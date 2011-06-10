@@ -1,0 +1,232 @@
+
+TODO/TASKS
+-----
+
+- downgrade infinspan, gemfire
+- move up monterey, byon
+- medium vcloud, gogrid
+
+
+DETAILED LIST (draft, from Alex, need Aled's+others' input)
+
+1A - Local Mgmt Executors and Subscription Manager frameworks (off Application?),
+     and ability to interact with a groovy console after setup, with "app" is in scope (to test)
+1B - Item-workrate resize policy (e.g. for Tomcat, Infinispan)
+1C - TC improvements - deploy war, use 1A, group shutdown approach, general sanity check
+1D - JBossNode, AbstractWebAppNode (refactor of 1C)
+2A - ElasticWebCluster, using JBoss or TC (sum of 1A-1D)
+2B - ElasticWebStack with app, adding web-load-balancer (e.g. ERS?, DNS? some other?) to 2A
+2C - EnrichingPolicies e.g. rolling workrates together, and pluggable to existing apps (e.g. 2B)
+1E - InfinispanNode, GemfireNode, and ElasticCacheCluster
+1F - Amazon VMs
+2D - WebAppCacheApplication in Amazon (sum of 2B+1E+1F)
+
+3A - vcloud and fixed-pool ssh (specifically MontereyEast, West)
+3B - multi-location sample app, including VPN setup - WebAppFabric, ElasticCacheFabric and SampleGlobalWebAppCacheApplication
+3C - MontereyFabric - basic Monterey integration (separate mgmt node doing setup, noddy policy in OverPaas)
+3D - item-balance policy, too-{hot,cold} event-driven resize policy
+3E - wide-area latency policy (aware of distances)
+3F - burst policy
+
+4A - VFMApp and JIMApp ({vFabric,JBoss+Infinispan} + Monterey), sum of all the above [the demo first cut]
+4B - graphical/web console ?
+4C - JMX over JMS, with MRG/Rabbit as control message bug
+4D - JMX security setup
+4E - distributed management
+4F - use of well-known document store for management
+
+(next sprint = 1+2, following sprint = 3 + some of 4? reaching draft 
+demos by end Jun)
+
+NB: some more summaries/notes contained in TODOs in various files, 
+including:
+- SimpleTomcatApp - fleshing out tomcat
+- Activity - fleshing out notifications
+- TomcatNode - executors and tasks, and shutdown
+(best clear up TODOs towards end of each sprint?)
+
+
+
+
+
+
+
+DRAFT INTRO
+-----------
+(slightly out-of-date ... gentle 3-minute intro would have some of this, 
+with sequence of choice examples)
+
+Overview
+
+OverPaas is a provisioning and management framework for large applications,
+including those consisting of multiple tiers and spanning multiple locations.
+You specify the topology of an application--its tiers, dependencies, and
+associated content, code and schemas--along with the management policies
+for scaling, load-balancing, and dynamically selecting optimal locations.
+This specification is easy-to-read Java (Groovy) code, which when executed,
+results in the deployed application running in the desired locations together
+with a management plane running the chosen policies.  Through the management
+plane (using either a command-line or a graphical console), the application's
+shape and behaviour can be explored, and the code, content, and policies can all be changed.
+
+
+Entities and Applications
+
+At the heart of OverPaas is the concept of "EntityDefinition" classes; these
+might be base entities, corresponding to actual machines and/or processes
+such as a JBossNode or a RabbitMqNode, or groups of other entities, such as a
+TomcatCluster or MultiLocationMySqlTier.  Some of these groups know how to
+create their children (e.g. from templates), and have a number of off-the-shelf
+policies for determining when and where to create entities (and when and where
+to scale back).  Other groups may be dynamic, collecting entities which match
+a pattern, possibly for aggregating monitoring information or for applying
+policies at a different grouping (such as optimizing the location where specific
+processing or request handling is fulfilled).
+
+Your application is defined as a class extending OverpaasAppDefinition,
+declaring the groups which make it up.  Start-up properties and policies
+can then be set, e.g. identifying which WAR files to deploy (even generating
+them dynamically from within your IDE and hot-swapping them on AppServer
+instances) or adding a resilience policy to a MongoCluster.
+
+
+Activity, Events, and Management Policies
+
+All entities can define "effectors", operations which can be invoked on them
+through the management console or by policies (such as "grow(int)" on a cluster).
+To know when these should be invoked, entities also expose an activity model
+(a nested map, e.g. JSON), and "sensors" pointing to events or to specific
+branches of the activity model. Policies subscribe to events through a
+SubscriptionManager on the application.
+
+... TODO
+
+
+
+VOCABULARY
+----------
+
+Current thinking: (Alex, updated since today's talk)
+
+interface Entity
+    abstract AbstractEntity
+        Node - anything which is "base"/"leaf", i.e. has no children ?
+    interface EntityGroup
+        abstract AbstractEntityGroup
+            Tier - anything which is homogenous (has a template and type)
+                Cluster - in-location tier
+                Fabric - multi-location tier
+            Stack - heterogenous (mixed types of children)
+                Application - user's entry point
+            Pool - dynamic group (doesn't create them?)
+mixins
+	Resizable
+	Balanceable / Moveable / MoveableWithCost
+
+
+Leaning towards:
+    ACTIVITY MODEL - custom status data visible within an entity
+    SENSORS (emit EVENTS) - subscribable data from an entity, either
+        ACTIVITY CHANGE SENSOR Foo foo  make  SensorEvent<Foo>
+        EXCEPTION SENSOR
+		LOGGING SENSOR
+		(this is a type, no need to annotate...)
+    OPERATIONS - things which can be invoked on an entity (aka EFFECTORS)
+    	marked by annotation ?
+    	
+    POLICY - code which lives on an entity, either
+        ENRICHING POLICIES - adding new data (e.g. workrates) ? (and PROPAGATING ?)
+        MANAGEMENT POLICIES - invoking operations
+
+
+Questions:
+
+ENTITY or ELEMENT, COMPONENT, CONFIG, DEFINITION, REFERENCE...
+
+EFFECTOR + SENSOR[ACTIVITY[CHANGE] or NOTIFICATION, causing EVENTS]
+    or ATTRIBUTE, OPERATION, NOTIFICATION (jmx) - or something else
+    (activity -> metrics, status, workrate)
+    "swallowable" ? - notion that an event can be marked as handled
+        (and will be restricted somehow in its subsequent distribution)
+
+POLICY or LISTENER
+
+
+
+
+
+ADDL DOCUMENTATION POINTS
+--------
+
+Entities - note that property look-up will look in parents if not present
+if set to null, or a field, then does _not_ look up in parents)
+
+
+
+
+
+
+
+MISC THOUGHTS
+--------
+
+executor API:
+
+Task entity.execute(description: "what needs doing", { closure... })
+Task entity.execute(description: "what needs doing", { closure... }, { closure }, ... )
+Task entity.execute(description: "what needs doing", [ { closure... }, { closure }, ... ])
+
+entity.execute(Task)
+
+Task(description, closure)
+	TaskGroup(tasks)
+		SequentialTaskGroup
+		ConcurrentTaskGroup
+			ConcurrentRepeatedTaskGroup
+	RecoverableTask (primary, recovery)
+
+
+ApplicationContext
+	all entities ?
+	all tasks
+	where each entity is mastered (?)
+	subscriptions ?  [or on the entity?]
+
+	
+Parenting
+	single primary parent (who created it)
+	multiple dynamic parents allowed
+Effectors
+	"invoke globally" means: if action not available on an entity, it is applied to children
+	static closures... typed via generics, used for T run(...) and Task<T> execute(...)
+
+subscription API:
+
+SubscriptionManager exposes methods
+    subscribe(Entity targetEntity, Sensor targetSensor, Entity 
+subscribingEntity, callback)
+        supported properties:  periodMillis, changeFilter (eventually)
+    subscribeToChildren(Entity parentTargetEntity, Sensor targetSensor, Entity subscribingEntity, callback)
+supported properties:
+    periodMillis -- indicates min frequency with which event will be reported;
+    reportIfNoChange -- for activity sensors, whether to report every period millis
+        even in the absence of change
+    childFilter -- closure which will determine which entities to report from
+        example
+            changeFilter might be... { (change.entity in MediationNode && change.path.startsWith("node.workrate"))
+                || (change.entity in MediationSegment && change.path.startsWith("item.workrate")) }
+callback is a closure which accepts a SensorEvent (qv)
+(we need the subscriber to locate the callback in the right place, and to shutdown...)
+cleaner
+	localEntity.subcribe(targetEntity, Sensor, callback)
+
+
+could use annotation @Effector for operations and @Sensor for 
+notification points on an entity, to dynamically discover what is 
+exposed (?);
+
+could allow sensors to be statics in an entity or, sometimes, any var 
+(static or not) elsewhere, and possibly added to an entity instance;
+mixes the vocabulary used earlier but it's a bit deeper in the code by 
+the time this would be used
+

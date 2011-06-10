@@ -1,0 +1,92 @@
+package org.overpaas.util
+
+import java.lang.reflect.Field
+import java.lang.reflect.Modifier;
+import java.util.Map
+import java.util.concurrent.Callable;
+
+import com.thoughtworks.xstream.XStream
+
+public class LanguageUtils {
+
+	static <T> T getRequiredField(String name, Map<?,?> m) {
+		if (!m.containsKey(name))
+			throw new IllegalArgumentException("a parameter '"+name+"' was required in the argument to this function")
+		m.get name
+	}
+	
+	static <T> T getOptionalField(String name, Map<?,?> m, T defaultValue=null) {
+		m.get(name) ?: defaultValue
+	}
+	
+	static <T> T getPropertySafe(Object target, String name, T defaultValue=null) {
+		target.hasProperty(name)?.getProperty(target) ?: defaultValue
+	}
+	
+	//TODO find with annotation
+	
+	public static byte[] serialize(Object orig) {
+		if (orig == null) return null;
+		
+		// Write the object out to a byte array
+		ByteArrayOutputStream fbos = []
+		ObjectOutputStream out = new ObjectOutputStream(fbos);
+		out.writeObject(orig);
+		out.flush();
+		out.close();
+		return fbos.toByteArray();
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static <T> T deserialize(byte[] bytes, ClassLoader classLoader) {
+		if (bytes == null) return null;
+		
+		ObjectInputStream ins =
+				//new ObjectInputStreamWithLoader(new FastByteArrayInputStream(bytes, bytes.length), classLoader);
+				new ObjectInputStream(new ByteArrayInputStream(bytes));
+		(T) ins.readObject();
+	}
+	
+	static <T> T clone(T src) {
+        XStream xstream = new XStream();
+        xstream.setClassLoader(src.getClass().getClassLoader())
+//      use (xstream) { fromXML(toXML(src)) }
+        xstream.fromXML(xstream.toXML(src))
+		
+//		// TODO investigate XStream.  or json.
+//		deserialize(serialize(src), src.getClass().getClassLoader());
+	}
+	
+	static String newUid() { Integer.toHexString((Integer)new Random().nextInt()) }
+
+	public static Map setFieldsFromMap(Object target, Map fieldValues) {
+		Map unused = [:]
+		fieldValues.each {
+//			println "looking for "+it.key+" in "+target+": "+target.metaClass.hasProperty(it.key) 
+			target.hasProperty(it.key) ? target.(it.key) = it.value : unused << it 
+		}
+		unused
+	}
+
+	/** visits all fields of a given object, recursively (for collections, arrays, and maps it visits the items within, passing null for keys where it isn't a map) */
+	private static void visitFields(Object o, FieldVisitor fv, Collection<Object> objectsToSkip=([] as Set)) {
+		if (o==null || objectsToSkip.contains(o)) return;
+		objectsToSkip << o
+		if (o in String) return;
+		if (o in Map) {
+			o.each { fv.visit(o, it.key.toString(), it.value); visitFields(it.value, fv, objectsToSkip) }
+		} else if ((o in Collection) || (o.getClass().isArray())) { 
+			o.each { fv.visit(o, null, it); visitFields(it, fv, objectsToSkip) }
+		} else {
+			o.getClass().getDeclaredFields().each { if ((it.getModifiers() & Modifier.STATIC) || it.isSynthetic()) return;  //skip static
+				it.setAccessible true; def v = it.get(o); 
+				//println "field $it value $v";
+				fv.visit(o, it.name, v); visitFields(v, fv, objectsToSkip) 
+		} }
+	}
+	public interface FieldVisitor {
+		/** invoked by visitFields; fieldName will be null for collections */
+		public void visit(Object parent, String fieldName, Object value)
+	}
+	
+}

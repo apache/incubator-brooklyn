@@ -1,0 +1,69 @@
+Coding Standards
+================
+
+We must have a coding standard, especially as this is an open source (or free?)
+software project.
+
+From android standard:
+
+     The rules below are not guidelines or recommendations, but strict
+     rules. Contributions to Android generally will not be accepted if they do not
+     adhere to these rules.
+
+     Not all existing code follows these rules, but all new code is expected to.
+
+We can avoid the second clause by using a standard now.
+
+Existing Standards
+==================
+
+Here are some existing standards:
+
+http://www.oracle.com/technetwork/java/codeconvtoc-136057.html
+http://source.android.com/source/code-style.html
+https://cwiki.apache.org/qpid/java-coding-standards.html
+http://static.springsource.org/spring/xml/spring-code-conventions.xml
+http://seamframework.org/Seam3/DevelopmentGuidelines
+
+I have not read them all in detail but my general impression is that 
+most of them are generally good practice and things we do already.
+
+One thing we can easily define now and which is not universally agreed upon is
+formatting. This is important to do early to avoid having to reformat.
+
+Line Length
+-----------
+
+Oracle 80, JBoss 128, Android 100 but exceptions:
+Exception: if a comment line contains an example command or a literal URL longer
+than 100 characters, that line may be longer than 100 characters for ease of cut
+and paste.
+
+Exception: import lines can go over the limit because humans rarely see
+them. This also simplifies tool writing.
+
+I like the android approach - keep it shorter where possible but allow longer in
+special cases. I am nearly convinced that 80 is outdated. 100 is probably a good
+compromise.
+
+
+
+OverPaaS Standard
+=================
+
+Formatting
+----------
+
+Indenting
+~~~~~~~~~
+
+Indent with spaces only. 4 for a normal indent.
+
+No space at end of lines or on blank lines.
+(Eclipse has a nasty habit of doing this.)
+
+Line length
+~~~~~~~~~~~
+
+Length 100, except imports, URLs and things (e.g. examples) that might want to
+be copied.

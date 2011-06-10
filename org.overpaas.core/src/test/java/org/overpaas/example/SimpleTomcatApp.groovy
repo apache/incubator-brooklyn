@@ -1,0 +1,100 @@
+package org.overpaas.example
+
+import org.codehaus.groovy.tools.shell.Groovysh
+import org.codehaus.groovy.tools.shell.IO
+import org.codehaus.groovy.tools.shell.util.NoExitSecurityManager
+import org.overpaas.console.EntityNavigationUtils
+import org.overpaas.core.locations.SshMachineLocation
+import org.overpaas.core.types.common.AbstractOverpaasApplication
+import org.overpaas.web.tomcat.TomcatCluster
+import org.overpaas.web.tomcat.TomcatNode
+/** starts some tomcat nodes, on localhost, using ssh;
+ * installs from scratch each time, for now, which may be overkill, but signposts.
+ * then dumps JMX stats periodically.
+ * 
+ * @author alex
+ */
+public class SimpleTomcatApp extends AbstractOverpaasApplication {
+	
+	TomcatCluster tc = new TomcatCluster(displayName:'MyTomcat', initialSize:3, this);
+
+	public static void main(String[] args) {
+		def app = new SimpleTomcatApp()
+		//TODO:
+//		app.tc.war = "/tmp/hello.war"
+//		app.tc.policy << new ElasticityPolicy(app.tc, TomcatCluster.REQS_PER_SEC, low:100, high:250);
+		app.tc.initialSize = 2  //override initial size
+		
+		EntityNavigationUtils.dump(app, "before start:  ")
+		
+		app.start(location:new 
+//			MockLocation(name:'london')
+			SshMachineLocation(name:'london', host:'localhost')
+			)
+		
+		EntityNavigationUtils.dump(app, "after start:  ")
+
+		Thread t = []
+		t.start {
+			while (!t.isInterrupted()) {
+				Thread.sleep 5000
+				app.entities.values().each { if (it in TomcatNode) {
+						println ""+it+": "+it.jmxTool?.getChildrenAttributesWithTotal("Catalina:type=GlobalRequestProcessor,name=\"*\"")
+						println "    "+it.getJmxSensors()
+					}
+				}
+			}
+		}
+		
+//		//TODO deploy a war file
+//		
+//		println "launching a groovy shell, with 'app' set"
+//		IO io = new IO()
+//		def code = 0;
+//		// Add a hook to display some status when shutting down...
+//		addShutdownHook {
+//			//
+//			// FIXME: We need to configure JLine to catch CTRL-C for us... Use gshell-io's InputPipe
+//			//
+//
+//			if (code == null) {
+//				// Give the user a warning when the JVM shutdown abnormally, normal shutdown
+//				// will set an exit code through the proper channels
+//
+//				io.err.println()
+//				io.err.println('@|red WARNING:|@ Abnormal JVM shutdown detected')
+//			}
+//
+//			io.flush()
+//		}
+//
+//		// set up the shell
+//		// TODO it insists on using ANSI which is a bother
+//		Binding b = new Binding()
+//		b.setVariable 'app', app
+//		Groovysh shell = new Groovysh(b, io)
+//
+//		SecurityManager psm = System.getSecurityManager()
+//		System.setSecurityManager(new NoExitSecurityManager())
+//
+//		try {
+//			code = shell.run(new String[0])
+//		} finally {
+//			System.setSecurityManager(psm)
+//		}
+		
+		println "waiting for readln then will kill the tomcats"
+		System.in.read()
+		t.interrupt()
+		
+		//TODO find a better way to shutdown a cluster?
+		println "shutting down..."
+		app.entities.values().each { if (it in TomcatNode) it.shutdown() }
+		//TODO there is still an executor service running, not doing anything but not marked as a daemon,
+		//so doesn't quit immediately (i think it will time out but haven't verified)
+		//app shutdown should exist and handle that???
+		
+		System.exit(0)
+	}
+	
+}
