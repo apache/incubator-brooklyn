@@ -102,6 +102,10 @@ public class JBossNode extends AbstractOverpaasEntity implements Startable {
             $runDir/bin/run.sh
             """
         }
+        
+        public String getDeployScript(String filename) {
+            ""
+        }
 
         public void shutdown(SshMachineLocation loc) {
             //          println "invoking shutdown script"
