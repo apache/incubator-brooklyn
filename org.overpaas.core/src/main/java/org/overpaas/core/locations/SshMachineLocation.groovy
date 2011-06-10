@@ -1,6 +1,8 @@
 package org.overpaas.core.locations;
 
 import java.util.Map
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.overpaas.core.decorators.Location;
 import org.overpaas.core.decorators.OverpaasEntity;
@@ -37,6 +39,14 @@ public class SshMachineLocation implements Location {
 		
 //		ExecUtils.execBlocking "ssh", (user?user+"@":"")+host, command
 	}
+    
+    public int copyTo(File src, String destination) {
+        def conn = new SshJschTool(user:user, host:host)
+        conn.connect()
+        int result = conn.copyToServer [:], src, destination
+        conn.disconnect()
+        result
+    }
 	
 	/*
 	 * TODO OS-X failure, if no recent command line ssh
@@ -47,7 +57,9 @@ Received disconnect from ::1: 2: Too many authentication failures for alex
 	 */
 	
 	public static abstract class SshBasedJavaAppSetup {
-		
+
+        private static final Logger logger = LoggerFactory.getLogger(SshBasedJavaAppSetup.class);;
+        
 		String overpaasBaseDir = "/tmp/overpaas"
 		String installsBaseDir = overpaasBaseDir+"/installs"
 
@@ -102,6 +114,7 @@ exit
 	
 		public String getInstallScript() { null }
 		public abstract String getRunScript();
+        public abstract String getDeployScript(String filename);
 		
 		public void start(SshMachineLocation loc) {
 			synchronized (getClass()) {
@@ -115,7 +128,23 @@ exit
 			def result = loc.run(out: System.out, getRunScript())
 			if (result) throw new IllegalStateException("failed to start $entity (exit code $result)")
 		}
-
+        
+        /** Copies f to loc:$installsBaseDir and invokes this.getDeployScript
+         *  for further processing on server. */
+        public void deploy(File f, SshMachineLocation loc) {
+            def target = new File(new File(installsBaseDir), f.getName()).toString()
+            int copySuccess = loc.copyTo f, target
+            String deployScript = getDeployScript(target)
+            if (deployScript) {
+                int result = loc.run(out:System.out, deployScript)
+                if (result) {
+                    logger.error "Failed to deploy $f to $loc"
+                } else {
+                    logger.trace "Deployed $f to $loc"
+                }
+            }
+        }
+        
 		OverpaasEntity entity
 		String appBaseDir
 

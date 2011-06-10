@@ -140,7 +140,7 @@ public class SshJschTool {
 	 * @param size
 	 * @param pathAndFileOnRemoteServer
 	 */
-	public void createFile(Map p=[:], String pathAndFileOnRemoteServer, InputStream input, long size) {
+	public int createFile(Map p=[:], String pathAndFileOnRemoteServer, InputStream input, long size) {
 		assertConnected()
 		ChannelExec channel=session.openChannel("exec");
 		lastChannel = channel;
@@ -186,15 +186,16 @@ public class SshJschTool {
 		checkAck(fromChannel)
 		toChannel.close()
 		channel.disconnect()
+        channel.getExitStatus()
 	}
 
 	/** creates the given file with the given contents; permissions specified using 'permissions:0755' */
-	public void createFile(Map p=[:], String pathAndFileOnRemoteServer, String contents) {
+	public int createFile(Map p=[:], String pathAndFileOnRemoteServer, String contents) {
 		byte[] b = contents.getBytes()
 		createFile(p, pathAndFileOnRemoteServer, new ByteArrayInputStream(b), b.length)
 	}
 	/** creates the given file with the given contents; permissions specified using 'permissions:0755' */
-	public void createFile(Map p=[:], String pathAndFileOnRemoteServer, byte[] contents) {
+	public int createFile(Map p=[:], String pathAndFileOnRemoteServer, byte[] contents) {
 		createFile(p, pathAndFileOnRemoteServer, new ByteArrayInputStream(contents), contents.length)
 	}
 
@@ -205,7 +206,7 @@ public class SshJschTool {
 	* @param file
 	* @param pathAndFileOnRemoteServer
 	*/
-	public void copyToServer(Map p=[:], File f, String pathAndFileOnRemoteServer=null) {
+	public int copyToServer(Map p=[:], File f, String pathAndFileOnRemoteServer=null) {
 		def p2 = [lastModificationDate:f.lastModified()]
 		p2 << p
 		String fn = pathAndFileOnRemoteServer

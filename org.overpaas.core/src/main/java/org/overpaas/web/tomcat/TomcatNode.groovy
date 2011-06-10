@@ -35,6 +35,9 @@ public class TomcatNode extends AbstractOverpaasEntity implements Startable {
 	static {
 		TomcatNode.metaClass.startInLocation = { GroupEntity parent, SshMachineLocation loc -> new Tomcat7SshSetup(delegate).start loc }
 		TomcatNode.metaClass.shutdownInLocation = { SshMachineLocation loc -> new Tomcat7SshSetup(delegate).shutdown loc }
+        TomcatNode.metaClass.deploy = { String file, SshMachineLocation loc -> 
+            new Tomcat7SshSetup(delegate).deploy(new File(file), loc)
+		}
 	}
 
 	JmxSensorEffectorTool jmxTool;
@@ -45,8 +48,9 @@ public class TomcatNode extends AbstractOverpaasEntity implements Startable {
 	public void start(Map properties=[:], GroupEntity parent=null, Location location=null) {
 		EntityStartUtils.startEntity properties, this, parent, location
 		logger.trace "started... jmxHost is {} and jmxPort is {}", this.properties['jmxHost'], this.properties['jmxPort']
-		if (this.properties['jmxHost'] && this.properties['jmxPort']) {
-			jmxTool = new JmxSensorEffectorTool(this.properties.jmxHost, this.properties.jmxPort)
+		
+        if (this.properties['jmxHost'] && this.properties['jmxPort']) {
+            jmxTool = new JmxSensorEffectorTool(this.properties.jmxHost, this.properties.jmxPort)
 			if (!(jmxTool.connect(60*1000))) {
 				logger.error "FAILED to connect JMX to {}", this
 				throw new IllegalStateException("failed to completely start $this: JMX not found at $jmxHost:$jmxPort after 60s")
@@ -56,6 +60,12 @@ public class TomcatNode extends AbstractOverpaasEntity implements Startable {
 			//e.g. getApplication().getExecutors().
 			jmxMonitoringTask = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay({ getJmxSensors() }, 1000, 1000, TimeUnit.MILLISECONDS)
 		}
+        if (this.war) {
+            def deployLoc = location ?: this.location
+            logger.trace "Deploying {} to {}", this.war, deployLoc
+            this.deploy(this.war, deployLoc)
+            logger.trace "Deployed {} to {}", this.war, deployLoc
+        }
 	}
 	
 	public double getJmxSensors() {
@@ -127,6 +137,14 @@ $installDir/bin/startup.sh
 exit
 """
 		}
+        
+        /** Assumes file is already in locOnServer. */
+        public String getDeployScript(String locOnServer) {
+            File to = new File(new File(runDir), "webapps")
+            """\
+cp $locOnServer $to
+exit"""
+        }
 				
 		public int getTomcatHttpPort() {
 			getNextValue("tomcatHttpPort", 8080)
