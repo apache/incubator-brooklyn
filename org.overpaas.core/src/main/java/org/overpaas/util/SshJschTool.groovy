@@ -40,7 +40,9 @@ public class SshJschTool {
 		
 		tidy()
 		
-		keyFiles.each { if (new File(it).exists()) { jsch.addIdentity(it) } }
+		keyFiles.each { if (new File(it).exists()) { jsch.addIdentity(it)
+            println it
+            } }
 		
 	    session = jsch.getSession(user, host, port)
 		session.setConfig(config)
