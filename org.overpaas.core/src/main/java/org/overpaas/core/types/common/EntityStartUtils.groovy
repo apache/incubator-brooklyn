@@ -30,7 +30,7 @@ class EntityStartUtils {
 		println "factory $this creating entity with $properties and $location"
 		if (location) {
 			if (entity.location && entity.location!=location) 
-			throw new IllegalStateException("request to start $entity in $location but it is already set with location "+entity.location)
+			    throw new IllegalStateException("request to start $entity in $location but it is already set with location "+entity.location)
 			entity.location = location
 		}
 		if (!parent && !entity.parents)
