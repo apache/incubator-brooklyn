@@ -10,7 +10,7 @@ public class SshJschTool {
 	String host, 
 		user = System.getProperty('user.name');
 	def port = 22,
-		keyFiles = ['~/.ssh/id_dsa','~/.ssh/id_rsa'],
+		keyFiles = ['~/.ssh/id_dsa'],
 		config = ['StrictHostKeyChecking', 'no']
 	
 	/** tidies up fields and config, e.g. replacing leading '~' with System.getProperty('user.home'),
@@ -40,7 +40,9 @@ public class SshJschTool {
 		
 		tidy()
 		
-		keyFiles.each { if (new File(it).exists()) { jsch.addIdentity(it) } }
+		keyFiles.each { if (new File(it).exists()) { jsch.addIdentity(it)
+            println it
+            } }
 		
 	    session = jsch.getSession(user, host, port)
 		session.setConfig(config)
