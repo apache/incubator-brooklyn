@@ -10,7 +10,7 @@ public class SshJschTool {
 	String host, 
 		user = System.getProperty('user.name');
 	def port = 22,
-		keyFiles = ['~/.ssh/id_dsa'],
+		keyFiles = ['~/.ssh/id_dsa','~/.ssh/id_rsa'],
 		config = ['StrictHostKeyChecking', 'no']
 	
 	/** tidies up fields and config, e.g. replacing leading '~' with System.getProperty('user.home'),
