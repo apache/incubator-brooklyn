@@ -239,8 +239,7 @@
 								<phase>process-test-classes</phase>
 								<configuration>
 									<target>
-										<taskdef resource="net/sf/antcontrib/antcontrib.properties"
-											classpathref="maven.plugin.classpath" />
+										<taskdef resource="net/sf/antcontrib/antcontrib.properties" classpathref="maven.plugin.classpath" />
 										<taskdef resource="tasks.properties" classpathref="maven.plugin.classpath" />
 										<if>
 											<available property="gogocobertura" file="target/test-classes" />
@@ -248,13 +247,16 @@
 												<echo message="INSTRUMENTING CLASSES FOR COBERTURA" />
 												<!-- Ensure any and all bits of our project are copied in first -->
 												<copy todir="target/cobertura/coverage-classes">
-													<fileset dir="target/classes" />
+													<fileset erroronmissingdir="false" dir="target/classes"/>
 												</copy>
-												<cobertura-instrument datafile="target/cobertura/cobertura.ser"
-													todir="target/cobertura/coverage-classes">
-													<fileset erroronmissingdir="false"
-														dir="target/cobertura/dependency-classes">
+												<cobertura-instrument datafile="target/cobertura/cobertura.ser" todir="target/cobertura/coverage-classes">
+													<fileset erroronmissingdir="false" dir="target/classes">
 														<include name="org/overpaas/**/*.class" />
+														<exclude name="org/overpaas/**/*Test.class" />
+													</fileset>
+													<fileset erroronmissingdir="false" dir="target/cobertura/dependency-classes">
+														<include name="org/overpaas/**/*.class" />
+														<exclude name="org/overpaas/**/*Test.class" />
 													</fileset>
 												</cobertura-instrument>
 											</then>
@@ -270,18 +272,15 @@
 								<phase>package</phase>
 								<configuration>
 									<target>
-										<taskdef resource="net/sf/antcontrib/antcontrib.properties"
-											classpathref="maven.plugin.classpath" />
+										<taskdef resource="net/sf/antcontrib/antcontrib.properties" classpathref="maven.plugin.classpath" />
 										<taskdef resource="tasks.properties" classpathref="maven.plugin.classpath" />
 										<if>
 											<available property="gogocobertura" file="target/cobertura/cobertura.ser" />
 											<then>
 												<echo message="GENERATING COBERTURA COVERAGE REPORT" />
-												<cobertura-report format="xml"
-													destdir="target/site/cobertura" datafile="target/cobertura/cobertura.ser">
+												<cobertura-report format="xml" destdir="target/site/cobertura" datafile="target/cobertura/cobertura.ser">
 													<fileset erroronmissingdir="false" dir="src/java" />
-													<fileset erroronmissingdir="false"
-														dir="target/cobertura/dependency-sources" />
+													<fileset erroronmissingdir="false" dir="target/cobertura/dependency-sources" />
 												</cobertura-report>
 											</then>
 										</if>
@@ -410,11 +409,6 @@
                 </exclusion>
             </exclusions>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>net.sourceforge.cobertura</groupId>
-            <artifactId>cobertura</artifactId>
-            <version>${cobertura.version}</version>
         </dependency>
     </dependencies>
 
