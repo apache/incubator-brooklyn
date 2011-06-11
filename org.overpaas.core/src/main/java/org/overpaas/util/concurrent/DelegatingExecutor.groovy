@@ -1,5 +1,4 @@
-package org.overpaas.util
-
+package org.overpaas.util.concurrent
 
 import groovy.lang.Closure;
 import groovy.time.TimeDuration;
@@ -8,14 +7,10 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors 
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit 
-
-
 
 class DelegatingExecutor implements Executor {
-	
 	ExecutorService executor = Executors.newCachedThreadPool();
 	TimeDuration timeout = null;
 	Closure preTask=null, postTask=null;
@@ -34,6 +29,7 @@ class DelegatingExecutor implements Executor {
 	public void shutdown() {
 		executor.shutdown()
 	}
+ 
 	public void shutdownNow() {
 		executor.shutdownNow()
 	}
@@ -57,5 +53,4 @@ class DelegatingExecutor implements Executor {
 		if (timeout) new FuturesCollection(executor.invokeAll( c.collect { asWrappedCallable(it) }, timeout.toMilliseconds(), TimeUnit.MILLISECONDS ));
 		else new FuturesCollection(executor.invokeAll( c.collect { asWrappedCallable(it) } ))
 	}
-	
 }

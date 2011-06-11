@@ -1,29 +1,26 @@
-package org.overpaas.core.types.common
-
+package org.overpaas.entities
 
 import groovy.transform.InheritConstructors;
 
-import java.util.Collection
-import java.util.Map
-import java.util.concurrent.Future
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Future;
 
-import org.overpaas.core.decorators.GroupEntity;
-import org.overpaas.core.decorators.Location;
-import org.overpaas.core.decorators.OverpaasEntity;
-import org.overpaas.core.decorators.Resizable;
-import org.overpaas.core.decorators.Startable;
-import org.overpaas.core.decorators.Location.SingleLocationEntity;
-import org.overpaas.util.OverpaasDsl;
+import org.overpaas.decorators.Resizable;
+import org.overpaas.decorators.Startable;
+import org.overpaas.types.Location;
+import org.overpaas.types.SingleLocation;
 
-/** intended to represent a group of homogeneous entities in a single location;
+/**
+ * intended to represent a group of homogeneous entities in a single location;
  * subclass must implement {@link #expand()} and {@link #shrink()} to specify how to create/remove nodes; 
  * caller must supply location as field either in constructor or call to start;
  * initialSize property determines initial size when started (defaults to 1)
- **/
-//@InheritConstructors
-public abstract class Cluster<T extends OverpaasEntity> extends Tier implements Startable, SingleLocationEntity {
-
-	public Cluster(Map props=[:], GroupEntity parent) {
+ */
+@InheritConstructors
+public abstract class Cluster<T extends Entity> extends Tier implements Startable, SingleLocation {
+	public Cluster(Map props=[:], Group parent) {
 		super(props, parent)
 	}
 
@@ -36,9 +33,9 @@ public abstract class Cluster<T extends OverpaasEntity> extends Tier implements 
 }
 
 public abstract class ClusterFromTemplate extends Cluster implements Resizable {
-	OverpaasEntity template=null
+	Entity template=null
 	
-	public ClusterFromTemplate(Map properties=[:], GroupEntity parent=null, OverpaasEntity template=null) {
+	public ClusterFromTemplate(Map properties=[:], Group parent=null, Entity template=null) {
 		super(properties, parent)
 		if (template) this.template = template
 	}

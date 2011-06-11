@@ -1,19 +1,18 @@
 package org.overpaas.web.tomcat;
 
-import static org.junit.Assert.*
-
-import java.util.Map;
+import static org.junit.Assert.*;
 
 import groovy.transform.InheritConstructors
 
+import java.util.Map
+
 import org.junit.Test
-import org.overpaas.core.locations.SshMachineLocation
-import org.overpaas.core.types.common.AbstractOverpaasApplication
+import org.overpaas.entities.AbstractApplication
+import org.overpaas.locations.SshMachineLocation
 
 class TomcatNodeTest {
-
 	@InheritConstructors
-	class Application extends AbstractOverpaasApplication {
+	class Application extends AbstractApplication {
 		public Application(Map properties=[:]) {
 			super(properties);
 		}

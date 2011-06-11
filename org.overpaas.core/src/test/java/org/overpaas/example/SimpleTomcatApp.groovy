@@ -1,22 +1,21 @@
 package org.overpaas.example
 
-import org.codehaus.groovy.tools.shell.Groovysh
-import org.codehaus.groovy.tools.shell.IO
-import org.codehaus.groovy.tools.shell.util.NoExitSecurityManager
-import org.overpaas.console.EntityNavigationUtils
-import org.overpaas.core.locations.SshMachineLocation
-import org.overpaas.core.types.common.AbstractOverpaasApplication
+import org.overpaas.entities.AbstractApplication
+import org.overpaas.entities.Cluster
+import org.overpaas.locations.SshMachineLocation
+import org.overpaas.util.EntityNavigationUtils
 import org.overpaas.web.tomcat.TomcatCluster
 import org.overpaas.web.tomcat.TomcatNode
-/** starts some tomcat nodes, on localhost, using ssh;
+
+/**
+ * Starts some tomcat nodes, on localhost, using ssh;
  * installs from scratch each time, for now, which may be overkill, but signposts.
  * then dumps JMX stats periodically.
  * 
  * @author alex
  */
-public class SimpleTomcatApp extends AbstractOverpaasApplication {
-	
-	TomcatCluster tc = new TomcatCluster(displayName:'MyTomcat', initialSize:3, this);
+public class SimpleTomcatApp extends AbstractApplication {
+    Cluster tc = new TomcatCluster(displayName:'MyTomcat', initialSize:3, this);
 
 	public static void main(String[] args) {
 		def app = new SimpleTomcatApp()
@@ -27,10 +26,7 @@ public class SimpleTomcatApp extends AbstractOverpaasApplication {
 		
 		EntityNavigationUtils.dump(app, "before start:  ")
 		
-		app.start(location:new 
-//			MockLocation(name:'london')
-			SshMachineLocation(name:'london', host:'localhost')
-			)
+		app.start location:new SshMachineLocation(name:'london', host:'localhost')
 		
 		EntityNavigationUtils.dump(app, "after start:  ")
 

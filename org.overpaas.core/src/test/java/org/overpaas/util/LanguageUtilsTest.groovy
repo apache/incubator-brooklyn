@@ -1,12 +1,14 @@
-package org.overpaas.util.test;
+package org.overpaas.util;
+
+import java.util.Date
+import java.util.Set
 
 import org.junit.Assert
 import org.junit.Test
-import org.overpaas.util.LanguageUtils
 import org.overpaas.util.LanguageUtils.FieldVisitor
 
-class LanguageUtilsTest {
 
+class LanguageUtilsTest {
     @Test
 	public void testSetFieldsFromMap() {
 		A a = []

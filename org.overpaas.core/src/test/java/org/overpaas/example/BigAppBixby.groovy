@@ -1,6 +1,7 @@
 package org.overpaas.example
 
-import org.overpaas.core.types.common.AbstractOverpaasApplication
+import org.overpaas.entities.AbstractApplication
+import org.overpaas.entities.Fabric
 import org.overpaas.example.PretendLocations.AmazonLocation
 import org.overpaas.example.PretendLocations.GemfireFabric
 import org.overpaas.example.PretendLocations.MontereyFabric
@@ -8,10 +9,8 @@ import org.overpaas.example.PretendLocations.MontereyLatencyOptimisationPolicy
 import org.overpaas.example.PretendLocations.VcloudLocation
 import org.overpaas.web.tomcat.TomcatFabric
 
-
-public class BigAppBixby extends AbstractOverpaasApplication {
-	
-	TomcatFabric tc = new TomcatFabric(name:'SpringTravelWebApp', war:'spring-travel.war', this);
+public class BigAppBixby extends AbstractApplication {
+    Fabric tc = new TomcatFabric(name:'SpringTravelWebApp', war:'spring-travel.war', this);
 	
 	MontereyFabric mm = new MontereyFabric(name:'SpringTravelBooking', 
 		osgi:['api','impl'].collect { 'com.cloudsoft.spring.booking.'+it }, this)

@@ -1,4 +1,4 @@
-package org.overpaas.util;
+package org.overpaas.util.concurrent;
 
 import groovy.lang.Closure;
 

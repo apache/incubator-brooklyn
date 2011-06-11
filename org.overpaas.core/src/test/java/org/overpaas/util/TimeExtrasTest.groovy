@@ -1,18 +1,15 @@
 package org.overpaas.util;
 
-import static java.util.concurrent.TimeUnit.MINUTES
-import static java.util.concurrent.TimeUnit.SECONDS
-import groovy.time.TimeDuration
-import groovy.util.GroovyTestCase
-import junit.framework.Assert
+import static java.util.concurrent.TimeUnit.*;
 
-import org.junit.Before
-import org.junit.Test
+import groovy.time.TimeDuration;
+import groovy.util.GroovyTestCase;
 
-public class TimeExtrasTest extends GroovyTestCase {
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
-    public void testX() {}
-    
+public class TimeExtrasTest {
     @Before
     public void setUp() throws Exception {
         TimeExtras.init();

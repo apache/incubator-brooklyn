@@ -1,4 +1,4 @@
-package org.overpaas.core.decorators;
+package org.overpaas.decorators;
 
 import java.util.List;
 import java.util.concurrent.Future;

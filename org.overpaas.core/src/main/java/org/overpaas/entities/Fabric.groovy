@@ -1,19 +1,16 @@
-package org.overpaas.core.types.common
+package org.overpaas.entities
 
 import java.util.Collection;
+import java.util.Map;
 
-import org.overpaas.core.decorators.GroupEntity;
-import org.overpaas.core.decorators.Location;
-import org.overpaas.core.decorators.OverpaasEntity;
-import org.overpaas.core.decorators.Startable;
-import org.overpaas.core.decorators.Location.MultiLocationEntityGroup;
-import org.overpaas.util.OverpaasDsl
+import org.overpaas.types.Location;
+import org.overpaas.types.MultiLocation;
 
-public abstract class Fabric extends TierFromTemplate implements MultiLocationEntityGroup {
+public abstract class Fabric extends TierFromTemplate implements MultiLocation {
 	
 	public final Collection<Location> locations = []
 	
-	public Fabric(Map properties=[:], GroupEntity parent=null, OverpaasEntity template=null) {
+	public Fabric(Map properties=[:], Group parent=null, Entity template=null) {
 		super(properties, parent, template)
 		//accept the word 'location' singular as well as plural (plural was put into field already)
 		if (this.properties.location) locations += this.properties.remove('location')

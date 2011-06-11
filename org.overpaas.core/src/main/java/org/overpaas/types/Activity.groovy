@@ -1,15 +1,16 @@
-package org.overpaas.core.types;
+package org.overpaas.types;
 
-import java.util.Map
+import java.util.Collection;
+import java.util.Map;
 
-import org.overpaas.core.decorators.OverpaasEntity;
+import org.overpaas.entities.Entity;
 
 public class Activity {
 
-	OverpaasEntity entity;
+	Entity entity;
 	Map values = [:];
 	
-	public Activity(OverpaasEntity entity) {
+	public Activity(Entity entity) {
 		this.entity = entity;
 	}
 	

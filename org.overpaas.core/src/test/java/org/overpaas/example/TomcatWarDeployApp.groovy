@@ -1,23 +1,22 @@
 package org.overpaas.example
 
-import org.codehaus.groovy.tools.shell.Groovysh
-import org.codehaus.groovy.tools.shell.IO
-import org.codehaus.groovy.tools.shell.util.NoExitSecurityManager
-import org.overpaas.console.EntityNavigationUtils
-import org.overpaas.core.locations.SshMachineLocation
-import org.overpaas.core.types.common.AbstractOverpaasApplication
+import org.overpaas.entities.AbstractApplication
+import org.overpaas.entities.Cluster
+import org.overpaas.locations.SshMachineLocation
+import org.overpaas.util.EntityNavigationUtils
 import org.overpaas.web.tomcat.TomcatCluster
 import org.overpaas.web.tomcat.TomcatNode
-/** starts some tomcat nodes, on localhost, using ssh;
+
+/**
+ * starts some tomcat nodes, on localhost, using ssh;
  * Copied from SimpleTomcatApp.groovy.
- * Get hello.war from 
-    http://tomcat.apache.org/tomcat-7.0-doc/appdev/sample/
+ * Get hello.war from http://tomcat.apache.org/tomcat-7.0-doc/appdev/sample/
  * (and rename it!)
+ * 
  * @author sam
  */
-public class TomcatWarDeployApp extends AbstractOverpaasApplication {
-	
-	TomcatCluster tc = new TomcatCluster(displayName:'MyTomcat', initialSize:3, this);
+public class TomcatWarDeployApp extends AbstractApplication {
+    Cluster tc = new TomcatCluster(displayName:'MyTomcat', initialSize:3, this);
 
 	public static void main(String[] args) {
         
@@ -28,9 +27,7 @@ public class TomcatWarDeployApp extends AbstractOverpaasApplication {
 		
 		EntityNavigationUtils.dump(app, "before start:  ")
 		
-		app.start(location:new 
-			SshMachineLocation(name:'london', host:'localhost')
-		)
+		app.start location:new SshMachineLocation(name:'london', host:'localhost')
 		
 		EntityNavigationUtils.dump(app, "after start:  ")
 

@@ -1,46 +1,51 @@
 package org.overpaas.web.jboss
 
-import org.overpaas.core.locations.SshMachineLocation;
-import org.overpaas.core.types.ActivitySensor;
-import org.overpaas.web.tomcat.SshBasedJavaAppSetup;
 import groovy.transform.InheritConstructors
 
 import java.util.Map
 import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit
 
-import org.overpaas.core.locations.SshMachineLocation
-import org.overpaas.core.locations.SshMachineLocation.SshBasedJavaAppSetup
-import org.overpaas.core.types.ActivitySensor
-import org.overpaas.core.decorators.GroupEntity
-import org.overpaas.core.decorators.Location
-import org.overpaas.core.decorators.Startable
-import org.overpaas.core.types.common.AbstractOverpaasEntity
-import org.overpaas.core.types.common.EntityStartUtils
+import org.overpaas.decorators.Startable
+import org.overpaas.entities.AbstractEntity
+import org.overpaas.entities.Group
+import org.overpaas.locations.SshBasedJavaAppSetup
+import org.overpaas.locations.SshMachineLocation
+import org.overpaas.types.ActivitySensor
+import org.overpaas.types.Location
+import org.overpaas.util.EntityStartUtils
 import org.overpaas.util.JmxSensorEffectorTool
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
+/**
+ * JBoss web application server.
+ */
 @InheritConstructors
-public class JBossNode extends AbstractOverpaasEntity implements Startable {
+public class JBossNode extends AbstractEntity implements Startable {
+	private static final Logger logger = LoggerFactory.getLogger(JBossNode.class)
+    
+    public static final ActivitySensor<Integer> REQUESTS_PER_SECOND = [ "Reqs/Sec", "jmx.reqs.persec.RequestCount", Double ]
 
     JmxSensorEffectorTool jmxTool;
 
-    public void start(Map properties=[:], GroupEntity parent=null, Location loc=null) {
+	//TODO hack reference (for shutting down), need a cleaner way -- e.g. look up in the app's executor service for this entity
+	ScheduledFuture jmxMonitoringTask;
+
+    public void start(Map properties=[:], Group parent=null, Location loc=null) {
         EntityStartUtils.startEntity(properties, this, parent, loc);
-        println "Started."
-        +" jmxHost is "+this.properties['jmxHost']
-		+" and jmxPort is "+this.properties['jmxPort'];
+		logger.trace "started... jmxHost is {} and jmxPort is {}", this.properties['jmxHost'], this.properties['jmxPort']
         
         if (this.properties['jmxHost'] && this.properties['jmxPort']) {
             jmxTool = new JmxSensorEffectorTool(this.properties.jmxHost, this.properties.jmxPort)
             if (!(jmxTool.connect(2*60*1000))) {
-                println "FAILED to connect JMX to $this"
-                throw new IllegalStateException("failed to completely start $this: "
-                    + "JMX not found at $jmxHost:$jmxPort after 60s")
+				logger.error "FAILED to connect JMX to {}", this
+                throw new IllegalStateException("failed to completely start $this: JMX not found at $jmxHost:$jmxPort after 60s")
             }
 
             //TODO get executor from app, then die when finished; why isn't schedule working???
-            Executors.newScheduledThreadPool(1)
-            .scheduleWithFixedDelay({ getJmxSensors() }, 1000, 1000, TimeUnit.MILLISECONDS)
+            jmxMonitoringTask = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay({ getJmxSensors() }, 1000, 1000, TimeUnit.MILLISECONDS)
         }
     }
 
@@ -51,24 +56,19 @@ public class JBossNode extends AbstractOverpaasEntity implements Startable {
     }
 
     public double getJmxSensors() {
-        def reqs = jmxTool.getChildrenAttributesWithTotal
-            ("Catalina:type=GlobalRequestProcessor,name=\"*\"")
+        def reqs = jmxTool.getChildrenAttributesWithTotal("Catalina:type=GlobalRequestProcessor,name=\"*\"")
         reqs.put "timestamp", System.currentTimeMillis()
-        Map prev = activity.update(["jmx", "reqs", "global"], reqs)
+        //update to explicit location in activity map, but not linked to sensor so probably shouldn't be used too widely 
+        Map prev = activity.update(["jmx","reqs","global"], reqs)
         double diff = (reqs?.totals?.requestCount ?: 0) - (prev?.totals?.requestCount ?: 0)
         long dt = (reqs?.timestamp ?: 0) - (prev?.timestamp ?: 0)
         if (dt <= 0 || dt > 60*1000) diff = -1; else diff = ((double)1000.0*diff)/dt
-        println "computed $diff reqs/sec over $dt millis "
-            + "for JMX JBoss process at $jmxHost:$jmxPort"
+        logger.trace "computed $diff reqs/sec over $dt millis for JMX jboss process at $jmxHost:$jmxPort"
+        
+        //is a sensor, should generate update events against subscribers
         activity.update(REQUESTS_PER_SECOND, diff)
         diff
     }
-
-    public static final ActivitySensor<Integer> REQUESTS_PER_SECOND = [
-        "Reqs/Sec",
-        "jmx.reqs.persec.RequestCount",
-        Double
-    ]
 
     public void shutdown() {
         if (jmxMonitoringTask) jmxMonitoringTask.cancel true
@@ -117,7 +117,4 @@ public class JBossNode extends AbstractOverpaasEntity implements Startable {
             //          println "done invoking shutdown script"
         }
     }
-
-
-
 }

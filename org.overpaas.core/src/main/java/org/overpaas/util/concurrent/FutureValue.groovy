@@ -1,17 +1,22 @@
-package org.overpaas.util
+package org.overpaas.util.concurrent
 
+import groovy.lang.Closure
+import groovy.time.TimeDuration
 
-import groovy.lang.Closure;
-import groovy.time.TimeDuration;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit 
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.CancellationException;
+import java.util.concurrent.CancellationException
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.Future
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
+import org.overpaas.util.TimeExtras
 
+/**
+ * A future value.
+ * 
+ * @author alex
+ */
 public class FutureValue<T> implements QualifiableFuture<T> {
-
 	private final Closure expression;
 	private final Closure validity;
 

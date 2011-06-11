@@ -1,8 +1,10 @@
-package org.overpaas.core.types
-
-import org.overpaas.core.decorators.OverpaasEntity;
+package org.overpaas.types
 
 import groovy.transform.InheritConstructors;
+
+import java.util.Map;
+
+import org.overpaas.entities.Entity;
 
 public abstract class Sensor<T> {
 	public final String name;
@@ -39,7 +41,7 @@ public class LogSensor<T> extends Sensor<T> {
 
 public class SensorEvent<T> {
 	Sensor<T> sensor
-	OverpaasEntity entity
+	Entity entity
 	T value
 	public T get() { value }
 }

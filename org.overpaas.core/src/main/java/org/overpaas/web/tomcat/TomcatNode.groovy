@@ -1,39 +1,38 @@
 package org.overpaas.web.tomcat
 
-import groovy.transform.InheritConstructors
+import groovy.transform.InheritConstructors;
 
-import java.util.Collection
-import java.util.Map
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledFuture
-import java.util.concurrent.TimeUnit
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+
+import org.overpaas.decorators.Startable;
+import org.overpaas.entities.AbstractEntity;
+import org.overpaas.entities.Group;
+import org.overpaas.locations.SshBasedJavaAppSetup;
+import org.overpaas.locations.SshMachineLocation;
+import org.overpaas.types.ActivitySensor;
+import org.overpaas.types.Location;
+import org.overpaas.util.EntityStartUtils;
+import org.overpaas.util.JmxSensorEffectorTool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.overpaas.core.decorators.GroupEntity;
-import org.overpaas.core.decorators.Location;
-import org.overpaas.core.decorators.Startable;
-import org.overpaas.core.locations.SshMachineLocation
-import org.overpaas.core.locations.SshMachineLocation.SshBasedJavaAppSetup
-import org.overpaas.core.types.ActivitySensor
-import org.overpaas.core.types.common.AbstractOverpaasEntity
-import org.overpaas.core.types.common.EntityStartUtils
-import org.overpaas.util.JmxSensorEffectorTool
 
 /**
  * An entity that represents a single Tomcat instance.
  * 
- * @author richardcloudsoft; Richard Downer <richard.downer@cloudsoftcorp.com>
+ * @author Richard Downer <richard.downer@cloudsoftcorp.com>
  */
 @InheritConstructors
-public class TomcatNode extends AbstractOverpaasEntity implements Startable {
-
-	private static final Logger logger = LoggerFactory.getLogger(TomcatNode.class);;
+public class TomcatNode extends AbstractEntity implements Startable {
+	private static final Logger logger = LoggerFactory.getLogger(TomcatNode.class)
 	
 	public static final ActivitySensor<Integer> REQUESTS_PER_SECOND = [ "Reqs/Sec", "webapp.reqs.persec.RequestCount", Double ]
 
 	static {
-		TomcatNode.metaClass.startInLocation = { GroupEntity parent, SshMachineLocation loc -> new Tomcat7SshSetup(delegate).start loc }
+		TomcatNode.metaClass.startInLocation = { Group parent, SshMachineLocation loc -> new Tomcat7SshSetup(delegate).start loc }
 		TomcatNode.metaClass.shutdownInLocation = { SshMachineLocation loc -> new Tomcat7SshSetup(delegate).shutdown loc }
         TomcatNode.metaClass.deploy = { String file, SshMachineLocation loc -> 
             new Tomcat7SshSetup(delegate).deploy(new File(file), loc)
@@ -45,7 +44,7 @@ public class TomcatNode extends AbstractOverpaasEntity implements Startable {
 	//TODO hack reference (for shutting down), need a cleaner way -- e.g. look up in the app's executor service for this entity
 	ScheduledFuture jmxMonitoringTask;
 
-	public void start(Map properties=[:], GroupEntity parent=null, Location location=null) {
+	public void start(Map properties=[:], Group parent=null, Location location=null) {
 		EntityStartUtils.startEntity properties, this, parent, location
 		logger.trace "started... jmxHost is {} and jmxPort is {}", this.properties['jmxHost'], this.properties['jmxPort']
 		
