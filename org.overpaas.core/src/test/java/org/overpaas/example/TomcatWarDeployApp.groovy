@@ -16,7 +16,7 @@ import org.overpaas.web.tomcat.TomcatNode
  * @author sam
  */
 public class TomcatWarDeployApp extends AbstractApplication {
-    Cluster tc = new TomcatCluster(displayName:'MyTomcat', initialSize:3, this);
+	TomcatCluster tc = new TomcatCluster(displayName:'MyTomcat', initialSize:3, this);
 
 	public static void main(String[] args) {
         
