@@ -7,8 +7,14 @@ import java.util.Collection
 import java.util.Map
 import java.util.concurrent.CopyOnWriteArrayList
 
+import org.overpaas.event.EventFilter;
+import org.overpaas.event.EventListener;
 import org.overpaas.types.Activity
+import org.overpaas.types.SensorEvent;
 import org.overpaas.util.LanguageUtils
+
+import com.google.common.base.Predicate;
+
 
 public interface Entity extends Serializable {
     String getDisplayName();
@@ -33,6 +39,11 @@ public interface Entity extends Serializable {
 
     Collection<? extends Field> getSensors();
     Collection<? extends Method> getEffectors();
+    
+    void subscribe(EventFilter filter, EventListener listener);
+    void subscribe(Predicate<Entity> entities, EventFilter filter, EventListener listener);
+
+    void raiseEvent(SensorEvent<?> event);
 }
 
 /**
@@ -164,4 +175,13 @@ public abstract class AbstractEntity implements Entity {
         // TODO find all fields here (or in delegates) annotated with @Effector ?
         return null;
     }
+    
+    /** TODO */
+    void subscribe(EventFilter filter, EventListener listener) { }
+    
+    /** TODO */
+    void subscribe(Predicate<Entity> entities, EventFilter filter, EventListener listener) { }
+
+    /** TODO */
+    void raiseEvent(SensorEvent<?> event) { }
 }

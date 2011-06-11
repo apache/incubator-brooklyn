@@ -40,8 +40,14 @@ public class Activity {
 //		println "  split regex is "+sensor.field.split("\\.")
 		update( sensor.field.split("\\.") as List, newValue )
 
-				
 		//TODO notify subscribers!
+				
+        SensorEvent<T> event = new SensorEvent<T>();
+        event.sensor = sensor;
+        event.entity = entity;
+        event.value = newValue;
+        entity.raiseEvent event
+        
 //		entity.getApplication().getSubscriptionManager().fire(entity, sensor, newValue)
 		// so that a policy could say e.g.
 		//application.subscribe(entity, sensor)
