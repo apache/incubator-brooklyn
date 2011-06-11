@@ -203,6 +203,23 @@
 			<build>
 				<plugins>
 					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>findbugs-maven-plugin</artifactId>
+						<version>2.3.2</version>
+						<configuration>
+						  <xmlOutput>true</xmlOutput>
+						  <xmlOutputDirectory>target/site</xmlOutputDirectory>
+						</configuration>
+						<executions>
+							<execution>
+								<phase>process-classes</phase>
+								<goals>
+									<goal>findbugs</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
 						<artifactId>maven-source-plugin</artifactId>
 					</plugin>
 					<plugin>
