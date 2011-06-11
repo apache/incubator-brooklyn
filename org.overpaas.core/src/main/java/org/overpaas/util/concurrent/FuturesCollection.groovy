@@ -48,7 +48,7 @@ public class FuturesCollection<T> extends ArrayList<Future<T>> implements Future
 		collect { Future f -> f.get() }
 	}
 
-	public Object get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+	public Collection<T> get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
 		def v = Futures.run(collect { Future f -> { -> f.get(timeout, unit) } } )
 		v.collect { Future f -> f.get() }
 	}

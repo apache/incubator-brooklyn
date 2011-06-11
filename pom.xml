@@ -151,6 +151,7 @@
                     <execution>
                         <id>compile</id>
                         <goals>
+                            <goal>generateStubs</goal>
                             <goal>compile</goal>
                         </goals>
                         <configuration>
@@ -159,7 +160,6 @@
                                     <directory>${pom.basedir}/src/main/java</directory>
                                     <includes>
                                         <include>**/*.groovy</include>
-                                        <include>**/*.java</include>
                                     </includes>
                                 </fileset>
                             </sources>
@@ -169,6 +169,7 @@
                     <execution>
                         <id>testCompile</id>
                         <goals>
+                            <goal>generateTestStubs</goal>
                             <goal>testCompile</goal>
                         </goals>
                         <configuration>
@@ -177,7 +178,6 @@
                                     <directory>${pom.basedir}/src/test/java</directory>
                                     <includes>
                                         <include>**/*.groovy</include>
-                                        <include>**/*.java</include>
                                     </includes>
                                 </fileset>
                             </sources>

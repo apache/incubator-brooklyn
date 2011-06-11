@@ -9,7 +9,9 @@ import org.overpaas.entities.Entity;
 public abstract class Sensor<T> {
 	public final String name;
 	public final Class<T> type;
-	
+    
+    public Sensor() { this([:]) }
+	 
 	public Sensor(Map m) { super(m) }
 	
 	protected Sensor(String name, Class<T> type) {

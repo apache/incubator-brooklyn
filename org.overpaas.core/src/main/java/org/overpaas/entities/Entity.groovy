@@ -34,11 +34,11 @@ public interface Entity extends Serializable {
     // e.g. jmxHost / jmxPort are handled as properties.
     Map<String,Object> getProperties();
 
-    Collection<? extends Group> getParents();
+    Collection<Group> getParents();
     void addParent(Group e);
 
-    Collection<? extends Field> getSensors();
-    Collection<? extends Method> getEffectors();
+    Collection<Field> getSensors();
+    Collection<Method> getEffectors();
     
     void subscribe(EventFilter filter, EventListener listener);
     void subscribe(Predicate<Entity> entities, EventFilter filter, EventListener listener);
@@ -90,7 +90,7 @@ public abstract class AbstractEntity implements Entity {
     Application application
 
     @Override
-    public Collection<? extends Group> getParents() {
+    public Collection<Group> getParents() {
         return Collections.unmodifiableCollection(parents);
     }
 
@@ -164,14 +164,12 @@ public abstract class AbstractEntity implements Entity {
 
     public final Activity activity = new Activity(this)
 
-    @Override
-    public Collection<? extends Field> getSensors() {
+    public Collection<Field> getSensors() {
         // TODO find all fields here (or in delegates?) which are Sensor objects (statics only? statics and fields? include entity properties map?)
         return null;
     }
 
-    @Override
-    public Collection<? extends Method> getEffectors() {
+    public Collection<Method> getEffectors() {
         // TODO find all fields here (or in delegates) annotated with @Effector ?
         return null;
     }

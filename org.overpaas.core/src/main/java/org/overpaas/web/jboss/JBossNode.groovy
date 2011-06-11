@@ -83,6 +83,12 @@ public class JBossNode extends AbstractEntity implements Startable {
 
         JBossNode entity
         String runDir
+        
+        public JBossSshSetup(JBossNode entity) {
+            super(entity)
+            this.entity = entity
+            runDir = appBaseDir + "/" + "jboss-"+entity.id
+        }
 
         public String getInstallScript() {
             def url = "http://downloads.sourceforge.net/project/jboss/JBoss/JBoss-$version/jboss-as-distribution-$version.zip?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fjboss%2Ffiles%2FJBoss%2F$version%2F&ts=1307104229&use_mirror=kent"
