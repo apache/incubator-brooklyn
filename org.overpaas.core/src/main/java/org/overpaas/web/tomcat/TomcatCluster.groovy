@@ -10,8 +10,4 @@ public class TomcatCluster extends ClusterFromTemplate {
 	public TomcatCluster(Map props=[:], Group parent) {
 		super(props, parent, new TomcatNode())
 	}
-	
-	public List shrink(int arg0) {
-		throw new UnsupportedOperationException("shrink not implemented yet")
-	}
 }

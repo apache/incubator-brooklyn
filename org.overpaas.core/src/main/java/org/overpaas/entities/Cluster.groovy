@@ -1,7 +1,5 @@
 package org.overpaas.entities
 
-import groovy.transform.InheritConstructors;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +9,8 @@ import org.overpaas.decorators.Resizable;
 import org.overpaas.decorators.Startable;
 import org.overpaas.types.Location;
 import org.overpaas.types.SingleLocation;
+import org.overpaas.util.EntityStartUtils;
+import org.overpaas.util.OverpaasDsl;
 
 /**
  * intended to represent a group of homogeneous entities in a single location;
@@ -18,8 +18,7 @@ import org.overpaas.types.SingleLocation;
  * caller must supply location as field either in constructor or call to start;
  * initialSize property determines initial size when started (defaults to 1)
  */
-@InheritConstructors
-public abstract class Cluster<T extends Entity> extends Tier implements Startable, SingleLocation {
+public abstract class Cluster extends Tier implements Startable, SingleLocation {
 	public Cluster(Map props=[:], Group parent) {
 		super(props, parent)
 	}
@@ -33,7 +32,7 @@ public abstract class Cluster<T extends Entity> extends Tier implements Startabl
 }
 
 public abstract class ClusterFromTemplate extends Cluster implements Resizable {
-	Entity template=null
+	Entity template = null
 	
 	public ClusterFromTemplate(Map properties=[:], Group parent=null, Entity template=null) {
 		super(properties, parent)
@@ -45,23 +44,24 @@ public abstract class ClusterFromTemplate extends Cluster implements Resizable {
 		desiredIncrease.times { nodes += EntityStartUtils.createFromTemplate(this, template) }
 		OverpaasDsl.run( nodes.collect({ node -> { -> node.start() } }) as Closure[] )
 	}
-//	public List<Future> shrink(int desiredDecrease) {
-//		throw new UnsupportedOperationException()
-//	}
+
+	public List<Future> shrink(int desiredDecrease) {
+		throw new UnsupportedOperationException()
+	}
 
 	int initialSize = 1
 
 	public synchronized void start(Map addlProperties=[:]) {
 		properties << addlProperties
-
-		//		println "starting $this cluster with properties "+properties+", size $initialSize"
 		if (!(initialSize in Integer))
 			throw new IllegalArgumentException('cluster initial size must be an integer')
+
+		log.debug "starting $this cluster with properties {} and size $initialSize", properties
 
 		int newNodes = initialSize - children.size()
 		if (newNodes>0) grow(newNodes)
 		else {
-			println "start of $this cluster skipping call to start with size $initialSize because size is currently "+children.size()
+			log.info "start of $this cluster skipping call to start with size $initialSize because size is currently {}", children.size()
 		}
 	}
 
@@ -71,5 +71,4 @@ public abstract class ClusterFromTemplate extends Cluster implements Resizable {
 		else if (newNodes<0) shrink(-newNodes);
 		else []
 	}
-
 }

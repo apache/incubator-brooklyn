@@ -14,8 +14,8 @@ import org.overpaas.web.tomcat.TomcatNode
  * 
  * @author alex
  */
-public class SimpleTomcatApp extends AbstractApplication {
-    Cluster tc = new TomcatCluster(displayName:'MyTomcat', initialSize:3, this);
+public class SimpleTomcatApp { //extends AbstractApplication {
+//    Cluster tc = new TomcatCluster(displayName:'MyTomcat', initialSize:3, this);
 
 	public static void main(String[] args) {
 		def app = new SimpleTomcatApp()

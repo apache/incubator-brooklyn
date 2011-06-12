@@ -1,13 +1,13 @@
 package org.overpaas.locations;
 
+import groovy.util.logging.Slf4j;
+
 import java.io.File
 import java.util.Map
 
 import org.overpaas.entities.Entity
 import org.overpaas.types.Location
 import org.overpaas.util.SshJschTool
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 public class SshMachineLocation implements Location {
 	String name
@@ -57,9 +57,8 @@ public class SshMachineLocation implements Location {
 // ssh_askpass: exec(/usr/libexec/ssh-askpass): No such file or directory
 // Received disconnect from ::1: 2: Too many authentication failures for alex 
 
+@Slf4j
 public abstract class SshBasedJavaAppSetup {
-    private static final Logger logger = LoggerFactory.getLogger(SshBasedJavaAppSetup.class);;
-        
 	String overpaasBaseDir = "/tmp/overpaas"
 	String installsBaseDir = overpaasBaseDir+"/installs"
 
@@ -74,12 +73,12 @@ public abstract class SshBasedJavaAppSetup {
 	protected int getNextValue(String field, int initial) {
 		def v = entity.properties[field]
 		if (!v) {
-			println "retrieving "+field+", "+entity.location.properties
+			log.debug "retrieving {}, {}", field, entity.location.properties
 			synchronized (entity.location) {
 				v = entity.location.properties["next_"+field] ?: initial
 				entity.location.properties["next_"+field] = (v+1)
 			}
-			println "retrieved "+field+", "+entity.location.properties
+			log.debug "retrieved {}, {}", field, entity.location.properties
 			entity.properties[field] = v
 		}
 		v
@@ -90,7 +89,7 @@ public abstract class SshBasedJavaAppSetup {
 	}
  
 	public int getJmxPort() {
-		println "setting jmxHost on $entity as "+entity.location.host
+		log.debug "setting jmxHost on $entity as {}", entity.location.host
 		entity.properties.jmxHost = entity.location.host
 		getNextValue("jmxPort", 10100)
 	}
@@ -144,9 +143,9 @@ exit
         if (deployScript) {
             int result = loc.run(out:System.out, deployScript)
             if (result) {
-                logger.error "Failed to deploy $f to $loc"
+                log.error "Failed to deploy $f to $loc"
             } else {
-                logger.trace "Deployed $f to $loc"
+                log.debug "Deployed $f to $loc"
             }
         }
     }

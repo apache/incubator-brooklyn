@@ -20,27 +20,27 @@ public class DynamicGroup extends AbstractGroup {
 		rescanEntities()
 	}
 	
+    @Override
 	protected synchronized void registerWithApplication(Application app) {
 		super.registerWithApplication(app)
-		((ObservableMap)app.entities).addPropertyChangeListener( { rescanEntities() } as PropertyChangeListener );
+		app.addEntityChangeListener({ rescanEntities() })
 		rescanEntities()
 	}
 	
 	public void rescanEntities() {
 		//TODO extremely inefficient; should act on the event!
 		if (!entityFilter) {
-			println "not (yet) scanning for children of $this: no filter defined"
+			log.info "not (yet) scanning for children of $this: no filter defined"
 			return
 		}
 		if (!getApplication()) return
 		Set childrenSet = getChildren() as HashSet
-		println "scanning "+getApplication().getEntities()
-		getApplication().getEntities().values().each {
+		log.info "scanning {}", getApplication().getEntities()
+		getApplication().getEntities().each {
 			if (entityFilter.call(it)) {
 				if (childrenSet.add(it))
 					addChild(it)
 			}
 		}
 	}
-
 }

@@ -4,7 +4,6 @@ import java.util.Map;
 
 import org.overpaas.decorators.Startable;
 
-//@InheritConstructors
 public abstract class Tier extends AbstractGroup {
 	public Tier(Map props=[:], Group parent) {
 		super(props, parent)

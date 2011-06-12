@@ -1,12 +1,14 @@
 package org.overpaas.types;
 
+import groovy.util.logging.Slf4j;
+
 import java.util.Collection;
 import java.util.Map;
 
 import org.overpaas.entities.Entity;
 
+@Slf4j
 public class Activity {
-
 	Entity entity;
 	Map values = [:];
 	
@@ -21,7 +23,7 @@ public class Activity {
 		path.each { 
 			if (!(val in Map)) {
 				if (val!=null)
-					println "WARNING: wrong type of value encountered when setting $path; expected map at $key but found $val; overwriting"
+					log.debug "wrong type of value encountered when setting $path; expected map at $key but found $val; overwriting"
 				val = [:]
 				map.put(key, val)
 			}
@@ -29,15 +31,13 @@ public class Activity {
 			key = it
 			val = map.get(it)
 		}
-//		println "putting at $path, $key under $map"
+		log.debug "putting at $path, $key under $map"
 		def oldValue = map.put(key, newValue)
 		// assert val == oldValue
 	}
 	
 	public <T> Object update(ActivitySensor<T> sensor, T newValue) {
-//		println "sensor $sensor field is "+sensor.field
-//		println "  split is "+sensor.field.split(".")
-//		println "  split regex is "+sensor.field.split("\\.")
+		log.debug "sensor $sensor field {} set to {}", sensor.field, newValue
 		update( sensor.field.split("\\.") as List, newValue )
 
 		//TODO notify subscribers!

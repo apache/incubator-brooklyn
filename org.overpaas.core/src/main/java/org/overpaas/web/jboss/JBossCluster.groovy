@@ -14,8 +14,4 @@ public class JBossCluster extends ClusterFromTemplate {
     public JBossCluster(Map props=[:], Group parent) {
         super(props, parent, new JBossNode())
     }
- 
-    public List shrink(int arg0) {
-        throw new UnsupportedOperationException("shrink not implemented yet")
-    }
 }

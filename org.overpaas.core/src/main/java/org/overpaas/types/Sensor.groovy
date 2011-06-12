@@ -1,6 +1,7 @@
 package org.overpaas.types
 
 import groovy.transform.InheritConstructors;
+import groovy.util.logging.Slf4j;
 
 import java.util.Map;
 
@@ -40,10 +41,14 @@ public class ExceptionSensor<T> extends Sensor<T> {
 public class LogSensor<T> extends Sensor<T> {
 }
 
-
 public class SensorEvent<T> {
 	Sensor<T> sensor
 	Entity entity
 	T value
-	public T get() { value }
+    
+    public SensorEvent(Sensor<T> sensor, Entity entity, T value) {
+        this.sensor = sensor
+        this.entity = entity
+        this.value = value
+    }
 }

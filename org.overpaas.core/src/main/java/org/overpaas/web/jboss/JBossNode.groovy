@@ -1,6 +1,7 @@
 package org.overpaas.web.jboss
 
 import groovy.transform.InheritConstructors
+import groovy.util.logging.Slf4j;
 
 import java.util.Map
 import java.util.concurrent.Executors
@@ -16,16 +17,13 @@ import org.overpaas.types.ActivitySensor
 import org.overpaas.types.Location
 import org.overpaas.util.EntityStartUtils
 import org.overpaas.util.JmxSensorEffectorTool
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 /**
  * JBoss web application server.
  */
 @InheritConstructors
+@Slf4j
 public class JBossNode extends AbstractEntity implements Startable {
-	private static final Logger logger = LoggerFactory.getLogger(JBossNode.class)
-    
     public static final ActivitySensor<Integer> REQUESTS_PER_SECOND = [ "Reqs/Sec", "jmx.reqs.persec.RequestCount", Double ]
 
     JmxSensorEffectorTool jmxTool;
@@ -35,12 +33,12 @@ public class JBossNode extends AbstractEntity implements Startable {
 
     public void start(Map properties=[:], Group parent=null, Location loc=null) {
         EntityStartUtils.startEntity(properties, this, parent, loc);
-		logger.trace "started... jmxHost is {} and jmxPort is {}", this.properties['jmxHost'], this.properties['jmxPort']
+		log.debug "started... jmxHost is {} and jmxPort is {}", this.properties['jmxHost'], this.properties['jmxPort']
         
         if (this.properties['jmxHost'] && this.properties['jmxPort']) {
             jmxTool = new JmxSensorEffectorTool(this.properties.jmxHost, this.properties.jmxPort)
             if (!(jmxTool.connect(2*60*1000))) {
-				logger.error "FAILED to connect JMX to {}", this
+				log.error "FAILED to connect JMX to {}", this
                 throw new IllegalStateException("failed to completely start $this: JMX not found at $jmxHost:$jmxPort after 60s")
             }
 
@@ -63,7 +61,7 @@ public class JBossNode extends AbstractEntity implements Startable {
         double diff = (reqs?.totals?.requestCount ?: 0) - (prev?.totals?.requestCount ?: 0)
         long dt = (reqs?.timestamp ?: 0) - (prev?.timestamp ?: 0)
         if (dt <= 0 || dt > 60*1000) diff = -1; else diff = ((double)1000.0*diff)/dt
-        logger.trace "computed $diff reqs/sec over $dt millis for JMX jboss process at $jmxHost:$jmxPort"
+        log.debug "computed $diff reqs/sec over $dt millis for JMX jboss process at $jmxHost:$jmxPort"
         
         //is a sensor, should generate update events against subscribers
         activity.update(REQUESTS_PER_SECOND, diff)
@@ -114,13 +112,11 @@ public class JBossNode extends AbstractEntity implements Startable {
         }
 
         public void shutdown(SshMachineLocation loc) {
-            //          println "invoking shutdown script"
             //we use kill -9 rather than shutdown.sh because the latter is not 100% reliable
             def result =  loc.run(out: System.out,
                                   "cd $runDir && echo killing process `cat pid.txt` on `hostname` "
                                   + "&& kill -9 `cat pid.txt` && rm pid.txt ; exit")
-            if (result) println "WARNING: non-zero result code terminating "+entity+": "+result
-            //          println "done invoking shutdown script"
+			if (result) log.info "non-zero result code terminating {}: {}", entity, result
         }
     }
 }

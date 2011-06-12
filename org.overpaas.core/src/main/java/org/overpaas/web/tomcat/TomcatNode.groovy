@@ -1,6 +1,7 @@
 package org.overpaas.web.tomcat
 
 import groovy.transform.InheritConstructors;
+import groovy.util.logging.Slf4j;
 
 import java.util.Collection;
 import java.util.Map;
@@ -17,8 +18,6 @@ import org.overpaas.types.ActivitySensor;
 import org.overpaas.types.Location;
 import org.overpaas.util.EntityStartUtils;
 import org.overpaas.util.JmxSensorEffectorTool;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * An entity that represents a single Tomcat instance.
@@ -26,9 +25,8 @@ import org.slf4j.LoggerFactory;
  * @author Richard Downer <richard.downer@cloudsoftcorp.com>
  */
 @InheritConstructors
+@Slf4j
 public class TomcatNode extends AbstractEntity implements Startable {
-	private static final Logger logger = LoggerFactory.getLogger(TomcatNode.class)
-	
 	public static final ActivitySensor<Integer> REQUESTS_PER_SECOND = [ "Reqs/Sec", "webapp.reqs.persec.RequestCount", Double ]
 
 	static {
@@ -46,12 +44,12 @@ public class TomcatNode extends AbstractEntity implements Startable {
 
 	public void start(Map properties=[:], Group parent=null, Location location=null) {
 		EntityStartUtils.startEntity properties, this, parent, location
-		logger.trace "started... jmxHost is {} and jmxPort is {}", this.properties['jmxHost'], this.properties['jmxPort']
+		log.debug "started... jmxHost is {} and jmxPort is {}", this.properties['jmxHost'], this.properties['jmxPort']
 		
         if (this.properties['jmxHost'] && this.properties['jmxPort']) {
             jmxTool = new JmxSensorEffectorTool(this.properties.jmxHost, this.properties.jmxPort)
 			if (!(jmxTool.connect(60*1000))) {
-				logger.error "FAILED to connect JMX to {}", this
+				log.error "FAILED to connect JMX to {}", this
 				throw new IllegalStateException("failed to completely start $this: JMX not found at $jmxHost:$jmxPort after 60s")
 			}
 			
@@ -61,9 +59,9 @@ public class TomcatNode extends AbstractEntity implements Startable {
 		}
         if (this.war) {
             def deployLoc = location ?: this.location
-            logger.trace "Deploying {} to {}", this.war, deployLoc
+            log.debug "Deploying {} to {}", this.war, deployLoc
             this.deploy(this.war, deployLoc)
-            logger.trace "Deployed {} to {}", this.war, deployLoc
+            log.debug "Deployed {} to {}", this.war, deployLoc
         }
 	}
 	
@@ -75,7 +73,7 @@ public class TomcatNode extends AbstractEntity implements Startable {
 		double diff = (reqs?.totals?.requestCount ?: 0) - (prev?.totals?.requestCount ?: 0)
 		long dt = (reqs?.timestamp ?: 0) - (prev?.timestamp ?: 0)
 		if (dt <= 0 || dt > 60*1000) diff = -1; else diff = ((double)1000.0*diff)/dt
-		logger.trace "computed $diff reqs/sec over $dt millis for JMX tomcat process at $jmxHost:$jmxPort"
+		log.debug "computed $diff reqs/sec over $dt millis for JMX tomcat process at $jmxHost:$jmxPort"
 		
 		//is a sensor, should generate update events against subscribers
 		activity.update(REQUESTS_PER_SECOND, diff)
@@ -86,12 +84,6 @@ public class TomcatNode extends AbstractEntity implements Startable {
 	public Collection<String> toStringFieldsToInclude() {
 		return super.toStringFieldsToInclude() + ['tomcatHttpPort', 'jmxPort']
 	}
- 
-//	public void startInLocation(GroupEntity parent, Location loc) {
-//		TomcatNode tc = new TomcatNode([:], parent);
-//		loc.logEvent("starting tomcat "+tc, parent)
-//		tc
-//	}
 
 	public void shutdown() {
 		if (jmxMonitoringTask) jmxMonitoringTask.cancel true
@@ -157,12 +149,11 @@ exit"""
 		}
 	
 		public void shutdown(SshMachineLocation loc) {
-
-			logger.trace "invoking shutdown script"
+			log.debug "invoking shutdown script"
 			//we use kill -9 rather than shutdown.sh because the latter is not 100% reliable
 			def result =  loc.run(out: System.out, "cd $runDir && echo killing process `cat pid.txt` on `hostname` && kill -9 `cat pid.txt` && rm -f pid.txt ; exit")
-			if (result) println "WARNING: non-zero result code terminating "+entity+": "+result
-			logger.trace "done invoking shutdown script"
+			if (result) log.info "non-zero result code terminating {}: {}", entity, result
+			log.debug "done invoking shutdown script"
 		}
 	}
 	
