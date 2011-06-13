@@ -1,9 +1,12 @@
 package org.overpaas.types;
 
-import java.util.Collection;
-import java.util.Map;
+import java.util.Collection
+import java.util.Map
 
-import org.overpaas.entities.Entity;
+import org.overpaas.entities.Entity
+import org.overpaas.web.tomcat.TomcatNode
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 public class Activity {
 
@@ -57,4 +60,29 @@ public class Activity {
 		//(so anyone who subscribesToChildren will implicitly also subscribe to CHILDREN sensor on the entity) 
 	}
 	
+	public Object getValue(Collection<String> path) {
+		return getValueRecurse( values, path )
+	}
+	
+	public <T> T getValue(ActivitySensor<T> sensor) {
+		return getValueRecurse( values, sensor.field.split("\\.") as List )
+	}
+
+	private static Object getValueRecurse(Map node, Collection<String> path) {
+		if (node == null) throw new IllegalArgumentException("node is null")
+		if (path.size() == 0) throw new IllegalArgumentException("field name is empty")
+		
+		def key = path[0]
+		if (key == null) throw new IllegalArgumentException("head of path is null")
+		if (key.length() == 0) throw new IllegalArgumentException("head of path is empty")
+		
+		def child = node.get(key)
+		if (child == null) throw new IllegalArgumentException("node $key is not present")
+		
+		if (path.size() > 1)
+			return getValueRecurse(child, path[1..-1])
+		else
+			return child
+	}
+
 }
