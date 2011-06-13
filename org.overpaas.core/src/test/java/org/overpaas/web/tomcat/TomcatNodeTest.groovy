@@ -102,6 +102,22 @@ class TomcatNodeTest {
 			})
 	}
 	
+	@Test
+	public void deploy_web_app_appears_at_URL() {
+		Application app = new TestApplication();
+		TomcatNode tc = new TomcatNode(parent: app);
+		tc.war = "resources/hello-world.war"
+		tc.start([:], null, new SshMachineLocation(name:'london', host:'localhost'))
+		executeUntilSucceedsWithShutdown(tc, {
+				def port = tc.activity.getValue(TomcatNode.HTTP_PORT)
+				URL url = new URL("http://localhost:${port}/sample")
+				URLConnection connection = url.openConnection()
+				connection.connect()
+				int status = ((HttpURLConnection)connection).getResponseCode()
+				assertEquals 200, status
+			})
+	}
+	
 	/**
 	 * Convenience method for cases where something takes several seconds to start up and throws exceptions if used too
 	 * early. The closure is run once a second for up to 30 seconds until it completes without throwing an Exception.
