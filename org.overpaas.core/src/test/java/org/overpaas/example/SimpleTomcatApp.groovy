@@ -19,8 +19,8 @@ public class SimpleTomcatApp extends AbstractApplication {
 
 	public static void main(String[] argv) {
 		def app = new SimpleTomcatApp()
-		//TODO:
-//		app.tc.war = "/tmp/hello.war"
+        app.tc.war = "resources/hello-world.war"
+       	//TODO:
 //		app.tc.policy << new ElasticityPolicy(app.tc, TomcatCluster.REQS_PER_SEC, low:100, high:250);
 		app.tc.initialSize = 2  //override initial size
 		
