@@ -81,7 +81,7 @@ class TomcatNodeTest {
 	
 	@Test
 	public void publishes_requests_per_second_metric() {
-		Application app = new Application();
+		Application app = new TestApplication();
 		TomcatNode tc = new TomcatNode(parent: app);
 		tc.start([:], null, new SshMachineLocation(name:'london', host:'localhost'))
 		Thread.sleep 2500 // TODO this should not be necessary, but REQUESTS_PER_SECOND returns -1 until things have warmed up
