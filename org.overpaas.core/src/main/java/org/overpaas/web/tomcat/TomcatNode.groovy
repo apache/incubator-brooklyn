@@ -41,6 +41,8 @@ public class TomcatNode extends AbstractEntity implements Startable {
 		}
 	}
 
+    JmxSensorEffectorTool jmxTool;
+ 
 	//TODO hack reference (for shutting down), need a cleaner way -- e.g. look up in the app's executor service for this entity
 	ScheduledFuture jmxMonitoringTask;
 
@@ -49,7 +51,7 @@ public class TomcatNode extends AbstractEntity implements Startable {
 		log.debug "started... jmxHost is {} and jmxPort is {}", this.properties['jmxHost'], this.properties['jmxPort']
 		
 		if (this.properties['jmxHost'] && this.properties['jmxPort']) {
-			JmxSensorEffectorTool jmxTool = new JmxSensorEffectorTool(this.properties.jmxHost, this.properties.jmxPort)
+			jmxTool = new JmxSensorEffectorTool(this.properties.jmxHost, this.properties.jmxPort)
 			if (!(jmxTool.connect(60*1000))) {
 				log.error "FAILED to connect JMX to {}", this
 				throw new IllegalStateException("failed to completely start $this: JMX not found at $jmxHost:$jmxPort after 60s")
