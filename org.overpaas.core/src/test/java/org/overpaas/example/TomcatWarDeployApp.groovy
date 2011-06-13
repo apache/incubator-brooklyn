@@ -22,7 +22,7 @@ public class TomcatWarDeployApp extends AbstractApplication {
         
 		def app = new TomcatWarDeployApp()
 
-        app.tc.war = "/tmp/hello.war"
+        app.tc.war = "resources/hello-world.war"
 		app.tc.initialSize = 2  //override initial size
 		
 		EntityNavigationUtils.dump(app, "before start:  ")
