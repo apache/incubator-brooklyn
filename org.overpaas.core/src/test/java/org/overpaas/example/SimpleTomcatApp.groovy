@@ -34,14 +34,12 @@ public class SimpleTomcatApp extends AbstractApplication {
 				Thread.sleep 5000
 				app.getEntities().each { if (it in TomcatNode) {
 						println ""+it+": "+it.jmxTool?.getChildrenAttributesWithTotal("Catalina:type=GlobalRequestProcessor,name=\"*\"")
-						println "    "+it.getJmxSensors()
+                        println "Requests per second: " + it.activity.getValue(TomcatNode.REQUESTS_PER_SECOND)
 					}
 				}
 			}
 		}
 		
-//		//TODO deploy a war file
-//		
 //		println "launching a groovy shell, with 'app' set"
 //		IO io = new IO()
 //		def code = 0;

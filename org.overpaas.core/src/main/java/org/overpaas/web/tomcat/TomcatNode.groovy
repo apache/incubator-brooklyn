@@ -59,7 +59,7 @@ public class TomcatNode extends AbstractEntity implements Startable {
 			
 			//TODO get executor from app, then die when finished; why isn't schedule working???
 			//e.g. getApplication().getExecutors().
-			jmxMonitoringTask = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay({ getJmxSensors(jmxTool) }, 1000, 1000, TimeUnit.MILLISECONDS)
+			jmxMonitoringTask = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay({ updateJmxSensors() }, 1000, 1000, TimeUnit.MILLISECONDS)
 		}
         if (this.war) {
             def deployLoc = location ?: this.location
@@ -69,20 +69,29 @@ public class TomcatNode extends AbstractEntity implements Startable {
         }
 	}
 	
-	private double getJmxSensors() {
-		def reqs = jmxTool.getChildrenAttributesWithTotal("Catalina:type=GlobalRequestProcessor,name=\"*\"")
+	private void updateJmxSensors() {
+	
+        def reqs = jmxTool.getChildrenAttributesWithTotal("Catalina:type=GlobalRequestProcessor,name=\"*\"")
 		reqs.put "timestamp", System.currentTimeMillis()
-		//update to explicit location in activity map, but not linked to sensor so probably shouldn't be used too widely 
+		
+        // update to explicit location in activity map, but not linked to sensor 
+        // so probably shouldn't be used too widely 
 		Map prev = activity.update(["jmx","reqs","global"], reqs)
-		double diff = (reqs?.totals?.requestCount ?: 0) - (prev?.totals?.requestCount ?: 0)
+		
+        // Calculate requests per second
+        double diff = (reqs?.totals?.requestCount ?: 0) - (prev?.totals?.requestCount ?: 0)
 		long dt = (reqs?.timestamp ?: 0) - (prev?.timestamp ?: 0)
-		if (dt <= 0 || dt > 60*1000) diff = -1; else diff = ((double)1000.0*diff)/dt
-		int result = (int)Math.round(diff)
-		log.trace "computed $result reqs/sec over $dt millis for JMX tomcat process at $jmxHost:$jmxPort"
+        
+		if (dt <= 0 || dt > 60*1000) {
+            diff = -1; 
+		} else {
+            diff = ((double) 1000.0 * diff) / dt
+		}
+		int rps = (int) Math.round(diff)
+		log.trace "computed $rps reqs/sec over $dt millis for JMX tomcat process at $jmxHost:$jmxPort"
 		
 		//is a sensor, should generate update events against subscribers
-		activity.update(REQUESTS_PER_SECOND, result)
-		return result
+		activity.update(REQUESTS_PER_SECOND, rps)
 	}
 	
 	@Override
