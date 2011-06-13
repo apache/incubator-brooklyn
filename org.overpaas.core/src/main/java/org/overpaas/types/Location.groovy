@@ -1,7 +1,7 @@
-package org.overpaas.types;
+package org.overpaas.types
 
-import java.io.Serializable;
-import java.util.Collection;
+import java.io.Serializable
+import java.util.Collection
 
 /**
  *  Location.

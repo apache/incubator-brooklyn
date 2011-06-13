@@ -1,13 +1,17 @@
 package org.overpaas.types
 
-import groovy.transform.InheritConstructors;
-import groovy.util.logging.Slf4j;
+import groovy.transform.InheritConstructors
 
 import java.util.Map;
 
-import org.overpaas.entities.Entity;
+import org.overpaas.entities.Entity
+
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 public abstract class Sensor<T> {
+    static final Logger log = LoggerFactory.getLogger(Activity.class)
+ 
 	public final String name;
 	public final Class<T> type;
     
@@ -45,6 +49,8 @@ public class SensorEvent<T> {
 	Sensor<T> sensor
 	Entity entity
 	T value
+    
+    public SensorEvent() { /* Meh */ }
     
     public SensorEvent(Sensor<T> sensor, Entity entity, T value) {
         this.sensor = sensor

@@ -14,10 +14,10 @@ import org.overpaas.web.tomcat.TomcatNode
  * 
  * @author alex
  */
-public class SimpleTomcatApp { //extends AbstractApplication {
-//    Cluster tc = new TomcatCluster(displayName:'MyTomcat', initialSize:3, this);
+public class SimpleTomcatApp extends AbstractApplication {
+    Cluster tc = new TomcatCluster(displayName:'MyTomcat', initialSize:3, this);
 
-	public static void main(String[] args) {
+	public void main(String...argv) {
 		def app = new SimpleTomcatApp()
 		//TODO:
 //		app.tc.war = "/tmp/hello.war"
@@ -25,9 +25,7 @@ public class SimpleTomcatApp { //extends AbstractApplication {
 		app.tc.initialSize = 2  //override initial size
 		
 		EntityNavigationUtils.dump(app, "before start:  ")
-		
 		app.start location:new SshMachineLocation(name:'london', host:'localhost')
-		
 		EntityNavigationUtils.dump(app, "after start:  ")
 
 		Thread t = []

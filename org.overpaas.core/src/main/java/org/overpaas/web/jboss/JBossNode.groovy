@@ -1,7 +1,6 @@
 package org.overpaas.web.jboss
 
 import groovy.transform.InheritConstructors
-import groovy.util.logging.Slf4j;
 
 import java.util.Map
 import java.util.concurrent.Executors
@@ -22,7 +21,6 @@ import org.overpaas.util.JmxSensorEffectorTool
  * JBoss web application server.
  */
 @InheritConstructors
-@Slf4j
 public class JBossNode extends AbstractEntity implements Startable {
     public static final ActivitySensor<Integer> REQUESTS_PER_SECOND = [ "Reqs/Sec", "jmx.reqs.persec.RequestCount", Double ]
 

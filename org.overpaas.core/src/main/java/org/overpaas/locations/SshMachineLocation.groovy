@@ -1,6 +1,4 @@
-package org.overpaas.locations;
-
-import groovy.util.logging.Slf4j;
+package org.overpaas.locations
 
 import java.io.File
 import java.util.Map
@@ -9,7 +7,12 @@ import org.overpaas.entities.Entity
 import org.overpaas.types.Location
 import org.overpaas.util.SshJschTool
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 public class SshMachineLocation implements Location {
+    static final Logger log = LoggerFactory.getLogger(Location.class)
+ 
 	String name
 	String user = null
 	String host
@@ -57,8 +60,9 @@ public class SshMachineLocation implements Location {
 // ssh_askpass: exec(/usr/libexec/ssh-askpass): No such file or directory
 // Received disconnect from ::1: 2: Too many authentication failures for alex 
 
-@Slf4j
 public abstract class SshBasedJavaAppSetup {
+    static final Logger log = LoggerFactory.getLogger(SshBasedJavaAppSetup.class)
+ 
 	String overpaasBaseDir = "/tmp/overpaas"
 	String installsBaseDir = overpaasBaseDir+"/installs"
 

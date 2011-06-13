@@ -1,17 +1,16 @@
-package org.overpaas.types;
+package org.overpaas.types
 
-import groovy.util.logging.Slf4j;
-
-import java.util.Collection;
-import java.util.Map;
+import java.util.Collection
+import java.util.Map
 
 import org.overpaas.entities.Entity
-import org.overpaas.web.tomcat.TomcatNode
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-@Slf4j
 public class Activity {
+    static final Logger log = LoggerFactory.getLogger(Activity.class)
+ 
 	Entity entity;
 	Map values = [:];
 	

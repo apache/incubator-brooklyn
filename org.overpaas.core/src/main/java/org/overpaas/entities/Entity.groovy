@@ -1,7 +1,6 @@
 package org.overpaas.entities
 
 import groovy.util.ObservableMap;
-import groovy.util.logging.Slf4j
 
 import java.io.Serializable
 import java.lang.reflect.Field
@@ -16,6 +15,9 @@ import org.overpaas.types.Activity
 import org.overpaas.types.SensorEvent
 import org.overpaas.util.LanguageUtils
 import org.overpaas.util.SerializableObservables.SerializableObservableList;
+
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 import com.google.common.base.Predicate;
 
@@ -69,10 +71,11 @@ public interface Entity extends Serializable {
  *
  * @author alex
  */
-@Slf4j
 public abstract class AbstractEntity implements Entity {
-    final String id = LanguageUtils.newUid();
-    final Map<String,Object> presentationAttributes = [:]
+    static final Logger log = LoggerFactory.getLogger(Entity.class);
+ 
+    String id = LanguageUtils.newUid();
+    Map<String,Object> presentationAttributes = [:]
     
     String displayName;
     

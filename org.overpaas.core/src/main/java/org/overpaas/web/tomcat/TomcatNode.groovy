@@ -25,7 +25,6 @@ import org.overpaas.util.JmxSensorEffectorTool;
  * @author Richard Downer <richard.downer@cloudsoftcorp.com>
  */
 @InheritConstructors
-@Slf4j
 public class TomcatNode extends AbstractEntity implements Startable {
 	public static final ActivitySensor<Integer> REQUESTS_PER_SECOND = [ "Reqs/Sec", "webapp.reqs.persec.RequestCount", Integer ]
 	public static final ActivitySensor<Integer> HTTP_PORT = [ "Reqs/Sec", "webapp.http.port", Integer ]

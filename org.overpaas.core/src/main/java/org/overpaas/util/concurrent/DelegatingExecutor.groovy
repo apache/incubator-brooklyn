@@ -9,6 +9,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 class DelegatingExecutor implements Executor {
 	ExecutorService executor = Executors.newCachedThreadPool();
@@ -37,9 +38,8 @@ class DelegatingExecutor implements Executor {
 	public void preTask() {}
 	public void postTask() {}
 		
-	public Callable<?> asWrappedCallable(final Closure c) {
-		return new Callable<?>() {
-			@Override
+	public <T> Callable<T> asWrappedCallable(final Closure<T> c) {
+		return new Callable() {
 			public Object call() throws Exception {
 				try {
 					preTask?.run()
@@ -49,8 +49,10 @@ class DelegatingExecutor implements Executor {
 		};
 	}
 	
-	public List<Future<?>> executeAll(final Closure ...c) {
-		if (timeout) new FuturesCollection(executor.invokeAll( c.collect { asWrappedCallable(it) }, timeout.toMilliseconds(), TimeUnit.MILLISECONDS ));
-		else new FuturesCollection(executor.invokeAll( c.collect { asWrappedCallable(it) } ))
+	public <T> List<Future<T>> executeAll(final Closure<T>...c) {
+		if (timeout)
+            new FuturesCollection<T>(executor.invokeAll(c.collect { asWrappedCallable(it) }, timeout.toMilliseconds(), TimeUnit.MILLISECONDS));
+		else
+            new FuturesCollection<T>(executor.invokeAll(c.collect { asWrappedCallable(it) }))
 	}
 }

@@ -1,6 +1,7 @@
 package org.overpaas.util
 
 import groovy.lang.Closure
+import groovy.util.logging.Slf4j;
 
 import java.util.Map
 
@@ -9,6 +10,8 @@ import org.overpaas.entities.Entity
 import org.overpaas.entities.Group
 import org.overpaas.types.Location
 import org.overpaas.util.LanguageUtils.FieldVisitor
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Entity startup utilities.
