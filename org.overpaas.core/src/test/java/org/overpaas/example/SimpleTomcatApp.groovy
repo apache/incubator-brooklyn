@@ -83,7 +83,7 @@ public class SimpleTomcatApp extends AbstractApplication {
 		
 		//TODO find a better way to shutdown a cluster?
 		println "shutting down..."
-		app.entities.values().each { if (it in TomcatNode) it.shutdown() }
+		app.getEntities().each { if (it in TomcatNode) it.shutdown() }
 		//TODO there is still an executor service running, not doing anything but not marked as a daemon,
 		//so doesn't quit immediately (i think it will time out but haven't verified)
 		//app shutdown should exist and handle that???

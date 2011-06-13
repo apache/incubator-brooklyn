@@ -69,7 +69,7 @@ public class TomcatNode extends AbstractEntity implements Startable {
         }
 	}
 	
-	private double getJmxSensors(JmxSensorEffectorTool jmxTool) {
+	private double getJmxSensors() {
 		def reqs = jmxTool.getChildrenAttributesWithTotal("Catalina:type=GlobalRequestProcessor,name=\"*\"")
 		reqs.put "timestamp", System.currentTimeMillis()
 		//update to explicit location in activity map, but not linked to sensor so probably shouldn't be used too widely 
