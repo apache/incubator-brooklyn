@@ -51,8 +51,8 @@ class DelegatingExecutor implements Executor {
 	
 	public List<Future<?>> executeAll(final Closure...c) {
 		if (timeout)
-            new FuturesCollection(executor.invokeAll(c.collect { asWrappedCallable(it) }, timeout.toMilliseconds(), TimeUnit.MILLISECONDS));
+            executor.invokeAll(c.collect { asWrappedCallable(it) }, timeout.toMilliseconds(), TimeUnit.MILLISECONDS)
 		else
-            new FuturesCollection(executor.invokeAll(c.collect { asWrappedCallable(it) }))
+            executor.invokeAll(c.collect { asWrappedCallable(it) })
 	}
 }
