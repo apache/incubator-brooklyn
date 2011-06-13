@@ -32,7 +32,7 @@ public class SimpleTomcatApp extends AbstractApplication {
 		t.start {
 			while (!t.isInterrupted()) {
 				Thread.sleep 5000
-				app.entities.values().each { if (it in TomcatNode) {
+				app.getEntities().each { if (it in TomcatNode) {
 						println ""+it+": "+it.jmxTool?.getChildrenAttributesWithTotal("Catalina:type=GlobalRequestProcessor,name=\"*\"")
 						println "    "+it.getJmxSensors()
 					}

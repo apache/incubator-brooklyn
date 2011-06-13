@@ -13,17 +13,16 @@ import java.util.concurrent.TimeoutException
 
 
 public class Futures {
-	
 	private Futures() {}
 	
 	/** runs the given closures simultaneously; can optionally be give a timeout (in TimeDuration, after which jobs are cancelled) and/or an ExecutorService executor */
 	//TODO rather than cancel after timeout (the default), we could simply apply the timeout to waitFor
-	static FuturesCollection run(Map m=[:], Closure ...c) {
+	static List<Future<?>> run(Map m=[:], Closure ...c) {
 		List<Future> result = start(m, c)
 		waitFor(result);
 		result
 	}
-	static FuturesCollection start(Map m=[:], Closure ...c) {
+	static List<Future<?>> start(Map m=[:], Closure ...c) {
 		Map m2 = new LinkedHashMap(m);
 		DelegatingExecutor ex = new DelegatingExecutor(m2);
 		List<Future> result = ex.executeAll(c)
@@ -31,7 +30,7 @@ public class Futures {
 		result
 	}
 	
-	static FuturesCollection waitFor(Collection<Future<?>> futures) {
+	static List<Future<?>> waitFor(Collection<Future<?>> futures) {
 		def problems = []
 		futures.each { try { it.get() } catch (Exception e) { if (!(e in TimeoutException) && !(e in CancellationException)) problems += e } }
 		if (problems) {
@@ -72,6 +71,5 @@ public class Futures {
 		}
 		return v
 	}
-	
 }
 
