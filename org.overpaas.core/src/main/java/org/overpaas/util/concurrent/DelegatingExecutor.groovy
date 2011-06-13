@@ -38,7 +38,7 @@ class DelegatingExecutor implements Executor {
 	public void preTask() {}
 	public void postTask() {}
 		
-	public <T> Callable<T> asWrappedCallable(final Closure<T> c) {
+	public Callable asWrappedCallable(final Closure c) {
 		return new Callable() {
 			public Object call() throws Exception {
 				try {
@@ -49,10 +49,10 @@ class DelegatingExecutor implements Executor {
 		};
 	}
 	
-	public <T> List<Future<T>> executeAll(final Closure<T>...c) {
+	public List<Future<?>> executeAll(final Closure...c) {
 		if (timeout)
-            new FuturesCollection<T>(executor.invokeAll(c.collect { asWrappedCallable(it) }, timeout.toMilliseconds(), TimeUnit.MILLISECONDS));
+            new FuturesCollection(executor.invokeAll(c.collect { asWrappedCallable(it) }, timeout.toMilliseconds(), TimeUnit.MILLISECONDS));
 		else
-            new FuturesCollection<T>(executor.invokeAll(c.collect { asWrappedCallable(it) }))
+            new FuturesCollection(executor.invokeAll(c.collect { asWrappedCallable(it) }))
 	}
 }
