@@ -35,7 +35,7 @@ public class TomcatWarDeployApp extends AbstractApplication {
 		t.start {
 			while (!t.isInterrupted()) {
 				Thread.sleep 5000
-				app.entities.values().each { 
+				app.entities.each { 
                     if (it in TomcatNode) {
 						println ""+it+": "+it.jmxTool?.getChildrenAttributesWithTotal("Catalina:type=GlobalRequestProcessor,name=\"*\"")
 						println "    "+it.getJmxSensors()
@@ -50,7 +50,7 @@ public class TomcatWarDeployApp extends AbstractApplication {
 		
 		//TODO find a better way to shutdown a cluster?
 		println "shutting down..."
-		app.entities.values().each { if (it in TomcatNode) it.shutdown() }
+		app.entities.each { if (it in TomcatNode) it.shutdown() }
 		System.exit(0)
 	}
 	
