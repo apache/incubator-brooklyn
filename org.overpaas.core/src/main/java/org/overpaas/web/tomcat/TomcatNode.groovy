@@ -27,7 +27,7 @@ import org.overpaas.util.JmxSensorEffectorTool;
 @InheritConstructors
 public class TomcatNode extends AbstractEntity implements Startable {
 	public static final ActivitySensor<Integer> REQUESTS_PER_SECOND = [ "Reqs/Sec", "webapp.reqs.persec.RequestCount", Integer ]
-	public static final ActivitySensor<Integer> HTTP_PORT = [ "Reqs/Sec", "webapp.http.port", Integer ]
+	public static final ActivitySensor<Integer> HTTP_PORT = [ "HTTP port", "webapp.http.port", Integer ]
 
 	static {
 		TomcatNode.metaClass.startInLocation = { Group parent, SshMachineLocation loc ->
