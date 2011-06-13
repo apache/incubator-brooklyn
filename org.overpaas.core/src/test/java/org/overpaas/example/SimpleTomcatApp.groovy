@@ -17,7 +17,7 @@ import org.overpaas.web.tomcat.TomcatNode
 public class SimpleTomcatApp extends AbstractApplication {
     Cluster tc = new TomcatCluster(displayName:'MyTomcat', initialSize:3, this);
 
-	public void main(String...argv) {
+	public static void main(String[] argv) {
 		def app = new SimpleTomcatApp()
 		//TODO:
 //		app.tc.war = "/tmp/hello.war"
