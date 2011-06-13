@@ -29,18 +29,21 @@ import org.slf4j.LoggerFactory;
 public class TomcatNode extends AbstractEntity implements Startable {
 	private static final Logger logger = LoggerFactory.getLogger(TomcatNode.class)
 	
-	public static final ActivitySensor<Integer> REQUESTS_PER_SECOND = [ "Reqs/Sec", "webapp.reqs.persec.RequestCount", Double ]
+	public static final ActivitySensor<Integer> REQUESTS_PER_SECOND = [ "Reqs/Sec", "webapp.reqs.persec.RequestCount", Integer ]
+	public static final ActivitySensor<Integer> HTTP_PORT = [ "Reqs/Sec", "webapp.http.port", Integer ]
 
 	static {
-		TomcatNode.metaClass.startInLocation = { Group parent, SshMachineLocation loc -> new Tomcat7SshSetup(delegate).start loc }
+		TomcatNode.metaClass.startInLocation = { Group parent, SshMachineLocation loc ->
+			def setup = new Tomcat7SshSetup(delegate)
+			setup.start loc
+			activity.update HTTP_PORT, setup.httpPort
+		}
 		TomcatNode.metaClass.shutdownInLocation = { SshMachineLocation loc -> new Tomcat7SshSetup(delegate).shutdown loc }
         TomcatNode.metaClass.deploy = { String file, SshMachineLocation loc -> 
             new Tomcat7SshSetup(delegate).deploy(new File(file), loc)
 		}
 	}
 
-	JmxSensorEffectorTool jmxTool;
-	
 	//TODO hack reference (for shutting down), need a cleaner way -- e.g. look up in the app's executor service for this entity
 	ScheduledFuture jmxMonitoringTask;
 
@@ -48,8 +51,8 @@ public class TomcatNode extends AbstractEntity implements Startable {
 		EntityStartUtils.startEntity properties, this, parent, location
 		logger.trace "started... jmxHost is {} and jmxPort is {}", this.properties['jmxHost'], this.properties['jmxPort']
 		
-        if (this.properties['jmxHost'] && this.properties['jmxPort']) {
-            jmxTool = new JmxSensorEffectorTool(this.properties.jmxHost, this.properties.jmxPort)
+		if (this.properties['jmxHost'] && this.properties['jmxPort']) {
+			JmxSensorEffectorTool jmxTool = new JmxSensorEffectorTool(this.properties.jmxHost, this.properties.jmxPort)
 			if (!(jmxTool.connect(60*1000))) {
 				logger.error "FAILED to connect JMX to {}", this
 				throw new IllegalStateException("failed to completely start $this: JMX not found at $jmxHost:$jmxPort after 60s")
@@ -57,7 +60,7 @@ public class TomcatNode extends AbstractEntity implements Startable {
 			
 			//TODO get executor from app, then die when finished; why isn't schedule working???
 			//e.g. getApplication().getExecutors().
-			jmxMonitoringTask = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay({ getJmxSensors() }, 1000, 1000, TimeUnit.MILLISECONDS)
+			jmxMonitoringTask = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay({ getJmxSensors(jmxTool) }, 1000, 1000, TimeUnit.MILLISECONDS)
 		}
         if (this.war) {
             def deployLoc = location ?: this.location
@@ -67,7 +70,7 @@ public class TomcatNode extends AbstractEntity implements Startable {
         }
 	}
 	
-	public double getJmxSensors() {
+	private double getJmxSensors(JmxSensorEffectorTool jmxTool) {
 		def reqs = jmxTool.getChildrenAttributesWithTotal("Catalina:type=GlobalRequestProcessor,name=\"*\"")
 		reqs.put "timestamp", System.currentTimeMillis()
 		//update to explicit location in activity map, but not linked to sensor so probably shouldn't be used too widely 
@@ -75,23 +78,18 @@ public class TomcatNode extends AbstractEntity implements Startable {
 		double diff = (reqs?.totals?.requestCount ?: 0) - (prev?.totals?.requestCount ?: 0)
 		long dt = (reqs?.timestamp ?: 0) - (prev?.timestamp ?: 0)
 		if (dt <= 0 || dt > 60*1000) diff = -1; else diff = ((double)1000.0*diff)/dt
-		logger.trace "computed $diff reqs/sec over $dt millis for JMX tomcat process at $jmxHost:$jmxPort"
+		int result = (int)Math.round(diff)
+		logger.trace "computed $result reqs/sec over $dt millis for JMX tomcat process at $jmxHost:$jmxPort"
 		
 		//is a sensor, should generate update events against subscribers
-		activity.update(REQUESTS_PER_SECOND, diff)
-		diff
+		activity.update(REQUESTS_PER_SECOND, result)
+		return result
 	}
 	
 	@Override
 	public Collection<String> toStringFieldsToInclude() {
 		return super.toStringFieldsToInclude() + ['tomcatHttpPort', 'jmxPort']
 	}
- 
-//	public void startInLocation(GroupEntity parent, Location loc) {
-//		TomcatNode tc = new TomcatNode([:], parent);
-//		loc.logEvent("starting tomcat "+tc, parent)
-//		tc
-//	}
 
 	public void shutdown() {
 		if (jmxMonitoringTask) jmxMonitoringTask.cancel true
@@ -104,6 +102,9 @@ public class TomcatNode extends AbstractEntity implements Startable {
 		
 		TomcatNode entity
 		String runDir
+		
+		Object httpPortLock = new Object()
+		int httpPort = -1
 		
 		public Tomcat7SshSetup(TomcatNode entity) {
 			super(entity)
@@ -146,7 +147,11 @@ exit"""
         }
 				
 		public int getTomcatHttpPort() {
-			getNextValue("tomcatHttpPort", 8080)
+			synchronized(httpPortLock) {
+				if (httpPort < 0)
+					httpPort = getNextValue("tomcatHttpPort", 8080)
+			}
+			return httpPort
 		}
 		/** tomcat insists on having a port you can connect to for the sole purpose of shutting it down;
 		 * don't see an easy way to disable it; causes collisions in its default location of 8005,
