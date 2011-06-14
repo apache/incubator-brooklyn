@@ -88,7 +88,6 @@ public abstract class AbstractEntity implements Entity {
     final Map properties = [:]
  
     public void propertyMissing(String name, value) { properties[name] = value }
- 
     public Object propertyMissing(String name) {
         if (properties.containsKey(name)) return properties[name];
         else {

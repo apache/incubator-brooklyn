@@ -19,6 +19,9 @@ import org.slf4j.LoggerFactory;
  * @author alex
  */
 class EntityStartUtils {
+	
+	private static final Logger log = LoggerFactory.getLogger(EntityStartUtils.class);
+	
     /**
      * Starts the children of the host, optionally inserting additional properties and possibly modifying the child properties before starting.
      */   
@@ -34,9 +37,10 @@ class EntityStartUtils {
     }
     
     public static Entity startEntity(Map properties=[:], Entity entity, Group parent=null, Location location=null) {
-        println "factory $this creating entity with $properties and $location"
+        log.debug "factory {} creating entity with properties {} and location {}", this, properties, location
+		entity.properties << properties
         if (location) {
-            if (entity.location && entity.location!=location) 
+            if (entity.properties.location && entity.properties.location!=location) 
                 throw new IllegalStateException("request to start $entity in $location but it is already set with location "+entity.location)
             entity.location = location
         }
