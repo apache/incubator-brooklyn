@@ -186,7 +186,7 @@ exit
 		public String getCheckRunningScript() { """\
 cd $runDir && \\
 echo pid is `cat pid.txt` && \\
-(ps aux | grep tomcat | grep `cat pid.txt` > pid.list || echo "no tomcat processes found") && \\
+(ps aux | grep '[t]'omcat | grep `cat pid.txt` > pid.list || echo "no tomcat processes found") && \\
 cat pid.list && \\
 if [ -z "`cat pid.list`" ] ; then echo process no longer running ; exit 1 ; fi
 exit
