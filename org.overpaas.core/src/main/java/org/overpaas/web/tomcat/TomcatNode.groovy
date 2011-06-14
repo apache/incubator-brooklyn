@@ -1,23 +1,27 @@
 package org.overpaas.web.tomcat
 
-import groovy.transform.InheritConstructors;
-import groovy.util.logging.Slf4j;
+import groovy.transform.InheritConstructors
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.Collection
+import java.util.Map
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledFuture
+import java.util.concurrent.TimeUnit
 
-import org.overpaas.decorators.Startable;
-import org.overpaas.entities.AbstractEntity;
-import org.overpaas.entities.Group;
-import org.overpaas.locations.SshBasedJavaAppSetup;
-import org.overpaas.locations.SshMachineLocation;
-import org.overpaas.types.ActivitySensor;
-import org.overpaas.types.Location;
-import org.overpaas.util.EntityStartUtils;
-import org.overpaas.util.JmxSensorEffectorTool;
+import javax.management.InstanceNotFoundException
+
+import org.overpaas.decorators.Startable
+import org.overpaas.entities.AbstractEntity
+import org.overpaas.entities.Group
+import org.overpaas.locations.SshBasedJavaAppSetup
+import org.overpaas.locations.SshMachineLocation
+import org.overpaas.types.ActivitySensor
+import org.overpaas.types.EntityStartException
+import org.overpaas.types.Location
+import org.overpaas.util.EntityStartUtils
+import org.overpaas.util.JmxSensorEffectorTool
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 /**
  * An entity that represents a single Tomcat instance.
@@ -26,6 +30,9 @@ import org.overpaas.util.JmxSensorEffectorTool;
  */
 @InheritConstructors
 public class TomcatNode extends AbstractEntity implements Startable {
+	
+	private static final Logger logger = LoggerFactory.getLogger(TomcatNode.class)
+	
 	public static final ActivitySensor<Integer> REQUESTS_PER_SECOND = [ "Reqs/Sec", "webapp.reqs.persec.RequestCount", Integer ]
 	public static final ActivitySensor<Integer> HTTP_PORT = [ "HTTP port", "webapp.http.port", Integer ]
 
@@ -35,8 +42,7 @@ public class TomcatNode extends AbstractEntity implements Startable {
 			//pass http port to setup, if one was specified on this object
 			if (properties.httpPort) setup.httpPort = properties.httpPort
 			setup.start loc
-			//ideallly, should poll until process aborts, or web server port is opened;
-			//but for now we assume port conflict complains after 3s
+			// TODO: remove the 3s sleep and find a better way to detect an early death of the Tomcat process
 			log.debug "waiting to ensure $delegate doesn't abort prematurely"
 			Thread.sleep 3000
 			if (!setup.isRunning(loc)) throw new IllegalStateException("$delegate aborted soon after startup")
@@ -67,6 +73,27 @@ public class TomcatNode extends AbstractEntity implements Startable {
 			//TODO get executor from app, then die when finished; why isn't schedule working???
 			//e.g. getApplication().getExecutors().
 			jmxMonitoringTask = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay({ updateJmxSensors() }, 1000, 1000, TimeUnit.MILLISECONDS)
+			
+			// Wait for the HTTP port to become available
+			String state = null
+			int port = activity.getValue(HTTP_PORT)
+			for(int attempts = 0; attempts < 30; attempts++) {
+				Map connectorAttrs;
+				try {
+					connectorAttrs = jmxTool.getAttributes("Catalina:type=Connector,port=$port")
+					state = connectorAttrs['stateName']
+				} catch(InstanceNotFoundException e) {
+					state = "InstanceNotFound"
+				}
+				logger.trace "state: $state"
+				if(state == "FAILED")
+					throw new EntityStartException("Tomcat connector for port $port is in state $state")
+				if(state == "STARTED")
+					break;
+				Thread.sleep 250
+			}
+			if(state != "STARTED")
+				throw new EntityStartException("Tomcat connector for port $port is in state $state after 30 seconds")
 		}
         if (this.war) {
             def deployLoc = location ?: this.location
@@ -114,6 +141,8 @@ public class TomcatNode extends AbstractEntity implements Startable {
 	public static class Tomcat7SshSetup extends SshBasedJavaAppSetup {
 		String version = "7.0.14"
 		String installDir = installsBaseDir+"/"+"tomcat"+"/"+"apache-tomcat-$version"
+		public static DEFAULT_FIRST_HTTP_PORT = 8080
+		public static DEFAULT_FIRST_SHUTDOWN_PORT = 31880
 		
 		TomcatNode entity
 		String runDir
@@ -157,7 +186,7 @@ exit
 		public String getCheckRunningScript() { """\
 cd $runDir && \\
 echo pid is `cat pid.txt` && \\
-(ps aux | grep [t]omcat | grep `cat pid.txt` > pid.list || echo "no tomcat processes found") && \\
+(ps aux | grep tomcat | grep `cat pid.txt` > pid.list || echo "no tomcat processes found") && \\
 cat pid.list && \\
 if [ -z "`cat pid.list`" ] ; then echo process no longer running ; exit 1 ; fi
 exit
@@ -176,7 +205,7 @@ exit"""
 		public int getTomcatHttpPort() {
 			synchronized(httpPortLock) {
 				if (httpPort < 0)
-					httpPort = getNextValue("tomcatHttpPort", 8080)
+					httpPort = getNextValue("tomcatHttpPort", DEFAULT_FIRST_HTTP_PORT)
 			}
 			return httpPort
 		}
@@ -185,7 +214,7 @@ exit"""
 		 * so moving it to some anonymous high-numbered location
 		 */
 		public int getTomcatShutdownPort() {
-			getNextValue("tomcatShutdownPort", 38180)
+			getNextValue("tomcatShutdownPort", DEFAULT_FIRST_SHUTDOWN_PORT)
 		}
 	
 		public void shutdown(SshMachineLocation loc) {

@@ -14,6 +14,9 @@ public class EntityRankers {
                 Object aMetric = a.getProperties().get(sensorName);
                 Object bMetric = b.getProperties().get(sensorName);
                 
+                // groovy "spaceship operator":
+                // return aMetric <=> bMetric
+                
                 if (aMetric == null) {
                     return (bMetric != null) ? 1 : 0;
                 } else if (bMetric == null) {
