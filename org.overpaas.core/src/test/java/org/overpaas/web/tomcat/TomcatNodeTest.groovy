@@ -5,20 +5,17 @@ import groovy.transform.InheritConstructors
 
 import java.util.Map
 
-import javax.management.remote.JMXConnectorFactory
-import javax.management.remote.JMXServiceURL
-
-import org.junit.Ignore
 import org.junit.Test
 import org.overpaas.entities.AbstractApplication
-import org.overpaas.entities.Application;
+import org.overpaas.entities.Application
 import org.overpaas.locations.SshMachineLocation
+import org.overpaas.types.EntityStartException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class TomcatNodeTest {
 
-	private static final Logger logger = LoggerFactory.getLogger(TomcatNode.class);;
+	private static final Logger logger = LoggerFactory.getLogger(TomcatNode.class)
 
 	@InheritConstructors
 	class TestApplication extends AbstractApplication {
@@ -110,12 +107,38 @@ class TomcatNodeTest {
 		tc.start([:], null, new SshMachineLocation(name:'london', host:'localhost'))
 		executeUntilSucceedsWithShutdown(tc, {
 				def port = tc.activity.getValue(TomcatNode.HTTP_PORT)
-				URL url = new URL("http://localhost:${port}/sample")
+				URL url = new URL("http://localhost:${port}/hello-world")
 				URLConnection connection = url.openConnection()
 				connection.connect()
 				int status = ((HttpURLConnection)connection).getResponseCode()
+				if (status == 404)
+					throw new Exception("App is not there yet (404)");
 				assertEquals 200, status
 			})
+	}
+	
+	@Test
+	public void detect_failure_if_tomcat_cant_bind_to_port() {
+		ServerSocket listener = new ServerSocket(8080);
+		Thread t = new Thread({ try { for(;;) { Socket socket = listener.accept(); socket.close(); } } catch(Exception e) {} })
+		t.start()
+		try {
+			Application app = new TestApplication()
+			TomcatNode tc = new TomcatNode(parent: app)
+			Exception caught = null
+			try {
+				tc.start([:], null, new SshMachineLocation(name:'london', host:'localhost'))
+			} catch(EntityStartException e) {
+				caught = e
+			} finally {
+				tc.shutdown()
+				assertNotNull caught
+				logger.debug "The exception that was thrown was:", caught
+			}
+		} finally {
+			listener.close();
+			t.join();
+		}
 	}
 	
 	/**

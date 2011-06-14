@@ -1,23 +1,27 @@
 package org.overpaas.web.tomcat
 
-import groovy.transform.InheritConstructors;
-import groovy.util.logging.Slf4j;
+import groovy.transform.InheritConstructors
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.Collection
+import java.util.Map
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledFuture
+import java.util.concurrent.TimeUnit
 
-import org.overpaas.decorators.Startable;
-import org.overpaas.entities.AbstractEntity;
-import org.overpaas.entities.Group;
-import org.overpaas.locations.SshBasedJavaAppSetup;
-import org.overpaas.locations.SshMachineLocation;
-import org.overpaas.types.ActivitySensor;
-import org.overpaas.types.Location;
-import org.overpaas.util.EntityStartUtils;
-import org.overpaas.util.JmxSensorEffectorTool;
+import javax.management.InstanceNotFoundException
+
+import org.overpaas.decorators.Startable
+import org.overpaas.entities.AbstractEntity
+import org.overpaas.entities.Group
+import org.overpaas.locations.SshBasedJavaAppSetup
+import org.overpaas.locations.SshMachineLocation
+import org.overpaas.types.ActivitySensor
+import org.overpaas.types.EntityStartException
+import org.overpaas.types.Location
+import org.overpaas.util.EntityStartUtils
+import org.overpaas.util.JmxSensorEffectorTool
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 /**
  * An entity that represents a single Tomcat instance.
@@ -26,6 +30,9 @@ import org.overpaas.util.JmxSensorEffectorTool;
  */
 @InheritConstructors
 public class TomcatNode extends AbstractEntity implements Startable {
+	
+	private static final Logger logger = LoggerFactory.getLogger(TomcatNode.class)
+	
 	public static final ActivitySensor<Integer> REQUESTS_PER_SECOND = [ "Reqs/Sec", "webapp.reqs.persec.RequestCount", Integer ]
 	public static final ActivitySensor<Integer> HTTP_PORT = [ "HTTP port", "webapp.http.port", Integer ]
 
@@ -59,7 +66,28 @@ public class TomcatNode extends AbstractEntity implements Startable {
 			
 			//TODO get executor from app, then die when finished; why isn't schedule working???
 			//e.g. getApplication().getExecutors().
-			jmxMonitoringTask = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay({ getJmxSensors(jmxTool) }, 1000, 1000, TimeUnit.MILLISECONDS)
+			jmxMonitoringTask = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay({ getJmxSensors() }, 1000, 1000, TimeUnit.MILLISECONDS)
+			
+			// Wait for the HTTP port to become available
+			String state = null
+			int port = activity.getValue(HTTP_PORT)
+			for(int attempts = 0; attempts < 30; attempts++) {
+				Map connectorAttrs;
+				try {
+					connectorAttrs = jmxTool.getAttributes("Catalina:type=Connector,port=$port")
+					state = connectorAttrs['stateName']
+				} catch(InstanceNotFoundException e) {
+					state = "InstanceNotFound"
+				}
+				logger.trace "state: $state"
+				if(state == "FAILED")
+					throw new EntityStartException("Tomcat connector for port $port is in state $state")
+				if(state == "STARTED")
+					break;
+				Thread.sleep 250
+			}
+			if(state != "STARTED")
+				throw new EntityStartException("Tomcat connector for port $port is in state $state after 30 seconds")
 		}
         if (this.war) {
             def deployLoc = location ?: this.location
