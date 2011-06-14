@@ -1,22 +1,22 @@
 package org.overpaas.web.tomcat;
 
+import static java.util.concurrent.TimeUnit.*
 import static org.junit.Assert.*
-import groovy.time.TimeDuration;
+import groovy.time.TimeDuration
 import groovy.transform.InheritConstructors
 
 import java.util.Map
-import java.util.concurrent.Callable;
-import static java.util.concurrent.TimeUnit.*;
+import java.util.concurrent.Callable
 
-import org.junit.After;
-import org.junit.Before;
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 import org.overpaas.entities.AbstractApplication
 import org.overpaas.entities.Application
-import org.overpaas.entities.Entity;
+import org.overpaas.entities.Entity
 import org.overpaas.locations.SshMachineLocation
 import org.overpaas.types.EntityStartException
-import org.overpaas.util.TimeExtras;
+import org.overpaas.util.TimeExtras
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -203,7 +203,7 @@ class TomcatNodeTest {
 	
 	@Test
 	public void detect_failure_if_tomcat_cant_bind_to_port() {
-		ServerSocket listener = new ServerSocket(8080);
+		ServerSocket listener = new ServerSocket(DEFAULT_HTTP_PORT);
 		Thread t = new Thread({ try { for(;;) { Socket socket = listener.accept(); socket.close(); } } catch(Exception e) {} })
 		t.start()
 		try {
@@ -216,9 +216,9 @@ class TomcatNodeTest {
 				caught = e
 			} finally {
 				tc.shutdown()
-				assertNotNull caught
-				logger.debug "The exception that was thrown was:", caught
 			}
+			assertNotNull caught
+			logger.debug "The exception that was thrown was:", caught
 		} finally {
 			listener.close();
 			t.join();
