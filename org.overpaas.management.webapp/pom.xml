@@ -189,15 +189,6 @@
 			<name>Spring Maven RELEASE Repository</name>
 			<url>http://maven.springframework.org/release</url>
 		</repository>
-		<repository>
-			<id>annoying-springsource-nonsense</id>
-			<url>http://spring-roo-repository.springsource.org/release/</url>
-		</repository>
-		<repository>
-			<id>spring-milestone</id>
-			<name>Spring Maven MILESTONE Repository</name>
-			<url>http://maven.springframework.org/milestone</url>
-		</repository>
 	</repositories>
 
 	<pluginRepositories>
@@ -240,9 +231,28 @@
 
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
+		        <version>2.3.2</version>
 				<configuration>
 					<source>1.6</source>
 					<target>1.6</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-clean-plugin</artifactId>
+				<version>2.4.1</version>
+				<configuration>
+					<filesets>
+						<fileset>
+							<directory>.</directory>
+							<includes><include>stacktrace.log</include></includes>
+						</fileset>
+						<fileset>
+							<directory>lib</directory>
+						</fileset>
+						<fileset>
+							<directory>plugins</directory>
+						</fileset>
+					</filesets>
 				</configuration>
 			</plugin>
 		</plugins>
