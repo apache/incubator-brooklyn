@@ -26,7 +26,11 @@ class TomcatNodeTest {
 	static { TimeExtras.init() }
 	
 	@InheritConstructors
-	static class TestApplication extends AbstractApplication {}
+	static class TestApplication extends AbstractApplication {
+        public TestApplication(Map properties=[:]) {
+            super(properties);
+        }
+	}
 
 	static boolean port8080leftOpen = false;
 	
