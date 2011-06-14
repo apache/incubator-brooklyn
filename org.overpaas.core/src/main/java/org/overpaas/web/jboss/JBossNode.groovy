@@ -1,46 +1,47 @@
 package org.overpaas.web.jboss
 
-import org.overpaas.core.locations.SshMachineLocation;
-import org.overpaas.core.types.ActivitySensor;
-import org.overpaas.web.tomcat.SshBasedJavaAppSetup;
 import groovy.transform.InheritConstructors
 
 import java.util.Map
 import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit
 
-import org.overpaas.core.locations.SshMachineLocation
-import org.overpaas.core.locations.SshMachineLocation.SshBasedJavaAppSetup
-import org.overpaas.core.types.ActivitySensor
-import org.overpaas.core.decorators.GroupEntity
-import org.overpaas.core.decorators.Location
-import org.overpaas.core.decorators.Startable
-import org.overpaas.core.types.common.AbstractOverpaasEntity
-import org.overpaas.core.types.common.EntityStartUtils
+import org.overpaas.decorators.Startable
+import org.overpaas.entities.AbstractEntity
+import org.overpaas.entities.Group
+import org.overpaas.locations.SshBasedJavaAppSetup
+import org.overpaas.locations.SshMachineLocation
+import org.overpaas.types.ActivitySensor
+import org.overpaas.types.Location
+import org.overpaas.util.EntityStartUtils
 import org.overpaas.util.JmxSensorEffectorTool
 
+/**
+ * JBoss web application server.
+ */
 @InheritConstructors
-public class JBossNode extends AbstractOverpaasEntity implements Startable {
+public class JBossNode extends AbstractEntity implements Startable {
+    public static final ActivitySensor<Integer> REQUESTS_PER_SECOND = [ "Reqs/Sec", "jmx.reqs.persec.RequestCount", Double ]
 
     JmxSensorEffectorTool jmxTool;
 
-    public void start(Map properties=[:], GroupEntity parent=null, Location loc=null) {
+	//TODO hack reference (for shutting down), need a cleaner way -- e.g. look up in the app's executor service for this entity
+	ScheduledFuture jmxMonitoringTask;
+
+    public void start(Map properties=[:], Group parent=null, Location loc=null) {
         EntityStartUtils.startEntity(properties, this, parent, loc);
-        println "Started."
-        +" jmxHost is "+this.properties['jmxHost']
-		+" and jmxPort is "+this.properties['jmxPort'];
+		log.debug "started... jmxHost is {} and jmxPort is {}", this.properties['jmxHost'], this.properties['jmxPort']
         
         if (this.properties['jmxHost'] && this.properties['jmxPort']) {
             jmxTool = new JmxSensorEffectorTool(this.properties.jmxHost, this.properties.jmxPort)
             if (!(jmxTool.connect(2*60*1000))) {
-                println "FAILED to connect JMX to $this"
-                throw new IllegalStateException("failed to completely start $this: "
-                    + "JMX not found at $jmxHost:$jmxPort after 60s")
+				log.error "FAILED to connect JMX to {}", this
+                throw new IllegalStateException("failed to completely start $this: JMX not found at $jmxHost:$jmxPort after 60s")
             }
 
             //TODO get executor from app, then die when finished; why isn't schedule working???
-            Executors.newScheduledThreadPool(1)
-            .scheduleWithFixedDelay({ getJmxSensors() }, 1000, 1000, TimeUnit.MILLISECONDS)
+            jmxMonitoringTask = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay({ getJmxSensors() }, 1000, 1000, TimeUnit.MILLISECONDS)
         }
     }
 
@@ -51,24 +52,19 @@ public class JBossNode extends AbstractOverpaasEntity implements Startable {
     }
 
     public double getJmxSensors() {
-        def reqs = jmxTool.getChildrenAttributesWithTotal
-            ("Catalina:type=GlobalRequestProcessor,name=\"*\"")
+        def reqs = jmxTool.getChildrenAttributesWithTotal("Catalina:type=GlobalRequestProcessor,name=\"*\"")
         reqs.put "timestamp", System.currentTimeMillis()
-        Map prev = activity.update(["jmx", "reqs", "global"], reqs)
+        //update to explicit location in activity map, but not linked to sensor so probably shouldn't be used too widely 
+        Map prev = activity.update(["jmx","reqs","global"], reqs)
         double diff = (reqs?.totals?.requestCount ?: 0) - (prev?.totals?.requestCount ?: 0)
         long dt = (reqs?.timestamp ?: 0) - (prev?.timestamp ?: 0)
         if (dt <= 0 || dt > 60*1000) diff = -1; else diff = ((double)1000.0*diff)/dt
-        println "computed $diff reqs/sec over $dt millis "
-            + "for JMX JBoss process at $jmxHost:$jmxPort"
+        log.debug "computed $diff reqs/sec over $dt millis for JMX jboss process at $jmxHost:$jmxPort"
+        
+        //is a sensor, should generate update events against subscribers
         activity.update(REQUESTS_PER_SECOND, diff)
         diff
     }
-
-    public static final ActivitySensor<Integer> REQUESTS_PER_SECOND = [
-        "Reqs/Sec",
-        "jmx.reqs.persec.RequestCount",
-        Double
-    ]
 
     public void shutdown() {
         if (jmxMonitoringTask) jmxMonitoringTask.cancel true
@@ -83,6 +79,12 @@ public class JBossNode extends AbstractOverpaasEntity implements Startable {
 
         JBossNode entity
         String runDir
+        
+        public JBossSshSetup(JBossNode entity) {
+            super(entity)
+            this.entity = entity
+            runDir = appBaseDir + "/" + "jboss-"+entity.id
+        }
 
         public String getInstallScript() {
             def url = "http://downloads.sourceforge.net/project/jboss/JBoss/JBoss-$version/jboss-as-distribution-$version.zip?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fjboss%2Ffiles%2FJBoss%2F$version%2F&ts=1307104229&use_mirror=kent"
@@ -103,17 +105,23 @@ public class JBossNode extends AbstractOverpaasEntity implements Startable {
             """
         }
 
+		//TODO not working; need to write above to a pid.txt file, then copy (or refactor to share) code from TomcatNode.getCheckRunningScript         
+		/** script to return 1 if pid in runDir is running, 0 otherwise */
+		public String getCheckRunningScript() { """\
+exit 0
+"""
+		}
+
+        public String getDeployScript(String filename) {
+            ""
+        }
+
         public void shutdown(SshMachineLocation loc) {
-            //          println "invoking shutdown script"
             //we use kill -9 rather than shutdown.sh because the latter is not 100% reliable
             def result =  loc.run(out: System.out,
                                   "cd $runDir && echo killing process `cat pid.txt` on `hostname` "
                                   + "&& kill -9 `cat pid.txt` && rm pid.txt ; exit")
-            if (result) println "WARNING: non-zero result code terminating "+entity+": "+result
-            //          println "done invoking shutdown script"
+			if (result) log.info "non-zero result code terminating {}: {}", entity, result
         }
     }
-
-
-
 }

@@ -1,53 +1,46 @@
 package org.overpaas.example
 
-import org.codehaus.groovy.tools.shell.Groovysh
-import org.codehaus.groovy.tools.shell.IO
-import org.codehaus.groovy.tools.shell.util.NoExitSecurityManager
-import org.overpaas.console.EntityNavigationUtils
-import org.overpaas.core.locations.SshMachineLocation
-import org.overpaas.core.types.common.AbstractOverpaasApplication
+import org.overpaas.entities.AbstractApplication
+import org.overpaas.entities.Cluster
+import org.overpaas.locations.SshMachineLocation
+import org.overpaas.util.EntityNavigationUtils
 import org.overpaas.web.tomcat.TomcatCluster
 import org.overpaas.web.tomcat.TomcatNode
-/** starts some tomcat nodes, on localhost, using ssh;
+
+/**
+ * Starts some tomcat nodes, on localhost, using ssh;
  * installs from scratch each time, for now, which may be overkill, but signposts.
  * then dumps JMX stats periodically.
  * 
  * @author alex
  */
-public class SimpleTomcatApp extends AbstractOverpaasApplication {
-	
-	TomcatCluster tc = new TomcatCluster(displayName:'MyTomcat', initialSize:3, this);
+public class SimpleTomcatApp extends AbstractApplication {
+    Cluster tc = new TomcatCluster(displayName:'MyTomcat', initialSize:3, this);
 
-	public static void main(String[] args) {
+	public static void main(String[] argv) {
 		def app = new SimpleTomcatApp()
-		//TODO:
-//		app.tc.war = "/tmp/hello.war"
+        app.tc.war = "resources/hello-world.war"
+       	//TODO:
 //		app.tc.policy << new ElasticityPolicy(app.tc, TomcatCluster.REQS_PER_SEC, low:100, high:250);
 		app.tc.initialSize = 2  //override initial size
 		
 		EntityNavigationUtils.dump(app, "before start:  ")
-		
-		app.start(location:new 
-//			MockLocation(name:'london')
-			SshMachineLocation(name:'london', host:'localhost')
-			)
-		
+		app.start location:new SshMachineLocation(name:'london', host:'localhost')
 		EntityNavigationUtils.dump(app, "after start:  ")
 
 		Thread t = []
 		t.start {
 			while (!t.isInterrupted()) {
 				Thread.sleep 5000
-				app.entities.values().each { if (it in TomcatNode) {
+				app.getEntities().each { if (it in TomcatNode) {
 						println ""+it+": "+it.jmxTool?.getChildrenAttributesWithTotal("Catalina:type=GlobalRequestProcessor,name=\"*\"")
-						println "    "+it.getJmxSensors()
+                        println "Requests per second: " + it.activity.getValue(TomcatNode.REQUESTS_PER_SECOND)
+                        println "Error count: " + it.activity.getValue(TomcatNode.ERROR_COUNT)
 					}
 				}
 			}
 		}
 		
-//		//TODO deploy a war file
-//		
 //		println "launching a groovy shell, with 'app' set"
 //		IO io = new IO()
 //		def code = 0;
@@ -89,7 +82,7 @@ public class SimpleTomcatApp extends AbstractOverpaasApplication {
 		
 		//TODO find a better way to shutdown a cluster?
 		println "shutting down..."
-		app.entities.values().each { if (it in TomcatNode) it.shutdown() }
+		app.entities.each { if (it in TomcatNode) it.shutdown() }
 		//TODO there is still an executor service running, not doing anything but not marked as a daemon,
 		//so doesn't quit immediately (i think it will time out but haven't verified)
 		//app shutdown should exist and handle that???

@@ -1,13 +1,13 @@
 package org.overpaas.example
 
-import org.overpaas.console.EntityNavigationUtils
-import org.overpaas.core.types.common.AbstractOverpaasApplication
+import org.overpaas.entities.AbstractApplication
+import org.overpaas.entities.Fabric
 import org.overpaas.example.PretendLocations.MockLocation
+import org.overpaas.util.EntityNavigationUtils
 import org.overpaas.web.tomcat.TomcatFabric
 
-public class MultiLocationTomcatApp extends AbstractOverpaasApplication {
-	
-	TomcatFabric tc = new TomcatFabric(displayName:'SpringTravelWebApp', war:'spring-travel.war', this);
+public class MultiLocationTomcatApp extends AbstractApplication {
+    Fabric tc = new TomcatFabric(displayName:'SpringTravelWebApp', war:'spring-travel.war', this);
 
 	public static void main(String[] args) {
 		def app = new MultiLocationTomcatApp()

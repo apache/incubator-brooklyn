@@ -1,14 +1,15 @@
 package org.overpaas.util
 
-import java.lang.reflect.Field
-import java.lang.reflect.Modifier;
+import java.lang.reflect.Modifier
+import java.util.Collection
 import java.util.Map
-import java.util.concurrent.Callable;
 
 import com.thoughtworks.xstream.XStream
 
+/**
+ * @author alex
+ */
 public class LanguageUtils {
-
 	static <T> T getRequiredField(String name, Map<?,?> m) {
 		if (!m.containsKey(name))
 			throw new IllegalArgumentException("a parameter '"+name+"' was required in the argument to this function")
@@ -68,7 +69,11 @@ public class LanguageUtils {
 		unused
 	}
 
-	/** visits all fields of a given object, recursively (for collections, arrays, and maps it visits the items within, passing null for keys where it isn't a map) */
+	/**
+	 * Visits all fields of a given object, recursively.
+	 * 
+	 * For collections, arrays, and maps it visits the items within, passing null for keys where it isn't a map.
+	 */
 	private static void visitFields(Object o, FieldVisitor fv, Collection<Object> objectsToSkip=([] as Set)) {
 		if (o==null || objectsToSkip.contains(o)) return;
 		objectsToSkip << o
@@ -88,5 +93,4 @@ public class LanguageUtils {
 		/** invoked by visitFields; fieldName will be null for collections */
 		public void visit(Object parent, String fieldName, Object value)
 	}
-	
 }

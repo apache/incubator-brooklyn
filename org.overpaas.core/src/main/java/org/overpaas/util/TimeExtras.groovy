@@ -1,10 +1,7 @@
 package org.overpaas.util
 
-
-import static java.util.concurrent.TimeUnit.*
 import groovy.time.TimeDuration
 
-import java.util.Collections
 import java.util.concurrent.TimeUnit
 
 /**

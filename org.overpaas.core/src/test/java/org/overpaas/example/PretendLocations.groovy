@@ -2,15 +2,12 @@ package org.overpaas.example;
 
 import groovy.transform.InheritConstructors
 
-import org.overpaas.core.decorators.Location;
-import org.overpaas.core.types.common.Fabric;
+import org.overpaas.entities.Fabric
+import org.overpaas.types.Location
 
 public class PretendLocations {
-
-	public static class AmazonLocation implements Location {
-	}
-	public static class VcloudLocation implements Location {
-	}
+	public static class AmazonLocation implements Location { }
+	public static class VcloudLocation implements Location { }
 	public static class AmazonUsEast implements Location {
 		String username, password;
 	}

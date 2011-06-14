@@ -1,12 +1,12 @@
 package org.overpaas.web.tomcat;
 
-import org.overpaas.core.decorators.GroupEntity;
-import org.overpaas.core.types.common.Fabric
+import java.util.Map;
 
-public class TomcatFabric extends Fabric/*<TomcatCluster>*/ {
+import org.overpaas.entities.Fabric;
+import org.overpaas.entities.Group;
 
-	public TomcatFabric(Map properties=[:], GroupEntity parent=null) {
+public class TomcatFabric extends Fabric {
+	public TomcatFabric(Map properties=[:], Group parent=null) {
 		super(properties, parent, new TomcatCluster(properties, null))
 	}
-		
 }
