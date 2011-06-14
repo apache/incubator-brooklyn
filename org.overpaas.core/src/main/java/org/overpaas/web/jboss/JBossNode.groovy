@@ -4,13 +4,13 @@ import groovy.transform.InheritConstructors
 
 import java.util.Map
 import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 
 import org.overpaas.decorators.Startable
 import org.overpaas.entities.AbstractEntity
 import org.overpaas.entities.Group
-import org.overpaas.locations.SshBasedJavaAppSetup
+import org.overpaas.locations.SshBasedJavaWebAppSetup
 import org.overpaas.locations.SshMachineLocation
 import org.overpaas.types.ActivitySensor
 import org.overpaas.types.Location
@@ -71,7 +71,7 @@ public class JBossNode extends AbstractEntity implements Startable {
         shutdownInLocation(location)
     }
 
-    public static class JBossSshSetup extends SshBasedJavaAppSetup {
+    public static class JBossSshSetup extends SshBasedJavaWebAppSetup {
         String version = "6.0.0.Final"
         String installDir = new File(new File(installsBaseDir), "jboss-$version").getPath()
 

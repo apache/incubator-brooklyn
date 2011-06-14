@@ -1,10 +1,10 @@
 package org.overpaas.locations
 
-import java.io.File;
-import java.util.Map;
+import java.util.Map
 
-import org.overpaas.entities.Entity;
-import org.slf4j.Logger;
+import org.overpaas.entities.Entity
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 // TODO OS-X failure, if no recent command line ssh
 // ssh_askpass: exec(/usr/libexec/ssh-askpass): No such file or directory
@@ -17,6 +17,11 @@ public abstract class SshBasedJavaAppSetup {
  
 	String overpaasBaseDir = "/tmp/overpaas"
 	String installsBaseDir = overpaasBaseDir+"/installs"
+	
+	public SshBasedJavaAppSetup(Entity entity) {
+		this.entity = entity
+		appBaseDir = overpaasBaseDir + "/" + "app-"+entity.getApplication()?.id
+	}
 
 	/** convenience to generate string -Dprop1=val1 -Dprop2=val2 for use with java */		
 	public static String toJavaDefinesString(Map m) {
@@ -97,33 +102,6 @@ exit
 		throw new IllegalStateException("$entity running check gave result code $result")
 	}
         
-	//FIXME: remove/push down to java app server, this does not apply to generic java programs
-	public abstract String getDeployScript(String filename);
-    /**
-     * Copies f to loc:$installsBaseDir and invokes this.getDeployScript
-     * for further processing on server.
-     */
-	//TODO should take an input stream?
-    public void deploy(File f, SshMachineLocation loc) {
-        String target = installsBaseDir + "/" + f.getName()
-		log.debug "Tomcat Deploy - Copying file {} to $loc {}", f.getAbsolutePath(), target
-        int copySuccess = loc.copyTo f, target
-        String deployScript = getDeployScript(target)
-        if (deployScript) {
-            int result = loc.run(out:System.out, deployScript)
-            if (result) {
-                log.error "Failed to deploy $f to $loc"
-            } else {
-                log.debug "Deployed $f to $loc"
-            }
-        }
-    }
-        
 	Entity entity
 	String appBaseDir
-
-	public SshBasedJavaAppSetup(Entity entity) {
-		this.entity = entity
-		appBaseDir = overpaasBaseDir + "/" + "app-"+entity.getApplication()?.id
-	}			
 }

@@ -13,7 +13,7 @@ import javax.management.InstanceNotFoundException
 import org.overpaas.decorators.Startable
 import org.overpaas.entities.AbstractEntity
 import org.overpaas.entities.Group
-import org.overpaas.locations.SshBasedJavaAppSetup
+import org.overpaas.locations.SshBasedJavaWebAppSetup
 import org.overpaas.locations.SshMachineLocation
 import org.overpaas.types.ActivitySensor
 import org.overpaas.types.EntityStartException
@@ -149,7 +149,7 @@ public class TomcatNode extends AbstractEntity implements Startable {
 		if (location) shutdownInLocation(location)
 	}
 
-	public static class Tomcat7SshSetup extends SshBasedJavaAppSetup {
+	public static class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
 		String version = "7.0.14"
 		String installDir = installsBaseDir+"/"+"tomcat"+"/"+"apache-tomcat-$version"
 		public static DEFAULT_FIRST_HTTP_PORT = 8080
