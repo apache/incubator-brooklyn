@@ -35,6 +35,7 @@ public class SimpleTomcatApp extends AbstractApplication {
 				app.getEntities().each { if (it in TomcatNode) {
 						println ""+it+": "+it.jmxTool?.getChildrenAttributesWithTotal("Catalina:type=GlobalRequestProcessor,name=\"*\"")
                         println "Requests per second: " + it.activity.getValue(TomcatNode.REQUESTS_PER_SECOND)
+                        println "Error count: " + it.activity.getValue(TomcatNode.ERROR_COUNT)
 					}
 				}
 			}
