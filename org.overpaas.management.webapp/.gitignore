@@ -2,3 +2,4 @@ target
 plugins
 stacktrace.log
 
+/application.properties
