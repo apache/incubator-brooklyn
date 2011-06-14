@@ -11,7 +11,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 public class SshMachineLocation implements Location {
-    static final Logger log = LoggerFactory.getLogger(Location.class)
+    static final Logger log = LoggerFactory.getLogger(SshMachineLocation.class)
  
 	String name
 	String user = null
@@ -121,7 +121,10 @@ exit
 
 	public String getInstallScript() { null }
 	public abstract String getRunScript();
-    public abstract String getDeployScript(String filename);
+	
+	/** should return script to run at remote server to determine whether process is running;
+	 * script should return 0 if healthy, 1 if stopped, any other code if not healthy */
+	public abstract String getCheckRunningScript();
 	
 	public void start(SshMachineLocation loc) {
 		synchronized (getClass()) {
@@ -135,13 +138,23 @@ exit
 		def result = loc.run(out: System.out, getRunScript())
 		if (result) throw new IllegalStateException("failed to start $entity (exit code $result)")
 	}
+	public boolean isRunning(SshMachineLocation loc) {
+		def result = loc.run(out: System.out, getCheckRunningScript())
+		if (result==0) return true
+		if (result==1) return false
+		throw new IllegalStateException("$entity running check gave result code $result")
+	}
         
+	//FIXME: remove/push down to java app server, this does not apply to generic java programs
+	public abstract String getDeployScript(String filename);
     /**
      * Copies f to loc:$installsBaseDir and invokes this.getDeployScript
      * for further processing on server.
      */
+	//TODO should take an input stream?
     public void deploy(File f, SshMachineLocation loc) {
-        def target = new File(new File(installsBaseDir), f.getName()).toString()
+        String target = installsBaseDir + "/" + f.getName()
+		log.debug "Tomcat Deploy - Copying file {} to $loc {}", f.getAbsolutePath(), target
         int copySuccess = loc.copyTo f, target
         String deployScript = getDeployScript(target)
         if (deployScript) {

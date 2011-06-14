@@ -104,7 +104,14 @@ public class JBossNode extends AbstractEntity implements Startable {
             $runDir/bin/run.sh
             """
         }
-        
+
+		//TODO not working; need to write above to a pid.txt file, then copy (or refactor to share) code from TomcatNode.getCheckRunningScript         
+		/** script to return 1 if pid in runDir is running, 0 otherwise */
+		public String getCheckRunningScript() { """\
+exit 0
+"""
+		}
+
         public String getDeployScript(String filename) {
             ""
         }
