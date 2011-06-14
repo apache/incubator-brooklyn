@@ -267,12 +267,12 @@ class TomcatNodeTest {
 	 */
 	public static void executeUntilSucceedsWithFinallyBlock(Map flags=[:], Runnable r, Runnable finallyBlock={}) {
 		println "abortOnError = "+flags.abortOnError
-		boolean abortOnException = valueOrDefault flags.abortOnException, false
-		boolean abortOnError = valueOrDefault flags.abortOnError, true
-		boolean useGroovyTruth = valueOrDefault flags.useGroovyTruth, false
-		TimeDuration timeout = valueOrDefault flags.timeout, 30*SECONDS
-		TimeDuration period = valueOrDefault flags.period, 500*MILLISECONDS
-		int maxAttempts = valueOrDefault flags.maxAttempts, Integer.MAX_VALUE
+		boolean abortOnException = flags.abortOnException ?: false
+		boolean abortOnError = flags.abortOnError ?: true
+		boolean useGroovyTruth = flags.useGroovyTruth ?: false
+		TimeDuration timeout = flags.timeout ?: 30*SECONDS
+		TimeDuration period = flags.period ?: 500*MILLISECONDS
+		int maxAttempts = flags.maxAttempts ?: Integer.MAX_VALUE
 		try {
 			Throwable lastException = null;
 			Object result;
@@ -321,7 +321,5 @@ class TomcatNodeTest {
 		public String toString() { return message }
 	}
 	
-	private static Object valueOrDefault(Object v, Object fallback) {
-		v!=null ? v : fallback
-	}
 }
+ 
