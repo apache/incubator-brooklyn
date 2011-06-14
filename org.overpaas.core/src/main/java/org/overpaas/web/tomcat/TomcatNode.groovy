@@ -42,8 +42,7 @@ public class TomcatNode extends AbstractEntity implements Startable {
 			//pass http port to setup, if one was specified on this object
 			if (properties.httpPort) setup.httpPort = properties.httpPort
 			setup.start loc
-			//ideallly, should poll until process aborts, or web server port is opened;
-			//but for now we assume port conflict complains after 3s
+			// TODO: remove the 3s sleep and find a better way to detect an early death of the Tomcat process
 			log.debug "waiting to ensure $delegate doesn't abort prematurely"
 			Thread.sleep 3000
 			if (!setup.isRunning(loc)) throw new IllegalStateException("$delegate aborted soon after startup")

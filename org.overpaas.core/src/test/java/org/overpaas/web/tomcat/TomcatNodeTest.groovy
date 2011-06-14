@@ -131,7 +131,7 @@ class TomcatNodeTest {
 	}
 
 	@Test
-	public void fails_if_doesnt_actually_start() {
+	public void detect_early_death_of_tomcat_process() {
 		TomcatNode tc1, tc2;
 		try {
 			Application app = new TestApplication(httpPort: DEFAULT_HTTP_PORT);
@@ -140,7 +140,7 @@ class TomcatNodeTest {
 			tc1.start(location: new SshMachineLocation(name:'london', host:'localhost'))
 			try {
 				tc2.start(location: new SshMachineLocation(name:'london', host:'localhost'))
-				fail "should have detected that $tc2 didn't start since port $DEFAULT_HTTP_PORT was in use"
+				fail "should have detected that $tc2 didn't start since tomcat was already running"
 			} catch (Exception e) {
 				logger.debug "successfully detected failure of {} to start: {}", tc2, e.toString()
 			}
@@ -191,8 +191,6 @@ class TomcatNodeTest {
 				if (status == 404)
 					throw new Exception("App is not there yet (404)");
 				assertEquals 200, status
-				//return the following, for fun&interest
-				tc.activity.getValue(TomcatNode.REQUESTS_PER_SECOND)
 			}, abortOnError: false)
 	}
 	
