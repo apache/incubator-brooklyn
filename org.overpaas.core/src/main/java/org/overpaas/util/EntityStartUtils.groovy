@@ -37,7 +37,7 @@ class EntityStartUtils {
     }
     
     public static Entity startEntity(Map properties=[:], Entity entity, Group parent=null, Location location=null) {
-        log.debug "factory {} creating entity with properties {} and location {}", this, properties, location
+        log.debug "factory creating entity {} with properties {} and location {}", entity, properties, location
 		entity.properties << properties
         if (location) {
             if (entity.properties.location && entity.properties.location!=location) 

@@ -114,6 +114,8 @@ public class TomcatNode extends AbstractEntity implements Startable {
 	public static class Tomcat7SshSetup extends SshBasedJavaAppSetup {
 		String version = "7.0.14"
 		String installDir = installsBaseDir+"/"+"tomcat"+"/"+"apache-tomcat-$version"
+		public static DEFAULT_FIRST_HTTP_PORT = 8080
+		public static DEFAULT_FIRST_SHUTDOWN_PORT = 31880
 		
 		TomcatNode entity
 		String runDir
@@ -176,7 +178,7 @@ exit"""
 		public int getTomcatHttpPort() {
 			synchronized(httpPortLock) {
 				if (httpPort < 0)
-					httpPort = getNextValue("tomcatHttpPort", 8080)
+					httpPort = getNextValue("tomcatHttpPort", DEFAULT_FIRST_HTTP_PORT)
 			}
 			return httpPort
 		}
@@ -185,7 +187,7 @@ exit"""
 		 * so moving it to some anonymous high-numbered location
 		 */
 		public int getTomcatShutdownPort() {
-			getNextValue("tomcatShutdownPort", 38180)
+			getNextValue("tomcatShutdownPort", DEFAULT_FIRST_SHUTDOWN_PORT)
 		}
 	
 		public void shutdown(SshMachineLocation loc) {

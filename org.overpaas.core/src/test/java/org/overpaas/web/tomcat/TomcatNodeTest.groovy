@@ -25,24 +25,39 @@ class TomcatNodeTest {
 
 	static { TimeExtras.init() }
 	
+	/** don't use 8080 since that is commonly used by testing software */
+	static int DEFAULT_HTTP_PORT = 7880
+	
 	@InheritConstructors
 	static class TestApplication extends AbstractApplication {}
 
-	static boolean port8080leftOpen = false;
+	static boolean httpPortLeftOpen = false;
 	
 	@Before
-	public void fail_if_8080_in_use() {
-		if (isPortInUse(8080)) {
-			port8080leftOpen = true;
-			fail "someone is already listening on port 8080; tests assume that port 8080 is free on localhost"
+	public void fail_if_http_port_in_use() {
+		if (isPortInUse(DEFAULT_HTTP_PORT)) {
+			httpPortLeftOpen = true;
+			fail "someone is already listening on port $DEFAULT_HTTP_PORT; tests assume that port $DEFAULT_HTTP_PORT is free on localhost"
 		}
 	}
 	@After
 	//can't fail because that swallows the original exception, grrr!
-	public void moan_if_8080_in_use() {
-		if (!port8080leftOpen && isPortInUse(8080, 1000))
-			logger.warn "port 8080 still running after test"
+	public void moan_if_http_port_in_use() {
+		if (!httpPortLeftOpen && isPortInUse(DEFAULT_HTTP_PORT, 1000))
+			logger.warn "port $DEFAULT_HTTP_PORT still running after test"
 	}
+	private int oldHttpPort=-1;
+	@Before
+	public void changeDefaultHttpPort() {
+		oldHttpPort = TomcatNode.Tomcat7SshSetup.DEFAULT_FIRST_HTTP_PORT;
+		TomcatNode.Tomcat7SshSetup.DEFAULT_FIRST_HTTP_PORT = DEFAULT_HTTP_PORT
+	}
+	@After
+	public void changeDefaultHttpPortBack() {
+		if (oldHttpPort>0)
+			TomcatNode.Tomcat7SshSetup.DEFAULT_FIRST_HTTP_PORT = oldHttpPort
+	}
+	
 	public boolean isPortInUse(int port, long retryAfterMillis=0) {
 		try {
 			def s = new Socket("localhost", port)
@@ -73,7 +88,7 @@ class TomcatNodeTest {
 	public void acceptsLocationInEntity() {
 		logger.debug ""
 		Application app = new TestApplication(location:new SshMachineLocation(name:'london', host:'localhost'));
-		TomcatNode tc = new TomcatNode(parent: app);
+		TomcatNode tc = [ parent: app ]
 		tc.start()
 		tc.shutdown()
 	}
@@ -81,7 +96,7 @@ class TomcatNodeTest {
 	@Test
 	public void acceptsEntityLocationSameAsStartParameter() {
 		Application app = new TestApplication();
-		TomcatNode tc = new TomcatNode(parent:app, location:new SshMachineLocation(name:'london', host:'localhost'));
+		TomcatNode tc = [ parent:app, location:new SshMachineLocation(name:'london', host:'localhost') ]
 		tc.start(location: new SshMachineLocation(name:'london', host:'localhost'))
 		tc.shutdown()
 	}
@@ -90,7 +105,7 @@ class TomcatNodeTest {
 	public void rejectIfEntityLocationConflictsWithStartParameter() {
 		Application app = new TestApplication()
 		boolean caught = false
-		TomcatNode tc = new TomcatNode(parent:app, location:new SshMachineLocation(name:'tokyo', host:'localhost'))
+		TomcatNode tc = [ parent:app, location:new SshMachineLocation(name:'tokyo', host:'localhost') ]
 		try {
 			tc.start([:], null, new SshMachineLocation(name:'london', host:'localhost'))
 			tc.shutdown()
@@ -118,13 +133,13 @@ class TomcatNodeTest {
 	public void fails_if_doesnt_actually_start() {
 		TomcatNode tc1, tc2;
 		try {
-			Application app = new TestApplication(httpPort: 8080);
+			Application app = new TestApplication(httpPort: DEFAULT_HTTP_PORT);
 			tc1 = new TomcatNode(parent: app);
 			tc2 = new TomcatNode(parent: app);
 			tc1.start(location: new SshMachineLocation(name:'london', host:'localhost'))
 			try {
 				tc2.start(location: new SshMachineLocation(name:'london', host:'localhost'))
-				fail "should have detected that $tc2 didn't start since port 8080 was in use"
+				fail "should have detected that $tc2 didn't start since port $DEFAULT_HTTP_PORT was in use"
 			} catch (Exception e) {
 				logger.debug "successfully detected failure of {} to start: {}", tc2, e.toString()
 			}
@@ -147,7 +162,7 @@ class TomcatNodeTest {
 				assertEquals 0, activityValue
 				
 				def port = tc.activity.getValue(TomcatNode.HTTP_PORT)
-				URL url = new URL("http://localhost:${port}/foo")
+				URL url = [ "http://localhost:${port}/foo" ]
 				URLConnection connection = url.openConnection()
 				connection.connect()
 				assertEquals "Apache-Coyote/1.1", connection.getHeaderField("Server")
@@ -167,7 +182,7 @@ class TomcatNodeTest {
 		tc.start(location: new SshMachineLocation(name:'london', host:'localhost'))
 		executeUntilSucceedsWithShutdown(tc, {
 				def port = tc.activity.getValue(TomcatNode.HTTP_PORT)
-				URL url = new URL("http://localhost:${port}/hello-world")
+				URL url = [ "http://localhost:${port}/hello-world" ]
 				URLConnection connection = url.openConnection()
 				connection.connect()
 				int status = ((HttpURLConnection)connection).getResponseCode()
