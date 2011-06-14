@@ -31,12 +31,16 @@ public abstract class AbstractApplication extends AbstractGroup implements Appli
     
     Collection<Entity> getEntities() { entities.values() }
 
+	private static class ClosurePropertyChangeListener extends PropertyChangeListener {
+		Closure closure;
+		public ClosurePropertyChangeListener(Closure c) { closure=c }
+		public void propertyChange(PropertyChangeEvent event) {
+			closure.call(event)
+		}
+	}
+	
     public void addEntityChangeListener(Closure closure) {
-        entities.addPropertyChangeListener new PropertyChangeListener() {
-            public void propertyChange(PropertyChangeEvent event) {
-                closure.call(event)
-            }
-        }
+        entities.addPropertyChangeListener new ClosurePropertyChangeListener(closure);
     }
 
     protected void initApplicationRegistrant() {
