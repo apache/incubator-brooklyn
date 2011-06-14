@@ -29,11 +29,7 @@ class TomcatNodeTest {
 	static int DEFAULT_HTTP_PORT = 7880
 	
 	@InheritConstructors
-	static class TestApplication extends AbstractApplication {
-        public TestApplication(Map properties=[:]) {
-            super(properties);
-        }
-	}
+	static class TestApplication extends AbstractApplication {}
 
 	static boolean httpPortLeftOpen = false;
 	
