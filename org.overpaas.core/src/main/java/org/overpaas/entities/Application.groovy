@@ -31,7 +31,7 @@ public abstract class AbstractApplication extends AbstractGroup implements Appli
     
     Collection<Entity> getEntities() { entities.values() }
 
-	private static class ClosurePropertyChangeListener extends PropertyChangeListener {
+	private static class ClosurePropertyChangeListener implements PropertyChangeListener {
 		Closure closure;
 		public ClosurePropertyChangeListener(Closure c) { closure=c }
 		public void propertyChange(PropertyChangeEvent event) {
