@@ -13,7 +13,7 @@ import javax.management.InstanceNotFoundException
 import org.overpaas.decorators.Startable
 import org.overpaas.entities.AbstractEntity
 import org.overpaas.entities.Group
-import org.overpaas.locations.SshBasedJavaAppSetup
+import org.overpaas.locations.SshBasedJavaWebAppSetup
 import org.overpaas.locations.SshMachineLocation
 import org.overpaas.types.ActivitySensor
 import org.overpaas.types.EntityStartException
@@ -32,7 +32,8 @@ import org.slf4j.LoggerFactory
 public class TomcatNode extends AbstractEntity implements Startable {
 	
 	private static final Logger logger = LoggerFactory.getLogger(TomcatNode.class)
-	
+
+	//FIXME should be called AttributeSensor
     public static final ActivitySensor<Integer> ERROR_COUNT = [ "Request errors", "jmx.reqs.global.totals.errorCount", Integer ]
     public static final ActivitySensor<Integer> HTTP_PORT = [ "HTTP port", "webapp.http.port", Integer ]
     public static final ActivitySensor<Integer> MAX_PROCESSING_TIME = [ "Request count", "jmx.reqs.global.totals.maxTime", Integer ]
@@ -114,8 +115,8 @@ public class TomcatNode extends AbstractEntity implements Startable {
             log.debug "Deployed {} to {}", this.war, deployLoc
         }
 	}
-    
-	private void updateJmxSensors() {
+	
+	private int computeReqsPerSec() {
         def reqs = jmxTool.getChildrenAttributesWithTotal("Catalina:type=GlobalRequestProcessor,name=\"*\"")
 		reqs.put "timestamp", System.currentTimeMillis()
 		
@@ -134,10 +135,29 @@ public class TomcatNode extends AbstractEntity implements Startable {
 		}
 		int rps = (int) Math.round(diff)
 		log.trace "computed $rps reqs/sec over $dt millis for JMX tomcat process at $jmxHost:$jmxPort"
-		
+		rps
+	}
+	
+	/* FIXME discard use of this method (and the registration above), in favour of approach below */
+	private void updateJmxSensors() {
+		int rps = computeReqsPerSec()
 		//is a sensor, should generate update events against subscribers
 		activity.update(REQUESTS_PER_SECOND, rps)
 	}
+	
+	// FIXME something like this seems a much nicer way to register sensors
+//	{ addSensor(REQUESTS_PER_SECOND, new AttributeSensorSource(&computeReqsPerSec), defaultPeriod: 5*SECONDS) }
+//	{ addSensor(REQUESTS_PER_SECOND, &computeReqsPerSec, defaultPeriod: 5*SECONDS) }
+	/* the protected addSensor methods
+	 *   addSensor(AttributeSensor<T>, AttributeSensorSource<T> 
+	 * sit on AbstractEntity takes care of registering the list of sensors, scheduled tasks, etc;  
+	 * if a subscriber requests a different period then that could trump (as enhancement; it gets tricky because
+	 * we are computing derived values & might have someone getting every 3s and someone else every 7s, we'd want to tally total for 7s and for 3s, perhaps...) */
+	// but problem with above is you can't easily see at design-time what the sensors are, could do something like
+//	public AttributeSensorSource<Integer> requestsPerSecond = [ this, REQUESTS_PER_SECOND, this.&computeReqsPerSec, defaultPeriod: 5*SECONDS ]
+	// then assuming AttributeSensorSource has an asSensor adapter method (or even extends AttributeSensor<Integer>) other guys could subscribe to
+	// TomcatNode.requestsPerSecond as Sensor    which returns REQUESTS_PER_SECOND
+	// (or even  TomcatNode.requestsPerSecond  directly...)	
 	
 	@Override
 	public Collection<String> toStringFieldsToInclude() {
@@ -149,7 +169,7 @@ public class TomcatNode extends AbstractEntity implements Startable {
 		if (location) shutdownInLocation(location)
 	}
 
-	public static class Tomcat7SshSetup extends SshBasedJavaAppSetup {
+	public static class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
 		String version = "7.0.14"
 		String installDir = installsBaseDir+"/"+"tomcat"+"/"+"apache-tomcat-$version"
 		public static DEFAULT_FIRST_HTTP_PORT = 8080
