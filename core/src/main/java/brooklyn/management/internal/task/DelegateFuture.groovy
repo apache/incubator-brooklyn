@@ -1,11 +1,10 @@
-package brooklyn.util.internal.task
+package brooklyn.management.internal.task
 
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Future
 import java.util.concurrent.FutureTask
 import java.util.concurrent.TimeUnit
 
-import brooklyn.util.internal.TimeExtras
 
 class DelegateFuture<T> implements Future<T> {
     FutureTask<T> target;

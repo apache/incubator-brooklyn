@@ -1,6 +1,5 @@
-package brooklyn.util.internal.task
+package brooklyn.management.internal.task
 
-import groovy.lang.Closure
 import groovy.time.TimeDuration
 
 import java.util.concurrent.CancellationException
@@ -9,7 +8,6 @@ import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
-import brooklyn.util.internal.TimeExtras
 
 /**
  * A future value.
