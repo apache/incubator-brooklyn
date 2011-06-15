@@ -3,7 +3,8 @@ package com.cloudsoftcorp.monterey.brooklyn.entity
 import java.util.logging.Level
 
 import org.overpaas.types.ActivitySensor
-import org.overpaas.types.Location
+
+import brooklyn.location.Location;
 
 import com.cloudsoftcorp.monterey.control.workrate.api.WorkrateReport
 import com.cloudsoftcorp.monterey.network.m.AbstractMediationWorkrateItem.BasicMediatorTotalWorkrateItem

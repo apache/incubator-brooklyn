@@ -9,10 +9,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.overpaas.activity.Event;
-import org.overpaas.activity.EventFilter;
-import org.overpaas.activity.EventListener;
-import org.overpaas.policy.Entity;
+
+import brooklyn.activity.Event;
+import brooklyn.activity.EventFilter;
+import brooklyn.activity.EventListener;
+import brooklyn.policy.Entity;
 
 import com.cloudsoftcorp.monterey.control.controltool.CdmControlClientAspects.CdmEventDispatcher;
 import com.cloudsoftcorp.monterey.control.controltool.CdmControlClientAspects.NodeLoadListener;
