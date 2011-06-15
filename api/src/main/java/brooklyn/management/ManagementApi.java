@@ -1,6 +1,7 @@
 package brooklyn.management;
 
 import java.util.Collection;
+import brooklyn.entity.EntitySummary;
 
 /**
  * This is the entry point for accessing and interacting with OverPaas. 

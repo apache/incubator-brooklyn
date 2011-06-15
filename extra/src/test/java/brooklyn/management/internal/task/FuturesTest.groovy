@@ -1,4 +1,4 @@
-package brooklyn.util.internal.task
+package brooklyn.management.internal.task
 
 import static brooklyn.util.internal.task.Futures.*;
 
