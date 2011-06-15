@@ -11,6 +11,7 @@
 
     <modules>
         <module>org.overpaas.core</module>
+        <module>api</module>
     </modules>
 
 	<build>
