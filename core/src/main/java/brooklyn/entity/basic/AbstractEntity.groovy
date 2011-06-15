@@ -97,6 +97,11 @@ public abstract class AbstractEntity implements Entity {
         return new BasicEntitySummary(id, displayName, getApplication().getId(), groups);
     }
     
+    public EntityClass getEntityClass() {
+        // FIXME `new EntityClass(this.getClass())`; but have a registry so re-use types?
+        return null;
+    }
+    
     /**
      * Should be invoked at end-of-life to clean up the item.
      */
@@ -142,16 +147,6 @@ public abstract class AbstractEntity implements Entity {
 
     public final Activity activity = new Activity(this)
 
-    public Collection<Field> getSensors() {
-        // TODO find all fields here (or in delegates?) which are Sensor objects (statics only? statics and fields? include entity properties map?)
-        return null;
-    }
-
-    public Collection<Method> getEffectors() {
-        // TODO find all fields here (or in delegates) annotated with @Effector ?
-        return null;
-    }
-    
     /** TODO */
     void subscribe(EventFilter filter, EventListener listener) { }
     

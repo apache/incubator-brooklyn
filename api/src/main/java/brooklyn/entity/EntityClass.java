@@ -1,6 +1,7 @@
 package brooklyn.entity;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.List;
@@ -20,6 +21,9 @@ public class EntityClass implements Serializable {
 
     // TODO Constructor that takes a Class<? extends Entity>, that introspects 
     // the fields/methods for appropriate annotations to infer sensors/effectors
+    // find all fields here (or in delegates?) which are Sensor objects (statics only? statics and fields? include entity properties map?)
+    // find all fields here (or in delegates) annotated with @Effector ?
+    
         
     // TODO maybe these? discuss/delete
     //Collection<EntityType> getSuperTypes();

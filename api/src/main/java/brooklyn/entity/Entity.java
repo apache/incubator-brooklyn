@@ -1,8 +1,6 @@
 package brooklyn.entity;
 
 import java.io.Serializable;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Map;
 
@@ -15,6 +13,8 @@ public interface Entity extends Serializable {
     String getId();
     String getDisplayName();
     EntitySummary getSummary();
+    
+    EntityClass getEntityClass();
     
     Application getApplication();
 
@@ -36,9 +36,6 @@ public interface Entity extends Serializable {
     Collection<Group> getParents();
     void addParent(Group e);
 
-    Collection<Field> getSensors();
-    Collection<Method> getEffectors();
-    
 //    void subscribe(EventFilter filter, EventListener listener);
 //    void subscribe(Predicate<Entity> entities, EventFilter filter, EventListener listener);
 //
