@@ -1,7 +1,4 @@
-package brooklyn.util.internal
-
-import java.io.IOException
-import java.util.Map
+package brooklyn.event.adapter
 
 import javax.management.AttributeList
 import javax.management.MBeanInfo

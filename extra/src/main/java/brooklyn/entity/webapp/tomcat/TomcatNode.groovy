@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.AbstractEntity
 import brooklyn.entity.Group
 import brooklyn.entity.trait.Startable
-import brooklyn.event.ActivitySensor
+import brooklyn.event.Sensor
 import brooklyn.event.EntityStartException
 import brooklyn.location.Location
 import brooklyn.location.basic.SshBasedJavaWebAppSetup
@@ -34,13 +34,12 @@ public class TomcatNode extends AbstractEntity implements Startable {
 	
 	private static final Logger logger = LoggerFactory.getLogger(TomcatNode.class)
 
-	//FIXME should be called AttributeSensor
-    public static final ActivitySensor<Integer> ERROR_COUNT = [ "Request errors", "jmx.reqs.global.totals.errorCount", Integer ]
-    public static final ActivitySensor<Integer> HTTP_PORT = [ "HTTP port", "webapp.http.port", Integer ]
-    public static final ActivitySensor<Integer> MAX_PROCESSING_TIME = [ "Request count", "jmx.reqs.global.totals.maxTime", Integer ]
-    public static final ActivitySensor<Integer> REQUEST_COUNT = [ "Request count", "jmx.reqs.global.totals.requestCount", Integer ]
-    public static final ActivitySensor<Integer> REQUESTS_PER_SECOND = [ "Reqs/Sec", "webapp.reqs.persec.RequestCount", Integer ]
-    public static final ActivitySensor<Integer> TOTAL_PROCESSING_TIME = [ "Request count", "jmx.reqs.global.totals.processingTime", Integer ]
+    public static final Sensor<Integer> ERROR_COUNT = [ "Request errors", "jmx.reqs.global.totals.errorCount", Integer ]
+    public static final Sensor<Integer> HTTP_PORT = [ "HTTP port", "webapp.http.port", Integer ]
+    public static final Sensor<Integer> MAX_PROCESSING_TIME = [ "Request count", "jmx.reqs.global.totals.maxTime", Integer ]
+    public static final Sensor<Integer> REQUEST_COUNT = [ "Request count", "jmx.reqs.global.totals.requestCount", Integer ]
+    public static final Sensor<Integer> REQUESTS_PER_SECOND = [ "Reqs/Sec", "webapp.reqs.persec.RequestCount", Integer ]
+    public static final Sensor<Integer> TOTAL_PROCESSING_TIME = [ "Request count", "jmx.reqs.global.totals.processingTime", Integer ]
    
     // This might be more interesting as some status like 'starting', 'started', 'failed', etc.
     public static final ActivitySensor<String>  NODE_UP = [ "Node started", "webapp.hasStarted", Boolean ];

@@ -1,28 +1,13 @@
 package brooklyn.entity.webapp.jboss
 
-import groovy.transform.InheritConstructors
-
-import java.util.Map
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledFuture
-import java.util.concurrent.TimeUnit
-
-import brooklyn.entity.AbstractEntity
-import brooklyn.entity.Group
-import brooklyn.entity.trait.Startable
-import brooklyn.event.ActivitySensor
-import brooklyn.location.Location
-import brooklyn.location.basic.SshBasedJavaWebAppSetup
-import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.internal.EntityStartUtils
-import brooklyn.util.internal.JmxSensorEffectorTool
+import java.util.jar.Attributes;
 
 /**
  * JBoss web application server.
  */
 @InheritConstructors
 public class JBossNode extends AbstractEntity implements Startable {
-    public static final ActivitySensor<Integer> REQUESTS_PER_SECOND = [ "Reqs/Sec", "jmx.reqs.persec.RequestCount", Double ]
+    public static final Sensor<Integer> REQUESTS_PER_SECOND = [ "Reqs/Sec", "jmx.reqs.persec.RequestCount", Double ]
 
     JmxSensorEffectorTool jmxTool;
 
@@ -56,10 +41,13 @@ public class JBossNode extends AbstractEntity implements Startable {
         reqs.put "timestamp", System.currentTimeMillis()
         //update to explicit location in activity map, but not linked to sensor so probably shouldn't be used too widely 
         Map prev = activity.update(["jmx","reqs","global"], reqs)
+//        old = attributes['jmx.reqs.global']
+        
         double diff = (reqs?.totals?.requestCount ?: 0) - (prev?.totals?.requestCount ?: 0)
         long dt = (reqs?.timestamp ?: 0) - (prev?.timestamp ?: 0)
         if (dt <= 0 || dt > 60*1000) diff = -1; else diff = ((double)1000.0*diff)/dt
         log.debug "computed $diff reqs/sec over $dt millis for JMX jboss process at $jmxHost:$jmxPort"
+//        attributes['jmx.reqs.global'] = diff
         
         //is a sensor, should generate update events against subscribers
         activity.update(REQUESTS_PER_SECOND, diff)

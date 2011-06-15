@@ -12,7 +12,7 @@ import brooklyn.entity.EntitySummary;
  * 
  * @author aled
  */
-public interface ManagementApi {
+public interface ManagementContext {
 
     /**
      * The applications known about in this OverPaas context.

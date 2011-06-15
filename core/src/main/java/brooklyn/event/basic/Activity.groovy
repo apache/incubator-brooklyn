@@ -1,12 +1,10 @@
-package brooklyn.event
-
-import java.util.Collection
-import java.util.Map
+package brooklyn.event.basic
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
+import brooklyn.event.Sensor
 
 public class Activity {
     static final Logger log = LoggerFactory.getLogger(Activity.class)
@@ -38,7 +36,7 @@ public class Activity {
 		// assert val == oldValue
 	}
 	
-	public <T> Object update(ActivitySensor<T> sensor, T newValue) {
+	public <T> Object update(Sensor<T> sensor, T newValue) {
 		log.debug "sensor $sensor field {} set to {}", sensor.field, newValue
 		update( sensor.field.split("\\.") as List, newValue )
 
@@ -63,7 +61,7 @@ public class Activity {
 		return getValueRecurse( values, path )
 	}
 	
-	public <T> T getValue(ActivitySensor<T> sensor) {
+	public <T> T getValue(Sensor<T> sensor) {
 		return getValueRecurse( values, sensor.field.split("\\.") as List )
 	}
 
