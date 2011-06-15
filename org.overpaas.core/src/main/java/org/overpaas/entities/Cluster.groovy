@@ -1,16 +1,18 @@
 package org.overpaas.entities
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Future;
+import java.util.Collection
+import java.util.Map
 
-import org.overpaas.decorators.Resizable;
-import org.overpaas.decorators.Startable;
-import org.overpaas.types.Location;
-import org.overpaas.types.SingleLocation;
-import org.overpaas.util.EntityStartUtils;
-import org.overpaas.util.OverpaasDsl;
+import org.overpaas.decorators.Resizable
+import org.overpaas.decorators.Startable
+import org.overpaas.execution.CompoundTask
+import org.overpaas.execution.ExecutionManager
+import org.overpaas.execution.ParallelTask
+import org.overpaas.execution.SequentialTask
+import org.overpaas.execution.Task
+import org.overpaas.types.Location
+import org.overpaas.types.SingleLocation
+import org.overpaas.util.EntityStartUtils
 
 /**
  * intended to represent a group of homogeneous entities in a single location;
@@ -39,13 +41,16 @@ public abstract class ClusterFromTemplate extends Cluster implements Resizable {
 		if (template) this.template = template
 	}
 	
-	public List<Future> grow(int desiredIncrease) {
-		def nodes = []
-		desiredIncrease.times { nodes += EntityStartUtils.createFromTemplate(this, template) }
-		OverpaasDsl.run( nodes.collect({ node -> { -> node.start() } }) as Closure[] )
+	public CompoundTask grow(int desiredIncrease) {
+		
+		final def nodes = []
+		ExecutionManager.execute(this, new SequentialTask( 
+			new Task({desiredIncrease.times { nodes += EntityStartUtils.createFromTemplate(this, template) }}),
+			new ParallelTask( nodes.collect({ node -> { -> node.start() } }) as Closure[] ))
+		)
 	}
 
-	public List<Future> shrink(int desiredDecrease) {
+	public CompoundTask shrink(int desiredDecrease) {
 		throw new UnsupportedOperationException()
 	}
 
@@ -65,7 +70,7 @@ public abstract class ClusterFromTemplate extends Cluster implements Resizable {
 		}
 	}
 
-	public synchronized List<Future> resize(int newSize) {
+	public synchronized CompoundTask resize(int newSize) {
 		int newNodes = newSize - children.size()
 		if (newNodes>0) grow(newNodes)
 		else if (newNodes<0) shrink(-newNodes);

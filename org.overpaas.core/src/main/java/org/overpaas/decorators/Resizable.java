@@ -1,7 +1,6 @@
 package org.overpaas.decorators;
 
-import java.util.List;
-import java.util.concurrent.Future;
+import org.overpaas.execution.CompoundTask;
 
 public interface Resizable<T> {
     /**
@@ -13,10 +12,9 @@ public interface Resizable<T> {
      * @param desiredSize
      * @return a list of handles to tasks started (possibly empty)
      */
-	List<Future> resize(int desiredSize);
+	CompoundTask resize(int desiredSize);
     
-	List<Future> grow(int desiredIncrease);
+	CompoundTask grow(int desiredIncrease);
     
-	List<Future> shrink(int desiredDecrease);
-    
+	CompoundTask shrink(int desiredDecrease);
 }
