@@ -7,9 +7,9 @@ import org.overpaas.entities.Entity
 
 class ExecutionManager {
 	
-	//this is a test by Alex
-	
 	Executor runner = Executors.newCachedThreadPool() 
+	
+	Map knownTasks = new LinkedHashMap()
 	
 	CompoundTask execute(Entity entity, CompoundTask tasks) {
 		tasks.subTasks.each { it.run(runner) }
