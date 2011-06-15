@@ -4,8 +4,8 @@
 
 *.class
 
-bin
-target
+bin/
+target/
 .classpath
 .project
-.settings
+.settings/
