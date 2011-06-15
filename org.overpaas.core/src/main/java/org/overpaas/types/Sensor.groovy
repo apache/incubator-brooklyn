@@ -10,6 +10,9 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 public abstract class Sensor<T> {
+    // TODO Sensor modeled on concepts in MBeanNotificationInfo
+    // String getName; String getType; String getDescription
+    
     static final Logger log = LoggerFactory.getLogger(Activity.class)
  
 	public final String name;
