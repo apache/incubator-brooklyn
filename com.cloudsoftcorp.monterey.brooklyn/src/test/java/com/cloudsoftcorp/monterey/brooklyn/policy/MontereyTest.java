@@ -1,4 +1,4 @@
-package com.cloudsoftcorp.overpaas.policy;
+package com.cloudsoftcorp.monterey.brooklyn.policy;
 
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -15,6 +15,9 @@ import org.overpaas.policy.BalancerPolicy;
 import org.overpaas.policy.ResizerPolicy;
 
 import com.cloudsoftcorp.monterey.CloudsoftThreadMonitoringTestFixture;
+import com.cloudsoftcorp.monterey.brooklyn.policy.MediatorEntity;
+import com.cloudsoftcorp.monterey.brooklyn.policy.ResizableMediatorTier;
+import com.cloudsoftcorp.monterey.brooklyn.policy.SegmentEntity;
 import com.cloudsoftcorp.monterey.location.api.MontereyActiveLocation;
 import com.cloudsoftcorp.monterey.network.control.api.Dmn1NetworkInfo;
 import com.cloudsoftcorp.monterey.network.control.plane.ManagementNode;
