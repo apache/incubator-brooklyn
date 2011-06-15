@@ -14,7 +14,34 @@ import org.overpaas.util.LanguageUtils;
 
 class TaskStub {
 	final String id = LanguageUtils.newUid()
-//	Object jvm = null //pointer to jvm where something is running, for distributed tasks 
+//	Object jvm = null //pointer to jvm where something is running, for distributed tasks
+
+	
+	
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((id == null) ? 0 : id.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		TaskStub other = (TaskStub) obj;
+		if (id == null) {
+			if (other.id != null)
+				return false;
+		} else if (!id.equals(other.id))
+			return false;
+		return true;
+	}
+	
+	 
 }
 
 class Task<T> implements Future<T> {
@@ -22,15 +49,15 @@ class Task<T> implements Future<T> {
 	public final String displayName
 	public final String description
 	
-	public Task(Map flags=[:], Runnable job) { this(flags, { job.run() } ) }
-	public Task(Map flags=[:], Callable job) { this(flags, { job.call() } ) }
 	public Task(Map flags=[:], Closure job) {
 		this.job = job
 		description = flags.remove("description")
 		displayName = flags.remove("displayName")
 		if (flags) throw new IllegalArgumentException("Unsupported flags passed to task: "+flags)
 	}
-	
+	public Task(Map flags=[:], Runnable job) { this(flags, { if (job in Callable) job.call() else job.run() } as Closure ) }
+	public Task(Map flags=[:], Callable job) { this(flags, { job.call() } as Closure) }
+
 	boolean cancelled = false
 	Future result
 
@@ -61,7 +88,7 @@ class Task<T> implements Future<T> {
 		}
 	}
 	
-	public Collection get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+	public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
 		//FIXME add support for timeouts
 		get()
 //		
