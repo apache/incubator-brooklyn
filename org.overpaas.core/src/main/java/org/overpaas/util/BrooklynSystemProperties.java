@@ -3,10 +3,10 @@ package org.overpaas.util;
 /** 
  * Convenience for retrieving well-defined system properties, including checking if they have been set etc.
  */
-public class OverpaasSystemProperties {
+public class BrooklynSystemProperties {
 
-	public static BooleanSystemProperty DEBUG = new BooleanSystemProperty("com.cloudsoftcorp.brooklyn.debug");
-	public static BooleanSystemProperty EXPERIMENTAL = new BooleanSystemProperty("com.cloudsoftcorp.brooklyn.experimental");
+	public static BooleanSystemProperty DEBUG = new BooleanSystemProperty("brooklyn.debug");
+	public static BooleanSystemProperty EXPERIMENTAL = new BooleanSystemProperty("brooklyn.experimental");
 
 	public static class StringSystemProperty {
 		public StringSystemProperty(String name) {
