@@ -9,6 +9,7 @@ import java.util.Map
 import java.util.concurrent.Callable
 
 import org.junit.After
+import org.junit.BeforeClass
 import org.junit.Before
 import org.junit.Test
 import org.overpaas.entities.AbstractApplication
@@ -24,7 +25,9 @@ class TomcatNodeTest {
 
 	private static final Logger logger = LoggerFactory.getLogger(TomcatNode.class)
 
-	static { TimeExtras.init() }
+	static {
+        TimeExtras.init()
+    }
 	
 	/** don't use 8080 since that is commonly used by testing software */
 	static int DEFAULT_HTTP_PORT = 7880
@@ -33,7 +36,30 @@ class TomcatNodeTest {
 	static class TestApplication extends AbstractApplication {}
 
 	static boolean httpPortLeftOpen = false;
-	
+
+    static File resourcesFolder
+
+    @BeforeClass
+    public static void detect_location_of_resources() {
+        File dir = new File(System.getProperty("user.dir"))
+
+        // Check if the current folder is called org.overpaas.core. If not, check if to see there is a subfolder with
+        // that name
+        if (dir.getAbsolutePath().endsWith(File.separator + "org.overpaas.core") == false)
+            dir = new File(dir, "org.overpaas.core")
+
+        if (!dir.exists())
+            throw new FileNotFoundException("Could not locate the 'org.overpaas.core' directory")
+
+        File r = new File(dir, "resources")
+        if (r.exists()) {
+            resourcesFolder = r
+            return
+        } else {
+            throw new FileNotFoundException("Could not locate the 'resources' folder in the org.overpaas.core project")
+        }
+    }
+
 	@Before
 	public void fail_if_http_port_in_use() {
 		if (isPortInUse(DEFAULT_HTTP_PORT)) {
@@ -207,7 +233,7 @@ class TomcatNodeTest {
 	public void deploy_web_app_appears_at_URL() {
 		Application app = new TestApplication();
 		TomcatNode tc = new TomcatNode(parent: app);
-		tc.war = "resources/hello-world.war"
+		tc.war = new File(resourcesFolder, "hello-world.war").getCanonicalPath()
 		tc.start(location: new SshMachineLocation(name:'london', host:'localhost'))
 		executeUntilSucceedsWithShutdown(tc, {
             def port = tc.activity.getValue(TomcatNode.HTTP_PORT)
