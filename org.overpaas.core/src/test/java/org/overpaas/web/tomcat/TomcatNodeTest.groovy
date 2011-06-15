@@ -149,7 +149,18 @@ class TomcatNodeTest {
 			if (tc2) tc2.shutdown();
 		}
 	} 
-		
+
+    @Test
+    public void tracksNodeState() {
+        TomcatNode tc = [ 
+            parent: new TestApplication(), 
+            location:new SshMachineLocation(name:'london', host:'localhost') 
+        ]
+        tc.start()
+        assertTrue tc.activity.getValue(TomcatNode.NODE_UP)
+        tc.shutdown()
+    }
+    
 	@Test
 	public void publishes_requests_per_second_metric() {
 		Application app = new TestApplication();
@@ -163,9 +174,7 @@ class TomcatNodeTest {
 				assertEquals 0, activityValue
 				
 				def port = tc.activity.getValue(TomcatNode.HTTP_PORT)
-				URL url = [ "http://localhost:${port}/foo" ]
-				URLConnection connection = url.openConnection()
-				connection.connect()
+                def connection = connectToURL "http://localhost:${port}/foo"
 				assertEquals "Apache-Coyote/1.1", connection.getHeaderField("Server")
 
 				Thread.sleep 1000
@@ -174,6 +183,25 @@ class TomcatNodeTest {
 				true
 			}, timeout: 10*SECONDS, useGroovyTruth: true)
 	}
+    
+    @Test
+    public void publishesErrorCountMetric() {
+        Application app = new TestApplication();
+        TomcatNode tc = new TomcatNode(parent: app);
+        tc.start(location: new SshMachineLocation(name:'london', host:'localhost'))
+        executeUntilSucceedsWithShutdown(tc, {
+            def port = tc.activity.getValue(TomcatNode.HTTP_PORT)
+            // Connect to non-existent URL n times
+            def n = 5
+            def connection = n.times { connectToURL("http://localhost:${port}/does_not_exist") }
+            int errorCount = tc.activity.getValue(TomcatNode.ERROR_COUNT)
+            logger.info "$errorCount errors in total"
+            
+            // TODO firm up assertions.  confused by the values returned (generally n*2?)
+            assert errorCount > 0
+            assertEquals 0, errorCount % n
+        })
+    }
 	
 	@Test
 	public void deploy_web_app_appears_at_URL() {
@@ -182,22 +210,17 @@ class TomcatNodeTest {
 		tc.war = "resources/hello-world.war"
 		tc.start(location: new SshMachineLocation(name:'london', host:'localhost'))
 		executeUntilSucceedsWithShutdown(tc, {
-				def port = tc.activity.getValue(TomcatNode.HTTP_PORT)
-				URL url = [ "http://localhost:${port}/hello-world" ]
-				URLConnection connection = url.openConnection()
-				connection.connect()
-				int status = ((HttpURLConnection)connection).getResponseCode()
-				logger.info "connection to {} gives {}", url, status
-				if (status == 404)
-					throw new Exception("App is not there yet (404)");
-				assertEquals 200, status
-			}, abortOnError: false)
+            def port = tc.activity.getValue(TomcatNode.HTTP_PORT)
+            def url  = "http://localhost:${port}/hello-world"
+            def connection = connectToURL(url)
+            int status = ((HttpURLConnection)connection).getResponseCode()
+            logger.info "connection to {} gives {}", url, status
+            if (status == 404)
+                throw new Exception("App is not there yet (404)");
+            assertEquals 200, status
+        }, abortOnError: false)
 	}
-	
-	/** convenience for entities to ensure they shutdown afterwards */
-	public static void executeUntilSucceedsWithShutdown(Map flags=[:], Entity entity, Runnable r) {
-		executeUntilSucceedsWithFinallyBlock(flags, r, { entity.shutdown() })
-	}
+
 	
 	@Test
 	public void detect_failure_if_tomcat_cant_bind_to_port() {
@@ -222,6 +245,24 @@ class TomcatNodeTest {
 			t.join();
 		}
 	}
+    
+    /**
+     * Connects to the given url and returns the connection.
+     * @param u
+     * @return
+     */
+    private URLConnection connectToURL(String u) {
+        URL url = [u]
+        URLConnection connection = url.openConnection()
+        connection.connect()
+        connection.getContentLength() // Make sure the connection is made.
+        return connection
+    }
+    
+    /** convenience for entities to ensure they shutdown afterwards */
+    public static void executeUntilSucceedsWithShutdown(Map flags=[:], Entity entity, Runnable r) {
+        executeUntilSucceedsWithFinallyBlock(flags, r, { entity.shutdown() })
+    }
 
 	/**
 	 * Convenience method for cases where we need to test until something is true.
@@ -237,12 +278,12 @@ class TomcatNodeTest {
 	 */
 	public static void executeUntilSucceedsWithFinallyBlock(Map flags=[:], Runnable r, Runnable finallyBlock={}) {
 		println "abortOnError = "+flags.abortOnError
-		boolean abortOnException = valueOrDefault flags.abortOnException, false
-		boolean abortOnError = valueOrDefault flags.abortOnError, true
-		boolean useGroovyTruth = valueOrDefault flags.useGroovyTruth, false
-		TimeDuration timeout = valueOrDefault flags.timeout, 30*SECONDS
-		TimeDuration period = valueOrDefault flags.period, 500*MILLISECONDS
-		int maxAttempts = valueOrDefault flags.maxAttempts, Integer.MAX_VALUE
+		boolean abortOnException = flags.abortOnException ?: false
+		boolean abortOnError = flags.abortOnError ?: true
+		boolean useGroovyTruth = flags.useGroovyTruth ?: false
+		TimeDuration timeout = flags.timeout ?: 30*SECONDS
+		TimeDuration period = flags.period ?: 500*MILLISECONDS
+		int maxAttempts = flags.maxAttempts ?: Integer.MAX_VALUE
 		try {
 			Throwable lastException = null;
 			Object result;
@@ -291,7 +332,5 @@ class TomcatNodeTest {
 		public String toString() { return message }
 	}
 	
-	private static Object valueOrDefault(Object v, Object fallback) {
-		v!=null ? v : fallback
-	}
 }
+ 
