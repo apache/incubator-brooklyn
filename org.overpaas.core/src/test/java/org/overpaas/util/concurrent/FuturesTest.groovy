@@ -1,6 +1,6 @@
-package org.overpaas.util.concurrent
+package brooklyn.util.internal.task
 
-import static org.overpaas.util.concurrent.Futures.*;
+import static brooklyn.util.internal.task.Futures.*;
 
 import java.util.concurrent.TimeUnit;
 
