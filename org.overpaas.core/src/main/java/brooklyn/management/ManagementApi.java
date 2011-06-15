@@ -1,4 +1,4 @@
-package brooklyn.entity;
+package brooklyn.management;
 
 import java.util.Collection;
 
