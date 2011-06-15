@@ -27,8 +27,9 @@ import com.google.common.base.Predicate;
  * @see AbstractEntity
  */
 public interface Entity extends Serializable {
-    String getDisplayName();
     String getId();
+    String getDisplayName();
+    EntitySummary getEntitySummary();
     
     Application getApplication();
 
@@ -103,6 +104,12 @@ public abstract class AbstractEntity implements Entity {
  
     Application application
 
+    public EntitySummary getEntitySummary() {
+        final Collection<String> groupIds = new ArrayList<String>(parent.size());
+        parents.each { groupIds.add(it.getId()) };
+        new BasicEntitySummary(id, displayName, getApplication().getId(), groupIds);
+    }
+    
     /**
      * Adds a parent, registers with application if necessary
      */
