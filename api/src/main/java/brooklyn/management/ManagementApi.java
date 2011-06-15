@@ -1,6 +1,8 @@
 package brooklyn.management;
 
 import java.util.Collection;
+
+import brooklyn.entity.Entity;
 import brooklyn.entity.EntitySummary;
 
 /**

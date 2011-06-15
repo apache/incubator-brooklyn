@@ -1,14 +1,10 @@
-package brooklyn.entity;
+package brooklyn.entity.basic
 
-import java.util.Collection
 import java.util.Map
 import java.util.concurrent.CopyOnWriteArraySet
 
-public interface Group extends Entity {
-    Collection<Entity> getChildren();
-    public Entity addChild(Entity child);
-    public boolean removeChild(Entity child);
-}
+import brooklyn.entity.Entity
+import brooklyn.entity.Group
 
 public abstract class AbstractGroup extends AbstractEntity implements Group {
     public AbstractGroup(Map props=[:], Group parent=null) {

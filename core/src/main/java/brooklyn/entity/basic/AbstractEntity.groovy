@@ -1,64 +1,23 @@
-package brooklyn.entity
+package brooklyn.entity.basic
 
-import groovy.util.ObservableList
-
-import java.io.Serializable
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 import java.util.Collection
+import java.util.EventListener
 import java.util.Map
 import java.util.concurrent.CopyOnWriteArrayList
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.event.Activity
+import brooklyn.entity.Application
+import brooklyn.entity.Entity
+import brooklyn.entity.EntitySummary
+import brooklyn.entity.Group
 import brooklyn.event.SensorEvent
 import brooklyn.event.basic.EventFilter
-import brooklyn.event.basic.EventListener
-import brooklyn.util.internal.LanguageUtils
-import brooklyn.util.internal.SerializableObservables.SerializableObservableList
 
 import com.google.common.base.Predicate
-
-/**
- * The basic interface for an OverPaaS entity.
- * 
- * @see AbstractEntity
- */
-public interface Entity extends Serializable {
-    String getId();
-    String getDisplayName();
-    EntitySummary getSummary();
-    
-    Application getApplication();
-
-    /**
-     * ad hoc map for storing, e.g. description, icons, etc
-     */
-    Map getPresentationAttributes();
-
-    /**
-     * Mutable properties on this entity.
-     * 
-     * Allows one to put arbitrary properties on entities which makes life much easier/dynamic, 
-     * though we lose something in type safety.
-     * <p>
-     * e.g. jmxHost / jmxPort are handled as properties.
-     */
-    Map<String, Object> getProperties();
-
-    Collection<Group> getParents();
-    void addParent(Group e);
-
-    Collection<Field> getSensors();
-    Collection<Method> getEffectors();
-    
-    void subscribe(EventFilter filter, EventListener listener);
-    void subscribe(Predicate<Entity> entities, EventFilter filter, EventListener listener);
-
-    void raiseEvent(SensorEvent<?> event);
-}
 
 /**
  * Default {@link Entity} definition.

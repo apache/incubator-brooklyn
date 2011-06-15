@@ -1,23 +1,10 @@
-package brooklyn.entity;
-
-import groovy.lang.Closure
-import groovy.util.ObservableMap
+package brooklyn.entity.basic
 
 import java.beans.PropertyChangeEvent
 import java.beans.PropertyChangeListener
 import java.util.Collection
 import java.util.Map
 import java.util.concurrent.ConcurrentHashMap
-
-import brooklyn.entity.trait.Startable
-import brooklyn.util.internal.EntityStartUtils
-import brooklyn.util.internal.SerializableObservables.SerializableObservableMap
-
-public interface Application extends Entity, Startable {
-	void registerEntity(Entity entity);
-	Collection<Entity> getEntities();
-    void addEntityChangeListener(Closure closure);
-}
 
 public abstract class AbstractApplication extends AbstractGroup implements Application {
     public AbstractApplication(Map properties=[:]) {
@@ -32,16 +19,16 @@ public abstract class AbstractApplication extends AbstractGroup implements Appli
     
     Collection<Entity> getEntities() { entities.values() }
 
-	private static class ClosurePropertyChangeListener implements PropertyChangeListener {
-		Closure closure;
-		public ClosurePropertyChangeListener(Closure c) { closure=c }
-		public void propertyChange(PropertyChangeEvent event) {
-			closure.call(event)
-		}
-	}
-	
-    public void addEntityChangeListener(Closure closure) {
-        entities.addPropertyChangeListener new ClosurePropertyChangeListener(closure);
+    private static class ClosurePropertyChangeListener implements PropertyChangeListener {
+        Closure closure;
+        public ClosurePropertyChangeListener(Closure c) { closure=c }
+        public void propertyChange(PropertyChangeEvent event) {
+            closure.call(event)
+        }
+    }
+    
+    public void addEntityChangeListener(PropertyChangeListener listener) {
+        entities.addPropertyChangeListener listener;
     }
 
     protected void initApplicationRegistrant() {

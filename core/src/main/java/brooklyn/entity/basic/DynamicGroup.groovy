@@ -1,8 +1,11 @@
 package brooklyn.entity.basic
 
-import groovy.lang.Closure;
+import groovy.lang.Closure
 
-import java.util.Map;
+import java.util.Map
+
+import brooklyn.entity.Application
+import brooklyn.entity.Group
 
 public class DynamicGroup extends AbstractGroup {
     Closure entityFilter=null;
