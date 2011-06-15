@@ -33,9 +33,13 @@ public class TomcatNode extends AbstractEntity implements Startable {
 	
 	private static final Logger logger = LoggerFactory.getLogger(TomcatNode.class)
 	
-	public static final ActivitySensor<Integer> REQUESTS_PER_SECOND = [ "Reqs/Sec", "webapp.reqs.persec.RequestCount", Integer ]
-	public static final ActivitySensor<Integer> HTTP_PORT = [ "HTTP port", "webapp.http.port", Integer ]
-
+    public static final ActivitySensor<Integer> ERROR_COUNT = [ "Request errors", "jmx.reqs.global.totals.errorCount", Integer ]
+    public static final ActivitySensor<Integer> HTTP_PORT = [ "HTTP port", "webapp.http.port", Integer ]
+    public static final ActivitySensor<Integer> MAX_PROCESSING_TIME = [ "Request count", "jmx.reqs.global.totals.maxTime", Integer ]
+    public static final ActivitySensor<Integer> REQUEST_COUNT = [ "Request count", "jmx.reqs.global.totals.requestCount", Integer ]
+    public static final ActivitySensor<Integer> REQUESTS_PER_SECOND = [ "Reqs/Sec", "webapp.reqs.persec.RequestCount", Integer ]
+    public static final ActivitySensor<Integer> TOTAL_PROCESSING_TIME = [ "Request count", "jmx.reqs.global.totals.processingTime", Integer ]
+    
 	static {
 		TomcatNode.metaClass.startInLocation = { Group parent, SshMachineLocation loc ->
 			def setup = new Tomcat7SshSetup(delegate)
@@ -186,7 +190,7 @@ exit
 		public String getCheckRunningScript() { """\
 cd $runDir && \\
 echo pid is `cat pid.txt` && \\
-(ps aux | grep tomcat | grep `cat pid.txt` > pid.list || echo "no tomcat processes found") && \\
+(ps aux | grep '[t]'omcat | grep `cat pid.txt` > pid.list || echo "no tomcat processes found") && \\
 cat pid.list && \\
 if [ -z "`cat pid.list`" ] ; then echo process no longer running ; exit 1 ; fi
 exit
