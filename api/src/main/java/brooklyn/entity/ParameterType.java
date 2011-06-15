@@ -6,11 +6,14 @@ import java.io.Serializable;
 public class ParameterType implements Serializable {
     private static final long serialVersionUID = -5521879180483663919L;
     
-    private final String name;
-    private final String type;
-    private final String description;
-    
-    ParameterType(String name, String type, String description) {
+    private String name;
+    private String type;
+    private String description;
+
+    @SuppressWarnings("unused")
+    private ParameterType() { /* for gson */ }
+
+    public ParameterType(String name, String type, String description) {
         this.name = name;
         this.type = type;
         this.description = description;
