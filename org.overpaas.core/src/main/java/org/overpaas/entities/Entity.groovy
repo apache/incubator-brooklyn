@@ -29,7 +29,7 @@ import com.google.common.base.Predicate;
 public interface Entity extends Serializable {
     String getId();
     String getDisplayName();
-    EntitySummary getEntitySummary();
+    EntitySummary getSummary();
     
     Application getApplication();
 
@@ -89,6 +89,7 @@ public abstract class AbstractEntity implements Entity {
     final Map properties = [:]
  
     public void propertyMissing(String name, value) { properties[name] = value }
+ 
     public Object propertyMissing(String name) {
         if (properties.containsKey(name)) return properties[name];
         else {
@@ -104,12 +105,6 @@ public abstract class AbstractEntity implements Entity {
  
     Application application
 
-    public EntitySummary getEntitySummary() {
-        final Collection<String> groupIds = new ArrayList<String>(parent.size());
-        parents.each { groupIds.add(it.getId()) };
-        new BasicEntitySummary(id, displayName, getApplication().getId(), groupIds);
-    }
-    
     /**
      * Adds a parent, registers with application if necessary
      */
@@ -137,6 +132,12 @@ public abstract class AbstractEntity implements Entity {
         app.registerEntity(this)
     }
 
+    public EntitySummary getSummary() {
+        Collection<String> groups = []
+        getParents().each { groups.add it.getId() }
+        return new BasicEntitySummary(id, displayName, getApplication().getId(), groups);
+    }
+    
     /**
      * Should be invoked at end-of-life to clean up the item.
      */
