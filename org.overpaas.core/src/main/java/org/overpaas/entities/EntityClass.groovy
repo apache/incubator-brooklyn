@@ -4,6 +4,8 @@ import java.lang.reflect.Method
 import java.util.Collection
 import java.util.List
 
+import org.overpaas.types.Sensor
+
 public class EntityClass implements Serializable {
     final String name;
     final Collection<Sensor> sensors;
