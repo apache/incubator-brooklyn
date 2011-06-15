@@ -149,7 +149,17 @@ class TomcatNodeTest {
 			if (tc2) tc2.shutdown();
 		}
 	} 
-		
+
+    @Test
+    public void tracksNodeState() {
+        TomcatNode tc = [ 
+            parent: new TestApplication(), 
+            location:new SshMachineLocation(name:'london', host:'localhost') 
+        ]
+        tc.start()
+        assertTrue tc.activity.getValue(TomcatNode.NODE_UP)
+    }
+    
 	@Test
 	public void publishes_requests_per_second_metric() {
 		Application app = new TestApplication();

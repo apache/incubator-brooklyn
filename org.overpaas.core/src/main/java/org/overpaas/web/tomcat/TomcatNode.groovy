@@ -39,6 +39,9 @@ public class TomcatNode extends AbstractEntity implements Startable {
     public static final ActivitySensor<Integer> REQUEST_COUNT = [ "Request count", "jmx.reqs.global.totals.requestCount", Integer ]
     public static final ActivitySensor<Integer> REQUESTS_PER_SECOND = [ "Reqs/Sec", "webapp.reqs.persec.RequestCount", Integer ]
     public static final ActivitySensor<Integer> TOTAL_PROCESSING_TIME = [ "Request count", "jmx.reqs.global.totals.processingTime", Integer ]
+   
+    // This might be more interesting as some status like 'starting', 'started', 'failed', etc.
+    public static final ActivitySensor<String>  NODE_UP = [ "Node started", "webapp.hasStarted", Boolean ];
     
 	static {
 		TomcatNode.metaClass.startInLocation = { Group parent, SshMachineLocation loc ->
@@ -90,14 +93,19 @@ public class TomcatNode extends AbstractEntity implements Startable {
 					state = "InstanceNotFound"
 				}
 				logger.trace "state: $state"
-				if(state == "FAILED")
+				if (state == "FAILED") {
+                    activity.update(NODE_UP, false)
 					throw new EntityStartException("Tomcat connector for port $port is in state $state")
-				if(state == "STARTED")
+				} else if (state == "STARTED") {
+                    activity.update(NODE_UP, true)
 					break;
+				}
 				Thread.sleep 250
 			}
-			if(state != "STARTED")
+			if(state != "STARTED") {
+                activity.update(NODE_UP, false)
 				throw new EntityStartException("Tomcat connector for port $port is in state $state after 30 seconds")
+            }
 		}
         if (this.war) {
             def deployLoc = location ?: this.location
@@ -106,16 +114,15 @@ public class TomcatNode extends AbstractEntity implements Startable {
             log.debug "Deployed {} to {}", this.war, deployLoc
         }
 	}
-	
+    
 	private void updateJmxSensors() {
-	
         def reqs = jmxTool.getChildrenAttributesWithTotal("Catalina:type=GlobalRequestProcessor,name=\"*\"")
 		reqs.put "timestamp", System.currentTimeMillis()
 		
         // update to explicit location in activity map, but not linked to sensor 
         // so probably shouldn't be used too widely 
 		Map prev = activity.update(["jmx","reqs","global"], reqs)
-		
+        
         // Calculate requests per second
         double diff = (reqs?.totals?.requestCount ?: 0) - (prev?.totals?.requestCount ?: 0)
 		long dt = (reqs?.timestamp ?: 0) - (prev?.timestamp ?: 0)
