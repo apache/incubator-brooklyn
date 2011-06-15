@@ -12,7 +12,7 @@ import brooklyn.util.internal.task.QualifiableFuture
 /**
  * Class whose statics can be imported to make code more readable, viz.
  * 
- * import org.overpaas.util.OverpaasDsl.*
+ * import brooklyn.util.internal.OverpaasDsl.*
  * 
  * @author alex
  */

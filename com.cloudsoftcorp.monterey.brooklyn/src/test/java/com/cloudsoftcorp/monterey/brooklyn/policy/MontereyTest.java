@@ -11,8 +11,9 @@ import java.util.logging.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.overpaas.policy.BalancerPolicy;
-import org.overpaas.policy.ResizerPolicy;
+
+import brooklyn.policy.BalancerPolicy;
+import brooklyn.policy.ResizerPolicy;
 
 import com.cloudsoftcorp.monterey.CloudsoftThreadMonitoringTestFixture;
 import com.cloudsoftcorp.monterey.brooklyn.policy.MediatorEntity;

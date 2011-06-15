@@ -10,15 +10,16 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.overpaas.activity.Event;
-import org.overpaas.activity.EventDictionary;
-import org.overpaas.activity.NestedMapAccessor;
-import org.overpaas.activity.impl.EventImpl;
-import org.overpaas.activity.impl.NestedMapAccessorImpl;
-import org.overpaas.policy.BalanceableEntity;
-import org.overpaas.policy.Entity;
-import org.overpaas.policy.MoveableEntity;
-import org.overpaas.policy.ResizableEntity;
+
+import brooklyn.activity.Event;
+import brooklyn.activity.EventDictionary;
+import brooklyn.activity.NestedMapAccessor;
+import brooklyn.activity.impl.EventImpl;
+import brooklyn.activity.impl.NestedMapAccessorImpl;
+import brooklyn.policy.BalanceableEntity;
+import brooklyn.policy.Entity;
+import brooklyn.policy.MoveableEntity;
+import brooklyn.policy.ResizableEntity;
 
 import com.cloudsoftcorp.monterey.control.workrate.api.WorkrateReport;
 import com.cloudsoftcorp.monterey.location.api.MontereyActiveLocation;

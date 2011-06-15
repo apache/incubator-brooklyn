@@ -18,9 +18,10 @@ import org.overpaas.entities.AbstractEntity
 import org.overpaas.entities.Group
 import org.overpaas.locations.SshMachineLocation
 import org.overpaas.types.ActivitySensor
-import org.overpaas.types.Location
 import org.overpaas.util.BrooklynSystemProperties
 import org.overpaas.util.EntityStartUtils
+
+import brooklyn.location.Location;
 
 import com.cloudsoftcorp.monterey.clouds.NetworkId
 import com.cloudsoftcorp.monterey.clouds.basic.DeploymentUtils
