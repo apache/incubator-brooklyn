@@ -11,7 +11,6 @@
 
     <modules>
         <module>org.overpaas.core</module>
-        <module>org.overpaas.policies</module>
     </modules>
 
 	<build>
