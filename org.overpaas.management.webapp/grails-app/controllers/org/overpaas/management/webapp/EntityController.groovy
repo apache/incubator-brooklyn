@@ -1,4 +1,4 @@
-package org.overpaas.grails
+package org.overpaas.management.webapp
 
 import grails.converters.JSON
 
@@ -12,3 +12,4 @@ class EntityController {
     }
 
 }
+
