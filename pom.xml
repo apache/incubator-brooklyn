@@ -199,7 +199,8 @@
 			<id>Brooklyn</id>
 	
 			<modules>
-				<module>api</module>
+                <module>parent</module>
+                <module>api</module>
 				<module>core</module>
 				<module>extra</module>
 			</modules>
