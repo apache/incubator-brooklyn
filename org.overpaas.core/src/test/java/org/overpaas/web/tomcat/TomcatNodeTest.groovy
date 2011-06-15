@@ -158,6 +158,7 @@ class TomcatNodeTest {
         ]
         tc.start()
         assertTrue tc.activity.getValue(TomcatNode.NODE_UP)
+        tc.shutdown()
     }
     
 	@Test
