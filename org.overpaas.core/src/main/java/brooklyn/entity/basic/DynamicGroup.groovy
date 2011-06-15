@@ -1,4 +1,4 @@
-package brooklyn.entity
+package brooklyn.entity.basic
 
 import groovy.lang.Closure;
 
