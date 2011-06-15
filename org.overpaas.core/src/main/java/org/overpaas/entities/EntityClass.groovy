@@ -17,8 +17,8 @@ public class EntityClass implements Serializable {
         this.effectors = effectors;
     }
 
-    // TODO Could have constructor that takes a Class<? extends Entity>, that introspects 
-    // the fields/methods for appropriate annotations
+    // TODO Constructor that takes a Class<? extends Entity>, that introspects 
+    // the fields/methods for appropriate annotations to infer sensors/effectors
         
     // TODO maybe these? discuss/delete
     //Collection<EntityType> getSuperTypes();
