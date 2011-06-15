@@ -3,6 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>brooklyn-api</artifactId>
 	<packaging>bundle</packaging>
+	<name>Brooklyn API</name>
 
 	<parent>
 		<groupId>brooklyn</groupId>
