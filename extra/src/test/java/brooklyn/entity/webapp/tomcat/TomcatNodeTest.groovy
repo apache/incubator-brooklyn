@@ -1,9 +1,11 @@
 package brooklyn.entity.webapp.tomcat;
 
+import java.util.Map;
+
 import static java.util.concurrent.TimeUnit.*
 
 import groovy.time.TimeDuration
-import groovy.transform.InheritConstructors
+//import groovy.transform.InheritConstructors
 
 import java.util.concurrent.Callable
 
@@ -33,8 +35,12 @@ class TomcatNodeTest {
 	/** don't use 8080 since that is commonly used by testing software */
 	static int DEFAULT_HTTP_PORT = 7880
 	
-	@InheritConstructors
-	static class TestApplication extends AbstractApplication {}
+//	@InheritConstructors
+	static class TestApplication extends AbstractApplication {
+        public TestApplication(Map properties=[:]) {
+            super(properties)
+        }
+    }
 
 	static boolean httpPortLeftOpen = false;
 
