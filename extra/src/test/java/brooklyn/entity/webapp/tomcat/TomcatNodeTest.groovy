@@ -61,13 +61,13 @@ class TomcatNodeTest {
 	private int oldHttpPort=-1;
 	@Before
 	public void changeDefaultHttpPort() {
-		oldHttpPort = TomcatNode.Tomcat7SshSetup.DEFAULT_FIRST_HTTP_PORT;
-		TomcatNode.Tomcat7SshSetup.DEFAULT_FIRST_HTTP_PORT = DEFAULT_HTTP_PORT
+		oldHttpPort = Tomcat7SshSetup.DEFAULT_FIRST_HTTP_PORT;
+		Tomcat7SshSetup.DEFAULT_FIRST_HTTP_PORT = DEFAULT_HTTP_PORT
 	}
 	@After
 	public void changeDefaultHttpPortBack() {
 		if (oldHttpPort>0)
-			TomcatNode.Tomcat7SshSetup.DEFAULT_FIRST_HTTP_PORT = oldHttpPort
+			Tomcat7SshSetup.DEFAULT_FIRST_HTTP_PORT = oldHttpPort
 	}
 	
 	public boolean isPortInUse(int port, long retryAfterMillis=0) {
