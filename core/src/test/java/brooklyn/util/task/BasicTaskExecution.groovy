@@ -1,4 +1,4 @@
-package brooklyn.util.task
+package brooklyn.util.task;
 
 import java.util.Map;
 
