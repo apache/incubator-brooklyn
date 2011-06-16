@@ -1,7 +1,9 @@
+import brooklyn.event.Event;
+import brooklyn.event.EventListener;
+
 package brooklyn.entity.basic
 
-import java.util.Map;
-
+import java.util.Map
 import java.util.Collection
 import java.util.EventListener
 import java.util.Map
@@ -15,11 +17,12 @@ import brooklyn.entity.Entity
 import brooklyn.entity.EntityClass
 import brooklyn.entity.EntitySummary
 import brooklyn.entity.Group
-import brooklyn.event.AttributeSensor
+import brooklyn.event.Sensor
 import brooklyn.event.basic.Activity
 import brooklyn.event.basic.EventFilter
 import brooklyn.event.basic.SensorEvent
 import brooklyn.location.Location
+import brooklyn.util.internal.LanguageUtils
 
 import com.google.common.base.Predicate
 
@@ -54,6 +57,8 @@ public abstract class AbstractEntity implements Entity {
     
     Collection<Location> locations = []
  
+    // TODO ref to local mgmt context and sub mgr etc
+ 
     public final Activity activity = new Activity(this)
 
     public void propertyMissing(String name, value) { properties[name] = value }
@@ -69,7 +74,7 @@ public abstract class AbstractEntity implements Entity {
     }
 
     /** Entity hierarchy */
-    final Collection<Group> parents = new CopyOnWriteArrayList<Group>();
+    final Collection<Group> parents = new CopyOnWriteArrayList<Group>()
  
     Application application
 
@@ -133,8 +138,7 @@ public abstract class AbstractEntity implements Entity {
     }
  
     /** override this, adding to the collection, to supply fields whose value, if not null, should be included in the toString */
-    public Collection<String> toStringFieldsToInclude() { ['id', 'displayName']}
-
+    public Collection<String> toStringFieldsToInclude() { ['id', 'displayName'] }
 
     public AbstractEntity(Map properties=[:], Group parent=null) {
         def parentFromProps = properties.remove('parent')
@@ -158,16 +162,21 @@ public abstract class AbstractEntity implements Entity {
         return activity.asMap();
     }
     
-    public <T> void updateAttribute(AttributeSensor<T> attribute, T val) {
+    public <T> void updateAttribute(Sensor<T> attribute, T val) {
         activity.update(attribute, val);
     }
     
-    /** TODO */
-    void subscribe(EventFilter filter, EventListener listener) { }
+    // TODO implement private methods
+    private void subscribe(EventFilter filter, EventListener listener) { }
+    private void subscribe(Predicate<Entity> entities, EventFilter filter, EventListener listener) { }
     
-    /** TODO */
-    void subscribe(Predicate<Entity> entities, EventFilter filter, EventListener listener) { }
-
-    /** TODO */
-    void raiseEvent(SensorEvent<?> event) { }
+    /** @see Entity#subscribe(String, String, EventListener) */
+    <T> void subscribe(String entityId, String sensorname, EventListener<T> listener) {
+        // TODO complete
+    }
+     
+    /** @see Entity#raiseEvent(Event) */
+    <T> void raiseEvent(Event<T> event) {
+        // TODO complete
+    }
 }

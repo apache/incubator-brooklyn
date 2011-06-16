@@ -16,7 +16,7 @@ public class Activity {
 		this.entity = entity;
 	}
 	
-	public Object update(Collection<String> path, Object newValue) {
+	public <T> T update(Collection<String> path, T newValue) {
 		Map map
 		String key
 		Object val = values
@@ -33,36 +33,21 @@ public class Activity {
 		}
 		log.debug "putting at $path, $key under $map"
 		def oldValue = map.put(key, newValue)
-		// assert val == oldValue
+        SensorEvent<T> event = new SensorEvent<T>(sensor, entity, newValue)
+        entity.raiseEvent event
 	}
 	
 	public <T> Object update(Sensor<T> sensor, T newValue) {
-		log.debug "sensor $sensor field {} set to {}", sensor.field, newValue
-		update( sensor.field.split("\\.") as List, newValue )
-
-		//TODO notify subscribers!
-				
-        SensorEvent<T> event = new SensorEvent<T>();
-        event.sensor = sensor;
-        event.entity = entity;
-        event.value = newValue;
-        entity.raiseEvent event
-        
-//		entity.getApplication().getSubscriptionManager().fire(entity, sensor, newValue)
-		// so that a policy could say e.g.
-		//application.subscribe(entity, sensor)
-		//or
-		//application.subscribeToChildren(entity, sensor)
-		//AND group defines a NotificationSensor around its children
-		//(so anyone who subscribesToChildren will implicitly also subscribe to CHILDREN sensor on the entity) 
+		log.debug "sensor $sensor field {} set to {}", sensor.name, newValue
+		update(sensor.getNameParts(), newValue)
 	}
 	
 	public Object getValue(Collection<String> path) {
-		return getValueRecurse( values, path )
+		return getValueRecurse(values, path)
 	}
 	
 	public <T> T getValue(Sensor<T> sensor) {
-		return getValueRecurse( values, sensor.field.split("\\.") as List )
+		return getValueRecurse(values, sensor.getNameParts())
 	}
 
 	private static Object getValueRecurse(Map node, Collection<String> path) {
