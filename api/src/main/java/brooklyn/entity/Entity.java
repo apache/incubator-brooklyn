@@ -15,9 +15,8 @@ import brooklyn.location.Location;
  * @see AbstractEntity
  */
 public interface Entity extends Serializable {
-
     /**
-     * @return The unique identifier for this entity.
+     * The unique identifier for this entity.
      */
     String getId();
     

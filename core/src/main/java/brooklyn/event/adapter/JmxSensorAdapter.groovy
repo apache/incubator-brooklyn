@@ -9,16 +9,26 @@ import javax.management.remote.JMXConnector
 import javax.management.remote.JMXConnectorFactory
 import javax.management.remote.JMXServiceURL
 
+import brooklyn.entity.Entity
+
 public class JmxSensorAdapter {
 	public final String jmxUrl;
 	JMXConnector jmxc;
 	MBeanServerConnection mbsc = null;
 	
 	long connectPollPeriodMillis = 500;
+    
+    public JmxSensorAdapter(Entity entity, Map<String, String> attributes) {
+        String host = entity.properties['jmxHost']
+        int port = entity.properties['jmxPort']
+ 
+        this.jmxUrl =  "service:jmx:rmi:///jndi/rmi://"+host+":"+port+"/jmxrmi";
+    }
 	
 	public JmxSensorAdapter(String jmxUrl) {
 		this.jmxUrl = jmxUrl;
 	}
+ 
 	public JmxSensorAdapter(String host, int port) {
 		this.jmxUrl = "service:jmx:rmi:///jndi/rmi://"+host+":"+port+"/jmxrmi";
 	}
@@ -33,6 +43,7 @@ public class JmxSensorAdapter {
 		jmxc = JMXConnectorFactory.connect(url, null);
 		mbsc = jmxc.getMBeanServerConnection();
 	}
+ 
 	/** continuously attempts to connect (blocking), for at least the indicated amount of time; or indefinitely if -1 */
 	public boolean connect(int timeoutMillis) {
 		println "invoking connect to "+jmxUrl

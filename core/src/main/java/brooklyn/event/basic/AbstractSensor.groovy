@@ -1,6 +1,9 @@
 package brooklyn.event.basic;
 
 import brooklyn.event.Sensor
+import java.util.List
+
+import groovy.transform.InheritConstructors
 
 import com.google.common.base.Splitter
 import com.google.common.base.Throwables
@@ -41,7 +44,7 @@ public abstract class AbstractSensor<T> implements Sensor<T> {
     }
 
     /** @see Sensor#getNameParts() */
-    public Collection<String> getNameParts() {
+    public List<String> getNameParts() {
         return Lists.newArrayList(dots.split(name));
     }
 

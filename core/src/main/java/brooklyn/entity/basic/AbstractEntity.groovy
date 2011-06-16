@@ -1,6 +1,7 @@
-
 package brooklyn.entity.basic
 
+import java.util.Collection
+import java.util.Map
 import java.util.concurrent.CopyOnWriteArrayList
 
 import org.slf4j.Logger
@@ -16,6 +17,10 @@ import brooklyn.event.Sensor
 import brooklyn.event.basic.AttributeMap
 import brooklyn.location.Location
 import brooklyn.management.ManagementContext
+import brooklyn.event.adapter.PropertiesSensorAdapter
+import brooklyn.event.basic.Activity
+import brooklyn.location.Location
+import brooklyn.management.internal.LocalManagementContext
 import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.task.ExecutionContext
 
@@ -36,9 +41,8 @@ public abstract class AbstractEntity implements Entity {
  
     String id = LanguageUtils.newUid();
     Map<String,Object> presentationAttributes = [:]
-    
     String displayName;
-    
+
     /**
      * Properties can be accessed or set on the entity itself; can also be accessed
      * from ancestors if not present on an entity
@@ -48,6 +52,10 @@ public abstract class AbstractEntity implements Entity {
     // TODO ref to local mgmt context and sub mgr etc
  
     protected final AttributeMap attributesInternal = new AttributeMap(this)
+    public final Activity activity = new Activity(this)
+ 
+    protected final LocalManagementContext management = LocalManagementContext.getContext()
+    protected final PropertiesSensorAdapter subscriptions = new PropertiesSensorAdapter(this, properties)
 
     /** Entity hierarchy */
     final Collection<Group> groups = new CopyOnWriteArrayList<Group>()
@@ -110,6 +118,10 @@ public abstract class AbstractEntity implements Entity {
         app
     }
 
+	public String getApplicationId() {
+		getApplication()?.id
+	}
+
 	public ManagementContext getManagementContext() {
 		getApplication()?.getManagementContext()
 	}
@@ -159,9 +171,13 @@ public abstract class AbstractEntity implements Entity {
         attributesInternal.update(attribute, val);
     }
     
+    public Collection<String> getGroupIds() {
+        parents.collect { g -> g.id }
+    }
+    
     // TODO implement private methods
-    // private void subscribe(EventFilter filter, EventListener listener) { }
-    // private void subscribe(Predicate<Entity> entities, EventFilter filter, EventListener listener) { }
+    //private void subscribe(Predicate<Sensor> filter, EventListener listener) { }
+    //private void subscribe(Predicate<Entity> entities, Predicate<Sensor> filter, EventListener listener) { }
     
     /** @see Entity#subscribe(String, String, EventListener) */
     public <T> void subscribe(String entityId, String sensorname, EventListener<T> listener) {
@@ -170,8 +186,24 @@ public abstract class AbstractEntity implements Entity {
      
     /** @see Entity#raiseEvent(Event) */
     public <T> void raiseEvent(Event<T> event) {
-        // TODO complete
+        management.getSubscriptionManager().fire event
     }
+    
+    /*
+
+    void subscribe(Predicate<SensorEvent<T>> filter, EventListener listener) {
+        subscribe(Predicate<SensorEvent<T>>s.entityId(id), filter, listener)
+    }
+
+    void subscribe(Predicate<Entity> entities, Predicate<SensorEvent<T>> filter, EventListener listener) {
+        application?.subscriptions.addSubscription entities, filter, listener
+    }
+
+    void raiseEvent(SensorEvent<?> event) {
+        log.info "raising event {} on entity id {}", event, id
+        application?.subscriptions.fire event
+    }
+     */
 	
 	private transient volatile ExecutionContext execution;
 	protected ExecutionContext getExecutionContext() {

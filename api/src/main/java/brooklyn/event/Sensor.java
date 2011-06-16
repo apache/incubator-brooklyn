@@ -1,7 +1,7 @@
 package brooklyn.event;
 
 import java.io.Serializable;
-import java.util.Collection;
+import java.util.List;
 
  
 /**
@@ -26,7 +26,7 @@ public interface Sensor<T> extends Serializable {
     /**
      * Returns the constitient parts of the sensor name as a {@link Collection}.
      */
-    public Collection<String> getNameParts();
+    public List<String> getNameParts();
  
     /**
      * Returns the type of the sensor data, as a {@link String} representation of the class name.
