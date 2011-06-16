@@ -72,8 +72,8 @@ public class TomcatNode extends AbstractEntity implements Startable {
         super(properties);
     }
 
-	public void start(Map properties=[:], Location location=null) {
-		EntityStartUtils.startEntity properties, this, location
+	public void start(Map properties=[:]) {
+		EntityStartUtils.startEntity properties, this
 		log.debug "started... jmxHost is {} and jmxPort is {}", this.properties['jmxHost'], this.properties['jmxPort']
 		
 		if (this.properties['jmxHost'] && this.properties['jmxPort']) {
@@ -114,10 +114,9 @@ public class TomcatNode extends AbstractEntity implements Startable {
             }
 		}
         if (this.war) {
-            def deployLoc = location ?: this.location
-            log.debug "Deploying {} to {}", this.war, deployLoc
-            this.deploy(this.war, deployLoc)
-            log.debug "Deployed {} to {}", this.war, deployLoc
+            log.debug "Deploying {} to {}", this.war, this.location
+            this.deploy(this.war, this.location)
+            log.debug "Deployed {} to {}", this.war, this.location
         }
 	}
 	
