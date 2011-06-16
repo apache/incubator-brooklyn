@@ -1,22 +1,18 @@
 package brooklyn.util.task;
 
-import java.util.Collection;
 import java.util.concurrent.Callable
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor
+import java.util.concurrent.CancellationException
+import java.util.concurrent.ExecutionException
 import java.util.concurrent.Future
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
-import brooklyn.util.internal.LanguageUtils;
+import brooklyn.util.internal.LanguageUtils
 
 
 public class TaskStub {
 	final String id = LanguageUtils.newUid()
-//	Object jvm = null //pointer to jvm where something is running, for distributed tasks
-
-	
+//	Object jvm = null //pointer to jvm where something is running, for distributed tasks	
 	
 	@Override
 	public int hashCode() {
@@ -57,11 +53,16 @@ public class TaskStub {
 public class Task<T> extends TaskStub implements Future<T> {
 	public final String displayName
 	public final String description
-		
+	private final Set tags = []
+
 	public Task(Map flags=[:], Closure job) {
 		this.job = job
 		description = flags.remove("description")
 		displayName = flags.remove("displayName")
+		
+		if (flags.tag) tags.add flags.remove("tag")
+		if (flags.tags) tags.addAll flags.remove("tags")
+		
 		if (flags) throw new IllegalArgumentException("Unsupported flags passed to task: "+flags)
 	}
 	public Task(Map flags=[:], Runnable job) { this(flags, { if (job in Callable) job.call() else job.run() } as Closure ) }
@@ -89,6 +90,7 @@ public class Task<T> extends TaskStub implements Future<T> {
 
 	// metadata accessors ------------
 
+	public Set<Object> getTags() { new LinkedHashSet(tags) }
 	public long getSubmitTimeUtc() { submitTimeUtc }
 	public long getStartTimeUtc() { startTimeUtc }
 	public long getEndTimeUtc() { endTimeUtc }

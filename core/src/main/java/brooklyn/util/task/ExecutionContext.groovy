@@ -1,8 +1,7 @@
 package brooklyn.util.task;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Callable
+import java.util.concurrent.Executor
 
 /** a means of executing tasks against an ExecutionManager with a given bucket/set of tags pre-defined
  * (so that it can look like an {@link Executor} and also supply {@link ExecutorService#submit(Callable)} */
@@ -14,11 +13,16 @@ public class ExecutionContext implements Executor {
 	public static Task getCurrentTask() { return ExecutionManager.getCurrentTask() }
 
 	final ExecutionManager executionManager;
-	final Object taskBucket;
+	final Set<Object> tags = [];
 	
-	public ExecutionContext(ExecutionManager executionManager, Object taskBucket) {
+	/** supported flags:
+	 * tag, tags: as in {@link ExecutionManager#submit(java.util.Map, Task)} */
+	public ExecutionContext(Map flags=[:], ExecutionManager executionManager) {
 		this.executionManager = executionManager;
-		this.taskBucket = taskBucket;
+
+		if (flags.tag) tags.add flags.remove("tag")
+		if (flags.tags) tags.addAll flags.remove("tags")
+
 	}
 
 	public Set<Task> getTasksInBucket() { executionManager.getTasksInBucket(taskBucket) }
