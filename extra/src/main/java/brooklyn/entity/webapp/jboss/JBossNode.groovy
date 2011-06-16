@@ -10,7 +10,7 @@ import brooklyn.entity.Group
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.trait.Startable
 import brooklyn.event.adapter.JmxSensorAdapter
-import brooklyn.event.AttributeSensor
+import brooklyn.event.basic.AttributeSensor
 import brooklyn.location.Location
 import brooklyn.location.basic.SshBasedJavaWebAppSetup
 import brooklyn.location.basic.SshMachineLocation
