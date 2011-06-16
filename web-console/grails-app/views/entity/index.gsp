@@ -15,14 +15,7 @@
 		$(function () {
 			$("#demo1")
 				.jstree({ 
-					"json_data" : {
-						"ajax" : {
-							"url" : "<g:createLink controller='entity' action='list'/>",
-							"data" : function (n) { 
-								return { "this$0" : null }; 
-							}
-						}
-					},
+					"json_data" : { "ajax" : { "url" : "<g:createLink controller='entity' action='jstree'/>"}},
 					"plugins" : [ "themes", "json_data", "ui" ]
 				})
 				.bind("select_node.jstree", function (event, data) {
