@@ -1,5 +1,8 @@
 package brooklyn.entity.trait;
 
+import java.util.List;
+import java.util.concurrent.Future;
+
 import brooklyn.util.task.Task;
 
 public interface Resizable<T> {
@@ -13,9 +16,12 @@ public interface Resizable<T> {
      * @param desiredSize
      * @return a list of handles to tasks started (possibly empty)
      */
-	Task resize(int desiredSize);
+	List<Future> //Task 
+		resize(int desiredSize);
     
-	Task grow(int desiredIncrease);
+	List<Future>  //Task 
+		grow(int desiredIncrease);
     
-	Task shrink(int desiredDecrease);
+	List<Future>  //Task 
+		shrink(int desiredDecrease);
 }
