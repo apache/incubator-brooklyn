@@ -8,7 +8,25 @@ import java.util.concurrent.Executors;
 import brooklyn.entity.Entity
 import brooklyn.util.internal.LanguageUtils;
 
-
+/** This class manages the execution of a number of jobs--with tags.
+ * It is like an executor service (and it ends up delegating to one) but adds additional support
+ * where jobs can be:
+ * - tracked with tags/buckets
+ * - be Runnables, Callables, or Closures
+ * - remembered after completion
+ * - treated as {@link Task} instances (see below)
+ * <p>  
+ * The advantage of treating them as {@link Task} instances include: 
+ * - richer status information
+ * - started-by, contained-by relationships automatically remembered
+ * - runtime metadata (start, stop, etc)
+ * - grid / multi-machine support) 
+ * <p>
+ * (It has been developed for the Brooklyn multi-location provisioning and management project,
+ * to track work being done by each Entity.)
+ *  
+ * @author alex
+ */
 public class ExecutionManager {
 	
 	private static final perThreadCurrentTask = new ThreadLocal<Task>()

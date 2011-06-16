@@ -2,8 +2,10 @@ package brooklyn.util.task;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
-/** a means of executing tasks associated with a given bucket */
+/** a means of executing tasks against an ExecutionManager with a given bucket/set of tags pre-defined
+ * (so that it can look like an {@link Executor} and also supply {@link ExecutorService#submit(Callable)} */
 public class ExecutionContext implements Executor {
 
 	static final ThreadLocal<ExecutionContext> perThreadExecutionContext = new ThreadLocal<ExecutionContext>()
