@@ -1,14 +1,17 @@
 
 ALEX - SOON
 - javadoc
-- Task, startedBy field in Task
-- expiry (removal)
+- tags instead of buckets, stored on the tag
+- record status in task (PRE_SUBMISSION, SUBMITTED_NOT_STARTED, RUNNING, BLOCKED_BY_TASK, SUCCEEDED, ERROR, CANCELLED)
+- blocking, synchronize conveniences (tied in with status)
 
 DAN - SOON
 - sequential, parallel tasks
 - Set<Task> containedIn, field in Task
 
-LONGER TERM
+THEN
 - replace execution elsewhere in code with use of ExecutionContext
-- better task hierarchy (interface, finals, etc)
+- expiry (removal) of completed tasks (currently everything is kept)
+- better task type hierarchy (interface, finals, etc)
 - task serialization, proxying (so remote can find out when source is finished)
+
