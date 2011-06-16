@@ -1,9 +1,10 @@
 package brooklyn.util.task;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.Executor;
 
 /** a means of executing tasks associated with a given bucket */
-public class ExecutionContext {
+public class ExecutionContext implements Executor {
 
 	static final ThreadLocal<ExecutionContext> perThreadExecutionContext = new ThreadLocal<ExecutionContext>()
 	
@@ -19,10 +20,20 @@ public class ExecutionContext {
 	}
 
 	public Set<Task> getTasksInBucket() { executionManager.getTasksInBucket(taskBucket) }
-	
-	public Task submit(Runnable r) { executionManager.submit taskBucket, r, newTaskCallback: this.&registerPerThreadExecutionContext }
-	public Task submit(Callable r) { executionManager.submit taskBucket, r, newTaskCallback: this.&registerPerThreadExecutionContext }
-	public Task submit(Task task) { executionManager.submit taskBucket, task, newTaskCallback: this.&registerPerThreadExecutionContext }
+
+	//these conform with ExecutorService but we do not want to expose shutdown etc here
+	public Task submit(Runnable r) { submitInternal(r) }
+	public Task submit(Callable r) { submitInternal(r) }
+	public Task submit(Task task) { submitInternal(task) }
+	private Task submitInternal(Object r) {
+		executionManager.submit taskBucket, r, 
+			newTaskStartCallback: this.&registerPerThreadExecutionContext,
+			newTaskEndCallback: this.&clearPerThreadExecutionContext
+	}
+
+	/** provided for compatibility; submit is preferred if a handle on the resulting Task is desired (although a task can be passed in so this is not always necessary) */
+	public void execute(Runnable r) { submit r }
 	
 	private void registerPerThreadExecutionContext() { perThreadExecutionContext.set this }  
+	private void clearPerThreadExecutionContext() { perThreadExecutionContext.remove() }
 }

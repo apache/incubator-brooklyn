@@ -41,14 +41,23 @@ public class TaskStub {
 		return true;
 	}
 	
+	public String toString() { "TaskStub[$id]" }
 	 
 }
 
+/** represents a task which is executing.  the task can be given an optional displayName and description in its constructor (as named arguments in the map in first parameter);
+ * when used with an ExecutionManager (or ExecutionContext) it will record submission time, execution start time, end time, and any result;
+ * a task can be submitted to the Execution{Manager,Context}, in which case it will be returned; or it may be created by submission of a Runnable or Callable --
+ * thereafter it can be treated just like a future.
+ * additionally it is guaranteed to be Object.notified once whenever the task starts running and once again when the task is about to complete
+ * (due to the way executors work it is ugly to guarantee notification _after_ completion, so instead we notify just before then expect user to call get()
+ * [which will throw errors if the underlying job did so]
+ * or blockUntilEnded()  [which will not throw errors]).
+ */
 public class Task<T> extends TaskStub implements Future<T> {
-	Closure job
 	public final String displayName
 	public final String description
-	
+		
 	public Task(Map flags=[:], Closure job) {
 		this.job = job
 		description = flags.remove("description")
@@ -56,25 +65,66 @@ public class Task<T> extends TaskStub implements Future<T> {
 		if (flags) throw new IllegalArgumentException("Unsupported flags passed to task: "+flags)
 	}
 	public Task(Map flags=[:], Runnable job) { this(flags, { if (job in Callable) job.call() else job.run() } as Closure ) }
-	public Task(Map flags=[:], Callable job) { this(flags, { job.call() } as Closure) }
+	public Task(Map flags=[:], Callable<?> job) { this(flags, { job.call() } as Closure) }
 
-	boolean cancelled = false
-	Future result
+	public String toString() { "Task["+(displayName?displayName+"; ":"")+"$id]" }
+	
+	// housekeeping --------------------
+	
+	Closure job
+	
+	private long submitTimeUtc = -1;
+	private long startTimeUtc = -1;
+	private long endTimeUtc = -1;
+	private Task submittedByTask;
 
+	private boolean cancelled = false
+	private Future<T> result
+	
+	synchronized void initResult(Future result) {
+		if (this.result!=null) throw new IllegalStateException("task "+this+" is being given a result twice"); 
+		this.result = result
+		notifyAll()
+	}
+
+	// metadata accessors ------------
+
+	public long getSubmitTimeUtc() { submitTimeUtc }
+	public long getStartTimeUtc() { startTimeUtc }
+	public long getEndTimeUtc() { endTimeUtc }
+	
+	public Task getSubmittedByTask() { submittedByTask }
+	public Future<T> getResultFuture() { result }
+		
+	// future --------------------
+	
 	public synchronized boolean cancel(boolean mayInterruptIfRunning) {
-		if (result) result.cancel(mayInterruptIfRunning)
+		if (isDone()) return false
+		boolean rv = true
+		if (result) rv = result.cancel(mayInterruptIfRunning)
 		cancelled = true
+		notifyAll()
+		rv
 	}
 
 	public boolean isCancelled() {
 		cancelled || result?.isCancelled()
 	}
 
-	/** true if all children are done */
 	public boolean isDone() {
-		result?.isDone()
+		cancelled || result?.isDone()
 	}
 
+	/** true if the task has had an error; i.e. if calling get() will throw an exception when it completes (including cancel);
+	 * implementations may set this true before completion if they have that insight, 
+	 * or (default) they may compute it lazily after completion (returning false before completion)
+	 */
+	public boolean isError() {
+		if (!isDone()) return false
+		if (isCancelled()) return true
+		try { get(); return false; } catch (Throwable t) { return true; }
+	}
+	
 	public T get() throws InterruptedException, ExecutionException {
 		blockUntilStarted()
 		result.get()
@@ -87,7 +137,12 @@ public class Task<T> extends TaskStub implements Future<T> {
 			if (result!=null) return
 		}
 	}
-	
+
+	public void blockUntilEnded() {
+		blockUntilStarted()
+		try { result.get() } catch (Throwable t) { /* swallow errors when using this method */ }
+	}
+
 	public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
 		//FIXME add support for timeouts
 		get()
