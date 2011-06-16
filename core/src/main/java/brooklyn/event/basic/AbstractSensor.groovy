@@ -1,5 +1,7 @@
 package brooklyn.event.basic;
 
+import com.google.common.base.Splitter;
+
 import groovy.transform.InheritConstructors;
 import brooklyn.event.Sensor;
 
