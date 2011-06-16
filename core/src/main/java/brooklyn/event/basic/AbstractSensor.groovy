@@ -22,12 +22,7 @@ public abstract class AbstractSensor<T> implements Sensor<T> {
 
     public AbstractSensor() { /* for gson */ }
 
-
-    public AbstractSensor(String name, Class<T> type) {
-        this(name, name, type);
-    }
-
-    public AbstractSensor(String description, String name, Class<T> type) {
+    public AbstractSensor(String description=name, String name, Class<T> type) {
         this.description = description;
         this.name = name;
         this.type = type.getName();

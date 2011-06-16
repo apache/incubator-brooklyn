@@ -1,7 +1,5 @@
 
 ALEX - SOON
-- javadoc
-- tags instead of buckets, stored on the tag
 - record status in task (PRE_SUBMISSION, SUBMITTED_NOT_STARTED, RUNNING, BLOCKED_BY_TASK, SUCCEEDED, ERROR, CANCELLED)
 - blocking, synchronize conveniences (tied in with status)
 
@@ -14,4 +12,3 @@ THEN
 - expiry (removal) of completed tasks (currently everything is kept)
 - better task type hierarchy (interface, finals, etc)
 - task serialization, proxying (so remote can find out when source is finished)
-
