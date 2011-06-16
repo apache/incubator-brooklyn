@@ -2,26 +2,38 @@ package brooklyn.event;
 
 import java.io.Serializable;
 
-public class Sensor<T> implements Serializable {
-    private static final long serialVersionUID = -3762018534086101323L;
-    
-    private String description;
-    private String name;
-    private String type;
-    
-    public Sensor() { /* for gson */ }
-
-    public Sensor(String name, Class<T> type) {
-        this("", name, type);
-    }
  
-    public Sensor(String description, String name, Class<T> type) {
-        this.description = description;
-        this.name = name;
-        this.type = type.getName();
-    }
-    
-    public String getDescription() { return description; }
-    public String getName() { return name; }
-    public String getType() { return type; }
+/**
+ * The interface implemented by concrete sensors.
+ * 
+ * A sensor is a container for a piece of data of a particular type, and exists in a hierarchical namespace.
+ * The name of the sensor is described as a set of tokens separated by dots.
+ * 
+ * @see Event
+ */
+public interface Sensor<T> extends Serializable {
+    /**
+     * Returns the description of the sensor, for display.
+     */
+    public String getDescription();
+ 
+    /**
+     * Returns the name of the sensor, in a dot-separated namespace.
+     */
+    public String getName();
+ 
+    /**
+     * Returns the constitient parts of the sensor name.
+     */
+    public Iterable<String> getNameParts();
+ 
+    /**
+     * Returns the type of the sensor data, as a {@link String} representation of the class name.
+     */
+    public String getType();
+ 
+    /**
+     * Returns the Java {@link Class} for the sensor data.
+     */
+    public Class<T> getSensorClass();
 }
