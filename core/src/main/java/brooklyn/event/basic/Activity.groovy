@@ -37,7 +37,7 @@ public class Activity {
 	}
 	
 	public <T> Object update(Sensor<T> sensor, T newValue) {
-		log.debug "sensor $sensor field {} set to {}", sensor.field, newValue
+		log.debug "sensor $sensor field {} set to {}", sensor.name, newValue
 		update(sensor.getNameParts(), newValue)
 		//TODO notify subscribers! - in activity?
         SensorEvent<T> event = new SensorEvent<T>(sensor, entity, newValue)
