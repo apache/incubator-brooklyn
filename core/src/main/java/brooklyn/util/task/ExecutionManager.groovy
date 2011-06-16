@@ -5,9 +5,10 @@ import java.util.concurrent.Executor
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.overpaas.entities.Entity
+import brooklyn.entity.Entity
 
-class ExecutionManager {
+
+public class ExecutionManager {
 	
 	ExecutorService runner = Executors.newCachedThreadPool() 
 	

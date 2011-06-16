@@ -9,10 +9,10 @@ import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.overpaas.util.LanguageUtils;
+import brooklyn.util.internal.LanguageUtils;
 
 
-class TaskStub {
+public class TaskStub {
 	final String id = LanguageUtils.newUid()
 //	Object jvm = null //pointer to jvm where something is running, for distributed tasks
 
@@ -44,7 +44,7 @@ class TaskStub {
 	 
 }
 
-class Task<T> implements Future<T> {
+public class Task<T> extends TaskStub implements Future<T> {
 	Closure job
 	public final String displayName
 	public final String description

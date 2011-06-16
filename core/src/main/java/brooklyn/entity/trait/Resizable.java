@@ -1,8 +1,9 @@
 package brooklyn.entity.trait;
 
-import org.overpaas.execution.CompoundTask;
+import brooklyn.util.task.Task;
 
 public interface Resizable<T> {
+	
     /**
      * A request to grow or shrink this entity to the desired size.
      * The desired size may not be possible, in which case this method will not
@@ -12,9 +13,9 @@ public interface Resizable<T> {
      * @param desiredSize
      * @return a list of handles to tasks started (possibly empty)
      */
-	CompoundTask resize(int desiredSize);
+	Task resize(int desiredSize);
     
-	CompoundTask grow(int desiredIncrease);
+	Task grow(int desiredIncrease);
     
-	CompoundTask shrink(int desiredDecrease);
+	Task shrink(int desiredDecrease);
 }
