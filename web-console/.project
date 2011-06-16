@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>org.overpaas.management.webapp</name>
+	<name>brooklyn-web-console</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -30,8 +30,14 @@
 			<arguments>
 			</arguments>
 		</buildCommand>
+		<buildCommand>
+			<name>org.eclipse.m2e.core.maven2Builder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
 	</buildSpec>
 	<natures>
+		<nature>org.eclipse.m2e.core.maven2Nature</nature>
 		<nature>com.springsource.sts.grails.core.nature</nature>
 		<nature>org.eclipse.jdt.groovy.core.groovyNature</nature>
 		<nature>org.eclipse.jem.workbench.JavaEMFNature</nature>
@@ -45,7 +51,7 @@
 		<link>
 			<name>.link_to_grails_plugins</name>
 			<type>2</type>
-			<locationURI>GRAILS_ROOT/1.3.7/projects/org.overpaas.management.webapp/plugins</locationURI>
+			<locationURI>GRAILS_ROOT/1.3.7/projects/web-console/plugins</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>

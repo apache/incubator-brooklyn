@@ -1,8 +1,8 @@
-package org.overpaas.management.webapp
+package brooklyn.management.webconsole
 
 import grails.test.*
 
-class EntityControllerTests extends ControllerUnitTestCase {
+class LoginControllerTests extends ControllerUnitTestCase {
     protected void setUp() {
         super.setUp()
     }

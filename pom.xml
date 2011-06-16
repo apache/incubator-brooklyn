@@ -200,9 +200,10 @@
 	
 			<modules>
                 <module>parent</module>
-                <module>api</module>
+               			<module>api</module>
 				<module>core</module>
 				<module>extra</module>
+				<module>web-console</module>
 			</modules>
 		</profile>
 

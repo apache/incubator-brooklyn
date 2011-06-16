@@ -1,17 +1,17 @@
-package org.overpaas.management.webapp
+package brooklyn.management.webconsole
 
 import grails.converters.JSON
 
 import java.util.Collection
 
-import org.overpaas.entities.BasicEntitySummary
-import org.overpaas.entities.Entity
-import org.overpaas.entities.EntitySummary
-import org.overpaas.entities.ManagementApi
+import brooklyn.entity.basic.BasicEntitySummary
+import brooklyn.entity.Entity
+import brooklyn.entity.EntitySummary
+import brooklyn.management.ManagementContext
 
 class EntityController {
 
-	class TestManagementApi implements ManagementApi {
+	class TestManagementApi implements ManagementContext {
 		Collection<EntitySummary> getApplicationSummaries() {
 			return new ArrayList<EntitySummary>();
 		}

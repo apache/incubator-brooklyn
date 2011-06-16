@@ -1,4 +1,4 @@
-package org.overpaas.management.webapp
+package brooklyn.management.webconsole
 
 class LoginController {
 
