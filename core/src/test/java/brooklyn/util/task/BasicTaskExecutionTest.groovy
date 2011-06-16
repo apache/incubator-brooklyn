@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import static org.junit.Assert.*;
 import org.junit.Test;
 
-public class BasicTaskExecution {
+public class BasicTaskExecutionTest {
 
 	Map data = new ConcurrentHashMap()
 	
