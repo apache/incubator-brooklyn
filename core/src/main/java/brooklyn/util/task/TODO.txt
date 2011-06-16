@@ -1,0 +1,14 @@
+
+ALEX - SOON
+- javadoc
+- Task, startedBy field in Task
+- expiry (removal)
+
+DAN - SOON
+- sequential, parallel tasks
+- Set<Task> containedIn, field in Task
+
+LONGER TERM
+- replace execution elsewhere in code with use of ExecutionContext
+- better task hierarchy (interface, finals, etc)
+- task serialization, proxying (so remote can find out when source is finished)
