@@ -14,7 +14,9 @@
 	
 	<build>
 	   <testResources>
-	       <testResource>src/test/resources</testResource>
+	       <testResource>
+			<directory>src/test/resources</directory>
+		</testResource>
 	   </testResources>
 	</build>
 
