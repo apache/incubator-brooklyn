@@ -2,12 +2,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.overpaas</groupId>
-	<artifactId>overpaas</artifactId>
+	<groupId>brooklyn</groupId>
+	<artifactId>brooklyn-all</artifactId>
 	<packaging>pom</packaging>
-	<name>overpaas</name>
+	<name>brooklyn-all</name>
 	<version>0.0.1-SNAPSHOT</version>
-	<description>OverPaaS Parent</description>
+	<description>Brooklyn Parent</description>
 
 	<build>
         <testSourceDirectory>src/test/java</testSourceDirectory>
@@ -199,7 +199,7 @@
 			<id>Brooklyn</id>
 	
 			<modules>
-                <module>parent</module>
+                		<module>parent</module>
                			<module>api</module>
 				<module>core</module>
 				<module>extra</module>
@@ -207,14 +207,6 @@
 			</modules>
 		</profile>
 
-		<profile>
-			<id>OverPaaS</id>
-	
-			<modules>
-        		<module>org.overpaas.core</module>
-			</modules>
-		</profile>
-    
 		<profile>
 			<id>CI</id>
 			<build>
@@ -311,12 +303,12 @@
 												</copy>
 												<cobertura-instrument datafile="target/cobertura/cobertura.ser" todir="target/cobertura/coverage-classes">
 													<fileset erroronmissingdir="false" dir="target/classes">
-														<include name="org/overpaas/**/*.class" />
-														<exclude name="org/overpaas/**/*Test.class" />
+														<include name="brooklyn/**/*.class" />
+														<exclude name="brooklyn/**/*Test.class" />
 													</fileset>
 													<fileset erroronmissingdir="false" dir="target/cobertura/dependency-classes">
-														<include name="org/overpaas/**/*.class" />
-														<exclude name="org/overpaas/**/*Test.class" />
+														<include name="brooklyn/**/*.class" />
+														<exclude name="brooklyn/**/*Test.class" />
 													</fileset>
 												</cobertura-instrument>
 											</then>
@@ -389,7 +381,7 @@
 								<configuration>
 									<classifier>sources</classifier>
 									<includeScope>compile</includeScope>
-									<includeGroupIds>org.overpaas</includeGroupIds>
+									<includeGroupIds>brooklyn</includeGroupIds>
 									<outputDirectory>${project.build.directory}/cobertura/dependency-sources</outputDirectory>
 								</configuration>
 							</execution>
@@ -402,7 +394,7 @@
 								<configuration>
 									<type>jar</type>
 									<includeScope>compile</includeScope>
-									<includeGroupIds>org.overpaas</includeGroupIds>
+									<includeGroupIds>brooklyn</includeGroupIds>
 									<outputDirectory>${project.build.directory}/cobertura/dependency-classes</outputDirectory>
 								</configuration>
 							</execution>
