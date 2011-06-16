@@ -1,12 +1,12 @@
-package brooklyn.entity.webapp.tomcat;
-
-import java.util.Map;
+package brooklyn.entity.webapp.tomcat
 
 import static java.util.concurrent.TimeUnit.*
+import static org.junit.Assert.*
 
 import groovy.time.TimeDuration
 //import groovy.transform.InheritConstructors
 
+import java.util.Map
 import java.util.concurrent.Callable
 
 import org.junit.After
@@ -23,10 +23,11 @@ import brooklyn.event.EntityStartException
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.internal.TimeExtras
 
-
+/**
+ * This tests the operation of the {@link TomcatNode} entity.
+ */
 class TomcatNodeTest {
-
-	private static final Logger logger = LoggerFactory.getLogger(TomcatNode.class)
+	private static final Logger logger = LoggerFactory.getLogger(TomcatNodeTest.class)
 
 	static {
         TimeExtras.init()
