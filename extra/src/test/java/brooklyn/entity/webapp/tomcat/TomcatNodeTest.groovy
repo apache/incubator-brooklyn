@@ -49,6 +49,8 @@ class TomcatNodeTest {
     @BeforeClass
     public static void detect_location_of_resources() {
         File dir = new File(System.getProperty("user.dir"))
+        
+       getClass().getClassLoader()
 
         // Check if the current folder is called brooklyn.core. If not, check if to see there is a subfolder with
         // that name
