@@ -217,9 +217,11 @@ class TomcatNodeTest {
 	public void deploy_web_app_appears_at_URL() {
 		Application app = new TestApplication();
 		TomcatNode tc = new TomcatNode(parent: app);
-        
-        tc.war = getClass().getClassLoader().getResource("hello-world.war").getFile().getAbsolutePath()
- 
+
+        URL resource = this.getClass().getClassLoader().getResource("hello-world.war")
+        assertNotNull resource
+        tc.war = resource.getPath()
+
 		tc.start(location: new SshMachineLocation(name:'london', host:'localhost'))
 		executeUntilSucceedsWithShutdown(tc, {
             def port = tc.activity.getValue(TomcatNode.HTTP_PORT)
