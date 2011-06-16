@@ -6,12 +6,12 @@ import groovy.util.ObservableMap
 
 import java.io.Serializable
 
-public class SerializableObservables {
+//FIXME intermittent bogus errors about InheritConstructors not supported -- IDE only
+//and sometimes about Inconsistent classfile encountered;
+//placing them in separate classes doesn't help, need to pursue with Groovy team
 
-	@InheritConstructors
-	public static class SerializableObservableList extends ObservableList implements Serializable {} 
+@InheritConstructors
+public class SerializableObservableList extends ObservableList implements Serializable {}
 
-	@InheritConstructors
-	public static class SerializableObservableMap extends ObservableMap implements Serializable {} 
-
-}
+@InheritConstructors
+public class SerializableObservableMap extends ObservableMap implements Serializable {}
