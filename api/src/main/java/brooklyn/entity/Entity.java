@@ -47,6 +47,9 @@ public interface Entity extends Serializable {
     void addParent(Group e);
 
     <T> void updateAttribute(Sensor<T> attribute, T val);
+    
+//    void subscribe(EventFilter filter, EventListener listener);
+//    void subscribe(Predicate<Entity> entities, EventFilter filter, EventListener listener);
 
     <T> void subscribe(String entityId, String sensorname, EventListener<T> listener);
  
