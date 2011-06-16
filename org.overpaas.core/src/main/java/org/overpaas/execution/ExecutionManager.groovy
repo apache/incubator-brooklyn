@@ -13,8 +13,7 @@ class ExecutionManager {
 	
 	Set<Task> knownTasks = new LinkedHashSet()
 	Map<Object,Set<Task>> tasksByBucket = new LinkedHashMap()
-	
-	public Set<Task> getTasksByBucket(Object bucket) { return tasksByBucket.get(bucket) ?: Collections.emptySet() }
+	Set<Task> getTasksByBucket(Object bucket) { return tasksByBucket.get(bucket) ?: Collections.emptySet() }
 	public Set<Task> getTaskBuckets() { synchronized (tasksByBucket) { return new LinkedHashSet(tasksByBucket.keySet()) }}
 	
 	public Task submit(Object bucket, Runnable r) { submit bucket, new Task(r) }
