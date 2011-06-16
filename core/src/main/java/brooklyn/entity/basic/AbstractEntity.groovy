@@ -1,7 +1,5 @@
 package brooklyn.entity.basic
 
-import java.lang.reflect.Field
-import java.lang.reflect.Method
 import java.util.Collection
 import java.util.EventListener
 import java.util.Map
@@ -12,10 +10,14 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
+import brooklyn.entity.EntityClass
 import brooklyn.entity.EntitySummary
 import brooklyn.entity.Group
-import brooklyn.event.SensorEvent
+import brooklyn.event.basic.Activity
 import brooklyn.event.basic.EventFilter
+import brooklyn.event.basic.SensorEvent
+import brooklyn.util.internal.LanguageUtils
+import brooklyn.util.internal.SerializableObservables.SerializableObservableList
 
 import com.google.common.base.Predicate
 

@@ -6,8 +6,8 @@ import java.util.List
 import java.util.Map
 import java.util.concurrent.Future
 
-import brooklyn.util.internal.task.Futures
-import brooklyn.util.internal.task.QualifiableFuture
+import brooklyn.management.internal.task.Futures
+import brooklyn.management.internal.task.QualifiableFuture
 
 /**
  * Class whose statics can be imported to make code more readable, viz.

@@ -2,6 +2,8 @@ package brooklyn.entity.basic
 
 import java.util.Collection
 
+import brooklyn.entity.EntitySummary
+
 public class BasicEntitySummary implements EntitySummary {
     
     final String id;

@@ -6,6 +6,11 @@ import java.util.Collection
 import java.util.Map
 import java.util.concurrent.ConcurrentHashMap
 
+import brooklyn.entity.Application
+import brooklyn.entity.Entity
+import brooklyn.util.internal.EntityStartUtils
+import brooklyn.util.internal.SerializableObservables.SerializableObservableMap
+
 public abstract class AbstractApplication extends AbstractGroup implements Application {
     public AbstractApplication(Map properties=[:]) {
         super(properties, null)
