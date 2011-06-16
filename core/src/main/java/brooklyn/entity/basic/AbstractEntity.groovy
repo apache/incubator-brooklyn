@@ -1,13 +1,8 @@
-import brooklyn.event.Event;
-import brooklyn.event.EventListener;
-
 package brooklyn.entity.basic
 
-import java.util.Map
-import java.util.Collection
-import java.util.EventListener
-import java.util.Map
 import java.util.concurrent.CopyOnWriteArrayList
+
+import com.google.common.base.Predicate
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -17,14 +12,13 @@ import brooklyn.entity.Entity
 import brooklyn.entity.EntityClass
 import brooklyn.entity.EntitySummary
 import brooklyn.entity.Group
+import brooklyn.event.Event
 import brooklyn.event.Sensor
+import brooklyn.event.EventListener
 import brooklyn.event.basic.Activity
 import brooklyn.event.basic.EventFilter
-import brooklyn.event.basic.SensorEvent
 import brooklyn.location.Location
 import brooklyn.util.internal.LanguageUtils
-
-import com.google.common.base.Predicate
 
 /**
  * Default {@link Entity} definition.
@@ -167,16 +161,16 @@ public abstract class AbstractEntity implements Entity {
     }
     
     // TODO implement private methods
-    private void subscribe(EventFilter filter, EventListener listener) { }
-    private void subscribe(Predicate<Entity> entities, EventFilter filter, EventListener listener) { }
+    // private void subscribe(EventFilter filter, EventListener listener) { }
+    // private void subscribe(Predicate<Entity> entities, EventFilter filter, EventListener listener) { }
     
     /** @see Entity#subscribe(String, String, EventListener) */
-    <T> void subscribe(String entityId, String sensorname, EventListener<T> listener) {
+    public <T> void subscribe(String entityId, String sensorname, EventListener<T> listener) {
         // TODO complete
     }
      
     /** @see Entity#raiseEvent(Event) */
-    <T> void raiseEvent(Event<T> event) {
+    public <T> void raiseEvent(Event<T> event) {
         // TODO complete
     }
 }
