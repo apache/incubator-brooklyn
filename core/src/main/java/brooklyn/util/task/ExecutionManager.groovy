@@ -52,6 +52,9 @@ public class ExecutionManager {
 		result
 	}
 	public Set<Task> getTasksWithAllTags(Iterable tags) {
+		//NB: for this method retrieval for multiple tags could be made (much) more efficient (if/when it is used with multiple tags!)
+		//by first looking for the least-used tag, getting those tasks, and then for each of those tasks 
+		//checking whether it contains the other tags (looking for second-least used, then third-least used, etc)
 		Set result = null
 		tags.each {
 			tag ->
@@ -99,12 +102,12 @@ public class ExecutionManager {
 		synchronized (knownTasks) {
 			knownTasks << task
 		}
+		if (flags.tag) task.@tags.add flags.remove("tag")
+		if (flags.tags) task.@tags.addAll flags.remove("tags")
+
 		List tagBuckets = []
 		synchronized (tasksByTag) {
-			Set tags = []
-			if (flags.tag) tags.add flags.tag
-			if (flags.tags) tags.addAll flags.tags
-			tags.each { tag ->
+			task.@tags.each { tag ->
 				Set tagBucket = tasksByTag.get tag
 				if (tagBucket==null) {
 					tagBucket = new LinkedHashSet()

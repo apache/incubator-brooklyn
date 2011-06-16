@@ -1,5 +1,6 @@
 package brooklyn.util.task;
 
+import java.util.Collections.UnmodifiableSet;
 import java.util.concurrent.Callable
 import java.util.concurrent.CancellationException
 import java.util.concurrent.ExecutionException
@@ -53,7 +54,7 @@ public class TaskStub {
 public class Task<T> extends TaskStub implements Future<T> {
 	public final String displayName
 	public final String description
-	private final Set tags = []
+	final Set tags = []
 
 	public Task(Map flags=[:], Closure job) {
 		this.job = job
@@ -68,7 +69,7 @@ public class Task<T> extends TaskStub implements Future<T> {
 	public Task(Map flags=[:], Runnable job) { this(flags, { if (job in Callable) job.call() else job.run() } as Closure ) }
 	public Task(Map flags=[:], Callable<?> job) { this(flags, { job.call() } as Closure) }
 
-	public String toString() { "Task["+(displayName?displayName+"; ":"")+"$id]" }
+	public String toString() { "Task["+(displayName?displayName+(tags?"":";")+" ":"")+(tags?""+tags+"; ":"")+"$id]" }
 	
 	// housekeeping --------------------
 	
@@ -90,7 +91,7 @@ public class Task<T> extends TaskStub implements Future<T> {
 
 	// metadata accessors ------------
 
-	public Set<Object> getTags() { new LinkedHashSet(tags) }
+	public Set<Object> getTags() { new UnmodifiableSet(new LinkedHashSet(tags)) }
 	public long getSubmitTimeUtc() { submitTimeUtc }
 	public long getStartTimeUtc() { startTimeUtc }
 	public long getEndTimeUtc() { endTimeUtc }

@@ -23,16 +23,19 @@ public class ExecutionContext implements Executor {
 		if (flags.tag) tags.add flags.remove("tag")
 		if (flags.tags) tags.addAll flags.remove("tags")
 
+		if (flags) throw new IllegalArgumentException("Unsupported flags passed to task: "+flags)
 	}
 
-	public Set<Task> getTasksInBucket() { executionManager.getTasksInBucket(taskBucket) }
+	/** returns tasks started by this context (or tasks which have all the tags on this object) */
+	public Set<Task> getTasks() { executionManager.getTasksWithAllTags(taskBucket) }
 
 	//these conform with ExecutorService but we do not want to expose shutdown etc here
 	public Task submit(Runnable r) { submitInternal(r) }
 	public Task submit(Callable r) { submitInternal(r) }
 	public Task submit(Task task) { submitInternal(task) }
 	private Task submitInternal(Object r) {
-		executionManager.submit taskBucket, r, 
+		executionManager.submit r,
+			tags:tags, 
 			newTaskStartCallback: this.&registerPerThreadExecutionContext,
 			newTaskEndCallback: this.&clearPerThreadExecutionContext
 	}
