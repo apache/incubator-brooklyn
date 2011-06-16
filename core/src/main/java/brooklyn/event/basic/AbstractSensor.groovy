@@ -1,15 +1,20 @@
 package brooklyn.event.basic;
 
-import com.google.common.base.Splitter;
+import groovy.transform.InheritConstructors
 
-import groovy.transform.InheritConstructors;
-import brooklyn.event.Sensor;
+import com.google.common.base.Splitter
+import com.google.common.base.Throwables
+import com.google.common.collect.Lists;
+
+import brooklyn.event.Sensor
 
 /**
  * Abstract parent class for all {@link Sensor} types.
  */
 public abstract class AbstractSensor<T> implements Sensor<T> {
     private static final long serialVersionUID = -3762018534086101323L;
+    
+    private static final Splitter dots = Splitter.on('.');
 
     private String description;
     private String name;
@@ -40,8 +45,8 @@ public abstract class AbstractSensor<T> implements Sensor<T> {
     }
 
     /** @see Sensor#getNameParts() */
-    public Iterable<String> getNameParts() {
-        return Splitter.on('.').split(name);
+    public Collection<String> getNameParts() {
+        Lists.newArrayList(dots.split(name));
     }
 
     /** @see Sensor#getType() */
