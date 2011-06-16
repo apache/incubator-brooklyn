@@ -1,3 +1,6 @@
+import brooklyn.event.Event;
+import brooklyn.event.EventListener;
+
 package brooklyn.entity.basic
 
 import java.util.Map
@@ -54,6 +57,8 @@ public abstract class AbstractEntity implements Entity {
     
     Collection<Location> locations = []
  
+    // TODO ref to local mgmt context and sub mgr etc
+ 
     public final Activity activity = new Activity(this)
 
     public void propertyMissing(String name, value) { properties[name] = value }
@@ -69,7 +74,7 @@ public abstract class AbstractEntity implements Entity {
     }
 
     /** Entity hierarchy */
-    final Collection<Group> parents = new CopyOnWriteArrayList<Group>();
+    final Collection<Group> parents = new CopyOnWriteArrayList<Group>()
  
     Application application
 
@@ -161,12 +166,17 @@ public abstract class AbstractEntity implements Entity {
         activity.update(attribute, val);
     }
     
-    /** TODO */
-    void subscribe(EventFilter filter, EventListener listener) { }
+    // TODO implement private methods
+    private void subscribe(EventFilter filter, EventListener listener) { }
+    private void subscribe(Predicate<Entity> entities, EventFilter filter, EventListener listener) { }
     
-    /** TODO */
-    void subscribe(Predicate<Entity> entities, EventFilter filter, EventListener listener) { }
-
-    /** TODO */
-    void raiseEvent(SensorEvent<?> event) { }
+    /** @see Entity#subscribe(String, String, EventListener) */
+    <T> void subscribe(String entityId, String sensorname, EventListener<T> listener) {
+        // TODO complete
+    }
+     
+    /** @see Entity#raiseEvent(Event) */
+    <T> void raiseEvent(Event<T> event) {
+        // TODO complete
+    }
 }

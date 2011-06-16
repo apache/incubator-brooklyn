@@ -20,9 +20,7 @@ public abstract class AbstractSensor<T> implements Sensor<T> {
     private String name;
     private String type;
 
-    public AbstractSensor() {
-        /* for gson */
-    }
+    public AbstractSensor() { /* for gson */ }
 
     public AbstractSensor(String name, Class<T> type) {
         this(name, name, type);
@@ -46,7 +44,7 @@ public abstract class AbstractSensor<T> implements Sensor<T> {
 
     /** @see Sensor#getNameParts() */
     public Collection<String> getNameParts() {
-        Lists.newArrayList(dots.split(name));
+        return Lists.newArrayList(dots.split(name));
     }
 
     /** @see Sensor#getType() */

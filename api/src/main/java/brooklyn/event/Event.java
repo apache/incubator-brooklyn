@@ -21,9 +21,4 @@ public interface Event<T> {
      * 
      */
     public T getValue();
- 
-    /**
-     * 
-     */
-    public void setValue(T value);
 }
