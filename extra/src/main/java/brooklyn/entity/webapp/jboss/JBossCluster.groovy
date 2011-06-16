@@ -1,9 +1,9 @@
 package brooklyn.entity.webapp.jboss;
 
-import java.util.Map;
+import java.util.Map
 
-import brooklyn.entity.Group;
-import brooklyn.entity.group.ClusterFromTemplate;
+import brooklyn.entity.Group
+import brooklyn.entity.group.ClusterFromTemplate
 
 public class JBossCluster extends ClusterFromTemplate {
     // TODO: Need to think about how JBoss cluster is modelled and controlled in overpaas entity

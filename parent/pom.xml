@@ -115,6 +115,7 @@
 			<plugins>
 				<plugin>
 					<artifactId>maven-compiler-plugin</artifactId>
+                    <version>2.3.2</version>
 					<configuration>
 						<source>1.6</source>
 						<target>1.6</target>
@@ -122,11 +123,12 @@
 				</plugin>
 				<plugin>
 					<artifactId>maven-jar-plugin</artifactId>
-					<configuration>
-						<archive>
-							<manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
-						</archive>
-					</configuration>
+	                <version>2.3.1</version>
+	                <configuration>
+	                    <archive>
+	                        <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+	                    </archive>
+	                </configuration>
 				</plugin>
 				<plugin>
 					<artifactId>maven-javadoc-plugin</artifactId>
@@ -214,6 +216,27 @@
 						</execution>
 					</executions>
 				</plugin>
+                <plugin>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${surefire.version}</version>
+                    <configuration>
+                        <forkMode>always</forkMode>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>2.1.2</version>
+                    <inherited>true</inherited>
+                    <executions>
+                        <execution>
+                            <id>attach-sources</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>jar-no-fork</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
 				
 				<!--This plugin's configuration is used to store Eclipse m2e settings 
 					only. It has no influence on the Maven build itself. -->
@@ -257,27 +280,6 @@
 						</lifecycleMappingMetadata>
 					</configuration>
 				</plugin>
-				<plugin>
-					<artifactId>maven-surefire-plugin</artifactId>
-					<version>2.8.1</version>
-					<configuration>
-						<forkMode>always</forkMode>
-					</configuration>
-				</plugin>
-				<plugin>
-					<artifactId>maven-source-plugin</artifactId>
-					<version>2.1.2</version>
-					<inherited>true</inherited>
-					<executions>
-						<execution>
-							<id>attach-sources</id>
-							<phase>verify</phase>
-							<goals>
-								<goal>jar-no-fork</goal>
-							</goals>
-						</execution>
-					</executions>
-				</plugin>
 			</plugins>
 		</pluginManagement>
 
@@ -317,6 +319,27 @@
 					<encoding>${project.build.sourceEncoding}</encoding>
 				</configuration>
 			</plugin>
+			
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <artifactId>maven-source-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.gmaven</groupId>
+                <artifactId>gmaven-plugin</artifactId>
+            </plugin>
 		</plugins>
 	</build>
 
@@ -524,7 +547,6 @@
 					</plugin>
 					<plugin>
 						<artifactId>maven-surefire-plugin</artifactId>
-						<version>${surefire.version}</version>
 						<inherited>true</inherited>
 						<configuration>
 							<forkMode>always</forkMode>
@@ -553,6 +575,4 @@
 			</build>
 		</profile>
 	</profiles>
-
-
 </project>

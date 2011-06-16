@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>brooklyn</groupId>
+	<artifactId>brooklyn-web-console</artifactId>
+	<packaging>war</packaging>
+	<version>0.0.1-SNAPSHOT</version>
+
+	<name>Brooklyn Management Console webapp</name>
+	<description>Brooklyn Management Console Web Application</description>
+	<url>http://brooklyn</url>
+
+	<properties>
+		<grails.version>1.3.7</grails.version>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>brooklyn-core</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.grails</groupId>
+			<artifactId>grails-bootstrap</artifactId>
+			<version>${grails.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.codehaus.gpars</groupId>
+					<artifactId>gpars</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.codehaus.gant</groupId>
+					<artifactId>gant_groovy1.7</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.gparallelizer</groupId>
+					<artifactId>GParallelizer</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.codehaus.gant</groupId>
+					<artifactId>gant_groovy1.6</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.apache.ant</groupId>
+					<artifactId>ant</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.apache.ant</groupId>
+					<artifactId>ant-launcher</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.apache.ivy</groupId>
+					<artifactId>ivy</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<dependency>
+			<groupId>org.grails</groupId>
+			<artifactId>grails-crud</artifactId>
+			<version>${grails.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.grails</groupId>
+					<artifactId>grails-docs</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.apache.ant</groupId>
+					<artifactId>ant</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.apache.ant</groupId>
+					<artifactId>ant-launcher</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.springframework</groupId>
+					<artifactId>spring-test</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>radeox</groupId>
+					<artifactId>radeox</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>commons-digester</groupId>
+					<artifactId>commons-digester</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>javax.persistence</groupId>
+					<artifactId>persistence-api</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>junit</groupId>
+					<artifactId>junit</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<dependency>
+			<groupId>org.grails</groupId>
+			<artifactId>grails-test</artifactId>
+			<version>${grails.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>jstl</artifactId>
+			<version>1.1.2</version>
+		</dependency>
+
+		<dependency>
+			<groupId>taglibs</groupId>
+			<artifactId>standard</artifactId>
+			<version>1.1.2</version>
+		</dependency>
+
+		<!-- Use Log4J for logging. This artifact also pulls in the Log4J JAR. -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>1.5.8</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>1.5.8</version>
+			<scope>runtime</scope>
+		</dependency>
+
+		<!-- Needed in the case of AOP usage -->
+		<dependency>
+			<groupId>org.aspectj</groupId>
+			<artifactId>aspectjweaver</artifactId>
+			<version>1.6.8</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.aspectj</groupId>
+			<artifactId>aspectjrt</artifactId>
+			<version>1.6.8</version>
+		</dependency>
+
+		<dependency>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+			<version>1.3</version>
+		</dependency>
+
+		<dependency>
+			<groupId>commons-collections</groupId>
+			<artifactId>commons-collections</artifactId>
+			<version>3.2.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>commons-pool</groupId>
+			<artifactId>commons-pool</artifactId>
+			<version>1.5.3</version>
+		</dependency>
+
+	</dependencies>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>log4j</groupId>
+				<artifactId>log4j</artifactId>
+				<version>1.2.16</version>
+				<scope>runtime</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<repositories>
+		<!-- Required to get hold of javassist:javassist -->
+		<repository>
+			<id>download.java.net</id>
+			<url>http://download.java.net/maven/2/</url>
+		</repository>
+		<repository>
+			<id>grails</id>
+			<url>http://repo.grails.org/grails/core</url>
+		</repository>
+		<repository>
+			<id>spring-releases</id>
+			<name>Spring Maven RELEASE Repository</name>
+			<url>http://maven.springframework.org/release</url>
+		</repository>
+	</repositories>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+			<id>codehaus.snapshots</id>
+			<url>http://snapshots.repository.codehaus.org/</url>
+		</pluginRepository>
+	</pluginRepositories>
+
+	<build>
+		<pluginManagement />
+
+		<plugins>
+			<plugin>
+				<groupId>org.grails</groupId>
+				<artifactId>grails-maven-plugin</artifactId>
+				<version>${grails.version}</version>
+				<extensions>true</extensions>
+				<executions>
+					<execution>
+						<goals>
+							<goal>init</goal>
+							<goal>maven-clean</goal>
+							<goal>validate</goal>
+							<goal>config-directories</goal>
+							<goal>maven-compile</goal>
+							<goal>maven-test</goal>
+							<goal>maven-war</goal>
+							<goal>maven-functional-test</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+		        <version>2.3.2</version>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-clean-plugin</artifactId>
+				<version>2.4.1</version>
+				<configuration>
+					<filesets>
+						<fileset>
+							<directory>.</directory>
+							<includes><include>stacktrace.log</include></includes>
+						</fileset>
+						<fileset>
+							<directory>lib</directory>
+						</fileset>
+						<fileset>
+							<directory>plugins</directory>
+						</fileset>
+					</filesets>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>

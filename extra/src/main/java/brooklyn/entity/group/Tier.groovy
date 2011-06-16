@@ -1,11 +1,11 @@
 package brooklyn.entity.group
 
-import java.util.Map;
+import java.util.Map
 
-import brooklyn.entity.AbstractGroup;
-import brooklyn.entity.Entity;
-import brooklyn.entity.Group;
-import brooklyn.entity.trait.Startable;
+import brooklyn.entity.Entity
+import brooklyn.entity.Group
+import brooklyn.entity.basic.AbstractGroup
+import brooklyn.entity.trait.Startable
 
 public abstract class Tier extends AbstractGroup {
 	public Tier(Map props=[:], Group parent) {

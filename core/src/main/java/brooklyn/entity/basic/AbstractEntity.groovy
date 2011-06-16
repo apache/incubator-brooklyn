@@ -1,7 +1,7 @@
 package brooklyn.entity.basic
 
-import java.lang.reflect.Field
-import java.lang.reflect.Method
+import java.util.Map;
+
 import java.util.Collection
 import java.util.EventListener
 import java.util.Map
@@ -12,10 +12,14 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
+import brooklyn.entity.EntityClass
 import brooklyn.entity.EntitySummary
 import brooklyn.entity.Group
-import brooklyn.event.SensorEvent
+import brooklyn.event.AttributeSensor
+import brooklyn.event.basic.Activity
 import brooklyn.event.basic.EventFilter
+import brooklyn.event.basic.SensorEvent
+import brooklyn.location.Location
 
 import com.google.common.base.Predicate
 
@@ -39,14 +43,19 @@ public abstract class AbstractEntity implements Entity {
     
     String displayName;
     
-    final ObservableList listeners = new SerializableObservableList(new CopyOnWriteArrayList<EventListener>());
+    //FIXME Delete?
+    //final ObservableList listeners = new SerializableObservableList(new CopyOnWriteArrayList<EventListener>());
 
     /**
      * Properties can be accessed or set on the entity itself; can also be accessed
      * from ancestors if not present on an entity
      */
     final Map properties = [:]
+    
+    Collection<Location> locations = []
  
+    public final Activity activity = new Activity(this)
+
     public void propertyMissing(String name, value) { properties[name] = value }
  
     public Object propertyMissing(String name) {
@@ -145,8 +154,14 @@ public abstract class AbstractEntity implements Entity {
         this.properties << LanguageUtils.setFieldsFromMap(this, properties)
     }
 
-    public final Activity activity = new Activity(this)
-
+    Map<String,Object> getAttributes() {
+        return activity.asMap();
+    }
+    
+    public <T> void updateAttribute(AttributeSensor<T> attribute, T val) {
+        activity.update(attribute, val);
+    }
+    
     /** TODO */
     void subscribe(EventFilter filter, EventListener listener) { }
     

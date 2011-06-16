@@ -9,12 +9,15 @@ import java.util.List;
 public class Effector implements Serializable {
     private static final long serialVersionUID = 1832435915652457843L;
     
-    private final String name;
-    private final String returnType;
-    private final List<ParameterType> parameters;
-    private final String description;
+    private String name;
+    private String returnType;
+    private List<ParameterType> parameters;
+    private String description;
 
-    Effector(Method m) {
+    @SuppressWarnings("unused")
+    private Effector() { /* for gson */ }
+
+    public Effector(Method m) {
         name = m.getName();
         returnType = m.getReturnType().getName();
         parameters = new ArrayList<ParameterType>();
@@ -24,7 +27,7 @@ public class Effector implements Serializable {
         description = "";
     }
     
-    Effector(String name, String returnType, List<ParameterType> parameters, String description) {
+    public Effector(String name, String returnType, List<ParameterType> parameters, String description) {
         this.name = name;
         this.returnType = returnType;
         this.parameters = parameters;

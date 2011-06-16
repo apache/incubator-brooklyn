@@ -1,19 +1,18 @@
 package brooklyn.entity.group
 
-import java.util.Collection;
-import java.util.Map;
+import java.util.Collection
+import java.util.Map
 
-import brooklyn.entity.Entity;
-import brooklyn.entity.Group;
-import brooklyn.location.Location;
-import brooklyn.location.MultiLocation;
+import brooklyn.entity.Entity
+import brooklyn.entity.Group
+import brooklyn.location.Location
+import brooklyn.util.internal.EntityStartUtils
+import brooklyn.util.internal.OverpaasDsl
 
 /**
  * Fabric is a {@link Tier} of entities over multiple locations.
  */
-public abstract class Fabric extends TierFromTemplate implements MultiLocation {
-	final Collection<Location> locations = []
-	
+public abstract class Fabric extends TierFromTemplate {
 	public Fabric(Map properties=[:], Group parent=null, Entity template=null) {
 		super(properties, parent, template)
 		// accept the word 'location' singular as well as plural (plural was put into field already)

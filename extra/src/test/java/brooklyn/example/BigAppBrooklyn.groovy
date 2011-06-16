@@ -1,6 +1,6 @@
 package brooklyn.example
 
-import brooklyn.entity.AbstractApplication
+import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.group.Fabric
 import brooklyn.example.PretendLocations.AmazonLocation
 import brooklyn.example.PretendLocations.InfinispanFabric
@@ -8,6 +8,7 @@ import brooklyn.example.PretendLocations.JBossFabric
 import brooklyn.example.PretendLocations.MontereyFabric
 import brooklyn.example.PretendLocations.MontereyLatencyOptimisationPolicy
 import brooklyn.example.PretendLocations.VcloudLocation
+
 
 
 public class BigAppBrooklyn extends AbstractApplication {

@@ -199,9 +199,11 @@
 			<id>Brooklyn</id>
 	
 			<modules>
-				<module>api</module>
+                <module>parent</module>
+               			<module>api</module>
 				<module>core</module>
 				<module>extra</module>
+				<module>web-console</module>
 			</modules>
 		</profile>
 

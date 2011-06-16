@@ -54,7 +54,7 @@ class EntityStartUtils {
     /**
      * Starts a clone of the given template entity running as a child of the host.
      */
-    public static void startFromTemplate(Map childProperties=[:], Group host, Startable template, Map startupProperties) {
+    public static void startFromTemplate(Map childProperties=[:], Group host, Entity template, Map startupProperties) {
         createFromTemplate(childProperties, host, template).start(startupProperties)
     }
 

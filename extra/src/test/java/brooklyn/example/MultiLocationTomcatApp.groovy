@@ -1,6 +1,6 @@
 package brooklyn.example
 
-import brooklyn.entity.AbstractApplication
+import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.group.Fabric
 import brooklyn.entity.webapp.tomcat.TomcatFabric
 import brooklyn.example.PretendLocations.MockLocation

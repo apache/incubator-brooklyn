@@ -3,6 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>brooklyn-core</artifactId>
 	<packaging>bundle</packaging>
+	<name>Brooklyn Core</name>
 
 	<parent>
 		<groupId>brooklyn</groupId>
@@ -73,6 +74,5 @@
 			</exclusions>
 			<scope>test</scope>
 		</dependency>
-
 	</dependencies>
 </project>

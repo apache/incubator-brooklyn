@@ -1,6 +1,6 @@
 package brooklyn.example
 
-import brooklyn.entity.AbstractApplication
+import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.group.Cluster
 import brooklyn.entity.webapp.tomcat.TomcatCluster
 import brooklyn.entity.webapp.tomcat.TomcatNode

@@ -2,7 +2,6 @@ package brooklyn.event.basic;
 
 import groovy.lang.Closure;
 import brooklyn.event.Sensor;
-import brooklyn.event.SensorEvent;
 
 public class EventFilters {
     private EventFilters() {}
@@ -11,7 +10,7 @@ public class EventFilters {
         return new EventFilter<T>() {
             public boolean apply(SensorEvent<T> event) {
                 Sensor<T> sensor = event.getSensor();
-                return sensor.name.equals(name);
+                return sensor.getName().equals(name);
             }
         };
     }
@@ -35,7 +34,7 @@ public class EventFilters {
     public static <T> EventFilter<T> entityId(final String id) {
         return new EventFilter<T>() {
             public boolean apply(SensorEvent<T> event) {
-                return event.getEntity().getId().equals(id);
+                return event.getSource().getId().equals(id);
             }
         };
     }

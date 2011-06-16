@@ -1,11 +1,10 @@
 package brooklyn.entity.webapp.tomcat;
 
 import static java.util.concurrent.TimeUnit.*
-import static org.junit.Assert.*
+
 import groovy.time.TimeDuration
 import groovy.transform.InheritConstructors
 
-import java.util.Map
 import java.util.concurrent.Callable
 
 import org.junit.After
@@ -15,12 +14,13 @@ import org.junit.Test
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.entity.AbstractApplication
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
+import brooklyn.entity.basic.AbstractApplication
 import brooklyn.event.EntityStartException
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.internal.TimeExtras
+
 
 class TomcatNodeTest {
 
