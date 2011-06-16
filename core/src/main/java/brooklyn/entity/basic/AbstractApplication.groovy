@@ -9,7 +9,7 @@ import java.util.concurrent.ConcurrentHashMap
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
 import brooklyn.util.internal.EntityStartUtils
-import brooklyn.util.internal.SerializableObservables.SerializableObservableMap
+import brooklyn.util.internal.SerializableObservableMap
 
 public abstract class AbstractApplication extends AbstractGroup implements Application {
     public AbstractApplication(Map properties=[:]) {
