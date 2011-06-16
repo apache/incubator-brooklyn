@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 
+import brooklyn.location.Location;
+
 /**
  * The basic interface for an OverPaaS entity.
  * 
@@ -40,4 +42,6 @@ public interface Entity extends Serializable {
 //    void subscribe(Predicate<Entity> entities, EventFilter filter, EventListener listener);
 //
 //    void raiseEvent(SensorEvent<?> event);
+    
+    Collection<Location> getLocations();
 }

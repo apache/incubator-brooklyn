@@ -1,10 +1,10 @@
 package brooklyn.management.internal.task
 
-import static brooklyn.util.internal.task.Futures.*;
+import static brooklyn.management.internal.task.Futures.*
 
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeUnit
 
-import org.junit.Test;
+import org.junit.Test
 
 class FuturesTest {
     @Test

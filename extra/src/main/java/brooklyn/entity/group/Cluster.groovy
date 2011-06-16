@@ -9,8 +9,6 @@ import brooklyn.entity.Entity
 import brooklyn.entity.Group
 import brooklyn.entity.trait.Resizable
 import brooklyn.entity.trait.Startable
-import brooklyn.location.Location
-import brooklyn.location.SingleLocation
 import brooklyn.util.internal.EntityStartUtils
 import brooklyn.util.internal.OverpaasDsl
 
@@ -20,17 +18,13 @@ import brooklyn.util.internal.OverpaasDsl
  * caller must supply location as field either in constructor or call to start;
  * initialSize property determines initial size when started (defaults to 1)
  */
-public abstract class Cluster extends Tier implements Startable, SingleLocation {
+public abstract class Cluster extends Tier implements Startable {
 	public Cluster(Map props=[:], Group parent) {
 		super(props, parent)
 	}
-
-	Location location
-	
-	@Override
-	public Collection<String> toStringFieldsToInclude() {
-		return super.toStringFieldsToInclude() + ['location'];
-	}
+    
+    
+    // TODO single location
 }
 
 public abstract class ClusterFromTemplate extends Cluster implements Resizable {

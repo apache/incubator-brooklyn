@@ -13,16 +13,16 @@ import javax.management.InstanceNotFoundException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.entity.AbstractEntity
 import brooklyn.entity.Group
+import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.trait.Startable
-import brooklyn.event.Sensor
+import brooklyn.event.AttributeSensor
 import brooklyn.event.EntityStartException
+import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.location.Location
 import brooklyn.location.basic.SshBasedJavaWebAppSetup
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.internal.EntityStartUtils
-import brooklyn.util.internal.JmxSensorEffectorTool
 
 /**
  * An entity that represents a single Tomcat instance.
@@ -34,15 +34,15 @@ public class TomcatNode extends AbstractEntity implements Startable {
 	
 	private static final Logger logger = LoggerFactory.getLogger(TomcatNode.class)
 
-    public static final Sensor<Integer> ERROR_COUNT = [ "Request errors", "jmx.reqs.global.totals.errorCount", Integer ]
-    public static final Sensor<Integer> HTTP_PORT = [ "HTTP port", "webapp.http.port", Integer ]
-    public static final Sensor<Integer> MAX_PROCESSING_TIME = [ "Request count", "jmx.reqs.global.totals.maxTime", Integer ]
-    public static final Sensor<Integer> REQUEST_COUNT = [ "Request count", "jmx.reqs.global.totals.requestCount", Integer ]
-    public static final Sensor<Integer> REQUESTS_PER_SECOND = [ "Reqs/Sec", "webapp.reqs.persec.RequestCount", Integer ]
-    public static final Sensor<Integer> TOTAL_PROCESSING_TIME = [ "Request count", "jmx.reqs.global.totals.processingTime", Integer ]
+    public static final AttributeSensor<Integer> ERROR_COUNT = [ "Request errors", "jmx.reqs.global.totals.errorCount", Integer ]
+    public static final AttributeSensor<Integer> HTTP_PORT = [ "HTTP port", "webapp.http.port", Integer ]
+    public static final AttributeSensor<Integer> MAX_PROCESSING_TIME = [ "Request count", "jmx.reqs.global.totals.maxTime", Integer ]
+    public static final AttributeSensor<Integer> REQUEST_COUNT = [ "Request count", "jmx.reqs.global.totals.requestCount", Integer ]
+    public static final AttributeSensor<Integer> REQUESTS_PER_SECOND = [ "Reqs/Sec", "webapp.reqs.persec.RequestCount", Integer ]
+    public static final AttributeSensor<Integer> TOTAL_PROCESSING_TIME = [ "Request count", "jmx.reqs.global.totals.processingTime", Integer ]
    
     // This might be more interesting as some status like 'starting', 'started', 'failed', etc.
-    public static final ActivitySensor<String>  NODE_UP = [ "Node started", "webapp.hasStarted", Boolean ];
+    public static final AttributeSensor<String>  NODE_UP = [ "Node started", "webapp.hasStarted", Boolean ];
     
 	static {
 		TomcatNode.metaClass.startInLocation = { Group parent, SshMachineLocation loc ->
@@ -63,7 +63,7 @@ public class TomcatNode extends AbstractEntity implements Startable {
 		}
 	}
 
-    JmxSensorEffectorTool jmxTool;
+    JmxSensorAdapter jmxAdapter;
  
 	//TODO hack reference (for shutting down), need a cleaner way -- e.g. look up in the app's executor service for this entity
 	ScheduledFuture jmxMonitoringTask;
@@ -73,8 +73,8 @@ public class TomcatNode extends AbstractEntity implements Startable {
 		log.debug "started... jmxHost is {} and jmxPort is {}", this.properties['jmxHost'], this.properties['jmxPort']
 		
 		if (this.properties['jmxHost'] && this.properties['jmxPort']) {
-			jmxTool = new JmxSensorEffectorTool(this.properties.jmxHost, this.properties.jmxPort)
-			if (!(jmxTool.connect(60*1000))) {
+			jmxAdapter = new JmxSensorAdapter(this.properties.jmxHost, this.properties.jmxPort)
+			if (!(jmxAdapter.connect(60*1000))) {
 				log.error "FAILED to connect JMX to {}", this
 				throw new IllegalStateException("failed to completely start $this: JMX not found at $jmxHost:$jmxPort after 60s")
 			}
@@ -89,7 +89,7 @@ public class TomcatNode extends AbstractEntity implements Startable {
 			for(int attempts = 0; attempts < 30; attempts++) {
 				Map connectorAttrs;
 				try {
-					connectorAttrs = jmxTool.getAttributes("Catalina:type=Connector,port=$port")
+					connectorAttrs = jmxAdapter.getAttributes("Catalina:type=Connector,port=$port")
 					state = connectorAttrs['stateName']
 				} catch(InstanceNotFoundException e) {
 					state = "InstanceNotFound"
@@ -118,7 +118,7 @@ public class TomcatNode extends AbstractEntity implements Startable {
 	}
 	
 	private int computeReqsPerSec() {
-        def reqs = jmxTool.getChildrenAttributesWithTotal("Catalina:type=GlobalRequestProcessor,name=\"*\"")
+        def reqs = jmxAdapter.getChildrenAttributesWithTotal("Catalina:type=GlobalRequestProcessor,name=\"*\"")
 		reqs.put "timestamp", System.currentTimeMillis()
 		
         // update to explicit location in activity map, but not linked to sensor 

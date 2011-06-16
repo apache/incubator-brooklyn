@@ -9,17 +9,17 @@ import javax.management.remote.JMXConnector
 import javax.management.remote.JMXConnectorFactory
 import javax.management.remote.JMXServiceURL
 
-public class JmxSensorEffectorTool {
+public class JmxSensorAdapter {
 	public final String jmxUrl;
 	JMXConnector jmxc;
 	MBeanServerConnection mbsc = null;
 	
 	long connectPollPeriodMillis = 500;
 	
-	public JmxSensorEffectorTool(String jmxUrl) {
+	public JmxSensorAdapter(String jmxUrl) {
 		this.jmxUrl = jmxUrl;
 	}
-	public JmxSensorEffectorTool(String host, int port) {
+	public JmxSensorAdapter(String host, int port) {
 		this.jmxUrl = "service:jmx:rmi:///jndi/rmi://"+host+":"+port+"/jmxrmi";
 	}
 

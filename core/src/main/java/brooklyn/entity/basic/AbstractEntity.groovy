@@ -16,6 +16,7 @@ import brooklyn.entity.Group
 import brooklyn.event.basic.Activity
 import brooklyn.event.basic.EventFilter
 import brooklyn.event.basic.SensorEvent
+import brooklyn.location.Location;
 import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.internal.SerializableObservables.SerializableObservableList
 
@@ -48,6 +49,8 @@ public abstract class AbstractEntity implements Entity {
      * from ancestors if not present on an entity
      */
     final Map properties = [:]
+    
+    Collection<Location> locations = []
  
     public void propertyMissing(String name, value) { properties[name] = value }
  

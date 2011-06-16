@@ -9,7 +9,9 @@ import javax.management.remote.JMXServiceURL
 import org.junit.Ignore
 import org.junit.Test
 
-class JmxSensorEffectorToolTest {
+import brooklyn.event.adapter.JmxSensorAdapter
+
+class JmxSensorAdapterTest {
     @Test
     @Ignore
     public void testJmxSensorTool() {
@@ -35,16 +37,16 @@ class JmxSensorEffectorToolTest {
             println("\tObjectName = " + name);
         }
         
-        JmxSensorEffectorTool tool = new JmxSensorEffectorTool(urlS)
-        tool.connect()
+        JmxSensorAdapter adapter = new JmxSensorAdapter(urlS)
+        adapter.connect()
         
-        def r1 = tool.getAttributes "Catalina:type=GlobalRequestProcessor,name=\"http-bio-8080\""
+        def r1 = adapter.getAttributes "Catalina:type=GlobalRequestProcessor,name=\"http-bio-8080\""
         println r1
 
-        def rN = tool.getChildrenAttributesWithTotal "Catalina:type=GlobalRequestProcessor,name=\"*\""
+        def rN = adapter.getChildrenAttributesWithTotal "Catalina:type=GlobalRequestProcessor,name=\"*\""
         println rN
 
-        tool.disconnect()
+        adapter.disconnect()
         
 //      ObjectName mxbeanName = new ObjectName("Catalina:type=GlobalRequestProcessor,name=\"*\"");
 ////        ObjectName mxbeanName = new ObjectName("Catalina:type=GlobalRequestProcessor,name=\"http-bio-8080\"");
