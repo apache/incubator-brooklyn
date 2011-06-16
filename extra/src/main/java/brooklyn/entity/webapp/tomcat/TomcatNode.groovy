@@ -3,6 +3,7 @@ package brooklyn.entity.webapp.tomcat
 import groovy.transform.InheritConstructors
 
 import java.util.Collection
+import java.util.Map;
 import java.util.Map
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
@@ -29,7 +30,6 @@ import brooklyn.util.internal.EntityStartUtils
  * 
  * @author Richard Downer <richard.downer@cloudsoftcorp.com>
  */
-@InheritConstructors
 public class TomcatNode extends AbstractEntity implements Startable {
 	
 	private static final Logger logger = LoggerFactory.getLogger(TomcatNode.class)
@@ -67,6 +67,10 @@ public class TomcatNode extends AbstractEntity implements Startable {
  
 	//TODO hack reference (for shutting down), need a cleaner way -- e.g. look up in the app's executor service for this entity
 	ScheduledFuture jmxMonitoringTask;
+
+    public TomcatNode(Map properties=[:], Group parent=null) {
+        super(properties, parent);
+    }
 
 	public void start(Map properties=[:], Group parent=null, Location location=null) {
 		EntityStartUtils.startEntity properties, this, parent, location
