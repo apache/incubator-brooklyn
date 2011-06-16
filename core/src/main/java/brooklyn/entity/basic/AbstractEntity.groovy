@@ -22,6 +22,7 @@ import brooklyn.event.basic.SensorEvent
 import brooklyn.location.Location
 
 import com.google.common.base.Predicate
+import brooklyn.util.internal.LanguageUtils
 
 /**
  * Default {@link Entity} definition.
