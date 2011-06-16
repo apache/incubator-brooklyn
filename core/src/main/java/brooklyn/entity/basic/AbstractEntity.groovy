@@ -1,7 +1,6 @@
 package brooklyn.entity.basic
 
-import java.util.Map;
-
+import java.util.Map
 import java.util.Collection
 import java.util.EventListener
 import java.util.Map
@@ -15,11 +14,12 @@ import brooklyn.entity.Entity
 import brooklyn.entity.EntityClass
 import brooklyn.entity.EntitySummary
 import brooklyn.entity.Group
-import brooklyn.event.AttributeSensor
+import brooklyn.event.Sensor
 import brooklyn.event.basic.Activity
 import brooklyn.event.basic.EventFilter
 import brooklyn.event.basic.SensorEvent
 import brooklyn.location.Location
+import brooklyn.util.internal.LanguageUtils
 
 import com.google.common.base.Predicate
 
@@ -133,8 +133,7 @@ public abstract class AbstractEntity implements Entity {
     }
  
     /** override this, adding to the collection, to supply fields whose value, if not null, should be included in the toString */
-    public Collection<String> toStringFieldsToInclude() { ['id', 'displayName']}
-
+    public Collection<String> toStringFieldsToInclude() { ['id', 'displayName'] }
 
     public AbstractEntity(Map properties=[:], Group parent=null) {
         def parentFromProps = properties.remove('parent')
@@ -158,7 +157,7 @@ public abstract class AbstractEntity implements Entity {
         return activity.asMap();
     }
     
-    public <T> void updateAttribute(AttributeSensor<T> attribute, T val) {
+    public <T> void updateAttribute(Sensor<T> attribute, T val) {
         activity.update(attribute, val);
     }
     

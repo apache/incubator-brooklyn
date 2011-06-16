@@ -1,12 +1,12 @@
-package brooklyn.entity.webapp.tomcat;
-
-import java.util.Map;
+package brooklyn.entity.webapp.tomcat
 
 import static java.util.concurrent.TimeUnit.*
+import static org.junit.Assert.*
 
 import groovy.time.TimeDuration
 //import groovy.transform.InheritConstructors
 
+import java.util.Map
 import java.util.concurrent.Callable
 
 import org.junit.After
@@ -23,10 +23,11 @@ import brooklyn.event.EntityStartException
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.internal.TimeExtras
 
-
+/**
+ * This tests the operation of the {@link TomcatNode} entity.
+ */
 class TomcatNodeTest {
-
-	private static final Logger logger = LoggerFactory.getLogger(TomcatNode.class)
+	private static final Logger logger = LoggerFactory.getLogger(TomcatNodeTest.class)
 
 	static {
         TimeExtras.init()
@@ -43,32 +44,6 @@ class TomcatNodeTest {
     }
 
 	static boolean httpPortLeftOpen = false;
-
-    static File resourcesFolder
-
-    @BeforeClass
-    public static void detect_location_of_resources() {
-        File dir = new File(System.getProperty("user.dir"))
-
-        // Check if the current folder is called brooklyn.core. If not, check if to see there is a subfolder with
-        // that name
-        
-        // FIXME breaks because of project name change; use classLoader.loadResource?
-        
-        if (dir.getAbsolutePath().endsWith(File.separator + "brooklyn.core") == false)
-            dir = new File(dir, "brooklyn.core")
-
-        if (!dir.exists())
-            throw new FileNotFoundException("Could not locate the 'brooklyn.core' directory")
-
-        File r = new File(dir, "resources")
-        if (r.exists()) {
-            resourcesFolder = r
-            return
-        } else {
-            throw new FileNotFoundException("Could not locate the 'resources' folder in the brooklyn.core project")
-        }
-    }
 
 	@Before
 	public void fail_if_http_port_in_use() {
@@ -243,7 +218,11 @@ class TomcatNodeTest {
 	public void deploy_web_app_appears_at_URL() {
 		Application app = new TestApplication();
 		TomcatNode tc = new TomcatNode(parent: app);
-		tc.war = new File(resourcesFolder, "hello-world.war").getCanonicalPath()
+
+        URL resource = this.getClass().getClassLoader().getResource("hello-world.war")
+        assertNotNull resource
+        tc.war = resource.getPath()
+
 		tc.start(location: new SshMachineLocation(name:'london', host:'localhost'))
 		executeUntilSucceedsWithShutdown(tc, {
             def port = tc.activity.getValue(TomcatNode.HTTP_PORT)

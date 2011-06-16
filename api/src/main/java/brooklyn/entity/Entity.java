@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 
-import brooklyn.event.AttributeSensor;
+import brooklyn.event.Sensor;
 import brooklyn.location.Location;
 
 /**
@@ -44,7 +44,7 @@ public interface Entity extends Serializable {
     Collection<Group> getParents();
     void addParent(Group e);
 
-    <T> void updateAttribute(AttributeSensor<T> attribute, T val);
+    <T> void updateAttribute(Sensor<T> attribute, T val);
     
 //    void subscribe(EventFilter filter, EventListener listener);
 //    void subscribe(Predicate<Entity> entities, EventFilter filter, EventListener listener);

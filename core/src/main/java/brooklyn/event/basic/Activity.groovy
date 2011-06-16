@@ -37,15 +37,10 @@ public class Activity {
 	}
 	
 	public <T> Object update(Sensor<T> sensor, T newValue) {
-		log.debug "sensor $sensor field {} set to {}", sensor.field, newValue
-		update( sensor.field.split("\\.") as List, newValue )
-
-		//TODO notify subscribers!
-				
-        SensorEvent<T> event = new SensorEvent<T>();
-        event.sensor = sensor;
-        event.entity = entity;
-        event.value = newValue;
+		log.debug "sensor $sensor field {} set to {}", sensor.name, newValue
+		update(sensor.getNameParts(), newValue)
+		//TODO notify subscribers! - in activity?
+        SensorEvent<T> event = new SensorEvent<T>(sensor, entity, newValue)
         entity.raiseEvent event
         
 //		entity.getApplication().getSubscriptionManager().fire(entity, sensor, newValue)
@@ -58,11 +53,11 @@ public class Activity {
 	}
 	
 	public Object getValue(Collection<String> path) {
-		return getValueRecurse( values, path )
+		return getValueRecurse(values, path)
 	}
 	
 	public <T> T getValue(Sensor<T> sensor) {
-		return getValueRecurse( values, sensor.field.split("\\.") as List )
+		return getValueRecurse(values, sensor.getNameParts())
 	}
 
 	private static Object getValueRecurse(Map node, Collection<String> path) {
