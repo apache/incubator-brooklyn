@@ -68,8 +68,8 @@ public class TomcatNode extends AbstractEntity implements Startable {
 	//TODO hack reference (for shutting down), need a cleaner way -- e.g. look up in the app's executor service for this entity
 	ScheduledFuture jmxMonitoringTask;
 
-    public TomcatNode(Map properties=[:], Group parent=null) {
-        super(properties, parent);
+    public TomcatNode(Map properties=[:]) {
+        super(properties);
     }
 
 	public void start(Map properties=[:], Group parent=null, Location location=null) {
