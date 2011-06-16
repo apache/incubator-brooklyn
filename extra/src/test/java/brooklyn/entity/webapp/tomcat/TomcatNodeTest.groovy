@@ -92,7 +92,7 @@ class TomcatNodeTest {
 	public void acceptsLocationAsStartParameter() {
 		Application app = new TestApplication();
 		TomcatNode tc = new TomcatNode(parent:app);
-		tc.start([:], null, new SshMachineLocation(name:'london', host:'localhost'))
+		tc.start([:], new SshMachineLocation(name:'london', host:'localhost'))
 		tc.shutdown()
 	}
 	
@@ -247,7 +247,7 @@ class TomcatNodeTest {
 			TomcatNode tc = new TomcatNode(parent: app)
 			Exception caught = null
 			try {
-				tc.start([:], null, new SshMachineLocation(name:'london', host:'localhost'))
+				tc.start([:], new SshMachineLocation(name:'london', host:'localhost'))
 			} catch(EntityStartException e) {
 				caught = e
 			} finally {

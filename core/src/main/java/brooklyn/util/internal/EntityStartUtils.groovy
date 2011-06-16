@@ -36,7 +36,7 @@ class EntityStartUtils {
         this
     }
     
-    public static Entity startEntity(Map properties=[:], Entity entity, Group parent=null, Location location=null) {
+    public static Entity startEntity(Map properties=[:], Entity entity, Location location=null) {
         log.debug "factory creating entity {} with properties {} and location {}", entity, properties, location
 		entity.properties << properties
         if (location) {
@@ -44,10 +44,10 @@ class EntityStartUtils {
                 throw new IllegalStateException("request to start $entity in $location but it is already set with location "+entity.location)
             entity.location = location
         }
-        if (!parent && !entity.parents)
+        if (!entity.parents)
             throw new IllegalStateException("request to start $entity without any parents specified or set")
         //TODO dynamically look for appropriate start method, throw better exception if not there
-        entity.startInLocation(parent, entity.location)
+        entity.startInLocation(entity.location)
         entity
     }
 

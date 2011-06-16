@@ -45,7 +45,7 @@ public class TomcatNode extends AbstractEntity implements Startable {
     public static final AttributeSensor<String>  NODE_UP = [ "Node started", "webapp.hasStarted", Boolean ];
     
 	static {
-		TomcatNode.metaClass.startInLocation = { Group parent, SshMachineLocation loc ->
+		TomcatNode.metaClass.startInLocation = { SshMachineLocation loc ->
 			def setup = new Tomcat7SshSetup(delegate)
 			//pass http port to setup, if one was specified on this object
 			if (properties.httpPort) setup.httpPort = properties.httpPort
@@ -72,8 +72,8 @@ public class TomcatNode extends AbstractEntity implements Startable {
         super(properties);
     }
 
-	public void start(Map properties=[:], Group parent=null, Location location=null) {
-		EntityStartUtils.startEntity properties, this, parent, location
+	public void start(Map properties=[:], Location location=null) {
+		EntityStartUtils.startEntity properties, this, location
 		log.debug "started... jmxHost is {} and jmxPort is {}", this.properties['jmxHost'], this.properties['jmxPort']
 		
 		if (this.properties['jmxHost'] && this.properties['jmxPort']) {
