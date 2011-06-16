@@ -1,5 +1,5 @@
 package brooklyn.management.internal;
 
-public class LocalSubscriptionManager {
+public class LocalSubscriptionManager implements SubscriptionManager {
 
 }
