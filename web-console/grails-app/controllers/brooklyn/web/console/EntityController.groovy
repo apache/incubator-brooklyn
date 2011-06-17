@@ -1,4 +1,4 @@
-package brooklyn.management.webconsole
+package brooklyn.web.console
 
 import grails.converters.JSON
 
@@ -15,7 +15,9 @@ class EntityController {
         }
 
         Collection<EntitySummary> getEntitySummariesInApplication(String id) {
-            return new ArrayList<EntitySummary>();
+            Collection<EntitySummary> c = allEntitySummaries;
+            c.add(getHackyEntitySummary(id, "searched for " + id, ["a1"]))
+            return c;
         }
 
         Collection<EntitySummary> getAllEntitySummaries() {
@@ -51,30 +53,63 @@ class EntityController {
 
     ManagementContext context = new TestManagementApi();
 
+    private Collection<EntitySummary> getEntitySummariesMatchingCriteria(String name, String id, String applicationId) {
+        Collection<EntitySummary> all = context.allEntitySummaries
+        Collection<EntitySummary> matches = all.findAll {
+            sum ->
+            ((!name || sum.displayName =~ name)
+                    && (!id || sum.id =~ id)
+                    && (!applicationId || sum.applicationId =~ applicationId)
+            )
+        }
+
+        for(EntitySummary match : matches) {
+            all.findAll{
+                s -> s.groupIds.contains(match.id)
+            }
+        }
+
+        return matches
+    }
+
     def index = {}
 
     def list = {
-        render context.getAllEntitySummaries() as JSON;
+        render context.getAllEntitySummaries() as JSON
+    }
+
+    def search = {
+        render getEntitySummariesMatchingCriteria(params.name, params.id, params.applicationId) as JSON
     }
 
     def jstree = {
-        JsTreeNodeImpl root = new JsTreeNodeImpl("root", "FAILED TO DETERMINE ROOT OF TREE", [])
         Map<String, JsTreeNodeImpl> nodeMap = [:]
-        for (EntitySummary summary: context.getAllEntitySummaries()) {
-            nodeMap.put(summary.getId(), new JsTreeNodeImpl(summary.getId(), summary.getDisplayName(), []))
+        List<String> potentialRoots = []
+
+        for (EntitySummary summary: context.allEntitySummaries) {
+            nodeMap.put(summary.id, new JsTreeNodeImpl(summary.id, summary.displayName))
         }
 
-        for (EntitySummary summary: context.getAllEntitySummaries()) {
-            JsTreeNode node = nodeMap.get(summary.getId())
-            if (summary.getGroupIds().isEmpty()) {
-                root = node;
-            }
-            for (String groupId: summary.getGroupIds()) {
-                nodeMap.get(groupId).getChildren().add(node)
+        JsTreeNodeImpl root = new JsTreeNodeImpl("root", ".")
+        for (EntitySummary summary: getEntitySummariesMatchingCriteria(params.name, params.id, params.applicationId)) {
+            potentialRoots.add(summary.id);
+        }
+
+        for (EntitySummary summary: context.allEntitySummaries) {
+            JsTreeNode node = nodeMap.get(summary.id);
+            for (String groupId: summary.groupIds) {
+                nodeMap.get(groupId).children.add(node)
             }
         }
+
+        for (String id: potentialRoots) {
+            JsTreeNode node = nodeMap[id];
+            if (!nodeMap.find { n -> n.value.hasDescendant(node)}) {
+                root.children.add(node);
+            }
+        }
+
         render root as JSON
     }
-
 }
 

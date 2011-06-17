@@ -134,22 +134,14 @@ public abstract class AbstractEntity implements Entity {
     /** override this, adding to the collection, to supply fields whose value, if not null, should be included in the toString */
     public Collection<String> toStringFieldsToInclude() { ['id', 'displayName'] }
 
-    public AbstractEntity(Map properties=[:], Group parent=null) {
-        def parentFromProps = properties.remove('parent')
-        if (parentFromProps) {
-            if (!parent) parent = parentFromProps;
-            else assert parent==parentFromProps;
-        }
+    public AbstractEntity(Map properties=[:]) {
+        def parent = properties.remove('parent')
 
-        addProperties(properties)
+        //place named-arguments into corresponding fields if they exist, otherwise put into config map
+        this.properties << LanguageUtils.setFieldsFromMap(this, properties)
 
         //set the parent if supplied; accept as argument or field
         if (parent) parent.addChild(this)
-    }
-
-    public void addProperties(Map properties) {
-        //place named-arguments into corresponding fields if they exist, otherwise put into config map
-        this.properties << LanguageUtils.setFieldsFromMap(this, properties)
     }
 
     Map<String,Object> getAttributes() {

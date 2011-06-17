@@ -33,13 +33,14 @@ public class Activity {
 		}
 		log.debug "putting at $path, $key under $map"
 		def oldValue = map.put(key, newValue)
-        SensorEvent<T> event = new SensorEvent<T>(sensor, entity, newValue)
-        entity.raiseEvent event
+        oldValue
 	}
 	
 	public <T> Object update(Sensor<T> sensor, T newValue) {
 		log.debug "sensor $sensor field {} set to {}", sensor.name, newValue
 		update(sensor.getNameParts(), newValue)
+        SensorEvent event = new SensorEvent<T>(sensor, entity, newValue)
+        entity.raiseEvent event
 	}
 	
 	public Object getValue(Collection<String> path) {

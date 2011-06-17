@@ -1,8 +1,7 @@
 package com.cloudsoftcorp.monterey.brooklyn.entity
 
-import org.overpaas.entities.AbstractGroup
-
-import brooklyn.location.Location;
+import brooklyn.entity.basic.AbstractGroup
+import brooklyn.location.Location
 
 import com.cloudsoftcorp.monterey.control.workrate.api.WorkrateReport
 import com.cloudsoftcorp.monterey.network.control.api.NodeSummary

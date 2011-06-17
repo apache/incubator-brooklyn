@@ -2,6 +2,5 @@ target
 plugins
 stacktrace.log
 
-/application.properties
 /.settings
 /.classpath

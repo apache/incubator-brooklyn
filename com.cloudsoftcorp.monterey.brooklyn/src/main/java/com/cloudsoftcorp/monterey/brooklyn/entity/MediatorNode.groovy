@@ -2,9 +2,8 @@ package com.cloudsoftcorp.monterey.brooklyn.entity
 
 import java.util.logging.Level
 
-import org.overpaas.types.ActivitySensor
-
-import brooklyn.location.Location;
+import brooklyn.event.basic.AttributeSensor
+import brooklyn.location.Location
 
 import com.cloudsoftcorp.monterey.control.workrate.api.WorkrateReport
 import com.cloudsoftcorp.monterey.network.m.AbstractMediationWorkrateItem.BasicMediatorTotalWorkrateItem
@@ -13,7 +12,7 @@ import com.cloudsoftcorp.monterey.node.api.NodeId
 
 public class MediatorNode extends AbstractMontereyNode {
 
-    public static final ActivitySensor<Integer> WORKRATE_MSGS_PER_SEC = [ "MsgsPerSec", "monterey.workrate.msgsPerSec", Double ]
+    public static final AttributeSensor<Integer> WORKRATE_MSGS_PER_SEC = [ "MsgsPerSec", "monterey.workrate.msgsPerSec", Double ]
     
     MediatorNode(MontereyNetworkConnectionDetails connectionDetails, NodeId nodeId, Location location) {
         super(connectionDetails, nodeId);
