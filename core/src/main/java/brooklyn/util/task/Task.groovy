@@ -61,10 +61,21 @@ public class Task<T> extends TaskStub implements Future<T> {
 		displayName = flags.remove("displayName")
 		if (flags) throw new IllegalArgumentException("Unsupported flags passed to task: "+flags)
 	}
-	public Task(Map flags=[:], Runnable job) { this(flags, { if (job in Callable) job.call() else job.run(); null } as Closure<T> ) }
-	public Task(Map flags=[:], Callable<T> job) { this(flags, { job.call() } as Closure<T>) }
+	public Task(Map flags=[:], Runnable job)    { this(flags, closureFromRunnable(job) ) }
+	public Task(Map flags=[:], Callable<T> job) { this(flags, closureFromCallable(job) ) }
 
 	public String toString() { "Task["+(displayName?displayName+"; ":"")+"$id]" }
+	
+	protected static <X> Closure<X> closureFromRunnable(Runnable r) {
+		return {
+			if (job in Callable) { job.call() }
+			else { job.run(); null; }
+		}
+	}
+	
+	protected static <X> Closure<X> closureFromCallable(Callable<X> r) {
+		return { job.call() }
+	}
 	
 	// housekeeping --------------------
 	
