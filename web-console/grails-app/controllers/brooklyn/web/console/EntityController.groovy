@@ -1,4 +1,4 @@
-package brooklyn.management.webconsole
+package brooklyn.web.console
 
 import grails.converters.JSON
 
@@ -15,7 +15,9 @@ class EntityController {
         }
 
         Collection<EntitySummary> getEntitySummariesInApplication(String id) {
-            return new ArrayList<EntitySummary>();
+            Collection<EntitySummary> c = allEntitySummaries;
+            c.add(getHackyEntitySummary(id, "searched for " + id, ["a1"]))
+            return c;
         }
 
         Collection<EntitySummary> getAllEntitySummaries() {
@@ -51,30 +53,58 @@ class EntityController {
 
     ManagementContext context = new TestManagementApi();
 
+    private Collection<EntitySummary> getEntitySummariesMatchingCriteria(Collection<EntitySummary> all, String name, String id, String applicationId) {
+        Collection<EntitySummary> matches = all.findAll {
+            sum ->
+            ((!name || sum.displayName =~ name)
+                    && (!id || sum.id =~ id)
+                    && (!applicationId || sum.applicationId =~ applicationId)
+            )
+        }
+
+        for (EntitySummary match: matches) {
+            all.findAll {
+                s -> s.groupIds.contains(match.id)
+            }
+        }
+
+        return matches
+    }
+
     def index = {}
 
     def list = {
-        render context.getAllEntitySummaries() as JSON;
+        render(context.getAllEntitySummaries() as JSON)
+    }
+
+    def search = {
+        render(getEntitySummariesMatchingCriteria(context.allEntitySummaries, params.name, params.id, params.applicationId) as JSON)
     }
 
     def jstree = {
-        JsTreeNodeImpl root = new JsTreeNodeImpl("root", "FAILED TO DETERMINE ROOT OF TREE", [])
+        List<EntitySummary> all = context.allEntitySummaries;
         Map<String, JsTreeNodeImpl> nodeMap = [:]
-        for (EntitySummary summary: context.getAllEntitySummaries()) {
-            nodeMap.put(summary.getId(), new JsTreeNodeImpl(summary.getId(), summary.getDisplayName(), []))
+        JsTreeNodeImpl root = new JsTreeNodeImpl("root", ".", true)
+
+        for (EntitySummary summary: all) {
+            nodeMap.put(summary.id, new JsTreeNodeImpl(summary.id, summary.displayName))
         }
 
-        for (EntitySummary summary: context.getAllEntitySummaries()) {
-            JsTreeNode node = nodeMap.get(summary.getId())
-            if (summary.getGroupIds().isEmpty()) {
-                root = node;
-            }
-            for (String groupId: summary.getGroupIds()) {
-                nodeMap.get(groupId).getChildren().add(node)
+        for (EntitySummary summary: all) {
+            for (String groupId: summary.groupIds) {
+                nodeMap.get(groupId).children.add(nodeMap.get(summary.id))
             }
         }
-        render root as JSON
+
+        List<JsTreeNodeImpl> potentialRoots = []
+        for (EntitySummary summary: getEntitySummariesMatchingCriteria(all, params.name, params.id, params.applicationId)) {
+            nodeMap[summary.id].matched = true
+            potentialRoots.add(nodeMap[summary.id])
+        }
+
+        root.children.addAll(potentialRoots.findAll { a -> !potentialRoots.findAll { n -> n.hasDescendant(a)} })
+
+        render(root as JSON)
     }
-
 }
 

@@ -125,6 +125,7 @@ public class ExecutionManager {
 	protected void beforeStart(Map flags, Task task) {
 		task.startTimeUtc = System.currentTimeMillis()
 		perThreadCurrentTask.set task
+		task.thread = Thread.currentThread()
 		ExecutionUtils.invoke flags.newTaskStartCallback, task
 	}
 
@@ -132,6 +133,8 @@ public class ExecutionManager {
 		ExecutionUtils.invoke flags.newTaskEndCallback, task
 		perThreadCurrentTask.remove()
 		task.endTimeUtc = System.currentTimeMillis()
+		//clear thread _after_ endTime set, so we won't get a null thread when there is no end-time
+		task.thread = null;
 		synchronized (task) { task.notifyAll() }
 	}
 

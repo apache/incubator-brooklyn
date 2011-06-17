@@ -13,7 +13,7 @@ import brooklyn.util.internal.SerializableObservableMap
 
 public abstract class AbstractApplication extends AbstractGroup implements Application {
     public AbstractApplication(Map properties=[:]) {
-        super(properties, null)
+        super(properties)
     }
     
     final ObservableMap entities = new SerializableObservableMap(new ConcurrentHashMap<String,Entity>());

@@ -69,6 +69,9 @@ public class BasicTaskExecutionTest {
 			assertEquals("b", data.get(1))
 			assertFalse(t.isDone())
 			
+			println "runTaskWithWaits, task status:\n"+t.getStatusDetail(true)
+			assertTrue(t.getStatusDetail(false).toLowerCase().contains("waiting"))
+			
 			data.notify()
 		}
 		assertEquals("a", t.get())
@@ -127,6 +130,9 @@ public class BasicTaskExecutionTest {
 		assertTrue(t.isCancelled())
 		assertTrue(t.isDone())
 		assertTrue(t.isError())
+		
+		println "cancelBeforeRun status: "+t.getStatusDetail(false)
+		assertTrue(t.getStatusDetail(false).toLowerCase().contains("cancel"))
 	}
 
 	@Test
@@ -187,6 +193,9 @@ public class BasicTaskExecutionTest {
 		assertFalse(t.isCancelled())
 		assertTrue(t.isError())
 		assertTrue(t.isDone())
+		
+		println "errorDuringRun status: "+t.getStatusDetail(false)
+		assertTrue(t.getStatusDetail(false).contains("Aaargh"))
 	}
 
 	@Test

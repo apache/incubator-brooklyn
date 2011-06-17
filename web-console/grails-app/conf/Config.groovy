@@ -74,11 +74,11 @@ log4j = {
     //    console name:'stdout', layout:pattern(conversionPattern: '%c{2} %m%n')
     //}
 
-    error  'org.codehaus.groovy.grails.web.servlet',  //  controllers
-           'org.codehaus.groovy.grails.web.pages', //  GSP
-           'org.codehaus.groovy.grails.web.sitemesh', //  layouts
-           'org.codehaus.groovy.grails.web.mapping.filter', // URL mapping
-           'org.codehaus.groovy.grails.web.mapping', // URL mapping
+    error  'org.codehaus.groovy.grails.console.servlet',  //  controllers
+           'org.codehaus.groovy.grails.console.pages', //  GSP
+           'org.codehaus.groovy.grails.console.sitemesh', //  layouts
+           'org.codehaus.groovy.grails.console.mapping.filter', // URL mapping
+           'org.codehaus.groovy.grails.console.mapping', // URL mapping
            'org.codehaus.groovy.grails.commons', // core / classloading
            'org.codehaus.groovy.grails.plugins', // plugins
            'org.codehaus.groovy.grails.orm.hibernate', // hibernate integration
@@ -88,3 +88,8 @@ log4j = {
 
     warn   'org.mortbay.log'
 }
+
+// Added by the Spring Security Core plugin:
+grails.plugins.springsecurity.userLookup.userDomainClassName = 'brooklyn.web.console.SecurityUser'
+grails.plugins.springsecurity.userLookup.authorityJoinClassName = 'brooklyn.web.console.SecurityUserRole'
+grails.plugins.springsecurity.authority.className = 'brooklyn.web.console.SecurityRole'

@@ -16,8 +16,11 @@ public abstract class AbstractSensor<T> implements Sensor<T> {
     
     private static final Splitter dots = Splitter.on('.');
 
+	//TODO Alex suggests:  make these public final (groovy automatically invokes getter if there is one for a field anyway, unless you use @ operator, e.g. otherObj.@field) 
     private String description;
     private String name;
+	//TODO Alex strongly suggests: make it a Class. java API nicer that way. use custom serialisers rather than corrupt the internal type
+	//or if you must, make it transient, and have non-transient String typeName, and getType will check for type being null...
     private String type;
 
     public AbstractSensor() { /* for gson */ }
@@ -28,6 +31,7 @@ public abstract class AbstractSensor<T> implements Sensor<T> {
         this.type = type.getName();
     }
 
+	//TODO remove getters which groovy gives for free?
     /** @see Sensor#getDescription() */
     public String getDescription() {
         return description;
@@ -48,6 +52,9 @@ public abstract class AbstractSensor<T> implements Sensor<T> {
         return type;
     }
 
+	//TODO Alex suggests: remove this, it is confusing in light of 'type' (and EntityClass)
+	//if/when we need it we'll consider (with a better understanding) whether this internal class hierarchy 
+	//is really the best way to expose, or whether we want an enum, explicit SensorType class with static values, etc...
     /** @see Sensor#getSensorClass() */
     public Class<T> getSensorClass() {
         try {

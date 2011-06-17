@@ -1,5 +1,9 @@
 package brooklyn.util.task;
 
+import java.lang.management.LockInfo;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadInfo;
+import java.lang.management.ThreadMXBean;
 import java.util.Collections.UnmodifiableSet;
 import java.util.concurrent.Callable
 import java.util.concurrent.CancellationException
@@ -66,19 +70,19 @@ public class Task<T> extends TaskStub implements Future<T> {
 		
 		if (flags) throw new IllegalArgumentException("Unsupported flags passed to task: "+flags)
 	}
-	public Task(Map flags=[:], Runnable job)    { this(flags, closureFromRunnable(job) ) }
-	public Task(Map flags=[:], Callable<T> job) { this(flags, closureFromCallable(job) ) }
+	public Task(Map flags=[:], Runnable job)    { this(flags, closureFromRunnable(job) as Closure) }
+	public Task(Map flags=[:], Callable<T> job) { this(flags, closureFromCallable(job) as Closure) }
 
 	public String toString() { "Task["+(displayName?displayName+(tags?"":";")+" ":"")+(tags?""+tags+"; ":"")+"$id]" }
 	
-	protected static <X> Closure<X> closureFromRunnable(Runnable r) {
+	protected static <X> Closure<X> closureFromRunnable(Runnable job) {
 		return {
 			if (job in Callable) { job.call() }
 			else { job.run(); null; }
 		}
 	}
 	
-	protected static <X> Closure<X> closureFromCallable(Callable<X> r) {
+	protected static <X> Closure<X> closureFromCallable(Callable<X> job) {
 		return { job.call() }
 	}
 	
@@ -89,8 +93,9 @@ public class Task<T> extends TaskStub implements Future<T> {
 	private long endTimeUtc = -1;
 	private Task<?> submittedByTask;
 
+	private Thread thread = null
 	private boolean cancelled = false
-	private Future<T> result
+	private Future<T> result = null
 	
 	synchronized void initResult(Future result) {
 		if (this.result!=null) throw new IllegalStateException("task "+this+" is being given a result twice"); 
@@ -98,6 +103,8 @@ public class Task<T> extends TaskStub implements Future<T> {
 		notifyAll()
 	}
 
+	
+	
 	// metadata accessors ------------
 
 	public Set<Object> getTags() { new UnmodifiableSet(new LinkedHashSet(tags)) }
@@ -105,8 +112,10 @@ public class Task<T> extends TaskStub implements Future<T> {
 	public long getStartTimeUtc() { startTimeUtc }
 	public long getEndTimeUtc() { endTimeUtc }
 	
-	public Task<?> getSubmittedByTask() { submittedByTask }
 	public Future<T> getResultFuture() { result }
+	public Task<?> getSubmittedByTask() { submittedByTask }
+	/** the thread where the task is running, if it is running */
+	public Thread getThread() { thread }
 		
 	// future --------------------
 	
@@ -163,5 +172,114 @@ public class Task<T> extends TaskStub implements Future<T> {
 //		def v = Futures.run(collect { Future f -> { -> f.get(timeout, unit) } } )
 //		v.collect { Future f -> f.get() }
 	}
-
+	
+	/** returns a brief status string; plain-text format; reported status if there is one;
+	 * otherwise state which will be one of:
+	 * - Not submitted
+	 * - Submitted for execution
+	 * - Ended by error
+	 * - Ended by cancellation
+	 * - Ended normally
+	 * - Running
+	 * - Waiting
+	 **/
+	public String getStatusSummary() {
+		getStatusString(0)
+	}
+	/** returns detailed status, suitable for a hover; plain-text format,
+	 * with new-lines (and sometimes extra info) if multiline enabled */
+	public String getStatusDetail(boolean multiline) {
+		getStatusString(multiline?2:1)
+	}
+	protected String getStatusString(int verbosity) {
+		Thread t = getThread()
+		String rv
+		if (submitTimeUtc <= 0) rv = "Not submitted"
+		else if (startTimeUtc <= 0) {
+			rv = "Submitted for execution"
+			if (verbosity>0) {
+				long elapsed = System.currentTimeMillis() - submitTimeUtc;
+				rv += " "+elapsed+" ms ago"
+			}
+		} else if (isDone()) {
+			long elapsed = System.currentTimeMillis() - submitTimeUtc;
+			String duration = ""+elapsed+" ms";
+			rv = "Ended "
+			if (isCancelled()) {
+				rv += "by cancellation"
+				if (verbosity >= 1) rv+" after "+duration;
+			} else if (isError()) {
+				rv += "by error"
+				if (verbosity >= 1) {
+					rv += " after "+duration
+					Throwable error
+					try { String rvx = get(); error = "no error, return value $rvx" /* shouldn't happen */ }   
+					catch (Throwable tt) { error = tt }
+					
+					//remove outer ExecException which is reported by the get(), we want the exception the task threw
+					if (error in ExecutionException) error = error.getCause()
+					
+					if (verbosity == 1) rv += " ("+error+")"
+					else {
+						StringWriter sw = new StringWriter()
+						error.printStackTrace new PrintWriter(sw), true
+						rv += "\n"+sw.getBuffer()
+					}
+				}
+			} else {
+				rv += "normally"
+				if (verbosity>=1) {
+					if (verbosity==1) {
+						rv += ", rv "+get()
+					} else {
+						rv += " after "+duration
+						rv += "\n" + "rv: "+get()
+					}
+				}
+			}
+		} else {
+			//active
+			assert t!=null : "shouldn't be possible not to have a current thread as we were started and not ended"
+			ThreadInfo ti = ManagementFactory.threadMXBean.getThreadInfo t.getId(), (verbosity<=0 ? 0 : verbosity==1 ? 1 : Integer.MAX_VALUE)
+			if (getThread()==null)
+				//thread might have moved on to a new task; if so, recompute (it should now say "done")
+				return getStatusString(verbosity)
+			LockInfo lock = ti.getLockInfo()
+			if (!lock) {
+				//not blocked
+				if (ti.isSuspended()) {
+					rv = "Waiting"
+					if (verbosity >= 1) rv += ", thread suspended"
+				} else {
+					rv = "Running"
+				}
+			} else {
+				rv = "Waiting"
+				if (verbosity>=1) {
+					if (ti.getThreadState() == Thread.State.BLOCKED) {
+						rv += " (mutex) on "+lookup(lock)
+					} else if (ti.getThreadState() == Thread.State.WAITING) {
+						rv += " (notify) on "+lookup(lock)
+					} else if (ti.getThreadState() == Thread.State.TIMED_WAITING) {
+						rv += " (timed) on "+lookup(lock)
+					} else {
+						rv = " ("+ti.getThreadState()+") on "+lookup(lock)
+					}
+					//TODO held by...
+				}
+			}
+			if (verbosity>=2) {
+				if (ti.getStackTrace()!=null && ti.getStackTrace().length>0)
+					rv += "\n" +"At: "+ti.getStackTrace()[0]
+				for (int ii=1; ii<ti.getStackTrace().length; ii++) {
+					rv += "\n" +"    "+ti.getStackTrace()[ii]
+				}
+			}
+		}
+		return rv
+	}
+		
+	protected lookup(LockInfo l) {
+		return l
+	}
 }

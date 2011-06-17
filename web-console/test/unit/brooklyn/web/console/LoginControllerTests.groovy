@@ -1,4 +1,4 @@
-package brooklyn.management.webconsole
+package brooklyn.web.console
 
 import grails.test.*
 

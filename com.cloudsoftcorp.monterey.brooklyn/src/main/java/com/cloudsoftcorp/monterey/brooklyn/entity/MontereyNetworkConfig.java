@@ -6,15 +6,9 @@
 package com.cloudsoftcorp.monterey.brooklyn.entity;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.Properties;
 
-import org.apache.commons.codec.binary.Base64;
-
-import com.cloudsoftcorp.util.exception.ExceptionUtils;
-import com.cloudsoftcorp.util.io.StreamUtils;
 import com.cloudsoftcorp.util.web.server.WebServer;
 
 /**
@@ -28,25 +22,6 @@ public class MontereyNetworkConfig implements Serializable {
     /** serialVersionUID */
     private static final long serialVersionUID = 5181096081594953360L;
     
-    public static final String PROVIDER_PROPERTY = "PROVIDER";
-    public static final String IDENTITY_PROPERTY = "IDENTITY";
-    public static final String CREDENTIAL_PROPERTY = "CREDENTIAL";
-    public static final String MONTEREY_WEB_API_PORT_PROPERTY = "MONTEREY_WEB_API_PORT";
-    public static final String MONTEREY_WEB_API_PROTOCOL_PROPERTY = "MONTEREY_WEB_API_PROTOCOL";
-    public static final String MONTEREY_WEB_API_SSL_KEYSTORE_PROPERTY = "MONTEREY_WEB_API_SSL_KEYSTORE";
-    public static final String MONTEREY_WEB_API_SSL_KEYSTORE_DATA_PROPERTY = "MONTEREY_WEB_API_SSL_KEYSTORE_DATA";
-    public static final String MONTEREY_WEB_API_SSL_KEYSTORE_PASSWORD_PROPERTY = "MONTEREY_WEB_API_SSL_KEYSTORE_PASSWORD";
-    public static final String MONTEREY_WEB_API_SSL_KEY_PASSWORD_PROPERTY = "MONTEREY_WEB_API_SSL_KEY_PASSWORD";
-    public static final String MONTEREY_NODE_PORT_PROPERTY = "MONTEREY_NODE_PORT";
-    public static final String MONTEREY_HUB_LPP_PORT_PROPERTY = "MONTEREY_HUB_LPP_PORT";
-    public static final String INSTANCE_TYPE_PROPERTY = "INSTANCE_TYPE";
-    public static final String MONTEREY_IMAGE_NAME_PROPERTY = "IMAGE_NAME";
-    public static final String MONTEREY_IMAGE_VERSION_PROPERTY = "MONTEREY_IMAGE_VERSION";
-    public static final String SSH_PORT_PROPERTY = "SSH_PORT";
-    public static final String SECURITY_GROUP_PROPERTY = "SECURITY_GROUP";
-    public static final String LOGGING_FILE_OVERRIDE_PROPERTY = "LOGGING_FILE_OVERRIDE";
-	public static final String CUSTOM_LOCATIONS_PROPERTY = "CUSTOM_LOCATIONS";
-
     public static final int SSH_PORT = 22;
     public static final int MONTEREY_NODE_PORT = 43500;
     public static final int MONTEREY_HUB_LPP_PORT = 43501;
@@ -97,14 +72,10 @@ public class MontereyNetworkConfig implements Serializable {
 
     public static final int TIMEOUT_FOR_NEW_NETWORK_ON_HOST = 60*1000;
     
-    private int montereyNodePort;
-    private int montereyHubLppPort;
-	private int sshPort;
+    protected int montereyNodePort;
+    protected int montereyHubLppPort;
+    protected int sshPort;
     
-	public int getDefaultMontereyNodePort() { return MONTEREY_NODE_PORT; }
-	public int getDefaultMontereyHubLppPort() { return MONTEREY_HUB_LPP_PORT; }
-	public int getDefaultSSHPort() { return SSH_PORT; }
-	
     protected int montereyWebApiPort;
 	protected String montereyWebApiProtocol;
 	protected File montereyWebApiSslKeystore = null;
@@ -122,64 +93,9 @@ public class MontereyNetworkConfig implements Serializable {
         sshPort = getDefaultSSHPort();
     }
 
-    public MontereyNetworkConfig(Properties props) {
-    	montereyNodePort = getIntegerProperty(props, MONTEREY_NODE_PORT_PROPERTY, getDefaultMontereyNodePort());
-    	montereyHubLppPort = getIntegerProperty(props, MONTEREY_HUB_LPP_PORT_PROPERTY, getDefaultMontereyHubLppPort());
-    	montereyWebApiPort = getIntegerProperty(props, MONTEREY_WEB_API_PORT_PROPERTY, WebServer.DEFAULT_HTTP_PORT);
-    	montereyWebApiProtocol = props.getProperty(MONTEREY_WEB_API_PROTOCOL_PROPERTY, WebServer.HTTP);
-    	montereyWebApiSslKeystore = getFileProperty(props, MONTEREY_WEB_API_SSL_KEYSTORE_PROPERTY);
-    	montereyWebApiSslKeystoreData = props.getProperty(MONTEREY_WEB_API_SSL_KEYSTORE_DATA_PROPERTY);
-        montereyWebApiSslKeystorePassword = props.getProperty(MONTEREY_WEB_API_SSL_KEYSTORE_PASSWORD_PROPERTY);
-        montereyWebApiSslKeyPassword = props.getProperty(MONTEREY_WEB_API_SSL_KEY_PASSWORD_PROPERTY);
-        sshPort = getIntegerProperty(props, SSH_PORT_PROPERTY, getDefaultSSHPort());
-        loggingFileOverride = getFileProperty(props, LOGGING_FILE_OVERRIDE_PROPERTY);
-    }
-    
-    public Properties toProperties() {
-        Properties result = new Properties();
- 
-        result.setProperty(MONTEREY_NODE_PORT_PROPERTY, Integer.toString(montereyNodePort));
-        result.setProperty(MONTEREY_HUB_LPP_PORT_PROPERTY, Integer.toString(montereyHubLppPort));
-        result.setProperty(MONTEREY_WEB_API_PORT_PROPERTY, Integer.toString(montereyWebApiPort));
-        result.setProperty(MONTEREY_WEB_API_PROTOCOL_PROPERTY, montereyWebApiProtocol);
-
-        if (montereyWebApiSslKeystore != null) result.setProperty(MONTEREY_WEB_API_SSL_KEYSTORE_PROPERTY, montereyWebApiSslKeystore.getPath());
-        if (montereyWebApiSslKeystorePassword != null) result.setProperty(MONTEREY_WEB_API_SSL_KEYSTORE_PASSWORD_PROPERTY, montereyWebApiSslKeystorePassword);
-        if (montereyWebApiSslKeyPassword != null) result.setProperty(MONTEREY_WEB_API_SSL_KEY_PASSWORD_PROPERTY, montereyWebApiSslKeyPassword);
- 
-        result.setProperty(SSH_PORT_PROPERTY, Integer.toString(sshPort));
-        if (loggingFileOverride != null) result.setProperty(LOGGING_FILE_OVERRIDE_PROPERTY, loggingFileOverride.getPath());
-        
-        return result;
-    }
-    
-    public Properties generateResourceProvisionerConf() {
-        Properties result = new Properties();
-        
-        result.setProperty(MONTEREY_NODE_PORT_PROPERTY, Integer.toString(montereyNodePort));
-        result.setProperty(MONTEREY_HUB_LPP_PORT_PROPERTY, Integer.toString(montereyHubLppPort));
-        result.setProperty(MONTEREY_WEB_API_PORT_PROPERTY, Integer.toString(montereyWebApiPort));
-        result.setProperty(MONTEREY_WEB_API_PROTOCOL_PROPERTY, montereyWebApiProtocol);
-
-        if (montereyWebApiSslKeystore != null && montereyWebApiSslKeystore.exists()) {
-            byte[] data;
-            try {
-                data = StreamUtils.getBytesFromStream(new FileInputStream(montereyWebApiSslKeystore));
-            } catch (IOException e) {
-                throw ExceptionUtils.throwRuntime("Exception while opening "+montereyWebApiSslKeystore, e);
-            }
-            result.setProperty(MONTEREY_WEB_API_SSL_KEYSTORE_DATA_PROPERTY, new String(Base64.encodeBase64(data)));
-            result.setProperty(MONTEREY_WEB_API_SSL_KEYSTORE_PROPERTY, montereyWebApiSslKeystore.getPath());
-        }
-        if (montereyWebApiSslKeystorePassword != null) result.setProperty(MONTEREY_WEB_API_SSL_KEYSTORE_PASSWORD_PROPERTY, montereyWebApiSslKeystorePassword);
-        if (montereyWebApiSslKeyPassword != null) result.setProperty(MONTEREY_WEB_API_SSL_KEY_PASSWORD_PROPERTY, montereyWebApiSslKeystorePassword);
-
-        result.setProperty(SSH_PORT_PROPERTY, Integer.toString(sshPort));
-        if (loggingFileOverride != null && loggingFileOverride.exists())
-        	result.setProperty(LOGGING_FILE_OVERRIDE_PROPERTY, loggingFileOverride.getPath());
- 
-        return result;
-    }
+    public int getDefaultMontereyNodePort() { return MONTEREY_NODE_PORT; }
+    public int getDefaultMontereyHubLppPort() { return MONTEREY_HUB_LPP_PORT; }
+    public int getDefaultSSHPort() { return SSH_PORT; }
     
     public static File getFileProperty(Properties props, String property) {
         if (props.getProperty(property) != null && props.getProperty(property).trim().length() > 0)
