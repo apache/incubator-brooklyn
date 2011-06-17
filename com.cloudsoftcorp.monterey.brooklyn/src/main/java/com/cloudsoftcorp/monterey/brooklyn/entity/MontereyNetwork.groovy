@@ -46,6 +46,7 @@ import com.cloudsoftcorp.util.proc.ProcessExecutionFailureException
 import com.cloudsoftcorp.util.web.client.CredentialsConfig
 import com.cloudsoftcorp.util.web.server.WebConfig
 import com.cloudsoftcorp.util.web.server.WebServer
+import com.google.common.collect.ImmutableMap
 import com.google.gson.Gson
 
 /**
@@ -123,12 +124,12 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         return managementUrl;
     }
 
-    public Collection<MontereyContainerNode> getNodes() {
-        return nodes.values();
+    public Map<NodeId,MontereyContainerNode> getNodes() {
+        return ImmutableMap.copyOf(nodes);
     }
 
-    public Collection<Segment> getSegments() {
-        return nodes.values();
+    public Map<String,Segment> getSegments() {
+        return ImmutableMap.copyOf(segments);
     }
 
     public void start(Map properties=[:], Group parent=null, Location location=null) {
