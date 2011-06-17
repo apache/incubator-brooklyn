@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 
+import brooklyn.event.Event;
+import brooklyn.event.EventListener;
 import brooklyn.event.Sensor;
 import brooklyn.location.Location;
 
@@ -39,8 +41,8 @@ public interface Entity extends Serializable {
     
     Map<String,Object> getAttributes();
 
-    // FIXME Have concept of primary parent, and then also groups. Needs refactored.
-    
+    // TODO the owner is the parent that strictly contains this entity
+//    Group getOwner();
     Collection<Group> getParents();
     void addParent(Group e);
 
@@ -49,7 +51,9 @@ public interface Entity extends Serializable {
 //    void subscribe(EventFilter filter, EventListener listener);
 //    void subscribe(Predicate<Entity> entities, EventFilter filter, EventListener listener);
 
-//    void raiseEvent(SensorEvent<?> event);
+    <T> void subscribe(String entityId, String sensorname, EventListener<T> listener);
+ 
+    <T> void raiseEvent(Event<T> event);
     
     Collection<Location> getLocations();
 }

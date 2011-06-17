@@ -1,10 +1,8 @@
 package brooklyn.entity.basic
 
-import java.util.Map
-import java.util.Collection
-import java.util.EventListener
-import java.util.Map
 import java.util.concurrent.CopyOnWriteArrayList
+
+import com.google.common.base.Predicate
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -14,14 +12,13 @@ import brooklyn.entity.Entity
 import brooklyn.entity.EntityClass
 import brooklyn.entity.EntitySummary
 import brooklyn.entity.Group
+import brooklyn.event.Event
 import brooklyn.event.Sensor
+import brooklyn.event.EventListener
 import brooklyn.event.basic.Activity
 import brooklyn.event.basic.EventFilter
-import brooklyn.event.basic.SensorEvent
 import brooklyn.location.Location
 import brooklyn.util.internal.LanguageUtils
-
-import com.google.common.base.Predicate
 
 /**
  * Default {@link Entity} definition.
@@ -54,6 +51,8 @@ public abstract class AbstractEntity implements Entity {
     
     Collection<Location> locations = []
  
+    // TODO ref to local mgmt context and sub mgr etc
+ 
     public final Activity activity = new Activity(this)
 
     public void propertyMissing(String name, value) { properties[name] = value }
@@ -69,7 +68,7 @@ public abstract class AbstractEntity implements Entity {
     }
 
     /** Entity hierarchy */
-    final Collection<Group> parents = new CopyOnWriteArrayList<Group>();
+    final Collection<Group> parents = new CopyOnWriteArrayList<Group>()
  
     Application application
 
@@ -135,22 +134,14 @@ public abstract class AbstractEntity implements Entity {
     /** override this, adding to the collection, to supply fields whose value, if not null, should be included in the toString */
     public Collection<String> toStringFieldsToInclude() { ['id', 'displayName'] }
 
-    public AbstractEntity(Map properties=[:], Group parent=null) {
-        def parentFromProps = properties.remove('parent')
-        if (parentFromProps) {
-            if (!parent) parent = parentFromProps;
-            else assert parent==parentFromProps;
-        }
+    public AbstractEntity(Map properties=[:]) {
+        def parent = properties.remove('parent')
 
-        addProperties(properties)
+        //place named-arguments into corresponding fields if they exist, otherwise put into config map
+        this.properties << LanguageUtils.setFieldsFromMap(this, properties)
 
         //set the parent if supplied; accept as argument or field
         if (parent) parent.addChild(this)
-    }
-
-    public void addProperties(Map properties) {
-        //place named-arguments into corresponding fields if they exist, otherwise put into config map
-        this.properties << LanguageUtils.setFieldsFromMap(this, properties)
     }
 
     Map<String,Object> getAttributes() {
@@ -161,12 +152,17 @@ public abstract class AbstractEntity implements Entity {
         activity.update(attribute, val);
     }
     
-    /** TODO */
-    void subscribe(EventFilter filter, EventListener listener) { }
+    // TODO implement private methods
+    // private void subscribe(EventFilter filter, EventListener listener) { }
+    // private void subscribe(Predicate<Entity> entities, EventFilter filter, EventListener listener) { }
     
-    /** TODO */
-    void subscribe(Predicate<Entity> entities, EventFilter filter, EventListener listener) { }
-
-    /** TODO */
-    void raiseEvent(SensorEvent<?> event) { }
+    /** @see Entity#subscribe(String, String, EventListener) */
+    public <T> void subscribe(String entityId, String sensorname, EventListener<T> listener) {
+        // TODO complete
+    }
+     
+    /** @see Entity#raiseEvent(Event) */
+    public <T> void raiseEvent(Event<T> event) {
+        // TODO complete
+    }
 }
