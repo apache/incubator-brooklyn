@@ -4,7 +4,7 @@ import java.util.logging.Level
 import java.util.logging.Logger
 
 import brooklyn.entity.basic.AbstractEntity
-import brooklyn.event.AttributeSensor
+import brooklyn.event.basic.AttributeSensor
 
 import com.cloudsoftcorp.monterey.control.workrate.api.WorkrateReport
 import com.cloudsoftcorp.monterey.network.m.MediationWorkrateItem.MediationWorkrateItemNames

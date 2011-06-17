@@ -2,7 +2,7 @@ package com.cloudsoftcorp.monterey.brooklyn.entity
 
 import java.util.logging.Level
 
-import brooklyn.event.AttributeSensor
+import brooklyn.event.basic.AttributeSensor
 import brooklyn.location.Location
 
 import com.cloudsoftcorp.monterey.control.workrate.api.WorkrateReport

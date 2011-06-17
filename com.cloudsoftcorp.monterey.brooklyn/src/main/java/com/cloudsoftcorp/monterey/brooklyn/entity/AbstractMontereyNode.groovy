@@ -1,7 +1,7 @@
 package com.cloudsoftcorp.monterey.brooklyn.entity
 
 import brooklyn.entity.basic.AbstractEntity
-import brooklyn.event.AttributeSensor
+import brooklyn.event.basic.AttributeSensor
 
 import com.cloudsoftcorp.monterey.control.workrate.api.WorkrateReport
 import com.cloudsoftcorp.monterey.network.control.api.Dmn1NodeType
