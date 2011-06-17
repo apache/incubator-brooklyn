@@ -107,7 +107,6 @@
 		</dependencies>
 	</dependencyManagement>
 
-
 	<build>
 		<testSourceDirectory>${test.directory}/java</testSourceDirectory>
 		<testResources>
