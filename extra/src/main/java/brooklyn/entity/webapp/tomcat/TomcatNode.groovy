@@ -39,8 +39,11 @@ public class TomcatNode extends AbstractEntity implements Startable {
     public static final AttributeSensor<Integer> MAX_PROCESSING_TIME = [ "Request count", "jmx.reqs.global.totals.maxTime", Integer ]
     public static final AttributeSensor<Integer> REQUEST_COUNT = [ "Request count", "jmx.reqs.global.totals.requestCount", Integer ]
     public static final AttributeSensor<Integer> REQUESTS_PER_SECOND = [ "Reqs/Sec", "webapp.reqs.persec.RequestCount", Integer ]
-    public static final AttributeSensor<Integer> TOTAL_PROCESSING_TIME = [ "Request count", "jmx.reqs.global.totals.processingTime", Integer ]
-   
+    public static final AttributeSensor<Integer> TOTAL_PROCESSING_TIME = [ "Total processing time", "jmx.reqs.global.totals.processingTime", Integer ]
+	
+//	public static final Effector<Integer> GET_TOTAL_PROCESSING_TIME = [ "retrieves the total processing time", { delegate, arg1, arg2 -> delegate.getTotal(arg1, arg2) } ]
+//	Task<Integer> invocation = entity.invoke(GET_TOTAL_PROCESSING_TIME, ...args)
+	 
     // This might be more interesting as some status like 'starting', 'started', 'failed', etc.
     public static final AttributeSensor<String>  NODE_UP = [ "Node started", "webapp.hasStarted", Boolean ];
     

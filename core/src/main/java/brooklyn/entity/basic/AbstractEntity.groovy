@@ -15,7 +15,7 @@ import brooklyn.entity.Group
 import brooklyn.event.Event
 import brooklyn.event.Sensor
 import brooklyn.event.EventListener
-import brooklyn.event.basic.Activity
+import brooklyn.event.basic.AttributeMap
 import brooklyn.event.basic.EventFilter
 import brooklyn.location.Location
 import brooklyn.util.internal.LanguageUtils
@@ -40,29 +40,24 @@ public abstract class AbstractEntity implements Entity {
     
     String displayName;
     
-    //FIXME Delete?
-    //final ObservableList listeners = new SerializableObservableList(new CopyOnWriteArrayList<EventListener>());
-
     /**
      * Properties can be accessed or set on the entity itself; can also be accessed
      * from ancestors if not present on an entity
      */
-    final Map properties = [:]
-    
     Collection<Location> locations = []
  
     // TODO ref to local mgmt context and sub mgr etc
  
-    public final Activity activity = new Activity(this)
+    protected final AttributeMap attributesInternal = new AttributeMap(this)
 
-    public void propertyMissing(String name, value) { properties[name] = value }
+    public void propertyMissing(String name, value) { attributes[name] = value }
  
     public Object propertyMissing(String name) {
-        if (properties.containsKey(name)) return properties[name];
+        if (attributes.containsKey(name)) return attributes[name];
         else {
             //TODO could be more efficient ;)
             def v = null
-            if (parents.find { parent -> v = parent.properties[name] }) return v;
+            if (parents.find { parent -> v = parent.attributes[name] }) return v;
         }
         log.debug "no property $name on $this"
     }
@@ -81,7 +76,7 @@ public abstract class AbstractEntity implements Entity {
     }
 
     /**
-     * Returns the application, looking it up if not yet known (registering if necessary
+     * Returns the application, looking it up if not yet known (registering if necessary)
      */
     public Application getApplication() {
         if (application!=null) return application;
@@ -114,6 +109,7 @@ public abstract class AbstractEntity implements Entity {
      * Should be invoked at end-of-life to clean up the item.
      */
     public void destroy() {
+		//FIXME this doesn't exist, but we need some way of deleting stale items
         removeApplicationRegistrant()
     }
 
@@ -134,22 +130,22 @@ public abstract class AbstractEntity implements Entity {
     /** override this, adding to the collection, to supply fields whose value, if not null, should be included in the toString */
     public Collection<String> toStringFieldsToInclude() { ['id', 'displayName'] }
 
-    public AbstractEntity(Map properties=[:]) {
-        def parent = properties.remove('parent')
+    public AbstractEntity(Map flags=[:]) {
+        def parent = flags.remove('parent')
 
-        //place named-arguments into corresponding fields if they exist, otherwise put into config map
-        this.properties << LanguageUtils.setFieldsFromMap(this, properties)
+        //place named-arguments into corresponding fields if they exist, otherwise put into attributes map
+        this.attributes << LanguageUtils.setFieldsFromMap(this, flags)
 
         //set the parent if supplied; accept as argument or field
         if (parent) parent.addChild(this)
     }
 
     Map<String,Object> getAttributes() {
-        return activity.asMap();
+        return attributesInternal.asMap();
     }
     
     public <T> void updateAttribute(Sensor<T> attribute, T val) {
-        activity.update(attribute, val);
+        attributesInternal.update(attribute, val);
     }
     
     // TODO implement private methods

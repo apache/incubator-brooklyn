@@ -24,21 +24,12 @@ public interface Entity extends Serializable {
     Application getApplication();
 
     /**
-     * ad hoc map for storing, e.g. description, icons, etc
-     */
-    Map<?,?> getPresentationAttributes();
-
-    /**
-     * Mutable properties on this entity.
+     * Mutable attributes on this entity.
      * 
-     * Allows one to put arbitrary properties on entities which makes life much easier/dynamic, 
-     * though we lose something in type safety.
-     * <p>
-     * e.g. jmxHost / jmxPort are handled as properties.
+     * This can include activity information and status information (e.g. AttributeSensors), as well as
+     * arbitrary internal properties which can make life much easier/dynamic (though we lose something in type safety)
+     * e.g. jmxHost / jmxPort are handled as attributes
      */
-    @Deprecated // want to just use getAttributes(); needs confirmed and refactored
-    Map<String, Object> getProperties();
-    
     Map<String,Object> getAttributes();
 
     // TODO the owner is the parent that strictly contains this entity

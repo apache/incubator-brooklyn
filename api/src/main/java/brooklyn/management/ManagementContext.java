@@ -10,6 +10,8 @@ import brooklyn.entity.EntitySummary;
  * 
  * For example, policies and the web-app can use this to retrieve the desired entities.  
  * 
+ * It may refer to several applications, and to all the entities within those applications.
+ * 
  * @author aled
  */
 public interface ManagementContext {
