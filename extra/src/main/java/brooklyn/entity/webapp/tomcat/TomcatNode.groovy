@@ -45,7 +45,7 @@ public class TomcatNode extends AbstractEntity implements Startable {
     public static final AttributeSensor<String>  NODE_UP = [ "Node started", "webapp.hasStarted", Boolean ];
     
 	static {
-		TomcatNode.metaClass.startInLocation = { Group parent, SshMachineLocation loc ->
+		TomcatNode.metaClass.startInLocation = { SshMachineLocation loc ->
 			def setup = new Tomcat7SshSetup(delegate)
 			//pass http port to setup, if one was specified on this object
 			if (properties.httpPort) setup.httpPort = properties.httpPort
@@ -68,12 +68,12 @@ public class TomcatNode extends AbstractEntity implements Startable {
 	//TODO hack reference (for shutting down), need a cleaner way -- e.g. look up in the app's executor service for this entity
 	ScheduledFuture jmxMonitoringTask;
 
-    public TomcatNode(Map properties=[:], Group parent=null) {
-        super(properties, parent);
+    public TomcatNode(Map properties=[:]) {
+        super(properties);
     }
 
-	public void start(Map properties=[:], Group parent=null, Location location=null) {
-		EntityStartUtils.startEntity properties, this, parent, location
+	public void start(Map properties=[:]) {
+		EntityStartUtils.startEntity properties, this
 		log.debug "started... jmxHost is {} and jmxPort is {}", this.properties['jmxHost'], this.properties['jmxPort']
 		
 		if (this.properties['jmxHost'] && this.properties['jmxPort']) {
@@ -114,10 +114,9 @@ public class TomcatNode extends AbstractEntity implements Startable {
             }
 		}
         if (this.war) {
-            def deployLoc = location ?: this.location
-            log.debug "Deploying {} to {}", this.war, deployLoc
-            this.deploy(this.war, deployLoc)
-            log.debug "Deployed {} to {}", this.war, deployLoc
+            log.debug "Deploying {} to {}", this.war, this.location
+            this.deploy(this.war, this.location)
+            log.debug "Deployed {} to {}", this.war, this.location
         }
 	}
 	
