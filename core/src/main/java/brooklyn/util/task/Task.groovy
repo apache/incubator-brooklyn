@@ -191,6 +191,8 @@ public class Task<T> extends TaskStub implements Future<T> {
 	public String getStatusDetail(boolean multiline) {
 		getStatusString(multiline?2:1)
 	}
+	/** this method is useful for callers to see the status (0=brief, 1=one-line with some detail, 2=lots of detail) of a task,
+	 * and also for developers to see best practices for examining status fields etc */
 	protected String getStatusString(int verbosity) {
 		Thread t = getThread()
 		String rv
@@ -258,6 +260,7 @@ public class Task<T> extends TaskStub implements Future<T> {
 				if (verbosity>=1) {
 					if (ti.getThreadState() == Thread.State.BLOCKED) {
 						rv += " (mutex) on "+lookup(lock)
+						//TODO could say who holds it
 					} else if (ti.getThreadState() == Thread.State.WAITING) {
 						rv += " (notify) on "+lookup(lock)
 					} else if (ti.getThreadState() == Thread.State.TIMED_WAITING) {
@@ -265,7 +268,6 @@ public class Task<T> extends TaskStub implements Future<T> {
 					} else {
 						rv = " ("+ti.getThreadState()+") on "+lookup(lock)
 					}
-					//TODO held by...
 				}
 			}
 			if (verbosity>=2) {
