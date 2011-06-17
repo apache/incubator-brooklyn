@@ -254,6 +254,7 @@ class TomcatNodeTest {
 				tc.shutdown()
 			}
 			assertNotNull caught
+			assertFalse tc.activity.getValue(TomcatNode.NODE_UP)
 			logger.debug "The exception that was thrown was:", caught
 		} finally {
 			listener.close();
