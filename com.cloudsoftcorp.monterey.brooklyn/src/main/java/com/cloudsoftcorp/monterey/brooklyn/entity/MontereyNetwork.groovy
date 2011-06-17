@@ -5,7 +5,6 @@ import java.util.Map;
 import java.io.File
 import java.io.IOException
 import java.net.URL
-import java.util.List
 import java.util.Map
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
@@ -13,34 +12,38 @@ import java.util.concurrent.TimeUnit
 import java.util.logging.Level
 import java.util.logging.Logger
 
-import org.overpaas.decorators.Startable
-import org.overpaas.entities.AbstractEntity
-import org.overpaas.entities.Group
-import org.overpaas.locations.SshMachineLocation
-import org.overpaas.types.ActivitySensor
-import org.overpaas.util.BrooklynSystemProperties
-import org.overpaas.util.EntityStartUtils
-
-import brooklyn.location.Location;
+import brooklyn.entity.Group
+import brooklyn.entity.basic.AbstractEntity
+import brooklyn.entity.trait.Startable
+import brooklyn.event.AttributeSensor
+import brooklyn.location.Location
+import brooklyn.location.basic.SshMachineLocation
+import brooklyn.util.internal.BrooklynSystemProperties
+import brooklyn.util.internal.EntityStartUtils
 
 import com.cloudsoftcorp.monterey.clouds.NetworkId
 import com.cloudsoftcorp.monterey.clouds.basic.DeploymentUtils
+import com.cloudsoftcorp.monterey.clouds.dto.CloudEnvironmentDto
 import com.cloudsoftcorp.monterey.control.api.SegmentSummary
 import com.cloudsoftcorp.monterey.control.workrate.api.WorkrateReport
 import com.cloudsoftcorp.monterey.location.api.MontereyLocation
 import com.cloudsoftcorp.monterey.network.control.api.Dmn1NetworkInfo
 import com.cloudsoftcorp.monterey.network.control.api.NodeSummary
 import com.cloudsoftcorp.monterey.network.control.plane.GsonSerializer
+import com.cloudsoftcorp.monterey.network.control.plane.web.DeploymentWebProxy
 import com.cloudsoftcorp.monterey.network.control.plane.web.Dmn1NetworkInfoWebProxy
 import com.cloudsoftcorp.monterey.network.control.plane.web.PingWebProxy
 import com.cloudsoftcorp.monterey.network.control.plane.web.UserCredentialsConfig
+import com.cloudsoftcorp.monterey.network.deployment.MontereyDeploymentDescriptor
 import com.cloudsoftcorp.monterey.network.m.MediationWorkrateItem.MediationWorkrateItemNames
 import com.cloudsoftcorp.monterey.node.api.NodeId
 import com.cloudsoftcorp.util.Loggers
 import com.cloudsoftcorp.util.TimeUtils
 import com.cloudsoftcorp.util.exception.RuntimeWrappedException
 import com.cloudsoftcorp.util.javalang.ClassLoadingContext
+import com.cloudsoftcorp.util.osgi.BundleSet
 import com.cloudsoftcorp.util.proc.ProcessExecutionFailureException
+import com.cloudsoftcorp.util.web.client.CredentialsConfig
 import com.cloudsoftcorp.util.web.server.WebConfig
 import com.cloudsoftcorp.util.web.server.WebServer
 import com.google.gson.Gson
@@ -52,6 +55,7 @@ import com.google.gson.Gson
  */
 public class MontereyNetwork extends AbstractEntity implements Startable { // FIXME , AbstractGroup
 
+    private final Logger LOG = Loggers.getLogger(MontereyNetwork.class);
     /*
      * FIXME, work in progress
      * 
@@ -64,19 +68,19 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     
     private static final Logger logger = Loggers.getLogger(MontereyNetwork.class);
     
-    public static final ActivitySensor<Integer> MANAGEMENT_URL = [ "ManagementUrl", "monterey.management-url", URL.class ]
-    public static final ActivitySensor<String> NETWORK_ID = [ "NetworkId", "monterey.network-id", String.class ]
-    public static final ActivitySensor<String> APPLICTION_NAME = [ "ApplicationName", "monterey.application-name", String.class ]
+    public static final AttributeSensor<Integer> MANAGEMENT_URL = [ "ManagementUrl", "monterey.management-url", URL.class ]
+    public static final AttributeSensor<String> NETWORK_ID = [ "NetworkId", "monterey.network-id", String.class ]
+    public static final AttributeSensor<String> APPLICTION_NAME = [ "ApplicationName", "monterey.application-name", String.class ]
     
     /** up, down, etc? */
-    public static final ActivitySensor<String> STATUS = [ "Status", "monterey.status", String.class ]
+    public static final AttributeSensor<String> STATUS = [ "Status", "monterey.status", String.class ]
     
     private final Gson gson;
     
     private String installDir;
     private MontereyNetworkConfig config;
-    private List<UserCredentialsConfig> webUsersCredentials;
-    private UserCredentialsConfig webAdminCredential;
+    private Collection<UserCredentialsConfig> webUsersCredentials;
+    private CredentialsConfig webAdminCredential;
     private NetworkId networkId = NetworkId.Factory.newId();
 
     private URL managementUrl;
@@ -100,12 +104,12 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         this.config = val;
     }
     
-    public void setWebUsersCredentials(List<UserCredentialsConfig> val) {
+    public void setWebUsersCredentials(Collection<UserCredentialsConfig> val) {
         this.webUsersCredentials = val;
         this.webAdminCredential = DeploymentUtils.findWebApiAdminCredential(webUsersCredentials);
     }
     
-    public void setWebAdminCredential(UserCredentialsConfig val) {
+    public void setWebAdminCredential(CredentialsConfig val) {
         this.webAdminCredential = val;
     }
 
@@ -164,10 +168,10 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
 //            new ManagementNodeStarter(mainArgs).start();
             
             host.run(installDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_START_SCRIPT_RELATIVE_PATH+
-                    " -address "+host.getHost(),
-                    " -port "+Integer.toString(config.getMontereyNodePort()),
-                    " -networkId "+networkId.getId(),
-                    " -key "+networkId.getId(),
+                    " -address "+host.getHost()+
+                    " -port "+Integer.toString(config.getMontereyNodePort())+
+                    " -networkId "+networkId.getId()+
+                    " -key "+networkId.getId()+
                     " -webConfig "+installDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_WEB_CONF_FILE_RELATIVE_PATH);
 
             PingWebProxy pingWebProxy = new PingWebProxy(managementUrl.toString(), webAdminCredential,
@@ -202,6 +206,18 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
             
             throw new RuntimeWrappedException("Error creating monterey network on "+host, e);
         }
+    }
+
+    public void deployCloudEnvironment(CloudEnvironmentDto cloudEnvironmentDto) {
+        int DEPLOY_TIMEOUT = 5*60*1000;
+        DeploymentWebProxy deployer = new DeploymentWebProxy(managementUrl, gson, webAdminCredential, DEPLOY_TIMEOUT);
+        deployer.deployCloudEnvironment(cloudEnvironmentDto);
+    }
+    
+    public void deployApplication(MontereyDeploymentDescriptor descriptor, BundleSet bundles) {
+        int DEPLOY_TIMEOUT = 5*60*1000;
+        DeploymentWebProxy deployer = new DeploymentWebProxy(managementUrl, gson, webAdminCredential, DEPLOY_TIMEOUT);
+        boolean result = deployer.deployApplication(descriptor, bundles);
     }
     
     private void shutdownManagementNodeProcess(MontereyNetworkConfig config, SshMachineLocation host, NetworkId networkId) {
