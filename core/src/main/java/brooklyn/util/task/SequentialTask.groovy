@@ -1,10 +1,17 @@
 package brooklyn.util.task;
 
 import java.util.concurrent.Callable
+import java.util.concurrent.Executor
 
-//class SequentialTask extends CompoundTask {
-//	public SequentialTask(Task... tasks) {}
-//	public SequentialTask(Runnable... tasks) {}
-//	public SequentialTask(Callable... tasks) {}
-//	public SequentialTask(Closure... tasks) {}
-//}
+
+class SequentialTask extends CompoundTask {
+	
+	public SequentialTask(Task<?>... tasks) { super(tasks) }
+	public SequentialTask(Runnable... tasks) { super(tasks) }
+	public SequentialTask(Callable<?>... tasks) { super(tasks) }
+	public SequentialTask(Closure<?>... tasks) { super(tasks) }
+	
+	protected void run(Executor runner) {
+		// TODO
+	}
+}
