@@ -1,19 +1,24 @@
 package brooklyn.event.basic
 
 import org.slf4j.Logger
+
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.event.Sensor
 
-public class Activity {
-    static final Logger log = LoggerFactory.getLogger(Activity.class)
+public class AttributeMap {
+    static final Logger log = LoggerFactory.getLogger(AttributeMap.class)
  
 	Entity entity;
 	Map values = [:];
 	
-	public Activity(Entity entity) {
+	public AttributeMap(Entity entity) {
 		this.entity = entity;
+	}
+	
+	public Map asMap() {
+		return values
 	}
 	
 	public <T> T update(Collection<String> path, T newValue) {
@@ -38,6 +43,7 @@ public class Activity {
 	
 	public <T> Object update(Sensor<T> sensor, T newValue) {
 		log.debug "sensor $sensor field {} set to {}", sensor.name, newValue
+		if (!(sensor in AttributeSensor)) throw new IllegalArgumentException("AttributeMap can only update an attribute sensor's value, not "+sensor)
 		update(sensor.getNameParts(), newValue)
         SensorEvent event = new SensorEvent<T>(sensor, entity, newValue)
         entity.raiseEvent event

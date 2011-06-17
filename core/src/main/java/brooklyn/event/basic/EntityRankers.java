@@ -11,8 +11,11 @@ public class EntityRankers {
     public static Comparator<Entity> sensorComparator(final String sensorName) {
         return new Comparator<Entity>() {
             public int compare(Entity a, Entity b) {
-                Object aMetric = a.getProperties().get(sensorName);
-                Object bMetric = b.getProperties().get(sensorName);
+            	//FIXME below is bogus;
+            	//not all sensors are attributes, and might be nested map etc
+            	//should have entity.getSensor or Sensor.getOnEntity
+                Object aMetric = a.getAttributes().get(sensorName);
+                Object bMetric = b.getAttributes().get(sensorName);
                 
                 // groovy "spaceship operator":
                 // return aMetric <=> bMetric
