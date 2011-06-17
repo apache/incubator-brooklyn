@@ -13,7 +13,7 @@ import brooklyn.util.internal.LanguageUtils
 
 public class TaskStub {
 	final String id = LanguageUtils.newUid()
-//	Object jvm = null //pointer to jvm where something is running, for distributed tasks	
+//	Object jvm = null //pointer to jvm where something is running, for distributed tasks
 	
 	@Override
 	public int hashCode() {
@@ -25,38 +25,38 @@ public class TaskStub {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
+		if (this == obj) return true;
+		if (obj == null) return false;
+		if (!(obj instanceof TaskStub)) return false;
 		TaskStub other = (TaskStub) obj;
-		if (id == null) {
-			if (other.id != null)
-				return false;
-		} else if (!id.equals(other.id))
-			return false;
+		if ((id == null) != (other.id == null)) return false;
+		if (id != null && !id.equals(other.id)) return false;
 		return true;
 	}
 	
 	public String toString() { "TaskStub[$id]" }
-	 
+	
 }
 
-/** represents a task which is executing.  the task can be given an optional displayName and description in its constructor (as named arguments in the map in first parameter);
- * when used with an ExecutionManager (or ExecutionContext) it will record submission time, execution start time, end time, and any result;
- * a task can be submitted to the Execution{Manager,Context}, in which case it will be returned; or it may be created by submission of a Runnable or Callable --
- * thereafter it can be treated just like a future.
- * additionally it is guaranteed to be Object.notified once whenever the task starts running and once again when the task is about to complete
- * (due to the way executors work it is ugly to guarantee notification _after_ completion, so instead we notify just before then expect user to call get()
- * [which will throw errors if the underlying job did so]
- * or blockUntilEnded()  [which will not throw errors]).
+/**
+ * Represents a task which is executing. The task can be given an optional displayName and description in its
+ * constructor (as named arguments in the map in first parameter). When used with an ExecutionManager (or
+ * ExecutionContext) it will record submission time, execution start time, end time, and any result. A task can be
+ * submitted to the Execution{Manager,Context}, in which case it will be returned; or it may be created by submission
+ * of a Runnable or Callable -- thereafter it can be treated just like a future. Additionally it is guaranteed to be
+ * Object.notified once whenever the task starts running and once again when the task is about to complete
+ * (due to the way executors work it is ugly to guarantee notification _after_ completion, so instead we notify just
+ * before then expect user to call get() [which will throw errors if the underlying job did so] or blockUntilEnded()
+ * [which will not throw errors]).
  */
 public class Task<T> extends TaskStub implements Future<T> {
+	private final Closure<T> job
 	public final String displayName
 	public final String description
-	final Set tags = []
 
-	public Task(Map flags=[:], Closure job) {
+		final Set tags = []
+
+	public Task(Map flags=[:], Closure<T> job) {
 		this.job = job
 		description = flags.remove("description")
 		displayName = flags.remove("displayName")
@@ -66,19 +66,28 @@ public class Task<T> extends TaskStub implements Future<T> {
 		
 		if (flags) throw new IllegalArgumentException("Unsupported flags passed to task: "+flags)
 	}
-	public Task(Map flags=[:], Runnable job) { this(flags, { if (job in Callable) job.call() else job.run() } as Closure ) }
-	public Task(Map flags=[:], Callable<?> job) { this(flags, { job.call() } as Closure) }
+	public Task(Map flags=[:], Runnable job)    { this(flags, closureFromRunnable(job) ) }
+	public Task(Map flags=[:], Callable<T> job) { this(flags, closureFromCallable(job) ) }
 
 	public String toString() { "Task["+(displayName?displayName+(tags?"":";")+" ":"")+(tags?""+tags+"; ":"")+"$id]" }
 	
-	// housekeeping --------------------
+	protected static <X> Closure<X> closureFromRunnable(Runnable r) {
+		return {
+			if (job in Callable) { job.call() }
+			else { job.run(); null; }
+		}
+	}
 	
-	Closure job
+	protected static <X> Closure<X> closureFromCallable(Callable<X> r) {
+		return { job.call() }
+	}
+	
+	// housekeeping --------------------
 	
 	private long submitTimeUtc = -1;
 	private long startTimeUtc = -1;
 	private long endTimeUtc = -1;
-	private Task submittedByTask;
+	private Task<?> submittedByTask;
 
 	private boolean cancelled = false
 	private Future<T> result
@@ -96,7 +105,7 @@ public class Task<T> extends TaskStub implements Future<T> {
 	public long getStartTimeUtc() { startTimeUtc }
 	public long getEndTimeUtc() { endTimeUtc }
 	
-	public Task getSubmittedByTask() { submittedByTask }
+	public Task<?> getSubmittedByTask() { submittedByTask }
 	public Future<T> getResultFuture() { result }
 		
 	// future --------------------
@@ -118,9 +127,10 @@ public class Task<T> extends TaskStub implements Future<T> {
 		cancelled || result?.isDone()
 	}
 
-	/** true if the task has had an error; i.e. if calling get() will throw an exception when it completes (including cancel);
-	 * implementations may set this true before completion if they have that insight, 
-	 * or (default) they may compute it lazily after completion (returning false before completion)
+	/**
+	 * Returns true if the task has had an error; i.e. if calling get() will throw an exception when it completes
+	 * (including cancel); implementations may set this true before completion if they have that insight, or
+	 * (the default) they may compute it lazily after completion (returning false before completion).
 	 */
 	public boolean isError() {
 		if (!isDone()) return false
