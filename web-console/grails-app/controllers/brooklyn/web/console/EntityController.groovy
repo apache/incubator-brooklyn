@@ -53,8 +53,7 @@ class EntityController {
 
     ManagementContext context = new TestManagementApi();
 
-    private Collection<EntitySummary> getEntitySummariesMatchingCriteria(String name, String id, String applicationId) {
-        Collection<EntitySummary> all = context.allEntitySummaries
+    private Collection<EntitySummary> getEntitySummariesMatchingCriteria(Collection<EntitySummary> all, String name, String id, String applicationId) {
         Collection<EntitySummary> matches = all.findAll {
             sum ->
             ((!name || sum.displayName =~ name)
@@ -63,8 +62,8 @@ class EntityController {
             )
         }
 
-        for(EntitySummary match : matches) {
-            all.findAll{
+        for (EntitySummary match: matches) {
+            all.findAll {
                 s -> s.groupIds.contains(match.id)
             }
         }
@@ -75,41 +74,37 @@ class EntityController {
     def index = {}
 
     def list = {
-        render context.getAllEntitySummaries() as JSON
+        render(context.getAllEntitySummaries() as JSON)
     }
 
     def search = {
-        render getEntitySummariesMatchingCriteria(params.name, params.id, params.applicationId) as JSON
+        render(getEntitySummariesMatchingCriteria(context.allEntitySummaries, params.name, params.id, params.applicationId) as JSON)
     }
 
     def jstree = {
+        List<EntitySummary> all = context.allEntitySummaries;
         Map<String, JsTreeNodeImpl> nodeMap = [:]
-        List<String> potentialRoots = []
+        JsTreeNodeImpl root = new JsTreeNodeImpl("root", ".", true)
 
-        for (EntitySummary summary: context.allEntitySummaries) {
+        for (EntitySummary summary: all) {
             nodeMap.put(summary.id, new JsTreeNodeImpl(summary.id, summary.displayName))
         }
 
-        JsTreeNodeImpl root = new JsTreeNodeImpl("root", ".")
-        for (EntitySummary summary: getEntitySummariesMatchingCriteria(params.name, params.id, params.applicationId)) {
-            potentialRoots.add(summary.id);
-        }
-
-        for (EntitySummary summary: context.allEntitySummaries) {
-            JsTreeNode node = nodeMap.get(summary.id);
+        for (EntitySummary summary: all) {
             for (String groupId: summary.groupIds) {
-                nodeMap.get(groupId).children.add(node)
+                nodeMap.get(groupId).children.add(nodeMap.get(summary.id))
             }
         }
 
-        for (String id: potentialRoots) {
-            JsTreeNode node = nodeMap[id];
-            if (!nodeMap.find { n -> n.value.hasDescendant(node)}) {
-                root.children.add(node);
-            }
+        List<JsTreeNodeImpl> potentialRoots = []
+        for (EntitySummary summary: getEntitySummariesMatchingCriteria(all, params.name, params.id, params.applicationId)) {
+            nodeMap[summary.id].matched = true
+            potentialRoots.add(nodeMap[summary.id])
         }
 
-        render root as JSON
+        root.children.addAll(potentialRoots.findAll { a -> !potentialRoots.findAll { n -> n.hasDescendant(a)} })
+
+        render(root as JSON)
     }
 }
 

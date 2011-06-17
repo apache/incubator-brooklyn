@@ -5,10 +5,12 @@ public class JsTreeNodeImpl implements JsTreeNode {
     private String id;
     private Map<String, String> data = [:]
     private List<JsTreeNode> children = []
+    public transient boolean matched;
 
-    public JsTreeNodeImpl(String id, String name) {
+    public JsTreeNodeImpl(String id, String name, boolean matched=false) {
         this.id = id;
         this.data.put("title", name)
+        this.matched = matched
     }
 
     public String getId() {
@@ -17,7 +19,7 @@ public class JsTreeNodeImpl implements JsTreeNode {
 
     public String getState() {
         if (children.size() != 0) {
-            return "open"
+            return matched ? "open" : "closed"
         } else {
             return "leaf"
         }
@@ -31,11 +33,6 @@ public class JsTreeNodeImpl implements JsTreeNode {
         return children;
     }
 
-    public void addChild(JsTreeNode kiddy) {
-        children.add(kiddy)
-        kiddy.parent = this
-    }
-
     public transient boolean hasDescendant(JsTreeNode other) {
         if (children.contains(other)) { return true }
         for(child in children) {
@@ -43,5 +40,6 @@ public class JsTreeNodeImpl implements JsTreeNode {
                 return true;
             }
         }
+        return false
     }
 }
