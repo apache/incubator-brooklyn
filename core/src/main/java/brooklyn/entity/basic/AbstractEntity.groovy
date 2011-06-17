@@ -43,10 +43,6 @@ public abstract class AbstractEntity implements Entity {
     Map<String,Object> presentationAttributes = [:]
     String displayName;
 
-    /**
-     * Properties can be accessed or set on the entity itself; can also be accessed
-     * from ancestors if not present on an entity
-     */
     Collection<Location> locations = []
  
     // TODO ref to local mgmt context and sub mgr etc
@@ -180,8 +176,8 @@ public abstract class AbstractEntity implements Entity {
     //private void subscribe(Predicate<Entity> entities, Predicate<Sensor> filter, EventListener listener) { }
     
     /** @see Entity#subscribe(String, String, EventListener) */
-    public <T> void subscribe(String entityId, String sensorname, EventListener<T> listener) {
-        // TODO complete
+    public <T> void subscribe(String entityId, String sensorName, EventListener<T> listener) {
+        management.getSubscriptionManager().subscribe(entityId, sensorName, listener)
     }
      
     /** @see Entity#raiseEvent(Event) */

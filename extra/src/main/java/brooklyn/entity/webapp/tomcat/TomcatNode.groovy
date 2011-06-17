@@ -26,11 +26,12 @@ import brooklyn.util.internal.EntityStartUtils
  * @author Richard Downer <richard.downer@cloudsoftcorp.com>
  */
 public class TomcatNode extends AbstractEntity implements Startable {
-	
 	private static final Logger logger = LoggerFactory.getLogger(TomcatNode.class)
+ 
+    public static final AttributeSensor<Integer> HTTP_PORT = [ "HTTP port", "webapp.http.port", Integer ]
+    public static final AttributeSensor<Integer> REQUESTS_PER_SECOND = [ "Reqs/Sec", "webapp.reqs.persec.RequestCount", Integer ]
 
     public static final AttributeSensor<Integer> ERROR_COUNT = [ "Request errors", "jmx.reqs.global.totals.errorCount", Integer ]
-    public static final AttributeSensor<Integer> HTTP_PORT = [ "HTTP port", "webapp.http.port", Integer ]
     public static final AttributeSensor<Integer> MAX_PROCESSING_TIME = [ "Request count", "jmx.reqs.global.totals.maxTime", Integer ]
     public static final AttributeSensor<Integer> REQUEST_COUNT = [ "Request count", "jmx.reqs.global.totals.requestCount", Integer ]
     public static final AttributeSensor<Integer> REQUESTS_PER_SECOND = [ "Reqs/Sec", "webapp.reqs.persec.RequestCount", Integer ]
@@ -81,16 +82,16 @@ public class TomcatNode extends AbstractEntity implements Startable {
 
 		log.debug "started... jmxHost is {} and jmxPort is {}", this.attributes['jmxHost'], this.attributes['jmxPort']
 		
-		if (this.attributes['jmxHost'] && this.attributes['jmxPort']) {
-			jmxAdapter = new JmxSensorAdapter(this.attributes.jmxHost, this.attributes.jmxPort)
-			if (!(jmxAdapter.connect(60*1000))) {
+		if (this.properties['jmxHost'] && this.properties['jmxPort']) {
+			jmxAdapter = new JmxSensorAdapter(this.properties.jmxHost, this.properties.jmxPort)
+			if (!(jmxAdapter.connect(60*1000))) { // TODO one minute
 				log.error "FAILED to connect JMX to {}", this
 				throw new IllegalStateException("failed to completely start $this: JMX not found at $jmxHost:$jmxPort after 60s")
 			}
 			
 			//TODO get executor from app, then die when finished; why isn't schedule working???
 			//e.g. getApplication().getExecutors().
-			jmxMonitoringTask = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay({ updateJmxSensors() }, 1000, 1000, TimeUnit.MILLISECONDS)
+//			jmxMonitoringTask = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay({ updateJmxSensors() }, 1000, 1000, TimeUnit.MILLISECONDS)
 			
 			// Wait for the HTTP port to become available
 			String state = null

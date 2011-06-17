@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit
 class DelegatingExecutor implements Executor {
 	ExecutorService executor = Executors.newCachedThreadPool();
 	TimeDuration timeout = null;
-	Closure preTask=null, postTask=null;
+	Closure<?> preTask=null, postTask=null;
 	
 	public void execute(Runnable command) {
 		executor.execute {

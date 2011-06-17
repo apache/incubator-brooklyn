@@ -1,5 +1,9 @@
 package brooklyn.event.adapter
 
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledFuture
+import java.util.concurrent.TimeUnit
+
 import javax.management.AttributeList
 import javax.management.MBeanInfo
 import javax.management.MBeanServerConnection
@@ -10,19 +14,35 @@ import javax.management.remote.JMXConnectorFactory
 import javax.management.remote.JMXServiceURL
 
 import brooklyn.entity.Entity
+import brooklyn.event.basic.AttributeSensor
+import brooklyn.management.internal.task.Futures
 
 public class JmxSensorAdapter {
-	public final String jmxUrl;
-	JMXConnector jmxc;
-	MBeanServerConnection mbsc = null;
+	final String jmxUrl
+	JMXConnector jmxc
+	MBeanServerConnection mbsc = null
+    ScheduledFuture jmxMonitoringTask = null
 	
+    
 	long connectPollPeriodMillis = 500;
     
-    public JmxSensorAdapter(Entity entity, Map<String, String> attributes) {
+    public JmxSensorAdapter(Entity entity) {
         String host = entity.properties['jmxHost']
         int port = entity.properties['jmxPort']
  
         this.jmxUrl =  "service:jmx:rmi:///jndi/rmi://"+host+":"+port+"/jmxrmi";
+        
+        connect()
+        
+        Futures.when { 
+            jmxMonitoringTask = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay({ updateJmxSensors() }, 1000, 1000, TimeUnit.MILLISECONDS)
+        } { isConnected() }
+    }
+    
+    
+    
+    public void addSensor(AttributeSensor sensor, String jmxName) {
+        sensors['jmxName'] = sensor
     }
 	
 	public JmxSensorAdapter(String jmxUrl) {

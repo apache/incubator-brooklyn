@@ -6,6 +6,7 @@ import java.util.List;
 import com.google.common.base.Predicate;
 
 import groovy.lang.Closure;
+import brooklyn.entity.Entity;
 import brooklyn.event.Sensor;
 
 public class EventFilters {
@@ -50,10 +51,10 @@ public class EventFilters {
         };
     }
     
-    public static <T> Predicate<SensorEvent<T>> entityId(final String id) {
-        return new Predicate<SensorEvent<T>>() {
-            public boolean apply(SensorEvent<T> event) {
-                return event.getSource().getId().equals(id);
+    public static Predicate<Entity> entityId(final String id) {
+        return new Predicate<Entity>() {
+            public boolean apply(Entity entity) {
+                return entity.getId().equals(id);
             }
         };
     }

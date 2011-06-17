@@ -3,8 +3,10 @@ package brooklyn.event.adapter
 import java.beans.PropertyChangeEvent
 import java.beans.PropertyChangeListener
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 import brooklyn.entity.Entity
-import brooklyn.event.EventListener
 import brooklyn.event.Sensor
 import brooklyn.event.basic.SensorEvent
 
@@ -16,6 +18,8 @@ import brooklyn.event.basic.SensorEvent
  * @see JmxSensorAdapter
  */
 public class PropertiesSensorAdapter implements SensorAdapter {
+    private static final Logger log = LoggerFactory.getLogger(SensorAdapter.class);
+ 
     private final Entity entity;
     private final ObservableMap properties;
     
@@ -48,6 +52,13 @@ public class PropertiesSensorAdapter implements SensorAdapter {
         SensorEvent<?> event = new SensorEvent(sensor, entity, value)
         entity.raiseEvent event
         value
+    }
+    
+    public <T> T update(Sensor<T> sensor, T newValue) {
+        log.debug "sensor $sensor field {} set to {}", sensor.name, newValue
+        def oldValue = entity.properties[sensor.getName()]
+        entity.properties[sensor.getName()] = newvalue
+        oldValue
     }
     
     private <T> Sensor<T> getSensor(String sensorName) {

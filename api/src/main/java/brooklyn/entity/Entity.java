@@ -1,6 +1,5 @@
 package brooklyn.entity;
 
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 

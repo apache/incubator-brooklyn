@@ -41,12 +41,13 @@ public class AttributeMap {
         oldValue
 	}
 	
-	public <T> Object update(Sensor<T> sensor, T newValue) {
+	public <T> T update(Sensor<T> sensor, T newValue) {
 		log.debug "sensor $sensor field {} set to {}", sensor.name, newValue
 		if (!(sensor in AttributeSensor)) throw new IllegalArgumentException("AttributeMap can only update an attribute sensor's value, not "+sensor)
-		update(sensor.getNameParts(), newValue)
+		def oldValue = update(sensor.getNameParts(), newValue)
         SensorEvent event = new SensorEvent<T>(sensor, entity, newValue)
         entity.raiseEvent event
+        oldValue
 	}
 	
 	public Object getValue(Collection<String> path) {
@@ -73,5 +74,8 @@ public class AttributeMap {
 		else
 			return child
 	}
+    
+    public void 
 
+    // TODO add the jmx and properties adapters to Activity
 }

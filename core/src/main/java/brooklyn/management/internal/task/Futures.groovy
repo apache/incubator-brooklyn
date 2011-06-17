@@ -47,14 +47,9 @@ public class Futures {
 	}
 	
 	/** returns the value when isValueReady evaluates to true */
-	static <T> Future<T> futureValueWhen(Closure value, Closure isValueReady = { it }) {
+	static <T> Future<T> futureValueWhen(Closure<T> value, Closure isValueReady = { it }) {
 //		println "defining future value when "+value+", "+isValueReady+"."
-		return new FutureValue<Object>(value, isValueReady);
-		//		 {
-		//			public void onNotValid() {
-		//				println "waiting for "+value //+" ("+JPaasProvisioningContext.contextMessage+")"
-		//			}
-		//		}
+		return new FutureValue<T>(value, isValueReady);
 	}
 	
 	/** returns the given value; when the item is a future, it waits for the future to be done */
