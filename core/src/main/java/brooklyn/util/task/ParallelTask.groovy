@@ -9,8 +9,9 @@ class ParallelTask extends CompoundTask {
 	public ParallelTask(Runnable... tasks) { super(tasks) }
 	public ParallelTask(Callable<?>... tasks) { super(tasks) }
 	public ParallelTask(Closure<?>... tasks) { super(tasks) }
-	
-	public void run(Executor runner) {
-		// TODO
-	}
+
+	protected Object runJobs() {
+		//TODO
+		null
+	}	
 }

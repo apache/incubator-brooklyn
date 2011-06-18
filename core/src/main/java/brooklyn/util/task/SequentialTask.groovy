@@ -11,7 +11,8 @@ class SequentialTask extends CompoundTask {
 	public SequentialTask(Callable<?>... tasks) { super(tasks) }
 	public SequentialTask(Closure<?>... tasks) { super(tasks) }
 	
-	protected void run(Executor runner) {
-		// TODO
-	}
+	protected Object runJobs() {
+		//TODO
+		null
+	}	
 }
