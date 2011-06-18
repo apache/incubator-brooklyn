@@ -58,8 +58,12 @@ public class Task<T> extends TaskStub implements Future<T> {
 	public final String displayName
 	public final String description
 
-		final Set tags = []
+	final Set tags = []
 
+	//constructor needed to prevent confusion in groovy stubs when looking for default constructor (generics on Closure<T> breaks it if that is first constructor)
+	protected Task(Map flags=[:]) {
+		this(flags, (Closure)null)
+	}
 	public Task(Map flags=[:], Closure<T> job) {
 		this.job = job
 		description = flags.remove("description")
