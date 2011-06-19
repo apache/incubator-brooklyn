@@ -10,41 +10,21 @@ import brooklyn.event.Sensor;
  *  
  * @author aled
  */
-public class EntityClass implements Serializable {
+public interface EntityClass extends Serializable {
     
-    // TODO Constructor that takes a Class<? extends Entity>, that introspects 
-    // the fields/methods for appropriate annotations to infer sensors/effectors
-    // find all fields here (or in delegates?) which are Sensor objects (statics only? statics and fields? include entity properties map?)
-    // find all fields here (or in delegates) annotated with @Effector ?
-    
+	//TODO call EntityType ?  instead of Class?  same for refs to SensorClass ?
+	
     // TODO maybe these? discuss/delete
     //Collection<EntityType> getSuperTypes();
     //boolean isInstance(Entity);
-    
-    private static final long serialVersionUID = 4670930188951106009L;
-    
-    private String name;
-    private Collection<Sensor> sensors;
-    private Collection<Effector> effectors;
+	//boolean isInstance(EntitySummary); ?
+	
+	//Alex: suggest we allow these, but always defer to the java type (i.e. use BasicEntitySummary, delete ExplicitEntitySummary) 
 
-    @SuppressWarnings("unused")
-    private EntityClass() { /* for gson */ }
-
-    EntityClass(String name, Collection<Sensor> sensors, Collection<Effector> effectors) {
-        this.name = name;
-        this.sensors = sensors;
-        this.effectors = effectors;
-    }
-
-    public String getName() {
-        return name;
-    }
+    public String getName();
     
-    public Collection<Sensor> getSensors() {
-        return sensors;
-    }
+    public Collection<Sensor<?>> getSensors();
     
-    public Collection<Effector> getEffectors() {
-        return effectors;
-    }
+    public Collection<Effector> getEffectors();
+
 }

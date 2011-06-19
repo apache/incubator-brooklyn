@@ -1,8 +1,7 @@
+
 package brooklyn.entity.basic
 
 import java.util.concurrent.CopyOnWriteArrayList
-
-import com.google.common.base.Predicate
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -13,10 +12,10 @@ import brooklyn.entity.EntityClass
 import brooklyn.entity.EntitySummary
 import brooklyn.entity.Group
 import brooklyn.event.Event
-import brooklyn.event.Sensor
 import brooklyn.event.EventListener
+import brooklyn.event.Sensor
+import brooklyn.management.ManagementContext;
 import brooklyn.event.basic.AttributeMap
-import brooklyn.event.basic.EventFilter
 import brooklyn.location.Location
 import brooklyn.util.internal.LanguageUtils
 
@@ -61,7 +60,7 @@ public abstract class AbstractEntity implements Entity {
         }
         log.debug "no property $name on $this"
     }
-
+	
     /** Entity hierarchy */
     final Collection<Group> parents = new CopyOnWriteArrayList<Group>()
  
@@ -74,6 +73,12 @@ public abstract class AbstractEntity implements Entity {
         parents.add e
         getApplication()
     }
+	public String getParentId() {
+		parents ? parents[0].id : null
+	}
+	public Collection<String> getGroupIds() {
+		parents.collect { it.id }
+	}
 
     /**
      * Returns the application, looking it up if not yet known (registering if necessary)
@@ -87,22 +92,27 @@ public abstract class AbstractEntity implements Entity {
         }
         app
     }
+	public String getApplicationId() {
+		getApplication()?.id
+	}
 
+	public ManagementContext getManagementContext() {
+		getApplication()?.getManagementContext()
+	}
+	
     protected synchronized void registerWithApplication(Application app) {
         if (application) return;
         this.application = app
         app.registerEntity(this)
     }
 
-    public EntitySummary getSummary() {
-        Collection<String> groups = []
-        getParents().each { groups.add it.getId() }
-        return new BasicEntitySummary(id, displayName, getApplication().getId(), groups);
+    public EntitySummary getImmutableSummary() {
+        return new BasicEntitySummary(this)
     }
     
     public EntityClass getEntityClass() {
-        // FIXME `new EntityClass(this.getClass())`; but have a registry so re-use types?
-        return null;
+		//TODO registry? or a transient?
+		new BasicEntityClass(getClass())
     }
     
     /**

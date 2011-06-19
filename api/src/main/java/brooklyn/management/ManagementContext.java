@@ -32,9 +32,10 @@ public interface ManagementContext {
     Collection<EntitySummary> getAllEntitySummaries();
 
     /**
-     * @return The entity with the given identifier.
+     * @return The entity with the given identifier (may be a full instance, or a proxy to one which is remote)
      */
     Entity getEntity(String id);
+
     
-    // TODO relationship of application?
+//    Execution
 }

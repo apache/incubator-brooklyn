@@ -14,15 +14,17 @@ import brooklyn.location.Location;
  * 
  * @see AbstractEntity
  */
-public interface Entity extends Serializable {
-    String getId();
-    String getDisplayName();
-    EntitySummary getSummary();
+public interface Entity extends EntitySummary, Serializable {
+
+    EntitySummary getImmutableSummary();
     
     EntityClass getEntityClass();
     
     Application getApplication();
-
+    
+    
+    //FIXME should these be here?  or is Abstract good enough?
+    
     /**
      * Mutable attributes on this entity.
      * 

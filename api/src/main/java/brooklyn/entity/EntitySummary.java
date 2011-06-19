@@ -10,6 +10,8 @@ public interface EntitySummary extends Serializable {
      */
     String getId();
     
+    EntityClass getEntityClass();
+    
     /**
      * A display name; recommended to be a concise single-line description.
      */
@@ -17,12 +19,14 @@ public interface EntitySummary extends Serializable {
     
     String getApplicationId();
     
+    String getParentId();
+    
     /**
      * The id of the group-entities that this entity is a member of.
      * 
      * TODO Entity.getParents() makes me think of containment relationships too much. I'd prefer groups?
      */
     Collection<String> getGroupIds();
-    
+
     // TODO Add getLocation when needed
 }
