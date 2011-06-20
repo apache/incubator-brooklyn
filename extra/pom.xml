@@ -11,14 +11,6 @@
 		<version>0.0.1-SNAPSHOT</version>
 		<relativePath>../parent/pom.xml</relativePath>
 	</parent>
-	
-	<build>
-	   <testResources>
-	       <testResource>
-			<directory>src/test/resources</directory>
-		</testResource>
-	   </testResources>
-	</build>
 
 	<dependencies>
 		<dependency>
