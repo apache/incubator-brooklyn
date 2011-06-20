@@ -93,3 +93,6 @@ log4j = {
 grails.plugins.springsecurity.userLookup.userDomainClassName = 'brooklyn.web.console.SecurityUser'
 grails.plugins.springsecurity.userLookup.authorityJoinClassName = 'brooklyn.web.console.SecurityUserRole'
 grails.plugins.springsecurity.authority.className = 'brooklyn.web.console.SecurityRole'
+
+grails.plugins.springsecurity.useBasicAuth = true
+grails.plugins.springsecurity.basic.realmName = "OverPaas Webconsole"

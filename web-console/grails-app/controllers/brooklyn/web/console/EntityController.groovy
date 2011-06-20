@@ -5,8 +5,12 @@ import grails.converters.JSON
 import brooklyn.entity.basic.BasicEntitySummary
 import brooklyn.entity.Entity
 import brooklyn.entity.EntitySummary
-import brooklyn.management.*
+import brooklyn.management.ManagementContext
+import brooklyn.management.ExecutionManager
 
+import grails.plugins.springsecurity.Secured
+
+@Secured(['ROLE_ADMIN'])
 class EntityController {
 
     class TestManagementApi implements ManagementContext {
@@ -50,8 +54,9 @@ class EntityController {
             return new BasicEntitySummary(id, displayName, "app1", groups);
         }
 
-	public ExecutionManager getExecutionManager() { throw new UnsupportedOperationException(); }
-
+        ExecutionManager getExecutionManager() {
+            return null  //To change body of implemented methods use File | Settings | File Templates.
+        }
     }
 
     ManagementContext context = new TestManagementApi();
