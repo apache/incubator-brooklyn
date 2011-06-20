@@ -90,7 +90,7 @@ class TomcatNodeIntegrationTest {
     public void tracksNodeState() {
         TomcatNode tc = [ 
             parent: new TestApplication(), 
-            location:new SimulatedITLocation()
+            location:new SshMachineLocation(name:'london', host:'localhost')
         ]
 		try {
 			tc.start()
@@ -104,7 +104,7 @@ class TomcatNodeIntegrationTest {
 	public void publishes_requests_per_second_metric() {
 		Application app = new TestApplication();
 		TomcatNode tc = new TomcatNode(parent: app);
-		tc.start(location: new SimulatedITLocation())
+		tc.start(location: new SshMachineLocation(name:'london', host:'localhost'))
 		executeUntilSucceedsWithShutdown(tc, {
 				def activityValue = tc.getAttribute(TomcatNode.REQUESTS_PER_SECOND)
 				assertEquals Integer, activityValue.class
@@ -127,7 +127,7 @@ class TomcatNodeIntegrationTest {
     public void publishesErrorCountMetric() {
         Application app = new TestApplication();
         TomcatNode tc = new TomcatNode(parent: app);
-        tc.start(location: new SimulatedITLocation())
+        tc.start(location: new SshMachineLocation(name:'london', host:'localhost'))
         executeUntilSucceedsWithShutdown(tc, {
             def port = tc.getAttribute(TomcatNode.HTTP_PORT)
             // Connect to non-existent URL n times
@@ -151,7 +151,7 @@ class TomcatNodeIntegrationTest {
         assertNotNull resource
         tc.war = resource.getPath()
 
-		tc.start(location: new SimulatedITLocation())
+		tc.start(location: new SshMachineLocation(name:'london', host:'localhost'))
 		executeUntilSucceedsWithShutdown(tc, {
             def port = tc.getAttribute(TomcatNode.HTTP_PORT)
             def url  = "http://localhost:${port}/hello-world"
@@ -175,7 +175,7 @@ class TomcatNodeIntegrationTest {
 			TomcatNode tc = new TomcatNode(parent: app)
 			Exception caught = null
 			try {
-                tc.start(location: new SimulatedITLocation())
+                tc.start(location: new SshMachineLocation(name:'london', host:'localhost'))
 			} catch(EntityStartException e) {
 				caught = e
 			} finally {
