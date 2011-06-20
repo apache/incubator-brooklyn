@@ -67,7 +67,21 @@ class TomcatNodeTest {
 		if (oldHttpPort>0)
 			Tomcat7SshSetup.DEFAULT_FIRST_HTTP_PORT = oldHttpPort
 	}
-	
+
+    @Before
+    public void patchInSimulator() {
+        TomcatNode.metaClass.startInLocation = { SimulatedLocation loc ->
+            TomcatSimulator sim = new TomcatSimulator(loc, delegate)
+            delegate.simulator = sim
+            sim.start()
+        }
+        TomcatNode.metaClass.shutdownInLocation { SimulatedLocation loc ->
+            TomcatSimulator sim = delegate.simulator
+            assertEquals loc, sim.location
+            sim.shutdown()
+        }
+    }
+
 	public boolean isPortInUse(int port, long retryAfterMillis=0) {
 		try {
 			def s = new Socket("localhost", port)
@@ -87,35 +101,31 @@ class TomcatNodeTest {
 	}
 
 	@Test
-    @Ignore("Disable tests that try and start Tomcat")
 	public void acceptsLocationAsStartParameter() {
 		Application app = new TestApplication();
 		TomcatNode tc = new TomcatNode(parent:app);
-		tc.start(location: new SshMachineLocation(name:'london', host:'localhost'))
+		tc.start(location: new SimulatedLocation())
 		tc.shutdown()
 	}
 
 	@Test
-    @Ignore("Disable tests that try and start Tomcat")
 	public void acceptsLocationInEntity() {
 		logger.debug ""
-		Application app = new TestApplication(location:new SshMachineLocation(name:'london', host:'localhost'));
+		Application app = new TestApplication(location:new SimulatedLocation());
 		TomcatNode tc = [ parent: app ]
 		tc.start()
 		tc.shutdown()
 	}
 	
 	@Test
-    @Ignore("Disable tests that try and start Tomcat")
 	public void acceptsEntityLocationSameAsStartParameter() {
 		Application app = new TestApplication();
-		TomcatNode tc = [ parent:app, location:new SshMachineLocation(name:'london', host:'localhost') ]
-		tc.start(location: new SshMachineLocation(name:'london', host:'localhost'))
+		TomcatNode tc = [ parent:app, location:new SimulatedLocation() ]
+		tc.start(location: new SimulatedLocation())
 		tc.shutdown()
 	}
 	
 	@Test
-    @Ignore("Disable tests that try and start Tomcat")
 	public void rejectIfEntityLocationConflictsWithStartParameter() {
 		Application app = new TestApplication()
 		boolean caught = false
@@ -130,7 +140,6 @@ class TomcatNodeTest {
 	}
 	
 	@Test
-    @Ignore("Disable tests that try and start Tomcat")
 	public void rejectIfLocationNotInEntityOrInStartParameter() {
 		Application app = new TestApplication();
 		boolean caught = false
@@ -145,16 +154,15 @@ class TomcatNodeTest {
 	}
 
 	@Test
-    @Ignore("Disable tests that try and start Tomcat")
 	public void detect_early_death_of_tomcat_process() {
 		TomcatNode tc1, tc2;
 		try {
 			Application app = new TestApplication(httpPort: DEFAULT_HTTP_PORT);
 			tc1 = new TomcatNode(parent: app);
 			tc2 = new TomcatNode(parent: app);
-			tc1.start(location: new SshMachineLocation(name:'london', host:'localhost'))
+			tc1.start(location: new SimulatedLocation())
 			try {
-				tc2.start(location: new SshMachineLocation(name:'london', host:'localhost'))
+				tc2.start(location: new SimulatedLocation())
 				fail "should have detected that $tc2 didn't start since tomcat was already running"
 			} catch (Exception e) {
 				logger.debug "successfully detected failure of {} to start: {}", tc2, e.toString()
@@ -170,7 +178,7 @@ class TomcatNodeTest {
     public void tracksNodeState() {
         TomcatNode tc = [ 
             parent: new TestApplication(), 
-            location:new SshMachineLocation(name:'london', host:'localhost') 
+            location:new SimulatedLocation() 
         ]
 		try {
 			tc.start()
@@ -185,7 +193,7 @@ class TomcatNodeTest {
 	public void publishes_requests_per_second_metric() {
 		Application app = new TestApplication();
 		TomcatNode tc = new TomcatNode(parent: app);
-		tc.start(location: new SshMachineLocation(name:'london', host:'localhost'))
+		tc.start(location: new SimulatedLocation())
 		executeUntilSucceedsWithShutdown(tc, {
 				def activityValue = tc.getAttribute(TomcatNode.REQUESTS_PER_SECOND)
 				assertEquals Integer, activityValue.class
@@ -209,7 +217,7 @@ class TomcatNodeTest {
     public void publishesErrorCountMetric() {
         Application app = new TestApplication();
         TomcatNode tc = new TomcatNode(parent: app);
-        tc.start(location: new SshMachineLocation(name:'london', host:'localhost'))
+        tc.start(location: new SimulatedLocation())
         executeUntilSucceedsWithShutdown(tc, {
             def port = tc.getAttribute(TomcatNode.HTTP_PORT)
             // Connect to non-existent URL n times
@@ -234,7 +242,7 @@ class TomcatNodeTest {
         assertNotNull resource
         tc.war = resource.getPath()
 
-		tc.start(location: new SshMachineLocation(name:'london', host:'localhost'))
+		tc.start(location: new SimulatedLocation())
 		executeUntilSucceedsWithShutdown(tc, {
             def port = tc.getAttribute(TomcatNode.HTTP_PORT)
             def url  = "http://localhost:${port}/hello-world"
@@ -259,7 +267,7 @@ class TomcatNodeTest {
 			TomcatNode tc = new TomcatNode(parent: app)
 			Exception caught = null
 			try {
-                tc.start(location: new SshMachineLocation(name:'london', host:'localhost'))
+                tc.start(location: new SimulatedLocation())
 			} catch(EntityStartException e) {
 				caught = e
 			} finally {
