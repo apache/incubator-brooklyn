@@ -45,12 +45,11 @@ public class Futures {
 	static <T> QualifiableFuture<T> futureValue(Closure value) {
 		futureValueWhen value
 	}
-	
-	/** returns the value when isValueReady evaluates to true */
-	static <T> Future<T> futureValueWhen(Closure<T> value, Closure isValueReady = { it }) {
-//		println "defining future value when "+value+", "+isValueReady+"."
-		return new FutureValue<T>(value, isValueReady);
-	}
+    
+    /** returns the value when isValueReady evaluates to true */
+    static <T> Future<T> futureValueWhen(Closure<T> value, Closure isValueReady = { it }) {
+        new FutureValue<T>(value, isValueReady);
+    }
 	
 	/** returns the given value; when the item is a future, it waits for the future to be done */
 	static Object getBlocking(Map params=[:], Object v) {
@@ -59,7 +58,8 @@ public class Futures {
 				TimeDuration t = params["timeout"]
 				if (t in TimeDuration)
 					return v.get(params["timeout"].toMilliseconds(), TimeUnit.MILLISECONDS)
-				else return v.get()
+				else
+                    return v.get()
 			} catch (Exception e) {
 				if ((e in TimeoutException) && params["defaultValue"]) return params["defaultValue"] 
 				throw e;

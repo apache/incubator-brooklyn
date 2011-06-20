@@ -85,8 +85,7 @@ public class TomcatNode extends AbstractEntity implements Startable {
 		if (this.properties['jmxHost'] && this.properties['jmxPort']) {
 			jmxAdapter = new JmxSensorAdapter(this, 60*1000)
             
-            Futures.when
-                {
+            Futures.futureValueWhen({
         			// Wait for the HTTP port to become available
         			String state = null
         			int port = getAttribute(HTTP_PORT)
@@ -112,8 +111,7 @@ public class TomcatNode extends AbstractEntity implements Startable {
                         updateAttribute(NODE_UP, false)
         				throw new EntityStartException("Tomcat connector for port $port is in state $state after 30 seconds")
                     }
-                }
-                { jmxAdapter.isConnected() }
+                }, { jmxAdapter.isConnected() }).get()
 		}
  
         if (this.war) {
