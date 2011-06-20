@@ -1,21 +1,23 @@
 package brooklyn.util.task
 
-import groovy.lang.Closure;
+import groovy.lang.Closure
 
-import java.lang.management.LockInfo;
-import java.lang.management.ThreadInfo;
-import java.util.Collections.UnmodifiableSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.lang.management.LockInfo
+import java.lang.management.ManagementFactory
+import java.lang.management.ThreadInfo
+import java.util.Map
+import java.util.Set
+import java.util.Collections.UnmodifiableSet
+import java.util.concurrent.Callable
+import java.util.concurrent.CancellationException
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.Future
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
-import brooklyn.management.Task;
-import brooklyn.management.TaskStub;
+import brooklyn.management.Task
+import brooklyn.management.TaskStub
+import brooklyn.util.internal.LanguageUtils
 
 public class BasicTaskStub implements TaskStub {
 	final String id = LanguageUtils.newUid()

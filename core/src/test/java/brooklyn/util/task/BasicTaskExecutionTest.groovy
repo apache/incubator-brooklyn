@@ -86,7 +86,7 @@ public class BasicTaskExecutionTest {
 		2.times { em.submit tag:"A", new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } }) }
 		2.times { em.submit tag:"B", new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } }) }
 		int total = 0;
-		em.getBasicTaskTags().each { println "tag $it"; em.getBasicTasksWithTag(it).each { println "  BasicTask $it, has "+it.get(); total += it.get() } }
+		em.getTaskTags().each { println "tag $it"; em.getTasksWithTag(it).each { println "  BasicTask $it, has "+it.get(); total += it.get() } }
 		assertEquals(10, total)
 		//now that all have completed:
 		assertEquals(5, data.get(1))
@@ -103,18 +103,18 @@ public class BasicTaskExecutionTest {
 		em.submit tags:["B","C"], new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } })
 		em.submit tags:["D"], new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } })
 		int total = 0;
-		em.getAllBasicTasks().each { println "  BasicTask $it, has "+it.get(); total += it.get() }
+		em.getAllTasks().each { println "  BasicTask $it, has "+it.get(); total += it.get() }
 		assertEquals(10, total)
 		//now that all have completed:
 		assertEquals(5, data.get(1))
-		assertEquals(2, em.getBasicTasksWithTag("A").size())
-		assertEquals(2, em.getBasicTasksWithAnyTag(["A"]).size())
-		assertEquals(2, em.getBasicTasksWithAllTags(["A"]).size())
+		assertEquals(2, em.getTasksWithTag("A").size())
+		assertEquals(2, em.getTasksWithAnyTag(["A"]).size())
+		assertEquals(2, em.getTasksWithAllTags(["A"]).size())
 
-		assertEquals(3, em.getBasicTasksWithAnyTag(["A", "B"]).size())
-		assertEquals(1, em.getBasicTasksWithAllTags(["A", "B"]).size())
-		assertEquals(1, em.getBasicTasksWithAllTags(["B", "C"]).size())
-		assertEquals(3, em.getBasicTasksWithAnyTag(["A", "D"]).size())
+		assertEquals(3, em.getTasksWithAnyTag(["A", "B"]).size())
+		assertEquals(1, em.getTasksWithAllTags(["A", "B"]).size())
+		assertEquals(1, em.getTasksWithAllTags(["B", "C"]).size())
+		assertEquals(3, em.getTasksWithAnyTag(["A", "D"]).size())
 	}
 
 	@Test
@@ -202,7 +202,7 @@ public class BasicTaskExecutionTest {
 	public void fieldsSetForSimpleBasicTask() {
 		BasicExecutionManager em = []
 		BasicTask t = [ { synchronized (data) { data.notify(); data.wait() }; return 42 } ]
-		assertEquals(null, t.submittedByBasicTask)
+		assertEquals(null, t.submittedByTask)
 		assertEquals(-1, t.submitTimeUtc)
 		assertNull(t.getResultFuture())
 		synchronized (data) {
@@ -226,21 +226,21 @@ public class BasicTaskExecutionTest {
 		//submitted BasicTask B is started by A, and waits for A to complete
 		BasicExecutionManager em = []
 		BasicTask t = new BasicTask( displayName: "sample", description: "some descr", { em.submit tag:"B", {
-				assertEquals(45, em.getBasicTasksWithTag("A").iterator().next().get());
+				assertEquals(45, em.getTasksWithTag("A").iterator().next().get());
 				46 };
 			45 } )
 		em.submit tag:"A", t
 
 		t.blockUntilEnded()
 		
-		assertEquals(2, em.getAllBasicTasks().size())
+		assertEquals(2, em.getAllTasks().size())
 		
-		BasicTask tb = em.getBasicTasksWithTag("B").iterator().next();
+		BasicTask tb = em.getTasksWithTag("B").iterator().next();
 		assertEquals( 46, tb.get() )
-		assertEquals( t, em.getBasicTasksWithTag("A").iterator().next() )
-		assertNull( t.submittedByBasicTask )
+		assertEquals( t, em.getTasksWithTag("A").iterator().next() )
+		assertNull( t.submittedByTask )
 		
-		BasicTask submitter = tb.submittedByBasicTask;
+		BasicTask submitter = tb.submittedByTask;
 		assertNotNull(submitter)
 		assertEquals("sample", submitter.displayName)
 		assertEquals("some descr", submitter.description)
