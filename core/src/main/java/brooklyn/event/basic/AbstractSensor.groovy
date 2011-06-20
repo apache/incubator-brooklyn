@@ -59,6 +59,7 @@ public abstract class AbstractSensor<T> implements Sensor<T> {
 /**
  * A {@link Sensor} describing an attribute change.
  */
+@InheritConstructors
 public class AttributeSensor<T> extends AbstractSensor<T> {
     private static final long serialVersionUID = -7670909215973264600L;
 
@@ -72,6 +73,7 @@ public class AttributeSensor<T> extends AbstractSensor<T> {
 /**
  * A {@link Sensor} describing a log message or exceptional condition.
  */
+@InheritConstructors
 public class LogSensor<T> extends AbstractSensor<T> {
     private static final long serialVersionUID = 4713993465669948212L;
 

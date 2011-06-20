@@ -18,6 +18,7 @@ import brooklyn.event.EventListener;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.EventFilters;
 import brooklyn.event.basic.SensorEvent;
+import brooklyn.management.SubscriptionManager;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;

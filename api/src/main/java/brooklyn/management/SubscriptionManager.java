@@ -1,4 +1,4 @@
-package brooklyn.management.internal;
+package brooklyn.management;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.EntitySummary;

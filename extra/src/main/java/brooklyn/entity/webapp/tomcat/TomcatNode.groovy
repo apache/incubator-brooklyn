@@ -16,6 +16,9 @@ import brooklyn.entity.trait.Startable
 import brooklyn.event.EntityStartException
 import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.basic.AttributeSensor
+import brooklyn.event.basic.LogSensor
+import brooklyn.location.Location
+import brooklyn.location.basic.SshBasedJavaWebAppSetup
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.management.internal.task.Futures;
 import brooklyn.util.internal.EntityStartUtils
@@ -29,13 +32,13 @@ import brooklyn.util.internal.EntityStartUtils
 public class TomcatNode extends AbstractEntity implements Startable {
 	private static final Logger logger = LoggerFactory.getLogger(TomcatNode.class)
  
-    public static final AttributeSensor<Integer> HTTP_PORT = [ "HTTP port", "webapp.http.port", Integer ]
-    public static final AttributeSensor<Integer> REQUESTS_PER_SECOND = [ "Reqs/Sec", "webapp.reqs.persec.RequestCount", Integer ]
+    public static final AttributeSensor<Integer> HTTP_PORT = [ Integer, "HTTP port", "webapp.http.port"  ]
+    public static final AttributeSensor<Integer> REQUESTS_PER_SECOND = [ Integer, "webapp.reqs.persec.RequestCount", "Reqs/Sec",  ]
 
-    public static final AttributeSensor<Integer> ERROR_COUNT = [ "Request errors", "jmx.reqs.global.totals.errorCount", Integer ]
-    public static final AttributeSensor<Integer> MAX_PROCESSING_TIME = [ "Request count", "jmx.reqs.global.totals.maxTime", Integer ]
-    public static final AttributeSensor<Integer> REQUEST_COUNT = [ "Request count", "jmx.reqs.global.totals.requestCount", Integer ]
-    public static final AttributeSensor<Integer> TOTAL_PROCESSING_TIME = [ "Total processing time", "jmx.reqs.global.totals.processingTime", Integer ]
+    public static final AttributeSensor<Integer> ERROR_COUNT = [ Integer, "jmx.reqs.global.totals.maxTime", "Request errors" ]
+    public static final AttributeSensor<Integer> MAX_PROCESSING_TIME = [ Integer, "jmx.reqs.global.totals.maxTime", "Request count" ]
+    public static final AttributeSensor<Integer> REQUEST_COUNT = [ Integer, "jmx.reqs.global.totals.requestCount", "Request count" ]
+    public static final AttributeSensor<Integer> TOTAL_PROCESSING_TIME = [ Integer, "jmx.reqs.global.totals.processingTime", "Total processing time" ]
 	
 //	public static final Effector START = new AbstractEffector("start", Void.TYPE, [], "starts an entity");
 	
@@ -43,7 +46,8 @@ public class TomcatNode extends AbstractEntity implements Startable {
 //	Task<Integer> invocation = entity.invoke(GET_TOTAL_PROCESSING_TIME, ...args)
 	 
     // This might be more interesting as some status like 'starting', 'started', 'failed', etc.
-    public static final AttributeSensor<String>  NODE_UP = [ "Node started", "webapp.hasStarted", Boolean ];
+    public static final AttributeSensor<Boolean>  NODE_UP = [ Boolean, "webapp.hasStarted", "Node started" ];
+    public static final LogSensor<String>  NODE_STATUS = [ String, "webapp.status", "Node status" ];
     
 	static {
 		TomcatNode.metaClass.startInLocation = { SshMachineLocation loc ->

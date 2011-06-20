@@ -21,7 +21,7 @@ import brooklyn.util.internal.EntityStartUtils
  */
 //@InheritConstructors
 public class JBossNode extends AbstractEntity implements Startable {
-    public static final AttributeSensor<Integer> REQUESTS_PER_SECOND = [ "Reqs/Sec", "jmx.reqs.persec.RequestCount", Double ]
+    public static final AttributeSensor<Integer> REQUESTS_PER_SECOND = [ Double, "jmx.reqs.persec.RequestCount", "Reqs/Sec" ]
 
     JmxSensorAdapter jmxAdapter;
 
