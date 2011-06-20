@@ -19,6 +19,7 @@ import brooklyn.entity.basic.AbstractApplication
 import brooklyn.event.EntityStartException
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.internal.TimeExtras
+import org.junit.Ignore
 
 /**
  * This tests the operation of the {@link TomcatNode} entity.
@@ -86,6 +87,7 @@ class TomcatNodeTest {
 	}
 
 	@Test
+    @Ignore("Disable tests that try and start Tomcat")
 	public void acceptsLocationAsStartParameter() {
 		Application app = new TestApplication();
 		TomcatNode tc = new TomcatNode(parent:app);
@@ -94,6 +96,7 @@ class TomcatNodeTest {
 	}
 
 	@Test
+    @Ignore("Disable tests that try and start Tomcat")
 	public void acceptsLocationInEntity() {
 		logger.debug ""
 		Application app = new TestApplication(location:new SshMachineLocation(name:'london', host:'localhost'));
@@ -103,6 +106,7 @@ class TomcatNodeTest {
 	}
 	
 	@Test
+    @Ignore("Disable tests that try and start Tomcat")
 	public void acceptsEntityLocationSameAsStartParameter() {
 		Application app = new TestApplication();
 		TomcatNode tc = [ parent:app, location:new SshMachineLocation(name:'london', host:'localhost') ]
@@ -111,6 +115,7 @@ class TomcatNodeTest {
 	}
 	
 	@Test
+    @Ignore("Disable tests that try and start Tomcat")
 	public void rejectIfEntityLocationConflictsWithStartParameter() {
 		Application app = new TestApplication()
 		boolean caught = false
@@ -125,6 +130,7 @@ class TomcatNodeTest {
 	}
 	
 	@Test
+    @Ignore("Disable tests that try and start Tomcat")
 	public void rejectIfLocationNotInEntityOrInStartParameter() {
 		Application app = new TestApplication();
 		boolean caught = false
@@ -139,6 +145,7 @@ class TomcatNodeTest {
 	}
 
 	@Test
+    @Ignore("Disable tests that try and start Tomcat")
 	public void detect_early_death_of_tomcat_process() {
 		TomcatNode tc1, tc2;
 		try {
@@ -159,6 +166,7 @@ class TomcatNodeTest {
 	} 
 
     @Test
+    @Ignore("Disable tests that try and start Tomcat")
     public void tracksNodeState() {
         TomcatNode tc = [ 
             parent: new TestApplication(), 
@@ -170,6 +178,7 @@ class TomcatNodeTest {
     }
     
 	@Test
+    @Ignore("Disable tests that try and start Tomcat")
 	public void publishes_requests_per_second_metric() {
 		Application app = new TestApplication();
 		TomcatNode tc = new TomcatNode(parent: app);
@@ -193,6 +202,7 @@ class TomcatNodeTest {
 	}
     
     @Test
+    @Ignore("Disable tests that try and start Tomcat")
     public void publishesErrorCountMetric() {
         Application app = new TestApplication();
         TomcatNode tc = new TomcatNode(parent: app);
@@ -212,6 +222,7 @@ class TomcatNodeTest {
     }
 	
 	@Test
+    @Ignore("Disable tests that try and start Tomcat")
 	public void deploy_web_app_appears_at_URL() {
 		Application app = new TestApplication();
 		TomcatNode tc = new TomcatNode(parent: app);
@@ -235,6 +246,7 @@ class TomcatNodeTest {
 
 	
 	@Test
+    @Ignore("Disable tests that try and start Tomcat")
 	public void detect_failure_if_tomcat_cant_bind_to_port() {
 		ServerSocket listener = new ServerSocket(DEFAULT_HTTP_PORT);
 		Thread t = new Thread({ try { for(;;) { Socket socket = listener.accept(); socket.close(); } } catch(Exception e) {} })
