@@ -2,7 +2,6 @@
 <html>
   <head>
     <meta content='basic' name='layout' />
-    <g:javascript library='console/init-widgets' />
   </head>
   <body>
     <div class='layout-left-column'>

@@ -1,39 +1,6 @@
 <html>
 <head>
-
-    
-
-    <script type="text/javascript" src="${resource(dir:'dynjs', file:'jsTreeConfig')}"></script>
-    <g:javascript src="overpaas/jsTree.js" />
-
-    <script>
-        $(document).ready(OverPaas.jsTree.loadJstree);
-    </script>
-    <script>
-        $(function() {
-            $( "#tabs" ).tabs();
-        });
-    </script>
-    <script>
-        $(function() {
-            // setup ul.tabs to work as tabs for each div directly under div.panes
-            $("ul.tabs").tabs("div.panes > div");
-        });
-    </script>
-
 <meta name="layout" content="test"></meta>
-<script>
-		$(function () {
-			$("#demo1")
-				.jstree({
-					"json_data" : { "ajax" : { "url" : "<g:createLink controller='entity' action='jstree'/>"}},
-					"plugins" : [ "themes", "json_data", "ui" ]
-				})
-				.bind("select_node.jstree", function (event, data) {
-					 alert(data.rslt.obj.attr("id"));
-				});
-		});
-	</script>
 
 </head>
 
