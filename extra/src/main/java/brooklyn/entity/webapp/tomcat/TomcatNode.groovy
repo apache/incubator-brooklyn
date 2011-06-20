@@ -174,7 +174,7 @@ public class TomcatNode extends AbstractEntity implements Startable {
 	}
 
 	public void shutdown() {
-		if (jmxMonitoringTask) jmxMonitoringTask.cancel true
+		if (jmxAdapter) jmxAdapter.disconnect()
 		if (location) shutdownInLocation(location)
 	}
 
