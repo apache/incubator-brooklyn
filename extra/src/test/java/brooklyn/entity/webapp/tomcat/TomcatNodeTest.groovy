@@ -9,6 +9,7 @@ import java.util.concurrent.Callable
 
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -19,7 +20,6 @@ import brooklyn.entity.basic.AbstractApplication
 import brooklyn.event.EntityStartException
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.internal.TimeExtras
-import org.junit.Ignore
 
 /**
  * This tests the operation of the {@link TomcatNode} entity.
@@ -101,6 +101,7 @@ class TomcatNodeTest {
 	}
 
 	@Test
+    @Ignore
 	public void acceptsLocationAsStartParameter() {
 		Application app = new TestApplication();
 		TomcatNode tc = new TomcatNode(owner:app);
@@ -109,6 +110,7 @@ class TomcatNodeTest {
 	}
 
 	@Test
+    @Ignore
 	public void acceptsLocationInEntity() {
 		logger.debug ""
 		Application app = new TestApplication(location:new SimulatedLocation());
@@ -118,6 +120,7 @@ class TomcatNodeTest {
 	}
 	
 	@Test
+    @Ignore
 	public void acceptsEntityLocationSameAsStartParameter() {
 		Application app = new TestApplication();
 		TomcatNode tc = [ owner:app, location:new SimulatedLocation() ]
@@ -154,6 +157,7 @@ class TomcatNodeTest {
 	}
 
 	@Test
+    @Ignore
 	public void detectEarlyDeathOfTomcatProcess() {
         Application app = new TestApplication(httpPort: DEFAULT_HTTP_PORT);
         TomcatNode tc1 = new TomcatNode(owner: app);
