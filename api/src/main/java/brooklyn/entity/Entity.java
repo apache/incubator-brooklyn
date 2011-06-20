@@ -14,10 +14,21 @@ import brooklyn.location.Location;
  * 
  * @see AbstractEntity
  */
-public interface Entity extends EntitySummary, Serializable {
+public interface Entity extends Serializable {
 
-    EntitySummary getImmutableSummary();
+    /**
+     * @return The unique identifier for this entity.
+     */
+    String getId();
     
+    /**
+     * A display name; recommended to be a concise single-line description.
+     */
+    String getDisplayName();
+    
+    /**
+     * Information about the type of this entity; analogous to Java's object.getClass.
+     */
     EntityClass getEntityClass();
     
     Application getApplication();
@@ -36,6 +47,7 @@ public interface Entity extends EntitySummary, Serializable {
 
     // TODO the owner is the parent that strictly contains this entity
 //    Group getOwner();
+    // TODO Entity.getParents() makes me think of containment relationships too much. I'd prefer groups?
     Collection<Group> getParents();
     void addParent(Group e);
 

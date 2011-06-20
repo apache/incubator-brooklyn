@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
 import brooklyn.entity.EntityClass
-import brooklyn.entity.EntitySummary
 import brooklyn.entity.Group
 import brooklyn.event.Event
 import brooklyn.event.EventListener
@@ -75,12 +74,6 @@ public abstract class AbstractEntity implements Entity {
         parents.add e
         getApplication()
     }
-	public String getParentId() {
-		parents ? parents[0].id : null
-	}
-	public Collection<String> getGroupIds() {
-		parents.collect { it.id }
-	}
 
     /**
      * Returns the application, looking it up if not yet known (registering if necessary)
@@ -94,9 +87,6 @@ public abstract class AbstractEntity implements Entity {
         }
         app
     }
-	public String getApplicationId() {
-		getApplication()?.id
-	}
 
 	public ManagementContext getManagementContext() {
 		getApplication()?.getManagementContext()
@@ -108,10 +98,6 @@ public abstract class AbstractEntity implements Entity {
         app.registerEntity(this)
     }
 
-    public EntitySummary getImmutableSummary() {
-        return new BasicEntitySummary(this)
-    }
-    
     public EntityClass getEntityClass() {
 		//TODO registry? or a transient?
 		new BasicEntityClass(getClass())
