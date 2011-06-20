@@ -65,7 +65,6 @@ class EntityController {
     }
 
     def search = {
-        render(getEntitySummariesMatchingCriteria(context.allEntitySummaries, params.name, params.id, params.applicationId) as JSON)
         def result = getEntitiesMatchingCriteria(allEntities, params.name, params.id, params.applicationId)
         render(toEntitySummaries(result) as JSON)
     }
