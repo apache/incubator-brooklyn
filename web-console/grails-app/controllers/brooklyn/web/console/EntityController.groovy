@@ -28,7 +28,7 @@ import grails.plugins.springsecurity.Secured
 @Secured(['ROLE_ADMIN'])
 class EntityController {
 
-    ManagementContext context = new TestManagementContext();
+    private ManagementContext context = new TestManagementContext();
     
     private Collection<Entity> getEntitiesMatchingCriteria(Collection<Entity> all, String name, String id, String applicationId) {
         Collection<Entity> matches = all.findAll {
