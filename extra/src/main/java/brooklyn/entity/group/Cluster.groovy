@@ -10,7 +10,6 @@ import brooklyn.entity.Group
 import brooklyn.entity.trait.Resizable
 import brooklyn.entity.trait.Startable
 import brooklyn.util.internal.EntityStartUtils
-import brooklyn.util.internal.OverpaasDsl
 
 /**
  * intended to represent a group of homogeneous entities in a single location;
@@ -38,7 +37,9 @@ public abstract class ClusterFromTemplate extends Cluster implements Resizable {
 	public List<Future> grow(int desiredIncrease) {
 		def nodes = []
 		desiredIncrease.times { nodes += EntityStartUtils.createFromTemplate(this, template) }
-		OverpaasDsl.run( nodes.collect({ node -> { -> node.start() } }) as Closure[] )
+		
+		Set tasks = nodes.collect { node -> getExecutionContext().submit({node.start()}) }
+		tasks.collect { it.get() }
 	}
 
 	public List<Future> shrink(int desiredDecrease) {

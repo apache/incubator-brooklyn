@@ -1,27 +1,27 @@
 package brooklyn.util.task;
 
-import java.util.Map;
+import static org.junit.Assert.*
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map
+import java.util.concurrent.Callable
+import java.util.concurrent.CancellationException
+import java.util.concurrent.ConcurrentHashMap
 
-import static org.junit.Assert.*;
-import org.junit.Test;
+import org.junit.Test
 
-import brooklyn.util.internal.LanguageUtils;
+import brooklyn.util.internal.LanguageUtils
 
 public class BasicTaskExecutionTest {
 
 	Map data = new ConcurrentHashMap()
 	
 	@Test
-	public void runSimpleTask() {
+	public void runSimpleBasicTask() {
 		data.clear()
-		Task t = [ { data.put(1, "b") } ] 
+		BasicTask t = [ { data.put(1, "b") } ] 
 		data.put(1, "a")
-		ExecutionManager em = []
-		Task t2 = em.submit tag:"A", t
+		BasicExecutionManager em = []
+		BasicTask t2 = em.submit tag:"A", t
 		assertEquals("a", t.get())
 		assertEquals("b", data.get(1))
 	}
@@ -30,8 +30,8 @@ public class BasicTaskExecutionTest {
 	public void runSimpleRunnable() {
 		data.clear()
 		data.put(1, "a")
-		ExecutionManager em = []
-		Task t = em.submit tag:"A", new Runnable() { public void run() { data.put(1, "b") } }
+		BasicExecutionManager em = []
+		BasicTask t = em.submit tag:"A", new Runnable() { public void run() { data.put(1, "b") } }
 		assertEquals(null, t.get())
 		assertEquals("b", data.get(1))
 	}
@@ -40,16 +40,16 @@ public class BasicTaskExecutionTest {
 	public void runSimpleCallable() {
 		data.clear()
 		data.put(1, "a")
-		ExecutionManager em = []
-		Task t = em.submit tag:"A", new Callable() { public Object call() { data.put(1, "b") } }
+		BasicExecutionManager em = []
+		BasicTask t = em.submit tag:"A", new Callable() { public Object call() { data.put(1, "b") } }
 		assertEquals("a", t.get())
 		assertEquals("b", data.get(1))
 	}
 
 	@Test
-	public void runTaskWithWaits() {
+	public void runBasicTaskWithWaits() {
 		data.clear()
-		Task t = [ {
+		BasicTask t = [ {
 			synchronized(data) {
 				def result = data.put(1, "b")
 				data.notify()
@@ -58,9 +58,9 @@ public class BasicTaskExecutionTest {
 			}
 		} ]
 		data.put(1, "a")
-		ExecutionManager em = []
+		BasicExecutionManager em = []
 		synchronized (data) {
-			Task t2 = em.submit tag:"A", t
+			BasicTask t2 = em.submit tag:"A", t
 			assertEquals(t, t2)
 			assertFalse(t.isDone())
 			
@@ -69,7 +69,7 @@ public class BasicTaskExecutionTest {
 			assertEquals("b", data.get(1))
 			assertFalse(t.isDone())
 			
-			println "runTaskWithWaits, task status:\n"+t.getStatusDetail(true)
+			println "runBasicTaskWithWaits, BasicTask status:\n"+t.getStatusDetail(true)
 			assertTrue(t.getStatusDetail(false).toLowerCase().contains("waiting"))
 			
 			data.notify()
@@ -78,49 +78,49 @@ public class BasicTaskExecutionTest {
 	}
 
 	@Test
-	public void runMultipleTasks() {
-		println "runMultipleTasks"
+	public void runMultipleBasicTasks() {
+		println "runMultipleBasicTasks"
 		data.clear()
 		data.put(1, 1)
-		ExecutionManager em = []
-		2.times { em.submit tag:"A", new Task({ synchronized(data) { data.put(1, data.get(1)+1) } }) }
-		2.times { em.submit tag:"B", new Task({ synchronized(data) { data.put(1, data.get(1)+1) } }) }
+		BasicExecutionManager em = []
+		2.times { em.submit tag:"A", new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } }) }
+		2.times { em.submit tag:"B", new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } }) }
 		int total = 0;
-		em.getTaskTags().each { println "tag $it"; em.getTasksWithTag(it).each { println "  task $it, has "+it.get(); total += it.get() } }
+		em.getBasicTaskTags().each { println "tag $it"; em.getBasicTasksWithTag(it).each { println "  BasicTask $it, has "+it.get(); total += it.get() } }
 		assertEquals(10, total)
 		//now that all have completed:
 		assertEquals(5, data.get(1))
 	}
 
 	@Test
-	public void runMultipleTasksMultipleTags() {
-		println "runMultipleTasksWithMultipleTags"
+	public void runMultipleBasicTasksMultipleTags() {
+		println "runMultipleBasicTasksWithMultipleTags"
 		data.clear()
 		data.put(1, 1)
-		ExecutionManager em = []
-		em.submit tag:"A", new Task({ synchronized(data) { data.put(1, data.get(1)+1) } })
-		em.submit tags:["A","B"], new Task({ synchronized(data) { data.put(1, data.get(1)+1) } })
-		em.submit tags:["B","C"], new Task({ synchronized(data) { data.put(1, data.get(1)+1) } })
-		em.submit tags:["D"], new Task({ synchronized(data) { data.put(1, data.get(1)+1) } })
+		BasicExecutionManager em = []
+		em.submit tag:"A", new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } })
+		em.submit tags:["A","B"], new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } })
+		em.submit tags:["B","C"], new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } })
+		em.submit tags:["D"], new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } })
 		int total = 0;
-		em.getAllTasks().each { println "  task $it, has "+it.get(); total += it.get() }
+		em.getAllBasicTasks().each { println "  BasicTask $it, has "+it.get(); total += it.get() }
 		assertEquals(10, total)
 		//now that all have completed:
 		assertEquals(5, data.get(1))
-		assertEquals(2, em.getTasksWithTag("A").size())
-		assertEquals(2, em.getTasksWithAnyTag(["A"]).size())
-		assertEquals(2, em.getTasksWithAllTags(["A"]).size())
+		assertEquals(2, em.getBasicTasksWithTag("A").size())
+		assertEquals(2, em.getBasicTasksWithAnyTag(["A"]).size())
+		assertEquals(2, em.getBasicTasksWithAllTags(["A"]).size())
 
-		assertEquals(3, em.getTasksWithAnyTag(["A", "B"]).size())
-		assertEquals(1, em.getTasksWithAllTags(["A", "B"]).size())
-		assertEquals(1, em.getTasksWithAllTags(["B", "C"]).size())
-		assertEquals(3, em.getTasksWithAnyTag(["A", "D"]).size())
+		assertEquals(3, em.getBasicTasksWithAnyTag(["A", "B"]).size())
+		assertEquals(1, em.getBasicTasksWithAllTags(["A", "B"]).size())
+		assertEquals(1, em.getBasicTasksWithAllTags(["B", "C"]).size())
+		assertEquals(3, em.getBasicTasksWithAnyTag(["A", "D"]).size())
 	}
 
 	@Test
 	public void cancelBeforeRun() {
-		ExecutionManager em = []
-		Task t = [ { synchronized (data) { data.notify(); data.wait() }; return 42 } ]
+		BasicExecutionManager em = []
+		BasicTask t = [ { synchronized (data) { data.notify(); data.wait() }; return 42 } ]
 		t.cancel true
 		assertTrue(t.isCancelled())
 		assertTrue(t.isDone())
@@ -137,8 +137,8 @@ public class BasicTaskExecutionTest {
 
 	@Test
 	public void cancelDuringRun() {
-		ExecutionManager em = []
-		Task t = [ { synchronized (data) { data.notify(); data.wait() }; return 42 } ]
+		BasicExecutionManager em = []
+		BasicTask t = [ { synchronized (data) { data.notify(); data.wait() }; return 42 } ]
 		assertFalse(t.isCancelled())
 		assertFalse(t.isDone())
 		assertFalse(t.isError())
@@ -157,8 +157,8 @@ public class BasicTaskExecutionTest {
 	
 	@Test
 	public void cancelAfterRun() {
-		ExecutionManager em = []
-		Task t = [ { synchronized (data) { data.notify(); data.wait() }; return 42 } ]
+		BasicExecutionManager em = []
+		BasicTask t = [ { synchronized (data) { data.notify(); data.wait() }; return 42 } ]
 		synchronized (data) {
 			em.submit tag:"A", t
 			data.wait()
@@ -176,8 +176,8 @@ public class BasicTaskExecutionTest {
 	
 	@Test
 	public void errorDuringRun() {
-		ExecutionManager em = []
-		Task t = [ { synchronized (data) { data.notify(); data.wait() }; throw new IllegalStateException("Aaargh"); } ]
+		BasicExecutionManager em = []
+		BasicTask t = [ { synchronized (data) { data.notify(); data.wait() }; throw new IllegalStateException("Aaargh"); } ]
 		
 		synchronized (data) {
 			em.submit tag:"A", t
@@ -199,10 +199,10 @@ public class BasicTaskExecutionTest {
 	}
 
 	@Test
-	public void fieldsSetForSimpleTask() {
-		ExecutionManager em = []
-		Task t = [ { synchronized (data) { data.notify(); data.wait() }; return 42 } ]
-		assertEquals(null, t.submittedByTask)
+	public void fieldsSetForSimpleBasicTask() {
+		BasicExecutionManager em = []
+		BasicTask t = [ { synchronized (data) { data.notify(); data.wait() }; return 42 } ]
+		assertEquals(null, t.submittedByBasicTask)
 		assertEquals(-1, t.submitTimeUtc)
 		assertNull(t.getResultFuture())
 		synchronized (data) {
@@ -218,29 +218,29 @@ public class BasicTaskExecutionTest {
 		assertEquals(42, t.get())
 		assertTrue(t.endTimeUtc >= t.startTimeUtc)
 
-		println "task duration (millis): "+(t.endTimeUtc - t.submitTimeUtc)		
+		println "BasicTask duration (millis): "+(t.endTimeUtc - t.submitTimeUtc)		
 	}
 
 	@Test
-	public void fieldsSetForTaskSubmittedTask() {
-		//submitted task B is started by A, and waits for A to complete
-		ExecutionManager em = []
-		Task t = new Task( displayName: "sample", description: "some descr", { em.submit tag:"B", {
-				assertEquals(45, em.getTasksWithTag("A").iterator().next().get());
+	public void fieldsSetForBasicTaskSubmittedBasicTask() {
+		//submitted BasicTask B is started by A, and waits for A to complete
+		BasicExecutionManager em = []
+		BasicTask t = new BasicTask( displayName: "sample", description: "some descr", { em.submit tag:"B", {
+				assertEquals(45, em.getBasicTasksWithTag("A").iterator().next().get());
 				46 };
 			45 } )
 		em.submit tag:"A", t
 
 		t.blockUntilEnded()
 		
-		assertEquals(2, em.getAllTasks().size())
+		assertEquals(2, em.getAllBasicTasks().size())
 		
-		Task tb = em.getTasksWithTag("B").iterator().next();
+		BasicTask tb = em.getBasicTasksWithTag("B").iterator().next();
 		assertEquals( 46, tb.get() )
-		assertEquals( t, em.getTasksWithTag("A").iterator().next() )
-		assertNull( t.submittedByTask )
+		assertEquals( t, em.getBasicTasksWithTag("A").iterator().next() )
+		assertNull( t.submittedByBasicTask )
 		
-		Task submitter = tb.submittedByTask;
+		BasicTask submitter = tb.submittedByBasicTask;
 		assertNotNull(submitter)
 		assertEquals("sample", submitter.displayName)
 		assertEquals("some descr", submitter.description)
@@ -249,7 +249,7 @@ public class BasicTaskExecutionTest {
 		assertTrue(submitter.submitTimeUtc <= tb.submitTimeUtc)
 		assertTrue(submitter.endTimeUtc <= tb.endTimeUtc)
 		
-		println "task $tb was submitted by $submitter"
+		println "BasicTask $tb was submitted by $submitter"
 	}
 
 }

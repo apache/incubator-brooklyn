@@ -59,7 +59,7 @@ public abstract class AbstractEntity implements Entity {
             def v = null
             if (parents.find { parent -> v = parent.attributes[name] }) return v;
         }
-        log.debug "no property $name on $this"
+        log.debug "no property or attribute $name on $this"
     }
 	
     /** Entity hierarchy */
@@ -155,6 +155,7 @@ public abstract class AbstractEntity implements Entity {
         return attributesInternal.asMap();
     }
     
+	public <T> T getAttribute(Sensor<T> attribute) { attributesInternal.getValue(attribute); }
     public <T> void updateAttribute(Sensor<T> attribute, T val) {
         attributesInternal.update(attribute, val);
     }

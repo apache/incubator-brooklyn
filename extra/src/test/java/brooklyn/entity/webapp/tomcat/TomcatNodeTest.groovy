@@ -2,16 +2,13 @@ package brooklyn.entity.webapp.tomcat
 
 import static java.util.concurrent.TimeUnit.*
 import static org.junit.Assert.*
-
 import groovy.time.TimeDuration
-//import groovy.transform.InheritConstructors
 
 import java.util.Map
 import java.util.concurrent.Callable
 
 import org.junit.After
 import org.junit.Before
-import org.junit.BeforeClass
 import org.junit.Test
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

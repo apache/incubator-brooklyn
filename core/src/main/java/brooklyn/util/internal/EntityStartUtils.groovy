@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
 import brooklyn.entity.trait.Startable
-import brooklyn.location.Location
 import brooklyn.util.internal.LanguageUtils.FieldVisitor
 
 /**
@@ -23,27 +22,28 @@ class EntityStartUtils {
 	private static final Logger log = LoggerFactory.getLogger(EntityStartUtils.class);
 	
     /**
-     * Starts the children of the host, optionally inserting additional properties and possibly modifying the child properties before starting.
+     * Starts the children of the host, optionally inserting additional attributes and possibly modifying the child attributes before starting.
      */   
-    public static void startGroup(Map addlProperties=[:], Group host, Closure propertiesMods={}) {
-        def childProperties = [:]
-        if (host.hasProperty('properties')) childProperties << host.properties
-        childProperties << addlProperties
+    public static void startGroup(Map addlAttributes=[:], Group host, Closure attributesMods={}) {
+        def childAttributes = [:]
+        childAttributes << host.attributes
+        childAttributes << addlAttributes
         
-        propertiesMods(childProperties)
+        attributesMods(childAttributes)
         
-        OverpaasDsl.run( (host.getChildren().collect { def item -> { -> if (item in Startable) item.start(childProperties) } }) as Closure[] )
-        this
+		Set tasks = []
+		host.getChildren().each { child -> tasks.add(host.getExecutionContext().submit { if (child in Startable) child.start(childAttributes) }) }
+		tasks.collect { it.get() }
     }
     
-    public static Entity startEntity(Map properties=[:], Entity entity) {
+    public static Entity startEntity(Map startAttributes=[:], Entity entity) {
 
-		entity.properties << properties
+		entity.attributes << startAttributes
         if (!entity.location)
             throw new IllegalStateException("request to start $entity without a location")
         if (!entity.parents)
             throw new IllegalStateException("request to start $entity without any parents specified or set")
-        log.debug "factory creating entity {} with properties {} and location {}", entity, properties, entity.location
+        log.debug "factory creating entity {} with properties {} and location {}", entity, entity.attributes, entity.location
 
         //TODO dynamically look for appropriate start method, throw better exception if not there
         entity.startInLocation(entity.location)
@@ -53,18 +53,18 @@ class EntityStartUtils {
     /**
      * Starts a clone of the given template entity running as a child of the host.
      */
-    public static void startFromTemplate(Map childProperties=[:], Group host, Entity template, Map startupProperties) {
-        createFromTemplate(childProperties, host, template).start(startupProperties)
+    public static void startFromTemplate(Map childAttributes=[:], Group host, Entity template, Map startupAttributes) {
+        createFromTemplate(childAttributes, host, template).start(startupAttributes)
     }
 
     /**
      * Creates a (not-started) clone of the given template, configured to be a child of the host
      */
-    public static <T extends Entity> T createFromTemplate(Map childProperties=[:], Group host, T template) {
+    public static <T extends Entity> T createFromTemplate(Map childAttributes=[:], Group host, T template) {
         assert !template.parents : "templates must not be assigned any parent entity"
         Entity c = cloneTemplate(template);
         c.id = LanguageUtils.newUid();
-        c.properties << childProperties;
+        c.attributes << childAttributes;
         host.addChild(c)
         c
     }

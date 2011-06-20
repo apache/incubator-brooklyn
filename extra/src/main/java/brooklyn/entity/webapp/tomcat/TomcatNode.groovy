@@ -75,12 +75,12 @@ public class TomcatNode extends AbstractEntity implements Startable {
         super(properties);
     }
 
-	public void start(Map properties=[:]) {
-		EntityStartUtils.startEntity properties, this
-		log.debug "started... jmxHost is {} and jmxPort is {}", this.properties['jmxHost'], this.properties['jmxPort']
+	public void start(Map startAttributes=[:]) {
+		EntityStartUtils.startEntity startAttributes, this
+		log.debug "started... jmxHost is {} and jmxPort is {}", this.attributes['jmxHost'], this.attributes['jmxPort']
 		
-		if (this.properties['jmxHost'] && this.properties['jmxPort']) {
-			jmxAdapter = new JmxSensorAdapter(this.properties.jmxHost, this.properties.jmxPort)
+		if (this.attributes['jmxHost'] && this.attributes['jmxPort']) {
+			jmxAdapter = new JmxSensorAdapter(this.attributes.jmxHost, this.attributes.jmxPort)
 			if (!(jmxAdapter.connect(60*1000))) {
 				log.error "FAILED to connect JMX to {}", this
 				throw new IllegalStateException("failed to completely start $this: JMX not found at $jmxHost:$jmxPort after 60s")
@@ -92,7 +92,7 @@ public class TomcatNode extends AbstractEntity implements Startable {
 			
 			// Wait for the HTTP port to become available
 			String state = null
-			int port = activity.getValue(HTTP_PORT)
+			int port = getAttribute(HTTP_PORT)
 			for(int attempts = 0; attempts < 30; attempts++) {
 				Map connectorAttrs;
 				try {
@@ -103,16 +103,16 @@ public class TomcatNode extends AbstractEntity implements Startable {
 				}
 				logger.trace "state: $state"
 				if (state == "FAILED") {
-                    activity.update(NODE_UP, false)
+                    attributes.update(NODE_UP, false)
 					throw new EntityStartException("Tomcat connector for port $port is in state $state")
 				} else if (state == "STARTED") {
-                    activity.update(NODE_UP, true)
+                    attributes.update(NODE_UP, true)
 					break;
 				}
 				Thread.sleep 250
 			}
 			if(state != "STARTED") {
-                activity.update(NODE_UP, false)
+                attributes.update(NODE_UP, false)
 				throw new EntityStartException("Tomcat connector for port $port is in state $state after 30 seconds")
             }
 		}

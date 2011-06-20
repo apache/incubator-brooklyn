@@ -37,6 +37,8 @@ public abstract class Fabric extends TierFromTemplate {
 			}
 			EntityStartUtils.createFromTemplate(childProperties + [location:loc], this, template);
 		}).findAll { it }  //remove nulls
-		OverpaasDsl.run(newNodes.collect({ node -> { -> node.start() }}) as Closure[])
-	}	
+		//TODO use ParallelTask
+		Set tasks = newNodes.collect { node -> getExecutionContext().submit({node.start()}) }
+		tasks.collect { it.get() }
+	}
 }
