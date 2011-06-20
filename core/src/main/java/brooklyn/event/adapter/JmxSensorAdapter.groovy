@@ -13,10 +13,12 @@ import javax.management.remote.JMXConnector
 import javax.management.remote.JMXConnectorFactory
 import javax.management.remote.JMXServiceURL
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 import brooklyn.entity.Entity
-import brooklyn.event.Sensor;
+import brooklyn.event.Sensor
 import brooklyn.event.basic.AttributeSensor
-import brooklyn.management.internal.task.Futures
 
 /**
  * This class adapts JMX {@link ObjectName} dfata to {@link Sensor} data for a particular {@link Entity}, updating the
@@ -26,6 +28,8 @@ import brooklyn.management.internal.task.Futures
  *  or simply reading values and setting them in the attribute map of the activity model.
  */
 public class JmxSensorAdapter {
+    static final Logger log = LoggerFactory.getLogger(JmxSensorAdapter.class);
+ 
     final Entity entity
 	final String jmxUrl
  
@@ -34,11 +38,13 @@ public class JmxSensorAdapter {
     ScheduledFuture monitor = null
     Map<String, Sensor<?>> sensors = [:]
     Map<String, ObjectName> objects = [:]
+    Closure updateSensors = null
     
 	long connectPollPeriodMillis = 500;
     
-    public JmxSensorAdapter(Entity entity, long timeout = -1) {
+    public JmxSensorAdapter(Entity entity, long timeout = -1, Closure updateSensors = null) {
         this.entity = entity
+        this.updateSensors = updateSensors
  
         String host = entity.properties['jmxHost']
         int port = entity.properties['jmxPort']
@@ -190,9 +196,13 @@ public class JmxSensorAdapter {
     }
 
     public void updateJmxSensors() {
+        updateSensors()
         sensors.keySet() each { s ->
                 Sensor<?> sensor = sensors.get(s)   
-                String objectName = objects.get(s)   
+                String objectName = objects.get(s)
+		        def data = getAttributes(objectName)
+                log.info "data for {},{} was {}", sensor.name, objectName, data
+//                entity.updateAttribute(sensor, newValue)
 	        } 
     }
 }

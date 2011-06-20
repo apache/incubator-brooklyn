@@ -30,11 +30,11 @@ import brooklyn.util.internal.EntityStartUtils
  * @author Richard Downer <richard.downer@cloudsoftcorp.com>
  */
 public class TomcatNode extends AbstractEntity implements Startable {
-	private static final Logger logger = LoggerFactory.getLogger(TomcatNode.class)
+	private static final Logger log = LoggerFactory.getLogger(TomcatNode.class)
  
-    public static final AttributeSensor<Integer> HTTP_PORT = [ Integer, "HTTP port", "webapp.http.port"  ]
-    public static final AttributeSensor<Integer> REQUESTS_PER_SECOND = [ Integer, "webapp.reqs.persec.RequestCount", "Reqs/Sec",  ]
-
+    public static final AttributeSensor<Integer> HTTP_PORT = [ Integer, "HTTP port", "webapp.http.port" ]
+    public static final AttributeSensor<Integer> REQUESTS_PER_SECOND = [ Integer, "webapp.reqs.persec.RequestCount", "Reqs/Sec" ]
+    
     public static final AttributeSensor<Integer> ERROR_COUNT = [ Integer, "jmx.reqs.global.totals.maxTime", "Request errors" ]
     public static final AttributeSensor<Integer> MAX_PROCESSING_TIME = [ Integer, "jmx.reqs.global.totals.maxTime", "Request count" ]
     public static final AttributeSensor<Integer> REQUEST_COUNT = [ Integer, "jmx.reqs.global.totals.requestCount", "Request count" ]
@@ -72,9 +72,6 @@ public class TomcatNode extends AbstractEntity implements Startable {
 
     JmxSensorAdapter jmxAdapter;
  
-	//TODO hack reference (for shutting down), need a cleaner way -- e.g. look up in the app's executor service for this entity
-	ScheduledFuture jmxMonitoringTask;
-
     public TomcatNode(Map properties=[:]) {
         super(properties);
     }
@@ -87,7 +84,11 @@ public class TomcatNode extends AbstractEntity implements Startable {
 		log.debug "started... jmxHost is {} and jmxPort is {}", this.attributes['jmxHost'], this.attributes['jmxPort']
 		
 		if (this.properties['jmxHost'] && this.properties['jmxPort']) {
-			jmxAdapter = new JmxSensorAdapter(this, 60*1000)
+			jmxAdapter = new JmxSensorAdapter(this, 60*1000, { computeReqsPerSec() })
+//            jmxAdapter.addSensor(ERROR_COUNT, )
+//            jmxAdapter.addSensor(MAX_PROCESSING_TIME, )
+//            jmxAdapter.addSensor(REQUEST_COUNT, )
+//            jmxAdapter.addSensor(TOTAL_PROCESSING_TIME, )
             
             Futures.futureValueWhen({
         			// Wait for the HTTP port to become available
@@ -101,7 +102,8 @@ public class TomcatNode extends AbstractEntity implements Startable {
         				} catch(InstanceNotFoundException e) {
         					state = "InstanceNotFound"
         				}
-        				logger.trace "state: $state"
+                        updateAttribute(NODE_STATUS, state) 
+        				log.trace "state: $state"
         				if (state == "FAILED") {
                             updateAttribute(NODE_UP, false)
         					throw new EntityStartException("Tomcat connector for port $port is in state $state")
@@ -125,9 +127,10 @@ public class TomcatNode extends AbstractEntity implements Startable {
         }
 	}
 	
-	private int computeReqsPerSec() {
+	private void computeReqsPerSec() {
         def reqs = jmxAdapter.getChildrenAttributesWithTotal("Catalina:type=GlobalRequestProcessor,name=\"*\"")
 		reqs.put "timestamp", System.currentTimeMillis()
+        log.info "got reqs: {}", reqs
 		
         // update to explicit location in activity map, but not linked to sensor 
         // so probably shouldn't be used too widely 
@@ -144,13 +147,6 @@ public class TomcatNode extends AbstractEntity implements Startable {
 		}
 		int rps = (int) Math.round(diff)
 		log.trace "computed $rps reqs/sec over $dt millis for JMX tomcat process at $jmxHost:$jmxPort"
-		rps
-	}
-	
-	/* FIXME discard use of this method (and the registration above), in favour of approach below */
-	private void updateJmxSensors() {
-		int rps = computeReqsPerSec()
-		//is a sensor, should generate update events against subscribers
 		updateAttribute(REQUESTS_PER_SECOND, rps)
 	}
 	
@@ -177,5 +173,4 @@ public class TomcatNode extends AbstractEntity implements Startable {
 		if (jmxAdapter) jmxAdapter.disconnect()
 		if (location) shutdownInLocation(location)
 	}
-
 }

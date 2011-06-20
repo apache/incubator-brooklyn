@@ -56,10 +56,7 @@ public class LocalSubscriptionManager implements SubscriptionManager {
     public void fire(SensorEvent<?> event) {
         lock.lock();
         try {
-	        allSubscriptions.values()
-                findAll { s -> s.filter.apply(event) }
-                findAll { s -> !s.entities || s.entities.apply(event) }
-                each { s -> s.listener.onEvent(event) }
+            allSubscriptions.each { key, Subscription s -> if (s.filter.apply(event) && (!s.entities || s.entities.apply(event))) s.listener.onEvent(event) }
         } finally {
             lock.unlock();
         }
