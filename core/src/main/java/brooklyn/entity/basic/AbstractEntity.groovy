@@ -18,7 +18,6 @@ import brooklyn.event.basic.AttributeMap
 import brooklyn.location.Location
 import brooklyn.management.ManagementContext
 import brooklyn.event.adapter.PropertiesSensorAdapter
-import brooklyn.event.basic.Activity
 import brooklyn.location.Location
 import brooklyn.management.internal.LocalManagementContext
 import brooklyn.util.internal.LanguageUtils
@@ -42,18 +41,16 @@ public abstract class AbstractEntity implements Entity {
     String id = LanguageUtils.newUid();
     Map<String,Object> presentationAttributes = [:]
     String displayName;
-
+    final Collection<Group> parents = new CopyOnWriteArrayList<Group>()
+    Application application
     Collection<Location> locations = []
- 
-    // TODO ref to local mgmt context and sub mgr etc
+    
+    private transient volatile ExecutionContext execution
  
     protected final AttributeMap attributesInternal = new AttributeMap(this)
-    public final Activity activity = new Activity(this)
- 
     protected final LocalManagementContext management = LocalManagementContext.getContext()
     protected final PropertiesSensorAdapter subscriptions = new PropertiesSensorAdapter(this, properties)
 
-    /** Entity hierarchy */
     final Collection<Group> groups = new CopyOnWriteArrayList<Group>()
  
     Group owner
@@ -99,6 +96,10 @@ public abstract class AbstractEntity implements Entity {
         groups.add e
         getApplication()
     }
+ 
+	public Collection<String> getGroupIds() {
+        parents.collect { g -> g.id }
+	}
 
     /**
      * Returns the application, looking it up if not yet known (registering if necessary)
@@ -132,7 +133,7 @@ public abstract class AbstractEntity implements Entity {
 		//TODO registry? or a transient?
 		new BasicEntityClass(getClass())
     }
-    
+
     /**
      * Should be invoked at end-of-life to clean up the item.
      */
@@ -140,6 +141,34 @@ public abstract class AbstractEntity implements Entity {
 		//FIXME this doesn't exist, but we need some way of deleting stale items
         removeApplicationRegistrant()
     }
+
+    Map<String,Object> getAttributes() {
+        return attributesInternal.asMap();
+    }
+    
+	public <T> T getAttribute(Sensor<T> attribute) { attributesInternal.getValue(attribute); }
+ 
+    public <T> void updateAttribute(Sensor<T> attribute, T val) {
+        attributesInternal.update(attribute, val);
+    }
+    
+    /** @see Entity#subscribe(String String, EventListener) */
+    public <T> long subscribe(String interestedId, String sensorName, EventListener<T> listener) {
+        management.getSubscriptionManager().subscribe interestedId, this.getId(), sensorName, listener
+    }
+     
+    /** @see Entity#raiseEvent(Event) */
+    public <T> void raiseEvent(Event<T> event) {
+        management.getSubscriptionManager().fire event
+    }
+
+	protected ExecutionContext getExecutionContext() {
+		if (execution) execution;
+		synchronized (this) {
+			if (execution) execution;
+			execution = new ExecutionContext(tag: this, getApplication()?.getManagementContext().getExecutionManager())
+		}
+	}
 
     /** default toString is simplified name of class, together with selected arguments */
     @Override
@@ -157,37 +186,4 @@ public abstract class AbstractEntity implements Entity {
  
     /** override this, adding to the collection, to supply fields whose value, if not null, should be included in the toString */
     public Collection<String> toStringFieldsToInclude() { ['id', 'displayName'] }
-
-    Map<String,Object> getAttributes() {
-        return attributesInternal.asMap();
-    }
-    
-	public <T> T getAttribute(Sensor<T> attribute) { attributesInternal.getValue(attribute); }
-    public <T> void updateAttribute(Sensor<T> attribute, T val) {
-        attributesInternal.update(attribute, val);
-    }
-    
-    public Collection<String> getGroupIds() {
-        parents.collect { g -> g.id }
-    }
-    
-    /** @see Entity#subscribe(String, EventListener) */
-    public <T> void subscribe(String sensorName, EventListener<T> listener) {
-        management.getSubscriptionManager().subscribe this.getId(), sensorName, listener
-    }
-     
-    /** @see Entity#raiseEvent(Event) */
-    public <T> void raiseEvent(Event<T> event) {
-        management.getSubscriptionManager().fire event
-    }
-    
-	private transient volatile ExecutionContext execution;
-
-	protected ExecutionContext getExecutionContext() {
-		if (execution) execution;
-		synchronized (this) {
-			if (execution) execution;
-			execution = new ExecutionContext(tag: this, getApplication()?.getManagementContext().getExecutionManager())
-		}
-	} 
 }

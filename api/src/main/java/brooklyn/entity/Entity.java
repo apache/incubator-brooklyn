@@ -9,7 +9,7 @@ import brooklyn.event.Sensor;
 import brooklyn.location.Location;
 
 /**
- * The basic interface for an OverPaaS entity.
+ * The basic interface for a Brooklyn entity.
  * 
  * @see AbstractEntity
  */
@@ -29,10 +29,10 @@ public interface Entity extends Serializable {
      */
     EntityClass getEntityClass();
     
+    /*
+     * Return the {@link Application} this entity is registered with.
+     */
     Application getApplication();
-    
-    
-    //FIXME should these be here?  or is Abstract good enough?
     
     /**
      * Mutable attributes on this entity.
@@ -55,9 +55,43 @@ public interface Entity extends Serializable {
      */
     Collection<Group> getGroups();
     
+    /**
+     * Update the {@link Sensor} data for the given attribute with a new value.
+     */
     <T> void updateAttribute(Sensor<T> attribute, T val);
     
-    <T> void raiseEvent(Event<T> event);
+    /**
+     * Get the latest value of a {@link Sensor} attribute.
+     */
+    <T> T getAttribute(Sensor<T> attribute);
+
+    /**
+     * Return the {@link Collection} of {@link Group}s this entity belongs to.
+     */
+    Collection<Group> getParents();
     
+    /**
+     * Add this entity to a {@link Group} as a child of the parent entity.
+     */
+    void addParent(Group parent);
+    
+    /**
+     * Return all the {@link Location}s this entity is deployed to.
+     */
     Collection<Location> getLocations();
+    
+    /**
+     * Allow an interested entity to subscribe to data from a named {@link Sensor} on this entity.
+     * 
+     * This method should forward the request to the relevant manager, but allows the entity to keep track of sensor data
+     * that it must raise events for, thus minimising potential network traffic and congestion.
+     * 
+     * @return a subscription id which can be used to unsubscribe
+     */
+    <T> long subscribe(String interestedId, String sensorName, EventListener<T> listener);
+        
+    /**
+     * The entity should raise the supplied {@link Event} and sent it to all interested parties.
+     */
+    <T> void raiseEvent(Event<T> event);
 }

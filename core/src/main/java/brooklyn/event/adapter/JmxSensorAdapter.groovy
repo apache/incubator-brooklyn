@@ -15,7 +15,6 @@ import javax.management.remote.JMXServiceURL
 
 import brooklyn.entity.Entity
 import brooklyn.event.Sensor;
-import brooklyn.event.basic.Activity;
 import brooklyn.event.basic.AttributeSensor
 import brooklyn.management.internal.task.Futures
 
@@ -27,27 +26,26 @@ import brooklyn.management.internal.task.Futures
  *  or simply reading values and setting them in the attribute map of the activity model.
  */
 public class JmxSensorAdapter {
+    final Entity entity
 	final String jmxUrl
+ 
 	JMXConnector jmxc
 	MBeanServerConnection mbsc = null
-    ScheduledFuture jmxMonitoringTask = null
+    ScheduledFuture monitor = null
     Map<String, Sensor<?>> sensors = [:]
+    Map<String, ObjectName> objects = [:]
     
 	long connectPollPeriodMillis = 500;
     
     public JmxSensorAdapter(Entity entity, long timeout = -1) {
+        this.entity = entity
+ 
         String host = entity.properties['jmxHost']
         int port = entity.properties['jmxPort']
  
         this.jmxUrl =  "service:jmx:rmi:///jndi/rmi://"+host+":"+port+"/jmxrmi";
         
         connect(timeout)
-        
-        Futures.when
-            { 
-	            jmxMonitoringTask = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay({ updateJmxSensors() }, 1000, 1000, TimeUnit.MILLISECONDS)
-	        }
-	        { isConnected() }
     }
     
     public void addSensor(AttributeSensor sensor, String jmxName) {
@@ -72,6 +70,8 @@ public class JmxSensorAdapter {
 		JMXServiceURL url = new JMXServiceURL(jmxUrl)
 		jmxc = JMXConnectorFactory.connect(url, null);
 		mbsc = jmxc.getMBeanServerConnection();
+ 
+        monitor = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay({ updateJmxSensors() }, 1000, 1000, TimeUnit.MILLISECONDS)
 	}
  
 	/** continuously attempts to connect (blocking), for at least the indicated amount of time; or indefinitely if -1 */
@@ -180,4 +180,19 @@ public class JmxSensorAdapter {
 		r
 	}
 	
+    public <T> void addSensor(Sensor<T> sensor, String objectName) {
+        sensors.put(sensor.getName(), sensor);
+        objects.put(sensor.getName(), objectName);
+    }
+ 
+    public <T> void addSensor(Sensor<T> sensor, ObjectName objectName) {
+        addSensor(sensor, objectname.getCanonicalName())
+    }
+
+    public void updateJmxSensors() {
+        sensors.keySet() each { s ->
+                Sensor<?> sensor = sensors.get(s)   
+                String objectName = objects.get(s)   
+	        } 
+    }
 }

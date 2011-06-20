@@ -17,6 +17,7 @@ import brooklyn.event.EntityStartException
 import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.basic.AttributeSensor
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.management.internal.task.Futures;
 import brooklyn.util.internal.EntityStartUtils
 
 
@@ -34,7 +35,6 @@ public class TomcatNode extends AbstractEntity implements Startable {
     public static final AttributeSensor<Integer> ERROR_COUNT = [ "Request errors", "jmx.reqs.global.totals.errorCount", Integer ]
     public static final AttributeSensor<Integer> MAX_PROCESSING_TIME = [ "Request count", "jmx.reqs.global.totals.maxTime", Integer ]
     public static final AttributeSensor<Integer> REQUEST_COUNT = [ "Request count", "jmx.reqs.global.totals.requestCount", Integer ]
-    public static final AttributeSensor<Integer> REQUESTS_PER_SECOND = [ "Reqs/Sec", "webapp.reqs.persec.RequestCount", Integer ]
     public static final AttributeSensor<Integer> TOTAL_PROCESSING_TIME = [ "Total processing time", "jmx.reqs.global.totals.processingTime", Integer ]
 	
 //	public static final Effector START = new AbstractEffector("start", Void.TYPE, [], "starts an entity");
@@ -83,42 +83,39 @@ public class TomcatNode extends AbstractEntity implements Startable {
 		log.debug "started... jmxHost is {} and jmxPort is {}", this.attributes['jmxHost'], this.attributes['jmxPort']
 		
 		if (this.properties['jmxHost'] && this.properties['jmxPort']) {
-			jmxAdapter = new JmxSensorAdapter(this.properties.jmxHost, this.properties.jmxPort)
-			if (!(jmxAdapter.connect(60*1000))) { // TODO one minute
-				log.error "FAILED to connect JMX to {}", this
-				throw new IllegalStateException("failed to completely start $this: JMX not found at $jmxHost:$jmxPort after 60s")
-			}
-			
-			//TODO get executor from app, then die when finished; why isn't schedule working???
-			//e.g. getApplication().getExecutors().
-//			jmxMonitoringTask = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay({ updateJmxSensors() }, 1000, 1000, TimeUnit.MILLISECONDS)
-			
-			// Wait for the HTTP port to become available
-			String state = null
-			int port = getAttribute(HTTP_PORT)
-			for(int attempts = 0; attempts < 30; attempts++) {
-				Map connectorAttrs;
-				try {
-					connectorAttrs = jmxAdapter.getAttributes("Catalina:type=Connector,port=$port")
-					state = connectorAttrs['stateName']
-				} catch(InstanceNotFoundException e) {
-					state = "InstanceNotFound"
-				}
-				logger.trace "state: $state"
-				if (state == "FAILED") {
-                    updateAttribute(NODE_UP, false)
-					throw new EntityStartException("Tomcat connector for port $port is in state $state")
-				} else if (state == "STARTED") {
-                    updateAttribute(NODE_UP, true)
-					break;
-				}
-				Thread.sleep 250
-			}
-			if(state != "STARTED") {
-                updateAttribute(NODE_UP, false)
-				throw new EntityStartException("Tomcat connector for port $port is in state $state after 30 seconds")
-            }
+			jmxAdapter = new JmxSensorAdapter(this, 60*1000)
+            
+            Futures.when
+                {
+        			// Wait for the HTTP port to become available
+        			String state = null
+        			int port = getAttribute(HTTP_PORT)
+        			for(int attempts = 0; attempts < 30; attempts++) {
+        				Map connectorAttrs;
+        				try {
+        					connectorAttrs = jmxAdapter.getAttributes("Catalina:type=Connector,port=$port")
+        					state = connectorAttrs['stateName']
+        				} catch(InstanceNotFoundException e) {
+        					state = "InstanceNotFound"
+        				}
+        				logger.trace "state: $state"
+        				if (state == "FAILED") {
+                            updateAttribute(NODE_UP, false)
+        					throw new EntityStartException("Tomcat connector for port $port is in state $state")
+        				} else if (state == "STARTED") {
+                            updateAttribute(NODE_UP, true)
+        					break;
+        				}
+        				Thread.sleep 250
+        			}
+        			if (state != "STARTED") {
+                        updateAttribute(NODE_UP, false)
+        				throw new EntityStartException("Tomcat connector for port $port is in state $state after 30 seconds")
+                    }
+                }
+                { jmxAdapter.isConnected() }
 		}
+ 
         if (this.war) {
             log.debug "Deploying {} to {}", this.war, this.location
             this.deploy(this.war, this.location)
