@@ -3,6 +3,9 @@ package brooklyn.util.task;
 import java.util.concurrent.Callable
 import java.util.concurrent.Executor
 
+import brooklyn.management.ExecutionManager
+import brooklyn.management.Task
+
 /** a means of executing tasks against an ExecutionManager with a given bucket/set of tags pre-defined
  * (so that it can look like an {@link Executor} and also supply {@link ExecutorService#submit(Callable)} */
 public class ExecutionContext implements Executor {

@@ -1,7 +1,8 @@
 package brooklyn.util.task;
 
 import java.util.concurrent.Callable
-import java.util.concurrent.Executor
+
+import brooklyn.management.Task
 
 
 class SequentialTask extends CompoundTask {

@@ -3,8 +3,6 @@ package brooklyn.entity.trait;
 import java.util.List;
 import java.util.concurrent.Future;
 
-import brooklyn.util.task.Task;
-
 public interface Resizable<T> {
 	
     /**

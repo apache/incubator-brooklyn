@@ -38,4 +38,6 @@ public interface ManagementContext {
 
     
 //    Execution
+    public ExecutionManager getExecutionManager();
+	
 }

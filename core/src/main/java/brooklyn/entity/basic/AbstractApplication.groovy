@@ -11,8 +11,7 @@ import brooklyn.entity.Entity
 import brooklyn.management.ManagementContext
 import brooklyn.management.internal.AbstractManagementContext
 import brooklyn.management.internal.LocalManagementContext
-import brooklyn.util.internal.EntityStartUtils
-import brooklyn.util.internal.SerializableObservableMap
+import brooklyn.util.internal.SerializableObservableMap;
 
 public abstract class AbstractApplication extends AbstractGroup implements Application {
     public AbstractApplication(Map properties=[:]) {

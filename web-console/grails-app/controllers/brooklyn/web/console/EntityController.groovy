@@ -5,7 +5,7 @@ import grails.converters.JSON
 import brooklyn.entity.basic.BasicEntitySummary
 import brooklyn.entity.Entity
 import brooklyn.entity.EntitySummary
-import brooklyn.management.ManagementContext
+import brooklyn.management.*
 
 class EntityController {
 
@@ -49,6 +49,9 @@ class EntityController {
         EntitySummary getHackyEntitySummary(String id, displayName, ArrayList<String> groups) {
             return new BasicEntitySummary(id, displayName, "app1", groups);
         }
+
+	public ExecutionManager getExecutionManager() { throw new UnsupportedOperationException(); }
+
     }
 
     ManagementContext context = new TestManagementApi();

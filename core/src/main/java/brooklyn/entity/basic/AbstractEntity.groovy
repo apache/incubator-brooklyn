@@ -14,10 +14,11 @@ import brooklyn.entity.Group
 import brooklyn.event.Event
 import brooklyn.event.EventListener
 import brooklyn.event.Sensor
-import brooklyn.management.ManagementContext;
 import brooklyn.event.basic.AttributeMap
 import brooklyn.location.Location
+import brooklyn.management.ManagementContext
 import brooklyn.util.internal.LanguageUtils
+import brooklyn.util.task.ExecutionContext
 
 /**
  * Default {@link Entity} definition.
@@ -171,4 +172,13 @@ public abstract class AbstractEntity implements Entity {
     public <T> void raiseEvent(Event<T> event) {
         // TODO complete
     }
+	
+	private transient volatile ExecutionContext execution;
+	protected ExecutionContext getExecutionContext() {
+		if (execution) execution;
+		synchronized (this) {
+			if (execution) execution;
+			execution = new ExecutionContext(tag: this, getApplication()?.getManagementContext().getExecutionManager())
+		}
+	} 
 }

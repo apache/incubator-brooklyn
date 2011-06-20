@@ -1,12 +1,10 @@
 package brooklyn.event.basic;
 
-import groovy.transform.InheritConstructors
+import brooklyn.event.Sensor
 
 import com.google.common.base.Splitter
 import com.google.common.base.Throwables
-import com.google.common.collect.Lists;
-
-import brooklyn.event.Sensor
+import com.google.common.collect.Lists
 
 /**
  * Abstract parent class for all {@link Sensor} types.
