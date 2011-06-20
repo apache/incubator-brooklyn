@@ -123,9 +123,23 @@
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>2.3.2</version>
                     <configuration>
+                        <compilerId>groovy-eclipse-compiler</compilerId>
+                        <verbose>false</verbose>
                         <source>1.6</source>
                         <target>1.6</target>
                     </configuration>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.codehaus.groovy</groupId>
+                            <artifactId>groovy-eclipse-compiler</artifactId>
+                            <version>2.5.1-M3</version>
+                        </dependency>
+                        <dependency>
+                            <groupId>org.codehaus.groovy</groupId>
+                            <artifactId>groovy-eclipse-batch</artifactId>
+                            <version>1.8.0-03</version>
+                        </dependency>
+                    </dependencies>
                 </plugin>
                 <plugin>
                     <artifactId>maven-jar-plugin</artifactId>
@@ -146,6 +160,7 @@
                         <author>true</author>
                     </configuration>
                 </plugin>
+                <!--
                 <plugin>
                     <groupId>org.codehaus.gmaven</groupId>
                     <artifactId>gmaven-plugin</artifactId>
@@ -207,6 +222,7 @@
                         </dependency>
                     </dependencies>
                 </plugin>
+                -->
                 <plugin>
                     <groupId>org.apache.felix</groupId>
                     <artifactId>maven-bundle-plugin</artifactId>
@@ -247,13 +263,21 @@
                         </execution>
                     </executions>
                 </plugin>
-
-                <!--This plugin's configuration is used to store Eclipse m2e settings
-                        only. It has no influence on the Maven build itself. -->
                 <plugin>
-                   	<groupId>org.eclipse.m2e</groupId>
-					<artifactId>lifecycle-mapping</artifactId>
-				    <version>1.0.0</version>
+                    <artifactId>maven-eclipse-plugin</artifactId>
+                    <version>2.8</version>
+                    <configuration>
+                        <additionalProjectnatures>
+                            <projectnature>org.eclipse.jdt.groovy.core.groovyNature</projectnature>
+                        </additionalProjectnatures>
+                    </configuration>
+                </plugin>
+                <!--This plugin's configuration is used to store Eclipse m2e settings
+      only. It has no influence on the Maven build itself. -->
+                <plugin>
+                    <groupId>org.eclipse.m2e</groupId>
+                    <artifactId>lifecycle-mapping</artifactId>
+                    <version>1.0.0</version>
                     <configuration>
                         <lifecycleMappingMetadata>
                             <pluginExecutions>
@@ -270,6 +294,7 @@
                                         <ignore/>
                                     </action>
                                 </pluginExecution>
+                                <!--
                                 <pluginExecution>
                                     <pluginExecutionFilter>
                                         <groupId>org.codehaus.gmaven</groupId>
@@ -286,6 +311,7 @@
                                         <ignore/>
                                     </action>
                                 </pluginExecution>
+                                -->
                             </pluginExecutions>
                         </lifecycleMappingMetadata>
                     </configuration>
@@ -451,33 +477,33 @@
                                 </goals>
                                 <phase>process-test-classes</phase>
                                 <configuration>
-                                    	<target>
-										<taskdef resource="net/sf/antcontrib/antcontrib.properties"
-											classpathref="maven.plugin.classpath" />
-										<taskdef resource="tasks.properties" classpathref="maven.plugin.classpath" />
-										<if>
-											<available property="gogocobertura" file="target/test-classes" />
-											<then>
-												<echo message="INSTRUMENTING CLASSES FOR COBERTURA" />
-												<!-- Ensure any and all bits of our project are copied in first -->
-												<copy todir="target/cobertura/coverage-classes">
-													<fileset erroronmissingdir="false" dir="target/classes" />
-												</copy>
-												<cobertura-instrument datafile="target/cobertura/cobertura.ser"
-													todir="target/cobertura/coverage-classes">
-													<fileset erroronmissingdir="false" dir="target/classes">
-														<include name="org/overpaas/**/*.class" />
-														<exclude name="org/overpaas/**/*Test.class" />
-													</fileset>
-													<fileset erroronmissingdir="false"
-														dir="target/cobertura/dependency-classes">
-														<include name="org/overpaas/**/*.class" />
-														<exclude name="org/overpaas/**/*Test.class" />
-													</fileset>
-												</cobertura-instrument>
-											</then>
-										</if>
-									</target>
+                                    <target>
+                                        <taskdef resource="net/sf/antcontrib/antcontrib.properties"
+                                                 classpathref="maven.plugin.classpath"/>
+                                        <taskdef resource="tasks.properties" classpathref="maven.plugin.classpath"/>
+                                        <if>
+                                            <available property="gogocobertura" file="target/test-classes"/>
+                                            <then>
+                                                <echo message="INSTRUMENTING CLASSES FOR COBERTURA"/>
+                                                <!-- Ensure any and all bits of our project are copied in first -->
+                                                <copy todir="target/cobertura/coverage-classes">
+                                                    <fileset erroronmissingdir="false" dir="target/classes"/>
+                                                </copy>
+                                                <cobertura-instrument datafile="target/cobertura/cobertura.ser"
+                                                                      todir="target/cobertura/coverage-classes">
+                                                    <fileset erroronmissingdir="false" dir="target/classes">
+                                                        <include name="org/overpaas/**/*.class"/>
+                                                        <exclude name="org/overpaas/**/*Test.class"/>
+                                                    </fileset>
+                                                    <fileset erroronmissingdir="false"
+                                                             dir="target/cobertura/dependency-classes">
+                                                        <include name="org/overpaas/**/*.class"/>
+                                                        <exclude name="org/overpaas/**/*Test.class"/>
+                                                    </fileset>
+                                                </cobertura-instrument>
+                                            </then>
+                                        </if>
+                                    </target>
                                 </configuration>
                             </execution>
                             <execution>
