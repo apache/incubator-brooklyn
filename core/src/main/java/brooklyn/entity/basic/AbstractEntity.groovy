@@ -60,6 +60,7 @@ public abstract class AbstractEntity implements Entity {
             if (parents.find { parent -> v = parent.attributes[name] }) return v;
         }
         log.debug "no property or attribute $name on $this"
+		if (name=="activity") log.warn "reference to removed field 'activity' on entity $this", new Throwable("location of failed reference to 'activity' on $this")
     }
 	
     /** Entity hierarchy */

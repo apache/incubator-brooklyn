@@ -172,9 +172,12 @@ class TomcatNodeTest {
             parent: new TestApplication(), 
             location:new SshMachineLocation(name:'london', host:'localhost') 
         ]
-        tc.start()
-        assertTrue tc.activity.getValue(TomcatNode.NODE_UP)
-        tc.shutdown()
+		try {
+			tc.start()
+			assertTrue tc.getAttribute(TomcatNode.NODE_UP)
+		} finally {
+        	tc.shutdown()
+		}
     }
     
 	@Test
@@ -184,18 +187,18 @@ class TomcatNodeTest {
 		TomcatNode tc = new TomcatNode(parent: app);
 		tc.start(location: new SshMachineLocation(name:'london', host:'localhost'))
 		executeUntilSucceedsWithShutdown(tc, {
-				def activityValue = tc.activity.getValue(TomcatNode.REQUESTS_PER_SECOND)
+				def activityValue = tc.getAttribute(TomcatNode.REQUESTS_PER_SECOND)
 				assertEquals Integer, activityValue.class
 				if (activityValue==-1) return new BooleanWithMessage(false, "activity not set yet (-1)")
 				
 				assertEquals 0, activityValue
 				
-				def port = tc.activity.getValue(TomcatNode.HTTP_PORT)
+				def port = tc.getAttribute(TomcatNode.HTTP_PORT)
                 def connection = connectToURL "http://localhost:${port}/foo"
 				assertEquals "Apache-Coyote/1.1", connection.getHeaderField("Server")
 
 				Thread.sleep 1000
-				activityValue = tc.activity.getValue(TomcatNode.REQUESTS_PER_SECOND)
+				activityValue = tc.getAttribute(TomcatNode.REQUESTS_PER_SECOND)
 				assertEquals 1, activityValue
 				true
 			}, timeout: 10*SECONDS, useGroovyTruth: true)
@@ -208,11 +211,11 @@ class TomcatNodeTest {
         TomcatNode tc = new TomcatNode(parent: app);
         tc.start(location: new SshMachineLocation(name:'london', host:'localhost'))
         executeUntilSucceedsWithShutdown(tc, {
-            def port = tc.activity.getValue(TomcatNode.HTTP_PORT)
+            def port = tc.getAttribute(TomcatNode.HTTP_PORT)
             // Connect to non-existent URL n times
             def n = 5
             def connection = n.times { connectToURL("http://localhost:${port}/does_not_exist") }
-            int errorCount = tc.activity.getValue(TomcatNode.ERROR_COUNT)
+            int errorCount = tc.getAttribute(TomcatNode.ERROR_COUNT)
             logger.info "$errorCount errors in total"
             
             // TODO firm up assertions.  confused by the values returned (generally n*2?)
@@ -233,7 +236,7 @@ class TomcatNodeTest {
 
 		tc.start(location: new SshMachineLocation(name:'london', host:'localhost'))
 		executeUntilSucceedsWithShutdown(tc, {
-            def port = tc.activity.getValue(TomcatNode.HTTP_PORT)
+            def port = tc.getAttribute(TomcatNode.HTTP_PORT)
             def url  = "http://localhost:${port}/hello-world"
             def connection = connectToURL(url)
             int status = ((HttpURLConnection)connection).getResponseCode()
@@ -263,7 +266,7 @@ class TomcatNodeTest {
 				tc.shutdown()
 			}
 			assertNotNull caught
-			assertFalse tc.activity.getValue(TomcatNode.NODE_UP)
+			assertFalse tc.getAttribute(TomcatNode.NODE_UP)
 			logger.debug "The exception that was thrown was:", caught
 		} finally {
 			listener.close();

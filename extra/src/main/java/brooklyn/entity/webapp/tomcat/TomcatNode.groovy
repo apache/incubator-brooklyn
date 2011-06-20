@@ -51,14 +51,14 @@ public class TomcatNode extends AbstractEntity implements Startable {
 		TomcatNode.metaClass.startInLocation = { SshMachineLocation loc ->
 			def setup = new Tomcat7SshSetup(delegate)
 			//pass http port to setup, if one was specified on this object
-			if (properties.httpPort) setup.httpPort = properties.httpPort
+			if (attributes.httpPort) setup.httpPort = attributes.httpPort
 			setup.start loc
 			// TODO: remove the 3s sleep and find a better way to detect an early death of the Tomcat process
 			log.debug "waiting to ensure $delegate doesn't abort prematurely"
 			Thread.sleep 3000
 			def isRunningResult = setup.isRunning(loc)
 			if (!isRunningResult) throw new IllegalStateException("$delegate aborted soon after startup")
-			activity.update HTTP_PORT, setup.httpPort
+			updateAttribute HTTP_PORT, setup.httpPort
 		}
 		TomcatNode.metaClass.shutdownInLocation = { SshMachineLocation loc -> new Tomcat7SshSetup(delegate).shutdown loc }
         TomcatNode.metaClass.deploy = { String file, SshMachineLocation loc -> 
