@@ -154,23 +154,20 @@ class TomcatNodeTest {
 	}
 
 	@Test
-	public void detect_early_death_of_tomcat_process() {
-		TomcatNode tc1, tc2;
-		try {
-			Application app = new TestApplication(httpPort: DEFAULT_HTTP_PORT);
-			tc1 = new TomcatNode(parent: app);
-			tc2 = new TomcatNode(parent: app);
-			tc1.start(location: new SimulatedLocation())
-			try {
-				tc2.start(location: new SimulatedLocation())
-				fail "should have detected that $tc2 didn't start since tomcat was already running"
-			} catch (Exception e) {
-				logger.debug "successfully detected failure of {} to start: {}", tc2, e.toString()
-			}
-		} finally {
-			if (tc1) tc1.shutdown();
-			if (tc2) tc2.shutdown();
-		}
+	public void detectEarlyDeathOfTomcatProcess() {
+        Application app = new TestApplication(httpPort: DEFAULT_HTTP_PORT);
+        TomcatNode tc1 = new TomcatNode(parent: app);
+        TomcatNode tc2 = new TomcatNode(parent: app);
+        tc1.start(location: new SimulatedLocation())
+        try {
+            tc2.start(location: new SimulatedLocation())
+            tc2.shutdown()
+            fail "should have detected that $tc2 didn't start since tomcat was already running"
+        } catch (Exception e) {
+            logger.debug "successfully detected failure of {} to start: {}", tc2, e.toString()
+        } finally {
+            tc1.shutdown()
+        }
 	}
 }
  
