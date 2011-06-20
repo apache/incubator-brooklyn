@@ -5,7 +5,6 @@ import java.util.Set
 
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
-import brooklyn.entity.EntitySummary
 import brooklyn.management.ExecutionManager
 import brooklyn.util.task.BasicExecutionManager
 import brooklyn.util.task.ExecutionContext
@@ -20,24 +19,10 @@ public class LocalManagementContext extends AbstractManagementContext {
 	}
 	
 	@Override
-	public Collection<EntitySummary> getApplicationSummaries() {
-		apps.collect { it.getImmutableSummary() }
+	public Collection<Application> getApplications() {
+		return apps
 	}
 	
-	@Override
-	public Collection<EntitySummary> getEntitySummariesInApplication(String id) {
-		// TODO Auto-generated method stub
-		
-		// FIXME are these really needed? if we can get children of an entity, and other entities contained by an entity...
-		
-		return null;
-	}
-	@Override
-	public Collection<EntitySummary> getAllEntitySummaries() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 	@Override
 	public Entity getEntity(String id) {
 		// TODO Auto-generated method stub

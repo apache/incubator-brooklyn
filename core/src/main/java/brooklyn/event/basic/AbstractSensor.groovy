@@ -7,7 +7,7 @@ import com.google.common.base.Throwables
 import com.google.common.collect.Lists
 
 /**
- * Abstract parent class for all {@link Sensor} types.
+ * Abstract super class for all {@link Sensor} types.
  */
 public abstract class AbstractSensor<T> implements Sensor<T> {
     private static final long serialVersionUID = -3762018534086101323L;

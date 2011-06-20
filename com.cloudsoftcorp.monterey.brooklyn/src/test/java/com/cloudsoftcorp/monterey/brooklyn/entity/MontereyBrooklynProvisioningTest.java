@@ -1,9 +1,15 @@
 package com.cloudsoftcorp.monterey.brooklyn.entity;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -38,7 +44,11 @@ import com.cloudsoftcorp.monterey.network.control.wipapi.NodesRolloutConfigurati
 import com.cloudsoftcorp.monterey.network.deployment.MontereyApplicationDescriptor;
 import com.cloudsoftcorp.monterey.network.deployment.MontereyDeploymentDescriptor;
 import com.cloudsoftcorp.monterey.node.api.NodeId;
-import com.cloudsoftcorp.util.exception.WorkInProgressException;
+import com.cloudsoftcorp.util.Loggers;
+import com.cloudsoftcorp.util.TimeUtils;
+import com.cloudsoftcorp.util.condition.Conditions.ConditionWithMessage;
+import com.cloudsoftcorp.util.exception.ExceptionUtils;
+import com.cloudsoftcorp.util.exception.RuntimeInterruptedException;
 import com.cloudsoftcorp.util.javalang.ClassLoadingContext;
 import com.cloudsoftcorp.util.osgi.BundleSet;
 import com.cloudsoftcorp.util.web.client.CredentialsConfig;
@@ -46,6 +56,8 @@ import com.google.gson.Gson;
 
 public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringTestFixture {
 
+    private static final Logger LOG = Loggers.getLogger(MontereyBrooklynProvisioningTest.class);
+    
     private static final String SIMULATOR_LOCATIONS_CONF_PATH = "/locations-simulator.conf";
 
     private static final long TIMEOUT = 30*1000;
@@ -89,7 +101,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
     }
 
     @Test
-    public void testRolloutNodesCreatesBrooklynEntities() throws Exception {
+    public void testRolloutNodesCreatesBrooklynEntities() throws Throwable {
         montereyNetwork.startOnHost(localhost);
         montereyNetwork.deployCloudEnvironment(newSimulatorCloudEnvironment());
         montereyNetwork.deployApplication(newEmptyMontreyDeploymentDescriptor(), BundleSet.EMPTY);
@@ -158,8 +170,68 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         Assert.assertTrue(deploymentWebProxy.isApplicationUndeployable());
     }
     
-    private void assertBrooklynEventuallyHasNodes(Map<NodeId,NodeSummary> expected) {
-        Collection<MontereyContainerNode> actual = montereyNetwork.getNodes();
-        throw new WorkInProgressException();
+    private void assertBrooklynEventuallyHasNodes(final Map<NodeId,NodeSummary> expected) throws Throwable {
+        assertSuccessWithin(new Callable<Object>() {
+            public Object call() throws Exception {
+                Map<NodeId, MontereyContainerNode> actual = montereyNetwork.getNodes();
+                Assert.assertEquals(expected.keySet(), actual.keySet());
+                for (Map.Entry<NodeId,NodeSummary> e : expected.entrySet()) {
+                    NodeSummary expectedNodeSummary = e.getValue();
+                    MontereyContainerNode actualContainerNode = actual.get(e.getKey());
+                    
+                    Assert.assertEquals(expectedNodeSummary.getNodeId(), actualContainerNode.getNodeId());
+                    
+                    Collection<AbstractMontereyNode> montereyNetworkNodes = actualContainerNode.getContainedMontereyNodes();
+                    Assert.assertEquals(1, montereyNetworkNodes.size());
+                    AbstractMontereyNode montereyNetworkNode = montereyNetworkNodes.iterator().next();
+                    
+                    Assert.assertEquals(expectedNodeSummary.getType(), montereyNetworkNode.getNodeType());
+                }
+                return null;
+            }}, TIMEOUT);
+    }
+    
+    private <T> T assertSuccessWithin(final Callable<T> callable, final long timeout) throws Throwable {
+        final AtomicReference<T> result = new AtomicReference<T>();
+        final AtomicReference<Throwable> lastError = new AtomicReference<Throwable>();
+        final AtomicInteger count = new AtomicInteger();
+        try {
+            boolean success = waitUtils.waitFor(timeout, new ConditionWithMessage() {
+                public Boolean evaluate() {
+                    try {
+                        try {
+                            result.set(callable.call());
+                            return true;
+                        } catch (InvocationTargetException e) {
+                            throw e.getCause();
+                        }
+                    } catch (RuntimeInterruptedException e) {
+                        lastError.set(e);
+                        throw e;
+                    } catch (Throwable t) {
+                        lastError.set(t);
+                        count.incrementAndGet();
+                        if (LOG.isLoggable(Level.FINER)) LOG.log(Level.FINER, "Waiting "+TimeUtils.makeTimeString(timeout)+" for "+m.getName()+"; failed "+count+" times", t);
+                        return false;
+                    }
+                }
+                public String getMessage() {
+                    Object val = result.get();
+                    return callable+(val!=null ? "->"+val : "");
+                }
+            });
+        
+            if (!success) {
+                if (lastError.get() != null) {
+                    Throwable unwrapped = ExceptionUtils.unwrapThrowable(lastError.get());
+                    throw new RuntimeException("Condition not be satisfied within"+TimeUtils.makeTimeString(timeout)+": "+unwrapped, unwrapped);
+                } else {
+                    Assert.fail("Did not return within "+TimeUtils.makeTimeString(timeout));
+                }
+            }
+            return result.get();
+        } catch (InterruptedException e) {
+            throw ExceptionUtils.throwRuntime(e);
+        }
     }
 }

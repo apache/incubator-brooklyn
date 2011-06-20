@@ -28,8 +28,8 @@ public class JBossNode extends AbstractEntity implements Startable {
 	//TODO hack reference (for shutting down), need a cleaner way -- e.g. look up in the app's executor service for this entity
 	ScheduledFuture jmxMonitoringTask;
 
-    public void start(Map properties=[:], Group parent=null, Location loc=null) {
-        EntityStartUtils.startEntity(properties, this, parent, loc);
+    public void start(Map properties=[:], Group owner=null, Location loc=null) {
+        EntityStartUtils.startEntity(properties, this, owner, loc);
 		log.debug "started... jmxHost is {} and jmxPort is {}", this.attributes['jmxHost'], this.attributes['jmxPort']
         
         if (this.attributes['jmxHost'] && this.attributes['jmxPort']) {
