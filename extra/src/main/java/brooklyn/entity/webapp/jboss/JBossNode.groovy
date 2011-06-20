@@ -30,10 +30,10 @@ public class JBossNode extends AbstractEntity implements Startable {
 
     public void start(Map properties=[:], Group parent=null, Location loc=null) {
         EntityStartUtils.startEntity(properties, this, parent, loc);
-		log.debug "started... jmxHost is {} and jmxPort is {}", this.properties['jmxHost'], this.properties['jmxPort']
+		log.debug "started... jmxHost is {} and jmxPort is {}", this.attributes['jmxHost'], this.attributes['jmxPort']
         
-        if (this.properties['jmxHost'] && this.properties['jmxPort']) {
-            jmxAdapter = new JmxSensorAdapter(this.properties.jmxHost, this.properties.jmxPort)
+        if (this.attributes['jmxHost'] && this.attributes['jmxPort']) {
+            jmxAdapter = new JmxSensorAdapter(this.jmxHost, this.jmxPort)
             if (!(jmxAdapter.connect(2*60*1000))) {
 				log.error "FAILED to connect JMX to {}", this
                 throw new IllegalStateException("failed to completely start $this: JMX not found at $jmxHost:$jmxPort after 60s")
@@ -64,7 +64,7 @@ public class JBossNode extends AbstractEntity implements Startable {
 //        attributes['jmx.reqs.global'] = diff
         
         //is a sensor, should generate update events against subscribers
-        activity.update(REQUESTS_PER_SECOND, diff)
+        updateAttribute(REQUESTS_PER_SECOND, diff)
         diff
     }
 
