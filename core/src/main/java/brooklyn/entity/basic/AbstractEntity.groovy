@@ -171,13 +171,9 @@ public abstract class AbstractEntity implements Entity {
         parents.collect { g -> g.id }
     }
     
-    // TODO implement private methods
-    //private void subscribe(Predicate<Sensor> filter, EventListener listener) { }
-    //private void subscribe(Predicate<Entity> entities, Predicate<Sensor> filter, EventListener listener) { }
-    
-    /** @see Entity#subscribe(String, String, EventListener) */
-    public <T> void subscribe(String entityId, String sensorName, EventListener<T> listener) {
-        management.getSubscriptionManager().subscribe(entityId, sensorName, listener)
+    /** @see Entity#subscribe(String, EventListener) */
+    public <T> void subscribe(String sensorName, EventListener<T> listener) {
+        management.getSubscriptionManager().subscribe this.getId(), sensorName, listener
     }
      
     /** @see Entity#raiseEvent(Event) */
@@ -185,23 +181,8 @@ public abstract class AbstractEntity implements Entity {
         management.getSubscriptionManager().fire event
     }
     
-    /*
-
-    void subscribe(Predicate<SensorEvent<T>> filter, EventListener listener) {
-        subscribe(Predicate<SensorEvent<T>>s.entityId(id), filter, listener)
-    }
-
-    void subscribe(Predicate<Entity> entities, Predicate<SensorEvent<T>> filter, EventListener listener) {
-        application?.subscriptions.addSubscription entities, filter, listener
-    }
-
-    void raiseEvent(SensorEvent<?> event) {
-        log.info "raising event {} on entity id {}", event, id
-        application?.subscriptions.fire event
-    }
-     */
-	
 	private transient volatile ExecutionContext execution;
+
 	protected ExecutionContext getExecutionContext() {
 		if (execution) execution;
 		synchronized (this) {

@@ -1,31 +1,38 @@
 package brooklyn.management.internal;
 
-import com.google.common.base.Predicate;
-
 import brooklyn.entity.Entity;
 import brooklyn.entity.EntitySummary;
 import brooklyn.event.EventListener;
 import brooklyn.event.Sensor;
-import brooklyn.event.basic.SensorEvent;
 
 public interface SubscriptionManager {
     /**
      * Subscribe to {@link Sensor} data changes and events on a given {@link Entity}, calling the {@link EventListener} when they occur.
      * 
-     * @param entity The id of the entity
-     * @param sensor The name of the sensor 
+     * The method returns an id which can be used to {@link #unsubscribe(long)} later.
+     * 
+     * @param interestedId The id of the entity receiving the data
+     * @param sourceId The id of the entity sending the data
+     * @param sensorName The name of the sensor  on the entity
      * @param listener The listener to call when an event occurs
+     * @return an id for this subscription
+     * 
      * @see #subscribe(EntitySummary, Sensor, EventListener)
+     * @see #unsubscribe(long)
      */
-    void subscribe(String entityId, String sensorName, EventListener listener);
+    <T> long subscribe(String interestedId, String sourceId, String sensorName, EventListener<T> listener);
     
     /**
-     * @see #subscribe(String, String, EventListener)
+     * @see #subscribe(String, String, String, EventListener)
+     * @see #unsubscribe(long)
      */
-    void subscribe(EntitySummary entity, Sensor sensor, EventListener listener);
- 
-    void fire(SensorEvent<?> event);
- 
-//    void subscribe(Predicate<SensorEvent> filter, EventListener listener);
-//    void subscribe(Predicate<Entity> entities, Predicate<SensorEvent> filter, EventListener listener);
+    <T> long subscribe(EntitySummary interestedEntity, EntitySummary sourceEntity, Sensor<T> sensor, EventListener<T> listener);
+    
+    /**
+     * Unsubscribe the given subscription id.
+     * 
+     * @see #subscribe(EntitySummary, Sensor, EventListener)
+     * @see #subscribe(String, String, String, EventListener)
+     */
+    void unsubscribe(long subscriptionId);
 }

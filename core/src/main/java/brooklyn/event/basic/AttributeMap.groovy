@@ -74,8 +74,4 @@ public class AttributeMap {
 		else
 			return child
 	}
-    
-    public void 
-
-    // TODO add the jmx and properties adapters to Activity
 }

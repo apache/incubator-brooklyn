@@ -17,80 +17,67 @@ public abstract class AbstractSensor<T> implements Sensor<T> {
     
     private static final Splitter dots = Splitter.on('.');
 
-	//TODO Alex suggests:  make these public final (groovy automatically invokes getter if there is one for a field anyway, unless you use @ operator, e.g. otherObj.@field) 
-    private String description;
-    private String name;
-	//TODO Alex strongly suggests: make it a Class. java API nicer that way. use custom serialisers rather than corrupt the internal type
-	//or if you must, make it transient, and have non-transient String typeName, and getType will check for type being null...
-    private String type;
+    public transient final Class<T> type;
+    public final String typeName;
+    public final String name;
+    public final String description;
 
     public AbstractSensor() { /* for gson */ }
 
-    public AbstractSensor(String description=name, String name, Class<T> type) {
-        this.description = description;
-        this.name = name;
-        this.type = type.getName();
-    }
-
-	//TODO remove getters which groovy gives for free?
-    /** @see Sensor#getDescription() */
-    public String getDescription() {
-        return description;
-    }
-
-    /** @see Sensor#getName() */
-    public String getName() {
-        return name;
-    }
-
-    /** @see Sensor#getNameParts() */
-    public List<String> getNameParts() {
-        return Lists.newArrayList(dots.split(name));
+	/** name is typically a dot-separated identifier; description is optional */
+	public AbstractSensor(Class<T> type, String name, String description=name) {
+		this.type = type;
+		this.typeName = type.getName();
+		this.name = name;
+		this.description = description;
     }
 
     /** @see Sensor#getType() */
-    public String getType() {
-        return type;
-    }
-
-	//TODO Alex suggests: remove this, it is confusing in light of 'type' (and EntityClass)
-	//if/when we need it we'll consider (with a better understanding) whether this internal class hierarchy 
-	//is really the best way to expose, or whether we want an enum, explicit SensorType class with static values, etc...
-    /** @see Sensor#getSensorClass() */
-    public Class<T> getSensorClass() {
+    public Class<T> getType() {
         try {
-            return (Class<T>) Class.forName(type);
+            return type ?: (Class<T>) Class.forName(typeName);
         } catch (ClassNotFoundException e) {
             throw Throwables.propagate(e);
         }
     }
+ 
+    /** @see Sensor#getTypeName() */
+    public String getTypeName() { return typeName }
+ 
+    /** @see Sensor#getName() */
+    public String getName() { return name }
+ 
+    /** @see Sensor#getNameParts() */
+    public List<String> getNameParts() {
+        return Lists.newArrayList(dots.split(name));
+    }
+ 
+    /** @see Sensor#getDescription() */
+    public String getDescription() { return description }
 }
 
+/**
+ * A {@link Sensor} describing an attribute change.
+ */
 public class AttributeSensor<T> extends AbstractSensor<T> {
     private static final long serialVersionUID = -7670909215973264600L;
 
     public AttributeSensor() { /* for gson */ }
 
-    public AttributeSensor(String name, Class<T> type) {
-        super(name, name, type);
-    }
-
-    public AttributeSensor(String description, String name, Class<T> type) {
-        super(name, name, type);
+	public AttributeSensor(Class<T> type, String name, String description=name) {
+        super(type, name, description);
     }
 }
 
+/**
+ * A {@link Sensor} describing a log message or exceptional condition.
+ */
 public class LogSensor<T> extends AbstractSensor<T> {
     private static final long serialVersionUID = 4713993465669948212L;
 
     public LogSensor() { /* for gson */ }
 
-
-    public LogSensor(String name, Class<T> type) {
-        super(name, name, type);
-    }
-
-    public LogSensor(String description, String name, Class<T> type) {
-        super(name, name, type);
+    public LogSensor(Class<T> type, String name, String description=name) {
+        super(type, name, description);
     }
 }

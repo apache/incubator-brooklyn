@@ -3,7 +3,6 @@ package brooklyn.event;
 import java.io.Serializable;
 import java.util.List;
 
- 
 /**
  * The interface implemented by concrete sensors.
  * 
@@ -14,9 +13,14 @@ import java.util.List;
  */
 public interface Sensor<T> extends Serializable {
     /**
-     * Returns the description of the sensor, for display.
+     * Returns the Java {@link Class} for the sensor data.
      */
-    public String getDescription();
+    public Class<T> getType();
+ 
+    /**
+     * Returns the type of the sensor data, as a {@link String} representation of the class name.
+     */
+    public String getTypeName();
  
     /**
      * Returns the name of the sensor, in a dot-separated namespace.
@@ -24,17 +28,12 @@ public interface Sensor<T> extends Serializable {
     public String getName();
  
     /**
-     * Returns the constitient parts of the sensor name as a {@link Collection}.
+     * Returns the constitient parts of the sensor name as a {@link List}.
      */
     public List<String> getNameParts();
  
     /**
-     * Returns the type of the sensor data, as a {@link String} representation of the class name.
+     * Returns the description of the sensor, for display.
      */
-    public String getType();
- 
-    /**
-     * Returns the Java {@link Class} for the sensor data.
-     */
-    public Class<T> getSensorClass();
+    public String getDescription();
 }

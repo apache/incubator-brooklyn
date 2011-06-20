@@ -57,11 +57,6 @@ public interface Entity extends Serializable {
     
     <T> void updateAttribute(Sensor<T> attribute, T val);
     
-//    void subscribe(EventFilter filter, EventListener listener);
-//    void subscribe(Predicate<Entity> entities, EventFilter filter, EventListener listener);
-
-    <T> void subscribe(String entityId, String sensorname, EventListener<T> listener);
- 
     <T> void raiseEvent(Event<T> event);
     
     Collection<Location> getLocations();

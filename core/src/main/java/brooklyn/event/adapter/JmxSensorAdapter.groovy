@@ -14,35 +14,44 @@ import javax.management.remote.JMXConnectorFactory
 import javax.management.remote.JMXServiceURL
 
 import brooklyn.entity.Entity
+import brooklyn.event.Sensor;
+import brooklyn.event.basic.Activity;
 import brooklyn.event.basic.AttributeSensor
 import brooklyn.management.internal.task.Futures
 
+/**
+ * This class adapts JMX {@link ObjectName} dfata to {@link Sensor} data for a particular {@link Entity}, updating the
+ * {@link Activity} as required.
+ * 
+ *  The adapter normally polls the JMX server every second to update sensors, which could involve aggregation of data
+ *  or simply reading values and setting them in the attribute map of the activity model.
+ */
 public class JmxSensorAdapter {
 	final String jmxUrl
 	JMXConnector jmxc
 	MBeanServerConnection mbsc = null
     ScheduledFuture jmxMonitoringTask = null
-	
+    Map<String, Sensor<?>> sensors = [:]
     
 	long connectPollPeriodMillis = 500;
     
-    public JmxSensorAdapter(Entity entity) {
+    public JmxSensorAdapter(Entity entity, long timeout = -1) {
         String host = entity.properties['jmxHost']
         int port = entity.properties['jmxPort']
  
         this.jmxUrl =  "service:jmx:rmi:///jndi/rmi://"+host+":"+port+"/jmxrmi";
         
-        connect()
+        connect(timeout)
         
-        Futures.when { 
-            jmxMonitoringTask = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay({ updateJmxSensors() }, 1000, 1000, TimeUnit.MILLISECONDS)
-        } { isConnected() }
+        Futures.when
+            { 
+	            jmxMonitoringTask = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay({ updateJmxSensors() }, 1000, 1000, TimeUnit.MILLISECONDS)
+	        }
+	        { isConnected() }
     }
     
-    
-    
     public void addSensor(AttributeSensor sensor, String jmxName) {
-        sensors['jmxName'] = sensor
+        sensors[jmxName] = sensor
     }
 	
 	public JmxSensorAdapter(String jmxUrl) {
@@ -56,6 +65,7 @@ public class JmxSensorAdapter {
 	public boolean isConnected() {
 		return (jmxc && mbsc);
 	}
+ 
 	/** attempts to connect immediately */
 	public void connect() throws IOException {
 		if (jmxc) jmxc.close()
@@ -65,7 +75,7 @@ public class JmxSensorAdapter {
 	}
  
 	/** continuously attempts to connect (blocking), for at least the indicated amount of time; or indefinitely if -1 */
-	public boolean connect(int timeoutMillis) {
+	public boolean connect(long timeoutMillis) {
 		println "invoking connect to "+jmxUrl
 		long thisStartTime = System.currentTimeMillis()
 		long endTime = thisStartTime + timeoutMillis
