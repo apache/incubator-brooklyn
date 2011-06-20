@@ -56,6 +56,7 @@ public class JmxSensorAdapter {
     
     public void addSensor(AttributeSensor sensor, String jmxName) {
         sensors[jmxName] = sensor
+        entity.updateAttribute(sensor, null)
     }
 	
 	public JmxSensorAdapter(String jmxUrl) {
@@ -155,7 +156,7 @@ public class JmxSensorAdapter {
 	 *    size: 1
 	 *  }
 	 *  
-	 **/
+	 */
 	//TODO allow overrides for attributes which should take min, max, rather than sum
 	public Map getChildrenAttributesWithTotal(String objectName) {
 		checkConnected()
