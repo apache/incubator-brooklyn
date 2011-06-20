@@ -19,7 +19,7 @@ import brooklyn.util.internal.EntityStartUtils
 /**
  * JBoss web application server.
  */
-@InheritConstructors
+//@InheritConstructors
 public class JBossNode extends AbstractEntity implements Startable {
     public static final AttributeSensor<Integer> REQUESTS_PER_SECOND = [ "Reqs/Sec", "jmx.reqs.persec.RequestCount", Double ]
 
