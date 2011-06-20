@@ -1,7 +1,2 @@
-<div id="footer" style="float:none;clear:both">
-
-<div id="corplinks" align=center>
-About --- Community --- Donate --- Help --- Contact
-</div>
-
-</div>
+<%-- DO NOT MODIFY THIS FILE, IT IS AUTOMATICALLY GENERATED. INSTEAD MODIFY _footer.haml --%>
+<div align='center' class='layout-footer' id='console-footer'><%= "Contact --- Donate --- Forum --- About" %></div>

@@ -1,6 +1,7 @@
 <html>
 <head>
-    <meta name="layout" content="test"></meta>
+
+    
 
     <script type="text/javascript" src="${resource(dir:'dynjs', file:'jsTreeConfig')}"></script>
     <g:javascript src="overpaas/jsTree.js" />
@@ -20,11 +21,25 @@
         });
     </script>
 
+<meta name="layout" content="test"></meta>
+<script>
+		$(function () {
+			$("#demo1")
+				.jstree({
+					"json_data" : { "ajax" : { "url" : "<g:createLink controller='entity' action='jstree'/>"}},
+					"plugins" : [ "themes", "json_data", "ui" ]
+				})
+				.bind("select_node.jstree", function (event, data) {
+					 alert(data.rslt.obj.attr("id"));
+				});
+		});
+	</script>
+
 </head>
 
   <body>
     <!-- TABS CONTAINER -->
-    <div class="ui-layout-center">
+    <div class="ui-layout-center" style="padding:0px">
        <ul class="tabs">
 			<li><a href="#">Summary</a></li>
 			<li><a href="#">Locations</a></li>
@@ -39,9 +54,15 @@
 	   </div>
     </div>
     <!-- TREE CONTAINER -->
-	<div class="ui-layout-west">
-	<!-- This is the tree -->
-		<div id="demo1"></div>
+	<div class="ui-layout-west" >
+	    <div class="ui-layout-north">
+	        <!--//TODO: configure filter logic for jstree, look at jstree docs.-->
+	        <div id="filterbar"><input type="text"></input><button>Filter</button></div>
+	    </div>
+	    <div class="ui-layout-center">
+	        <!-- This is the tree -->
+		    <div id="demo1" style="width:0%"></div>
+	    </div>
 	</div>
   </body>
 </html>

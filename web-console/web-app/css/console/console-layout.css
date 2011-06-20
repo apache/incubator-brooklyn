@@ -1,0 +1,44 @@
+/* GENERAL BODY */
+
+body{
+font-family:"lucida grande",tahoma,verdana,arial,sans-serif;
+font-size:11px;
+margin:0px;
+padding:0px;
+}
+
+/* TEMPLATE LAYOUT CONTAINERS */
+
+.layout-header{
+	background: #e3e3e3;
+	height:20%;
+	border-width:medium;
+	border-bottom:solid;
+
+}
+
+.layout-footer{
+	background: #e3e3e3;
+	height:5%;
+	border-width:medium;
+	border-top:solid;
+	clear: both;
+}
+
+.layout-left-column{
+	background: #f7f7f7;
+	float: left;
+	width: 350px;
+	height:75%;
+	border-right:solid;
+	border-width:medium;
+}
+
+.layout-main-content{
+	background: #fff;
+	float: left;
+	height:75%
+	border:solid;
+	border-width:thin;
+
+}

@@ -7,7 +7,7 @@
 <g:javascript library="jquery/jquery.tools.min" />
 <link rel="shortcut icon" href="${resource(dir:'images',file:'favicon.ico')}" type="image/x-icon" />
 <link rel="stylesheet" type="text/css" href="http://static.flowplayer.org/tools/css/tabs.css" />
-<g:javascript library="console/console-layout"/>
+<g:javascript library="console/console-layout-jquery"/>
 <g:layoutHead />
 
 </head>
