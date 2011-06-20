@@ -92,12 +92,12 @@ class TomcatNodeIntegrationTest {
             parent: new TestApplication(), 
             location:new SshMachineLocation(name:'london', host:'localhost')
         ]
-		try {
-			tc.start()
-			assertTrue tc.getAttribute(TomcatNode.NODE_UP)
-		} finally {
-        	tc.shutdown()
-		}
+        tc.start()
+        executeUntilSucceedsWithFinallyBlock ([:], {
+            assertTrue tc.getAttribute(TomcatNode.NODE_UP)
+        }, {
+            tc.shutdown()
+        })
     }
     
 	@Test

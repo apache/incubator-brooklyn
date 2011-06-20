@@ -77,6 +77,9 @@ public class TomcatNode extends AbstractEntity implements Startable {
 
 	public void start(Map startAttributes=[:]) {
 		EntityStartUtils.startEntity startAttributes, this
+        if (!this.jxmHost && !this.jmxPort)
+            throw new IllegalStateException("JMX is not available")
+
 		log.debug "started... jmxHost is {} and jmxPort is {}", this.attributes['jmxHost'], this.attributes['jmxPort']
 		
 		if (this.attributes['jmxHost'] && this.attributes['jmxPort']) {
@@ -103,16 +106,16 @@ public class TomcatNode extends AbstractEntity implements Startable {
 				}
 				logger.trace "state: $state"
 				if (state == "FAILED") {
-                    attributes.update(NODE_UP, false)
+                    updateAttribute(NODE_UP, false)
 					throw new EntityStartException("Tomcat connector for port $port is in state $state")
 				} else if (state == "STARTED") {
-                    attributes.update(NODE_UP, true)
+                    updateAttribute(NODE_UP, true)
 					break;
 				}
 				Thread.sleep 250
 			}
 			if(state != "STARTED") {
-                attributes.update(NODE_UP, false)
+                updateAttribute(NODE_UP, false)
 				throw new EntityStartException("Tomcat connector for port $port is in state $state after 30 seconds")
             }
 		}
@@ -129,7 +132,7 @@ public class TomcatNode extends AbstractEntity implements Startable {
 		
         // update to explicit location in activity map, but not linked to sensor 
         // so probably shouldn't be used too widely 
-		Map prev = activity.update(["jmx","reqs","global"], reqs)
+		Map prev = updateAttribute(["jmx","reqs","global"], reqs)
         
         // Calculate requests per second
         double diff = (reqs?.totals?.requestCount ?: 0) - (prev?.totals?.requestCount ?: 0)
@@ -149,7 +152,7 @@ public class TomcatNode extends AbstractEntity implements Startable {
 	private void updateJmxSensors() {
 		int rps = computeReqsPerSec()
 		//is a sensor, should generate update events against subscribers
-		activity.update(REQUESTS_PER_SECOND, rps)
+		updateAttribute(REQUESTS_PER_SECOND, rps)
 	}
 	
 	// FIXME something like this seems a much nicer way to register sensors
