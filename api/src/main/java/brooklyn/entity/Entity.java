@@ -45,12 +45,18 @@ public interface Entity extends Serializable {
      */
     Map<String,Object> getAttributes();
 
-    // TODO the owner is the parent that strictly contains this entity
-//    Group getOwner();
-    // TODO Entity.getParents() makes me think of containment relationships too much. I'd prefer groups?
-    Collection<Group> getParents();
-    void addParent(Group e);
-
+    /**
+     * The "owner" of this entity, if null if no owner. The owner is normally the entity 
+     * responsible for creating/destroying this entity.
+     */
+    Group getOwner();
+    
+    /**
+     * The groups that this entity is a member of. Groupings can be used to allow easy 
+     * management/monitoring of a group of entities.
+     */
+    Collection<Group> getGroups();
+    
     <T> void updateAttribute(Sensor<T> attribute, T val);
     
 //    void subscribe(EventFilter filter, EventListener listener);

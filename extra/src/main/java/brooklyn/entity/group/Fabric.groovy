@@ -13,8 +13,8 @@ import brooklyn.util.internal.OverpaasDsl
  * Fabric is a {@link Tier} of entities over multiple locations.
  */
 public abstract class Fabric extends TierFromTemplate {
-	public Fabric(Map properties=[:], Group parent=null, Entity template=null) {
-		super(properties, parent, template)
+	public Fabric(Map properties=[:], Group owner=null, Entity template=null) {
+		super(properties, owner, template)
 		// accept the word 'location' singular as well as plural (plural was put into field already)
 		if (this.properties.location) locations += this.properties.remove('location')
 	}

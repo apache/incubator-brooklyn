@@ -49,29 +49,50 @@ public abstract class AbstractEntity implements Entity {
  
     protected final AttributeMap attributesInternal = new AttributeMap(this)
 
+    /** Entity hierarchy */
+    final Collection<Group> groups = new CopyOnWriteArrayList<Group>()
+ 
+    Group owner
+    
+    Application application
+
+    public AbstractEntity(Map flags=[:]) {
+        def owner = flags.remove('owner')
+
+        //place named-arguments into corresponding fields if they exist, otherwise put into attributes map
+        this.attributes << LanguageUtils.setFieldsFromMap(this, flags)
+
+        //set the owner if supplied; accept as argument or field
+        if (owner) owner.addOwnedChild(this)
+    }
+
     public void propertyMissing(String name, value) { attributes[name] = value }
  
     public Object propertyMissing(String name) {
         if (attributes.containsKey(name)) return attributes[name];
         else {
             //TODO could be more efficient ;)
-            def v = null
-            if (parents.find { parent -> v = parent.attributes[name] }) return v;
+            def v = owner?.attributes[name]
+            if (v != null) return v;
+            if (groups.find { group -> v = group.attributes[name] }) return v;
         }
         log.debug "no property or attribute $name on $this"
 		if (name=="activity") log.warn "reference to removed field 'activity' on entity $this", new Throwable("location of failed reference to 'activity' on $this")
     }
 	
-    /** Entity hierarchy */
-    final Collection<Group> parents = new CopyOnWriteArrayList<Group>()
- 
-    Application application
+    /**
+     * Adds this as a member of the given group, registers with application if necessary
+     */
+    public void setOwner(Group e) {
+        owner = e
+        getApplication()
+    }
 
     /**
-     * Adds a parent, registers with application if necessary
+     * Adds this as a member of the given group, registers with application if necessary
      */
-    public void addParent(Group e) {
-        parents.add e
+    public void addGroup(Group e) {
+        groups.add e
         getApplication()
     }
 
@@ -80,7 +101,8 @@ public abstract class AbstractEntity implements Entity {
      */
     public Application getApplication() {
         if (application!=null) return application;
-        def app = parents.find({ it.getApplication() })?.getApplication()
+        def app = owner?.getApplication()
+        app = (app != null) ? app : groups.find({ it.getApplication() })?.getApplication()
         if (app) {
             registerWithApplication(app)
             application
@@ -127,16 +149,6 @@ public abstract class AbstractEntity implements Entity {
  
     /** override this, adding to the collection, to supply fields whose value, if not null, should be included in the toString */
     public Collection<String> toStringFieldsToInclude() { ['id', 'displayName'] }
-
-    public AbstractEntity(Map flags=[:]) {
-        def parent = flags.remove('parent')
-
-        //place named-arguments into corresponding fields if they exist, otherwise put into attributes map
-        this.attributes << LanguageUtils.setFieldsFromMap(this, flags)
-
-        //set the parent if supplied; accept as argument or field
-        if (parent) parent.addChild(this)
-    }
 
     Map<String,Object> getAttributes() {
         return attributesInternal.asMap();

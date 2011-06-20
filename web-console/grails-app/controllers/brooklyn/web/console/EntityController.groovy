@@ -13,13 +13,17 @@ import brooklyn.event.Event;
 import brooklyn.event.EventListener;
 import brooklyn.event.Sensor;
 import brooklyn.location.Location;
-
-import java.beans.PropertyChangeListener;
-import java.util.Collection;
-
 import grails.converters.JSON
+
+import java.util.Collection
+import java.util.Map
+
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
+import brooklyn.entity.basic.AbstractApplication
+import brooklyn.entity.basic.AbstractEntity
+import brooklyn.entity.basic.AbstractGroup
+import brooklyn.management.ExecutionManager
 import brooklyn.management.ManagementContext
 import brooklyn.management.ExecutionManager
 
@@ -117,7 +121,7 @@ private class TestApplication extends AbstractApplication {
         displayName = "Application";
         
         addOwnedChildren( [
-                new TestGroupEntity("t1", "tomcat tier 1", ["a1"]).addOwnedChildren( [
+                new TestGroupEntity("tomcat tier 1").addOwnedChildren( [
                         new TestGroupEntity("tomcat cluster 1a").addOwnedChildren( [
                                 new TestLeafEntity("tomcat node 1a.1"),
                                 new TestLeafEntity("tomcat node 1a.2"),
@@ -137,10 +141,15 @@ private class TestApplication extends AbstractApplication {
                     ] )
                 ] )
     }
+    
+    TestGroupEntity addOwnedChildren(Entity[] children) {
+        children.each { addOwnedChild(it) }
+        return this
+    }
 }
 
 private class TestGroupEntity extends AbstractGroup {
-    TestGroupEntity(displayName, ArrayList<String> groups) {
+    TestGroupEntity(String displayName, ArrayList<String> groups) {
         this.displayName = displayName
     }
     
@@ -151,9 +160,7 @@ private class TestGroupEntity extends AbstractGroup {
 }
 
 private class TestLeafEntity extends AbstractEntity {
-    TestLeafEntity(displayName, ArrayList<String> groups) {
+    TestLeafEntity(String displayName) {
         this.displayName = displayName;
-        return new EntitySummary(id, displayName, "app1", groups);
     }
-
 }

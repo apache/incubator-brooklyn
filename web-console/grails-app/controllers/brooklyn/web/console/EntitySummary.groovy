@@ -13,7 +13,7 @@ public class EntitySummary {
     final String displayName;
     
     final String applicationId;
-    final String parentId;
+    final String ownerId;
     final Collection<String> groupIds;
 
     public EntitySummary(Entity entity) {
@@ -21,15 +21,16 @@ public class EntitySummary {
         this.entityClass = entity.entityClass;
         this.displayName = entity.displayName;
         this.applicationId = entity.application?.getId();
-        this.parentId = entity.parents ? entity.parents[0].id : null;
-        this.groupIds = entity.parents.collect { it.id };
+        this.ownerId = entity.owner ? entity.owner.id : null;
+        this.groupIds = entity.groups.collect { it.id };
     }
-    public EntitySummary(String id, EntityClass entityClass, String displayName, String applicationId, String parentId, Collection<String> groupIds) {
+    
+    public EntitySummary(String id, EntityClass entityClass, String displayName, String applicationId, String ownerId, Collection<String> groupIds) {
         this.id = id;
         this.entityClass = entityClass;
         this.displayName = displayName;
         this.applicationId = applicationId;
-        this.parentId = parentId;
+        this.ownerId = ownerId;
         this.groupIds = groupIds;
     }
 }
