@@ -41,7 +41,7 @@ public class AttributeMap {
         oldValue
 	}
 	
-	public <T> T update(Sensor<T> sensor, T newValue) {
+	public <T> void update(Sensor<T> sensor, T newValue) {
 		log.debug "sensor $sensor field {} set to {}", sensor.name, newValue
 		if (!(sensor in AttributeSensor)) throw new IllegalArgumentException("AttributeMap can only update an attribute sensor's value, not "+sensor)
 		def oldValue = update(sensor.getNameParts(), newValue)

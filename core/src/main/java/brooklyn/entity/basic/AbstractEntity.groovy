@@ -169,6 +169,10 @@ public abstract class AbstractEntity implements Entity {
 			execution = new ExecutionContext(tag: this, getApplication()?.getManagementContext().getExecutionManager())
 		}
 	}
+    
+    public <T> Sensor<T> getSensor(String sensorName) {
+        getEntityClass().getSensors() find { s -> s.name.equals(sensorName) }
+    }
 
     /** default toString is simplified name of class, together with selected arguments */
     @Override

@@ -1,6 +1,7 @@
 package brooklyn.event.adapter
 
 import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 
@@ -19,6 +20,8 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.Entity
 import brooklyn.event.Sensor
 import brooklyn.event.basic.AttributeSensor
+import brooklyn.event.basic.DynamicSensor
+import brooklyn.event.basic.SensorEvent
 
 /**
  * This class adapts JMX {@link ObjectName} dfata to {@link Sensor} data for a particular {@link Entity}, updating the
@@ -27,45 +30,53 @@ import brooklyn.event.basic.AttributeSensor
  *  The adapter normally polls the JMX server every second to update sensors, which could involve aggregation of data
  *  or simply reading values and setting them in the attribute map of the activity model.
  */
-public class JmxSensorAdapter {
+public class JmxSensorAdapter implements SensorAdapter {
     static final Logger log = LoggerFactory.getLogger(JmxSensorAdapter.class);
  
     final Entity entity
 	final String jmxUrl
+    final Map<?, ?> properties  = [
+            period : 500,
+            connectDelay : 1000
+        ]   
  
+    ScheduledExecutorService exec = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors())
 	JMXConnector jmxc
 	MBeanServerConnection mbsc = null
     ScheduledFuture monitor = null
-    Map<String, Sensor<?>> sensors = [:]
+    Map<String, AttributeSensor<?>> sensors = [:]
     Map<String, ObjectName> objects = [:]
-    Closure updateSensors = null
+    Map<String, DynamicSensor<?>> calculated = [:]
+    Map<String, ScheduledFuture> schedule = [:]
     
-	long connectPollPeriodMillis = 500;
+    /* Default polling interval, milliseconds */
+	long defaultPollingPeriod = 500;
     
-    public JmxSensorAdapter(Entity entity, long timeout = -1, Closure updateSensors = null) {
+    public JmxSensorAdapter(Entity entity, long timeout = -1, Map properties = [:]) {
         this.entity = entity
-        this.updateSensors = updateSensors
+        this.properties << properties
  
         String host = entity.properties['jmxHost']
         int port = entity.properties['jmxPort']
  
         this.jmxUrl =  "service:jmx:rmi:///jndi/rmi://"+host+":"+port+"/jmxrmi";
         
-        connect(timeout)
+        if (!connect(timeout)) throw new IllegalStateException("Could not connect to JMX service")
     }
     
+    public void addSensor(AttributeSensor sensor, String jmxName, Closure calculate, long period = defaultPollingPeriod) {
+        calculated[sensor.getName()] = sensor
+        objects[sensor.getName()] = new ObjectName(jmxName)
+        entity.updateAttribute(sensor, null)
+        
+        schedule[sensor.getName()] = exec.scheduleWithFixedDelay(calculate, period, period, TimeUnit.MILLISECONDS)
+    }
+ 
     public void addSensor(AttributeSensor sensor, String jmxName) {
-        sensors[jmxName] = sensor
+        sensors[sensor.getName()] = sensor
+        objects[sensor.getName()] = new ObjectName(jmxName)
         entity.updateAttribute(sensor, null)
     }
-	
-	public JmxSensorAdapter(String jmxUrl) {
-		this.jmxUrl = jmxUrl;
-	}
- 
-	public JmxSensorAdapter(String host, int port) {
-		this.jmxUrl = "service:jmx:rmi:///jndi/rmi://"+host+":"+port+"/jmxrmi";
-	}
 
 	public boolean isConnected() {
 		return (jmxc && mbsc);
@@ -78,7 +89,7 @@ public class JmxSensorAdapter {
 		jmxc = JMXConnectorFactory.connect(url, null);
 		mbsc = jmxc.getMBeanServerConnection();
  
-        monitor = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay({ updateJmxSensors() }, 1000, 1000, TimeUnit.MILLISECONDS)
+        monitor = exec.scheduleWithFixedDelay({ updateJmxSensors() }, properties['period'], properties['period'], TimeUnit.MILLISECONDS)
 	}
  
 	/** continuously attempts to connect (blocking), for at least the indicated amount of time; or indefinitely if -1 */
@@ -96,7 +107,7 @@ public class JmxSensorAdapter {
 			} catch (IOException e) {
 				println ""+System.currentTimeMillis()+" failed connection to "+jmxUrl+" ("+e+")"
 			}
-			Thread.sleep connectPollPeriodMillis
+			Thread.sleep properties['connectDelay']
 		}
 		false
 	}
@@ -107,6 +118,8 @@ public class JmxSensorAdapter {
 			jmxc = null
 			mbsc = null
 		}
+        if (monitor) monitor.cancel(true) 
+        schedule.each { key, ScheduledFuture future -> future.cancel(true) }
 	}
 	
 	public void checkConnected() {
@@ -197,7 +210,6 @@ public class JmxSensorAdapter {
     }
 
     public void updateJmxSensors() {
-        updateSensors()
         sensors.keySet() each { s ->
                 Sensor<?> sensor = sensors.get(s)   
                 String objectName = objects.get(s)
@@ -205,5 +217,30 @@ public class JmxSensorAdapter {
                 log.info "data for {},{} was {}", sensor.name, objectName, data
 //                entity.updateAttribute(sensor, newValue)
 	        } 
+    }
+    
+    
+    
+    public <T> void subscribe(String sensorName) {
+        Sensor<?> sensor = sensors.get(sensorName) ?: calculated.get(sensorName) ?: null
+        if (sensor == null) throw new IllegalStateException("Sensor $sensorname not found");
+        subscribe(sensor)
+    }
+ 
+    public <T> void subscribe(final Sensor<T> sensor) {
+        subscriptions += sensor
+    }
+    
+    public <T> T poll(String sensorName) {
+        Sensor<?> sensor = sensors.get(sensorName) ?: calculated.get(sensorName) ?: null
+        if (sensor == null) throw new IllegalStateException("Sensor $sensorname not found");
+        poll(sensor)
+    }
+ 
+    public <T> T poll(Sensor<T> sensor) {
+        def value = entity.attributes[sensorName]
+        SensorEvent<?> event = new SensorEvent(sensor, entity, value)
+        entity.raiseEvent event
+        value
     }
 }

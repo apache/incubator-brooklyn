@@ -83,3 +83,23 @@ public class LogSensor<T> extends AbstractSensor<T> {
         super(type, name, description);
     }
 }
+
+/**
+ * A {@link Sensor} describing a calculated property
+ */
+@InheritConstructors
+public class DynamicSensor<T> extends AttributeSensor<T> {
+    private static final long serialVersionUID = -1;
+    
+    public final Closure calculate
+    public final long period
+
+    public DynamicSensor() { /* for gson */ }
+
+    public DynamicSensor(Class<T> type, String name, String description=name, Closure calculate, long period) {
+        super(type, name, description);
+        
+        this.calculate = calculate
+        this.period = period
+    }
+}
