@@ -2,7 +2,6 @@ package brooklyn.entity;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.Map;
 
 import brooklyn.event.Event;
 import brooklyn.event.EventListener;
@@ -33,18 +32,6 @@ public interface Entity extends Serializable {
     
     Application getApplication();
     
-    
-    //FIXME should these be here?  or is Abstract good enough?
-    
-    /**
-     * Mutable attributes on this entity.
-     * 
-     * This can include activity information and status information (e.g. AttributeSensors), as well as
-     * arbitrary internal properties which can make life much easier/dynamic (though we lose something in type safety)
-     * e.g. jmxHost / jmxPort are handled as attributes
-     */
-    Map<String,Object> getAttributes();
-
     /**
      * The "owner" of this entity, if null if no owner. The owner is normally the entity 
      * responsible for creating/destroying this entity.
@@ -56,8 +43,6 @@ public interface Entity extends Serializable {
      * management/monitoring of a group of entities.
      */
     Collection<Group> getGroups();
-    
-    <T> void updateAttribute(Sensor<T> attribute, T val);
     
 //    void subscribe(EventFilter filter, EventListener listener);
 //    void subscribe(Predicate<Entity> entities, EventFilter filter, EventListener listener);
