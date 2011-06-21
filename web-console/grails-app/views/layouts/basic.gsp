@@ -11,7 +11,7 @@
     <link href='http://static.flowplayer.org/tools/css/tabs.css' rel='stylesheet' type='text/css' />
     <link href="${resource(dir:'css/console',file:'console-layout.css')}" rel='stylesheet' type='text/css' />
     <script src="${resource(dir:'dynjs', file:'jsTreeConfig')}" type='text/javascript'></script>
-    <g:javascript library='console/jsTree.js'></g:javascript>
+    <g:javascript library='console/jsTree'></g:javascript>
     <g:javascript library='console/init-widgets'></g:javascript>
     <g:layoutHead></g:layoutHead>
   </head>
