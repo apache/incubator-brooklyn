@@ -18,6 +18,9 @@ import brooklyn.management.SubscriptionManager
 import com.google.common.base.Objects
 import com.google.common.base.Predicate
 
+/**
+ * A {@link SubscriptionManager} that stores subscription details locally.
+ */
 public class LocalSubscriptionManager implements SubscriptionManager {
     private static class Subscription {
         public String interestedId;
@@ -45,42 +48,19 @@ public class LocalSubscriptionManager implements SubscriptionManager {
     
     AtomicLong subscriptionId = new AtomicLong(0L);
     ConcurrentMap<Long, Subscription> allSubscriptions = new ConcurrentHashMap<Long, Subscription>();
-    ConcurrentMap<String, List<Subscription>> entitySubscriptionList = new ConcurrentHashMap<String, List<Subscription>>();
-    Lock lock = new ReentrantLock();
     
     public <T> void fire(Event<T> event) {
-        lock.lock();
-        try {
-            allSubscriptions.each { key, Subscription s -> if (s.filter.apply(event) && (!s.entities || s.entities.apply(event))) s.listener.onEvent(event) }
-        } finally {
-            lock.unlock();
-        }
+        allSubscriptions.each { key, Subscription s -> if (s.filter.apply(event) && (!s.entities || s.entities.apply(event))) s.listener.onEvent(event) }
     }
 
     public <T> long subscribe(String interestedId, String producerId, String sensorName, EventListener<T> listener) {
         Subscription sub = new Subscription(interestedId, EventFilters.entityId(producerId), EventFilters.sensorName(sensorName), listener);
         long id = subscriptionId.incrementAndGet();
-        lock.lock();
-        try {
-            allSubscriptions.put(id, sub);
-            entitySubscriptionList.putIfAbsent(interestedId, new CopyOnWriteArrayList<Subscription>());
-            List<Subscription> entitySubscriptions = entitySubscriptionList.get(interestedId);
-            entitySubscriptions.add(sub);
-        } finally {
-            lock.unlock();
-        }
+        allSubscriptions.put(id, sub);
         return id;
     }
 
     public void unsubscribe(long subscriptionId) {
-        lock.lock();
-        try {
-	        Subscription subscription = allSubscriptions.get(subscriptionId);
-	        allSubscriptions.remove(subscriptionId);
-            List<Subscription> entitySubscriptions = entitySubscriptionList.get(subscription.interestedId);
-            entitySubscriptions.remove(subscription);
-        } finally {
-            lock.unlock();
-        }
+        allSubscriptions.remove(subscriptionId);
     }
 }

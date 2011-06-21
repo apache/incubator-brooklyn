@@ -62,12 +62,6 @@ public abstract class AbstractSensor<T> implements Sensor<T> {
 @InheritConstructors
 public class AttributeSensor<T> extends AbstractSensor<T> {
     private static final long serialVersionUID = -7670909215973264600L;
-
-    public AttributeSensor() { /* for gson */ }
-
-	public AttributeSensor(Class<T> type, String name, String description=name) {
-        super(type, name, description);
-    }
 }
 
 /**
@@ -76,12 +70,6 @@ public class AttributeSensor<T> extends AbstractSensor<T> {
 @InheritConstructors
 public class LogSensor<T> extends AbstractSensor<T> {
     private static final long serialVersionUID = 4713993465669948212L;
-
-    public LogSensor() { /* for gson */ }
-
-    public LogSensor(Class<T> type, String name, String description=name) {
-        super(type, name, description);
-    }
 }
 
 /**
@@ -93,8 +81,6 @@ public class DynamicSensor<T> extends AttributeSensor<T> {
     
     public final Closure calculate
     public final long period
-
-    public DynamicSensor() { /* for gson */ }
 
     public DynamicSensor(Class<T> type, String name, String description=name, Closure calculate, long period) {
         super(type, name, description);

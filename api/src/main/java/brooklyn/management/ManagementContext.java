@@ -15,7 +15,6 @@ import brooklyn.entity.Entity;
  * @author aled
  */
 public interface ManagementContext {
-
     /**
      * The applications known about in this OverPaas context.
      */
@@ -25,11 +24,6 @@ public interface ManagementContext {
      * Returns the entity with the given identifier (may be a full instance, or a proxy to one which is remote)
      */
     Entity getEntity(String id);
-
-    /**
-     * Returns the current {@link SubscriptionManager} instance.
-     */
-    SubscriptionManager getSubscriptionManager();
     
     /**
      * Returns the current {@link ExecutionManager} instance.

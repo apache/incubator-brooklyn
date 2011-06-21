@@ -14,11 +14,11 @@ import brooklyn.entity.Group
 import brooklyn.event.Event
 import brooklyn.event.EventListener
 import brooklyn.event.Sensor
+import brooklyn.event.adapter.PropertiesSensorAdapter
 import brooklyn.event.basic.AttributeMap
 import brooklyn.location.Location
 import brooklyn.management.ManagementContext
-import brooklyn.event.adapter.PropertiesSensorAdapter
-import brooklyn.location.Location
+import brooklyn.management.SubscriptionContext
 import brooklyn.management.internal.LocalManagementContext
 import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.task.ExecutionContext
@@ -46,8 +46,9 @@ public abstract class AbstractEntity implements Entity {
     Collection<Location> locations = []
     Group owner
     
-    private transient volatile ExecutionContext execution
-    protected transient final LocalManagementContext management = LocalManagementContext.getContext()
+    protected transient volatile ExecutionContext execution
+    protected transient volatile SubscriptionContext subscriptions
+    protected transient volatile LocalManagementContext management = LocalManagementContext.getContext()
  
     protected final AttributeMap attributesInternal = new AttributeMap(this)
     protected final PropertiesSensorAdapter propertiesAdapter = new PropertiesSensorAdapter(this, attributes)
@@ -149,12 +150,12 @@ public abstract class AbstractEntity implements Entity {
     
     /** @see Entity#subscribe(Entity, Sensor, EventListener) */
     public <T> long subscribe(Entity producer, Sensor<T> sensor, EventListener<T> listener) {
-        management.getSubscriptionManager().subscribe this.id, producer.id, sensor.name, listener
+        subscriptions.getSubscriptionManager().subscribe this.id, producer.id, sensor.name, listener
     }
      
     /** @see Entity#raiseEvent(Event) */
     public <T> void raiseEvent(Event<T> event) {
-        management.getSubscriptionManager().fire event
+        subscriptions.getSubscriptionManager().fire event
     }
 
 	protected ExecutionContext getExecutionContext() {
