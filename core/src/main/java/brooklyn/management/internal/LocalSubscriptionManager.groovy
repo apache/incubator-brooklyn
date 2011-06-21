@@ -61,8 +61,8 @@ public class LocalSubscriptionManager implements SubscriptionManager {
         }
     }
 
-    public <T> long subscribe(String interestedId, String sourceId, String sensorName, EventListener<T> listener) {
-        Subscription sub = new Subscription(interestedId, EventFilters.entityId(sourceId), EventFilters.sensorName(sensorName), listener);
+    public <T> long subscribe(String interestedId, String producerId, String sensorName, EventListener<T> listener) {
+        Subscription sub = new Subscription(interestedId, EventFilters.entityId(producerId), EventFilters.sensorName(sensorName), listener);
         long id = subscriptionId.incrementAndGet();
         lock.lock();
         try {
