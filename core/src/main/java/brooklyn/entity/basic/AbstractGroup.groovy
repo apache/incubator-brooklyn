@@ -21,7 +21,7 @@ public abstract class AbstractGroup extends AbstractEntity implements Group {
      */
     public Entity addMember(Entity member) {
         member.addGroup(this)
-        members.add(t)
+        members.add(member)
         member
     }
  
