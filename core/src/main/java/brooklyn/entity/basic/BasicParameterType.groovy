@@ -8,14 +8,14 @@ public class BasicParameterType<T> implements ParameterType<T> {
     
     private String name;
     private Class<T> type;
+    private String defaultValue;
     private String description;
 
-    @SuppressWarnings("unused")
-    private BasicParameterType() { /* for gson */ }
-
-    public BasicParameterType(String name, Class<T> type, String description) {
+	public BasicParameterType(Map m=[:]) { super(m) }
+    public BasicParameterType(String name, Class<T> type, T defaultValue=null, String description=null) {
         this.name = name;
         this.type = type;
+        this.defaultValue = defaultValue;
         this.description = description;
     }
 
@@ -35,4 +35,7 @@ public class BasicParameterType<T> implements ParameterType<T> {
         return description;
     }
 
+	public String getDefaultValue() {
+		return defaultValue;
+	}
 }

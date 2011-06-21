@@ -1,52 +1,41 @@
 package brooklyn.entity
 
+import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.lang.reflect.Method;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import static org.junit.Assert.*;
 
 import brooklyn.entity.basic.AbstractEffector
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.BasicParameterType
+import brooklyn.entity.basic.DefaultValue;
+import brooklyn.entity.basic.Description;
+import brooklyn.entity.basic.EffectorInferredFromAnnotatedMethod;
+import brooklyn.entity.basic.NamedParameter;
 
-@Retention(RetentionPolicy.RUNTIME)
-public @interface ProvidesEffector {
-	String name();
-	String description() default "sample";
-}
-@Retention(RetentionPolicy.RUNTIME)
-public @interface EffectorParameter {
-	String value();
-	String description() default "sample"
-}
-public @interface DefaultValue {
-	String value();
-}
-public @interface Description {
-	String value();
-}
 
 class EffectorTest {
 
-	public static class EffectorInferredFromAnnotatedMethod {}
-	
 	public interface CanSayHi {
-		static Effector SAY_HI_1 = new AbstractEffector("sayHi", String.class, 
+		static Effector<String> SAY_HI_1 = new AbstractEffector<CanSayHi,String>("sayHi", String.class, 
 			[
 				[ "name", String.class, "person to say hi to" ] as BasicParameterType<String>,
 				[ "greeting", String.class, "what to say as greeting", "hello" ] as BasicParameterType<String>
 			], 
 			"says hello to a person") {
-				String call(CanSayHi e, Map m) { e.sayHi(m) }
+				public String call(CanSayHi e, Map m) { e.sayHi(m) }
 		};
 
-		static Effector SAY_HI_2 = new EffectorInferredFromAnnotatedMethod(CanSayHi.class, "sayHi");
+		static Effector<String> SAY_HI_2 = new EffectorInferredFromAnnotatedMethod<String>(CanSayHi.class, "sayHi", "says hello");
 
 		public String sayHi( 
-			@EffectorParameter("name") String name,
-			@EffectorParameter("greeting") @DefaultValue("hello") @Description("what to say") String greeting);
+			@NamedParameter("name") String name,
+			@NamedParameter("greeting") @DefaultValue("hello") @Description("what to say") String greeting);
 
 //		String sayHi(String name="");
 //		String sayHi();
@@ -55,33 +44,43 @@ class EffectorTest {
 	}
 		
 	public static class MyEntity extends AbstractEntity implements CanSayHi {
-//		{ CanSayHi.SAY_HI.name }
-		@ProvidesEffector ( name="sayHi" )
-//		@ProvidesEffector ( CanSayHi.SAY_HI.name )
-//		@ProvidesEffector( ((AbstractEffector)(CanSayHi.SAY_HI)).name )
-//		public String sayHi(String name) { "hello $name" }
-		
-//		public String sayHi(@ProvidesEffector(name="name") Map flags=[:], String name=flags.name, String greeting=flags.greeting?:"hello") { "$greeting $name" }
-		
-//		@MakeEffector(description: "says hello to a person")
-		public String sayHi(Map flags=[:], String name, String greeting) 
-		{ "$greeting $name" }
+		public String sayHi(String name, String greeting) { "$greeting $name" }
 	}
 
-	@Ignore	
 	@Test
 	public void testFindEffectors() {
 		MyEntity e = new MyEntity();
-		println e.sayHi(name: "Bob")
 		
-		e.getClass().getMethods().each { Method m -> if (m.getName()!="sayHi") return;
-			println "method $m: "+(m.getAnnotations());
-			println m.getParameterAnnotations()
-		}
-		println e.SAY_HI
+		assertEquals("hello Bob", e.sayHi("Bob", "hello"))
+
+		println e.SAY_HI_1	
 		
-		println e.SAY_HI.code.call(e, [name:"Bob"])
+		//FIXME this still failing, and needs following tests below...		
+		println e.SAY_HI_2			
+//		println e.effectors
+//			
+//		e.getClass().getMethods().each { Method m -> 
+//			if (m.getName()!="sayHi") return;
+//			println "method $m: "+(m.getAnnotations());
+//			println m.getParameterAnnotations()
+//		}
+//		
+//		assertEquals("hello Bob", e.sayHi(name: "Bob"))
+//		assertEquals("hello Bob", e.SAY_HI_1.call(e, [name:"Bob"]) )
+//		assertEquals("hello Bob", e.SAY_HI_2.call(e, [name:"Bob"]) )
 	} 
+	
+	/*
+	 * e.sayHi("Bob", "hello")
+e.sayHi("Bob")
+e.sayHi(name: "Bob")
+e.sayHi(name: "Bob", greeting: "hello")
+
+or (useful in some cases)
+
+[e1,e2,e3].each { invoke(SAY_HI_1, name: "Bob") }
+SAY_HI_1.invoke(e, name:"Bob")  //though this one only resolves at runtime, unless you downcast SAY_HI_1 to AbstractEffector 
+	 */
 	
 }
 
