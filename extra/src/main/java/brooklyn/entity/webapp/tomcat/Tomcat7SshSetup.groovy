@@ -8,7 +8,6 @@ import brooklyn.location.basic.SshMachineLocation
  * User: richard
  * Date: 16/06/2011
  * Time: 15:13
- * To change this template use File | Settings | File Templates.
  */
 public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
 	//FIXME nextag only keep most recent version.  need someone who keeps history!
@@ -25,7 +24,6 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
 
     public Tomcat7SshSetup(TomcatNode entity) {
         super(entity)
-        this.entity = entity
         runDir = appBaseDir + "/" + "tomcat-" + entity.id
     }
 
