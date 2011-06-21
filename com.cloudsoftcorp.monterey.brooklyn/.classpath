@@ -9,5 +9,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/brooklyn-extra"/>
 	<classpathentry kind="lib" path="build/lib/slf4j-api-1.6.1.jar"/>
 	<classpathentry exported="true" kind="con" path="GROOVY_SUPPORT"/>
+	<classpathentry kind="lib" path="build/lib/slf4j-jdk14-1.6.1.jar"/>
 	<classpathentry kind="output" path="build/out"/>
 </classpath>
