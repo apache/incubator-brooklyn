@@ -3,22 +3,22 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>brooklyn</groupId>
-	<artifactId>brooklyn-groovy-parent</artifactId>
+	<artifactId>brooklyn-parent-groovy</artifactId>
 	<packaging>pom</packaging>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Brooklyn Groovy Parent</name>
 
 	<description>
-        The parent for Brooklyn modules that use groovy
+        The parent for Brooklyn modules that use groovy (defines dependencies and config for groovy-based projects, extending brooklyn-parent-root)
     </description>
 
 	<url>http://brooklyn</url>
 
 	<parent>
 		<groupId>brooklyn</groupId>
-		<artifactId>brooklyn-parent</artifactId>
+		<artifactId>brooklyn-parent-root</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
-		<relativePath>pom.xml</relativePath>
+		<relativePath>../root/pom.xml</relativePath>
 	</parent>
 	
 	<build>
