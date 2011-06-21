@@ -156,6 +156,7 @@
 					<version>${surefire.version}</version>
 					<configuration>
 						<forkMode>always</forkMode>
+						<redirectTestOutputToFile>true</redirectTestOutputToFile>
 					</configuration>
 				</plugin>
 				<plugin>
