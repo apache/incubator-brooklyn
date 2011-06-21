@@ -7,23 +7,26 @@
 
 	<parent>
 		<groupId>brooklyn</groupId>
-		<artifactId>brooklyn-parent</artifactId>
+		<artifactId>brooklyn-groovy-parent</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
-		<relativePath>../parent/pom.xml</relativePath>
+		<relativePath>../parent/pom-with-groovy.xml</relativePath>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>brooklyn</groupId>
-			<artifactId>brooklyn-api</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>brooklyn</groupId>
 			<artifactId>brooklyn-core</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-
+		<!--  inherited from core:
+		<dependency>
+			<groupId>brooklyn</groupId>
+			<artifactId>brooklyn-api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		(but test dependencies are needed explicitly)
+		-->
+		
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
