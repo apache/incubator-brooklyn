@@ -7,8 +7,8 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
+import brooklyn.event.AttributeSensor
 import brooklyn.event.Sensor
-import brooklyn.event.basic.AttributeSensor
 import brooklyn.event.basic.LogSensor
 import brooklyn.event.basic.SensorEvent
 

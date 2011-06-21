@@ -1,5 +1,6 @@
 package brooklyn.event.basic;
 
+import brooklyn.event.AttributeSensor;
 import brooklyn.event.Event;
 
 public interface AttributeEvent<T> extends Event<T> {

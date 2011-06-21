@@ -1,7 +1,5 @@
 package brooklyn.entity.webapp.jboss
 
-import groovy.transform.InheritConstructors
-
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
@@ -10,7 +8,7 @@ import brooklyn.entity.Group
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.trait.Startable
 import brooklyn.event.adapter.JmxSensorAdapter
-import brooklyn.event.basic.AttributeSensor
+import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.Location
 import brooklyn.location.basic.SshBasedJavaWebAppSetup
 import brooklyn.location.basic.SshMachineLocation
@@ -21,7 +19,7 @@ import brooklyn.util.internal.EntityStartUtils
  */
 //@InheritConstructors
 public class JBossNode extends AbstractEntity implements Startable {
-    public static final AttributeSensor<Integer> REQUESTS_PER_SECOND = [ Double, "jmx.reqs.persec.RequestCount", "Reqs/Sec" ]
+    public static final BasicAttributeSensor<Integer> REQUESTS_PER_SECOND = [ Double, "jmx.reqs.persec.RequestCount", "Reqs/Sec" ]
 
     JmxSensorAdapter jmxAdapter;
 

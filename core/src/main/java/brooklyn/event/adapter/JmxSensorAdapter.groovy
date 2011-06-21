@@ -1,7 +1,7 @@
 package brooklyn.event.adapter
 
 import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 
@@ -18,9 +18,9 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
+import brooklyn.event.AttributeSensor
 import brooklyn.event.Sensor
-import brooklyn.event.basic.AttributeSensor
-import brooklyn.event.basic.DynamicSensor
+import brooklyn.event.basic.DynamicAttributeSensor
 import brooklyn.event.basic.SensorEvent
 
 /**
@@ -46,7 +46,7 @@ public class JmxSensorAdapter implements SensorAdapter {
     ScheduledFuture monitor = null
     Map<String, AttributeSensor<?>> sensors = [:]
     Map<String, ObjectName> objects = [:]
-    Map<String, DynamicSensor<?>> calculated = [:]
+    Map<String, DynamicAttributeSensor<?>> calculated = [:]
     Map<String, ScheduledFuture> schedule = [:]
     
     /* Default polling interval, milliseconds */
@@ -64,12 +64,12 @@ public class JmxSensorAdapter implements SensorAdapter {
         if (!connect(timeout)) throw new IllegalStateException("Could not connect to JMX service")
     }
     
-    public void addSensor(AttributeSensor sensor, String jmxName, Closure calculate, long period = defaultPollingPeriod) {
+    public void addSensor(DynamicAttributeSensor sensor, String jmxName) {
         calculated[sensor.getName()] = sensor
         objects[sensor.getName()] = new ObjectName(jmxName)
         entity.updateAttribute(sensor, null)
         
-        schedule[sensor.getName()] = exec.scheduleWithFixedDelay(calculate, period, period, TimeUnit.MILLISECONDS)
+        schedule[sensor.getName()] = exec.scheduleWithFixedDelay(sensor.calculate, sensor.period, sensor.period, TimeUnit.MILLISECONDS)
     }
  
     public void addSensor(AttributeSensor sensor, String jmxName) {
