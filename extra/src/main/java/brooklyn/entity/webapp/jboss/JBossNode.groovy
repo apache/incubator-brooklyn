@@ -28,7 +28,22 @@ public class JBossNode extends AbstractEntity implements Startable {
     
     static {
         JBossNode.metaClass.startInLocation = { SshMachineLocation loc ->
-            new JBoss6SshSetup(delegate).start loc;
+			def setup = new JBoss6SshSetup(delegate)
+			setup.start loc
+
+			//TODO extract to a utility method
+			//TODO use same code with TomcatNode, or use extract new abstract superclass
+			log.debug "waiting to ensure $delegate doesn't abort prematurely"
+			long startTime = System.currentTimeMillis()
+			boolean isRunningResult = false;
+			while (!isRunningResult && System.currentTimeMillis() < startTime+60000) {
+				Thread.sleep 3000
+				isRunningResult = setup.isRunning(loc)
+				log.debug "checked jboss $delegate, running result $isRunningResult"
+			}
+			if (!isRunningResult) throw new IllegalStateException("$delegate aborted soon after startup")
+			
+			log.warn "not setting http port for successful jboss execution"
         }
         JBossNode.metaClass.shutdownInLocation = { SshMachineLocation loc ->
             new JBoss6SshSetup(delegate).shutdown loc;
