@@ -2,9 +2,6 @@ package brooklyn.entity.webapp.jboss;
 
 import static org.junit.Assert.*
 
-import java.security.*
-import java.util.Map
-
 import org.junit.Test
 
 import brooklyn.entity.Application
