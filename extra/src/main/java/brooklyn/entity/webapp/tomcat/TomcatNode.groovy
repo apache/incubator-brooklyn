@@ -50,7 +50,6 @@ public class TomcatNode extends AbstractEntity implements Startable {
     public static final AttributeSensor<String>  NODE_STATUS = [ String, "webapp.status", "Node status" ];
     
     JmxSensorAdapter jmxAdapter;
-    PropertiesSensorAdapter propertiesAdapter;
  
 	static {
 		TomcatNode.metaClass.startInLocation = { SshMachineLocation loc ->
@@ -83,7 +82,6 @@ public class TomcatNode extends AbstractEntity implements Startable {
 
 		log.debug "started... jmxHost is {} and jmxPort is {}", this.attributes['jmxHost'], this.attributes['jmxPort']
 		
-        propertiesAdapter = new PropertiesSensorAdapter(this)
 		propertiesAdapter.addSensor HTTP_PORT, this.attributes['httpPort']
 		propertiesAdapter.addSensor NODE_UP, false
         propertiesAdapter.addSensor NODE_STATUS, "starting"

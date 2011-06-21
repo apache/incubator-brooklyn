@@ -34,7 +34,12 @@ public interface Entity extends Serializable {
      * Return the {@link Application} this entity is registered with.
      */
     Application getApplication();
-    
+
+    /**
+     * Return the id of the {@link Application} this entity is registered with.
+     */
+    String getApplicationId();
+
     /**
      * Mutable attributes on this entity.
      * 
@@ -45,14 +50,16 @@ public interface Entity extends Serializable {
     Map<String,Object> getAttributes();
 
     /**
-     * The "owner" of this entity, if null if no owner. The owner is normally the entity 
-     * responsible for creating/destroying this entity.
+     * The owner of this entity, null if no owner.
+     *
+     * The owner is normally the entity responsible for creating/destroying this entity.
      */
     Group getOwner();
     
     /**
-     * The groups that this entity is a member of. Groupings can be used to allow easy 
-     * management/monitoring of a group of entities.
+     * The {@link Collection} of {@link Group}s that this entity is a member of.
+     *
+     * Groupings can be used to allow easy management/monitoring of a group of entities.
      */
     Collection<Group> getGroups();
     
@@ -67,15 +74,15 @@ public interface Entity extends Serializable {
     <T> T getAttribute(Sensor<T> attribute);
 
     /**
-     * Return the {@link Collection} of {@link Group}s this entity belongs to.
-     */
-    Collection<Group> getParents();
-    
-    /**
      * Add this entity to a {@link Group} as a child of the parent entity.
      */
-    void addParent(Group parent);
-    
+    void addGroup(Group parent);
+
+    /**
+     * The ids of all {@link Group}s this entity belongs to.
+     */
+    Collection<String> getGroupIds();
+
     /**
      * Return all the {@link Location}s this entity is deployed to.
      */

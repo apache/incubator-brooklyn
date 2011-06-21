@@ -41,21 +41,16 @@ public abstract class AbstractEntity implements Entity {
     String id = LanguageUtils.newUid();
     Map<String,Object> presentationAttributes = [:]
     String displayName;
-    final Collection<Group> parents = new CopyOnWriteArrayList<Group>()
+    final Collection<Group> groups = new CopyOnWriteArrayList<Group>()
     Application application
     Collection<Location> locations = []
-    
-    private transient volatile ExecutionContext execution
- 
-    protected final AttributeMap attributesInternal = new AttributeMap(this)
-    protected final LocalManagementContext management = LocalManagementContext.getContext()
-    protected final PropertiesSensorAdapter subscriptions = new PropertiesSensorAdapter(this, properties)
-
-    final Collection<Group> groups = new CopyOnWriteArrayList<Group>()
- 
     Group owner
     
-    Application application
+    private transient volatile ExecutionContext execution
+    protected transient final LocalManagementContext management = LocalManagementContext.getContext()
+ 
+    protected final AttributeMap attributesInternal = new AttributeMap(this)
+    protected final PropertiesSensorAdapter propertiesAdapter = new PropertiesSensorAdapter(this, attributes)
 
     public AbstractEntity(Map flags=[:]) {
         def owner = flags.remove('owner')
@@ -98,7 +93,7 @@ public abstract class AbstractEntity implements Entity {
     }
  
 	public Collection<String> getGroupIds() {
-        parents.collect { g -> g.id }
+        groups.collect { g -> g.id }
 	}
 
     /**
