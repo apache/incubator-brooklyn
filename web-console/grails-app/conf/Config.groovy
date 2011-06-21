@@ -95,4 +95,8 @@ grails.plugins.springsecurity.userLookup.authorityJoinClassName = 'brooklyn.web.
 grails.plugins.springsecurity.authority.className = 'brooklyn.web.console.SecurityRole'
 
 grails.plugins.springsecurity.useBasicAuth = true
-grails.plugins.springsecurity.basic.realmName = "OverPaas Webconsole"
+grails.plugins.springsecurity.basic.realmName = "Brooklyn Webconsole"
+
+grails.plugins.springsecurity.controllerAnnotations.staticRules = [
+   '/': ['ROLE_ADMIN']
+]
