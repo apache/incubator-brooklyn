@@ -89,14 +89,11 @@ public interface Entity extends Serializable {
     Collection<Location> getLocations();
     
     /**
-     * Allow an interested entity to subscribe to data from a named {@link Sensor} on this entity.
-     * 
-     * This method should forward the request to the relevant manager, but allows the entity to keep track of sensor data
-     * that it must raise events for, thus minimising potential network traffic and congestion.
+     * Allow us to subscribe to data from a {@link Sensor} on another entity.
      * 
      * @return a subscription id which can be used to unsubscribe
      */
-    <T> long subscribe(String interestedId, String sensorName, EventListener<T> listener);
+    <T> long subscribe(Entity producer, Sensor<T> sensor, EventListener<T> listener);
         
     /**
      * The entity should raise the supplied {@link Event} and sent it to all interested parties.

@@ -147,9 +147,9 @@ public abstract class AbstractEntity implements Entity {
         attributesInternal.update(attribute, val);
     }
     
-    /** @see Entity#subscribe(String String, EventListener) */
-    public <T> long subscribe(String interestedId, String sensorName, EventListener<T> listener) {
-        management.getSubscriptionManager().subscribe interestedId, this.getId(), sensorName, listener
+    /** @see Entity#subscribe(Entity, Sensor, EventListener) */
+    public <T> long subscribe(Entity producer, Sensor<T> sensor, EventListener<T> listener) {
+        management.getSubscriptionManager().subscribe this.id, producer.id, sensor.name, listener
     }
      
     /** @see Entity#raiseEvent(Event) */
