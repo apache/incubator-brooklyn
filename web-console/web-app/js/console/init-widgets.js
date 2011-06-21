@@ -1,6 +1,5 @@
 
 //TABS WIDGET.
-
 $(function() {
 			$( "#tabs" ).tabs();
 	});
@@ -10,4 +9,4 @@ $(function() {
 });
 
 //INITIALISE TREE
-$(document).ready(OverPaas.jsTree.loadJstree);
+$(document).ready(Brooklyn.jsTree.loadJstree);
