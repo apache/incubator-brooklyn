@@ -158,8 +158,7 @@
 						<forkMode>always</forkMode>
 						<redirectTestOutputToFile>true</redirectTestOutputToFile>
 						<systemPropertyVariables>
-                            <propertyName>java.util.logging.config.file</propertyName>
-                            <buildDirectory>${project.build.outputDirectory}/logging.properties</buildDirectory>
+                            <java.util.logging.config.file>${test.directory}/resources/logging.properties</java.util.logging.config.file>
                         </systemPropertyVariables>
 					</configuration>
 				</plugin>
