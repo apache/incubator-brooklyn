@@ -39,7 +39,7 @@ public class Segment extends AbstractEntity {
             double msgCount = item.getReceivedRequestCount();
             double msgCountPerSec = (msgCount/report.getReportPeriodDuration())*1000;
             
-            activity.update WORKRATE_MSGS_PER_SEC, msgCountPerSec
+            updateAttribute WORKRATE_MSGS_PER_SEC, msgCountPerSec
             if (LOG.isLoggable(Level.FINEST)) LOG.finest(String.format("(node=%s, msgCount=%s, duration=%s), ",report.getSourceNodeAddress(), msgCount, report.getReportPeriodDuration()));
         }
     }

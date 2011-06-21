@@ -199,8 +199,8 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
                 throw new IllegalStateException("Management plane not reachable via web-api within "+TimeUtils.makeTimeString(MontereyNetworkConfig.TIMEOUT_FOR_NEW_NETWORK_ON_HOST)+": url="+managementUrl);
             }
 
-            activity.update MANAGEMENT_URL, managementUrl
-            activity.update NETWORK_ID, networkId.getId()
+            updateAttribute MANAGEMENT_URL, managementUrl
+            updateAttribute NETWORK_ID, networkId.getId()
 
             monitoringTask = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay({ updateAll() }, 1000, 1000, TimeUnit.MILLISECONDS)
 
@@ -283,7 +283,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         String currentAppName = currentApp?.getName();
         if (!(applicationName != null ? applicationName.equals(currentAppName) : currentAppName == null)) {
             applicationName = currentAppName;
-            activity.update(APPLICTION_NAME, applicationName);
+            updateAttribute(APPLICTION_NAME, applicationName);
         }
     }
     
