@@ -44,7 +44,7 @@ public class AttributeMap {
 	
 	public <T> void update(Sensor<T> sensor, T newValue) {
 		log.debug "sensor $sensor field {} set to {}", sensor.name, newValue
-		if (!(sensor in AttributeSensor<T>)) throw new IllegalArgumentException("AttributeMap can only update an attribute sensor's value, not "+sensor)
+		if (!(sensor in AttributeSensor)) throw new IllegalArgumentException("AttributeMap can only update an attribute sensor's value, not "+sensor)
 		def oldValue = update(sensor.getNameParts(), newValue)
         SensorEvent event = new SensorEvent<T>(sensor, entity, newValue)
         entity.raiseEvent event
