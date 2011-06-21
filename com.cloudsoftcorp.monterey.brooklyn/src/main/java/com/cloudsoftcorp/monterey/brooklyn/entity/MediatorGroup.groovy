@@ -5,12 +5,13 @@ import groovy.lang.Closure
 import java.util.Map
 import java.util.concurrent.ConcurrentHashMap
 
-import org.overpaas.entities.DynamicGroup
+import brooklyn.entity.basic.DynamicGroup
+import brooklyn.entity.trait.Balanceable
 
-import com.cloudsoftcorp.monterey.network.control.plane.web.PlumberWebProxy;
-import com.cloudsoftcorp.monterey.network.control.wipapi.Dmn1PlumberInternalAsync;
+import com.cloudsoftcorp.monterey.network.control.plane.web.PlumberWebProxy
+import com.cloudsoftcorp.monterey.network.control.wipapi.Dmn1PlumberInternalAsync
 import com.cloudsoftcorp.monterey.node.api.NodeId
-import com.google.gson.Gson;
+import com.google.gson.Gson
 
 public class MediatorGroup extends DynamicGroup implements Balanceable {
 

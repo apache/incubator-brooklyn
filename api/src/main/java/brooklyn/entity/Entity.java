@@ -15,37 +15,48 @@ import brooklyn.location.Location;
  * @see AbstractEntity
  */
 public interface Entity extends Serializable {
+
+    /**
+     * @return The unique identifier for this entity.
+     */
     String getId();
-    String getDisplayName();
-    EntitySummary getSummary();
     
+    /**
+     * A display name; recommended to be a concise single-line description.
+     */
+    String getDisplayName();
+    
+    /**
+     * Information about the type of this entity; analogous to Java's object.getClass.
+     */
     EntityClass getEntityClass();
     
     Application getApplication();
-
-    /**
-     * ad hoc map for storing, e.g. description, icons, etc
-     */
-    Map<?,?> getPresentationAttributes();
-
-    /**
-     * Mutable properties on this entity.
-     * 
-     * Allows one to put arbitrary properties on entities which makes life much easier/dynamic, 
-     * though we lose something in type safety.
-     * <p>
-     * e.g. jmxHost / jmxPort are handled as properties.
-     */
-    @Deprecated // want to just use getAttributes(); needs confirmed and refactored
-    Map<String, Object> getProperties();
     
+    
+    //FIXME should these be here?  or is Abstract good enough?
+    
+    /**
+     * Mutable attributes on this entity.
+     * 
+     * This can include activity information and status information (e.g. AttributeSensors), as well as
+     * arbitrary internal properties which can make life much easier/dynamic (though we lose something in type safety)
+     * e.g. jmxHost / jmxPort are handled as attributes
+     */
     Map<String,Object> getAttributes();
 
-    // TODO the owner is the parent that strictly contains this entity
-//    Group getOwner();
-    Collection<Group> getParents();
-    void addParent(Group e);
-
+    /**
+     * The "owner" of this entity, if null if no owner. The owner is normally the entity 
+     * responsible for creating/destroying this entity.
+     */
+    Group getOwner();
+    
+    /**
+     * The groups that this entity is a member of. Groupings can be used to allow easy 
+     * management/monitoring of a group of entities.
+     */
+    Collection<Group> getGroups();
+    
     <T> void updateAttribute(Sensor<T> attribute, T val);
     
 //    void subscribe(EventFilter filter, EventListener listener);

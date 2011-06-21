@@ -1,5 +1,7 @@
 class UrlMappings {
 
+    static excludes = ["/images/**", "/css/**", "/js/**", "/static/**" ]
+
 	static mappings = {
 		"/$controller/$action?/$id?"{
 			constraints {
@@ -7,7 +9,9 @@ class UrlMappings {
 			}
 		}
 
-		"/"(view:"/index")
+        "/dynjs/$action"(controller: "javascript")
+
+		"/"(view:"jheytest/index")
 		"500"(view:'/error')
 	}
 }

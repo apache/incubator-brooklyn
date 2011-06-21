@@ -10,7 +10,6 @@ import brooklyn.entity.Group
 import brooklyn.entity.trait.Resizable
 import brooklyn.entity.trait.Startable
 import brooklyn.util.internal.EntityStartUtils
-import brooklyn.util.internal.OverpaasDsl
 
 /**
  * intended to represent a group of homogeneous entities in a single location;
@@ -19,8 +18,8 @@ import brooklyn.util.internal.OverpaasDsl
  * initialSize property determines initial size when started (defaults to 1)
  */
 public abstract class Cluster extends Tier implements Startable {
-	public Cluster(Map props=[:], Group parent) {
-		super(props, parent)
+	public Cluster(Map props=[:], Group owner) {
+		super(props, owner)
 	}
     
     
@@ -30,15 +29,17 @@ public abstract class Cluster extends Tier implements Startable {
 public abstract class ClusterFromTemplate extends Cluster implements Resizable {
 	Entity template = null
 	
-	public ClusterFromTemplate(Map properties=[:], Group parent=null, Entity template=null) {
-		super(properties, parent)
+	public ClusterFromTemplate(Map properties=[:], Group owner=null, Entity template=null) {
+		super(properties, owner)
 		if (template) this.template = template
 	}
 	
 	public List<Future> grow(int desiredIncrease) {
 		def nodes = []
 		desiredIncrease.times { nodes += EntityStartUtils.createFromTemplate(this, template) }
-		OverpaasDsl.run( nodes.collect({ node -> { -> node.start() } }) as Closure[] )
+		
+		Set tasks = nodes.collect { node -> getExecutionContext().submit({node.start()}) }
+		tasks.collect { it.get() }
 	}
 
 	public List<Future> shrink(int desiredDecrease) {

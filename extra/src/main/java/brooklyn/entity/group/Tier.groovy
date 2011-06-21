@@ -8,16 +8,16 @@ import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.trait.Startable
 
 public abstract class Tier extends AbstractGroup {
-	public Tier(Map props=[:], Group parent) {
-		super(props, parent)
+	public Tier(Map props=[:], Group owner) {
+		super(props, owner)
 	}
 }
 
 public abstract class TierFromTemplate extends Tier implements Startable {
 	Entity template
 
-	public TierFromTemplate(Map properties=[:], Group parent=null, Entity template=null) {
-		super(properties, parent);
+	public TierFromTemplate(Map properties=[:], Group owner=null, Entity template=null) {
+		super(properties, owner);
 		if (template) this.template = template
 	}
 }

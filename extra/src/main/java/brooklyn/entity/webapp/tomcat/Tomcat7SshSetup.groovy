@@ -1,7 +1,7 @@
 package brooklyn.entity.webapp.tomcat
 
-import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.SshBasedJavaWebAppSetup
+import brooklyn.location.basic.SshMachineLocation
 
 /**
  * Created by IntelliJ IDEA.
@@ -10,8 +10,9 @@ import brooklyn.location.basic.SshBasedJavaWebAppSetup
  * Time: 15:13
  * To change this template use File | Settings | File Templates.
  */
-class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
-    String version = "7.0.14"
+public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
+	//FIXME nextag only keep most recent version.  need someone who keeps history!
+    String version = "7.0.16"
     String installDir = installsBaseDir + "/" + "tomcat" + "/" + "apache-tomcat-$version"
     public static DEFAULT_FIRST_HTTP_PORT = 8080
     public static DEFAULT_FIRST_SHUTDOWN_PORT = 31880

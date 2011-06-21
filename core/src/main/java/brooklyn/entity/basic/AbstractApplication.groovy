@@ -8,12 +8,14 @@ import java.util.concurrent.ConcurrentHashMap
 
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
-import brooklyn.util.internal.EntityStartUtils
-import brooklyn.util.internal.SerializableObservables.SerializableObservableMap
+import brooklyn.management.ManagementContext
+import brooklyn.management.internal.AbstractManagementContext
+import brooklyn.management.internal.LocalManagementContext
+import brooklyn.util.internal.SerializableObservableMap;
 
 public abstract class AbstractApplication extends AbstractGroup implements Application {
     public AbstractApplication(Map properties=[:]) {
-        super(properties, null)
+        super(properties)
     }
     
     final ObservableMap entities = new SerializableObservableMap(new ConcurrentHashMap<String,Entity>());
@@ -47,6 +49,26 @@ public abstract class AbstractApplication extends AbstractGroup implements Appli
      * Default start will start all Startable children
      */
     public void start(Map properties=[:]) {
+		getManagementContext()
         EntityStartUtils.startGroup properties, this
     }
+	
+	private volatile AbstractManagementContext mgmt = null;
+	public ManagementContext getManagementContext() {
+		AbstractManagementContext result = mgmt
+		if (result==null) synchronized (this) {
+			result = mgmt
+			if (result!=null) return result
+			
+			//TODO how does user override?  expect he annotates a field in this class, then look up that field?
+			//(do that here)
+			
+			if (result==null)
+				result = new LocalManagementContext()
+			result.registerApplication(this)
+			mgmt = result
+		}
+		result
+	}
+	
 }

@@ -10,11 +10,12 @@ import brooklyn.entity.Group
 public class DynamicGroup extends AbstractGroup {
     Closure entityFilter=null;
 	
-	public DynamicGroup(Map properties=[:], Group parent=null, Closure entityFilter=null) {
+	public DynamicGroup(Map properties=[:], Group owner=null, Closure entityFilter=null) {
 		super(properties, null)
 		if (entityFilter) this.entityFilter = entityFilter;
-		//do this last, rather than passing parent up, so that entity filter is ready
-		if (parent) parent.addChild(this)
+        
+		//do this last, rather than passing owner up, so that entity filter is ready
+		if (owner) owner.addOwnedChild(this)
 	}
 	
 	void setEntityFilter(Closure entityFilter) {
@@ -36,13 +37,15 @@ public class DynamicGroup extends AbstractGroup {
 			return
 		}
 		if (!getApplication()) return
-		Set childrenSet = getChildren() as HashSet
+		Set existingMembers = getMembers() as HashSet
 		log.info "scanning {}", getApplication().getEntities()
 		getApplication().getEntities().each {
 			if (entityFilter.call(it)) {
-				if (childrenSet.add(it))
-					addChild(it)
-			}
+				if (existingMembers.add(it))
+					addMember(it)
+			} else if (existingMembers.remove(it)) {
+                removeMember(it)
+            } 
 		}
 	}
 }

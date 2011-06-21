@@ -93,4 +93,17 @@ public class LanguageUtils {
 		/** invoked by visitFields; fieldName will be null for collections */
 		public void visit(Object parent, String fieldName, Object value)
 	}
+	
+	public static <T> T throwRuntime(Throwable t) {
+		if (t instanceof RuntimeException) throw (RuntimeException)t;
+		if (t instanceof Error) throw (Error)t;
+		throw new RuntimeException(t);
+	}
+
+	public static Throwable getRoot(Throwable t) {
+		Throwable cause = t.getCause()
+		if (!cause) return t
+		if (cause==t) return t
+		return getRoot(cause)
+	}	
 }

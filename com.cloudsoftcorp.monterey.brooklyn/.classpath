@@ -4,6 +4,9 @@
 	<classpathentry kind="src" path="src/main/java"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/org.overpaas.core"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/brooklyn-api"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/brooklyn-core"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/brooklyn-extra"/>
+	<classpathentry kind="lib" path="build/lib/slf4j-api-1.6.1.jar"/>
 	<classpathentry kind="output" path="build/out"/>
 </classpath>

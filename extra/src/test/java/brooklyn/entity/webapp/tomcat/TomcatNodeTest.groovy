@@ -2,16 +2,13 @@ package brooklyn.entity.webapp.tomcat
 
 import static java.util.concurrent.TimeUnit.*
 import static org.junit.Assert.*
-
 import groovy.time.TimeDuration
-//import groovy.transform.InheritConstructors
 
 import java.util.Map
 import java.util.concurrent.Callable
 
 import org.junit.After
 import org.junit.Before
-import org.junit.BeforeClass
 import org.junit.Test
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -22,6 +19,7 @@ import brooklyn.entity.basic.AbstractApplication
 import brooklyn.event.EntityStartException
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.internal.TimeExtras
+import org.junit.Ignore
 
 /**
  * This tests the operation of the {@link TomcatNode} entity.
@@ -69,7 +67,21 @@ class TomcatNodeTest {
 		if (oldHttpPort>0)
 			Tomcat7SshSetup.DEFAULT_FIRST_HTTP_PORT = oldHttpPort
 	}
-	
+
+    @Before
+    public void patchInSimulator() {
+        TomcatNode.metaClass.startInLocation = { SimulatedLocation loc ->
+            TomcatSimulator sim = new TomcatSimulator(loc, delegate)
+            delegate.simulator = sim
+            sim.start()
+        }
+        TomcatNode.metaClass.shutdownInLocation { SimulatedLocation loc ->
+            TomcatSimulator sim = delegate.simulator
+            assertEquals loc, sim.location
+            sim.shutdown()
+        }
+    }
+
 	public boolean isPortInUse(int port, long retryAfterMillis=0) {
 		try {
 			def s = new Socket("localhost", port)
@@ -91,16 +103,16 @@ class TomcatNodeTest {
 	@Test
 	public void acceptsLocationAsStartParameter() {
 		Application app = new TestApplication();
-		TomcatNode tc = new TomcatNode(parent:app);
-		tc.start([:], null, new SshMachineLocation(name:'london', host:'localhost'))
+		TomcatNode tc = new TomcatNode(owner:app);
+		tc.start(location: new SimulatedLocation())
 		tc.shutdown()
 	}
-	
+
 	@Test
 	public void acceptsLocationInEntity() {
 		logger.debug ""
-		Application app = new TestApplication(location:new SshMachineLocation(name:'london', host:'localhost'));
-		TomcatNode tc = [ parent: app ]
+		Application app = new TestApplication(location:new SimulatedLocation());
+		TomcatNode tc = [ owner: app ]
 		tc.start()
 		tc.shutdown()
 	}
@@ -108,8 +120,8 @@ class TomcatNodeTest {
 	@Test
 	public void acceptsEntityLocationSameAsStartParameter() {
 		Application app = new TestApplication();
-		TomcatNode tc = [ parent:app, location:new SshMachineLocation(name:'london', host:'localhost') ]
-		tc.start(location: new SshMachineLocation(name:'london', host:'localhost'))
+		TomcatNode tc = [ owner:app, location:new SimulatedLocation() ]
+		tc.start(location: new SimulatedLocation())
 		tc.shutdown()
 	}
 	
@@ -117,7 +129,7 @@ class TomcatNodeTest {
 	public void rejectIfEntityLocationConflictsWithStartParameter() {
 		Application app = new TestApplication()
 		boolean caught = false
-		TomcatNode tc = [ parent:app, location:new SshMachineLocation(name:'tokyo', host:'localhost') ]
+		TomcatNode tc = [ owner:app, location:new SshMachineLocation(name:'tokyo', host:'localhost') ]
 		try {
 			tc.start([:], null, new SshMachineLocation(name:'london', host:'localhost'))
 			tc.shutdown()
@@ -131,7 +143,7 @@ class TomcatNodeTest {
 	public void rejectIfLocationNotInEntityOrInStartParameter() {
 		Application app = new TestApplication();
 		boolean caught = false
-		TomcatNode tc = new TomcatNode(parent: app);
+		TomcatNode tc = new TomcatNode(owner: app);
 		try {
 			tc.start()
 			tc.shutdown()
@@ -142,210 +154,20 @@ class TomcatNodeTest {
 	}
 
 	@Test
-	public void detect_early_death_of_tomcat_process() {
-		TomcatNode tc1, tc2;
-		try {
-			Application app = new TestApplication(httpPort: DEFAULT_HTTP_PORT);
-			tc1 = new TomcatNode(parent: app);
-			tc2 = new TomcatNode(parent: app);
-			tc1.start(location: new SshMachineLocation(name:'london', host:'localhost'))
-			try {
-				tc2.start(location: new SshMachineLocation(name:'london', host:'localhost'))
-				fail "should have detected that $tc2 didn't start since tomcat was already running"
-			} catch (Exception e) {
-				logger.debug "successfully detected failure of {} to start: {}", tc2, e.toString()
-			}
-		} finally {
-			if (tc1) tc1.shutdown();
-			if (tc2) tc2.shutdown();
-		}
-	} 
-
-    @Test
-    public void tracksNodeState() {
-        TomcatNode tc = [ 
-            parent: new TestApplication(), 
-            location:new SshMachineLocation(name:'london', host:'localhost') 
-        ]
-        tc.start()
-        assertTrue tc.activity.getValue(TomcatNode.NODE_UP)
-        tc.shutdown()
-    }
-    
-	@Test
-	public void publishes_requests_per_second_metric() {
-		Application app = new TestApplication();
-		TomcatNode tc = new TomcatNode(parent: app);
-		tc.start(location: new SshMachineLocation(name:'london', host:'localhost'))
-		executeUntilSucceedsWithShutdown(tc, {
-				def activityValue = tc.activity.getValue(TomcatNode.REQUESTS_PER_SECOND)
-				assertEquals Integer, activityValue.class
-				if (activityValue==-1) return new BooleanWithMessage(false, "activity not set yet (-1)")
-				
-				assertEquals 0, activityValue
-				
-				def port = tc.activity.getValue(TomcatNode.HTTP_PORT)
-                def connection = connectToURL "http://localhost:${port}/foo"
-				assertEquals "Apache-Coyote/1.1", connection.getHeaderField("Server")
-
-				Thread.sleep 1000
-				activityValue = tc.activity.getValue(TomcatNode.REQUESTS_PER_SECOND)
-				assertEquals 1, activityValue
-				true
-			}, timeout: 10*SECONDS, useGroovyTruth: true)
+	public void detectEarlyDeathOfTomcatProcess() {
+        Application app = new TestApplication(httpPort: DEFAULT_HTTP_PORT);
+        TomcatNode tc1 = new TomcatNode(owner: app);
+        TomcatNode tc2 = new TomcatNode(owner: app);
+        tc1.start(location: new SimulatedLocation())
+        try {
+            tc2.start(location: new SimulatedLocation())
+            tc2.shutdown()
+            fail "should have detected that $tc2 didn't start since tomcat was already running"
+        } catch (Exception e) {
+            logger.debug "successfully detected failure of {} to start: {}", tc2, e.toString()
+        } finally {
+            tc1.shutdown()
+        }
 	}
-    
-    @Test
-    public void publishesErrorCountMetric() {
-        Application app = new TestApplication();
-        TomcatNode tc = new TomcatNode(parent: app);
-        tc.start(location: new SshMachineLocation(name:'london', host:'localhost'))
-        executeUntilSucceedsWithShutdown(tc, {
-            def port = tc.activity.getValue(TomcatNode.HTTP_PORT)
-            // Connect to non-existent URL n times
-            def n = 5
-            def connection = n.times { connectToURL("http://localhost:${port}/does_not_exist") }
-            int errorCount = tc.activity.getValue(TomcatNode.ERROR_COUNT)
-            logger.info "$errorCount errors in total"
-            
-            // TODO firm up assertions.  confused by the values returned (generally n*2?)
-            assert errorCount > 0
-            assertEquals 0, errorCount % n
-        })
-    }
-	
-	@Test
-	public void deploy_web_app_appears_at_URL() {
-		Application app = new TestApplication();
-		TomcatNode tc = new TomcatNode(parent: app);
-
-        URL resource = this.getClass().getClassLoader().getResource("hello-world.war")
-        assertNotNull resource
-        tc.war = resource.getPath()
-
-		tc.start(location: new SshMachineLocation(name:'london', host:'localhost'))
-		executeUntilSucceedsWithShutdown(tc, {
-            def port = tc.activity.getValue(TomcatNode.HTTP_PORT)
-            def url  = "http://localhost:${port}/hello-world"
-            def connection = connectToURL(url)
-            int status = ((HttpURLConnection)connection).getResponseCode()
-            logger.info "connection to {} gives {}", url, status
-            if (status == 404)
-                throw new Exception("App is not there yet (404)");
-            assertEquals 200, status
-        }, abortOnError: false)
-	}
-
-	
-	@Test
-	public void detect_failure_if_tomcat_cant_bind_to_port() {
-		ServerSocket listener = new ServerSocket(DEFAULT_HTTP_PORT);
-		Thread t = new Thread({ try { for(;;) { Socket socket = listener.accept(); socket.close(); } } catch(Exception e) {} })
-		t.start()
-		try {
-			Application app = new TestApplication()
-			TomcatNode tc = new TomcatNode(parent: app)
-			Exception caught = null
-			try {
-				tc.start([:], null, new SshMachineLocation(name:'london', host:'localhost'))
-			} catch(EntityStartException e) {
-				caught = e
-			} finally {
-				tc.shutdown()
-			}
-			assertNotNull caught
-			logger.debug "The exception that was thrown was:", caught
-		} finally {
-			listener.close();
-			t.join();
-		}
-	}
-    
-    /**
-     * Connects to the given url and returns the connection.
-     * @param u
-     * @return
-     */
-    private URLConnection connectToURL(String u) {
-        URL url = [u]
-        URLConnection connection = url.openConnection()
-        connection.connect()
-        connection.getContentLength() // Make sure the connection is made.
-        return connection
-    }
-    
-    /** convenience for entities to ensure they shutdown afterwards */
-    public static void executeUntilSucceedsWithShutdown(Map flags=[:], Entity entity, Runnable r) {
-        executeUntilSucceedsWithFinallyBlock(flags, r, { entity.shutdown() })
-    }
-
-	/**
-	 * Convenience method for cases where we need to test until something is true.
-	 * The runnable will be invoked periodically until it succesfully concludes.
-	 * Additionally, a finally block can be supplied.
-	 * 
-	 * @param flags, accepts boolean abortOnError (default true), abortOnException (default false), 
-	 * useGroovyTruth (defaults to false; any result code apart from 'false' will be treated as success including null; ignored for Runnables which aren't Callables), 
-	 * timeout (a TimeDuration, defaults to 30*SECONDS), period (a TimeDuration, defaults to 500*MILLISECONDS),
-	 * maxAttempts (integer, Integer.MAX_VALUE)
-	 * @param entity
-	 * @param r
-	 */
-	public static void executeUntilSucceedsWithFinallyBlock(Map flags=[:], Runnable r, Runnable finallyBlock={}) {
-		println "abortOnError = "+flags.abortOnError
-		boolean abortOnException = flags.abortOnException ?: false
-		boolean abortOnError = flags.abortOnError ?: true
-		boolean useGroovyTruth = flags.useGroovyTruth ?: false
-		TimeDuration timeout = flags.timeout ?: 30*SECONDS
-		TimeDuration period = flags.period ?: 500*MILLISECONDS
-		int maxAttempts = flags.maxAttempts ?: Integer.MAX_VALUE
-		try {
-			Throwable lastException = null;
-			Object result;
-			long lastAttemptTime = 0;
-			long startTime = System.currentTimeMillis()
-			long expireTime = startTime+timeout.toMilliseconds()
-			int attempt = 0;
-			while (attempt<maxAttempts && lastAttemptTime<expireTime) {
-				try {
-					attempt++
-					lastAttemptTime = System.currentTimeMillis()
-					if (r in Callable) {
-						result = r.call();
-						logger.trace "Attempt ${attempt} after ${System.currentTimeMillis()-startTime}ms: ${result}"
-						if (useGroovyTruth) {
-							if (result) return;
-						} else if (result!=false) return;
-					} else {
-						r.run()
-						return
-					}
-					lastException = null
-				} catch(Throwable e) {
-					lastException = e
-					logger.trace "Attempt $attempt after ${System.currentTimeMillis()-startTime}ms: ${e.message}"
-					if (abortOnException) throw e
-					if (abortOnError && e in Error) throw e
-				}
-				if (period.toMilliseconds()>0) Thread.sleep period.toMilliseconds()
-			}
-			logger.trace "Exceeded max attempts or timeout - $attempt attempts lasting {}ms", System.currentTimeMillis()-startTime
-			if (lastException != null)
-				throw lastException
-			fail "invalid result code $result"
-		} finally {
-			finallyBlock.run()
-		}
-	}
-
-	public static class BooleanWithMessage {
-		boolean value; String message;
-		public BooleanWithMessage(boolean value, String message) {
-			this.value = value; this.message = message;
-		}
-		public boolean asBoolean() { return value }
-		public String toString() { return message }
-	}
-	
 }
  

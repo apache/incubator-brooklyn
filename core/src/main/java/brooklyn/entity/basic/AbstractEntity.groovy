@@ -1,8 +1,7 @@
 package brooklyn.entity.basic
 
+import java.util.Collection;
 import java.util.concurrent.CopyOnWriteArrayList
-
-import com.google.common.base.Predicate
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -10,15 +9,15 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
 import brooklyn.entity.EntityClass
-import brooklyn.entity.EntitySummary
 import brooklyn.entity.Group
 import brooklyn.event.Event
-import brooklyn.event.Sensor
 import brooklyn.event.EventListener
-import brooklyn.event.basic.Activity
-import brooklyn.event.basic.EventFilter
+import brooklyn.event.Sensor
+import brooklyn.event.basic.AttributeMap
 import brooklyn.location.Location
+import brooklyn.management.ManagementContext
 import brooklyn.util.internal.LanguageUtils
+import brooklyn.util.task.ExecutionContext
 
 /**
  * Default {@link Entity} definition.
@@ -40,52 +39,75 @@ public abstract class AbstractEntity implements Entity {
     
     String displayName;
     
-    //FIXME Delete?
-    //final ObservableList listeners = new SerializableObservableList(new CopyOnWriteArrayList<EventListener>());
-
     /**
      * Properties can be accessed or set on the entity itself; can also be accessed
      * from ancestors if not present on an entity
      */
-    final Map properties = [:]
-    
     Collection<Location> locations = []
  
     // TODO ref to local mgmt context and sub mgr etc
  
-    public final Activity activity = new Activity(this)
-
-    public void propertyMissing(String name, value) { properties[name] = value }
- 
-    public Object propertyMissing(String name) {
-        if (properties.containsKey(name)) return properties[name];
-        else {
-            //TODO could be more efficient ;)
-            def v = null
-            if (parents.find { parent -> v = parent.properties[name] }) return v;
-        }
-        log.debug "no property $name on $this"
-    }
+    protected final AttributeMap attributesInternal = new AttributeMap(this)
 
     /** Entity hierarchy */
-    final Collection<Group> parents = new CopyOnWriteArrayList<Group>()
+    final Collection<Group> groups = new CopyOnWriteArrayList<Group>()
  
+    Group owner
+    
     Application application
 
+    public AbstractEntity(Map flags=[:]) {
+        def owner = flags.remove('owner')
+
+        //place named-arguments into corresponding fields if they exist, otherwise put into attributes map
+        this.attributes << LanguageUtils.setFieldsFromMap(this, flags)
+
+        //set the owner if supplied; accept as argument or field
+        if (owner) owner.addOwnedChild(this)
+    }
+
+    public void propertyMissing(String name, value) { attributes[name] = value }
+ 
+    public Object propertyMissing(String name) {
+        if (attributes.containsKey(name)) return attributes[name];
+        else {
+            //TODO could be more efficient ;)
+            def v = owner?.attributes[name]
+            if (v != null) return v;
+            if (groups.find { group -> v = group.attributes[name] }) return v;
+        }
+        log.debug "no property or attribute $name on $this"
+		if (name=="activity") log.warn "reference to removed field 'activity' on entity $this", new Throwable("location of failed reference to 'activity' on $this")
+    }
+	
     /**
-     * Adds a parent, registers with application if necessary
+     * Adds this as a member of the given group, registers with application if necessary
      */
-    public void addParent(Group e) {
-        parents.add e
+    public void setOwner(Group e) {
+        owner = e
         getApplication()
     }
 
     /**
-     * Returns the application, looking it up if not yet known (registering if necessary
+     * Adds this as a member of the given group, registers with application if necessary
+     */
+    public void addGroup(Group e) {
+        groups.add e
+        getApplication()
+    }
+	
+	@Override
+	public Group getOwner() { owner }
+	@Override
+	public Collection<Group> getGroups() { groups }
+
+    /**
+     * Returns the application, looking it up if not yet known (registering if necessary)
      */
     public Application getApplication() {
         if (application!=null) return application;
-        def app = parents.find({ it.getApplication() })?.getApplication()
+        def app = owner?.getApplication()
+        app = (app != null) ? app : groups.find({ it.getApplication() })?.getApplication()
         if (app) {
             registerWithApplication(app)
             application
@@ -93,27 +115,26 @@ public abstract class AbstractEntity implements Entity {
         app
     }
 
+	public ManagementContext getManagementContext() {
+		getApplication()?.getManagementContext()
+	}
+	
     protected synchronized void registerWithApplication(Application app) {
         if (application) return;
         this.application = app
         app.registerEntity(this)
     }
 
-    public EntitySummary getSummary() {
-        Collection<String> groups = []
-        getParents().each { groups.add it.getId() }
-        return new BasicEntitySummary(id, displayName, getApplication().getId(), groups);
-    }
-    
     public EntityClass getEntityClass() {
-        // FIXME `new EntityClass(this.getClass())`; but have a registry so re-use types?
-        return null;
+		//TODO registry? or a transient?
+		new BasicEntityClass(getClass())
     }
     
     /**
      * Should be invoked at end-of-life to clean up the item.
      */
     public void destroy() {
+		//FIXME this doesn't exist, but we need some way of deleting stale items
         removeApplicationRegistrant()
     }
 
@@ -134,30 +155,13 @@ public abstract class AbstractEntity implements Entity {
     /** override this, adding to the collection, to supply fields whose value, if not null, should be included in the toString */
     public Collection<String> toStringFieldsToInclude() { ['id', 'displayName'] }
 
-    public AbstractEntity(Map properties=[:], Group parent=null) {
-        def parentFromProps = properties.remove('parent')
-        if (parentFromProps) {
-            if (!parent) parent = parentFromProps;
-            else assert parent==parentFromProps;
-        }
-
-        addProperties(properties)
-
-        //set the parent if supplied; accept as argument or field
-        if (parent) parent.addChild(this)
-    }
-
-    public void addProperties(Map properties) {
-        //place named-arguments into corresponding fields if they exist, otherwise put into config map
-        this.properties << LanguageUtils.setFieldsFromMap(this, properties)
-    }
-
     Map<String,Object> getAttributes() {
-        return activity.asMap();
+        return attributesInternal.asMap();
     }
     
+	public <T> T getAttribute(Sensor<T> attribute) { attributesInternal.getValue(attribute); }
     public <T> void updateAttribute(Sensor<T> attribute, T val) {
-        activity.update(attribute, val);
+        attributesInternal.update(attribute, val);
     }
     
     // TODO implement private methods
@@ -173,4 +177,13 @@ public abstract class AbstractEntity implements Entity {
     public <T> void raiseEvent(Event<T> event) {
         // TODO complete
     }
+	
+	private transient volatile ExecutionContext execution;
+	protected ExecutionContext getExecutionContext() {
+		if (execution) execution;
+		synchronized (this) {
+			if (execution) execution;
+			execution = new ExecutionContext(tag: this, getApplication()?.getManagementContext().getExecutionManager())
+		}
+	} 
 }

@@ -5,11 +5,15 @@
 	<packaging>bundle</packaging>
 	<name>Brooklyn API</name>
 
+	<description>
+        API classes for Brooklyn
+    </description>
+
 	<parent>
 		<groupId>brooklyn</groupId>
-		<artifactId>brooklyn-parent</artifactId>
+		<artifactId>brooklyn-parent-root</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
-		<relativePath>../parent/pom.xml</relativePath>
+		<relativePath>../parent/root/pom.xml</relativePath>
 	</parent>
 	
 	<build>
@@ -20,4 +24,5 @@
 			</plugin>
 		</plugins>
 	</build>
+	
 </project>

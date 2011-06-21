@@ -1,6 +1,10 @@
+
 package brooklyn.example;
 
-import groovy.transform.InheritConstructors
+import java.util.Map
+
+import brooklyn.entity.Entity
+import brooklyn.entity.Group
 import brooklyn.entity.group.Fabric
 import brooklyn.location.Location
 
@@ -28,24 +32,24 @@ public class PretendLocations {
 		}
 	}
 
-	@InheritConstructors
 	public static class MontereyFabric extends Fabric {
+		public MontereyFabric(Map properties=[:], Group parent=null, Entity template=null) { super(properties, parent, template); }
 		public void propertyMissing(String name, value) { super.propertyMissing(name, value) }
 		public Object propertyMissing(String name) { super.propertyMissing(name) }
 	}
 	
-	@InheritConstructors
 	public static class GemfireFabric extends Fabric {
+		public GemfireFabric(Map properties=[:], Group parent=null, Entity template=null) { super(properties, parent, template); }
 		public void propertyMissing(String name, value) { super.propertyMissing(name, value) }
 		public Object propertyMissing(String name) { super.propertyMissing(name) }
 	}
-	@InheritConstructors
 	public static class JBossFabric extends Fabric {
+		public JBossFabric(Map properties=[:], Group parent=null, Entity template=null) { super(properties, parent, template); }
 		public void propertyMissing(String name, value) { super.propertyMissing(name, value) }
 		public Object propertyMissing(String name) { super.propertyMissing(name) }
 	}
-	@InheritConstructors
 	public static class InfinispanFabric extends Fabric {
+		public InfinispanFabric(Map properties=[:], Group parent=null, Entity template=null) { super(properties, parent, template); }
 		public void propertyMissing(String name, value) { super.propertyMissing(name, value) }
 		public Object propertyMissing(String name) { super.propertyMissing(name) }
 	}

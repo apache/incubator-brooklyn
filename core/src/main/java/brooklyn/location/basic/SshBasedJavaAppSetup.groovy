@@ -41,7 +41,7 @@ public abstract class SshBasedJavaAppSetup {
 				entity.location.properties["next_"+field] = (v+1)
 			}
 			log.debug "retrieved {}, {}", field, entity.location.properties
-			entity.properties[field] = v
+			entity.attributes[field] = v
 		}
 		v
 	}
@@ -52,7 +52,7 @@ public abstract class SshBasedJavaAppSetup {
  
 	public int getJmxPort() {
 		log.debug "setting jmxHost on $entity as {}", entity.location.host
-		entity.properties.jmxHost = entity.location.host
+		entity.jmxHost = entity.location.host
 		getNextValue("jmxPort", 10100)
 	}
  
