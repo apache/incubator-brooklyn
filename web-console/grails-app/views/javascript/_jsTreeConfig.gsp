@@ -1,5 +1,4 @@
-
-var OverPaas = (function(parent) {
+var Brooklyn = (function(parent) {
 
     var urls = parent.urls = (parent.urls || {});
 
@@ -9,4 +8,4 @@ var OverPaas = (function(parent) {
 
     return parent;
 
-}(OverPaas || {}));
+}(Brooklyn || {}));
