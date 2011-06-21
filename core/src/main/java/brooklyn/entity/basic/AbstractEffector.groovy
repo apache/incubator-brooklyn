@@ -1,24 +1,28 @@
 package brooklyn.entity.basic;
 
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.lang.reflect.Method
+import java.util.ArrayList
+import java.util.Collections
+import java.util.List
+import java.util.concurrent.Callable
 
-import brooklyn.entity.ParameterType;
+import brooklyn.entity.Effector;
+import brooklyn.entity.ParameterType
 
-public class AbstractEffector {
+public class AbstractEffector implements Effector {
     private static final long serialVersionUID = 1832435915652457843L;
     
-    private String name;
+    final private String name;
     private Class<?> returnType;
     private List<ParameterType<?>> parameters;
     private String description;
+	
+	public Callable code;
 
-    @SuppressWarnings("unused")
-    private AbstractEffector() { /* for gson */ }
+//    @SuppressWarnings("unused")
+    private AbstractEffector() { /* for gson */ name = null; }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+//    @SuppressWarnings({ "rawtypes", "unchecked" })
 	public AbstractEffector(Method m) {
         name = m.getName();
         returnType = m.getReturnType();
@@ -31,11 +35,12 @@ public class AbstractEffector {
         description = "";
     }
     
-    public AbstractEffector(String name, Class<?> returnType, List<ParameterType<?>> parameters, String description) {
+    public AbstractEffector(String name, Class<?> returnType, List<ParameterType<?>> parameters, String description, Callable code=null) {
         this.name = name;
         this.returnType = returnType;
         this.parameters = Collections.unmodifiableList(parameters);
         this.description = description;
+		this.code = code;
     }
 
     public String getName() {

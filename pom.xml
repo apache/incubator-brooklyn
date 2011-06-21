@@ -8,7 +8,8 @@
 	<version>0.0.1-SNAPSHOT</version>
 
 	<modules>
-		<module>parent</module>
+		<module>parent/root</module>
+		<module>parent/groovy</module>
 		<module>api</module>
 		<module>core</module>
 		<module>extra</module>

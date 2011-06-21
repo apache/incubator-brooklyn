@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>brooklyn</groupId>
+	<artifactId>brooklyn-parent-groovy</artifactId>
+	<packaging>pom</packaging>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>Brooklyn Groovy Parent</name>
+
+	<description>
+        The parent for Brooklyn modules that use groovy (defines dependencies and config for groovy-based projects, extending brooklyn-parent-root)
+    </description>
+
+	<url>http://brooklyn</url>
+
+	<parent>
+		<groupId>brooklyn</groupId>
+		<artifactId>brooklyn-parent-root</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+		<relativePath>../root/pom.xml</relativePath>
+	</parent>
+	
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-bundle-plugin</artifactId>
+			</plugin>
+		</plugins>
+		
+	<pluginManagement>
+		<plugins>
+				<plugin>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>2.3.2</version>
+					<configuration>
+						<compilerId>groovy-eclipse-compiler</compilerId>
+						<verbose>false</verbose>
+						<source>1.6</source>
+						<target>1.6</target>
+					</configuration>
+					<dependencies>
+						<dependency>
+							<groupId>org.codehaus.groovy</groupId>
+							<artifactId>groovy-eclipse-compiler</artifactId>
+							<version>2.5.1-M3</version>
+						</dependency>
+						<dependency>
+							<groupId>org.codehaus.groovy</groupId>
+							<artifactId>groovy-eclipse-batch</artifactId>
+							<version>1.8.0-03</version>
+						</dependency>
+					</dependencies>
+				</plugin>
+
+		  <plugin>
+			<artifactId>maven-eclipse-plugin</artifactId>
+			<configuration>
+				<additionalProjectnatures>
+					<projectnature>org.eclipse.jdt.groovy.core.groovyNature</projectnature>
+					<projectnature>org.maven.ide.eclipse.maven2Nature</projectnature>
+				</additionalProjectnatures>
+			</configuration>
+		  </plugin>
+				
+		</plugins>
+	</pluginManagement>
+		
+	</build>
+
+</project>

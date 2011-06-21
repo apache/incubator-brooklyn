@@ -9,9 +9,13 @@ class UrlMappings {
 			}
 		}
 
+        "/login/$action?"(controller: "login")
+        "/logout/$action?"(controller: "logout")
+
         "/dynjs/$action"(controller: "javascript")
 
-		"/"(view:"jheytest/index")
-		"500"(view:'/error')
+		"/"(view:"/index")
+
+        "500"(view:'/error')
 	}
 }

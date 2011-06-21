@@ -96,6 +96,10 @@ public abstract class AbstractEntity implements Entity {
 	public Collection<String> getGroupIds() {
         groups.collect { g -> g.id }
 	}
+	
+	public Group getOwner() { owner }
+
+	public Collection<Group> getGroups() { groups }
 
     /**
      * Returns the application, looking it up if not yet known (registering if necessary)
