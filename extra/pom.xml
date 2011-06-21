@@ -7,9 +7,9 @@
 
 	<parent>
 		<groupId>brooklyn</groupId>
-		<artifactId>brooklyn-groovy-parent</artifactId>
+		<artifactId>brooklyn-parent-groovy</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
-		<relativePath>../parent/pom-with-groovy.xml</relativePath>
+		<relativePath>../parent/groovy/pom.xml</relativePath>
 	</parent>
 
 	<dependencies>

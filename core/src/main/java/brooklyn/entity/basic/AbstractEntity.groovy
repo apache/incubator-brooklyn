@@ -1,6 +1,6 @@
-
 package brooklyn.entity.basic
 
+import java.util.Collection;
 import java.util.concurrent.CopyOnWriteArrayList
 
 import org.slf4j.Logger
@@ -95,6 +95,11 @@ public abstract class AbstractEntity implements Entity {
         groups.add e
         getApplication()
     }
+	
+	@Override
+	public Group getOwner() { owner }
+	@Override
+	public Collection<Group> getGroups() { groups }
 
     /**
      * Returns the application, looking it up if not yet known (registering if necessary)
