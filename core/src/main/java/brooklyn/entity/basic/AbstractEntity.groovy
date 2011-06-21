@@ -1,6 +1,6 @@
 package brooklyn.entity.basic
 
-import java.util.Collection;
+import java.util.Collection
 import java.util.concurrent.CopyOnWriteArrayList
 
 import org.slf4j.Logger
@@ -14,6 +14,7 @@ import brooklyn.event.Event
 import brooklyn.event.EventListener
 import brooklyn.event.Sensor
 import brooklyn.event.basic.AttributeMap
+import brooklyn.event.basic.AttributeSensor
 import brooklyn.location.Location
 import brooklyn.management.ManagementContext
 import brooklyn.util.internal.LanguageUtils
@@ -31,7 +32,7 @@ import brooklyn.util.task.ExecutionContext
  *
  * @author alex
  */
-public abstract class AbstractEntity implements Entity {
+public abstract class AbstractEntity implements EntityLocal {
     static final Logger log = LoggerFactory.getLogger(Entity.class);
  
     String id = LanguageUtils.newUid();
@@ -155,13 +156,19 @@ public abstract class AbstractEntity implements Entity {
     /** override this, adding to the collection, to supply fields whose value, if not null, should be included in the toString */
     public Collection<String> toStringFieldsToInclude() { ['id', 'displayName'] }
 
-    Map<String,Object> getAttributes() {
-        return attributesInternal.asMap();
+    @Override
+	public <T> T getAttribute(AttributeSensor<T> sensor) {
+        attributesInternal.getValue(sensor);
+    }
+
+    public <T> void updateAttribute(AttributeSensor<T> attribute, T val) {
+        attributesInternal.update(attribute, val);
     }
     
-	public <T> T getAttribute(Sensor<T> attribute) { attributesInternal.getValue(attribute); }
-    public <T> void updateAttribute(Sensor<T> attribute, T val) {
-        attributesInternal.update(attribute, val);
+    /** @see EntityLocal#raiseEvent(Event) */
+    @Override
+    public <T> void raiseEvent(Sensor<T> sensor, T val) {
+        // TODO complete
     }
     
     // TODO implement private methods
@@ -174,6 +181,7 @@ public abstract class AbstractEntity implements Entity {
     }
      
     /** @see Entity#raiseEvent(Event) */
+    @Deprecated // FIXME use raiseEvent(Sensor,val)
     public <T> void raiseEvent(Event<T> event) {
         // TODO complete
     }

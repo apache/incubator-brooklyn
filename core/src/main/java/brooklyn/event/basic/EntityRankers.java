@@ -2,20 +2,22 @@ package brooklyn.event.basic;
 
 import java.util.Comparator;
 
-import brooklyn.entity.Entity;
+import brooklyn.entity.basic.EntityLocal;
 
 public class EntityRankers {
 
+    // FIXME Delete this class or use it?
+    
     private EntityRankers() {}
     
-    public static Comparator<Entity> sensorComparator(final String sensorName) {
-        return new Comparator<Entity>() {
-            public int compare(Entity a, Entity b) {
+    public static <T> Comparator<EntityLocal> sensorComparator(final AttributeSensor<T> sensor) {
+        return new Comparator<EntityLocal>() {
+            public int compare(EntityLocal a, EntityLocal b) {
             	//FIXME below is bogus;
             	//not all sensors are attributes, and might be nested map etc
             	//should have entity.getSensor or Sensor.getOnEntity
-                Object aMetric = a.getAttributes().get(sensorName);
-                Object bMetric = b.getAttributes().get(sensorName);
+                T aMetric = a.getAttribute(sensor);
+                T bMetric = b.getAttribute(sensor);
                 
                 // groovy "spaceship operator":
                 // return aMetric <=> bMetric
@@ -27,7 +29,7 @@ public class EntityRankers {
                 } else if (aMetric instanceof Comparable) {
                     return ((Comparable) aMetric).compareTo(bMetric);
                 } else {
-                    throw new IllegalArgumentException("Metric "+sensorName+" not comparable; value is "+aMetric);
+                    throw new IllegalArgumentException("Metric "+sensor+" not comparable; value is "+aMetric);
                 }
             }
         };

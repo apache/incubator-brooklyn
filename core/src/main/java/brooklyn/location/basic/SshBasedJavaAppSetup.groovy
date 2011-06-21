@@ -35,14 +35,14 @@ public abstract class SshBasedJavaAppSetup {
  
 	/** convenience to record a value on the location to ensure each instance gets a unique value */
 	protected int getNextValue(String field, int initial) {
-		def v = entity.properties[field]
+		def v = entity.attributes[field]
 		if (!v) {
-			log.debug "retrieving {}, {}", field, entity.location.properties
+			log.debug "retrieving {}, {}", field, entity.location.attributes
 			synchronized (entity.location) {
-				v = entity.location.properties["next_"+field] ?: initial
-				entity.location.properties["next_"+field] = (v+1)
+				v = entity.location.attributes["next_"+field] ?: initial
+				entity.location.attributes["next_"+field] = (v+1)
 			}
-			log.debug "retrieved {}, {}", field, entity.location.properties
+			log.debug "retrieved {}, {}", field, entity.location.attributes
 			entity.attributes[field] = v
 		}
 		v
@@ -54,7 +54,7 @@ public abstract class SshBasedJavaAppSetup {
  
 	public int getJmxPort() {
 		log.debug "setting jmxHost on $entity as {}", entity.location.host
-		entity.jmxHost = entity.location.host
+		entity.attributes.jmxHost = entity.location.host
 		getNextValue("jmxPort", 10100)
 	}
  

@@ -16,14 +16,14 @@ public class SshMachineLocation implements Location {
 	String user = null
 	String host
  
-	Map properties=[:]
+	Map attributes=[:]
 		
 	/**
-	 * These properties are separate to the entity hierarchy properties,
+	 * These attributes are separate to the entity hierarchy attributes,
 	 * used by certain types of entities as documented in their setup
 	 * (e.g. JMX port) 
 	 */
-	public Map getProperties() { properties }
+	public Map getAttributes() { attributes }
 
 	/** convenience for running a script, returning the result code */
 	public int run(Map props=[:], String command) {
