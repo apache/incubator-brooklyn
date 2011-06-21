@@ -3,13 +3,13 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>brooklyn</groupId>
-	<artifactId>brooklyn-parent</artifactId>
+	<artifactId>brooklyn-parent-root</artifactId>
 	<packaging>pom</packaging>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Brooklyn Parent</name>
 
 	<description>
-        The parent for Brooklyn modules
+        The parent for Brooklyn modules (defines dependencies and config used everywhere)
     </description>
 
 	<url>http://brooklyn</url>
@@ -119,28 +119,6 @@
 		<pluginManagement>
 			<plugins>
 				<plugin>
-					<artifactId>maven-compiler-plugin</artifactId>
-					<version>2.3.2</version>
-					<configuration>
-						<compilerId>groovy-eclipse-compiler</compilerId>
-						<verbose>false</verbose>
-						<source>1.6</source>
-						<target>1.6</target>
-					</configuration>
-					<dependencies>
-						<dependency>
-							<groupId>org.codehaus.groovy</groupId>
-							<artifactId>groovy-eclipse-compiler</artifactId>
-							<version>2.5.1-M3</version>
-						</dependency>
-						<dependency>
-							<groupId>org.codehaus.groovy</groupId>
-							<artifactId>groovy-eclipse-batch</artifactId>
-							<version>1.8.0-03</version>
-						</dependency>
-					</dependencies>
-				</plugin>
-				<plugin>
 					<artifactId>maven-jar-plugin</artifactId>
 					<version>2.3.1</version>
 					<configuration>
@@ -200,7 +178,10 @@
 					</executions>
 				</plugin>
 				<!--This plugin's configuration is used to store Eclipse m2e settings 
-					only. It has no influence on the Maven build itself. -->
+					only. It has no influence on the Maven build itself. 
+					
+					This seems to break install via command line, so am deleting.
+					
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>
 					<artifactId>lifecycle-mapping</artifactId>
@@ -225,10 +206,30 @@
 						</lifecycleMappingMetadata>
 					</configuration>
 				</plugin>
+					-->
+				
+		<plugin>
+			<artifactId>maven-eclipse-plugin</artifactId>
+			<configuration>
+				<additionalProjectnatures>
+					<projectnature>
+						org.maven.ide.eclipse.maven2Nature
+					</projectnature>
+				</additionalProjectnatures>
+<!-- 
+				<buildcommands>
+					<buildcommand>
+						org.eclipse.ajdt.core.ajbuilder
+					</buildcommand>
+				</buildcommands>
+ -->				
+			</configuration>
+		</plugin>
+				
 			</plugins>
 		</pluginManagement>
 
-		<plugins>
+	<plugins>		
 			<plugin>
 				<artifactId>maven-enforcer-plugin</artifactId>
 				<version>1.0</version>
