@@ -6,7 +6,7 @@
 	<artifactId>brooklyn-parent-groovy</artifactId>
 	<packaging>pom</packaging>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>Brooklyn Groovy Parent</name>
+	<name>Brooklyn Parent Groovy</name>
 
 	<description>
         The parent for Brooklyn modules that use groovy (defines dependencies and config for groovy-based projects, extending brooklyn-parent-root)
