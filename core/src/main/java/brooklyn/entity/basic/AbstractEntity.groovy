@@ -20,6 +20,7 @@ import brooklyn.location.Location
 import brooklyn.management.ManagementContext
 import brooklyn.management.SubscriptionContext
 import brooklyn.management.internal.LocalManagementContext
+import brooklyn.management.internal.LocalSubscriptionContext;
 import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.task.ExecutionContext
 
@@ -47,7 +48,7 @@ public abstract class AbstractEntity implements Entity {
     Group owner
     
     protected transient volatile ExecutionContext execution
-    protected transient volatile SubscriptionContext subscriptions
+    protected transient volatile SubscriptionContext subscription
     protected transient volatile LocalManagementContext management = LocalManagementContext.getContext()
  
     protected final AttributeMap attributesInternal = new AttributeMap(this)
@@ -154,21 +155,25 @@ public abstract class AbstractEntity implements Entity {
     
     /** @see Entity#subscribe(Entity, Sensor, EventListener) */
     public <T> long subscribe(Entity producer, Sensor<T> sensor, EventListener<T> listener) {
-        subscriptions.getSubscriptionManager().subscribe this.id, producer.id, sensor.name, listener
+        subscriptionContext.getSubscriptionManager().subscribe this.id, producer.id, sensor.name, listener
     }
      
     /** @see Entity#raiseEvent(Event) */
     public <T> void raiseEvent(Event<T> event) {
-        subscriptions.getSubscriptionManager().fire event
+        subscriptionContext.getSubscriptionManager().fire event
     }
 
-	protected ExecutionContext getExecutionContext() {
-		if (execution) execution;
-		synchronized (this) {
-			if (execution) execution;
-			execution = new ExecutionContext(tag: this, getApplication()?.getManagementContext().getExecutionManager())
-		}
-	}
+    protected SubscriptionContext getSubscriptionContext() {
+        synchronized (this) {
+	        subscription ?: new LocalSubscriptionContext()
+        }
+    }
+
+    protected ExecutionContext getExecutionContext() {
+        synchronized (this) {
+            execution ?: new ExecutionContext(tag: this, getApplication()?.getManagementContext().getExecutionManager())
+        }
+    }
     
     public <T> Sensor<T> getSensor(String sensorName) {
         getEntityClass().getSensors() find { s -> s.name.equals(sensorName) }

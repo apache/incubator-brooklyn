@@ -10,10 +10,8 @@ public class LocalSubscriptionContext implements SubscriptionContext {
     private static SubscriptionManager manager;
     
     public SubscriptionManager getSubscriptionManager() {
-        if (manager != null) return manager;
-        
         synchronized (LocalSubscriptionContext.class) {
-            manager = new LocalSubscriptionManager();
+	        if (manager == null) manager = new LocalSubscriptionManager();
         }
         
         return manager;
