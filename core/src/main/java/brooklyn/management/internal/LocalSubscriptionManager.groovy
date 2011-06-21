@@ -13,7 +13,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.EntitySummary;
 import brooklyn.event.EventListener;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.EventFilters;
@@ -75,10 +74,6 @@ public class LocalSubscriptionManager implements SubscriptionManager {
             lock.unlock();
         }
         return id;
-    }
-
-    public <T> long subscribe(EntitySummary interestedEntity, EntitySummary sourceEntity, Sensor<T> sensor, EventListener<T> listener) {
-        return subscribe(interestedEntity.getId(), sourceEntity.getId(), sensor.getName(), listener);
     }
 
     public void unsubscribe(long subscriptionId) {

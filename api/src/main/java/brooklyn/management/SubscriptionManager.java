@@ -1,7 +1,6 @@
 package brooklyn.management;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.EntitySummary;
 import brooklyn.event.EventListener;
 import brooklyn.event.Sensor;
 
@@ -17,16 +16,9 @@ public interface SubscriptionManager {
      * @param listener The listener to call when an event occurs
      * @return an id for this subscription
      * 
-     * @see #subscribe(EntitySummary, Sensor, EventListener)
      * @see #unsubscribe(long)
      */
     <T> long subscribe(String interestedId, String sourceId, String sensorName, EventListener<T> listener);
-    
-    /**
-     * @see #subscribe(String, String, String, EventListener)
-     * @see #unsubscribe(long)
-     */
-    <T> long subscribe(EntitySummary interestedEntity, EntitySummary sourceEntity, Sensor<T> sensor, EventListener<T> listener);
     
     /**
      * Unsubscribe the given subscription id.
