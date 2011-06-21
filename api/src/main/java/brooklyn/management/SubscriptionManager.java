@@ -1,6 +1,7 @@
 package brooklyn.management;
 
 import brooklyn.entity.Entity;
+import brooklyn.event.Event;
 import brooklyn.event.EventListener;
 import brooklyn.event.Sensor;
 
@@ -26,4 +27,9 @@ public interface SubscriptionManager {
      * @see #subscribe(String, String, String, EventListener)
      */
     void unsubscribe(long subscriptionId);
+
+    /**
+     * Fire an {@link Event} to all subscribed listeners.
+     */
+    <T> void fire(Event<T> event);
 }

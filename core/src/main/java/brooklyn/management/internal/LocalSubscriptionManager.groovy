@@ -1,26 +1,22 @@
 package brooklyn.management.internal;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.List
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentMap
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.locks.Lock
+import java.util.concurrent.locks.ReentrantLock
 
-import brooklyn.entity.Entity;
-import brooklyn.event.EventListener;
-import brooklyn.event.Sensor;
-import brooklyn.event.basic.EventFilters;
-import brooklyn.event.basic.SensorEvent;
-import brooklyn.management.SubscriptionManager;
+import brooklyn.entity.Entity
+import brooklyn.event.Event
+import brooklyn.event.EventListener
+import brooklyn.event.basic.EventFilters
+import brooklyn.event.basic.SensorEvent
+import brooklyn.management.SubscriptionManager
 
-import com.google.common.base.Objects;
-import com.google.common.base.Predicate;
+import com.google.common.base.Objects
+import com.google.common.base.Predicate
 
 public class LocalSubscriptionManager implements SubscriptionManager {
     private static class Subscription {
@@ -52,7 +48,7 @@ public class LocalSubscriptionManager implements SubscriptionManager {
     ConcurrentMap<String, List<Subscription>> entitySubscriptionList = new ConcurrentHashMap<String, List<Subscription>>();
     Lock lock = new ReentrantLock();
     
-    public void fire(SensorEvent<?> event) {
+    public <T> void fire(Event<T> event) {
         lock.lock();
         try {
             allSubscriptions.each { key, Subscription s -> if (s.filter.apply(event) && (!s.entities || s.entities.apply(event))) s.listener.onEvent(event) }
