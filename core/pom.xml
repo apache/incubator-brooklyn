@@ -4,6 +4,9 @@
 	<artifactId>brooklyn-core</artifactId>
 	<packaging>bundle</packaging>
 	<name>Brooklyn Core</name>
+	<description>
+        Entity implementation classes, events, and other core elements  
+    </description>
 
 	<parent>
 		<groupId>brooklyn</groupId>
@@ -17,6 +20,15 @@
 			<plugin>
 				<groupId>org.apache.felix</groupId>
 				<artifactId>maven-bundle-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-eclipse-plugin</artifactId>
+				<configuration>
+					<additionalProjectNatures>
+						<projectnature>org.eclipse.jdt.groovy.core.groovyNature</projectnature>
+					</additionalProjectNatures>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
@@ -64,14 +76,8 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.codehaus.gmaven.runtime</groupId>
-			<artifactId>gmaven-runtime-1.7</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>org.codehaus.groovy</groupId>
-					<artifactId>groovy-all</artifactId>
-				</exclusion>
-			</exclusions>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

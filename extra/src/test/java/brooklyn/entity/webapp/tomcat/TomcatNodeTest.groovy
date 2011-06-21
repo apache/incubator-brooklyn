@@ -103,7 +103,7 @@ class TomcatNodeTest {
 	@Test
 	public void acceptsLocationAsStartParameter() {
 		Application app = new TestApplication();
-		TomcatNode tc = new TomcatNode(parent:app);
+		TomcatNode tc = new TomcatNode(owner:app);
 		tc.start(location: new SimulatedLocation())
 		tc.shutdown()
 	}
@@ -112,7 +112,7 @@ class TomcatNodeTest {
 	public void acceptsLocationInEntity() {
 		logger.debug ""
 		Application app = new TestApplication(location:new SimulatedLocation());
-		TomcatNode tc = [ parent: app ]
+		TomcatNode tc = [ owner: app ]
 		tc.start()
 		tc.shutdown()
 	}
@@ -120,7 +120,7 @@ class TomcatNodeTest {
 	@Test
 	public void acceptsEntityLocationSameAsStartParameter() {
 		Application app = new TestApplication();
-		TomcatNode tc = [ parent:app, location:new SimulatedLocation() ]
+		TomcatNode tc = [ owner:app, location:new SimulatedLocation() ]
 		tc.start(location: new SimulatedLocation())
 		tc.shutdown()
 	}
@@ -129,7 +129,7 @@ class TomcatNodeTest {
 	public void rejectIfEntityLocationConflictsWithStartParameter() {
 		Application app = new TestApplication()
 		boolean caught = false
-		TomcatNode tc = [ parent:app, location:new SshMachineLocation(name:'tokyo', host:'localhost') ]
+		TomcatNode tc = [ owner:app, location:new SshMachineLocation(name:'tokyo', host:'localhost') ]
 		try {
 			tc.start([:], null, new SshMachineLocation(name:'london', host:'localhost'))
 			tc.shutdown()
@@ -143,7 +143,7 @@ class TomcatNodeTest {
 	public void rejectIfLocationNotInEntityOrInStartParameter() {
 		Application app = new TestApplication();
 		boolean caught = false
-		TomcatNode tc = new TomcatNode(parent: app);
+		TomcatNode tc = new TomcatNode(owner: app);
 		try {
 			tc.start()
 			tc.shutdown()
@@ -156,8 +156,8 @@ class TomcatNodeTest {
 	@Test
 	public void detectEarlyDeathOfTomcatProcess() {
         Application app = new TestApplication(httpPort: DEFAULT_HTTP_PORT);
-        TomcatNode tc1 = new TomcatNode(parent: app);
-        TomcatNode tc2 = new TomcatNode(parent: app);
+        TomcatNode tc1 = new TomcatNode(owner: app);
+        TomcatNode tc2 = new TomcatNode(owner: app);
         tc1.start(location: new SimulatedLocation())
         try {
             tc2.start(location: new SimulatedLocation())

@@ -89,7 +89,7 @@ class TomcatNodeIntegrationTest {
     @Test
     public void tracksNodeState() {
         TomcatNode tc = [ 
-            parent: new TestApplication(), 
+            owner: new TestApplication(), 
             location:new SshMachineLocation(name:'london', host:'localhost')
         ]
         tc.start()
@@ -103,7 +103,7 @@ class TomcatNodeIntegrationTest {
 	@Test
 	public void publishes_requests_per_second_metric() {
 		Application app = new TestApplication();
-		TomcatNode tc = new TomcatNode(parent: app);
+		TomcatNode tc = new TomcatNode(owner: app);
 		tc.start(location: new SshMachineLocation(name:'london', host:'localhost'))
 		executeUntilSucceedsWithShutdown(tc, {
 				def activityValue = tc.getAttribute(TomcatNode.REQUESTS_PER_SECOND)
@@ -126,7 +126,7 @@ class TomcatNodeIntegrationTest {
     @Test
     public void publishesErrorCountMetric() {
         Application app = new TestApplication();
-        TomcatNode tc = new TomcatNode(parent: app);
+        TomcatNode tc = new TomcatNode(owner: app);
         tc.start(location: new SshMachineLocation(name:'london', host:'localhost'))
         executeUntilSucceedsWithShutdown(tc, {
             def port = tc.getAttribute(TomcatNode.HTTP_PORT)
@@ -145,7 +145,7 @@ class TomcatNodeIntegrationTest {
 	@Test
 	public void deploy_web_app_appears_at_URL() {
 		Application app = new TestApplication();
-		TomcatNode tc = new TomcatNode(parent: app);
+		TomcatNode tc = new TomcatNode(owner: app);
 
         URL resource = this.getClass().getClassLoader().getResource("hello-world.war")
         assertNotNull resource
@@ -172,7 +172,7 @@ class TomcatNodeIntegrationTest {
 		t.start()
 		try {
 			Application app = new TestApplication()
-			TomcatNode tc = new TomcatNode(parent: app)
+			TomcatNode tc = new TomcatNode(owner: app)
 			Exception caught = null
 			try {
                 tc.start(location: new SshMachineLocation(name:'london', host:'localhost'))

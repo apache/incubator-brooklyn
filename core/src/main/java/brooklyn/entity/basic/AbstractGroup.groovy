@@ -11,19 +11,35 @@ public abstract class AbstractGroup extends AbstractEntity implements Group {
         super(props)
     }
 
-    final Collection<Entity> children = new CopyOnWriteArraySet<Entity>();
+    final Collection<Entity> members = new CopyOnWriteArraySet<Entity>();
 
+    final Collection<Entity> ownedChildren = new CopyOnWriteArraySet<Entity>();
+    
     /**
-     * Adds argument as child of this group <em>and</em> this group as parent of the child;
+     * Adds the given entity as a member of this group <em>and</em> this group as one of the groups of the child;
      * returns argument passed in, for convenience.
      */
-    public Entity addChild(Entity t) {
-        t.addParent(this)
-        children.add(t)
-        t
+    public Entity addMember(Entity member) {
+        member.addGroup(this)
+        members.add(member)
+        member
     }
  
-    public boolean removeChild(Entity child) {
-        children.remove child
+    public boolean removeMember(Entity child) {
+        members.remove child
+    }
+    
+    /**
+     * Adds the given entity as a member of this group <em>and</em> this group as one of the groups of the child;
+     * returns argument passed in, for convenience.
+     */
+    public Entity addOwnedChild(Entity child) {
+        child.setOwner(this)
+        ownedChildren.add(child)
+        child
+    }
+ 
+    public boolean removeOwnedChild(Entity child) {
+        ownedChildren.remove child
     }
 }

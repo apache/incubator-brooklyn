@@ -1,10 +1,29 @@
 package brooklyn.web.console
 
+import java.util.Collection;
+import java.util.Map;
+
+import brooklyn.entity.Application;
+import brooklyn.entity.EntityClass;
+import brooklyn.entity.Group;
+import brooklyn.entity.basic.AbstractGroup
+import brooklyn.entity.basic.AbstractEntity
+import brooklyn.entity.basic.AbstractApplication
+import brooklyn.event.Event;
+import brooklyn.event.EventListener;
+import brooklyn.event.Sensor;
+import brooklyn.location.Location;
 import grails.converters.JSON
 
-import brooklyn.entity.basic.BasicEntitySummary
+import java.util.Collection
+import java.util.Map
+
+import brooklyn.entity.Application
 import brooklyn.entity.Entity
-import brooklyn.entity.EntitySummary
+import brooklyn.entity.basic.AbstractApplication
+import brooklyn.entity.basic.AbstractEntity
+import brooklyn.entity.basic.AbstractGroup
+import brooklyn.management.ExecutionManager
 import brooklyn.management.ManagementContext
 import brooklyn.management.ExecutionManager
 
@@ -13,64 +32,18 @@ import grails.plugins.springsecurity.Secured
 @Secured(['ROLE_ADMIN'])
 class EntityController {
 
-    class TestManagementApi implements ManagementContext {
-        Collection<EntitySummary> getApplicationSummaries() {
-            return new ArrayList<EntitySummary>();
-        }
-
-        Collection<EntitySummary> getEntitySummariesInApplication(String id) {
-            Collection<EntitySummary> c = allEntitySummaries;
-            c.add(getHackyEntitySummary(id, "searched for " + id, ["a1"]))
-            return c;
-        }
-
-        Collection<EntitySummary> getAllEntitySummaries() {
-            return [
-                    getHackyEntitySummary("a1", "Application", []),
-                    getHackyEntitySummary("t1", "tomcat tier 1", ["a1"]),
-                    getHackyEntitySummary("tcc1a", "tomcat cluster 1a", ["t1"]),
-                    getHackyEntitySummary("tc1a1", "tomcat node 1a.1", ["tcc1a"]),
-                    getHackyEntitySummary("tc1a2", "tomcat node 1a.2", ["tcc1a"]),
-                    getHackyEntitySummary("tc1a3", "tomcat node 1a.3", ["tcc1a"]),
-                    getHackyEntitySummary("tc1a4", "tomcat node 1a.4", ["tcc1a"]),
-                    getHackyEntitySummary("tcc1b", "tomcat cluster 1b", ["t1"]),
-                    getHackyEntitySummary("tc1b1", "tomcat node 1b.1", ["tcc1b"]),
-                    getHackyEntitySummary("tc1b2", "tomcat node 1b.2", ["tcc1b"]),
-                    getHackyEntitySummary("tc1b3", "tomcat node 1b.3", ["tcc1b"]),
-                    getHackyEntitySummary("tc1b4", "tomcat node 1b.4", ["tcc1b"]),
-                    getHackyEntitySummary("d1", "data tier 1", ["a1"]),
-                    getHackyEntitySummary("dbc1", "data cluster 1a", ["d1"]),
-                    getHackyEntitySummary("db1", "data node 1a.1", ["dbc1"]),
-                    getHackyEntitySummary("db2", "data node 1a.2", ["dbc1"]),
-                    getHackyEntitySummary("db3", "data node 1a.3", ["dbc1"]),
-            ];
-        }
-
-        Entity getEntity(String id) {
-            null;
-        }
-
-        EntitySummary getHackyEntitySummary(String id, displayName, ArrayList<String> groups) {
-            return new BasicEntitySummary(id, displayName, "app1", groups);
-        }
-
-        ExecutionManager getExecutionManager() {
-            return null  //To change body of implemented methods use File | Settings | File Templates.
-        }
-    }
-
-    ManagementContext context = new TestManagementApi();
-
-    private Collection<EntitySummary> getEntitySummariesMatchingCriteria(Collection<EntitySummary> all, String name, String id, String applicationId) {
-        Collection<EntitySummary> matches = all.findAll {
-            sum ->
-            ((!name || sum.displayName =~ name)
-                    && (!id || sum.id =~ id)
-                    && (!applicationId || sum.applicationId =~ applicationId)
+    private ManagementContext context = new TestManagementContext();
+    
+    private Collection<Entity> getEntitiesMatchingCriteria(Collection<Entity> all, String name, String id, String applicationId) {
+        Collection<Entity> matches = all.findAll {
+            it ->
+            ((!name || it.displayName =~ name)
+                    && (!id || it.id =~ id)
+                    && (!applicationId || it.applicationId =~ applicationId)
             )
         }
 
-        for (EntitySummary match: matches) {
+        for (Entity match: matches) {
             all.findAll {
                 s -> s.groupIds.contains(match.id)
             }
@@ -79,34 +52,45 @@ class EntityController {
         return matches
     }
 
+    private Collection<EntitySummary> toEntitySummaries(Collection<Entity> entities) {
+        return entities.collect { new EntitySummary(it) }
+    }
+    
+    // TODO Enhancement for future user-story: multiple applications?
+    private Collection<Entity> getAllEntities() {
+        return context.applications[0].entities
+    }
+
+
     def index = {}
 
     def list = {
-        render(context.getAllEntitySummaries() as JSON)
+        render(toEntitySummaries(getAllEntities) as JSON)
     }
 
     def search = {
-        render(getEntitySummariesMatchingCriteria(context.allEntitySummaries, params.name, params.id, params.applicationId) as JSON)
+        def result = getEntitiesMatchingCriteria(allEntities, params.name, params.id, params.applicationId)
+        render(toEntitySummaries(result) as JSON)
     }
 
     def jstree = {
-        List<EntitySummary> all = context.allEntitySummaries;
+        List<Entity> all = allEntities
         Map<String, JsTreeNodeImpl> nodeMap = [:]
         JsTreeNodeImpl root = new JsTreeNodeImpl("root", ".", true)
 
-        for (EntitySummary summary: all) {
-            nodeMap.put(summary.id, new JsTreeNodeImpl(summary.id, summary.displayName))
+        for (Entity entity: all) {
+            nodeMap.put(entity.id, new JsTreeNodeImpl(entity.id, entity.displayName))
         }
 
-        for (EntitySummary summary: all) {
-            for (String groupId: summary.groupIds) {
-                nodeMap.get(groupId).children.add(nodeMap.get(summary.id))
+        all.each { entity ->
+            entity.children.each { child ->
+                entity.add( nodeMap.get(child.id) )
             }
         }
 
         List<JsTreeNodeImpl> potentialRoots = []
-        for (EntitySummary summary: getEntitySummariesMatchingCriteria(all, params.name, params.id, params.applicationId)) {
-            nodeMap[summary.id].matched = true
+        for (Entity entity : getEntitiesMatchingCriteria(all, params.name, params.id, params.applicationId)) {
+            nodeMap[entity.id].matched = true
             potentialRoots.add(nodeMap[summary.id])
         }
 
@@ -116,3 +100,67 @@ class EntityController {
     }
 }
 
+private class TestManagementContext implements ManagementContext {
+    private final Application app = new TestApplication();
+
+    Collection<Application> getApplications() {
+        return Collections.singleton(app);
+    }
+
+    Entity getEntity(String id) {
+        throw new UnsupportedOperationException();
+    }
+    
+    public ExecutionManager getExecutionManager() {
+        throw new UnsupportedOperationException();
+    }
+}
+
+private class TestApplication extends AbstractApplication {
+    TestApplication() {
+        displayName = "Application";
+        
+        addOwnedChildren( [
+                new TestGroupEntity("tomcat tier 1").addOwnedChildren( [
+                        new TestGroupEntity("tomcat cluster 1a").addOwnedChildren( [
+                                new TestLeafEntity("tomcat node 1a.1"),
+                                new TestLeafEntity("tomcat node 1a.2"),
+                                new TestLeafEntity("tomcat node 1a.3"),
+                                new TestLeafEntity("tomcat node 1a.4") ]),
+                        new TestGroupEntity("tomcat cluster 1b").addOwnedChildren( [
+                            new TestLeafEntity("tomcat node 1b.1"),
+                            new TestLeafEntity("tomcat node 1b.2"),
+                            new TestLeafEntity("tomcat node 1b.3"),
+                            new TestLeafEntity("tomcat node 1b.4") ])
+                        ] ),
+                new TestGroupEntity("data tier 1").addOwnedChildren( [
+                    new TestGroupEntity("data cluster 1a").addOwnedChildren( [
+                            new TestLeafEntity("data node 1a.1"),
+                            new TestLeafEntity("data node 1a.2"),
+                            new TestLeafEntity("data node 1a.3") ])
+                    ] )
+                ] )
+    }
+    
+    TestGroupEntity addOwnedChildren(Entity[] children) {
+        children.each { addOwnedChild(it) }
+        return this
+    }
+}
+
+private class TestGroupEntity extends AbstractGroup {
+    TestGroupEntity(String displayName, ArrayList<String> groups) {
+        this.displayName = displayName
+    }
+    
+    TestGroupEntity addOwnedChildren(Entity[] children) {
+        children.each { addOwnedChild(it) }
+        return this
+    }
+}
+
+private class TestLeafEntity extends AbstractEntity {
+    TestLeafEntity(String displayName) {
+        this.displayName = displayName;
+    }
+}

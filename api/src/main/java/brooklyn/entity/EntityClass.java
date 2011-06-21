@@ -17,9 +17,8 @@ public interface EntityClass extends Serializable {
     // TODO maybe these? discuss/delete
     //Collection<EntityType> getSuperTypes();
     //boolean isInstance(Entity);
-	//boolean isInstance(EntitySummary); ?
 	
-	//Alex: suggest we allow these, but always defer to the java type (i.e. use BasicEntitySummary, delete ExplicitEntitySummary) 
+	//FIXME Alex: suggest we allow these, but always defer to the java type (i.e. use BasicEntitySummary, delete ExplicitEntitySummary) 
 
     public String getName();
     

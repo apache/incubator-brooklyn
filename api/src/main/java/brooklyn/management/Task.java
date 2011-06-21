@@ -5,7 +5,7 @@ import java.util.concurrent.Future;
 
 
 /**
- * Represents a task which is executing. The task can be given an optional displayName and description in its
+ * Represents a unit of work for execution. The task can be given an optional displayName and description in its
  * constructor (as named arguments in the map in first parameter). When used with an ExecutionManager (or
  * ExecutionContext) it will record submission time, execution start time, end time, and any result. A task can be
  * submitted to the Execution{Manager,Context}, in which case it will be returned; or it may be created by submission

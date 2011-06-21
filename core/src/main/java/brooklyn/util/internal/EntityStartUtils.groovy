@@ -41,8 +41,8 @@ class EntityStartUtils {
 		entity.attributes << startAttributes
         if (!entity.location)
             throw new IllegalStateException("request to start $entity without a location")
-        if (!entity.parents)
-            throw new IllegalStateException("request to start $entity without any parents specified or set")
+        if (!entity.owner)
+            throw new IllegalStateException("request to start $entity without any owner specified or set")
         log.debug "factory creating entity {} with properties {} and location {}", entity, entity.attributes, entity.location
 
         //TODO dynamically look for appropriate start method, throw better exception if not there
@@ -58,14 +58,15 @@ class EntityStartUtils {
     }
 
     /**
-     * Creates a (not-started) clone of the given template, configured to be a child of the host
+     * Creates a (not-started) clone of the given template, configured to be owned by the given entity
      */
-    public static <T extends Entity> T createFromTemplate(Map childAttributes=[:], Group host, T template) {
-        assert !template.parents : "templates must not be assigned any parent entity"
+    public static <T extends Entity> T createFromTemplate(Map childAttributes=[:], Group owner, T template) {
+        assert !template.owner : "templates must not be assigned any owner (but is in "+template.owner+")"
+        assert !template.groups : "templates must not be a member of any group entity (but is in "+template.groups+")"
         Entity c = cloneTemplate(template);
         c.id = LanguageUtils.newUid();
         c.attributes << childAttributes;
-        host.addChild(c)
+        owner.addOwnedChild(c)
         c
     }
     

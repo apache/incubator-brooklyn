@@ -5,6 +5,10 @@
 	<packaging>bundle</packaging>
 	<name>Brooklyn API</name>
 
+	<description>
+        API classes for Brooklyn
+    </description>
+
 	<parent>
 		<groupId>brooklyn</groupId>
 		<artifactId>brooklyn-parent</artifactId>

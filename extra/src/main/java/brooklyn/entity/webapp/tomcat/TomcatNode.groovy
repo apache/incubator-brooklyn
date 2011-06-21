@@ -1,10 +1,5 @@
 package brooklyn.entity.webapp.tomcat
 
-import groovy.transform.InheritConstructors
-
-import java.util.Collection
-import java.util.Map;
-import java.util.Map
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
@@ -14,16 +9,16 @@ import javax.management.InstanceNotFoundException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.entity.Group
+import brooklyn.entity.Effector
+import brooklyn.entity.basic.AbstractEffector
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.trait.Startable
 import brooklyn.event.EntityStartException
 import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.basic.AttributeSensor
-import brooklyn.location.Location
-import brooklyn.location.basic.SshBasedJavaWebAppSetup
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.internal.EntityStartUtils
+
 
 /**
  * An entity that represents a single Tomcat instance.
@@ -40,6 +35,8 @@ public class TomcatNode extends AbstractEntity implements Startable {
     public static final AttributeSensor<Integer> REQUEST_COUNT = [ "Request count", "jmx.reqs.global.totals.requestCount", Integer ]
     public static final AttributeSensor<Integer> REQUESTS_PER_SECOND = [ "Reqs/Sec", "webapp.reqs.persec.RequestCount", Integer ]
     public static final AttributeSensor<Integer> TOTAL_PROCESSING_TIME = [ "Total processing time", "jmx.reqs.global.totals.processingTime", Integer ]
+	
+//	public static final Effector START = new AbstractEffector("start", Void.TYPE, [], "starts an entity");
 	
 //	public static final Effector<Integer> GET_TOTAL_PROCESSING_TIME = [ "retrieves the total processing time", { delegate, arg1, arg2 -> delegate.getTotal(arg1, arg2) } ]
 //	Task<Integer> invocation = entity.invoke(GET_TOTAL_PROCESSING_TIME, ...args)
@@ -60,8 +57,10 @@ public class TomcatNode extends AbstractEntity implements Startable {
 			if (!isRunningResult) throw new IllegalStateException("$delegate aborted soon after startup")
 			updateAttribute HTTP_PORT, setup.httpPort
 		}
-		TomcatNode.metaClass.shutdownInLocation = { SshMachineLocation loc -> new Tomcat7SshSetup(delegate).shutdown loc }
-        TomcatNode.metaClass.deploy = { String file, SshMachineLocation loc -> 
+		TomcatNode.metaClass.shutdownInLocation = { SshMachineLocation loc -> null
+			new Tomcat7SshSetup(delegate).shutdown loc 
+		}
+        TomcatNode.metaClass.deploy = { String file, SshMachineLocation loc -> null 
             new Tomcat7SshSetup(delegate).deploy(new File(file), loc)
 		}
 	}
