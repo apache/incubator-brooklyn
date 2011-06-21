@@ -160,7 +160,8 @@ public abstract class AbstractEntity implements EntityLocal {
 	public <T> T getAttribute(AttributeSensor<T> sensor) {
         attributesInternal.getValue(sensor);
     }
-
+	Map<String,Object> getAttributes() { attributesInternal.asMap(); }
+		
     public <T> void updateAttribute(AttributeSensor<T> attribute, T val) {
         attributesInternal.update(attribute, val);
     }
