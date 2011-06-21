@@ -1,18 +1,20 @@
 package brooklyn.event.basic;
 
-import brooklyn.event.Sensor
+import groovy.transform.InheritConstructors
+
 import java.util.List
 
-import groovy.transform.InheritConstructors
+import brooklyn.event.AttributeSensor
+import brooklyn.event.Sensor
 
 import com.google.common.base.Splitter
 import com.google.common.base.Throwables
 import com.google.common.collect.Lists
 
 /**
- * Abstract super class for all {@link Sensor} types.
+ * Parent for all {@link Sensor}s.
  */
-public abstract class AbstractSensor<T> implements Sensor<T> {
+public class BasicSensor<T> implements Sensor<T> {
     private static final long serialVersionUID = -3762018534086101323L;
     
     private static final Splitter dots = Splitter.on('.');
@@ -22,10 +24,10 @@ public abstract class AbstractSensor<T> implements Sensor<T> {
     public final String name;
     public final String description;
 
-    public AbstractSensor() { /* for gson */ }
+    public BasicSensor() { /* for gson */ }
 
 	/** name is typically a dot-separated identifier; description is optional */
-	public AbstractSensor(Class<T> type, String name, String description=name) {
+	public BasicSensor(Class<T> type, String name, String description=name) {
 		this.type = type;
 		this.typeName = type.getName();
 		this.name = name;
@@ -60,7 +62,7 @@ public abstract class AbstractSensor<T> implements Sensor<T> {
  * A {@link Sensor} describing an attribute change.
  */
 @InheritConstructors
-public class AttributeSensor<T> extends AbstractSensor<T> {
+public class BasicAttributeSensor<T> extends BasicSensor<T> implements AttributeSensor<T> {
     private static final long serialVersionUID = -7670909215973264600L;
 }
 
@@ -68,7 +70,7 @@ public class AttributeSensor<T> extends AbstractSensor<T> {
  * A {@link Sensor} describing a log message or exceptional condition.
  */
 @InheritConstructors
-public class LogSensor<T> extends AbstractSensor<T> {
+public class LogSensor<T> extends BasicSensor<T> {
     private static final long serialVersionUID = 4713993465669948212L;
 }
 
@@ -76,13 +78,13 @@ public class LogSensor<T> extends AbstractSensor<T> {
  * A {@link Sensor} describing a calculated property
  */
 @InheritConstructors
-public class DynamicSensor<T> extends AttributeSensor<T> {
+public class DynamicAttributeSensor<T> extends BasicAttributeSensor<T> {
     private static final long serialVersionUID = -1;
     
     public final Closure calculate
     public final long period
 
-    public DynamicSensor(Class<T> type, String name, String description=name, Closure calculate, long period) {
+    public DynamicAttributeSensor(Class<T> type, String name, String description=name, Closure calculate, long period) {
         super(type, name, description);
         
         this.calculate = calculate
