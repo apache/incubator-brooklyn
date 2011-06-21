@@ -11,7 +11,7 @@ public class BasicParameterType<T> implements ParameterType<T> {
     private String defaultValue;
     private String description;
 
-	public BasicParameterType(Map m=[:]) { super(m) }
+	public BasicParameterType(Map m=[:]) { m.each { this."$it.key" = it.value } }
     public BasicParameterType(String name, Class<T> type, T defaultValue=null, String description=null) {
         this.name = name;
         this.type = type;

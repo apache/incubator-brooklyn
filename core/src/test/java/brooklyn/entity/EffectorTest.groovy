@@ -53,18 +53,13 @@ class EffectorTest {
 		
 		assertEquals("hello Bob", e.sayHi("Bob", "hello"))
 
-		println e.SAY_HI_1	
-		
-		//FIXME this still failing, and needs following tests below...		
-		println e.SAY_HI_2			
-//		println e.effectors
-//			
-//		e.getClass().getMethods().each { Method m -> 
-//			if (m.getName()!="sayHi") return;
-//			println "method $m: "+(m.getAnnotations());
-//			println m.getParameterAnnotations()
-//		}
-//		
+		assertEquals("sayHi", e.SAY_HI_1.getName());	
+		assertEquals(["name", "greeting"], e.SAY_HI_1.getParameters()[0..1]*.getName());	
+
+		assertEquals("sayHi", e.SAY_HI_2.getName());
+		assertEquals(["name", "greeting"], e.SAY_HI_2.getParameters()[0..1]*.getName());
+
+//		//TODO test invocation with map interception
 //		assertEquals("hello Bob", e.sayHi(name: "Bob"))
 //		assertEquals("hello Bob", e.SAY_HI_1.call(e, [name:"Bob"]) )
 //		assertEquals("hello Bob", e.SAY_HI_2.call(e, [name:"Bob"]) )

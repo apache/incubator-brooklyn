@@ -110,7 +110,6 @@ public abstract class AbstractEffector<EntityTrait,T> implements Effector<T> {
 @Target(ElementType.PARAMETER)
 public @interface NamedParameter {
 	String value();
-	String description() default "sample"
 }
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.PARAMETER)
@@ -139,16 +138,18 @@ public class EffectorInferredFromAnnotatedMethod<T> extends AbstractEffector<Ent
 			if (best==null) throw new IllegalStateException("Cannot find method $methodName on "+clazz.getCanonicalName());
 			returnType = best.getReturnType()
 			parameters = []
-			LanguageUtils.forBothWithIndex(best.getAnnotations(), best.getParameterTypes()) {
+			LanguageUtils.forBothWithIndex(best.getParameterAnnotations(), best.getParameterTypes()) {
 				anns, type, i -> parameters.add(new BasicParameterType([
-					name: findAnnotation(anns, NamedParameter)?.getValue() ?: "param"+(i+1), 
+					name: findAnnotation(anns, NamedParameter)?.value() ?: "param"+(i+1), 
 					type: type,
-					defaultValue: findAnnotation(anns, DefaultValue)?.getValue(),
-					description: findAnnotation(anns, Description)?.getValue() ]))
+					defaultValue: findAnnotation(anns, DefaultValue)?.value(),
+					description: findAnnotation(anns, Description)?.value() ]))
 			}
 		}
 
-		public static <T extends Annotation> T findAnnotation(Annotation[] anns, Class<T> type) { anns.find { type.isInstance(anns) } }		
+		public static <T extends Annotation> T findAnnotation(Annotation[] anns, Class<T> type) { 
+			anns.find { type.isInstance(it) } 
+		}		
 	}
 	
 	public EffectorInferredFromAnnotatedMethod(Class<?> whereEffectorDefined, String methodName, String description=null) {
