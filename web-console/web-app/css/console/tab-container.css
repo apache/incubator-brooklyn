@@ -22,7 +22,7 @@ ul#tabs li a:hover {
 
 ul#tabs li a.selected {
 	color: #000;
-	background-color: #f1f0ee;
+	background-color: #f7f7f7;
 	font-weight: bold;
 	padding: 0.7em 0.3em 0.38em 0.3em;
 }
@@ -30,10 +30,10 @@ ul#tabs li a.selected {
 div.tabContent {
 	border: 1px solid #c9c3ba;
 	padding: 0.5em;
-	background-color: #f1f0ee;
+	background-color: #f7f7f7;
+	height:98%;
 }
 
 div.tabContent.hide {
 	display: none;
 }
-

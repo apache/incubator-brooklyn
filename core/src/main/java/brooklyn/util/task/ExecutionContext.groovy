@@ -13,7 +13,7 @@ public class ExecutionContext implements Executor {
 	static final ThreadLocal<ExecutionContext> perThreadExecutionContext = new ThreadLocal<ExecutionContext>()
 	
 	public static ExecutionManager getCurrentExecutionContext() { return perThreadExecutionContext.get() }
-	public static Task getCurrentTask() { return ExecutionManager.getCurrentTask() }
+	public static Task getCurrentTask() { return BasicExecutionManager.getCurrentTask() }
 
 	final ExecutionManager executionManager;
 	final Set<Object> tags = [];
@@ -33,14 +33,17 @@ public class ExecutionContext implements Executor {
 	public Set<Task> getTasks() { executionManager.getTasksWithAllTags(taskBucket) }
 
 	//these conform with ExecutorService but we do not want to expose shutdown etc here
-	public Task submit(Runnable r) { submitInternal(r) }
-	public Task submit(Callable r) { submitInternal(r) }
-	public Task submit(Task task) { submitInternal(task) }
-	private Task submitInternal(Object r) {
-		executionManager.submit r,
-			tags:tags, 
-			newTaskStartCallback: this.&registerPerThreadExecutionContext,
-			newTaskEndCallback: this.&clearPerThreadExecutionContext
+	/** keys in map, e.g.: tags (add'l tags), description (string), others as per BasicExecutionManager */
+	public Task submit(Map m=[:], Runnable r) { submitInternal(m, r) }
+	public Task submit(Map m=[:], Callable r) { submitInternal(m, r) }
+	public Task submit(Task task) { submitInternal([:], task) }
+	private Task submitInternal(Map m, Object r) {
+		if (m.tags==null) m.tags = []; m.tags << tags
+		def oldNTSC = m.newTaskStartCallback;
+		m.newTaskStartCallback = { this.registerPerThreadExecutionContext(); if (oldNTSC!=null) oldNTSC.call(it); }
+		def oldNTEC = m.newTaskEndCallback;
+		m.newTaskEndCallback = { try { if (oldNTEC!=null) oldNTEC.call(it); } finally { this.clearPerThreadExecutionContext() } }
+		executionManager.submit m, r
 	}
 
 	/** provided for compatibility; submit is preferred if a handle on the resulting Task is desired (although a task can be passed in so this is not always necessary) */

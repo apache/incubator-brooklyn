@@ -1,15 +1,18 @@
 package brooklyn.entity.basic
 
+import java.lang.reflect.Field
 import java.util.Collection
+import java.util.Map
 import java.util.concurrent.CopyOnWriteArrayList
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Application
-import brooklyn.entity.Entity
+import brooklyn.entity.Effector
 import brooklyn.entity.EntityClass
 import brooklyn.entity.Group
+import brooklyn.entity.ParameterType
 import brooklyn.event.Event
 import brooklyn.event.EventListener
 import brooklyn.event.Sensor
@@ -17,6 +20,7 @@ import brooklyn.event.basic.AttributeMap
 import brooklyn.event.basic.AttributeSensor
 import brooklyn.location.Location
 import brooklyn.management.ManagementContext
+import brooklyn.management.Task
 import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.task.ExecutionContext
 
@@ -33,7 +37,7 @@ import brooklyn.util.task.ExecutionContext
  * @author alex
  */
 public abstract class AbstractEntity implements EntityLocal {
-    static final Logger log = LoggerFactory.getLogger(Entity.class);
+    private static final Logger log = LoggerFactory.getLogger(AbstractEntity.class);
  
     String id = LanguageUtils.newUid();
     Map<String,Object> presentationAttributes = [:]
@@ -192,7 +196,116 @@ public abstract class AbstractEntity implements EntityLocal {
 		if (execution) execution;
 		synchronized (this) {
 			if (execution) execution;
-			execution = new ExecutionContext(tag: this, getApplication()?.getManagementContext().getExecutionManager())
+			execution = new ExecutionContext(tag: this, getManagementContext().getExecutionManager())
 		}
-	} 
+	}
+	
+	// -------- EFFECTORS --------------
+	
+	private ThreadLocal<Boolean> invokeMethodPrep = new ThreadLocal() { protected Object initialValue() { Boolean.FALSE } }
+	
+	public Object invokeMethod(String name, Object args) {
+		if (!this.@invokeMethodPrep.get()) {
+			this.@invokeMethodPrep.set(true);
+			
+			//args should be an array, warn if we got here wrongly
+			if (args==null) log.warn("$this.$name invoked with incorrect args signature (null)", new Throwable("source of incorrect invocation of $this.$name"))
+			else if (!args.getClass().isArray()) log.warn("$this.$name invoked with incorrect args signature (non-array ${args.getClass()}): "+args, new Throwable("source of incorrect invocation of $this.$name"))
+			
+			try {
+				Effector eff = getEffectors().get(name)
+				if (eff) {
+					args = prepareArgsForEffector(eff, args);
+					Task currentTask = executionContext.getCurrentTask();
+					if (!currentTask || !currentTask.getTags().contains(this)) {
+						//wrap in a task if we aren't already in a task that is tagged with this entity
+						MetaClass mc = metaClass
+						Task t = executionContext.submit( { mc.invokeMethod(this, name, args); },
+							description: "call to method $name being treated as call to effector $eff" )
+						return t.get();
+					}
+				}
+			} finally { this.@invokeMethodPrep.set(false); }
+		}
+		metaClass.invokeMethod(this, name, args);
+		//following is recommended on web site, but above is how groovy actually implements it
+//			def metaMethod = metaClass.getMetaMethod(name, newArgs)
+//			if (metaMethod==null)
+//				throw new IllegalArgumentException("Invalid arguments (no method found) for method $name: "+newArgs);
+//			metaMethod.invoke(this, newArgs)
+	}
+	private transient volatile Map<String,Effector> effectors = null
+	public Map<String,Effector> getEffectors() {
+		if (effectors!=null) return effectors
+		synchronized (this) {
+			if (effectors!=null) return effectors
+			Map<String,Effector> effectorsT = [:]
+			getClass().getFields().each { Field f ->
+				if (Effector.class.isAssignableFrom(f.getType())) {
+					Effector eff = f.get(this)
+					def overwritten = effectorsT.put(eff.name, eff)
+					if (overwritten!=null) log.warn("multiple definitions for effector ${eff.name} on $this; preferring $eff to $overwritten")
+				}
+			}
+			effectors = effectorsT
+		}
+	}
+	/** takes an array of arguments, which typically contain a map in the first position (and possibly nothing else),
+	 * and returns an array of arguments suitable for use by Effector according to the ParameterTypes it exposes */
+	public static Object prepareArgsForEffector(Effector eff, Object args) {
+		//attempt to coerce unexpected types
+		if (args==null) args = [:]
+		if (!args.getClass().isArray()) {
+			if (args instanceof Collection) args = args as Object[]
+			else args = new Object[1] { args }
+		}
+		
+		//if args starts with a map, assume it contains the named arguments
+		//(but only use it when we have insufficient supplied arguments)
+		List l = new ArrayList()
+		l.addAll(args)
+		Map m = (args[0] instanceof Map ? new LinkedHashMap(l.remove(0)) : null)
+		def newArgs = []
+		int newArgsNeeded = eff.getParameters().size()
+		boolean mapUsed = false;
+		eff.getParameters().eachWithIndex { ParameterType<?> it, int index ->
+			if (l.size()>=newArgsNeeded)
+				//all supplied (unnamed) arguments must be used; ignore map
+				newArgs << l.remove(0)
+			else if (m && it.name && m.containsKey(it.name))
+				//some arguments were not supplied, and this one is in the map
+				newArgs << m.remove(it.name)
+			else if (index==0 && Map.class.isAssignableFrom(it.getParameterClass())) {
+				//if first arg is a map it takes the supplied map
+				newArgs << m
+				mapUsed = true
+			} else if (!l.isEmpty() && it.getParameterClass().isInstance(l[0]))
+				//if there are parameters supplied, and type is correct, they get applied before default values
+				//(this is akin to groovy)
+				newArgs << l.remove(0)
+			else if (it in BasicParameterType && it.hasDefaultValue())
+				//finally, default values are used to make up for missing parameters
+				newArgs << it.defaultValue
+			else
+				throw new IllegalArgumentException("Invalid arguments (count mismatch) for effector $eff: "+args);
+				
+			newArgsNeeded--
+		}
+		if (newArgsNeeded>0)
+			throw new IllegalArgumentException("Invalid arguments (missing $newArgsNeeded) for effector $eff: "+args);
+		if (!l.isEmpty())
+			throw new IllegalArgumentException("Invalid arguments (${l.size()} extra) for effector $eff: "+args);
+		if (m && !mapUsed)
+			throw new IllegalArgumentException("Invalid arguments (${m.size()} extra named) for effector $eff: "+args);
+		newArgs = newArgs as Object[]
+	}
+	
+	public <T> Task<T> invoke(Map parameters=[:], Effector<T> eff) {
+		invoke(eff, parameters);
+	}
+	//add'l form supplied for when map needs to be made explicit (above supports implicit named args)
+	public <T> Task<T> invoke(Effector<T> eff, Map parameters) {
+		executionContext.submit( { eff.call(this, parameters) }, description: "invocation of effector $eff" )
+	}
+
 }

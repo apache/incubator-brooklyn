@@ -62,15 +62,3 @@ public abstract class AbstractSensor<T> implements Sensor<T> {
         }
     }
 }
-
-//@InheritConstructors
-public class AttributeSensor<T> extends AbstractSensor<T> {
-    private static final long serialVersionUID = -7670909215973264600L;
-	public AttributeSensor(String description=name, String name, Class<T> type) { super(description, name, type) }
-}
-
-//@InheritConstructors
-public class LogSensor<T> extends AbstractSensor<T> {
-    private static final long serialVersionUID = 4713993465669948212L;
-	public LogSensor(String description=name, String name, Class<T> type) { super(description, name, type) }
-}

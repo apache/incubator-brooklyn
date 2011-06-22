@@ -19,8 +19,6 @@
 
 .jstree-default.jstree-focused { background:#ffffee; }
 
-.jstree-leaf a .jstree-icon { background-position:-36px -19px; }
-
 .jstree-default .jstree-no-dots li, 
 .jstree-default .jstree-no-dots .jstree-leaf > ins { background:transparent; }
 .jstree-default .jstree-no-dots .jstree-open > ins { background-position:-18px 0; }
