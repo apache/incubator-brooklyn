@@ -68,7 +68,7 @@ public class AttributeMap {
 		if (key.length() == 0) throw new IllegalArgumentException("head of path is empty")
 		
 		def child = node.get(key)
-		if (child == null) throw new IllegalArgumentException("node $key is not present")
+		if (child == null && path.size() > 1) throw new IllegalArgumentException("node $key is not present")
 		
 		if (path.size() > 1)
 			return getValueRecurse(child, path[1..-1])
