@@ -33,7 +33,7 @@ import brooklyn.util.task.ExecutionContext
  * @author alex
  */
 public abstract class AbstractEntity implements EntityLocal {
-    static final Logger log = LoggerFactory.getLogger(Entity.class);
+    private static final Logger log = LoggerFactory.getLogger(AbstractEntity.class);
  
     String id = LanguageUtils.newUid();
     Map<String,Object> presentationAttributes = [:]
