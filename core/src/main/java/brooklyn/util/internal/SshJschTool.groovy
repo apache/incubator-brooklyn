@@ -86,61 +86,61 @@ public class SshJschTool {
      * 'block' set as false), so you must send an exit command.
      *  returns exit status.
      */
-     public int execShell(Map properties=[:], String ...commands) {
-         assertConnected()
-         ChannelShell channel=session.openChannel("shell");
-         lastChannel = channel
-         if (properties.out) {
-             channel.setOutputStream(properties.out, true)
-         }
+    public int execShell(Map properties=[:], String ...commands) {
+        assertConnected()
+        ChannelShell channel=session.openChannel("shell");
+        lastChannel = channel
+        if (properties.out) {
+            channel.setOutputStream(properties.out, true)
+        }
 
-         StringBuffer sb = []
-         commands.each { sb.append(it); sb.append("\n") }
-         channel.setInputStream new ByteArrayInputStream(sb.toString().getBytes())
+        StringBuffer sb = []
+        commands.each { sb.append(it); sb.append("\n") }
+        channel.setInputStream new ByteArrayInputStream(sb.toString().getBytes())
 
-         channel.connect()
-         if (properties.block==null || properties.block) {
-             block(channel)
-         }
+        channel.connect()
+        if (properties.block==null || properties.block) {
+            block(channel)
+        }
 
-         channel.getExitStatus()
+        channel.getExitStatus()
     }
 
-   /** convenience for the last channel used, in case it is needed */
+    /** convenience for the last channel used, in case it is needed */
 
-   public Channel lastChannel
+    public Channel lastChannel
 
-   /**
-    * Executes the set of commands using ssh exec, ";" separated (overridable
-    * with property 'separator'.
-    *
-    * Optional properties 'out' and 'err' should be streams.
-    * This is generally preferable to shell because it captures both
-    *  streams and doesn't need an explicit exit, * but may cause problems if you
-    * are doing funny escaping or need env values which are only set on a
-    * full-fledged shell;
-    * returns exit status (if blocking)
-    */
-   public int execCommands(Map properties=[:], String ...commands) {
-       assertConnected()
-       ChannelExec channel=session.openChannel("exec");
-       lastChannel = channel;
-       if (properties.out) {
-           channel.setOutputStream(properties.out, true)
-       }
+    /**
+     * Executes the set of commands using ssh exec, ";" separated (overridable
+     * with property 'separator'.
+     *
+     * Optional properties 'out' and 'err' should be streams.
+     * This is generally preferable to shell because it captures both
+     *  streams and doesn't need an explicit exit, * but may cause problems if you
+     * are doing funny escaping or need env values which are only set on a
+     * full-fledged shell;
+     * returns exit status (if blocking)
+     */
+    public int execCommands(Map properties=[:], String ...commands) {
+        assertConnected()
+        ChannelExec channel=session.openChannel("exec");
+        lastChannel = channel;
+        if (properties.out) {
+            channel.setOutputStream(properties.out, true)
+        }
 
-       if (properties.err) {
-           channel.setErrStream(properties.err, true)
-       }
-       String separator = properties.separator ?: " ; "
-       channel.setCommand Arrays.asList(commands).join(separator)
+        if (properties.err) {
+            channel.setErrStream(properties.err, true)
+        }
+        String separator = properties.separator ?: " ; "
+        channel.setCommand Arrays.asList(commands).join(separator)
 
-       channel.connect()
-       if (properties.block==null || properties.block) {
-           block(channel)
-       }
+        channel.connect()
+        if (properties.block==null || properties.block) {
+            block(channel)
+        }
 
-       channel.getExitStatus()
+        channel.getExitStatus()
     }
 
 
@@ -175,64 +175,64 @@ public class SshJschTool {
      * @param size
      * @param pathAndFileOnRemoteServer
      */
-     public int createFile(Map p=[:], String pathAndFileOnRemoteServer, InputStream input, long size) {
-         assertConnected()
-         ChannelExec channel=session.openChannel("exec");
-         lastChannel = channel;
+    public int createFile(Map p=[:], String pathAndFileOnRemoteServer, InputStream input, long size) {
+        assertConnected()
+        ChannelExec channel=session.openChannel("exec");
+        lastChannel = channel;
 
-         int targetSepIndex = pathAndFileOnRemoteServer.lastIndexOf('/');
-         String targetName = pathAndFileOnRemoteServer.substring(targetSepIndex+1)
-         String targetPath = targetSepIndex>=0 ? pathAndFileOnRemoteServer.substring(0, targetSepIndex) : "."
+        int targetSepIndex = pathAndFileOnRemoteServer.lastIndexOf('/');
+        String targetName = pathAndFileOnRemoteServer.substring(targetSepIndex+1)
+        String targetPath = targetSepIndex>=0 ? pathAndFileOnRemoteServer.substring(0, targetSepIndex) : "."
 
-         boolean ptimestamp = (p.timestamp!=null ? p.timestamp : p.lastModificationDate || p.lastAccessDate);
-         String command = "scp " + (ptimestamp ? "-p " :"") + "-t "+targetPath
-         channel.setCommand command
-//              println "connecting, with command $command"
-         channel.connect()
-         InputStream fromChannel = channel.getInputStream()
-         OutputStream toChannel = channel.getOutputStream()
-         checkAck(fromChannel)
+        boolean ptimestamp = (p.timestamp!=null ? p.timestamp : p.lastModificationDate || p.lastAccessDate);
+        String command = "scp " + (ptimestamp ? "-p " :"") + "-t "+targetPath
+        channel.setCommand command
+        //              println "connecting, with command $command"
+        channel.connect()
+        InputStream fromChannel = channel.getInputStream()
+        OutputStream toChannel = channel.getOutputStream()
+        checkAck(fromChannel)
 
-         if (p.lastModificationDate || p.lastAccessDate) {
-             long lmd = p.lastModificationDate ?: System.currentTimeMillis()
-             long lad = p.lastAccessDate ?: lmd
-//                      println "sending mod date"
-             toChannel << "T "+(lmd/1000)+" 0 "+(lad/1000)+" 0\n"
-             toChannel.flush()
-             checkAck(fromChannel)
-         }
-//               send "C0644 filesize filename", where filename should not include '/'
-         command = "C"+(p.permissions ?: '0644') + " "+size+" "+targetName+"\n"
-//              println "sending file init $command"
-         toChannel << command.getBytes();
-         toChannel.flush()
-         checkAck(fromChannel)
+        if (p.lastModificationDate || p.lastAccessDate) {
+            long lmd = p.lastModificationDate ?: System.currentTimeMillis()
+            long lad = p.lastAccessDate ?: lmd
+            //                      println "sending mod date"
+            toChannel << "T "+(lmd/1000)+" 0 "+(lad/1000)+" 0\n"
+            toChannel.flush()
+            checkAck(fromChannel)
+        }
+        //               send "C0644 filesize filename", where filename should not include '/'
+        command = "C"+(p.permissions ?: '0644') + " "+size+" "+targetName+"\n"
+        //              println "sending file init $command"
+        toChannel << command.getBytes();
+        toChannel.flush()
+        checkAck(fromChannel)
 
-         byte[] buf = new byte[1024]
-         while (size > 0) {
-             int numRead = input.read(buf, 0, (int) (size > 1024 ? 1024 : size))
-             if (numRead <= 0) throw new IOException("error reading from input when copying to "
-                                                     + pathAndFileOnRemoteServer+" at "+session);
-             size -= numRead
-//                      println "read $numRead bytes, now sending, size now $size"
-             toChannel.write buf, 0, numRead
-         }
-         toChannel.write 0
-         toChannel.flush()
-         checkAck(fromChannel)
-         toChannel.close()
-         channel.disconnect()
-         channel.getExitStatus()
+        byte[] buf = new byte[1024]
+        while (size > 0) {
+            int numRead = input.read(buf, 0, (int) (size > 1024 ? 1024 : size))
+            if (numRead <= 0) throw new IOException("error reading from input when copying to "
+                                                    + pathAndFileOnRemoteServer+" at "+session);
+            size -= numRead
+            //                      println "read $numRead bytes, now sending, size now $size"
+            toChannel.write buf, 0, numRead
+        }
+        toChannel.write 0
+        toChannel.flush()
+        checkAck(fromChannel)
+        toChannel.close()
+        channel.disconnect()
+        channel.getExitStatus()
     }
 
     /** Creates the given file with the given contents.
      *
      * Permissions specified using 'permissions:0755'.
      */
-     public int createFile(Map p=[:], String pathAndFileOnRemoteServer, String contents) {
-         byte[] b = contents.getBytes()
-         createFile(p, pathAndFileOnRemoteServer, new ByteArrayInputStream(b), b.length)
-     }
+    public int createFile(Map p=[:], String pathAndFileOnRemoteServer, String contents) {
+        byte[] b = contents.getBytes()
+        createFile(p, pathAndFileOnRemoteServer, new ByteArrayInputStream(b), b.length)
+    }
 
     /** Creates the given file with the given contents.
      *
