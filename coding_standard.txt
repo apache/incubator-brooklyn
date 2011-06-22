@@ -65,6 +65,13 @@ Optional for function calls with one argument.
 In general, do not use semicolons at the end of lines. They may be used in
 certain situations if it makes the code clearer.
 
+Use spaces around comparison operators, e.g.
+         while (size > 0) {
+
+not 
+
+         while (size>0) {
+
 Comments
 --------
 
