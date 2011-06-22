@@ -14,7 +14,7 @@ import brooklyn.event.EntityStartException
 import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.adapter.PropertiesSensorAdapter
 import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.event.basic.DynamicAttributeSensor
+import brooklyn.event.basic.JmxAttributeSensor
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.management.internal.task.Futures
 import brooklyn.util.internal.EntityStartUtils
@@ -29,21 +29,19 @@ public class TomcatNode extends AbstractEntity implements Startable {
 	private static final Logger log = LoggerFactory.getLogger(TomcatNode.class)
  
     public static final BasicAttributeSensor<Integer> HTTP_PORT = [ Integer, "webapp.http.port", "HTTP port" ]
-    public static final DynamicAttributeSensor<Integer> REQUESTS_PER_SECOND = [ Integer, "webapp.reqs.persec.RequestCount", "Reqs/Sec", { computeReqsPerSec() }, 1000 ]
+    public static final BasicAttributeSensor<Integer> REQUESTS_PER_SECOND = [ Integer, "webapp.reqs.persec.RequestCount", "Reqs/Sec", 1000L ]
     
-    public static final BasicAttributeSensor<Integer> ERROR_COUNT = [ Integer, "jmx.reqs.global.totals.maxTime", "Request errors" ]
-    public static final BasicAttributeSensor<Integer> MAX_PROCESSING_TIME = [ Integer, "jmx.reqs.global.totals.maxTime", "Request count" ]
-    public static final BasicAttributeSensor<Integer> REQUEST_COUNT = [ Integer, "jmx.reqs.global.totals.requestCount", "Request count" ]
-    public static final BasicAttributeSensor<Integer> TOTAL_PROCESSING_TIME = [ Integer, "jmx.reqs.global.totals.processingTime", "Total processing time" ]
-	
-//	public static final Effector START = new AbstractEffector("start", Void.TYPE, [], "starts an entity");
-	
-//	public static final Effector<Integer> GET_TOTAL_PROCESSING_TIME = [ "retrieves the total processing time", { delegate, arg1, arg2 -> delegate.getTotal(arg1, arg2) } ]
-//	Task<Integer> invocation = entity.invoke(GET_TOTAL_PROCESSING_TIME, ...args)
+    public static final JmxAttributeSensor<Integer> ERROR_COUNT = [ Integer, "jmx.reqs.global.totals.maxTime", "Request errors", "Catalina:type=GlobalRequestProcessor,name=\"*\"", "errorCount" ]
+    public static final JmxAttributeSensor<Integer> MAX_PROCESSING_TIME = [ Integer, "jmx.reqs.global.totals.maxTime", "Request count", "Catalina:type=GlobalRequestProcessor,name=\"*\"", "requestCount" ]
+    public static final JmxAttributeSensor<Integer> REQUEST_COUNT = [ Integer, "jmx.reqs.global.totals.requestCount", "Request count" ]
+    public static final JmxAttributeSensor<Integer> TOTAL_PROCESSING_TIME = [ Integer, "jmx.reqs.global.totals.processingTime", "Total processing time", "Catalina:type=GlobalRequestProcessor,name=\"*\"", "processingTime" ]
 	 
-    // This might be more interesting as some status like 'starting', 'started', 'failed', etc.
     public static final BasicAttributeSensor<Boolean>  NODE_UP = [ Boolean, "webapp.hasStarted", "Node started" ];
     public static final BasicAttributeSensor<String>  NODE_STATUS = [ String, "webapp.status", "Node status" ];
+	
+//	public static final Effector START = new AbstractEffector("start", Void.TYPE, [], "starts an entity");
+//	public static final Effector<Integer> GET_TOTAL_PROCESSING_TIME = [ "retrieves the total processing time", { delegate, arg1, arg2 -> delegate.getTotal(arg1, arg2) } ]
+//	Task<Integer> invocation = entity.invoke(GET_TOTAL_PROCESSING_TIME, ...args)
     
     JmxSensorAdapter jmxAdapter;
  
@@ -51,7 +49,9 @@ public class TomcatNode extends AbstractEntity implements Startable {
 		TomcatNode.metaClass.startInLocation = { SshMachineLocation loc ->
 			def setup = new Tomcat7SshSetup(delegate)
 			//pass http port to setup, if one was specified on this object
-			if (attributes.httpPort) setup.httpPort = attributes.httpPort
+			if (attributes['httpPort']) setup.httpPort = attributes['httpPort']
+            delegate.attributes['httpPort'] = setup.tomcatHttpPort // copy the http port to tomcat entity
+            log.error "attributes {}, delegate {}, setup {}", attributes['httpPort'], delegate.attributes['httpPort'], setup.tomcatHttpPort
 			setup.start loc
 			// TODO: remove the 3s sleep and find a better way to detect an early death of the Tomcat process
 			log.debug "waiting to ensure $delegate doesn't abort prematurely"
@@ -76,25 +76,25 @@ public class TomcatNode extends AbstractEntity implements Startable {
         if (!this.jxmHost && !this.jmxPort)
             throw new IllegalStateException("JMX is not available")
 
-		log.debug "started... jmxHost is {} and jmxPort is {}", this.attributes['jmxHost'], this.attributes['jmxPort']
+		log.debug "starting tomcat: httpPort {}, jmxHost {} and jmxPort {}", this.attributes['httpPort'], this.attributes['jmxHost'], this.attributes['jmxPort']
 		
 		propertiesAdapter.addSensor HTTP_PORT, this.attributes['httpPort']
 		propertiesAdapter.addSensor NODE_UP, false
         propertiesAdapter.addSensor NODE_STATUS, "starting"
  
-		if (this.properties['jmxHost'] && this.properties['jmxPort']) {
+		if (this.attributes['jmxHost'] && this.attributes['jmxPort']) {
 			jmxAdapter = new JmxSensorAdapter(this, 60*1000)
-            jmxAdapter.addSensor(ERROR_COUNT, "Catalina:type=GlobalRequestProcessor,name=\"*\"")
-            jmxAdapter.addSensor(MAX_PROCESSING_TIME, "Catalina:type=GlobalRequestProcessor,name=\"*\"")
-            jmxAdapter.addSensor(REQUEST_COUNT, "Catalina:type=GlobalRequestProcessor,name=\"*\"")
-            jmxAdapter.addSensor(TOTAL_PROCESSING_TIME, "Catalina:type=GlobalRequestProcessor,name=\"*\"")
-            jmxAdapter.addSensor(REQUESTS_PER_SECOND, "Catalina:type=GlobalRequestProcessor,name=\"*\"", { computeReqsPerSec() }, 1000)
+            jmxAdapter.addSensor(ERROR_COUNT)
+//            jmxAdapter.addSensor(MAX_PROCESSING_TIME)
+            jmxAdapter.addSensor(REQUEST_COUNT)
+            jmxAdapter.addSensor(TOTAL_PROCESSING_TIME)
+            jmxAdapter.addSensor(REQUESTS_PER_SECOND, "Catalina:type=GlobalRequestProcessor,name=\"*\"", { computeReqsPerSec() }, 1000L)
             
             Futures.futureValueWhen({
         			// Wait for the HTTP port to become available
         			String state = null
         			int port = getAttribute(HTTP_PORT)
-        			for(int attempts = 0; attempts < 30; attempts++) {
+        			for (int attempts = 0; attempts < 30; attempts++) {
         				Map connectorAttrs;
         				try {
         					connectorAttrs = jmxAdapter.getAttributes("Catalina:type=Connector,port=$port")
@@ -118,7 +118,11 @@ public class TomcatNode extends AbstractEntity implements Startable {
                         updateAttribute(NODE_UP, false)
         				throw new EntityStartException("Tomcat connector for port $port is in state $state after 30 seconds")
                     }
-                }, { jmxAdapter.isConnected() }).get()
+                }, { 
+                    boolean connected = jmxAdapter.isConnected()
+                    if (connected) log.info "jmx connected"
+                    connected
+                }).get()
 		}
  
         if (this.war) {

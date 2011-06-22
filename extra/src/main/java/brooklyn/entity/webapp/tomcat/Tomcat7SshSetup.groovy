@@ -1,19 +1,17 @@
 package brooklyn.entity.webapp.tomcat
 
+import brooklyn.location.Location;
 import brooklyn.location.basic.SshBasedJavaWebAppSetup
 import brooklyn.location.basic.SshMachineLocation
 
+
 /**
- * Created by IntelliJ IDEA.
- * User: richard
- * Date: 16/06/2011
- * Time: 15:13
- * To change this template use File | Settings | File Templates.
+ * Start a {@link TomcatNode} in a {@link Location} accessible over ssh.
  */
 public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
-	//FIXME nextag only keep most recent version.  need someone who keeps history!
     String version = "7.0.16"
     String installDir = installsBaseDir + "/" + "tomcat" + "/" + "apache-tomcat-$version"
+ 
     public static DEFAULT_FIRST_HTTP_PORT = 8080
     public static DEFAULT_FIRST_SHUTDOWN_PORT = 31880
 
@@ -27,6 +25,7 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
         super(entity)
         this.entity = entity
         runDir = appBaseDir + "/" + "tomcat-" + entity.id
+        log.info "tomvcat http port is {}", httpPort
     }
 
     public String getInstallScript() {
@@ -35,7 +34,8 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
                 "tar xvzf apache-tomcat-${version}.tar.gz")
     }
 
-    /** creates the directories tomcat needs to run in a different location from where it is installed,
+    /**
+     * Creates the directories tomcat needs to run in a different location from where it is installed,
      * renumber http and shutdown ports, and delete AJP connector, then start with JMX enabled
      */
     public String getRunScript() {

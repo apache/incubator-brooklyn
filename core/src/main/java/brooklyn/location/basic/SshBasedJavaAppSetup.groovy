@@ -18,6 +18,8 @@ public abstract class SshBasedJavaAppSetup {
  
 	String overpaasBaseDir = "/tmp/overpaas"
 	String installsBaseDir = overpaasBaseDir+"/installs"
+	Entity entity
+	String appBaseDir
 	
 	public SshBasedJavaAppSetup(Entity entity) {
 		this.entity = entity
@@ -47,7 +49,7 @@ public abstract class SshBasedJavaAppSetup {
 	}
  
 	public Map getJvmStartupProperties() {
-		[:]+getJmxConfigOptions()
+		[:] + getJmxConfigOptions()
 	}
  
 	public int getJmxPort() {
@@ -56,9 +58,14 @@ public abstract class SshBasedJavaAppSetup {
 		getNextValue("jmxPort", 10100)
 	}
  
+	/**
+	 * Return the JMX configuration properties used to start the service.
+	 * 
+	 * TODO security!
+	 */
 	public Map getJmxConfigOptions() {
-		//TODO security!
-		[ 'com.sun.management.jmxremote':'',
+		[
+          'com.sun.management.jmxremote':'',
 		  'com.sun.management.jmxremote.port':getJmxPort(),
 		  'com.sun.management.jmxremote.ssl':false,
 		  'com.sun.management.jmxremote.authenticate':false
@@ -78,31 +85,34 @@ exit
 	}
 
 	public String getInstallScript() { null }
+ 
 	public abstract String getRunScript();
 	
-	/** should return script to run at remote server to determine whether process is running;
-	 * script should return 0 if healthy, 1 if stopped, any other code if not healthy */
+	/**
+	 * Should return script to run at remote server to determine whether process is running.
+	 * 
+	 * Script should return 0 if healthy, 1 if stopped, any other code if not healthy
+	 */
 	public abstract String getCheckRunningScript();
 	
 	public void start(SshMachineLocation loc) {
+        log.info "starting entity {} in location {}", entity, loc
 		synchronized (getClass()) {
 			String s = getInstallScript()
 			if (s) {
-				int result = loc.run(out: System.out, s)
+				int result = loc.run(out:System.out, s)
 				if (result) throw new IllegalStateException("failed to start $entity (exit code $result)")
 			}
 		}
 
-		def result = loc.run(out: System.out, getRunScript())
+		def result = loc.run(out:System.out, getRunScript())
 		if (result) throw new IllegalStateException("failed to start $entity (exit code $result)")
 	}
+ 
 	public boolean isRunning(SshMachineLocation loc) {
-		def result = loc.run(out: System.out, getCheckRunningScript())
+		def result = loc.run(out:System.out, getCheckRunningScript())
 		if (result==0) return true
 		if (result==1) return false
 		throw new IllegalStateException("$entity running check gave result code $result")
 	}
-        
-	Entity entity
-	String appBaseDir
 }

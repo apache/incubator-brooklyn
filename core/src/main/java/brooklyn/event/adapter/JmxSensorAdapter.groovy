@@ -18,9 +18,9 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
-import brooklyn.event.AttributeSensor
 import brooklyn.event.Sensor
-import brooklyn.event.basic.DynamicAttributeSensor
+import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.event.basic.JmxAttributeSensor
 import brooklyn.event.basic.SensorEvent
 
 /**
@@ -44,10 +44,10 @@ public class JmxSensorAdapter implements SensorAdapter {
 	JMXConnector jmxc
 	MBeanServerConnection mbsc = null
     ScheduledFuture monitor = null
-    Map<String, AttributeSensor<?>> sensors = [:]
+    Map<String, JmxAttributeSensor<?>> sensors = [:]
     Map<String, ObjectName> objects = [:]
-    Map<String, DynamicAttributeSensor<?>> calculated = [:]
-    Map<String, ScheduledFuture> schedule = [:]
+    Map<String, BasicAttributeSensor<?>> calculated = [:]
+    Map<String, ScheduledFuture> scheduled = [:]
     
     /* Default polling interval, milliseconds */
 	long defaultPollingPeriod = 500;
@@ -56,26 +56,36 @@ public class JmxSensorAdapter implements SensorAdapter {
         this.entity = entity
         this.properties << properties
  
-        String host = entity.properties['jmxHost']
-        int port = entity.properties['jmxPort']
+        String host = entity.attributes['jmxHost']
+        int port = entity.attributes['jmxPort']
  
         this.jmxUrl =  "service:jmx:rmi:///jndi/rmi://"+host+":"+port+"/jmxrmi";
         
         if (!connect(timeout)) throw new IllegalStateException("Could not connect to JMX service")
     }
     
-    public void addSensor(DynamicAttributeSensor sensor, String jmxName) {
+    public void addSensor(BasicAttributeSensor sensor, String jmxName, Closure calculate, long period) {
+        log.info "adding calculated sensor {} with delay {}", sensor.name, period
         calculated[sensor.getName()] = sensor
         objects[sensor.getName()] = new ObjectName(jmxName)
         entity.updateAttribute(sensor, null)
         
-        schedule[sensor.getName()] = exec.scheduleWithFixedDelay(sensor.calculate, sensor.period, sensor.period, TimeUnit.MILLISECONDS)
+        scheduled[sensor.getName()] = exec.scheduleWithFixedDelay(calculate, period, period, TimeUnit.MILLISECONDS)
     }
  
-    public void addSensor(AttributeSensor sensor, String jmxName) {
+    public void addSensor(JmxAttributeSensor sensor) {
+        log.info "adding sensor {} for {} - {}", sensor.name, sensor.objectName, sensor.attribute
         sensors[sensor.getName()] = sensor
-        objects[sensor.getName()] = new ObjectName(jmxName)
+        objects[sensor.getName()] = new ObjectName(sensor.objectName)
         entity.updateAttribute(sensor, null)
+    }
+    
+    public <T> void addSensor(Sensor<T> sensor, String objectName) {
+        sensors.put(sensor.getName(), sensor);
+    }
+ 
+    public <T> void addSensor(Sensor<T> sensor, ObjectName objectName) {
+        addSensor(sensor, objectname.getCanonicalName())
     }
 
 	public boolean isConnected() {
@@ -119,7 +129,7 @@ public class JmxSensorAdapter implements SensorAdapter {
 			mbsc = null
 		}
         if (monitor) monitor.cancel(true) 
-        schedule.each { key, ScheduledFuture future -> future.cancel(true) }
+        scheduled.each { key, ScheduledFuture future -> future.cancel(true) }
 	}
 	
 	public void checkConnected() {
@@ -132,21 +142,19 @@ public class JmxSensorAdapter implements SensorAdapter {
 		ObjectName mxbeanName = new ObjectName(objectName);
 		ObjectInstance bean = mbsc.getObjectInstance(mxbeanName)
 		Map r = [:]
-//		println "bean $it";
 		MBeanInfo info = mbsc.getMBeanInfo(bean.getObjectName())
 		info.getAttributes().each { r[it.getName()] = null }
 		AttributeList attrs = mbsc.getAttributes bean.getObjectName(), r.keySet() as String[]
-		attrs.asList().each {
-//				println "  attr value "+it.getName()+" = "+it.getValue()+"  ("+it.getValue().getClass()+")"
-			r[it.getName()] = it.getValue();
-//			info.getNotifications().each { println "  notf $it" }
-		}
+		attrs.asList().each { r[it.getName()] = it.getValue(); }
 		r
 	}
 	
-	/** returns all attributes for all children matching a given objectName string;
-	 * structure:
+	/**
+	 * Returns all attributes for all children matching a given objectName string.
 	 * 
+	 * TODO allow overrides for attributes which should take min, max, rather than sum
+	 * 
+	 * <pre>
 	 *  children {
 	 *    MBean1[objName] {
 	 *      attributes {
@@ -168,9 +176,8 @@ public class JmxSensorAdapter implements SensorAdapter {
 	 *  totals {
 	 *    size: 1
 	 *  }
-	 *  
+	 * </pre>
 	 */
-	//TODO allow overrides for attributes which should take min, max, rather than sum
 	public Map getChildrenAttributesWithTotal(String objectName) {
 		checkConnected()
 		ObjectName mxbeanName = new ObjectName(objectName);
@@ -179,18 +186,15 @@ public class JmxSensorAdapter implements SensorAdapter {
 		r.totals = [:]
 		matchingBeans.each {
 			ObjectInstance bean = it
-//			println "bean $it";
 			if (!r.children) r.children=[:]
 			def c = r.children[it.toString()] = [:]
 			MBeanInfo info = mbsc.getMBeanInfo(it.getObjectName())
 			c.attributes = [:]
 			info.getAttributes().each {
-//				println "  attr $it"
 				c.attributes[it.getName()] = null
 			}
 			AttributeList attrs = mbsc.getAttributes it.getObjectName(), c.attributes.keySet() as String[]
 			attrs.asList().each {
-//				println "  attr value "+it.getName()+" = "+it.getValue()+"  ("+it.getValue().getClass()+")"
 				c.attributes[it.getName()] = it.getValue();
 				if (it.getValue() in Number)
 					r.totals[it.getName()] = (r.totals[it.getName()]?:0) + it.getValue()
@@ -199,31 +203,20 @@ public class JmxSensorAdapter implements SensorAdapter {
 		}
 		r
 	}
-	
-    public <T> void addSensor(Sensor<T> sensor, String objectName) {
-        sensors.put(sensor.getName(), sensor);
-        objects.put(sensor.getName(), objectName);
-    }
- 
-    public <T> void addSensor(Sensor<T> sensor, ObjectName objectName) {
-        addSensor(sensor, objectname.getCanonicalName())
-    }
 
     public void updateJmxSensors() {
         sensors.keySet() each { s ->
-                Sensor<?> sensor = sensors.get(s)   
-                String objectName = objects.get(s)
-		        def data = getAttributes(objectName)
-                log.info "data for {},{} was {}", sensor.name, objectName, data
-//                entity.updateAttribute(sensor, newValue)
+                JmxAttributeSensor<?> sensor = sensors.get(s)   
+		        def data = getAttributes(sensor.objectName)
+                log.info "data for {},{} was {}", sensor.name, sensor.objectName, data[sensor.attribute]
+                def newValue = data[sensor.attribute]
+                entity.updateAttribute(sensor, newValue)
 	        } 
     }
     
-    
-    
     public <T> void subscribe(String sensorName) {
         Sensor<?> sensor = sensors.get(sensorName) ?: calculated.get(sensorName) ?: null
-        if (sensor == null) throw new IllegalStateException("Sensor $sensorname not found");
+        if (sensor == null) throw new IllegalStateException("Sensor $sensorName not found");
         subscribe(sensor)
     }
  
@@ -233,7 +226,7 @@ public class JmxSensorAdapter implements SensorAdapter {
     
     public <T> T poll(String sensorName) {
         Sensor<?> sensor = sensors.get(sensorName) ?: calculated.get(sensorName) ?: null
-        if (sensor == null) throw new IllegalStateException("Sensor $sensorname not found");
+        if (sensor == null) throw new IllegalStateException("Sensor $sensorName not found");
         poll(sensor)
     }
  

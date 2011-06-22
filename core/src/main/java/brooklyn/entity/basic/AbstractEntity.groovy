@@ -150,6 +150,7 @@ public abstract class AbstractEntity implements Entity {
 	public <T> T getAttribute(Sensor<T> attribute) { attributesInternal.getValue(attribute); }
  
     public <T> void updateAttribute(Sensor<T> attribute, T val) {
+        log.info "updating attribute {} as {}", attribute.name, val
         attributesInternal.update(attribute, val);
     }
     

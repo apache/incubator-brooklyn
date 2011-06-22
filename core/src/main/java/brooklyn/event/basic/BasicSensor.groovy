@@ -75,19 +75,19 @@ public class LogSensor<T> extends BasicSensor<T> {
 }
 
 /**
- * A {@link Sensor} describing a calculated property
+ * A {@link Sensor} describing a property retrieved via JMX. 
  */
 @InheritConstructors
-public class DynamicAttributeSensor<T> extends BasicAttributeSensor<T> {
+public class JmxAttributeSensor<T> extends BasicAttributeSensor<T> {
     private static final long serialVersionUID = -1;
     
-    public final Closure calculate
-    public final long period
+    public final String objectName
+    public final String attribute
 
-    public DynamicAttributeSensor(Class<T> type, String name, String description=name, Closure calculate, long period) {
+    public JmxAttributeSensor(Class<T> type, String name, String description=name, String objectName, String attribute) {
         super(type, name, description);
         
-        this.calculate = calculate
-        this.period = period
+        this.objectName = objectName
+        this.attribute = attribute
     }
 }
