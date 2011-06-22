@@ -48,11 +48,39 @@ compromise.
 
 
 
-OverPaaS Standard
+Brooklyn Standard
 =================
+
+This is for Java and Groovy code. Not all parts will apply to Java -
+e.g. optional brackets.
 
 Formatting
 ----------
+
+It is strongly preferable but not mandatory to use curly brackets for if blocks.
+
+You must use brackets for function calls of more than one argument.
+Optional for function calls with one argument.
+
+In general, do not use semicolons at the end of lines. They may be used in
+certain situations if it makes the code clearer.
+
+Comments
+--------
+
+Long comments should start with a summary sentence. Then there should be a
+blank line before the rest of the comment.
+
+Do not fully describe a function in the @return paramater. This should be
+explained in the initial summary sentence and following text.
+
+Write in English sentences. These start with a capital letter and end with a
+terminal symbol.
+
+Use of @link and @see is encouraged.
+Don't use @version except perhaps in APIs.
+Don't use @author.
+
 
 Indenting
 ~~~~~~~~~
