@@ -48,5 +48,4 @@ public interface ExecutionManager {
 	 * callbacks run in the task's thread, and if the callback is a closure it is passed the Task for convenience
 	 */
 	public Task submit(Map flags, Task task);
-	
 }

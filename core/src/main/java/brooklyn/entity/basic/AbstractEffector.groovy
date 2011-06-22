@@ -54,7 +54,10 @@ public abstract class AbstractEffector<EntityTrait,T> implements Effector<T> {
     }
 	
 	public abstract T call(EntityTrait e, Map parameters);
-	
+
+	/** convenience for named-parameter syntax (needs map in first argument) */
+	public T call(Map parameters=[:], EntityTrait e) { call(e, parameters); }
+
 	public String toString() {
 		return name+"["+parameters.collect({it.name}).join(",")+"]";
 	}
@@ -139,11 +142,13 @@ public class EffectorInferredFromAnnotatedMethod<T> extends AbstractEffector<Ent
 			returnType = best.getReturnType()
 			parameters = []
 			LanguageUtils.forBothWithIndex(best.getParameterAnnotations(), best.getParameterTypes()) {
-				anns, type, i -> parameters.add(new BasicParameterType([
-					name: findAnnotation(anns, NamedParameter)?.value() ?: "param"+(i+1), 
+				anns, type, i -> def m = [
+					name: findAnnotation(anns, NamedParameter)?.value() /* ?: "param"+(i+1) */ , 
 					type: type,
-					defaultValue: findAnnotation(anns, DefaultValue)?.value(),
-					description: findAnnotation(anns, Description)?.value() ]))
+					description: findAnnotation(anns, Description)?.value() ]
+				def dv = findAnnotation(anns, DefaultValue);
+				if (dv) m.defaultValue = dv.value()
+				parameters.add(new BasicParameterType(m))
 			}
 		}
 
@@ -160,6 +165,6 @@ public class EffectorInferredFromAnnotatedMethod<T> extends AbstractEffector<Ent
 	}
 	
 	public T call(Entity e, Map parameters) {
-		e.invokeMethod(name, parameters)
+		e."$name"(parameters);
 	}
 }
