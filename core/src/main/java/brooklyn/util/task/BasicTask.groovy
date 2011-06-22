@@ -47,8 +47,12 @@ public class BasicTaskStub implements TaskStub {
 }
 
 /**
- * A task can be given an optional displayName and description in its
- * constructor (as named arguments in the map in first parameter).
+ * A task can be given an optional displayName and description in its constructor (as named 
+ * arguments in the map in first parameter). It is guaranteed to be Object.notified 
+ * once whenever the task starts running and once again when the task is about to complete (due to 
+ * the way executors work it is ugly to guarantee notification _after_ completion, so instead we 
+ * notify just before then expect user to call get() [which will throw errors if the underlying job 
+ * did so] or blockUntilEnded() [which will not throw errors]).
  */
 public class BasicTask<T> extends BasicTaskStub implements Task<T> {
 	private final Closure<T> job

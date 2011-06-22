@@ -8,11 +8,7 @@ import java.util.concurrent.Future;
  * Represents a unit of work for execution. When used with an ExecutionManager (or
  * ExecutionContext) it will record submission time, execution start time, end time, and any result. A task can be
  * submitted to the Execution{Manager,Context}, in which case it will be returned; or it may be created by submission
- * of a Runnable or Callable -- thereafter it can be treated just like a future. Additionally it is guaranteed to be
- * Object.notified once whenever the task starts running and once again when the task is about to complete
- * (due to the way executors work it is ugly to guarantee notification _after_ completion, so instead we notify just
- * before then expect user to call get() [which will throw errors if the underlying job did so] or blockUntilEnded()
- * [which will not throw errors]).
+ * of a Runnable or Callable -- thereafter it can be treated just like a future.
  */
 public interface Task<T> extends TaskStub, Future<T> {
 
