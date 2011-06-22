@@ -35,10 +35,10 @@ padding:0px;
 }
 
 .layout-main-content{
-	background: #fff;
-	float: left;
-	height:75%
-	border:solid;
-	border-width:thin;
-
+	background: #ffffff;
+	height:71%;
+	margin-left:355px;
+	margin-right:2px;
+	width:auto;
 }
+
