@@ -64,10 +64,10 @@ public class JmxSensorAdapter implements SensorAdapter {
         if (!connect(timeout)) throw new IllegalStateException("Could not connect to JMX service")
     }
     
-    public void addSensor(BasicAttributeSensor sensor, String jmxName, Closure calculate, long period) {
+    public void addSensor(BasicAttributeSensor sensor, String objectName, Closure calculate, long period) {
         log.info "adding calculated sensor {} with delay {}", sensor.name, period
         calculated[sensor.getName()] = sensor
-        objects[sensor.getName()] = new ObjectName(jmxName)
+        objects[sensor.getName()] = new ObjectName(objectName)
         entity.updateAttribute(sensor, null)
         
         scheduled[sensor.getName()] = exec.scheduleWithFixedDelay(calculate, period, period, TimeUnit.MILLISECONDS)

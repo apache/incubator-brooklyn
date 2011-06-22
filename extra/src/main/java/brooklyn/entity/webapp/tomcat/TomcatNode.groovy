@@ -21,23 +21,20 @@ import brooklyn.util.internal.EntityStartUtils
 
 
 /**
- * An entity that represents a single Tomcat instance.
- * 
- * @author Richard Downer <richard.downer@cloudsoftcorp.com>
+ * An {@link Entity} that represents a single Tomcat instance.
  */
 public class TomcatNode extends AbstractEntity implements Startable {
 	private static final Logger log = LoggerFactory.getLogger(TomcatNode.class)
  
     public static final BasicAttributeSensor<Integer> HTTP_PORT = [ Integer, "webapp.http.port", "HTTP port" ]
     public static final BasicAttributeSensor<Integer> REQUESTS_PER_SECOND = [ Integer, "webapp.reqs.persec.RequestCount", "Reqs/Sec" ]
+    public static final BasicAttributeSensor<Integer> MAX_PROCESSING_TIME = [ Integer, "webpp.processing.maxTime", "Max processing time" ]
+    public static final BasicAttributeSensor<Boolean> NODE_UP = [ Boolean, "webapp.hasStarted", "Node started" ];
+    public static final BasicAttributeSensor<String> NODE_STATUS = [ String, "webapp.status", "Node status" ];
     
     public static final JmxAttributeSensor<Integer> ERROR_COUNT = [ Integer, "jmx.reqs.global.totals.maxTime", "Request errors", "Catalina:type=GlobalRequestProcessor,name=\"*\"", "errorCount" ]
-    public static final JmxAttributeSensor<Integer> MAX_PROCESSING_TIME = [ Integer, "jmx.reqs.global.totals.maxTime", "Request count", "Catalina:type=GlobalRequestProcessor,name=\"*\"", "requestCount" ]
-    public static final JmxAttributeSensor<Integer> REQUEST_COUNT = [ Integer, "jmx.reqs.global.totals.requestCount", "Request count" ]
+    public static final JmxAttributeSensor<Integer> REQUEST_COUNT = [ Integer, "jmx.reqs.global.totals.requestCount", "Request count", "Catalina:type=GlobalRequestProcessor,name=\"*\"", "requestCount"  ]
     public static final JmxAttributeSensor<Integer> TOTAL_PROCESSING_TIME = [ Integer, "jmx.reqs.global.totals.processingTime", "Total processing time", "Catalina:type=GlobalRequestProcessor,name=\"*\"", "processingTime" ]
-	 
-    public static final BasicAttributeSensor<Boolean>  NODE_UP = [ Boolean, "webapp.hasStarted", "Node started" ];
-    public static final BasicAttributeSensor<String>  NODE_STATUS = [ String, "webapp.status", "Node status" ];
 	
 //	public static final Effector START = new AbstractEffector("start", Void.TYPE, [], "starts an entity");
 //	public static final Effector<Integer> GET_TOTAL_PROCESSING_TIME = [ "retrieves the total processing time", { delegate, arg1, arg2 -> delegate.getTotal(arg1, arg2) } ]

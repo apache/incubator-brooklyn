@@ -84,7 +84,7 @@ public class JmxAttributeSensor<T> extends BasicAttributeSensor<T> {
     public final String objectName
     public final String attribute
 
-    public JmxAttributeSensor(Class<T> type, String name, String description=name, String objectName, String attribute) {
+    public JmxAttributeSensor(Class<T> type, String name, String description, String objectName, String attribute) {
         super(type, name, description);
         
         this.objectName = objectName
