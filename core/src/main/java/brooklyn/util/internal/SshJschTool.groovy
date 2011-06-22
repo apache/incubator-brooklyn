@@ -111,14 +111,16 @@ public class SshJschTool {
    public Channel lastChannel
 
    /**
+    * Executes the set of commands using ssh exec, ";" separated (overridable
+    * with property 'separator'.
     *
-* executes the set of commands using ssh exec, ";" separated (overridable
-   with property 'separator'; optional properties 'out' and 'err' should be
-   streams; * this is generally preferable to shell because it captures both
-   streams and doesn't need an explicit exit, * but may cause problems if you
-   are doing funny escaping or need env values which are only set on a
-   full-fledged shell; * returns exit status (if blocking) */
-
+    * Optional properties 'out' and 'err' should be streams.
+    * This is generally preferable to shell because it captures both
+    *  streams and doesn't need an explicit exit, * but may cause problems if you
+    * are doing funny escaping or need env values which are only set on a
+    * full-fledged shell;
+    * returns exit status (if blocking)
+    */
    public int execCommands(Map properties=[:], String ...commands) {
        assertConnected()
        ChannelExec channel=session.openChannel("exec");
