@@ -120,7 +120,7 @@ class TomcatNodeIntegrationTest {
 				activityValue = tc.getAttribute(TomcatNode.REQUESTS_PER_SECOND)
 				assertEquals 1, activityValue
 				true
-			}, timeout: 10*SECONDS, useGroovyTruth: true)
+			}, timeout:10*SECONDS, useGroovyTruth:true)
 	}
     
     @Test
@@ -172,7 +172,7 @@ class TomcatNodeIntegrationTest {
 		t.start()
 		try {
 			Application app = new TestApplication()
-			TomcatNode tc = new TomcatNode(owner: app)
+			TomcatNode tc = new TomcatNode(owner:app)
 			Exception caught = null
 			try {
                 tc.start(location: new SshMachineLocation(name:'london', host:'localhost'))
