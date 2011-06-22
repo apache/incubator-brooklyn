@@ -1,5 +1,8 @@
 package brooklyn.web.console
 
+import brooklyn.entity.Entity
+
+
 public class JsTreeNodeImpl implements JsTreeNode {
 
     private String id;
@@ -7,9 +10,14 @@ public class JsTreeNodeImpl implements JsTreeNode {
     private List<JsTreeNode> children = []
     public transient boolean matched;
 
-    public JsTreeNodeImpl(String id, String name, boolean matched=false) {
+    public JsTreeNodeImpl(Entity e, boolean matched=false) {
+        this(e.id, e.displayName, e.entityClass.name, matched)
+    }
+
+    public JsTreeNodeImpl(String id, String name, String clazz, boolean matched) {
         this.id = id;
         this.data.put("title", name)
+        this.data.put("type", clazz)
         this.matched = matched
     }
 
@@ -18,7 +26,7 @@ public class JsTreeNodeImpl implements JsTreeNode {
     }
 
     public String getState() {
-        if (children.size() != 0) {
+        if (children) {
             return matched ? "open" : "closed"
         } else {
             return "leaf"
@@ -31,15 +39,5 @@ public class JsTreeNodeImpl implements JsTreeNode {
 
     public List<JsTreeNode> getChildren() {
         return children;
-    }
-
-    public transient boolean hasDescendant(JsTreeNode other) {
-        if (children.contains(other)) { return true }
-        for(child in children) {
-            if (child.hasDescendant(other)) {
-                return true;
-            }
-        }
-        return false
     }
 }
