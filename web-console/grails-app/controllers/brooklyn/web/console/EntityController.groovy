@@ -112,6 +112,7 @@ class EntityController {
 //                root.children.add(nodeMap[match.id])
 //            }
 //        }
+
         getTopLevelEntities().each {
             root.children.add(nodeMap[it.id])
         }

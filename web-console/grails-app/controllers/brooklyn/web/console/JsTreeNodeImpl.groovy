@@ -10,11 +10,11 @@ public class JsTreeNodeImpl implements JsTreeNode {
     private List<JsTreeNode> children = []
     public transient boolean matched;
 
-    public JsTreeNodeImpl(Entity e, boolean matched=false) {
+    public JsTreeNodeImpl(Entity e, Boolean matched=false) {
         this(e.id, e.displayName, e.entityClass.name, matched)
     }
 
-    public JsTreeNodeImpl(String id, String name, String clazz, boolean matched) {
+    public JsTreeNodeImpl(String id, String name, String clazz, Boolean matched) {
         this.id = id;
         this.data.put("title", name)
         this.data.put("type", clazz)
