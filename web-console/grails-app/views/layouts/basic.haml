@@ -2,6 +2,7 @@
 	%head
 		%title
 			%g:layoutTitle{:default=>"JHEYS HAML TEST"}
+
 		%g:javascript{:library=>"jquery/jquery"}\
 		%g:javascript{:library=>"jquery/jquery.jstree"}\
 		%g:javascript{:library=>"jquery/jquery.tools.min"}\
@@ -12,7 +13,6 @@
 		%link{:rel=>"stylesheet",:type=>"text/css",:href=>"${resource(dir:'css/console',file:'tab-container.css')}"}\
 		%script{:type=>"text/javascript",:src=>"${resource(dir:'dynjs',file:'jsTreeConfig')}"}\
 		%g:javascript{:library=>"console/jsTree"}\
-		%g:javascript{:library=>"console/init-widgets"}\
 		%g:layoutHead\
 	%body{:onload=>"initTabs()"}
 		%g:render{:template=>"/shared/banner"}
