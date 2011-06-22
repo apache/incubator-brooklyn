@@ -65,8 +65,10 @@ public interface Entity extends Serializable {
     
     /**
      * Update the {@link Sensor} data for the given attribute with a new value.
+     * 
+     * @return the old value for the attribute
      */
-    <T> void updateAttribute(Sensor<T> attribute, T val);
+    <T> T updateAttribute(Sensor<T> attribute, T val);
     
     /**
      * Get the latest value of a {@link Sensor} attribute.

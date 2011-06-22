@@ -131,16 +131,17 @@ public class TomcatNode extends AbstractEntity implements Startable {
 	
 	private void computeReqsPerSec() {
         def reqs = jmxAdapter.getChildrenAttributesWithTotal("Catalina:type=GlobalRequestProcessor,name=\"*\"")
-		reqs.put "timestamp", System.currentTimeMillis()
+        def now = System.currentTimeMillis()
         log.info "got reqs: {}", reqs
 		
         // update to explicit location in activity map, but not linked to sensor 
         // so probably shouldn't be used too widely 
-		Map prev = updateAttribute(["jmx","reqs","global"], reqs)
+		def prevTimestamp = updateAttribute(["tmp","reqs","timestamp"],  now)
+		def prevCount = updateAttribute(["tmp","reqs","count"], reqs?.requestCount ?: 0)
         
         // Calculate requests per second
-        double diff = (reqs?.totals?.requestCount ?: 0) - (prev?.totals?.requestCount ?: 0)
-		long dt = (reqs?.timestamp ?: 0) - (prev?.timestamp ?: 0)
+        double diff = (reqs?.requestCount ?: 0) - prevCount
+		long dt = now - prevTimestamp
         
 		if (dt <= 0 || dt > 60*1000) {
             diff = -1; 
@@ -148,7 +149,7 @@ public class TomcatNode extends AbstractEntity implements Startable {
             diff = ((double) 1000.0 * diff) / dt
 		}
 		int rps = (int) Math.round(diff)
-		log.trace "computed $rps reqs/sec over $dt millis for JMX tomcat process at $jmxHost:$jmxPort"
+		log.trace "computed $rps reqs/sec over $dt millis"
 		updateAttribute(REQUESTS_PER_SECOND, rps)
 	}
 	
