@@ -16,6 +16,8 @@ public class AttributeMap {
 		this.entity = entity;
 	}
 	
+	public Map asMap() { values }
+		
 	public <T> T update(Collection<String> path, T newValue) {
 		Map map
 		String key

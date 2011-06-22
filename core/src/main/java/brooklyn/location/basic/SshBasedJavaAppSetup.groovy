@@ -27,8 +27,10 @@ public abstract class SshBasedJavaAppSetup {
 	/** convenience to generate string -Dprop1=val1 -Dprop2=val2 for use with java */		
 	public static String toJavaDefinesString(Map m) {
 		StringBuffer sb = []
-		m.each { sb.append("-D"); sb.append(it.key); if (sb.value!='') { sb.append('=\''); sb.append(it.value); sb.append('\' ') } }
+		m.each { sb.append("-D"); sb.append(it.key); if (it.value!='') { sb.append('=\''); sb.append(it.value); sb.append('\' ') } }
 		return sb.toString().trim()
+		//TODO - try the following instead
+		//return m.collect( { "-D"+it.key+(it.value?:"='"+it.value+"'"} ).join(" ")
 	}
  
 	/** convenience to record a value on the location to ensure each instance gets a unique value */
@@ -71,6 +73,7 @@ mkdir -p $installDir && \\
 cd $installDir/.. && \\
 """;
 		lines.each { result += it + "&& \\\n" }
+		// TODO use .collect, as above
 		result += """\
 date > INSTALL_COMPLETION_DATE
 exit
