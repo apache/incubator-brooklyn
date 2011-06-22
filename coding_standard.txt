@@ -79,6 +79,15 @@ certain situations if it makes the code clearer.
 Alex% why? i often don't but sometimes do, to make it look more java-like,
 or if importing java.  i don't think it makes any difference...
 
+Use spaces around comparison operators, e.g.
+         while (size > 0) {
+not 
+         while (size>0) {
+
+
+Alex% yuck. prefer using spaces in a line for readability, as one sees fit.
+  i>0 needs no spaces. list.findAll({..}).size() > 1  probably should.
+
 
 Comments
 --------
