@@ -42,3 +42,8 @@ padding:0px;
 	width:auto;
 }
 
+div#demo1{
+	overflow:hidden;
+	height:100%;
+}
+
