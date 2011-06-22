@@ -29,7 +29,7 @@ public class TomcatNode extends AbstractEntity implements Startable {
 	private static final Logger log = LoggerFactory.getLogger(TomcatNode.class)
  
     public static final BasicAttributeSensor<Integer> HTTP_PORT = [ Integer, "webapp.http.port", "HTTP port" ]
-    public static final BasicAttributeSensor<Integer> REQUESTS_PER_SECOND = [ Integer, "webapp.reqs.persec.RequestCount", "Reqs/Sec", 1000L ]
+    public static final BasicAttributeSensor<Integer> REQUESTS_PER_SECOND = [ Integer, "webapp.reqs.persec.RequestCount", "Reqs/Sec" ]
     
     public static final JmxAttributeSensor<Integer> ERROR_COUNT = [ Integer, "jmx.reqs.global.totals.maxTime", "Request errors", "Catalina:type=GlobalRequestProcessor,name=\"*\"", "errorCount" ]
     public static final JmxAttributeSensor<Integer> MAX_PROCESSING_TIME = [ Integer, "jmx.reqs.global.totals.maxTime", "Request count", "Catalina:type=GlobalRequestProcessor,name=\"*\"", "requestCount" ]
