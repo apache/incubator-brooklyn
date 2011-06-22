@@ -27,26 +27,31 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     }
 
     public String getRunScript() {
-        // TODO: Config. Run using correct pre-setup jboss config dir. Also deal with making these.
-        // Configuring ports:
-        // http://docs.jboss.org/jbossas/docs/Server_Configuration_Guide/beta422/html/Additional_Services-Services_Binding_Management.html
-        // http://docs.jboss.org/jbossas/6/Admin_Console_Guide/en-US/html/Administration_Console_User_Guide-Port_Configuration.html
-        
         // Notes:
         // LAUNCH_JBOSS_IN_BACKGROUND relays OS signals sent to the run.sh process to the JBoss process.
         // run.sh must be backgrounded otherwise the script will never return.
-        def props = getJvmStartupProperties()
-        def port = entity.attributes.jmxPort    
-        def host = entity.attributes.jmxHost 
+		// Assume one instance of JBoss per machine (why would you run two?), 
+		// this setup uses the default ports..
+
+		// Configuring ports:
+		// http://community.jboss.org/wiki/ConfiguringMultipleJBossInstancesOnOneMachine
+		// http://community.jboss.org/wiki/ConfigurePorts
+		// http://community.jboss.org/wiki/AS5ServiceBindingManager
+		
 """
+mkdir -p $runDir/server
+cd $runDir/server
+export JBOSS_HOME=$installDir
+cp -r $installDir/server/default default
 export LAUNCH_JBOSS_IN_BACKGROUND=1
-export JAVA_OPTS=""" + "\"" + toJavaDefinesString(props) + """\"
+export JAVA_OPTS=""" + "\"" + toJavaDefinesString(getJvmStartupProperties()) + """\"
 JAVA_OPTS="\$JAVA_OPTS -Djboss.platform.mbeanserver"
 JAVA_OPTS="\$JAVA_OPTS -Djavax.management.builder.initial=org.jboss.system.server.jmx.MBeanServerBuilderImpl"
 JAVA_OPTS="\$JAVA_OPTS -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
 JAVA_OPTS="\$JAVA_OPTS -Dorg.jboss.logging.Logger.pluginClass=org.jboss.logging.logmanager.LoggerPluginImpl"
 export JBOSS_CLASSPATH="$installDir/lib/jboss-logmanager.jar"
-$installDir/bin/run.sh &
+$installDir/bin/run.sh -Djboss.server.base.dir=$runDir/server \
+					   -Djboss.server.base.url=file://$runDir/server -c default &
 exit
 """
     }
@@ -56,9 +61,9 @@ exit
     public String getCheckRunningScript() { 
 		def port = entity.attributes.jmxPort
 		def host = entity.attributes.jmxHost
-		"""
+"""
 $installDir/bin/twiddle.sh -s service:jmx:rmi:///jndi/rmi://$host:$port/jmxrmi \
-get "jboss.system:type=Server" Started
+	get "jboss.system:type=Server" Started 
 exit
 """
     }
