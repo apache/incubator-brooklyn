@@ -107,9 +107,9 @@ class TomcatNodeIntegrationTest {
 		tc.start(location: new SshMachineLocation(name:'london', host:'localhost'))
 		executeUntilSucceedsWithShutdown(tc, {
 				def activityValue = tc.getAttribute(TomcatNode.REQUESTS_PER_SECOND)
+				if (activityValue == null || activityValue == -1) return new BooleanWithMessage(false, "activity not set yet (-1)")
+                
 				assertEquals Integer, activityValue.class
-				if (activityValue==-1) return new BooleanWithMessage(false, "activity not set yet (-1)")
-				
 				assertEquals 0, activityValue
 				
 				def port = tc.getAttribute(TomcatNode.HTTP_PORT)

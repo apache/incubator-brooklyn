@@ -70,7 +70,7 @@ public class JmxSensorAdapter implements SensorAdapter {
         objects[sensor.getName()] = new ObjectName(objectName)
         entity.updateAttribute(sensor, null)
         
-        scheduled[sensor.getName()] = exec.scheduleWithFixedDelay(calculate, period, period, TimeUnit.MILLISECONDS)
+        scheduled[sensor.getName()] = exec.scheduleWithFixedDelay(calculate, 0L, period, TimeUnit.MILLISECONDS)
     }
  
     public void addSensor(JmxAttributeSensor sensor) {
