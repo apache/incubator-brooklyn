@@ -1,6 +1,8 @@
 ul#tabs {
 	list-style-type: none;
-	height:0px;
+	border-bottom:solid;
+	border-width:thin;
+	width:100%;
 	padding: 0 0 0.3em 0;
 }
 ul#tabs li {
@@ -22,15 +24,14 @@ ul#tabs li a:hover {
 
 ul#tabs li a.selected {
 	color: #000;
-	background-color: #f7f7f7;
+	background-color: #ffffff;
 	font-weight: bold;
 	padding: 0.7em 0.3em 0.38em 0.3em;
 }
 
 div.tabContent {
-	border: 1px solid #c9c3ba;
 	padding: 0.5em;
-	background-color: #f7f7f7;
+	background-color:#ffffff
 	height:98%;
 }
 
