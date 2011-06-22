@@ -5,8 +5,7 @@ import java.util.concurrent.Future;
 
 
 /**
- * Represents a unit of work for execution. The task can be given an optional displayName and description in its
- * constructor (as named arguments in the map in first parameter). When used with an ExecutionManager (or
+ * Represents a unit of work for execution. When used with an ExecutionManager (or
  * ExecutionContext) it will record submission time, execution start time, end time, and any result. A task can be
  * submitted to the Execution{Manager,Context}, in which case it will be returned; or it may be created by submission
  * of a Runnable or Callable -- thereafter it can be treated just like a future. Additionally it is guaranteed to be
@@ -25,7 +24,6 @@ public interface Task<T> extends TaskStub, Future<T> {
 	public Task<?> getSubmittedByTask();
 	/** the thread where the task is running, if it is running */
 	public Thread getThread();
-		
 
 	public boolean isError();
 

@@ -46,6 +46,10 @@ public class BasicTaskStub implements TaskStub {
 	
 }
 
+/**
+ * A task can be given an optional displayName and description in its
+ * constructor (as named arguments in the map in first parameter).
+ */
 public class BasicTask<T> extends BasicTaskStub implements Task<T> {
 	private final Closure<T> job
 	public final String displayName
