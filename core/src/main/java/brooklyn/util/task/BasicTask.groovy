@@ -15,6 +15,7 @@ import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
+import brooklyn.management.ExecutionManager
 import brooklyn.management.Task
 import brooklyn.management.TaskStub
 import brooklyn.util.internal.LanguageUtils
@@ -46,12 +47,20 @@ public class BasicTaskStub implements TaskStub {
 	
 }
 
+/**
+ * A task can be given an optional displayName and description in its constructor (as named 
+ * arguments in the map in first parameter). It is guaranteed to be Object.notified 
+ * once whenever the task starts running and once again when the task is about to complete (due to 
+ * the way executors work it is ugly to guarantee notification _after_ completion, so instead we 
+ * notify just before then expect user to call get() [which will throw errors if the underlying job 
+ * did so] or blockUntilEnded() [which will not throw errors]).
+ */
 public class BasicTask<T> extends BasicTaskStub implements Task<T> {
-	private final Closure<T> job
+	protected Closure<T> job
 	public final String displayName
 	public final String description
 
-	final Set tags = []
+	protected final Set tags = []
 
 	//constructor needed to prevent confusion in groovy stubs when looking for default constructor (generics on Closure<T> breaks it if that is first constructor)
 	protected BasicTask(Map flags=[:]) {
@@ -85,14 +94,19 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
 	
 	// housekeeping --------------------
 	
-	private long submitTimeUtc = -1;
-	private long startTimeUtc = -1;
-	private long endTimeUtc = -1;
-	private Task<?> submittedByTask;
+	protected long submitTimeUtc = -1;
+	protected long startTimeUtc = -1;
+	protected long endTimeUtc = -1;
+	protected Task<?> submittedByTask;
 
-	private Thread thread = null
+	protected Thread thread = null
 	private boolean cancelled = false
 	private Future<T> result = null
+	protected ExecutionManager em = null
+	
+	void initExecutionManager(ExecutionManager em) {
+		this.em = em
+	}
 	
 	synchronized void initResult(Future result) {
 		if (this.result!=null) throw new IllegalStateException("task "+this+" is being given a result twice");
@@ -109,7 +123,7 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
 	public long getStartTimeUtc() { startTimeUtc }
 	public long getEndTimeUtc() { endTimeUtc }
 	
-	public Future<T> getResultFuture() { result }
+	public Future<T> getResult() { result }
 	public Task<?> getSubmittedByTask() { submittedByTask }
 	/** the thread where the task is running, if it is running */
 	public Thread getThread() { thread }
@@ -280,5 +294,15 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
 		
 	protected lookup(LockInfo l) {
 		return l
+	}
+	
+	@Override
+	public int hashCode() {
+		super.hashCode()
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		super.equals(obj)
 	}
 }

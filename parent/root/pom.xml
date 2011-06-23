@@ -6,7 +6,7 @@
 	<artifactId>brooklyn-parent-root</artifactId>
 	<packaging>pom</packaging>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>Brooklyn Parent</name>
+	<name>Brooklyn Parent Root</name>
 
 	<description>
         The parent for Brooklyn modules (defines dependencies and config used everywhere)

@@ -8,6 +8,7 @@ import java.net.URL
 import java.util.Map
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 import java.util.logging.Level
 import java.util.logging.Logger
@@ -39,6 +40,7 @@ import com.cloudsoftcorp.monterey.network.m.MediationWorkrateItem.MediationWorkr
 import com.cloudsoftcorp.monterey.node.api.NodeId
 import com.cloudsoftcorp.util.Loggers
 import com.cloudsoftcorp.util.TimeUtils
+import com.cloudsoftcorp.util.exception.ExceptionUtils;
 import com.cloudsoftcorp.util.exception.RuntimeWrappedException
 import com.cloudsoftcorp.util.javalang.ClassLoadingContext
 import com.cloudsoftcorp.util.osgi.BundleSet
@@ -48,6 +50,7 @@ import com.cloudsoftcorp.util.web.server.WebConfig
 import com.cloudsoftcorp.util.web.server.WebServer
 import com.google.common.collect.ImmutableMap
 import com.google.gson.Gson
+
 
 /**
  * Represents a Monterey network.
@@ -92,6 +95,8 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     private final Map<NodeId,MontereyContainerNode> nodes = new ConcurrentHashMap<NodeId,MontereyContainerNode>();
     private final Map<String,Segment> segments = new ConcurrentHashMap<String,Segment>();
 
+    private ScheduledFuture<?> monitoringTask
+    
     public MontereyNetwork() {
         classloadingContext = ClassLoadingContext.Defaults.getDefaultClassLoadingContext();
         gsonSerializer = new GsonSerializer(classloadingContext);
@@ -136,6 +141,10 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         // FIXME Work in progress...
         EntityStartUtils.startEntity properties, this, parent, location
         log.debug "Monterey network started... management-url is {}", this.properties['ManagementUrl']
+    }
+    
+    public void dispose() {
+        if (monitoringTask != null) monitoringTask.cancel(true);
     }
 
     public void startOnHost(SshMachineLocation host) {
@@ -199,8 +208,8 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
                 throw new IllegalStateException("Management plane not reachable via web-api within "+TimeUtils.makeTimeString(MontereyNetworkConfig.TIMEOUT_FOR_NEW_NETWORK_ON_HOST)+": url="+managementUrl);
             }
 
-            activity.update MANAGEMENT_URL, managementUrl
-            activity.update NETWORK_ID, networkId.getId()
+            updateAttribute MANAGEMENT_URL, managementUrl
+            updateAttribute NETWORK_ID, networkId.getId()
 
             monitoringTask = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay({ updateAll() }, 1000, 1000, TimeUnit.MILLISECONDS)
 
@@ -273,8 +282,13 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     }
 
     private void updateAll() {
-        updateTopology();
-        updateWorkrates();
+        try {
+            updateTopology();
+            updateWorkrates();
+        } catch (Throwable t) {
+            LOG.log Level.WARNING, "Error updating brooklyn entities of Monterey Network "+managementUrl, t
+            ExceptionUtils.throwRuntime t
+        }
     }
 
     private void updateStatus() {
@@ -283,7 +297,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         String currentAppName = currentApp?.getName();
         if (!(applicationName != null ? applicationName.equals(currentAppName) : currentAppName == null)) {
             applicationName = currentAppName;
-            activity.update(APPLICTION_NAME, applicationName);
+            updateAttribute(APPLICTION_NAME, applicationName);
         }
     }
     
@@ -326,7 +340,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
 
         // Notify "container nodes" (i.e. BasicNode in monterey classes jargon) of what node-types are running there
         nodeSummaries.values().each {
-            nodes.get(it.getKey())?.updateContents(it);
+            nodes.get(it.getNodeId())?.updateContents(it);
         }
     }
 

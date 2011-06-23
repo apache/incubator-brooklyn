@@ -23,7 +23,6 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
 
     public Tomcat7SshSetup(TomcatNode entity) {
         super(entity)
-        this.entity = entity
         runDir = appBaseDir + "/" + "tomcat-" + entity.id
     }
 

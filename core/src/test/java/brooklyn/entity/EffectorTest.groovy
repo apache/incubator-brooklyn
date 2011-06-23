@@ -1,87 +1,134 @@
 package brooklyn.entity
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.reflect.Method;
+import static org.junit.Assert.*
 
-import org.junit.Ignore;
-import org.junit.Test;
+import java.lang.reflect.Field
+import java.util.concurrent.Callable;
+
+import org.junit.Test
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.AbstractEffector
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.BasicParameterType
+import brooklyn.entity.basic.DefaultValue
+import brooklyn.entity.basic.Description
+import brooklyn.entity.basic.EffectorInferredFromAnnotatedMethod
+import brooklyn.entity.basic.NamedParameter
+import brooklyn.management.ManagementContext;
+import brooklyn.management.Task;
+import brooklyn.management.internal.LocalManagementContext;
 
-@Retention(RetentionPolicy.RUNTIME)
-public @interface ProvidesEffector {
-	String name();
-	String description() default "sample";
-}
-@Retention(RetentionPolicy.RUNTIME)
-public @interface EffectorParameter {
-	String value();
-	String description() default "sample"
-}
-public @interface DefaultValue {
-	String value();
-}
-public @interface Description {
-	String value();
-}
 
 class EffectorTest {
-
-	public static class EffectorInferredFromAnnotatedMethod {}
+	private static final Logger log = LoggerFactory.getLogger(EffectorTest.class);
+	// FIXME remove this when we have a process for setting logging...
+//	static {
+//		log.metaClass {
+//			warn = { String a -> println "WARN "+a }
+//			warn = { String a, Throwable t -> println "WARN "+a; t.printStackTrace(); }
+//			info = { String a -> println "INFO "+a }
+//		}
+//	}
 	
-	public interface CanSayHi {
-		static Effector SAY_HI_1 = new AbstractEffector("sayHi", String.class, 
+	public static interface CanSayHi {
+		static Effector<String> SAY_HI_1 = new AbstractEffector<CanSayHi,String>("sayHi1", String.class, 
 			[
 				[ "name", String.class, "person to say hi to" ] as BasicParameterType<String>,
 				[ "greeting", String.class, "what to say as greeting", "hello" ] as BasicParameterType<String>
 			], 
 			"says hello to a person") {
-				String call(CanSayHi e, Map m) { e.sayHi(m) }
+				public String call(CanSayHi e, Map m) { e.sayHi1(m) }
 		};
 
-		static Effector SAY_HI_2 = new EffectorInferredFromAnnotatedMethod(CanSayHi.class, "sayHi");
+		static Effector<String> SAY_HI_2 = new EffectorInferredFromAnnotatedMethod<String>(CanSayHi.class, "sayHi2", "says hello");
 
-		public String sayHi( 
-			@EffectorParameter("name") String name,
-			@EffectorParameter("greeting") @DefaultValue("hello") @Description("what to say") String greeting);
-
-//		String sayHi(String name="");
-//		String sayHi();
-//		String sayHi(String name);
-		
+		public String sayHi1(String name, String greeting);
+		public String sayHi2(
+			@NamedParameter("name") String name,
+			@NamedParameter("greeting") @DefaultValue("hello") @Description("what to say") String greeting);
 	}
 		
-	public static class MyEntity extends AbstractEntity implements CanSayHi {
-//		{ CanSayHi.SAY_HI.name }
-		@ProvidesEffector ( name="sayHi" )
-//		@ProvidesEffector ( CanSayHi.SAY_HI.name )
-//		@ProvidesEffector( ((AbstractEffector)(CanSayHi.SAY_HI)).name )
-//		public String sayHi(String name) { "hello $name" }
+	public static class MyEntity extends AbstractEntity implements CanSayHi, GroovyInterceptable {
+		public String sayHi1(String name, String greeting) { "$greeting $name" }
+		public String sayHi2(String name, String greeting) { "$greeting $name" }
+
+		ManagementContext mgmt = new LocalManagementContext()
 		
-//		public String sayHi(@ProvidesEffector(name="name") Map flags=[:], String name=flags.name, String greeting=flags.greeting?:"hello") { "$greeting $name" }
+		//for testing
+		@Override
+		public ManagementContext getManagementContext() {
+			if (!getApplication()) return mgmt;
+			return super.getManagementContext();
+		}
 		
-//		@MakeEffector(description: "says hello to a person")
-		public String sayHi(Map flags=[:], String name, String greeting) 
-		{ "$greeting $name" }
 	}
 
-	@Ignore	
 	@Test
 	public void testFindEffectors() {
 		MyEntity e = new MyEntity();
-		println e.sayHi(name: "Bob")
 		
-		e.getClass().getMethods().each { Method m -> if (m.getName()!="sayHi") return;
-			println "method $m: "+(m.getAnnotations());
-			println m.getParameterAnnotations()
-		}
-		println e.SAY_HI
+		assertEquals("sayHi1", e.SAY_HI_1.getName());	
+		assertEquals(["name", "greeting"], e.SAY_HI_1.getParameters()[0..1]*.getName());	
+
+		assertEquals("sayHi2", e.SAY_HI_2.getName());
+		assertEquals(["name", "greeting"], e.SAY_HI_2.getParameters()[0..1]*.getName());
+	}
+	@Test
+	public void testInvokeEffectorMethod1BypassInterception() {
+		MyEntity e = new MyEntity();
 		
-		println e.SAY_HI.code.call(e, [name:"Bob"])
+		String name = "sayHi1"
+		def args = ["Bob", "hello"] as Object[]
+		assertEquals("hello Bob", e.metaClass.invokeMethod(e, name, args))
+	}
+	@Test
+	public void testInvokeEffectorMethod2BypassInterception() {
+		MyEntity e = new MyEntity();
+		
+		String name = "sayHi2"
+		def args = ["Bob", "hello"] as Object[]
+
+		//try the alt syntax recommended from web
+		def metaMethod = e.metaClass.getMetaMethod(name, args)
+		if (metaMethod==null)
+			throw new IllegalArgumentException("Invalid arguments (no method found) for method $name: "+args);
+		assertEquals("hello Bob", metaMethod.invoke(e, args))
+	}
+
+	@Test
+	public void testInvokeEffectors1() {
+		MyEntity e = new MyEntity();
+		
+		assertEquals("hi Bob", e.sayHi1("Bob", "hi"))
+		assertEquals("hello Bob", e.sayHi1("Bob"))
+		
+		assertEquals("hi Bob", e.sayHi1(name: "Bob", greeting:"hi"))
+		assertEquals("hello Bob", e.sayHi1(name: "Bob"))
+		
+		assertEquals("hello Bob", e.SAY_HI_1.call(e, [name:"Bob"]) )
+		assertEquals("hello Bob", e.invoke(e.SAY_HI_1, [name:"Bob"]).get() );
 	} 
+	@Test
+	public void testInvokeEffectors2() {
+		MyEntity e = new MyEntity();
+		
+		assertEquals("hi Bob", e.sayHi2("Bob", "hi"))
+		assertEquals("hello Bob", e.sayHi2("Bob"))
+		
+		assertEquals("hi Bob", e.sayHi2(name: "Bob", greeting:"hi"))
+		assertEquals("hello Bob", e.sayHi2(name: "Bob"))
+		
+		assertEquals("hello Bob", e.SAY_HI_2.call(e, [name:"Bob"]) )
+		assertEquals("hello Bob", e.invoke(e.SAY_HI_2, [name:"Bob"]).get() );
+	}
+
+	//TODO test spread invocation:
+//	[e1,e2,e3]*.invoke(SAY_HI_1, name: "Bob")
+
+	//TODO test edge/error conditions
+	//(missing parameters, wrong number of params, etc)	
 	
 }
 

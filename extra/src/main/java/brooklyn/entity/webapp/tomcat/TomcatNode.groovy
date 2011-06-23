@@ -62,6 +62,8 @@ public class TomcatNode extends AbstractEntity implements Startable {
             new Tomcat7SshSetup(delegate).deploy(new File(file), loc)
 		}
 	}
+
+    transient JmxSensorAdapter jmxAdapter;
  
     public TomcatNode(Map properties=[:]) {
         super(properties);

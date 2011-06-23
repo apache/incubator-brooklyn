@@ -1,27 +1,25 @@
 package brooklyn.event.basic
 
 import org.slf4j.Logger
-
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.event.AttributeSensor
+import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.Sensor
 
 public class AttributeMap {
     static final Logger log = LoggerFactory.getLogger(AttributeMap.class)
  
-	Entity entity;
+	EntityLocal entity;
 	Map values = [:];
 	
-	public AttributeMap(Entity entity) {
+	public AttributeMap(EntityLocal entity) {
 		this.entity = entity;
 	}
 	
-	public Map asMap() {
-		return values
-	}
-	
+	public Map asMap() { values }
+		
 	public <T> T update(Collection<String> path, T newValue) {
 		Map map
 		String key

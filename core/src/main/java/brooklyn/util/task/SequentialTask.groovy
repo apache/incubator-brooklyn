@@ -1,8 +1,8 @@
 package brooklyn.util.task;
 
-import java.util.Collection;
-import java.util.concurrent.Callable
+import java.util.Collection
 
+import brooklyn.management.ExecutionManager
 import brooklyn.management.Task
 
 
@@ -12,7 +12,11 @@ class SequentialTask extends CompoundTask {
 	public SequentialTask(Collection<Object> tasks) { super(tasks) }
 
 	protected Object runJobs() {
-		children.each { job -> result.add job.get() }
+		List<Object> result = []
+		children.each { task ->
+			em.submit(task)
+			result.add (task.get())
+		}
 		return result
 	}
 }

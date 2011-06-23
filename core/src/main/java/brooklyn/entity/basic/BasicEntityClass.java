@@ -32,7 +32,7 @@ public class BasicEntityClass implements EntityClass {
 	}
 
 	@Override
-	public Collection<Effector> getEffectors() {
+	public Collection<Effector<?>> getEffectors() {
 		// TODO Auto-generated method stub
 		return null;
 	}

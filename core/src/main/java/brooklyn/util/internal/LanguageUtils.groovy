@@ -105,5 +105,36 @@ public class LanguageUtils {
 		if (!cause) return t
 		if (cause==t) return t
 		return getRoot(cause)
-	}	
+	}
+
+	/** runs iterates through two collections simultaneously, passing both args to code;
+	 * e.g. a = ['a','b']; b=[1,2]; 
+	 * assert ['a1','b2'] == forboth(a,b) { x,y -> x+y }
+	 * 	
+	 * @param l1
+	 * @param l2
+	 * @param code
+	 * @return
+	 */
+	public static Collection forBoth(Collection l1, Collection l2, Closure code) {
+		def result=[]
+		l1.eachWithIndex { a, i -> result.add( code.call(a, l2[i]) ) }
+		result
+	}
+	public static Collection forBothWithIndex(Collection l1, Collection l2, Closure code) {
+		def result=[]
+		l1.eachWithIndex { a, i -> result.add( code.call(a, l2[i], i) ) }
+		result
+	}
+	public static Collection forBoth(Object[] l1, Object[] l2, Closure code) {
+		def result=[]
+		l1.eachWithIndex { a, i -> result.add( code.call(a, l2[i]) ) }
+		result
+	}
+	public static Collection forBothWithIndex(Object[] l1, Object[] l2, Closure code) {
+		def result=[]
+		l1.eachWithIndex { a, i -> result.add( code.call(a, l2[i], i) ) }
+		result
+	}
+	
 }

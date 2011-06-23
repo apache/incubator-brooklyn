@@ -1,10 +1,15 @@
 package brooklyn.util.task
 
 import java.util.concurrent.Callable
+import java.util.concurrent.Future
 
+import brooklyn.management.ExecutionManager
 import brooklyn.management.Task
 
 
+/**
+ * TODO: javadoc (splodge)
+ */
 public abstract class CompoundTask extends BasicTask<Object> {
 	
 	protected final Collection<Task> children;
@@ -15,7 +20,8 @@ public abstract class CompoundTask extends BasicTask<Object> {
 	}
 	
 	public CompoundTask(Collection<?> jobs) {
-		super( { runJobs() } );
+		super( tag:"compound" );
+		super.job = { runJobs() }
 		
 		this.result = new ArrayList<Object>(jobs.size());
 		this.children = new ArrayList<Task>(jobs.size());

@@ -50,6 +50,7 @@ import com.cloudsoftcorp.util.condition.Conditions.ConditionWithMessage;
 import com.cloudsoftcorp.util.exception.ExceptionUtils;
 import com.cloudsoftcorp.util.exception.RuntimeInterruptedException;
 import com.cloudsoftcorp.util.javalang.ClassLoadingContext;
+import com.cloudsoftcorp.util.javalang.OsgiClassLoadingContextFromBundle;
 import com.cloudsoftcorp.util.osgi.BundleSet;
 import com.cloudsoftcorp.util.web.client.CredentialsConfig;
 import com.google.gson.Gson;
@@ -67,10 +68,13 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
     private MontereyNetwork montereyNetwork;
     private UserCredentialsConfig adminCredential = new UserCredentialsConfig("myname", "mypass", HTTP_AUTH.ADMIN_ROLE);
     
+    private ClassLoadingContext originalClassLoadingContext;
     @Before
     public void setUp() throws Exception {
-        ClassLoadingContext classloadingContext = ClassLoadingContext.Defaults.getDefaultClassLoadingContext();
-        GsonSerializer gsonSerializer = new GsonSerializer(classloadingContext);
+        originalClassLoadingContext = ClassLoadingContext.Defaults.getDefaultClassLoadingContext(); 
+        OsgiClassLoadingContextFromBundle classLoadingContext = new OsgiClassLoadingContextFromBundle(null, MontereyBrooklynProvisioningTest.class.getClassLoader());
+        ClassLoadingContext.Defaults.setDefaultClassLoadingContext(classLoadingContext);
+        GsonSerializer gsonSerializer = new GsonSerializer(classLoadingContext);
         gson = gsonSerializer.getGson();
 
         localhost = new SshMachineLocation();
@@ -87,7 +91,12 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
     
     @After
     public void tearDown() throws Exception {
-        montereyNetwork.stop();
+        try {
+            montereyNetwork.stop();
+        } finally {
+            if (originalClassLoadingContext != null)
+            ClassLoadingContext.Defaults.setDefaultClassLoadingContext(originalClassLoadingContext);
+        }
     }
     
     @Test
@@ -211,7 +220,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
                     } catch (Throwable t) {
                         lastError.set(t);
                         count.incrementAndGet();
-                        if (LOG.isLoggable(Level.FINER)) LOG.log(Level.FINER, "Waiting "+TimeUtils.makeTimeString(timeout)+" for "+m.getName()+"; failed "+count+" times", t);
+                        if (LOG.isLoggable(Level.FINER)) LOG.log(Level.FINER, "Waiting "+TimeUtils.makeTimeString(timeout)+" for "+callable+"; failed "+count+" times", t);
                         return false;
                     }
                 }

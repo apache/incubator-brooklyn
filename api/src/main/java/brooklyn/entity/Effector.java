@@ -7,7 +7,8 @@ import java.util.List;
 public interface Effector<T> extends Serializable {
 
 	public String getName();
-    public T getReturnType();
+    public Class<T> getReturnType();
+    public String getReturnTypeName();
     @SuppressWarnings("rawtypes")
 	public List<ParameterType> getParameters();
     public String getDescription();

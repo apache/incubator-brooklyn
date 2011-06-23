@@ -3,6 +3,8 @@ package brooklyn.util.task;
 import java.util.concurrent.Callable
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.Future
+import java.util.concurrent.FutureTask
 
 import brooklyn.management.ExecutionManager
 import brooklyn.management.Task
@@ -10,8 +12,14 @@ import brooklyn.management.Task
 
 public class BasicExecutionManager implements ExecutionManager {
 	
-	private static final perThreadCurrentTask = new ThreadLocal<Task>()
-	public static Task getCurrentTask() { return perThreadCurrentTask.get() }
+	private static class PerThreadCurrentTaskHolder {
+		public static final perThreadCurrentTask = new ThreadLocal<Task>();
+	}
+	public static ThreadLocal<Task> getPerThreadCurrentTask() {
+		return PerThreadCurrentTaskHolder.perThreadCurrentTask;
+	}
+	
+	public static Task getCurrentTask() { return getPerThreadCurrentTask().get() }
 	
 	private ExecutorService runner = Executors.newCachedThreadPool() 
 	
@@ -66,9 +74,20 @@ public class BasicExecutionManager implements ExecutionManager {
 
 	protected Task submitNewTask(Map flags, Task task) {
 		beforeSubmit(flags, task)
-		Closure job = { try { beforeStart(flags, task); task.job.call() } finally { afterEnd(flags, task) } }
-		task.initResult(runner.submit(job as Callable))   //need as Callable to make sure we get the return type; otherwise closure may be treated as Runnable
-		return task
+		Closure job = { 
+			Object result = null
+			try { 
+				beforeStart(flags, task);
+				result = task.job.call() 
+			} finally { 
+				afterEnd(flags, task) 
+			}
+			result
+		}
+		task.initExecutionManager(this)
+		// 'as Callable' to prevent being treated as Runnable and returning a future that gives null
+		task.initResult(runner.submit(job as Callable))
+		task
 	}
 
 	protected void beforeSubmit(Map flags, Task task) {

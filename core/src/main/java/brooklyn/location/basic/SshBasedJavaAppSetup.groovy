@@ -29,20 +29,22 @@ public abstract class SshBasedJavaAppSetup {
 	/** convenience to generate string -Dprop1=val1 -Dprop2=val2 for use with java */		
 	public static String toJavaDefinesString(Map m) {
 		StringBuffer sb = []
-		m.each { sb.append("-D"); sb.append(it.key); if (sb.value!='') { sb.append('=\''); sb.append(it.value); sb.append('\' ') } }
+		m.each { sb.append("-D"); sb.append(it.key); if (it.value!='') { sb.append('=\''); sb.append(it.value); sb.append('\' ') } else { sb.append(' ') } }
 		return sb.toString().trim()
+		//TODO - try the following instead
+		//return m.collect( { "-D"+it.key+(it.value?:"='"+it.value+"'"} ).join(" ")
 	}
  
 	/** convenience to record a value on the location to ensure each instance gets a unique value */
 	protected int getNextValue(String field, int initial) {
-		def v = entity.properties[field]
+		def v = entity.attributes[field]
 		if (!v) {
-			log.debug "retrieving {}, {}", field, entity.location.properties
+			log.debug "retrieving {}, {}", field, entity.location.attributes
 			synchronized (entity.location) {
-				v = entity.location.properties["next_"+field] ?: initial
-				entity.location.properties["next_"+field] = (v+1)
+				v = entity.location.attributes["next_"+field] ?: initial
+				entity.location.attributes["next_"+field] = (v+1)
 			}
-			log.debug "retrieved {}, {}", field, entity.location.properties
+			log.debug "retrieved {}, {}", field, entity.location.attributes
 			entity.attributes[field] = v
 		}
 		v
@@ -54,7 +56,7 @@ public abstract class SshBasedJavaAppSetup {
  
 	public int getJmxPort() {
 		log.debug "setting jmxHost on $entity as {}", entity.location.host
-		entity.jmxHost = entity.location.host
+		entity.attributes.jmxHost = entity.location.host
 		getNextValue("jmxPort", 10100)
 	}
  
@@ -78,6 +80,7 @@ mkdir -p $installDir && \\
 cd $installDir/.. && \\
 """;
 		lines.each { result += it + "&& \\\n" }
+		// TODO use .collect, as above
 		result += """\
 date > INSTALL_COMPLETION_DATE
 exit

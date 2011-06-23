@@ -2,10 +2,8 @@ package brooklyn.entity.webapp.tomcat
 
 import static java.util.concurrent.TimeUnit.*
 import static org.junit.Assert.*
-import groovy.time.TimeDuration
 
 import java.util.Map
-import java.util.concurrent.Callable
 
 import org.junit.After
 import org.junit.Before
@@ -15,9 +13,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Application
-import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
-import brooklyn.event.EntityStartException
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.internal.TimeExtras
 
@@ -67,7 +63,7 @@ class TomcatNodeTest {
 		if (oldHttpPort>0)
 			Tomcat7SshSetup.DEFAULT_FIRST_HTTP_PORT = oldHttpPort
 	}
-
+	
     @Before
     public void patchInSimulator() {
         TomcatNode.metaClass.startInLocation = { SimulatedLocation loc ->
@@ -97,6 +93,57 @@ class TomcatNodeTest {
 			return true
 		} catch (ConnectException e) {
 			return false
+		}
+	}
+	
+	@Test
+	public void ensureNodeCanStartAndShutdown() {
+		Application app = new TestApplication(httpPort: DEFAULT_HTTP_PORT);
+		TomcatNode tc = new TomcatNode(owner: app);
+		
+		try { 
+			tc.start(location: new SimulatedLocation());
+			try { tc.shutdown() } catch (Exception e) { 
+				throw new Exception("tomcat is throwing exceptions when shutting down; this will break most tests", e) }
+		} catch (Exception e) {
+			throw new Exception("tomcat is throwing exceptions when starting; this will break most tests", e)
+		}
+	}
+	
+	@Test
+	public void ensureNodeShutdownCleansUp() {
+		Application app = new TestApplication(httpPort: DEFAULT_HTTP_PORT);
+		TomcatNode tc1 = new TomcatNode(owner: app);
+		TomcatNode tc2 = new TomcatNode(owner: app);
+		
+		try {
+			tc1.start(location: new SimulatedLocation());
+			tc1.shutdown()
+		} catch (Exception e) {} //NOOP
+		
+		try { 
+			tc2.start(location: new SimulatedLocation())
+		} catch (IllegalStateException e) {
+			throw new Exception("tomcat should clean up after itself in case of failure; this will break most tests", e)
+		} finally {
+			try { tc2.shutdown() } catch (Exception e) {} //NOOP
+		}
+	}
+	
+	@Test
+	public void detectEarlyDeathOfTomcatProcess() {
+		Application app = new TestApplication(httpPort: DEFAULT_HTTP_PORT);
+		TomcatNode tc1 = new TomcatNode(owner: app);
+		TomcatNode tc2 = new TomcatNode(owner: app);
+		tc1.start(location: new SimulatedLocation())
+		try {
+			tc2.start(location: new SimulatedLocation())
+			tc2.shutdown()
+			fail "should have detected that $tc2 didn't start since tomcat was already running"
+		} catch (Exception e) {
+			logger.debug "successfully detected failure of {} to start: {}", tc2, e.toString()
+		} finally {
+			tc1.shutdown()
 		}
 	}
 

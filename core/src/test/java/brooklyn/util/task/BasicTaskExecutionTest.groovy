@@ -12,7 +12,6 @@ import org.junit.Test
 import brooklyn.util.internal.LanguageUtils
 
 public class BasicTaskExecutionTest {
-
 	Map data = new ConcurrentHashMap()
 	
 	@Test
@@ -25,7 +24,7 @@ public class BasicTaskExecutionTest {
 		assertEquals("a", t.get())
 		assertEquals("b", data.get(1))
 	}
-
+	
 	@Test
 	public void runSimpleRunnable() {
 		data.clear()
@@ -69,7 +68,7 @@ public class BasicTaskExecutionTest {
 			assertEquals("b", data.get(1))
 			assertFalse(t.isDone())
 			
-			println "runBasicTaskWithWaits, BasicTask status:\n"+t.getStatusDetail(true)
+			println "runBasicTaskWithWaits, BasicTask status:\n"+t.getStatusDetail(false)
 			assertTrue(t.getStatusDetail(false).toLowerCase().contains("waiting"))
 			
 			data.notify()
@@ -204,14 +203,14 @@ public class BasicTaskExecutionTest {
 		BasicTask t = [ { synchronized (data) { data.notify(); data.wait() }; return 42 } ]
 		assertEquals(null, t.submittedByTask)
 		assertEquals(-1, t.submitTimeUtc)
-		assertNull(t.getResultFuture())
+		assertNull(t.getResult())
 		synchronized (data) {
 			em.submit tag:"A", t
 			data.wait()
 		}
 		assertTrue(t.submitTimeUtc > 0)
 		assertTrue(t.startTimeUtc >= t.submitTimeUtc)
-		assertNotNull(t.getResultFuture())
+		assertNotNull(t.getResult())
 		assertEquals(-1, t.endTimeUtc)
 		assertEquals(false, t.isCancelled())
 		synchronized (data) { data.notify() }
