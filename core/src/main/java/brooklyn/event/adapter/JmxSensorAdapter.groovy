@@ -76,7 +76,8 @@ public class JmxSensorAdapter implements SensorAdapter {
         log.debug "adding sensor {} for {} - {}", sensor.name, sensor.objectName, sensor.attribute
         sensors[sensor.getName()] = sensor
         objects[sensor.getName()] = new ObjectName(sensor.objectName)
-        entity.updateAttribute(sensor, null)
+		//FIXME ENGR-1458  if there is already a value, we shouldn't clobber it
+//        entity.updateAttribute(sensor, null)
     }
     
     public <T> void addSensor(AttributeSensor<T> sensor, String objectName) {

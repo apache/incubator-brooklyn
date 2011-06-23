@@ -12,7 +12,6 @@ import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.trait.Startable
 import brooklyn.event.EntityStartException
 import brooklyn.event.adapter.JmxSensorAdapter
-import brooklyn.event.adapter.PropertiesSensorAdapter
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.JmxAttributeSensor
 import brooklyn.location.basic.SshMachineLocation

@@ -59,6 +59,11 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     protected transient volatile LocalManagementContext management = LocalManagementContext.getContext()
  
     protected final AttributeMap attributesInternal = new AttributeMap(this)
+	
+	//ENGR-1458  interesting to use property change. if it works great. 
+	//if there are any issues with it consider instead just making attributesInternal private,
+	//and forcing all changes to attributesInternal to go through update(AttributeSensor,...)
+	//and do the publishing there...  (please leave this comment here for several months until we know... it's Jun 2011 right now)
     protected final PropertiesSensorAdapter propertiesAdapter = new PropertiesSensorAdapter(this, attributes)
 
     public AbstractEntity(Map flags=[:]) {
