@@ -12,8 +12,6 @@ import brooklyn.entity.trait.Startable
 import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.Location
-import brooklyn.location.basic.SshBasedJavaWebAppSetup
-import brooklyn.event.basic.AttributeSensor
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.internal.EntityStartUtils
 
