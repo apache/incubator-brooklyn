@@ -17,9 +17,7 @@ import brooklyn.util.internal.TimeExtras
 /**
  * Helper functions for tests of Tomcat, JBoss and others.
  */
-
 class TestUtils {
-
 	private static final Logger logger = LoggerFactory.getLogger(brooklyn.test.TestUtils.class)
 
 	static {

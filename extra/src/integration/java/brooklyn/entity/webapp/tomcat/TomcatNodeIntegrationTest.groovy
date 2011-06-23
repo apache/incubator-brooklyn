@@ -145,7 +145,7 @@ class TomcatNodeIntegrationTest {
 
 	
 	@Test
-	public void detect_failure_if_tomcat_cant_bind_to_port() {
+	public void detectFailureIfTomcatCantBindToPort() {
 		ServerSocket listener = new ServerSocket(DEFAULT_HTTP_PORT);
 		Thread t = new Thread({ try { for(;;) { Socket socket = listener.accept(); socket.close(); } } catch(Exception e) {} })
 		t.start()

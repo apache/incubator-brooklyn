@@ -181,23 +181,5 @@ class TomcatNodeTest {
 		}
 		assertEquals(true, caught)
 	}
-
-	@Test
-    @Ignore
-	public void detectEarlyDeathOfTomcatProcess() {
-        Application app = new TestApplication(httpPort: DEFAULT_HTTP_PORT);
-        TomcatNode tc1 = new TomcatNode(owner: app);
-        TomcatNode tc2 = new TomcatNode(owner: app);
-        tc1.start(location: new SimulatedLocation())
-        try {
-            tc2.start(location: new SimulatedLocation())
-            tc2.shutdown()
-            fail "should have detected that $tc2 didn't start since tomcat was already running"
-        } catch (Exception e) {
-            logger.debug "successfully detected failure of {} to start: {}", tc2, e.toString()
-        } finally {
-            tc1.shutdown()
-        }
-	}
 }
  

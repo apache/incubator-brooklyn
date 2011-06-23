@@ -57,7 +57,7 @@ public abstract class SshBasedJavaAppSetup {
 	public int getJmxPort() {
 		log.debug "setting jmxHost on $entity as {}", entity.location.host
 		entity.attributes.jmxHost = entity.location.host
-		getNextValue("jmxPort", 10100)
+		getNextValue("jmxPort", 32199)
 	}
  
 	/**
