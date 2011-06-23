@@ -4,6 +4,9 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.trait.Startable
 import brooklyn.event.adapter.JmxSensorAdapter
@@ -19,7 +22,13 @@ import brooklyn.util.internal.EntityStartUtils
  */
 //@InheritConstructors
 public class JBossNode extends AbstractEntity implements Startable {
+	private static final Logger log = LoggerFactory.getLogger(JBossNode.class)
+
     public static final BasicAttributeSensor<Integer> REQUESTS_PER_SECOND = [ Double, "jmx.reqs.persec.RequestCount", "Reqs/Sec" ]
+	public static final BasicAttributeSensor<Integer> ERROR_COUNT = [ Integer, "jmx.reqs.global.totals.errorCount", "Error count" ]
+	public static final BasicAttributeSensor<Integer> MAX_PROCESSING_TIME = [ Integer, "jmx.reqs.global.totals.maxTime", "Max processing time" ]
+	public static final BasicAttributeSensor<Integer> REQUEST_COUNT = [ Integer, "jmx.reqs.global.totals.requestCount", "Request count" ]
+	public static final BasicAttributeSensor<Integer> TOTAL_PROCESSING_TIME = [ Integer, "jmx.reqs.global.totals.processingTime", "Total processing time" ]
 
     transient JmxSensorAdapter jmxAdapter;
 
@@ -68,14 +77,11 @@ public class JBossNode extends AbstractEntity implements Startable {
         }
     }
 
-    private void temp_testingJMX() {
-        def mod_cluster_jmx = "jboss.web:service=ModCluster,provider=LoadBalanceFactor";
-        def attrs = jmxAdapter.getAttributes(mod_cluster_jmx);
-        println attrs
-    }
-
     public void updateJmxSensors() {
-    }
+		def reqs = jmxAdapter.getChildrenAttributesWithTotal("jboss.web:type=GlobalRequestProcessor,name=http*")
+		reqs.put("timestamp", System.currentTimeMillis())
+		updateAttribute(["jmx", "reqs", "global"], reqs)
+   }
 
     public void shutdown() {
         if (jmxMonitoringTask) jmxMonitoringTask.cancel true

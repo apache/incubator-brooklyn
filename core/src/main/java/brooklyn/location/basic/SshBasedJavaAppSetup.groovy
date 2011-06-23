@@ -16,6 +16,8 @@ import brooklyn.entity.Entity
 public abstract class SshBasedJavaAppSetup {
     static final Logger log = LoggerFactory.getLogger(SshBasedJavaAppSetup.class)
  
+	Entity entity
+	String appBaseDir
 	String overpaasBaseDir = "/tmp/overpaas"
 	String installsBaseDir = overpaasBaseDir+"/installs"
 	Entity entity
