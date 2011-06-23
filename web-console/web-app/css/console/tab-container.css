@@ -2,8 +2,9 @@ ul#tabs {
 	list-style-type: none;
 	border-bottom:solid;
 	border-width:thin;
-	width:100%;
 	padding: 0 0 0.3em 0;
+	position:absolute;
+	width:50%;
 }
 ul#tabs li {
 	display: inline;
@@ -32,7 +33,6 @@ ul#tabs li a.selected {
 div.tabContent {
 	padding: 0.5em;
 	background-color:#ffffff
-	height:98%;
 }
 
 div.tabContent.hide {
