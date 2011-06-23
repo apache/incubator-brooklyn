@@ -171,11 +171,13 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         }
     }
 
-    protected ExecutionContext getExecutionContext() {
-        synchronized (this) {
-            execution ?: new ExecutionContext(tag: this, getManagementContext().getExecutionManager())
-        }
-    }
+	protected ExecutionContext getExecutionContext() {
+		if (execution) execution;
+		synchronized (this) {
+			if (execution) execution;
+			execution = new ExecutionContext(tag: this, getManagementContext().getExecutionManager())
+		}
+	}
     
     public <T> Sensor<T> getSensor(String sensorName) {
         getEntityClass().getSensors() find { s -> s.name.equals(sensorName) }
