@@ -27,7 +27,10 @@ import java.util.Map.Entry
  */
 class TomcatSimulator {
 
-    private static Semaphore lock = new Semaphore(1)
+    private static final int MAXIMUM_LOCKS = 1
+
+    private static Semaphore lock = new Semaphore(MAXIMUM_LOCKS)
+    private static Collection<TomcatSimulator> activeInstances = []
     private Location location
     private Entity entity
     private MBeanServer server
@@ -44,6 +47,7 @@ class TomcatSimulator {
     public void start() {
         if (lock.tryAcquire() == false)
             throw new IllegalStateException("TomcatSimulator is already running")
+        synchronized (activeInstances) { activeInstances.add(this) }
 
         String host = "localhost";
         int port = 1099;
@@ -78,8 +82,17 @@ class TomcatSimulator {
     public void shutdown() {
         connectorServer.stop();
         namingServiceMBean.stop();
+        synchronized (activeInstances) { activeInstances.remove(this) }
         lock.release()
     }
 
     Location getLocation() { return location }
+
+    static boolean reset() {
+        boolean wasFree = true;
+        Collection<TomcatSimulator> copyActiveInstances;
+        synchronized (activeInstances) { copyActiveInstances = new ArrayList(activeInstances) }
+        copyActiveInstances.each { wasFree = false; it.shutdown(); }
+        return wasFree
+    }
 }

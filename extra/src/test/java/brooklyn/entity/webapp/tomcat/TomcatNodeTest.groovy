@@ -45,6 +45,13 @@ class TomcatNodeTest {
         }
     }
 
+    @After
+    public void ensureSimulatorIsShutDownForNextTest() {
+        boolean wasFree = TomcatSimulator.reset();
+        if (wasFree == false)
+            logger.error "TomcatSimulator was locked. If tests failed this is not unexpected. If tests passed, then this needs investigation."
+    }
+
 	@Test
 	public void ensureNodeCanStartAndShutdown() {
 		Application app = new TestApplication();
