@@ -27,7 +27,7 @@ import brooklyn.util.internal.EntityStartUtils
  */
 public class TomcatNode extends AbstractEntity implements Startable {
 	
-	private static final Logger logger = LoggerFactory.getLogger(TomcatNode.class)
+	private static final Logger log = LoggerFactory.getLogger(TomcatNode.class)
 
     public static final AttributeSensor<Integer> ERROR_COUNT = [ "Request errors", "jmx.reqs.global.totals.errorCount", Integer ]
     public static final AttributeSensor<Integer> HTTP_PORT = [ "HTTP port", "webapp.http.port", Integer ]
@@ -103,7 +103,7 @@ public class TomcatNode extends AbstractEntity implements Startable {
 				} catch(InstanceNotFoundException e) {
 					state = "InstanceNotFound"
 				}
-				logger.trace "state: $state"
+				log.trace "state: $state"
 				if (state == "FAILED") {
                     updateAttribute(NODE_UP, false)
 					throw new EntityStartException("Tomcat connector for port $port is in state $state")
