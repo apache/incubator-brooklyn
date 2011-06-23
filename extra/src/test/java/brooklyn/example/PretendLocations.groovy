@@ -9,13 +9,15 @@ import brooklyn.entity.group.Fabric
 import brooklyn.location.Location
 
 public class PretendLocations {
-	public static class AmazonLocation implements Location { }
-	public static class VcloudLocation implements Location { }
+	public static class AmazonLocation implements Location { private static final long serialVersionUID = 1L; }
+	public static class VcloudLocation implements Location { private static final long serialVersionUID = 1L; }
 	public static class AmazonUsEast implements Location {
+		private static final long serialVersionUID = 1L;
 		String username, password;
 	}
 	
 	public static class MockLocation implements Location {
+		private static final long serialVersionUID = 1L;
 		String displayName = "mock";
 		
 		public void logEvent(String event, Object entity) {
@@ -25,6 +27,13 @@ public class PretendLocations {
 		@Override
 		public String toString() {
 			return "MockLocation["+displayName+"]";
+		}
+		
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + ((displayName == null) ? 0 : displayName.hashCode());
+			return result;
 		}
 		
 		public boolean equals(other) {

@@ -16,6 +16,8 @@ import brooklyn.entity.Entity
 public abstract class SshBasedJavaAppSetup {
     static final Logger log = LoggerFactory.getLogger(SshBasedJavaAppSetup.class)
  
+	Entity entity
+	String appBaseDir
 	String overpaasBaseDir = "/tmp/overpaas"
 	String installsBaseDir = overpaasBaseDir+"/installs"
 	
@@ -105,7 +107,5 @@ exit
 		if (result==1) return false
 		throw new IllegalStateException("$entity running check gave result code $result")
 	}
-        
-	Entity entity
-	String appBaseDir
+
 }

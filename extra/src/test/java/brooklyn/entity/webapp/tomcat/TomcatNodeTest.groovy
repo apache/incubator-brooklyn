@@ -7,6 +7,7 @@ import java.util.Map
 
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -15,6 +16,7 @@ import brooklyn.entity.Application
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.internal.TimeExtras
+import static brooklyn.test.TestUtils.isPortInUse
 
 /**
  * This tests the operation of the {@link TomcatNode} entity.
@@ -22,10 +24,6 @@ import brooklyn.util.internal.TimeExtras
 class TomcatNodeTest {
 	private static final Logger logger = LoggerFactory.getLogger(TomcatNodeTest.class)
 
-	static {
-        TimeExtras.init()
-    }
-	
 	/** don't use 8080 since that is commonly used by testing software */
 	static int DEFAULT_HTTP_PORT = 7880
 	
@@ -77,24 +75,6 @@ class TomcatNodeTest {
         }
     }
 
-	public boolean isPortInUse(int port, long retryAfterMillis=0) {
-		try {
-			def s = new Socket("localhost", port)
-			s.close()
-			if (retryAfterMillis>0) {
-				logger.debug "port $port still open, waiting 1s for it to really close"
-				//give it 1s to close
-				Thread.sleep retryAfterMillis
-				s = new Socket("localhost", port)
-				s.close()
-			}
-			logger.debug "port $port still open (conclusive)"
-			return true
-		} catch (ConnectException e) {
-			return false
-		}
-	}
-	
 	@Test
 	public void ensureNodeCanStartAndShutdown() {
 		Application app = new TestApplication(httpPort: DEFAULT_HTTP_PORT);

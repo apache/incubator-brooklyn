@@ -10,5 +10,5 @@ import brooklyn.location.Location
  * To change this template use File | Settings | File Templates.
  */
 class SimulatedLocation implements Location {
-    
+	private static final long serialVersionUID = 1L;
 }
