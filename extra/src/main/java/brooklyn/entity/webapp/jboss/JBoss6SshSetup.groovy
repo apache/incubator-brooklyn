@@ -39,33 +39,27 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
 		// http://community.jboss.org/wiki/AS5ServiceBindingManager
 		
 """
-mkdir -p $runDir/server
-cd $runDir/server
-export JBOSS_HOME=$installDir
-cp -r $installDir/server/default default
+mkdir -p ${runDir}/server
+cd ${runDir}/server
+export JBOSS_HOME=${installDir}
+cp -r ${installDir}/server/default default
 export LAUNCH_JBOSS_IN_BACKGROUND=1
 export JAVA_OPTS=""" + "\"" + toJavaDefinesString(getJvmStartupProperties()) + """\"
 JAVA_OPTS="\$JAVA_OPTS -Djboss.platform.mbeanserver"
 JAVA_OPTS="\$JAVA_OPTS -Djavax.management.builder.initial=org.jboss.system.server.jmx.MBeanServerBuilderImpl"
 JAVA_OPTS="\$JAVA_OPTS -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
 JAVA_OPTS="\$JAVA_OPTS -Dorg.jboss.logging.Logger.pluginClass=org.jboss.logging.logmanager.LoggerPluginImpl"
-export JBOSS_CLASSPATH="$installDir/lib/jboss-logmanager.jar"
-$installDir/bin/run.sh -Djboss.server.base.dir=$runDir/server \
-					   -Djboss.server.base.url=file://$runDir/server -c default &
+export JBOSS_CLASSPATH="${installDir}/lib/jboss-logmanager.jar"
+${installDir}/bin/run.sh -Djboss.server.base.dir=${runDir}/server -Djboss.server.base.url=file://${runDir}/server -c default &
 exit
 """
     }
 
-    //TODO not working; need to write above to a pid.txt file, then copy (or refactor to share) code from TomcatNode.getCheckRunningScript
     /** script to return 1 if pid in runDir is running, 0 otherwise */
     public String getCheckRunningScript() { 
 		def port = entity.attributes.jmxPort
 		def host = entity.attributes.jmxHost
-"""
-$installDir/bin/twiddle.sh -s service:jmx:rmi:///jndi/rmi://$host:$port/jmxrmi \
-	get "jboss.system:type=Server" Started 
-exit
-"""
+		"$installDir/bin/twiddle.sh ---host $host --port $port get \"jboss.system:type=Server\" Started; exit"
     }
 
     public String getDeployScript(String filename) {
