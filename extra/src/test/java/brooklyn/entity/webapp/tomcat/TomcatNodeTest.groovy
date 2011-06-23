@@ -96,7 +96,7 @@ class TomcatNodeTest {
 	}
 	
 	@Test
-	public void testTomcatLifecycle() {
+	public void ensureNodeCanStartAndShutdown() {
 		Application app = new TestApplication(httpPort: DEFAULT_HTTP_PORT);
 		TomcatNode tc = new TomcatNode(owner: app);
 		
@@ -110,7 +110,7 @@ class TomcatNodeTest {
 	}
 	
 	@Test
-	public void detectTomcatCascadeStartFailure() {
+	public void ensureNodeShutdownCleansUp() {
 		Application app = new TestApplication(httpPort: DEFAULT_HTTP_PORT);
 		TomcatNode tc1 = new TomcatNode(owner: app);
 		TomcatNode tc2 = new TomcatNode(owner: app);
