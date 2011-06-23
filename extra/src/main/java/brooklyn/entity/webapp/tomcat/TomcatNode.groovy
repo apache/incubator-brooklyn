@@ -40,7 +40,8 @@ public class TomcatNode extends AbstractEntity implements Startable {
 //	public static final Effector<Integer> GET_TOTAL_PROCESSING_TIME = [ "retrieves the total processing time", { delegate, arg1, arg2 -> delegate.getTotal(arg1, arg2) } ]
 //	Task<Integer> invocation = entity.invoke(GET_TOTAL_PROCESSING_TIME, ...args)
     
-    JmxSensorAdapter jmxAdapter;
+    transient JmxSensorAdapter jmxAdapter;
+ 
  
 	static {
 		TomcatNode.metaClass.startInLocation = { SshMachineLocation loc ->
@@ -63,8 +64,6 @@ public class TomcatNode extends AbstractEntity implements Startable {
 		}
 	}
 
-    transient JmxSensorAdapter jmxAdapter;
- 
     public TomcatNode(Map properties=[:]) {
         super(properties);
     }
