@@ -68,7 +68,7 @@ public class BasicTaskExecutionTest {
 			assertEquals("b", data.get(1))
 			assertFalse(t.isDone())
 			
-			println "runBasicTaskWithWaits, BasicTask status:\n"+t.getStatusDetail(true)
+			println "runBasicTaskWithWaits, BasicTask status:\n"+t.getStatusDetail(false)
 			assertTrue(t.getStatusDetail(false).toLowerCase().contains("waiting"))
 			
 			data.notify()
