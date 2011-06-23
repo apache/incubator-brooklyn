@@ -27,7 +27,7 @@ body{
 }
 .layout-middle-content{
 	position:absolute;
-	top:130;
+	top:128px;
 	bottom:2.3em;
 	overflow:auto;
 	width:100%;
@@ -58,6 +58,7 @@ body{
 	margin-left:355px;
 	margin-right:2px;
 	width:auto;
+	height:100%;
 }
 
 div#demo1{
