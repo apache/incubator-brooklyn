@@ -1,6 +1,5 @@
-package brooklyn.web.console;
+package brooklyn.web.console.entity;
 
-import java.util.Collection
 
 import brooklyn.entity.Entity
 import brooklyn.entity.EntityClass

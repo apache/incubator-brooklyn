@@ -1,4 +1,5 @@
-package brooklyn.web.console
+package brooklyn.web.console.entity
+
 
 public interface JsTreeNode extends Serializable {
     String getId();
