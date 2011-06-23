@@ -10,6 +10,7 @@ import brooklyn.location.Location
 import brooklyn.util.internal.SshJschTool
 
 public class SshMachineLocation implements Location {
+	private static final long serialVersionUID = -6233729266488652570L;
     static final Logger log = LoggerFactory.getLogger(SshMachineLocation.class)
  
 	String name

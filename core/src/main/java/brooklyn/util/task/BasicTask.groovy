@@ -295,4 +295,14 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
 	protected lookup(LockInfo l) {
 		return l
 	}
+	
+	@Override
+	public int hashCode() {
+		super.hashCode()
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		super.equals(obj)
+	}
 }
