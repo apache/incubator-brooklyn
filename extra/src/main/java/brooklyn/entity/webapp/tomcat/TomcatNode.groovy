@@ -81,10 +81,12 @@ public class TomcatNode extends AbstractEntity implements Startable {
 		if (this.attributes['jmxHost'] && this.attributes['jmxPort']) {
 			jmxAdapter = new JmxSensorAdapter(this, 60*1000)
             
+			AbstractEntity ae = this
             Futures.when({
         			// Wait for the HTTP port to become available
         			String state = null
-        			int port = getAttribute(HTTP_PORT)
+					//FIXME HTTP_PORT should be a CONFIG (if supplied by user) _and_ an ATTRIBUTE (where it's actually running)
+        			int port = getAttribute(HTTP_PORT)?:-1
         			for (int attempts = 0; attempts < 30; attempts++) {
         				Map connectorAttrs;
         				try {
