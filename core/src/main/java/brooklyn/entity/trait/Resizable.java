@@ -14,12 +14,12 @@ public interface Resizable<T> {
      * @param desiredSize
      * @return a list of handles to tasks started (possibly empty)
      */
-	List<Future> //Task 
+	List<Future<?>> //Task 
 		resize(int desiredSize);
     
-	List<Future>  //Task 
+	List<Future<?>>  //Task 
 		grow(int desiredIncrease);
     
-	List<Future>  //Task 
+	List<Future<?>>  //Task 
 		shrink(int desiredDecrease);
 }
