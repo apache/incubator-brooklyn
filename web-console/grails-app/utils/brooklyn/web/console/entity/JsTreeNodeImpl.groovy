@@ -1,4 +1,5 @@
-package brooklyn.web.console
+package brooklyn.web.console.entity
+
 
 import brooklyn.entity.Entity
 

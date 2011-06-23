@@ -1,33 +1,19 @@
 package brooklyn.web.console
 
-import java.util.Collection;
-import java.util.Map;
-
-import brooklyn.entity.Application;
-import brooklyn.entity.EntityClass;
-import brooklyn.entity.Group;
-import brooklyn.entity.basic.AbstractGroup
-import brooklyn.entity.basic.AbstractEntity
-import brooklyn.entity.basic.AbstractApplication
-import brooklyn.event.Event;
-import brooklyn.event.EventListener;
-import brooklyn.event.Sensor;
-import brooklyn.location.Location;
 import grails.converters.JSON
-
-import java.util.Collection
-import java.util.Map
 
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.AbstractGroup
-import brooklyn.management.ExecutionManager
 import brooklyn.management.ManagementContext
 import brooklyn.management.ExecutionManager
 
 import grails.plugins.springsecurity.Secured
+import brooklyn.web.console.entity.EntitySummary
+import brooklyn.web.console.entity.JsTreeNodeImpl
+
 
 @Secured(['ROLE_ADMIN'])
 class EntityController {
@@ -105,7 +91,7 @@ class EntityController {
             }
         }
 
-        // TODO Place matches at the root of our tree view (iff an ancestor isn't already present)
+//        // TODO Place matches at the root of our tree view (iff an ancestor isn't already present)
 //        Collection<Entity> matches = getEntitiesMatchingCriteria(params.name, params.id, params.applicationId);
 //        matches.each { match ->
 //            if (!isChildOf(match, matches)) {
