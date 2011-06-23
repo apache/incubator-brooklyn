@@ -17,11 +17,11 @@ import javax.management.remote.JMXServiceURL
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.entity.Entity
+import brooklyn.entity.basic.EntityLocal
+import brooklyn.event.AttributeSensor
 import brooklyn.event.Sensor
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.JmxAttributeSensor
-import brooklyn.event.basic.SensorEvent
 
 /**
  * This class adapts JMX {@link ObjectName} dfata to {@link Sensor} data for a particular {@link Entity}, updating the
@@ -33,7 +33,7 @@ import brooklyn.event.basic.SensorEvent
 public class JmxSensorAdapter implements SensorAdapter {
     static final Logger log = LoggerFactory.getLogger(JmxSensorAdapter.class);
  
-    final Entity entity
+    final EntityLocal entity
 	final String jmxUrl
     final Map<?, ?> properties  = [
             period : 500,
@@ -52,7 +52,7 @@ public class JmxSensorAdapter implements SensorAdapter {
     /* Default polling interval, milliseconds */
 	long defaultPollingPeriod = 500;
     
-    public JmxSensorAdapter(Entity entity, long timeout = -1, Map properties = [:]) {
+    public JmxSensorAdapter(EntityLocal entity, long timeout = -1, Map properties = [:]) {
         this.entity = entity
         this.properties << properties
  
@@ -79,11 +79,11 @@ public class JmxSensorAdapter implements SensorAdapter {
         entity.updateAttribute(sensor, null)
     }
     
-    public <T> void addSensor(Sensor<T> sensor, String objectName) {
+    public <T> void addSensor(AttributeSensor<T> sensor, String objectName) {
         sensors.put(sensor.getName(), sensor);
     }
  
-    public <T> void addSensor(Sensor<T> sensor, ObjectName objectName) {
+    public <T> void addSensor(AttributeSensor<T> sensor, ObjectName objectName) {
         addSensor(sensor, objectname.getCanonicalName())
     }
 
@@ -135,7 +135,9 @@ public class JmxSensorAdapter implements SensorAdapter {
 		if (!isConnected()) throw new IllegalStateException("JmxTool must be connected")
 	}
 	
-	/** returns all attributes on a specific named object */
+	/**
+	 * Returns all attributes on a specific named object
+	 */
 	public Map getAttributes(String objectName) {
 		checkConnected()
 		ObjectName mxbeanName = new ObjectName(objectName);
@@ -148,63 +150,8 @@ public class JmxSensorAdapter implements SensorAdapter {
         log.trace "returning attributes: {}", r
 		r
 	}
-	
-	/**
-	 * Returns all attributes for all children matching a given objectName string.
-	 * 
-	 * TODO allow overrides for attributes which should take min, max, rather than sum
-	 * 
-	 * <pre>
-	 *  children {
-	 *    MBean1[objName] {
-	 *      attributes {
-	 *        size: 1
-	 *      }
-	 *      notifications {
-	 *        desiredSize {
-	 *          value: 4
-	 *          seqNo: 8
-	 *          oldValue: 1
-	 *        }
-	 *      }
-	 *    }
-	 *    MBean2[objName2] {
-	 *      attributes {
-	 *        size: 0
-	 *      }
-	 *  }
-	 *  totals {
-	 *    size: 1
-	 *  }
-	 * </pre>
-	 */
-	public Map getChildrenAttributesWithTotal(String objectName) {
-		checkConnected()
-		ObjectName mxbeanName = new ObjectName(objectName);
-		Set<ObjectInstance> matchingBeans = mbsc.queryMBeans mxbeanName, null
-		Map r = [:]
-		r.totals = [:]
-		matchingBeans.each {
-			ObjectInstance bean = it
-			if (!r.children) r.children=[:]
-			def c = r.children[it.toString()] = [:]
-			MBeanInfo info = mbsc.getMBeanInfo(it.getObjectName())
-			c.attributes = [:]
-			info.getAttributes().each {
-				c.attributes[it.getName()] = null
-			}
-			AttributeList attrs = mbsc.getAttributes it.getObjectName(), c.attributes.keySet() as String[]
-			attrs.asList().each {
-				c.attributes[it.getName()] = it.getValue();
-				if (it.getValue() in Number)
-					r.totals[it.getName()] = (r.totals[it.getName()]?:0) + it.getValue()
-			}
-//			info.getNotifications().each { println "  notf $it" }
-		}
-		r
-	}
 
-    public void updateJmxSensors() {
+    private void updateJmxSensors() {
         sensors.keySet() each { s ->
                 JmxAttributeSensor<?> sensor = sensors.get(s)   
 		        def data = getAttributes(sensor.objectName)
@@ -232,8 +179,7 @@ public class JmxSensorAdapter implements SensorAdapter {
  
     public <T> T poll(Sensor<T> sensor) {
         def value = entity.attributes[sensorName]
-        SensorEvent<?> event = new SensorEvent(sensor, entity, value)
-        entity.raiseEvent event
+        entity.raiseEvent sensor, value
         value
     }
 }

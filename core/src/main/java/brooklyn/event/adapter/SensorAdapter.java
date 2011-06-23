@@ -7,11 +7,11 @@ import brooklyn.event.Sensor;
  * Adapter to convert data from a sensor to events on an entity.
  * 
  * Implementations should provide a constructor that takes an {@link Entity} and any appropriate configuration, and should then convert
- * changes to subscribed {@link Sensor}s into {@link Entity#raiseEvent(Event)} calls.
+ * changes to subscribed {@link Sensor}s into {@link Entity#raiseEvent(Sensor, Object)} calls.
  */
 public interface SensorAdapter {
     /** @see #subscribe(Sensor) */
-    public <T> void subscribe(String sensorName);
+    public void subscribe(String sensorName);
  
     /**
      * 

@@ -20,6 +20,7 @@ import brooklyn.event.EventListener
 import brooklyn.event.Sensor
 import brooklyn.event.adapter.PropertiesSensorAdapter
 import brooklyn.event.basic.AttributeMap
+import brooklyn.event.basic.SensorEvent;
 import brooklyn.location.Location
 import brooklyn.management.ManagementContext
 import brooklyn.management.SubscriptionContext
@@ -163,11 +164,6 @@ public abstract class AbstractEntity implements EntityLocal {
     public <T> long subscribe(Entity producer, Sensor<T> sensor, EventListener<T> listener) {
         subscriptionContext.getSubscriptionManager().subscribe this.id, producer.id, sensor.name, listener
     }
-     
-    /** @see Entity#raiseEvent(Event) */
-    public <T> void raiseEvent(Event<T> event) {
-        subscriptionContext.getSubscriptionManager().fire event
-    }
 
     protected SubscriptionContext getSubscriptionContext() {
         synchronized (this) {
@@ -202,10 +198,9 @@ public abstract class AbstractEntity implements EntityLocal {
     /** override this, adding to the collection, to supply fields whose value, if not null, should be included in the toString */
     public Collection<String> toStringFieldsToInclude() { ['id', 'displayName'] }
 
-    /** @see EntityLocal#raiseEvent(Event) */
-    @Override
+    /** @see EntityLocal#raiseEvent(Sensor, Object) */
     public <T> void raiseEvent(Sensor<T> sensor, T val) {
-        // TODO complete
+        subscriptionContext.getSubscriptionManager().fire new SensorEvent<T>(sensor, this, val)
     }
     
 	// -------- EFFECTORS --------------

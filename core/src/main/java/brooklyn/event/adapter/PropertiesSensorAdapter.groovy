@@ -6,7 +6,7 @@ import java.beans.PropertyChangeListener
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.entity.Entity
+import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.AttributeSensor
 import brooklyn.event.Sensor
 import brooklyn.event.basic.LogSensor
@@ -14,7 +14,7 @@ import brooklyn.event.basic.SensorEvent
 
 /**
  * A {@link SensorAdapter} that observes changes to the attributes in a {@link Map} and registers events
- * on an {@link Entity} for particuular {@link Sensor}s.
+ * on an {@link EntityLocal} entity for particular {@link Sensor}s.
  * 
  * @see SensorAdapter
  * @see JmxSensorAdapter
@@ -22,11 +22,11 @@ import brooklyn.event.basic.SensorEvent
 public class PropertiesSensorAdapter implements SensorAdapter {
     private static final Logger log = LoggerFactory.getLogger(SensorAdapter.class);
  
-    private final Entity entity;
+    private final EntityLocal entity;
     private final ObservableMap attributes;
     private final ObservableMap logs;
     
-    public PropertiesSensorAdapter(Entity entity, Map attributes = [:], Map logs = [:]) {
+    public PropertiesSensorAdapter(EntityLocal entity, Map attributes = [:], Map logs = [:]) {
         this.entity = entity;
         this.attributes = new ObservableMap(attributes);
         this.logs = new ObservableMap(logs);
@@ -42,29 +42,27 @@ public class PropertiesSensorAdapter implements SensorAdapter {
         update(logs, initialValue)
     }
     
-    public <T> void subscribe(String sensorName) {
-        Sensor<T> sensor = entity.getSensor(sensorName)
-        subscribe(sensor)
+    public void subscribe(String sensorName) {
+        Sensor<?> sensor = getSensor sensorName
+        subscribe sensor
     }
  
     public <T> void subscribe(final Sensor<T> sensor) {
         properties.addPropertyChangeListener sensorName, new PropertyChangeListener() {
             public void propertyChange(PropertyChangeEvent change) {
-                SensorEvent<?> event = new SensorEvent(sensor, entity, change.getNewvalue())
-                entity.raiseEvent event
+                entity.raiseEvent sensor, change.newValue
             }
         };
     }
     
     public <T> T poll(String sensorName) {
-        Sensor<T> sensor = getSensor(sensorName)
-        poll(sensor)
+        Sensor<T> sensor = getSensor sensorName
+        poll sensor
     }
  
     public <T> T poll(Sensor<T> sensor) {
         def value = entity.attributes[sensorName]
-        SensorEvent<?> event = new SensorEvent(sensor, entity, value)
-        entity.raiseEvent event
+        entity.raiseEvent sensor, value
         value
     }
     
@@ -73,7 +71,11 @@ public class PropertiesSensorAdapter implements SensorAdapter {
         def oldValue = entity.properties[sensor.getName()]
         entity.properties[sensor.getName()] = newValue
         entity.updateAttribute sensor, newValue
-        entity.raiseEvent new SensorEvent<T>(sensor, entity, newValue)
+        entity.raiseEvent sensor, newValue
         oldValue
+    }
+    
+    private Sensor<?> getSensor(String sensorName) {
+        entity.entityClass.sensors.find { it.name.equals sensorName }
     }
 }

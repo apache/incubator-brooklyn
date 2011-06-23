@@ -4,8 +4,6 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 
-import brooklyn.event.AttributeSensor;
-import brooklyn.event.Event;
 import brooklyn.event.EventListener;
 import brooklyn.event.Sensor;
 import brooklyn.location.Location;
@@ -85,9 +83,4 @@ public interface Entity extends Serializable {
      * @return a subscription id which can be used to unsubscribe
      */
     <T> long subscribe(Entity producer, Sensor<T> sensor, EventListener<T> listener);
-        
-    /**
-     * The entity should raise the supplied {@link Event} and sent it to all interested parties.
-     */
-    <T> void raiseEvent(Event<T> event);
 }

@@ -8,6 +8,9 @@ import brooklyn.event.AttributeSensor
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.Sensor
 
+/**
+ * A {@link Map} of {@link Entity} attribute values.
+ */
 public class AttributeMap {
     static final Logger log = LoggerFactory.getLogger(AttributeMap.class)
  
@@ -44,8 +47,7 @@ public class AttributeMap {
 		log.debug "sensor $sensor field {} set to {}", sensor.name, newValue
 		if (!(sensor in AttributeSensor)) throw new IllegalArgumentException("AttributeMap can only update an attribute sensor's value, not "+sensor)
 		def oldValue = update(sensor.getNameParts(), newValue)
-        SensorEvent event = new SensorEvent<T>(sensor, entity, newValue)
-        entity.raiseEvent event
+        entity.raiseEvent sensor, newValue
         oldValue
 	}
 	
