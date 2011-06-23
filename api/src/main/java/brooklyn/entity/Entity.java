@@ -5,7 +5,6 @@ import java.util.Collection;
 
 import brooklyn.event.Event;
 import brooklyn.event.EventListener;
-import brooklyn.event.Sensor;
 import brooklyn.location.Location;
 
 /**
