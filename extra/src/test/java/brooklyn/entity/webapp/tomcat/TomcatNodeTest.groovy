@@ -24,9 +24,6 @@ import static brooklyn.test.TestUtils.isPortInUse
 class TomcatNodeTest {
 	private static final Logger logger = LoggerFactory.getLogger(TomcatNodeTest.class)
 
-	/** don't use 8080 since that is commonly used by testing software */
-	static int DEFAULT_HTTP_PORT = 7880
-	
 //	@InheritConstructors
 	static class TestApplication extends AbstractApplication {
         public TestApplication(Map properties=[:]) {
@@ -34,33 +31,6 @@ class TomcatNodeTest {
         }
     }
 
-	static boolean httpPortLeftOpen = false;
-
-	@Before
-	public void fail_if_http_port_in_use() {
-		if (isPortInUse(DEFAULT_HTTP_PORT)) {
-			httpPortLeftOpen = true;
-			fail "someone is already listening on port $DEFAULT_HTTP_PORT; tests assume that port $DEFAULT_HTTP_PORT is free on localhost"
-		}
-	}
-	@After
-	//can't fail because that swallows the original exception, grrr!
-	public void moan_if_http_port_in_use() {
-		if (!httpPortLeftOpen && isPortInUse(DEFAULT_HTTP_PORT, 1000))
-			logger.warn "port $DEFAULT_HTTP_PORT still running after test"
-	}
-	private int oldHttpPort=-1;
-	@Before
-	public void changeDefaultHttpPort() {
-		oldHttpPort = Tomcat7SshSetup.DEFAULT_FIRST_HTTP_PORT;
-		Tomcat7SshSetup.DEFAULT_FIRST_HTTP_PORT = DEFAULT_HTTP_PORT
-	}
-	@After
-	public void changeDefaultHttpPortBack() {
-		if (oldHttpPort>0)
-			Tomcat7SshSetup.DEFAULT_FIRST_HTTP_PORT = oldHttpPort
-	}
-	
     @Before
     public void patchInSimulator() {
         TomcatNode.metaClass.startInLocation = { SimulatedLocation loc ->
@@ -77,7 +47,7 @@ class TomcatNodeTest {
 
 	@Test
 	public void ensureNodeCanStartAndShutdown() {
-		Application app = new TestApplication(httpPort: DEFAULT_HTTP_PORT);
+		Application app = new TestApplication();
 		TomcatNode tc = new TomcatNode(owner: app);
 		
 		try { 
@@ -91,7 +61,7 @@ class TomcatNodeTest {
 	
 	@Test
 	public void ensureNodeShutdownCleansUp() {
-		Application app = new TestApplication(httpPort: DEFAULT_HTTP_PORT);
+		Application app = new TestApplication();
 		TomcatNode tc1 = new TomcatNode(owner: app);
 		TomcatNode tc2 = new TomcatNode(owner: app);
 		
@@ -111,7 +81,7 @@ class TomcatNodeTest {
 	
 	@Test
 	public void detectEarlyDeathOfTomcatProcess() {
-		Application app = new TestApplication(httpPort: DEFAULT_HTTP_PORT);
+		Application app = new TestApplication();
 		TomcatNode tc1 = new TomcatNode(owner: app);
 		TomcatNode tc2 = new TomcatNode(owner: app);
 		tc1.start(location: new SimulatedLocation())
