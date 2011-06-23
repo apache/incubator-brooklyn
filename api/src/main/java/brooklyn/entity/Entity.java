@@ -2,9 +2,12 @@ package brooklyn.entity;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Map;
 
+import brooklyn.event.AttributeSensor;
 import brooklyn.event.Event;
 import brooklyn.event.EventListener;
+import brooklyn.event.Sensor;
 import brooklyn.location.Location;
 
 /**
@@ -60,18 +63,6 @@ public interface Entity extends Serializable {
      * Groupings can be used to allow easy management/monitoring of a group of entities.
      */
     Collection<Group> getGroups();
-    
-    /**
-     * Update the {@link Sensor} data for the given attribute with a new value.
-     * 
-     * @return the old value for the attribute
-     */
-    <T> T updateAttribute(Sensor<T> attribute, T val);
-    
-    /**
-     * Get the latest value of a {@link Sensor} attribute.
-     */
-    <T> T getAttribute(Sensor<T> attribute);
 
     /**
      * Add this entity to a {@link Group} as a child of the parent entity.

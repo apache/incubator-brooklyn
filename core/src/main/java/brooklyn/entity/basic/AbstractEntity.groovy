@@ -14,18 +14,18 @@ import brooklyn.entity.Entity
 import brooklyn.entity.EntityClass
 import brooklyn.entity.Group
 import brooklyn.entity.ParameterType
+import brooklyn.event.AttributeSensor
 import brooklyn.event.Event
 import brooklyn.event.EventListener
 import brooklyn.event.Sensor
 import brooklyn.event.adapter.PropertiesSensorAdapter
 import brooklyn.event.basic.AttributeMap
-import brooklyn.event.basic.AttributeSensor
 import brooklyn.location.Location
 import brooklyn.management.ManagementContext
 import brooklyn.management.SubscriptionContext
-import brooklyn.management.internal.LocalManagementContext
-import brooklyn.management.internal.LocalSubscriptionContext;
 import brooklyn.management.Task
+import brooklyn.management.internal.LocalManagementContext
+import brooklyn.management.internal.LocalSubscriptionContext
 import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.task.ExecutionContext
 
@@ -152,9 +152,9 @@ public abstract class AbstractEntity implements EntityLocal {
         return attributesInternal.asMap();
     }
     
-	public <T> T getAttribute(Sensor<T> attribute) { attributesInternal.getValue(attribute); }
+	public <T> T getAttribute(AttributeSensor<T> attribute) { attributesInternal.getValue(attribute); }
  
-    public <T> T updateAttribute(Sensor<T> attribute, T val) {
+    public <T> T updateAttribute(AttributeSensor<T> attribute, T val) {
         log.info "updating attribute {} as {}", attribute.name, val
         attributesInternal.update(attribute, val);
     }

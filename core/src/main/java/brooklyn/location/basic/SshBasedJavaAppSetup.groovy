@@ -20,8 +20,6 @@ public abstract class SshBasedJavaAppSetup {
 	String appBaseDir
 	String overpaasBaseDir = "/tmp/overpaas"
 	String installsBaseDir = overpaasBaseDir+"/installs"
-	Entity entity
-	String appBaseDir
 	
 	public SshBasedJavaAppSetup(Entity entity) {
 		this.entity = entity

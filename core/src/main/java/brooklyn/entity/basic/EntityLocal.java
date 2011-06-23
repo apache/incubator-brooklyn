@@ -1,11 +1,10 @@
 package brooklyn.entity.basic;
 
 import brooklyn.entity.Entity;
+import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
-import brooklyn.event.basic.AttributeSensor;
 
 public interface EntityLocal extends Entity {
-
     /**
      * Gets the value of the given attribute on this entity, or null if has not been set.
      * 
@@ -15,19 +14,19 @@ public interface EntityLocal extends Entity {
     <T> T getAttribute(AttributeSensor<T> sensor);
 
     /**
-     * Sets the value for the given sensor on this entity, 
+     * Update the {@link Sensor} data for the given attribute with a new value.
      * 
      * This can be used to "enrich" the entity, such as adding aggregated information, 
      * rolling averages, etc.
+     * 
+     * @return the old value for the attribute
      */
-    <T> void updateAttribute(AttributeSensor<T> sensor, T val);
-
+    <T> T updateAttribute(AttributeSensor<T> sensor, T val);
+    
     /**
      * Generates and emits an event (as though produced by this entity).
      * 
-     * For example, it could be used by a 
-     * @param <T>
-     * @param event
+     * For example, it could be used by a <em>???</em>...
      */
     <T> void raiseEvent(Sensor<T> sensor, T val);
 }

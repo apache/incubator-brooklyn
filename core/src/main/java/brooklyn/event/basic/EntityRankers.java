@@ -3,6 +3,7 @@ package brooklyn.event.basic;
 import java.util.Comparator;
 
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.event.AttributeSensor;
 
 public class EntityRankers {
 
