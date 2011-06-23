@@ -14,6 +14,10 @@ From android standard:
 
 We can avoid the second clause by using a standard now.
 
+(Alex%  it might be worth calling out some as recommendations as some best practices
+aren't always best...)
+
+
 Existing Standards
 ==================
 
@@ -47,17 +51,76 @@ special cases. I am nearly convinced that 80 is outdated. 100 is probably a good
 compromise.
 
 
+Alex% I like 128 ... with wide screens less than that becomes hard to read quite often
+with extra unwanted line breaks
 
-OverPaaS Standard
+
+
+Brooklyn Standard
 =================
+
+This is for Java and Groovy code. Not all parts will apply to Java -
+e.g. optional brackets.
 
 Formatting
 ----------
+
+It is strongly preferable but not mandatory to use curly brackets for if blocks.
+
+Alex% i don't like them in a long if..else if..else if.. block
+
+You must use brackets for function calls of more than one argument.
+Optional for function calls with one argument (in Groovy),
+recommended if that function is likely to be wrapped,
+
+In general, do not use semicolons at the end of lines. They may be used in
+certain situations if it makes the code clearer.
+
+Alex% why? i often don't but sometimes do, to make it look more java-like,
+or if importing java.  i don't think it makes any difference...
+
+Use spaces around comparison operators, e.g.
+         while (size > 0) {
+not 
+         while (size>0) {
+
+
+Alex% yuck. prefer using spaces in a line for readability, as one sees fit.
+  i>0 needs no spaces. list.findAll({..}).size() > 1  probably should.
+
+
+Comments
+--------
+
+Long comments should start with a summary sentence. Then there should be a
+blank line before the rest of the comment.
+
+Alex% blank line optional
+
+Do not fully describe a function in the @return paramater. This should be
+explained in the initial summary sentence and following text.
+
+Write in English sentences. These start with a capital letter and end with a
+terminal symbol.
+
+Alex% why? often brief notes are more useful e.g. /* shouldn't happen */. only exception i'd say is _API_ javadoc.
+Alex% need to differentiate between javadoc and comments
+
+Use of @link and @see is encouraged.
+Don't use @version except perhaps in APIs.
+Don't use @author.
+
+Alex% @author is useful sometimes
+
+Alex% unhelpful javdoc is punishable with extreme prejudice  e.g. /** getter for remote state @return remote state */ Object getRemoteState();
+
 
 Indenting
 ~~~~~~~~~
 
 Indent with spaces only. 4 for a normal indent.
+
+Alex% is this universal? does eclipse handle this correctly? tab for any indentation is nice because people can set it how they want...
 
 No space at end of lines or on blank lines.
 (Eclipse has a nasty habit of doing this.)
@@ -67,3 +130,13 @@ Line length
 
 Length 100, except imports, URLs and things (e.g. examples) that might want to
 be copied.
+
+Alex% i vote 128
+
+
+Groovy Code
+~~~~~~~~~~~
+
+In general, provide type information for items, particularly where it will help your colleagues with refactoring and code completion.
+
+

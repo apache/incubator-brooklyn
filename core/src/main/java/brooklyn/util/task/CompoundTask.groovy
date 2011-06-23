@@ -7,6 +7,9 @@ import brooklyn.management.ExecutionManager
 import brooklyn.management.Task
 
 
+/**
+ * TODO: javadoc (splodge)
+ */
 public abstract class CompoundTask extends BasicTask<Object> {
 	
 	protected final Collection<Task> children;

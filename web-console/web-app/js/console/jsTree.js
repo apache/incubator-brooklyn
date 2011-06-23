@@ -13,3 +13,5 @@ Brooklyn.jsTree = (function(parent) {
     };
 
 }(Brooklyn || {}));
+
+$(document).ready(Brooklyn.jsTree.loadJstree);
