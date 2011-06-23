@@ -31,7 +31,7 @@ ul#tabs li a.selected {
 }
 
 div.tabContent {
-	padding: 0.5em;
+	padding: 2em 1em;
 	background-color:#ffffff
 }
 
