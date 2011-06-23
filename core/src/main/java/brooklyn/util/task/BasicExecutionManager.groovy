@@ -12,8 +12,14 @@ import brooklyn.management.Task
 
 public class BasicExecutionManager implements ExecutionManager {
 	
-	private static final perThreadCurrentTask = new ThreadLocal<Task>()
-	public static Task getCurrentTask() { return perThreadCurrentTask.get() }
+	private static class PerThreadCurrentTaskHolder {
+		public static final perThreadCurrentTask = new ThreadLocal<Task>();
+	}
+	public static ThreadLocal<Task> getPerThreadCurrentTask() {
+		return PerThreadCurrentTaskHolder.perThreadCurrentTask;
+	}
+	
+	public static Task getCurrentTask() { return getPerThreadCurrentTask().get() }
 	
 	private ExecutorService runner = Executors.newCachedThreadPool() 
 	
