@@ -2,6 +2,7 @@ package brooklyn.entity.webapp.tomcat
 
 import static java.util.concurrent.TimeUnit.*
 import static org.junit.Assert.*
+
 import groovy.time.TimeDuration
 
 import java.util.Map
@@ -19,7 +20,6 @@ import brooklyn.entity.basic.AbstractApplication
 import brooklyn.event.EntityStartException
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.internal.TimeExtras
-import org.junit.Ignore
 
 /**
  * This tests the operation of the {@link TomcatNode} entity.
@@ -101,13 +101,13 @@ class TomcatNodeIntegrationTest {
     }
     
 	@Test
-	public void publishes_requests_per_second_metric() {
+	public void publishesRequestsPerSecondMetric() {
 		Application app = new TestApplication();
 		TomcatNode tc = new TomcatNode(owner: app);
 		tc.start(location: new SshMachineLocation(name:'london', host:'localhost'))
 		executeUntilSucceedsWithShutdown(tc, {
 				def activityValue = tc.getAttribute(TomcatNode.REQUESTS_PER_SECOND)
-				if (activityValue == null || activityValue == -1) return new BooleanWithMessage(false, "activity not set yet (-1)")
+				if (activityValue == null || activityValue == -1) return new BooleanWithMessage(false, "activity not set yet ($activityValue)")
                 
 				assertEquals Integer, activityValue.class
 				assertEquals 0, activityValue
@@ -127,23 +127,26 @@ class TomcatNodeIntegrationTest {
     public void publishesErrorCountMetric() {
         Application app = new TestApplication();
         TomcatNode tc = new TomcatNode(owner: app);
-        tc.start(location: new SshMachineLocation(name:'london', host:'localhost'))
+        tc.start(location:new SshMachineLocation(name:'london', host:'localhost'))
         executeUntilSucceedsWithShutdown(tc, {
             def port = tc.getAttribute(TomcatNode.HTTP_PORT)
+            def errorCount = tc.getAttribute(TomcatNode.ERROR_COUNT)
+			if (errorCount == null) return new BooleanWithMessage(false, "errorCount not set yet ($errorCount)")
+ 
             // Connect to non-existent URL n times
             def n = 5
-            def connection = n.times { connectToURL("http://localhost:${port}/does_not_exist") }
-            int errorCount = tc.getAttribute(TomcatNode.ERROR_COUNT)
+            n.times { connectToURL("http://localhost:${port}/does_not_exist") }
+            errorCount = tc.getAttribute(TomcatNode.ERROR_COUNT)
             logger.info "$errorCount errors in total"
             
             // TODO firm up assertions.  confused by the values returned (generally n*2?)
-            assert errorCount > 0
+            assertTrue errorCount > 0
             assertEquals 0, errorCount % n
         })
     }
 	
 	@Test
-	public void deploy_web_app_appears_at_URL() {
+	public void deployWebAppAppearsAtUrl() {
 		Application app = new TestApplication();
 		TomcatNode tc = new TomcatNode(owner: app);
 
@@ -176,7 +179,7 @@ class TomcatNodeIntegrationTest {
 			Exception caught = null
 			try {
                 tc.start(location: new SshMachineLocation(name:'london', host:'localhost'))
-			} catch(EntityStartException e) {
+			} catch (EntityStartException e) {
 				caught = e
 			} finally {
 				tc.shutdown()

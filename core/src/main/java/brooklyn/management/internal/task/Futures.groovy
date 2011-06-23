@@ -41,14 +41,30 @@ public class Futures {
 		futures
 	}
 	
-	/** returns the value when it is truthy (ie non-null, non-zero, non-empty) */
+	/**
+	 * Returns a {@link Future} containing the value when it is truthy (ie non-null, non-zero, non-empty).
+	 */
 	static <T> QualifiableFuture<T> futureValue(Closure value) {
 		futureValueWhen value
 	}
     
-    /** returns the value when isValueReady evaluates to true */
+    /**
+     * Returns a {@link Future} containing the value when isValueReady evaluates to true.
+     */
     static <T> Future<T> futureValueWhen(Closure<T> value, Closure isValueReady = { it }) {
         new FutureValue<T>(value, isValueReady);
+    }
+    
+    /**
+     * Returns the value when isValueReady evaluates to true.
+     */
+    static <T> T when(Closure<T> value, Closure isValueReady = { it }) {
+        Future<T> future = futureValueWhen value, isValueReady
+        try {
+            return future.get()
+        } catch (ExecutionException e) {
+            throw e.cause
+        }
     }
 	
 	/** returns the given value; when the item is a future, it waits for the future to be done */

@@ -48,7 +48,6 @@ public class TomcatNode extends AbstractEntity implements Startable {
 			//pass http port to setup, if one was specified on this object
 			if (attributes['httpPort']) setup.httpPort = attributes['httpPort']
             delegate.attributes['httpPort'] = setup.tomcatHttpPort // copy the http port to tomcat entity
-            log.error "attributes {}, delegate {}, setup {}", attributes['httpPort'], delegate.attributes['httpPort'], setup.tomcatHttpPort
 			setup.start loc
 			// TODO: remove the 3s sleep and find a better way to detect an early death of the Tomcat process
 			log.debug "waiting to ensure $delegate doesn't abort prematurely"
@@ -81,13 +80,8 @@ public class TomcatNode extends AbstractEntity implements Startable {
  
 		if (this.attributes['jmxHost'] && this.attributes['jmxPort']) {
 			jmxAdapter = new JmxSensorAdapter(this, 60*1000)
-            jmxAdapter.addSensor(ERROR_COUNT)
-//            jmxAdapter.addSensor(MAX_PROCESSING_TIME)
-            jmxAdapter.addSensor(REQUEST_COUNT)
-            jmxAdapter.addSensor(TOTAL_PROCESSING_TIME)
-            jmxAdapter.addSensor(REQUESTS_PER_SECOND, "Catalina:type=GlobalRequestProcessor,name=\"*\"", { computeReqsPerSec() }, 1000L)
             
-            Futures.futureValueWhen({
+            Futures.when({
         			// Wait for the HTTP port to become available
         			String state = null
         			int port = getAttribute(HTTP_PORT)
@@ -119,8 +113,14 @@ public class TomcatNode extends AbstractEntity implements Startable {
                     boolean connected = jmxAdapter.isConnected()
                     if (connected) log.info "jmx connected"
                     connected
-                }).get()
+                })
 		}
+        
+        // Add JMX sensors
+        jmxAdapter.addSensor(ERROR_COUNT)
+        jmxAdapter.addSensor(REQUEST_COUNT)
+        jmxAdapter.addSensor(TOTAL_PROCESSING_TIME)
+        jmxAdapter.addSensor(REQUESTS_PER_SECOND, { computeReqsPerSec() }, 1000L)
  
         if (this.war) {
             log.debug "Deploying {} to {}", this.war, this.location
@@ -130,16 +130,16 @@ public class TomcatNode extends AbstractEntity implements Startable {
 	}
 	
 	private void computeReqsPerSec() {
-        def reqs = jmxAdapter.getChildrenAttributesWithTotal("Catalina:type=GlobalRequestProcessor,name=\"*\"")
+        def reqs = jmxAdapter.getAttributes("Catalina:type=GlobalRequestProcessor,name=\"*\"")
+        log.trace "running computeReqsPerSec - {}", reqs
+ 
         def curTimestamp = System.currentTimeMillis()
         def curCount = reqs?.requestCount ?: 0
-        log.info "got reqs: {}", reqs
-		
-		def prevTimestamp = attributes['tmp.reqs.timestamp']
-		def prevCount = attributes['tmp.reqs.count']
+		def prevTimestamp = attributes['tmp.reqs.timestamp'] ?: 0
+		def prevCount = attributes['tmp.reqs.count'] ?: 0
         attributes['tmp.reqs.timestamp'] = curTimestamp
         attributes['tmp.reqs.count'] = curCount
-        log.info "previous data {} at {}", prevCount, prevTimestamp
+        log.trace "previous data {} at {}, current {} at {}", prevCount, prevTimestamp, curCount, curTimestamp
         
         // Calculate requests per second
         double diff = curCount - prevCount

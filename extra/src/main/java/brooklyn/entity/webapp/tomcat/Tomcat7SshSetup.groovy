@@ -25,7 +25,6 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
         super(entity)
         this.entity = entity
         runDir = appBaseDir + "/" + "tomcat-" + entity.id
-        log.info "tomvcat http port is {}", httpPort
     }
 
     public String getInstallScript() {

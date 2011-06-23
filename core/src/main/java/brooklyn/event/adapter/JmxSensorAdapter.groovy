@@ -64,17 +64,16 @@ public class JmxSensorAdapter implements SensorAdapter {
         if (!connect(timeout)) throw new IllegalStateException("Could not connect to JMX service")
     }
     
-    public void addSensor(BasicAttributeSensor sensor, String objectName, Closure calculate, long period) {
-        log.info "adding calculated sensor {} with delay {}", sensor.name, period
+    public void addSensor(BasicAttributeSensor sensor, Closure calculate, long period) {
+        log.debug "adding calculated sensor {} with delay {}", sensor.name, period
         calculated[sensor.getName()] = sensor
-        objects[sensor.getName()] = new ObjectName(objectName)
         entity.updateAttribute(sensor, null)
         
         scheduled[sensor.getName()] = exec.scheduleWithFixedDelay(calculate, 0L, period, TimeUnit.MILLISECONDS)
     }
  
     public void addSensor(JmxAttributeSensor sensor) {
-        log.info "adding sensor {} for {} - {}", sensor.name, sensor.objectName, sensor.attribute
+        log.debug "adding sensor {} for {} - {}", sensor.name, sensor.objectName, sensor.attribute
         sensors[sensor.getName()] = sensor
         objects[sensor.getName()] = new ObjectName(sensor.objectName)
         entity.updateAttribute(sensor, null)
@@ -104,18 +103,18 @@ public class JmxSensorAdapter implements SensorAdapter {
  
 	/** continuously attempts to connect (blocking), for at least the indicated amount of time; or indefinitely if -1 */
 	public boolean connect(long timeoutMillis) {
-		println "invoking connect to "+jmxUrl
+		log.debug "invoking connect to {}", jmxUrl
 		long thisStartTime = System.currentTimeMillis()
 		long endTime = thisStartTime + timeoutMillis
 		if (timeoutMillis==-1) endTime = Long.MAX_VALUE
 		while (thisStartTime <= endTime) {
 			thisStartTime = System.currentTimeMillis()
-			println "$thisStartTime trying connection to "+jmxUrl
+			log.debug "{} trying connection to {}", thisStartTime, jmxUrl
 			try {
 				connect()
 				return true
 			} catch (IOException e) {
-				println ""+System.currentTimeMillis()+" failed connection to "+jmxUrl+" ("+e+")"
+				log.error "{} failed connection to {} ({})", System.currentTimeMillis(), jmxUrl, e.message
 			}
 			Thread.sleep properties['connectDelay']
 		}
@@ -141,11 +140,12 @@ public class JmxSensorAdapter implements SensorAdapter {
 		checkConnected()
 		ObjectName mxbeanName = new ObjectName(objectName);
 		ObjectInstance bean = mbsc.getObjectInstance(mxbeanName)
-		Map r = [:]
 		MBeanInfo info = mbsc.getMBeanInfo(bean.getObjectName())
+		Map r = [:]
 		info.getAttributes().each { r[it.getName()] = null }
 		AttributeList attrs = mbsc.getAttributes bean.getObjectName(), r.keySet() as String[]
 		attrs.asList().each { r[it.getName()] = it.getValue(); }
+        log.trace "returning attributes: {}", r
 		r
 	}
 	
@@ -208,7 +208,7 @@ public class JmxSensorAdapter implements SensorAdapter {
         sensors.keySet() each { s ->
                 JmxAttributeSensor<?> sensor = sensors.get(s)   
 		        def data = getAttributes(sensor.objectName)
-                log.info "data for {},{} was {}", sensor.name, sensor.objectName, data[sensor.attribute]
+                log.trace "data for {},{} was {}", sensor.name, sensor.objectName, data[sensor.attribute]
                 def newValue = data[sensor.attribute]
                 entity.updateAttribute(sensor, newValue)
 	        } 
