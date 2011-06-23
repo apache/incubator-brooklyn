@@ -31,25 +31,26 @@ import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.task.ExecutionContext
 
 /**
- * Default {@link Entity} definition.
+ * Default {@link Entity} implementation
  * 
  * Provides several common fields ({@link #name}, {@link #id});
  * also provides a map {@link #config} which contains arbitrary fields.
  * <p>
  * Fields in config can be accessed (get and set) without referring to config,
  * (through use of propertyMissing). Note that config is typically inherited
- * by children, whereas the fields are not.
+ * by children, whereas the fields are not. (Attributes cannot be so accessed,
+ * nor are they inherited.)
  *
- * @author alex
+ * @author alex, aled
  */
-public abstract class AbstractEntity implements EntityLocal {
+public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
     private static final Logger log = LoggerFactory.getLogger(AbstractEntity.class);
  
     String id = LanguageUtils.newUid();
     Map<String,Object> presentationAttributes = [:]
     String displayName;
     final Collection<Group> groups = new CopyOnWriteArrayList<Group>()
-    Application application
+    volatile Application application
     Collection<Location> locations = []
     Group owner
     
@@ -114,7 +115,6 @@ public abstract class AbstractEntity implements EntityLocal {
     public Application getApplication() {
         if (application!=null) return application;
         def app = owner?.getApplication()
-        app = (app != null) ? app : groups.find({ it.getApplication() })?.getApplication()
         if (app) {
             registerWithApplication(app)
             application
@@ -173,7 +173,7 @@ public abstract class AbstractEntity implements EntityLocal {
 
     protected ExecutionContext getExecutionContext() {
         synchronized (this) {
-            execution ?: new ExecutionContext(tag: this, getApplication()?.getManagementContext().getExecutionManager())
+            execution ?: new ExecutionContext(tag: this, getManagementContext().getExecutionManager())
         }
     }
     
