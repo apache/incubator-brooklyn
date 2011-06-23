@@ -120,7 +120,7 @@ public class TomcatNode extends AbstractEntity implements Startable {
         jmxAdapter.addSensor(ERROR_COUNT)
         jmxAdapter.addSensor(REQUEST_COUNT)
         jmxAdapter.addSensor(TOTAL_PROCESSING_TIME)
-        jmxAdapter.addSensor(REQUESTS_PER_SECOND, { computeReqsPerSec() }, 1000L)
+        jmxAdapter.addSensor(REQUESTS_PER_SECOND, { computeReqsPerSec() }, 100L)
  
         if (this.war) {
             log.debug "Deploying {} to {}", this.war, this.location
@@ -154,20 +154,6 @@ public class TomcatNode extends AbstractEntity implements Startable {
 		log.trace "computed $rps reqs/sec over $dt millis"
 		updateAttribute(REQUESTS_PER_SECOND, rps)
 	}
-	
-	// FIXME something like this seems a much nicer way to register sensors
-//	{ addSensor(REQUESTS_PER_SECOND, new AttributeSensorSource(&computeReqsPerSec), defaultPeriod: 5*SECONDS) }
-//	{ addSensor(REQUESTS_PER_SECOND, &computeReqsPerSec, defaultPeriod: 5*SECONDS) }
-	/* the protected addSensor methods
-	 *   addSensor(AttributeSensor<T>, AttributeSensorSource<T> 
-	 * sit on AbstractEntity takes care of registering the list of sensors, scheduled tasks, etc;  
-	 * if a subscriber requests a different period then that could trump (as enhancement; it gets tricky because
-	 * we are computing derived values & might have someone getting every 3s and someone else every 7s, we'd want to tally total for 7s and for 3s, perhaps...) */
-	// but problem with above is you can't easily see at design-time what the sensors are, could do something like
-//	public AttributeSensorSource<Integer> requestsPerSecond = [ this, REQUESTS_PER_SECOND, this.&computeReqsPerSec, defaultPeriod: 5*SECONDS ]
-	// then assuming AttributeSensorSource has an asSensor adapter method (or even extends AttributeSensor<Integer>) other guys could subscribe to
-	// TomcatNode.requestsPerSecond as Sensor    which returns REQUESTS_PER_SECOND
-	// (or even  TomcatNode.requestsPerSecond  directly...)	
 	
 	@Override
 	public Collection<String> toStringFieldsToInclude() {
