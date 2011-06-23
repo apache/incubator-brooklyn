@@ -21,7 +21,7 @@ public class JBossNode extends AbstractEntity implements Startable {
     
     public static final AttributeSensor<Integer> REQUESTS_PER_SECOND = [ "Reqs/Sec", "jmx.reqs.persec.RequestCount", Double ]
 
-    JmxSensorAdapter jmxAdapter;
+    transient JmxSensorAdapter jmxAdapter;
 
 	//TODO hack reference (for shutting down), need a cleaner way -- e.g. look up in the app's executor service for this entity
 	ScheduledFuture jmxMonitoringTask;
