@@ -87,7 +87,10 @@ not
 
 Alex% yuck. prefer using spaces in a line for readability, as one sees fit.
   i>0 needs no spaces. list.findAll({..}).size() > 1  probably should.
-
+  Splodge: Yuck! I've never liked this tendency to omit whtespace around operators,
+           except perhaps "for "+"string "+"concatenation". Each to their own, I guess,
+           although it always struck me as odd; certainly never worked with other
+           developers who recommend that style.
 
 Comments
 --------
@@ -105,14 +108,20 @@ terminal symbol.
 
 Alex% why? often brief notes are more useful e.g. /* shouldn't happen */. only exception i'd say is _API_ javadoc.
 Alex% need to differentiate between javadoc and comments
+  Splodge: Bad grammar/capitalisation in publicly visible docs will make us appear slapdash
+           (in some people's minds, at least). And might as well be consistent for all comments,
+           no? At least in capitalisation?!
 
 Use of @link and @see is encouraged.
 Don't use @version except perhaps in APIs.
 Don't use @author.
 
 Alex% @author is useful sometimes
+  Splodge: Disagree; we should embrace shared code ownership and expect that most files will have many authors.
+           commit history is much more useful to ascertain who did what, and when.
 
 Alex% unhelpful javdoc is punishable with extreme prejudice  e.g. /** getter for remote state @return remote state */ Object getRemoteState();
+  Splodge: Enthusiastic agreement.
 
 
 Indenting
@@ -138,5 +147,5 @@ Groovy Code
 ~~~~~~~~~~~
 
 In general, provide type information for items, particularly where it will help your colleagues with refactoring and code completion.
-
+Splodge: Agree!
 
