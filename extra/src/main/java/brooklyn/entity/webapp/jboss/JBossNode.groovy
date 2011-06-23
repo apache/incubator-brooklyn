@@ -1,13 +1,15 @@
 package brooklyn.entity.webapp.jboss
 
-import groovy.transform.InheritConstructors
-
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.trait.Startable
+import brooklyn.entity.webapp.tomcat.TomcatNode
 import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.basic.AttributeSensor
 import brooklyn.location.basic.SshMachineLocation
@@ -19,7 +21,12 @@ import brooklyn.util.internal.EntityStartUtils
 //@InheritConstructors
 public class JBossNode extends AbstractEntity implements Startable {
     
-    public static final AttributeSensor<Integer> REQUESTS_PER_SECOND = [ "Reqs/Sec", "jmx.reqs.persec.RequestCount", Double ]
+	private static final Logger log = LoggerFactory.getLogger(TomcatNode.class)
+	
+	public static final AttributeSensor<Integer> ERROR_COUNT = [ "Request errors", "jmx.reqs.global.totals.errorCount", Integer ]
+	public static final AttributeSensor<Integer> MAX_PROCESSING_TIME = [ "Request count", "jmx.reqs.global.totals.maxTime", Integer ]
+	public static final AttributeSensor<Integer> REQUEST_COUNT = [ "Request count", "jmx.reqs.global.totals.requestCount", Integer ]
+	public static final AttributeSensor<Integer> TOTAL_PROCESSING_TIME = [ "Total processing time", "jmx.reqs.global.totals.processingTime", Integer ]
 
     transient JmxSensorAdapter jmxAdapter;
 
@@ -68,14 +75,11 @@ public class JBossNode extends AbstractEntity implements Startable {
         }
     }
 
-    private void temp_testingJMX() {
-        def mod_cluster_jmx = "jboss.web:service=ModCluster,provider=LoadBalanceFactor";
-        def attrs = jmxAdapter.getAttributes(mod_cluster_jmx);
-        println attrs
-    }
-
     public void updateJmxSensors() {
-    }
+		def reqs = jmxAdapter.getChildrenAttributesWithTotal("jboss.web:type=GlobalRequestProcessor,name=http*")
+		reqs.put("timestamp", System.currentTimeMillis())
+		updateAttribute(["jmx", "reqs", "global"], reqs)
+   }
 
     public void shutdown() {
         if (jmxMonitoringTask) jmxMonitoringTask.cancel true

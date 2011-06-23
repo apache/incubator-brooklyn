@@ -59,7 +59,7 @@ exit
     public String getCheckRunningScript() { 
 		def port = entity.attributes.jmxPort
 		def host = entity.attributes.jmxHost
-		"$installDir/bin/twiddle.sh ---host $host --port $port get \"jboss.system:type=Server\" Started; exit"
+		"$installDir/bin/twiddle.sh --host $host --port $port get \"jboss.system:type=Server\" Started; exit"
     }
 
     public String getDeployScript(String filename) {
