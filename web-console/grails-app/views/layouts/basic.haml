@@ -1,4 +1,4 @@
-%html{:xmlns=>"http://www.w3.org/1999/xhtml"}
+%html
 	%head
 		%title
 			%g:layoutTitle{:default=>"Brooklyn Webconsole"}
@@ -12,7 +12,6 @@
 		%g:javascript{:library=>"console/jsTree"}\
 	%body{:onload=>"initTabs()"}
 		%g:render{:template=>"/shared/banner"}
-		.layout-middle
-			%g:layoutBody/
+		%g:layoutBody/
 		%g:render{:template=>"/shared/footer"}
 

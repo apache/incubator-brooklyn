@@ -2,24 +2,25 @@
 	%head
 		%meta{:name=>"layout",:content=>"basic"}\
 	%body{:onload=>"initTabs()"}
-		.layout-left-column
-			%div{:id=>"demo1"}
-		.layout-main-content
-			%ul{:id=>"tabs"}
-				%li
-					%a{:href=>"#summary"}="Summary"
-				%li
-					%a{:href=>"#location"}="Location"
-				%li
-					%a{:href=>"#health"}="Health"
-				%li
-					%a{:href=>"#structure"}="Structure"
-			.tab-content{:id=>"summary"}
-				%h2="Summary"
-			.tab-content{:id=>"location"}
-				%h2="Location"
-			.tab-content{:id=>"health"}
-				%h2="Health"
-			.tab-content{:id=>"structure"}
-				%h2="Structure"
+		.layout-middle-content
+			.layout-left-column
+				%div{:id=>"demo1"}
+			.layout-main-content
+				%ul{:id=>"tabs"}
+					%li
+						%a{:href=>"#summary"}="Summary"
+					%li
+						%a{:href=>"#location"}="Location"
+					%li
+						%a{:href=>"#health"}="Health"
+					%li
+						%a{:href=>"#structure"}="Structure"
+				.tab-content{:id=>"summary"}
+					%h2="Summary"
+				.tab-content{:id=>"location"}
+					%h2="Location"
+				.tab-content{:id=>"health"}
+					%h2="Health"
+				.tab-content{:id=>"structure"}
+					%h2="Structure"
 
