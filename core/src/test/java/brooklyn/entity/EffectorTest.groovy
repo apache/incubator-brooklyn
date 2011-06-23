@@ -32,7 +32,7 @@ class EffectorTest {
 //		}
 //	}
 	
-	public interface CanSayHi {
+	public static interface CanSayHi {
 		static Effector<String> SAY_HI_1 = new AbstractEffector<CanSayHi,String>("sayHi1", String.class, 
 			[
 				[ "name", String.class, "person to say hi to" ] as BasicParameterType<String>,

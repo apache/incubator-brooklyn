@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Application
 import brooklyn.entity.Effector
+import brooklyn.entity.Entity
 import brooklyn.entity.EntityClass
 import brooklyn.entity.Group
 import brooklyn.entity.ParameterType
@@ -203,7 +204,7 @@ public abstract class AbstractEntity implements EntityLocal {
 	// -------- EFFECTORS --------------
 	
 	private ThreadLocal<Boolean> invokeMethodPrep = new ThreadLocal() { protected Object initialValue() { Boolean.FALSE } }
-	
+
 	public Object invokeMethod(String name, Object args) {
 		if (!this.@invokeMethodPrep.get()) {
 			this.@invokeMethodPrep.set(true);
