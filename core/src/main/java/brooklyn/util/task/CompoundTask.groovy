@@ -35,7 +35,8 @@ public abstract class CompoundTask extends BasicTask<Object> {
 				" passed to compound task; must be Runnable, Callable, Closure or Task");
 		}
 	}
-	
+
+	/** return value needs to be specified by subclass */	
 	protected abstract Object runJobs()
 	
 }

@@ -2,7 +2,9 @@ package brooklyn.util.task;
 
 import brooklyn.management.Task
 
-class ParallelTask extends CompoundTask {
+/** runs tasks in parallel, no guarantees of order of starting these;
+ * return value here is a collection of the return value of supplied tasks, in that order */ 
+public class ParallelTask extends CompoundTask {
 	
 	public ParallelTask(Object... tasks) { super(tasks) }
 	public ParallelTask(Collection<Object> tasks) { super(tasks) }
