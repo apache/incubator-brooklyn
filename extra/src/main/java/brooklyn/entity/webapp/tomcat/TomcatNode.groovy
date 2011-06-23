@@ -45,9 +45,10 @@ public class TomcatNode extends AbstractEntity implements Startable {
 	static {
 		TomcatNode.metaClass.startInLocation = { SshMachineLocation loc ->
 			def setup = new Tomcat7SshSetup(delegate)
+			//FIXME HTTP_PORT should be a CONFIG (if supplied by user) _and_ an ATTRIBUTE (where it's actually running)
 			//pass http port to setup, if one was specified on this object
-			if (attributes['httpPort']) setup.httpPort = attributes['httpPort']
-            delegate.attributes['httpPort'] = setup.tomcatHttpPort // copy the http port to tomcat entity
+			if (getAttribute(HTTP_PORT)) setup.httpPort = getAttribute(HTTP_PORT)
+            delegate.updateAttribute(HTTP_PORT, setup.tomcatHttpPort) // copy the http port to tomcat entity
 			setup.start loc
 			// TODO: remove the 3s sleep and find a better way to detect an early death of the Tomcat process
 			log.debug "waiting to ensure $delegate doesn't abort prematurely"
@@ -65,6 +66,10 @@ public class TomcatNode extends AbstractEntity implements Startable {
 
     public TomcatNode(Map properties=[:]) {
         super(properties);
+		
+		propertiesAdapter.addSensor HTTP_PORT, -1  /*getAttribute(HTTP_PORT)*/
+		propertiesAdapter.addSensor NODE_UP, false
+		propertiesAdapter.addSensor NODE_STATUS, "starting"
     }
 
 	public void start(Map startAttributes=[:]) {
@@ -73,11 +78,7 @@ public class TomcatNode extends AbstractEntity implements Startable {
             throw new IllegalStateException("JMX is not available")
 
 		log.debug "starting tomcat: httpPort {}, jmxHost {} and jmxPort {}", this.attributes['httpPort'], this.attributes['jmxHost'], this.attributes['jmxPort']
-		
-		propertiesAdapter.addSensor HTTP_PORT, this.attributes['httpPort']
-		propertiesAdapter.addSensor NODE_UP, false
-        propertiesAdapter.addSensor NODE_STATUS, "starting"
- 
+
 		if (this.attributes['jmxHost'] && this.attributes['jmxPort']) {
 			jmxAdapter = new JmxSensorAdapter(this, 60*1000)
             
@@ -85,7 +86,6 @@ public class TomcatNode extends AbstractEntity implements Startable {
             Futures.when({
         			// Wait for the HTTP port to become available
         			String state = null
-					//FIXME HTTP_PORT should be a CONFIG (if supplied by user) _and_ an ATTRIBUTE (where it's actually running)
         			int port = getAttribute(HTTP_PORT)?:-1
         			for (int attempts = 0; attempts < 30; attempts++) {
         				Map connectorAttrs;
