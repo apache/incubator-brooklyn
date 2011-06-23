@@ -18,12 +18,12 @@ public abstract class SshBasedJavaAppSetup {
  
 	Entity entity
 	String appBaseDir
-	String overpaasBaseDir = "/tmp/overpaas"
-	String installsBaseDir = overpaasBaseDir+"/installs"
+	String brooklynBaseDir = "/tmp/brooklyn"
+	String installsBaseDir = brooklynBaseDir+"/installs"
 	
 	public SshBasedJavaAppSetup(Entity entity) {
 		this.entity = entity
-		appBaseDir = overpaasBaseDir + "/" + "app-"+entity.getApplication()?.id
+		appBaseDir = brooklynBaseDir + "/" + "app-"+entity.getApplication()?.id
 	}
 
 	/** convenience to generate string -Dprop1=val1 -Dprop2=val2 for use with java */		

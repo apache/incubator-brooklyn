@@ -29,9 +29,6 @@ public class JBossNode extends AbstractEntity implements Startable {
 	public static final BasicAttributeSensor<Integer> TOTAL_PROCESSING_TIME = [ Integer, "jmx.reqs.global.totals.processingTime", "Total processing time" ]
 
     transient JmxSensorAdapter jmxAdapter;
-
-	//TODO hack reference (for shutting down), need a cleaner way -- e.g. look up in the app's executor service for this entity
-	ScheduledFuture jmxMonitoringTask;
     
     static {
         JBossNode.metaClass.startInLocation = { SshMachineLocation loc ->
@@ -69,9 +66,6 @@ public class JBossNode extends AbstractEntity implements Startable {
 				log.error "FAILED to connect JMX to {}", this
                 throw new IllegalStateException("failed to completely start $this: JMX not found at $jmxHost:$jmxPort after 60s")
             }
-
-            //TODO get executor from app, then die when finished; why isn't schedule working???
-            jmxMonitoringTask = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay({ updateJmxSensors() }, 1000, 1000, TimeUnit.MILLISECONDS)
         }
     }
 
@@ -82,9 +76,6 @@ public class JBossNode extends AbstractEntity implements Startable {
    }
 
     public void shutdown() {
-        if (jmxMonitoringTask) jmxMonitoringTask.cancel true
         if (location) shutdownInLocation(location)
     }
-
- 
 }

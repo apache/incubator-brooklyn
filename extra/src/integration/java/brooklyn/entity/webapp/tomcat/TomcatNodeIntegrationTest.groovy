@@ -1,10 +1,8 @@
 package brooklyn.entity.webapp.tomcat
 
+import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.junit.Assert.*
-import static brooklyn.test.TestUtils.*
-
-import groovy.time.TimeDuration
 
 import java.util.Map
 
@@ -18,7 +16,7 @@ import brooklyn.entity.Application
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.event.EntityStartException
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.internal.TimeExtras
+import brooklyn.test.TestUtils.BooleanWithMessage;
 
 /**
  * This tests the operation of the {@link TomcatNode} entity.
@@ -170,8 +168,5 @@ class TomcatNodeIntegrationTest {
 			t.join();
 		}
 	}
-    
-
-	
 }
  

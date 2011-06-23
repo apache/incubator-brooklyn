@@ -16,7 +16,7 @@ import brooklyn.entity.Entity;
  */
 public interface ManagementContext {
     /**
-     * The applications known about in this OverPaas context.
+     * The applications known about in this Brooklyn context.
      */
     Collection<Application> getApplications();
 
