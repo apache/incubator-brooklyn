@@ -9,7 +9,7 @@ Brooklyn.jsTree = (function(parent) {
     }
 
     return {
-        loadJstree: loadJstree,
+        loadJstree: loadJstree
     };
 
 }(Brooklyn || {}));
