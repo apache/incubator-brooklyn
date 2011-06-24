@@ -23,13 +23,11 @@ import com.google.common.base.Predicate
  */
 public class LocalSubscriptionManager implements SubscriptionManager {
     private static class Subscription {
-        public String interestedId;
         public Predicate<Entity> entities;
         public Predicate<SensorEvent<?>> filter;
         public EventListener<?> listener;
 
-        public Subscription(String interestedId, Predicate<Entity> entities, Predicate<SensorEvent<?>> filter, EventListener<?> listener) {
-            this.interestedId = interestedId;
+        public Subscription(Predicate<Entity> entities, Predicate<SensorEvent<?>> filter, EventListener<?> listener) {
             this.entities = entities;
             this.filter = filter;
             this.listener = listener;
@@ -37,12 +35,13 @@ public class LocalSubscriptionManager implements SubscriptionManager {
         
         @Override
         public boolean equals(Object other) {
+            // FIXME proper equals
             return Objects.equal(this, other);
         }
  
         @Override
         public int hashCode() {
-            return Objects.hashCode(interestedId, entities, filter, listener);
+            return Objects.hashCode(entities, filter, listener);
         }
     }
     
@@ -53,8 +52,8 @@ public class LocalSubscriptionManager implements SubscriptionManager {
         allSubscriptions.each { key, Subscription s -> if (s.filter.apply(event) && (!s.entities || s.entities.apply(event))) s.listener.onEvent(event) }
     }
 
-    public <T> long subscribe(String interestedId, String producerId, String sensorName, EventListener<T> listener) {
-        Subscription sub = new Subscription(interestedId, EventFilters.entityId(producerId), EventFilters.sensorName(sensorName), listener);
+    public <T> long subscribe(String producerId, String sensorName, EventListener<T> listener) {
+        Subscription sub = new Subscription(EventFilters.entityId(producerId), EventFilters.sensorName(sensorName), listener);
         long id = subscriptionId.incrementAndGet();
         allSubscriptions.put(id, sub);
         return id;
