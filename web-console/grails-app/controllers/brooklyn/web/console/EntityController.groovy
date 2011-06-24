@@ -31,7 +31,7 @@ class EntityController {
 
         all.each {
             entity ->
-            entityService.getTheKiddies(entity).each {
+            entityService.getChildren(entity).each {
                 child -> nodeMap[entity.id].children.add(nodeMap[child.id])
             }
         }

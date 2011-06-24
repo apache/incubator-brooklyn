@@ -7,7 +7,7 @@ class EntityService {
     static transactional = false
     def managementContextService
 
-    public Collection<Entity> getTheKiddies(Entity parent) {
+    public Collection<Entity> getChildren(Entity parent) {
         Set<Entity> result = []
 
         if (parent.properties.containsKey("ownedChildren")){
@@ -22,7 +22,7 @@ class EntityService {
 
     public boolean isChildOf(Entity child, Collection<Entity> parents) {
         parents.find { parent ->
-           getTheKiddies(parent).contains(child) || isChildOf(getTheKiddies(parent), child)
+           getChildren(parent).contains(child) || isChildOf(getChildren(parent), child)
         }
     }
 
@@ -35,15 +35,15 @@ class EntityService {
     }
 
     private Set<Entity> flattenEntities(Collection<Entity> entities) {
-        Set<Entity> dest = []
+        Set<Entity> flattenedList = []
         entities.each {
             e ->
-            dest.add(e)
-            getTheKiddies(e).each {
-                dest.addAll(flattenEntities([it]))
+            flattenedList.add(e)
+            getChildren(e).each {
+                flattenedList.addAll(flattenEntities([it]))
             }
         }
-        dest
+        flattenedList
     }
 
     public Set<Entity> getEntitiesMatchingCriteria(String name, String id, String applicationId) {

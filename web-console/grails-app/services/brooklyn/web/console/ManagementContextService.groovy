@@ -55,22 +55,22 @@ class ManagementContextService implements ManagementContext{
             children.each { addOwnedChild(it) }
             return this
         }
-    }
 
-    private class TestGroupEntity extends AbstractGroup {
-        TestGroupEntity(String displayName) {
-            this.displayName = displayName
+        private class TestGroupEntity extends AbstractGroup {
+            TestGroupEntity(String displayName) {
+                this.displayName = displayName
+            }
+
+            TestGroupEntity addOwnedChildren(Collection<Entity> children) {
+                children.each { addOwnedChild(it) }
+                return this
+            }
         }
 
-        TestGroupEntity addOwnedChildren(Collection<Entity> children) {
-            children.each { addOwnedChild(it) }
-            return this
-        }
-    }
-
-    private class TestLeafEntity extends AbstractEntity {
-        TestLeafEntity(String displayName) {
-            this.displayName = displayName;
+        private class TestLeafEntity extends AbstractEntity {
+            TestLeafEntity(String displayName) {
+                this.displayName = displayName;
+            }
         }
     }
 }
