@@ -1,10 +1,8 @@
 package brooklyn.web.console.entity;
 
-
 import brooklyn.entity.Entity
 import brooklyn.entity.EntityClass
 import brooklyn.entity.Group
-
 
 public class EntitySummary {
 
