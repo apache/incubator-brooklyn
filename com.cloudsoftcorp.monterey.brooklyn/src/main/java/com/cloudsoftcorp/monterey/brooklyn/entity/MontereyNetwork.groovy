@@ -16,7 +16,7 @@ import java.util.logging.Logger
 import brooklyn.entity.Group
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.trait.Startable
-import brooklyn.event.basic.AttributeSensor
+import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.Location
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.internal.BrooklynSystemProperties
@@ -40,7 +40,7 @@ import com.cloudsoftcorp.monterey.network.m.MediationWorkrateItem.MediationWorkr
 import com.cloudsoftcorp.monterey.node.api.NodeId
 import com.cloudsoftcorp.util.Loggers
 import com.cloudsoftcorp.util.TimeUtils
-import com.cloudsoftcorp.util.exception.ExceptionUtils;
+import com.cloudsoftcorp.util.exception.ExceptionUtils
 import com.cloudsoftcorp.util.exception.RuntimeWrappedException
 import com.cloudsoftcorp.util.javalang.ClassLoadingContext
 import com.cloudsoftcorp.util.osgi.BundleSet
@@ -72,12 +72,12 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
 
     private static final Logger logger = Loggers.getLogger(MontereyNetwork.class);
 
-    public static final AttributeSensor<Integer> MANAGEMENT_URL = [ "ManagementUrl", "monterey.management-url", URL.class ]
-    public static final AttributeSensor<String> NETWORK_ID = [ "NetworkId", "monterey.network-id", String.class ]
-    public static final AttributeSensor<String> APPLICTION_NAME = [ "ApplicationName", "monterey.application-name", String.class ]
+    public static final BasicAttributeSensor<Integer> MANAGEMENT_URL = [ "ManagementUrl", "monterey.management-url", URL.class ]
+    public static final BasicAttributeSensor<String> NETWORK_ID = [ "NetworkId", "monterey.network-id", String.class ]
+    public static final BasicAttributeSensor<String> APPLICTION_NAME = [ "ApplicationName", "monterey.application-name", String.class ]
 
     /** up, down, etc? */
-    public static final AttributeSensor<String> STATUS = [ "Status", "monterey.status", String.class ]
+    public static final BasicAttributeSensor<String> STATUS = [ "Status", "monterey.status", String.class ]
 
     private final Gson gson;
 

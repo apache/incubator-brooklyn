@@ -4,7 +4,7 @@ import java.util.logging.Level
 import java.util.logging.Logger
 
 import brooklyn.entity.basic.AbstractEntity
-import brooklyn.event.basic.AttributeSensor
+import brooklyn.event.basic.BasicAttributeSensor
 
 import com.cloudsoftcorp.monterey.control.workrate.api.WorkrateReport
 import com.cloudsoftcorp.monterey.network.m.MediationWorkrateItem.MediationWorkrateItemNames
@@ -19,7 +19,7 @@ public class Segment extends AbstractEntity {
     // Currently leaving that in the logic behind Dmn1NetworkInfo.getActivityModel.
 
     // TODO Share constant for all nodes plus segment?
-    public static final AttributeSensor<Integer> WORKRATE_MSGS_PER_SEC = [ "MsgsPerSec", "monterey.workrate.msgsPerSec", Double ]
+    public static final BasicAttributeSensor<Integer> WORKRATE_MSGS_PER_SEC = [ "MsgsPerSec", "monterey.workrate.msgsPerSec", Double ]
     
     private final MontereyNetworkConnectionDetails connectionDetails;
     private final String segmentId;
