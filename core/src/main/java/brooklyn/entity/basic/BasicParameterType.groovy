@@ -14,7 +14,7 @@ public class BasicParameterType<T> implements ParameterType<T> {
     private T defaultValue = NONE
 
 	public BasicParameterType(Map<?, ?> arguments = [:]) {
-        arguments each { key, value -> this."$key" = value }
+        arguments.each { key, value -> this."$key" = value }
     }
 
     public BasicParameterType(String name, Class<T> type, String description=null, T defaultValue = NONE) {

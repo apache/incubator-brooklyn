@@ -1,5 +1,7 @@
 package brooklyn.entity.webapp.tomcat
 
+import static brooklyn.test.TestUtils.*
+
 import static java.util.concurrent.TimeUnit.*
 import static org.junit.Assert.*
 
@@ -16,7 +18,6 @@ import brooklyn.entity.Application
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.internal.TimeExtras
-import static brooklyn.test.TestUtils.isPortInUse
 
 /**
  * This tests the operation of the {@link TomcatNode} entity.

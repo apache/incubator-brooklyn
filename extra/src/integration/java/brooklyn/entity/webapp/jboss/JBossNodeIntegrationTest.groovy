@@ -1,8 +1,9 @@
 package brooklyn.entity.webapp.jboss;
 
+import static brooklyn.test.TestUtils.*
+
 import static java.util.concurrent.TimeUnit.*
 import static org.junit.Assert.*
-import static brooklyn.test.TestUtils.*
 
 import org.junit.Test
 

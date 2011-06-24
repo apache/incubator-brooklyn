@@ -234,7 +234,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 			else if (!args.getClass().isArray()) log.warn("$this.$name invoked with incorrect args signature (non-array ${args.getClass()}): "+args, new Throwable("source of incorrect invocation of $this.$name"))
 			
 			try {
-				Effector eff = effectors.name
+				Effector eff = getEffectors().get(name)
 				if (eff) {
 					args = prepareArgsForEffector(eff, args);
 					Task currentTask = ExecutionContext.getCurrentTask();
