@@ -79,7 +79,10 @@ public class JmxSensorAdapter implements SensorAdapter {
 		//FIXME ENGR-1458  if there is already a value, we shouldn't clobber it
 //        entity.updateAttribute(sensor, null)
     }
-    
+
+	//TODO replace above and below by something e.g. addSensor(AttributeSensor, JmxValueProvider(objectName, ...))
+	
+	//FIXME -- objectName not used!!!    
     public <T> void addSensor(AttributeSensor<T> sensor, String objectName) {
         sensors.put(sensor.getName(), sensor);
     }
