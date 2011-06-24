@@ -7,7 +7,6 @@ import brooklyn.entity.Entity
 import brooklyn.entity.Group
 import brooklyn.location.Location
 import brooklyn.util.internal.EntityStartUtils
-import brooklyn.util.internal.OverpaasDsl
 
 /**
  * Fabric is a {@link Tier} of entities over multiple locations.
