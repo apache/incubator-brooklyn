@@ -24,6 +24,6 @@ public interface EntityClass extends Serializable {
     
     public Collection<Sensor<?>> getSensors();
     
-    public Collection<Effector<?, ?>> getEffectors();
+    public Collection<Effector<?>> getEffectors();
 
 }

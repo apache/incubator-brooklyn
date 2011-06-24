@@ -11,7 +11,7 @@ import java.util.Map;
  * <p>
  * TODO ENGR-1560 javadoc
  */
-public interface Effector<E,T> extends Serializable {
+public interface Effector<T> extends Serializable {
     /**
      * TODO javadoc
      */
@@ -40,5 +40,5 @@ public interface Effector<E,T> extends Serializable {
     /**
      * TODO javadoc
      */
-	T call(E entity, Map parameters);
+	T call(Entity entity, Map parameters);
 }

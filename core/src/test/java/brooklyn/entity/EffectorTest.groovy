@@ -29,7 +29,7 @@ class EffectorTest {
 //	}
 	
 	public static interface CanSayHi {
-		static Effector<CanSayHi,String> SAY_HI_1 = new InterfaceEffector<CanSayHi,String>("sayHi1", String.class, [
+		static Effector<String> SAY_HI_1 = new InterfaceEffector<CanSayHi,String>("sayHi1", String.class, [
 					[ "name", String.class, "person to say hi to" ] as BasicParameterType<String>,
 					[ "greeting", String.class, "what to say as greeting", "hello" ] as BasicParameterType<String>
 				], "says hello to a person") {
@@ -38,7 +38,7 @@ class EffectorTest {
             }
 		};
 
-		static Effector<CanSayHi,String> SAY_HI_2 = new EffectorInferredFromAnnotatedMethod<CanSayHi,String>(CanSayHi.class, "sayHi2", "says hello");
+		static Effector<String> SAY_HI_2 = new EffectorInferredFromAnnotatedMethod<String>(CanSayHi.class, "sayHi2", "says hello");
 
 		public String sayHi1(String name, String greeting);
 		public String sayHi2(

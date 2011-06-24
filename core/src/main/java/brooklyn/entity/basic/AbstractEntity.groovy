@@ -326,11 +326,11 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 		newArgs = newArgs as Object[]
 	}
 	
-	public <E,T> Task<T> invoke(Map parameters=[:], Effector<E,T> eff) {
+	public <T> Task<T> invoke(Map parameters=[:], Effector<T> eff) {
 		invoke(eff, parameters);
 	}
 	//add'l form supplied for when map needs to be made explicit (above supports implicit named args)
-	public <E,T> Task<T> invoke(Effector<E,T> eff, Map parameters) {
+	public <T> Task<T> invoke(Effector<T> eff, Map parameters) {
 		executionContext.submit( { eff.call(this, parameters) }, description: "invocation of effector $eff" )
 	}
 }
