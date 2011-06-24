@@ -40,7 +40,7 @@ public interface Entity extends Serializable {
     String getApplicationId();
     
     @Deprecated
-    Map<String,Object> getAttributes();
+    Map<String, Object> getAttributes();
 
     /**
      * The owner of this entity, null if no owner.

@@ -11,12 +11,12 @@ public class ExplicitEntityClass {
     
     private String name;
     private Collection<Sensor<?>> sensors;
-    private Collection<Effector<?>> effectors;
+    private Collection<Effector<?, ?>> effectors;
 
     @SuppressWarnings("unused")
     private ExplicitEntityClass() { /* for gson */ }
 
-    ExplicitEntityClass(String name, Collection<Sensor<?>> sensors, Collection<Effector<?>> effectors) {
+    ExplicitEntityClass(String name, Collection<Sensor<?>> sensors, Collection<Effector<?, ?>> effectors) {
         this.name = name;
         this.sensors = sensors;
         this.effectors = effectors;
@@ -30,7 +30,7 @@ public class ExplicitEntityClass {
         return sensors;
     }
     
-    public Collection<Effector<?>> getEffectors() {
+    public Collection<Effector<?, ?>> getEffectors() {
         return effectors;
     }
 

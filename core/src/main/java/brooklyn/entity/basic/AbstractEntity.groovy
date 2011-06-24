@@ -165,7 +165,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
      * @deprecated this will not be exposed, final API TBD
      */
     @Deprecated
-    public Map<String, ?> getAttributeMap() {
+    public Map<String, Object> getAttributes() {
         return attributesInternal.asMap(); // .asImmutable(); // FIXME this does not make the children immutable
     }
     
