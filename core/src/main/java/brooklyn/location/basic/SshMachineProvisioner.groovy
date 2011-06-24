@@ -14,19 +14,19 @@ public class SshMachineProvisioner {
         inUse = new ArrayList();
     }
 
-    public SshMachineLocation obtain() {
-        SshMachineLocation machine;
+    public SshMachine obtain() {
+        SshMachine machine;
         synchronized (lock) {
             if (available.empty)
                 return null;
             InetAddress host = available.pop();
-            machine = new SshMachineLocation(host);
+            machine = new SshMachine(host);
             inUse.add(machine);
         }
         return machine;
     }
 
-    public void release(SshMachineLocation machine) {
+    public void release(SshMachine machine) {
         synchronized (lock) {
             inUse.remove(machine.host);
             available.add(machine.host);

@@ -11,7 +11,7 @@ class SshMachineProvisionerTest {
     @Test
     public void canGetAMachine() {
         SshMachineProvisioner provisioner = new SshMachineProvisioner([Inet4Address.getByAddress((byte[])[192,168,144,200])])
-        SshMachineLocation machine = provisioner.obtain()
+        SshMachine machine = provisioner.obtain()
         assertNotNull machine
         assertEquals '192.168.144.200', machine.host.hostAddress
     }
@@ -19,15 +19,15 @@ class SshMachineProvisionerTest {
     @Test
     public void returnsNullIfNoMachinesAvailable() {
         SshMachineProvisioner provisioner = new SshMachineProvisioner([Inet4Address.getByAddress((byte[])[192,168,144,200])])
-        SshMachineLocation machine1 = provisioner.obtain()
-        SshMachineLocation machine2 = provisioner.obtain()
+        SshMachine machine1 = provisioner.obtain()
+        SshMachine machine2 = provisioner.obtain()
         assertNull machine2
     }
 
     @Test
     public void canGetAMachineReturnItAndObtainItAgain() {
         SshMachineProvisioner provisioner = new SshMachineProvisioner([Inet4Address.getByAddress((byte[])[192,168,144,200])])
-        SshMachineLocation machine = provisioner.obtain()
+        SshMachine machine = provisioner.obtain()
         provisioner.release(machine)
         machine = provisioner.obtain()
         assertNotNull machine

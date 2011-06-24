@@ -14,22 +14,36 @@ public class SshMachineLocation implements Location {
     static final Logger log = LoggerFactory.getLogger(SshMachineLocation.class)
  
 	String name
-	String user = null
-	InetAddress host
- 
+
 	Map attributes=[:]
 
+    SshMachine machine;
+
     public SshMachineLocation(InetAddress host) {
-        this.host = host
+        machine = new SshMachine(host)
     }
 
     public SshMachineLocation(Map attributes, InetAddress host) {
         name = attributes.name
         attributes.remove 'name'
-        user = attributes.user
+        String user = attributes.user
         attributes.remove 'user'
         this.attributes = attributes
-        this.host = host
+
+        machine = new SshMachine(host, user)
+    }
+
+    public int run(Map props=[:], String command) {
+        return machine.run(props, command)
+    }
+
+    public int copyTo(File src, String destination) {
+        return machine.copyTo(src, destination)
+    }
+
+    @Override
+    public String toString() {
+        return machine.toString()
     }
 
 	/**
@@ -39,30 +53,4 @@ public class SshMachineLocation implements Location {
 	 */
 	public Map getAttributes() { attributes }
 
-	/** convenience for running a script, returning the result code */
-	public int run(Map props=[:], String command) {
-		assert host : "host must be specified for $this"
-		
-		if (!user) user=System.getProperty "user.name"
-		def t = new SshJschTool(user:user, host:host.hostName);
-		t.connect()
-		int result = t.execShell props, command
-		t.disconnect()
-		result
-		
-//		ExecUtils.execBlocking "ssh", (user?user+"@":"")+host, command
-	}
-    
-    public int copyTo(File src, String destination) {
-        def conn = new SshJschTool(user:user, host:host)
-        conn.connect()
-        int result = conn.copyToServer [:], src, destination
-        conn.disconnect()
-        result
-    }
-
-    @Override
-    public String toString() {
-        return name?name+"["+host+"]":host;
-    }
 }
