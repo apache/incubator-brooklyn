@@ -6,12 +6,13 @@ import org.junit.Test
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.entity.basic.AbstractEffector;
+import brooklyn.entity.basic.AbstractEffector
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.BasicParameterType
 import brooklyn.entity.basic.DefaultValue
 import brooklyn.entity.basic.Description
 import brooklyn.entity.basic.EffectorInferredFromAnnotatedMethod
+import brooklyn.entity.basic.EffectorWithExplicitImplementation;
 import brooklyn.entity.basic.NamedParameter
 import brooklyn.management.ManagementContext
 import brooklyn.management.internal.LocalManagementContext
@@ -29,11 +30,11 @@ class EffectorTest {
 //	}
 	
 	public static interface CanSayHi {
-		static Effector<String> SAY_HI_1 = new AbstractEffector<CanSayHi,String>("sayHi1", String.class, [
+		static Effector<String> SAY_HI_1 = new EffectorWithExplicitImplementation<CanSayHi,String>("sayHi1", String.class, [
 					[ "name", String.class, "person to say hi to" ] as BasicParameterType<String>,
 					[ "greeting", String.class, "what to say as greeting", "hello" ] as BasicParameterType<String>
 				], "says hello to a person") {
-			public String call(CanSayHi e, Map m) {
+			public String invokeEffector(CanSayHi e, Map m) {
                 e.sayHi1(m)
             }
 		};
@@ -119,9 +120,6 @@ class EffectorTest {
 		assertEquals("hello Bob", e.SAY_HI_2.call(e, [name:"Bob"]) )
 		assertEquals("hello Bob", e.invoke(e.SAY_HI_2, [name:"Bob"]).get() );
 	}
-
-	//TODO test spread invocation:
-//	[e1,e2,e3]*.invoke(SAY_HI_1, name: "Bob")
 
 	//TODO test edge/error conditions
 	//(missing parameters, wrong number of params, etc)	

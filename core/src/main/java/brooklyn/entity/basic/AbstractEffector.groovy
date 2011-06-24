@@ -27,7 +27,7 @@ import brooklyn.util.internal.LanguageUtils
  * @param <EntityType> type of Entity that is supported (Entity for all Entities, or a trait...)
  * @param <T> return type of effector
  */
-public abstract class AbstractEffector<EntityType,T> implements Effector<T> {
+public abstract class AbstractEffector<T> implements Effector<T> {
     private static final long serialVersionUID = 1832435915652457843L;
   
     final private String name;
@@ -65,10 +65,10 @@ public abstract class AbstractEffector<EntityType,T> implements Effector<T> {
         return description;
     }
     
-	public abstract T call(EntityType entity, Map parameters);
+	public abstract T call(Entity entity, Map parameters);
 
 	/** convenience for named-parameter syntax (needs map in first argument) */
-	public T call(Map parameters=[:], EntityType entity) { call(entity, parameters); }
+	public T call(Map parameters=[:], Entity entity) { call(entity, parameters); }
 
 	@Override
 	public String toString() {
@@ -159,7 +159,7 @@ public @interface Description {
 /** concrete class for providing an Effector implementation that gets its information from annotations on a method;
  * see EffectorTest for usage example
  */
-public class EffectorInferredFromAnnotatedMethod<T> extends AbstractEffector<Entity,T> {
+public class EffectorInferredFromAnnotatedMethod<T> extends AbstractEffector<T> {
 	protected static class AnnotationsOnMethod {
 		Class<?> clazz;
 		String name;
@@ -201,4 +201,12 @@ public class EffectorInferredFromAnnotatedMethod<T> extends AbstractEffector<Ent
         entity."$name"(parameters);
     }
 	
+}
+
+@InheritConstructors
+public abstract class EffectorWithExplicitImplementation<EntityTrait,T> extends AbstractEffector<T> {
+	public T call(Entity entity, Map parameters) {
+		invokeEffector( (EntityTrait)entity, parameters );
+	}	
+	public abstract T invokeEffector(EntityTrait entity, Map parameters);
 }
