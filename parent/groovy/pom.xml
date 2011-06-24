@@ -18,7 +18,7 @@
 		<version>0.0.1-SNAPSHOT</version>
 		<relativePath>../root/pom.xml</relativePath>
 	</parent>
-	
+
 	<build>
 		<plugins>
 			<plugin>
@@ -26,9 +26,22 @@
 				<artifactId>maven-bundle-plugin</artifactId>
 			</plugin>
 		</plugins>
-		
-	<pluginManagement>
-		<plugins>
+
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<artifactId>maven-jar-plugin</artifactId>
+					<executions>
+						<execution>
+							<goals>
+								<goal>test-jar</goal>
+							</goals>
+							<configuration>
+								<forceCreation>true</forceCreation>
+							</configuration>
+						</execution>
+					</executions>
+				</plugin>
 				<plugin>
 					<artifactId>maven-compiler-plugin</artifactId>
 					<version>2.3.2</version>
@@ -52,19 +65,16 @@
 					</dependencies>
 				</plugin>
 
-		  <plugin>
-			<artifactId>maven-eclipse-plugin</artifactId>
-			<configuration>
-				<additionalProjectnatures>
-					<projectnature>org.eclipse.jdt.groovy.core.groovyNature</projectnature>
-					<projectnature>org.maven.ide.eclipse.maven2Nature</projectnature>
-				</additionalProjectnatures>
-			</configuration>
-		  </plugin>
-				
-		</plugins>
-	</pluginManagement>
-		
+				<plugin>
+					<artifactId>maven-eclipse-plugin</artifactId>
+					<configuration>
+						<additionalProjectnatures>
+							<projectnature>org.eclipse.jdt.groovy.core.groovyNature</projectnature>
+							<projectnature>org.maven.ide.eclipse.maven2Nature</projectnature>
+						</additionalProjectnatures>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 	</build>
-
 </project>
