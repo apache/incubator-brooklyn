@@ -40,7 +40,6 @@ public class LanguageUtils {
 		return fbos.toByteArray();
 	}
 	
-	@SuppressWarnings("unchecked")
 	public static <T> T deserialize(byte[] bytes, ClassLoader classLoader) {
 		if (bytes == null) return null;
 		

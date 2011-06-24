@@ -2,43 +2,36 @@ package brooklyn.entity;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.Map;
+
+import javax.management.MBeanOperationInfo;
 
 /**
  * An operation of some kind, carried out by an {@link Entity}.
  *
  * Modeled on concepts in the JMX {@link MBeanOperationInfo} class.
  * <p>
- * TODO ENGR-1560 javadoc
  */
 public interface Effector<T> extends Serializable {
     /**
-     * TODO javadoc
+     * human-friendly name of the effector (although frequently this uses java method naming convention)
      */
 	String getName();
 
-    /**
-     * TODO javadoc
-     */
     Class<T> getReturnType();
 
     /**
-     * TODO javadoc
+     * canonical name of return type (in case return type does not resolve after serialization)
      */
     String getReturnTypeName();
 
     /**
-     * TODO javadoc
+     * parameters expected by method, including name and type, optional description and default value
      */
 	List<ParameterType<?>> getParameters();
 
     /**
-     * TODO javadoc
+     * optional description for the effector
      */
     String getDescription();
 
-    /**
-     * TODO javadoc
-     */
-	T call(Entity entity, Map parameters);
 }

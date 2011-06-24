@@ -59,7 +59,7 @@ public class BasicExecutionManager implements ExecutionManager {
 		}
 		result
 	}
-	public Set<Task> getTaskTags() { synchronized (tasksByTag) { return new LinkedHashSet(tasksByTag.keySet()) }}
+	public Set<Object> getTaskTags() { synchronized (tasksByTag) { return new LinkedHashSet(tasksByTag.keySet()) }}
 	public Set<Task> getAllTasks() { synchronized (knownTasks) { return new LinkedHashSet(knownTasks) }}
 	
 	public Task submit(Map flags=[:], Runnable r) { submit flags, new BasicTask(r) }

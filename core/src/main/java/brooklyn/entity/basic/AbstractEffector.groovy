@@ -1,5 +1,6 @@
 package brooklyn.entity.basic;
 
+import groovy.transform.EqualsAndHashCode;
 import groovy.transform.InheritConstructors;
 
 import java.lang.annotation.Annotation
@@ -13,14 +14,22 @@ import java.util.Collections
 import java.util.List
 import java.util.concurrent.Callable
 
+import com.google.common.base.Objects;
+
 import brooklyn.entity.Effector
 import brooklyn.entity.Entity
 import brooklyn.entity.ParameterType
 import brooklyn.util.internal.LanguageUtils
 
-public abstract class AbstractEffector<T> implements Effector<T> {
+/** abstract effector implementation whose concrete subclass (often anonymous) will supply
+ * the "call(EntityType, Map parameters)" implementation (and the fields in the constructor) 
+ *
+ * @param <EntityType> type of Entity that is supported (Entity for all Entities, or a trait...)
+ * @param <T> return type of effector
+ */
+public abstract class AbstractEffector<EntityType,T> implements Effector<T> {
     private static final long serialVersionUID = 1832435915652457843L;
-    
+  
     final private String name;
     private Class<T> returnType;
     private List<ParameterType<?>> parameters;
@@ -56,10 +65,10 @@ public abstract class AbstractEffector<T> implements Effector<T> {
         return description;
     }
     
-	public abstract T call(Entity entity, Map parameters);
+	public abstract T call(EntityType entity, Map parameters);
 
 	/** convenience for named-parameter syntax (needs map in first argument) */
-	public T call(Map parameters=[:], Entity entity) { call(entity, parameters); }
+	public T call(Map parameters=[:], EntityType entity) { call(entity, parameters); }
 
 	@Override
 	public String toString() {
@@ -68,66 +77,89 @@ public abstract class AbstractEffector<T> implements Effector<T> {
 	
 	@Override
 	public int hashCode() {
-        // ENGR-1560 use Objects.hashCode(a, b, c, d)
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((description == null) ? 0 : description.hashCode());
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
-		result = prime * result + ((parameters == null) ? 0 : parameters.hashCode());
-		result = prime * result + ((returnType == null) ? 0 : returnType.hashCode());
-		return result;
+		Objects.hashCode(description, name, parameters, returnType);
 	}
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		AbstractEffector other = (AbstractEffector) obj;
-		if (description == null) {
-			if (other.description != null)
-				return false;
-		} else if (!description.equals(other.description))
-			return false;
-		if (name == null) {
-			if (other.name != null)
-				return false;
-		} else if (!name.equals(other.name))
-			return false;
-		if (parameters == null) {
-			if (other.parameters != null)
-				return false;
-		} else if (!parameters.equals(other.parameters))
-			return false;
-		if (returnType == null) {
-			if (other.returnType != null)
-				return false;
-		} else if (!returnType.equals(other.returnType))
-			return false;
-		return true;
+		LanguageUtils.equals(this, obj, ["description", "name", "parameters", "returnType"]);
 	}
+	
+	/** takes an array of arguments, which typically contain a map in the first position (and possibly nothing else),
+	* and returns an array of arguments suitable for use by Effector according to the ParameterTypes it exposes */
+   public static Object prepareArgsForEffector(Effector eff, Object args) {
+	   //attempt to coerce unexpected types
+	   if (args==null) args = [:]
+	   if (!args.getClass().isArray()) {
+		   if (args instanceof Collection) args = args as Object[]
+		   else args = new Object[1] { args }
+	   }
+	   
+	   //if args starts with a map, assume it contains the named arguments
+	   //(but only use it when we have insufficient supplied arguments)
+	   List l = new ArrayList()
+	   l.addAll(args)
+	   Map m = (args[0] instanceof Map ? new LinkedHashMap(l.remove(0)) : null)
+	   def newArgs = []
+	   int newArgsNeeded = eff.getParameters().size()
+	   boolean mapUsed = false;
+	   eff.getParameters().eachWithIndex { ParameterType<?> it, int index ->
+		   if (l.size()>=newArgsNeeded)
+			   //all supplied (unnamed) arguments must be used; ignore map
+			   newArgs << l.remove(0)
+		   else if (m && it.name && m.containsKey(it.name))
+			   //some arguments were not supplied, and this one is in the map
+			   newArgs << m.remove(it.name)
+		   else if (index==0 && Map.class.isAssignableFrom(it.getParameterClass())) {
+			   //if first arg is a map it takes the supplied map
+			   newArgs << m
+			   mapUsed = true
+		   } else if (!l.isEmpty() && it.getParameterClass().isInstance(l[0]))
+			   //if there are parameters supplied, and type is correct, they get applied before default values
+			   //(this is akin to groovy)
+			   newArgs << l.remove(0)
+		   else if (it in BasicParameterType && it.hasDefaultValue())
+			   //finally, default values are used to make up for missing parameters
+			   newArgs << it.defaultValue
+		   else
+			   throw new IllegalArgumentException("Invalid arguments (count mismatch) for effector $eff: "+args);
+			   
+		   newArgsNeeded--
+	   }
+	   if (newArgsNeeded>0)
+		   throw new IllegalArgumentException("Invalid arguments (missing $newArgsNeeded) for effector $eff: "+args);
+	   if (!l.isEmpty())
+		   throw new IllegalArgumentException("Invalid arguments (${l.size()} extra) for effector $eff: "+args);
+	   if (m && !mapUsed)
+		   throw new IllegalArgumentException("Invalid arguments (${m.size()} extra named) for effector $eff: "+args);
+	   newArgs = newArgs as Object[]
+   }
+
 }
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.PARAMETER)
+/** provides a runtime name of a paramter, esp for effectors; typically matches the name in the code */
 public @interface NamedParameter {
 	String value();
 }
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.PARAMETER)
+/** provides runtime access to the name of a paramter, esp for effectors; typically matches any default value supplied in the code */
 public @interface DefaultValue {
 	String value();
 }
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.PARAMETER)
+/** provides runtime access to the description of a paramter, esp for effectors */
 public @interface Description {
 	String value();
 }
 
-public class EffectorInferredFromAnnotatedMethod<T> extends AbstractEffector<T> {
+/** concrete class for providing an Effector implementation that gets its information from annotations on a method;
+ * see EffectorTest for usage example
+ */
+public class EffectorInferredFromAnnotatedMethod<T> extends AbstractEffector<Entity,T> {
 	protected static class AnnotationsOnMethod {
 		Class<?> clazz;
 		String name;
@@ -168,16 +200,5 @@ public class EffectorInferredFromAnnotatedMethod<T> extends AbstractEffector<T> 
     public T call(Entity entity, Map parameters) {
         entity."$name"(parameters);
     }
-}
-
-/**
- * TODO attempting to add an interface type parameter
- */
-@InheritConstructors
-public abstract class InterfaceEffector<I, T> extends AbstractEffector<T> {
-    public abstract T call(I entity, Map parameters);
-
-    public T call(Entity entity, Map parameters) {
-        call((I) entity, parameters);
-    }
+	
 }

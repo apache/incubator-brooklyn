@@ -1,40 +1,39 @@
 package brooklyn.entity.basic;
 
-import groovy.xml.Entity;
+import groovy.transform.EqualsAndHashCode;
 
 import java.util.Collection;
 
 import brooklyn.entity.Effector;
-import brooklyn.entity.EntityClass;
 import brooklyn.event.Sensor;
 
-public class BasicEntityClass implements EntityClass {
+@EqualsAndHashCode(includeFields=true)
+public class BasicEntityClass {
+    private static final long serialVersionUID = 4670930188951106009L;
+    
+    private String name;
+    private Collection<Sensor<?>> sensors;
+    private Collection<Effector<?>> effectors;
 
-	private static final long serialVersionUID = -5097081646153721468L;
-	
-	private Class<? extends Entity> javaClass;
+    @SuppressWarnings("unused")
+    private BasicEntityClass() { /* for gson */ }
 
-	public BasicEntityClass(Class<? extends Entity> javaClass) {
-		this.javaClass = javaClass;
-	}
-	
-	@Override
-	public String getName() {
-		return javaClass.getCanonicalName();
-	}
+    BasicEntityClass(String name, Collection<Sensor<?>> sensors, Collection<Effector<?>> effectors) {
+        this.name = name;
+        this.sensors = sensors;
+        this.effectors = effectors;
+    }
 
-	//TODO find the values below by introspecting on the class (could cache to a transient?)
-	
-	@Override
-	public Collection<Sensor<?>> getSensors() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Collection<Effector<?>> getEffectors() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    public String getName() {
+        return name;
+    }
+    
+    public Collection<Sensor<?>> getSensors() {
+        return sensors;
+    }
+    
+    public Collection<Effector<?>> getEffectors() {
+        return effectors;
+    }
 
 }

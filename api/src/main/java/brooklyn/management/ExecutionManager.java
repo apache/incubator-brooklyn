@@ -28,14 +28,21 @@ public interface ExecutionManager {
 	public Set<Task> getTasksWithTag(Object tag);
 	public Set<Task> getTasksWithAnyTag(Iterable tags);
 	public Set<Task> getTasksWithAllTags(Iterable tags);
-	public Set<Task> getTaskTags();
+	/** returns all tags known to this manager (immutable) */
+	public Set<Object> getTaskTags();
+	/** returns all tasks known to this manager (immutable) */
 	public Set<Task> getAllTasks();
 
+	/** see {@link #submit(Map, Task)} */
 	public Task submit(Runnable r);
+	/** see {@link #submit(Map, Task)} */
 	public Task submit(Callable r);
+	/** see {@link #submit(Map, Task)} */
 	public Task submit(Task task);
 	
+	/** see {@link #submit(Map, Task)} */
 	public Task submit(Map flags, Runnable r);
+	/** see {@link #submit(Map, Task)} */
 	public Task submit(Map flags, Callable r);
 
 	/**
