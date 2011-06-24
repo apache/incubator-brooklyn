@@ -58,14 +58,8 @@ public class JBossNode extends AbstractEntity implements Startable {
         EntityStartUtils.startEntity(startAttributes, this);
 		log.debug "started... jmxHost is {} and jmxPort is {}", this.attributes['jmxHost'], this.attributes['jmxPort']
         
-        if (this.attributes['jmxHost'] && this.attributes['jmxPort']) {
-            
-            jmxAdapter = new JmxSensorAdapter(this.attributes.jmxHost, this.attributes.jmxPort)
-
-            if (!(jmxAdapter.connect(2*60*1000))) {
-				log.error "FAILED to connect JMX to {}", this
-                throw new IllegalStateException("failed to completely start $this: JMX not found at $jmxHost:$jmxPort after 60s")
-            }
+		if (this.attributes['jmxHost'] && this.attributes['jmxPort']) {
+			jmxAdapter = new JmxSensorAdapter(this, 60*1000)
         }
     }
 
