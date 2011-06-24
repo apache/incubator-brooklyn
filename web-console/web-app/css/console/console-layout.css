@@ -65,3 +65,9 @@ div#demo1{
 	overflow:auto;
 	height:100%;
 }
+
+h1#brooklyn-header{
+	height:100%;
+	width:250px;
+	background-image:url("/brooklyn-web-console/images/brooklyn/brooklynbannerone.png");
+}
