@@ -98,7 +98,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         // initialize the effectors defined on the class
 		// (dynamic effectors could still be added; see #getEffectors
 		Map<String,Effector> effectorsT = [:]
-		getClass().getFields().each { Field f ->
+		for (Field f in getClass().getFields()) {
 			if (Effector.class.isAssignableFrom(f.getType())) {
 				Effector eff = f.get(this)
 				def overwritten = effectorsT.put(eff.name, eff)
