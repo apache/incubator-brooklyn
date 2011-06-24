@@ -10,7 +10,7 @@ import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.AttributeSensor
 import brooklyn.event.Sensor
 import brooklyn.event.basic.LogSensor
-import brooklyn.event.basic.SensorEvent
+import brooklyn.event.basic.BasicSensorEvent
 
 /**
  * A {@link SensorAdapter} that observes changes to the attributes in a {@link Map} and registers events

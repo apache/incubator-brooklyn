@@ -4,8 +4,10 @@ import groovy.transform.InheritConstructors
 
 import java.util.List
 
+import brooklyn.entity.Entity
 import brooklyn.event.AttributeSensor
 import brooklyn.event.Sensor
+import brooklyn.event.SensorEvent
 
 import com.google.common.base.Splitter
 import com.google.common.base.Throwables
@@ -56,6 +58,11 @@ public class BasicSensor<T> implements Sensor<T> {
  
     /** @see Sensor#getDescription() */
     public String getDescription() { return description }
+    
+    /** @see Sensor#newEvent(Entity, Object) */
+    public SensorEvent<T> newEvent(Entity producer, T value) {
+        return new BasicSensorEvent<T>(this, producer, value)
+    }
 }
 
 /**
@@ -72,22 +79,4 @@ public class BasicAttributeSensor<T> extends BasicSensor<T> implements Attribute
 @InheritConstructors
 public class LogSensor<T> extends BasicSensor<T> {
     private static final long serialVersionUID = 4713993465669948212L;
-}
-
-/**
- * A {@link Sensor} describing a property retrieved via JMX. 
- */
-@InheritConstructors
-public class JmxAttributeSensor<T> extends BasicAttributeSensor<T> {
-    private static final long serialVersionUID = -1;
-    
-    public final String objectName
-    public final String attribute
-
-    public JmxAttributeSensor(Class<T> type, String name, String description, String objectName, String attribute) {
-        super(type, name, description);
-        
-        this.objectName = objectName
-        this.attribute = attribute
-    }
 }

@@ -9,10 +9,10 @@ import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
 
 import brooklyn.entity.Entity
-import brooklyn.event.Event
+import brooklyn.event.SensorEvent
 import brooklyn.event.EventListener
 import brooklyn.event.basic.EventFilters
-import brooklyn.event.basic.SensorEvent
+import brooklyn.event.basic.BasicSensorEvent
 import brooklyn.management.SubscriptionManager
 
 import com.google.common.base.Objects
@@ -24,10 +24,10 @@ import com.google.common.base.Predicate
 public class LocalSubscriptionManager implements SubscriptionManager {
     private static class Subscription {
         public Predicate<Entity> entities;
-        public Predicate<SensorEvent<?>> filter;
+        public Predicate<BasicSensorEvent<?>> filter;
         public EventListener<?> listener;
 
-        public Subscription(Predicate<Entity> entities, Predicate<SensorEvent<?>> filter, EventListener<?> listener) {
+        public Subscription(Predicate<Entity> entities, Predicate<BasicSensorEvent<?>> filter, EventListener<?> listener) {
             this.entities = entities;
             this.filter = filter;
             this.listener = listener;
@@ -48,7 +48,7 @@ public class LocalSubscriptionManager implements SubscriptionManager {
     AtomicLong subscriptionId = new AtomicLong(0L);
     ConcurrentMap<Long, Subscription> allSubscriptions = new ConcurrentHashMap<Long, Subscription>();
     
-    public <T> void fire(Event<T> event) {
+    public <T> void publish(SensorEvent<T> event) {
         allSubscriptions.each { key, Subscription s -> if (s.filter.apply(event) && (!s.entities || s.entities.apply(event))) s.listener.onEvent(event) }
     }
 

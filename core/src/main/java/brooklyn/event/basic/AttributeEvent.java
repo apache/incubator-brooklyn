@@ -1,9 +1,9 @@
 package brooklyn.event.basic;
 
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.Event;
+import brooklyn.event.SensorEvent;
 
-public interface AttributeEvent<T> extends Event<T> {
-    /** @see Event#getSensor() */
+public interface AttributeEvent<T> extends SensorEvent<T> {
+    /** @see SensorEvent#getSensor() */
     public AttributeSensor<T> getSensor();
 }
