@@ -79,9 +79,12 @@ public class JmxSensorAdapter implements  SensorAdapter {
         log.debug "adding sensor {} for {} - {}", sensor.name, provider.objectName, provider.attribute
         sensors[sensor.getName()] = sensor
         providers[sensor.getName()] = provider
-//        provider.connect(sensor, this)
         
-        if (entity.getAttribute(sensor) == null) entity.updateAttribute(sensor, null)
+        try {
+	        entity.getAttribute(sensor)
+        } catch (NullPointerException npe) {
+            entity.updateAttribute(sensor, null)
+        }
     }
 
 	public boolean isConnected() {
