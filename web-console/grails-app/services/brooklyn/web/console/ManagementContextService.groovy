@@ -13,7 +13,7 @@ class ManagementContextService implements ManagementContext{
     static transactional = false
 
     Collection<Application> getApplications() {
-        return Collections.singleton(application);
+        return Collections.singletonList(application);
     }
 
     Entity getEntity(String id) {
