@@ -29,7 +29,6 @@ class JBossNodeTest {
 		jb.start(location: loc)
 		assert (new JBoss6SshSetup(jb)).isRunning(loc)
         jb.shutdown()
-		Thread.sleep 5000
     }
 	
 	// Failing @Test

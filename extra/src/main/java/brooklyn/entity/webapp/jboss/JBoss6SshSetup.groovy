@@ -9,6 +9,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     String saveAs  = "jboss-as-distribution-$version"
     String installDir = "$installsBaseDir/jboss-$version"
     String runDir
+	int jBossPortIncrement = 0
 
     public JBoss6SshSetup(JBossNode entity) {
         super(entity)
@@ -30,27 +31,31 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         // Notes:
         // LAUNCH_JBOSS_IN_BACKGROUND relays OS signals sent to the run.sh process to the JBoss process.
         // run.sh must be backgrounded otherwise the script will never return.
-		// Assume one instance of JBoss per machine (why would you run two?), 
-		// this setup uses the default ports..
-
-		// Configuring ports:
-		// http://community.jboss.org/wiki/ConfiguringMultipleJBossInstancesOnOneMachine
-		// http://community.jboss.org/wiki/ConfigurePorts
-		// http://community.jboss.org/wiki/AS5ServiceBindingManager
-		
+		/* Configuring ports:
+		   http://community.jboss.org/wiki/ConfiguringMultipleJBossInstancesOnOneMachine
+		   http://community.jboss.org/wiki/ConfigurePorts
+	       http://community.jboss.org/wiki/AS5ServiceBindingManager
+	       .. changing port numbers with sed is pretty brittle.
+		*/
+		def portGroupName = "ports-brooklyn"
 """
-mkdir -p ${runDir}/server
-cd ${runDir}/server
-export JBOSS_HOME=${installDir}
-cp -r ${installDir}/server/default default
-export LAUNCH_JBOSS_IN_BACKGROUND=1
-export JAVA_OPTS=""" + "\"" + toJavaDefinesString(getJvmStartupProperties()) + """\"
-JAVA_OPTS="\$JAVA_OPTS -Djboss.platform.mbeanserver"
-JAVA_OPTS="\$JAVA_OPTS -Djavax.management.builder.initial=org.jboss.system.server.jmx.MBeanServerBuilderImpl"
-JAVA_OPTS="\$JAVA_OPTS -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
-JAVA_OPTS="\$JAVA_OPTS -Dorg.jboss.logging.Logger.pluginClass=org.jboss.logging.logmanager.LoggerPluginImpl"
-export JBOSS_CLASSPATH="${installDir}/lib/jboss-logmanager.jar"
-${installDir}/bin/run.sh -Djboss.server.base.dir=${runDir}/server -Djboss.server.base.url=file://${runDir}/server -c default &
+mkdir -p $runDir/server && \\
+cd $runDir/server && \\
+export JBOSS_HOME=$installDir && \\
+cp -r $installDir/server/default default && \\
+cd $installDir/server/default/conf/bindingservice.beans/META-INF/ && \\
+BJB="bindings-jboss-beans.xml" && \\
+cp \$BJB \$BJB.bk && \\
+sed -i '' 's/ports-03/$portGroupName/' \$BJB && \\
+sed -i '' 's/\\<parameter\\>300\\<\\/parameter\\>/\\<parameter\\>$jBossPortIncrement\\<\\/parameter\\>/' \$BJB && \\
+export LAUNCH_JBOSS_IN_BACKGROUND=1 && \\
+export JAVA_OPTS=""" + "\"" + toJavaDefinesString(getJvmStartupProperties()) + "\"" + """ && \\
+JAVA_OPTS="\$JAVA_OPTS -Djboss.platform.mbeanserver" && \\
+JAVA_OPTS="\$JAVA_OPTS -Djavax.management.builder.initial=org.jboss.system.server.jmx.MBeanServerBuilderImpl" && \\
+JAVA_OPTS="\$JAVA_OPTS -Djava.util.logging.manager=org.jboss.logmanager.LogManager" && \\
+JAVA_OPTS="\$JAVA_OPTS -Dorg.jboss.logging.Logger.pluginClass=org.jboss.logging.logmanager.LoggerPluginImpl" && \\
+export JBOSS_CLASSPATH="$installDir/lib/jboss-logmanager.jar" && \\
+$installDir/bin/run.sh -Djboss.service.binding.set=$portGroupName -Djboss.server.base.dir=$runDir/server -Djboss.server.base.url=file://$runDir/server -c default &
 exit
 """
     }
