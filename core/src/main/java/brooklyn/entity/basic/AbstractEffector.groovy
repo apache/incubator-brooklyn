@@ -176,4 +176,8 @@ public class EffectorInferredFromAnnotatedMethod<T> extends AbstractEffector<T> 
 @InheritConstructors
 public abstract class InterfaceEffector<I, T> extends AbstractEffector<T> {
     public abstract T call(I entity, Map parameters);
+
+    public T call(Entity entity, Map parameters) {
+        call((I) entity, parameters);
+    }
 }

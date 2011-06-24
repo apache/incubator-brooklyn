@@ -35,7 +35,7 @@ public class BasicParameterType<T> implements ParameterType<T> {
     public String getDescription() { description }
 
 	public T getDefaultValue() {
-		hasDefaultValue ? defaultValue : null;
+		hasDefaultValue() ? defaultValue : null;
 	}
 
 	public boolean hasDefaultValue() {
