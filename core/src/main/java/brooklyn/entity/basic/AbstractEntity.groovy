@@ -72,6 +72,8 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         //place named-arguments into corresponding fields if they exist, otherwise put into attributes map
         this.attributes << LanguageUtils.setFieldsFromMap(this, flags)
 
+        // ENGR-1560 - why not init effectors here? or allow an "addEffector" like addAttribute?
+
         //set the owner if supplied; accept as argument or field
         if (owner) owner.addOwnedChild(this)
     }
@@ -218,15 +220,16 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 		if (!this.@invokeMethodPrep.get()) {
 			this.@invokeMethodPrep.set(true);
 			
+		    // ENGR-1560 - we do this in prepareArgsForEffector?
 			//args should be an array, warn if we got here wrongly
 			if (args==null) log.warn("$this.$name invoked with incorrect args signature (null)", new Throwable("source of incorrect invocation of $this.$name"))
 			else if (!args.getClass().isArray()) log.warn("$this.$name invoked with incorrect args signature (non-array ${args.getClass()}): "+args, new Throwable("source of incorrect invocation of $this.$name"))
 			
 			try {
-				Effector eff = getEffectors().get(name)
+				Effector eff = effectors.name
 				if (eff) {
 					args = prepareArgsForEffector(eff, args);
-					Task currentTask = executionContext.getCurrentTask();
+					Task currentTask = ExecutionContext.getCurrentTask();
 					if (!currentTask || !currentTask.getTags().contains(this)) {
 						//wrap in a task if we aren't already in a task that is tagged with this entity
 						MetaClass mc = metaClass
@@ -237,6 +240,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 				}
 			} finally { this.@invokeMethodPrep.set(false); }
 		}
+	    // ENGR-1560 - why is this here? Can we be called trwice from same thread witrh diff args/name or not possible?
 		metaClass.invokeMethod(this, name, args);
 		//following is recommended on web site, but above is how groovy actually implements it
 //			def metaMethod = metaClass.getMetaMethod(name, newArgs)
@@ -245,6 +249,9 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 //			metaMethod.invoke(this, newArgs)
 	}
 	private transient volatile Map<String,Effector> effectors = null
+    // ENGR-1560 don't like the idea of initialising (DCL, too ;) on first get
+    // also assumes no dynamic effectors, or not added and removed at different lifeccle stages
+    // prefer same syntax as attributes, maybe
 	public Map<String,Effector> getEffectors() {
 		if (effectors!=null) return effectors
 		synchronized (this) {
@@ -260,6 +267,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 			effectors = effectorsT
 		}
 	}
+    // ENGR-1560 - shouldn't this be in AbstractEffector?
 	/** takes an array of arguments, which typically contain a map in the first position (and possibly nothing else),
 	 * and returns an array of arguments suitable for use by Effector according to the ParameterTypes it exposes */
 	public static Object prepareArgsForEffector(Effector eff, Object args) {

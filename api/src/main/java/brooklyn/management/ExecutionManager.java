@@ -37,15 +37,19 @@ public interface ExecutionManager {
 	
 	public Task submit(Map flags, Runnable r);
 	public Task submit(Map flags, Callable r);
-	/** submits the gives task associated with the given bucket; 
-	 * following optional flags supported.
-	 * <p>
-	 * tag: a single object to be used as a tag for looking up the task
-	 * tags:  a collection of object tags each of which the task should be associated 
-	 * newTaskStartCallback: a runnable (or callable) who will be invoked just before the task starts if it starts as a result of this call
-	 * newTaskEndCallback: a runnable (or callable) who will be invoked when the task completes if it starts as a result of this call
-	 * <p>
-	 * callbacks run in the task's thread, and if the callback is a closure it is passed the Task for convenience
+
+	/**
+	 * Submits the given {@link Task} associated with the given bucket.
+	 *
+	 * The following optional flags supported.
+	 * <ul>
+	 * <li><em>tag</em> - a single object to be used as a tag for looking up the task
+	 * <li><em>tags</em> - a collection of object tags each of which the task should be associated
+	 * <li><em>newTaskStartCallback</em> - a closure that will be invoked just before the task starts if it starts as a result of this call
+	 * <li><em>newTaskEndCallback</em> - a closure that will be invoked when the task completes if it starts as a result of this call
+	 * </ul>
+	 * Callbacks run in the task's thread, and if the callback is a closure it is passed the Task for convenience. The closure can be any of the
+	 * following types; either a {@link Closure}, {@link Runnable} or {@link Callable}.
 	 */
 	public Task submit(Map flags, Task task);
 }

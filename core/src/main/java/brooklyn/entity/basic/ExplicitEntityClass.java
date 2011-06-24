@@ -5,8 +5,8 @@ import java.util.Collection;
 import brooklyn.entity.Effector;
 import brooklyn.event.Sensor;
 
+// ENGR-1560 why not use BasicEntityClass?
 public class ExplicitEntityClass {
-    
     private static final long serialVersionUID = 4670930188951106009L;
     
     private String name;

@@ -35,12 +35,10 @@ public class TomcatNode extends AbstractEntity implements Startable {
     public static final JmxAttributeSensor<Integer> REQUEST_COUNT = [ Integer, "webapp.reqs.total", "Request count", "Catalina:type=GlobalRequestProcessor,name=\"*\"", "requestCount"  ]
     public static final JmxAttributeSensor<Integer> TOTAL_PROCESSING_TIME = [ Integer, "webapp.reqs.processing.time", "Total processing time", "Catalina:type=GlobalRequestProcessor,name=\"*\"", "processingTime" ]
 	
-//	public static final Effector START = new AbstractEffector("start", Void.TYPE, [], "starts an entity");
 //	public static final Effector<Integer> GET_TOTAL_PROCESSING_TIME = [ "retrieves the total processing time", { delegate, arg1, arg2 -> delegate.getTotal(arg1, arg2) } ]
 //	Task<Integer> invocation = entity.invoke(GET_TOTAL_PROCESSING_TIME, ...args)
     
     transient JmxSensorAdapter jmxAdapter;
- 
  
 	static {
 		TomcatNode.metaClass.startInLocation = { SshMachineLocation loc ->
@@ -66,7 +64,9 @@ public class TomcatNode extends AbstractEntity implements Startable {
 
     public TomcatNode(Map properties=[:]) {
         super(properties);
-		
+
+        // addEffector(Startable.START);
+
 		propertiesAdapter.addSensor HTTP_PORT, -1  /*getAttribute(HTTP_PORT)*/
 		propertiesAdapter.addSensor NODE_UP, false
 		propertiesAdapter.addSensor NODE_STATUS, "starting"

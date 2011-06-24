@@ -16,18 +16,18 @@ import brooklyn.entity.Entity
 import brooklyn.entity.ParameterType
 import brooklyn.util.internal.LanguageUtils
 
-public abstract class AbstractEffector<EntityTrait,T> implements Effector<T> {
+public abstract class AbstractEffector<T> implements Effector<T> {
     private static final long serialVersionUID = 1832435915652457843L;
     
     final private String name;
-    private Class<?> returnType;
+    private Class<T> returnType;
     private List<ParameterType<?>> parameters;
     private String description;
 	
 //    @SuppressWarnings("unused")
     private AbstractEffector() { /* for gson */ name = null; }
     
-    public AbstractEffector(String name, Class<?> returnType, List<ParameterType<?>> parameters, String description) {
+    public AbstractEffector(String name, Class<T> returnType, List<ParameterType<?>> parameters, String description) {
         this.name = name;
         this.returnType = returnType;
         this.parameters = Collections.unmodifiableList(parameters);
@@ -41,6 +41,7 @@ public abstract class AbstractEffector<EntityTrait,T> implements Effector<T> {
     public Class<T> getReturnType() {
         return returnType;
     }
+
     public String getReturnTypeName() {
         return returnType.getCanonicalName();
     }
@@ -52,18 +53,18 @@ public abstract class AbstractEffector<EntityTrait,T> implements Effector<T> {
     public String getDescription() {
         return description;
     }
-	
-	public abstract T call(EntityTrait e, Map parameters);
 
 	/** convenience for named-parameter syntax (needs map in first argument) */
-	public T call(Map parameters=[:], EntityTrait e) { call(e, parameters); }
+	public T call(Map parameters=[:], Entity entity) { call(entity, parameters); }
 
+	@Override
 	public String toString() {
 		return name+"["+parameters.collect({it.name}).join(",")+"]";
 	}
 	
 	@Override
 	public int hashCode() {
+        // ENGR-1560 use Objects.hashCode(a, b, c, d)
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((description == null) ? 0 : description.hashCode());
@@ -122,8 +123,7 @@ public @interface Description {
 	String value();
 }
 
-public class EffectorInferredFromAnnotatedMethod<T> extends AbstractEffector<Entity,T> {
-	
+public class EffectorInferredFromAnnotatedMethod<T> extends AbstractEffector<T> {
 	protected static class AnnotationsOnMethod {
 		Class<?> clazz;
 		String name;
@@ -161,7 +161,18 @@ public class EffectorInferredFromAnnotatedMethod<T> extends AbstractEffector<Ent
 		super(anns.name, anns.returnType, anns.parameters, description);
 	}
 	
-	public T call(Entity e, Map parameters) {
-		e."$name"(parameters);
+	public T call(Entity entity, Map parameters) {
+		entity."$name"(parameters);
+	}
+}
+
+/**
+ * TODO attempting to add an interface type parameter
+ */
+public abstract class InterfaceEffector<I, T> extends AbstractEffector<T> {
+    public abstract T call(I entity, Map parameters);
+
+	public T call(Entity entity, Map parameters) {
+	    invoke entity, parameters
 	}
 }
