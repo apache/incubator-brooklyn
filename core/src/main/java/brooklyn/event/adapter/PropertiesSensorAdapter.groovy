@@ -53,7 +53,7 @@ public class PropertiesSensorAdapter implements SensorAdapter {
 				//FIXME ENGR-1458  sensor.newEvent(change.newValue)  does feel better as second arg here 
 				//(in light of comments on EntityLocal; we don't know the sensor type, is it an AttributeChanged?
 				//or, say we one day had ConfigChanged?)
-                entity.raiseEvent sensor, change.newValue
+                entity.emit sensor, change.newValue
             }
         };
     }
@@ -65,7 +65,7 @@ public class PropertiesSensorAdapter implements SensorAdapter {
  
     public <T> T poll(Sensor<T> sensor) {
         def value = entity.attributes[sensorName]
-        entity.raiseEvent sensor, value
+        entity.emit sensor, value
         value
     }
     
@@ -74,7 +74,7 @@ public class PropertiesSensorAdapter implements SensorAdapter {
         def oldValue = entity.properties[sensor.getName()]
         entity.properties[sensor.getName()] = newValue
         entity.updateAttribute sensor, newValue
-        entity.raiseEvent sensor, newValue
+        entity.emit sensor, newValue
         oldValue
     }
     

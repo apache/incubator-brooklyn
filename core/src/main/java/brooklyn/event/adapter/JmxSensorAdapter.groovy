@@ -18,7 +18,6 @@ import javax.management.remote.JMXServiceURL
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.entity.Entity
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.AttributeSensor
 import brooklyn.event.Sensor
@@ -75,11 +74,12 @@ public class JmxSensorAdapter implements  SensorAdapter {
         scheduled[sensor.getName()] = exec.scheduleWithFixedDelay(calculate, 0L, period, TimeUnit.MILLISECONDS)
     }
  
-    public <T> void addSensor(BasicAttributeSensor<T> sensor, JmxValueProvider<T> provider) {
+    public <T> void addSensor(BasicAttributeSensor<T> sensor, String objectName, String attribute) {
+        JmxValueProvider<T> provider = new JmxValueProvider(objectName, attribute)
         log.debug "adding sensor {} for {} - {}", sensor.name, provider.objectName, provider.attribute
         sensors[sensor.getName()] = sensor
         providers[sensor.getName()] = provider
-        provider.connect(sensor, this)
+//        provider.connect(sensor, this)
         
         if (entity.getAttribute(sensor) == null) entity.updateAttribute(sensor, null)
     }
@@ -187,7 +187,7 @@ public class JmxSensorAdapter implements  SensorAdapter {
  
     public <T> T poll(Sensor<T> sensor) {
         def value = entity.attributes[sensorName]
-        entity.raiseEvent sensor, value
+        entity.emit sensor, value
         value
     }
 }

@@ -20,8 +20,6 @@ import brooklyn.event.Sensor
 import brooklyn.event.adapter.PropertiesSensorAdapter
 import brooklyn.event.basic.AttributeMap
 import brooklyn.event.basic.ConfigKey
-import brooklyn.event.basic.SensorEvent
-import brooklyn.event.basic.BasicSensorEvent
 import brooklyn.location.Location
 import brooklyn.management.ManagementContext
 import brooklyn.management.SubscriptionContext

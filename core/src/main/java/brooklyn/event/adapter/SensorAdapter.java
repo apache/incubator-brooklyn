@@ -10,7 +10,7 @@ import brooklyn.event.Sensor;
  * Adapter to convert data from a sensor to events on an entity.
  * 
  * Implementations should provide a constructor that takes an {@link Entity} and any appropriate configuration, and should then convert
- * changes to subscribed {@link Sensor}s into {@link Entity#raiseEvent(Sensor, Object)} calls.
+ * changes to subscribed {@link Sensor}s into {@link Entity#emit(Sensor, Object)} calls.
  */
 public interface SensorAdapter {
 	//FIXME ENGR-1458  remove string support from interface?
