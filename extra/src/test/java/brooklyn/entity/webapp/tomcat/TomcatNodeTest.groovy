@@ -136,7 +136,7 @@ class TomcatNodeTest {
 	public void rejectIfEntityLocationConflictsWithStartParameter() {
 		Application app = new TestApplication()
 		boolean caught = false
-		TomcatNode tc = [ owner:app, location:new SshMachineLocation(name:'tokyo', host:'localhost') ]
+		TomcatNode tc = [ owner:app, location:new SshMachineLocation(name:'tokyo', InetAddress.getByName('localhost')) ]
 		try {
 			tc.start([:], null, new SshMachineLocation(name:'london', host:'localhost'))
 			tc.shutdown()

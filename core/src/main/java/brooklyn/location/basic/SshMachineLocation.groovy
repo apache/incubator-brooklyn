@@ -15,10 +15,23 @@ public class SshMachineLocation implements Location {
  
 	String name
 	String user = null
-	String host
+	InetAddress host
  
 	Map attributes=[:]
-		
+
+    public SshMachineLocation(InetAddress host) {
+        this.host = host
+    }
+
+    public SshMachineLocation(Map attributes, InetAddress host) {
+        name = attributes.name
+        attributes.remove 'name'
+        user = attributes.user
+        attributes.remove 'user'
+        this.attributes = attributes
+        this.host = host
+    }
+
 	/**
 	 * These attributes are separate to the entity hierarchy attributes,
 	 * used by certain types of entities as documented in their setup
@@ -31,7 +44,7 @@ public class SshMachineLocation implements Location {
 		assert host : "host must be specified for $this"
 		
 		if (!user) user=System.getProperty "user.name"
-		def t = new SshJschTool(user:user, host:host);
+		def t = new SshJschTool(user:user, host:host.hostName);
 		t.connect()
 		int result = t.execShell props, command
 		t.disconnect()
