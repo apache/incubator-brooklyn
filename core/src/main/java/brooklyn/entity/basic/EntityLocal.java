@@ -3,6 +3,7 @@ package brooklyn.entity.basic;
 import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
+import brooklyn.event.basic.ConfigKey;
 
 public interface EntityLocal extends Entity {
     /**
@@ -43,6 +44,18 @@ public interface EntityLocal extends Entity {
     //e.g. BasicSensor<T>.newEvent(T val) 
     //     LogSensor.newEvent(LogLevel level, String topic, String message)
     //then it is 
+    /**
+     * Gets the given configuration value for this entity, which may be inherited from 
+     * its owner.
+     */
+    <T> T getConfig(ConfigKey<T> key);
+    
+    /**
+     * Must be called before the entity is started. Also must be called before the entity's 
+     * "owned children" are added, to guarantee that those children inherit the config.
+     */
+    <T> T setConfig(ConfigKey<T> key, T val);
+    
     /**
      * Generates and emits an event (as though produced by this entity).
      * 

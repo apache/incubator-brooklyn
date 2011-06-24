@@ -19,6 +19,7 @@ import brooklyn.event.EventListener
 import brooklyn.event.Sensor
 import brooklyn.event.adapter.PropertiesSensorAdapter
 import brooklyn.event.basic.AttributeMap
+import brooklyn.event.basic.ConfigKey
 import brooklyn.event.basic.SensorEvent
 import brooklyn.location.Location
 import brooklyn.management.ManagementContext
@@ -52,11 +53,15 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     volatile Application application
     Collection<Location> locations = []
     Group owner
-    
+ 
     protected transient volatile ExecutionContext execution
     protected transient volatile SubscriptionContext subscription
     protected transient volatile LocalManagementContext management = LocalManagementContext.getContext()
  
+    /**
+     * The sensor-attribute values of this entity. Updating this map should be done
+     * via getAttribute/updateAttribute; it will automatically emit an attribute-change event.
+     */
     protected final AttributeMap attributesInternal = new AttributeMap(this)
 	
 	//ENGR-1458  interesting to use property change. if it works great. 
@@ -65,16 +70,33 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 	//and do the publishing there...  (please leave this comment here for several months until we know... it's Jun 2011 right now)
     protected final PropertiesSensorAdapter propertiesAdapter = new PropertiesSensorAdapter(this, attributes)
 
+    /*
+     * TODO An alternative implementation approach would be to have:
+     *   setOwner(Entity o, Map<ConfigKey,Object> inheritedConfig=[:])
+     * The idea is that the owner could in theory decide explicitly what in its config
+     * would be shared.
+     * I (Aled) am undecided as to whether that would be better...
+     */
+    /**
+     * Map of configuration information that is defined at start-up time for the entity. These
+     * configuration parameters are shared and made accessible to the "owned children" of this
+     * entity.
+     */
+    protected final Map<ConfigKey,Object> inheritableConfig = [:]
+    
     public AbstractEntity(Map flags=[:]) {
-        def owner = flags.remove('owner')
+        Entity suppliedOwner = flags.remove('owner')
+        Map<ConfigKey,Object> suppliedInheritableConfig = flags.remove('inheritableConfig')
 
+        if (suppliedInheritableConfig) inheritableConfig.putAll(suppliedInheritableConfig)
+        
         //place named-arguments into corresponding fields if they exist, otherwise put into attributes map
         this.attributes << LanguageUtils.setFieldsFromMap(this, flags)
 
         // ENGR-1560 - why not init effectors here? or allow an "addEffector" like addAttribute?
 
         //set the owner if supplied; accept as argument or field
-        if (owner) owner.addOwnedChild(this)
+        if (suppliedOwner) suppliedOwner.addOwnedChild(this)
     }
 
     public void propertyMissing(String name, value) { attributes[name] = value }
@@ -96,6 +118,11 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
      */
     public void setOwner(Group e) {
         owner = e
+        owner.inheritableConfig?.entrySet().each { Map.Entry<ConfigKey,Object> entry ->
+            if (!inheritableConfig.containsKey(entry.getKey())) {
+                inheritableConfig.put(entry.getKey(), entry.getValue())
+            }
+        }
         getApplication()
     }
 
@@ -175,7 +202,17 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         log.info "updating attribute {} as {}", attribute.name, val
         attributesInternal.update(attribute, val);
     }
-    
+
+    @Override
+    public <T> T getConfig(ConfigKey<T> key) {
+        return inheritableConfig.get(key);
+    }
+
+    @Override
+    public <T> T setConfig(ConfigKey<T> key, T val) {
+        return inheritableConfig.put(key, val);
+    }
+
     /** @see Entity#subscribe(Entity, Sensor, EventListener) */
     public <T> long subscribe(Entity producer, Sensor<T> sensor, EventListener<T> listener) {
         subscriptionContext.getSubscriptionManager().subscribe this.id, producer.id, sensor.name, listener
@@ -216,6 +253,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     public Collection<String> toStringFieldsToInclude() { ['id', 'displayName'] }
 
     /** @see EntityLocal#raiseEvent(Sensor, Object) */
+    @Override
     public <T> void raiseEvent(Sensor<T> sensor, T val) {
         subscriptionContext.getSubscriptionManager().fire new SensorEvent<T>(sensor, this, val)
     }
