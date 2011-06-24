@@ -11,34 +11,34 @@ import java.util.Map;
  * <p>
  * TODO ENGR-1560 javadoc
  */
-public interface Effector<T> extends Serializable {
+public interface Effector<E,T> extends Serializable {
     /**
      * TODO javadoc
      */
-	public String getName();
+	String getName();
 
     /**
      * TODO javadoc
      */
-    public Class<T> getReturnType();
+    Class<T> getReturnType();
 
     /**
      * TODO javadoc
      */
-    public String getReturnTypeName();
+    String getReturnTypeName();
 
     /**
      * TODO javadoc
      */
-	public List<ParameterType<?>> getParameters();
+	List<ParameterType<?>> getParameters();
 
     /**
      * TODO javadoc
      */
-    public String getDescription();
+    String getDescription();
 
     /**
      * TODO javadoc
      */
-	public T call(Entity entity, Map<?, ?> parameters);
+	T call(E entity, Map parameters);
 }

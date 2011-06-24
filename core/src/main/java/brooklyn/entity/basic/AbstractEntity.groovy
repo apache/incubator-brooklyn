@@ -15,12 +15,11 @@ import brooklyn.entity.EntityClass
 import brooklyn.entity.Group
 import brooklyn.entity.ParameterType
 import brooklyn.event.AttributeSensor
-import brooklyn.event.Event
 import brooklyn.event.EventListener
 import brooklyn.event.Sensor
 import brooklyn.event.adapter.PropertiesSensorAdapter
 import brooklyn.event.basic.AttributeMap
-import brooklyn.event.basic.SensorEvent;
+import brooklyn.event.basic.SensorEvent
 import brooklyn.location.Location
 import brooklyn.management.ManagementContext
 import brooklyn.management.SubscriptionContext
@@ -156,8 +155,18 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         removeApplicationRegistrant()
     }
 
-    Map<String,Object> getAttributes() {
-        return attributesInternal.asMap();
+    /**
+     * Mutable attributes on this entity.
+     *
+     * This can include activity information and status information (e.g. AttributeSensors), as well as
+     * arbitrary internal properties which can make life much easier/dynamic (though we lose something in type safety)
+     * e.g. jmxHost / jmxPort are handled as attributes.
+     * 
+     * @deprecated this will not be exposed, final API TBD
+     */
+    @Deprecated
+    public Map<String, ?> getAttributeMap() {
+        return attributesInternal.asMap(); // .asImmutable(); // FIXME this does not make the children immutable
     }
     
 	public <T> T getAttribute(AttributeSensor<T> attribute) { attributesInternal.getValue(attribute); }
@@ -172,13 +181,12 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         subscriptionContext.getSubscriptionManager().subscribe this.id, producer.id, sensor.name, listener
     }
 
-    protected SubscriptionContext getSubscriptionContext() {
-        synchronized (this) {
-	        subscription ?: new LocalSubscriptionContext()
-        }
+    protected synchronized SubscriptionContext getSubscriptionContext() {
+		if (subscription) subscription;
+        subscription = subscription ?: new LocalSubscriptionContext() // XXX doesn't work ?
     }
 
-	protected ExecutionContext getExecutionContext() {
+	protected synchronized ExecutionContext getExecutionContext() {
 		if (execution) execution;
 		synchronized (this) {
 			if (execution) execution;
@@ -318,11 +326,11 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 		newArgs = newArgs as Object[]
 	}
 	
-	public <T> Task<T> invoke(Map parameters=[:], Effector<T> eff) {
+	public <E,T> Task<T> invoke(Map parameters=[:], Effector<E,T> eff) {
 		invoke(eff, parameters);
 	}
 	//add'l form supplied for when map needs to be made explicit (above supports implicit named args)
-	public <T> Task<T> invoke(Effector<T> eff, Map parameters) {
+	public <E,T> Task<T> invoke(Effector<E,T> eff, Map parameters) {
 		executionContext.submit( { eff.call(this, parameters) }, description: "invocation of effector $eff" )
 	}
 }

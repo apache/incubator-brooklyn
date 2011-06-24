@@ -1,5 +1,7 @@
 package brooklyn.entity.basic;
 
+import groovy.transform.InheritConstructors;
+
 import java.lang.annotation.Annotation
 import java.lang.annotation.ElementType
 import java.lang.annotation.Retention
@@ -16,7 +18,7 @@ import brooklyn.entity.Entity
 import brooklyn.entity.ParameterType
 import brooklyn.util.internal.LanguageUtils
 
-public abstract class AbstractEffector<T> implements Effector<T> {
+public abstract class AbstractEffector<E, T> implements Effector<E, T> {
     private static final long serialVersionUID = 1832435915652457843L;
     
     final private String name;
@@ -53,9 +55,11 @@ public abstract class AbstractEffector<T> implements Effector<T> {
     public String getDescription() {
         return description;
     }
+    
+	public abstract T call(E entity, Map parameters);
 
 	/** convenience for named-parameter syntax (needs map in first argument) */
-	public T call(Map parameters=[:], Entity entity) { call(entity, parameters); }
+	public T call(Map parameters=[:], E entity) { call(entity, parameters); }
 
 	@Override
 	public String toString() {
@@ -123,7 +127,7 @@ public @interface Description {
 	String value();
 }
 
-public class EffectorInferredFromAnnotatedMethod<T> extends AbstractEffector<T> {
+public class EffectorInferredFromAnnotatedMethod<E, T> extends AbstractEffector<E, T> {
 	protected static class AnnotationsOnMethod {
 		Class<?> clazz;
 		String name;
@@ -161,7 +165,7 @@ public class EffectorInferredFromAnnotatedMethod<T> extends AbstractEffector<T> 
 		super(anns.name, anns.returnType, anns.parameters, description);
 	}
 	
-	public T call(Entity entity, Map parameters) {
+	public T call(E entity, Map parameters) {
 		entity."$name"(parameters);
 	}
 }
@@ -169,10 +173,5 @@ public class EffectorInferredFromAnnotatedMethod<T> extends AbstractEffector<T> 
 /**
  * TODO attempting to add an interface type parameter
  */
-public abstract class InterfaceEffector<I, T> extends AbstractEffector<T> {
-    public abstract T call(I entity, Map parameters);
-
-	public T call(Entity entity, Map parameters) {
-	    invoke entity, parameters
-	}
-}
+@InheritConstructors
+public abstract class InterfaceEffector<E, T> extends AbstractEffector<E, T> { }

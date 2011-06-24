@@ -38,14 +38,8 @@ public interface Entity extends Serializable {
      * Return the id of the {@link Application} this entity is registered with.
      */
     String getApplicationId();
-
-    /**
-     * Mutable attributes on this entity.
-     * 
-     * This can include activity information and status information (e.g. AttributeSensors), as well as
-     * arbitrary internal properties which can make life much easier/dynamic (though we lose something in type safety)
-     * e.g. jmxHost / jmxPort are handled as attributes
-     */
+    
+    @Deprecated
     Map<String,Object> getAttributes();
 
     /**
