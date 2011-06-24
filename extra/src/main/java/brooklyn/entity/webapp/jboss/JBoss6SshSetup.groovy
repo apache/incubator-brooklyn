@@ -9,7 +9,6 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     String saveAs  = "jboss-as-distribution-$version"
     String installDir = "$installsBaseDir/jboss-$version"
     String runDir
-	int jBossPortIncrement = 0
 
     public JBoss6SshSetup(JBossNode entity) {
         super(entity)
@@ -38,17 +37,16 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
 	       .. changing port numbers with sed is pretty brittle.
 		*/
 		def portGroupName = "ports-brooklyn"
-"""
-mkdir -p $runDir/server && \\
+		int portIncrement = entity.portIncrement ?: 0
+"""mkdir -p $runDir/server && \\
 cd $runDir/server && \\
-export JBOSS_HOME=$installDir && \\
 cp -r $installDir/server/default default && \\
-cd $installDir/server/default/conf/bindingservice.beans/META-INF/ && \\
+cd default/conf/bindingservice.beans/META-INF/ && \\
 BJB="bindings-jboss-beans.xml" && \\
-cp \$BJB \$BJB.bk && \\
-sed -i '' 's/ports-03/$portGroupName/' \$BJB && \\
-sed -i '' 's/\\<parameter\\>300\\<\\/parameter\\>/\\<parameter\\>$jBossPortIncrement\\<\\/parameter\\>/' \$BJB && \\
+sed -i.bk 's/ports-03/$portGroupName/' \$BJB && \\
+sed -i.bk 's/\\<parameter\\>300\\<\\/parameter\\>/\\<parameter\\>$portIncrement\\<\\/parameter\\>/' \$BJB && \\
 export LAUNCH_JBOSS_IN_BACKGROUND=1 && \\
+export JBOSS_HOME=$installDir && \\
 export JAVA_OPTS=""" + "\"" + toJavaDefinesString(getJvmStartupProperties()) + "\"" + """ && \\
 JAVA_OPTS="\$JAVA_OPTS -Djboss.platform.mbeanserver" && \\
 JAVA_OPTS="\$JAVA_OPTS -Djavax.management.builder.initial=org.jboss.system.server.jmx.MBeanServerBuilderImpl" && \\
@@ -56,8 +54,7 @@ JAVA_OPTS="\$JAVA_OPTS -Djava.util.logging.manager=org.jboss.logmanager.LogManag
 JAVA_OPTS="\$JAVA_OPTS -Dorg.jboss.logging.Logger.pluginClass=org.jboss.logging.logmanager.LoggerPluginImpl" && \\
 export JBOSS_CLASSPATH="$installDir/lib/jboss-logmanager.jar" && \\
 $installDir/bin/run.sh -Djboss.service.binding.set=$portGroupName -Djboss.server.base.dir=$runDir/server -Djboss.server.base.url=file://$runDir/server -c default &
-exit
-"""
+exit"""
     }
 
     /** script to return 1 if pid in runDir is running, 0 otherwise */
