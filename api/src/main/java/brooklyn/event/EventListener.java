@@ -1,11 +1,11 @@
 package brooklyn.event;
 
 /**
- * A listener for {@link Event}s on an {@link Entity}.
+ * A listener for {@link SensorEvent}s on an {@link Entity}.
  */
 public interface EventListener<T> {
     /**
-     * Event handler.
+     * The {@link SensorEvent} handler method.
      */
-    void onEvent(Event<T> event);
+    void onEvent(SensorEvent<T> event);
 }

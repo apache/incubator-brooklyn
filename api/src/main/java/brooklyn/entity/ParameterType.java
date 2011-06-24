@@ -4,6 +4,8 @@ import java.io.Serializable;
 
 /**
  * Modeled on concepts in the JMX {@link MBeanParameterInfo} class.
+ *
+ * TODO javadoc
  */
 public interface ParameterType<T> extends Serializable {
     /**

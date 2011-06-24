@@ -5,19 +5,19 @@ import brooklyn.entity.Entity;
 /**
  * A tuple representing a piece of data from a {@link Sensor} on an {@link Entity}.
  */
-public interface Event<T> {
+public interface SensorEvent<T> {
     /**
      * The {@link Entity} where the data originated.
      */
-    public Entity getSource();
+    Entity getSource();
  
     /**
      * The {@link Sensor} describing the data.
      */
-    public Sensor<T> getSensor();
+    Sensor<T> getSensor();
  
     /**
      * The value for the {@link Sensor} data.
      */
-    public T getValue();
+    T getValue();
 }

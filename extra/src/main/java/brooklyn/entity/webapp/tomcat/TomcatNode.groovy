@@ -13,7 +13,6 @@ import brooklyn.entity.trait.Startable
 import brooklyn.event.EntityStartException
 import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.event.basic.JmxAttributeSensor
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.management.internal.task.Futures
 import brooklyn.util.internal.EntityStartUtils
@@ -30,10 +29,9 @@ public class TomcatNode extends AbstractEntity implements Startable {
     public static final BasicAttributeSensor<Integer> MAX_PROCESSING_TIME = [ Integer, "webpp.reqs.processing.max", "Max processing time" ]
     public static final BasicAttributeSensor<Boolean> NODE_UP = [ Boolean, "webapp.hasStarted", "Node started" ];
     public static final BasicAttributeSensor<String> NODE_STATUS = [ String, "webapp.status", "Node status" ];
-    
-    public static final JmxAttributeSensor<Integer> ERROR_COUNT = [ Integer, "webapp.reqs.errors", "Request errors", "Catalina:type=GlobalRequestProcessor,name=\"*\"", "errorCount" ]
-    public static final JmxAttributeSensor<Integer> REQUEST_COUNT = [ Integer, "webapp.reqs.total", "Request count", "Catalina:type=GlobalRequestProcessor,name=\"*\"", "requestCount"  ]
-    public static final JmxAttributeSensor<Integer> TOTAL_PROCESSING_TIME = [ Integer, "webapp.reqs.processing.time", "Total processing time", "Catalina:type=GlobalRequestProcessor,name=\"*\"", "processingTime" ]
+    public static final BasicAttributeSensor<Integer> ERROR_COUNT = [ Integer, "webapp.reqs.errors", "Request errors" ]
+    public static final BasicAttributeSensor<Integer> REQUEST_COUNT = [ Integer, "webapp.reqs.total", "Request count" ]
+    public static final BasicAttributeSensor<Integer> TOTAL_PROCESSING_TIME = [ Integer, "webapp.reqs.processing.time", "Total processing time" ]
 	
 //	public static final Effector<Integer> GET_TOTAL_PROCESSING_TIME = [ "retrieves the total processing time", { delegate, arg1, arg2 -> delegate.getTotal(arg1, arg2) } ]
 //	Task<Integer> invocation = entity.invoke(GET_TOTAL_PROCESSING_TIME, ...args)
@@ -119,9 +117,9 @@ public class TomcatNode extends AbstractEntity implements Startable {
 		}
         
         // Add JMX sensors
-        jmxAdapter.addSensor(ERROR_COUNT)
-        jmxAdapter.addSensor(REQUEST_COUNT)
-        jmxAdapter.addSensor(TOTAL_PROCESSING_TIME)
+        jmxAdapter.addSensor(ERROR_COUNT, "Catalina:type=GlobalRequestProcessor,name=\"*\"", "errorCount")
+        jmxAdapter.addSensor(REQUEST_COUNT, "Catalina:type=GlobalRequestProcessor,name=\"*\"", "requestCount")
+        jmxAdapter.addSensor(TOTAL_PROCESSING_TIME, "Catalina:type=GlobalRequestProcessor,name=\"*\"", "processingTime")
         jmxAdapter.addSensor(REQUESTS_PER_SECOND, { computeReqsPerSec() }, 100L)
  
         if (this.war) {

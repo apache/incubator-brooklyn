@@ -12,18 +12,18 @@ import com.google.common.base.Predicate;
 public class EventFilters {
     private EventFilters() {}
     
-    public static Predicate<SensorEvent<?>> sensorName(final String name) {
-        return new Predicate<SensorEvent<?>>() {
-            public boolean apply(SensorEvent<?> event) {
+    public static Predicate<BasicSensorEvent<?>> sensorName(final String name) {
+        return new Predicate<BasicSensorEvent<?>>() {
+            public boolean apply(BasicSensorEvent<?> event) {
                 Sensor<?> sensor = event.getSensor();
                 return sensor.getName().equals(name);
             }
         };
     }
     
-    public static Predicate<SensorEvent<?>> sensorNamePart(final List<String> parts) {
-        return new Predicate<SensorEvent<?>>() {
-            public boolean apply(SensorEvent<?> event) {
+    public static Predicate<BasicSensorEvent<?>> sensorNamePart(final List<String> parts) {
+        return new Predicate<BasicSensorEvent<?>>() {
+            public boolean apply(BasicSensorEvent<?> event) {
                 Sensor<?> sensor = event.getSensor();
                 List<String> sensorParts = sensor.getNameParts();
                 if (parts.size() > sensorParts.size()) return false;
@@ -35,17 +35,17 @@ public class EventFilters {
         };
     }
  
-    public static Predicate<SensorEvent<?>> sensorValue(final Object value) {
-        return new Predicate<SensorEvent<?>>() {
-            public boolean apply(SensorEvent<?> event) {
+    public static Predicate<BasicSensorEvent<?>> sensorValue(final Object value) {
+        return new Predicate<BasicSensorEvent<?>>() {
+            public boolean apply(BasicSensorEvent<?> event) {
                 return event.getValue().equals(value);
             }
         };
     }
     
-    public static Predicate<SensorEvent<?>> sensor(final Closure<Boolean> expr) {
-        return new Predicate<SensorEvent<?>>() {
-            public boolean apply(SensorEvent<?> event) {
+    public static Predicate<BasicSensorEvent<?>> sensor(final Closure<Boolean> expr) {
+        return new Predicate<BasicSensorEvent<?>>() {
+            public boolean apply(BasicSensorEvent<?> event) {
                 return expr.call(event.getValue());
             }
         };
@@ -59,9 +59,9 @@ public class EventFilters {
         };
     }
     
-    public static Predicate<SensorEvent<?>> all() {
-        return new Predicate<SensorEvent<?>>() {
-            public boolean apply(SensorEvent<?> sensor) {
+    public static Predicate<BasicSensorEvent<?>> all() {
+        return new Predicate<BasicSensorEvent<?>>() {
+            public boolean apply(BasicSensorEvent<?> sensor) {
                 return true;
             }
         };

@@ -20,7 +20,6 @@ import brooklyn.event.Sensor
 import brooklyn.event.adapter.PropertiesSensorAdapter
 import brooklyn.event.basic.AttributeMap
 import brooklyn.event.basic.ConfigKey
-import brooklyn.event.basic.SensorEvent
 import brooklyn.location.Location
 import brooklyn.management.ManagementContext
 import brooklyn.management.SubscriptionContext
@@ -263,10 +262,9 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     /** override this, adding to the collection, to supply fields whose value, if not null, should be included in the toString */
     public Collection<String> toStringFieldsToInclude() { ['id', 'displayName'] }
 
-    /** @see EntityLocal#raiseEvent(Sensor, Object) */
-    @Override
-    public <T> void raiseEvent(Sensor<T> sensor, T val) {
-        subscriptionContext.getSubscriptionManager().fire new SensorEvent<T>(sensor, this, val)
+    /** @see EntityLocal#emit(Sensor, Object) */
+    public <T> void emit(Sensor<T> sensor, T val) {
+        subscriptionContext.subscriptionManager.publish(sensor.newEvent(this, val))
     }
     
 	// -------- EFFECTORS --------------
@@ -314,6 +312,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 	public <T> Task<T> invoke(Map parameters=[:], Effector<T> eff) {
 		invoke(eff, parameters);
 	}
+ 
 	//add'l form supplied for when map needs to be made explicit (above supports implicit named args)
 	public <T> Task<T> invoke(Effector<T> eff, Map parameters) {
 		executionContext.submit( { eff.call(this, parameters) }, description: "invocation of effector $eff" )

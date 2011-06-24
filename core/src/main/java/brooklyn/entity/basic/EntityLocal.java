@@ -24,7 +24,7 @@ public interface EntityLocal extends Entity {
      */
     <T> T updateAttribute(AttributeSensor<T> sensor, T val);
     
-    //FIXME ENGR-1458  change arg #2 to be the SensorEvent?
+    //FIXME ENGR-1458  change arg #2 to be the BasicSensorEvent?
     //generating new BasicSensorEvent() is _wrong_ for some sensor types (e.g. attribute sensor)
     
     //JAVADOC - remove word 'Generates and' as per above
@@ -37,7 +37,7 @@ public interface EntityLocal extends Entity {
     //thoughts?
     
     //get slightly concerned that folks could still generate the wrong event type;
-    //is it worth using more generics?  e.g. defining Sensor<EventValueType,EventType extends SensorEvent<EventValueType>>
+    //is it worth using more generics?  e.g. defining Sensor<EventValueType,EventType extends BasicSensorEvent<EventValueType>>
     //then e.g. <T,C> raiseEvent(Sensor<T,C> s, C e) 
     
     //also/instead, we could by convention put newEvent on the concrete Sensor implementations,
@@ -58,8 +58,6 @@ public interface EntityLocal extends Entity {
     
     /**
      * Generates and emits an event (as though produced by this entity).
-     * 
-     * For example, it could be used by a <em>???</em>...
      */
-    <T> void raiseEvent(Sensor<T> sensor, T val);
+    <T> void emit(Sensor<T> sensor, T value);
 }

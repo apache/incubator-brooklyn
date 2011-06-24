@@ -1,7 +1,7 @@
 package brooklyn.management;
 
 /**
- * This is the contexst through which an entity can manage subscriptions.
+ * This is the context through which an {@link Entity} can manage subscriptions.
  */
 public interface SubscriptionContext {
     /**

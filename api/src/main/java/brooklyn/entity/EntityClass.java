@@ -6,9 +6,11 @@ import java.util.Collection;
 import brooklyn.event.Sensor;
 
 /**
- * Represents the type of an entity, analogous to java.lang.Class for an instance.
- *  
- * @author aled
+ * Represents the type of an {@link Entity}.
+ * 
+ * Analogous to {@link Class} for an instance.
+ * 
+ * TODO javadoc
  */
 public interface EntityClass extends Serializable {
     
@@ -20,10 +22,9 @@ public interface EntityClass extends Serializable {
 	
 	//FIXME Alex: suggest we allow these, but always defer to the java type (i.e. use BasicEntitySummary, delete ExplicitEntitySummary) 
 
-    public String getName();
+    String getName();
     
-    public Collection<Sensor<?>> getSensors();
+    Collection<Sensor<?>> getSensors();
     
-    public Collection<Effector<?>> getEffectors();
-
+    Collection<Effector<?>> getEffectors();
 }

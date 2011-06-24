@@ -1,10 +1,18 @@
 package brooklyn.management;
 
 import brooklyn.entity.Entity;
-import brooklyn.event.Event;
+import brooklyn.event.SensorEvent;
 import brooklyn.event.EventListener;
 import brooklyn.event.Sensor;
 
+/**
+ * The mangement interface for subscriptions.
+ * 
+ * Different implementations will handle entities subscribing and unsubscribing to {@link SensorEvent}s
+ * and their delivery.
+ * 
+ * @see SubscriptionContext
+ */
 public interface SubscriptionManager {
     /**
      * Subscribe to {@link Sensor} data changes and events on a given {@link Entity}, calling the {@link EventListener} when they occur.
@@ -28,7 +36,7 @@ public interface SubscriptionManager {
     void unsubscribe(long subscriptionId);
 
     /**
-     * Fire an {@link Event} to all subscribed listeners.
+     * Deliver a {@link SensorEvent} to all subscribed listeners.
      */
-    <T> void fire(Event<T> event);
+    <T> void publish(SensorEvent<T> event);
 }
