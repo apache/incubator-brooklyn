@@ -4,6 +4,8 @@ import java.lang.reflect.Modifier
 import java.util.Collection
 import java.util.Map
 
+import org.codehaus.groovy.util.HashCodeHelper;
+
 import com.thoughtworks.xstream.XStream
 
 /**
@@ -135,6 +137,103 @@ public class LanguageUtils {
 		def result=[]
 		l1.eachWithIndex { a, i -> result.add( code.call(a, l2[i], i) ) }
 		result
+	}
+
+	/** return value used to indicate that there is no such field */
+	public static final Object NO_SUCH_FIELD = new Object();
+	/** default field getter, delegates to object[field] (which will invoke a getter if one exists, in groovy),
+	 * unless field starts with "@" in which case it looks up the actual java field (bypassing getter);
+	 * can be extended as needed when passed to {@link #equals(Object, Object, Class, String[])} */
+	public static final Closure DEFAULT_FIELD_GETTER = { Object object, Object field ->
+		try {
+//			println "getting $field"
+			if ((field in String) && field.startsWith("@")) {
+//				println "  getting @ ${field.substring(1)}"
+//				println "  got@ "+object.@"${field.substring(1)}"
+				return object.@"${field.substring(1)}"
+			}
+//			println "  got "+object[field]
+			return object[field]
+		} catch (Exception e) {
+//			println "  error"
+//			e.printStackTrace()
+			return NO_SUCH_FIELD
+		}
+	}
+	
+	/** checks equality of o1 and o2 with respect to the named fields, optionally enforcing a common superclass
+	 * and using a custom field-getter. for example
+	 * 
+	 * <code>
+	 * public class Foo {
+	 *   Object bar;
+	 *   public boolean equals(Object other) { LangaugeUtils.equals(this, other, Foo.class, ["bar"]); }
+	 *   public int hashCode() { LangaugeUtils.hashCode(this, ["bar"]); }
+	 * }
+	 * </code>
+	 *  
+	 * @param o1 one object to compare
+	 * @param o2 other object to compare
+	 * 
+	 * @param optionalCommonSuperClass  if supplied, returns false unless both objects are instances of the given type;
+	 * 	(if not supplied it effectively does duck typing, returning false if any field is not present)
+	 * 
+	 * @param optionalGetter  if supplied, a closure which takes (object, field) and returns the value of field on object;
+	 *  should return static {@link #NO_SUCH_FIELD} if none found;
+	 *  recommended to delegate to {@link #DEFAULT_FIELD_GETTER} at least for strings (or for anything)
+	 *  
+	 * @param fields  typically a list of strings being names of fields on the class to compare;
+	 *   other types can be supplied if they are supported by object[field] (what the {@link #DEFAULT_FIELD_GETTER} does)
+	 *   or if the optionalGetter handles it;
+	 *   note that object[field] causes invocation of object.getAt(field) 
+	 *   (which can be provided on the object for non-strings;
+	 *   this is preferred to an optionalGetter, generally),
+	 *   looking for object.getXxx() (where field is a string "xxx")
+	 *   then object.xxx;
+	 *   one exception is that field names which start with "@" get the field directly (according to {@link #DEFAULT_FIELD_GETTER};
+	 *   but use with care on private fields, as they must be on the object -- not a superclass --
+	 *   and with groovy properties (formerly known as package-private, i.e. with no access modifiers)
+	 *   because they become private fields)
+	 *   
+	 * @return true if the two objects are equal in all indicated fields, and conform to the optionalCommonSuperClass if supplied 
+	 */
+	public static boolean equals(Object o1, Object o2, Class<?> optionalCommonSuperClass=null, 
+			Closure optionalGetter=null, Iterable<Object> fieldNames) {
+		if (o1==null) return o2==null;
+		if (o2==null) return false;
+		if (optionalCommonSuperClass) {
+			if (!(o1 in optionalCommonSuperClass) || !(o2 in optionalCommonSuperClass)) return false
+		}
+		Closure get = optionalGetter ?: DEFAULT_FIELD_GETTER
+		for (it in fieldNames) {
+			def v1 = get.call(o1, it)
+			if (v1==NO_SUCH_FIELD) return false
+			if (v1!=get.call(o2, it)) return false 
+		}
+		return true
+	}
+	public static boolean equals(Object o1, Object o2, Class<?> optionalCommonSuperClass=null,
+			Closure optionalGetter=null, Object[] fieldNames) {
+		return equals(o1, o2, optionalCommonSuperClass, optionalGetter, Arrays.asList(fieldNames) )	
+	}
+
+	/** generates a hashcode for an object, similar to com.google.common.base.Objects.hashCode(),
+	 * but taking field _names_ and an optional getter, with the same rich groovy semantics as
+	 * described in {@link #equals(Object, Object, Class)} (which has more extensive javadoc) */
+	public static int hashCode(Object o, Closure optionalGetter=null, Collection<Object> fieldNames) {
+		if (o==null) return 0;
+		Closure get = optionalGetter ?: DEFAULT_FIELD_GETTER
+		int result = 1;
+		for (it in fieldNames) {
+			def v1 = get.call(o, it)
+			if (v1==NO_SUCH_FIELD) 
+				throw new NoSuchFieldError("Cannot access $it on "+o.getClass());
+			result = 31 * result + (it == null ? 0 : it.hashCode());
+		}
+		result
+	}
+	public static int hashCode(Object o, Closure optionalGetter=null, Object[] fieldNames) {
+		hashCode(o, optionalGetter, Arrays.asList(fieldNames))
 	}
 	
 }

@@ -45,4 +45,81 @@ class LanguageUtilsTest {
         Set children = []
         Date[] dates;
     }
+
+	//test the default getter, and equals
+	static class TestingFieldA {
+		public int a = 6;
+		int getAt(A aa) { return aa.num * a; }
+		static A aa = [num:10];
+		int x = -1;
+	}
+	static class TestingFields extends TestingFieldA {
+		int b = 7;
+		int getB() { -7 }
+		public int c = 8;
+		int getD() { 9 }
+	}
+	@Test
+	public void testSomeGet() {
+		TestingFields tf = []
+		Assert.assertEquals( [6, -7, 7, 8, 9, 60],
+			["a", "b", "@b", "c", "d", TestingFields.aa].collect {
+				LanguageUtils.DEFAULT_FIELD_GETTER.call(tf, it)
+			})
+	}
+	
+	@Test
+	public void testEquals() {
+		//basic
+		TestingFields t1 = [], t2 = []
+		Assert.assertTrue LanguageUtils.equals(t1, t2, null, ["a", "b"])
+		Assert.assertTrue LanguageUtils.equals(t1, t2, TestingFields, ["a", "b"])
+		Assert.assertFalse LanguageUtils.equals(t1, t2, String, ["a", "b"])
+		Assert.assertFalse LanguageUtils.equals(t1, t2, null, ["z"])
+		Assert.assertTrue LanguageUtils.equals(t1, t2, null, (["a", "b"] as String[]))
+		
+		//type hierarchy
+		TestingFieldA t1a = []
+		Assert.assertTrue LanguageUtils.equals(t1, t1a, null, "a")
+		Assert.assertTrue LanguageUtils.equals(t1, t1a, TestingFieldA, "a")
+		Assert.assertFalse LanguageUtils.equals(t1, t1a, TestingFields, "a")
+		Assert.assertFalse LanguageUtils.equals(t1, t1a, null, "a", "b")
+		t1.b = 0
+		Assert.assertTrue LanguageUtils.equals(t1, t1a, null, "a")
+		t1a.a = -6
+		Assert.assertFalse LanguageUtils.equals(t1, t1a, null, "a")
+		
+		//direct access to field
+		Assert.assertTrue LanguageUtils.equals(t1, t2, null, "b")
+		Assert.assertFalse LanguageUtils.equals(t1, t2, null, "@b")
+		Assert.assertTrue LanguageUtils.equals(t1, t2, null, "@a")
+		
+		//and complex field
+		Assert.assertTrue LanguageUtils.equals(t1, t2, null, TestingFields.aa)
+		//because we changed t1a.a, and getAt(A) refers to int a
+		Assert.assertFalse LanguageUtils.equals(t1, t1a, null, TestingFields.aa)
+		
+		//test it works with POJO objects (non-groovy)
+		Assert.assertTrue LanguageUtils.equals("hi", "ho", null, "count")
+		Assert.assertFalse LanguageUtils.equals("hi", "hello", null, "count")
+		
+		//and a tricky one, because x is a groovy property, it is _private_ so we cannot see it as a field wrt t1
+		Assert.assertFalse LanguageUtils.equals(t1, t1a, null, "@x")
+		//but in the context of t1a we can.. in short, be careful with fields
+		Assert.assertTrue LanguageUtils.equals(t1a, t1a, null, "@x")
+	}
+
+	@Test
+	public void testHashCode() {
+		//basic
+		TestingFields t1 = [], t2 = []
+		Assert.assertTrue LanguageUtils.hashCode(t1, ["a", "b"]) == LanguageUtils.hashCode(t2, ["a", "b"])
+		Assert.assertTrue LanguageUtils.hashCode(t1, ["a", "@b"]) == LanguageUtils.hashCode(t2, ["a", "@b"])
+		Assert.assertFalse LanguageUtils.hashCode(t1, ["a", "b"]) == LanguageUtils.hashCode(t2, ["a", "@b"])
+		t2.b = 0;
+		Assert.assertTrue LanguageUtils.hashCode(t1, ["a", "b"]) == LanguageUtils.hashCode(t2, ["a", "b"])
+		Assert.assertTrue LanguageUtils.hashCode(t1, ["a", "@b"]) == LanguageUtils.hashCode(t2, ["a", "@b"])
+		Assert.assertEquals 0, LanguageUtils.hashCode(null, ["a", "@b"])
+	}
+	
 }
