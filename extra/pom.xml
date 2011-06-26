@@ -1,31 +1,32 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<artifactId>brooklyn-extra</artifactId>
-	<packaging>bundle</packaging>
-	<name>Brooklyn Extra</name>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>brooklyn-extra</artifactId>
+    <packaging>bundle</packaging>
+    <name>Brooklyn Extra</name>
 
-	<parent>
-		<groupId>brooklyn</groupId>
-		<artifactId>brooklyn-parent-groovy</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
-		<relativePath>../parent/groovy/pom.xml</relativePath>
-	</parent>
+    <parent>
+        <groupId>brooklyn</groupId>
+        <artifactId>brooklyn-parent-root</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../parent/root/pom.xml</relativePath>
+    </parent>
 
-	<dependencies>
-		<dependency>
-			<groupId>brooklyn</groupId>
-			<artifactId>brooklyn-core</artifactId>
-			<version>${project.version}</version>
-		</dependency>
+    <dependencies>
+        <dependency>
+            <groupId>brooklyn</groupId>
+            <artifactId>brooklyn-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
-		<dependency>
-			<groupId>brooklyn</groupId>
-			<artifactId>brooklyn-core</artifactId>
-			<version>${project.version}</version>
-			<type>test-jar</type>
-			<scope>test</scope>
-		</dependency>
+        <dependency>
+            <groupId>brooklyn</groupId>
+            <artifactId>brooklyn-core</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -42,5 +43,5 @@
             <version>3.0.1</version>
             <scope>test</scope>
         </dependency>
-	</dependencies>
+    </dependencies>
 </project>
