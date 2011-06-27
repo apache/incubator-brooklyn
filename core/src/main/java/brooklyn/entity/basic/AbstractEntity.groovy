@@ -183,7 +183,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 
     public EntityClass getEntityClass() {
 		//TODO registry? or a transient?
-		new BasicEntityClass(getClass())
+		new BasicEntityClass()
     }
 
     /**
