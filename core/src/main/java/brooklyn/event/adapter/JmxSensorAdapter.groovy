@@ -70,7 +70,7 @@ public class JmxSensorAdapter implements  SensorAdapter {
     public <T> void addSensor(BasicAttributeSensor<T> sensor, Closure calculate, long period) {
         log.debug "adding calculated sensor {} with delay {}", sensor.name, period
         calculated[sensor.getName()] = sensor
-        entity.updateAttribute(sensor, null)
+        entity.updateAttribute(sensor, null) // FIXME if exists?
         
         Closure safeCalculate = {
             try {
@@ -164,24 +164,28 @@ public class JmxSensorAdapter implements  SensorAdapter {
 	}
 
     /**
-     * Returns a specific attribute for a JMX {@link Objectname}.
+     * Returns a specific attribute for a JMX {@link ObjectName}.
      */
-    public Map getAttribute(ObjectName objectName, String attribute) {
-        ObjectInstance bean = mbsc.getObjectInstance(objectName)
-        MBeanInfo info = mbsc.getMBeanInfo(bean.getObjectName())
-        AttributeList list = mbsc.getAttributes bean.getObjectName(), [ attribute ]
-        Attribute result = list.find { Attribute a -> a.name.equals(attribute) }
-        result.value
-    }
+	public Object getAttribute(ObjectName objectName, String attribute) {
+		Set<ObjectInstance> beans = mbsc.queryMBeans(objectName, null)
+		if (beans.isEmpty() || beans.size() > 1) return null // TODO error reporting
+		ObjectInstance bean = beans.find { true }
+		// MBeanInfo info = mbsc.getMBeanInfo(bean.getObjectName())
+		// log.trace "jmx attributes  are: " + info.getAttributes().collect({ it.name }).join(", ")
+		def result = mbsc.getAttribute(bean.getObjectName(), attribute)
+		log.trace "got value {} for jmx attribute {}.{}", result, objectName.canonicalName, attribute
+		return result
+	}
 
     private void updateJmxSensors() {
+		log.debug "updating all jmx sensors"
         sensors.keySet() each { s ->
                 AttributeSensor<?> sensor = sensors.get(s)
                 JmxValueProvider<?> provider = providers.get(s)
 		        def newValue = getAttribute(provider.objectName, provider.attribute)
-                log.trace "new value for {},{} was {}", sensor.name, provider.name, newValue
+				log.debug "update for jmx attribute {}.{} to {}", sensor.name, provider.attribute, newValue
                 entity.updateAttribute(sensor, newValue)
-	        } 
+	        }
     }
     
     public <T> void subscribe(String sensorName) {

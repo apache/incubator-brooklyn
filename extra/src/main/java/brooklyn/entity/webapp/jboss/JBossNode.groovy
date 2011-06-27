@@ -53,10 +53,6 @@ public class JBossNode extends AbstractEntity implements Startable {
         log.warn "not setting http port for successful jboss execution"
     }
     
-    public void shutdownInLocation(SshMachineLocation loc) {
-        new JBoss6SshSetup(this).shutdown loc;
-    }
-    
     public void start(Collection<Location> locs) {
         EntityStartUtils.startEntity(this, locs);
         
@@ -66,15 +62,18 @@ public class JBossNode extends AbstractEntity implements Startable {
         log.debug "started jboss server: jmxHost {} and jmxPort {}", getAttribute(JMX_HOST), getAttribute(JMX_PORT)
         
 		jmxAdapter = new JmxSensorAdapter(this, 60*1000)
+		// Add JMX sensors
+		jmxAdapter.addSensor(ERROR_COUNT, "jboss.web:type=GlobalRequestProcessor,name=http-*", "errorCount")
+		jmxAdapter.addSensor(REQUEST_COUNT, "jboss.web:type=GlobalRequestProcessor,name=http-*", "requestCount")
+		jmxAdapter.addSensor(TOTAL_PROCESSING_TIME, "jboss.web:type=GlobalRequestProcessor,name=http-*", "processingTime")
+		// jmxAdapter.addSensor(REQUESTS_PER_SECOND, { computeReqsPerSec() }, 100L)
+
     }
 
-    public void updateJmxSensors() {
-		def reqs = jmxAdapter.getChildrenAttributesWithTotal("jboss.web:type=GlobalRequestProcessor,name=http*")
-		reqs.put("timestamp", System.currentTimeMillis())
-		updateAttribute(["jmx", "reqs", "global"], reqs) // FIXME Update one attribute at a time...
-   }
-
     public void shutdown() {
-        if (location) shutdownInLocation(location)
+		if (jmxAdapter) jmxAdapter.disconnect();
+        if (location) { 
+			new JBoss6SshSetup(this).shutdown loc;
+        }
     }
 }

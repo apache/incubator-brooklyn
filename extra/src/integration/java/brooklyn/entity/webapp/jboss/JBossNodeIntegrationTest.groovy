@@ -17,35 +17,36 @@ import brooklyn.location.basic.SshMachineLocation
 class JBossNodeIntegrationTest {
 
 	private static final Logger logger = LoggerFactory.getLogger(brooklyn.entity.webapp.jboss.JBossNodeIntegrationTest)
-	
+
 	static int baseHttpPort = 8080
 	static int portIncrement = 300
 	static int httpPort = baseHttpPort + portIncrement
-	
+
 	private Application app
 	private Location testLocation
-	
+
 	static class TestApplication extends AbstractApplication {
-        public TestApplication(Map properties=[:]) {
-            super(properties)
-        }
-    }
-	
+		public TestApplication(Map properties=[:]) {
+			super(properties)
+		}
+	}
+
 	@Before
 	public void setup() {
 		app = new TestApplication();
 		testLocation = new SshMachineLocation(name:'london', host:'localhost')
 	}
-	
-    @Test
-    public void canStartupAndShutdown() {
-        JBossNode jb = new JBossNode(owner:app, portIncrement: portIncrement);
+
+	@Test
+	public void canStartupAndShutdown() {
+		JBossNode jb = new JBossNode(owner:app, portIncrement: portIncrement);
 		jb.start(location: testLocation)
 		assert (new JBoss6SshSetup(jb)).isRunning(testLocation)
-        jb.shutdown()
+		jb.shutdown()
+		// Potential for JBoss to be in process of shutting down here..
 		assert ! (new JBoss6SshSetup(jb)).isRunning(testLocation)
-    }
-	
+	}
+
 	@Test
 	public void canAlterPortIncrement() {
 		int pI = 1020
@@ -54,7 +55,7 @@ class JBossNodeIntegrationTest {
 		// Assert httpPort is contactable.
 		logger.info "Starting JBoss with HTTP port $httpPort"
 		jb.start(location: testLocation)
-		
+
 		executeUntilSucceedsWithShutdown(jb, {
 			def url = "http://localhost:$httpPort"
 			def connection = connectToURL(url)
@@ -65,34 +66,34 @@ class JBossNodeIntegrationTest {
 			assertEquals 200, status
 		}, abortOnError: false)
 	}
-	
-	// Failing @Test
+
+	@Test
 	public void publishesRequestsPerSecondMetric() {
-		JBossNode jb = new JBossNode(owner:app);
+		JBossNode jb = new JBossNode(owner:app, portIncrement: portIncrement);
 		jb.start(location: testLocation)
 		executeUntilSucceedsWithShutdown(jb, {
-			
-            // Connect to non-existent URL n times
-            def n = 5
+			def errorCount = jb.getAttribute(JBossNode.ERROR_COUNT)
+			if (errorCount == null) return new BooleanWithMessage(false, "errorCount not set yet ($errorCount)")
+
+			// Connect to non-existent URL n times
+			def n = 5
 			def url = "http://localhost:${httpPort}/does_not_exist"
 			println url
-            def connection = n.times {
-				try {
-					 connectToURL(url) 
-				} catch (Exception e) {
-					println e
-				}
-            }
-            int errorCount = jb.getAttribute(JBossNode.ERROR_COUNT)
-			jb.updateJmxSensors()	
-            println "$errorCount errors in total"
-            
-            // TODO firm up assertions.  confused by the values returned (generally n*2?)
-            assert errorCount > 0
-            assertEquals 0, errorCount % n
-			
-		}, timeout: 6*SECONDS, useGroovyTruth: true)
-		
+			n.times {
+				def connection = connectToURL(url)
+				int status = ((HttpURLConnection)connection).getResponseCode()
+				logger.info "connection to {} gives {}", url, status
+			}
+			Thread.sleep(1000L)
+			errorCount = jb.getAttribute(JBossNode.ERROR_COUNT)
+			println "$errorCount errors in total"
+
+			// TODO firm up assertions.  confused by the values returned (generally n*2?)
+			assertTrue errorCount > 0
+			assertEquals 0, errorCount % n
+			true
+		}, abortOnError: false, timeout:10*SECONDS, useGroovyTruth:true)
+
 	}
 
 }
