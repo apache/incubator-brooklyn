@@ -258,7 +258,7 @@
             <id>bundle-jar</id>
             <activation>
                 <file>
-                    <exists>${basedir}/src/main</exists>
+                    <exists>${basedir}/src</exists>
                 </file>
             </activation>
             <build>
