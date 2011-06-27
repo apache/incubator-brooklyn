@@ -19,7 +19,7 @@ public abstract class SshBasedJavaWebAppSetup extends SshBasedJavaAppSetup {
 	//TODO should take an input stream?
     public void deploy(File f, SshMachine machine) {
         String target = installsBaseDir + "/" + f.getName()
-		log.debug "Tomcat Deploy - Copying file {} to $loc {}", f.getAbsolutePath(), target
+		log.debug "Tomcat Deploy - Copying file {} to $machine {}", f.getAbsolutePath(), target
         int copySuccess = machine.copyTo f, target
         String deployScript = getDeployScript(target)
         if (deployScript) {

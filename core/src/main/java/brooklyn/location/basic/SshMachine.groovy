@@ -33,7 +33,7 @@ public class SshMachine {
     }
 
     public int copyTo(File src, String destination) {
-        def conn = new SshJschTool(user:user, host:host)
+        def conn = new SshJschTool(user:user, host:host.hostName)
         conn.connect()
         int result = conn.copyToServer [:], src, destination
         conn.disconnect()
