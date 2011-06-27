@@ -19,8 +19,8 @@ import com.cloudsoftcorp.monterey.node.api.NodeId
  */
 abstract class AbstractMontereyNode extends AbstractEntity {
 
-    public static final BasicAttributeSensor<Integer> WORKRATE_MSGS_PER_SEC = [ "MsgsPerSec", "monterey.workrate.msgsPerSec", Double ]
-    public static final BasicAttributeSensor<Dmn1NodeType> NODE_TYPE = [ "MsgsPerSec", "monterey.node-type", Dmn1NodeType.class ]
+    public static final BasicAttributeSensor<Integer> WORKRATE_MSGS_PER_SEC = [ Double, "monterey.workrate.msgsPerSec", "Messages per sec" ]
+    public static final BasicAttributeSensor<Dmn1NodeType> NODE_TYPE = [ Dmn1NodeType.class, "monterey.node-type", "Messages per sec" ]
     
     private final MontereyNetworkConnectionDetails connectionDetails;
     private final NodeId nodeId;

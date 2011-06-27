@@ -19,7 +19,7 @@ public class Segment extends AbstractEntity {
     // Currently leaving that in the logic behind Dmn1NetworkInfo.getActivityModel.
 
     // TODO Share constant for all nodes plus segment?
-    public static final BasicAttributeSensor<Integer> WORKRATE_MSGS_PER_SEC = [ "MsgsPerSec", "monterey.workrate.msgsPerSec", Double ]
+    public static final BasicAttributeSensor<Integer> WORKRATE_MSGS_PER_SEC = [ Double, "monterey.workrate.msgsPerSec", "Messages per sec" ]
     
     private final MontereyNetworkConnectionDetails connectionDetails;
     private final String segmentId;

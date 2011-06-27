@@ -92,10 +92,11 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
     @After
     public void tearDown() throws Exception {
         try {
-            montereyNetwork.stop();
+            if (montereyNetwork != null) montereyNetwork .stop();
         } finally {
-            if (originalClassLoadingContext != null)
-            ClassLoadingContext.Defaults.setDefaultClassLoadingContext(originalClassLoadingContext);
+            if (originalClassLoadingContext != null) {
+                ClassLoadingContext.Defaults.setDefaultClassLoadingContext(originalClassLoadingContext);
+            }
         }
     }
     

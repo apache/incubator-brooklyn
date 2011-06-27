@@ -12,7 +12,7 @@ import com.cloudsoftcorp.monterey.node.api.NodeId
 
 public class MediatorNode extends AbstractMontereyNode {
 
-    public static final BasicAttributeSensor<Integer> WORKRATE_MSGS_PER_SEC = [ "MsgsPerSec", "monterey.workrate.msgsPerSec", Double ]
+    public static final BasicAttributeSensor<Integer> WORKRATE_MSGS_PER_SEC = [ Double, "monterey.workrate.msgsPerSec", "Messages per sec" ]
     
     MediatorNode(MontereyNetworkConnectionDetails connectionDetails, NodeId nodeId, Location location) {
         super(connectionDetails, nodeId);

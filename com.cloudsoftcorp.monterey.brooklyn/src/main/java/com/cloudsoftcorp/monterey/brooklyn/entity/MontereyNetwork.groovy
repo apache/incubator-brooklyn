@@ -72,12 +72,12 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
 
     private static final Logger logger = Loggers.getLogger(MontereyNetwork.class);
 
-    public static final BasicAttributeSensor<Integer> MANAGEMENT_URL = [ "ManagementUrl", "monterey.management-url", URL.class ]
-    public static final BasicAttributeSensor<String> NETWORK_ID = [ "NetworkId", "monterey.network-id", String.class ]
-    public static final BasicAttributeSensor<String> APPLICTION_NAME = [ "ApplicationName", "monterey.application-name", String.class ]
+    public static final BasicAttributeSensor<Integer> MANAGEMENT_URL = [ URL.class, "monterey.management-url", "Management URL" ]
+    public static final BasicAttributeSensor<String> NETWORK_ID = [ String.class, "monterey.network-id", "Network id" ]
+    public static final BasicAttributeSensor<String> APPLICTION_NAME = [ String.class, "monterey.application-name", "Application name" ]
 
     /** up, down, etc? */
-    public static final BasicAttributeSensor<String> STATUS = [ "Status", "monterey.status", String.class ]
+    public static final BasicAttributeSensor<String> STATUS = [ String, "monterey.status", "Status" ]
 
     private final Gson gson;
 
@@ -137,10 +137,10 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         return ImmutableMap.copyOf(segments);
     }
 
-    public void start(Map properties=[:], Group parent=null, Location location=null) {
+    public void start(Collection<? extends Location> locs) {
         // FIXME Work in progress...
-        EntityStartUtils.startEntity properties, this, parent, location
-        log.debug "Monterey network started... management-url is {}", this.properties['ManagementUrl']
+        EntityStartUtils.startEntity this, locs
+        LOG.debug "Monterey network started... management-url is {}", this.properties['ManagementUrl']
     }
     
     public void dispose() {
@@ -157,7 +157,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
          * HostKeyChecking hostKeyChecking = HostKeyChecking.NO;
          */
 
-        log.info("Creating new monterey network "+networkId+" on "+host.getName());
+        LOG.info("Creating new monterey network "+networkId+" on "+host.getName());
 
         File webUsersConfFile = DeploymentUtils.toEncryptedWebUsersConfFile(webUsersCredentials);
         String username = System.getenv("USER");
@@ -252,6 +252,10 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
             throw new IllegalStateException("Monterey network is not running; cannot stop");
         }
         shutdownManagementNodeProcess(this.config, host, networkId)
+        
+        // TODO Race: monitoringTask could still be executing, and could get NPE when it tries to get connectionDetails
+        if (monitoringTask != null) monitoringTask.cancel(true);
+        
         host = null;
         managementUrl = null;
         connectionDetails = null;
@@ -283,15 +287,27 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
 
     private void updateAll() {
         try {
-            updateTopology();
-            updateWorkrates();
+            boolean isup = updateStatus();
+            if (isup) {
+                updateAppName();
+                updateTopology();
+                updateWorkrates();
+            }
         } catch (Throwable t) {
             LOG.log Level.WARNING, "Error updating brooklyn entities of Monterey Network "+managementUrl, t
             ExceptionUtils.throwRuntime t
         }
     }
 
-    private void updateStatus() {
+    private boolean updateStatus() {
+        PingWebProxy pinger = new PingWebProxy(connectionDetails.getManagementUrl(), gson, connectionDetails.getWebApiAdminCredential());
+        boolean isup = pinger.ping();
+        String status = (isup) ? "UP" : "DOWN";
+        updateAttribute(STATUS, status);
+        return isup;
+    }
+    
+    private void updateAppName() {
         DeploymentWebProxy deployer = new DeploymentWebProxy(connectionDetails.getManagementUrl(), gson, connectionDetails.getWebApiAdminCredential());
         MontereyDeploymentDescriptor currentApp = deployer.getApplicationDeploymentDescriptor();
         String currentAppName = currentApp?.getName();
@@ -306,11 +322,13 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         Map<NodeId, NodeSummary> nodeSummaries = networkInfo.getNodeSummaries();
         Map<String, SegmentSummary> segmentSummaries = networkInfo.getSegmentSummaries();
 
+        // FIXME Why doesn't nodeSummaries.keySet work?!
+        
         // Create/destroy nodes that have been added/removed
         Collection<NodeId> newNodes = []
         Collection<NodeId> removedNodes = []
         newNodes.addAll(nodeSummaries.keySet()); newNodes.removeAll(nodes.keySet());
-        removedNodes.addAll(nodes.keySet()); newNodes.removeAll(nodeSummaries.keySet());
+        removedNodes.addAll(nodes.keySet()); removedNodes.removeAll(nodeSummaries.keySet());
 
         newNodes.each {
             MontereyLocation montereyLocation = nodeSummaries.get(it).getMontereyLocation();
