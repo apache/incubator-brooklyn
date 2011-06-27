@@ -65,13 +65,21 @@ public class JmxSensorAdapter implements  SensorAdapter {
         
         if (!connect(timeout)) throw new IllegalStateException("Could not connect to JMX service")
     }
-    
+
     public <T> void addSensor(BasicAttributeSensor<T> sensor, Closure calculate, long period) {
         log.debug "adding calculated sensor {} with delay {}", sensor.name, period
         calculated[sensor.getName()] = sensor
         entity.updateAttribute(sensor, null)
-        
-        scheduled[sensor.getName()] = exec.scheduleWithFixedDelay(calculate, 0L, period, TimeUnit.MILLISECONDS)
+
+        Closure safeCalculate = {
+            try {
+                calculate.call()
+            } catch (Exception e) {
+                log.error "Error calculating value for sensor $sensor on entity $entity", e
+            }
+        }
+
+        scheduled[sensor.getName()] = exec.scheduleWithFixedDelay(safeCalculate, 0L, period, TimeUnit.MILLISECONDS)
     }
  
     public <T> void addSensor(BasicAttributeSensor<T> sensor, String objectName, String attribute) {
@@ -134,14 +142,17 @@ public class JmxSensorAdapter implements  SensorAdapter {
 	public void checkConnected() {
 		if (!isConnected()) throw new IllegalStateException("JmxTool must be connected")
 	}
-	
+
 	/**
 	 * Returns all attributes on a specific named object
 	 */
 	public Map getAttributes(String name) {
 		checkConnected()
 		ObjectName objectName = new ObjectName(name);
-		ObjectInstance bean = mbsc.getObjectInstance(objectName)
+        Set<ObjectInstance> beans = mbsc.queryMBeans(objectName, null)
+        ObjectInstance bean = beans.iterator().next();
+        // Use 'query' because objectName could contain wildcards
+        // TODO What if more than one bean?
 		MBeanInfo info = mbsc.getMBeanInfo(bean.getObjectName())
 		Map r = [:]
 		info.getAttributes().each { r[it.getName()] = null }
@@ -150,7 +161,7 @@ public class JmxSensorAdapter implements  SensorAdapter {
         log.trace "returning attributes: {}", r
 		r
 	}
-    
+
     /**
      * Returns a specific attribute for a JMX {@link Objectname}.
      */
