@@ -41,4 +41,7 @@ abstract class AbstractMontereyNode extends AbstractEntity {
     }
     
     abstract void updateWorkrate(WorkrateReport report);
+    
+    protected void dispose() {
+    }
 }

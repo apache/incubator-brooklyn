@@ -130,11 +130,15 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     }
 
     public Map<NodeId,MontereyContainerNode> getNodes() {
-        return ImmutableMap.copyOf(nodes);
+        // FIXME How do I return an immutableMap, without groovy interpretting accessing the 'node' field as calling the getter?!
+        // return ImmutableMap.copyOf(nodes);
+        return nodes;
     }
 
     public Map<String,Segment> getSegments() {
-        return ImmutableMap.copyOf(segments);
+        // FIXME How do I return an immutableMap, without groovy interpretting accessing the 'segments' field as calling the getter?!
+        // return ImmutableMap.copyOf(segments);
+        return segments;
     }
 
     public void start(Collection<? extends Location> locs) {
@@ -300,7 +304,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     }
 
     private boolean updateStatus() {
-        PingWebProxy pinger = new PingWebProxy(connectionDetails.getManagementUrl(), gson, connectionDetails.getWebApiAdminCredential());
+        PingWebProxy pinger = new PingWebProxy(connectionDetails.getManagementUrl(), connectionDetails.getWebApiAdminCredential());
         boolean isup = pinger.ping();
         String status = (isup) ? "UP" : "DOWN";
         updateAttribute(STATUS, status);

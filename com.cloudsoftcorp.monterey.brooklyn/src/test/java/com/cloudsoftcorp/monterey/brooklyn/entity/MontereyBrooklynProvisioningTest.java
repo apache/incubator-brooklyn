@@ -191,10 +191,8 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
                     
                     Assert.assertEquals(expectedNodeSummary.getNodeId(), actualContainerNode.getNodeId());
                     
-                    Collection<AbstractMontereyNode> montereyNetworkNodes = actualContainerNode.getContainedMontereyNodes();
-                    Assert.assertEquals(1, montereyNetworkNodes.size());
-                    AbstractMontereyNode montereyNetworkNode = montereyNetworkNodes.iterator().next();
-                    
+                    AbstractMontereyNode montereyNetworkNode = actualContainerNode.getContainedMontereyNode();
+                    Assert.assertNotNull(montereyNetworkNode);
                     Assert.assertEquals(expectedNodeSummary.getType(), montereyNetworkNode.getNodeType());
                 }
                 return null;

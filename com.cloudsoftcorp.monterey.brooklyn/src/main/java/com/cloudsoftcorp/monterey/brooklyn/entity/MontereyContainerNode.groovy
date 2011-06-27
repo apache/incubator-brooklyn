@@ -4,6 +4,7 @@ import brooklyn.entity.basic.AbstractGroup
 import brooklyn.location.Location
 
 import com.cloudsoftcorp.monterey.control.workrate.api.WorkrateReport
+import com.cloudsoftcorp.monterey.network.control.api.Dmn1NodeType
 import com.cloudsoftcorp.monterey.network.control.api.NodeSummary
 import com.cloudsoftcorp.monterey.node.api.NodeId
 
@@ -20,20 +21,22 @@ public class MontereyContainerNode extends AbstractGroup {
     
     private final MontereyNetworkConnectionDetails connectionDetails;
     private final NodeId nodeId;
+    private final Location location;
     
     private AbstractMontereyNode node;
     
     MontereyContainerNode(MontereyNetworkConnectionDetails connectionDetails, NodeId nodeId, Location location) {
         this.connectionDetails = connectionDetails;
         this.nodeId = nodeId;
+        this.location = location;
     }
     
     public NodeId getNodeId() {
         return nodeId;
     }
     
-    public Collection<AbstractMontereyNode> getContainedMontereyNodes() {
-        return nodes;
+    public AbstractMontereyNode getContainedMontereyNode() {
+        return node;
     }
 
     void updateContents(NodeSummary nodeSummary) {
@@ -47,13 +50,16 @@ public class MontereyContainerNode extends AbstractGroup {
         }
         
         switch (nodeSummary.getType()) {
-            case M:
-                node = new MediatorNode(connectionDetails, nodeId);
+            case Dmn1NodeType.M:
+                node = new MediatorNode(connectionDetails, nodeId, location);
                 break;
-            case LPP:
-            case MR:
-            case TP:
-            case SPARE:
+            case Dmn1NodeType.SPARE:
+                node = new SpareNode(connectionDetails, nodeId, location);
+                break;
+            case Dmn1NodeType.LPP:
+            case Dmn1NodeType.MR:
+            case Dmn1NodeType.TP:
+            case Dmn1NodeType.SPARE:
                 throw new UnsupportedOperationException("Work-in-progress, type="+nodeSummary.getType());
             default: 
                 throw new IllegalStateException("Cannot create entity for mediator node type "+nodeSummary.getType()+" at "+nodeId);
