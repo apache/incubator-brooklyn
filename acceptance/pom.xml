@@ -130,6 +130,12 @@
                         <artifactId>jetty-maven-plugin</artifactId>
                         <configuration>
                             <webApp>${basedir}/target/dependencies/web-console.war</webApp>
+                            <connectors>
+                                <connector implementation="org.eclipse.jetty.server.nio.SelectChannelConnector">
+                                    <port>9090</port>
+                                    <maxIdleTime>60000</maxIdleTime>
+                                </connector>
+                            </connectors>
                         </configuration>
                         <executions>
                             <execution>

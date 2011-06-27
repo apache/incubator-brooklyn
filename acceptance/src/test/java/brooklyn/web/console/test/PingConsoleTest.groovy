@@ -13,7 +13,7 @@ public class PingConsoleTest {
 
     @Before
     public void setUp() throws Exception {
-        selenium = new DefaultSelenium("localhost", 4666, "*firefox", "http://localhost:8080/")
+        selenium = new DefaultSelenium("localhost", 4666, "*firefox", "http://localhost:9090/")
         selenium.start()
     }
 
@@ -24,7 +24,7 @@ public class PingConsoleTest {
 
     @Test
     public void findEntityController() throws Exception {
-        selenium.open("http://localhost:8080/");
+        selenium.open("http://localhost:9090/");
         assertTrue(selenium.isTextPresent("EntityController"))
         selenium.close()
     }
