@@ -287,6 +287,15 @@
                         </configuration>
                     </plugin>
                     <plugin>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <inherited>true</inherited>
+                        <configuration>
+                            <archive>
+                                <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+                            </archive>
+                        </configuration>
+                    </plugin>
+                    <plugin>
                         <artifactId>maven-source-plugin</artifactId>
                         <inherited>true</inherited>
                         <executions>
@@ -412,12 +421,6 @@
                                 </configuration>
                             </execution>
                         </executions>
-                        <configuration>
-                            <archive>
-                                <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF
-                                </manifestFile>
-                            </archive>
-                        </configuration>
                     </plugin>
                 </plugins>
             </build>
