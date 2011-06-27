@@ -120,7 +120,7 @@ public class TomcatNode extends AbstractEntity implements Startable {
         jmxAdapter.addSensor(ERROR_COUNT, "Catalina:type=GlobalRequestProcessor,name=\"*\"", "errorCount")
         jmxAdapter.addSensor(REQUEST_COUNT, "Catalina:type=GlobalRequestProcessor,name=\"*\"", "requestCount")
         jmxAdapter.addSensor(TOTAL_PROCESSING_TIME, "Catalina:type=GlobalRequestProcessor,name=\"*\"", "processingTime")
-        jmxAdapter.addSensor(REQUESTS_PER_SECOND, { computeReqsPerSec() }, 100L)
+        jmxAdapter.addSensor(REQUESTS_PER_SECOND, { computeReqsPerSec() }, 1000L)
  
         if (this.war) {
             log.debug "Deploying {} to {}", this.war, this.location
