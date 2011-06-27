@@ -2,7 +2,7 @@ package brooklyn.entity.webapp.tomcat
 
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshBasedJavaWebAppSetup
-import brooklyn.location.basic.SshMachineLocation
+import brooklyn.location.basic.SshMachine
 
 
 /**
@@ -90,10 +90,10 @@ exit"""
         getNextValue("tomcatShutdownPort", DEFAULT_FIRST_SHUTDOWN_PORT)
     }
 
-    public void shutdown(SshMachineLocation loc) {
+    public void shutdown(SshMachine machine) {
         log.debug "invoking shutdown script"
         //we use kill -9 rather than shutdown.sh because the latter is not 100% reliable
-        def result = loc.run(out: System.out, "cd $runDir && echo killing process `cat pid.txt` on `hostname` && kill -9 `cat pid.txt` && rm -f pid.txt ; exit")
+        def result = machine.run(out: System.out, "cd $runDir && echo killing process `cat pid.txt` on `hostname` && kill -9 `cat pid.txt` && rm -f pid.txt ; exit")
         if (result) log.info "non-zero result code terminating {}: {}", entity, result
         log.debug "done invoking shutdown script"
     }

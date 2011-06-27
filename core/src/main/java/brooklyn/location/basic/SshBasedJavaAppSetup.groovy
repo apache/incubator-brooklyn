@@ -55,8 +55,8 @@ public abstract class SshBasedJavaAppSetup {
 	}
  
 	public int getJmxPort() {
-		log.debug "setting jmxHost on $entity as {}", entity.location.host
-		entity.attributes.jmxHost = entity.location.host
+		log.debug "setting jmxHost on $entity as {}", entity.machine.host
+		entity.attributes.jmxHost = entity.machine.host.hostName
 		getNextValue("jmxPort", 32199)
 	}
  
@@ -98,22 +98,22 @@ exit
 	 */
 	public abstract String getCheckRunningScript();
 	
-	public void start(SshMachineLocation loc) {
-        log.info "starting entity {} in location {}", entity, loc
+	public void start(SshMachine machine) {
+        log.info "starting entity {} on machine {}", entity, machine
 		synchronized (getClass()) {
 			String s = getInstallScript()
 			if (s) {
-				int result = loc.run(out:System.out, s)
+				int result = machine.run(out:System.out, s)
 				if (result) throw new IllegalStateException("failed to start $entity (exit code $result)")
 			}
 		}
 
-		def result = loc.run(out:System.out, getRunScript())
+		def result = machine.run(out:System.out, getRunScript())
 		if (result) throw new IllegalStateException("failed to start $entity (exit code $result)")
 	}
  
-	public boolean isRunning(SshMachineLocation loc) {
-		def result = loc.run(out:System.out, getCheckRunningScript())
+	public boolean isRunning(SshMachine machine) {
+		def result = machine.run(out:System.out, getCheckRunningScript())
 		if (result==0) return true
 		if (result==1) return false
 		throw new IllegalStateException("$entity running check gave result code $result")

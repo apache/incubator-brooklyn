@@ -16,10 +16,12 @@ import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.management.internal.task.Futures
 import brooklyn.util.internal.EntityStartUtils
+import brooklyn.location.basic.SshMachine
+import brooklyn.location.basic.NoMachinesAvailableException
 
 
 /**
- * An {@link Entity} that represents a single Tomcat instance.
+ * An {@link brooklyn.entity.Entity} that represents a single Tomcat instance.
  */
 public class TomcatNode extends AbstractEntity implements Startable {
 	private static final Logger log = LoggerFactory.getLogger(TomcatNode.class)
@@ -40,23 +42,28 @@ public class TomcatNode extends AbstractEntity implements Startable {
  
 	static {
 		TomcatNode.metaClass.startInLocation = { SshMachineLocation loc ->
+            if (! loc.attributes.provisioner)
+                throw new IllegalStateException("Location $loc does not have a machine provisioner")
+            SshMachine machine = loc.attributes.provisioner.obtain()
+            if (machine == null) throw new NoMachinesAvailableException(loc)
+            delegate.machine = machine
 			def setup = new Tomcat7SshSetup(delegate)
 			//FIXME HTTP_PORT should be a CONFIG (if supplied by user) _and_ an ATTRIBUTE (where it's actually running)
 			//pass http port to setup, if one was specified on this object
 			if (getAttribute(HTTP_PORT)) setup.httpPort = getAttribute(HTTP_PORT)
             delegate.updateAttribute(HTTP_PORT, setup.tomcatHttpPort) // copy the http port to tomcat entity
-			setup.start loc
+			setup.start machine
 			// TODO: remove the 3s sleep and find a better way to detect an early death of the Tomcat process
 			log.debug "waiting to ensure $delegate doesn't abort prematurely"
 			Thread.sleep 3000
-			def isRunningResult = setup.isRunning(loc)
+			def isRunningResult = setup.isRunning(machine)
 			if (!isRunningResult) throw new IllegalStateException("$delegate aborted soon after startup")
 		}
 		TomcatNode.metaClass.shutdownInLocation = { SshMachineLocation loc -> null
-			new Tomcat7SshSetup(delegate).shutdown loc 
+			new Tomcat7SshSetup(delegate).shutdown delegate.machine
 		}
         TomcatNode.metaClass.deploy = { String file, SshMachineLocation loc -> null 
-            new Tomcat7SshSetup(delegate).deploy(new File(file), loc)
+            new Tomcat7SshSetup(delegate).deploy(new File(file), delegate.machine)
 		}
 	}
 

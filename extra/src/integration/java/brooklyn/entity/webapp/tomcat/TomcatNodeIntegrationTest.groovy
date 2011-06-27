@@ -18,6 +18,7 @@ import brooklyn.entity.basic.AbstractApplication
 import brooklyn.event.EntityStartException
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.test.TestUtils.BooleanWithMessage
+import brooklyn.location.basic.LocalhostSshMachineProvisioner
 
 /**
  * This tests the operation of the {@link TomcatNode} entity.
@@ -67,7 +68,7 @@ class TomcatNodeIntegrationTest {
     public void tracksNodeState() {
         TomcatNode tc = [ 
             owner: new TestApplication(), 
-            location:new SshMachineLocation(name:'london', host:'localhost')
+            location:new SshMachineLocation(name:'london', provisioner:new LocalhostSshMachineProvisioner())
         ]
         tc.start()
         executeUntilSucceedsWithFinallyBlock ([:], {
@@ -81,7 +82,7 @@ class TomcatNodeIntegrationTest {
 	public void publishesRequestsPerSecondMetric() {
 		Application app = new TestApplication();
 		TomcatNode tc = new TomcatNode(owner: app);
-		tc.start(location: new SshMachineLocation(name:'london', host:'localhost'))
+		tc.start(location: new SshMachineLocation(name:'london', provisioner:new LocalhostSshMachineProvisioner()))
 		executeUntilSucceedsWithShutdown(tc, {
 				def activityValue = tc.getAttribute(TomcatNode.REQUESTS_PER_SECOND)
 				if (activityValue == null || activityValue == -1) return new BooleanWithMessage(false, "activity not set yet ($activityValue)")
@@ -104,7 +105,7 @@ class TomcatNodeIntegrationTest {
     public void publishesErrorCountMetric() {
         Application app = new TestApplication();
         TomcatNode tc = new TomcatNode(owner: app);
-        tc.start(location:new SshMachineLocation(name:'london', host:'localhost'))
+        tc.start(location:new SshMachineLocation(name:'london', provisioner:new LocalhostSshMachineProvisioner()))
         executeUntilSucceedsWithShutdown(tc, {
             def port = tc.getAttribute(TomcatNode.HTTP_PORT)
             def errorCount = tc.getAttribute(TomcatNode.ERROR_COUNT)
@@ -131,7 +132,7 @@ class TomcatNodeIntegrationTest {
         assertNotNull resource
         tc.war = resource.getPath()
 
-		tc.start(location: new SshMachineLocation(name:'london', host:'localhost'))
+		tc.start(location: new SshMachineLocation(name:'london', provisioner:new LocalhostSshMachineProvisioner()))
 		executeUntilSucceedsWithShutdown(tc, {
             def port = tc.getAttribute(TomcatNode.HTTP_PORT)
             def url  = "http://localhost:${port}/hello-world"
@@ -155,7 +156,7 @@ class TomcatNodeIntegrationTest {
 			TomcatNode tc = new TomcatNode(owner:app)
 			Exception caught = null
 			try {
-                tc.start(location: new SshMachineLocation(name:'london', host:'localhost'))
+                tc.start(location: new SshMachineLocation(name:'london', provisioner:new LocalhostSshMachineProvisioner()))
 			} catch (EntityStartException e) {
 				caught = e
 			} finally {
