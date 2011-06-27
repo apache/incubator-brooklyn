@@ -7,7 +7,9 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.AbstractEntity
+import brooklyn.entity.basic.AttributeDictionary
 import brooklyn.entity.trait.Startable
+import brooklyn.event.AttributeSensor
 import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.Location
@@ -21,6 +23,8 @@ import brooklyn.util.internal.EntityStartUtils
 public class JBossNode extends AbstractEntity implements Startable {
 	private static final Logger log = LoggerFactory.getLogger(JBossNode.class)
 
+    public static final AttributeSensor<Integer> JMX_PORT = AttributeDictionary.JMX_PORT;
+    public static final AttributeSensor<String> JMX_HOST = AttributeDictionary.JMX_HOST;
     public static final BasicAttributeSensor<Integer> REQUESTS_PER_SECOND = [ Double, "jmx.reqs.persec.RequestCount", "Reqs/Sec" ]
 	public static final BasicAttributeSensor<Integer> ERROR_COUNT = [ Integer, "jmx.reqs.global.totals.errorCount", "Error count" ]
 	public static final BasicAttributeSensor<Integer> MAX_PROCESSING_TIME = [ Integer, "jmx.reqs.global.totals.maxTime", "Max processing time" ]

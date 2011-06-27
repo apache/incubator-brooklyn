@@ -19,8 +19,9 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     @Override
     protected void postStart() {
         entity.updateAttribute(AttributeDictionary.JMX_PORT, jmxPort)
-        entity.updateAttribute(AttributeDictionary.JMX_HOST, jmxPort)
-        entity.updateAttribute(AttributeDictionary.HTTP_PORT, httpPort)
+        entity.updateAttribute(AttributeDictionary.JMX_HOST, jmxHost)
+        //FIXME Where is the http port set?
+        // entity.updateAttribute(AttributeDictionary.HTTP_PORT, httpPort)
     }
     
     public String getInstallScript() {
