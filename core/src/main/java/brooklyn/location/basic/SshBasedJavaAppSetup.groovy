@@ -5,7 +5,7 @@ import java.util.Map
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.entity.Entity
+import brooklyn.entity.basic.EntityLocal
 
 // TODO OS-X failure, if no recent command line ssh
 // ssh_askpass: exec(/usr/libexec/ssh-askpass): No such file or directory
@@ -16,13 +16,17 @@ import brooklyn.entity.Entity
 public abstract class SshBasedJavaAppSetup {
     static final Logger log = LoggerFactory.getLogger(SshBasedJavaAppSetup.class)
  
-	Entity entity
+	EntityLocal entity
+    SshMachineLocation host
 	String appBaseDir
 	String brooklynBaseDir = "/tmp/brooklyn"
 	String installsBaseDir = brooklynBaseDir+"/installs"
-	
-	public SshBasedJavaAppSetup(Entity entity) {
+	int jmxPort
+    String jmxHost
+    
+	public SshBasedJavaAppSetup(EntityLocal entity, SshMachineLocation host) {
 		this.entity = entity
+        this.host = host
 		appBaseDir = brooklynBaseDir + "/" + "app-"+entity.getApplication()?.id
 	}
 
@@ -36,15 +40,18 @@ public abstract class SshBasedJavaAppSetup {
 	}
  
 	/** convenience to record a value on the location to ensure each instance gets a unique value */
-	protected int getNextValue(String field, int initial) {
+	protected int claimNextValue(String field, int initial) {
 		def v = entity.attributes[field]
 		if (!v) {
-			log.debug "retrieving {}, {}", field, entity.location.attributes
-			synchronized (entity.location) {
-				v = entity.location.attributes["next_"+field] ?: initial
-				entity.location.attributes["next_"+field] = (v+1)
+			log.debug "retrieving {}, {}", field, host.attributes
+			synchronized (host) {
+                println "host="+host
+                println "attribs="+host.getAttributes()
+                println "val="+host.attributes["next_"+field]
+				v = host.attributes["next_"+field] ?: initial
+				host.attributes["next_"+field] = (v+1)
 			}
-			log.debug "retrieved {}, {}", field, entity.location.attributes
+			log.debug "retrieved {}, {}", field, host.attributes
 			entity.attributes[field] = v
 		}
 		v
@@ -54,10 +61,11 @@ public abstract class SshBasedJavaAppSetup {
 		[:] + getJmxConfigOptions()
 	}
  
-	public int getJmxPort() {
-		log.debug "setting jmxHost on $entity as {}", entity.location.host
-		entity.attributes.jmxHost = entity.location.host
-		getNextValue("jmxPort", 32199)
+	public int claimJmxPort() {
+        // FIXME Really bad place to have side effects! Clean up required.
+		log.debug "setting jmxHost on $entity as {}", host
+		jmxHost = host.getHost()
+		jmxPort = claimNextValue("jmxPort", 32199)
 	}
  
 	/**
@@ -68,7 +76,7 @@ public abstract class SshBasedJavaAppSetup {
 	public Map getJmxConfigOptions() {
 		[
           'com.sun.management.jmxremote':'',
-		  'com.sun.management.jmxremote.port':getJmxPort(),
+		  'com.sun.management.jmxremote.port':claimJmxPort(),
 		  'com.sun.management.jmxremote.ssl':false,
 		  'com.sun.management.jmxremote.authenticate':false
 		]
@@ -110,8 +118,16 @@ exit
 
 		def result = loc.run(out:System.out, getRunScript())
 		if (result) throw new IllegalStateException("failed to start $entity (exit code $result)")
+        
+        postStart();
 	}
  
+    /**
+     * Called after start has completed, if successful. To be overridden; default is a no-op. 
+     */
+    protected void postStart() {
+    }
+    
 	public boolean isRunning(SshMachineLocation loc) {
 		def result = loc.run(out:System.out, getCheckRunningScript())
 		if (result==0) return true

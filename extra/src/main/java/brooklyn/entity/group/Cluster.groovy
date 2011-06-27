@@ -9,6 +9,7 @@ import brooklyn.entity.Entity
 import brooklyn.entity.Group
 import brooklyn.entity.trait.Resizable
 import brooklyn.entity.trait.Startable
+import brooklyn.location.Location
 import brooklyn.util.internal.EntityStartUtils
 
 /**
@@ -48,12 +49,12 @@ public abstract class ClusterFromTemplate extends Cluster implements Resizable {
 
 	int initialSize = 1
 
-	public synchronized void start(Map addlProperties=[:]) {
-		properties << addlProperties
+	public synchronized void start(Collection<Location> locs) {
+        // FIXME Do what with locs?
 		if (!(initialSize in Integer))
 			throw new IllegalArgumentException('cluster initial size must be an integer')
 
-		log.debug "starting $this cluster with properties {} and size $initialSize", properties
+		log.debug "starting $this cluster with properties {} and size $initialSize in $locs"
 
 		int newNodes = initialSize - children.size()
 		if (newNodes>0) grow(newNodes)

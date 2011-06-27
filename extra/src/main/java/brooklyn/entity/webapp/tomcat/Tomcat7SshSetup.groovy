@@ -1,6 +1,6 @@
 package brooklyn.entity.webapp.tomcat
 
-import brooklyn.location.Location;
+import brooklyn.entity.basic.AttributeDictionary
 import brooklyn.location.basic.SshBasedJavaWebAppSetup
 import brooklyn.location.basic.SshMachineLocation
 
@@ -15,17 +15,23 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
     public static DEFAULT_FIRST_HTTP_PORT = 8080
     public static DEFAULT_FIRST_SHUTDOWN_PORT = 31880
 
-    TomcatNode entity
     String runDir
 
     Object httpPortLock = new Object()
     int httpPort = -1
 
-    public Tomcat7SshSetup(TomcatNode entity) {
-        super(entity)
+    public Tomcat7SshSetup(TomcatNode entity, SshMachineLocation host) {
+        super(entity, host)
         runDir = appBaseDir + "/" + "tomcat-" + entity.id
     }
 
+    @Override
+    protected void postStart() {
+        entity.updateAttribute(AttributeDictionary.JMX_PORT, jmxPort)
+        entity.updateAttribute(AttributeDictionary.JMX_HOST, jmxHost)
+        entity.updateAttribute(AttributeDictionary.HTTP_PORT, httpPort)
+    }
+    
     public String getInstallScript() {
         makeInstallScript(
                 "wget http://download.nextag.com/apache/tomcat/tomcat-7/v${version}/bin/apache-tomcat-${version}.tar.gz",
@@ -78,7 +84,7 @@ exit"""
     public int getTomcatHttpPort() {
         synchronized (httpPortLock) {
             if (httpPort < 0)
-                httpPort = getNextValue("tomcatHttpPort", DEFAULT_FIRST_HTTP_PORT)
+                httpPort = claimNextValue("tomcatHttpPort", DEFAULT_FIRST_HTTP_PORT)
         }
         return httpPort
     }
@@ -87,7 +93,7 @@ exit"""
      * so moving it to some anonymous high-numbered location
      */
     public int getTomcatShutdownPort() {
-        getNextValue("tomcatShutdownPort", DEFAULT_FIRST_SHUTDOWN_PORT)
+        claimNextValue("tomcatShutdownPort", DEFAULT_FIRST_SHUTDOWN_PORT)
     }
 
     public void shutdown(SshMachineLocation loc) {

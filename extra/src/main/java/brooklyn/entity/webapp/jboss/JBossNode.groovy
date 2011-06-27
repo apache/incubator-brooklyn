@@ -1,8 +1,7 @@
 package brooklyn.entity.webapp.jboss
 
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledFuture
-import java.util.concurrent.TimeUnit
+import static brooklyn.entity.basic.AttributeDictionary.*
+import static brooklyn.entity.basic.ConfigKeyDictionary.*
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -30,43 +29,45 @@ public class JBossNode extends AbstractEntity implements Startable {
 
     transient JmxSensorAdapter jmxAdapter;
     
-    static {
-        JBossNode.metaClass.startInLocation = { SshMachineLocation loc ->
-			def setup = new JBoss6SshSetup(delegate)
-			setup.start loc
-
-			//TODO extract to a utility method
-			//TODO use same code with TomcatNode, or use extract new abstract superclass
-			log.debug "waiting to ensure $delegate doesn't abort prematurely"
-			long startTime = System.currentTimeMillis()
-			boolean isRunningResult = false;
-			while (!isRunningResult && System.currentTimeMillis() < startTime+60000) {
-				Thread.sleep 3000
-				isRunningResult = setup.isRunning(loc)
-				log.debug "checked jboss $delegate, running result $isRunningResult"
-			}
-			if (!isRunningResult) throw new IllegalStateException("$delegate aborted soon after startup")
-			
-			log.warn "not setting http port for successful jboss execution"
+    public void startInLocation(SshMachineLocation loc) {
+        def setup = new JBoss6SshSetup(this)
+        setup.start loc
+        locations.add(loc)
+        
+        //TODO extract to a utility method
+        //TODO use same code with TomcatNode, or use extract new abstract superclass
+        log.debug "waiting to ensure $this doesn't abort prematurely"
+        long startTime = System.currentTimeMillis()
+        boolean isRunningResult = false;
+        while (!isRunningResult && System.currentTimeMillis() < startTime+60000) {
+            Thread.sleep 3000
+            isRunningResult = setup.isRunning(loc)
+            log.debug "checked jboss $this, running result $isRunningResult"
         }
-        JBossNode.metaClass.shutdownInLocation = { SshMachineLocation loc ->
-            new JBoss6SshSetup(delegate).shutdown loc;
-        }
+        if (!isRunningResult) throw new IllegalStateException("$this aborted soon after startup")
+        
+        log.warn "not setting http port for successful jboss execution"
     }
     
-    public void start(Map startAttributes=[:]) {
-        EntityStartUtils.startEntity(startAttributes, this);
-		log.debug "started... jmxHost is {} and jmxPort is {}", this.attributes['jmxHost'], this.attributes['jmxPort']
+    public void shutdownInLocation(SshMachineLocation loc) {
+        new JBoss6SshSetup(this).shutdown loc;
+    }
+    
+    public void start(Collection<Location> locs) {
+        EntityStartUtils.startEntity(this, locs);
         
-		if (this.attributes['jmxHost'] && this.attributes['jmxPort']) {
-			jmxAdapter = new JmxSensorAdapter(this, 60*1000)
-        }
+        if (!(getAttribute(JMX_HOST) && getAttribute(JMX_PORT)))
+            throw new IllegalStateException("JMX is not available")
+        
+        log.debug "started jboss server: jmxHost {} and jmxPort {}", getAttribute(JMX_HOST), getAttribute(JMX_PORT)
+        
+		jmxAdapter = new JmxSensorAdapter(this, 60*1000)
     }
 
     public void updateJmxSensors() {
 		def reqs = jmxAdapter.getChildrenAttributesWithTotal("jboss.web:type=GlobalRequestProcessor,name=http*")
 		reqs.put("timestamp", System.currentTimeMillis())
-		updateAttribute(["jmx", "reqs", "global"], reqs)
+		updateAttribute(["jmx", "reqs", "global"], reqs) // FIXME Update one attribute at a time...
    }
 
     public void shutdown() {

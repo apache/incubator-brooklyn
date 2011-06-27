@@ -18,6 +18,7 @@ import javax.management.remote.JMXServiceURL
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.entity.basic.AttributeDictionary
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.AttributeSensor
 import brooklyn.event.Sensor
@@ -58,10 +59,10 @@ public class JmxSensorAdapter implements  SensorAdapter {
         this.entity = entity
         this.properties << properties
  
-        String host = entity.attributes['jmxHost']
-        int port = entity.attributes['jmxPort']
+        String host = entity.getAttribute(AttributeDictionary.JMX_HOST);
+        int port = entity.getAttribute(AttributeDictionary.JMX_PORT);
  
-        this.jmxUrl =  "service:jmx:rmi:///jndi/rmi://"+host+":"+port+"/jmxrmi";
+        this.jmxUrl = "service:jmx:rmi:///jndi/rmi://"+host+":"+port+"/jmxrmi";
         
         if (!connect(timeout)) throw new IllegalStateException("Could not connect to JMX service")
     }
@@ -70,7 +71,7 @@ public class JmxSensorAdapter implements  SensorAdapter {
         log.debug "adding calculated sensor {} with delay {}", sensor.name, period
         calculated[sensor.getName()] = sensor
         entity.updateAttribute(sensor, null)
-
+        
         Closure safeCalculate = {
             try {
                 calculate.call()
@@ -78,7 +79,7 @@ public class JmxSensorAdapter implements  SensorAdapter {
                 log.error "Error calculating value for sensor $sensor on entity $entity", e
             }
         }
-
+        
         scheduled[sensor.getName()] = exec.scheduleWithFixedDelay(safeCalculate, 0L, period, TimeUnit.MILLISECONDS)
     }
  
@@ -200,7 +201,7 @@ public class JmxSensorAdapter implements  SensorAdapter {
     }
  
     public <T> T poll(Sensor<T> sensor) {
-        def value = entity.attributes[sensorName]
+        def value = entity.getAttribute(sensor)
         entity.emit sensor, value
         value
     }

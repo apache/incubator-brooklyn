@@ -1,6 +1,9 @@
 package brooklyn.entity.trait;
 
-import java.util.Map;
+import java.util.Collection;
+
+import brooklyn.location.Location;
+
 
 public interface Startable {
 //	Effector<Void> START = new InterfaceEffector(Startable.class, "start", "Start an entity");
@@ -13,5 +16,5 @@ public interface Startable {
 	/**
 	 * TODO documentation
 	 */
-	void start(Map<?,?> properties);
+	void start(Collection<? extends Location> loc);
 }

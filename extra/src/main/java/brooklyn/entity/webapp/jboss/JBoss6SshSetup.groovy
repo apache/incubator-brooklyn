@@ -1,7 +1,8 @@
 package brooklyn.entity.webapp.jboss
 
-import brooklyn.location.basic.SshBasedJavaWebAppSetup;
-import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.entity.basic.AttributeDictionary
+import brooklyn.location.basic.SshBasedJavaWebAppSetup
+import brooklyn.location.basic.SshMachineLocation
 
 public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     
@@ -15,6 +16,13 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         runDir = appBaseDir + "/" + "jboss-"+entity.id
     }
 
+    @Override
+    protected void postStart() {
+        entity.updateAttribute(AttributeDictionary.JMX_PORT, jmxPort)
+        entity.updateAttribute(AttributeDictionary.JMX_HOST, jmxPort)
+        entity.updateAttribute(AttributeDictionary.HTTP_PORT, httpPort)
+    }
+    
     public String getInstallScript() {
         def url = "http://downloads.sourceforge.net/project/jboss/JBoss/JBoss-$version/jboss-as-distribution-${version}.zip?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fjboss%2Ffiles%2FJBoss%2F$version%2F&ts=1307104229&use_mirror=kent"
         // Note the -o option to unzip, to overwrite existing files without warning.
@@ -59,8 +67,8 @@ exit"""
 
     /** script to return 1 if pid in runDir is running, 0 otherwise */
     public String getCheckRunningScript() { 
-		def port = entity.attributes.jmxPort
-		def host = entity.attributes.jmxHost
+		def port = jmxPort
+		def host = jmxHost
 		"$installDir/bin/twiddle.sh --host $host --port $port get \"jboss.system:type=Server\" Started; exit"
     }
 
@@ -69,8 +77,8 @@ exit"""
     }
 
     public void shutdown(SshMachineLocation loc) {
-        def host = entity.attributes.jmxHost
-		def port = entity.attributes.jmxPort
+        def host = entity.getAttribute(AttributeDictionary.JMX_HOST)
+		def port = entity.getAttribute(AttributeDictionary.JMX_PORT)
         loc.run("$installDir/bin/shutdown.sh --host=$host --port=$port -S; exit", out: System.out)
     }
 }

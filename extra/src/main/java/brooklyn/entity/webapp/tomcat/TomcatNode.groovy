@@ -1,5 +1,8 @@
 package brooklyn.entity.webapp.tomcat
 
+import static brooklyn.entity.basic.AttributeDictionary.*
+import static brooklyn.entity.basic.ConfigKeyDictionary.*
+
 import java.util.Collection
 import java.util.Map
 
@@ -9,10 +12,13 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.AbstractEntity
+import brooklyn.entity.basic.AttributeDictionary
 import brooklyn.entity.trait.Startable
+import brooklyn.event.AttributeSensor
 import brooklyn.event.EntityStartException
 import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.location.Location
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.management.internal.task.Futures
 import brooklyn.util.internal.EntityStartUtils
@@ -24,7 +30,9 @@ import brooklyn.util.internal.EntityStartUtils
 public class TomcatNode extends AbstractEntity implements Startable {
 	private static final Logger log = LoggerFactory.getLogger(TomcatNode.class)
  
-    public static final BasicAttributeSensor<Integer> HTTP_PORT = [ Integer, "webapp.http.port", "HTTP port" ]
+    public static final AttributeSensor<Integer> HTTP_PORT = AttributeDictionary.HTTP_PORT;
+    public static final AttributeSensor<Integer> JMX_PORT = AttributeDictionary.JMX_PORT;
+    public static final AttributeSensor<String> JMX_HOST = AttributeDictionary.JMX_HOST;
     public static final BasicAttributeSensor<Integer> REQUESTS_PER_SECOND = [ Integer, "webapp.reqs.persec", "Reqs/Sec" ]
     public static final BasicAttributeSensor<Integer> MAX_PROCESSING_TIME = [ Integer, "webpp.reqs.processing.max", "Max processing time" ]
     public static final BasicAttributeSensor<Boolean> NODE_UP = [ Boolean, "webapp.hasStarted", "Node started" ];
@@ -38,28 +46,6 @@ public class TomcatNode extends AbstractEntity implements Startable {
     
     transient JmxSensorAdapter jmxAdapter;
  
-	static {
-		TomcatNode.metaClass.startInLocation = { SshMachineLocation loc ->
-			def setup = new Tomcat7SshSetup(delegate)
-			//FIXME HTTP_PORT should be a CONFIG (if supplied by user) _and_ an ATTRIBUTE (where it's actually running)
-			//pass http port to setup, if one was specified on this object
-			if (getAttribute(HTTP_PORT)) setup.httpPort = getAttribute(HTTP_PORT)
-            delegate.updateAttribute(HTTP_PORT, setup.tomcatHttpPort) // copy the http port to tomcat entity
-			setup.start loc
-			// TODO: remove the 3s sleep and find a better way to detect an early death of the Tomcat process
-			log.debug "waiting to ensure $delegate doesn't abort prematurely"
-			Thread.sleep 3000
-			def isRunningResult = setup.isRunning(loc)
-			if (!isRunningResult) throw new IllegalStateException("$delegate aborted soon after startup")
-		}
-		TomcatNode.metaClass.shutdownInLocation = { SshMachineLocation loc -> null
-			new Tomcat7SshSetup(delegate).shutdown loc 
-		}
-        TomcatNode.metaClass.deploy = { String file, SshMachineLocation loc -> null 
-            new Tomcat7SshSetup(delegate).deploy(new File(file), loc)
-		}
-	}
-
     public TomcatNode(Map properties=[:]) {
         super(properties);
 
@@ -70,51 +56,85 @@ public class TomcatNode extends AbstractEntity implements Startable {
 		propertiesAdapter.addSensor NODE_STATUS, "starting"
     }
 
-	public void start(Map startAttributes=[:]) {
-		EntityStartUtils.startEntity startAttributes, this
-        if (!this.jmxHost && !this.jmxPort)
+    // TODO Thinking about thinks...
+//    public void startInLocation(MachineFactoryLocation factory) {
+//        SshMachineLocation loc = factory.newMachine();
+//        startInLocation(loc);
+//    }
+
+    public void startInLocation(Collection<SshMachineLocation> locs) {
+        // TODO check has exactly one?
+        startInLocation(locs.iterator().next())
+    }
+    
+    public void startInLocation(SshMachineLocation loc) {
+        locations.add(loc)
+        
+        def setup = new Tomcat7SshSetup(this, loc)
+        //FIXME HTTP_PORT should be a CONFIG (if supplied by user) _and_ an ATTRIBUTE (where it's actually running)
+        //pass http port to setup, if one was specified on this object
+        if (getAttribute(HTTP_PORT)) setup.httpPort = getAttribute(HTTP_PORT)
+        updateAttribute(HTTP_PORT, setup.tomcatHttpPort) // copy the http port to tomcat entity
+        setup.start loc
+        // TODO: remove the 3s sleep and find a better way to detect an early death of the Tomcat process
+        log.debug "waiting to ensure $delegate doesn't abort prematurely"
+        Thread.sleep 3000
+        def isRunningResult = setup.isRunning(loc)
+        if (!isRunningResult) throw new IllegalStateException("$delegate aborted soon after startup")
+    }
+
+    public void shutdownInLocation(SshMachineLocation loc) {
+        new Tomcat7SshSetup(this, loc).shutdown loc
+    }
+
+    public void deploy(String file, SshMachineLocation loc) {
+        new Tomcat7SshSetup(this, loc).deploy(new File(file), loc)
+    }
+
+	public void start(Collection<Location> locs) {
+		EntityStartUtils.startEntity this, locs
+        
+        if (!(getAttribute(JMX_HOST) && getAttribute(JMX_PORT)))
             throw new IllegalStateException("JMX is not available")
+        
+		log.debug "starting tomcat: httpPort {}, jmxHost {} and jmxPort {}", getAttribute(HTTP_PORT), getAttribute(JMX_HOST), getAttribute(JMX_PORT)
 
-		log.debug "starting tomcat: httpPort {}, jmxHost {} and jmxPort {}", this.attributes['httpPort'], this.attributes['jmxHost'], this.attributes['jmxPort']
-
-		if (this.attributes['jmxHost'] && this.attributes['jmxPort']) {
-			jmxAdapter = new JmxSensorAdapter(this, 60*1000)
-            
-			AbstractEntity ae = this
-            Futures.when({
-        			// Wait for the HTTP port to become available
-        			String state = null
-        			int port = getAttribute(HTTP_PORT)?:-1
-        			for (int attempts = 0; attempts < 30; attempts++) {
-        				Map connectorAttrs;
-        				try {
-        					connectorAttrs = jmxAdapter.getAttributes("Catalina:type=Connector,port=$port")
-                            log.info "attempt {} - connector attribs are {}", attempts, connectorAttrs
-        					state = connectorAttrs['stateName']
-        				} catch (InstanceNotFoundException e) {
-        					state = "InstanceNotFound"
-        				}
-                        updateAttribute(NODE_STATUS, state) 
-        				log.trace "state: $state"
-        				if (state == "FAILED") {
-                            updateAttribute(NODE_UP, false)
-        					throw new EntityStartException("Tomcat connector for port $port is in state $state")
-        				} else if (state == "STARTED") {
-                            updateAttribute(NODE_UP, true)
-        					break;
-        				}
-        				Thread.sleep 250
-        			}
-        			if (state != "STARTED") {
+		jmxAdapter = new JmxSensorAdapter(this, 60*1000)
+        
+		AbstractEntity ae = this
+        Futures.when({
+    			// Wait for the HTTP port to become available
+    			String state = null
+    			int port = getAttribute(HTTP_PORT)?:-1
+    			for (int attempts = 0; attempts < 30; attempts++) {
+    				Map connectorAttrs;
+    				try {
+    					connectorAttrs = jmxAdapter.getAttributes("Catalina:type=Connector,port=$port")
+                        log.info "attempt {} - connector attribs are {}", attempts, connectorAttrs
+    					state = connectorAttrs['stateName']
+    				} catch (InstanceNotFoundException e) {
+    					state = "InstanceNotFound"
+    				}
+                    updateAttribute(NODE_STATUS, state) 
+    				log.trace "state: $state"
+    				if (state == "FAILED") {
                         updateAttribute(NODE_UP, false)
-        				throw new EntityStartException("Tomcat connector for port $port is in state $state after 30 seconds")
-                    }
-                }, { 
-                    boolean connected = jmxAdapter.isConnected()
-                    if (connected) log.info "jmx connected"
-                    connected
-                })
-		}
+    					throw new EntityStartException("Tomcat connector for port $port is in state $state")
+    				} else if (state == "STARTED") {
+                        updateAttribute(NODE_UP, true)
+    					break;
+    				}
+    				Thread.sleep 250
+    			}
+    			if (state != "STARTED") {
+                    updateAttribute(NODE_UP, false)
+    				throw new EntityStartException("Tomcat connector for port $port is in state $state after 30 seconds")
+                }
+            }, { 
+                boolean connected = jmxAdapter.isConnected()
+                if (connected) log.info "jmx connected"
+                connected
+            })
         
         // Add JMX sensors
         jmxAdapter.addSensor(ERROR_COUNT, "Catalina:type=GlobalRequestProcessor,name=\"*\"", "errorCount")
@@ -135,10 +155,12 @@ public class TomcatNode extends AbstractEntity implements Startable {
  
         def curTimestamp = System.currentTimeMillis()
         def curCount = reqs?.requestCount ?: 0
-		def prevTimestamp = attributes['tmp.reqs.timestamp'] ?: 0
-		def prevCount = attributes['tmp.reqs.count'] ?: 0
-        attributes['tmp.reqs.timestamp'] = curTimestamp
-        attributes['tmp.reqs.count'] = curCount
+        
+        // TODO Andrew reviewing/changing?
+		def prevTimestamp = tempWorkings['tmp.reqs.timestamp'] ?: 0
+		def prevCount = tempWorkings['tmp.reqs.count'] ?: 0
+        tempWorkings['tmp.reqs.timestamp'] = curTimestamp
+        tempWorkings['tmp.reqs.count'] = curCount
         log.trace "previous data {} at {}, current {} at {}", prevCount, prevTimestamp, curCount, curTimestamp
         
         // Calculate requests per second
@@ -162,6 +184,6 @@ public class TomcatNode extends AbstractEntity implements Startable {
 
 	public void shutdown() {
 		if (jmxAdapter) jmxAdapter.disconnect()
-		if (location) shutdownInLocation(location)
+		if (locations) shutdownInLocation(locations.iterator().next())
 	}
 }

@@ -44,7 +44,9 @@ class TomcatSimulator {
         this.entity = entity
     }
 
-    public void start() {
+    public void start(Collection<Location> locs) {
+        location = locs.iterator().next()
+        
         if (lock.tryAcquire() == false)
             throw new IllegalStateException("TomcatSimulator is already running")
         synchronized (activeInstances) { activeInstances.add(this) }

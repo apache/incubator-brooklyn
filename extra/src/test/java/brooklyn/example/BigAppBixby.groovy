@@ -28,7 +28,7 @@ public class BigAppBixby extends AbstractApplication {
 		app.tc.webCluster.template.initialSize = 2  //2 web nodes per region 
 		app.mm.policy << new MontereyLatencyOptimisationPolicy()
 		installSecretCredentials(app.properties)
-		app.start(location:[new VcloudLocation(id:"vcloudmgr.monterey-west.cloudsoftcorp.com"), new AmazonLocation(id:"US-East")])
+		app.start([new VcloudLocation(id:"vcloudmgr.monterey-west.cloudsoftcorp.com"), new AmazonLocation(id:"US-East")])
 	}
 	
 }

@@ -8,10 +8,12 @@ import java.util.concurrent.ConcurrentHashMap
 
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
+import brooklyn.location.Location
 import brooklyn.management.ManagementContext
 import brooklyn.management.internal.AbstractManagementContext
 import brooklyn.management.internal.LocalManagementContext
-import brooklyn.util.internal.SerializableObservableMap;
+import brooklyn.util.internal.EntityStartUtils
+import brooklyn.util.internal.SerializableObservableMap
 
 public abstract class AbstractApplication extends AbstractGroup implements Application {
     public AbstractApplication(Map properties=[:]) {
@@ -48,9 +50,9 @@ public abstract class AbstractApplication extends AbstractGroup implements Appli
     /**
      * Default start will start all Startable children
      */
-    public void start(Map properties=[:]) {
+    public void start(Collection<Location> locs) {
 		getManagementContext()
-        EntityStartUtils.startGroup properties, this
+        EntityStartUtils.startGroup this, locs
     }
 	
 	private volatile AbstractManagementContext mgmt = null;

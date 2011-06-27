@@ -70,6 +70,12 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 	//and do the publishing there...  (please leave this comment here for several months until we know... it's Jun 2011 right now)
     protected final PropertiesSensorAdapter propertiesAdapter = new PropertiesSensorAdapter(this, attributes)
 
+    /**
+     * For temporary data, e.g. timestamps etc for calculating real attribute values, such as when
+     * calculating averages over time etc.
+     */
+    protected final Map<String,Object> tempWorkings = [:]
+    
     /*
      * TODO An alternative implementation approach would be to have:
      *   setOwner(Entity o, Map<ConfigKey,Object> inheritedConfig=[:])
