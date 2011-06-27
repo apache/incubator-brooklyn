@@ -72,7 +72,7 @@ public class TomcatNode extends AbstractEntity implements Startable {
 
 	public void start(Map startAttributes=[:]) {
 		EntityStartUtils.startEntity startAttributes, this
-        if (!this.jxmHost && !this.jmxPort)
+        if (!this.jmxHost && !this.jmxPort)
             throw new IllegalStateException("JMX is not available")
 
 		log.debug "starting tomcat: httpPort {}, jmxHost {} and jmxPort {}", this.attributes['httpPort'], this.attributes['jmxHost'], this.attributes['jmxPort']
