@@ -1,12 +1,14 @@
-import brooklyn.web.console.*
+import brooklyn.web.console.SecurityRole
+import brooklyn.web.console.SecurityUser
+import brooklyn.web.console.SecurityUserRole
 
 class BootStrap {
     def springSecurityService
 
     // TODO hard-coded admin/password account!
     def init = { servletContext ->
-        def adminRole = new SecurityRole(authority: 'ROLE_ADMIN').save(failOnError: true)
-        def adminUser = new SecurityUser(
+        def adminRole = SecurityRole.findByAuthority('ROLE_ADMIN') ?: new SecurityRole(authority: 'ROLE_ADMIN').save(failOnError: true)
+        def adminUser =  SecurityUser.findByUsername('admin') ?: new SecurityUser(
                 username: 'admin',
                 password: springSecurityService.encodePassword('password'),
                 enabled: true).save(failOnError: true)
@@ -15,8 +17,8 @@ class BootStrap {
             SecurityUserRole.create adminUser, adminRole
         }
 
-        def userRole = new SecurityRole(authority: 'ROLE_USER').save(failOnError: true)
-        def user = new SecurityUser(
+        def userRole =  SecurityRole.findByAuthority('ROLE_USER') ?: new SecurityRole(authority: 'ROLE_USER').save(failOnError: true)
+        def user = SecurityUser.findByUsername('user') ?: new SecurityUser(
                 username: 'user',
                 password: springSecurityService.encodePassword('password'),
                 enabled: true).save(failOnError: true)
@@ -25,6 +27,7 @@ class BootStrap {
             SecurityUserRole.create user, userRole
         }
     }
+
     def destroy = {
     }
 }
