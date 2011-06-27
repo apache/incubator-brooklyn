@@ -11,8 +11,10 @@
 	<modules>
         <module>parent/root</module>
     	<module>api</module>
+        <module>test-support</module>
 		<module>core</module>
 		<module>extra</module>
 		<module>web-console</module>
+        <module>acceptance</module>
 	</modules>
 </project>
