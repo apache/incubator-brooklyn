@@ -47,10 +47,11 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
 		*/
 		def portGroupName = "ports-brooklyn"
 		int portIncrement = entity.portIncrement ?: 0
+		def serverProfile = "default"
 """mkdir -p $runDir/server && \\
 cd $runDir/server && \\
-cp -r $installDir/server/default default && \\
-cd default/conf/bindingservice.beans/META-INF/ && \\
+cp -r $installDir/server/$serverProfile $serverProfile && \\
+cd $serverProfile/conf/bindingservice.beans/META-INF/ && \\
 BJB="bindings-jboss-beans.xml" && \\
 sed -i.bk 's/ports-03/$portGroupName/' \$BJB && \\
 sed -i.bk 's/\\<parameter\\>300\\<\\/parameter\\>/\\<parameter\\>$portIncrement\\<\\/parameter\\>/' \$BJB && \\
@@ -62,7 +63,7 @@ JAVA_OPTS="\$JAVA_OPTS -Djavax.management.builder.initial=org.jboss.system.serve
 JAVA_OPTS="\$JAVA_OPTS -Djava.util.logging.manager=org.jboss.logmanager.LogManager" && \\
 JAVA_OPTS="\$JAVA_OPTS -Dorg.jboss.logging.Logger.pluginClass=org.jboss.logging.logmanager.LoggerPluginImpl" && \\
 export JBOSS_CLASSPATH="$installDir/lib/jboss-logmanager.jar" && \\
-$installDir/bin/run.sh -Djboss.service.binding.set=$portGroupName -Djboss.server.base.dir=$runDir/server -Djboss.server.base.url=file://$runDir/server -c default &
+$installDir/bin/run.sh -Djboss.service.binding.set=$portGroupName -Djboss.server.base.dir=$runDir/server -Djboss.server.base.url=file://$runDir/server -c $serverProfile &
 exit"""
     }
 
