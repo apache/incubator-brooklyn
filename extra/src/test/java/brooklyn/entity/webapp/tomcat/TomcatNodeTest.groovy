@@ -18,6 +18,8 @@ import brooklyn.entity.Application
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.internal.TimeExtras
+import brooklyn.location.basic.SshMachineProvisioner
+import brooklyn.location.basic.SshMachine
 
 /**
  * This tests the operation of the {@link TomcatNode} entity.
@@ -136,9 +138,13 @@ class TomcatNodeTest {
 	public void rejectIfEntityLocationConflictsWithStartParameter() {
 		Application app = new TestApplication()
 		boolean caught = false
-		TomcatNode tc = [ owner:app, location:new SshMachineLocation(name:'tokyo', InetAddress.getByName('localhost')) ]
+        SshMachineProvisioner tokyoMachinePool = new SshMachineProvisioner([InetAddress.getLocalHost()])
+        SshMachineLocation tokyoLocation = new SshMachineLocation(name:'tokyo', provisioner: tokyoMachinePool)
+        SshMachineProvisioner londonMachinePool = new SshMachineProvisioner([InetAddress.getLocalHost()])
+        SshMachineLocation londonLocation = new SshMachineLocation(name:'london', provisioner: tokyoMachinePool)
+		TomcatNode tc = [ owner:app, location:londonLocation ]
 		try {
-			tc.start([:], null, new SshMachineLocation(name:'london', host:'localhost'))
+			tc.start([:], null, tokyoLocation)
 			tc.shutdown()
 		} catch(Exception e) {
 			caught = true

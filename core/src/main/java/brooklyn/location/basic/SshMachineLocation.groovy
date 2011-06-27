@@ -17,33 +17,13 @@ public class SshMachineLocation implements Location {
 
 	Map attributes=[:]
 
-    SshMachine machine;
-
-    public SshMachineLocation(InetAddress host) {
-        machine = new SshMachine(host)
+    public SshMachineLocation() {
     }
 
-    public SshMachineLocation(Map attributes, InetAddress host) {
+    public SshMachineLocation(Map attributes) {
         name = attributes.name
         attributes.remove 'name'
-        String user = attributes.user
-        attributes.remove 'user'
         this.attributes = attributes
-
-        machine = new SshMachine(host, user)
-    }
-
-    public int run(Map props=[:], String command) {
-        return machine.run(props, command)
-    }
-
-    public int copyTo(File src, String destination) {
-        return machine.copyTo(src, destination)
-    }
-
-    @Override
-    public String toString() {
-        return machine.toString()
     }
 
 	/**
