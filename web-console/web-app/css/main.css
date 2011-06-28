@@ -33,10 +33,6 @@ h1 {
     margin: .8em 0 .3em 0;
 }
 
-ul {
-    padding-left: 15px;
-}
-
 input, select, textarea {
     background-color: #fcfcfc;
     border: 1px solid #ccc;
