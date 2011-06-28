@@ -76,26 +76,26 @@ public class TomcatNode extends AbstractEntity implements Startable {
             throw new IllegalStateException("Location $loc does not have a machine provisioner")
         SshMachine machine = loc.attributes.provisioner.obtain()
         if (machine == null) throw new NoMachinesAvailableException(loc)
-        delegate.machine = machine
+        this.machine = machine
         def setup = new Tomcat7SshSetup(this, machine)
         //FIXME HTTP_PORT should be a CONFIG (if supplied by user) _and_ an ATTRIBUTE (where it's actually running)
         //pass http port to setup, if one was specified on this object
         if (getAttribute(HTTP_PORT)) setup.httpPort = getAttribute(HTTP_PORT)
         updateAttribute(HTTP_PORT, setup.tomcatHttpPort) // copy the http port to tomcat entity
-        setup.start machine
+        setup.start()
         // TODO: remove the 3s sleep and find a better way to detect an early death of the Tomcat process
         log.debug "waiting to ensure $delegate doesn't abort prematurely"
         Thread.sleep 3000
-        def isRunningResult = setup.isRunning(machine)
+        def isRunningResult = setup.isRunning()
         if (!isRunningResult) throw new IllegalStateException("$delegate aborted soon after startup")
     }
 
     public void shutdownInLocation(SshMachineLocation loc) {
-        new Tomcat7SshSetup(this, loc).shutdown loc
+        new Tomcat7SshSetup(this, machine).shutdown()
     }
 
     public void deploy(String file, SshMachineLocation loc) {
-        new Tomcat7SshSetup(this, loc).deploy(new File(file), loc)
+        new Tomcat7SshSetup(this, machine).deploy(new File(file))
     }
 
     public void start(Collection<Location> locs) {

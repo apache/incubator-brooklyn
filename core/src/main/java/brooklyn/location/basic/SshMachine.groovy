@@ -8,12 +8,13 @@ import brooklyn.util.internal.SshJschTool
 public class SshMachine {
     String user = null
     InetAddress host
+    Map attributes=[:]
 
-    public SshMachine(InetAddress host) {
+    public SshMachine(Map attributes = [:], InetAddress host) {
         this.host = host
     }
 
-    public SshMachine(InetAddress host, String userName) {
+    public SshMachine(Map attributes = [:], InetAddress host, String userName) {
         this.user = userName
         this.host = host
     }
@@ -44,4 +45,11 @@ public class SshMachine {
     public String toString() {
         return host;
     }
+
+    /**
+     * These attributes are separate to the entity hierarchy attributes,
+     * used by certain types of entities as documented in their setup
+     * (e.g. JMX port)
+     */
+    public Map getAttributes() { attributes }
 }

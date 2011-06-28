@@ -67,9 +67,8 @@ class TomcatNodeIntegrationTest {
     public void tracksNodeState() {
         TomcatNode tc = [ 
             owner: new TestApplication()
-            location:new SshMachineLocation(name:'london', provisioner:new LocalhostSshMachineProvisioner())
         ]
-        tc.start([ new SshMachineLocation(name:'london', host:'localhost') ])
+        tc.start([ new SshMachineLocation(name:'london', provisioner:new LocalhostSshMachineProvisioner()) ])
         executeUntilSucceedsWithFinallyBlock ([:], {
             assertTrue tc.getAttribute(TomcatNode.NODE_UP)
         }, {
@@ -128,7 +127,7 @@ class TomcatNodeIntegrationTest {
         Application app = new TestApplication();
         TomcatNode tc = new TomcatNode(owner: app);
 
-        URL resource = this.getClass().getClassLoader().getResource("/hello-world.war")
+        URL resource = this.getClass().getClassLoader().getResource("hello-world.war")
         assertNotNull resource
         tc.war = resource.getPath()
 
