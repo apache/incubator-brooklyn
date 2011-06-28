@@ -1,6 +1,7 @@
 package brooklyn.util.task;
 
 import java.util.concurrent.Callable
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
@@ -78,7 +79,10 @@ public class BasicExecutionManager implements ExecutionManager {
 			Object result = null
 			try { 
 				beforeStart(flags, task);
-				result = task.job.call() 
+				if (!task.isCancelled())
+					result = task.job.call()
+				else 
+					throw new CancellationException()
 			} finally { 
 				afterEnd(flags, task) 
 			}
@@ -117,9 +121,13 @@ public class BasicExecutionManager implements ExecutionManager {
 		}
 	}	
 	protected void beforeStart(Map flags, Task task) {
-		task.startTimeUtc = System.currentTimeMillis()
-		perThreadCurrentTask.set task
-		task.thread = Thread.currentThread()
+		//set thread _before_ start time, so we won't get a null thread when there is a start-time
+		if (!task.isCancelled()) {
+			task.thread = Thread.currentThread()
+			perThreadCurrentTask.set task
+			task.startTimeUtc = System.currentTimeMillis()
+		}
+//		println "set thread for $task as "+task.thread
 		ExecutionUtils.invoke flags.newTaskStartCallback, task
 	}
 
@@ -128,6 +136,7 @@ public class BasicExecutionManager implements ExecutionManager {
 		perThreadCurrentTask.remove()
 		task.endTimeUtc = System.currentTimeMillis()
 		//clear thread _after_ endTime set, so we won't get a null thread when there is no end-time
+//		println "clearing thread for $task as "+task.thread
 		task.thread = null;
 		synchronized (task) { task.notifyAll() }
 	}

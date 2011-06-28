@@ -94,13 +94,28 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
 	
 	// housekeeping --------------------
 	
+	/*
+	 * These flags are set by BasicExecutionManager.submit.
+	 * 
+	 * Order is guaranteed to be as numbered. Within each number it is currently in the order specified by commas but this is not guaranteed.
+	 * 
+	 * (1) submitter, submit time set, tags and other submit-time fields set
+	 * (2) thread set, ThreadLocal getCurrentTask set  
+	 * (3) start time set, isBegun is true
+	 * (4) end time set
+	 * (5) thread cleared, ThreadLocal getCurrentTask set
+	 * (6) thread notified
+	 * (7) result available, isDone is true
+	 * 
+	 * Few consumers should care, but internally we need this so, for example, status is displayed correctly.
+	 */
 	protected long submitTimeUtc = -1;
 	protected long startTimeUtc = -1;
 	protected long endTimeUtc = -1;
 	protected Task<?> submittedByTask;
 
-	protected Thread thread = null
-	private boolean cancelled = false
+	protected volatile Thread thread = null
+	private volatile boolean cancelled = false
 	private Future<T> result = null
 	protected ExecutionManager em = null
 	
@@ -129,6 +144,10 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
 	public Thread getThread() { thread }
 		
 	// future --------------------
+
+	public boolean isBegun() {
+		return startTimeUtc>=0
+	}	
 	
 	public synchronized boolean cancel(boolean mayInterruptIfRunning) {
 		if (isDone()) return false
@@ -138,7 +157,7 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
 		notifyAll()
 		rv
 	}
-
+	
 	public boolean isCancelled() {
 		cancelled || result?.isCancelled()
 	}
@@ -163,6 +182,8 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
 		result.get()
 	}
 
+	String blockingDetails = null;
+	
 	public synchronized void blockUntilStarted() {
 		while (true) {
 			if (cancelled) throw new CancellationException()
@@ -205,17 +226,17 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
 	/** this method is useful for callers to see the status (0=brief, 1=one-line with some detail, 2=lots of detail) of a task,
 	 * and also for developers to see best practices for examining status fields etc */
 	protected String getStatusString(int verbosity) {
-		Thread t = getThread()
+		volatile Thread t = getThread()
 		String rv
 		if (submitTimeUtc <= 0) rv = "Not submitted"
-		else if (startTimeUtc <= 0) {
+		else if (!isCancelled() && startTimeUtc <= 0) {
 			rv = "Submitted for execution"
 			if (verbosity>0) {
 				long elapsed = System.currentTimeMillis() - submitTimeUtc;
 				rv += " "+elapsed+" ms ago"
 			}
 		} else if (isDone()) {
-			long elapsed = System.currentTimeMillis() - submitTimeUtc;
+			long elapsed = endTimeUtc - submitTimeUtc;
 			String duration = ""+elapsed+" ms";
 			rv = "Ended "
 			if (isCancelled()) {
@@ -243,28 +264,31 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
 				rv += "normally"
 				if (verbosity>=1) {
 					if (verbosity==1) {
-						rv += ", rv "+get()
+						rv += ", result "+get()
 					} else {
 						rv += " after "+duration
-						rv += "\n" + "rv: "+get()
+						rv += "\n" + "Result: "+get()
 					}
 				}
 			}
 		} else {
 			//active
-			assert t!=null : "shouldn't be possible not to have a current thread as we were started and not ended"
+			if (t==null) t = getThread()  //possible race on entry with initialization, but should be resolved now (according to task.thread)
+			assert t!=null : "shouldn't be possible not to have a current thread for $this as we were started and not ended, thread is "+t
+			
 			ThreadInfo ti = ManagementFactory.threadMXBean.getThreadInfo t.getId(), (verbosity<=0 ? 0 : verbosity==1 ? 1 : Integer.MAX_VALUE)
 			if (getThread()==null)
 				//thread might have moved on to a new task; if so, recompute (it should now say "done")
 				return getStatusString(verbosity)
 			LockInfo lock = ti.getLockInfo()
-			if (!lock) {
+			if (!lock && ti.getThreadState()==Thread.State.RUNNABLE) {
 				//not blocked
 				if (ti.isSuspended()) {
+					// when does this happen?
 					rv = "Waiting"
 					if (verbosity >= 1) rv += ", thread suspended"
 				} else {
-					rv = "Running"
+					rv = "Running ("+ti.getThreadState()+")"
 				}
 			} else {
 				rv = "Waiting"
@@ -279,6 +303,7 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
 					} else {
 						rv = " ("+ti.getThreadState()+") on "+lookup(lock)
 					}
+					if (blockingDetails) rv += " - "+blockingDetails;
 				}
 			}
 			if (verbosity>=2) {
@@ -292,7 +317,8 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
 		return rv
 	}
 		
-	protected lookup(LockInfo l) {
+	protected String lookup(LockInfo l) {
+		if (l==null) return "unknown (sleep)"
 		return l
 	}
 	

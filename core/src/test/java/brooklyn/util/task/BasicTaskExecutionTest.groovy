@@ -48,18 +48,23 @@ public class BasicTaskExecutionTest {
 	@Test
 	public void runBasicTaskWithWaits() {
 		data.clear()
+		String status;
 		BasicTask t = [ {
 			synchronized(data) {
 				def result = data.put(1, "b")
 				data.notify()
+				ExecutionContext.getCurrentTask().blockingDetails = "here my friend"
 				data.wait()
+				ExecutionContext.getCurrentTask().blockingDetails = null
 				result
 			}
 		} ]
+		status = t.getStatusDetail(true)
 		data.put(1, "a")
 		BasicExecutionManager em = []
 		synchronized (data) {
 			BasicTask t2 = em.submit tag:"A", t
+			status = t.getStatusDetail(true)
 			assertEquals(t, t2)
 			assertFalse(t.isDone())
 			
@@ -68,12 +73,16 @@ public class BasicTaskExecutionTest {
 			assertEquals("b", data.get(1))
 			assertFalse(t.isDone())
 			
-			println "runBasicTaskWithWaits, BasicTask status:\n"+t.getStatusDetail(false)
-			assertTrue(t.getStatusDetail(false).toLowerCase().contains("waiting"))
+			status = t.getStatusDetail(true)  //just checking it doesn't throw an exception
+			status = t.getStatusDetail(false)
+			println "runBasicTaskWithWaits, BasicTask status:\n"+status
+			assertTrue(status.toLowerCase().contains("waiting"))
+			assertTrue(status.toLowerCase().contains("here my friend"))
 			
 			data.notify()
 		}
 		assertEquals("a", t.get())
+		status = t.getStatusDetail(false)
 	}
 
 	@Test
@@ -124,11 +133,13 @@ public class BasicTaskExecutionTest {
 		assertTrue(t.isCancelled())
 		assertTrue(t.isDone())
 		assertTrue(t.isError())
+		assertFalse(t.isBegun())
 		em.submit tag:"A", t
 		try { t.get(); fail("get should have failed due to cancel"); } catch (CancellationException e) {}
 		assertTrue(t.isCancelled())
 		assertTrue(t.isDone())
 		assertTrue(t.isError())
+		assertFalse(t.isBegun())
 		
 		println "cancelBeforeRun status: "+t.getStatusDetail(false)
 		assertTrue(t.getStatusDetail(false).toLowerCase().contains("cancel"))
@@ -141,17 +152,22 @@ public class BasicTaskExecutionTest {
 		assertFalse(t.isCancelled())
 		assertFalse(t.isDone())
 		assertFalse(t.isError())
+		assertFalse(t.isBegun())
 		synchronized (data) {
 			em.submit tag:"A", t
 			data.wait()
+			assertTrue(t.isBegun())
+			assertFalse(t.isDone())
 			t.cancel true
 		}
 		assertTrue(t.isCancelled())
 		assertTrue(t.isError())
+		assertTrue(t.isBegun())
 		try { t.get(); fail("get should have failed due to cancel"); } catch (CancellationException e) {}
 		assertTrue(t.isCancelled())
 		assertTrue(t.isDone())
 		assertTrue(t.isError())
+		assertTrue(t.isBegun())
 	}
 	
 	@Test

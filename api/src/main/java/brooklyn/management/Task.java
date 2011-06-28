@@ -21,9 +21,15 @@ public interface Task<T> extends TaskStub, Future<T> {
 	/** the thread where the task is running, if it is running */
 	public Thread getThread();
 
+	/** whether task has started running; will remain true after normal completion or non-cancellation error;
+	 * will be true on cancel iff the thread did actually start */
+	public boolean isBegun();
+	/** whether the task threw an error, including cancellation (implies isDone) */
 	public boolean isError();
 
+	/** causes calling thread to block until the task is started */
 	public void blockUntilStarted();
+	/** causes calling thread to block until the task is ended (normally or by cancellation or error, but without throwing error on cancellation or error) */
 	public void blockUntilEnded();
 	
 	public String getStatusSummary();
