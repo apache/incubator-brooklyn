@@ -6,8 +6,8 @@ import brooklyn.entity.basic.EntityLocal
 
 public abstract class SshBasedJavaWebAppSetup extends SshBasedJavaAppSetup {
 
-    public SshBasedJavaWebAppSetup(EntityLocal entity, SshMachineLocation loc) {
-        super(entity, loc);
+    public SshBasedJavaWebAppSetup(EntityLocal entity, SshMachine machine) {
+        super(entity, machine);
     }
 
     public abstract String getDeployScript(String filename);
@@ -17,7 +17,7 @@ public abstract class SshBasedJavaWebAppSetup extends SshBasedJavaAppSetup {
      * for further processing on server.
      */
     //TODO should take an input stream?
-    public void deploy(File f, SshMachine machine) {
+    public void deploy(File f) {
         String target = installsBaseDir + "/" + f.getName()
 		log.debug "Tomcat Deploy - Copying file {} to $machine {}", f.getAbsolutePath(), target
         int copySuccess = machine.copyTo f, target

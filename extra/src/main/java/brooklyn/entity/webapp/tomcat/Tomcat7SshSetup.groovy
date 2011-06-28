@@ -20,8 +20,8 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
     Object httpPortLock = new Object()
     int httpPort = -1
 
-    public Tomcat7SshSetup(TomcatNode entity, SshMachineLocation host) {
-        super(entity, host)
+    public Tomcat7SshSetup(TomcatNode entity, SshMachine machine) {
+        super(entity, machine)
         runDir = appBaseDir + "/" + "tomcat-" + entity.id
     }
 
@@ -96,7 +96,7 @@ exit"""
         claimNextValue("tomcatShutdownPort", DEFAULT_FIRST_SHUTDOWN_PORT)
     }
 
-    public void shutdown(SshMachine machine) {
+    public void shutdown() {
         log.debug "invoking shutdown script"
         //we use kill -9 rather than shutdown.sh because the latter is not 100% reliable
         def result = machine.run(out: System.out, "cd $runDir && echo killing process `cat pid.txt` on `hostname` && kill -9 `cat pid.txt` && rm -f pid.txt ; exit")

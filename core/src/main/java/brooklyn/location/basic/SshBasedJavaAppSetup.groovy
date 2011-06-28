@@ -17,16 +17,16 @@ public abstract class SshBasedJavaAppSetup {
     static final Logger log = LoggerFactory.getLogger(SshBasedJavaAppSetup.class)
  
     EntityLocal entity
-    SshMachineLocation host
+    SshMachine machine
     String appBaseDir
     String brooklynBaseDir = "/tmp/brooklyn"
     String installsBaseDir = brooklynBaseDir+"/installs"
     int jmxPort
     String jmxHost
     
-    public SshBasedJavaAppSetup(EntityLocal entity, SshMachineLocation host) {
+    public SshBasedJavaAppSetup(EntityLocal entity, SshMachine machine) {
         this.entity = entity
-        this.host = host
+        this.machine = machine
         appBaseDir = brooklynBaseDir + "/" + "app-"+entity.getApplication()?.id
     }
 
@@ -43,15 +43,15 @@ public abstract class SshBasedJavaAppSetup {
     protected int claimNextValue(String field, int initial) {
         def v = entity.attributes[field]
         if (!v) {
-            log.debug "retrieving {}, {}", field, host.attributes
-            synchronized (host) {
-                println "host="+host
-                println "attribs="+host.getAttributes()
-                println "val="+host.attributes["next_"+field]
-                v = host.attributes["next_"+field] ?: initial
-                host.attributes["next_"+field] = (v+1)
+            log.debug "retrieving {}, {}", field, machine.attributes
+            synchronized (machine) {
+                println "machine="+machine
+                println "attribs="+machine.getAttributes()
+                println "val="+machine.attributes["next_"+field]
+                v = machine.attributes["next_"+field] ?: initial
+                machine.attributes["next_"+field] = (v+1)
             }
-            log.debug "retrieved {}, {}", field, host.attributes
+            log.debug "retrieved {}, {}", field, machine.attributes
             entity.attributes[field] = v
         }
         v
@@ -63,8 +63,8 @@ public abstract class SshBasedJavaAppSetup {
  
     public int claimJmxPort() {
         // FIXME Really bad place to have side effects! Clean up required.
-        log.debug "setting jmxHost on $entity as {}", host
-        jmxHost = host.getHost()
+        log.debug "setting jmxHost on $entity as {}", machine
+        jmxHost = machine.host.hostName
         jmxPort = claimNextValue("jmxPort", 32199)
     }
  
@@ -106,7 +106,7 @@ exit
      */
     public abstract String getCheckRunningScript();
     
-	public void start(SshMachine machine) {
+	public void start() {
         log.info "starting entity {} on machine {}", entity, machine
         synchronized (getClass()) {
             String s = getInstallScript()
@@ -128,7 +128,7 @@ exit
     protected void postStart() {
     }
     
-	public boolean isRunning(SshMachine machine) {
+	public boolean isRunning() {
 		def result = machine.run(out:System.out, getCheckRunningScript())
         if (result==0) return true
         if (result==1) return false
