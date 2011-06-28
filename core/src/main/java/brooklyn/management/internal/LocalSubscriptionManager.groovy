@@ -57,8 +57,17 @@ public class LocalSubscriptionManager implements SubscriptionManager {
     ExecutionManager em = new BasicExecutionManager()
 	
     public <T> void publish(SensorEvent<T> event) {
-		// FIXME SUBS should run in new thread in case listeners are blocked;
+		// FIXME SUBS - execution - see below
+		
+		// now run in new thread in case listeners are blocked;
+		
 		// FIXME should be given execution manager when instantiated
+		
+		// FIXME for any subscriber, should define SingleThreadedExecution for any subscriber ID tag
+		// in order to ensure callbacks are invoked in the order they are submitted
+		// (recommend exactly one per subscription to prevent deadlock)
+		// this is done with:
+		// em.setTaskPreprocessorForTag(subscriberId, SingleThreadedExecution.class);
 		
 		//note, generating the notifications must be done in the calling thread to preserve order
 		//e.g. emit(A); emit(B); should cause onEvent(A); onEvent(B) in that order

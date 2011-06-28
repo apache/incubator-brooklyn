@@ -154,7 +154,9 @@ public class BasicExecutionManager implements ExecutionManager {
 		synchronized (task) { task.notifyAll() }
 	}
 
+	/** returns {@link TaskPreprocessor} defined for tasks with the given tag, or null if none */
 	public TaskPreprocessor getTaskPreprocessorForTag(Object tag) { return preprocessorByTag.get(tag) }
+	/** @see #setTaskPreprocessorForTag(Object, TaskPreprocessor) */
 	public void setTaskPreprocessorForTag(Object tag, Class<? extends TaskPreprocessor> preprocessor) {
 		def old = getTaskPreprocessorForTag(tag)
 		if (old!=null) {
@@ -167,6 +169,8 @@ public class BasicExecutionManager implements ExecutionManager {
 		}
 		setTaskPreprocessorForTag(tag, preprocessor.newInstance())
 	}
+	/** defines a {@link TaskPreprocessor} to run on all subsequently submitted jobs with the given tag;
+	 * max 1 allowed currently; resubmissions of same preprocessor (or preprocessor class) allowed; if changing, you must set null between the two */
 	public void setTaskPreprocessorForTag(Object tag, TaskPreprocessor preprocessor) {
 		preprocessor.injectManager(this)
 		preprocessor.injectTag(tag)

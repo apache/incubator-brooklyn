@@ -7,8 +7,8 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import brooklyn.management.ExecutionManager
 import brooklyn.management.Task
 
-/** TaskPreprocessor is the internal mechanism by which tasks are decorated so that they acquire a synch block,
- * or clear previous entrants, etc.
+/** TaskPreprocessor is the internal mechanism by which tasks are decorated so that they acquire a synch block (effectively run singly-threaded),
+ * or clear intermediate queued jobs, etc.
  */
 public interface TaskPreprocessor {
 
