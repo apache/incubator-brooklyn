@@ -41,7 +41,7 @@ class TomcatSimulator {
 
         int httpPort = 8080
         entity.updateAttribute(TomcatNode.HTTP_PORT, httpPort)
-        registerMBean "Catalina:type=Connector,port="+httpPort, stateName: "STARTED"
+        jmxService.registerMBean "Catalina:type=Connector,port="+httpPort, stateName: "STARTED"
     }
 
     public void shutdown() {
