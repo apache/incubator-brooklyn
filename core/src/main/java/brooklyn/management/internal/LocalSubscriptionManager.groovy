@@ -59,12 +59,13 @@ public class LocalSubscriptionManager implements SubscriptionManager {
     public <T> void publish(SensorEvent<T> event) {
 		// FIXME SUBS should run in new thread in case listeners are blocked;
 		// FIXME should be given execution manager when instantiated
-		em.submit(tag:this, {
-			allSubscriptions.each { key, Subscription s -> 
-				if (s.filter.apply(event) && (!s.entities || s.entities.apply(event))) 
-					em.submit(tags: s.subscriberTags, { s.listener.onEvent(event) })
-			}
-		})
+		
+		//note, generating the notifications must be done in the calling thread to preserve order
+		//e.g. emit(A); emit(B); should cause onEvent(A); onEvent(B) in that order
+		allSubscriptions.each { key, Subscription s -> 
+			if (s.filter.apply(event) && (!s.entities || s.entities.apply(event))) 
+				em.submit(tags: s.subscriberTags, { s.listener.onEvent(event) })
+		}
     }
 
 	//FIXME should take tags for subscribers
