@@ -22,7 +22,7 @@ class EntityService {
 
     public boolean isChildOf(Entity child, Collection<Entity> parents) {
         parents.find { parent ->
-           getChildren(parent).contains(child) || isChildOf(getChildren(parent), child)
+           getChildren(parent).contains(child) || isChildOf(child, getChildren(parent))
         }
     }
 

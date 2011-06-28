@@ -19,9 +19,9 @@ class JBossNodeIntegrationTest {
 
 	private static final Logger logger = LoggerFactory.getLogger(brooklyn.entity.webapp.jboss.JBossNodeIntegrationTest)
 
-	static int baseHttpPort = 8080
-	static int portIncrement = 300
-	static int httpPort = baseHttpPort + portIncrement
+	// Increment default ports to avoid tests running on 8080
+	final static int PORT_INCREMENT = 300
+	final static int DEFAULT_HTTP_PORT = 8080 + PORT_INCREMENT
 
 	private Application app
 	private Location testLocation
@@ -40,8 +40,8 @@ class JBossNodeIntegrationTest {
 
 	@Before
 	public void fail_if_http_port_in_use() {
-		if (isPortInUse(httpPort)) {
-			fail "someone is already listening on port $httpPort; tests assume that port $httpPort is free on localhost"
+		if (isPortInUse(DEFAULT_HTTP_PORT)) {
+			fail "someone is already listening on port $DEFAULT_HTTP_PORT; tests assume that port $DEFAULT_HTTP_PORT is free on localhost"
 		}
 	}
 
@@ -53,7 +53,7 @@ class JBossNodeIntegrationTest {
 
 	@Test
 	public void canStartupAndShutdown() {
-		JBossNode jb = new JBossNode(owner:app, portIncrement: portIncrement);
+		JBossNode jb = new JBossNode(owner:app, portIncrement: PORT_INCREMENT);
 		jb.start([testLocation])
 		assert (new JBoss6SshSetup(jb, testLocation)).isRunning(testLocation)
 		jb.shutdown()
@@ -65,26 +65,43 @@ class JBossNodeIntegrationTest {
 	@Test
 	public void canAlterPortIncrement() {
 		int pI = 1020
-		int httpPort = baseHttpPort + pI
 		JBossNode jb = new JBossNode(owner:app, portIncrement: pI);
-		// Assert httpPort is contactable.
-		logger.info "Starting JBoss with HTTP port $httpPort"
 		jb.start([testLocation])
-
 		executeUntilSucceedsWithShutdown(jb, {
-			def url = "http://localhost:$httpPort"
-			def connection = connectToURL(url)
-			int status = ((HttpURLConnection)connection).getResponseCode()
-			logger.info "connection to {} gives {}", url, status
-			if (status == 404)
-				throw new Exception("App is not there yet (404)");
-			assertEquals 200, status
+			def port = jb.getAttribute(JBossNode.HTTP_PORT)
+			def url = "http://localhost:$port"
+			assertTrue urlRespondsWithStatusCode200(url)
+			true
 		}, abortOnError: false)
 	}
-
+	
 	@Test
-	public void publishesRequestsPerSecondMetric() {
-		JBossNode jb = new JBossNode(owner:app, portIncrement: portIncrement);
+	public void canStartMultipleJBossNodes() {
+
+		def aInc = 400
+		JBossNode nodeA = new JBossNode(owner:app, portIncrement: aInc);
+		nodeA.start([testLocation])
+		
+		def bInc = 450
+		JBossNode nodeB = new JBossNode(owner:app, portIncrement: bInc);
+		nodeB.start([testLocation])
+		
+		executeUntilSucceedsWithFinallyBlock({
+			def aHttp = nodeA.getAttribute(JBossNode.HTTP_PORT)
+			def bHttp = nodeB.getAttribute(JBossNode.HTTP_PORT)
+			assertTrue urlRespondsWithStatusCode200("http://localhost:$aHttp")
+			assertTrue urlRespondsWithStatusCode200("http://localhost:$bHttp")
+			true
+		}, {
+			nodeA.shutdown()
+			nodeB.shutdown()
+		}, abortOnError: false)
+		
+	}
+	
+	@Test
+	public void publishesErrorCountMetric() {
+		JBossNode jb = new JBossNode(owner:app, portIncrement: PORT_INCREMENT);
 		jb.start([testLocation])
 		executeUntilSucceedsWithShutdown(jb, {
 			def errorCount = jb.getAttribute(JBossNode.ERROR_COUNT)
@@ -92,18 +109,17 @@ class JBossNodeIntegrationTest {
 
 			// Connect to non-existent URL n times
 			def n = 5
-			def url = "http://localhost:${httpPort}/does_not_exist"
-			println url
+			def port = jb.getAttribute(JBossNode.HTTP_PORT)
+			def url = "http://localhost:${port}/does_not_exist"
 			n.times {
 				def connection = connectToURL(url)
-				int status = ((HttpURLConnection)connection).getResponseCode()
+				int status = ((HttpURLConnection) connection).getResponseCode()
 				logger.info "connection to {} gives {}", url, status
 			}
 			Thread.sleep(1000L)
 			errorCount = jb.getAttribute(JBossNode.ERROR_COUNT)
 			println "$errorCount errors in total"
 
-			// TODO firm up assertions.  confused by the values returned (generally n*2?)
 			assertTrue errorCount > 0
 			assertEquals 0, errorCount % n
 			true
