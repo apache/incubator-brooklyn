@@ -55,10 +55,8 @@ body{
 
 .layout-main-content{
 	background-color:white;
-	margin-left:355px;
+        float: left;
 	margin-right:2px;
-	width:auto;
-	height:100%;
 }
 
 div#demo1{

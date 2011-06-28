@@ -16,9 +16,6 @@ body {
     color: #333;
     font: 11px verdana, arial, helvetica, sans-serif;
 }
-#grailsLogo {
-	padding:20px;
-}
 
 a:link, a:visited, a:hover {
     color: #666;
@@ -31,10 +28,6 @@ h1 {
     font-weight: normal;
     font-size: 16px;
     margin: .8em 0 .3em 0;
-}
-
-ul {
-    padding-left: 15px;
 }
 
 input, select, textarea {
