@@ -34,6 +34,10 @@ class GeneralisedDynamicMBean implements DynamicMBean {
                 null, null, null)
     }
 
+    public void updateAttributeValue(String name, Object value) {
+        attributes[name] = value
+    }
+
     Object getAttribute(String s) {
         return attributes[s]
     }
