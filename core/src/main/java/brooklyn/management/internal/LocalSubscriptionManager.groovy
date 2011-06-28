@@ -9,11 +9,14 @@ import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
 
 import brooklyn.entity.Entity
+import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.event.SensorEvent
 import brooklyn.event.EventListener
 import brooklyn.event.basic.EventFilters
 import brooklyn.event.basic.BasicSensorEvent
+import brooklyn.management.ExecutionManager;
 import brooklyn.management.SubscriptionManager
+import brooklyn.util.task.BasicExecutionManager;
 
 import com.google.common.base.Objects
 import com.google.common.base.Predicate
@@ -23,6 +26,9 @@ import com.google.common.base.Predicate
  */
 public class LocalSubscriptionManager implements SubscriptionManager {
     private static class Subscription {
+		//FIXME subs this should be populated, typically with the subscribing entity, but with tag-type TBD in cases of remote subscriptions (webapp, tests)  
+		public Collection subscriberTags = []
+		
         public Predicate<Entity> entities;
         public Predicate<BasicSensorEvent<?>> filter;
         public EventListener<?> listener;
@@ -48,10 +54,20 @@ public class LocalSubscriptionManager implements SubscriptionManager {
     AtomicLong subscriptionId = new AtomicLong(0L);
     ConcurrentMap<Long, Subscription> allSubscriptions = new ConcurrentHashMap<Long, Subscription>();
     
+    ExecutionManager em = new BasicExecutionManager()
+	
     public <T> void publish(SensorEvent<T> event) {
-        allSubscriptions.each { key, Subscription s -> if (s.filter.apply(event) && (!s.entities || s.entities.apply(event))) s.listener.onEvent(event) }
+		// FIXME SUBS should run in new thread in case listeners are blocked;
+		// FIXME should be given execution manager when instantiated
+		em.submit(tag:this, {
+			allSubscriptions.each { key, Subscription s -> 
+				if (s.filter.apply(event) && (!s.entities || s.entities.apply(event))) 
+					em.submit(tags: s.subscriberTags, { s.listener.onEvent(event) })
+			}
+		})
     }
 
+	//FIXME should take tags for subscribers
     public <T> long subscribe(String producerId, String sensorName, EventListener<T> listener) {
         Subscription sub = new Subscription(EventFilters.entityId(producerId), EventFilters.sensorName(sensorName), listener);
         long id = subscriptionId.incrementAndGet();
