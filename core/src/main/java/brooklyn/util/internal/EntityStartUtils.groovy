@@ -21,12 +21,12 @@ class EntityStartUtils {
     /**
      * Starts the children of the host.
      */   
-    public static void startGroup(Group host) {
+	public static void startGroup(Group host, Collection<Location> locs = []) {
 		Set tasks = []
-		host.getChildren().each { child -> tasks.add(host.getExecutionContext().submit { if (child in Startable) child.start() }) }
+		host.getOwnedChildren().each { child -> tasks.add(host.getExecutionContext().submit { if (child in Startable) child.start(locs) }) }
 		tasks.collect { it.get() }
-    }
-    
+	}
+
     public static Entity startEntity(Entity entity, Collection<Location> locs) {
         if (!locs || locs.isEmpty())
             throw new IllegalStateException("request to start $entity without a location")

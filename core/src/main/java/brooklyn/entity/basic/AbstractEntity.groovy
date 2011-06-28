@@ -54,6 +54,15 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     Collection<Location> locations = []
     Group owner
  
+	// following two perhaps belong in entity class in a registry;
+	// but that is an optimization, and possibly wrong if we have dynamic sensors/effectors
+	// (added only to this instance), however if we did we'd need to reset/update entity class
+	// on sensor/effector set change
+	/** map of effectors on this entity by name, populated at constructor time */
+	private Map<String,Effector> effectors = null
+	/** map of sensors on this entity by name, populated at constructor time */
+	private Map<String,Sensor> sensors = null
+	
     protected transient volatile ExecutionContext execution
     protected transient volatile SubscriptionContext subscription
     protected transient volatile LocalManagementContext management = LocalManagementContext.getContext()
@@ -112,6 +121,16 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 		}
 		effectors = effectorsT
 
+		Map<String,Sensor> sensorsT = [:]
+		for (Field f in getClass().getFields()) {
+			if (Sensor.class.isAssignableFrom(f.getType())) {
+				Sensor sens = f.get(this)
+				def overwritten = sensorsT.put(sens.name, sens)
+				if (overwritten!=null) log.warn("multiple definitions for sensor ${sens.name} on $this; preferring $sens to $overwritten")
+			}
+		}
+		sensors = sensorsT
+
         //set the owner if supplied; accept as argument or field
         if (suppliedOwner) suppliedOwner.addOwnedChild(this)
         this.@skipCustomInvokeMethod.set(false)
@@ -135,7 +154,12 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
      * Adds this as a member of the given group, registers with application if necessary
      */
     public void setOwner(Group e) {
+		if (owner!=null) {
+			if (owner==e) return
+			if (owner!=e) throw new UnsupportedOperationException("Cannot change owner of $this from $owner to $e (owner change not supported)")
+		}
         owner = e
+		((AbstractGroup)e).addOwnedChild(owner)
         owner.inheritableConfig?.entrySet().each { Map.Entry<ConfigKey,Object> entry ->
             if (!inheritableConfig.containsKey(entry.getKey())) {
                 inheritableConfig.put(entry.getKey(), entry.getValue())
@@ -187,9 +211,10 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         app.registerEntity(this)
     }
 
-    public EntityClass getEntityClass() {
-		//TODO registry? or a transient?
-		new BasicEntityClass()
+	private transient EntityClass entityClass = null
+    public synchronized EntityClass getEntityClass() {
+		if (!entityClass) return entityClass
+		entityClass = new BasicEntityClass(getClass().getCanonicalName(), getSensors().values(), getEffectors().values())
     }
 
     /**
@@ -238,7 +263,8 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 
     protected synchronized SubscriptionContext getSubscriptionContext() {
 		if (subscription) subscription;
-        subscription = subscription ?: new LocalSubscriptionContext() // XXX doesn't work ?
+        subscription = new LocalSubscriptionContext()
+		//FIXME SUBS  needs to get subscription manager owned by ManagementContext, customised for this entity
     }
 
 	protected synchronized ExecutionContext getExecutionContext() {
@@ -249,10 +275,6 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 		}
 	}
     
-    public <T> Sensor<T> getSensor(String sensorName) {
-        getEntityClass().getSensors() find { s -> s.name.equals(sensorName) }
-    }
-
     /** default toString is simplified name of class, together with selected arguments */
     @Override
     public String toString() {
@@ -268,11 +290,21 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     /** override this, adding to the collection, to supply fields whose value, if not null, should be included in the toString */
     public Collection<String> toStringFieldsToInclude() { ['id', 'displayName'] }
 
+	// -------- SENSORS --------------------
+	
     /** @see EntityLocal#emit(Sensor, Object) */
     public <T> void emit(Sensor<T> sensor, T val) {
         subscriptionContext.subscriptionManager.publish(sensor.newEvent(this, val))
     }
-    
+
+	/** sensors available on this entity
+	 * <p>
+	 * NB no work has been done supporting changing this after initialization; see note on {@link #getEffectors()}
+	 */
+	public Map<String,Sensor<?>> getSensors(String sensorName) { sensors }
+	/** convenience for finding named sensor in {@link #getSensor()} map */
+	public <T> Sensor<T> getSensor(String sensorName) { getSensors()[sensorName] }
+
 	// -------- EFFECTORS --------------
 
 	/** flag needed internally to prevent invokeMethod from recursing on itself */ 	
@@ -309,11 +341,14 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 //			metaMethod.invoke(this, newArgs)
 	}
 	
-	private Map<String,Effector> effectors = null
-	/** effectors available on this entity; no work has been done supporting changing this after initialization,
+	/** effectors available on this entity
+	 * <p>
+	 * NB no work has been done supporting changing this after initialization,
 	 * but the idea of these so-called "dynamic effectors" has been discussed and it might be supported in future...
 	 */
 	public Map<String,Effector> getEffectors() { effectors }
+	/** convenience for finding named effector in {@link #getEffectors()} map */
+	public <T> Effector<T> getEffector(String effectorName) { getEffectors()[effectorName] }
 	
 	public <T> Task<T> invoke(Map parameters=[:], Effector<T> eff) {
 		invoke(eff, parameters);
