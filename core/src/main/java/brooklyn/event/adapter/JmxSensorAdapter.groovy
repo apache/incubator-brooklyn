@@ -129,17 +129,17 @@ public class JmxSensorAdapter implements  SensorAdapter {
         }
         false
     }
-    
+
     public void disconnect() {
+        scheduled.each { key, ScheduledFuture future -> future.cancel(true) }
         if (jmxc) {
             jmxc.close()
             jmxc = null
             mbsc = null
         }
         if (monitor) monitor.cancel(true) 
-        scheduled.each { key, ScheduledFuture future -> future.cancel(true) }
     }
-    
+
     public void checkConnected() {
         if (!isConnected()) throw new IllegalStateException("JmxTool must be connected")
     }
