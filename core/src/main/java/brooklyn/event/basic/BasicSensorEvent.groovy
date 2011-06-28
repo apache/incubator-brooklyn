@@ -13,11 +13,11 @@ import brooklyn.event.Sensor
  * @see LogEvent
  */
 public class BasicSensorEvent<T> implements SensorEvent<T> {
-	private final Sensor<T> sensor;
-	private final Entity source;
+    private final Sensor<T> sensor;
+    private final Entity source;
     private final T value;
-	
-	public T getValue() { return value; }
+    
+    public T getValue() { return value; }
 
     public Sensor<T> getSensor() { return sensor; }
 

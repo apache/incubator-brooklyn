@@ -5,5 +5,5 @@ package com.cloudsoftcorp.monterey.example.noapisimple;
  */
 public interface Helloee {
     
-	public String hello(String msg);
+    public String hello(String msg);
 }

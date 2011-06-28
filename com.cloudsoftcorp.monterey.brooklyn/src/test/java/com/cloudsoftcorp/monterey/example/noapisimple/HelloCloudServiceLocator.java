@@ -5,10 +5,10 @@ package com.cloudsoftcorp.monterey.example.noapisimple;
  */
 public interface HelloCloudServiceLocator {
 
-	/**
-	 * @returns a non-thread-safe service; 
-	 * getService should be called once by each and every thread that wishes to use it
-	 */
+    /**
+     * @returns a non-thread-safe service; 
+     * getService should be called once by each and every thread that wishes to use it
+     */
     public com.cloudsoftcorp.monterey.example.noapisimple.Helloee getService(String name);
 
 }

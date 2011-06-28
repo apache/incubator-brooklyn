@@ -65,7 +65,7 @@ public class MontereyNetworkConfig implements Serializable {
     public static final String NETWORK_NODE_START_SCRIPT_RELATIVE_PATH = "scripts/osgi-network-node-start.sh";
     public static final String NETWORK_NODE_KILL_SCRIPT_RELATIVE_PATH = "scripts/network-node-kill.sh";
     public static final String NETWORK_NODE_SSL_TRUSTSTORE_RELATIVE_PATH = "conf/truststore";
-	
+    
     public static final String NETWORK_NODE_SIDE_LOGGING_FILE_ABSOLUTE_PATH = MONTEREY_NETWORK_HOME+"/"+NETWORK_NODE_SIDE_LOGGING_FILE_RELATIVE_PATH;
     public static final String NETWORK_NODE_START_SCRIPT_ABSOLUTE_PATH = MONTEREY_NETWORK_HOME+"/"+NETWORK_NODE_START_SCRIPT_RELATIVE_PATH;
     public static final String NETWORK_NODE_KILL_SCRIPT_ABSOLUTE_PATH = MONTEREY_NETWORK_HOME+"/"+NETWORK_NODE_KILL_SCRIPT_RELATIVE_PATH;
@@ -77,11 +77,11 @@ public class MontereyNetworkConfig implements Serializable {
     protected int sshPort;
     
     protected int montereyWebApiPort;
-	protected String montereyWebApiProtocol;
-	protected File montereyWebApiSslKeystore = null;
-	protected String montereyWebApiSslKeystoreData = null;
-	protected String montereyWebApiSslKeystorePassword = null;
-	protected String montereyWebApiSslKeyPassword = null;
+    protected String montereyWebApiProtocol;
+    protected File montereyWebApiSslKeystore = null;
+    protected String montereyWebApiSslKeystoreData = null;
+    protected String montereyWebApiSslKeystorePassword = null;
+    protected String montereyWebApiSslKeyPassword = null;
 
     protected File loggingFileOverride;
     
@@ -108,33 +108,33 @@ public class MontereyNetworkConfig implements Serializable {
     }
 
     public int getMontereyHubLppPort() { return montereyHubLppPort; }
-	public void setMontereyHubLppPort(int montereyHubLppPort) { this.montereyHubLppPort = montereyHubLppPort; }
+    public void setMontereyHubLppPort(int montereyHubLppPort) { this.montereyHubLppPort = montereyHubLppPort; }
 
-	public int getMontereyNodePort() { return montereyNodePort; }
-	public void setMontereyNodePort(int montereyNodePort) { this.montereyNodePort = montereyNodePort; }
+    public int getMontereyNodePort() { return montereyNodePort; }
+    public void setMontereyNodePort(int montereyNodePort) { this.montereyNodePort = montereyNodePort; }
 
-	public int getMontereyWebApiPort() { return montereyWebApiPort; }
-	public void setMontereyWebApiPort(int montereyWebApiPort) { this.montereyWebApiPort = montereyWebApiPort; }
+    public int getMontereyWebApiPort() { return montereyWebApiPort; }
+    public void setMontereyWebApiPort(int montereyWebApiPort) { this.montereyWebApiPort = montereyWebApiPort; }
 
     public String getMontereyWebApiProtocol() { return montereyWebApiProtocol; }
-	public void setMontereyWebApiProtocol(String montereyWebApiProtocol) { this.montereyWebApiProtocol = montereyWebApiProtocol; }
+    public void setMontereyWebApiProtocol(String montereyWebApiProtocol) { this.montereyWebApiProtocol = montereyWebApiProtocol; }
 
     public File getMontereyWebApiSslKeystore() { return montereyWebApiSslKeystore; }
-	public void setMontereyWebApiSslKeystore(File montereyWebApiSslKeystore) { this.montereyWebApiSslKeystore = montereyWebApiSslKeystore; }
+    public void setMontereyWebApiSslKeystore(File montereyWebApiSslKeystore) { this.montereyWebApiSslKeystore = montereyWebApiSslKeystore; }
 
     public String getMontereyWebApiSslKeystoreData() { return montereyWebApiSslKeystoreData; }
-	public void setMontereyWebApiSslKeystoreData(String montereyWebApiSslKeystoreData) { this.montereyWebApiSslKeystoreData = montereyWebApiSslKeystoreData; }
+    public void setMontereyWebApiSslKeystoreData(String montereyWebApiSslKeystoreData) { this.montereyWebApiSslKeystoreData = montereyWebApiSslKeystoreData; }
 
     public String getMontereyWebApiSslKeystorePassword() { return montereyWebApiSslKeystorePassword; }
-	public void setMontereyWebApiSslKeystorePassword( String montereyWebApiSslKeystorePassword) { this.montereyWebApiSslKeystorePassword = montereyWebApiSslKeystorePassword; }
+    public void setMontereyWebApiSslKeystorePassword( String montereyWebApiSslKeystorePassword) { this.montereyWebApiSslKeystorePassword = montereyWebApiSslKeystorePassword; }
 
     public String getMontereyWebApiSslKeyPassword() { return montereyWebApiSslKeyPassword; }
-	public void setMontereyWebApiSslKeyPassword(String montereyWebApiSslKeyPassword) { this.montereyWebApiSslKeyPassword = montereyWebApiSslKeyPassword; }
+    public void setMontereyWebApiSslKeyPassword(String montereyWebApiSslKeyPassword) { this.montereyWebApiSslKeyPassword = montereyWebApiSslKeyPassword; }
 
-	public int getSshPort() { return sshPort; }
-	public void setSshPort(int sshPort) { this.sshPort = sshPort; }
+    public int getSshPort() { return sshPort; }
+    public void setSshPort(int sshPort) { this.sshPort = sshPort; }
 
     public File getLoggingFileOverride() { return loggingFileOverride; }
-	public void setLoggingFileOverride(File loggingFileOverride) { this.loggingFileOverride = loggingFileOverride; }
+    public void setLoggingFileOverride(File loggingFileOverride) { this.loggingFileOverride = loggingFileOverride; }
 }
 

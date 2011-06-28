@@ -33,40 +33,40 @@ import java.util.concurrent.Callable;
  */
 @SuppressWarnings("rawtypes")
 public interface ExecutionManager {
-	public Set<Task> getTasksWithTag(Object tag);
-	public Set<Task> getTasksWithAnyTag(Iterable tags);
-	public Set<Task> getTasksWithAllTags(Iterable tags);
-	/** returns all tags known to this manager (immutable) */
-	public Set<Object> getTaskTags();
-	/** returns all tasks known to this manager (immutable) */
-	public Set<Task> getAllTasks();
+    public Set<Task> getTasksWithTag(Object tag);
+    public Set<Task> getTasksWithAnyTag(Iterable tags);
+    public Set<Task> getTasksWithAllTags(Iterable tags);
+    /** returns all tags known to this manager (immutable) */
+    public Set<Object> getTaskTags();
+    /** returns all tasks known to this manager (immutable) */
+    public Set<Task> getAllTasks();
 
-	/** see {@link #submit(Map, Task)} */
-	public Task submit(Runnable r);
-	/** see {@link #submit(Map, Task)} */
-	public Task submit(Callable r);
-	/** see {@link #submit(Map, Task)} */
-	public Task submit(Task task);
-	
-	/** see {@link #submit(Map, Task)} */
-	public Task submit(Map flags, Runnable r);
-	/** see {@link #submit(Map, Task)} */
-	public Task submit(Map flags, Callable r);
+    /** see {@link #submit(Map, Task)} */
+    public Task submit(Runnable r);
+    /** see {@link #submit(Map, Task)} */
+    public Task submit(Callable r);
+    /** see {@link #submit(Map, Task)} */
+    public Task submit(Task task);
+    
+    /** see {@link #submit(Map, Task)} */
+    public Task submit(Map flags, Runnable r);
+    /** see {@link #submit(Map, Task)} */
+    public Task submit(Map flags, Callable r);
 
-	/**
-	 * Submits the given {@link Task} associated with the given bucket.
-	 *
-	 * The following optional flags supported.
-	 * <ul>
-	 * <li><em>tag</em> - A single object to be used as a tag for looking up the task
-	 * <li><em>tags</em> - A {@link Collection} of object tags each of which the task should be associated
-XXX	 * <li><em>synchId</em> - A string, or {@link Collection} of strings, representing a category on which an object should own a synch lock 
-	 * <li><em>synchObj</em> - A string, or {@link Collection} of strings, representing a category on which an object should own a synch lock 
-	 * <li><em>newTaskStartCallback</em> - A {@link Closure} that will be invoked just before the task starts if it starts as a result of this call
-	 * <li><em>newTaskEndCallback</em> - A {@link Closure} that will be invoked when the task completes if it starts as a result of this call
-	 * </ul>
-	 * Callbacks run in the task's thread, and if the callback is a closure it is passed the task for convenience. The closure can be any of the
-	 * following types; either a {@link Closure}, {@link Runnable} or {@link Callable}.
-	 */
-	public Task submit(Map flags, Task task);
+    /**
+     * Submits the given {@link Task} associated with the given bucket.
+     *
+     * The following optional flags supported.
+     * <ul>
+     * <li><em>tag</em> - A single object to be used as a tag for looking up the task
+     * <li><em>tags</em> - A {@link Collection} of object tags each of which the task should be associated
+XXX     * <li><em>synchId</em> - A string, or {@link Collection} of strings, representing a category on which an object should own a synch lock 
+     * <li><em>synchObj</em> - A string, or {@link Collection} of strings, representing a category on which an object should own a synch lock 
+     * <li><em>newTaskStartCallback</em> - A {@link Closure} that will be invoked just before the task starts if it starts as a result of this call
+     * <li><em>newTaskEndCallback</em> - A {@link Closure} that will be invoked when the task completes if it starts as a result of this call
+     * </ul>
+     * Callbacks run in the task's thread, and if the callback is a closure it is passed the task for convenience. The closure can be any of the
+     * following types; either a {@link Closure}, {@link Runnable} or {@link Callable}.
+     */
+    public Task submit(Map flags, Task task);
 }

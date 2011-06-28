@@ -11,15 +11,15 @@ import brooklyn.management.Task
  * might want some pipeline support and eventually only to return final value...) */
 class SequentialTask extends CompoundTask {
 
-	public SequentialTask(Object... tasks) { super(tasks) }
-	public SequentialTask(Collection<Object> tasks) { super(tasks) }
+    public SequentialTask(Object... tasks) { super(tasks) }
+    public SequentialTask(Collection<Object> tasks) { super(tasks) }
 
-	protected Object runJobs() {
-		List<Object> result = []
-		children.each { task ->
-			em.submit(task)
-			result.add (task.get())
-		}
-		return result
-	}
+    protected Object runJobs() {
+        List<Object> result = []
+        children.each { task ->
+            em.submit(task)
+            result.add (task.get())
+        }
+        return result
+    }
 }

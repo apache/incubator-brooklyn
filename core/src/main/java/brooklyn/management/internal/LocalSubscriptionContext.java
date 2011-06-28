@@ -13,7 +13,7 @@ public class LocalSubscriptionContext implements SubscriptionContext {
     
     public SubscriptionManager getSubscriptionManager() {
         synchronized (LocalSubscriptionContext.class) {
-	        if (manager == null) manager = new LocalSubscriptionManager();
+            if (manager == null) manager = new LocalSubscriptionManager();
         }
         
         return manager;

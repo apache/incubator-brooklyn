@@ -15,7 +15,7 @@ public interface Effector<T> extends Serializable {
     /**
      * human-friendly name of the effector (although frequently this uses java method naming convention)
      */
-	String getName();
+    String getName();
 
     Class<T> getReturnType();
 
@@ -27,7 +27,7 @@ public interface Effector<T> extends Serializable {
     /**
      * parameters expected by method, including name and type, optional description and default value
      */
-	List<ParameterType<?>> getParameters();
+    List<ParameterType<?>> getParameters();
 
     /**
      * optional description for the effector

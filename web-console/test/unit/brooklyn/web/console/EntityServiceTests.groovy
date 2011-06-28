@@ -19,7 +19,7 @@ class EntityServiceTests extends GrailsUnitTestCase {
 
     protected void setUp() {
         testService = new EntityService()
-		testService.managementContextService = new TestManagementContext()
+        testService.managementContextService = new TestManagementContext()
         testCollection.add(new TestApplication())
 
         testEntity = testCollection.get(0).testEntity()

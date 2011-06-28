@@ -35,7 +35,7 @@ public class JmxSensorAdapter implements  SensorAdapter {
     static final Logger log = LoggerFactory.getLogger(JmxSensorAdapter.class);
  
     final EntityLocal entity
-	final String jmxUrl
+    final String jmxUrl
     final Map<?, ?> properties  = [
             period : 500,
             connectDelay : 1000
@@ -43,8 +43,8 @@ public class JmxSensorAdapter implements  SensorAdapter {
  
     ScheduledExecutorService exec = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors())
  
-	JMXConnector jmxc
-	MBeanServerConnection mbsc = null
+    JMXConnector jmxc
+    MBeanServerConnection mbsc = null
     ScheduledFuture monitor = null
  
     Map<String, AttributeSensor<?>> sensors = [:]
@@ -53,7 +53,7 @@ public class JmxSensorAdapter implements  SensorAdapter {
     Map<String, ScheduledFuture> scheduled = [:]
     
     /* Default polling interval, milliseconds */
-	long defaultPollingPeriod = 500;
+    long defaultPollingPeriod = 500;
     
     public JmxSensorAdapter(EntityLocal entity, long timeout = -1, Map properties = [:]) {
         this.entity = entity
@@ -90,102 +90,102 @@ public class JmxSensorAdapter implements  SensorAdapter {
         providers[sensor.getName()] = provider
         
         try {
-	        entity.getAttribute(sensor)
+            entity.getAttribute(sensor)
         } catch (NullPointerException npe) {
             entity.updateAttribute(sensor, null)
         }
     }
 
-	public boolean isConnected() {
-		return (jmxc && mbsc);
-	}
+    public boolean isConnected() {
+        return (jmxc && mbsc);
+    }
  
-	/** attempts to connect immediately */
-	public void connect() throws IOException {
-		if (jmxc) jmxc.close()
-		JMXServiceURL url = new JMXServiceURL(jmxUrl)
-		jmxc = JMXConnectorFactory.connect(url, null);
-		mbsc = jmxc.getMBeanServerConnection();
+    /** attempts to connect immediately */
+    public void connect() throws IOException {
+        if (jmxc) jmxc.close()
+        JMXServiceURL url = new JMXServiceURL(jmxUrl)
+        jmxc = JMXConnectorFactory.connect(url, null);
+        mbsc = jmxc.getMBeanServerConnection();
  
         monitor = exec.scheduleWithFixedDelay({ updateJmxSensors() }, properties['period'], properties['period'], TimeUnit.MILLISECONDS)
-	}
+    }
  
-	/** continuously attempts to connect (blocking), for at least the indicated amount of time; or indefinitely if -1 */
-	public boolean connect(long timeoutMillis) {
-		log.debug "invoking connect to {}", jmxUrl
-		long thisStartTime = System.currentTimeMillis()
-		long endTime = thisStartTime + timeoutMillis
-		if (timeoutMillis==-1) endTime = Long.MAX_VALUE
-		while (thisStartTime <= endTime) {
-			thisStartTime = System.currentTimeMillis()
-			log.debug "{} trying connection to {}", thisStartTime, jmxUrl
-			try {
-				connect()
-				return true
-			} catch (IOException e) {
-				log.error "{} failed connection to {} ({})", System.currentTimeMillis(), jmxUrl, e.message
-			}
-			Thread.sleep properties['connectDelay']
-		}
-		false
-	}
-	
-	public void disconnect() {
-		if (jmxc) {
-			jmxc.close()
-			jmxc = null
-			mbsc = null
-		}
+    /** continuously attempts to connect (blocking), for at least the indicated amount of time; or indefinitely if -1 */
+    public boolean connect(long timeoutMillis) {
+        log.debug "invoking connect to {}", jmxUrl
+        long thisStartTime = System.currentTimeMillis()
+        long endTime = thisStartTime + timeoutMillis
+        if (timeoutMillis==-1) endTime = Long.MAX_VALUE
+        while (thisStartTime <= endTime) {
+            thisStartTime = System.currentTimeMillis()
+            log.debug "{} trying connection to {}", thisStartTime, jmxUrl
+            try {
+                connect()
+                return true
+            } catch (IOException e) {
+                log.error "{} failed connection to {} ({})", System.currentTimeMillis(), jmxUrl, e.message
+            }
+            Thread.sleep properties['connectDelay']
+        }
+        false
+    }
+    
+    public void disconnect() {
+        if (jmxc) {
+            jmxc.close()
+            jmxc = null
+            mbsc = null
+        }
         if (monitor) monitor.cancel(true) 
         scheduled.each { key, ScheduledFuture future -> future.cancel(true) }
-	}
-	
-	public void checkConnected() {
-		if (!isConnected()) throw new IllegalStateException("JmxTool must be connected")
-	}
+    }
+    
+    public void checkConnected() {
+        if (!isConnected()) throw new IllegalStateException("JmxTool must be connected")
+    }
 
-	/**
-	 * Returns all attributes on a specific named object
-	 */
-	public Map getAttributes(String name) {
-		checkConnected()
-		ObjectName objectName = new ObjectName(name);
+    /**
+     * Returns all attributes on a specific named object
+     */
+    public Map getAttributes(String name) {
+        checkConnected()
+        ObjectName objectName = new ObjectName(name);
         Set<ObjectInstance> beans = mbsc.queryMBeans(objectName, null)
         ObjectInstance bean = beans.iterator().next();
         // Use 'query' because objectName could contain wildcards
         // TODO What if more than one bean?
-		MBeanInfo info = mbsc.getMBeanInfo(bean.getObjectName())
-		Map r = [:]
-		info.getAttributes().each { r[it.getName()] = null }
-		AttributeList list = mbsc.getAttributes bean.getObjectName(), r.keySet() as String[]
-		list.each { r[it.getName()] = it.getValue(); }
+        MBeanInfo info = mbsc.getMBeanInfo(bean.getObjectName())
+        Map r = [:]
+        info.getAttributes().each { r[it.getName()] = null }
+        AttributeList list = mbsc.getAttributes bean.getObjectName(), r.keySet() as String[]
+        list.each { r[it.getName()] = it.getValue(); }
         log.trace "returning attributes: {}", r
-		r
-	}
+        r
+    }
 
     /**
      * Returns a specific attribute for a JMX {@link ObjectName}.
      */
-	public Object getAttribute(ObjectName objectName, String attribute) {
-		Set<ObjectInstance> beans = mbsc.queryMBeans(objectName, null)
-		if (beans.isEmpty() || beans.size() > 1) return null // TODO error reporting
-		ObjectInstance bean = beans.find { true }
-		// MBeanInfo info = mbsc.getMBeanInfo(bean.getObjectName())
-		// log.trace "jmx attributes  are: " + info.getAttributes().collect({ it.name }).join(", ")
-		def result = mbsc.getAttribute(bean.getObjectName(), attribute)
-		log.trace "got value {} for jmx attribute {}.{}", result, objectName.canonicalName, attribute
-		return result
-	}
+    public Object getAttribute(ObjectName objectName, String attribute) {
+        Set<ObjectInstance> beans = mbsc.queryMBeans(objectName, null)
+        if (beans.isEmpty() || beans.size() > 1) return null // TODO error reporting
+        ObjectInstance bean = beans.find { true }
+        // MBeanInfo info = mbsc.getMBeanInfo(bean.getObjectName())
+        // log.trace "jmx attributes  are: " + info.getAttributes().collect({ it.name }).join(", ")
+        def result = mbsc.getAttribute(bean.getObjectName(), attribute)
+        log.trace "got value {} for jmx attribute {}.{}", result, objectName.canonicalName, attribute
+        return result
+    }
 
     private void updateJmxSensors() {
-		log.debug "updating all jmx sensors"
+        log.debug "updating all jmx sensors"
         sensors.keySet() each { s ->
                 AttributeSensor<?> sensor = sensors.get(s)
                 JmxValueProvider<?> provider = providers.get(s)
-		        def newValue = getAttribute(provider.objectName, provider.attribute)
-				log.debug "update for jmx attribute {}.{} to {}", sensor.name, provider.attribute, newValue
+                def newValue = getAttribute(provider.objectName, provider.attribute)
+                log.debug "update for jmx attribute {}.{} to {}", sensor.name, provider.attribute, newValue
                 entity.updateAttribute(sensor, newValue)
-	        }
+            }
     }
     
     public <T> void subscribe(String sensorName) {

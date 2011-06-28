@@ -7,7 +7,7 @@ package brooklyn.util.internal.duplicates;
 
 public class ExecResult {
     
-	private final String stdout;
+    private final String stdout;
     private final String stderr;
     private final int exitval;
     
@@ -18,19 +18,19 @@ public class ExecResult {
     }
     
     public String getStdout() {
-		return stdout;
-	}
+        return stdout;
+    }
     
     public String getStderr() {
-		return stderr;
-	}
+        return stderr;
+    }
     
     public int getExitval() {
-		return exitval;
-	}
+        return exitval;
+    }
     
     @Override
     public String toString() {
-    	return "exitcode="+exitval+"; stdout="+stdout.trim()+"; stderr="+stderr.trim();
+        return "exitcode="+exitval+"; stdout="+stdout.trim()+"; stderr="+stderr.trim();
     }
 }

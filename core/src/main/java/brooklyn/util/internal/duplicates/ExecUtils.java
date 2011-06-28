@@ -17,33 +17,33 @@ import java.io.PrintStream;
 public class ExecUtils {
 
     public static class StreamGobbler extends Thread {
-    	protected final InputStream stream;
-    	protected final PrintStream out;
-		public StreamGobbler(InputStream stream, PrintStream out) {
-    		this.stream = stream;
-    		this.out = out;
-    	}
-    	public void run() {
-    		int c = -1;
-    		try {
-				while ((c=stream.read())>=0) {
-					onChar(c);
-				}
-			} catch (IOException e) {
-				System.err.println("ERROR reading stream "+stream+": "+e);
-			}
-			onClose();
-    	}
-    	public void onChar(int c) {
-    		out.print((char)c);
-    	}
-    	public void onClose() {}
+        protected final InputStream stream;
+        protected final PrintStream out;
+        public StreamGobbler(InputStream stream, PrintStream out) {
+            this.stream = stream;
+            this.out = out;
+        }
+        public void run() {
+            int c = -1;
+            try {
+                while ((c=stream.read())>=0) {
+                    onChar(c);
+                }
+            } catch (IOException e) {
+                System.err.println("ERROR reading stream "+stream+": "+e);
+            }
+            onClose();
+        }
+        public void onChar(int c) {
+            out.print((char)c);
+        }
+        public void onClose() {}
     }
     
     public static int execBlocking(String... cmd) throws IOException {
-    	Process p = Runtime.getRuntime().exec(cmd);
-    	new StreamGobbler(p.getInputStream(), System.out).start();
-    	new StreamGobbler(p.getErrorStream(), System.err).start();
+        Process p = Runtime.getRuntime().exec(cmd);
+        new StreamGobbler(p.getInputStream(), System.out).start();
+        new StreamGobbler(p.getErrorStream(), System.err).start();
         try {
             p.waitFor();
         } catch (InterruptedException e) {

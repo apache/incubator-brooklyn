@@ -39,15 +39,15 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         // Notes:
         // LAUNCH_JBOSS_IN_BACKGROUND relays OS signals sent to the run.sh process to the JBoss process.
         // run.sh must be backgrounded otherwise the script will never return.
-		/* Configuring ports:
-		   http://community.jboss.org/wiki/ConfiguringMultipleJBossInstancesOnOneMachine
-		   http://community.jboss.org/wiki/ConfigurePorts
-	       http://community.jboss.org/wiki/AS5ServiceBindingManager
-	       .. changing port numbers with sed is pretty brittle.
-		*/
-		def portGroupName = "ports-brooklyn"
-		int portIncrement = entity.getAttribute(JBossNode.PORT_INCREMENT)
-		def serverProfile = "default"
+        /* Configuring ports:
+           http://community.jboss.org/wiki/ConfiguringMultipleJBossInstancesOnOneMachine
+           http://community.jboss.org/wiki/ConfigurePorts
+           http://community.jboss.org/wiki/AS5ServiceBindingManager
+           .. changing port numbers with sed is pretty brittle.
+        */
+        def portGroupName = "ports-brooklyn"
+        int portIncrement = entity.getAttribute(JBossNode.PORT_INCREMENT)
+        def serverProfile = "default"
 """mkdir -p $runDir/server && \\
 cd $runDir/server && \\
 cp -r $installDir/server/$serverProfile $serverProfile && \\
@@ -70,9 +70,9 @@ exit"""
 
     /** script to return 1 if pid in runDir is running, 0 otherwise */
     public String getCheckRunningScript() { 
-		def host = entity.getAttribute(AttributeDictionary.JMX_HOST)
-		def port = entity.getAttribute(AttributeDictionary.JMX_PORT)
-		"$installDir/bin/twiddle.sh --host $host --port $port get \"jboss.system:type=Server\" Started; exit"
+        def host = entity.getAttribute(AttributeDictionary.JMX_HOST)
+        def port = entity.getAttribute(AttributeDictionary.JMX_PORT)
+        "$installDir/bin/twiddle.sh --host $host --port $port get \"jboss.system:type=Server\" Started; exit"
     }
 
     public String getDeployScript(String filename) {
@@ -81,7 +81,7 @@ exit"""
 
     public void shutdown(SshMachineLocation loc) {
         def host = entity.getAttribute(AttributeDictionary.JMX_HOST)
-		def port = entity.getAttribute(AttributeDictionary.JMX_PORT)
+        def port = entity.getAttribute(AttributeDictionary.JMX_PORT)
         loc.run("$installDir/bin/shutdown.sh --host=$host --port=$port -S; exit", out: System.out)
     }
 }

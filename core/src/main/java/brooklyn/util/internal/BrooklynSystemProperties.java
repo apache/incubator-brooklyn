@@ -5,40 +5,40 @@ package brooklyn.util.internal;
  */
 public class BrooklynSystemProperties {
 
-	public static BooleanSystemProperty DEBUG = new BooleanSystemProperty("brooklyn.debug");
-	public static BooleanSystemProperty EXPERIMENTAL = new BooleanSystemProperty("brooklyn.experimental");
+    public static BooleanSystemProperty DEBUG = new BooleanSystemProperty("brooklyn.debug");
+    public static BooleanSystemProperty EXPERIMENTAL = new BooleanSystemProperty("brooklyn.experimental");
 
-	public static class StringSystemProperty {
-		public StringSystemProperty(String name) {
-			this.propertyName = name;
-		}
+    public static class StringSystemProperty {
+        public StringSystemProperty(String name) {
+            this.propertyName = name;
+        }
 
-		private final String propertyName;
+        private final String propertyName;
 
-		public String getPropertyName() {
-			return propertyName;
-		}
+        public String getPropertyName() {
+            return propertyName;
+        }
 
-		public boolean isAvailable() {
-			String property = System.getProperty(getPropertyName());
-			return property!=null;
-		}
-		public boolean isNonEmpty() {
-			String property = System.getProperty(getPropertyName());
-			return property!=null && !property.equals("");
-		}
+        public boolean isAvailable() {
+            String property = System.getProperty(getPropertyName());
+            return property!=null;
+        }
+        public boolean isNonEmpty() {
+            String property = System.getProperty(getPropertyName());
+            return property!=null && !property.equals("");
+        }
 
-		public String getValue() {
-			return System.getProperty(getPropertyName());
-		}
-		
-	    @Override
-	    public String toString() {
-	    	return getPropertyName()+(isAvailable()?"="+getValue():"(unset)");
-	    }
-	}
+        public String getValue() {
+            return System.getProperty(getPropertyName());
+        }
+        
+        @Override
+        public String toString() {
+            return getPropertyName()+(isAvailable()?"="+getValue():"(unset)");
+        }
+    }
 
-	private static class BasicDelegatingSystemProperty {
+    private static class BasicDelegatingSystemProperty {
         protected final StringSystemProperty delegate;
         
         public BasicDelegatingSystemProperty(String name) {
@@ -54,16 +54,16 @@ public class BrooklynSystemProperties {
             return delegate.toString();
         }
     }
-	
-	public static class BooleanSystemProperty extends BasicDelegatingSystemProperty {
-		public BooleanSystemProperty(String name) {
-			super(name);
-		}
-		public boolean isEnabled() {
-			// actually access system property!
-			return Boolean.getBoolean(getPropertyName());
-		}
-	}
+    
+    public static class BooleanSystemProperty extends BasicDelegatingSystemProperty {
+        public BooleanSystemProperty(String name) {
+            super(name);
+        }
+        public boolean isEnabled() {
+            // actually access system property!
+            return Boolean.getBoolean(getPropertyName());
+        }
+    }
 
     public static class IntegerSystemProperty extends BasicDelegatingSystemProperty {
         public IntegerSystemProperty(String name) {
