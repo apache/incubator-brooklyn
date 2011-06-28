@@ -97,17 +97,27 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
 	/*
 	 * These flags are set by BasicExecutionManager.submit.
 	 * 
-	 * Order is guaranteed to be as numbered. Within each number it is currently in the order specified by commas but this is not guaranteed.
+	 * Order is guaranteed to be as shown below, in order of #. Within each # line it is currently in the order specified by commas but this is not guaranteed.
+	 * (The spaces between the # section indicate longer delays / logical separation ... it should be clear!)
 	 * 
-	 * (1) submitter, submit time set, tags and other submit-time fields set
-	 * (2) thread set, ThreadLocal getCurrentTask set  
-	 * (3) start time set, isBegun is true
-	 * (4) end time set
-	 * (5) thread cleared, ThreadLocal getCurrentTask set
-	 * (6) thread notified
-	 * (7) result available, isDone is true
+	 * # submitter, submit time set, tags and other submit-time fields set, task tag-linked preprocessors onSubmit invoked
 	 * 
-	 * Few consumers should care, but internally we need this so, for example, status is displayed correctly.
+	 * # thread set, ThreadLocal getCurrentTask set
+	 * # start time set, isBegun is true
+	 * # task tag-linked preprocessors onStart invoked
+	 * # task end callback run, if supplied
+	 * 
+	 * # task runs
+	 * 
+	 * # task end callback run, if supplied
+	 * # task tag-linked preprocessors onEnd invoked (in reverse order of tags)
+	 * # end time set
+	 * # thread cleared, ThreadLocal getCurrentTask set
+	 * # Task.notifyAll()
+	 * # Task.get() (result.get()) available, Task.isDone is true
+	 * 
+	 * Few _consumers_ should care, but internally we rely on this so that, for example, status is displayed correctly.
+	 * Tests should catch most things, but be careful if you change any of the above semantics.
 	 */
 	protected long submitTimeUtc = -1;
 	protected long startTimeUtc = -1;

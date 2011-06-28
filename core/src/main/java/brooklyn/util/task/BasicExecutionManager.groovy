@@ -1,11 +1,10 @@
 package brooklyn.util.task;
 
 import java.util.concurrent.Callable
-import java.util.concurrent.CancellationException;
+import java.util.concurrent.CancellationException
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import java.util.concurrent.Future
-import java.util.concurrent.FutureTask
 
 import brooklyn.management.ExecutionManager
 import brooklyn.management.Task
@@ -29,6 +28,8 @@ public class BasicExecutionManager implements ExecutionManager {
 	//access to the above is synchronized in code in this class, to allow us to preserve order while guaranteeing thread-safe
 	//(but more testing is needed before we are sure it is thread-safe!)
 	//synch blocks are as finely grained as possible for efficiency
+
+	private Map<Object,TaskPreprocessor> preprocessorByTag = new ConcurrentHashMap();
 	
 	public Set<Task> getTasksWithTag(Object tag) {
 		Set<Task> tasksWithTag;
@@ -119,6 +120,14 @@ public class BasicExecutionManager implements ExecutionManager {
 				bucket << task
 			}
 		}
+		List tagLinkedPreprocessors = []
+		task.@tags.each { 
+			TaskPreprocessor p = getTaskPreprocessorForTag(it);
+//			println "submit: task $task, tag $it, preprocessor $p"
+			if (p) tagLinkedPreprocessors << p
+		}
+		flags.tagLinkedPreprocessors = tagLinkedPreprocessors
+		flags.tagLinkedPreprocessors.each { TaskPreprocessor t -> t.onSubmit(flags, task) }
 	}	
 	protected void beforeStart(Map flags, Task task) {
 		//set thread _before_ start time, so we won't get a null thread when there is a start-time
@@ -128,11 +137,15 @@ public class BasicExecutionManager implements ExecutionManager {
 			task.startTimeUtc = System.currentTimeMillis()
 		}
 //		println "set thread for $task as "+task.thread
+		flags.tagLinkedPreprocessors.each { TaskPreprocessor t -> t.onStart(flags, task) }
 		ExecutionUtils.invoke flags.newTaskStartCallback, task
 	}
 
 	protected void afterEnd(Map flags, Task task) {
 		ExecutionUtils.invoke flags.newTaskEndCallback, task
+		Collections.reverse(flags.tagLinkedPreprocessors)
+		flags.tagLinkedPreprocessors.each { TaskPreprocessor t -> t.onEnd(flags, task) }
+		
 		perThreadCurrentTask.remove()
 		task.endTimeUtc = System.currentTimeMillis()
 		//clear thread _after_ endTime set, so we won't get a null thread when there is no end-time
@@ -141,4 +154,18 @@ public class BasicExecutionManager implements ExecutionManager {
 		synchronized (task) { task.notifyAll() }
 	}
 
+	public TaskPreprocessor getTaskPreprocessorForTag(Object tag) { return preprocessorByTag.get(tag) }
+	public void setTaskPreprocessorForTag(Object tag, Class<? extends TaskPreprocessor> preprocessor) {
+		setTaskPreprocessorForTag(tag, preprocessor.newInstance())
+	}
+	public void setTaskPreprocessorForTag(Object tag, TaskPreprocessor preprocessor) {
+		preprocessor.injectManager(this)
+		preprocessor.injectTag(tag)
+
+		def old = preprocessorByTag.put(tag, preprocessor);
+		if (old && preprocessor && old!=preprocessor)
+			//might support multiple in future...
+			throw new IllegalStateException("Not allowed set multiple TaskProcessors on ExecutionManager tag (tag $tag)"); 
+	}
+	
 }
