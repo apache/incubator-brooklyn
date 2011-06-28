@@ -7,8 +7,8 @@ import static org.testng.Assert.*
 
 import java.util.Map
 
-import org.testng.annotations.AfterTest
-import org.testng.annotations.BeforeTest
+import org.testng.annotations.AfterMethod
+import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import org.slf4j.Logger
@@ -37,7 +37,7 @@ class TomcatNodeTest {
         }
     }
 
-    @BeforeTest
+    @BeforeMethod
     public void patchInSimulator() {
         TomcatNode.metaClass.startInLocation = { SimulatedLocation loc ->
             delegate.locations.add(loc)
@@ -52,7 +52,7 @@ class TomcatNodeTest {
         }
     }
 
-    @AfterTest
+    @AfterMethod
     public void ensureSimulatorIsShutDownForNextTest() {
         boolean wasFree = TomcatSimulator.reset();
         if (wasFree == false)

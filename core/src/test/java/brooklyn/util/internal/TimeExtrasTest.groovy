@@ -5,7 +5,7 @@ import static org.testng.Assert.*
 
 import groovy.time.TimeDuration
 
-import org.testng.annotations.BeforeTest
+import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 /**
@@ -14,7 +14,7 @@ import org.testng.annotations.Test
  * TODO clarify test purpose
  */
 public class TimeExtrasTest {
-    @BeforeTest
+    @BeforeMethod
     public void setUp() throws Exception {
         TimeExtras.init();
     }

@@ -2,8 +2,6 @@ package brooklyn.test;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.IClass;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
@@ -15,8 +13,6 @@ import org.testng.ITestResult;
  * @see org.jclouds.test.testng.UnitTestStatusListener
  */
 public class StatusListener implements ITestListener {
-    private static final Logger log = LoggerFactory.getLogger(StatusListener.class);
-    
     /**
      * Holds test classes actually running in all threads.
      */
@@ -28,26 +24,25 @@ public class StatusListener implements ITestListener {
     private AtomicInteger skipped = new AtomicInteger(0);
 
     public void onTestStart(ITestResult res) {
-        log.info("Starting test {}", getTestDesc(res));
+        System.out.println("Starting test " + getTestDesc(res));
         threadTestClass.set(res.getTestClass());
         threadTestStart.set(System.currentTimeMillis());
     }
 
     synchronized public void onTestSuccess(ITestResult arg0) {
-        log.info("{} Test {} succeeded: {} ms",
-                new Object[] { getThreadId(), getTestDesc(arg0), (System.currentTimeMillis() - threadTestStart.get()) });
+        System.out.println(getThreadId() + " Test " + getTestDesc(arg0) + " succeeded: " + (System.currentTimeMillis() - threadTestStart.get()) + "ms");
         succeded.incrementAndGet();
         printStatus();
     }
 
     synchronized public void onTestFailure(ITestResult arg0) {
-        log.info("{} Test {} failed.", getThreadId(), getTestDesc(arg0));
+        System.out.println(getThreadId() + " Test " + getTestDesc(arg0) + " failed.");
         failed.incrementAndGet();
         printStatus();
     }
 
     synchronized public void onTestSkipped(ITestResult arg0) {
-        log.info("{} Test {} skipped.", getThreadId(), getTestDesc(arg0));
+        System.out.println(getThreadId() + " Test " + getTestDesc(arg0) + " skipped.");
         skipped.incrementAndGet();
         printStatus();
     }
@@ -70,7 +65,6 @@ public class StatusListener implements ITestListener {
     }
 
     private void printStatus() {
-        log.info("Test suite progress: tests succeeded: {}, failed: {}, skipped: {}",
-                new Object[] { succeded.get(), failed.get(), skipped.get() });
+        System.out.println("Test suite progress: tests succeeded: " + succeded.get() + ", failed: " + failed.get() + ", skipped: " + skipped.get() + ".");
     }
 }

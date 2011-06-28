@@ -4,15 +4,15 @@ import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
-import org.testng.annotations.BeforeTest
-import org.testng.annotations.Test
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.testng.annotations.BeforeMethod
+import org.testng.annotations.Test
 
 import brooklyn.entity.Application
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.location.Location
+import brooklyn.location.basic.SshBasedJavaWebAppSetup
 import brooklyn.location.basic.SshMachineLocation
 
 /**
@@ -20,8 +20,8 @@ import brooklyn.location.basic.SshMachineLocation
  * 
  * TODO clarify test purpose
  */
-class JBossNodeIntegrationTest {
-    private static final Logger logger = LoggerFactory.getLogger(brooklyn.entity.webapp.jboss.JBossNodeIntegrationTest)
+public class JBossNodeIntegrationTest {
+	private static final Logger logger = LoggerFactory.getLogger(brooklyn.entity.webapp.jboss.JBossNodeIntegrationTest)
 
     // Increment default ports to avoid tests running on 8080
     final static int PORT_INCREMENT = 300
@@ -36,41 +36,31 @@ class JBossNodeIntegrationTest {
         }
     }
 
-    @BeforeTest
-    public void setup() {
-        app = new TestApplication();
-        testLocation = new SshMachineLocation(name:'london', host:'localhost')
-    }
+	@BeforeMethod(groups = "Integration")
+	public void setup() {
+		app = new TestApplication();
+		testLocation = new SshMachineLocation(name:'london', host:'localhost')
+	}
 
-    @BeforeTest
-    public void fail_if_http_port_in_use() {
-        if (isPortInUse(DEFAULT_HTTP_PORT)) {
-            fail "someone is already listening on port $DEFAULT_HTTP_PORT; tests assume that port $DEFAULT_HTTP_PORT is free on localhost"
-        }
-    }
+	@Test(groups = "Integration")
+	public void canStartupAndShutdown() {
+		JBossNode jb = new JBossNode(owner:app, portIncrement: portIncrement);
+		jb.start([ testLocation ])
+        SshBasedJavaWebAppSetup setup = new JBoss6SshSetup(jb)
+		assertTrue setup.isRunning(testLocation)
+		jb.shutdown()
+		// Potential for JBoss to be in process of shutting down here..
+		assertFalse setup.isRunning(testLocation)
+	}
 
-    @AfterTest
-    public void waitForShutdown() {
-        logger.info "Sleeping for shutdown"
-        Thread.sleep 4000
-    }
-
-    @Test(groups = [ "Integration" ])
-    public void canStartupAndShutdown() {
-        JBossNode jb = new JBossNode(owner:app, portIncrement: PORT_INCREMENT);
-        jb.start([testLocation])
-        assert (new JBoss6SshSetup(jb, testLocation)).isRunning(testLocation)
-        jb.shutdown()
-        // Potential for JBoss to be in process of shutting down here..
-        Thread.sleep 4000
-        assert ! (new JBoss6SshSetup(jb, testLocation)).isRunning(testLocation)
-    }
-
-    @Test(groups = [ "Integration" ])
-    public void canAlterPortIncrement() {
-        int pI = 1020
-        JBossNode jb = new JBossNode(owner:app, portIncrement: pI);
-        jb.start([testLocation])
+	@Test(groups = "Integration")
+	public void canAlterPortIncrement() {
+		int pI = 1020
+		int httpPort = baseHttpPort + pI
+		JBossNode jb = new JBossNode(owner:app, portIncrement: pI);
+		// Assert httpPort is contactable.
+		logger.info "Starting JBoss with HTTP port $httpPort"
+		jb.start([ testLocation ])
         executeUntilSucceedsWithShutdown(jb, {
             def port = jb.getAttribute(JBossNode.HTTP_PORT)
             def url = "http://localhost:$port"
@@ -109,6 +99,15 @@ class JBossNodeIntegrationTest {
         executeUntilSucceedsWithShutdown(jb, {
             def errorCount = jb.getAttribute(JBossNode.ERROR_COUNT)
             if (errorCount == null) return new BooleanWithMessage(false, "errorCount not set yet ($errorCount)")
+=======
+	@Test(groups = "Integration")
+	public void publishesRequestsPerSecondMetric() {
+		JBossNode jb = new JBossNode(owner:app, portIncrement: portIncrement);
+		jb.start([ testLocation ])
+		executeUntilSucceedsWithShutdown(jb, {
+			def errorCount = jb.getAttribute(JBossNode.ERROR_COUNT)
+			if (errorCount == null) return new BooleanWithMessage(false, "errorCount not set yet ($errorCount)")
+>>>>>>> get groups working with TestNG
 
             // Connect to non-existent URL n times
             def n = 5

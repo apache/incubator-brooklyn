@@ -6,8 +6,8 @@ import static org.testng.Assert.*
 
 import java.util.Map
 
-import org.testng.annotations.AfterTest
-import org.testng.annotations.BeforeTest
+import org.testng.annotations.AfterMethod
+import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import org.slf4j.Logger
@@ -24,7 +24,6 @@ import brooklyn.location.basic.LocalhostSshMachineProvisioner
  * 
  * TODO clarify test purpose
  */
-@Test(groups = [ "Integration" ])
 public class TomcatNodeIntegrationTest {
 	private static final Logger logger = LoggerFactory.getLogger(brooklyn.entity.webapp.tomcat.TomcatNodeIntegrationTest.class)
 	
@@ -40,7 +39,7 @@ public class TomcatNodeIntegrationTest {
 	static boolean httpPortLeftOpen = false;
 	private int oldHttpPort=-1;
 
-	@BeforeTest
+	@BeforeMethod(groups = [ "Integration" ])
 	public void fail_if_http_port_in_use() {
 		if (isPortInUse(DEFAULT_HTTP_PORT)) {
 			httpPortLeftOpen = true;
@@ -48,26 +47,26 @@ public class TomcatNodeIntegrationTest {
 		}
 	}
  
-	@AfterTest
+	@AfterMethod(groups = [ "Integration" ])
 	//can't fail because that swallows the original exception, grrr!
 	public void moan_if_http_port_in_use() {
 		if (!httpPortLeftOpen && isPortInUse(DEFAULT_HTTP_PORT, 1000))
 			logger.warn "port $DEFAULT_HTTP_PORT still running after test"
 	}
  
-	@BeforeTest(groups = [ "Integration" ])
+	@BeforeMethod(groups = [ "Integration" ])
 	public void changeDefaultHttpPort() {
 		oldHttpPort = Tomcat7SshSetup.DEFAULT_FIRST_HTTP_PORT;
 		Tomcat7SshSetup.DEFAULT_FIRST_HTTP_PORT = DEFAULT_HTTP_PORT
 	}
  
-	@AfterTest
+	@AfterMethod(groups = [ "Integration" ])
 	public void changeDefaultHttpPortBack() {
 		if (oldHttpPort>0)
 			Tomcat7SshSetup.DEFAULT_FIRST_HTTP_PORT = oldHttpPort
 	}
 
-	@Test
+	@Test(groups = [ "Integration" ])
     public void tracksNodeState() {
         TomcatNode tc = [ 
             owner:new TestApplication()
@@ -80,7 +79,7 @@ public class TomcatNodeIntegrationTest {
         })
     }
     
-    @Test
+	@Test(groups = [ "Integration" ])
     public void publishesRequestsPerSecondMetric() {
         Application app = new TestApplication();
         TomcatNode tc = new TomcatNode(owner: app);
@@ -88,7 +87,7 @@ public class TomcatNodeIntegrationTest {
         executeUntilSucceedsWithShutdown(tc, {
                 def activityValue = tc.getAttribute(TomcatNode.REQUESTS_PER_SECOND)
                 if (activityValue == null || activityValue == -1) return new BooleanWithMessage(false, "activity not set yet ($activityValue)")
-                
+
                 assertEquals Integer, activityValue.class
                 assertEquals 0, activityValue
                 
@@ -103,7 +102,7 @@ public class TomcatNodeIntegrationTest {
             }, timeout:10*SECONDS, useGroovyTruth:true)
     }
     
-	@Test
+	@Test(groups = [ "Integration" ])
     public void publishesErrorCountMetric() {
         Application app = new TestApplication();
         TomcatNode tc = new TomcatNode(owner: app);
@@ -126,10 +125,10 @@ public class TomcatNodeIntegrationTest {
         })
     }
     
-    @Test
-    public void deployWebAppAppearsAtUrl() {
-        Application app = new TestApplication();
-        TomcatNode tc = new TomcatNode(owner: app);
+	@Test(groups = [ "Integration" ])
+	public void deployWebAppAppearsAtUrl() {
+		Application app = new TestApplication();
+		TomcatNode tc = new TomcatNode(owner: app);
 
         URL resource = this.getClass().getClassLoader().getResource("hello-world.war")
         assertNotNull resource
@@ -144,9 +143,8 @@ public class TomcatNodeIntegrationTest {
         }, abortOnError: false)
     }
 
-    
-    @Test
-    public void detectFailureIfTomcatCantBindToPort() {
+	@Test(groups = [ "Integration" ])
+	public void detectFailureIfTomcatCantBindToPort() {
         ServerSocket listener = new ServerSocket(DEFAULT_HTTP_PORT);
         Thread t = new Thread({ try { for(;;) { Socket socket = listener.accept(); socket.close(); } } catch(Exception e) {} })
         t.start()

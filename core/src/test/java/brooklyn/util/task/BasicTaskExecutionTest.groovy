@@ -5,12 +5,14 @@ import static org.testng.Assert.*
 import java.util.Map
 import java.util.concurrent.Callable
 import java.util.concurrent.CancellationException
-import java.util.concurrent.ConcurrentHashMap
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.management.ExecutionManager
+import brooklyn.management.Task
 import brooklyn.util.internal.LanguageUtils
 
 /**
@@ -21,14 +23,22 @@ import brooklyn.util.internal.LanguageUtils
 public class BasicTaskExecutionTest {
     private static final Logger log = LoggerFactory.getLogger(BasicTaskExecutionTest.class)
  
-	private Map data = new ConcurrentHashMap()
+    private ExecutionManager em
+	private Map data
+
+    @BeforeMethod
+    public void setUp() {
+		em = new BasicExecutionManager()
+		assertTrue em.allTasks.isEmpty()
+        data = Collections.synchronizedMap(new HashMap())
+        data.clear()
+    }
 	
 	@Test
 	public void runSimpleBasicTask() {
 		data.clear()
 		BasicTask t = [ { data.put(1, "b") } ] 
 		data.put(1, "a")
-		BasicExecutionManager em = []
 		BasicTask t2 = em.submit tag:"A", t
 		assertEquals("a", t.get())
 		assertEquals("b", data.get(1))
@@ -38,7 +48,6 @@ public class BasicTaskExecutionTest {
 	public void runSimpleRunnable() {
 		data.clear()
 		data.put(1, "a")
-		BasicExecutionManager em = []
 		BasicTask t = em.submit tag:"A", new Runnable() { public void run() { data.put(1, "b") } }
 		assertEquals(null, t.get())
 		assertEquals("b", data.get(1))
@@ -48,7 +57,6 @@ public class BasicTaskExecutionTest {
 	public void runSimpleCallable() {
 		data.clear()
 		data.put(1, "a")
-		BasicExecutionManager em = []
 		BasicTask t = em.submit tag:"A", new Callable() { public Object call() { data.put(1, "b") } }
 		assertEquals("a", t.get())
 		assertEquals("b", data.get(1))
@@ -66,7 +74,6 @@ public class BasicTaskExecutionTest {
 			}
 		} ]
 		data.put(1, "a")
-		BasicExecutionManager em = []
 		synchronized (data) {
 			BasicTask t2 = em.submit tag:"A", t
 			assertEquals(t, t2)
@@ -87,7 +94,6 @@ public class BasicTaskExecutionTest {
 
 	@Test
 	public void runMultipleBasicTasks() {
-		log.debug "runMultipleBasicTasks"
 		data.clear()
 		data.put(1, 1)
 		BasicExecutionManager em = []
@@ -108,18 +114,16 @@ public class BasicTaskExecutionTest {
 
 	@Test
 	public void runMultipleBasicTasksMultipleTags() {
-		log.debug "runMultipleBasicTasksWithMultipleTags"
 		data.clear()
 		data.put(1, 1)
-		BasicExecutionManager em = []
 		em.submit tag:"A", new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } })
 		em.submit tags:["A","B"], new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } })
 		em.submit tags:["B","C"], new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } })
 		em.submit tags:["D"], new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } })
 		int total = 0;
-		em.getAllTasks().each {
-                log.debug "BasicTask {}, has {}", it, it.get()
-                total += it.get()
+		em.getAllTasks().each { Task t ->
+                log.debug "BasicTask {}, has {}", t, t.get()
+                total += t.get()
             }
 		assertEquals(10, total)
 		//now that all have completed:
@@ -136,7 +140,6 @@ public class BasicTaskExecutionTest {
 
 	@Test
 	public void cancelBeforeRun() {
-		BasicExecutionManager em = []
 		BasicTask t = [ { synchronized (data) { data.notify(); data.wait() }; return 42 } ]
 		t.cancel true
 		assertTrue(t.isCancelled())
@@ -154,7 +157,6 @@ public class BasicTaskExecutionTest {
 
 	@Test
 	public void cancelDuringRun() {
-		BasicExecutionManager em = []
 		BasicTask t = [ { synchronized (data) { data.notify(); data.wait() }; return 42 } ]
 		assertFalse(t.isCancelled())
 		assertFalse(t.isDone())
@@ -174,7 +176,6 @@ public class BasicTaskExecutionTest {
 	
 	@Test
 	public void cancelAfterRun() {
-		BasicExecutionManager em = []
 		BasicTask t = [ { synchronized (data) { data.notify(); data.wait() }; return 42 } ]
 		synchronized (data) {
 			em.submit tag:"A", t
@@ -193,7 +194,6 @@ public class BasicTaskExecutionTest {
 	
 	@Test
 	public void errorDuringRun() {
-		BasicExecutionManager em = []
 		BasicTask t = [ { synchronized (data) { data.notify(); data.wait() }; throw new IllegalStateException("Aaargh"); } ]
 		
 		synchronized (data) {
@@ -217,7 +217,6 @@ public class BasicTaskExecutionTest {
 
 	@Test
 	public void fieldsSetForSimpleBasicTask() {
-		BasicExecutionManager em = []
 		BasicTask t = [ { synchronized (data) { data.notify(); data.wait() }; return 42 } ]
 		assertEquals(null, t.submittedByTask)
 		assertEquals(-1, t.submitTimeUtc)
@@ -241,7 +240,6 @@ public class BasicTaskExecutionTest {
 	@Test
 	public void fieldsSetForBasicTaskSubmittedBasicTask() {
 		//submitted BasicTask B is started by A, and waits for A to complete
-		BasicExecutionManager em = []
 		BasicTask t = new BasicTask( displayName: "sample", description: "some descr", { em.submit tag:"B", {
 				assertEquals(45, em.getTasksWithTag("A").iterator().next().get());
 				46 };
@@ -249,8 +247,8 @@ public class BasicTaskExecutionTest {
 		em.submit tag:"A", t
 
 		t.blockUntilEnded()
-		
-		assertEquals(2, em.getAllTasks().size())
+ 
+		assertEquals em.getAllTasks().size(), 2
 		
 		BasicTask tb = em.getTasksWithTag("B").iterator().next();
 		assertEquals( 46, tb.get() )
