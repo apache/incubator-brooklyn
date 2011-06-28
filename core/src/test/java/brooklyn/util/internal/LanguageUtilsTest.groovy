@@ -131,6 +131,4 @@ public class LanguageUtilsTest {
 		assertTrue LanguageUtils.hashCode(t1, ["a", "@b"]) == LanguageUtils.hashCode(t2, ["a", "@b"])
 		assertEquals 0, LanguageUtils.hashCode(null, ["a", "@b"])
 	}
-	
->>>>>>> Updating Maven configuration to use TestNG
 }
