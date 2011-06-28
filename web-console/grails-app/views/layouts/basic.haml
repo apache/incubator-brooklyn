@@ -4,11 +4,13 @@
 		%title
 			%g:layoutTitle{:default=>"Brooklyn Webconsole"}
 		%g:javascript{:library=>"jquery/jquery"}\
+		%g:javascript{:library=>"jquery/jquery-ui-1.8.13.min"}\
 		%g:javascript{:library=>"jquery/jquery.jstree"}\
 		%g:javascript{:library=>"console/tab-container-logic"}
 		%link{:rel=>"shortcut icon",:href=>"${resource(dir:'images',file:'favicon.ico')}",:type=>"image/x-icon"}\
 		%link{:rel=>"stylesheet",:type=>"text/css",:href=>"${resource(dir:'css/console',file:'console-layout.css')}"}\
 		%link{:rel=>"stylesheet",:type=>"text/css",:href=>"${resource(dir:'css/console',file:'tab-container.css')}"}\
+		%link{:rel=>"stylesheet",:type=>"text/css",:href=>"${resource(dir:'css',file:'jquery-ui.css')}"}\
 		%script{:type=>"text/javascript",:src=>"${resource(dir:'dynjs',file:'jsTreeConfig')}"}\
 		%g:javascript{:library=>"console/jsTree"}\
 	%body{:onload=>"initTabs()"}
