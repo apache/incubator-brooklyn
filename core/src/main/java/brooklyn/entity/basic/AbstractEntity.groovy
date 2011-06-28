@@ -155,11 +155,20 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
      */
     public synchronized void setOwner(Group e) {
 		if (owner!=null) {
-			if (owner==e) return
+			if (owner==e) return ;
 			if (owner!=e) throw new UnsupportedOperationException("Cannot change owner of $this from $owner to $e (owner change not supported)")
 		}
+		//make sure there is no loop
+		List ancestors = []
+		AbstractGroup root = e;
+		while (root!=null) {
+			ancestors << root
+			root=root.getOwner()
+			if (ancestors.contains(root)) throw new IllegalStateException("loop detected trying to set owner of $this as $e; ancestors list $ancestors and owner of last is $root")
+		}
+		
         owner = e
-		((AbstractGroup)e).addOwnedChild(owner)
+		((AbstractGroup)e).addOwnedChild(this)
         owner.inheritableConfig?.entrySet().each { Map.Entry<ConfigKey,Object> entry ->
             if (!inheritableConfig.containsKey(entry.getKey())) {
                 inheritableConfig.put(entry.getKey(), entry.getValue())
