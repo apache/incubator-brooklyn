@@ -11,8 +11,8 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     String installDir = "$installsBaseDir/jboss-$version"
     String runDir
 
-    public JBoss6SshSetup(JBossNode entity) {
-        super(entity)
+    public JBoss6SshSetup(JBossNode entity, SshMachineLocation host) {
+        super(entity, host)
         runDir = appBaseDir + "/" + "jboss-"+entity.id
     }
 
@@ -46,7 +46,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
 	       .. changing port numbers with sed is pretty brittle.
 		*/
 		def portGroupName = "ports-brooklyn"
-		int portIncrement = entity.portIncrement ?: 0
+		int portIncrement = entity.getAttribute(JBossNode.PORT_INCREMENT)
 		def serverProfile = "default"
 """mkdir -p $runDir/server && \\
 cd $runDir/server && \\
@@ -64,13 +64,14 @@ JAVA_OPTS="\$JAVA_OPTS -Djava.util.logging.manager=org.jboss.logmanager.LogManag
 JAVA_OPTS="\$JAVA_OPTS -Dorg.jboss.logging.Logger.pluginClass=org.jboss.logging.logmanager.LoggerPluginImpl" && \\
 export JBOSS_CLASSPATH="$installDir/lib/jboss-logmanager.jar" && \\
 $installDir/bin/run.sh -Djboss.service.binding.set=$portGroupName -Djboss.server.base.dir=$runDir/server -Djboss.server.base.url=file://$runDir/server -c $serverProfile &
+sleep 30
 exit"""
     }
 
     /** script to return 1 if pid in runDir is running, 0 otherwise */
     public String getCheckRunningScript() { 
-		def port = jmxPort
-		def host = jmxHost
+		def host = entity.getAttribute(AttributeDictionary.JMX_HOST)
+		def port = entity.getAttribute(AttributeDictionary.JMX_PORT)
 		"$installDir/bin/twiddle.sh --host $host --port $port get \"jboss.system:type=Server\" Started; exit"
     }
 
