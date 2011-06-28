@@ -18,7 +18,7 @@ import brooklyn.entity.EffectorTest
  * TODO add assertions
  */
 public class FuturesTest {
-	private static final Logger log = LoggerFactory.getLogger(FuturesTest.class)
+    private static final Logger log = LoggerFactory.getLogger(FuturesTest.class)
  
     @Test
     public void testFutures() {

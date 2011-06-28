@@ -55,8 +55,8 @@ public class LocalSubscriptionManager implements SubscriptionManager {
     ConcurrentMap<Long, Subscription> allSubscriptions = new ConcurrentHashMap<Long, Subscription>();
     
     final ExecutionManager em;
-	
-	public LocalSubscriptionManager(ExecutionManager em) { this.em = em }
+    
+    public LocalSubscriptionManager(ExecutionManager em) { this.em = em }
     
     public <T> void publish(SensorEvent<T> event) {
         // FIXME SUBS - execution - see below

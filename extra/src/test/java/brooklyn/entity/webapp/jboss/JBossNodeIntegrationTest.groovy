@@ -21,7 +21,7 @@ import brooklyn.location.basic.SshMachineLocation
  * TODO clarify test purpose
  */
 public class JBossNodeIntegrationTest {
-	private static final Logger logger = LoggerFactory.getLogger(brooklyn.entity.webapp.jboss.JBossNodeIntegrationTest)
+    private static final Logger logger = LoggerFactory.getLogger(brooklyn.entity.webapp.jboss.JBossNodeIntegrationTest)
 
     // Increment default ports to avoid tests running on 8080
     final static int PORT_INCREMENT = 300
@@ -36,31 +36,31 @@ public class JBossNodeIntegrationTest {
         }
     }
 
-	@BeforeMethod(groups = "Integration")
-	public void setup() {
-		app = new TestApplication();
-		testLocation = new SshMachineLocation(name:'london', host:'localhost')
-	}
+    @BeforeMethod(groups = "Integration")
+    public void setup() {
+        app = new TestApplication();
+        testLocation = new SshMachineLocation(name:'london', host:'localhost')
+    }
 
-	@Test(groups = "Integration")
-	public void canStartupAndShutdown() {
-		JBossNode jb = new JBossNode(owner:app, portIncrement: portIncrement);
-		jb.start([ testLocation ])
+    @Test(groups = "Integration")
+    public void canStartupAndShutdown() {
+        JBossNode jb = new JBossNode(owner:app, portIncrement: portIncrement);
+        jb.start([ testLocation ])
         SshBasedJavaWebAppSetup setup = new JBoss6SshSetup(jb)
-		assertTrue setup.isRunning(testLocation)
-		jb.shutdown()
-		// Potential for JBoss to be in process of shutting down here..
-		assertFalse setup.isRunning(testLocation)
-	}
+        assertTrue setup.isRunning(testLocation)
+        jb.shutdown()
+        // Potential for JBoss to be in process of shutting down here..
+        assertFalse setup.isRunning(testLocation)
+    }
 
-	@Test(groups = "Integration")
-	public void canAlterPortIncrement() {
-		int pI = 1020
-		int httpPort = baseHttpPort + pI
-		JBossNode jb = new JBossNode(owner:app, portIncrement: pI);
-		// Assert httpPort is contactable.
-		logger.info "Starting JBoss with HTTP port $httpPort"
-		jb.start([ testLocation ])
+    @Test(groups = "Integration")
+    public void canAlterPortIncrement() {
+        int pI = 1020
+        int httpPort = baseHttpPort + pI
+        JBossNode jb = new JBossNode(owner:app, portIncrement: pI);
+        // Assert httpPort is contactable.
+        logger.info "Starting JBoss with HTTP port $httpPort"
+        jb.start([ testLocation ])
         executeUntilSucceedsWithShutdown(jb, {
             def port = jb.getAttribute(JBossNode.HTTP_PORT)
             def url = "http://localhost:$port"
@@ -100,13 +100,13 @@ public class JBossNodeIntegrationTest {
             def errorCount = jb.getAttribute(JBossNode.ERROR_COUNT)
             if (errorCount == null) return new BooleanWithMessage(false, "errorCount not set yet ($errorCount)")
 =======
-	@Test(groups = "Integration")
-	public void publishesRequestsPerSecondMetric() {
-		JBossNode jb = new JBossNode(owner:app, portIncrement: portIncrement);
-		jb.start([ testLocation ])
-		executeUntilSucceedsWithShutdown(jb, {
-			def errorCount = jb.getAttribute(JBossNode.ERROR_COUNT)
-			if (errorCount == null) return new BooleanWithMessage(false, "errorCount not set yet ($errorCount)")
+    @Test(groups = "Integration")
+    public void publishesRequestsPerSecondMetric() {
+        JBossNode jb = new JBossNode(owner:app, portIncrement: portIncrement);
+        jb.start([ testLocation ])
+        executeUntilSucceedsWithShutdown(jb, {
+            def errorCount = jb.getAttribute(JBossNode.ERROR_COUNT)
+            if (errorCount == null) return new BooleanWithMessage(false, "errorCount not set yet ($errorCount)")
 >>>>>>> get groups working with TestNG
 
             // Connect to non-existent URL n times

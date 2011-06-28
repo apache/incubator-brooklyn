@@ -106,17 +106,17 @@ exit
      */
     public abstract String getCheckRunningScript();
     
-	public void start() {
+    public void start() {
         log.info "starting entity {} on machine {}", entity, machine
         synchronized (getClass()) {
             String s = getInstallScript()
             if (s) {
-				int result = machine.run(out:System.out, s)
+                int result = machine.run(out:System.out, s)
                 if (result) throw new IllegalStateException("failed to start $entity (exit code $result)")
             }
         }
 
-		def result = machine.run(out:System.out, getRunScript())
+        def result = machine.run(out:System.out, getRunScript())
         if (result) throw new IllegalStateException("failed to start $entity (exit code $result)")
         
         postStart();
@@ -128,8 +128,8 @@ exit
     protected void postStart() {
     }
     
-	public boolean isRunning() {
-		def result = machine.run(out:System.out, getCheckRunningScript())
+    public boolean isRunning() {
+        def result = machine.run(out:System.out, getCheckRunningScript())
         if (result==0) return true
         if (result==1) return false
         throw new IllegalStateException("$entity running check gave result code $result")

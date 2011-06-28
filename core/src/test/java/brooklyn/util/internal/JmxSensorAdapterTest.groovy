@@ -27,7 +27,7 @@ import brooklyn.test.JmxService
  * TODO clarify test purpose
  */
 public class JmxSensorAdapterTest {
-	private static final Logger log = LoggerFactory.getLogger(JmxSensorAdapterTest.class)
+    private static final Logger log = LoggerFactory.getLogger(JmxSensorAdapterTest.class)
 
     @Test
     public void addASensorAndCheckItDetectsValuesOfAJmxAttribute() {
@@ -66,7 +66,7 @@ public class JmxSensorAdapterTest {
         String[] domains = mbsc.getDomains();
         Arrays.sort(domains);
         for (String domain : domains) {
-	        log.debug "domain {}", domain
+            log.debug "domain {}", domain
         }
     
         log.debug "default domain {}", mbsc.defaultDomain
@@ -74,7 +74,7 @@ public class JmxSensorAdapterTest {
 
         Set names = new TreeSet(mbsc.queryNames(null, null));
         for (ObjectName name : names) {
-	        log.debug "object name {}", name
+            log.debug "object name {}", name
         }
         
         JmxSensorAdapter adapter = new JmxSensorAdapter(urlS)

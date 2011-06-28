@@ -24,22 +24,22 @@ import brooklyn.management.internal.LocalManagementContext
  * TODO clarify test purpose
  */
 public class EffectorTest {
-	private static final Logger log = LoggerFactory.getLogger(EffectorTest.class);
-	// FIXME remove this when we have a process for setting logging...
-//	static {
-//		log.metaClass {
-//			warn = { String a -> println "WARN "+a }
-//			warn = { String a, Throwable t -> println "WARN "+a; t.printStackTrace(); }
-//			info = { String a -> println "INFO "+a }
-//		}
-//	}
-	
-	public static interface CanSayHi {
-		static Effector<String> SAY_HI_1 = new EffectorWithExplicitImplementation<CanSayHi,String>("sayHi1", String.class, [
-					[ "name", String.class, "person to say hi to" ] as BasicParameterType<String>,
-					[ "greeting", String.class, "what to say as greeting", "hello" ] as BasicParameterType<String>
-				], "says hello to a person") {
-			public String invokeEffector(CanSayHi e, Map m) {
+    private static final Logger log = LoggerFactory.getLogger(EffectorTest.class);
+    // FIXME remove this when we have a process for setting logging...
+//    static {
+//        log.metaClass {
+//            warn = { String a -> println "WARN "+a }
+//            warn = { String a, Throwable t -> println "WARN "+a; t.printStackTrace(); }
+//            info = { String a -> println "INFO "+a }
+//        }
+//    }
+    
+    public static interface CanSayHi {
+        static Effector<String> SAY_HI_1 = new EffectorWithExplicitImplementation<CanSayHi,String>("sayHi1", String.class, [
+                    [ "name", String.class, "person to say hi to" ] as BasicParameterType<String>,
+                    [ "greeting", String.class, "what to say as greeting", "hello" ] as BasicParameterType<String>
+                ], "says hello to a person") {
+            public String invokeEffector(CanSayHi e, Map m) {
                 e.sayHi1(m)
             }
         };
