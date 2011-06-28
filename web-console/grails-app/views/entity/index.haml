@@ -1,26 +1,28 @@
+!!! 5
 %html
-	%head
-		%meta{:name=>"layout",:content=>"basic"}\
-	%body{:onload=>"initTabs()"}
-		.layout-middle-content
-			.layout-left-column
-				%div{:id=>"demo1"}
-			.layout-main-content
-				%ul{:id=>"tabs"}
-					%li
-						%a{:href=>"#summary"}Summary
-					%li
-						%a{:href=>"#location"}Location
-					%li
-						%a{:href=>"#health"}Health
-					%li
-						%a{:href=>"#structure"}Structure
-				.tabContent{:id=>"summary"}
-					%h2 Summary
-				.tabContent{:id=>"location"}
-					%h2 Location
-				.tabContent{:id=>"health"}
-					%h2 Health
-				.tabContent{:id=>"structure"}
-					%h2 Structure
-
+%head
+    %head
+        %meta{:name=>"layout",:content=>"basic"}\
+    %body{:onload=>"initTabs()"}
+        .layout-middle-content
+            .layout-left-column
+                %div{:id=>"demo1"}
+            .layout-main-content
+                #tabs
+                    %ul
+                        %li
+                            %a{:href=>"#summary"}Summary
+                        %li
+                            %a{:href=>"#location"}Location
+                        %li
+                            %a{:href=>"#health"}Health
+                        %li
+                            %a{:href=>"#structure"}Structure
+                    #summary
+                        %h2 JAM TEMP
+                    #location
+                        %h2 Location
+                    #health
+                        %h2 Health
+                    #structure
+                        %h2 Structure
