@@ -45,6 +45,15 @@ class TestUtils {
 		}
 	}
 
+	public static boolean urlRespondsWithStatusCode200(String url) {
+		def connection = connectToURL(url)
+		int status = ((HttpURLConnection) connection).getResponseCode()
+		logger.info "connection to {} gives {}", url, status
+		if (status == 404)
+			throw new Exception("Connection to $url gave 404");
+		return status == 200
+	}
+	
 	/** Connects to the given url and returns the connection. */
 	public static URLConnection connectToURL(String u) {
 		URL url = [u]

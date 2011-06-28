@@ -134,12 +134,7 @@ class TomcatNodeIntegrationTest {
 		executeUntilSucceedsWithShutdown(tc, {
             def port = tc.getAttribute(TomcatNode.HTTP_PORT)
             def url  = "http://localhost:${port}/hello-world"
-            def connection = connectToURL(url)
-            int status = ((HttpURLConnection)connection).getResponseCode()
-            logger.info "connection to {} gives {}", url, status
-            if (status == 404)
-                throw new Exception("App is not there yet (404)");
-            assertEquals 200, status
+			assertTrue urlRespondsWithStatusCode200(url)
 			true
         }, abortOnError: false)
 	}
