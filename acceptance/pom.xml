@@ -85,47 +85,6 @@
                         </executions>
                     </plugin>
                     <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>selenium-maven-plugin</artifactId>
-                        <version>1.1</version>
-                        <executions>
-                            <execution>
-                                <id>start</id>
-                                <phase>pre-integration-test</phase>
-                                <goals>
-                                    <goal>start-server</goal>
-                                </goals>
-                                <configuration>
-                                    <background>true</background>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>stop</id>
-                                <phase>post-integration-test</phase>
-                                <goals>
-                                    <goal>stop-server</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <port>4666</port>
-                        </configuration>
-                        <dependencies>
-                            <dependency>
-                                <groupId>org.seleniumhq.selenium</groupId>
-                                <artifactId>selenium-server</artifactId>
-                                <version>2.0rc3</version>
-                                <exclusions>
-                                    <!-- prevent ant:ant versus org.apache.ant:ant collision -->
-                                    <exclusion>
-                                        <groupId>ant</groupId>
-                                        <artifactId>ant</artifactId>
-                                    </exclusion>
-                                </exclusions>
-                            </dependency>
-                        </dependencies>
-                    </plugin>
-                    <plugin>
                         <groupId>org.mortbay.jetty</groupId>
                         <artifactId>jetty-maven-plugin</artifactId>
                         <configuration>
@@ -136,6 +95,8 @@
                                     <maxIdleTime>60000</maxIdleTime>
                                 </connector>
                             </connectors>
+                            <stopPort>9091</stopPort>
+                            <stopKey>stopitnow</stopKey>
                         </configuration>
                         <executions>
                             <execution>
