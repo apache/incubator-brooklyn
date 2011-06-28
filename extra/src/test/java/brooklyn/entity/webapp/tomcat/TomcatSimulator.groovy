@@ -5,22 +5,6 @@ import static org.junit.Assert.*
 import brooklyn.entity.Entity
 import brooklyn.location.Location
 import java.util.concurrent.Semaphore
-import javax.management.ObjectName
-import javax.management.MBeanServerFactory
-import javax.management.MBeanServer
-import javax.management.remote.JMXConnectorServerFactory
-import javax.management.remote.JMXConnectorServer
-import javax.management.remote.JMXServiceURL
-import mx4j.tools.naming.NamingServiceMBean
-import javax.management.MBeanServerInvocationHandler
-import mx4j.tools.naming.NamingService
-import javax.management.DynamicMBean
-import javax.management.Attribute
-import javax.management.AttributeList
-import javax.management.MBeanInfo
-import sun.reflect.generics.reflectiveObjects.NotImplementedException
-import javax.management.MBeanAttributeInfo
-import java.util.Map.Entry
 
 /**
  * A class that simulates Tomcat for the purposes of testing.
@@ -33,9 +17,7 @@ class TomcatSimulator {
     private static Collection<TomcatSimulator> activeInstances = []
     private Location location
     private Entity entity
-    private MBeanServer server
-    private NamingServiceMBean namingServiceMBean
-    private JMXConnectorServer connectorServer
+    private JmxService jmxService
 
     TomcatSimulator(Location location, Entity entity) {
         assertNotNull(location)
@@ -51,39 +33,19 @@ class TomcatSimulator {
             throw new IllegalStateException("TomcatSimulator is already running")
         synchronized (activeInstances) { activeInstances.add(this) }
 
-        String host = "localhost";
-        int port = 1099;
-        JMXServiceURL address = new JMXServiceURL("service:jmx:rmi://localhost/jndi/rmi://localhost:"+port+"/jmxrmi");
-        connectorServer = JMXConnectorServerFactory.newJMXConnectorServer(address, null, null)
-        server = MBeanServerFactory.createMBeanServer();
-        ObjectName cntorServerName = ObjectName.getInstance("connectors:protocol=rmi");
-        server.registerMBean(connectorServer, cntorServerName);
+        jmxService = new JmxService();
 
-        ObjectName naming = new ObjectName("Naming:type=registry");
-        server.registerMBean(new NamingService(), naming);
-        Object proxy = MBeanServerInvocationHandler.newProxyInstance(server, naming, NamingServiceMBean.class, false);
-        namingServiceMBean = (NamingServiceMBean) proxy
-        namingServiceMBean.start();
-
-        connectorServer.start();
-
-        entity.jmxHost = host
-        entity.jmxPort = port
+        entity.jmxHost = jmxService.jmxHost
+        entity.jmxPort = jmxService.jmxPort
 
         int httpPort = 8080
         entity.updateAttribute(TomcatNode.HTTP_PORT, httpPort)
         registerMBean "Catalina:type=Connector,port="+httpPort, stateName: "STARTED"
     }
 
-    private GeneralisedDynamicMBean registerMBean(Map initialAttributes, String name) {
-        GeneralisedDynamicMBean mbean = new GeneralisedDynamicMBean(initialAttributes)
-        server.registerMBean(mbean, new ObjectName (name))
-        return mbean
-    }
-
     public void shutdown() {
-        connectorServer.stop();
-        namingServiceMBean.stop();
+        jmxService.shutdown();
+        jmxService = null;
         synchronized (activeInstances) { activeInstances.remove(this) }
         lock.release()
     }
