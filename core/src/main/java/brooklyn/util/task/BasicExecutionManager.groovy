@@ -156,6 +156,15 @@ public class BasicExecutionManager implements ExecutionManager {
 
 	public TaskPreprocessor getTaskPreprocessorForTag(Object tag) { return preprocessorByTag.get(tag) }
 	public void setTaskPreprocessorForTag(Object tag, Class<? extends TaskPreprocessor> preprocessor) {
+		def old = getTaskPreprocessorForTag(tag)
+		if (old!=null) {
+			if (preprocessor.isAssignableFrom(old)) { 
+				/* already have such an instance */ 
+				return;
+			}
+			//might support multiple in future...
+			throw new IllegalStateException("Not allowed to set multiple TaskProcessors on ExecutionManager tag (tag $tag, has $old, setting new $preprocessor)"); 
+		}
 		setTaskPreprocessorForTag(tag, preprocessor.newInstance())
 	}
 	public void setTaskPreprocessorForTag(Object tag, TaskPreprocessor preprocessor) {
@@ -165,7 +174,7 @@ public class BasicExecutionManager implements ExecutionManager {
 		def old = preprocessorByTag.put(tag, preprocessor);
 		if (old && preprocessor && old!=preprocessor)
 			//might support multiple in future...
-			throw new IllegalStateException("Not allowed set multiple TaskProcessors on ExecutionManager tag (tag $tag)"); 
+			throw new IllegalStateException("Not allowed to set multiple TaskProcessors on ExecutionManager tag (tag $tag)"); 
 	}
 	
 }

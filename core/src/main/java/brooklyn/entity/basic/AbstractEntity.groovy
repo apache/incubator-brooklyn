@@ -153,7 +153,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     /**
      * Adds this as a member of the given group, registers with application if necessary
      */
-    public void setOwner(Group e) {
+    public synchronized void setOwner(Group e) {
 		if (owner!=null) {
 			if (owner==e) return
 			if (owner!=e) throw new UnsupportedOperationException("Cannot change owner of $this from $owner to $e (owner change not supported)")
