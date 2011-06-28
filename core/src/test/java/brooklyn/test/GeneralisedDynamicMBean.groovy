@@ -1,4 +1,4 @@
-package brooklyn.entity.webapp.tomcat
+package brooklyn.test
 
 import javax.management.MBeanInfo
 import sun.reflect.generics.reflectiveObjects.NotImplementedException
@@ -32,6 +32,10 @@ class GeneralisedDynamicMBean implements DynamicMBean {
             new MBeanAttributeInfo(it.key, it.value.class.name, it.key, true, false, false) }
         mBeanInfo = new MBeanInfo(GeneralisedDynamicMBean.class.name, GeneralisedDynamicMBean.class.name, attrInfo,
                 null, null, null)
+    }
+
+    public void updateAttributeValue(String name, Object value) {
+        attributes[name] = value
     }
 
     Object getAttribute(String s) {
