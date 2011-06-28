@@ -13,7 +13,7 @@ public class BasicParameterType<T> implements ParameterType<T> {
     private String description
     private T defaultValue = NONE
 
-	public BasicParameterType(Map<?, ?> arguments = [:]) {
+    public BasicParameterType(Map<?, ?> arguments = [:]) {
         arguments.each { key, value -> this."$key" = value }
     }
 
@@ -24,8 +24,8 @@ public class BasicParameterType<T> implements ParameterType<T> {
         this.defaultValue = defaultValue
     }
 
-	private static Object NONE = new Object()
-	
+    private static Object NONE = new Object()
+    
     public String getName() { name }
 
     public Class<T> getParameterClass() { type }
@@ -34,11 +34,11 @@ public class BasicParameterType<T> implements ParameterType<T> {
 
     public String getDescription() { description }
 
-	public T getDefaultValue() {
-		hasDefaultValue() ? defaultValue : null;
-	}
+    public T getDefaultValue() {
+        hasDefaultValue() ? defaultValue : null;
+    }
 
-	public boolean hasDefaultValue() {
-		defaultValue != NONE
-	}
+    public boolean hasDefaultValue() {
+        defaultValue != NONE
+    }
 }

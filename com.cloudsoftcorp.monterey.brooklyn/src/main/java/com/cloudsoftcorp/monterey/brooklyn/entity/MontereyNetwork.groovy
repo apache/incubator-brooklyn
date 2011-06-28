@@ -16,7 +16,7 @@ import java.util.logging.Logger
 import brooklyn.entity.Group
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.trait.Startable
-import brooklyn.event.basic.AttributeSensor
+import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.Location
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.internal.BrooklynSystemProperties
@@ -40,7 +40,7 @@ import com.cloudsoftcorp.monterey.network.m.MediationWorkrateItem.MediationWorkr
 import com.cloudsoftcorp.monterey.node.api.NodeId
 import com.cloudsoftcorp.util.Loggers
 import com.cloudsoftcorp.util.TimeUtils
-import com.cloudsoftcorp.util.exception.ExceptionUtils;
+import com.cloudsoftcorp.util.exception.ExceptionUtils
 import com.cloudsoftcorp.util.exception.RuntimeWrappedException
 import com.cloudsoftcorp.util.javalang.ClassLoadingContext
 import com.cloudsoftcorp.util.osgi.BundleSet
@@ -48,7 +48,6 @@ import com.cloudsoftcorp.util.proc.ProcessExecutionFailureException
 import com.cloudsoftcorp.util.web.client.CredentialsConfig
 import com.cloudsoftcorp.util.web.server.WebConfig
 import com.cloudsoftcorp.util.web.server.WebServer
-import com.google.common.collect.ImmutableMap
 import com.google.gson.Gson
 
 
@@ -72,12 +71,12 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
 
     private static final Logger logger = Loggers.getLogger(MontereyNetwork.class);
 
-    public static final AttributeSensor<Integer> MANAGEMENT_URL = [ "ManagementUrl", "monterey.management-url", URL.class ]
-    public static final AttributeSensor<String> NETWORK_ID = [ "NetworkId", "monterey.network-id", String.class ]
-    public static final AttributeSensor<String> APPLICTION_NAME = [ "ApplicationName", "monterey.application-name", String.class ]
+    public static final BasicAttributeSensor<Integer> MANAGEMENT_URL = [ URL.class, "monterey.management-url", "Management URL" ]
+    public static final BasicAttributeSensor<String> NETWORK_ID = [ String.class, "monterey.network-id", "Network id" ]
+    public static final BasicAttributeSensor<String> APPLICTION_NAME = [ String.class, "monterey.application-name", "Application name" ]
 
     /** up, down, etc? */
-    public static final AttributeSensor<String> STATUS = [ "Status", "monterey.status", String.class ]
+    public static final BasicAttributeSensor<String> STATUS = [ String, "monterey.status", "Status" ]
 
     private final Gson gson;
 
@@ -129,18 +128,30 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         return managementUrl;
     }
 
-    public Map<NodeId,MontereyContainerNode> getNodes() {
-        return ImmutableMap.copyOf(nodes);
+    public Map<NodeId,MontereyContainerNode> getContainerNodes() {
+        // FIXME How do I return an immutableMap, without groovy interpretting accessing the 'node' field as calling the getter?!
+        // return ImmutableMap.copyOf(nodes);
+        return nodes;
+    }
+
+    public Map<NodeId,AbstractMontereyNode> getMontereyNodes() {
+        Map<NodeId,AbstractMontereyNode> result = [:]
+        nodes.values().each {
+            result.put(it.getNodeId(), it.getContainedMontereyNode());
+        }
+        return Collections.unmodifiableMap(result);
     }
 
     public Map<String,Segment> getSegments() {
-        return ImmutableMap.copyOf(segments);
+        // FIXME How do I return an immutableMap, without groovy interpretting accessing the 'segments' field as calling the getter?!
+        // return ImmutableMap.copyOf(segments);
+        return segments;
     }
 
-    public void start(Map properties=[:], Group parent=null, Location location=null) {
+    public void start(Collection<? extends Location> locs) {
         // FIXME Work in progress...
-        EntityStartUtils.startEntity properties, this, parent, location
-        log.debug "Monterey network started... management-url is {}", this.properties['ManagementUrl']
+        EntityStartUtils.startEntity this, locs
+        LOG.debug "Monterey network started... management-url is {}", this.properties['ManagementUrl']
     }
     
     public void dispose() {
@@ -157,7 +168,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
          * HostKeyChecking hostKeyChecking = HostKeyChecking.NO;
          */
 
-        log.info("Creating new monterey network "+networkId+" on "+host.getName());
+        LOG.info("Creating new monterey network "+networkId+" on "+host.getName());
 
         File webUsersConfFile = DeploymentUtils.toEncryptedWebUsersConfFile(webUsersCredentials);
         String username = System.getenv("USER");
@@ -252,6 +263,10 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
             throw new IllegalStateException("Monterey network is not running; cannot stop");
         }
         shutdownManagementNodeProcess(this.config, host, networkId)
+        
+        // TODO Race: monitoringTask could still be executing, and could get NPE when it tries to get connectionDetails
+        if (monitoringTask != null) monitoringTask.cancel(true);
+        
         host = null;
         managementUrl = null;
         connectionDetails = null;
@@ -283,15 +298,27 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
 
     private void updateAll() {
         try {
-            updateTopology();
-            updateWorkrates();
+            boolean isup = updateStatus();
+            if (isup) {
+                updateAppName();
+                updateTopology();
+                updateWorkrates();
+            }
         } catch (Throwable t) {
             LOG.log Level.WARNING, "Error updating brooklyn entities of Monterey Network "+managementUrl, t
             ExceptionUtils.throwRuntime t
         }
     }
 
-    private void updateStatus() {
+    private boolean updateStatus() {
+        PingWebProxy pinger = new PingWebProxy(connectionDetails.getManagementUrl(), connectionDetails.getWebApiAdminCredential());
+        boolean isup = pinger.ping();
+        String status = (isup) ? "UP" : "DOWN";
+        updateAttribute(STATUS, status);
+        return isup;
+    }
+    
+    private void updateAppName() {
         DeploymentWebProxy deployer = new DeploymentWebProxy(connectionDetails.getManagementUrl(), gson, connectionDetails.getWebApiAdminCredential());
         MontereyDeploymentDescriptor currentApp = deployer.getApplicationDeploymentDescriptor();
         String currentAppName = currentApp?.getName();
@@ -306,11 +333,13 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         Map<NodeId, NodeSummary> nodeSummaries = networkInfo.getNodeSummaries();
         Map<String, SegmentSummary> segmentSummaries = networkInfo.getSegmentSummaries();
 
+        // FIXME Why doesn't nodeSummaries.keySet work?!
+        
         // Create/destroy nodes that have been added/removed
         Collection<NodeId> newNodes = []
         Collection<NodeId> removedNodes = []
         newNodes.addAll(nodeSummaries.keySet()); newNodes.removeAll(nodes.keySet());
-        removedNodes.addAll(nodes.keySet()); newNodes.removeAll(nodeSummaries.keySet());
+        removedNodes.addAll(nodes.keySet()); removedNodes.removeAll(nodeSummaries.keySet());
 
         newNodes.each {
             MontereyLocation montereyLocation = nodeSummaries.get(it).getMontereyLocation();
@@ -327,7 +356,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         Collection<NodeId> newSegments = []
         Collection<NodeId> removedSegments = []
         newSegments.addAll(segmentSummaries.keySet()); newSegments.removeAll(segments.keySet());
-        removedSegments.addAll(segments.keySet()); newSegments.removeAll(segmentSummaries.keySet());
+        removedSegments.addAll(segments.keySet()); removedSegments.removeAll(segmentSummaries.keySet());
 
         newSegments.each {
             segments.put(it, new Segment(connectionDetails, it));

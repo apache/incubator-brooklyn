@@ -18,7 +18,7 @@ public class MontereyNetworkConnectionDetails implements Serializable {
     
     private NetworkId networkId;
     private URL managementUrl;
-	private CredentialsConfig adminCredential;
+    private CredentialsConfig adminCredential;
 
     public MontereyNetworkConnectionDetails(NetworkId networkId, URL managementUrl, CredentialsConfig adminCredential) {
         this.networkId = Preconditions.checkNotNull(networkId, "networkId");

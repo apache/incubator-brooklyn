@@ -8,10 +8,12 @@ import java.util.concurrent.ConcurrentHashMap
 
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
+import brooklyn.location.Location
 import brooklyn.management.ManagementContext
 import brooklyn.management.internal.AbstractManagementContext
 import brooklyn.management.internal.LocalManagementContext
-import brooklyn.util.internal.SerializableObservableMap;
+import brooklyn.util.internal.EntityStartUtils
+import brooklyn.util.internal.SerializableObservableMap
 
 public abstract class AbstractApplication extends AbstractGroup implements Application {
     public AbstractApplication(Map properties=[:]) {
@@ -48,27 +50,27 @@ public abstract class AbstractApplication extends AbstractGroup implements Appli
     /**
      * Default start will start all Startable children
      */
-    public void start(Map properties=[:]) {
-		getManagementContext()
-        EntityStartUtils.startGroup properties, this
+    public void start(Collection<Location> locs) {
+        getManagementContext()
+        EntityStartUtils.startGroup this, locs
     }
-	
-	private volatile AbstractManagementContext mgmt = null;
-	public ManagementContext getManagementContext() {
-		AbstractManagementContext result = mgmt
-		if (result==null) synchronized (this) {
-			result = mgmt
-			if (result!=null) return result
-			
-			//TODO how does user override?  expect he annotates a field in this class, then look up that field?
-			//(do that here)
-			
-			if (result==null)
-				result = new LocalManagementContext()
-			result.registerApplication(this)
-			mgmt = result
-		}
-		result
-	}
-	
+    
+    private volatile AbstractManagementContext mgmt = null;
+    public ManagementContext getManagementContext() {
+        AbstractManagementContext result = mgmt
+        if (result==null) synchronized (this) {
+            result = mgmt
+            if (result!=null) return result
+            
+            //TODO how does user override?  expect he annotates a field in this class, then look up that field?
+            //(do that here)
+            
+            if (result==null)
+                result = new LocalManagementContext()
+            result.registerApplication(this)
+            mgmt = result
+        }
+        result
+    }
+    
 }

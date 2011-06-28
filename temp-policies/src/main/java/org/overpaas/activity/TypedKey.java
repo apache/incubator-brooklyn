@@ -33,17 +33,17 @@ public class TypedKey<T> {
 
     private final String path;
     private final String[] segments;
-	private final EnhancedType<T> type;
-	
+    private final EnhancedType<T> type;
+    
     /**
      * @param path A slash-separated set of segments that make up the path.
      */
-	public TypedKey(String path, EnhancedType<T> type) {
-	    this(path, split(path), type);
+    public TypedKey(String path, EnhancedType<T> type) {
+        this(path, split(path), type);
     }
     
-	public TypedKey(String[] segments, EnhancedType<T> type) {
-	    this(merge(segments), segments, type);
+    public TypedKey(String[] segments, EnhancedType<T> type) {
+        this(merge(segments), segments, type);
     }
     
     public TypedKey(String[] segments, Class<T> type) {
@@ -86,22 +86,22 @@ public class TypedKey<T> {
         return result;
     }
 
-	public EnhancedType<T> getType() {
-		return type;
-	}
+    public EnhancedType<T> getType() {
+        return type;
+    }
 
-//	public interface ImmutableAdapter<Source,Target> {
-//		public Target toImmutable(Source s);
-//	}
-//	
-//	public static abstract class KeyImmutableCollectionType<O,T extends Collection<O>> extends KeyType<T> implements ImmutableAdapter<Collection<O>,T> {
-//		public KeyImmutableCollectionType(Class<T> type) {
-//			super(type);
-//		}
-//		@SuppressWarnings("unchecked")
-//		public T toImmutableUntyped(Object input) {
-//			return toImmutable((Collection<O>) input); 
-//		}
-//	}
-			
+//    public interface ImmutableAdapter<Source,Target> {
+//        public Target toImmutable(Source s);
+//    }
+//    
+//    public static abstract class KeyImmutableCollectionType<O,T extends Collection<O>> extends KeyType<T> implements ImmutableAdapter<Collection<O>,T> {
+//        public KeyImmutableCollectionType(Class<T> type) {
+//            super(type);
+//        }
+//        @SuppressWarnings("unchecked")
+//        public T toImmutableUntyped(Object input) {
+//            return toImmutable((Collection<O>) input); 
+//        }
+//    }
+            
 }

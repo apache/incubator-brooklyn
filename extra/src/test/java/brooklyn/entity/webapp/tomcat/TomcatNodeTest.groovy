@@ -25,10 +25,10 @@ import brooklyn.location.basic.SshMachine
  * This tests the operation of the {@link TomcatNode} entity.
  */
 class TomcatNodeTest {
-	private static final Logger logger = LoggerFactory.getLogger(TomcatNodeTest.class)
+    private static final Logger logger = LoggerFactory.getLogger(TomcatNodeTest.class)
 
-//	@InheritConstructors
-	static class TestApplication extends AbstractApplication {
+//    @InheritConstructors
+    static class TestApplication extends AbstractApplication {
         public TestApplication(Map properties=[:]) {
             super(properties)
         }
@@ -37,6 +37,7 @@ class TomcatNodeTest {
     @Before
     public void patchInSimulator() {
         TomcatNode.metaClass.startInLocation = { SimulatedLocation loc ->
+            delegate.locations.add(loc)
             TomcatSimulator sim = new TomcatSimulator(loc, delegate)
             delegate.simulator = sim
             sim.start()
@@ -55,115 +56,69 @@ class TomcatNodeTest {
             logger.error "TomcatSimulator was locked. If tests failed this is not unexpected. If tests passed, then this needs investigation."
     }
 
-	@Test
-	public void ensureNodeCanStartAndShutdown() {
-		Application app = new TestApplication();
-		TomcatNode tc = new TomcatNode(owner: app);
-		
-		try { 
-			tc.start(location: new SimulatedLocation());
-			try { tc.shutdown() } catch (Exception e) { 
-				throw new Exception("tomcat is throwing exceptions when shutting down; this will break most tests", e) }
-		} catch (Exception e) {
-			throw new Exception("tomcat is throwing exceptions when starting; this will break most tests", e)
-		}
-	}
-	
-	@Test
-	public void ensureNodeShutdownCleansUp() {
-		Application app = new TestApplication();
-		TomcatNode tc1 = new TomcatNode(owner: app);
-		TomcatNode tc2 = new TomcatNode(owner: app);
-		
-		try {
-			tc1.start(location: new SimulatedLocation());
-			tc1.shutdown()
-		} catch (Exception e) {} //NOOP
-		
-		try { 
-			tc2.start(location: new SimulatedLocation())
-		} catch (IllegalStateException e) {
-			throw new Exception("tomcat should clean up after itself in case of failure; this will break most tests", e)
-		} finally {
-			try { tc2.shutdown() } catch (Exception e) {} //NOOP
-		}
-	}
-	
-	@Test
-	public void detectEarlyDeathOfTomcatProcess() {
-		Application app = new TestApplication();
-		TomcatNode tc1 = new TomcatNode(owner: app);
-		TomcatNode tc2 = new TomcatNode(owner: app);
-		tc1.start(location: new SimulatedLocation())
-		try {
-			tc2.start(location: new SimulatedLocation())
-			tc2.shutdown()
-			fail "should have detected that $tc2 didn't start since tomcat was already running"
-		} catch (Exception e) {
-			logger.debug "successfully detected failure of {} to start: {}", tc2, e.toString()
-		} finally {
-			tc1.shutdown()
-		}
-	}
+    @Test
+    public void ensureNodeCanStartAndShutdown() {
+        Application app = new TestApplication();
+        TomcatNode tc = new TomcatNode(owner: app);
+        
+        try { 
+            tc.start([ new SimulatedLocation() ]);
+            try { tc.shutdown() } catch (Exception e) {
+                throw new Exception("tomcat is throwing exceptions when shutting down; this will break most tests", e) }
+        } catch (Exception e) {
+            throw new Exception("tomcat is throwing exceptions when starting; this will break most tests", e)
+        }
+    }
+    
+    @Test
+    public void ensureNodeShutdownCleansUp() {
+        Application app = new TestApplication();
+        TomcatNode tc1 = new TomcatNode(owner: app);
+        TomcatNode tc2 = new TomcatNode(owner: app);
+        
+        try {
+            tc1.start([ new SimulatedLocation() ]);
+            tc1.shutdown()
+        } catch (Exception e) {} //NOOP
+        
+        try { 
+            tc2.start([ new SimulatedLocation() ])
+        } catch (IllegalStateException e) {
+            throw new Exception("tomcat should clean up after itself in case of failure; this will break most tests", e)
+        } finally {
+            try { tc2.shutdown() } catch (Exception e) {} //NOOP
+        }
+    }
+    
+    @Test
+    public void detectEarlyDeathOfTomcatProcess() {
+        Application app = new TestApplication();
+        TomcatNode tc1 = new TomcatNode(owner: app);
+        TomcatNode tc2 = new TomcatNode(owner: app);
+        tc1.start([ new SimulatedLocation() ])
+        try {
+            tc2.start([ new SimulatedLocation() ])
+            tc2.shutdown()
+            fail "should have detected that $tc2 didn't start since tomcat was already running"
+        } catch (Exception e) {
+            logger.debug "successfully detected failure of {} to start: {}", tc2, e.toString()
+        } finally {
+            tc1.shutdown()
+        }
+    }
 
-	@Test
-    @Ignore
-	public void acceptsLocationAsStartParameter() {
-		Application app = new TestApplication();
-		TomcatNode tc = new TomcatNode(owner:app);
-		tc.start(location: new SimulatedLocation())
-		tc.shutdown()
-	}
-
-	@Test
-    @Ignore
-	public void acceptsLocationInEntity() {
-		logger.debug ""
-		Application app = new TestApplication(location:new SimulatedLocation());
-		TomcatNode tc = [ owner: app ]
-		tc.start()
-		tc.shutdown()
-	}
-	
-	@Test
-    @Ignore
-	public void acceptsEntityLocationSameAsStartParameter() {
-		Application app = new TestApplication();
-		TomcatNode tc = [ owner:app, location:new SimulatedLocation() ]
-		tc.start(location: new SimulatedLocation())
-		tc.shutdown()
-	}
-	
-	@Test
-	public void rejectIfEntityLocationConflictsWithStartParameter() {
-		Application app = new TestApplication()
-		boolean caught = false
-        SshMachineProvisioner tokyoMachinePool = new SshMachineProvisioner([InetAddress.getLocalHost()])
-        SshMachineLocation tokyoLocation = new SshMachineLocation(name:'tokyo', provisioner: tokyoMachinePool)
-        SshMachineProvisioner londonMachinePool = new SshMachineProvisioner([InetAddress.getLocalHost()])
-        SshMachineLocation londonLocation = new SshMachineLocation(name:'london', provisioner: tokyoMachinePool)
-		TomcatNode tc = [ owner:app, location:londonLocation ]
-		try {
-			tc.start([:], null, tokyoLocation)
-			tc.shutdown()
-		} catch(Exception e) {
-			caught = true
-		}
-		assertEquals(true, caught)
-	}
-	
-	@Test
-	public void rejectIfLocationNotInEntityOrInStartParameter() {
-		Application app = new TestApplication();
-		boolean caught = false
-		TomcatNode tc = new TomcatNode(owner: app);
-		try {
-			tc.start()
-			tc.shutdown()
-		} catch(Exception e) {
-			caught = true
-		}
-		assertEquals(true, caught)
-	}
+    @Test
+    public void rejectIfLocationNotSupplied() {
+        Application app = new TestApplication();
+        boolean caught = false
+        TomcatNode tc = new TomcatNode(owner: app);
+        try {
+            tc.start([])
+            tc.shutdown()
+        } catch(Exception e) {
+            caught = true
+        }
+        assertEquals(true, caught)
+    }
 }
  

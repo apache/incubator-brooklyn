@@ -4,6 +4,7 @@ import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.junit.Assert.*
 
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.slf4j.Logger
@@ -16,83 +17,114 @@ import brooklyn.location.basic.SshMachineLocation
 
 class JBossNodeIntegrationTest {
 
-	private static final Logger logger = LoggerFactory.getLogger(brooklyn.entity.webapp.jboss.JBossNodeIntegrationTest)
-	
-	static int baseHttpPort = 8080
-	static int portIncrement = 300
-	static int httpPort = baseHttpPort + portIncrement
-	
-	private Application app
-	private Location testLocation
-	
-	static class TestApplication extends AbstractApplication {
+    private static final Logger logger = LoggerFactory.getLogger(brooklyn.entity.webapp.jboss.JBossNodeIntegrationTest)
+
+    // Increment default ports to avoid tests running on 8080
+    final static int PORT_INCREMENT = 300
+    final static int DEFAULT_HTTP_PORT = 8080 + PORT_INCREMENT
+
+    private Application app
+    private Location testLocation
+
+    static class TestApplication extends AbstractApplication {
         public TestApplication(Map properties=[:]) {
             super(properties)
         }
     }
-	
-	@Before
-	public void setup() {
-		app = new TestApplication();
-		testLocation = new SshMachineLocation(name:'london', host:'localhost')
-	}
-	
+
+    @Before
+    public void setup() {
+        app = new TestApplication();
+        testLocation = new SshMachineLocation(name:'london', host:'localhost')
+    }
+
+    @Before
+    public void fail_if_http_port_in_use() {
+        if (isPortInUse(DEFAULT_HTTP_PORT)) {
+            fail "someone is already listening on port $DEFAULT_HTTP_PORT; tests assume that port $DEFAULT_HTTP_PORT is free on localhost"
+        }
+    }
+
+    @After
+    public void waitForShutdown() {
+        logger.info "Sleeping for shutdown"
+        Thread.sleep 4000
+    }
+
     @Test
     public void canStartupAndShutdown() {
-        JBossNode jb = new JBossNode(owner:app, portIncrement: portIncrement);
-		jb.start(location: testLocation)
-		assert (new JBoss6SshSetup(jb)).isRunning(testLocation)
+        JBossNode jb = new JBossNode(owner:app, portIncrement: PORT_INCREMENT);
+        jb.start([testLocation])
+        assert (new JBoss6SshSetup(jb, testLocation)).isRunning(testLocation)
         jb.shutdown()
-		assert ! (new JBoss6SshSetup(jb)).isRunning(testLocation)
+        // Potential for JBoss to be in process of shutting down here..
+        Thread.sleep 4000
+        assert ! (new JBoss6SshSetup(jb, testLocation)).isRunning(testLocation)
     }
-	
-	@Test
-	public void canAlterPortIncrement() {
-		int pI = 1020
-		int httpPort = baseHttpPort + pI
-		JBossNode jb = new JBossNode(owner:app, portIncrement: pI);
-		// Assert httpPort is contactable.
-		logger.info "Starting JBoss with HTTP port $httpPort"
-		jb.start(location: testLocation)
-		
-		executeUntilSucceedsWithShutdown(jb, {
-			def url = "http://localhost:$httpPort"
-			def connection = connectToURL(url)
-			int status = ((HttpURLConnection)connection).getResponseCode()
-			logger.info "connection to {} gives {}", url, status
-			if (status == 404)
-				throw new Exception("App is not there yet (404)");
-			assertEquals 200, status
-		}, abortOnError: false)
-	}
-	
-	// Failing @Test
-	public void publishesRequestsPerSecondMetric() {
-		JBossNode jb = new JBossNode(owner:app);
-		jb.start(location: testLocation)
-		executeUntilSucceedsWithShutdown(jb, {
-			
+
+    @Test
+    public void canAlterPortIncrement() {
+        int pI = 1020
+        JBossNode jb = new JBossNode(owner:app, portIncrement: pI);
+        jb.start([testLocation])
+        executeUntilSucceedsWithShutdown(jb, {
+            def port = jb.getAttribute(JBossNode.HTTP_PORT)
+            def url = "http://localhost:$port"
+            assertTrue urlRespondsWithStatusCode200(url)
+            true
+        }, abortOnError: false)
+    }
+    
+    @Test
+    public void canStartMultipleJBossNodes() {
+
+        def aInc = 400
+        JBossNode nodeA = new JBossNode(owner:app, portIncrement: aInc);
+        nodeA.start([testLocation])
+        
+        def bInc = 450
+        JBossNode nodeB = new JBossNode(owner:app, portIncrement: bInc);
+        nodeB.start([testLocation])
+        
+        executeUntilSucceedsWithFinallyBlock({
+            def aHttp = nodeA.getAttribute(JBossNode.HTTP_PORT)
+            def bHttp = nodeB.getAttribute(JBossNode.HTTP_PORT)
+            assertTrue urlRespondsWithStatusCode200("http://localhost:$aHttp")
+            assertTrue urlRespondsWithStatusCode200("http://localhost:$bHttp")
+            true
+        }, {
+            nodeA.shutdown()
+            nodeB.shutdown()
+        }, abortOnError: false)
+        
+    }
+    
+    @Test
+    public void publishesErrorCountMetric() {
+        JBossNode jb = new JBossNode(owner:app, portIncrement: PORT_INCREMENT);
+        jb.start([testLocation])
+        executeUntilSucceedsWithShutdown(jb, {
+            def errorCount = jb.getAttribute(JBossNode.ERROR_COUNT)
+            if (errorCount == null) return new BooleanWithMessage(false, "errorCount not set yet ($errorCount)")
+
             // Connect to non-existent URL n times
             def n = 5
-			def url = "http://localhost:${httpPort}/does_not_exist"
-			println url
-            def connection = n.times {
-				try {
-					 connectToURL(url) 
-				} catch (Exception e) {
-					println e
-				}
+            def port = jb.getAttribute(JBossNode.HTTP_PORT)
+            def url = "http://localhost:${port}/does_not_exist"
+            n.times {
+                def connection = connectToURL(url)
+                int status = ((HttpURLConnection) connection).getResponseCode()
+                logger.info "connection to {} gives {}", url, status
             }
-            int errorCount = jb.getAttribute(JBossNode.ERROR_COUNT)
-			jb.updateJmxSensors()	
+            Thread.sleep(1000L)
+            errorCount = jb.getAttribute(JBossNode.ERROR_COUNT)
             println "$errorCount errors in total"
-            
-            // TODO firm up assertions.  confused by the values returned (generally n*2?)
-            assert errorCount > 0
+
+            assertTrue errorCount > 0
             assertEquals 0, errorCount % n
-			
-		}, timeout: 6*SECONDS, useGroovyTruth: true)
-		
-	}
+            true
+        }, abortOnError: false, timeout:10*SECONDS, useGroovyTruth:true)
+
+    }
 
 }

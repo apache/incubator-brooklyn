@@ -1,7 +1,7 @@
 package com.cloudsoftcorp.monterey.brooklyn.entity
 
 import brooklyn.entity.basic.AbstractEntity
-import brooklyn.event.basic.AttributeSensor
+import brooklyn.event.basic.BasicAttributeSensor
 
 import com.cloudsoftcorp.monterey.control.workrate.api.WorkrateReport
 import com.cloudsoftcorp.monterey.network.control.api.Dmn1NodeType
@@ -19,8 +19,8 @@ import com.cloudsoftcorp.monterey.node.api.NodeId
  */
 abstract class AbstractMontereyNode extends AbstractEntity {
 
-    public static final AttributeSensor<Integer> WORKRATE_MSGS_PER_SEC = [ "MsgsPerSec", "monterey.workrate.msgsPerSec", Double ]
-    public static final AttributeSensor<Dmn1NodeType> NODE_TYPE = [ "MsgsPerSec", "monterey.node-type", Dmn1NodeType.class ]
+    public static final BasicAttributeSensor<Integer> WORKRATE_MSGS_PER_SEC = [ Double, "monterey.workrate.msgsPerSec", "Messages per sec" ]
+    public static final BasicAttributeSensor<Dmn1NodeType> NODE_TYPE = [ Dmn1NodeType.class, "monterey.node-type", "Messages per sec" ]
     
     private final MontereyNetworkConnectionDetails connectionDetails;
     private final NodeId nodeId;
@@ -41,4 +41,7 @@ abstract class AbstractMontereyNode extends AbstractEntity {
     }
     
     abstract void updateWorkrate(WorkrateReport report);
+    
+    protected void dispose() {
+    }
 }

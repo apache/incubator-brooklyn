@@ -21,32 +21,32 @@ public class LocalManagementContext extends AbstractManagementContext {
     private static final Logger log = LoggerFactory.getLogger(ManagementContext.class)
 
     private SubscriptionManager subscriptions = new LocalSubscriptionManager();
-	private ExecutionManager execution = new BasicExecutionManager();
+    private ExecutionManager execution = new BasicExecutionManager();
     
-	Set<Application> apps = []
+    Set<Application> apps = []
  
     public static ManagementContext getContext() { return new LocalManagementContext() }
-	                         
-	@Override
-	public void registerApplication(Application app) {
-		apps.add(app);
-	}
-	
-	@Override
-	public Collection<Application> getApplications() {
-		return apps
-	}
-	
-	@Override
-	public Entity getEntity(String id) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+                             
+    @Override
+    public void registerApplication(Application app) {
+        apps.add(app);
+    }
+    
+    @Override
+    public Collection<Application> getApplications() {
+        return apps
+    }
+    
+    @Override
+    public Entity getEntity(String id) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
     public SubscriptionManager getSubscriptionManager() { return subscriptions; }
 
-	public ExecutionManager getExecutionManager() { return execution; }
+    public ExecutionManager getExecutionManager() { return execution; }
  
-	public ExecutionContext getExecutionContext(Entity e) { return new ExecutionContext(tag: e, execution); }
-	
+    public ExecutionContext getExecutionContext(Entity e) { return new ExecutionContext(tag: e, execution); }
+    
 }

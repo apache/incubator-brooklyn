@@ -35,7 +35,7 @@ class BasicConfigKey<T> implements ConfigKey, Serializable {
     
     String getType() {
         return type;
-	}
+    }
     
     @Override
     public String getDescription() {

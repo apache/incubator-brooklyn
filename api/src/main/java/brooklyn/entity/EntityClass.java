@@ -14,13 +14,13 @@ import brooklyn.event.Sensor;
  */
 public interface EntityClass extends Serializable {
     
-	//TODO call EntityType ?  instead of Class?  same for refs to SensorClass ?
-	
+    //TODO call EntityType ?  instead of Class?  same for refs to SensorClass ?
+    
     // TODO maybe these? discuss/delete
     //Collection<EntityType> getSuperTypes();
     //boolean isInstance(Entity);
-	
-	//FIXME Alex: suggest we allow these, but always defer to the java type (i.e. use BasicEntitySummary, delete ExplicitEntitySummary) 
+    
+    //FIXME Alex: suggest we allow these, but always defer to the java type (i.e. use BasicEntitySummary, delete ExplicitEntitySummary) 
 
     String getName();
     

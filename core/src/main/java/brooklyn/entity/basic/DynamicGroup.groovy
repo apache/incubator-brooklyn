@@ -9,43 +9,43 @@ import brooklyn.entity.Group
 
 public class DynamicGroup extends AbstractGroup {
     Closure entityFilter=null;
-	
-	public DynamicGroup(Map properties=[:], Group owner=null, Closure entityFilter=null) {
-		super(properties, null)
-		if (entityFilter) this.entityFilter = entityFilter;
+    
+    public DynamicGroup(Map properties=[:], Group owner=null, Closure entityFilter=null) {
+        super(properties, null)
+        if (entityFilter) this.entityFilter = entityFilter;
         
-		//do this last, rather than passing owner up, so that entity filter is ready
-		if (owner) owner.addOwnedChild(this)
-	}
-	
-	void setEntityFilter(Closure entityFilter) {
-		this.entityFilter = entityFilter
-		rescanEntities()
-	}
-	
+        //do this last, rather than passing owner up, so that entity filter is ready
+        if (owner) owner.addOwnedChild(this)
+    }
+    
+    void setEntityFilter(Closure entityFilter) {
+        this.entityFilter = entityFilter
+        rescanEntities()
+    }
+    
     @Override
-	protected synchronized void registerWithApplication(Application app) {
-		super.registerWithApplication(app)
-		app.addEntityChangeListener({ rescanEntities() })
-		rescanEntities()
-	}
-	
-	public void rescanEntities() {
-		//TODO extremely inefficient; should act on the event!
-		if (!entityFilter) {
-			log.info "not (yet) scanning for children of $this: no filter defined"
-			return
-		}
-		if (!getApplication()) return
-		Set existingMembers = getMembers() as HashSet
-		log.info "scanning {}", getApplication().getEntities()
-		getApplication().getEntities().each {
-			if (entityFilter.call(it)) {
-				if (existingMembers.add(it))
-					addMember(it)
-			} else if (existingMembers.remove(it)) {
+    protected synchronized void registerWithApplication(Application app) {
+        super.registerWithApplication(app)
+        app.addEntityChangeListener({ rescanEntities() })
+        rescanEntities()
+    }
+    
+    public void rescanEntities() {
+        //TODO extremely inefficient; should act on the event!
+        if (!entityFilter) {
+            log.info "not (yet) scanning for children of $this: no filter defined"
+            return
+        }
+        if (!getApplication()) return
+        Set existingMembers = getMembers() as HashSet
+        log.info "scanning {}", getApplication().getEntities()
+        getApplication().getEntities().each {
+            if (entityFilter.call(it)) {
+                if (existingMembers.add(it))
+                    addMember(it)
+            } else if (existingMembers.remove(it)) {
                 removeMember(it)
             } 
-		}
-	}
+        }
+    }
 }

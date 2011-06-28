@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.concurrent.Future;
 
 public interface Resizable<T> {
-	
+    
     /**
      * A request to grow or shrink this entity to the desired size.
      * The desired size may not be possible, in which case this method will not
@@ -14,12 +14,12 @@ public interface Resizable<T> {
      * @param desiredSize
      * @return a list of handles to tasks started (possibly empty)
      */
-	List<Future<?>> //Task 
-		resize(int desiredSize);
+    List<Future<?>> //Task 
+        resize(int desiredSize);
     
-	List<Future<?>>  //Task 
-		grow(int desiredIncrease);
+    List<Future<?>>  //Task 
+        grow(int desiredIncrease);
     
-	List<Future<?>>  //Task 
-		shrink(int desiredDecrease);
+    List<Future<?>>  //Task 
+        shrink(int desiredDecrease);
 }

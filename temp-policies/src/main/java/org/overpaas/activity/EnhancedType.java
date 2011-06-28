@@ -29,41 +29,41 @@ public class EnhancedType<T> {
     public static EnhancedType<Map<String,? extends String>> MAP_STRING_STRING = new EnhancedType(Map.class);
     public static EnhancedType<Map<String,? extends Object>> MAP_STRING_OBJECT = new EnhancedType(Map.class);
     
-	private final Class<T> javaClass;
-	private final Type javaType;
-	
-	public EnhancedType(Class<T> javaClass) {
-		this(javaClass, javaClass);
-	}
-	
+    private final Class<T> javaClass;
+    private final Type javaType;
+    
+    public EnhancedType(Class<T> javaClass) {
+        this(javaClass, javaClass);
+    }
+    
     public EnhancedType(Type typeWithGenericInformation) {
         this.javaClass = null;
         this.javaType = typeWithGenericInformation;
     }
     
-	public EnhancedType(Class<T> javaClass, Type typeWithGenericInformation) {
-		this.javaClass = javaClass;
-		this.javaType = typeWithGenericInformation;
-	}
-	
-	public Class<T> asJavaClass() {
-		return javaClass;
-	}
-	
-	public Type asJavaType() {
-		return javaType;
-	}
-	
-	//could move toward this format to support strong immutability
-//		public static KeyImmutableCollectionType<String,List<String>> IMMUTABLE_COLLECTION_OF_STRINGS = new KeyImmutableCollectionType<String,List<String>>( (Class) List.class) {
-//			public List<String> toImmutable(Collection<String> input) {
-//				return Collections.unmodifiableList(new ArrayList<String>(input));
-//			}
-//		};
-//		public static KeyImmutableCollectionType<Object,List<Object>> IMMUTABLE_COLLECTION_OF_OBJECTS = new KeyImmutableCollectionType<Object,List<Object>>( (Class) List.class) {
-//			public List<Object> toImmutable(Collection<Object> input) {
-//				return Collections.unmodifiableList(new ArrayList<Object>(input));
-//			}
-//		};
-	
+    public EnhancedType(Class<T> javaClass, Type typeWithGenericInformation) {
+        this.javaClass = javaClass;
+        this.javaType = typeWithGenericInformation;
+    }
+    
+    public Class<T> asJavaClass() {
+        return javaClass;
+    }
+    
+    public Type asJavaType() {
+        return javaType;
+    }
+    
+    //could move toward this format to support strong immutability
+//        public static KeyImmutableCollectionType<String,List<String>> IMMUTABLE_COLLECTION_OF_STRINGS = new KeyImmutableCollectionType<String,List<String>>( (Class) List.class) {
+//            public List<String> toImmutable(Collection<String> input) {
+//                return Collections.unmodifiableList(new ArrayList<String>(input));
+//            }
+//        };
+//        public static KeyImmutableCollectionType<Object,List<Object>> IMMUTABLE_COLLECTION_OF_OBJECTS = new KeyImmutableCollectionType<Object,List<Object>>( (Class) List.class) {
+//            public List<Object> toImmutable(Collection<Object> input) {
+//                return Collections.unmodifiableList(new ArrayList<Object>(input));
+//            }
+//        };
+    
 }
