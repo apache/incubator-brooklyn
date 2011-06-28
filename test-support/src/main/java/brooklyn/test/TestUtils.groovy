@@ -1,7 +1,8 @@
 package brooklyn.test
 
 import static java.util.concurrent.TimeUnit.*
-import static org.junit.Assert.*
+import static org.testng.Assert.*
+
 import groovy.time.TimeDuration
 
 import java.net.URLConnection
@@ -16,9 +17,10 @@ import brooklyn.entity.Entity
 /**
  * Helper functions for tests of Tomcat, JBoss and others.
  */
-
-class TestUtils {
-	private static final Logger log = LoggerFactory.getLogger(brooklyn.test.TestUtils.class)
+public class TestUtils {
+	private static final Logger log = LoggerFactory.getLogger(TestUtils.class)
+    
+    private TestUtils() { }
 
 	/** True if two attempts to connect to the port succeed. */
 	public static boolean isPortInUse(int port, long retryAfterMillis=0) {

@@ -8,9 +8,9 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.testng.After;
+import org.testng.Before;
+import org.testng.Test;
 
 import brooklyn.policy.BalancerPolicy;
 import brooklyn.policy.ResizerPolicy;

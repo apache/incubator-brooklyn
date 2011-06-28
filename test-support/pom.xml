@@ -8,9 +8,9 @@
 
 	<parent>
 		<groupId>brooklyn</groupId>
-		<artifactId>brooklyn-parent-groovy</artifactId>
+		<artifactId>brooklyn-parent-root</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
-		<relativePath>../parent/groovy/pom.xml</relativePath>
+		<relativePath>../parent/root/pom.xml</relativePath>
 	</parent>
 
     <dependencies>
@@ -25,12 +25,16 @@
         </dependency>
 
 		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
+			<groupId>org.testng</groupId>
+			<artifactId>testng</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-jdk14</artifactId>
-		</dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-jdk14</artifactId>
+        </dependency>
     </dependencies>
 </project>

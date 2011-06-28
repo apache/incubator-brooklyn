@@ -2,11 +2,11 @@ package brooklyn.entity.webapp.jboss;
 
 import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
-import static org.junit.Assert.*
+import static org.testng.Assert.*
 
-import org.junit.After
-import org.junit.Before
-import org.junit.Test
+import org.testng.annotations.BeforeTest
+import org.testng.annotations.Test
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -15,8 +15,12 @@ import brooklyn.entity.basic.AbstractApplication
 import brooklyn.location.Location
 import brooklyn.location.basic.SshMachineLocation
 
+/**
+ * Test the operation of the {@link JBossNode} class.
+ * 
+ * TODO clarify test purpose
+ */
 class JBossNodeIntegrationTest {
-
     private static final Logger logger = LoggerFactory.getLogger(brooklyn.entity.webapp.jboss.JBossNodeIntegrationTest)
 
     // Increment default ports to avoid tests running on 8080
@@ -32,26 +36,26 @@ class JBossNodeIntegrationTest {
         }
     }
 
-    @Before
+    @BeforeTest
     public void setup() {
         app = new TestApplication();
         testLocation = new SshMachineLocation(name:'london', host:'localhost')
     }
 
-    @Before
+    @BeforeTest
     public void fail_if_http_port_in_use() {
         if (isPortInUse(DEFAULT_HTTP_PORT)) {
             fail "someone is already listening on port $DEFAULT_HTTP_PORT; tests assume that port $DEFAULT_HTTP_PORT is free on localhost"
         }
     }
 
-    @After
+    @AfterTest
     public void waitForShutdown() {
         logger.info "Sleeping for shutdown"
         Thread.sleep 4000
     }
 
-    @Test
+    @Test(groups = [ "Integration" ])
     public void canStartupAndShutdown() {
         JBossNode jb = new JBossNode(owner:app, portIncrement: PORT_INCREMENT);
         jb.start([testLocation])
@@ -62,7 +66,7 @@ class JBossNodeIntegrationTest {
         assert ! (new JBoss6SshSetup(jb, testLocation)).isRunning(testLocation)
     }
 
-    @Test
+    @Test(groups = [ "Integration" ])
     public void canAlterPortIncrement() {
         int pI = 1020
         JBossNode jb = new JBossNode(owner:app, portIncrement: pI);
@@ -75,9 +79,8 @@ class JBossNodeIntegrationTest {
         }, abortOnError: false)
     }
     
-    @Test
+    @Test(groups = [ "Integration" ])
     public void canStartMultipleJBossNodes() {
-
         def aInc = 400
         JBossNode nodeA = new JBossNode(owner:app, portIncrement: aInc);
         nodeA.start([testLocation])
@@ -99,7 +102,7 @@ class JBossNodeIntegrationTest {
         
     }
     
-    @Test
+    @Test(groups = [ "Integration" ])
     public void publishesErrorCountMetric() {
         JBossNode jb = new JBossNode(owner:app, portIncrement: PORT_INCREMENT);
         jb.start([testLocation])
@@ -124,7 +127,5 @@ class JBossNodeIntegrationTest {
             assertEquals 0, errorCount % n
             true
         }, abortOnError: false, timeout:10*SECONDS, useGroovyTruth:true)
-
     }
-
 }

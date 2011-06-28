@@ -45,9 +45,9 @@ public abstract class SshBasedJavaAppSetup {
         if (!v) {
             log.debug "retrieving {}, {}", field, machine.attributes
             synchronized (machine) {
-                println "machine="+machine
-                println "attribs="+machine.getAttributes()
-                println "val="+machine.attributes["next_"+field]
+                log.debug "machine={}", machine
+                log.debug "attribs={}", machine.getAttributes()
+                log.debug "val={}", machine.attributes["next_"+field]
                 v = machine.attributes["next_"+field] ?: initial
                 machine.attributes["next_"+field] = (v+1)
             }

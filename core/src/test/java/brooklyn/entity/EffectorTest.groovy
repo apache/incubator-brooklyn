@@ -1,8 +1,9 @@
 package brooklyn.entity
 
-import static org.junit.Assert.*
+import static org.testng.Assert.*
 
-import org.junit.Test
+import org.testng.annotations.Test
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -17,24 +18,28 @@ import brooklyn.entity.basic.NamedParameter
 import brooklyn.management.ManagementContext
 import brooklyn.management.internal.LocalManagementContext
 
-
-class EffectorTest {
-    private static final Logger log = LoggerFactory.getLogger(EffectorTest.class);
-    // FIXME remove this when we have a process for setting logging...
-//    static {
-//        log.metaClass {
-//            warn = { String a -> println "WARN "+a }
-//            warn = { String a, Throwable t -> println "WARN "+a; t.printStackTrace(); }
-//            info = { String a -> println "INFO "+a }
-//        }
-//    }
-    
-    public static interface CanSayHi {
-        static Effector<String> SAY_HI_1 = new EffectorWithExplicitImplementation<CanSayHi,String>("sayHi1", String.class, [
-                    [ "name", String.class, "person to say hi to" ] as BasicParameterType<String>,
-                    [ "greeting", String.class, "what to say as greeting", "hello" ] as BasicParameterType<String>
-                ], "says hello to a person") {
-            public String invokeEffector(CanSayHi e, Map m) {
+/**
+ * Test the operation of the {@link Effector} implementations.
+ * 
+ * TODO clarify test purpose
+ */
+public class EffectorTest {
+	private static final Logger log = LoggerFactory.getLogger(EffectorTest.class);
+	// FIXME remove this when we have a process for setting logging...
+//	static {
+//		log.metaClass {
+//			warn = { String a -> println "WARN "+a }
+//			warn = { String a, Throwable t -> println "WARN "+a; t.printStackTrace(); }
+//			info = { String a -> println "INFO "+a }
+//		}
+//	}
+	
+	public static interface CanSayHi {
+		static Effector<String> SAY_HI_1 = new EffectorWithExplicitImplementation<CanSayHi,String>("sayHi1", String.class, [
+					[ "name", String.class, "person to say hi to" ] as BasicParameterType<String>,
+					[ "greeting", String.class, "what to say as greeting", "hello" ] as BasicParameterType<String>
+				], "says hello to a person") {
+			public String invokeEffector(CanSayHi e, Map m) {
                 e.sayHi1(m)
             }
         };

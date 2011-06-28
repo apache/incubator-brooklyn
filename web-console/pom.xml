@@ -93,8 +93,8 @@
                     <artifactId>persistence-api</artifactId>
                 </exclusion>
                 <exclusion>
-                    <groupId>junit</groupId>
-                    <artifactId>junit</artifactId>
+                    <groupId>org.testng</groupId>
+                    <artifactId>testng</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -117,8 +117,8 @@
                     <artifactId>commons-digester</artifactId>
                 </exclusion>
                 <exclusion>
-                    <groupId>junit</groupId>
-                    <artifactId>junit</artifactId>
+                    <groupId>org.testng</groupId>
+                    <artifactId>testng</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.hibernate</groupId>

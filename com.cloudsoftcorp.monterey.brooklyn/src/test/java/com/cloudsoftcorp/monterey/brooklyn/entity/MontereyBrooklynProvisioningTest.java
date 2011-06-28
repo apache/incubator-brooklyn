@@ -14,10 +14,10 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.testng.After;
+import org.testng.Assert;
+import org.testng.Before;
+import org.testng.Test;
 
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
