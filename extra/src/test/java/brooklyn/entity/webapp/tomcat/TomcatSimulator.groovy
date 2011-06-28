@@ -27,21 +27,23 @@ class TomcatSimulator {
         this.entity = entity
     }
 
-    public void start(Collection<Location> locs) {
-        location = locs.iterator().next()
-        
+    public void start() {
         if (lock.tryAcquire() == false)
             throw new IllegalStateException("TomcatSimulator is already running")
         synchronized (activeInstances) { activeInstances.add(this) }
 
         jmxService = new JmxService();
 
-        entity.jmxHost = jmxService.jmxHost
-        entity.jmxPort = jmxService.jmxPort
-
         int httpPort = 8080
-        entity.updateAttribute(TomcatNode.HTTP_PORT, httpPort)
         jmxService.registerMBean "Catalina:type=Connector,port="+httpPort, stateName: "STARTED"
+        jmxService.registerMBean "Catalina:type=GlobalRequestProcessor,name=http-"+httpPort,
+            errorCount: 0,
+            requestCount: 0,
+            processingTime: 0
+
+        entity.updateAttribute(TomcatNode.HTTP_PORT, httpPort)
+        entity.updateAttribute(TomcatNode.JMX_HOST, jmxService.jmxHost)
+        entity.updateAttribute(TomcatNode.JMX_PORT, jmxService.jmxPort)
     }
 
     public void shutdown() {

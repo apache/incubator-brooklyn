@@ -35,9 +35,10 @@ class TomcatNodeTest {
     @Before
     public void patchInSimulator() {
         TomcatNode.metaClass.startInLocation = { SimulatedLocation loc ->
+            delegate.locations.add(loc)
             TomcatSimulator sim = new TomcatSimulator(loc, delegate)
             delegate.simulator = sim
-            sim.start([ new SimulatedLocation() ])
+            sim.start()
         }
         TomcatNode.metaClass.shutdownInLocation { SimulatedLocation loc ->
             TomcatSimulator sim = delegate.simulator
@@ -54,14 +55,13 @@ class TomcatNodeTest {
     }
 
     @Test
-    @Ignore
     public void ensureNodeCanStartAndShutdown() {
         Application app = new TestApplication();
         TomcatNode tc = new TomcatNode(owner: app);
         
         try { 
             tc.start([ new SimulatedLocation() ]);
-            try { tc.shutdown() } catch (Exception e) { 
+            try { tc.shutdown() } catch (Exception e) {
                 throw new Exception("tomcat is throwing exceptions when shutting down; this will break most tests", e) }
         } catch (Exception e) {
             throw new Exception("tomcat is throwing exceptions when starting; this will break most tests", e)
@@ -69,7 +69,6 @@ class TomcatNodeTest {
     }
     
     @Test
-    @Ignore
     public void ensureNodeShutdownCleansUp() {
         Application app = new TestApplication();
         TomcatNode tc1 = new TomcatNode(owner: app);
@@ -90,7 +89,6 @@ class TomcatNodeTest {
     }
     
     @Test
-    @Ignore
     public void detectEarlyDeathOfTomcatProcess() {
         Application app = new TestApplication();
         TomcatNode tc1 = new TomcatNode(owner: app);
@@ -108,13 +106,12 @@ class TomcatNodeTest {
     }
 
     @Test
-    @Ignore
     public void rejectIfLocationNotSupplied() {
         Application app = new TestApplication();
         boolean caught = false
         TomcatNode tc = new TomcatNode(owner: app);
         try {
-            tc.start([ new SimulatedLocation() ])
+            tc.start([])
             tc.shutdown()
         } catch(Exception e) {
             caught = true
