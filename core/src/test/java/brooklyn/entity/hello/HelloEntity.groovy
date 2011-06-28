@@ -1,6 +1,7 @@
 package brooklyn.entity.hello;
 
-import static org.junit.Assert.*
+import static org.testng.Assert.*
+
 import brooklyn.entity.Effector
 import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.basic.EffectorInferredFromAnnotatedMethod
@@ -10,7 +11,6 @@ import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicSensor
 
 class HelloEntity extends AbstractGroup {
-
     public HelloEntity(Map flags=[:]) { super(flags) }
 
     /** records name of the person represented by this entity */
@@ -29,5 +29,4 @@ class HelloEntity extends AbstractGroup {
         updateAttribute(AGE, age);
         emit(ITS_MY_BIRTHDAY, null);
     }
-    
 }

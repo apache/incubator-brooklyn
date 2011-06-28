@@ -1,13 +1,12 @@
 package brooklyn.entity.hello;
 
-import static org.junit.Assert.*
+import static org.testng.Assert.*
 
 import java.util.concurrent.Semaphore
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.junit.Ignore
-import org.junit.Test
+import org.testng.annotations.Test
 
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.event.SensorEvent
@@ -29,8 +28,8 @@ class LocalEntitiesTest {
         assertEquals(5, h.getAttribute(HelloEntity.AGE))
     }
 
-    @Ignore //needs FIXME SUBS before will pass (so subscriptions can be registered, and so subscriptions get notified in separate thread)
-    @Test
+    //needs FIXME SUBS before will pass (so subscriptions can be registered, and so subscriptions get notified in separate thread)
+    @Test(enabled = false)
     public void testEffectorEmitsAttributeSensor() {
         AbstractApplication a = new AbstractApplication() {}
         HelloEntity h = new HelloEntity(owner:a)
@@ -55,8 +54,8 @@ class LocalEntitiesTest {
         assertTrue(System.currentTimeMillis() - startTime < 5000)  //shouldn't have blocked for all 5s
     }
     
-    @Ignore //needs FIXME SUBS before will pass
-    @Test
+    //needs FIXME SUBS before will pass
+    @Test(enabled = false)
     public void testEffectorEmitsTransientSensor() {
         AbstractApplication a = new AbstractApplication() {}
         HelloEntity h = new HelloEntity(owner:a)
