@@ -188,11 +188,11 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
      * Returns the application, looking it up if not yet known (registering if necessary)
      */
     public Application getApplication() {
-        if (application!=null) return application;
+        if (this.@application!=null) return this.@application;
         def app = owner?.getApplication()
         if (app) {
             registerWithApplication(app)
-            application
+            this.@application
         }
         app
     }
