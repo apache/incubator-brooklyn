@@ -1,4 +1,4 @@
-package brooklyn.entity.webapp.tomcat
+package brooklyn.test
 
 import javax.management.MBeanInfo
 import sun.reflect.generics.reflectiveObjects.NotImplementedException

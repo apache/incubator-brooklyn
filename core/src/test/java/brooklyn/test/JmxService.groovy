@@ -1,4 +1,4 @@
-package brooklyn.entity.webapp.tomcat
+package brooklyn.test
 
 import javax.management.MBeanServer
 import javax.management.MBeanServerFactory
@@ -17,7 +17,7 @@ import mx4j.tools.naming.NamingServiceMBean
 class JmxService {
 
     private MBeanServer server
-    private NamingServiceMBean namingServiceMBean
+    private mx4j.tools.naming.NamingServiceMBean namingServiceMBean
     private JMXConnectorServer connectorServer
     private String jmxHost;
     private int jmxPort;
@@ -32,9 +32,9 @@ class JmxService {
         server.registerMBean(connectorServer, cntorServerName);
 
         ObjectName naming = new ObjectName("Naming:type=registry");
-        server.registerMBean(new NamingService(), naming);
-        Object proxy = MBeanServerInvocationHandler.newProxyInstance(server, naming, NamingServiceMBean.class, false);
-        namingServiceMBean = (NamingServiceMBean) proxy
+        server.registerMBean(new mx4j.tools.naming.NamingService(), naming);
+        Object proxy = MBeanServerInvocationHandler.newProxyInstance(server, naming, mx4j.tools.naming.NamingServiceMBean.class, false);
+        namingServiceMBean = (mx4j.tools.naming.NamingServiceMBean) proxy
         namingServiceMBean.start();
 
         connectorServer.start()

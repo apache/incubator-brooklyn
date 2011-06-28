@@ -5,6 +5,7 @@ import static org.junit.Assert.*
 import brooklyn.entity.Entity
 import brooklyn.location.Location
 import java.util.concurrent.Semaphore
+import brooklyn.test.JmxService
 
 /**
  * A class that simulates Tomcat for the purposes of testing.
