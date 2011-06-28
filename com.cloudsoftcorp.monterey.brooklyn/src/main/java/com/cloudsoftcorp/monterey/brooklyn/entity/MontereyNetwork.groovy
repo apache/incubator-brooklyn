@@ -48,7 +48,6 @@ import com.cloudsoftcorp.util.proc.ProcessExecutionFailureException
 import com.cloudsoftcorp.util.web.client.CredentialsConfig
 import com.cloudsoftcorp.util.web.server.WebConfig
 import com.cloudsoftcorp.util.web.server.WebServer
-import com.google.common.collect.ImmutableMap
 import com.google.gson.Gson
 
 
@@ -129,10 +128,18 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         return managementUrl;
     }
 
-    public Map<NodeId,MontereyContainerNode> getNodes() {
+    public Map<NodeId,MontereyContainerNode> getContainerNodes() {
         // FIXME How do I return an immutableMap, without groovy interpretting accessing the 'node' field as calling the getter?!
         // return ImmutableMap.copyOf(nodes);
         return nodes;
+    }
+
+    public Map<NodeId,AbstractMontereyNode> getMontereyNodes() {
+        Map<NodeId,AbstractMontereyNode> result = [:]
+        nodes.values().each {
+            result.put(it.getNodeId(), it.getContainedMontereyNode());
+        }
+        return Collections.unmodifiableMap(result);
     }
 
     public Map<String,Segment> getSegments() {
@@ -349,7 +356,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         Collection<NodeId> newSegments = []
         Collection<NodeId> removedSegments = []
         newSegments.addAll(segmentSummaries.keySet()); newSegments.removeAll(segments.keySet());
-        removedSegments.addAll(segments.keySet()); newSegments.removeAll(segmentSummaries.keySet());
+        removedSegments.addAll(segments.keySet()); removedSegments.removeAll(segmentSummaries.keySet());
 
         newSegments.each {
             segments.put(it, new Segment(connectionDetails, it));

@@ -1,5 +1,7 @@
 package com.cloudsoftcorp.monterey.brooklyn.entity
 
+import java.util.logging.Logger
+
 import brooklyn.entity.basic.AbstractGroup
 import brooklyn.location.Location
 
@@ -7,6 +9,7 @@ import com.cloudsoftcorp.monterey.control.workrate.api.WorkrateReport
 import com.cloudsoftcorp.monterey.network.control.api.Dmn1NodeType
 import com.cloudsoftcorp.monterey.network.control.api.NodeSummary
 import com.cloudsoftcorp.monterey.node.api.NodeId
+import com.cloudsoftcorp.util.Loggers
 
 /**
  * Represents a "proto node", i.e. a container that can host a LPP, MR, M, TP. 
@@ -18,7 +21,9 @@ import com.cloudsoftcorp.monterey.node.api.NodeId
 public class MontereyContainerNode extends AbstractGroup {
 
     // TODO Would be great if we supported a "container", aka protonode, being able to host M,TP,etc
-    
+
+    private static final Logger LOG = Loggers.getLogger(MontereyContainerNode.class);
+        
     private final MontereyNetworkConnectionDetails connectionDetails;
     private final NodeId nodeId;
     private final Location location;
@@ -29,6 +34,8 @@ public class MontereyContainerNode extends AbstractGroup {
         this.connectionDetails = connectionDetails;
         this.nodeId = nodeId;
         this.location = location;
+        
+        LOG.info("Node "+nodeId+" created in location "+location);        
     }
     
     public NodeId getNodeId() {
@@ -57,13 +64,25 @@ public class MontereyContainerNode extends AbstractGroup {
                 node = new SpareNode(connectionDetails, nodeId, location);
                 break;
             case Dmn1NodeType.LPP:
+                node = new LppNode(connectionDetails, nodeId, location);
+                break;
             case Dmn1NodeType.MR:
+                node = new MrNode(connectionDetails, nodeId, location);
+                break;
             case Dmn1NodeType.TP:
-            case Dmn1NodeType.SPARE:
-                throw new UnsupportedOperationException("Work-in-progress, type="+nodeSummary.getType());
+                node = new TpNode(connectionDetails, nodeId, location);
+                break;
+            case Dmn1NodeType.SATELLITE_BOT:
+                node = new SatelliteLppNode(connectionDetails, nodeId, location);
+                break;
+            case Dmn1NodeType.CHANGING:
+                // no-op; will change type again shortly
+                break;
             default: 
                 throw new IllegalStateException("Cannot create entity for mediator node type "+nodeSummary.getType()+" at "+nodeId);
         }
+
+        LOG.info("Node "+nodeId+" changed type to "+nodeSummary.getType());        
     }   
      
     void updateWorkrate(WorkrateReport report) {

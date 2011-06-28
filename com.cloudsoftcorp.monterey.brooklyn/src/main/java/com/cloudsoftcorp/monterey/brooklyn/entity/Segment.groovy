@@ -5,10 +5,12 @@ import java.util.logging.Logger
 
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.location.Location;
 
 import com.cloudsoftcorp.monterey.control.workrate.api.WorkrateReport
 import com.cloudsoftcorp.monterey.network.m.MediationWorkrateItem.MediationWorkrateItemNames
 import com.cloudsoftcorp.monterey.network.m.MediationWorkrateItem.SegmentWorkrateItem
+import com.cloudsoftcorp.monterey.node.api.NodeId;
 import com.cloudsoftcorp.util.Loggers
 
 public class Segment extends AbstractEntity {
@@ -27,6 +29,8 @@ public class Segment extends AbstractEntity {
     Segment(MontereyNetworkConnectionDetails connectionDetails, String segmentId) {
         this.connectionDetails = connectionDetails;
         this.segmentId = segmentId;
+        
+        LOG.info("Segment "+segmentId+" created");        
     }
     
     public String segmentId() {
