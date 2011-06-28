@@ -117,6 +117,7 @@ class TomcatNodeIntegrationTest {
             // TODO firm up assertions.  confused by the values returned (generally n*2?)
             assertTrue errorCount > 0
             assertEquals 0, errorCount % n
+			true
         })
     }
 	
@@ -139,6 +140,7 @@ class TomcatNodeIntegrationTest {
             if (status == 404)
                 throw new Exception("App is not there yet (404)");
             assertEquals 200, status
+			true
         }, abortOnError: false)
 	}
 
