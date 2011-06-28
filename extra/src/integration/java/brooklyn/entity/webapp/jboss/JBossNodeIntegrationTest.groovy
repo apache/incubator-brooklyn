@@ -4,6 +4,7 @@ import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.junit.Assert.*
 
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.slf4j.Logger
@@ -37,14 +38,28 @@ class JBossNodeIntegrationTest {
 		testLocation = new SshMachineLocation(name:'london', host:'localhost')
 	}
 
+	@Before
+	public void fail_if_http_port_in_use() {
+		if (isPortInUse(httpPort)) {
+			fail "someone is already listening on port $httpPort; tests assume that port $httpPort is free on localhost"
+		}
+	}
+
+	@After
+	public void waitForShutdown() {
+		logger.info "Sleeping for shutdown"
+		Thread.sleep 4000
+	}
+
 	@Test
 	public void canStartupAndShutdown() {
 		JBossNode jb = new JBossNode(owner:app, portIncrement: portIncrement);
-		jb.start(location: testLocation)
-		assert (new JBoss6SshSetup(jb)).isRunning(testLocation)
+		jb.start([testLocation])
+		assert (new JBoss6SshSetup(jb, testLocation)).isRunning(testLocation)
 		jb.shutdown()
 		// Potential for JBoss to be in process of shutting down here..
-		assert ! (new JBoss6SshSetup(jb)).isRunning(testLocation)
+		Thread.sleep 4000
+		assert ! (new JBoss6SshSetup(jb, testLocation)).isRunning(testLocation)
 	}
 
 	@Test
@@ -54,7 +69,7 @@ class JBossNodeIntegrationTest {
 		JBossNode jb = new JBossNode(owner:app, portIncrement: pI);
 		// Assert httpPort is contactable.
 		logger.info "Starting JBoss with HTTP port $httpPort"
-		jb.start(location: testLocation)
+		jb.start([testLocation])
 
 		executeUntilSucceedsWithShutdown(jb, {
 			def url = "http://localhost:$httpPort"
@@ -70,7 +85,7 @@ class JBossNodeIntegrationTest {
 	@Test
 	public void publishesRequestsPerSecondMetric() {
 		JBossNode jb = new JBossNode(owner:app, portIncrement: portIncrement);
-		jb.start(location: testLocation)
+		jb.start([testLocation])
 		executeUntilSucceedsWithShutdown(jb, {
 			def errorCount = jb.getAttribute(JBossNode.ERROR_COUNT)
 			if (errorCount == null) return new BooleanWithMessage(false, "errorCount not set yet ($errorCount)")

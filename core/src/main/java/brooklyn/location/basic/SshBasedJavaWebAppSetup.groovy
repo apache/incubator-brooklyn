@@ -25,7 +25,7 @@ public abstract class SshBasedJavaWebAppSetup extends SshBasedJavaAppSetup {
         if (deployScript) {
             int result = loc.run(out:System.out, deployScript)
             if (result) {
-                log.error "Failed to deploy $f to $loc"
+                log.error "Failed to deploy $f to $loc, result $result"
             } else {
                 log.debug "Deployed $f to $loc"
             }
