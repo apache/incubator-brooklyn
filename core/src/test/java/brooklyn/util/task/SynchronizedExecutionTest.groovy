@@ -53,7 +53,7 @@ class SynchronizedExecutionTest {
         mon.interrupt()
     }
 
-    @Test
+    @Test(enabled = false)
     public void runTwoSynchedTasks100Times() {
         100.times { runTwoSynchedTasks() }
     }
