@@ -203,10 +203,14 @@ public class EffectorInferredFromAnnotatedMethod<T> extends AbstractEffector<T> 
     
 }
 
-@InheritConstructors
-public abstract class EffectorWithExplicitImplementation<EntityTrait,T> extends AbstractEffector<T> {
+public abstract class EffectorWithExplicitImplementation<I,T> extends AbstractEffector<T> {
+    public EffectorWithExplicitImplementation(String name, Class<Void> type, List<ParameterType<?>> parameters, String description) {
+        super(name, type, parameters, description)
+    }
+
     public T call(Entity entity, Map parameters) {
-        invokeEffector( (EntityTrait)entity, parameters );
+        invokeEffector((I) entity, parameters );
     }    
-    public abstract T invokeEffector(EntityTrait entity, Map parameters);
+ 
+    public abstract T invokeEffector(I trait, Map parameters);
 }

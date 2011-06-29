@@ -16,7 +16,6 @@ import brooklyn.util.internal.EntityStartUtils
 import brooklyn.util.internal.SerializableObservableMap
 
 public abstract class AbstractApplication extends AbstractGroup implements Application {
-    
     final ObservableMap entities = new SerializableObservableMap(new ConcurrentHashMap<String,Entity>());
     private volatile AbstractManagementContext mgmt = null;
     private boolean deployed = false
@@ -75,7 +74,7 @@ public abstract class AbstractApplication extends AbstractGroup implements Appli
         }
         result
     }
-    
+ 
     public boolean isDeployed() {
         // TODO How to tell if we're deployed? What if sub-class overrides start 
         return deployed

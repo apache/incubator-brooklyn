@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Collection
 import java.util.LinkedHashMap;
 import java.util.Map
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.codehaus.groovy.util.HashCodeHelper;
 
@@ -14,6 +16,9 @@ import com.thoughtworks.xstream.XStream
  * @author alex
  */
 public class LanguageUtils {
+    // For unique identifiers
+    private static final AtomicLong seed = new AtomicLong(0L)
+    
     static <T> T getRequiredField(String name, Map<?,?> m) {
         if (!m.containsKey(name))
             throw new IllegalArgumentException("a parameter '"+name+"' was required in the argument to this function")
@@ -61,7 +66,12 @@ public class LanguageUtils {
         //        deserialize(serialize(src), src.getClass().getClassLoader());
     }
 
-    static String newUid() { Integer.toHexString((Integer)new Random().nextInt()) }
+    /**
+     * Return a unique identifier as a string.
+     * 
+     * TODO move this to a shared service provider interface
+     */
+    static String newUid() { Long.toHexString(seed.incrementAndGet()) }
 
     public static Map setFieldsFromMap(Object target, Map fieldValues) {
         Map unused = [:]

@@ -126,16 +126,17 @@ public class BasicTaskExecutionTest {
                 total += t.get()
             }
         assertEquals(10, total)
+ 
         //now that all have completed:
-        assertEquals(5, data.get(1))
-        assertEquals(2, em.getTasksWithTag("A").size())
-        assertEquals(2, em.getTasksWithAnyTag(["A"]).size())
-        assertEquals(2, em.getTasksWithAllTags(["A"]).size())
+        assertEquals data.get(1), 5
+        assertEquals em.getTasksWithTag("A").size(), 2
+        assertEquals em.getTasksWithAnyTag(["A"]).size(), 2
+        assertEquals em.getTasksWithAllTags(["A"]).size(), 2
 
-        assertEquals(3, em.getTasksWithAnyTag(["A", "B"]).size())
-        assertEquals(1, em.getTasksWithAllTags(["A", "B"]).size())
-        assertEquals(1, em.getTasksWithAllTags(["B", "C"]).size())
-        assertEquals(3, em.getTasksWithAnyTag(["A", "D"]).size())
+        assertEquals em.getTasksWithAnyTag(["A", "B"]).size(), 3
+        assertEquals em.getTasksWithAllTags(["A", "B"]).size(), 1
+        assertEquals em.getTasksWithAllTags(["B", "C"]).size(), 1
+        assertEquals em.getTasksWithAnyTag(["A", "D"]).size(), 3
     }
 
     @Test

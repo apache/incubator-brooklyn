@@ -4,9 +4,9 @@ import java.util.Map;
 import java.util.Set;
 
 import brooklyn.entity.Entity;
-import brooklyn.event.SensorEvent;
 import brooklyn.event.EventListener;
 import brooklyn.event.Sensor;
+import brooklyn.event.SensorEvent;
 
 /**
  * The mangement interface for subscriptions.
@@ -17,34 +17,51 @@ import brooklyn.event.Sensor;
  * @see SubscriptionContext
  */
 public interface SubscriptionManager {
-    
     /**
-     * Subscribe to {@link Sensor} data changes and events on a given {@link Entity}, supplying the {@link EventListener} to invoke when they occur
+     * Subscribe to {@link Sensor} data changes and events on a given {@link Entity}, supplying the {@link EventListener}
+     * to invoke when they occur.
      * 
-     * The method returns an id which can be used to {@link #unsubscribe(long)} later.
-     * 
-     * @param <T> type of 
-     * @param flags parameters to be associated with the subscription (optional), including:
-     * <li>subscriber - object to identify the subscriber (e.g. entity, or console session uid); 
-     * listener callback is in-order single-threaded, synched on this object (if supplied and non-null)
+     * The method returns an id which can be used to {@link #unsubscribe(SubscriptionHandle)} later.
+     * <p>
+     * The listener callback is in-order single-threaded and synchronized on this object. The flags
+     * parameters can include the following:
+     * <ul>
+     * <li>subscriber - object to identify the subscriber (e.g. entity, or console session uid) 
      * <li><i>in future</i> - control parameters for the subscription (period, minimum delta for updates, etc)
+     * </ul>
+     * 
+     * @param flags optional parameters to be associated with the subscription
      * @param producer entity to listen to
      * @param sensor sensor channel of events to listen to
      * @param listener callback to invoke when an event occurs
      * @return an id for this subscription
      * 
-     * @see #unsubscribe(Object)
+     * @see #unsubscribe(SubscriptionHandle)
      */
     <T> SubscriptionHandle subscribe(Map<String, Object> flags, Entity producer, Sensor<T> sensor, EventListener<T> listener);
+ 
     /** @see #subscribe(Map, Entity, Sensor, EventListener) */
-    <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, EventListener<T> listener);
-    //REVIEW 1459 - parameters changed (from strings, optional tags e.g. subscriber)
+    <T> SubscriptionHandle subscribe(Entity parent, Sensor<T> sensor, EventListener<T> listener);
+
+    /**
+     * Subscribe to {@link Sensor} data changes and events on all children of a given {@link Entity}, supplying the
+     * {@link EventListener} to invoke when they occur.
+     * 
+     * The subscriptions will be created recursively for all children, and the same listener callback will be invoked for each
+     * sensor datum. The semantics are otherwise identical to the {@link #subscribe(Map, Entity, Sensor, EventListener)} method.
+     *
+     * @see #subscribe(Map, Entity, Sensor, EventListener)
+     */
+    <T> SubscriptionHandle subscribeToChildren(Map<String, Object> flags, Entity parent, Sensor<T> sensor, EventListener<T> listener);
+ 
+    /** @see #subscribeToChildren(Map, Entity, Sensor, EventListener) */
+    <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, EventListener<T> listener);
     
-    //REVIEW 1459 - changed nominal type of subscription ID to Object (may use long but that is internal detail)
     /**
      * Unsubscribe the given subscription id.
      * 
      * @return true if such a subscription was present (and it will now be removed)
+     * 
      * @see #subscribe(Map, Entity, Sensor, EventListener)
      */
     boolean unsubscribe(SubscriptionHandle subscriptionId);
@@ -56,7 +73,7 @@ public interface SubscriptionManager {
 
     /** Return the subscriptions requested by a given subscriber */
     Set<SubscriptionHandle> getSubscriptionsForSubscriber(Object subscriber);
+    
     /** Return the subscriptions on a given source-sensor pair */
     Set<SubscriptionHandle> getSubscriptionsForEntitySensor(Entity source, Sensor<?> sensor);
-    
 }

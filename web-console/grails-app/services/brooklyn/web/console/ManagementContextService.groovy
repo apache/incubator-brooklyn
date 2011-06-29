@@ -7,8 +7,10 @@ import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.AbstractGroup
 import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.management.ExecutionContext
 import brooklyn.management.ExecutionManager
 import brooklyn.management.ManagementContext
+import brooklyn.management.SubscriptionContext
 import brooklyn.management.SubscriptionManager
 import brooklyn.web.console.entity.TestEffector
 import brooklyn.entity.webapp.tomcat.TomcatNode
@@ -34,6 +36,14 @@ class ManagementContextService implements ManagementContext {
     }
 
     public SubscriptionManager getSubscriptionManager() {
+        throw new UnsupportedOperationException();
+    }
+
+    public ExecutionContext getExecutionContext(Entity entity) {
+        throw new UnsupportedOperationException();
+    }
+
+    public SubscriptionContext getSubscriptionContext(Entity entity) {
         throw new UnsupportedOperationException();
     }
 

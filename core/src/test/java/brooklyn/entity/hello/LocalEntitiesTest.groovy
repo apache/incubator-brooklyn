@@ -10,6 +10,10 @@ import brooklyn.entity.basic.AbstractApplication
 import brooklyn.event.EventListener
 import brooklyn.event.SensorEvent
 import brooklyn.management.Task
+import brooklyn.location.Location
+import brooklyn.management.ExecutionContext
+import brooklyn.management.SubscriptionHandle
+import brooklyn.util.task.BasicTask
 
 import static brooklyn.event.basic.DependentConfiguration.*
 import brooklyn.location.basic.AbstractLocation;

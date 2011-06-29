@@ -1,13 +1,14 @@
 package brooklyn.management;
 
 import java.util.Collection;
+import java.util.concurrent.Executor;
 
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 
 /**
  * This is the entry point for accessing and interacting with a realm of applications and their entities in Brooklyn.
- * <p>
+ *
  * For example, policies and the management console(s) (web-app, etc) can use this to interact with entities; 
  * policies, web-app, and entities share the realm for subscribing to events, executing tasks, and generally co-existing.      
  * <p>
@@ -35,5 +36,8 @@ public interface ManagementContext {
      * to subscribe to sensor events (and, in the case of entities, to emit sensor events) 
      */
     SubscriptionManager getSubscriptionManager();
-
+ 
+    ExecutionContext getExecutionContext(Entity entity);
+ 
+    SubscriptionContext getSubscriptionContext(Entity entity);
 }

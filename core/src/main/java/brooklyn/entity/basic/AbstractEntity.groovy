@@ -23,13 +23,15 @@ import brooklyn.event.Sensor
 import brooklyn.event.basic.AttributeMap
 import brooklyn.event.basic.ConfigKey
 import brooklyn.location.Location
+import brooklyn.management.ExecutionContext
 import brooklyn.management.ManagementContext
 import brooklyn.management.SubscriptionContext
+import brooklyn.management.SubscriptionHandle
 import brooklyn.management.Task
 import brooklyn.management.internal.BasicSubscriptionContext
-import brooklyn.util.internal.LanguageUtils
-import brooklyn.util.task.ExecutionContext
 import brooklyn.management.internal.AbstractManagementContext
+import brooklyn.util.internal.LanguageUtils
+import brooklyn.util.task.BasicExecutionContext
 
 /**
  * Default {@link Entity} implementation.
@@ -106,58 +108,60 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     
     public AbstractEntity(Map flags=[:], Entity owner=null) {
         this.@skipCustomInvokeMethod.set(true)
-        if (flags.owner != null && owner != null && flags.owner != owner) {
-            throw new IllegalArgumentException("Multiple owners supplied, ${flags.owner} and $owner")
-        }
-        Entity suppliedOwner = flags.remove('owner') ?: owner
-        Map<ConfigKey,Object> suppliedOwnConfig = flags.remove('config')
+        try {
+            if (flags.owner != null && owner != null && flags.owner != owner) {
+                throw new IllegalArgumentException("Multiple owners supplied, ${flags.owner} and $owner")
+            }
+            Entity suppliedOwner = flags.remove('owner') ?: owner
+            Map<ConfigKey,Object> suppliedOwnConfig = flags.remove('config')
 
-        if (suppliedOwnConfig) ownConfig.putAll(suppliedOwnConfig)
+            if (suppliedOwnConfig) ownConfig.putAll(suppliedOwnConfig)
         
-        // initialize the effectors defined on the class
-        // (dynamic effectors could still be added; see #getEffectors
-        Map<String,Effector> effectorsT = [:]
-        for (Field f in getClass().getFields()) {
-            if (Effector.class.isAssignableFrom(f.getType())) {
-                Effector eff = f.get(this)
-                def overwritten = effectorsT.put(eff.name, eff)
-                if (overwritten!=null) LOG.warn("multiple definitions for effector ${eff.name} on $this; preferring $eff to $overwritten")
+            // initialize the effectors defined on the class
+            // (dynamic effectors could still be added; see #getEffectors
+            Map<String,Effector> effectorsT = [:]
+            for (Field f in getClass().getFields()) {
+                if (Effector.class.isAssignableFrom(f.getType())) {
+                    Effector eff = f.get(this)
+                    def overwritten = effectorsT.put(eff.name, eff)
+                    if (overwritten!=null) LOG.warn("multiple definitions for effector ${eff.name} on $this; preferring $eff to $overwritten")
+                }
             }
-        }
-        effectors = effectorsT
-
-        Map<String,Sensor> sensorsT = [:]
-        for (Field f in getClass().getFields()) {
-            if (Sensor.class.isAssignableFrom(f.getType())) {
-                Sensor sens = f.get(this)
-                def overwritten = sensorsT.put(sens.name, sens)
-                if (overwritten!=null) LOG.warn("multiple definitions for sensor ${sens.name} on $this; preferring $sens to $overwritten")
+            LOG.trace "Entity {} effectors: {}", id, effectorsT.keySet().join(", ")
+            effectors = effectorsT
+    
+            Map<String,Sensor> sensorsT = [:]
+            for (Field f in getClass().getFields()) {
+                if (Sensor.class.isAssignableFrom(f.getType())) {
+                    Sensor sens = f.get(this)
+                    def overwritten = sensorsT.put(sens.name, sens)
+                    if (overwritten!=null) LOG.warn("multiple definitions for sensor ${sens.name} on $this; preferring $sens to $overwritten")
+                }
             }
-        }
-        sensors = sensorsT
-
-        //set the owner if supplied; accept as argument or field
-        if (suppliedOwner) suppliedOwner.addOwnedChild(this)
-        this.@skipCustomInvokeMethod.set(false)
+            LOG.trace "Entity {} sensors: {}", id, sensorsT.keySet().join(", ")
+            sensors = sensorsT
+    
+            //set the owner if supplied; accept as argument or field
+            if (suppliedOwner) suppliedOwner.addOwnedChild(this)
+        } finally { skipCustomInvokeMethod.set(false) }
     }
 
     /**
      * Adds this as a member of the given group, registers with application if necessary
      */
-    public synchronized void setOwner(Entity e) {
-        if (owner!=null) {
-            if (owner==e) return ;
-            if (owner!=e) throw new UnsupportedOperationException("Cannot change owner of $this from $owner to $e (owner change not supported)")
+    public synchronized void setOwner(Entity entity) {
+        if (owner != null) {
+            if (owner == entity) return
+            if (owner != entity) throw new UnsupportedOperationException("Cannot change owner of $this from $owner to $entity (owner change not supported)")
         }
         //make sure there is no loop
-        if (this.equals(e)) throw new IllegalStateException("entity $this cannot own itself")
-        if (isDescendant(e)) throw new IllegalStateException("loop detected trying to set owner of $this as $e, which is already a descendant")
+        if (this.equals(entity)) throw new IllegalStateException("entity $this cannot own itself")
+        if (isDescendant(entity)) throw new IllegalStateException("loop detected trying to set owner of $this as $entity, which is already a descendent")
         
-        owner = e
-        ((AbstractEntity)e).addOwnedChild(this)
+        owner = entity
         inheritedConfig.putAll(owner.getAllConfig())
         
-        getApplication()
+        entity.addOwnedChild(this)
     }
 
     public boolean isAncestor(Entity oldee) {
@@ -333,9 +337,14 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         return result.asImmutable()
     }
 
-    @Override
-    public <T> long subscribe(Entity producer, Sensor<T> sensor, EventListener<T> listener) {
-        subscriptionContext.getSubscriptionManager().subscribe this.id, producer.id, sensor.name, listener
+    /** @see Entity#subscribe(Entity, Sensor, EventListener) */
+    public <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, EventListener<T> listener) {
+        subscriptionContext.subscribe(producer, sensor, listener)
+    }
+    
+    /** @see Entity#subscribeToChildren(Entity, Sensor, EventListener) */
+    public <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, EventListener<T> listener) {
+        subscriptionContext.subscribeToChildren(parent, sensor, listener)
     }
 
     protected synchronized SubscriptionContext getSubscriptionContext() {
@@ -345,7 +354,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 
     protected synchronized ExecutionContext getExecutionContext() {
         if (execution) execution;
-        execution = new ExecutionContext(tag: this, getManagementContext().getExecutionManager())
+        execution = new BasicExecutionContext(tag:this, getManagementContext().getExecutionManager())
     }
     
     /** default toString is simplified name of class, together with selected arguments */
@@ -390,23 +399,34 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         subscriptionContext?.publish(sensor.newEvent(this, val))
     }
 
-    /** sensors available on this entity
-     * <p>
+    /**
+     * Sensors available on this entity
+     *
      * NB no work has been done supporting changing this after initialization; see note on {@link #getEffectors()}
      */
     public Map<String,Sensor<?>> getSensors() { sensors }
     
     /** convenience for finding named sensor in {@link #getSensor()} map */
     public <T> Sensor<T> getSensor(String sensorName) { getSensors()[sensorName] }
-
+ 
+    /**
+     * Add the given {@link Sensor} to this entity.
+     */
+    public void addSensor(Sensor<?> sensor) { sensors.put(sensor.name, sensor) }
+ 
+    /**
+     * Remove the named {@link Sensor} to this entity.
+     */
+    public void removeSensor(String sensorName) { sensors.remove(sensorName) }
+    
     // -------- EFFECTORS --------------
 
     /** flag needed internally to prevent invokeMethod from recursing on itself */     
     private ThreadLocal<Boolean> skipCustomInvokeMethod = new ThreadLocal() { protected Object initialValue() { Boolean.FALSE } }
 
     public Object invokeMethod(String name, Object args) {
-        if (!this.@skipCustomInvokeMethod.get()) {
-            this.@skipCustomInvokeMethod.set(true);
+        if (!skipCustomInvokeMethod.get()) {
+            skipCustomInvokeMethod.set(true);
             
             //args should be an array, warn if we got here wrongly (extra defensive as args accepts it, but it shouldn't happen here)
             if (args==null) LOG.warn("$this.$name invoked with incorrect args signature (null)", new Throwable("source of incorrect invocation of $this.$name"))
@@ -416,7 +436,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
                 Effector eff = getEffectors().get(name)
                 if (eff) {
                     args = AbstractEffector.prepareArgsForEffector(eff, args);
-                    Task currentTask = ExecutionContext.getCurrentTask();
+                    Task currentTask = executionContext.getCurrentTask();
                     if (!currentTask || !currentTask.getTags().contains(this)) {
                         //wrap in a task if we aren't already in a task that is tagged with this entity
                         MetaClass mc = metaClass
@@ -425,7 +445,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
                         return t.get();
                     }
                 }
-            } finally { this.@skipCustomInvokeMethod.set(false); }
+            } finally { skipCustomInvokeMethod.set(false); }
         }
         metaClass.invokeMethod(this, name, args);
         //following is recommended on web site, but above is how groovy actually implements it
@@ -435,12 +455,14 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 //            metaMethod.invoke(this, newArgs)
     }
     
-    /** effectors available on this entity
-     * <p>
+    /**
+     * Effectors available on this entity.
+     *
      * NB no work has been done supporting changing this after initialization,
      * but the idea of these so-called "dynamic effectors" has been discussed and it might be supported in future...
      */
     public Map<String,Effector> getEffectors() { effectors }
+ 
     /** convenience for finding named effector in {@link #getEffectors()} map */
     public <T> Effector<T> getEffector(String effectorName) { getEffectors()[effectorName] }
     

@@ -31,6 +31,7 @@ public class TomcatNode extends JavaWebApp {
     
     public TomcatNode(Map properties=[:]) {
         super(properties);
+        addSensor HTTP_PORT, (properties.httpPort ?: -1)
     }
 
     public SshBasedJavaWebAppSetup getSshBasedSetup(SshMachineLocation machine) {
@@ -46,7 +47,6 @@ public class TomcatNode extends JavaWebApp {
     }
 
     public void waitForHttpPort() {
-        jmxAdapter = new JmxSensorAdapter(this, 60*1000)
         new Repeater("Wait for Tomcat JMX").repeat({}).every(1, TimeUnit.SECONDS).until({jmxAdapter.isConnected()}).limitIterationsTo(30).run();
 
         String state = null;

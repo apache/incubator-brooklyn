@@ -10,9 +10,8 @@ import java.util.Collection;
  * or dynamic (i.e. contains all entities that match some filter).
  */
 public interface Group extends Entity {
-    
     /**
-     * @return the entities that are members of this group.
+     * Return the entities that are members of this group.
      */
     Collection<Entity> getMembers();
     

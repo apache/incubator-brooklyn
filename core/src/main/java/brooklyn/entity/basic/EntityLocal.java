@@ -3,6 +3,7 @@ package brooklyn.entity.basic;
 import java.util.Collection;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.Group;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.EventListener;
 import brooklyn.event.Sensor;
@@ -10,6 +11,7 @@ import brooklyn.event.SensorEvent;
 import brooklyn.event.basic.ConfigKey;
 import brooklyn.management.ManagementContext;
 import brooklyn.policy.Policy;
+import brooklyn.management.SubscriptionHandle;
 
 public interface EntityLocal extends Entity {
     /**
@@ -53,8 +55,14 @@ public interface EntityLocal extends Entity {
      * Allow us to subscribe to data from a {@link Sensor} on another entity.
      * 
      * @return a subscription id which can be used to unsubscribe
+     *
+     * @see SubscriptionManger#subscribe(Map, Entity, Sensor, EventListener)
      */
-    <T> long subscribe(Entity producer, Sensor<T> sensor, EventListener<T> listener);
+    <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, EventListener<T> listener);
+ 
+    /** @see SubscriptionManger#subscribeToChildren(Map, Entity, Sensor, EventListener) */
+    <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, EventListener<T> listener);
+ 
 
     /**
      * @return an immutable thread-safe view of the policies.

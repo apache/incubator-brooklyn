@@ -3,59 +3,54 @@ package brooklyn.util.internal
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import com.google.common.base.Preconditions;
+
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
+import brooklyn.management.ManagementContext;
 import brooklyn.util.internal.LanguageUtils.FieldVisitor
 
 /**
  * Entity startup utilities.
- * 
- * @author alex
  */
 class EntityStartUtils {
-    
     private static final Logger log = LoggerFactory.getLogger(EntityStartUtils.class);
     
     /**
      * Starts the children of the host.
      */   
     public static void startGroup(Group host, Collection<Location> locs = []) {
-        Set tasks = []
-        host.getOwnedChildren().each { child -> tasks.add(host.getExecutionContext().submit { if (child in Startable) child.start(locs) }) }
-        tasks.collect { it.get() }
+        host.ownedChildren.each { child -> startEntity(child, locs) }
     }
 
     public static Entity startEntity(Entity entity, Collection<Location> locs) {
-        if (!locs || locs.isEmpty())
-            throw new IllegalStateException("request to start $entity without a location")
-        if (!entity.owner)
-            throw new IllegalStateException("request to start $entity without any owner specified or set")
-        log.debug "factory creating entity {} in location {}", entity, locs
-
-        //TODO dynamically look for appropriate start method, throw better exception if not there
-        entity.startInLocation(locs)
-        entity
+        Preconditions.checkArgument(locs != null && !locs.isEmpty(), "Request to start $entity without a location")
+        Preconditions.checkArgument(entity.owner != null, "Request to start $entity without any owner specified or set")
+ 
+        log.debug "Starting entity {} in locations {}", entity, locs
+        if (entity in Startable) entity.start(locs)
     }
 
     /**
      * Starts a clone of the given template entity running as a child of the host.
      */
     public static void startFromTemplate(Group host, Entity template, Collection<Location> locs) {
-        createFromTemplate(host, template).start(locs)
+        startEntity(createFromTemplate(host, template), locs)
     }
 
     /**
      * Creates a (not-started) clone of the given template, configured to be owned by the given entity
      */
     public static <T extends Entity> T createFromTemplate(Group owner, T template) {
-        assert !template.owner : "templates must not be assigned any owner (but is in "+template.owner+")"
-        assert !template.groups : "templates must not be a member of any group entity (but is in "+template.groups+")"
-        Entity c = cloneTemplate(template);
-        c.id = LanguageUtils.newUid();
-        owner.addOwnedChild(c)
-        c
+        Preconditions.checkArgument(template.owner != null, "Templates must not be assigned any owner (but is in "+template.owner+")")
+        Preconditions.checkArgument(template.groups != null, "Templates must not be a member of any group entity (but is in "+template.groups+")")
+
+        Entity copy = cloneTemplate(template);
+        copy.id = LanguageUtils.newUid()
+        owner.addOwnedChild(copy)
+        copy
     }
     
     /**

@@ -101,6 +101,26 @@ public class JmxSensorAdapter {
     }
 
     /**
+     * Returns all attributes on a specific named object
+     */
+    public Map getAttributes(String name) {
+        checkConnected()
+        Map r = [:]
+        ObjectName objectName = new ObjectName(name);
+        Set<ObjectInstance> beans = mbsc.queryMBeans(objectName, null)
+        if (beans.isEmpty() || beans.size() > 1) return r // TODO error reporting
+        ObjectInstance bean = beans.find { true }
+        // Use 'query' because objectName could contain wildcards
+        MBeanInfo info = mbsc.getMBeanInfo(bean.getObjectName())
+        info.getAttributes().each { r[it.getName()] = null }
+        AttributeList list = mbsc.getAttributes bean.getObjectName(), r.keySet() as String[]
+        list.each { r[it.getName()] = it.getValue(); }
+        log.trace "returning attributes: {}", r
+        r
+>>>>>>> Code review based updates and adding new subscribeToChildren method
+    }
+
+    /**
      * Returns a specific attribute for a JMX {@link ObjectName}.
      */
     private Object getAttribute(ObjectName objectName, String attribute) {

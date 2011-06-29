@@ -6,8 +6,8 @@ import brooklyn.entity.basic.AbstractEntity
 import brooklyn.event.AttributeSensor
 import brooklyn.management.SubscriptionHandle
 import brooklyn.management.Task
+import brooklyn.util.task.BasicExecutionContext
 import brooklyn.util.task.BasicTask
-import brooklyn.util.task.ExecutionContext
 
 import com.google.common.base.Function
 import com.google.common.base.Predicate
@@ -39,7 +39,7 @@ public class DependentConfiguration {
         T v = ((AbstractEntity)source).getAttribute(sensor);
         if (ready.apply(v)) 
             return v
-        BasicTask t = ExecutionContext.getCurrentTask();
+        BasicTask t = BasicExecutionContext.getCurrentExecutionContext().getCurrentTask();
         if (t==null) throw new IllegalStateException("should only be invoked in a running task");
 //        println "waiting in $t with tags "+t.getTags()
         AbstractEntity e = t.getTags().find { it in Entity }
@@ -75,15 +75,14 @@ public class DependentConfiguration {
     public static <U,T> Task<T> transform(Task<U> f, Function<U,T> g) {
         new BasicTask<T>( {
             if (!f.isSubmitted()) {
-                ExecutionContext.getCurrentExecutionContext().submit(f);
+                BasicExecutionContext.getCurrentExecutionContext().submit(f);
             } 
             g.apply(f.get())
         } );
     }
+ 
     /** @see #transform(Task, Function) */
     public static <U,T> Task<T> transform(Task<U> f, Closure g) {
         transform(f, g as Function)
     }
-    
-
 }

@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.util.Collection;
 
 import brooklyn.location.Location;
+import brooklyn.management.SubscriptionHandle;
+import brooklyn.management.SubscriptionManager;
 
 /**
  * The basic interface for a Brooklyn entity.
@@ -40,13 +42,28 @@ public interface Entity extends Serializable {
      * The owner of this entity, null if no owner.
      *
      * The owner is normally the entity responsible for creating/destroying this entity.
+     *
+     * @see #setOwner(Group)
      */
     Entity getOwner();
 
     /** 
-     * @return the entities that are owned by this entity
+     * Return the entities that are owned by this entity
      */
     Collection<Entity> getOwnedChildren();
+    
+    /**
+     * Sets the owner of this entity.
+     *
+     * @see #getOwner
+     */
+    void setOwner(Entity group);
+    
+    /** 
+     * Add a child {@link Entity}, and set this entity as its owner.
+     */
+    Entity addOwnedChild(Entity child);
+    
     
     /**
      * The {@link Collection} of {@link Group}s that this entity is a member of.

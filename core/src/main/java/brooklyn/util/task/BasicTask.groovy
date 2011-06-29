@@ -23,7 +23,7 @@ import brooklyn.util.internal.LanguageUtils
 public class BasicTaskStub implements TaskStub {
     final String id = LanguageUtils.newUid()
 //    Object jvm = null //pointer to jvm where something is running, for distributed tasks
-    
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -34,17 +34,15 @@ public class BasicTaskStub implements TaskStub {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null) return false;
         if (!(obj instanceof TaskStub)) return false;
         TaskStub other = (TaskStub) obj;
         if ((id == null) != (other.id == null)) return false;
         if (id != null && !id.equals(other.id)) return false;
         return true;
     }
-    
+ 
+    @Override
     public String toString() { "TaskStub[$id]" }
-    
 }
 
 /**
@@ -68,6 +66,7 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
     protected BasicTask(Map flags=[:]) {
         this(flags, (Closure)null)
     }
+ 
     public BasicTask(Map flags=[:], Closure<T> job) {
         this.job = job
         description = flags.remove("description")
@@ -78,9 +77,12 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
         
         if (flags) throw new IllegalArgumentException("Unsupported flags passed to task: "+flags)
     }
+ 
     public BasicTask(Map flags=[:], Runnable job)    { this(flags, closureFromRunnable(job) as Closure) }
+ 
     public BasicTask(Map flags=[:], Callable<T> job) { this(flags, closureFromCallable(job) as Closure) }
 
+    @Override
     public String toString() { "Task["+(displayName?displayName+(tags?"":";")+" ":"")+(tags?""+tags+"; ":"")+"$id]" }
     
     protected static <X> Closure<X> closureFromRunnable(Runnable job) {
@@ -336,15 +338,5 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
     protected String lookup(LockInfo l) {
         if (l==null) return "unknown (sleep)"
         return l
-    }
-    
-    @Override
-    public int hashCode() {
-        super.hashCode()
-    }
-    
-    @Override
-    public boolean equals(Object obj) {
-        super.equals(obj)
     }
 }

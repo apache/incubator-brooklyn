@@ -12,17 +12,19 @@ import brooklyn.event.SensorEvent;
  * This is the context through which an {@link Entity} can manage subscriptions.
  */
 public interface SubscriptionContext {
-
-    //REVIEW 1459 - class fleshed out, and preferred to manager access
-
-    //REVIEW 1459 - getSubscriptionManager taken off API
-    
     /**
      * As {@link SubscriptionManager#subscribe(Map, Entity, Sensor, EventListener)} with default subscription parameters for this context
      */
     <T> SubscriptionHandle subscribe(Map<String, Object> flags, Entity producer, Sensor<T> sensor, EventListener<T> listener);
+ 
     /** @see #subscribe(Map, Entity, Sensor, EventListener) */
     <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, EventListener<T> listener);
+    
+    /** @see #subscribe(Map, Entity, Sensor, EventListener) */
+    <T> SubscriptionHandle subscribeToChildren(Map<String, Object> flags, Entity parent, Sensor<T> sensor, EventListener<T> listener);
+ 
+    /** @see #subscribe(Map, Entity, Sensor, EventListener) */
+    <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, EventListener<T> listener);
     
     /** @see SubscriptionManager#unsubscribe(SubscriptionHandle) */
     boolean unsubscribe(SubscriptionHandle subscriptionId);
@@ -36,5 +38,4 @@ public interface SubscriptionContext {
 
     /** Return the subscriptions associated with this context */
     Set<SubscriptionHandle> getSubscriptions();
-
 }

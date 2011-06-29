@@ -3,6 +3,7 @@ package brooklyn.util.task;
 import java.util.concurrent.Callable
 import java.util.concurrent.CancellationException
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -23,7 +24,7 @@ public class BasicExecutionManager implements ExecutionManager {
     
     private ExecutorService runner = Executors.newCachedThreadPool() 
     
-    private Set<Task> knownTasks = new LinkedHashSet()
+    private Set<Task> knownTasks = new CopyOnWriteArraySet<Task>()
     private Map<Object,Set<Task>> tasksByTag = new LinkedHashMap()
     //access to the above is synchronized in code in this class, to allow us to preserve order while guaranteeing thread-safe
     //(but more testing is needed before we are sure it is thread-safe!)
@@ -35,15 +36,13 @@ public class BasicExecutionManager implements ExecutionManager {
         Set<Task> tasksWithTag;
         synchronized (tasksByTag) {
             tasksWithTag = tasksByTag.get(tag)
+	        if (tasksWithTag == null) return Collections.emptySet()
+	        return new LinkedHashSet(tasksWithTag)
         }
-        if (tasksWithTag==null) return Collections.emptySet()
-        synchronized (tasksWithTag) {
-            return new LinkedHashSet(tasksWithTag)
-        } 
     }
     public Set<Task> getTasksWithAnyTag(Iterable tags) {
         Set result = []
-        tags.each { tag -> result.addAll( getTasksWithTag(tag) ) }
+        tags.each { tag -> result.addAll getTasksWithTag(tag) }
         result
     }
     public Set<Task> getTasksWithAllTags(Iterable tags) {
@@ -67,7 +66,6 @@ public class BasicExecutionManager implements ExecutionManager {
     public Task submit(Map flags=[:], Runnable r) { submit flags, new BasicTask(r) }
     public Task submit(Map flags=[:], Callable r) { submit flags, new BasicTask(r) }
     public Task submit(Map flags=[:], Task task) {
-        if (task.result!=null) return task
         synchronized (task) {
             if (task.result!=null) return task
             submitNewTask flags, task
