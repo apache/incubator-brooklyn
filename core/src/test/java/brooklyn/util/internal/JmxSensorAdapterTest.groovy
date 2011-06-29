@@ -34,13 +34,14 @@ class JmxSensorAdapterTest {
         BasicAttributeSensor<Integer> ERROR_COUNT = [ Integer, "webapp.reqs.errors", "Request errors" ]
         jmxAdapter.addSensor(ERROR_COUNT, "Catalina:type=GlobalRequestProcessor,name=http-*", "errorCount")
 
+        //FIXME test is sensitive to timing; 50ms was too low, eg failure in build #218; 250ms is more likely to work but still not guaranteed... 
         // Sleep to allow the periodic update to happen, and then query the sensor for the test message
-        Thread.sleep 550
+        Thread.sleep 750
         assertEquals 42, entity.getAttribute(ERROR_COUNT)
 
         // Change the message and check it updates
         mbean.updateAttributeValue('errorCount', 64)
-        Thread.sleep 550
+        Thread.sleep 750
         assertEquals 64, entity.getAttribute(ERROR_COUNT)
     }
 
