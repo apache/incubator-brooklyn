@@ -1,15 +1,12 @@
 package brooklyn.web.console.entity
 
-
 import brooklyn.entity.Entity
 
-
 public class JsTreeNodeImpl implements JsTreeNode {
-
-    private String id;
+    private String id
     private Map<String, String> data = [:]
     private List<JsTreeNode> children = []
-    public transient boolean matched;
+    public transient boolean matched
 
     public JsTreeNodeImpl(Entity e, Boolean matched=false) {
         this(e.id, e.displayName, e.entityClass.name, matched)
@@ -39,6 +36,6 @@ public class JsTreeNodeImpl implements JsTreeNode {
     }
 
     public List<JsTreeNode> getChildren() {
-        return children;
+        return children
     }
 }
