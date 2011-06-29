@@ -26,13 +26,10 @@ public class MediatorGroup extends DynamicGroup implements Balanceable {
     MediatorGroup(MontereyNetworkConnectionDetails connectionDetails, NodeId nodeId) {
         this.connectionDetails = connectionDetails;
         this.nodeId = nodeId;
+        
+        setEntityFilter { it instanceof MediatorNode }
     }
 
-    void setEntityFilter(Closure entityFilter) {
-        this.entityFilter = entityFilter
-        rescanEntities()
-    }
-    
     private void moveSegment(String segmentId, MediatorNode destination) {
         Dmn1PlumberInternalAsync plumber = new PlumberWebProxy(connectionDetails.getManagementUrl(), gson, connectionDetails.getWebApiAdminCredential());
         plumber.migrateSegment(segmentId, destination.getNodeId());

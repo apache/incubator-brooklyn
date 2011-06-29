@@ -1,14 +1,13 @@
 package brooklyn.location.basic
 
-import org.junit.Assert
-import org.junit.Before
-import org.junit.Test
+import org.testng.annotations.BeforeTest
+import org.testng.annotations.Test;
 
 class SshMachineTest {
 
     private SshMachine host;
     
-    @Before
+    @BeforeTest
     public void setUp() throws Exception {
         host = new SshMachine(InetAddress.getLocalHost());
     }

@@ -47,7 +47,11 @@ public interface Entity extends Serializable {
      *
      * The owner is normally the entity responsible for creating/destroying this entity.
      */
-    Group getOwner();
+    Entity getOwner();
+
+    /** 
+     * @return the entities that are owned by this group */
+    Collection<Entity> getOwnedChildren();
     
     /**
      * The {@link Collection} of {@link Group}s that this entity is a member of.

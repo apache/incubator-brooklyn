@@ -77,14 +77,19 @@ public class MontereyContainerNode extends AbstractGroup {
                 break;
             case Dmn1NodeType.CHANGING:
                 // no-op; will change type again shortly
+                // TODO How to handle "changing"? Should we have no child until it changes?
                 break;
             default: 
                 throw new IllegalStateException("Cannot create entity for mediator node type "+nodeSummary.getType()+" at "+nodeId);
         }
 
+        if (node != null) {
+            addOwnedChild(node)
+        }
+        
         LOG.info("Node "+nodeId+" changed type to "+nodeSummary.getType());        
     }   
-     
+    
     void updateWorkrate(WorkrateReport report) {
         node?.updateWorkrate(report)
     }
