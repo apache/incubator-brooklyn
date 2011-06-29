@@ -50,7 +50,7 @@ public interface Entity extends Serializable {
     Entity getOwner();
 
     /** 
-     * @return the entities that are owned by this group
+     * @return the entities that are owned by this entity
      */
     Collection<Entity> getOwnedChildren();
     
@@ -62,9 +62,9 @@ public interface Entity extends Serializable {
     Collection<Group> getGroups();
 
     /**
-     * Add this entity to a {@link Group} as a child of the parent entity.
+     * Add this entity as a member of the given {@link Group}.
      */
-    void addGroup(Group parent);
+    void addGroup(Group group);
 
     /**
      * Return all the {@link Location}s this entity is deployed to.
