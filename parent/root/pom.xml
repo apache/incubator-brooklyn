@@ -49,8 +49,8 @@
 		<jansi.version>1.2.1</jansi.version>
 		<guava.version>r09</guava.version>
 		<ivy.version>2.2.0</ivy.version>
-		<!-- <selenium.java.client.version>1.0.1</selenium.java.client.version> 
-			<selenium.maven.plugin.version>1.1</selenium.maven.plugin.version> -->
+        <includedTestGroups></includedTestGroups>
+		<excludedTestGroups>Integration</excludedTestGroups>
 	</properties>
 
 	<dependencyManagement>
@@ -384,7 +384,8 @@
                                 <configuration>
                                     <tasks>
                                         <taskdef resource="testngtasks" classpathref="maven.plugin.classpath" />
-                                        <testng listeners="brooklyn.test.StatusListener" excludedgroups="Integration"
+                                        <testng listeners="brooklyn.test.StatusListener" groups="${includedTestGroups}"
+                                                excludedGroups="${excludedTestGroups}"
                                                 classpathref="maven.test.classpath" outputDir="target/testng">
                                             <classfileset dir="target/test-classes" includes="**/*Test.class" />
                                             <sysproperty
@@ -496,7 +497,11 @@
 		</profile>
 		<profile>
 			<id>Integration</id>
-			<build>
+            <properties>
+                <includedTestGroups>Integration</includedTestGroups>
+                <excludedTestGroups></excludedTestGroups>
+            </properties>
+	    	<build>
 				<plugins>
 					<plugin>
 						<artifactId>maven-jar-plugin</artifactId>
@@ -509,66 +514,6 @@
 							</execution>
 						</executions>
 					</plugin>
-					<plugin>
-                        <artifactId>maven-antrun-plugin</artifactId>
-                        <inherited>true</inherited>
-                        <executions>
-                            <execution>
-                                <id>run-integration-tests</id>
-                                <goals>
-                                    <goal>run</goal>
-                                </goals>
-                                <phase>integration-test</phase>
-                                <configuration>
-                                    <tasks>
-                                        <taskdef resource="net/sf/antcontrib/antcontrib.properties"
-                                                classpathref="maven.plugin.classpath" />
-                                        <taskdef resource="tasks.properties" classpathref="maven.plugin.classpath" />
-                                        <if>
-                                            <available file="src/test" type="dir" />
-                                            <then>
-		                                        <testng listeners="brooklyn.test.StatusListener" groups="Integration"
-		                                                classpathref="maven.test.classpath" outputDir="target/testng">
-		                                            <classfileset dir="target/test-classes" includes="**/*Test.class" />
-		                                            <sysproperty
-		                                                    key="java.util.logging.config.file"
-		                                                    value="${basedir}/src/test/resources/logging.properties" />
-		                                        </testng>
-		                                    </then>
-                                        </if>
-                                    </tasks>
-                                </configuration>
-                            </execution>
-                        </executions>
-                        <dependencies>
-                            <dependency>
-                                <groupId>ant-contrib</groupId>
-                                <artifactId>ant-contrib</artifactId>
-                                <version>1.0b3</version>
-                                <exclusions>
-                                    <exclusion>
-                                        <groupId>ant</groupId>
-                                        <artifactId>ant</artifactId>
-                                    </exclusion>
-                                </exclusions>
-                            </dependency>
-                            <dependency>
-                                <groupId>org.apache.ant</groupId>
-                                <artifactId>ant-launcher</artifactId>
-                                <version>1.8.2</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>org.apache.ant</groupId>
-                                <artifactId>ant</artifactId>
-                                <version>1.8.2</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>org.testng</groupId>
-                                <artifactId>testng</artifactId>
-                                <version>${testng.version}</version>
-                            </dependency>
-                        </dependencies>
-                    </plugin>
 				</plugins>
 			</build>
 		</profile>
