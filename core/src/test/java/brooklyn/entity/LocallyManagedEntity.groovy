@@ -12,7 +12,7 @@ public class LocallyManagedEntity extends AbstractEntity {
     
     //for testing
     @Override
-    public AbstractManagementContext getManagementContext() {
+    public ManagementContext getManagementContext() {
         if (!getApplication()) return mgmt;
         return super.getManagementContext();
     }

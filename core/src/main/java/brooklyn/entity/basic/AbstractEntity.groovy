@@ -209,7 +209,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         getApplication()?.id
     }
 
-    public AbstractManagementContext getManagementContext() {
+    public ManagementContext getManagementContext() {
         getApplication()?.getManagementContext()
     }
     
