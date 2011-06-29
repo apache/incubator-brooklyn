@@ -81,10 +81,15 @@ cp $locOnServer $to
 exit"""
     }
 
+    // TODO Fail if requested port is in use rather than taking first available.
     public int getTomcatHttpPort() {
         synchronized (httpPortLock) {
-            if (httpPort < 0)
+            int requested = entity.getAttribute(AttributeDictionary.HTTP_PORT)
+            if (requested > 0) {
+                httpPort = requested
+            } else {
                 httpPort = claimNextValue("tomcatHttpPort", DEFAULT_FIRST_HTTP_PORT)
+            }
         }
         return httpPort
     }

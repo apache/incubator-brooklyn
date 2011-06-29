@@ -53,24 +53,10 @@ public class TomcatNodeIntegrationTest {
         if (!httpPortLeftOpen && isPortInUse(DEFAULT_HTTP_PORT, 1000))
             logger.warn "port $DEFAULT_HTTP_PORT still running after test"
     }
- 
-    @BeforeMethod(groups = [ "Integration" ])
-    public void changeDefaultHttpPort() {
-        oldHttpPort = Tomcat7SshSetup.DEFAULT_FIRST_HTTP_PORT;
-        Tomcat7SshSetup.DEFAULT_FIRST_HTTP_PORT = DEFAULT_HTTP_PORT
-    }
- 
-    @AfterMethod(groups = [ "Integration" ])
-    public void changeDefaultHttpPortBack() {
-        if (oldHttpPort>0)
-            Tomcat7SshSetup.DEFAULT_FIRST_HTTP_PORT = oldHttpPort
-    }
 
-    @Test(groups = [ "Integration" ])
+    @Test
     public void tracksNodeState() {
-        TomcatNode tc = [ 
-            owner:new TestApplication()
-        ]
+        TomcatNode tc = [ owner: new TestApplication(), httpPort: DEFAULT_HTTP_PORT ]
         tc.start([ new SshMachineLocation(name:'london', provisioner:new LocalhostSshMachineProvisioner()) ])
         executeUntilSucceedsWithFinallyBlock ([:], {
             assertTrue tc.getAttribute(TomcatNode.NODE_UP)
@@ -82,8 +68,8 @@ public class TomcatNodeIntegrationTest {
     @Test(groups = [ "Integration" ])
     public void publishesRequestsPerSecondMetric() {
         Application app = new TestApplication();
-        TomcatNode tc = new TomcatNode(owner: app);
-        tc.start([ new SshMachineLocation(name:'london', provisioner:new LocalhostSshMachineProvisioner()) ])
+        TomcatNode tc = new TomcatNode(owner: app, httpPort: DEFAULT_HTTP_PORT);
+		tc.start([ new SshMachineLocation(name:'london', provisioner:new LocalhostSshMachineProvisioner()) ])
         executeUntilSucceedsWithShutdown(tc, {
                 def activityValue = tc.getAttribute(TomcatNode.REQUESTS_PER_SECOND)
                 if (activityValue == null || activityValue == -1) return new BooleanWithMessage(false, "activity not set yet ($activityValue)")
@@ -105,7 +91,7 @@ public class TomcatNodeIntegrationTest {
     @Test(groups = [ "Integration" ])
     public void publishesErrorCountMetric() {
         Application app = new TestApplication();
-        TomcatNode tc = new TomcatNode(owner: app);
+        TomcatNode tc = new TomcatNode(owner: app, httpPort: DEFAULT_HTTP_PORT);
         tc.start([ new SshMachineLocation(name:'london', provisioner:new LocalhostSshMachineProvisioner()) ])
         executeUntilSucceedsWithShutdown(tc, {
             def port = tc.getAttribute(TomcatNode.HTTP_PORT)
@@ -128,7 +114,7 @@ public class TomcatNodeIntegrationTest {
     @Test(groups = [ "Integration" ])
     public void deployWebAppAppearsAtUrl() {
         Application app = new TestApplication();
-        TomcatNode tc = new TomcatNode(owner: app);
+        TomcatNode tc = new TomcatNode(owner: app, httpPort: DEFAULT_HTTP_PORT);
 
         URL resource = this.getClass().getClassLoader().getResource("hello-world.war")
         assertNotNull resource
@@ -150,7 +136,7 @@ public class TomcatNodeIntegrationTest {
         t.start()
         try {
             Application app = new TestApplication()
-            TomcatNode tc = new TomcatNode(owner:app)
+            TomcatNode tc = new TomcatNode(owner:app, httpPort: DEFAULT_HTTP_PORT)
             Exception caught = null
             try {
                 tc.start([ new SshMachineLocation(name:'london', provisioner:new LocalhostSshMachineProvisioner()) ])
