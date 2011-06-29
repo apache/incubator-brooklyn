@@ -1,0 +1,63 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>brooklyn-monterey-integration</artifactId>
+    <packaging>bundle</packaging>
+    <name>Brooklyn Monterey Integration</name>
+
+    <parent>
+        <groupId>brooklyn</groupId>
+        <artifactId>brooklyn-parent-root</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../parent/root/pom.xml</relativePath>
+    </parent>
+
+    <properties>
+        <monterey.version>3.3.0-SNAPSHOT</monterey.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>brooklyn</groupId>
+            <artifactId>brooklyn-extra</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.cloudsoftcorp.monterey</groupId>
+            <artifactId>com.cloudsoftcorp.monterey.activemq</artifactId>
+            <version>${monterey.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.cloudsoftcorp.monterey</groupId>
+            <artifactId>com.cloudsoftcorp.monterey.amqp</artifactId>
+            <version>${monterey.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.cloudsoftcorp.monterey</groupId>
+            <artifactId>com.cloudsoftcorp.monterey.jclouds</artifactId>
+            <version>${monterey.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.cloudsoftcorp.monterey</groupId>
+            <artifactId>com.cloudsoftcorp.monterey.sshlab</artifactId>
+            <version>${monterey.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.cloudsoftcorp.monterey</groupId>
+            <artifactId>com.cloudsoftcorp.monterey.simulator</artifactId>
+            <version>${monterey.version}</version>
+        </dependency>
+    </dependencies>
+
+    <repositories>
+        <repository>
+            <id>cloudsoft-internal-snapshots</id>
+            <url>http://releng1.cloudsoftcorp.com/downloads/maven2/snapshots/</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
+</project>

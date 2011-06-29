@@ -1,6 +1,7 @@
 package com.cloudsoftcorp.monterey.brooklyn.entity;
 
 import java.lang.reflect.InvocationTargetException;
+import java.net.InetAddress;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -17,14 +18,15 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.testng.After;
-import org.testng.Assert;
-import org.testng.Before;
-import org.testng.Test;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
+import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
-import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.location.basic.SshMachine;
 
 import com.cloudsoftcorp.monterey.CloudsoftThreadMonitoringTestFixture;
 import com.cloudsoftcorp.monterey.clouds.dto.CloudAccountDto;
@@ -90,12 +92,14 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
     private static final long TIMEOUT = 30*1000;
     
     private Gson gson;
-    private SshMachineLocation localhost;
+    private SshMachine localhost;
+    private AbstractApplication app;
     private MontereyNetwork montereyNetwork;
     private UserCredentialsConfig adminCredential = new UserCredentialsConfig("myname", "mypass", HTTP_AUTH.ADMIN_ROLE);
     private ScheduledExecutorService worloadExecutor = Executors.newScheduledThreadPool(10);
     
     private ClassLoadingContext originalClassLoadingContext;
+
     
     @Before
     public void setUp() throws Exception {
@@ -105,12 +109,11 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         GsonSerializer gsonSerializer = new GsonSerializer(classLoadingContext);
         gson = gsonSerializer.getGson();
 
-        localhost = new SshMachineLocation();
-        localhost.setName(SSH_HOST_NAME);
-        localhost.setUser(SSH_USERNAME);
-        localhost.setHost(SSH_HOST_NAME);
+        localhost = new SshMachine(InetAddress.getByName(SSH_HOST_NAME), SSH_USERNAME);
 
+        app = new SimpleApp();
         montereyNetwork = new MontereyNetwork();
+        montereyNetwork.setOwner(app);
         montereyNetwork.setInstallDir(MONTEREY_MANAGEMENT_NODE_PATH);
         MontereyNetworkConfig config = new MontereyNetworkConfig();
         montereyNetwork.setConfig(config);

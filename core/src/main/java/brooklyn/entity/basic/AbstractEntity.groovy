@@ -155,22 +155,17 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     /**
      * Adds this as a member of the given group, registers with application if necessary
      */
-    public synchronized void setOwner(Group e) {
+    public synchronized void setOwner(Entity e) {
         if (owner!=null) {
             if (owner==e) return ;
             if (owner!=e) throw new UnsupportedOperationException("Cannot change owner of $this from $owner to $e (owner change not supported)")
         }
         //make sure there is no loop
-        List ancestors = []
-        AbstractGroup root = e;
-        while (root!=null) {
-            ancestors << root
-            root=root.getOwner()
-            if (ancestors.contains(root)) throw new IllegalStateException("loop detected trying to set owner of $this as $e; ancestors list $ancestors and owner of last is $root")
-        }
+        if (this.equals(e)) throw new IllegalStateException("entity $this cannot own itself")
+        if (isDescendant(e)) throw new IllegalStateException("loop detected trying to set owner of $this as $e, which is already a decendent")
         
         owner = e
-        ((AbstractGroup)e).addOwnedChild(this)
+        ((AbstractEntity)e).addOwnedChild(this)
         owner.inheritableConfig?.entrySet().each { Map.Entry<ConfigKey,Object> entry ->
             if (!inheritableConfig.containsKey(entry.getKey())) {
                 inheritableConfig.put(entry.getKey(), entry.getValue())
@@ -179,11 +174,38 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         getApplication()
     }
 
+    public boolean isAncestor(Entity oldee) {
+        AbstractEntity ancestor = getOwner()
+        while (ancestor) {
+            if (ancestor.equals(oldee)) return true
+            ancestor = ancestor.getOwner()
+        }
+        return false
+    }
+
+    public boolean isDescendant(Entity youngster) {
+        Set<Entity> inspected = [] as HashSet
+        List<Entity> toinspect = [this]
+        
+        while (!toinspect.isEmpty()) {
+            Entity e = toinspect.pop()
+            if (e.getOwnedChildren().contains(youngster)) {
+                return true
+            }
+            inspected.add(e)
+            toinspect.addAll(e.getOwnedChildren())
+            toinspect.removeAll(inspected)
+        }
+        
+        return false
+    }
+
     /**
      * Adds the given entity as a member of this group <em>and</em> this group as one of the groups of the child;
      * returns argument passed in, for convenience.
      */
     public Entity addOwnedChild(Entity child) {
+        if (isAncestor(child)) throw new IllegalStateException("loop detected trying to add child $child to $this; it is already an ancestor")
         child.setOwner(this)
         ownedChildren.add(child)
         child
@@ -191,6 +213,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
  
     public boolean removeOwnedChild(Entity child) {
         ownedChildren.remove child
+        child.setOwner(null)
     }
     
     /**
@@ -201,10 +224,6 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         getApplication()
     }
  
-    public Collection<String> getGroupIds() {
-        groups.collect { g -> g.id }
-    }
-    
     public Entity getOwner() { owner }
 
     public Collection<Group> getGroups() { groups }
