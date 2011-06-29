@@ -53,7 +53,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     final Collection<Group> groups = new CopyOnWriteArrayList<Group>()
     volatile Application application
     Collection<Location> locations = []
-    Group owner
+    Entity owner
 
     // following two perhaps belong in entity class in a registry;
     // but that is an optimization, and possibly wrong if we have dynamic sensors/effectors
@@ -205,7 +205,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         groups.collect { g -> g.id }
     }
     
-    public Group getOwner() { owner }
+    public Entity getOwner() { owner }
 
     public Collection<Group> getGroups() { groups }
 
