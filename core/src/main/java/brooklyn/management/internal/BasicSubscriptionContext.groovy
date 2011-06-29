@@ -21,13 +21,16 @@ public class BasicSubscriptionContext implements SubscriptionContext {
     	this.manager = manager;
         this.subscriber = subscriber;
         this.flags = [subscriber:subscriber]
-    	this.flags << flags;
+    	if (flags!=null) this.flags << flags;
     }
     
+    public <T> SubscriptionHandle subscribe(Map<String, Object> newFlags=[:], Entity producer, Sensor<T> sensor, Closure c) {
+        subscribe(newFlags, producer, sensor, c as EventListener)        
+    }
     public <T> SubscriptionHandle subscribe(Map<String, Object> newFlags=[:], Entity producer, Sensor<T> sensor, EventListener<T> listener) {
         Map f2 = [:]
         f2 << flags
-        f2 << newFlags
+        if (newFlags!=null) f2 << newFlags
         manager.subscribe(f2, producer, sensor, listener)
     }
     

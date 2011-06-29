@@ -54,9 +54,10 @@ public class LocalSubscriptionManager implements SubscriptionManager {
         
     //REVIEW 1459 - removed "entities" predicate because at that generality it is hard to implement wide area; not used anyway
   
+    public LocalSubscriptionManager(ExecutionManager m) {
+        this.em = m
+    }
       
-//subscriberExecutionManagerTag
-    
     public <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, EventListener<T> listener) {
         subscribe([:], producer, sensor, listener)
     }

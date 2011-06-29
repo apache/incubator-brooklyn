@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.testng.annotations.Test
 
 import brooklyn.entity.basic.AbstractApplication
+import brooklyn.event.EventListener;
 import brooklyn.event.SensorEvent
 import brooklyn.location.Location
 
@@ -28,21 +29,22 @@ class LocalEntitiesTest {
         assertEquals(5, h.getAttribute(HelloEntity.AGE))
     }
 
-    //needs FIXME SUBS before will pass (so subscriptions can be registered, and so subscriptions get notified in separate thread)
-    @Test(enabled = false)
+    //REVIEW 1459 - new test
+    //subscriptions get notified in separate thread
+    @Test
     public void testEffectorEmitsAttributeSensor() {
         AbstractApplication a = new AbstractApplication() {}
         HelloEntity h = new HelloEntity(owner:a)
         a.start([new MockLocation()])
         
         AtomicReference<SensorEvent> evt = new AtomicReference()
-        a.getManagementContext().getSubscriptionManager.subscribe(/* listener tag (typically an entity) */ null, h, HelloEntity.AGE, { 
+        a.getSubscriptionContext().subscribe(h, HelloEntity.AGE, { 
             SensorEvent e -> 
             evt.set(e)
             synchronized (evt) {
                 evt.notifyAll();
             }
-        })
+        } as EventListener)
         long startTime = System.currentTimeMillis()
         synchronized (evt) {
             h.setAge(5)
@@ -54,15 +56,15 @@ class LocalEntitiesTest {
         assertTrue(System.currentTimeMillis() - startTime < 5000)  //shouldn't have blocked for all 5s
     }
     
-    //needs FIXME SUBS before will pass
-    @Test(enabled = false)
+    //REVIEW 1459 - new test
+    @Test
     public void testEffectorEmitsTransientSensor() {
         AbstractApplication a = new AbstractApplication() {}
         HelloEntity h = new HelloEntity(owner:a)
         a.start([new MockLocation()])
         
         AtomicReference<SensorEvent> evt = new AtomicReference()
-        a.getManagementContext().getSubscriptionManager.subscribe(/* listener tag (typically an entity) */ null, h, HelloEntity.ITS_MY_BIRTHDAY, {
+        a.getSubscriptionContext().subscribe(/* listener tag (typically an entity) */ null, h, HelloEntity.ITS_MY_BIRTHDAY, {
             SensorEvent e ->
             evt.set(e)
             synchronized (evt) {

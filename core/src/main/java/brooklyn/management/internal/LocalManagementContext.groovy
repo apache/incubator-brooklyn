@@ -22,7 +22,7 @@ public class LocalManagementContext extends AbstractManagementContext {
     private static final Logger log = LoggerFactory.getLogger(ManagementContext.class)
 
     private ExecutionManager execution = new BasicExecutionManager();
-    private SubscriptionManager subscriptions = new LocalSubscriptionManager();
+    private SubscriptionManager subscriptions = new LocalSubscriptionManager(execution);
     
     Set<Application> apps = []
  
