@@ -47,19 +47,9 @@ class EffectorTest {
             @NamedParameter("greeting") @DefaultValue("hello") @Description("what to say") String greeting);
     }
         
-    public static class MyEntity extends AbstractEntity implements CanSayHi {
+    public static class MyEntity extends LocallyManagedEntity implements CanSayHi {
         public String sayHi1(String name, String greeting) { "$greeting $name" }
         public String sayHi2(String name, String greeting) { "$greeting $name" }
-
-        ManagementContext mgmt = new LocalManagementContext()
-        
-        //for testing
-        @Override
-        public ManagementContext getManagementContext() {
-            if (!getApplication()) return mgmt;
-            return super.getManagementContext();
-        }
-        
     }
 
     @Test

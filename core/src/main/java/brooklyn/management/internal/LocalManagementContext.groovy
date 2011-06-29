@@ -20,8 +20,8 @@ import brooklyn.util.task.ExecutionContext
 public class LocalManagementContext extends AbstractManagementContext {
     private static final Logger log = LoggerFactory.getLogger(ManagementContext.class)
 
-    private SubscriptionManager subscriptions = new LocalSubscriptionManager();
     private ExecutionManager execution = new BasicExecutionManager();
+    private SubscriptionManager subscriptions = new LocalSubscriptionManager();
     
     Set<Application> apps = []
  

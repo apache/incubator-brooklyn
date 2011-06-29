@@ -1,5 +1,6 @@
 package brooklyn.util.internal
 
+import brooklyn.entity.LocallyManagedEntity;
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.AttributeDictionary
 import brooklyn.event.adapter.JmxSensorAdapter
@@ -24,7 +25,7 @@ class JmxSensorAdapterTest {
         GeneralisedDynamicMBean mbean = jmxService.registerMBean('Catalina:type=GlobalRequestProcessor,name=http-8080', errorCount: 42)
 
         // Create an entity and configure it with the above JMX service
-        AbstractEntity entity = new AbstractEntity(){}
+        AbstractEntity entity = new LocallyManagedEntity()
         entity.updateAttribute(AttributeDictionary.JMX_HOST, jmxService.jmxHost)
         entity.updateAttribute(AttributeDictionary.JMX_PORT, jmxService.jmxPort)
 

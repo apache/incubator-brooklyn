@@ -24,8 +24,7 @@ import brooklyn.location.Location
 import brooklyn.management.ManagementContext
 import brooklyn.management.SubscriptionContext
 import brooklyn.management.Task
-import brooklyn.management.internal.LocalManagementContext
-import brooklyn.management.internal.LocalSubscriptionContext
+import brooklyn.management.internal.BasicSubscriptionContext
 import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.task.ExecutionContext
 
@@ -63,9 +62,8 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     /** map of sensors on this entity by name, populated at constructor time */
     private Map<String,Sensor> sensors = null
     
-    protected transient volatile ExecutionContext execution
-    protected transient volatile SubscriptionContext subscription
-    protected transient volatile LocalManagementContext management = LocalManagementContext.getContext()
+    protected transient ExecutionContext execution
+    protected transient SubscriptionContext subscription
  
     /**
      * The sensor-attribute values of this entity. Updating this map should be done
@@ -272,16 +270,13 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 
     protected synchronized SubscriptionContext getSubscriptionContext() {
         if (subscription) subscription;
-        subscription = new LocalSubscriptionContext()
+        subscription = new BasicSubscriptionContext(getManagementContext().getSubscriptionManager(), this)
         //FIXME SUBS  needs to get subscription manager owned by ManagementContext, customised for this entity
     }
 
     protected synchronized ExecutionContext getExecutionContext() {
         if (execution) execution;
-        synchronized (this) {
-            if (execution) execution;
-            execution = new ExecutionContext(tag: this, getManagementContext().getExecutionManager())
-        }
+        execution = new ExecutionContext(tag: this, getManagementContext().getExecutionManager())
     }
     
     /** default toString is simplified name of class, together with selected arguments */
