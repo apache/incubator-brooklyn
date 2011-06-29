@@ -224,10 +224,6 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         getApplication()
     }
  
-    public Collection<String> getGroupIds() {
-        groups.collect { g -> g.id }
-    }
-    
     public Entity getOwner() { owner }
 
     public Collection<Group> getGroups() { groups }
