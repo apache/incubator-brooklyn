@@ -2,7 +2,7 @@ package brooklyn.entity.webapp.jboss
 
 import brooklyn.entity.basic.AttributeDictionary
 import brooklyn.location.basic.SshBasedJavaWebAppSetup
-import brooklyn.location.basic.SshMachineLocation
+import brooklyn.location.basic.SshMachine
 
 public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     String version = "6.0.0.Final"
@@ -10,8 +10,8 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     String installDir = "$installsBaseDir/jboss-$version"
     String runDir
 
-    public JBoss6SshSetup(JBossNode entity, SshMachineLocation host) {
-        super(entity, host)
+    public JBoss6SshSetup(JBossNode entity, SshMachine machine) {
+        super(entity, machine)
         runDir = appBaseDir + "/" + "jboss-"+entity.id
     }
 
@@ -27,7 +27,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         def url = "http://downloads.sourceforge.net/project/jboss/JBoss/JBoss-$version/jboss-as-distribution-${version}.zip?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fjboss%2Ffiles%2FJBoss%2F$version%2F&ts=1307104229&use_mirror=kent"
         // Note the -o option to unzip, to overwrite existing files without warning.
         // The JBoss zip file contains lgpl.txt (at least) twice and the prompt to
-        // overwrite breaks the installer.
+        // overwrite interrupts the installer.
         makeInstallScript(
             "curl -L \"$url\" -o $saveAs",
             "unzip -o $saveAs"
@@ -74,13 +74,13 @@ exit"""
         "$installDir/bin/twiddle.sh --host $host --port $port get \"jboss.system:type=Server\" Started; exit"
     }
 
-    public String getDeployScript(String filename) {
+    public String getDeployScript(String locOnServer) {
         ""
     }
 
-    public void shutdown(SshMachineLocation loc) {
+    public void shutdown() {
         def host = entity.getAttribute(AttributeDictionary.JMX_HOST)
         def port = entity.getAttribute(AttributeDictionary.JMX_PORT)
-        loc.run("$installDir/bin/shutdown.sh --host=$host --port=$port -S; exit", out: System.out)
+        machine.run("$installDir/bin/shutdown.sh --host=$host --port=$port -S; exit", out: System.out)
     }
 }
