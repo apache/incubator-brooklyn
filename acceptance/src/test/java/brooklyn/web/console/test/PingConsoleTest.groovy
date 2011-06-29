@@ -1,15 +1,19 @@
 package brooklyn.web.console.test
 
-import org.testng.annotations.Test
-import static org.testng.Assert.assertTrue
+import static org.testng.Assert.*
 
-public class PingConsoleTest extends AbstractSeleniumTest {
+import org.testng.annotations.Test
+import org.openqa.selenium.WebDriver
+import org.openqa.selenium.firefox.FirefoxDriver
+
+public class PingConsoleTest {
 
     @Test
     public void findEntityController() throws Exception {
-        selenium.open("http://localhost:9090/");
-        assertTrue(selenium.isTextPresent("EntityController"))
-        selenium.close()
+        WebDriver driver = new FirefoxDriver();
+        driver.get("http://localhost:9090/");
+        assertTrue(driver.getPageSource().contains("EntityController"))
+        driver.quit()
     }
 
 }

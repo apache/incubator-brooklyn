@@ -1,15 +1,20 @@
 package brooklyn.web.console.test
 
-import org.testng.annotations.Test
-import static org.testng.Assert.assertTrue
+import static org.testng.Assert.*
 
-public class CloudsoftWebsiteTest extends AbstractSeleniumTest {
+import org.testng.annotations.Test
+import org.openqa.selenium.WebDriver
+import org.openqa.selenium.firefox.FirefoxDriver
+
+public class CloudsoftWebsiteTest {
 
     @Test
     public void findApplicationMobility() throws Exception {
-        selenium.open("http://www.cloudsoftcorp.com/");
-        assertTrue(selenium.isTextPresent("Application Mobility"))
-        selenium.close()
+        WebDriver driver = new FirefoxDriver();
+        driver.get("http://www.cloudsoftcorp.com/");
+        assertEquals(driver.getTitle(), "Bringing Intelligent Application Mobility to the Cloud")
+        assertTrue(driver.findElementById("main_content").text.contains("Elastic Application Platform"))
+        driver.quit()
     }
 
 }

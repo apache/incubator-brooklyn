@@ -9,8 +9,8 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.BeforeTest
 
 public abstract class AbstractSeleniumTest {
-    static SeleniumServer server;
-    Selenium selenium;
+    protected static SeleniumServer server;
+    protected Selenium selenium;
 
     @BeforeTest
     public static void startSeleniumServer() {
