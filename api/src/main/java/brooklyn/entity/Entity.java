@@ -70,11 +70,4 @@ public interface Entity extends Serializable {
      * Return all the {@link Location}s this entity is deployed to.
      */
     Collection<Location> getLocations();
-    
-    /**
-     * Allow us to subscribe to data from a {@link Sensor} on another entity.
-     * 
-     * @return a subscription id which can be used to unsubscribe
-     */
-    <T> long subscribe(Entity producer, Sensor<T> sensor, EventListener<T> listener);
 }

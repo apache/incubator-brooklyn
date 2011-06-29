@@ -2,6 +2,7 @@ package brooklyn.entity.basic;
 
 import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
+import brooklyn.event.EventListener;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.ConfigKey;
 import brooklyn.management.ManagementContext;
@@ -61,6 +62,13 @@ public interface EntityLocal extends Entity {
      * Generates and emits an event (as though produced by this entity).
      */
     <T> void emit(Sensor<T> sensor, T value);
+    
+    /**
+     * Allow us to subscribe to data from a {@link Sensor} on another entity.
+     * 
+     * @return a subscription id which can be used to unsubscribe
+     */
+    <T> long subscribe(Entity producer, Sensor<T> sensor, EventListener<T> listener);
     
     ManagementContext getManagementContext();
 }
