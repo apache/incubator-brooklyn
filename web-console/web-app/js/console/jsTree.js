@@ -27,4 +27,7 @@ Brooklyn.jsTree = (function(parent) {
 
 }(Brooklyn || {}));
 
-$(document).ready(Brooklyn.jsTree.loadJstree);
+$(document).ready(function(){
+    Brooklyn.jsTree.loadJstree();
+    $("#searchInput").corner();
+});
