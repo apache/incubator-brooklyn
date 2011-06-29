@@ -32,7 +32,7 @@ class EntityStartUtils {
             throw new IllegalStateException("request to start $entity without a location")
         if (!entity.owner)
             throw new IllegalStateException("request to start $entity without any owner specified or set")
-        log.debug "factory creating entity {} with properties {} and location {}", entity, entity.attributes, entity.location
+        log.debug "factory creating entity {} in location {}", entity, locs
 
         //TODO dynamically look for appropriate start method, throw better exception if not there
         entity.startInLocation(locs)
