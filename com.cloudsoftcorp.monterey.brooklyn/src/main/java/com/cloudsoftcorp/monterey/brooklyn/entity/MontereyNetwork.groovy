@@ -355,7 +355,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
 
         newSegments.each {
             Segment segment = new Segment(connectionDetails, it);
-            addOwnedChild(containerNode);
+            addOwnedChild(segment);
             segments.put(it, segment);
         }
 

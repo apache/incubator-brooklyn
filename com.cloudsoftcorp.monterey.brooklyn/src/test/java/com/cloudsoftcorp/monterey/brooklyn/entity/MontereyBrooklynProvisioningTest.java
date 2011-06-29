@@ -23,10 +23,10 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.basic.SshMachine;
-import brooklyn.location.basic.SshMachineLocation;
 
 import com.cloudsoftcorp.monterey.CloudsoftThreadMonitoringTestFixture;
 import com.cloudsoftcorp.monterey.clouds.dto.CloudAccountDto;
@@ -93,11 +93,13 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
     
     private Gson gson;
     private SshMachine localhost;
+    private AbstractApplication app;
     private MontereyNetwork montereyNetwork;
     private UserCredentialsConfig adminCredential = new UserCredentialsConfig("myname", "mypass", HTTP_AUTH.ADMIN_ROLE);
     private ScheduledExecutorService worloadExecutor = Executors.newScheduledThreadPool(10);
     
     private ClassLoadingContext originalClassLoadingContext;
+
     
     @Before
     public void setUp() throws Exception {
@@ -109,7 +111,9 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
 
         localhost = new SshMachine(InetAddress.getByName(SSH_HOST_NAME), SSH_USERNAME);
 
+        app = new SimpleApp();
         montereyNetwork = new MontereyNetwork();
+        montereyNetwork.setOwner(app);
         montereyNetwork.setInstallDir(MONTEREY_MANAGEMENT_NODE_PATH);
         MontereyNetworkConfig config = new MontereyNetworkConfig();
         montereyNetwork.setConfig(config);
