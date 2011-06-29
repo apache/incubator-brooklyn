@@ -134,4 +134,6 @@ exit
         if (result==1) return false
         throw new IllegalStateException("$entity running check gave result code $result")
     }
+    
+    public abstract void shutdown();
 }
