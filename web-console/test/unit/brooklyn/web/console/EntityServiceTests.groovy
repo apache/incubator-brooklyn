@@ -4,6 +4,7 @@ import grails.test.*
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
 import brooklyn.management.ExecutionManager
+import brooklyn.management.SubscriptionManager
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.basic.AbstractEntity
@@ -54,6 +55,8 @@ class EntityServiceTests extends GrailsUnitTestCase {
         assertTrue(testService.isChildOf(testEntity.ownedChildren.asList().get(0), testEntities))
     }
 
+    //TODO no need for this mock (or for other mock impls of ManagementContext?) -- just 
+    //use the real management context ... e.g. new TestApplication().getManagementContext() ... no?  (Alex's suggest'n)
     private class TestManagementContext implements ManagementContext{
         Collection<Application> getApplications() {
             return Collections.singletonList(new TestApplication());
@@ -64,6 +67,9 @@ class EntityServiceTests extends GrailsUnitTestCase {
         }
 
         public ExecutionManager getExecutionManager() {
+            throw new UnsupportedOperationException();
+        }
+        public SubscriptionManager getSubscriptionManager() {
             throw new UnsupportedOperationException();
         }
     }
