@@ -13,12 +13,11 @@ import java.util.concurrent.TimeUnit
 import java.util.logging.Level
 import java.util.logging.Logger
 
-import brooklyn.entity.Group
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.trait.Startable
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.Location
-import brooklyn.location.basic.SshMachineLocation
+import brooklyn.location.basic.SshMachine
 import brooklyn.util.internal.BrooklynSystemProperties
 import brooklyn.util.internal.EntityStartUtils
 
@@ -79,7 +78,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     private CredentialsConfig webAdminCredential;
     private NetworkId networkId = NetworkId.Factory.newId();
 
-    private SshMachineLocation host;
+    private SshMachine host;
     private URL managementUrl;
     private MontereyNetworkConnectionDetails connectionDetails;
     private String applicationName;
@@ -151,9 +150,9 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         if (monitoringTask != null) monitoringTask.cancel(true);
     }
 
-    public void startOnHost(SshMachineLocation host) {
+    public void startOnHost(SshMachine host) {
         /*
-         * TODO: Assumes the following are already set on SshMachineLocation:
+         * TODO: Assumes the following are already set on SshMachine:
          * sshAddress
          * sshPort
          * sshUsername
@@ -161,7 +160,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
          * HostKeyChecking hostKeyChecking = HostKeyChecking.NO;
          */
 
-        LOG.info("Creating new monterey network "+networkId+" on "+host.getName());
+        LOG.info("Creating new monterey network "+networkId+" on "+host);
 
         File webUsersConfFile = DeploymentUtils.toEncryptedWebUsersConfFile(webUsersCredentials);
         String username = System.getenv("USER");
@@ -185,7 +184,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
                 host.copyTo(config.getMontereyWebApiSslKeystore(), installDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_SSL_KEYSTORE_RELATIVE_PATH);
             }
 
-            this.managementUrl = new URL(config.getMontereyWebApiProtocol()+"://"+host.getHost()+":"+config.getMontereyWebApiPort());
+            this.managementUrl = new URL(config.getMontereyWebApiProtocol()+"://"+host.getHost().getHostName()+":"+config.getMontereyWebApiPort());
             this.connectionDetails = new MontereyNetworkConnectionDetails(networkId, managementUrl, webAdminCredential);
             this.host = host;
 
@@ -266,7 +265,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         applicationName = null;
     }
 
-    private void shutdownManagementNodeProcess(MontereyNetworkConfig config, SshMachineLocation host, NetworkId networkId) {
+    private void shutdownManagementNodeProcess(MontereyNetworkConfig config, SshMachine host, NetworkId networkId) {
         String killScript = installDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_KILL_SCRIPT_RELATIVE_PATH;
         try {
             LOG.info("Releasing management node on "+toString());
