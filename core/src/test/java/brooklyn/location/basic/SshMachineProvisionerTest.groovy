@@ -1,13 +1,13 @@
 package brooklyn.location.basic
 
-import static org.junit.Assert.*
-import org.junit.Test
+import static org.testng.Assert.*
+
+import org.testng.annotations.Test
 
 /**
  * Provisions @{link SshMachine}s in a specific location from a list of known machines
  */
-class SshMachineProvisionerTest {
-
+public class SshMachineProvisionerTest {
     @Test
     public void canGetAMachine() {
         SshMachineProvisioner provisioner = new SshMachineProvisioner([Inet4Address.getByAddress((byte[])[192,168,144,200])])
@@ -33,5 +33,4 @@ class SshMachineProvisionerTest {
         assertNotNull machine
         assertEquals '192.168.144.200', machine.host.hostAddress
     }
-
 }

@@ -45,7 +45,6 @@ body{
 }
 
 .layout-left-column{
-	background-color:white;
 	float: left;
 	width: 270px;
 	height:100%;
@@ -60,7 +59,15 @@ body{
 }
 
 #searchBox{
-    margin: 2px
+    margin-bottom: 3px;
+    padding: 3px;
+}
+
+#searchInput{
+    width: 100%;
+    background-image: url("/brooklyn-web-console/images/brooklyn/magnifying-glass.gif");
+    background-repeat:no-repeat;
+    padding-left:20px;
 }
 
 div#demo1{

@@ -1,14 +1,17 @@
 !!! 5
 %html
-%head
     %head
-        %meta{:name=>"layout",:content=>"basic"}\
+        %title Brooklyn Webconsole - Dashboard
+        %meta{:name=>"layout",:content=>"basic"}
+        %script{:type=>"text/javascript",:src=>"${resource(dir:'dynjs',file:'jsTreeConfig')}"}
+        %g:javascript{:src=>"console/jsTree.js"}
+        %g:javascript{:src=>"jquery/jquery.corner.js"}
+        %g:javascript{:src=>"jquery/jquery.jstree.js"}
     %body{:onload=>"initTabs()"}
         .layout-middle-content
             .layout-left-column
                 %div{:id=>"searchBox"}
-                    %input{:type=>'text', :size=>37, :name=>'name', :id=>'searchInput'}
-                    %input{:type=>"button", :onclick=>"Brooklyn.jsTree.loadJstree()", :name=>"searchButton", :value=>"Search"}
+                    %input{:type=>'text', :placeholder=>"Search", :name=>'name', :id=>'searchInput', :onkeypress=>"Brooklyn.jsTree.loadJstree()"}
                 %div{:id=>"demo1"}
             .layout-main-content
                 #tabs

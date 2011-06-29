@@ -3,14 +3,14 @@ package brooklyn.entity.webapp.tomcat
 import static brooklyn.test.TestUtils.*
 
 import static java.util.concurrent.TimeUnit.*
-import static org.junit.Assert.*
+import static org.testng.Assert.*
 
 import java.util.Map
 
-import org.junit.After
-import org.junit.Before
-import org.junit.Ignore
-import org.junit.Test
+import org.testng.annotations.AfterMethod
+import org.testng.annotations.BeforeMethod
+import org.testng.annotations.Test
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -23,6 +23,9 @@ import brooklyn.location.basic.SshMachine
 
 /**
  * This tests the operation of the {@link TomcatNode} entity.
+ * 
+ * TODO clarify test purpose
+ * TODO check disabled tests
  */
 class TomcatNodeTest {
     private static final Logger logger = LoggerFactory.getLogger(TomcatNodeTest.class)
@@ -34,7 +37,7 @@ class TomcatNodeTest {
         }
     }
 
-    @Before
+    @BeforeMethod
     public void patchInSimulator() {
         TomcatNode.metaClass.startInLocation = { SimulatedLocation loc ->
             delegate.locations.add(loc)
@@ -49,7 +52,7 @@ class TomcatNodeTest {
         }
     }
 
-    @After
+    @AfterMethod
     public void ensureSimulatorIsShutDownForNextTest() {
         boolean wasFree = TomcatSimulator.reset();
         if (wasFree == false)

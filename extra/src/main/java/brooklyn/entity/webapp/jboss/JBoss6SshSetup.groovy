@@ -5,7 +5,6 @@ import brooklyn.location.basic.SshBasedJavaWebAppSetup
 import brooklyn.location.basic.SshMachineLocation
 
 public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
-    
     String version = "6.0.0.Final"
     String saveAs  = "jboss-as-distribution-$version"
     String installDir = "$installsBaseDir/jboss-$version"

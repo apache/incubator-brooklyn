@@ -1,14 +1,12 @@
 package brooklyn.util.task
 
+import static org.testng.Assert.*;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
 
-import junit.extensions.RepeatedTest;
-
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.testng.annotations.Test;
 
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.Task;
@@ -21,14 +19,14 @@ class SynchronizedExecutionTest {
         Object last = flags["last"]
         Object size = flags["size"]?:null
         
-        if (size!=null) Assert.assertTrue("expected size $size but it is ${data.size}; list is $data", data.size()==size)
+        if (size!=null) assertEquals(data.size(), size, "expected size $size but it is ${data.size}; list is $data")
         
         Object lo = null
         for (Object o in data) {
-            if (lo!=null) Assert.assertTrue("expected $o greater than $lo; list is $data", lo.compareTo(o) < 0)
+            if (lo!=null) assertTrue(lo.compareTo(o) < 0, "expected $o greater than $lo; list is $data")
             lo = o
         }
-        if (last!=null) Assert.assertTrue("expected last element $last but it is $lo; list is $data", lo==last)
+        if (last!=null) assertTrue(lo == last, "expected last element $last but it is $lo; list is $data")
     }
     
     @Test
@@ -55,7 +53,7 @@ class SynchronizedExecutionTest {
         mon.interrupt()
     }
 
-    @Test
+    @Test(enabled = false)
     public void runTwoSynchedTasks100Times() {
         100.times { runTwoSynchedTasks() }
     }

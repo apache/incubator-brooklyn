@@ -1,12 +1,12 @@
 package brooklyn.test
 
-import javax.management.MBeanInfo
-import sun.reflect.generics.reflectiveObjects.NotImplementedException
+import java.util.Map.Entry
+
 import javax.management.Attribute
 import javax.management.AttributeList
 import javax.management.DynamicMBean
 import javax.management.MBeanAttributeInfo
-import java.util.Map.Entry
+import javax.management.MBeanInfo
 
 /**
  * A quick-and-simple general-purpose implementation of DynamicMBean.
@@ -58,11 +58,10 @@ class GeneralisedDynamicMBean implements DynamicMBean {
     }
 
     Object invoke(String s, Object[] objects, String[] strings) {
-        throw new NotImplementedException()
+        throw new RuntimeException("Not Yet Implemented")
     }
 
     MBeanInfo getMBeanInfo() {
         return mBeanInfo
     }
-
 }

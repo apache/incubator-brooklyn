@@ -1,8 +1,9 @@
 package brooklyn.entity
 
-import static org.junit.Assert.*
+import static org.testng.Assert.*
 
-import org.junit.Test
+import org.testng.annotations.Test
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -17,8 +18,12 @@ import brooklyn.entity.basic.NamedParameter
 import brooklyn.management.ManagementContext
 import brooklyn.management.internal.LocalManagementContext
 
-
-class EffectorTest {
+/**
+ * Test the operation of the {@link Effector} implementations.
+ * 
+ * TODO clarify test purpose
+ */
+public class EffectorTest {
     private static final Logger log = LoggerFactory.getLogger(EffectorTest.class);
     // FIXME remove this when we have a process for setting logging...
 //    static {

@@ -1,25 +1,44 @@
 package brooklyn.util.task;
 
-import static org.junit.Assert.*
+import static org.testng.Assert.*
 
 import java.util.Map
 import java.util.concurrent.Callable
 import java.util.concurrent.CancellationException
-import java.util.concurrent.ConcurrentHashMap
 
-import org.junit.Test
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.testng.annotations.BeforeMethod
+import org.testng.annotations.Test
 
+import brooklyn.management.ExecutionManager
+import brooklyn.management.Task
 import brooklyn.util.internal.LanguageUtils
 
+/**
+ * Test the operation of the {@link BasicTask} class.
+ * 
+ * TODO clarify test purpose
+ */
 public class BasicTaskExecutionTest {
-    Map data = new ConcurrentHashMap()
+    private static final Logger log = LoggerFactory.getLogger(BasicTaskExecutionTest.class)
+ 
+    private ExecutionManager em
+    private Map data
+
+    @BeforeMethod
+    public void setUp() {
+        em = new BasicExecutionManager()
+        assertTrue em.allTasks.isEmpty()
+        data = Collections.synchronizedMap(new HashMap())
+        data.clear()
+    }
     
     @Test
     public void runSimpleBasicTask() {
         data.clear()
         BasicTask t = [ { data.put(1, "b") } ] 
         data.put(1, "a")
-        BasicExecutionManager em = []
         BasicTask t2 = em.submit tag:"A", t
         assertEquals("a", t.get())
         assertEquals("b", data.get(1))
@@ -29,7 +48,6 @@ public class BasicTaskExecutionTest {
     public void runSimpleRunnable() {
         data.clear()
         data.put(1, "a")
-        BasicExecutionManager em = []
         BasicTask t = em.submit tag:"A", new Runnable() { public void run() { data.put(1, "b") } }
         assertEquals(null, t.get())
         assertEquals("b", data.get(1))
@@ -39,7 +57,6 @@ public class BasicTaskExecutionTest {
     public void runSimpleCallable() {
         data.clear()
         data.put(1, "a")
-        BasicExecutionManager em = []
         BasicTask t = em.submit tag:"A", new Callable() { public Object call() { data.put(1, "b") } }
         assertEquals("a", t.get())
         assertEquals("b", data.get(1))
@@ -48,23 +65,17 @@ public class BasicTaskExecutionTest {
     @Test
     public void runBasicTaskWithWaits() {
         data.clear()
-        String status;
         BasicTask t = [ {
             synchronized(data) {
                 def result = data.put(1, "b")
                 data.notify()
-                ExecutionContext.getCurrentTask().blockingDetails = "here my friend"
                 data.wait()
-                ExecutionContext.getCurrentTask().blockingDetails = null
                 result
             }
         } ]
-        status = t.getStatusDetail(true)
         data.put(1, "a")
-        BasicExecutionManager em = []
         synchronized (data) {
             BasicTask t2 = em.submit tag:"A", t
-            status = t.getStatusDetail(true)
             assertEquals(t, t2)
             assertFalse(t.isDone())
             
@@ -73,28 +84,29 @@ public class BasicTaskExecutionTest {
             assertEquals("b", data.get(1))
             assertFalse(t.isDone())
             
-            status = t.getStatusDetail(true)  //just checking it doesn't throw an exception
-            status = t.getStatusDetail(false)
-            println "runBasicTaskWithWaits, BasicTask status:\n"+status
-            assertTrue(status.toLowerCase().contains("waiting"))
-            assertTrue(status.toLowerCase().contains("here my friend"))
+            log.debug "runBasicTaskWithWaits, BasicTask status: {}", t.getStatusDetail(false)
+            assertTrue(t.getStatusDetail(false).toLowerCase().contains("waiting"))
             
             data.notify()
         }
         assertEquals("a", t.get())
-        status = t.getStatusDetail(false)
     }
 
     @Test
     public void runMultipleBasicTasks() {
-        println "runMultipleBasicTasks"
         data.clear()
         data.put(1, 1)
         BasicExecutionManager em = []
         2.times { em.submit tag:"A", new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } }) }
         2.times { em.submit tag:"B", new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } }) }
         int total = 0;
-        em.getTaskTags().each { println "tag $it"; em.getTasksWithTag(it).each { println "  BasicTask $it, has "+it.get(); total += it.get() } }
+        em.getTaskTags().each {
+                log.debug "tag {}", it
+                em.getTasksWithTag(it).each {
+                    log.debug "BasicTask {}, has {}", it, it.get()
+                    total += it.get()
+                }
+            }
         assertEquals(10, total)
         //now that all have completed:
         assertEquals(5, data.get(1))
@@ -102,16 +114,17 @@ public class BasicTaskExecutionTest {
 
     @Test
     public void runMultipleBasicTasksMultipleTags() {
-        println "runMultipleBasicTasksWithMultipleTags"
         data.clear()
         data.put(1, 1)
-        BasicExecutionManager em = []
         em.submit tag:"A", new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } })
         em.submit tags:["A","B"], new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } })
         em.submit tags:["B","C"], new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } })
         em.submit tags:["D"], new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } })
         int total = 0;
-        em.getAllTasks().each { println "  BasicTask $it, has "+it.get(); total += it.get() }
+        em.getAllTasks().each { Task t ->
+                log.debug "BasicTask {}, has {}", t, t.get()
+                total += t.get()
+            }
         assertEquals(10, total)
         //now that all have completed:
         assertEquals(5, data.get(1))
@@ -127,52 +140,42 @@ public class BasicTaskExecutionTest {
 
     @Test
     public void cancelBeforeRun() {
-        BasicExecutionManager em = []
         BasicTask t = [ { synchronized (data) { data.notify(); data.wait() }; return 42 } ]
         t.cancel true
         assertTrue(t.isCancelled())
         assertTrue(t.isDone())
         assertTrue(t.isError())
-        assertFalse(t.isBegun())
         em.submit tag:"A", t
         try { t.get(); fail("get should have failed due to cancel"); } catch (CancellationException e) {}
         assertTrue(t.isCancelled())
         assertTrue(t.isDone())
         assertTrue(t.isError())
-        assertFalse(t.isBegun())
         
-        println "cancelBeforeRun status: "+t.getStatusDetail(false)
+        log.debug "cancelBeforeRun status: {}", t.getStatusDetail(false)
         assertTrue(t.getStatusDetail(false).toLowerCase().contains("cancel"))
     }
 
     @Test
     public void cancelDuringRun() {
-        BasicExecutionManager em = []
         BasicTask t = [ { synchronized (data) { data.notify(); data.wait() }; return 42 } ]
         assertFalse(t.isCancelled())
         assertFalse(t.isDone())
         assertFalse(t.isError())
-        assertFalse(t.isBegun())
         synchronized (data) {
             em.submit tag:"A", t
             data.wait()
-            assertTrue(t.isBegun())
-            assertFalse(t.isDone())
             t.cancel true
         }
         assertTrue(t.isCancelled())
         assertTrue(t.isError())
-        assertTrue(t.isBegun())
         try { t.get(); fail("get should have failed due to cancel"); } catch (CancellationException e) {}
         assertTrue(t.isCancelled())
         assertTrue(t.isDone())
         assertTrue(t.isError())
-        assertTrue(t.isBegun())
     }
     
     @Test
     public void cancelAfterRun() {
-        BasicExecutionManager em = []
         BasicTask t = [ { synchronized (data) { data.notify(); data.wait() }; return 42 } ]
         synchronized (data) {
             em.submit tag:"A", t
@@ -191,7 +194,6 @@ public class BasicTaskExecutionTest {
     
     @Test
     public void errorDuringRun() {
-        BasicExecutionManager em = []
         BasicTask t = [ { synchronized (data) { data.notify(); data.wait() }; throw new IllegalStateException("Aaargh"); } ]
         
         synchronized (data) {
@@ -209,13 +211,12 @@ public class BasicTaskExecutionTest {
         assertTrue(t.isError())
         assertTrue(t.isDone())
         
-        println "errorDuringRun status: "+t.getStatusDetail(false)
+        log.debug "errorDuringRun status: {}", t.getStatusDetail(false)
         assertTrue(t.getStatusDetail(false).contains("Aaargh"))
     }
 
     @Test
     public void fieldsSetForSimpleBasicTask() {
-        BasicExecutionManager em = []
         BasicTask t = [ { synchronized (data) { data.notify(); data.wait() }; return 42 } ]
         assertEquals(null, t.submittedByTask)
         assertEquals(-1, t.submitTimeUtc)
@@ -233,13 +234,12 @@ public class BasicTaskExecutionTest {
         assertEquals(42, t.get())
         assertTrue(t.endTimeUtc >= t.startTimeUtc)
 
-        println "BasicTask duration (millis): "+(t.endTimeUtc - t.submitTimeUtc)        
+        log.debug "BasicTask duration (millis): {}", (t.endTimeUtc - t.submitTimeUtc)        
     }
 
     @Test
     public void fieldsSetForBasicTaskSubmittedBasicTask() {
         //submitted BasicTask B is started by A, and waits for A to complete
-        BasicExecutionManager em = []
         BasicTask t = new BasicTask( displayName: "sample", description: "some descr", { em.submit tag:"B", {
                 assertEquals(45, em.getTasksWithTag("A").iterator().next().get());
                 46 };
@@ -247,8 +247,8 @@ public class BasicTaskExecutionTest {
         em.submit tag:"A", t
 
         t.blockUntilEnded()
-        
-        assertEquals(2, em.getAllTasks().size())
+ 
+        assertEquals em.getAllTasks().size(), 2
         
         BasicTask tb = em.getTasksWithTag("B").iterator().next();
         assertEquals( 46, tb.get() )
@@ -264,7 +264,6 @@ public class BasicTaskExecutionTest {
         assertTrue(submitter.submitTimeUtc <= tb.submitTimeUtc)
         assertTrue(submitter.endTimeUtc <= tb.endTimeUtc)
         
-        println "BasicTask $tb was submitted by $submitter"
+        log.debug "BasicTask {} was submitted by {}", tb, submitter
     }
-
 }

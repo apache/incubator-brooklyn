@@ -1,9 +1,12 @@
 package brooklyn.util.internal
 
-import org.junit.Test
+import org.testng.annotations.Test
 
-class SshJschToolTest {
-    @Test
+/**
+ * Test the operation of the {@link SshJschTool} utility class.
+ */
+public class SshJschToolTest {
+    @Test(groups = [ "Integration" ])
     public void testSshTool() {
         def t = new SshJschTool(host:'localhost')
         t.connect()

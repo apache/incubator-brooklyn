@@ -12,7 +12,7 @@ import brooklyn.management.SubscriptionManager
  * A {@link SubscriptionContext} for an entitiy or other user of a {@link SubscriptionManager}.
  */
 public class BasicSubscriptionContext implements SubscriptionContext {
-	
+    
     private SubscriptionManager manager;
     private Object subscriber;
     private Map flags;

@@ -51,9 +51,7 @@ public class LocalSubscriptionManager implements SubscriptionManager {
     protected ConcurrentMap<Object, Set<Subscription>> subscriptionsByToken = new ConcurrentHashMap<Object, Set<Subscription>>()
 	
     //REVIEW 1459 - add'l maps for efficient lookup
-    
-	public LocalSubscriptionManager(ExecutionManager em) { this.em = em }
-    
+        
     //REVIEW 1459 - removed "entities" predicate because at that generality it is hard to implement wide area; not used anyway
   
       

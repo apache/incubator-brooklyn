@@ -1,17 +1,34 @@
 package brooklyn.entity.webapp.tomcat
 
-import static org.junit.Assert.*
+import static org.testng.Assert.*
+
+import java.util.Map.Entry
+import java.util.concurrent.Semaphore
+
+import javax.management.Attribute
+import javax.management.AttributeList
+import javax.management.DynamicMBean
+import javax.management.MBeanAttributeInfo
+import javax.management.MBeanInfo
+import javax.management.MBeanServer
+import javax.management.MBeanServerFactory
+import javax.management.MBeanServerInvocationHandler
+import javax.management.ObjectName
+import javax.management.remote.JMXConnectorServer
+import javax.management.remote.JMXConnectorServerFactory
+import javax.management.remote.JMXServiceURL
+
+import mx4j.tools.naming.NamingServiceMBean
+import mx4j.tools.naming.NamingService
 
 import brooklyn.entity.Entity
 import brooklyn.location.Location
-import java.util.concurrent.Semaphore
 import brooklyn.test.JmxService
 
 /**
  * A class that simulates Tomcat for the purposes of testing.
  */
-class TomcatSimulator {
-
+public class TomcatSimulator {
     private static final int MAXIMUM_LOCKS = 1
 
     private static Semaphore lock = new Semaphore(MAXIMUM_LOCKS)

@@ -1,18 +1,25 @@
 package brooklyn.util.task;
 
-import static org.junit.Assert.*
+import static org.testng.Assert.*
 
 import java.util.Map
-import java.util.Set
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.TimeUnit
 
-import org.junit.Test
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.testng.annotations.Test
 
 import brooklyn.management.Task
 
+/**
+ * Test the operation of the {@link CompoundTask} class.
+ * 
+ * TODO clarify test purpose
+ */
 public class CompoundTaskExecutionTest {
-    Map data = new ConcurrentHashMap()
+    private static final Logger log = LoggerFactory.getLogger(CompoundTaskExecutionTest.class)
+ 
+    private Map data = new ConcurrentHashMap()
     
     @Test
     public void runSequenceTask() {
@@ -52,12 +59,12 @@ public class CompoundTaskExecutionTest {
         
         BasicExecutionManager em = []
         Task t = em.submit(tag:"A", new ParallelTask(
-            new SequentialTask((1..5).collect { int i -> { def ignored -> Thread.sleep((int)(100*Math.random())); println "running a$i"; vals.add("a$i"); } }),
-            new SequentialTask((1..5).collect({ int i -> { def ignored -> Thread.sleep((int)(100*Math.random())); println "running b$i"; vals.add("b$i"); } }))
+            new SequentialTask((1..5).collect { int i -> { def ignored -> Thread.sleep((int)(100*Math.random())); log.debug "running a{}", i; vals.add("a$i"); } }),
+            new SequentialTask((1..5).collect({ int i -> { def ignored -> Thread.sleep((int)(100*Math.random())); log.debug "running b{}", i; vals.add("b$i"); } }))
         ));
         def result = t.get()
         
-        println "tasks happened in order: "+vals
+        log.debug "tasks happened in order: {}", vals
         
         assertEquals(10, vals.size())
 
