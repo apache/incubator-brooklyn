@@ -4,6 +4,7 @@ import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.ConfigKey;
+import brooklyn.management.ManagementContext;
 
 public interface EntityLocal extends Entity {
     /**
@@ -60,4 +61,6 @@ public interface EntityLocal extends Entity {
      * Generates and emits an event (as though produced by this entity).
      */
     <T> void emit(Sensor<T> sensor, T value);
+    
+    ManagementContext getManagementContext();
 }
