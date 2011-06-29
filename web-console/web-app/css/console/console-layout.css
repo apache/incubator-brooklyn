@@ -29,7 +29,7 @@ body{
 	position:absolute;
 	top:128px;
 	bottom:2.3em;
-	overflow:auto;
+	overflow:hidden;
 	width:100%;
 
 }
@@ -64,7 +64,7 @@ body{
 }
 
 #searchInput{
-    width: 100%;
+    width: 92%;
     background-image: url("/brooklyn-web-console/images/brooklyn/magnifying-glass.gif");
     background-repeat:no-repeat;
     padding-left:20px;
