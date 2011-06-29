@@ -59,15 +59,6 @@ import com.google.gson.Gson
 public class MontereyNetwork extends AbstractEntity implements Startable { // FIXME , AbstractGroup
 
     private final Logger LOG = Loggers.getLogger(MontereyNetwork.class);
-    /*
-     * FIXME, work in progress
-     * 
-     * Poll for application name.
-     * Poll for status.
-     * Poll for workrates.
-     * Add/remove nodes/segments as they are created/deleted.
-     * Add/remove nodes as their type changes.
-     */
 
     private static final Logger logger = Loggers.getLogger(MontereyNetwork.class);
 
@@ -78,6 +69,8 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     /** up, down, etc? */
     public static final BasicAttributeSensor<String> STATUS = [ String, "monterey.status", "Status" ]
 
+    private static final int POLL_PERIOD = 1000;
+    
     private final Gson gson;
 
     private String installDir;
@@ -222,7 +215,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
             updateAttribute MANAGEMENT_URL, managementUrl
             updateAttribute NETWORK_ID, networkId.getId()
 
-            monitoringTask = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay({ updateAll() }, 1000, 1000, TimeUnit.MILLISECONDS)
+            monitoringTask = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay({ updateAll() }, POLL_PERIOD, POLL_PERIOD, TimeUnit.MILLISECONDS)
 
             LOG.info("Created new monterey network: "+connectionDetails);
 
@@ -344,11 +337,14 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         newNodes.each {
             MontereyLocation montereyLocation = nodeSummaries.get(it).getMontereyLocation();
             Location location = null; // FIXME create brooklyn location
-            nodes.put(it, new MontereyContainerNode(connectionDetails, it, location));
+            MontereyContainerNode containerNode = new MontereyContainerNode(connectionDetails, it, location);
+            addOwnedChild(containerNode);
+            nodes.put(it, containerNode);
         }
 
         removedNodes.each {
             nodes.get(it)?.dispose();
+            removeOwnedChild(it);
         }
 
 
@@ -359,13 +355,15 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         removedSegments.addAll(segments.keySet()); removedSegments.removeAll(segmentSummaries.keySet());
 
         newSegments.each {
-            segments.put(it, new Segment(connectionDetails, it));
+            Segment segment = new Segment(connectionDetails, it);
+            addOwnedChild(containerNode);
+            segments.put(it, segment);
         }
 
         removedSegments.each {
             segments.get(it)?.dispose();
+            removeOwnedChild(it);
         }
-
 
         // Notify "container nodes" (i.e. BasicNode in monterey classes jargon) of what node-types are running there
         nodeSummaries.values().each {
