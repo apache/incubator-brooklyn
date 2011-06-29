@@ -2,16 +2,21 @@ package brooklyn.entity.hello;
 
 import static org.testng.Assert.*
 
-import java.util.concurrent.Semaphore
-import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicReference
 
 import org.testng.annotations.Test
 
+import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
-import brooklyn.event.EventListener;
+import brooklyn.entity.basic.AbstractEntity
+import brooklyn.event.AttributeSensor
+import brooklyn.event.EventListener
 import brooklyn.event.SensorEvent
 import brooklyn.location.Location
+import brooklyn.management.SubscriptionHandle
+import brooklyn.management.Task
+import brooklyn.util.task.BasicTask
+import brooklyn.util.task.ExecutionContext
 
 /** tests effector invocation and a variety of sensor accessors and subscribers */
 class LocalEntitiesTest {
@@ -108,5 +113,83 @@ class LocalEntitiesTest {
         assertEquals((1..5), data)
         assertTrue(System.currentTimeMillis() - startTime < 2000)  //shouldn't have blocked for anywhere close to 2s
     }
+
+    public static <T> Task<T> attributeWhenReady(Entity source, AttributeSensor<T> sensor, Closure ready = { it }) {
+        new BasicTask<T>(description:"retrieving $source $sensor", { waitInTaskForAttributeReady(source, sensor, ready); } )    
+    }
+    private static <T> T waitInTaskForAttributeReady(Entity source, AttributeSensor<T> sensor, Closure ready) {
+        T v = ((AbstractEntity)source).getAttribute(sensor);
+        if (ready.call(v)) 
+            return v
+        BasicTask t = ExecutionContext.getCurrentTask();
+        if (t==null) throw new IllegalStateException("should only be invoked in a running task");
+//        println "waiting in $t with tags "+t.getTags()
+        AbstractEntity e = t.getTags().find { it in Entity }
+        if (e==null) throw new IllegalStateException("should only be invoked in a running task with an entity tag; $t has no entity tag ("+t.getStatusDetail(false)+")");
+        T[] data = new T[1]
+        SubscriptionHandle sub
+        try {
+            synchronized (data) {
+                sub = e.getSubscriptionContext().subscribe(source, sensor, {
+                    synchronized (data) {
+                        data[0] = it.value
+                        data.notifyAll()
+                    }
+                });
+                v = source.getAttribute(sensor)
+                while (!ready.call(v)) {
+                    t.setBlockingDetails("waiting for notification from subscription")
+                    data.wait()
+                    v = data[0]
+                }
+                return v
+            }
+        } finally {
+            e.getSubscriptionContext().unsubscribe(sub)
+        }
+    }
+    
+    @Test
+    public void testConfigSetFromAttribute() {
+        AbstractApplication a = new AbstractApplication() {}
+        a.setConfig(HelloEntity.MY_NAME, "Bob")
+        
+        HelloEntity dad = new HelloEntity(owner:a)
+        HelloEntity son = new HelloEntity(owner:dad)
+        
+        //config is inherited
+        assertEquals("Bob", a.getConfig(HelloEntity.MY_NAME))
+        assertEquals("Bob", dad.getConfig(HelloEntity.MY_NAME))
+        assertEquals("Bob", son.getConfig(HelloEntity.MY_NAME))
+        
+        //attributes are not
+        a.updateAttribute(HelloEntity.FAVOURITE_NAME, "Carl")
+        assertEquals("Carl", a.getAttribute(HelloEntity.FAVOURITE_NAME))
+        assertEquals(null, dad.getAttribute(HelloEntity.FAVOURITE_NAME))
+        
+        //config can be set from an attribute
+        son.setConfig(HelloEntity.MY_NAME, attributeWhenReady(dad, HelloEntity.FAVOURITE_NAME))
+        Object[] sonsConfig = new Object[1]
+        Thread t = new Thread( { 
+            sonsConfig[0] = son.getConfig(HelloEntity.MY_NAME);
+//            println "got config "+sonsConfig[0] 
+            synchronized (sonsConfig) { sonsConfig.notify() } 
+        } );
+        t.start();
+        //thread should be blocking, not finishing after 10s
+        Thread.sleep(10);
+        assertTrue(t.isAlive());
+        long startTime = System.currentTimeMillis();
+        synchronized (sonsConfig) {
+            assertEquals(null, sonsConfig[0]);
+            dad.updateAttribute(HelloEntity.FAVOURITE_NAME, "Dave");
+            sonsConfig.wait(1000)
+        }
+        //shouldn't have blocked for very long at all
+        assertTrue(System.currentTimeMillis() - startTime < 800)
+        //and sons config should now pick up the dad's attribute
+        assertEquals("Dave", sonsConfig[0])
+    }
+
 
 }
