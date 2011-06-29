@@ -47,13 +47,13 @@ public class SingleThreadedExecution implements TaskPreprocessor {
         order.add(task.id)
     }
     public void onStart(Map flags=[:], Task task) {
-        def next = order.peek();
-        while (next!=task.id) {
-            task.blockingDetails = "single threaded category, "+order.size()+" elements ahead of us when submitted"
-            synchronized (task.id) {
+        task.blockingDetails = "single threaded category, "+order.size()+" elements ahead of us when submitted"
+        synchronized (task.id) {
+            def next = order.peek();
+            while (next!=task.id) {
                 task.id.wait();
+                next = order.peek();
             }
-            next = order.peek();
         }
         task.blockingDetails = null
     }

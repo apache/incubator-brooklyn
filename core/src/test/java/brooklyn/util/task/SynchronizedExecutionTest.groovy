@@ -41,7 +41,7 @@ class SynchronizedExecutionTest {
         BasicExecutionManager em = []
         
         //for debug
-        Thread mon = new Thread({ try { Thread.sleep(1000); println "tasks for $em"; em.allTasks.each { println "  "+it.getStatusDetail(true); } } catch (Throwable t) {} })
+        Thread mon = new Thread({ try { Thread.sleep(1000); println "tasks for $em"; em.allTasks.each { println "$it: "+it.getStatusDetail(true); } } catch (Throwable t) {} })
         mon.start();
         
         em.setTaskPreprocessorForTag("category1", SingleThreadedExecution.class);
