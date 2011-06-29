@@ -521,8 +521,9 @@
                                 <phase>integration-test</phase>
                                 <configuration>
                                     <tasks>
-										<taskdef resource="net/sf/antcontrib/antcontrib.properties" classpathref="maven.plugin.classpath" />
-                                        
+                                        <taskdef resource="net/sf/antcontrib/antcontrib.properties"
+                                                classpathref="maven.plugin.classpath" />
+                                        <taskdef resource="tasks.properties" classpathref="maven.plugin.classpath" />
                                         <if>
                                             <available file="src/test" type="dir" />
                                             <then>
@@ -567,12 +568,6 @@
                                 <version>${testng.version}</version>
                             </dependency>
                         </dependencies>
-                    </plugin>
-                    <plugin>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <skip>true</skip>
-                        </configuration>
                     </plugin>
 				</plugins>
 			</build>
