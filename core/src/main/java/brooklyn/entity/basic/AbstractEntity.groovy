@@ -4,6 +4,7 @@ import java.lang.reflect.Field
 import java.util.Collection
 import java.util.Map
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.CopyOnWriteArraySet
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -53,7 +54,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     volatile Application application
     Collection<Location> locations = []
     Group owner
- 
+
     // following two perhaps belong in entity class in a registry;
     // but that is an optimization, and possibly wrong if we have dynamic sensors/effectors
     // (added only to this instance), however if we did we'd need to reset/update entity class
@@ -65,6 +66,8 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     
     protected transient ExecutionContext execution
     protected transient SubscriptionContext subscription
+    
+    final Collection<Entity> ownedChildren = new CopyOnWriteArraySet<Entity>();
  
     /**
      * The sensor-attribute values of this entity. Updating this map should be done
@@ -176,6 +179,20 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         getApplication()
     }
 
+    /**
+     * Adds the given entity as a member of this group <em>and</em> this group as one of the groups of the child;
+     * returns argument passed in, for convenience.
+     */
+    public Entity addOwnedChild(Entity child) {
+        child.setOwner(this)
+        ownedChildren.add(child)
+        child
+    }
+ 
+    public boolean removeOwnedChild(Entity child) {
+        ownedChildren.remove child
+    }
+    
     /**
      * Adds this as a member of the given group, registers with application if necessary
      */

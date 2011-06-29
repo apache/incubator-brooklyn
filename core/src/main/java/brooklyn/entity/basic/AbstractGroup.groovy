@@ -13,8 +13,6 @@ public abstract class AbstractGroup extends AbstractEntity implements Group {
 
     final Collection<Entity> members = new CopyOnWriteArraySet<Entity>();
 
-    final Collection<Entity> ownedChildren = new CopyOnWriteArraySet<Entity>();
-    
     /**
      * Adds the given entity as a member of this group <em>and</em> this group as one of the groups of the child;
      * returns argument passed in, for convenience.
@@ -27,19 +25,5 @@ public abstract class AbstractGroup extends AbstractEntity implements Group {
  
     public boolean removeMember(Entity child) {
         members.remove child
-    }
-    
-    /**
-     * Adds the given entity as a member of this group <em>and</em> this group as one of the groups of the child;
-     * returns argument passed in, for convenience.
-     */
-    public Entity addOwnedChild(Entity child) {
-        child.setOwner(this)
-        ownedChildren.add(child)
-        child
-    }
- 
-    public boolean removeOwnedChild(Entity child) {
-        ownedChildren.remove child
     }
 }
