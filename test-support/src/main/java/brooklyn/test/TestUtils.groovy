@@ -41,6 +41,7 @@ public class TestUtils {
         }
     }
 
+    /** Connects to the given HTTP URL and asserts that the response had status code 200. */
     public static boolean urlRespondsWithStatusCode200(String url) {
         def connection = connectToURL(url)
         int status = ((HttpURLConnection) connection).getResponseCode()
