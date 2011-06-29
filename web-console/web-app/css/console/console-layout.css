@@ -47,7 +47,7 @@ body{
 .layout-left-column{
 	background-color:white;
 	float: left;
-	width: 350px;
+	width: 270px;
 	height:100%;
 	border-right:solid;
 	border-width:medium;
@@ -55,8 +55,12 @@ body{
 
 .layout-main-content{
 	background-color:white;
-        float: left;
+    float: left;
 	margin-right:2px;
+}
+
+#searchBox{
+    margin: 2px
 }
 
 div#demo1{

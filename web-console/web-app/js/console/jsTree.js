@@ -10,7 +10,7 @@ Brooklyn.jsTree = (function(parent) {
                         "data" : function () {
                             return {
                                 //TODO Still need to link up UI component to corresponding parameters
-                                "name" : "",
+                                "name" : $("#searchInput").val(),
                                 "id" : "",
                                 "applicationID" : ""
                             };

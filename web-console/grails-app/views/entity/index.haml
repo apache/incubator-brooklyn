@@ -6,6 +6,9 @@
     %body{:onload=>"initTabs()"}
         .layout-middle-content
             .layout-left-column
+                %div{:id=>"searchBox"}
+                    %input{:type=>'text', :size=>37, :name=>'name', :id=>'searchInput'}
+                    %input{:type=>"button", :onclick=>"Brooklyn.jsTree.loadJstree()", :name=>"searchButton", :value=>"Search"}
                 %div{:id=>"demo1"}
             .layout-main-content
                 #tabs
