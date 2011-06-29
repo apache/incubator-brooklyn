@@ -56,7 +56,7 @@ public abstract class AbstractApplication extends AbstractGroup implements Appli
     }
     
     private volatile AbstractManagementContext mgmt = null;
-    public ManagementContext getManagementContext() {
+    public AbstractManagementContext getManagementContext() {
         AbstractManagementContext result = mgmt
         if (result==null) synchronized (this) {
             result = mgmt

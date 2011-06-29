@@ -10,6 +10,7 @@ import brooklyn.entity.Application
 import brooklyn.entity.Entity
 import brooklyn.management.ExecutionManager
 import brooklyn.management.ManagementContext
+import brooklyn.management.SubscriptionContext;
 import brooklyn.management.SubscriptionManager;
 import brooklyn.util.task.BasicExecutionManager
 import brooklyn.util.task.ExecutionContext
@@ -44,9 +45,9 @@ public class LocalManagementContext extends AbstractManagementContext {
     }
 
     public SubscriptionManager getSubscriptionManager() { return subscriptions; }
-
     public ExecutionManager getExecutionManager() { return execution; }
  
     public ExecutionContext getExecutionContext(Entity e) { return new ExecutionContext(tag: e, execution); }
+    public SubscriptionContext getSubscriptionContext(Entity e) { return new BasicSubscriptionContext(getSubscriptionManager(), e); }
     
 }

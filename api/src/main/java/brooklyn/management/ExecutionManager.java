@@ -69,4 +69,10 @@ XXX     * <li><em>synchId</em> - A string, or {@link Collection} of strings, rep
      * following types; either a {@link Closure}, {@link Runnable} or {@link Callable}.
      */
     public Task submit(Map flags, Task task);
+
+    //following also used, may be moved up to interface
+//    void setTaskPreprocessorForTag(Object tag, Class<? extends TaskPreprocessor> preprocessor);
+//    TaskPreprocessor getTaskPreprocessorForTag(Object tag);
+//    void setTaskPreprocessorForTag(Object tag, TaskPreprocessor preprocessor);
+
 }

@@ -158,27 +158,40 @@ public class BasicExecutionManager implements ExecutionManager {
     public TaskPreprocessor getTaskPreprocessorForTag(Object tag) { return preprocessorByTag.get(tag) }
     /** @see #setTaskPreprocessorForTag(Object, TaskPreprocessor) */
     public void setTaskPreprocessorForTag(Object tag, Class<? extends TaskPreprocessor> preprocessor) {
-        def old = getTaskPreprocessorForTag(tag)
-        if (old!=null) {
-            if (preprocessor.isAssignableFrom(old)) { 
-                /* already have such an instance */ 
-                return;
+        synchronized (preprocessorByTag) {
+            def old = getTaskPreprocessorForTag(tag)
+            if (old!=null) {
+                if (preprocessor.isAssignableFrom(old)) {
+                    /* already have such an instance */ 
+                    return;
+                }
+                //might support multiple in future...
+                throw new IllegalStateException("Not allowed to set multiple TaskProcessors on ExecutionManager tag (tag $tag, has $old, setting new $preprocessor)");
             }
-            //might support multiple in future...
-            throw new IllegalStateException("Not allowed to set multiple TaskProcessors on ExecutionManager tag (tag $tag, has $old, setting new $preprocessor)"); 
+            setTaskPreprocessorForTag(tag, preprocessor.newInstance())
         }
-        setTaskPreprocessorForTag(tag, preprocessor.newInstance())
     }
     /** defines a {@link TaskPreprocessor} to run on all subsequently submitted jobs with the given tag;
-     * max 1 allowed currently; resubmissions of same preprocessor (or preprocessor class) allowed; if changing, you must set null between the two */
+     * max 1 allowed currently; resubmissions of same preprocessor (or preprocessor class) allowed; 
+     * if changing, you must call {@link #clearTaskPreprocessorForTag(Object)} between the two */
     public void setTaskPreprocessorForTag(Object tag, TaskPreprocessor preprocessor) {
-        preprocessor.injectManager(this)
-        preprocessor.injectTag(tag)
+        synchronized (preprocessorByTag) {
+            preprocessor.injectManager(this)
+            preprocessor.injectTag(tag)
 
-        def old = preprocessorByTag.put(tag, preprocessor);
-        if (old && preprocessor && old!=preprocessor)
-            //might support multiple in future...
-            throw new IllegalStateException("Not allowed to set multiple TaskProcessors on ExecutionManager tag (tag $tag)"); 
+            def old = preprocessorByTag.put(tag, preprocessor);
+            if (old!=null && old!=preprocessor) {
+                //might support multiple in future...
+                throw new IllegalStateException("Not allowed to set multiple TaskProcessors on ExecutionManager tag (tag $tag)");
+            }
+        }
     }
-    
+    /** forgets that any preprocessor was associated with a tag; @see #setTaskPreprocessorForTag */ 
+    public boolean clearTaskPreprocessorForTag(Object tag) {
+        synchronized (preprocessorByTag) {
+            def old = preprocessorByTag.clear(tag)
+            return (old!=null)
+        }
+    }
+
 }

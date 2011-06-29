@@ -27,6 +27,7 @@ import brooklyn.management.Task
 import brooklyn.management.internal.BasicSubscriptionContext
 import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.task.ExecutionContext
+import brooklyn.management.internal.AbstractManagementContext
 
 /**
  * Default {@link Entity} implementation
@@ -208,7 +209,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         getApplication()?.id
     }
 
-    public ManagementContext getManagementContext() {
+    public AbstractManagementContext getManagementContext() {
         getApplication()?.getManagementContext()
     }
     
@@ -270,8 +271,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 
     protected synchronized SubscriptionContext getSubscriptionContext() {
         if (subscription) subscription;
-        subscription = new BasicSubscriptionContext(getManagementContext().getSubscriptionManager(), this)
-        //FIXME SUBS  needs to get subscription manager owned by ManagementContext, customised for this entity
+        subscription = getManagementContext().getSubscriptionContext(this);
     }
 
     protected synchronized ExecutionContext getExecutionContext() {
@@ -298,14 +298,14 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     
     /** @see EntityLocal#emit(Sensor, Object) */
     public <T> void emit(Sensor<T> sensor, T val) {
-        subscriptionContext.subscriptionManager.publish(sensor.newEvent(this, val))
+        subscriptionContext.publish(sensor.newEvent(this, val))
     }
 
     /** sensors available on this entity
      * <p>
      * NB no work has been done supporting changing this after initialization; see note on {@link #getEffectors()}
      */
-    public Map<String,Sensor<?>> getSensors(String sensorName) { sensors }
+    public Map<String,Sensor<?>> getSensors() { sensors }
     /** convenience for finding named sensor in {@link #getSensor()} map */
     public <T> Sensor<T> getSensor(String sensorName) { getSensors()[sensorName] }
 
