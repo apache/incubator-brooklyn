@@ -382,7 +382,7 @@
                                 </goals>
                                 <phase>test</phase>
                                 <configuration>
-                                    <tasks>
+                                    <target>
                                         <taskdef resource="testngtasks" classpathref="maven.plugin.classpath"/>
                                         <testng listeners="brooklyn.test.StatusListener" groups="${includedTestGroups}"
                                                 excludedGroups="${excludedTestGroups}"
@@ -391,8 +391,14 @@
                                             <sysproperty
                                                     key="java.util.logging.config.file"
                                                     value="src/test/resources/logging.properties"/>
+                                            <sysproperty
+                                                    key="net.sourceforge.cobertura.datafile"
+                                                    value="${project.build.directory}/cobertura/cobertura.ser"/>
+                                            <sysproperty
+                                                    key="cobertura.user.java.nio"
+                                                    value="false"/>
                                         </testng>
-                                    </tasks>
+                                    </target>
                                 </configuration>
                             </execution>
                         </executions>
@@ -550,6 +556,9 @@
                         <inherited>true</inherited>
                         <executions>
                             <execution>
+                                <id>run-tests</id>
+                            </execution>
+                            <execution>
                                 <id>instrument classes</id>
                                 <goals>
                                     <goal>run</goal>
@@ -569,13 +578,12 @@
                                                     <fileset erroronmissingdir="false" dir="target/classes"/>
                                                 </copy>
                                                 <cobertura-instrument datafile="target/cobertura/cobertura.ser"
-                                                                      todir="target/cobertura/coverage-classes">
+                                                                      todir="target/test-classes">
                                                     <fileset erroronmissingdir="false" dir="target/classes">
                                                         <include name="brooklyn/**/*.class"/>
                                                         <exclude name="brooklyn/**/*Test.class"/>
                                                     </fileset>
-                                                    <fileset erroronmissingdir="false"
-                                                             dir="target/cobertura/dependency-classes">
+                                                    <fileset erroronmissingdir="false" dir="target/cobertura/dependency-classes">
                                                         <include name="brooklyn/**/*.class"/>
                                                         <exclude name="brooklyn/**/*Test.class"/>
                                                     </fileset>
@@ -590,7 +598,7 @@
                                 <goals>
                                     <goal>run</goal>
                                 </goals>
-                                <phase>package</phase>
+                                <phase>post-integration-test</phase>
                                 <configuration>
                                     <target>
                                         <taskdef resource="net/sf/antcontrib/antcontrib.properties"
@@ -616,6 +624,21 @@
                         </executions>
                         <dependencies>
                             <dependency>
+                                <groupId>org.apache.ant</groupId>
+                                <artifactId>ant-launcher</artifactId>
+                                <version>1.8.2</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>org.apache.ant</groupId>
+                                <artifactId>ant</artifactId>
+                                <version>1.8.2</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>org.testng</groupId>
+                                <artifactId>testng</artifactId>
+                                <version>${testng.version}</version>
+                            </dependency>
+                            <dependency>
                                 <groupId>ant-contrib</groupId>
                                 <artifactId>ant-contrib</artifactId>
                                 <version>1.0b3</version>
@@ -625,16 +648,6 @@
                                         <artifactId>ant</artifactId>
                                     </exclusion>
                                 </exclusions>
-                            </dependency>
-                            <dependency>
-                                <groupId>org.apache.ant</groupId>
-                                <artifactId>ant-launcher</artifactId>
-                                <version>1.8.2</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>org.apache.ant</groupId>
-                                <artifactId>ant</artifactId>
-                                <version>1.8.2</version>
                             </dependency>
                             <dependency>
                                 <groupId>net.sourceforge.cobertura</groupId>
