@@ -1,6 +1,6 @@
 package brooklyn.util.internal
 
-import static org.junit.Assert.*
+import static org.testng.Assert.*
 
 import org.testng.annotations.Test
 
