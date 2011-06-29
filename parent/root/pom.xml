@@ -571,13 +571,13 @@
                                                 <cobertura-instrument datafile="target/cobertura/cobertura.ser"
                                                                       todir="target/cobertura/coverage-classes">
                                                     <fileset erroronmissingdir="false" dir="target/classes">
-                                                        <include name="org/overpaas/**/*.class"/>
-                                                        <exclude name="org/overpaas/**/*Test.class"/>
+                                                        <include name="brooklyn/**/*.class"/>
+                                                        <exclude name="brooklyn/**/*Test.class"/>
                                                     </fileset>
                                                     <fileset erroronmissingdir="false"
                                                              dir="target/cobertura/dependency-classes">
-                                                        <include name="org/overpaas/**/*.class"/>
-                                                        <exclude name="org/overpaas/**/*Test.class"/>
+                                                        <include name="brooklyn/**/*.class"/>
+                                                        <exclude name="brooklyn/**/*Test.class"/>
                                                     </fileset>
                                                 </cobertura-instrument>
                                             </then>
@@ -655,7 +655,7 @@
                                 <configuration>
                                     <classifier>sources</classifier>
                                     <includeScope>compile</includeScope>
-                                    <includeGroupIds>org.overpaas</includeGroupIds>
+                                    <includeGroupIds>brooklyn</includeGroupIds>
                                     <outputDirectory>
                                         ${project.build.directory}/cobertura/dependency-sources
                                     </outputDirectory>
@@ -670,7 +670,7 @@
                                 <configuration>
                                     <type>jar</type>
                                     <includeScope>compile</includeScope>
-                                    <includeGroupIds>org.overpaas</includeGroupIds>
+                                    <includeGroupIds>brooklyn</includeGroupIds>
                                     <outputDirectory>
                                         ${project.build.directory}/cobertura/dependency-classes
                                     </outputDirectory>
