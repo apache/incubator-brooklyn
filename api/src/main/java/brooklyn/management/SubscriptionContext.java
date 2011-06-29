@@ -26,6 +26,10 @@ public interface SubscriptionContext {
     
     /** @see SubscriptionManager#unsubscribe(SubscriptionHandle) */
     boolean unsubscribe(SubscriptionHandle subscriptionId);
+    
+    /** causes all subscriptions to be deregistered
+     * @return number of subscriptions removed */
+    int unsubscribeAll();
 
     /** @see SubscriptionManager#publish(SensorEvent) */
     <T> void publish(SensorEvent<T> event);

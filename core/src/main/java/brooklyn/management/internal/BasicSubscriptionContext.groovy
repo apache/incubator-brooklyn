@@ -46,7 +46,13 @@ public class BasicSubscriptionContext implements SubscriptionContext {
 
     /** Return the subscriptions associated with this context */
     public Set<SubscriptionHandle> getSubscriptions() {
-        return manager.getSubscriptionsBySubscriber(subscriber)
+        return manager.getSubscriptionsForSubscriber(subscriber)
+    }
+
+    public int unsubscribeAll() {
+        int count = 0;
+        getSubscriptions().each { count++; boolean result = unsubscribe(it); assert result }
+        count
     }
     
 }

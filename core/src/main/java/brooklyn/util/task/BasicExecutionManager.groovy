@@ -189,7 +189,7 @@ public class BasicExecutionManager implements ExecutionManager {
     /** forgets that any preprocessor was associated with a tag; @see #setTaskPreprocessorForTag */ 
     public boolean clearTaskPreprocessorForTag(Object tag) {
         synchronized (preprocessorByTag) {
-            def old = preprocessorByTag.clear(tag)
+            def old = preprocessorByTag.remove(tag)
             return (old!=null)
         }
     }

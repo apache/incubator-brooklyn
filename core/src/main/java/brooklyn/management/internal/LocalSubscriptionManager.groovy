@@ -149,7 +149,7 @@ public class LocalSubscriptionManager implements SubscriptionManager {
             for (Subscription s in subs) {
                 if (s.eventFilter!=null && !s.eventFilter.apply(event))
                     continue;
-                em.submit(tags: s.subscriber, { s.listener.onEvent(event) })
+                em.submit(tags: s.subscriberExecutionManagerTag, { s.listener.onEvent(event) })
             }
         }
     }    

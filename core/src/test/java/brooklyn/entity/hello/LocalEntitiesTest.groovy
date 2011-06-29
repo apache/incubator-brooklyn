@@ -64,7 +64,7 @@ class LocalEntitiesTest {
         a.start([new MockLocation()])
         
         AtomicReference<SensorEvent> evt = new AtomicReference()
-        a.getSubscriptionContext().subscribe(/* listener tag (typically an entity) */ null, h, HelloEntity.ITS_MY_BIRTHDAY, {
+        a.getSubscriptionContext().subscribe(h, HelloEntity.ITS_MY_BIRTHDAY, {
             SensorEvent e ->
             evt.set(e)
             synchronized (evt) {
@@ -82,6 +82,31 @@ class LocalEntitiesTest {
         assertNull(evt.get().value)
         assertTrue(System.currentTimeMillis() - startTime < 5000)  //shouldn't have blocked for all 5s
     }
-    
+
+    @Test
+    public void testSendMultipleInOrderThenUnsubscribe() {
+        AbstractApplication a = new AbstractApplication() {}
+        HelloEntity h = new HelloEntity(owner:a)
+        a.start([new MockLocation()])
+
+        List data = []       
+        a.getSubscriptionContext().subscribe(h, HelloEntity.AGE, { SensorEvent e -> 
+            data << e.value
+            Thread.sleep((int)(20*Math.random()))
+            println "notify on subscription received for "+e.value
+            synchronized (data) { data.notifyAll() } 
+        });
+
+        long startTime = System.currentTimeMillis()
+        synchronized (data) {
+            (1..5).each { h.setAge(it) }
+            (1..5).each { println "waiting on $it"; data.wait(2000); }
+        }
+        a.getSubscriptionContext().unsubscribeAll();
+        h.setAge(6)
+        Thread.sleep(50);
+        assertEquals((1..5), data)
+        assertTrue(System.currentTimeMillis() - startTime < 2000)  //shouldn't have blocked for anywhere close to 2s
+    }
 
 }
