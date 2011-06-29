@@ -503,7 +503,20 @@
             </properties>
 	    	<build>
 				<plugins>
-					<plugin>
+                    <plugin>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <inherited>true</inherited>
+                        <executions>
+                            <execution>
+                                <id>run-tests</id>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <phase>integration-test</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
 						<artifactId>maven-jar-plugin</artifactId>
 						<executions>
 							<execution>
