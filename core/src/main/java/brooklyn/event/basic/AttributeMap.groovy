@@ -61,7 +61,7 @@ public class AttributeMap {
     }
 
     private static Object getValueRecurse(Map node, Collection<String> path) {
-        Preconditions.checkNotNull(node, "node is null")
+        if (node==null) return null
         Preconditions.checkArgument(!path.isEmpty(), "field name is empty")
         
         def key = path[0]

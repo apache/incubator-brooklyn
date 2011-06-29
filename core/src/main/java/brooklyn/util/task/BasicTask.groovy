@@ -61,6 +61,8 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
     public final String description
 
     protected final Set tags = []
+    
+    String blockingDetails = null;
 
     //constructor needed to prevent confusion in groovy stubs when looking for default constructor (generics on Closure<T> breaks it if that is first constructor)
     protected BasicTask(Map flags=[:]) {
@@ -153,8 +155,12 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
     /** the thread where the task is running, if it is running */
     public Thread getThread() { thread }
         
-    // future --------------------
+    // basic fields --------------------
 
+    public boolean isSubmitted() {
+        return submitTimeUtc>=0
+    }
+    
     public boolean isBegun() {
         return startTimeUtc>=0
     }    
@@ -191,8 +197,8 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
         blockUntilStarted()
         result.get()
     }
-
-    String blockingDetails = null;
+    
+    // future value --------------------
     
     public synchronized void blockUntilStarted() {
         while (true) {

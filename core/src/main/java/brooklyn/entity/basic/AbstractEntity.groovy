@@ -273,12 +273,20 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 
     @Override
     public <T> T getConfig(ConfigKey<T> key) {
-        return inheritableConfig.get(key);
+        Object v = inheritableConfig.get(key);
+        //if config is set as a task, we wait for the task to complete
+        while (v in Task) { v = v.get() }
+        v
     }
 
     @Override
     public <T> T setConfig(ConfigKey<T> key, T val) {
-        return inheritableConfig.put(key, val);
+        T oldVal = inheritableConfig.put(key, val);
+        if ((val in Task) && (!(val.isSubmitted()))) {
+            //if config is set as a task, we make sure it starts running
+            getExecutionContext().submit(val)
+        }
+        oldVal
     }
 
     /** @see Entity#subscribe(Entity, Sensor, EventListener) */

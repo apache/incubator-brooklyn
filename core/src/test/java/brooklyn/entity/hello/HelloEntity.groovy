@@ -1,21 +1,26 @@
 package brooklyn.entity.hello;
 
 import static org.testng.Assert.*
-
 import brooklyn.entity.Effector
 import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.basic.EffectorInferredFromAnnotatedMethod
 import brooklyn.entity.basic.NamedParameter
 import brooklyn.event.Sensor
 import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.BasicSensor
+import brooklyn.event.basic.ConfigKey
 
-class HelloEntity extends AbstractGroup {
+
+public class HelloEntity extends AbstractGroup {
     public HelloEntity(Map flags=[:]) { super(flags) }
 
     /** records name of the person represented by this entity */
-    public static Sensor<String> MY_NAME = new BasicAttributeSensor<String>(String.class, "my.name");
-
+    public static ConfigKey<String> MY_NAME = new BasicConfigKey<String>(String.class, "my.name");
+    
+    /** this "person"'s favourite name */
+    public static Sensor<String> FAVOURITE_NAME = new BasicAttributeSensor<String>(String.class, "my.favourite.name");
+    
     /** records age (in years) of the person represented by this entity */
     public static Sensor<Integer> AGE = new BasicAttributeSensor<Integer>(Integer.class, "my.age");
     

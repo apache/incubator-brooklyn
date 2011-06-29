@@ -21,6 +21,9 @@ public interface Task<T> extends TaskStub, Future<T> {
     /** the thread where the task is running, if it is running */
     public Thread getThread();
 
+    /** whether task has been submitted; submitted tasks are normally expected to start running then complete,
+     * but unsubmitted tasks are sometimes passed around for someone else to submit them */
+    public boolean isSubmitted();
     /** whether task has started running; will remain true after normal completion or non-cancellation error;
      * will be true on cancel iff the thread did actually start */
     public boolean isBegun();

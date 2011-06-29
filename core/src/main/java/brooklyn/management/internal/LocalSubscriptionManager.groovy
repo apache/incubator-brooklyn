@@ -95,6 +95,7 @@ public class LocalSubscriptionManager implements SubscriptionManager {
                 ((BasicExecutionManager)em).setTaskPreprocessorForTag(s.subscriberExecutionManagerTag, SingleThreadedExecution.class);
             }
         }
+        s
     }
 
     /**
@@ -183,6 +184,6 @@ class Subscription<T> implements SubscriptionHandle {
     
     @Override
     public String toString() {
-        return "Subscription[$id;$subscriber@"+makeEntitySensorToken(producer,sensor)+"]"
+        return "Subscription[$id;$subscriber@"+LocalSubscriptionManager.makeEntitySensorToken(producer,sensor)+"]"
     }
 }

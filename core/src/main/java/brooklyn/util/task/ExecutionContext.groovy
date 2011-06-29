@@ -45,7 +45,8 @@ public class ExecutionContext implements Executor {
     /** @see #submit(Map, Runnable) */
     public Task submit(Task task) { submitInternal([:], task) }
     private Task submitInternal(Map m, Object r) {
-        if (m.tags==null) m.tags = []; m.tags << tags
+        if (m.tags==null) m.tags = []; 
+        m.tags.addAll(tags)
         def oldNTSC = m.newTaskStartCallback;
         m.newTaskStartCallback = { this.registerPerThreadExecutionContext(); if (oldNTSC!=null) oldNTSC.call(it); }
         def oldNTEC = m.newTaskEndCallback;
