@@ -1,7 +1,5 @@
 package brooklyn.location.basic
 
-import java.util.Map
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -74,11 +72,13 @@ public abstract class SshBasedJavaAppSetup {
      * TODO security!
      */
     public Map getJmxConfigOptions() {
+        claimJmxPort() // this sets jmxHost and jmxPort as side effects
         [
           'com.sun.management.jmxremote':'',
-          'com.sun.management.jmxremote.port':claimJmxPort(),
+          'com.sun.management.jmxremote.port': jmxPort,
           'com.sun.management.jmxremote.ssl':false,
-          'com.sun.management.jmxremote.authenticate':false
+          'com.sun.management.jmxremote.authenticate':false,
+          'java.rmi.server.hostname':jmxHost
         ]
     }
     protected String makeInstallScript(String ...lines) { 
