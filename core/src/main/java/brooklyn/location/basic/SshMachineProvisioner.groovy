@@ -6,16 +6,16 @@ package brooklyn.location.basic
 public class SshMachineProvisioner {
 
     private Object lock = new Object();
-    private List<InetAddress> available;
-    private List<InetAddress> inUse;
+    private List<SshMachine> available;
+    private List<SshMachine> inUse;
 
-    public SshMachineProvisioner(Collection<InetAddress> machines) {
+    public SshMachineProvisioner(Collection<SshMachine> machines) {
         available = new ArrayList(machines);
         inUse = new ArrayList();
     }
 
-    public static fromStringList(Collection<String> machines) {
-        return new SshMachineProvisioner(machines.collect { InetAddress.getByName() })
+    public static fromStringList(Collection<String> machines, String userName) {
+        return new SshMachineProvisioner(machines.collect { new SshMachine(InetAddress.getByName(), userName) })
     }
 
     public SshMachine obtain() {
@@ -23,8 +23,7 @@ public class SshMachineProvisioner {
         synchronized (lock) {
             if (available.empty)
                 return null;
-            InetAddress host = available.pop();
-            machine = new SshMachine(host);
+            machine = available.pop();
             inUse.add(machine);
         }
         return machine;
@@ -32,14 +31,14 @@ public class SshMachineProvisioner {
 
     public void release(SshMachine machine) {
         synchronized (lock) {
-            inUse.remove(machine.host);
-            available.add(machine.host);
+            inUse.remove(machine);
+            available.add(machine);
         }
     }
 }
 
 public class LocalhostSshMachineProvisioner extends SshMachineProvisioner {
     public LocalhostSshMachineProvisioner() {
-        super([ InetAddress.getByAddress((byte[])[127,0,0,1]) ])
+        super([ new SshMachine(InetAddress.getByAddress((byte[])[127,0,0,1])) ])
     }
 }
