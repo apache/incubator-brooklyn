@@ -41,7 +41,6 @@ public class TomcatNode extends JavaWebApp {
         jmxAdapter.addSensor(ERROR_COUNT, "Catalina:type=GlobalRequestProcessor,name=http-*", "errorCount")
         jmxAdapter.addSensor(REQUEST_COUNT, "Catalina:type=GlobalRequestProcessor,name=http-*", "requestCount")
         jmxAdapter.addSensor(TOTAL_PROCESSING_TIME, "Catalina:type=GlobalRequestProcessor,name=http-*", "processingTime")
-        jmxAdapter.addSensor(REQUESTS_PER_SECOND, { computeReqsPerSec() }, 1000L)
     }
     
     public void waitForHttpPort() {
@@ -78,34 +77,6 @@ public class TomcatNode extends JavaWebApp {
                 if (connected) log.info "jmx connected"
                 connected
             })
-    }
-    
-    private void computeReqsPerSec() {
-        def reqs = jmxAdapter.getAttributes("Catalina:type=GlobalRequestProcessor,name=\"*\"")
-        log.trace "running computeReqsPerSec - {}", reqs
- 
-        def curTimestamp = System.currentTimeMillis()
-        def curCount = reqs?.requestCount ?: 0
-        
-        // TODO Andrew reviewing/changing?
-        def prevTimestamp = tempWorkings['tmp.reqs.timestamp'] ?: 0
-        def prevCount = tempWorkings['tmp.reqs.count'] ?: 0
-        tempWorkings['tmp.reqs.timestamp'] = curTimestamp
-        tempWorkings['tmp.reqs.count'] = curCount
-        log.trace "previous data {} at {}, current {} at {}", prevCount, prevTimestamp, curCount, curTimestamp
-        
-        // Calculate requests per second
-        double diff = curCount - prevCount
-        long dt = curTimestamp - prevTimestamp
-        
-        if (dt <= 0 || dt > 60*1000) {
-            diff = -1; 
-        } else {
-            diff = ((double) 1000.0 * diff) / dt
-        }
-        int rps = (int) Math.round(diff)
-        log.trace "computed $rps reqs/sec over $dt millis"
-        updateAttribute(REQUESTS_PER_SECOND, rps)
     }
     
     @Override

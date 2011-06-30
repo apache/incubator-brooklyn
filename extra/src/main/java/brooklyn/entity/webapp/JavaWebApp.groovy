@@ -76,6 +76,8 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
         
         jmxAdapter = new JmxSensorAdapter(this, 60*1000)
         initJmxSensors()
+        jmxAdapter.addSensor(REQUESTS_PER_SECOND, { computeReqsPerSec() }, 1000L)
+        
         waitForHttpPort()
         
         if (this.war) {
@@ -126,6 +128,34 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
     
     public void deploy(String file) {
         getSshBasedSetup(this.machine).deploy(new File(file))
+    }
+    
+    public void computeReqsPerSec() {
+        def reqs = getAttribute(REQUEST_COUNT)
+        log.trace "running computeReqsPerSec - {}", reqs
+ 
+        def curTimestamp = System.currentTimeMillis()
+        def curCount = reqs?.requestCount ?: 0
+        
+        // TODO Andrew reviewing/changing?
+        def prevTimestamp = tempWorkings['tmp.reqs.timestamp'] ?: 0
+        def prevCount = tempWorkings['tmp.reqs.count'] ?: 0
+        tempWorkings['tmp.reqs.timestamp'] = curTimestamp
+        tempWorkings['tmp.reqs.count'] = curCount
+        log.trace "previous data {} at {}, current {} at {}", prevCount, prevTimestamp, curCount, curTimestamp
+        
+        // Calculate requests per second
+        double diff = curCount - prevCount
+        long dt = curTimestamp - prevTimestamp
+        
+        if (dt <= 0 || dt > 60*1000) {
+            diff = -1;
+        } else {
+            diff = ((double) 1000.0 * diff) / dt
+        }
+        int rps = (int) Math.round(diff)
+        log.trace "computed $rps reqs/sec over $dt millis"
+        updateAttribute(REQUESTS_PER_SECOND, rps)
     }
     
     @Override
