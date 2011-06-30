@@ -61,6 +61,7 @@ body{
 #searchBox{
     margin-bottom: 3px;
     padding: 3px;
+    height:5%;
 }
 
 #searchInput{
@@ -72,7 +73,9 @@ body{
 
 div#demo1{
 	overflow:auto;
-	height:100%;
+	height:90%;
+    padding:3px;
+    margin-bottom:3px;
 }
 
 h1#brooklyn-header{
