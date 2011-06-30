@@ -117,7 +117,7 @@ class LocalEntitiesTest {
     }
 
     public static <T> Task<T> attributeWhenReady(Entity source, AttributeSensor<T> sensor, Closure ready = { it }) {
-        new BasicTask<T>(description:"retrieving $source $sensor", { waitInTaskForAttributeReady(source, sensor, ready); } )    
+        new BasicTask<T>(tag:"attributeWhenReady", displayName:"retrieving $source $sensor", { waitInTaskForAttributeReady(source, sensor, ready); } )    
     }
     private static <T> T waitInTaskForAttributeReady(Entity source, AttributeSensor<T> sensor, Closure ready) {
         T v = ((AbstractEntity)source).getAttribute(sensor);
@@ -140,7 +140,7 @@ class LocalEntitiesTest {
                 });
                 v = source.getAttribute(sensor)
                 while (!ready.call(v)) {
-                    t.setBlockingDetails("waiting for notification from subscription")
+                    t.setBlockingDetails("waiting for notification from subscription on $source $sensor")
                     data.wait()
                     v = data[0]
                 }
@@ -183,7 +183,10 @@ class LocalEntitiesTest {
         assertEquals(null, dad.getAttribute(HelloEntity.FAVOURITE_NAME))
         
         //config can be set from an attribute
-        son.setConfig(HelloEntity.MY_NAME, attributeWhenReady(dad, HelloEntity.FAVOURITE_NAME))
+        son.setConfig(HelloEntity.MY_NAME, attributeWhenReady(dad, HelloEntity.FAVOURITE_NAME
+            /* third param is closure; defaults to groovy truth (see google), but could be e.g.
+               , { it!=null && it.length()>0 && it!="Jebediah" }
+             */ ));
         Object[] sonsConfig = new Object[1]
         Thread t = new Thread( { 
             sonsConfig[0] = son.getConfig(HelloEntity.MY_NAME);
@@ -192,11 +195,13 @@ class LocalEntitiesTest {
         } );
         t.start();
         //thread should be blocking, not finishing after 10ms
-        Thread.sleep(10);
+        Thread.sleep(50);
         assertTrue(t.isAlive());
         long startTime = System.currentTimeMillis();
         synchronized (sonsConfig) {
             assertEquals(null, sonsConfig[0]);
+            for (Task tt in dad.getExecutionContext().getTasks()) { println "task at dad:  $tt, "+tt.getStatusDetail(false) }
+            for (Task tt in son.getExecutionContext().getTasks()) { println "task at son:  $tt, "+tt.getStatusDetail(false) }
             dad.updateAttribute(HelloEntity.FAVOURITE_NAME, "Dan");
             sonsConfig.wait(1000)
         }
