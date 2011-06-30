@@ -12,7 +12,7 @@ public class ExecutionContext implements Executor {
 
     static final ThreadLocal<ExecutionContext> perThreadExecutionContext = new ThreadLocal<ExecutionContext>()
     
-    public static ExecutionManager getCurrentExecutionContext() { return perThreadExecutionContext.get() }
+    public static ExecutionContext getCurrentExecutionContext() { return perThreadExecutionContext.get() }
     public static Task getCurrentTask() { return BasicExecutionManager.getCurrentTask() }
 
     final ExecutionManager executionManager;

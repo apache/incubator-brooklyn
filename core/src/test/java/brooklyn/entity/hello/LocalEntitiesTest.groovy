@@ -6,6 +6,8 @@ import java.util.concurrent.atomic.AtomicReference
 
 import org.testng.annotations.Test
 
+import com.google.common.base.Function;
+
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractEntity
@@ -149,6 +151,19 @@ class LocalEntitiesTest {
         }
     }
     
+    /** waits for the result of first parameter, then applies the function in the second parameter to it */ 
+    public static <U,T> Task<T> transform(Task<U> f, Function<U,T> g) {
+        new BasicTask<T>( {
+            if (!f.isSubmitted()) {
+                ExecutionContext.getCurrentExecutionContext().submit(f);
+            } 
+            g.apply(f.get())
+        } );
+    }
+    public static <U,T> Task<T> transform(Task<U> f, Closure g) {
+        transform(f, g as Function)
+    }
+    
     @Test
     public void testConfigSetFromAttribute() {
         AbstractApplication a = new AbstractApplication() {}
@@ -176,19 +191,23 @@ class LocalEntitiesTest {
             synchronized (sonsConfig) { sonsConfig.notify() } 
         } );
         t.start();
-        //thread should be blocking, not finishing after 10s
+        //thread should be blocking, not finishing after 10ms
         Thread.sleep(10);
         assertTrue(t.isAlive());
         long startTime = System.currentTimeMillis();
         synchronized (sonsConfig) {
             assertEquals(null, sonsConfig[0]);
-            dad.updateAttribute(HelloEntity.FAVOURITE_NAME, "Dave");
+            dad.updateAttribute(HelloEntity.FAVOURITE_NAME, "Dan");
             sonsConfig.wait(1000)
         }
         //shouldn't have blocked for very long at all
         assertTrue(System.currentTimeMillis() - startTime < 800)
         //and sons config should now pick up the dad's attribute
-        assertEquals("Dave", sonsConfig[0])
+        assertEquals("Dan", sonsConfig[0])
+        
+        //and config can have transformations
+        son.setConfig(HelloEntity.MY_NAME, transform(attributeWhenReady(dad, HelloEntity.FAVOURITE_NAME), { it+it[-1]+"y" }))
+        assertEquals("Danny", son.getConfig(HelloEntity.MY_NAME))
     }
 
 
