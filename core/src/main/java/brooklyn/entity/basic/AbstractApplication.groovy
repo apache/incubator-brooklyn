@@ -16,12 +16,15 @@ import brooklyn.util.internal.EntityStartUtils
 import brooklyn.util.internal.SerializableObservableMap
 
 public abstract class AbstractApplication extends AbstractGroup implements Application {
+    
+    final ObservableMap entities = new SerializableObservableMap(new ConcurrentHashMap<String,Entity>());
+    private volatile AbstractManagementContext mgmt = null;
+    private boolean deployed = false
+    
     public AbstractApplication(Map properties=[:]) {
         super(properties)
     }
     
-    final ObservableMap entities = new SerializableObservableMap(new ConcurrentHashMap<String,Entity>());
- 
     public void registerEntity(Entity entity) {
         entities.put entity.id, entity
     }
@@ -53,9 +56,9 @@ public abstract class AbstractApplication extends AbstractGroup implements Appli
     public void start(Collection<Location> locs) {
         getManagementContext()
         EntityStartUtils.startGroup this, locs
+        deployed = true
     }
     
-    private volatile AbstractManagementContext mgmt = null;
     public AbstractManagementContext getManagementContext() {
         AbstractManagementContext result = mgmt
         if (result==null) synchronized (this) {
@@ -73,4 +76,8 @@ public abstract class AbstractApplication extends AbstractGroup implements Appli
         result
     }
     
+    public boolean isDeployed() {
+        // TODO How to tell if we're deployed? What if sub-class overrides start 
+        return deployed
+    }
 }

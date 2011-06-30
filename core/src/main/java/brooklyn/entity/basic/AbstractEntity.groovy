@@ -99,14 +99,15 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
      * configuration parameters are shared and made accessible to the "owned children" of this
      * entity.
      */
-    protected final Map<ConfigKey,Object> inheritableConfig = [:]
+    protected final Map<ConfigKey,Object> ownConfig = [:]
+    protected final Map<ConfigKey,Object> inheritedConfig = [:]
     
     public AbstractEntity(Map flags=[:]) {
         this.@skipCustomInvokeMethod.set(true)
         Entity suppliedOwner = flags.remove('owner')
-        Map<ConfigKey,Object> suppliedInheritableConfig = flags.remove('inheritableConfig')
+        Map<ConfigKey,Object> suppliedOwnConfig = flags.remove('config')
 
-        if (suppliedInheritableConfig) inheritableConfig.putAll(suppliedInheritableConfig)
+        if (suppliedOwnConfig) ownConfig.putAll(suppliedOwnConfig)
         
         //place named-arguments into corresponding fields if they exist, otherwise put into attributes map
         this.attributes << LanguageUtils.setFieldsFromMap(this, flags)
@@ -166,11 +167,8 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         
         owner = e
         ((AbstractEntity)e).addOwnedChild(this)
-        owner.inheritableConfig?.entrySet().each { Map.Entry<ConfigKey,Object> entry ->
-            if (!inheritableConfig.containsKey(entry.getKey())) {
-                inheritableConfig.put(entry.getKey(), entry.getValue())
-            }
-        }
+        inheritedConfig.putAll(owner.getAllConfig())
+        
         getApplication()
     }
 
@@ -292,7 +290,10 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 
     @Override
     public <T> T getConfig(ConfigKey<T> key) {
-        Object v = inheritableConfig.get(key);
+        // FIXME What about inherited task in config?!
+        Object v = ownConfig.get(key);
+        v = v ?: inheritedConfig.get(key)
+
         //if config is set as a task, we wait for the task to complete
         while (v in Task) { v = v.get() }
         v
@@ -300,12 +301,41 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 
     @Override
     public <T> T setConfig(ConfigKey<T> key, T val) {
-        T oldVal = inheritableConfig.put(key, val);
+        // TODO Is this the best idea, for making life easier for brooklyn coders when supporting changing config?
+        if (application?.isDeployed()) throw new IllegalStateException("Cannot set configuration $key on active entity $this")
+        
+        T oldVal = ownConfig.put(key, val);
         if ((val in Task) && (!(val.isSubmitted()))) {
             //if config is set as a task, we make sure it starts running
             getExecutionContext().submit(val)
         }
+        
+        ownedChildren.each {
+            it.refreshInheritedConfig()
+        }
+        
         oldVal
+    }
+
+    public void refreshInheritedConfig() {
+        if (owner != null) {
+            inheritedConfig.putAll(owner.getAllConfig())
+        } else {
+            inheritedConfig.clear();
+        }
+        
+        ownedChildren.each {
+            it.refreshInheritedConfig()
+        }
+    }
+    
+    @Override
+    public Map<ConfigKey,Object> getAllConfig() {
+        // FIXME What about task-based config?!
+        Map<ConfigKey,Object> result = [:]
+        result.putAll(ownConfig);
+        result.putAll(inheritedConfig);
+        return result.asImmutable()
     }
 
     /** @see Entity#subscribe(Entity, Sensor, EventListener) */
