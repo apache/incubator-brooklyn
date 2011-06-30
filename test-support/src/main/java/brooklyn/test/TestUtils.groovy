@@ -2,7 +2,6 @@ package brooklyn.test
 
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
-
 import groovy.time.TimeDuration
 
 import java.net.URLConnection
@@ -89,8 +88,8 @@ public class TestUtils {
         boolean abortOnException = flags.abortOnException ?: false
         boolean abortOnError = flags.abortOnError ?: true
         boolean useGroovyTruth = flags.useGroovyTruth ?: false
-        TimeDuration timeout = flags.timeout ?: 30000
-        TimeDuration period = flags.period ?: 500
+        TimeDuration timeout = flags.timeout ?: new TimeDuration(0, 0, 0, 30, 0)
+        TimeDuration period = flags.period ?: new TimeDuration(0, 0, 0, 5, 0)
         int maxAttempts = flags.maxAttempts ?: Integer.MAX_VALUE
         try {
             Throwable lastException = null;
