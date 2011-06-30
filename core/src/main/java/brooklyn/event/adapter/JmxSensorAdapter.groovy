@@ -168,10 +168,11 @@ public class JmxSensorAdapter implements  SensorAdapter {
      */
     public Object getAttribute(ObjectName objectName, String attribute) {
         Set<ObjectInstance> beans = mbsc.queryMBeans(objectName, null)
-        if (beans.isEmpty() || beans.size() > 1) return null // TODO error reporting
+        if (beans.isEmpty() || beans.size() > 1) {
+            log.warn("JMX object name query returned ${beans.size()} values. Object name was: ${objectName.getCanonicalName()}")
+            return null
+        }
         ObjectInstance bean = beans.find { true }
-        // MBeanInfo info = mbsc.getMBeanInfo(bean.getObjectName())
-        // log.trace "jmx attributes  are: " + info.getAttributes().collect({ it.name }).join(", ")
         def result = mbsc.getAttribute(bean.getObjectName(), attribute)
         log.trace "got value {} for jmx attribute {}.{}", result, objectName.canonicalName, attribute
         return result

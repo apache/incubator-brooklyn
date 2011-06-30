@@ -38,9 +38,9 @@ public class TomcatNode extends JavaWebApp {
     }
     
     public void initJmxSensors() {
-        jmxAdapter.addSensor(ERROR_COUNT, "Catalina:type=GlobalRequestProcessor,name=http-*", "errorCount")
-        jmxAdapter.addSensor(REQUEST_COUNT, "Catalina:type=GlobalRequestProcessor,name=http-*", "requestCount")
-        jmxAdapter.addSensor(TOTAL_PROCESSING_TIME, "Catalina:type=GlobalRequestProcessor,name=http-*", "processingTime")
+        jmxAdapter.addSensor(ERROR_COUNT, "Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "errorCount")
+        jmxAdapter.addSensor(REQUEST_COUNT, "Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "requestCount")
+        jmxAdapter.addSensor(TOTAL_PROCESSING_TIME, "Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "processingTime")
     }
     
     public void waitForHttpPort() {

@@ -130,12 +130,10 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
         getSshBasedSetup(this.machine).deploy(new File(file))
     }
     
-    public void computeReqsPerSec() {
-        def reqs = getAttribute(REQUEST_COUNT)
-        log.trace "running computeReqsPerSec - {}", reqs
+    protected void computeReqsPerSec() {
  
         def curTimestamp = System.currentTimeMillis()
-        def curCount = reqs?.requestCount ?: 0
+        def curCount = getAttribute(REQUEST_COUNT) ?: 0
         
         // TODO Andrew reviewing/changing?
         def prevTimestamp = tempWorkings['tmp.reqs.timestamp'] ?: 0
