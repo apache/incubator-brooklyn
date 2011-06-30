@@ -19,8 +19,8 @@ import brooklyn.util.internal.EntityStartUtils
  * initialSize property determines initial size when started (defaults to 1)
  */
 public abstract class Cluster extends Tier implements Startable {
-    public Cluster(Map props=[:], Group owner) {
-        super(props, owner)
+    public Cluster(Map props=[:]) {
+        super(props)
     }
     
     
