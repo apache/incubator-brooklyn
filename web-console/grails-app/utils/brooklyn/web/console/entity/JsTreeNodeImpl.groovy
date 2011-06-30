@@ -12,7 +12,7 @@ public class JsTreeNodeImpl implements JsTreeNode {
     public transient boolean matched;
 
     public JsTreeNodeImpl(Entity e, Boolean matched=false) {
-        this(e.id, e.displayName, e.entityClass?.name ?: "$e [no entity class]", matched)
+        this(e.id, e.displayName, (e.entityClass?.name) ?: "$e [no entity class]", matched)
     }
 
     public JsTreeNodeImpl(String id, String name, String clazz, Boolean matched) {
