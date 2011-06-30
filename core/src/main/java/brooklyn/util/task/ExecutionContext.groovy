@@ -30,7 +30,7 @@ public class ExecutionContext implements Executor {
     }
 
     /** returns tasks started by this context (or tasks which have all the tags on this object) */
-    public Set<Task> getTasks() { executionManager.getTasksWithAllTags(taskBucket) }
+    public Set<Task> getTasks() { executionManager.getTasksWithAllTags(tags) }
 
     //these conform with ExecutorService but we do not want to expose shutdown etc here
     /** submits the given runnable/callable/task for execution (in a separate thread);
