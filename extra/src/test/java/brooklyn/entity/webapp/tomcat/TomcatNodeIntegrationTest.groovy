@@ -97,7 +97,8 @@ public class TomcatNodeIntegrationTest {
         tc.start([ new SshMachineLocation(name:'london', provisioner:new LocalhostSshMachineProvisioner()) ])
         executeUntilSucceedsWithShutdown(tc, {
                 def activityValue = tc.getAttribute(TomcatNode.REQUESTS_PER_SECOND)
-                if (activityValue == null || activityValue == -1) return new BooleanWithMessage(false, "activity not set yet ($activityValue)")
+                if (activityValue == null || activityValue == -1) 
+                    return new BooleanWithMessage(false, "activity not set yet ($activityValue)")
 
                 assertEquals Integer, activityValue.class
                 assertEquals 0, activityValue
