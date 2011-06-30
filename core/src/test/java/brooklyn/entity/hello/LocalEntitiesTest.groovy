@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicReference
 import org.testng.annotations.Test
 
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
@@ -19,6 +20,8 @@ import brooklyn.management.SubscriptionHandle
 import brooklyn.management.Task
 import brooklyn.util.task.BasicTask
 import brooklyn.util.task.ExecutionContext
+
+import static brooklyn.event.basic.DependentConfiguration.*;
 
 /** tests effector invocation and a variety of sensor accessors and subscribers */
 class LocalEntitiesTest {
@@ -100,14 +103,18 @@ class LocalEntitiesTest {
         a.getSubscriptionContext().subscribe(h, HelloEntity.AGE, { SensorEvent e -> 
             data << e.value
             Thread.sleep((int)(20*Math.random()))
-            println "notify on subscription received for "+e.value
-            synchronized (data) { data.notifyAll() } 
+            synchronized (data) { 
+                println "Thread "+Thread.currentThread()+" notify on subscription received for "+e.value+", data is "+data
+                data.notifyAll()
+                data.wait(2000) 
+            } 
         });
-
+        //need for notify-then-wait (above) and wait-then-notify (below) is ugly but simplest way (i could find) 
+        //to ensure they are in lock step; otherwise above might notify twice in succession, below not successful at resuming in between   
         long startTime = System.currentTimeMillis()
         synchronized (data) {
             (1..5).each { h.setAge(it) }
-            (1..5).each { println "waiting on $it"; data.wait(2000); }
+            (1..5).each { println "Thread "+Thread.currentThread()+" waiting on $it"; data.wait(2000); data.notifyAll(); }
         }
         a.getSubscriptionContext().unsubscribeAll();
         h.setAge(6)
@@ -116,54 +123,6 @@ class LocalEntitiesTest {
         assertTrue(System.currentTimeMillis() - startTime < 2000)  //shouldn't have blocked for anywhere close to 2s
     }
 
-    public static <T> Task<T> attributeWhenReady(Entity source, AttributeSensor<T> sensor, Closure ready = { it }) {
-        new BasicTask<T>(tag:"attributeWhenReady", displayName:"retrieving $source $sensor", { waitInTaskForAttributeReady(source, sensor, ready); } )    
-    }
-    private static <T> T waitInTaskForAttributeReady(Entity source, AttributeSensor<T> sensor, Closure ready) {
-        T v = ((AbstractEntity)source).getAttribute(sensor);
-        if (ready.call(v)) 
-            return v
-        BasicTask t = ExecutionContext.getCurrentTask();
-        if (t==null) throw new IllegalStateException("should only be invoked in a running task");
-//        println "waiting in $t with tags "+t.getTags()
-        AbstractEntity e = t.getTags().find { it in Entity }
-        if (e==null) throw new IllegalStateException("should only be invoked in a running task with an entity tag; $t has no entity tag ("+t.getStatusDetail(false)+")");
-        T[] data = new T[1]
-        SubscriptionHandle sub
-        try {
-            synchronized (data) {
-                sub = e.getSubscriptionContext().subscribe(source, sensor, {
-                    synchronized (data) {
-                        data[0] = it.value
-                        data.notifyAll()
-                    }
-                });
-                v = source.getAttribute(sensor)
-                while (!ready.call(v)) {
-                    t.setBlockingDetails("waiting for notification from subscription on $source $sensor")
-                    data.wait()
-                    v = data[0]
-                }
-                return v
-            }
-        } finally {
-            e.getSubscriptionContext().unsubscribe(sub)
-        }
-    }
-    
-    /** waits for the result of first parameter, then applies the function in the second parameter to it */ 
-    public static <U,T> Task<T> transform(Task<U> f, Function<U,T> g) {
-        new BasicTask<T>( {
-            if (!f.isSubmitted()) {
-                ExecutionContext.getCurrentExecutionContext().submit(f);
-            } 
-            g.apply(f.get())
-        } );
-    }
-    public static <U,T> Task<T> transform(Task<U> f, Closure g) {
-        transform(f, g as Function)
-    }
-    
     @Test
     public void testConfigSetFromAttribute() {
         AbstractApplication a = new AbstractApplication() {}
