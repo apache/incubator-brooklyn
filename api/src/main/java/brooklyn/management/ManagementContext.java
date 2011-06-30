@@ -6,17 +6,16 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 
 /**
- * This is the entry point for accessing and interacting with Brooklyn.
- * 
- * For example, policies and the web-app can use this to retrieve the desired entities.  
+ * This is the entry point for accessing and interacting with a realm of applications and their entities in Brooklyn.
  * <p>
- * It may refer to several applications, and to all the entities within those applications.
- * 
- * @author aled
+ * For example, policies and the management console(s) (web-app, etc) can use this to interact with entities; 
+ * policies, web-app, and entities share the realm for subscribing to events, executing tasks, and generally co-existing.      
+ * <p>
+ * It may refer to several applications, and it refers to all the entities owned by those applications.
  */
 public interface ManagementContext {
     /**
-     * The applications known about in this Brooklyn context.
+     * The applications associated with this management realm
      */
     Collection<Application> getApplications();
 
@@ -26,7 +25,15 @@ public interface ManagementContext {
     Entity getEntity(String id);
     
     /**
-     * Returns the current {@link ExecutionManager} instance.
+     * Returns the {@link ExecutionManager} instance for entities and users in this management realm 
+     * to submit tasks and to observe what tasks are occurring
      */
     ExecutionManager getExecutionManager();
+    
+    /**
+     * Returns the {@link SubscriptionManager} instance for entities and users of this management realm
+     * to subscribe to sensor events (and, in the case of entities, to emit sensor events) 
+     */
+    SubscriptionManager getSubscriptionManager();
+
 }

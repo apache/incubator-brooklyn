@@ -15,24 +15,24 @@ import brooklyn.util.internal.LanguageUtils.FieldVisitor
  * @author alex
  */
 class EntityStartUtils {
-	
-	private static final Logger log = LoggerFactory.getLogger(EntityStartUtils.class);
-	
+    
+    private static final Logger log = LoggerFactory.getLogger(EntityStartUtils.class);
+    
     /**
      * Starts the children of the host.
      */   
-    public static void startGroup(Group host) {
-		Set tasks = []
-		host.getChildren().each { child -> tasks.add(host.getExecutionContext().submit { if (child in Startable) child.start() }) }
-		tasks.collect { it.get() }
+    public static void startGroup(Group host, Collection<Location> locs = []) {
+        Set tasks = []
+        host.getOwnedChildren().each { child -> tasks.add(host.getExecutionContext().submit { if (child in Startable) child.start(locs) }) }
+        tasks.collect { it.get() }
     }
-    
+
     public static Entity startEntity(Entity entity, Collection<Location> locs) {
         if (!locs || locs.isEmpty())
             throw new IllegalStateException("request to start $entity without a location")
         if (!entity.owner)
             throw new IllegalStateException("request to start $entity without any owner specified or set")
-        log.debug "factory creating entity {} with properties {} and location {}", entity, entity.attributes, entity.location
+        log.debug "factory creating entity {} in location {}", entity, locs
 
         //TODO dynamically look for appropriate start method, throw better exception if not there
         entity.startInLocation(locs)

@@ -51,26 +51,26 @@ public abstract class AbstractApplication extends AbstractGroup implements Appli
      * Default start will start all Startable children
      */
     public void start(Collection<Location> locs) {
-		getManagementContext()
+        getManagementContext()
         EntityStartUtils.startGroup this, locs
     }
-	
-	private volatile AbstractManagementContext mgmt = null;
-	public ManagementContext getManagementContext() {
-		AbstractManagementContext result = mgmt
-		if (result==null) synchronized (this) {
-			result = mgmt
-			if (result!=null) return result
-			
-			//TODO how does user override?  expect he annotates a field in this class, then look up that field?
-			//(do that here)
-			
-			if (result==null)
-				result = new LocalManagementContext()
-			result.registerApplication(this)
-			mgmt = result
-		}
-		result
-	}
-	
+    
+    private volatile AbstractManagementContext mgmt = null;
+    public AbstractManagementContext getManagementContext() {
+        AbstractManagementContext result = mgmt
+        if (result==null) synchronized (this) {
+            result = mgmt
+            if (result!=null) return result
+            
+            //TODO how does user override?  expect he annotates a field in this class, then look up that field?
+            //(do that here)
+            
+            if (result==null)
+                result = new LocalManagementContext()
+            result.registerApplication(this)
+            mgmt = result
+        }
+        result
+    }
+    
 }

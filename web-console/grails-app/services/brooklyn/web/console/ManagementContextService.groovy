@@ -4,6 +4,7 @@ import brooklyn.management.ManagementContext
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
 import brooklyn.management.ExecutionManager
+import brooklyn.management.SubscriptionManager
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.basic.AbstractEntity
@@ -24,6 +25,9 @@ class ManagementContextService implements ManagementContext{
         throw new UnsupportedOperationException();
     }
 
+    public SubscriptionManager getSubscriptionManager() {
+        throw new UnsupportedOperationException();
+    }
 
     private class TestApplication extends AbstractApplication {
         TestApplication() {

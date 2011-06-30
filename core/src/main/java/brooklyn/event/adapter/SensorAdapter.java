@@ -13,11 +13,11 @@ import brooklyn.event.Sensor;
  * changes to subscribed {@link Sensor}s into {@link Entity#emit(Sensor, Object)} calls.
  */
 public interface SensorAdapter {
-	//FIXME ENGR-1458  remove string support from interface?
+    //FIXME ENGR-1458  remove string support from interface?
     /** @see #subscribe(Sensor) */
     public void subscribe(String sensorName);
  
-	//FIXME ENGR-1458  setActive(Sensor, boolean active)  ?
+    //FIXME ENGR-1458  setActive(Sensor, boolean active)  ?
     //(that's what we are doing, because someone is subscribed; from the adapter's point of view we aren't subscribing,
     //plus we want a way to unsubscribe-i-mean-turn-off, no?)
     
@@ -30,7 +30,7 @@ public interface SensorAdapter {
      */
     public <T> void subscribe(final Sensor<T> sensor);
 
-	//FIXME ENGR-1458  remove string support from interface?
+    //FIXME ENGR-1458  remove string support from interface?
     /** @see #poll(Sensor) */
     public <T> T poll(String sensorName);
  

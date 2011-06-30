@@ -16,17 +16,17 @@ import java.util.concurrent.TimeUnit
  */
 class TimeExtras {
 
-	static void init() {}
-	static {
-		Number.metaClass.multiply << { TimeUnit t -> new TimeDuration(t.toMillis(intValue())) }
-		Number.metaClass.multiply << { TimeDuration t -> t.multiply(doubleValue()) }
-		
-		TimeDuration.metaClass.multiply << { Number n -> new TimeDuration( (int)(toMilliseconds()*n) ) }
-		TimeDuration.metaClass.constructor << { long millis ->
-			def shift = { int modulus -> int v=millis%modulus; millis/=modulus; v }
-			def l = [shift(1000), shift(60), shift(60), shift(24), (int)millis]
-			Collections.reverse(l)
-			l as TimeDuration
-		}
-	}
+    static void init() {}
+    static {
+        Number.metaClass.multiply << { TimeUnit t -> new TimeDuration(t.toMillis(intValue())) }
+        Number.metaClass.multiply << { TimeDuration t -> t.multiply(doubleValue()) }
+        
+        TimeDuration.metaClass.multiply << { Number n -> new TimeDuration( (int)(toMilliseconds()*n) ) }
+        TimeDuration.metaClass.constructor << { long millis ->
+            def shift = { int modulus -> int v=millis%modulus; millis/=modulus; v }
+            def l = [shift(1000), shift(60), shift(60), shift(24), (int)millis]
+            Collections.reverse(l)
+            l as TimeDuration
+        }
+    }
 }

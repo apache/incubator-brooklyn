@@ -36,16 +36,12 @@ class EntityController {
             }
         }
 
-//        // TODO Place matches at the root of our tree view (iff an ancestor isn't already present)
-//        Collection<Entity> matches = entityService.getEntitiesMatchingCriteria(params.name, params.id, params.applicationId);
-//        matches.each { match ->
-//            if (!entityService.isChildOf(match, matches)) {
-//                root.children.add(nodeMap[match.id])
-//            }
-//        }
-
-        entityService.getTopLevelEntities().each {
-            root.children.add(nodeMap[it.id])
+        // TODO Place matches at the root of our tree view (iff an ancestor isn't already present)
+        Collection<Entity> matches = entityService.getEntitiesMatchingCriteria(params.name, params.id, params.applicationId);
+        matches.each { match ->
+            if (!entityService.isChildOf(match, matches)) {
+                root.children.add(nodeMap[match.id])
+            }
         }
 
         render(root as JSON)

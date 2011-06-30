@@ -47,7 +47,12 @@ public interface Entity extends Serializable {
      *
      * The owner is normally the entity responsible for creating/destroying this entity.
      */
-    Group getOwner();
+    Entity getOwner();
+
+    /** 
+     * @return the entities that are owned by this entity
+     */
+    Collection<Entity> getOwnedChildren();
     
     /**
      * The {@link Collection} of {@link Group}s that this entity is a member of.
@@ -57,24 +62,12 @@ public interface Entity extends Serializable {
     Collection<Group> getGroups();
 
     /**
-     * Add this entity to a {@link Group} as a child of the parent entity.
+     * Add this entity as a member of the given {@link Group}.
      */
-    void addGroup(Group parent);
-
-    /**
-     * The ids of all {@link Group}s this entity belongs to.
-     */
-    Collection<String> getGroupIds();
+    void addGroup(Group group);
 
     /**
      * Return all the {@link Location}s this entity is deployed to.
      */
     Collection<Location> getLocations();
-    
-    /**
-     * Allow us to subscribe to data from a {@link Sensor} on another entity.
-     * 
-     * @return a subscription id which can be used to unsubscribe
-     */
-    <T> long subscribe(Entity producer, Sensor<T> sensor, EventListener<T> listener);
 }

@@ -2,8 +2,8 @@ package org.overpaas.policy;
 
 import java.util.Collections
 
-import org.junit.Before
-import org.junit.Test
+import org.testng.Before
+import org.testng.Test
 import org.mockito.Mockito
 
 import org.overpaas.activity.EventDictionary

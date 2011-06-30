@@ -14,9 +14,9 @@ public class EntityRankers {
     public static <T> Comparator<EntityLocal> sensorComparator(final AttributeSensor<T> sensor) {
         return new Comparator<EntityLocal>() {
             public int compare(EntityLocal a, EntityLocal b) {
-            	//FIXME below is bogus;
-            	//not all sensors are attributes, and might be nested map etc
-            	//should have entity.getSensor or Sensor.getOnEntity
+                //FIXME below is bogus;
+                //not all sensors are attributes, and might be nested map etc
+                //should have entity.getSensor or Sensor.getOnEntity
                 T aMetric = a.getAttribute(sensor);
                 T bMetric = b.getAttribute(sensor);
                 

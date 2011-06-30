@@ -1,6 +1,7 @@
 package com.cloudsoftcorp.monterey.brooklyn.entity;
 
 import java.lang.reflect.InvocationTargetException;
+import java.net.InetAddress;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -8,6 +9,9 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -19,9 +23,10 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
-import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.location.basic.SshMachine;
 
 import com.cloudsoftcorp.monterey.CloudsoftThreadMonitoringTestFixture;
 import com.cloudsoftcorp.monterey.clouds.dto.CloudAccountDto;
@@ -87,11 +92,14 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
     private static final long TIMEOUT = 30*1000;
     
     private Gson gson;
-    private SshMachineLocation localhost;
+    private SshMachine localhost;
+    private AbstractApplication app;
     private MontereyNetwork montereyNetwork;
     private UserCredentialsConfig adminCredential = new UserCredentialsConfig("myname", "mypass", HTTP_AUTH.ADMIN_ROLE);
+    private ScheduledExecutorService worloadExecutor = Executors.newScheduledThreadPool(10);
     
     private ClassLoadingContext originalClassLoadingContext;
+
     
     @Before
     public void setUp() throws Exception {
@@ -101,12 +109,11 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         GsonSerializer gsonSerializer = new GsonSerializer(classLoadingContext);
         gson = gsonSerializer.getGson();
 
-        localhost = new SshMachineLocation();
-        localhost.setName(SSH_HOST_NAME);
-        localhost.setUser(SSH_USERNAME);
-        localhost.setHost(SSH_HOST_NAME);
+        localhost = new SshMachine(InetAddress.getByName(SSH_HOST_NAME), SSH_USERNAME);
 
+        app = new SimpleApp();
         montereyNetwork = new MontereyNetwork();
+        montereyNetwork.setOwner(app);
         montereyNetwork.setInstallDir(MONTEREY_MANAGEMENT_NODE_PATH);
         MontereyNetworkConfig config = new MontereyNetworkConfig();
         montereyNetwork.setConfig(config);
@@ -116,6 +123,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
     @After
     public void tearDown() throws Exception {
         try {
+            worloadExecutor.shutdownNow();
             if (montereyNetwork != null) montereyNetwork .stop();
         } finally {
             if (originalClassLoadingContext != null) {
@@ -233,38 +241,48 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
                         .put(MediatorNode.WORKRATE_MSGS_PER_SEC, Filters.equal(0d))
                         .build())
                 .build());
+        assertBrooklynEventuallyHasExpectedSegmentAttributeValues(ImmutableMap.<String, Map<AttributeSensor,Filter>>builder()
+                .put("a", ImmutableMap.<AttributeSensor,Filter>builder()
+                        .put(MediatorNode.WORKRATE_MSGS_PER_SEC, Filters.equal(0d))
+                        .build())
+                .put("b", ImmutableMap.<AttributeSensor,Filter>builder()
+                        .put(MediatorNode.WORKRATE_MSGS_PER_SEC, Filters.equal(0d))
+                        .build())
+                .build());
         
         // Apply load, and assert workrate goes up
-        // TODO Can I use DmnAssertionUtils?
-        // It takes a ManagementNode, and it currently doesn't do workload for no-api
+        // TODO Can I use DmnAssertionUtils? It takes a ManagementNode, and it currently doesn't do workload for no-api
         final double desiredWorkratePerSecond = 10;
+        createHelloCloudLoad("a", desiredWorkratePerSecond);
+            
+        assertBrooklynEventuallyHasExpectedNodeAttributeValues(ImmutableMap.<NodeId, Map<AttributeSensor,Filter>>builder()
+                .put(mediatorId, ImmutableMap.<AttributeSensor,Filter>builder()
+                        .put(MediatorNode.WORKRATE_MSGS_PER_SEC, Filters.between(0d, desiredWorkratePerSecond))
+                        .build())
+                .build());
+        assertBrooklynEventuallyHasExpectedSegmentAttributeValues(ImmutableMap.<String, Map<AttributeSensor,Filter>>builder()
+                .put("a", ImmutableMap.<AttributeSensor,Filter>builder()
+                        .put(MediatorNode.WORKRATE_MSGS_PER_SEC, Filters.between(0d, desiredWorkratePerSecond))
+                        .build())
+                .put("b", ImmutableMap.<AttributeSensor,Filter>builder()
+                        .put(MediatorNode.WORKRATE_MSGS_PER_SEC, Filters.equal(0d))
+                        .build())
+                .build());
+    }
+    
+    private ScheduledFuture<?> createHelloCloudLoad(final String segment, double msgsPerSec) throws Exception {
         final HelloCloudServiceLocator serviceLocator = newHelloCloudServiceLocator();
-        Thread t = new Thread() {
-            public void run() {
-                int i = 0;
-                try {
-                    while (!Thread.currentThread().isInterrupted()) {
-                        serviceLocator.getService("a").hello(""+(i++));
-                        Thread.sleep(1000/(int)desiredWorkratePerSecond);
+        long period = (long)(1000/msgsPerSec);
+        final AtomicInteger i = new AtomicInteger();
+        return worloadExecutor.scheduleAtFixedRate(
+                new Runnable() {
+                    @Override public void run() {
+                        serviceLocator.getService(segment).hello(""+i.incrementAndGet());
                     }
-                } catch (InterruptedException e) {
-                    LOG.info("Interrupted loader-thread; terminating thread gracefully");
-                    Thread.currentThread().interrupt();
-                }
-            }
-        };
-        try {
-            t.start();
-            
-            assertBrooklynEventuallyHasExpectedNodeAttributeValues(ImmutableMap.<NodeId, Map<AttributeSensor,Filter>>builder()
-                    .put(mediatorId, ImmutableMap.<AttributeSensor,Filter>builder()
-                            .put(MediatorNode.WORKRATE_MSGS_PER_SEC, Filters.between(0d, desiredWorkratePerSecond))
-                            .build())
-                    .build());
-            
-        } finally {
-            t.interrupt();
-        }
+                },
+                0,
+                period,
+                TimeUnit.MILLISECONDS);
     }
     
     private CloudEnvironmentDto newSimulatorCloudEnvironment() throws Exception {
@@ -371,13 +389,14 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
             public Object call() throws Exception {
                 Map<NodeId, AbstractMontereyNode> actualNodes = montereyNetwork.getMontereyNodes();
                 Map<NodeId,Map<AttributeSensor,Object>> valsForLogging = new LinkedHashMap<NodeId, Map<AttributeSensor,Object>>();
+                
                 for (Map.Entry<NodeId,Map<AttributeSensor,Filter>> entry : expectedNodes.entrySet()) {
                     NodeId nodeId = entry.getKey();
                     AbstractMontereyNode actualNode = actualNodes.get(nodeId);
                     Map<AttributeSensor, Object> sensorVals = assertEntityAttributes(actualNode, entry.getValue());
                     valsForLogging.put(nodeId, sensorVals);
                 }
-                LOG.info("Sensor values: "+valsForLogging);
+                LOG.info("Node sensor values: "+valsForLogging);
                 return null;
             }}, TIMEOUT);
     }
@@ -387,12 +406,15 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         assertSuccessWithin(new Callable<Object>() {
             public Object call() throws Exception {
                 Map<String, Segment> actualSegments = montereyNetwork.getSegments();
+                Map<String,Map<AttributeSensor,Object>> valsForLogging = new LinkedHashMap<String, Map<AttributeSensor,Object>>();
                 
                 for (Map.Entry<String,Map<AttributeSensor,Filter>> entry : expectedSegments.entrySet()) {
                     String segmentId = entry.getKey();
                     Segment actualSegment = actualSegments.get(segmentId);
-                    assertEntityAttributes(actualSegment, entry.getValue());
+                    Map<AttributeSensor, Object> sensorVals = assertEntityAttributes(actualSegment, entry.getValue());
+                    valsForLogging.put(segmentId, sensorVals);
                 }
+                LOG.info("Segment sensor values: "+valsForLogging);
                 return null;
             }}, TIMEOUT);
     }

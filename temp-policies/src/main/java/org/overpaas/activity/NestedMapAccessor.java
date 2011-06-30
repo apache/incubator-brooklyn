@@ -21,12 +21,12 @@ public interface NestedMapAccessor {
 
     public <T> T get(String keySegments[], Type type);
 
-	/** returns default value if the key is not present; otherwise coerces to type of default value; null default value not allowed
-	 * (use the simpler get(key) method in that case) */
-	public <T> T getOrDefault(String[] keySegments, T defaultValue);
-	
-	/** returns default value if the key is not present */
-	public <T> T getOrDefault(TypedKey<T> key, T defaultValue);
+    /** returns default value if the key is not present; otherwise coerces to type of default value; null default value not allowed
+     * (use the simpler get(key) method in that case) */
+    public <T> T getOrDefault(String[] keySegments, T defaultValue);
+    
+    /** returns default value if the key is not present */
+    public <T> T getOrDefault(TypedKey<T> key, T defaultValue);
 
     /** 
      * Returns the entity stored at the given hierarchical key (without any type-coercion). If this 

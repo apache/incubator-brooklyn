@@ -22,7 +22,12 @@ class BasicConfigKey<T> implements ConfigKey, Serializable {
     
     public BasicConfigKey() { /* for gson */ }
     
+    /** @deprecated class argument should be first */
+    @Deprecated 
     public BasicConfigKey(String name, Class<T> type, String description=name) {
+        this(type, name, description)
+    }
+    public BasicConfigKey(Class<T> type, String name, String description=name) {
         this.description = description;
         this.name = name;
         this.type = type.getName();
@@ -35,7 +40,7 @@ class BasicConfigKey<T> implements ConfigKey, Serializable {
     
     String getType() {
         return type;
-	}
+    }
     
     @Override
     public String getDescription() {

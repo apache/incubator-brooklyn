@@ -2,17 +2,16 @@ package brooklyn.entity.webapp.jboss
 
 import brooklyn.entity.basic.AttributeDictionary
 import brooklyn.location.basic.SshBasedJavaWebAppSetup
-import brooklyn.location.basic.SshMachineLocation
+import brooklyn.location.basic.SshMachine
 
 public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
-    
     String version = "6.0.0.Final"
     String saveAs  = "jboss-as-distribution-$version"
     String installDir = "$installsBaseDir/jboss-$version"
     String runDir
 
-    public JBoss6SshSetup(JBossNode entity) {
-        super(entity)
+    public JBoss6SshSetup(JBossNode entity, SshMachine machine) {
+        super(entity, machine)
         runDir = appBaseDir + "/" + "jboss-"+entity.id
     }
 
@@ -28,7 +27,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         def url = "http://downloads.sourceforge.net/project/jboss/JBoss/JBoss-$version/jboss-as-distribution-${version}.zip?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fjboss%2Ffiles%2FJBoss%2F$version%2F&ts=1307104229&use_mirror=kent"
         // Note the -o option to unzip, to overwrite existing files without warning.
         // The JBoss zip file contains lgpl.txt (at least) twice and the prompt to
-        // overwrite breaks the installer.
+        // overwrite interrupts the installer.
         makeInstallScript(
             "curl -L \"$url\" -o $saveAs",
             "unzip -o $saveAs"
@@ -39,15 +38,15 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         // Notes:
         // LAUNCH_JBOSS_IN_BACKGROUND relays OS signals sent to the run.sh process to the JBoss process.
         // run.sh must be backgrounded otherwise the script will never return.
-		/* Configuring ports:
-		   http://community.jboss.org/wiki/ConfiguringMultipleJBossInstancesOnOneMachine
-		   http://community.jboss.org/wiki/ConfigurePorts
-	       http://community.jboss.org/wiki/AS5ServiceBindingManager
-	       .. changing port numbers with sed is pretty brittle.
-		*/
-		def portGroupName = "ports-brooklyn"
-		int portIncrement = entity.portIncrement ?: 0
-		def serverProfile = "default"
+        /* Configuring ports:
+           http://community.jboss.org/wiki/ConfiguringMultipleJBossInstancesOnOneMachine
+           http://community.jboss.org/wiki/ConfigurePorts
+           http://community.jboss.org/wiki/AS5ServiceBindingManager
+           .. changing port numbers with sed is pretty brittle.
+        */
+        def portGroupName = "ports-brooklyn"
+        int portIncrement = entity.getAttribute(JBossNode.PORT_INCREMENT)
+        def serverProfile = "default"
 """mkdir -p $runDir/server && \\
 cd $runDir/server && \\
 cp -r $installDir/server/$serverProfile $serverProfile && \\
@@ -64,23 +63,24 @@ JAVA_OPTS="\$JAVA_OPTS -Djava.util.logging.manager=org.jboss.logmanager.LogManag
 JAVA_OPTS="\$JAVA_OPTS -Dorg.jboss.logging.Logger.pluginClass=org.jboss.logging.logmanager.LoggerPluginImpl" && \\
 export JBOSS_CLASSPATH="$installDir/lib/jboss-logmanager.jar" && \\
 $installDir/bin/run.sh -Djboss.service.binding.set=$portGroupName -Djboss.server.base.dir=$runDir/server -Djboss.server.base.url=file://$runDir/server -c $serverProfile &
+sleep 30
 exit"""
     }
 
     /** script to return 1 if pid in runDir is running, 0 otherwise */
     public String getCheckRunningScript() { 
-		def port = jmxPort
-		def host = jmxHost
-		"$installDir/bin/twiddle.sh --host $host --port $port get \"jboss.system:type=Server\" Started; exit"
+        def host = entity.getAttribute(AttributeDictionary.JMX_HOST)
+        def port = entity.getAttribute(AttributeDictionary.JMX_PORT)
+        "$installDir/bin/twiddle.sh --host $host --port $port get \"jboss.system:type=Server\" Started; exit"
     }
 
-    public String getDeployScript(String filename) {
+    public String getDeployScript(String locOnServer) {
         ""
     }
 
-    public void shutdown(SshMachineLocation loc) {
+    public void shutdown() {
         def host = entity.getAttribute(AttributeDictionary.JMX_HOST)
-		def port = entity.getAttribute(AttributeDictionary.JMX_PORT)
-        loc.run("$installDir/bin/shutdown.sh --host=$host --port=$port -S; exit", out: System.out)
+        def port = entity.getAttribute(AttributeDictionary.JMX_PORT)
+        machine.run("$installDir/bin/shutdown.sh --host=$host --port=$port -S; exit", out: System.out)
     }
 }

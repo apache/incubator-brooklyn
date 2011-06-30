@@ -19,54 +19,54 @@ import brooklyn.util.internal.EntityStartUtils
  * initialSize property determines initial size when started (defaults to 1)
  */
 public abstract class Cluster extends Tier implements Startable {
-	public Cluster(Map props=[:], Group owner) {
-		super(props, owner)
-	}
+    public Cluster(Map props=[:], Group owner) {
+        super(props, owner)
+    }
     
     
     // TODO single location
 }
 
 public abstract class ClusterFromTemplate extends Cluster implements Resizable {
-	Entity template = null
-	
-	public ClusterFromTemplate(Map properties=[:], Group owner=null, Entity template=null) {
-		super(properties, owner)
-		if (template) this.template = template
-	}
-	
-	public List<Future> grow(int desiredIncrease) {
-		def nodes = []
-		desiredIncrease.times { nodes += EntityStartUtils.createFromTemplate(this, template) }
-		
-		Set tasks = nodes.collect { node -> getExecutionContext().submit({node.start()}) }
-		tasks.collect { it.get() }
-	}
+    Entity template = null
+    
+    public ClusterFromTemplate(Map properties=[:], Group owner=null, Entity template=null) {
+        super(properties, owner)
+        if (template) this.template = template
+    }
+    
+    public List<Future> grow(int desiredIncrease) {
+        def nodes = []
+        desiredIncrease.times { nodes += EntityStartUtils.createFromTemplate(this, template) }
+        
+        Set tasks = nodes.collect { node -> getExecutionContext().submit({node.start()}) }
+        tasks.collect { it.get() }
+    }
 
-	public List<Future> shrink(int desiredDecrease) {
-		throw new UnsupportedOperationException()
-	}
+    public List<Future> shrink(int desiredDecrease) {
+        throw new UnsupportedOperationException()
+    }
 
-	int initialSize = 1
+    int initialSize = 1
 
-	public synchronized void start(Collection<Location> locs) {
+    public synchronized void start(Collection<Location> locs) {
         // FIXME Do what with locs?
-		if (!(initialSize in Integer))
-			throw new IllegalArgumentException('cluster initial size must be an integer')
+        if (!(initialSize in Integer))
+            throw new IllegalArgumentException('cluster initial size must be an integer')
 
-		log.debug "starting $this cluster with properties {} and size $initialSize in $locs"
+        log.debug "starting $this cluster with properties {} and size $initialSize in $locs"
 
-		int newNodes = initialSize - children.size()
-		if (newNodes>0) grow(newNodes)
-		else {
-			log.info "start of $this cluster skipping call to start with size $initialSize because size is currently {}", children.size()
-		}
-	}
+        int newNodes = initialSize - children.size()
+        if (newNodes>0) grow(newNodes)
+        else {
+            log.info "start of $this cluster skipping call to start with size $initialSize because size is currently {}", children.size()
+        }
+    }
 
-	public synchronized List<Future> resize(int newSize) {
-		int newNodes = newSize - children.size()
-		if (newNodes>0) grow(newNodes)
-		else if (newNodes<0) shrink(-newNodes);
-		else []
-	}
+    public synchronized List<Future> resize(int newSize) {
+        int newNodes = newSize - children.size()
+        if (newNodes>0) grow(newNodes)
+        else if (newNodes<0) shrink(-newNodes);
+        else []
+    }
 }

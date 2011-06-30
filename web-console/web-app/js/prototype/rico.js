@@ -75,8 +75,8 @@ if (!Array.prototype.indices) {
 
 // Create the loadXML method and xml getter for Mozilla
 if ( window.DOMParser &&
-	  window.XMLSerializer &&
-	  window.Node && Node.prototype && Node.prototype.__defineGetter__ ) {
+      window.XMLSerializer &&
+      window.Node && Node.prototype && Node.prototype.__defineGetter__ ) {
 
    if (!Document.prototype.loadXML) {
       Document.prototype.loadXML = function (s) {
@@ -88,13 +88,13 @@ if ( window.DOMParser &&
             this.appendChild(this.importNode(doc2.childNodes[i], true));
          }
       };
-	}
+    }
 
-	Document.prototype.__defineGetter__( "xml",
-	   function () {
-		   return (new XMLSerializer()).serializeToString(this);
-	   }
-	 );
+    Document.prototype.__defineGetter__( "xml",
+       function () {
+           return (new XMLSerializer()).serializeToString(this);
+       }
+     );
 }
 
 document.getElementsByTagAndClassName = function(tagName, className) {
@@ -275,8 +275,8 @@ Rico.Accordion.Tab.prototype = {
    },
 
    hover: function(e) {
-		this.titleBar.style.backgroundColor = this.accordion.options.hoverBg;
-		this.titleBar.style.color           = this.accordion.options.hoverTextColor;
+        this.titleBar.style.backgroundColor = this.accordion.options.hoverBg;
+        this.titleBar.style.color           = this.accordion.options.hoverTextColor;
    },
 
    unhover: function(e) {
@@ -338,12 +338,12 @@ Rico.AjaxEngine.prototype = {
       var queryString = "";
       
       if ( arguments.length > 1 ) {
-      	 if(typeof(arguments[1]) == "object" && arguments[1].length != undefined) {
-	      	 queryString = this._createQueryString(arguments[1], 0);
-      	 }
-      	 else {
-	         queryString = this._createQueryString(arguments, 1);
-	     }         
+           if(typeof(arguments[1]) == "object" && arguments[1].length != undefined) {
+               queryString = this._createQueryString(arguments[1], 0);
+           }
+           else {
+             queryString = this._createQueryString(arguments, 1);
+         }         
        }
              
       new Ajax.Request(requestURL, this._requestOptions(queryString));
@@ -356,12 +356,12 @@ Rico.AjaxEngine.prototype = {
 
       var queryString = "";
       if ( arguments.length > 2 ) {
-      	 if(typeof(arguments[2]) == "object" && arguments[2].length != undefined) {
-	      	 queryString = this._createQueryString(arguments[2], 0);
-      	 }
-      	 else {
-	         queryString = this._createQueryString(arguments, 2);
-	     }         
+           if(typeof(arguments[2]) == "object" && arguments[2].length != undefined) {
+               queryString = this._createQueryString(arguments[2], 0);
+           }
+           else {
+             queryString = this._createQueryString(arguments, 2);
+         }         
        }             
 
       new Ajax.Request(requestURL + "?" + queryString, this._requestOptions(null,xmlDocument));
@@ -374,12 +374,12 @@ Rico.AjaxEngine.prototype = {
 
       var queryString = "";
       if ( arguments.length > 3 ) {
-      	 if(typeof(arguments[3]) == "object" && arguments[3].length != undefined) {
-	      	 queryString = this._createQueryString(arguments[3], 0);
-      	 }
-      	 else {
-	         queryString = this._createQueryString(arguments, 3);
-	     }         
+           if(typeof(arguments[3]) == "object" && arguments[3].length != undefined) {
+               queryString = this._createQueryString(arguments[3], 0);
+           }
+           else {
+             queryString = this._createQueryString(arguments, 3);
+         }         
        }  
              
       var updaterOptions = this._requestOptions(queryString);
@@ -396,12 +396,12 @@ Rico.AjaxEngine.prototype = {
 
       var queryString = "";
       if ( arguments.length > 4 ) {
-      	 if(typeof(arguments[4]) == "object" && arguments[4].length != undefined) {
-	      	 queryString = this._createQueryString(arguments[4], 0);
-      	 }
-      	 else {
-	         queryString = this._createQueryString(arguments, 4);
-	     }         
+           if(typeof(arguments[4]) == "object" && arguments[4].length != undefined) {
+               queryString = this._createQueryString(arguments[4], 0);
+           }
+           else {
+             queryString = this._createQueryString(arguments, 4);
+         }         
        }
 
 
@@ -432,7 +432,7 @@ Rico.AjaxEngine.prototype = {
    },
 
    _createQueryString: function( theArgs, offset ) {
-   	  var self = this;
+         var self = this;
       var queryString = ""
       for ( var i = offset ; i < theArgs.length ; i++ ) {
           if ( i != offset )
@@ -635,15 +635,15 @@ Rico.Color.createColorFromBackground = function(elem) {
 Rico.Color.HSBtoRGB = function(hue, saturation, brightness) {
 
    var red   = 0;
-	var green = 0;
-	var blue  = 0;
+    var green = 0;
+    var blue  = 0;
 
    if (saturation == 0) {
       red = parseInt(brightness * 255.0 + 0.5);
-	   green = red;
-	   blue = red;
-	}
-	else {
+       green = red;
+       blue = red;
+    }
+    else {
       var h = (hue - Math.floor(hue)) * 6.0;
       var f = h - Math.floor(h);
       var p = brightness * (1.0 - saturation);
@@ -681,8 +681,8 @@ Rico.Color.HSBtoRGB = function(hue, saturation, brightness) {
             green = (p * 255.0 + 0.5);
             blue  = (q * 255.0 + 0.5);
             break;
-	    }
-	}
+        }
+    }
 
    return { r : parseInt(red), g : parseInt(green) , b : parseInt(blue) };
 }
@@ -711,19 +711,19 @@ Rico.Color.RGBtoHSB = function(r, g, b) {
       hue = 0;
    else {
       var redc   = (cmax - r)/(cmax - cmin);
-    	var greenc = (cmax - g)/(cmax - cmin);
-    	var bluec  = (cmax - b)/(cmax - cmin);
+        var greenc = (cmax - g)/(cmax - cmin);
+        var bluec  = (cmax - b)/(cmax - cmin);
 
-    	if (r == cmax)
-    	   hue = bluec - greenc;
-    	else if (g == cmax)
-    	   hue = 2.0 + redc - bluec;
+        if (r == cmax)
+           hue = bluec - greenc;
+        else if (g == cmax)
+           hue = 2.0 + redc - bluec;
       else
-    	   hue = 4.0 + greenc - redc;
+           hue = 4.0 + greenc - redc;
 
-    	hue = hue / 6.0;
-    	if (hue < 0)
-    	   hue = hue + 1.0;
+        hue = hue / 6.0;
+        if (hue < 0)
+           hue = hue + 1.0;
    }
 
    return { h : hue, s : saturation, b : brightness };

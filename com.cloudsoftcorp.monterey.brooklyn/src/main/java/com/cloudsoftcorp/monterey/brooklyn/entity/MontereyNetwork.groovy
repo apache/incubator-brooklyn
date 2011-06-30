@@ -13,12 +13,11 @@ import java.util.concurrent.TimeUnit
 import java.util.logging.Level
 import java.util.logging.Logger
 
-import brooklyn.entity.Group
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.trait.Startable
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.Location
-import brooklyn.location.basic.SshMachineLocation
+import brooklyn.location.basic.SshMachine
 import brooklyn.util.internal.BrooklynSystemProperties
 import brooklyn.util.internal.EntityStartUtils
 
@@ -59,15 +58,6 @@ import com.google.gson.Gson
 public class MontereyNetwork extends AbstractEntity implements Startable { // FIXME , AbstractGroup
 
     private final Logger LOG = Loggers.getLogger(MontereyNetwork.class);
-    /*
-     * FIXME, work in progress
-     * 
-     * Poll for application name.
-     * Poll for status.
-     * Poll for workrates.
-     * Add/remove nodes/segments as they are created/deleted.
-     * Add/remove nodes as their type changes.
-     */
 
     private static final Logger logger = Loggers.getLogger(MontereyNetwork.class);
 
@@ -78,6 +68,8 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     /** up, down, etc? */
     public static final BasicAttributeSensor<String> STATUS = [ String, "monterey.status", "Status" ]
 
+    private static final int POLL_PERIOD = 1000;
+    
     private final Gson gson;
 
     private String installDir;
@@ -86,7 +78,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     private CredentialsConfig webAdminCredential;
     private NetworkId networkId = NetworkId.Factory.newId();
 
-    private SshMachineLocation host;
+    private SshMachine host;
     private URL managementUrl;
     private MontereyNetworkConnectionDetails connectionDetails;
     private String applicationName;
@@ -158,9 +150,9 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         if (monitoringTask != null) monitoringTask.cancel(true);
     }
 
-    public void startOnHost(SshMachineLocation host) {
+    public void startOnHost(SshMachine host) {
         /*
-         * TODO: Assumes the following are already set on SshMachineLocation:
+         * TODO: Assumes the following are already set on SshMachine:
          * sshAddress
          * sshPort
          * sshUsername
@@ -168,7 +160,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
          * HostKeyChecking hostKeyChecking = HostKeyChecking.NO;
          */
 
-        LOG.info("Creating new monterey network "+networkId+" on "+host.getName());
+        LOG.info("Creating new monterey network "+networkId+" on "+host);
 
         File webUsersConfFile = DeploymentUtils.toEncryptedWebUsersConfFile(webUsersCredentials);
         String username = System.getenv("USER");
@@ -192,7 +184,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
                 host.copyTo(config.getMontereyWebApiSslKeystore(), installDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_SSL_KEYSTORE_RELATIVE_PATH);
             }
 
-            this.managementUrl = new URL(config.getMontereyWebApiProtocol()+"://"+host.getHost()+":"+config.getMontereyWebApiPort());
+            this.managementUrl = new URL(config.getMontereyWebApiProtocol()+"://"+host.getHost().getHostName()+":"+config.getMontereyWebApiPort());
             this.connectionDetails = new MontereyNetworkConnectionDetails(networkId, managementUrl, webAdminCredential);
             this.host = host;
 
@@ -222,7 +214,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
             updateAttribute MANAGEMENT_URL, managementUrl
             updateAttribute NETWORK_ID, networkId.getId()
 
-            monitoringTask = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay({ updateAll() }, 1000, 1000, TimeUnit.MILLISECONDS)
+            monitoringTask = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay({ updateAll() }, POLL_PERIOD, POLL_PERIOD, TimeUnit.MILLISECONDS)
 
             LOG.info("Created new monterey network: "+connectionDetails);
 
@@ -273,7 +265,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         applicationName = null;
     }
 
-    private void shutdownManagementNodeProcess(MontereyNetworkConfig config, SshMachineLocation host, NetworkId networkId) {
+    private void shutdownManagementNodeProcess(MontereyNetworkConfig config, SshMachine host, NetworkId networkId) {
         String killScript = installDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_KILL_SCRIPT_RELATIVE_PATH;
         try {
             LOG.info("Releasing management node on "+toString());
@@ -344,11 +336,14 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         newNodes.each {
             MontereyLocation montereyLocation = nodeSummaries.get(it).getMontereyLocation();
             Location location = null; // FIXME create brooklyn location
-            nodes.put(it, new MontereyContainerNode(connectionDetails, it, location));
+            MontereyContainerNode containerNode = new MontereyContainerNode(connectionDetails, it, location);
+            addOwnedChild(containerNode);
+            nodes.put(it, containerNode);
         }
 
         removedNodes.each {
             nodes.get(it)?.dispose();
+            removeOwnedChild(it);
         }
 
 
@@ -359,13 +354,15 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         removedSegments.addAll(segments.keySet()); removedSegments.removeAll(segmentSummaries.keySet());
 
         newSegments.each {
-            segments.put(it, new Segment(connectionDetails, it));
+            Segment segment = new Segment(connectionDetails, it);
+            addOwnedChild(segment);
+            segments.put(it, segment);
         }
 
         removedSegments.each {
             segments.get(it)?.dispose();
+            removeOwnedChild(it);
         }
-
 
         // Notify "container nodes" (i.e. BasicNode in monterey classes jargon) of what node-types are running there
         nodeSummaries.values().each {

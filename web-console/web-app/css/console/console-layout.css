@@ -29,7 +29,7 @@ body{
 	position:absolute;
 	top:128px;
 	bottom:2.3em;
-	overflow:auto;
+	overflow:hidden;
 	width:100%;
 
 }
@@ -45,9 +45,8 @@ body{
 }
 
 .layout-left-column{
-	background-color:white;
 	float: left;
-	width: 350px;
+	width: 270px;
 	height:100%;
 	border-right:solid;
 	border-width:medium;
@@ -55,17 +54,32 @@ body{
 
 .layout-main-content{
 	background-color:white;
-        float: left;
+    float: left;
 	margin-right:2px;
+}
+
+#searchBox{
+    margin-bottom: 3px;
+    padding: 3px;
+    height:5%;
+}
+
+#searchInput{
+    width: 92%;
+    background-image: url("../../images/brooklyn/magnifying-glass.gif");
+    background-repeat:no-repeat;
+    padding-left:20px;
 }
 
 div#demo1{
 	overflow:auto;
-	height:100%;
+	height:90%;
+    padding:3px;
+    margin-bottom:3px;
 }
 
 h1#brooklyn-header{
 	height:100%;
 	width:250px;
-	background-image:url("/brooklyn-web-console/images/brooklyn/brooklynbannerone.png");
+	background-image:url("../../images/brooklyn/brooklynbannerone.png");
 }

@@ -2,8 +2,8 @@ package brooklyn.entity.webapp.tomcat
 
 import brooklyn.entity.basic.AttributeDictionary
 import brooklyn.location.basic.SshBasedJavaWebAppSetup
+import brooklyn.location.basic.SshMachine
 import brooklyn.location.basic.SshMachineLocation
-
 
 /**
  * Start a {@link TomcatNode} in a {@link Location} accessible over ssh.
@@ -20,8 +20,8 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
     Object httpPortLock = new Object()
     int httpPort = -1
 
-    public Tomcat7SshSetup(TomcatNode entity, SshMachineLocation host) {
-        super(entity, host)
+    public Tomcat7SshSetup(TomcatNode entity, SshMachine machine) {
+        super(entity, machine)
         runDir = appBaseDir + "/" + "tomcat-" + entity.id
     }
 
@@ -81,10 +81,15 @@ cp $locOnServer $to
 exit"""
     }
 
+    // TODO Fail if requested port is in use rather than taking first available.
     public int getTomcatHttpPort() {
         synchronized (httpPortLock) {
-            if (httpPort < 0)
+            int requested = entity.getAttribute(AttributeDictionary.HTTP_PORT)
+            if (requested > 0) {
+                httpPort = requested
+            } else {
                 httpPort = claimNextValue("tomcatHttpPort", DEFAULT_FIRST_HTTP_PORT)
+            }
         }
         return httpPort
     }
@@ -96,10 +101,10 @@ exit"""
         claimNextValue("tomcatShutdownPort", DEFAULT_FIRST_SHUTDOWN_PORT)
     }
 
-    public void shutdown(SshMachineLocation loc) {
+    public void shutdown() {
         log.debug "invoking shutdown script"
         //we use kill -9 rather than shutdown.sh because the latter is not 100% reliable
-        def result = loc.run(out: System.out, "cd $runDir && echo killing process `cat pid.txt` on `hostname` && kill -9 `cat pid.txt` && rm -f pid.txt ; exit")
+        def result = machine.run(out: System.out, "cd $runDir && echo killing process `cat pid.txt` on `hostname` && kill -9 `cat pid.txt` && rm -f pid.txt ; exit")
         if (result) log.info "non-zero result code terminating {}: {}", entity, result
         log.debug "done invoking shutdown script"
     }

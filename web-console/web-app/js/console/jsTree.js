@@ -3,9 +3,22 @@ Brooklyn.jsTree = (function(parent) {
     function loadJstree() {
         $("#demo1")
             .jstree({
-                "json_data" : {"ajax" : { "url" : Brooklyn.urls.jsTree.loadJsTreeJson}},
-                "plugins" : [ "themes", "json_data", "ui" ]
-            });
+                "plugins" : [ "themes", "json_data", "ui" ],
+                "json_data" : {
+                    "ajax" : {
+                        "url" : Brooklyn.urls.jsTree.loadJsTreeJson,
+                        "data" : function () {
+                            return {
+                                //TODO Still need to link up UI component to corresponding parameters
+                                "name" : $("#searchInput").val().toLowerCase(),
+                                "id" : "",
+                                "applicationID" : ""
+                            };
+                        }
+                    }
+                }
+            }
+        );
     }
 
     return {
@@ -14,4 +27,7 @@ Brooklyn.jsTree = (function(parent) {
 
 }(Brooklyn || {}));
 
-$(document).ready(Brooklyn.jsTree.loadJstree);
+$(document).ready(function(){
+    Brooklyn.jsTree.loadJstree();
+    $("#searchInput").corner();
+});

@@ -1,15 +1,20 @@
 package brooklyn.entity.basic
 
+import static org.testng.Assert.*
+
 import java.util.Map
 
-import org.junit.Assert
-import org.junit.Test
+import org.testng.annotations.Test
 
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.ConfigKey
 
-class InheritedConfigTest {
-
+/**
+ * Test that configuration properties are inherited correctly.
+ * 
+ * TODO clarify test purpose
+ */
+public class InheritedConfigTest {
     private BasicConfigKey akey = ["akey", String.class, "a key"]
     private BasicConfigKey bkey = ["bkey", Integer.class, "b key"]
     
@@ -22,8 +27,8 @@ class InheritedConfigTest {
         TestApplication app = new TestApplication();
         TestEntity entity = new TestEntity([owner:app, inheritableConfig:conf])
         
-        Assert.assertEquals("aval", entity.getConfig(akey))
-        Assert.assertEquals(2, entity.getConfig(bkey))
+        assertEquals("aval", entity.getConfig(akey))
+        assertEquals(2, entity.getConfig(bkey))
     }
     
     @Test
@@ -33,8 +38,8 @@ class InheritedConfigTest {
         entity.setConfig(akey, "aval")
         entity.setConfig(bkey, 2)
         
-        Assert.assertEquals("aval", entity.getConfig(akey))
-        Assert.assertEquals(2, entity.getConfig(bkey))
+        assertEquals("aval", entity.getConfig(akey))
+        assertEquals(2, entity.getConfig(bkey))
     }
     
     @Test
@@ -46,8 +51,8 @@ class InheritedConfigTest {
         app.setConfig(bkey, 2)
         TestEntity entity = new TestEntity([owner:app])
         
-        Assert.assertEquals("aval", entity.getConfig(akey))
-        Assert.assertEquals(2, entity.getConfig(bkey))
+        assertEquals("aval", entity.getConfig(akey))
+        assertEquals(2, entity.getConfig(bkey))
     }
     
     @Test
@@ -61,7 +66,7 @@ class InheritedConfigTest {
         TestApplication app = new TestApplication([inheritableConfig:appConf]);
         TestEntity entity = new TestEntity([owner:app, inheritableConfig:childConf])
         
-        Assert.assertEquals("diffval", entity.getConfig(akey))
+        assertEquals("diffval", entity.getConfig(akey))
     }
     
     @Test
@@ -73,7 +78,7 @@ class InheritedConfigTest {
         TestEntity entity = new TestEntity([owner:app])
         entity.setConfig(akey, "diffval")
         
-        Assert.assertEquals("diffval", entity.getConfig(akey))
+        assertEquals("diffval", entity.getConfig(akey))
     }
     
     @Test
@@ -85,7 +90,7 @@ class InheritedConfigTest {
         TestEntity entity = new TestEntity([owner:app, inheritableConfig:childConf])
         entity.setConfig(akey, "diffval")
         
-        Assert.assertEquals("diffval", entity.getConfig(akey))
+        assertEquals("diffval", entity.getConfig(akey))
     }
     
     private static class TestApplication extends AbstractApplication {

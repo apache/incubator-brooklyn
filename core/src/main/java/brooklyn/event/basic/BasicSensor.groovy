@@ -28,12 +28,12 @@ public class BasicSensor<T> implements Sensor<T> {
 
     public BasicSensor() { /* for gson */ }
 
-	/** name is typically a dot-separated identifier; description is optional */
-	public BasicSensor(Class<T> type, String name, String description=name) {
-		this.type = type;
-		this.typeName = type.getName();
-		this.name = name;
-		this.description = description;
+    /** name is typically a dot-separated identifier; description is optional */
+    public BasicSensor(Class<T> type, String name, String description=name) {
+        this.type = type;
+        this.typeName = type.getName();
+        this.name = name;
+        this.description = description;
     }
 
     /** @see Sensor#getType() */
