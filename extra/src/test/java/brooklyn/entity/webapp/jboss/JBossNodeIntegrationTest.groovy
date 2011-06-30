@@ -3,9 +3,11 @@ package brooklyn.entity.webapp.jboss;
 import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
+import groovy.time.TimeDuration
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
@@ -44,15 +46,22 @@ public class JBossNodeIntegrationTest {
                     provisioner: new LocalhostSshMachineProvisioner())
     }
 
+    
+    @AfterMethod(groups = [ "Integration" ])
+    public void waitForShutdown() {
+        log.info "Sleeping for shutdown"
+        Thread.sleep 4000
+    }
+    
     @Test(groups = "Integration")
     public void canStartupAndShutdown() {
         JBossNode jb = new JBossNode(owner:app, portIncrement: PORT_INCREMENT);
         jb.start([ testLocation ])
-        assertTrue (new JBoss6SshSetup(jb, jb.machine)).isRunning()
+        assertTrue((new JBoss6SshSetup(jb, jb.machine)).isRunning())
         jb.shutdown()
         // Potential for JBoss to be in process of shutting down here..
         Thread.sleep 4000
-        assertFalse (new JBoss6SshSetup(jb, jb.machine)).isRunning()
+        assertFalse((new JBoss6SshSetup(jb, jb.machine)).isRunning())
     }
 
     @Test(groups = "Integration")
@@ -71,7 +80,7 @@ public class JBossNodeIntegrationTest {
         }, abortOnError:false)
     }
     
-    @Test(groups = [ "Integration" ])
+    @Test(enabled = false, groups = [ "Integration" ])
     public void canStartMultipleJBossNodes() {
         def aInc = 400
         JBossNode nodeA = new JBossNode(owner:app, portIncrement:aInc);
@@ -118,6 +127,6 @@ public class JBossNodeIntegrationTest {
             assertTrue errorCount > 0
             assertEquals 0, errorCount % n
             true
-        }, abortOnError:false, timeout:10*SECONDS, useGroovyTruth:true)
+        }, abortOnError:false, timeout:new TimeDuration(0, 0, 0, 10, 0), useGroovyTruth:true)
     }
 }
