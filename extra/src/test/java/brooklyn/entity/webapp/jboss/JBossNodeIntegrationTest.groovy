@@ -12,7 +12,7 @@ import org.testng.annotations.Test
 import brooklyn.entity.Application
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.location.Location
-import brooklyn.location.basic.SshBasedJavaWebAppSetup
+import brooklyn.location.basic.LocalhostSshMachineProvisioner
 import brooklyn.location.basic.SshMachineLocation
 
 /**
@@ -40,18 +40,19 @@ public class JBossNodeIntegrationTest {
     @BeforeMethod(groups = "Integration")
     public void setup() {
         app = new TestApplication();
-        testLocation = new SshMachineLocation(name:'london', host:'localhost')
+        testLocation = new SshMachineLocation(name:'london', host:'localhost', 
+                    provisioner: new LocalhostSshMachineProvisioner())
     }
 
     @Test(groups = "Integration")
     public void canStartupAndShutdown() {
-        JBossNode jb = new JBossNode(owner:app, portIncrement:PORT_INCREMENT);
+        JBossNode jb = new JBossNode(owner:app, portIncrement: PORT_INCREMENT);
         jb.start([ testLocation ])
-        SshBasedJavaWebAppSetup setup = new JBoss6SshSetup(jb)
-        assertTrue setup.isRunning(testLocation)
+        assertTrue (new JBoss6SshSetup(jb, jb.machine)).isRunning()
         jb.shutdown()
         // Potential for JBoss to be in process of shutting down here..
-        assertFalse setup.isRunning(testLocation)
+        Thread.sleep 4000
+        assertFalse (new JBoss6SshSetup(jb, jb.machine)).isRunning()
     }
 
     @Test(groups = "Integration")

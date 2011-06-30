@@ -6,30 +6,21 @@ import static brooklyn.entity.basic.ConfigKeyDictionary.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.entity.basic.AttributeDictionary
-import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.JavaWebApp
 import brooklyn.event.AttributeSensor
 import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.location.Location
-import brooklyn.location.basic.SshBasedJavaWebAppSetup;
-import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.internal.EntityStartUtils
+import brooklyn.location.basic.SshBasedJavaWebAppSetup
+import brooklyn.location.basic.SshMachine
 
 /**
  * JBoss web application server.
  */
-//@InheritConstructors
 public class JBossNode extends JavaWebApp {
 
     private static final Logger log = LoggerFactory.getLogger(JBossNode.class)
 
     public static final int DEFAULT_HTTP_PORT = 8080;
-
-    public static final BasicAttributeSensor<Integer> ERROR_COUNT = [ Integer, "jmx.reqs.global.totals.errorCount", "Error count" ]
-    public static final BasicAttributeSensor<Integer> REQUEST_COUNT = [ Integer, "jmx.reqs.global.totals.requestCount", "Request count" ]
-    public static final BasicAttributeSensor<Integer> TOTAL_PROCESSING_TIME = [ Integer, "jmx.reqs.global.totals.processingTime", "Total processing time" ]
 
     // Jboss specific
     public static final BasicAttributeSensor<Integer> PORT_INCREMENT = 
@@ -47,7 +38,7 @@ public class JBossNode extends JavaWebApp {
         updateAttribute HTTP_PORT, (DEFAULT_HTTP_PORT + portIncrement)
     }
 
-    public SshBasedJavaWebAppSetup getSshBasedSetup(SshMachineLocation loc) {
+    public SshBasedJavaWebAppSetup getSshBasedSetup(SshMachine loc) {
         return new JBoss6SshSetup(this, loc);
     }
     
@@ -57,4 +48,9 @@ public class JBossNode extends JavaWebApp {
         jmxAdapter.addSensor(TOTAL_PROCESSING_TIME, "jboss.web:type=GlobalRequestProcessor,name=http-*", "processingTime")
     }
 
+    public void waitForHttpPort() {
+		// TODO Groovy Auto-generated method stub
+		// Only partially implemented. Perform organize imports
+		// to properly import parameter and return types
+	}
 }
