@@ -61,22 +61,25 @@ body{
 #searchBox{
     margin-bottom: 3px;
     padding: 3px;
+    height:5%;
 }
 
 #searchInput{
     width: 92%;
-    background-image: url("/brooklyn-web-console/images/brooklyn/magnifying-glass.gif");
+    background-image: url("../../images/brooklyn/magnifying-glass.gif");
     background-repeat:no-repeat;
     padding-left:20px;
 }
 
 div#demo1{
 	overflow:auto;
-	height:100%;
+	height:90%;
+    padding:3px;
+    margin-bottom:3px;
 }
 
 h1#brooklyn-header{
 	height:100%;
 	width:250px;
-	background-image:url("/brooklyn-web-console/images/brooklyn/brooklynbannerone.png");
+	background-image:url("../../images/brooklyn/brooklynbannerone.png");
 }

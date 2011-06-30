@@ -49,7 +49,7 @@ class EntityService {
     public Set<Entity> getEntitiesMatchingCriteria(String name, String id, String applicationId) {
         getAllEntities().findAll {
             it ->
-            ((!name || it.displayName =~ name)
+            ((!name || it.displayName.toLowerCase() =~ name.toLowerCase())
                     && (!id || it.id =~ id)
                     && (!applicationId || it.application.id =~ applicationId)
             )
