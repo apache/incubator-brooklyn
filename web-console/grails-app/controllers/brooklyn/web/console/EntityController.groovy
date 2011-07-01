@@ -24,12 +24,12 @@ class EntityController {
 
     def jstree = {
         Map<String, JsTreeNodeImpl> nodeMap = [:]
-        Collection<Entity> all = entityService.getAllEntities()
+        Collection<Entity> entities = entityService.getAllEntities()
         JsTreeNodeImpl root = new JsTreeNodeImpl("root", ".", "root", true)
 
-        all.each { nodeMap.put(it.id, new JsTreeNodeImpl(it, true)) }
+        entities.each { nodeMap.put(it.id, new JsTreeNodeImpl(it, true)) }
 
-        all.each {
+        entities.each {
             entity ->
             entityService.getChildren(entity).each {
                 child -> nodeMap[entity.id].children.add(nodeMap[child.id])
