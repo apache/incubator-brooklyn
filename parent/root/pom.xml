@@ -386,7 +386,7 @@
                                         <taskdef resource="testngtasks" classpathref="maven.plugin.classpath"/>
                                         <testng listeners="brooklyn.test.StatusListener"
                                                 groups="${includedTestGroups}" excludedGroups="${excludedTestGroups}"
-                                                haltonfailure="true" enableAssert="true"
+                                                haltonfailure="true" enableAssert="true" testNames="${test}"
                                                 classpathref="maven.test.classpath" outputDir="target/testng">
                                             <classfileset dir="target/test-classes" includes="**/*Test.class"/>
                                             <sysproperty
