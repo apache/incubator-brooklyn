@@ -14,9 +14,9 @@ import org.testng.annotations.Test
 import brooklyn.entity.Application
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.location.Location
-import brooklyn.location.basic.LocalhostSshMachineProvisioner
 
 import brooklyn.location.basic.GeneralPurposeLocation
+import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 
 /**
  * Test the operation of the {@link JBossNode} class.
@@ -44,7 +44,7 @@ public class JBossNodeIntegrationTest {
     public void setup() {
         app = new TestApplication();
         testLocation = new GeneralPurposeLocation(name:'london', host:'localhost',
-                    provisioner: new LocalhostSshMachineProvisioner())
+                    provisioner: new LocalhostMachineProvisioningLocation())
     }
 
     

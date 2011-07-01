@@ -1,21 +1,24 @@
 package brooklyn.location.basic
 
+import brooklyn.location.MachineProvisioningLocation
+
 /**
  * A provisioner of @{link SshMachineLocation}s
  */
-public class SshMachineProvisioner {
+public class FixedListMachineProvisioningLocation extends GeneralPurposeLocation implements MachineProvisioningLocation<SshMachineLocation> {
 
     private Object lock = new Object();
     private List<SshMachineLocation> available;
     private List<SshMachineLocation> inUse;
 
-    public SshMachineProvisioner(Collection<SshMachineLocation> machines) {
+    public FixedListMachineProvisioningLocation(Map attributes = [:], Collection<SshMachineLocation> machines) {
+        super(attributes)
         available = new ArrayList(machines);
         inUse = new ArrayList();
     }
 
-    public static fromStringList(Collection<String> machines, String userName) {
-        return new SshMachineProvisioner(machines.collect { new SshMachineLocation(InetAddress.getByName(), userName) })
+    public static fromStringList(Map attributes = [:], Collection<String> machines, String userName) {
+        return new FixedListMachineProvisioningLocation(attributes, machines.collect { new SshMachineLocation(InetAddress.getByName(), userName) })
     }
 
     public SshMachineLocation obtain() {
@@ -37,8 +40,8 @@ public class SshMachineProvisioner {
     }
 }
 
-public class LocalhostSshMachineProvisioner extends SshMachineProvisioner {
-    public LocalhostSshMachineProvisioner() {
+public class LocalhostMachineProvisioningLocation extends FixedListMachineProvisioningLocation {
+    public LocalhostMachineProvisioningLocation() {
         super([ new SshMachineLocation(InetAddress.getByAddress((byte[])[127,0,0,1])) ])
     }
 }
