@@ -46,6 +46,12 @@ class EntityService {
         flattenedList
     }
 
+    /** Returns entities which match the given conditions.
+     *
+     * If the condition value is false entities will not be filtered on the value.
+     * Otherwise, the condition is a regular expression that will be matched
+     * against the corresponding field of the entities.
+     */
     public Set<Entity> getEntitiesMatchingCriteria(String name, String id, String applicationId) {
         getAllEntities().findAll {
             it ->

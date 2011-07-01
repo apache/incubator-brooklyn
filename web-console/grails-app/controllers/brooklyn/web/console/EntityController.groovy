@@ -10,6 +10,7 @@ import brooklyn.web.console.entity.JsTreeNodeImpl
 @Secured(['ROLE_ADMIN'])
 class EntityController {
 
+    // Injected
     def entityService
 
     def index = {}
@@ -22,14 +23,28 @@ class EntityController {
         render(toEntitySummaries(entityService.getEntitiesMatchingCriteria(params.name, params.id, params.applicationId)) as JSON)
     }
 
+    def sensors = {
+        String id = "leaf-\\d*"
+        Collection<Entity> entities = entityService.getEntitiesMatchingCriteria(null, id, null)
+        if (entities.size() == 0) {
+            // log maybe
+            render(status: 404, text: '{message: "Entity with specified id does not exist"}')
+            return
+        }
+
+        Entity entity = entities.toArray()[0]
+
+        render entity.sensorReadings as JSON
+    }
+
     def jstree = {
         Map<String, JsTreeNodeImpl> nodeMap = [:]
-        Collection<Entity> all = entityService.getAllEntities()
+        Collection<Entity> entities = entityService.getAllEntities()
         JsTreeNodeImpl root = new JsTreeNodeImpl("root", ".", "root", true)
 
-        all.each { nodeMap.put(it.id, new JsTreeNodeImpl(it, true)) }
+        entities.each { nodeMap.put(it.id, new JsTreeNodeImpl(it, true)) }
 
-        all.each {
+        entities.each {
             entity ->
             entityService.getChildren(entity).each {
                 child -> nodeMap[entity.id].children.add(nodeMap[child.id])

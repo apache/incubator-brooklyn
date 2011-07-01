@@ -75,9 +75,19 @@ class ManagementContextService implements ManagementContext {
         }
 
         private class TestLeafEntity extends AbstractEntity {
+            /* Temporarily using fake sensor data provider.
+             * Should switch to using the sensors field of AbstractEntity:
+                 private Map<String,Sensor> sensors = null
+            */
+            Map sensorReadings;
+
             TestLeafEntity(String displayName) {
                 this.id = "leaf-" + ManagementContextService.ID_GENERATOR++
                 this.displayName = displayName;
+                this.id = id;
+                this.sensorReadings = [ Happiness: 42,
+                                        WubWub: 16,
+                                        Pingu: "Moop" ];
             }
         }
     }
