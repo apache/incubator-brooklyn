@@ -349,7 +349,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 
     protected synchronized SubscriptionContext getSubscriptionContext() {
         if (subscription) subscription;
-        subscription = getManagementContext().getSubscriptionContext(this);
+        subscription = getManagementContext()?.getSubscriptionContext(this);
     }
 
     protected synchronized ExecutionContext getExecutionContext() {
@@ -376,7 +376,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     
     /** @see EntityLocal#emit(Sensor, Object) */
     public <T> void emit(Sensor<T> sensor, T val) {
-        subscriptionContext.publish(sensor.newEvent(this, val))
+        subscriptionContext?.publish(sensor.newEvent(this, val))
     }
 
     /** sensors available on this entity
