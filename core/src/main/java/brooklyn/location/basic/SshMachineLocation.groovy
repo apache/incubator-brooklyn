@@ -1,7 +1,8 @@
 package brooklyn.location.basic
 
-import brooklyn.util.internal.SshJschTool
 import brooklyn.location.MachineLocation
+import brooklyn.location.PortRange
+import brooklyn.util.internal.SshJschTool
 
 /**
  * Operations on a machine that is accessible via ssh.
@@ -56,7 +57,7 @@ public class SshMachineLocation extends GeneralPurposeLocation implements Machin
         throw new Exception("Not implemented")
     }
 
-    int obtainPort(int lowerLimit, int upperLimit) {
+    int obtainPort(PortRange range) {
         throw new Exception("Not implemented")
     }
 

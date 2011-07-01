@@ -28,11 +28,10 @@ public interface MachineLocation extends Location {
     /**
      * Reserve a port for your application, with a port number in a specific range. If your application requires a port, but it
      * does not mind exactly which port number - for example, a port for internal JMX monitoring - call this method.
-     * @param lowerLimit the lowest-number port that is acceptable.
-     * @param upperLimit the highest-number port that is acceptable.
+     * @param range the range of acceptable port numbers.
      * @return the port number that has been reserved, or -1 if there was no available port in the acceptable range.
      */
-    public int obtainPort(int lowerLimit, int upperLimit);
+    public int obtainPort(PortRange range);
 
     /**
      * Release a previously reserved port.
