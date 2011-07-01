@@ -1,0 +1,39 @@
+.effector-left-column
+    Here is where we have a list of effectors
+    .effector-list-container
+        %table{:id=>"effectorlist"}
+    .effector-list-edit{:align=>"center"}
+        %button +
+        %button="-"
+.effector-main-content
+    %fieldset
+        %legend{:id=>"effector-name"} Effector Name
+        %fieldset
+            %legend Invoke
+            .effector-invoke
+                Here is a list of invokable actions
+                %ul
+                    %li
+                        Arg1
+                        %button Go
+                    %li
+                        Arg2
+                        %button Go
+                    %li
+                        Arg3
+                        %button Go
+        %fieldset
+            %legend Execute
+            .effector-execute
+                Here is a list of executable tasks
+                %ul
+                    %li
+                        Arg1
+                        %button Go
+                    %li
+                        Arg2
+                        %button Go
+                    %li
+                        Arg3
+                        %button Go
+

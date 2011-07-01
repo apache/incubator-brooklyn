@@ -34,21 +34,7 @@
                         %h3 Activity
                         #activity
                     #location
-                        %h2 Location
-                        .effector-left-column
-                            Here is where we have a list of effectors
-                        .effector-main-content
-                            %fieldset
-                                %legend Effector Name
-                                .effector-description
-                                Here is an effector description
-                            %fieldset
-                                %legend Effector Logic
-                                .effector-logic
-                                Here is the effector logic
-                            .effector-buttons{:align=>"right"}
-                                %button Edit
-                                %button Invoke
+                        %g:render{:template=>"/tabs/effectors"}
                     #health
                         %h2 Health
                     #structure
