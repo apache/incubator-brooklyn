@@ -31,7 +31,7 @@ import brooklyn.util.task.ExecutionContext
 import brooklyn.management.internal.AbstractManagementContext
 
 /**
- * Default {@link Entity} implementation
+ * Default {@link Entity} implementation.
  * 
  * Provides several common fields ({@link #name}, {@link #id});
  * a map {@link #config} which contains arbitrary config data;
@@ -45,11 +45,11 @@ import brooklyn.management.internal.AbstractManagementContext
  * @author alex, aled
  */
 public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
-    private static final Logger log = LoggerFactory.getLogger(AbstractEntity.class);
+    private static final Logger log = LoggerFactory.getLogger(AbstractEntity.class)
  
-    String id = LanguageUtils.newUid();
+    String id = LanguageUtils.newUid()
     Map<String,Object> presentationAttributes = [:]
-    String displayName;
+    String displayName
     final Collection<Group> groups = new CopyOnWriteArrayList<Group>()
     volatile Application application
     Collection<Location> locations = []
