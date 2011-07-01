@@ -558,6 +558,9 @@
                         <inherited>true</inherited>
                         <executions>
                             <execution>
+                                <id>run-tests</id>
+                            </execution>
+                            <execution>
                                 <id>instrument classes</id>
                                 <goals>
                                     <goal>run</goal>
@@ -578,7 +581,8 @@
                                                 </copy>
                                                 <cobertura-instrument datafile="target/cobertura/cobertura.ser"
                                                                       todir="target/cobertura/coverage-classes">
-                                                    <fileset erroronmissingdir="false" dir="target/classes">
+                                                    <fileset erroronmissingdir="false"
+                                                            dir="target/cobertura/coverage-classes">
                                                         <include name="brooklyn/**/*.class"/>
                                                         <exclude name="brooklyn/**/*Test.class"/>
                                                     </fileset>
@@ -598,7 +602,7 @@
                                 <goals>
                                     <goal>run</goal>
                                 </goals>
-                                <phase>package</phase>
+                                <phase>post-integration-test</phase>
                                 <configuration>
                                     <target>
                                         <taskdef resource="net/sf/antcontrib/antcontrib.properties"
@@ -643,6 +647,11 @@
                                 <groupId>org.apache.ant</groupId>
                                 <artifactId>ant</artifactId>
                                 <version>1.8.2</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>org.testng</groupId>
+                                <artifactId>testng</artifactId>
+                                <version>${testng.version}</version>
                             </dependency>
                             <dependency>
                                 <groupId>net.sourceforge.cobertura</groupId>
@@ -704,6 +713,17 @@
                                 </property>
                             </systemProperties>
                         </configuration>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>test-jar-creation</id>
+                                <configuration>
+                                    <skip>true</skip>
+                                </configuration>
+                           </execution>
+                        </executions>
                     </plugin>
                     <plugin>
                         <artifactId>maven-deploy-plugin</artifactId>
