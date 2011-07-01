@@ -4,11 +4,11 @@ import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.group.Cluster
 import brooklyn.entity.webapp.tomcat.TomcatCluster
 import brooklyn.entity.webapp.tomcat.TomcatNode
-import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.internal.EntityNavigationUtils
+
 import brooklyn.location.basic.SshMachineProvisioner
 import brooklyn.location.basic.SshMachine
 import com.google.common.base.Preconditions
+import brooklyn.location.basic.GeneralPurposeLocation
 
 /**
  * Starts some tomcat nodes, on localhost, using ssh;
@@ -35,7 +35,7 @@ public class SimpleTomcatApp extends AbstractApplication {
         ]
         Collection<SshMachine> machines = hosts.collect { new SshMachine(it, "cloudsoft") }
 
-        app.tc.start([ new SshMachineLocation(name:'london', provisioner:new SshMachineProvisioner(machines)) ])
+        app.tc.start([ new GeneralPurposeLocation(name:'london', provisioner:new SshMachineProvisioner(machines)) ])
 
         Thread t = []
         t.start {

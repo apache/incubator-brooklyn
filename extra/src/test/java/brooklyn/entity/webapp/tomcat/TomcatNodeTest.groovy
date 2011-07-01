@@ -1,11 +1,6 @@
 package brooklyn.entity.webapp.tomcat
 
-import static brooklyn.test.TestUtils.*
-
-import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
-
-import java.util.Map
 
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
@@ -16,10 +11,6 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Application
 import brooklyn.entity.basic.AbstractApplication
-import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.internal.TimeExtras
-import brooklyn.location.basic.SshMachineProvisioner
-import brooklyn.location.basic.SshMachine
 
 /**
  * This tests the operation of the {@link TomcatNode} entity.

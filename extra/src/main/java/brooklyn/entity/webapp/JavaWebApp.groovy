@@ -13,8 +13,9 @@ import brooklyn.location.Location
 import brooklyn.location.NoMachinesAvailableException
 import brooklyn.location.basic.SshBasedJavaWebAppSetup
 import brooklyn.location.basic.SshMachine
-import brooklyn.location.basic.SshMachineLocation
+
 import brooklyn.util.internal.EntityStartUtils
+import brooklyn.location.basic.GeneralPurposeLocation
 
 /**
 * An {@link brooklyn.entity.Entity} representing a single web application instance.
@@ -54,11 +55,11 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
         
     // TODO Thinking about things...
     // public void startInLocation(MachineFactoryLocation factory) {
-    //     SshMachineLocation loc = factory.newMachine();
+    //     GeneralPurposeLocation loc = factory.newMachine();
     //     startInLocation(loc);
     // }
     
-    public void startInLocation(Collection<SshMachineLocation> locs) {
+    public void startInLocation(Collection<GeneralPurposeLocation> locs) {
         // TODO check has exactly one?
         startInLocation(locs.iterator().next())
     }
@@ -85,7 +86,7 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
         }
     }
     
-    public void startInLocation(SshMachineLocation loc) {
+    public void startInLocation(GeneralPurposeLocation loc) {
         
         locations.add(loc)
         if (!loc.attributes.provisioner)
@@ -120,7 +121,7 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
         shutdownInLocation(locations.iterator().next())
     }
     
-    public void shutdownInLocation(SshMachineLocation loc) {
+    public void shutdownInLocation(GeneralPurposeLocation loc) {
         getSshBasedSetup(this.machine).shutdown()
     }
     

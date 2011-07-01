@@ -3,7 +3,6 @@ package brooklyn.entity.webapp.tomcat
 import brooklyn.entity.basic.AttributeDictionary
 import brooklyn.location.basic.SshBasedJavaWebAppSetup
 import brooklyn.location.basic.SshMachine
-import brooklyn.location.basic.SshMachineLocation
 
 /**
  * Start a {@link TomcatNode} in a {@link Location} accessible over ssh.
