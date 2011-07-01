@@ -1,7 +1,4 @@
 /* GENERAL BODY */
-*{
-margin:0;
-}
 
 html,body{
 	height:100%;
@@ -10,8 +7,6 @@ html,body{
 body{
 	font-family:"lucida grande",tahoma,verdana,arial,sans-serif;
 	font-size:11px;
-	margin:0;
-	padding:0;
 }
 
 /* TEMPLATE LAYOUT CONTAINERS */
