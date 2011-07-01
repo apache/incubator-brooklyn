@@ -24,7 +24,7 @@ class EntityController {
     }
 
     def sensors = {
-        String id = "1"
+        String id = "leaf-\\d*"
         Collection<Entity> entities = entityService.getEntitiesMatchingCriteria(null, id, null)
         if (entities.size() == 0) {
             // log maybe
