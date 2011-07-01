@@ -382,7 +382,7 @@
                                 </goals>
                                 <phase>test</phase>
                                 <configuration>
-                                    <tasks>
+                                    <target unless="${skipTests}">
                                         <taskdef resource="testngtasks" classpathref="maven.plugin.classpath"/>
                                         <testng listeners="brooklyn.test.StatusListener"
                                                 groups="${includedTestGroups}" excludedGroups="${excludedTestGroups}"
@@ -400,7 +400,7 @@
                                                     value="false"/>
 
                                         </testng>
-                                    </tasks>
+                                    </target>
                                 </configuration>
                             </execution>
                         </executions>
