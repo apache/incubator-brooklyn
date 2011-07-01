@@ -44,7 +44,7 @@ public abstract class ClusterFromTemplate extends Cluster implements Resizable {
         def nodes = []
         desiredIncrease.times { nodes += EntityStartUtils.createFromTemplate(this, template) }
 
-        Set tasks = nodes.collect { node -> getExecutionContext().submit({node.start()}) }
+        Set tasks = nodes.collect { node -> getExecutionContext().submit({node.start(locations)}) }
         tasks.collect { it.get() }
     }
 

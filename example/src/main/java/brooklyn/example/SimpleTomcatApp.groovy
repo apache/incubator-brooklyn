@@ -18,7 +18,7 @@ import com.google.common.base.Preconditions
  * @author alex
  */
 public class SimpleTomcatApp extends AbstractApplication {
-    Cluster tc = new TomcatCluster(displayName:'MyTomcat', initialSize:3, this);
+    Cluster tc = new TomcatCluster(displayName:'MyTomcat', initialSize: 3, owner: this);
 
     public static void main(String[] argv) {
         def app = new SimpleTomcatApp()
@@ -35,9 +35,7 @@ public class SimpleTomcatApp extends AbstractApplication {
         ]
         Collection<SshMachine> machines = hosts.collect { new SshMachine(it, "cloudsoft") }
 
-        EntityNavigationUtils.dump(app, "before start:  ")
         app.tc.start([ new SshMachineLocation(name:'london', provisioner:new SshMachineProvisioner(machines)) ])
-        EntityNavigationUtils.dump(app, "after start:  ")
 
         Thread t = []
         t.start {
