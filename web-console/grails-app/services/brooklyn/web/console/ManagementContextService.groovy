@@ -12,6 +12,7 @@ import brooklyn.entity.basic.AbstractEntity
 class ManagementContextService implements ManagementContext {
     private final Application application = new TestApplication();
     static transactional = false;
+    protected static int ID_GENERATOR = 0;
 
     Collection<Application> getApplications() {
         return Collections.singletonList(application);
@@ -31,6 +32,7 @@ class ManagementContextService implements ManagementContext {
 
     private class TestApplication extends AbstractApplication {
         TestApplication() {
+            this.id = "app-" + ManagementContextService.ID_GENERATOR++
             displayName = "Application";
 
             addOwnedChildren([
@@ -62,6 +64,7 @@ class ManagementContextService implements ManagementContext {
 
         private class TestGroupEntity extends AbstractGroup {
             TestGroupEntity(String displayName) {
+                this.id = "group-" + ManagementContextService.ID_GENERATOR++
                 this.displayName = displayName
             }
 
@@ -73,6 +76,7 @@ class ManagementContextService implements ManagementContext {
 
         private class TestLeafEntity extends AbstractEntity {
             TestLeafEntity(String displayName) {
+                this.id = "leaf-" + ManagementContextService.ID_GENERATOR++
                 this.displayName = displayName;
             }
         }
