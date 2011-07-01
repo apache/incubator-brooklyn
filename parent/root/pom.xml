@@ -580,9 +580,8 @@
                                                     <fileset erroronmissingdir="false" dir="target/classes"/>
                                                 </copy>
                                                 <cobertura-instrument datafile="target/cobertura/cobertura.ser"
-                                                                      todir="target/cobertura/coverage-classes">
-                                                    <fileset erroronmissingdir="false"
-                                                            dir="target/cobertura/coverage-classes">
+                                                                      todir="target/test-classes">
+                                                    <fileset erroronmissingdir="false" dir="target/classes">
                                                         <include name="brooklyn/**/*.class"/>
                                                         <exclude name="brooklyn/**/*Test.class"/>
                                                     </fileset>
