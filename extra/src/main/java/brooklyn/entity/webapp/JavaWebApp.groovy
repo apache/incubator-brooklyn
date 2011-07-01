@@ -110,9 +110,10 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
         if (!isRunningResult) throw new IllegalStateException("$this aborted soon after startup")
     }
 
+    // FIXME: should MachineLocations below actually be SshMachineLocation? That's what XSshSetup requires, but not what the unit tests offer.
     public void shutdown() {
         jmxAdapter.disconnect();
-        shutdownInLocation(locations.find({ it instanceof SshMachineLocation }))
+        shutdownInLocation(locations.find({ it instanceof MachineLocation }))
     }
     
     public void shutdownInLocation(MachineLocation loc) {
@@ -120,7 +121,7 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
     }
     
     public void deploy(String file) {
-        getSshBasedSetup(locations.find({ it instanceof SshMachineLocation })).deploy(new File(file))
+        getSshBasedSetup(locations.find({ it instanceof MachineLocation })).deploy(new File(file))
     }
     
     protected void computeReqsPerSec() {
