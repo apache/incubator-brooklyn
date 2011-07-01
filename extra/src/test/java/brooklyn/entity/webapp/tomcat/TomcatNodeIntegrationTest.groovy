@@ -38,6 +38,10 @@ public class TomcatNodeIntegrationTest {
             super(properties)
         }
     }
+    
+    static {
+        TimeExtras.init()
+    }
 
     static boolean httpPortLeftOpen = false;
     private int oldHttpPort=-1;

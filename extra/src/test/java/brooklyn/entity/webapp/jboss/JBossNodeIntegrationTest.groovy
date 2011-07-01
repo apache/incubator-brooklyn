@@ -39,7 +39,7 @@ public class JBossNodeIntegrationTest {
             super(properties)
         }
     }
-
+    
     @BeforeMethod(groups = "Integration")
     public void setup() {
         app = new TestApplication();
@@ -60,7 +60,7 @@ public class JBossNodeIntegrationTest {
             jb.start([ testLocation ])
             assertTrue(JBoss6SshSetup.newInstance(jb, jb.locations.first()).isRunning())
         } finally {
-            jb.shutdown()
+            jb.stop()
             // Potential for JBoss to be in process of shutting down here..
             Thread.sleep 4000
             assertFalse(JBoss6SshSetup.newInstance(jb, jb.locations.first()).isRunning())
@@ -91,6 +91,6 @@ public class JBossNodeIntegrationTest {
             assertTrue errorCount > 0
             assertEquals 0, errorCount % n
             true
-        }, abortOnError:false, timeout: 10*SECONDS, useGroovyTruth:true)
+        }, abortOnError:false, timeout:10*SECONDS, useGroovyTruth:true)
     }
 }
