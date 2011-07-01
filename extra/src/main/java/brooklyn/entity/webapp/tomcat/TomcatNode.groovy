@@ -31,7 +31,7 @@ public class TomcatNode extends JavaWebApp {
     
     public TomcatNode(Map properties=[:]) {
         super(properties);
-        addSensor HTTP_PORT, (properties.httpPort ?: -1)
+        updateAttribute(HTTP_PORT, (properties.httpPort ?: -1))
     }
 
     public SshBasedJavaWebAppSetup getSshBasedSetup(SshMachineLocation machine) {

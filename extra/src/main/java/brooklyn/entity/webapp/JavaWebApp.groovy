@@ -74,7 +74,7 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
     abstract void waitForHttpPort();
         
     public void start(Collection<Location> locations) {
-        EntityStartUtils.startEntity this, locations;
+        startInLocation locations
         
         if (!(getAttribute(JMX_HOST) && getAttribute(JMX_PORT)))
             throw new IllegalStateException("JMX is not available")
@@ -150,7 +150,6 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
     }
     
     protected double computeReqsPerSec() {
- 
         def curTimestamp = System.currentTimeMillis()
         def curCount = getAttribute(REQUEST_COUNT) ?: 0
         

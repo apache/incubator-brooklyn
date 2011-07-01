@@ -4,8 +4,6 @@ import java.io.Serializable;
 import java.util.Collection;
 
 import brooklyn.location.Location;
-import brooklyn.management.SubscriptionHandle;
-import brooklyn.management.SubscriptionManager;
 
 /**
  * The basic interface for a Brooklyn entity.

@@ -45,10 +45,8 @@ public class JBossNode extends JavaWebApp {
         attributePoller.addSensor(REQUEST_COUNT, jmxAdapter.newValueProvider("jboss.web:type=GlobalRequestProcessor,name=http-*", "requestCount"))
         attributePoller.addSensor(TOTAL_PROCESSING_TIME, jmxAdapter.newValueProvider("jboss.web:type=GlobalRequestProcessor,name=http-*", "processingTime"))
     }
-
+    
     public void waitForHttpPort() {
-		// TODO Groovy Auto-generated method stub
-		// Only partially implemented. Perform organize imports
-		// to properly import parameter and return types
-	}
+        log.debug "started jboss server: jmxHost {} and jmxPort {}", getAttribute(JMX_HOST), getAttribute(JMX_PORT)
+    }
 }

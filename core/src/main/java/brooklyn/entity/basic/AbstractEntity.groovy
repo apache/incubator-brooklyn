@@ -401,8 +401,6 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 
     /**
      * Sensors available on this entity
-     *
-     * NB no work has been done supporting changing this after initialization; see note on {@link #getEffectors()}
      */
     public Map<String,Sensor<?>> getSensors() { sensors }
     
