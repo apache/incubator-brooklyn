@@ -112,3 +112,13 @@ legend{
     height: 300px;
     padding: 0;
 }
+
+table, th, td {
+    border: 2px solid #ccc;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 0.2em;
+    text-align: left;
+}
