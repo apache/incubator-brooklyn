@@ -43,8 +43,7 @@ public class JBossNodeIntegrationTest {
     @BeforeMethod(groups = "Integration")
     public void setup() {
         app = new TestApplication();
-        testLocation = new GeneralPurposeLocation(name:'london', host:'localhost',
-                    provisioner: new LocalhostMachineProvisioningLocation())
+        testLocation = new LocalhostMachineProvisioningLocation(name:'london')
     }
 
     

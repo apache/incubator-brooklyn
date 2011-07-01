@@ -16,6 +16,9 @@ import brooklyn.location.basic.SshBasedJavaWebAppSetup
 import brooklyn.util.internal.EntityStartUtils
 import brooklyn.location.basic.GeneralPurposeLocation
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.location.MachineProvisioningLocation
+import com.google.common.base.Preconditions
+import brooklyn.location.MachineLocation
 
 /**
 * An {@link brooklyn.entity.Entity} representing a single web application instance.
@@ -53,17 +56,6 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
     protected abstract void initJmxSensors();
     abstract void waitForHttpPort();
         
-    // TODO Thinking about things...
-    // public void startInLocation(MachineFactoryLocation factory) {
-    //     GeneralPurposeLocation loc = factory.newMachine();
-    //     startInLocation(loc);
-    // }
-    
-    public void startInLocation(Collection<GeneralPurposeLocation> locs) {
-        // TODO check has exactly one?
-        startInLocation(locs.iterator().next())
-    }
-    
     public void start(Collection<Location> locations) {
         EntityStartUtils.startEntity this, locations;
         
@@ -86,16 +78,18 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
         }
     }
     
-    public void startInLocation(GeneralPurposeLocation loc) {
-        
-        locations.add(loc)
-        if (!loc.attributes.provisioner)
-            throw new IllegalStateException("Location $loc does not have a machine provisioner")
+    public void startInLocation(Collection<Location> locs) {
+        // TODO check has exactly one?
+        MachineProvisioningLocation loc = locs.find({ it instanceof MachineProvisioningLocation });
+        Preconditions.checkArgument loc != null, "None of the provided locations is a MachineProvisioningLocation"
+        startInLocation(loc)
+    }
 
-        SshMachineLocation machine = loc.attributes.provisioner.obtain()
+    public void startInLocation(MachineProvisioningLocation loc) {
+        SshMachineLocation machine = loc.obtain()
         if (machine == null) throw new NoMachinesAvailableException(loc)
-        this.machine = machine
-        
+        locations.add(machine)
+
         SshBasedJavaWebAppSetup setup = getSshBasedSetup(machine)
         setup.start()
         waitForEntityStart(setup)
@@ -118,15 +112,15 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
 
     public void shutdown() {
         jmxAdapter.disconnect();
-        shutdownInLocation(locations.iterator().next())
+        shutdownInLocation(locations.find({ it instanceof SshMachineLocation }))
     }
     
-    public void shutdownInLocation(GeneralPurposeLocation loc) {
-        getSshBasedSetup(this.machine).shutdown()
+    public void shutdownInLocation(MachineLocation loc) {
+        getSshBasedSetup(loc).shutdown()
     }
     
     public void deploy(String file) {
-        getSshBasedSetup(this.machine).deploy(new File(file))
+        getSshBasedSetup(locations.find({ it instanceof SshMachineLocation })).deploy(new File(file))
     }
     
     protected void computeReqsPerSec() {
