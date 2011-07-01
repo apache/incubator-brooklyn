@@ -11,15 +11,16 @@ import brooklyn.management.SubscriptionHandle
 import brooklyn.policy.basic.AbstractPolicy
 
 class BufferingEnricher<T> extends AbstractPolicy implements EventListener<T> {
-    private Sensor<List<T>> result
+    public static class BufferChangedEvent {}
+    private Sensor<BufferChangedEvent> result
     private boolean alwaysRetainBuffer
     
     protected LinkedList<T> buffer = new LinkedList<T>()
     
-    public BufferingEnricher(Entity producer, Sensor<T> source, boolean alwaysRetainBuffer) {
+    public BufferingEnricher(Entity owner, Entity producer, Sensor<T> source, boolean alwaysRetainBuffer) {
         this.alwaysRetainBuffer = alwaysRetainBuffer
-        this.result = new BasicSensor(List.class, "Buffer", "Buffer for ${source.getDescription()}")
-        super.setEntity(producer)
+        this.result = new BasicSensor(BufferChangedEvent.class, "Buffer", "Buffer for ${source.getDescription()}")
+        super.setEntity(owner)
         super.subscribe(producer, source, this)
     }
     
@@ -27,7 +28,7 @@ class BufferingEnricher<T> extends AbstractPolicy implements EventListener<T> {
         if (!discardBuffer()) {
             buffer.addFirst(e.getValue())
             manageBuffer()
-            subscription.publish(result.newEvent(this, getBuffer()))
+            subscription.publish(result.newEvent(entity, new BufferChangedEvent()))
         }
     }
     
