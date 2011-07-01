@@ -9,9 +9,9 @@ import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.basic.AbstractEntity
 
-class ManagementContextService implements ManagementContext{
+class ManagementContextService implements ManagementContext {
     private final Application application = new TestApplication();
-    static transactional = false
+    static transactional = false;
 
     Collection<Application> getApplications() {
         return Collections.singletonList(application);
