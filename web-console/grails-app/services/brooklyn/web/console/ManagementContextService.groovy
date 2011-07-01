@@ -78,7 +78,7 @@ class ManagementContextService implements ManagementContext{
             */
             Map sensorReadings;
 
-            TestLeafEntity(String id, String displayName) {
+            TestLeafEntity(String displayName) {
                 this.displayName = displayName;
                 this.id = id;
                 this.sensorReadings = [ Happiness: 42,
