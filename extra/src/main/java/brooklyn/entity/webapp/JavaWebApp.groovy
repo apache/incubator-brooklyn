@@ -1,7 +1,5 @@
 package brooklyn.entity.webapp
 
-import java.util.Collection
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -12,7 +10,7 @@ import brooklyn.event.AttributeSensor
 import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.Location
-import brooklyn.location.basic.NoMachinesAvailableException
+import brooklyn.location.NoMachinesAvailableException
 import brooklyn.location.basic.SshBasedJavaWebAppSetup
 import brooklyn.location.basic.SshMachine
 import brooklyn.location.basic.SshMachineLocation
