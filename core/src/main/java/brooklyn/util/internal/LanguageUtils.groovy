@@ -71,7 +71,7 @@ public class LanguageUtils {
      * 
      * TODO move this to a shared service provider interface
      */
-    static String newUid() { Long.toHexString(seed.incrementAndGet()) }
+    static String newUid() { UUID.randomUUID().toString() }
 
     public static Map setFieldsFromMap(Object target, Map fieldValues) {
         Map unused = [:]
