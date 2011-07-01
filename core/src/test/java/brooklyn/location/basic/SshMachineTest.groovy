@@ -5,18 +5,15 @@ import static org.testng.Assert.*
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import brooklyn.location.basic.SshMachineLocation;
-
 /**
- * Test the {@link SshMachineLocation} implementation of the {@link Location} interface.
+ * Test the {@link SshMachineLocation} implementation of the {@link brooklyn.location.Location} interface.
  */
-public class SshMachineLocationTest {
-    private SshMachineLocation host;
+public class SshMachineTest {
+    private SshMachine host;
     
     @BeforeMethod(groups = "Integration")
     public void setUp() throws Exception {
-        host = new SshMachineLocation();
-        host.host = "localhost"
+        host = new SshMachine(InetAddress.getLocalHost());
     }
 
     // Note: requires `ssh localhost` to be setup such that no password is required    
