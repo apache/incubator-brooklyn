@@ -19,12 +19,12 @@ function initTabs() {
         }
     });
 
-    $("#summary").accordion();
+    $("#summary").accordion({fillSpace: true});
 
     var url = "sensors";
     $.getJSON(url, drawSensorData);
 }
 
 function setAccordionLayout(accordion) {
-    $("#summary").css('width', '300px');
+   $("#summary").css('padding', '0px');
 }
