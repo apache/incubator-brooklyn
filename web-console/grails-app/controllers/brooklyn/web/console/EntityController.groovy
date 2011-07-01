@@ -10,6 +10,7 @@ import brooklyn.web.console.entity.JsTreeNodeImpl
 @Secured(['ROLE_ADMIN'])
 class EntityController {
 
+    // Injected
     def entityService
 
     def index = {}
@@ -20,6 +21,20 @@ class EntityController {
 
     def search = {
         render(toEntitySummaries(entityService.getEntitiesMatchingCriteria(params.name, params.id, params.applicationId)) as JSON)
+    }
+
+    def sensors = {
+        String id = "1"
+        Collection<Entity> entities = entityService.getEntitiesMatchingCriteria(null, id, null)
+        if (entities.size() == 0) {
+            // log maybe
+            render(status: 404, text: '{message: "Entity with specified id does not exist"}')
+            return
+        }
+
+        Entity entity = entities.toArray()[0]
+
+        render entity.sensorReadings as JSON
     }
 
     def jstree = {
