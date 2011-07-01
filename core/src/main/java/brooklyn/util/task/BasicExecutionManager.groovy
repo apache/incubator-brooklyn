@@ -157,9 +157,9 @@ public class BasicExecutionManager implements ExecutionManager {
     /** @see #setTaskPreprocessorForTag(Object, TaskPreprocessor) */
     public void setTaskPreprocessorForTag(Object tag, Class<? extends TaskPreprocessor> preprocessor) {
         synchronized (preprocessorByTag) {
-            def old = getTaskPreprocessorForTag(tag)
+            TaskPreprocessor old = getTaskPreprocessorForTag(tag)
             if (old!=null) {
-                if (preprocessor.isAssignableFrom(old)) {
+                if (preprocessor.isAssignableFrom(old.getClass())) {
                     /* already have such an instance */ 
                     return;
                 }
