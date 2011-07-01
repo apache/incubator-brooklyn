@@ -1,5 +1,6 @@
 package com.cloudsoftcorp.monterey.brooklyn.entity
 
+import java.util.Collection
 import java.util.logging.Logger
 
 import brooklyn.entity.basic.AbstractGroup
@@ -8,8 +9,14 @@ import brooklyn.location.Location
 import com.cloudsoftcorp.monterey.control.workrate.api.WorkrateReport
 import com.cloudsoftcorp.monterey.network.control.api.Dmn1NodeType
 import com.cloudsoftcorp.monterey.network.control.api.NodeSummary
+import com.cloudsoftcorp.monterey.network.control.plane.GsonSerializer
+import com.cloudsoftcorp.monterey.network.control.plane.web.PlumberWebProxy
+import com.cloudsoftcorp.monterey.network.control.wipapi.DmnFuture
+import com.cloudsoftcorp.monterey.network.control.wipapi.NodesRolloutConfiguration
 import com.cloudsoftcorp.monterey.node.api.NodeId
 import com.cloudsoftcorp.util.Loggers
+import com.cloudsoftcorp.util.javalang.ClassLoadingContext
+import com.google.gson.Gson
 
 /**
  * Represents a "proto node", i.e. a container that can host a LPP, MR, M, TP. 
@@ -30,11 +37,17 @@ public class MontereyContainerNode extends AbstractGroup {
     
     private AbstractMontereyNode node;
     
+    private final Gson gson;
+    
     MontereyContainerNode(MontereyNetworkConnectionDetails connectionDetails, NodeId nodeId, Location location) {
         this.connectionDetails = connectionDetails;
         this.nodeId = nodeId;
         this.location = location;
         
+        classloadingContext = ClassLoadingContext.Defaults.getDefaultClassLoadingContext();
+        gsonSerializer = new GsonSerializer(classloadingContext);
+        gson = gsonSerializer.getGson();
+
         LOG.info("Node "+nodeId+" created in location "+location);        
     }
     
@@ -46,6 +59,19 @@ public class MontereyContainerNode extends AbstractGroup {
         return node;
     }
 
+    public void rollout(Dmn1NodeType type) {
+        PlumberWebProxy plumber = new PlumberWebProxy(connectionDetails.getManagementUrl(), gson, connectionDetails.getWebApiAdminCredential());
+        DmnFuture<Collection<NodeId>> future = plumber.rolloutNodes(new NodesRolloutConfiguration.Builder()
+                .nodesToUse(Collections.singleton(nodeId))
+                .ofType(type, 1)
+                .build());
+    }
+    
+    public void revert() {
+        PlumberWebProxy plumber = new PlumberWebProxy(connectionDetails.getManagementUrl(), gson, connectionDetails.getWebApiAdminCredential());
+        DmnFuture<?> future = plumber.revert(nodeId);
+    }
+    
     void updateContents(NodeSummary nodeSummary) {
         if (nodeSummary.getType() == node?.getNodeType()) {
             // already has correct type; nothing to do

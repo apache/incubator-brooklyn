@@ -1,33 +1,38 @@
 package com.cloudsoftcorp.monterey.brooklyn.entity
 
-import groovy.lang.Closure
-
 import java.util.Map
 import java.util.concurrent.ConcurrentHashMap
 
+import brooklyn.entity.Entity
 import brooklyn.entity.basic.DynamicGroup
 import brooklyn.entity.trait.Balanceable
+import brooklyn.location.Location
 
+import com.cloudsoftcorp.monterey.network.control.plane.GsonSerializer
 import com.cloudsoftcorp.monterey.network.control.plane.web.PlumberWebProxy
 import com.cloudsoftcorp.monterey.network.control.wipapi.Dmn1PlumberInternalAsync
 import com.cloudsoftcorp.monterey.node.api.NodeId
+import com.cloudsoftcorp.util.javalang.ClassLoadingContext
 import com.google.gson.Gson
 
 public class MediatorGroup extends DynamicGroup implements Balanceable {
 
     private final Map<NodeId,MediatorNode> mediators = new ConcurrentHashMap<NodeId,AbstractMontereyNode>();
     
-    // TODO inject or instantiate gson
     private Gson gson;
     
-    private final MontereyNetworkConnectionDetails connectionDetails;
-    private final NodeId nodeId;
+    final MontereyNetworkConnectionDetails connectionDetails;
+    final Location loc;
     
-    MediatorGroup(MontereyNetworkConnectionDetails connectionDetails, NodeId nodeId) {
+    MediatorGroup(MontereyNetworkConnectionDetails connectionDetails, Location loc) {
         this.connectionDetails = connectionDetails;
-        this.nodeId = nodeId;
-        
-        setEntityFilter { it instanceof MediatorNode }
+        this.loc = loc;
+
+        classloadingContext = ClassLoadingContext.Defaults.getDefaultClassLoadingContext();
+        gsonSerializer = new GsonSerializer(classloadingContext);
+        gson = gsonSerializer.getGson();
+
+        setEntityFilter { Entity e -> e instanceof MediatorNode && e.locations.equals(Collections.singleton(loc)) }
     }
 
     private void moveSegment(String segmentId, MediatorNode destination) {
