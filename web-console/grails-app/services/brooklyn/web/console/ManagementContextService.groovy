@@ -31,6 +31,8 @@ class ManagementContextService implements ManagementContext {
     }
 
     private class TestApplication extends AbstractApplication {
+        Map sensorReadings = [:];
+
         TestApplication() {
             this.id = "app-" + ManagementContextService.ID_GENERATOR++
             displayName = "Application";
@@ -63,6 +65,7 @@ class ManagementContextService implements ManagementContext {
         }
 
         private class TestGroupEntity extends AbstractGroup {
+            Map sensorReadings = [:];
             TestGroupEntity(String displayName) {
                 this.id = "group-" + ManagementContextService.ID_GENERATOR++
                 this.displayName = displayName
