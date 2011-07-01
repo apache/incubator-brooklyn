@@ -83,3 +83,32 @@ h1#brooklyn-header{
 	width:250px;
 	background-image:url("../../images/brooklyn/brooklynbannerone.png");
 }
+
+.effector-left-column{
+    float: left;
+    width: 300px;
+    height:100%;
+    border:1px solid #CCCCCC;
+}
+.effector-main-content{
+    float:left;
+    height:100%;
+    border:1px solid #CCCCCC;
+}
+.effector-buttons{
+     border:1px solid #CCCCCC;
+}
+
+fieldset{
+    display:block;
+    font-family:Verdana, Arial, Helvetica, sans-serif;
+    font-size:12px;
+    margin-top:5px;
+    margin-left:5px;
+    border:1px solid #CCCCCC;
+}
+
+legend{
+    padding:2px 5px;
+}
+

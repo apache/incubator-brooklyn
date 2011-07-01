@@ -14,10 +14,19 @@ public class OwnedChildrenTest {
     public void setUp() {
         app = new AbstractApplication() {}
     }
-        
+    
     @Test
-    public void testSetOwnerInConstructor() {
+    public void testSetOwnerInConstructorMap() {
         Entity e = new AbstractEntity(owner:app) {}
+        
+        Assert.assertEquals(app, e.getOwner())
+        Assert.assertEquals(app.getOwnedChildren(), [e])
+        Assert.assertEquals(e.getApplication(), app)
+    }
+    
+    @Test
+    public void testSetOwnerInConstructorArgument() {
+        Entity e = new AbstractEntity(app) {}
         
         Assert.assertEquals(app, e.getOwner())
         Assert.assertEquals(app.getOwnedChildren(), [e])

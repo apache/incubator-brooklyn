@@ -107,7 +107,12 @@ public class TestUtils {
                         log.trace "Attempt {} after {} ms: {}", attempt, System.currentTimeMillis() - startTime, result
                         if (useGroovyTruth) {
                             if (result) return;
-                        } else if (result!=false) return;
+                        } else if (result != false) {
+                            if (result instanceof BooleanWithMessage) 
+                                log.warn "Test returned an instance of BooleanWithMessage but useGroovyTruth is not set! " +
+                                         "The result of this probably isn't what you intended."
+                            return;
+                        }
                     } else {
                         r.run()
                         return

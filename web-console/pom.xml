@@ -2,18 +2,22 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>brooklyn</groupId>
     <artifactId>brooklyn-web-console</artifactId>
     <packaging>war</packaging>
-    <version>0.0.1-SNAPSHOT</version>
 
     <name>Brooklyn Management Console webapp</name>
     <description>Brooklyn Management Console Web Application</description>
     <url>http://brooklyn</url>
 
+    <parent>
+        <groupId>brooklyn</groupId>
+        <artifactId>brooklyn-parent-root</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../parent/root/pom.xml</relativePath>
+    </parent>
+
     <properties>
         <grails.version>1.3.7</grails.version>
-        <grails.testPhases>-unit</grails.testPhases>
     </properties>
 
     <dependencies>
@@ -21,6 +25,18 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>brooklyn-core</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>brooklyn-test-support</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-jdk14</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
@@ -146,13 +162,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.grails</groupId>
-            <artifactId>grails-test</artifactId>
-            <version>${grails.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>jstl</artifactId>
             <version>1.1.2</version>
@@ -170,12 +179,6 @@
             <artifactId>hibernate-ehcache</artifactId>
             <version>3.3.1.GA</version>
             <exclusions>
-                <!-- See http://www.slf4j.org/faq.html#IllegalAccessError -->
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-api</artifactId>
-                </exclusion>
-
                 <!-- We are pulling in ehcache-core below -->
                 <exclusion>
                     <groupId>net.sf.ehcache</groupId>
@@ -188,12 +191,6 @@
             <groupId>net.sf.ehcache</groupId>
             <artifactId>ehcache-core</artifactId>
             <version>1.7.1</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-api</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
         <!-- For ease of development and testing, we include the HSQLDB database. -->
@@ -316,60 +313,33 @@
     </pluginRepositories>
 
     <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.grails</groupId>
-                    <artifactId>grails-maven-plugin</artifactId>
-                    <version>${grails.version}</version>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <version>2.3.2</version>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-clean-plugin</artifactId>
-                    <version>2.4.1</version>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-
         <plugins>
             <plugin>
                 <groupId>org.grails</groupId>
                 <artifactId>grails-maven-plugin</artifactId>
+                <version>${grails.version}</version>
                 <extensions>true</extensions>
                 <executions>
                     <execution>
-                        <id>main</id>
+                        <id>initialize</id>
+                        <phase>initialize</phase>
                         <goals>
                             <goal>init</goal>
-                            <goal>maven-clean</goal>
-                            <goal>validate</goal>
                             <goal>config-directories</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>main</id>
+                        <goals>
+                            <!-- note: plugins are installed and classpath correctly tweaked by maven-compile! -->
                             <goal>maven-compile</goal>
                             <goal>maven-war</goal>
                         </goals>
                     </execution>
                     <execution>
                         <id>maven-test</id>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <command>TestApp</command>
-                            <args>${grails.testPhases}</args>
-                        </configuration>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
-                </configuration>
             </plugin>
             <plugin>
                 <artifactId>maven-clean-plugin</artifactId>
@@ -383,40 +353,32 @@
                         </fileset>
                         <fileset>
                             <directory>lib</directory>
-                        </fileset>
-                        <fileset>
                             <directory>plugins</directory>
                         </fileset>
                     </filesets>
                 </configuration>
             </plugin>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <!-- preventing compiler from doing anything during compile phase! -->
+                    <excludes>
+                        <exclude>**/*.*</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>test-jar-creation</id>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <profile>
-            <id>Integration</id>
-            <properties>
-                <grails.testPhases>-unit -integration</grails.testPhases>
-            </properties>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.grails</groupId>
-                        <artifactId>grails-maven-plugin</artifactId>
-                        <extensions>true</extensions>
-                        <executions>
-                            <execution>
-                                <id>functional-tests</id>
-                                <goals>
-                                    <goal>maven-functional-test</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 
 </project>

@@ -6,6 +6,9 @@ import brooklyn.entity.webapp.tomcat.TomcatCluster
 import brooklyn.entity.webapp.tomcat.TomcatNode
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.internal.EntityNavigationUtils
+import brooklyn.location.basic.SshMachineProvisioner
+import brooklyn.location.basic.SshMachine
+import com.google.common.base.Preconditions
 
 /**
  * Starts some tomcat nodes, on localhost, using ssh;
@@ -15,18 +18,24 @@ import brooklyn.util.internal.EntityNavigationUtils
  * @author alex
  */
 public class SimpleTomcatApp extends AbstractApplication {
-    Cluster tc = new TomcatCluster(displayName:'MyTomcat', initialSize:3, this);
+    Cluster tc = new TomcatCluster(displayName:'MyTomcat', initialSize: 3, owner: this);
 
     public static void main(String[] argv) {
         def app = new SimpleTomcatApp()
-        app.tc.war = "resources/hello-world.war"
+        URL resource = SimpleTomcatApp.class.getClassLoader().getResource("hello-world.war")
+        Preconditions.checkState resource != null, "Unable to locate resource hello-world.war"
+        app.tc.template.war = resource.getPath()
            //TODO:
 //        app.tc.policy << new ElasticityPolicy(app.tc, TomcatCluster.REQS_PER_SEC, low:100, high:250);
         app.tc.initialSize = 2  //override initial size
-        
-        EntityNavigationUtils.dump(app, "before start:  ")
-        app.start location:new SshMachineLocation(name:'london', host:'localhost')
-        EntityNavigationUtils.dump(app, "after start:  ")
+
+        Collection<InetAddress> hosts = [
+            Inet4Address.getByAddress((byte[])[192,168,2,241]),
+            Inet4Address.getByAddress((byte[])[192,168,2,242])
+        ]
+        Collection<SshMachine> machines = hosts.collect { new SshMachine(it, "cloudsoft") }
+
+        app.tc.start([ new SshMachineLocation(name:'london', provisioner:new SshMachineProvisioner(machines)) ])
 
         Thread t = []
         t.start {
@@ -40,7 +49,7 @@ public class SimpleTomcatApp extends AbstractApplication {
                 }
             }
         }
-        
+
 //        println "launching a groovy shell, with 'app' set"
 //        IO io = new IO()
 //        def code = 0;
@@ -75,19 +84,19 @@ public class SimpleTomcatApp extends AbstractApplication {
 //        } finally {
 //            System.setSecurityManager(psm)
 //        }
-        
+
         println "waiting for readln then will kill the tomcats"
         System.in.read()
         t.interrupt()
-        
+
         //TODO find a better way to shutdown a cluster?
         println "shutting down..."
         app.entities.each { if (it in TomcatNode) it.shutdown() }
         //TODO there is still an executor service running, not doing anything but not marked as a daemon,
         //so doesn't quit immediately (i think it will time out but haven't verified)
         //app shutdown should exist and handle that???
-        
+
         System.exit(0)
     }
-    
+
 }

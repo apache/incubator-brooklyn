@@ -4,6 +4,7 @@ import brooklyn.entity.Entity
 import brooklyn.entity.EntityClass
 import brooklyn.entity.Group
 
+/** Summary of a Brookln Entity */
 public class EntitySummary {
 
     final String id;

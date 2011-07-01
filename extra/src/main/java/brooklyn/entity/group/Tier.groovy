@@ -8,8 +8,8 @@ import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.trait.Startable
 
 public abstract class Tier extends AbstractGroup {
-    public Tier(Map props=[:], Group owner) {
-        super(props, owner)
+    public Tier(Map props=[:]) {
+        super(props)
     }
 }
 

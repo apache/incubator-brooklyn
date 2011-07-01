@@ -66,13 +66,39 @@ public class TomcatNodeIntegrationTest {
     }
     
     @Test(groups = [ "Integration" ])
+    public void publishesRequestAndErrorCountMetrics() {
+        Application app = new TestApplication();
+        TomcatNode tc = new TomcatNode(owner: app, httpPort: DEFAULT_HTTP_PORT);
+        tc.start([ new SshMachineLocation(name:'london', provisioner:new LocalhostSshMachineProvisioner()) ])
+        executeUntilSucceedsWithShutdown(tc, {
+            def port = tc.getAttribute(TomcatNode.HTTP_PORT)
+            def errorCount = tc.getAttribute(TomcatNode.ERROR_COUNT)
+ 
+            10.times { connectToURL("http://localhost:${port}/does_not_exist") }
+            def requestCount = tc.getAttribute(TomcatNode.REQUEST_COUNT)
+            errorCount = tc.getAttribute(TomcatNode.ERROR_COUNT)
+            println "$requestCount/$errorCount"
+            
+            if (errorCount == null) {
+                return new BooleanWithMessage(false, "errorCount not set yet ($errorCount)")
+            } else { 
+                logger.info "\n$errorCount errors in total"
+                assertTrue errorCount > 0
+                assertEquals requestCount, errorCount
+            }
+            true
+        }, useGroovyTruth: true, timeout: 10*SECONDS)
+    }
+    
+    @Test(groups = [ "Integration" ])
     public void publishesRequestsPerSecondMetric() {
         Application app = new TestApplication();
         TomcatNode tc = new TomcatNode(owner: app, httpPort: DEFAULT_HTTP_PORT);
-		tc.start([ new SshMachineLocation(name:'london', provisioner:new LocalhostSshMachineProvisioner()) ])
+        tc.start([ new SshMachineLocation(name:'london', provisioner:new LocalhostSshMachineProvisioner()) ])
         executeUntilSucceedsWithShutdown(tc, {
                 def activityValue = tc.getAttribute(TomcatNode.REQUESTS_PER_SECOND)
-                if (activityValue == null || activityValue == -1) return new BooleanWithMessage(false, "activity not set yet ($activityValue)")
+                if (activityValue == null || activityValue == -1) 
+                    return new BooleanWithMessage(false, "activity not set yet ($activityValue)")
 
                 assertEquals Integer, activityValue.class
                 assertEquals 0, activityValue
@@ -86,29 +112,6 @@ public class TomcatNodeIntegrationTest {
                 assertEquals 1, activityValue
                 true
             }, timeout:10*SECONDS, useGroovyTruth:true)
-    }
-    
-    @Test(groups = [ "Integration" ])
-    public void publishesErrorCountMetric() {
-        Application app = new TestApplication();
-        TomcatNode tc = new TomcatNode(owner: app, httpPort: DEFAULT_HTTP_PORT);
-        tc.start([ new SshMachineLocation(name:'london', provisioner:new LocalhostSshMachineProvisioner()) ])
-        executeUntilSucceedsWithShutdown(tc, {
-            def port = tc.getAttribute(TomcatNode.HTTP_PORT)
-            def errorCount = tc.getAttribute(TomcatNode.ERROR_COUNT)
-            if (errorCount == null) return new BooleanWithMessage(false, "errorCount not set yet ($errorCount)")
- 
-            // Connect to non-existent URL n times
-            def n = 5
-            n.times { connectToURL("http://localhost:${port}/does_not_exist") }
-            errorCount = tc.getAttribute(TomcatNode.ERROR_COUNT)
-            logger.info "$errorCount errors in total"
-            
-            // TODO firm up assertions.  confused by the values returned (generally n*2?)
-            assertTrue errorCount > 0
-            assertEquals 0, errorCount % n
-            true
-        })
     }
     
     @Test(groups = [ "Integration" ])
