@@ -392,6 +392,13 @@
                                             <sysproperty
                                                     key="java.util.logging.config.file"
                                                     value="src/test/resources/logging.properties"/>
+                                            <sysproperty
+                                                    key="net.sourceforge.cobertura.datafile"
+                                                    value="${project.build.directory}/cobertura/cobertura.ser"/>
+                                            <sysproperty
+                                                    key="cobertura.user.java.nio"
+                                                    value="false"/>
+
                                         </testng>
                                     </tasks>
                                 </configuration>
