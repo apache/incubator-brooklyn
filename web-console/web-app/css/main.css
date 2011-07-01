@@ -41,9 +41,9 @@ select {
    padding: 2px 2px 2px 0;
 }
 textarea {
-	width: 250px;
-	height: 150px;
-	vertical-align: top;
+    width: 250px;
+    height: 150px;
+    vertical-align: top;
 }
 
 input:focus, select:focus, textarea:focus {
@@ -111,7 +111,7 @@ div.errors ul {
     padding: 0;
 }
 div.errors li {
-	background: url(../images/skin/exclamation.png) 8px 0% no-repeat;
+    background: url(../images/skin/exclamation.png) 8px 0% no-repeat;
     line-height: 16px;
     padding-left: 30px;
 }
