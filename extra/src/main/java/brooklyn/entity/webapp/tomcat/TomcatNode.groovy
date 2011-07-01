@@ -10,8 +10,10 @@ import brooklyn.entity.webapp.JavaWebApp;
 import brooklyn.event.EntityStartException;
 import brooklyn.event.adapter.JmxSensorAdapter;
 import brooklyn.location.basic.SshBasedJavaWebAppSetup;
-import brooklyn.location.basic.SshMachine;
-import brooklyn.util.internal.Repeater;
+
+
+import brooklyn.util.internal.Repeater
+import brooklyn.location.basic.SshMachineLocation;
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Tomcat instance.
@@ -25,7 +27,7 @@ public class TomcatNode extends JavaWebApp {
         propertiesAdapter.addSensor HTTP_PORT, (properties.httpPort ?: -1)
     }
 
-    public SshBasedJavaWebAppSetup getSshBasedSetup(SshMachine machine) {
+    public SshBasedJavaWebAppSetup getSshBasedSetup(SshMachineLocation machine) {
         return new Tomcat7SshSetup(this, machine)
     }
     

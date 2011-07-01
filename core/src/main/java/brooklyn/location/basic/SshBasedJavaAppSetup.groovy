@@ -15,14 +15,14 @@ public abstract class SshBasedJavaAppSetup {
     static final Logger log = LoggerFactory.getLogger(SshBasedJavaAppSetup.class)
  
     EntityLocal entity
-    SshMachine machine
+    SshMachineLocation machine
     String appBaseDir
     String brooklynBaseDir = "/tmp/brooklyn"
     String installsBaseDir = brooklynBaseDir+"/installs"
     int jmxPort
     String jmxHost
     
-    public SshBasedJavaAppSetup(EntityLocal entity, SshMachine machine) {
+    public SshBasedJavaAppSetup(EntityLocal entity, SshMachineLocation machine) {
         this.entity = entity
         this.machine = machine
         appBaseDir = brooklynBaseDir + "/" + "app-"+entity.getApplication()?.id
@@ -62,7 +62,7 @@ public abstract class SshBasedJavaAppSetup {
     public int claimJmxPort() {
         // FIXME Really bad place to have side effects! Clean up required.
         log.debug "setting jmxHost on $entity as {}", machine
-        jmxHost = machine.host.hostName
+        jmxHost = machine.address.hostName
         jmxPort = claimNextValue("jmxPort", 32199)
     }
  

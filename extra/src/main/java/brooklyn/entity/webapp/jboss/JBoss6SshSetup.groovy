@@ -2,7 +2,8 @@ package brooklyn.entity.webapp.jboss
 
 import brooklyn.entity.basic.AttributeDictionary
 import brooklyn.location.basic.SshBasedJavaWebAppSetup
-import brooklyn.location.basic.SshMachine
+
+import brooklyn.location.basic.SshMachineLocation
 
 public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     String version = "6.0.0.Final"
@@ -10,7 +11,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     String installDir = "$installsBaseDir/jboss-$version"
     String runDir
 
-    public JBoss6SshSetup(JBossNode entity, SshMachine machine) {
+    public JBoss6SshSetup(JBossNode entity, SshMachineLocation machine) {
         super(entity, machine)
         runDir = appBaseDir + "/" + "jboss-"+entity.id
     }

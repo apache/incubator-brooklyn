@@ -12,10 +12,10 @@ import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.Location
 import brooklyn.location.NoMachinesAvailableException
 import brooklyn.location.basic.SshBasedJavaWebAppSetup
-import brooklyn.location.basic.SshMachine
 
 import brooklyn.util.internal.EntityStartUtils
 import brooklyn.location.basic.GeneralPurposeLocation
+import brooklyn.location.basic.SshMachineLocation
 
 /**
 * An {@link brooklyn.entity.Entity} representing a single web application instance.
@@ -49,7 +49,7 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
         propertiesAdapter.addSensor NODE_STATUS, "starting"
     }
 
-    public abstract SshBasedJavaWebAppSetup getSshBasedSetup(SshMachine loc);
+    public abstract SshBasedJavaWebAppSetup getSshBasedSetup(SshMachineLocation loc);
     protected abstract void initJmxSensors();
     abstract void waitForHttpPort();
         
@@ -92,7 +92,7 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
         if (!loc.attributes.provisioner)
             throw new IllegalStateException("Location $loc does not have a machine provisioner")
 
-        SshMachine machine = loc.attributes.provisioner.obtain()
+        SshMachineLocation machine = loc.attributes.provisioner.obtain()
         if (machine == null) throw new NoMachinesAvailableException(loc)
         this.machine = machine
         

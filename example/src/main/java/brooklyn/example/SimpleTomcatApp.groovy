@@ -6,7 +6,7 @@ import brooklyn.entity.webapp.tomcat.TomcatCluster
 import brooklyn.entity.webapp.tomcat.TomcatNode
 
 import brooklyn.location.basic.SshMachineProvisioner
-import brooklyn.location.basic.SshMachine
+import brooklyn.location.basic.SshMachineLocation
 import com.google.common.base.Preconditions
 import brooklyn.location.basic.GeneralPurposeLocation
 
@@ -33,7 +33,7 @@ public class SimpleTomcatApp extends AbstractApplication {
             Inet4Address.getByAddress((byte[])[192,168,2,241]),
             Inet4Address.getByAddress((byte[])[192,168,2,242])
         ]
-        Collection<SshMachine> machines = hosts.collect { new SshMachine(it, "cloudsoft") }
+        Collection<SshMachineLocation> machines = hosts.collect { new SshMachineLocation(it, "cloudsoft") }
 
         app.tc.start([ new GeneralPurposeLocation(name:'london', provisioner:new SshMachineProvisioner(machines)) ])
 

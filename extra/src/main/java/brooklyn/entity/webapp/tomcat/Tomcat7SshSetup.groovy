@@ -2,7 +2,7 @@ package brooklyn.entity.webapp.tomcat
 
 import brooklyn.entity.basic.AttributeDictionary
 import brooklyn.location.basic.SshBasedJavaWebAppSetup
-import brooklyn.location.basic.SshMachine
+import brooklyn.location.basic.SshMachineLocation
 
 /**
  * Start a {@link TomcatNode} in a {@link Location} accessible over ssh.
@@ -19,7 +19,7 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
     Object httpPortLock = new Object()
     int httpPort = -1
 
-    public Tomcat7SshSetup(TomcatNode entity, SshMachine machine) {
+    public Tomcat7SshSetup(TomcatNode entity, SshMachineLocation machine) {
         super(entity, machine)
         runDir = appBaseDir + "/" + "tomcat-" + entity.id
     }
