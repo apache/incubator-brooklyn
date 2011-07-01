@@ -1,11 +1,10 @@
 package brooklyn.web.console
 
-import grails.test.*
-import org.testng.annotations.AfterTest
-import org.testng.annotations.Test
-import org.testng.annotations.BeforeTest
+import static org.testng.Assert.*
 
-class LoginControllerTest extends ControllerUnitTestCase {
+import org.testng.annotations.Test
+
+class LoginControllerTest {
 
     @Test
     void testSomething() {

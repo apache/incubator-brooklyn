@@ -2,7 +2,6 @@ package brooklyn.web.console
 
 import static org.testng.Assert.*
 
-import grails.test.*
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
 import brooklyn.management.ExecutionManager
@@ -11,7 +10,6 @@ import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.management.ManagementContext
-import org.testng.annotations.AfterTest
 import org.testng.annotations.Test
 import org.testng.annotations.BeforeTest
 
