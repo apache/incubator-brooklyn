@@ -24,7 +24,12 @@ class EntityController {
     }
 
     def sensors = {
-        String id = "leaf-\\d*"
+        String id = params.id
+        if (! id) {
+            render(status: 400, text: '{message: "You must provide an entity id"}')
+            return
+        }
+
         Collection<Entity> entities = entityService.getEntitiesMatchingCriteria(null, id, null)
         if (entities.size() == 0) {
             // log maybe
