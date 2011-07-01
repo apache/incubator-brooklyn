@@ -57,7 +57,7 @@ public class LocalSubscriptionManager implements SubscriptionManager {
      * <li>subscriberExecutionManagerTag - a tag to pass to execution manager (without setting any execution semantics / TaskPreprocessor);
      *      if not supplied and there is a subscriber, this will be inferred from the subscriber and set up with SingleThreadedExecution
      *      (supply this flag with value null to prevent any task preprocessor from being set)
-     * <li>eventFilter - a Predicate<SensorEvent> instance to filter what events are delivered
+     * <li>eventFilter - a Predicate&lt;SensorEvent&gt; instance to filter what events are delivered
      * </ul>
      * 
      * @see SubscriptionManager#subscribe(Map, Entity, Sensor, EventListener)
@@ -165,7 +165,7 @@ public class LocalSubscriptionManager implements SubscriptionManager {
                 em.submit(tags: s.subscriberExecutionManagerTag, { s.listener.onEvent(event) })
             }
         }
-    }    
+    }
 }
 
 class Subscription<T> implements SubscriptionHandle {

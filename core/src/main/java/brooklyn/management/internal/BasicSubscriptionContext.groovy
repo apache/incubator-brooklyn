@@ -1,7 +1,5 @@
 package brooklyn.management.internal
 
-import com.google.common.base.Preconditions;
-
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
 import brooklyn.event.EventListener
@@ -10,6 +8,8 @@ import brooklyn.event.SensorEvent
 import brooklyn.management.SubscriptionContext
 import brooklyn.management.SubscriptionHandle
 import brooklyn.management.SubscriptionManager
+
+import com.google.common.base.Preconditions
 
 /**
  * A {@link SubscriptionContext} for an entitiy or other user of a {@link SubscriptionManager}.
