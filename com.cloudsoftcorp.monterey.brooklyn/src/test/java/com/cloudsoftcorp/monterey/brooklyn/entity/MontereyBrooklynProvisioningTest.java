@@ -28,7 +28,8 @@ import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
-import brooklyn.location.basic.SshMachine;
+import brooklyn.location.MachineLocation;
+import brooklyn.location.basic.SshMachineLocation;
 
 import com.cloudsoftcorp.monterey.CloudsoftThreadMonitoringTestFixture;
 import com.cloudsoftcorp.monterey.clouds.dto.CloudAccountDto;
@@ -104,7 +105,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
     private static final long TIMEOUT = 30*1000;
     
     private Gson gson;
-    private SshMachine localhost;
+    private MachineLocation localhost;
     private AbstractApplication app;
     private MontereyNetwork montereyNetwork;
     private UserCredentialsConfig adminCredential = new UserCredentialsConfig("myname", "mypass", HTTP_AUTH.ADMIN_ROLE);
@@ -121,7 +122,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         GsonSerializer gsonSerializer = new GsonSerializer(classLoadingContext);
         gson = gsonSerializer.getGson();
 
-        localhost = new SshMachine(InetAddress.getByName(SSH_HOST_NAME), SSH_USERNAME);
+        localhost = new SshMachineLocation(InetAddress.getByName(SSH_HOST_NAME), SSH_USERNAME);
 
         app = new SimpleApp();
         montereyNetwork = new MontereyNetwork();
