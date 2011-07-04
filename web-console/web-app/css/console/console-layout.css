@@ -29,7 +29,6 @@ body{
     clear: both;
     bottom:2.3em;
     overflow:hidden;
-    width:100%;
     width: 980px;
 }
 
@@ -41,7 +40,6 @@ body{
     border-width:medium;
     border-top:solid;
     clear: both;
-    width:100%;
     width: 980px;
 }
 
