@@ -1,17 +1,14 @@
 package brooklyn.entity.webapp.jboss
 
-import static brooklyn.entity.basic.AttributeDictionary.*
-import static brooklyn.entity.basic.ConfigKeyDictionary.*
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.webapp.JavaWebApp
-import brooklyn.event.AttributeSensor
-import brooklyn.event.adapter.JmxSensorAdapter
+
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.basic.SshBasedJavaWebAppSetup
-import brooklyn.location.basic.SshMachine
+
+import brooklyn.location.basic.SshMachineLocation
 
 /**
  * JBoss web application server.
@@ -38,7 +35,7 @@ public class JBossNode extends JavaWebApp {
         updateAttribute HTTP_PORT, (DEFAULT_HTTP_PORT + portIncrement)
     }
 
-    public SshBasedJavaWebAppSetup getSshBasedSetup(SshMachine loc) {
+    public SshBasedJavaWebAppSetup getSshBasedSetup(SshMachineLocation loc) {
         return new JBoss6SshSetup(this, loc);
     }
     

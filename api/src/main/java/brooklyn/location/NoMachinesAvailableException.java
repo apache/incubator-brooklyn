@@ -1,4 +1,4 @@
-package brooklyn.location.basic;
+package brooklyn.location;
 
 import brooklyn.location.Location;
 

@@ -17,7 +17,7 @@ import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.trait.Startable
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.Location
-import brooklyn.location.basic.SshMachine
+import brooklyn.location.MachineLocation
 import brooklyn.util.internal.BrooklynSystemProperties
 import brooklyn.util.internal.EntityStartUtils
 
@@ -26,6 +26,7 @@ import com.cloudsoftcorp.monterey.clouds.basic.DeploymentUtils
 import com.cloudsoftcorp.monterey.clouds.dto.CloudEnvironmentDto
 import com.cloudsoftcorp.monterey.control.api.SegmentSummary
 import com.cloudsoftcorp.monterey.control.workrate.api.WorkrateReport
+import com.cloudsoftcorp.monterey.location.api.MontereyActiveLocation
 import com.cloudsoftcorp.monterey.location.api.MontereyLocation
 import com.cloudsoftcorp.monterey.network.control.api.Dmn1NetworkInfo
 import com.cloudsoftcorp.monterey.network.control.api.NodeSummary
@@ -78,15 +79,16 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     private CredentialsConfig webAdminCredential;
     private NetworkId networkId = NetworkId.Factory.newId();
 
-    private SshMachine host;
+    private MachineLocation host;
     private URL managementUrl;
     private MontereyNetworkConnectionDetails connectionDetails;
     private String applicationName;
 
+    private final LocationRegistry locationRegistry = new LocationRegistry();
     private final Map<NodeId,MontereyContainerNode> nodes = new ConcurrentHashMap<NodeId,MontereyContainerNode>();
     private final Map<String,Segment> segments = new ConcurrentHashMap<String,Segment>();
-
-    private ScheduledFuture<?> monitoringTask
+    private final Map<Location,MediatorGroup> mediatorsByLocation = new ConcurrentHashMap<Location,MediatorGroup>();
+    private ScheduledFuture<?> monitoringTask;
     
     public MontereyNetwork() {
         classloadingContext = ClassLoadingContext.Defaults.getDefaultClassLoadingContext();
@@ -134,6 +136,10 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         return Collections.unmodifiableMap(result);
     }
 
+    public Map<Location, MediatorGroup> getMediatorGroups() {
+        mediatorsByLocation.asImmutable();
+    }
+    
     public Map<String,Segment> getSegments() {
         // FIXME How do I return an immutableMap, without groovy interpretting accessing the 'segments' field as calling the getter?!
         // return ImmutableMap.copyOf(segments);
@@ -150,7 +156,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         if (monitoringTask != null) monitoringTask.cancel(true);
     }
 
-    public void startOnHost(SshMachine host) {
+    public void startOnHost(MachineLocation host) {
         /*
          * TODO: Assumes the following are already set on SshMachine:
          * sshAddress
@@ -265,7 +271,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         applicationName = null;
     }
 
-    private void shutdownManagementNodeProcess(MontereyNetworkConfig config, SshMachine host, NetworkId networkId) {
+    private void shutdownManagementNodeProcess(MontereyNetworkConfig config, MachineLocation host, NetworkId networkId) {
         String killScript = installDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_KILL_SCRIPT_RELATIVE_PATH;
         try {
             LOG.info("Releasing management node on "+toString());
@@ -324,8 +330,29 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         Dmn1NetworkInfo networkInfo = new Dmn1NetworkInfoWebProxy(connectionDetails.getManagementUrl(), gson, connectionDetails.getWebApiAdminCredential());
         Map<NodeId, NodeSummary> nodeSummaries = networkInfo.getNodeSummaries();
         Map<String, SegmentSummary> segmentSummaries = networkInfo.getSegmentSummaries();
+        Collection<MontereyActiveLocation> montereyLocations = networkInfo.getActiveLocations();
+        Collection<Location> locations = montereyLocations.collect { locationRegistry.getConvertedLocation(it) }
+        
+        // Create/destroy mediator groups
+        Collection<Location> newLocations = []
+        Collection<Location> removedLocations = []
+        newLocations.addAll(locations); newLocations.removeAll(mediatorsByLocation.keySet());
+        removedLocations.addAll(mediatorsByLocation.keySet()); removedLocations.removeAll(locations);
 
-        // FIXME Why doesn't nodeSummaries.keySet work?!
+        newLocations.each {
+            MontereyContainerNode mediatorGroup = new MediatorGroup(connectionDetails, it);
+            addOwnedChild(mediatorGroup);
+            mediatorsByLocation.put(it, mediatorGroup);
+        }
+
+        removedLocations.each {
+            MontereyContainerNode mediatorGroup = mediatorsByLocation.get(it);
+            if (mediatorGroup != null) {
+                mediatorGroup.dispose();
+                removeOwnedChild(mediatorGroup);
+            }
+        }
+
         
         // Create/destroy nodes that have been added/removed
         Collection<NodeId> newNodes = []
@@ -335,15 +362,18 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
 
         newNodes.each {
             MontereyLocation montereyLocation = nodeSummaries.get(it).getMontereyLocation();
-            Location location = null; // FIXME create brooklyn location
+            Location location = locationRegistry.getConvertedLocation(montereyLocation);
             MontereyContainerNode containerNode = new MontereyContainerNode(connectionDetails, it, location);
             addOwnedChild(containerNode);
             nodes.put(it, containerNode);
         }
 
         removedNodes.each {
-            nodes.get(it)?.dispose();
-            removeOwnedChild(it);
+            MontereyContainerNode node = nodes.get(it);
+            if (node != null) {
+                node.dispose();
+                removeOwnedChild(node);
+            }
         }
 
 
@@ -360,8 +390,11 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         }
 
         removedSegments.each {
-            segments.get(it)?.dispose();
-            removeOwnedChild(it);
+            Segment segment = segments.get(it);
+            if (segment != null) {
+                segment.dispose();
+                removeOwnedChild(segment);
+            }
         }
 
         // Notify "container nodes" (i.e. BasicNode in monterey classes jargon) of what node-types are running there

@@ -7,7 +7,7 @@
         %g:javascript{:src=>"console/jsTree.js"}
         %g:javascript{:src=>"jquery/jquery.corner.js"}
         %g:javascript{:src=>"jquery/jquery.jstree.js"}
-    %body{:onload=>"initTabs()"}
+    %body
         .layout-middle-content
             .layout-left-column
                 %div{:id=>"searchBox"}
@@ -19,37 +19,29 @@
                         %li
                             %a{:href=>"#summary"}Summary
                         %li
+                            %a{:href=>"#sensors"}Sensors
+                        %li
+                            %a{:href=>"#effectors"}Effectors
+                        %li
                             %a{:href=>"#location"}Location
                         %li
                             %a{:href=>"#health"}Health
                         %li
                             %a{:href=>"#structure"}Structure
                     #summary
-                        %h3 Sensors
-                        #sensors
-                        %h3 Effectors
-                        #effectors
-                        %h3 Policies
-                        #policies
-                        %h3 Activity
-                        #activity
+                        %h2 Summary
+                        %p wibble
+                    #sensors
+                        %h2 Sensors
+                        #sensor-data
+                    #effectors
+                        %h2 Effectors
+                        %g:render{:template=>"/tabs/effectors"}
                     #location
                         %h2 Location
-                        .effector-left-column
-                            Here is where we have a list of effectors
-                        .effector-main-content
-                            %fieldset
-                                %legend Effector Name
-                                .effector-description
-                                Here is an effector description
-                            %fieldset
-                                %legend Effector Logic
-                                .effector-logic
-                                Here is the effector logic
-                            .effector-buttons{:align=>"right"}
-                                %button Edit
-                                %button Invoke
+                        %p wibble
                     #health
                         %h2 Health
                     #structure
                         %h2 Structure
+                    %p{:class=>'bottom-filler'} &nbsp;

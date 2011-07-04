@@ -8,12 +8,12 @@ import org.testng.annotations.Test
 /**
  * Test the {@link SshMachineLocation} implementation of the {@link brooklyn.location.Location} interface.
  */
-public class SshMachineTest {
-    private SshMachine host;
+public class SshMachineLocationTest {
+    private SshMachineLocation host;
     
     @BeforeMethod(groups = "Integration")
     public void setUp() throws Exception {
-        host = new SshMachine(InetAddress.getLocalHost());
+        host = new SshMachineLocation(InetAddress.getLocalHost());
     }
 
     // Note: requires `ssh localhost` to be setup such that no password is required    

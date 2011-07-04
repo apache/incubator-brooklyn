@@ -7,20 +7,18 @@ function drawSensorData(json) {
         var line = "<tr> <td> " + name + " </td> <td> " + json[name] + "</td> </tr>\n";
         table += line;
     }
+    table += "</tbody></table>";
 
-    $("#sensors").html(table);
+    $("#sensor-data").html(table);
 }
 
 function initTabs() {
-    $("#sensors").html("Oh what lovely sensor data I see.");
-
     $("#tabs").tabs({
         show: function (event, ui) {
-            setAccordionLayout(ui);
+            var url = "sensors";
+            $.getJSON(url, drawSensorData);
         }
     });
-
-    $("#summary").accordion({fillSpace: true});
 
     $(eventBus).bind("entity_selected", getAndDrawSensorData);
 }

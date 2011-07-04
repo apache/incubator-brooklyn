@@ -1,7 +1,7 @@
 package brooklyn.entity.webapp.jboss;
 
 import static brooklyn.test.TestUtils.*
-import static java.util.concurrent.TimeUnit.*
+
 import static org.testng.Assert.*
 import groovy.time.TimeDuration
 
@@ -14,8 +14,9 @@ import org.testng.annotations.Test
 import brooklyn.entity.Application
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.location.Location
-import brooklyn.location.basic.LocalhostSshMachineProvisioner
-import brooklyn.location.basic.SshMachineLocation
+
+import brooklyn.location.basic.GeneralPurposeLocation
+import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 
 /**
  * Test the operation of the {@link JBossNode} class.
@@ -42,8 +43,7 @@ public class JBossNodeIntegrationTest {
     @BeforeMethod(groups = "Integration")
     public void setup() {
         app = new TestApplication();
-        testLocation = new SshMachineLocation(name:'london', host:'localhost', 
-                    provisioner: new LocalhostSshMachineProvisioner())
+        testLocation = new LocalhostMachineProvisioningLocation(name:'london')
     }
 
     

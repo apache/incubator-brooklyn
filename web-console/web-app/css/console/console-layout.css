@@ -7,55 +7,63 @@ html,body{
 body{
     font-family:"lucida grande",tahoma,verdana,arial,sans-serif;
     font-size:11px;
+    width: 980px;
+    height: 100%;
 }
 
 /* TEMPLATE LAYOUT CONTAINERS */
 
-.layout-header{
+#console-header {
     position:absolute;
     top:0;
     background:#c0c0c0;
-    height:125px;
     border-width:medium;
     border-bottom:solid;
-    width:100%
+    height:75px;
+    width: 980px;
 }
+
 .layout-middle-content{
     position:absolute;
-    top:128px;
+    top:78px;
+    clear: both;
     bottom:2.3em;
     overflow:hidden;
-    width:100%;
-
+    width: 980px;
 }
+
 .layout-footer{
     position:absolute;
+    bottom:0;
     background-color:#f7f7f7;
     height:2.3em;
     border-width:medium;
     border-top:solid;
     clear: both;
-    width:100%;
-    bottom:0;
+    width: 980px;
 }
 
 .layout-left-column{
     float: left;
-    width: 270px;
-    height:100%;
     border-right:solid;
     border-width:medium;
+    height:100%;
+    padding: 0;
+    width: 220px;
 }
 
 .layout-main-content{
     background-color:white;
-    float: left;
-    margin-right:2px;
+    float: right;
+    clear: right;
+    overflow: hidden;
+    padding: 5px;
+    width: 745px;
 }
 
 #searchBox{
     margin-bottom: 3px;
-    padding: 3px;
+    padding: 10px;
     height:5%;
 }
 
@@ -73,28 +81,28 @@ div#demo1{
     margin-bottom:3px;
 }
 
-h1#brooklyn-header{
+.tab-content-left-column {
+    clear: left;
+    float: left;
+    min-width: 300px;
+    width: 48%;
     height:100%;
-    width:250px;
-    background-image:url("../../images/brooklyn/brooklynbannerone.png");
+    border:1px solid #CCCCCC;
 }
 
-.effector-left-column{
+.tab-content-right-column {
+    clear: right;
     float: left;
-    width: 300px;
+    min-width: 300px;
+    width: 48%;
     height:100%;
     border:1px solid #CCCCCC;
 }
-.effector-main-content{
-    float:left;
-    height:100%;
-    border:1px solid #CCCCCC;
-}
-.effector-buttons{
+.tab-content-buttons{
      border:1px solid #CCCCCC;
 }
 
-fieldset{
+fieldset {
     display:block;
     font-family:Verdana, Arial, Helvetica, sans-serif;
     font-size:12px;
@@ -107,10 +115,16 @@ legend{
     padding:2px 5px;
 }
 
-#tabs {
-    width: 500px;
-    height: 300px;
-    padding: 0;
+h1#brooklyn-header{
+    height:100%;
+    width:175px;
+    background-image:url("../../images/brooklyn/brooklynbannerone.png");
+}
+
+.ui-tabs-panel {
+    width: 100%;
+    height:100%;
+    padding: 1em;
 }
 
 table, th, td {
@@ -121,4 +135,19 @@ table, th, td {
 th, td {
     padding: 0.2em;
     text-align: left;
+}
+
+ul {
+  margin-left: 1em;
+}
+
+.bottom-filler {
+    clear: both;
+    width:100%;
+    height:100%;
+}
+
+h2 {
+    clear: both;
+    margin-bottom: 0.5em;
 }

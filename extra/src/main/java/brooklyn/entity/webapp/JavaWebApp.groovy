@@ -1,22 +1,25 @@
 package brooklyn.entity.webapp
 
-import java.util.Collection
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.AttributeDictionary
+import brooklyn.entity.basic.ConfigKeyDictionary
 import brooklyn.entity.trait.Startable
 import brooklyn.event.AttributeSensor
 import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.event.basic.ConfigKey
 import brooklyn.location.Location
-import brooklyn.location.basic.NoMachinesAvailableException
+import brooklyn.location.MachineLocation
+import brooklyn.location.MachineProvisioningLocation
+import brooklyn.location.NoMachinesAvailableException
 import brooklyn.location.basic.SshBasedJavaWebAppSetup
-import brooklyn.location.basic.SshMachine
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.internal.EntityStartUtils
+
+import com.google.common.base.Preconditions
 
 /**
 * An {@link brooklyn.entity.Entity} representing a single web application instance.
@@ -24,6 +27,10 @@ import brooklyn.util.internal.EntityStartUtils
 public abstract class JavaWebApp extends AbstractEntity implements Startable {
     
     public static final Logger log = LoggerFactory.getLogger(JavaWebApp.class)
+
+    public static final ConfigKey<Integer> SUGGESTED_HTTP_PORT = ConfigKeyDictionary.SUGGESTED_HTTP_PORT;
+    public static final ConfigKey<Integer> SUGGESTED_JMX_PORT = ConfigKeyDictionary.SUGGESTED_JMX_PORT;
+    public static final ConfigKey<String> SUGGESTED_JMX_HOST = ConfigKeyDictionary.SUGGESTED_JMX_HOST;
 
     public static final AttributeSensor<Integer> HTTP_PORT = AttributeDictionary.HTTP_PORT;
     public static final AttributeSensor<Integer> JMX_PORT = AttributeDictionary.JMX_PORT;
@@ -45,26 +52,19 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
 
     JavaWebApp(Map properties=[:]) {
         super(properties)
+        if (properties.httpPort) setConfig(SUGGESTED_HTTP_PORT, properties.remove("httpPort"))
+        if (properties.jmxPort) setConfig(SUGGESTED_JMX_PORT, properties.remove("jmxPort"))
+        if (properties.jmxHost) setConfig(SUGGESTED_JMX_HOST, properties.remove("jmxHost"))
+        
         // addEffector(Startable.START);
         propertiesAdapter.addSensor NODE_UP, false
         propertiesAdapter.addSensor NODE_STATUS, "starting"
     }
 
-    public abstract SshBasedJavaWebAppSetup getSshBasedSetup(SshMachine loc);
+    public abstract SshBasedJavaWebAppSetup getSshBasedSetup(SshMachineLocation loc);
     protected abstract void initJmxSensors();
     abstract void waitForHttpPort();
         
-    // TODO Thinking about things...
-    // public void startInLocation(MachineFactoryLocation factory) {
-    //     SshMachineLocation loc = factory.newMachine();
-    //     startInLocation(loc);
-    // }
-    
-    public void startInLocation(Collection<SshMachineLocation> locs) {
-        // TODO check has exactly one?
-        startInLocation(locs.iterator().next())
-    }
-    
     public void start(Collection<Location> locations) {
         EntityStartUtils.startEntity this, locations;
         
@@ -87,16 +87,18 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
         }
     }
     
-    public void startInLocation(SshMachineLocation loc) {
-        
-        locations.add(loc)
-        if (!loc.attributes.provisioner)
-            throw new IllegalStateException("Location $loc does not have a machine provisioner")
+    public void startInLocation(Collection<Location> locs) {
+        // TODO check has exactly one?
+        MachineProvisioningLocation loc = locs.find({ it instanceof MachineProvisioningLocation });
+        Preconditions.checkArgument loc != null, "None of the provided locations is a MachineProvisioningLocation"
+        startInLocation(loc)
+    }
 
-        SshMachine machine = loc.attributes.provisioner.obtain()
+    public void startInLocation(MachineProvisioningLocation loc) {
+        SshMachineLocation machine = loc.obtain()
         if (machine == null) throw new NoMachinesAvailableException(loc)
-        this.machine = machine
-        
+        locations.add(machine)
+
         SshBasedJavaWebAppSetup setup = getSshBasedSetup(machine)
         setup.start()
         waitForEntityStart(setup)
@@ -117,17 +119,18 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
         if (!isRunningResult) throw new IllegalStateException("$this aborted soon after startup")
     }
 
+    // FIXME: should MachineLocations below actually be SshMachineLocation? That's what XSshSetup requires, but not what the unit tests offer.
     public void shutdown() {
         jmxAdapter.disconnect();
-        shutdownInLocation(locations.iterator().next())
+        shutdownInLocation(locations.find({ it instanceof MachineLocation }))
     }
     
-    public void shutdownInLocation(SshMachineLocation loc) {
-        getSshBasedSetup(this.machine).shutdown()
+    public void shutdownInLocation(MachineLocation loc) {
+        getSshBasedSetup(loc).shutdown()
     }
     
     public void deploy(String file) {
-        getSshBasedSetup(this.machine).deploy(new File(file))
+        getSshBasedSetup(locations.find({ it instanceof MachineLocation })).deploy(new File(file))
     }
     
     protected void computeReqsPerSec() {

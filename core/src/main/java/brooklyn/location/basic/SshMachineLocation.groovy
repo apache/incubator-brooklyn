@@ -1,36 +1,78 @@
 package brooklyn.location.basic
 
-import java.io.File
-import java.util.Map
-
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-
-import brooklyn.location.Location
+import brooklyn.location.MachineLocation
+import brooklyn.location.PortRange
 import brooklyn.util.internal.SshJschTool
 
-public class SshMachineLocation implements Location {
-    private static final long serialVersionUID = -6233729266488652570L;
-    static final Logger log = LoggerFactory.getLogger(SshMachineLocation.class)
- 
-    String name
-
-    Map attributes=[:]
-
-    public SshMachineLocation() {
+/**
+ * Operations on a machine that is accessible via ssh.
+ */
+public class SshMachineLocation extends GeneralPurposeLocation implements MachineLocation {
+    private String user = null
+    private InetAddress address
+    private final List<Integer> portsInUse = []
+    
+    public SshMachineLocation(Map attributes = [:], InetAddress address) {
+        super(attributes)
+        this.address = address
     }
 
-    public SshMachineLocation(Map attributes) {
-        name = attributes.name
-        attributes.remove 'name'
-        this.attributes = attributes
+    public SshMachineLocation(Map attributes = [:], InetAddress address, String userName) {
+        super(attributes)
+        this.user = userName
+        this.address = address
     }
 
-    /**
-     * These attributes are separate to the entity hierarchy attributes,
-     * used by certain types of entities as documented in their setup
-     * (e.g. JMX port) 
-     */
-    public Map getAttributes() { attributes }
+    public InetAddress getAddress() {
+        return this.address;
+    }
 
+    /** convenience for running a script, returning the result code */
+    public int run(Map props=[:], String command) {
+        assert address : "host must be specified for $this"
+
+        if (!user) user=System.getProperty "user.name"
+        def t = new SshJschTool(user:user, host:address.hostName);
+        t.connect()
+        int result = t.execShell props, command
+        t.disconnect()
+        result
+
+//        ExecUtils.execBlocking "ssh", (user?user+"@":"")+host, command
+    }
+
+    public int copyTo(File src, String destination) {
+        def conn = new SshJschTool(user:user, host:address.hostName)
+        conn.connect()
+        int result = conn.copyToServer [:], src, destination
+        conn.disconnect()
+        result
+    }
+
+    @Override
+    public String toString() {
+        return address;
+    }
+
+    // TODO Does not support zero to mean any; but can't when returning boolean
+    // TODO Does not yet check if the port really is free on this machine
+    boolean obtainSpecificPort(int portNumber) {
+        if (portsInUse.contains(portNumber)) {
+            return false
+        } else {
+            portsInUse.add(portNumber)
+            return true
+        }
+    }
+
+    int obtainPort(PortRange range) {
+        for (int i = range.getMin(); i <= range.getMax(); i++) {
+            if (obtainSpecificPort(i)) return i;
+        }
+        return -1;
+    }
+
+    void releasePort(int portNumber) {
+        portsInUse.remove((Object)portNumber);
+    }
 }

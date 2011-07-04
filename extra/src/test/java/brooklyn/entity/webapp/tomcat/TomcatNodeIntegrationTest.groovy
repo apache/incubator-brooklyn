@@ -4,20 +4,21 @@ import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
-import java.util.Map
+import java.util.concurrent.TimeUnit
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-
 import brooklyn.entity.Application
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.event.EntityStartException
-import brooklyn.location.basic.SshMachineLocation
-import brooklyn.location.basic.LocalhostSshMachineProvisioner
+import brooklyn.location.basic.LocalhostMachineProvisioningLocation
+import brooklyn.util.internal.Repeater
+import brooklyn.util.internal.TimeExtras
+import brooklyn.util.internal.TimeExtras
 
 /**
  * This tests the operation of the {@link TomcatNode} entity.
@@ -29,6 +30,8 @@ public class TomcatNodeIntegrationTest {
     
     /** don't use 8080 since that is commonly used by testing software */
     static int DEFAULT_HTTP_PORT = 7880
+
+    static { TimeExtras.init() }
 
     protected static class TestApplication extends AbstractApplication {
         public TestApplication(Map properties=[:]) {
@@ -48,16 +51,36 @@ public class TomcatNodeIntegrationTest {
     }
  
     @AfterMethod(groups = [ "Integration" ])
-    //can't fail because that swallows the original exception, grrr!
-    public void moan_if_http_port_in_use() {
-        if (!httpPortLeftOpen && isPortInUse(DEFAULT_HTTP_PORT, 1000))
-            logger.warn "port $DEFAULT_HTTP_PORT still running after test"
+    public void ensureTomcatIsShutDown() {
+        Socket shutdownSocket = null;
+        SocketException gotException = null;
+
+        boolean socketClosed = new Repeater("Checking Tomcat has shut down").repeat({
+            if (shutdownSocket) shutdownSocket.close();
+            try { shutdownSocket = new Socket(InetAddress.getByAddress((byte[])[127,0,0,1]), Tomcat7SshSetup.DEFAULT_FIRST_SHUTDOWN_PORT); }
+            catch (SocketException e) { gotException = e; return; }
+            gotException = null
+        }).every(100, TimeUnit.MILLISECONDS).until({
+            gotException
+        }).limitIterationsTo(25)
+        .run();
+
+        if (socketClosed == false) {
+            logger.error "Tomcat did not shut down - this is a failure of the last test run";
+            logger.warn "I'm sending a message to the Tomcat shutdown port";
+            OutputStreamWriter writer = new OutputStreamWriter(shutdownSocket.getOutputStream());
+            writer.write("SHUTDOWN\r\n");
+            writer.flush();
+            writer.close();
+            shutdownSocket.close();
+            throw new Exception("Last test run did not shut down Tomcat")
+        }
     }
 
-    @Test
+    @Test(groups = [ "Integration" ])
     public void tracksNodeState() {
         TomcatNode tc = [ owner: new TestApplication(), httpPort: DEFAULT_HTTP_PORT ]
-        tc.start([ new SshMachineLocation(name:'london', provisioner:new LocalhostSshMachineProvisioner()) ])
+        tc.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         executeUntilSucceedsWithFinallyBlock ([:], {
             assertTrue tc.getAttribute(TomcatNode.NODE_UP)
         }, {
@@ -67,9 +90,11 @@ public class TomcatNodeIntegrationTest {
     
     @Test(groups = [ "Integration" ])
     public void publishesRequestAndErrorCountMetrics() {
+        TimeExtras.init();
+        
         Application app = new TestApplication();
         TomcatNode tc = new TomcatNode(owner: app, httpPort: DEFAULT_HTTP_PORT);
-        tc.start([ new SshMachineLocation(name:'london', provisioner:new LocalhostSshMachineProvisioner()) ])
+        tc.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         executeUntilSucceedsWithShutdown(tc, {
             def port = tc.getAttribute(TomcatNode.HTTP_PORT)
             def errorCount = tc.getAttribute(TomcatNode.ERROR_COUNT)
@@ -94,7 +119,7 @@ public class TomcatNodeIntegrationTest {
     public void publishesRequestsPerSecondMetric() {
         Application app = new TestApplication();
         TomcatNode tc = new TomcatNode(owner: app, httpPort: DEFAULT_HTTP_PORT);
-        tc.start([ new SshMachineLocation(name:'london', provisioner:new LocalhostSshMachineProvisioner()) ])
+        tc.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         executeUntilSucceedsWithShutdown(tc, {
                 def activityValue = tc.getAttribute(TomcatNode.REQUESTS_PER_SECOND)
                 if (activityValue == null || activityValue == -1) 
@@ -123,7 +148,7 @@ public class TomcatNodeIntegrationTest {
         assertNotNull resource
         tc.war = resource.getPath()
 
-        tc.start([ new SshMachineLocation(name:'london', provisioner:new LocalhostSshMachineProvisioner()) ])
+        tc.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         executeUntilSucceedsWithShutdown(tc, {
             def port = tc.getAttribute(TomcatNode.HTTP_PORT)
             def url  = "http://localhost:${port}/hello-world"
@@ -142,15 +167,15 @@ public class TomcatNodeIntegrationTest {
             TomcatNode tc = new TomcatNode(owner:app, httpPort: DEFAULT_HTTP_PORT)
             Exception caught = null
             try {
-                tc.start([ new SshMachineLocation(name:'london', provisioner:new LocalhostSshMachineProvisioner()) ])
+                tc.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
+                fail("Should have thrown start-exception")
             } catch (EntityStartException e) {
-                caught = e
+                // success
+                logger.debug "The exception that was thrown was:", caught
             } finally {
                 tc.shutdown()
             }
-            assertNotNull caught
             assertFalse tc.getAttribute(TomcatNode.NODE_UP)
-            logger.debug "The exception that was thrown was:", caught
         } finally {
             listener.close();
             t.join();

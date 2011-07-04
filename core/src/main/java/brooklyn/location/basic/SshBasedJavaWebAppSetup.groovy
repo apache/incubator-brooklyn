@@ -1,12 +1,10 @@
 package brooklyn.location.basic
 
-import java.io.File
-
 import brooklyn.entity.basic.EntityLocal
 
 public abstract class SshBasedJavaWebAppSetup extends SshBasedJavaAppSetup {
 
-    public SshBasedJavaWebAppSetup(EntityLocal entity, SshMachine machine) {
+    public SshBasedJavaWebAppSetup(EntityLocal entity, SshMachineLocation machine) {
         super(entity, machine);
     }
 
