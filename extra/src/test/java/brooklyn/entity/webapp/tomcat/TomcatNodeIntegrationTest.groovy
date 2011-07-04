@@ -17,6 +17,8 @@ import brooklyn.event.EntityStartException
 
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.test.TestUtils.BooleanWithMessage
+import brooklyn.util.internal.Repeater
+import java.util.concurrent.TimeUnit
 
 /**
  * This tests the operation of the {@link TomcatNode} entity.
@@ -47,13 +49,33 @@ public class TomcatNodeIntegrationTest {
     }
  
     @AfterMethod(groups = [ "Integration" ])
-    //can't fail because that swallows the original exception, grrr!
-    public void moan_if_http_port_in_use() {
-        if (!httpPortLeftOpen && isPortInUse(DEFAULT_HTTP_PORT, 1000))
-            logger.warn "port $DEFAULT_HTTP_PORT still running after test"
+    public void ensureTomcatIsShutDown() {
+        Socket shutdownSocket = null;
+        SocketException gotException = null;
+
+        boolean socketClosed = new Repeater("Checking Tomcat has shut down").repeat({
+            if (shutdownSocket) shutdownSocket.close();
+            try { shutdownSocket = new Socket(InetAddress.getByAddress((byte[])[127,0,0,1]), Tomcat7SshSetup.DEFAULT_FIRST_SHUTDOWN_PORT); }
+            catch (SocketException e) { gotException = e; return; }
+            gotException = null
+        }).every(100, TimeUnit.MILLISECONDS).until({
+            gotException
+        }).limitIterationsTo(25)
+        .run();
+
+        if (socketClosed == false) {
+            logger.error "Tomcat did not shut down - this is a failure of the last test run";
+            logger.warn "I'm sending a message to the Tomcat shutdown port";
+            OutputStreamWriter writer = new OutputStreamWriter(shutdownSocket.getOutputStream());
+            writer.write("SHUTDOWN\r\n");
+            writer.flush();
+            writer.close();
+            shutdownSocket.close();
+            throw new Exception("Last test run did not shut down Tomcat")
+        }
     }
 
-    @Test
+    @Test(groups = [ "Integration" ])
     public void tracksNodeState() {
         TomcatNode tc = [ owner: new TestApplication(), httpPort: DEFAULT_HTTP_PORT ]
         tc.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
