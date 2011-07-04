@@ -7,8 +7,8 @@ import brooklyn.entity.Entity
 import brooklyn.entity.Group
 
 public abstract class AbstractGroup extends AbstractEntity implements Group {
-    public AbstractGroup(Map props=[:]) {
-        super(props)
+    public AbstractGroup(Map props=[:], Entity owner=null) {
+        super(props, owner)
     }
 
     final Collection<Entity> members = new CopyOnWriteArraySet<Entity>();

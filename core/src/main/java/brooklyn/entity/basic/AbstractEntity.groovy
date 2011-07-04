@@ -95,13 +95,12 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     protected final Map<ConfigKey,Object> ownConfig = [:]
     protected final Map<ConfigKey,Object> inheritedConfig = [:]
 
-    public AbstractEntity(Entity owner) {
-        this([owner:owner])
-    }
-    
-    public AbstractEntity(Map flags=[:]) {
+    public AbstractEntity(Map flags=[:], Entity owner=null) {
         this.@skipCustomInvokeMethod.set(true)
-        Entity suppliedOwner = flags.remove('owner')
+        if (flags.owner != null && owner != null && flags.owner != owner) {
+            throw new IllegalArgumentException("Multiple owners supplied, ${flags.owner} and $owner")
+        }
+        Entity suppliedOwner = flags.remove('owner') ?: owner
         Map<ConfigKey,Object> suppliedOwnConfig = flags.remove('config')
 
         if (suppliedOwnConfig) ownConfig.putAll(suppliedOwnConfig)

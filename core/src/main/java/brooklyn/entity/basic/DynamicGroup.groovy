@@ -2,16 +2,22 @@ package brooklyn.entity.basic
 
 import groovy.lang.Closure
 
+import java.beans.PropertyChangeListener
 import java.util.Map
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 import brooklyn.entity.Application
-import brooklyn.entity.Group
+import brooklyn.entity.Entity
 
 public class DynamicGroup extends AbstractGroup {
+    private static final Logger log = LoggerFactory.getLogger(DynamicGroup.class)
+    
     Closure entityFilter=null;
     
-    public DynamicGroup(Map properties=[:], Group owner=null, Closure entityFilter=null) {
-        super(properties, null)
+    public DynamicGroup(Map properties=[:], Entity owner=null, Closure entityFilter=null) {
+        super(properties, owner)
         if (entityFilter) this.entityFilter = entityFilter;
         
         //do this last, rather than passing owner up, so that entity filter is ready
@@ -26,7 +32,7 @@ public class DynamicGroup extends AbstractGroup {
     @Override
     protected synchronized void registerWithApplication(Application app) {
         super.registerWithApplication(app)
-        app.addEntityChangeListener({ rescanEntities() })
+        app.addEntityChangeListener({ rescanEntities() } as PropertyChangeListener)
         rescanEntities()
     }
     
