@@ -18,7 +18,6 @@ import brooklyn.entity.ParameterType
 import brooklyn.event.AttributeSensor
 import brooklyn.event.EventListener
 import brooklyn.event.Sensor
-import brooklyn.event.adapter.PropertiesSensorAdapter
 import brooklyn.event.basic.AttributeMap
 import brooklyn.event.basic.ConfigKey
 import brooklyn.location.Location
@@ -75,12 +74,6 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
      */
     protected final AttributeMap attributesInternal = new AttributeMap(this)
     
-    //ENGR-1458  interesting to use property change. if it works great. 
-    //if there are any issues with it consider instead just making attributesInternal private,
-    //and forcing all changes to attributesInternal to go through update(AttributeSensor,...)
-    //and do the publishing there...  (please leave this comment here for several months until we know... it's Jun 2011 right now)
-    protected final PropertiesSensorAdapter propertiesAdapter = new PropertiesSensorAdapter(this, attributes)
-
     /**
      * For temporary data, e.g. timestamps etc for calculating real attribute values, such as when
      * calculating averages over time etc.

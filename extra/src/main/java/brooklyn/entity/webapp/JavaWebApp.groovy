@@ -10,7 +10,6 @@ import brooklyn.entity.trait.Startable
 import brooklyn.event.AttributeSensor
 import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.ConfigKey
 import brooklyn.location.Location
 import brooklyn.location.MachineLocation
@@ -61,8 +60,8 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
         if (properties.jmxHost) setConfig(SUGGESTED_JMX_HOST, properties.remove("jmxHost"))
         
         // addEffector(Startable.START);
-        propertiesAdapter.addSensor NODE_UP, false
-        propertiesAdapter.addSensor NODE_STATUS, "starting"
+        updateAttribute(NODE_UP, false)
+        updateAttribute(NODE_STATUS, "uninitialized")
     }
 
     public abstract SshBasedJavaWebAppSetup getSshBasedSetup(SshMachineLocation loc);
@@ -104,9 +103,9 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
         locations.add(machine)
 
         SshBasedJavaWebAppSetup setup = getSshBasedSetup(machine)
+        updateAttribute(NODE_STATUS, "starting")
         setup.start()
         waitForEntityStart(setup)
-
     }
     
     // TODO Find a better way to detect early death of process.
@@ -120,17 +119,23 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
             isRunningResult = setup.isRunning()
             log.debug "checked $this, running result $isRunningResult"
         }
-        if (!isRunningResult) throw new IllegalStateException("$this aborted soon after startup")
+        if (!isRunningResult) {
+            updateAttribute(NODE_STATUS, "failed")
+            throw new IllegalStateException("$this aborted soon after startup")
+        }
+        updateAttribute(NODE_STATUS, "running")
     }
 
     // FIXME: should MachineLocations below actually be SshMachineLocation? That's what XSshSetup requires, but not what the unit tests offer.
     public void shutdown() {
+        updateAttribute(NODE_STATUS, "stopping")
         jmxAdapter.disconnect();
         shutdownInLocation(locations.find({ it instanceof MachineLocation }))
     }
     
     public void shutdownInLocation(MachineLocation loc) {
         getSshBasedSetup(loc).shutdown()
+        updateAttribute(NODE_STATUS, "stopped")
     }
     
     public void deploy(String file) {
