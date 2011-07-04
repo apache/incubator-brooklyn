@@ -15,7 +15,13 @@ public class JsTreeNodeImpl implements JsTreeNode {
 
     public JsTreeNodeImpl(String id, String name, String clazz, Boolean matched) {
         this.data.put("title", name)
-        this.data.put("attr", ["title": id])
+        
+        // Set html attributes on the a elements jstree uses to display nodes
+        this.data.put("attr", ["title": id,
+                               "id", "jstree-node-id-" + id])
+
+        // Here you can store anything you like.
+        // The data is then available with jQuery's .data() mechanism.
         this.metadata.put("id", id)
 
         this.matched = matched
