@@ -1,8 +1,6 @@
 package brooklyn.entity.webapp.tomcat
 
 import brooklyn.entity.basic.AttributeDictionary
-import brooklyn.entity.basic.ConfigKeyDictionary
-import brooklyn.location.basic.BasicPortRange
 import brooklyn.location.basic.SshBasedJavaWebAppSetup
 import brooklyn.location.basic.SshMachineLocation
 
@@ -10,29 +8,73 @@ import brooklyn.location.basic.SshMachineLocation
  * Start a {@link TomcatNode} in a {@link Location} accessible over ssh.
  */
 public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
-    String version = "7.0.16"
-    String installDir = installsBaseDir + "/" + "tomcat" + "/" + "apache-tomcat-$version"
- 
-    public static DEFAULT_FIRST_HTTP_PORT = 8080
-    public static DEFAULT_FIRST_SHUTDOWN_PORT = 31880
-
-    String runDir
-
+    
+    public static final String DEFAULT_VERSION = "7.0.16"
+    public static final String DEFAULT_INSTALL_DIR = DEFAULT_INSTALL_BASEDIR+"tomcat/"
+    public static final String DEFAULT_DEPLOY_SUBDIR = "webapps"
+    public static final int DEFAULT_FIRST_HTTP_PORT = 8080
+    public static final int DEFAULT_FIRST_SHUTDOWN_PORT = 31880
+    
     /** tomcat insists on having a port you can connect to for the sole purpose of shutting it down;
      * don't see an easy way to disable it; causes collisions in its default location of 8005,
      * so moving it to some anonymous high-numbered location
      */
     private int tomcatShutdownPort;
+    
     private int tomcatHttpPort;
+    
+    private String tomcatVersion;
+
+    public static Tomcat7SshSetup newInstance(TomcatNode entity, SshMachineLocation machine) {
+        Integer suggestedTomcatVersion = entity.getConfig(TomcatNode.SUGGESTED_VERSION)
+        String suggestedInstallDir = entity.getConfig(TomcatNode.SUGGESTED_INSTALL_DIR)
+        String suggestedRunDir = entity.getConfig(TomcatNode.SUGGESTED_RUN_DIR)
+        Integer suggestedJmxPort = entity.getConfig(TomcatNode.SUGGESTED_JMX_PORT)
+        String suggestedJmxHost = entity.getConfig(TomcatNode.SUGGESTED_JMX_HOST)
+        Integer suggestedShutdownPort = entity.getConfig(TomcatNode.SUGGESTED_SHUTDOWN_PORT)
+        Integer suggestedHttpPort = entity.getConfig(TomcatNode.SUGGESTED_HTTP_PORT)
         
+        String tomcatVersion = suggestedTomcatVersion ?: DEFAULT_VERSION
+        String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"apache-tomcat-$tomcatVersion")
+        String runDir = suggestedRunDir ?: (DEFAULT_RUN_DIR+"/"+"app-"+entity.getApplication()?.id+"/tomcat-"+entity.id)
+        String deployDir = runDir+"/"+DEFAULT_DEPLOY_SUBDIR
+        String jmxHost = suggestedJmxHost ?: machine.getAddress().getHostName()
+        int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort, DEFAULT_FIRST_JMX_PORT))
+        int httpPort = machine.obtainPort(toDesiredPortRange(suggestedHttpPort, DEFAULT_FIRST_HTTP_PORT))
+        int shutdownPort = machine.obtainPort(toDesiredPortRange(suggestedShutdownPort, DEFAULT_FIRST_SHUTDOWN_PORT))
+        
+        Tomcat7SshSetup result = new Tomcat7SshSetup(entity, machine)
+        result.setJmxPort(jmxPort)
+        result.setJmxHost(jmxHost)
+        result.setHttpPort(httpPort)
+        result.setShutdownPort(shutdownPort)
+        result.setTomcatVersion(tomcatVersion)
+        result.setInstallDir(installDir)
+        result.setDeployDir(deployDir)
+        result.setRunDir(runDir)
+        
+        // FIXME More checks for if ports not available
+    }
+    
     public Tomcat7SshSetup(TomcatNode entity, SshMachineLocation machine) {
         super(entity, machine)
-        runDir = appBaseDir + "/" + "tomcat-" + entity.id
-        
-        tomcatShutdownPort = machine.obtainPort(new BasicPortRange(DEFAULT_FIRST_SHUTDOWN_PORT, 65535));
-        tomcatHttpPort = obtainPort(entity.getConfig(ConfigKeyDictionary.SUGGESTED_HTTP_PORT), DEFAULT_FIRST_HTTP_PORT, true)
     }
 
+    public Tomcat7SshSetup setShutdownPort(int val) {
+        this.tomcatShutdownPort = val
+        return this
+    }
+    
+    public Tomcat7SshSetup setHttpPort(int val) {
+        this.tomcatHttpPort = val
+        return this
+    }
+    
+    public Tomcat7SshSetup setTomcatVersion(String val) {
+        this.tomcatVersion = val
+        return this
+    }
+    
     @Override
     protected void postStart() {
         entity.updateAttribute(AttributeDictionary.JMX_PORT, jmxPort)
@@ -43,8 +85,8 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
     
     public String getInstallScript() {
         makeInstallScript(
-                "wget http://download.nextag.com/apache/tomcat/tomcat-7/v${version}/bin/apache-tomcat-${version}.tar.gz",
-                "tar xvzf apache-tomcat-${version}.tar.gz")
+                "wget http://download.nextag.com/apache/tomcat/tomcat-7/v${tomcatVersion}/bin/apache-tomcat-${tomcatVersion}.tar.gz",
+                "tar xvzf apache-tomcat-${tomcatVersion}.tar.gz")
     }
 
     /**
@@ -102,6 +144,7 @@ exit"""
     
     protected void postShutdown() {
         super.postShutdown();
+        machine.releasePort(jmxPort)
         machine.releasePort(tomcatShutdownPort);
         machine.releasePort(tomcatHttpPort);
     }

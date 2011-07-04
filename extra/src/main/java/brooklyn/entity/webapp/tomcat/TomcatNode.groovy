@@ -1,20 +1,20 @@
 package brooklyn.entity.webapp.tomcat
 
-import java.util.concurrent.TimeUnit;
-import javax.management.InstanceNotFoundException;
+import java.util.concurrent.TimeUnit
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import javax.management.InstanceNotFoundException
 
-import brooklyn.entity.webapp.JavaWebApp;
-import brooklyn.event.EntityStartException;
-import brooklyn.event.adapter.JmxSensorAdapter;
-import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.location.basic.SshBasedJavaWebAppSetup;
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
-
+import brooklyn.entity.webapp.JavaWebApp
+import brooklyn.event.EntityStartException
+import brooklyn.event.adapter.JmxSensorAdapter
+import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.event.basic.BasicConfigKey
+import brooklyn.location.basic.SshBasedJavaWebAppSetup
+import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.internal.Repeater
-import brooklyn.location.basic.SshMachineLocation;
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Tomcat instance.
@@ -23,6 +23,8 @@ public class TomcatNode extends JavaWebApp {
     
     private static final Logger log = LoggerFactory.getLogger(TomcatNode.class)
     
+    public static final BasicConfigKey<Integer> SUGGESTED_SHUTDOWN_PORT = [Integer, "tomcat.shutdownport", "Suggested shutdown port" ]
+    
     public static final BasicAttributeSensor<Integer> TOMCAT_SHUTDOWN_PORT = [ Integer, "webapp.tomcat.shutdownPort", "Port to use for shutting down" ];
     
     public TomcatNode(Map properties=[:]) {
@@ -30,7 +32,7 @@ public class TomcatNode extends JavaWebApp {
     }
 
     public SshBasedJavaWebAppSetup getSshBasedSetup(SshMachineLocation machine) {
-        return new Tomcat7SshSetup(this, machine)
+        return Tomcat7SshSetup.newInstance(this, machine)
     }
     
     public void initJmxSensors() {

@@ -4,10 +4,9 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.webapp.JavaWebApp
-
 import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.basic.SshBasedJavaWebAppSetup
-
 import brooklyn.location.basic.SshMachineLocation
 
 /**
@@ -17,8 +16,8 @@ public class JBossNode extends JavaWebApp {
 
     private static final Logger log = LoggerFactory.getLogger(JBossNode.class)
 
-    public static final int DEFAULT_HTTP_PORT = 8080;
-
+    public static BasicConfigKey<Integer> SUGGESTED_PORT_INCREMENT = [ Integer, "jboss.portincrement", "Increment to be used for all jboss ports" ]
+    
     // Jboss specific
     public static final BasicAttributeSensor<Integer> PORT_INCREMENT = 
             [ Integer, "webapp.portIncrement", "Increment added to default JBoss ports" ];
@@ -31,12 +30,11 @@ public class JBossNode extends JavaWebApp {
         if (portIncrement < 0) {
             throw new IllegalArgumentException("JBoss port increment cannot be negative")
         }
-        updateAttribute PORT_INCREMENT, portIncrement
-        updateAttribute HTTP_PORT, (DEFAULT_HTTP_PORT + portIncrement)
+        setConfig SUGGESTED_PORT_INCREMENT, portIncrement
     }
 
     public SshBasedJavaWebAppSetup getSshBasedSetup(SshMachineLocation loc) {
-        return new JBoss6SshSetup(this, loc);
+        return JBoss6SshSetup.newInstance(this, loc);
     }
     
     public void initJmxSensors() {

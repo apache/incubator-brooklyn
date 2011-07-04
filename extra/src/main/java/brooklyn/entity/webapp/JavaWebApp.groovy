@@ -10,6 +10,7 @@ import brooklyn.entity.trait.Startable
 import brooklyn.event.AttributeSensor
 import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.ConfigKey
 import brooklyn.location.Location
 import brooklyn.location.MachineLocation
@@ -28,10 +29,13 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
     
     public static final Logger log = LoggerFactory.getLogger(JavaWebApp.class)
 
+    public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeyDictionary.SUGGESTED_VERSION;
+    public static final ConfigKey<String> SUGGESTED_INSTALL_DIR = ConfigKeyDictionary.SUGGESTED_INSTALL_DIR;
+    public static final ConfigKey<String> SUGGESTED_RUN_DIR = ConfigKeyDictionary.SUGGESTED_RUN_DIR;
     public static final ConfigKey<Integer> SUGGESTED_HTTP_PORT = ConfigKeyDictionary.SUGGESTED_HTTP_PORT;
     public static final ConfigKey<Integer> SUGGESTED_JMX_PORT = ConfigKeyDictionary.SUGGESTED_JMX_PORT;
     public static final ConfigKey<String> SUGGESTED_JMX_HOST = ConfigKeyDictionary.SUGGESTED_JMX_HOST;
-
+    
     public static final AttributeSensor<Integer> HTTP_PORT = AttributeDictionary.HTTP_PORT;
     public static final AttributeSensor<Integer> JMX_PORT = AttributeDictionary.JMX_PORT;
     public static final AttributeSensor<String> JMX_HOST = AttributeDictionary.JMX_HOST;

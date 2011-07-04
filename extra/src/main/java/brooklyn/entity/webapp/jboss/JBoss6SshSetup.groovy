@@ -2,30 +2,69 @@ package brooklyn.entity.webapp.jboss
 
 import brooklyn.entity.basic.AttributeDictionary
 import brooklyn.location.basic.SshBasedJavaWebAppSetup
-
 import brooklyn.location.basic.SshMachineLocation
 
 public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
-    String version = "6.0.0.Final"
-    String saveAs  = "jboss-as-distribution-$version"
-    String installDir = "$installsBaseDir/jboss-$version"
-    String runDir
+    
+    public static final String DEFAULT_VERSION = "6.0.0.Final"
+    public static final String DEFAULT_INSTALL_DIR = DEFAULT_INSTALL_BASEDIR+"jboss/"
+    public static final String DEFAULT_DEPLOY_SUBDIR = "deploy"
+    public static final int DEFAULT_HTTP_PORT = 8080;
+
+    private String jbossVersion
+    private int portIncrement
+    
+    public static JBoss6SshSetup newInstance(JBossNode entity, SshMachineLocation machine) {
+        Integer suggestedJbossVersion = entity.getConfig(JBossNode.SUGGESTED_VERSION)
+        String suggestedInstallDir = entity.getConfig(JBossNode.SUGGESTED_INSTALL_DIR)
+        String suggestedRunDir = entity.getConfig(JBossNode.SUGGESTED_RUN_DIR)
+        Integer suggestedJmxPort = entity.getConfig(JBossNode.SUGGESTED_JMX_PORT)
+        String suggestedJmxHost = entity.getConfig(JBossNode.SUGGESTED_JMX_HOST)
+        Integer suggestedPortIncrement = entity.getConfig(JBossNode.SUGGESTED_PORT_INCREMENT)
+        
+        String jbossVersion = suggestedJbossVersion ?: DEFAULT_VERSION
+        String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"jboss-$jbossVersion")
+        String runDir = suggestedRunDir ?: (DEFAULT_RUN_DIR+"/"+"app-"+entity.getApplication()?.id+"/jboss-"+entity.id)
+        String deployDir = runDir+"/"+DEFAULT_DEPLOY_SUBDIR
+        String jmxHost = suggestedJmxHost ?: machine.getAddress().getHostName()
+        int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort, DEFAULT_FIRST_JMX_PORT))
+        int portIncrement = suggestedPortIncrement ?: 0
+        
+        JBoss6SshSetup result = new JBoss6SshSetup(entity, machine)
+        result.setJmxPort(jmxPort)
+        result.setJmxHost(jmxHost)
+        result.setJbossVersion(jbossVersion)
+        result.setInstallDir(installDir)
+        result.setDeployDir(deployDir)
+        result.setRunDir(runDir)
+        result.setPortIncrement(portIncrement)
+    }
 
     public JBoss6SshSetup(JBossNode entity, SshMachineLocation machine) {
         super(entity, machine)
-        runDir = appBaseDir + "/" + "jboss-"+entity.id
     }
-
+    
+    public JBoss6SshSetup setJbossVersion(String val) {
+        this.jbossVersion = val
+        return this
+    }
+    
+    public JBoss6SshSetup setPortIncrement(int val) {
+        this.portIncrement = val
+        return this
+    }
+    
     @Override
     protected void postStart() {
         entity.updateAttribute(AttributeDictionary.JMX_PORT, jmxPort)
         entity.updateAttribute(AttributeDictionary.JMX_HOST, jmxHost)
-        //FIXME Where is the http port set?
-        // entity.updateAttribute(AttributeDictionary.HTTP_PORT, httpPort)
+        entity.updateAttribute(AttributeDictionary.HTTP_PORT, DEFAULT_HTTP_PORT+portIncrement)
     }
     
     public String getInstallScript() {
-        def url = "http://downloads.sourceforge.net/project/jboss/JBoss/JBoss-$version/jboss-as-distribution-${version}.zip?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fjboss%2Ffiles%2FJBoss%2F$version%2F&ts=1307104229&use_mirror=kent"
+        String url = "http://downloads.sourceforge.net/project/jboss/JBoss/JBoss-$jbossVersion/jboss-as-distribution-${jbossVersion}.zip?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fjboss%2Ffiles%2FJBoss%2F$jbossVersion%2F&ts=1307104229&use_mirror=kent"
+        String saveAs  = "jboss-as-distribution-$jbossVersion"
+        
         // Note the -o option to unzip, to overwrite existing files without warning.
         // The JBoss zip file contains lgpl.txt (at least) twice and the prompt to
         // overwrite interrupts the installer.
@@ -46,7 +85,6 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
            .. changing port numbers with sed is pretty brittle.
         */
         def portGroupName = "ports-brooklyn"
-        int portIncrement = entity.getAttribute(JBossNode.PORT_INCREMENT)
         def serverProfile = "default"
 """mkdir -p $runDir/server && \\
 cd $runDir/server && \\
