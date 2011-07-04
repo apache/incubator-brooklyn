@@ -11,13 +11,19 @@ import brooklyn.management.SubscriptionHandle
 import brooklyn.policy.basic.AbstractPolicy
 
 class BufferingEnricher<T> extends AbstractPolicy implements EventListener<T> {
-    public static class BufferChangedEvent {}
+    public static interface BufferEvent {}
+    public static final class BufferChangedEvent implements BufferEvent {}
+    public static final class BufferFlushedEvent implements BufferEvent {}
     private Sensor<BufferChangedEvent> result
     private boolean alwaysRetainBuffer
     
     protected LinkedList<T> buffer = new LinkedList<T>()
     
-    public BufferingEnricher(Entity owner, Entity producer, Sensor<T> source, boolean alwaysRetainBuffer) {
+    public BufferingEnricher(Entity owner, Entity producer, Sensor<T> source) {
+        this(owner, producer, source, true)
+    }
+    
+    private BufferingEnricher(Entity owner, Entity producer, Sensor<T> source, boolean alwaysRetainBuffer) {
         this.alwaysRetainBuffer = alwaysRetainBuffer
         this.result = new BasicSensor(BufferChangedEvent.class, "Buffer", "Buffer for ${source.getDescription()}")
         super.setEntity(owner)
@@ -32,7 +38,7 @@ class BufferingEnricher<T> extends AbstractPolicy implements EventListener<T> {
         }
     }
     
-    public <T> void unsubscribe(long subscriptionId) {
+    public <T> void unsubscribe(SubscriptionHandle subscriptionId) {
         subscription.unsubscribe subscriptionId
         if (discardBuffer()) {buffer = new LinkedList<T>()}
     }
@@ -46,11 +52,12 @@ class BufferingEnricher<T> extends AbstractPolicy implements EventListener<T> {
         new UnmodifiableList<T>(buffer)
     }
     
-    public void flushBuffer() {
+    public void flush() {
         buffer = new LinkedList<T>()
+        subscription.publish(result.newEvent(entity, new BufferFlushedEvent()))
     }
     
-    private boolean discardBuffer() {alwaysRetainBuffer && subscription.getSubscriptions().size() == 0}
+    private boolean discardBuffer() {!alwaysRetainBuffer && subscription.getSubscriptions().size() == 0}
     
     public static class RangeCachingEnricher<T> extends BufferingEnricher<T> {
         static final int DEFAULT_BUFFER_SIZE = 1
