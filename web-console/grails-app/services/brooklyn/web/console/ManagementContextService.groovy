@@ -87,10 +87,11 @@ class ManagementContextService implements ManagementContext {
             TestLeafEntity(String displayName) {
                 this.id = "leaf-" + ManagementContextService.ID_GENERATOR++
                 this.displayName = displayName;
-                this.id = id;
                 this.sensorReadings = [ Happiness: 42,
                                         WubWub: 16,
-                                        Pingu: "Moop" ];
+                                        Pingu: "Moop",
+                                        id: this.id]
+
             }
         }
     }
