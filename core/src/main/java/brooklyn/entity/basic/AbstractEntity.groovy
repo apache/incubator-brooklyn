@@ -106,9 +106,6 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 
         if (suppliedOwnConfig) ownConfig.putAll(suppliedOwnConfig)
         
-        //place named-arguments into corresponding fields if they exist, otherwise put into attributes map
-        this.attributes << LanguageUtils.setFieldsFromMap(this, flags)
-
         // initialize the effectors defined on the class
         // (dynamic effectors could still be added; see #getEffectors
         Map<String,Effector> effectorsT = [:]
@@ -136,20 +133,6 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         this.@skipCustomInvokeMethod.set(false)
     }
 
-    public void propertyMissing(String name, value) { attributes[name] = value }
- 
-    public Object propertyMissing(String name) {
-        if (attributes.containsKey(name)) return attributes[name];
-        else {
-            //TODO could be more efficient ;)
-            def v = owner?.attributes[name]
-            if (v != null) return v;
-            if (groups.find { group -> v = group.attributes[name] }) return v;
-        }
-        log.debug "no property or attribute $name on $this"
-        if (name=="activity") log.warn "reference to removed field 'activity' on entity $this", new Throwable("location of failed reference to 'activity' on $this")
-    }
-    
     /**
      * Adds this as a member of the given group, registers with application if necessary
      */
@@ -264,21 +247,9 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         removeApplicationRegistrant()
     }
 
-    /**
-     * Mutable attributes on this entity.
-     *
-     * This can include activity information and status information (e.g. AttributeSensors), as well as
-     * arbitrary internal properties which can make life much easier/dynamic (though we lose something in type safety)
-     * e.g. jmxHost / jmxPort are handled as attributes.
-     * 
-     * @deprecated this will not be exposed, final API TBD
-     */
-    @Deprecated
-    public Map<String, Object> getAttributes() {
-        return attributesInternal.asMap(); // .asImmutable(); // FIXME this does not make the children immutable
+    public <T> T getAttribute(AttributeSensor<T> attribute) {
+        attributesInternal.getValue(attribute);
     }
-    
-    public <T> T getAttribute(AttributeSensor<T> attribute) { attributesInternal.getValue(attribute); }
  
     public <T> T updateAttribute(AttributeSensor<T> attribute, T val) {
         log.info "updating attribute {} as {}", attribute.name, val

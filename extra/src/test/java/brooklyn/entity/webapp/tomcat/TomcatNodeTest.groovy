@@ -33,7 +33,7 @@ class TomcatNodeTest {
         TomcatNode.metaClass.startInLocation = { SimulatedLocation loc ->
             delegate.locations.add(loc)
             TomcatSimulator sim = new TomcatSimulator(loc, delegate)
-            delegate.simulator = sim
+            delegate.metaClass.simulator = sim
             sim.start()
         }
         TomcatNode.metaClass.shutdownInLocation { SimulatedLocation loc ->

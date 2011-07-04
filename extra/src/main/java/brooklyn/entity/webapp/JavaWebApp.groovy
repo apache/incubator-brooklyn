@@ -10,6 +10,7 @@ import brooklyn.entity.trait.Startable
 import brooklyn.event.AttributeSensor
 import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.ConfigKey
 import brooklyn.location.Location
 import brooklyn.location.MachineLocation
@@ -28,6 +29,7 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
     
     public static final Logger log = LoggerFactory.getLogger(JavaWebApp.class)
 
+    public static final BasicConfigKey<String> WAR = [ String, "war", "Path of WAR file to deploy" ]
     public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeyDictionary.SUGGESTED_VERSION;
     public static final ConfigKey<String> SUGGESTED_INSTALL_DIR = ConfigKeyDictionary.SUGGESTED_INSTALL_DIR;
     public static final ConfigKey<String> SUGGESTED_RUN_DIR = ConfigKeyDictionary.SUGGESTED_RUN_DIR;
@@ -83,10 +85,10 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
         
         waitForHttpPort()
         
-        if (this.war) {
-            log.debug "Deploying {} to {}", this.war, this.machine
-            this.deploy(this.war)
-            log.debug "Deployed {} to {}", this.war, this.machine
+        if (getConfig(WAR)) {
+            log.debug "Deploying {} to {}", getConfig(WAR), this.locations
+            this.deploy(getConfig(WAR))
+            log.debug "Deployed {} to {}", getConfig(WAR), this.locations
         }
     }
     

@@ -2,26 +2,9 @@ package brooklyn.entity.webapp.tomcat
 
 import static org.testng.Assert.*
 
-import java.util.Map.Entry
 import java.util.concurrent.Semaphore
 
-import javax.management.Attribute
-import javax.management.AttributeList
-import javax.management.DynamicMBean
-import javax.management.MBeanAttributeInfo
-import javax.management.MBeanInfo
-import javax.management.MBeanServer
-import javax.management.MBeanServerFactory
-import javax.management.MBeanServerInvocationHandler
-import javax.management.ObjectName
-import javax.management.remote.JMXConnectorServer
-import javax.management.remote.JMXConnectorServerFactory
-import javax.management.remote.JMXServiceURL
-
-import mx4j.tools.naming.NamingServiceMBean
-import mx4j.tools.naming.NamingService
-
-import brooklyn.entity.Entity
+import brooklyn.entity.basic.EntityLocal
 import brooklyn.location.Location
 import brooklyn.test.JmxService
 
@@ -34,10 +17,10 @@ public class TomcatSimulator {
     private static Semaphore lock = new Semaphore(MAXIMUM_LOCKS)
     private static Collection<TomcatSimulator> activeInstances = []
     private Location location
-    private Entity entity
+    private EntityLocal entity
     private JmxService jmxService
 
-    TomcatSimulator(Location location, Entity entity) {
+    TomcatSimulator(Location location, EntityLocal entity) {
         assertNotNull(location)
         assertNotNull(entity)
         this.location = location

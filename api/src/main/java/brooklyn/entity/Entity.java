@@ -2,10 +2,7 @@ package brooklyn.entity;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.Map;
 
-import brooklyn.event.EventListener;
-import brooklyn.event.Sensor;
 import brooklyn.location.Location;
 
 /**
@@ -38,9 +35,6 @@ public interface Entity extends Serializable {
      * Return the id of the {@link Application} this entity is registered with.
      */
     String getApplicationId();
-    
-    @Deprecated
-    Map<String, Object> getAttributes();
 
     /**
      * The owner of this entity, null if no owner.
