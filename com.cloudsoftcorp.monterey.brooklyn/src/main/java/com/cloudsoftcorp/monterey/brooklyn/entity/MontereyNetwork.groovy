@@ -17,7 +17,7 @@ import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.trait.Startable
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.Location
-import brooklyn.location.MachineLocation
+import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.internal.BrooklynSystemProperties
 import brooklyn.util.internal.EntityStartUtils
 
@@ -48,6 +48,7 @@ import com.cloudsoftcorp.util.proc.ProcessExecutionFailureException
 import com.cloudsoftcorp.util.web.client.CredentialsConfig
 import com.cloudsoftcorp.util.web.server.WebConfig
 import com.cloudsoftcorp.util.web.server.WebServer
+import com.google.common.collect.ImmutableMap
 import com.google.gson.Gson
 
 
@@ -79,7 +80,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     private CredentialsConfig webAdminCredential;
     private NetworkId networkId = NetworkId.Factory.newId();
 
-    private MachineLocation host;
+    private SshMachineLocation host;
     private URL managementUrl;
     private MontereyNetworkConnectionDetails connectionDetails;
     private String applicationName;
@@ -91,8 +92,8 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     private ScheduledFuture<?> monitoringTask;
     
     public MontereyNetwork() {
-        classloadingContext = ClassLoadingContext.Defaults.getDefaultClassLoadingContext();
-        gsonSerializer = new GsonSerializer(classloadingContext);
+        ClassLoadingContext classloadingContext = ClassLoadingContext.Defaults.getDefaultClassLoadingContext();
+        GsonSerializer gsonSerializer = new GsonSerializer(classloadingContext);
         gson = gsonSerializer.getGson();
     }
 
@@ -123,9 +124,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     }
 
     public Map<NodeId,MontereyContainerNode> getContainerNodes() {
-        // FIXME How do I return an immutableMap, without groovy interpretting accessing the 'node' field as calling the getter?!
-        // return ImmutableMap.copyOf(nodes);
-        return nodes;
+        return ImmutableMap.copyOf(nodes);
     }
 
     public Map<NodeId,AbstractMontereyNode> getMontereyNodes() {
@@ -141,9 +140,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     }
     
     public Map<String,Segment> getSegments() {
-        // FIXME How do I return an immutableMap, without groovy interpretting accessing the 'segments' field as calling the getter?!
-        // return ImmutableMap.copyOf(segments);
-        return segments;
+        return ImmutableMap.copyOf(this.@segments);
     }
 
     public void start(Collection<? extends Location> locs) {
@@ -156,7 +153,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         if (monitoringTask != null) monitoringTask.cancel(true);
     }
 
-    public void startOnHost(MachineLocation host) {
+    public void startOnHost(SshMachineLocation host) {
         /*
          * TODO: Assumes the following are already set on SshMachine:
          * sshAddress
@@ -190,7 +187,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
                 host.copyTo(config.getMontereyWebApiSslKeystore(), installDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_SSL_KEYSTORE_RELATIVE_PATH);
             }
 
-            this.managementUrl = new URL(config.getMontereyWebApiProtocol()+"://"+host.getHost().getHostName()+":"+config.getMontereyWebApiPort());
+            this.managementUrl = new URL(config.getMontereyWebApiProtocol()+"://"+host.getAddress().getHostName()+":"+config.getMontereyWebApiPort());
             this.connectionDetails = new MontereyNetworkConnectionDetails(networkId, managementUrl, webAdminCredential);
             this.host = host;
 
@@ -202,7 +199,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
 
             host.run(out: System.out,
                     installDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_START_SCRIPT_RELATIVE_PATH+
-                    " -address "+host.getHost()+
+                    " -address "+host.getAddress().getHostName()+
                     " -port "+Integer.toString(config.getMontereyNodePort())+
                     " -networkId "+networkId.getId()+
                     " -key "+networkId.getId()+
@@ -271,7 +268,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         applicationName = null;
     }
 
-    private void shutdownManagementNodeProcess(MontereyNetworkConfig config, MachineLocation host, NetworkId networkId) {
+    private void shutdownManagementNodeProcess(MontereyNetworkConfig config, SshMachineLocation host, NetworkId networkId) {
         String killScript = installDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_KILL_SCRIPT_RELATIVE_PATH;
         try {
             LOG.info("Releasing management node on "+toString());
@@ -340,13 +337,13 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         removedLocations.addAll(mediatorsByLocation.keySet()); removedLocations.removeAll(locations);
 
         newLocations.each {
-            MontereyContainerNode mediatorGroup = new MediatorGroup(connectionDetails, it);
+            MediatorGroup mediatorGroup = new MediatorGroup(connectionDetails, it);
             addOwnedChild(mediatorGroup);
             mediatorsByLocation.put(it, mediatorGroup);
         }
 
         removedLocations.each {
-            MontereyContainerNode mediatorGroup = mediatorsByLocation.get(it);
+            MediatorGroup mediatorGroup = mediatorsByLocation.get(it);
             if (mediatorGroup != null) {
                 mediatorGroup.dispose();
                 removeOwnedChild(mediatorGroup);
@@ -386,11 +383,11 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         newSegments.each {
             Segment segment = new Segment(connectionDetails, it);
             addOwnedChild(segment);
-            segments.put(it, segment);
+            this.@segments.put(it, segment);
         }
 
         removedSegments.each {
-            Segment segment = segments.get(it);
+            Segment segment = this.@segments.remove(it);
             if (segment != null) {
                 segment.dispose();
                 removeOwnedChild(segment);

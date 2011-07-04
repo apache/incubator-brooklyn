@@ -44,8 +44,8 @@ public class MontereyContainerNode extends AbstractGroup {
         this.nodeId = nodeId;
         this.location = location;
         
-        classloadingContext = ClassLoadingContext.Defaults.getDefaultClassLoadingContext();
-        gsonSerializer = new GsonSerializer(classloadingContext);
+        ClassLoadingContext classloadingContext = ClassLoadingContext.Defaults.getDefaultClassLoadingContext();
+        GsonSerializer gsonSerializer = new GsonSerializer(classloadingContext);
         gson = gsonSerializer.getGson();
 
         LOG.info("Node "+nodeId+" created in location "+location);        

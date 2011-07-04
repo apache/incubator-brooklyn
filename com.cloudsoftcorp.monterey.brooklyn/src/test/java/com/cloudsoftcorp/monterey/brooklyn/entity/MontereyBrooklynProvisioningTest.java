@@ -28,7 +28,6 @@ import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
-import brooklyn.location.MachineLocation;
 import brooklyn.location.basic.SshMachineLocation;
 
 import com.cloudsoftcorp.monterey.CloudsoftThreadMonitoringTestFixture;
@@ -105,7 +104,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
     private static final long TIMEOUT = 30*1000;
     
     private Gson gson;
-    private MachineLocation localhost;
+    private SshMachineLocation localhost;
     private AbstractApplication app;
     private MontereyNetwork montereyNetwork;
     private UserCredentialsConfig adminCredential = new UserCredentialsConfig("myname", "mypass", HTTP_AUTH.ADMIN_ROLE);

@@ -95,6 +95,10 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     protected final Map<ConfigKey,Object> ownConfig = [:]
     protected final Map<ConfigKey,Object> inheritedConfig = [:]
 
+    public AbstractEntity(Entity owner) {
+        this([:], owner)
+    }
+    
     public AbstractEntity(Map flags=[:], Entity owner=null) {
         this.@skipCustomInvokeMethod.set(true)
         if (flags.owner != null && owner != null && flags.owner != owner) {

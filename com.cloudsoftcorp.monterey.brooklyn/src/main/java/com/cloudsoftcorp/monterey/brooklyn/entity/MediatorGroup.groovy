@@ -28,8 +28,8 @@ public class MediatorGroup extends DynamicGroup implements Balanceable {
         this.connectionDetails = connectionDetails;
         this.loc = loc;
 
-        classloadingContext = ClassLoadingContext.Defaults.getDefaultClassLoadingContext();
-        gsonSerializer = new GsonSerializer(classloadingContext);
+        ClassLoadingContext classloadingContext = ClassLoadingContext.Defaults.getDefaultClassLoadingContext();
+        GsonSerializer gsonSerializer = new GsonSerializer(classloadingContext);
         gson = gsonSerializer.getGson();
 
         setEntityFilter { Entity e -> e instanceof MediatorNode && e.locations.equals(Collections.singleton(loc)) }
