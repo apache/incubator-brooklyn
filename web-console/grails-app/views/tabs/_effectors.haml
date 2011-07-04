@@ -1,11 +1,12 @@
 .effector
     .tab-content-left-column
-        Here is where we have a list of effectors
-        .tab-content-list-container
-            %table{:id=>"effector-list"}
-        .tab-content-list-edit{:align=>"center"}
-            %button +
-            %button="-"
+        %ul{:id=>"effectorList"}
+            %li{:class=>"ui-widget-content"}
+                Start
+            %li{:class=>"ui-widget-content"}
+                Stop
+            %li{:class=>"ui-widget-content"}
+                Restart
     .tab-content-right-column
         %fieldset
             %legend Invoke
@@ -21,18 +22,3 @@
                     %li
                         Arg3
                         %button Go
-        %fieldset
-            %legend Execute
-            .effector-execute
-                Here is a list of executable tasks
-                %ul
-                    %li
-                        Arg1
-                        %button Go
-                    %li
-                        Arg2
-                        %button Go
-                    %li
-                        Arg3
-                        %button Go
-

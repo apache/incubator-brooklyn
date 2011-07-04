@@ -63,12 +63,13 @@ body{
 
 #searchBox{
     margin-bottom: 3px;
-    padding: 10px;
+    padding: 5px;
+    padding-right: 8px;
     height:5%;
 }
 
 #searchInput{
-    width: 92%;
+    width: 90%;
     background-image: url("../../images/brooklyn/magnifying-glass.gif");
     background-repeat:no-repeat;
     padding-left:20px;
