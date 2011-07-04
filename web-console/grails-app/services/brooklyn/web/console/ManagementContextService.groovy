@@ -31,11 +31,13 @@ class ManagementContextService implements ManagementContext {
     }
 
     private class TestApplication extends AbstractApplication {
-        Map sensorReadings = [:];
-
+        Map sensorReadings;
         TestApplication() {
             this.id = "app-" + ManagementContextService.ID_GENERATOR++
             displayName = "Application";
+
+            this.sensorReadings = [ id: this.id,
+                                    "Application Entity": true ];
 
             addOwnedChildren([
                     new TestGroupEntity("tomcat tier 1").addOwnedChildren([
@@ -65,10 +67,12 @@ class ManagementContextService implements ManagementContext {
         }
 
         private class TestGroupEntity extends AbstractGroup {
-            Map sensorReadings = [:];
+            Map sensorReadings;
             TestGroupEntity(String displayName) {
                 this.id = "group-" + ManagementContextService.ID_GENERATOR++
                 this.displayName = displayName
+                this.sensorReadings = [ id: this.id,
+                                        "Group entity": true ];
             }
 
             TestGroupEntity addOwnedChildren(Collection<Entity> children) {
