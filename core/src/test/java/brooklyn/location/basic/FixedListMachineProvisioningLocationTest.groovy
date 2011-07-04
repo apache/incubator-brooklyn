@@ -10,7 +10,9 @@ import org.testng.annotations.Test
 public class FixedListMachineProvisioningLocationTest {
     @Test
     public void canGetAMachine() {
-        FixedListMachineProvisioningLocation provisioner = new FixedListMachineProvisioningLocation([new SshMachineLocation(Inet4Address.getByAddress((byte[])[192,168,144,200]))])
+        FixedListMachineProvisioningLocation<SshMachineLocation> provisioner =
+            new FixedListMachineProvisioningLocation<SshMachineLocation>(
+                [new SshMachineLocation(Inet4Address.getByAddress((byte[])[192,168,144,200]))]);
         SshMachineLocation machine = provisioner.obtain()
         assertNotNull machine
         assertEquals '192.168.144.200', machine.address.hostAddress
@@ -18,7 +20,9 @@ public class FixedListMachineProvisioningLocationTest {
 
     @Test
     public void returnsNullIfNoMachinesAvailable() {
-        FixedListMachineProvisioningLocation provisioner = new FixedListMachineProvisioningLocation([new SshMachineLocation(Inet4Address.getByAddress((byte[])[192,168,144,200]))])
+        FixedListMachineProvisioningLocation<SshMachineLocation> provisioner =
+            new FixedListMachineProvisioningLocation<SshMachineLocation>(
+                [new SshMachineLocation(Inet4Address.getByAddress((byte[])[192,168,144,200]))]);
         SshMachineLocation machine1 = provisioner.obtain()
         SshMachineLocation machine2 = provisioner.obtain()
         assertNull machine2
@@ -26,7 +30,9 @@ public class FixedListMachineProvisioningLocationTest {
 
     @Test
     public void canGetAMachineReturnItAndObtainItAgain() {
-        FixedListMachineProvisioningLocation provisioner = new FixedListMachineProvisioningLocation([new SshMachineLocation(Inet4Address.getByAddress((byte[])[192,168,144,200]))])
+        FixedListMachineProvisioningLocation<SshMachineLocation> provisioner =
+            new FixedListMachineProvisioningLocation<SshMachineLocation>(
+                [new SshMachineLocation(Inet4Address.getByAddress((byte[])[192,168,144,200]))])
         SshMachineLocation machine = provisioner.obtain()
         provisioner.release(machine)
         machine = provisioner.obtain()

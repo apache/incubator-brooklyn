@@ -34,8 +34,10 @@ public class SimpleTomcatApp extends AbstractApplication {
             Inet4Address.getByAddress((byte[])[192,168,2,242])
         ]
         Collection<SshMachineLocation> machines = hosts.collect { new SshMachineLocation(it, "cloudsoft") }
+        GeneralPurposeLocation location = new GeneralPurposeLocation(name: 'london',
+            provisioner: new FixedListMachineProvisioningLocation<SshMachineLocation>(machines))
 
-        app.tc.start([ new GeneralPurposeLocation(name:'london', provisioner:new FixedListMachineProvisioningLocation(machines)) ])
+        app.tc.start([location])
 
         Thread t = []
         t.start {
