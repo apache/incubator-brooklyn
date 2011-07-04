@@ -18,6 +18,7 @@ import brooklyn.event.EntityStartException
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
+import brooklyn.util.internal.TimeExtras
 
 /**
  * This tests the operation of the {@link TomcatNode} entity.
@@ -89,6 +90,8 @@ public class TomcatNodeIntegrationTest {
     
     @Test(groups = [ "Integration" ])
     public void publishesRequestAndErrorCountMetrics() {
+        TimeExtras.init();
+        
         Application app = new TestApplication();
         TomcatNode tc = new TomcatNode(owner: app, httpPort: DEFAULT_HTTP_PORT);
         tc.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
