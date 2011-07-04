@@ -9,12 +9,16 @@ import javax.management.remote.JMXConnectorServerFactory
 import javax.management.remote.JMXServiceURL
 import mx4j.tools.naming.NamingService
 import mx4j.tools.naming.NamingServiceMBean
+import org.slf4j.LoggerFactory
+import org.slf4j.Logger
 
 /**
  * Set up a JMX service ready for clients to connect. This consists of an MBean server, a connector server and a naming
  * service.
  */
 class JmxService {
+
+    private static final Logger logger = LoggerFactory.getLogger(JmxService.class)
 
     private MBeanServer server
     private mx4j.tools.naming.NamingServiceMBean namingServiceMBean
@@ -24,7 +28,8 @@ class JmxService {
 
     public JmxService() {
         jmxHost = "localhost";
-        jmxPort = 1099;
+        jmxPort = 28000 + Math.floor(new Random().nextDouble() * 1000);
+
         JMXServiceURL address = new JMXServiceURL("service:jmx:rmi://localhost/jndi/rmi://localhost:" + jmxPort + "/jmxrmi");
         connectorServer = JMXConnectorServerFactory.newJMXConnectorServer(address, null, null)
         server = MBeanServerFactory.createMBeanServer();
@@ -32,12 +37,13 @@ class JmxService {
         server.registerMBean(connectorServer, cntorServerName);
 
         ObjectName naming = new ObjectName("Naming:type=registry");
-        server.registerMBean(new mx4j.tools.naming.NamingService(), naming);
-        Object proxy = MBeanServerInvocationHandler.newProxyInstance(server, naming, mx4j.tools.naming.NamingServiceMBean.class, false);
-        namingServiceMBean = (mx4j.tools.naming.NamingServiceMBean) proxy
+        server.registerMBean(new NamingService(jmxPort), naming);
+        Object proxy = MBeanServerInvocationHandler.newProxyInstance(server, naming, NamingServiceMBean.class, false);
+        namingServiceMBean = (NamingServiceMBean) proxy
         namingServiceMBean.start();
 
         connectorServer.start()
+        logger.info "JMX tester service started at URL {}", address
     }
 
     public void shutdown() {
