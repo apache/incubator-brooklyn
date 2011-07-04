@@ -1,9 +1,9 @@
 package brooklyn.entity.webapp.tomcat
 
-import brooklyn.location.Location
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.MachineLocation
 import brooklyn.location.PortRange
+import brooklyn.location.basic.AbstractLocation
 
 /**
  * Created by IntelliJ IDEA.
@@ -12,7 +12,7 @@ import brooklyn.location.PortRange
  * Time: 10:22
  * To change this template use File | Settings | File Templates.
  */
-class SimulatedLocation implements MachineProvisioningLocation, MachineLocation {
+class SimulatedLocation extends AbstractLocation implements MachineProvisioningLocation, MachineLocation {
 
     private static final address = InetAddress.getLocalHost()
 

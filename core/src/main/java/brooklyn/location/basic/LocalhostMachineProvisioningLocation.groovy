@@ -5,7 +5,7 @@ package brooklyn.location.basic
  * local host.
  */
 public class LocalhostMachineProvisioningLocation extends FixedListMachineProvisioningLocation<SshMachineLocation> {
-    public LocalhostMachineProvisioningLocation() {
-        super([ new SshMachineLocation(InetAddress.getByAddress((byte[])[127,0,0,1])) ])
+    public LocalhostMachineProvisioningLocation(String name = null) {
+        super([ new SshMachineLocation(InetAddress.getByAddress((byte[])[127,0,0,1])) ], name)
     }
 }

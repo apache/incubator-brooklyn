@@ -7,18 +7,13 @@ import brooklyn.util.internal.SshJschTool
 /**
  * Operations on a machine that is accessible via ssh.
  */
-public class SshMachineLocation extends GeneralPurposeLocation implements MachineLocation {
+public class SshMachineLocation extends AbstractLocation implements MachineLocation {
     private String user = null
     private InetAddress address
     private final List<Integer> portsInUse = []
     
-    public SshMachineLocation(Map attributes = [:], InetAddress address) {
-        super(attributes)
-        this.address = address
-    }
-
-    public SshMachineLocation(Map attributes = [:], InetAddress address, String userName) {
-        super(attributes)
+    public SshMachineLocation(InetAddress address, String userName = null, String name = null) {
+        super(name ?: address.getHostName(), null)
         this.user = userName
         this.address = address
     }

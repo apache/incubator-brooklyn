@@ -18,7 +18,7 @@ import brooklyn.event.EntityStartException
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
-import brooklyn.util.internal.TimeExtras
+import brooklyn.test.TestUtils.BooleanWithMessage
 
 /**
  * This tests the operation of the {@link TomcatNode} entity.
@@ -80,7 +80,7 @@ public class TomcatNodeIntegrationTest {
     @Test(groups = [ "Integration" ])
     public void tracksNodeState() {
         TomcatNode tc = [ owner: new TestApplication(), httpPort: DEFAULT_HTTP_PORT ]
-        tc.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
+        tc.start([ new LocalhostMachineProvisioningLocation('london') ])
         executeUntilSucceedsWithFinallyBlock ([:], {
             assertTrue tc.getAttribute(TomcatNode.NODE_UP)
         }, {
@@ -94,7 +94,7 @@ public class TomcatNodeIntegrationTest {
         
         Application app = new TestApplication();
         TomcatNode tc = new TomcatNode(owner: app, httpPort: DEFAULT_HTTP_PORT);
-        tc.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
+        tc.start([ new LocalhostMachineProvisioningLocation('london') ])
         executeUntilSucceedsWithShutdown(tc, {
             def port = tc.getAttribute(TomcatNode.HTTP_PORT)
             def errorCount = tc.getAttribute(TomcatNode.ERROR_COUNT)
@@ -119,7 +119,7 @@ public class TomcatNodeIntegrationTest {
     public void publishesRequestsPerSecondMetric() {
         Application app = new TestApplication();
         TomcatNode tc = new TomcatNode(owner: app, httpPort: DEFAULT_HTTP_PORT);
-        tc.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
+        tc.start([ new LocalhostMachineProvisioningLocation('london') ])
         executeUntilSucceedsWithShutdown(tc, {
                 def activityValue = tc.getAttribute(TomcatNode.REQUESTS_PER_SECOND)
                 if (activityValue == null || activityValue == -1) 
@@ -148,7 +148,7 @@ public class TomcatNodeIntegrationTest {
         assertNotNull resource
         tc.war = resource.getPath()
 
-        tc.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
+        tc.start([ new LocalhostMachineProvisioningLocation('london') ])
         executeUntilSucceedsWithShutdown(tc, {
             def port = tc.getAttribute(TomcatNode.HTTP_PORT)
             def url  = "http://localhost:${port}/hello-world"
@@ -167,7 +167,7 @@ public class TomcatNodeIntegrationTest {
             TomcatNode tc = new TomcatNode(owner:app, httpPort: DEFAULT_HTTP_PORT)
             Exception caught = null
             try {
-                tc.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
+                tc.start([ new LocalhostMachineProvisioningLocation('london') ])
                 fail("Should have thrown start-exception")
             } catch (EntityStartException e) {
                 // success

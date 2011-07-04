@@ -6,29 +6,20 @@ import java.util.concurrent.atomic.AtomicReference
 
 import org.testng.annotations.Test
 
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-
-import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
-import brooklyn.entity.basic.AbstractEntity
-import brooklyn.event.AttributeSensor
 import brooklyn.event.EventListener
 import brooklyn.event.SensorEvent
-import brooklyn.location.Location
-import brooklyn.management.SubscriptionHandle
 import brooklyn.management.Task
-import brooklyn.util.task.BasicTask
-import brooklyn.util.task.ExecutionContext
 
-import static brooklyn.event.basic.DependentConfiguration.*;
+import static brooklyn.event.basic.DependentConfiguration.*
+import brooklyn.location.basic.AbstractLocation;
 
 /** tests effector invocation and a variety of sensor accessors and subscribers */
 class LocalEntitiesTest {
 
-    private static class MockLocation implements Location {
+    private static class MockLocation extends AbstractLocation {
     }
-    
+
     @Test
     public void testEffectorUpdatesAttributeSensor() {
         AbstractApplication a = new AbstractApplication() {}

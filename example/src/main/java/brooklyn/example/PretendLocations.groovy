@@ -7,19 +7,20 @@ import brooklyn.entity.Entity
 import brooklyn.entity.Group
 import brooklyn.entity.group.Fabric
 import brooklyn.location.Location
+import brooklyn.location.basic.AbstractLocation
 
 public class PretendLocations {
-    public static class AmazonLocation implements Location { private static final long serialVersionUID = 1L; }
-    public static class VcloudLocation implements Location { private static final long serialVersionUID = 1L; }
-    public static class AmazonUsEast implements Location {
+    public static class AmazonLocation extends AbstractLocation { private static final long serialVersionUID = 1L; Location parentLocation = null; }
+    public static class VcloudLocation extends AbstractLocation { private static final long serialVersionUID = 1L; Location parentLocation = null; }
+    public static class AmazonUsEast extends AbstractLocation {
         private static final long serialVersionUID = 1L;
         String username, password;
     }
     
-    public static class MockLocation implements Location {
+    public static class MockLocation extends AbstractLocation {
         private static final long serialVersionUID = 1L;
         String displayName = "mock";
-        
+
         public void logEvent(String event, Object entity) {
             println ""+entity+": "+event
         }
