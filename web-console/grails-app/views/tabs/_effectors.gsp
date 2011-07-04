@@ -1,17 +1,16 @@
 <%-- DO NOT MODIFY THIS FILE, IT IS AUTOMATICALLY GENERATED. INSTEAD MODIFY _effectors.haml --%>
-<div class='effector-left-column'>
-  Here is where we have a list of effectors
-  <div class='effector-list-container'>
-    <table id='effectorlist'></table>
+<div class='effector'>
+  <div class='tab-content-left-column'>
+    Here is where we have a list of effectors
+    <div class='tab-content-list-container'>
+      <table id='effector-list'></table>
+    </div>
+    <div align='center' class='tab-content-list-edit'>
+      <button>+</button>
+      <button><%= "-" %></button>
+    </div>
   </div>
-  <div align='center' class='effector-list-edit'>
-    <button>+</button>
-    <button><%= "-" %></button>
-  </div>
-</div>
-<div class='effector-main-content'>
-  <fieldset>
-    <legend id='effector-name'>Effector Name</legend>
+  <div class='tab-content-right-column'>
     <fieldset>
       <legend>Invoke</legend>
       <div class='effector-invoke'>
@@ -52,5 +51,5 @@
         </ul>
       </div>
     </fieldset>
-  </fieldset>
+  </div>
 </div>
