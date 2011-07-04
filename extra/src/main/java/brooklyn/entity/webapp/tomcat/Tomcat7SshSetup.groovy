@@ -1,6 +1,8 @@
 package brooklyn.entity.webapp.tomcat
 
 import brooklyn.entity.basic.AttributeDictionary
+import brooklyn.entity.basic.ConfigKeyDictionary
+import brooklyn.location.basic.BasicPortRange
 import brooklyn.location.basic.SshBasedJavaWebAppSetup
 import brooklyn.location.basic.SshMachineLocation
 
@@ -16,19 +18,27 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
 
     String runDir
 
-    Object httpPortLock = new Object()
-    int httpPort = -1
-
+    /** tomcat insists on having a port you can connect to for the sole purpose of shutting it down;
+     * don't see an easy way to disable it; causes collisions in its default location of 8005,
+     * so moving it to some anonymous high-numbered location
+     */
+    private int tomcatShutdownPort;
+    private int tomcatHttpPort;
+        
     public Tomcat7SshSetup(TomcatNode entity, SshMachineLocation machine) {
         super(entity, machine)
         runDir = appBaseDir + "/" + "tomcat-" + entity.id
+        
+        tomcatShutdownPort = machine.obtainPort(new BasicPortRange(DEFAULT_FIRST_SHUTDOWN_PORT, 65535));
+        tomcatHttpPort = obtainPort(entity.getConfig(ConfigKeyDictionary.SUGGESTED_HTTP_PORT), DEFAULT_FIRST_HTTP_PORT, true)
     }
 
     @Override
     protected void postStart() {
         entity.updateAttribute(AttributeDictionary.JMX_PORT, jmxPort)
         entity.updateAttribute(AttributeDictionary.JMX_HOST, jmxHost)
-        entity.updateAttribute(AttributeDictionary.HTTP_PORT, httpPort)
+        entity.updateAttribute(AttributeDictionary.HTTP_PORT, tomcatHttpPort)
+        entity.updateAttribute(TomcatNode.TOMCAT_SHUTDOWN_PORT, tomcatShutdownPort)
     }
     
     public String getInstallScript() {
@@ -50,8 +60,8 @@ mkdir conf && \\
 mkdir logs && \\
 mkdir webapps && \\
 cp $installDir/conf/{server,web}.xml conf/ && \\
-sed -i.bk s/8080/${getTomcatHttpPort()}/g conf/server.xml && \\
-sed -i.bk s/8005/${getTomcatShutdownPort()}/g conf/server.xml && \\
+sed -i.bk s/8080/${tomcatHttpPort}/g conf/server.xml && \\
+sed -i.bk s/8005/${tomcatShutdownPort}/g conf/server.xml && \\
 sed -i.bk /8009/D conf/server.xml && \\
 export CATALINA_OPTS=""" + "\"" + toJavaDefinesString(getJvmStartupProperties()) + """\" && \\
 export CATALINA_PID="pid.txt" && \\
@@ -80,31 +90,19 @@ cp $locOnServer $to
 exit"""
     }
 
-    // TODO Fail if requested port is in use rather than taking first available.
-    public int getTomcatHttpPort() {
-        synchronized (httpPortLock) {
-            int requested = entity.getAttribute(AttributeDictionary.HTTP_PORT)
-            if (requested > 0) {
-                httpPort = requested
-            } else {
-                httpPort = claimNextValue("tomcatHttpPort", DEFAULT_FIRST_HTTP_PORT)
-            }
-        }
-        return httpPort
-    }
-    /** tomcat insists on having a port you can connect to for the sole purpose of shutting it down;
-     * don't see an easy way to disable it; causes collisions in its default location of 8005,
-     * so moving it to some anonymous high-numbered location
-     */
-    public int getTomcatShutdownPort() {
-        claimNextValue("tomcatShutdownPort", DEFAULT_FIRST_SHUTDOWN_PORT)
-    }
-
     public void shutdown() {
         log.debug "invoking shutdown script"
         //we use kill -9 rather than shutdown.sh because the latter is not 100% reliable
         def result = machine.run(out: System.out, "cd $runDir && echo killing process `cat pid.txt` on `hostname` && kill -9 `cat pid.txt` && rm -f pid.txt ; exit")
         if (result) log.info "non-zero result code terminating {}: {}", entity, result
         log.debug "done invoking shutdown script"
+        
+        postShutdown();
+    }
+    
+    protected void postShutdown() {
+        super.postShutdown();
+        machine.releasePort(tomcatShutdownPort);
+        machine.releasePort(tomcatHttpPort);
     }
 }

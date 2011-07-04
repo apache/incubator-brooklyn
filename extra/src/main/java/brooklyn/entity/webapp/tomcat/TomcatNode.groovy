@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.webapp.JavaWebApp;
 import brooklyn.event.EntityStartException;
 import brooklyn.event.adapter.JmxSensorAdapter;
+import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.location.basic.SshBasedJavaWebAppSetup;
 
 
@@ -22,9 +23,10 @@ public class TomcatNode extends JavaWebApp {
     
     private static final Logger log = LoggerFactory.getLogger(TomcatNode.class)
     
+    public static final BasicAttributeSensor<Integer> TOMCAT_SHUTDOWN_PORT = [ Integer, "webapp.tomcat.shutdownPort", "Port to use for shutting down" ];
+    
     public TomcatNode(Map properties=[:]) {
         super(properties);
-        propertiesAdapter.addSensor HTTP_PORT, (properties.httpPort ?: -1)
     }
 
     public SshBasedJavaWebAppSetup getSshBasedSetup(SshMachineLocation machine) {

@@ -4,21 +4,20 @@ import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
+import java.util.concurrent.TimeUnit
+
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-
 import brooklyn.entity.Application
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.event.EntityStartException
-
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
-import brooklyn.test.TestUtils.BooleanWithMessage
 import brooklyn.util.internal.Repeater
-import java.util.concurrent.TimeUnit
+import brooklyn.util.internal.TimeExtras
 
 /**
  * This tests the operation of the {@link TomcatNode} entity.
@@ -30,6 +29,8 @@ public class TomcatNodeIntegrationTest {
     
     /** don't use 8080 since that is commonly used by testing software */
     static int DEFAULT_HTTP_PORT = 7880
+
+    static { TimeExtras.init() }
 
     protected static class TestApplication extends AbstractApplication {
         public TestApplication(Map properties=[:]) {
@@ -164,14 +165,14 @@ public class TomcatNodeIntegrationTest {
             Exception caught = null
             try {
                 tc.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
+                fail("Should have thrown start-exception")
             } catch (EntityStartException e) {
-                caught = e
+                // success
+                logger.debug "The exception that was thrown was:", caught
             } finally {
                 tc.shutdown()
             }
-            assertNotNull caught
             assertFalse tc.getAttribute(TomcatNode.NODE_UP)
-            logger.debug "The exception that was thrown was:", caught
         } finally {
             listener.close();
             t.join();

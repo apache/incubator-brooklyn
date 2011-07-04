@@ -4,6 +4,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.EntityLocal
+import brooklyn.location.PortRange
 
 // TODO OS-X failure, if no recent command line ssh
 // ssh_askpass: exec(/usr/libexec/ssh-askpass): No such file or directory
@@ -26,6 +27,10 @@ public abstract class SshBasedJavaAppSetup {
         this.entity = entity
         this.machine = machine
         appBaseDir = brooklynBaseDir + "/" + "app-"+entity.getApplication()?.id
+        
+        log.debug "setting jmxHost on $entity as {}", machine
+        jmxHost = machine.address.hostName
+        jmxPort = obtainPort(32199, true);
     }
 
     /** convenience to generate string -Dprop1=val1 -Dprop2=val2 for use with java */        
@@ -36,34 +41,33 @@ public abstract class SshBasedJavaAppSetup {
         //TODO - try the following instead
         //return m.collect( { "-D"+it.key+(it.value?:"='"+it.value+"'"} ).join(" ")
     }
- 
-    /** convenience to record a value on the location to ensure each instance gets a unique value */
-    protected int claimNextValue(String field, int initial) {
-        def v = entity.attributes[field]
-        if (!v) {
-            log.debug "retrieving {}, {}", field, machine.attributes
-            synchronized (machine) {
-                log.debug "machine={}", machine
-                log.debug "attribs={}", machine.getAttributes()
-                log.debug "val={}", machine.attributes["next_"+field]
-                v = machine.attributes["next_"+field] ?: initial
-                machine.attributes["next_"+field] = (v+1)
-            }
-            log.debug "retrieved {}, {}", field, machine.attributes
-            entity.attributes[field] = v
+
+    /**
+    * Uses suggested port if greater than 0; if 0 then uses any high port; if less than 0 then uses defaultPort.
+    * @param suggested
+    * @param defaultPort
+    * @param canIncrement
+    * @return
+    */
+    protected int obtainPort(Integer suggested, int defaultPort, boolean canIncrement) {
+        PortRange range;
+        if (suggested > 0) {
+            range = (canIncrement) ? new BasicPortRange(suggested, 65535) : new BasicPortRange(suggested, suggested)
+        } else if (suggested == 0) {
+            range = BasicPortRange.ANY_HIGH_PORT
+        } else {
+            range = (canIncrement) ? new BasicPortRange(defaultPort, 65535) : new BasicPortRange(defaultPort, defaultPort)
         }
-        v
+        return machine.obtainPort(range);
     }
- 
+
+    protected int obtainPort(int suggested, boolean canIncrement) {
+        if (suggested < 0) throw new IllegalArgumentException("Port $suggested must be >= 0")
+        obtainPort(suggested, suggested, canIncrement)
+    }
+    
     public Map getJvmStartupProperties() {
         [:] + getJmxConfigOptions()
-    }
- 
-    public int claimJmxPort() {
-        // FIXME Really bad place to have side effects! Clean up required.
-        log.debug "setting jmxHost on $entity as {}", machine
-        jmxHost = machine.address.hostName
-        jmxPort = claimNextValue("jmxPort", 32199)
     }
  
     /**
@@ -72,7 +76,6 @@ public abstract class SshBasedJavaAppSetup {
      * TODO security!
      */
     public Map getJmxConfigOptions() {
-        claimJmxPort() // this sets jmxHost and jmxPort as side effects
         [
           'com.sun.management.jmxremote':'',
           'com.sun.management.jmxremote.port': jmxPort,
@@ -81,6 +84,7 @@ public abstract class SshBasedJavaAppSetup {
           'java.rmi.server.hostname':jmxHost
         ]
     }
+    
     protected String makeInstallScript(String ...lines) { 
         String result = """\
 if [ -f $installDir/../INSTALL_COMPLETION_DATE ] ; then echo software is already installed ; exit ; fi
@@ -127,7 +131,11 @@ exit
      */
     protected void postStart() {
     }
-    
+
+    protected void postShutdown() {
+        machine.releasePort(jmxPort)
+    }
+
     public boolean isRunning() {
         def result = machine.run(out:System.out, getCheckRunningScript())
         if (result==0) return true

@@ -4,6 +4,9 @@ import brooklyn.location.PortRange
 
 class BasicPortRange implements PortRange {
 
+    public static final int MAX_PORT = 65535;
+    public static final PortRange ANY_HIGH_PORT = new BasicPortRange(1024, MAX_PORT)
+    
     private final int min;
     private final int max;
     

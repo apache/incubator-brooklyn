@@ -10,7 +10,8 @@ import brooklyn.util.internal.SshJschTool
 public class SshMachineLocation extends GeneralPurposeLocation implements MachineLocation {
     private String user = null
     private InetAddress address
-
+    private final List<Integer> portsInUse = []
+    
     public SshMachineLocation(Map attributes = [:], InetAddress address) {
         super(attributes)
         this.address = address
@@ -53,15 +54,25 @@ public class SshMachineLocation extends GeneralPurposeLocation implements Machin
         return address;
     }
 
+    // TODO Does not support zero to mean any; but can't when returning boolean
+    // TODO Does not yet check if the port really is free on this machine
     boolean obtainSpecificPort(int portNumber) {
-        throw new Exception("Not implemented")
+        if (portsInUse.contains(portNumber)) {
+            return false
+        } else {
+            portsInUse.add(portNumber)
+            return true
+        }
     }
 
     int obtainPort(PortRange range) {
-        throw new Exception("Not implemented")
+        for (int i = range.getMin(); i <= range.getMax(); i++) {
+            if (obtainSpecificPort(i)) return i;
+        }
+        return -1;
     }
 
     void releasePort(int portNumber) {
-        throw new Exception("Not implemented")
+        portsInUse.remove((Object)portNumber);
     }
 }

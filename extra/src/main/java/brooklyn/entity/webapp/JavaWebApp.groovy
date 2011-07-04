@@ -5,20 +5,21 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.AttributeDictionary
+import brooklyn.entity.basic.ConfigKeyDictionary
 import brooklyn.entity.trait.Startable
 import brooklyn.event.AttributeSensor
 import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.event.basic.ConfigKey
 import brooklyn.location.Location
+import brooklyn.location.MachineLocation
+import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.NoMachinesAvailableException
 import brooklyn.location.basic.SshBasedJavaWebAppSetup
-
-import brooklyn.util.internal.EntityStartUtils
-import brooklyn.location.basic.GeneralPurposeLocation
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.location.MachineProvisioningLocation
+import brooklyn.util.internal.EntityStartUtils
+
 import com.google.common.base.Preconditions
-import brooklyn.location.MachineLocation
 
 /**
 * An {@link brooklyn.entity.Entity} representing a single web application instance.
@@ -26,6 +27,10 @@ import brooklyn.location.MachineLocation
 public abstract class JavaWebApp extends AbstractEntity implements Startable {
     
     public static final Logger log = LoggerFactory.getLogger(JavaWebApp.class)
+
+    public static final ConfigKey<Integer> SUGGESTED_HTTP_PORT = ConfigKeyDictionary.SUGGESTED_HTTP_PORT;
+    public static final ConfigKey<Integer> SUGGESTED_JMX_PORT = ConfigKeyDictionary.SUGGESTED_JMX_PORT;
+    public static final ConfigKey<String> SUGGESTED_JMX_HOST = ConfigKeyDictionary.SUGGESTED_JMX_HOST;
 
     public static final AttributeSensor<Integer> HTTP_PORT = AttributeDictionary.HTTP_PORT;
     public static final AttributeSensor<Integer> JMX_PORT = AttributeDictionary.JMX_PORT;
@@ -47,6 +52,10 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
 
     JavaWebApp(Map properties=[:]) {
         super(properties)
+        if (properties.httpPort) setConfig(SUGGESTED_HTTP_PORT, properties.remove("httpPort"))
+        if (properties.jmxPort) setConfig(SUGGESTED_JMX_PORT, properties.remove("jmxPort"))
+        if (properties.jmxHost) setConfig(SUGGESTED_JMX_HOST, properties.remove("jmxHost"))
+        
         // addEffector(Startable.START);
         propertiesAdapter.addSensor NODE_UP, false
         propertiesAdapter.addSensor NODE_STATUS, "starting"
