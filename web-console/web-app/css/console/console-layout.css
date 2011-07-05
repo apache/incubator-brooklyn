@@ -169,4 +169,6 @@ fieldset legend {
 textarea#logbox{
     height:250px;
     width:100%;
+    background:black;
+    color:green;
 
