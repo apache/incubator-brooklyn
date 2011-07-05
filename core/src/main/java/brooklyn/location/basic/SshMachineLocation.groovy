@@ -3,6 +3,7 @@ package brooklyn.location.basic
 import brooklyn.location.MachineLocation
 import brooklyn.location.PortRange
 import brooklyn.util.internal.SshJschTool
+import com.google.common.base.Preconditions
 
 /**
  * Operations on a machine that is accessible via ssh.
@@ -12,10 +13,17 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     private InetAddress address
     private final Set<Integer> portsInUse = [] as HashSet
     
-    public SshMachineLocation(InetAddress address, String userName = null, String name = null) {
-        super(name ?: address.getHostName(), null)
-        this.user = userName
-        this.address = address
+    public SshMachineLocation(Map properties = [:]) {
+        super(properties)
+
+        Preconditions.checkArgument properties.containsKey('address'), "properties must contain an entry with key 'address'"
+        Preconditions.checkArgument properties.address instanceof InetAddress, "'address' value must be an InetAddress"
+        this.address = properties.remove('address')
+
+        if (properties.userName) {
+            Preconditions.checkArgument properties.userName instanceof String, "'userName' value must be a string"
+            this.user = properties.remove('userName')
+        }
     }
 
     public InetAddress getAddress() {

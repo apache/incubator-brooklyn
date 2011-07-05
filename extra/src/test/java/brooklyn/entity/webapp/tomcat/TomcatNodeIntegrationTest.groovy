@@ -80,7 +80,7 @@ public class TomcatNodeIntegrationTest {
     @Test(groups = [ "Integration" ])
     public void tracksNodeState() {
         TomcatNode tc = [ owner: new TestApplication(), httpPort: DEFAULT_HTTP_PORT ]
-        tc.start([ new LocalhostMachineProvisioningLocation('london') ])
+        tc.start([ new LocalhostMachineProvisioningLocation(name: 'london') ])
         executeUntilSucceedsWithFinallyBlock ([:], {
             assertTrue tc.getAttribute(TomcatNode.NODE_UP)
         }, {
@@ -94,7 +94,7 @@ public class TomcatNodeIntegrationTest {
         
         Application app = new TestApplication();
         TomcatNode tc = new TomcatNode(owner: app, httpPort: DEFAULT_HTTP_PORT);
-        tc.start([ new LocalhostMachineProvisioningLocation('london') ])
+        tc.start([ new LocalhostMachineProvisioningLocation(name: 'london') ])
         int port = tc.getAttribute(TomcatNode.HTTP_PORT)
         10.times { connectToURL("http://localhost:${port}/does_not_exist") }
         
@@ -118,7 +118,7 @@ public class TomcatNodeIntegrationTest {
     public void publishesRequestsPerSecondMetric() {
         Application app = new TestApplication();
         TomcatNode tc = new TomcatNode(owner: app, httpPort: DEFAULT_HTTP_PORT);
-        tc.start([ new LocalhostMachineProvisioningLocation('london') ])
+        tc.start([ new LocalhostMachineProvisioningLocation(name: 'london') ])
         executeUntilSucceedsWithShutdown(tc, {
                 def activityValue = tc.getAttribute(TomcatNode.REQUESTS_PER_SECOND)
                 if (activityValue == null || activityValue == -1) 
@@ -147,7 +147,7 @@ public class TomcatNodeIntegrationTest {
         assertNotNull resource
         tc.setConfig(TomcatNode.WAR, resource.getPath())
 
-        tc.start([ new LocalhostMachineProvisioningLocation('london') ])
+        tc.start([ new LocalhostMachineProvisioningLocation(name: 'london') ])
         executeUntilSucceedsWithShutdown(tc, {
             def port = tc.getAttribute(TomcatNode.HTTP_PORT)
             def url  = "http://localhost:${port}/hello-world"
@@ -166,7 +166,7 @@ public class TomcatNodeIntegrationTest {
             TomcatNode tc = new TomcatNode(owner:app, httpPort: DEFAULT_HTTP_PORT)
             Exception caught = null
             try {
-                tc.start([ new LocalhostMachineProvisioningLocation('london') ])
+                tc.start([ new LocalhostMachineProvisioningLocation(name: 'london') ])
                 fail("Should have thrown start-exception")
             } catch (EntityStartException e) {
                 // success

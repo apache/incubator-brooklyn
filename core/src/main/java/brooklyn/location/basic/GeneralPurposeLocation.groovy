@@ -9,7 +9,7 @@ public class GeneralPurposeLocation extends AbstractLocation {
     private static final long serialVersionUID = -6233729266488652570L;
 
 
-    GeneralPurposeLocation(String name = null, Location parentLocation = null) {
-        super(name, parentLocation)
+    GeneralPurposeLocation(Map properties = [:]) {
+        super(properties)
     }
 }

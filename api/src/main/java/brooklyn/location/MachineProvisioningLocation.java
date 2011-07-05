@@ -17,6 +17,7 @@ public interface MachineProvisioningLocation<T extends MachineLocation> extends 
     /**
      * Release a previously-obtained machine.
      * @param machine a @{link MachineLocation} previously obtained from a call to @{link obtain}
+     * @throws IllegalStateException if the machine did not come from a call to obtain() or it has already been released.
      */
     public void release(T machine);
 

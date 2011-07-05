@@ -34,8 +34,8 @@ public class SimpleTomcatApp extends AbstractApplication {
             Inet4Address.getByAddress((byte[])[192,168,2,241]),
             Inet4Address.getByAddress((byte[])[192,168,2,242])
         ]
-        Collection<SshMachineLocation> machines = hosts.collect { new SshMachineLocation(it, "cloudsoft") }
-        Location location = new FixedListMachineProvisioningLocation<SshMachineLocation>(machines, "London")
+        Collection<SshMachineLocation> machines = hosts.collect { new SshMachineLocation(address: it, userName: "cloudsoft") }
+        Location location = new FixedListMachineProvisioningLocation<SshMachineLocation>(machines: machines, name: "London")
 
         app.tc.start([location])
 
