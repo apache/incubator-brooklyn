@@ -146,7 +146,7 @@ public class TomcatNodeIntegrationTest {
 
         URL resource = this.getClass().getClassLoader().getResource("hello-world.war")
         assertNotNull resource
-        tc.war = resource.getPath()
+        tc.setConfig(TomcatNode.WAR, resource.getPath())
 
         tc.start([ new LocalhostMachineProvisioningLocation('london') ])
         executeUntilSucceedsWithShutdown(tc, {
