@@ -35,5 +35,5 @@ Brooklyn.effectors = (function(parent) {
 }(Brooklyn || {}));
 
 $(document).ready(function(){
-    $(eventBus).bind("entity_selected", Brooklyn.effectors.updateEffectorsList);
+    $(Brooklyn.eventBus).bind("entity_selected", Brooklyn.effectors.updateEffectorsList);
 });
