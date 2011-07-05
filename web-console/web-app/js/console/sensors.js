@@ -18,7 +18,7 @@ Brooklyn.sensors = (function() {
     /* Make a GET request for sensor data for an entity of the given id. Then call
      * drawSensorData on the returned json.
      */
-    function getAndDrawSensorData(entity_id) {
+    function getAndDrawSensorData(id) {
         // TODO: Handle failure
         $.getJSON("sensors?id=" + entity_id, drawSensorData);
     }
@@ -37,7 +37,6 @@ Brooklyn.sensors = (function() {
         entity_id = id;
         update();
     }
-
 
     function init() {
         $(Brooklyn.eventBus).bind("entity_selected", setEntityIdAndUpdate);
