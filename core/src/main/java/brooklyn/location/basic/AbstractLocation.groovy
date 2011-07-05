@@ -9,7 +9,7 @@ import brooklyn.location.Location
  * Time: 16:12
  * To change this template use File | Settings | File Templates.
  */
-public abstract class AbstractLocation {
+public abstract class AbstractLocation implements Location {
 
     private String name
     private Location parentLocation
