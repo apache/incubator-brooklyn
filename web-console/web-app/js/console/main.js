@@ -10,3 +10,12 @@ var Brooklyn = {};
 
 /* Used to bind jQuery custom events for the application. */
 Brooklyn.eventBus = {};
+
+/* A timer for periodically refreshing data we display. */
+var updateInterval = 5000;
+
+function triggerUpdateEvent () {
+    $(Brooklyn.eventBus).trigger('update');
+}
+
+setInterval(triggerUpdateEvent, updateInterval);
