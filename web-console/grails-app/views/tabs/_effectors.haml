@@ -1,10 +1,7 @@
 .effector
     %fieldset{:class=>"tab-content-left-column"}
         %legend Select Effector
-        %select{:size=>"10"}
-            %option Start
-            %option Stop
-            %option Restart
+        %select{:size=>"10", :id=>"effectorList"}
     %fieldset{:class=>"tab-content-right-column"}
         %legend Invoke
         %label{:for=>"input1"} Arg1:
