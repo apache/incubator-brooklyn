@@ -165,3 +165,8 @@ fieldset label {
 fieldset legend {
     padding:2px 5px;
 }
+
+textarea#logbox{
+    height:250px;
+    width:100%;
+

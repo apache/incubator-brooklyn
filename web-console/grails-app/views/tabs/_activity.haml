@@ -1,0 +1,14 @@
+.activity
+    %fieldset{:class=>"tab-content-left-column"}
+        //turn this into a grid, shouldnt be too hard//
+        %legend Select Activity
+        %table{:id=>"activitylist"}
+    %fieldset{:class=>"tab-content-right-column"}
+        %legend Activity Log
+        //just put a large text box in here
+        %textarea{:id=>"logbox",:disabled=>"true"}
+            Console output for Effector Arg1 
+        .buttons{:align=>"center"}
+            %button Copy
+            %button Clear
+
