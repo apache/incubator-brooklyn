@@ -33,7 +33,8 @@ $("#activitylist").jqGrid({
         {name:'name',index:'name'},
         {name:'activitydate',index:'invdate'}
     ],
-    multiselect: false
+    multiselect: false,
+    onSelectRow: function(id){updateLog(id);}
   });
 }
 
@@ -42,3 +43,24 @@ function populateGrid(){
         $("#activitylist").jqGrid('addRowData',i+1,mydata[i]);
 }
 
+function selectLog(){
+    document.getElementById("logbox").select();
+}
+
+function clearLog(){
+    var logBox = document.getElementById("logbox");
+    logBox.value="";
+}
+
+function updateLog(name){
+    var id = name;
+    if(id){
+        var result = jQuery("#activitylist").jqGrid('getRowData',id);
+        var logBox=document.getElementById("logbox");
+        logBox.value+="######### NEW LOG ##########"+
+        "--- Console Log Output for "+result.name+" ---"+
+        " activity last initiated on "+result.activitydate+
+        " start of process status checked "+
+        "log,log,log";
+        }
+}
