@@ -10,7 +10,7 @@ import brooklyn.util.internal.SshJschTool
 public class SshMachineLocation extends AbstractLocation implements MachineLocation {
     private String user = null
     private InetAddress address
-    private final List<Integer> portsInUse = []
+    private final Set<Integer> portsInUse = [] as HashSet
     
     public SshMachineLocation(InetAddress address, String userName = null, String name = null) {
         super(name ?: address.getHostName(), null)
