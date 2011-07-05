@@ -3,6 +3,7 @@ package brooklyn.location.basic
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.MachineLocation
 import com.google.common.base.Preconditions
+import brooklyn.location.NoMachinesAvailableException
 
 /**
  * A provisioner of @{link MachineLocation}s.
@@ -34,7 +35,7 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
         T machine;
         synchronized (lock) {
             if (available.empty)
-                return null;
+                throw new NoMachinesAvailableException(this);
             machine = available.pop();
             inUse.add(machine);
         }
