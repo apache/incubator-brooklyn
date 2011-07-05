@@ -238,8 +238,11 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 
     private transient EntityClass entityClass = null
     public synchronized EntityClass getEntityClass() {
-        if (!entityClass) return entityClass
-        entityClass = new BasicEntityClass(getClass().getCanonicalName(), getSensors().values(), getEffectors().values())
+        if (!entityClass) {
+            entityClass = new BasicEntityClass(getClass().getCanonicalName(), getSensors().values(), getEffectors().values())
+        }
+
+        return entityClass
     }
 
     /**
