@@ -44,6 +44,8 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
 
     public void release(T machine) {
         synchronized (lock) {
+            if (inUse.contains(machine) == false)
+                throw new IllegalStateException("Request to release machine $machine, but this machine is not currently allocated")
             inUse.remove(machine);
             available.add(machine);
         }

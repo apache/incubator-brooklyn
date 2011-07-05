@@ -44,4 +44,18 @@ public class FixedListMachineProvisioningLocationTest {
         assertNotNull machine
         assertEquals '192.168.144.200', machine.address.hostAddress
     }
+
+    @Test
+    public void throwsExceptionIfTryingToReleaseUnallocationMachine() {
+        FixedListMachineProvisioningLocation<SshMachineLocation> provisioner =
+            new FixedListMachineProvisioningLocation<SshMachineLocation>(
+                machines: [new SshMachineLocation(address: Inet4Address.getByAddress((byte[])[192,168,144,200]))]);
+        SshMachineLocation machine = provisioner.obtain()
+        try {
+            provisioner.release(new SshMachineLocation(address: Inet4Address.getByAddress((byte[])[192,168,144,201])));
+            fail "Did not throw IllegalStateException as expected"
+        } catch(IllegalStateException e) {
+            // expected case
+        }
+    }
 }
