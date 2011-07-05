@@ -85,8 +85,7 @@ div#demo1{
 .tab-content-left-column {
     clear: left;
     float: left;
-    min-width: 300px;
-    width: 48%;
+    width: 300px;
     height:100%;
     border:1px solid #CCCCCC;
 }
@@ -94,26 +93,13 @@ div#demo1{
 .tab-content-right-column {
     clear: right;
     float: left;
-    min-width: 300px;
-    width: 48%;
+    width: 300px;
     height:100%;
     border:1px solid #CCCCCC;
 }
+
 .tab-content-buttons{
      border:1px solid #CCCCCC;
-}
-
-fieldset {
-    display:block;
-    font-family:Verdana, Arial, Helvetica, sans-serif;
-    font-size:12px;
-    margin-top:5px;
-    margin-left:5px;
-    border:1px solid #CCCCCC;
-}
-
-legend{
-    padding:2px 5px;
 }
 
 h1#brooklyn-header{
@@ -151,4 +137,31 @@ ul {
 h2 {
     clear: both;
     margin-bottom: 0.5em;
+}
+
+select {
+    margin: 5%;
+    width: 90%;
+}
+
+fieldset {
+    display:block;
+    font-family:Verdana, Arial, Helvetica, sans-serif;
+    font-size:12px;
+    margin-top:5px;
+    margin-left:5px;
+    border:1px solid #CCCCCC;
+}
+
+fieldset label {
+    text-align:right;
+    width:70px;
+    float:left;
+    padding:0.2em;
+    margin:0;
+    margin-top:0.3em;
+}
+
+fieldset legend {
+    padding:2px 5px;
 }

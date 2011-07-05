@@ -1,24 +1,16 @@
 .effector
-    .tab-content-left-column
-        %ul{:id=>"effectorList"}
-            %li{:class=>"ui-widget-content"}
-                Start
-            %li{:class=>"ui-widget-content"}
-                Stop
-            %li{:class=>"ui-widget-content"}
-                Restart
-    .tab-content-right-column
-        %fieldset
-            %legend Invoke
-            .effector-invoke
-                Here is a list of invokable actions
-                %ul
-                    %li
-                        Arg1
-                        %button Go
-                    %li
-                        Arg2
-                        %button Go
-                    %li
-                        Arg3
-                        %button Go
+    %fieldset{:class=>"tab-content-left-column"}
+        %legend Select Effector
+        %select{:size=>"10"}
+            %option Start
+            %option Stop
+            %option Restart
+    %fieldset{:class=>"tab-content-right-column"}
+        %legend Invoke
+        %label{:for=>"input1"} Arg1:
+        %input{:id=>"input1"}
+        %label{:for=>"input2"} Arg2:
+        %input{:id=>"input2"}
+        %label{:for=>"input3"} Arg3:
+        %input{:id=>"input3"}
+        %button Go
