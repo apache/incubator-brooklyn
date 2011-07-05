@@ -59,7 +59,7 @@ public interface EntityLocal extends Entity {
     <T> T setConfig(ConfigKey<T> key, T val);
     
     /**
-     * Generates and emits an event (as though produced by this entity).
+     * Emits a {@link SensorEvent} event on behalf of this entity (as though produced by this entity).
      */
     <T> void emit(Sensor<T> sensor, T value);
     
