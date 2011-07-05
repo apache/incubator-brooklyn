@@ -3,13 +3,6 @@ Brooklyn.effectors = (function() {
     function updateEffectorsList(json) {
         $('#effectorList').find('option').remove().end()
 
-        // TODO tidy this up!
-        var option = document.createElement("option");
-        option.text = "ALL";
-        option.value = "all";
-        option.selected = true;
-        $('#effectorList').get(0)[$('#effectorList option').length] = option;
-
         for (name in json) {
             option = document.createElement("option");
             option.text = name;
@@ -24,8 +17,12 @@ Brooklyn.effectors = (function() {
 
     function updateParameters(){
         //TODO update parameter panel
-        var option = $('#effectorList option:selected')[0];
-        $('#effector-input1-label').html("GOT " + option.text);
+        if ($('#effectorList option:selected').length == 0) {
+            $('#effector-input1-label').html("Nothing!");
+        } else {
+            var option = $('#effectorList option:selected')[0];
+            $('#effector-input1-label').html("GOT " + option.text);
+        }
     }
 
     function updateList(e, entity_id) {
