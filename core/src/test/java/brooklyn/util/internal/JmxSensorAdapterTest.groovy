@@ -2,8 +2,6 @@ package brooklyn.util.internal
 
 import static org.testng.Assert.*
 
-import org.testng.annotations.Test
-
 import javax.management.MBeanServerConnection
 import javax.management.ObjectName
 import javax.management.remote.JMXConnector
@@ -12,12 +10,13 @@ import javax.management.remote.JMXServiceURL
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.testng.annotations.Test
 
-import brooklyn.entity.LocallyManagedEntity;
+import brooklyn.entity.LocallyManagedEntity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.AttributeDictionary
 import brooklyn.event.adapter.JmxSensorAdapter
-import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.event.adapter.ValueProvider
 import brooklyn.test.GeneralisedDynamicMBean
 import brooklyn.test.JmxService
 
@@ -30,7 +29,7 @@ public class JmxSensorAdapterTest {
     private static final Logger log = LoggerFactory.getLogger(JmxSensorAdapterTest.class)
 
     @Test
-    public void addASensorAndCheckItDetectsValuesOfAJmxAttribute() {
+    public void jmxValueProviderReturnsMBeanAttribute() {
         // Create a JMX service and configure an MBean with an attribute
         JmxService jmxService = new JmxService()
         GeneralisedDynamicMBean mbean = jmxService.registerMBean('Catalina:type=GlobalRequestProcessor,name=http-8080', errorCount: 42)
@@ -41,21 +40,19 @@ public class JmxSensorAdapterTest {
         entity.updateAttribute(AttributeDictionary.JMX_PORT, jmxService.jmxPort)
 
         // Create a JMX adapter, and register a sensor for the JMX attribute
-        JmxSensorAdapter jmxAdapter = new JmxSensorAdapter(entity, 5)
-        BasicAttributeSensor<Integer> ERROR_COUNT = [ Integer, "webapp.reqs.errors", "Request errors" ]
-        jmxAdapter.addSensor(ERROR_COUNT, "Catalina:type=GlobalRequestProcessor,name=http-*", "errorCount")
+        JmxSensorAdapter jmxAdapter = new JmxSensorAdapter(entity)
+        jmxAdapter.connect()
+        ValueProvider valueProvider = jmxAdapter.newValueProvider("Catalina:type=GlobalRequestProcessor,name=http-*", "errorCount")
 
-        //FIXME test is sensitive to timing; 50ms was too low, eg failure in build #218; 250ms is more likely to work but still not guaranteed... 
-        // Sleep to allow the periodic update to happen, and then query the sensor for the test message
-        Thread.sleep 750
-        assertEquals 42, entity.getAttribute(ERROR_COUNT)
+        // Starts with value defined when registering...
+        assertEquals 42, valueProvider.compute()
 
-        // Change the message and check it updates
+        // Change the value and check it updates
         mbean.updateAttributeValue('errorCount', 64)
-        Thread.sleep 750
-        assertEquals 64, entity.getAttribute(ERROR_COUNT)
+        assertEquals 64, valueProvider.compute()
     }
  
+    // TODO Test needs fixed/updated and cleaned up, or deleted
     @Test(enabled = false)
     public void testJmxSensorTool() {
         String urlS = "service:jmx:rmi:///jndi/rmi://localhost:10100/jmxrmi";

@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.webapp.JavaWebApp
 import brooklyn.event.EntityStartException
 import brooklyn.event.adapter.JmxSensorAdapter
+import brooklyn.event.adapter.ValueProvider
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.basic.SshBasedJavaWebAppSetup
@@ -26,6 +27,7 @@ public class TomcatNode extends JavaWebApp {
     public static final BasicConfigKey<Integer> SUGGESTED_SHUTDOWN_PORT = [Integer, "tomcat.shutdownport", "Suggested shutdown port" ]
     
     public static final BasicAttributeSensor<Integer> TOMCAT_SHUTDOWN_PORT = [ Integer, "webapp.tomcat.shutdownPort", "Port to use for shutting down" ];
+    public static final BasicAttributeSensor<String> CONNECTOR_STATUS = [String, "webapp.tomcat.connectorStatus", "Catalina connector state name"]
     
     public TomcatNode(Map properties=[:]) {
         super(properties);
@@ -36,9 +38,11 @@ public class TomcatNode extends JavaWebApp {
     }
     
     public void initJmxSensors() {
-        jmxAdapter.addSensor(ERROR_COUNT, "Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "errorCount")
-        jmxAdapter.addSensor(REQUEST_COUNT, "Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "requestCount")
-        jmxAdapter.addSensor(TOTAL_PROCESSING_TIME, "Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "processingTime")
+        attributePoller.addSensor(ERROR_COUNT, jmxAdapter.newValueProvider("Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "errorCount"))
+        attributePoller.addSensor(REQUEST_COUNT, jmxAdapter.newValueProvider("Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "requestCount"))
+        attributePoller.addSensor(TOTAL_PROCESSING_TIME, jmxAdapter.newValueProvider("Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "processingTime"))
+        attributePoller.addSensor(CONNECTOR_STATUS, { computeConnectorStatus() } as ValueProvider)
+        attributePoller.addSensor(NODE_UP, { computeNodeUp() } as ValueProvider)
     }
 
     public void waitForHttpPort() {
@@ -48,14 +52,7 @@ public class TomcatNode extends JavaWebApp {
         String state = null;
         new Repeater("Wait for Tomcat HTTP port status")
             .repeat({
-                int port = getAttribute(HTTP_PORT)?:-1
-                if (port <= 0) return;
-                try {
-                    Map connectorAttrs = jmxAdapter.getAttributes("Catalina:type=Connector,port=$port")
-                    state = connectorAttrs['stateName']
-                } catch (InstanceNotFoundException e) {
-                    state = "InstanceNotFound"
-                }
+                state = getAttribute(CONNECTOR_STATUS)
             })
             .every(1, TimeUnit.SECONDS)
             .until({
@@ -64,10 +61,7 @@ public class TomcatNode extends JavaWebApp {
             .limitIterationsTo(30)
             .run();
 
-        if (state == "STARTED") {
-            updateAttribute(NODE_UP, true)
-        } else {
-            updateAttribute(NODE_UP, false)
+        if (state != "STARTED") {
             throw new EntityStartException("Tomcat connector for port "+getAttribute(HTTP_PORT)+" is in state $state")
         }
 
@@ -78,4 +72,23 @@ public class TomcatNode extends JavaWebApp {
         return super.toStringFieldsToInclude() + ['tomcatHttpPort']
     }
 
+    // state values include: STARTED, FAILED, InstanceNotFound
+    protected String computeConnectorStatus() {
+        int port = getAttribute(HTTP_PORT)
+        ValueProvider<String> rawProvider = jmxAdapter.newValueProvider("Catalina:type=Connector,port=$port", "stateName")
+        try {
+            return rawProvider.compute()
+        } catch (InstanceNotFoundException e) {
+            return "InstanceNotFound"
+        }
+    }
+    
+    protected boolean computeNodeUp() {
+        String connectorStatus = getAttribute(CONNECTOR_STATUS)
+        if (connectorStatus == "STARTED") {
+            return true
+        } else {
+            return false
+        }
+    }
 }

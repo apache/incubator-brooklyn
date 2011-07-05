@@ -1,6 +1,7 @@
 package brooklyn.event.basic;
 
 import groovy.transform.InheritConstructors
+import groovy.transform.ToString;
 
 import java.util.List
 
@@ -62,6 +63,11 @@ public class BasicSensor<T> implements Sensor<T> {
     /** @see Sensor#newEvent(Entity, Object) */
     public SensorEvent<T> newEvent(Entity producer, T value) {
         return new BasicSensorEvent<T>(this, producer, value)
+    }
+    
+    @Override
+    public String toString() {
+        return "Sensor:"+name;
     }
 }
 

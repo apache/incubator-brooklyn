@@ -95,24 +95,23 @@ public class TomcatNodeIntegrationTest {
         Application app = new TestApplication();
         TomcatNode tc = new TomcatNode(owner: app, httpPort: DEFAULT_HTTP_PORT);
         tc.start([ new LocalhostMachineProvisioningLocation('london') ])
+        int port = tc.getAttribute(TomcatNode.HTTP_PORT)
+        10.times { connectToURL("http://localhost:${port}/does_not_exist") }
+        
         executeUntilSucceedsWithShutdown(tc, {
-            def port = tc.getAttribute(TomcatNode.HTTP_PORT)
-            def errorCount = tc.getAttribute(TomcatNode.ERROR_COUNT)
- 
-            10.times { connectToURL("http://localhost:${port}/does_not_exist") }
             def requestCount = tc.getAttribute(TomcatNode.REQUEST_COUNT)
-            errorCount = tc.getAttribute(TomcatNode.ERROR_COUNT)
-            println "$requestCount/$errorCount"
+            def errorCount = tc.getAttribute(TomcatNode.ERROR_COUNT)
+            println "req=$requestCount, err=$errorCount"
             
             if (errorCount == null) {
                 return new BooleanWithMessage(false, "errorCount not set yet ($errorCount)")
-            } else { 
+            } else {
                 logger.info "\n$errorCount errors in total"
-                assertTrue errorCount > 0
+                assertTrue errorCount > 0, "errorCount="+errorCount
                 assertEquals requestCount, errorCount
             }
             true
-        }, useGroovyTruth: true, timeout: 10*SECONDS)
+        }, useGroovyTruth: true, timeout: 60*SECONDS)
     }
     
     @Test(groups = [ "Integration" ])
@@ -125,7 +124,7 @@ public class TomcatNodeIntegrationTest {
                 if (activityValue == null || activityValue == -1) 
                     return new BooleanWithMessage(false, "activity not set yet ($activityValue)")
 
-                assertEquals Integer, activityValue.class
+                assertEquals Double, activityValue.class
                 assertEquals 0, activityValue
                 
                 def port = tc.getAttribute(TomcatNode.HTTP_PORT)
@@ -134,7 +133,7 @@ public class TomcatNodeIntegrationTest {
 
                 Thread.sleep 1000
                 activityValue = tc.getAttribute(TomcatNode.REQUESTS_PER_SECOND)
-                assertEquals 1, activityValue
+                assertEquals 1d, activityValue
                 true
             }, timeout:10*SECONDS, useGroovyTruth:true)
     }

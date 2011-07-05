@@ -29,16 +29,3 @@ public class BasicSensorEvent<T> implements SensorEvent<T> {
         this.value = value;
     }
 }
-
-@InheritConstructors
-public class LogEvent<String> extends BasicSensorEvent<String> {
-    String level
-    String topic
-    
-    public LogEvent(Sensor<String> sensor, Entity source, String value, String level, String topic) {
-        this(sensor, source, value)
-        
-        this.level = level
-        this.topic = topic
-    }
-}

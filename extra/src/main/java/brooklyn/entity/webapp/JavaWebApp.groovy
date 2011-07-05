@@ -8,7 +8,9 @@ import brooklyn.entity.basic.AttributeDictionary
 import brooklyn.entity.basic.ConfigKeyDictionary
 import brooklyn.entity.trait.Startable
 import brooklyn.event.AttributeSensor
+import brooklyn.event.adapter.AttributePoller
 import brooklyn.event.adapter.JmxSensorAdapter
+import brooklyn.event.adapter.ValueProvider
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.ConfigKey
@@ -47,14 +49,15 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
     public static final BasicAttributeSensor<Integer> ERROR_COUNT = [ Integer, "webapp.reqs.errors", "Request errors" ]
     public static final BasicAttributeSensor<Integer> MAX_PROCESSING_TIME = [ Integer, "webpp.reqs.processing.max", "Max processing time" ]
     public static final BasicAttributeSensor<Integer> REQUEST_COUNT = [ Integer, "webapp.reqs.total", "Request count" ]
-    public static final BasicAttributeSensor<Integer> REQUESTS_PER_SECOND = [ Integer, "webapp.reqs.persec", "Reqs/Sec" ]
+    public static final BasicAttributeSensor<Double> REQUESTS_PER_SECOND = [ Double, "webapp.reqs.persec", "Reqs/Sec" ]
     public static final BasicAttributeSensor<Integer> TOTAL_PROCESSING_TIME = [ Integer, "webapp.reqs.processing.time", "Total processing time" ]
 
     // public static final Effector<Integer> GET_TOTAL_PROCESSING_TIME = [ "retrieves the total processing time", { delegate, arg1, arg2 -> delegate.getTotal(arg1, arg2) } ]
     // Task<Integer> invocation = entity.invoke(GET_TOTAL_PROCESSING_TIME, ...args)
     
-    transient JmxSensorAdapter jmxAdapter;
-
+    transient JmxSensorAdapter jmxAdapter
+    transient AttributePoller attributePoller
+    
     JavaWebApp(Map properties=[:]) {
         super(properties)
         if (properties.httpPort) setConfig(SUGGESTED_HTTP_PORT, properties.remove("httpPort"))
@@ -79,9 +82,11 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
         log.debug "started $this: httpPort {}, jmxHost {} and jmxPort {}", 
                 getAttribute(HTTP_PORT), getAttribute(JMX_HOST), getAttribute(JMX_PORT)
         
+        attributePoller = new AttributePoller(this)
         jmxAdapter = new JmxSensorAdapter(this, 60*1000)
+        jmxAdapter.connect();
         initJmxSensors()
-        jmxAdapter.addSensor(REQUESTS_PER_SECOND, { computeReqsPerSec() }, 1000L)
+        attributePoller.addSensor(REQUESTS_PER_SECOND, { computeReqsPerSec() } as ValueProvider, 1000L)
         
         waitForHttpPort()
         
@@ -144,7 +149,7 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
         getSshBasedSetup(locations.find({ it instanceof MachineLocation })).deploy(new File(file))
     }
     
-    protected void computeReqsPerSec() {
+    protected double computeReqsPerSec() {
  
         def curTimestamp = System.currentTimeMillis()
         def curCount = getAttribute(REQUEST_COUNT) ?: 0
@@ -159,15 +164,15 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
         // Calculate requests per second
         double diff = curCount - prevCount
         long dt = curTimestamp - prevTimestamp
+        double result
         
         if (dt <= 0 || dt > 60*1000) {
-            diff = -1;
+            result = -1;
         } else {
-            diff = ((double) 1000.0 * diff) / dt
+            result = ((double) 1000.0 * diff) / dt
         }
-        int rps = (int) Math.round(diff)
-        log.trace "computed $rps reqs/sec over $dt millis"
-        updateAttribute(REQUESTS_PER_SECOND, rps)
+        log.trace "computed $result reqs/sec over $dt millis"
+        return result
     }
     
     @Override

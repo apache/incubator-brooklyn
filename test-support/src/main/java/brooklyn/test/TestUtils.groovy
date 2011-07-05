@@ -59,6 +59,10 @@ public class TestUtils {
         return connection
     }
 
+    public static void executeUntilSucceeds(Map flags=[:], Runnable r) {
+        executeUntilSucceedsWithFinallyBlock(flags, r, {})
+    }
+
     /** convenience for entities to ensure they shutdown afterwards */
     public static void executeUntilSucceedsWithShutdown(Map flags=[:], Entity entity, Runnable r) {
         executeUntilSucceedsWithFinallyBlock(flags, r, { entity.shutdown() })

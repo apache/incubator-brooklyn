@@ -18,11 +18,12 @@ import javax.management.remote.JMXServiceURL
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import com.google.common.base.Preconditions;
+
 import brooklyn.entity.basic.AttributeDictionary
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.AttributeSensor
 import brooklyn.event.Sensor
-import brooklyn.event.basic.BasicAttributeSensor
 
 /**
  * This class adapts JMX {@link ObjectName} dfata to {@link Sensor} data for a particular {@link Entity}, updating the
@@ -31,33 +32,17 @@ import brooklyn.event.basic.BasicAttributeSensor
  *  The adapter normally polls the JMX server every second to update sensors, which could involve aggregation of data
  *  or simply reading values and setting them in the attribute map of the activity model.
  */
-public class JmxSensorAdapter implements  SensorAdapter {
+public class JmxSensorAdapter {
     static final Logger log = LoggerFactory.getLogger(JmxSensorAdapter.class);
  
     final EntityLocal entity
     final String jmxUrl
-    final Map<?, ?> properties  = [
-            period : 500,
-            connectDelay : 1000
-        ]   
- 
-    ScheduledExecutorService exec = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors())
- 
+    
     JMXConnector jmxc
-    MBeanServerConnection mbsc = null
-    ScheduledFuture monitor = null
+    MBeanServerConnection mbsc
  
-    Map<String, AttributeSensor<?>> sensors = [:]
-    Map<String, JmxValueProvider<?>> providers = [:]
-    Map<String, BasicAttributeSensor<?>> calculated = [:]
-    Map<String, ScheduledFuture> scheduled = [:]
-    
-    /* Default polling interval, milliseconds */
-    long defaultPollingPeriod = 500;
-    
-    public JmxSensorAdapter(EntityLocal entity, long timeout = -1, Map properties = [:]) {
+    public JmxSensorAdapter(EntityLocal entity, long timeout = -1) {
         this.entity = entity
-        this.properties << properties
  
         String host = entity.getAttribute(AttributeDictionary.JMX_HOST);
         int port = entity.getAttribute(AttributeDictionary.JMX_PORT);
@@ -67,35 +52,10 @@ public class JmxSensorAdapter implements  SensorAdapter {
         if (!connect(timeout)) throw new IllegalStateException("Could not connect to JMX service")
     }
 
-    public <T> void addSensor(BasicAttributeSensor<T> sensor, Closure calculate, long period) {
-        log.debug "adding calculated sensor {} with delay {}", sensor.name, period
-        calculated[sensor.getName()] = sensor
-        entity.updateAttribute(sensor, null) // FIXME if exists?
-        
-        Closure safeCalculate = {
-            try {
-                calculate.call()
-            } catch (Exception e) {
-                log.error "Error calculating value for sensor $sensor on entity $entity", e
-            }
-        }
-        
-        scheduled[sensor.getName()] = exec.scheduleWithFixedDelay(safeCalculate, 0L, period, TimeUnit.MILLISECONDS)
+    public <T> ValueProvider<T> newValueProvider(String objectName, String attribute) {
+        return new JmxValueProvider(new ObjectName(objectName), attribute, this)
     }
- 
-    public <T> void addSensor(BasicAttributeSensor<T> sensor, String objectName, String attribute) {
-        JmxValueProvider<T> provider = new JmxValueProvider(objectName, attribute)
-        log.debug "adding sensor {} for {} - {}", sensor.name, provider.objectName, provider.attribute
-        sensors[sensor.getName()] = sensor
-        providers[sensor.getName()] = provider
-        
-        try {
-            entity.getAttribute(sensor)
-        } catch (NullPointerException npe) {
-            entity.updateAttribute(sensor, null)
-        }
-    }
-
+    
     public boolean isConnected() {
         return (jmxc && mbsc);
     }
@@ -106,8 +66,6 @@ public class JmxSensorAdapter implements  SensorAdapter {
         JMXServiceURL url = new JMXServiceURL(jmxUrl)
         jmxc = JMXConnectorFactory.connect(url, null);
         mbsc = jmxc.getMBeanServerConnection();
- 
-        monitor = exec.scheduleWithFixedDelay({ updateJmxSensors() }, properties['period'], properties['period'], TimeUnit.MILLISECONDS)
     }
  
     /** continuously attempts to connect (blocking), for at least the indicated amount of time; or indefinitely if -1 */
@@ -131,42 +89,23 @@ public class JmxSensorAdapter implements  SensorAdapter {
     }
 
     public void disconnect() {
-        scheduled.each { key, ScheduledFuture future -> future.cancel(true) }
         if (jmxc) {
             jmxc.close()
             jmxc = null
             mbsc = null
         }
-        if (monitor) monitor.cancel(true) 
     }
 
     public void checkConnected() {
-        if (!isConnected()) throw new IllegalStateException("JmxTool must be connected")
-    }
-
-    /**
-     * Returns all attributes on a specific named object
-     */
-    public Map getAttributes(String name) {
-        checkConnected()
-        ObjectName objectName = new ObjectName(name);
-        Set<ObjectInstance> beans = mbsc.queryMBeans(objectName, null)
-        ObjectInstance bean = beans.iterator().next();
-        // Use 'query' because objectName could contain wildcards
-        // TODO What if more than one bean?
-        MBeanInfo info = mbsc.getMBeanInfo(bean.getObjectName())
-        Map r = [:]
-        info.getAttributes().each { r[it.getName()] = null }
-        AttributeList list = mbsc.getAttributes bean.getObjectName(), r.keySet() as String[]
-        list.each { r[it.getName()] = it.getValue(); }
-        log.trace "returning attributes: {}", r
-        r
+        if (!isConnected()) throw new IllegalStateException("Not connected to JMX for entity $entity")
     }
 
     /**
      * Returns a specific attribute for a JMX {@link ObjectName}.
      */
-    public Object getAttribute(ObjectName objectName, String attribute) {
+    private Object getAttribute(ObjectName objectName, String attribute) {
+        checkConnected()
+        
         Set<ObjectInstance> beans = mbsc.queryMBeans(objectName, null)
         if (beans.isEmpty() || beans.size() > 1) {
             log.warn("JMX object name query returned ${beans.size()} values. Object name was: ${objectName.getCanonicalName()}")
@@ -177,69 +116,23 @@ public class JmxSensorAdapter implements  SensorAdapter {
         log.trace "got value {} for jmx attribute {}.{}", result, objectName.canonicalName, attribute
         return result
     }
-
-    private void updateJmxSensors() {
-        log.debug "updating all jmx sensors"
-        sensors.keySet() each { s ->
-                AttributeSensor<?> sensor = sensors.get(s)
-                JmxValueProvider<?> provider = providers.get(s)
-                def newValue = getAttribute(provider.objectName, provider.attribute)
-                log.debug "update for jmx attribute {}.{} to {}", sensor.name, provider.attribute, newValue
-                entity.updateAttribute(sensor, newValue)
-            }
-    }
-    
-    public <T> void subscribe(String sensorName) {
-        Sensor<?> sensor = sensors.get(sensorName) ?: calculated.get(sensorName) ?: null
-        if (sensor == null) throw new IllegalStateException("Sensor $sensorName not found");
-        subscribe(sensor)
-    }
- 
-    public <T> void subscribe(final Sensor<T> sensor) {
-        subscriptions += sensor
-    }
-    
-    public <T> T poll(String sensorName) {
-        Sensor<?> sensor = sensors.get(sensorName) ?: calculated.get(sensorName) ?: null
-        if (sensor == null) throw new IllegalStateException("Sensor $sensorName not found");
-        poll(sensor)
-    }
- 
-    public <T> T poll(Sensor<T> sensor) {
-        def value = entity.getAttribute(sensor)
-        entity.emit sensor, value
-        value
-    }
 }
 
 /**
  * Provides values to a sensor via JMX.
  */
-public class JmxValueProvider<T> {
-    public final String name
-    public final String attribute
-    public final ObjectName objectName
-//    public final JmxSensorAdapter adapter
-//    public final EntityLocal entity
+public class JmxValueProvider<T> implements ValueProvider<T> {
+    private final ObjectName objectName
+    private final String attribute
+    private final JmxSensorAdapter adapter
     
-    public Sensor<T> sensor
-
-    public JmxValueProvider(String name, String attribute) { //, JmxSensorAdapter adapter, EntityLocal entity) {
-        this.name = name
-        this.attribute = attribute
-        this.objectName = new ObjectName(name)
-//        this.adapter = adapter
-//        this.entity = entity
-    }
-    
-    public connect(Sensor<T> sensor) {
-        this.sensor = sensor
+    public JmxValueProvider(ObjectName objectName, String attribute, JmxSensorAdapter adapter) {
+        this.objectName = Preconditions.checkNotNull(objectName, "object name")
+        this.attribute = Preconditions.checkNotNull(attribute, "attribute")
+        this.adapter = Preconditions.checkNotNull(adapter, "adapter")
     }
     
     public T compute() {
-//        def newValue = adapter.getAttribute(objectName, attribute)
-//        entity.updateAttribute(sensor, newValue)
-//        newValue
-        null
+        return adapter.getAttribute(objectName, attribute)
     }
 }
