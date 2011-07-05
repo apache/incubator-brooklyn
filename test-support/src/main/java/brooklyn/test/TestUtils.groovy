@@ -86,7 +86,7 @@ public class TestUtils {
     public static void executeUntilSucceedsWithFinallyBlock(Map flags=[:], Runnable r, Runnable finallyBlock={}) {
         log.debug "abortOnError = {}", flags.abortOnError
         boolean abortOnException = flags.abortOnException ?: false
-        boolean abortOnError = flags.abortOnError ?: true
+        boolean abortOnError = flags.abortOnError ?: false
         boolean useGroovyTruth = flags.useGroovyTruth ?: false
         TimeDuration timeout = flags.timeout ?: new TimeDuration(0, 0, 0, 30, 0)
         TimeDuration period = flags.period ?: new TimeDuration(0, 0, 0, 5, 0)
