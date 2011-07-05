@@ -5,13 +5,12 @@
             %g:layoutTitle{:default=>"Brooklyn Webconsole"}
         %g:javascript{:library=>"jquery/jquery"}
         %g:javascript{:library=>"jquery/jquery-ui-1.8.14.min"}
-        %g:javascript{:library=>"console/tab-container-logic"}
         %g:layoutHead
         %link{:rel=>"shortcut icon",:href=>"${resource(dir:'images',file:'favicon.ico')}",:type=>"image/x-icon"}
         %link{:rel=>"stylesheet",:type=>"text/css",:href=>"${resource(dir:'css',file:'reset.css')}"}
         %link{:rel=>"stylesheet",:type=>"text/css",:href=>"${resource(dir:'css/smoothness',file:'jquery-ui-1.8.14.css')}"}
         %link{:rel=>"stylesheet",:type=>"text/css",:href=>"${resource(dir:'css/console',file:'console-layout.css')}"}
-    %body{:onload=>"initTabs()"}
+    %body
         %g:render{:template=>"/shared/banner"}
         %g:layoutBody/
         %g:render{:template=>"/shared/footer"}

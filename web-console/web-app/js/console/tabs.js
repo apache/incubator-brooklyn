@@ -1,0 +1,25 @@
+Brooklyn.tabs = (function() {
+    function enableTabs() {
+        $("#tabs").tabs("option", "disabled", false);
+    }
+
+    function disableTabs() {
+        // Should be able to use true here instead of list but it was not working.
+        // Must extend the list to the number of tabs used.
+        $("#tabs").tabs("option", "disabled", [0,1,2,3,4,5,6,7,8,9,10]);
+    }
+
+    function init() {
+        $("#tabs").tabs();
+        disableTabs();
+
+        var selectEntityMessage = "<p>Select an entity in the tree to the left to work with it here.</p>";
+        $('#summary').html(selectEntityMessage);
+
+        $(Brooklyn.eventBus).bind("entity_selected", enableTabs);
+    }
+
+    return {init: init};
+}());
+
+$(document).ready(Brooklyn.tabs.init);

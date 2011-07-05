@@ -3,9 +3,12 @@
     %head
         %title Brooklyn Webconsole - Dashboard
         %meta{:name=>"layout",:content=>"basic"}
+        %g:javascript{:src=>"console/main.js"}
         %script{:type=>"text/javascript",:src=>"${resource(dir:'dynjs',file:'jsTreeConfig')}"}
         %g:javascript{:src=>"console/jsTree.js"}
+        %g:javascript{:src=>"console/tabs.js"}
         %g:javascript{:src=>"console/effectors.js"}
+        %g:javascript{:src=>"console/sensors.js"}
         %g:javascript{:src=>"jquery/jquery.corner.js"}
         %g:javascript{:src=>"jquery/jquery.jstree.js"}
     %body
