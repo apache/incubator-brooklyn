@@ -5,6 +5,7 @@ import brooklyn.entity.Entity
 public class JsTreeNodeImpl implements JsTreeNode {
     private String id
     private Map<String, String> data = [:]
+    private Map<String, String> metadata = [:]
     private List<JsTreeNode> children = []
     public transient boolean matched
 
@@ -13,9 +14,16 @@ public class JsTreeNodeImpl implements JsTreeNode {
     }
 
     public JsTreeNodeImpl(String id, String name, String clazz, Boolean matched) {
-        this.id = id;
         this.data.put("title", name)
-        this.data.put("type", clazz)
+        
+        // Set html attributes on the a elements jstree uses to display nodes
+        this.data.put("attr", ["title": id,
+                               "id": "jstree-node-id-" + id])
+
+        // Here you can store anything you like.
+        // The data is then available with jQuery's .data() mechanism.
+        this.metadata.put("id", id)
+
         this.matched = matched
     }
 
@@ -33,6 +41,10 @@ public class JsTreeNodeImpl implements JsTreeNode {
 
     public Map<String, String> getData() {
         return data
+    }
+
+    public Map<String, String> getMetadata() {
+        return metadata
     }
 
     public List<JsTreeNode> getChildren() {
