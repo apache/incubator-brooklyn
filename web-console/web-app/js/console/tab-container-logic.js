@@ -1,3 +1,24 @@
+function enableTabs() {
+    $("#tabs").tabs("option", "disabled", false);
+}
+
+function disableTabs() {
+    // Should be able to use true here instead of list but it was not working.
+     // Must extend the list to the number of tabs used.
+    $("#tabs").tabs("option", "disabled", [0,1,2,3,4,5,6,7,8,9,10]);
+}
+
+function initTabs() {
+    $("#tabs").tabs();
+    disableTabs();
+
+    var selectEntityMessage = "<p>Select an entity in the tree to the left to work with it here.</p>";
+    $('#summary').html(selectEntityMessage);
+
+    $(eventBus).bind("entity_selected", enableTabs);
+    $(eventBus).bind("entity_selected", getAndDrawSensorData);
+}
+
 /* Fetch sensor readings for an entity and show them in an html table. */
 function drawSensorData(json) {
     var table = "<table> <thead> <tr> <th>Sensor</th> <th>Value</th> </tr> </thead>\n";
@@ -12,17 +33,6 @@ function drawSensorData(json) {
     $("#sensor-data").html(table);
 }
 
-function initTabs() {
-    $("#tabs").tabs({
-        show: function (event, ui) {
-            var url = "sensors";
-            $.getJSON(url, drawSensorData);
-        }
-    });
-
-    $(eventBus).bind("entity_selected", getAndDrawSensorData);
-}
-
 /* Make a GET request for sensor data for an entity of the given id. Then call
  * drawSensorData on the returned json.
  *
@@ -35,8 +45,4 @@ function getAndDrawSensorData(e, entity_id) {
     var url = baseUrl + "?id=" + entity_id;
     // TODO: Handle failure
     $.getJSON(url, drawSensorData);
-}
-
-function setAccordionLayout(accordion) {
-   $("#summary").css('padding', '0px');
 }
