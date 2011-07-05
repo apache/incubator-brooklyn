@@ -8,6 +8,10 @@ import java.util.Collection;
  */
 public interface Location extends Serializable {
 
+    /**
+     * Get the name assigned to this location.
+     * @return the name assigned to the location.
+     */
     public String getName();
 
     /**
