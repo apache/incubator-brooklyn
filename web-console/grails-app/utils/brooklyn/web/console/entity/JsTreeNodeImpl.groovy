@@ -18,7 +18,7 @@ public class JsTreeNodeImpl implements JsTreeNode {
         
         // Set html attributes on the a elements jstree uses to display nodes
         this.data.put("attr", ["title": id,
-                               "id", "jstree-node-id-" + id])
+                               "id": "jstree-node-id-" + id])
 
         // Here you can store anything you like.
         // The data is then available with jQuery's .data() mechanism.
