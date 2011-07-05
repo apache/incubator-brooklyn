@@ -9,6 +9,7 @@ import brooklyn.location.basic.SshMachineLocation
 import com.google.common.base.Preconditions
 import brooklyn.location.basic.GeneralPurposeLocation
 import brooklyn.location.basic.FixedListMachineProvisioningLocation
+import brooklyn.location.Location
 
 /**
  * Starts some tomcat nodes, on localhost, using ssh;
@@ -24,7 +25,7 @@ public class SimpleTomcatApp extends AbstractApplication {
         def app = new SimpleTomcatApp()
         URL resource = SimpleTomcatApp.class.getClassLoader().getResource("hello-world.war")
         Preconditions.checkState resource != null, "Unable to locate resource hello-world.war"
-        app.tc.template.war = resource.getPath()
+        app.tc.template.setConfig(TomcatNode.WAR, resource.getPath())
            //TODO:
 //        app.tc.policy << new ElasticityPolicy(app.tc, TomcatCluster.REQS_PER_SEC, low:100, high:250);
         app.tc.initialSize = 2  //override initial size
@@ -34,8 +35,7 @@ public class SimpleTomcatApp extends AbstractApplication {
             Inet4Address.getByAddress((byte[])[192,168,2,242])
         ]
         Collection<SshMachineLocation> machines = hosts.collect { new SshMachineLocation(it, "cloudsoft") }
-        GeneralPurposeLocation location = new GeneralPurposeLocation(name: 'london',
-            provisioner: new FixedListMachineProvisioningLocation<SshMachineLocation>(machines))
+        Location location = new FixedListMachineProvisioningLocation<SshMachineLocation>(machines, "London")
 
         app.tc.start([location])
 
