@@ -25,11 +25,21 @@ class EntityController {
     }
 
     def effectors = {
-        render getEntityMatchingId(params.id).effectors as JSON
+        EntitySummary summary = getEntityMatchingId(params.id);
+        if (summary) {
+            render summary.effectors as JSON
+        } else {
+            render(status: 404, text: '{message: "Entity with specified id does not exist"}')
+        }
     }
 
     def sensors = {
-       render getEntityMatchingId(params.id).sensors as JSON
+        EntitySummary summary = getEntityMatchingId(params.id);
+        if (summary) {
+            render summary.sensors as JSON
+        } else {
+            render(status: 404, text: '{message: "Entity with specified id does not exist"}')
+        }
     }
 
     def jstree = {
@@ -60,16 +70,14 @@ class EntityController {
         entities.collect {  new EntitySummary(it) }
     }
 
-    private EntitySummary getEntityMatchingId(String id){
+    private EntitySummary getEntityMatchingId(String id) {
         Set<EntitySummary> entities = toEntitySummaries(entityService.getEntitiesMatchingCriteria(null, id, null))
 
-        if (! id) {
-            render(status: 400, text: '{message: "You must provide an entity id"}')
+        if (!id) {
             return null;
         }
 
         if (entities.size() == 0) {
-            render(status: 404, text: '{message: "Entity with specified id does not exist"}')
             return null;
         }
 
