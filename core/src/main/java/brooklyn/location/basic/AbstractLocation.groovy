@@ -11,10 +11,10 @@ import brooklyn.location.Location
  */
 public abstract class AbstractLocation implements Location {
 
-    private String name
+    private final String name
     private Location parentLocation
-    private Collection<Location> childLocations = []
-    private Collection<Location> childLocationsReadOnly = Collections.unmodifiableCollection(childLocations)
+    private final Collection<Location> childLocations = []
+    private final Collection<Location> childLocationsReadOnly = Collections.unmodifiableCollection(childLocations)
 
     public AbstractLocation(String name = null, Location parentLocation = null) {
         this.name = name

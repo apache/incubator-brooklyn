@@ -20,7 +20,6 @@ public interface Location extends Serializable {
     /**
      * Get the 'children' of this location. Locations are organized into a tree hierarchy, and this method will return a
      * collection containing the children of this location. This collection is an unmodifiable view of the data.
-     * to the parent of this location, or <code>null</code> if this location is the tree root.
      * @return a collection containing the children of this location.
      */
     public Collection<Location> getChildLocations();
@@ -35,6 +34,7 @@ public interface Location extends Serializable {
 
     /**
      * TODO Return the ISO-3166 country code.
+     * TODO A location could be in multiple iso-3166-2 locations.
      */
 //    String getCountryCode();
 }

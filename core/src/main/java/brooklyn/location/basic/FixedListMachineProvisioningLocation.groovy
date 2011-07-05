@@ -10,9 +10,9 @@ import com.google.common.base.Preconditions
  */
 public class FixedListMachineProvisioningLocation<T extends MachineLocation> extends AbstractLocation implements MachineProvisioningLocation<T> {
 
-    private Object lock = new Object();
-    private List<T> available;
-    private List<T> inUse;
+    private final Object lock = new Object();
+    private final List<T> available;
+    private final List<T> inUse;
 
     public FixedListMachineProvisioningLocation(Collection<T> machines, String name = null, Location parentLocation = null) {
         super(name, parentLocation)
