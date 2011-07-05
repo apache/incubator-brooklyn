@@ -12,7 +12,7 @@ public class FixedListMachineProvisioningLocationTest {
     public void canGetAMachine() {
         FixedListMachineProvisioningLocation<SshMachineLocation> provisioner =
             new FixedListMachineProvisioningLocation<SshMachineLocation>(
-                [new SshMachineLocation(Inet4Address.getByAddress((byte[])[192,168,144,200]))]);
+                machines: [new SshMachineLocation(address: Inet4Address.getByAddress((byte[])[192,168,144,200]))]);
         SshMachineLocation machine = provisioner.obtain()
         assertNotNull machine
         assertEquals '192.168.144.200', machine.address.hostAddress
@@ -22,7 +22,7 @@ public class FixedListMachineProvisioningLocationTest {
     public void returnsNullIfNoMachinesAvailable() {
         FixedListMachineProvisioningLocation<SshMachineLocation> provisioner =
             new FixedListMachineProvisioningLocation<SshMachineLocation>(
-                [new SshMachineLocation(Inet4Address.getByAddress((byte[])[192,168,144,200]))]);
+                machines: [new SshMachineLocation(address: Inet4Address.getByAddress((byte[])[192,168,144,200]))]);
         SshMachineLocation machine1 = provisioner.obtain()
         SshMachineLocation machine2 = provisioner.obtain()
         assertNull machine2
@@ -32,7 +32,7 @@ public class FixedListMachineProvisioningLocationTest {
     public void canGetAMachineReturnItAndObtainItAgain() {
         FixedListMachineProvisioningLocation<SshMachineLocation> provisioner =
             new FixedListMachineProvisioningLocation<SshMachineLocation>(
-                [new SshMachineLocation(Inet4Address.getByAddress((byte[])[192,168,144,200]))])
+                machines: [new SshMachineLocation(address: Inet4Address.getByAddress((byte[])[192,168,144,200]))])
         SshMachineLocation machine = provisioner.obtain()
         provisioner.release(machine)
         machine = provisioner.obtain()

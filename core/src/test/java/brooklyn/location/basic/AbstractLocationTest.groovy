@@ -2,55 +2,54 @@ package brooklyn.location.basic
 
 import static org.testng.Assert.*
 import org.testng.annotations.Test
-import brooklyn.location.Location
 
 public class AbstractLocationTest {
 
     private static class ConcreteLocation extends AbstractLocation {
-        ConcreteLocation(String name, Location parentLocation) {
-            super(name, parentLocation)
+        ConcreteLocation(Map properties = [:]) {
+            super(properties)
         }
     }
 
     @Test
     public void nullNameAndParentLocationIsAcceptable() {
-        AbstractLocation location = new ConcreteLocation(null, null)
+        AbstractLocation location = new ConcreteLocation(name: null, parentLocation: null)
     }
 
     @Test
     public void queryingNameReturnsNameGivenInConstructor() {
         String name = "Outer Mongolia"
-        AbstractLocation location = new ConcreteLocation("Outer Mongolia", null)
+        AbstractLocation location = new ConcreteLocation(name: "Outer Mongolia")
         assertEquals name, location.name
     }
 
     @Test
     public void queryingParentLocationReturnsLocationGivenInConstructor() {
-        AbstractLocation parent = new ConcreteLocation("Middle Earth", null)
-        AbstractLocation child = new ConcreteLocation("The Shire", parent)
+        AbstractLocation parent = new ConcreteLocation(name: "Middle Earth")
+        AbstractLocation child = new ConcreteLocation(name: "The Shire", parentLocation: parent)
         assertEquals parent, child.parentLocation
     }
 
     @Test
     public void queryingChildrenOfParentReturnsExpectedLocation() {
-        AbstractLocation parent = new ConcreteLocation("Middle Earth", null)
-        AbstractLocation child = new ConcreteLocation("The Shire", parent)
+        AbstractLocation parent = new ConcreteLocation(name: "Middle Earth")
+        AbstractLocation child = new ConcreteLocation(name: "The Shire", parentLocation: parent)
         assertEquals 1, parent.childLocations.size()
         assertEquals child, parent.childLocations.iterator().next()
     }
 
     @Test
     public void queryParentLocationAfterSetParentLocationReturnsExpectedLocation() {
-        AbstractLocation parent = new ConcreteLocation("Middle Earth", null)
-        AbstractLocation child = new ConcreteLocation("The Shire", null)
+        AbstractLocation parent = new ConcreteLocation(name: "Middle Earth")
+        AbstractLocation child = new ConcreteLocation(name: "The Shire")
         child.parentLocation = parent
         assertEquals parent, child.parentLocation
     }
 
     @Test
     public void queryingChildrenOfParentAfterSetParentLocationReturnsExpectedLocation() {
-        AbstractLocation parent = new ConcreteLocation("Middle Earth", null)
-        AbstractLocation child = new ConcreteLocation("The Shire", null)
+        AbstractLocation parent = new ConcreteLocation(name: "Middle Earth")
+        AbstractLocation child = new ConcreteLocation(name: "The Shire")
         child.parentLocation = parent
         assertEquals 1, parent.childLocations.size()
         assertEquals child, parent.childLocations.iterator().next()

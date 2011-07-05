@@ -1,6 +1,7 @@
 package brooklyn.location.basic
 
 import brooklyn.location.Location
+import com.google.common.base.Preconditions
 
 /**
  * Created by IntelliJ IDEA.
@@ -15,10 +16,20 @@ public abstract class AbstractLocation implements Location {
     private Location parentLocation
     private final Collection<Location> childLocations = []
     private final Collection<Location> childLocationsReadOnly = Collections.unmodifiableCollection(childLocations)
+    private Map leftoverProperties
 
-    public AbstractLocation(String name = null, Location parentLocation = null) {
-        this.name = name
-        setParentLocation(parentLocation)
+    public AbstractLocation(Map properties = [:]) {
+        if (properties.name) {
+            Preconditions.checkArgument properties.name == null || properties.name instanceof String,
+                "'name' property should be a string"
+            name = properties.remove("name")
+        }
+        if (properties.parentLocation) {
+            Preconditions.checkArgument properties.parentLocation == null || properties.parentLocation instanceof Location,
+                "'parentLocation' property should be a Location instance"
+            setParentLocation(properties.remove("parentLocation"))
+        }
+        leftoverProperties = properties
     }
 
     public String getName() { return name; }

@@ -2,7 +2,6 @@ package brooklyn.location.basic
 
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.MachineLocation
-import brooklyn.location.Location
 import com.google.common.base.Preconditions
 
 /**
@@ -14,10 +13,13 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
     private final List<T> available;
     private final List<T> inUse;
 
-    public FixedListMachineProvisioningLocation(Collection<T> machines, String name = null, Location parentLocation = null) {
-        super(name, parentLocation)
+    public FixedListMachineProvisioningLocation(Map properties = [:]) {
+        super(properties)
 
-        Preconditions.checkNotNull machines, "machines must not be null"
+        Preconditions.checkArgument properties.containsKey('machines'), "properties must include a 'machines' key"
+        Preconditions.checkArgument properties.machines instanceof Collection<T>, "'machines' value must be a collection"
+        Collection<T> machines = properties.remove('machines')
+
         machines.each {
             Preconditions.checkArgument it.parentLocation == null,
                 "Machines must not have a parent location, but machine '%s' has its parent location set", it.name;

@@ -15,7 +15,7 @@ public class SshMachineLocationTest {
     
     @BeforeMethod
     public void setUp() throws Exception {
-        host = new SshMachineLocation(InetAddress.getLocalHost());
+        host = new SshMachineLocation(address: InetAddress.getLocalHost());
     }
 
     // Note: requires `ssh localhost` to be setup such that no password is required    
