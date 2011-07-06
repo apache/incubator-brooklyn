@@ -7,7 +7,7 @@ Brooklyn.sensors = (function() {
         table += "<tbody>\n";
 
         for (name in json) {
-            table += "<tr> <td> " + name + " </td> <td>" + json[name].sensor.description + " </td> <td>" + json[name].value + "</td> </tr>\n";
+            table += "<tr> <td> " + name + " </td> <td>" + json[name].description + " </td> <td>" + json[name].value + "</td> </tr>\n";
         }
 
         table += "</tbody></table>";
