@@ -34,12 +34,22 @@ class EntityController {
     }
 
     def sensors = {
-        EntitySummary summary = getEntityMatchingId(params.id);
-        if (summary) {
-            render summary.sensors as JSON
-        } else {
-            render(status: 404, text: '{message: "Entity with specified id does not exist"}')
+        String id = params.id
+        if (! id) {
+            render(status: 400, text: '{message: "You must provide an entity id"}')
+            return
         }
+
+        Collection<Entity> entities = entityService.getEntitiesMatchingCriteria(null, id, null)
+        if (entities.size() == 0) {
+            // log maybe
+            render(status: 404, text: '{message: "Entity with specified id does not exist"}')
+            return
+        }
+
+        EntitySummary entitySummary = toEntitySummaries(entities).toArray()[0]
+
+        render (entitySummary.sensors as JSON)
     }
 
     def jstree = {
