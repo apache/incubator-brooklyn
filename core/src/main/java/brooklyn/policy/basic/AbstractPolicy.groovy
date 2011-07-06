@@ -10,6 +10,7 @@ import brooklyn.event.Sensor
 import brooklyn.management.ManagementContext
 import brooklyn.management.SubscriptionContext
 import brooklyn.management.internal.BasicSubscriptionContext
+import brooklyn.policy.Policy
 import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.task.ExecutionContext
 
@@ -17,7 +18,7 @@ import brooklyn.util.task.ExecutionContext
  * Default {@link Policy} implementation.
  *
  */
-class AbstractPolicy {
+class AbstractPolicy implements Policy {
    private static final Logger log = LoggerFactory.getLogger(AbstractPolicy.class);
 
    String id = LanguageUtils.newUid();
@@ -33,12 +34,12 @@ class AbstractPolicy {
    public void setEntity(EntityLocal entity) {
        this.entity = entity;
        this.subscription = new BasicSubscriptionContext(getManagementContext().getSubscriptionManager(), this)
-       this.execution = new ExecutionContext(getManagementContext().getExecutionManager(), this)
+       this.execution = new ExecutionContext([tags:[entity,this]], getManagementContext().getExecutionManager())
    }
    
    /** @see Entity#subscribe(Entity, Sensor, EventListener) */
    public <T> long subscribe(Entity producer, Sensor<T> sensor, EventListener<T> listener) {
-       subscription.getSubscriptionManager().subscribe producer, sensor, listener
+       subscription.subscribe(producer, sensor, listener)
    }
    
    private ManagementContext getManagementContext() {

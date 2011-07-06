@@ -1,5 +1,7 @@
 package brooklyn.entity.basic
 
+import brooklyn.policy.Policy;
+
 import java.lang.reflect.Field
 import java.util.Collection
 import java.util.Map
@@ -53,7 +55,8 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     volatile Application application
     Collection<Location> locations = []
     Entity owner
-
+    Collection<Policy> policies = [] as CopyOnWriteArrayList
+    
     // following two perhaps belong in entity class in a registry;
     // but that is an optimization, and possibly wrong if we have dynamic sensors/effectors
     // (added only to this instance), however if we did we'd need to reset/update entity class
@@ -245,6 +248,11 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         return entityClass
     }
 
+    public Collection<Location> getLocations() {
+        // TODO make result immutable, and use this.@locations when we want to update it?
+        return locations;
+    }
+
     /**
      * Should be invoked at end-of-life to clean up the item.
      */
@@ -341,6 +349,32 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
  
     /** override this, adding to the collection, to supply fields whose value, if not null, should be included in the toString */
     public Collection<String> toStringFieldsToInclude() { ['id', 'displayName'] }
+
+    
+    // -------- POLICIES --------------------
+    
+    /**
+     * @see EntityLocal.getPolicies()
+     */
+    public Collection<Policy> getPolicies() {
+        return policies.asImmutable()
+    }
+    
+    /**
+     * @see EntityLocal.addPolicy(Policy)
+     */
+    public void addPolicy(Policy policy) {
+        policies.add(policy)
+        policy.setEntity(this)
+    }
+
+    /**
+     * @see EntityLocal.removePolicy(Policy)
+     */
+    boolean removePolicy(Policy policy) {
+        return policies.remove(policy)
+    }
+   
 
     // -------- SENSORS --------------------
     

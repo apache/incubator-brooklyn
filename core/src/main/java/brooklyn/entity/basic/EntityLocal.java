@@ -1,11 +1,15 @@
 package brooklyn.entity.basic;
 
+import java.util.Collection;
+
 import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.EventListener;
 import brooklyn.event.Sensor;
+import brooklyn.event.SensorEvent;
 import brooklyn.event.basic.ConfigKey;
 import brooklyn.management.ManagementContext;
+import brooklyn.policy.Policy;
 
 public interface EntityLocal extends Entity {
     /**
@@ -52,5 +56,21 @@ public interface EntityLocal extends Entity {
      */
     <T> long subscribe(Entity producer, Sensor<T> sensor, EventListener<T> listener);
 
+    /**
+     * @return an immutable thread-safe view of the policies.
+     */
+    Collection<Policy> getPolicies();
+    
+    /**
+     * Adds the given policy to this entity. Also calls policy.setEntity if available.
+     */
+    void addPolicy(Policy policy);
+    
+    /**
+     * Removes the given policy from this entity. 
+     * @return True if the policy existed at this entity; false otherwise
+     */
+    boolean removePolicy(Policy policy);
+    
     ManagementContext getManagementContext();
 }
