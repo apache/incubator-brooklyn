@@ -64,7 +64,7 @@ class ManagementContextService implements ManagementContext {
             sensors.putAll([
                     Children: new BasicAttributeSensor<Integer>(Integer.class, "Children", "Owned children of this application"), DataRate: new BasicAttributeSensor<String>(String.class, "DataRate")])
 
-            updateAttribute(getSensor("Children"), getOwnedChildren().size())
+            setAttribute(getSensor("Children"), getOwnedChildren().size())
 
         }
 
@@ -83,7 +83,7 @@ class ManagementContextService implements ManagementContext {
 
             TestGroupEntity addOwnedChildren(Collection<Entity> children) {
                 children.each { addOwnedChild(it) }
-                updateAttribute(getSensor("Children"), children.size())
+                setAttribute(getSensor("Children"), children.size())
                 return this
             }
         }
@@ -105,9 +105,9 @@ class ManagementContextService implements ManagementContext {
                         Sync: new BasicAttributeSensor<String>(String.class, "Sync", "Synchronization strategy")]
                 )
 
-                updateAttribute(getSensor("Happiness"), 50)
-                updateAttribute(getSensor("Cache"), 200)
-                updateAttribute(getSensor("Sync"), "Moop")
+                setAttribute(getSensor("Happiness"), 50)
+                setAttribute(getSensor("Cache"), 200)
+                setAttribute(getSensor("Sync"), "Moop")
             }
         }
 
@@ -138,7 +138,7 @@ class ManagementContextService implements ManagementContext {
 
                 // TODO should we be looking in entityClass (rather than calling getSensor?)
                 for (String key: hackMeIn.keySet()) {
-                    this.updateAttribute(getSensor(key), hackMeIn[key] + ManagementContextService.ID_GENERATOR)
+                    this.setAttribute(getSensor(key), hackMeIn[key] + ManagementContextService.ID_GENERATOR)
                 }
             }
         }
