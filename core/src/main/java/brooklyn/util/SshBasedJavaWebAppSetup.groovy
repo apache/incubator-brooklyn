@@ -1,6 +1,7 @@
-package brooklyn.location.basic
+package brooklyn.util
 
 import brooklyn.entity.basic.EntityLocal
+import brooklyn.location.basic.SshMachineLocation
 
 public abstract class SshBasedJavaWebAppSetup extends SshBasedJavaAppSetup {
 

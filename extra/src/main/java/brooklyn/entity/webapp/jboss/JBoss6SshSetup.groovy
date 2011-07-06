@@ -1,7 +1,7 @@
 package brooklyn.entity.webapp.jboss
 
 import brooklyn.entity.basic.AttributeDictionary
-import brooklyn.location.basic.SshBasedJavaWebAppSetup
+import brooklyn.util.SshBasedJavaWebAppSetup
 import brooklyn.location.basic.SshMachineLocation
 
 public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {

@@ -18,7 +18,7 @@ import brooklyn.location.Location
 import brooklyn.location.MachineLocation
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.NoMachinesAvailableException
-import brooklyn.location.basic.SshBasedJavaWebAppSetup
+import brooklyn.util.SshBasedJavaWebAppSetup
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.internal.EntityStartUtils
 
