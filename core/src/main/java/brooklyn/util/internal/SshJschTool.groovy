@@ -86,7 +86,7 @@ public class SshJschTool {
     }
 
     public void disconnect() {
-        session.disconnect()
+        if (session && session.isConnected()) session.disconnect()
         session = null
     }
 
@@ -105,25 +105,29 @@ public class SshJschTool {
         while (!c.isClosed()) synchronized (c) { c.wait(pollPeriodMillis) }
     }
 
+    
     /**
      * Executes the set of commands in a shell; optional property 'out'
      * should be an output stream. Blocks until completion (unless property
      * 'block' set as false), so you must send an exit command.
      *  returns exit status.
      */
-    public int execShell(Map properties=[:], String ...commands) {
+    public int execShell(Map properties=[:], List<String> commands, Map env=[:]) {
         assertConnected()
         ChannelShell channel=session.openChannel("shell");
         lastChannel = channel
         if (properties.out) {
-            channel.setOutputStream(properties.out, true)
+//            channel.setOutputStream(properties.out, true)
         }
 
         StringBuffer sb = []
-        commands.each { sb.append(it); sb.append("\n") }
-        channel.setInputStream new ByteArrayInputStream(sb.toString().getBytes())
+        env.each { key, value -> sb.append("export $key=\"$value\"").append('\n') }
+        commands.each { sb.append(it).append('\n') }
+ 
 
+        channel.setInputStream new ByteArrayInputStream(sb.toString().getBytes("UTF-8"))
         channel.connect()
+
         if (properties.block==null || properties.block) {
             block(channel)
         }
@@ -134,38 +138,44 @@ public class SshJschTool {
     /** convenience for the last channel used, in case it is needed */
 
     public Channel lastChannel
-
+    
     /**
      * Executes the set of commands using ssh exec, ";" separated (overridable
      * with property 'separator'.
      *
      * Optional properties 'out' and 'err' should be streams.
      * This is generally preferable to shell because it captures both
-     *  streams and doesn't need an explicit exit, * but may cause problems if you
+     * streams and doesn't need an explicit exit, but may cause problems if you
      * are doing funny escaping or need env values which are only set on a
      * full-fledged shell;
      * returns exit status (if blocking)
      */
-    public int execCommands(Map properties=[:], String ...commands) {
+    public int execCommands(Map properties=[:], List<String> commands, Map env=[:]) {
         assertConnected()
         ChannelExec channel=session.openChannel("exec");
         lastChannel = channel;
         if (properties.out) {
             channel.setOutputStream(properties.out, true)
         }
-
         if (properties.err) {
             channel.setErrStream(properties.err, true)
         }
-        String separator = properties.separator ?: " ; "
-        channel.setCommand Arrays.asList(commands).join(separator)
+        String separator = properties.separator ?: "; "
+//        env.each { key, value -> channel.setEnv(key, value) }
+        StringBuffer run = []
+        env.each { key, value -> run.append("export $key=\"$value\"").append(separator) }
+        commands.each { run.append(it).append(separator) }
+        println run.toString()
+        channel.setCommand  run.toString()
 
         channel.connect()
         if (properties.block==null || properties.block) {
             block(channel)
         }
 
-        channel.getExitStatus()
+        def exitStatus = channel.getExitStatus()
+        println exitStatus
+        return exitStatus
     }
 
 

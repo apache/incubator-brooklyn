@@ -143,7 +143,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     
             //set the owner if supplied; accept as argument or field
             if (suppliedOwner) suppliedOwner.addOwnedChild(this)
-        } finally { skipCustomInvokeMethod.set(false) }
+        } finally { this.@skipCustomInvokeMethod.set(false) }
     }
 
     /**
@@ -423,8 +423,8 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     private ThreadLocal<Boolean> skipCustomInvokeMethod = new ThreadLocal() { protected Object initialValue() { Boolean.FALSE } }
 
     public Object invokeMethod(String name, Object args) {
-        if (!skipCustomInvokeMethod.get()) {
-            skipCustomInvokeMethod.set(true);
+        if (!this.@skipCustomInvokeMethod.get()) {
+            this.@skipCustomInvokeMethod.set(true);
             
             //args should be an array, warn if we got here wrongly (extra defensive as args accepts it, but it shouldn't happen here)
             if (args==null) LOG.warn("$this.$name invoked with incorrect args signature (null)", new Throwable("source of incorrect invocation of $this.$name"))
@@ -443,7 +443,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
                         return t.get();
                     }
                 }
-            } finally { skipCustomInvokeMethod.set(false); }
+            } finally { this.@skipCustomInvokeMethod.set(false); }
         }
         metaClass.invokeMethod(this, name, args);
         //following is recommended on web site, but above is how groovy actually implements it

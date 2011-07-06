@@ -1,5 +1,8 @@
 package brooklyn.util
 
+import java.io.File
+import java.util.List;
+
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.location.basic.SshMachineLocation
 
@@ -16,7 +19,7 @@ public abstract class SshBasedJavaWebAppSetup extends SshBasedJavaAppSetup {
         return this
     }
     
-    public abstract String getDeployScript(String filename);
+    public abstract List<String> getDeployScript(String filename);
 
     /**
      * Copies f to loc:$deployDir and invokes this.getDeployScript
@@ -27,8 +30,8 @@ public abstract class SshBasedJavaWebAppSetup extends SshBasedJavaAppSetup {
         String target = deployDir + "/" + f.getName()
         log.debug "Tomcat Deploy - Copying file {} to $machine {}", f.getAbsolutePath(), target
         int copySuccess = machine.copyTo f, target
-        String deployScript = getDeployScript(target)
-        if (deployScript) {
+        List<String> deployScript = getDeployScript(target)
+        if (deployScript && !deployScript.isEmpty()) {
             int result = machine.run(out:System.out, deployScript)
             if (result) {
                 log.error "Failed to deploy $f to $machine, result $result"

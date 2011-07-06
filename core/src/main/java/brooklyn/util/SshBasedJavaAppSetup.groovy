@@ -97,41 +97,41 @@ public abstract class SshBasedJavaAppSetup {
         ]
     }
     
-    protected String makeInstallScript(String ...lines) { 
-        String result = """\
-if [ -f $installDir/../INSTALL_COMPLETION_DATE ] ; then echo software is already installed ; exit ; fi
-mkdir -p $installDir && \\
-cd $installDir/.. && \\
-""";
-        lines.each { result += it + "&& \\\n" }
-        // TODO use .collect, as above
-        result += """\
-date > INSTALL_COMPLETION_DATE
-exit
-""" 
+    protected List<String> makeInstallScript(List<String> lines) { 
+        List<String> script = [
+            "if [ -f $installDir/../INSTALL_COMPLETION_DATE ] ; then echo software is already installed ; exit ; fi",
+			"mkdir -p $installDir",
+			"cd $installDir/..",
+        ]
+        lines.each { script += it }
+        script += "date > INSTALL_COMPLETION_DATE"
+        script += "exit"
+        return script
     }
 
-    protected String getInstallScript() { null }
+    public List<String> getInstallScript() { Collections.emptyList() }
  
-    protected abstract String getRunScript();
+    public abstract List<String> getRunScript();
+    
+    public abstract Map<String, String> getRunEnvironment();
     
     /**
      * Should return script to run at remote server to determine whether process is running.
      * 
      * Script should return 0 if healthy, 1 if stopped, any other code if not healthy
      */
-    protected abstract String getCheckRunningScript();
+    public abstract List<String> getCheckRunningScript();
     
     /**
      * Installs the application on this machine, or no-op if no install-script defined.
      */
     public void install() {
         synchronized (getClass()) {
-            String s = getInstallScript()
-            if (s) {
+            List<String> script = getInstallScript()
+            if (script) {
                 log.info "installing entity {} on machine {}", entity, machine
-                int result = machine.run(out:System.out, s)
-                if (result) throw new IllegalStateException("failed to install $entity (exit code $result)")
+                int result = machine.run(out:System.out, script)
+                if (result) throw new IllegalStateException("failed to start $entity (exit code $result)")
             } else {
                 log.debug "not installing entity {} on machine {}, as no install-script defined", entity, machine
             }
@@ -140,7 +140,8 @@ exit
     
     public void runApp() {
         log.info "starting entity $entity on $machine, jmx $jmxHost:$jmxPort", entity, machine
-        def result = machine.run(out:System.out, getRunScript())
+        def result = machine.run(out:System.out, getRunScript(), getRunEnvironment())
+
         if (result) throw new IllegalStateException("failed to start $entity (exit code $result)")
         
         postStart();

@@ -1,11 +1,12 @@
 package brooklyn.entity.webapp.jboss
 
+import java.util.List;
+
 import brooklyn.entity.basic.Attributes
 import brooklyn.util.SshBasedJavaWebAppSetup
 import brooklyn.location.basic.SshMachineLocation
 
 public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
-    
     public static final String DEFAULT_VERSION = "6.0.0.Final"
     public static final String DEFAULT_INSTALL_DIR = DEFAULT_INSTALL_BASEDIR+"jboss/"
     public static final String DEFAULT_DEPLOY_SUBDIR = "deploy"
@@ -73,20 +74,20 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         entity.setAttribute(Attributes.HTTP_PORT, DEFAULT_HTTP_PORT+portIncrement)
     }
     
-    public String getInstallScript() {
-        String url = "http://downloads.sourceforge.net/project/jboss/JBoss/JBoss-$jbossVersion/jboss-as-distribution-${jbossVersion}.zip?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fjboss%2Ffiles%2FJBoss%2F$jbossVersion%2F&ts=1307104229&use_mirror=kent"
-        String saveAs  = "jboss-as-distribution-$jbossVersion"
+    public List<String> getInstallScript() {
+        String url = "http://downloads.sourceforge.net/project/jboss/JBoss/JBoss-${jbossVersion}/jboss-as-distribution-${jbossVersion}.zip?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fjboss%2Ffiles%2FJBoss%2F${jbossVersion}%2F&ts=1307104229&use_mirror=kent"
+        String saveAs  = "jboss-as-distribution-${jbossVersion}"
         
         // Note the -o option to unzip, to overwrite existing files without warning.
         // The JBoss zip file contains lgpl.txt (at least) twice and the prompt to
         // overwrite interrupts the installer.
-        makeInstallScript(
-            "curl -L \"$url\" -o $saveAs",
-            "unzip -o $saveAs"
-        )
+        makeInstallScript([
+	            "curl -L \"${url}\" -o ${saveAs}",
+	            "unzip -o ${saveAs}"
+            ])
     }
 
-    public String getRunScript() {
+    public List<String> getRunScript() {
         // Notes:
         // LAUNCH_JBOSS_IN_BACKGROUND relays OS signals sent to the run.sh process to the JBoss process.
         // run.sh must be backgrounded otherwise the script will never return.
@@ -97,36 +98,45 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
            .. changing port numbers with sed is pretty brittle.
         */
         def portGroupName = "ports-brooklyn"
-"""mkdir -p $runDir/server && \\
-cd $runDir/server && \\
-cp -r $installDir/server/$serverProfile $serverProfile && \\
-cd $serverProfile/conf/bindingservice.beans/META-INF/ && \\
-BJB="bindings-jboss-beans.xml" && \\
-sed -i.bk 's/ports-03/$portGroupName/' \$BJB && \\
-sed -i.bk 's/\\<parameter\\>300\\<\\/parameter\\>/\\<parameter\\>$portIncrement\\<\\/parameter\\>/' \$BJB && \\
-export LAUNCH_JBOSS_IN_BACKGROUND=1 && \\
-export JBOSS_HOME=$installDir && \\
-export JAVA_OPTS=""" + "\"" + toJavaDefinesString(getJvmStartupProperties()) + "\"" + """ && \\
-JAVA_OPTS="\$JAVA_OPTS -Djboss.platform.mbeanserver" && \\
-JAVA_OPTS="\$JAVA_OPTS -Djavax.management.builder.initial=org.jboss.system.server.jmx.MBeanServerBuilderImpl" && \\
-JAVA_OPTS="\$JAVA_OPTS -Djava.util.logging.manager=org.jboss.logmanager.LogManager" && \\
-JAVA_OPTS="\$JAVA_OPTS -Dorg.jboss.logging.Logger.pluginClass=org.jboss.logging.logmanager.LoggerPluginImpl" && \\
-export JBOSS_CLASSPATH="$installDir/lib/jboss-logmanager.jar" && \\
-$installDir/bin/run.sh -Djboss.service.binding.set=$portGroupName -Djboss.server.base.dir=$runDir/server -Djboss.server.base.url=file://$runDir/server -c $serverProfile &
-sleep 30
-exit"""
+        
+        List<String> script = [
+            "mkdir -p $runDir/server",
+            "cd $runDir/server",
+            "cp -r $installDir/server/$serverProfile $serverProfile",
+            "cd $serverProfile/conf/bindingservice.beans/META-INF/",
+            "BJB=\"bindings-jboss-beans.xml\"",
+            "sed -i.bk 's/ports-03/$portGroupName/' \$BJB",
+            "sed -i.bk 's/\\<parameter\\>300\\<\\/parameter\\>/\\<parameter\\>$portIncrement\\<\\/parameter\\>/' \$BJB",
+            "$installDir/bin/run.sh -Djboss.service.binding.set=$portGroupName -Djboss.server.base.dir=$runDir/server -Djboss.server.base.url=file://$runDir/server -c $serverProfile &",
+        ]
+        return script
+    }
+    
+    public Map<String, String> getRunEnvironment() {
+        Map<String, String> env = [
+	        "LAUNCH_JBOSS_IN_BACKGROUND" : "1",
+	        "JBOSS_HOME" : "$installDir",
+	        "JAVA_OPTS" : toJavaDefinesString(getJvmStartupProperties()) + " " +
+		        "-Djboss.platform.mbeanserver " +
+		        "-Djavax.management.builder.initial=org.jboss.system.server.jmx.MBeanServerBuilderImpl " +
+		        "-Djava.util.logging.manager=org.jboss.logmanager.LogManager " +
+		        "-Dorg.jboss.logging.Logger.pluginClass=org.jboss.logging.logmanager.LoggerPluginImpl",
+	        "JBOSS_CLASSPATH" : "$installDir/lib/jboss-logmanager.jar",
+        ]
+        return env
     }
 
     /** script to return 1 if pid in runDir is running, 0 otherwise */
-    public String getCheckRunningScript() { 
-        def host = entity.getAttribute(Attributes.JMX_HOST)
-        def port = entity.getAttribute(Attributes.JMX_PORT)
-        "$installDir/bin/twiddle.sh --host $host --port $port get \"jboss.system:type=Server\" Started; exit"
+    public List<String> getCheckRunningScript() { 
+        def host = entity.getAttribute(AttributeDictionary.JMX_HOST)
+        def port = entity.getAttribute(AttributeDictionary.JMX_PORT)
+        List<String> script = [
+            "$installDir/bin/twiddle.sh --host $host --port $port get \"jboss.system:type=Server\" Started; exit"
+        ]
+        return script
     }
 
-    public String getDeployScript(String locOnServer) {
-        ""
-    }
+    public List<String> getDeployScript(String locOnServer) { Collections.emptyList() }
 
     public void shutdown() {
         def host = entity.getAttribute(Attributes.JMX_HOST)
