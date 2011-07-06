@@ -91,8 +91,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         def portGroupName = "ports-brooklyn"
         
         List<String> script = [
-            "cd $serverProfile/conf/bindingservice.beans/META-INF/",
-            "$installDir/bin/run.sh -Djboss.service.binding.set=$portGroupName -Djboss.server.base.dir=$runDir/server -Djboss.server.base.url=file://$runDir/server -c $serverProfile &",
+            "\$JBOSS_HOME/bin/run.sh -Djboss.service.binding.set=$portGroupName -Djboss.server.base.dir=\$RUN/server -Djboss.server.base.url=file://\$RUN/server -c $serverProfile &",
             "sleep 30",
         ]
         return script
@@ -108,6 +107,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
 		        "-Djava.util.logging.manager=org.jboss.logmanager.LogManager " +
 		        "-Dorg.jboss.logging.Logger.pluginClass=org.jboss.logging.logmanager.LoggerPluginImpl",
 	        "JBOSS_CLASSPATH" : "$installDir/lib/jboss-logmanager.jar",
+	        "RUN" : "$runDir",
         ]
         return env
     }
