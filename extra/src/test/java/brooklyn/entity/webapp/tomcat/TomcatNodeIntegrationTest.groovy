@@ -18,7 +18,6 @@ import brooklyn.event.EntityStartException
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
-import brooklyn.test.TestUtils.BooleanWithMessage
 
 /**
  * This tests the operation of the {@link TomcatNode} entity.
