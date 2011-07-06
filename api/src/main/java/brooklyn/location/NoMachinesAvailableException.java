@@ -6,6 +6,7 @@ import brooklyn.location.Location;
  * Indicates no machines are available in a given location.
  */
 public class NoMachinesAvailableException extends Exception {
+    private static final long serialVersionUID = 1079817235289265761L;
     private Location location;
 
     public NoMachinesAvailableException() {
