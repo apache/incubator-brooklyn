@@ -11,6 +11,7 @@ import brooklyn.management.ExecutionManager
 import brooklyn.management.ManagementContext
 import brooklyn.management.SubscriptionManager
 import brooklyn.web.console.entity.TestEffector
+import brooklyn.entity.webapp.tomcat.TomcatNode
 
 class ManagementContextService implements ManagementContext {
     private final Application application = new TestApplication();
@@ -66,7 +67,7 @@ class ManagementContextService implements ManagementContext {
 
 
             sensors.putAll([
-                    Children: new BasicAttributeSensor<Integer>(Integer.class, "Children"), DataRate: new BasicAttributeSensor<String>(String.class, "DataRate")])
+                    Children: new BasicAttributeSensor<Integer>(Integer.class, "Children", "Owned children of this application"), DataRate: new BasicAttributeSensor<String>(String.class, "DataRate")])
 
             updateAttribute(getSensor("Children"), getOwnedChildren().size())
 
@@ -82,7 +83,7 @@ class ManagementContextService implements ManagementContext {
                 this.id = "group-" + ManagementContextService.ID_GENERATOR++
                 this.displayName = displayName
                 sensors.putAll([
-                        Children: new BasicAttributeSensor<Integer>(Integer.class, "Children"), DataRate: new BasicAttributeSensor<String>(String.class, "DataRate")])
+                        Children: new BasicAttributeSensor<Integer>(Integer.class, "Children", "Direct children of this group"), DataRate: new BasicAttributeSensor<String>(String.class, "DataRate")])
             }
 
             TestGroupEntity addOwnedChildren(Collection<Entity> children) {
@@ -105,8 +106,8 @@ class ManagementContextService implements ManagementContext {
 
                 this.sensors.putAll(
                        [Happiness: new BasicAttributeSensor<String>(String.class, "Happiness"),
-                        Cache: new BasicAttributeSensor<String>(String.class, "Cache"),
-                        Sync: new BasicAttributeSensor<String>(String.class, "Sync")]
+                        Cache: new BasicAttributeSensor<String>(String.class, "Cache", "Some cache metric"),
+                        Sync: new BasicAttributeSensor<String>(String.class, "Sync", "Synchronization strategy")]
                 )
 
                 updateAttribute(getSensor("Happiness"), 50)
@@ -128,19 +129,22 @@ class ManagementContextService implements ManagementContext {
                 this.displayName = displayName;
                 this.id = id;
 
+                // Stealing the sensors from TomcatNode
+                this.sensors.putAll(new TomcatNode().sensors)
+
+                // Don't appear to be any effectors in TomcatNode
                 TestEffector startTomcat = new TestEffector("Start Tomcat", "This will start Tomcat at a specified location",  new ArrayList<ParameterType<?>>())
                 TestEffector stopTomcat = new TestEffector("Stop Tomcat", "This will stop tomcat at its current location", new ArrayList<ParameterType<?>>())
                 TestEffector restartTomcat = new TestEffector("Restart Tomcat", "This will restart tomcat in its current location", new ArrayList<ParameterType<?>>())
 
-                // TODO should we be looking in entityClass (rather than calling getSensor?)
-                for (String key: hackMeIn.keySet()) {
-                    this.sensors.put(key, new BasicAttributeSensor<Integer>(Integer.class, key))
-                    this.updateAttribute(getSensor(key), hackMeIn[key] + ManagementContextService.ID_GENERATOR)
-                }
-                
                 this.effectors.putAll([  "Start Tomcat": startTomcat,
                                     "Stop Tomcat": stopTomcat,
                                     "Restart Tomcat": restartTomcat])
+
+                // TODO should we be looking in entityClass (rather than calling getSensor?)
+                for (String key: hackMeIn.keySet()) {
+                    this.updateAttribute(getSensor(key), hackMeIn[key] + ManagementContextService.ID_GENERATOR)
+                }
             }
         }
     }
