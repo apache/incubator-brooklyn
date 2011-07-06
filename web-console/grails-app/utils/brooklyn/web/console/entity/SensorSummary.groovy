@@ -5,11 +5,11 @@ import brooklyn.event.Sensor
 /**
  */
 public class SensorSummary {
-    public final Sensor sensor
+    public final String description
     public final Object value
 
     public SensorSummary(Sensor sensor, Object value) {
-        this.sensor = sensor
+        this.description = sensor.description
         this.value = value
     }
 }
