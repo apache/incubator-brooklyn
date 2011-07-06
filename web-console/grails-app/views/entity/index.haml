@@ -3,12 +3,14 @@
     %head
         %title Brooklyn Webconsole - Dashboard
         %meta{:name=>"layout",:content=>"basic"}
+        %script{:type=>"text/javascript", :src=>"http://maps.google.com/maps/api/js?sensor=false"}
         %g:javascript{:src=>"console/main.js"}
         %g:javascript{:src=>"console/jsTree.js"}
         %g:javascript{:src=>"console/tabs.js"}
         %g:javascript{:src=>"console/effectors.js"}
         %g:javascript{:src=>"console/activity.js"}
         %g:javascript{:src=>"console/sensors.js"}
+        %g:javascript{:src=>"console/location.js"}
         %g:javascript{:src=>"jquery/jquery.corner.js"}
         %g:javascript{:src=>"jquery/jquery.jstree.js"}
     %body
@@ -44,7 +46,7 @@
                         %g:render{:template=>"/tabs/effectors"}
                     #location
                         %h2 Location
-                        %p wibble
+                        #map-canvas
                     #activity
                         %g:render{:template=>"/tabs/activity"}
                     #health

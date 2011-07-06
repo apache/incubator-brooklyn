@@ -10,7 +10,12 @@ Brooklyn.tabs = (function() {
     }
 
     function init() {
-        $("#tabs").tabs();
+        $("#tabs").tabs({
+            show: function(event, ui) {
+                $(Brooklyn.eventBus).trigger('tab_selected', ui.panel.id);
+            }
+        });
+
         disableTabs();
 
         var selectEntityMessage = "<p>Select an entity in the tree to the left to work with it here.</p>";
