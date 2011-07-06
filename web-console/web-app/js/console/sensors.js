@@ -15,18 +15,25 @@ Brooklyn.sensors = (function() {
         $("#sensor-data").html(table);
     }
 
+    function handleXHRError(jqXHR, textStatus, errorThrown) {
+        $(Brooklyn.eventBus).trigger('update_failed', "Could not get sensor data.");
+    }
+
     /* Make a GET request for sensor data for an entity of the given id. Then call
      * drawSensorData on the returned json.
      */
-    function getAndDrawSensorData(id) {
-        // TODO: Handle failure
-        $.getJSON("sensors?id=" + entity_id, drawSensorData);
+    function getAndDrawSensorData(entity_id) {
+        $.getJSON("sensors?id=" + entity_id,
+                  function (json) {drawSensorData(json);
+                                   $(Brooklyn.eventBus).trigger('update_ok');
+                                   }).error(handleXHRError);
     }
 
     function update() {
         if (typeof entity_id === 'undefined') {
             return;
         }
+
         getAndDrawSensorData(entity_id);
     }
 
@@ -40,7 +47,7 @@ Brooklyn.sensors = (function() {
 
     function init() {
         $(Brooklyn.eventBus).bind("entity_selected", setEntityIdAndUpdate);
-        $(Brooklyn.eventBus).bind("update", getAndDrawSensorData);
+        $(Brooklyn.eventBus).bind("update", update);
     }
 
     return {init: init};
