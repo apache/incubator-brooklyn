@@ -10,18 +10,43 @@ import com.jcraft.jsch.ChannelExec
 import com.jcraft.jsch.ChannelShell
 import com.jcraft.jsch.JSch
 import com.jcraft.jsch.Session
+import com.google.common.base.Preconditions
 
 /** class is a wrapper for jsch session, taken from their examples */
 public class SshJschTool {
 
     String host
     String user = System.getProperty('user.name')
-    def port = 22
-    def keyFiles = ['~/.ssh/id_dsa','~/.ssh/id_rsa']
-    def config = ['StrictHostKeyChecking', 'no']
+    int port = 22
+    List<String> keyFiles = ['~/.ssh/id_dsa','~/.ssh/id_rsa']
+    Map config = [StrictHostKeyChecking: 'no']
 
     private JSch jsch;
     private Session session;
+
+    public SshJschTool(Map properties = [:]) {
+        Preconditions.checkArgument properties.containsKey('host'), "properties must contain a host key"
+        Preconditions.checkArgument properties.get('host') instanceof String, "host value must be a string"
+        Preconditions.checkArgument properties.get('host').length() > 0, "host value must not be an empty string"
+        this.host = properties.remove('host')
+
+        if(properties.user) {
+            Preconditions.checkArgument properties.user instanceof String, "user value must be a string"
+            this.user = properties.remove('user')
+        }
+
+        if(properties.port) {
+            Preconditions.checkArgument properties.port instanceof Integer, "port value must be an integer"
+            this.port = properties.remove('port')
+        }
+
+        if(properties.keyFiles) {
+            Preconditions.checkArgument properties.keyFiles instanceof Collection, "keyFiles value must be a Collection"
+            this.keyFiles = properties.remove('keyFiles')
+        }
+
+        this.config << properties
+    }
 
     /**
      * Tidies up fields and config, e.g. replacing leading '~' with
@@ -52,7 +77,7 @@ public class SshJschTool {
         keyFiles.each { if (new File(it).exists()) { jsch.addIdentity(it) } }
 
         session = jsch.getSession(user, host, port)
-        session.setConfig(config)
+        session.setConfig((Hashtable)config)
         try{
             session.connect()
         } catch (Exception e) {

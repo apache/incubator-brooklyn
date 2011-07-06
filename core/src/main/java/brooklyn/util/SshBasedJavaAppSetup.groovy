@@ -1,12 +1,12 @@
-package brooklyn.location.basic
-
-import java.util.Map;
+package brooklyn.util
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.location.PortRange
+import brooklyn.location.basic.SshMachineLocation
+import brooklyn.location.basic.BasicPortRange
 
 // TODO OS-X failure, if no recent command line ssh
 // ssh_askpass: exec(/usr/libexec/ssh-askpass): No such file or directory

@@ -11,6 +11,8 @@ import com.google.common.base.Preconditions
 public class SshMachineLocation extends AbstractLocation implements MachineLocation {
     private String user = null
     private InetAddress address
+    private Map sshConfig = [:]
+
     private final Set<Integer> portsInUse = [] as HashSet
     
     public SshMachineLocation(Map properties = [:]) {
@@ -24,6 +26,11 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             Preconditions.checkArgument properties.userName instanceof String, "'userName' value must be a string"
             this.user = properties.remove('userName')
         }
+
+        if (properties.sshConfig) {
+            Preconditions.checkArgument properties.sshConfig instanceof Map, "'sshConfig' value must be a Map"
+            this.sshConfig = properties.remove('sshConfig')
+        }
     }
 
     public InetAddress getAddress() {
@@ -35,7 +42,9 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         assert address : "host must be specified for $this"
 
         if (!user) user=System.getProperty "user.name"
-        def t = new SshJschTool(user:user, host:address.hostName);
+        def sshArgs = [user:user, host:address.hostName]
+        sshArgs << sshConfig
+        def t = new SshJschTool(sshArgs);
         t.connect()
         int result = t.execShell props, command
         t.disconnect()

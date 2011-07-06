@@ -6,7 +6,7 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.webapp.JavaWebApp
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
-import brooklyn.location.basic.SshBasedJavaWebAppSetup
+import brooklyn.util.SshBasedJavaWebAppSetup
 import brooklyn.location.basic.SshMachineLocation
 
 /**

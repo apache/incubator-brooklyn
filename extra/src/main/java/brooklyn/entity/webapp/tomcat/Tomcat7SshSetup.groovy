@@ -1,7 +1,7 @@
 package brooklyn.entity.webapp.tomcat
 
 import brooklyn.entity.basic.AttributeDictionary
-import brooklyn.location.basic.SshBasedJavaWebAppSetup
+import brooklyn.util.SshBasedJavaWebAppSetup
 import brooklyn.location.basic.SshMachineLocation
 
 /**

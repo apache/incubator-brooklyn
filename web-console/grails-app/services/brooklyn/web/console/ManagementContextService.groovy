@@ -35,14 +35,9 @@ class ManagementContextService implements ManagementContext {
     }
 
     private class TestApplication extends AbstractApplication {
-        Map sensorReadings;
-
         TestApplication() {
             this.id = "app-" + ManagementContextService.ID_GENERATOR++
             displayName = "Application";
-
-            this.sensorReadings = [id: this.id,
-                    "Application Entity": true];
 
             addOwnedChildren([
                     new TestGroupEntity("tomcat tier 1").addOwnedChildren([
