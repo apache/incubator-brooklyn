@@ -36,8 +36,8 @@ public class JmxSensorAdapterTest {
 
         // Create an entity and configure it with the above JMX service
         AbstractEntity entity = new LocallyManagedEntity()
-        entity.updateAttribute(AttributeDictionary.JMX_HOST, jmxService.jmxHost)
-        entity.updateAttribute(AttributeDictionary.JMX_PORT, jmxService.jmxPort)
+        entity.setAttribute(AttributeDictionary.JMX_HOST, jmxService.jmxHost)
+        entity.setAttribute(AttributeDictionary.JMX_PORT, jmxService.jmxPort)
 
         // Create a JMX adapter, and register a sensor for the JMX attribute
         JmxSensorAdapter jmxAdapter = new JmxSensorAdapter(entity)

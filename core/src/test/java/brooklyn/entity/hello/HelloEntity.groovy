@@ -31,7 +31,7 @@ public class HelloEntity extends AbstractGroup {
     public static Effector<Void> SET_AGE = new EffectorInferredFromAnnotatedMethod<String>(HelloEntity.class, "setAge", "allows setting the age");
     
     public void setAge(@NamedParameter("age") Integer age) {
-        updateAttribute(AGE, age);
+        setAttribute(AGE, age);
         emit(ITS_MY_BIRTHDAY, null);
     }
 }

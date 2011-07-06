@@ -77,10 +77,10 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
     
     @Override
     protected void postStart() {
-        entity.updateAttribute(AttributeDictionary.JMX_PORT, jmxPort)
-        entity.updateAttribute(AttributeDictionary.JMX_HOST, jmxHost)
-        entity.updateAttribute(AttributeDictionary.HTTP_PORT, tomcatHttpPort)
-        entity.updateAttribute(TomcatNode.TOMCAT_SHUTDOWN_PORT, tomcatShutdownPort)
+        entity.setAttribute(AttributeDictionary.JMX_PORT, jmxPort)
+        entity.setAttribute(AttributeDictionary.JMX_HOST, jmxHost)
+        entity.setAttribute(AttributeDictionary.HTTP_PORT, tomcatHttpPort)
+        entity.setAttribute(TomcatNode.TOMCAT_SHUTDOWN_PORT, tomcatShutdownPort)
     }
     
     public String getInstallScript() {

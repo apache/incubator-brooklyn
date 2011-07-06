@@ -21,14 +21,14 @@ public interface EntityLocal extends Entity {
     <T> T getAttribute(AttributeSensor<T> sensor);
 
     /**
-     * Update the {@link Sensor} data for the given attribute with a new value.
+     * Sets the {@link Sensor} data for the given attribute to the specified value.
      * 
      * This can be used to "enrich" the entity, such as adding aggregated information, 
      * rolling averages, etc.
      * 
-     * @return the old value for the attribute
+     * @return the old value for the attribute (possibly <code>null</code>)
      */
-    <T> T updateAttribute(AttributeSensor<T> sensor, T val);
+    <T> T setAttribute(AttributeSensor<T> sensor, T val);
     
     // ??? = policy which detects a group is too hot and want the entity to fire a TOO_HOT event
     

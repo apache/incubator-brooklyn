@@ -46,7 +46,7 @@ import brooklyn.management.internal.AbstractManagementContext
  * @author alex, aled
  */
 public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
-    private static final Logger log = LoggerFactory.getLogger(AbstractEntity.class)
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractEntity.class)
  
     String id = LanguageUtils.newUid()
     Map<String,Object> presentationAttributes = [:]
@@ -66,6 +66,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     /** map of sensors on this entity by name, populated at constructor time */
     private Map<String,Sensor> sensors = null
     
+    private transient EntityClass entityClass = null
     protected transient ExecutionContext execution
     protected transient SubscriptionContext subscription
     
@@ -73,7 +74,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
  
     /**
      * The sensor-attribute values of this entity. Updating this map should be done
-     * via getAttribute/updateAttribute; it will automatically emit an attribute-change event.
+     * via getAttribute/setAttribute; it will automatically emit an attribute-change event.
      */
     protected final AttributeMap attributesInternal = new AttributeMap(this)
     
@@ -98,6 +99,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     protected final Map<ConfigKey,Object> ownConfig = [:]
     protected final Map<ConfigKey,Object> inheritedConfig = [:]
 
+    
     public AbstractEntity(Entity owner) {
         this([:], owner)
     }
@@ -119,7 +121,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
             if (Effector.class.isAssignableFrom(f.getType())) {
                 Effector eff = f.get(this)
                 def overwritten = effectorsT.put(eff.name, eff)
-                if (overwritten!=null) log.warn("multiple definitions for effector ${eff.name} on $this; preferring $eff to $overwritten")
+                if (overwritten!=null) LOG.warn("multiple definitions for effector ${eff.name} on $this; preferring $eff to $overwritten")
             }
         }
         effectors = effectorsT
@@ -129,7 +131,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
             if (Sensor.class.isAssignableFrom(f.getType())) {
                 Sensor sens = f.get(this)
                 def overwritten = sensorsT.put(sens.name, sens)
-                if (overwritten!=null) log.warn("multiple definitions for sensor ${sens.name} on $this; preferring $sens to $overwritten")
+                if (overwritten!=null) LOG.warn("multiple definitions for sensor ${sens.name} on $this; preferring $sens to $overwritten")
             }
         }
         sensors = sensorsT
@@ -188,6 +190,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
      * Adds the given entity as a member of this group <em>and</em> this group as one of the groups of the child;
      * returns argument passed in, for convenience.
      */
+    @Override
     public Entity addOwnedChild(Entity child) {
         if (isAncestor(child)) throw new IllegalStateException("loop detected trying to add child $child to $this; it is already an ancestor")
         child.setOwner(this)
@@ -195,6 +198,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         child
     }
  
+    @Override
     public boolean removeOwnedChild(Entity child) {
         ownedChildren.remove child
         child.setOwner(null)
@@ -203,18 +207,22 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     /**
      * Adds this as a member of the given group, registers with application if necessary
      */
+    @Override
     public void addGroup(Group e) {
         groups.add e
         getApplication()
     }
  
+    @Override
     public Entity getOwner() { owner }
 
+    @Override
     public Collection<Group> getGroups() { groups }
 
     /**
      * Returns the application, looking it up if not yet known (registering if necessary)
      */
+    @Override
     public Application getApplication() {
         if (this.@application!=null) return this.@application;
         def app = owner?.getApplication()
@@ -225,10 +233,12 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         app
     }
 
+    @Override
     public String getApplicationId() {
         getApplication()?.id
     }
 
+    @Override
     public ManagementContext getManagementContext() {
         getApplication()?.getManagementContext()
     }
@@ -239,7 +249,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         app.registerEntity(this)
     }
 
-    private transient EntityClass entityClass = null
+    @Override
     public synchronized EntityClass getEntityClass() {
         if (!entityClass) {
             entityClass = new BasicEntityClass(getClass().getCanonicalName(), getSensors().values(), getEffectors().values())
@@ -248,6 +258,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         return entityClass
     }
 
+    @Override
     public Collection<Location> getLocations() {
         // TODO make result immutable, and use this.@locations when we want to update it?
         return locations;
@@ -261,12 +272,14 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         removeApplicationRegistrant()
     }
 
+    @Override
     public <T> T getAttribute(AttributeSensor<T> attribute) {
         attributesInternal.getValue(attribute);
     }
- 
-    public <T> T updateAttribute(AttributeSensor<T> attribute, T val) {
-        log.info "updating attribute {} as {}", attribute.name, val
+    
+    @Override
+    public <T> T setAttribute(AttributeSensor<T> attribute, T val) {
+        LOG.info "setting attribute {} to {}", attribute.name, val
         attributesInternal.update(attribute, val);
     }
 
@@ -320,7 +333,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         return result.asImmutable()
     }
 
-    /** @see Entity#subscribe(Entity, Sensor, EventListener) */
+    @Override
     public <T> long subscribe(Entity producer, Sensor<T> sensor, EventListener<T> listener) {
         subscriptionContext.getSubscriptionManager().subscribe this.id, producer.id, sensor.name, listener
     }
@@ -353,24 +366,18 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     
     // -------- POLICIES --------------------
     
-    /**
-     * @see EntityLocal.getPolicies()
-     */
+    @Override
     public Collection<Policy> getPolicies() {
         return policies.asImmutable()
     }
     
-    /**
-     * @see EntityLocal.addPolicy(Policy)
-     */
+    @Override
     public void addPolicy(Policy policy) {
         policies.add(policy)
         policy.setEntity(this)
     }
 
-    /**
-     * @see EntityLocal.removePolicy(Policy)
-     */
+    @Override
     boolean removePolicy(Policy policy) {
         return policies.remove(policy)
     }
@@ -378,7 +385,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 
     // -------- SENSORS --------------------
     
-    /** @see EntityLocal#emit(Sensor, Object) */
+    @Override
     public <T> void emit(Sensor<T> sensor, T val) {
         subscriptionContext?.publish(sensor.newEvent(this, val))
     }
@@ -388,6 +395,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
      * NB no work has been done supporting changing this after initialization; see note on {@link #getEffectors()}
      */
     public Map<String,Sensor<?>> getSensors() { sensors }
+    
     /** convenience for finding named sensor in {@link #getSensor()} map */
     public <T> Sensor<T> getSensor(String sensorName) { getSensors()[sensorName] }
 
@@ -401,8 +409,8 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
             this.@skipCustomInvokeMethod.set(true);
             
             //args should be an array, warn if we got here wrongly (extra defensive as args accepts it, but it shouldn't happen here)
-            if (args==null) log.warn("$this.$name invoked with incorrect args signature (null)", new Throwable("source of incorrect invocation of $this.$name"))
-            else if (!args.getClass().isArray()) log.warn("$this.$name invoked with incorrect args signature (non-array ${args.getClass()}): "+args, new Throwable("source of incorrect invocation of $this.$name"))
+            if (args==null) LOG.warn("$this.$name invoked with incorrect args signature (null)", new Throwable("source of incorrect invocation of $this.$name"))
+            else if (!args.getClass().isArray()) LOG.warn("$this.$name invoked with incorrect args signature (non-array ${args.getClass()}): "+args, new Throwable("source of incorrect invocation of $this.$name"))
             
             try {
                 Effector eff = getEffectors().get(name)

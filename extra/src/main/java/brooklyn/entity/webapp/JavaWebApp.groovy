@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.AttributeDictionary
-import brooklyn.entity.basic.ConfigKeyDictionary
+import brooklyn.entity.basic.ConfigKeys
 import brooklyn.entity.trait.Startable
 import brooklyn.event.AttributeSensor
 import brooklyn.event.adapter.AttributePoller
@@ -32,12 +32,12 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
     public static final Logger log = LoggerFactory.getLogger(JavaWebApp.class)
 
     public static final BasicConfigKey<String> WAR = [ String, "war", "Path of WAR file to deploy" ]
-    public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeyDictionary.SUGGESTED_VERSION;
-    public static final ConfigKey<String> SUGGESTED_INSTALL_DIR = ConfigKeyDictionary.SUGGESTED_INSTALL_DIR;
-    public static final ConfigKey<String> SUGGESTED_RUN_DIR = ConfigKeyDictionary.SUGGESTED_RUN_DIR;
-    public static final ConfigKey<Integer> SUGGESTED_HTTP_PORT = ConfigKeyDictionary.SUGGESTED_HTTP_PORT;
-    public static final ConfigKey<Integer> SUGGESTED_JMX_PORT = ConfigKeyDictionary.SUGGESTED_JMX_PORT;
-    public static final ConfigKey<String> SUGGESTED_JMX_HOST = ConfigKeyDictionary.SUGGESTED_JMX_HOST;
+    public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.SUGGESTED_VERSION;
+    public static final ConfigKey<String> SUGGESTED_INSTALL_DIR = ConfigKeys.SUGGESTED_INSTALL_DIR;
+    public static final ConfigKey<String> SUGGESTED_RUN_DIR = ConfigKeys.SUGGESTED_RUN_DIR;
+    public static final ConfigKey<Integer> SUGGESTED_HTTP_PORT = ConfigKeys.SUGGESTED_HTTP_PORT;
+    public static final ConfigKey<Integer> SUGGESTED_JMX_PORT = ConfigKeys.SUGGESTED_JMX_PORT;
+    public static final ConfigKey<String> SUGGESTED_JMX_HOST = ConfigKeys.SUGGESTED_JMX_HOST;
     
     public static final AttributeSensor<Integer> HTTP_PORT = AttributeDictionary.HTTP_PORT;
     public static final AttributeSensor<Integer> JMX_PORT = AttributeDictionary.JMX_PORT;
@@ -65,8 +65,8 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
         if (properties.jmxHost) setConfig(SUGGESTED_JMX_HOST, properties.remove("jmxHost"))
         
         // addEffector(Startable.START);
-        updateAttribute(NODE_UP, false)
-        updateAttribute(NODE_STATUS, "uninitialized")
+        setAttribute(NODE_UP, false)
+        setAttribute(NODE_STATUS, "uninitialized")
     }
 
     public abstract SshBasedJavaWebAppSetup getSshBasedSetup(SshMachineLocation loc);
@@ -110,7 +110,7 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
         locations.add(machine)
 
         SshBasedJavaWebAppSetup setup = getSshBasedSetup(machine)
-        updateAttribute(NODE_STATUS, "starting")
+        setAttribute(NODE_STATUS, "starting")
         setup.start()
         waitForEntityStart(setup)
     }
@@ -127,22 +127,22 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
             log.debug "checked $this, running result $isRunningResult"
         }
         if (!isRunningResult) {
-            updateAttribute(NODE_STATUS, "failed")
+            setAttribute(NODE_STATUS, "failed")
             throw new IllegalStateException("$this aborted soon after startup")
         }
-        updateAttribute(NODE_STATUS, "running")
+        setAttribute(NODE_STATUS, "running")
     }
 
     // FIXME: should MachineLocations below actually be SshMachineLocation? That's what XSshSetup requires, but not what the unit tests offer.
     public void shutdown() {
-        updateAttribute(NODE_STATUS, "stopping")
+        setAttribute(NODE_STATUS, "stopping")
         jmxAdapter.disconnect();
         shutdownInLocation(locations.find({ it instanceof MachineLocation }))
     }
     
     public void shutdownInLocation(MachineLocation loc) {
         getSshBasedSetup(loc).shutdown()
-        updateAttribute(NODE_STATUS, "stopped")
+        setAttribute(NODE_STATUS, "stopped")
     }
     
     public void deploy(String file) {

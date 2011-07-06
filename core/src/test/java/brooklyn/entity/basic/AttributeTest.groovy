@@ -13,7 +13,7 @@ public class AttributeTest {
     @Test
     public void canGetAndSetAttribute() {
         LocallyManagedEntity e = []
-        e.updateAttribute(COLOR, "red")
+        e.setAttribute(COLOR, "red")
         Assert.assertEquals(e.getAttribute(COLOR), "red")
     }
     

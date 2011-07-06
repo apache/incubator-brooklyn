@@ -41,9 +41,9 @@ public class TomcatSimulator {
             requestCount: 0,
             processingTime: 0
 
-        entity.updateAttribute(TomcatNode.HTTP_PORT, httpPort)
-        entity.updateAttribute(TomcatNode.JMX_HOST, jmxService.jmxHost)
-        entity.updateAttribute(TomcatNode.JMX_PORT, jmxService.jmxPort)
+        entity.setAttribute(TomcatNode.HTTP_PORT, httpPort)
+        entity.setAttribute(TomcatNode.JMX_HOST, jmxService.jmxHost)
+        entity.setAttribute(TomcatNode.JMX_PORT, jmxService.jmxPort)
     }
 
     public void shutdown() {

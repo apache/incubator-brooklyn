@@ -46,7 +46,7 @@ public class AttributePoller {
         Closure safeCalculate = {
             try {
                 T newValue = provider.compute()
-                entity.updateAttribute(sensor, newValue)
+                entity.setAttribute(sensor, newValue)
             } catch (Exception e) {
                 log.error "Error calculating value for sensor $sensor on entity $entity", e
             }
@@ -72,7 +72,7 @@ public class AttributePoller {
                 ValueProvider provider = e.getValue()
                 def newValue = provider.compute()
                 log.debug "update for attribute {} to {}", sensor.name, newValue
-                entity.updateAttribute(sensor, newValue)
+                entity.setAttribute(sensor, newValue)
             }
     }
     
@@ -81,6 +81,6 @@ public class AttributePoller {
         ValueProvider<?> provider = providers.get(sensor)
         def newValue = provider.compute()
         log.debug "update for attribute {} to {}", sensor.name, newValue
-        entity.updateAttribute(sensor, newValue)
+        entity.setAttribute(sensor, newValue)
     }
 }

@@ -128,7 +128,7 @@ class LocalEntitiesTest {
         assertEquals("Bob", son.getConfig(HelloEntity.MY_NAME))
         
         //attributes are not
-        a.updateAttribute(HelloEntity.FAVOURITE_NAME, "Carl")
+        a.setAttribute(HelloEntity.FAVOURITE_NAME, "Carl")
         assertEquals("Carl", a.getAttribute(HelloEntity.FAVOURITE_NAME))
         assertEquals(null, dad.getAttribute(HelloEntity.FAVOURITE_NAME))
         
@@ -152,7 +152,7 @@ class LocalEntitiesTest {
             assertEquals(null, sonsConfig[0]);
             for (Task tt in dad.getExecutionContext().getTasks()) { println "task at dad:  $tt, "+tt.getStatusDetail(false) }
             for (Task tt in son.getExecutionContext().getTasks()) { println "task at son:  $tt, "+tt.getStatusDetail(false) }
-            dad.updateAttribute(HelloEntity.FAVOURITE_NAME, "Dan");
+            dad.setAttribute(HelloEntity.FAVOURITE_NAME, "Dan");
             sonsConfig.wait(1000)
         }
         //shouldn't have blocked for very long at all
