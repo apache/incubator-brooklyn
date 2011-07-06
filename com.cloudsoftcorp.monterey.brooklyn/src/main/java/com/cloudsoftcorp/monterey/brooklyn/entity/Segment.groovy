@@ -39,7 +39,7 @@ public class Segment extends AbstractEntity {
     }
 
     public void updateTopology(SegmentSummary summary, NodeId mediator) {
-        updateAttribute MEDIATOR, mediator
+        setAttribute MEDIATOR, mediator
     }
 
     public void updateWorkrate(WorkrateReport report) {
@@ -48,7 +48,7 @@ public class Segment extends AbstractEntity {
             double msgCount = item.getReceivedRequestCount();
             double msgCountPerSec = (msgCount/report.getReportPeriodDuration())*1000;
             
-            updateAttribute WORKRATE_MSGS_PER_SEC, msgCountPerSec
+            setAttribute WORKRATE_MSGS_PER_SEC, msgCountPerSec
             if (LOG.isLoggable(Level.FINEST)) LOG.finest(String.format("(node=%s, msgCount=%s, duration=%s), ",report.getSourceNodeAddress(), msgCount, report.getReportPeriodDuration()));
         }
     }
