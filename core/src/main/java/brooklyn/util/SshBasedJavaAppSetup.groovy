@@ -58,7 +58,11 @@ public abstract class SshBasedJavaAppSetup {
     /** convenience to generate string -Dprop1=val1 -Dprop2=val2 for use with java */        
     public static String toJavaDefinesString(Map m) {
         StringBuffer sb = []
-        m.each { sb.append("-D"); sb.append(it.key); if (it.value!='') { sb.append('=\''); sb.append(it.value); sb.append('\' ') } else { sb.append(' ') } }
+        m.each { key, value ->
+	            sb.append("-D").append(key)
+	            if (value!='') { sb.append('=\'').append(value).append('\'') }
+	            sb.append(' ')
+	        }
         return sb.toString().trim()
         //TODO - try the following instead
         //return m.collect( { "-D"+it.key+(it.value?:"='"+it.value+"'"} ).join(" ")

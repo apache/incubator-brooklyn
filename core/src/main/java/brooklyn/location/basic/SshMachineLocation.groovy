@@ -36,9 +36,13 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public InetAddress getAddress() {
         return this.address;
     }
+ 
+    public int run(Map props=[:], String command, Map env=[:]) {
+        run(props, [ command ], env)
+    }
 
     /** convenience for running a script, returning the result code */
-    public int run(Map props=[:], String command) {
+    public int run(Map props=[:], List<String> commands, Map env=[:]) {
         assert address : "host must be specified for $this"
 
         if (!user) user=System.getProperty "user.name"
@@ -46,7 +50,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         sshArgs << sshConfig
         def t = new SshJschTool(sshArgs);
         t.connect()
-        int result = t.execShell props, command
+        int result = t.execShell props, commands, env
         t.disconnect()
         result
 

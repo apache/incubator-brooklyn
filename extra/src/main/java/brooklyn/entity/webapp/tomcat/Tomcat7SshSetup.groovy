@@ -172,7 +172,11 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
     public void shutdown() {
         log.debug "invoking shutdown script"
         //we use kill -9 rather than shutdown.sh because the latter is not 100% reliable
-        def result = machine.run(out: System.out, "cd $runDir && echo killing process `cat pid.txt` on `hostname` && kill -9 `cat pid.txt` && rm -f pid.txt ; exit")
+        def result = machine.run(out:System.out, [
+            "cd $runDir",
+            "echo killing process `cat pid.txt` on `hostname`",
+            "kill -9 `cat pid.txt`",
+            "rm -f pid.txt" ] )
         if (result) log.info "non-zero result code terminating {}: {}", entity, result
         log.debug "done invoking shutdown script"
         

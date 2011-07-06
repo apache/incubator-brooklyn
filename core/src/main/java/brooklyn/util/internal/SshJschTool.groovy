@@ -5,6 +5,9 @@ import java.io.IOException
 import java.io.InputStream
 import java.util.Map
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 import com.jcraft.jsch.Channel
 import com.jcraft.jsch.ChannelExec
 import com.jcraft.jsch.ChannelShell
@@ -14,7 +17,8 @@ import com.google.common.base.Preconditions
 
 /** class is a wrapper for jsch session, taken from their examples */
 public class SshJschTool {
-
+    private static final Logger log = LoggerFactory.getLogger(SshJschTool.class)
+ 
     String host
     String user = System.getProperty('user.name')
     int port = 22
@@ -117,12 +121,13 @@ public class SshJschTool {
         ChannelShell channel=session.openChannel("shell");
         lastChannel = channel
         if (properties.out) {
-//            channel.setOutputStream(properties.out, true)
+            channel.setOutputStream(properties.out, true)
         }
 
         StringBuffer sb = []
         env.each { key, value -> sb.append("export $key=\"$value\"").append('\n') }
         commands.each { sb.append(it).append('\n') }
+        sb.append("exit\n")
  
 
         channel.setInputStream new ByteArrayInputStream(sb.toString().getBytes("UTF-8"))
@@ -136,7 +141,6 @@ public class SshJschTool {
     }
 
     /** convenience for the last channel used, in case it is needed */
-
     public Channel lastChannel
     
     /**
@@ -161,11 +165,10 @@ public class SshJschTool {
             channel.setErrStream(properties.err, true)
         }
         String separator = properties.separator ?: "; "
-//        env.each { key, value -> channel.setEnv(key, value) }
         StringBuffer run = []
         env.each { key, value -> run.append("export $key=\"$value\"").append(separator) }
         commands.each { run.append(it).append(separator) }
-        println run.toString()
+        log.trace "Running command {}", run.toString()
         channel.setCommand  run.toString()
 
         channel.connect()
@@ -173,9 +176,7 @@ public class SshJschTool {
             block(channel)
         }
 
-        def exitStatus = channel.getExitStatus()
-        println exitStatus
-        return exitStatus
+        channel.getExitStatus()
     }
 
 

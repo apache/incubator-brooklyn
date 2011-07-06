@@ -94,7 +94,6 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
             "cd $serverProfile/conf/bindingservice.beans/META-INF/",
             "$installDir/bin/run.sh -Djboss.service.binding.set=$portGroupName -Djboss.server.base.dir=$runDir/server -Djboss.server.base.url=file://$runDir/server -c $serverProfile &",
             "sleep 30",
-			"exit",
         ]
         return script
     }
@@ -118,7 +117,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         def host = entity.getAttribute(AttributeDictionary.JMX_HOST)
         def port = entity.getAttribute(AttributeDictionary.JMX_PORT)
         List<String> script = [
-            "$installDir/bin/twiddle.sh --host $host --port $port get \"jboss.system:type=Server\" Started; exit"
+            "$installDir/bin/twiddle.sh --host $host --port $port get \"jboss.system:type=Server\" Started"
         ]
         return script
     }
@@ -150,6 +149,6 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     public void shutdown() {
         def host = entity.getAttribute(Attributes.JMX_HOST)
         def port = entity.getAttribute(Attributes.JMX_PORT)
-        machine.run("$installDir/bin/shutdown.sh --host=$host --port=$port -S; exit", out: System.out)
+        machine.run(out:System.out, "$installDir/bin/shutdown.sh --host=$host --port=$port -S")
     }
 }
