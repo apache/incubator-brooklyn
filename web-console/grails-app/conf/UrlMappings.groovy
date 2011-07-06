@@ -14,7 +14,7 @@ class UrlMappings {
 
         "/dynjs/$action"(controller: "javascript")
 
-        "/"(view:"/index")
+        "/"(view:"entity/index")
 
         "500"(view:'/error')
     }
