@@ -151,7 +151,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         }
         //make sure there is no loop
         if (this.equals(e)) throw new IllegalStateException("entity $this cannot own itself")
-        if (isDescendant(e)) throw new IllegalStateException("loop detected trying to set owner of $this as $e, which is already a decendent")
+        if (isDescendant(e)) throw new IllegalStateException("loop detected trying to set owner of $this as $e, which is already a descendant")
         
         owner = e
         ((AbstractEntity)e).addOwnedChild(this)
