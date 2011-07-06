@@ -109,7 +109,6 @@ public abstract class SshBasedJavaAppSetup {
         ]
         lines.each { script += it }
         script += "date > INSTALL_COMPLETION_DATE"
-        script += "exit"
         return script
     }
 

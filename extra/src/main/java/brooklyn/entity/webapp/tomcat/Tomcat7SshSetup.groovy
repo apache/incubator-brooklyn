@@ -100,7 +100,6 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
     public List<String> getRunScript() {
         List<String> script = [
 			"$installDir/bin/startup.sh",
-			"exit"
         ]
         return script
     }
@@ -122,7 +121,6 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
 			"(ps aux | grep '[t]'omcat | grep `cat pid.txt` > pid.list || echo \"no tomcat processes found\")",
 			"cat pid.list",
 			"if [ -z \"`cat pid.list`\" ] ; then echo process no longer running ; exit 1 ; fi",
-			"exit"
         ]
         return script
         //note grep can return exit code 1 if text not found, hence the || in the block above
@@ -142,7 +140,6 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
             "sed -i.bk s/8080/${tomcatHttpPort}/g conf/server.xml",
             "sed -i.bk s/8005/${tomcatShutdownPort}/g conf/server.xml",
             "sed -i.bk /8009/D conf/server.xml",
-			"exit"
         ]
         return script
     }
