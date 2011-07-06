@@ -17,14 +17,14 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     
     public SshMachineLocation(Map properties = [:]) {
         super(properties)
+        Map mutableProperties = properties as LinkedHashMap
+        Preconditions.checkArgument mutableProperties.containsKey('address'), "properties must contain an entry with key 'address'"
+        Preconditions.checkArgument mutableProperties.address instanceof InetAddress, "'address' value must be an InetAddress"
+        this.address = mutableProperties.remove('address')
 
-        Preconditions.checkArgument properties.containsKey('address'), "properties must contain an entry with key 'address'"
-        Preconditions.checkArgument properties.address instanceof InetAddress, "'address' value must be an InetAddress"
-        this.address = properties.remove('address')
-
-        if (properties.userName) {
-            Preconditions.checkArgument properties.userName instanceof String, "'userName' value must be a string"
-            this.user = properties.remove('userName')
+        if (mutableProperties.userName) {
+            Preconditions.checkArgument mutableProperties.userName instanceof String, "'userName' value must be a string"
+            this.user = mutableProperties.remove('userName')
         }
 
         if (properties.sshConfig) {
