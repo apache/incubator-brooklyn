@@ -99,15 +99,6 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
      */
     public List<String> getRunScript() {
         List<String> script = [
-			"mkdir -p $runDir",
-			"cd $runDir",
-			"mkdir conf",
-			"mkdir logs",
-			"mkdir webapps",
-			"cp $installDir/conf/{server,web}.xml conf/",
-			"sed -i.bk s/8080/${getTomcatHttpPort()}/g conf/server.xml",
-			"sed -i.bk s/8005/${getTomcatShutdownPort()}/g conf/server.xml",
-			"sed -i.bk /8009/D conf/server.xml",
 			"$installDir/bin/startup.sh",
 			"exit"
         ]
@@ -142,6 +133,15 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
         String to = runDir + "/" + "webapps"
         List<String> script = [
 			"cp $locOnServer $to",
+            "mkdir -p $runDir",
+            "cd $runDir",
+            "mkdir conf",
+            "mkdir logs",
+            "mkdir webapps",
+            "cp $installDir/conf/{server,web}.xml conf/",
+            "sed -i.bk s/8080/${tomcatHttpPort}/g conf/server.xml",
+            "sed -i.bk s/8005/${tomcatShutdownPort}/g conf/server.xml",
+            "sed -i.bk /8009/D conf/server.xml",
 			"exit"
         ]
         return script

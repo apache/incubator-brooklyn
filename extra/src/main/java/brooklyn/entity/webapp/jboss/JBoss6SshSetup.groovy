@@ -88,26 +88,13 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     }
 
     public List<String> getRunScript() {
-        // Notes:
-        // LAUNCH_JBOSS_IN_BACKGROUND relays OS signals sent to the run.sh process to the JBoss process.
-        // run.sh must be backgrounded otherwise the script will never return.
-        /* Configuring ports:
-           http://community.jboss.org/wiki/ConfiguringMultipleJBossInstancesOnOneMachine
-           http://community.jboss.org/wiki/ConfigurePorts
-           http://community.jboss.org/wiki/AS5ServiceBindingManager
-           .. changing port numbers with sed is pretty brittle.
-        */
         def portGroupName = "ports-brooklyn"
         
         List<String> script = [
-            "mkdir -p $runDir/server",
-            "cd $runDir/server",
-            "cp -r $installDir/server/$serverProfile $serverProfile",
             "cd $serverProfile/conf/bindingservice.beans/META-INF/",
-            "BJB=\"bindings-jboss-beans.xml\"",
-            "sed -i.bk 's/ports-03/$portGroupName/' \$BJB",
-            "sed -i.bk 's/\\<parameter\\>300\\<\\/parameter\\>/\\<parameter\\>$portIncrement\\<\\/parameter\\>/' \$BJB",
             "$installDir/bin/run.sh -Djboss.service.binding.set=$portGroupName -Djboss.server.base.dir=$runDir/server -Djboss.server.base.url=file://$runDir/server -c $serverProfile &",
+            "sleep 30",
+			"exit",
         ]
         return script
     }
@@ -136,7 +123,29 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         return script
     }
 
-    public List<String> getDeployScript(String locOnServer) { Collections.emptyList() }
+    public List<String> getDeployScript(String locOnServer) {
+        // Notes:
+        // LAUNCH_JBOSS_IN_BACKGROUND relays OS signals sent to the run.sh process to the JBoss process.
+        // run.sh must be backgrounded otherwise the script will never return.
+        /* Configuring ports:
+           http://community.jboss.org/wiki/ConfiguringMultipleJBossInstancesOnOneMachine
+           http://community.jboss.org/wiki/ConfigurePorts
+           http://community.jboss.org/wiki/AS5ServiceBindingManager
+           .. changing port numbers with sed is pretty brittle.
+        */
+        def portGroupName = "ports-brooklyn"
+        
+        List<String> script = [
+            "mkdir -p $runDir/server",
+            "cd $runDir/server",
+            "cp -r $installDir/server/$serverProfile $serverProfile",
+            "cd $serverProfile/conf/bindingservice.beans/META-INF/",
+            "BJB=\"bindings-jboss-beans.xml\"",
+            "sed -i.bk 's/ports-03/$portGroupName/' \$BJB",
+            "sed -i.bk 's/\\<parameter\\>300\\<\\/parameter\\>/\\<parameter\\>$portIncrement\\<\\/parameter\\>/' \$BJB",
+        ]
+        return script
+    }
 
     public void shutdown() {
         def host = entity.getAttribute(Attributes.JMX_HOST)
