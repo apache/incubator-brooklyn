@@ -34,7 +34,7 @@ public class BasicTaskStub implements TaskStub {
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof TaskStub)) return false;
+        if (!(obj in TaskStub)) return false;
         TaskStub other = (TaskStub) obj;
         if ((id == null) != (other.id == null)) return false;
         if (id != null && !id.equals(other.id)) return false;

@@ -114,7 +114,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
             }
             Entity suppliedOwner = flags.remove('owner') ?: owner
             Map<ConfigKey,Object> suppliedOwnConfig = flags.remove('config')
-
+        
             if (suppliedOwnConfig) ownConfig.putAll(suppliedOwnConfig)
         
             // initialize the effectors defined on the class
