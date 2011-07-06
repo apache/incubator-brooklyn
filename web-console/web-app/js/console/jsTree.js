@@ -6,7 +6,7 @@ Brooklyn.jsTree = (function(parent) {
                 "plugins" : [ "themes", "json_data", "ui" ],
                 "json_data" : {
                     "ajax" : {
-                        "url" : Brooklyn.urls.jsTree.loadJsTreeJson,
+                        "url" : "jstree",
                         "data" : function () {
                             return {
                                 //TODO Still need to link up UI component to corresponding parameters
