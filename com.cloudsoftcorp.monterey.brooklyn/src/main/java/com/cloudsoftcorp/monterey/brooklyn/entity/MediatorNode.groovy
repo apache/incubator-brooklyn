@@ -20,7 +20,7 @@ public class MediatorNode extends AbstractMontereyNode {
     public static final BasicAttributeSensor<Integer> WORKRATE_MSGS_PER_SEC = [ Double, "monterey.workrate.msgsPerSec", "Messages per sec" ]
     
     MediatorNode(MontereyNetworkConnectionDetails connectionDetails, NodeId nodeId, Location location) {
-        super(connectionDetails, nodeId, Dmn1NodeType.M);
+        super(connectionDetails, nodeId, Dmn1NodeType.M, location);
     }
     
     @Override

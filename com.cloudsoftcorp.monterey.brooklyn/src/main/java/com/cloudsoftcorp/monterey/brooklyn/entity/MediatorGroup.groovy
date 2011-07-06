@@ -27,15 +27,18 @@ public class MediatorGroup extends DynamicGroup implements Balanceable {
     MediatorGroup(MontereyNetworkConnectionDetails connectionDetails, Location loc) {
         this.connectionDetails = connectionDetails;
         this.loc = loc;
-
+        this.locations.add(loc);
+        
         ClassLoadingContext classloadingContext = ClassLoadingContext.Defaults.getDefaultClassLoadingContext();
         GsonSerializer gsonSerializer = new GsonSerializer(classloadingContext);
         gson = gsonSerializer.getGson();
 
-        setEntityFilter { Entity e -> e instanceof MediatorNode && e.locations.equals(Collections.singleton(loc)) }
+        setEntityFilter { 
+            Entity e -> e instanceof MediatorNode && e.locations.contains(loc)
+        }
     }
 
-    private void moveSegment(String segmentId, MediatorNode destination) {
+    public void moveSegment(String segmentId, MediatorNode destination) {
         Dmn1PlumberInternalAsync plumber = new PlumberWebProxy(connectionDetails.getManagementUrl(), gson, connectionDetails.getWebApiAdminCredential());
         plumber.migrateSegment(segmentId, destination.getNodeId());
     }

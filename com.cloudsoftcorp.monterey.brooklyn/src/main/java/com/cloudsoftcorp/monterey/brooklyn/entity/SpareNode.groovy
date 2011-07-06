@@ -9,7 +9,7 @@ import com.cloudsoftcorp.monterey.node.api.NodeId
 public class SpareNode extends AbstractMontereyNode {
 
     SpareNode(MontereyNetworkConnectionDetails connectionDetails, NodeId nodeId, Location location) {
-        super(connectionDetails, nodeId, Dmn1NodeType.SPARE);
+        super(connectionDetails, nodeId, Dmn1NodeType.SPARE, location);
     }
     
     @Override

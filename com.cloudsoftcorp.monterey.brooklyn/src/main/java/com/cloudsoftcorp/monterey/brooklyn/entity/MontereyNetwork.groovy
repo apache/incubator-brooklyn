@@ -27,7 +27,6 @@ import com.cloudsoftcorp.monterey.clouds.dto.CloudEnvironmentDto
 import com.cloudsoftcorp.monterey.control.api.SegmentSummary
 import com.cloudsoftcorp.monterey.control.workrate.api.WorkrateReport
 import com.cloudsoftcorp.monterey.location.api.MontereyActiveLocation
-import com.cloudsoftcorp.monterey.location.api.MontereyLocation
 import com.cloudsoftcorp.monterey.network.control.api.Dmn1NetworkInfo
 import com.cloudsoftcorp.monterey.network.control.api.NodeSummary
 import com.cloudsoftcorp.monterey.network.control.plane.GsonSerializer
@@ -48,6 +47,7 @@ import com.cloudsoftcorp.util.proc.ProcessExecutionFailureException
 import com.cloudsoftcorp.util.web.client.CredentialsConfig
 import com.cloudsoftcorp.util.web.server.WebConfig
 import com.cloudsoftcorp.util.web.server.WebServer
+import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.ImmutableMap
 import com.google.gson.Gson
 
@@ -141,6 +141,11 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     
     public Map<String,Segment> getSegments() {
         return ImmutableMap.copyOf(this.@segments);
+    }
+
+    @VisibleForTesting    
+    LocationRegistry getLocationRegistry() {
+        return locationRegistry;
     }
 
     public void start(Collection<? extends Location> locs) {
@@ -327,6 +332,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         Dmn1NetworkInfo networkInfo = new Dmn1NetworkInfoWebProxy(connectionDetails.getManagementUrl(), gson, connectionDetails.getWebApiAdminCredential());
         Map<NodeId, NodeSummary> nodeSummaries = networkInfo.getNodeSummaries();
         Map<String, SegmentSummary> segmentSummaries = networkInfo.getSegmentSummaries();
+        Map<String, NodeId> segmentAllocations = networkInfo.getSegmentAllocations();
         Collection<MontereyActiveLocation> montereyLocations = networkInfo.getActiveLocations();
         Collection<Location> locations = montereyLocations.collect { locationRegistry.getConvertedLocation(it) }
         
@@ -358,7 +364,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         removedNodes.addAll(nodes.keySet()); removedNodes.removeAll(nodeSummaries.keySet());
 
         newNodes.each {
-            MontereyLocation montereyLocation = nodeSummaries.get(it).getMontereyLocation();
+            MontereyActiveLocation montereyLocation = nodeSummaries.get(it).getMontereyActiveLocation();
             Location location = locationRegistry.getConvertedLocation(montereyLocation);
             MontereyContainerNode containerNode = new MontereyContainerNode(connectionDetails, it, location);
             addOwnedChild(containerNode);
@@ -394,6 +400,14 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
             }
         }
 
+        // Notify segments of their mediator
+        segments.values().each {
+            String segmentId = it.segmentId()
+            SegmentSummary summary = segmentSummaries.get(segmentId);
+            NodeId mediator = segmentAllocations.get(segmentId);
+            it.updateTopology(summary, mediator);  
+        }
+        
         // Notify "container nodes" (i.e. BasicNode in monterey classes jargon) of what node-types are running there
         nodeSummaries.values().each {
             nodes.get(it.getNodeId())?.updateContents(it);

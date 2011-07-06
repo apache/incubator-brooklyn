@@ -9,7 +9,7 @@ import com.cloudsoftcorp.monterey.node.api.NodeId
 public class TpNode extends AbstractMontereyNode {
 
     TpNode(MontereyNetworkConnectionDetails connectionDetails, NodeId nodeId, Location location) {
-        super(connectionDetails, nodeId, Dmn1NodeType.TP);
+        super(connectionDetails, nodeId, Dmn1NodeType.TP, location);
     }
     
     @Override

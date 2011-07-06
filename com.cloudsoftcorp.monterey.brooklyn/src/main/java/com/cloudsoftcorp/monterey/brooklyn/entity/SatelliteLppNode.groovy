@@ -9,7 +9,7 @@ import com.cloudsoftcorp.monterey.node.api.NodeId
 public class SatelliteLppNode extends AbstractMontereyNode {
 
     SatelliteLppNode(MontereyNetworkConnectionDetails connectionDetails, NodeId nodeId, Location location) {
-        super(connectionDetails, nodeId, Dmn1NodeType.SATELLITE_BOT);
+        super(connectionDetails, nodeId, Dmn1NodeType.SATELLITE_BOT, location);
     }
     
     @Override

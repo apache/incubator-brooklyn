@@ -18,6 +18,11 @@
     </properties>
 
     <dependencies>
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+		</dependency>
+		
         <dependency>
             <groupId>brooklyn</groupId>
             <artifactId>brooklyn-extra</artifactId>

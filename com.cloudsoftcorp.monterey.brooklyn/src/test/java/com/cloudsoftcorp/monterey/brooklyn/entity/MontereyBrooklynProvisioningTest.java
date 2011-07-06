@@ -7,6 +7,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -24,6 +25,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
@@ -108,7 +110,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
     private AbstractApplication app;
     private MontereyNetwork montereyNetwork;
     private UserCredentialsConfig adminCredential = new UserCredentialsConfig("myname", "mypass", HTTP_AUTH.ADMIN_ROLE);
-    private ScheduledExecutorService worloadExecutor = Executors.newScheduledThreadPool(10);
+    private ScheduledExecutorService workloadExecutor = Executors.newScheduledThreadPool(10);
     
     private ClassLoadingContext originalClassLoadingContext;
 
@@ -121,7 +123,9 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         GsonSerializer gsonSerializer = new GsonSerializer(classLoadingContext);
         gson = gsonSerializer.getGson();
 
-        localhost = new SshMachineLocation(InetAddress.getByName(SSH_HOST_NAME), SSH_USERNAME);
+        localhost = new SshMachineLocation(ImmutableMap.builder()
+                .put("address", InetAddress.getByName(SSH_HOST_NAME))
+                .put("userName", SSH_USERNAME).build());
 
         app = new SimpleApp();
         montereyNetwork = new MontereyNetwork();
@@ -135,8 +139,8 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
     @After
     public void tearDown() throws Exception {
         try {
-            worloadExecutor.shutdownNow();
-            if (montereyNetwork != null) montereyNetwork .stop();
+            workloadExecutor.shutdownNow();
+            if (montereyNetwork != null) montereyNetwork.stop();
         } finally {
             if (originalClassLoadingContext != null) {
                 ClassLoadingContext.Defaults.setDefaultClassLoadingContext(originalClassLoadingContext);
@@ -236,7 +240,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         boolean first = true;
         for (MontereyActiveLocation loc : networkInfo.getActiveLocations()) {
             CloudProviderAccountAndLocationId locId = LocationUtils.toAccountAndLocationId(loc);
-            provisioningMoreFutures.put(loc, provisioner.createNodesAt(1, locId));
+            provisioningMoreFutures.put(loc, provisioner.createNodesAt(2, locId));
             if (first) {
                 provisioningFuture = provisioner.createNodesAt(3, locId);
                 first = false;
@@ -260,8 +264,27 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         // Check that the mediator groups exist
         assertBrooklynEventuallyHasMediatorGroups(provisionedMoreNodes);
         
-        // Pick a group, and try moving a segment
-        throw new UnsupportedOperationException();
+        // Pick a group; allocate a segment there; try to move the segment
+        MediatorGroup mediatorGroup = montereyNetwork.getMediatorGroups().values().iterator().next();
+        MediatorNode mediator1 = (MediatorNode) getAt(mediatorGroup.getMembers(), 0);
+        MediatorNode mediator2 = (MediatorNode) getAt(mediatorGroup.getMembers(), 1);
+        
+        plumber.addSegments(Collections.singleton(SegmentSummary.Factory.newInstance("a"))).get(TIMEOUT, TimeUnit.MILLISECONDS);
+        plumber.migrateSegment("a", mediator1.getNodeId()).get(TIMEOUT, TimeUnit.MILLISECONDS);
+        
+        mediatorGroup.moveSegment("a", mediator2);
+        
+        assertMontereyEventuallyHasSegmentAllocation(Collections.singletonMap("a", mediator2.getNodeId()));
+        assertBrooklynEventuallyHasSegmentAllocation(Collections.singletonMap("a", mediator2));
+    }
+    
+    private static <T> T getAt(Collection<T> col, int index) {
+        int i = 0;
+        for (T val : col) {
+            if (i == index) return val;
+            i++;
+        }
+        throw new IndexOutOfBoundsException("index "+index+" out of range for collection of size "+col.size()+"; col="+col);
     }
     
     @Test
@@ -277,7 +300,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         // Create 1 node
         MontereyActiveLocation aMontereyLocation = networkInfo.getActiveLocations().iterator().next();
         CloudProviderAccountAndLocationId aMontereLocationId = LocationUtils.toAccountAndLocationId(aMontereyLocation);
-        DmnFuture<Collection<NodeId>> provisioningFuture = provisioner.createNodesAt(4, aMontereLocationId);
+        DmnFuture<Collection<NodeId>> provisioningFuture = provisioner.createNodesAt(1, aMontereLocationId);
         Collection<NodeId> provisionedNodes = provisioningFuture.get(TIMEOUT, TimeUnit.MILLISECONDS);
         NodeId provisionedNode = provisionedNodes.iterator().next();
         
@@ -374,7 +397,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         final HelloCloudServiceLocator serviceLocator = newHelloCloudServiceLocator();
         long period = (long)(1000/msgsPerSec);
         final AtomicInteger i = new AtomicInteger();
-        return worloadExecutor.scheduleAtFixedRate(
+        return workloadExecutor.scheduleAtFixedRate(
                 new Runnable() {
                     @Override public void run() {
                         serviceLocator.getService(segment).hello(""+i.incrementAndGet());
@@ -469,6 +492,31 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
             }}, TIMEOUT);
     }
     
+    private void assertMontereyEventuallyHasSegmentAllocation(final Map<String,NodeId> expected) throws Throwable {
+        final Dmn1NetworkInfoWebProxy networkInfo = newMontereyNetworkInfo();
+        assertSuccessWithin(new Callable<Object>() {
+            public Object call() throws Exception {
+                Map<String,NodeId> actual = networkInfo.getSegmentAllocations();
+                Assert.assertEquals(expected, actual);
+                return null;
+            }}, TIMEOUT);
+    }
+    
+    private void assertBrooklynEventuallyHasSegmentAllocation(final Map<String,MediatorNode> expected) throws Throwable {
+        assertSuccessWithin(new Callable<Object>() {
+            public Object call() throws Exception {
+                Map<String, Segment> actualSegments = montereyNetwork.getSegments();
+                Assert.assertEquals(expected.keySet(), actualSegments.keySet());
+                for (Map.Entry<String, Segment> entry : actualSegments.entrySet()) {
+                    String segment = entry.getKey();
+                    NodeId expectedMediator = expected.get(segment).getNodeId();
+                    NodeId actualMediator = entry.getValue().getAttribute(Segment.MEDIATOR);
+                    Assert.assertEquals("segment="+segment, expectedMediator, actualMediator);
+                }
+                return null;
+            }}, TIMEOUT);
+    }
+    
     private int countNodesOfType(Collection<NodeSummary> nodes, Dmn1NodeType type) {
         int result = 0;
         for (NodeSummary node : nodes) {
@@ -514,14 +562,25 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
             }}, TIMEOUT);
     }
 
-    private void assertBrooklynEventuallyHasMediatorGroups(final Map<MontereyActiveLocation,Collection<NodeId>> expected) throws Throwable {
+    private void assertBrooklynEventuallyHasMediatorGroups(final Map<MontereyActiveLocation,Collection<NodeId>> rawExpected) throws Throwable {
+        final Map<Location,Collection<NodeId>> expected = new LinkedHashMap<Location,Collection<NodeId>>();
+        for (Map.Entry<MontereyActiveLocation,Collection<NodeId>> entry : rawExpected.entrySet()) {
+            Location loc = montereyNetwork.getLocationRegistry().getConvertedLocation(entry.getKey());
+            expected.put(loc, entry.getValue());
+        }
+        
         assertSuccessWithin(new Callable<Object>() {
             public Object call() throws Exception {
                 Map<Location, MediatorGroup> actual = montereyNetwork.getMediatorGroups();
-                Assert.assertEquals(expected.size(), actual.size());
-                for (Map.Entry<MontereyActiveLocation,Collection<NodeId>> entry : expected.entrySet()) {
-                    // FIXME figure out which actual group it corresponds to...
-                    throw new UnsupportedOperationException();
+                Assert.assertEquals(expected.keySet(), actual.keySet());
+                for (Location loc : expected.keySet()) {
+                    MediatorGroup mediatorGroup = actual.get(loc);
+                    Collection<NodeId> actualNodeIds = new ArrayList<NodeId>();
+                    for (Entity actualMediator : mediatorGroup.getMembers()) {
+                        actualNodeIds.add(((MediatorNode)actualMediator).getNodeId());
+                    }
+                    Collection<NodeId> expectedNodeIds = expected.get(loc);
+                    Assert.assertEquals("loc="+loc, new HashSet<NodeId>(expectedNodeIds), new HashSet<NodeId>(actualNodeIds));
                 }
                 return null;
             }}, TIMEOUT);

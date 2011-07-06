@@ -2,6 +2,7 @@ package com.cloudsoftcorp.monterey.brooklyn.entity
 
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.location.Location
 
 import com.cloudsoftcorp.monterey.control.workrate.api.WorkrateReport
 import com.cloudsoftcorp.monterey.network.control.api.Dmn1NodeType
@@ -26,10 +27,11 @@ abstract class AbstractMontereyNode extends AbstractEntity {
     private final NodeId nodeId;
     private final Dmn1NodeType nodeType;
     
-    AbstractMontereyNode(MontereyNetworkConnectionDetails connectionDetails, NodeId nodeId, Dmn1NodeType nodeType) {
+    AbstractMontereyNode(MontereyNetworkConnectionDetails connectionDetails, NodeId nodeId, Dmn1NodeType nodeType, Location loc) {
         this.connectionDetails = connectionDetails;
         this.nodeId = nodeId;
         this.nodeType = nodeType;
+        locations.add(loc);
     }
     
     public NodeId getNodeId() {

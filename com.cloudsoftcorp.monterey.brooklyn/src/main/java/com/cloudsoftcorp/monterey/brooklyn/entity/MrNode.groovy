@@ -9,7 +9,7 @@ import com.cloudsoftcorp.monterey.node.api.NodeId
 public class MrNode extends AbstractMontereyNode {
 
     MrNode(MontereyNetworkConnectionDetails connectionDetails, NodeId nodeId, Location location) {
-        super(connectionDetails, nodeId, Dmn1NodeType.MR);
+        super(connectionDetails, nodeId, Dmn1NodeType.MR, location);
     }
     
     @Override

@@ -43,6 +43,7 @@ public class MontereyContainerNode extends AbstractGroup {
         this.connectionDetails = connectionDetails;
         this.nodeId = nodeId;
         this.location = location;
+        this.locations.add(location);
         
         ClassLoadingContext classloadingContext = ClassLoadingContext.Defaults.getDefaultClassLoadingContext();
         GsonSerializer gsonSerializer = new GsonSerializer(classloadingContext);

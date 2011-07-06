@@ -9,7 +9,7 @@ import com.cloudsoftcorp.monterey.node.api.NodeId
 public class LppNode extends AbstractMontereyNode {
 
     LppNode(MontereyNetworkConnectionDetails connectionDetails, NodeId nodeId, Location location) {
-        super(connectionDetails, nodeId, Dmn1NodeType.LPP);
+        super(connectionDetails, nodeId, Dmn1NodeType.LPP, location);
     }
     
     @Override

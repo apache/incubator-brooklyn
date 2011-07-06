@@ -5,12 +5,12 @@ import java.util.logging.Logger
 
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.location.Location;
 
+import com.cloudsoftcorp.monterey.control.api.SegmentSummary
 import com.cloudsoftcorp.monterey.control.workrate.api.WorkrateReport
 import com.cloudsoftcorp.monterey.network.m.MediationWorkrateItem.MediationWorkrateItemNames
 import com.cloudsoftcorp.monterey.network.m.MediationWorkrateItem.SegmentWorkrateItem
-import com.cloudsoftcorp.monterey.node.api.NodeId;
+import com.cloudsoftcorp.monterey.node.api.NodeId
 import com.cloudsoftcorp.util.Loggers
 
 public class Segment extends AbstractEntity {
@@ -22,6 +22,7 @@ public class Segment extends AbstractEntity {
 
     // TODO Share constant for all nodes plus segment?
     public static final BasicAttributeSensor<Integer> WORKRATE_MSGS_PER_SEC = [ Double, "monterey.workrate.msgsPerSec", "Messages per sec" ]
+    public static final BasicAttributeSensor<NodeId> MEDIATOR = [ NodeId, "monterey.segment.mediator", "Mediator that contains this segment" ]
     
     private final MontereyNetworkConnectionDetails connectionDetails;
     private final String segmentId;
@@ -35,6 +36,10 @@ public class Segment extends AbstractEntity {
     
     public String segmentId() {
         return segmentId;
+    }
+
+    public void updateTopology(SegmentSummary summary, NodeId mediator) {
+        updateAttribute MEDIATOR, mediator
     }
 
     public void updateWorkrate(WorkrateReport report) {
