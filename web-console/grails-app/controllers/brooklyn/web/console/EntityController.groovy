@@ -25,7 +25,13 @@ class EntityController {
     }
 
     def effectors = {
-        EntitySummary summary = getEntityMatchingId(params.id);
+        String id = params.id
+        if (! id) {
+            render(status: 400, text: '{message: "You must provide an entity id"}')
+            return
+        }
+
+        EntitySummary summary = getEntityMatchingId(id);
         if (summary) {
             render summary.effectors as JSON
         } else {
@@ -40,16 +46,14 @@ class EntityController {
             return
         }
 
-        Collection<Entity> entities = entityService.getEntitiesMatchingCriteria(null, id, null)
-        if (entities.size() == 0) {
+        EntitySummary summary = getEntityMatchingId(id);
+        if (!summary) {
             // log maybe
             render(status: 404, text: '{message: "Entity with specified id does not exist"}')
             return
         }
 
-        EntitySummary entitySummary = toEntitySummaries(entities).toArray()[0]
-
-        render (entitySummary.sensors as JSON)
+        render (summary.sensors as JSON)
     }
 
     def jstree = {
