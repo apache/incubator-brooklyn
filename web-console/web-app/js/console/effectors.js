@@ -1,39 +1,43 @@
-Brooklyn.effectors = (function(parent) {
+Brooklyn.effectors = (function() {
 
-    function _getEffectors(e, entity_id, fn) {
-        $.ajax({
-            url: Brooklyn.urls.effectors.getEffectors,
-            data: "id="+entity_id,
-            success: function(result){
-                fn(result)
-            }
-        });
-    }
-
-    function updateEffectorsList(e, entity_id){
+    function updateEffectorsList(json) {
         $('#effectorList').find('option').remove().end()
-        var effectors = _getEffectors(e, entity_id, function(result){
-            for(i=0;i<result.length;i++){
-                var option = document.createElement("option");
-                option.text = result[i].name;
-                option.onclick = Brooklyn.effectors.updateParameters;
-                $('#effectorList').get(0)[$('#effectorList option').length] = option;
-            }
-        });
+
+        for (name in json) {
+            option = document.createElement("option");
+            option.text = name;
+            option.value = name;
+            $('#effectorList').get(0)[$('#effectorList option').length] = option;
+        }
+
+        $('#effectorList').change(updateParameters);
+
+        updateParameters();
     }
 
     function updateParameters(){
         //TODO update parameter panel
-        console.log("Updated Parameters")
+        if ($('#effectorList option:selected').length == 0) {
+            $('#effector-input1-label').html("Nothing!");
+        } else {
+            var option = $('#effectorList option:selected')[0];
+            $('#effector-input1-label').html("GOT " + option.text);
+        }
     }
 
-    return {
-        updateEffectorsList: updateEffectorsList,
-        updateParameters: updateParameters
-    };
+    function updateList(e, entity_id) {
+        if (typeof entity_id === 'undefined') {
+            return;
+        }
+        // TODO: Handle failure
+        $.getJSON("effectors?id=" + entity_id, updateEffectorsList);
+    }
 
-}(Brooklyn || {}));
+    function init() {
+        $(Brooklyn.eventBus).bind("entity_selected", updateList);
+    }
 
-$(document).ready(function(){
-    $(Brooklyn.eventBus).bind("entity_selected", Brooklyn.effectors.updateEffectorsList);
-});
+    return {init: init};
+})();
+
+$(document).ready(Brooklyn.effectors.init);

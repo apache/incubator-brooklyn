@@ -3,13 +3,13 @@ Brooklyn.sensors = (function() {
 
     /* Fetch sensor readings for an entity and show them in an html table. */
     function drawSensorData(json) {
-        var table = "<table> <thead> <tr> <th>Sensor</th> <th>Value</th> </tr> </thead>\n";
+        var table = "<table><thead><tr><th>Sensor</th><th>Description</th><th>Value</th></tr></thead>\n";
         table += "<tbody>\n";
 
         for (name in json) {
-            var line = "<tr> <td> " + name + " </td> <td> " + json[name] + "</td> </tr>\n";
-            table += line;
+            table += "<tr> <td> " + name + " </td> <td>" + json[name].sensor.description + " </td> <td>" + json[name].value + "</td> </tr>\n";
         }
+
         table += "</tbody></table>";
 
         $("#sensor-data").html(table);
@@ -18,19 +18,15 @@ Brooklyn.sensors = (function() {
     /* Make a GET request for sensor data for an entity of the given id. Then call
      * drawSensorData on the returned json.
      */
-    function getAndDrawSensorData(entity_id) {
-        var baseUrl = "sensors";
-
-        var url = baseUrl + "?id=" + entity_id;
+    function getAndDrawSensorData(id) {
         // TODO: Handle failure
-        $.getJSON(url, drawSensorData);
+        $.getJSON("sensors?id=" + entity_id, drawSensorData);
     }
 
     function update() {
         if (typeof entity_id === 'undefined') {
             return;
         }
-
         getAndDrawSensorData(entity_id);
     }
 
@@ -44,7 +40,7 @@ Brooklyn.sensors = (function() {
 
     function init() {
         $(Brooklyn.eventBus).bind("entity_selected", setEntityIdAndUpdate);
-        $(Brooklyn.eventBus).bind("update", update);
+        $(Brooklyn.eventBus).bind("update", getAndDrawSensorData);
     }
 
     return {init: init};

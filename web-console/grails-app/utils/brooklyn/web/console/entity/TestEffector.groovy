@@ -1,8 +1,9 @@
 package brooklyn.web.console.entity
 
+import brooklyn.entity.Entity
 import brooklyn.entity.ParameterType
 import brooklyn.entity.basic.AbstractEffector
-import brooklyn.entity.Entity
+import javax.naming.OperationNotSupportedException
 
 public class TestEffector extends AbstractEffector{
 
@@ -12,6 +13,6 @@ public class TestEffector extends AbstractEffector{
 
     @Override
     Object call(Entity entity, Map parameters) {
-        return null  //To change body of implemented methods use File | Settings | File Templates.
+        throw new OperationNotSupportedException("Please refrain from pressing that button")
     }
 }

@@ -5,8 +5,8 @@ import grails.plugins.springsecurity.Secured
 
 import brooklyn.entity.Entity
 import brooklyn.web.console.entity.EntitySummary
-import brooklyn.web.console.entity.JsTreeNodeImpl
-import brooklyn.entity.Effector
+
+import brooklyn.web.console.entity.JsTreeNode
 
 @Secured(['ROLE_ADMIN'])
 class EntityController {
@@ -25,28 +25,28 @@ class EntityController {
     }
 
     def effectors = {
-        Collection<Effector> effectors = new ArrayList<Effector>()
-        Entity entity = getEntityMatchingId(params.id)
-
-        entity.effectors.each {
-            effector ->
-            effectors.add(effector.value)
+        EntitySummary summary = getEntityMatchingId(params.id);
+        if (summary) {
+            render summary.effectors as JSON
+        } else {
+            render(status: 404, text: '{message: "Entity with specified id does not exist"}')
         }
-
-        render effectors as JSON
     }
 
     def sensors = {
-        Entity entity = getEntityMatchingId(params.id)
-        render entity.sensorReadings as JSON
+        EntitySummary summary = getEntityMatchingId(params.id);
+        if (summary) {
+            render summary.sensors as JSON
+        } else {
+            render(status: 404, text: '{message: "Entity with specified id does not exist"}')
+        }
     }
 
     def jstree = {
-        Map<String, JsTreeNodeImpl> nodeMap = [:]
+        Map<String, JsTreeNode> nodeMap = [:]
         Collection<Entity> entities = entityService.getAllEntities()
-        JsTreeNodeImpl root = new JsTreeNodeImpl("root", ".", "root", true)
 
-        entities.each { nodeMap.put(it.id, new JsTreeNodeImpl(it, true)) }
+        entities.each { nodeMap.put(it.id, new JsTreeNode(it, true)) }
 
         entities.each {
             entity ->
@@ -55,31 +55,29 @@ class EntityController {
             }
         }
 
-        // TODO Place matches at the root of our tree view (iff an ancestor isn't already present)
+        List<JsTreeNode> roots = []
         Collection<Entity> matches = entityService.getEntitiesMatchingCriteria(params.name, params.id, params.applicationId);
         matches.each { match ->
             if (!entityService.isChildOf(match, matches)) {
-                root.children.add(nodeMap[match.id])
+                roots.add(nodeMap[match.id])
             }
         }
 
-        render(root as JSON)
+        render([roots] as JSON)
     }
 
     private Set<EntitySummary> toEntitySummaries(Collection<Entity> entities) {
         entities.collect {  new EntitySummary(it) }
     }
 
-    private Entity getEntityMatchingId(String id){
-        Collection<Entity> entities = entityService.getEntitiesMatchingCriteria(null, id, null)
+    private EntitySummary getEntityMatchingId(String id) {
+        Set<EntitySummary> entities = toEntitySummaries(entityService.getEntitiesMatchingCriteria(null, id, null))
 
-        if (! id) {
-            render(status: 400, text: '{message: "You must provide an entity id"}')
+        if (!id) {
             return null;
         }
 
         if (entities.size() == 0) {
-            render(status: 404, text: '{message: "Entity with specified id does not exist"}')
             return null;
         }
 
