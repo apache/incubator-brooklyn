@@ -7,7 +7,7 @@ html,body{
 body{
     font-family:"lucida grande",tahoma,verdana,arial,sans-serif;
     font-size:11px;
-    width: 100%;
+    width: 980px;
     height: 100%;
 }
 
@@ -17,19 +17,19 @@ body{
     position:absolute;
     top:0;
     background:#c0c0c0;
-    height:125px;
     border-width:medium;
     border-bottom:solid;
-    width: 100%;
+    height:75px;
+    width: 980px;
 }
 
 .layout-middle-content{
     position:absolute;
-    top:125px;
+    top:78px;
     clear: both;
     bottom:2.3em;
     overflow:hidden;
-    width: 100%;
+    width: 980px;
 }
 
 .layout-footer{
@@ -40,7 +40,7 @@ body{
     border-width:medium;
     border-top:solid;
     clear: both;
-    width: 100%;
+    width: 980px;
 }
 
 .layout-left-column{
@@ -49,20 +49,23 @@ body{
     border-width:medium;
     height:100%;
     padding: 0;
-    width: 12%;
+    width: 220px;
 }
 
 .layout-main-content{
     background-color:white;
-    float: left;
+    float: right;
+    clear: right;
     overflow: hidden;
-    margin: 5px;
-    width: 87%;
+    padding: 5px;
+    width: 745px;
 }
 
 #searchBox{
-    padding-left: 2px;
-    padding: 10px;
+    margin-bottom: 3px;
+    padding: 5px;
+    padding-right: 8px;
+    height:5%;
 }
 
 #searchInput{
@@ -75,14 +78,14 @@ body{
 div#demo1{
     overflow:auto;
     height:90%;
+    padding:3px;
     margin-bottom:3px;
 }
 
 .tab-content-left-column {
     clear: left;
     float: left;
-    min-width: 300px;
-    width: 48%;
+    width: 300px;
     height:100%;
     border:1px solid #CCCCCC;
 }
@@ -93,13 +96,15 @@ div#demo1{
     width: 300px;
     height:100%;
     border:1px solid #CCCCCC;
-    padding: 5px;
+}
+
+.tab-content-buttons{
+     border:1px solid #CCCCCC;
 }
 
 h1#brooklyn-header{
     height:100%;
-    width: 100%;
-    background-repeat: no-repeat;
+    width:175px;
     background-image:url("../../images/brooklyn/brooklynbannerone.png");
 }
 
