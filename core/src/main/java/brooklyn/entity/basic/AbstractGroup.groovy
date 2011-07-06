@@ -1,5 +1,6 @@
 package brooklyn.entity.basic
 
+import java.util.Collection;
 import java.util.Map
 import java.util.concurrent.CopyOnWriteArraySet
 
@@ -25,5 +26,10 @@ public abstract class AbstractGroup extends AbstractEntity implements Group {
  
     public boolean removeMember(Entity child) {
         members.remove child
+    }
+    
+    // Declared so can be overridden (the default auto-generated getter is final!)
+    public Collection<Entity> getMembers() {
+        return members;
     }
 }

@@ -43,7 +43,7 @@ public class DynamicGroup extends AbstractGroup {
             return
         }
         if (!getApplication()) return
-        Set existingMembers = getMembers() as HashSet
+        Set existingMembers = super.getMembers() as HashSet
         log.info "scanning {}", getApplication().getEntities()
         getApplication().getEntities().each {
             if (entityFilter.call(it)) {
@@ -53,5 +53,11 @@ public class DynamicGroup extends AbstractGroup {
                 removeMember(it)
             } 
         }
+    }
+    
+    @Override
+    public Collection<Entity> getMembers() {
+        rescanEntities();
+        return super.getMembers();
     }
 }
