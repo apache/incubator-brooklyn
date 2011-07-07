@@ -38,7 +38,7 @@ public class LocalSubscriptionManagerTest {
         
         public synchronized void setSequenceValue(int value) {
             sequenceValue = value
-            updateAttribute(SEQUENCE, value)
+            setAttribute(SEQUENCE, value)
         }
     }
     
