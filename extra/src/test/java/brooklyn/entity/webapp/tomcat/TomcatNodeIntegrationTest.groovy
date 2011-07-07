@@ -87,7 +87,7 @@ public class TomcatNodeIntegrationTest {
         executeUntilSucceedsWithFinallyBlock ([:], {
             assertTrue tc.getAttribute(TomcatNode.NODE_UP)
         }, {
-            tc.shutdown()
+            tc.stop()
         })
     }
     
@@ -175,7 +175,7 @@ public class TomcatNodeIntegrationTest {
                 // success
                 logger.debug "The exception that was thrown was:", caught
             } finally {
-                tc.shutdown()
+                tc.stop()
             }
             assertFalse tc.getAttribute(TomcatNode.NODE_UP)
         } finally {

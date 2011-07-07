@@ -99,7 +99,7 @@ public abstract class AbstractEffector<T> implements Effector<T> {
        //(but only use it when we have insufficient supplied arguments)
        List l = new ArrayList()
        l.addAll(args)
-       Map m = (args[0] instanceof Map ? new LinkedHashMap(l.remove(0)) : null)
+       Map m = (args.size() > 0 && args[0] instanceof Map ? new LinkedHashMap(l.remove(0)) : null)
        def newArgs = []
        int newArgsNeeded = eff.getParameters().size()
        boolean mapUsed = false;

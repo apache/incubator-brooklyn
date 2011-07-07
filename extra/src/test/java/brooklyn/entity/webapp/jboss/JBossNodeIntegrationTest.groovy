@@ -61,11 +61,50 @@ public class JBossNodeIntegrationTest {
         executeUntilSucceedsWithFinallyBlock ([:], {
             assertTrue jb.getAttribute(JavaWebApp.NODE_UP)
         }, {
-            jb.shutdown()
+            jb.stop()
             assertFalse jb.getAttribute(JavaWebApp.NODE_UP)
         })
     }
 
+    @Test(groups = "Integration")
+    public void canAlterPortIncrement() {
+        int pI = 1020
+        int httpPort = BASE_HTTP_PORT + pI
+        JBossNode jb = new JBossNode(owner:app, portIncrement: pI);
+        // Assert httpPort is contactable.
+        log.info "Starting JBoss with HTTP port $httpPort"
+        jb.start([ testLocation ])
+        executeUntilSucceedsWithShutdown(jb, {
+            def port = jb.getAttribute(JBossNode.HTTP_PORT)
+            def url = "http://localhost:$port"
+            assertTrue urlRespondsWithStatusCode200(url)
+            true
+        }, abortOnError:false)
+    }
+    
+    @Test(enabled = false, groups = [ "Integration" ])
+    public void canStartMultipleJBossNodes() {
+        def aInc = 400
+        JBossNode nodeA = new JBossNode(owner:app, portIncrement:aInc);
+        nodeA.start([ testLocation ])
+        
+        def bInc = 450
+        JBossNode nodeB = new JBossNode(owner:app, portIncrement:bInc);
+        nodeB.start([ testLocation ])
+        
+        executeUntilSucceedsWithFinallyBlock({
+            def aHttp = nodeA.getAttribute(JBossNode.HTTP_PORT)
+            def bHttp = nodeB.getAttribute(JBossNode.HTTP_PORT)
+            assertTrue urlRespondsWithStatusCode200("http://localhost:$aHttp")
+            assertTrue urlRespondsWithStatusCode200("http://localhost:$bHttp")
+            true
+        }, {
+            nodeA.stop()
+            nodeB.stop()
+        }, abortOnError:false)
+        
+    }
+    
     @Test(groups = [ "Integration" ])
     public void publishesErrorCountMetric() {
         JBossNode jb = new JBossNode(owner:app, portIncrement:PORT_INCREMENT);

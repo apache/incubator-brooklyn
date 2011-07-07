@@ -47,9 +47,7 @@ public class TomcatSimulator {
     }
 
     public void shutdown() {
-        if (jmxService) {
-            jmxService.shutdown();
-        }
+        if (jmxService) jmxService.shutdown();
         jmxService = null;
         synchronized (activeInstances) { activeInstances.remove(this) }
         lock.release()

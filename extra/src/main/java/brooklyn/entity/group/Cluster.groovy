@@ -68,6 +68,10 @@ public abstract class ClusterFromTemplate extends Cluster implements Resizable {
             log.info "start of $this cluster skipping call to start with size $initialSize because size is currently {}", children.size()
         }
     }
+    
+    public synchronized void stop() {
+        members.each { Startable entity  -> entity.stop() }
+    }
 
     public synchronized List<Future> resize(int newSize) {
         int newNodes = newSize - children.size()

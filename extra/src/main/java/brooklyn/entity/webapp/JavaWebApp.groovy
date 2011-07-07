@@ -144,7 +144,7 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
     }
 
     // FIXME: should MachineLocations below actually be SshMachineLocation? That's what XSshSetup requires, but not what the unit tests offer.
-    public void shutdown() {
+    public void stop() {
         setAttribute(NODE_STATUS, "stopping")
         if (attributePoller) attributePoller.close()
         if (jmxAdapter) jmxAdapter.disconnect();

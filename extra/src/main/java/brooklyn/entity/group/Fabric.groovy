@@ -38,4 +38,8 @@ public abstract class Fabric extends TierFromTemplate {
         Set tasks = newNodes.collect { node -> getExecutionContext().submit({node.start(locs)}) }
         tasks.collect { it.get() }
     }
+    
+    public void stop() {
+        // TODO implement
+    }
 }

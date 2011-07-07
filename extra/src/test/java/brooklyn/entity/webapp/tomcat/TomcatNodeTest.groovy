@@ -57,7 +57,7 @@ class TomcatNodeTest {
         
         try { 
             tc.start([ new SimulatedLocation() ]);
-            try { tc.shutdown() } catch (Exception e) {
+            try { tc.stop() } catch (Exception e) {
                 throw new Exception("tomcat is throwing exceptions when shutting down; this will break most tests", e) }
         } catch (Exception e) {
             throw new Exception("tomcat is throwing exceptions when starting; this will break most tests", e)
@@ -72,7 +72,7 @@ class TomcatNodeTest {
         
         try {
             tc1.start([ new SimulatedLocation() ]);
-            tc1.shutdown()
+            tc1.stop()
         } catch (Exception e) {} //NOOP
         
         try { 
@@ -80,7 +80,7 @@ class TomcatNodeTest {
         } catch (IllegalStateException e) {
             throw new Exception("tomcat should clean up after itself in case of failure; this will break most tests", e)
         } finally {
-            try { tc2.shutdown() } catch (Exception e) {} //NOOP
+            try { tc2.stop() } catch (Exception e) {} //NOOP
         }
     }
     
@@ -92,12 +92,12 @@ class TomcatNodeTest {
         tc1.start([ new SimulatedLocation() ])
         try {
             tc2.start([ new SimulatedLocation() ])
-            tc2.shutdown()
+            tc2.stop()
             fail "should have detected that $tc2 didn't start since tomcat was already running"
         } catch (Exception e) {
             logger.debug "successfully detected failure of {} to start: {}", tc2, e.toString()
         } finally {
-            tc1.shutdown()
+            tc1.stop()
         }
     }
 
@@ -108,7 +108,7 @@ class TomcatNodeTest {
         TomcatNode tc = new TomcatNode(owner: app);
         try {
             tc.start([])
-            tc.shutdown()
+            tc.stop()
         } catch(Exception e) {
             caught = true
         }

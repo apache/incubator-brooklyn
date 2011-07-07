@@ -65,7 +65,7 @@ public class TestUtils {
 
     /** convenience for entities to ensure they shutdown afterwards */
     public static void executeUntilSucceedsWithShutdown(Map flags=[:], Entity entity, Runnable r) {
-        executeUntilSucceedsWithFinallyBlock(flags, r, { entity.shutdown() })
+        executeUntilSucceedsWithFinallyBlock(flags, r, { entity.stop() })
     }
 
     /**
