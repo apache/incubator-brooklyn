@@ -14,7 +14,11 @@ public class SshMachineLocationTest {
     private SshMachineLocation host;
     
     @BeforeMethod
-    public void setUp() throws Exception {
+    public void setUpUnit() throws Exception {
+        host = new SshMachineLocation(address: InetAddress.getLocalHost());
+    }
+    @BeforeMethod(groups = "Integration")
+    public void setUpIntegration() throws Exception {
         host = new SshMachineLocation(address: InetAddress.getLocalHost());
     }
 
