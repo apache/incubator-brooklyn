@@ -40,7 +40,8 @@
                         %h2 Summary
                     #sensors
                         %h2 Sensors
-                        #sensor-data
+                        %table{:id=>"sensor-data"}
+                        #sensor-pager
                     #effectors
                         %h2 Effectors
                         %g:render{:template=>"/tabs/effectors"}

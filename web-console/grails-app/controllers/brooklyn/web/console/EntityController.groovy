@@ -7,6 +7,8 @@ import brooklyn.entity.Entity
 import brooklyn.web.console.entity.EntitySummary
 
 import brooklyn.web.console.entity.JsTreeNode
+import brooklyn.management.Task
+import brooklyn.web.console.entity.SensorSummary
 
 @Secured(['ROLE_ADMIN'])
 class EntityController {
@@ -25,36 +27,32 @@ class EntityController {
     }
 
     def effectors = {
-        String id = params.id
-        if (! id) {
+        if (!params.id) {
             render(status: 400, text: '{message: "You must provide an entity id"}')
             return
         }
+        render entityService.getEffectorsOfEntity(params.id) as JSON
+    }
 
-        EntitySummary summary = getEntityMatchingId(id);
-        if (summary) {
-            render summary.effectors as JSON
+    def sensors = {
+        if (!params.id) {
+            render(status: 400, text: '{message: "You must provide an entity id"}')
+            return
+        }
+        Map stuff = [rows: entityService.getSensorsOfEntity(params.id)]
+        render stuff as JSON
+    }
+
+    def activity = {
+        Entity entity = getEntityMatchingId(params.id);
+        if (entity) {
+            Collection<Task> activity = activityService.getTasksOfEntity(entity)
+            render toTaskSummaries(activity) as JSON
         } else {
             render(status: 404, text: '{message: "Entity with specified id does not exist"}')
         }
     }
 
-    def sensors = {
-        String id = params.id
-        if (! id) {
-            render(status: 400, text: '{message: "You must provide an entity id"}')
-            return
-        }
-
-        EntitySummary summary = getEntityMatchingId(id);
-        if (!summary) {
-            // log maybe
-            render(status: 404, text: '{message: "Entity with specified id does not exist"}')
-            return
-        }
-
-        render (summary.sensors as JSON)
-    }
 
     def jstree = {
         Map<String, JsTreeNode> nodeMap = [:]
@@ -80,12 +78,16 @@ class EntityController {
         render([roots] as JSON)
     }
 
-    private Set<EntitySummary> toEntitySummaries(Collection<Entity> entities) {
-        entities.collect {  new EntitySummary(it) }
+    private EntitySummary toEntitySummary(Entity entity) {
+        return new EntitySummary(entity);
     }
 
-    private EntitySummary getEntityMatchingId(String id) {
-        Set<EntitySummary> entities = toEntitySummaries(entityService.getEntitiesMatchingCriteria(null, id, null))
+    private Set<EntitySummary> toEntitySummaries(Collection<Entity> entities) {
+        entities.collect { toEntitySummary(it) }
+    }
+
+    private Entity getEntityMatchingId(String id) {
+        Set<Entity> entities = entityService.getEntitiesMatchingCriteria(null, id, null)
 
         if (!id) {
             return null;

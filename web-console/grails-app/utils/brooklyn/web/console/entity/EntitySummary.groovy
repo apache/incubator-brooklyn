@@ -17,8 +17,6 @@ public class EntitySummary {
     final String applicationId;
     final String ownerId;
     final Collection<String> children;
-    final Map<String, SensorSummary> sensors = [:];
-    final Map<String, Effector> effectors = [:];
 
     public EntitySummary(Entity entity) {
         this.id = entity.getId();
@@ -28,17 +26,6 @@ public class EntitySummary {
         this.ownerId = entity.owner ? entity.owner.id : null;
         if (entity instanceof Group) {
             this.children = ((Group) entity).members.collect { it.id };
-        }
-
-        if (entity.entityClass) {
-            for (Sensor sensor: entity.entityClass.sensors) {
-                if (sensor instanceof AttributeSensor) {
-                    this.sensors[sensor.name] = new SensorSummary(sensor, entity.getAttribute(sensor))
-                }
-            }
-            for (Effector effector: entity.entityClass.effectors) {
-                this.effectors[effector.name] = effector
-            }
         }
     }
 }

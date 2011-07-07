@@ -12,8 +12,11 @@ import brooklyn.management.ManagementContext
 import brooklyn.management.SubscriptionManager
 import brooklyn.web.console.entity.TestEffector
 import brooklyn.entity.webapp.tomcat.TomcatNode
+import brooklyn.util.task.BasicExecutionManager
+import brooklyn.management.Task
 
 class ManagementContextService implements ManagementContext {
+    private final ExecutionManager executionManager = new BasicExecutionManager();
     private final Application application = new TestApplication();
     static transactional = false;
     protected static int ID_GENERATOR = 0;
@@ -27,7 +30,7 @@ class ManagementContextService implements ManagementContext {
     }
 
     public ExecutionManager getExecutionManager() {
-        throw new UnsupportedOperationException();
+        return executionManager;
     }
 
     public SubscriptionManager getSubscriptionManager() {
@@ -39,59 +42,49 @@ class ManagementContextService implements ManagementContext {
             this.id = "app-" + ManagementContextService.ID_GENERATOR++
             displayName = "Application";
 
-            addOwnedChildren([
-                    new TestGroupEntity("tomcat tier 1").addOwnedChildren([
-                            new TestGroupEntity("tomcat cluster 1a").addOwnedChildren([
-                                    new TestTomcatEntity("tomcat node 1a.1"),
-                                    new TestTomcatEntity("tomcat node 1a.2"),
-                                    new TestTomcatEntity("tomcat node 1a.3"),
-                                    new TestTomcatEntity("tomcat node 1a.4")]),
-                            new TestGroupEntity("tomcat cluster 1b").addOwnedChildren([
-                                    new TestTomcatEntity("tomcat node 1b.1"),
-                                    new TestTomcatEntity("tomcat node 1b.2"),
-                                    new TestTomcatEntity("tomcat node 1b.3"),
-                                    new TestTomcatEntity("tomcat node 1b.4")])
-                    ]),
-                    new TestGroupEntity("data tier 1").addOwnedChildren([
-                            new TestGroupEntity("data cluster 1a").addOwnedChildren([
-                                    new TestDataEntity("data node 1a.1"),
-                                    new TestDataEntity("data node 1a.2"),
-                                    new TestDataEntity("data node 1a.3")])
-                    ])
-            ])
+            for(String tierName : ["tomcat tier 1", "tomcat tier 2", "data tier 1"]) {
+                Entity tier = new TestGroupEntity(this, tierName);
+                for(String clusterName : ["1a", "1b"]) {
+                    Entity cluster = new TestGroupEntity(tier, tierName.substring(0, tierName.indexOf(" ")) + " cluster " + clusterName)
+                    for(int i=1; i<4; i++) {
+                        if (tierName =~ /^tomcat/) {
+                            cluster.addOwnedChild(new TestTomcatEntity(cluster, "tomcat node " + clusterName + "." + i))
+                        } else {
+                            cluster.addOwnedChild(new TestDataEntity(cluster, "data node " + clusterName + "." + i))
+                        }
 
+                    }
+                    tier.addOwnedChild(cluster)
+                }
+                addOwnedChild(tier)
+            }
 
             sensors.putAll([
                     Children: new BasicAttributeSensor<Integer>(Integer.class, "Children", "Owned children of this application"), DataRate: new BasicAttributeSensor<String>(String.class, "DataRate")])
-
             setAttribute(getSensor("Children"), getOwnedChildren().size())
-
-        }
-
-        AbstractGroup addOwnedChildren(Collection<Entity> children) {
-            children.each { addOwnedChild(it) }
-            return this
         }
 
         private class TestGroupEntity extends AbstractGroup {
-            TestGroupEntity(String displayName) {
-                this.id = "group-" + ManagementContextService.ID_GENERATOR++
+            TestGroupEntity(Entity owner, String displayName) {
+                super([:], owner)
                 this.displayName = displayName
-                sensors.putAll([
-                        Children: new BasicAttributeSensor<Integer>(Integer.class, "Children", "Direct children of this group"), DataRate: new BasicAttributeSensor<String>(String.class, "DataRate")])
+                this.id = "group-" + ManagementContextService.ID_GENERATOR++
+                sensors.putAll([Children: new BasicAttributeSensor<Integer>(Integer.class, "Children", "Direct children of this group"), DataRate: new BasicAttributeSensor<String>(String.class, "DataRate")])
             }
 
-            TestGroupEntity addOwnedChildren(Collection<Entity> children) {
-                children.each { addOwnedChild(it) }
-                setAttribute(getSensor("Children"), children.size())
+            TestGroupEntity addOwnedChild(Entity child) {
+                super.addOwnedChild(child)
+                setAttribute(getSensor("Children"), ownedChildren.size())
                 return this
             }
         }
 
         private class TestDataEntity extends AbstractEntity {
-            TestDataEntity(String displayName) {
+            TestDataEntity(Entity owner, String displayName) {
+                super([:], owner)
+
+                this.displayName = displayName
                 this.id = "leaf-" + ManagementContextService.ID_GENERATOR++
-                this.displayName = displayName;
 
                 TestEffector startDB = new TestEffector("Start DB", "This will start the database",  new ArrayList<ParameterType<?>>())
                 TestEffector stopDB = new TestEffector("Stop DB", "This will stop the database", new ArrayList<ParameterType<?>>())
@@ -119,10 +112,10 @@ class ManagementContextService implements ManagementContext {
                     "webapp.reqs.processing.time": 100
             ]
 
-            public TestTomcatEntity(String displayName) {
+            public TestTomcatEntity(Entity owner, String displayName) {
+                super([:], owner)
+                this.displayName = displayName
                 this.id = "leaf-" + ManagementContextService.ID_GENERATOR++
-                this.displayName = displayName;
-                this.id = id;
 
                 // Stealing the sensors from TomcatNode
                 this.sensors.putAll(new TomcatNode().sensors)
@@ -140,6 +133,14 @@ class ManagementContextService implements ManagementContext {
                 for (String key: hackMeIn.keySet()) {
                     this.setAttribute(getSensor(key), hackMeIn[key] + ManagementContextService.ID_GENERATOR)
                 }
+
+                this.getExecutionContext().submit([displayName: "myTask", description: "some task or other"], new Runnable() {
+                    void run() {
+                        //To change body of implemented methods use File | Settings | File Templates.
+                    }
+                })
+
+
             }
         }
     }

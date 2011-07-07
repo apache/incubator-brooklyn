@@ -1,20 +1,46 @@
 package brooklyn.web.console
 
 import brooklyn.entity.Entity
+import brooklyn.management.Task
+import brooklyn.web.console.entity.SensorSummary
+import brooklyn.event.Sensor
+import brooklyn.entity.Effector
 
 class EntityService {
 
     static transactional = false
     def managementContextService
 
+    public Collection<Task> getTasksOfEntity(String entityId) {
+        return managementContextService.executionManager.getTasksWithTag(getEntity(entityId))
+    }
+
+    public Collection<SensorSummary> getSensorsOfEntity(String entityId) {
+        Set<SensorSummary> results = []
+        Entity entity = getEntity(entityId)
+        if (entity) {
+            for (Sensor s: entity.entityClass.sensors) {
+                results.add(new SensorSummary(s, entity.getAttribute(s)))
+            }
+        }
+        return results
+    }
+
+    public Collection<Effector> getEffectorsOfEntity(String entityId) {
+        Set<Effector> results = []
+        Entity entity = getEntity(entityId)
+        if (entity) {
+            results.addAll(entity.entityClass.effectors)
+        }
+
+        return results
+    }
+
     public Collection<Entity> getChildren(Entity parent) {
         Set<Entity> result = []
 
-        if (parent.properties.containsKey("ownedChildren")){
+        if (parent.properties.containsKey("ownedChildren")) {
             parent.ownedChildren.each { result << it }
-        }
-        if(parent.properties.containsKey("members")){
-            parent.members.each { result << it }
         }
 
         result
@@ -22,7 +48,7 @@ class EntityService {
 
     public boolean isChildOf(Entity child, Collection<Entity> parents) {
         parents.find { parent ->
-           getChildren(parent).contains(child) || isChildOf(child, getChildren(parent))
+            getChildren(parent).contains(child) || isChildOf(child, getChildren(parent))
         }
     }
 
@@ -56,9 +82,17 @@ class EntityService {
         getAllEntities().findAll {
             it ->
             ((!name || it.displayName.toLowerCase() =~ name.toLowerCase())
-                    && (!id || it.id =~ id)
+                    && (!id || it.id == id)
                     && (!applicationId || it.application.id =~ applicationId)
             )
         }
+    }
+
+    public Entity getEntity(String id, name = null, applicationId = null) {
+        Set<Entity> entities = getEntitiesMatchingCriteria(null, id, null)
+        if (entities.size() == 1) {
+            return entities.iterator().next()
+        }
+        return null
     }
 }
