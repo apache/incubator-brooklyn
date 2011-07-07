@@ -44,7 +44,7 @@ public class DynamicGroup extends AbstractGroup {
         }
         if (!getApplication()) return
         Set existingMembers = super.getMembers() as HashSet
-        log.info "scanning {}", getApplication().getEntities()
+        log.debug "scanning {}", getApplication().getEntities()
         getApplication().getEntities().each {
             if (entityFilter.call(it)) {
                 if (existingMembers.add(it))
