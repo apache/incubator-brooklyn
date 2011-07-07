@@ -21,7 +21,6 @@ Brooklyn.sensors = (function() {
                 sortname: 'name',
                 viewrecords: true,
                 sortorder: "desc",
-                caption:"Sensor Values",
                 multiselect: false,
                 jsonReader: {
 		            repeatitems : false,
