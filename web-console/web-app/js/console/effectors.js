@@ -3,10 +3,10 @@ Brooklyn.effectors = (function() {
     function updateEffectorsList(json) {
         $('#effectorList').find('option').remove().end()
 
-        for (name in json) {
+        for (var i=0; i<json.length; i++) {
             option = document.createElement("option");
-            option.text = name;
-            option.value = name;
+            option.text = json[i].name;
+            option.value = json[i].name;
             $('#effectorList').get(0)[$('#effectorList option').length] = option;
         }
 
