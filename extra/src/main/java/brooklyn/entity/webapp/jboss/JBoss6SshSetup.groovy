@@ -13,6 +13,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
 
     private String jbossVersion
     private int portIncrement
+    private String serverProfile
     
     public static JBoss6SshSetup newInstance(JBossNode entity, SshMachineLocation machine) {
         Integer suggestedJbossVersion = entity.getConfig(JBossNode.SUGGESTED_VERSION)
@@ -21,11 +22,14 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         Integer suggestedJmxPort = entity.getConfig(JBossNode.SUGGESTED_JMX_PORT)
         String suggestedJmxHost = entity.getConfig(JBossNode.SUGGESTED_JMX_HOST)
         Integer suggestedPortIncrement = entity.getConfig(JBossNode.SUGGESTED_PORT_INCREMENT)
+        String suggestedServerProfile = entity.getConfig(JBossNode.SUGGESTED_SERVER_PROFILE)
         
         String jbossVersion = suggestedJbossVersion ?: DEFAULT_VERSION
         String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"jboss-$jbossVersion")
         String runDir = suggestedRunDir ?: (DEFAULT_RUN_DIR+"/"+"app-"+entity.getApplication()?.id+"/jboss-"+entity.id)
         String deployDir = runDir+"/"+DEFAULT_DEPLOY_SUBDIR
+        String serverProfile = suggestedServerProfile ?: "default"
+        
         String jmxHost = suggestedJmxHost ?: machine.getAddress().getHostName()
         int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort, DEFAULT_FIRST_JMX_PORT))
         int portIncrement = suggestedPortIncrement ?: 0
@@ -38,6 +42,9 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         result.setDeployDir(deployDir)
         result.setRunDir(runDir)
         result.setPortIncrement(portIncrement)
+        result.setServerProfile(serverProfile)
+        
+        return result
     }
 
     public JBoss6SshSetup(JBossNode entity, SshMachineLocation machine) {
@@ -51,6 +58,11 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     
     public JBoss6SshSetup setPortIncrement(int val) {
         this.portIncrement = val
+        return this
+    }
+    
+    public JBoss6SshSetup setServerProfile(String val) {
+        this.serverProfile = val
         return this
     }
     
@@ -85,7 +97,6 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
            .. changing port numbers with sed is pretty brittle.
         */
         def portGroupName = "ports-brooklyn"
-        def serverProfile = "default"
 """mkdir -p $runDir/server && \\
 cd $runDir/server && \\
 cp -r $installDir/server/$serverProfile $serverProfile && \\

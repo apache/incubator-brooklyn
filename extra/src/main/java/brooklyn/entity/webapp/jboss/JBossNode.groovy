@@ -16,7 +16,10 @@ public class JBossNode extends JavaWebApp {
 
     private static final Logger log = LoggerFactory.getLogger(JBossNode.class)
 
-    public static BasicConfigKey<Integer> SUGGESTED_PORT_INCREMENT = [ Integer, "jboss.portincrement", "Increment to be used for all jboss ports" ]
+    public static BasicConfigKey<String>  SUGGESTED_SERVER_PROFILE = 
+            [ String, "jboss.serverProfile", "Profile used when running server" ] 
+    public static BasicConfigKey<Integer> SUGGESTED_PORT_INCREMENT = 
+            [ Integer, "jboss.portincrement", "Increment to be used for all jboss ports" ]
     
     // Jboss specific
     public static final BasicAttributeSensor<Integer> PORT_INCREMENT = 
