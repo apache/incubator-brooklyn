@@ -160,9 +160,9 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         if (isDescendant(entity)) throw new IllegalStateException("loop detected trying to set owner of $this as $entity, which is already a descendent")
         
         owner = entity
-        inheritedConfig.putAll(owner.getAllConfig())
-        
         entity.addOwnedChild(this)
+        inheritedConfig.putAll(owner.getAllConfig())
+        getApplication()
     }
 
     public boolean isAncestor(Entity oldee) {
