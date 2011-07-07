@@ -7,6 +7,7 @@ import java.util.Collection
 import java.util.Map
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CopyOnWriteArraySet
+import java.util.concurrent.ExecutionException;
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -443,6 +444,8 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
                         return t.get();
                     }
                 }
+            } catch (ExecutionException ee) {
+                throw ee.getCause()
             } finally { this.@skipCustomInvokeMethod.set(false); }
         }
         metaClass.invokeMethod(this, name, args);
