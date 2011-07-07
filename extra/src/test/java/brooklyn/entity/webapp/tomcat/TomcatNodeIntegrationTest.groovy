@@ -104,12 +104,12 @@ public class TomcatNodeIntegrationTest {
         executeUntilSucceedsWithShutdown(tc, {
             def requestCount = tc.getAttribute(TomcatNode.REQUEST_COUNT)
             def errorCount = tc.getAttribute(TomcatNode.ERROR_COUNT)
-            println "req=$requestCount, err=$errorCount"
+            logger.info "req=$requestCount, err=$errorCount"
             
             if (errorCount == null) {
                 return new BooleanWithMessage(false, "errorCount not set yet ($errorCount)")
             } else {
-                logger.info "\n$errorCount errors in total"
+                logger.info "$errorCount errors in total"
                 assertTrue errorCount > 0, "errorCount="+errorCount
                 assertEquals requestCount, errorCount
             }
@@ -127,16 +127,16 @@ public class TomcatNodeIntegrationTest {
                 if (activityValue == null || activityValue == -1) 
                     return new BooleanWithMessage(false, "activity not set yet ($activityValue)")
 
-                assertEquals Double, activityValue.class
-                assertEquals 0.0, (double)activityValue, 0.01
+                assertEquals activityValue.class, Double
+                assertEquals activityValue, 0.0d, 0.01d
                 
                 def port = tc.getAttribute(TomcatNode.HTTP_PORT)
                 def connection = connectToURL "http://localhost:${port}/foo"
-                assertEquals "Apache-Coyote/1.1", connection.getHeaderField("Server")
+                assertEquals connection.getHeaderField("Server"), "Apache-Coyote/1.1"
 
                 Thread.sleep 1000
                 activityValue = tc.getAttribute(TomcatNode.REQUESTS_PER_SECOND)
-                assertEquals 1d, (double)activityValue, 0.01
+                assertEquals activityValue, 1.0d, 0.01d
                 true
             }, timeout:10*SECONDS, useGroovyTruth:true)
     }

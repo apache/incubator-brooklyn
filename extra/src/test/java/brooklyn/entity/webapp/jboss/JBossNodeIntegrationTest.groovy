@@ -44,7 +44,7 @@ public class JBossNodeIntegrationTest {
     @BeforeMethod(groups = "Integration")
     public void setup() {
         app = new TestApplication();
-        testLocation = new LocalhostMachineProvisioningLocation(name:'london')
+        testLocation = new LocalhostMachineProvisioningLocation(name:'london', count:2)
     }
 
     
@@ -62,7 +62,6 @@ public class JBossNodeIntegrationTest {
             assertTrue jb.getAttribute(JavaWebApp.NODE_UP)
         }, {
             jb.stop()
-            assertFalse jb.getAttribute(JavaWebApp.NODE_UP)
         })
     }
 
@@ -102,7 +101,6 @@ public class JBossNodeIntegrationTest {
             nodeA.stop()
             nodeB.stop()
         }, abortOnError:false)
-        
     }
     
     @Test(groups = [ "Integration" ])

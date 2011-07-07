@@ -13,7 +13,7 @@ import brooklyn.location.basic.SshMachineLocation
 public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
     
     public static final String DEFAULT_VERSION = "7.0.16"
-    public static final String DEFAULT_INSTALL_DIR = DEFAULT_INSTALL_BASEDIR+"tomcat/"
+    public static final String DEFAULT_INSTALL_DIR = DEFAULT_INSTALL_BASEDIR+"/"+"tomcat"
     public static final String DEFAULT_DEPLOY_SUBDIR = "webapps"
     public static final int DEFAULT_FIRST_HTTP_PORT = 8080
     public static final int DEFAULT_FIRST_SHUTDOWN_PORT = 31880
@@ -38,7 +38,7 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
         Integer suggestedHttpPort = entity.getConfig(TomcatNode.SUGGESTED_HTTP_PORT)
         
         String tomcatVersion = suggestedTomcatVersion ?: DEFAULT_VERSION
-        String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"apache-tomcat-$tomcatVersion")
+        String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"apache-tomcat-$tomcatVersion")
         String runDir = suggestedRunDir ?: (DEFAULT_RUN_DIR+"/"+"app-"+entity.getApplication()?.id+"/tomcat-"+entity.id)
         String deployDir = runDir+"/"+DEFAULT_DEPLOY_SUBDIR
         String jmxHost = suggestedJmxHost ?: machine.getAddress().getHostName()
@@ -153,28 +153,7 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
         return script
     }
 
-    // TODO Fail if requested port is in use rather than taking first available.
-    public int getTomcatHttpPort() {
-        synchronized (httpPortLock) {
-            int requested = entity.getAttribute(AttributeDictionary.HTTP_PORT)
-            if (requested > 0) {
-                httpPort = requested
-            } else {
-                httpPort = claimNextValue("tomcatHttpPort", DEFAULT_FIRST_HTTP_PORT)
-            }
-        }
-        return httpPort
-    }
- 
-    /**
-     * Tomcat insists on having a port you can connect to for the sole purpose of shutting it down;
-     * don't see an easy way to disable it; causes collisions in its default location of 8005,
-     * so moving it to some anonymous high-numbered location
-     */
-    public int getTomcatShutdownPort() {
-        claimNextValue("tomcatShutdownPort", DEFAULT_FIRST_SHUTDOWN_PORT)
-    }
-
+    @Override
     public void shutdown() {
         log.debug "invoking shutdown script"
         //we use kill -9 rather than shutdown.sh because the latter is not 100% reliable
@@ -185,12 +164,10 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
             "rm -f pid.txt" ] )
         if (result) log.info "non-zero result code terminating {}: {}", entity, result
         log.debug "done invoking shutdown script"
-        
-        postShutdown();
     }
     
+    @Override
     protected void postShutdown() {
-        super.postShutdown();
         machine.releasePort(jmxPort)
         machine.releasePort(tomcatShutdownPort);
         machine.releasePort(tomcatHttpPort);

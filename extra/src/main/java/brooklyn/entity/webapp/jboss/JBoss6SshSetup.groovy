@@ -8,7 +8,7 @@ import brooklyn.location.basic.SshMachineLocation
 
 public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     public static final String DEFAULT_VERSION = "6.0.0.Final"
-    public static final String DEFAULT_INSTALL_DIR = DEFAULT_INSTALL_BASEDIR+"jboss/"
+    public static final String DEFAULT_INSTALL_DIR = DEFAULT_INSTALL_BASEDIR+"/"+"jboss"
     public static final String DEFAULT_DEPLOY_SUBDIR = "deploy"
     public static final int DEFAULT_HTTP_PORT = 8080;
 
@@ -26,10 +26,10 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         String suggestedServerProfile = entity.getConfig(JBossNode.SUGGESTED_SERVER_PROFILE)
         
         String jbossVersion = suggestedJbossVersion ?: DEFAULT_VERSION
-        String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"jboss-$jbossVersion")
+        String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"jboss-$jbossVersion")
         String runDir = suggestedRunDir ?: (DEFAULT_RUN_DIR+"/"+"app-"+entity.getApplication()?.id+"/jboss-"+entity.id)
         String deployDir = runDir+"/"+DEFAULT_DEPLOY_SUBDIR
-        String serverProfile = suggestedServerProfile ?: "default"
+        String serverProfile = suggestedServerProfile ?: "standard"
         
         String jmxHost = suggestedJmxHost ?: machine.getAddress().getHostName()
         int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort, DEFAULT_FIRST_JMX_PORT))
@@ -93,7 +93,6 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         // run.sh must be backgrounded otherwise the script will never return.
         List<String> script = [
             "\$JBOSS_HOME/bin/run.sh -Djboss.service.binding.set=$portGroupName -Djboss.server.base.dir=\$RUN/server -Djboss.server.base.url=file://\$RUN/server -c $serverProfile &",
-            "sleep 30",
         ]
         return script
     }
@@ -116,8 +115,8 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
 
     /** script to return 1 if pid in runDir is running, 0 otherwise */
     public List<String> getCheckRunningScript() { 
-        def host = entity.getAttribute(AttributeDictionary.JMX_HOST)
-        def port = entity.getAttribute(AttributeDictionary.JMX_PORT)
+        def host = entity.getAttribute(Attributes.JMX_HOST)
+        def port = entity.getAttribute(Attributes.JMX_PORT)
         List<String> script = [
             "$installDir/bin/twiddle.sh --host $host --port $port get \"jboss.system:type=Server\" Started"
         ]
@@ -154,6 +153,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         return script
     }
 
+    @Override
     public void shutdown() {
         def host = entity.getAttribute(Attributes.JMX_HOST)
         def port = entity.getAttribute(Attributes.JMX_PORT)

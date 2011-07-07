@@ -8,12 +8,13 @@ import java.util.Map
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import com.google.common.base.Preconditions
 import com.jcraft.jsch.Channel
 import com.jcraft.jsch.ChannelExec
+import com.jcraft.jsch.ChannelSftp
 import com.jcraft.jsch.ChannelShell
 import com.jcraft.jsch.JSch
 import com.jcraft.jsch.Session
-import com.google.common.base.Preconditions
 
 /** class is a wrapper for jsch session, taken from their examples */
 public class SshJschTool {
@@ -201,6 +202,21 @@ public class SshJschTool {
         }
         throw new IOException("ssh server failed to ack appropriately ("+b+")")
     }
+    
+    /**
+     * @see #createFile(Map, String, InputStream, long)
+     */
+    public int transferFile(Map p=[:], String pathAndFileOnRemoteServer, InputStream input) {
+        assertConnected()
+        ChannelSftp channel=session.openChannel("sftp")
+        lastChannel = channel
+        channel.connect()
+        channel.put(input, pathAndFileOnRemoteServer, p.permissions ?: 0644)
+        int modified = p.lastModificationDate ?: System.currentTimeMillis()/1000
+        channel.setMtime(pathAndFileOnRemoteServer, modified)
+        channel.disconnect()
+        channel.getExitStatus()
+    }
 
     /** Properties can be:
      *  permissions (must be four-digit octal string, default '0644');
@@ -230,10 +246,10 @@ public class SshJschTool {
         checkAck(fromChannel)
 
         if (p.lastModificationDate || p.lastAccessDate) {
-            long lmd = p.lastModificationDate ?: System.currentTimeMillis()
+            long lmd = p.lastModificationDate ?: System.currentTimeMillis()/1000
             long lad = p.lastAccessDate ?: lmd
             //                      println "sending mod date"
-            toChannel << "T "+(lmd/1000)+" 0 "+(lad/1000)+" 0\n"
+            toChannel << "T "+lmd+" 0 "+lad+" 0\n"
             toChannel.flush()
             checkAck(fromChannel)
         }

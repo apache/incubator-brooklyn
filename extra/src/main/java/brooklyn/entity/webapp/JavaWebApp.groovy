@@ -152,7 +152,7 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
     }
     
     public void shutdownInLocation(MachineLocation loc) {
-        getSshBasedSetup(loc).shutdown()
+        getSshBasedSetup(loc).stop()
         setAttribute(NODE_STATUS, "stopped")
     }
     

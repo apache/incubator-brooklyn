@@ -17,8 +17,8 @@ import brooklyn.location.basic.BasicPortRange
 public abstract class SshBasedJavaAppSetup {
     static final Logger log = LoggerFactory.getLogger(SshBasedJavaAppSetup.class)
  
-    public static final String DEFAULT_INSTALL_BASEDIR = "/tmp/brooklyn/installs/"
-    public static final String DEFAULT_RUN_DIR = "/tmp/brooklyn/"
+    public static final String DEFAULT_INSTALL_BASEDIR = "/tmp/brooklyn/installs"
+    public static final String DEFAULT_RUN_DIR = "/tmp/brooklyn"
     public static final int DEFAULT_FIRST_JMX_PORT = 32199
 
     EntityLocal entity
@@ -55,7 +55,7 @@ public abstract class SshBasedJavaAppSetup {
         return this
     }
     
-    /** convenience to generate string -Dprop1=val1 -Dprop2=val2 for use with java */        
+    /** convenience to generate string '-Dprop1=val1 -Dprop2' for use with java */        
     public static String toJavaDefinesString(Map m) {
         StringBuffer sb = []
         m.each { key, value ->
@@ -175,31 +175,35 @@ public abstract class SshBasedJavaAppSetup {
         throw new IllegalStateException("$entity running check gave result code $result")
     }
     
-    public void shutdown() {
-        postShutdown();
+    public void shutdown() { }
+    
+    /**
+     * May also explicit {@link #install()}, {@link #config()} and {@link #runApp()} steps
+     */
+    public void start() {
+        install()
+        config()
+        runApp()
+        postStart()
     }
     
     /**
-     * @deprecated Use explicit {@link #install()}, {@link #config()} and {@link #runApp()} steps
+     * May also use explicit {@link #shutdown()} step
      */
-    @Deprecated
-    public void start() {
-        install();
-        config()
-        runApp();
+    public void stop() {
+        shutdown()
+        postShutdown()
     }
  
     /**
      * Called after start has completed, if successful. To be overridden; default is a no-op. 
      */
-    protected void postStart() {
-    }
+    protected void postStart() { }
 
     /**
      * Called after shutdown has completed, if successful. To be overridden; default is a no-op. 
      */
-    protected void postShutdown() {
-    }
+    protected void postShutdown() { }
 
     /**
      * Reserves a port (via machine.obtainPort). Uses the suggested port if greater than 0; if 0 then uses any high port; 
