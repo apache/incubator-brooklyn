@@ -1,27 +1,31 @@
 package brooklyn.web.console.test
 
-import org.openqa.selenium.WebDriverBackedSelenium
+import org.openqa.selenium.WebDriver
 import org.openqa.selenium.firefox.FirefoxDriver
 import org.openqa.selenium.firefox.FirefoxProfile
-
-import java.util.regex.Pattern
-
+import org.testng.annotations.AfterTest
+import org.testng.annotations.BeforeTest
 import org.testng.annotations.Test
 import static org.testng.Assert.assertTrue
+import org.openqa.selenium.By
 
-public class SensorsTest extends SeleneseTestCase {
-    @Before
+public class SensorsTest {
+    WebDriver driver;
+    @BeforeTest
     public void setUp() throws Exception {
-        WebDriver driver = new FirefoxDriver();
-        String baseUrl = "http://localhost:8080/";
-        Selenium selenium = new WebDriverBackedSelenium(driver, baseUrl);
-        selenium.start();
+        //TODO There must be another way to get past the confirmation dialog, needs investigating
+        FirefoxProfile profile = new FirefoxProfile()
+        profile.setPreference("network.http.phishy-userpass-length", 255)
+        driver = new FirefoxDriver(profile)
+
+        driver.get("http://admin:password@localhost:9090/entity/")
     }
 
     @Test
-    public void testJun() throws Exception {
-        selenium.open("/brooklyn-web-console/entity/#summary");
-        verifyTrue(selenium.isTextPresent("No data yet."));
+    public void testJun() {
+        assertTrue(!!(driver.findElement(By.id("status")).getText() =~ "No data yet"));
+
+        /*        verifyTrue(selenium.isTextPresent("No data yet."));
         verifyTrue(selenium.isTextPresent("Select an entity in the tree to the left to work with it here."));
         for (int second = 0;; second++) {
             if (second >= 60) fail("timeout");
@@ -39,10 +43,12 @@ public class SensorsTest extends SeleneseTestCase {
         selenium.click("jstree-node-id-leaf-10");
         selenium.click("jstree-node-id-leaf-11");
         verifyEquals("8092", selenium.getText("css=tbody > tr:nth(2) > td:nth(2)"));
+
+        */
     }
 
-    @After
+    @AfterTest
     public void tearDown() throws Exception {
-        selenium.stop();
+        driver.quit()
     }
 }
