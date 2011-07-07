@@ -90,6 +90,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     public List<String> getRunScript() {
         def portGroupName = "ports-brooklyn"
         
+        // run.sh must be backgrounded otherwise the script will never return.
         List<String> script = [
             "\$JBOSS_HOME/bin/run.sh -Djboss.service.binding.set=$portGroupName -Djboss.server.base.dir=\$RUN/server -Djboss.server.base.url=file://\$RUN/server -c $serverProfile &",
             "sleep 30",
@@ -98,6 +99,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     }
     
     public Map<String, String> getRunEnvironment() {
+        // LAUNCH_JBOSS_IN_BACKGROUND relays OS signals sent to the run.sh process to the JBoss process.
         Map<String, String> env = [
 	        "LAUNCH_JBOSS_IN_BACKGROUND" : "1",
 	        "JBOSS_HOME" : "$installDir",
@@ -122,10 +124,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         return script
     }
 
-    public List<String> getDeployScript(String locOnServer) {
-        // Notes:
-        // LAUNCH_JBOSS_IN_BACKGROUND relays OS signals sent to the run.sh process to the JBoss process.
-        // run.sh must be backgrounded otherwise the script will never return.
+    public List<String> getConfigScript() {
         /* Configuring ports:
            http://community.jboss.org/wiki/ConfiguringMultipleJBossInstancesOnOneMachine
            http://community.jboss.org/wiki/ConfigurePorts
@@ -142,6 +141,15 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
             "BJB=\"bindings-jboss-beans.xml\"",
             "sed -i.bk 's/ports-03/$portGroupName/' \$BJB",
             "sed -i.bk 's/\\<parameter\\>300\\<\\/parameter\\>/\\<parameter\\>$portIncrement\\<\\/parameter\\>/' \$BJB",
+        ]
+        return script
+    }
+
+    /** Assumes file is already in locOnServer.  */
+    public List<String> getDeployScript(String locOnServer) {
+        String to = runDir + "/" + "webapps"
+        List<String> script = [
+            "cp $locOnServer $to",
         ]
         return script
     }

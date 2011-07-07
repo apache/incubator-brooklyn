@@ -1,5 +1,7 @@
 package brooklyn.entity.webapp
 
+import java.util.concurrent.TimeUnit
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -20,7 +22,7 @@ import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.NoMachinesAvailableException
 import brooklyn.util.SshBasedJavaWebAppSetup
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.internal.EntityStartUtils
+import brooklyn.util.internal.Repeater
 
 import com.google.common.base.Preconditions
 
@@ -70,9 +72,15 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
     }
 
     public abstract SshBasedJavaWebAppSetup getSshBasedSetup(SshMachineLocation loc);
+ 
     protected abstract void initJmxSensors();
+    
     abstract void waitForHttpPort();
-        
+
+    public void waitForJmx() {
+        new Repeater("Wait for JMX").repeat().every(1, TimeUnit.SECONDS).until({jmxAdapter.isConnected()}).limitIterationsTo(30).run();
+    }
+ 
     public void start(Collection<Location> locations) {
         startInLocation locations
         
@@ -85,6 +93,8 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
         attributePoller = new AttributePoller(this)
         jmxAdapter = new JmxSensorAdapter(this, 60*1000)
         jmxAdapter.connect();
+        waitForJmx()
+ 
         initJmxSensors()
         attributePoller.addSensor(REQUESTS_PER_SECOND, { computeReqsPerSec() } as ValueProvider, 1000L)
         
@@ -92,7 +102,7 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
         
         if (getConfig(WAR)) {
             log.debug "Deploying {} to {}", getConfig(WAR), this.locations
-            this.deploy(getConfig(WAR))
+            deploy(getConfig(WAR))
             log.debug "Deployed {} to {}", getConfig(WAR), this.locations
         }
     }
@@ -136,7 +146,8 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
     // FIXME: should MachineLocations below actually be SshMachineLocation? That's what XSshSetup requires, but not what the unit tests offer.
     public void shutdown() {
         setAttribute(NODE_STATUS, "stopping")
-        jmxAdapter.disconnect();
+        if (attributePoller) attributePoller.close()
+        if (jmxAdapter) jmxAdapter.disconnect();
         shutdownInLocation(locations.find({ it instanceof MachineLocation }))
     }
     
@@ -178,5 +189,4 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
     public Collection<String> toStringFieldsToInclude() {
         return super.toStringFieldsToInclude() + ['jmxPort']
     }
-
 }

@@ -12,6 +12,7 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.Application
 import brooklyn.entity.basic.AbstractApplication
+import brooklyn.entity.webapp.JavaWebApp
 import brooklyn.location.Location
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.util.internal.TimeExtras
@@ -56,15 +57,13 @@ public class JBossNodeIntegrationTest {
     @Test(groups = "Integration")
     public void canStartupAndShutdown() {
         JBossNode jb = new JBossNode(owner:app, portIncrement: PORT_INCREMENT);
-        try {
-            jb.start([ testLocation ])
-            assertTrue(JBoss6SshSetup.newInstance(jb, jb.locations.first()).isRunning())
-        } finally {
-            jb.stop()
-            // Potential for JBoss to be in process of shutting down here..
-            Thread.sleep 4000
-            assertFalse(JBoss6SshSetup.newInstance(jb, jb.locations.first()).isRunning())
-        }
+        jb.start([ testLocation ])
+        executeUntilSucceedsWithFinallyBlock ([:], {
+            assertTrue jb.getAttribute(JavaWebApp.NODE_UP)
+        }, {
+            jb.shutdown()
+            assertFalse jb.getAttribute(JavaWebApp.NODE_UP)
+        })
     }
 
     @Test(groups = [ "Integration" ])

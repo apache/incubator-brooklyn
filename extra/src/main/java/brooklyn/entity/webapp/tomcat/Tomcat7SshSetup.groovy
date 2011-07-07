@@ -99,6 +99,7 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
      */
     public List<String> getRunScript() {
         List<String> script = [
+            "cd $runDir",
 			"$installDir/bin/startup.sh",
         ]
         return script
@@ -116,7 +117,7 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
     /** script to return 1 if pid in runDir is running, 0 otherwise  */
     public List<String> getCheckRunningScript() {
         List<String> script = [
-			"cd $runDir",
+            "cd $runDir",
 			"echo pid is `cat pid.txt`",
 			"(ps aux | grep '[t]'omcat | grep `cat pid.txt` > pid.list || echo \"no tomcat processes found\")",
 			"cat pid.list",
@@ -130,7 +131,15 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
     public List<String> getDeployScript(String locOnServer) {
         String to = runDir + "/" + "webapps"
         List<String> script = [
-			"cp $locOnServer $to",
+            "cp $locOnServer $to",
+        ]
+        return script
+    }
+
+    /** Configure the instance.  */
+    public List<String> getConfigScript() {
+        String to = runDir + "/" + "webapps"
+        List<String> script = [
             "mkdir -p $runDir",
             "cd $runDir",
             "mkdir conf",

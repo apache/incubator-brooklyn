@@ -47,8 +47,6 @@ public class TomcatNode extends JavaWebApp {
     }
 
     public void waitForHttpPort() {
-        new Repeater("Wait for Tomcat JMX").repeat({}).every(1, TimeUnit.SECONDS).until({jmxAdapter.isConnected()}).limitIterationsTo(30).run();
-
         String state = null;
         new Repeater("Wait for Tomcat HTTP port status")
             .repeat({
@@ -64,7 +62,6 @@ public class TomcatNode extends JavaWebApp {
         if (state != "STARTED") {
             throw new EntityStartException("Tomcat connector for port "+getAttribute(HTTP_PORT)+" is in state $state")
         }
-
     }
     
     @Override

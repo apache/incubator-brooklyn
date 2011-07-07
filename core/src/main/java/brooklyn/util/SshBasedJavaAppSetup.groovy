@@ -114,6 +114,8 @@ public abstract class SshBasedJavaAppSetup {
 
     public List<String> getInstallScript() { Collections.emptyList() }
  
+    public List<String> getConfigScript() { Collections.emptyList() }
+ 
     public abstract List<String> getRunScript();
     
     public abstract Map<String, String> getRunEnvironment();
@@ -134,9 +136,25 @@ public abstract class SshBasedJavaAppSetup {
             if (script) {
                 log.info "installing entity {} on machine {}", entity, machine
                 int result = machine.run(out:System.out, script)
-                if (result) throw new IllegalStateException("failed to start $entity (exit code $result)")
+                if (result) throw new IllegalStateException("failed to install $entity (exit code $result)")
             } else {
                 log.debug "not installing entity {} on machine {}, as no install-script defined", entity, machine
+            }
+        }
+    }
+    
+    /**
+     * Configure the application on this machine, or no-op if no config-script defined.
+     */
+    public void config() {
+        synchronized (entity) {
+            List<String> script = getConfigScript()
+            if (script) {
+                log.info "Configuring entity {} on machine {}", entity, machine
+                int result = machine.run(out:System.out, script)
+                if (result) throw new IllegalStateException("failed to configure $entity (exit code $result)")
+            } else {
+                log.debug "not configuring entity {} on machine {}, as no config-script defined", entity, machine
             }
         }
     }
@@ -161,9 +179,13 @@ public abstract class SshBasedJavaAppSetup {
         postShutdown();
     }
     
-    @Deprecated // use explicit install/startApp steps
+    /**
+     * @deprecated Use explicit {@link #install()}, {@link #config()} and {@link #runApp()} steps
+     */
+    @Deprecated
     public void start() {
         install();
+        config()
         runApp();
     }
  

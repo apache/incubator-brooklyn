@@ -146,7 +146,7 @@ public class TomcatNodeIntegrationTest {
         Application app = new TestApplication();
         TomcatNode tc = new TomcatNode(owner: app, httpPort: DEFAULT_HTTP_PORT);
 
-        URL resource = this.getClass().getClassLoader().getResource("hello-world.war")
+        URL resource = getClass().getClassLoader().getResource("hello-world.war")
         assertNotNull resource
         tc.setConfig(TomcatNode.WAR, resource.getPath())
 

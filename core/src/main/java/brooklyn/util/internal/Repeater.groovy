@@ -47,7 +47,7 @@ class Repeater {
      * @param body a closure or other Runnable that is executed in the main body of the loop.
      * @return <code>this<code> (to aid coding in a fluent style)
      */
-    Repeater repeat(Runnable body) {
+    Repeater repeat(Runnable body={}) {
         Preconditions.checkNotNull body, "body must not be null"
         this.body = body;
         return this;
