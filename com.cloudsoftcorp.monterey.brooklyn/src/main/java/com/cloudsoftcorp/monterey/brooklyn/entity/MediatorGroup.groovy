@@ -1,41 +1,28 @@
 package com.cloudsoftcorp.monterey.brooklyn.entity
 
 import java.util.Map
-import java.util.concurrent.ConcurrentHashMap
 
 import brooklyn.entity.Entity
-import brooklyn.entity.basic.DynamicGroup
 import brooklyn.entity.trait.Balanceable
 import brooklyn.location.Location
 
-import com.cloudsoftcorp.monterey.network.control.plane.GsonSerializer
+import com.cloudsoftcorp.monterey.network.control.api.Dmn1NodeType
 import com.cloudsoftcorp.monterey.network.control.plane.web.PlumberWebProxy
 import com.cloudsoftcorp.monterey.network.control.wipapi.Dmn1PlumberInternalAsync
-import com.cloudsoftcorp.monterey.node.api.NodeId
-import com.cloudsoftcorp.util.javalang.ClassLoadingContext
 import com.google.gson.Gson
 
-public class MediatorGroup extends DynamicGroup implements Balanceable {
+public class MediatorGroup extends MontereyTypedGroup implements Balanceable {
 
-    private final Map<NodeId,MediatorNode> mediators = new ConcurrentHashMap<NodeId,AbstractMontereyNode>();
+    static MediatorGroup newSingleLocationInstance(MontereyNetworkConnectionDetails connectionDetails, Location loc) {
+        return new MediatorGroup(connectionDetails, Collections.singleton(loc), { it.contains(loc) } );
+    }
     
-    private final Gson gson;
+    static MediatorGroup newAllLocationsInstance(MontereyNetworkConnectionDetails connectionDetails, Collection<Location> locs) {
+        return new MediatorGroup(connectionDetails, locs, { true } );
+    }
     
-    final MontereyNetworkConnectionDetails connectionDetails;
-    final Location loc;
-    
-    MediatorGroup(MontereyNetworkConnectionDetails connectionDetails, Location loc) {
-        this.connectionDetails = connectionDetails;
-        this.loc = loc;
-        this.locations.add(loc);
-        
-        ClassLoadingContext classloadingContext = ClassLoadingContext.Defaults.getDefaultClassLoadingContext();
-        GsonSerializer gsonSerializer = new GsonSerializer(classloadingContext);
-        gson = gsonSerializer.getGson();
-
-        setEntityFilter {
-            Entity e -> e instanceof MediatorNode && e.locations.contains(loc)
-        }
+    MediatorGroup(MontereyNetworkConnectionDetails connectionDetails, Collection<Location> locs, Closure locFilter) {
+        super(connectionDetails, Dmn1NodeType.M, locs, locFilter)
     }
 
     public void moveSegment(String segmentId, MediatorNode destination) {

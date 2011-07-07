@@ -1,5 +1,15 @@
 package com.cloudsoftcorp.monterey.brooklyn.entity
 
+import com.cloudsoftcorp.util.Loggers;
+
+import java.util.Map
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledFuture
+import java.util.concurrent.TimeUnit
+import java.util.logging.Level
+import java.util.logging.Logger
+
 import java.io.File
 import java.io.IOException
 import java.net.URL
@@ -27,6 +37,7 @@ import com.cloudsoftcorp.monterey.control.api.SegmentSummary
 import com.cloudsoftcorp.monterey.control.workrate.api.WorkrateReport
 import com.cloudsoftcorp.monterey.location.api.MontereyActiveLocation
 import com.cloudsoftcorp.monterey.network.control.api.Dmn1NetworkInfo
+import com.cloudsoftcorp.monterey.network.control.api.Dmn1NodeType
 import com.cloudsoftcorp.monterey.network.control.api.NodeSummary
 import com.cloudsoftcorp.monterey.network.control.plane.GsonSerializer
 import com.cloudsoftcorp.monterey.network.control.plane.web.DeploymentWebProxy
@@ -50,7 +61,6 @@ import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.ImmutableMap
 import com.google.gson.Gson
 
-
 /**
  * Represents a Monterey network.
  * 
@@ -58,6 +68,13 @@ import com.google.gson.Gson
  */
 public class MontereyNetwork extends AbstractEntity implements Startable { // FIXME , AbstractGroup
 
+    /*
+     * FIXME Deal with converting from monterey location to Brooklyn location properly
+     * FIXME Startable: need to use brooklyn to provision the original network...
+     * FIXME Declare things as effectors
+     * FIXME How will this entity be moved? How will its sub-entities be wired back up?
+     */
+    
     private final Logger LOG = Loggers.getLogger(MontereyNetwork.class);
 
     private static final Logger logger = Loggers.getLogger(MontereyNetwork.class);
@@ -87,7 +104,8 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     private final LocationRegistry locationRegistry = new LocationRegistry();
     private final Map<NodeId,MontereyContainerNode> nodes = new ConcurrentHashMap<NodeId,MontereyContainerNode>();
     private final Map<String,Segment> segments = new ConcurrentHashMap<String,Segment>();
-    private final Map<Location,MediatorGroup> mediatorsByLocation = new ConcurrentHashMap<Location,MediatorGroup>();
+    private final Map<Location,Map<Dmn1NodeType,MontereyTypedGroup>> clustersByLocationAndType = new ConcurrentHashMap<Location,Map<Dmn1NodeType,MontereyTypedGroup>>();
+    private final Map<Dmn1NodeType,MontereyTypedGroup> typedFabrics = [:];
     private ScheduledFuture<?> monitoringTask;
     
     public MontereyNetwork() {
@@ -134,8 +152,31 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         return Collections.unmodifiableMap(result);
     }
 
-    public Map<Location, MediatorGroup> getMediatorGroups() {
-        mediatorsByLocation.asImmutable();
+    public MontereyTypedGroup getFabric(Dmn1NodeType nodeType) {
+        return typedFabrics.get(nodeType);
+    }
+
+    public Map<Location, MontereyTypedGroup> getClusters(Dmn1NodeType nodeType) {
+        Map<Location, MontereyTypedGroup> result = [:]
+        clustersByLocationAndType.each {
+            MontereyTypedGroup cluster = it.getValue().getAt(nodeType)
+            if (cluster != null) {
+                result.put(it.getKey(), cluster)
+            }
+        }
+        return result
+    }
+    
+    public Map<Dmn1NodeType, MontereyTypedGroup> getClusters(Location loc) {
+        return clustersByLocationAndType.get(loc)?.asImmutable() ?: [:];
+    }
+    
+    public MediatorGroup getMediatorFabric() {
+        return typedFabrics.get(Dmn1NodeType.M);
+    }
+    
+    public Map<Location, MediatorGroup> getMediatorClusters() {
+        return getClusters(Dmn1NodeType.M);
     }
     
     public Map<String,Segment> getSegments() {
@@ -256,6 +297,11 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         boolean result = deployer.deployApplication(descriptor, bundles);
     }
 
+    // TODO Use attribute? Method is used to guard call to stop. Or should stop be idempotent?
+    public boolean isRunning() {
+        return host != null;
+    }
+    
     public void stop() {
         // TODO Guard so can only shutdown if network nodes are not running?
         if (host == null) {
@@ -336,26 +382,15 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         Collection<MontereyActiveLocation> montereyLocations = networkInfo.getActiveLocations();
         Collection<Location> locations = montereyLocations.collect { locationRegistry.getConvertedLocation(it) }
         
-        // Create/destroy mediator groups
-        Collection<Location> newLocations = []
-        Collection<Location> removedLocations = []
-        newLocations.addAll(locations); newLocations.removeAll(mediatorsByLocation.keySet());
-        removedLocations.addAll(mediatorsByLocation.keySet()); removedLocations.removeAll(locations);
-
-        newLocations.each {
-            MediatorGroup mediatorGroup = new MediatorGroup(connectionDetails, it);
-            addOwnedChild(mediatorGroup);
-            mediatorsByLocation.put(it, mediatorGroup);
+        // Update locations, if they've changed
+        if (!this.locations.equals(locations)) {
+            this.locations.clear();
+            this.locations.addAll(locations);
         }
-
-        removedLocations.each {
-            MediatorGroup mediatorGroup = mediatorsByLocation.get(it);
-            if (mediatorGroup != null) {
-                mediatorGroup.dispose();
-                removeOwnedChild(mediatorGroup);
-            }
-        }
-
+        
+        updateFabricTopologies();
+        
+        updateClusterTopologies();
         
         // Create/destroy nodes that have been added/removed
         Collection<NodeId> newNodes = []
@@ -414,6 +449,51 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         }
     }
 
+    private void updateFabricTopologies() {
+        // Create fabrics (if have not already done so)
+        if (typedFabrics.isEmpty()) {
+            typedFabrics.put(Dmn1NodeType.LPP, MontereyTypedGroup.newAllLocationsInstance(connectionDetails, Dmn1NodeType.LPP, locations));
+            typedFabrics.put(Dmn1NodeType.MR, MontereyTypedGroup.newAllLocationsInstance(connectionDetails, Dmn1NodeType.MR, locations));
+            typedFabrics.put(Dmn1NodeType.M, MediatorGroup.newAllLocationsInstance(connectionDetails, locations));
+            typedFabrics.put(Dmn1NodeType.TP, MontereyTypedGroup.newAllLocationsInstance(connectionDetails, Dmn1NodeType.TP, locations));
+            
+            typedFabrics.values().each { addOwnedChild(it) }
+        }
+        
+        typedFabrics.values().each {
+            it.refreshLocations(locations);
+        }
+    }
+    
+    private void updateClusterTopologies() {
+        // Create/destroy clusters
+        Collection<Location> newLocations = []
+        Collection<Location> removedLocations = []
+        
+        newLocations.addAll(locations); newLocations.removeAll(clustersByLocationAndType.keySet());
+        removedLocations.addAll(clustersByLocationAndType.keySet()); removedLocations.removeAll(locations);
+
+        newLocations.each { Location loc ->
+            Map<Dmn1NodeType,MontereyTypedGroup> clustersByType = [:]
+            clustersByLocationAndType.put(loc, clustersByType)
+
+            clustersByType.put(Dmn1NodeType.LPP, MontereyTypedGroup.newSingleLocationInstance(connectionDetails, Dmn1NodeType.LPP, loc));
+            clustersByType.put(Dmn1NodeType.MR, MontereyTypedGroup.newSingleLocationInstance(connectionDetails, Dmn1NodeType.MR, loc));
+            clustersByType.put(Dmn1NodeType.M, MediatorGroup.newSingleLocationInstance(connectionDetails, loc));
+            clustersByType.put(Dmn1NodeType.TP, MontereyTypedGroup.newSingleLocationInstance(connectionDetails, Dmn1NodeType.TP, loc));
+
+            clustersByType.values().each { it.setOwner(typedFabrics.get(it.nodeType)) }
+        }
+
+        removedLocations.each { Location loc ->
+            Map<Dmn1NodeType,MontereyTypedGroup> clustersByType = clustersByLocationAndType.remove(loc)
+            clustersByType?.values().each { MontereyTypedGroup cluster ->
+                cluster.dispose();
+                removeOwnedChild(cluster);
+            }
+        }
+    }
+    
     private void updateWorkrates() {
         Dmn1NetworkInfo networkInfo = new Dmn1NetworkInfoWebProxy(connectionDetails.getManagementUrl(), gson, connectionDetails.getWebApiAdminCredential());
         Map<NodeId, WorkrateReport> workrates = networkInfo.getActivityModel().getAllWorkrateReports();
