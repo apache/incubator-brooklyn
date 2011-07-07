@@ -1,10 +1,9 @@
-var map;
-var loc;
-var locations = new Array();
-var locationNumber = 0;
-
 Brooklyn.location = (function() {
-    
+    var map;
+    var loc;
+    var locations = new Array();
+    var locationNumber = 0;
+
     function init() {
         var edinburgh = "Edinburgh, UK";
         var japan = "Tokyo, Japan";
@@ -71,20 +70,21 @@ Brooklyn.location = (function() {
             }
         });
     }
-    return { init : init, resize : resize}
+
+    function toggleLocation(){
+        if(locationNumber==(locations.length-1)){
+            locationNumber = 0;
+        }
+        else{
+            locationNumber = locationNumber + 1;
+        }
+        map.setCenter(locations[locationNumber]);
+    }
+    return { init : init, resize : resize, toggleLocation : toggleLocation}
 })();
 
 $(document).ready(Brooklyn.location.init);
 
 //Other Map Functions, Toggle etc.
 
-function toggleLocation(){
-    if(locationNumber==(locations.length-1)){
-        locationNumber = 0;
-    }
-    else{
-        locationNumber = locationNumber + 1;
-    }
-    map.setCenter(locations[locationNumber]);
-}
 
