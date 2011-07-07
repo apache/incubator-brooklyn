@@ -183,6 +183,11 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         return ImmutableMap.copyOf(this.@segments);
     }
 
+    // TODO Use attribute? Method is used to guard call to stop. Or should stop be idempotent?
+    public boolean isRunning() {
+        return host != null;
+    }
+    
     @VisibleForTesting    
     LocationRegistry getLocationRegistry() {
         return locationRegistry;
@@ -297,9 +302,9 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         boolean result = deployer.deployApplication(descriptor, bundles);
     }
 
-    // TODO Use attribute? Method is used to guard call to stop. Or should stop be idempotent?
-    public boolean isRunning() {
-        return host != null;
+    public void provisionNodes(Location loc, int numNodes) {
+        MontereyContainerNode node = new MontereyContainerNode(connectionDetails);
+        node.start([loc]);
     }
     
     public void stop() {
