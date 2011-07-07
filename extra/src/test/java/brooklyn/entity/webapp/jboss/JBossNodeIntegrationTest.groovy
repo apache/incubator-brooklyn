@@ -46,13 +46,6 @@ public class JBossNodeIntegrationTest {
         app = new TestApplication();
         testLocation = new LocalhostMachineProvisioningLocation(name:'london', count:2)
     }
-
-    
-    @AfterMethod(groups = [ "Integration" ])
-    public void waitForShutdown() {
-        log.info "Sleeping for shutdown"
-        Thread.sleep 4000
-    }
     
     @Test(groups = "Integration")
     public void canStartupAndShutdown() {

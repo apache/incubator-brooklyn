@@ -157,6 +157,10 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     public void shutdown() {
         def host = entity.getAttribute(Attributes.JMX_HOST)
         def port = entity.getAttribute(Attributes.JMX_PORT)
-        machine.run(out:System.out, "$installDir/bin/shutdown.sh --host=$host --port=$port -S")
+        machine.run(out:System.out, [
+	            "$installDir/bin/shutdown.sh --host=$host --port=$port -S",
+                "sleep 5",
+                "ps auxwwww | grep ${entity.id} | awk '{ print \$2 }' | xargs kill -9"
+            ])
     }
 }
