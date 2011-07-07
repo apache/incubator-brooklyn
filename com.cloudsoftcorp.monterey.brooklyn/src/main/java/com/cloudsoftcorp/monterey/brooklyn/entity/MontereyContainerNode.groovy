@@ -73,7 +73,16 @@ public class MontereyContainerNode extends AbstractGroup {
         DmnFuture<?> future = plumber.revert(nodeId);
     }
     
-    void updateContents(NodeSummary nodeSummary) {
+    void updateWorkrate(WorkrateReport report) {
+        node?.updateWorkrate(report)
+    }
+
+    void updateContents(NodeSummary nodeSummary, Collection<NodeId> downstreamNodes) {
+        updateNodeType(nodeSummary);
+        node?.updateTopology(nodeSummary, (downstreamNodes ?: []));
+    }
+    
+    private void updateNodeType(NodeSummary nodeSummary) {
         if (nodeSummary.getType() == node?.getNodeType()) {
             // already has correct type; nothing to do
             return;
@@ -116,8 +125,4 @@ public class MontereyContainerNode extends AbstractGroup {
         
         LOG.info("Node "+nodeId+" changed type to "+nodeSummary.getType());        
     }   
-    
-    void updateWorkrate(WorkrateReport report) {
-        node?.updateWorkrate(report)
-    }
 }

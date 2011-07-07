@@ -19,7 +19,7 @@ public class MediatorGroup extends DynamicGroup implements Balanceable {
 
     private final Map<NodeId,MediatorNode> mediators = new ConcurrentHashMap<NodeId,AbstractMontereyNode>();
     
-    private Gson gson;
+    private final Gson gson;
     
     final MontereyNetworkConnectionDetails connectionDetails;
     final Location loc;
@@ -33,7 +33,7 @@ public class MediatorGroup extends DynamicGroup implements Balanceable {
         GsonSerializer gsonSerializer = new GsonSerializer(classloadingContext);
         gson = gsonSerializer.getGson();
 
-        setEntityFilter { 
+        setEntityFilter {
             Entity e -> e instanceof MediatorNode && e.locations.contains(loc)
         }
     }

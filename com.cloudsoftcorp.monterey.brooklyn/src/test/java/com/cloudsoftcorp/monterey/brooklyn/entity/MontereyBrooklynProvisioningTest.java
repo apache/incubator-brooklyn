@@ -9,7 +9,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -178,37 +180,52 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
 
     @Test
     public void testRolloutNodesCreatesBrooklynEntities() throws Throwable {
-        // Start the management plane (with "simulator" embedded network nodes)
-        montereyNetwork.startOnHost(localhost);
-        montereyNetwork.deployCloudEnvironment(newSimulatorCloudEnvironment());
+        Map<NodeId, NodeSummary> nodes = rollout(1,1,1,1,1);
+        assertBrooklynEventuallyHasNodes(nodes);
+    }
+    
+    @Test
+    public void testLppRouterSwitchover() throws Throwable {
+        rollout(1,2,1,1,0);
         
-        // Deploy a real app
-        montereyNetwork.deployApplication(newHelloCloudMontereyDeploymentDescriptor(), HELLO_CLOUD_BUNDLE_SET);
-
-        Dmn1NetworkInfoWebProxy networkInfo = newMontereyNetworkInfo();
-        ProvisionerWebProxy provisioner = newMontereyProvisioner();
-        PlumberWebProxy plumber = newMontereyPlumber();
+        // Get LPP, and rewire it
+        NodeId lppId = findNodesOfType(Dmn1NodeType.LPP).iterator().next();
+        LppNode lppNode = (LppNode) montereyNetwork.getMontereyNodes().get(lppId);
+        Collection<NodeId> mrIds = findNodesOfType(Dmn1NodeType.MR);
+        NodeId oldMrId = lppNode.getAttribute(MontereyAttributes.DOWNSTREAM_ROUTER);
+        NodeId newMrId = findRelativeComplement(mrIds, Collections.singleton(oldMrId)).iterator().next();
+        MrNode newMr = (MrNode) montereyNetwork.getMontereyNodes().get(newMrId);
         
-        // Create 4 nodes, and assert brooklyn entities knows about spares
-        MontereyActiveLocation aMontereyLocation = networkInfo.getActiveLocations().iterator().next();
-        CloudProviderAccountAndLocationId aMontereLocationId = LocationUtils.toAccountAndLocationId(aMontereyLocation);
-        DmnFuture<Collection<NodeId>> provisioningFuture = provisioner.createNodesAt(4, aMontereLocationId);
-        Collection<NodeId> provisionedNodes = provisioningFuture.get(TIMEOUT, TimeUnit.MILLISECONDS);
-
-        assertBrooklynEventuallyHasNodes(networkInfo.getNodeSummaries());
+        lppNode.routerSwitchover(newMr);
         
-        // Rollout a simple 1-1-1-1 network, and assert brooklyn entities know about it 
-        DmnFuture<Collection<NodeId>> rolloutingFuture = plumber.rolloutNodes(new NodesRolloutConfiguration.Builder()
-                .nodesToUse(provisionedNodes)
-                .lpps(1)
-                .mrs(1)
-                .ms(1)
-                .tps(1)
-                .build());
+        assertBrooklynEventuallyHasDownstreamRouters(Collections.singletonMap(lppId, newMrId));
+    }
+    
+    @Test
+    public void testMediatorRouterSwitchover() throws Throwable {
+        rollout(1,1,1,2,0);
         
-        rolloutingFuture.get(TIMEOUT, TimeUnit.MILLISECONDS);
-
-        assertBrooklynEventuallyHasNodes(networkInfo.getNodeSummaries());
+        // Get M, and rewire it
+        NodeId lppId = findNodesOfType(Dmn1NodeType.M).iterator().next();
+        MediatorNode mNode = (MediatorNode) montereyNetwork.getMontereyNodes().get(lppId);
+        Collection<NodeId> tpIds = findNodesOfType(Dmn1NodeType.TP);
+        NodeId oldTpId = mNode.getAttribute(MontereyAttributes.DOWNSTREAM_ROUTER);
+        NodeId newTpId = findRelativeComplement(tpIds, Collections.singleton(oldTpId)).iterator().next();
+        TpNode newTp = (TpNode) montereyNetwork.getMontereyNodes().get(newTpId);
+        
+        mNode.routerSwitchover(newTp);
+        
+        assertBrooklynEventuallyHasDownstreamRouters(Collections.singletonMap(lppId, newTpId));
+    }
+    
+    /**
+     * The relative complement of A with respect to a set B, is the set of elements in B but not in A.
+     * Therefore, returns the elements that are in col but that are not in other.
+     */
+    private <T> Collection<T> findRelativeComplement(Collection<T> col, Collection<?> other) {
+        Set<T> result = new LinkedHashSet<T>(col);
+        result.removeAll(other);
+        return Collections.unmodifiableSet(result);
     }
     
     @Test
@@ -393,6 +410,31 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
                 .build());
     }
     
+    private Map<NodeId, NodeSummary> rollout(int lpp, int mr, int m, int tp, int spare) throws Throwable {
+        // Start the management plane (with "simulator" embedded network nodes)
+        montereyNetwork.startOnHost(localhost);
+        montereyNetwork.deployCloudEnvironment(newSimulatorCloudEnvironment());
+        montereyNetwork.deployApplication(newHelloCloudMontereyDeploymentDescriptor(), HELLO_CLOUD_BUNDLE_SET);
+
+        Dmn1NetworkInfoWebProxy networkInfo = newMontereyNetworkInfo();
+        ProvisionerWebProxy provisioner = newMontereyProvisioner();
+        PlumberWebProxy plumber = newMontereyPlumber();
+        
+        // Create nodes
+        int numNodes = lpp+mr+m+tp+spare;
+        MontereyActiveLocation aMontereyLocation = networkInfo.getActiveLocations().iterator().next();
+        CloudProviderAccountAndLocationId aMontereLocationId = LocationUtils.toAccountAndLocationId(aMontereyLocation);
+        DmnFuture<Collection<NodeId>> provisioningFuture = provisioner.createNodesAt(numNodes, aMontereLocationId);
+        Collection<NodeId> provisionedNodes = provisioningFuture.get(TIMEOUT, TimeUnit.MILLISECONDS);
+        
+        DmnFuture<Collection<NodeId>> future = plumber.rolloutNodes(new NodesRolloutConfiguration.Builder()
+                .nodesToUse(provisionedNodes).lpps(lpp).mrs(mr).ms(m).tps(tp).build());
+        future.get(TIMEOUT, TimeUnit.MILLISECONDS);
+        
+        assertBrooklynEventuallyHasNodes(networkInfo.getNodeSummaries());
+        return networkInfo.getNodeSummaries();
+    }
+    
     private ScheduledFuture<?> createHelloCloudLoad(final String segment, double msgsPerSec) throws Exception {
         final HelloCloudServiceLocator serviceLocator = newHelloCloudServiceLocator();
         long period = (long)(1000/msgsPerSec);
@@ -473,6 +515,14 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         return result;
     }
     
+    private int countNodesOfType(Collection<NodeSummary> nodes, Dmn1NodeType type) {
+        int result = 0;
+        for (NodeSummary node : nodes) {
+            if (node.getType() == type) result++;
+        }
+        return result;
+    }
+    
     private void assertMontereyRunningWithApp(MontereyNetwork montereyNetwork) {
         DeploymentWebProxy deploymentWebProxy = new DeploymentWebProxy(montereyNetwork.getManagementUrl(), gson, new CredentialsConfig("myname", "mypass", HTTP_AUTH.REALM, HTTP_AUTH.METHOD));
         Assert.assertTrue(deploymentWebProxy.isApplicationUndeployable());
@@ -517,14 +567,6 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
             }}, TIMEOUT);
     }
     
-    private int countNodesOfType(Collection<NodeSummary> nodes, Dmn1NodeType type) {
-        int result = 0;
-        for (NodeSummary node : nodes) {
-            if (node.getType() == type) result++;
-        }
-        return result;
-    }
-    
     private void assertBrooklynEventuallyHasNodes(final Map<NodeId,NodeSummary> expected) throws Throwable {
         assertSuccessWithin(new Callable<Object>() {
             public Object call() throws Exception {
@@ -553,6 +595,19 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
             }}, TIMEOUT);
     }
     
+    private void assertBrooklynEventuallyHasDownstreamRouters(final Map<NodeId,NodeId> expected) throws Throwable {
+        assertSuccessWithin(new Callable<Object>() {
+            public Object call() throws Exception {
+                for (Map.Entry<NodeId,NodeId> entry : expected.entrySet()) {
+                    NodeId sourceId = entry.getKey();
+                    NodeId expectedDownstreamId = entry.getValue();
+                    AbstractMontereyNode montereyNetworkNode = montereyNetwork.getMontereyNodes().get(sourceId);
+                    Assert.assertEquals(expectedDownstreamId, montereyNetworkNode.getAttribute(LppNode.DOWNSTREAM_ROUTER));
+                }
+                return null;
+            }}, TIMEOUT);
+    }
+
     private void assertBrooklynEventuallyHasMediatorGroups(final Collection<MontereyActiveLocation> locs) throws Throwable {
         assertSuccessWithin(new Callable<Object>() {
             public Object call() throws Exception {

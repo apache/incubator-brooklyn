@@ -6,6 +6,7 @@ import brooklyn.location.Location
 
 import com.cloudsoftcorp.monterey.control.workrate.api.WorkrateReport
 import com.cloudsoftcorp.monterey.network.control.api.Dmn1NodeType
+import com.cloudsoftcorp.monterey.network.control.api.NodeSummary
 import com.cloudsoftcorp.monterey.node.api.NodeId
 
 /**
@@ -23,7 +24,7 @@ abstract class AbstractMontereyNode extends AbstractEntity {
     public static final BasicAttributeSensor<Integer> WORKRATE_MSGS_PER_SEC = [ Double, "monterey.workrate.msgsPerSec", "Messages per sec" ]
     public static final BasicAttributeSensor<Dmn1NodeType> NODE_TYPE = [ Dmn1NodeType.class, "monterey.node-type", "Messages per sec" ]
     
-    private final MontereyNetworkConnectionDetails connectionDetails;
+    protected final MontereyNetworkConnectionDetails connectionDetails;
     private final NodeId nodeId;
     private final Dmn1NodeType nodeType;
     
@@ -42,6 +43,10 @@ abstract class AbstractMontereyNode extends AbstractEntity {
         return nodeType;
     }
     
+    void updateTopology(NodeSummary summary, Collection<NodeId> downstreamNodes) {
+        // default is no-op; can be over-ridden
+    }
+        
     abstract void updateWorkrate(WorkrateReport report);
     
     protected void dispose() {

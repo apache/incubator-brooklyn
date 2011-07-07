@@ -1,10 +1,9 @@
 package com.cloudsoftcorp.monterey.brooklyn.entity
 
-import java.util.Map;
-
 import java.io.File
 import java.io.IOException
 import java.net.URL
+import java.util.Collection
 import java.util.Map
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
@@ -333,6 +332,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         Map<NodeId, NodeSummary> nodeSummaries = networkInfo.getNodeSummaries();
         Map<String, SegmentSummary> segmentSummaries = networkInfo.getSegmentSummaries();
         Map<String, NodeId> segmentAllocations = networkInfo.getSegmentAllocations();
+        Map<NodeId,Collection<NodeId>> downstreamNodes = networkInfo.getTopology().getAllTargets();
         Collection<MontereyActiveLocation> montereyLocations = networkInfo.getActiveLocations();
         Collection<Location> locations = montereyLocations.collect { locationRegistry.getConvertedLocation(it) }
         
@@ -410,7 +410,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         
         // Notify "container nodes" (i.e. BasicNode in monterey classes jargon) of what node-types are running there
         nodeSummaries.values().each {
-            nodes.get(it.getNodeId())?.updateContents(it);
+            nodes.get(it.getNodeId())?.updateContents(it, downstreamNodes.get(it.getNodeId()));
         }
     }
 
