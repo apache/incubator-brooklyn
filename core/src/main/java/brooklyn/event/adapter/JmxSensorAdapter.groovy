@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory
 
 import com.google.common.base.Preconditions;
 
-import brooklyn.entity.basic.AttributeDictionary
+import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.AttributeSensor
 import brooklyn.event.Sensor
@@ -44,8 +44,8 @@ public class JmxSensorAdapter {
     public JmxSensorAdapter(EntityLocal entity, long timeout = -1) {
         this.entity = entity
  
-        String host = entity.getAttribute(AttributeDictionary.JMX_HOST);
-        int port = entity.getAttribute(AttributeDictionary.JMX_PORT);
+        String host = entity.getAttribute(Attributes.JMX_HOST);
+        int port = entity.getAttribute(Attributes.JMX_PORT);
  
         this.jmxUrl = "service:jmx:rmi:///jndi/rmi://"+host+":"+port+"/jmxrmi";
         

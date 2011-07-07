@@ -1,6 +1,6 @@
 package brooklyn.entity.webapp.tomcat
 
-import brooklyn.entity.basic.AttributeDictionary
+import brooklyn.entity.basic.Attributes
 import brooklyn.util.SshBasedJavaWebAppSetup
 import brooklyn.location.basic.SshMachineLocation
 
@@ -77,9 +77,9 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
     
     @Override
     protected void postStart() {
-        entity.setAttribute(AttributeDictionary.JMX_PORT, jmxPort)
-        entity.setAttribute(AttributeDictionary.JMX_HOST, jmxHost)
-        entity.setAttribute(AttributeDictionary.HTTP_PORT, tomcatHttpPort)
+        entity.setAttribute(Attributes.JMX_PORT, jmxPort)
+        entity.setAttribute(Attributes.JMX_HOST, jmxHost)
+        entity.setAttribute(Attributes.HTTP_PORT, tomcatHttpPort)
         entity.setAttribute(TomcatNode.TOMCAT_SHUTDOWN_PORT, tomcatShutdownPort)
     }
     

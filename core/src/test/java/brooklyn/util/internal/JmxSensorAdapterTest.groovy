@@ -14,7 +14,7 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.LocallyManagedEntity
 import brooklyn.entity.basic.AbstractEntity
-import brooklyn.entity.basic.AttributeDictionary
+import brooklyn.entity.basic.Attributes
 import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.adapter.ValueProvider
 import brooklyn.test.GeneralisedDynamicMBean
@@ -36,8 +36,8 @@ public class JmxSensorAdapterTest {
 
         // Create an entity and configure it with the above JMX service
         AbstractEntity entity = new LocallyManagedEntity()
-        entity.setAttribute(AttributeDictionary.JMX_HOST, jmxService.jmxHost)
-        entity.setAttribute(AttributeDictionary.JMX_PORT, jmxService.jmxPort)
+        entity.setAttribute(Attributes.JMX_HOST, jmxService.jmxHost)
+        entity.setAttribute(Attributes.JMX_PORT, jmxService.jmxPort)
 
         // Create a JMX adapter, and register a sensor for the JMX attribute
         JmxSensorAdapter jmxAdapter = new JmxSensorAdapter(entity)

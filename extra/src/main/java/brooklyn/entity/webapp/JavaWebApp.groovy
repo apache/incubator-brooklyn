@@ -4,7 +4,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.AbstractEntity
-import brooklyn.entity.basic.AttributeDictionary
+import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.ConfigKeys
 import brooklyn.entity.trait.Startable
 import brooklyn.event.AttributeSensor
@@ -39,9 +39,9 @@ public abstract class JavaWebApp extends AbstractEntity implements Startable {
     public static final ConfigKey<Integer> SUGGESTED_JMX_PORT = ConfigKeys.SUGGESTED_JMX_PORT;
     public static final ConfigKey<String> SUGGESTED_JMX_HOST = ConfigKeys.SUGGESTED_JMX_HOST;
     
-    public static final AttributeSensor<Integer> HTTP_PORT = AttributeDictionary.HTTP_PORT;
-    public static final AttributeSensor<Integer> JMX_PORT = AttributeDictionary.JMX_PORT;
-    public static final AttributeSensor<String> JMX_HOST = AttributeDictionary.JMX_HOST;
+    public static final AttributeSensor<Integer> HTTP_PORT = Attributes.HTTP_PORT;
+    public static final AttributeSensor<Integer> JMX_PORT = Attributes.JMX_PORT;
+    public static final AttributeSensor<String> JMX_HOST = Attributes.JMX_HOST;
 
     public static final BasicAttributeSensor<Boolean> NODE_UP = [ Boolean, "webapp.hasStarted", "Node started" ];
     public static final BasicAttributeSensor<String> NODE_STATUS = [ String, "webapp.status", "Node status" ];

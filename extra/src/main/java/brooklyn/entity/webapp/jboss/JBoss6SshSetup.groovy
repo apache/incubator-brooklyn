@@ -1,6 +1,6 @@
 package brooklyn.entity.webapp.jboss
 
-import brooklyn.entity.basic.AttributeDictionary
+import brooklyn.entity.basic.Attributes
 import brooklyn.util.SshBasedJavaWebAppSetup
 import brooklyn.location.basic.SshMachineLocation
 
@@ -56,9 +56,9 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     
     @Override
     protected void postStart() {
-        entity.setAttribute(AttributeDictionary.JMX_PORT, jmxPort)
-        entity.setAttribute(AttributeDictionary.JMX_HOST, jmxHost)
-        entity.setAttribute(AttributeDictionary.HTTP_PORT, DEFAULT_HTTP_PORT+portIncrement)
+        entity.setAttribute(Attributes.JMX_PORT, jmxPort)
+        entity.setAttribute(Attributes.JMX_HOST, jmxHost)
+        entity.setAttribute(Attributes.HTTP_PORT, DEFAULT_HTTP_PORT+portIncrement)
     }
     
     public String getInstallScript() {
@@ -108,8 +108,8 @@ exit"""
 
     /** script to return 1 if pid in runDir is running, 0 otherwise */
     public String getCheckRunningScript() { 
-        def host = entity.getAttribute(AttributeDictionary.JMX_HOST)
-        def port = entity.getAttribute(AttributeDictionary.JMX_PORT)
+        def host = entity.getAttribute(Attributes.JMX_HOST)
+        def port = entity.getAttribute(Attributes.JMX_PORT)
         "$installDir/bin/twiddle.sh --host $host --port $port get \"jboss.system:type=Server\" Started; exit"
     }
 
@@ -118,8 +118,8 @@ exit"""
     }
 
     public void shutdown() {
-        def host = entity.getAttribute(AttributeDictionary.JMX_HOST)
-        def port = entity.getAttribute(AttributeDictionary.JMX_PORT)
+        def host = entity.getAttribute(Attributes.JMX_HOST)
+        def port = entity.getAttribute(Attributes.JMX_PORT)
         machine.run("$installDir/bin/shutdown.sh --host=$host --port=$port -S; exit", out: System.out)
     }
 }
