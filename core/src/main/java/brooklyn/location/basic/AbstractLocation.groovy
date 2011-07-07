@@ -1,6 +1,10 @@
 package brooklyn.location.basic
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 import brooklyn.location.Location
+
 import com.google.common.base.Preconditions
 
 /**
@@ -8,7 +12,8 @@ import com.google.common.base.Preconditions
  * requirements of the Location interface documentation, and is ready to be extended to make more specialized locations.
  */
 public abstract class AbstractLocation implements Location {
-
+    public static final Logger LOG = LoggerFactory.getLogger(Location.class)
+ 
     private final String name
     private Location parentLocation
     private final Collection<Location> childLocations = []

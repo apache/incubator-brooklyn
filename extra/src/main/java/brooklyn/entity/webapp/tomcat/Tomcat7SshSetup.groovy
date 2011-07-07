@@ -114,7 +114,7 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
         return env
     }
 
-    /** script to return 1 if pid in runDir is running, 0 otherwise  */
+    /** script to return 0 if pid in runDir is running, 1 otherwise  */
     public List<String> getCheckRunningScript() {
         List<String> script = [
             "cd $runDir",

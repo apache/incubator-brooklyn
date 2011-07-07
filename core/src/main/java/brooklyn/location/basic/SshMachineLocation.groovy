@@ -53,9 +53,9 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         int result = t.execShell props, commands, env
         t.disconnect()
         result
-
-//        ExecUtils.execBlocking "ssh", (user?user+"@":"")+host, command
     }
+ 
+//        ExecUtils.execBlocking "ssh", (user?user+"@":"")+host, command
 
     public int copyTo(File src, String destination) {
         def conn = new SshJschTool(user:user, host:address.hostName)

@@ -113,12 +113,12 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         return env
     }
 
-    /** script to return 1 if pid in runDir is running, 0 otherwise */
+    /** script to return 0 if pid in runDir is running, 1 otherwise */
     public List<String> getCheckRunningScript() { 
         def host = entity.getAttribute(Attributes.JMX_HOST)
         def port = entity.getAttribute(Attributes.JMX_PORT)
         List<String> script = [
-            "$installDir/bin/twiddle.sh --host $host --port $port get \"jboss.system:type=Server\" Started"
+            "$installDir/bin/twiddle.sh --host $host --port $port get \"jboss.system:type=Server\" Started | grep false && exit 1"
         ]
         return script
     }
