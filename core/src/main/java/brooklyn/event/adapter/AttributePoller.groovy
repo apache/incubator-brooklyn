@@ -63,6 +63,7 @@ public class AttributePoller {
 
     public void close() {
         scheduled.each { key, ScheduledFuture future -> future.cancel(true) }
+        exec.shutdownNow()
     }
 
     private void updateAll() {
