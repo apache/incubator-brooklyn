@@ -423,6 +423,10 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     /** flag needed internally to prevent invokeMethod from recursing on itself */     
     private ThreadLocal<Boolean> skipCustomInvokeMethod = new ThreadLocal() { protected Object initialValue() { Boolean.FALSE } }
 
+    /** 
+     * Called by groovy for all method invocations; pass-through for everything but effectors; 
+     * effectors get wrapped in a new task (parented by current task if there is one).
+     */
     public Object invokeMethod(String name, Object args) {
         if (!this.@skipCustomInvokeMethod.get()) {
             this.@skipCustomInvokeMethod.set(true);
