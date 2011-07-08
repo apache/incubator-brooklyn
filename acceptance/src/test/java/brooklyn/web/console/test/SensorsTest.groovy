@@ -5,19 +5,7 @@ import static org.testng.Assert.*;
 
 public class SensorsTest extends AbstractSeleniumTest {
 
-    private static int timeout = 10;
 
-    void waitFor(c) {
-		for (int second = 0;; second++) {
-			if (second >= timeout) fail("timeout");
-			try {
-                if (c()) {
-                    break;
-                }
-            } catch (Exception e) {}
-			Thread.sleep(1000);
-		}
-    }
 
     @Test public void testInitialText() {
         selenium.open("/entity/#summary");
