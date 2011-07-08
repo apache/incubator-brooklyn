@@ -172,3 +172,16 @@ textarea#logbox{
     background:black;
     color:green;
 }
+.map-container{
+    height:500px;
+    width:450px;
+    float:left;
+}
+#map-canvas{
+    float:left;
+    width:400px;
+}
+
+.locationData{
+    float:left;
+}

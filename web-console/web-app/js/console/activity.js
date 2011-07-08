@@ -36,8 +36,8 @@ Brooklyn.activity = (function(){
     }
 
     function populateGrid(){
-        for(var i=0;i<=mydata.length;i++)
-            $("#activitylist").jqGrid('addRowData',i+1,mydata[i]);
+        for(i=0;i<mydata.length;i++){
+            $("#activitylist").jqGrid('addRowData',i+1,mydata[i]);}
     }
 
     function selectLog(){
