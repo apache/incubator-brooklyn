@@ -7,18 +7,24 @@ import brooklyn.entity.basic.EntityLocal
 import brooklyn.location.PortRange
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.BasicPortRange
+import brooklyn.util.internal.SshJschTool;
 
-// TODO OS-X failure, if no recent command line ssh
-// ssh_askpass: exec(/usr/libexec/ssh-askpass): No such file or directory
-// Permission denied, please try again.
-// ssh_askpass: exec(/usr/libexec/ssh-askpass): No such file or directory
-// Received disconnect from ::1: 2: Too many authentication failures for alex 
-
+/**
+ * Java application installation, configuration and startup using ssh.
+ *
+ * This class should be extended for use by entities that are implemented by a Java
+ * application.
+ *
+ * TODO complete documentation
+ *
+ * @see SshJschTool
+ * @see SshMachineLocation
+ */
 public abstract class SshBasedJavaAppSetup {
     static final Logger log = LoggerFactory.getLogger(SshBasedJavaAppSetup.class)
- 
-    public static final String DEFAULT_INSTALL_BASEDIR = "/tmp/brooklyn/installs"
+
     public static final String DEFAULT_RUN_DIR = "/tmp/brooklyn"
+    public static final String DEFAULT_INSTALL_BASEDIR = DEFAULT_RUN_DIR+"/"+"installs"
     public static final int DEFAULT_FIRST_JMX_PORT = 32199
 
     EntityLocal entity
@@ -28,13 +34,13 @@ public abstract class SshBasedJavaAppSetup {
     protected String runDir;
     protected int jmxPort
     protected String jmxHost
-    
-    public SshBasedJavaAppSetup(EntityLocal entity, SshMachineLocation machine/*, Map properties=[:]*/) {
+
+    public SshBasedJavaAppSetup(EntityLocal entity, SshMachineLocation machine) {
         this.entity = entity
         this.machine = machine
-        jmxHost = machine.getAddress().getHostName();
+        jmxHost = machine.getAddress().getHostName()
     }
-    
+
     public SshBasedJavaAppSetup setJmxPort(int val) {
         this.jmxPort = val
         return this
@@ -54,26 +60,34 @@ public abstract class SshBasedJavaAppSetup {
         this.runDir = val
         return this
     }
-    
-    /** convenience to generate string '-Dprop1=val1 -Dprop2' for use with java */        
-    public static String toJavaDefinesString(Map m) {
-        StringBuffer sb = []
-        m.each { key, value ->
-	            sb.append("-D").append(key)
-	            if (value!='') { sb.append('=\'').append(value).append('\'') }
-	            sb.append(' ')
+
+    /**
+     * Convenience method to generate Java environment options string.
+     *
+     * Converts the properties {@link Map} entries with a value to {@code -Dkey=value}
+     * and entries where the value is null to {@code -Dkey}.
+     */
+    public static String toJavaDefinesString(Map properties) {
+        StringBuffer options = []
+        properties.each { key, value ->
+	            options.append("-D").append(key)
+	            if (value) options.append("=\'").append(value).append("\'")
+	            options.append(" ")
 	        }
-        return sb.toString().trim()
-        //TODO - try the following instead
-        //return m.collect( { "-D"+it.key+(it.value?:"='"+it.value+"'"} ).join(" ")
+        return options.toString().trim()
+//        return properties
+//            .collect({ key, value -> "-D${key}" + (value ?: "='${value}'") })
+//            .join(" ")
     }
 
     /**
-     * Generates the valid range of possible ports. If desired is specified, then try to use exactly that.
-     * Otherwise, use the range defaultFirst..65535. 
+     * Generates a valid range of possible ports.
+     *
+     * If desired is specified, then try to use exactly that. Otherwise, use the
+     * range from defaultFirst to 65535.
      */
-    public static PortRange toDesiredPortRange(Integer desired, int defaultFirst) {
-        if (desired == null | desired < 0) {
+    public static PortRange toDesiredPortRange(Integer desired, Integer defaultFirst) {
+        if (desired == null || desired < 0) {
             return new BasicPortRange(defaultFirst, 65535)
         } else if (desired > 0) {
             return new BasicPortRange(desired, desired)
@@ -82,28 +96,60 @@ public abstract class SshBasedJavaAppSetup {
         }
     }
 
-    protected Map getJvmStartupProperties() {
-        [:] + getJmxConfigOptions()
-    }
- 
     /**
-     * Return the JMX configuration properties used to start the service.
+     * Returns the complete set of Java configuration options required by
+     * the application.
+     *
+     * These should be formatted and passed to the JVM as the contents of
+     * the {@code JAVA_OPTS} environment variable. The default set contains
+     * only the options required to enable JMX. To add application specific
+     * options, override the {@link #getJavaConfigOptions()} method.
+     *
+     * @see #toJavaDefinesString(Map)
+     */
+    protected Map getJvmStartupProperties() {
+        getJavaConfigOptions() + getJmxConfigOptions()
+    }
+
+    /**
+     * Return extra Java configuration options required by the application.
      * 
+     * This should be overridden; default is an empty {@link Map}.
+     */
+    protected Map getJavaConfigOptions() { return [:] }
+
+    /**
+     * Return the configuration properties required to enable JMX for a Java application.
+     *
+     * These should be set as properties in the {@code JAVA_OPTS} environment variable
+     * when calling the run script for the application.
+     *
      * TODO security!
      */
     protected Map getJmxConfigOptions() {
         [
-          'com.sun.management.jmxremote':'',
-          'com.sun.management.jmxremote.port': jmxPort,
-          'com.sun.management.jmxremote.ssl':false,
-          'com.sun.management.jmxremote.authenticate':false,
-          'java.rmi.server.hostname':jmxHost
+          "com.sun.management.jmxremote" : null,
+          "com.sun.management.jmxremote.port" : jmxPort,
+          "com.sun.management.jmxremote.ssl" : false,
+          "com.sun.management.jmxremote.authenticate" : false,
+          "java.rmi.server.hostname" : jmxHost,
         ]
     }
-    
-    protected List<String> makeInstallScript(List<String> lines) { 
+
+    /**
+     * Add generic commands to an application specific installation script.
+     *
+     * The script will check for a {@code INSTALL_COMPLETION_DATE} file, and
+     * skip the installation if it exists, otherwise it executes the commands
+     * to install the applications and creates the file with the current
+     * date and time.
+     *
+     * @see #getInstallScript()
+     */
+    protected List<String> makeInstallScript(List<String> lines) {
+        if (lines.isEmpty()) return lines
         List<String> script = [
-            "if [ -f $installDir/../INSTALL_COMPLETION_DATE ] ; then echo software is already installed ; exit ; fi",
+            "[ -f $installDir/../INSTALL_COMPLETION_DATE ] && exit",
 			"mkdir -p $installDir",
 			"cd $installDir/..",
         ]
@@ -112,23 +158,61 @@ public abstract class SshBasedJavaAppSetup {
         return script
     }
 
-    public List<String> getInstallScript() { Collections.emptyList() }
- 
-    public List<String> getConfigScript() { Collections.emptyList() }
- 
-    public abstract List<String> getRunScript();
-    
-    public abstract Map<String, String> getRunEnvironment();
-    
     /**
-     * Should return script to run at remote server to determine whether process is running.
-     * 
-     * Script should return 0 if healthy, 1 if stopped, any other code if not healthy
+     * The script to run to on a remote machine to install the application.
+     *
+     * The default is a no-op.
+     *
+     * @return a {@link List} of shell commands
+     */
+    public List<String> getInstallScript() { Collections.emptyList() }
+
+    /**
+     * The script to run to on a remote machine to configure the application.
+     *
+     * The default is a no-op.
+     *
+     * @return a {@link List} of shell commands
+     */
+    public List<String> getConfigScript() { Collections.emptyList() }
+
+    /**
+     * The script to run to on a remote machine to run the application.
+     *
+     * The {@link #getRunEnvironment()} should be used to set any environment
+     * variables required.
+     *
+     * @return a {@link List} of shell commands
+     *
+     * @see #getRunEnvironment()
+     */
+    public abstract List<String> getRunScript();
+
+    /**
+     * The environment variables to be set when executing the commands to run
+     * the application.
+     *
+     * @see #getRunScript()
+     */
+    public abstract Map<String, String> getRunEnvironment();
+
+    /**
+     * The script to run to on a remote machine to determine whether the
+     * application is running.
+     *
+     * The script should exit with status 0 if healthy, 1 if stopped, any other
+     * code if not healthy.
+     *
+     * @return a {@link List} of shell commands
+     *
+     * @see #isRunning()
      */
     public abstract List<String> getCheckRunningScript();
-    
+
     /**
      * Installs the application on this machine, or no-op if no install-script defined.
+     *
+     * @see #getInstallScript()
      */
     public void install() {
         synchronized (getClass()) {
@@ -142,9 +226,11 @@ public abstract class SshBasedJavaAppSetup {
             }
         }
     }
-    
+
     /**
      * Configure the application on this machine, or no-op if no config-script defined.
+     *
+     * @see #getConfigScript()
      */
     public void config() {
         synchronized (entity) {
@@ -158,27 +244,53 @@ public abstract class SshBasedJavaAppSetup {
             }
         }
     }
-    
+
+    /**
+     * Run the application on this machine.
+     *
+     * The {@link #getRunEnvironment()} method should return a {@link Map} of
+     * environment variables and their values which will be set before executing
+     * the commands in {@link #getRunScript()}.
+     *
+     * @see #start()
+     * @see #getRunScript()
+     * @see #getRunEnvironment()
+     */
     public void runApp() {
         log.info "starting entity $entity on $machine, jmx $jmxHost:$jmxPort", entity, machine
         def result = machine.run(out:System.out, getRunScript(), getRunEnvironment())
 
         if (result) throw new IllegalStateException("failed to start $entity (exit code $result)")
-        
-        postStart();
     }
 
+    /**
+     * Test whether the application is running.
+     *
+     * @see #getCheckRunningScript()
+     */
     public boolean isRunning() {
         def result = machine.run(out:System.out, getCheckRunningScript())
         if (result==0) return true
         if (result==1) return false
         throw new IllegalStateException("$entity running check gave result code $result")
     }
-    
-    public void shutdown() { }
-    
+
     /**
-     * May also explicit {@link #install()}, {@link #config()} and {@link #runApp()} steps
+     * Shut down the application process.
+     */
+    public void shutdown() { }
+
+    /**
+     * Start the Java application.
+     *
+     * this installs, configures and starts the application process. However,
+     * users can also call the {@link #install()}, {@link #config()} and
+     * {@link #runApp()} steps independently. The {@link #postStart()} method
+     * will be called after the application run script has been executed, but
+     * the process may not be completely initialised at this stage, so care is
+     * required when implementing these stages.
+     *
+     * @see #stop()
      */
     public void start() {
         install()
@@ -186,35 +298,57 @@ public abstract class SshBasedJavaAppSetup {
         runApp()
         postStart()
     }
-    
+
     /**
-     * May also use explicit {@link #shutdown()} step
+     * Stop the Java application.
+     *
+     * May also use the explicit {@link #shutdown()} step, however this call
+     * also executes the {@link #postShutdown()} method if successful.
+     *
+     * @see #start()
      */
     public void stop() {
         shutdown()
         postShutdown()
     }
- 
+
     /**
-     * Called after start has completed, if successful. To be overridden; default is a no-op. 
+     * Called when starting the application, after the run step has completed
+     * without an exception.
+     *
+     * To be overridden; default is a no-op.
+     *
+     * @see #start()
+     * @see #runApp()
      */
     protected void postStart() { }
 
     /**
-     * Called after shutdown has completed, if successful. To be overridden; default is a no-op. 
+     * Called when stopping the application, if the shutdown step completes
+     * without an exception.
+     *
+     * To be overridden; default is a no-op.
+     *
+     * @see #stop()
+     * @see #shutdown()
      */
     protected void postShutdown() { }
 
     /**
-     * Reserves a port (via machine.obtainPort). Uses the suggested port if greater than 0; if 0 then uses any high port; 
-     * if less than 0 then uses defaultPort.
-     * 
-     * @param suggested
-     * @param defaultPort
-     * @param canIncrement
-     * @return
+     * Reserves a port.
+     *
+     * Uses the suggested port if greater than 0; if 0 then uses any high port;
+     * if less than 0 then uses defaultPort. If canIncrement is true, will reserve
+     * a port in the range between the suggested value and 65535.
+     *
+     * TODO support a flag for privileged ports less than 1024
+     *
+     * @return the reserved port number
+     *
+     * @see #obtainPort(int, boolean)
+     * @see SshMachineLocation#obtainPort(PortRange)
      */
-    protected int obtainPort(Integer suggested, int defaultPort, boolean canIncrement) {
+    protected int obtainPort(int suggested, int defaultPort, boolean canIncrement) {
         PortRange range;
         if (suggested > 0) {
             range = (canIncrement) ? new BasicPortRange(suggested, 65535) : new BasicPortRange(suggested, suggested)
@@ -226,6 +360,7 @@ public abstract class SshBasedJavaAppSetup {
         return machine.obtainPort(range);
     }
 
+    /** @see #obtainPort(int, int, boolean) */
     protected int obtainPort(int suggested, boolean canIncrement) {
         if (suggested < 0) throw new IllegalArgumentException("Port $suggested must be >= 0")
         obtainPort(suggested, suggested, canIncrement)

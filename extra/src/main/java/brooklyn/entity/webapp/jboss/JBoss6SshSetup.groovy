@@ -3,6 +3,7 @@ package brooklyn.entity.webapp.jboss
 import java.util.List;
 
 import brooklyn.entity.basic.Attributes
+import brooklyn.util.SshBasedJavaAppSetup;
 import brooklyn.util.SshBasedJavaWebAppSetup
 import brooklyn.location.basic.SshMachineLocation
 
@@ -113,7 +114,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         return env
     }
 
-    /** script to return 0 if pid in runDir is running, 1 otherwise */
+    /** @see SshBasedJavaAppSetup#getCheckRunningScript() */
     public List<String> getCheckRunningScript() { 
         def host = entity.getAttribute(Attributes.JMX_HOST)
         def port = entity.getAttribute(Attributes.JMX_PORT)

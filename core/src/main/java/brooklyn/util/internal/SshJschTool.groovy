@@ -16,7 +16,19 @@ import com.jcraft.jsch.ChannelShell
 import com.jcraft.jsch.JSch
 import com.jcraft.jsch.Session
 
-/** class is a wrapper for jsch session, taken from their examples */
+/**
+ * This class is a wrapper for the Jsch {@link Session} object.
+ *
+ * FIXME OS X failure, if no recent command line ssh
+ * <pre>
+ * ssh_askpass: exec(/usr/libexec/ssh-askpass): No such file or directory
+ * Permission denied, please try again.
+ * ssh_askpass: exec(/usr/libexec/ssh-askpass): No such file or directory
+ * Received disconnect from ::1: 2: Too many authentication failures for alex
+ * </pre>
+ *
+ * @see http://wiki.jsch.org/index.php?Manual%2FExamples%2FJschExecExample
+ */
 public class SshJschTool {
     private static final Logger log = LoggerFactory.getLogger(SshJschTool.class)
  
@@ -33,24 +45,24 @@ public class SshJschTool {
         Preconditions.checkArgument properties.containsKey('host'), "properties must contain a host key"
         Preconditions.checkArgument properties.get('host') instanceof String, "host value must be a string"
         Preconditions.checkArgument properties.get('host').length() > 0, "host value must not be an empty string"
-        this.host = properties.remove('host')
+        host = properties.remove('host')
 
-        if(properties.user) {
+        if (properties.user) {
             Preconditions.checkArgument properties.user instanceof String, "user value must be a string"
-            this.user = properties.remove('user')
+            user = properties.remove('user')
         }
 
-        if(properties.port) {
+        if (properties.port) {
             Preconditions.checkArgument properties.port instanceof Integer, "port value must be an integer"
-            this.port = properties.remove('port')
+            port = properties.remove('port')
         }
 
-        if(properties.keyFiles) {
+        if (properties.keyFiles) {
             Preconditions.checkArgument properties.keyFiles instanceof Collection, "keyFiles value must be a Collection"
-            this.keyFiles = properties.remove('keyFiles')
+            keyFiles = properties.remove('keyFiles')
         }
 
-        this.config << properties
+        config << properties
     }
 
     /**
