@@ -76,14 +76,13 @@ public class JmxSensorAdapter {
         if (timeoutMillis==-1) endTime = Long.MAX_VALUE
         while (thisStartTime <= endTime) {
             thisStartTime = System.currentTimeMillis()
-            log.debug "{} trying connection to {}", thisStartTime, jmxUrl
+            log.debug "trying connection to {} (at {})", jmxUrl, thisStartTime
             try {
                 connect()
                 return true
             } catch (IOException e) {
-                log.error "{} failed connection to {} ({})", System.currentTimeMillis(), jmxUrl, e.message
+                log.debug "failed connection to {} ({} at {})", jmxUrl, e.message, System.currentTimeMillis()
             }
-            Thread.sleep properties['connectDelay']
         }
         false
     }

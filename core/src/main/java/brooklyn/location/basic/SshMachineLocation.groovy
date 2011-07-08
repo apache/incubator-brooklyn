@@ -33,9 +33,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         }
     }
 
-    public InetAddress getAddress() {
-        return this.address;
-    }
+    public InetAddress getAddress() { return address }
  
     public int run(Map props=[:], String command, Map env=[:]) {
         run(props, [ command ], env)
@@ -54,8 +52,6 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         t.disconnect()
         result
     }
- 
-//        ExecUtils.execBlocking "ssh", (user?user+"@":"")+host, command
 
     public int copyTo(File src, String destination) {
         def conn = new SshJschTool(user:user, host:address.hostName)

@@ -71,7 +71,7 @@ public abstract class SshBasedJavaAppSetup {
         StringBuffer options = []
         properties.each { key, value ->
 	            options.append("-D").append(key)
-	            if (value) options.append("=\'").append(value).append("\'")
+	            if (value != null && value != "") options.append("=\'").append(value).append("\'")
 	            options.append(" ")
 	        }
         return options.toString().trim()
@@ -128,7 +128,7 @@ public abstract class SshBasedJavaAppSetup {
      */
     protected Map getJmxConfigOptions() {
         [
-          "com.sun.management.jmxremote" : null,
+          "com.sun.management.jmxremote" : "",
           "com.sun.management.jmxremote.port" : jmxPort,
           "com.sun.management.jmxremote.ssl" : false,
           "com.sun.management.jmxremote.authenticate" : false,
@@ -269,7 +269,7 @@ public abstract class SshBasedJavaAppSetup {
      * @see #getCheckRunningScript()
      */
     public boolean isRunning() {
-        def result = machine.run(out:System.out, getCheckRunningScript())
+        int result = machine.run(out:System.out, getCheckRunningScript())
         if (result==0) return true
         if (result==1) return false
         throw new IllegalStateException("$entity running check gave result code $result")

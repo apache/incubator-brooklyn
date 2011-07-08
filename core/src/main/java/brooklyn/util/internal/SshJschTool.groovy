@@ -140,7 +140,7 @@ public class SshJschTool {
         StringBuffer sb = []
         env.each { key, value -> sb.append("export $key=\"$value\"").append('\n') }
         commands.each { sb.append(it).append('\n') }
-        sb.append("exit\n")
+        sb.append("exit 0\n")
  
 
         channel.setInputStream new ByteArrayInputStream(sb.toString().getBytes("UTF-8"))
