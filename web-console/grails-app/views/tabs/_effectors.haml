@@ -1,16 +1,8 @@
 .effector
-    %fieldset{:class=>"tab-content-left-column"}
-        %legend Select Effector
-        %select{:size=>"15", :id=>"effectorList"}
-            %option ALL
-    %fieldset{:id=>"effector-args", :class=>"tab-content-right-column"}
-        %legend Invoke
-        %label{:id=>"effector-input1-label", :for=>"effector-input1"} Arg1:
-        %input{:id=>"effector-input1"}
-        %label{:id=>"effector-input2-label", :for=>"effector-input2"} Arg2:
-        %input{:id=>"effector-input2"}
-        %label{:id=>"effector-input3-label", :for=>"effector-input3"} Arg3:
-        %input{:id=>"effector-input3"}
-        %label{:id=>"effector-input4-label", :for=>"effector-input4"} Arg4:
-        %input{:id=>"effector-input4"}
-        %button Go
+	%fieldset{:class=>"tab-content-left-column"}
+		%legend Select Effector
+		%select{:size=>"15", :id=>"effectorList"}
+	#args
+		%fieldset{:id=>"effector-args", :class=>"tab-content-right-column"}
+			%legend Parameters
+			#effectorArgs

@@ -14,6 +14,7 @@ import brooklyn.management.SubscriptionContext
 import brooklyn.management.SubscriptionManager
 import brooklyn.web.console.entity.TestEffector
 import brooklyn.entity.webapp.tomcat.TomcatNode
+import brooklyn.entity.basic.BasicParameterType
 import brooklyn.util.task.BasicExecutionManager
 import brooklyn.management.Task
 
@@ -130,9 +131,16 @@ class ManagementContextService implements ManagementContext {
                 // Stealing the sensors from TomcatNode
                 this.sensors.putAll(new TomcatNode().sensors)
 
+                List<ParameterType<?>> parameterTypeList = new ArrayList<ParameterType<?>>()
+                ParameterType tomcatStartLocation = new BasicParameterType("Location", Void.class)
+                ParameterType actionDate = new BasicParameterType("Date", Void.class)
+                parameterTypeList.add(tomcatStartLocation)
+                parameterTypeList.add(actionDate)
+
+
                 // Don't appear to be any effectors in TomcatNode
-                TestEffector startTomcat = new TestEffector("Start Tomcat", "This will start Tomcat at a specified location",  new ArrayList<ParameterType<?>>())
-                TestEffector stopTomcat = new TestEffector("Stop Tomcat", "This will stop tomcat at its current location", new ArrayList<ParameterType<?>>())
+                TestEffector startTomcat = new TestEffector("Start Tomcat", "This will start Tomcat at a specified location", parameterTypeList)
+                TestEffector stopTomcat = new TestEffector("Stop Tomcat", "This will stop tomcat at its current location",  new Collections.SingletonList(actionDate))
                 TestEffector restartTomcat = new TestEffector("Restart Tomcat", "This will restart tomcat in its current location", new ArrayList<ParameterType<?>>())
 
                 this.effectors.putAll([  "Start Tomcat": startTomcat,
