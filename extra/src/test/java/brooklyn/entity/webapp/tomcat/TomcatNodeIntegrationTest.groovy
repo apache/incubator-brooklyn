@@ -125,7 +125,7 @@ public class TomcatNodeIntegrationTest {
                     return new BooleanWithMessage(false, "activity not set yet ($activityValue)")
 
                 assertEquals Double, activityValue.class
-                assertEquals 0, activityValue
+                assertEquals 0.0, (double)activityValue, 0.01
                 
                 def port = tc.getAttribute(TomcatNode.HTTP_PORT)
                 def connection = connectToURL "http://localhost:${port}/foo"
@@ -133,7 +133,7 @@ public class TomcatNodeIntegrationTest {
 
                 Thread.sleep 1000
                 activityValue = tc.getAttribute(TomcatNode.REQUESTS_PER_SECOND)
-                assertEquals 1d, activityValue
+                assertEquals 1d, (double)activityValue, 0.01
                 true
             }, timeout:10*SECONDS, useGroovyTruth:true)
     }
