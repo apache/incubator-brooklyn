@@ -49,5 +49,11 @@
 			<version>1.1-rc4</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.gmock</groupId>
+            <artifactId>gmock</artifactId>
+            <version>0.8.1</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>
