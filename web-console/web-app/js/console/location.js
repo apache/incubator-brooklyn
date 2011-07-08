@@ -2,14 +2,8 @@ Brooklyn.location = (function() {
     var map;
     var loc;
     var locationNumber = 0;
-// definitely need to look at getting some kind of map in here.
-    //var appLocations = [locations
-    //{name:"London, UK"},
-    //{name:"New York, USA"},
-    //{name:"Tokyo, Japan"},
-    //{name:"Edinburgh, UK"}
-    //];
-
+    var markers = new Array();
+    var infowindows = new Array();
     var appLocations = { "locations" : [ 
         {   "locationname" : "London, UK" ,
             "locationresources" : "60" ,
@@ -48,11 +42,9 @@ Brooklyn.location = (function() {
 
     function init() {
         createMap();
-        addLocations();
-        //alter location number for means of toggling.
-        locationNumber = locationNumber - 1;
         createLocationsGrid();
-        populateLocationsGrid();
+        addLocationsToWidgets();
+        locationNumber = locationNumber - 1;
         $(Brooklyn.eventBus).bind("tab_selected", resize);
     }
     function createLocationsGrid(){
@@ -81,6 +73,16 @@ Brooklyn.location = (function() {
             if (status == google.maps.GeocoderStatus.OK) {
                 loc = results[0].geometry.location;
                 map.setCenter(loc);
+                for(i=0;i<appLocations.locations.length;i++){
+                    if(appLocations.locations[i].locationname == result.locationname){
+                    // in here set the window and marker to be open.
+                    var locNumber = appLocations.locations[i].locationNumber;
+                    locwindow = infowindows[locNumber];
+                    locmarker = markers[locNumber];
+                    locwindow.open(map,locmarker);
+                    //alert(id);     = 0 for London but actually 1.
+                    }
+                }
                 } else {
                 alert("Geocode was not successful for the following reason: " + status);
             }
@@ -96,12 +98,16 @@ Brooklyn.location = (function() {
         }
         map = new google.maps.Map(document.getElementById("map-canvas"), myOptions);
     }
-    function addLocations(){
+    function addLocationsToWidgets(){
     for(i=0;i<appLocations.locations.length;i++){
-            addLocation(appLocations.locations[i].locationname ,
+            addLocationToMap(appLocations.locations[i].locationname ,
                         appLocations.locations[i].locationresources ,
                         i);
+            addLocationToGrid(i+1,appLocations.locations[i]);
             }
+    }
+    function addLocationToGrid(row,location){
+        $("#locationlist").jqGrid('addRowData',row,location);
     }
     function resize(e, id) {
         if (id == 'location') {
@@ -111,7 +117,7 @@ Brooklyn.location = (function() {
             map.setCenter(loc);
         }
     }
-    function addLocation(address , resources , i){
+    function addLocationToMap(address , resources , i){
         geocoder.geocode( { 'address': address}, function(results, status) {
             if (status == google.maps.GeocoderStatus.OK) {
                 loctext = results[0].formatted_address;
@@ -137,14 +143,15 @@ Brooklyn.location = (function() {
                     position: loc ,
                     title: loctext
                 });
-                var infoWindow = new google.maps.InfoWindow({
-                    height:200,
-                    width:200,
+                var infowindow = new google.maps.InfoWindow({
                     content: contentString
                 });
                 google.maps.event.addListener(marker, 'click' , function(){
-                    infoWindow.open(map , marker);
+                    infowindow.open(map , marker);
                 });
+                markers.push(marker);
+                infowindows.push(infowindow);
+                appLocations.locations[i].locationNumber = i;
                 locationNumber = locationNumber + 1;
             } else {
                 alert("Geocode was not successful for the following reason: " + status);
