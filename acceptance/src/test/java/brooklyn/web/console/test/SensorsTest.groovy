@@ -8,44 +8,85 @@ import org.testng.annotations.BeforeTest
 import org.testng.annotations.Test
 import static org.testng.Assert.assertTrue
 import org.openqa.selenium.By
+import org.openqa.selenium.support.ui.WebDriverWait
+import org.openqa.selenium.support.ui.Wait
+import org.openqa.selenium.support.ui.ExpectedCondition
+import org.openqa.selenium.chrome.ChromeDriver
 
 public class SensorsTest {
     WebDriver driver;
+    static Wait<WebDriver> wait;
+
+
     @BeforeTest
     public void setUp() throws Exception {
         //TODO There must be another way to get past the confirmation dialog, needs investigating
         FirefoxProfile profile = new FirefoxProfile()
         profile.setPreference("network.http.phishy-userpass-length", 255)
+        //System.properties.setProperty("webdriver.chrome.driver", "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
+        //driver = new ChromeDriver()
         driver = new FirefoxDriver(profile)
+        wait = new WebDriverWait(driver, 30);
 
         driver.get("http://admin:password@localhost:9090/entity/")
     }
 
+    void clickId(String id) {
+        driver.findElement(By.id(id)).click();
+    }
+
     @Test
-    public void testJun() {
+    public void testInitalDisplay() {
         assertTrue(!!(driver.findElement(By.id("status")).getText() =~ "No data yet"));
+        assertTrue(!!(driver.findElement(By.tagName("body")).getText() =~
+                "Select an entity in the tree to the left to work with it here."));
 
-        /*        verifyTrue(selenium.isTextPresent("No data yet."));
-        verifyTrue(selenium.isTextPresent("Select an entity in the tree to the left to work with it here."));
-        for (int second = 0;; second++) {
-            if (second >= 60) fail("timeout");
-            try { if (selenium.isTextPresent("tomcat node 1a.1")) break; } catch (Exception e) {}
-            Thread.sleep(1000);
-        }
+        println driver.findElement(By.tagName("body")).getText().contains("pplica");
 
-        selenium.click("jstree-node-id-leaf-4");
-        selenium.click("jstree-node-id-leaf-5");
-        selenium.waitForPageToLoad("");
-        verifyTrue(selenium.isTextPresent("status-message"));
-        selenium.click("link=Sensors");
-        verifyTrue(selenium.isTextPresent("HTTP port"));
+        wait.until(new ExpectedCondition<Boolean>() {
+            public Boolean apply(WebDriver webDriver) {
+
+                System.out.println("Searching ...");
+                //return !!(driver.findElement(By.tagName("body")).getText().contains("pplica"));
+                return true;
+            }
+        });
+    }
+
+    @Test public void testUpdatesWhenEntitySelected () {
+        driver.findElement(By.id("jstree-node-id-leaf-5")).click();
+
+        wait.until(new ExpectedCondition<Boolean>() {
+            public Boolean apply(WebDriver webDriver) {
+
+                System.out.println("Searching ...");
+                return !!(driver.findElement(By.id("status-message")).getText() =~ /\d{2}:\d{2}:\d{2}/);
+            }
+        });
+    }
+
+    @Test public void testSummaryShown() {
+        driver.findElement(By.id("jstree-node-id-leaf-5")).click();
+        sleep(3000);
+        clickId("summary");
+
+        wait.until(new ExpectedCondition<Boolean>() {
+            public Boolean apply(WebDriver webDriver) {
+
+                System.out.println("Searching ...");
+                return !!(driver.findElement(By.tagName("body")).getText() =~ /HTTP Port/);
+            }
+        });
+    }
+
+/*
+
         verifyEquals("8086", selenium.getText("css=tbody > tr:nth(2) > td:nth(2)"));
         selenium.click("jstree-node-id-leaf-10");
         selenium.click("jstree-node-id-leaf-11");
         verifyEquals("8092", selenium.getText("css=tbody > tr:nth(2) > td:nth(2)"));
 
         */
-    }
 
     @AfterTest
     public void tearDown() throws Exception {
