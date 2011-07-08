@@ -17,9 +17,4 @@ public interface Resizable<T> {
     List<Future<?>> //Task 
         resize(int desiredSize);
     
-    List<Future<?>>  //Task 
-        grow(int desiredIncrease);
-    
-    List<Future<?>>  //Task 
-        shrink(int desiredDecrease);
 }
