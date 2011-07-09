@@ -20,4 +20,9 @@ public interface SensorEvent<T> {
      * The value for the {@link Sensor} data.
      */
     T getValue();
+
+    /**
+     * The time this data was published.
+     */
+    long getTimestamp();
 }
