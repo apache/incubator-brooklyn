@@ -1,6 +1,5 @@
 package brooklyn.entity.basic
 
-import java.beans.PropertyChangeEvent
 import java.beans.PropertyChangeListener
 import java.util.Collection
 import java.util.Map
@@ -8,15 +7,16 @@ import java.util.concurrent.ConcurrentHashMap
 
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
+import brooklyn.entity.trait.Changeable
 import brooklyn.location.Location
-import brooklyn.management.ManagementContext
 import brooklyn.management.internal.AbstractManagementContext
 import brooklyn.management.internal.LocalManagementContext
 import brooklyn.util.internal.EntityStartUtils
 import brooklyn.util.internal.SerializableObservableMap
 
-public abstract class AbstractApplication extends AbstractGroup implements Application {
+public abstract class AbstractApplication extends AbstractGroup implements Application, Changeable {
     final ObservableMap entities = new SerializableObservableMap(new ConcurrentHashMap<String,Entity>());
+
     private volatile AbstractManagementContext mgmt = null;
     private boolean deployed = false
     
@@ -30,14 +30,7 @@ public abstract class AbstractApplication extends AbstractGroup implements Appli
     
     Collection<Entity> getEntities() { entities.values() }
 
-    private static class ClosurePropertyChangeListener implements PropertyChangeListener {
-        Closure closure;
-        public ClosurePropertyChangeListener(Closure c) { closure=c }
-        public void propertyChange(PropertyChangeEvent event) {
-            closure.call(event)
-        }
-    }
-    
+    @Override
     public void addEntityChangeListener(PropertyChangeListener listener) {
         entities.addPropertyChangeListener listener;
     }
