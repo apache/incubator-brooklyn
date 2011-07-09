@@ -1,40 +1,36 @@
 package brooklyn.location.basic
 
-import static org.testng.AssertJUnit.*
+import static org.testng.Assert.*
+
 import org.testng.annotations.Test
+
 import brooklyn.location.NoMachinesAvailableException
 
-class LocalhostMachineProvisioningLocationTest {
-
-    private static final byte[] localhostIp = [127, 0, 0, 1]
-
+public class LocalhostMachineProvisioningLocationTest {
     @Test
     public void defaultInvocationCanProvisionALocalhostInstance() {
         LocalhostMachineProvisioningLocation provisioner = new LocalhostMachineProvisioningLocation()
         SshMachineLocation machine = provisioner.obtain()
         assertNotNull machine
-        assertArrayEquals localhostIp, machine.address.address
+        assertTrue machine.address.isSiteLocalAddress()
     }
 
-    @Test public void provisionWithASpecificNumberOfInstances() {
-        LocalhostMachineProvisioningLocation provisioner = new LocalhostMachineProvisioningLocation(count: 2)
+    @Test(expectedExceptions = [ NoMachinesAvailableException.class ])
+    public void provisionWithASpecificNumberOfInstances() {
+        LocalhostMachineProvisioningLocation provisioner = new LocalhostMachineProvisioningLocation(count:2)
 
         // first machine
-        SshMachineLocation machine = provisioner.obtain()
-        assertNotNull machine
-        assertArrayEquals localhostIp, machine.address.address
+        SshMachineLocation first = provisioner.obtain()
+        assertNotNull first
+        assertTrue first.address.isSiteLocalAddress()
 
         // second machine
-        machine = provisioner.obtain()
-        assertNotNull machine
-        assertArrayEquals localhostIp, machine.address.address
+        SshMachineLocation second = provisioner.obtain()
+        assertNotNull second
+        assertTrue second.address.isSiteLocalAddress()
 
         // third machine
-        try {
-            machine = provisioner.obtain()
-            fail "did not throw expected exception"
-        } catch (NoMachinesAvailableException e) {
-            // expected behaviour
-        }
+        SshMachineLocation third = provisioner.obtain()
+        fail "did not throw expected exception"
     }
 }

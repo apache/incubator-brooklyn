@@ -11,17 +11,18 @@ import javax.management.MBeanInfo
 /**
  * A quick-and-simple general-purpose implementation of DynamicMBean.
  *
- * This class provides an implementation of @{link DynamicMBean}. Its initial set of attribute names and values are
- * provided to the constructor; from this it figures an @{link MBeanInfo}.
- *
+ * This class provides an implementation of {@link DynamicMBean}. Its initial set of attribute names and values are
+ * provided to the constructor; from this it figures an {@link MBeanInfo}.
+ * <p>
  * It presently assumes that all attributes are read-only; operations and notifications are not currently supported.
  * Choosing the descriptions is not supported - they are set to be the same as the name.
- *
+ * <p>
  * Getting a valid dynamic MBean (in Groovy) is as simple as:
+ * <pre>
  * new GeneralisedDynamicMBean(meaning: 42, advice: "Don't panic")
+ * </pre>
  */
 class GeneralisedDynamicMBean implements DynamicMBean {
-
     private final MBeanInfo mBeanInfo
     private final Map attributes
 

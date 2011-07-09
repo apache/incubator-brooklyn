@@ -6,7 +6,7 @@ import com.google.common.base.Preconditions
 import brooklyn.location.NoMachinesAvailableException
 
 /**
- * A provisioner of @{link MachineLocation}s.
+ * A provisioner of {@link MachineLocation}s.
  */
 public class FixedListMachineProvisioningLocation<T extends MachineLocation> extends AbstractLocation implements MachineProvisioningLocation<T> {
 

@@ -8,8 +8,10 @@ import brooklyn.location.Location
 import com.google.common.base.Preconditions
 
 /**
- * A basic implementation of the @{link Location} interface. This provides an implementation which works according to the
- * requirements of the Location interface documentation, and is ready to be extended to make more specialized locations.
+ * A basic implementation of the {@link Location} interface.
+ *
+ * This provides an implementation which works according to the requirements of
+ * the interface documentation, and is ready to be extended to make more specialized locations.
  */
 public abstract class AbstractLocation implements Location {
     public static final Logger LOG = LoggerFactory.getLogger(Location.class)
@@ -21,9 +23,14 @@ public abstract class AbstractLocation implements Location {
     private Map leftoverProperties
 
     /**
-     * Construct a new instance of an AbstractLocation. The properties map recognizes the following keys:
-     * * name (String) - a name for the location
-     * * parentLocation (@{link Location}) - the parent of this location
+     * Construct a new instance of an AbstractLocation.
+     *
+     * The properties map recognizes the following keys:
+     * <ul>
+     * <li>name - a name for the location
+     * <li>parentLocation - the parent {@link Location}
+     * </ul>
+     *
      * @param properties
      */
     public AbstractLocation(Map properties = [:]) {
@@ -56,5 +63,4 @@ public abstract class AbstractLocation implements Location {
             parentLocation.addChildLocation(this);
         }
     }
-
 }

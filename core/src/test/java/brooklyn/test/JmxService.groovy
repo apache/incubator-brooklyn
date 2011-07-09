@@ -7,8 +7,10 @@ import javax.management.ObjectName
 import javax.management.remote.JMXConnectorServer
 import javax.management.remote.JMXConnectorServerFactory
 import javax.management.remote.JMXServiceURL
+
 import mx4j.tools.naming.NamingService
 import mx4j.tools.naming.NamingServiceMBean
+
 import org.slf4j.LoggerFactory
 import org.slf4j.Logger
 
@@ -52,9 +54,9 @@ class JmxService {
     }
 
     /**
-     * Construct a @{link GeneralisedDynamicMBean} and register it with this MBean server.
-     * @param initialAttributes a @{link Map} of attributes that make up the MBean's initial set of attributes and their
-     * values
+     * Construct a {@link GeneralisedDynamicMBean} and register it with this MBean server.
+     *
+     * @param initialAttributes a {@link Map} of attributes that make up the MBean's initial set of attributes and their * values
      * @param name the name of the MBean
      * @return the newly created and registered MBean
      */
@@ -63,5 +65,4 @@ class JmxService {
         server.registerMBean(mbean, new ObjectName (name))
         return mbean
     }
-
 }
