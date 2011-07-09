@@ -46,6 +46,8 @@ public abstract class JavaApp extends AbstractEntity implements Startable {
         super(properties)
         if (properties.jmxPort) setConfig(SUGGESTED_JMX_PORT, properties.remove("jmxPort"))
         if (properties.jmxHost) setConfig(SUGGESTED_JMX_HOST, properties.remove("jmxHost"))
+ 
+        setAttribute(NODE_UP, false)
     }
 
     public abstract SshBasedJavaAppSetup getSshBasedSetup(SshMachineLocation loc);
@@ -117,6 +119,7 @@ public abstract class JavaApp extends AbstractEntity implements Startable {
     public void shutdownInLocation(MachineLocation loc) {
         getSshBasedSetup(loc).stop()
         setAttribute(NODE_STATUS, "stopped")
+        setAttribute(NODE_UP, false)
     }
 
     @Override

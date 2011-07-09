@@ -37,10 +37,10 @@ public class JBossNode extends JavaWebApp {
     }
     
     public void initJmxSensors() {
-        attributePoller.addSensor(ERROR_COUNT, jmxAdapter.newValueProvider("jboss.web:type=GlobalRequestProcessor,name=http-*", "errorCount"))
-        attributePoller.addSensor(REQUEST_COUNT, jmxAdapter.newValueProvider("jboss.web:type=GlobalRequestProcessor,name=http-*", "requestCount"))
-        attributePoller.addSensor(TOTAL_PROCESSING_TIME, jmxAdapter.newValueProvider("jboss.web:type=GlobalRequestProcessor,name=http-*", "processingTime"))
-        attributePoller.addSensor(NODE_UP, jmxAdapter.newValueProvider("jboss.system:type=Server", "Started"))
+        attributePoller.addSensor(ERROR_COUNT, jmxAdapter.newAttributeProvider("jboss.web:type=GlobalRequestProcessor,name=http-*", "errorCount"))
+        attributePoller.addSensor(REQUEST_COUNT, jmxAdapter.newAttributeProvider("jboss.web:type=GlobalRequestProcessor,name=http-*", "requestCount"))
+        attributePoller.addSensor(TOTAL_PROCESSING_TIME, jmxAdapter.newAttributeProvider("jboss.web:type=GlobalRequestProcessor,name=http-*", "processingTime"))
+        attributePoller.addSensor(NODE_UP, jmxAdapter.newAttributeProvider("jboss.system:type=Server", "Started"))
     }
 
     public void waitForHttpPort() {

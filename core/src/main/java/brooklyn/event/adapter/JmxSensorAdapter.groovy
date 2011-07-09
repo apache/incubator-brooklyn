@@ -23,7 +23,17 @@ import com.google.common.base.Preconditions
  *  or simply reading values and setting them in the attribute map of the activity model.
  */
 public class JmxSensorAdapter {
-    static final Logger log = LoggerFactory.getLogger(JmxSensorAdapter.class);
+    private static final Logger log = LoggerFactory.getLogger(JmxSensorAdapter.class);
+    
+    private static final Map<String,String> PRIMITIVES = [
+            "Integer" : Integer.TYPE.name,
+            "Long" : Long.TYPE.name,
+            "Boolean" : Boolean.TYPE.name,
+            "Byte" : Byte.TYPE.name,
+            "Character" : Character.TYPE.name,
+            "Double" : Double.TYPE.name,
+            "Float" : Float.TYPE.name,
+        ]
  
     final EntityLocal entity
     final String jmxUrl
@@ -42,8 +52,12 @@ public class JmxSensorAdapter {
         if (!connect(timeout)) throw new IllegalStateException("Could not connect to JMX service")
     }
 
-    public <T> ValueProvider<T> newValueProvider(String objectName, String attribute) {
-        return new JmxValueProvider(new ObjectName(objectName), attribute, this)
+    public <T> ValueProvider<T> newAttributeProvider(String objectName, String attribute) {
+        return new JmxAttributeProvider(this, new ObjectName(objectName), attribute)
+    }
+
+    public <T> ValueProvider<T> newOperationProvider(String objectName, String method, Object...arguments) {
+        return new JmxOperationProvider(this, new ObjectName(objectName), method, arguments)
     }
     
     public boolean isConnected() {
@@ -112,23 +126,66 @@ public class JmxSensorAdapter {
         log.trace "got value {} for jmx attribute {}.{}", result, objectName.canonicalName, attribute
         return result
     }
+
+    /**
+     * Executes an operation on a JMX {@link ObjectName}.
+     */
+    private Object operation(ObjectName objectName, String method, Object...arguments) {
+        checkConnected()
+        
+        Set<ObjectInstance> beans = mbsc.queryMBeans(objectName, null)
+        if (beans.isEmpty() || beans.size() > 1) {
+            log.warn "JMX object name query returned {} values for {}", beans.size(), objectName.canonicalName
+            return null
+        }
+        ObjectInstance bean = beans.find { true }
+        String[] signature = new String[arguments.size()]
+        arguments.eachWithIndex { it, int index ->
+            signature[index] =
+                (PRIMITIVES.keySet().contains(it.class.simpleName) ? PRIMITIVES.get(it.class.simpleName) : it.class.name)
+        }
+        def result = mbsc.invoke(objectName, method, arguments, signature)
+        log.trace "got result {} for jmx operation {}.{}", result, objectName.canonicalName, method
+        return result
+    }
 }
 
 /**
- * Provides values to a sensor via JMX.
+ * Provides JMX attribute values to a sensor.
  */
-public class JmxValueProvider<T> implements ValueProvider<T> {
+public class JmxAttributeProvider<T> implements ValueProvider<T> {
+    private final JmxSensorAdapter adapter
     private final ObjectName objectName
     private final String attribute
-    private final JmxSensorAdapter adapter
     
-    public JmxValueProvider(ObjectName objectName, String attribute, JmxSensorAdapter adapter) {
+    public JmxAttributeProvider(JmxSensorAdapter adapter, ObjectName objectName, String attribute) {
+        this.adapter = Preconditions.checkNotNull(adapter, "adapter")
         this.objectName = Preconditions.checkNotNull(objectName, "object name")
         this.attribute = Preconditions.checkNotNull(attribute, "attribute")
-        this.adapter = Preconditions.checkNotNull(adapter, "adapter")
     }
     
     public T compute() {
         return adapter.getAttribute(objectName, attribute)
+    }
+}
+
+/**
+ * Provides JMX operation results to a sensor.
+ */
+public class JmxOperationProvider<T> implements ValueProvider<T> {
+    private final JmxSensorAdapter adapter
+    private final ObjectName objectName
+    private final String method
+    private final Object[] arguments
+    
+    public JmxOperationProvider(JmxSensorAdapter adapter, ObjectName objectName, String method, Object...arguments) {
+        this.adapter = Preconditions.checkNotNull(adapter, "adapter")
+        this.objectName = Preconditions.checkNotNull(objectName, "object name")
+        this.method = Preconditions.checkNotNull(method, "method")
+        this.arguments = arguments
+    }
+    
+    public T compute() {
+        return adapter.operation(objectName, method, arguments)
     }
 }

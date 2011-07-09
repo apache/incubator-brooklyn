@@ -37,9 +37,9 @@ public class TomcatNode extends JavaWebApp {
     }
     
     public void initJmxSensors() {
-        attributePoller.addSensor(ERROR_COUNT, jmxAdapter.newValueProvider("Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "errorCount"))
-        attributePoller.addSensor(REQUEST_COUNT, jmxAdapter.newValueProvider("Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "requestCount"))
-        attributePoller.addSensor(TOTAL_PROCESSING_TIME, jmxAdapter.newValueProvider("Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "processingTime"))
+        attributePoller.addSensor(ERROR_COUNT, jmxAdapter.newAttributeProvider("Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "errorCount"))
+        attributePoller.addSensor(REQUEST_COUNT, jmxAdapter.newAttributeProvider("Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "requestCount"))
+        attributePoller.addSensor(TOTAL_PROCESSING_TIME, jmxAdapter.newAttributeProvider("Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "processingTime"))
         attributePoller.addSensor(CONNECTOR_STATUS, { computeConnectorStatus() } as ValueProvider)
         attributePoller.addSensor(NODE_UP, { computeNodeUp() } as ValueProvider)
     }
@@ -70,7 +70,7 @@ public class TomcatNode extends JavaWebApp {
     // state values include: STARTED, FAILED, InstanceNotFound
     protected String computeConnectorStatus() {
         int port = getAttribute(HTTP_PORT)
-        ValueProvider<String> rawProvider = jmxAdapter.newValueProvider("Catalina:type=Connector,port=$port", "stateName")
+        ValueProvider<String> rawProvider = jmxAdapter.newAttributeProvider("Catalina:type=Connector,port=$port", "stateName")
         try {
             return rawProvider.compute()
         } catch (InstanceNotFoundException infe) {

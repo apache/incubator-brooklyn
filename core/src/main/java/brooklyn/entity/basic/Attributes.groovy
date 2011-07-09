@@ -27,4 +27,5 @@ public interface Attributes {
      */
 
     BasicAttributeSensor<Integer> HTTP_PORT = [ Integer, "http.port", "HTTP port" ]
+    BasicAttributeSensor<Integer> AMQP_PORT = [ Integer, "amqp.port", "AMQP port" ]
 }

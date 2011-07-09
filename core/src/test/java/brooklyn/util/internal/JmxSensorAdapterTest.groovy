@@ -42,7 +42,7 @@ public class JmxSensorAdapterTest {
         // Create a JMX adapter, and register a sensor for the JMX attribute
         JmxSensorAdapter jmxAdapter = new JmxSensorAdapter(entity)
         jmxAdapter.connect()
-        ValueProvider valueProvider = jmxAdapter.newValueProvider("Catalina:type=GlobalRequestProcessor,name=http-*", "errorCount")
+        ValueProvider valueProvider = jmxAdapter.newAttributeProvider("Catalina:type=GlobalRequestProcessor,name=http-*", "errorCount")
 
         // Starts with value defined when registering...
         assertEquals 42, valueProvider.compute()
