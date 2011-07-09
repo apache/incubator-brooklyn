@@ -8,6 +8,7 @@ import brooklyn.entity.basic.ConfigKeys
 import brooklyn.entity.basic.JavaApp
 import brooklyn.event.AttributeSensor
 import brooklyn.event.adapter.AttributePoller
+import brooklyn.event.adapter.HttpSensorAdapter
 import brooklyn.event.adapter.ValueProvider
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
@@ -32,6 +33,11 @@ public abstract class JavaWebApp extends JavaApp {
     public static final BasicAttributeSensor<Double> REQUESTS_PER_SECOND = [ Double, "webapp.reqs.persec", "Reqs/Sec" ]
     public static final BasicAttributeSensor<Integer> TOTAL_PROCESSING_TIME = [ Integer, "webapp.reqs.processing.time", "Total processing time" ]
 
+    public static final BasicAttributeSensor<String> HTTP_SERVER = [ String, "webapp.http.server", " Server name" ]
+    public static final BasicAttributeSensor<Integer> HTTP_STATUS = [ Integer, "webapp.http.status", " HTTP response code for the server" ]
+
+    transient HttpSensorAdapter httpAdapter
+
     public JavaWebApp(Map properties=[:]) {
         super(properties)
         if (properties.httpPort) setConfig(SUGGESTED_HTTP_PORT, properties.remove("httpPort"))
@@ -42,6 +48,11 @@ public abstract class JavaWebApp extends JavaApp {
 
     protected abstract void waitForHttpPort();
 
+    public void initHttpSensors() {
+        def host = getAttribute(JMX_HOST)
+        def port = getAttribute(HTTP_PORT)
+        attributePoller.addSensor(HTTP_STATUS, httpAdapter.newStatusValueProvider("http://${host}:${port}/"))
+        attributePoller.addSensor(HTTP_SERVER, httpAdapter.newHeaderValueProvider("http://${host}:${port}/", "Server"))
     }
 
     @Override
@@ -54,6 +65,7 @@ public abstract class JavaWebApp extends JavaApp {
         attributePoller.addSensor(REQUESTS_PER_SECOND, { computeReqsPerSec() } as ValueProvider, 1000L)
 
         waitForHttpPort()
+//        initHttpSensors()
 
         if (getConfig(WAR)) {
             log.debug "Deploying {} to {}", getConfig(WAR), this.locations
