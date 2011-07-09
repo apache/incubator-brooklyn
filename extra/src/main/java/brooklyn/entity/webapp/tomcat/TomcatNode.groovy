@@ -13,15 +13,14 @@ import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.adapter.ValueProvider
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
-import brooklyn.util.SshBasedJavaWebAppSetup
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.util.SshBasedJavaWebAppSetup
 import brooklyn.util.internal.Repeater
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Tomcat instance.
  */
 public class TomcatNode extends JavaWebApp {
-    
     private static final Logger log = LoggerFactory.getLogger(TomcatNode.class)
     
     public static final BasicConfigKey<Integer> SUGGESTED_SHUTDOWN_PORT = [Integer, "tomcat.shutdownport", "Suggested shutdown port" ]
@@ -74,17 +73,13 @@ public class TomcatNode extends JavaWebApp {
         ValueProvider<String> rawProvider = jmxAdapter.newValueProvider("Catalina:type=Connector,port=$port", "stateName")
         try {
             return rawProvider.compute()
-        } catch (InstanceNotFoundException e) {
+        } catch (InstanceNotFoundException infe) {
             return "InstanceNotFound"
         }
     }
     
     protected boolean computeNodeUp() {
         String connectorStatus = getAttribute(CONNECTOR_STATUS)
-        if (connectorStatus == "STARTED") {
-            return true
-        } else {
-            return false
-        }
+        return (connectorStatus == "STARTED")
     }
 }

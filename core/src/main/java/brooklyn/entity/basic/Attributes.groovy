@@ -3,10 +3,28 @@ package brooklyn.entity.basic
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey;
 
-class Attributes {
+/**
+ * This interface should be used to access {@link Sensor} definitions.
+ */
+public interface Attributes {
+    /*
+     * Application information sensors.
+     */
 
-    public static final BasicAttributeSensor<Integer> JMX_PORT = [ Integer, "jmx.port", "JMX port" ]
-    public static final BasicAttributeSensor<String> JMX_HOST = [ String, "jmx.host", "JMX host" ]
- 
-    public static final BasicAttributeSensor<Integer> HTTP_PORT = [ Integer, "http.port", "HTTP port" ]
+    BasicAttributeSensor<Integer> VERSION = [ String, "version", "Version information" ]
+
+    /*
+     * JMX sensors.
+     */
+
+    BasicAttributeSensor<Integer> JMX_PORT = [ Integer, "jmx.port", "JMX port" ]
+    BasicAttributeSensor<String> JMX_HOST = [ String, "jmx.host", "JMX host" ]
+    BasicAttributeSensor<Integer> JMX_USER = [ Integer, "jmx.user", "JMX username" ]
+    BasicAttributeSensor<String> JMX_PASSWORD = [ String, "jmx.password", "JMX password" ]
+
+    /*
+     * Port number sensors.
+     */
+
+    BasicAttributeSensor<Integer> HTTP_PORT = [ Integer, "http.port", "HTTP port" ]
 }

@@ -13,17 +13,13 @@ import brooklyn.location.basic.SshMachineLocation
  * JBoss web application server.
  */
 public class JBossNode extends JavaWebApp {
-
     private static final Logger log = LoggerFactory.getLogger(JBossNode.class)
 
-    public static BasicConfigKey<String>  SUGGESTED_SERVER_PROFILE = 
-            [ String, "jboss.serverProfile", "Profile used when running server" ] 
-    public static BasicConfigKey<Integer> SUGGESTED_PORT_INCREMENT = 
-            [ Integer, "jboss.portincrement", "Increment to be used for all jboss ports" ]
+    public static BasicConfigKey<String>  SUGGESTED_SERVER_PROFILE = [ String, "jboss.serverProfile", "Profile used when running server" ] 
+    public static BasicConfigKey<Integer> SUGGESTED_PORT_INCREMENT = [ Integer, "jboss.portincrement", "Increment to be used for all jboss ports" ]
     
     // Jboss specific
-    public static final BasicAttributeSensor<Integer> PORT_INCREMENT = 
-            [ Integer, "webapp.portIncrement", "Increment added to default JBoss ports" ];
+    public static final BasicAttributeSensor<Integer> PORT_INCREMENT = [ Integer, "webapp.portIncrement", "Increment added to default JBoss ports" ];
 
     
     public JBossNode(Map properties=[:]) {
@@ -44,9 +40,9 @@ public class JBossNode extends JavaWebApp {
         attributePoller.addSensor(ERROR_COUNT, jmxAdapter.newValueProvider("jboss.web:type=GlobalRequestProcessor,name=http-*", "errorCount"))
         attributePoller.addSensor(REQUEST_COUNT, jmxAdapter.newValueProvider("jboss.web:type=GlobalRequestProcessor,name=http-*", "requestCount"))
         attributePoller.addSensor(TOTAL_PROCESSING_TIME, jmxAdapter.newValueProvider("jboss.web:type=GlobalRequestProcessor,name=http-*", "processingTime"))
-        attributePoller.addSensor(NODE_UP,jmxAdapter.newValueProvider("jboss.system:type=Server", "Started"))
+        attributePoller.addSensor(NODE_UP, jmxAdapter.newValueProvider("jboss.system:type=Server", "Started"))
     }
-    
+
     public void waitForHttpPort() {
         log.debug "started jboss server: jmxHost {} and jmxPort {}", getAttribute(JMX_HOST), getAttribute(JMX_PORT)
     }

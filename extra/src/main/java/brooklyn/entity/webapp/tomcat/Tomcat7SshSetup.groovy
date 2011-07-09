@@ -11,23 +11,19 @@ import brooklyn.location.basic.SshMachineLocation
  * Start a {@link TomcatNode} in a {@link Location} accessible over ssh.
  */
 public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
-    
     public static final String DEFAULT_VERSION = "7.0.16"
     public static final String DEFAULT_INSTALL_DIR = DEFAULT_INSTALL_BASEDIR+"/"+"tomcat"
     public static final String DEFAULT_DEPLOY_SUBDIR = "webapps"
     public static final int DEFAULT_FIRST_HTTP_PORT = 8080
     public static final int DEFAULT_FIRST_SHUTDOWN_PORT = 31880
     
-    /** tomcat insists on having a port you can connect to for the sole purpose of shutting it down;
+    /**
+     * Tomcat insists on having a port you can connect to for the sole purpose of shutting it down;
      * don't see an easy way to disable it; causes collisions in its default location of 8005,
      * so moving it to some anonymous high-numbered location
      */
     private int tomcatShutdownPort;
     
-    private int tomcatHttpPort;
-    
-    private String tomcatVersion;
-
     public static Tomcat7SshSetup newInstance(TomcatNode entity, SshMachineLocation machine) {
         Integer suggestedTomcatVersion = entity.getConfig(TomcatNode.SUGGESTED_VERSION)
         String suggestedInstallDir = entity.getConfig(TomcatNode.SUGGESTED_INSTALL_DIR)
@@ -37,9 +33,9 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
         Integer suggestedShutdownPort = entity.getConfig(TomcatNode.SUGGESTED_SHUTDOWN_PORT)
         Integer suggestedHttpPort = entity.getConfig(TomcatNode.SUGGESTED_HTTP_PORT)
         
-        String tomcatVersion = suggestedTomcatVersion ?: DEFAULT_VERSION
-        String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"apache-tomcat-$tomcatVersion")
-        String runDir = suggestedRunDir ?: (DEFAULT_RUN_DIR+"/"+"app-"+entity.getApplication()?.id+"/tomcat-"+entity.id)
+        String version = suggestedTomcatVersion ?: DEFAULT_VERSION
+        String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"apache-tomcat-${version}")
+        String runDir = suggestedRunDir ?: (DEFAULT_RUN_DIR+"/"+"app-${entity.application.id}"+"/"+"tomcat-${entity.id}")
         String deployDir = runDir+"/"+DEFAULT_DEPLOY_SUBDIR
         String jmxHost = suggestedJmxHost ?: machine.getAddress().getHostName()
         int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort, DEFAULT_FIRST_JMX_PORT))
@@ -51,12 +47,12 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
         result.setJmxHost(jmxHost)
         result.setHttpPort(httpPort)
         result.setShutdownPort(shutdownPort)
-        result.setTomcatVersion(tomcatVersion)
+        result.setVersion(version)
         result.setInstallDir(installDir)
         result.setDeployDir(deployDir)
         result.setRunDir(runDir)
         
-        // FIXME More checks for if ports not available
+        return result
     }
     
     public Tomcat7SshSetup(TomcatNode entity, SshMachineLocation machine) {
@@ -64,17 +60,7 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
     }
 
     public Tomcat7SshSetup setShutdownPort(int val) {
-        this.tomcatShutdownPort = val
-        return this
-    }
-    
-    public Tomcat7SshSetup setHttpPort(int val) {
-        this.tomcatHttpPort = val
-        return this
-    }
-    
-    public Tomcat7SshSetup setTomcatVersion(String val) {
-        this.tomcatVersion = val
+        tomcatShutdownPort = val
         return this
     }
     
@@ -82,32 +68,30 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
     protected void postStart() {
         entity.setAttribute(Attributes.JMX_PORT, jmxPort)
         entity.setAttribute(Attributes.JMX_HOST, jmxHost)
-        entity.setAttribute(Attributes.HTTP_PORT, tomcatHttpPort)
+        entity.setAttribute(Attributes.HTTP_PORT, httpPort)
+        entity.setAttribute(Attributes.VERSION, version)
         entity.setAttribute(TomcatNode.TOMCAT_SHUTDOWN_PORT, tomcatShutdownPort)
     }
     
+    @Override
     public List<String> getInstallScript() {
         makeInstallScript([
-                "wget http://download.nextag.com/apache/tomcat/tomcat-7/v${tomcatVersion}/bin/apache-tomcat-${tomcatVersion}.tar.gz",
-                "tar xvzf apache-tomcat-${tomcatVersion}.tar.gz",
+                "wget http://download.nextag.com/apache/tomcat/tomcat-7/v${version}/bin/apache-tomcat-${version}.tar.gz",
+                "tar xvzf apache-tomcat-${version}.tar.gz",
             ])
     }
 
-    /**
-     * Creates the directories tomcat needs to run in a different location from where it is installed,
-     * renumber http and shutdown ports, and delete AJP connector, then start with JMX enabled
-     */
     public List<String> getRunScript() {
         List<String> script = [
-            "cd $runDir",
-			"$installDir/bin/startup.sh",
+            "cd ${runDir}",
+			"${installDir}/bin/startup.sh",
         ]
         return script
     }
     
     public Map<String, String> getRunEnvironment() {
         Map<String, String> env = [
-			"CATALINA_BASE" : "$runDir",
+			"CATALINA_BASE" : "${runDir}",
 			"CATALINA_OPTS" : toJavaDefinesString(getJvmStartupProperties()),
 			"CATALINA_PID" : "pid.txt",
         ]
@@ -117,7 +101,7 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
     /** @see SshBasedJavaAppSetup#getCheckRunningScript() */
     public List<String> getCheckRunningScript() {
         List<String> script = [
-            "cd $runDir",
+            "cd ${runDir}",
 			"echo pid is `cat pid.txt`",
 			"(ps aux | grep '[t]'omcat | grep `cat pid.txt` > pid.list || echo \"no tomcat processes found\")",
 			"cat pid.list",
@@ -127,26 +111,16 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
         //note grep can return exit code 1 if text not found, hence the || in the block above
     }
 
-    /** Assumes file is already in locOnServer.  */
-    public List<String> getDeployScript(String locOnServer) {
-        String to = runDir + "/" + "webapps"
-        List<String> script = [
-            "cp $locOnServer $to",
-        ]
-        return script
-    }
-
-    /** Configure the instance.  */
+    @Override
     public List<String> getConfigScript() {
-        String to = runDir + "/" + "webapps"
         List<String> script = [
-            "mkdir -p $runDir",
-            "cd $runDir",
+            "mkdir -p ${runDir}",
+            "cd ${runDir}",
             "mkdir conf",
             "mkdir logs",
             "mkdir webapps",
-            "cp $installDir/conf/{server,web}.xml conf/",
-            "sed -i.bk s/8080/${tomcatHttpPort}/g conf/server.xml",
+            "cp ${installDir}/conf/{server,web}.xml conf/",
+            "sed -i.bk s/8080/${httpPort}/g conf/server.xml",
             "sed -i.bk s/8005/${tomcatShutdownPort}/g conf/server.xml",
             "sed -i.bk /8009/D conf/server.xml",
         ]
@@ -158,7 +132,7 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
         log.debug "invoking shutdown script"
         //we use kill -9 rather than shutdown.sh because the latter is not 100% reliable
         def result = machine.run(out:System.out, [
-            "cd $runDir",
+            "cd ${runDir}",
             "echo killing process `cat pid.txt` on `hostname`",
             "kill -9 `cat pid.txt`",
             "rm -f pid.txt" ] )
@@ -169,7 +143,7 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
     @Override
     protected void postShutdown() {
         machine.releasePort(jmxPort)
+        machine.releasePort(httpPort);
         machine.releasePort(tomcatShutdownPort);
-        machine.releasePort(tomcatHttpPort);
     }
 }

@@ -1,13 +1,5 @@
 package brooklyn.event.adapter
 
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledExecutorService
-import java.util.concurrent.ScheduledFuture
-import java.util.concurrent.TimeUnit
-
-import javax.management.Attribute
-import javax.management.AttributeList
-import javax.management.MBeanInfo
 import javax.management.MBeanServerConnection
 import javax.management.ObjectInstance
 import javax.management.ObjectName
@@ -18,12 +10,10 @@ import javax.management.remote.JMXServiceURL
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import com.google.common.base.Preconditions;
-
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.EntityLocal
-import brooklyn.event.AttributeSensor
-import brooklyn.event.Sensor
+
+import com.google.common.base.Preconditions
 
 /**
  * This class adapts JMX {@link ObjectName} dfata to {@link Sensor} data for a particular {@link Entity}, updating the
@@ -47,7 +37,7 @@ public class JmxSensorAdapter {
         String host = entity.getAttribute(Attributes.JMX_HOST);
         int port = entity.getAttribute(Attributes.JMX_PORT);
  
-        this.jmxUrl = "service:jmx:rmi:///jndi/rmi://"+host+":"+port+"/jmxrmi";
+        this.jmxUrl = "service:jmx:rmi:///jndi/rmi://${host}:${port}/jmxrmi";
         
         if (!connect(timeout)) throw new IllegalStateException("Could not connect to JMX service")
     }
@@ -64,7 +54,14 @@ public class JmxSensorAdapter {
     public void connect() throws IOException {
         if (jmxc) jmxc.close()
         JMXServiceURL url = new JMXServiceURL(jmxUrl)
-        jmxc = JMXConnectorFactory.connect(url, null);
+        Hashtable env = new Hashtable();
+        String user = entity.getAttribute(Attributes.JMX_USER);
+        String password = entity.getAttribute(Attributes.JMX_PASSWORD);
+        if (user && password) {
+			String[] creds = [ user, password ]
+			env.put(JMXConnector.CREDENTIALS, creds);
+        }
+        jmxc = JMXConnectorFactory.connect(url, env);
         mbsc = jmxc.getMBeanServerConnection();
     }
  
@@ -107,11 +104,11 @@ public class JmxSensorAdapter {
         
         Set<ObjectInstance> beans = mbsc.queryMBeans(objectName, null)
         if (beans.isEmpty() || beans.size() > 1) {
-            log.warn("JMX object name query returned ${beans.size()} values. Object name was: ${objectName.getCanonicalName()}")
+            log.warn "JMX object name query returned {} values for {}", beans.size(), objectName.canonicalName
             return null
         }
         ObjectInstance bean = beans.find { true }
-        def result = mbsc.getAttribute(bean.getObjectName(), attribute)
+        def result = mbsc.getAttribute(bean.objectName, attribute)
         log.trace "got value {} for jmx attribute {}.{}", result, objectName.canonicalName, attribute
         return result
     }

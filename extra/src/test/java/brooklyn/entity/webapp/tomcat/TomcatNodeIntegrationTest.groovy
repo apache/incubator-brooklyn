@@ -38,12 +38,10 @@ public class TomcatNodeIntegrationTest {
         }
     }
     
-    static {
-        TimeExtras.init()
-    }
+    static { TimeExtras.init() }
 
     static boolean httpPortLeftOpen = false;
-    private int oldHttpPort=-1;
+    private int oldHttpPort = -1;
 
     @BeforeMethod(groups = [ "Integration" ])
     public void fail_if_http_port_in_use() {
@@ -93,8 +91,6 @@ public class TomcatNodeIntegrationTest {
     
     @Test(groups = [ "Integration" ])
     public void publishesRequestAndErrorCountMetrics() {
-        TimeExtras.init();
-        
         Application app = new TestApplication();
         TomcatNode tc = new TomcatNode(owner: app, httpPort: DEFAULT_HTTP_PORT);
         tc.start([ new LocalhostMachineProvisioningLocation(name: 'london') ])
@@ -110,17 +106,17 @@ public class TomcatNodeIntegrationTest {
                 return new BooleanWithMessage(false, "errorCount not set yet ($errorCount)")
             } else {
                 logger.info "$errorCount errors in total"
-                assertTrue errorCount > 0, "errorCount="+errorCount
+                assertTrue errorCount > 0
                 assertEquals requestCount, errorCount
             }
             true
-        }, useGroovyTruth: true, timeout: 60*SECONDS)
+        }, useGroovyTruth:true, timeout:60*SECONDS)
     }
     
     @Test(groups = [ "Integration" ])
     public void publishesRequestsPerSecondMetric() {
         Application app = new TestApplication();
-        TomcatNode tc = new TomcatNode(owner: app, httpPort: DEFAULT_HTTP_PORT);
+        TomcatNode tc = new TomcatNode(owner: app, httpPort:DEFAULT_HTTP_PORT);
         tc.start([ new LocalhostMachineProvisioningLocation(name: 'london') ])
         executeUntilSucceedsWithShutdown(tc, {
                 def activityValue = tc.getAttribute(TomcatNode.REQUESTS_PER_SECOND)
@@ -150,13 +146,13 @@ public class TomcatNodeIntegrationTest {
         assertNotNull resource
         tc.setConfig(TomcatNode.WAR, resource.getPath())
 
-        tc.start([ new LocalhostMachineProvisioningLocation(name: 'london') ])
+        tc.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         executeUntilSucceedsWithShutdown(tc, {
             def port = tc.getAttribute(TomcatNode.HTTP_PORT)
             def url  = "http://localhost:${port}/hello-world"
             assertTrue urlRespondsWithStatusCode200(url)
             true
-        }, abortOnError: false)
+        }, abortOnError:false)
     }
 
     @Test(groups = [ "Integration" ])
@@ -166,7 +162,7 @@ public class TomcatNodeIntegrationTest {
         t.start()
         try {
             Application app = new TestApplication()
-            TomcatNode tc = new TomcatNode(owner:app, httpPort: DEFAULT_HTTP_PORT)
+            TomcatNode tc = new TomcatNode(owner:app, httpPort:DEFAULT_HTTP_PORT)
             Exception caught = null
             try {
                 tc.start([ new LocalhostMachineProvisioningLocation(name: 'london') ])

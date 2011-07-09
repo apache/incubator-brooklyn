@@ -10,10 +10,9 @@ import brooklyn.location.basic.SshMachineLocation
 public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     public static final String DEFAULT_VERSION = "6.0.0.Final"
     public static final String DEFAULT_INSTALL_DIR = DEFAULT_INSTALL_BASEDIR+"/"+"jboss"
-    public static final String DEFAULT_DEPLOY_SUBDIR = "deploy"
+    public static final String DEFAULT_DEPLOY_SUBDIR = "webapps"
     public static final int DEFAULT_HTTP_PORT = 8080;
 
-    private String jbossVersion
     private int portIncrement
     private String serverProfile
     
@@ -26,9 +25,9 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         Integer suggestedPortIncrement = entity.getConfig(JBossNode.SUGGESTED_PORT_INCREMENT)
         String suggestedServerProfile = entity.getConfig(JBossNode.SUGGESTED_SERVER_PROFILE)
         
-        String jbossVersion = suggestedJbossVersion ?: DEFAULT_VERSION
-        String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"jboss-$jbossVersion")
-        String runDir = suggestedRunDir ?: (DEFAULT_RUN_DIR+"/"+"app-"+entity.getApplication()?.id+"/jboss-"+entity.id)
+        String version = suggestedJbossVersion ?: DEFAULT_VERSION
+        String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"jboss-${version}")
+        String runDir = suggestedRunDir ?: (DEFAULT_RUN_DIR+"/"+"app-${entity.application.id}"+"/"+"jboss-${entity.id}")
         String deployDir = runDir+"/"+DEFAULT_DEPLOY_SUBDIR
         String serverProfile = suggestedServerProfile ?: "standard"
         
@@ -39,11 +38,12 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         JBoss6SshSetup result = new JBoss6SshSetup(entity, machine)
         result.setJmxPort(jmxPort)
         result.setJmxHost(jmxHost)
-        result.setJbossVersion(jbossVersion)
+        result.setVersion(version)
         result.setInstallDir(installDir)
         result.setDeployDir(deployDir)
         result.setRunDir(runDir)
         result.setPortIncrement(portIncrement)
+        result.setHttpPort(DEFAULT_HTTP_PORT+portIncrement)
         result.setServerProfile(serverProfile)
         
         return result
@@ -53,18 +53,13 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         super(entity, machine)
     }
     
-    public JBoss6SshSetup setJbossVersion(String val) {
-        this.jbossVersion = val
-        return this
-    }
-    
     public JBoss6SshSetup setPortIncrement(int val) {
-        this.portIncrement = val
+        portIncrement = val
         return this
     }
     
     public JBoss6SshSetup setServerProfile(String val) {
-        this.serverProfile = val
+        serverProfile = val
         return this
     }
     
@@ -72,12 +67,14 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     protected void postStart() {
         entity.setAttribute(Attributes.JMX_PORT, jmxPort)
         entity.setAttribute(Attributes.JMX_HOST, jmxHost)
-        entity.setAttribute(Attributes.HTTP_PORT, DEFAULT_HTTP_PORT+portIncrement)
+        entity.setAttribute(Attributes.HTTP_PORT, httpPort)
+        entity.setAttribute(Attributes.VERSION, version)
     }
     
+    @Override
     public List<String> getInstallScript() {
-        String url = "http://downloads.sourceforge.net/project/jboss/JBoss/JBoss-${jbossVersion}/jboss-as-distribution-${jbossVersion}.zip?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fjboss%2Ffiles%2FJBoss%2F${jbossVersion}%2F&ts=1307104229&use_mirror=kent"
-        String saveAs  = "jboss-as-distribution-${jbossVersion}"
+        String url = "http://downloads.sourceforge.net/project/jboss/JBoss/JBoss-${version}/jboss-as-distribution-${version}.zip?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fjboss%2Ffiles%2FJBoss%2F${version}%2F&ts=1307104229&use_mirror=kent"
+        String saveAs  = "jboss-as-distribution-${version}"
         
         // Note the -o option to unzip, to overwrite existing files without warning.
         // The JBoss zip file contains lgpl.txt (at least) twice and the prompt to
@@ -93,23 +90,30 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         
         // run.sh must be backgrounded otherwise the script will never return.
         List<String> script = [
-            "\$JBOSS_HOME/bin/run.sh -Djboss.service.binding.set=$portGroupName -Djboss.server.base.dir=\$RUN/server -Djboss.server.base.url=file://\$RUN/server -c $serverProfile &",
+            "\$JBOSS_HOME/bin/run.sh -Djboss.service.binding.set=${portGroupName} -Djboss.server.base.dir=\$RUN/server -Djboss.server.base.url=file://\$RUN/server -c ${serverProfile} &",
         ]
         return script
     }
     
+    @Override
+    protected Map getJavaConfigOptions() {
+        Map<String, String> options = [
+            "jboss.platform.mbeanserver" : null,
+            "javax.management.builder.initial" : "org.jboss.system.server.jmx.MBeanServerBuilderImpl",
+            "java.util.logging.manager" : "org.jboss.logmanager.LogManager",
+            "org.jboss.logging.Logger.pluginClass" : "org.jboss.logging.logmanager.LoggerPluginImpl",
+        ]
+        return options
+    }
+ 
     public Map<String, String> getRunEnvironment() {
         // LAUNCH_JBOSS_IN_BACKGROUND relays OS signals sent to the run.sh process to the JBoss process.
         Map<String, String> env = [
 	        "LAUNCH_JBOSS_IN_BACKGROUND" : "1",
-	        "JBOSS_HOME" : "$installDir",
-	        "JAVA_OPTS" : toJavaDefinesString(getJvmStartupProperties()) + " " +
-		        "-Djboss.platform.mbeanserver " +
-		        "-Djavax.management.builder.initial=org.jboss.system.server.jmx.MBeanServerBuilderImpl " +
-		        "-Djava.util.logging.manager=org.jboss.logmanager.LogManager " +
-		        "-Dorg.jboss.logging.Logger.pluginClass=org.jboss.logging.logmanager.LoggerPluginImpl",
-	        "JBOSS_CLASSPATH" : "$installDir/lib/jboss-logmanager.jar",
-	        "RUN" : "$runDir",
+	        "JBOSS_HOME" : "${installDir}",
+	        "JAVA_OPTS" : toJavaDefinesString(getJvmStartupProperties()),
+	        "JBOSS_CLASSPATH" : "${installDir}/lib/jboss-logmanager.jar",
+	        "RUN" : "${runDir}",
         ]
         return env
     }
@@ -119,11 +123,12 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         def host = entity.getAttribute(Attributes.JMX_HOST)
         def port = entity.getAttribute(Attributes.JMX_PORT)
         List<String> script = [
-            "$installDir/bin/twiddle.sh --host $host --port $port get \"jboss.system:type=Server\" Started | grep false && exit 1"
+            "${installDir}/bin/twiddle.sh --host ${host} --port ${port} get \"jboss.system:type=Server\" Started | grep false && exit 1"
         ]
         return script
     }
 
+    @Override
     public List<String> getConfigScript() {
         /* Configuring ports:
            http://community.jboss.org/wiki/ConfiguringMultipleJBossInstancesOnOneMachine
@@ -134,22 +139,13 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         def portGroupName = "ports-brooklyn"
         
         List<String> script = [
-            "mkdir -p $runDir/server",
-            "cd $runDir/server",
-            "cp -r $installDir/server/$serverProfile $serverProfile",
-            "cd $serverProfile/conf/bindingservice.beans/META-INF/",
+            "mkdir -p ${runDir}/server",
+            "cd ${runDir}/server",
+            "cp -r ${installDir}/server/${serverProfile} ${serverProfile}",
+            "cd ${serverProfile}/conf/bindingservice.beans/META-INF/",
             "BJB=\"bindings-jboss-beans.xml\"",
-            "sed -i.bk 's/ports-03/$portGroupName/' \$BJB",
-            "sed -i.bk 's/\\<parameter\\>300\\<\\/parameter\\>/\\<parameter\\>$portIncrement\\<\\/parameter\\>/' \$BJB",
-        ]
-        return script
-    }
-
-    /** Assumes file is already in locOnServer.  */
-    public List<String> getDeployScript(String locOnServer) {
-        String to = runDir + "/" + "webapps"
-        List<String> script = [
-            "cp $locOnServer $to",
+            "sed -i.bk 's/ports-03/${portGroupName}/' \$BJB",
+            "sed -i.bk 's/\\<parameter\\>300\\<\\/parameter\\>/\\<parameter\\>${portIncrement}\\<\\/parameter\\>/' \$BJB",
         ]
         return script
     }
@@ -158,10 +154,18 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     public void shutdown() {
         def host = entity.getAttribute(Attributes.JMX_HOST)
         def port = entity.getAttribute(Attributes.JMX_PORT)
-        machine.run(out:System.out, [
-	            "$installDir/bin/shutdown.sh --host=$host --port=$port -S",
+        def result = machine.run(out:System.out, [
+	            "${installDir}/bin/shutdown.sh --host ${host} --port ${port} -S",
                 "sleep 5",
                 "ps auxwwww | grep ${entity.id} | awk '{ print \$2 }' | xargs kill -9"
             ])
+        if (result) log.info "non-zero result code terminating {}: {}", entity, result
+        log.debug "done invoking shutdown script"
+    }
+
+    @Override
+    protected void postShutdown() {
+        machine.releasePort(jmxPort)
+        machine.releasePort(httpPort);
     }
 }

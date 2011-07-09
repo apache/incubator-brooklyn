@@ -29,9 +29,11 @@ public abstract class SshBasedJavaAppSetup {
 
     EntityLocal entity
     SshMachineLocation machine
+
+    protected String version
     protected String appBaseDir
     protected String installDir
-    protected String runDir;
+    protected String runDir
     protected int jmxPort
     protected String jmxHost
 
@@ -42,22 +44,27 @@ public abstract class SshBasedJavaAppSetup {
     }
 
     public SshBasedJavaAppSetup setJmxPort(int val) {
-        this.jmxPort = val
+        jmxPort = val
         return this
     }
 
     public SshBasedJavaAppSetup setJmxHost(String val) {
-        this.jmxHost = val
+        jmxHost = val
         return this
     }
 
     public SshBasedJavaAppSetup setInstallDir(String val) {
-        this.installDir = val
+        installDir = val
         return this
     }
 
     public SshBasedJavaAppSetup setRunDir(String val) {
-        this.runDir = val
+        runDir = val
+        return this
+    }
+
+    public SshBasedJavaAppSetup setVersion(String val) {
+        version = val
         return this
     }
 
@@ -86,7 +93,7 @@ public abstract class SshBasedJavaAppSetup {
      * If desired is specified, then try to use exactly that. Otherwise, use the
      * range from defaultFirst to 65535.
      */
-    public static PortRange toDesiredPortRange(Integer desired, Integer defaultFirst) {
+    public static PortRange toDesiredPortRange(Integer desired, Integer defaultFirst=desired) {
         if (desired == null || desired < 0) {
             return new BasicPortRange(defaultFirst, 65535)
         } else if (desired > 0) {
