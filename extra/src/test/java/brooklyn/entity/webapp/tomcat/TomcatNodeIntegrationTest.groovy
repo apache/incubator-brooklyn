@@ -44,7 +44,7 @@ public class TomcatNodeIntegrationTest {
     private int oldHttpPort = -1;
 
     @BeforeMethod(groups = [ "Integration" ])
-    public void fail_if_http_port_in_use() {
+    public void failIfHttpPortInUse() {
         if (isPortInUse(DEFAULT_HTTP_PORT)) {
             httpPortLeftOpen = true;
             fail "someone is already listening on port $DEFAULT_HTTP_PORT; tests assume that port $DEFAULT_HTTP_PORT is free on localhost"

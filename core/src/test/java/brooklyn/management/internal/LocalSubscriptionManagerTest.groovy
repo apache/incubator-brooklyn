@@ -59,7 +59,7 @@ public class LocalSubscriptionManagerTest {
         latch = new CountDownLatch(1)
         entity.setSequenceValue(1234)
         if (!latch.await(1, TimeUnit.SECONDS)) {
-            fail("Timeout waiting for Event on TestEntity listener")
+            fail "Timeout waiting for Event on TestEntity listener"
         }
     }
     
@@ -75,7 +75,7 @@ public class LocalSubscriptionManagerTest {
         parent.addOwnedChild(one)
         one.setSequenceValue(1234)
         if (!latch.await(1, TimeUnit.SECONDS)) {
-            fail("Timeout waiting for Event on parent TestEntity listener")
+            fail "Timeout waiting for Event on parent TestEntity listener"
         }
     }
 }

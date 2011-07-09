@@ -1,6 +1,7 @@
 package brooklyn.entity.basic
 
-import org.testng.Assert
+import static org.testng.Assert.*
+
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
@@ -8,11 +9,10 @@ import brooklyn.policy.Policy
 import brooklyn.policy.basic.AbstractPolicy
 
 class PolicyRegistrationTest {
-
     private AbstractApplication app
-    private AbstractEntity entity;
-    private Policy policy1;
-    private Policy policy2;
+    private AbstractEntity entity
+    private Policy policy1
+    private Policy policy2
 
     @BeforeMethod
     public void setUp() {
@@ -24,31 +24,27 @@ class PolicyRegistrationTest {
     
     @Test
     public void testGetPoliciesIsInitiallyEmpty() {
-        Assert.assertEquals(entity.getPolicies(), []);
+        assertEquals entity.policies, []
     }
 
-    @Test
+    @Test(expectedExceptions = [ UnsupportedOperationException.class ])
     public void testGetPoliciesReturnsImmutableCollection() {
-        try {
-            entity.getPolicies().add(policy1);
-            Assert.fail();
-        } catch (UnsupportedOperationException e) {
-            // success
-        }
+        entity.policies.add(policy1);
+        fail
     }
 
     @Test
     public void testAddAndRemovePolicies() {
-        entity.addPolicy(policy1);
-        Assert.assertEquals(entity.getPolicies(), [policy1]);
+        entity.addPolicy policy1
+        assertEquals entity.policies, [policy1]
         
-        entity.addPolicy(policy2);
-        Assert.assertEquals(entity.getPolicies(), [policy1, policy2]);
+        entity.addPolicy policy2
+        assertEquals entity.policies, [policy1, policy2]
         
-        entity.removePolicy(policy1);
-        Assert.assertEquals(entity.getPolicies(), [policy2]);
+        entity.removePolicy policy1
+        assertEquals entity.policies, [policy2]
         
-        entity.removePolicy(policy2);
-        Assert.assertEquals(entity.getPolicies(), []);
+        entity.removePolicy policy2
+        assertEquals entity.policies, []
     }
 }

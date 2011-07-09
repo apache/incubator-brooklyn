@@ -64,16 +64,12 @@ public class OwnedChildrenTest {
         assertEquals(app.getOwnedChildren(), [e])
     }
     
-    @Test
+    @Test(expectedExceptions = [ UnsupportedOperationException.class ])
     public void testSetOwnerWhenDiffersFromOwnerSetInConstructor() {
         Entity e = new AbstractEntity(owner:app) {}
         Entity e2 = new AbstractEntity() {}
-        try {
-            e.setOwner(e2)
-            fail();
-        } catch (UnsupportedOperationException ex) {
-            // success; can't change owner
-        }
+        e.setOwner(e2)
+        fail();
     }
     
     @Test
@@ -103,7 +99,7 @@ public class OwnedChildrenTest {
         assertEquals(e3.getOwnedChildren(), [])
     }
     
-    // @Test // FIXME fails currently
+    @Test(enabled = false) // FIXME fails currently
     public void testRemoveOwnedChild() {
         Entity e = new AbstractEntity(owner:app) {}
         app.removeOwnedChild(e)
@@ -146,15 +142,11 @@ public class OwnedChildrenTest {
         assertEquals(e2.getOwner(), e)
     }
     
-    @Test
+    @Test(expectedExceptions = [ IllegalStateException.class ])
     public void testOwningOneselfForbidden() {
         AbstractEntity e = new AbstractEntity() {}
-        try {
-            e.addOwnedChild(e)
-            fail()
-        } catch (IllegalStateException ex) {
-            // success
-        }
+        e.addOwnedChild(e)
+        fail()
     }
     
     @Test

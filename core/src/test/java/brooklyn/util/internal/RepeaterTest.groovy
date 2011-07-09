@@ -11,13 +11,9 @@ class RepeaterTest {
         new Repeater("Sanity test").repeat({}).until({true}).every(10, TimeUnit.MILLISECONDS);
     }
 
-    @Test
+    @Test(expectedExceptions = [ NullPointerException.class ])
     public void repeatFailsIfClosureIsNull() {
-        try {
-            new Repeater("repeatFailsIfClosureIsNull").repeat(null);
-        } catch(NullPointerException e) {
-            return
-        }
+        new Repeater("repeatFailsIfClosureIsNull").repeat(null);
         fail "Expected exception was not thrown"
     }
 
@@ -26,13 +22,9 @@ class RepeaterTest {
         new Repeater("repeatSucceedsIfClosureIsNonNull").repeat({});
     }
 
-    @Test
+    @Test(expectedExceptions = [ NullPointerException.class ])
     public void untilFailsIfClosureIsNull() {
-        try {
-            new Repeater("untilFailsIfClosureIsNull").until(null);
-        } catch(NullPointerException e) {
-            return
-        }
+        new Repeater("untilFailsIfClosureIsNull").until(null);
         fail "Expected exception was not thrown"
     }
 
@@ -41,33 +33,21 @@ class RepeaterTest {
         new Repeater("untilSucceedsIfClosureIsNonNull").until({true});
     }
 
-    @Test
+    @Test(expectedExceptions = [ IllegalArgumentException.class ])
     public void everyFailsIfPeriodIsZero() {
-        try {
-            new Repeater("everyFailsIfPeriodIsZero").every(0, TimeUnit.MILLISECONDS);
-        } catch(IllegalArgumentException e) {
-            return
-        }
+        new Repeater("everyFailsIfPeriodIsZero").every(0, TimeUnit.MILLISECONDS);
         fail "Expected exception was not thrown"
     }
 
-    @Test
+    @Test(expectedExceptions = [ IllegalArgumentException.class ])
     public void everyFailsIfPeriodIsNegative() {
-        try {
-            new Repeater("everyFailsIfPeriodIsNegative").every(-1, TimeUnit.MILLISECONDS);
-        } catch(IllegalArgumentException e) {
-            return
-        }
+        new Repeater("everyFailsIfPeriodIsNegative").every(-1, TimeUnit.MILLISECONDS);
         fail "Expected exception was not thrown"
     }
 
-    @Test
+    @Test(expectedExceptions = [ NullPointerException.class ])
     public void everyFailsIfUnitsIsNull() {
-        try {
-            new Repeater("everyFailsIfUnitsIsNull").every(10, null);
-        } catch(NullPointerException e) {
-            return
-        }
+        new Repeater("everyFailsIfUnitsIsNull").every(10, null);
         fail "Expected exception was not thrown"
     }
 
@@ -76,33 +56,21 @@ class RepeaterTest {
         new Repeater("repeatSucceedsIfClosureIsNonNull").every(10, TimeUnit.MILLISECONDS);
     }
 
-    @Test
+    @Test(expectedExceptions = [ IllegalArgumentException.class ])
     public void limitTimeToFailsIfPeriodIsZero() {
-        try {
-            new Repeater("limitTimeToFailsIfPeriodIsZero").limitTimeTo(0, TimeUnit.MILLISECONDS);
-        } catch(IllegalArgumentException e) {
-            return
-        }
+        new Repeater("limitTimeToFailsIfPeriodIsZero").limitTimeTo(0, TimeUnit.MILLISECONDS);
         fail "Expected exception was not thrown"
     }
 
-    @Test
+    @Test(expectedExceptions = [ IllegalArgumentException.class ])
     public void limitTimeToFailsIfPeriodIsNegative() {
-        try {
-            new Repeater("limitTimeToFailsIfPeriodIsNegative").limitTimeTo(-1, TimeUnit.MILLISECONDS);
-        } catch(IllegalArgumentException e) {
-            return
-        }
+        new Repeater("limitTimeToFailsIfPeriodIsNegative").limitTimeTo(-1, TimeUnit.MILLISECONDS);
         fail "Expected exception was not thrown"
     }
 
-    @Test
+    @Test(expectedExceptions = [ NullPointerException.class ])
     public void limitTimeToFailsIfUnitsIsNull() {
-        try {
-            new Repeater("limitTimeToFailsIfUnitsIsNull").limitTimeTo(10, null);
-        } catch(NullPointerException e) {
-            return
-        }
+        new Repeater("limitTimeToFailsIfUnitsIsNull").limitTimeTo(10, null);
         fail "Expected exception was not thrown"
     }
 
@@ -142,33 +110,21 @@ class RepeaterTest {
         assertTrue difference < DEADLINE*1.1
     }
 
-    @Test
+    @Test(expectedExceptions = [ IllegalStateException.class ])
     public void runFailsIfBodyWasNotSet() {
-        try {
-            new Repeater("runFailsIfBodyWasNotSet").every(10, TimeUnit.MILLISECONDS).until({true}).run();
-        } catch(IllegalStateException e) {
-            return;
-        }
+        new Repeater("runFailsIfBodyWasNotSet").every(10, TimeUnit.MILLISECONDS).until({true}).run();
         fail "Expected exception was not thrown"
     }
 
-    @Test
+    @Test(expectedExceptions = [ IllegalStateException.class ])
     public void runFailsIfUntilWasNotSet() {
-        try {
-            new Repeater("runFailsIfUntilWasNotSet").repeat({}).every(10, TimeUnit.MILLISECONDS).run();
-        } catch(IllegalStateException e) {
-            return;
-        }
+        new Repeater("runFailsIfUntilWasNotSet").repeat({}).every(10, TimeUnit.MILLISECONDS).run();
         fail "Expected exception was not thrown"
     }
 
-    @Test
+    @Test(expectedExceptions = [ IllegalStateException.class ])
     public void runFailsIfEveryWasNotSet() {
-        try {
-            new Repeater("runFailsIfEveryWasNotSet").repeat({}).until({true}).run();
-        } catch(IllegalStateException e) {
-            return;
-        }
+        new Repeater("runFailsIfEveryWasNotSet").repeat({}).until({true}).run();
         fail "Expected exception was not thrown"
     }
 }
