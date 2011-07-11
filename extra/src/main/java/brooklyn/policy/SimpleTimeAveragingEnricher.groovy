@@ -11,6 +11,18 @@ import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.policy.basic.AbstractPolicy
 
 class SimpleTimeAveragingEnricher<T extends Number> extends AbstractPolicy implements EventListener<T> {
+    
+    // FIXME What if no values yet? Document what it will return, e.g. -1
+    // TODO Do we want a hasValues? or Size? but what about pruning?
+    // TODO Do we want to retain oldest value, if not older than some threshold? 
+    //      Otherwise if heard nothing since 1.1 seconds ago then we'd report per-second avarege is -1.
+    
+    // TODO next...
+    // 1. unit tests
+    // 2. want a version of this / a way for if raw data is absolute count of msgs-processed
+    //    could have a class explicitly for that;
+    //    or an intermediate enricher that creates a "workrate" attribute by subtracting the latest from last 
+    
     public static final BasicAttributeSensor<Number> AVERAGE = [ Number, "enricher.average", "Enriched time aware average" ]
     
     private LinkedList<T> values = new LinkedList<T>()
@@ -30,13 +42,17 @@ class SimpleTimeAveragingEnricher<T extends Number> extends AbstractPolicy imple
         super.setEntity(entity)
         subscribe(producer, source, this)
     }
-    
+
     public void onEvent(SensorEvent<T> event) {
         long now = System.currentTimeMillis()
+        onEvent(event, now)
+    }
+    
+    public void onEvent(SensorEvent<T> event, long eventTime) {
         values.addLast(event.getValue())
-        timestamps.addLast(now)
-        pruneValues(now)
-        entity.emit(AVERAGE, getAverage(now))
+        timestamps.addLast(eventTime)
+        pruneValues(eventTime)
+        entity.emit(AVERAGE, getAverage(eventTime))
     }
     
     public Number getAverage() {
@@ -48,20 +64,24 @@ class SimpleTimeAveragingEnricher<T extends Number> extends AbstractPolicy imple
         
         long start = now - timePeriod
         long end
-        double weightedTotal
+        double weightedAverage
         
-        timePeriod.eachWithIndex { timestamp, i ->
+        timestamps.eachWithIndex { timestamp, i ->
             end = timestamp
-            weightedTotal += ((end - start) / timePeriod) * values[i]
+            weightedAverage += ((end - start) / timePeriod) * values[i]
             start = timestamp
         }
         end = now
-        weightedTotal += ((end - start) / timePeriod) * values.last()
-        return weightedTotal/values.size()
+        
+        // FIXME Don't extrapolate
+        weightedAverage += ((end - start) / timePeriod) * values.last()
+        
+        return weightedAverage
     }
     
     private void pruneValues(long now) {
-        while(timestamps.first() < now - timePeriod) {
+        // FIXME Instead perhaps keep a window of size timePeriod (e.g. if we haven't received anything recently then don't prune older stuff yet).
+        while(timestamps.first() < (now - timePeriod)) {
             timestamps.removeFirst()
             values.removeFirst()
         }
