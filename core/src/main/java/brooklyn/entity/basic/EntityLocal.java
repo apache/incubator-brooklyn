@@ -1,25 +1,31 @@
 package brooklyn.entity.basic;
 
 import java.util.Collection;
+import java.util.Map;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.Group;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.EventListener;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.basic.ConfigKey;
 import brooklyn.management.ManagementContext;
-import brooklyn.policy.Policy;
 import brooklyn.management.SubscriptionHandle;
+import brooklyn.policy.Policy;
 
 public interface EntityLocal extends Entity {
+    
+    // FIXME Rename to something other than EntityLocal.
+    // Separate out what is specific to "local jvm", and what is here for an SPI rather than API.
+    
     /**
      * Gets the value of the given attribute on this entity, or null if has not been set.
      * 
      * Attributes can be things like workrate and status information, as well as 
      * configuration (e.g. url/jmxHost/jmxPort), etc.
      */
+    // TODO Move to Entity, and document semantics of when vals are available in remote JVM?
+    //      Or have getLatestEvent instead?
     <T> T getAttribute(AttributeSensor<T> sensor);
 
     /**
@@ -41,8 +47,7 @@ public interface EntityLocal extends Entity {
     <T> T getConfig(ConfigKey<T> key);
     
     /**
-     * Must be called before the entity is started. Also must be called before the entity's 
-     * "owned children" are added, to guarantee that those children inherit the config.
+     * Must be called before the entity is started.
      */
     <T> T setConfig(ConfigKey<T> key, T val);
     
@@ -58,15 +63,18 @@ public interface EntityLocal extends Entity {
      *
      * @see SubscriptionManger#subscribe(Map, Entity, Sensor, EventListener)
      */
+    // FIXME remove from interface?
     <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, EventListener<T> listener);
  
     /** @see SubscriptionManger#subscribeToChildren(Map, Entity, Sensor, EventListener) */
+    // FIXME remove from interface?
     <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, EventListener<T> listener);
  
 
     /**
      * @return an immutable thread-safe view of the policies.
      */
+    // FIXME move to Entity
     Collection<Policy> getPolicies();
     
     /**
