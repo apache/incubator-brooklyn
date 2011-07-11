@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.net.URL;
 
 import com.cloudsoftcorp.monterey.clouds.NetworkId;
+import com.cloudsoftcorp.monterey.node.api.NodeId;
 import com.cloudsoftcorp.util.web.client.CredentialsConfig;
 import com.google.common.base.Preconditions;
 
@@ -19,11 +20,15 @@ public class MontereyNetworkConnectionDetails implements Serializable {
     private NetworkId networkId;
     private URL managementUrl;
     private CredentialsConfig adminCredential;
-
-    public MontereyNetworkConnectionDetails(NetworkId networkId, URL managementUrl, CredentialsConfig adminCredential) {
+    private NodeId monitorAddress;
+    private NodeId managerAddress;
+    
+    public MontereyNetworkConnectionDetails(NetworkId networkId, URL managementUrl, CredentialsConfig adminCredential, NodeId monitorAddress, NodeId managerAddress) {
         this.networkId = Preconditions.checkNotNull(networkId, "networkId");
         this.managementUrl = Preconditions.checkNotNull(managementUrl, "managementUrl");
         this.adminCredential = Preconditions.checkNotNull(adminCredential, "managementUrl");
+        this.monitorAddress = Preconditions.checkNotNull(monitorAddress, "monitorAddress");
+        this.managerAddress = Preconditions.checkNotNull(managerAddress, "managerAddress");
     }
     
     @SuppressWarnings("unused")
@@ -41,6 +46,14 @@ public class MontereyNetworkConnectionDetails implements Serializable {
         return adminCredential;
     }
 
+    public NodeId getMonitorAddress() {
+        return monitorAddress;
+    }
+    
+    public NodeId getManagerAddress() {
+        return managerAddress;
+    }
+    
     @Override
     public String toString() {
         return managementUrl+"("+networkId+")";

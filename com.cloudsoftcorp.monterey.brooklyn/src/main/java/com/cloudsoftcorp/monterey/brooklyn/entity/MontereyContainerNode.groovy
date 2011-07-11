@@ -3,9 +3,7 @@ package com.cloudsoftcorp.monterey.brooklyn.entity
 import com.cloudsoftcorp.monterey.node.api.PropertiesContext;
 import java.io.IOException
 import java.net.InetSocketAddress
-import java.util.ArrayList
 import java.util.Collection
-import java.util.List
 import java.util.logging.Level
 import java.util.logging.Logger
 
@@ -13,6 +11,7 @@ import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.util.internal.LanguageUtils
 
 import com.cloudsoftcorp.monterey.clouds.AccountConfig
 import com.cloudsoftcorp.monterey.comms.socket.SocketAddress
@@ -30,6 +29,7 @@ import com.cloudsoftcorp.util.Loggers
 import com.cloudsoftcorp.util.StringUtils
 import com.cloudsoftcorp.util.exception.ExceptionUtils
 import com.cloudsoftcorp.util.javalang.ClassLoadingContext
+import com.cloudsoftcorp.util.javalang.JarUrlUtils
 import com.cloudsoftcorp.util.text.StringEscapeHelper
 import com.google.gson.Gson
 
@@ -47,36 +47,28 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
     private static final Logger LOG = Loggers.getLogger(MontereyContainerNode.class);
         
     private final MontereyNetworkConnectionDetails connectionDetails;
-    private final String creationId;
-    
-    private final NodeId nodeId;
-    private final Location location;
+    private String creationId;
+    private NodeId nodeId;
+    private Location location;
     
     // TODO use these or delete them?
-    private File truststore;
-    private int montereyNodePort;
-    private int montereyHubLppPort;
+    private File truststore = null;
+    private int montereyNodePort = 0;
+    private int montereyHubLppPort = 0;
     private String locationId;
     private String accountId;
-    private String networkHome;
-    private String startScript;
-    private String killScript;
+    private String networkHome = "~/monterey-network-node-copy1";
     
     private AbstractMontereyNode node;
     
     private final Gson gson;
-    
-    MontereyContainerNode(MontereyNetworkConnectionDetails connectionDetails, NodeId nodeId, Location location) {
+
+    MontereyContainerNode(MontereyNetworkConnectionDetails connectionDetails) {
         this.connectionDetails = connectionDetails;
-        this.nodeId = nodeId;
-        this.location = location;
-        this.locations.add(location);
-        
+        this.creationId = LanguageUtils.newUid();
         ClassLoadingContext classloadingContext = ClassLoadingContext.Defaults.getDefaultClassLoadingContext();
         GsonSerializer gsonSerializer = new GsonSerializer(classloadingContext);
         gson = gsonSerializer.getGson();
-
-        LOG.info("Node "+nodeId+" created in location "+location);        
     }
     
     public void setTruststore(File val) {
@@ -95,12 +87,38 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
         return node;
     }
 
-    public void start(Collection<? extends Location> locs) {
+    public void connectToExisting(NodeSummary nodeSummary, Location loc) {
+        this.nodeId = nodeSummary.getNodeId();
+        this.creationId = nodeSummary.getCreationUid();
+        this.location = location;
+        this.locations.add(location);
+        
+        LOG.info("Connected to existing node "+nodeId+" in location "+location);        
+    }
     
+    void onStarted(NodeSummary nodeSummary) {
+        this.nodeId = nodeSummary.getNodeId();
+    }
+    
+    public void start(Collection<? extends Location> locs) {
+        if (locs.isEmpty()) throw new IllegalArgumentException("Locations empty; cannot start monterey node");
+        Location loc = locs.iterator().next();
+        
+        if (loc instanceof SshMachineLocation) {
+            startOnHost((SshMachineLocation)loc);
+        } else {
+            throw new UnsupportedOperationException("Unsupported location type "+loc);
+        }
+    }
+
+    public void stop() {
+        release();
     }
 
     // FIXME Work in progress; untested code that won't work because fields aren't initialized!
     public void startOnHost(SshMachineLocation host) {
+        locations.add(host);
+        
         LOG.info("Creating new monterey node "+creationId+" on "+host);
 
         PropertiesContext nodeProperties = new PropertiesContext();
@@ -112,45 +130,61 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
             nodeProperties.getProperties().add(ProvisioningConstants.PREFERRED_HOSTNAME_PROPERTY, host.getAddress().getHostName());
             nodeProperties.getProperties().add(ProvisioningConstants.PREFERRED_SOCKET_ADDRESS_PROPERTY,address.getConstructionString());
             nodeProperties.getProperties().add(ProvisioningConstants.LPP_HUB_LISTENER_PORT_PROPERTY, ""+montereyHubLppPort);
+            nodeProperties.getProperties().add(ProvisioningConstants.MONITOR_ADDRESS_PROPERTY, JarUrlUtils.toStringUsingDefaultClassloadingContext(connectionDetails.getMonitorAddress()));
+            nodeProperties.getProperties().add(ProvisioningConstants.MANAGER_ADDRESS_PROPERTY, JarUrlUtils.toStringUsingDefaultClassloadingContext(connectionDetails.getManagerAddress()));
+
+            // TODO Set comms class/bundle (and location latencies); see ManagementNodeConfig.getDefaultNodeProperties
+        
             if (truststore != null) nodeProperties.getProperties().add(ProvisioningConstants.JAVAX_NET_SSL_TRUSTSTORE, networkHome+"/"+AccountConfig.NETWORK_NODE_SSL_TRUSTSTORE_RELATIVE_PATH);
             
-
-            List<String> args = []
-            args.add(startScript);
-            args.add("-key"); args.add(creationId);
-            args.add(StringEscapeHelper.wrapBash(StringUtils.join(nodeProperties.getProperties(), "\n")));
+            String args = networkHome+"/"+MontereyNetworkConfig.NETWORK_NODE_START_SCRIPT_RELATIVE_PATH+
+                    " -key "+creationId+
+                    " "+StringEscapeHelper.wrapBash(StringUtils.join(nodeProperties.getProperties(), "\n"));
             
             try {
                 if (truststore != null) {
                     host.copyTo(truststore, networkHome+"/"+AccountConfig.NETWORK_NODE_SSL_TRUSTSTORE_RELATIVE_PATH);
                 }
-                host.run(args);
+                host.run(out: System.out, args);
+                
             } catch (IllegalStateException e) {
               throw e; // TODO throw as something nicer?
             } catch (IOException e) {
+                // TODO Should just rethrow without logging; but exception wasn't being logged anywhere
+                LOG.log(Level.WARNING, "Failed to start monterey container node; rethrowing", e);
                 throw ExceptionUtils.throwRuntime(e);
             }
 
-            LOG.info("Created new monterey network: "+connectionDetails);
+            LOG.info("Created new monterey node on host $host, creation id $creationId");
             
         } catch (RuntimeException e) {
             LOG.log(Level.SEVERE, "Error starting node("+nodeProperties+") on "+host, e);
-            onFailureToStart();
+            kill(host);
             throw e;
         }
     }
 
-    private void onFailureToStart(SshMachineLocation host) {
-        List<String> args = new ArrayList<String>();
-        args.add(killScript);
-        args.add("-key"); args.add(creationId);
+    public void kill() {
+        Location loc = (locations) ? locations.iterator().next() : null;
+        if (loc instanceof SshMachineLocation) {
+            kill((SshMachineLocation)loc);
+        } else if (loc == null) {
+            LOG.info("No-op killing monterey network node; no location: creationId=$creationId");
+        } else {
+            throw new UnsupportedOperationException("Unsupported location type, $locations");
+        }
+    }
+    
+    private void kill(SshMachineLocation host) {
+        String args = networkHome+"/"+MontereyNetworkConfig.NETWORK_NODE_KILL_SCRIPT_RELATIVE_PATH+
+                " -key $creationId";
 
         try {
-            host.run(args);
+            host.run(out: System.out, args);
         } catch (IllegalStateException e) {
             if (e.toString().contains("No such process")) {
                 // the process hadn't started or was killed externally? Our work is done.
-                LOG.info("Network node process not running; termination is a no-op: creationId="+creationId+"; machine="+getSshAddress());
+                LOG.info("Network node process not running; termination is a no-op: creationId="+creationId+"; machine="+host);
             } else {
                 throw e;
             }
@@ -168,8 +202,25 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
     }
     
     public void revert() {
-        PlumberWebProxy plumber = new PlumberWebProxy(connectionDetails.getManagementUrl(), gson, connectionDetails.getWebApiAdminCredential());
-        DmnFuture<?> future = plumber.revert(nodeId);
+        if (nodeId != null) {
+            PlumberWebProxy plumber = new PlumberWebProxy(connectionDetails.getManagementUrl(), gson, connectionDetails.getWebApiAdminCredential());
+            DmnFuture<?> future = plumber.revert(nodeId);
+            future.get();
+        } else {
+            LOG.info("Cannot revert monterey network node; unknown node id: creationId="+creationId+"; location="+locations);
+        }
+    }
+    
+    public void release() {
+        if (nodeId != null) {
+            PlumberWebProxy plumber = new PlumberWebProxy(connectionDetails.getManagementUrl(), gson, connectionDetails.getWebApiAdminCredential());
+            DmnFuture<?> future = plumber.release(nodeId);
+            future.get();
+        } else {
+            LOG.info("Cannot release monterey network node; unknown node id, will attempt to kill: creationId="+creationId+"; location="+locations);
+        }
+        
+        kill();
     }
     
     void updateWorkrate(WorkrateReport report) {

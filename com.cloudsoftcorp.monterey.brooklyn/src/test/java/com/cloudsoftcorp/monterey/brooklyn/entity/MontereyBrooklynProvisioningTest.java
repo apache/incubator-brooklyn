@@ -144,7 +144,10 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
     public void tearDown() throws Exception {
         try {
             workloadExecutor.shutdownNow();
-            if (montereyNetwork != null && montereyNetwork.isRunning()) montereyNetwork.stop();
+            if (montereyNetwork != null && montereyNetwork.isRunning()) {
+                montereyNetwork.releaseAllNodes();
+                montereyNetwork.stop();
+            }
         } finally {
             if (originalClassLoadingContext != null) {
                 ClassLoadingContext.Defaults.setDefaultClassLoadingContext(originalClassLoadingContext);
@@ -159,6 +162,15 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         montereyNetwork.deployApplication(newDummyMontereyDeploymentDescriptor(), BundleSet.EMPTY);
         
         assertMontereyRunningWithApp(montereyNetwork);
+    }
+
+    @Test
+    public void testStartMontereyNetworkNode() throws Throwable {
+        rolloutManagementPlane();
+        
+        montereyNetwork.provisionNode(localhost);
+        
+        assertBrooklynEventuallyHasNodes(0,0,0,0,1);
     }
 
     @Test
@@ -584,6 +596,35 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
                     NodeId expectedMediator = expected.get(segment).getNodeId();
                     NodeId actualMediator = entry.getValue().getAttribute(Segment.MEDIATOR);
                     Assert.assertEquals("segment="+segment, expectedMediator, actualMediator);
+                }
+                return null;
+            }}, TIMEOUT);
+    }
+
+    private void assertBrooklynEventuallyHasNodes(int lpp, int mr, int m, int tp, int spare) throws Throwable {
+        final Map<Dmn1NodeType, Integer> expectedCounts = new ImmutableMap.Builder<Dmn1NodeType, Integer>()
+                .put(Dmn1NodeType.LPP, lpp)
+                .put(Dmn1NodeType.MR, mr)
+                .put(Dmn1NodeType.M, m)
+                .put(Dmn1NodeType.TP, tp)
+                .put(Dmn1NodeType.SPARE, spare)
+                .build();
+        
+        assertSuccessWithin(new Callable<Object>() {
+            public Object call() throws Exception {
+                Map<NodeId, MontereyContainerNode> actual = montereyNetwork.getContainerNodes();
+                for (Dmn1NodeType nodeType : Arrays.asList(Dmn1NodeType.LPP, Dmn1NodeType.MR, Dmn1NodeType.M, Dmn1NodeType.TP, Dmn1NodeType.SPARE)) {
+                    Collection<NodeId> nodesOfType = findNodesMatching(nodeType);
+                    Assert.assertEquals(expectedCounts.get(nodeType), (Integer)nodesOfType.size());
+                    
+                    for (NodeId nodeId : nodesOfType) {
+                        MontereyContainerNode actualContainerNode = actual.get(nodeId);
+                        
+                        Assert.assertEquals(nodeId, actualContainerNode.getNodeId());
+                        AbstractMontereyNode montereyNetworkNode = actualContainerNode.getContainedMontereyNode();
+                        Assert.assertNotNull(montereyNetworkNode);
+                        Assert.assertEquals(nodeType, montereyNetworkNode.getNodeType());
+                    }
                 }
                 return null;
             }}, TIMEOUT);

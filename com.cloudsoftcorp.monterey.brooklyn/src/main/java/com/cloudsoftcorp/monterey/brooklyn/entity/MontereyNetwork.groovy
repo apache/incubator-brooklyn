@@ -43,6 +43,7 @@ import com.cloudsoftcorp.monterey.network.control.plane.GsonSerializer
 import com.cloudsoftcorp.monterey.network.control.plane.web.DeploymentWebProxy
 import com.cloudsoftcorp.monterey.network.control.plane.web.Dmn1NetworkInfoWebProxy
 import com.cloudsoftcorp.monterey.network.control.plane.web.PingWebProxy
+import com.cloudsoftcorp.monterey.network.control.plane.web.PlumberWebProxy
 import com.cloudsoftcorp.monterey.network.control.plane.web.UserCredentialsConfig
 import com.cloudsoftcorp.monterey.network.deployment.MontereyDeploymentDescriptor
 import com.cloudsoftcorp.monterey.network.m.MediationWorkrateItem.MediationWorkrateItemNames
@@ -103,6 +104,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
 
     private final LocationRegistry locationRegistry = new LocationRegistry();
     private final Map<NodeId,MontereyContainerNode> nodes = new ConcurrentHashMap<NodeId,MontereyContainerNode>();
+    private final Map<String,MontereyContainerNode> pendingProvisionNodes = new ConcurrentHashMap<String,MontereyContainerNode>();
     private final Map<String,Segment> segments = new ConcurrentHashMap<String,Segment>();
     private final Map<Location,Map<Dmn1NodeType,MontereyTypedGroup>> clustersByLocationAndType = new ConcurrentHashMap<Location,Map<Dmn1NodeType,MontereyTypedGroup>>();
     private final Map<Dmn1NodeType,MontereyTypedGroup> typedFabrics = [:];
@@ -238,7 +240,6 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
             }
 
             this.managementUrl = new URL(config.getMontereyWebApiProtocol()+"://"+host.getAddress().getHostName()+":"+config.getMontereyWebApiPort());
-            this.connectionDetails = new MontereyNetworkConnectionDetails(networkId, managementUrl, webAdminCredential);
             this.host = host;
 
             // Convenient for testing: create the management-node directly in-memory, rather than starting it in a separate process
@@ -264,6 +265,11 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
                 throw new IllegalStateException("Management plane not reachable via web-api within "+TimeUtils.makeTimeString(MontereyNetworkConfig.TIMEOUT_FOR_NEW_NETWORK_ON_HOST)+": url="+managementUrl);
             }
 
+            PlumberWebProxy plumberProxy = new PlumberWebProxy(managementUrl, gson, webAdminCredential);
+            NodeId controlNodeId = plumberProxy.getControlNodeId();
+            
+            this.connectionDetails = new MontereyNetworkConnectionDetails(networkId, managementUrl, webAdminCredential, controlNodeId, controlNodeId);
+            
             setAttribute MANAGEMENT_URL, managementUrl
             setAttribute NETWORK_ID, networkId.getId()
 
@@ -302,11 +308,19 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         boolean result = deployer.deployApplication(descriptor, bundles);
     }
 
-    public void provisionNodes(Location loc, int numNodes) {
+    public MontereyContainerNode provisionNode(Location loc) {
         MontereyContainerNode node = new MontereyContainerNode(connectionDetails);
+        pendingProvisionNodes.put(node.creationId, node);
+        addOwnedChild(node);
         node.start([loc]);
     }
     
+    public void releaseAllNodes() {
+        for (MontereyContainerNode node : union(pendingProvisionNodes.values(),nodes.values())) {
+            node.release();
+        }
+    }
+
     public void stop() {
         // TODO Guard so can only shutdown if network nodes are not running?
         if (host == null) {
@@ -404,10 +418,18 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         removedNodes.addAll(nodes.keySet()); removedNodes.removeAll(nodeSummaries.keySet());
 
         newNodes.each {
-            MontereyActiveLocation montereyLocation = nodeSummaries.get(it).getMontereyActiveLocation();
+            NodeSummary nodeSummary = nodeSummaries.get(it);
+            MontereyActiveLocation montereyLocation = nodeSummary.getMontereyActiveLocation();
             Location location = locationRegistry.getConvertedLocation(montereyLocation);
-            MontereyContainerNode containerNode = new MontereyContainerNode(connectionDetails, it, location);
-            addOwnedChild(containerNode);
+            MontereyContainerNode containerNode;
+            if (pendingProvisionNodes.containsKey(nodeSummary.getCreationUid())) {
+                containerNode = pendingProvisionNodes.remove(nodeSummary.getCreationUid());
+                containerNode.onStarted(nodeSummary)
+            } else {
+                containerNode = new MontereyContainerNode(connectionDetails);
+                containerNode.connectToExisting(nodeSummary, location)
+                addOwnedChild(containerNode);
+            }
             nodes.put(it, containerNode);
         }
 
@@ -519,4 +541,10 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
             }
         }
     }
+    
+    private static <T> Set<T> union(Collection<T> col1, Collection<T> col2) {
+        Set<T> result = new LinkedHashSet<T>(col1);
+        result.addAll(col2);
+        return result;
+    }   
 }
