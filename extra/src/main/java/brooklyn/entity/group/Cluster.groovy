@@ -5,14 +5,15 @@ import java.util.List
 import java.util.Map
 import java.util.concurrent.Future
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 import brooklyn.entity.Entity
-import brooklyn.entity.Group
 import brooklyn.entity.trait.Resizable
 import brooklyn.entity.trait.Startable
+import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.Location
 import brooklyn.util.internal.EntityStartUtils
-import org.slf4j.LoggerFactory
-import org.slf4j.Logger
 
 /**
  * intended to represent a group of homogeneous entities in a single location;
@@ -21,8 +22,14 @@ import org.slf4j.Logger
  * initialSize property determines initial size when started (defaults to 1)
  */
 public abstract class Cluster extends Tier implements Startable {
+    public static final BasicConfigKey<Integer> INITIAL_SIZE = [Integer, "cluster.size", "Initial cluster size" ]
+
+    int initialSize
+
     public Cluster(Map props=[:]) {
         super(props)
+        initialSize = getConfig(INITIAL_SIZE) ?: properties.initialSize ?: 2
+        setConfig(INITIAL_SIZE, initialSize)
     }
     
     
