@@ -98,6 +98,10 @@ div#demo1{
     border:1px solid #CCCCCC;
 }
 
+.tab-content-full-size {
+    width: 700px;
+}
+
 .tab-content-buttons{
      border:1px solid #CCCCCC;
 }
@@ -184,4 +188,22 @@ textarea#logbox{
 
 .locationData{
     float:left;
+}
+
+.dataTables_info {
+    font-size: 9px;
+}
+
+.dataTables_filter {
+    clear:right;
+    float:right;
+    padding: 2px;
+    padding-right: 10px;
+}
+
+.dataTables_filter input {
+    width: 90%;
+    background-image: url("../../images/brooklyn/magnifying-glass.gif");
+    background-repeat:no-repeat;
+    padding-left:20px;
 }
