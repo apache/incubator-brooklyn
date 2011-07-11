@@ -17,7 +17,7 @@
         .layout-middle-content
             .layout-left-column
                 %div{:id=>"searchBox"}
-                    %input{:type=>"search", :placeholder=>"Search", :name=>"name", :id=>"searchInput", :results=>"5"}
+                    %input{:type=>"search", :placeholder=>"Search", :name=>"name", :id=>"searchInput", :results=>"5", :autosave=>"brooklynEntity"}
                 %div{:id=>"demo1"}
             .layout-main-content
                 #tabs
@@ -41,7 +41,7 @@
                     #sensors
                         %h2 Sensors
                         .tab-content-full-size
-                            %table{:id=>"sensor-data"}
+                            %table{:id=>"sensor-data", :class=>"tab-content-table"}
                     #effectors
                         %h2 Effectors
                         %g:render{:template=>"/tabs/effectors"}

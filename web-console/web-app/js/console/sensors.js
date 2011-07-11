@@ -4,12 +4,14 @@ Brooklyn.sensors = (function() {
     function updateTableData(json) {
          var table = $('#sensor-data').dataTable( {
                 "bRetrieve": true,
+                "bAutoWidth": false,
                 "bLengthChange": false,
                 "bJQueryUI": true,
+                "bPaginate": false,
                 "aoColumns": [
-                    { "sTitle": "name" },
-                    { "sTitle": "description" },
-                    { "sTitle": "value" }
+                    { "sTitle": "name", "sWidth":"30%"  },
+                    { "sTitle": "description", "sWidth":"50%" },
+                    { "sTitle": "value", "sWidth":"20%"  }
                 ]
         });
         table.fnClearTable();
