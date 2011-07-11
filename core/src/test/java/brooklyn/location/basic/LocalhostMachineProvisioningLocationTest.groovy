@@ -12,7 +12,7 @@ public class LocalhostMachineProvisioningLocationTest {
         LocalhostMachineProvisioningLocation provisioner = new LocalhostMachineProvisioningLocation()
         SshMachineLocation machine = provisioner.obtain()
         assertNotNull machine
-        assertTrue machine.address.isSiteLocalAddress()
+        assertEquals machine.address, InetAddress.localHost
     }
 
     @Test(expectedExceptions = [ NoMachinesAvailableException.class ])
@@ -22,12 +22,12 @@ public class LocalhostMachineProvisioningLocationTest {
         // first machine
         SshMachineLocation first = provisioner.obtain()
         assertNotNull first
-        assertTrue first.address.isSiteLocalAddress()
+        assertEquals first.address, InetAddress.localHost
 
         // second machine
         SshMachineLocation second = provisioner.obtain()
         assertNotNull second
-        assertTrue second.address.isSiteLocalAddress()
+        assertEquals second.address, InetAddress.localHost
 
         // third machine
         SshMachineLocation third = provisioner.obtain()
