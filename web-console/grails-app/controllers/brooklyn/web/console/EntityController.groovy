@@ -40,7 +40,7 @@ class EntityController {
             render(status: 400, text: '{message: "You must provide an entity id"}')
             return
         }
-        render entityService.getSensorsOfEntity(params.id).collect{[it.name, it.description, it.value]} as JSON
+        render entityService.getSensorsOfEntity(params.id) as JSON
     }
 
     def activity = {

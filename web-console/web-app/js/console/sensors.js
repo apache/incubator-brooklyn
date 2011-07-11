@@ -8,13 +8,15 @@ Brooklyn.sensors = (function() {
                 "bLengthChange": false,
                 "bJQueryUI": true,
                 "bPaginate": false,
+                "bDeferRender": true,
+                "sAjaxDataProp": ".",
                 "aoColumns": [
-                    { "sTitle": "name", "sWidth":"30%"  },
-                    { "sTitle": "description", "sWidth":"50%" },
-                    { "sTitle": "value", "sWidth":"20%"  }
+                    { "mDataProp": "name", "sTitle": "name", "sWidth":"30%"  },
+                    { "mDataProp": "description", "sTitle": "description", "sWidth":"50%" },
+                    { "mDataProp": "value", "sTitle": "value", "sWidth":"20%"  }
                 ]
         });
-        table.fnClearTable();
+        table.fnClearTable(false);
         table.fnAddData(json);
     }
 
