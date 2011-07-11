@@ -10,14 +10,19 @@
 
 	<modules>
         <module>parent/root</module>
-    	<module>api</module>
+        <module>api</module>
         <module>test-support</module>
-		<module>core</module>
-		<module>extra</module>
-		<module>web-console</module>
+        <module>core</module>
+        <module>extra</module>
 	</modules>
 
     <profiles>
+        <profile>
+            <id>Console</id>
+            <modules>
+                <module>web-console</module>
+            </modules>
+        </profile>
         <profile>
             <id>Acceptance</id>
             <modules>
@@ -25,5 +30,4 @@
             </modules>
         </profile>
     </profiles>
-
 </project>
