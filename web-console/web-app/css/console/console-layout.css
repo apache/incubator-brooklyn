@@ -196,7 +196,7 @@ textarea#logbox{
 }
 
 .dataTables_filter {
-    width:30%;
+    width: 200px;
     padding: 2px;
 }
 

@@ -4208,8 +4208,8 @@
 		{
 			var sSearchStr = oSettings.oLanguage.sSearch;
 			sSearchStr = (sSearchStr.indexOf('_INPUT_') !== -1) ?
-			  sSearchStr.replace('_INPUT_', '<input type="search" placeHolder="Search" results="5"/>') :
-			   '<input type="search" placeHolder="Search" results="5"/>';
+			  sSearchStr.replace('_INPUT_', '<input type="search" placeHolder="Search" results="0" />') :
+			   '<input type="search" placeHolder="Search" results="0" />';
 
 			var nFilter = document.createElement( 'div' );
 			nFilter.className = oSettings.oClasses.sFilter;
