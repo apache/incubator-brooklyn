@@ -1,7 +1,7 @@
 Brooklyn.jsTree = (function(parent) {
 
     function loadJstree() {
-        $("#demo1").jstree({
+        $("#jstree").jstree({
                 "plugins" : [ "themes", "json_data", "ui" ],
                 "json_data" : {
                     "ajax" : {
@@ -9,7 +9,7 @@ Brooklyn.jsTree = (function(parent) {
                         "data" : function () {
                             return {
                                 //TODO Still need to link up UI component to corresponding parameters
-                                "name" : $("#searchInput").val().toLowerCase(),
+                                "name" : $("#search-input").val().toLowerCase(),
                                 "id" : "",
                                 "applicationID" : ""
                             };
@@ -24,9 +24,9 @@ Brooklyn.jsTree = (function(parent) {
     }
 
     function init() {
-        $('#searchInput').bind('input', loadJstree);
-        $('#searchInput').bind('search', loadJstree);
-        $("#searchInput").corner();
+        $('#search-input').bind('input', loadJstree);
+        $('#search-input').bind('search', loadJstree);
+        $("#search-input").corner();
         loadJstree();
     }
 

@@ -23,7 +23,13 @@ body{
     width: 980px;
 }
 
-.layout-middle-content{
+h1#brooklyn-header{
+    height:100%;
+    width:175px;
+    background-image:url("../../images/brooklyn/brooklynbannerone.png");
+}
+
+#layout-middle-content{
     position:absolute;
     top:78px;
     clear: both;
@@ -32,7 +38,7 @@ body{
     width: 980px;
 }
 
-.layout-footer{
+#layout-footer{
     position:absolute;
     bottom:0;
     background-color:#f7f7f7;
@@ -61,21 +67,21 @@ body{
     width: 745px;
 }
 
-#searchBox{
+.search-box {
     margin-bottom: 3px;
     padding: 5px;
     padding-right: 8px;
     height:5%;
 }
 
-#searchInput{
+.search-input {
     width: 90%;
     background-image: url("../../images/brooklyn/magnifying-glass.gif");
     background-repeat:no-repeat;
     padding-left:20px;
 }
 
-div#demo1{
+.jstree {
     overflow:auto;
     height:90%;
     padding:3px;
@@ -104,12 +110,6 @@ div#demo1{
 
 .tab-content-buttons{
      border:1px solid #CCCCCC;
-}
-
-h1#brooklyn-header{
-    height:100%;
-    width:175px;
-    background-image:url("../../images/brooklyn/brooklynbannerone.png");
 }
 
 .ui-tabs-panel {
@@ -209,4 +209,17 @@ textarea#logbox{
 
 .tab-content-table {
     width:100%;
+}
+
+.row_selected {
+    background-color: #888888;
+}
+
+.effector-args p {
+    padding: 5px;
+}
+
+.effector-args div {
+    clear: both;
+    width: 100%;
 }

@@ -1,61 +1,66 @@
 Brooklyn.effectors = (function() {
+    var selectedRowData;
 
-    var _jsonObject
-    var _selectedEffector
+    function getTable() {
+        return $('#effector-data').dataTable( {
+                "bRetrieve": true, // return existing table if initialized
+                "bAutoWidth": false,
+                "bLengthChange": false,
+                "bJQueryUI": true,
+                "bPaginate": false,
+                "bDeferRender": true,
+                "sAjaxDataProp": ".",
+                "aoColumns": [
+                    { "mDataProp": "name", "sTitle": "name", "sWidth":"100%"  },
+                ]
+        });
+    }
 
     function _updateEffectorsList(json) {
-        _jsonObject = json
-        $('#effectorList').find('option').remove().end()
+        var _jsonObject = json;
+        getTable().fnClearTable(false);
+        getTable().fnAddData(_jsonObject);
 
-        for (var i=0; i<_jsonObject.length; i++) {
-            option = document.createElement("option");
-            option.text = _jsonObject[i].name;
-            option.value = _jsonObject[i].name;
-            $('#effectorList').get(0)[$('#effectorList option').length] = option;
-        }
+        $('#effector-args').empty();
+        var noSelectedEffector = document.createElement("p");
+        noSelectedEffector.textContent = "Please select an effector to invoke";
+        $('#effector-args').append(noSelectedEffector);
 
-        $('#effectorList').change(_updateParameters);
-        _updateParameters();
+        $('#effectors-invoke-button').attr("disabled", "disabled");
+
+        $("#effector-data tbody").click(updateParameters);
+        $('#effector-invoke').submit(invokeEffector);
     }
 
-    function _getEffector(effectorName){
-        for (var i=0; i<_jsonObject.length; i++) {
-            if (_jsonObject[i].name == effectorName) {
-                return _jsonObject[i];
-            }
-        }
-    }
+    function updateParameters(event) {
+        var settings = getTable().fnSettings().aoData;
+        var selectedRow = settings[getTable().fnGetPosition(event.target.parentNode)];
+        for(row in settings) {
+       		$(settings[row].nTr).removeClass('row_selected');
+   		}
+ 		$(selectedRow.nTr).addClass('row_selected');
 
-    function _updateParameters(){
-        //TODO update parameter panel
-        if ($('#effectorList option:selected').length == 0) {
-            var noSelectedEffector = document.createElement("label");
-            noSelectedEffector.textContent = "Please select an effector to invoke";
-            $('#effectorArgs').html(noSelectedEffector);
-            $('#invokeButton').attr("disabled", "disabled");
+        // TODO bit hacky!
+        selectedRowData = selectedRow._aData;
+
+        $('#effectors-invoke-button').removeAttr("disabled")
+
+        $('#effector-args').empty();
+
+        var title = document.createElement("p");
+        title.textContent = selectedRowData.description;
+        $('#effector-args').append(title);
+
+        if(selectedRowData.parameters.length == 0 ) {
+            var argumentLabel = document.createElement('p');
+            argumentLabel.textContent = "No arguments needed:";
+            $('#effector-args').append(argumentLabel);
         } else {
-            $('#effectorArgs').find('label').remove().end();
-            $('#effectorArgs').find('input').remove().end();
-            _selectedEffector = _getEffector($('#effectorList option:selected')[0].text);
-            _addElementsToPanel();
-        }
-    }
-
-    function _addElementsToPanel(){
-        $('#invokeButton').removeAttr("disabled")
-        var arguments = _selectedEffector["parameters"];
-        var form = document.createElement('form');
-
-        if(!arguments.length > 0 ){
-            var argumentLabel = document.createElement('label');
-            argumentLabel.textContent = "No arguments needed";
-            form.appendChild(argumentLabel);
-        } else {
-            for (parameter in arguments){
+            for (parameter in selectedRowData.parameters){
                 var textBox = document.createElement("input");
                 var argumentLabel = document.createElement('label');
                 var div = document.createElement('div');
-                var parameterName = arguments[parameter].name
+                var parameterName = selectedRowData.parameters[parameter].name
 
                 argumentLabel.setAttribute("name", parameterName + "Label");
                 argumentLabel.setAttribute("for", parameterName + "Input");
@@ -65,19 +70,12 @@ Brooklyn.effectors = (function() {
                 textBox.setAttribute("name", parameterName + "Input");
                 div.appendChild(textBox);
 
-                form.appendChild(div);
+                $('#effector-args').append(div);
             }
         }
-
-        var invokeButton = document.createElement("input");
-        invokeButton.setAttribute("type", "button");
-        invokeButton.setAttribute("onclick", "Brooklyn.effectors.invokeEffector(this.form)");
-        invokeButton.setAttribute("value", "Invoke");
-        form.appendChild(invokeButton);
-        $('#effectorArgs').append(form);
     }
 
-    function _updateList(e, entity_id) {
+    function updateList(e, entity_id) {
         if (typeof entity_id === 'undefined') {
             return;
         }
@@ -85,18 +83,18 @@ Brooklyn.effectors = (function() {
         $.getJSON("effectors?id=" + entity_id, _updateEffectorsList);
     }
 
-    function invokeEffector(form){
+    function invokeEffector(event){
         //TODO: use form object correctly
-        alert("Effector: " + _selectedEffector.name + " invoked");
+        alert('Effector: "' + selectedRowData.name + '" invoked');
+        return false;
     }
 
     function init() {
-        $(Brooklyn.eventBus).bind("entity_selected", _updateList);
+        $(Brooklyn.eventBus).bind("entity_selected", updateList);
     }
 
     return {
         init: init,
-        invokeEffector: invokeEffector
     };
 
 })();

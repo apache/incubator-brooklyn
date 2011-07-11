@@ -14,11 +14,11 @@
         %g:javascript{:src=>"jquery/jquery.corner.js"}
         %g:javascript{:src=>"jquery/jquery.jstree.js"}
     %body
-        .layout-middle-content
+        #layout-middle-content
             .layout-left-column
-                %div{:id=>"searchBox"}
-                    %input{:type=>"search", :placeholder=>"Search", :name=>"name", :id=>"searchInput", :results=>"5", :autosave=>"brooklynEntity"}
-                %div{:id=>"demo1"}
+                .search-box
+                    %input{:type=>"search", :placeholder=>"Search", :name=>"name", :class=>"search-input", :id=>"search-input", :results=>"5", :autosave=>"brooklynEntity"}
+                %div{:id=>"jstree", :class=>"jstree"}
             .layout-main-content
                 #tabs
                     %ul
@@ -53,5 +53,5 @@
                         %h2 Health
                     #structure
                         %h2 Structure
-                    %p{:class=>'bottom-filler'} &nbsp;
+                    %p{:class=>"bottom-filler"} &nbsp;
                 #status Last Update: <span id="status-message">No data yet.</span>
