@@ -6,46 +6,34 @@ import brooklyn.entity.ParameterType
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.AbstractGroup
+import brooklyn.entity.basic.BasicParameterType
+import brooklyn.entity.webapp.tomcat.TomcatNode
 import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.management.ExecutionContext
 import brooklyn.management.ExecutionManager
 import brooklyn.management.ManagementContext
-import brooklyn.management.SubscriptionContext
-import brooklyn.management.SubscriptionManager
+import brooklyn.management.internal.LocalManagementContext
 import brooklyn.web.console.entity.TestEffector
-import brooklyn.entity.webapp.tomcat.TomcatNode
-import brooklyn.entity.basic.BasicParameterType
-import brooklyn.util.task.BasicExecutionManager
-import brooklyn.management.Task
 
-class ManagementContextService implements ManagementContext {
-    private final ExecutionManager executionManager = new BasicExecutionManager();
-    private final Application application = new TestApplication();
-    static transactional = false;
-    protected static int ID_GENERATOR = 0;
+class ManagementContextService {
+    private final ManagementContext context = LocalManagementContext.context
+    private final Application application = new TestApplication()
+    protected static int ID_GENERATOR = 0
+
+    public ManagementContextService() {
+        context.applications.add(application)
+    }
+
 
     Collection<Application> getApplications() {
-        return Collections.singletonList(application);
+        return context.applications
     }
 
     Entity getEntity(String id) {
-        throw new UnsupportedOperationException();
+        return context.getEntity(id)
     }
 
     public ExecutionManager getExecutionManager() {
-        return executionManager;
-    }
-
-    public SubscriptionManager getSubscriptionManager() {
-        throw new UnsupportedOperationException();
-    }
-
-    public ExecutionContext getExecutionContext(Entity entity) {
-        throw new UnsupportedOperationException();
-    }
-
-    public SubscriptionContext getSubscriptionContext(Entity entity) {
-        throw new UnsupportedOperationException();
+        return context.executionManager
     }
 
     private class TestApplication extends AbstractApplication {
@@ -147,18 +135,22 @@ class ManagementContextService implements ManagementContext {
                                     "Stop Tomcat": stopTomcat,
                                     "Restart Tomcat": restartTomcat])
 
-                // TODO should we be looking in entityClass (rather than calling getSensor?)
-                for (String key: hackMeIn.keySet()) {
-                    this.setAttribute(getSensor(key), hackMeIn[key] + ManagementContextService.ID_GENERATOR)
+                this.getExecutionContext().submit([tag:this, displayName: "myTask", description: "some task or other"], new MyRunnable(this));
+            }
+
+            protected class MyRunnable implements Runnable {
+                Entity entity
+                protected MyRunnable(Entity e) {
+                    this.entity = e
                 }
-
-                this.getExecutionContext().submit([displayName: "myTask", description: "some task or other"], new Runnable() {
-                    void run() {
-                        //To change body of implemented methods use File | Settings | File Templates.
+                void run() {
+                    while (true) {
+                        for (String key: hackMeIn.keySet()) {
+                            entity.setAttribute(entity.getSensor(key), hackMeIn[key] + ManagementContextService.ID_GENERATOR + ((int) 1000 * Math.random()))
+                        }
+                        Thread.sleep(5000)
                     }
-                })
-
-
+                }
             }
         }
     }

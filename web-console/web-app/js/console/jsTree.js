@@ -1,8 +1,7 @@
 Brooklyn.jsTree = (function(parent) {
 
     function loadJstree() {
-        $("#demo1")
-            .jstree({
+        $("#demo1").jstree({
                 "plugins" : [ "themes", "json_data", "ui" ],
                 "json_data" : {
                     "ajax" : {
@@ -24,13 +23,17 @@ Brooklyn.jsTree = (function(parent) {
                     });
     }
 
+    function init() {
+        $('#searchInput').bind('input', loadJstree);
+        $('#searchInput').bind('search', loadJstree);
+        $("#searchInput").corner();
+        loadJstree();
+    }
+
     return {
-        loadJstree: loadJstree
+        init: init
     };
 
 }(Brooklyn || {}));
 
-$(document).ready(function(){
-    Brooklyn.jsTree.loadJstree();
-    $("#searchInput").corner();
-});
+$(document).ready(Brooklyn.jsTree.init);

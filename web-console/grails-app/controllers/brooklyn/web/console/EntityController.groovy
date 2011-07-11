@@ -9,6 +9,7 @@ import brooklyn.web.console.entity.EntitySummary
 import brooklyn.web.console.entity.JsTreeNode
 import brooklyn.management.Task
 import brooklyn.web.console.entity.SensorSummary
+import brooklyn.web.console.entity.TaskSummary
 
 @Secured(['ROLE_ADMIN'])
 class EntityController {
@@ -39,18 +40,15 @@ class EntityController {
             render(status: 400, text: '{message: "You must provide an entity id"}')
             return
         }
-        Map stuff = [rows: entityService.getSensorsOfEntity(params.id)]
-        render stuff as JSON
+        render entityService.getSensorsOfEntity(params.id).collect{[it.name, it.description, it.value]} as JSON
     }
 
     def activity = {
-        Entity entity = getEntityMatchingId(params.id);
-        if (entity) {
-            Collection<Task> activity = activityService.getTasksOfEntity(entity)
-            render toTaskSummaries(activity) as JSON
-        } else {
-            render(status: 404, text: '{message: "Entity with specified id does not exist"}')
+        if (!params.id) {
+            render(status: 400, text: '{message: "You must provide an entity id"}')
+            return
         }
+        render entityService.getTasksOfEntity(params.id) as JSON
     }
 
 
@@ -84,6 +82,15 @@ class EntityController {
 
     private Set<EntitySummary> toEntitySummaries(Collection<Entity> entities) {
         entities.collect { toEntitySummary(it) }
+    }
+
+
+    private TaskSummary toTaskSummary(Task task) {
+        return new TaskSummary(task)
+    }
+
+    private Set<EntitySummary> toTaskSummaries(Collection<Task> tasks) {
+        tasks.collect { toTaskSummary(it) }
     }
 
     private Entity getEntityMatchingId(String id) {

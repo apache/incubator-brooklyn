@@ -17,7 +17,7 @@
         .layout-middle-content
             .layout-left-column
                 %div{:id=>"searchBox"}
-                    %input{:type=>'text', :placeholder=>"Search", :name=>'name', :id=>'searchInput', :onkeypress=>"Brooklyn.jsTree.loadJstree()"}
+                    %input{:type=>"search", :placeholder=>"Search", :name=>"name", :id=>"searchInput", :results=>"5"}
                 %div{:id=>"demo1"}
             .layout-main-content
                 #tabs
@@ -40,8 +40,8 @@
                         %h2 Summary
                     #sensors
                         %h2 Sensors
-                        %table{:id=>"sensor-data"}
-                        #sensor-pager
+                        .tab-content-full-size
+                            %table{:id=>"sensor-data"}
                     #effectors
                         %h2 Effectors
                         %g:render{:template=>"/tabs/effectors"}

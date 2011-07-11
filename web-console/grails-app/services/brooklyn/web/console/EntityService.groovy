@@ -5,14 +5,15 @@ import brooklyn.management.Task
 import brooklyn.web.console.entity.SensorSummary
 import brooklyn.event.Sensor
 import brooklyn.entity.Effector
+import brooklyn.web.console.entity.TaskSummary
 
 class EntityService {
 
     static transactional = false
     def managementContextService
 
-    public Collection<Task> getTasksOfEntity(String entityId) {
-        return managementContextService.executionManager.getTasksWithTag(getEntity(entityId))
+    public Collection<TaskSummary> getTasksOfEntity(String entityId) {
+        return managementContextService.executionManager.getTasksWithTag(getEntity(entityId)).collect { new TaskSummary(it) }
     }
 
     public Collection<SensorSummary> getSensorsOfEntity(String entityId) {
