@@ -1,7 +1,8 @@
 package brooklyn.web.console.test
 
 import org.testng.annotations.Test
-import static org.testng.Assert.*;
+import static org.testng.Assert.*
+import org.testng.Assert;
 
 public class SensorsTest extends AbstractSeleniumTest {
 
@@ -29,9 +30,11 @@ public class SensorsTest extends AbstractSeleniumTest {
 
         selenium.click("jstree-node-id-leaf-4")
         selenium.click("link=Sensors");
-        waitFor({selenium.isTextPresent("HTTP port")});
+        waitFor({selenium.isTextPresent("http.port")});
 
+        assertTrue(selenium.isTextPresent("http.port"));
         assertTrue(selenium.isTextPresent("HTTP port"));
-        assertTrue(selenium.isTextPresent("8085"));
+        assertTrue(selenium.isTextPresent("JMX host"));
+        assertTrue(selenium.isTextPresent("JMX port"));
     }
 }
