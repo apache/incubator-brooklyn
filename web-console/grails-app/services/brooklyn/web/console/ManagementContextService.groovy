@@ -44,7 +44,8 @@ class ManagementContextService {
             for(String tierName : ["tomcat tier 1", "tomcat tier 2", "data tier 1"]) {
                 Entity tier = new TestGroupEntity(this, tierName);
                 for(String clusterName : ["1a", "1b"]) {
-                    Entity cluster = new TestGroupEntity(tier, tierName.substring(0, tierName.indexOf(" ")) + " cluster " + clusterName)
+                    Entity cluster = new TestGroupEntity(tier, tierName.substring(0, tierName.indexOf(" ")) +
+                            " cluster " + clusterName)
                     for(int i=1; i<4; i++) {
                         if (tierName =~ /^tomcat/) {
                             cluster.addOwnedChild(new TestTomcatEntity(cluster, "tomcat node " + clusterName + "." + i))
@@ -59,7 +60,9 @@ class ManagementContextService {
             }
 
             sensors.putAll([
-                    Children: new BasicAttributeSensor<Integer>(Integer.class, "Children", "Owned children of this application"), DataRate: new BasicAttributeSensor<String>(String.class, "DataRate")])
+                    Children: new BasicAttributeSensor<Integer>(Integer.class, "Children",
+                            "Owned children of this application"),
+                            DataRate: new BasicAttributeSensor<String>(String.class, "DataRate")])
             setAttribute(getSensor("Children"), getOwnedChildren().size())
         }
 
@@ -68,7 +71,8 @@ class ManagementContextService {
                 super([:], owner)
                 this.displayName = displayName
                 this.id = "group-" + ManagementContextService.ID_GENERATOR++
-                sensors.putAll([Children: new BasicAttributeSensor<Integer>(Integer.class, "Children", "Direct children of this group"), DataRate: new BasicAttributeSensor<String>(String.class, "DataRate")])
+                sensors.putAll([Children: new BasicAttributeSensor<Integer>(Integer.class, "Children",
+                        "Direct children of this group"), DataRate: new BasicAttributeSensor<String>(String.class, "DataRate")])
             }
 
             TestGroupEntity addOwnedChild(Entity child) {
@@ -85,9 +89,12 @@ class ManagementContextService {
                 this.displayName = displayName
                 this.id = "leaf-" + ManagementContextService.ID_GENERATOR++
 
-                TestEffector startDB = new TestEffector("Start DB", "This will start the database",  new ArrayList<ParameterType<?>>())
-                TestEffector stopDB = new TestEffector("Stop DB", "This will stop the database", new ArrayList<ParameterType<?>>())
-                TestEffector restartDB = new TestEffector("Restart DB", "This will restart the DB", new ArrayList<ParameterType<?>>())
+                TestEffector startDB = new TestEffector("Start DB", "This will start the database",
+                        new ArrayList<ParameterType<?>>())
+                TestEffector stopDB = new TestEffector("Stop DB", "This will stop the database",
+                        new ArrayList<ParameterType<?>>())
+                TestEffector restartDB = new TestEffector("Restart DB", "This will restart the DB",
+                        new ArrayList<ParameterType<?>>())
 
                 this.effectors.putAll(["Start DB": startDB, "Stop DB": stopDB, "Restart DB": restartDB])
 
@@ -127,15 +134,22 @@ class ManagementContextService {
 
 
                 // Don't appear to be any effectors in TomcatNode
-                TestEffector startTomcat = new TestEffector("Start Tomcat", "This will start Tomcat at a specified location", parameterTypeList)
-                TestEffector stopTomcat = new TestEffector("Stop Tomcat", "This will stop tomcat at its current location",  new Collections.SingletonList(actionDate))
-                TestEffector restartTomcat = new TestEffector("Restart Tomcat", "This will restart tomcat in its current location", new ArrayList<ParameterType<?>>())
+                TestEffector startTomcat = new TestEffector("Start Tomcat",
+                                                            "This will start Tomcat at a specified location",
+                                                            parameterTypeList)
+                TestEffector stopTomcat = new TestEffector("Stop Tomcat",
+                                                            "This will stop tomcat at its current location",
+                                                            new Collections.SingletonList(actionDate))
+                TestEffector restartTomcat = new TestEffector("Restart Tomcat",
+                                                              "This will restart tomcat in its current location",
+                                                              new ArrayList<ParameterType<?>>())
 
                 this.effectors.putAll([  "Start Tomcat": startTomcat,
                                     "Stop Tomcat": stopTomcat,
                                     "Restart Tomcat": restartTomcat])
 
-                this.getExecutionContext().submit([tag:this, displayName: "myTask", description: "some task or other"], new MyRunnable(this));
+                this.getExecutionContext().submit([tag:this, displayName: "myTask", description: "some task or other"],
+                                                  new MyRunnable(this));
             }
 
             protected class MyRunnable implements Runnable {
@@ -146,7 +160,9 @@ class ManagementContextService {
                 void run() {
                     while (true) {
                         for (String key: hackMeIn.keySet()) {
-                            entity.setAttribute(entity.getSensor(key), hackMeIn[key] + ManagementContextService.ID_GENERATOR + ((int) 1000 * Math.random()))
+                            entity.setAttribute(entity.getSensor(key),
+                                                hackMeIn[key] + ManagementContextService.ID_GENERATOR +
+                                                        ((int) 1000 * Math.random()))
                         }
                         Thread.sleep(5000)
                     }
