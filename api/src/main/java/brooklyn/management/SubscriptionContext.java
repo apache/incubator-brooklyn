@@ -26,6 +26,12 @@ public interface SubscriptionContext {
     /** @see #subscribe(Map, Entity, Sensor, EventListener) */
     <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, EventListener<T> listener);
     
+    /** @see #subscribe(Map, Entity, Sensor, EventListener) */
+    <T> SubscriptionHandle subscribeToMembers(Map<String, Object> flags, Entity parent, Sensor<T> sensor, EventListener<T> listener);
+ 
+    /** @see #subscribe(Map, Entity, Sensor, EventListener) */
+    <T> SubscriptionHandle subscribeToMembers(Entity parent, Sensor<T> sensor, EventListener<T> listener);
+    
     /** @see SubscriptionManager#unsubscribe(SubscriptionHandle) */
     boolean unsubscribe(SubscriptionHandle subscriptionId);
     

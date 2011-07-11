@@ -48,6 +48,17 @@ public class BasicSubscriptionContext implements SubscriptionContext {
         manager.subscribeToChildren(subscriptionFlags, parent, sensor, listener)
     }
  
+    public <T> SubscriptionHandle subscribeToMembers(Map<String, Object> newFlags=[:], Entity parent, Sensor<T> sensor, Closure c) {
+        subscribeToMembers(newFlags, parent, sensor, c as EventListener)
+    }
+
+    public <T> SubscriptionHandle subscribeToMembers(Map<String, Object> newFlags=[:], Entity parent, Sensor<T> sensor, EventListener<T> listener) {
+        Map subscriptionFlags = [:]
+        subscriptionFlags << flags
+        if (newFlags) subscriptionFlags << newFlags
+        manager.subscribeToMembers(subscriptionFlags, parent, sensor, listener)
+    }
+
     public boolean unsubscribe(SubscriptionHandle subscriptionId) {
         Preconditions.checkArgument(((Subscription) subscriptionId).subscriber == subscriber, "The subscriptionId is for a different $subscriber")
         manager.unsubscribe(subscriptionId)

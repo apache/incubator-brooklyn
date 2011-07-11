@@ -96,14 +96,23 @@ public class LocalSubscriptionManager implements SubscriptionManager {
     public synchronized <T> SubscriptionHandle subscribeToChildren(Map<String, Object> flags, final Entity parent, Sensor<T> sensor, EventListener<T> listener) {
         Predicate<SensorEvent<T>> eventFilter = new Predicate<SensorEvent<?>>() {
             public boolean apply(SensorEvent<?> input) {
-                return input.source.isAncestor(parent)
+                return parent.getOwnedChildren().contains(input.source)
             }
         }
         flags.put("eventFilter", eventFilter)
-        flags.put("subscriber", parent.id)
         subscribe(flags, null, sensor, listener)
     }
 
+    /** @see SubscriptionManager#subscribe(Map, Entity, Sensor, EventListener) */
+    public synchronized <T> SubscriptionHandle subscribeToMembers(Map<String, Object> flags, final Group parent, Sensor<T> sensor, EventListener<T> listener) {
+        Predicate<SensorEvent<T>> eventFilter = new Predicate<SensorEvent<?>>() {
+            public boolean apply(SensorEvent<?> input) {
+                return parent.members.contains(input.source)
+            }
+        }
+        flags.put("eventFilter", eventFilter)
+        subscribe(flags, null, sensor, listener)
+    }
     /**
      * Unsubscribe the given subscription id.
      *
