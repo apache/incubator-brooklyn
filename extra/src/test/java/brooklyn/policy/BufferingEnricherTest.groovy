@@ -24,9 +24,10 @@ import brooklyn.policy.wip.BufferingEnricher.*
 import brooklyn.policy.wip.BufferingEnricher
 import brooklyn.policy.wip.RangeBufferEnricher
 
-
-class BufferingEnricherTest {
-
+/**
+ * TODO clarify test purpose
+ */
+public class BufferingEnricherTest {
     public static class BarrieredEventListener<T> implements EventListener<T> {
         CyclicBarrier changeBarrier = new CyclicBarrier(2)
         CyclicBarrier flushBarrier = new CyclicBarrier(2)
@@ -44,7 +45,7 @@ class BufferingEnricherTest {
     }
 
     public static final BarrieredEventListener<BufferChangedEvent> BARRIER_EVENT_LISTENER =
-    new BarrieredEventListener<BufferChangedEvent>()
+		    new BarrieredEventListener<BufferChangedEvent>()
 
     AbstractApplication app
 
@@ -54,7 +55,7 @@ class BufferingEnricherTest {
     Sensor<Integer> intSensor
     SubscriptionContext subscription
 
-    @BeforeMethod
+    @BeforeMethod(groups = "WIP")
     public void before() {
         app = new AbstractApplication() {}
 
@@ -69,12 +70,12 @@ class BufferingEnricherTest {
                 }
     }
 
-    @AfterMethod
+    @AfterMethod(groups = "WIP")
     public void after() {
         BARRIER_EVENT_LISTENER.setSize(2)
     }
 
-    @Test
+    @Test(groups = "WIP")
     public void testBufferAccumulation() {
         BufferingEnricher<Integer> buffer = new BufferingEnricher<Integer>(bufferer, producer, intSensor)
 
@@ -91,7 +92,7 @@ class BufferingEnricherTest {
         assertEquals(buffer.getBuffer(), [4, 3, 2, 1])
     }
 
-    @Test
+    @Test(groups = "WIP")
     public void testBufferFlushAndRepopulate() {
         BufferingEnricher<Integer> buffer = new BufferingEnricher<Integer>(bufferer, producer, intSensor)
 
@@ -115,7 +116,7 @@ class BufferingEnricherTest {
         assertEquals(buffer.getBuffer(), [4, 3, 2, 1])
     }
 
-    @Test
+    @Test(groups = "WIP")
     public void testBufferOrdering() {
         BufferingEnricher<Integer> buffer = new BufferingEnricher<Integer>(bufferer, producer, intSensor)
         
@@ -144,7 +145,7 @@ class BufferingEnricherTest {
         assertEquals(new LinkedList(buffer.getBuffer()), values)
     }
 
-    @Test
+    @Test(groups = "WIP")
     public void testRangeBuffer() {
         BufferingEnricher<Integer> buffer = new RangeBufferEnricher<Integer>(bufferer, producer, intSensor, 3)
 

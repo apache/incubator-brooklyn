@@ -49,8 +49,9 @@
         <jansi.version>1.2.1</jansi.version>
         <guava.version>r09</guava.version>
         <ivy.version>2.2.0</ivy.version>
+ 
         <includedTestGroups></includedTestGroups>
-        <excludedTestGroups>Integration</excludedTestGroups>
+        <excludedTestGroups>Integration,WIP</excludedTestGroups>
     </properties>
 
     <dependencyManagement>
@@ -507,7 +508,7 @@
             <id>Integration</id>
             <properties>
                 <includedTestGroups>Integration</includedTestGroups>
-                <excludedTestGroups></excludedTestGroups>
+                <excludedTestGroups>WIP</excludedTestGroups>
             </properties>
             <build>
                 <plugins>
