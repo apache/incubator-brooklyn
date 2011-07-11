@@ -15,7 +15,6 @@ import brooklyn.management.Task
  * A cluster of entities that can dynamically increase or decrease the number of entities.
  */
 public class DynamicCluster extends AbstractGroup implements Startable, Resizable {
-
     private static final Logger logger = LoggerFactory.getLogger(DynamicCluster)
 
     Closure<Entity> newEntity;
@@ -51,6 +50,10 @@ public class DynamicCluster extends AbstractGroup implements Startable, Resizabl
 
     void stop() {
         resize(0)
+    }
+
+    void restart() {
+        throw new UnsupportedOperationException()
     }
 
     ResizeResult resize(int desiredSize) {

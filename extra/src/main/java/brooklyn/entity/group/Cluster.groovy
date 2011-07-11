@@ -79,6 +79,11 @@ public abstract class ClusterFromTemplate extends Cluster implements Resizable {
         members.each { Startable entity  -> entity.stop() }
     }
 
+    public synchronized void restart() {
+        stop()
+        start locations
+    }
+
     // FIXME
     public synchronized ResizeResult resize(int newSize) {
         int newNodes = newSize - children.size()
