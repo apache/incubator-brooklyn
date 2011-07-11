@@ -12,7 +12,7 @@
         <version>0.0.1-SNAPSHOT</version>
         <relativePath>../parent/root/pom.xml</relativePath>
     </parent>
-
+    
     <dependencies>
         <dependency>
             <groupId>brooklyn</groupId>
@@ -44,10 +44,10 @@
             <scope>test</scope>
         </dependency>
 		<dependency>
-            <groupId>javax.jms</groupId>
-            <artifactId>jms</artifactId>
-            <version>1.1</version>
-            <scope>provided</scope>
+            <groupId>geronimo-spec</groupId>
+			<artifactId>geronimo-spec-jms</artifactId>
+			<version>1.1-rc4</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>
