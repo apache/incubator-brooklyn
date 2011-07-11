@@ -7,11 +7,16 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 import brooklyn.management.ExecutionManager
 import brooklyn.management.Task
 
 
 public class BasicExecutionManager implements ExecutionManager {
+    
+    private static final Logger log = LoggerFactory.getLogger(BasicExecutionManager.class)
     
     private static class PerThreadCurrentTaskHolder {
         public static final perThreadCurrentTask = new ThreadLocal<Task>();
@@ -82,8 +87,14 @@ public class BasicExecutionManager implements ExecutionManager {
                     result = task.job.call()
                 else 
                     throw new CancellationException()
+            } catch(Exception e) {
+                log.error("Error while running task", e)
+                result = e
             } finally { 
                 afterEnd(flags, task) 
+            }
+            if (result instanceof Exception) {
+                throw result
             }
             result
         }
