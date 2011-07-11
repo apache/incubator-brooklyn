@@ -14,6 +14,7 @@ import brooklyn.entity.trait.Startable
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.Location
 import brooklyn.util.internal.EntityStartUtils
+import brooklyn.entity.trait.ResizeResult
 
 /**
  * intended to represent a group of homogeneous entities in a single location;
@@ -78,10 +79,11 @@ public abstract class ClusterFromTemplate extends Cluster implements Resizable {
         members.each { Startable entity  -> entity.stop() }
     }
 
-    public synchronized List<Future> resize(int newSize) {
+    // FIXME
+    public synchronized ResizeResult resize(int newSize) {
         int newNodes = newSize - children.size()
         if (newNodes>0) grow(newNodes)
         else if (newNodes<0) shrink(-newNodes);
-        else []
+        return null
     }
 }

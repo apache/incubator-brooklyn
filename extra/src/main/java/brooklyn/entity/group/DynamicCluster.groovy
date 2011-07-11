@@ -3,13 +3,13 @@ package brooklyn.entity.group
 import brooklyn.entity.trait.Resizable
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
-import java.util.concurrent.Future
 import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.Entity
 import com.google.common.base.Preconditions
-import java.util.concurrent.atomic.AtomicInteger
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import brooklyn.entity.trait.ResizeResult
+import brooklyn.management.Task
 
 /**
  * A cluster of entities that can dynamically increase or decrease the number of entities.
@@ -48,30 +48,52 @@ public class DynamicCluster extends AbstractGroup implements Startable, Resizabl
         location = locations.first()
     }
 
-    List<Future<?>> resize(int desiredSize) {
-        List<Future<?>> outcomes = []
+    void stop() {
+        throw new UnsupportedOperationException()
+    }
 
+    ResizeResult resize(int desiredSize) {
         int delta = desiredSize - currentSize
         logger.info "Resize from {} to {}; delta = {}", currentSize, desiredSize, delta
 
+        Collection<Entity> addedEntities = null
+        Collection<Entity> removedEntities = null
+
         if (delta > 0) {
-            while (delta --> 0) outcomes.add(addNode())
+            addedEntities = []
+            delta.times {
+                def result = addNode()
+                Preconditions.checkState result != null, "addNode call returned null"
+                Preconditions.checkState result.containsKey('entity') && result.entity instanceof Entity,
+                    "addNode result should include key='entity' with value of type Entity instead of "+result.task?.class?.name
+                Preconditions.checkState result.containsKey('task') && result.task instanceof Task,
+                    "addNode result should include key='task' with value of type Task instead of "+result.task?.class?.name
+                result.task.get()
+                addedEntities.add(result.entity)
+            }
         } else if (delta < 0) {
-            throw new Exception("not implemented")
+            throw new UnsupportedOperationException()
         }
 
-        return outcomes
+        return new ResizeResult(){
+            int getDelta(){return delta}
+            Collection<Entity> getAddedEntities(){return addedEntities}
+            Collection<Entity> getRemovedEntities(){return removedEntities};
+        }
     }
 
-    protected Future<?> addNode() {
+    protected def addNode() {
         logger.info "Adding a node"
-        Entity e = newEntity.call()
+        def e = newEntity.call()
         Preconditions.checkState e != null, "newEntity call returned null"
         Preconditions.checkState e instanceof Entity, "newEntity call returned an object that is not an Entity"
         Preconditions.checkState e instanceof Startable, "newEntity call returned an object that is not Startable"
+        Entity entity = (Entity)e
 
-        e.owner = this
-        return e.getExecutionContext().submit({e.start([location])})
+        entity.setOwner(this)
+        Task<Void> startTask = entity.invoke(Startable.START, [loc: [location]])
+        Preconditions.checkState startTask != null, "Invoke Startable.START returned null"
+        return [entity: entity, task: startTask]
     }
 
     int getCurrentSize() {

@@ -1,20 +1,22 @@
 package brooklyn.entity.trait;
 
+import brooklyn.entity.Entity;
+
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Future;
 
-public interface Resizable<T> {
+/**
+ * Defines an entity group that can be re-sized dynamically. By invoking the @{link #resize} effector, the number of child nodes
+ * can be reduced (by shutting down some of them) or increased (by provisioning new entities.)
+ */
+public interface Resizable {
     
     /**
-     * A request to grow or shrink this entity to the desired size.
-     * The desired size may not be possible, in which case this method will not
-     * return an error but the returned list will contain at least one future
-     * who throws an error
-     * 
-     * @param desiredSize
-     * @return a list of handles to tasks started (possibly empty)
+     * Grow or shrink this entity to the desired size.
+     * @param desiredSize the new size of the entity group.
+     * @return a ResizeResult object that describes the outcome of the action.
      */
-    List<Future<?>> //Task 
-        resize(int desiredSize);
-    
+    ResizeResult resize(int desiredSize);
 }
+

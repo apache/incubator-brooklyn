@@ -6,16 +6,22 @@ import brooklyn.entity.basic.AbstractEntity
 import brooklyn.location.Location
 import brooklyn.location.basic.GeneralPurposeLocation
 import org.gmock.GMockTestCase
-import brooklyn.util.task.ExecutionContext
 import brooklyn.util.task.BasicExecutionManager
-import java.util.concurrent.Future
+import brooklyn.management.ExecutionContext
+import brooklyn.util.task.BasicExecutionContext
+import brooklyn.entity.Application
+import brooklyn.entity.basic.AbstractApplication
+import brooklyn.entity.trait.ResizeResult
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import java.util.concurrent.atomic.AtomicInteger
 
 class DynamicClusterTest extends GMockTestCase {
 
     @Test
     public void constructorRequiresThatNewEntityArgumentIsGiven() {
         try {
-            new DynamicCluster(initialSize: 1)
+            new DynamicCluster(initialSize: 1, new TestApplication())
             fail "Did not throw expected exception"
         } catch(IllegalArgumentException e) {
             // expected behaviour
@@ -25,7 +31,13 @@ class DynamicClusterTest extends GMockTestCase {
     @Test
     public void constructorRequiresThatNewEntityArgumentIsAnEntity() {
         try {
-            new DynamicCluster(initialSize: 1, newEntity: new Startable(){ void start(Collection<? extends Location> loc) {} })
+            new DynamicCluster(initialSize: 1,
+                newEntity: new Startable(){
+                    void start(Collection<? extends Location> loc) {};
+                    void stop() {}
+                },
+                new TestApplication()
+            )
             fail "Did not throw expected exception"
         } catch(IllegalArgumentException e) {
             // expected behaviour
@@ -35,7 +47,7 @@ class DynamicClusterTest extends GMockTestCase {
     @Test
     public void constructorRequiresThatNewEntityArgumentIsStartable() {
         try {
-            new DynamicCluster(initialSize: 1, newEntity: new AbstractEntity(){})
+            new DynamicCluster(initialSize: 1, newEntity: new AbstractEntity(){}, new TestApplication())
             fail "Did not throw expected exception"
         } catch(IllegalArgumentException e) {
             // expected behaviour
@@ -45,7 +57,7 @@ class DynamicClusterTest extends GMockTestCase {
     @Test
     public void constructorRequiresThatInitialSizeArgumentIsGiven() {
         try {
-            new DynamicCluster(newEntity: {new TestEntity()})
+            new DynamicCluster(newEntity: {new TestEntity()}, new TestApplication())
             fail "Did not throw expected exception"
         } catch(IllegalArgumentException e) {
             // expected behaviour
@@ -55,7 +67,7 @@ class DynamicClusterTest extends GMockTestCase {
     @Test
     public void constructorRequiresThatInitialSizeArgumentIsAnInteger() {
         try {
-            new DynamicCluster(newEntity: {new TestEntity()}, initialSize: "foo")
+            new DynamicCluster(newEntity: {new TestEntity()}, initialSize: "foo", new TestApplication())
             fail "Did not throw expected exception"
         } catch(IllegalArgumentException e) {
             // expected behaviour
@@ -64,7 +76,7 @@ class DynamicClusterTest extends GMockTestCase {
 
     @Test
     public void startMethodFailsIfLocationsParameterIsMissing() {
-        DynamicCluster cluster = new DynamicCluster(newEntity: {new TestEntity()}, initialSize: 0)
+        DynamicCluster cluster = new DynamicCluster(newEntity: {new TestEntity()}, initialSize: 0, new TestApplication())
         try {
             cluster.start(null)
             fail "Did not throw expected exception"
@@ -75,7 +87,7 @@ class DynamicClusterTest extends GMockTestCase {
 
     @Test
     public void startMethodFailsIfLocationsParameterIsEmpty() {
-        DynamicCluster cluster = new DynamicCluster(newEntity: {new TestEntity()}, initialSize: 0)
+        DynamicCluster cluster = new DynamicCluster(newEntity: {new TestEntity()}, initialSize: 0, new TestApplication())
         try {
             cluster.start([])
             fail "Did not throw expected exception"
@@ -86,7 +98,7 @@ class DynamicClusterTest extends GMockTestCase {
 
     @Test
     public void startMethodFailsIfLocationsParameterHasMoreThanOneElement() {
-        DynamicCluster cluster = new DynamicCluster(newEntity: {new TestEntity()}, initialSize: 0)
+        DynamicCluster cluster = new DynamicCluster(newEntity: {new TestEntity()}, initialSize: 0, new TestApplication())
         try {
             cluster.start([new GeneralPurposeLocation(), new GeneralPurposeLocation()])
             fail "Did not throw expected exception"
@@ -97,41 +109,48 @@ class DynamicClusterTest extends GMockTestCase {
 
     @Test
     public void resizeFromZeroToOneStartsANewEntityAndSetsItsOwner() {
-        ExecutionContext execCtx = new ExecutionContext(new BasicExecutionManager())
+        ExecutionContext execCtx = new BasicExecutionContext(new BasicExecutionManager())
         Collection<Location> locations = [new GeneralPurposeLocation()]
 
-        def entity = mock(TestEntity)
-        entity.getExecutionContext().returns(execCtx).stub()
-        entity.start(locations).once()
-        DynamicCluster cluster = new DynamicCluster(newEntity: {entity}, initialSize: 0)
-        entity.setOwner(cluster).once()
+        def entity = new TestEntity()
+        Application app = new TestApplication()
+        DynamicCluster cluster = new DynamicCluster(newEntity: {entity}, initialSize: 0, app)
 
         cluster.start(locations)
-
-        play {
-            cluster.resize(1).each { Future<?> future -> future.get() }
-        }
+        cluster.resize(1)
+        assertEquals 1, entity.counter.get()
+        assertEquals cluster, entity.owner
+        assertEquals app, entity.application
     }
 
     @Test
     public void currentSizePropertyReflectsActualClusterSize() {
         Collection<Location> locations = [new GeneralPurposeLocation()]
 
-        DynamicCluster cluster = new DynamicCluster(newEntity: {new TestEntity()}, initialSize: 0)
+        Application app = new AbstractApplication(){}
+        DynamicCluster cluster = new DynamicCluster(newEntity: {new TestEntity()}, initialSize: 0, app)
         cluster.start(locations)
 
         assertEquals 0, cluster.currentSize
-        cluster.resize(1).each { Future<?> future -> future.get() }
+
+        ResizeResult rr = cluster.resize(1)
+        assertEquals 1, rr.delta
         assertEquals 1, cluster.currentSize
-        cluster.resize(4).each { Future<?> future -> future.get() }
+
+        rr = cluster.resize(4)
+        assertEquals 3, rr.delta
         assertEquals 4, cluster.currentSize
     }
 
+    private static class TestApplication extends AbstractApplication {
+        @Override String toString() { return "Application["+id[-8..-1]+"]" }
+    }
     private static class TestEntity extends AbstractEntity implements Startable {
-        private ExecutionContext execCtx = new ExecutionContext(new BasicExecutionManager())
-
-        void start(Collection<? extends Location> loc) {}
-        @Override protected synchronized ExecutionContext getExecutionContext() { return execCtx }
+        private static final Logger logger = LoggerFactory.getLogger(DynamicCluster)
+        AtomicInteger counter = new AtomicInteger(0)
+        void start(Collection<? extends Location> loc) {logger.trace "Start"; counter.incrementAndGet()}
+        void stop() {}
+        @Override String toString() { return "Entity["+id[-8..-1]+"]" }
     }
 
 }
