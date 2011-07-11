@@ -5,6 +5,8 @@ import static org.testng.Assert.*
 import java.util.Map
 import java.util.concurrent.Callable
 import java.util.concurrent.CancellationException
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -23,6 +25,8 @@ import brooklyn.util.internal.LanguageUtils
 public class BasicTaskExecutionTest {
     private static final Logger log = LoggerFactory.getLogger(BasicTaskExecutionTest.class)
  
+    private static final int TIMEOUT = 10*1000
+    
     private ExecutionManager em
     private Map data
 
@@ -139,6 +143,61 @@ public class BasicTaskExecutionTest {
         assertEquals em.getTasksWithAnyTag(["A", "D"]).size(), 3
     }
 
+    @Test
+    public void testRetrievingTasksWithTagsReturnsExpectedTask() {
+        Task t = new BasicTask({ /*no-op*/ })
+        em.submit tag:"A",t
+        t.get();
+
+        assertEquals(em.getTasksWithTag("A"), [t]);
+        assertEquals(em.getTasksWithAnyTag(["A"]), [t]);
+        assertEquals(em.getTasksWithAnyTag(["A","B"]), [t]);
+        assertEquals(em.getTasksWithAllTags(["A"]), [t]);
+    }
+
+    @Test
+    public void testRetrievingTasksWithTagsExcludesNonMatchingTasks() {
+        Task t = new BasicTask({ /*no-op*/ })
+        em.submit tag:"A",t
+        t.get();
+
+        assertEquals(em.getTasksWithTag("B"), []);
+        assertEquals(em.getTasksWithAnyTag(["B"]), []);
+        assertEquals(em.getTasksWithAllTags(["A","B"]), []);
+    }
+    
+    @Test
+    public void testRetrievingTasksWithMultipleTags() {
+        Task t = new BasicTask({ /*no-op*/ })
+        em.submit tags:["A","B"], t
+        t.get();
+
+        assertEquals(em.getTasksWithTag("A"), [t]);
+        assertEquals(em.getTasksWithTag("B"), [t]);
+        assertEquals(em.getTasksWithAnyTag(["A"]), [t]);
+        assertEquals(em.getTasksWithAnyTag(["B"]), [t]);
+        assertEquals(em.getTasksWithAnyTag(["A","B"]), [t]);
+        assertEquals(em.getTasksWithAllTags(["A","B"]), [t]);
+        assertEquals(em.getTasksWithAllTags(["A"]), [t]);
+        assertEquals(em.getTasksWithAllTags(["B"]), [t]);
+    }
+    
+    @Test
+    public void testRetrievedTasksIncludesTasksInProgress() {
+        CountDownLatch runningLatch = new CountDownLatch(1);
+        CountDownLatch finishLatch = new CountDownLatch(1);
+        Task t = new BasicTask({ runningLatch.countDown(); finishLatch.await() })
+        em.submit tags:["A"], t
+        
+        try {
+            runningLatch.await(TIMEOUT, TimeUnit.MILLISECONDS);
+    
+            assertEquals(em.getTasksWithTag("A"), [t]);
+        } finally {
+            finishLatch.countDown();
+        }
+    }
+    
     @Test
     public void cancelBeforeRun() {
         BasicTask t = [ { synchronized (data) { data.notify(); data.wait() }; return 42 } ]
