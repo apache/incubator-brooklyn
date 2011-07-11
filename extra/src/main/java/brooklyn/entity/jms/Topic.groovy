@@ -15,7 +15,7 @@ import com.google.common.base.Preconditions
 public interface Topic {
     BasicConfigKey<String> TOPIC_NAME = [ String, "jms.topic.name", "JMS topic name" ]
 
-    BasicAttributeSensor<Integer> QUEUE_DEPTH = [ Integer, "jms.queue.depth", "Queue depth" ]
+    BasicAttributeSensor<Integer> QUEUE_DEPTH = [ Integer, "jms.queue.depth", "Queue depth in bytes" ]
     BasicAttributeSensor<Integer> MESSAGE_COUNT = [ Integer, "jms.message.count", "Number of messages" ]
 
     /**

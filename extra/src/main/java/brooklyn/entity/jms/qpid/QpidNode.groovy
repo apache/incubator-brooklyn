@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.Attributes
-import brooklyn.entity.basic.EntityLocal
 import brooklyn.entity.basic.JavaApp
 import brooklyn.entity.jms.Queue
 import brooklyn.entity.jms.Topic
@@ -36,9 +35,9 @@ public class QpidNode extends JavaApp {
 
     String virtualHost
     Collection<String> queueNames = []
-    Collection<QpidQueue> queues = []
+    Map<String,QpidQueue> queues = [:]
     Collection<String> topicNames = []
-    Collection<QpidQueue> topics = []
+    Map<String,QpidTopic> topics = [:]
 
     public QpidNode(Map properties=[:]) {
         super(properties)
@@ -71,18 +70,24 @@ public class QpidNode extends JavaApp {
         topicNames.each { String name -> createTopic(name) }
     }
 
+    @Override
+    public void stop() {
+        queues.each { String name, QpidQueue queue -> queue.destroy() }
+        topics.each { String name, QpidTopic topic -> topic.destroy() }
+
+        super.stop()
+    }
+
     public void createQueue(String name, Map properties=[:]) {
         properties.owner = this
         properties.name = name
-        properties.jmxAdapter = jmxAdapter
-        queues += new QpidQueue(properties)
+        queues.put name, new QpidQueue(properties)
     }
 
     public void createTopic(String name, Map properties=[:]) {
         properties.owner = this
         properties.name = name
-        properties.jmxAdapter = jmxAdapter
-        topics += new QpidTopic(properties)
+        topics.put name, new QpidTopic(properties)
     }
 
     @Override
@@ -105,16 +110,14 @@ public abstract class QpidBinding extends AbstractEntity {
     String virtualHost
     String name
 
-    protected EntityLocal broker
     protected ObjectName virtualHostManager
     protected ObjectName exchange
 
-    protected transient JmxSensorAdapter jmxAdapter
-    protected transient AttributePoller attributePoller
+    transient JmxSensorAdapter jmxAdapter
+    transient AttributePoller attributePoller
 
     public QpidBinding(Map properties=[:]) {
         super(properties)
-        broker = owner
 
         Preconditions.checkNotNull properties.name, "Name must be specified"
         name = properties.name
@@ -124,7 +127,7 @@ public abstract class QpidBinding extends AbstractEntity {
         virtualHostManager = new ObjectName("org.apache.qpid:type=VirtualHost.VirtualHostManager,VirtualHost=\"${virtualHost}\"")
         init()
         
-        jmxAdapter = properties.jmxAdapter
+        jmxAdapter = ((QpidBroker) this.owner).jmxAdapter
         attributePoller = new AttributePoller(this)
  
         create()
@@ -136,7 +139,7 @@ public abstract class QpidBinding extends AbstractEntity {
     public abstract void initJmxSensors()
  
     public void create() {
-        jmxAdapter.operation(virtualHostManager, "createNewQueue", name, broker.getAttribute(Attributes.JMX_USER), true)
+        jmxAdapter.operation(virtualHostManager, "createNewQueue", name, owner.getAttribute(Attributes.JMX_USER), true)
         jmxAdapter.operation(exchange, "createNewBinding", name, name)
     }
  
@@ -144,6 +147,11 @@ public abstract class QpidBinding extends AbstractEntity {
         jmxAdapter.operation(exchange, "removeBinding", name, name)
         jmxAdapter.operation(virtualHostManager, "deleteQueue", name)
     }
+    
+    @Override
+    public void destroy() {
+		attributePoller.close()
+	}
  
     @Override
     public Collection<String> toStringFieldsToInclude() {
@@ -158,7 +166,7 @@ public class QpidQueue extends QpidBinding implements Queue {
     
     public void init() {
         setConfig QUEUE_NAME, name
-        exchange = new ObjectName("org.apache.qpid:type=VirtualHost.Exchange,VirtualHost=\"${virtualHost}\",name=\"amq.direct\",ExchangeType=\"direct\"")
+        exchange = new ObjectName("org.apache.qpid:type=VirtualHost.Exchange,VirtualHost=\"${virtualHost}\",name=\"amq.direct\",ExchangeType=direct")
     }
  
     public void initJmxSensors() {
@@ -175,7 +183,7 @@ public class QpidTopic extends QpidBinding implements Topic {
     
     public void init() {
         setConfig TOPIC_NAME, name
-        exchange = new ObjectName("org.apache.qpid:type=VirtualHost.Exchange,VirtualHost=\"${virtualHost}\",name=\"amq.topic\",ExchangeType=\"topic\"")
+        exchange = new ObjectName("org.apache.qpid:type=VirtualHost.Exchange,VirtualHost=\"${virtualHost}\",name=\"amq.topic\",ExchangeType=topic")
     }
  
     public void initJmxSensors() {

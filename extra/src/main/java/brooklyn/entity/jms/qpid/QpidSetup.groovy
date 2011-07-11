@@ -89,7 +89,7 @@ public class QpidSetup extends SshBasedJavaAppSetup {
     public List<String> getRunScript() {
         List<String> script = [
             "cd ${runDir}",
-			"nohup ./bin/qpid-server -m ${jmxPort} -p ${amqpPort} &",
+			"nohup ./bin/qpid-server -m ${jmxPort} -p ${amqpPort} --exclude-0-10 ${amqpPort} &",
         ]
         return script
     }
@@ -107,7 +107,8 @@ public class QpidSetup extends SshBasedJavaAppSetup {
     public List<String> getCheckRunningScript() {
         List<String> script = [
             "cd ${runDir}",
-			"(ps auxww | grep '[q]'pid | grep ${entity.id} > pid.list || echo \"no qpid processes found\")",
+			"echo pid is `cat qpid-server.pid`",
+			"(ps auxww | grep '[q]'pid | grep `cat qpid-server.pid` > pid.list || echo \"no qpid processes found\")",
 			"cat pid.list",
 			"if [ -z \"`cat pid.list`\" ] ; then echo process no longer running ; exit 1 ; fi",
         ]
@@ -129,8 +130,10 @@ public class QpidSetup extends SshBasedJavaAppSetup {
     public void shutdown() {
         log.debug "invoking shutdown script"
         def result = machine.run(out:System.out, [
-	            "ps auxww | grep '[q]'pid  | grep ${entity.id} | awk '{ print \$2 }' | xargs kill -9",
-            ])
+            "cd ${runDir}",
+            "echo killing process `cat qpid-server.pid` on `hostname`",
+            "kill -9 `cat qpid-server.pid`",
+            "rm -f pid.txt" ] )
         if (result) log.info "non-zero result code terminating {}: {}", entity, result
         log.debug "done invoking shutdown script"
     }
