@@ -40,7 +40,12 @@ class EntityController {
             render(status: 400, text: '{message: "You must provide an entity id"}')
             return
         }
-        render entityService.getSensorsOfEntity(params.id) as JSON
+
+        try {
+            render entityService.getSensorsOfEntity(params.id) as JSON
+        } catch (NoSuchEntity) {
+            render(status: 404, text: '{message: "Entity with specified id does not exist"}')
+        }
     }
 
     def activity = {
@@ -50,7 +55,6 @@ class EntityController {
         }
         render entityService.getTasksOfEntity(params.id) as JSON
     }
-
 
     def jstree = {
         Map<String, JsTreeNode> nodeMap = [:]

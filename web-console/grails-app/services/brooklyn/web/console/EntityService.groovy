@@ -12,6 +12,8 @@ class EntityService {
     static transactional = false
     def managementContextService
 
+    public static class NoSuchEntity extends Exception {}
+
     public Collection<TaskSummary> getTasksOfEntity(String entityId) {
         return managementContextService.executionManager.getTasksWithTag(getEntity(entityId)).collect { new TaskSummary(it) }
     }
@@ -23,8 +25,10 @@ class EntityService {
             for (Sensor s: entity.entityClass.sensors) {
                 results.add(new SensorSummary(s, entity.getAttribute(s)))
             }
+            return results
+        } else {
+            throw new NoSuchEntity();
         }
-        return results
     }
 
     public Collection<Effector> getEffectorsOfEntity(String entityId) {
