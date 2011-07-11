@@ -1,4 +1,4 @@
-package brooklyn.policy;
+package brooklyn.policy.wip;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -7,7 +7,7 @@ import brooklyn.entity.Entity;
 import brooklyn.event.EventListener;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
-import brooklyn.policy.BufferingEnricher.BufferEvent;
+import brooklyn.policy.wip.BufferingEnricher.BufferEvent;
 import brooklyn.policy.basic.AbstractPolicy;
 
 class AggregatorEnricher<T> extends AbstractPolicy implements EventListener<BufferEvent>{

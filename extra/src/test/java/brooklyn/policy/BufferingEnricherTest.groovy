@@ -23,6 +23,8 @@ import brooklyn.management.internal.BasicSubscriptionContext
 import brooklyn.policy.BufferingEnricher.BufferChangedEvent
 import brooklyn.policy.BufferingEnricher.BufferEvent
 import brooklyn.policy.BufferingEnricher.BufferFlushedEvent
+import brooklyn.policy.wip.BufferingEnricher;
+import brooklyn.policy.wip.RangeBufferEnricher;
 
 
 class BufferingEnricherTest {
