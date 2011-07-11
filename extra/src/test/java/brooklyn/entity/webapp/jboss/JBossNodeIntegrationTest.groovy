@@ -57,22 +57,6 @@ public class JBossNodeIntegrationTest {
             jb.stop()
         })
     }
-
-    @Test(groups = "Integration")
-    public void canAlterPortIncrement() {
-        int pI = 1020
-        int httpPort = BASE_HTTP_PORT + pI
-        JBossNode jb = new JBossNode(owner:app, portIncrement: pI);
-        // Assert httpPort is contactable.
-        log.info "Starting JBoss with HTTP port $httpPort"
-        jb.start([ testLocation ])
-        executeUntilSucceedsWithShutdown(jb, {
-            def port = jb.getAttribute(JBossNode.HTTP_PORT)
-            def url = "http://localhost:$port"
-            assertTrue urlRespondsWithStatusCode200(url)
-            true
-        }, abortOnError:false)
-    }
     
     @Test(enabled = false, groups = [ "Integration" ])
     public void canStartMultipleJBossNodes() {
