@@ -150,17 +150,19 @@ public abstract class SshBasedJavaAppSetup {
      * skip the installation if it exists, otherwise it executes the commands
      * to install the applications and creates the file with the current
      * date and time.
+     * <p>
+     * The script will exit with status 0 on success and 1 on failure.
      *
      * @see #getInstallScript()
      */
     protected List<String> makeInstallScript(List<String> lines) {
         if (lines.isEmpty()) return lines
         List<String> script = [
-            "[ -f $installDir/../INSTALL_COMPLETION_DATE ] && exit",
+            "[ -f $installDir/../INSTALL_COMPLETION_DATE ] && exit 0",
 			"mkdir -p $installDir",
 			"cd $installDir/..",
         ]
-        lines.each { script += it }
+        lines.each { line -> script += "${line} || exit 1" }
         script += "date > INSTALL_COMPLETION_DATE"
         return script
     }
