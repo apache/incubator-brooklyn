@@ -29,7 +29,6 @@ Brooklyn.effectors = (function() {
         $('#effectors-invoke-button').attr("disabled", "disabled");
 
         $("#effector-data tbody").click(updateParameters);
-        $('#effector-invoke').submit(invokeEffector);
     }
 
     function updateParameters(event) {
@@ -90,6 +89,7 @@ Brooklyn.effectors = (function() {
     }
 
     function init() {
+        $('#effector-invoke').submit(invokeEffector);
         $(Brooklyn.eventBus).bind("entity_selected", updateList);
     }
 
