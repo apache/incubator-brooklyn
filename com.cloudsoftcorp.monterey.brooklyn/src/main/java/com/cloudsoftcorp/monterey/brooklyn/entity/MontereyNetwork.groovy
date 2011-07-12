@@ -83,7 +83,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
 
     private static final Logger logger = Loggers.getLogger(MontereyNetwork.class);
 
-    public static final BasicAttributeSensor<Integer> MANAGEMENT_URL = [ URL.class, "monterey.management-url", "Management URL" ]
+    public static final BasicAttributeSensor<URL> MANAGEMENT_URL = [ URL.class, "monterey.management-url", "Management URL" ]
     public static final BasicAttributeSensor<String> NETWORK_ID = [ String.class, "monterey.network-id", "Network id" ]
     public static final BasicAttributeSensor<String> APPLICTION_NAME = [ String.class, "monterey.application-name", "Application name" ]
 

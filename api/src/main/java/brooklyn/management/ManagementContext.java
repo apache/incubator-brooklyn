@@ -20,10 +20,12 @@ public interface ManagementContext {
      */
     Collection<Application> getApplications();
 
-    /**
-     * Returns the entity with the given identifier (may be a full instance, or a proxy to one which is remote)
-     */
-    Entity getEntity(String id);
+    //try removing this, as it is tedious to implement always (e.g. local case, where it was returning null anyway);
+    //and not sure it is desirable to treat an entity by its ID only (when we can just as easily keep a proxy Entity instance)
+//    /**
+//     * Returns the entity with the given identifier (may be a full instance, or a proxy to one which is remote)
+//     */
+//    Entity getEntity(String id);
     
     /**
      * Returns the {@link ExecutionManager} instance for entities and users in this management realm 

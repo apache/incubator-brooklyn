@@ -431,6 +431,10 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         if (!this.@skipCustomInvokeMethod.get()) {
             this.@skipCustomInvokeMethod.set(true);
             
+            if (entityProxyForManagement!=null) {
+                return entityProxyForManagement.invokeMethod(name, args);
+            }
+            
             //args should be an array, warn if we got here wrongly (extra defensive as args accepts it, but it shouldn't happen here)
             if (args==null) LOG.warn("$this.$name invoked with incorrect args signature (null)", new Throwable("source of incorrect invocation of $this.$name"))
             else if (!args.getClass().isArray()) LOG.warn("$this.$name invoked with incorrect args signature (non-array ${args.getClass()}): "+args, new Throwable("source of incorrect invocation of $this.$name"))
@@ -479,4 +483,8 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     public <T> Task<T> invoke(Effector<T> eff, Map parameters) {
         executionContext.submit( { eff.call(this, parameters) }, description: "invocation of effector $eff" )
     }
+    
+    /** field for use only by management plane, to record remote destination when proxied */
+    private AbstractEntity entityProxyForManagement = null;
+    
 }
