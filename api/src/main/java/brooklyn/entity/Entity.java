@@ -11,6 +11,9 @@ import brooklyn.location.Location;
  * @see AbstractEntity
  */
 public interface Entity extends Serializable {
+    
+    // FIXME Add a description
+    
     /**
      * The unique identifier for this entity.
      */
