@@ -90,7 +90,7 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
     public void connectToExisting(NodeSummary nodeSummary, Location loc) {
         this.nodeId = nodeSummary.getNodeId();
         this.creationId = nodeSummary.getCreationUid();
-        this.location = location;
+        this.location = loc;
         this.locations.add(location);
         
         LOG.info("Connected to existing node "+nodeId+" in location "+location);        
