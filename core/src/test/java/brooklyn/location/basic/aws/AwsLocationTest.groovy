@@ -41,7 +41,7 @@ class AwsLocationTest {
         }
     }
     
-    @Test(groups = "Live")
+    @Test(groups = ["Live", "WIP"] )
     public void testProvisionVm() {
         loc.setTagMapping([MyEntityType:[imageId:IMAGE_ID,imageOwner:IMAGE_OWNER]])
         
