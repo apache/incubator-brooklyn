@@ -22,9 +22,9 @@ class SimpleTimeAveragingEnricherTest {
     AbstractApplication app
     
     EntityLocal producer
-    EntityLocal consumer
 
-    Sensor<Integer> intSensor
+    Sensor<Integer> intSensor, deltaSensor
+    Sensor<Double> avgSensor
     SubscriptionContext subscription
 
     @BeforeMethod
@@ -32,10 +32,10 @@ class SimpleTimeAveragingEnricherTest {
         app = new AbstractApplication() {}
 
         producer = new LocallyManagedEntity(owner:app)
-        consumer = new LocallyManagedEntity(owner:app)
 
         intSensor = new BasicSensor<Integer>(Integer.class, "int sensor")
-        subscription = new BasicSubscriptionContext(app.getManagementContext().getSubscriptionManager(), this)
+        deltaSensor = new BasicSensor<Integer>(Integer.class, "delta sensor")
+        avgSensor = new BasicSensor<Double>(Integer.class, "avg sensor")
     }
 
     @AfterMethod
@@ -44,11 +44,9 @@ class SimpleTimeAveragingEnricherTest {
 
     @Test
     public void testAveraging() {
-        DeltaEnricher<Integer> delta = new DeltaEnricher<Integer>(producer, intSensor)
-        SimpleTimeAveragingEnricher<Integer> averager = new SimpleTimeAveragingEnricher<Integer>(producer, delta.DELTA, 1000)
-        averager.setEntity(consumer)
-
-//        subscription.subscribe(producer, averager.AVERAGE, this)
+        producer.addPolicy(new DeltaEnricher<Integer>(producer, intSensor, deltaSensor))
+        SimpleTimeAveragingEnricher<Integer> averager = new SimpleTimeAveragingEnricher<Integer>(producer, deltaSensor, avgSensor, 1000)
+        producer.addPolicy(averager)
 
         ConfidenceQualifiedNumber average = averager.getAverage(0)
         assertEquals(average.value, 0)

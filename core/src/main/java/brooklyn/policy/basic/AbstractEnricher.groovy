@@ -15,7 +15,7 @@ abstract class AbstractEnricher<T> extends AbstractPolicy implements EventListen
     private Sensor<T> source
     protected Sensor<Double> target
     
-    public AbstractEnricher(Entity producer, Sensor<T> source) {
+    public AbstractEnricher(Entity producer, Sensor<T> source, Sensor<?> target) {
         this.producer = producer
         this.source = source
         this.target = target
