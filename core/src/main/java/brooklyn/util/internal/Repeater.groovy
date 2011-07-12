@@ -1,9 +1,13 @@
 package brooklyn.util.internal
 
-import java.util.concurrent.TimeUnit
+import groovy.time.Duration
+
 import java.util.concurrent.Callable
-import org.slf4j.LoggerFactory
+import java.util.concurrent.TimeUnit
+
 import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 import com.google.common.base.Preconditions
 
 /**
@@ -104,6 +108,11 @@ class Repeater {
         this.deadline = deadline;
         this.deadlineUnit = unit;
         return this;
+    }
+
+    Repeater limitTimeTo(Duration duration) {
+        Preconditions.checkArgument duration > 0, "duration must be positive: %s", duration
+        return limitTimeTo(duration.toMilliseconds(), TimeUnit.MILLISECONDS)
     }
 
     /**
