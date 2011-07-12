@@ -98,7 +98,7 @@ public class SshJschTool {
         try{
             session.connect()
         } catch (Exception e) {
-            throw new IllegalStateException("Cannot connect to $user@$host: " + e);
+            throw new IllegalStateException("Cannot connect to $user@$host", e);
         }
     }
 
