@@ -127,6 +127,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         GsonSerializer gsonSerializer = new GsonSerializer(classLoadingContext);
         gson = gsonSerializer.getGson();
 
+        // FIXME Delete SSH_USERNAME
         localhost = new SshMachineLocation(ImmutableMap.builder()
                 .put("address", InetAddress.getByName(SSH_HOST_NAME))
                 .put("userName", SSH_USERNAME).build());
@@ -145,8 +146,11 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         try {
             workloadExecutor.shutdownNow();
             if (montereyNetwork != null && montereyNetwork.isRunning()) {
-                montereyNetwork.releaseAllNodes();
-                montereyNetwork.stop();
+                try {
+                    montereyNetwork.releaseAllNodes();
+                } finally {
+                    montereyNetwork.stop();
+                }
             }
         } finally {
             if (originalClassLoadingContext != null) {
@@ -238,7 +242,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
      * The relative complement of A with respect to a set B, is the set of elements in B but not in A.
      * Therefore, returns the elements that are in col but that are not in other.
      */
-    private <T> Collection<T> findRelativeComplement(Collection<T> col, Collection<?> other) {
+    private static <T> Collection<T> findRelativeComplement(Collection<T> col, Collection<?> other) {
         Set<T> result = new LinkedHashSet<T>(col);
         result.removeAll(other);
         return Collections.unmodifiableSet(result);

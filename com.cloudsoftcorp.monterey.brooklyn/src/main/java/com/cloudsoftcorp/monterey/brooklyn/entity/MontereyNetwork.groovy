@@ -14,7 +14,10 @@ import java.io.File
 import java.io.IOException
 import java.net.URL
 import java.util.Collection
+import java.util.Collections
+import java.util.LinkedHashSet
 import java.util.Map
+import java.util.Set
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
@@ -316,7 +319,19 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     }
     
     public void releaseAllNodes() {
-        for (MontereyContainerNode node : union(pendingProvisionNodes.values(),nodes.values())) {
+        // TODO Releasing in the right order; but what if revert/rollout is happening concurrently?
+        //      Can we delegate to management node, or have brooklyn more aware of what's going on?
+        
+        List<MontereyContainerNode> torelease = []
+        findNodesOfType(Dmn1NodeType.SATELLITE_BOT).each { if (nodes.get(it)) torelease.add(nodes.get(it)) }
+        findNodesOfType(Dmn1NodeType.LPP).each { if (nodes.get(it)) torelease.add(nodes.get(it)) }
+        findNodesOfType(Dmn1NodeType.M).each { if (nodes.get(it)) torelease.add(nodes.get(it)) }
+        findNodesOfType(Dmn1NodeType.MR).each { if (nodes.get(it)) torelease.add(nodes.get(it)) }
+        findNodesOfType(Dmn1NodeType.TP).each { if (nodes.get(it)) torelease.add(nodes.get(it)) }
+        findNodesOfType(Dmn1NodeType.SPARE).each { if (nodes.get(it)) torelease.add(nodes.get(it)) }
+        relativeComplement(pendingProvisionNodes.values(), torelease).each { torelease.add(torelease) }
+        
+        for (MontereyContainerNode node : torelease) {
             node.release();
         }
     }
@@ -542,9 +557,28 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         }
     }
     
+    private Collection<AbstractMontereyNode> findNodesOfType(Dmn1NodeType type) {
+        Collection<AbstractMontereyNode> result = []
+        montereyNodes.values().each {
+            if (type == it.nodeType) result.add(it)
+        }
+        return result
+    }
+
     private static <T> Set<T> union(Collection<T> col1, Collection<T> col2) {
         Set<T> result = new LinkedHashSet<T>(col1);
         result.addAll(col2);
         return result;
-    }   
+    }
+    
+    /**
+     * The relative complement of A with respect to a set B, is the set of elements in B but not in A.
+     * Therefore, returns the elements that are in col but that are not in other.
+     */
+    private static <T> Collection<T> relativeComplement(Collection<T> col, Collection<?> other) {
+        Set<T> result = new LinkedHashSet<T>(col);
+        result.removeAll(other);
+        return Collections.unmodifiableSet(result);
+    }
+    
 }
