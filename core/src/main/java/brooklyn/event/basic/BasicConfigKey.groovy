@@ -4,6 +4,8 @@ import groovy.transform.EqualsAndHashCode
 
 import java.util.Collection
 
+import brooklyn.entity.ConfigKey
+
 import com.google.common.base.Splitter
 import com.google.common.collect.Lists
 

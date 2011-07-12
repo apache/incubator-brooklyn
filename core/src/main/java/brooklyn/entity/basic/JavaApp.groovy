@@ -10,7 +10,7 @@ import brooklyn.event.AttributeSensor
 import brooklyn.event.adapter.AttributePoller
 import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.event.basic.ConfigKey
+import brooklyn.entity.ConfigKey
 import brooklyn.location.Location
 import brooklyn.location.MachineLocation
 import brooklyn.location.MachineProvisioningLocation

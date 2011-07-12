@@ -7,7 +7,7 @@ import java.util.Map
 import org.testng.annotations.Test
 
 import brooklyn.event.basic.BasicConfigKey
-import brooklyn.event.basic.ConfigKey
+import brooklyn.entity.ConfigKey
 import brooklyn.location.basic.AbstractLocation;
 
 

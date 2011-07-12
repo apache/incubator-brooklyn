@@ -11,6 +11,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Application
+import brooklyn.entity.ConfigKey
 import brooklyn.entity.Effector
 import brooklyn.entity.Entity
 import brooklyn.entity.EntityClass
@@ -19,7 +20,6 @@ import brooklyn.event.AttributeSensor
 import brooklyn.event.EventListener
 import brooklyn.event.Sensor
 import brooklyn.event.basic.AttributeMap
-import brooklyn.event.basic.ConfigKey
 import brooklyn.location.Location
 import brooklyn.management.ExecutionContext
 import brooklyn.management.ManagementContext
@@ -31,7 +31,9 @@ import brooklyn.util.task.BasicExecutionContext
 
 /**
  * Default {@link Entity} implementation.
- * 
+ *
+ * FIXME rewrite documentation below
+ *
  * Provides several common fields ({@link #name}, {@link #id});
  * a map {@link #config} which contains arbitrary config data;
  * sensors and effectors; policies; managementContext.
@@ -40,8 +42,6 @@ import brooklyn.util.task.BasicExecutionContext
  * (through use of propertyMissing). Note that config is typically inherited
  * by children, whereas the fields are not. (Attributes cannot be so accessed,
  * nor are they inherited.)
- *
- * @author alex, aled
  */
 public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractEntity.class)
@@ -68,9 +68,11 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     // but that is an optimization, and possibly wrong if we have dynamic sensors/effectors
     // (added only to this instance), however if we did we'd need to reset/update entity class
     // on sensor/effector set change
-    /** map of effectors on this entity by name, populated at constructor time */
+ 
+    /** Map of effectors on this entity by name, populated at constructor time. */
     private Map<String,Effector> effectors = null
-    /** map of sensors on this entity by name, populated at constructor time */
+ 
+    /** Map of sensors on this entity by name, populated at constructor time. */
     private Map<String,Sensor> sensors = null
     
     private transient EntityClass entityClass = null
@@ -345,8 +347,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         v = v ?: inheritedConfig.get(key)
 
         //if config is set as a task, we wait for the task to complete
-        while (v in Task) { v = v.get() }
-        v
+        v in Task ? v.get() : v
     }
 
     @Override

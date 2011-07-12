@@ -14,7 +14,7 @@ import brooklyn.entity.Entity
 public class DynamicGroup extends AbstractGroup {
     private static final Logger log = LoggerFactory.getLogger(DynamicGroup.class)
     
-    Closure entityFilter=null;
+    Closure entityFilter
     
     public DynamicGroup(Map properties=[:], Entity owner=null, Closure entityFilter=null) {
         super(properties, owner)

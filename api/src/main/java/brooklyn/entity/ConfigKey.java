@@ -1,13 +1,11 @@
-package brooklyn.event.basic;
+package brooklyn.entity;
 
 import java.util.Collection;
 
+/**
+ * Represents the name of a piece of typed configuration data for an entity.
+ */
 public interface ConfigKey<T> {
-
-    // TODO This is scarily similar looking to Sensor. But I think that's probably a good thing, with no shared super-type...
-    
-    // TODO 
-    
     /**
      * Returns the description of the configuration parameter, for display.
      */

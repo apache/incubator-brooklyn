@@ -12,7 +12,7 @@ import brooklyn.event.adapter.HttpSensorAdapter
 import brooklyn.event.adapter.ValueProvider
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
-import brooklyn.event.basic.ConfigKey
+import brooklyn.entity.ConfigKey
 import brooklyn.location.Location
 import brooklyn.location.MachineLocation
 import brooklyn.policy.DeltaEnricher

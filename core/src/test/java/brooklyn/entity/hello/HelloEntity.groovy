@@ -9,7 +9,7 @@ import brooklyn.event.Sensor
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.BasicSensor
-import brooklyn.event.basic.ConfigKey
+import brooklyn.entity.ConfigKey
 
 
 public class HelloEntity extends AbstractGroup {
