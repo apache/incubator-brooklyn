@@ -26,9 +26,7 @@ public class JBossNodeIntegrationTest {
     private static final Logger log = LoggerFactory.getLogger(brooklyn.entity.webapp.jboss.JBossNodeIntegrationTest)
 
     // Increment default ports to avoid tests running on 8080
-    final static int PORT_INCREMENT = 300
-    final static int BASE_HTTP_PORT = 8080
-    final static int DEFAULT_HTTP_PORT = BASE_HTTP_PORT + PORT_INCREMENT
+    final static int PORT_INCREMENT = 400
 
     static { TimeExtras.init() }
     
@@ -57,7 +55,7 @@ public class JBossNodeIntegrationTest {
             jb.stop()
         })
     }
-    
+
     @Test(enabled = false, groups = [ "Integration" ])
     public void canStartMultipleJBossNodes() {
         def aInc = 400
