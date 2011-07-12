@@ -40,7 +40,7 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
         synchronized (lock) {
             if (available.empty)
                 throw new NoMachinesAvailableException(this);
-            machine = available.pop();
+            machine = available.remove(0);
             inUse.add(machine);
         }
         return machine;
