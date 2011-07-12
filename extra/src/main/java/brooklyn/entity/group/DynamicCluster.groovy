@@ -1,15 +1,17 @@
 package brooklyn.entity.group
 
-import brooklyn.entity.trait.Resizable
-import brooklyn.entity.trait.Startable
-import brooklyn.location.Location
-import brooklyn.entity.basic.AbstractGroup
-import brooklyn.entity.Entity
-import com.google.common.base.Preconditions
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import brooklyn.entity.trait.ResizeResult
-import brooklyn.management.Task
+
+import brooklyn.entity.Entity
+import brooklyn.entity.basic.AbstractGroup
+import brooklyn.entity.trait.Resizable
+import brooklyn.entity.trait.Startable
+import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.event.basic.BasicConfigKey
+import brooklyn.location.Location
+
+import com.google.common.base.Preconditions
 
 /**
  * A cluster of entities that can dynamically increase or decrease the number of entities.
@@ -17,15 +19,24 @@ import brooklyn.management.Task
 public class DynamicCluster extends AbstractGroup implements Startable, Resizable {
     private static final Logger logger = LoggerFactory.getLogger(DynamicCluster)
 
-    Closure<Entity> newEntity;
-    int initialSize;
-    private Location location;
+    public static final BasicConfigKey<Integer> INITIAL_SIZE = [ Integer, "initial.size", "Initial cluster size" ]
+
+    public static final BasicAttributeSensor<String> CLUSTER_SIZE = [ Integer, "cluster.size", "Cluster size" ]
+
+    Closure<Entity> newEntity
+    int initialSize
+    Map properties
+
+    private Location location
 
     /**
      * Instantiate a new DynamicCluster. Valid properties are:
-     * * template: an @{link Entity} that implements @{link Startable} that will be the template for nodes in the cluster.
-     * * initialSize: an @{link Integer} that is the number of nodes to start when the cluster's @{link start()} method is
+     * <ul>
+     * <li>template - an {@link Entity} that implements {@link Startable} that will be the template for nodes in the cluster.
+     * <li>initialSize - an {@link Integer} that is the number of nodes to start when the cluster's {@link #start(Collection)} method is
      * called.
+     * </ul>
+     *
      * @param properties the properties of the new entity.
      * @param owner the entity that owns this cluster (optional)
      */
@@ -36,27 +47,28 @@ public class DynamicCluster extends AbstractGroup implements Startable, Resizabl
         Preconditions.checkArgument properties.get('newEntity') instanceof Closure, "'newEntity' must be a closure"
         newEntity = properties.remove('newEntity')
 
-        Preconditions.checkArgument properties.containsKey('initialSize'), "'initialSize' property is mandatory"
-        Preconditions.checkArgument properties.get('initialSize') instanceof Integer, "'initialSize' property must be an integer"
-        initialSize = properties.remove('initialSize')
+        initialSize = getConfig(INITIAL_SIZE) ?: properties.remove("initialSize") ?: 1
+        setConfig(INITIAL_SIZE, initialSize)
+
+        this.properties = properties
     }
 
-    void start(Collection<? extends Location> locations) {
+    public void start(Collection<? extends Location> locations) {
         Preconditions.checkNotNull locations, "locations must be supplied"
         Preconditions.checkArgument locations.size() == 1, "Exactly one location must be supplied"
-        location = locations.first()
+        location = locations.any { true }
         resize(initialSize)
     }
 
-    void stop() {
+    public void stop() {
         resize(0)
     }
 
-    void restart() {
+    public void restart() {
         throw new UnsupportedOperationException()
     }
 
-    ResizeResult resize(int desiredSize) {
+    public Integer resize(int desiredSize) {
         int delta = desiredSize - currentSize
         logger.info "Resize from {} to {}; delta = {}", currentSize, desiredSize, delta
 
@@ -64,64 +76,40 @@ public class DynamicCluster extends AbstractGroup implements Startable, Resizabl
         Collection<Entity> removedEntities = []
 
         if (delta > 0) {
-            delta.times {
-                def result = addNode()
-                Preconditions.checkState result != null, "addNode call returned null"
-                Preconditions.checkState result.containsKey('entity') && result.entity instanceof Entity,
-                    "addNode result should include key='entity' with value of type Entity instead of "+result.task?.class?.name
-                Preconditions.checkState result.containsKey('task') && result.task instanceof Task,
-                    "addNode result should include key='task' with value of type Task instead of "+result.task?.class?.name
-                result.task.get()
-                addedEntities.add(result.entity)
-            }
+            delta.times { addedEntities += addNode() }
         } else if (delta < 0) {
-            def result = removeNode()
-            Preconditions.checkState result != null, "removeNode call returned null"
-            Preconditions.checkState result.containsKey('entity') && result.entity instanceof Entity,
-                "removeNode result should include key='entity' with value of type Entity instead of "+result.task?.class?.name
-            Preconditions.checkState result.containsKey('task') && result.task instanceof Task,
-                "removeNode result should include key='task' with value of type Task instead of "+result.task?.class?.name
-            result.task.get()
-            removedEntities.add(result.entity)
+            (-delta).times { removedEntities += removeNode() }
         }
 
-        return new ResizeResult(){
-            int getDelta(){return delta}
-            Collection<Entity> getAddedEntities(){return addedEntities}
-            Collection<Entity> getRemovedEntities(){return removedEntities};
-        }
+        setAttribute(CLUSTER_SIZE, currentSize)
+
+        return currentSize
     }
 
-    protected def addNode() {
+    protected Entity addNode() {
         logger.info "Adding a node"
-        def e = newEntity.call()
-        Preconditions.checkState e != null, "newEntity call returned null"
-        Preconditions.checkState e instanceof Entity, "newEntity call returned an object that is not an Entity"
-        Preconditions.checkState e instanceof Startable, "newEntity call returned an object that is not Startable"
-        Entity entity = (Entity)e
+        Entity entity = newEntity.call(this, properties)
+        Preconditions.checkNotNull entity, "newEntity call returned null"
+        Preconditions.checkState entity instanceof Entity, "newEntity call returned an object that is not an Entity"
+        Preconditions.checkState entity instanceof Startable, "newEntity call returned an object that is not Startable"
 
-        entity.setOwner(this)
-        Task<Void> startTask = entity.invoke(Startable.START, [locations: [location]])
-        Preconditions.checkState startTask != null, "Invoke Startable.START returned null"
-        return [entity: entity, task: startTask]
+        entity.start([location])
+        addMember(entity)
+        entity
     }
 
-    protected def removeNode() {
+    protected Entity removeNode() {
         logger.info "Removing a node"
-        Entity child = null
-        Task<Void> stopTask = null
-        accessOwnedChildrenSynchronized { Set<Entity> children ->
-            Iterator iter = children.iterator()
-            if (iter.hasNext() == false) return
-            child = iter.next()
-            stopTask = child.invoke(Startable.STOP)
-            Preconditions.checkState stopTask != null, "Invoke Startable.STOP returned null"
-            removeOwnedChild(child)
-        }
-        return [entity: child, task: stopTask]
+        Entity entity = members.find { true } // TODO use specific criteria
+        Preconditions.checkNotNull entity, "No member entity found to remove"
+        Preconditions.checkState entity instanceof Startable, "Member entity is not Startable"
+ 
+        removeMember(entity)
+        entity.stop()
+        entity
     }
-
-    int getCurrentSize() {
-        return ownedChildren.size()
+ 
+    public int getCurrentSize() {
+        return members.size()
     }
 }

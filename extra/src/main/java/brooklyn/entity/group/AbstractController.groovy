@@ -4,24 +4,24 @@ import groovy.util.ObservableList.ChangeType
 import groovy.util.ObservableList.ElementEvent
 
 import java.beans.PropertyChangeListener
-import java.nio.charset.Charset;
 import java.util.Collection
 import java.util.Map
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import com.google.common.base.Charsets
-import com.google.common.base.Preconditions
-import com.google.common.io.Files
-
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
+import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.basic.AbstractService
 import brooklyn.entity.basic.Attributes
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.MachineLocation
+
+import com.google.common.base.Charsets
+import com.google.common.base.Preconditions
+import com.google.common.io.Files
 
 /**
  * Represents a controller mechanism for a {@link Cluster}.
@@ -36,14 +36,14 @@ public abstract class AbstractController extends AbstractService {
 
     public static final BasicAttributeSensor<Integer> HTTP_PORT = Attributes.HTTP_PORT
 
-    Cluster cluster
+    AbstractGroup cluster
     String domain
     int port
     String protocol
     URL url
     Map<InetAddress,List<Integer>> addresses
 
-    public AbstractController(Map properties=[:], Group owner=null, Cluster cluster) {
+    public AbstractController(Map properties=[:], Entity owner=null, Group cluster=null) {
         super(properties, owner)
 
         if (getConfig(PROTOCOL) || properties.url in URL) {
@@ -76,7 +76,7 @@ public abstract class AbstractController extends AbstractService {
         addresses = new HashMap<InetAddress,List<Integer>>().withDefault { new ArrayList<Integer>() }
     }
 
-    public void setCluster(Cluster cluster) {
+    public void setCluster(Group cluster) {
         Preconditions.checkNotNull cluster, "The cluster cannot be null"
         this.cluster = cluster
         cluster.setOwner(this)

@@ -11,11 +11,10 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.Entity
 import brooklyn.entity.trait.Resizable
 import brooklyn.entity.trait.Startable
-import brooklyn.event.AttributeSensor
+import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.Location
 import brooklyn.util.internal.EntityStartUtils
-import brooklyn.entity.trait.ResizeResult
 
 /**
  * intended to represent a group of homogeneous entities in a single location;
@@ -26,7 +25,7 @@ import brooklyn.entity.trait.ResizeResult
 public abstract class Cluster extends Tier implements Startable {
     public static final BasicConfigKey<Integer> INITIAL_SIZE = [ Integer, "initial.size", "Initial cluster size" ]
 
-    public static final AttributeSensor<String> CLUSTER_SIZE = [ Integer, "cluster.size", "Cluster size" ]
+    public static final BasicAttributeSensor<String> CLUSTER_SIZE = [ Integer, "cluster.size", "Cluster size" ]
 
     int initialSize
 
@@ -86,11 +85,10 @@ public abstract class ClusterFromTemplate extends Cluster implements Resizable {
         start locations
     }
 
-    // FIXME
-    public synchronized ResizeResult resize(int newSize) {
-        int newNodes = newSize - children.size()
+    public synchronized Integer resize(int newSize) {
+        int newNodes = newSize - members.size()
         if (newNodes>0) grow(newNodes)
         else if (newNodes<0) shrink(-newNodes);
-        return null
+        return members.size()
     }
 }

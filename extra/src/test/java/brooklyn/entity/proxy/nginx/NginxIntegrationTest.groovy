@@ -13,10 +13,9 @@ import org.testng.annotations.Test
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
-import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.JavaApp
-import brooklyn.entity.group.Cluster
-import brooklyn.entity.group.ClusterFromTemplate
+import brooklyn.entity.group.DynamicCluster
+import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.location.Location
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.util.internal.TimeExtras
@@ -60,12 +59,12 @@ public class NginxBrokerIntegrationTest {
     }
 
     /**
-     * Test that the broker starts up and sets SERVICE_UP correctly.
+     * Test that the Nginx proxy starts up and sets SERVICE_UP correctly.
      */
     @Test(groups = "Integration")
     public void canStartupAndShutdown() {
-        Entity template = new AbstractEntity() { }
-        Cluster cluster = new ClusterFromTemplate(template, initialSize:1) { }
+        def template = { Entity owner, Map properties -> new TomcatServer(properties, owner) }
+        DynamicCluster cluster = new DynamicCluster(newEntity:template, initialSize:1)
         nginx = new NginxController(owner:app, cluster:cluster, domain:"localhost")
         nginx.start([ testLocation ])
         executeUntilSucceedsWithFinallyBlock ([:], {

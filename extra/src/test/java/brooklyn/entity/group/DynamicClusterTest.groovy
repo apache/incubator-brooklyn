@@ -12,7 +12,6 @@ import brooklyn.entity.Application
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.trait.Resizable
-import brooklyn.entity.trait.ResizeResult
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
 import brooklyn.location.basic.GeneralPurposeLocation
@@ -41,18 +40,6 @@ class DynamicClusterTest {
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void constructorRequiresThatNewEntityArgumentIsStartable() {
         new DynamicCluster(initialSize:1, newEntity:new AbstractEntity() { }, new TestApplication())
-        fail "Did not throw expected exception"
-    }
-
-    @Test(expectedExceptions = IllegalArgumentException.class)
-    public void constructorRequiresThatInitialSizeArgumentIsGiven() {
-        new DynamicCluster(newEntity:{ new TestEntity() }, new TestApplication())
-        fail "Did not throw expected exception"
-    }
-
-    @Test(expectedExceptions = IllegalArgumentException.class)
-    public void constructorRequiresThatInitialSizeArgumentIsAnInteger() {
-        new DynamicCluster(newEntity:{ new TestEntity() }, initialSize: "foo", new TestApplication())
         fail "Did not throw expected exception"
     }
 
@@ -101,30 +88,15 @@ class DynamicClusterTest {
 
         assertEquals 0, cluster.currentSize
 
-        ResizeResult rr = cluster.resize(1)
-        assertEquals 1, rr.delta
-        assertEquals 1, cluster.currentSize
+        int newSize = cluster.resize(1)
+        assertEquals newSize, 1
+        assertEquals newSize, cluster.currentSize
+        assertEquals newSize, cluster.members.size()
 
-        rr = cluster.resize(4)
-        assertEquals 3, rr.delta
-        assertEquals 4, cluster.currentSize
-    }
-
-    @Test
-    public void resizeCanBeInvokedAsAnEffector() {
-        Collection<Location> locations = [ new GeneralPurposeLocation() ]
-        TestEntity entity = new TestEntity()
-        Application app = new TestApplication()
-        DynamicCluster cluster = new DynamicCluster(newEntity:{ entity }, initialSize:0, app)
-
-        cluster.start(locations)
-        Task<ResizeResult> task = cluster.invoke(Resizable.RESIZE, [ desiredSize: 1 ])
-        
-        assertNotNull task
-        ResizeResult rr = task.get()
-        assertNotNull rr
-        assertEquals 1, rr.delta
-        assertEquals 1, cluster.currentSize
+        newSize = cluster.resize(4)
+        assertEquals newSize, 4
+        assertEquals newSize, cluster.currentSize
+        assertEquals newSize, cluster.members.size()
     }
 
     @Test
@@ -133,7 +105,8 @@ class DynamicClusterTest {
         Application app = new TestApplication()
         DynamicCluster cluster = new DynamicCluster(newEntity:{ new TestEntity() }, initialSize:2, app)
         cluster.start(locations)
-        assertEquals 2, cluster.currentSize
+        assertEquals cluster.currentSize, 2
+        assertEquals cluster.members.size(), 2
     }
 
     @Test
