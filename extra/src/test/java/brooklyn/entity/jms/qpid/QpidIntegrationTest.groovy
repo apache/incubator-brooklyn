@@ -27,18 +27,18 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.util.internal.TimeExtras
 
 /**
- * Test the operation of the {@link QpidNode} class.
+ * Test the operation of the {@link QpidBroker} class.
  *
  * TODO clarify test purpose
  */
-public class QpidNodeIntegrationTest {
+public class QpidBrokerIntegrationTest {
     private static final Logger log = LoggerFactory.getLogger(brooklyn.entity.webapp.jboss.JBossNodeIntegrationTest)
 
     static { TimeExtras.init() }
 
     private Application app
     private Location testLocation
-    private QpidNode qpid
+    private QpidBroker qpid
 
     static class TestApplication extends AbstractApplication {
         public TestApplication(Map properties=[:]) {
@@ -69,7 +69,7 @@ public class QpidNodeIntegrationTest {
      */
     @Test(groups = "Integration")
     public void canStartupAndShutdown() {
-        qpid = new QpidNode(owner:app);
+        qpid = new QpidBroker(owner:app);
         qpid.start([ testLocation ])
         executeUntilSucceedsWithFinallyBlock ([:], {
             assertTrue qpid.getAttribute(JavaApp.NODE_UP)
@@ -89,7 +89,7 @@ public class QpidNodeIntegrationTest {
         String content = "01234567890123456789012345678901"
 
         // Start broker with a configured queue
-        qpid = new QpidNode(owner:app, queue:queueName);
+        qpid = new QpidBroker(owner:app, queue:queueName);
         qpid.start([ testLocation ])
         executeUntilSucceeds([:], {
             assertTrue qpid.getAttribute(JavaApp.NODE_UP)
@@ -131,7 +131,7 @@ public class QpidNodeIntegrationTest {
         }
     }
 
-    private Connection getQpidConnection(QpidNode qpid) {
+    private Connection getQpidConnection(QpidBroker qpid) {
         int port = qpid.getAttribute(Attributes.AMQP_PORT)
         AMQConnectionFactory factory = new AMQConnectionFactory("amqp://admin:admin@brooklyn/localhost?brokerlist='tcp://localhost:${port}'")
         Connection connection = factory.createConnection();

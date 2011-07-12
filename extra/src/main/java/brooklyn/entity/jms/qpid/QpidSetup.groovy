@@ -10,7 +10,7 @@ import brooklyn.util.SshBasedJavaAppSetup;
 import brooklyn.util.SshBasedJavaWebAppSetup
 
 /**
- * Start a {@link QpidNode} in a {@link Location} accessible over ssh.
+ * Start a {@link QpidBroker} in a {@link Location} accessible over ssh.
  */
 public class QpidSetup extends SshBasedJavaAppSetup {
     public static final String DEFAULT_VERSION = "0.10"
@@ -20,15 +20,15 @@ public class QpidSetup extends SshBasedJavaAppSetup {
     private int amqpPort
     private int rmiPort
 
-    public static QpidSetup newInstance(QpidNode entity, SshMachineLocation machine) {
-        Integer suggestedQpidVersion = entity.getConfig(QpidNode.SUGGESTED_VERSION)
-        String suggestedInstallDir = entity.getConfig(QpidNode.SUGGESTED_INSTALL_DIR)
-        String suggestedRunDir = entity.getConfig(QpidNode.SUGGESTED_RUN_DIR)
-        Integer suggestedJmxPort = entity.getConfig(QpidNode.SUGGESTED_JMX_PORT)
-        String suggestedJmxHost = entity.getConfig(QpidNode.SUGGESTED_JMX_HOST)
-        Integer suggestedAmqpPort = entity.getConfig(QpidNode.SUGGESTED_AMQP_PORT)
+    public static QpidSetup newInstance(QpidBroker entity, SshMachineLocation machine) {
+        Integer suggestedVersion = entity.getConfig(QpidBroker.SUGGESTED_VERSION)
+        String suggestedInstallDir = entity.getConfig(QpidBroker.SUGGESTED_INSTALL_DIR)
+        String suggestedRunDir = entity.getConfig(QpidBroker.SUGGESTED_RUN_DIR)
+        Integer suggestedJmxPort = entity.getConfig(QpidBroker.SUGGESTED_JMX_PORT)
+        String suggestedJmxHost = entity.getConfig(QpidBroker.SUGGESTED_JMX_HOST)
+        Integer suggestedAmqpPort = entity.getConfig(QpidBroker.SUGGESTED_AMQP_PORT)
 
-        String version = suggestedQpidVersion ?: DEFAULT_VERSION
+        String version = suggestedVersion ?: DEFAULT_VERSION
         String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"qpid-broker-${version}")
         String runDir = suggestedRunDir ?: (DEFAULT_RUN_DIR+"/"+"app-"+entity.getApplication()?.id+"/qpid-"+entity.id)
         String jmxHost = suggestedJmxHost ?: machine.getAddress().getHostName()
@@ -48,7 +48,7 @@ public class QpidSetup extends SshBasedJavaAppSetup {
         return result
     }
 
-    public QpidSetup(QpidNode entity, SshMachineLocation machine) {
+    public QpidSetup(QpidBroker entity, SshMachineLocation machine) {
         super(entity, machine)
     }
 
@@ -83,8 +83,7 @@ public class QpidSetup extends SshBasedJavaAppSetup {
     }
 
     /**
-     * Creates the directories qpid needs to run in a different location from where it is installed,
-     * renumber http and shutdown ports, and delete AJP connector, then start with JMX enabled
+     * Creates the directories Qpid needs to run in a different location from where it is installed.
      */
     public List<String> getRunScript() {
         List<String> script = [

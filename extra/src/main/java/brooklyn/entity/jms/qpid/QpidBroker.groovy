@@ -1,5 +1,8 @@
 package brooklyn.entity.jms.qpid
 
+import java.util.Collection
+import java.util.Map
+
 import javax.management.InstanceNotFoundException
 import javax.management.ObjectName
 
@@ -25,8 +28,8 @@ import com.google.common.base.Preconditions
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Qpid broker instance.
  */
-public class QpidNode extends JavaApp {
-    private static final Logger log = LoggerFactory.getLogger(QpidNode.class)
+public class QpidBroker extends JavaApp {
+    private static final Logger log = LoggerFactory.getLogger(QpidBroker.class)
 
     public static final BasicConfigKey<Integer> SUGGESTED_AMQP_PORT = [Integer, "qpid.amqpPort", "Suggested AMQP port" ]
     public static final BasicConfigKey<String> VIRTUAL_HOST_NAME = [String, "qpid.virtualHost", "Qpid virtual host name" ]
@@ -39,7 +42,7 @@ public class QpidNode extends JavaApp {
     Collection<String> topicNames = []
     Map<String,QpidTopic> topics = [:]
 
-    public QpidNode(Map properties=[:]) {
+    public QpidBroker(Map properties=[:]) {
         super(properties)
         virtualHost = getConfig(VIRTUAL_HOST_NAME) ?: properties.virtualHost ?: "localhost"
         setConfig(VIRTUAL_HOST_NAME, virtualHost)
@@ -122,8 +125,8 @@ public abstract class QpidBinding extends AbstractEntity {
         Preconditions.checkNotNull properties.name, "Name must be specified"
         name = properties.name
  
-        virtualHost = getConfig(QpidNode.VIRTUAL_HOST_NAME) ?: properties.virtualHost ?: "localhost"
-        setConfig(QpidNode.VIRTUAL_HOST_NAME, virtualHost)
+        virtualHost = getConfig(QpidBroker.VIRTUAL_HOST_NAME) ?: properties.virtualHost ?: "localhost"
+        setConfig(QpidBroker.VIRTUAL_HOST_NAME, virtualHost)
         virtualHostManager = new ObjectName("org.apache.qpid:type=VirtualHost.VirtualHostManager,VirtualHost=\"${virtualHost}\"")
         init()
         
