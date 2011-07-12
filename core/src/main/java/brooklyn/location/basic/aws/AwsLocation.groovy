@@ -67,7 +67,7 @@ public class AwsLocation extends AbstractLocation implements MachineProvisioning
     // Currently, just takes first match that it finds...
     Map<String,Object> getProvisioningFlags(Collection<String> tags) {
         Map<String,Object> result = [:]
-        Collection<String> unmatchedTags = new LinkedList<String>(tags)
+        Collection<String> unmatchedTags = []
         tags.each {
             if (tagMapping.get(it) && !result) {
                 result.putAll(tagMapping.get(it))
