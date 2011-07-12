@@ -204,7 +204,7 @@ public class EffectorInferredFromAnnotatedMethod<T> extends AbstractEffector<T> 
 }
 
 public abstract class EffectorWithExplicitImplementation<I,T> extends AbstractEffector<T> {
-    public EffectorWithExplicitImplementation(String name, Class<Void> type, List<ParameterType<?>> parameters, String description) {
+    public EffectorWithExplicitImplementation(String name, Class<T> type, List<ParameterType<?>> parameters, String description) {
         super(name, type, parameters, description)
     }
 
