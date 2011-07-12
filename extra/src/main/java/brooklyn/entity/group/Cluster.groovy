@@ -26,9 +26,9 @@ public abstract class Cluster extends Tier implements Startable {
 
     int initialSize
 
-    public Cluster(Map props=[:]) {
-        super(props)
-        initialSize = getConfig(INITIAL_SIZE) ?: properties.initialSize ?: 2
+    public Cluster(Map properties=[:]) {
+        super(properties)
+        initialSize = getConfig(INITIAL_SIZE) ?: properties?.initialSize ?: 1
         setConfig(INITIAL_SIZE, initialSize)
     }
     
@@ -58,8 +58,6 @@ public abstract class ClusterFromTemplate extends Cluster implements Resizable {
     public List<Future> shrink(int desiredDecrease) {
         throw new UnsupportedOperationException()
     }
-
-    int initialSize = 1
 
     public synchronized void start(Collection<Location> locs) {
         this.locations = locs
