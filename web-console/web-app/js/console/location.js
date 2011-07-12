@@ -27,14 +27,15 @@ Brooklyn.location = (function() {
         // TODO why is this necessary? (location, etc should be in result!)
         for(i in appLocations) {
             if (appLocations[i].name == result.name) {
-                moveToLoc(i);
+                locationNumber = i;
+                moveToLoc();
                 break;
             }
         }
  		$(event.target.parentNode).addClass('row_selected');
     }
 
-    function moveToLoc(index) {
+    function moveToLoc() {
         var settings = Brooklyn.tabs.getDataTable(tableId).fnSettings().aoData;
         for(row in settings) {
        		$(settings[row].nTr).removeClass('row_selected');
@@ -44,8 +45,8 @@ Brooklyn.location = (function() {
              appLocations[i].infowindow.close(map , appLocations[i].marker);
         }
 
-        map.setCenter(appLocations[index].location);
-        appLocations[index].infowindow.open(map , appLocations[index].marker);
+        map.setCenter(appLocations[locationNumber].location);
+        appLocations[locationNumber].infowindow.open(map , appLocations[locationNumber].marker);
     }
 
     function addLocationToMap(address , resources , i){
@@ -94,7 +95,7 @@ Brooklyn.location = (function() {
         if(appLocations.length <= ++locationNumber) {
             locationNumber = 0;
         }
-        moveToLoc(locationNumber);
+        moveToLoc();
     }
 
     // TODO call when set of locations changes?
@@ -120,7 +121,10 @@ Brooklyn.location = (function() {
             $('#map-canvas').width('98%');
             $('#map-canvas').height('500px');
             google.maps.event.trigger(map, 'resize');
-            map.setCenter(loc);
+            if(appLocations.length <= locationNumber) {
+                locationNumber = 0;
+            }
+            map.setCenter(appLocations[locationNumber].location);
         }
     }
 
