@@ -44,8 +44,8 @@ class EntityStartUtils {
      * Creates a (not-started) clone of the given template, configured to be owned by the given entity
      */
     public static <T extends Entity> T createFromTemplate(Group owner, T template) {
-        Preconditions.checkArgument(template.owner != null, "Templates must not be assigned any owner (but is in "+template.owner+")")
-        Preconditions.checkArgument(template.groups != null, "Templates must not be a member of any group entity (but is in "+template.groups+")")
+        Preconditions.checkArgument(template.owner == null, "Templates must not be assigned any owner (but is in "+template.owner+")")
+        Preconditions.checkArgument(template.groups == null || template.groups.isEmpty(), "Templates must not be a member of any group entity (but is in "+template.groups+")")
 
         Entity copy = cloneTemplate(template);
         copy.id = LanguageUtils.newUid()
