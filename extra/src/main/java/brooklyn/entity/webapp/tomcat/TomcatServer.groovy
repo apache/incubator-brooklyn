@@ -20,15 +20,15 @@ import brooklyn.util.internal.Repeater
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Tomcat instance.
  */
-public class TomcatNode extends JavaWebApp {
-    private static final Logger log = LoggerFactory.getLogger(TomcatNode.class)
+public class TomcatServer extends JavaWebApp {
+    private static final Logger log = LoggerFactory.getLogger(TomcatServer.class)
     
     public static final BasicConfigKey<Integer> SUGGESTED_SHUTDOWN_PORT = [Integer, "tomcat.shutdownport", "Suggested shutdown port" ]
     
     public static final BasicAttributeSensor<Integer> TOMCAT_SHUTDOWN_PORT = [ Integer, "webapp.tomcat.shutdownPort", "Port to use for shutting down" ];
     public static final BasicAttributeSensor<String> CONNECTOR_STATUS = [String, "webapp.tomcat.connectorStatus", "Catalina connector state name"]
     
-    public TomcatNode(Map properties=[:]) {
+    public TomcatServer(Map properties=[:]) {
         super(properties);
     }
 

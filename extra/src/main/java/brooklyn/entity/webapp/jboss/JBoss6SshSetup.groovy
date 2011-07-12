@@ -18,15 +18,15 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     private String serverProfile
     private String clusterName
     
-    public static JBoss6SshSetup newInstance(JBossNode entity, SshMachineLocation machine) {
-        Integer suggestedJbossVersion = entity.getConfig(JBossNode.SUGGESTED_VERSION)
-        String suggestedInstallDir = entity.getConfig(JBossNode.SUGGESTED_INSTALL_DIR)
-        String suggestedRunDir = entity.getConfig(JBossNode.SUGGESTED_RUN_DIR)
-        Integer suggestedJmxPort = entity.getConfig(JBossNode.SUGGESTED_JMX_PORT)
-        String suggestedJmxHost = entity.getConfig(JBossNode.SUGGESTED_JMX_HOST)
-        Integer suggestedPortIncrement = entity.getConfig(JBossNode.SUGGESTED_PORT_INCREMENT)
-        String suggestedServerProfile = entity.getConfig(JBossNode.SUGGESTED_SERVER_PROFILE)
-        String suggestedClusterName = entity.getConfig(JBossNode.SUGGESTED_CLUSTER_NAME)
+    public static JBoss6SshSetup newInstance(JBossServer entity, SshMachineLocation machine) {
+        Integer suggestedJbossVersion = entity.getConfig(JBossServer.SUGGESTED_VERSION)
+        String suggestedInstallDir = entity.getConfig(JBossServer.SUGGESTED_INSTALL_DIR)
+        String suggestedRunDir = entity.getConfig(JBossServer.SUGGESTED_RUN_DIR)
+        Integer suggestedJmxPort = entity.getConfig(JBossServer.SUGGESTED_JMX_PORT)
+        String suggestedJmxHost = entity.getConfig(JBossServer.SUGGESTED_JMX_HOST)
+        Integer suggestedPortIncrement = entity.getConfig(JBossServer.SUGGESTED_PORT_INCREMENT)
+        String suggestedServerProfile = entity.getConfig(JBossServer.SUGGESTED_SERVER_PROFILE)
+        String suggestedClusterName = entity.getConfig(JBossServer.SUGGESTED_CLUSTER_NAME)
         
         String version = suggestedJbossVersion ?: DEFAULT_VERSION
         String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"jboss-${version}")
@@ -54,7 +54,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         return result
     }
 
-    public JBoss6SshSetup(JBossNode entity, SshMachineLocation machine) {
+    public JBoss6SshSetup(JBossServer entity, SshMachineLocation machine) {
         super(entity, machine)
     }
     

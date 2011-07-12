@@ -12,8 +12,8 @@ import brooklyn.location.basic.SshMachineLocation
 /**
  * JBoss web application server.
  */
-public class JBossNode extends JavaWebApp {
-    private static final Logger log = LoggerFactory.getLogger(JBossNode.class)
+public class JBossServer extends JavaWebApp {
+    private static final Logger log = LoggerFactory.getLogger(JBossServer.class)
 
     public static BasicConfigKey<String>  SUGGESTED_SERVER_PROFILE = 
             [ String, "jboss.serverProfile", "Profile used when running server" ] 
@@ -25,7 +25,7 @@ public class JBossNode extends JavaWebApp {
     // Jboss specific
     public static final BasicAttributeSensor<Integer> PORT_INCREMENT = [ Integer, "webapp.portIncrement", "Increment added to default JBoss ports" ];
             
-    public JBossNode(Map properties=[:]) {
+    public JBossServer(Map properties=[:]) {
         super(properties);
         
         def portIncrement = properties.portIncrement ?: 0

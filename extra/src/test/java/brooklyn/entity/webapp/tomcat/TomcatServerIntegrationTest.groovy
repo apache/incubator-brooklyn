@@ -20,12 +20,12 @@ import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
 
 /**
- * This tests the operation of the {@link TomcatNode} entity.
+ * This tests the operation of the {@link TomcatServer} entity.
  * 
  * TODO clarify test purpose
  */
-public class TomcatNodeIntegrationTest {
-    private static final Logger logger = LoggerFactory.getLogger(brooklyn.entity.webapp.tomcat.TomcatNodeIntegrationTest.class)
+public class TomcatServerIntegrationTest {
+    private static final Logger logger = LoggerFactory.getLogger(brooklyn.entity.webapp.tomcat.TomcatServerIntegrationTest.class)
     
     /** don't use 8080 since that is commonly used by testing software */
     static int DEFAULT_HTTP_PORT = 7880
@@ -80,10 +80,10 @@ public class TomcatNodeIntegrationTest {
 
     @Test(groups = [ "Integration" ])
     public void tracksNodeState() {
-        TomcatNode tc = [ owner: new TestApplication(), httpPort: DEFAULT_HTTP_PORT ]
+        TomcatServer tc = [ owner: new TestApplication(), httpPort: DEFAULT_HTTP_PORT ]
         tc.start([ new LocalhostMachineProvisioningLocation(name: 'london') ])
         executeUntilSucceedsWithFinallyBlock ([:], {
-            assertTrue tc.getAttribute(TomcatNode.SERVICE_UP)
+            assertTrue tc.getAttribute(TomcatServer.SERVICE_UP)
         }, {
             tc.stop()
         })
@@ -92,14 +92,14 @@ public class TomcatNodeIntegrationTest {
     @Test(groups = [ "Integration" ])
     public void publishesRequestAndErrorCountMetrics() {
         Application app = new TestApplication();
-        TomcatNode tc = new TomcatNode(owner: app, httpPort: DEFAULT_HTTP_PORT);
+        TomcatServer tc = new TomcatServer(owner: app, httpPort: DEFAULT_HTTP_PORT);
         tc.start([ new LocalhostMachineProvisioningLocation(name: 'london') ])
-        int port = tc.getAttribute(TomcatNode.HTTP_PORT)
+        int port = tc.getAttribute(TomcatServer.HTTP_PORT)
         10.times { connectToURL("http://localhost:${port}/does_not_exist") }
         
         executeUntilSucceedsWithShutdown(tc, {
-            def requestCount = tc.getAttribute(TomcatNode.REQUEST_COUNT)
-            def errorCount = tc.getAttribute(TomcatNode.ERROR_COUNT)
+            def requestCount = tc.getAttribute(TomcatServer.REQUEST_COUNT)
+            def errorCount = tc.getAttribute(TomcatServer.ERROR_COUNT)
             logger.info "req=$requestCount, err=$errorCount"
             
             if (errorCount == null) {
@@ -116,22 +116,22 @@ public class TomcatNodeIntegrationTest {
     @Test(groups = [ "Integration" ])
     public void publishesRequestsPerSecondMetric() {
         Application app = new TestApplication();
-        TomcatNode tc = new TomcatNode(owner: app, httpPort:DEFAULT_HTTP_PORT);
+        TomcatServer tc = new TomcatServer(owner: app, httpPort:DEFAULT_HTTP_PORT);
         tc.start([ new LocalhostMachineProvisioningLocation(name: 'london') ])
         executeUntilSucceedsWithShutdown(tc, {
-                def activityValue = tc.getAttribute(TomcatNode.REQUESTS_PER_SECOND)
+                def activityValue = tc.getAttribute(TomcatServer.REQUESTS_PER_SECOND)
                 if (activityValue == null || activityValue == -1) 
                     return new BooleanWithMessage(false, "activity not set yet ($activityValue)")
 
                 assertEquals activityValue.class, Double
                 assertEquals activityValue, 0.0d, 0.01d
                 
-                def port = tc.getAttribute(TomcatNode.HTTP_PORT)
+                def port = tc.getAttribute(TomcatServer.HTTP_PORT)
                 def connection = connectToURL "http://localhost:${port}/foo"
                 assertEquals connection.getHeaderField("Server"), "Apache-Coyote/1.1"
 
                 Thread.sleep 1000
-                activityValue = tc.getAttribute(TomcatNode.REQUESTS_PER_SECOND)
+                activityValue = tc.getAttribute(TomcatServer.REQUESTS_PER_SECOND)
                 assertEquals activityValue, 1.0d, 0.01d
                 true
             }, timeout:10*SECONDS, useGroovyTruth:true)
@@ -140,15 +140,15 @@ public class TomcatNodeIntegrationTest {
     @Test(groups = [ "Integration" ])
     public void deployWebAppAppearsAtUrl() {
         Application app = new TestApplication();
-        TomcatNode tc = new TomcatNode(owner: app, httpPort: DEFAULT_HTTP_PORT);
+        TomcatServer tc = new TomcatServer(owner: app, httpPort: DEFAULT_HTTP_PORT);
 
         URL resource = getClass().getClassLoader().getResource("hello-world.war")
         assertNotNull resource
-        tc.setConfig(TomcatNode.WAR, resource.getPath())
+        tc.setConfig(TomcatServer.WAR, resource.getPath())
 
         tc.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         executeUntilSucceedsWithShutdown(tc, {
-            def port = tc.getAttribute(TomcatNode.HTTP_PORT)
+            def port = tc.getAttribute(TomcatServer.HTTP_PORT)
             def url  = "http://localhost:${port}/hello-world"
             assertTrue urlRespondsWithStatusCode200(url)
             true
@@ -162,7 +162,7 @@ public class TomcatNodeIntegrationTest {
         t.start()
         try {
             Application app = new TestApplication()
-            TomcatNode tc = new TomcatNode(owner:app, httpPort:DEFAULT_HTTP_PORT)
+            TomcatServer tc = new TomcatServer(owner:app, httpPort:DEFAULT_HTTP_PORT)
             Exception caught = null
             try {
                 tc.start([ new LocalhostMachineProvisioningLocation(name: 'london') ])
@@ -173,7 +173,7 @@ public class TomcatNodeIntegrationTest {
             } finally {
                 tc.stop()
             }
-            assertFalse tc.getAttribute(TomcatNode.SERVICE_UP)
+            assertFalse tc.getAttribute(TomcatServer.SERVICE_UP)
         } finally {
             listener.close();
             t.join();

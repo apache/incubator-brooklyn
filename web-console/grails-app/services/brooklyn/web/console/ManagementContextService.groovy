@@ -7,7 +7,7 @@ import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.basic.BasicParameterType
-import brooklyn.entity.webapp.tomcat.TomcatNode
+import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.management.ExecutionManager
 import brooklyn.management.ManagementContext
@@ -139,7 +139,7 @@ class ManagementContextService {
                 this.id = "leaf-" + ManagementContextService.ID_GENERATOR.incrementAndGet()
                 this.locations = ["Kuala Lumpur"]
                 // Stealing the sensors from TomcatNode
-                this.sensors.putAll(new TomcatNode().sensors)
+                this.sensors.putAll(new TomcatServer().sensors)
 
                 List<ParameterType<?>> parameterTypeList = new ArrayList<ParameterType<?>>()
                 ParameterType tomcatStartLocation = new BasicParameterType("Location", Void.class)
@@ -148,7 +148,7 @@ class ManagementContextService {
                 parameterTypeList.add(actionDate)
 
 
-                // Don't appear to be any effectors in TomcatNode
+                // Don't appear to be any effectors in TomcatServer
                 TestEffector startTomcat = new TestEffector("Start Tomcat",
                                                             "This will start Tomcat at a specified location",
                                                             parameterTypeList)

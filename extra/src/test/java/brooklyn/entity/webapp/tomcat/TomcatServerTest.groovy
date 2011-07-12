@@ -17,13 +17,13 @@ import brooklyn.entity.webapp.JavaWebApp
 import brooklyn.event.adapter.AttributePoller
 
 /**
- * This tests the operation of the {@link TomcatNode} entity.
+ * This tests the operation of the {@link TomcatServer} entity.
  * 
  * TODO clarify test purpose
  * TODO check disabled tests
  */
-class TomcatNodeTest {
-    private static final Logger logger = LoggerFactory.getLogger(TomcatNodeTest.class)
+class TomcatServerTest {
+    private static final Logger logger = LoggerFactory.getLogger(TomcatServerTest.class)
 
 //    @InheritConstructors
     static class TestApplication extends AbstractApplication {
@@ -34,13 +34,13 @@ class TomcatNodeTest {
 
     @BeforeMethod
     public void patchInSimulator() {
-        TomcatNode.metaClass.startInLocation = { SimulatedLocation loc ->
+        TomcatServer.metaClass.startInLocation = { SimulatedLocation loc ->
             delegate.locations.add(loc)
             TomcatSimulator sim = new TomcatSimulator(loc, delegate)
             delegate.metaClass.simulator = sim
             sim.start()
         }
-        TomcatNode.metaClass.shutdownInLocation { SimulatedLocation loc ->
+        TomcatServer.metaClass.shutdownInLocation { SimulatedLocation loc ->
             TomcatSimulator sim = delegate.simulator
             assertEquals loc, sim.location
             sim.shutdown()
@@ -57,7 +57,7 @@ class TomcatNodeTest {
     @Test
     public void ensureNodeCanStartAndShutdown() {
         Application app = new TestApplication();
-        TomcatNode tc = new TomcatNode(owner: app);
+        TomcatServer tc = new TomcatServer(owner: app);
         
         try { 
             tc.start([ new SimulatedLocation() ]);
@@ -71,8 +71,8 @@ class TomcatNodeTest {
     @Test
     public void ensureNodeShutdownCleansUp() {
         Application app = new TestApplication();
-        TomcatNode tc1 = new TomcatNode(owner: app);
-        TomcatNode tc2 = new TomcatNode(owner: app);
+        TomcatServer tc1 = new TomcatServer(owner: app);
+        TomcatServer tc2 = new TomcatServer(owner: app);
         
         try {
             tc1.start([ new SimulatedLocation() ]);
@@ -91,8 +91,8 @@ class TomcatNodeTest {
     @Test
     public void detectEarlyDeathOfTomcatProcess() {
         Application app = new TestApplication();
-        TomcatNode tc1 = new TomcatNode(owner: app);
-        TomcatNode tc2 = new TomcatNode(owner: app);
+        TomcatServer tc1 = new TomcatServer(owner: app);
+        TomcatServer tc2 = new TomcatServer(owner: app);
         tc1.start([ new SimulatedLocation() ])
         try {
             tc2.start([ new SimulatedLocation() ])
@@ -109,7 +109,7 @@ class TomcatNodeTest {
     public void rejectIfLocationNotSupplied() {
         Application app = new TestApplication();
         boolean caught = false
-        TomcatNode tc = new TomcatNode(owner: app);
+        TomcatServer tc = new TomcatServer(owner: app);
         try {
             tc.start([])
             tc.stop()
