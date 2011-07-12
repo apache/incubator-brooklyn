@@ -6,15 +6,14 @@ import brooklyn.entity.basic.AbstractEntity
 import brooklyn.location.Location
 import brooklyn.location.basic.GeneralPurposeLocation
 import org.gmock.GMockTestCase
-import brooklyn.util.task.BasicExecutionManager
-import brooklyn.management.ExecutionContext
-import brooklyn.util.task.BasicExecutionContext
 import brooklyn.entity.Application
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.trait.ResizeResult
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicInteger
+import brooklyn.entity.trait.Resizable
+import brooklyn.management.Task
 
 class DynamicClusterTest extends GMockTestCase {
 
@@ -109,10 +108,8 @@ class DynamicClusterTest extends GMockTestCase {
 
     @Test
     public void resizeFromZeroToOneStartsANewEntityAndSetsItsOwner() {
-        ExecutionContext execCtx = new BasicExecutionContext(new BasicExecutionManager())
         Collection<Location> locations = [new GeneralPurposeLocation()]
-
-        def entity = new TestEntity()
+        TestEntity entity = new TestEntity()
         Application app = new TestApplication()
         DynamicCluster cluster = new DynamicCluster(newEntity: {entity}, initialSize: 0, app)
 
@@ -140,6 +137,22 @@ class DynamicClusterTest extends GMockTestCase {
         rr = cluster.resize(4)
         assertEquals 3, rr.delta
         assertEquals 4, cluster.currentSize
+    }
+
+    @Test(enabled = false)
+    public void resizeCanBeInvokedAsAnEffector() {
+        Collection<Location> locations = [new GeneralPurposeLocation()]
+        TestEntity entity = new TestEntity()
+        Application app = new TestApplication()
+        DynamicCluster cluster = new DynamicCluster(newEntity: {entity}, initialSize: 0, app)
+
+        cluster.start(locations)
+        Task<ResizeResult> task = cluster.invoke(Resizable.RESIZE, [ desiredSize: 1 ])
+        assertNotNull task
+        ResizeResult rr = task.get()
+        assertNotNull rr
+        assertEquals 1, rr.delta
+        assertEquals 1, cluster.currentSize
     }
 
     private static class TestApplication extends AbstractApplication {
