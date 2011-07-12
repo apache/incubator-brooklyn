@@ -15,13 +15,16 @@ import brooklyn.location.basic.SshMachineLocation
 public class JBossNode extends JavaWebApp {
     private static final Logger log = LoggerFactory.getLogger(JBossNode.class)
 
-    public static BasicConfigKey<String>  SUGGESTED_SERVER_PROFILE = [ String, "jboss.serverProfile", "Profile used when running server" ] 
-    public static BasicConfigKey<Integer> SUGGESTED_PORT_INCREMENT = [ Integer, "jboss.portincrement", "Increment to be used for all jboss ports" ]
-    
+    public static BasicConfigKey<String>  SUGGESTED_SERVER_PROFILE = 
+            [ String, "jboss.serverProfile", "Profile used when running server" ] 
+    public static BasicConfigKey<Integer> SUGGESTED_PORT_INCREMENT = 
+            [ Integer, "jboss.portincrement", "Increment to be used for all jboss ports" ]
+    public static BasicConfigKey<Integer> SUGGESTED_CLUSTER_NAME =
+            [ String, "jboss.clusterName", "Identifier used to group JBoss instances" ]
+  
     // Jboss specific
     public static final BasicAttributeSensor<Integer> PORT_INCREMENT = [ Integer, "webapp.portIncrement", "Increment added to default JBoss ports" ];
-
-    
+            
     public JBossNode(Map properties=[:]) {
         super(properties);
         
@@ -30,6 +33,10 @@ public class JBossNode extends JavaWebApp {
             throw new IllegalArgumentException("JBoss port increment cannot be negative")
         }
         setConfig SUGGESTED_PORT_INCREMENT, portIncrement
+        
+        if (properties.clusterName) {
+            setConfig SUGGESTED_CLUSTER_NAME, properties.clusterName
+        }
     }
 
     public SshBasedJavaWebAppSetup getSshBasedSetup(SshMachineLocation loc) {
@@ -45,5 +52,6 @@ public class JBossNode extends JavaWebApp {
 
     public void waitForHttpPort() {
         log.debug "started jboss server: jmxHost {} and jmxPort {}", getAttribute(JMX_HOST), getAttribute(JMX_PORT)
-    }
+	}
+    
 }

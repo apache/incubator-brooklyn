@@ -13,8 +13,10 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     public static final String DEFAULT_DEPLOY_SUBDIR = "webapps"
     public static final int DEFAULT_HTTP_PORT = 8080;
 
+    private static final portGroupName = "ports-brooklyn"
     private int portIncrement
     private String serverProfile
+    private String clusterName
     
     public static JBoss6SshSetup newInstance(JBossNode entity, SshMachineLocation machine) {
         Integer suggestedJbossVersion = entity.getConfig(JBossNode.SUGGESTED_VERSION)
@@ -24,12 +26,14 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         String suggestedJmxHost = entity.getConfig(JBossNode.SUGGESTED_JMX_HOST)
         Integer suggestedPortIncrement = entity.getConfig(JBossNode.SUGGESTED_PORT_INCREMENT)
         String suggestedServerProfile = entity.getConfig(JBossNode.SUGGESTED_SERVER_PROFILE)
+        String suggestedClusterName = entity.getConfig(JBossNode.SUGGESTED_CLUSTER_NAME)
         
         String version = suggestedJbossVersion ?: DEFAULT_VERSION
         String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"jboss-${version}")
         String runDir = suggestedRunDir ?: (DEFAULT_RUN_DIR+"/"+"app-${entity.application.id}"+"/"+"jboss-${entity.id}")
         String deployDir = runDir+"/"+DEFAULT_DEPLOY_SUBDIR
         String serverProfile = suggestedServerProfile ?: "standard"
+        String clusterName = suggestedClusterName ?: ""
         
         String jmxHost = suggestedJmxHost ?: machine.getAddress().getHostName()
         int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort, DEFAULT_FIRST_JMX_PORT))
@@ -45,6 +49,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         result.setPortIncrement(portIncrement)
         result.setHttpPort(DEFAULT_HTTP_PORT+portIncrement)
         result.setServerProfile(serverProfile)
+        result.setClusterName(clusterName)
         
         return result
     }
@@ -60,6 +65,11 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     
     public JBoss6SshSetup setServerProfile(String val) {
         serverProfile = val
+        return this
+    }
+    
+    public JBoss6SshSetup setClusterName(String val) {
+        this.clusterName = val
         return this
     }
     
@@ -80,17 +90,19 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         // The JBoss zip file contains lgpl.txt (at least) twice and the prompt to
         // overwrite interrupts the installer.
         makeInstallScript([
-	            "curl -L \"${url}\" -o ${saveAs}",
-	            "unzip -o ${saveAs}"
-            ])
+            "curl -L \"${url}\" -o ${saveAs}",
+            "unzip -o ${saveAs}"
+        ])
     }
 
     public List<String> getRunScript() {
-        def portGroupName = "ports-brooklyn"
-        
+        def clusterArg = (clusterName == "") ? "" : "-g $clusterName"
         // run.sh must be backgrounded otherwise the script will never return.
         List<String> script = [
-            "\$JBOSS_HOME/bin/run.sh -Djboss.service.binding.set=${portGroupName} -Djboss.server.base.dir=\$RUN/server -Djboss.server.base.url=file://\$RUN/server -c ${serverProfile} &",
+            "\$JBOSS_HOME/bin/run.sh -Djboss.service.binding.set=${portGroupName} -Djboss.server.base.dir=\$RUN/server " +
+                    "-Djboss.server.base.url=file://\$RUN/server -Djboss.messaging.ServerPeerID=${entity.id} " +
+                    "-b ${machine.address.hostAddress} $clusterArg -c $serverProfile " + 
+                    ">\$RUN/jboss.log 2>\$RUN/jboss.err </dev/null &",
         ]
         return script
     }
@@ -136,8 +148,6 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
            http://community.jboss.org/wiki/AS5ServiceBindingManager
            .. changing port numbers with sed is pretty brittle.
         */
-        def portGroupName = "ports-brooklyn"
-        
         List<String> script = [
             "mkdir -p ${runDir}/server",
             "cd ${runDir}/server",
@@ -145,7 +155,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
             "cd ${serverProfile}/conf/bindingservice.beans/META-INF/",
             "BJB=\"bindings-jboss-beans.xml\"",
             "sed -i.bk 's/ports-03/${portGroupName}/' \$BJB",
-            "sed -i.bk 's/\\<parameter\\>300\\<\\/parameter\\>/\\<parameter\\>${portIncrement}\\<\\/parameter\\>/' \$BJB",
+            "sed -i.bk 's/<parameter>300<\\/parameter>/<parameter>${portIncrement}<\\/parameter>/' \$BJB",
         ]
         return script
     }
