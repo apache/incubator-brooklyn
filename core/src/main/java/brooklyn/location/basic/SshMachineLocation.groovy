@@ -1,8 +1,12 @@
 package brooklyn.location.basic
 
+import java.io.IOException
+import java.util.List
+
 import brooklyn.location.MachineLocation
 import brooklyn.location.PortRange
 import brooklyn.util.internal.SshJschTool
+
 import com.google.common.base.Preconditions
 
 /**
@@ -68,7 +72,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
     // TODO Does not support zero to mean any; but can't when returning boolean
     // TODO Does not yet check if the port really is free on this machine
-    boolean obtainSpecificPort(int portNumber) {
+    public boolean obtainSpecificPort(int portNumber) {
         if (portsInUse.contains(portNumber)) {
             return false
         } else {
@@ -77,14 +81,33 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         }
     }
 
-    int obtainPort(PortRange range) {
+    public int obtainPort(PortRange range) {
         for (int i = range.getMin(); i <= range.getMax(); i++) {
             if (obtainSpecificPort(i)) return i;
         }
         return -1;
     }
 
-    void releasePort(int portNumber) {
+    public void releasePort(int portNumber) {
         portsInUse.remove((Object)portNumber);
+    }
+    
+    public boolean isSshable() {
+        String cmd = "date; exit";
+        try {
+            int result = run(cmd)
+            if (result == 0) {
+                return true;
+            } else {
+                LOG.info("Not reachable: $this, executing `$cmd`, exit code $result");
+                return false;
+            }
+        } catch (IllegalStateException e) {
+            LOG.info("Exception checking if $this is reachable; assuming not", e);
+            return false;
+        } catch (IOException e) {
+            LOG.info("Exception checking if $this is reachable; assuming not", e);
+            return false;
+        }
     }
 }

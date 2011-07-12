@@ -33,6 +33,20 @@ public class SshMachineLocationTest {
         assertTrue outString.contains(expectedName), outString
     }
     
+    // Note: requires `ssh localhost` to be setup such that no password is required    
+    @Test(groups = "Integration")
+    public void testIsSshableWhenTrue() throws Exception {
+        assertTrue host.isSshable()
+    }
+    
+    // Note: requires `ssh localhost` to be setup such that no password is required    
+    @Test(groups = "Integration")
+    public void testIsSshableWhenFalse() throws Exception {
+        byte[] unreachableIp = [123,123,123,123]
+        SshMachineLocation unreachableHost = new SshMachineLocation(address: InetAddress.getByAddress("unreachablename", unreachableIp));
+        assertFalse unreachableHost.isSshable()
+    }
+    
     @Test
     public void obtainSpecificPortGivesOutPortOnlyOnce() {
         int port = 2345
