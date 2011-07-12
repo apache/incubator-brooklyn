@@ -15,7 +15,7 @@ import brooklyn.management.internal.LocalManagementContext
 import brooklyn.web.console.entity.TestEffector
 
 class ManagementContextService {
-    private final ManagementContext context = LocalManagementContext.context
+    private final ManagementContext context = new LocalManagementContext()
     private final Application application = new TestApplication()
     protected static int ID_GENERATOR = 0
 
