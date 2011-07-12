@@ -1,5 +1,4 @@
 Brooklyn.effectors = (function() {
-
     // Config
     var id = '#effector-data';
     var aoColumns = [ { "mDataProp": "name", "sTitle": "name", "sWidth":"100%"  }];
@@ -7,11 +6,8 @@ Brooklyn.effectors = (function() {
     // State
     var selectedRowData;
 
-    function _updateEffectorsList(json) {
-        var _jsonObject = json;
-        var table = Brooklyn.tabs.getDataTable(id, ".", aoColumns);
-        table.fnClearTable(false);
-        table.fnAddData(_jsonObject);
+    function updateEffectorsList(json) {
+        Brooklyn.tabs.getDataTable(id, ".", aoColumns, updateParameters, json);
 
         $('#effector-args').empty();
         var noSelectedEffector = document.createElement("p");
@@ -19,8 +15,6 @@ Brooklyn.effectors = (function() {
         $('#effector-args').append(noSelectedEffector);
 
         $('#effectors-invoke-button').attr("disabled", "disabled");
-
-        $(id + " tbody").click(updateParameters);
     }
 
     function updateParameters(event) {
@@ -40,7 +34,7 @@ Brooklyn.effectors = (function() {
         title.textContent = selectedRowData.description;
         $('#effector-args').append(title);
 
-        if(selectedRowData.parameters.length == 0 ) {
+        if(selectedRowData.parameters.length === 0 ) {
             var argumentLabel = document.createElement('p');
             argumentLabel.textContent = "No arguments needed:";
             $('#effector-args').append(argumentLabel);
@@ -65,15 +59,14 @@ Brooklyn.effectors = (function() {
     }
 
     function updateList(e, entity_id) {
-        if (typeof entity_id === 'undefined') {
-            return;
+        if (entity_id) {
+            // TODO: Handle failure
+            $.getJSON("effectors?id=" + entity_id, updateEffectorsList);
+            $(Brooklyn.eventBus).trigger('update_ok');
         }
-        // TODO: Handle failure
-        $.getJSON("effectors?id=" + entity_id, _updateEffectorsList);
     }
 
     function invokeEffector(event){
-        //TODO: use form object correctly
         alert('Effector: "' + selectedRowData.name + '" invoked');
         return false;
     }

@@ -27,10 +27,7 @@ Brooklyn.activity = (function(){
     ];
 
     function createGrid(){
-        var table = Brooklyn.tabs.getDataTable(id, ".", aoColumns);
-        table.fnClearTable();
-        table.fnAddData(mydata);
-        $(id + " tbody").click(updateLog);
+        Brooklyn.tabs.getDataTable(id, ".", aoColumns, updateLog, mydata);
     }
 
     function selectLog(event){
@@ -43,6 +40,12 @@ Brooklyn.activity = (function(){
     }
 
     function updateLog(event){
+        var settings = Brooklyn.tabs.getDataTable(id).fnSettings().aoData;
+        for(row in settings) {
+       		$(settings[row].nTr).removeClass('row_selected');
+   		}
+ 		$(event.target.parentNode).addClass('row_selected');
+
         var result = Brooklyn.tabs.getDataTableSelectedRowData(id, event);
         if(result) {
             var logBox=document.getElementById("logbox");

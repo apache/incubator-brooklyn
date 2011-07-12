@@ -26,7 +26,7 @@ Brooklyn.location = (function() {
 
         // TODO why is this necessary? (location, etc should be in result!)
         for(i in appLocations) {
-            if (appLocations[i].name == result.name) {
+            if (appLocations[i].name === result.name) {
                 locationNumber = i;
                 moveToLoc();
                 break;
@@ -51,7 +51,7 @@ Brooklyn.location = (function() {
 
     function addLocationToMap(address , resources , i){
         new google.maps.Geocoder().geocode( { 'address': address}, function(results, status) {
-            if (status == google.maps.GeocoderStatus.OK) {
+            if (status === google.maps.GeocoderStatus.OK) {
                 loctext = results[0].formatted_address;
                 loc = results[0].geometry.location;
                 appLocations[i].location = loc;
@@ -111,13 +111,11 @@ Brooklyn.location = (function() {
             addLocationToMap(appLocations[i].name, appLocations[i].resources, i);
         }
 
-        var table = Brooklyn.tabs.getDataTable(tableId, '.', aoColumns);
-        table.fnClearTable(false);
-        table.fnAddData(appLocations);
+        Brooklyn.tabs.getDataTable(tableId, '.', aoColumns, updateLocation, appLocations);
     }
 
     function resize(e, id) {
-        if (id == 'location') {
+        if (id === 'location') {
             $('#map-canvas').width('98%');
             $('#map-canvas').height('500px');
             google.maps.event.trigger(map, 'resize');
@@ -130,8 +128,6 @@ Brooklyn.location = (function() {
 
     function init() {
         updateLocations();
-
-        $(tableId + " tbody").click(updateLocation);
         $('#toggle-location').click(toggleLocation);
         $(Brooklyn.eventBus).bind("tab_selected", resize);
     }

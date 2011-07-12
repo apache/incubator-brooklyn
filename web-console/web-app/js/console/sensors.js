@@ -9,17 +9,14 @@ Brooklyn.sensors = (function() {
     var entity_id;
 
     function updateTableData(json) {
-        var table =  Brooklyn.tabs.getDataTable(id, ".", aoColumns);
-        table.fnClearTable(false);
-        table.fnAddData(json);
+        Brooklyn.tabs.getDataTable(id, ".", aoColumns, undefined, json);
     }
 
     function update() {
-        if (typeof entity_id === 'undefined') {
-            return;
+        if (entity_id) {
+            $.getJSON("sensors?id=" + entity_id, updateTableData);
+            $(Brooklyn.eventBus).trigger('update_ok');
         }
-        $.getJSON("sensors?id=" + entity_id, updateTableData);
-        $(Brooklyn.eventBus).trigger('update_ok');
     }
 
     /* This method is intended to be called as an event handler. The e paramater is
