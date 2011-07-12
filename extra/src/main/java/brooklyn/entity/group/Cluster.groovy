@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.Entity
 import brooklyn.entity.trait.Resizable
 import brooklyn.entity.trait.Startable
+import brooklyn.event.AttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.Location
 import brooklyn.util.internal.EntityStartUtils
@@ -23,7 +24,9 @@ import brooklyn.entity.trait.ResizeResult
  * initialSize property determines initial size when started (defaults to 1)
  */
 public abstract class Cluster extends Tier implements Startable {
-    public static final BasicConfigKey<Integer> INITIAL_SIZE = [Integer, "cluster.size", "Initial cluster size" ]
+    public static final BasicConfigKey<Integer> INITIAL_SIZE = [ Integer, "initial.size", "Initial cluster size" ]
+
+    public static final AttributeSensor<String> CLUSTER_SIZE = [ Integer, "cluster.size", "Cluster size" ]
 
     int initialSize
 
@@ -32,7 +35,6 @@ public abstract class Cluster extends Tier implements Startable {
         initialSize = getConfig(INITIAL_SIZE) ?: properties?.initialSize ?: 1
         setConfig(INITIAL_SIZE, initialSize)
     }
-    
     
     // TODO single location
 }

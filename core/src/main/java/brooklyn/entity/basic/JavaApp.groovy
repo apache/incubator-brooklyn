@@ -1,5 +1,6 @@
 package brooklyn.entity.basic
 
+import java.util.Collection;
 import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
@@ -124,6 +125,11 @@ public abstract class JavaApp extends AbstractEntity implements Startable {
         getSshBasedSetup(loc).stop()
         setAttribute(NODE_STATUS, "stopped")
         setAttribute(NODE_UP, false)
+    }
+
+    public void restart() {
+        stop
+        start locations
     }
 
     @Override
