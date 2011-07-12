@@ -1,21 +1,15 @@
 Brooklyn.sensors = (function() {
+    // Config
+    var id = '#sensor-data';
+    var aoColumns = [ { "mDataProp": "name", "sTitle": "name", "sWidth":"30%"  },
+                      { "mDataProp": "description", "sTitle": "description", "sWidth":"50%" },
+                      { "mDataProp": "value", "sTitle": "value", "sWidth":"20%", "bSortable": false  }];
+
+    // State
     var entity_id;
 
     function updateTableData(json) {
-         var table = $('#sensor-data').dataTable( {
-                "bRetrieve": true,
-                "bAutoWidth": false,
-                "bLengthChange": false,
-                "bJQueryUI": true,
-                "bPaginate": false,
-                "bDeferRender": true,
-                "sAjaxDataProp": ".",
-                "aoColumns": [
-                    { "mDataProp": "name", "sTitle": "name", "sWidth":"30%"  },
-                    { "mDataProp": "description", "sTitle": "description", "sWidth":"50%" },
-                    { "mDataProp": "value", "sTitle": "value", "sWidth":"20%"  }
-                ]
-        });
+        var table =  Brooklyn.tabs.getDataTable(id, ".", aoColumns);
         table.fnClearTable(false);
         table.fnAddData(json);
     }

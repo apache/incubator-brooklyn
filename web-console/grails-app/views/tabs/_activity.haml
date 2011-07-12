@@ -1,13 +1,10 @@
 .activity
-    %fieldset{:class=>"tab-content-left-column"}
-        //turn this into a grid, shouldnt be too hard//
-        %legend Select Activity
-        %table{:id=>"activitylist"}
+    .tab-content-left-column
+        %table{:id=>"activity-data"}
     %fieldset{:class=>"tab-content-right-column"}
         %legend Activity Log
         //just put a large text box in here
         %textarea{:id=>"logbox",:readonly=>"true",:wrap=>"hard"}
-        .buttons{:align=>"center"}
-            %button{:id=>"selectButton",:onClick=>"Brooklyn.activity.selectLog()"} Select
-            %button{:id=>"clearButton",:onClick=>"Brooklyn.activity.clearLog()"} Clear
-
+        .buttons{::align=>"center"}
+            %button{:id=>"activity-select"} Select
+            %button{:id=>"activity-clear"} Clear

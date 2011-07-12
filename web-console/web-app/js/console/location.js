@@ -1,129 +1,60 @@
 Brooklyn.location = (function() {
+    // Config
+    var tableId = '#location-data';
+    var aoColumns = [ { "mDataProp": "name", "sTitle": "Location", "sWidth":"100%"  }];
+    var appLocations = [
+        {"name": "London, UK", "resources": "60", "location":"somewhere"},
+        {"name": "Edinburgh, UK" ,"resources": "25"},
+        {"name": "Tokyo, Japan", "resources": "500"},
+        {"name": "New York, USA", "resources": "400"},
+        {"name": "California, USA", "resources": "600"},
+        {"name": "Hertfordshire, UK", "resources": "25"},
+        {"name": "Silicon Valley, USA", "resources": "25"},
+        {"name": "Hong Kong, China" , "resources": "25"},
+        {"name": "Shanghai, China" , "resources": "25"},
+        {"name": "Brooklyn, USA", "resources": "25"},
+        {"name": "Berlin, Germany", "resources": "25"}
+    ];
+
+    // Status
     var map;
     var loc;
     var locationNumber = 0;
-    var markers = new Array();
-    var infowindows = new Array();
-    var appLocations = { "locations" : [ 
-        {   "locationname" : "London, UK" ,
-            "locationresources" : "60" ,
-            "locationpoint" : "google Calculated"},
-        {   "locationname" : "Edinburgh, UK" ,
-            "locationresources" : "25" ,
-            "locationpoint" : "google Calculated"},
-        {   "locationname" : "Tokyo, Japan" ,
-            "locationresources" : "500" ,
-            "locationpoint" : "google Calculated"},
-        {   "locationname" : "New York, USA" ,
-            "locationresources" : "400" ,
-            "locationpoint" : "google Calculated"},
-        {   "locationname" : "California, USA" ,
-            "locationresources" : "600" ,
-            "locationpoint" : "google Calculated"},
-        {   "locationname" : "Hertfordshire, UK" ,
-            "locationresources" : "25" ,
-            "locationpoint" : "google Calculated"},
-        {   "locationname" : "Silicon Valley, USA" ,
-            "locationresources" : "25" ,
-            "locationpoint" : "google Calculated"},
-        {   "locationname" : "Hong Kong, China" ,
-            "locationresources" : "25" ,
-            "locationpoint" : "google Calculated"},
-        {   "locationname" : "Shanghai, China" ,
-            "locationresources" : "25" ,
-            "locationpoint" : "google Calculated"},
-        {   "locationname" : "Brooklyn, USA" ,
-            "locationresources" : "25" ,
-            "locationpoint" : "google Calculated"},
-        {   "locationname" : "Berlin, Germany" ,
-            "locationresources" : "25" ,
-            "locationpoint" : "google Calculated"}
-    ]};
 
-    function init() {
-        createMap();
-        createLocationsGrid();
-        addLocationsToWidgets();
-        locationNumber = locationNumber - 1;
-        $(Brooklyn.eventBus).bind("tab_selected", resize);
-    }
-    function createLocationsGrid(){
-        $("#locationlist").jqGrid({
-            datatype: "local",
-            height: 500,
-            width:200,
-            colNames:['Name'],
-            colModel:[
-            {name:'locationname',index:'locationname'},
-            ],
-            multiselect: false,
-            onSelectRow: function(id){updateLocation(id);}
-        });
-    }
-    function populateLocationsGrid(){
-        for(i=0;i<appLocations.locations.length;i++){
-            $("#locationlist").jqGrid('addRowData',i+1,appLocations.locations[i]);}
-    }
-    function updateLocation(location){
-        var id = location;
-        if(id){
-            var result = jQuery("#locationlist").jqGrid('getRowData',id);
-            //get the point for the address
-            geocoder.geocode( { 'address': result.locationname}, function(results, status) {
-            if (status == google.maps.GeocoderStatus.OK) {
-                loc = results[0].geometry.location;
-                map.setCenter(loc);
-                for(i=0;i<appLocations.locations.length;i++){
-                    if(appLocations.locations[i].locationname == result.locationname){
-                    // in here set the window and marker to be open.
-                    var locNumber = appLocations.locations[i].locationNumber;
-                    locwindow = infowindows[locNumber];
-                    locmarker = markers[locNumber];
-                    locwindow.open(map,locmarker);
-                    //alert(id);     = 0 for London but actually 1.
-                    }
-                }
-                } else {
-                alert("Geocode was not successful for the following reason: " + status);
+    function updateLocation(event) {
+        var result = Brooklyn.tabs.getDataTableSelectedRowData(tableId, event);
+
+        // TODO why is this necessary? (location, etc should be in result!)
+        for(i in appLocations) {
+            if (appLocations[i].name == result.name) {
+                moveToLoc(i);
+                break;
             }
-            });
-            }
-    }
-    function createMap(){
-        geocoder = new google.maps.Geocoder();
-        var myOptions = {
-            width:400,
-            zoom: 7,
-            mapTypeId: google.maps.MapTypeId.ROADMAP
         }
-        map = new google.maps.Map(document.getElementById("map-canvas"), myOptions);
+ 		$(event.target.parentNode).addClass('row_selected');
     }
-    function addLocationsToWidgets(){
-    for(i=0;i<appLocations.locations.length;i++){
-            addLocationToMap(appLocations.locations[i].locationname ,
-                        appLocations.locations[i].locationresources ,
-                        i);
-            addLocationToGrid(i+1,appLocations.locations[i]);
-            }
-    }
-    function addLocationToGrid(row,location){
-        $("#locationlist").jqGrid('addRowData',row,location);
-    }
-    function resize(e, id) {
-        if (id == 'location') {
-            $('#map-canvas').width('98%');
-            $('#map-canvas').height('500px');
-            google.maps.event.trigger(map, 'resize');
-            map.setCenter(loc);
+
+    function moveToLoc(index) {
+        var settings = Brooklyn.tabs.getDataTable(tableId).fnSettings().aoData;
+        for(row in settings) {
+       		$(settings[row].nTr).removeClass('row_selected');
+   		}
+
+        for(i in appLocations) {
+             appLocations[i].infowindow.close(map , appLocations[i].marker);
         }
+
+        map.setCenter(appLocations[index].location);
+        appLocations[index].infowindow.open(map , appLocations[index].marker);
     }
+
     function addLocationToMap(address , resources , i){
-        geocoder.geocode( { 'address': address}, function(results, status) {
+        new google.maps.Geocoder().geocode( { 'address': address}, function(results, status) {
             if (status == google.maps.GeocoderStatus.OK) {
                 loctext = results[0].formatted_address;
                 loc = results[0].geometry.location;
-                appLocations.locations[i].locationpoint = loc;
-                var contentString = '<div id="content" style="height:200px">'+
+                appLocations[i].location = loc;
+                var contentString = '<div id="content" style="height:80px">'+
                 '<h1>'+loctext+'</h1>'+
                 '<table border="1">'+
                     '<tr>'+
@@ -149,9 +80,9 @@ Brooklyn.location = (function() {
                 google.maps.event.addListener(marker, 'click' , function(){
                     infowindow.open(map , marker);
                 });
-                markers.push(marker);
-                infowindows.push(infowindow);
-                appLocations.locations[i].locationNumber = i;
+                appLocations[i].marker = marker;
+                appLocations[i].infowindow = infowindow;
+                appLocations[i].locationNumber = i;
                 locationNumber = locationNumber + 1;
             } else {
                 alert("Geocode was not successful for the following reason: " + status);
@@ -159,21 +90,52 @@ Brooklyn.location = (function() {
         });
     }
 
-    function toggleLocation(){
-        if(locationNumber==(appLocations.locations.length-1)){
+    function toggleLocation(e){
+        if(appLocations.length <= ++locationNumber) {
             locationNumber = 0;
         }
-        else{
-            locationNumber = locationNumber + 1;
-        }
-        map.setCenter(appLocations.locations[locationNumber].locationpoint);
+        moveToLoc(locationNumber);
     }
-    return { init : init, resize : resize, toggleLocation : toggleLocation}
+
+    // TODO call when set of locations changes?
+    function updateLocations(event) {
+        var myOptions = {
+            width:400,
+            zoom: 7,
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        }
+
+        map = new google.maps.Map(document.getElementById("map-canvas"), myOptions);
+        for(i in appLocations) {
+            addLocationToMap(appLocations[i].name, appLocations[i].resources, i);
+        }
+
+        var table = Brooklyn.tabs.getDataTable(tableId, '.', aoColumns);
+        table.fnClearTable(false);
+        table.fnAddData(appLocations);
+    }
+
+    function resize(e, id) {
+        if (id == 'location') {
+            $('#map-canvas').width('98%');
+            $('#map-canvas').height('500px');
+            google.maps.event.trigger(map, 'resize');
+            map.setCenter(loc);
+        }
+    }
+
+    function init() {
+        updateLocations();
+
+        $(tableId + " tbody").click(updateLocation);
+        $('#toggle-location').click(toggleLocation);
+        $(Brooklyn.eventBus).bind("tab_selected", resize);
+    }
+
+    return { init : init, resize : resize, locationNumber: locationNumber, appLocations: appLocations }
 })();
 
-$(document).ready(function(){
-    Brooklyn.location.init();
-});
+$(document).ready(Brooklyn.location.init);
 
 
 

@@ -1,25 +1,17 @@
 Brooklyn.effectors = (function() {
-    var selectedRowData;
 
-    function getTable() {
-        return $('#effector-data').dataTable( {
-                "bRetrieve": true, // return existing table if initialized
-                "bAutoWidth": false,
-                "bLengthChange": false,
-                "bJQueryUI": true,
-                "bPaginate": false,
-                "bDeferRender": true,
-                "sAjaxDataProp": ".",
-                "aoColumns": [
-                    { "mDataProp": "name", "sTitle": "name", "sWidth":"100%"  },
-                ]
-        });
-    }
+    // Config
+    var id = '#effector-data';
+    var aoColumns = [ { "mDataProp": "name", "sTitle": "name", "sWidth":"100%"  }];
+
+    // State
+    var selectedRowData;
 
     function _updateEffectorsList(json) {
         var _jsonObject = json;
-        getTable().fnClearTable(false);
-        getTable().fnAddData(_jsonObject);
+        var table = Brooklyn.tabs.getDataTable(id, ".", aoColumns);
+        table.fnClearTable(false);
+        table.fnAddData(_jsonObject);
 
         $('#effector-args').empty();
         var noSelectedEffector = document.createElement("p");
@@ -28,19 +20,17 @@ Brooklyn.effectors = (function() {
 
         $('#effectors-invoke-button').attr("disabled", "disabled");
 
-        $("#effector-data tbody").click(updateParameters);
+        $(id + " tbody").click(updateParameters);
     }
 
     function updateParameters(event) {
-        var settings = getTable().fnSettings().aoData;
-        var selectedRow = settings[getTable().fnGetPosition(event.target.parentNode)];
+        var settings = Brooklyn.tabs.getDataTable(id).fnSettings().aoData;
         for(row in settings) {
        		$(settings[row].nTr).removeClass('row_selected');
    		}
- 		$(selectedRow.nTr).addClass('row_selected');
+ 		$(event.target.parentNode).addClass('row_selected');
 
-        // TODO bit hacky!
-        selectedRowData = selectedRow._aData;
+        selectedRowData = Brooklyn.tabs.getDataTableSelectedRowData(id, event);
 
         $('#effectors-invoke-button').removeAttr("disabled")
 

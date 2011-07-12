@@ -1,4 +1,10 @@
 Brooklyn.activity = (function(){
+
+    // Config
+    var id = '#activity-data';
+    var aoColumns = [ { "mDataProp": "name", "sTitle": "name", "sWidth":"100%"  },
+                      { "mDataProp": "activitydate", "sTitle": "date", "sWidth":"100%"  }];
+
     var mydata = [
         {activitydate:"2007-10-01:18:45:30",name:"Effector:Stop,Arg3"},
         {activitydate:"2007-10-02",name:"Effector:Stop,Arg2"},
@@ -21,38 +27,24 @@ Brooklyn.activity = (function(){
     ];
 
     function createGrid(){
-        $("#activitylist").jqGrid({
-            datatype: "local",
-            height: 250,
-            width:290,
-            colNames:['Name', 'Date'],
-            colModel:[
-            {name:'name',index:'name'},
-            {name:'activitydate',index:'invdate'}
-            ],
-            multiselect: false,
-            onSelectRow: function(id){updateLog(id);}
-        });
+        var table = Brooklyn.tabs.getDataTable(id, ".", aoColumns);
+        table.fnClearTable();
+        table.fnAddData(mydata);
+        $(id + " tbody").click(updateLog);
     }
 
-    function populateGrid(){
-        for(i=0;i<mydata.length;i++){
-            $("#activitylist").jqGrid('addRowData',i+1,mydata[i]);}
-    }
-
-    function selectLog(){
+    function selectLog(event){
         document.getElementById("logbox").select();
     }
 
-    function clearLog(){
+    function clearLog(event){
         var logBox = document.getElementById("logbox");
         logBox.value="";
     }
 
-    function updateLog(name){
-        var id = name;
-        if(id){
-            var result = jQuery("#activitylist").jqGrid('getRowData',id);
+    function updateLog(event){
+        var result = Brooklyn.tabs.getDataTableSelectedRowData(id, event);
+        if(result) {
             var logBox=document.getElementById("logbox");
             logBox.value+="######### NEW LOG ##########"+
             "--- Console Log Output for "+result.name+" ---"+
@@ -62,10 +54,14 @@ Brooklyn.activity = (function(){
         }
     }
 
-    return{ createGrid : createGrid , populateGrid : populateGrid , selectLog : selectLog , clearLog : clearLog , updateLog : updateLog }
+    function init() {
+        createGrid();
+        $('#activity-clear').click(clearLog);
+        $('#activity-select').click(selectLog);
+    }
+
+    return { init: init, selectLog: selectLog , clearLog: clearLog , updateLog: updateLog }
+
 })();
-$(document).ready(function(){
-    Brooklyn.activity.createGrid();
-    Brooklyn.activity.populateGrid();
-});
+$(document).ready(Brooklyn.activity.init);
 

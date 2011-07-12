@@ -25,7 +25,32 @@ Brooklyn.tabs = (function() {
         $(Brooklyn.eventBus).bind("entity_selected", enableTabs);
     }
 
-    return {init: init};
+    function getDataTable(id, sAjaxDataProp, aoColumns) {
+        return $(id).dataTable( {
+                "bRetrieve": true, // return existing table if initialized
+                "bAutoWidth": false,
+                "bLengthChange": false,
+                "bJQueryUI": true,
+                "bPaginate": false,
+                "bDeferRender": true,
+                "sAjaxDataProp": sAjaxDataProp,
+                "aoColumns": aoColumns
+        });
+    }
+
+    function getDataTableSelectedRow(id, event) {
+        var table = getDataTable(id);
+        var settings = table.fnSettings().aoData;
+        return settings[table.fnGetPosition(event.target.parentNode)];
+    }
+
+    function getDataTableSelectedRowData(id, event) {
+        var row = getDataTableSelectedRow(id, event);
+        // TODO bit hacky!
+        return row._aData;
+    }
+
+    return {init: init, getDataTable: getDataTable, getDataTableSelectedRowData: getDataTableSelectedRowData};
 }());
 
 $(document).ready(Brooklyn.tabs.init);
