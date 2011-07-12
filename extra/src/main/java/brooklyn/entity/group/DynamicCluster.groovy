@@ -18,8 +18,8 @@ public class DynamicCluster extends AbstractGroup implements Startable, Resizabl
 
     private static final Logger logger = LoggerFactory.getLogger(DynamicCluster)
 
-    private Closure<Entity> newEntity;
-    private int initialSize;
+    Closure<Entity> newEntity;
+    int initialSize;
     private Location location;
 
     /**
