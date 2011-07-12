@@ -10,6 +10,7 @@ import com.google.common.base.Preconditions
 import brooklyn.location.basic.GeneralPurposeLocation
 import brooklyn.location.basic.FixedListMachineProvisioningLocation
 import brooklyn.location.Location
+import brooklyn.entity.group.DynamicCluster
 
 /**
  * Starts some tomcat nodes, on localhost, using ssh;
@@ -19,20 +20,29 @@ import brooklyn.location.Location
  * @author alex
  */
 public class SimpleTomcatApp extends AbstractApplication {
-    Cluster tc = new TomcatCluster(displayName:'MyTomcat', initialSize: 3, owner: this);
+    DynamicCluster tc = new DynamicCluster(displayName:'MyTomcat', initialSize: 1,
+        newEntity: {
+            def tc = new TomcatNode()
+            URL resource = SimpleTomcatApp.class.getClassLoader().getResource("hello-world.war")
+            Preconditions.checkState resource != null, "Unable to locate resource hello-world.war"
+            tc.setConfig(TomcatNode.WAR, resource.getPath())
+            return tc;
+        },
+        owner: this);
 
     public static void main(String[] argv) {
         def app = new SimpleTomcatApp()
-        URL resource = SimpleTomcatApp.class.getClassLoader().getResource("hello-world.war")
-        Preconditions.checkState resource != null, "Unable to locate resource hello-world.war"
-        app.tc.template.setConfig(TomcatNode.WAR, resource.getPath())
            //TODO:
 //        app.tc.policy << new ElasticityPolicy(app.tc, TomcatCluster.REQS_PER_SEC, low:100, high:250);
         app.tc.initialSize = 2  //override initial size
 
         Collection<InetAddress> hosts = [
             Inet4Address.getByAddress((byte[])[192,168,144,241]),
-            Inet4Address.getByAddress((byte[])[192,168,144,242])
+            Inet4Address.getByAddress((byte[])[192,168,144,242]),
+            Inet4Address.getByAddress((byte[])[192,168,144,243]),
+            Inet4Address.getByAddress((byte[])[192,168,144,244]),
+            Inet4Address.getByAddress((byte[])[192,168,144,245]),
+            Inet4Address.getByAddress((byte[])[192,168,144,246])
         ]
         Collection<SshMachineLocation> machines = hosts.collect {
             new SshMachineLocation(address: it, userName: "cloudsoft")
