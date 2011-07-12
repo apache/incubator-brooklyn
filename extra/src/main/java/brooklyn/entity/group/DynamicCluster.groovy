@@ -46,6 +46,7 @@ public class DynamicCluster extends AbstractGroup implements Startable, Resizabl
         Preconditions.checkNotNull locations, "locations must be supplied"
         Preconditions.checkArgument locations.size() == 1, "Exactly one location must be supplied"
         location = locations.first()
+        resize(initialSize)
     }
 
     void stop() {
@@ -91,7 +92,7 @@ public class DynamicCluster extends AbstractGroup implements Startable, Resizabl
         Entity entity = (Entity)e
 
         entity.setOwner(this)
-        Task<Void> startTask = entity.invoke(Startable.START, [loc: [location]])
+        Task<Void> startTask = entity.invoke(Startable.START, [locations: [location]])
         Preconditions.checkState startTask != null, "Invoke Startable.START returned null"
         return [entity: entity, task: startTask]
     }

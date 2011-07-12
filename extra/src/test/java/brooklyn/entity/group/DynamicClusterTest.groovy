@@ -5,7 +5,6 @@ import brooklyn.entity.trait.Startable
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.location.Location
 import brooklyn.location.basic.GeneralPurposeLocation
-import org.gmock.GMockTestCase
 import brooklyn.entity.Application
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.trait.ResizeResult
@@ -15,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import brooklyn.entity.trait.Resizable
 import brooklyn.management.Task
 
-class DynamicClusterTest extends GMockTestCase {
+class DynamicClusterTest {
 
     @Test
     public void constructorRequiresThatNewEntityArgumentIsGiven() {
@@ -153,6 +152,35 @@ class DynamicClusterTest extends GMockTestCase {
         assertNotNull rr
         assertEquals 1, rr.delta
         assertEquals 1, cluster.currentSize
+    }
+
+    @Test
+    public void clusterSizeAfterStartIsInitialSize() {
+        Collection<Location> locations = [new GeneralPurposeLocation()]
+        Application app = new TestApplication()
+        DynamicCluster cluster = new DynamicCluster(newEntity: {new TestEntity()}, initialSize: 2, app)
+        cluster.start(locations)
+        assertEquals 2, cluster.currentSize
+    }
+
+    @Test
+    public void clusterLocationIsPassedOnToEntityStart() {
+        Collection<Location> locations = [new GeneralPurposeLocation()]
+        def entity = new TestEntity(){
+            Collection<Location> stashedLocations = null
+            @Override
+            void start(Collection<? extends Location> loc) {
+                super.start(loc)
+                stashedLocations = loc
+            }
+        }
+        Application app = new TestApplication()
+        DynamicCluster cluster = new DynamicCluster(newEntity: {entity}, initialSize: 1, app)
+        cluster.start(locations)
+
+        assertNotNull entity.stashedLocations
+        assertEquals 1, entity.stashedLocations.size()
+        assertEquals locations[0], entity.stashedLocations[0]
     }
 
     private static class TestApplication extends AbstractApplication {
