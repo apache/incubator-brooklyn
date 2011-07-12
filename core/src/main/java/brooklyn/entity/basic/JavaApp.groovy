@@ -96,7 +96,7 @@ public abstract class JavaApp extends AbstractEntity implements Startable {
         log.debug "waiting to ensure $this doesn't abort prematurely"
         long startTime = System.currentTimeMillis()
         boolean isRunningResult = false;
-        while (!isRunningResult && System.currentTimeMillis() < startTime+45000) {
+        while (!isRunningResult && System.currentTimeMillis() < startTime+70000) {
             Thread.sleep 3000
             isRunningResult = setup.isRunning()
             log.debug "checked $this, running result $isRunningResult"
