@@ -15,6 +15,7 @@ Brooklyn.effectors = (function() {
         $('#effector-args').append(noSelectedEffector);
 
         $('#effectors-invoke-button').attr("disabled", "disabled");
+        $(Brooklyn.eventBus).trigger('update_ok');
     }
 
     function updateParameters(event) {
@@ -60,9 +61,9 @@ Brooklyn.effectors = (function() {
 
     function updateList(e, entity_id) {
         if (entity_id) {
-            // TODO: Handle failure
-            $.getJSON("effectors?id=" + entity_id, updateEffectorsList);
-            $(Brooklyn.eventBus).trigger('update_ok');
+             $.getJSON("effectors?id=" + entity_id, updateEffectorsList).error(
+                function() {$(Brooklyn.eventBus).trigger('update_failed', "Could not get effector data.");}
+            );
         }
     }
 
