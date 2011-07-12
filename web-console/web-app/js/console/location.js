@@ -56,10 +56,10 @@ Brooklyn.location = (function() {
                 loc = results[0].geometry.location;
                 appLocations[i].location = loc;
                 var contentString = '<div id="content" style="height:80px">'+
-                '<h1>'+loctext+'</h1>'+
+                '<h1>'+address+'</h1>'+
                 '<table border="1">'+
                     '<tr>'+
-                        '<td>Location Name</td>'+
+                        '<td>Address</td>'+
                         '<td>Active</td>'+
                         '<td>Resources</td>'+
                     '</tr>'+
