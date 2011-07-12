@@ -17,7 +17,6 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.logging.Logger;
 
 import org.jclouds.Constants;
 import org.jclouds.compute.ComputeService;
@@ -38,8 +37,11 @@ import org.jclouds.scriptbuilder.InitBuilder;
 import org.jclouds.scriptbuilder.domain.Statement;
 import org.jclouds.scriptbuilder.domain.Statements;
 import org.jclouds.ssh.jsch.config.JschSshClientModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.cloudsoftcorp.util.Loggers;
+import brooklyn.entity.basic.AbstractEntity;
+
 import com.google.common.base.Charsets;
 import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
@@ -50,8 +52,8 @@ import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import com.google.inject.Module;
 
-public class JCloudsUtils {
-    private static final Logger LOG = Loggers.getLogger(JCloudsUtils.class);
+public class JCloudsUtil {
+    private static final Logger LOG = LoggerFactory.getLogger(JCloudsUtil.class);
     
     public static String APT_INSTALL = "apt-get install -f -y -qq --force-yes";
 
@@ -94,7 +96,7 @@ public class JCloudsUtils {
         // TODO Includes workaround for NodeMetadata's equals/hashcode method being wrong.
         
         Map<? extends NodeMetadata, ExecResponse> scriptResults = computeService.runScriptOnNodesMatching(
-                JCloudsUtils.predicateMatchingById(node), 
+                JCloudsUtil.predicateMatchingById(node), 
                 statement,
                 new RunScriptOptions().nameTask(scriptName));
         if (scriptResults.isEmpty()) {
@@ -114,7 +116,7 @@ public class JCloudsUtils {
                 .append("echo nameserver 208.67.222.222 >> /etc/resolv.conf\n")//
                 // jeos hasn't enough room!
                 .append("rm -rf /var/cache/apt /usr/lib/vmware-tools\n")//
-                .append("echo \"export PATH=\\\"\\$JAVA_HOME/bin/:\\$PATH\\\"\" >> /root/.bashrc")//
+                .append('echo \"export PATH=\\\"\\$JAVA_HOME/bin/:\\$PATH\\\"\" >> /root/.bashrc')//
                 .toString()));
 
     public static final Statement YUM_RUN_SCRIPT = newStatementList(
@@ -123,7 +125,7 @@ public class JCloudsUtils {
           execHttpResponse(URI.create("http://whirr.s3.amazonaws.com/0.2.0-incubating-SNAPSHOT/sun/java/install")),//
           exec(new StringBuilder()//
                 .append("echo nameserver 208.67.222.222 >> /etc/resolv.conf\n") //
-                .append("echo \"export PATH=\\\"\\$JAVA_HOME/bin/:\\$PATH\\\"\" >> /root/.bashrc")//
+                .append('echo \"export PATH=\\\"\\$JAVA_HOME/bin/:\\$PATH\\\"\" >> /root/.bashrc')//
                 .toString()));
 
     public static final Statement ZYPPER_RUN_SCRIPT = exec(new StringBuilder()//
@@ -144,35 +146,25 @@ public class JCloudsUtils {
           throw new IllegalArgumentException("don't know how to handle" + os.toString());
     }
 
-    public static ComputeService buildComputeService(JCloudsConfiguration config) {
+    public static ComputeService buildComputeService(Map<String,? extends Object> conf) {
         Properties properties = new Properties();
-        properties.setProperty(Constants.PROPERTY_PROVIDER, config.getProvider());
-        properties.setProperty(Constants.PROPERTY_IDENTITY, config.getIdentity());
-        properties.setProperty(Constants.PROPERTY_CREDENTIAL, config.getCredential());
+        properties.setProperty(Constants.PROPERTY_PROVIDER, conf.provider);
+        properties.setProperty(Constants.PROPERTY_IDENTITY, conf.identity);
+        properties.setProperty(Constants.PROPERTY_CREDENTIAL, conf.credential);
         properties.setProperty(Constants.PROPERTY_TRUST_ALL_CERTS, ""+true);
         properties.setProperty(Constants.PROPERTY_RELAX_HOSTNAME, ""+true);
         
-        if (config.getImageOwner() != null && config.getImageOwner().length() > 0) {
-            properties.setProperty("jclouds.ec2.ami-owners", config.getImageOwner());
+        if (conf.imageOwner) {
+            properties.setProperty("jclouds.ec2.ami-owners", conf.imageOwner);
         }
 
-        properties.putAll(config.getOverrides());
-        
-        // ImmutableSet.<Module>of(new JschSshClientModule(), new Log4JLoggingModule()); to add log4j
-        // integration
+        // ImmutableSet.<Module>of(new JschSshClientModule(), new Log4JLoggingModule()); to add log4j integration
         Iterable<Module> modules = ImmutableSet.<Module> of(new JschSshClientModule());
 
-        Properties restProperties = config.getRestProperties();
-        
-        ComputeServiceContextFactory computeServiceFactory;
-        if (restProperties != null && !restProperties.isEmpty()) {
-            computeServiceFactory = new ComputeServiceContextFactory(restProperties);
-        } else {
-            computeServiceFactory = new ComputeServiceContextFactory();
-        }
+        ComputeServiceContextFactory computeServiceFactory = new ComputeServiceContextFactory();
         
         ComputeService computeService = computeServiceFactory
-                .createContext(config.getProvider(), modules, properties)
+                .createContext(conf.provider, modules, properties)
                 .getComputeService();
         return computeService;
      }
@@ -203,11 +195,11 @@ public class JCloudsUtils {
      // must be used inside InitBuilder, as this sets the shell variables used in this statement
      private static Statement createUserWithPublicKey(String username, String publicKey) {
         // note directory must be created first
-        return newStatementList(interpret("mkdir -p $DEFAULT_HOME/$NEW_USER/.ssh",
-                 "useradd --shell /bin/bash -d $DEFAULT_HOME/$NEW_USER $NEW_USER\n"), appendFile(
-                 "$DEFAULT_HOME/$NEW_USER/.ssh/authorized_keys", Splitter.on('\n').split(publicKey)),
-                 interpret("chmod 600 $DEFAULT_HOME/$NEW_USER/.ssh/authorized_keys",
-                          "chown -R $NEW_USER $DEFAULT_HOME/$NEW_USER\n"));
+        return newStatementList(interpret('mkdir -p $DEFAULT_HOME/$NEW_USER/.ssh',
+                         'useradd --shell /bin/bash -d $DEFAULT_HOME/$NEW_USER $NEW_USER\n'), 
+                 appendFile('$DEFAULT_HOME/$NEW_USER/.ssh/authorized_keys', Splitter.on('\n').split(publicKey)),
+                 interpret('chmod 600 $DEFAULT_HOME/$NEW_USER/.ssh/authorized_keys',
+                          'chown -R $NEW_USER $DEFAULT_HOME/$NEW_USER\n'));
      }
 
      // must be used inside InitBuilder, as this sets the shell variables used in this statement
@@ -248,7 +240,7 @@ public class JCloudsUtils {
      * also be a public one. The method tries to guess what will work.
      */
     public static String getNodeAddress(NodeMetadata node) {
-        String addr = JCloudsUtils.getFirstReachableAddress(node);
+        String addr = JCloudsUtil.getFirstReachableAddress(node);
 
         if (addr != null) {
             return addr;
