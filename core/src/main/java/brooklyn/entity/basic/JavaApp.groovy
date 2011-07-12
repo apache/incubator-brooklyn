@@ -43,8 +43,6 @@ public abstract class JavaApp extends AbstractService {
         if (properties.jmxHost) setConfig(SUGGESTED_JMX_HOST, properties.remove("jmxHost"))
     }
 
-    public abstract SshBasedJavaAppSetup getSshBasedSetup(SshMachineLocation loc);
-
     protected abstract void initJmxSensors();
 
     public void waitForJmx() {

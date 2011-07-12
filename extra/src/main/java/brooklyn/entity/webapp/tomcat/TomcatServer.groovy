@@ -14,7 +14,7 @@ import brooklyn.event.adapter.ValueProvider
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.SshBasedJavaWebAppSetup
+import brooklyn.util.SshBasedAppSetup
 import brooklyn.util.internal.Repeater
 
 /**
@@ -32,7 +32,7 @@ public class TomcatServer extends JavaWebApp {
         super(properties);
     }
 
-    public SshBasedJavaWebAppSetup getSshBasedSetup(SshMachineLocation machine) {
+    public SshBasedAppSetup getSshBasedSetup(SshMachineLocation machine) {
         return Tomcat7SshSetup.newInstance(this, machine)
     }
     

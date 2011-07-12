@@ -3,11 +3,10 @@ package brooklyn.entity.proxy.nginx
 import java.util.Collection
 import java.util.Map
 
-import brooklyn.entity.Entity
 import brooklyn.entity.group.AbstractController
 import brooklyn.location.Location
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.SshBasedJavaWebAppSetup
+import brooklyn.util.SshBasedAppSetup
 
 import com.google.common.base.Charsets
 import com.google.common.io.Files
@@ -20,7 +19,7 @@ public class NginxController extends AbstractController {
         super(properties);
     }
 
-    public SshBasedJavaWebAppSetup getSshBasedSetup(SshMachineLocation machine) {
+    public SshBasedAppSetup getSshBasedSetup(SshMachineLocation machine) {
         return NginxSetup.newInstance(this, machine)
     }
 

@@ -6,8 +6,8 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.webapp.JavaWebApp
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
-import brooklyn.util.SshBasedJavaWebAppSetup
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.util.SshBasedAppSetup
 
 /**
  * JBoss web application server.
@@ -39,7 +39,7 @@ public class JBossServer extends JavaWebApp {
         }
     }
 
-    public SshBasedJavaWebAppSetup getSshBasedSetup(SshMachineLocation loc) {
+    public SshBasedAppSetup getSshBasedSetup(SshMachineLocation loc) {
         return JBoss6SshSetup.newInstance(this, loc);
     }
     

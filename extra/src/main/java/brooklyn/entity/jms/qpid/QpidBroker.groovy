@@ -21,7 +21,7 @@ import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.Location
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.SshBasedJavaAppSetup
+import brooklyn.util.SshBasedAppSetup
 
 import com.google.common.base.Preconditions
 
@@ -57,7 +57,7 @@ public class QpidBroker extends JavaApp {
         if (properties.topics) topicNames.addAll properties.topics
     }
 
-    public SshBasedJavaAppSetup getSshBasedSetup(SshMachineLocation machine) {
+    public SshBasedAppSetup getSshBasedSetup(SshMachineLocation machine) {
         return QpidSetup.newInstance(this, machine)
     }
 
