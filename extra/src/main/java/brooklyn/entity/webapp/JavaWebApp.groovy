@@ -48,7 +48,7 @@ public abstract class JavaWebApp extends JavaApp {
         super(properties)
         if (properties.httpPort) setConfig(SUGGESTED_HTTP_PORT, properties.remove("httpPort"))
 
-        setAttribute(NODE_STATUS, "uninitialized")
+        setAttribute(SERVICE_STATUS, "uninitialized")
     }
 
     protected abstract void waitForHttpPort();

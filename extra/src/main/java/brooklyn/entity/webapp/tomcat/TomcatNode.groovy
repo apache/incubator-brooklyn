@@ -41,7 +41,7 @@ public class TomcatNode extends JavaWebApp {
         attributePoller.addSensor(REQUEST_COUNT, jmxAdapter.newAttributeProvider("Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "requestCount"))
         attributePoller.addSensor(TOTAL_PROCESSING_TIME, jmxAdapter.newAttributeProvider("Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "processingTime"))
         attributePoller.addSensor(CONNECTOR_STATUS, { computeConnectorStatus() } as ValueProvider)
-        attributePoller.addSensor(NODE_UP, { computeNodeUp() } as ValueProvider)
+        attributePoller.addSensor(SERVICE_UP, { computeNodeUp() } as ValueProvider)
     }
 
     public void waitForHttpPort() {

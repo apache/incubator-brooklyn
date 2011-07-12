@@ -50,7 +50,7 @@ public class JBossNodeIntegrationTest {
         JBossNode jb = new JBossNode(owner:app, portIncrement: PORT_INCREMENT);
         jb.start([ testLocation ])
         executeUntilSucceedsWithFinallyBlock ([:], {
-            assertTrue jb.getAttribute(JavaWebApp.NODE_UP)
+            assertTrue jb.getAttribute(JavaWebApp.SERVICE_UP)
         }, {
             jb.stop()
         })

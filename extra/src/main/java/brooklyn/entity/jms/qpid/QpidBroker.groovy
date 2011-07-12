@@ -62,7 +62,7 @@ public class QpidBroker extends JavaApp {
     }
 
     public void initJmxSensors() {
-        attributePoller.addSensor(JavaApp.NODE_UP, { computeNodeUp() } as ValueProvider)
+        attributePoller.addSensor(JavaApp.SERVICE_UP, { computeNodeUp() } as ValueProvider)
     }
 
     @Override

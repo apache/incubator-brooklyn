@@ -83,7 +83,7 @@ public class TomcatNodeIntegrationTest {
         TomcatNode tc = [ owner: new TestApplication(), httpPort: DEFAULT_HTTP_PORT ]
         tc.start([ new LocalhostMachineProvisioningLocation(name: 'london') ])
         executeUntilSucceedsWithFinallyBlock ([:], {
-            assertTrue tc.getAttribute(TomcatNode.NODE_UP)
+            assertTrue tc.getAttribute(TomcatNode.SERVICE_UP)
         }, {
             tc.stop()
         })
@@ -173,7 +173,7 @@ public class TomcatNodeIntegrationTest {
             } finally {
                 tc.stop()
             }
-            assertFalse tc.getAttribute(TomcatNode.NODE_UP)
+            assertFalse tc.getAttribute(TomcatNode.SERVICE_UP)
         } finally {
             listener.close();
             t.join();

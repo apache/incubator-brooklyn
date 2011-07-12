@@ -32,7 +32,7 @@ import brooklyn.util.internal.TimeExtras
  * TODO clarify test purpose
  */
 public class QpidBrokerIntegrationTest {
-    private static final Logger log = LoggerFactory.getLogger(brooklyn.entity.webapp.jboss.JBossNodeIntegrationTest)
+    private static final Logger log = LoggerFactory.getLogger(QpidBrokerIntegrationTest.class)
 
     static { TimeExtras.init() }
 
@@ -54,7 +54,7 @@ public class QpidBrokerIntegrationTest {
 
     @AfterMethod(groups = "Integration")
     public void shutdown() {
-        if (qpid.getAttribute(JavaApp.NODE_UP)) {
+        if (qpid.getAttribute(JavaApp.SERVICE_UP)) {
             log.warn "Qpid broker {} is still running", qpid.id
 	        try {
 	            qpid.stop()
@@ -65,18 +65,18 @@ public class QpidBrokerIntegrationTest {
     }
 
     /**
-     * Test that the broker starts up and sets NODE_UP correctly.
+     * Test that the broker starts up and sets SERVICE_UP correctly.
      */
     @Test(groups = "Integration")
     public void canStartupAndShutdown() {
         qpid = new QpidBroker(owner:app);
         qpid.start([ testLocation ])
         executeUntilSucceedsWithFinallyBlock ([:], {
-            assertTrue qpid.getAttribute(JavaApp.NODE_UP)
+            assertTrue qpid.getAttribute(JavaApp.SERVICE_UP)
         }, {
             qpid.stop()
         })
-        assertFalse qpid.getAttribute(JavaApp.NODE_UP)
+        assertFalse qpid.getAttribute(JavaApp.SERVICE_UP)
     }
 
     /**
@@ -92,7 +92,7 @@ public class QpidBrokerIntegrationTest {
         qpid = new QpidBroker(owner:app, queue:queueName);
         qpid.start([ testLocation ])
         executeUntilSucceeds([:], {
-            assertTrue qpid.getAttribute(JavaApp.NODE_UP)
+            assertTrue qpid.getAttribute(JavaApp.SERVICE_UP)
         })
 
         try {

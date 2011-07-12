@@ -22,7 +22,6 @@ import brooklyn.entity.basic.Attributes
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.MachineLocation
-import brooklyn.location.basic.SshMachineLocation
 
 /**
  * Represents a controller mechanism for a {@link Cluster}.
@@ -32,25 +31,49 @@ public abstract class AbstractController extends AbstractService {
 
     public static final BasicConfigKey<Integer> SUGGESTED_HTTP_PORT = [ Integer, "proxy.httpPort", "Suggested proxy HTTP port" ]
     public static final BasicConfigKey<String> DOMAIN_NAME = [ String, "proxy.domainName", "Domain name" ]
+    public static final BasicConfigKey<String> PROTOCOL = [ String, "proxy.portNumber", "Protocol" ]
+    public static final BasicConfigKey<URL> URL = [ String, "proxy.url", "URL" ]
 
     public static final BasicAttributeSensor<Integer> HTTP_PORT = Attributes.HTTP_PORT
 
     Cluster cluster
     String domain
-    Map<InetAddress,List<Integer>> addresses = [:].withDefault []
-    BasicAttributeSensor<Integer> portNumber
+    int port
+    String protocol
+    URL url
+    Map<InetAddress,List<Integer>> addresses
 
     public AbstractController(Map properties=[:], Group owner=null, Cluster cluster) {
         super(properties, owner)
 
-        portNumber = properties.portNumber ?: 80
-        setAttribute(HTTP_PORT, portNumber)
+        if (getConfig(PROTOCOL) || properties.url in URL) {
+	        url = getConfig(URL) ?: properties.url
+	        setConfig(URL, url)
 
-        domain = getConfig(DOMAIN_NAME) ?: properties.domain
-        Preconditions.checkNotNull(domain, "Domain must be set for controller")
-        setConfig(DOMAIN_NAME, domain)
+            // Set config properties from URL
+            port = url.port
+            setConfig(HTTP_PORT, port)
+            porotocol = url.protocol
+            setConfig(PROTOCOL, protocol)
+            domain = url.host
+            setConfig(DOMAIN_NAME, domain)
+        } else {
+	        port = properties.port ?: 80
+	        setAttribute(HTTP_PORT, port)
+
+	        protocol = getConfig(PROTOCOL) ?: properties.protocol ?: "http"
+	        setConfig(PROTOCOL, protocol)
+
+            domain = getConfig(DOMAIN_NAME) ?: properties.domain
+            Preconditions.checkNotNull(domain, "Domain must be set for controller")
+            setConfig(DOMAIN_NAME, domain)
+
+	        setConfig(URL, new URL("${protocol}://${domain}:${port}"))
+        }
 
         setCluster(cluster ?: properties.cluster)
+
+        addresses = new HashMap<InetAddress,List<Integer>>().withDefault { new ArrayList<Integer>() }
     }
 
     public void setCluster(Cluster cluster) {
@@ -61,19 +84,19 @@ public abstract class AbstractController extends AbstractService {
                 LOG.trace "Entity change event for {} - {}", id, event.changeType
 	            switch (event.changeType) {
                     case ChangeType.ADDED:
-                        add [ event.newValue ]
+                        add([ event.newValue ])
                         break
                     case ChangeType.MULTI_ADD:
-                        add event.values
+                        add(event.values)
                         break
                     case ChangeType.REMOVED:
-	                    remove [ event.oldValue ]
+	                    remove([ event.oldValue ])
                         break;
                     case ChangeType.MULTI_REMOVE:
-                        remove event.values
+                        remove(event.values)
                         break
                     case ChangeType.CLEARED:
-                        remove event.values
+                        remove(event.values)
                         break
                     default:
                         break;
@@ -91,12 +114,8 @@ public abstract class AbstractController extends AbstractService {
         configure()
     }
 
-    public void configure() {
-        File file = new File("/tmp/${id}")
-        Files.write(getConfigFile(), file, Charsets.UTF_8)
-        locations.each { SshMachineLocation machine -> machine.copyTo file, "${machine.setup.runDir}/conf/server.conf" }
-        restart()
-    }
-    
-    public abstract String getConfigFile()
+    /**
+     * Configure the controller based on the cluster membership list.
+     */
+    public abstract void configure()
 }
