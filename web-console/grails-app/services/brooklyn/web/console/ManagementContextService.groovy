@@ -15,6 +15,7 @@ import brooklyn.management.internal.LocalManagementContext
 import brooklyn.web.console.entity.TestEffector
 
 class ManagementContextService {
+    
     //FIXME: how should this be supplied?  (previously it called to LocalManagementContext to generate, but that isn't the answer...)  --Alex
     //it does have to get set in the application
     private final ManagementContext context = new LocalManagementContext()
