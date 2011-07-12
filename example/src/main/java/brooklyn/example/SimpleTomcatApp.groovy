@@ -31,10 +31,12 @@ public class SimpleTomcatApp extends AbstractApplication {
         app.tc.initialSize = 2  //override initial size
 
         Collection<InetAddress> hosts = [
-            Inet4Address.getByAddress((byte[])[192,168,2,241]),
-            Inet4Address.getByAddress((byte[])[192,168,2,242])
+            Inet4Address.getByAddress((byte[])[192,168,144,241]),
+            Inet4Address.getByAddress((byte[])[192,168,144,242])
         ]
-        Collection<SshMachineLocation> machines = hosts.collect { new SshMachineLocation(address: it, userName: "cloudsoft") }
+        Collection<SshMachineLocation> machines = hosts.collect {
+            new SshMachineLocation(address: it, userName: "cloudsoft")
+        }
         Location location = new FixedListMachineProvisioningLocation<SshMachineLocation>(machines: machines, name: "London")
 
         app.tc.start([location])
@@ -44,9 +46,9 @@ public class SimpleTomcatApp extends AbstractApplication {
             while (!t.isInterrupted()) {
                 Thread.sleep 5000
                 app.getEntities().each { if (it in TomcatNode) {
-                        println ""+it+": "+it.jmxTool?.getChildrenAttributesWithTotal("Catalina:type=GlobalRequestProcessor,name=\"*\"")
-                        println "Requests per second: " + it.activity.getValue(TomcatNode.REQUESTS_PER_SECOND)
-                        println "Error count: " + it.activity.getValue(TomcatNode.ERROR_COUNT)
+                        println it.toString()
+                        println "Requests per second: " + it.getAttribute(TomcatNode.REQUESTS_PER_SECOND)
+                        println "Error count: " + it.getAttribute(TomcatNode.ERROR_COUNT)
                     }
                 }
             }
@@ -93,7 +95,7 @@ public class SimpleTomcatApp extends AbstractApplication {
 
         //TODO find a better way to shutdown a cluster?
         println "shutting down..."
-        app.entities.each { if (it in TomcatNode) it.shutdown() }
+        app.entities.each { if (it in TomcatNode) it.stop() }
         //TODO there is still an executor service running, not doing anything but not marked as a daemon,
         //so doesn't quit immediately (i think it will time out but haven't verified)
         //app shutdown should exist and handle that???
