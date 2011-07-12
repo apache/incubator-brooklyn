@@ -104,6 +104,13 @@ h1#brooklyn-header{
     border:1px solid #CCCCCC;
 }
 
+.tab-content-mini-column {
+    float: left;
+    width: 200px;
+    height:100%;
+    border:1px solid #CCCCCC;
+}
+
 .tab-content-full-size {
     width: 700px;
 }
@@ -184,10 +191,6 @@ textarea#logbox{
 #map-canvas{
     float:left;
     width:400px;
-}
-
-.locationData{
-    float:left;
 }
 
 .dataTables_info {
