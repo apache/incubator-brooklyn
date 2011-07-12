@@ -1,109 +1,80 @@
 package brooklyn.entity.group
 
 import static org.testng.AssertJUnit.*
-import org.testng.annotations.Test
-import brooklyn.entity.trait.Startable
-import brooklyn.entity.basic.AbstractEntity
-import brooklyn.location.Location
-import brooklyn.location.basic.GeneralPurposeLocation
-import brooklyn.entity.Application
-import brooklyn.entity.basic.AbstractApplication
-import brooklyn.entity.trait.ResizeResult
+
+import java.util.concurrent.atomic.AtomicInteger
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.util.concurrent.atomic.AtomicInteger
+import org.testng.annotations.Test
+
+import brooklyn.entity.Application
+import brooklyn.entity.basic.AbstractApplication
+import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.trait.Resizable
+import brooklyn.entity.trait.ResizeResult
+import brooklyn.entity.trait.Startable
+import brooklyn.location.Location
+import brooklyn.location.basic.GeneralPurposeLocation
 import brooklyn.management.Task
 
 class DynamicClusterTest {
-
-    @Test
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void constructorRequiresThatNewEntityArgumentIsGiven() {
-        try {
-            new DynamicCluster(initialSize: 1, new TestApplication())
-            fail "Did not throw expected exception"
-        } catch(IllegalArgumentException e) {
-            // expected behaviour
-        }
+        new DynamicCluster(initialSize:1, new TestApplication())
+        fail "Did not throw expected exception"
     }
 
-    @Test
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void constructorRequiresThatNewEntityArgumentIsAnEntity() {
-        try {
-            new DynamicCluster(initialSize: 1,
-                newEntity: new Startable(){
-                    void start(Collection<? extends Location> loc) {};
-                    void stop() {}
-                },
-                new TestApplication()
-            )
-            fail "Did not throw expected exception"
-        } catch(IllegalArgumentException e) {
-            // expected behaviour
-        }
+        new DynamicCluster(initialSize:1,
+            newEntity:new Startable() {
+                void start(Collection<? extends Location> loc) { };
+                void stop() { }
+                void restart() { }
+            },
+            new TestApplication()
+        )
+        fail "Did not throw expected exception"
     }
 
-    @Test
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void constructorRequiresThatNewEntityArgumentIsStartable() {
-        try {
-            new DynamicCluster(initialSize: 1, newEntity: new AbstractEntity(){}, new TestApplication())
-            fail "Did not throw expected exception"
-        } catch(IllegalArgumentException e) {
-            // expected behaviour
-        }
+        new DynamicCluster(initialSize:1, newEntity:new AbstractEntity() { }, new TestApplication())
+        fail "Did not throw expected exception"
     }
 
-    @Test
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void constructorRequiresThatInitialSizeArgumentIsGiven() {
-        try {
-            new DynamicCluster(newEntity: {new TestEntity()}, new TestApplication())
-            fail "Did not throw expected exception"
-        } catch(IllegalArgumentException e) {
-            // expected behaviour
-        }
+        new DynamicCluster(newEntity:{ new TestEntity() }, new TestApplication())
+        fail "Did not throw expected exception"
     }
 
-    @Test
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void constructorRequiresThatInitialSizeArgumentIsAnInteger() {
-        try {
-            new DynamicCluster(newEntity: {new TestEntity()}, initialSize: "foo", new TestApplication())
-            fail "Did not throw expected exception"
-        } catch(IllegalArgumentException e) {
-            // expected behaviour
-        }
+        new DynamicCluster(newEntity:{ new TestEntity() }, initialSize: "foo", new TestApplication())
+        fail "Did not throw expected exception"
     }
 
-    @Test
+    @Test(expectedExceptions = NullPointerException.class)
     public void startMethodFailsIfLocationsParameterIsMissing() {
-        DynamicCluster cluster = new DynamicCluster(newEntity: {new TestEntity()}, initialSize: 0, new TestApplication())
-        try {
-            cluster.start(null)
-            fail "Did not throw expected exception"
-        } catch(NullPointerException e) {
-            // expected behaviour
-        }
+        DynamicCluster cluster = new DynamicCluster(newEntity:{ new TestEntity() }, initialSize:0, new TestApplication())
+        cluster.start(null)
+        fail "Did not throw expected exception"
     }
 
-    @Test
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void startMethodFailsIfLocationsParameterIsEmpty() {
-        DynamicCluster cluster = new DynamicCluster(newEntity: {new TestEntity()}, initialSize: 0, new TestApplication())
-        try {
-            cluster.start([])
-            fail "Did not throw expected exception"
-        } catch(IllegalArgumentException e) {
-            // expected behaviour
-        }
+        DynamicCluster cluster = new DynamicCluster(newEntity:{ new TestEntity() }, initialSize:0, new TestApplication())
+        cluster.start([])
+        fail "Did not throw expected exception"
     }
 
-    @Test
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void startMethodFailsIfLocationsParameterHasMoreThanOneElement() {
-        DynamicCluster cluster = new DynamicCluster(newEntity: {new TestEntity()}, initialSize: 0, new TestApplication())
-        try {
-            cluster.start([new GeneralPurposeLocation(), new GeneralPurposeLocation()])
-            fail "Did not throw expected exception"
-        } catch(IllegalArgumentException e) {
-            // expected behaviour
-        }
+        DynamicCluster cluster = new DynamicCluster(newEntity:{ new TestEntity() }, initialSize:0, new TestApplication())
+        cluster.start([ new GeneralPurposeLocation(), new GeneralPurposeLocation() ])
+        fail "Did not throw expected exception"
     }
 
     @Test
@@ -111,7 +82,7 @@ class DynamicClusterTest {
         Collection<Location> locations = [new GeneralPurposeLocation()]
         TestEntity entity = new TestEntity()
         Application app = new TestApplication()
-        DynamicCluster cluster = new DynamicCluster(newEntity: {entity}, initialSize: 0, app)
+        DynamicCluster cluster = new DynamicCluster(newEntity:{ entity }, initialSize:0, app)
 
         cluster.start(locations)
         cluster.resize(1)
@@ -122,10 +93,10 @@ class DynamicClusterTest {
 
     @Test
     public void currentSizePropertyReflectsActualClusterSize() {
-        Collection<Location> locations = [new GeneralPurposeLocation()]
+        Collection<Location> locations = [ new GeneralPurposeLocation() ]
 
-        Application app = new AbstractApplication(){}
-        DynamicCluster cluster = new DynamicCluster(newEntity: {new TestEntity()}, initialSize: 0, app)
+        Application app = new AbstractApplication() { }
+        DynamicCluster cluster = new DynamicCluster(newEntity:{ new TestEntity() }, initialSize:0, app)
         cluster.start(locations)
 
         assertEquals 0, cluster.currentSize
@@ -141,13 +112,14 @@ class DynamicClusterTest {
 
     @Test
     public void resizeCanBeInvokedAsAnEffector() {
-        Collection<Location> locations = [new GeneralPurposeLocation()]
+        Collection<Location> locations = [ new GeneralPurposeLocation() ]
         TestEntity entity = new TestEntity()
         Application app = new TestApplication()
-        DynamicCluster cluster = new DynamicCluster(newEntity: {entity}, initialSize: 0, app)
+        DynamicCluster cluster = new DynamicCluster(newEntity:{ entity }, initialSize:0, app)
 
         cluster.start(locations)
         Task<ResizeResult> task = cluster.invoke(Resizable.RESIZE, [ desiredSize: 1 ])
+        
         assertNotNull task
         ResizeResult rr = task.get()
         assertNotNull rr
@@ -157,17 +129,17 @@ class DynamicClusterTest {
 
     @Test
     public void clusterSizeAfterStartIsInitialSize() {
-        Collection<Location> locations = [new GeneralPurposeLocation()]
+        Collection<Location> locations = [ new GeneralPurposeLocation() ]
         Application app = new TestApplication()
-        DynamicCluster cluster = new DynamicCluster(newEntity: {new TestEntity()}, initialSize: 2, app)
+        DynamicCluster cluster = new DynamicCluster(newEntity:{ new TestEntity() }, initialSize:2, app)
         cluster.start(locations)
         assertEquals 2, cluster.currentSize
     }
 
     @Test
     public void clusterLocationIsPassedOnToEntityStart() {
-        Collection<Location> locations = [new GeneralPurposeLocation()]
-        def entity = new TestEntity(){
+        Collection<Location> locations = [ new GeneralPurposeLocation() ]
+        def entity = new TestEntity() {
             Collection<Location> stashedLocations = null
             @Override
             void start(Collection<? extends Location> loc) {
@@ -176,7 +148,7 @@ class DynamicClusterTest {
             }
         }
         Application app = new TestApplication()
-        DynamicCluster cluster = new DynamicCluster(newEntity: {entity}, initialSize: 1, app)
+        DynamicCluster cluster = new DynamicCluster(newEntity:{ entity }, initialSize:1, app)
         cluster.start(locations)
 
         assertNotNull entity.stashedLocations
@@ -216,12 +188,13 @@ class DynamicClusterTest {
     private static class TestApplication extends AbstractApplication {
         @Override String toString() { return "Application["+id[-8..-1]+"]" }
     }
+ 
     private static class TestEntity extends AbstractEntity implements Startable {
         private static final Logger logger = LoggerFactory.getLogger(DynamicCluster)
         AtomicInteger counter = new AtomicInteger(0)
-        void start(Collection<? extends Location> loc) {logger.trace "Start"; counter.incrementAndGet()}
-        void stop() {logger.trace "Stop"; counter.decrementAndGet()}
+        void start(Collection<? extends Location> loc) { logger.trace "Start"; counter.incrementAndGet() }
+        void stop() { logger.trace "Stop"; counter.decrementAndGet() }
+        void restart() { }
         @Override String toString() { return "Entity["+id[-8..-1]+"]" }
     }
-
 }
