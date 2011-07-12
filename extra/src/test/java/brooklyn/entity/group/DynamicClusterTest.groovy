@@ -1,5 +1,6 @@
 package brooklyn.entity.group
 
+import static org.testng.AssertJUnit.*
 import org.testng.annotations.Test
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.basic.AbstractEntity
