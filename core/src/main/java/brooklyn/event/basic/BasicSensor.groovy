@@ -1,7 +1,7 @@
 package brooklyn.event.basic;
 
+import groovy.transform.EqualsAndHashCode
 import groovy.transform.InheritConstructors
-import groovy.transform.ToString;
 
 import java.util.List
 
@@ -11,12 +11,12 @@ import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
 
 import com.google.common.base.Splitter
-import com.google.common.base.Throwables
 import com.google.common.collect.Lists
 
 /**
  * Parent for all {@link Sensor}s.
  */
+@EqualsAndHashCode(includeFields=true)
 public class BasicSensor<T> implements Sensor<T> {
     private static final long serialVersionUID = -3762018534086101323L;
     
@@ -38,19 +38,13 @@ public class BasicSensor<T> implements Sensor<T> {
     }
 
     /** @see Sensor#getType() */
-    public Class<T> getType() {
-        try {
-            return type ?: (Class<T>) Class.forName(typeName);
-        } catch (ClassNotFoundException e) {
-            throw Throwables.propagate(e);
-        }
-    }
+    public Class<T> getType() { type }
  
     /** @see Sensor#getTypeName() */
-    public String getTypeName() { return typeName }
+    public String getTypeName() { typeName }
  
     /** @see Sensor#getName() */
-    public String getName() { return name }
+    public String getName() { name }
  
     /** @see Sensor#getNameParts() */
     public List<String> getNameParts() {
@@ -58,7 +52,7 @@ public class BasicSensor<T> implements Sensor<T> {
     }
  
     /** @see Sensor#getDescription() */
-    public String getDescription() { return description }
+    public String getDescription() { description }
     
     /** @see Sensor#newEvent(Entity, Object) */
     public SensorEvent<T> newEvent(Entity producer, T value) {
@@ -67,7 +61,7 @@ public class BasicSensor<T> implements Sensor<T> {
     
     @Override
     public String toString() {
-        return "Sensor:"+name;
+        return String.format("Sensor: %s (%s)", name, typeName)
     }
 }
 

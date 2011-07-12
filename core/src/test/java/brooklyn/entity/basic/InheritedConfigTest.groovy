@@ -10,13 +10,12 @@ import brooklyn.event.basic.BasicConfigKey
 import brooklyn.entity.ConfigKey
 import brooklyn.location.basic.AbstractLocation;
 
-
 /**
- * Test that configuration properties are set'able and inherited correctly.
+ * Test that configuration properties are usable and inherited correctly.
  */
 public class InheritedConfigTest {
-    private BasicConfigKey akey = ["akey", String.class, "a key"]
-    private BasicConfigKey bkey = ["bkey", Integer.class, "b key"]
+    private BasicConfigKey akey = [ String, "akey", "a key"]
+    private BasicConfigKey bkey = [ Integer, "bkey", "b key"]
     
     @Test
     public void testConfigPassedInAtConstructorIsAvailable() throws Exception {

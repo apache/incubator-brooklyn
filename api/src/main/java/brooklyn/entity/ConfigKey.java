@@ -9,20 +9,35 @@ public interface ConfigKey<T> {
     /**
      * Returns the description of the configuration parameter, for display.
      */
-    public String getDescription();
- 
+    String getDescription();
+
     /**
      * Returns the name of the configuration parameter, in a dot-separated namespace.
      */
-    public String getName();
- 
+    String getName();
+
     /**
      * Returns the constituent parts of the configuration parameter name as a {@link Collection}.
      */
-    public Collection<String> getNameParts();
- 
+    Collection<String> getNameParts();
+
     /**
-     * Returns the type of the configuration parameter data, as a {@link String} representation of the class name.
+     * Returns the type of the configuration parameter data.
      */
-    public String getType();
+    Class<T> getType();
+
+    /**
+     * Returns the name of of the configuration parameter data type, as a {@link String}.
+     */
+    String getTypeName();
+
+    /**
+     * Returns the default value of the configuration parameter.
+     */
+    T getDefaultValue();
+
+    /**
+     * Returns true if a default configuration value has been set.
+     */
+    boolean hasDefaultValue();
 }
