@@ -10,12 +10,14 @@ Brooklyn.sensors = (function() {
 
     function updateTableData(json) {
         Brooklyn.tabs.getDataTable(id, ".", aoColumns, undefined, json);
+        $(Brooklyn.eventBus).trigger('update_ok');
     }
 
     function update() {
         if (entity_id) {
-            $.getJSON("sensors?id=" + entity_id, updateTableData);
-            $(Brooklyn.eventBus).trigger('update_ok');
+            $.getJSON("sensors?id=" + entity_id, updateTableData).error(
+                function() {$(Brooklyn.eventBus).trigger('update_failed', "Could not get sensor data.");}
+            );
         }
     }
 
