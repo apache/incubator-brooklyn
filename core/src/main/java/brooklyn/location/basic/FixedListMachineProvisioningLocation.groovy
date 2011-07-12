@@ -1,9 +1,13 @@
 package brooklyn.location.basic
 
-import brooklyn.location.MachineProvisioningLocation
+import java.util.Collection
+import java.util.Map
+
 import brooklyn.location.MachineLocation
-import com.google.common.base.Preconditions
+import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.NoMachinesAvailableException
+
+import com.google.common.base.Preconditions
 
 /**
  * A provisioner of {@link MachineLocation}s.
@@ -31,7 +35,7 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
         available.each { it.setParentLocation(this); }
     }
 
-    public T obtain() {
+    public T obtain(Map<String,? extends Object> flags) {
         T machine;
         synchronized (lock) {
             if (available.empty)
@@ -50,4 +54,8 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
             available.add(machine);
         }
     }
-}
+    
+    Map<String,Object> getProvisioningFlags(Collection<String> tags) {
+        return [:]
+    }
+} 
