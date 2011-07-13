@@ -32,7 +32,10 @@ public abstract class SshBasedJavaWebAppSetup extends SshBasedJavaAppSetup {
         String target = runDir + "/" + f.name
         log.debug "WebApp Deploy - Copying file {} to {}:{}", f.absolutePath, machine, target
         int copySuccess = machine.copyTo f, target
-        if (!copySuccess) throw new IllegalStateException("Failed to transfer ${f.name} to ${machine}")
+        if (!copySuccess) {
+            log.error "Failed to copy {} to {}, result {}", f.name, machine, copySuccess
+            throw new IllegalStateException("Failed to transfer ${f.name} to ${machine}")
+        }
         List<String> deployScript = getDeployScript(target)
         if (deployScript && !deployScript.isEmpty()) {
             int result = machine.run(out:System.out, deployScript)
