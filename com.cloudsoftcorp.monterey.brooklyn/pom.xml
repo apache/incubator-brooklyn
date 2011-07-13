@@ -28,6 +28,13 @@
             <artifactId>brooklyn-extra</artifactId>
         </dependency>
 
+        <!-- TODO this should probably come from one or all monterey depdendencies -->
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
+            <version>4.3.0</version>
+        </dependency>
+
         <dependency>
             <groupId>com.cloudsoftcorp.monterey</groupId>
             <artifactId>com.cloudsoftcorp.monterey.activemq</artifactId>
@@ -53,10 +60,17 @@
             <artifactId>com.cloudsoftcorp.monterey.simulator</artifactId>
             <version>${monterey.version}</version>
         </dependency>
+
+        <!-- TODO which test framework should be used - including both seems bad -->
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.8.2</version>
+            <groupId>brooklyn</groupId>
+            <artifactId>brooklyn-test-support</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.cloudsoftcorp.monterey</groupId>
+            <artifactId>com.cloudsoftcorp.monterey.management.tests</artifactId>
+            <version>${monterey.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
