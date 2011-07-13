@@ -8,7 +8,7 @@ Brooklyn.summary = (function() {
 
         var locations_html = '<div id="summary-locations">\nLocations: ';
         if (json.locations.length > 0) {
-            locations_html += '<ul id="#summary-locations">\n<li>'
+            locations_html += '<ul id="#summary-locations">\n<li>';
             locations_html += json.locations.join("</li>\n<li>");
             locations_html += "</ul>";
         } else {
@@ -18,14 +18,18 @@ Brooklyn.summary = (function() {
 
         var groups_html = '<div id="summary-groups">Groups:';
         if (json.groupNames.length > 0) {
-            groups_html += '<ul>\n<li>'
+            groups_html += '<ul>\n<li>';
             groups_html += json.groupNames.join("</li>\n<li>");
             groups_html += "</ul>";
         } else {
             groups_html += "None";
         }
 
-        $("#summary").html(name_html + locations_html + groups_html);
+        var activity_html = '<div id="summary-activity"><h4>Recent Activity</h4>';
+        activity_html += '<p>TODO</p>';
+        activity_html += '</div>';
+
+        $("#summary").html(name_html + locations_html + groups_html + activity_html);
     }
 
     function update() {
