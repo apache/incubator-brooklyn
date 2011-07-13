@@ -19,6 +19,7 @@ public class EntitySummary {
     final String ownerId;
     final Collection<Location> locations;
     final Collection<String> children;
+    final Collection<String> groupNames;
 
     public EntitySummary(Entity entity) {
         this.id = entity.getId();
@@ -27,6 +28,7 @@ public class EntitySummary {
         this.applicationId = entity.application?.getId();
         this.ownerId = entity.owner ? entity.owner.id : null;
         this.locations = entity.getLocations();
+        this.groupNames = entity.getGroups().collect { it.getDisplayName() }
         if (entity instanceof Group) {
             this.children = ((Group) entity).members.collect { it.id };
         }

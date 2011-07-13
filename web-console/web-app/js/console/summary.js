@@ -16,8 +16,16 @@ Brooklyn.summary = (function() {
         }
         locations_html += '</div>';
 
-        $("#summary").html(name_html + locations_html);
+        var groups_html = '<div id="summary-groups">Groups:';
+        if (json.groupNames.length > 0) {
+            groups_html += '<ul>\n<li>'
+            groups_html += json.groupNames.join("</li>\n<li>");
+            groups_html += "</ul>";
+        } else {
+            groups_html += "None";
+        }
 
+        $("#summary").html(name_html + locations_html + groups_html);
     }
 
     function update() {
