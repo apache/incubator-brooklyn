@@ -1,11 +1,8 @@
 package brooklyn.policy
 
-import static brooklyn.test.TestUtils.*
 import static org.testng.Assert.*
 
 import java.util.concurrent.CyclicBarrier
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
@@ -20,7 +17,6 @@ import brooklyn.event.SensorEvent
 import brooklyn.event.basic.BasicSensor
 import brooklyn.management.SubscriptionContext
 import brooklyn.management.internal.BasicSubscriptionContext
-import brooklyn.policy.wip.BufferingEnricher.*
 import brooklyn.policy.wip.BufferingEnricher
 import brooklyn.policy.wip.RangeBufferEnricher
 
@@ -32,10 +28,10 @@ public class BufferingEnricherTest {
         CyclicBarrier changeBarrier = new CyclicBarrier(2)
         CyclicBarrier flushBarrier = new CyclicBarrier(2)
 
-        public void onEvent(SensorEvent<BufferEvent> e) {awaitEvent(e.getValue())}
-        public void awaitEvent(BufferEvent e) {
-            if(e instanceof BufferChangedEvent) {changeBarrier.await()}
-            if(e instanceof BufferFlushedEvent) {flushBarrier.await()}
+        public void onEvent(SensorEvent<BufferingEnricher.BufferEvent> e) {awaitEvent(e.getValue())}
+        public void awaitEvent(BufferingEnricher.BufferEvent e) {
+            if(e instanceof BufferingEnricher.BufferChangedEvent) {changeBarrier.await()}
+            if(e instanceof BufferingEnricher.BufferFlushedEvent) {flushBarrier.await()}
         }
         public void setSize(int size) {
             assert size > 1
@@ -44,8 +40,8 @@ public class BufferingEnricherTest {
         }
     }
 
-    public static final BarrieredEventListener<BufferChangedEvent> BARRIER_EVENT_LISTENER =
-		    new BarrieredEventListener<BufferChangedEvent>()
+    public static final BarrieredEventListener<BufferingEnricher.BufferChangedEvent> BARRIER_EVENT_LISTENER =
+		    new BarrieredEventListener<BufferingEnricher.BufferChangedEvent>()
 
     AbstractApplication app
 
@@ -66,7 +62,7 @@ public class BufferingEnricherTest {
         subscription = new BasicSubscriptionContext(app.getManagementContext().getSubscriptionManager(), this) {
                     void publishAndWait(SensorEvent event) {
                         publish(event)
-                        BARRIER_EVENT_LISTENER.awaitEvent(new BufferChangedEvent())}
+                        BARRIER_EVENT_LISTENER.awaitEvent(new BufferingEnricher.BufferChangedEvent())}
                 }
     }
 
@@ -105,7 +101,7 @@ public class BufferingEnricherTest {
 
         assertEquals(buffer.getBuffer(), [4, 3, 2, 1])
         buffer.flush()
-        BARRIER_EVENT_LISTENER.awaitEvent(new BufferFlushedEvent())
+        BARRIER_EVENT_LISTENER.awaitEvent(new BufferingEnricher.BufferFlushedEvent())
         assertEquals(buffer.getBuffer(), [])
 
         subscription.publishAndWait(intSensor.newEvent(producer, 1))
@@ -162,7 +158,7 @@ public class BufferingEnricherTest {
         assertEquals(buffer.getBuffer(), [4, 3, 2])
 
         buffer.flush()
-        BARRIER_EVENT_LISTENER.awaitEvent(new BufferFlushedEvent())
+        BARRIER_EVENT_LISTENER.awaitEvent(new BufferingEnricher.BufferFlushedEvent())
         assertEquals(buffer.getBuffer(), [])
 
         subscription.publishAndWait(intSensor.newEvent(producer, 1))
