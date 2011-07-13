@@ -101,7 +101,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         List<String> script = [
             "\$JBOSS_HOME/bin/run.sh -Djboss.service.binding.set=${portGroupName} -Djboss.server.base.dir=\$RUN/server " +
                     "-Djboss.server.base.url=file://\$RUN/server -Djboss.messaging.ServerPeerID=${entity.id} " +
-                    "-b 0.0.0.0 $clusterArg -c $serverProfile " +
+                    "-b 0.0.0.0 ${clusterArg} -c ${serverProfile} " + // ${machine.address.hostAddress}
                     ">>\$RUN/jboss.log 2>&1 </dev/null &",
         ]
         return script
@@ -124,7 +124,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
 	        "LAUNCH_JBOSS_IN_BACKGROUND" : "1",
 	        "JBOSS_HOME" : "${installDir}",
 	        "JAVA_OPTS" : toJavaDefinesString(getJvmStartupProperties()),
-	        "JBOSS_CLASSPATH" : "${installDir}/lib/jboss-logmanager.jar",
+	        "JBOSS_CLASSPATH" : "\$JBOSS_HOME/lib/jboss-logmanager.jar",
 	        "RUN" : "${runDir}",
         ]
         return env
