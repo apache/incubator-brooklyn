@@ -310,6 +310,23 @@
             <id>codehaus.snapshots</id>
             <url>http://snapshots.repository.codehaus.org/</url>
         </pluginRepository>
+        <!-- suggested for org.xhtmlrenderer:core-renderer:jar:R8 needed by grails-eclipse-plugin to run eclipse:eclpse,
+             at http://grails.1312388.n4.nabble.com/Several-problems-starting-grails-application-with-Maven-according-to-tutorial-td3208760.html,
+             possibly a bug according to http://jira.grails.org/browse/MAVEN-153?page=com.atlassian.jira.plugin.system.issuetabpanels%3Aall-tabpanel;
+             according to https://cwiki.apache.org/confluence/display/MAVEN/PluginResolutionException it must be a plugin repository,
+             as well as a repository (above) -->
+		<pluginRepository>
+            <id>maven-repository.dev.java.net</id>
+            <name>Java Dev Net Repository</name>
+            <url>http://download.java.net/maven/2/</url>
+            <releases>
+                <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </pluginRepository>
     </pluginRepositories>
 
     <build>
