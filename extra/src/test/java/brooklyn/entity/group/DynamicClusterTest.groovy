@@ -139,7 +139,7 @@ class DynamicClusterTest {
         assertEquals 4, cluster.currentSize
     }
 
-    @Test(enabled = false)
+    @Test
     public void resizeCanBeInvokedAsAnEffector() {
         Collection<Location> locations = [new GeneralPurposeLocation()]
         TestEntity entity = new TestEntity()

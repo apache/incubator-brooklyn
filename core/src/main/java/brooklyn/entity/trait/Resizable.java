@@ -23,8 +23,7 @@ public interface Resizable {
         private static final long serialVersionUID = 1L;
         
         public ResizeResult invokeEffector(Resizable r, @SuppressWarnings("rawtypes") Map params) {
-              r.resize((Integer) params.get("desiredSize"));
-              return null;
+              return r.resize((Integer) params.get("desiredSize"));
         }
     };
     
