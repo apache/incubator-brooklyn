@@ -14,7 +14,7 @@ Brooklyn.sensors = (function() {
     }
 
     function update() {
-        if (entity_id) {
+        if (typeof entity_id !== 'undefined') {
             $.getJSON("sensors?id=" + entity_id, updateTableData).error(
                 function() {$(Brooklyn.eventBus).trigger('update_failed', "Could not get sensor data.");}
             );

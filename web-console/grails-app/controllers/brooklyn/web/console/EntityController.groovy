@@ -23,8 +23,28 @@ class EntityController {
         render(toEntitySummaries(entityService.getAllEntities()) as JSON)
     }
 
+    def info = {
+        String id = params.id
+        if (!id) {
+            render(status: 400, text: '{message: "You must provide an entity id"}')
+            return
+        }
+
+        Set <Entity> es = entityService.getEntitiesMatchingCriteria(null, id, null)
+        if (es.size() == 0) {
+            render(status: 404, text: '{message: "Entity with specified id does not exist"}')
+        }
+        else if (es.size() > 1) {
+            render(status: 500, text: '{message: "Two entities with that ID were found. This should not happen."}')
+        } else {
+            Entity e = es.toArray()[0]
+            render(toEntitySummary(e) as JSON)
+        }
+    }
+
     def search = {
-        render(toEntitySummaries(entityService.getEntitiesMatchingCriteria(params.name, params.id, params.applicationId)) as JSON)
+        render(toEntitySummaries(entityService.getEntitiesMatchingCriteria(params.name, params.id, params.applicationId))
+               as JSON)
     }
 
     def effectors = {

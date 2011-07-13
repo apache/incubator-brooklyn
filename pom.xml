@@ -24,8 +24,15 @@
             </modules>
         </profile>
         <profile>
+            <id>Monterey</id>
+            <modules>
+                <module>com.cloudsoftcorp.monterey.brooklyn</module>
+            </modules>
+        </profile>
+        <profile>
             <id>Acceptance</id>
             <modules>
+                <module>web-console</module>
                 <module>acceptance</module>
             </modules>
         </profile>
