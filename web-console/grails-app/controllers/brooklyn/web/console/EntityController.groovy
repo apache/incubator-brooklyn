@@ -43,7 +43,8 @@ class EntityController {
     }
 
     def search = {
-        render(toEntitySummaries(entityService.getEntitiesMatchingCriteria(params.name, params.id, params.applicationId)) as JSON)
+        render(toEntitySummaries(entityService.getEntitiesMatchingCriteria(params.name, params.id, params.applicationId))
+               as JSON)
     }
 
     def effectors = {
