@@ -15,7 +15,7 @@ public class EntityTreeTest {
         profile.setPreference("network.http.phishy-userpass-length", 255)
         WebDriver driver = new FirefoxDriver(profile)
         driver.get("http://admin:password@localhost:9090/entity/")
-        driver.findElementById("demo1").text.contains("tomcat node 1a.1")
+        driver.findElementById("jstree").text.contains("tomcat node 1a.1")
         driver.quit()
     }
 
