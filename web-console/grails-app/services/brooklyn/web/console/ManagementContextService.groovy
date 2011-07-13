@@ -27,7 +27,6 @@ class ManagementContextService {
         context.applications.add(application)
     }
 
-
     Collection<Application> getApplications() {
         return context.applications
     }
@@ -45,6 +44,8 @@ class ManagementContextService {
             this.id = "app-" + ManagementContextService.ID_GENERATOR++
             displayName = "Application";
 
+            Entity testExtraGroup = new TestGroupEntity(this, "Another group for testing");
+
             for(String tierName : ["tomcat tier 1", "tomcat tier 2", "data tier 1"]) {
                 Entity tier = new TestGroupEntity(this, tierName);
                 for(String clusterName : ["1a", "1b"]) {
@@ -52,7 +53,9 @@ class ManagementContextService {
                             " cluster " + clusterName)
                     for(int i=1; i<4; i++) {
                         if (tierName =~ /^tomcat/) {
-                            cluster.addOwnedChild(new TestTomcatEntity(cluster, "tomcat node " + clusterName + "." + i))
+                            Entity testTomcat = new TestTomcatEntity(cluster, "tomcat node " + clusterName + "." + i)
+                            testTomcat.addGroup(testExtraGroup);
+                            cluster.addOwnedChild(testTomcat)
                         } else {
                             cluster.addOwnedChild(new TestDataEntity(cluster, "data node " + clusterName + "." + i))
                         }
