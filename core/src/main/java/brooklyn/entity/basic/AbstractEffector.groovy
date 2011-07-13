@@ -14,6 +14,8 @@ import java.util.Collections
 import java.util.List
 import java.util.concurrent.Callable
 
+import org.codehaus.groovy.runtime.DefaultGroovyMethods;
+
 import com.google.common.base.Objects;
 
 import brooklyn.entity.Effector
@@ -43,6 +45,7 @@ public abstract class AbstractEffector<T> implements Effector<T> {
         this.returnType = returnType;
         this.parameters = Collections.unmodifiableList(parameters);
         this.description = description;
+        setMetaClass(DefaultGroovyMethods.getMetaClass(getClass()))
     }
 
     public String getName() {
