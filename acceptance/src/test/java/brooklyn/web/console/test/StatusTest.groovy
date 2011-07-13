@@ -15,6 +15,6 @@ public class StatusTest extends AbstractSeleniumTest {
 
         selenium.click("jstree-node-id-leaf-4")
 
-        waitFor({selenium.isTextPresent("regexp:\d{2}:\d{2}:\d{2}")});
+        waitFor({selenium.isTextPresent("regexp:\\d{2}:\\d{2}:\\d{2}")});
     }
 }
