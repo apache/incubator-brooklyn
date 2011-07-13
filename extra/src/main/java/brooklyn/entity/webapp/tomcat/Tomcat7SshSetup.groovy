@@ -1,11 +1,12 @@
 package brooklyn.entity.webapp.tomcat
 
-import brooklyn.entity.basic.Attributes
-import java.util.List;
-import java.util.Map;
+import java.util.List
+import java.util.Map
 
-import brooklyn.util.SshBasedJavaWebAppSetup
+import brooklyn.entity.basic.Attributes
+import brooklyn.entity.webapp.JavaWebApp
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.util.SshBasedJavaWebAppSetup
 
 /**
  * Start a {@link TomcatServer} in a {@link Location} accessible over ssh.
@@ -69,6 +70,7 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
         entity.setAttribute(Attributes.JMX_PORT, jmxPort)
         entity.setAttribute(Attributes.JMX_HOST, jmxHost)
         entity.setAttribute(Attributes.HTTP_PORT, httpPort)
+        entity.setAttribute(JavaWebApp.ROOT_URL, "http://${machine.address.hostAddress}:${httpPort}/")
         entity.setAttribute(Attributes.VERSION, version)
         entity.setAttribute(TomcatServer.TOMCAT_SHUTDOWN_PORT, tomcatShutdownPort)
     }

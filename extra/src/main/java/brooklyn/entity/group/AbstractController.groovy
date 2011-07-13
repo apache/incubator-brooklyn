@@ -32,7 +32,7 @@ public abstract class AbstractController extends AbstractService {
     public static final BasicConfigKey<Integer> SUGGESTED_HTTP_PORT = [ Integer, "proxy.httpPort", "Suggested proxy HTTP port" ]
     public static final BasicConfigKey<String> DOMAIN_NAME = [ String, "proxy.domainName", "Domain name" ]
     public static final BasicConfigKey<String> PROTOCOL = [ String, "proxy.portNumber", "Protocol" ]
-    public static final BasicConfigKey<URL> URL = [ String, "proxy.url", "URL" ]
+    public static final BasicConfigKey<String> URL = [ String, "proxy.url", "URL" ]
 
     public static final BasicAttributeSensor<Integer> HTTP_PORT = Attributes.HTTP_PORT
 
@@ -46,8 +46,8 @@ public abstract class AbstractController extends AbstractService {
     public AbstractController(Map properties=[:], Entity owner=null, Group cluster=null) {
         super(properties, owner)
 
-        if (getConfig(PROTOCOL) || properties.url in URL) {
-	        url = getConfig(URL) ?: properties.url
+        if (getConfig(PROTOCOL) || properties.containsKey("url")) {
+	        url = getConfig(URL) ?: properties.remove("url")
 	        setConfig(URL, url)
 
             // Set config properties from URL
@@ -68,7 +68,7 @@ public abstract class AbstractController extends AbstractService {
             Preconditions.checkNotNull(domain, "Domain must be set for controller")
             setConfig(DOMAIN_NAME, domain)
 
-	        setConfig(URL, new URL("${protocol}://${domain}:${port}"))
+	        setConfig(URL, "${protocol}://${domain}:${port}/")
         }
 
         setCluster(cluster ?: properties.cluster)

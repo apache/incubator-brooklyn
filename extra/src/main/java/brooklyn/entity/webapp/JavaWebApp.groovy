@@ -1,8 +1,11 @@
 package brooklyn.entity.webapp
 
+import java.net.URL
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.entity.ConfigKey
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.ConfigKeys
 import brooklyn.entity.basic.JavaApp
@@ -12,7 +15,6 @@ import brooklyn.event.adapter.HttpSensorAdapter
 import brooklyn.event.adapter.ValueProvider
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
-import brooklyn.entity.ConfigKey
 import brooklyn.location.Location
 import brooklyn.location.MachineLocation
 import brooklyn.policy.DeltaEnricher
@@ -39,6 +41,7 @@ public abstract class JavaWebApp extends JavaApp {
          "Average Reqs/Sec (over ${AVG_REQUESTS_PER_SECOND_PERIOD}ms)" ]
     public static final BasicAttributeSensor<Integer> TOTAL_PROCESSING_TIME = [ Integer, "webapp.reqs.processing.time", "Total processing time" ]
 
+    public static final BasicAttributeSensor<String> ROOT_URL = [ String, "webapp.url", "URL" ]
     public static final BasicAttributeSensor<String> HTTP_SERVER = [ String, "webapp.http.server", " Server name" ]
     public static final BasicAttributeSensor<Integer> HTTP_STATUS = [ Integer, "webapp.http.status", " HTTP response code for the server" ]
 

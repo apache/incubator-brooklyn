@@ -67,10 +67,10 @@ public class JBossServerIntegrationTest {
         nodeB.start([ testLocation ])
         
         executeUntilSucceedsWithFinallyBlock({
-            def aHttp = nodeA.getAttribute(JBossServer.HTTP_PORT)
-            def bHttp = nodeB.getAttribute(JBossServer.HTTP_PORT)
-            assertTrue urlRespondsWithStatusCode200("http://localhost:$aHttp")
-            assertTrue urlRespondsWithStatusCode200("http://localhost:$bHttp")
+            String aUrl = nodeA.getAttribute(JBossServer.ROOT_URL)
+            String bUrl = nodeB.getAttribute(JBossServer.ROOT_URL)
+            assertTrue urlRespondsWithStatusCode200(aUrl)
+            assertTrue urlRespondsWithStatusCode200(bUrl)
             true
         }, {
             nodeA.stop()
@@ -87,9 +87,9 @@ public class JBossServerIntegrationTest {
             if (errorCount == null) return new BooleanWithMessage(false, "errorCount not set yet ($errorCount)")
 
             // Connect to non-existent URL n times
-            def n = 5
-            def port = jb.getAttribute(JBossServer.HTTP_PORT)
-            def url = "http://localhost:${port}/does_not_exist"
+            int n = 5
+            String url = jb.getAttribute(JBossServer.ROOT_URL) + "does_not_exist"
+            log.info "connect to {}", url
             n.times {
                 def connection = connectToURL(url)
                 int status = ((HttpURLConnection) connection).getResponseCode()

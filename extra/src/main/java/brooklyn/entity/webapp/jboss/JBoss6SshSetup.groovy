@@ -1,11 +1,12 @@
 package brooklyn.entity.webapp.jboss
 
-import java.util.List;
+import java.util.List
 
 import brooklyn.entity.basic.Attributes
-import brooklyn.util.SshBasedJavaAppSetup;
-import brooklyn.util.SshBasedJavaWebAppSetup
+import brooklyn.entity.webapp.JavaWebApp
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.util.SshBasedJavaAppSetup
+import brooklyn.util.SshBasedJavaWebAppSetup
 
 public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     public static final String DEFAULT_VERSION = "6.0.0.Final"
@@ -78,6 +79,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         entity.setAttribute(Attributes.JMX_PORT, jmxPort)
         entity.setAttribute(Attributes.JMX_HOST, jmxHost)
         entity.setAttribute(Attributes.HTTP_PORT, httpPort)
+        entity.setAttribute(JavaWebApp.ROOT_URL, "http://${machine.address.hostAddress}:${httpPort}/")
         entity.setAttribute(Attributes.VERSION, version)
     }
     
@@ -102,7 +104,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
             "\$JBOSS_HOME/bin/run.sh -Djboss.service.binding.set=${portGroupName} -Djboss.server.base.dir=\$RUN/server " +
                     "-Djboss.server.base.url=file://\$RUN/server -Djboss.messaging.ServerPeerID=${entity.id} " +
                     "-b 0.0.0.0 ${clusterArg} -c ${serverProfile} " + // ${machine.address.hostAddress}
-                    ">>\$RUN/jboss.log 2>&1 </dev/null &",
+                    ">>\$RUN/console 2>&1 </dev/null &",
         ]
         return script
     }
