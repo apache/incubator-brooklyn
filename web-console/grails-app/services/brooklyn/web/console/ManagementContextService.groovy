@@ -88,6 +88,7 @@ class ManagementContextService {
 
                 this.displayName = displayName
                 this.id = "leaf-" + ManagementContextService.ID_GENERATOR++
+                this.locations = ["Fairbanks, Alaska", "Dubai"]
 
                 TestEffector startDB = new TestEffector("Start DB", "This will start the database",
                         new ArrayList<ParameterType<?>>())
@@ -122,7 +123,7 @@ class ManagementContextService {
                 super([:], owner)
                 this.displayName = displayName
                 this.id = "leaf-" + ManagementContextService.ID_GENERATOR++
-
+                this.locations = ["Kuala Lumpur"]
                 // Stealing the sensors from TomcatNode
                 this.sensors.putAll(new TomcatNode().sensors)
 
