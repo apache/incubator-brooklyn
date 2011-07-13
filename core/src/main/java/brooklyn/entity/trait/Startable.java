@@ -8,6 +8,7 @@ import java.util.Map;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.ParameterType;
+import brooklyn.entity.basic.BasicParameterType;
 import brooklyn.entity.basic.EffectorWithExplicitImplementation;
 import brooklyn.location.Location;
 
@@ -19,30 +20,32 @@ import brooklyn.location.Location;
  */
 @SuppressWarnings({ "rawtypes", "unchecked", "serial" })
 public interface Startable {
-    Effector<Void> START = new EffectorWithExplicitImplementation<Startable,Void>("start", Void.TYPE, Arrays.<ParameterType<?>>asList(new ParameterType<Collection<?>>() {
-        public String getName() { return "locations"; }
-        public Class getParameterClass() { return Collection.class; }
-        public String getParameterClassName() { return null; }
-        public String getDescription() { return "Collection of Locations"; } }), "Start an entity") {
+    public static final Effector<Void> START = new EffectorWithExplicitImplementation<Startable,Void>(
+            "start", Void.TYPE,
+            Arrays.<ParameterType<?>>asList(
+                    new BasicParameterType<Collection>("locations", Collection.class, "collection of locations to start in") ),
+            "Starts an entity") 
+    {
         public Void invokeEffector(Startable s, Map params) {
               s.start((Collection) params.get("locations"));
               return null;
         }
     };
-    Effector<Void> STOP = new EffectorWithExplicitImplementation<Startable,Void>("stop", Void.TYPE, Collections.<ParameterType<?>>emptyList(), "Stop an entity") {
+    public static final Effector<Void> STOP = new EffectorWithExplicitImplementation<Startable,Void>(
+            "stop", Void.TYPE, Collections.<ParameterType<?>>emptyList(), "Stops an entity") {
         public Void invokeEffector(Startable s, Map params) {
               s.stop();
               return null;
         }
     };
 
+//  TODO documentation
     /**
-     * TODO documentation
      */
     void start(Collection<? extends Location> loc);
 
+//  TODO documentation
     /**
-     * TODO documentation
      */
     void stop();
 }

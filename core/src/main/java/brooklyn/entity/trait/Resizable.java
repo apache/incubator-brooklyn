@@ -1,12 +1,12 @@
 package brooklyn.entity.trait;
 
+import java.util.Arrays;
+import java.util.Map;
+
 import brooklyn.entity.Effector;
 import brooklyn.entity.ParameterType;
+import brooklyn.entity.basic.BasicParameterType;
 import brooklyn.entity.basic.EffectorWithExplicitImplementation;
-
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Map;
 
 /**
  * Defines an entity group that can be re-sized dynamically. By invoking the @{link #resize} effector, the number of child nodes
@@ -14,20 +14,20 @@ import java.util.Map;
  */
 public interface Resizable {
 
-    Effector<ResizeResult> RESIZE = new EffectorWithExplicitImplementation<Resizable,ResizeResult>("resize", ResizeResult.class,
-        Arrays.<ParameterType<?>>asList(new ParameterType<Collection<?>>() {
-            public String getName() { return "desiredSize"; }
-            public Class getParameterClass() { return Integer.class; }
-            public String getParameterClassName() { return null; }
-            public String getDescription() { return "the new size of the cluster"; }
-        }),
-        "change the number of nodes in the cluster") {
-        public ResizeResult invokeEffector(Resizable r, Map params) {
+    public static final Effector<ResizeResult> RESIZE = new EffectorWithExplicitImplementation<Resizable,ResizeResult>(
+            "resize", ResizeResult.class, 
+            Arrays.<ParameterType<?>>asList(
+                new BasicParameterType<Integer>("desiredSize", Integer.class, "the desired new size of the cluster")
+            ), "Changes the size of the entity (e.g. the number of nodes in a cluster)") {
+        
+        private static final long serialVersionUID = 1L;
+        
+        public ResizeResult invokeEffector(Resizable r, @SuppressWarnings("rawtypes") Map params) {
               r.resize((Integer) params.get("desiredSize"));
               return null;
         }
     };
-
+    
     /**
      * Grow or shrink this entity to the desired size.
      * @param desiredSize the new size of the entity group.
