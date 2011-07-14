@@ -118,12 +118,6 @@ h1#brooklyn-header{
      border:1px solid #CCCCCC;
 }
 
-.ui-tabs-panel {
-    width: 100%;
-    height:100%;
-    padding: 1em;
-}
-
 table, th, td {
     border: 2px solid #ccc;
     border-collapse: collapse;
@@ -224,4 +218,37 @@ textarea#logbox{
 .effector-args div {
     clear: both;
     width: 100%;
+}
+
+#summary-basic-info {
+    float: left;
+    margin-bottom: 4em;
+}
+
+#summary-status {
+    float: right;
+    clear: right;
+    margin-bottom: 4em;
+}
+
+#summary-groups {
+    float: left;
+    clear: left;
+}
+
+#summary-activity {
+    float: right;
+}
+
+#summary ul {
+    list-style-type: none;
+}
+
+#summary h4 {
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+}
+
+.label {
+    font-weight: bold;
 }

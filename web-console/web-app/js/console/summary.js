@@ -3,8 +3,7 @@ Brooklyn.summary = (function() {
     var entity_id;
 
     function handleSummaryData(json) {
-        // FIXME: Do stuff
-        var name_html = "<p>Name: " + json.displayName + "</p>";
+        var name_html = '<p><span class="label">Name:</span> ' + json.displayName + "</p>";
 
         var locations_html = '<h4>Locations</h4>';
         if (json.locations.length > 0) {
