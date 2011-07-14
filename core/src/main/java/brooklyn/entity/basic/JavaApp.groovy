@@ -1,26 +1,18 @@
 package brooklyn.entity.basic
 
-import java.util.Collection;
+import java.util.Collection
 import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.entity.trait.Startable
+import brooklyn.entity.ConfigKey
+import brooklyn.entity.Entity
 import brooklyn.event.AttributeSensor
 import brooklyn.event.adapter.AttributePoller
 import brooklyn.event.adapter.JmxSensorAdapter
-import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.entity.ConfigKey
 import brooklyn.location.Location
-import brooklyn.location.MachineLocation
-import brooklyn.location.MachineProvisioningLocation
-import brooklyn.location.NoMachinesAvailableException
-import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.SshBasedJavaAppSetup
 import brooklyn.util.internal.Repeater
-
-import com.google.common.base.Preconditions
 
 /**
 * An {@link brooklyn.entity.Entity} representing a single web application instance.
@@ -37,8 +29,9 @@ public abstract class JavaApp extends AbstractService {
     transient JmxSensorAdapter jmxAdapter
     transient AttributePoller attributePoller
 
-    public JavaApp(Map properties=[:]) {
-        super(properties)
+    public JavaApp(Map properties=[:], Entity owner=null) {
+        super(properties, owner)
+
         if (properties.jmxPort) setConfig(SUGGESTED_JMX_PORT, properties.remove("jmxPort"))
         if (properties.jmxHost) setConfig(SUGGESTED_JMX_HOST, properties.remove("jmxHost"))
     }

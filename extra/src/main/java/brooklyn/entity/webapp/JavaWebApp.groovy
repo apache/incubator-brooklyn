@@ -6,6 +6,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.ConfigKey
+import brooklyn.entity.Entity
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.ConfigKeys
 import brooklyn.entity.basic.JavaApp
@@ -47,8 +48,9 @@ public abstract class JavaWebApp extends JavaApp {
 
     transient HttpSensorAdapter httpAdapter
 
-    public JavaWebApp(Map properties=[:]) {
-        super(properties)
+    public JavaWebApp(Map properties=[:], Entity owner=null) {
+        super(properties, owner)
+
         if (properties.httpPort) setConfig(SUGGESTED_HTTP_PORT, properties.remove("httpPort"))
 
         setAttribute(SERVICE_STATUS, "uninitialized")

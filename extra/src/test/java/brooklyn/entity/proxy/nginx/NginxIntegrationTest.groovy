@@ -13,7 +13,7 @@ import org.testng.annotations.Test
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
-import brooklyn.entity.basic.JavaApp
+import brooklyn.entity.basic.AbstractService
 import brooklyn.entity.group.DynamicCluster
 import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.location.Location
@@ -48,7 +48,7 @@ public class NginxBrokerIntegrationTest {
 
     @AfterMethod(groups = "Integration")
     public void shutdown() {
-        if (nginx != null && nginx.getAttribute(JavaApp.SERVICE_UP)) {
+        if (nginx != null && nginx.getAttribute(AbstractService.SERVICE_UP)) {
             log.warn "Nginx controller is still running", nginx.id
 	        try {
 	            nginx.stop()
@@ -63,15 +63,25 @@ public class NginxBrokerIntegrationTest {
      */
     @Test(groups = "Integration")
     public void canStartupAndShutdown() {
-        def template = { Entity owner, Map properties -> new TomcatServer(properties, owner) }
-        DynamicCluster cluster = new DynamicCluster(newEntity:template, initialSize:1)
-        nginx = new NginxController(owner:app, cluster:cluster, domain:"localhost")
-        nginx.start([ testLocation ])
+        def template = { properties -> new TomcatServer(properties) }
+        DynamicCluster cluster = new DynamicCluster(owner:app, newEntity:template, initialSize:1)
+        cluster.start([ new LocalhostMachineProvisioningLocation(count:1) ])
+        nginx = new NginxController([
+	            "owner" : app,
+	            "cluster" : cluster,
+	            "domain" : "localhost",
+	            "port" : 8000,
+	            "portNumberSensor" : TomcatServer.HTTP_PORT,
+            ])
+        nginx.start([ new LocalhostMachineProvisioningLocation(count:1) ])
         executeUntilSucceedsWithFinallyBlock ([:], {
-            assertTrue nginx.getAttribute(JavaApp.SERVICE_UP)
+            assertTrue cluster.getAttribute(AbstractService.SERVICE_UP)
+            assertTrue nginx.getAttribute(AbstractService.SERVICE_UP)
         }, {
             nginx.stop()
+            cluster.stop()
         })
-        assertFalse nginx.getAttribute(JavaApp.SERVICE_UP)
+        assertFalse nginx.getAttribute(AbstractService.SERVICE_UP)
+        assertFalse cluster.getAttribute(AbstractService.SERVICE_UP)
     }
 }

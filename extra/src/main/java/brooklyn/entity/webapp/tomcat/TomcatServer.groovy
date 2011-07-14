@@ -7,9 +7,9 @@ import javax.management.InstanceNotFoundException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.entity.Entity
 import brooklyn.entity.webapp.JavaWebApp
 import brooklyn.event.EntityStartException
-import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.adapter.ValueProvider
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
@@ -28,8 +28,8 @@ public class TomcatServer extends JavaWebApp {
     public static final BasicAttributeSensor<Integer> TOMCAT_SHUTDOWN_PORT = [ Integer, "webapp.tomcat.shutdownPort", "Port to use for shutting down" ];
     public static final BasicAttributeSensor<String> CONNECTOR_STATUS = [String, "webapp.tomcat.connectorStatus", "Catalina connector state name"]
     
-    public TomcatServer(Map properties=[:]) {
-        super(properties);
+    public TomcatServer(Map properties=[:], Entity owner=null) {
+        super(properties, owner)
     }
 
     public SshBasedAppSetup getSshBasedSetup(SshMachineLocation machine) {

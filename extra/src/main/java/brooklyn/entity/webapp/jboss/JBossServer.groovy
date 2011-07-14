@@ -3,6 +3,7 @@ package brooklyn.entity.webapp.jboss
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.entity.Entity
 import brooklyn.entity.webapp.JavaWebApp
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
@@ -25,9 +26,9 @@ public class JBossServer extends JavaWebApp {
     // Jboss specific
     public static final BasicAttributeSensor<Integer> PORT_INCREMENT = [ Integer, "webapp.portIncrement", "Increment added to default JBoss ports" ];
             
-    public JBossServer(Map properties=[:]) {
-        super(properties);
-        
+    public JBossServer(Map properties=[:], Entity owner=null) {
+        super(properties, owner)
+
         def portIncrement = properties.portIncrement ?: 0
         if (portIncrement < 0) {
             throw new IllegalArgumentException("JBoss port increment cannot be negative")

@@ -19,9 +19,7 @@ import com.google.common.base.Preconditions
 public class DynamicCluster extends AbstractGroup implements Startable, Resizable {
     private static final Logger logger = LoggerFactory.getLogger(DynamicCluster)
 
-    public static final BasicConfigKey<Integer> INITIAL_SIZE = [ Integer, "initial.size", "Initial cluster size" ]
-
-    public static final BasicAttributeSensor<String> CLUSTER_SIZE = [ Integer, "cluster.size", "Cluster size" ]
+    public static final BasicConfigKey<Integer> INITIAL_SIZE = [ Integer, "cluster.initial.size", "Initial cluster size" ]
 
     Closure<Entity> newEntity
     int initialSize
@@ -34,7 +32,7 @@ public class DynamicCluster extends AbstractGroup implements Startable, Resizabl
      * <ul>
      * <li>template - an {@link Entity} that implements {@link Startable} that will be the template for nodes in the cluster.
      * <li>initialSize - an {@link Integer} that is the number of nodes to start when the cluster's {@link #start(List)} method is
-     * called.
+     * called, default is 0.
      * </ul>
      *
      * @param properties the properties of the new entity.
@@ -46,8 +44,8 @@ public class DynamicCluster extends AbstractGroup implements Startable, Resizabl
         Preconditions.checkArgument properties.containsKey('newEntity'), "'newEntity' property is mandatory"
         Preconditions.checkArgument properties.get('newEntity') instanceof Closure, "'newEntity' must be a closure"
         newEntity = properties.remove('newEntity')
-
-        initialSize = getConfig(INITIAL_SIZE) ?: properties.remove("initialSize") ?: 1
+        
+        initialSize = getConfig(INITIAL_SIZE) ?: properties.initialSize ?: 0
         setConfig(INITIAL_SIZE, initialSize)
 
         this.properties = properties
@@ -81,18 +79,20 @@ public class DynamicCluster extends AbstractGroup implements Startable, Resizabl
             (-delta).times { removedEntities += removeNode() }
         }
 
-        setAttribute(CLUSTER_SIZE, currentSize)
-
         return currentSize
     }
 
     protected Entity addNode() {
-        logger.info "Adding a node"
-        Entity entity = newEntity.call(this, properties)
+        Map creation = [:]
+        creation << properties
+        creation.put("owner", this)
+        logger.trace "Adding a node to {} with properties {}", id, creation
+
+        Entity entity = newEntity.call(creation)
         Preconditions.checkNotNull entity, "newEntity call returned null"
         Preconditions.checkState entity instanceof Entity, "newEntity call returned an object that is not an Entity"
         Preconditions.checkState entity instanceof Startable, "newEntity call returned an object that is not Startable"
-
+ 
         entity.start([location])
         addMember(entity)
         entity

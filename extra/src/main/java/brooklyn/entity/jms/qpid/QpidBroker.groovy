@@ -9,6 +9,7 @@ import javax.management.ObjectName
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.JavaApp
@@ -119,8 +120,8 @@ public abstract class QpidBinding extends AbstractEntity {
     transient JmxSensorAdapter jmxAdapter
     transient AttributePoller attributePoller
 
-    public QpidBinding(Map properties=[:]) {
-        super(properties)
+    public QpidBinding(Map properties=[:], Entity owner=null) {
+        super(properties, owner)
 
         Preconditions.checkNotNull properties.name, "Name must be specified"
         name = properties.name
@@ -163,8 +164,8 @@ public abstract class QpidBinding extends AbstractEntity {
 }
 
 public class QpidQueue extends QpidBinding implements Queue {
-    public QpidQueue(Map properties=[:]) {
-        super(properties)
+    public QpidQueue(Map properties=[:], Entity owner=null) {
+        super(properties, owner)
     }
     
     public void init() {
@@ -180,8 +181,8 @@ public class QpidQueue extends QpidBinding implements Queue {
 }
 
 public class QpidTopic extends QpidBinding implements Topic {
-    public QpidTopic(Map properties=[:]) {
-        super(properties)
+    public QpidTopic(Map properties=[:], Entity owner=null) {
+        super(properties, owner)
     }
     
     public void init() {

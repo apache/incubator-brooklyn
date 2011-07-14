@@ -29,8 +29,8 @@ public abstract class Cluster extends Tier implements Startable {
 
     int initialSize
 
-    public Cluster(Map properties=[:]) {
-        super(properties)
+    public Cluster(Map properties=[:], Entity owner=null) {
+        super(properties, owner)
         initialSize = getConfig(INITIAL_SIZE) ?: properties?.initialSize ?: 1
         setConfig(INITIAL_SIZE, initialSize)
     }
@@ -44,8 +44,8 @@ public abstract class ClusterFromTemplate extends Cluster implements Resizable {
     Entity template = null
     Collection<Location> locations = null
     
-    public ClusterFromTemplate(Map properties=[:], Entity template=null) {
-        super(properties)
+    public ClusterFromTemplate(Map properties=[:], Entity owner=null, Entity template=null) {
+        super(properties, owner)
         if (template) this.template = template
     }
     
