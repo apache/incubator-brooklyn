@@ -6,7 +6,7 @@ Brooklyn.summary = (function() {
         // FIXME: Do stuff
         var name_html = "<p>Name: " + json.displayName + "</p>";
 
-        var locations_html = '<div id="summary-locations">\nLocations: ';
+        var locations_html = '<h4>Locations</h4>';
         if (json.locations.length > 0) {
             locations_html += '<ul id="#summary-locations">\n<li>';
             locations_html += json.locations.join("</li>\n<li>");
@@ -14,9 +14,12 @@ Brooklyn.summary = (function() {
         } else {
             locations_html += "None set";
         }
-        locations_html += '</div>';
+        $("#summary-basic-info").html(name_html + locations_html);
 
-        var groups_html = '<div id="summary-groups">Groups:';
+        var status_html = '<span class="label">Status: </span>TODO';
+        $("#summary-status").html(status_html);
+
+        var groups_html = '<h4>Groups</h4>';
         if (json.groupNames.length > 0) {
             groups_html += '<ul>\n<li>';
             groups_html += json.groupNames.join("</li>\n<li>");
@@ -24,12 +27,11 @@ Brooklyn.summary = (function() {
         } else {
             groups_html += "None";
         }
+        $("#summary-groups").html(groups_html);
 
-        var activity_html = '<div id="summary-activity"><h4>Recent Activity</h4>';
+        var activity_html = '<h4>Recent Activity</h4>';
         activity_html += '<p>TODO</p>';
-        activity_html += '</div>';
-
-        $("#summary").html(name_html + locations_html + groups_html + activity_html);
+        $("#summary-activity").html(activity_html);
     }
 
     function update() {

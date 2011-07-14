@@ -19,7 +19,7 @@ Brooklyn.tabs = (function() {
         disableTabs();
 
         var selectEntityMessage = "<p>Select an entity in the tree to the left to work with it here.</p>";
-        $('#summary').html(selectEntityMessage);
+        $('#summary-basic-info').html(selectEntityMessage);
         location.hash = "#summary";
 
         $(Brooklyn.eventBus).bind("entity_selected", enableTabs);
