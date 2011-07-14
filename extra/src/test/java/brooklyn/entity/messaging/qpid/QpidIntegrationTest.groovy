@@ -1,4 +1,4 @@
-package brooklyn.entity.jms.qpid;
+package brooklyn.entity.messaging.qpid;
 
 import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
@@ -22,6 +22,8 @@ import brooklyn.entity.Application
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.JavaApp
+import brooklyn.entity.messaging.qpid.QpidBroker;
+import brooklyn.entity.messaging.qpid.QpidQueue;
 import brooklyn.location.Location
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.util.internal.TimeExtras
@@ -31,8 +33,8 @@ import brooklyn.util.internal.TimeExtras
  *
  * TODO clarify test purpose
  */
-public class QpidBrokerIntegrationTest {
-    private static final Logger log = LoggerFactory.getLogger(QpidBrokerIntegrationTest.class)
+public class QpidIntegrationTest {
+    private static final Logger log = LoggerFactory.getLogger(QpidIntegrationTest.class)
 
     static { TimeExtras.init() }
 

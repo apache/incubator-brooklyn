@@ -1,4 +1,4 @@
-package brooklyn.entity.jms.qpid
+package brooklyn.entity.messaging.qpid
 
 import java.util.List
 import java.util.Map

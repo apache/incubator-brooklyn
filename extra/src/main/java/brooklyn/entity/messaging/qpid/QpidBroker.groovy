@@ -1,4 +1,4 @@
-package brooklyn.entity.jms.qpid
+package brooklyn.entity.messaging.qpid
 
 import java.util.Collection
 import java.util.Map
@@ -13,8 +13,8 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.JavaApp
-import brooklyn.entity.jms.Queue
-import brooklyn.entity.jms.Topic
+import brooklyn.entity.messaging.Queue
+import brooklyn.entity.messaging.Topic
 import brooklyn.event.adapter.AttributePoller
 import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.adapter.ValueProvider
