@@ -25,13 +25,12 @@ import brooklyn.util.internal.TimeExtras
  *
  * TODO clarify test purpose
  */
-public class NginxBrokerIntegrationTest {
-    private static final Logger log = LoggerFactory.getLogger(NginxBrokerIntegrationTest.class)
+public class NginxIntegrationTest {
+    private static final Logger log = LoggerFactory.getLogger(NginxIntegrationTest.class)
 
     static { TimeExtras.init() }
 
     private Application app
-    private Location testLocation
     private NginxController nginx
 
     static class TestApplication extends AbstractApplication {
@@ -43,7 +42,6 @@ public class NginxBrokerIntegrationTest {
     @BeforeMethod(groups = "Integration")
     public void setup() {
         app = new TestApplication();
-        testLocation = new LocalhostMachineProvisioningLocation(name:'london', count:2)
     }
 
     @AfterMethod(groups = "Integration")

@@ -100,7 +100,6 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
     }
 
     public void restart() {
-        stop
-        start locations
+        locations.each { MachineLocation machine -> getSshBasedSetup(machine).restart() }
     }
 }

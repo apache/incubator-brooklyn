@@ -61,28 +61,56 @@ public class NginxSetup extends SshBasedAppSetup {
     }
 
     /**
-     * Creates the directories nginx needs to run in a different location from where it is installed.
+     * Starts nginx from the {@link #runDir} directory.
      */
     public List<String> getRunScript() {
         List<String> script = [
             "cd ${runDir}",
-			"nohup ./sbin/nginx -c ./conf/server.conf &",
+            "nohup ./sbin/nginx -c ./conf/server.conf &",
+        ]
+        return script
+    }
+ 
+    /** @see SshBasedAppSetup#getRunEnvironment() */
+    public Map<String, String> getRunEnvironment() { [:] }
+
+    /**
+     * Restarts nginx with the current configuration.
+     */
+    @Override
+    public List<String> getRestartScript() {
+        List<String> script = [
+            "cd ${runDir}",
+            "ps aux | grep '[n]'ginx | grep `cat pid.txt` || exit 1",
+            "kill -HUP `cat pid.txt`"
         ]
         return script
     }
 
-    public Map<String, String> getRunEnvironment() { [:] }
-
-    /** @see SshBasedJavaAppSetup#getCheckRunningScript() */
+    /** @see SshBasedAppSetup#getCheckRunningScript() */
     public List<String> getCheckRunningScript() {
         List<String> script = [
             "cd ${runDir}",
-			"(ps auxww | grep '[n]'ginx | grep ${entity.id} > pid.list || echo \"no nginx processes found\")",
-			"cat pid.list",
-			"if [ -z \"`cat pid.list`\" ] ; then echo process no longer running ; exit 1 ; fi",
+            "echo pid is `cat pid.txt`",
+            "(ps aux | grep '[n]'ginx | grep `cat pid.txt` > pid.list || echo \"no nginx processes found\")",
+            "cat pid.list",
+            "if [ -z \"`cat pid.list`\" ] ; then echo process no longer running ; exit 1 ; fi",
         ]
         return script
         //note grep can return exit code 1 if text not found, hence the || in the block above
+    }
+
+    /**
+     * Restarts nginx with the current configuration.
+     */
+    @Override
+    public List<String> getShutdownScript() {
+        List<String> script = [
+            "cd ${runDir}",
+            "ps aux | grep '[n]'ginx | grep `cat pid.txt` || exit 1",
+            "kill -9 `cat nginx.pid`"
+        ]
+        return script
     }
 
     @Override
@@ -97,17 +125,13 @@ public class NginxSetup extends SshBasedAppSetup {
     }
 
     @Override
-    public void shutdown() {
-        log.debug "invoking shutdown script"
-        def result = machine.run(out:System.out, [
-	            "ps auxww | grep '[n]'ginx  | grep ${entity.id} | awk '{ print \$2 }' | xargs kill -9",
-            ])
-        if (result) log.info "non-zero result code terminating {}: {}", entity, result
-        log.debug "done invoking shutdown script"
-    }
-
-    @Override
     protected void postShutdown() {
         machine.releasePort(httpPort);
+    }
+    
+    @Override
+    public void config() {
+        super.config()
+        entity.configure()
     }
 }

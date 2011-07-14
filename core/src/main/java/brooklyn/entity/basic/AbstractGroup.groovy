@@ -26,20 +26,24 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
         member.addGroup(this)
         members.add(member)
         listeners.each { it.propertyChange(new ElementAddedEvent(this, member, -1)) }
+        emit(MEMBER_ADDED, MEMBER_ADDED.newEvent(this, member))
+        setAttribute(Changeable.GROUP_SIZE, members.size())
         member
     }
  
-    public boolean removeMember(Entity child) {
-        members.remove child
-        listeners.each { it.propertyChange(new ElementRemovedEvent(this, child, -1)) }
+    public boolean removeMember(Entity member) {
+        members.remove member
+        listeners.each { it.propertyChange(new ElementRemovedEvent(this, member, -1)) }
+        emit(MEMBER_REMOVED, MEMBER_REMOVED.newEvent(this, member))
+        setAttribute(Changeable.GROUP_SIZE, members.size())
+        member
     }
-    
+ 
     // Declared so can be overridden (the default auto-generated getter is final!)
     public Collection<Entity> getMembers() {
         return members.get()
     }
 
-    //FIXME: use sensors; and also needed for owned children
     Set<PropertyChangeListener> listeners = new LinkedHashSet<PropertyChangeListener>();
     public void addEntityChangeListener(PropertyChangeListener listener) {
         listeners << listener

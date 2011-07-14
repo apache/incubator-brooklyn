@@ -71,6 +71,22 @@ public class BasicSensor<T> implements Sensor<T> {
 @InheritConstructors
 public class BasicAttributeSensor<T> extends BasicSensor<T> implements AttributeSensor<T> {
     private static final long serialVersionUID = -7670909215973264600L;
+
+    public BasicAttributeSensor(Class<T> type, String name, String description=name) {
+        super(type, name, description)
+    }
+}
+
+/**
+ * A {@link Sensor} used to notify subscribers about events.
+ */
+@InheritConstructors
+public class BasicNotificationSensor<T> extends BasicSensor<T> {
+    private static final long serialVersionUID = -7670909215973264600L;
+
+    public BasicNotificationSensor(Class<T> type, String name, String description=name) {
+        super(type, name, description)
+    }
 }
 
 /**
@@ -79,4 +95,8 @@ public class BasicAttributeSensor<T> extends BasicSensor<T> implements Attribute
 @InheritConstructors
 public class LogSensor<T> extends BasicSensor<T> {
     private static final long serialVersionUID = 4713993465669948212L;
+
+    public LogSensor(Class<T> type, String name, String description=name) {
+        super(type, name, description)
+    }
 }

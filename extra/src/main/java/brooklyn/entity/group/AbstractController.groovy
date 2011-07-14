@@ -1,27 +1,21 @@
 package brooklyn.entity.group
 
-import groovy.util.ObservableList.ChangeType
-import groovy.util.ObservableList.ElementEvent
-
-import java.beans.PropertyChangeListener
-import java.util.Collection
 import java.util.Map
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
-import brooklyn.entity.Group
 import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.basic.AbstractService
 import brooklyn.entity.basic.Attributes
+import brooklyn.event.EventListener;
+import brooklyn.event.Sensor
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.MachineLocation
 
-import com.google.common.base.Charsets
 import com.google.common.base.Preconditions
-import com.google.common.io.Files
 
 /**
  * Represents a controller mechanism for a {@link Cluster}.
@@ -33,7 +27,8 @@ public abstract class AbstractController extends AbstractService {
     public static final BasicConfigKey<String> DOMAIN_NAME = [ String, "proxy.domainName", "Domain name" ]
     public static final BasicConfigKey<String> PROTOCOL = [ String, "proxy.portNumber", "Protocol" ]
     public static final BasicConfigKey<String> URL = [ String, "proxy.url", "URL" ]
-
+    public static final BasicConfigKey<Sensor> PORT_NUMBER_SENSOR = [ String, "member.sensor.portNumber", "Port number sensor on members" ]
+    
     public static final BasicAttributeSensor<Integer> HTTP_PORT = Attributes.HTTP_PORT
 
     AbstractGroup cluster
@@ -41,10 +36,14 @@ public abstract class AbstractController extends AbstractService {
     int port
     String protocol
     URL url
+    Sensor portNumber
     Map<InetAddress,List<Integer>> addresses
 
-    public AbstractController(Map properties=[:], Entity owner=null, Group cluster=null) {
+    public AbstractController(Map properties=[:], Entity owner=null, AbstractGroup cluster=null) {
         super(properties, owner)
+
+        portNumber = getConfig(PORT_NUMBER_SENSOR) ?: properties.portNumberSensor
+        Preconditions.checkNotNull(portNumber, "The port number sensor must be supplied")
 
         if (getConfig(PROTOCOL) || properties.containsKey("url")) {
 	        url = getConfig(URL) ?: properties.remove("url")
@@ -76,42 +75,27 @@ public abstract class AbstractController extends AbstractService {
         addresses = new HashMap<InetAddress,List<Integer>>().withDefault { new ArrayList<Integer>() }
     }
 
-    public void setCluster(Group cluster) {
+    public void setCluster(AbstractGroup cluster) {
         Preconditions.checkNotNull cluster, "The cluster cannot be null"
         this.cluster = cluster
-        cluster.setOwner(this)
-        cluster.addEntityChangeListener({ ElementEvent event ->
-                LOG.trace "Entity change event for {} - {}", id, event.changeType
-	            switch (event.changeType) {
-                    case ChangeType.ADDED:
-                        add([ event.newValue ])
-                        break
-                    case ChangeType.MULTI_ADD:
-                        add(event.values)
-                        break
-                    case ChangeType.REMOVED:
-	                    remove([ event.oldValue ])
-                        break;
-                    case ChangeType.MULTI_REMOVE:
-                        remove(event.values)
-                        break
-                    case ChangeType.CLEARED:
-                        remove(event.values)
-                        break
-                    default:
-                        break;
-                }
-            } as PropertyChangeListener)
+        subscriptionContext.subscribe(cluster, cluster.MEMBER_ADDED, { add it } as EventListener)
+        subscriptionContext.subscribe(cluster, cluster.MEMBER_REMOVED, { remove it } as EventListener)
     }
 
-    public void add(Collection<Entity> entities) {
-        entities.each { Entity e -> e.locations.each { MachineLocation machine -> addresses[machine.address] += e.getAttribute(portNumber) } }
-        configure()
+    public synchronized void add(Entity entity) {
+        entity.locations.each { MachineLocation machine -> addresses[machine.address] += entity.getAttribute(portNumber) }
+        if (getAttribute(SERVICE_UP)) {
+	        configure()
+	        restart()
+        }
     }
 
-    public void remove(Collection<Entity> entities) {
-        entities.each { Entity e -> e.locations.each { MachineLocation machine -> addresses[machine.address] -= e.getAttribute(portNumber) } }
-        configure()
+    public synchronized void remove(Entity entity) {
+        entity.locations.each { MachineLocation machine -> addresses[machine.address] -= entity.getAttribute(portNumber) }
+        if (getAttribute(SERVICE_UP)) {
+	        configure()
+	        restart()
+        }
     }
 
     /**

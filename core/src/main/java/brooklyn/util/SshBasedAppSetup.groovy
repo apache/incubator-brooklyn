@@ -124,6 +124,20 @@ public abstract class SshBasedAppSetup {
      * @see #isRunning()
      */
     public abstract List<String> getCheckRunningScript();
+ 
+    /**
+     * The script to run to on a remote machine to restart the application.
+     *
+     * @return a {@link List} of shell commands
+     */
+    public List<String> getRestartScript() { [] }
+
+    /**
+     * The script to run to on a remote machine to shutdown the application.
+     *
+     * @return a {@link List} of shell commands
+     */
+    public List<String> getShutdownScript() { [] }
 
     /**
      * Installs the application on this machine, or no-op if no install-script defined.
@@ -194,7 +208,12 @@ public abstract class SshBasedAppSetup {
     /**
      * Shut down the application process.
      */
-    public void shutdown() { }
+    public void shutdown() {
+        log.debug "invoking shutdown script"
+        def result = machine.run(out:System.out, getShutdownScript())
+        if (result) log.info "non-zero result code terminating {}: {}", entity, result
+        log.debug "done invoking shutdown script"
+    }
 
     /**
      * Start the application.
@@ -216,7 +235,7 @@ public abstract class SshBasedAppSetup {
     }
 
     /**
-     * Stop the Java application.
+     * Stop the application.
      *
      * May also use the explicit {@link #shutdown()} step, however this call
      * also executes the {@link #postShutdown()} method if successful.
@@ -226,6 +245,29 @@ public abstract class SshBasedAppSetup {
     public void stop() {
         shutdown()
         postShutdown()
+    }
+
+    /**
+     * Restart the application.
+     * 
+     * If {@link #getRestartScript()} is empty, this will simply stop and then start the service, otherwise
+     * the script will be run.
+     *
+     * @see #start()
+     * @see #stop()
+     */
+    public void restart() {
+        if (restartScript.isEmpty()) {
+	        stop()
+	        runApp()
+	        postStart()
+        } else {
+	        log.debug "invoking restart script"
+	        def result = machine.run(out:System.out, restartScript)
+	        if (result) log.info "non-zero result code terminating {}: {}", entity, result
+	        log.debug "done invoking restart script"
+        
+        }
     }
 
     /**
