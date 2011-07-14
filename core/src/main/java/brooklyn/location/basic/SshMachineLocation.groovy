@@ -58,7 +58,10 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     }
 
     public int copyTo(File src, String destination) {
-        def conn = new SshJschTool(user:user, host:address.hostName)
+        if (!user) user=System.getProperty "user.name"
+        def sshArgs = [user:user, host:address.hostName]
+        sshArgs << sshConfig
+        def conn = new SshJschTool(sshArgs)
         conn.connect()
         int result = conn.copyToServer [:], src, destination
         conn.disconnect()
