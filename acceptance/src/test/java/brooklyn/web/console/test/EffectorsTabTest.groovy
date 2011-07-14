@@ -8,12 +8,12 @@ public class EffectorsTabTest extends AbstractSeleniumTest{
 
     @Test
     public void effectorsTabShows() throws Exception {
-         selenium.open("/entity/");
+        selenium.open("/entity/");
 
         // Wait for tree to load
         waitFor({selenium.isTextPresent("tomcat")});
 
-        selenium.click("jstree-node-id-leaf-4")
+        selenium.click("link=tomcat node 1a.3")
         selenium.click("link=Effectors");
         waitFor({selenium.isTextPresent("Parameters")});
 
