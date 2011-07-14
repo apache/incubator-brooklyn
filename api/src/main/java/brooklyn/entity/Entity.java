@@ -5,6 +5,7 @@ import java.util.Collection;
 
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
+import brooklyn.policy.Policy;
 
 /**
  * The basic interface for a Brooklyn entity.
@@ -66,6 +67,10 @@ public interface Entity extends Serializable {
      */
     Entity addOwnedChild(Entity child);
     
+    /**
+     * @return an immutable thread-safe view of the policies.
+     */
+    Collection<Policy> getPolicies();
     
     /**
      * The {@link Collection} of {@link Group}s that this entity is a member of.

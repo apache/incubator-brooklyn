@@ -1,18 +1,15 @@
 package brooklyn.entity.basic
 
-import groovy.util.ObservableList.ElementAddedEvent;
-import groovy.util.ObservableList.ElementRemovedEvent;
+import groovy.util.ObservableList.ElementAddedEvent
+import groovy.util.ObservableList.ElementRemovedEvent
 
-import java.util.Collection;
+import java.beans.PropertyChangeListener
+import java.util.Collection
 import java.util.Map
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.beans.PropertyChangeListener;
 
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
 import brooklyn.entity.trait.Changeable
-import brooklyn.util.internal.SerializableObservableList;
-
 
 public abstract class AbstractGroup extends AbstractEntity implements Group, Changeable {
     public AbstractGroup(Map props=[:], Entity owner=null) {
@@ -20,7 +17,7 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
     }
 
     final EntityCollectionReference<Group> members = new EntityCollectionReference<Group>(this);
-    
+
     /**
      * Adds the given entity as a member of this group <em>and</em> this group as one of the groups of the child;
      * returns argument passed in, for convenience.

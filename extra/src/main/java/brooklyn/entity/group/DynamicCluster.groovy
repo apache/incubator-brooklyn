@@ -33,7 +33,7 @@ public class DynamicCluster extends AbstractGroup implements Startable, Resizabl
      * Instantiate a new DynamicCluster. Valid properties are:
      * <ul>
      * <li>template - an {@link Entity} that implements {@link Startable} that will be the template for nodes in the cluster.
-     * <li>initialSize - an {@link Integer} that is the number of nodes to start when the cluster's {@link #start(Collection)} method is
+     * <li>initialSize - an {@link Integer} that is the number of nodes to start when the cluster's {@link #start(List)} method is
      * called.
      * </ul>
      *
@@ -56,7 +56,7 @@ public class DynamicCluster extends AbstractGroup implements Startable, Resizabl
     public void start(Collection<? extends Location> locations) {
         Preconditions.checkNotNull locations, "locations must be supplied"
         Preconditions.checkArgument locations.size() == 1, "Exactly one location must be supplied"
-        location = locations.any { true }
+        location = locations.find { true }
         resize(initialSize)
     }
 

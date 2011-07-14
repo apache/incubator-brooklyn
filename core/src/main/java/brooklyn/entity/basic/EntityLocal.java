@@ -54,13 +54,6 @@ public interface EntityLocal extends Entity {
     // FIXME remove from interface?
     <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, EventListener<T> listener);
  
-
-    /**
-     * @return an immutable thread-safe view of the policies.
-     */
-    // FIXME move to Entity
-    Collection<Policy> getPolicies();
-    
     /**
      * Adds the given policy to this entity. Also calls policy.setEntity if available.
      */

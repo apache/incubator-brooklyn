@@ -5,7 +5,7 @@ import brooklyn.policy.Policy;
 import java.lang.reflect.Field
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CopyOnWriteArraySet
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutionException
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -48,9 +48,10 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
  
     String id = LanguageUtils.newUid()
     String displayName
-    
     EntityReference owner
+ 
     volatile EntityReference<Application> application
+ 
     private final Object ownedChildrenLock = new Object();
     final EntityCollectionReference ownedChildren = new EntityCollectionReference<Entity>(this);
     final EntityCollectionReference<Group> groups = new EntityCollectionReference<Group>(this);
@@ -292,12 +293,12 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 
     @Override
     public String getApplicationId() {
-        getApplication()?.id
+        application?.id
     }
 
     @Override
     public ManagementContext getManagementContext() {
-        getApplication()?.getManagementContext()
+        application.managementContext
     }
     
     protected synchronized void registerWithApplication(Application app) {
@@ -308,11 +309,8 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 
     @Override
     public synchronized EntityClass getEntityClass() {
-        if (!entityClass) {
-            entityClass = new BasicEntityClass(getClass().getCanonicalName(), getSensors().values(), getEffectors().values())
-        }
-
-        return entityClass
+        if (entityClass) entityClass
+        entityClass = new BasicEntityClass(this.class.canonicalName, sensors.values(), effectors.values()) 
     }
 
     @Override
@@ -400,13 +398,13 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     }
 
     protected synchronized SubscriptionContext getSubscriptionContext() {
-        if (subscription) subscription;
-        subscription = getManagementContext()?.getSubscriptionContext(this);
+        if (subscription) subscription
+        subscription = managementContext.getSubscriptionContext(this);
     }
 
     protected synchronized ExecutionContext getExecutionContext() {
         if (execution) execution;
-        execution = new BasicExecutionContext(tag:this, getManagementContext().getExecutionManager())
+        execution = new BasicExecutionContext(tag:this, managementContext.executionManager)
     }
     
     /** default toString is simplified name of class, together with selected arguments */
@@ -564,13 +562,17 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     
 }
 
-/** serialization helper; this masks (with transience) a remote entity (e.g a child or parent) during serialization,
+/**
+ * Serialization helper.
+ *
+ * This masks (with transience) a remote entity (e.g a child or parent) during serialization,
  * by keeping a non-transient reference to the entity which owns the reference, 
  * and using his management context reference to find the referred Entity (master instance or proxy),
- * which is then cached */
+ * which is then cached.
+ */
 private class EntityReference<T extends Entity> implements Serializable {
     Entity referrer;
-    
+
     String id;
     transient T entity = null;
 
@@ -578,6 +580,7 @@ private class EntityReference<T extends Entity> implements Serializable {
         this.referrer = referrer;
         this.id = id;
     }
+
     public EntityReference(Entity referrer, Entity reference) {
         this(referrer, reference.id);
         entity = reference;
@@ -588,6 +591,7 @@ private class EntityReference<T extends Entity> implements Serializable {
         if (e) return e;
         find();
     }
+
     private synchronized T find() {
         if (entity) return entity;
         if (!referrer)
@@ -599,6 +603,7 @@ private class EntityReference<T extends Entity> implements Serializable {
         entity = null;
     }
 }
+
 private class EntityCollectionReference<T extends Entity> implements Serializable {
     private static final Logger LOG = LoggerFactory.getLogger(EntityCollectionReference.class)
     Entity referrer;
@@ -617,6 +622,7 @@ private class EntityCollectionReference<T extends Entity> implements Serializabl
             entities = e2;
         }
     }
+
     public synchronized void remove(Entity e) {
         if (entityRefs.remove(e.id) && entities!=null) {
             def e2 = new LinkedHashSet<T>(entities);
@@ -624,6 +630,7 @@ private class EntityCollectionReference<T extends Entity> implements Serializabl
             entities = e2;
         }
     }
+
     public Collection<T> get() {
         Collection<T> result = entities;
         if (result==null) {
@@ -631,6 +638,7 @@ private class EntityCollectionReference<T extends Entity> implements Serializabl
         }
         return Collections.unmodifiableCollection(result);
     }
+
     private synchronized Collection<T> find() {
         if (entities!=null) return entities;
         if (!referrer)
@@ -644,5 +652,4 @@ private class EntityCollectionReference<T extends Entity> implements Serializabl
         }
         entities = result;
     }
-
 }
