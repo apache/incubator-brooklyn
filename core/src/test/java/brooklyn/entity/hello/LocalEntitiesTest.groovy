@@ -59,6 +59,7 @@ class LocalEntitiesTest {
             evt.wait(5000)
         }
         
+        assertNotNull(evt.get())
         assertEquals(HelloEntity.AGE, evt.get().sensor)
         assertEquals(h, evt.get().source)
         assertEquals(5, evt.get().value)

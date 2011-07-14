@@ -10,13 +10,13 @@ import brooklyn.event.AttributeSensor
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
 
+import com.google.common.base.Objects;
 import com.google.common.base.Splitter
 import com.google.common.collect.Lists
 
 /**
  * Parent for all {@link Sensor}s.
  */
-@EqualsAndHashCode(includeFields=true)
 public class BasicSensor<T> implements Sensor<T> {
     private static final long serialVersionUID = -3762018534086101323L;
     
@@ -57,6 +57,20 @@ public class BasicSensor<T> implements Sensor<T> {
     /** @see Sensor#newEvent(Entity, Object) */
     public SensorEvent<T> newEvent(Entity producer, T value) {
         return new BasicSensorEvent<T>(this, producer, value)
+    }
+    
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(typeName, name, description)
+    }
+ 
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof Sensor)) return false
+        Sensor that = (Sensor) other
+        return ((that.typeName == this.typeName) &&
+	            (that.name == this.name) &&
+	            (that.description == this.description)) 
     }
     
     @Override
