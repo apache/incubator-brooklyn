@@ -57,11 +57,10 @@ public class DynamicCluster extends AbstractGroup implements Startable, Resizabl
         int delta = desiredSize - currentSize
         logger.info "Resize from {} to {}; delta = {}", currentSize, desiredSize, delta
 
-        Collection<Entity> addedEntities = null
-        Collection<Entity> removedEntities = null
+        Collection<Entity> addedEntities = []
+        Collection<Entity> removedEntities = []
 
         if (delta > 0) {
-            addedEntities = []
             delta.times {
                 def result = addNode()
                 Preconditions.checkState result != null, "addNode call returned null"
