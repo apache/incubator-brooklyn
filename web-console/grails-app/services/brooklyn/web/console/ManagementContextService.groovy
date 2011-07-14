@@ -13,6 +13,8 @@ import brooklyn.management.ExecutionManager
 import brooklyn.management.ManagementContext
 import brooklyn.management.internal.LocalManagementContext
 import brooklyn.web.console.entity.TestEffector
+import brooklyn.management.SubscriptionManager
+import java.util.concurrent.atomic.AtomicLong
 
 class ManagementContextService {
     
@@ -21,7 +23,7 @@ class ManagementContextService {
     private final ManagementContext context = new LocalManagementContext()
     private final Application application = new TestApplication()
     
-    protected static int ID_GENERATOR = 0
+    protected static AtomicLong ID_GENERATOR = new AtomicLong(0L)
 
     public ManagementContextService() {
         context.applications.add(application)
@@ -39,9 +41,13 @@ class ManagementContextService {
         return context.executionManager
     }
 
+    public SubscriptionManager getSubscriptionManager() {
+        return context.subscriptionManager
+    }
+
     private class TestApplication extends AbstractApplication {
         TestApplication() {
-            this.id = "app-" + ManagementContextService.ID_GENERATOR++
+            this.id = "app-" + ManagementContextService.ID_GENERATOR.incrementAndGet()
             displayName = "Application";
 
             Entity testExtraGroup = new TestGroupEntity(this, "Another group for testing");
@@ -77,7 +83,7 @@ class ManagementContextService {
             TestGroupEntity(Entity owner, String displayName) {
                 super([:], owner)
                 this.displayName = displayName
-                this.id = "group-" + ManagementContextService.ID_GENERATOR++
+                this.id = "group-" + ManagementContextService.ID_GENERATOR.incrementAndGet()
                 sensors.putAll([Children: new BasicAttributeSensor<Integer>(Integer.class, "Children",
                         "Direct children of this group"), DataRate: new BasicAttributeSensor<String>(String.class, "DataRate")])
             }
@@ -94,7 +100,7 @@ class ManagementContextService {
                 super([:], owner)
 
                 this.displayName = displayName
-                this.id = "leaf-" + ManagementContextService.ID_GENERATOR++
+                this.id = "leaf-" + ManagementContextService.ID_GENERATOR.incrementAndGet()
                 this.locations = ["Fairbanks, Alaska", "Dubai"]
 
                 TestEffector startDB = new TestEffector("Start DB", "This will start the database",
@@ -129,7 +135,7 @@ class ManagementContextService {
             public TestTomcatEntity(Entity owner, String displayName) {
                 super([:], owner)
                 this.displayName = displayName
-                this.id = "leaf-" + ManagementContextService.ID_GENERATOR++
+                this.id = "leaf-" + ManagementContextService.ID_GENERATOR.incrementAndGet()
                 this.locations = ["Kuala Lumpur"]
                 // Stealing the sensors from TomcatNode
                 this.sensors.putAll(new TomcatNode().sensors)
