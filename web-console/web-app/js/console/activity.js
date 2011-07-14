@@ -63,7 +63,12 @@ Brooklyn.activity = (function(){
         $('#activity-select').click(selectLog);
     }
 
-    return { init: init, selectLog: selectLog , clearLog: clearLog , updateLog: updateLog }
+    return {
+        init: init,
+        selectLog: selectLog,
+        clearLog: clearLog,
+        updateLog: updateLog
+    };
 
 })();
 $(document).ready(Brooklyn.activity.init);

@@ -52,7 +52,10 @@ Brooklyn.summary = (function() {
         $(Brooklyn.eventBus).bind("update", update);
     }
 
-    return {init: init};
+    return {
+        init: init
+    };
+
 })();
 
 $(document).ready(Brooklyn.summary.init);

@@ -62,7 +62,12 @@ Brooklyn.tabs = (function() {
         return row._aData;
     }
 
-    return {init: init, getDataTable: getDataTable, getDataTableSelectedRowData: getDataTableSelectedRowData};
+    return {
+        init: init,
+        getDataTable: getDataTable,
+        getDataTableSelectedRowData: getDataTableSelectedRowData
+    };
+
 }());
 
 $(document).ready(Brooklyn.tabs.init);

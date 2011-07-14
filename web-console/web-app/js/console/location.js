@@ -132,7 +132,13 @@ Brooklyn.location = (function() {
         $(Brooklyn.eventBus).bind("tab_selected", resize);
     }
 
-    return { init : init, resize : resize, locationNumber: locationNumber, appLocations: appLocations }
+    return {
+        init : init,
+        resize : resize,
+        locationNumber: locationNumber,
+        appLocations: appLocations
+    };
+
 })();
 
 $(document).ready(Brooklyn.location.init);
