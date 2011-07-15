@@ -54,9 +54,6 @@ public abstract class SshBasedJavaAppSetup extends SshBasedAppSetup {
 	            options.append(" ")
 	        }
         return options.toString().trim()
-//        return properties
-//            .collect({ key, value -> "-D${key}" + (value ?: "='${value}'") })
-//            .join(" ")
     }
 
     /**

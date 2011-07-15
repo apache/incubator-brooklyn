@@ -65,11 +65,11 @@ public abstract class SshBasedAppSetup {
     protected List<String> makeInstallScript(List<String> lines) {
         if (lines.isEmpty()) return lines
         List<String> script = [
-            "[ -f $installDir/../INSTALL_COMPLETION_DATE ] && exit 0",
-			"mkdir -p $installDir",
-			"cd $installDir/..",
+            "[ -f ${installDir}/../INSTALL_COMPLETION_DATE ] && exit 0",
+			"mkdir -p ${installDir}",
+			"cd ${installDir}/..",
         ]
-        lines.each { line -> script += "${line} || exit 1" }
+        lines.each { line -> script += "${line}" }
         script += "date > INSTALL_COMPLETION_DATE"
         return script
     }

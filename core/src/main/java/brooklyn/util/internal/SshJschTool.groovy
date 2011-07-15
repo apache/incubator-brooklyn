@@ -136,6 +136,7 @@ public class SshJschTool {
         if (properties.out) {
             channel.setOutputStream(properties.out, true)
         }
+        long pause = properties.pause ?: 250
 
         def allCmds = []
         allCmds.add "exec bash -e"
@@ -152,10 +153,10 @@ public class SshJschTool {
                 log.info "[{}] {}", host, it
                 byte[] data = (it+"\n").getBytes("UTF-8")
                 out.write(data)
-                Thread.sleep 300
+                Thread.sleep pause
             }
-        } catch (IOException e) {
-            log.info "Caught an IOException - the script has probably exited early"
+        } catch (IOException ioe) {
+            log.info "Caught an IOException ({}) - the script has probably exited early", ioe.message
         }
 
         if (properties.block==null || properties.block) {
