@@ -11,8 +11,8 @@ public class ParallelTask extends CompoundTask {
 
     protected Object runJobs() {
         List<Object> result = []
-        children.each { task ->    em.submit(task) }
-        children.each { task ->    result.add(task.get()) }
+        children.each { task -> if (!task.isSubmitted()) em.submit(task) }
+        children.each { task -> result.add(task.get()) }
         return result
     }    
 }
