@@ -105,25 +105,28 @@ public class QpidIntegrationTest {
             assertEquals qpid.ownedChildren.size(), 1
             assertFalse qpid.queues.isEmpty()
             assertEquals qpid.queues.size(), 1
-            assertNotNull qpid.queues[queueName]
+
+            // Get the named queue entity
+            QpidQueue queue = qpid.queues[queueName]
+            assertNotNull queue
 
             // Connect to broker using JMS and send messages
             Connection connection = getQpidConnection(qpid)
-            clearQueue(connection, "BURL:${queueName}")
-            sendMessages(connection, number, "BURL:${queueName}", content)
+            clearQueue(connection, queue.bindingUrl)
+            sendMessages(connection, number, queue.bindingUrl, content)
             Thread.sleep 1000
 
             // Check messages arrived
-            assertEquals qpid.queues[queueName].getAttribute(QpidQueue.MESSAGE_COUNT), number
-            assertEquals qpid.queues[queueName].getAttribute(QpidQueue.QUEUE_DEPTH), number * content.length()
+            assertEquals queue.getAttribute(QpidQueue.MESSAGE_COUNT), number
+            assertEquals queue.getAttribute(QpidQueue.QUEUE_DEPTH), number * content.length()
 
             // Clear the messages
-            assertEquals clearQueue(connection, "BURL:${queueName}"), number
+            assertEquals clearQueue(connection, queue.bindingUrl), number
             Thread.sleep 1000
 
             // Check messages cleared
-            assertEquals qpid.queues[queueName].getAttribute(QpidQueue.MESSAGE_COUNT), 0
-            assertEquals qpid.queues[queueName].getAttribute(QpidQueue.QUEUE_DEPTH), 0
+            assertEquals queue.getAttribute(QpidQueue.MESSAGE_COUNT), 0
+            assertEquals queue.getAttribute(QpidQueue.QUEUE_DEPTH), 0
 	        connection.close()
 
             // Close the JMS connection
