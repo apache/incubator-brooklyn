@@ -66,7 +66,7 @@ public class DynamicCluster extends AbstractGroup implements Startable, Resizabl
         throw new UnsupportedOperationException()
     }
 
-    public Integer resize(int desiredSize) {
+    public synchronized Integer resize(int desiredSize) {
         int delta = desiredSize - currentSize
         logger.info "Resize from {} to {}; delta = {}", currentSize, desiredSize, delta
 

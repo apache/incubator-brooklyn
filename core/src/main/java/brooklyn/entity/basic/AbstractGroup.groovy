@@ -22,7 +22,7 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
      * Adds the given entity as a member of this group <em>and</em> this group as one of the groups of the child;
      * returns argument passed in, for convenience.
      */
-    public Entity addMember(Entity member) {
+    public synchronized Entity addMember(Entity member) {
         member.addGroup(this)
         members.add(member)
         listeners.each { it.propertyChange(new ElementAddedEvent(this, member, -1)) }
@@ -31,7 +31,7 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
         member
     }
  
-    public boolean removeMember(Entity member) {
+    public synchronized boolean removeMember(Entity member) {
         members.remove member
         listeners.each { it.propertyChange(new ElementRemovedEvent(this, member, -1)) }
         emit(MEMBER_REMOVED, MEMBER_REMOVED.newEvent(this, member))

@@ -1,5 +1,6 @@
 package brooklyn.entity.group
 
+import java.util.List
 import java.util.Map
 
 import org.slf4j.Logger
@@ -9,11 +10,12 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.basic.AbstractService
 import brooklyn.entity.basic.Attributes
-import brooklyn.event.EventListener;
+import brooklyn.event.EventListener
 import brooklyn.event.Sensor
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.MachineLocation
+import brooklyn.management.SubscriptionHandle
 
 import com.google.common.base.Preconditions
 
@@ -28,7 +30,7 @@ public abstract class AbstractController extends AbstractService {
     public static final BasicConfigKey<String> PROTOCOL = [ String, "proxy.portNumber", "Protocol" ]
     public static final BasicConfigKey<String> URL = [ String, "proxy.url", "URL" ]
     public static final BasicConfigKey<Sensor> PORT_NUMBER_SENSOR = [ String, "member.sensor.portNumber", "Port number sensor on members" ]
-    
+
     public static final BasicAttributeSensor<Integer> HTTP_PORT = Attributes.HTTP_PORT
 
     AbstractGroup cluster
@@ -37,7 +39,9 @@ public abstract class AbstractController extends AbstractService {
     String protocol
     URL url
     Sensor portNumber
-    Map<InetAddress,List<Integer>> addresses
+
+    protected Map<InetAddress,List<Integer>> addresses
+    protected List<SubscriptionHandle> subscriptions = []
 
     public AbstractController(Map properties=[:], Entity owner=null, AbstractGroup cluster=null) {
         super(properties, owner)
@@ -71,16 +75,31 @@ public abstract class AbstractController extends AbstractService {
         }
 
         setCluster(cluster ?: properties.cluster)
-
-        addresses = new HashMap<InetAddress,List<Integer>>().withDefault { new ArrayList<Integer>() }
     }
 
     public void setCluster(AbstractGroup cluster) {
         Preconditions.checkNotNull cluster, "The cluster cannot be null"
         this.cluster = cluster
-        subscriptionContext.subscribe(cluster, cluster.MEMBER_ADDED, { add it } as EventListener)
-        subscriptionContext.subscribe(cluster, cluster.MEMBER_REMOVED, { remove it } as EventListener)
+        reset()
+        cluster.members.each { add it }
+        subscriptions += subscriptionContext.subscribe(cluster, cluster.MEMBER_ADDED, { add it } as EventListener)
+        subscriptions += subscriptionContext.subscribe(cluster, cluster.MEMBER_REMOVED, { remove it } as EventListener)
     }
+
+    public void reset() {
+        addresses = new HashMap<InetAddress,List<Integer>>().withDefault { new ArrayList<Integer>() }
+
+        subscriptions.each { subscriptionContext.unsubscribe(it) }
+        subscriptions.clear()
+    }
+
+    @Override
+    public void stop() {
+        reset()
+        super.stop()
+    }
+
+    // TODO use blocking config mechanism to wait for the port number attribute to become available
 
     public synchronized void add(Entity entity) {
         entity.locations.each { MachineLocation machine -> addresses[machine.address] += entity.getAttribute(portNumber) }
