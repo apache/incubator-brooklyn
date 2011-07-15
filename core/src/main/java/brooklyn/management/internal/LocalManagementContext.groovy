@@ -40,6 +40,11 @@ public class LocalManagementContext extends AbstractManagementContext {
         return apps
     }
     
+    public Entity getEntity(String id) {
+        //FIXME needed, a registry after serialization
+        null
+	}
+    
     public SubscriptionManager getSubscriptionManager() { return subscriptions; }
     public ExecutionManager getExecutionManager() { return execution; }
      

@@ -52,13 +52,17 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     private static final Logger LOG = LoggerFactory.getLogger(AbstractEntity.class)
  
     String id = LanguageUtils.newUid()
-    Map<String,Object> presentationAttributes = [:]
     String displayName
-    final Collection<Group> groups = new CopyOnWriteArrayList<Group>()
-    volatile Application application
-    Collection<Location> locations = []
-    Entity owner
+    
+    EntityReference owner
+    volatile EntityReference<Application> application
+    final EntityCollectionReference ownedChildren = new EntityCollectionReference<Entity>(this);
+    final EntityCollectionReference<Group> groups = new EntityCollectionReference<Group>(this);
+
+    Map<String,Object> presentationAttributes = [:]
     Collection<Policy> policies = [] as CopyOnWriteArrayList
+    Collection<Location> locations = []
+    
     
     // following two perhaps belong in entity class in a registry;
     // but that is an optimization, and possibly wrong if we have dynamic sensors/effectors
@@ -73,7 +77,6 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     protected transient ExecutionContext execution
     protected transient SubscriptionContext subscription
     
-    final Collection<Entity> ownedChildren = new CopyOnWriteArraySet<Entity>();
  
     /**
      * The sensor-attribute values of this entity. Updating this map should be done
@@ -93,6 +96,8 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
      * The idea is that the owner could in theory decide explicitly what in its config
      * would be shared.
      * I (Aled) am undecided as to whether that would be better...
+     * 
+     * (Alex) i lean toward the config key getting to make the decision
      */
     /**
      * Map of configuration information that is defined at start-up time for the entity. These
@@ -152,16 +157,16 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
      */
     public synchronized void setOwner(Entity entity) {
         if (owner != null) {
-            if (owner == entity) return
-            if (owner != entity) throw new UnsupportedOperationException("Cannot change owner of $this from $owner to $entity (owner change not supported)")
+            if (owner.get() == entity) return
+            throw new UnsupportedOperationException("Cannot change owner of $this from $owner to $entity (owner change not supported)")
         }
         //make sure there is no loop
         if (this.equals(entity)) throw new IllegalStateException("entity $this cannot own itself")
         if (isDescendant(entity)) throw new IllegalStateException("loop detected trying to set owner of $this as $entity, which is already a descendent")
         
-        owner = entity
+        owner = new EntityReference(this, entity)
         entity.addOwnedChild(this)
-        inheritedConfig.putAll(owner.getAllConfig())
+        inheritedConfig.putAll(entity.getAllConfig())
         getApplication()
     }
 
@@ -219,21 +224,23 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     }
  
     @Override
-    public Entity getOwner() { owner }
+    public Entity getOwner() { owner?.get() }
 
     @Override
-    public Collection<Group> getGroups() { groups }
+    public Collection<Entity> getOwnedChildren() { ownedChildren.get() }
+    
+    @Override
+    public Collection<Group> getGroups() { groups.get() }
 
     /**
      * Returns the application, looking it up if not yet known (registering if necessary)
      */
     @Override
     public Application getApplication() {
-        if (this.@application!=null) return this.@application;
-        def app = owner?.getApplication()
+        if (this.@application!=null) return this.@application.get();
+        def app = getOwner()?.getApplication()
         if (app) {
             registerWithApplication(app)
-            this.@application
         }
         app
     }
@@ -250,7 +257,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     
     protected synchronized void registerWithApplication(Application app) {
         if (application) return;
-        this.application = app
+        this.application = new EntityReference(this, app);
         app.registerEntity(this)
     }
 
@@ -302,7 +309,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     @Override
     public <T> T setConfig(ConfigKey<T> key, T val) {
         // TODO Is this the best idea, for making life easier for brooklyn coders when supporting changing config?
-        if (application?.isDeployed()) throw new IllegalStateException("Cannot set configuration $key on active entity $this")
+        if (getApplication()?.isDeployed()) throw new IllegalStateException("Cannot set configuration $key on active entity $this")
         
         T oldVal = ownConfig.put(key, val);
         if ((val in Task) && (!(val.isSubmitted()))) {
@@ -310,7 +317,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
             getExecutionContext().submit(val)
         }
         
-        ownedChildren.each {
+        ownedChildren.get().each {
             it.refreshInheritedConfig()
         }
         
@@ -318,13 +325,13 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     }
 
     public void refreshInheritedConfig() {
-        if (owner != null) {
-            inheritedConfig.putAll(owner.getAllConfig())
+        if (getOwner() != null) {
+            inheritedConfig.putAll(getOwner().getAllConfig())
         } else {
             inheritedConfig.clear();
         }
         
-        ownedChildren.each {
+        getOwnedChildren().each {
             it.refreshInheritedConfig()
         }
     }
@@ -486,5 +493,102 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     
     /** field for use only by management plane, to record remote destination when proxied */
     private AbstractEntity entityProxyForManagement = null;
+    /** for use by management plane, to record remote destination when proxied */
+    public void managementReplaceWithEntityProxy(AbstractEntity e) {
+        assert entityProxyForManagement==null : "already proxied";
+        entityProxyForManagement = e;
+        
+        this.@owner.invalidate();
+        this.@application.invalidate();
+        ownedChildren.get().each { it.invalidate() }
+        groups.get().each { it.invalidate() }
+        
+        entityClass = null
+        execution = null
+        subscription = null
+    }
     
+}
+
+/** serialization helper; this masks (with transience) a remote entity (e.g a child or parent) during serialization,
+ * by keeping a non-transient reference to the entity which owns the reference, 
+ * and using his management context reference to find the referred Entity (master instance or proxy),
+ * which is then cached */
+private class EntityReference<T extends Entity> implements Serializable {
+    Entity referrer;
+    
+    String id;
+    transient T entity = null;
+
+    public EntityReference(Entity referrer, String id) {
+        this.referrer = referrer;
+        this.id = id;
+    }
+    public EntityReference(Entity referrer, Entity reference) {
+        this(referrer, reference.id);
+        entity = reference;
+    }
+    
+    public T get() {
+        T e = entity;
+        if (e) return e;
+        find();
+    }
+    private synchronized T find() {
+        if (entity) return entity;
+        if (!referrer)
+            throw new IllegalStateException("EntityReference $id should have been initialised with a reference owner")
+        entity = ((AbstractEntity)referrer).getManagementContext().getEntity(id);
+    }
+    
+    synchronized void invalidate() {
+        entity = null;
+    }
+}
+private class EntityCollectionReference<T extends Entity> implements Serializable {
+    private static final Logger LOG = LoggerFactory.getLogger(EntityCollectionReference.class)
+    Entity referrer;
+    
+    Collection<String> entityRefs = new LinkedHashSet<String>();
+    transient Collection<T> entities = null;
+    
+    public EntityCollectionReference(Entity referrer) {
+        this.referrer = referrer;
+    }
+
+    public synchronized void add(Entity e) {
+        if (entityRefs.add(e.id)) {
+            def e2 = new LinkedHashSet<T>(entities!=null?entities:Collections.emptySet());
+            e2 << e
+            entities = e2;
+        }
+    }
+    public synchronized void remove(Entity e) {
+        if (entityRefs.remove(e.id) && entities!=null) {
+            def e2 = new LinkedHashSet<T>(entities);
+            e2.remove(e);
+            entities = e2;
+        }
+    }
+    public Collection<T> get() {
+        Collection<T> result = entities;
+        if (result==null) {
+            result = find();
+        }
+        return Collections.unmodifiableCollection(result);
+    }
+    private synchronized Collection<T> find() {
+        if (entities!=null) return entities;
+        if (!referrer)
+            throw new IllegalStateException("EntityReference $id should have been initialised with a reference owner")
+        Collection<T> result = new CopyOnWriteArrayList<T>();
+        entityRefs.each { 
+            def e = ((AbstractEntity)referrer).getManagementContext().getEntity(it); 
+            if (e==null) 
+                LOG.warn("unable to find $it, referred to by $referrer");
+            else result << e;
+        }
+        entities = result;
+    }
+
 }

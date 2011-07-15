@@ -1,7 +1,6 @@
 package brooklyn.management;
 
 import java.util.Collection;
-import java.util.concurrent.Executor;
 
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
@@ -20,12 +19,10 @@ public interface ManagementContext {
      */
     Collection<Application> getApplications();
 
-    //try removing this, as it is tedious to implement always (e.g. local case, where it was returning null anyway);
-    //and not sure it is desirable to treat an entity by its ID only (when we can just as easily keep a proxy Entity instance)
-//    /**
-//     * Returns the entity with the given identifier (may be a full instance, or a proxy to one which is remote)
-//     */
-//    Entity getEntity(String id);
+    /**
+     * Returns the entity with the given identifier (may be a full instance, or a proxy to one which is remote)
+     */
+    Entity getEntity(String id);
     
     /**
      * Returns the {@link ExecutionManager} instance for entities and users in this management realm 
@@ -38,8 +35,24 @@ public interface ManagementContext {
      * to subscribe to sensor events (and, in the case of entities, to emit sensor events) 
      */
     SubscriptionManager getSubscriptionManager();
- 
+
+    //TODO (Alex) I'm not sure the following two getXxxContext methods are needed on the interface;
+    //I expect they will only be called once, in AbstractEntity, and fully capable
+    //there of generating the respective contexts from the managers
+    //(Litmus test will be whether there is anything in FederatedManagementContext
+    //which requires a custom FederatedExecutionContext -- or whether BasicEC 
+    //works with FederatedExecutionManager)
+    /**
+     * Returns an {@link ExecutionContext} instance representing tasks 
+     * (from the {@link ExecutionManager}) associated with this entity, and capable 
+     * of conveniently running such tasks which will be associated with that entity  
+     */
     ExecutionContext getExecutionContext(Entity entity);
- 
+    
+    /**
+     * Returns a {@link SubscriptionContext} instance representing subscriptions
+     * (from the {@link SubscriptionManager}) associated with this entity, and capable 
+     * of conveniently subscribing on behalf of that entity  
+     */
     SubscriptionContext getSubscriptionContext(Entity entity);
 }
