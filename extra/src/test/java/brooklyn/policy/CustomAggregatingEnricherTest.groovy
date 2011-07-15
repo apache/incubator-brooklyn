@@ -27,6 +27,14 @@ class CustomAggregatingEnricherTest {
         intSensor = new BasicSensor<Integer>(Integer.class, "int sensor")
         target = new BasicSensor<Integer>(Integer.class, "target sensor")
     }
+    
+    @Test
+    public void testEnrichersWithNoProducers() {
+        CustomAggregatingEnricher<Integer> cae = CustomAggregatingEnricher.<Integer>getSummingEnricher(
+                [], intSensor, target)
+        producer.addPolicy(cae)
+        assertEquals cae.getAggregate(), 0
+    }
 
     @Test
     public void testSingleProducerSum() {
@@ -79,6 +87,9 @@ class CustomAggregatingEnricherTest {
         cae.onEvent(intSensor.newEvent(producers[2], 6))
         assertEquals cae.getAggregate(), 4d
 
+        // change p2's value to 7.5, average increase of 0.5.
+        cae.onEvent(intSensor.newEvent(producers[2], 7.5))
+        assertEquals cae.getAggregate(), 4.5d
     }
     
     @Test
@@ -100,6 +111,9 @@ class CustomAggregatingEnricherTest {
         cae.addProducer(p2)
         cae.onEvent(intSensor.newEvent(p2, 4))
         assertEquals cae.getAggregate(), 5
+        
+        cae.removeProducer(p2)
+        assertEquals cae.getAggregate(), 1
         
     }
 }

@@ -37,9 +37,7 @@ class CustomAggregatingEnricher<T> extends AbstractPolicy implements EventListen
     
     public void setEntity(EntityLocal entity) {
         super.setEntity(entity)
-        values.each { 
-            def subscription = subscribe(it.key, source, this)
-        }
+        values.each { subscribe(it.key, source, this) }
     }
     
     @Override
@@ -58,13 +56,13 @@ class CustomAggregatingEnricher<T> extends AbstractPolicy implements EventListen
     }
     
     public T removeProducer(Entity producer) {
-        def subscription = subscriptions.remove(producer)
         unsubscribe(producer)
+        values.remove(producer)
     }
     
     public static <R extends Number> CustomAggregatingEnricher<R> getSummingEnricher(
             List<Entity> producer, Sensor<R> source, Sensor<R> target) {
-        return new CustomAggregatingEnricher<R>(producer, source, target, { it.sum() }, 0)
+        return new CustomAggregatingEnricher<R>(producer, source, target, { it.sum(0) }, 0)
     }
 
     public static <R extends Number> CustomAggregatingEnricher<R> getAveragingEnricher(
