@@ -36,8 +36,7 @@ public class NginxController extends AbstractController {
 
     public String getConfigFile(SshBasedAppSetup setup) {
         List<String> servers = []
-        addresses.collect servers, { InetAddress host, portList ->
-                portList.collect servers, { int port -> host.hostAddress + ":" + port } }
+        addresses.each { InetAddress host, portList -> portList.collect(servers, { int port -> host.hostAddress + ":" + port }) }
         StringBuffer config = []
         config.append """
 pid ${setup.runDir}/pid.txt;

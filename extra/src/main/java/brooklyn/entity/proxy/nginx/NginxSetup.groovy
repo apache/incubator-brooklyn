@@ -108,7 +108,9 @@ public class NginxSetup extends SshBasedAppSetup {
         List<String> script = [
             "cd ${runDir}",
             "ps aux | grep '[n]'ginx | grep `cat pid.txt` || exit 1",
-            "kill -9 `cat nginx.pid`"
+            "kill `cat pid.txt`",
+            "sleep 5",
+            "kill -9 `cat pid.txt`"
         ]
         return script
     }

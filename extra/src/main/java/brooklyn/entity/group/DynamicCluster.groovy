@@ -49,6 +49,8 @@ public class DynamicCluster extends AbstractGroup implements Startable, Resizabl
         setConfig(INITIAL_SIZE, initialSize)
 
         this.properties = properties
+
+        setAttribute(SERVICE_UP, false)
     }
 
     public void start(Collection<? extends Location> locations) {
@@ -56,10 +58,12 @@ public class DynamicCluster extends AbstractGroup implements Startable, Resizabl
         Preconditions.checkArgument locations.size() == 1, "Exactly one location must be supplied"
         location = locations.find { true }
         resize(initialSize)
+        setAttribute(SERVICE_UP, true)
     }
 
     public void stop() {
         resize(0)
+        setAttribute(SERVICE_UP, false)
     }
 
     public void restart() {
