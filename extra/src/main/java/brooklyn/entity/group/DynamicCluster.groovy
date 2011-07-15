@@ -50,18 +50,17 @@ public class DynamicCluster extends AbstractGroup implements Startable, Resizabl
     }
 
     void stop() {
-        throw new UnsupportedOperationException()
+        resize(0)
     }
 
     ResizeResult resize(int desiredSize) {
         int delta = desiredSize - currentSize
         logger.info "Resize from {} to {}; delta = {}", currentSize, desiredSize, delta
 
-        Collection<Entity> addedEntities = null
-        Collection<Entity> removedEntities = null
+        Collection<Entity> addedEntities = []
+        Collection<Entity> removedEntities = []
 
         if (delta > 0) {
-            addedEntities = []
             delta.times {
                 def result = addNode()
                 Preconditions.checkState result != null, "addNode call returned null"
@@ -73,7 +72,14 @@ public class DynamicCluster extends AbstractGroup implements Startable, Resizabl
                 addedEntities.add(result.entity)
             }
         } else if (delta < 0) {
-            throw new UnsupportedOperationException()
+            def result = removeNode()
+            Preconditions.checkState result != null, "removeNode call returned null"
+            Preconditions.checkState result.containsKey('entity') && result.entity instanceof Entity,
+                "removeNode result should include key='entity' with value of type Entity instead of "+result.task?.class?.name
+            Preconditions.checkState result.containsKey('task') && result.task instanceof Task,
+                "removeNode result should include key='task' with value of type Task instead of "+result.task?.class?.name
+            result.task.get()
+            removedEntities.add(result.entity)
         }
 
         return new ResizeResult(){
@@ -95,6 +101,21 @@ public class DynamicCluster extends AbstractGroup implements Startable, Resizabl
         Task<Void> startTask = entity.invoke(Startable.START, [locations: [location]])
         Preconditions.checkState startTask != null, "Invoke Startable.START returned null"
         return [entity: entity, task: startTask]
+    }
+
+    protected def removeNode() {
+        logger.info "Removing a node"
+        Entity child = null
+        Task<Void> stopTask = null
+        accessOwnedChildrenSynchronized { Set<Entity> children ->
+            Iterator iter = children.iterator()
+            if (iter.hasNext() == false) return
+            child = iter.next()
+            stopTask = child.invoke(Startable.STOP)
+            Preconditions.checkState stopTask != null, "Invoke Startable.STOP returned null"
+            removeOwnedChild(child)
+        }
+        return [entity: child, task: stopTask]
     }
 
     int getCurrentSize() {

@@ -78,7 +78,7 @@ Brooklyn.effectors = (function() {
     }
 
     return {
-        init: init,
+        init: init
     };
 
 })();

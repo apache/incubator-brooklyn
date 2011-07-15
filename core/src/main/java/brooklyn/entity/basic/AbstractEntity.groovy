@@ -3,8 +3,6 @@ package brooklyn.entity.basic
 import brooklyn.policy.Policy;
 
 import java.lang.reflect.Field
-import java.util.Collection
-import java.util.Map
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CopyOnWriteArraySet
 import java.util.concurrent.ExecutionException;
@@ -17,7 +15,6 @@ import brooklyn.entity.Effector
 import brooklyn.entity.Entity
 import brooklyn.entity.EntityClass
 import brooklyn.entity.Group
-import brooklyn.entity.ParameterType
 import brooklyn.event.AttributeSensor
 import brooklyn.event.EventListener
 import brooklyn.event.Sensor
@@ -29,8 +26,6 @@ import brooklyn.management.ManagementContext
 import brooklyn.management.SubscriptionContext
 import brooklyn.management.SubscriptionHandle
 import brooklyn.management.Task
-import brooklyn.management.internal.BasicSubscriptionContext
-import brooklyn.management.internal.AbstractManagementContext
 import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.task.BasicExecutionContext
 
@@ -56,14 +51,18 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     
     EntityReference owner
     volatile EntityReference<Application> application
+    private final Object ownedChildrenLock = new Object();
     final EntityCollectionReference ownedChildren = new EntityCollectionReference<Entity>(this);
     final EntityCollectionReference<Group> groups = new EntityCollectionReference<Group>(this);
 
     Map<String,Object> presentationAttributes = [:]
     Collection<Policy> policies = [] as CopyOnWriteArrayList
-    Collection<Location> locations = []
-    
-    
+
+    // FIXME we do not currently support changing owners, but to implement a cluster that can shrink we need to support at least
+    // removing ownership. This flag notes if the class has previously been owned, and if an attempt is made to set a new owner
+    // an exception will be thrown.
+    boolean previouslyOwned = false
+
     // following two perhaps belong in entity class in a registry;
     // but that is an optimization, and possibly wrong if we have dynamic sensors/effectors
     // (added only to this instance), however if we did we'd need to reset/update entity class
@@ -76,7 +75,6 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     private transient EntityClass entityClass = null
     protected transient ExecutionContext execution
     protected transient SubscriptionContext subscription
-    
  
     /**
      * The sensor-attribute values of this entity. Updating this map should be done
@@ -157,17 +155,37 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
      */
     public synchronized void setOwner(Entity entity) {
         if (owner != null) {
+            // If we are changing to the same owner...
             if (owner.get() == entity) return
+            // If we have an owner but changing to unowned...
+            if (entity==null) { clearOwner(); return; }
+            
+            // We have an owner and are changing to another owner...
             throw new UnsupportedOperationException("Cannot change owner of $this from $owner to $entity (owner change not supported)")
         }
+        // If we have previously had an owner and are trying to change to another one...
+        if (previouslyOwned && entity != null) 
+            throw new UnsupportedOperationException("Cannot set an owner of $this because it has previously had an owner")
+        // We don't have an owner, never have and are changing to being owned...
+
         //make sure there is no loop
         if (this.equals(entity)) throw new IllegalStateException("entity $this cannot own itself")
         if (isDescendant(entity)) throw new IllegalStateException("loop detected trying to set owner of $this as $entity, which is already a descendent")
         
         owner = new EntityReference(this, entity)
+        //used to test entity!=null but that should be guaranteed?
         entity.addOwnedChild(this)
         inheritedConfig.putAll(entity.getAllConfig())
+        previouslyOwned = true
+        
         getApplication()
+    }
+
+    public synchronized void clearOwner() {
+        if (owner == null) return
+        Entity oldOwner = owner
+        owner = null
+        oldOwner.removeOwnedChild(this)
     }
 
     public boolean isAncestor(Entity oldee) {
@@ -197,6 +215,30 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     }
 
     /**
+     * Access the set of owned children in a thread-safe manner. The supplied closure is passed a reference to the
+     * @{link Set} of owned children, and is run while an exclusive lock is held. The operation is synchronous, i.e., this
+     * method will block until the mutex can be obtained and the closure has finished executing.
+     *
+     * Example:
+     * <code>
+     *     // This code queries the set of children, and then removes one of its entries. Between the two operations there is
+     *     // scope for a race condition, so it must be run while holding an exclusive lock on the set of children.
+     *     entity.accessOwnedChildrenSynchronized({ Set<Entity> children ->
+     *         Entity child = children.iterator().next()
+     *         entity.removeOwnedChild(child)
+     *     })
+     * </code>
+     * @param closure a block of code to run while holding the exclusive lock.
+     */
+    // FIXME: If this method is present the Web Console build barfs with error:
+    // Compilation error: BUG! exception in phase 'semantic analysis' in source unit '<https://ccweb.cloudsoftcorp.com/jenkins/job/Brooklyn/ws/web-console/grails-app/services/brooklyn/web/console/ManagementContextService.groovy'> null
+//    protected <T> T accessOwnedChildrenSynchronized(Closure<T> closure) {
+//        synchronized(ownedChildrenLock) {
+//            return closure.call(ownedChildren)
+//        }
+//    }
+
+    /**
      * Adds the given entity as a member of this group <em>and</em> this group as one of the groups of the child;
      * returns argument passed in, for convenience.
      */
@@ -211,7 +253,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     @Override
     public boolean removeOwnedChild(Entity child) {
         ownedChildren.remove child
-        child.setOwner(null)
+        child.clearOwner()
     }
     
     /**

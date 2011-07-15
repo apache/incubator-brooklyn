@@ -184,6 +184,35 @@ class DynamicClusterTest {
         assertEquals locations[0], entity.stashedLocations[0]
     }
 
+    @Test(enabled = false)
+    public void resizeFromOneToZeroChangesClusterSize() {
+        DynamicCluster cluster = new DynamicCluster(newEntity: {new TestEntity()}, initialSize: 1, new TestApplication())
+        cluster.start([new GeneralPurposeLocation()])
+        assertEquals 1, cluster.currentSize
+        cluster.resize(0)
+        assertEquals 0, cluster.currentSize
+    }
+
+    @Test(enabled = false)
+    public void resizeFromOneToZeroStopsTheEntity() {
+        TestEntity entity = new TestEntity()
+        DynamicCluster cluster = new DynamicCluster(newEntity: {entity}, initialSize: 1, new TestApplication())
+        cluster.start([new GeneralPurposeLocation()])
+        assertEquals 1, entity.counter.get()
+        cluster.resize(0)
+        assertEquals 0, entity.counter.get()
+    }
+
+    @Test(enabled = false)
+    public void stoppingTheClusterStopsTheEntity() {
+        TestEntity entity = new TestEntity()
+        DynamicCluster cluster = new DynamicCluster(newEntity: {entity}, initialSize: 1, new TestApplication())
+        cluster.start([new GeneralPurposeLocation()])
+        assertEquals 1, entity.counter.get()
+        cluster.stop()
+        assertEquals 0, entity.counter.get()
+    }
+
     private static class TestApplication extends AbstractApplication {
         @Override String toString() { return "Application["+id[-8..-1]+"]" }
     }
@@ -191,7 +220,7 @@ class DynamicClusterTest {
         private static final Logger logger = LoggerFactory.getLogger(DynamicCluster)
         AtomicInteger counter = new AtomicInteger(0)
         void start(Collection<? extends Location> loc) {logger.trace "Start"; counter.incrementAndGet()}
-        void stop() {}
+        void stop() {logger.trace "Stop"; counter.decrementAndGet()}
         @Override String toString() { return "Entity["+id[-8..-1]+"]" }
     }
 

@@ -6,11 +6,19 @@ import brooklyn.web.console.entity.SensorSummary
 import brooklyn.event.Sensor
 import brooklyn.entity.Effector
 import brooklyn.web.console.entity.TaskSummary
+import brooklyn.event.SensorEvent
+import brooklyn.management.SubscriptionHandle
+import java.util.concurrent.ConcurrentMap
+import java.util.concurrent.ConcurrentHashMap
+import brooklyn.event.EventListener
 
 class EntityService {
 
     static transactional = false
     def managementContextService
+
+    ConcurrentMap<String, ConcurrentMap<String, SensorSummary>> sensorCache = new ConcurrentHashMap<String, ConcurrentMap<String, SensorSummary>>()
+    ConcurrentMap<String, SubscriptionHandle> subscriptions = new ConcurrentHashMap<String, SubscriptionHandle>()
 
     public static class NoSuchEntity extends Exception {}
 
@@ -18,17 +26,44 @@ class EntityService {
         return managementContextService.executionManager.getTasksWithTag(getEntity(entityId)).collect { new TaskSummary(it) }
     }
 
-    public Collection<SensorSummary> getSensorsOfEntity(String entityId) {
-        Set<SensorSummary> results = []
-        Entity entity = getEntity(entityId)
-        if (entity) {
-            for (Sensor s: entity.entityClass.sensors) {
-                results.add(new SensorSummary(s, entity.getAttribute(s)))
+    /*
+    private static final int LIMIT = 10
+    if (size() >= LIMIT) {
+        managementContextService.subscriptionManager.unsubscribe(subscriptions.get(key))
+        return true
+    } else return false
+     */
+
+    private void initializeEntitySensors(Entity entity) {
+        synchronized (entity) {
+            sensorCache.putIfAbsent(entity.id, new ConcurrentHashMap<String, SensorSummary>())
+            for (Sensor s : entity.entityClass.sensors) {
+                sensorCache[entity.id].putIfAbsent(s.name, new SensorSummary(s, entity.getAttribute(s)))
             }
-            return results
-        } else {
-            throw new NoSuchEntity();
+
+            if (!subscriptions.containsKey(entity.id)) {
+                SubscriptionHandle handle = managementContextService.subscriptionManager.subscribe(entity, null,
+                    new EventListener() {
+                        void onEvent(SensorEvent event) {
+                            sensorCache.putIfAbsent(event.source.id, new ConcurrentHashMap<String, SensorSummary>())
+                            sensorCache[event.source.id].put(event.sensor.name, new SensorSummary(event))
+                        }
+                    })
+                subscriptions.put(entity.id, handle)
+            }
+
+            // TODO unsubscribe LRU
         }
+    }
+
+    public Collection<SensorSummary> getSensorData(String entityId) {
+        Entity entity = getEntity(entityId)
+        if (!entity) throw new NoSuchEntity()
+
+        if (!sensorCache.containsKey(entityId) || sensorCache[entityId].isEmpty()) {
+            initializeEntitySensors(entity)
+        }
+        return sensorCache[entityId].values()
     }
 
     public Collection<Effector> getEffectorsOfEntity(String entityId) {

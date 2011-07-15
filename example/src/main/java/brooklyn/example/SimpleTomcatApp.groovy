@@ -1,16 +1,13 @@
 package brooklyn.example
 
 import brooklyn.entity.basic.AbstractApplication
-import brooklyn.entity.group.Cluster
-import brooklyn.entity.webapp.tomcat.TomcatCluster
-import brooklyn.entity.webapp.tomcat.TomcatNode
-
-import brooklyn.location.basic.SshMachineLocation
-import com.google.common.base.Preconditions
-import brooklyn.location.basic.GeneralPurposeLocation
-import brooklyn.location.basic.FixedListMachineProvisioningLocation
-import brooklyn.location.Location
 import brooklyn.entity.group.DynamicCluster
+import brooklyn.entity.webapp.tomcat.TomcatNode
+import brooklyn.location.Location
+import brooklyn.location.basic.FixedListMachineProvisioningLocation
+import brooklyn.location.basic.SshMachineLocation
+
+import com.google.common.base.Preconditions
 
 /**
  * Starts some tomcat nodes, on localhost, using ssh;

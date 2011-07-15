@@ -17,14 +17,14 @@ public interface ResizeResult {
     int getDelta();
 
     /**
-     * Gets the entities that were added in this resize operation. May return null if @{link #getDelta} is equal to or less than
-     * zero.
+     * Gets the entities that were added in this resize operation. Result is empty when @{link #getDelta} is equal to or less 
+     * than zero.
      */
     Collection<Entity> getAddedEntities();
 
     /**
-     * Gets the entities that were removed in this resize operation. May return null if @{link #getDelta} is equal to or greater
-     * than zero.
+     * Gets the entities that were removed in this resize operation. Result is empty when @{link #getDelta} is equal to or 
+     * greater than zero.
      */
     Collection<Entity> getRemovedEntities();
 

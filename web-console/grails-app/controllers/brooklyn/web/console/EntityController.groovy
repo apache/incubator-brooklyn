@@ -10,6 +10,7 @@ import brooklyn.web.console.entity.JsTreeNode
 import brooklyn.management.Task
 import brooklyn.web.console.entity.SensorSummary
 import brooklyn.web.console.entity.TaskSummary
+import brooklyn.web.console.EntityService.NoSuchEntity
 
 @Secured(['ROLE_ADMIN'])
 class EntityController {
@@ -32,7 +33,7 @@ class EntityController {
 
         Set <Entity> es = entityService.getEntitiesMatchingCriteria(null, id, null)
         if (es.size() == 0) {
-            render(status: 404, text: '{message: "Entity with specified id does not exist"}')
+            render(status: 404, text: '{message: "Cannot retrieve info: Entity with specified id '+ params.id + ' does not exist"}')
         }
         else if (es.size() > 1) {
             render(status: 500, text: '{message: "Two entities with that ID were found. This should not happen."}')
@@ -60,12 +61,7 @@ class EntityController {
             render(status: 400, text: '{message: "You must provide an entity id"}')
             return
         }
-
-        try {
-            render entityService.getSensorsOfEntity(params.id) as JSON
-        } catch (NoSuchEntity) {
-            render(status: 404, text: '{message: "Entity with specified id does not exist"}')
-        }
+        render entityService.getSensorData(params.id) as JSON
     }
 
     def activity = {

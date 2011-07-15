@@ -2,8 +2,9 @@ Brooklyn.sensors = (function() {
     // Config
     var id = '#sensor-data';
     var aoColumns = [ { "mDataProp": "name", "sTitle": "name", "sWidth":"30%"  },
-                      { "mDataProp": "description", "sTitle": "description", "sWidth":"50%" },
-                      { "mDataProp": "value", "sTitle": "value", "sWidth":"20%", "bSortable": false  }];
+                      { "mDataProp": "description", "sTitle": "description", "sWidth":"30%" },
+                      { "mDataProp": "value", "sTitle": "value", "sWidth":"20%", "bSortable": false },
+                      { "mDataProp": "timestamp", "sTitle": "last updated", "sWidth":"20%"}];
 
     // State
     var entity_id;
@@ -34,7 +35,10 @@ Brooklyn.sensors = (function() {
         $(Brooklyn.eventBus).bind("update", update);
     }
 
-    return {init: init};
+    return {
+        init: init
+    };
+
 })();
 
 $(document).ready(Brooklyn.sensors.init);
