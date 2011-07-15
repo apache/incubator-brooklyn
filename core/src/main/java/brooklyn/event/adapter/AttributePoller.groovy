@@ -68,9 +68,8 @@ public class AttributePoller {
 
     private void updateAll() {
         log.debug "updating all jmx sensors"
-        providers.entrySet() each { Map.Entry<AttributeSensor,ValueProvider> e ->
-                AttributeSensor sensor = e.getKey()
-                ValueProvider provider = e.getValue()
+        providers.each {
+                AttributeSensor sensor, ValueProvider provider ->
                 def newValue = provider.compute()
                 log.debug "update for attribute {} to {}", sensor.name, newValue
                 entity.setAttribute(sensor, newValue)
@@ -78,7 +77,7 @@ public class AttributePoller {
     }
     
     private void update(Sensor sensor) {
-        if (!providers.containsKey(sensor)) throw new IllegalStateException("Sensor $sensor.name not found");
+        if (!providers.containsKey(sensor)) throw new IllegalStateException("Sensor ${sensor.name} not found");
         ValueProvider<?> provider = providers.get(sensor)
         def newValue = provider.compute()
         log.debug "update for attribute {} to {}", sensor.name, newValue
