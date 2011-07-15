@@ -32,7 +32,7 @@ $servers = array(
  * specified as latitude and longitude in decimal degrees. Derived from the spherical
  * law of cosines.
  */
-function distance($lat1_deg, $long1_deg, $lat2_deg, $long2_deg) {
+function distanceBetween($lat1_deg, $long1_deg, $lat2_deg, $long2_deg) {
     define("RADIUS_KM", 6372.8); // approx
     $lat1_rad = deg2rad($lat1_deg);
     $lat2_rad = deg2rad($lat2_deg);
@@ -46,7 +46,7 @@ function findClosestServer($lat_deg, $long_deg, $available_servers) {
     $minimum_distance = PHP_INT_MAX;
     for ($i = 0 ; $i < sizeof($available_servers); $i++) {
         $server = $available_servers[$i];
-        $distance_km = distance($lat_deg, $long_deg, $server['latitude'], $server['longitude']);
+        $distance_km = distanceBetween($lat_deg, $long_deg, $server['latitude'], $server['longitude']);
         if ($distance_km < $minimum_distance) {
             $minimum_distance = $distance_km;
             $closest_server = $server;
