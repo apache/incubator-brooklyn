@@ -5,6 +5,7 @@ import brooklyn.policy.Policy;
 import java.lang.reflect.Field
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CopyOnWriteArraySet
+import java.util.concurrent.CancellationException
 import java.util.concurrent.ExecutionException
 
 import org.slf4j.Logger
@@ -45,14 +46,16 @@ import brooklyn.util.task.BasicExecutionContext
  */
 public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractEntity.class)
- 
+
     String id = LanguageUtils.newUid()
     String displayName
     EntityReference owner
  
     volatile EntityReference<Application> application
  
-    private final Object ownedChildrenLock = new Object();
+    // XXX see comments below (grkvlt)
+//    private final Object ownedChildrenLock = new Object();
+ 
     final EntityCollectionReference ownedChildren = new EntityCollectionReference<Entity>(this);
     final EntityCollectionReference<Group> groups = new EntityCollectionReference<Group>(this);
 
@@ -69,29 +72,29 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     // but that is an optimization, and possibly wrong if we have dynamic sensors/effectors
     // (added only to this instance), however if we did we'd need to reset/update entity class
     // on sensor/effector set change
- 
+
     /** Map of effectors on this entity by name, populated at constructor time. */
     private Map<String,Effector> effectors = null
- 
+
     /** Map of sensors on this entity by name, populated at constructor time. */
     private Map<String,Sensor> sensors = null
-    
+
     private transient EntityClass entityClass = null
     protected transient ExecutionContext execution
     protected transient SubscriptionContext subscription
- 
+
     /**
      * The sensor-attribute values of this entity. Updating this map should be done
      * via getAttribute/setAttribute; it will automatically emit an attribute-change event.
      */
     protected final AttributeMap attributesInternal = new AttributeMap(this)
-    
+
     /**
      * For temporary data, e.g. timestamps etc for calculating real attribute values, such as when
      * calculating averages over time etc.
      */
     protected final Map<String,Object> tempWorkings = [:]
-    
+
     /*
      * TODO An alternative implementation approach would be to have:
      *   setOwner(Entity o, Map<ConfigKey,Object> inheritedConfig=[:])
@@ -109,11 +112,10 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     protected final Map<ConfigKey,Object> ownConfig = [:]
     protected final Map<ConfigKey,Object> inheritedConfig = [:]
 
-    
     public AbstractEntity(Entity owner) {
         this([:], owner)
     }
-    
+
     public AbstractEntity(Map flags=[:], Entity owner=null) {
         this.@skipCustomInvokeMethod.set(true)
         try {
@@ -233,8 +235,17 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
      *     })
      * </code>
      * @param closure a block of code to run while holding the exclusive lock.
+     * @deprecated see comments below
      */
-    // FIXME: If this method is present the Web Console build barfs with error:
+    @Deprecated
+    protected <T> T accessOwnedChildrenSynchronized(Closure<T> closure) {
+        throw new UnsupportedOperationException("Deprecated in favour of intrinsic synchronisation")
+    }
+    // XXX the group methods addMember and removeMember are now synchronized on the group itself, and the resize effector
+    //      implementation for dymanic cluster is also synchronized on the owning group. the members collection returned
+    //      is immutable, so group membership changes should be intrinsicly thread safe, meaning this is not required.
+    //      Note that set and clear of owner are also synchronized.
+    // FIXME If this method is present the Web Console build barfs with error:
     // Compilation error: BUG! exception in phase 'semantic analysis' in source unit '<https://ccweb.cloudsoftcorp.com/jenkins/job/Brooklyn/ws/web-console/grails-app/services/brooklyn/web/console/ManagementContextService.groovy'> null
 //    protected <T> T accessOwnedChildrenSynchronized(Closure<T> closure) {
 //        synchronized(ownedChildrenLock) {
@@ -247,19 +258,19 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
      * returns argument passed in, for convenience.
      */
     @Override
-    public Entity addOwnedChild(Entity child) {
+    public  synchronized Entity addOwnedChild(Entity child) {
         if (isAncestor(child)) throw new IllegalStateException("loop detected trying to add child $child to $this; it is already an ancestor")
         child.setOwner(this)
         ownedChildren.add(child)
         child
     }
- 
+
     @Override
-    public boolean removeOwnedChild(Entity child) {
+    public synchronized boolean removeOwnedChild(Entity child) {
         ownedChildren.remove child
         child.clearOwner()
     }
-    
+
     /**
      * Adds this as a member of the given group, registers with application if necessary
      */
@@ -268,7 +279,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         groups.add e
         getApplication()
     }
- 
+
     @Override
     public Entity getOwner() { owner?.get() }
 
@@ -300,7 +311,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     public ManagementContext getManagementContext() {
         application.managementContext
     }
-    
+
     protected synchronized void registerWithApplication(Application app) {
         if (application) return;
         this.application = new EntityReference(this, app);
@@ -315,23 +326,21 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 
     @Override
     public Collection<Location> getLocations() {
-        // TODO make result immutable, and use this.@locations when we want to update it?
-        return locations;
+        locations
     }
 
     /**
      * Should be invoked at end-of-life to clean up the item.
      */
     public void destroy() {
-        //FIXME this doesn't exist, but we need some way of deleting stale items
-        removeApplicationRegistrant()
+        // TODO we need some way of deleting stale items
     }
 
     @Override
     public <T> T getAttribute(AttributeSensor<T> attribute) {
         attributesInternal.getValue(attribute);
     }
-    
+
     @Override
     public <T> T setAttribute(AttributeSensor<T> attribute, T val) {
         LOG.trace "setting attribute {} to {}", attribute.name, val
@@ -351,8 +360,8 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     @Override
     public <T> T setConfig(ConfigKey<T> key, T val) {
         // TODO Is this the best idea, for making life easier for brooklyn coders when supporting changing config?
-        if (getApplication()?.isDeployed()) throw new IllegalStateException("Cannot set configuration $key on active entity $this")
-        
+        if (application?.isDeployed()) throw new IllegalStateException("Cannot set configuration $key on active entity $this")
+
         T oldVal = ownConfig.put(key, val);
         if ((val in Task) && (!(val.isSubmitted()))) {
             //if config is set as a task, we make sure it starts running
@@ -362,7 +371,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         ownedChildren.get().each {
             it.refreshInheritedConfig()
         }
-        
+
         oldVal
     }
 
@@ -372,12 +381,12 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         } else {
             inheritedConfig.clear();
         }
-        
-        getOwnedChildren().each {
+
+        ownedChildren.get().each {
             it.refreshInheritedConfig()
         }
     }
-    
+
     @Override
     public Map<ConfigKey,Object> getAllConfig() {
         // FIXME What about task-based config?!
@@ -391,7 +400,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     public <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, EventListener<T> listener) {
         subscriptionContext.subscribe(producer, sensor, listener)
     }
-    
+
     /** @see Entity#subscribeToChildren(Entity, Sensor, EventListener) */
     public <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, EventListener<T> listener) {
         subscriptionContext.subscribeToChildren(parent, sensor, listener)
@@ -406,7 +415,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         if (execution) execution;
         execution = new BasicExecutionContext(tag:this, managementContext.executionManager)
     }
-    
+
     /** default toString is simplified name of class, together with selected arguments */
     @Override
     public String toString() {
@@ -418,18 +427,18 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
             v ? "$it=$v" : null
         }).findAll({it!=null}).join(",") << "]"
     }
- 
+
     /** override this, adding to the collection, to supply fields whose value, if not null, should be included in the toString */
     public Collection<String> toStringFieldsToInclude() { ['id', 'displayName'] }
 
     
     // -------- POLICIES --------------------
-    
+
     @Override
     public Collection<Policy> getPolicies() {
         return policies.asImmutable()
     }
-    
+
     @Override
     public void addPolicy(Policy policy) {
         policies.add(policy)
@@ -440,10 +449,9 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     boolean removePolicy(Policy policy) {
         return policies.remove(policy)
     }
-   
 
     // -------- SENSORS --------------------
-    
+
     @Override
     public <T> void emit(Sensor<T> sensor, T val) {
         if (sensor instanceof AttributeSensor) {
@@ -463,20 +471,20 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
      * Sensors available on this entity
      */
     public Map<String,Sensor<?>> getSensors() { sensors }
-    
+
     /** convenience for finding named sensor in {@link #getSensor()} map */
     public <T> Sensor<T> getSensor(String sensorName) { getSensors()[sensorName] }
- 
+
     /**
      * Add the given {@link Sensor} to this entity.
      */
     public void addSensor(Sensor<?> sensor) { sensors.put(sensor.name, sensor) }
- 
+
     /**
-     * Remove the named {@link Sensor} to this entity.
+     * Remove the named {@link Sensor} from this entity.
      */
     public void removeSensor(String sensorName) { sensors.remove(sensorName) }
-    
+
     // -------- EFFECTORS --------------
 
     /** flag needed internally to prevent invokeMethod from recursing on itself */     
@@ -489,40 +497,39 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     public Object invokeMethod(String name, Object args) {
         if (!this.@skipCustomInvokeMethod.get()) {
             this.@skipCustomInvokeMethod.set(true);
-            
+
             if (entityProxyForManagement!=null) {
                 return entityProxyForManagement.invokeMethod(name, args);
             }
-            
+
             //args should be an array, warn if we got here wrongly (extra defensive as args accepts it, but it shouldn't happen here)
             if (args==null) LOG.warn("$this.$name invoked with incorrect args signature (null)", new Throwable("source of incorrect invocation of $this.$name"))
-            else if (!args.getClass().isArray()) LOG.warn("$this.$name invoked with incorrect args signature (non-array ${args.getClass()}): "+args, new Throwable("source of incorrect invocation of $this.$name"))
-            
+            else if (!args.class.isArray()) LOG.warn("$this.$name invoked with incorrect args signature (non-array ${args.class}): "+args, new Throwable("source of incorrect invocation of $this.$name"))
+
             try {
-                Effector eff = getEffectors().get(name)
+                Effector eff = effectors.get(name)
                 if (eff) {
                     args = AbstractEffector.prepareArgsForEffector(eff, args);
-                    Task currentTask = executionContext.getCurrentTask();
-                    if (!currentTask || !currentTask.getTags().contains(this)) {
-                        //wrap in a task if we aren't already in a task that is tagged with this entity
-                        MetaClass mc = metaClass
-                        Task t = executionContext.submit( { mc.invokeMethod(this, name, args); },
-                            description: "call to method $name being treated as call to effector $eff" )
-                        return t.get();
+                    Task current = executionContext.currentTask
+                    if (!current || !current.tags.contains(this)) {
+                        // Wrap in a task if we aren't already in a task that is tagged with this entity
+                        Task exec = executionContext.submit(
+	                            { this.metaClass.invokeMethod(this, name, args) } as Runnable,
+	                            description:"call to method $name being treated as call to effector $eff" )
+                        return exec.get();
                     }
                 }
+            } catch (CancellationException ce) {
+	            LOG.info "Execution of effector {} on entity {} was cancelled", name, id
+                return null // TODO or throw a runtime exception?
             } catch (ExecutionException ee) {
+                // Exceptions thrown in Futures are wrapped
                 throw ee.getCause()
             } finally { this.@skipCustomInvokeMethod.set(false); }
         }
         metaClass.invokeMethod(this, name, args);
-        //following is recommended on web site, but above is how groovy actually implements it
-//            def metaMethod = metaClass.getMetaMethod(name, newArgs)
-//            if (metaMethod==null)
-//                throw new IllegalArgumentException("Invalid arguments (no method found) for method $name: "+newArgs);
-//            metaMethod.invoke(this, newArgs)
     }
-    
+
     /**
      * Effectors available on this entity.
      *
@@ -530,21 +537,27 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
      * but the idea of these so-called "dynamic effectors" has been discussed and it might be supported in future...
      */
     public Map<String,Effector> getEffectors() { effectors }
- 
+
     /** convenience for finding named effector in {@link #getEffectors()} map */
-    public <T> Effector<T> getEffector(String effectorName) { getEffectors()[effectorName] }
-    
+    public <T> Effector<T> getEffector(String effectorName) { effectors[effectorName] }
+
+    /** Invoke an {@link Effector} directly. */
     public <T> Task<T> invoke(Map parameters=[:], Effector<T> eff) {
         invoke(eff, parameters);
     }
- 
-    //add'l form supplied for when map needs to be made explicit (above supports implicit named args)
+
+    /**
+     * Additional form supplied for when the parameter map needs to be made explicit.
+     *
+     * @see #invoke(Effector)
+     */
     public <T> Task<T> invoke(Effector<T> eff, Map parameters) {
-        executionContext.submit( { eff.call(this, parameters) }, description: "invocation of effector $eff" )
+        executionContext.submit( { eff.call(this, parameters) }, description:"invocation of effector $eff" )
     }
-    
+
     /** field for use only by management plane, to record remote destination when proxied */
     private AbstractEntity entityProxyForManagement = null;
+
     /** for use by management plane, to record remote destination when proxied */
     public void managementReplaceWithEntityProxy(AbstractEntity e) {
         assert entityProxyForManagement==null : "already proxied";
@@ -559,7 +572,6 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         execution = null
         subscription = null
     }
-    
 }
 
 /**
