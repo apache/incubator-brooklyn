@@ -29,7 +29,6 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
     public static final ConfigKey<String> SUGGESTED_INSTALL_DIR = ConfigKeys.SUGGESTED_INSTALL_DIR;
     public static final ConfigKey<String> SUGGESTED_RUN_DIR = ConfigKeys.SUGGESTED_RUN_DIR;
 
-    public static final BasicAttributeSensor<Boolean> SERVICE_UP = [ Boolean, "service.hasStarted", "Service started" ]
     public static final BasicAttributeSensor<String> SERVICE_STATUS = [ String, "service.status", "Service status" ]
     
     AbstractService(Map properties=[:], Entity owner=null) {

@@ -7,6 +7,8 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Description;
 import brooklyn.entity.basic.EffectorInferredFromAnnotatedMethod;
 import brooklyn.entity.basic.NamedParameter;
+import brooklyn.event.Sensor;
+import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.location.Location;
 
 /**
@@ -17,6 +19,8 @@ import brooklyn.location.Location;
  * these locations. The other effectors will stop or restart the entity in the location(s) it is already running in.
  */
 public interface Startable {
+    Sensor<Boolean> SERVICE_UP = new BasicAttributeSensor<Boolean>(Boolean.class, "service.hasStarted", "Service started");
+
     Effector<Void> START = new EffectorInferredFromAnnotatedMethod<Void>(Startable.class, "start", "Start an entity");
     Effector<Void> STOP = new EffectorInferredFromAnnotatedMethod<Void>(Startable.class, "stop", "Stop an entity");
     Effector<Void> RESTART = new EffectorInferredFromAnnotatedMethod<Void>(Startable.class, "restart", "Restart an entity");
