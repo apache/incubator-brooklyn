@@ -138,6 +138,7 @@ public class SshJschTool {
         }
 
         def allCmds = []
+        allCmds.add "exec bash -e"
         allCmds.addAll env.collect { key, value -> "export $key=\"$value\"" }
         allCmds.addAll commands
         allCmds.add "exit 0"
