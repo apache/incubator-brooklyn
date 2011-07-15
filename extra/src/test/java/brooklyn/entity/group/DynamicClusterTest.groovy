@@ -203,6 +203,16 @@ class DynamicClusterTest {
         assertEquals 0, entity.counter.get()
     }
 
+    @Test
+    public void stoppingTheClusterStopsTheEntity() {
+        TestEntity entity = new TestEntity()
+        DynamicCluster cluster = new DynamicCluster(newEntity: {entity}, initialSize: 1, new TestApplication())
+        cluster.start([new GeneralPurposeLocation()])
+        assertEquals 1, entity.counter.get()
+        cluster.stop()
+        assertEquals 0, entity.counter.get()
+    }
+
     private static class TestApplication extends AbstractApplication {
         @Override String toString() { return "Application["+id[-8..-1]+"]" }
     }
