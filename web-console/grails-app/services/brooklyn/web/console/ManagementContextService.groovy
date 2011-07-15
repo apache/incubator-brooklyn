@@ -15,14 +15,10 @@ import brooklyn.management.internal.LocalManagementContext
 import brooklyn.web.console.entity.TestEffector
 import brooklyn.management.SubscriptionManager
 import java.util.concurrent.atomic.AtomicLong
+import brooklyn.util.task.BasicExecutionManager
 
 class ManagementContextService {
-    
-    //FIXME: how should this be supplied?  (previously it called to LocalManagementContext to generate, but that isn't the answer...)  --Alex
-    //it does have to get set in the application
-    private final ManagementContext context = new LocalManagementContext()
     private final Application application = new TestApplication()
-    
     protected static AtomicLong ID_GENERATOR = new AtomicLong(0L)
 
     public ManagementContextService() {
@@ -35,6 +31,11 @@ class ManagementContextService {
 
     Entity getEntity(String id) {
         return context.getEntity(id)
+    }
+
+    public synchronized ManagementContext getContext() {
+        application.managementContext
+
     }
 
     public ExecutionManager getExecutionManager() {
