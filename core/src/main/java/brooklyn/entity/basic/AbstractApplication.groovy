@@ -1,10 +1,5 @@
 package brooklyn.entity.basic
 
-import java.beans.PropertyChangeListener
-import java.util.Collection
-import java.util.Map
-import java.util.concurrent.ConcurrentHashMap
-
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
 import brooklyn.entity.trait.Changeable
@@ -13,6 +8,8 @@ import brooklyn.management.internal.AbstractManagementContext
 import brooklyn.management.internal.LocalManagementContext
 import brooklyn.util.internal.EntityStartUtils
 import brooklyn.util.internal.SerializableObservableMap
+import java.beans.PropertyChangeListener
+import java.util.concurrent.ConcurrentHashMap
 
 public abstract class AbstractApplication extends AbstractGroup implements Application, Changeable {
     final ObservableMap entities = new SerializableObservableMap(new ConcurrentHashMap<String,Entity>());
@@ -22,6 +19,13 @@ public abstract class AbstractApplication extends AbstractGroup implements Appli
     
     public AbstractApplication(Map properties=[:]) {
         super(properties)
+        if(properties.mgmt) {
+            mgmt = (AbstractManagementContext) properties.remove("mgmt")
+            mgmt.registerApplication(this)
+        }
+
+        // record ourself as an entity in the entity list
+        registerWithApplication this
     }
     
     public void registerEntity(Entity entity) {
@@ -39,9 +43,6 @@ public abstract class AbstractApplication extends AbstractGroup implements Appli
         // do nothing; we register ourself later
     }
 
-    // record ourself as an entity in the entity list
-    { registerWithApplication this }
-    
     /**
      * Default start will start all Startable children
      */
@@ -50,22 +51,16 @@ public abstract class AbstractApplication extends AbstractGroup implements Appli
         EntityStartUtils.startGroup this, locs
         deployed = true
     }
-    
-    public AbstractManagementContext getManagementContext() {
-        AbstractManagementContext result = mgmt
-        if (result==null) synchronized (this) {
-            result = mgmt
-            if (result!=null) return result
-            
-            //TODO how does user override?  expect he annotates a field in this class, then look up that field?
-            //(do that here)
-            
-            if (result==null)
-                result = new LocalManagementContext()
-            result.registerApplication(this)
-            mgmt = result
-        }
-        result
+
+    public synchronized AbstractManagementContext getManagementContext() {
+        if (mgmt) return mgmt
+
+        //TODO how does user override?  expect he annotates a field in this class, then look up that field?
+        //(do that here)
+
+        mgmt = new LocalManagementContext()
+        mgmt.registerApplication(this)
+        return mgmt
     }
  
     public boolean isDeployed() {
