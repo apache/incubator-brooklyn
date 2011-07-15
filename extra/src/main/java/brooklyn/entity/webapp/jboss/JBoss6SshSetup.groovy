@@ -101,8 +101,8 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         List<String> script = [
             "\$JBOSS_HOME/bin/run.sh -Djboss.service.binding.set=${portGroupName} -Djboss.server.base.dir=\$RUN/server " +
                     "-Djboss.server.base.url=file://\$RUN/server -Djboss.messaging.ServerPeerID=${entity.id} " +
-                    "-b ${machine.address.hostAddress} $clusterArg -c $serverProfile " + 
-                    ">\$RUN/jboss.log 2>\$RUN/jboss.err </dev/null &",
+                    "-b 0.0.0.0 $clusterArg -c $serverProfile " +
+                    ">>\$RUN/jboss.log 2>&1 </dev/null &",
         ]
         return script
     }

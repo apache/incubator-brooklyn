@@ -137,14 +137,26 @@ public class SshJschTool {
             channel.setOutputStream(properties.out, true)
         }
 
-        StringBuffer sb = []
-        env.each { key, value -> sb.append("export $key=\"$value\"").append('\n') }
-        commands.each { sb.append(it).append('\n') }
-        sb.append("exit 0\n")
- 
+        def allCmds = []
+        allCmds.add "exec bash -e"
+        allCmds.addAll env.collect { key, value -> "export $key=\"$value\"" }
+        allCmds.addAll commands
+        allCmds.add "exit 0"
 
-        channel.setInputStream new ByteArrayInputStream(sb.toString().getBytes("UTF-8"))
+        PipedOutputStream out = new PipedOutputStream()
+        channel.setInputStream new PipedInputStream(out)
         channel.connect()
+
+        try {
+            allCmds.each {
+                log.info "[{}] {}", host, it
+                byte[] data = (it+"\n").getBytes("UTF-8")
+                out.write(data)
+                Thread.sleep 300
+            }
+        } catch (IOException e) {
+            log.info "Caught an IOException - the script has probably exited early"
+        }
 
         if (properties.block==null || properties.block) {
             block(channel)
