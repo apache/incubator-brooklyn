@@ -1,5 +1,7 @@
 package brooklyn.policy.basic
 
+import java.util.Map;
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -29,6 +31,8 @@ class AbstractPolicy implements Policy {
    protected transient ExecutionContext execution
    protected transient SubscriptionContext subscription
    
+   private Map<Entity, SubscriptionHandle> subscriptions = new HashMap<Entity, SubscriptionHandle>()
+   
    public AbstractPolicy() { }
 
    public void setEntity(EntityLocal entity) {
@@ -39,7 +43,15 @@ class AbstractPolicy implements Policy {
    
    /** @see SubscriptionContext#subscribe(Entity, Sensor, EventListener) */
    public <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, EventListener<T> listener) {
-       subscription.subscribe producer, sensor, listener
+       def handle = subscription.subscribe producer, sensor, listener
+       subscriptions.put(producer, handle)
+   }
+   
+   /** Unsubscribes the given producer. 
+    * @see SubscriptionContext#unsubscribe(SubscriptionHandle) */
+   public boolean unsubscribe(Entity producer) {
+       def handle = subscriptions.remove(producer)
+       subscription.unsubscribe(handle)
    }
    
    private ManagementContext getManagementContext() {
