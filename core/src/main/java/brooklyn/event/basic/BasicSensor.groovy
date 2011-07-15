@@ -1,6 +1,5 @@
 package brooklyn.event.basic;
 
-import groovy.transform.EqualsAndHashCode
 import groovy.transform.InheritConstructors
 
 import java.util.List
@@ -9,8 +8,9 @@ import brooklyn.entity.Entity
 import brooklyn.event.AttributeSensor
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
+import brooklyn.util.internal.LanguageUtils
 
-import com.google.common.base.Objects;
+import com.google.common.base.Objects
 import com.google.common.base.Splitter
 import com.google.common.collect.Lists
 
@@ -66,11 +66,7 @@ public class BasicSensor<T> implements Sensor<T> {
  
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof Sensor)) return false
-        Sensor that = (Sensor) other
-        return ((that.typeName == this.typeName) &&
-	            (that.name == this.name) &&
-	            (that.description == this.description)) 
+        LanguageUtils.equals(this, other, ["type", "name", "description"]);
     }
     
     @Override
