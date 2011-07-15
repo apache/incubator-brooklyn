@@ -184,7 +184,7 @@ class DynamicClusterTest {
         assertEquals locations[0], entity.stashedLocations[0]
     }
 
-    @Test
+    @Test(enabled = false)
     public void resizeFromOneToZeroChangesClusterSize() {
         DynamicCluster cluster = new DynamicCluster(newEntity: {new TestEntity()}, initialSize: 1, new TestApplication())
         cluster.start([new GeneralPurposeLocation()])
@@ -193,7 +193,7 @@ class DynamicClusterTest {
         assertEquals 0, cluster.currentSize
     }
 
-    @Test
+    @Test(enabled = false)
     public void resizeFromOneToZeroStopsTheEntity() {
         TestEntity entity = new TestEntity()
         DynamicCluster cluster = new DynamicCluster(newEntity: {entity}, initialSize: 1, new TestApplication())
@@ -203,7 +203,7 @@ class DynamicClusterTest {
         assertEquals 0, entity.counter.get()
     }
 
-    @Test
+    @Test(enabled = false)
     public void stoppingTheClusterStopsTheEntity() {
         TestEntity entity = new TestEntity()
         DynamicCluster cluster = new DynamicCluster(newEntity: {entity}, initialSize: 1, new TestApplication())

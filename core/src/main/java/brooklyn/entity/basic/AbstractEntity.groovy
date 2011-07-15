@@ -224,11 +224,13 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
      * </code>
      * @param closure a block of code to run while holding the exclusive lock.
      */
-    protected <T> T accessOwnedChildrenSynchronized(Closure<T> closure) {
-        synchronized(ownedChildrenLock) {
-            return closure.call(ownedChildren)
-        }
-    }
+    // FIXME: If this method is present the Web Console build barfs with error:
+    // Compilation error: BUG! exception in phase 'semantic analysis' in source unit '<https://ccweb.cloudsoftcorp.com/jenkins/job/Brooklyn/ws/web-console/grails-app/services/brooklyn/web/console/ManagementContextService.groovy'> null
+//    protected <T> T accessOwnedChildrenSynchronized(Closure<T> closure) {
+//        synchronized(ownedChildrenLock) {
+//            return closure.call(ownedChildren)
+//        }
+//    }
 
     /**
      * Adds the given entity as a member of this group <em>and</em> this group as one of the groups of the child;
