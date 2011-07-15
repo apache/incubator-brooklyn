@@ -57,6 +57,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 
     Map<String,Object> presentationAttributes = [:]
     Collection<Policy> policies = [] as CopyOnWriteArrayList
+    Collection<Location> locations = []
 
     // FIXME we do not currently support changing owners, but to implement a cluster that can shrink we need to support at least
     // removing ownership. This flag notes if the class has previously been owned, and if an attempt is made to set a new owner

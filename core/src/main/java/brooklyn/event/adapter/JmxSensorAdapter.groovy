@@ -85,6 +85,7 @@ public class JmxSensorAdapter {
         long thisStartTime = System.currentTimeMillis()
         long endTime = thisStartTime + timeoutMillis
         if (timeoutMillis==-1) endTime = Long.MAX_VALUE
+        Throwable lastError;
         while (thisStartTime <= endTime) {
             thisStartTime = System.currentTimeMillis()
             log.debug "trying connection to {} (at {})", jmxUrl, thisStartTime
@@ -93,8 +94,10 @@ public class JmxSensorAdapter {
                 return true
             } catch (IOException e) {
                 log.debug "failed connection to {} ({} at {})", jmxUrl, e.message, System.currentTimeMillis()
+                lastError = e;
             }
         }
+        log.warn("unable to connect to JMX jmxUrl", lastError);
         false
     }
 
