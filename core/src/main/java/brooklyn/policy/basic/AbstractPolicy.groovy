@@ -45,6 +45,7 @@ class AbstractPolicy implements Policy {
    public <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, EventListener<T> listener) {
        def handle = subscription.subscribe producer, sensor, listener
        subscriptions.put(producer, handle)
+       return handle
    }
    
    /** Unsubscribes the given producer. 
