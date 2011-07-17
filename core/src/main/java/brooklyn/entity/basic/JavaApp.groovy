@@ -82,10 +82,10 @@ public abstract class JavaApp extends AbstractEntity implements Startable {
     public void startInLocation(MachineProvisioningLocation loc) {
         SshMachineLocation machine = loc.obtain()
         if (machine == null) throw new NoMachinesAvailableException(loc)
-        startInLocation( (SshMachineLocation)loc )
+        startInLocation( (SshMachineLocation)machine )
     }
     
-    public void startInLocation(SshMachineLocation loc) {
+    public void startInLocation(SshMachineLocation machine) {
         locations.add(machine)
         SshBasedJavaAppSetup setup = getSshBasedSetup(machine)
         setAttribute(NODE_STATUS, "starting")
