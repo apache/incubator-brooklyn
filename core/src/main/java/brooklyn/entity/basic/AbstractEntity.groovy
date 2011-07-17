@@ -1,7 +1,5 @@
 package brooklyn.entity.basic
 
-import brooklyn.policy.Policy;
-
 import java.lang.reflect.Field
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CopyOnWriteArraySet
@@ -27,6 +25,7 @@ import brooklyn.management.ManagementContext
 import brooklyn.management.SubscriptionContext
 import brooklyn.management.SubscriptionHandle
 import brooklyn.management.Task
+import brooklyn.policy.Policy
 import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.task.BasicExecutionContext
 
@@ -61,7 +60,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 
     Map<String,Object> presentationAttributes = [:]
     Collection<Policy> policies = [] as CopyOnWriteArrayList
-    Collection<Location> locations = []
+    Collection<Location> locations = [] as CopyOnWriteArrayList
 
     // FIXME we do not currently support changing owners, but to implement a cluster that can shrink we need to support at least
     // removing ownership. This flag notes if the class has previously been owned, and if an attempt is made to set a new owner
