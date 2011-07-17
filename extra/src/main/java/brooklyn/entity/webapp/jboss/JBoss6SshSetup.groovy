@@ -30,8 +30,8 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         String suggestedClusterName = entity.getConfig(JBossServer.SUGGESTED_CLUSTER_NAME)
         
         String version = suggestedJbossVersion ?: DEFAULT_VERSION
-        String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"jboss-${version}")
-        String runDir = suggestedRunDir ?: (DEFAULT_RUN_DIR+"/"+"app-${entity.application.id}"+"/"+"jboss-${entity.id}")
+        String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"${version}"+"/"+"jboss-${version}")
+        String runDir = suggestedRunDir ?: (BROOKLYN_HOME_DIR+"/"+"${entity.application.id}"+"/"+"jboss-${entity.id}")
         String deployDir = runDir+"/"+DEFAULT_DEPLOY_SUBDIR
         String serverProfile = suggestedServerProfile ?: "standard"
         String clusterName = suggestedClusterName ?: ""
@@ -163,17 +163,17 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     }
 
     @Override
-    public void shutdown() {
+    public List<String> getShutdownScript() {
         def host = entity.getAttribute(Attributes.JMX_HOST)
         def port = entity.getAttribute(Attributes.JMX_PORT)
-        def result = machine.run(out:System.out, [
+        List<String> script = [
 	            "${installDir}/bin/shutdown.sh --host ${host} --port ${port} -S",
-                "sleep 5",
-                "ps auxwwww | grep ${entity.id} | awk '{ print \$2 }' | xargs kill -9"
-            ])
-        if (result) log.info "non-zero result code terminating {}: {}", entity, result
-        log.debug "done invoking shutdown script"
+            ]
+        return script
     }
+
+    @Override
+    public List<String> getRestartScript() { [] }
 
     @Override
     protected void postShutdown() {

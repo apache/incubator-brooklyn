@@ -29,8 +29,8 @@ public class QpidSetup extends SshBasedJavaAppSetup {
         Integer suggestedAmqpPort = entity.getConfig(QpidBroker.SUGGESTED_AMQP_PORT)
 
         String version = suggestedVersion ?: DEFAULT_VERSION
-        String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"qpid-broker-${version}")
-        String runDir = suggestedRunDir ?: (DEFAULT_RUN_DIR+"/"+"app-"+entity.getApplication()?.id+"/qpid-"+entity.id)
+        String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"${version}"+"/"+"qpid-broker-${version}")
+        String runDir = suggestedRunDir ?: (BROOKLYN_HOME_DIR+"/"+"${entity.application.id}"+"/"+"qpid-${entity.id}")
         String jmxHost = suggestedJmxHost ?: machine.getAddress().getHostName()
         int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort, DEFAULT_FIRST_JMX_PORT))
         int rmiPort = machine.obtainPort(toDesiredPortRange(jmxPort - 100))
@@ -104,15 +104,7 @@ public class QpidSetup extends SshBasedJavaAppSetup {
 
     /** @see SshBasedJavaAppSetup#getCheckRunningScript() */
     public List<String> getCheckRunningScript() {
-        List<String> script = [
-            "cd ${runDir}",
-			"echo pid is `cat qpid-server.pid`",
-			"(ps auxww | grep '[q]'pid | grep `cat qpid-server.pid` > pid.list || echo \"no qpid processes found\")",
-			"cat pid.list",
-			"if [ -z \"`cat pid.list`\" ] ; then echo process no longer running ; exit 1 ; fi",
-        ]
-        return script
-        //note grep can return exit code 1 if text not found, hence the || in the block above
+       return makeCheckRunningScript("qpid", "qpid-server.pid")
     }
 
     @Override
@@ -126,15 +118,13 @@ public class QpidSetup extends SshBasedJavaAppSetup {
     }
 
     @Override
-    public void shutdown() {
-        log.debug "invoking shutdown script"
-        def result = machine.run(out:System.out, [
-            "cd ${runDir}",
-            "echo killing process `cat qpid-server.pid` on `hostname`",
-            "kill -9 `cat qpid-server.pid`",
-            "rm -f pid.txt" ] )
-        if (result) log.info "non-zero result code terminating {}: {}", entity, result
-        log.debug "done invoking shutdown script"
+    public List<String> getRestartScript() {
+       return makeRestartScript("qpid-server.pid")
+    }
+
+    @Override
+    public List<String> getShutdownScript() {
+       return makeShutdownScript("qpid-server.pid")
     }
 
     @Override

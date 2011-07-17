@@ -24,8 +24,8 @@ public class NginxSetup extends SshBasedAppSetup {
         Integer suggestedHttpPort = entity.getConfig(NginxController.SUGGESTED_HTTP_PORT)
 
         String version = suggestedVersion ?: DEFAULT_VERSION
-        String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"nginx-${version}")
-        String runDir = suggestedRunDir ?: (DEFAULT_RUN_DIR+"/"+"app-"+entity.getApplication()?.id+"/nginx-"+entity.id)
+        String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"${version}"+"/"+"nginx-${version}")
+        String runDir = suggestedRunDir ?: (BROOKLYN_HOME_DIR+"/"+"${entity.application.id}"+"/"+"nginx-${entity.id}")
         int httpPort = machine.obtainPort(toDesiredPortRange(suggestedHttpPort, DEFAULT_HTTP_PORT))
 
         NginxSetup result = new NginxSetup(entity, machine)
@@ -89,15 +89,7 @@ public class NginxSetup extends SshBasedAppSetup {
 
     /** @see SshBasedAppSetup#getCheckRunningScript() */
     public List<String> getCheckRunningScript() {
-        List<String> script = [
-            "cd ${runDir}",
-            "echo pid is `cat pid.txt`",
-            "(ps aux | grep '[n]'ginx | grep `cat pid.txt` > pid.list || echo \"no nginx processes found\")",
-            "cat pid.list",
-            "if [ -z \"`cat pid.list`\" ] ; then echo process no longer running ; exit 1 ; fi",
-        ]
-        return script
-        //note grep can return exit code 1 if text not found, hence the || in the block above
+        return makeCheckRunningScript("nginx")
     }
 
     /**

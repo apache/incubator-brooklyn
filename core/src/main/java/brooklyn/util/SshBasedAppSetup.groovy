@@ -1,13 +1,16 @@
 package brooklyn.util
 
+import java.util.List
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.location.PortRange
-import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.BasicPortRange
-import brooklyn.util.internal.SshJschTool;
+import brooklyn.location.basic.SshMachineLocation
+
+import com.google.common.base.Strings
 
 /**
  * Application installation, configuration and startup using ssh.
@@ -20,8 +23,8 @@ import brooklyn.util.internal.SshJschTool;
 public abstract class SshBasedAppSetup {
     protected static final Logger log = LoggerFactory.getLogger(SshBasedAppSetup.class)
 
-    public static final String DEFAULT_RUN_DIR = "/tmp/brooklyn"
-    public static final String DEFAULT_INSTALL_BASEDIR = DEFAULT_RUN_DIR+"/"+"installs"
+    public static final String BROOKLYN_HOME_DIR = "/tmp/brooklyn"
+    public static final String DEFAULT_INSTALL_BASEDIR = BROOKLYN_HOME_DIR+"/"+"installs"
 
     EntityLocal entity
     SshMachineLocation machine
@@ -65,19 +68,21 @@ public abstract class SshBasedAppSetup {
     protected List<String> makeInstallScript(List<String> lines) {
         if (lines.isEmpty()) return lines
         List<String> script = [
-            "[ -f ${installDir}/../INSTALL_COMPLETION_DATE ] && exit 0",
-			"mkdir -p ${installDir}",
-			"cd ${installDir}/..",
+            "export INSTALL=\"${installDir}\"",
+            "test -f \$INSTALL/../BROOKLYN && exit 0",
+			"mkdir -p \$INSTALL",
+			"cd \$INSTALL/..",
         ]
         lines.each { line -> script += "${line}" }
-        script += "date > INSTALL_COMPLETION_DATE"
+        script += "date > \$INSTALL/../BROOKLYN"
         return script
     }
 
     /**
      * The script to run to on a remote machine to install the application.
      *
-     * The default is a no-op.
+     * The default is a no-op. The shell variable {@code INSTALL} is exported with
+     * the path to the installation directory for the application.
      *
      * @return a {@link List} of shell commands
      */
@@ -122,22 +127,59 @@ public abstract class SshBasedAppSetup {
      * @return a {@link List} of shell commands
      *
      * @see #isRunning()
+     * @see #makeCheckRunningScript(String, String)
      */
     public abstract List<String> getCheckRunningScript();
+
+    /**
+     * Default commands for {@link #getCheckRunningScript()}.
+     *
+     * This method will generate script commands to check for the presence of a PID
+     * file with a given name and a process matching the PID with the correct
+     * service name or entity id (if the service is not given). This script
+     * also forms the basis of the generated restart and shutdown scripts.
+     *
+     * @see #getCheckRunningScript()
+     * @see #makeRestartScript(String)
+     * @see #makeShutdownScript(String)
+     */
+    protected List<String> makeCheckRunningScript(String service = null, String pidFile = "pid.txt") {
+        if (Strings.isNullOrEmpty(service)) service = entity.id
+        List<String> script = [
+            "cd ${runDir}",
+            "test -f ${pidFile}",
+            "ps aux | grep ${service} | grep \$(cat ${pidFile}) > /dev/null"
+        ]
+        return script
+    }
  
     /**
      * The script to run to on a remote machine to restart the application.
      *
      * @return a {@link List} of shell commands
      */
-    public List<String> getRestartScript() { [] }
+    public List<String> getRestartScript() { makeRestartScript() }
+
+    /** @see SshBasedJavaSetup#getRestartScript() */
+    protected List<String> makeRestartScript(String pidFile = "pid.txt") {
+        return makeCheckRunningScript(entity.id, pidFile) + [ "kill -HUP \$(cat ${pidFile})" ]
+    }
 
     /**
      * The script to run to on a remote machine to shutdown the application.
      *
      * @return a {@link List} of shell commands
      */
-    public List<String> getShutdownScript() { [] }
+    public List<String> getShutdownScript() { makeShutdownScript() }
+
+    /** @see SshBasedJavaSetup#getShutdownScript() */
+    protected List<String> makeShutdownScript(String pidFile = "pid.txt") {
+        return makeCheckRunningScript(entity.id, pidFile) + [
+            "kill \$(cat ${pidFile})",
+            "sleep 1",
+            "kill -9 \$(cat ${pidFile}) || exit 0",
+        ]
+    }
 
     /**
      * Installs the application on this machine, or no-op if no install-script defined.
