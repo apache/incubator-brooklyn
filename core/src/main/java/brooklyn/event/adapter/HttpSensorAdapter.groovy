@@ -1,14 +1,12 @@
 package brooklyn.event.adapter
 
-import java.nio.charset.Charset
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.EntityLocal
 
 import com.google.common.base.Preconditions
-import com.google.common.io.Resources
+import com.google.common.io.CharStreams
 
 /**
  * This class adapts HTTP {@link URL}s to {@link Sensor} data for a particular {@link Entity}, updating the
@@ -42,8 +40,9 @@ public class HttpSensorAdapter {
      * Returns true if the HTTP data from the URL matches the regexp.
      */
     private Boolean checkHttpData(URL url, String regexp) {
-        String data = Resources.toString(url, Charset.forName("UTF-8"))
-        return data =~ regexp
+        HttpURLConnection connection = url.openConnection()
+        List<String> lines = CharStreams.readLines(connection.inputStream)
+        return lines.any { it =~ regexp }
     }
 
     /**
