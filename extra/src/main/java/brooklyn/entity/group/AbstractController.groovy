@@ -26,18 +26,18 @@ public abstract class AbstractController extends AbstractService {
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractController.class)
 
     public static final BasicConfigKey<Integer> SUGGESTED_HTTP_PORT = [ Integer, "proxy.httpPort", "Suggested proxy HTTP port" ]
-    public static final BasicConfigKey<String> DOMAIN_NAME = [ String, "proxy.domainName", "Domain name" ]
-    public static final BasicConfigKey<String> PROTOCOL = [ String, "proxy.portNumber", "Protocol" ]
-    public static final BasicConfigKey<String> URL = [ String, "proxy.url", "URL" ]
     public static final BasicConfigKey<Sensor> PORT_NUMBER_SENSOR = [ String, "member.sensor.portNumber", "Port number sensor on members" ]
 
     public static final BasicAttributeSensor<Integer> HTTP_PORT = Attributes.HTTP_PORT
+    public static final BasicAttributeSensor<String> DOMAIN_NAME = [ String, "proxy.domainName", "Domain name" ]
+    public static final BasicAttributeSensor<String> PROTOCOL = [ String, "proxy.portNumber", "Protocol" ]
+    public static final BasicAttributeSensor<String> URL = [ String, "proxy.url", "URL" ]
 
     AbstractGroup cluster
     String domain
     int port
     String protocol
-    URL url
+    String url
     Sensor portNumber
 
     protected Map<InetAddress,List<Integer>> addresses
@@ -49,29 +49,29 @@ public abstract class AbstractController extends AbstractService {
         portNumber = getConfig(PORT_NUMBER_SENSOR) ?: properties.portNumberSensor
         Preconditions.checkNotNull(portNumber, "The port number sensor must be supplied")
 
-        if (getConfig(PROTOCOL) || properties.containsKey("url")) {
-	        url = getConfig(URL) ?: properties.remove("url")
-	        setConfig(URL, url)
+        if (getAttribute(PROTOCOL) || properties.containsKey("url")) {
+	        url = getAttribute(URL) ?: properties.remove("url")
+	        setAttribute(URL, url)
 
             // Set config properties from URL
             port = url.port
-            setConfig(HTTP_PORT, port)
+            setAttribute(HTTP_PORT, port)
             porotocol = url.protocol
-            setConfig(PROTOCOL, protocol)
+            setAttribute(PROTOCOL, protocol)
             domain = url.host
-            setConfig(DOMAIN_NAME, domain)
+            setAttribute(DOMAIN_NAME, domain)
         } else {
 	        port = properties.port ?: 80
 	        setAttribute(HTTP_PORT, port)
 
-	        protocol = getConfig(PROTOCOL) ?: properties.protocol ?: "http"
-	        setConfig(PROTOCOL, protocol)
+	        protocol = getAttribute(PROTOCOL) ?: properties.protocol ?: "http"
+	        setAttribute(PROTOCOL, protocol)
 
-            domain = getConfig(DOMAIN_NAME) ?: properties.domain
+            domain = getAttribute(DOMAIN_NAME) ?: properties.domain
             Preconditions.checkNotNull(domain, "Domain must be set for controller")
-            setConfig(DOMAIN_NAME, domain)
+            setAttribute(DOMAIN_NAME, domain)
 
-	        setConfig(URL, "${protocol}://${domain}:${port}/")
+	        setAttribute(URL, "${protocol}://${domain}:${port}/")
         }
 
         setCluster(cluster ?: properties.cluster)

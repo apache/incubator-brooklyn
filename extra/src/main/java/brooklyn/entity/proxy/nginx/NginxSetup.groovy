@@ -57,6 +57,10 @@ public class NginxSetup extends SshBasedAppSetup {
         makeInstallScript([
                 "wget http://nginx.org/download/nginx-${version}.tar.gz",
                 "tar xvzf nginx-${version}.tar.gz",
+	            "cd \$INSTALL",
+	            "mkdir -p dist",
+	            "./configure --prefix=\$INSTALL/dist",
+	            "make install"
             ])
     }
 
@@ -66,7 +70,7 @@ public class NginxSetup extends SshBasedAppSetup {
     public List<String> getRunScript() {
         List<String> script = [
             "cd ${runDir}",
-            "nohup ./sbin/nginx -c ./conf/server.conf &",
+            "nohup ./sbin/nginx -p ${runDir}/ -c conf/server.conf &",
         ]
         return script
     }
@@ -81,15 +85,15 @@ public class NginxSetup extends SshBasedAppSetup {
     public List<String> getRestartScript() {
         List<String> script = [
             "cd ${runDir}",
-            "ps aux | grep '[n]'ginx | grep `cat pid.txt` || exit 1",
-            "kill -HUP `cat pid.txt`"
+            "test -f logs/nginx.pid || exit 1",
+            "./sbin/nginx -p ${runDir}/ -s restart",
         ]
         return script
     }
 
     /** @see SshBasedAppSetup#getCheckRunningScript() */
     public List<String> getCheckRunningScript() {
-        return makeCheckRunningScript("nginx")
+        return makeCheckRunningScript("nginx", "logs/nginx.pid")
     }
 
     /**
@@ -99,10 +103,8 @@ public class NginxSetup extends SshBasedAppSetup {
     public List<String> getShutdownScript() {
         List<String> script = [
             "cd ${runDir}",
-            "ps aux | grep '[n]'ginx | grep `cat pid.txt` || exit 1",
-            "kill `cat pid.txt`",
-            "sleep 5",
-            "kill -9 `cat pid.txt`"
+            "test -f logs/nginx.pid || exit 1",
+            "./sbin/nginx -p ${runDir}/ -s quit",
         ]
         return script
     }
@@ -111,9 +113,7 @@ public class NginxSetup extends SshBasedAppSetup {
     public List<String> getConfigScript() {
         List<String> script = [
             "mkdir -p ${runDir}",
-            "cd ${installDir}",
-            "./configure --prefix=${runDir}",
-            "make install",
+            "cp -R ${installDir}/dist/{conf,html,logs,sbin} ${runDir}"
         ]
         return script
     }
