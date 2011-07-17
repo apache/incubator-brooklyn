@@ -112,8 +112,4 @@ public class DynamicCluster extends AbstractGroup implements Startable, Resizabl
         entity.stop()
         entity
     }
- 
-    public int getCurrentSize() {
-        return members.size()
-    }
 }

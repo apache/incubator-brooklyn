@@ -303,12 +303,12 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 
     @Override
     public String getApplicationId() {
-        application?.id
+        getApplication()?.id
     }
 
     @Override
     public ManagementContext getManagementContext() {
-        application.managementContext
+        getApplication()?.managementContext
     }
 
     protected synchronized void registerWithApplication(Application app) {
@@ -359,7 +359,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     @Override
     public <T> T setConfig(ConfigKey<T> key, T val) {
         // TODO Is this the best idea, for making life easier for brooklyn coders when supporting changing config?
-        if (application?.isDeployed()) throw new IllegalStateException("Cannot set configuration $key on active entity $this")
+        if (getApplication()?.isDeployed()) throw new IllegalStateException("Cannot set configuration $key on active entity $this")
 
         T oldVal = ownConfig.put(key, val);
         if ((val in Task) && (!(val.isSubmitted()))) {

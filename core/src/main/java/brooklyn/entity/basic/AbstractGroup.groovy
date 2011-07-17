@@ -27,7 +27,7 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
         members.add(member)
         listeners.each { it.propertyChange(new ElementAddedEvent(this, member, -1)) }
         emit(MEMBER_ADDED, MEMBER_ADDED.newEvent(this, member))
-        setAttribute(Changeable.GROUP_SIZE, members.size())
+        setAttribute(Changeable.GROUP_SIZE, currentSize)
         member
     }
  
@@ -35,13 +35,17 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
         members.remove member
         listeners.each { it.propertyChange(new ElementRemovedEvent(this, member, -1)) }
         emit(MEMBER_REMOVED, MEMBER_REMOVED.newEvent(this, member))
-        setAttribute(Changeable.GROUP_SIZE, members.size())
+        setAttribute(Changeable.GROUP_SIZE, currentSize)
         member
     }
  
     // Declared so can be overridden (the default auto-generated getter is final!)
     public Collection<Entity> getMembers() {
         return members.get()
+    }
+ 
+    public int getCurrentSize() {
+        return getMembers().size()
     }
 
     Set<PropertyChangeListener> listeners = new LinkedHashSet<PropertyChangeListener>();

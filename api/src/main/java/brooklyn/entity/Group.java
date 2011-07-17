@@ -15,7 +15,9 @@ public interface Group extends Entity {
      */
     Collection<Entity> getMembers();
     
-    Entity addMember(Entity child);
+    Entity addMember(Entity member);
  
-    boolean removeMember(Entity child);
+    boolean removeMember(Entity member);
+    
+    int getCurrentSize();
 }
