@@ -83,6 +83,7 @@ public class LocalSubscriptionManager implements SubscriptionManager {
         s.eventFilter = flags.remove("eventFilter")
         s.flags = flags
         
+        LOG.info "Creating subscription $s for ${s.subscriber} on $producer $sensor in $this"
         allSubscriptions.put(s.id, s)
         LanguageUtils.addToMapOfSets(subscriptionsByToken, makeEntitySensorToken(s.producer, s.sensor), s);
         if (s.subscriber!=null) {
