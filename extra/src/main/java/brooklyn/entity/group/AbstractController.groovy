@@ -1,43 +1,124 @@
 package brooklyn.entity.group
 
-import groovy.util.ObservableList.ChangeType
-import groovy.util.ObservableList.ElementEvent
-
-import java.beans.PropertyChangeListener
+import java.util.List
 import java.util.Map
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 import brooklyn.entity.Entity
-import brooklyn.entity.Group
-import brooklyn.entity.basic.AbstractEntity
-import brooklyn.entity.group.Cluster
-import brooklyn.entity.trait.Startable
+import brooklyn.entity.basic.AbstractGroup
+import brooklyn.entity.basic.AbstractService
+import brooklyn.entity.basic.Attributes
+import brooklyn.event.EventListener
+import brooklyn.event.Sensor
+import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.event.basic.BasicConfigKey
+import brooklyn.location.MachineLocation
+import brooklyn.management.SubscriptionHandle
+
+import com.google.common.base.Preconditions
 
 /**
  * Represents a controller mechanism for a {@link Cluster}.
  */
-public abstract class Controller extends AbstractEntity implements Startable {
-    public Cluster cluster
+public abstract class AbstractController extends AbstractService {
+    protected static final Logger LOG = LoggerFactory.getLogger(AbstractController.class)
 
-    public Controller(Map properties=[:], Group owner=null, Cluster cluster=null) {
+    public static final BasicConfigKey<Integer> SUGGESTED_HTTP_PORT = [ Integer, "proxy.httpPort", "Suggested proxy HTTP port" ]
+    public static final BasicConfigKey<Sensor> PORT_NUMBER_SENSOR = [ String, "member.sensor.portNumber", "Port number sensor on members" ]
+
+    public static final BasicAttributeSensor<Integer> HTTP_PORT = Attributes.HTTP_PORT
+    public static final BasicAttributeSensor<String> DOMAIN_NAME = [ String, "proxy.domainName", "Domain name" ]
+    public static final BasicAttributeSensor<String> PROTOCOL = [ String, "proxy.portNumber", "Protocol" ]
+    public static final BasicAttributeSensor<String> URL = [ String, "proxy.url", "URL" ]
+
+    AbstractGroup cluster
+    String domain
+    int port
+    String protocol
+    String url
+    Sensor portNumber
+
+    protected Map<InetAddress,List<Integer>> addresses
+    protected List<SubscriptionHandle> subscriptions = []
+
+    public AbstractController(Map properties=[:], Entity owner=null, AbstractGroup cluster=null) {
         super(properties, owner)
 
-        if (cluster) this.cluster = cluster
+        portNumber = getConfig(PORT_NUMBER_SENSOR) ?: properties.portNumberSensor
+        Preconditions.checkNotNull(portNumber, "The port number sensor must be supplied")
 
-        cluster.addEntityChangeListener({ ElementEvent event ->
-	            switch (event.changeType) {
-                    case ChangeType.ADDED:
-                        add event.newValue
-                        break
-                    case ChangeType.REMOVED:
-	                    remove event.oldValue
-                        break;
-                    default:
-                        break;
-                }
-            } as PropertyChangeListener)
+        if (getAttribute(PROTOCOL) || properties.containsKey("url")) {
+	        url = getAttribute(URL) ?: properties.remove("url")
+	        setAttribute(URL, url)
+
+            // Set config properties from URL
+            port = url.port
+            setAttribute(HTTP_PORT, port)
+            porotocol = url.protocol
+            setAttribute(PROTOCOL, protocol)
+            domain = url.host
+            setAttribute(DOMAIN_NAME, domain)
+        } else {
+	        port = properties.port ?: 80
+	        setAttribute(HTTP_PORT, port)
+
+	        protocol = getAttribute(PROTOCOL) ?: properties.protocol ?: "http"
+	        setAttribute(PROTOCOL, protocol)
+
+            domain = getAttribute(DOMAIN_NAME) ?: properties.domain
+            Preconditions.checkNotNull(domain, "Domain must be set for controller")
+            setAttribute(DOMAIN_NAME, domain)
+
+	        setAttribute(URL, "${protocol}://${domain}:${port}/")
+        }
+
+        setCluster(cluster ?: properties.cluster)
     }
 
-    public abstract void add(Entity entity);
+    public void setCluster(AbstractGroup cluster) {
+        Preconditions.checkNotNull cluster, "The cluster cannot be null"
+        this.cluster = cluster
+        reset()
+        cluster.members.each { add it }
+        subscriptions += subscriptionContext.subscribe(cluster, cluster.MEMBER_ADDED, { add it } as EventListener)
+        subscriptions += subscriptionContext.subscribe(cluster, cluster.MEMBER_REMOVED, { remove it } as EventListener)
+    }
 
-    public abstract void remove(Entity entity);
+    public void reset() {
+        addresses = new HashMap<InetAddress,List<Integer>>().withDefault { new ArrayList<Integer>() }
+
+        subscriptions.each { subscriptionContext.unsubscribe(it) }
+        subscriptions.clear()
+    }
+
+    @Override
+    public void stop() {
+        reset()
+        super.stop()
+    }
+
+    // TODO use blocking config mechanism to wait for the port number attribute to become available
+
+    public synchronized void add(Entity entity) {
+        entity.locations.each { MachineLocation machine -> addresses[machine.address] += entity.getAttribute(portNumber) }
+        if (getAttribute(SERVICE_UP)) {
+	        configure()
+	        restart()
+        }
+    }
+
+    public synchronized void remove(Entity entity) {
+        entity.locations.each { MachineLocation machine -> addresses[machine.address] -= entity.getAttribute(portNumber) }
+        if (getAttribute(SERVICE_UP)) {
+	        configure()
+	        restart()
+        }
+    }
+
+    /**
+     * Configure the controller based on the cluster membership list.
+     */
+    public abstract void configure()
 }

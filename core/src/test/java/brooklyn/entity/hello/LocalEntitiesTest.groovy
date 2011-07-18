@@ -14,6 +14,7 @@ import brooklyn.location.Location
 import brooklyn.management.ExecutionContext
 import brooklyn.management.SubscriptionHandle
 import brooklyn.util.task.BasicTask
+import brooklyn.util.task.ParallelTask;
 
 import static brooklyn.event.basic.DependentConfiguration.*
 import brooklyn.location.basic.AbstractLocation;
@@ -52,9 +53,13 @@ class LocalEntitiesTest {
         } as EventListener)
         long startTime = System.currentTimeMillis()
         synchronized (evt) {
-            h.setAge(5)
+//            h.setAge(5)
+            new ParallelTask([h /*, otherEntity, anotherEntity */ ].
+                    collect { it.invoke(HelloEntity.SET_AGE, age: 5) });
             evt.wait(5000)
         }
+        
+        assertNotNull(evt.get())
         assertEquals(HelloEntity.AGE, evt.get().sensor)
         assertEquals(h, evt.get().source)
         assertEquals(5, evt.get().value)

@@ -4,55 +4,59 @@ import groovy.transform.EqualsAndHashCode
 
 import java.util.Collection
 
+import brooklyn.entity.ConfigKey
+
 import com.google.common.base.Splitter
 import com.google.common.collect.Lists
 
 @EqualsAndHashCode(includeFields=true)
 class BasicConfigKey<T> implements ConfigKey, Serializable {
-
-    private static final long serialVersionUID = -1762014059150215376L;
+    private static final long serialVersionUID = -1762014059150215376L
     
-    private static final Splitter dots = Splitter.on('.');
+    private static final Splitter dots = Splitter.on('.')
     
-    public final String name;
-    //TODO Alex strongly suggests: make it a Class. java API nicer that way. use custom serialisers rather than corrupt the internal type
-    //or if you must, make it transient, and have non-transient String typeName, and getType will check for type being null...
-    public final String type;
-    public final String description;
+    public final String name
+    public final Class<T> type
+    public final String typeName
+    public final String description
+    public final T defaultValue
     
     public BasicConfigKey() { /* for gson */ }
     
-    /** @deprecated class argument should be first */
-    @Deprecated 
-    public BasicConfigKey(String name, Class<T> type, String description=name) {
-        this(type, name, description)
-    }
-    public BasicConfigKey(Class<T> type, String name, String description=name) {
-        this.description = description;
-        this.name = name;
-        this.type = type.getName();
+    public BasicConfigKey(Class<T> type, String name, String description=name, T defaultValue=null) {
+        this.description = description
+        this.name = name
+        this.type = type
+        this.typeName = type.name
     }
 
-    @Override
-    public String getName() {
-        return name;
+    /** @see ConfigKey#getName() */
+    public String getName() { name }
+
+    /** @see ConfigKey#getTypeName() */
+    public String getTypeName() { typeName }
+
+    /** @see ConfigKey#getType() */
+    public Class<T> getType() { type }
+
+    /** @see ConfigKey#getDescription() */
+    public String getDescription() { description }
+
+    /** @see ConfigKey#getDefaultValue() */
+    public T getDefaultValue() { defaultValue }
+
+    /** @see ConfigKey#hasDefaultValue() */
+    public boolean hasDefaultValue() {
+        return defaultValue != null
     }
-    
-    String getType() {
-        return type;
-    }
-    
-    @Override
-    public String getDescription() {
-        return description;
-    }
-    
-    /** @see Sensor#getNameParts() */
+
+    /** @see ConfigKey#getNameParts() */
     public Collection<String> getNameParts() {
         return Lists.newArrayList(dots.split(name));
     }
-    
+ 
+    @Override
     public String toString() {
-        return "Config:"+name;
+        return String.format("Config: %s (%s)", name, typeName)
     }
 }

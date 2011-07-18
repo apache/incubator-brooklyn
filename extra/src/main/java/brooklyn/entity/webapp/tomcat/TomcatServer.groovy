@@ -7,32 +7,32 @@ import javax.management.InstanceNotFoundException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.entity.Entity
 import brooklyn.entity.webapp.JavaWebApp
 import brooklyn.event.EntityStartException
-import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.adapter.ValueProvider
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.SshBasedJavaWebAppSetup
+import brooklyn.util.SshBasedAppSetup
 import brooklyn.util.internal.Repeater
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Tomcat instance.
  */
-public class TomcatNode extends JavaWebApp {
-    private static final Logger log = LoggerFactory.getLogger(TomcatNode.class)
+public class TomcatServer extends JavaWebApp {
+    private static final Logger log = LoggerFactory.getLogger(TomcatServer.class)
     
     public static final BasicConfigKey<Integer> SUGGESTED_SHUTDOWN_PORT = [Integer, "tomcat.shutdownport", "Suggested shutdown port" ]
     
     public static final BasicAttributeSensor<Integer> TOMCAT_SHUTDOWN_PORT = [ Integer, "webapp.tomcat.shutdownPort", "Port to use for shutting down" ];
     public static final BasicAttributeSensor<String> CONNECTOR_STATUS = [String, "webapp.tomcat.connectorStatus", "Catalina connector state name"]
     
-    public TomcatNode(Map properties=[:]) {
-        super(properties);
+    public TomcatServer(Map properties=[:], Entity owner=null) {
+        super(properties, owner)
     }
 
-    public SshBasedJavaWebAppSetup getSshBasedSetup(SshMachineLocation machine) {
+    public SshBasedAppSetup getSshBasedSetup(SshMachineLocation machine) {
         return Tomcat7SshSetup.newInstance(this, machine)
     }
     
@@ -41,7 +41,7 @@ public class TomcatNode extends JavaWebApp {
         attributePoller.addSensor(REQUEST_COUNT, jmxAdapter.newAttributeProvider("Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "requestCount"))
         attributePoller.addSensor(TOTAL_PROCESSING_TIME, jmxAdapter.newAttributeProvider("Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "processingTime"))
         attributePoller.addSensor(CONNECTOR_STATUS, { computeConnectorStatus() } as ValueProvider)
-        attributePoller.addSensor(NODE_UP, { computeNodeUp() } as ValueProvider)
+        attributePoller.addSensor(SERVICE_UP, { computeNodeUp() } as ValueProvider)
     }
 
     public void waitForHttpPort() {

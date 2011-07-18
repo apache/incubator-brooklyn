@@ -11,10 +11,10 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.Entity
 import brooklyn.entity.trait.Resizable
 import brooklyn.entity.trait.Startable
+import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.Location
 import brooklyn.util.internal.EntityStartUtils
-import brooklyn.entity.trait.ResizeResult
 
 /**
  * intended to represent a group of homogeneous entities in a single location;
@@ -23,16 +23,17 @@ import brooklyn.entity.trait.ResizeResult
  * initialSize property determines initial size when started (defaults to 1)
  */
 public abstract class Cluster extends Tier implements Startable {
-    public static final BasicConfigKey<Integer> INITIAL_SIZE = [Integer, "cluster.size", "Initial cluster size" ]
+    public static final BasicConfigKey<Integer> INITIAL_SIZE = [ Integer, "initial.size", "Initial cluster size" ]
+
+    public static final BasicAttributeSensor<String> CLUSTER_SIZE = [ Integer, "cluster.size", "Cluster size" ]
 
     int initialSize
 
-    public Cluster(Map properties=[:]) {
-        super(properties)
+    public Cluster(Map properties=[:], Entity owner=null) {
+        super(properties, owner)
         initialSize = getConfig(INITIAL_SIZE) ?: properties?.initialSize ?: 1
         setConfig(INITIAL_SIZE, initialSize)
     }
-    
     
     // TODO single location
 }
@@ -43,8 +44,8 @@ public abstract class ClusterFromTemplate extends Cluster implements Resizable {
     Entity template = null
     Collection<Location> locations = null
     
-    public ClusterFromTemplate(Map properties=[:], Entity template=null) {
-        super(properties)
+    public ClusterFromTemplate(Map properties=[:], Entity owner=null, Entity template=null) {
+        super(properties, owner)
         if (template) this.template = template
     }
     
@@ -79,11 +80,15 @@ public abstract class ClusterFromTemplate extends Cluster implements Resizable {
         members.each { Startable entity  -> entity.stop() }
     }
 
-    // FIXME
-    public synchronized ResizeResult resize(int newSize) {
-        int newNodes = newSize - children.size()
+    public synchronized void restart() {
+        stop()
+        start locations
+    }
+
+    public synchronized Integer resize(int newSize) {
+        int newNodes = newSize - members.size()
         if (newNodes>0) grow(newNodes)
         else if (newNodes<0) shrink(-newNodes);
-        return null
+        return members.size()
     }
 }

@@ -1,8 +1,12 @@
 package brooklyn.entity.webapp
 
+import java.net.URL
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.entity.ConfigKey
+import brooklyn.entity.Entity
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.ConfigKeys
 import brooklyn.entity.basic.JavaApp
@@ -12,9 +16,11 @@ import brooklyn.event.adapter.HttpSensorAdapter
 import brooklyn.event.adapter.ValueProvider
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
-import brooklyn.event.basic.ConfigKey
 import brooklyn.location.Location
 import brooklyn.location.MachineLocation
+import brooklyn.policy.DeltaEnricher
+import brooklyn.policy.SimpleAveragingEnricher;
+import brooklyn.policy.SimpleTimeAveragingEnricher;
 
 /**
 * An {@link brooklyn.entity.Entity} representing a single java web application server instance.
@@ -26,23 +32,28 @@ public abstract class JavaWebApp extends JavaApp {
     public static final ConfigKey<Integer> SUGGESTED_HTTP_PORT = ConfigKeys.SUGGESTED_HTTP_PORT
 
     public static final AttributeSensor<Integer> HTTP_PORT = Attributes.HTTP_PORT
+    public static final Integer AVG_REQUESTS_PER_SECOND_PERIOD = 30*1000
 
     public static final BasicAttributeSensor<Integer> ERROR_COUNT = [ Integer, "webapp.reqs.errors", "Request errors" ]
     public static final BasicAttributeSensor<Integer> MAX_PROCESSING_TIME = [ Integer, "webpp.reqs.processing.max", "Max processing time" ]
     public static final BasicAttributeSensor<Integer> REQUEST_COUNT = [ Integer, "webapp.reqs.total", "Request count" ]
-    public static final BasicAttributeSensor<Double> REQUESTS_PER_SECOND = [ Double, "webapp.reqs.persec", "Reqs/Sec" ]
+    public static final BasicAttributeSensor<Double> REQUESTS_PER_SECOND = [ Double, "webapp.reqs.persec.last", "Reqs/Sec" ]
+    public static final BasicAttributeSensor<Double> AVG_REQUESTS_PER_SECOND = [ Double, "webapp.reqs.persec.avg.$AVG_REQUESTS_PER_SECOND_PERIOD",
+         "Average Reqs/Sec (over ${AVG_REQUESTS_PER_SECOND_PERIOD}ms)" ]
     public static final BasicAttributeSensor<Integer> TOTAL_PROCESSING_TIME = [ Integer, "webapp.reqs.processing.time", "Total processing time" ]
 
+    public static final BasicAttributeSensor<String> ROOT_URL = [ String, "webapp.url", "URL" ]
     public static final BasicAttributeSensor<String> HTTP_SERVER = [ String, "webapp.http.server", " Server name" ]
     public static final BasicAttributeSensor<Integer> HTTP_STATUS = [ Integer, "webapp.http.status", " HTTP response code for the server" ]
 
     transient HttpSensorAdapter httpAdapter
 
-    public JavaWebApp(Map properties=[:]) {
-        super(properties)
+    public JavaWebApp(Map properties=[:], Entity owner=null) {
+        super(properties, owner)
+
         if (properties.httpPort) setConfig(SUGGESTED_HTTP_PORT, properties.remove("httpPort"))
 
-        setAttribute(NODE_STATUS, "uninitialized")
+        setAttribute(SERVICE_STATUS, "uninitialized")
     }
 
     protected abstract void waitForHttpPort();
@@ -61,7 +72,11 @@ public abstract class JavaWebApp extends JavaApp {
         log.debug "started $this: httpPort {}, jmxHost {} and jmxPort {}",
                 getAttribute(HTTP_PORT), getAttribute(JMX_HOST), getAttribute(JMX_PORT)
 
-        attributePoller.addSensor(REQUESTS_PER_SECOND, { computeReqsPerSec() } as ValueProvider, 1000L)
+        // TODO Want to wire this up so doesn't go through SubscriptionManager;
+        // but that's an optimisation we'll do later.
+        addPolicy(new DeltaEnricher<Integer>(this, REQUEST_COUNT, REQUESTS_PER_SECOND))
+        addPolicy(new SimpleTimeAveragingEnricher<Double>(this, REQUESTS_PER_SECOND, AVG_REQUESTS_PER_SECOND, 
+            AVG_REQUESTS_PER_SECOND_PERIOD))
 
         waitForHttpPort()
 //        initHttpSensors()
@@ -77,27 +92,5 @@ public abstract class JavaWebApp extends JavaApp {
         getSshBasedSetup(locations.find({ it instanceof MachineLocation })).deploy(new File(file))
     }
 
-    protected double computeReqsPerSec() {
-        def curTimestamp = System.currentTimeMillis()
-        def curCount = getAttribute(REQUEST_COUNT) ?: 0
-        def prevTimestamp = tempWorkings['tmp.reqs.timestamp'] ?: 0
-        def prevCount = tempWorkings['tmp.reqs.count'] ?: 0
-        tempWorkings['tmp.reqs.timestamp'] = curTimestamp
-        tempWorkings['tmp.reqs.count'] = curCount
-        log.trace "previous data {} at {}, current {} at {}", prevCount, prevTimestamp, curCount, curTimestamp
-
-        // Calculate requests per second
-        double diff = curCount - prevCount
-        long dt = curTimestamp - prevTimestamp
-        double result
-
-        if (dt <= 0 || dt > 60*1000) {
-            result = -1;
-        } else {
-            result = ((double) 1000.0 * diff) / dt
-        }
-        log.trace "computed $result reqs/sec over $dt millis"
-        return result
-    }
 }
 

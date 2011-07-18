@@ -46,12 +46,19 @@ public class BasicTaskStub implements TaskStub {
 }
 
 /**
- * A task can be given an optional displayName and description in its constructor (as named 
- * arguments in the map in first parameter). It is guaranteed to be Object.notified 
- * once whenever the task starts running and once again when the task is about to complete (due to 
- * the way executors work it is ugly to guarantee notification _after_ completion, so instead we 
- * notify just before then expect user to call get() [which will throw errors if the underlying job 
- * did so] or blockUntilEnded() [which will not throw errors]).
+ * The basic concrete implementation of a {@link Task} to be executed.
+ *
+ * A {@link Task} is a wrapper for an executable unit, such as a {@link Closure} or a {@link Runnable} or
+ * {@link Callable} and will run in its own {@link Thread}.
+ * <p>
+ * The task can be given an optional displayName and description in its constructor (as named 
+ * arguments in the first {@link Map} parameter). It is guaranteed to have {@link Object#notify()} called
+ * once whenever the task starts running and once again when the task is about to complete. Due to 
+ * the way executors work it is ugly to guarantee notification <em>after</em> completion, so instead we 
+ * notify just before then expect the user to call {@link #get()} - which will throw errors if the underlying job 
+ * did so - or {@link #blockUntilEnded()} which will not throw errors.
+ *
+ * @see BasicTaskStub
  */
 public class BasicTask<T> extends BasicTaskStub implements Task<T> {
     protected Closure<T> job

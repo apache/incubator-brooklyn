@@ -3,7 +3,9 @@ package brooklyn.entity;
 import java.io.Serializable;
 import java.util.Collection;
 
+import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
+import brooklyn.policy.Policy;
 
 /**
  * The basic interface for a Brooklyn entity.
@@ -11,9 +13,6 @@ import brooklyn.location.Location;
  * @see AbstractEntity
  */
 public interface Entity extends Serializable {
-    
-    // FIXME Add a description
-    
     /**
      * The unique identifier for this entity.
      */
@@ -65,6 +64,10 @@ public interface Entity extends Serializable {
      */
     Entity addOwnedChild(Entity child);
     
+    /**
+     * @return an immutable thread-safe view of the policies.
+     */
+    Collection<Policy> getPolicies();
     
     /**
      * The {@link Collection} of {@link Group}s that this entity is a member of.
@@ -82,4 +85,18 @@ public interface Entity extends Serializable {
      * Return all the {@link Location}s this entity is deployed to.
      */
     Collection<Location> getLocations();
+
+    /**
+     * Gets the value of the given attribute on this entity, or null if has not been set.
+     *
+     * Attributes can be things like workrate and status information, as well as
+     * configuration (e.g. url/jmxHost/jmxPort), etc.
+     */
+    <T> T getAttribute(AttributeSensor<T> sensor);
+
+    /**
+     * Gets the given configuration value for this entity, which may be inherited from
+     * its owner.
+     */
+    <T> T getConfig(ConfigKey<T> key);
 }

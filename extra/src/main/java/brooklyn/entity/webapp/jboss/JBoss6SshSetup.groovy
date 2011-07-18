@@ -1,11 +1,12 @@
 package brooklyn.entity.webapp.jboss
 
-import java.util.List;
+import java.util.List
 
 import brooklyn.entity.basic.Attributes
-import brooklyn.util.SshBasedJavaAppSetup;
-import brooklyn.util.SshBasedJavaWebAppSetup
+import brooklyn.entity.webapp.JavaWebApp
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.util.SshBasedJavaAppSetup
+import brooklyn.util.SshBasedJavaWebAppSetup
 
 public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     public static final String DEFAULT_VERSION = "6.0.0.Final"
@@ -18,19 +19,19 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     private String serverProfile
     private String clusterName
     
-    public static JBoss6SshSetup newInstance(JBossNode entity, SshMachineLocation machine) {
-        Integer suggestedJbossVersion = entity.getConfig(JBossNode.SUGGESTED_VERSION)
-        String suggestedInstallDir = entity.getConfig(JBossNode.SUGGESTED_INSTALL_DIR)
-        String suggestedRunDir = entity.getConfig(JBossNode.SUGGESTED_RUN_DIR)
-        Integer suggestedJmxPort = entity.getConfig(JBossNode.SUGGESTED_JMX_PORT)
-        String suggestedJmxHost = entity.getConfig(JBossNode.SUGGESTED_JMX_HOST)
-        Integer suggestedPortIncrement = entity.getConfig(JBossNode.SUGGESTED_PORT_INCREMENT)
-        String suggestedServerProfile = entity.getConfig(JBossNode.SUGGESTED_SERVER_PROFILE)
-        String suggestedClusterName = entity.getConfig(JBossNode.SUGGESTED_CLUSTER_NAME)
+    public static JBoss6SshSetup newInstance(JBossServer entity, SshMachineLocation machine) {
+        Integer suggestedJbossVersion = entity.getConfig(JBossServer.SUGGESTED_VERSION)
+        String suggestedInstallDir = entity.getConfig(JBossServer.SUGGESTED_INSTALL_DIR)
+        String suggestedRunDir = entity.getConfig(JBossServer.SUGGESTED_RUN_DIR)
+        Integer suggestedJmxPort = entity.getConfig(JBossServer.SUGGESTED_JMX_PORT)
+        String suggestedJmxHost = entity.getConfig(JBossServer.SUGGESTED_JMX_HOST)
+        Integer suggestedPortIncrement = entity.getConfig(JBossServer.SUGGESTED_PORT_INCREMENT)
+        String suggestedServerProfile = entity.getConfig(JBossServer.SUGGESTED_SERVER_PROFILE)
+        String suggestedClusterName = entity.getConfig(JBossServer.SUGGESTED_CLUSTER_NAME)
         
         String version = suggestedJbossVersion ?: DEFAULT_VERSION
-        String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"jboss-${version}")
-        String runDir = suggestedRunDir ?: (DEFAULT_RUN_DIR+"/"+"app-${entity.application.id}"+"/"+"jboss-${entity.id}")
+        String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"${version}"+"/"+"jboss-${version}")
+        String runDir = suggestedRunDir ?: (BROOKLYN_HOME_DIR+"/"+"${entity.application.id}"+"/"+"jboss-${entity.id}")
         String deployDir = runDir+"/"+DEFAULT_DEPLOY_SUBDIR
         String serverProfile = suggestedServerProfile ?: "standard"
         String clusterName = suggestedClusterName ?: ""
@@ -54,7 +55,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         return result
     }
 
-    public JBoss6SshSetup(JBossNode entity, SshMachineLocation machine) {
+    public JBoss6SshSetup(JBossServer entity, SshMachineLocation machine) {
         super(entity, machine)
     }
     
@@ -78,6 +79,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         entity.setAttribute(Attributes.JMX_PORT, jmxPort)
         entity.setAttribute(Attributes.JMX_HOST, jmxHost)
         entity.setAttribute(Attributes.HTTP_PORT, httpPort)
+        entity.setAttribute(JavaWebApp.ROOT_URL, "http://${machine.address.hostAddress}:${httpPort}/")
         entity.setAttribute(Attributes.VERSION, version)
     }
     
@@ -101,8 +103,8 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         List<String> script = [
             "\$JBOSS_HOME/bin/run.sh -Djboss.service.binding.set=${portGroupName} -Djboss.server.base.dir=\$RUN/server " +
                     "-Djboss.server.base.url=file://\$RUN/server -Djboss.messaging.ServerPeerID=${entity.id} " +
-                    "-b ${machine.address.hostAddress} $clusterArg -c $serverProfile " + 
-                    ">\$RUN/jboss.log 2>\$RUN/jboss.err </dev/null &",
+                    "-b 0.0.0.0 ${clusterArg} -c ${serverProfile} " + // ${machine.address.hostAddress}
+                    ">>\$RUN/console 2>&1 </dev/null &",
         ]
         return script
     }
@@ -124,7 +126,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
 	        "LAUNCH_JBOSS_IN_BACKGROUND" : "1",
 	        "JBOSS_HOME" : "${installDir}",
 	        "JAVA_OPTS" : toJavaDefinesString(getJvmStartupProperties()),
-	        "JBOSS_CLASSPATH" : "${installDir}/lib/jboss-logmanager.jar",
+	        "JBOSS_CLASSPATH" : "\$JBOSS_HOME/lib/jboss-logmanager.jar",
 	        "RUN" : "${runDir}",
         ]
         return env
@@ -161,17 +163,17 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     }
 
     @Override
-    public void shutdown() {
+    public List<String> getShutdownScript() {
         def host = entity.getAttribute(Attributes.JMX_HOST)
         def port = entity.getAttribute(Attributes.JMX_PORT)
-        def result = machine.run(out:System.out, [
+        List<String> script = [
 	            "${installDir}/bin/shutdown.sh --host ${host} --port ${port} -S",
-                "sleep 5",
-                "ps auxwwww | grep ${entity.id} | awk '{ print \$2 }' | xargs kill -9"
-            ])
-        if (result) log.info "non-zero result code terminating {}: {}", entity, result
-        log.debug "done invoking shutdown script"
+            ]
+        return script
     }
+
+    @Override
+    public List<String> getRestartScript() { [] }
 
     @Override
     protected void postShutdown() {

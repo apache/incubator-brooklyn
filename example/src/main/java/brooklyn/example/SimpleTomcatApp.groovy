@@ -1,16 +1,14 @@
 package brooklyn.example
 
 import brooklyn.entity.basic.AbstractApplication
-import brooklyn.entity.group.Cluster
-import brooklyn.entity.webapp.tomcat.TomcatCluster
-import brooklyn.entity.webapp.tomcat.TomcatNode
+import brooklyn.entity.group.DynamicCluster
+import brooklyn.location.Location
+import brooklyn.location.basic.FixedListMachineProvisioningLocation
+import brooklyn.entity.webapp.tomcat.TomcatServer
 
 import brooklyn.location.basic.SshMachineLocation
+
 import com.google.common.base.Preconditions
-import brooklyn.location.basic.GeneralPurposeLocation
-import brooklyn.location.basic.FixedListMachineProvisioningLocation
-import brooklyn.location.Location
-import brooklyn.entity.group.DynamicCluster
 
 /**
  * Starts some tomcat nodes, on localhost, using ssh;
@@ -20,15 +18,15 @@ import brooklyn.entity.group.DynamicCluster
  * @author alex
  */
 public class SimpleTomcatApp extends AbstractApplication {
-    DynamicCluster tc = new DynamicCluster(displayName:'MyTomcat', initialSize: 1,
-        newEntity: {
-            def tc = new TomcatNode()
+    DynamicCluster tc = new DynamicCluster(displayName:'MyTomcat', initialSize:1,
+        newEntity:{ properties ->
+            def ts = new TomcatServer(properties)
             URL resource = SimpleTomcatApp.class.getClassLoader().getResource("hello-world.war")
             Preconditions.checkState resource != null, "Unable to locate resource hello-world.war"
-            tc.setConfig(TomcatNode.WAR, resource.getPath())
-            return tc;
+            ts.setConfig(TomcatServer.WAR, resource.getPath())
+            return ts;
         },
-        owner: this);
+        owner:this);
 
     public static void main(String[] argv) {
         def app = new SimpleTomcatApp()
@@ -55,10 +53,10 @@ public class SimpleTomcatApp extends AbstractApplication {
         t.start {
             while (!t.isInterrupted()) {
                 Thread.sleep 5000
-                app.getEntities().each { if (it in TomcatNode) {
+                app.getEntities().each { if (it in TomcatServer) {
                         println it.toString()
-                        println "Requests per second: " + it.getAttribute(TomcatNode.REQUESTS_PER_SECOND)
-                        println "Error count: " + it.getAttribute(TomcatNode.ERROR_COUNT)
+                        println "Requests per second: " + it.getAttribute(TomcatServer.REQUESTS_PER_SECOND)
+                        println "Error count: " + it.getAttribute(TomcatServer.ERROR_COUNT)
                     }
                 }
             }
@@ -105,7 +103,7 @@ public class SimpleTomcatApp extends AbstractApplication {
 
         //TODO find a better way to shutdown a cluster?
         println "shutting down..."
-        app.entities.each { if (it in TomcatNode) it.stop() }
+        app.entities.each { if (it in TomcatServer) it.stop() }
         //TODO there is still an executor service running, not doing anything but not marked as a daemon,
         //so doesn't quit immediately (i think it will time out but haven't verified)
         //app shutdown should exist and handle that???

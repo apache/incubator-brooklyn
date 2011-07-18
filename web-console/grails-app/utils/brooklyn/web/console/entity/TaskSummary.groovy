@@ -20,11 +20,11 @@ public class TaskSummary {
     final boolean cancelled;
 
     public TaskSummary(Task task) {
-        this.id = task.getId()
+        this.id = task.id
         this.submitTimeUtc = task.submitTimeUtc
         this.startTimeUtc = task.startTimeUtc
         this.endTimeUtc = task.endTimeUtc
-        this.submittedByTask = task.submittedByTask.id
+        this.submittedByTask = task.submittedByTask ? task.submittedByTask.id : null
         this.statusDetail = task.getStatusDetail(false)
         this.statusDetailMultiLine = task.getStatusDetail(true)
         this.submittedByTask = task.submittedByTask

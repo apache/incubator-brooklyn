@@ -1,4 +1,4 @@
-package brooklyn.entity.jms
+package brooklyn.entity.messaging
 
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
@@ -9,7 +9,7 @@ import brooklyn.event.basic.BasicConfigKey
 public interface Queue {
     BasicConfigKey<String> QUEUE_NAME = [ String, "jms.queue.name", "JMS queue name" ]
 
-    BasicAttributeSensor<Integer> QUEUE_DEPTH = [ Integer, "jms.queue.depth", "Queue depth" ]
+    BasicAttributeSensor<Integer> QUEUE_DEPTH = [ Integer, "jms.queue.depth", "Queue depth in bytes" ]
     BasicAttributeSensor<Integer> MESSAGE_COUNT = [ Integer, "jms.message.count", "Number of messages" ]
 
     /**

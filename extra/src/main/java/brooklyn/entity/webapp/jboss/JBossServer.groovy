@@ -3,17 +3,18 @@ package brooklyn.entity.webapp.jboss
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.entity.Entity
 import brooklyn.entity.webapp.JavaWebApp
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
-import brooklyn.util.SshBasedJavaWebAppSetup
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.util.SshBasedAppSetup
 
 /**
  * JBoss web application server.
  */
-public class JBossNode extends JavaWebApp {
-    private static final Logger log = LoggerFactory.getLogger(JBossNode.class)
+public class JBossServer extends JavaWebApp {
+    private static final Logger log = LoggerFactory.getLogger(JBossServer.class)
 
     public static BasicConfigKey<String>  SUGGESTED_SERVER_PROFILE = 
             [ String, "jboss.serverProfile", "Profile used when running server" ] 
@@ -25,9 +26,9 @@ public class JBossNode extends JavaWebApp {
     // Jboss specific
     public static final BasicAttributeSensor<Integer> PORT_INCREMENT = [ Integer, "webapp.portIncrement", "Increment added to default JBoss ports" ];
             
-    public JBossNode(Map properties=[:]) {
-        super(properties);
-        
+    public JBossServer(Map properties=[:], Entity owner=null) {
+        super(properties, owner)
+
         def portIncrement = properties.portIncrement ?: 0
         if (portIncrement < 0) {
             throw new IllegalArgumentException("JBoss port increment cannot be negative")
@@ -39,7 +40,7 @@ public class JBossNode extends JavaWebApp {
         }
     }
 
-    public SshBasedJavaWebAppSetup getSshBasedSetup(SshMachineLocation loc) {
+    public SshBasedAppSetup getSshBasedSetup(SshMachineLocation loc) {
         return JBoss6SshSetup.newInstance(this, loc);
     }
     
@@ -47,7 +48,7 @@ public class JBossNode extends JavaWebApp {
         attributePoller.addSensor(ERROR_COUNT, jmxAdapter.newAttributeProvider("jboss.web:type=GlobalRequestProcessor,name=http-*", "errorCount"))
         attributePoller.addSensor(REQUEST_COUNT, jmxAdapter.newAttributeProvider("jboss.web:type=GlobalRequestProcessor,name=http-*", "requestCount"))
         attributePoller.addSensor(TOTAL_PROCESSING_TIME, jmxAdapter.newAttributeProvider("jboss.web:type=GlobalRequestProcessor,name=http-*", "processingTime"))
-        attributePoller.addSensor(NODE_UP, jmxAdapter.newAttributeProvider("jboss.system:type=Server", "Started"))
+        attributePoller.addSensor(SERVICE_UP, jmxAdapter.newAttributeProvider("jboss.system:type=Server", "Started"))
     }
 
     public void waitForHttpPort() {

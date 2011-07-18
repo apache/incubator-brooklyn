@@ -1,12 +1,12 @@
 package brooklyn.policy.wip
 
-import java.util.LinkedList;
-import java.util.Map;
+import java.util.LinkedList
+import java.util.Map
 
-import brooklyn.entity.Entity;
-import brooklyn.event.EventListener;
-import brooklyn.event.Sensor;
-import brooklyn.management.SubscriptionHandle;
+import brooklyn.entity.Entity
+import brooklyn.event.EventListener
+import brooklyn.event.Sensor
+import brooklyn.management.SubscriptionHandle
 
 public class TimeBufferEnricher<T> extends BufferingEnricher<T> {
     static final int DEFAULT_BUFFER_TIME = 1000

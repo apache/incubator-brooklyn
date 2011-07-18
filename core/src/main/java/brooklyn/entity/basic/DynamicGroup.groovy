@@ -14,14 +14,11 @@ import brooklyn.entity.Entity
 public class DynamicGroup extends AbstractGroup {
     private static final Logger log = LoggerFactory.getLogger(DynamicGroup.class)
     
-    Closure entityFilter=null;
+    Closure entityFilter
     
     public DynamicGroup(Map properties=[:], Entity owner=null, Closure entityFilter=null) {
         super(properties, owner)
         if (entityFilter) this.entityFilter = entityFilter;
-        
-        //do this last, rather than passing owner up, so that entity filter is ready
-        if (owner) owner.addOwnedChild(this)
     }
     
     void setEntityFilter(Closure entityFilter) {
@@ -44,8 +41,8 @@ public class DynamicGroup extends AbstractGroup {
         }
         if (!getApplication()) return
         Set existingMembers = super.getMembers() as HashSet
-        log.debug "scanning {}", getApplication().getEntities()
-        getApplication().getEntities().each {
+        log.debug "scanning {}", getApplication().entities
+        getApplication().entities.each {
             if (entityFilter.call(it)) {
                 if (existingMembers.add(it))
                     addMember(it)
@@ -58,6 +55,6 @@ public class DynamicGroup extends AbstractGroup {
     @Override
     public Collection<Entity> getMembers() {
         rescanEntities();
-        return super.getMembers();
+        return super.getMembers()
     }
 }

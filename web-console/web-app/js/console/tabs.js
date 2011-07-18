@@ -19,7 +19,7 @@ Brooklyn.tabs = (function() {
         disableTabs();
 
         var selectEntityMessage = "<p>Select an entity in the tree to the left to work with it here.</p>";
-        $('#summary').html(selectEntityMessage);
+        $('#summary-basic-info').html(selectEntityMessage);
         location.hash = "#summary";
 
         $(Brooklyn.eventBus).bind("entity_selected", enableTabs);
@@ -62,7 +62,12 @@ Brooklyn.tabs = (function() {
         return row._aData;
     }
 
-    return {init: init, getDataTable: getDataTable, getDataTableSelectedRowData: getDataTableSelectedRowData};
+    return {
+        init: init,
+        getDataTable: getDataTable,
+        getDataTableSelectedRowData: getDataTableSelectedRowData
+    };
+
 }());
 
 $(document).ready(Brooklyn.tabs.init);

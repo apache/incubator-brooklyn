@@ -7,6 +7,9 @@ import java.util.Set
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
 import brooklyn.event.EventListener
@@ -20,11 +23,15 @@ import brooklyn.util.task.BasicExecutionManager
 import brooklyn.util.task.SingleThreadedExecution
 
 import com.google.common.base.Predicate
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 /**
  * A {@link SubscriptionManager} that stores subscription details locally.
  */
 public class LocalSubscriptionManager implements SubscriptionManager {
+    private static final Logger LOG = LoggerFactory.getLogger(SubscriptionManager.class)
+
     static String makeEntitySensorToken(Entity e, Sensor<?> s) {
         return (e ? e.id :  "*")+":"+(s ? s.name : "*")
     }
@@ -164,11 +171,14 @@ public class LocalSubscriptionManager implements SubscriptionManager {
         
         //note, generating the notifications must be done in the calling thread to preserve order
         //e.g. emit(A); emit(B); should cause onEvent(A); onEvent(B) in that order
-        Set<Subscription> subs = getSubscriptionsForEntitySensor(event.source, event.sensor);
+        LOG.debug "got an {} event", event
+        Set<Subscription> subs = getSubscriptionsForEntitySensor(event.source, event.sensor)
         if (subs) {
+            LOG.trace "sending {} to {}", event.sensor.name, subs.join(",")
             for (Subscription s in subs) {
                 if (s.eventFilter!=null && !s.eventFilter.apply(event))
                     continue;
+                LOG.debug "publishing {} to {}", event, s
                 em.submit(tags: s.subscriberExecutionManagerTag, { s.listener.onEvent(event) })
             }
         }

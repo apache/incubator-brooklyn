@@ -31,7 +31,8 @@ class SimpleTimeAveragingEnricher<T extends Number> extends AbstractEnricher {
     long timePeriod
     boolean extrapolateFromLast
     
-    public SimpleTimeAveragingEnricher(Entity producer, Sensor<T> source, Sensor<Double> target, long timePeriod) {
+    public SimpleTimeAveragingEnricher(Entity producer, BasicAttributeSensor<T> source, BasicAttributeSensor<Double> target, 
+            long timePeriod) {
         super(producer, source, target)
         this.timePeriod = timePeriod
         this.extrapolateFromLast = extrapolateFromLast
@@ -45,7 +46,7 @@ class SimpleTimeAveragingEnricher<T extends Number> extends AbstractEnricher {
         values.addLast(event.getValue())
         timestamps.addLast(eventTime)
         pruneValues(eventTime)
-        entity.emit(target, getAverage(eventTime).value)
+        entity.setAttribute(target, getAverage(eventTime).value)
     }
     
     public ConfidenceQualifiedNumber getAverage() {

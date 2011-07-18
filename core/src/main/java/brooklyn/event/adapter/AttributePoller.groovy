@@ -52,13 +52,13 @@ public class AttributePoller {
             }
         }
         
-        scheduled[sensor.getName()] = exec.scheduleWithFixedDelay(safeCalculate, 0L, period, TimeUnit.MILLISECONDS)
+        scheduled[sensor.name] = exec.scheduleWithFixedDelay(safeCalculate, 0L, period, TimeUnit.MILLISECONDS)
     }
 
     public <T> void removeSensor(AttributeSensor<T> sensor) {
         log.debug "removing sensor", sensor.name
-        providers.remove(sensor)
-        scheduled.remove(sensor).cancel(true)
+        providers.remove(sensor.name)
+        scheduled.remove(sensor.name).cancel(true)
     }
 
     public void close() {
@@ -68,9 +68,8 @@ public class AttributePoller {
 
     private void updateAll() {
         log.debug "updating all jmx sensors"
-        providers.entrySet() each { Map.Entry<AttributeSensor,ValueProvider> e ->
-                AttributeSensor sensor = e.getKey()
-                ValueProvider provider = e.getValue()
+        providers.each {
+                AttributeSensor sensor, ValueProvider provider ->
                 def newValue = provider.compute()
                 log.debug "update for attribute {} to {}", sensor.name, newValue
                 entity.setAttribute(sensor, newValue)
@@ -78,7 +77,7 @@ public class AttributePoller {
     }
     
     private void update(Sensor sensor) {
-        if (!providers.containsKey(sensor)) throw new IllegalStateException("Sensor $sensor.name not found");
+        if (!providers.containsKey(sensor)) throw new IllegalStateException("Sensor ${sensor.name} not found");
         ValueProvider<?> provider = providers.get(sensor)
         def newValue = provider.compute()
         log.debug "update for attribute {} to {}", sensor.name, newValue

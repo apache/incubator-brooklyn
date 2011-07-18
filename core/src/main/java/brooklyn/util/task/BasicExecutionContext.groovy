@@ -15,7 +15,7 @@ public class BasicExecutionContext implements ExecutionContext {
     
     public static BasicExecutionContext getCurrentExecutionContext() { return perThreadExecutionContext.get() }
  
-    public Task getCurrentTask() { return BasicExecutionManager.getCurrentTask() }
+    public Task<?> getCurrentTask() { return BasicExecutionManager.getCurrentTask() }
 
     final ExecutionManager executionManager;
     final Set<Object> tags = [];
@@ -34,7 +34,7 @@ public class BasicExecutionContext implements ExecutionContext {
     }
 
     /** returns tasks started by this context (or tasks which have all the tags on this object) */
-    public Set<Task> getTasks() { executionManager.getTasksWithAllTags(tags) }
+    public Set<Task<?>> getTasks() { executionManager.getTasksWithAllTags(tags) }
 
     //these conform with ExecutorService but we do not want to expose shutdown etc here
     /**
@@ -44,22 +44,31 @@ public class BasicExecutionContext implements ExecutionContext {
      *   
      * @see ExecutionManager#submit(Map, Task) 
      */
-    public Task submit(Map m=[:], Runnable r) { submitInternal(m, r) }
+    public Task<?> submit(Map properties=[:], Runnable runnable) { submitInternal(properties, runnable) }
  
     /** @see #submit(Map, Runnable) */
-    public Task submit(Map m=[:], Callable r) { submitInternal(m, r) }
+    public <T> Task<T> submit(Map properties=[:], Callable callable) { submitInternal(properties, callable) }
  
     /** @see #submit(Map, Runnable) */
-    public Task submit(Task task) { submitInternal([:], task) }
+    public <T> Task<T> submit(Task task) { submitInternal([:], task) }
  
-    private Task submitInternal(Map m, Object r) {
-        if (m.tags==null) m.tags = []; 
-        m.tags.addAll(tags)
-        def oldNTSC = m.newTaskStartCallback;
-        m.newTaskStartCallback = { this.registerPerThreadExecutionContext(); if (oldNTSC!=null) oldNTSC.call(it); }
-        def oldNTEC = m.newTaskEndCallback;
-        m.newTaskEndCallback = { try { if (oldNTEC!=null) oldNTEC.call(it); } finally { this.clearPerThreadExecutionContext() } }
-        executionManager.submit m, r
+    private Task submitInternal(Map properties, Object task) {
+        if (properties.tags==null) properties.tags = [] 
+        properties.tags.addAll(tags)
+        def startCallback = properties.newTaskStartCallback;
+        properties.newTaskStartCallback = {
+                this.registerPerThreadExecutionContext()
+                if (startCallback!=null) startCallback.call(it)
+            }
+        def endCallback = properties.newTaskEndCallback
+        properties.newTaskEndCallback = {
+                try {
+                    if (startCallback!=null) startCallback.call(it)
+                } finally {
+                    this.clearPerThreadExecutionContext()
+                }
+            }
+        executionManager.submit properties, task
     }
 
     /**

@@ -1,4 +1,4 @@
-package brooklyn.entity.jms.qpid
+package brooklyn.entity.messaging.qpid
 
 import java.util.List
 import java.util.Map
@@ -10,7 +10,7 @@ import brooklyn.util.SshBasedJavaAppSetup;
 import brooklyn.util.SshBasedJavaWebAppSetup
 
 /**
- * Start a {@link QpidNode} in a {@link Location} accessible over ssh.
+ * Start a {@link QpidBroker} in a {@link Location} accessible over ssh.
  */
 public class QpidSetup extends SshBasedJavaAppSetup {
     public static final String DEFAULT_VERSION = "0.10"
@@ -20,17 +20,17 @@ public class QpidSetup extends SshBasedJavaAppSetup {
     private int amqpPort
     private int rmiPort
 
-    public static QpidSetup newInstance(QpidNode entity, SshMachineLocation machine) {
-        Integer suggestedQpidVersion = entity.getConfig(QpidNode.SUGGESTED_VERSION)
-        String suggestedInstallDir = entity.getConfig(QpidNode.SUGGESTED_INSTALL_DIR)
-        String suggestedRunDir = entity.getConfig(QpidNode.SUGGESTED_RUN_DIR)
-        Integer suggestedJmxPort = entity.getConfig(QpidNode.SUGGESTED_JMX_PORT)
-        String suggestedJmxHost = entity.getConfig(QpidNode.SUGGESTED_JMX_HOST)
-        Integer suggestedAmqpPort = entity.getConfig(QpidNode.SUGGESTED_AMQP_PORT)
+    public static QpidSetup newInstance(QpidBroker entity, SshMachineLocation machine) {
+        Integer suggestedVersion = entity.getConfig(QpidBroker.SUGGESTED_VERSION)
+        String suggestedInstallDir = entity.getConfig(QpidBroker.SUGGESTED_INSTALL_DIR)
+        String suggestedRunDir = entity.getConfig(QpidBroker.SUGGESTED_RUN_DIR)
+        Integer suggestedJmxPort = entity.getConfig(QpidBroker.SUGGESTED_JMX_PORT)
+        String suggestedJmxHost = entity.getConfig(QpidBroker.SUGGESTED_JMX_HOST)
+        Integer suggestedAmqpPort = entity.getConfig(QpidBroker.SUGGESTED_AMQP_PORT)
 
-        String version = suggestedQpidVersion ?: DEFAULT_VERSION
-        String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"qpid-broker-${version}")
-        String runDir = suggestedRunDir ?: (DEFAULT_RUN_DIR+"/"+"app-"+entity.getApplication()?.id+"/qpid-"+entity.id)
+        String version = suggestedVersion ?: DEFAULT_VERSION
+        String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"${version}"+"/"+"qpid-broker-${version}")
+        String runDir = suggestedRunDir ?: (BROOKLYN_HOME_DIR+"/"+"${entity.application.id}"+"/"+"qpid-${entity.id}")
         String jmxHost = suggestedJmxHost ?: machine.getAddress().getHostName()
         int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort, DEFAULT_FIRST_JMX_PORT))
         int rmiPort = machine.obtainPort(toDesiredPortRange(jmxPort - 100))
@@ -48,7 +48,7 @@ public class QpidSetup extends SshBasedJavaAppSetup {
         return result
     }
 
-    public QpidSetup(QpidNode entity, SshMachineLocation machine) {
+    public QpidSetup(QpidBroker entity, SshMachineLocation machine) {
         super(entity, machine)
     }
 
@@ -83,13 +83,12 @@ public class QpidSetup extends SshBasedJavaAppSetup {
     }
 
     /**
-     * Creates the directories qpid needs to run in a different location from where it is installed,
-     * renumber http and shutdown ports, and delete AJP connector, then start with JMX enabled
+     * Creates the directories Qpid needs to run in a different location from where it is installed.
      */
     public List<String> getRunScript() {
         List<String> script = [
             "cd ${runDir}",
-			"nohup ./bin/qpid-server -m ${jmxPort} -p ${amqpPort} &",
+			"nohup ./bin/qpid-server -m ${jmxPort} -p ${amqpPort} --exclude-0-10 ${amqpPort} &",
         ]
         return script
     }
@@ -105,14 +104,7 @@ public class QpidSetup extends SshBasedJavaAppSetup {
 
     /** @see SshBasedJavaAppSetup#getCheckRunningScript() */
     public List<String> getCheckRunningScript() {
-        List<String> script = [
-            "cd ${runDir}",
-			"(ps auxww | grep '[q]'pid | grep ${entity.id} > pid.list || echo \"no qpid processes found\")",
-			"cat pid.list",
-			"if [ -z \"`cat pid.list`\" ] ; then echo process no longer running ; exit 1 ; fi",
-        ]
-        return script
-        //note grep can return exit code 1 if text not found, hence the || in the block above
+       return makeCheckRunningScript("qpid", "qpid-server.pid")
     }
 
     @Override
@@ -126,13 +118,13 @@ public class QpidSetup extends SshBasedJavaAppSetup {
     }
 
     @Override
-    public void shutdown() {
-        log.debug "invoking shutdown script"
-        def result = machine.run(out:System.out, [
-	            "ps auxww | grep '[q]'pid  | grep ${entity.id} | awk '{ print \$2 }' | xargs kill -9",
-            ])
-        if (result) log.info "non-zero result code terminating {}: {}", entity, result
-        log.debug "done invoking shutdown script"
+    public List<String> getRestartScript() {
+       return makeRestartScript("qpid-server.pid")
+    }
+
+    @Override
+    public List<String> getShutdownScript() {
+       return makeShutdownScript("qpid-server.pid")
     }
 
     @Override

@@ -56,7 +56,10 @@ Brooklyn.main = (function() {
         $(Brooklyn.eventBus).bind("update_failed", updateFailed);
     }
 
-    return { init: init }
+    return {
+        init: init
+    };
+
 })();
 
 $(document).ready(Brooklyn.main.init);

@@ -2,32 +2,11 @@ Brooklyn.activity = (function(){
 
     // Config
     var id = '#activity-data';
-    var aoColumns = [ { "mDataProp": "name", "sTitle": "name", "sWidth":"100%"  },
-                      { "mDataProp": "activitydate", "sTitle": "date", "sWidth":"100%"  }];
+    var aoColumns = [ { "mDataProp": "submitTimeUtc", "sTitle": "Submit time", "sWidth":"10%"  },
+                      { "mDataProp": "statusDetail", "sTitle": "Status", "sWidth":"90%"  }];
 
-    var mydata = [
-        {activitydate:"2007-10-01:18:45:30",name:"Effector:Stop,Arg3"},
-        {activitydate:"2007-10-02",name:"Effector:Stop,Arg2"},
-        {activitydate:"2007-09-01",name:"Effector:Stop,Arg1"},
-        {activitydate:"2007-10-04",name:"StatCheck"},
-        {activitydate:"2007-10-05",name:"Effector:Stop"},
-        {activitydate:"2007-09-06",name:"Effector:Deploy"},
-        {activitydate:"2007-10-04",name:"Effector:Start"},
-        {activitydate:"2007-10-03:19:01:27",name:"Effector:Reset"},
-        {activitydate:"2007-09-01",name:"Effector:Abandon"},
-        {activitydate:"2007-10-01",name:"Effector:Stop,Arg3"},
-        {activitydate:"2007-10-02",name:"Effector:Stop,Arg2"},
-        {activitydate:"2007-09-01",name:"Effector:Stop,Arg1"},
-        {activitydate:"2007-10-04",name:"StatCheck"},
-        {activitydate:"2007-10-05",name:"Effector:Stop"},
-        {activitydate:"2007-09-06",name:"Effector:Deploy"},
-        {activitydate:"2007-10-04",name:"Effector:Start"},
-        {activitydate:"2007-10-03",name:"Effector:Reset"},
-        {activitydate:"2007-09-01",name:"Effector:Abandon"}
-    ];
-
-    function createGrid(){
-        Brooklyn.tabs.getDataTable(id, ".", aoColumns, updateLog, mydata);
+    function updateTable(json){
+        Brooklyn.tabs.getDataTable(id, ".", aoColumns, updateLog, json);
     }
 
     function selectLog(event){
@@ -57,13 +36,26 @@ Brooklyn.activity = (function(){
         }
     }
 
-    function init() {
-        createGrid();
-        $('#activity-clear').click(clearLog);
-        $('#activity-select').click(selectLog);
+    function updateList(e, entity_id) {
+        if (entity_id) {
+             $.getJSON("activity?id=" + entity_id, updateTable).error(
+                function() {$(Brooklyn.eventBus).trigger('update_failed', "Could not get activity data.");}
+            );
+        }
     }
 
-    return { init: init, selectLog: selectLog , clearLog: clearLog , updateLog: updateLog }
+    function init() {
+        $('#activity-clear').click(clearLog);
+        $('#activity-select').click(selectLog);
+        $(Brooklyn.eventBus).bind("entity_selected", updateList);
+    }
+
+    return {
+        init: init,
+        selectLog: selectLog,
+        clearLog: clearLog,
+        updateLog: updateLog
+    };
 
 })();
 $(document).ready(Brooklyn.activity.init);

@@ -35,7 +35,7 @@ public class AbstractLocationTest {
         AbstractLocation parent = new ConcreteLocation(name: "Middle Earth")
         AbstractLocation child = new ConcreteLocation(name: "The Shire", parentLocation: parent)
         assertEquals 1, parent.childLocations.size()
-        assertEquals child, parent.childLocations.iterator().next()
+        assertEquals child, parent.childLocations.find { true }
     }
 
     @Test
@@ -52,6 +52,6 @@ public class AbstractLocationTest {
         AbstractLocation child = new ConcreteLocation(name: "The Shire")
         child.parentLocation = parent
         assertEquals 1, parent.childLocations.size()
-        assertEquals child, parent.childLocations.iterator().next()
+        assertEquals child, parent.childLocations.find { true }
     }
 }

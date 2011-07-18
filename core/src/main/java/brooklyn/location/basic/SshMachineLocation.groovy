@@ -1,5 +1,7 @@
 package brooklyn.location.basic
 
+import com.google.common.base.Preconditions
+
 import java.io.IOException
 import java.util.List
 
@@ -15,25 +17,25 @@ import com.google.common.base.Preconditions
 public class SshMachineLocation extends AbstractLocation implements MachineLocation {
     private String user = null
     private InetAddress address
-    private Map sshConfig = [:]
+    private Map config = [:]
 
-    private final Set<Integer> portsInUse = [] as HashSet
-    
+    private final Set<Integer> ports = [] as HashSet
+
     public SshMachineLocation(Map properties = [:]) {
         super(properties)
-        Map mutableProperties = properties as LinkedHashMap
-        Preconditions.checkArgument mutableProperties.containsKey('address'), "properties must contain an entry with key 'address'"
-        Preconditions.checkArgument mutableProperties.address instanceof InetAddress, "'address' value must be an InetAddress"
-        this.address = mutableProperties.remove('address')
 
-        if (mutableProperties.userName) {
-            Preconditions.checkArgument mutableProperties.userName instanceof String, "'userName' value must be a string"
-            this.user = mutableProperties.remove('userName')
+        Preconditions.checkArgument properties.containsKey('address'), "properties must contain an entry with key 'address'"
+        Preconditions.checkArgument properties.address instanceof InetAddress, "'address' value must be an InetAddress"
+        this.address = properties.address
+
+        if (properties.userName) {
+            Preconditions.checkArgument properties.userName instanceof String, "'userName' value must be a string"
+            this.user = properties.userName
         }
 
-        if (properties.sshConfig) {
-            Preconditions.checkArgument properties.sshConfig instanceof Map, "'sshConfig' value must be a Map"
-            this.sshConfig = properties.remove('sshConfig')
+        if (properties.config) {
+            Preconditions.checkArgument properties.config instanceof Map, "'config' value must be a Map"
+            this.config = properties.config
         }
     }
 
@@ -45,23 +47,29 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
     /** convenience for running a script, returning the result code */
     public int run(Map props=[:], List<String> commands, Map env=[:]) {
-        assert address : "host must be specified for $this"
+        Preconditions.checkNotNull address, "host address must be specified for ssh"
 
-        if (!user) user=System.getProperty "user.name"
-        def sshArgs = [user:user, host:address.hostName]
-        sshArgs << sshConfig
-        def t = new SshJschTool(sshArgs);
-        t.connect()
-        int result = t.execShell props, commands, env
-        t.disconnect()
+        if (!user) user = System.getProperty "user.name"
+        Map args = [ user:user, host:address.hostName ]
+        args << config
+        SshJschTool ssh = new SshJschTool(args);
+        ssh.connect()
+        int result = ssh.execShell props, commands, env
+        ssh.disconnect()
         result
     }
 
-    public int copyTo(File src, String destination) {
-        def conn = new SshJschTool(user:user, host:address.hostName)
-        conn.connect()
-        int result = conn.copyToServer [:], src, destination
-        conn.disconnect()
+    public int copyTo(Map props=[:], File src, String destination) {
+        Preconditions.checkNotNull address, "host address must be specified for scp"
+        Preconditions.checkArgument src.exists(), "File {} must exist for scp", src.name
+
+        if (!user) user=System.getProperty "user.name"
+        Map args = [user:user, host:address.hostName]
+        args << config
+        SshJschTool ssh = new SshJschTool(args)
+        ssh.connect()
+        int result = ssh.copyToServer props, src, destination
+        ssh.disconnect()
         result
     }
 
@@ -73,23 +81,20 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     // TODO Does not support zero to mean any; but can't when returning boolean
     // TODO Does not yet check if the port really is free on this machine
     public boolean obtainSpecificPort(int portNumber) {
-        if (portsInUse.contains(portNumber)) {
+        if (ports.contains(portNumber)) {
             return false
         } else {
-            portsInUse.add(portNumber)
+            ports.add(portNumber)
             return true
         }
     }
 
     public int obtainPort(PortRange range) {
-        for (int i = range.getMin(); i <= range.getMax(); i++) {
-            if (obtainSpecificPort(i)) return i;
-        }
-        return -1;
+        return (range.min..range.max).find { int p -> obtainSpecificPort(p) } ?: -1
     }
 
     public void releasePort(int portNumber) {
-        portsInUse.remove((Object)portNumber);
+        ports.remove((Object) portNumber);
     }
     
     public boolean isSshable() {

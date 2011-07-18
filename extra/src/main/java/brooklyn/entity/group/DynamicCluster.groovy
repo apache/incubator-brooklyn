@@ -1,32 +1,40 @@
 package brooklyn.entity.group
 
-import brooklyn.entity.trait.Resizable
-import brooklyn.entity.trait.Startable
-import brooklyn.location.Location
-import brooklyn.entity.basic.AbstractGroup
-import brooklyn.entity.Entity
-import com.google.common.base.Preconditions
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import brooklyn.entity.trait.ResizeResult
-import brooklyn.management.Task
+
+import brooklyn.entity.Entity
+import brooklyn.entity.basic.AbstractGroup
+import brooklyn.entity.trait.Resizable
+import brooklyn.entity.trait.Startable
+import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.event.basic.BasicConfigKey
+import brooklyn.location.Location
+
+import com.google.common.base.Preconditions
 
 /**
  * A cluster of entities that can dynamically increase or decrease the number of entities.
  */
 public class DynamicCluster extends AbstractGroup implements Startable, Resizable {
-
     private static final Logger logger = LoggerFactory.getLogger(DynamicCluster)
 
-    Closure<Entity> newEntity;
-    int initialSize;
-    private Location location;
+    public static final BasicConfigKey<Integer> INITIAL_SIZE = [ Integer, "cluster.initial.size", "Initial cluster size" ]
+
+    Closure<Entity> newEntity
+    int initialSize
+    Map properties
+
+    private Location location
 
     /**
      * Instantiate a new DynamicCluster. Valid properties are:
-     * * template: an @{link Entity} that implements @{link Startable} that will be the template for nodes in the cluster.
-     * * initialSize: an @{link Integer} that is the number of nodes to start when the cluster's @{link start()} method is
-     * called.
+     * <ul>
+     * <li>template - an {@link Entity} that implements {@link Startable} that will be the template for nodes in the cluster.
+     * <li>initialSize - an {@link Integer} that is the number of nodes to start when the cluster's {@link #start(List)} method is
+     * called, default is 0.
+     * </ul>
+     *
      * @param properties the properties of the new entity.
      * @param owner the entity that owns this cluster (optional)
      */
@@ -36,68 +44,72 @@ public class DynamicCluster extends AbstractGroup implements Startable, Resizabl
         Preconditions.checkArgument properties.containsKey('newEntity'), "'newEntity' property is mandatory"
         Preconditions.checkArgument properties.get('newEntity') instanceof Closure, "'newEntity' must be a closure"
         newEntity = properties.remove('newEntity')
+        
+        initialSize = getConfig(INITIAL_SIZE) ?: properties.initialSize ?: 0
+        setConfig(INITIAL_SIZE, initialSize)
 
-        Preconditions.checkArgument properties.containsKey('initialSize'), "'initialSize' property is mandatory"
-        Preconditions.checkArgument properties.get('initialSize') instanceof Integer, "'initialSize' property must be an integer"
-        initialSize = properties.remove('initialSize')
+        this.properties = properties
+
+        setAttribute(SERVICE_UP, false)
     }
 
-    void start(Collection<? extends Location> locations) {
+    public void start(Collection<? extends Location> locations) {
         Preconditions.checkNotNull locations, "locations must be supplied"
         Preconditions.checkArgument locations.size() == 1, "Exactly one location must be supplied"
-        location = locations.first()
+        location = locations.find { true }
         resize(initialSize)
+        setAttribute(SERVICE_UP, true)
     }
 
-    void stop() {
+    public void stop() {
+        resize(0)
+        setAttribute(SERVICE_UP, false)
+    }
+
+    public void restart() {
         throw new UnsupportedOperationException()
     }
 
-    ResizeResult resize(int desiredSize) {
+    public synchronized Integer resize(int desiredSize) {
         int delta = desiredSize - currentSize
         logger.info "Resize from {} to {}; delta = {}", currentSize, desiredSize, delta
 
-        Collection<Entity> addedEntities = null
-        Collection<Entity> removedEntities = null
+        Collection<Entity> addedEntities = []
+        Collection<Entity> removedEntities = []
 
         if (delta > 0) {
-            addedEntities = []
-            delta.times {
-                def result = addNode()
-                Preconditions.checkState result != null, "addNode call returned null"
-                Preconditions.checkState result.containsKey('entity') && result.entity instanceof Entity,
-                    "addNode result should include key='entity' with value of type Entity instead of "+result.task?.class?.name
-                Preconditions.checkState result.containsKey('task') && result.task instanceof Task,
-                    "addNode result should include key='task' with value of type Task instead of "+result.task?.class?.name
-                result.task.get()
-                addedEntities.add(result.entity)
-            }
+            delta.times { addedEntities += addNode() }
         } else if (delta < 0) {
-            throw new UnsupportedOperationException()
+            (-delta).times { removedEntities += removeNode() }
         }
 
-        return new ResizeResult(){
-            int getDelta(){return delta}
-            Collection<Entity> getAddedEntities(){return addedEntities}
-            Collection<Entity> getRemovedEntities(){return removedEntities};
-        }
+        return currentSize
     }
 
-    protected def addNode() {
-        logger.info "Adding a node"
-        def e = newEntity.call()
-        Preconditions.checkState e != null, "newEntity call returned null"
-        Preconditions.checkState e instanceof Entity, "newEntity call returned an object that is not an Entity"
-        Preconditions.checkState e instanceof Startable, "newEntity call returned an object that is not Startable"
-        Entity entity = (Entity)e
+    protected Entity addNode() {
+        Map creation = [:]
+        creation << properties
+        creation.put("owner", this)
+        logger.trace "Adding a node to {} with properties {}", id, creation
 
-        entity.setOwner(this)
-        Task<Void> startTask = entity.invoke(Startable.START, [locations: [location]])
-        Preconditions.checkState startTask != null, "Invoke Startable.START returned null"
-        return [entity: entity, task: startTask]
+        Entity entity = newEntity.call(creation)
+        Preconditions.checkNotNull entity, "newEntity call returned null"
+        Preconditions.checkState entity instanceof Entity, "newEntity call returned an object that is not an Entity"
+        Preconditions.checkState entity instanceof Startable, "newEntity call returned an object that is not Startable"
+ 
+        entity.start([location])
+        addMember(entity)
+        entity
     }
 
-    int getCurrentSize() {
-        return ownedChildren.size()
+    protected Entity removeNode() {
+        logger.info "Removing a node"
+        Entity entity = members.find { true } // TODO use specific criteria
+        Preconditions.checkNotNull entity, "No member entity found to remove"
+        Preconditions.checkState entity instanceof Startable, "Member entity is not Startable"
+ 
+        removeMember(entity)
+        entity.stop()
+        entity
     }
 }

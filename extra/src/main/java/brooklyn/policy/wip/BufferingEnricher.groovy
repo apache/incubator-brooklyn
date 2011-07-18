@@ -3,7 +3,7 @@ package brooklyn.policy.wip
 import java.util.Collections.UnmodifiableList
 
 import brooklyn.entity.Entity
-import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.EventListener
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
@@ -11,8 +11,10 @@ import brooklyn.event.basic.BasicSensor
 import brooklyn.management.SubscriptionHandle
 import brooklyn.policy.basic.AbstractPolicy
 
+public interface BufferEvent {}
+
 class BufferingEnricher<T> extends AbstractPolicy implements EventListener<T> {
-    public static interface BufferEvent {}
+    
     public static final class BufferChangedEvent implements BufferEvent {}
     public static final class BufferFlushedEvent implements BufferEvent {}
     private Sensor<BufferChangedEvent> result
@@ -67,5 +69,4 @@ class BufferingEnricher<T> extends AbstractPolicy implements EventListener<T> {
     public Sensor<BufferChangedEvent> getSensor() {
         return result;
     }
-
 }

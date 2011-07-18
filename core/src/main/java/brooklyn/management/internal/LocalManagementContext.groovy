@@ -22,13 +22,13 @@ import brooklyn.util.task.BasicExecutionManager
 public class LocalManagementContext extends AbstractManagementContext {
     private static final Logger log = LoggerFactory.getLogger(LocalManagementContext.class)
 
-    private ExecutionManager execution = new BasicExecutionManager();
-    private SubscriptionManager subscriptions = new LocalSubscriptionManager(execution);
+    private ExecutionManager execution
+    private SubscriptionManager subscriptions
     
     Set<Application> apps = []
  
     //completely unacceptable!! :
-//    public static ManagementContext getContext() { return new LocalManagementContext() }
+    //public static ManagementContext getContext() { return new LocalManagementContext() }
     
     @Override
     public void registerApplication(Application app) {
@@ -40,7 +40,18 @@ public class LocalManagementContext extends AbstractManagementContext {
         return apps
     }
     
-    public SubscriptionManager getSubscriptionManager() { return subscriptions; }
-    public ExecutionManager getExecutionManager() { return execution; }
-     
+    public Entity getEntity(String id) {
+        //FIXME needed, a registry after serialization
+        null
+	}
+    
+    public synchronized  SubscriptionManager getSubscriptionManager() {
+        if (subscriptions) return subscriptions
+        subscriptions = new LocalSubscriptionManager(executionManager)
+    }
+
+    public synchronized ExecutionManager getExecutionManager() {
+        if (execution) return execution
+        execution = new BasicExecutionManager()
+    }
 }

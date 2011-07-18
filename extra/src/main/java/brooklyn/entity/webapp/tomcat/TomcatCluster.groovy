@@ -7,23 +7,23 @@ import brooklyn.util.internal.LanguageUtils
 // This class is deprecated. Instead you should write your code to refer directly to DynamicCluster.
 @Deprecated
 public class TomcatCluster extends DynamicCluster {
-    public TomcatCluster(Map props=[:], TomcatNode template=new TomcatNode()) {
+    public TomcatCluster(Map props=[:], TomcatServer template=new TomcatServer()) {
         super(getPropertiesForSuperConstructor(props), template);
     }
 
-    private static Map getPropertiesForSuperConstructor(Map props, TomcatNode template) {
+    private static Map getPropertiesForSuperConstructor(Map props, TomcatServer template) {
         Map superProps = [:]
         superProps << props
         superProps.newEntity = makeNewEntityClosure(template)
     }
 
-    private void setTemplate(TomcatNode template) {
+    private void setTemplate(TomcatServer template) {
         super.newEntity = makeNewEntityClosure(template)
     }
 
-    private static Closure<TomcatNode> makeNewEntityClosure(TomcatNode template) {
+    private static Closure<TomcatServer> makeNewEntityClosure(TomcatServer template) {
         return {
-            TomcatNode copy = EntityStartUtils.cloneTemplate(template);
+            TomcatServer copy = EntityStartUtils.cloneTemplate(template);
             copy.id = LanguageUtils.newUid()
             return copy
         }

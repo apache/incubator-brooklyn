@@ -1,7 +1,6 @@
 package brooklyn.event.basic;
 
 import groovy.transform.InheritConstructors
-import groovy.transform.ToString;
 
 import java.util.List
 
@@ -9,9 +8,10 @@ import brooklyn.entity.Entity
 import brooklyn.event.AttributeSensor
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
+import brooklyn.util.internal.LanguageUtils
 
+import com.google.common.base.Objects
 import com.google.common.base.Splitter
-import com.google.common.base.Throwables
 import com.google.common.collect.Lists
 
 /**
@@ -38,19 +38,13 @@ public class BasicSensor<T> implements Sensor<T> {
     }
 
     /** @see Sensor#getType() */
-    public Class<T> getType() {
-        try {
-            return type ?: (Class<T>) Class.forName(typeName);
-        } catch (ClassNotFoundException e) {
-            throw Throwables.propagate(e);
-        }
-    }
+    public Class<T> getType() { type }
  
     /** @see Sensor#getTypeName() */
-    public String getTypeName() { return typeName }
+    public String getTypeName() { typeName }
  
     /** @see Sensor#getName() */
-    public String getName() { return name }
+    public String getName() { name }
  
     /** @see Sensor#getNameParts() */
     public List<String> getNameParts() {
@@ -58,7 +52,7 @@ public class BasicSensor<T> implements Sensor<T> {
     }
  
     /** @see Sensor#getDescription() */
-    public String getDescription() { return description }
+    public String getDescription() { description }
     
     /** @see Sensor#newEvent(Entity, Object) */
     public SensorEvent<T> newEvent(Entity producer, T value) {
@@ -66,8 +60,18 @@ public class BasicSensor<T> implements Sensor<T> {
     }
     
     @Override
+    public int hashCode() {
+        return Objects.hashCode(typeName, name, description)
+    }
+ 
+    @Override
+    public boolean equals(Object other) {
+        LanguageUtils.equals(this, other, ["type", "name", "description"]);
+    }
+    
+    @Override
     public String toString() {
-        return "Sensor:"+name;
+        return String.format("Sensor: %s (%s)", name, typeName)
     }
 }
 
@@ -77,6 +81,22 @@ public class BasicSensor<T> implements Sensor<T> {
 @InheritConstructors
 public class BasicAttributeSensor<T> extends BasicSensor<T> implements AttributeSensor<T> {
     private static final long serialVersionUID = -7670909215973264600L;
+
+    public BasicAttributeSensor(Class<T> type, String name, String description=name) {
+        super(type, name, description)
+    }
+}
+
+/**
+ * A {@link Sensor} used to notify subscribers about events.
+ */
+@InheritConstructors
+public class BasicNotificationSensor<T> extends BasicSensor<T> {
+    private static final long serialVersionUID = -7670909215973264600L;
+
+    public BasicNotificationSensor(Class<T> type, String name, String description=name) {
+        super(type, name, description)
+    }
 }
 
 /**
@@ -85,4 +105,8 @@ public class BasicAttributeSensor<T> extends BasicSensor<T> implements Attribute
 @InheritConstructors
 public class LogSensor<T> extends BasicSensor<T> {
     private static final long serialVersionUID = 4713993465669948212L;
+
+    public LogSensor(Class<T> type, String name, String description=name) {
+        super(type, name, description)
+    }
 }

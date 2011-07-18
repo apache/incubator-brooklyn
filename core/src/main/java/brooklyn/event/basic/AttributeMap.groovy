@@ -12,7 +12,7 @@ import com.google.common.base.Preconditions
 /**
  * A {@link Map} of {@link Entity} attribute values.
  */
-public class AttributeMap {
+public class AttributeMap implements Serializable {
     static final Logger log = LoggerFactory.getLogger(AttributeMap.class)
  
     EntityLocal entity;
@@ -48,7 +48,7 @@ public class AttributeMap {
         Preconditions.checkArgument(sensor in AttributeSensor, "AttributeMap can only update an attribute sensor's value, not %s", sensor)
         def oldValue = update(sensor.getNameParts(), newValue)
         log.debug "sensor {} set to {}", sensor.name, newValue
-        entity.emit sensor, newValue
+        entity.emitInternal sensor, newValue
         oldValue
     }
     
