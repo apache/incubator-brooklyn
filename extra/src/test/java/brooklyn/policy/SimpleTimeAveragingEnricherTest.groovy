@@ -12,6 +12,7 @@ import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent;
+import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicSensor
 import brooklyn.management.SubscriptionContext
 import brooklyn.management.internal.BasicSubscriptionContext
@@ -33,9 +34,9 @@ class SimpleTimeAveragingEnricherTest {
 
         producer = new LocallyManagedEntity(owner:app)
 
-        intSensor = new BasicSensor<Integer>(Integer.class, "int sensor")
-        deltaSensor = new BasicSensor<Integer>(Integer.class, "delta sensor")
-        avgSensor = new BasicSensor<Double>(Integer.class, "avg sensor")
+        intSensor = new BasicAttributeSensor<Integer>(Integer.class, "int sensor")
+        deltaSensor = new BasicAttributeSensor<Integer>(Integer.class, "delta sensor")
+        avgSensor = new BasicAttributeSensor<Double>(Integer.class, "avg sensor")
     }
 
     @AfterMethod
