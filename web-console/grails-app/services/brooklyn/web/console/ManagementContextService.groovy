@@ -1,5 +1,7 @@
 package brooklyn.web.console
 
+import java.util.concurrent.atomic.AtomicLong
+
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
 import brooklyn.entity.ParameterType
@@ -11,11 +13,8 @@ import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.management.ExecutionManager
 import brooklyn.management.ManagementContext
-import brooklyn.management.internal.LocalManagementContext
-import brooklyn.web.console.entity.TestEffector
 import brooklyn.management.SubscriptionManager
-import java.util.concurrent.atomic.AtomicLong
-import brooklyn.util.task.BasicExecutionManager
+import brooklyn.web.console.entity.TestEffector
 
 class ManagementContextService {
     private final Application application = new TestApplication()
