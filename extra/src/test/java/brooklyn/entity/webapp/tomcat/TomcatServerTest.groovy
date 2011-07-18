@@ -132,12 +132,13 @@ class TomcatServerTest {
         tc.start([ new SimulatedLocation() ]);
         
         tc.emit(TomcatServer.REQUEST_COUNT, 0);
-        Thread.sleep(1000);
+        Thread.sleep(1000)
         tc.emit(TomcatServer.REQUEST_COUNT, 10);
-        Thread.sleep(1000);
+        Thread.sleep(1000)
         tc.emit(TomcatServer.REQUEST_COUNT, 10);
+        Thread.sleep(1000)
         
-        Assert.assertEquals(tc.getAttribute(JavaWebApp.AVG_REQUESTS_PER_SECOND), 10/JavaWebApp.AVG_REQUESTS_PER_SECOND_PERIOD*1000, 0.1);
+        assertEquals tc.getAttribute(JavaWebApp.AVG_REQUESTS_PER_SECOND), 10/JavaWebApp.AVG_REQUESTS_PER_SECOND_PERIOD*1000, 0.2d
         println tc.getAttribute(JavaWebApp.AVG_REQUESTS_PER_SECOND)
     }
 }

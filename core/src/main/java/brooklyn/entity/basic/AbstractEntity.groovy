@@ -403,7 +403,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 
     protected synchronized SubscriptionContext getSubscriptionContext() {
         if (subscription) subscription
-        subscription = managementContext.getSubscriptionContext(this);
+        subscription = managementContext?.getSubscriptionContext(this);
     }
 
     protected synchronized ExecutionContext getExecutionContext() {
