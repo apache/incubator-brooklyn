@@ -7,6 +7,9 @@ import java.util.Set
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
 import brooklyn.event.EventListener
@@ -171,6 +174,7 @@ public class LocalSubscriptionManager implements SubscriptionManager {
         LOG.debug "got an {} event", event
         Set<Subscription> subs = getSubscriptionsForEntitySensor(event.source, event.sensor)
         if (subs) {
+            log.trace "sending {} to {}", event.sensor.name, subs.join(",")
             for (Subscription s in subs) {
                 if (s.eventFilter!=null && !s.eventFilter.apply(event))
                     continue;
