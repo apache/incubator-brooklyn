@@ -48,7 +48,7 @@ public class AttributeMap implements Serializable {
         Preconditions.checkArgument(sensor in AttributeSensor, "AttributeMap can only update an attribute sensor's value, not %s", sensor)
         def oldValue = update(sensor.getNameParts(), newValue)
         log.debug "sensor {} set to {}", sensor.name, newValue
-        entity.emit sensor, newValue
+        entity.emitInternal sensor, newValue
         oldValue
     }
     

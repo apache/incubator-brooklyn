@@ -447,9 +447,19 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     
     @Override
     public <T> void emit(Sensor<T> sensor, T val) {
+        if (sensor instanceof AttributeSensor) {
+            LOG.warn("Strongly discouraged use of emit with attribute sensor $sensor $val; use setAttribute instead!", 
+                new Throwable("location of discouraged $sensor emit"))
+        }
+        emitInternal(sensor, val);
+    }
+    
+    @Override
+    public <T> void emitInternal(Sensor<T> sensor, T val) {
         subscriptionContext?.publish(sensor.newEvent(this, val))
     }
 
+    
     /**
      * Sensors available on this entity
      */
