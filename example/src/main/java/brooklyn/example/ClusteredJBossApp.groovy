@@ -4,7 +4,6 @@ import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.JavaApp
 import brooklyn.entity.webapp.DynamicWebAppCluster
 import brooklyn.entity.webapp.JavaWebApp
-import brooklyn.entity.webapp.jboss.JBossCluster
 import brooklyn.entity.webapp.jboss.JBossServer
 import brooklyn.location.Location
 import brooklyn.location.basic.FixedListMachineProvisioningLocation
@@ -13,7 +12,7 @@ import brooklyn.location.basic.SshMachineLocation
 class ClusteredJBossApp extends AbstractApplication {
 
     DynamicWebAppCluster cluster = new DynamicWebAppCluster(displayName: "SimpleJBossCluster", initialSize: 1, 
-        newEntity: { new JBossNode() }, owner: this)
+        newEntity: { new JBossServer() }, owner: this)
 
     public static void main(String[] args) {
 
