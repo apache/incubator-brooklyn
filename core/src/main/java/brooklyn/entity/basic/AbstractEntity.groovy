@@ -236,10 +236,6 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
      * @param closure a block of code to run while holding the exclusive lock.
      * @deprecated see comments below
      */
-    @Deprecated
-    protected <T> T accessOwnedChildrenSynchronized(Closure<T> closure) {
-        throw new UnsupportedOperationException("Deprecated in favour of intrinsic synchronisation")
-    }
     // XXX the group methods addMember and removeMember are now synchronized on the group itself, and the resize effector
     //      implementation for dymanic cluster is also synchronized on the owning group. the members collection returned
     //      is immutable, so group membership changes should be intrinsicly thread safe, meaning this is not required.
