@@ -174,7 +174,7 @@ public class LocalSubscriptionManager implements SubscriptionManager {
         LOG.debug "got an {} event", event
         Set<Subscription> subs = getSubscriptionsForEntitySensor(event.source, event.sensor)
         if (subs) {
-            log.trace "sending {} to {}", event.sensor.name, subs.join(",")
+            LOG.trace "sending {} to {}", event.sensor.name, subs.join(",")
             for (Subscription s in subs) {
                 if (s.eventFilter!=null && !s.eventFilter.apply(event))
                     continue;
