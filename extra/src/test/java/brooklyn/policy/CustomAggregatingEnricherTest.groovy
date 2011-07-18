@@ -5,11 +5,11 @@ import static org.testng.Assert.*
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import brooklyn.entity.Entity
 import brooklyn.entity.LocallyManagedEntity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.EntityLocal
-import brooklyn.event.Sensor
+import brooklyn.event.AttributeSensor
+import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicSensor
 
 class CustomAggregatingEnricherTest {
@@ -17,15 +17,15 @@ class CustomAggregatingEnricherTest {
     AbstractApplication app
 
     EntityLocal producer
-    Sensor<Integer> intSensor
-    Sensor<Integer> target
+    AttributeSensor<Integer> intSensor
+    AttributeSensor<Integer> target
 
     @BeforeMethod()
     public void before() {
         app = new AbstractApplication() {}
         producer = new LocallyManagedEntity(owner:app)
-        intSensor = new BasicSensor<Integer>(Integer.class, "int sensor")
-        target = new BasicSensor<Integer>(Integer.class, "target sensor")
+        intSensor = new BasicAttributeSensor<Integer>(Integer.class, "int sensor")
+        target = new BasicAttributeSensor<Integer>(Integer.class, "target sensor")
     }
     
     @Test
@@ -73,7 +73,7 @@ class CustomAggregatingEnricherTest {
                 [owner: app] as LocallyManagedEntity,
                 [owner: app] as LocallyManagedEntity]
         CustomAggregatingEnricher<Double> cae = CustomAggregatingEnricher.<Double>getAveragingEnricher(producers,
-            intSensor, new BasicSensor<Double>(Double.class, "target sensor"))
+            intSensor, new BasicAttributeSensor<Double>(Double.class, "target sensor"))
         
         producer.addPolicy(cae)
         
