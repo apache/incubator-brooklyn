@@ -122,20 +122,20 @@ class TomcatServerTest {
     @Test
     public void ensureRequestsPerSecondIsReportedCorrectly() {
         Application app = new TestApplication();
-        TomcatNode tc = new TomcatNode(owner: app) {
+        TomcatServer tc = new TomcatServer(owner: app) {
             public void initJmxSensors() {
                 super.initJmxSensors()
-                attributePoller.removeSensor(TomcatNode.REQUEST_COUNT)
+                attributePoller.removeSensor(TomcatServer.REQUEST_COUNT)
             }
         }
         
         tc.start([ new SimulatedLocation() ]);
         
-        tc.emit(TomcatNode.REQUEST_COUNT, 0);
+        tc.emit(TomcatServer.REQUEST_COUNT, 0);
         Thread.sleep(1000);
-        tc.emit(TomcatNode.REQUEST_COUNT, 10);
+        tc.emit(TomcatServer.REQUEST_COUNT, 10);
         Thread.sleep(1000);
-        tc.emit(TomcatNode.REQUEST_COUNT, 10);
+        tc.emit(TomcatServer.REQUEST_COUNT, 10);
         
         Assert.assertEquals(tc.getAttribute(JavaWebApp.AVG_REQUESTS_PER_SECOND), 10/JavaWebApp.AVG_REQUESTS_PER_SECOND_PERIOD*1000, 0.1);
         println tc.getAttribute(JavaWebApp.AVG_REQUESTS_PER_SECOND)
