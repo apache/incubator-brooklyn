@@ -52,13 +52,13 @@ public class AttributePoller {
             }
         }
         
-        scheduled[sensor.getName()] = exec.scheduleWithFixedDelay(safeCalculate, 0L, period, TimeUnit.MILLISECONDS)
+        scheduled[sensor.name] = exec.scheduleWithFixedDelay(safeCalculate, 0L, period, TimeUnit.MILLISECONDS)
     }
 
     public <T> void removeSensor(AttributeSensor<T> sensor) {
         log.debug "removing sensor", sensor.name
-        providers.remove(sensor)
-        scheduled.remove(sensor).cancel(true)
+        providers.remove(sensor.name)
+        scheduled.remove(sensor.name).cancel(true)
     }
 
     public void close() {
