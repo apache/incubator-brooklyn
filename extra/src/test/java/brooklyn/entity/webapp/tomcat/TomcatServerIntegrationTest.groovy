@@ -128,12 +128,13 @@ public class TomcatServerIntegrationTest {
                 assertEquals activityValue, 0
                 
 		        String url = tc.getAttribute(TomcatServer.ROOT_URL) + "foo"
-                def connection = connectToURL url
-                assertEquals connection.getHeaderField("Server"), "Apache-Coyote/1.1"
-
+                10.times { connectToURL url }
                 Thread.sleep 1000
+                def requestCount = tc.getAttribute(TomcatServer.REQUEST_COUNT)
+                assertEquals requestCount, 20
+
                 activityValue = tc.getAttribute(TomcatServer.REQUESTS_PER_SECOND)
-                assertEquals activityValue, 1
+                assertEquals activityValue, 10
                 true
             }, timeout:10*SECONDS, useGroovyTruth:true)
     }
