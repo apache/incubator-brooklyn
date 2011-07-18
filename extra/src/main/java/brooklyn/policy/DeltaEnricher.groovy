@@ -20,8 +20,8 @@ class DeltaEnricher<T extends Number> extends AbstractEnricher {
     
     @Override
     public void onEvent(SensorEvent<T> event) {
-        Number current = event.getValue()
-        entity.emit(target, current - last)
+        Number current = event.getValue() ?: 0
+        entity.setAttribute(target, current - last)
         last = current
     }
 }
