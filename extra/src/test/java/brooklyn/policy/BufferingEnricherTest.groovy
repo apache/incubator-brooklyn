@@ -17,8 +17,10 @@ import brooklyn.event.SensorEvent
 import brooklyn.event.basic.BasicSensor
 import brooklyn.management.SubscriptionContext
 import brooklyn.management.internal.BasicSubscriptionContext
+import brooklyn.policy.wip.BufferEvent
 import brooklyn.policy.wip.BufferingEnricher
 import brooklyn.policy.wip.RangeBufferEnricher
+import brooklyn.policy.wip.BufferingEnricher.*
 
 /**
  * TODO clarify test purpose
@@ -28,8 +30,8 @@ public class BufferingEnricherTest {
         CyclicBarrier changeBarrier = new CyclicBarrier(2)
         CyclicBarrier flushBarrier = new CyclicBarrier(2)
 
-        public void onEvent(SensorEvent<BufferingEnricher.BufferEvent> e) {awaitEvent(e.getValue())}
-        public void awaitEvent(BufferingEnricher.BufferEvent e) {
+        public void onEvent(SensorEvent<BufferEvent> e) {awaitEvent(e.getValue())}
+        public void awaitEvent(BufferEvent e) {
             if(e instanceof BufferingEnricher.BufferChangedEvent) {changeBarrier.await()}
             if(e instanceof BufferingEnricher.BufferFlushedEvent) {flushBarrier.await()}
         }

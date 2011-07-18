@@ -11,8 +11,10 @@ import brooklyn.event.basic.BasicSensor
 import brooklyn.management.SubscriptionHandle
 import brooklyn.policy.basic.AbstractPolicy
 
+public interface BufferEvent {}
+
 class BufferingEnricher<T> extends AbstractPolicy implements EventListener<T> {
-    public static interface BufferEvent {}
+    
     public static final class BufferChangedEvent implements BufferEvent {}
     public static final class BufferFlushedEvent implements BufferEvent {}
     private Sensor<BufferChangedEvent> result

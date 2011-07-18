@@ -7,7 +7,7 @@ import brooklyn.entity.Entity;
 import brooklyn.event.EventListener;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
-import brooklyn.policy.wip.BufferingEnricher.BufferEvent;
+import brooklyn.policy.wip.BufferEvent;
 import brooklyn.policy.basic.AbstractPolicy;
 
 class AggregatorEnricher<T> extends AbstractPolicy implements EventListener<BufferEvent>{
