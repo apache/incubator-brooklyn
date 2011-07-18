@@ -1,16 +1,20 @@
 package brooklyn.entity.webapp.tomcat
 
+import static brooklyn.test.TestUtils.*
+import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.testng.Assert
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-
 import brooklyn.entity.Application
 import brooklyn.entity.basic.AbstractApplication
+import brooklyn.entity.webapp.JavaWebApp
+import brooklyn.event.adapter.AttributePoller
 
 /**
  * This tests the operation of the {@link TomcatNode} entity.
@@ -113,6 +117,28 @@ class TomcatNodeTest {
             caught = true
         }
         assertEquals(true, caught)
+    }
+    
+    @Test
+    public void ensureRequestsPerSecondIsReportedCorrectly() {
+        Application app = new TestApplication();
+        TomcatNode tc = new TomcatNode(owner: app) {
+            public void initJmxSensors() {
+                super.initJmxSensors()
+                attributePoller.removeSensor(TomcatNode.REQUEST_COUNT)
+            }
+        }
+        
+        tc.start([ new SimulatedLocation() ]);
+        
+        tc.emit(TomcatNode.REQUEST_COUNT, 0);
+        Thread.sleep(1000);
+        tc.emit(TomcatNode.REQUEST_COUNT, 10);
+        Thread.sleep(1000);
+        tc.emit(TomcatNode.REQUEST_COUNT, 10);
+        
+        Assert.assertEquals(tc.getAttribute(JavaWebApp.AVG_REQUESTS_PER_SECOND), 10/JavaWebApp.AVG_REQUESTS_PER_SECOND_PERIOD*1000, 0.1);
+        println tc.getAttribute(JavaWebApp.AVG_REQUESTS_PER_SECOND)
     }
 }
  
