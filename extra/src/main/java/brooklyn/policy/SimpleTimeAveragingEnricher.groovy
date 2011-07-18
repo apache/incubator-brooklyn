@@ -45,7 +45,7 @@ class SimpleTimeAveragingEnricher<T extends Number> extends AbstractEnricher {
         values.addLast(event.getValue())
         timestamps.addLast(eventTime)
         pruneValues(eventTime)
-        entity.emit(target, getAverage(eventTime).value)
+        entity.setAttribute(target, getAverage(eventTime).value)
     }
     
     public ConfidenceQualifiedNumber getAverage() {

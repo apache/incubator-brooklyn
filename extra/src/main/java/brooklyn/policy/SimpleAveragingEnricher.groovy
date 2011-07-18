@@ -11,6 +11,7 @@ class SimpleAveragingEnricher<T extends Number> extends AbstractEnricher {
     
     int maxSize
     
+    // rolling window? average?
     public SimpleAveragingEnricher(Entity producer, Sensor<T> source, Sensor<Double> target, int maxSize) {
         super(producer, source, target)
         this.maxSize = maxSize
@@ -25,7 +26,7 @@ class SimpleAveragingEnricher<T extends Number> extends AbstractEnricher {
     public void onEvent(SensorEvent<T> event) {
         values.addLast(event.getValue())
         pruneValues()
-        entity.emit(target, getAverage())
+        entity.setAttribute(target, getAverage())
     }
     
     private void pruneValues() {
