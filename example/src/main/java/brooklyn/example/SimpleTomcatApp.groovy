@@ -1,11 +1,13 @@
 package brooklyn.example
 
 import brooklyn.entity.basic.AbstractApplication
-import brooklyn.entity.group.DynamicCluster
+import brooklyn.entity.basic.AbstractService
+import brooklyn.entity.basic.JavaApp
+import brooklyn.entity.webapp.DynamicWebAppCluster
+import brooklyn.entity.webapp.JavaWebApp
+import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.location.Location
 import brooklyn.location.basic.FixedListMachineProvisioningLocation
-import brooklyn.entity.webapp.tomcat.TomcatServer
-
 import brooklyn.location.basic.SshMachineLocation
 
 import com.google.common.base.Preconditions
@@ -18,29 +20,29 @@ import com.google.common.base.Preconditions
  * @author alex
  */
 public class SimpleTomcatApp extends AbstractApplication {
-    DynamicCluster tc = new DynamicCluster(displayName:'MyTomcat', initialSize:1,
-        newEntity:{ properties ->
-            def ts = new TomcatServer(properties)
-            URL resource = SimpleTomcatApp.class.getClassLoader().getResource("hello-world.war")
-            Preconditions.checkState resource != null, "Unable to locate resource hello-world.war"
-            ts.setConfig(TomcatServer.WAR, resource.getPath())
-            return ts;
-        },
-        owner:this);
+    DynamicWebAppCluster tc = new DynamicWebAppCluster(displayName:'MyTomcat', initialSize:1,
+    newEntity:{ properties ->
+        def ts = new TomcatServer(properties)
+        URL resource = SimpleTomcatApp.class.getClassLoader().getResource("hello-world.war")
+        Preconditions.checkState resource != null, "Unable to locate resource hello-world.war"
+        ts.setConfig(TomcatServer.WAR, resource.getPath())
+        return ts;
+    },
+    owner:this);
 
     public static void main(String[] argv) {
         def app = new SimpleTomcatApp()
-           //TODO:
-//        app.tc.policy << new ElasticityPolicy(app.tc, TomcatCluster.REQS_PER_SEC, low:100, high:250);
+        //TODO:
+        //        app.tc.policy << new ElasticityPolicy(app.tc, TomcatCluster.REQS_PER_SEC, low:100, high:250);
         app.tc.initialSize = 2  //override initial size
 
         Collection<InetAddress> hosts = [
-            Inet4Address.getByAddress((byte[])[192,168,144,241]),
-            Inet4Address.getByAddress((byte[])[192,168,144,242]),
-            Inet4Address.getByAddress((byte[])[192,168,144,243]),
-            Inet4Address.getByAddress((byte[])[192,168,144,244]),
-            Inet4Address.getByAddress((byte[])[192,168,144,245]),
-            Inet4Address.getByAddress((byte[])[192,168,144,246])
+            Inet4Address.getByAddress((byte[])[192, 168, 144, 241]),
+            Inet4Address.getByAddress((byte[])[192, 168, 144, 242]),
+            Inet4Address.getByAddress((byte[])[192, 168, 144, 243]),
+            Inet4Address.getByAddress((byte[])[192, 168, 144, 244]),
+            Inet4Address.getByAddress((byte[])[192, 168, 144, 245]),
+            Inet4Address.getByAddress((byte[])[192, 168, 144, 246])
         ]
         Collection<SshMachineLocation> machines = hosts.collect {
             new SshMachineLocation(address: it, userName: "cloudsoft")
@@ -53,12 +55,43 @@ public class SimpleTomcatApp extends AbstractApplication {
         t.start {
             while (!t.isInterrupted()) {
                 Thread.sleep 5000
-                app.getEntities().each { if (it in TomcatServer) {
-                        println it.toString()
-                        println "Requests per second: " + it.getAttribute(TomcatServer.REQUESTS_PER_SECOND)
-                        println "Error count: " + it.getAttribute(TomcatServer.ERROR_COUNT)
+                app.getEntities().each {
+                    if (it in TomcatServer) {
+                        println "${it.toString()}: ${it.getAttribute(JavaWebApp.REQUEST_COUNT)} requests (" +
+                                "${it.getAttribute(JavaWebApp.REQUESTS_PER_SECOND)} per second), " +
+                                "${it.getAttribute(JavaWebApp.ERROR_COUNT)} errors"
                     }
                 }
+                println "Cluster stats: ${app.tc.getAttribute(DynamicWebAppCluster.REQUEST_COUNT)} requests, " +
+                        "average ${app.tc.getAttribute(DynamicWebAppCluster.REQUEST_AVERAGE)} per entity"
+            }
+        }
+
+        Thread activity = []
+        activity.start {
+            def rand = new Random()
+            def sleep = 3000
+            while (!activity.isInterrupted()) {
+                def ents = app.getEntities().findAll { it instanceof TomcatServer }
+                ents.each {
+                    def requests = rand.nextInt(5) + 1
+                    if (it.getAttribute(AbstractService.SERVICE_UP)) {
+                        URL url = [
+                            "http://${it.getAttribute(JavaApp.JMX_HOST)}:${it.getAttribute(JavaWebApp.HTTP_PORT)}"
+                        ]
+                        println "Making $requests requests to $url"
+                        requests.times {
+                            try {
+                                URLConnection connection = url.openConnection()
+                                connection.connect()
+                                connection.getContentLength()
+                            } catch (Exception e) {
+                                // Suppress exceptions caused by shutdown
+                            }
+                        }
+                    }
+                }
+                Thread.sleep sleep
             }
         }
 
@@ -100,6 +133,7 @@ public class SimpleTomcatApp extends AbstractApplication {
         println "waiting for readln then will kill the tomcats"
         System.in.read()
         t.interrupt()
+        activity.interrupt()
 
         //TODO find a better way to shutdown a cluster?
         println "shutting down..."

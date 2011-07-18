@@ -6,10 +6,7 @@ import java.util.Map
 
 import brooklyn.entity.Entity
 import brooklyn.entity.group.DynamicCluster
-import brooklyn.entity.trait.ResizeResult
-import brooklyn.event.adapter.AttributePoller
 import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.location.Location
 import brooklyn.policy.CustomAggregatingEnricher
 
 class DynamicWebAppCluster extends DynamicCluster {
@@ -33,20 +30,18 @@ class DynamicWebAppCluster extends DynamicCluster {
     }
     
     @Override
-    ResizeResult resize(int desiredSize) {
-        ResizeResult result = super.resize(desiredSize)
-        if (result.delta > 0) {
-            result.addedEntities.each { 
-                requestCountEnricher.addProducer(it) 
-                averageRequestsEnricher.addProducer(it)
-            }
-        } else if (result.delta < 0) {
-            result.removedEntities.each {  
-                requestCountEnricher.removeProducer(it) 
-                averageRequestsEnricher.removeProducer(it)
-            }
-        }
-        return result
+    public synchronized Entity addMember(Entity member) {
+        requestCountEnricher.addProducer(member) 
+        averageRequestsEnricher.addProducer(member)
+        super.addMember(member)
     }
+    
+    @Override
+    public synchronized boolean removeMember(Entity member) {
+        requestCountEnricher.removeProducer(member) 
+        averageRequestsEnricher.removeProducer(member)
+        super.removeMember(member)
+    }
+    
     
 }

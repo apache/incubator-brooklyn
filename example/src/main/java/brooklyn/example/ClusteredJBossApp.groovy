@@ -1,6 +1,7 @@
 package brooklyn.example
 
 import brooklyn.entity.basic.AbstractApplication
+import brooklyn.entity.basic.AbstractService
 import brooklyn.entity.basic.JavaApp
 import brooklyn.entity.webapp.DynamicWebAppCluster
 import brooklyn.entity.webapp.JavaWebApp
@@ -12,7 +13,7 @@ import brooklyn.location.basic.SshMachineLocation
 class ClusteredJBossApp extends AbstractApplication {
 
     DynamicWebAppCluster cluster = new DynamicWebAppCluster(displayName: "SimpleJBossCluster", initialSize: 1, 
-        newEntity: { new JBossServer() }, owner: this)
+        newEntity: { properties -> new JBossServer(properties) }, owner: this)
 
     public static void main(String[] args) {
 
@@ -40,13 +41,13 @@ class ClusteredJBossApp extends AbstractApplication {
                 
                 app.getEntities().each {
                     if (it instanceof JBossServer) {
-                        if (it.getAttribute(JavaApp.NODE_UP)) {
+                        if (it.getAttribute(AbstractService.SERVICE_UP)) {
                             println "${it.toString()}: ${it.getAttribute(JavaWebApp.REQUEST_COUNT)} requests (" +
                                     "${it.getAttribute(JavaWebApp.REQUESTS_PER_SECOND)} per second), " +
                                     "${it.getAttribute(JavaWebApp.ERROR_COUNT)} errors"
                         } else {
-                            println "${it.toString()} status: ${it.getAttribute(JavaApp.NODE_STATUS)}, " +
-                                    "node up: ${it.getAttribute(JavaApp.NODE_UP)}"
+                            println "${it.toString()} status: ${it.getAttribute(AbstractService.SERVICE_STATUS)}, " +
+                                    "node up: ${it.getAttribute(AbstractService.SERVICE_UP)}"
                         }
                     }
                 }
