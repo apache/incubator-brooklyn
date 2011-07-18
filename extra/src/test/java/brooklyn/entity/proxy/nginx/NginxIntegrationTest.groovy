@@ -15,9 +15,9 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractService
 import brooklyn.entity.group.DynamicCluster
-import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
+import brooklyn.util.internal.EntityStartUtils
 import brooklyn.util.internal.TimeExtras
 
 /**
@@ -47,19 +47,8 @@ public class NginxIntegrationTest {
 
     @AfterMethod(groups = "Integration")
     public void shutdown() {
-        stop(nginx)
-        stop(cluster)
-    }
-
-    private <E extends Entity & Startable> void stop(E entity) {
-        if (entity != null && entity.getAttribute(AbstractService.SERVICE_UP)) {
-            log.warn "Entity {} still running", entity.id
-	        try {
-	            entity.stop()
-	        } catch (Exception e) {
-	            log.warn "Error caught trying to shut down {}: {}", entity, e.message
-	        }
-        }
+        EntityStartUtils.stopEntity(nginx)
+        EntityStartUtils.stopEntity(cluster)
     }
 
     /**

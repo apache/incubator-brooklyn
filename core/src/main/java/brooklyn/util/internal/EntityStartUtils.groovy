@@ -3,14 +3,13 @@ package brooklyn.util.internal
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import com.google.common.base.Preconditions;
-
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
-import brooklyn.management.ManagementContext;
 import brooklyn.util.internal.LanguageUtils.FieldVisitor
+
+import com.google.common.base.Preconditions
 
 /**
  * Entity startup utilities.
@@ -64,5 +63,19 @@ class EntityStartUtils {
         LanguageUtils.visitFields(result, { parent, name, value -> 
             if (name=="entity" && template.equals(value)) parent."$name" = result } as FieldVisitor, [ result ] as Set)
         result
+    }
+
+    /**
+     * Stop an entity if it is still running.
+     */
+    public static <E extends Entity & Startable> void stopEntity(E entity) {
+        if (entity != null && entity.getAttribute(Startable.SERVICE_UP)) {
+            log.warn "Entity {} still running", entity
+            try {
+                entity.stop()
+            } catch (Exception e) {
+                log.warn "Error caught trying to shut down {}: {}", entity.id, e.message
+            }
+        }
     }
 }

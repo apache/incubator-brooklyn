@@ -22,10 +22,9 @@ import brooklyn.entity.Application
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.JavaApp
-import brooklyn.entity.messaging.qpid.QpidBroker;
-import brooklyn.entity.messaging.qpid.QpidQueue;
 import brooklyn.location.Location
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
+import brooklyn.util.internal.EntityStartUtils
 import brooklyn.util.internal.TimeExtras
 
 /**
@@ -56,14 +55,7 @@ public class QpidIntegrationTest {
 
     @AfterMethod(groups = "Integration")
     public void shutdown() {
-        if (qpid.getAttribute(JavaApp.SERVICE_UP)) {
-            log.warn "Qpid broker {} is still running", qpid.id
-	        try {
-	            qpid.stop()
-	        } catch (Exception e) {
-	            log.warn "Error caught trying to shut down Qpid: {}", e.message
-	        }
-        }
+        EntityStartUtils.stopEntity(qpid)
     }
 
     /**
