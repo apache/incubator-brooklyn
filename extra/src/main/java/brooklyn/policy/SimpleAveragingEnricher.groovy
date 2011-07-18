@@ -12,7 +12,8 @@ class SimpleAveragingEnricher<T extends Number> extends AbstractEnricher {
     int maxSize
     
     // rolling window? average?
-    public SimpleAveragingEnricher(Entity producer, Sensor<T> source, Sensor<Double> target, int maxSize) {
+    public SimpleAveragingEnricher(Entity producer, BasicAttributeSensor<T> source, BasicAttributeSensor<Double> target, 
+            int maxSize) {
         super(producer, source, target)
         this.maxSize = maxSize
     }
