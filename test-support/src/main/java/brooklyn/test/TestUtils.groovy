@@ -1,11 +1,7 @@
 package brooklyn.test
 
-import static java.util.concurrent.TimeUnit.*
-import static org.testng.Assert.*
 import groovy.time.TimeDuration
 
-import java.net.URLConnection
-import java.util.Map
 import java.util.concurrent.Callable
 
 import org.slf4j.Logger
