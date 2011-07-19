@@ -28,14 +28,17 @@ public class DynamicCluster extends AbstractGroup implements Startable, Resizabl
     private Location location
 
     /**
-     * Instantiate a new DynamicCluster. Valid properties are:
+     * Instantiate a new DynamicCluster.
+     * 
+     * Valid properties are:
      * <ul>
-     * <li>template - an {@link Entity} that implements {@link Startable} that will be the template for nodes in the cluster.
+     * <li>newEntity - a {@link Closure} that creates an {@link Entity} that implements {@link Startable}, taking the {@link Map}
+     * of properties from this cluster as an argument. This property is mandatory.
      * <li>initialSize - an {@link Integer} that is the number of nodes to start when the cluster's {@link #start(List)} method is
-     * called, default is 0.
+     * called. This property is optional, with a default of 0.
      * </ul>
      *
-     * @param properties the properties of the new entity.
+     * @param properties the properties of the cluster and any new entity.
      * @param owner the entity that owns this cluster (optional)
      */
     public DynamicCluster(Map properties = [:], Entity owner = null) {
@@ -104,9 +107,8 @@ public class DynamicCluster extends AbstractGroup implements Startable, Resizabl
 
     protected Entity removeNode() {
         logger.info "Removing a node"
-        Entity entity = members.find { true } // TODO use specific criteria
-        Preconditions.checkNotNull entity, "No member entity found to remove"
-        Preconditions.checkState entity instanceof Startable, "Member entity is not Startable"
+        Entity entity = members.find { it instanceof Startable } // TODO use specific criteria
+        Preconditions.checkNotNull entity, "No Startable member entity found to remove"
  
         removeMember(entity)
         entity.stop()
