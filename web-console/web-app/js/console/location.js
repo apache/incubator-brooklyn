@@ -2,19 +2,20 @@ Brooklyn.location = (function() {
     // Config
     var tableId = '#location-data';
     var aoColumns = [ { "mDataProp": "name", "sTitle": "Location", "sWidth":"100%"  }];
-    var appLocations = [
-        {"name": "London, UK", "resources": "60", "location":"somewhere"},
-        {"name": "Edinburgh, UK" ,"resources": "25"},
-        {"name": "Tokyo, Japan", "resources": "500"},
-        {"name": "New York, USA", "resources": "400"},
-        {"name": "California, USA", "resources": "600"},
-        {"name": "Hertfordshire, UK", "resources": "25"},
-        {"name": "Silicon Valley, USA", "resources": "25"},
-        {"name": "Hong Kong, China" , "resources": "25"},
-        {"name": "Shanghai, China" , "resources": "25"},
-        {"name": "Brooklyn, USA", "resources": "25"},
-        {"name": "Berlin, Germany", "resources": "25"}
-    ];
+    var appLocations;
+    //= [
+      //  {"name": "London, UK", "resources": "60", "location":"somewhere"},
+        //{"name": "Edinburgh, UK" ,"resources": "25"},
+        //{"name": "Tokyo, Japan", "resources": "500"},
+        //{"name": "New York, USA", "resources": "400"},
+        //{"name": "California, USA", "resources": "600"},
+        //{"name": "Hertfordshire, UK", "resources": "25"},
+       // {"name": "Silicon Valley, USA", "resources": "25"},
+        //{"name": "Hong Kong, China" , "resources": "25"},
+        //{"name": "Shanghai, China" , "resources": "25"},
+        //{"name": "Brooklyn, USA", "resources": "25"},
+        //{"name": "Berlin, Germany", "resources": "25"}
+    //];
 
     // Status
     var map;
@@ -49,7 +50,7 @@ Brooklyn.location = (function() {
         appLocations[locationNumber].infowindow.open(map , appLocations[locationNumber].marker);
     }
 
-    function addLocationToMap(address , resources , i){
+    function addLocationToMap(address , i){
         new google.maps.Geocoder().geocode( { 'address': address}, function(results, status) {
             if (status === google.maps.GeocoderStatus.OK) {
                 loctext = results[0].formatted_address;
@@ -66,7 +67,7 @@ Brooklyn.location = (function() {
                     '<tr>'+
                         '<td>'+loctext+'</td>'+
                         '<td>True</td>'+
-                        '<td>'+resources+'</td>'+
+                        '<td>'+'resources'+'</td>'+
                     '</tr>'+
                 '</table>'+
                 '</div>';
@@ -99,7 +100,7 @@ Brooklyn.location = (function() {
     }
 
     // TODO call when set of locations changes?
-    function updateLocations(event) {
+    function updateLocations() {
         var myOptions = {
             width:400,
             zoom: 7,
@@ -107,9 +108,13 @@ Brooklyn.location = (function() {
         }
 
         map = new google.maps.Map(document.getElementById("map-canvas"), myOptions);
+        //if(update){
         for(i in appLocations) {
-            addLocationToMap(appLocations[i].name, appLocations[i].resources, i);
-        }
+           // alert(appLocations[i].name);
+            addLocationToMap(appLocations[i].name, i);
+           // alert(appLocations[i].name+' added to map');
+            }
+        //}
 
         Brooklyn.tabs.getDataTable(tableId, '.', aoColumns, updateLocation, appLocations);
     }
@@ -125,20 +130,39 @@ Brooklyn.location = (function() {
             map.setCenter(appLocations[locationNumber].location);
         }
     }
-
-    function init() {
-        updateLocations();
-        $('#toggle-location').click(toggleLocation);
-        $(Brooklyn.eventBus).bind("tab_selected", resize);
+    function getLocations(e,id){
+        if (typeof id !== 'undefined') {
+            $.getJSON("info?id=" + id, handleLocations).error(
+                function() {$(Brooklyn.eventBus).trigger('update_failed', "Could not get entity info to show in summary.");});
+        }
     }
 
-    return {
-        init : init,
-        resize : resize,
-        locationNumber: locationNumber,
-        appLocations: appLocations
-    };
+    function handleLocations(json){
+        appLocations = new Array();
+        if (json.locations.length > 0) {
+            //alert('There are some locations');
+            for(i in json.locations){
+                var location = json.locations[i];
+                //alert(location);
+                var jsonLoc = {name:json.locations[i],resources:'500'};
+                //alert(JSON.stringify(jsonLoc));
+                appLocations.push(jsonLoc);
+            }
+            updateLocations();
+        } else {
+            //alert('there are no locations');
+            updateLocations();
+        }
+    }
+    
 
+    function init() {
+        $('#toggle-location').click(toggleLocation);
+        $(Brooklyn.eventBus).bind("tab_selected", resize);
+        $(Brooklyn.eventBus).bind("entity_selected", getLocations);
+    }
+
+    return { init : init, resize : resize, locationNumber: locationNumber, appLocations: appLocations }
 })();
 
 $(document).ready(Brooklyn.location.init);

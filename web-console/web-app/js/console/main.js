@@ -51,9 +51,22 @@ Brooklyn.main = (function() {
         $("#status-message").html("Error" + (message ? ": " + message : ""));
     }
 
+    function setEntityIdInNavBar(e,id){
+        if (typeof id !== 'undefined') {
+            $.getJSON("info?id=" + id, displayNodeBreadCrumb).error(
+                function() {$(Brooklyn.eventBus).trigger('update_failed', "Could not get entity info to show in summary.");});
+        }
+    }
+    function displayNodeBreadCrumb(json){
+        newContent = 'You are currently viewing > <b>'+json.displayName+'</b>';
+        document.getElementById('navigation').innerHTML = newContent;
+    }
+
+
     function init() {
         $(Brooklyn.eventBus).bind("update_ok", updateOK);
         $(Brooklyn.eventBus).bind("update_failed", updateFailed);
+        $(Brooklyn.eventBus).bind("entity_selected", setEntityIdInNavBar);
     }
 
     return {
