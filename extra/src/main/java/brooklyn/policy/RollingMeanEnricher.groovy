@@ -1,18 +1,17 @@
 package brooklyn.policy
 
 import brooklyn.entity.Entity
-import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
-import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.policy.basic.AbstractEnricher
+import brooklyn.event.AttributeSensor
 
-class SimpleAveragingEnricher<T extends Number> extends AbstractEnricher {
+class RollingMeanEnricher<T extends Number> extends AbstractEnricher {
     private LinkedList<T> values = new LinkedList<T>()
     
     int maxSize
     
     // rolling window? average?
-    public SimpleAveragingEnricher(Entity producer, BasicAttributeSensor<T> source, BasicAttributeSensor<Double> target, 
+    public RollingMeanEnricher(Entity producer, AttributeSensor<T> source, AttributeSensor<Double> target,
             int maxSize) {
         super(producer, source, target)
         this.maxSize = maxSize

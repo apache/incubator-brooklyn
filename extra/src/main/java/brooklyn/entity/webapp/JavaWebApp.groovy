@@ -19,8 +19,8 @@ import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.Location
 import brooklyn.location.MachineLocation
 import brooklyn.policy.DeltaEnricher
-import brooklyn.policy.SimpleAveragingEnricher;
-import brooklyn.policy.SimpleTimeAveragingEnricher;
+
+import brooklyn.policy.RollingTimeWindowMeanEnricher;
 
 /**
 * An {@link brooklyn.entity.Entity} representing a single java web application server instance.
@@ -75,7 +75,7 @@ public abstract class JavaWebApp extends JavaApp {
         // TODO Want to wire this up so doesn't go through SubscriptionManager;
         // but that's an optimisation we'll do later.
         addPolicy(new DeltaEnricher<Integer>(this, REQUEST_COUNT, REQUESTS_PER_SECOND))
-        addPolicy(new SimpleTimeAveragingEnricher<Double>(this, REQUESTS_PER_SECOND, AVG_REQUESTS_PER_SECOND, 
+        addPolicy(new RollingTimeWindowMeanEnricher<Double>(this, REQUESTS_PER_SECOND, AVG_REQUESTS_PER_SECOND,
             AVG_REQUESTS_PER_SECOND_PERIOD))
 
         waitForHttpPort()

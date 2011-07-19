@@ -1,17 +1,11 @@
 package brooklyn.policy
 
-import java.util.LinkedList
-
 import brooklyn.entity.Entity
-import brooklyn.entity.basic.EntityLocal
-import brooklyn.event.EventListener
-import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
-import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.policy.basic.AbstractEnricher;
-import brooklyn.policy.basic.AbstractPolicy
+import brooklyn.event.AttributeSensor
 
-class SimpleTimeAveragingEnricher<T extends Number> extends AbstractEnricher {
+class RollingTimeWindowMeanEnricher<T extends Number> extends AbstractEnricher {
     // FIXME What if no values yet? Document what it will return, e.g. -1
     
     public static class ConfidenceQualifiedNumber {
@@ -31,7 +25,7 @@ class SimpleTimeAveragingEnricher<T extends Number> extends AbstractEnricher {
     long timePeriod
     boolean extrapolateFromLast
     
-    public SimpleTimeAveragingEnricher(Entity producer, BasicAttributeSensor<T> source, BasicAttributeSensor<Double> target, 
+    public RollingTimeWindowMeanEnricher(Entity producer, AttributeSensor<T> source, AttributeSensor<Double> target,
             long timePeriod) {
         super(producer, source, target)
         this.timePeriod = timePeriod

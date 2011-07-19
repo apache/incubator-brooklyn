@@ -72,7 +72,7 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
     public void waitForEntityStart(SshBasedAppSetup setup) throws IllegalStateException {
         log.debug "waiting to ensure $this doesn't abort prematurely"
         long startTime = System.currentTimeMillis()
-        long waitTime = startTime + 45000 // FIXME magic number
+        long waitTime = startTime + 75000 // FIXME magic number
         boolean isRunningResult = false;
         while (!isRunningResult && System.currentTimeMillis() < waitTime) {
             Thread.sleep 3000 // FIXME magic number

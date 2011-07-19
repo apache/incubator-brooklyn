@@ -124,16 +124,17 @@ public class TomcatServerIntegrationTest {
                 if (activityValue == null || activityValue == -1) 
                     return new BooleanWithMessage(false, "activity not set yet ($activityValue)")
 
-                assertEquals activityValue.class, Double
-                assertEquals activityValue, 0.0d, 0.01d
+                assertEquals activityValue.class, Integer
+                assertEquals activityValue, 0
                 
 		        String url = tc.getAttribute(TomcatServer.ROOT_URL) + "foo"
-                def connection = connectToURL url
-                assertEquals connection.getHeaderField("Server"), "Apache-Coyote/1.1"
-
+                10.times { connectToURL url }
                 Thread.sleep 1000
+                def requestCount = tc.getAttribute(TomcatServer.REQUEST_COUNT)
+                assertEquals requestCount, 20
+
                 activityValue = tc.getAttribute(TomcatServer.REQUESTS_PER_SECOND)
-                assertEquals activityValue, 1.0d, 0.01d
+                assertEquals activityValue, 10
                 true
             }, timeout:10*SECONDS, useGroovyTruth:true)
     }

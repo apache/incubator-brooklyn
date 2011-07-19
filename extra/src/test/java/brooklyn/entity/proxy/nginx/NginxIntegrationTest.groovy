@@ -58,7 +58,7 @@ public class NginxIntegrationTest {
     public void canStartupAndShutdown() {
         def template = { properties -> new TomcatServer(properties) }
         URL war = getClass().getClassLoader().getResource("hello-world.war")
-        cluster = new DynamicCluster(owner:app, newEntity:template, initialSize:1)
+        cluster = new DynamicCluster(owner:app, newEntity:template, initialSize:1, httpPort:7080)
         cluster.setConfig(TomcatServer.WAR, war.path)
         cluster.start([ new LocalhostMachineProvisioningLocation(count:1) ])
         nginx = new NginxController([

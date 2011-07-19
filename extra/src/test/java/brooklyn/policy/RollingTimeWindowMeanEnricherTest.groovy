@@ -1,6 +1,5 @@
 package brooklyn.policy
 
-import static brooklyn.test.TestUtils.*
 import static org.testng.Assert.*
 
 import org.testng.annotations.AfterMethod
@@ -11,14 +10,15 @@ import brooklyn.entity.LocallyManagedEntity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.Sensor
-import brooklyn.event.SensorEvent;
-import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.event.basic.BasicSensor
-import brooklyn.management.SubscriptionContext
-import brooklyn.management.internal.BasicSubscriptionContext
-import brooklyn.policy.SimpleTimeAveragingEnricher.ConfidenceQualifiedNumber
 
-class SimpleTimeAveragingEnricherTest {
+import brooklyn.event.basic.BasicAttributeSensor;
+
+
+import brooklyn.management.SubscriptionContext
+
+import brooklyn.policy.RollingTimeWindowMeanEnricher.ConfidenceQualifiedNumber
+
+class RollingTimeWindowMeanEnricherTest {
     
     AbstractApplication app
     
@@ -46,7 +46,7 @@ class SimpleTimeAveragingEnricherTest {
     @Test
     public void testAveraging() {
         producer.addPolicy(new DeltaEnricher<Integer>(producer, intSensor, deltaSensor))
-        SimpleTimeAveragingEnricher<Integer> averager = new SimpleTimeAveragingEnricher<Integer>(producer, deltaSensor, avgSensor, 1000)
+        RollingTimeWindowMeanEnricher<Integer> averager = new RollingTimeWindowMeanEnricher<Integer>(producer, deltaSensor, avgSensor, 1000)
         producer.addPolicy(averager)
 
         ConfidenceQualifiedNumber average = averager.getAverage(0)

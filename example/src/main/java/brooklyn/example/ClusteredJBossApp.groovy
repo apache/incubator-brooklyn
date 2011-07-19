@@ -1,10 +1,10 @@
 package brooklyn.example
 
 import brooklyn.entity.basic.AbstractApplication
+import brooklyn.entity.basic.AbstractService
 import brooklyn.entity.basic.JavaApp
-import brooklyn.entity.group.DynamicCluster
+import brooklyn.entity.webapp.DynamicWebAppCluster
 import brooklyn.entity.webapp.JavaWebApp
-import brooklyn.entity.webapp.jboss.JBossCluster
 import brooklyn.entity.webapp.jboss.JBossServer
 import brooklyn.location.Location
 import brooklyn.location.basic.FixedListMachineProvisioningLocation
@@ -12,8 +12,8 @@ import brooklyn.location.basic.SshMachineLocation
 
 class ClusteredJBossApp extends AbstractApplication {
 
-    DynamicCluster cluster = new DynamicCluster(displayName: "SimpleJBossCluster", initialSize: 2, 
-        newEntity: { new JBossNode() }, owner: this)
+    DynamicWebAppCluster cluster = new DynamicWebAppCluster(displayName: "SimpleJBossCluster", initialSize: 1, 
+        newEntity: { properties -> new JBossServer(properties) }, owner: this)
 
     public static void main(String[] args) {
 
@@ -38,18 +38,23 @@ class ClusteredJBossApp extends AbstractApplication {
         t.start {
             while (!t.isInterrupted()) {
                 Thread.sleep 5000
+                
                 app.getEntities().each {
                     if (it instanceof JBossServer) {
-                        if (it.getAttribute(JavaApp.NODE_UP)) {
+                        if (it.getAttribute(AbstractService.SERVICE_UP)) {
                             println "${it.toString()}: ${it.getAttribute(JavaWebApp.REQUEST_COUNT)} requests (" +
                                     "${it.getAttribute(JavaWebApp.REQUESTS_PER_SECOND)} per second), " +
                                     "${it.getAttribute(JavaWebApp.ERROR_COUNT)} errors"
                         } else {
-                            println "${it.toString()} status: ${it.getAttribute(JavaApp.NODE_STATUS)}, " +
-                                    "node up: ${it.getAttribute(JavaApp.NODE_UP)}"
+                            println "${it.toString()} status: ${it.getAttribute(AbstractService.SERVICE_STATUS)}, " +
+                                    "node up: ${it.getAttribute(AbstractService.SERVICE_UP)}"
                         }
                     }
                 }
+                println "Cluster stats: ${app.cluster.getAttribute(DynamicWebAppCluster.REQUEST_COUNT)} requests, " + 
+                        "average ${app.cluster.getAttribute(DynamicWebAppCluster.REQUEST_AVERAGE)} per entity"
+                println "xxx"
+                 
             }
         }
         
@@ -61,7 +66,7 @@ class ClusteredJBossApp extends AbstractApplication {
                 def ents = app.getEntities().findAll { it instanceof JBossServer }
                 ents.each {
                     def requests = rand.nextInt(5) + 1
-                    if (it.getAttribute(JavaApp.NODE_UP)) {
+                    if (it.getAttribute(AbstractService.SERVICE_UP)) {
                         URL url = ["http://${it.getAttribute(JavaApp.JMX_HOST)}:${it.getAttribute(JavaWebApp.HTTP_PORT)}"]
                         println "Making $requests requests to $url"
                         requests.times {
@@ -80,17 +85,20 @@ class ClusteredJBossApp extends AbstractApplication {
         }
 
         println "waiting for readln then will resize the cluster"
-        System.in.read()
-        println "Resizing cluster to 4 nodes"
-        app.cluster.resize(4)
+        int input = System.in.read()
         
+        if (input != 'q') {
+            println "Resizing cluster"
+            app.cluster.resize(2)
+            println "waiting for readln then will kill the cluster"
+            System.in.read()
+        }
+                
         // Reducing not currently supported
         // println "waiting for readln then will resize the cluster"
         // System.in.read()
         // app.cluster.resize(1)
                 
-        println "waiting for readln then will kill the cluster"
-        System.in.read()
         t.interrupt()
         activity.interrupt()
         
