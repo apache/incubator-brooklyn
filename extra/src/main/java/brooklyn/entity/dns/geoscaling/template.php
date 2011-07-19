@@ -28,32 +28,7 @@ function findClosestServer($lat_deg, $long_deg, $available_servers) {
 }
 
 
-$servers = array(
-    array('name'      => 'Amazon US-West', // Northern California (approx)
-          'latitude'  => 40.0,
-          'longitude' => -120.0,
-          'ip'        => '1.2.3.100'),
-
-    array('name'      => 'Amazon US-East', // Northern Virginia (approx)
-          'latitude'  => 38.0,
-          'longitude' => 76.0,
-          'ip'        => '1.2.3.200'),
-
-    array('name'      => 'Amazon EU-West', // Dublin, Ireland
-          'latitude'  => 53.34778,
-          'longitude' => -6.25972,
-          'ip'        => '1.2.3.300'),
-
-    array('name'      => 'Monterey West', // Milpitas, CA
-          'latitude'  => 37.43472,
-          'longitude' => -121.89500,
-          'ip'        => '208.95.232.123'),
-
-    array('name'      => 'Monterey East', // Hawthorne, NY
-          'latitude'  => 41.10361,
-          'longitude' => -73.79583,
-          'ip'        => '216.48.127.224'),
-);
+/* SERVER DECLARATIONS TO BE SUBSTITUTED HERE */
 
 $closest_server = findClosestServer($city_info['latitude'], $city_info['longitude'], $servers);
 
