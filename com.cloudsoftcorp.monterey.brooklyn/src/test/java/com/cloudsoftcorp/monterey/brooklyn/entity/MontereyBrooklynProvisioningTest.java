@@ -99,6 +99,9 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
     private static final URL HELLO_CLOUD_BUNDLE_URL = MontereyBrooklynProvisioningTest.class.getClassLoader().getResource(APP_BUNDLE_RESOURCE_PATH);
     private static final BundleSet HELLO_CLOUD_BUNDLE_SET;
     static {
+        if (HELLO_CLOUD_BUNDLE_URL == null) {
+            throw new RuntimeException("Hello cloud bundle not found: "+APP_BUNDLE_RESOURCE_PATH);
+        }
         try {
             HELLO_CLOUD_BUNDLE_SET = BundleSet.fromUrls(Collections.singleton(HELLO_CLOUD_BUNDLE_URL));
         } catch (IOException e) {
@@ -161,7 +164,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
     
     @Test
     public void testStartMontereyManagementNodeAndDeployApp() throws Exception {
-        montereyNetwork.startOnHost(localhost);
+        montereyNetwork.startInLocation(localhost);
         montereyNetwork.deployCloudEnvironment(newSimulatorCloudEnvironment());
         montereyNetwork.deployApplication(newDummyMontereyDeploymentDescriptor(), BundleSet.EMPTY);
         
@@ -179,7 +182,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
 
     @Test
     public void testAddingSegmentsCreatesBrooklynEntities() throws Throwable {
-        montereyNetwork.startOnHost(localhost);
+        montereyNetwork.startInLocation(localhost);
         montereyNetwork.deployCloudEnvironment(newSimulatorCloudEnvironment());
         montereyNetwork.deployApplication(newDummyMontereyDeploymentDescriptor(), BundleSet.EMPTY);
 
@@ -314,7 +317,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
     @Test
     public void testBrooklynEntityRolloutEffector() throws Throwable {
         // Start the management plane (with "simulator" embedded network nodes)
-        montereyNetwork.startOnHost(localhost);
+        montereyNetwork.startInLocation(localhost);
         montereyNetwork.deployCloudEnvironment(newSimulatorCloudEnvironment());
         montereyNetwork.deployApplication(newHelloCloudMontereyDeploymentDescriptor(), HELLO_CLOUD_BUNDLE_SET);
 
@@ -331,7 +334,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         assertBrooklynEventuallyHasNodes(networkInfo.getNodeSummaries());
         
         // Call rollout, and assert monterey + brooklyn see the change
-        MontereyContainerNode node = montereyNetwork.getContainerNodes().get(provisionedNode);
+        MontereyContainerNode node = findContainerNode(provisionedNode);
         node.rollout(Dmn1NodeType.MR);
         
         assertMontereyEventuallyHasTologology(0,1,0,0,0);
@@ -347,7 +350,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
     @Test
     public void testNodesAndSegmentsReportWorkrate() throws Throwable {
         // Create management plane and deploy app
-        montereyNetwork.startOnHost(localhost);
+        montereyNetwork.startInLocation(localhost);
         montereyNetwork.deployCloudEnvironment(newSimulatorCloudEnvironment());
         montereyNetwork.deployApplication(newHelloCloudMontereyDeploymentDescriptor(), HELLO_CLOUD_BUNDLE_SET);
 
@@ -423,12 +426,9 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         return rolloutNodes(loc, lpp, mr, m, tp, spare);
     }
 
-    /**
-     * If loc is null, then an arbitrary location will be chosen
-     */
     private void rolloutManagementPlane() throws Throwable {
         // Start the management plane (with "simulator" embedded network nodes)
-        montereyNetwork.startOnHost(localhost);
+        montereyNetwork.startInLocation(localhost);
         montereyNetwork.deployCloudEnvironment(newSimulatorCloudEnvironment());
         montereyNetwork.deployApplication(newHelloCloudMontereyDeploymentDescriptor(), HELLO_CLOUD_BUNDLE_SET);
     }
@@ -494,6 +494,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
                         .clientGateway(HELLO_CLOUD_CLIENT_FACTORY_NAME)
                         .segmentService(HELLO_CLOUD_SERVICE_FACTORY_NAME)
                         .build())
+                .managementBundles(Collections.singleton(HELLO_CLOUD_BUNDLE_NAME))
                 .build();
     }
     
@@ -551,6 +552,21 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         return result;
     }
 
+    private Set<NodeId> findContainerNodeIds() {
+        Set<NodeId> result = new LinkedHashSet<NodeId>();
+        for (MontereyContainerNode node : montereyNetwork.getContainerNodes()) {
+            if (node.getNodeId() != null) result.add(node.getNodeId());
+        }
+        return result;
+    }
+    
+    private MontereyContainerNode findContainerNode(NodeId nodeId) {
+        for (MontereyContainerNode node : montereyNetwork.getContainerNodes()) {
+            if (nodeId.equals(node.getNodeId())) return node;
+        }
+        throw new IllegalArgumentException("Node id not found, "+nodeId);
+    }
+    
     private Location toBrooklynLocation(MontereyActiveLocation loc) {
         return montereyNetwork.getLocationRegistry().getConvertedLocation(loc);
     }
@@ -616,13 +632,12 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         
         assertSuccessWithin(new Callable<Object>() {
             public Object call() throws Exception {
-                Map<NodeId, MontereyContainerNode> actual = montereyNetwork.getContainerNodes();
                 for (Dmn1NodeType nodeType : Arrays.asList(Dmn1NodeType.LPP, Dmn1NodeType.MR, Dmn1NodeType.M, Dmn1NodeType.TP, Dmn1NodeType.SPARE)) {
                     Collection<NodeId> nodesOfType = findNodesMatching(nodeType);
                     Assert.assertEquals(expectedCounts.get(nodeType), (Integer)nodesOfType.size());
                     
                     for (NodeId nodeId : nodesOfType) {
-                        MontereyContainerNode actualContainerNode = actual.get(nodeId);
+                        MontereyContainerNode actualContainerNode = findContainerNode(nodeId);
                         
                         Assert.assertEquals(nodeId, actualContainerNode.getNodeId());
                         AbstractMontereyNode montereyNetworkNode = actualContainerNode.getContainedMontereyNode();
@@ -637,11 +652,10 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
     private void assertBrooklynEventuallyHasNodes(final Map<NodeId,NodeSummary> expected) throws Throwable {
         assertSuccessWithin(new Callable<Object>() {
             public Object call() throws Exception {
-                Map<NodeId, MontereyContainerNode> actual = montereyNetwork.getContainerNodes();
-                Assert.assertEquals(expected.keySet(), actual.keySet());
+                Assert.assertEquals(expected.keySet(), findContainerNodeIds());
                 for (Map.Entry<NodeId,NodeSummary> e : expected.entrySet()) {
                     NodeSummary expectedNodeSummary = e.getValue();
-                    MontereyContainerNode actualContainerNode = actual.get(e.getKey());
+                    MontereyContainerNode actualContainerNode = findContainerNode(e.getKey());
                     
                     Assert.assertEquals(expectedNodeSummary.getNodeId(), actualContainerNode.getNodeId());
 
