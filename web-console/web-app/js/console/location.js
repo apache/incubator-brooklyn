@@ -3,20 +3,6 @@ Brooklyn.location = (function() {
     var tableId = '#location-data';
     var aoColumns = [ { "mDataProp": "name", "sTitle": "Location", "sWidth":"100%"  }];
     var appLocations;
-    //= [
-      //  {"name": "London, UK", "resources": "60", "location":"somewhere"},
-        //{"name": "Edinburgh, UK" ,"resources": "25"},
-        //{"name": "Tokyo, Japan", "resources": "500"},
-        //{"name": "New York, USA", "resources": "400"},
-        //{"name": "California, USA", "resources": "600"},
-        //{"name": "Hertfordshire, UK", "resources": "25"},
-       // {"name": "Silicon Valley, USA", "resources": "25"},
-        //{"name": "Hong Kong, China" , "resources": "25"},
-        //{"name": "Shanghai, China" , "resources": "25"},
-        //{"name": "Brooklyn, USA", "resources": "25"},
-        //{"name": "Berlin, Germany", "resources": "25"}
-    //];
-
     // Status
     var map;
     var loc;
@@ -86,6 +72,7 @@ Brooklyn.location = (function() {
                 appLocations[i].infowindow = infowindow;
                 appLocations[i].locationNumber = i;
                 locationNumber = locationNumber + 1;
+                map.setCenter(loc);
             } else {
                 alert("Geocode was not successful for the following reason: " + status);
             }
@@ -108,14 +95,9 @@ Brooklyn.location = (function() {
         }
 
         map = new google.maps.Map(document.getElementById("map-canvas"), myOptions);
-        //if(update){
         for(i in appLocations) {
-           // alert(appLocations[i].name);
             addLocationToMap(appLocations[i].name, i);
-           // alert(appLocations[i].name+' added to map');
-            }
-        //}
-
+        }
         Brooklyn.tabs.getDataTable(tableId, '.', aoColumns, updateLocation, appLocations);
     }
 
@@ -132,7 +114,7 @@ Brooklyn.location = (function() {
     }
     function getLocations(e,id){
         if (typeof id !== 'undefined') {
-            $.getJSON("info?id=" + id, handleLocations).error(
+            $.getJSON("locations?id=" + id, handleLocations).error(
                 function() {$(Brooklyn.eventBus).trigger('update_failed', "Could not get entity info to show in summary.");});
         }
     }
@@ -140,17 +122,13 @@ Brooklyn.location = (function() {
     function handleLocations(json){
         appLocations = new Array();
         if (json.locations.length > 0) {
-            //alert('There are some locations');
             for(i in json.locations){
                 var location = json.locations[i];
-                //alert(location);
                 var jsonLoc = {name:json.locations[i],resources:'500'};
-                //alert(JSON.stringify(jsonLoc));
                 appLocations.push(jsonLoc);
             }
             updateLocations();
         } else {
-            //alert('there are no locations');
             updateLocations();
         }
     }
