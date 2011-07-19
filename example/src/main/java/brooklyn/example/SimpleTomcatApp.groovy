@@ -34,7 +34,7 @@ public class SimpleTomcatApp extends AbstractApplication {
         def app = new SimpleTomcatApp()
         // TODO:
         // app.tc.policy << new ElasticityPolicy(app.tc, TomcatCluster.REQS_PER_SEC, low:100, high:250);
-        app.tc.initialSize = 2  //override initial size
+        app.tc.initialSize = 3  //override initial size
 
         Collection<InetAddress> hosts = [
             Inet4Address.getByAddress((byte[])[192, 168, 144, 241]),

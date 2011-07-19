@@ -140,6 +140,7 @@ public class BasicExecutionManager implements ExecutionManager {
     }    
     protected void beforeStart(Map flags, Task task) {
         //set thread _before_ start time, so we won't get a null thread when there is a start-time
+        log.trace "$this beforeStart, task: $task"
         if (!task.isCancelled()) {
             task.thread = Thread.currentThread()
             perThreadCurrentTask.set task
@@ -151,6 +152,7 @@ public class BasicExecutionManager implements ExecutionManager {
     }
 
     protected void afterEnd(Map flags, Task task) {
+        log.trace "$this afterEnd, task: $task"
         ExecutionUtils.invoke flags.newTaskEndCallback, task
         Collections.reverse(flags.tagLinkedPreprocessors)
         flags.tagLinkedPreprocessors.each { TaskPreprocessor t -> t.onEnd(flags, task) }
