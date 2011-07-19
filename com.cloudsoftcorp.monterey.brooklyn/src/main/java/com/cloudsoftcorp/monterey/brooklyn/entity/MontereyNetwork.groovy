@@ -198,12 +198,18 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         return locationRegistry;
     }
 
+    @Override
     public void start(Collection<? extends Location> locs) {
         // FIXME Work in progress...
         EntityStartUtils.startEntity this, locs
         LOG.debug "Monterey network started... management-url is {}", this.properties['ManagementUrl']
     }
     
+    @Override
+    public void restart() {
+        throw new UnsupportedOperationException();
+    }
+        
     public void dispose() {
         if (monitoringTask != null) monitoringTask.cancel(true);
     }
@@ -336,6 +342,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         }
     }
 
+    @Override
     public void stop() {
         // TODO Guard so can only shutdown if network nodes are not running?
         if (host == null) {

@@ -100,6 +100,7 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
         this.nodeId = nodeSummary.getNodeId();
     }
     
+    @Override
     public void start(Collection<? extends Location> locs) {
         if (locs.isEmpty()) throw new IllegalArgumentException("Locations empty; cannot start monterey node");
         Location loc = locs.iterator().next();
@@ -111,6 +112,12 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
         }
     }
 
+    @Override
+    public void restart() {
+        throw new UnsupportedOperationException();
+    }
+        
+    @Override
     public void stop() {
         release();
     }
