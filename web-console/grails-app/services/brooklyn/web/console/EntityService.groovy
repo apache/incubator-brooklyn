@@ -11,14 +11,18 @@ import brooklyn.management.SubscriptionHandle
 import java.util.concurrent.ConcurrentMap
 import java.util.concurrent.ConcurrentHashMap
 import brooklyn.event.EventListener
+import java.util.concurrent.ConcurrentLinkedQueue
 
 class EntityService {
 
     static transactional = false
     def managementContextService
 
+    private static final int CACHE_LIMIT = 10
     ConcurrentMap<String, ConcurrentMap<String, SensorSummary>> sensorCache = new ConcurrentHashMap<String, ConcurrentMap<String, SensorSummary>>()
     ConcurrentMap<String, SubscriptionHandle> subscriptions = new ConcurrentHashMap<String, SubscriptionHandle>()
+
+    ConcurrentLinkedQueue<String> cacheQueue = new ConcurrentLinkedQueue<String>();
 
     public static class NoSuchEntity extends Exception {}
 
@@ -26,16 +30,20 @@ class EntityService {
         return managementContextService.executionManager.getTasksWithTag(getEntity(entityId)).collect { new TaskSummary(it) }
     }
 
-    /*
-    private static final int LIMIT = 10
-    if (size() >= LIMIT) {
-        managementContextService.subscriptionManager.unsubscribe(subscriptions.get(key))
-        return true
-    } else return false
-     */
+    private synchronized void unsubscribeEntitySensors(){
+        String oldestEntity = cacheQueue.poll()
+        if(managementContextService.subscriptionManager.unsubscribe(subscriptions.get(oldestEntity))){
+            sensorCache.remove(oldestEntity)
+            subscriptions.remove(oldestEntity)
+        }
+    }
 
     private void initializeEntitySensors(Entity entity) {
         synchronized (entity) {
+            if(sensorCache.size() >= CACHE_LIMIT){
+                unsubscribeEntitySensors()
+            }
+
             sensorCache.putIfAbsent(entity.id, new ConcurrentHashMap<String, SensorSummary>())
             for (Sensor s : entity.entityClass.sensors) {
                 sensorCache[entity.id].putIfAbsent(s.name, new SensorSummary(s, entity.getAttribute(s)))
@@ -49,10 +57,9 @@ class EntityService {
                             sensorCache[event.source.id].put(event.sensor.name, new SensorSummary(event))
                         }
                     })
+                cacheQueue.add(entity.id)
                 subscriptions.put(entity.id, handle)
             }
-
-            // TODO unsubscribe LRU
         }
     }
 

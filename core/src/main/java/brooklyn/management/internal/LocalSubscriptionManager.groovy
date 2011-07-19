@@ -136,10 +136,10 @@ public class LocalSubscriptionManager implements SubscriptionManager {
             assert b3 == b2
         }
         
-        if (!subscriptionsBySubscriber.get(s.subscriber) && !s.subscriberExecutionManagerTagSupplied && s.subscriberExecutionManagerTag!=null) {
+        if ((subscriptionsBySubscriber.size() == 0 || !subscriptionsBySubscriber.get(s.subscriber)) && !s.subscriberExecutionManagerTagSupplied && s.subscriberExecutionManagerTag!=null) {
             //if subscriber has gone away forget about his task; but check in synch block to ensure setTaskPreprocessor call above will win in any race
-            if (!subscriptionsBySubscriber.get(s.subscriber))
-                ((BasicExecutionManager)em).clearTaskPreprocessorForTag(s.subscriberExecutionManagerTag);
+            if ((subscriptionsBySubscriber.size() == 0 || !subscriptionsBySubscriber.get(s.subscriber)))
+                ((BasicExecutionManager)em).clearTaskPreprocessorForTag(s.subscriberExecutionManagerTag)
         }
 
         ((BasicExecutionManager) em).setTaskPreprocessorForTag(s.subscriberExecutionManagerTag, SingleThreadedExecution.class);
