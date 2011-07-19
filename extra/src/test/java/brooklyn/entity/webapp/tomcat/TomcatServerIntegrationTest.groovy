@@ -38,8 +38,6 @@ public class TomcatServerIntegrationTest {
             super(properties)
         }
     }
-    
-    static { TimeExtras.init() }
 
     static boolean httpPortLeftOpen = false;
     private int oldHttpPort = -1;
@@ -57,15 +55,17 @@ public class TomcatServerIntegrationTest {
         Socket shutdownSocket = null;
         SocketException gotException = null;
 
-        boolean socketClosed = new Repeater("Checking Tomcat has shut down").repeat({
-            if (shutdownSocket) shutdownSocket.close();
-            try { shutdownSocket = new Socket(InetAddress.localHost, Tomcat7SshSetup.DEFAULT_FIRST_SHUTDOWN_PORT); }
-            catch (SocketException e) { gotException = e; return; }
-            gotException = null
-        }).every(100, TimeUnit.MILLISECONDS).until({
-            gotException
-        }).limitIterationsTo(25)
-        .run();
+        boolean socketClosed = new Repeater("Checking Tomcat has shut down")
+            .repeat({
+		            if (shutdownSocket) shutdownSocket.close();
+		            try { shutdownSocket = new Socket(InetAddress.localHost, Tomcat7SshSetup.DEFAULT_FIRST_SHUTDOWN_PORT); }
+		            catch (SocketException e) { gotException = e; return; }
+		            gotException = null
+		        })
+            .every(100, TimeUnit.MILLISECONDS)
+            .until({ gotException })
+            .limitIterationsTo(25)
+	        .run();
 
         if (socketClosed == false) {
             logger.error "Tomcat did not shut down - this is a failure of the last test run";
