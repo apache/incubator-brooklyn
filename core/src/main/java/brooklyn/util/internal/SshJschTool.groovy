@@ -92,10 +92,10 @@ public class SshJschTool {
         tidy()
 
         keyFiles.each { if (new File(it).exists()) { jsch.addIdentity(it) } }
-
         session = jsch.getSession(user, host, port)
-        session.setConfig((Hashtable)config)
-        try{
+        session.setConfig((Hashtable) config)
+
+        try {
             session.connect()
         } catch (Exception e) {
             throw new IllegalStateException("Cannot connect to $user@$host", e);
@@ -243,14 +243,19 @@ public class SshJschTool {
         channel.getExitStatus()
     }
 
-    /** Properties can be:
-     *  permissions (must be four-digit octal string, default '0644');
-     *  lastModificationDate (should be UTC/1000, ie seconds since 1970; defaults to current);
-     *  lastAccessDate (again UTC/1000; defaults to lastModificationDate);
-     *  [if neither lastXxxDate set it does not send that line (unless property ptimestamp set true)]
+    /**
+     * Properties can be:
+     * <ul>
+     * <li>permissions (must be four-digit octal string, default '0644');
+     * <li>lastModificationDate (should be UTC/1000, ie seconds since 1970; defaults to current);
+     * <li>lastAccessDate (again UTC/1000; defaults to lastModificationDate);
+     * </ul>
+     * If neither lastXxxDate set it does not send that line (unless property ptimestamp set true)
+     *
+     * @param p
+     * @param pathAndFileOnRemoteServer
      * @param input
      * @param size
-     * @param pathAndFileOnRemoteServer
      */
     public int createFile(Map p=[:], String pathAndFileOnRemoteServer, InputStream input, long size) {
         assertConnected()
@@ -264,7 +269,6 @@ public class SshJschTool {
         boolean ptimestamp = (p.timestamp!=null ? p.timestamp : p.lastModificationDate || p.lastAccessDate);
         String command = "scp " + (ptimestamp ? "-p " :"") + "-t "+targetPath
         channel.setCommand command
-        //              println "connecting, with command $command"
         channel.connect()
         InputStream fromChannel = channel.getInputStream()
         OutputStream toChannel = channel.getOutputStream()
@@ -273,15 +277,12 @@ public class SshJschTool {
         if (p.lastModificationDate || p.lastAccessDate) {
             long lmd = p.lastModificationDate ?: System.currentTimeMillis()/1000
             long lad = p.lastAccessDate ?: lmd
-            //                      println "sending mod date"
             toChannel << "T "+lmd+" 0 "+lad+" 0\n"
             toChannel.flush()
             checkAck(fromChannel)
         }
-        //               send "C0644 filesize filename", where filename should not include '/'
-        command = "C"+(p.permissions ?: '0644') + " "+size+" "+targetName+"\n"
-        //              println "sending file init $command"
-        toChannel << command.getBytes();
+        // send "C0644 filesize filename", where filename should not include '/'
+        toChannel << "C"+(p.permissions ?: '0644') + " "+size+" "+targetName+"\n"
         toChannel.flush()
         checkAck(fromChannel)
 
@@ -291,7 +292,6 @@ public class SshJschTool {
             if (numRead <= 0) throw new IOException("error reading from input when copying to "
                                                     + pathAndFileOnRemoteServer+" at "+session);
             size -= numRead
-            //                      println "read $numRead bytes, now sending, size now $size"
             toChannel.write buf, 0, numRead
         }
         toChannel.write 0
@@ -322,16 +322,18 @@ public class SshJschTool {
                    contents.length)
     }
 
-    /** Copies file.
+    /**
+     * Copies file.
      *
      * (but won't preserve permission of last _access_ date since these not
      * available in java (last mod date is fine). If path is null, empty, '.',
      * '..', or ends with '/' then file name is used.
-     * <p> To set permissions (or override mod date) use 'permissions:"0644"',
+     * <p>
+     * To set permissions (or override mod date) use 'permissions:"0644"',
      * as described at {@link #copyTo(Map, InputStream, int, String)}
+     *
      * @param file
-     * @param
-     * pathAndFileOnRemoteServer
+     * @param pathAndFileOnRemoteServer
      */
     public int copyToServer(Map p=[:], File f, String pathAndFileOnRemoteServer=null) {
         def p2 = [lastModificationDate:f.lastModified()]

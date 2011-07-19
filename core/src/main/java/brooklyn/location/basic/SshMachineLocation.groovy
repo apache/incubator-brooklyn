@@ -1,10 +1,5 @@
 package brooklyn.location.basic
 
-import com.google.common.base.Preconditions
-
-import java.io.IOException
-import java.util.List
-
 import brooklyn.location.MachineLocation
 import brooklyn.location.PortRange
 import brooklyn.util.internal.SshJschTool
@@ -25,8 +20,11 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         super(properties)
 
         Preconditions.checkArgument properties.containsKey('address'), "properties must contain an entry with key 'address'"
-        Preconditions.checkArgument properties.address instanceof InetAddress, "'address' value must be an InetAddress"
-        this.address = properties.address
+        if (properties.address instanceof InetAddress) {
+            this.address = properties.remove("address")
+        } else {
+            this.address = Inet4Address.getByName(properties.remove("address"))
+        }
 
         if (properties.userName) {
             Preconditions.checkArgument properties.userName instanceof String, "'userName' value must be a string"
@@ -59,6 +57,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         result
     }
 
+    // FIXME the return code is not a reliable indicator of success or failure
     public int copyTo(Map props=[:], File src, String destination) {
         Preconditions.checkNotNull address, "host address must be specified for scp"
         Preconditions.checkArgument src.exists(), "File {} must exist for scp", src.name
@@ -78,7 +77,8 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         return address;
     }
 
-    // TODO Does not support zero to mean any; but can't when returning boolean
+    // @see #obtainPort(PortRange)
+    // @see BasicPortRange#ANY_HIGH_PORT
     // TODO Does not yet check if the port really is free on this machine
     public boolean obtainSpecificPort(int portNumber) {
         if (ports.contains(portNumber)) {
@@ -98,7 +98,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     }
     
     public boolean isSshable() {
-        String cmd = "date; exit";
+        String cmd = "date";
         try {
             int result = run(cmd)
             if (result == 0) {

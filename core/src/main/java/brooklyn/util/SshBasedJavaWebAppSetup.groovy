@@ -30,29 +30,35 @@ public abstract class SshBasedJavaWebAppSetup extends SshBasedJavaAppSetup {
      */
     public void deploy(File f) {
         String target = runDir + "/" + f.name
-        log.debug "WebApp Deploy - Copying file {} to {}:{}", f.absolutePath, machine, target
-        int copySuccess = machine.copyTo f, target
-        if (copySuccess != -1) {
-            log.error "Failed to copy {} to {}, result {}", f.name, machine, copySuccess
-            throw new IllegalStateException("Failed to transfer ${f.name} to ${machine}")
+        log.debug "Deploying file {} to {} on {}", f.name, target, machine
+        try {
+	        machine.copyTo f, target
+        } catch (IOException ioe) {
+            log.error "Failed to copy {} to {}: {}", f.name, machine, ioe.message
+            throw new IllegalStateException("Failed to copy ${f.name} to ${machine}", ioe)
         }
         List<String> deployScript = getDeployScript(target)
         if (deployScript && !deployScript.isEmpty()) {
             int result = machine.run(out:System.out, deployScript)
             if (result != 0) {
-                log.error "Failed to deploy {} to {}, result {}", f.name, machine, result
+                log.error "Failed to deploy {} on {}, result {}", f.name, machine, result
+	            throw new IllegalStateException("Failed to deploy ${f.name} on ${machine}")
             } else {
-                log.debug "Deployed {} to {}", f.name, machine
+                log.debug "Deployed {} on {}", f.name, machine
             }
         }
     }
 
     /**
-     * Deploy the file at the specified location on the server.
+     * Deploy the file found at the specified location on the server.
+     *
+     * Checks that the file exists, and fails if not accessible, otherwise copies it
+     * to the configured deploy directory. This is required because exit status from
+     * the Jsch scp command is not reliable.
      */
     public List<String> getDeployScript(String locOnServer) {
         List<String> script = [
-            "[ -f ${locOnServer} ] || exit 1",
+            "test -f ${locOnServer} || exit 1",
             "cp ${locOnServer} ${deployDir}",
         ]
         return script
