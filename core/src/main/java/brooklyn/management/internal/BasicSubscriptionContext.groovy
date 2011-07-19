@@ -60,7 +60,8 @@ public class BasicSubscriptionContext implements SubscriptionContext {
     }
 
     public boolean unsubscribe(SubscriptionHandle subscriptionId) {
-        Preconditions.checkArgument(((Subscription) subscriptionId).subscriber == subscriber, "The subscriptionId is for a different $subscriber")
+        Preconditions.checkNotNull subscriptionId, "subscriptionId should not be null"
+        Preconditions.checkArgument(subscriber == ((Subscription) subscriptionId).subscriber, "The subscriptionId is for a different $subscriber")
         manager.unsubscribe(subscriptionId)
     }
 
