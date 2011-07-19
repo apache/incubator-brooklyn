@@ -10,12 +10,12 @@ import brooklyn.event.SensorEvent;
 import brooklyn.event.basic.BasicAttributeSensor;
 
 
-abstract class AbstractEnricher<T> extends AbstractPolicy implements EventListener<T> {
+abstract class AbstractTransformingEnricher<T> extends AbstractPolicy implements EventListener<T> {
     private Entity producer
     private Sensor<T> source
     protected Sensor<T> target
     
-    public AbstractEnricher(Entity producer, Sensor<T> source, Sensor<T> target) {
+    public AbstractTransformingEnricher(Entity producer, Sensor<T> source, Sensor<T> target) {
         this.producer = producer
         this.source = source
         this.target = target
