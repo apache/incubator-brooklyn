@@ -2,24 +2,29 @@ package brooklyn.policy
 
 import brooklyn.entity.Entity
 import brooklyn.event.SensorEvent
-import brooklyn.policy.basic.AbstractEnricher
+import brooklyn.policy.basic.AbstractTransformingEnricher
 import brooklyn.event.AttributeSensor
 
-class RollingMeanEnricher<T extends Number> extends AbstractEnricher {
+
+/**
+* Transforms a sensor into a rolling average based on a fixed window size. This is useful for smoothing sample type metrics, 
+* such as latency or CPU time
+*/
+class RollingMeanEnricher<T extends Number> extends AbstractTransformingEnricher {
     private LinkedList<T> values = new LinkedList<T>()
     
-    int maxSize
+    int windowSize
     
-    // rolling window? average?
     public RollingMeanEnricher(Entity producer, AttributeSensor<T> source, AttributeSensor<Double> target,
-            int maxSize) {
+            int windowSize) {
         super(producer, source, target)
-        this.maxSize = maxSize
+        this.windowSize = windowSize
     }
     
+    /** @returns null when no data has been received or windowSize is 0 */
     public Number getAverage() {
         pruneValues()
-        return values.sum() / values.size()
+        return values.size() == 0 ? null : values.sum() / values.size()
     }
     
     @Override
@@ -30,7 +35,7 @@ class RollingMeanEnricher<T extends Number> extends AbstractEnricher {
     }
     
     private void pruneValues() {
-        while(maxSize > -1 && values.size() > maxSize) {
+        while(windowSize > -1 && values.size() > windowSize) {
             values.removeFirst()
         }
     }
