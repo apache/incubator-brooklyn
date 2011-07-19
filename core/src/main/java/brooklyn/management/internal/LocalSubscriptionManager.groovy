@@ -174,11 +174,12 @@ public class LocalSubscriptionManager implements SubscriptionManager {
         Set<Subscription> subs = getSubscriptionsForEntitySensor(event.source, event.sensor)
         if (subs) {
             LOG.trace "sending {} to {}", event.sensor.name, subs.join(",")
-            for (final Subscription s in subs) {
+            for (Subscription s in subs) {
                 if (s.eventFilter!=null && !s.eventFilter.apply(event))
                     continue;
+                def final sAtClosureCreation = s
                 LOG.debug "publishing {} to {}", event, s
-                em.submit(tags: s.subscriberExecutionManagerTag, { s.listener.onEvent(event) })
+                em.submit(tags: s.subscriberExecutionManagerTag, { sAtClosureCreation.listener.onEvent(event) })
             }
         }
     }
