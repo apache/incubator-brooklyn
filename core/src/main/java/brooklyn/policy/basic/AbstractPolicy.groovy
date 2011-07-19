@@ -42,7 +42,7 @@ class AbstractPolicy implements Policy {
    }
    
    /** @see SubscriptionContext#subscribe(Entity, Sensor, EventListener) */
-   public <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, EventListener<T> listener) {
+   protected <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, EventListener<T> listener) {
        def handle = subscription.subscribe producer, sensor, listener
        subscriptions.put(producer, handle)
        return handle
@@ -50,7 +50,7 @@ class AbstractPolicy implements Policy {
    
    /** Unsubscribes the given producer. 
     * @see SubscriptionContext#unsubscribe(SubscriptionHandle) */
-   public boolean unsubscribe(Entity producer) {
+   protected boolean unsubscribe(Entity producer) {
        def handle = subscriptions.remove(producer)
        subscription.unsubscribe(handle)
    }
