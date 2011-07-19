@@ -1,8 +1,5 @@
 package brooklyn.entity.trait;
 
-import java.util.Arrays;
-import java.util.Map;
-
 import brooklyn.entity.Effector;
 import brooklyn.entity.basic.Description;
 import brooklyn.entity.basic.EffectorInferredFromAnnotatedMethod;
