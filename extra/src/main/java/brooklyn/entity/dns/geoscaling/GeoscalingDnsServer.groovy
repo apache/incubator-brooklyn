@@ -56,6 +56,8 @@ class GeoscalingDnsServer extends AbstractEntity {
             false, // provide uptime info
             script);
         gwc.logout();
+        
+        emit(DESTINATION_SERVERS, servers);
     }
     
 }
