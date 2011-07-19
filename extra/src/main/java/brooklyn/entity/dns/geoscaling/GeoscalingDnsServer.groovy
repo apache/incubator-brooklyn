@@ -36,7 +36,7 @@ class GeoscalingDnsServer extends AbstractEntity {
     };
 
     
-    public boolean setDestinationServers(Set<ServerGeoInfo> servers) {
+    public void setDestinationServers(Set<ServerGeoInfo> servers) {
         String host = getConfig(GEOSCALING_HOST);
         int port = getConfig(GEOSCALING_PORT);
         String username = getConfig(GEOSCALING_USERNAME);
