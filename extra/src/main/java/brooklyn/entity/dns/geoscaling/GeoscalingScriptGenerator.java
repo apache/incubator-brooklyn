@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -13,12 +15,16 @@ class GeoscalingScriptGenerator {
     
     private static final String PHP_SCRIPT_TEMPLATE_RESOURCE = "/brooklyn/entity/dns/geoscaling/template.php";
     private static final String SERVER_DECLARATIONS_MARKER = "/* SERVER DECLARATIONS TO BE SUBSTITUTED HERE */";
+    private static final String DATESTAMP_MARKER = "DATESTAMP";
 
     
     public static String generateScriptString(Set<ServerGeoInfo> servers) {
         String template = loadResource(PHP_SCRIPT_TEMPLATE_RESOURCE);
+        String datestamp = new SimpleDateFormat("E, dd MMM yyyy 'at' HH:mm:ss Z").format(new Date());
         String declarations = getServerDeclaration(servers);
-        return template.replace(SERVER_DECLARATIONS_MARKER, declarations);
+        return template
+            .replace(DATESTAMP_MARKER, datestamp)
+            .replace(SERVER_DECLARATIONS_MARKER, declarations);
     }
     
     private static String getServerDeclaration(Set<ServerGeoInfo> servers) {

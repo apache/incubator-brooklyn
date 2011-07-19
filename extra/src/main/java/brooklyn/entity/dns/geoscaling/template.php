@@ -1,5 +1,11 @@
 <?php
 
+/**************************************************************************************
+ **  DO NOT modify this script, as your changes will likely be overwritten.
+ **  Auto-generated on DATESTAMP.
+ **************************************************************************************/
+
+
 /* Returns the approximate distance (in km) between 2 points on the Earth's surface,
  * specified as latitude and longitude in decimal degrees. Derived from the spherical
  * law of cosines.
