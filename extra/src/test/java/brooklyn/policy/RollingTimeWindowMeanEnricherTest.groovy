@@ -27,6 +27,9 @@ class RollingTimeWindowMeanEnricherTest {
     Sensor<Integer> intSensor, deltaSensor
     Sensor<Double> avgSensor
     SubscriptionContext subscription
+    
+    RollingTimeWindowMeanEnricher<Integer> averager
+    ConfidenceQualifiedNumber average
 
     @BeforeMethod
     public void before() {
@@ -37,6 +40,10 @@ class RollingTimeWindowMeanEnricherTest {
         intSensor = new BasicAttributeSensor<Integer>(Integer.class, "int sensor")
         deltaSensor = new BasicAttributeSensor<Integer>(Integer.class, "delta sensor")
         avgSensor = new BasicAttributeSensor<Double>(Integer.class, "avg sensor")
+        
+        producer.addPolicy(new DeltaEnricher<Integer>(producer, intSensor, deltaSensor))
+        averager = new RollingTimeWindowMeanEnricher<Integer>(producer, deltaSensor, avgSensor, 1000)
+        producer.addPolicy(averager)
     }
 
     @AfterMethod
@@ -44,46 +51,64 @@ class RollingTimeWindowMeanEnricherTest {
     }
 
     @Test
-    public void testAveraging() {
-        producer.addPolicy(new DeltaEnricher<Integer>(producer, intSensor, deltaSensor))
-        RollingTimeWindowMeanEnricher<Integer> averager = new RollingTimeWindowMeanEnricher<Integer>(producer, deltaSensor, avgSensor, 1000)
-        producer.addPolicy(averager)
-
-        ConfidenceQualifiedNumber average = averager.getAverage(0)
+    public void testDefaultAverage() {
+        average = averager.getAverage(0)
         assertEquals(average.value, 0)
         assertEquals(average.confidence, 0.0d)
-        
+    }
+    
+    @Test
+    public void testSingleValueAverage() {
         averager.onEvent(intSensor.newEvent(producer, 10), 1000)
         average = averager.getAverage(1000)
-        assertEquals(average.value, 10.0d)
-        assertEquals(average.confidence, 1.0d)
-        
-        averager.onEvent(intSensor.newEvent(producer, 20), 1500)
-        average = averager.getAverage(1500)
-        assertEquals(average.value, 15.0d)
-        assertEquals(average.confidence, 1.0d)
+        assertEquals(average.value, 10 /1d)
+        assertEquals(average.confidence, 1d)
+    }
+    
+    @Test
+    public void testMonospacedAverage() {
+        averager.onEvent(intSensor.newEvent(producer, 10), 1000)
+        averager.onEvent(intSensor.newEvent(producer, 20), 1250)
+        averager.onEvent(intSensor.newEvent(producer, 30), 1500)
+        averager.onEvent(intSensor.newEvent(producer, 40), 1750)
+        averager.onEvent(intSensor.newEvent(producer, 50), 2000)
         average = averager.getAverage(2000)
-        assertEquals(average.value, 20.0d)
+        assertEquals(average.value, (20+30+40+50)/4d)
+        assertEquals(average.confidence, 1d)
+    }
+    
+    @Test
+    public void testWeightedAverage() {
+        averager.onEvent(intSensor.newEvent(producer, 10), 1000)
+        averager.onEvent(intSensor.newEvent(producer, 20), 1100)
+        averager.onEvent(intSensor.newEvent(producer, 30), 1300)
+        averager.onEvent(intSensor.newEvent(producer, 40), 1600)
+        averager.onEvent(intSensor.newEvent(producer, 50), 2000)
+        average = averager.getAverage(2000)
+        assertEquals(average.value, (20*0.1d)+(30*0.2d)+(40*0.3d)+(50*0.4d))
+        assertEquals(average.confidence, 1d)
+    }
+    
+    @Test
+    public void testConfidenceDecay() {
+        averager.onEvent(intSensor.newEvent(producer, 10), 1000)
+        averager.onEvent(intSensor.newEvent(producer, 20), 1250)
+        averager.onEvent(intSensor.newEvent(producer, 30), 1500)
+        averager.onEvent(intSensor.newEvent(producer, 40), 1750)
+        averager.onEvent(intSensor.newEvent(producer, 50), 2000)
+        
+        average = averager.getAverage(2250)
+        assertEquals(average.value, (30+40+50)/3d)
+        assertEquals(average.confidence, 0.75d)
+        average = averager.getAverage(2500)
+        assertEquals(average.value, (40+50)/2d)
         assertEquals(average.confidence, 0.5d)
+        average = averager.getAverage(2750)
+        assertEquals(average.value, 50d)
+        assertEquals(average.confidence, 0.25d)
         average = averager.getAverage(3000)
-        assertEquals(average.value, 20.0d)
-        assertEquals(average.confidence, 0.0d)
-        
-        averager.onEvent(intSensor.newEvent(producer, 30), 3000)
-        average = averager.getAverage(3000)
-        assertEquals(average.value, 30.0d)
-        assertEquals(average.confidence, 1.0d)
-        
-        averager.onEvent(intSensor.newEvent(producer, 10), 4000)
-        averager.onEvent(intSensor.newEvent(producer, 20), 4200)
-        averager.onEvent(intSensor.newEvent(producer, 30), 4400)
-        averager.onEvent(intSensor.newEvent(producer, 40), 4600)
-        averager.onEvent(intSensor.newEvent(producer, 50), 4800)
-        averager.onEvent(intSensor.newEvent(producer, 60), 5000)
-        
-        average = averager.getAverage(5000)
-        assertEquals(average.value, 40.0d)
-        assertEquals(average.confidence, 1.0d)
+        assertEquals(average.value, 50d)
+        assertEquals(average.confidence, 0d)
     }
 
 }
