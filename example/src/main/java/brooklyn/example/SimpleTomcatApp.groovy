@@ -21,19 +21,19 @@ import com.google.common.base.Preconditions
  */
 public class SimpleTomcatApp extends AbstractApplication {
     DynamicWebAppCluster tc = new DynamicWebAppCluster(displayName:'MyTomcat', initialSize:1,
-    newEntity:{ properties ->
-        def ts = new TomcatServer(properties)
-        URL resource = SimpleTomcatApp.class.getClassLoader().getResource("hello-world.war")
-        Preconditions.checkState resource != null, "Unable to locate resource hello-world.war"
-        ts.setConfig(TomcatServer.WAR, resource.getPath())
-        return ts;
-    },
-    owner:this);
+        newEntity:{ properties ->
+            def ts = new TomcatServer(properties)
+            URL resource = SimpleTomcatApp.class.getClassLoader().getResource("hello-world.war")
+            Preconditions.checkState resource != null, "Unable to locate resource hello-world.war"
+            ts.setConfig(TomcatServer.WAR, resource.getPath())
+            return ts;
+        },
+        owner:this);
 
     public static void main(String[] argv) {
         def app = new SimpleTomcatApp()
-        //TODO:
-        //        app.tc.policy << new ElasticityPolicy(app.tc, TomcatCluster.REQS_PER_SEC, low:100, high:250);
+        // TODO:
+        // app.tc.policy << new ElasticityPolicy(app.tc, TomcatCluster.REQS_PER_SEC, low:100, high:250);
         app.tc.initialSize = 2  //override initial size
 
         Collection<InetAddress> hosts = [
