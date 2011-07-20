@@ -1,4 +1,3 @@
-<?php
 
 /**************************************************************************************
  **  DO NOT modify this script, as your changes will likely be overwritten.
@@ -45,5 +44,3 @@ if (isset($closest_server)) {
 } else {
     $output[] = array("fail");
 }
-
-?>

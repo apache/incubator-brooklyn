@@ -1,14 +1,17 @@
 package brooklyn.entity.dns.geoscaling
 
+import java.util.List
 import java.util.Set
 
 import brooklyn.entity.Effector
+import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.BasicParameterType
 import brooklyn.entity.basic.EffectorWithExplicitImplementation
 import brooklyn.entity.dns.ServerGeoInfo
 import brooklyn.event.AttributeSensor
 import brooklyn.event.basic.BasicConfigKey
+import brooklyn.management.SubscriptionHandle
 
 class GeoscalingDnsServer extends AbstractEntity {
     
@@ -26,26 +29,29 @@ class GeoscalingDnsServer extends AbstractEntity {
         new EffectorWithExplicitImplementation<GeoscalingDnsServer, Void>(
             "setDestinationServers", Void.class,
             [ new BasicParameterType<Set>("servers", Set.class, "Set of all destination servers, including address and lat/long information") ],
-            "Reconfigures the GeoScaling account to redirect users to their nearst server from the passed set") {
+            "Reconfigures the GeoScaling account to redirect users to their nearest server from the passed set") {
         
-        public Void invokeEffector(GeoscalingDnsServer gds, Map args) {
+        public Void invokeEffector(GeoscalingDnsServer entity, Map args) {
             Set<ServerGeoInfo> servers = args.get("servers");
-            gds.setDestinationServers(servers);
+            entity.setDestinationServers(servers);
             return null;
         }
     };
 
-    
+
     public void setDestinationServers(Set<ServerGeoInfo> servers) {
         String host = getConfig(GEOSCALING_HOST);
-        int port = getConfig(GEOSCALING_PORT);
+        Integer port = getConfig(GEOSCALING_PORT);
         String username = getConfig(GEOSCALING_USERNAME);
         String password = getConfig(GEOSCALING_PASSWORD);
-        int primaryDomainId = getConfig(GEOSCALING_PRIMARY_DOMAIN_ID);
-        int smartSubdomainId = getConfig(GEOSCALING_SMART_SUBDOMAIN_ID);
+        Integer primaryDomainId = getConfig(GEOSCALING_PRIMARY_DOMAIN_ID);
+        Integer smartSubdomainId = getConfig(GEOSCALING_SMART_SUBDOMAIN_ID);
         String smartSubdomainName = getConfig(GEOSCALING_SMART_SUBDOMAIN_NAME);
         
+        // TODO: complain if required config is missing
+        
         String script = GeoscalingScriptGenerator.generateScriptString(servers);
+        
         GeoscalingWebClient gwc = [ host, port ];
         gwc.login(username, password);
         gwc.configureSmartSubdomain(primaryDomainId, smartSubdomainId, smartSubdomainName,
