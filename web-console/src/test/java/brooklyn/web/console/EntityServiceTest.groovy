@@ -2,6 +2,8 @@ package brooklyn.web.console
 
 import static org.testng.Assert.*
 
+import java.util.Collection;
+
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
 import brooklyn.management.ExecutionContext
@@ -68,6 +70,16 @@ class EntityServiceTest {
 private class TestManagementContext implements ManagementContext{
     Collection<Application> getApplications() {
         return Collections.singletonList(new TestApplication());
+    }
+
+    @Override
+    public Collection<Entity> getEntities() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isManaged(Entity entity) {
+        throw new UnsupportedOperationException();
     }
 
     Entity getEntity(String id) {

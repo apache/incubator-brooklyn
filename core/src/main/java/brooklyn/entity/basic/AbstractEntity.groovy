@@ -43,14 +43,14 @@ import brooklyn.util.task.BasicExecutionContext
  * by children, whereas the fields are not. (Attributes cannot be so accessed,
  * nor are they inherited.)
  */
-public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
+abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractEntity.class)
 
     String id = LanguageUtils.newUid()
     String displayName
     EntityReference owner
  
-    volatile EntityReference<Application> application
+    protected volatile EntityReference<Application> application
  
     // XXX see comments below (grkvlt)
 //    private final Object ownedChildrenLock = new Object();
@@ -81,6 +81,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     private transient EntityClass entityClass = null
     protected transient ExecutionContext execution
     protected transient SubscriptionContext subscription
+    protected transient ManagementContext managementContext
 
     /**
      * The sensor-attribute values of this entity. Updating this map should be done
@@ -116,7 +117,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     }
 
     public AbstractEntity(Map flags=[:], Entity owner=null) {
-        this.@skipCustomInvokeMethod.set(true)
+        this.@skipInvokeMethodEffectorInterception.set(true)
         try {
             if (flags.owner != null && owner != null && flags.owner != owner) {
                 throw new IllegalArgumentException("Multiple owners supplied, ${flags.owner} and $owner")
@@ -152,7 +153,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     
             //set the owner if supplied; accept as argument or field
             if (suppliedOwner) suppliedOwner.addOwnedChild(this)
-        } finally { this.@skipCustomInvokeMethod.set(false) }
+        } finally { this.@skipInvokeMethodEffectorInterception.set(false) }
     }
 
     /**
@@ -292,9 +293,18 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         if (this.@application!=null) return this.@application.get();
         def app = getOwner()?.getApplication()
         if (app) {
-            registerWithApplication(app)
+            setApplication(app)
         }
         app
+    }
+    protected synchronized void setApplication(Application app) {
+        if (application) {
+            if (this.@application.id!=app.id) {
+                throw new IllegalStateException("Cannot change application of entity (attempted for $this from ${this.application} to ${app})")
+            }
+            return;
+        }
+        this.application = new EntityReference(this, app);
     }
 
     @Override
@@ -304,14 +314,11 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 
     @Override
     public ManagementContext getManagementContext() {
-        getApplication()?.managementContext
+        ManagementContext m = managementContext
+        if (m) return m
+        managementContext = getApplication()?.getManagementContext()
     }
 
-    protected synchronized void registerWithApplication(Application app) {
-        if (application) return;
-        this.application = new EntityReference(this, app);
-        app.registerEntity(this)
-    }
 
     @Override
     public synchronized EntityClass getEntityClass() {
@@ -349,7 +356,17 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         v = v ?: inheritedConfig.get(key)
 
         //if config is set as a task, we wait for the task to complete
-        v in Task ? v.get() : v
+        if (v in Task) {
+            if ( !((Task)v).isSubmitted() ) {
+                def exec = getExecutionContext()
+//                if (exec==null || !getApplication().isDeployed())
+//                    throw new IllegalStateException("Not permitted to access deferred config until application is deployed");
+                exec.submit((Task)v)
+            }
+            v = v.get()
+        }
+        
+        v
     }
 
     @Override
@@ -357,12 +374,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         // TODO Is this the best idea, for making life easier for brooklyn coders when supporting changing config?
         if (getApplication()?.isDeployed()) throw new IllegalStateException("Cannot set configuration $key on active entity $this")
 
-        T oldVal = ownConfig.put(key, val);
-        if ((val in Task) && (!(val.isSubmitted()))) {
-            //if config is set as a task, we make sure it starts running
-            getExecutionContext().submit(val)
-        }
-        
+        T oldVal = ownConfig.put(key, val);        
         ownedChildren.get().each {
             it.refreshInheritedConfig()
         }
@@ -403,12 +415,12 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 
     protected synchronized SubscriptionContext getSubscriptionContext() {
         if (subscription) subscription
-        subscription = managementContext?.getSubscriptionContext(this);
+        subscription = getManagementContext()?.getSubscriptionContext(this);
     }
 
     protected synchronized ExecutionContext getExecutionContext() {
         if (execution) execution;
-        execution = new BasicExecutionContext(tag:this, managementContext.executionManager)
+        execution = new BasicExecutionContext(tag:this, getManagementContext().executionManager)
     }
 
     /** default toString is simplified name of class, together with selected arguments */
@@ -483,19 +495,15 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     // -------- EFFECTORS --------------
 
     /** flag needed internally to prevent invokeMethod from recursing on itself */     
-    private ThreadLocal<Boolean> skipCustomInvokeMethod = new ThreadLocal() { protected Object initialValue() { Boolean.FALSE } }
+    private ThreadLocal<Boolean> skipInvokeMethodEffectorInterception = new ThreadLocal() { protected Object initialValue() { Boolean.FALSE } }
 
     /** 
      * Called by groovy for all method invocations; pass-through for everything but effectors; 
      * effectors get wrapped in a new task (parented by current task if there is one).
      */
     public Object invokeMethod(String name, Object args) {
-        if (!this.@skipCustomInvokeMethod.get()) {
-            this.@skipCustomInvokeMethod.set(true);
-
-            if (entityProxyForManagement!=null) {
-                return entityProxyForManagement.invokeMethod(name, args);
-            }
+        if (!this.@skipInvokeMethodEffectorInterception.get()) {
+            this.@skipInvokeMethodEffectorInterception.set(true);
 
             //args should be an array, warn if we got here wrongly (extra defensive as args accepts it, but it shouldn't happen here)
             if (args==null) LOG.warn("$this.$name invoked with incorrect args signature (null)", new Throwable("source of incorrect invocation of $this.$name"))
@@ -504,23 +512,16 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
             try {
                 Effector eff = effectors.get(name)
                 if (eff) {
-                    args = AbstractEffector.prepareArgsForEffector(eff, args);
-                    Task current = executionContext.currentTask
-                    if (!current || !current.tags.contains(this)) {
-                        // Wrap in a task if we aren't already in a task that is tagged with this entity
-                        Task exec = executionContext.submit(
-	                            { this.metaClass.invokeMethod(this, name, args) } as Runnable,
-	                            description:"call to method $name being treated as call to effector $eff" )
-                        return exec.get();
-                    }
+                    return getManagementContext().invokeEffectorMethodSync(this, eff, args);
                 }
             } catch (CancellationException ce) {
 	            LOG.info "Execution of effector {} on entity {} was cancelled", name, id
-                return null // TODO or throw a runtime exception?
+                throw ce;
             } catch (ExecutionException ee) {
+                LOG.info "Execution of effector {} on entity {} failed with {}", name, id, ee
                 // Exceptions thrown in Futures are wrapped
                 throw ee.getCause()
-            } finally { this.@skipCustomInvokeMethod.set(false); }
+            } finally { this.@skipInvokeMethodEffectorInterception.set(false); }
         }
         metaClass.invokeMethod(this, name, args);
     }
@@ -547,17 +548,22 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
      * @see #invoke(Effector)
      */
     public <T> Task<T> invoke(Effector<T> eff, Map parameters) {
-        executionContext.submit( { eff.call(this, parameters) }, description:"invocation of effector $eff" )
+        getManagementContext().invokeEffector(this, eff, parameters);
     }
 
-    /** field for use only by management plane, to record remote destination when proxied */
-    private AbstractEntity entityProxyForManagement = null;
+    /** invoked by management context when this entity becomes managed by a given management context (e.g. at a particular management node);
+     * including the initial management started and subsequent management node master-change for this entity */
+    public void onManagementBecomingMaster() {}
+    
+    /** invoked by management context when this entity becomes mastered by a given management context (e.g. at a particular management node),
+     * including the final management end and subsequent management node master-change for this entity */
+    public void onManagementNoLongerMaster() {}
 
-    /** for use by management plane, to record remote destination when proxied */
-    public void managementReplaceWithEntityProxy(AbstractEntity e) {
-        assert entityProxyForManagement==null : "already proxied";
-        entityProxyForManagement = e;
-        
+    /** field for use only by management plane, to record remote destination when proxied */
+    public Object managementData = null;
+
+    /** for use by management plane, to invalidate all fields (e.g. when an entity is changing to being proxied) */
+    public void invalidate() {
         this.@owner.invalidate();
         this.@application.invalidate();
         ownedChildren.get().each { it.invalidate() }
@@ -595,11 +601,11 @@ private class EntityReference<T extends Entity> implements Serializable {
     
     public T get() {
         T e = entity;
-        if (e) return e;
+        if (e!=null) return e;
         find();
     }
 
-    private synchronized T find() {
+    protected synchronized T find() {
         if (entity) return entity;
         if (!referrer)
             throw new IllegalStateException("EntityReference $id should have been initialised with a reference owner")
@@ -608,6 +614,20 @@ private class EntityReference<T extends Entity> implements Serializable {
     
     synchronized void invalidate() {
         entity = null;
+    }
+    
+    public String toString() {
+        getClass().getSimpleName()+"["+get().toString()+"]"
+    }
+}
+
+
+class SelfEntityReference<T extends Entity> extends EntityReference<T> {
+    public SelfEntityReference(Entity self) {
+        super(self, self);
+    }
+    protected synchronized T find() {
+        return referrer;
     }
 }
 
@@ -622,19 +642,25 @@ private class EntityCollectionReference<T extends Entity> implements Serializabl
         this.referrer = referrer;
     }
 
-    public synchronized void add(Entity e) {
+    public synchronized boolean add(Entity e) {
         if (entityRefs.add(e.id)) {
             def e2 = new LinkedHashSet<T>(entities!=null?entities:Collections.emptySet());
             e2 << e
             entities = e2;
+            return true
+        } else {
+            return false
         }
     }
 
-    public synchronized void remove(Entity e) {
+    public synchronized boolean remove(Entity e) {
         if (entityRefs.remove(e.id) && entities!=null) {
             def e2 = new LinkedHashSet<T>(entities);
             e2.remove(e);
             entities = e2;
+            return true
+        } else {
+            return false
         }
     }
 
@@ -646,7 +672,7 @@ private class EntityCollectionReference<T extends Entity> implements Serializabl
         return Collections.unmodifiableCollection(result);
     }
 
-    private synchronized Collection<T> find() {
+    protected synchronized Collection<T> find() {
         if (entities!=null) return entities;
         if (!referrer)
             throw new IllegalStateException("EntityReference $id should have been initialised with a reference owner")

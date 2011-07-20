@@ -23,8 +23,8 @@ import brooklyn.management.internal.LocalManagementContext
  * 
  * TODO clarify test purpose
  */
-public class EffectorTest {
-    private static final Logger log = LoggerFactory.getLogger(EffectorTest.class);
+public class EffectorSayHiTest {
+    private static final Logger log = LoggerFactory.getLogger(EffectorSayHiTest.class);
     // FIXME remove this when we have a process for setting logging...
 //    static {
 //        log.metaClass {

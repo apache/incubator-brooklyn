@@ -10,7 +10,7 @@ import org.testng.annotations.Test
 import brooklyn.entity.Effector
 import brooklyn.management.Task
 
-public class EffectorTest {
+public class EffectorConcatenateTest {
 
     private static final long TIMEOUT = 10*1000
     

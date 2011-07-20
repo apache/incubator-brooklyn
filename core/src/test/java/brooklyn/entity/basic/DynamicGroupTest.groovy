@@ -17,6 +17,7 @@ class DynamicGroupTest {
         group = new DynamicGroup(owner:app) {}
         e1 = new AbstractEntity(owner:app) {}
         e2 = new AbstractEntity(owner:app) {}
+        app.getManagementContext().manage(app)
     }
     
     @Test

@@ -15,15 +15,22 @@ import brooklyn.entity.Entity;
  */
 public interface ManagementContext {
     /**
-     * The applications associated with this management realm
+     * All applications under control of this management plane
      */
     Collection<Application> getApplications();
+    /**
+     * All entities under control of this management plane
+     */
+    Collection<Entity> getEntities();
 
     /**
      * Returns the entity with the given identifier (may be a full instance, or a proxy to one which is remote)
      */
     Entity getEntity(String id);
     
+    /** whether the entity is under management by this management context */
+    boolean isManaged(Entity entity);
+
     /**
      * Returns the {@link ExecutionManager} instance for entities and users in this management realm 
      * to submit tasks and to observe what tasks are occurring
@@ -55,4 +62,5 @@ public interface ManagementContext {
      * of conveniently subscribing on behalf of that entity  
      */
     SubscriptionContext getSubscriptionContext(Entity entity);
+
 }

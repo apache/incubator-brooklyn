@@ -7,13 +7,12 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Application
+import brooklyn.entity.Effector
 import brooklyn.entity.Entity
-import brooklyn.management.ExecutionContext
+import brooklyn.entity.basic.AbstractEntity
 import brooklyn.management.ExecutionManager
-import brooklyn.management.ManagementContext
-import brooklyn.management.SubscriptionContext
 import brooklyn.management.SubscriptionManager
-import brooklyn.util.task.BasicExecutionContext
+import brooklyn.management.Task
 import brooklyn.util.task.BasicExecutionManager
 
 /**
@@ -24,25 +23,51 @@ public class LocalManagementContext extends AbstractManagementContext {
 
     private ExecutionManager execution
     private SubscriptionManager subscriptions
+
+    protected Map<String,Entity> entitiesById = new LinkedHashMap<String,Entity>()
+    protected ObservableList entities = new ObservableList()
+    protected Set<Application> applications = []
+
+    private static final Object MANAGED_LOCALLY = new Object();
     
-    Set<Application> apps = []
- 
-    //completely unacceptable!! :
-    //public static ManagementContext getContext() { return new LocalManagementContext() }
-    
-    @Override
-    public void registerApplication(Application app) {
-        apps.add(app);
+    protected synchronized boolean manageNonRecursive(Entity e) {
+        ((AbstractEntity)e).managementData = MANAGED_LOCALLY;
+        Object old = entitiesById.put(e.getId(), e);
+        if (old!=null) {
+            if (old.is(e))
+                log.warn("call to manage entity $e but it is already known at $this")
+            else
+                log.warn("call to manage entity $e but different entity $old already known under that id at $this")
+            return false
+        } else {
+            entities.add(e)
+            if (e instanceof Application) applications << e
+            return true
+        }
     }
-    
+    protected synchronized boolean unmanageNonRecursive(Entity e) {
+        ((AbstractEntity)e).managementData = null;
+        if (e in Application) applications.remove(e)
+        entities.add(e)
+        Object old = entitiesById.remove(e.getId());
+        if (old!=e) {
+            log.warn("call to unmanage entity $e but it is not known at $this")
+            return false
+        } else {
+            return true
+        }
+    }
+
     @Override
     public Collection<Application> getApplications() {
-        return apps
+        return applications
+    }
+    public Collection<Entity> getEntities() {
+        return entitiesById.values();
     }
     
     public Entity getEntity(String id) {
-        //FIXME needed, a registry after serialization
-        null
+        entitiesById.get(id)
 	}
     
     public synchronized  SubscriptionManager getSubscriptionManager() {
@@ -53,5 +78,30 @@ public class LocalManagementContext extends AbstractManagementContext {
     public synchronized ExecutionManager getExecutionManager() {
         if (execution) return execution
         execution = new BasicExecutionManager()
+    }
+    
+    public <T> Task<T> runAtEntity(Map flags, Entity entity, Runnable c) {
+        if (!isManaged(entity)) {
+            Entity rootUnmanaged = entity;
+            while (true) {
+                Entity candidateUnmanagedOwner = rootUnmanaged.getOwner();
+                if (candidateUnmanagedOwner==null || getEntity(candidateUnmanagedOwner.id)!=null)
+                    break;
+                rootUnmanaged = candidateUnmanagedOwner;
+            }
+            log.info("Activating management for $rootUnmanaged due to invocation of $entity $c")
+            manage(rootUnmanaged)
+        }
+        entity.executionContext.submit(flags, c);
+    }
+    public boolean isManagedLocally(Entity e) {
+        return true;
+    }
+
+    public void addEntitySetListener(CollectionChangeListener<Entity> listener) {
+        entities.addPropertyChangeListener(new GroovyObservablesPropertyChangeToCollectionChangeAdapter(listener))
+    }
+    public void removeEntitySetListener(CollectionChangeListener<Entity> listener) {
+        entities.removePropertyChangeListener(new GroovyObservablesPropertyChangeToCollectionChangeAdapter(listener))
     }
 }

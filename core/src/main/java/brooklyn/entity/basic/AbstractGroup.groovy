@@ -16,7 +16,7 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
         super(props, owner)
     }
 
-    final EntityCollectionReference<Group> members = new EntityCollectionReference<Group>(this);
+    final EntityCollectionReference<Entity> members = new EntityCollectionReference<Entity>(this);
 
     /**
      * Adds the given entity as a member of this group <em>and</em> this group as one of the groups of the child;
@@ -24,18 +24,18 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
      */
     public synchronized Entity addMember(Entity member) {
         member.addGroup(this)
-        members.add(member)
-        listeners.each { it.propertyChange(new ElementAddedEvent(this, member, -1)) }
-        emit(MEMBER_ADDED, MEMBER_ADDED.newEvent(this, member))
-        setAttribute(Changeable.GROUP_SIZE, currentSize)
+        if (members.add(member)) {
+            emit(MEMBER_ADDED, MEMBER_ADDED.newEvent(this, member))
+            setAttribute(Changeable.GROUP_SIZE, currentSize)
+        }
         member
     }
  
     public synchronized boolean removeMember(Entity member) {
-        members.remove member
-        listeners.each { it.propertyChange(new ElementRemovedEvent(this, member, -1)) }
-        emit(MEMBER_REMOVED, MEMBER_REMOVED.newEvent(this, member))
-        setAttribute(Changeable.GROUP_SIZE, currentSize)
+        if (members.remove(member)) {
+            emit(MEMBER_REMOVED, MEMBER_REMOVED.newEvent(this, member))
+            setAttribute(Changeable.GROUP_SIZE, currentSize)
+        }
         member
     }
  
@@ -48,8 +48,4 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
         return getMembers().size()
     }
 
-    Set<PropertyChangeListener> listeners = new LinkedHashSet<PropertyChangeListener>();
-    public void addEntityChangeListener(PropertyChangeListener listener) {
-        listeners << listener
-    }
 }

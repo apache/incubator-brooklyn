@@ -148,6 +148,7 @@ class LocalEntitiesTest {
              */ ));
         Object[] sonsConfig = new Object[1]
         Thread t = new Thread( { 
+//            println "getting config "+sonsConfig[0]
             sonsConfig[0] = son.getConfig(HelloEntity.MY_NAME);
 //            println "got config "+sonsConfig[0] 
             synchronized (sonsConfig) { sonsConfig.notify() } 

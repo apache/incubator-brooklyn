@@ -2,19 +2,19 @@ package brooklyn.entity.basic
 
 import groovy.lang.Closure
 
-import java.beans.PropertyChangeListener
 import java.util.Map
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.entity.Application
 import brooklyn.entity.Entity
+import brooklyn.management.internal.AbstractManagementContext;
+import brooklyn.management.internal.CollectionChangeListener
 
 public class DynamicGroup extends AbstractGroup {
     private static final Logger log = LoggerFactory.getLogger(DynamicGroup.class)
     
-    Closure entityFilter
+    private Closure entityFilter
     
     public DynamicGroup(Map properties=[:], Entity owner=null, Closure entityFilter=null) {
         super(properties, owner)
@@ -26,35 +26,65 @@ public class DynamicGroup extends AbstractGroup {
         rescanEntities()
     }
     
-    @Override
-    protected synchronized void registerWithApplication(Application app) {
-        super.registerWithApplication(app)
-        app.addEntityChangeListener({ rescanEntities() } as PropertyChangeListener)
-        rescanEntities()
+    public synchronized void setOwner(Entity entity) {
+        super.setOwner(entity);
     }
     
-    public void rescanEntities() {
-        //TODO extremely inefficient; should act on the event!
+    protected boolean acceptsEntity(Entity e) {
+        return (entityFilter!=null && entityFilter.call(e))
+    }
+
+    
+    protected void onEntityAdded(Entity item) {
+        log.info("$this detected item add $item")
+        if (acceptsEntity(item)) addMember(item)
+    }
+    protected void onEntityRemoved(Entity item) {
+        log.info("$this detected item removal $item")
+        removeMember(item)
+    }
+    class MyEntitySetChangeListener implements CollectionChangeListener<Entity> {
+        public void onItemAdded(Entity item) { onEntityAdded(item) }
+        public void onItemRemoved(Entity item) { onEnittyRemoved(item) }
+    }
+    volatile MyEntitySetChangeListener setChangeListener = null;
+    public synchronized void onManagementBecomingMaster() {
+        if (setChangeListener!=null) {
+            log.warn("$this becoming master twice");
+            return;
+        }
+        setChangeListener = new MyEntitySetChangeListener();
+        ((AbstractManagementContext)getManagementContext()).addEntitySetListener(setChangeListener)
+        rescanEntities();
+    }
+    public synchronized void onManagementNoLongerMaster() {
+        if (setChangeListener==null) {
+            log.warn("$this no longer master twice");
+            return;
+        }
+        ((AbstractManagementContext)getManagementContext()).removeEntitySetListener(setChangeListener)
+        setChangeListener = null
+    }
+    
+    public synchronized void rescanEntities() {
         if (!entityFilter) {
-            log.info "not (yet) scanning for children of $this: no filter defined"
+            log.warn "$this not (yet) scanning for children of $this: no filter defined"
             return
         }
-        if (!getApplication()) return
-        Set existingMembers = super.getMembers() as HashSet
-        log.debug "scanning {}", getApplication().entities
-        getApplication().entities.each {
-            if (entityFilter.call(it)) {
-                if (existingMembers.add(it))
-                    addMember(it)
-            } else if (existingMembers.remove(it)) {
-                removeMember(it)
-            } 
+        if (!getApplication()) {
+            log.warn "$this not (yet) scanning for children of $this: no application defined"
+            return
         }
+        Collection<Entity> toRemove = []
+        toRemove.addAll(super.getMembers());
+        ((AbstractManagementContext)getManagementContext()).getEntities().each {
+            if (acceptsEntity(it)) {
+                addMember(it)
+                toRemove.remove(it)
+            }
+        }
+        toRemove.each { removeMember(it) }
+        log.info("$this rescan complete, members now ${getMembers()}")
     }
     
-    @Override
-    public Collection<Entity> getMembers() {
-        rescanEntities();
-        return super.getMembers()
-    }
 }

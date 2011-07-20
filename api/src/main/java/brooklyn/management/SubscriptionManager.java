@@ -56,7 +56,7 @@ public interface SubscriptionManager {
  
     /** @see #subscribeToChildren(Map, Entity, Sensor, EventListener) */
     <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, EventListener<T> listener);
-    
+
     /**
      * Unsubscribe the given subscription id.
      * 
