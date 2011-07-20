@@ -222,22 +222,23 @@ textarea#logbox{
 
 #summary-basic-info {
     float: left;
-    margin-bottom: 4em;
+    margin-bottom: 1em;
 }
 
 #summary-status {
     float: right;
-    clear: right;
-    margin-bottom: 4em;
+    margin-right: 130px;
 }
 
 #summary-groups {
     float: left;
     clear: left;
+    margin-bottom: 1em;
 }
 
 #summary-activity {
     float: right;
+    margin-right: 116px;
 }
 
 #summary ul {
