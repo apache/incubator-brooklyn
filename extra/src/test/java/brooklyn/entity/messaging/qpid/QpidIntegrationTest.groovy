@@ -22,8 +22,10 @@ import brooklyn.entity.Application
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.JavaApp
+import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
+import brooklyn.management.Task
 import brooklyn.util.internal.EntityStartUtils
 import brooklyn.util.internal.TimeExtras
 
@@ -55,7 +57,9 @@ public class QpidIntegrationTest {
 
     @AfterMethod(groups = "Integration")
     public void shutdown() {
-        EntityStartUtils.stopEntity(qpid)
+        if (qpid != null && qpid.getAttribute(Startable.SERVICE_UP)) {
+	        EntityStartUtils.stopEntity(qpid)
+        }
     }
 
     /**

@@ -24,22 +24,21 @@ import brooklyn.entity.ParameterType
 import brooklyn.util.internal.LanguageUtils
 
 /** abstract effector implementation whose concrete subclass (often anonymous) will supply
- * the "call(EntityType, Map parameters)" implementation (and the fields in the constructor) 
+ * the "call(EntityType, Map parameters)" implementation (and the fields in the constructor)
  *
  * @param <EntityType> type of Entity that is supported (Entity for all Entities, or a trait...)
  * @param <T> return type of effector
  */
 public abstract class AbstractEffector<T> implements Effector<T> {
     private static final long serialVersionUID = 1832435915652457843L;
-  
-    final private String name;
-    private Class<T> returnType;
-    private List<ParameterType<?>> parameters;
-    private String description;
-    
-//    @SuppressWarnings("unused")
+
+    private final String name;
+    private final Class<T> returnType;
+    private final List<ParameterType<?>> parameters;
+    private final String description;
+
     private AbstractEffector() { /* for gson */ name = null; }
-    
+
     public AbstractEffector(String name, Class<T> returnType, List<ParameterType<?>> parameters, String description) {
         this.name = name;
         this.returnType = returnType;
@@ -63,21 +62,21 @@ public abstract class AbstractEffector<T> implements Effector<T> {
     public List<ParameterType<?>> getParameters() {
         return parameters;
     }
-    
+
     public String getDescription() {
         return description;
     }
-    
+
     public abstract T call(Entity entity, Map parameters);
 
-    /** convenience for named-parameter syntax (needs map in first argument) */
+    /** Convenience for named-parameter syntax (needs map in first argument) */
     public T call(Map parameters=[:], Entity entity) { call(entity, parameters); }
 
     @Override
     public String toString() {
         return name+"["+parameters.collect({it.name}).join(",")+"]";
     }
-    
+
     @Override
     public int hashCode() {
         Objects.hashCode(description, name, parameters, returnType);
@@ -87,7 +86,7 @@ public abstract class AbstractEffector<T> implements Effector<T> {
     public boolean equals(Object obj) {
         LanguageUtils.equals(this, obj, ["description", "name", "parameters", "returnType"]);
     }
-    
+
     /** takes an array of arguments, which typically contain a map in the first position (and possibly nothing else),
     * and returns an array of arguments suitable for use by Effector according to the ParameterTypes it exposes */
    public static Object prepareArgsForEffector(Effector eff, Object args) {
@@ -97,7 +96,7 @@ public abstract class AbstractEffector<T> implements Effector<T> {
            if (args instanceof Collection) args = args as Object[]
            else args = new Object[1] { args }
        }
-       
+
        //if args starts with a map, assume it contains the named arguments
        //(but only use it when we have insufficient supplied arguments)
        List l = new ArrayList()
@@ -126,7 +125,7 @@ public abstract class AbstractEffector<T> implements Effector<T> {
                newArgs << it.defaultValue
            else
                throw new IllegalArgumentException("Invalid arguments (count mismatch) for effector $eff: "+args);
-               
+
            newArgsNeeded--
        }
        if (newArgsNeeded>0)
@@ -179,31 +178,31 @@ public class EffectorInferredFromAnnotatedMethod<T> extends AbstractEffector<T> 
             parameters = []
             LanguageUtils.forBothWithIndex(best.getParameterAnnotations(), best.getParameterTypes()) {
                 anns, type, i -> def m = [
-                    name: findAnnotation(anns, NamedParameter)?.value() /* ?: "param"+(i+1) */ , 
-                    type: type,
-                    description: findAnnotation(anns, Description)?.value() ]
+                    name:findAnnotation(anns, NamedParameter)?.value() /* ?: "param"+(i+1) */ ,
+                    type:type,
+                    description:findAnnotation(anns, Description)?.value() ]
                 def dv = findAnnotation(anns, DefaultValue);
                 if (dv) m.defaultValue = dv.value()
                 parameters.add(new BasicParameterType(m))
             }
         }
 
-        public static <T extends Annotation> T findAnnotation(Annotation[] anns, Class<T> type) { 
-            anns.find { type.isInstance(it) } 
-        }        
+        public static <T extends Annotation> T findAnnotation(Annotation[] anns, Class<T> type) {
+            anns.find { type.isInstance(it) }
+        }
     }
-    
+
     public EffectorInferredFromAnnotatedMethod(Class<?> whereEffectorDefined, String methodName, String description=null) {
         this(new AnnotationsOnMethod(whereEffectorDefined, methodName), description);
     }
     protected EffectorInferredFromAnnotatedMethod(AnnotationsOnMethod anns, String description) {
         super(anns.name, anns.returnType, anns.parameters, description);
     }
-    
+
     public T call(Entity entity, Map parameters) {
         entity."$name"(parameters);
     }
-    
+
 }
 
 public abstract class EffectorWithExplicitImplementation<I,T> extends AbstractEffector<T> {
@@ -213,7 +212,7 @@ public abstract class EffectorWithExplicitImplementation<I,T> extends AbstractEf
 
     public T call(Entity entity, Map parameters) {
         invokeEffector((I) entity, parameters );
-    }    
- 
+    }
+
     public abstract T invokeEffector(I trait, Map parameters);
 }

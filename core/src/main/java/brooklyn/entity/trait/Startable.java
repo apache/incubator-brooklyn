@@ -1,12 +1,16 @@
 package brooklyn.entity.trait;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
 
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.Description;
+import brooklyn.entity.ParameterType;
+import brooklyn.entity.basic.BasicParameterType;
 import brooklyn.entity.basic.EffectorInferredFromAnnotatedMethod;
-import brooklyn.entity.basic.NamedParameter;
+import brooklyn.entity.basic.EffectorWithExplicitImplementation;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.location.Location;
@@ -21,16 +25,25 @@ import brooklyn.location.Location;
 public interface Startable {
     Sensor<Boolean> SERVICE_UP = new BasicAttributeSensor<Boolean>(Boolean.class, "service.hasStarted", "Service started");
 
-    Effector<Void> START = new EffectorInferredFromAnnotatedMethod<Void>(Startable.class, "start", "Start an entity");
+    @SuppressWarnings({ "rawtypes" })
+    Effector<Void> START = new EffectorWithExplicitImplementation<Startable, Void>("start", Void.TYPE, 
+            Arrays.<ParameterType<?>>asList(new BasicParameterType<Collection>("locations", Collection.class, "Locations to start entity in", Collections.emptyList())),
+            "Start an entity") {
+        /** serialVersionUID */
+        private static final long serialVersionUID = 6316740447259603273L;
+        @SuppressWarnings("unchecked")
+        public Void invokeEffector(Startable entity, Map m) {
+            entity.start((Collection<Location>) m.get("locations"));
+            return null;
+        }
+    };
     Effector<Void> STOP = new EffectorInferredFromAnnotatedMethod<Void>(Startable.class, "stop", "Stop an entity");
     Effector<Void> RESTART = new EffectorInferredFromAnnotatedMethod<Void>(Startable.class, "restart", "Restart an entity");
 
     /**
      * Start the entity in the given collection of locations.
      */
-    void start(@NamedParameter("locations")
-	           @Description("Locations to start entity in")
-	           Collection<? extends Location> locations);
+    void start(Collection<Location> locations);
 
     /**
      * Stop the entity.

@@ -1,6 +1,7 @@
 package brooklyn.entity.basic
 
 import java.lang.reflect.Field
+import java.util.concurrent.Callable
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CopyOnWriteArraySet
 import java.util.concurrent.CancellationException
@@ -28,6 +29,8 @@ import brooklyn.management.Task
 import brooklyn.policy.Policy
 import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.task.BasicExecutionContext
+import brooklyn.util.task.BasicTask
+import brooklyn.util.task.ParallelTask
 
 /**
  * Default {@link Entity} implementation.
@@ -47,6 +50,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     private static final Logger LOG = LoggerFactory.getLogger(AbstractEntity.class)
 
     String id = LanguageUtils.newUid()
+    String name
     String displayName
     EntityReference owner
  
@@ -424,7 +428,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     }
 
     /** override this, adding to the collection, to supply fields whose value, if not null, should be included in the toString */
-    public Collection<String> toStringFieldsToInclude() { ['id', 'displayName'] }
+    public Collection<String> toStringFieldsToInclude() { ['id', 'name', 'displayName'] }
 
     
     // -------- POLICIES --------------------
@@ -547,7 +551,16 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
      * @see #invoke(Effector)
      */
     public <T> Task<T> invoke(Effector<T> eff, Map<String,?> parameters) {
-        executionContext.submit( { eff.call(this, parameters) }, description:"invocation of effector $eff" )
+        executionContext.submit(
+                { effector.call(this, parameters) } as Callable<T>,
+                description:"invocation of effector ${effector}")
+    }
+
+    public <T> Task<List<T>> invokeEffectorList(Collection<Entity> entities, Effector<T> effector, Map<String,?> parameters) {
+        if (!entities || entities.isEmpty()) return
+        List<Task> tasks = entities.collect { it.invoke(effector, parameters) }
+        ParallelTask invoke = new ParallelTask(tasks)
+        executionContext.submit(invoke)
     }
 
     /** field for use only by management plane, to record remote destination when proxied */

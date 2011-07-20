@@ -2,17 +2,21 @@ package brooklyn.util.task;
 
 import brooklyn.management.Task
 
-/** runs tasks in parallel, no guarantees of order of starting these;
- * return value here is a collection of the return value of supplied tasks, in that order */ 
+/**
+ * Runs {@link Task}s in parallel.
+ *
+ * No guarantees of order of starting the tasks, but the return value is a
+ * {@link Collection} of the return values of supplied tasks in the same
+ * order they were passed as arguments.
+ */
 public class ParallelTask extends CompoundTask {
-    
     public ParallelTask(Object... tasks) { super(tasks) }
     public ParallelTask(Collection<Object> tasks) { super(tasks) }
 
     protected Object runJobs() {
-        List<Object> result = []
+        NavigableMap<Integer,Object> results = [:] as TreeMap
         children.each { task -> if (!task.isSubmitted()) em.submit(task) }
-        children.each { task -> result.add(task.get()) }
-        return result
-    }    
+//        while (!children.every { task -> task.isDone() })
+        return children.collect { task -> task.get() }
+    }
 }

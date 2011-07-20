@@ -3,43 +3,65 @@ package brooklyn.management;
 import java.util.Set;
 import java.util.concurrent.Future;
 
-
 /**
- * Represents a unit of work for execution. When used with an ExecutionManager (or
- * ExecutionContext) it will record submission time, execution start time, end time, and any result. A task can be
- * submitted to the Execution{Manager,Context}, in which case it will be returned; or it may be created by submission
- * of a Runnable or Callable -- thereafter it can be treated just like a future.
+ * Represents a unit of work for execution.
+ *
+ * When used with an {@link ExecutionManager} or {@link ExecutionContext} it will record submission time,
+ * execution start time, end time, and any result. A task can be submitted to the ExecutionManager or
+ * ExecutionContext, in which case it will be returned, or it may be created by submission
+ * of a {@link Runnable} or {@link Callable} and thereafter it can be treated just like a {@link Future}.
  */
 public interface Task<T> extends TaskStub, Future<T> {
-
     public Set<Object> getTags();
     public long getSubmitTimeUtc();
     public long getStartTimeUtc();
     public long getEndTimeUtc();
     public String getDisplayName();
     public String getDescription();
-    
     public Task<?> getSubmittedByTask();
-    /** the thread where the task is running, if it is running */
+
+    /** The thread where the task is running, if it is running. */
     public Thread getThread();
 
-    /** whether task has been submitted; submitted tasks are normally expected to start running then complete,
-     * but unsubmitted tasks are sometimes passed around for someone else to submit them */
+    /**
+     * Whether task has been submitted
+     *
+     * Submitted tasks are normally expected to start running then complete,
+     * but unsubmitted tasks are sometimes passed around for someone else to submit them.
+     */
     public boolean isSubmitted();
-    /** whether task has started running; will remain true after normal completion or non-cancellation error;
-     * will be true on cancel iff the thread did actually start */
+
+    /**
+     * Whether task has started running.
+     *
+     * Will remain true after normal completion or non-cancellation error.
+     * will be true on cancel iff the thread did actually start.
+     */
     public boolean isBegun();
-    /** whether the task threw an error, including cancellation (implies isDone) */
+
+    /**
+     * Whether the task threw an error, including cancellation (implies {@link #isDone()})
+     */
     public boolean isError();
 
-    /** causes calling thread to block until the task is started */
+    /**
+     * Causes calling thread to block until the task is started.
+     */
     public void blockUntilStarted();
-    /** causes calling thread to block until the task is ended (normally or by cancellation or error, but without throwing error on cancellation or error) */
+
+    /**
+     * Causes calling thread to block until the task is ended.
+     *
+     * Either normally or by cancellation or error, but without throwing error on cancellation or error.
+     */
     public void blockUntilEnded();
-    
+
     public String getStatusSummary();
-    /** returns detailed status, suitable for a hover; plain-text format,
-     * with new-lines (and sometimes extra info) if multiline enabled */
+
+    /**
+     * Returns detailed status, suitable for a hover.
+     *
+     * Plain-text format, with new-lines (and sometimes extra info) if multiline enabled.
+     */
     public String getStatusDetail(boolean multiline);
-    
 }
