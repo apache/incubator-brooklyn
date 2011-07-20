@@ -53,8 +53,6 @@ class ClusteredJBossApp extends AbstractApplication {
                 }
                 println "Cluster stats: ${app.cluster.getAttribute(DynamicWebAppCluster.REQUEST_COUNT)} requests, " + 
                         "average ${app.cluster.getAttribute(DynamicWebAppCluster.REQUEST_AVERAGE)} per entity"
-                println "xxx"
-                 
             }
         }
         
