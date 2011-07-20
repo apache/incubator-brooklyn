@@ -120,8 +120,8 @@ public class AwsLocation extends AbstractLocation implements MachineProvisioning
                     .until( {
                         Statement statement = Statements.newStatementList(exec('date'))
                         ExecResponse response = computeService.runScriptOnNode(node.getId(), statement)
-                        log.warn "stdout: {}", response.output
-                        log.warn "stderr: {}", response.error
+                        LOG.warn "stdout: {}", response.output
+                        LOG.warn "stderr: {}", response.error
                         response.exitCode } )
                     .limitTimeTo(START_SSHABLE_TIMEOUT, TimeUnit.MILLISECONDS)
                     .run()
