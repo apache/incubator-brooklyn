@@ -12,24 +12,24 @@ Brooklyn.location = (function() {
         var result = Brooklyn.tabs.getDataTableSelectedRowData(tableId, event);
 
         // TODO why is this necessary? (location, etc should be in result!)
-        for(i in appLocations) {
+        for (i in appLocations) {
             if (appLocations[i].name === result.name) {
                 locationNumber = i;
                 moveToLoc();
                 break;
             }
         }
- 		$(event.target.parentNode).addClass('row_selected');
+ 	$(event.target.parentNode).addClass('row_selected');
     }
 
     function moveToLoc() {
         var settings = Brooklyn.tabs.getDataTable(tableId).fnSettings().aoData;
         for(row in settings) {
-       		$(settings[row].nTr).removeClass('row_selected');
-   		}
+       	    $(settings[row].nTr).removeClass('row_selected');
+   	}
 
         for(i in appLocations) {
-             appLocations[i].infowindow.close(map , appLocations[i].marker);
+            appLocations[i].infowindow.close(map , appLocations[i].marker);
         }
 
         map.setCenter(appLocations[locationNumber].location);
@@ -43,20 +43,20 @@ Brooklyn.location = (function() {
                 loc = results[0].geometry.location;
                 appLocations[i].location = loc;
                 var contentString = '<div id="content" style="height:80px">'+
-                '<h1>'+address+'</h1>'+
-                '<table border="1">'+
+                    '<h1>'+address+'</h1>'+
+                    '<table border="1">'+
                     '<tr>'+
-                        '<td>Address</td>'+
-                        '<td>Active</td>'+
-                        '<td>Resources</td>'+
+                    '<td>Address</td>'+
+                    '<td>Active</td>'+
+                    '<td>Resources</td>'+
                     '</tr>'+
                     '<tr>'+
-                        '<td>'+loctext+'</td>'+
-                        '<td>True</td>'+
-                        '<td>'+'resources'+'</td>'+
+                    '<td>'+loctext+'</td>'+
+                    '<td>True</td>'+
+                    '<td>'+'resources'+'</td>'+
                     '</tr>'+
-                '</table>'+
-                '</div>';
+                    '</table>'+
+                    '</div>';
                 var marker = new google.maps.Marker({
                     map: map,
                     position: loc ,
@@ -89,7 +89,7 @@ Brooklyn.location = (function() {
     // TODO call when set of locations changes?
     function updateLocations() {
         var myOptions = {
-            width:400,
+            width: 400,
             zoom: 7,
             mapTypeId: google.maps.MapTypeId.ROADMAP
         }
@@ -105,6 +105,7 @@ Brooklyn.location = (function() {
         if (id === 'location') {
             $('#map-canvas').width('98%');
             $('#map-canvas').height('500px');
+
             google.maps.event.trigger(map, 'resize');
             if(appLocations.length <= locationNumber) {
                 locationNumber = 0;
@@ -115,7 +116,7 @@ Brooklyn.location = (function() {
     function getLocations(e,id){
         if (typeof id !== 'undefined') {
             $.getJSON("locations?id=" + id, handleLocations).error(
-                function() {$(Brooklyn.eventBus).trigger('update_failed', "Could not get entity info to show in summary.");});
+                function() {$(Brooklyn.eventBus).trigger('update_failed', "Location view could not get locations.");});
         }
     }
 
@@ -124,7 +125,7 @@ Brooklyn.location = (function() {
         if (locations.length > 0) {
             for(i in locations){
                 var location = locations[i];
-                var jsonLoc = {name:locations[i],resources:'500'};
+                var jsonLoc = {name: locations[i], resources: '500'};
                 appLocations.push(jsonLoc);
             }
             updateLocations();
@@ -144,7 +145,3 @@ Brooklyn.location = (function() {
 })();
 
 $(document).ready(Brooklyn.location.init);
-
-
-
-
