@@ -5,7 +5,7 @@ import brooklyn.management.Task
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 
-/** Summary of a Brookln Task   */
+/** Summary of a Brooklyn Task   */
 public class TaskSummary {
 
     final String displayName;
@@ -24,8 +24,7 @@ public class TaskSummary {
     final boolean cancelled;
     final String currentStatus;
 
-    DateFormat formatter = new SimpleDateFormat("hh:mm:ss dd/MM/yyyy ")
-    Calendar date = Calendar.getInstance();
+    private DateFormat formatter = new SimpleDateFormat("hh:mm:ss dd/MM/yyyy")
 
     public TaskSummary(Task task) {
         this.displayName = task.displayName
@@ -33,12 +32,9 @@ public class TaskSummary {
 
         this.id = task.id
 
-        date.setTimeInMillis(task.submitTimeUtc)
-        this.submitTimeUtc = formatter.format(date.getTime())
-        date.setTimeInMillis(task.startTimeUtc)
-        this.startTimeUtc = formatter.format(date.getTime())
-        date.setTimeInMillis(task.endTimeUtc)
-        this.endTimeUtc = formatter.format(date.getTime())
+        this.submitTimeUtc = formatter.format(new Date(task.submitTimeUtc))
+        this.startTimeUtc = formatter.format(new Date(task.startTimeUtc))
+        this.endTimeUtc = formatter.format(new Date(task.endTimeUtc))
 
         this.submittedByTask = task.submittedByTask ? task.submittedByTask.id : null
         this.statusDetail = task.getStatusDetail(false)
