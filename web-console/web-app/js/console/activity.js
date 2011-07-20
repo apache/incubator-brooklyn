@@ -2,8 +2,16 @@ Brooklyn.activity = (function(){
 
     // Config
     var id = '#activity-data';
-    var aoColumns = [ { "mDataProp": "submitTimeUtc", "sTitle": "Submit time", "sWidth":"10%"  },
-                      { "mDataProp": "statusDetail", "sTitle": "Status", "sWidth":"90%"  }];
+    var aoColumns = [ { "mDataProp": "name", "sTitle": "Name", "sWidth":"10%" },
+                      { "mDataProp": "description", "sTitle": "Description", "sWidth":"10%" },
+                      { "mDataProp": "submitTimeUtc", "sTitle": "Submit time", "sWidth":"10%" },
+                      { "mDataProp": "startTimeUtc", "sTitle": "Start time", "sWidth":"10%" },
+                      { "mDataProp": "endTimeUtc", "sTitle": "End time", "sWidth":"10%" },
+                      { "mDataProp": "statusDetail", "sTitle": "Status", "sWidth":"10%" },
+                      { "mDataProp": "submitted", "sTitle": "Submitted", "sWidth":"10%" },
+                      { "mDataProp": "done", "sTitle": "Done", "sWidth":"10%" },
+                      { "mDataProp": "error", "sTitle": "Error", "sWidth":"10%" },
+                      { "mDataProp": "cancelled", "sTitle": "Cancelled", "sWidth":"10%" }];
 
     function updateTable(json){
         Brooklyn.tabs.getDataTable(id, ".", aoColumns, updateLog, json);
@@ -28,11 +36,7 @@ Brooklyn.activity = (function(){
         var result = Brooklyn.tabs.getDataTableSelectedRowData(id, event);
         if(result) {
             var logBox=document.getElementById("logbox");
-            logBox.value+="######### NEW LOG ##########"+
-            "--- Console Log Output for "+result.name+" ---"+
-            " activity last initiated on "+result.activitydate+
-            " start of process status checked "+
-            "log,log,log";
+            logBox.value=result.statusDetailMultiLine;
         }
     }
 
@@ -51,10 +55,7 @@ Brooklyn.activity = (function(){
     }
 
     return {
-        init: init,
-        selectLog: selectLog,
-        clearLog: clearLog,
-        updateLog: updateLog
+        init: init
     };
 
 })();
