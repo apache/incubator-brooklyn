@@ -112,9 +112,13 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
     void onStarted(NodeSummary nodeSummary) {
         this.nodeId = nodeSummary.getNodeId();
     }
-    
+
     @Override
     public void start(Collection<? extends Location> locs) {
+        startInLocation(locs)
+    }
+    
+    public void startInLocation(Collection<? extends Location> locs) {
         if (locs.isEmpty()) throw new IllegalArgumentException("Locations empty; cannot start monterey node");
         Location loc = locs.iterator().next();
         

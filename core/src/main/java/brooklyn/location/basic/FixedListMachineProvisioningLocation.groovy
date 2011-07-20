@@ -3,6 +3,7 @@ package brooklyn.location.basic
 import java.util.Collection
 import java.util.Map
 
+import brooklyn.location.Location;
 import brooklyn.location.MachineLocation
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.NoMachinesAvailableException
@@ -33,6 +34,20 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
         available = new ArrayList(machines);
         inUse = new ArrayList();
         available.each { it.setParentLocation(this); }
+    }
+
+    protected void addChildLocation(Location child) {
+        super.addChildLocation(child);
+        available.add(child);
+    }
+
+    protected boolean removeChildLocation(Location child) {
+        if (!available.remove(child)) {
+            if (inUse.contains(child)) {
+                throw new IllegalStateException("Child location $child is in use; cannot remove from $this");
+            }
+        }
+        return super.removeChildLocation(child);
     }
 
     public T obtain(Map<String,? extends Object> flags) {

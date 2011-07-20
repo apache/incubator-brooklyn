@@ -1,6 +1,5 @@
 package com.cloudsoftcorp.monterey.brooklyn.entity;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
 import java.net.URL;
@@ -76,9 +75,7 @@ import com.cloudsoftcorp.util.exception.ExceptionUtils;
 import com.cloudsoftcorp.util.exception.RuntimeInterruptedException;
 import com.cloudsoftcorp.util.javalang.ClassLoadingContext;
 import com.cloudsoftcorp.util.javalang.OsgiClassLoadingContextFromBundle;
-import com.cloudsoftcorp.util.osgi.BundleSet;
 import com.cloudsoftcorp.util.web.client.CredentialsConfig;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 
@@ -97,18 +94,11 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
     private static final String HELLO_CLOUD_CLIENT_FACTORY_NAME = "com.cloudsoftcorp.monterey.example.noapisimple.HelloCloudClientFactory";
     private static final String HELLO_CLOUD_SERVICE_FACTORY_NAME = "com.cloudsoftcorp.monterey.example.noapisimple.HelloCloudServiceFactory";
     private static final URL HELLO_CLOUD_BUNDLE_URL = MontereyBrooklynProvisioningTest.class.getClassLoader().getResource(APP_BUNDLE_RESOURCE_PATH);
-    private static final BundleSet HELLO_CLOUD_BUNDLE_SET;
     static {
         if (HELLO_CLOUD_BUNDLE_URL == null) {
             throw new RuntimeException("Hello cloud bundle not found: "+APP_BUNDLE_RESOURCE_PATH);
         }
-        try {
-            HELLO_CLOUD_BUNDLE_SET = BundleSet.fromUrls(Collections.singleton(HELLO_CLOUD_BUNDLE_URL));
-        } catch (IOException e) {
-            throw Throwables.propagate(e);
-        }
     }
-
     
     private static final long TIMEOUT = 30*1000;
     
@@ -138,7 +128,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         app = new SimpleApp();
         montereyNetwork = new MontereyNetwork();
         montereyNetwork.setOwner(app);
-        montereyNetwork.setInstallDir(MONTEREY_MANAGEMENT_NODE_PATH);
+        montereyNetwork.setManagementNodeInstallDir(MONTEREY_MANAGEMENT_NODE_PATH);
         MontereyNetworkConfig config = new MontereyNetworkConfig();
         montereyNetwork.setConfig(config);
         montereyNetwork.setWebUsersCredentials(Collections.singleton(adminCredential));
@@ -164,9 +154,10 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
     
     @Test
     public void testStartMontereyManagementNodeAndDeployApp() throws Exception {
-        montereyNetwork.startInLocation(localhost);
-        montereyNetwork.deployCloudEnvironment(newSimulatorCloudEnvironment());
-        montereyNetwork.deployApplication(newDummyMontereyDeploymentDescriptor(), BundleSet.EMPTY);
+        montereyNetwork.setCloudEnvironment(newSimulatorCloudEnvironment());
+        montereyNetwork.setAppDescriptor(newDummyMontereyDeploymentDescriptor());
+        montereyNetwork.setAppBundles(Collections.<URL>emptySet());
+        montereyNetwork.start(Collections.singleton(localhost));
         
         assertMontereyRunningWithApp(montereyNetwork);
     }
@@ -182,9 +173,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
 
     @Test
     public void testAddingSegmentsCreatesBrooklynEntities() throws Throwable {
-        montereyNetwork.startInLocation(localhost);
-        montereyNetwork.deployCloudEnvironment(newSimulatorCloudEnvironment());
-        montereyNetwork.deployApplication(newDummyMontereyDeploymentDescriptor(), BundleSet.EMPTY);
+        rolloutManagementPlane();
 
         Map<String,SegmentSummary> expectedSegments = ImmutableMap.<String,SegmentSummary>builder()
                 .put("a", SegmentSummary.Factory.newInstance("a"))
@@ -316,10 +305,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
     
     @Test
     public void testBrooklynEntityRolloutEffector() throws Throwable {
-        // Start the management plane (with "simulator" embedded network nodes)
-        montereyNetwork.startInLocation(localhost);
-        montereyNetwork.deployCloudEnvironment(newSimulatorCloudEnvironment());
-        montereyNetwork.deployApplication(newHelloCloudMontereyDeploymentDescriptor(), HELLO_CLOUD_BUNDLE_SET);
+        rolloutManagementPlane();
 
         Dmn1NetworkInfoWebProxy networkInfo = newMontereyNetworkInfo();
         ProvisionerWebProxy provisioner = newMontereyProvisioner();
@@ -349,10 +335,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
 
     @Test
     public void testNodesAndSegmentsReportWorkrate() throws Throwable {
-        // Create management plane and deploy app
-        montereyNetwork.startInLocation(localhost);
-        montereyNetwork.deployCloudEnvironment(newSimulatorCloudEnvironment());
-        montereyNetwork.deployApplication(newHelloCloudMontereyDeploymentDescriptor(), HELLO_CLOUD_BUNDLE_SET);
+        rolloutManagementPlane();
 
         Dmn1NetworkInfoWebProxy networkInfo = newMontereyNetworkInfo();
         ProvisionerWebProxy provisioner = newMontereyProvisioner();
@@ -428,9 +411,11 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
 
     private void rolloutManagementPlane() throws Throwable {
         // Start the management plane (with "simulator" embedded network nodes)
-        montereyNetwork.startInLocation(localhost);
-        montereyNetwork.deployCloudEnvironment(newSimulatorCloudEnvironment());
-        montereyNetwork.deployApplication(newHelloCloudMontereyDeploymentDescriptor(), HELLO_CLOUD_BUNDLE_SET);
+        montereyNetwork.setCloudEnvironment(newSimulatorCloudEnvironment());
+        montereyNetwork.setAppDescriptor(newHelloCloudMontereyDeploymentDescriptor());
+        montereyNetwork.setAppBundles(Collections.singleton(HELLO_CLOUD_BUNDLE_URL));
+        
+        montereyNetwork.start(Collections.singleton(localhost));
     }
     
     private Map<NodeId, NodeSummary> rolloutNodes(MontereyActiveLocation loc, int lpp, int mr, int m, int tp, int spare) throws Throwable {

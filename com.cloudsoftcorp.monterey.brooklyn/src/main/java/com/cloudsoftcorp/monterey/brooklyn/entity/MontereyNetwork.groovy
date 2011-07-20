@@ -33,7 +33,6 @@ import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.NoMachinesAvailableException
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.internal.BrooklynSystemProperties
-import brooklyn.util.internal.EntityStartUtils
 
 import com.cloudsoftcorp.monterey.clouds.NetworkId
 import com.cloudsoftcorp.monterey.clouds.basic.DeploymentUtils
@@ -44,6 +43,7 @@ import com.cloudsoftcorp.monterey.location.api.MontereyActiveLocation
 import com.cloudsoftcorp.monterey.network.control.api.Dmn1NetworkInfo
 import com.cloudsoftcorp.monterey.network.control.api.Dmn1NodeType
 import com.cloudsoftcorp.monterey.network.control.api.NodeSummary
+import com.cloudsoftcorp.monterey.network.control.deployment.DescriptorLoader
 import com.cloudsoftcorp.monterey.network.control.plane.GsonSerializer
 import com.cloudsoftcorp.monterey.network.control.plane.web.DeploymentWebProxy
 import com.cloudsoftcorp.monterey.network.control.plane.web.Dmn1NetworkInfoWebProxy
@@ -101,8 +101,14 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     
     private final Gson gson;
 
-    private String installDir;
-    private MontereyNetworkConfig config;
+    private String managementNodeInstallDir;
+    private String name;
+    private Collection<URL> appBundles;
+    private URL appDescriptorUrl;
+    private MontereyDeploymentDescriptor appDescriptor;
+    private CloudEnvironmentDto cloudEnvironmentDto = CloudEnvironmentDto.EMPTY;
+
+    private MontereyNetworkConfig config = new MontereyNetworkConfig();
     private Collection<UserCredentialsConfig> webUsersCredentials;
     private CredentialsConfig webAdminCredential;
     private NetworkId networkId = NetworkId.Factory.newId();
@@ -125,8 +131,28 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         gson = gsonSerializer.getGson();
     }
 
-    public void setInstallDir(String val) {
-        this.installDir = val;
+    public void setName(String val) {
+        this.name = name
+    }
+    
+    public void setAppBundles(Collection<URL> val) {
+        this.appBundles = new ArrayList<String>(val)
+    }
+    
+    public void setAppDescriptorUrl(URL val) {
+        this.appDescriptorUrl = val
+    }
+    
+    public void setAppDescriptor(MontereyDeploymentDescriptor val) {
+        this.appDescriptor = val
+    }
+    
+    public void setCloudEnvironment(CloudEnvironmentDto val) {
+        cloudEnvironmentDto = val
+    }
+        
+    public void setManagementNodeInstallDir(String val) {
+        this.managementNodeInstallDir = val;
     }
 
     public void setConfig(MontereyNetworkConfig val) {
@@ -209,21 +235,19 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     }
     
     @Override
-    public void start(Collection<? extends Location> locs) {
-        // FIXME Work in progress...
-        EntityStartUtils.startEntity this, locs
-        LOG.debug "Monterey network started... management-url is {}", this.properties['ManagementUrl']
-    }
-    
-    @Override
     public void restart() {
         throw new UnsupportedOperationException();
     }
-        
+    
+    @Override
+    public void start(Collection<? extends Location> locs) {
+        startInLocation locs
+    }
+
     public void startInLocation(Collection<Location> locs) {
         // TODO how do we deal with different types of location?
         
-        SshMachineLocation machineLoc = locs.find({ it instanceof MachineProvisioningLocation });
+        SshMachineLocation machineLoc = locs.find({ it instanceof SshMachineLocation });
         MachineProvisioningLocation provisioningLoc = locs.find({ it instanceof MachineProvisioningLocation });
         if (machineLoc) {
             startInLocation(machineLoc)
@@ -256,22 +280,22 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         String username = System.getenv("USER");
 
         WebConfig web = new WebConfig(true, config.getMontereyWebApiPort(), config.getMontereyWebApiProtocol(), null);
-        web.setSslKeystore(installDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_SSL_KEYSTORE_RELATIVE_PATH);
+        web.setSslKeystore(managementNodeInstallDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_SSL_KEYSTORE_RELATIVE_PATH);
         web.setSslKeystorePassword(config.getMontereyWebApiSslKeystorePassword());
         web.setSslKeyPassword(config.getMontereyWebApiSslKeyPassword());
         File webConf = DeploymentUtils.toWebConfFile(web);
 
         try {
-            host.copyTo(webUsersConfFile, installDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_WEBUSERS_FILE_RELATIVE_PATH);
+            host.copyTo(webUsersConfFile, managementNodeInstallDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_WEBUSERS_FILE_RELATIVE_PATH);
 
             if (config.getLoggingFileOverride() != null) {
-                host.copyTo(config.getLoggingFileOverride(), installDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_LOGGING_FILE_OVERRIDE_RELATIVE_PATH);
-                host.copyTo(config.getLoggingFileOverride(), installDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_LOGGING_FILE_RELATIVE_PATH);
+                host.copyTo(config.getLoggingFileOverride(), managementNodeInstallDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_LOGGING_FILE_OVERRIDE_RELATIVE_PATH);
+                host.copyTo(config.getLoggingFileOverride(), managementNodeInstallDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_LOGGING_FILE_RELATIVE_PATH);
             }
 
-            host.copyTo(webConf, installDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_WEB_CONF_FILE_RELATIVE_PATH);
+            host.copyTo(webConf, managementNodeInstallDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_WEB_CONF_FILE_RELATIVE_PATH);
             if (config.getMontereyWebApiProtocol().equals(WebServer.HTTPS)) {
-                host.copyTo(config.getMontereyWebApiSslKeystore(), installDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_SSL_KEYSTORE_RELATIVE_PATH);
+                host.copyTo(config.getMontereyWebApiSslKeystore(), managementNodeInstallDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_SSL_KEYSTORE_RELATIVE_PATH);
             }
 
             this.managementUrl = new URL(config.getMontereyWebApiProtocol()+"://"+host.getAddress().getHostName()+":"+config.getMontereyWebApiPort());
@@ -280,16 +304,16 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
             // Convenient for testing: create the management-node directly in-memory, rather than starting it in a separate process
             // Please leave this commented out code here, to make subsequent debugging easier!
             // Or you could refactor to have a private static final constant that switches the behaviour?
-            //            MainArguments mainArgs = new MainArguments(new File(installDir), null, null, null, null, null, networkId.getId());
+            //            MainArguments mainArgs = new MainArguments(new File(managementNodeInstallDir), null, null, null, null, null, networkId.getId());
             //            new ManagementNodeStarter(mainArgs).start();
 
             host.run(out: System.out,
-                    installDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_START_SCRIPT_RELATIVE_PATH+
+                    managementNodeInstallDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_START_SCRIPT_RELATIVE_PATH+
                     " -address "+host.getAddress().getHostName()+
                     " -port "+Integer.toString(config.getMontereyNodePort())+
                     " -networkId "+networkId.getId()+
                     " -key "+networkId.getId()+
-                    " -webConfig "+installDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_WEB_CONF_FILE_RELATIVE_PATH+";"+
+                    " -webConfig "+managementNodeInstallDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_WEB_CONF_FILE_RELATIVE_PATH+";"+
                     "exit");
 
             PingWebProxy pingWebProxy = new PingWebProxy(managementUrl.toString(), webAdminCredential,
@@ -308,9 +332,23 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
             setAttribute MANAGEMENT_URL, managementUrl
             setAttribute NETWORK_ID, networkId.getId()
 
-            monitoringTask = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay({ updateAll() }, POLL_PERIOD, POLL_PERIOD, TimeUnit.MILLISECONDS)
+            // TODO want to call executionContext.scheduleAtFixedRate or some such
+            monitoringTask = Executors.newScheduledThreadPool(1).scheduleAtFixedRate({ updateAll() }, POLL_PERIOD, POLL_PERIOD, TimeUnit.MILLISECONDS)
 
             LOG.info("Created new monterey network: "+connectionDetails);
+
+            if (!appDescriptor) {
+                if (appDescriptorUrl) {
+                    appDescriptor = DescriptorLoader.loadDescriptor(appDescriptorUrl);
+                }
+            }
+            
+            if (appDescriptor) {
+                deployCloudEnvironment(cloudEnvironmentDto);
+                
+                BundleSet bundleSet = (appBundles) ? BundleSet.fromUrls(appBundles) : BundleSet.EMPTY;
+                deployApplication(appDescriptor, bundleSet);
+            }
 
         } catch (Exception e) {
             LOG.log(Level.WARNING, "Error creating monterey network", e);
@@ -395,7 +433,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     }
 
     private void shutdownManagementNodeProcess(MontereyNetworkConfig config, SshMachineLocation host, NetworkId networkId) {
-        String killScript = installDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_KILL_SCRIPT_RELATIVE_PATH;
+        String killScript = managementNodeInstallDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_KILL_SCRIPT_RELATIVE_PATH;
         try {
             LOG.info("Releasing management node on "+toString());
             host.run(out: System.out,
