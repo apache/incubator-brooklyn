@@ -1,8 +1,7 @@
 package com.cloudsoftcorp.monterey.brooklyn.entity
 
-import java.util.Map
+import java.util.concurrent.Future
 
-import brooklyn.entity.Entity
 import brooklyn.entity.trait.Balanceable
 import brooklyn.location.Location
 
@@ -27,6 +26,7 @@ public class MediatorGroup extends MontereyTypedGroup implements Balanceable {
 
     public void moveSegment(String segmentId, MediatorNode destination) {
         Dmn1PlumberInternalAsync plumber = new PlumberWebProxy(connectionDetails.getManagementUrl(), gson, connectionDetails.getWebApiAdminCredential());
-        plumber.migrateSegment(segmentId, destination.getNodeId());
+        Future<?> future = plumber.migrateSegment(segmentId, destination.getNodeId());
+        future.get();
     }
 }

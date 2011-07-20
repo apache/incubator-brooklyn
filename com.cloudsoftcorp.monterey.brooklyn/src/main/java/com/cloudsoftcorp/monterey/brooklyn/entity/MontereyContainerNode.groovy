@@ -4,6 +4,7 @@ import com.cloudsoftcorp.monterey.node.api.PropertiesContext;
 import java.io.IOException
 import java.net.InetSocketAddress
 import java.util.Collection
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.logging.Level
 import java.util.logging.Logger
 
@@ -50,6 +51,7 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
     private String creationId;
     private NodeId nodeId;
     private Location location;
+    private final AtomicBoolean running = new AtomicBoolean(false)
     
     // TODO use these or delete them?
     private File truststore = null;
@@ -64,8 +66,12 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
     private final Gson gson;
 
     MontereyContainerNode(MontereyNetworkConnectionDetails connectionDetails) {
+        this(connectionDetails, LanguageUtils.newUid());
+    }
+    
+    MontereyContainerNode(MontereyNetworkConnectionDetails connectionDetails, String creationId) {
         this.connectionDetails = connectionDetails;
-        this.creationId = LanguageUtils.newUid();
+        this.creationId = creationId;
         ClassLoadingContext classloadingContext = ClassLoadingContext.Defaults.getDefaultClassLoadingContext();
         GsonSerializer gsonSerializer = new GsonSerializer(classloadingContext);
         gson = gsonSerializer.getGson();
@@ -87,6 +93,13 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
         return node;
     }
 
+    public void dispose() {
+        synchronized (running) {
+            running.set(false);
+            running.notifyAll();
+        }
+    }
+    
     public void connectToExisting(NodeSummary nodeSummary, Location loc) {
         this.nodeId = nodeSummary.getNodeId();
         this.creationId = nodeSummary.getCreationUid();
@@ -100,23 +113,30 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
         this.nodeId = nodeSummary.getNodeId();
     }
     
+    @Override
     public void start(Collection<? extends Location> locs) {
         if (locs.isEmpty()) throw new IllegalArgumentException("Locations empty; cannot start monterey node");
         Location loc = locs.iterator().next();
         
         if (loc instanceof SshMachineLocation) {
-            startOnHost((SshMachineLocation)loc);
+            startInLocation((SshMachineLocation)loc);
         } else {
             throw new UnsupportedOperationException("Unsupported location type "+loc);
         }
     }
 
+    @Override
+    public void restart() {
+        throw new UnsupportedOperationException();
+    }
+        
+    @Override
     public void stop() {
         release();
     }
 
-    // FIXME Work in progress; untested code that won't work because fields aren't initialized!
-    public void startOnHost(SshMachineLocation host) {
+    public void startInLocation(SshMachineLocation host) {
+        running.set(true);
         locations.add(host);
         
         LOG.info("Creating new monterey node "+creationId+" on "+host);
@@ -147,6 +167,8 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
                 }
                 host.run(out: System.out, args);
                 
+                waitForStartOrFailed();
+                
             } catch (IllegalStateException e) {
               throw e; // TODO throw as something nicer?
             } catch (IOException e) {
@@ -164,14 +186,27 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
         }
     }
 
+    private void waitForStartOrFailed() {
+        synchronized (running) {
+            while (running.get() && nodeId == null) {
+                running.wait();
+            }
+        }
+    }
+    
     public void kill() {
+        synchronized (running) {
+            running.set(false);
+            running.notifyAll();
+        }
+        
         Location loc = (locations) ? locations.iterator().next() : null;
         if (loc instanceof SshMachineLocation) {
             kill((SshMachineLocation)loc);
         } else if (loc == null) {
             LOG.info("No-op killing monterey network node; no location: creationId=$creationId");
         } else {
-            throw new UnsupportedOperationException("Unsupported location type, $locations");
+            LOG.warning("No-op killing monterey network node; unsupported location type $locations, creationId=$creationId");
         }
     }
     
@@ -228,6 +263,13 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
     }
 
     void updateContents(NodeSummary nodeSummary, Collection<NodeId> downstreamNodes) {
+        if (!nodeId) {
+            synchronized (running) {
+                nodeId = nodeSummary.nodeId
+                running.notifyAll();
+            }
+        }
+        
         updateNodeType(nodeSummary);
         node?.updateTopology(nodeSummary, (downstreamNodes ?: []));
     }

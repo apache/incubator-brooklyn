@@ -29,6 +29,8 @@ import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.trait.Startable
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.Location
+import brooklyn.location.MachineProvisioningLocation
+import brooklyn.location.NoMachinesAvailableException
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.internal.BrooklynSystemProperties
 import brooklyn.util.internal.EntityStartUtils
@@ -63,6 +65,7 @@ import com.cloudsoftcorp.util.web.server.WebConfig
 import com.cloudsoftcorp.util.web.server.WebServer
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.ImmutableMap
+import com.google.common.collect.ImmutableSet
 import com.google.gson.Gson
 
 /**
@@ -74,9 +77,13 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
 
     /*
      * FIXME Deal with converting from monterey location to Brooklyn location properly
-     * FIXME Startable: need to use brooklyn to provision the original network...
      * FIXME Declare things as effectors
      * FIXME How will this entity be moved? How will its sub-entities be wired back up?
+     * TODO  Should this be called MontereyManagementPlane?
+     *       Currently starting in a list of locations is confusing - what if some locations 
+     *       are machines and others are ProvisioningLocatinos?
+     * FIXME Should the provisioning script create and add the cluster? Rather than creating one
+     *       per known location?
      */
     
     private final Logger LOG = Loggers.getLogger(MontereyNetwork.class);
@@ -106,8 +113,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     private String applicationName;
 
     private final LocationRegistry locationRegistry = new LocationRegistry();
-    private final Map<NodeId,MontereyContainerNode> nodes = new ConcurrentHashMap<NodeId,MontereyContainerNode>();
-    private final Map<String,MontereyContainerNode> pendingProvisionNodes = new ConcurrentHashMap<String,MontereyContainerNode>();
+    private final Map<String,MontereyContainerNode> nodesByCreationId = new ConcurrentHashMap<String,MontereyContainerNode>();
     private final Map<String,Segment> segments = new ConcurrentHashMap<String,Segment>();
     private final Map<Location,Map<Dmn1NodeType,MontereyTypedGroup>> clustersByLocationAndType = new ConcurrentHashMap<Location,Map<Dmn1NodeType,MontereyTypedGroup>>();
     private final Map<Dmn1NodeType,MontereyTypedGroup> typedFabrics = [:];
@@ -145,13 +151,13 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         return managementUrl;
     }
 
-    public Map<NodeId,MontereyContainerNode> getContainerNodes() {
-        return ImmutableMap.copyOf(nodes);
+    public Collection<MontereyContainerNode> getContainerNodes() {
+        return ImmutableSet.copyOf(nodesByCreationId.values());
     }
 
     public Map<NodeId,AbstractMontereyNode> getMontereyNodes() {
         Map<NodeId,AbstractMontereyNode> result = [:]
-        nodes.values().each {
+        nodesByCreationId.values().each {
             result.put(it.getNodeId(), it.getContainedMontereyNode());
         }
         return Collections.unmodifiableMap(result);
@@ -198,17 +204,43 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         return locationRegistry;
     }
 
+    public void dispose() {
+        if (monitoringTask != null) monitoringTask.cancel(true);
+    }
+    
+    @Override
     public void start(Collection<? extends Location> locs) {
         // FIXME Work in progress...
         EntityStartUtils.startEntity this, locs
         LOG.debug "Monterey network started... management-url is {}", this.properties['ManagementUrl']
     }
     
-    public void dispose() {
-        if (monitoringTask != null) monitoringTask.cancel(true);
+    @Override
+    public void restart() {
+        throw new UnsupportedOperationException();
+    }
+        
+    public void startInLocation(Collection<Location> locs) {
+        // TODO how do we deal with different types of location?
+        
+        SshMachineLocation machineLoc = locs.find({ it instanceof MachineProvisioningLocation });
+        MachineProvisioningLocation provisioningLoc = locs.find({ it instanceof MachineProvisioningLocation });
+        if (machineLoc) {
+            startInLocation(machineLoc)
+        } else if (provisioningLoc) {
+            startInLocation(provisioningLoc)
+        } else {
+            throw new IllegalArgumentException("Unsupported location types creating monterey network, $locations")
+        }
     }
 
-    public void startOnHost(SshMachineLocation host) {
+    public void startInLocation(MachineProvisioningLocation loc) {
+        SshMachineLocation machine = loc.obtain()
+        if (machine == null) throw new NoMachinesAvailableException(loc)
+        startInLocation(machine)
+    }
+
+    public void startInLocation(SshMachineLocation host) {
         /*
          * TODO: Assumes the following are already set on SshMachine:
          * sshAddress
@@ -311,31 +343,41 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         boolean result = deployer.deployApplication(descriptor, bundles);
     }
 
+    public MontereyContainerNode provisionNode(Collection<Location> locs) {
+        if (!locs) {
+            throw new IllegalArgumentException("No locations supplied when provisioning nodes, locs=$locs")
+        }
+        provisionNode(locs.iterator().next())
+    }
+    
     public MontereyContainerNode provisionNode(Location loc) {
         MontereyContainerNode node = new MontereyContainerNode(connectionDetails);
-        pendingProvisionNodes.put(node.creationId, node);
+        nodesByCreationId.put(node.creationId, node);
         addOwnedChild(node);
         node.start([loc]);
+        node
     }
     
     public void releaseAllNodes() {
         // TODO Releasing in the right order; but what if revert/rollout is happening concurrently?
         //      Can we delegate to management node, or have brooklyn more aware of what's going on?
+        // TODO Release is currently being done sequentially...
         
         List<MontereyContainerNode> torelease = []
-        findNodesOfType(Dmn1NodeType.SATELLITE_BOT).each { if (nodes.get(it)) torelease.add(nodes.get(it)) }
-        findNodesOfType(Dmn1NodeType.LPP).each { if (nodes.get(it)) torelease.add(nodes.get(it)) }
-        findNodesOfType(Dmn1NodeType.M).each { if (nodes.get(it)) torelease.add(nodes.get(it)) }
-        findNodesOfType(Dmn1NodeType.MR).each { if (nodes.get(it)) torelease.add(nodes.get(it)) }
-        findNodesOfType(Dmn1NodeType.TP).each { if (nodes.get(it)) torelease.add(nodes.get(it)) }
-        findNodesOfType(Dmn1NodeType.SPARE).each { if (nodes.get(it)) torelease.add(nodes.get(it)) }
-        relativeComplement(pendingProvisionNodes.values(), torelease).each { torelease.add(torelease) }
+        findNodesOfType(Dmn1NodeType.SATELLITE_BOT).each { torelease.add(it.owner) }
+        findNodesOfType(Dmn1NodeType.LPP).each { torelease.add(it.owner) }
+        findNodesOfType(Dmn1NodeType.M).each { torelease.add(it.owner) }
+        findNodesOfType(Dmn1NodeType.MR).each { torelease.add(it.owner) }
+        findNodesOfType(Dmn1NodeType.TP).each { torelease.add(it.owner) }
+        findNodesOfType(Dmn1NodeType.SPARE).each { torelease.add(it.owner) }
+        relativeComplement(nodesByCreationId.values(), torelease).each { torelease.add(torelease) }
         
         for (MontereyContainerNode node : torelease) {
             node.release();
         }
     }
 
+    @Override
     public void stop() {
         // TODO Guard so can only shutdown if network nodes are not running?
         if (host == null) {
@@ -407,12 +449,9 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         }
     }
     
+//    private NodeSummary 
     private void updateTopology() {
         Dmn1NetworkInfo networkInfo = new Dmn1NetworkInfoWebProxy(connectionDetails.getManagementUrl(), gson, connectionDetails.getWebApiAdminCredential());
-        Map<NodeId, NodeSummary> nodeSummaries = networkInfo.getNodeSummaries();
-        Map<String, SegmentSummary> segmentSummaries = networkInfo.getSegmentSummaries();
-        Map<String, NodeId> segmentAllocations = networkInfo.getSegmentAllocations();
-        Map<NodeId,Collection<NodeId>> downstreamNodes = networkInfo.getTopology().getAllTargets();
         Collection<MontereyActiveLocation> montereyLocations = networkInfo.getActiveLocations();
         Collection<Location> locations = montereyLocations.collect { locationRegistry.getConvertedLocation(it) }
         
@@ -423,72 +462,9 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         }
         
         updateFabricTopologies();
-        
         updateClusterTopologies();
-        
-        // Create/destroy nodes that have been added/removed
-        Collection<NodeId> newNodes = []
-        Collection<NodeId> removedNodes = []
-        newNodes.addAll(nodeSummaries.keySet()); newNodes.removeAll(nodes.keySet());
-        removedNodes.addAll(nodes.keySet()); removedNodes.removeAll(nodeSummaries.keySet());
-
-        newNodes.each {
-            NodeSummary nodeSummary = nodeSummaries.get(it);
-            MontereyActiveLocation montereyLocation = nodeSummary.getMontereyActiveLocation();
-            Location location = locationRegistry.getConvertedLocation(montereyLocation);
-            MontereyContainerNode containerNode;
-            if (pendingProvisionNodes.containsKey(nodeSummary.getCreationUid())) {
-                containerNode = pendingProvisionNodes.remove(nodeSummary.getCreationUid());
-                containerNode.onStarted(nodeSummary)
-            } else {
-                containerNode = new MontereyContainerNode(connectionDetails);
-                containerNode.connectToExisting(nodeSummary, location)
-                addOwnedChild(containerNode);
-            }
-            nodes.put(it, containerNode);
-        }
-
-        removedNodes.each {
-            MontereyContainerNode node = nodes.get(it);
-            if (node != null) {
-                node.dispose();
-                removeOwnedChild(node);
-            }
-        }
-
-
-        // Create/destroy segments
-        Collection<NodeId> newSegments = []
-        Collection<NodeId> removedSegments = []
-        newSegments.addAll(segmentSummaries.keySet()); newSegments.removeAll(segments.keySet());
-        removedSegments.addAll(segments.keySet()); removedSegments.removeAll(segmentSummaries.keySet());
-
-        newSegments.each {
-            Segment segment = new Segment(connectionDetails, it);
-            addOwnedChild(segment);
-            this.@segments.put(it, segment);
-        }
-
-        removedSegments.each {
-            Segment segment = this.@segments.remove(it);
-            if (segment != null) {
-                segment.dispose();
-                removeOwnedChild(segment);
-            }
-        }
-
-        // Notify segments of their mediator
-        segments.values().each {
-            String segmentId = it.segmentId()
-            SegmentSummary summary = segmentSummaries.get(segmentId);
-            NodeId mediator = segmentAllocations.get(segmentId);
-            it.updateTopology(summary, mediator);  
-        }
-        
-        // Notify "container nodes" (i.e. BasicNode in monterey classes jargon) of what node-types are running there
-        nodeSummaries.values().each {
-            nodes.get(it.getNodeId())?.updateContents(it, downstreamNodes.get(it.getNodeId()));
-        }
+        updateNodeTopologies();
+        updateSegmentTopologies();
     }
 
     private void updateFabricTopologies() {
@@ -536,6 +512,79 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         }
     }
     
+    private void updateNodeTopologies() {
+        Dmn1NetworkInfo networkInfo = new Dmn1NetworkInfoWebProxy(connectionDetails.getManagementUrl(), gson, connectionDetails.getWebApiAdminCredential());
+        Map<NodeId, NodeSummary> nodeSummaries = networkInfo.getNodeSummaries();
+        Map<NodeId,Collection<NodeId>> downstreamNodes = networkInfo.getTopology().getAllTargets();
+        
+        // Create/destroy nodes that have been added/removed
+        Collection<NodeSummary> newNodes = []
+        Collection<String> removedNodes = []
+        nodeSummaries.values().each {
+            if (!nodesByCreationId.containsKey(it.creationUid)) {
+                newNodes.add(it)
+            }
+            removedNodes.remove(it.creationUid)
+        }
+
+        newNodes.each {
+            // Node started externally
+            MontereyActiveLocation montereyLocation = it.getMontereyActiveLocation();
+            Location location = locationRegistry.getConvertedLocation(montereyLocation);
+            MontereyContainerNode containerNode = new MontereyContainerNode(connectionDetails, it.creationUid);
+            containerNode.connectToExisting(it, location)
+            addOwnedChild(containerNode);
+            nodesByCreationId.put(it.creationUid, containerNode);
+        }
+
+        removedNodes.each {
+            MontereyContainerNode node = nodesByCreationId.remove(it)
+            if (node != null) {
+                node.dispose();
+                removeOwnedChild(node);
+            }
+        }
+        
+        // Notify "container nodes" (i.e. BasicNode in monterey classes jargon) of what node-types are running there
+        nodeSummaries.values().each {
+            nodesByCreationId.get(it.creationUid)?.updateContents(it, downstreamNodes.get(it.getNodeId()));
+        }
+    }
+    
+    private void updateSegmentTopologies() {
+        Dmn1NetworkInfo networkInfo = new Dmn1NetworkInfoWebProxy(connectionDetails.getManagementUrl(), gson, connectionDetails.getWebApiAdminCredential());
+        Map<String, SegmentSummary> segmentSummaries = networkInfo.getSegmentSummaries();
+        Map<String, NodeId> segmentAllocations = networkInfo.getSegmentAllocations();
+        
+        // Create/destroy segments
+        Collection<String> newSegments = []
+        Collection<String> removedSegments = []
+        newSegments.addAll(segmentSummaries.keySet()); newSegments.removeAll(segments.keySet());
+        removedSegments.addAll(segments.keySet()); removedSegments.removeAll(segmentSummaries.keySet());
+
+        newSegments.each {
+            Segment segment = new Segment(connectionDetails, it);
+            addOwnedChild(segment);
+            this.@segments.put(it, segment);
+        }
+
+        removedSegments.each {
+            Segment segment = this.@segments.remove(it);
+            if (segment != null) {
+                segment.dispose();
+                removeOwnedChild(segment);
+            }
+        }
+
+        // Notify segments of their mediator
+        segments.values().each {
+            String segmentId = it.segmentId()
+            SegmentSummary summary = segmentSummaries.get(segmentId);
+            NodeId mediator = segmentAllocations.get(segmentId);
+            it.updateTopology(summary, mediator);
+        }
+    }
+    
     private void updateWorkrates() {
         Dmn1NetworkInfo networkInfo = new Dmn1NetworkInfoWebProxy(connectionDetails.getManagementUrl(), gson, connectionDetails.getWebApiAdminCredential());
         Map<NodeId, WorkrateReport> workrates = networkInfo.getActivityModel().getAllWorkrateReports();
@@ -544,7 +593,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
             WorkrateReport report = it.getValue();
 
             // Update this node's workrate
-            nodes.get(it.getKey())?.updateWorkrate(report);
+            findNode(it.getKey())?.updateWorkrate(report);
 
             // Update each segment's workrate (if a mediator's segment-workrate item is contained here)
             report.getWorkrateItems().each {
@@ -562,6 +611,12 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         montereyNodes.values().each {
             if (type == it.nodeType) result.add(it)
         }
+        return result
+    }
+
+    private MontereyContainerNode findNode(NodeId nodeId) {
+        MontereyContainerNode result
+        nodesByCreationId.values().each { if (nodeId.equals(it.nodeId)) result = it }
         return result
     }
 
