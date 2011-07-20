@@ -62,8 +62,8 @@ public class SimpleTomcatApp extends AbstractApplication {
                                 "${it.getAttribute(JavaWebApp.ERROR_COUNT)} errors"
                     }
                 }
-                println "Cluster stats: ${app.tc.getAttribute(DynamicWebAppCluster.REQUEST_COUNT)} requests, " +
-                        "average ${app.tc.getAttribute(DynamicWebAppCluster.REQUEST_AVERAGE)} per entity"
+                println "Cluster stats: ${app.tc.getAttribute(DynamicWebAppCluster.TOTAL_REQUEST_COUNT)} requests, " +
+                        "average ${app.tc.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)} per entity"
             }
         }
 
