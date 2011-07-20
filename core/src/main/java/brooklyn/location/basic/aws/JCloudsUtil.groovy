@@ -148,14 +148,16 @@ public class JCloudsUtil {
 
     public static ComputeService buildComputeService(Map<String,? extends Object> conf) {
         Properties properties = new Properties();
-        properties.setProperty(Constants.PROPERTY_PROVIDER, conf.provider);
-        properties.setProperty(Constants.PROPERTY_IDENTITY, conf.identity);
-        properties.setProperty(Constants.PROPERTY_CREDENTIAL, conf.credential);
-        properties.setProperty(Constants.PROPERTY_TRUST_ALL_CERTS, ""+true);
-        properties.setProperty(Constants.PROPERTY_RELAX_HOSTNAME, ""+true);
+        properties.setProperty(Constants.PROPERTY_PROVIDER, conf.provider)
+        properties.setProperty(Constants.PROPERTY_IDENTITY, conf.identity)
+        properties.setProperty(Constants.PROPERTY_CREDENTIAL, conf.credential)
+        properties.setProperty(Constants.PROPERTY_TRUST_ALL_CERTS, Boolean.toString(true))
+        properties.setProperty(Constants.PROPERTY_RELAX_HOSTNAME, Boolean.toString(true))
         
         if (conf.imageOwner) {
-            properties.setProperty("jclouds.ec2.ami-owners", conf.imageOwner);
+            properties.setProperty("jclouds.ec2.ami-owners", conf.imageOwner)
+        } else {
+            properties.setProperty("jclouds.ec2.ami-owners", "")
         }
 
         // ImmutableSet.<Module>of(new JschSshClientModule(), new Log4JLoggingModule()); to add log4j integration

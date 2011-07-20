@@ -4,6 +4,7 @@ import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.util.Map
+import java.util.logging.Level
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -31,12 +32,18 @@ import com.jcraft.jsch.Session
  */
 public class SshJschTool {
     private static final Logger log = LoggerFactory.getLogger(SshJschTool.class)
- 
+    
+	static {
+	   java.util.logging.Logger.getLogger(".level").setLevel(Level.FINEST)
+	}
+       
     String host
     String user = System.getProperty('user.name')
     int port = 22
     List<String> keyFiles = ['~/.ssh/id_dsa','~/.ssh/id_rsa']
-    Map config = [StrictHostKeyChecking: 'no']
+    String privateKey
+    String publicKey
+    Map config = [StrictHostKeyChecking:'no']
 
     private JSch jsch;
     private Session session;
@@ -60,6 +67,13 @@ public class SshJschTool {
         if (properties.keyFiles) {
             Preconditions.checkArgument properties.keyFiles instanceof Collection, "keyFiles value must be a Collection"
             keyFiles = properties.remove('keyFiles')
+        }
+
+        if (properties.publicKey && properties.privateKey) {
+            Preconditions.checkNotNull properties.publicKey
+            Preconditions.checkNotNull properties.privateKey
+            publicKey = properties.remove('publicKey')
+            privateKey = properties.remove('privateKey')
         }
 
         config << properties
@@ -91,6 +105,9 @@ public class SshJschTool {
 
         tidy()
 
+        if (publicKey && privateKey) {
+            jsch.addIdentity(privateKey, publicKey, null)
+        }
         keyFiles.each { if (new File(it).exists()) { jsch.addIdentity(it) } }
         session = jsch.getSession(user, host, port)
         session.setConfig((Hashtable) config)

@@ -12,8 +12,8 @@ import brooklyn.location.basic.SshMachineLocation
 class AwsLocationTest {
     private static final Logger LOG = LoggerFactory.getLogger(AwsLocationTest.class)
     
-    private static final String REGION_NAME = "eu-west-1"
-    private static final String IMAGE_ID = "ami-89def4fd"
+    private static final String REGION_NAME = "us-east-1" // "eu-west-1"
+    private static final String IMAGE_ID = REGION_NAME+"/"+"ami-0859bb61" // "ami-d7bb90a3"
     private static final String IMAGE_OWNER = "411009282317"
     
     private AwsLocation loc;
@@ -43,14 +43,18 @@ class AwsLocationTest {
     
     @Test(groups = ["Live", "WIP"] )
     public void testProvisionVm() {
-        loc.setTagMapping([MyEntityType:[imageId:IMAGE_ID,imageOwner:IMAGE_OWNER]])
+        loc.setTagMapping([MyEntityType:[
+            imageId:IMAGE_ID,
+            providerLocationId:REGION_NAME,
+            sshPublicKey:new File("/Users/adk/.ssh/id_rsa.pub"),
+            sshPrivateKey:new File("/Users/adk/.ssh/id_rsa"),
+        ]]) //, imageOwner:IMAGE_OWNER]])
         
         Map flags = loc.getProvisioningFlags(["MyEntityType"])
         SshMachineLocation machine = obtainMachine(flags)
         
         Assert.assertTrue machine.isSshable()
     }
-    
     
     // Use this utility method to ensure 
     private SshMachineLocation obtainMachine(Map flags) {

@@ -1,5 +1,8 @@
 package brooklyn.util.internal
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.testng.annotations.Test
 
 /**
@@ -17,10 +20,18 @@ public class SshJschToolTest {
         t.execCommands(out:System.out, [
             "cat /tmp/exec/say-hello.sh",
             "ls -al /tmp/exec/say-hello.sh",
-			"/tmp/exec/say-hello.sh",
-			"exit"
+            "/tmp/exec/say-hello.sh",
+            "exit"
         ])
 
+        t.disconnect()
+    }
+ 
+    @Test(groups = [ "Integration" ])
+    public void testAwsSsh() {
+        def t = new SshJschTool(user:"root", host:"ec2-50-17-6-2.compute-1.amazonaws.com", sshPublicKey:"/Users/adk/.ssh/id_rsa.pub", sshPrivateKey:"/Users/adk/.ssh/id_rsa" )
+        t.connect()
+        t.execCommands([ "date", "hostname" ])
         t.disconnect()
     }
 }
