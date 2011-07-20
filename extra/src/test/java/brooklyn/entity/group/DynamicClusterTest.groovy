@@ -168,7 +168,7 @@ class DynamicClusterTest {
     private static class TestEntity extends AbstractEntity implements Startable {
         private static final Logger logger = LoggerFactory.getLogger(DynamicCluster)
         AtomicInteger counter = new AtomicInteger(0)
-        void start(Collection<? extends Location> loc) { logger.trace "Start"; counter.incrementAndGet() }
+        void start(Collection<? extends Location> loc) { logger.trace "Start $this"; counter.incrementAndGet() }
         void stop() { logger.trace "Stop"; counter.decrementAndGet() }
         void restart() { }
         @Override String toString() { return "Entity["+id[-8..-1]+"]" }

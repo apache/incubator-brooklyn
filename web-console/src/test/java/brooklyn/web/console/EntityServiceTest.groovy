@@ -51,7 +51,7 @@ class EntityServiceTest {
 
     @Test
     public void testFlattenEntities() {
-        assertEquals(5, testService.flattenEntities(testCollection.get(0).entities).size())
+        assertEquals(5, testService.flattenEntities(testCollection).size())
     }
 
     @Test
