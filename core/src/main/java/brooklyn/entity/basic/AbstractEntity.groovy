@@ -546,7 +546,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
      *
      * @see #invoke(Effector)
      */
-    public <T> Task<T> invoke(Effector<T> eff, Map parameters) {
+    public <T> Task<T> invoke(Effector<T> eff, Map<String,?> parameters) {
         executionContext.submit( { eff.call(this, parameters) }, description:"invocation of effector $eff" )
     }
 
