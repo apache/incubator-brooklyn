@@ -13,7 +13,7 @@
 # Has an integration test left a Java process running? See if there is any running
 # Java processes and offer to kill them/
 cleanup(){
-    PROCS=$(ps ax | grep '[j]ava')
+    PROCS=$(ps ax | grep '[j]ava' | grep -v set_tab_title)
     if [ ! -z "${PROCS}" ]; then
 	echo "These Java processes are running:"
 	echo -n ${PROCS}
