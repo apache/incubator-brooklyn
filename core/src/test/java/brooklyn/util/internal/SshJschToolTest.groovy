@@ -27,7 +27,7 @@ public class SshJschToolTest {
         t.disconnect()
     }
  
-    @Test(groups = [ "Integration" ])
+    @Test(groups = [ "WIP" ])
     public void testAwsSsh() {
         def t = new SshJschTool(user:"root", host:"ec2-50-17-6-2.compute-1.amazonaws.com", sshPublicKey:"/Users/adk/.ssh/id_rsa.pub", sshPrivateKey:"/Users/adk/.ssh/id_rsa" )
         t.connect()
