@@ -1,17 +1,14 @@
 package brooklyn.entity.dns.geoscaling
 
-import java.util.List
 import java.util.Set
 
 import brooklyn.entity.Effector
-import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
-import brooklyn.entity.basic.BasicParameterType
-import brooklyn.entity.basic.EffectorWithExplicitImplementation
+import brooklyn.entity.basic.EffectorInferredFromAnnotatedMethod
+import brooklyn.entity.basic.NamedParameter
 import brooklyn.entity.dns.ServerGeoInfo
 import brooklyn.event.AttributeSensor
 import brooklyn.event.basic.BasicConfigKey
-import brooklyn.management.SubscriptionHandle
 
 class GeoscalingDnsServer extends AbstractEntity {
     
@@ -23,23 +20,14 @@ class GeoscalingDnsServer extends AbstractEntity {
     public static BasicConfigKey<Integer> GEOSCALING_SMART_SUBDOMAIN_ID = [ Integer.class, "geoscaling.smart.subdomain.id" ];
     public static BasicConfigKey<String> GEOSCALING_SMART_SUBDOMAIN_NAME = [ String.class, "geoscaling.smart.subdomain.name" ];
     
-    public static AttributeSensor<Set<ServerGeoInfo>> DESTINATION_SERVERS = [ Set.class, "destination.servers" ];
+    public static AttributeSensor<Set<ServerGeoInfo>> TARGET_HOSTS = [ Set.class, "target.hosts" ];
     
-    public static Effector<String> SET_DESTINATION_SERVERS =
-        new EffectorWithExplicitImplementation<GeoscalingDnsServer, Void>(
-            "setDestinationServers", Void.class,
-            [ new BasicParameterType<Set>("servers", Set.class, "Set of all destination servers, including address and lat/long information") ],
-            "Reconfigures the GeoScaling account to redirect users to their nearest server from the passed set") {
-        
-        public Void invokeEffector(GeoscalingDnsServer entity, Map args) {
-            Set<ServerGeoInfo> servers = args.get("servers");
-            entity.setDestinationServers(servers);
-            return null;
-        }
-    };
+    public static final Effector<Void> SET_TARGET_HOSTS = new EffectorInferredFromAnnotatedMethod<Void>(
+        GeoscalingDnsServer.class, "setTargetHosts",
+        "Reconfigures the GeoScaling account to redirect users to their nearest host from the passed set");
 
 
-    public void setDestinationServers(Set<ServerGeoInfo> servers) {
+    public void setTargetHosts(@NamedParameter("targetHosts") Set<ServerGeoInfo> targetHosts) {
         String host = getConfig(GEOSCALING_HOST);
         Integer port = getConfig(GEOSCALING_PORT);
         String username = getConfig(GEOSCALING_USERNAME);
@@ -50,7 +38,16 @@ class GeoscalingDnsServer extends AbstractEntity {
         
         // TODO: complain if required config is missing
         
-        String script = GeoscalingScriptGenerator.generateScriptString(servers);
+        configureGeoscalingService(host, port, username, password,
+            primaryDomainId, smartSubdomainId, smartSubdomainName, targetHosts);
+        
+        emit(TARGET_HOSTS, targetHosts);
+    }
+    
+    private static void configureGeoscalingService(String host, int port, String username, String password,
+        int primaryDomainId, int smartSubdomainId, String smartSubdomainName, Set<ServerGeoInfo> targetHosts) {
+        
+        String script = GeoscalingScriptGenerator.generateScriptString(targetHosts);
         
         GeoscalingWebClient gwc = [ host, port ];
         gwc.login(username, password);
@@ -62,8 +59,6 @@ class GeoscalingDnsServer extends AbstractEntity {
             false, // provide uptime info
             script);
         gwc.logout();
-        
-        emit(DESTINATION_SERVERS, servers);
     }
-    
+
 }

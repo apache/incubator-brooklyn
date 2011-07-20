@@ -19,27 +19,27 @@ function distanceBetween($lat1_deg, $long1_deg, $lat2_deg, $long2_deg) {
     return $distance_km;
 }
 
-function findClosestServer($lat_deg, $long_deg, $available_servers) {
+function findClosestHost($lat_deg, $long_deg, $available_hosts) {
     $minimum_distance = PHP_INT_MAX;
-    for ($i = 0 ; $i < sizeof($available_servers); $i++) {
-        $server = $available_servers[$i];
-        $distance_km = distanceBetween($lat_deg, $long_deg, $server['latitude'], $server['longitude']);
+    for ($i = 0 ; $i < sizeof($available_hosts); $i++) {
+        $host = $available_hosts[$i];
+        $distance_km = distanceBetween($lat_deg, $long_deg, $host['latitude'], $host['longitude']);
         if ($distance_km < $minimum_distance) {
             $minimum_distance = $distance_km;
-            $closest_server = $server;
+            $closest_host = $host;
         }
     }
-    return $closest_server;
+    return $closest_host;
 }
 
 
-/* SERVER DECLARATIONS TO BE SUBSTITUTED HERE */
+/* HOST DECLARATIONS TO BE SUBSTITUTED HERE */
 
-$closest_server = findClosestServer($city_info['latitude'], $city_info['longitude'], $servers);
+$closest_host = findClosestHost($city_info['latitude'], $city_info['longitude'], $hosts);
 
-if (isset($closest_server)) {
-    $output[] = array("A", $closest_server['ip']);
-    $output[] = array("TXT", "Chosen closest server is ".$closest_server['name']);
+if (isset($closest_host)) {
+    $output[] = array("A", $closest_host['ip']);
+    $output[] = array("TXT", "Chosen closest host is ".$closest_host['name']);
     $output[] = array("TXT", "Request originated from [".$city_info['latitude'].",".$city_info['longitude']."]");
 } else {
     $output[] = array("fail");

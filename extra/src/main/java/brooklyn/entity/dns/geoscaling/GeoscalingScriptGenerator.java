@@ -14,30 +14,30 @@ import brooklyn.entity.dns.ServerGeoInfo;
 class GeoscalingScriptGenerator {
     
     private static final String PHP_SCRIPT_TEMPLATE_RESOURCE = "/brooklyn/entity/dns/geoscaling/template.php";
-    private static final String SERVER_DECLARATIONS_MARKER = "/* SERVER DECLARATIONS TO BE SUBSTITUTED HERE */";
+    private static final String HOSTS_DECLARATIONS_MARKER = "/* HOST DECLARATIONS TO BE SUBSTITUTED HERE */";
     private static final String DATESTAMP_MARKER = "DATESTAMP";
 
     
-    public static String generateScriptString(Set<ServerGeoInfo> servers) {
+    public static String generateScriptString(Set<ServerGeoInfo> hosts) {
         String template = loadResource(PHP_SCRIPT_TEMPLATE_RESOURCE);
         String datestamp = new SimpleDateFormat("E, dd MMM yyyy 'at' HH:mm:ss Z").format(new Date());
-        String declarations = getServerDeclaration(servers);
+        String declarations = getHostsDeclaration(hosts);
         return template
             .replace(DATESTAMP_MARKER, datestamp)
-            .replace(SERVER_DECLARATIONS_MARKER, declarations);
+            .replace(HOSTS_DECLARATIONS_MARKER, declarations);
     }
     
-    private static String getServerDeclaration(Set<ServerGeoInfo> servers) {
+    private static String getHostsDeclaration(Set<ServerGeoInfo> hosts) {
         StringBuffer sb = new StringBuffer();
-        sb.append("$servers = array(\n");
-        Iterator<ServerGeoInfo> iServer = servers.iterator();
+        sb.append("$hosts = array(\n");
+        Iterator<ServerGeoInfo> iServer = hosts.iterator();
         while (iServer.hasNext()) {
             ServerGeoInfo server = iServer.next();
             sb.append("    array('name'      => '").append(server.displayName).append("',\n");
             sb.append("          'latitude'  => ").append(server.latitude).append(",\n");
             sb.append("          'longitude' => ").append(server.longitude).append(",\n");
             sb.append("          'ip'        => '").append(server.address).append("')");
-            if (iServer.hasNext()) sb.append(",");
+            if (iServer.hasNext()) sb.append(",\n");
             sb.append("\n");
         }
         sb.append(");\n");
