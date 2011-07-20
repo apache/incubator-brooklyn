@@ -19,17 +19,17 @@ Brooklyn.location = (function() {
                 break;
             }
         }
- 		$(event.target.parentNode).addClass('row_selected');
+ 	$(event.target.parentNode).addClass('row_selected');
     }
 
     function moveToLoc() {
         var settings = Brooklyn.tabs.getDataTable(tableId).fnSettings().aoData;
         for(row in settings) {
-       		$(settings[row].nTr).removeClass('row_selected');
-   		}
+       	    $(settings[row].nTr).removeClass('row_selected');
+   	}
 
         for(i in appLocations) {
-             appLocations[i].infowindow.close(map , appLocations[i].marker);
+            appLocations[i].infowindow.close(map , appLocations[i].marker);
         }
 
         map.setCenter(appLocations[locationNumber].location);
@@ -43,20 +43,20 @@ Brooklyn.location = (function() {
                 loc = results[0].geometry.location;
                 appLocations[i].location = loc;
                 var contentString = '<div id="content" style="height:80px">'+
-                '<h1>'+address+'</h1>'+
-                '<table border="1">'+
+                    '<h1>'+address+'</h1>'+
+                    '<table border="1">'+
                     '<tr>'+
-                        '<td>Address</td>'+
-                        '<td>Active</td>'+
-                        '<td>Resources</td>'+
+                    '<td>Address</td>'+
+                    '<td>Active</td>'+
+                    '<td>Resources</td>'+
                     '</tr>'+
                     '<tr>'+
-                        '<td>'+loctext+'</td>'+
-                        '<td>True</td>'+
-                        '<td>'+'resources'+'</td>'+
+                    '<td>'+loctext+'</td>'+
+                    '<td>True</td>'+
+                    '<td>'+'resources'+'</td>'+
                     '</tr>'+
-                '</table>'+
-                '</div>';
+                    '</table>'+
+                    '</div>';
                 var marker = new google.maps.Marker({
                     map: map,
                     position: loc ,
@@ -144,7 +144,3 @@ Brooklyn.location = (function() {
 })();
 
 $(document).ready(Brooklyn.location.init);
-
-
-
-
