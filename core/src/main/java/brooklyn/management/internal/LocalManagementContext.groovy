@@ -89,7 +89,7 @@ public class LocalManagementContext extends AbstractManagementContext {
                     break;
                 rootUnmanaged = candidateUnmanagedOwner;
             }
-            log.info("Activating management for $rootUnmanaged due to invocation of $entity $c")
+            log.info("Activating management for $rootUnmanaged due to invocation of $entity "+flags+" - "+c.toString())
             manage(rootUnmanaged)
         }
         entity.executionContext.submit(flags, c);
