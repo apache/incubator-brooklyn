@@ -31,9 +31,12 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
                 "Machines must not have a parent location, but machine '%s' has its parent location set", it.name;
         }
 
-        available = new ArrayList(machines);
+        available = new ArrayList();
         inUse = new ArrayList();
-        available.each { it.setParentLocation(this); }
+        machines.each {
+            // As a side effect, this will add 'it' to the 'available' list
+            it.setParentLocation(this);
+        }
     }
 
     protected void addChildLocation(Location child) {
