@@ -17,7 +17,7 @@ class DeltaEnricher<T extends Number> extends AbstractTransformingEnricher {
     
     Number last = 0
     
-    public DeltaEnricher(Entity producer, Sensor<T> source, Sensor<Double> target) {
+    public DeltaEnricher(Entity producer, Sensor<T> source, Sensor<T> target) {
         super(producer, source, target)
     }
     

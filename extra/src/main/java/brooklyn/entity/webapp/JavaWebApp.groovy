@@ -37,7 +37,7 @@ public abstract class JavaWebApp extends JavaApp {
     public static final BasicAttributeSensor<Integer> ERROR_COUNT = [ Integer, "webapp.reqs.errors", "Request errors" ]
     public static final BasicAttributeSensor<Integer> MAX_PROCESSING_TIME = [ Integer, "webpp.reqs.processing.max", "Max processing time" ]
     public static final BasicAttributeSensor<Integer> REQUEST_COUNT = [ Integer, "webapp.reqs.total", "Request count" ]
-    public static final BasicAttributeSensor<Double> REQUESTS_PER_SECOND = [ Double, "webapp.reqs.persec.last", "Reqs/Sec" ]
+    public static final BasicAttributeSensor<Integer> REQUESTS_PER_SECOND = [ Double, "webapp.reqs.persec.last", "Reqs/Sec" ]
     public static final BasicAttributeSensor<Double> AVG_REQUESTS_PER_SECOND = [ Double, "webapp.reqs.persec.avg.$AVG_REQUESTS_PER_SECOND_PERIOD",
          "Average Reqs/Sec (over ${AVG_REQUESTS_PER_SECOND_PERIOD}ms)" ]
     public static final BasicAttributeSensor<Integer> TOTAL_PROCESSING_TIME = [ Integer, "webapp.reqs.processing.time", "Total processing time" ]
