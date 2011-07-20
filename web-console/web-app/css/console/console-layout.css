@@ -90,7 +90,7 @@ h1#brooklyn-header{
 .tab-content-left-column {
     clear: left;
     float: left;
-    width: 300px;
+    width: 100%;
     height:100%;
     border:1px solid #CCCCCC;
 }
@@ -172,9 +172,8 @@ fieldset legend {
 
 textarea#logbox{
     height:250px;
-    width:100%;
-    background:black;
-    color:green;
+    width:98%;
+    resize: none;
 }
 .map-container{
     height:500px;
@@ -254,3 +253,11 @@ textarea#logbox{
     font-weight: bold;
 }
 
+#activityFieldset {
+    width: 99%;
+}
+
+#effector-fieldset {
+    width: 100%;
+    margin-left: -3px;
+}

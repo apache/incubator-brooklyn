@@ -16,6 +16,8 @@ public interface Task<T> extends TaskStub, Future<T> {
     public long getSubmitTimeUtc();
     public long getStartTimeUtc();
     public long getEndTimeUtc();
+    public String getDisplayName();
+    public String getDescription();
     
     public Task<?> getSubmittedByTask();
     /** the thread where the task is running, if it is running */

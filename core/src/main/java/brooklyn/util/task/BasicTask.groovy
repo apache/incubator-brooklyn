@@ -346,4 +346,13 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
         if (l==null) return "unknown (sleep)"
         return l
     }
+
+    public String getDisplayName() {
+        return displayName
+
+    }
+
+    public String getDescription() {
+        return description
+    }
 }

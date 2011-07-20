@@ -8,7 +8,7 @@ import java.text.SimpleDateFormat
 /** Summary of a Brookln Task   */
 public class TaskSummary {
 
-    final String name;
+    final String displayName;
     final String description;
     final String id;
     final Set<String> tags;
@@ -22,14 +22,14 @@ public class TaskSummary {
     final boolean done;
     final boolean error;
     final boolean cancelled;
+    final String currentStatus;
 
     DateFormat formatter = new SimpleDateFormat("hh:mm:ss dd/MM/yyyy ")
     Calendar date = Calendar.getInstance();
 
     public TaskSummary(Task task) {
-        //TODO Add name and description to task interface
-        this.name = "Activity"
-        this.description = "This is some activity"
+        this.displayName = task.displayName
+        this.description = task.description
 
         this.id = task.id
 
@@ -44,10 +44,26 @@ public class TaskSummary {
         this.statusDetail = task.getStatusDetail(false)
         this.statusDetailMultiLine = task.getStatusDetail(true)
         this.submittedByTask = task.submittedByTask
+
         this.submitted = task.submitted
+        if(submitted){
+            currentStatus = "Submitted"
+        }
+
         this.done = task.done
+        if(done){
+            currentStatus = "Done"
+        }
+
         this.error = task.error
+        if(error){
+            currentStatus = "Error"
+        }
+
         this.cancelled = task.cancelled
+        if(cancelled){
+            currentStatus = "Cancelled"
+        }
     }
 
 }
