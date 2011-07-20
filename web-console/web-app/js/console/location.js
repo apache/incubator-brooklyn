@@ -119,12 +119,12 @@ Brooklyn.location = (function() {
         }
     }
 
-    function handleLocations(json){
+    function handleLocations(locations){
         appLocations = new Array();
-        if (json.locations.length > 0) {
-            for(i in json.locations){
-                var location = json.locations[i];
-                var jsonLoc = {name:json.locations[i],resources:'500'};
+        if (locations.length > 0) {
+            for(i in locations){
+                var location = locations[i];
+                var jsonLoc = {name:locations[i],resources:'500'};
                 appLocations.push(jsonLoc);
             }
             updateLocations();
