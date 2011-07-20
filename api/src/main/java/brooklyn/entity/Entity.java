@@ -2,9 +2,11 @@ package brooklyn.entity;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Map;
 
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
+import brooklyn.management.Task;
 import brooklyn.policy.Policy;
 
 /**
@@ -99,4 +101,9 @@ public interface Entity extends Serializable {
      * its owner.
      */
     <T> T getConfig(ConfigKey<T> key);
+    
+    /**
+     * Invokes the given effector, with the given parameters to that effector.
+     */
+    <T> Task<T> invoke(Effector<T> eff, Map<String,?> parameters);
 }
