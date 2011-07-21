@@ -37,7 +37,7 @@ Brooklyn.effectors = (function() {
 
         if(selectedRowData.parameters.length === 0 ) {
             var argumentLabel = document.createElement('p');
-            argumentLabel.textContent = "No arguments needed:";
+            argumentLabel.textContent = "No arguments needed";
             $('#effector-args').append(argumentLabel);
         } else {
             for (parameter in selectedRowData.parameters){
