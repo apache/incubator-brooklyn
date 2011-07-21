@@ -55,7 +55,7 @@ class AbstractPolicy implements Policy {
     */
    protected boolean unsubscribe(Entity producer) {
        def handle = subscriptions.remove(producer)
-       subscription.unsubscribe(handle)
+       if (handle) subscription.unsubscribe(handle)
    }
    
    private ManagementContext getManagementContext() {

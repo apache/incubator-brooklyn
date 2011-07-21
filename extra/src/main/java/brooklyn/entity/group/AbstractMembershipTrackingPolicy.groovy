@@ -28,8 +28,8 @@ abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
         this.group = group;
         reset();
         group.members.each { onEntityAdded it }
-        subscribe(group, group.MEMBER_ADDED, { onEntityAdded it } as EventListener);
-        subscribe(group, group.MEMBER_REMOVED, { onEntityRemoved it } as EventListener);
+        subscribe(group, group.MEMBER_ADDED, { Entity entity -> onEntityAdded entity } as EventListener);
+        subscribe(group, group.MEMBER_REMOVED, { Entity entity -> onEntityRemoved entity } as EventListener);
     }
 
     public void reset() {
