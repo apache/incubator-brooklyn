@@ -28,7 +28,7 @@ Brooklyn.activity = (function(){
         var result = Brooklyn.tabs.getDataTableSelectedRowData(id, event);
         if(result) {
             var logBox=document.getElementById("logbox");
-            logBox.value=result.statusDetailMultiLine;
+            logBox.value=result.detailedStatus;
         }
     }
 
