@@ -8,6 +8,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.TimeZone;
 
 import brooklyn.entity.dns.HostGeoInfo;
 
@@ -19,8 +20,14 @@ class GeoscalingScriptGenerator {
 
     
     public static String generateScriptString(Set<HostGeoInfo> hosts) {
+        return generateScriptString(new Date(), hosts);
+    }
+    
+    public static String generateScriptString(Date generationTime, Set<HostGeoInfo> hosts) {
         String template = loadResource(PHP_SCRIPT_TEMPLATE_RESOURCE);
-        String datestamp = new SimpleDateFormat("E, dd MMM yyyy 'at' HH:mm:ss Z").format(new Date());
+        SimpleDateFormat sdf = new SimpleDateFormat("E, dd MMM yyyy 'at' HH:mm:ss 'UTC'");
+        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+        String datestamp = sdf.format(generationTime);
         String declarations = getHostsDeclaration(hosts);
         return template
             .replace(DATESTAMP_MARKER, datestamp)
