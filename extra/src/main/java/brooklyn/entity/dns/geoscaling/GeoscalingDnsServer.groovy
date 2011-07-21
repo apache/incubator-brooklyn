@@ -2,13 +2,14 @@ package brooklyn.entity.dns.geoscaling
 
 import java.util.Set
 
-import brooklyn.entity.Effector
+import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
-import brooklyn.entity.basic.EffectorInferredFromAnnotatedMethod
-import brooklyn.entity.basic.NamedParameter
+import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.dns.ServerGeoInfo
+import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.event.AttributeSensor
 import brooklyn.event.basic.BasicConfigKey
+
 
 class GeoscalingDnsServer extends AbstractEntity {
     
@@ -22,12 +23,28 @@ class GeoscalingDnsServer extends AbstractEntity {
     
     public static AttributeSensor<Set<ServerGeoInfo>> TARGET_HOSTS = [ Set.class, "target.hosts" ];
     
-    public static final Effector<Void> SET_TARGET_HOSTS = new EffectorInferredFromAnnotatedMethod<Void>(
-        GeoscalingDnsServer.class, "setTargetHosts",
-        "Reconfigures the GeoScaling account to redirect users to their nearest host from the passed set");
+    private final Map<Entity,ServerGeoInfo> targetHosts = new HashMap<Entity,ServerGeoInfo>();
+    
 
+    public GeoscalingDnsServer(AbstractGroup group) {
+        addPolicy(new AbstractMembershipTrackingPolicy(group) {
+            protected void onEntityAdded(Entity entity) { addTargetHost(entity); }
+            protected void onEntityRemoved(Entity entity) { removeTargetHost(entity); }
+        });
+    }
 
-    public void setTargetHosts(@NamedParameter("targetHosts") Set<ServerGeoInfo> targetHosts) {
+    private void addTargetHost(Entity e) {
+        if (targetHosts.containsKey(e)) return;
+        targetHosts.put(e, ServerGeoInfo.fromEntity(e));
+        update();
+    }
+
+    private void removeTargetHost(Entity e) {
+        if (targetHosts.remove(e))
+            update();
+    }
+    
+    private void update() {
         String host = getConfig(GEOSCALING_HOST);
         Integer port = getConfig(GEOSCALING_PORT);
         String username = getConfig(GEOSCALING_USERNAME);
