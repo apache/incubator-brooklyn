@@ -1,9 +1,10 @@
 package brooklyn.web.console.test
 
 import org.testng.annotations.Test
-import static org.testng.Assert.*;
+import static brooklyn.web.console.test.SeleniumTest.selenium
+import static brooklyn.web.console.test.SeleniumTest.waitFor
 
-public class StatusTest extends AbstractSeleniumTest {
+public class StatusTest {
 
     @Test public void statusIndicator() {
         selenium.open("/entity/");

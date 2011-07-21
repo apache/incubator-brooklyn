@@ -6,6 +6,7 @@ import brooklyn.entity.Entity
 import brooklyn.entity.ParameterType
 import brooklyn.entity.basic.AbstractEffector
 
+// TODO remove this test class as soon as the group agrees it's unnecessary!
 public class TestEffector extends AbstractEffector{
 
     TestEffector(String name, String description, List<ParameterType<?>> parameters){

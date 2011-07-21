@@ -1,7 +1,7 @@
 
 /**************************************************************************************
  **  DO NOT modify this script, as your changes will likely be overwritten.
- **  Auto-generated on DATESTAMP.
+ **  Auto-generated on DATESTAMP
  **************************************************************************************/
 
 

@@ -77,30 +77,31 @@ public abstract class AbstractController extends AbstractService {
         }
 
         policy = new AbstractMembershipTrackingPolicy() {
-            protected void onEntityAdded(Entity member) { addEntity( member); }
+            protected void onEntityAdded(Entity member) { addEntity(member); }
             protected void onEntityRemoved(Entity member) { removeEntity(member); }
         }
         
         addPolicy(policy)
+        reset()
         policy.setGroup(cluster ?: properties.cluster)
     }
 
     //FIXME members locations might be remote?
-    private void addEntity(Entity member) {
+    public void addEntity(Entity member) {
         member.locations.each { MachineLocation machine ->
             addresses[machine.address] += member.getAttribute(portNumber)
         }
         update();
     }
     
-    private void removeEntity(Entity member) {
+    public void removeEntity(Entity member) {
         member.locations.each { MachineLocation machine ->
             addresses[machine.address] -= member.getAttribute(portNumber)
         }
         update();
     }
     
-    private void update() {
+    public void update() {
         if (getAttribute(AbstractService.SERVICE_UP)) {
             configure()
             restart()

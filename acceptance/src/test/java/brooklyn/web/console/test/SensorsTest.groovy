@@ -1,12 +1,14 @@
 package brooklyn.web.console.test
 
 import org.testng.annotations.Test
-import static org.testng.Assert.*
-import org.testng.Assert;
+import static brooklyn.web.console.test.SeleniumTest.selenium
+import static brooklyn.web.console.test.SeleniumTest.waitFor
+import static org.testng.Assert.assertTrue
 
-public class SensorsTest extends AbstractSeleniumTest {
+public class SensorsTest {
 
-    @Test public void testSensors() {
+    @Test(groups = "Selenium1")
+    public void testSensors() {
         selenium.open("/entity/");
 
         // Wait for tree to load

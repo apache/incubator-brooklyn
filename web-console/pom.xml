@@ -25,6 +25,12 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>brooklyn-extra</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>jtidy</groupId>
+                    <artifactId>jtidy</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -315,7 +321,7 @@
              possibly a bug according to http://jira.grails.org/browse/MAVEN-153?page=com.atlassian.jira.plugin.system.issuetabpanels%3Aall-tabpanel;
              according to https://cwiki.apache.org/confluence/display/MAVEN/PluginResolutionException it must be a plugin repository,
              as well as a repository (above) -->
-		<pluginRepository>
+        <pluginRepository>
             <id>maven-repository.dev.java.net</id>
             <name>Java Dev Net Repository</name>
             <url>http://download.java.net/maven/2/</url>

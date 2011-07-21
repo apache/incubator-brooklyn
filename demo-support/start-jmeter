@@ -1,0 +1,117 @@
+#!/bin/bash -e
+
+REGION=us-east-1
+INSTANCE_COUNT=2
+JMETER_HOME=~/Downloads/jakarta-jmeter-2.4
+KEYPREFIX=$HOME/.ssh/id_rsa-monterey.
+KEY=${KEYPREFIX}${REGION}
+
+# Rightscale CentOS
+USER=root
+case "$REGION" in
+    us-east-1)      AMI=ami-2342a94a;;
+    eu-west-1)      AMI=ami-89def4fd;;
+    us-west-1)      AMI=ami-25df8e60;;
+    ap-southeast-1) AMI=ami-21c2bd73;;
+    ap-northeast-1) AMI=ami-f0e842f1;;
+    *)              echo Unknown region $REGION; exit 1;;
+esac
+# Amazon Linux
+#USER=ec2-user
+#case "$REGION" in
+#    us-east-1)      AMI=ami-8c1fece5;;
+#    eu-west-1)      AMI=ami-47cefa33;;
+#    us-west-1)      AMI=ami-3bc9997e;;
+#    ap-southeast-1) AMI=ami-6af08e38;;
+#    ap-northeast-1) AMI=ami-300ca731;;
+#    *)              echo Unknown region $REGION; exit 1;;
+#esac
+
+echo >&2 Starting $INSTANCE_COUNT instances in $REGION
+output=$(ec2-run-instances \
+    --region $REGION \
+    $AMI \
+    --key monterey.$REGION \
+    --group jmeter \
+    --instance-count $INSTANCE_COUNT \
+    --instance-type t1.micro)
+instance_ids=$(echo "${output}" | awk '$1=="INSTANCE"{print $2}')
+[ -z "$instance_ids" ] && { echo "No instance IDs ?!" ; exit 1 ; }
+echo >&2 New instance IDs are: $instance_ids
+
+# Wait until we get a private name for everything
+until [ $(echo $private_names | wc -w) -eq $INSTANCE_COUNT ]; do
+    echo >&2 Waiting until private DNS names are available for new instances
+    sleep 3s
+    output=$(ec2-describe-instances \
+	--region $REGION \
+	${instance_ids} )
+    private_names=$(echo "${output}" | awk '$1=="INSTANCE" && match($5, "\.internal$"){print $5}')
+done
+echo >&2 Private hostnames are: $private_names
+
+# Wait until we get a public name for everything
+until [ $(echo $public_names | wc -w) -eq $INSTANCE_COUNT ]; do
+    echo >&2 Waiting until public DNS names are available for new instances
+    sleep 3s
+    output=$(ec2-describe-instances \
+	--region $REGION \
+	${instance_ids} )
+    public_names=$(echo "${output}" | awk '$1=="INSTANCE" && match($4, "\.com$"){print $4}')
+done
+echo >&2 Public hostnames are: $public_names
+
+# Wait until SSH running on everything
+ssh_ok=0
+until [ $ssh_ok -eq 1 ]; do
+    echo >&2 Waiting until SSH port is active on new instances
+    sleep 3s
+    ssh_ok=1
+    for host in $public_names; do
+	nc -z $host 22 || ssh_ok=0
+    done
+done
+
+# Install X server
+for host in $public_names; do
+    echo >&2 Installing X on $host
+    ssh -i $KEY -o StrictHostKeyChecking=no -o CheckHostIP=no $USER@$host yum -y install \
+	xorg-x11-xauth
+#	xorg-x11-server-Xvfb \
+#	xorg-x11-server-utils \
+#	xorg-x11-fonts-100dpi \
+#	xorg-x11-fonts-75dpi \
+#	xorg-x11-fonts-ISO8859-1-100dpi \
+#	xorg-x11-fonts-ISO8859-1-75dpi \
+#	xorg-x11-fonts-ISO8859-14-100dpi \
+#	xorg-x11-fonts-ISO8859-14-75dpi \
+#	xorg-x11-fonts-ISO8859-15-100dpi \
+#	xorg-x11-fonts-ISO8859-15-75dpi \
+#	xorg-x11-fonts-ISO8859-2-100dpi \
+#	xorg-x11-fonts-ISO8859-2-75dpi \
+#	xorg-x11-fonts-ISO8859-9-100dpi \
+#	xorg-x11-fonts-ISO8859-9-75dpi \
+#	xorg-x11-fonts-Type1 \
+#	xorg-x11-fonts-cyrillic \
+#	xorg-x11-fonts-ethiopic \
+#	xorg-x11-fonts-misc
+done
+
+# Upload JMeter
+for host in $public_names; do
+    echo >&2 Uploading JMeter to $host
+    rsync -a -e "ssh -i $KEY -o StrictHostKeyChecking=no -o CheckHostIP=no -l $USER" ${JMETER_HOME}/ $host:jmeter
+done
+
+echo >&2 Starting JMeter
+for host in $public_names; do
+    ssh -i $KEY -o StrictHostKeyChecking=no -o CheckHostIP=no $USER@$host nohup ./jmeter/bin/jmeter-server \>/dev/null 2\>\&1 \</dev/null \&
+done
+
+echo >&2 Starting JMeter controller
+for host in $public_names; do
+    echo ssh -X -i $KEY -o StrictHostKeyChecking=no -o CheckHostIP=no $USER@$host ./jmeter/bin/jmeter -Jremote_hosts=$(echo $private_names | tr -s '[:blank:]' ',')
+    break
+done
+
+echo >&2 Finished.

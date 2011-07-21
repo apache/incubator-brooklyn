@@ -20,6 +20,8 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.util.internal.EntityStartUtils
 import brooklyn.util.internal.TimeExtras
 
+import com.google.common.base.Preconditions
+
 /**
  * Test the operation of the {@link NginxController} class.
  *
@@ -62,6 +64,8 @@ public class NginxIntegrationTest {
     public void canStartupAndShutdown() {
         def template = { properties -> new TomcatServer(properties) }
         URL war = getClass().getClassLoader().getResource("hello-world.war")
+        Preconditions.checkState war != null, "Unable to locate resource $war"
+        
         cluster = new DynamicCluster(owner:app, newEntity:template, initialSize:1, httpPort:7080)
         cluster.setConfig(TomcatServer.WAR, war.path)
         cluster.start([ new LocalhostMachineProvisioningLocation(count:1) ])
