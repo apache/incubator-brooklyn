@@ -81,6 +81,7 @@ public abstract class AbstractController extends AbstractService {
         }
         
         addPolicy(policy)
+        reset()
         policy.setGroup(cluster ?: properties.cluster)
     }
 
