@@ -1,5 +1,8 @@
 package brooklyn.entity.dns.geoscaling;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -32,6 +35,7 @@ public class GeoscalingWebClient {
     private final String host;
     private final int port;
     private DefaultHttpClient httpClient;
+    private Tidy tidy;
     
     private List<Domain> primaryDomains = null;
     
@@ -133,6 +137,11 @@ public class GeoscalingWebClient {
         this.host = host;
         this.port = port;
         this.httpClient = new DefaultHttpClient();
+        this.tidy = new Tidy();
+        // Silently swallow all HTML errors/warnings.
+        tidy.setErrout(new PrintWriter(new OutputStream() {
+            @Override public void write(int b) throws IOException { }
+        }));
     }
     
     public void login(String username, String password) {
@@ -215,7 +224,6 @@ public class GeoscalingWebClient {
             HttpResponse response = httpClient.execute(new HttpGet(url));
             HttpEntity entity = response.getEntity();
             if (entity != null) {
-                Tidy tidy = new Tidy();
                 Document document = tidy.parseDOM(entity.getContent(), null);
                 NodeList links = document.getElementsByTagName("a");
                 for (int i = 0; i < links.getLength(); ++i) {
@@ -268,7 +276,6 @@ public class GeoscalingWebClient {
             HttpResponse response = httpClient.execute(new HttpGet(url));
             HttpEntity entity = response.getEntity();
             if (entity != null) {
-                Tidy tidy = new Tidy();
                 Document document = tidy.parseDOM(entity.getContent(), null);
                 NodeList links = document.getElementsByTagName("a");
                 for (int i = 0; i < links.getLength(); ++i) {
