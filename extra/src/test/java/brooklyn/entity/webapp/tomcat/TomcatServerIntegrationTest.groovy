@@ -165,6 +165,25 @@ public class TomcatServerIntegrationTest {
             true
         }, abortOnError:false)
     }
+    
+    @Test(groups=[ "Integration" ])
+    public void canDeploySpringTravel() {
+        Application app = new TestApplication();
+        TomcatServer tc = new TomcatServer(owner:app, httpPort:DEFAULT_HTTP_PORT);
+
+        URL resource = getClass().getClassLoader().getResource("swf-booking-mvc.war")
+        assertNotNull resource
+        tc.setConfig(TomcatServer.WAR, resource.getPath())
+
+        tc.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
+        executeUntilSucceedsWithShutdown(tc, {
+            // TODO get this URL from a WAR file entity
+            String url = tc.getAttribute(TomcatServer.ROOT_URL) + "swf-booking-mvc/spring/intro"
+            println url
+            assertTrue urlRespondsWithStatusCode200(url)
+            true
+        }, abortOnError:false, timeout: 10*SECONDS)
+    }
 
     @Test(groups = [ "Integration" ])
     public void detectFailureIfTomcatCantBindToPort() {
