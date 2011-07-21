@@ -91,7 +91,8 @@ private class TestManagementContext implements ManagementContext{
 }
 
 private class TestApplication extends AbstractApplication {
-    TestApplication() {
+    TestApplication(Map props=[:]) {
+        super(props)
         displayName = "Application";
         addOwnedChildren([
             new TestGroupEntity("tomcat tier 1").addOwnedChildren([

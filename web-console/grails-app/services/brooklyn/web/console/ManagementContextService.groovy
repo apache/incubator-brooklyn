@@ -15,14 +15,12 @@ import brooklyn.management.ExecutionManager
 import brooklyn.management.ManagementContext
 import brooklyn.management.SubscriptionManager
 import brooklyn.web.console.entity.TestEffector
+import brooklyn.management.internal.LocalManagementContext
+import org.codehaus.groovy.grails.web.context.ServletContextHolder
 
 class ManagementContextService {
-    private final Application application = new TestApplication()
+    private ManagementContext managementContext
     protected static AtomicLong ID_GENERATOR = new AtomicLong(0L)
-
-    public ManagementContextService() {
-        context.applications.add(application)
-    }
 
     Collection<Application> getApplications() {
         return context.applications
@@ -33,8 +31,17 @@ class ManagementContextService {
     }
 
     public synchronized ManagementContext getContext() {
-        application.managementContext
+        if (!managementContext) {
+            managementContext = (ManagementContext) ServletContextHolder.servletContext?.getAttribute("brooklynManagementContext")
+        }
+        // TODO remove this test code as soon as the group agrees it's unnecessary!
+        if (!managementContext) {
+            managementContext = new LocalManagementContext();
+            new TestApplication(mgmt: managementContext)
+        }
+        // END TODO
 
+        return managementContext
     }
 
     public ExecutionManager getExecutionManager() {
@@ -45,8 +52,10 @@ class ManagementContextService {
         return context.subscriptionManager
     }
 
+    // TODO remove these test classes as soon as the group agrees they're unnecessary!
     private class TestApplication extends AbstractApplication {
-        TestApplication() {
+        TestApplication(Map props) {
+            super(props)
             this.id = "app-" + ManagementContextService.ID_GENERATOR.incrementAndGet()
             displayName = "Application";
 
