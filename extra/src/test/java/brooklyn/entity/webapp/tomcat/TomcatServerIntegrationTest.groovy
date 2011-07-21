@@ -17,6 +17,7 @@ import brooklyn.entity.Application
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.event.EntityStartException
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
+import brooklyn.policy.RollingTimeWindowMeanEnricher.ConfidenceQualifiedNumber
 import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
 
@@ -120,25 +121,29 @@ public class TomcatServerIntegrationTest {
         TomcatServer tc = new TomcatServer(owner:app, httpPort:DEFAULT_HTTP_PORT);
         tc.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         executeUntilSucceedsWithShutdown(tc, {
-                def activityValue = tc.getAttribute(TomcatServer.REQUESTS_PER_SECOND)
-                if (activityValue == null || activityValue == -1) 
+                ConfidenceQualifiedNumber activityValue = tc.getAttribute(TomcatServer.AVG_REQUESTS_PER_SECOND)
+                if (activityValue == null) 
                     return new BooleanWithMessage(false, "activity not set yet ($activityValue)")
 
-                assertEquals activityValue.class, Integer
-                assertEquals activityValue, 0
+                assertEquals activityValue.class, ConfidenceQualifiedNumber
+                assertEquals activityValue.value, 0d, 1
                 
 		        String url = tc.getAttribute(TomcatServer.ROOT_URL) + "foo"
-                int n = 10
-                n.times { connectToURL url }
-                Thread.sleep 1000
-                def requestCount = tc.getAttribute(TomcatServer.REQUEST_COUNT)
-                activityValue = tc.getAttribute(TomcatServer.REQUESTS_PER_SECOND)
+                long startTime = System.currentTimeMillis()
+                long elapsedTime = 0
                 
-                assertTrue requestCount > 0
-                assertEquals requestCount % n, 0
+                // need to maintain n requests per second for the duration of the window size
+                while (elapsedTime < TomcatServer.AVG_REQUESTS_PER_SECOND_PERIOD) {
+                    int n = 10
+                    n.times { connectToURL url }
+                    Thread.sleep 1000
+                    def requestCount = tc.getAttribute(TomcatServer.REQUEST_COUNT)
+                    assertEquals requestCount % n, 0
+                    elapsedTime = System.currentTimeMillis() - startTime
+                }
 
-                assertTrue activityValue > 0
-                assertEquals activityValue % n, 0
+                activityValue = tc.getAttribute(TomcatServer.AVG_REQUESTS_PER_SECOND)
+                assertEquals activityValue.value, 10.0d, 1
                 true
             }, timeout:10*SECONDS, useGroovyTruth:true)
     }
