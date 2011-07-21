@@ -208,7 +208,7 @@ public class AwsLocation extends AbstractLocation implements MachineProvisioning
         TemplateOptions options = template.getOptions();
         
         if (properties.inboundPorts) {
-            options.inboundPorts(properties.inboundPorts);
+            options.inboundPorts(properties.inboundPorts.toArray(new Integer[0]));
         }
         if (properties.sshPublicKey) {
             String keyData = Files.toString(properties.sshPublicKey, Charsets.UTF_8)

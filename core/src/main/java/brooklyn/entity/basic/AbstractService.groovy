@@ -1,6 +1,7 @@
 package brooklyn.entity.basic
 
 import java.util.Collection
+import java.util.Map
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -15,7 +16,6 @@ import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.NoMachinesAvailableException
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedAppSetup
-import brooklyn.util.SshBasedJavaAppSetup
 
 import com.google.common.base.Preconditions
 
@@ -55,7 +55,8 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
     }
 
     public void startInLocation(MachineProvisioningLocation loc) {
-        SshMachineLocation machine = loc.obtain()
+        Map<String,Object> flags = loc.getProvisioningFlags([getClass().getName()])
+        SshMachineLocation machine = loc.obtain(flags)
         if (machine == null) throw new NoMachinesAvailableException(loc)
         startInLocation(machine)
     }
