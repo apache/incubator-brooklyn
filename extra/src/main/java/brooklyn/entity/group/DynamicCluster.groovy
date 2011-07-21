@@ -1,15 +1,21 @@
 package brooklyn.entity.group
 
+import java.util.Collection
+import java.util.Map
+import java.util.concurrent.ExecutionException
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.entity.Effector
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.trait.Resizable
 import brooklyn.entity.trait.Startable
-import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.Location
+import brooklyn.management.Task
+import brooklyn.util.task.ParallelTask
 
 import com.google.common.base.Preconditions
 
@@ -73,19 +79,28 @@ public class DynamicCluster extends AbstractGroup implements Startable, Resizabl
         throw new UnsupportedOperationException()
     }
 
-    public synchronized Integer resize(int desiredSize) {
+    public synchronized Integer resize(Integer desiredSize) {
         int delta = desiredSize - currentSize
         logger.info "Resize from {} to {}; delta = {}", currentSize, desiredSize, delta
 
         Collection<Entity> addedEntities = []
         Collection<Entity> removedEntities = []
 
+        Task invoke
         if (delta > 0) {
             delta.times { addedEntities += addNode() }
+            invoke = invokeEffectorList(addedEntities, Startable.START, [locations:[ location ]])
         } else if (delta < 0) {
             (-delta).times { removedEntities += removeNode() }
+            invoke = invokeEffectorList(removedEntities, Startable.STOP, [:])
         }
-
+        if (invoke) {
+	        try {
+	            invoke.get()
+	        } catch (ExecutionException ee) {
+	            throw ee.cause
+	        }
+        }
         return currentSize
     }
 
@@ -100,7 +115,6 @@ public class DynamicCluster extends AbstractGroup implements Startable, Resizabl
         Preconditions.checkState entity instanceof Entity, "newEntity call returned an object that is not an Entity"
         Preconditions.checkState entity instanceof Startable, "newEntity call returned an object that is not Startable"
  
-        entity.start([location])
         addMember(entity)
         entity
     }
@@ -111,7 +125,6 @@ public class DynamicCluster extends AbstractGroup implements Startable, Resizabl
         Preconditions.checkNotNull entity, "No Startable member entity found to remove"
  
         removeMember(entity)
-        entity.stop()
         entity
     }
 }

@@ -138,8 +138,7 @@ class TomcatServerTest {
         tc.emit(TomcatServer.REQUEST_COUNT, 10);
         Thread.sleep(1000)
         
-        assertEquals tc.getAttribute(JavaWebApp.AVG_REQUESTS_PER_SECOND), 10/JavaWebApp.AVG_REQUESTS_PER_SECOND_PERIOD*1000, 0.2d
-        println tc.getAttribute(JavaWebApp.AVG_REQUESTS_PER_SECOND)
+        assertEquals tc.getAttribute(JavaWebApp.AVG_REQUESTS_PER_SECOND).value, 10/JavaWebApp.AVG_REQUESTS_PER_SECOND_PERIOD*1000, 0.2d
     }
 }
  

@@ -11,10 +11,10 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.Application
-import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractService
 import brooklyn.entity.group.DynamicCluster
+import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.util.internal.EntityStartUtils
@@ -47,8 +47,12 @@ public class NginxIntegrationTest {
 
     @AfterMethod(groups = "Integration")
     public void shutdown() {
-        EntityStartUtils.stopEntity(nginx)
-        EntityStartUtils.stopEntity(cluster)
+        if (cluster != null && cluster.getAttribute(Startable.SERVICE_UP)) {
+	        EntityStartUtils.stopEntity(cluster)
+        }
+        if (nginx != null && nginx.getAttribute(Startable.SERVICE_UP)) {
+	        EntityStartUtils.stopEntity(nginx)
+        }
     }
 
     /**

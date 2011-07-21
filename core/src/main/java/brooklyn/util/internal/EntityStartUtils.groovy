@@ -1,15 +1,24 @@
 package brooklyn.util.internal
 
+import java.util.concurrent.CancellationException
+import java.util.concurrent.ExecutionException
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.entity.Effector
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
+import brooklyn.management.Task
 import brooklyn.util.internal.LanguageUtils.FieldVisitor
+import brooklyn.util.task.BasicTask;
+import brooklyn.util.task.ParallelTask
 
 import com.google.common.base.Preconditions
+import com.google.common.base.Throwables
+
 
 /**
  * Entity startup utilities.
@@ -17,26 +26,22 @@ import com.google.common.base.Preconditions
 class EntityStartUtils {
     private static final Logger log = LoggerFactory.getLogger(EntityStartUtils.class);
     
-    /**
-     * Starts the children of the host.
-     */   
-    public static void startGroup(Group host, Collection<Location> locs = []) {
-        host.ownedChildren.each { child -> startEntity(child, locs) }
+    public static void startEntity(Entity entity, Collection<Location> locations = []) {
+        entity.start(locations)
     }
 
-    public static Entity startEntity(Entity entity, Collection<Location> locs) {
-        Preconditions.checkArgument(locs != null && !locs.isEmpty(), "Request to start $entity without a location")
-        Preconditions.checkArgument(entity.owner != null, "Request to start $entity without any owner specified or set")
- 
-        log.debug "Starting entity {} in locations {}", entity, locs
-        if (entity in Startable) entity.start(locs)
+    /**
+     * Stop an entity if it is still running.
+     */
+    public static void stopEntity(Entity entity) {
+        entity.stop()
     }
 
     /**
      * Starts a clone of the given template entity running as a child of the host.
      */
-    public static void startFromTemplate(Group host, Entity template, Collection<Location> locs) {
-        startEntity(createFromTemplate(host, template), locs)
+    public static void startFromTemplate(Group host, Entity template, Collection<Location> locations) {
+        startEntity(createFromTemplate(host, template), locations)
     }
 
     /**
@@ -60,22 +65,9 @@ class EntityStartUtils {
      */
     public static <T extends Entity> T cloneTemplate(T template) {
         Entity result = LanguageUtils.clone template
-        LanguageUtils.visitFields(result, { parent, name, value -> 
-            if (name=="entity" && template.equals(value)) parent."$name" = result } as FieldVisitor, [ result ] as Set)
+        LanguageUtils.visitFields(result,
+	            { parent, name, value -> if (name=="entity" && template.equals(value)) parent."$name" = result } as FieldVisitor,
+	            [ result ] as Set)
         result
-    }
-
-    /**
-     * Stop an entity if it is still running.
-     */
-    public static <E extends Entity & Startable> void stopEntity(E entity) {
-        if (entity != null && entity.getAttribute(Startable.SERVICE_UP)) {
-            log.warn "Entity {} still running", entity
-            try {
-                entity.stop()
-            } catch (Exception e) {
-                log.warn "Error caught trying to shut down {}: {}", entity.id, e.message
-            }
-        }
     }
 }

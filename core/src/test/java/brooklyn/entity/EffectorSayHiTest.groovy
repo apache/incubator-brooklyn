@@ -15,12 +15,13 @@ import brooklyn.entity.basic.Description
 import brooklyn.entity.basic.EffectorInferredFromAnnotatedMethod
 import brooklyn.entity.basic.EffectorWithExplicitImplementation;
 import brooklyn.entity.basic.NamedParameter
+import brooklyn.entity.trait.Startable;
 import brooklyn.management.ManagementContext
 import brooklyn.management.internal.LocalManagementContext
 
 /**
  * Test the operation of the {@link Effector} implementations.
- * 
+ *
  * TODO clarify test purpose
  */
 public class EffectorSayHiTest {
@@ -33,7 +34,7 @@ public class EffectorSayHiTest {
 //            info = { String a -> println "INFO "+a }
 //        }
 //    }
-    
+
     public static interface CanSayHi {
         static Effector<String> SAY_HI_1 = new EffectorWithExplicitImplementation<CanSayHi,String>("sayHi1", String.class, [
                     [ "name", String.class, "person to say hi to" ] as BasicParameterType<String>,
@@ -51,7 +52,7 @@ public class EffectorSayHiTest {
             @NamedParameter("name") String name,
             @NamedParameter("greeting") @DefaultValue("hello") @Description("what to say") String greeting);
     }
-        
+
     public static class MyEntity extends LocallyManagedEntity implements CanSayHi {
         public String sayHi1(String name, String greeting) { "$greeting $name" }
         public String sayHi2(String name, String greeting) { "$greeting $name" }
@@ -60,17 +61,25 @@ public class EffectorSayHiTest {
     @Test
     public void testFindEffectors() {
         MyEntity e = new MyEntity();
-        
-        assertEquals("sayHi1", e.SAY_HI_1.getName());    
-        assertEquals(["name", "greeting"], e.SAY_HI_1.getParameters()[0..1]*.getName());    
+
+        assertEquals("sayHi1", e.SAY_HI_1.getName());
+        assertEquals(["name", "greeting"], e.SAY_HI_1.getParameters()[0..1]*.getName());
 
         assertEquals("sayHi2", e.SAY_HI_2.getName());
         assertEquals(["name", "greeting"], e.SAY_HI_2.getParameters()[0..1]*.getName());
     }
+
+    // XXX parameter type annotations do NOT work on external Java interface effector definitions
+    //     that use EffectorInferredFromAnnotatedMethod.
+    @Test
+    public void testFindTraitEffectors() {
+        assertEquals("locations", Startable.START.getParameters()[0].getName());
+    }
+
     @Test
     public void testInvokeEffectorMethod1BypassInterception() {
         MyEntity e = new MyEntity();
-        
+
         String name = "sayHi1"
         def args = ["Bob", "hello"] as Object[]
         assertEquals("hello Bob", e.metaClass.invokeMethod(e, name, args))
@@ -78,7 +87,7 @@ public class EffectorSayHiTest {
     @Test
     public void testInvokeEffectorMethod2BypassInterception() {
         MyEntity e = new MyEntity();
-        
+
         String name = "sayHi2"
         def args = ["Bob", "hello"] as Object[]
 
@@ -92,32 +101,32 @@ public class EffectorSayHiTest {
     @Test
     public void testInvokeEffectors1() {
         MyEntity e = new MyEntity();
-        
+
         assertEquals("hi Bob", e.sayHi1("Bob", "hi"))
         assertEquals("hello Bob", e.sayHi1("Bob"))
-        
+
         assertEquals("hi Bob", e.sayHi1(name: "Bob", greeting:"hi"))
         assertEquals("hello Bob", e.sayHi1(name: "Bob"))
-        
+
         assertEquals("hello Bob", e.SAY_HI_1.call(e, [name:"Bob"]) )
         assertEquals("hello Bob", e.invoke(e.SAY_HI_1, [name:"Bob"]).get() );
-    } 
+    }
     @Test
     public void testInvokeEffectors2() {
         MyEntity e = new MyEntity();
-        
+
         assertEquals("hi Bob", e.sayHi2("Bob", "hi"))
         assertEquals("hello Bob", e.sayHi2("Bob"))
-        
+
         assertEquals("hi Bob", e.sayHi2(name: "Bob", greeting:"hi"))
         assertEquals("hello Bob", e.sayHi2(name: "Bob"))
-        
+
         assertEquals("hello Bob", e.SAY_HI_2.call(e, [name:"Bob"]) )
         assertEquals("hello Bob", e.invoke(e.SAY_HI_2, [name:"Bob"]).get() );
     }
 
     //TODO test edge/error conditions
-    //(missing parameters, wrong number of params, etc)    
-    
+    //(missing parameters, wrong number of params, etc)
+
 }
 

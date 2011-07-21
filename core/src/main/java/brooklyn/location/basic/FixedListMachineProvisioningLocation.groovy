@@ -26,24 +26,27 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
         Preconditions.checkArgument properties.machines instanceof Collection<T>, "'machines' value must be a collection"
         Collection<T> machines = properties.remove('machines')
 
+        available = []
+        inUse = []
+
         machines.each {
             Preconditions.checkArgument it.parentLocation == null,
                 "Machines must not have a parent location, but machine '%s' has its parent location set", it.name;
+	        addChildLocation(it)
         }
 
         available = new ArrayList();
         inUse = new ArrayList();
-        machines.each {
-            // As a side effect, this will add 'it' to the 'available' list
-            it.setParentLocation(this);
-        }
+        machines.each { it.setParentLocation(this) } // As a side effect, this will add it to the available list
     }
 
+    @Override
     protected void addChildLocation(Location child) {
         super.addChildLocation(child);
         available.add(child);
     }
 
+    @Override
     protected boolean removeChildLocation(Location child) {
         if (!available.remove(child)) {
             if (inUse.contains(child)) {

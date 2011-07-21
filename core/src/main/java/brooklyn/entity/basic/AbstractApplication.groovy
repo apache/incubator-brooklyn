@@ -1,15 +1,18 @@
 package brooklyn.entity.basic
 
+import java.beans.PropertyChangeListener
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ExecutionException;
+
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
 import brooklyn.entity.trait.Changeable
+import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
+import brooklyn.management.Task
 import brooklyn.management.internal.AbstractManagementContext
 import brooklyn.management.internal.LocalManagementContext
-import brooklyn.util.internal.EntityStartUtils
 import brooklyn.util.internal.SerializableObservableMap
-import java.beans.PropertyChangeListener
-import java.util.concurrent.ConcurrentHashMap
 
 public abstract class AbstractApplication extends AbstractGroup implements Application, Changeable {
 
@@ -28,10 +31,17 @@ public abstract class AbstractApplication extends AbstractGroup implements Appli
     /**
      * Default start will start all Startable children
      */
-    public void start(Collection<Location> locs) {
-        getManagementContext().manage(this)
-        
-        EntityStartUtils.startGroup this, locs
+    public void start(Collection<Location> locations) {
+//        getManagementContext().manage(this)
+        List<Entity> startable = ownedChildren.find { it in Startable }
+        if (startable && !startable.isEmpty() && locations && !locations.isEmpty()) {
+	        Task start = invokeEffectorList(startable, Startable.START, [ locations:locations ])
+	        try {
+	            start.get()
+	        } catch (ExecutionException ee) {
+	            throw ee.cause
+	        }
+        }
         deployed = true
     }
 

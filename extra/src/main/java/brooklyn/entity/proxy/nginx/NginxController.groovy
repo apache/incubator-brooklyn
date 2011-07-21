@@ -81,7 +81,7 @@ events {
 }
 http {
   upstream ${id} {
-    ip_hash;
+    sticky;
 """
         servers.each { String address -> config.append("    server ${address};\n") }
         config.append """

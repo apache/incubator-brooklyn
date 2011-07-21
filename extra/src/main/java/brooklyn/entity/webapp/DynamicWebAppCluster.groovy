@@ -10,6 +10,15 @@ import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.policy.CustomAggregatingEnricher
 import brooklyn.policy.Policy
 
+/**
+ * DynamicWebAppClusters provide cluster-wide aggregates of entity attributes.  Currently totals and averages:
+ * <ul>
+ *   <li>Entity request counts</li>
+ *   <li>Entity error counts</li>
+ *   <li>Requests per second</li>
+ *   <li>Entity processing time</li>
+ * </ul>
+ */
 class DynamicWebAppCluster extends DynamicCluster {
 
     public static final BasicAttributeSensor TOTAL_REQUEST_COUNT =
@@ -32,7 +41,9 @@ class DynamicWebAppCluster extends DynamicCluster {
     public static final BasicAttributeSensor<Integer> AVERAGE_PROCESSING_TIME =
             [ Integer, "cluster.reqs.processing-time.average", "Cluster entity average total processing time" ]
 
-            
+    /**
+     * Instantiate a new DynamicWebAppCluster.  Parameters as per {@link DynamicCluster#DynamicCluster()}
+     */
     public DynamicWebAppCluster(Map properties=[:], Entity owner=null) {
         super(properties, owner)
         
