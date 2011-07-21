@@ -22,7 +22,7 @@ class RollingMeanEnricher<T extends Number> extends AbstractTransformingEnricher
     }
     
     /** @returns null when no data has been received or windowSize is 0 */
-    public Number getAverage() {
+    public Double getAverage() {
         pruneValues()
         return values.size() == 0 ? null : values.sum() / values.size()
     }
