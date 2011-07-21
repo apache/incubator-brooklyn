@@ -10,11 +10,6 @@ import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.policy.basic.AbstractTransformingEnricher
 
 class DeltaEnricher<T extends Number> extends AbstractTransformingEnricher {
-    private LinkedList<T> values = new LinkedList<T>()
-    
-    // TODO: Add a time-based delta enricher so that it can be used to calculate 
-    // things like requests/sec
-    
     Number last = 0
     
     public DeltaEnricher(Entity producer, Sensor<T> source, Sensor<T> target) {

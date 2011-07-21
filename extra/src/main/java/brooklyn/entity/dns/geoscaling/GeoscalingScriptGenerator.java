@@ -9,7 +9,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.Set;
 
-import brooklyn.entity.dns.ServerGeoInfo;
+import brooklyn.entity.dns.HostGeoInfo;
 
 class GeoscalingScriptGenerator {
     
@@ -18,7 +18,7 @@ class GeoscalingScriptGenerator {
     private static final String DATESTAMP_MARKER = "DATESTAMP";
 
     
-    public static String generateScriptString(Set<ServerGeoInfo> hosts) {
+    public static String generateScriptString(Set<HostGeoInfo> hosts) {
         String template = loadResource(PHP_SCRIPT_TEMPLATE_RESOURCE);
         String datestamp = new SimpleDateFormat("E, dd MMM yyyy 'at' HH:mm:ss Z").format(new Date());
         String declarations = getHostsDeclaration(hosts);
@@ -27,12 +27,12 @@ class GeoscalingScriptGenerator {
             .replace(HOSTS_DECLARATIONS_MARKER, declarations);
     }
     
-    private static String getHostsDeclaration(Set<ServerGeoInfo> hosts) {
+    private static String getHostsDeclaration(Set<HostGeoInfo> hosts) {
         StringBuffer sb = new StringBuffer();
         sb.append("$hosts = array(\n");
-        Iterator<ServerGeoInfo> iServer = hosts.iterator();
+        Iterator<HostGeoInfo> iServer = hosts.iterator();
         while (iServer.hasNext()) {
-            ServerGeoInfo server = iServer.next();
+            HostGeoInfo server = iServer.next();
             sb.append("    array('name'      => '").append(server.displayName).append("',\n");
             sb.append("          'latitude'  => ").append(server.latitude).append(",\n");
             sb.append("          'longitude' => ").append(server.longitude).append(",\n");
