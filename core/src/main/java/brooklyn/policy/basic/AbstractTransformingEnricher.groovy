@@ -4,13 +4,13 @@ import java.util.LinkedList;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.event.EventListener;
+import brooklyn.event.SensorEventListener;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.basic.BasicAttributeSensor;
 
 
-abstract class AbstractTransformingEnricher<T> extends AbstractPolicy implements EventListener<T> {
+abstract class AbstractTransformingEnricher<T> extends AbstractPolicy implements SensorEventListener<T> {
     private Entity producer
     private Sensor<T> source
     protected Sensor<T> target

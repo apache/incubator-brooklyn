@@ -14,7 +14,7 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.AbstractGroup
-import brooklyn.event.EventListener
+import brooklyn.event.SensorEventListener
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
 import brooklyn.event.basic.BasicAttributeSensor
@@ -28,7 +28,7 @@ public class LocalSubscriptionManagerTest {
         public TestApplication(Map properties=[:]) {
             super(properties)
         }
-        public <T> SubscriptionHandle subscribeToMembers(Entity parent, Sensor<T> sensor, EventListener<T> listener) {
+        public <T> SubscriptionHandle subscribeToMembers(Entity parent, Sensor<T> sensor, SensorEventListener<T> listener) {
             subscriptionContext.subscribeToMembers(parent, sensor, listener)
         }
     }
@@ -56,7 +56,7 @@ public class LocalSubscriptionManagerTest {
         TestApplication app = new TestApplication()
         TestEntity entity = new TestEntity([owner:app])
         CountDownLatch latch = new CountDownLatch(1)
-        app.subscribe(entity, TestEntity.SEQUENCE, { latch.countDown() } as EventListener) 
+        app.subscribe(entity, TestEntity.SEQUENCE, { latch.countDown() } as SensorEventListener) 
         entity.setSequenceValue(1234)
         if (!latch.await(1, TimeUnit.SECONDS)) {
             fail "Timeout waiting for Event on TestEntity listener"
@@ -68,7 +68,7 @@ public class LocalSubscriptionManagerTest {
         TestApplication app = new TestApplication()
         TestEntity child = new TestEntity([owner:app])
         CountDownLatch latch = new CountDownLatch(1)
-        app.subscribeToChildren(app, TestEntity.SEQUENCE, { latch.countDown() } as EventListener) 
+        app.subscribeToChildren(app, TestEntity.SEQUENCE, { latch.countDown() } as SensorEventListener) 
         child.setSequenceValue(1234)
         if (!latch.await(1, TimeUnit.SECONDS)) {
             fail "Timeout waiting for Event on child TestEntity listener"
@@ -84,7 +84,7 @@ public class LocalSubscriptionManagerTest {
 
         List<SensorEvent<Integer>> events = []
         CountDownLatch latch = new CountDownLatch(1)
-        app.subscribeToMembers(group, TestEntity.SEQUENCE, { events.add(it); latch.countDown() } as EventListener)
+        app.subscribeToMembers(group, TestEntity.SEQUENCE, { events.add(it); latch.countDown() } as SensorEventListener)
         member.emit(TestEntity.SEQUENCE, 123)
 
         if (!latch.await(1, TimeUnit.SECONDS)) {

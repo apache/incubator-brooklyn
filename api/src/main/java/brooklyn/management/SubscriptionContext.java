@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.Set;
 
 import brooklyn.entity.Entity;
-import brooklyn.event.EventListener;
+import brooklyn.event.SensorEventListener;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 
@@ -13,24 +13,24 @@ import brooklyn.event.SensorEvent;
  */
 public interface SubscriptionContext {
     /**
-     * As {@link SubscriptionManager#subscribe(Map, Entity, Sensor, EventListener)} with default subscription parameters for this context
+     * As {@link SubscriptionManager#subscribe(Map, Entity, Sensor, SensorEventListener)} with default subscription parameters for this context
      */
-    <T> SubscriptionHandle subscribe(Map<String, Object> flags, Entity producer, Sensor<T> sensor, EventListener<T> listener);
+    <T> SubscriptionHandle subscribe(Map<String, Object> flags, Entity producer, Sensor<T> sensor, SensorEventListener<T> listener);
  
-    /** @see #subscribe(Map, Entity, Sensor, EventListener) */
-    <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, EventListener<T> listener);
+    /** @see #subscribe(Map, Entity, Sensor, SensorEventListener) */
+    <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<T> listener);
     
-    /** @see #subscribe(Map, Entity, Sensor, EventListener) */
-    <T> SubscriptionHandle subscribeToChildren(Map<String, Object> flags, Entity parent, Sensor<T> sensor, EventListener<T> listener);
+    /** @see #subscribe(Map, Entity, Sensor, SensorEventListener) */
+    <T> SubscriptionHandle subscribeToChildren(Map<String, Object> flags, Entity parent, Sensor<T> sensor, SensorEventListener<T> listener);
  
-    /** @see #subscribe(Map, Entity, Sensor, EventListener) */
-    <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, EventListener<T> listener);
+    /** @see #subscribe(Map, Entity, Sensor, SensorEventListener) */
+    <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, SensorEventListener<T> listener);
     
-    /** @see #subscribe(Map, Entity, Sensor, EventListener) */
-    <T> SubscriptionHandle subscribeToMembers(Map<String, Object> flags, Entity parent, Sensor<T> sensor, EventListener<T> listener);
+    /** @see #subscribe(Map, Entity, Sensor, SensorEventListener) */
+    <T> SubscriptionHandle subscribeToMembers(Map<String, Object> flags, Entity parent, Sensor<T> sensor, SensorEventListener<T> listener);
  
-    /** @see #subscribe(Map, Entity, Sensor, EventListener) */
-    <T> SubscriptionHandle subscribeToMembers(Entity parent, Sensor<T> sensor, EventListener<T> listener);
+    /** @see #subscribe(Map, Entity, Sensor, SensorEventListener) */
+    <T> SubscriptionHandle subscribeToMembers(Entity parent, Sensor<T> sensor, SensorEventListener<T> listener);
     
     /** @see SubscriptionManager#unsubscribe(SubscriptionHandle) */
     boolean unsubscribe(SubscriptionHandle subscriptionId);

@@ -10,7 +10,7 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.basic.AbstractService
 import brooklyn.entity.basic.Attributes
-import brooklyn.event.EventListener
+import brooklyn.event.SensorEventListener
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent;
 import brooklyn.event.basic.BasicAttributeSensor

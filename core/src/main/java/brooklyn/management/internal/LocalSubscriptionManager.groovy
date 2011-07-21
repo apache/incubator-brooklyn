@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
-import brooklyn.event.EventListener
+import brooklyn.event.SensorEventListener
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
 import brooklyn.management.ExecutionManager
@@ -49,7 +49,7 @@ public class LocalSubscriptionManager implements SubscriptionManager {
     }
       
     /** @see SubscriptionManager#subscribe(Map, Entity, Sensor, EventListener) */
-    public <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, EventListener<T> listener) {
+    public <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<T> listener) {
         subscribe([:], producer, sensor, listener)
     }
  
@@ -65,7 +65,7 @@ public class LocalSubscriptionManager implements SubscriptionManager {
      * 
      * @see SubscriptionManager#subscribe(Map, Entity, Sensor, EventListener)
      */
-    public synchronized <T> SubscriptionHandle subscribe(Map<String, Object> flags, Entity producer, Sensor<T> sensor, EventListener<T> listener) {
+    public synchronized <T> SubscriptionHandle subscribe(Map<String, Object> flags, Entity producer, Sensor<T> sensor, SensorEventListener<T> listener) {
         Subscription s = new Subscription(producer:producer, sensor:sensor, listener:listener)
         s.subscriber = flags.remove("subscriber")
         if (flags.containsKey("subscriberExecutionManagerTag")) {
@@ -94,12 +94,12 @@ public class LocalSubscriptionManager implements SubscriptionManager {
     }
   
     /** @see SubscriptionManager#subscribeToChildren(Map, Entity, Sensor, EventListener) */
-    public <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, EventListener<T> listener) {
+    public <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, SensorEventListener<T> listener) {
         subscribeToChildren([:], parent, sensor, listener)
     }
 
     /** @see SubscriptionManager#subscribe(Map, Entity, Sensor, EventListener) */
-    public synchronized <T> SubscriptionHandle subscribeToChildren(Map<String, Object> flags, final Entity parent, Sensor<T> sensor, EventListener<T> listener) {
+    public synchronized <T> SubscriptionHandle subscribeToChildren(Map<String, Object> flags, final Entity parent, Sensor<T> sensor, SensorEventListener<T> listener) {
         Predicate<SensorEvent<T>> eventFilter = new Predicate<SensorEvent<?>>() {
             public boolean apply(SensorEvent<?> input) {
                 return parent.getOwnedChildren().contains(input.source)
@@ -110,7 +110,7 @@ public class LocalSubscriptionManager implements SubscriptionManager {
     }
 
     /** @see SubscriptionManager#subscribe(Map, Entity, Sensor, EventListener) */
-    public synchronized <T> SubscriptionHandle subscribeToMembers(Map<String, Object> flags, final Group parent, Sensor<T> sensor, EventListener<T> listener) {
+    public synchronized <T> SubscriptionHandle subscribeToMembers(Map<String, Object> flags, final Group parent, Sensor<T> sensor, SensorEventListener<T> listener) {
         Predicate<SensorEvent<T>> eventFilter = new Predicate<SensorEvent<?>>() {
             public boolean apply(SensorEvent<?> input) {
                 return parent.members.contains(input.source)
@@ -194,7 +194,7 @@ class Subscription<T> implements SubscriptionHandle {
     public boolean subscriberExecutionManagerTagSupplied;
     public Entity producer;
     public Sensor<T> sensor;
-    public EventListener<T> listener;
+    public SensorEventListener<T> listener;
     public Map<String,Object> flags;
     public Predicate<SensorEvent<T>> eventFilter;
 

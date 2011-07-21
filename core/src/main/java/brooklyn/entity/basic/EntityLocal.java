@@ -6,7 +6,7 @@ import java.util.Map;
 import brooklyn.entity.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.EventListener;
+import brooklyn.event.SensorEventListener;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.management.ManagementContext;
@@ -45,14 +45,14 @@ public interface EntityLocal extends Entity {
      * 
      * @return a subscription id which can be used to unsubscribe
      *
-     * @see SubscriptionManger#subscribe(Map, Entity, Sensor, EventListener)
+     * @see SubscriptionManger#subscribe(Map, Entity, Sensor, SensorEventListener)
      */
     // FIXME remove from interface?
-    <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, EventListener<T> listener);
+    <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<T> listener);
  
-    /** @see SubscriptionManger#subscribeToChildren(Map, Entity, Sensor, EventListener) */
+    /** @see SubscriptionManger#subscribeToChildren(Map, Entity, Sensor, SensorEventListener) */
     // FIXME remove from interface?
-    <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, EventListener<T> listener);
+    <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, SensorEventListener<T> listener);
  
     /**
      * Adds the given policy to this entity. Also calls policy.setEntity if available.

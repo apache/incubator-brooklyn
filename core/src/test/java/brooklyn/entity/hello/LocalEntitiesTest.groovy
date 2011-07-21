@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicReference
 import org.testng.annotations.Test
 
 import brooklyn.entity.basic.AbstractApplication
-import brooklyn.event.EventListener
+import brooklyn.event.SensorEventListener
 import brooklyn.event.SensorEvent
 import brooklyn.management.Task
 import brooklyn.location.Location
@@ -50,7 +50,7 @@ class LocalEntitiesTest {
             synchronized (evt) {
                 evt.notifyAll();
             }
-        } as EventListener)
+        } as SensorEventListener)
         long startTime = System.currentTimeMillis()
         synchronized (evt) {
 //            h.setAge(5)

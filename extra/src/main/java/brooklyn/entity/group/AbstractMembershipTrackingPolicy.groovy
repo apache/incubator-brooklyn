@@ -6,6 +6,7 @@ import java.util.Map
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractGroup
+import brooklyn.event.SensorEventListener;
 import brooklyn.location.MachineLocation
 import brooklyn.management.SubscriptionHandle
 import brooklyn.policy.basic.AbstractPolicy
@@ -28,8 +29,8 @@ abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
         this.group = group;
         reset();
         group.members.each { onEntityAdded it }
-        subscribe(group, group.MEMBER_ADDED, { Entity entity -> onEntityAdded entity } as EventListener);
-        subscribe(group, group.MEMBER_REMOVED, { Entity entity -> onEntityRemoved entity } as EventListener);
+        subscribe(group, group.MEMBER_ADDED, { Entity entity -> onEntityAdded entity } as SensorEventListener);
+        subscribe(group, group.MEMBER_REMOVED, { Entity entity -> onEntityRemoved entity } as SensorEventListener);
     }
 
     public void reset() {

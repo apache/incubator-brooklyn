@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.Set;
 
 import brooklyn.entity.Entity;
-import brooklyn.event.EventListener;
+import brooklyn.event.SensorEventListener;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 
@@ -18,7 +18,7 @@ import brooklyn.event.SensorEvent;
  */
 public interface SubscriptionManager {
     /**
-     * Subscribe to {@link Sensor} data changes and events on a given {@link Entity}, supplying the {@link EventListener}
+     * Subscribe to {@link Sensor} data changes and events on a given {@link Entity}, supplying the {@link SensorEventListener}
      * to invoke when they occur.
      * 
      * The method returns an id which can be used to {@link #unsubscribe(SubscriptionHandle)} later.
@@ -38,31 +38,31 @@ public interface SubscriptionManager {
      * 
      * @see #unsubscribe(SubscriptionHandle)
      */
-    <T> SubscriptionHandle subscribe(Map<String, Object> flags, Entity producer, Sensor<T> sensor, EventListener<T> listener);
+    <T> SubscriptionHandle subscribe(Map<String, Object> flags, Entity producer, Sensor<T> sensor, SensorEventListener<T> listener);
  
-    /** @see #subscribe(Map, Entity, Sensor, EventListener) */
-    <T> SubscriptionHandle subscribe(Entity parent, Sensor<T> sensor, EventListener<T> listener);
+    /** @see #subscribe(Map, Entity, Sensor, SensorEventListener) */
+    <T> SubscriptionHandle subscribe(Entity parent, Sensor<T> sensor, SensorEventListener<T> listener);
 
     /**
      * Subscribe to {@link Sensor} data changes and events on all children of a given {@link Entity}, supplying the
-     * {@link EventListener} to invoke when they occur.
+     * {@link SensorEventListener} to invoke when they occur.
      * 
      * The subscriptions will be created recursively for all children, and the same listener callback will be invoked for each
-     * sensor datum. The semantics are otherwise identical to the {@link #subscribe(Map, Entity, Sensor, EventListener)} method.
+     * sensor datum. The semantics are otherwise identical to the {@link #subscribe(Map, Entity, Sensor, SensorEventListener)} method.
      *
-     * @see #subscribe(Map, Entity, Sensor, EventListener)
+     * @see #subscribe(Map, Entity, Sensor, SensorEventListener)
      */
-    <T> SubscriptionHandle subscribeToChildren(Map<String, Object> flags, Entity parent, Sensor<T> sensor, EventListener<T> listener);
+    <T> SubscriptionHandle subscribeToChildren(Map<String, Object> flags, Entity parent, Sensor<T> sensor, SensorEventListener<T> listener);
  
-    /** @see #subscribeToChildren(Map, Entity, Sensor, EventListener) */
-    <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, EventListener<T> listener);
+    /** @see #subscribeToChildren(Map, Entity, Sensor, SensorEventListener) */
+    <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, SensorEventListener<T> listener);
 
     /**
      * Unsubscribe the given subscription id.
      * 
      * @return true if such a subscription was present (and it will now be removed)
      * 
-     * @see #subscribe(Map, Entity, Sensor, EventListener)
+     * @see #subscribe(Map, Entity, Sensor, SensorEventListener)
      */
     boolean unsubscribe(SubscriptionHandle subscriptionId);
 

@@ -17,7 +17,7 @@ import brooklyn.entity.Entity
 import brooklyn.entity.EntityClass
 import brooklyn.entity.Group
 import brooklyn.event.AttributeSensor
-import brooklyn.event.EventListener
+import brooklyn.event.SensorEventListener
 import brooklyn.event.Sensor
 import brooklyn.event.basic.AttributeMap
 import brooklyn.location.Location
@@ -408,12 +408,12 @@ abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
     }
 
     /** @see Entity#subscribe(Entity, Sensor, EventListener) */
-    public <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, EventListener<T> listener) {
+    public <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<T> listener) {
         subscriptionContext.subscribe(producer, sensor, listener)
     }
 
     /** @see Entity#subscribeToChildren(Entity, Sensor, EventListener) */
-    public <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, EventListener<T> listener) {
+    public <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, SensorEventListener<T> listener) {
         subscriptionContext.subscribeToChildren(parent, sensor, listener)
     }
 

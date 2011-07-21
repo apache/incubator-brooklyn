@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.EntityLocal
-import brooklyn.event.EventListener
+import brooklyn.event.SensorEventListener
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
 import brooklyn.management.SubscriptionHandle
@@ -18,7 +18,7 @@ import brooklyn.policy.basic.AbstractPolicy
  * provided closure and emits the result on the target sensor.
  * @param <T>
  */
-class CustomAggregatingEnricher<T> extends AbstractPolicy implements EventListener<T> {
+class CustomAggregatingEnricher<T> extends AbstractPolicy implements SensorEventListener<T> {
     
     private static final Logger LOG = LoggerFactory.getLogger(CustomAggregatingEnricher.class)
     

@@ -2,7 +2,7 @@ package brooklyn.management.internal
 
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
-import brooklyn.event.EventListener
+import brooklyn.event.SensorEventListener
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
 import brooklyn.management.SubscriptionContext
@@ -27,10 +27,10 @@ public class BasicSubscriptionContext implements SubscriptionContext {
     }
 
     public <T> SubscriptionHandle subscribe(Map<String, Object> newFlags=[:], Entity producer, Sensor<T> sensor, Closure c) {
-        subscribe(newFlags, producer, sensor, c as EventListener)        
+        subscribe(newFlags, producer, sensor, c as SensorEventListener)        
     }
 
-    public <T> SubscriptionHandle subscribe(Map<String, Object> newFlags=[:], Entity producer, Sensor<T> sensor, EventListener<T> listener) {
+    public <T> SubscriptionHandle subscribe(Map<String, Object> newFlags=[:], Entity producer, Sensor<T> sensor, SensorEventListener<T> listener) {
         Map subscriptionFlags = [:]
         subscriptionFlags << flags
         if (newFlags) subscriptionFlags << newFlags
@@ -38,10 +38,10 @@ public class BasicSubscriptionContext implements SubscriptionContext {
     }
     
     public <T> SubscriptionHandle subscribeToChildren(Map<String, Object> newFlags=[:], Entity parent, Sensor<T> sensor, Closure c) {
-        subscribeToChildren(newFlags, parent, sensor, c as EventListener)        
+        subscribeToChildren(newFlags, parent, sensor, c as SensorEventListener)        
     }
 
-    public <T> SubscriptionHandle subscribeToChildren(Map<String, Object> newFlags=[:], Entity parent, Sensor<T> sensor, EventListener<T> listener) {
+    public <T> SubscriptionHandle subscribeToChildren(Map<String, Object> newFlags=[:], Entity parent, Sensor<T> sensor, SensorEventListener<T> listener) {
         Map subscriptionFlags = [:]
         subscriptionFlags << flags
         if (newFlags) subscriptionFlags << newFlags
@@ -49,10 +49,10 @@ public class BasicSubscriptionContext implements SubscriptionContext {
     }
  
     public <T> SubscriptionHandle subscribeToMembers(Map<String, Object> newFlags=[:], Entity parent, Sensor<T> sensor, Closure c) {
-        subscribeToMembers(newFlags, parent, sensor, c as EventListener)
+        subscribeToMembers(newFlags, parent, sensor, c as SensorEventListener)
     }
 
-    public <T> SubscriptionHandle subscribeToMembers(Map<String, Object> newFlags=[:], Entity parent, Sensor<T> sensor, EventListener<T> listener) {
+    public <T> SubscriptionHandle subscribeToMembers(Map<String, Object> newFlags=[:], Entity parent, Sensor<T> sensor, SensorEventListener<T> listener) {
         Map subscriptionFlags = [:]
         subscriptionFlags << flags
         if (newFlags) subscriptionFlags << newFlags

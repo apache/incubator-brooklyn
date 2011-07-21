@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.EntityLocal
-import brooklyn.event.EventListener
+import brooklyn.event.SensorEventListener
 import brooklyn.event.Sensor
 import brooklyn.management.ExecutionContext
 import brooklyn.management.ManagementContext
@@ -42,7 +42,7 @@ class AbstractPolicy implements Policy {
    }
    
    /** @see SubscriptionContext#subscribe(Entity, Sensor, EventListener) */
-   protected <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, EventListener<T> listener) {
+   protected <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<T> listener) {
        def handle = subscription.subscribe producer, sensor, listener
        subscriptions.put(producer, handle)
        return handle
