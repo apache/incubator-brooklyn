@@ -16,7 +16,13 @@ import com.google.common.base.Preconditions
 abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
     private AbstractGroup group;
     private List<SubscriptionHandle> subscriptions = [];
-
+    
+    
+    public AbstractMembershipTrackingPolicy() { }
+    
+    public AbstractMembershipTrackingPolicy(AbstractGroup group) {
+        setGroup(group);
+    }
     
     public void setGroup(AbstractGroup group) {
         Preconditions.checkNotNull(group, "The group cannot be null");
