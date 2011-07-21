@@ -62,7 +62,12 @@ class EntityController {
         else if (es.size() > 1) {
             render(status: 500, text: '{message: "Two entities with that ID were found. This should not happen."}')
         } else {
+        //could just do a recursive loop in here until ownerId = null
             Entity e = es.toArray()[0]
+            String name = e.displayName
+            String owner = e.owner.id
+            def result = [name:name,owner: owner];
+            render(result as JSON)
         }
     }
 

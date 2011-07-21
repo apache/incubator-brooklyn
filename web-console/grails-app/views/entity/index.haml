@@ -17,11 +17,14 @@
     %body
         #layout-middle-content
             .layout-left-column
-                .search-box
-                    %input{:type=>"search", :placeholder=>"Search", :name=>"name", :class=>"search-input", :id=>"search-input", :results=>"5", :autosave=>"brooklynEntity"}
-                %div{:id=>"jstree", :class=>"jstree"}
+                #brooklyn-logo
+                    %h1{:id=>"brooklyn-header"}
+                .tree-components
+                    .search-box
+                        %input{:type=>"search", :placeholder=>"Search", :name=>"name", :class=>"search-input", :id=>"search-input", :results=>"5", :autosave=>"brooklynEntity"}
+                    %div{:id=>"jstree", :class=>"jstree"}
             .layout-main-content
-                #navigation{:align=>"right"}
+                #navigation{:align=>"left"}
                 #tabs
                     %ul
                         %li
