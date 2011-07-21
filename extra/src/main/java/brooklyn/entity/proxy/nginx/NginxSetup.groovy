@@ -57,9 +57,12 @@ public class NginxSetup extends SshBasedAppSetup {
         makeInstallScript([
                 "wget http://nginx.org/download/nginx-${version}.tar.gz",
                 "tar xvzf nginx-${version}.tar.gz",
-	            "cd \$INSTALL",
+	            "cd \$INSTALL/src",
+                "wget http://nginx-sticky-module.googlecode.com/files/nginx-sticky-module-1.0-rc2.tar.gz",
+                "tar xvzf nginx-sticky-module-1.0-rc2.tar.gz",
+                "cd ..",
 	            "mkdir -p dist",
-	            "./configure --prefix=\$INSTALL/dist",
+	            "./configure --prefix=\$INSTALL/dist --add-module=\$INSTALL/src/nginx-sticky-module-1.0-rc2",
 	            "make install"
             ])
     }

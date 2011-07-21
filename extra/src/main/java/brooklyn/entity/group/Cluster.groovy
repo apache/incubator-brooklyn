@@ -85,7 +85,7 @@ public abstract class ClusterFromTemplate extends Cluster implements Resizable {
         start locations
     }
 
-    public synchronized Integer resize(int newSize) {
+    public synchronized Integer resize(Integer newSize) {
         int newNodes = newSize - members.size()
         if (newNodes>0) grow(newNodes)
         else if (newNodes<0) shrink(-newNodes);

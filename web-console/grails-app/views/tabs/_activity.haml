@@ -1,10 +1,8 @@
 .activity
     .tab-content-left-column
         %table{:id=>"activity-data"}
-    %fieldset{:class=>"tab-content-right-column"}
-        %legend Activity Log
-        //just put a large text box in here
-        %textarea{:id=>"logbox",:readonly=>"true",:wrap=>"hard"}
-        .buttons{::align=>"center"}
-            %button{:id=>"activity-select"} Select
-            %button{:id=>"activity-clear"} Clear
+        #activityStatus
+            %fieldset{:id=>"activityFieldset"}
+                %legend Activity Status
+                //just put a large text box in here
+                %textarea{:id=>"logbox",:readonly=>"true",:wrap=>"hard"}

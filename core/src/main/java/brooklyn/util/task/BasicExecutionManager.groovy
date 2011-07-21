@@ -83,17 +83,16 @@ public class BasicExecutionManager implements ExecutionManager {
             Object result = null
             try { 
                 beforeStart(flags, task);
-                if (!task.isCancelled())
+                if (!task.isCancelled()) {
                     result = task.job.call()
-                else 
-                    throw new CancellationException()
+                } else throw new CancellationException()
             } catch(Exception e) {
-                log.error("Error while running task", e)
                 result = e
             } finally { 
                 afterEnd(flags, task) 
             }
             if (result instanceof Exception) {
+                log.warn "Error while running task {}", result.message
                 throw result
             }
             result

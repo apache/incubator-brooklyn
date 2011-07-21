@@ -5,49 +5,30 @@ import brooklyn.management.Task
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 
-/** Summary of a Brookln Task   */
+/** Summary of a Brooklyn Task   */
 public class TaskSummary {
 
-    final String name;
+    final String displayName;
     final String description;
     final String id;
     final Set<String> tags;
     final String submitTimeUtc;
     final String startTimeUtc;
     final String endTimeUtc;
-    final String submittedByTask;
-    final String statusDetail;
-    final String statusDetailMultiLine;
-    final boolean submitted;
-    final boolean done;
-    final boolean error;
-    final boolean cancelled;
+    final String currentStatus;
+    final String detailedStatus;
 
-    DateFormat formatter = new SimpleDateFormat("hh:mm:ss dd/MM/yyyy ")
-    Calendar date = Calendar.getInstance();
+    private DateFormat formatter = new SimpleDateFormat("hh:mm:ss dd/MM/yyyy")
 
     public TaskSummary(Task task) {
-        //TODO Add name and description to task interface
-        this.name = "Activity"
-        this.description = "This is some activity"
-
+        this.displayName = task.displayName
+        this.description = task.description
         this.id = task.id
-
-        date.setTimeInMillis(task.submitTimeUtc)
-        this.submitTimeUtc = formatter.format(date.getTime())
-        date.setTimeInMillis(task.startTimeUtc)
-        this.startTimeUtc = formatter.format(date.getTime())
-        date.setTimeInMillis(task.endTimeUtc)
-        this.endTimeUtc = formatter.format(date.getTime())
-
-        this.submittedByTask = task.submittedByTask ? task.submittedByTask.id : null
-        this.statusDetail = task.getStatusDetail(false)
-        this.statusDetailMultiLine = task.getStatusDetail(true)
-        this.submittedByTask = task.submittedByTask
-        this.submitted = task.submitted
-        this.done = task.done
-        this.error = task.error
-        this.cancelled = task.cancelled
+        this.submitTimeUtc = formatter.format(new Date(task.submitTimeUtc))
+        this.startTimeUtc = formatter.format(new Date(task.startTimeUtc))
+        this.endTimeUtc = formatter.format(new Date(task.endTimeUtc))
+        this.currentStatus = task.statusSummary
+        this.detailedStatus = task.getStatusDetail(true)
     }
 
 }
