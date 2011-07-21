@@ -130,10 +130,17 @@ public class TomcatServerIntegrationTest {
 		        String url = tc.getAttribute(TomcatServer.ROOT_URL) + "foo"
                 int n = 10
                 n.times { connectToURL url }
-                Thread.sleep 1000
+                Thread.sleep 500
                 def requestCount = tc.getAttribute(TomcatServer.REQUEST_COUNT)
                 activityValue = tc.getAttribute(TomcatServer.REQUESTS_PER_SECOND)
                 
+                logger.info("TOMCAT REQS 1: $requestCount $activityValue "+tc.getAttribute(TomcatServer.AVG_REQUESTS_PER_SECOND))
+
+                n.times { connectToURL url }
+                Thread.sleep 200
+                activityValue = tc.getAttribute(TomcatServer.REQUESTS_PER_SECOND)
+                logger.info("TOMCAT REQS 2: $requestCount $activityValue "+tc.getAttribute(TomcatServer.AVG_REQUESTS_PER_SECOND))
+
                 assertTrue requestCount > 0
                 assertEquals requestCount % n, 0
 
