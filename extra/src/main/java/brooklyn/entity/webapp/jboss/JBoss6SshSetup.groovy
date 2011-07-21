@@ -125,7 +125,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         Map<String, String> env = [
 	        "LAUNCH_JBOSS_IN_BACKGROUND" : "1",
 	        "JBOSS_HOME" : "${installDir}",
-	        "JAVA_OPTS" : toJavaDefinesString(getJvmStartupProperties()),
+	        "JAVA_OPTS" : toJavaDefinesString(getJvmStartupProperties())+" -Xmx256m -Xms128m",
 	        "JBOSS_CLASSPATH" : "\$JBOSS_HOME/lib/jboss-logmanager.jar",
 	        "RUN" : "${runDir}",
         ]
