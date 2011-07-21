@@ -28,7 +28,7 @@ abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
         Preconditions.checkNotNull(group, "The group cannot be null");
         this.group = group;
         reset();
-        group.members.each { add it }
+        group.members.each { onEntityAdded it }
         subscriptions += subscription.subscribe(group, group.MEMBER_ADDED, { onEntityAdded it } as EventListener);
         subscriptions += subscription.subscribe(group, group.MEMBER_REMOVED, { onEntityRemoved it } as EventListener);
     }
@@ -38,7 +38,13 @@ abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
         subscriptions.clear();
     }
 
+    /**
+     * Called when a member is added.
+     */
     protected void onEntityAdded(Entity member) {}
+
+    /**
+     * Called when a member is removed.
+     */
     protected void onEntityRemoved(Entity member) {}
-    
 }
