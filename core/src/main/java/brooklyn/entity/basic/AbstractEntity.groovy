@@ -467,7 +467,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 
     
     /**
-     * Sensors available on this entity
+     * Sensors available on this entit5
      */
     public Map<String,Sensor<?>> getSensors() { sensors }
 
@@ -550,7 +550,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
      *
      * @see #invoke(Effector)
      */
-    public <T> Task<T> invoke(Effector<T> eff, Map<String,?> parameters) {
+    public <T> Task<T> invoke(Effector<T> effector, Map<String,?> parameters) {
         executionContext.submit(
                 { effector.call(this, parameters) } as Callable<T>,
                 description:"invocation of effector ${effector}")
