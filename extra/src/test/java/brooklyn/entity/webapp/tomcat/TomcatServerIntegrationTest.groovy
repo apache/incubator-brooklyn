@@ -179,7 +179,6 @@ public class TomcatServerIntegrationTest {
         executeUntilSucceedsWithShutdown(tc, {
             // TODO get this URL from a WAR file entity
             String url = tc.getAttribute(TomcatServer.ROOT_URL) + "swf-booking-mvc/spring/intro"
-            println url
             assertTrue urlRespondsWithStatusCode200(url)
             true
         }, abortOnError:false, timeout: 10*SECONDS)

@@ -35,8 +35,7 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
      */
     private static class WebClusterGroup extends AbstractGroup implements Startable {
         private static final String springTravelPath
-        // FIXME: change this to a Spring Travel WAR
-        private static final String warName = "hello-world.war"
+        private static final String warName = "swf-booking-mvc.war"
 
         private DynamicCluster cluster
         private NginxController controller
