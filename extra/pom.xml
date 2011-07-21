@@ -50,8 +50,13 @@
             <artifactId>httpclient</artifactId>
             <version>4.1.1</version>
         </dependency>
+        <dependency>
+            <groupId>jtidy</groupId>
+            <artifactId>jtidy</artifactId>
+            <version>4aug2000r7-dev</version>
+        </dependency>
 
-	<dependency>
+    	<dependency>
             <groupId>geronimo-spec</groupId>
 			<artifactId>geronimo-spec-jms</artifactId>
 			<version>1.1-rc4</version>
