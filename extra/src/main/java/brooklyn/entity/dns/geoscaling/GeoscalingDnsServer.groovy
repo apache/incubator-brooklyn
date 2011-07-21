@@ -13,6 +13,7 @@ import brooklyn.event.basic.BasicConfigKey
 
 class GeoscalingDnsServer extends AbstractEntity {
     
+    public static BasicConfigKey<String> GEOSCALING_PROTOCOL = [ String.class, "geoscaling.protocol" ];
     public static BasicConfigKey<String> GEOSCALING_HOST = [ String.class, "geoscaling.host" ];
     public static BasicConfigKey<Integer> GEOSCALING_PORT = [ Integer.class, "geoscaling.port" ];
     public static BasicConfigKey<String> GEOSCALING_USERNAME = [ String.class, "geoscaling.username" ];
@@ -45,6 +46,7 @@ class GeoscalingDnsServer extends AbstractEntity {
     }
     
     private void update() {
+        String protocol = getConfig(GEOSCALING_PROTOCOL);
         String host = getConfig(GEOSCALING_HOST);
         Integer port = getConfig(GEOSCALING_PORT);
         String username = getConfig(GEOSCALING_USERNAME);
@@ -53,20 +55,24 @@ class GeoscalingDnsServer extends AbstractEntity {
         Integer smartSubdomainId = getConfig(GEOSCALING_SMART_SUBDOMAIN_ID);
         String smartSubdomainName = getConfig(GEOSCALING_SMART_SUBDOMAIN_NAME);
         
+        protocol = protocol ?: GeoscalingWebClient.DEFAULT_PROTOCOL;
+        host = host ?: GeoscalingWebClient.DEFAULT_HOST;
+        port = port ?: GeoscalingWebClient.DEFAULT_PORT;
         // TODO: complain if required config is missing
         
-        configureGeoscalingService(host, port, username, password,
+        configureGeoscalingService(protocol, host, port, username, password,
             primaryDomainId, smartSubdomainId, smartSubdomainName, targetHosts);
         
         emit(TARGET_HOSTS, targetHosts);
     }
     
-    private static void configureGeoscalingService(String host, int port, String username, String password,
+    private static void configureGeoscalingService(
+        String protocol, String host, int port, String username, String password,
         int primaryDomainId, int smartSubdomainId, String smartSubdomainName, Set<HostGeoInfo> targetHosts) {
         
         String script = GeoscalingScriptGenerator.generateScriptString(targetHosts);
         
-        GeoscalingWebClient gwc = [ host, port ];
+        GeoscalingWebClient gwc = [ protocol, host, port ];
         gwc.login(username, password);
         gwc.configureSmartSubdomain(primaryDomainId, smartSubdomainId, smartSubdomainName,
             false, // provide network info

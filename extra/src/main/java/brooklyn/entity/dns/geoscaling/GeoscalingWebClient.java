@@ -14,20 +14,23 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 
 class GeoscalingWebClient {
-    private static final String DEFAULT_HOST ="www.geoscaling.com";
-    private static final int DEFAULT_PORT = 80;
+    public static final String DEFAULT_PROTOCOL ="http";
+    public static final String DEFAULT_HOST ="www.geoscaling.com";
+    public static final int DEFAULT_PORT = 80;
     private static final String PATH ="dns2/index.php";
     
+    private final String protocol;
     private final String host;
     private final int port;
     private DefaultHttpClient httpClient;
 
     
     public GeoscalingWebClient() {
-        this(DEFAULT_HOST, DEFAULT_PORT);
+        this(DEFAULT_PROTOCOL, DEFAULT_HOST, DEFAULT_PORT);
     }
     
-    public GeoscalingWebClient(String host, int port) {
+    public GeoscalingWebClient(String protocol, String host, int port) {
+        this.protocol = protocol;
         this.host = host;
         this.port = port;
         this.httpClient = new DefaultHttpClient();
@@ -35,7 +38,7 @@ class GeoscalingWebClient {
     
     public void login(String username, String password) {
         try {
-            String url = MessageFormat.format("http://{0}:{1}/{2}?module=auth", host, port, PATH);
+            String url = MessageFormat.format("{0}://{1}:{2}/{3}?module=auth", protocol, host, port, PATH);
             
             HttpPost request = new HttpPost(url);
             List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
@@ -54,7 +57,7 @@ class GeoscalingWebClient {
     
     public void logout() {
         try {
-            String url = MessageFormat.format("http://{0}:{1}/{2}?module=auth&logout", host, port, PATH);
+            String url = MessageFormat.format("{0}://{1}:{2}/{3}?module=auth&logout", protocol, host, port, PATH);
             HttpResponse response = httpClient.execute(new HttpGet(url));
             if (response.getEntity() != null)
                 EntityUtils.consume(response.getEntity());
@@ -71,8 +74,8 @@ class GeoscalingWebClient {
         
         try {
             String url = MessageFormat.format(
-                    "http://{0}:{1}/{2}?module=smart_subdomain&id={3,number,#}&subdomain_id={4,number,#}",
-                    host, port, PATH, primaryDomainId, smartSubdomainId);
+                    "{0}://{1}:{2}/{3}?module=smart_subdomain&id={4,number,#}&subdomain_id={5,number,#}",
+                    protocol, host, port, PATH, primaryDomainId, smartSubdomainId);
             
             HttpPost request = new HttpPost(url);
             List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
