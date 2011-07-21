@@ -3,7 +3,6 @@ package brooklyn.entity.dns;
 import java.net.InetAddress;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.dns.geoscaling.LocationUtils;
 
 /**
  * Encapsulates geo-IP information for a given server.

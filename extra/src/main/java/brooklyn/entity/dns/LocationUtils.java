@@ -1,4 +1,4 @@
-package brooklyn.entity.dns.geoscaling;
+package brooklyn.entity.dns;
 
 import java.net.InetAddress;
 
