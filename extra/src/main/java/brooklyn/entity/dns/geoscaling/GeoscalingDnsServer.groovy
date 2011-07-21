@@ -5,7 +5,7 @@ import java.util.Set
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.AbstractGroup
-import brooklyn.entity.dns.ServerGeoInfo
+import brooklyn.entity.dns.HostGeoInfo
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.event.AttributeSensor
 import brooklyn.event.basic.BasicConfigKey
@@ -21,9 +21,9 @@ class GeoscalingDnsServer extends AbstractEntity {
     public static BasicConfigKey<Integer> GEOSCALING_SMART_SUBDOMAIN_ID = [ Integer.class, "geoscaling.smart.subdomain.id" ];
     public static BasicConfigKey<String> GEOSCALING_SMART_SUBDOMAIN_NAME = [ String.class, "geoscaling.smart.subdomain.name" ];
     
-    public static AttributeSensor<Set<ServerGeoInfo>> TARGET_HOSTS = [ Set.class, "target.hosts" ];
+    public static AttributeSensor<Set<HostGeoInfo>> TARGET_HOSTS = [ Set.class, "target.hosts" ];
     
-    private final Map<Entity,ServerGeoInfo> targetHosts = new HashMap<Entity,ServerGeoInfo>();
+    private final Map<Entity,HostGeoInfo> targetHosts = new HashMap<Entity,HostGeoInfo>();
     
 
     public GeoscalingDnsServer(AbstractGroup group) {
@@ -35,7 +35,7 @@ class GeoscalingDnsServer extends AbstractEntity {
 
     private void addTargetHost(Entity e) {
         if (targetHosts.containsKey(e)) return;
-        targetHosts.put(e, ServerGeoInfo.fromEntity(e));
+        targetHosts.put(e, HostGeoInfo.fromEntity(e));
         update();
     }
 
@@ -62,7 +62,7 @@ class GeoscalingDnsServer extends AbstractEntity {
     }
     
     private static void configureGeoscalingService(String host, int port, String username, String password,
-        int primaryDomainId, int smartSubdomainId, String smartSubdomainName, Set<ServerGeoInfo> targetHosts) {
+        int primaryDomainId, int smartSubdomainId, String smartSubdomainName, Set<HostGeoInfo> targetHosts) {
         
         String script = GeoscalingScriptGenerator.generateScriptString(targetHosts);
         
