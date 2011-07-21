@@ -12,6 +12,7 @@ import brooklyn.entity.basic.AbstractService
 import brooklyn.entity.basic.Attributes
 import brooklyn.event.EventListener
 import brooklyn.event.Sensor
+import brooklyn.event.SensorEvent;
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.MachineLocation
@@ -81,9 +82,10 @@ public abstract class AbstractController extends AbstractService {
         Preconditions.checkNotNull cluster, "The cluster cannot be null"
         this.cluster = cluster
         reset()
+        subscriptions += subscriptionContext.subscribe(cluster, cluster.MEMBER_ADDED, { SensorEvent<Entity> evt -> add evt.value } as EventListener)
+        subscriptions += subscriptionContext.subscribe(cluster, cluster.MEMBER_REMOVED, { SensorEvent<Entity> evt -> remove evt.value } as EventListener)
+        //FIXME cluster may be remote, we need to make this retrieve the remote values, or store members in local mgmt node, or use children 
         cluster.members.each { add it }
-        subscriptions += subscriptionContext.subscribe(cluster, cluster.MEMBER_ADDED, { add it } as EventListener)
-        subscriptions += subscriptionContext.subscribe(cluster, cluster.MEMBER_REMOVED, { remove it } as EventListener)
     }
 
     public void reset() {
