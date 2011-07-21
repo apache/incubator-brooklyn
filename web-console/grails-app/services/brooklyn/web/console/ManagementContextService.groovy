@@ -37,7 +37,7 @@ class ManagementContextService {
         // TODO remove this test code as soon as the group agrees it's unnecessary!
         if (!managementContext) {
             managementContext = new LocalManagementContext();
-            new TestApplication(mgmt: managementContext)
+            managementContext.manage(new TestApplication(mgmt: managementContext))
         }
         // END TODO
 

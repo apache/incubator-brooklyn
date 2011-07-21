@@ -16,7 +16,8 @@ class ManagementContextServiceTest {
 
     @Test
     void testGetApplication() {
-        assertEquals("Application", testService.getApplications().asList().get(0).getDisplayName())
-        assertEquals(1, testService.getApplications().size())
+        def apps = testService.getApplications();
+        assertEquals(1, apps.size())
+        assertEquals("Application", apps.asList().get(0).getDisplayName())
     }
 }
