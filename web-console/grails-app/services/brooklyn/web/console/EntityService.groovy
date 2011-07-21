@@ -10,7 +10,7 @@ import brooklyn.event.SensorEvent
 import brooklyn.management.SubscriptionHandle
 import java.util.concurrent.ConcurrentMap
 import java.util.concurrent.ConcurrentHashMap
-import brooklyn.event.EventListener
+import brooklyn.event.SensorEventListener
 import java.util.concurrent.ConcurrentLinkedQueue
 
 class EntityService {
