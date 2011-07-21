@@ -34,9 +34,11 @@ public abstract class JavaWebApp extends JavaApp {
     public static final BasicAttributeSensor<Integer> ERROR_COUNT = [ Integer, "webapp.reqs.errors", "Request errors" ]
     public static final BasicAttributeSensor<Integer> MAX_PROCESSING_TIME = [ Integer, "webpp.reqs.processing.max", "Max processing time" ]
     public static final BasicAttributeSensor<Integer> REQUEST_COUNT = [ Integer, "webapp.reqs.total", "Request count" ]
+    // this is the normalised req/second based on a delta of the last request count, e.g the derived req/s for the last time period
     public static final BasicAttributeSensor<Double> REQUESTS_PER_SECOND = [ Double, "webapp.reqs.persec.last", "Reqs/Sec" ]
+    // FIXME: this value can actually go stale when we aren't receiving request count messages 
     public static final BasicAttributeSensor<ConfidenceQualifiedNumber> AVG_REQUESTS_PER_SECOND = [ ConfidenceQualifiedNumber, 
-        "webapp.reqs.persec.avg.$AVG_REQUESTS_PER_SECOND_PERIOD", "Average Reqs/Sec (over ${AVG_REQUESTS_PER_SECOND_PERIOD}ms)" ]
+        "webapp.reqs.persec.avg.$AVG_REQUESTS_PER_SECOND_PERIOD", "Average Reqs/Sec (over the last ${AVG_REQUESTS_PER_SECOND_PERIOD}ms)" ]
     public static final BasicAttributeSensor<Integer> TOTAL_PROCESSING_TIME = [ Integer, "webapp.reqs.processing.time", "Total processing time" ]
 
     public static final BasicAttributeSensor<String> ROOT_URL = [ String, "webapp.url", "URL" ]
