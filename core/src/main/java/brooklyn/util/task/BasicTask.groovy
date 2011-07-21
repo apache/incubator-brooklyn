@@ -1,12 +1,8 @@
 package brooklyn.util.task
 
-import groovy.lang.Closure
-
 import java.lang.management.LockInfo
 import java.lang.management.ManagementFactory
 import java.lang.management.ThreadInfo
-import java.util.Map
-import java.util.Set
 import java.util.Collections.UnmodifiableSet
 import java.util.concurrent.Callable
 import java.util.concurrent.CancellationException
@@ -313,7 +309,8 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
                     rv = "Waiting"
                     if (verbosity >= 1) rv += ", thread suspended"
                 } else {
-                    rv = "Running ("+ti.getThreadState()+")"
+                    rv = "Running"
+                    if (verbosity >= 1) rv += " ("+ti.getThreadState()+")"
                 }
             } else {
                 rv = "Waiting"
