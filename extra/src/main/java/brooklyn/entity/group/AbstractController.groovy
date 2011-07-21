@@ -40,8 +40,9 @@ public abstract class AbstractController extends AbstractService {
     String url
     Sensor portNumber
 
+    AbstractMembershipTrackingPolicy policy
     protected Map<InetAddress,List<Integer>> addresses
-    protected List<SubscriptionHandle> subscriptions = []
+    
 
     public AbstractController(Map properties=[:], Entity owner=null, AbstractGroup cluster=null) {
         super(properties, owner)
@@ -74,23 +75,39 @@ public abstract class AbstractController extends AbstractService {
 	        setAttribute(URL, "${protocol}://${domain}:${port}/")
         }
 
-        setCluster(cluster ?: properties.cluster)
+        policy = new AbstractMembershipTrackingPolicy() {
+            protected void onEntityAdded(Entity member) { addEntity( member); }
+            protected void onEntityRemoved(Entity member) { removeEntity(member); }
+        }
+        
+        addPolicy(policy)
+        policy.setGroup(cluster ?: properties.cluster)
     }
 
-    public void setCluster(AbstractGroup cluster) {
-        Preconditions.checkNotNull cluster, "The cluster cannot be null"
-        this.cluster = cluster
-        reset()
-        cluster.members.each { add it }
-        subscriptions += subscriptionContext.subscribe(cluster, cluster.MEMBER_ADDED, { add it } as EventListener)
-        subscriptions += subscriptionContext.subscribe(cluster, cluster.MEMBER_REMOVED, { remove it } as EventListener)
+    private void addEntity(Entity member) {
+        member.locations.each { MachineLocation machine ->
+            addresses[machine.address] += member.getAttribute(portNumber)
+        }
+        update();
+    }
+    
+    private void removeEntity(Entity member) {
+        member.locations.each { MachineLocation machine ->
+            addresses[machine.address] -= member.getAttribute(portNumber)
+        }
+        update();
+    }
+    
+    private void update() {
+        if (getAttribute(AbstractService.SERVICE_UP)) {
+            configure()
+            restart()
+        }
     }
 
     public void reset() {
+        policy.reset()
         addresses = new HashMap<InetAddress,List<Integer>>().withDefault { new ArrayList<Integer>() }
-
-        subscriptions.each { subscriptionContext.unsubscribe(it) }
-        subscriptions.clear()
     }
 
     @Override
@@ -100,22 +117,6 @@ public abstract class AbstractController extends AbstractService {
     }
 
     // TODO use blocking config mechanism to wait for the port number attribute to become available
-
-    public synchronized void add(Entity entity) {
-        entity.locations.each { MachineLocation machine -> addresses[machine.address] += entity.getAttribute(portNumber) }
-        if (getAttribute(SERVICE_UP)) {
-	        configure()
-	        restart()
-        }
-    }
-
-    public synchronized void remove(Entity entity) {
-        entity.locations.each { MachineLocation machine -> addresses[machine.address] -= entity.getAttribute(portNumber) }
-        if (getAttribute(SERVICE_UP)) {
-	        configure()
-	        restart()
-        }
-    }
 
     /**
      * Configure the controller based on the cluster membership list.
