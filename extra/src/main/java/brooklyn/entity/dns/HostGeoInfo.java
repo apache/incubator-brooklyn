@@ -3,6 +3,7 @@ package brooklyn.entity.dns;
 import java.net.InetAddress;
 
 import brooklyn.entity.Entity;
+import brooklyn.location.Location;
 
 /**
  * Encapsulates geo-IP information for a given host.
@@ -14,15 +15,24 @@ public class HostGeoInfo {
     public final double longitude;
 
     
-    public static HostGeoInfo fromEntity(Entity e) {
-        String displayName = e.getDisplayName();
-        InetAddress address = LocationUtils.findIpAddress(e);
-        Double latitude = LocationUtils.findLatitude(e);
-        Double longitude = LocationUtils.findLongitude(e);
+    public static HostGeoInfo fromLocation(Location l) {
+        InetAddress address = LocationUtils.findIpAddress(l);
+        Double latitude = LocationUtils.findLatitude(l);
+        Double longitude = LocationUtils.findLongitude(l);
+
+        if (address == null || latitude == null || longitude == null)
+            return null;
         
-        return new HostGeoInfo(address.toString(), displayName,
-                (latitude == null ? 0.0 : latitude),
-                (longitude == null ? 0.0 : longitude));
+        return new HostGeoInfo(address.toString(), l.getName(), latitude, longitude);
+    }
+    
+    public static HostGeoInfo fromEntity(Entity e) {
+        for (Location l : e.getLocations()) {
+            HostGeoInfo hgi = fromLocation(l);
+            if (hgi != null)
+                return hgi;
+        }
+        return null;
     }
     
     
