@@ -43,7 +43,7 @@ class TimeWeightedDeltaEnricher<T extends Number> extends AbstractTransformingEn
                 delta = (current - lastValue) / (duration / unitMillis)
             }
             entity.setAttribute(target, delta)
-            println "set $this to ${delta}, $lastValue -> $current at $eventTime" 
+            LOG.trace "set $this to ${delta}, $lastValue -> $current at $eventTime" 
             lastValue = current
             lastTime = eventTime
         }
