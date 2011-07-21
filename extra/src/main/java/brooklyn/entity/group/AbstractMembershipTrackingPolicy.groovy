@@ -15,7 +15,6 @@ import com.google.common.base.Preconditions
 
 abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
     private AbstractGroup group;
-    private List<SubscriptionHandle> subscriptions = [];
     
     
     public AbstractMembershipTrackingPolicy() { }
@@ -29,13 +28,12 @@ abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
         this.group = group;
         reset();
         group.members.each { onEntityAdded it }
-        subscriptions += subscription.subscribe(group, group.MEMBER_ADDED, { onEntityAdded it } as EventListener);
-        subscriptions += subscription.subscribe(group, group.MEMBER_REMOVED, { onEntityRemoved it } as EventListener);
+        subscribe(group, group.MEMBER_ADDED, { onEntityAdded it } as EventListener);
+        subscribe(group, group.MEMBER_REMOVED, { onEntityRemoved it } as EventListener);
     }
 
     public void reset() {
-        subscriptions.each { subscription.unsubscribe(it) }
-        subscriptions.clear();
+        unsubscribe(group)
     }
 
     /**

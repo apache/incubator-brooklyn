@@ -48,8 +48,11 @@ class AbstractPolicy implements Policy {
        return handle
    }
    
-   /** Unsubscribes the given producer. 
-    * @see SubscriptionContext#unsubscribe(SubscriptionHandle) */
+   /**
+    * Unsubscribes the given producer. 
+    *
+    * @see SubscriptionContext#unsubscribe(SubscriptionHandle)
+    */
    protected boolean unsubscribe(Entity producer) {
        def handle = subscriptions.remove(producer)
        subscription.unsubscribe(handle)
