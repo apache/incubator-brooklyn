@@ -116,10 +116,10 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
         super(props)
         
         DynamicFabric fabric = new DynamicFabric(
-            id: 'fabricID',
+            [id: 'fabricID',
             name: 'fabricName',
             displayName: 'Fabric',
-            newEntity: { properties -> return new WebClusterEntity(properties) },
+            newEntity: { properties -> return new WebClusterEntity(properties) }],
             this)
         Preconditions.checkState fabric.getDisplayName() == "Fabric"
         DynamicGroup nginxEntities = new DynamicGroup([:], this, { Entity e -> (e instanceof NginxController) })
@@ -140,17 +140,18 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
     }
     
     public static void main(String[] args) {
-//        AwsLocation awsUsEastLocation = newAwsUsEastLocation()
+        AwsLocation awsUsEastLocation = newAwsUsEastLocation()
 //        FixedListMachineProvisioningLocation montereyEastLocation = newMontereyEastLocation()
         MachineProvisioningLocation montereyEdinburghLocation = newMontereyEdinburghLocation()
         
         MultiLocationWebAppDemo app = new MultiLocationWebAppDemo(id: 'DemoID', name: 'DemoName', displayName: 'Demo')
 
-//        app.start([montereyEdinburghLocation])
         AbstractManagementContext context = app.getManagementContext()
         context.manage(app)
         WebAppRunner web = new WebAppRunner(context)
         web.start()
+        
+        app.start([montereyEdinburghLocation])
     }
 
     private static AwsLocation newAwsUsEastLocation() {
@@ -171,15 +172,14 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
             longitude: AMAZON_US_EAST_COORDS['longitude']]
         )
         
-        result.setTagMapping([(TomcatServer.class.getName()):[
-                imageId:IMAGE_ID,
-                securityGroups:["everything"]
-            ]]) //, imageOwner:IMAGE_OWNER]])
-        
-        result.setTagMapping([(NginxController.class.getName()):[
-                imageId:IMAGE_ID,
-                securityGroups:["everything"]
-            ]]) //, imageOwner:IMAGE_OWNER]])
+        result.setTagMapping([
+            (TomcatServer.class.getName()):[
+                    imageId:IMAGE_ID,
+                    securityGroups:["everything"]],
+            (NginxController.class.getName()):[
+                    imageId:IMAGE_ID,
+                    securityGroups:["everything"]]
+            ]) //, imageOwner:IMAGE_OWNER]])
         
         return result
     }
