@@ -26,7 +26,7 @@ import brooklyn.launcher.WebAppRunner
  * The application demonstrates the following:
  * <ul><li>dynamic clusters of web application servers</li>
  * <li>multiple geographic locations</li>
- * <li>use of any anycast DNS provider to router users to the closest cluster of web servers</li>
+ * <li>use of any geo-redirecting DNS provider to route users to their closest cluster of web servers</li>
  * <li>resizing the clusters to meet client demand</li></ul>
  */
 public class MultiLocationWebAppDemo extends AbstractApplication implements Startable {
