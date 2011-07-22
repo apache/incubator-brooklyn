@@ -98,7 +98,6 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
             cluster.start(locations)
             cluster.resize(1)
             controller.start(locations)
-            // FIXME: register nginx' IP address with geo DNS
         }
         void stop() {
             controller.stop()
@@ -122,7 +121,7 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
             newEntity: { properties -> return new WebClusterEntity(properties) }],
             this)
         Preconditions.checkState fabric.getDisplayName() == "Fabric"
-        DynamicGroup nginxEntities = new DynamicGroup([:], this, { Entity e -> (e instanceof NginxController) })
+        nginxEntities = new DynamicGroup([:], this, { Entity e -> (e instanceof NginxController) })
         GeoscalingDnsService geoDns = new GeoscalingDnsService(
             config: [
                 (GeoscalingDnsService.GEOSCALING_USERNAME): 'cloudsoft',
@@ -131,6 +130,7 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
                 (GeoscalingDnsService.GEOSCALING_SMART_SUBDOMAIN_NAME): 'cloudsoft',
             ],
             this)
+        nginxEntities.rescanEntities()
         geoDns.setGroup(nginxEntities)
     }
     
