@@ -5,26 +5,28 @@ import java.util.Set
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.AbstractGroup
-import brooklyn.entity.dns.HostGeoInfo
-import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.Domain
-import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.SmartSubdomain
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy
-import brooklyn.event.AttributeSensor
-import brooklyn.event.basic.BasicConfigKey
+import brooklyn.policy.Policy
 
 
 abstract class AbstractGeoDnsService extends AbstractEntity {
     
-    public static AttributeSensor<Set<HostGeoInfo>> TARGET_HOSTS = [ Set.class, "target.hosts" ];
+//    public static AttributeSensor<Set<HostGeoInfo>> TARGET_HOSTS = [ Set.class, "target.hosts" ];
     
     private final Map<Entity,HostGeoInfo> targetHosts = new HashMap<Entity,HostGeoInfo>();
     
 
-    public AbstractGeoDnsService(AbstractGroup group) {
-        addPolicy(new AbstractMembershipTrackingPolicy(group) {
+    public AbstractGeoDnsService(Entity owner) {
+        super(owner);
+    }
+    
+    public void setGroup(AbstractGroup group) {
+        AbstractMembershipTrackingPolicy amtp = new AbstractMembershipTrackingPolicy() {
             protected void onEntityAdded(Entity entity) { addTargetHost(entity); }
             protected void onEntityRemoved(Entity entity) { removeTargetHost(entity); }
-        });
+        }
+        addPolicy(amtp);
+        amtp.setGroup(group);
     }
 
     protected abstract void reconfigureService(Set<HostGeoInfo> targetHosts);
@@ -42,7 +44,7 @@ abstract class AbstractGeoDnsService extends AbstractEntity {
     
     private void update() {
         reconfigureService(targetHosts.values());
-        emit(TARGET_HOSTS, targetHosts);
+//        emit(TARGET_HOSTS, targetHosts);
     }
     
 }
