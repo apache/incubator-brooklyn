@@ -24,8 +24,8 @@ class GeoscalingDnsServer extends AbstractGeoDnsService {
     public static BasicConfigKey<String> GEOSCALING_SMART_SUBDOMAIN_NAME = [ String.class, "geoscaling.smart.subdomain.name" ];
     
 
-    public GeoscalingDnsServer(AbstractGroup group) {
-        super(group);
+    public GeoscalingDnsServer(Entity owner, AbstractGroup group) {
+        super(owner, group);
     }
 
     protected void reconfigureService(Set<HostGeoInfo> targetHosts) {

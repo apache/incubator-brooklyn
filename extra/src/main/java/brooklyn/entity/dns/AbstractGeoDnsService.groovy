@@ -20,6 +20,11 @@ abstract class AbstractGeoDnsService extends AbstractEntity {
         super(owner);
     }
     
+    public AbstractGeoDnsService(Entity owner, AbstractGroup group) {
+        super(owner);
+        setGroup(group);
+    }
+    
     public void setGroup(AbstractGroup group) {
         AbstractMembershipTrackingPolicy amtp = new AbstractMembershipTrackingPolicy() {
             protected void onEntityAdded(Entity entity) { addTargetHost(entity); }
