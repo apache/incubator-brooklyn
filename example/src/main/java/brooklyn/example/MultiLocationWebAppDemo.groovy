@@ -3,7 +3,9 @@ package brooklyn.example
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractEntity
+import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.basic.JavaApp
+import brooklyn.entity.dns.geoscaling.GeoscalingDnsServer;
 import brooklyn.entity.group.DynamicCluster
 import brooklyn.entity.group.DynamicFabric
 import brooklyn.entity.proxy.nginx.NginxController
@@ -17,10 +19,9 @@ import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.aws.AWSCredentialsFromEnv
 import brooklyn.location.basic.aws.AwsLocation
 import brooklyn.policy.Policy
+import brooklyn.policy.ResizerPolicy
 
 import com.google.common.base.Preconditions
-import brooklyn.policy.ResizerPolicy
-import brooklyn.launcher.WebAppRunner
 
 /**
  * The application demonstrates the following:
@@ -106,7 +107,8 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
     MultiLocationWebAppDemo(Map props=[:]) {
         super(props)
         
-        new DynamicFabric(newEntity: { properties -> return new WebClusterEntity(properties) }, this)
+        AbstractGroup fabric = new DynamicFabric(newEntity: { properties -> return new WebClusterEntity(properties) }, this)
+        GeoscalingDnsServer geoDns = new GeoscalingDnsServer(this, fabric)
     }
     
     @Override
@@ -140,7 +142,7 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
             providerLocationId:REGION_NAME,
             latitude: AMAZON_US_EAST_COORDS['latitude'],
             longitude: AMAZON_US_EAST_COORDS['longitude']
-            )
+        )
         result.setTagMapping([MyEntityType:[
                 imageId:IMAGE_ID,
                 providerLocationId:REGION_NAME,
@@ -164,8 +166,8 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
         MachineProvisioningLocation<SshMachineLocation> result =
             new FixedListMachineProvisioningLocation<SshMachineLocation>(
                 machines: MONTEREY_EAST_PUBLIC_ADDRESSES,
-                latutude: MONTEREY_EAST_COORDS['latitude'],
-                longutude: MONTEREY_EAST_COORDS['longitude']
+                latitude: MONTEREY_EAST_COORDS['latitude'],
+                longitude: MONTEREY_EAST_COORDS['longitude']
             )
         return result
     }
@@ -184,8 +186,8 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
         MachineProvisioningLocation<SshMachineLocation> result =
             new FixedListMachineProvisioningLocation<SshMachineLocation>(
                 machines: MONTEREY_EDINBURGH_MACHINES,
-                latutude: EDINBURGH_COORDS['latitude'],
-                longutude: EDINBURGH_COORDS['longitude']
+                latitude: EDINBURGH_COORDS['latitude'],
+                longitude: EDINBURGH_COORDS['longitude']
             )
         return result
     }
