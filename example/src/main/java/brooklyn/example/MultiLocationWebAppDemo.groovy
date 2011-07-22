@@ -2,7 +2,7 @@ package brooklyn.example
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
-import brooklyn.entity.basic.AbstractGroup
+
 import brooklyn.entity.group.DynamicCluster
 import brooklyn.entity.proxy.nginx.NginxController
 import brooklyn.entity.trait.Startable
@@ -16,6 +16,7 @@ import brooklyn.location.basic.SshMachineLocation
 import brooklyn.policy.Policy
 import brooklyn.util.internal.EntityStartUtils
 import com.google.common.base.Preconditions
+import brooklyn.entity.basic.AbstractEntity
 
 /**
  * The application demonstrates the following:
@@ -33,7 +34,7 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
      * <li>a cluster controller</li>
      * <li>a @{link Policy} to resize the DynamicCluster</li></ul>
      */
-    private static class WebClusterGroup extends AbstractGroup implements Startable {
+    private static class WebClusterEntity extends AbstractEntity implements Startable {
         private static final String springTravelPath
         private static final String warName = "swf-booking-mvc.war"
 
@@ -47,7 +48,7 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
             springTravelPath = resource.getPath()
         }
 
-        WebClusterGroup(Map props, Entity owner) {
+        WebClusterEntity(Map props, Entity owner) {
             super(props, owner)
 
             cluster = new DynamicCluster(newEntity: { properties ->
@@ -105,8 +106,8 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
         new LocalhostMachineProvisioningLocation()
 
     // The groups in each location
-    private WebClusterGroup montereyEastGroup = new WebClusterGroup([:], this)
-    private WebClusterGroup amazonEuropeGroup = new WebClusterGroup([:], this)
+    private WebClusterEntity montereyEastGroup = new WebClusterEntity([:], this)
+    private WebClusterEntity amazonEuropeGroup = new WebClusterEntity([:], this)
 
     public static void main(String[] args) {
         MultiLocationWebAppDemo app = new MultiLocationWebAppDemo()
