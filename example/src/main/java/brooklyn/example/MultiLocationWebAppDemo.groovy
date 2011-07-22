@@ -140,11 +140,10 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
     }
     
     public static void main(String[] args) {
-        AwsLocation awsUsEastLocation = newAwsUsEastLocation()
+//        AwsLocation awsUsEastLocation = newAwsUsEastLocation()
 //        FixedListMachineProvisioningLocation montereyEastLocation = newMontereyEastLocation()
-//        MachineProvisioningLocation montereyEdinburghLocation = newMontereyEdinburghLocation()
+        MachineProvisioningLocation montereyEdinburghLocation = newMontereyEdinburghLocation()
         
-<<<<<<< HEAD
         MultiLocationWebAppDemo app = new MultiLocationWebAppDemo(id: 'DemoID', name: 'DemoName', displayName: 'Demo')
 
 //        app.start([montereyEdinburghLocation])
@@ -152,14 +151,6 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
         context.manage(app)
         WebAppRunner web = new WebAppRunner(context)
         web.start()
-=======
-        MultiLocationWebAppDemo app = new MultiLocationWebAppDemo([:])
-        app.fabric.setConfig(DynamicCluster.INITIAL_SIZE, 1)
-        
-//        WebAppRunner web = new WebAppRunner(app.getManagementContext())
-//        web.start()
-        app.start([awsUsEastLocation])
->>>>>>> webapp-demo: define AWS image for NginxController; fix DynamicGroup for nginxEntities
     }
 
     private static AwsLocation newAwsUsEastLocation() {
