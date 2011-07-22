@@ -17,6 +17,7 @@ import org.jclouds.ec2.compute.options.EC2TemplateOptions
 import org.jclouds.scriptbuilder.domain.Statement
 import org.jclouds.scriptbuilder.domain.Statements
 
+import brooklyn.location.CoordinatesProvider
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.NoMachinesAvailableException
 import brooklyn.location.basic.AbstractLocation
@@ -29,7 +30,7 @@ import com.google.common.base.Throwables
 import com.google.common.collect.Iterables
 import com.google.common.io.Files
 
-public class AwsLocation extends AbstractLocation implements MachineProvisioningLocation<SshMachineLocation> {
+public class AwsLocation extends AbstractLocation implements MachineProvisioningLocation<SshMachineLocation>, CoordinatesProvider {
 
     public static final String ROOT_USERNAME = "root";
     public static final int START_SSHABLE_TIMEOUT = 15*60*1000;
@@ -67,6 +68,14 @@ public class AwsLocation extends AbstractLocation implements MachineProvisioning
     
     public void setDefaultImageId(String val) {
         defaultImageId = val
+    }
+    
+    public double getLatitude() {
+        return conf.latitude;
+    }
+    
+    public double getLongitude() {
+        return conf.longitude;
     }
     
     // TODO Decide on semantics. If I give "TomcatServer" and "Ubuntu", then must I get back an image that matches both?

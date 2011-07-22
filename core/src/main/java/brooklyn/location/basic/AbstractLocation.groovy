@@ -20,7 +20,7 @@ public abstract class AbstractLocation implements Location {
     private Location parentLocation
     private final Collection<Location> childLocations = []
     private final Collection<Location> childLocationsReadOnly = Collections.unmodifiableCollection(childLocations)
-    private Map leftoverProperties
+    protected Map leftoverProperties
 
     /**
      * Construct a new instance of an AbstractLocation.

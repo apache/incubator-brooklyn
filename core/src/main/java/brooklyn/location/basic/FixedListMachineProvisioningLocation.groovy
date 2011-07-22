@@ -3,7 +3,8 @@ package brooklyn.location.basic
 import java.util.Collection
 import java.util.Map
 
-import brooklyn.location.Location;
+import brooklyn.location.CoordinatesProvider
+import brooklyn.location.Location
 import brooklyn.location.MachineLocation
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.NoMachinesAvailableException
@@ -13,7 +14,7 @@ import com.google.common.base.Preconditions
 /**
  * A provisioner of {@link MachineLocation}s.
  */
-public class FixedListMachineProvisioningLocation<T extends MachineLocation> extends AbstractLocation implements MachineProvisioningLocation<T> {
+public class FixedListMachineProvisioningLocation<T extends MachineLocation> extends AbstractLocation implements MachineProvisioningLocation<T>, CoordinatesProvider {
 
     private final Object lock = new Object();
     private final List<T> available;
@@ -40,6 +41,14 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
         machines.each { it.setParentLocation(this) } // As a side effect, this will add it to the available list
     }
 
+    public double getLatitude() {
+        return leftoverProperties.latitude;
+    }
+    
+    public double getLongitude() {
+        return leftoverProperties.longitude;
+    }
+    
     @Override
     protected void addChildLocation(Location child) {
         super.addChildLocation(child);
