@@ -21,17 +21,15 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements P
     private int minSize
     private int maxSize = Integer.MAX_VALUE
     
-    Entity producer
     AttributeSensor<T> source
     
-    public ResizerPolicy(Entity producer, AttributeSensor<T> source) {
-        this.producer = producer
+    public ResizerPolicy(AttributeSensor<T> source) {
         this.source = source
     }
     
     public void setEntity(DynamicCluster entity) {
         super.setEntity(entity)
-        subscribe(producer, source, this)
+        subscribe(entity, source, this)
     }
     
     public ResizerPolicy setMetricLowerBound(double val) {
@@ -64,7 +62,7 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements P
                     Arrays.toString(metricName), val, metricLowerBound, metricUpperBound, currentSize, desiredSize, minSize, maxSize))
             entity.resize(desiredSize)
         } else {
-            if (LOG.isLoggable(Level.FINER)) LOG.finer(String.format("policy resizer doing nothing: metric=%s, workrate=%s, lowerBound=%s, upperBound=%s; currentSize=%d, minSize=%d, maxSize=%d", 
+            LOG.trace(String.format("policy resizer doing nothing: metric=%s, workrate=%s, lowerBound=%s, upperBound=%s; currentSize=%d, minSize=%d, maxSize=%d", 
                     Arrays.toString(metricName), val, metricLowerBound, metricUpperBound, currentSize, minSize, maxSize))
         }
     }

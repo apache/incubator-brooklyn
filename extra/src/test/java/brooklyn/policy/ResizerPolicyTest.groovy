@@ -14,7 +14,7 @@ class ResizerPolicyTest {
     
     @BeforeMethod()
     public void before() {
-        policy = new ResizerPolicy(null, null)
+        policy = new ResizerPolicy(null)
         policy.setMinSize 0
     }
     
