@@ -152,9 +152,10 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
             latitude: AMAZON_US_EAST_COORDS['latitude'],
             longitude: AMAZON_US_EAST_COORDS['longitude']
         )   
-        result.setTagMapping([MyEntityType:[
+        result.setTagMapping([(TomcatServer.class.getName()):[
                 imageId:IMAGE_ID,
                 providerLocationId:REGION_NAME,
+                securityGroups:["everything"],
                 sshPublicKey:new File(SSH_PUBLIC_KEY_PATH),
                 sshPrivateKey:new File(SSH_PRIVATE_KEY_PATH),
             ]]) //, imageOwner:IMAGE_OWNER]])

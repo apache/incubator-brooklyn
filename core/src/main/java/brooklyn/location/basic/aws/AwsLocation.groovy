@@ -1,6 +1,6 @@
 package brooklyn.location.basic.aws
 
-import static org.jclouds.scriptbuilder.domain.Statements.*;
+import static org.jclouds.scriptbuilder.domain.Statements.*
 
 import java.util.Collection
 import java.util.Map
@@ -13,8 +13,9 @@ import org.jclouds.compute.domain.NodeMetadata
 import org.jclouds.compute.domain.Template
 import org.jclouds.compute.domain.TemplateBuilder
 import org.jclouds.compute.options.TemplateOptions
+import org.jclouds.ec2.compute.options.EC2TemplateOptions
 import org.jclouds.scriptbuilder.domain.Statement
-import org.jclouds.scriptbuilder.domain.Statements;
+import org.jclouds.scriptbuilder.domain.Statements
 
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.NoMachinesAvailableException
@@ -207,6 +208,10 @@ public class AwsLocation extends AbstractLocation implements MachineProvisioning
         Template template = templateBuilder.build();
         TemplateOptions options = template.getOptions();
         
+        if (properties.securityGroups) {
+            String[] securityGroups = (properties.securityGroups instanceof Collection) ? properties.securityGroups.toArray(new String[0]): properties.securityGroups
+            template.getOptions().as(EC2TemplateOptions.class).securityGroups(securityGroups);
+        }
         if (properties.inboundPorts) {
             Object[] inboundPorts = (properties.inboundPorts instanceof Collection) ? properties.inboundPorts.toArray(new Integer[0]): properties.inboundPorts
             options.inboundPorts(inboundPorts);

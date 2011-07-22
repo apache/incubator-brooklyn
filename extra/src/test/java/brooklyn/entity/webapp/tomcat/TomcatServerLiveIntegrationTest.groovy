@@ -17,6 +17,7 @@ import brooklyn.entity.basic.ConfigKeys
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.aws.AWSCredentialsFromEnv
 import brooklyn.location.basic.aws.AwsLocation
+import brooklyn.test.TestUtils;
 import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
 
@@ -27,9 +28,9 @@ public class TomcatServerLiveIntegrationTest {
     private static final Logger logger = LoggerFactory.getLogger(brooklyn.entity.webapp.tomcat.TomcatServerLiveIntegrationTest.class)
     
     /** don't use 8080 since that is commonly used by testing software */
-    private static final int HTTP_PORT = 40122
-    private static final int SHUTDOWN_PORT = 40123
-    private static final int JMX_PORT = 40124
+    private static final int HTTP_PORT = 8080//40122
+    private static final int SHUTDOWN_PORT = 31880//40123
+    private static final int JMX_PORT = 32199//40124
     private static final String REGION_NAME = "us-east-1" // "eu-west-1"
     private static final String IMAGE_ID = REGION_NAME+"/"+"ami-0859bb61" // "ami-d7bb90a3"
     private static final String IMAGE_OWNER = "411009282317"
@@ -55,6 +56,7 @@ public class TomcatServerLiveIntegrationTest {
                 providerLocationId:REGION_NAME])
         loc.setTagMapping([(TomcatServer.class.getName()):[
                 imageId:IMAGE_ID,
+                securityGroups:["everything"],
                 sshPublicKey:new File(SSH_PUBLIC_KEY_PATH),
                 sshPrivateKey:new File(SSH_PRIVATE_KEY_PATH),
                 ]]) //, imageOwner:IMAGE_OWNER]])
@@ -116,7 +118,7 @@ public class TomcatServerLiveIntegrationTest {
                 config:[(SUGGESTED_SHUTDOWN_PORT):SHUTDOWN_PORT, (SUGGESTED_HTTP_PORT):HTTP_PORT, (SUGGESTED_HTTP_PORT):HTTP_PORT, 
                 (SUGGESTED_JMX_PORT):JMX_PORT] ])
         tc.start([ loc ])
-        executeUntilSucceedsWithFinallyBlock ([:],
+        TestUtils.executeUntilSucceedsWithFinallyBlock ([:],
                 { assertTrue tc.getAttribute(TomcatServer.SERVICE_UP) }, 
                 { tc.stop() })
     }
