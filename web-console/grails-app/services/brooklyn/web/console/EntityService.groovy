@@ -51,7 +51,7 @@ class EntityService {
 
             if (!subscriptions.containsKey(entity.id)) {
                 SubscriptionHandle handle = managementContextService.subscriptionManager.subscribe(entity, null,
-                    new EventListener() {
+                    new SensorEventListener() {
                         void onEvent(SensorEvent event) {
                             sensorCache.putIfAbsent(event.source.id, new ConcurrentHashMap<String, SensorSummary>())
                             sensorCache[event.source.id].put(event.sensor.name, new SensorSummary(event))
