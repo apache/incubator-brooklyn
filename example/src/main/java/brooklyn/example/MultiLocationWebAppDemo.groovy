@@ -52,7 +52,7 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
             springTravelPath = resource.getPath()
         }
 
-        WebClusterEntity(Map props, Entity owner) {
+        WebClusterEntity(Map props, Entity owner = null) {
             super(props, owner)
 
             cluster = new DynamicCluster(newEntity: { properties ->
@@ -83,8 +83,9 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
 
         // FIXME: why am I implementing these?
         void start(Collection<? extends Location> locations) {
-            controller.start(locations)
             cluster.start(locations)
+            cluster.resize(1)
+            controller.start(locations)
             // FIXME: register nginx' IP address with geo DNS
         }
         void stop() {
@@ -108,14 +109,15 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
     }
     
     public static void main(String[] args) {
-        AwsLocation awsUsEastLocation = newAwsUsEastLocation()
-        FixedListMachineProvisioningLocation montereyEastLocation = newMontereyEastLocation()
+//        AwsLocation awsUsEastLocation = newAwsUsEastLocation()
+//        FixedListMachineProvisioningLocation montereyEastLocation = newMontereyEastLocation()
         MachineProvisioningLocation montereyEdinburghLocation = newMontereyEdinburghLocation()
         
         MultiLocationWebAppDemo app = new MultiLocationWebAppDemo([:])
 
-        WebAppRunner web = new WebAppRunner(app.getManagementContext())
-        web.start()
+//        WebAppRunner web = new WebAppRunner(app.getManagementContext())
+//        web.start()
+        app.start([montereyEdinburghLocation])
     }
 
     private static AwsLocation newAwsUsEastLocation() {
