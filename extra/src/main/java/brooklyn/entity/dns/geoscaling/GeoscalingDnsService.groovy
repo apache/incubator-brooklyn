@@ -16,36 +16,32 @@ import brooklyn.event.basic.BasicConfigKey
 
 class GeoscalingDnsService extends AbstractGeoDnsService {
     
-    public static BasicConfigKey<String> GEOSCALING_PROTOCOL = [ String.class, "geoscaling.protocol" ];
-    public static BasicConfigKey<String> GEOSCALING_HOST = [ String.class, "geoscaling.host" ];
-    public static BasicConfigKey<Integer> GEOSCALING_PORT = [ Integer.class, "geoscaling.port" ];
     public static BasicConfigKey<String> GEOSCALING_USERNAME = [ String.class, "geoscaling.username" ];
     public static BasicConfigKey<String> GEOSCALING_PASSWORD = [ String.class, "geoscaling.password" ];
     public static BasicConfigKey<String> GEOSCALING_PRIMARY_DOMAIN_NAME = [ String.class, "geoscaling.primary.domain.name" ];
     public static BasicConfigKey<String> GEOSCALING_SMART_SUBDOMAIN_NAME = [ String.class, "geoscaling.smart.subdomain.name" ];
     
+    private String username;
+    private String password;
+    private String primaryDomainName;
+    private String smartSubdomainName;
 
+    
     public GeoscalingDnsService(Map properties = [:], Entity owner = null) {
         super(properties, owner);
+        
+        username = getConfig(GEOSCALING_USERNAME);
+        password = getConfig(GEOSCALING_PASSWORD);
+        primaryDomainName = getConfig(GEOSCALING_PRIMARY_DOMAIN_NAME);
+        smartSubdomainName = getConfig(GEOSCALING_SMART_SUBDOMAIN_NAME);
+        
+        // FIXME: complain about any missing config
     }
 
     protected void reconfigureService(Set<HostGeoInfo> targetHosts) {
-        String protocol = getConfig(GEOSCALING_PROTOCOL);
-        String host = getConfig(GEOSCALING_HOST);
-        Integer port = getConfig(GEOSCALING_PORT);
-        String username = getConfig(GEOSCALING_USERNAME);
-        String password = getConfig(GEOSCALING_PASSWORD);
-        String primaryDomainName = getConfig(GEOSCALING_PRIMARY_DOMAIN_NAME);
-        String smartSubdomainName = getConfig(GEOSCALING_SMART_SUBDOMAIN_NAME);
-        
-        protocol = protocol ?: GeoscalingWebClient.DEFAULT_PROTOCOL;
-        host = host ?: GeoscalingWebClient.DEFAULT_HOST;
-        port = port ?: GeoscalingWebClient.DEFAULT_PORT;
-        // TODO: complain if required config is missing
-        
         String script = GeoscalingScriptGenerator.generateScriptString(targetHosts);
         
-        GeoscalingWebClient gwc = [ protocol, host, port ];
+        GeoscalingWebClient gwc = [ ];
         gwc.login(username, password);
         Domain primaryDomain = gwc.getPrimaryDomain(primaryDomainName);
         SmartSubdomain smartSubdomain = primaryDomain.getSmartSubdomain(smartSubdomainName);

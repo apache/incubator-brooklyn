@@ -26,17 +26,10 @@ import org.w3c.dom.NodeList;
 import org.w3c.tidy.Tidy;
 
 public class GeoscalingWebClient {
-    public static final String DEFAULT_PROTOCOL ="http";
-    public static final String DEFAULT_HOST ="www.geoscaling.com";
-    public static final int DEFAULT_PORT = 80;
+    private static final String HOST ="www.geoscaling.com";
     private static final String PATH ="dns2/index.php";
-    
-    private final String protocol;
-    private final String host;
-    private final int port;
     private DefaultHttpClient httpClient;
     private Tidy tidy;
-    
     private List<Domain> primaryDomains = null;
     
     
@@ -129,13 +122,6 @@ public class GeoscalingWebClient {
     
     
     public GeoscalingWebClient() {
-        this(DEFAULT_PROTOCOL, DEFAULT_HOST, DEFAULT_PORT);
-    }
-    
-    public GeoscalingWebClient(String protocol, String host, int port) {
-        this.protocol = protocol;
-        this.host = host;
-        this.port = port;
         this.httpClient = new DefaultHttpClient();
         this.tidy = new Tidy();
         // Silently swallow all HTML errors/warnings.
@@ -146,7 +132,7 @@ public class GeoscalingWebClient {
     
     public void login(String username, String password) {
         try {
-            String url = MessageFormat.format("{0}://{1}:{2}/{3}?module=auth", protocol, host, port, PATH);
+            String url = MessageFormat.format("http://{0}/{1}?module=auth", HOST, PATH);
             
             HttpPost request = new HttpPost(url);
             List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
@@ -165,7 +151,7 @@ public class GeoscalingWebClient {
     
     public void logout() {
         try {
-            String url = MessageFormat.format("{0}://{1}:{2}/{3}?module=auth&logout", protocol, host, port, PATH);
+            String url = MessageFormat.format("http://{0}/{1}?module=auth&logout", HOST, PATH);
             HttpResponse response = httpClient.execute(new HttpGet(url));
             if (response.getEntity() != null)
                 EntityUtils.consume(response.getEntity());
@@ -197,7 +183,7 @@ public class GeoscalingWebClient {
     
     public void createPrimaryDomain(String name) {
         try {
-            String url = MessageFormat.format("{0}://{1}:{2}/{3}?module=domains", protocol, host, port, PATH);
+            String url = MessageFormat.format("http://{0}/{1}?module=domains", HOST, PATH);
             
             HttpPost request = new HttpPost(url);
             List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
@@ -219,7 +205,7 @@ public class GeoscalingWebClient {
     private List<Domain> fetchPrimaryDomains() {
         try {
             List<Domain> domains = new LinkedList<Domain>();
-            String url = MessageFormat.format("{0}://{1}:{2}/{3}?module=domains", protocol, host, port, PATH);
+            String url = MessageFormat.format("http://{0}/{1}?module=domains", HOST, PATH);
             
             HttpResponse response = httpClient.execute(new HttpGet(url));
             HttpEntity entity = response.getEntity();
@@ -253,8 +239,8 @@ public class GeoscalingWebClient {
     private void deletePrimaryDomain(int primaryDomainId) {
         try {
             String url = MessageFormat.format(
-                    "{0}://{1}:{2}/{3}?module=domain&id={4,number,#}&delete=1",
-                    protocol, host, port, PATH, primaryDomainId);
+                    "http://{0}/{1}?module=domain&id={2,number,#}&delete=1",
+                    HOST, PATH, primaryDomainId);
             
             HttpResponse response = httpClient.execute(new HttpGet(url));
             if (response.getEntity() != null)
@@ -270,8 +256,8 @@ public class GeoscalingWebClient {
             List<SmartSubdomain> subdomains = new LinkedList<SmartSubdomain>();
             
             String url = MessageFormat.format(
-                    "{0}://{1}:{2}/{3}?module=smart_subdomains&id={4,number,#}",
-                    protocol, host, port, PATH, parent.id);
+                    "http://{0}/{1}?module=smart_subdomains&id={2,number,#}",
+                    HOST, PATH, parent.id);
             
             HttpResponse response = httpClient.execute(new HttpGet(url));
             HttpEntity entity = response.getEntity();
@@ -306,8 +292,8 @@ public class GeoscalingWebClient {
     private void createSmartSubdomain(int primaryDomainId, String smartSubdomainName) {
         try {
             String url = MessageFormat.format(
-                    "{0}://{1}:{2}/{3}?module=smart_subdomains&id={4,number,#}",
-                    protocol, host, port, PATH, primaryDomainId);
+                    "http://{0}/{1}?module=smart_subdomains&id={2,number,#}",
+                    HOST, PATH, primaryDomainId);
             
             HttpPost request = new HttpPost(url);
             List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
@@ -327,8 +313,8 @@ public class GeoscalingWebClient {
     private void deleteSmartSubdomain(int primaryDomainId, int smartSubdomainId) {
         try {
             String url = MessageFormat.format(
-                    "{0}://{1}:{2}/{3}?module=smart_subdomains&id={4,number,#}&delete={5,number,#}",
-                    protocol, host, port, PATH, primaryDomainId, smartSubdomainId);
+                    "http://{0}/{1}?module=smart_subdomains&id={2,number,#}&delete={3,number,#}",
+                    HOST, PATH, primaryDomainId, smartSubdomainId);
             
             HttpResponse response = httpClient.execute(new HttpGet(url));
             if (response.getEntity() != null)
@@ -346,8 +332,8 @@ public class GeoscalingWebClient {
         
         try {
             String url = MessageFormat.format(
-                    "{0}://{1}:{2}/{3}?module=smart_subdomain&id={4,number,#}&subdomain_id={5,number,#}",
-                    protocol, host, port, PATH, primaryDomainId, smartSubdomainId);
+                    "http://{0}/{1}?module=smart_subdomain&id={2,number,#}&subdomain_id={3,number,#}",
+                    HOST, PATH, primaryDomainId, smartSubdomainId);
             
             HttpPost request = new HttpPost(url);
             List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
