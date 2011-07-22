@@ -1,20 +1,25 @@
 Brooklyn.jsTree = (function(parent) {
 
+    var currentTree;
+
+    function getLatestTree(){
+        $.getJSON("jstree?name=" + $("#search-input").val().toLowerCase(), refreshTreeIfChanged).error(
+            function() {$(Brooklyn.eventBus).trigger('update_failed', "Could not get new entity data.");}
+        );
+    }
+
+    function refreshTreeIfChanged(json){
+        if(currentTree == null || json.toString() != currentTree.toString()){
+            currentTree = json;
+            loadJstree();
+        }
+    }
+
     function loadJstree() {
         $("#jstree").jstree({
                 "plugins" : [ "themes", "json_data", "ui" ],
                 "json_data" : {
-                    "ajax" : {
-                        "url" : "jstree",
-                        "data" : function () {
-                            return {
-                                //TODO Still need to link up UI component to corresponding parameters
-                                "name" : $("#search-input").val().toLowerCase(),
-                                "id" : "",
-                                "applicationID" : ""
-                            };
-                        }
-                    }
+                    data : currentTree
                 }
             }).bind('select_node.jstree',
                     function(e, data){
@@ -24,10 +29,10 @@ Brooklyn.jsTree = (function(parent) {
     }
 
     function init() {
-        $('#search-input').bind('input', loadJstree);
-        $('#search-input').bind('search', loadJstree);
+        $('#search-input').keyup(getLatestTree);
         $("#search-input").corner();
-        loadJstree();
+        $(Brooklyn.eventBus).bind("update", getLatestTree);
+        getLatestTree();
     }
 
     return {
