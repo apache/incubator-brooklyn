@@ -46,7 +46,7 @@ public abstract class AbstractApplication extends AbstractGroup implements Appli
      * Default stop will stop all Startable children
      */
     public void stop() {
-        List<Entity> startable = ownedChildren.find { it in Startable }
+        List<Entity> startable = ownedChildren.findAll { it in Startable }
         if (startable && !startable.isEmpty()) {
             Task task = invokeEffectorList(startable, Startable.STOP)
             try {

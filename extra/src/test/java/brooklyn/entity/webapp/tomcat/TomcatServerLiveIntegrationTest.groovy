@@ -52,7 +52,7 @@ public class TomcatServerLiveIntegrationTest {
     public void setUp() {
         AWSCredentialsFromEnv creds = new AWSCredentialsFromEnv();
         loc = new AwsLocation([identity:creds.getAWSAccessKeyId(), credential:creds.getAWSSecretKey(), 
-                providerLocationId:REGION_NAME, inboundPorts:[HTTP_PORT,SHUTDOWN_PORT,JMX_PORT]])
+                providerLocationId:REGION_NAME])
         loc.setTagMapping([(TomcatServer.class.getName()):[
                 imageId:IMAGE_ID,
                 sshPublicKey:new File(SSH_PUBLIC_KEY_PATH),
@@ -113,7 +113,7 @@ public class TomcatServerLiveIntegrationTest {
     @Test(groups = [ "Live", "WIP" ])
     public void testStartsTomcatInAws() {
         TomcatServer tc = new TomcatServer([ owner:new TestApplication(), httpPort:HTTP_PORT, 
-                conf:[(SUGGESTED_SHUTDOWN_PORT):SHUTDOWN_PORT, (SUGGESTED_HTTP_PORT):HTTP_PORT, (SUGGESTED_HTTP_PORT):HTTP_PORT, 
+                config:[(SUGGESTED_SHUTDOWN_PORT):SHUTDOWN_PORT, (SUGGESTED_HTTP_PORT):HTTP_PORT, (SUGGESTED_HTTP_PORT):HTTP_PORT, 
                 (SUGGESTED_JMX_PORT):JMX_PORT] ])
         tc.start([ loc ])
         executeUntilSucceedsWithFinallyBlock ([:],
