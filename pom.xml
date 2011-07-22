@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>brooklyn</groupId>
-	<artifactId>brooklyn</artifactId>
-	<packaging>pom</packaging>
-	<version>0.0.1-SNAPSHOT</version>
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>brooklyn</groupId>
+    <artifactId>brooklyn</artifactId>
+    <packaging>pom</packaging>
+    <version>0.0.1-SNAPSHOT</version>
     <name>Brooklyn Top Level Project</name>
 
-	<modules>
+    <modules>
         <module>parent/root</module>
         <module>api</module>
         <module>test-support</module>
         <module>core</module>
         <module>extra</module>
-	</modules>
+    </modules>
 
     <profiles>
         <profile>
@@ -42,6 +42,12 @@
                 <module>web-console</module>
                 <module>launcher</module>
                 <module>acceptance</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>Example</id>
+            <modules>
+                <module>example</module>
             </modules>
         </profile>
     </profiles>
