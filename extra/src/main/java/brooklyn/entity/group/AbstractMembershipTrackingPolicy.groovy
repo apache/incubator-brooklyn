@@ -1,14 +1,9 @@
 package brooklyn.entity.group
 
-import java.net.InetAddress
-import java.util.List
-import java.util.Map
-
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractGroup
-import brooklyn.event.SensorEventListener;
-import brooklyn.location.MachineLocation
-import brooklyn.management.SubscriptionHandle
+import brooklyn.event.SensorEvent
+import brooklyn.event.SensorEventListener
 import brooklyn.policy.basic.AbstractPolicy
 
 import com.google.common.base.Preconditions
@@ -25,8 +20,9 @@ abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
         this.group = group;
         reset();
         group.members.each { onEntityAdded it }
-        subscribe(group, group.MEMBER_ADDED, { Entity entity -> onEntityAdded entity } as SensorEventListener);
-        subscribe(group, group.MEMBER_REMOVED, { Entity entity -> onEntityRemoved entity } as SensorEventListener);
+        subscribe(group, group.MEMBER_ADDED, { SensorEvent<Entity> evt -> onEntityAdded evt.value } as SensorEventListener);
+        subscribe(group, group.MEMBER_REMOVED, { SensorEvent<Entity> evt  -> onEntityRemoved evt.value } as SensorEventListener);
+        // FIXME cluster may be remote, we need to make this retrieve the remote values, or store members in local mgmt node, or use children
     }
 
     public void reset() {
