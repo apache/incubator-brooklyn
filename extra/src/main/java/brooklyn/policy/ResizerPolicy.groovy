@@ -1,18 +1,18 @@
 package brooklyn.policy
 
-import java.util.logging.Level
-import java.util.logging.Logger
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.group.DynamicCluster
 import brooklyn.event.AttributeSensor
-import brooklyn.event.SensorEventListener
 import brooklyn.event.SensorEvent
+import brooklyn.event.SensorEventListener
 import brooklyn.policy.basic.AbstractPolicy
 
 public class ResizerPolicy<T extends Number> extends AbstractPolicy implements Policy, SensorEventListener {
     
-    private static final Logger LOG = Logger.getLogger(ResizerPolicy.class)
+    private static final Logger LOG = LoggerFactory.getLogger(ResizerPolicy.class)
     
     private DynamicCluster entity
     private String[] metricName
@@ -78,7 +78,7 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements P
         def desiredSize
         if (0 < currentMetric - metricUpperBound) {
             desiredSize = currentSize+Math.ceil(currentSize * ((currentMetric - metricUpperBound) / metricUpperBound))// scale out
-        } else if (0 < metricLowerBound - currentSize) {
+        } else if (0 < metricLowerBound - currentMetric) {
             desiredSize = currentSize-Math.ceil(currentSize * (Math.abs(currentMetric - metricLowerBound) / metricLowerBound)) // scale back
         } else {
             desiredSize = currentSize

@@ -11,16 +11,17 @@ import brooklyn.entity.group.DynamicCluster
 class ResizerPolicyTest {
 
     ResizerPolicy policy
-
+    
     @BeforeMethod()
     public void before() {
-        policy = [null, null]
+        policy = new ResizerPolicy(null, null)
         policy.setMinSize 0
     }
     
     @Test
     public void testUpperBounds() {
         TestCluster tc = [1]
+        policy.@entity = tc
         policy.setMetricLowerBound 0
         policy.setMetricUpperBound 100
         assertEquals 1, policy.calculateDesiredSize(99)
@@ -30,6 +31,7 @@ class ResizerPolicyTest {
     @Test
     public void testLowerBounds() {
         TestCluster tc = [1]
+        policy.@entity = tc
         policy.setMetricLowerBound 100
         policy.setMetricUpperBound 10000
         assertEquals 1, policy.calculateDesiredSize(101)
@@ -42,6 +44,7 @@ class ResizerPolicyTest {
         public int size
         
         TestCluster(int initialSize) {
+            super(newEntity: {})
             size = initialSize
         }
         
