@@ -25,6 +25,7 @@ class ResizerPolicyTest {
         policy.setMetricLowerBound 0
         policy.setMetricUpperBound 100
         assertEquals 1, policy.calculateDesiredSize(99)
+        assertEquals 1, policy.calculateDesiredSize(100)
         assertEquals 2, policy.calculateDesiredSize(101)
     }
     
@@ -35,7 +36,38 @@ class ResizerPolicyTest {
         policy.setMetricLowerBound 100
         policy.setMetricUpperBound 10000
         assertEquals 1, policy.calculateDesiredSize(101)
+        assertEquals 1, policy.calculateDesiredSize(100)
         assertEquals 0, policy.calculateDesiredSize(99)
+    }
+    
+    @Test
+    public void clustersWithSeveralEntities() {
+        TestCluster tc = [3]
+        policy.@entity = tc
+        policy.setMetricLowerBound 50
+        policy.setMetricUpperBound 100
+        assertEquals 3, policy.calculateDesiredSize(99)
+        assertEquals 3, policy.calculateDesiredSize(100)
+        assertEquals 4, policy.calculateDesiredSize(101)
+        
+        assertEquals 2, policy.calculateDesiredSize(49)
+        assertEquals 3, policy.calculateDesiredSize(50)
+        assertEquals 3, policy.calculateDesiredSize(51)
+
+    }
+    
+    @Test
+    public void extremeResizes() {
+        TestCluster tc = [5]
+        policy.@entity = tc
+        policy.setMetricLowerBound 50
+        policy.setMetricUpperBound 100
+        assertEquals 10, policy.calculateDesiredSize(200)
+        assertEquals 0, policy.calculateDesiredSize(9)
+        // Metric lower bound is 50 shared between 5 entities
+        assertEquals 1, policy.calculateDesiredSize(10)
+        assertEquals 1, policy.calculateDesiredSize(11)
+        assertEquals 2, policy.calculateDesiredSize(20)
     }
     
     @InheritConstructors
