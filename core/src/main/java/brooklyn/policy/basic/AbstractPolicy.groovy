@@ -27,7 +27,7 @@ class AbstractPolicy implements Policy {
    String id = LanguageUtils.newUid();
    String displayName;
    
-   protected transient EntityLocal entity
+   protected transient Entity entity
    protected transient ExecutionContext execution
    protected transient SubscriptionContext subscription
    
@@ -35,7 +35,7 @@ class AbstractPolicy implements Policy {
    
    public AbstractPolicy() { }
 
-   public void setEntity(EntityLocal entity) {
+   public void setEntity(Entity entity) {
        this.entity = entity;
        this.subscription = new BasicSubscriptionContext(getManagementContext().getSubscriptionManager(), this)
        this.execution = new BasicExecutionContext([tags:[entity,this]], getManagementContext().getExecutionManager())

@@ -1,5 +1,6 @@
 package brooklyn.test
 
+import static org.testng.AssertJUnit.*
 import groovy.time.TimeDuration
 
 import java.util.concurrent.Callable
