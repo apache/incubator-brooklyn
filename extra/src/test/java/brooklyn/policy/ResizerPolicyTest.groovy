@@ -70,6 +70,29 @@ class ResizerPolicyTest {
         assertEquals 2, policy.calculateDesiredSize(20)
     }
     
+    @Test
+    public void obeysMinAndMaxSize() {
+        TestCluster tc = [4]
+        policy.@entity = tc
+        policy.setMinSize 2
+        policy.setMaxSize 6
+        policy.setMetricLowerBound 50
+        policy.setMetricUpperBound 100
+        
+        TestCluster tcNoResize = [4]
+        ResizerPolicy policyNoResize = new ResizerPolicy(null)
+        policyNoResize.@entity = tcNoResize
+        policyNoResize.setMetricLowerBound 50
+        policyNoResize.setMetricUpperBound 100
+        
+        assertEquals 2, policy.calculateDesiredSize(0)
+        assertEquals 0, policyNoResize.calculateDesiredSize(0)
+        
+        assertEquals 6, policy.calculateDesiredSize(175)
+        assertEquals 7, policyNoResize.calculateDesiredSize(175)
+        
+    }
+    
     @InheritConstructors
     private static class TestCluster extends DynamicCluster {
         
