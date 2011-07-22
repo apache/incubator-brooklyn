@@ -66,17 +66,23 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
 
         WebClusterEntity(Map props, Entity owner = null) {
             super(props, owner)
-
-            cluster = new DynamicCluster(newEntity: { properties ->
-                def server = new TomcatServer(properties)
-                server.setConfig(JavaApp.SUGGESTED_JMX_PORT, 32199)
-                server.setConfig(JavaWebApp.SUGGESTED_HTTP_PORT, 8080)
-                server.setConfig(TomcatServer.SUGGESTED_SHUTDOWN_PORT, 31880)
-                server.setConfig(JavaWebApp.WAR, springTravelPath)
-                return server;
-            }, this)
+            def template = { Map properties ->
+                    def server = new TomcatServer(properties)
+                    server.setConfig(JavaApp.SUGGESTED_JMX_PORT, 32199)
+                    server.setConfig(JavaWebApp.SUGGESTED_HTTP_PORT, 8080)
+                    server.setConfig(TomcatServer.SUGGESTED_SHUTDOWN_PORT, 31880)
+                    server.setConfig(JavaWebApp.WAR, springTravelPath)
+                    return server;
+                }
+            cluster = new DynamicCluster(newEntity:template, this)
             cluster.setConfig(DynamicCluster.INITIAL_SIZE, 0)
+        }
 
+        // FIXME: why am I implementing these?
+        void start(Collection<? extends Location> locations) {
+            cluster.start(locations)
+            cluster.resize(1)
+            
             controller = new NginxController(
                 owner: this,
                 cluster: cluster,
@@ -91,12 +97,7 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
             policy.setMetricLowerBound(10)
             policy.setMetricUpperBound(100)
             policy.setEntity(cluster)
-        }
 
-        // FIXME: why am I implementing these?
-        void start(Collection<? extends Location> locations) {
-            cluster.start(locations)
-            cluster.resize(1)
             controller.start(locations)
         }
         void stop() {
@@ -156,18 +157,21 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
 
     private static AwsLocation newAwsUsEastLocation() {
         final String REGION_NAME = "us-east-1" // "eu-west-1"
-        final String IMAGE_ID = REGION_NAME+"/"+"ami-0859bb61" // "ami-d7bb90a3"
+        final String IMAGE_ID = REGION_NAME+"/"+"ami-2342a94a" // "ami-d7bb90a3"
         final String IMAGE_OWNER = "411009282317"
-        final String SSH_PUBLIC_KEY_PATH = "/Users/aled/id_rsa.junit.pub"
-        final String SSH_PRIVATE_KEY_PATH = "/Users/aled/id_rsa.junit.private"
+        
+        ClassLoader classLoader = getClass().getClassLoader()
+        
+        File sshPrivateKey = new File(classLoader.getResource("jclouds/id_rsa.private").path)
+        File sshPublicKey = new File(classLoader.getResource("jclouds/id_rsa.pub").path)
         
         AWSCredentialsFromEnv creds = new AWSCredentialsFromEnv();
         AwsLocation result = new AwsLocation([
             identity:creds.getAWSAccessKeyId(),
             credential:creds.getAWSSecretKey(),
             providerLocationId:REGION_NAME,
-            sshPublicKey:new File(SSH_PUBLIC_KEY_PATH),
-            sshPrivateKey:new File(SSH_PRIVATE_KEY_PATH),
+            sshPublicKey:sshPublicKey
+            sshPrivateKey:sshPrivateKey
             latitude: AMAZON_US_EAST_COORDS['latitude'],
             longitude: AMAZON_US_EAST_COORDS['longitude']]
         )
