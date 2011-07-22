@@ -30,7 +30,7 @@ public abstract class AbstractApplication extends AbstractGroup implements Appli
      */
     public void start(Collection<Location> locations) {
 //        getManagementContext().manage(this)
-        List<Entity> startable = ownedChildren.find { it in Startable }
+        List<Entity> startable = ownedChildren.findAll { it in Startable }
         if (startable && !startable.isEmpty() && locations && !locations.isEmpty()) {
 	        Task start = invokeEffectorList(startable, Startable.START, [ locations:locations ])
 	        try {
