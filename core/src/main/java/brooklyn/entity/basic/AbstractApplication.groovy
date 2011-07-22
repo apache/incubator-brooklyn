@@ -1,8 +1,6 @@
 package brooklyn.entity.basic
 
-import java.beans.PropertyChangeListener
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutionException
 
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
@@ -12,7 +10,6 @@ import brooklyn.location.Location
 import brooklyn.management.Task
 import brooklyn.management.internal.AbstractManagementContext
 import brooklyn.management.internal.LocalManagementContext
-import brooklyn.util.internal.SerializableObservableMap
 
 public abstract class AbstractApplication extends AbstractGroup implements Application, Changeable {
 
@@ -43,6 +40,22 @@ public abstract class AbstractApplication extends AbstractGroup implements Appli
 	        }
         }
         deployed = true
+    }
+
+    /**
+     * Default stop will stop all Startable children
+     */
+    public void stop() {
+        List<Entity> startable = ownedChildren.find { it in Startable }
+        if (startable && !startable.isEmpty()) {
+            Task task = invokeEffectorList(startable, Startable.STOP)
+            try {
+                task.get()
+            } catch (ExecutionException ee) {
+                throw ee.cause
+            }
+        }
+        deployed = false
     }
 
     public synchronized AbstractManagementContext getManagementContext() {
