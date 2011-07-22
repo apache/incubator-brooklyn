@@ -63,14 +63,14 @@ public class AbstractGeoDnsServiceTest {
     private AbstractGeoDnsService geoDns;
     
 
-    @BeforeMethod(groups = "Integration")
+    @BeforeMethod
     public void setup() {
         def template = { properties -> new TestEntity(properties) }
         app = new AbstractApplication() { };
         fabric = new DynamicFabric(owner:app, newEntity:template);
     }
 
-    @AfterMethod(groups = "Integration")
+    @AfterMethod
     public void shutdown() {
         if (fabric != null && fabric.getAttribute(Startable.SERVICE_UP)) {
             EntityStartUtils.stopEntity(fabric)
