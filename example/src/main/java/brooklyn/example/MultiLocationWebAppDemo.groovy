@@ -3,7 +3,7 @@ package brooklyn.example
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractEntity
-import brooklyn.entity.basic.AbstractGroup
+import brooklyn.entity.basic.DynamicGroup
 import brooklyn.entity.basic.JavaApp
 import brooklyn.entity.dns.geoscaling.GeoscalingDnsService
 import brooklyn.entity.group.DynamicCluster
@@ -107,7 +107,8 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
     MultiLocationWebAppDemo(Map props=[:]) {
         super(props)
         
-        AbstractGroup fabric = new DynamicFabric(newEntity: { properties -> return new WebClusterEntity(properties) }, this)
+        DynamicFabric fabric = new DynamicFabric(newEntity: { properties -> return new WebClusterEntity(properties) }, this)
+        DynamicGroup nginxEntities = [ this, { Entity e -> (e instanceof NginxController) } ];
         GeoscalingDnsService geoDns = new GeoscalingDnsService(
             config: [
                 (GeoscalingDnsService.GEOSCALING_USERNAME): 'cloudsoft',
@@ -116,7 +117,7 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
                 (GeoscalingDnsService.GEOSCALING_SMART_SUBDOMAIN_NAME): 'cloudsoft',
             ],
             this)
-        geoDns.setGroup(fabric)
+        geoDns.setGroup(nginxEntities)
     }
     
     @Override
