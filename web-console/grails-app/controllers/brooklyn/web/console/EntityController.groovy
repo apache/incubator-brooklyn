@@ -64,9 +64,15 @@ class EntityController {
         } else {
         //could just do a recursive loop in here until ownerId = null
             Entity e = es.toArray()[0]
-            String name = e.displayName
-            String owner = e.owner.id
-            def result = [name:name,owner: owner];
+            List<Entity> parents = entityService.getAncestorsOf(e);
+            parents.reverse()
+            String childName = e.displayName
+            def result = []
+            result += childName
+            for(p in parents){
+                Entity parent = p
+                result += parent.displayName
+            }
             render(result as JSON)
         }
     }

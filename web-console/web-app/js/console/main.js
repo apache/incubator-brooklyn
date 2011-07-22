@@ -51,10 +51,30 @@ Brooklyn.main = (function() {
         $("#status-message").html("Error" + (message ? ": " + message : ""));
     }
 
+    function handleBreadCrumbs(json){
+        newContent = 'You are currently viewing ';
+        for(var p = json.length-1;p>=0;p--){
+            var parent = json[p]
+            parentHTML = '> '+'<b>'+parent+'</b>'
+            newContent += parentHTML
+        }
+        document.getElementById('navigation').innerHTML = newContent;
+    }
+
+    /* This method is intended to be called as an event handler. The e paramater is
+     * unused.
+     */
+    function getBreadCrumbs(e, id) {
+        if (typeof id !== 'undefined') {
+            $.getJSON("breadcrumbs?id=" + id, handleBreadCrumbs).error(
+                function() {$(Brooklyn.eventBus).trigger('update_failed', "Could not get entity info to show in summary.");});
+        }
+    }
 
     function init() {
         $(Brooklyn.eventBus).bind("update_ok", updateOK);
         $(Brooklyn.eventBus).bind("update_failed", updateFailed);
+        $(Brooklyn.eventBus).bind("entity_selected", getBreadCrumbs);
     }
 
     return {

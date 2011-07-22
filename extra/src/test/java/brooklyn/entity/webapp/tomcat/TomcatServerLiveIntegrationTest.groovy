@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.testng.Assert
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
@@ -26,6 +27,8 @@ import brooklyn.util.internal.TimeExtras
  */
 public class TomcatServerLiveIntegrationTest {
     private static final Logger logger = LoggerFactory.getLogger(brooklyn.entity.webapp.tomcat.TomcatServerLiveIntegrationTest.class)
+    
+    // FIXME Uses aled's ssh paths!
     
     /** don't use 8080 since that is commonly used by testing software */
     private static final int HTTP_PORT = 8080//40122
@@ -112,14 +115,14 @@ public class TomcatServerLiveIntegrationTest {
         }
     }
 
-    @Test(groups = [ "Live", "WIP" ])
+    @Test(groups = [ "Live" ])
     public void testStartsTomcatInAws() {
         TomcatServer tc = new TomcatServer([ owner:new TestApplication(), httpPort:HTTP_PORT, 
                 config:[(SUGGESTED_SHUTDOWN_PORT):SHUTDOWN_PORT, (SUGGESTED_HTTP_PORT):HTTP_PORT, (SUGGESTED_HTTP_PORT):HTTP_PORT, 
                 (SUGGESTED_JMX_PORT):JMX_PORT] ])
         tc.start([ loc ])
         TestUtils.executeUntilSucceedsWithFinallyBlock ([:],
-                { assertTrue tc.getAttribute(TomcatServer.SERVICE_UP) }, 
+                { Assert.assertTrue(tc.getAttribute(TomcatServer.SERVICE_UP)) }, 
                 { tc.stop() })
     }
 }
