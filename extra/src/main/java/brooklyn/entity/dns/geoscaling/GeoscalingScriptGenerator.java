@@ -52,7 +52,7 @@ class GeoscalingScriptGenerator {
     }
     
     // TODO: move to sensible "general utilities" location
-    private static String loadResource(String resourceName) {
+    public static String loadResource(String resourceName) {
         BufferedReader reader = null;
         try {
             InputStream is = GeoscalingScriptGenerator.class.getResourceAsStream(resourceName);
