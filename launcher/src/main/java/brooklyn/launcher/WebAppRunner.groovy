@@ -26,6 +26,9 @@ public class WebAppRunner {
 
         try {
             is = WebAppRunner.class.getResourceAsStream(warClasspathPath);
+            if (!is) {
+                throw new IllegalArgumentException("WAR not found on classpath at $warClasspathPath")
+            }
             out = new FileWriter(war);
             IOUtils.copy(is, out);
         } finally {
