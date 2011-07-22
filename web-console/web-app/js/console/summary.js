@@ -4,10 +4,6 @@ Brooklyn.summary = (function() {
 
     function handleSummaryData(json) {
         var name_html = '<p><span class="label">Name:</span> ' + json.displayName + "</p>";
-        // set status bar node until new breadcrumbs service made.
-        newContent = 'You are currently viewing > <b>'+json.displayName+'</b>';
-        document.getElementById('navigation').innerHTML = newContent;
-        /////
         var locations_html = '<h4>Locations</h4>';
         if (json.locations.length > 0) {
             locations_html += '<ul id="#summary-locations">\n<li>';

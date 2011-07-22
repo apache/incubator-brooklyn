@@ -93,6 +93,17 @@ class EntityService {
         result
     }
 
+    public List<Entity> getAncestorsOf(Entity child) {
+        List<Entity> result = []
+        Entity ancestor = child.getOwner()
+        while (ancestor) {
+            result.add(ancestor)
+            ancestor = ancestor.getOwner()
+        }
+        return result
+    }
+    
+
     public boolean isChildOf(Entity child, Collection<Entity> parents) {
         parents.find { parent ->
             getChildren(parent).contains(child) || isChildOf(child, getChildren(parent))
