@@ -20,10 +20,6 @@ abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
     
     public AbstractMembershipTrackingPolicy() { }
     
-    public AbstractMembershipTrackingPolicy(AbstractGroup group) {
-        setGroup(group);
-    }
-    
     public void setGroup(AbstractGroup group) {
         Preconditions.checkNotNull(group, "The group cannot be null");
         this.group = group;
