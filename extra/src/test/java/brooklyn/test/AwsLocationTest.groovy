@@ -25,9 +25,8 @@ import brooklyn.util.internal.EntityStartUtils
 class AwsLocationTest {
     private static final Logger LOG = LoggerFactory.getLogger(AwsLocationTest.class)
     
-    private static final String REGION_NAME = "us-east-1" // "eu-west-1"
-    private static final String IMAGE_ID = REGION_NAME+"/"+"ami-0859bb61" // "ami-d7bb90a3"
-    private static final String IMAGE_OWNER = "411009282317"
+    private static final String REGION_NAME = "us-east-1"
+    private static final String IMAGE_ID = REGION_NAME+"/"+"ami-2342a94a"
     
     private AwsLocation aws
     private File sshPrivateKey
@@ -83,7 +82,7 @@ class AwsLocationTest {
         aws.setTagMapping([
             "brooklyn.entity.webapp.tomcat.TomcatServer":imageData,
             "brooklyn.entity.proxy.nginx.NginxController":imageData,
-        ]) //, imageOwner:IMAGE_OWNER]])
+        ])
  
         def template = { Map properties -> new TomcatServer(properties) }
         
@@ -114,5 +113,7 @@ class AwsLocationTest {
                 assertTrue urlRespondsWithStatusCode200(it.getAttribute(TomcatServer.ROOT_URL) + "hello-world")
             }
         })
+
+		Thread.sleep 60*1000
     }
 }
