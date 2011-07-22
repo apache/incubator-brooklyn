@@ -1,17 +1,19 @@
 package brooklyn.entity.dns
 
-import java.util.Map;
+import java.util.Map
 import java.util.Set
+
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy
-import brooklyn.policy.Policy
 
 
 abstract class AbstractGeoDnsService extends AbstractEntity {
-    
+    private static final Logger log = LoggerFactory.getLogger(AbstractGeoDnsService.class);
 //    public static AttributeSensor<Set<HostGeoInfo>> TARGET_HOSTS = [ Set.class, "target.hosts" ];
     
     private final Map<Entity, HostGeoInfo> targetHosts = new HashMap<Entity, HostGeoInfo>();
@@ -36,7 +38,7 @@ abstract class AbstractGeoDnsService extends AbstractEntity {
         if (targetHosts.containsKey(e)) return;
         HostGeoInfo hgi = HostGeoInfo.fromEntity(e)
         if (hgi == null) {
-            // TODO: log warning (no geo info found for entity)
+            log.warn("Failed to derive geo information for entity "+e);
         } else {
             targetHosts.put(e, hgi);
             update();
