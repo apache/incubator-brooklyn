@@ -19,8 +19,8 @@ import brooklyn.location.basic.aws.AwsLocation
 import brooklyn.policy.Policy
 
 import com.google.common.base.Preconditions
-
-
+import brooklyn.policy.ResizerPolicy
+import brooklyn.launcher.WebAppRunner
 
 /**
  * The application demonstrates the following:
@@ -73,11 +73,12 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
                 portNumberSensor: JavaWebApp.HTTP_PORT
             )
 
-            // FIXME: write this policy
-//            policy = new WatermarkResizingPolicy()
-//            policy.setConfig(WatermarkResizingPolicy.SENSOR, JavaWebApp.AVG_REQUESTS_PER_SECOND)
-//            policy.setConfig(WatermarkResizingPolicy.LOW_WATER_MARK, 10)
-//            policy.setConfig(WatermarkResizingPolicy.HIGH_WATER_MARK, 100)
+            policy = new ResizerPolicy(JavaWebApp.AVG_REQUESTS_PER_SECOND)
+            policy.setMinSize(1)
+            policy.setMaxSize(5)
+            policy.setMetricLowerBound(10)
+            policy.setMetricUpperBound(100)
+            policy.setEntity(cluster)
         }
 
         // FIXME: why am I implementing these?
@@ -95,8 +96,8 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
         }
     }
 
-    MultiLocationWebAppDemo(Map props=[:], Entity owner=null) {
-        super(props, owner)
+    MultiLocationWebAppDemo(Map props=[:]) {
+        super(props)
         
         new DynamicFabric(newEntity: { properties -> return new WebClusterEntity(properties) }, this)
     }
@@ -109,13 +110,12 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
     public static void main(String[] args) {
         AwsLocation awsUsEastLocation = newAwsUsEastLocation()
         FixedListMachineProvisioningLocation montereyEastLocation = newMontereyEastLocation()
+        MachineProvisioningLocation montereyEdinburghLocation = newMontereyEdinburghLocation()
         
-        // FIXME: start the web management console here
-        MultiLocationWebAppDemo app = new MultiLocationWebAppDemo()
-        app.start([montereyEastLocation, awsUsEastLocation])
-        
-        System.in.read()
-        app.stop()
+        MultiLocationWebAppDemo app = new MultiLocationWebAppDemo([:])
+
+        WebAppRunner web = new WebAppRunner(app.getManagementContext())
+        web.start()
     }
 
     private static AwsLocation newAwsUsEastLocation() {
@@ -135,7 +135,7 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
             ]]) //, imageOwner:IMAGE_OWNER]])
         return result
     }
-    
+
     private static FixedListMachineProvisioningLocation newMontereyEastLocation() {
         // The definition of the Monterey East location
         final Collection<SshMachineLocation> MONTEREY_EAST_PUBLIC_ADDRESSES = [
@@ -146,9 +146,25 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
                 '216.48.127.232', '216.48.127.233', // east5a/b
                 '216.48.127.234', '216.48.127.235'  // east6a/b
                 ].collect { new SshMachineLocation(address: InetAddress.getByName(it), userName: 'cdm') }
-                
+
         MachineProvisioningLocation<SshMachineLocation> result =
             new FixedListMachineProvisioningLocation<SshMachineLocation>(machines: MONTEREY_EAST_PUBLIC_ADDRESSES)
+        return result
+    }
+
+    private static FixedListMachineProvisioningLocation newMontereyEdinburghLocation() {
+        // The definition of the Monterey Edinburgh location
+        final Collection<SshMachineLocation> MONTEREY_EDINBURGH_MACHINES = [
+            '192.168.144.241',
+            '192.168.144.242',
+            '192.168.144.243',
+            '192.168.144.244',
+            '192.168.144.245',
+            '192.168.144.246'
+        ].collect { new SshMachineLocation(address: InetAddress.getByName(it), userName: 'cloudsoft') }
+
+        MachineProvisioningLocation<SshMachineLocation> result =
+            new FixedListMachineProvisioningLocation<SshMachineLocation>(machines: MONTEREY_EDINBURGH_MACHINES)
         return result
     }
 }
