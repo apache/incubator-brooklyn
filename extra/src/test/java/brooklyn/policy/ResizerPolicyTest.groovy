@@ -6,7 +6,6 @@ import groovy.transform.InheritConstructors
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.group.DynamicCluster
 
 class ResizerPolicyTest {

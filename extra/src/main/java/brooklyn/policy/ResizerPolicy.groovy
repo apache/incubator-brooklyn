@@ -6,11 +6,11 @@ import java.util.logging.Logger
 import brooklyn.entity.Entity
 import brooklyn.entity.group.DynamicCluster
 import brooklyn.event.AttributeSensor
-import brooklyn.event.EventListener
+import brooklyn.event.SensorEventListener
 import brooklyn.event.SensorEvent
 import brooklyn.policy.basic.AbstractPolicy
 
-public class ResizerPolicy<T extends Number> extends AbstractPolicy implements Policy, EventListener {
+public class ResizerPolicy<T extends Number> extends AbstractPolicy implements Policy, SensorEventListener {
     
     private static final Logger LOG = Logger.getLogger(ResizerPolicy.class)
     
