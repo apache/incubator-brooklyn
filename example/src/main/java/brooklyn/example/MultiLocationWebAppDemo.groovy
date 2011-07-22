@@ -1,5 +1,8 @@
 package brooklyn.example
 
+import brooklyn.entity.basic.AbstractApplication
+import brooklyn.entity.trait.Startable
+
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractEntity
@@ -106,6 +109,9 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
         }
     }
 
+    final DynamicFabric fabric
+    final DynamicGroup nginxEntities
+    
     MultiLocationWebAppDemo(Map props=[:]) {
         super(props)
         
@@ -134,10 +140,11 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
     }
     
     public static void main(String[] args) {
-//        AwsLocation awsUsEastLocation = newAwsUsEastLocation()
+        AwsLocation awsUsEastLocation = newAwsUsEastLocation()
 //        FixedListMachineProvisioningLocation montereyEastLocation = newMontereyEastLocation()
-        MachineProvisioningLocation montereyEdinburghLocation = newMontereyEdinburghLocation()
+//        MachineProvisioningLocation montereyEdinburghLocation = newMontereyEdinburghLocation()
         
+<<<<<<< HEAD
         MultiLocationWebAppDemo app = new MultiLocationWebAppDemo(id: 'DemoID', name: 'DemoName', displayName: 'Demo')
 
 //        app.start([montereyEdinburghLocation])
@@ -145,6 +152,14 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
         context.manage(app)
         WebAppRunner web = new WebAppRunner(context)
         web.start()
+=======
+        MultiLocationWebAppDemo app = new MultiLocationWebAppDemo([:])
+        app.fabric.setConfig(DynamicCluster.INITIAL_SIZE, 1)
+        
+//        WebAppRunner web = new WebAppRunner(app.getManagementContext())
+//        web.start()
+        app.start([awsUsEastLocation])
+>>>>>>> webapp-demo: define AWS image for NginxController; fix DynamicGroup for nginxEntities
     }
 
     private static AwsLocation newAwsUsEastLocation() {
@@ -155,20 +170,26 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
         final String SSH_PRIVATE_KEY_PATH = "/Users/aled/id_rsa.junit.private"
         
         AWSCredentialsFromEnv creds = new AWSCredentialsFromEnv();
-        AwsLocation result = new AwsLocation(
+        AwsLocation result = new AwsLocation([
             identity:creds.getAWSAccessKeyId(),
             credential:creds.getAWSSecretKey(),
             providerLocationId:REGION_NAME,
+            sshPublicKey:new File(SSH_PUBLIC_KEY_PATH),
+            sshPrivateKey:new File(SSH_PRIVATE_KEY_PATH),
             latitude: AMAZON_US_EAST_COORDS['latitude'],
-            longitude: AMAZON_US_EAST_COORDS['longitude']
-        )   
+            longitude: AMAZON_US_EAST_COORDS['longitude']]
+        )
+        
         result.setTagMapping([(TomcatServer.class.getName()):[
                 imageId:IMAGE_ID,
-                providerLocationId:REGION_NAME,
-                securityGroups:["everything"],
-                sshPublicKey:new File(SSH_PUBLIC_KEY_PATH),
-                sshPrivateKey:new File(SSH_PRIVATE_KEY_PATH),
+                securityGroups:["everything"]
             ]]) //, imageOwner:IMAGE_OWNER]])
+        
+        result.setTagMapping([(NginxController.class.getName()):[
+                imageId:IMAGE_ID,
+                securityGroups:["everything"]
+            ]]) //, imageOwner:IMAGE_OWNER]])
+        
         return result
     }
 
