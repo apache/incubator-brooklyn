@@ -22,6 +22,8 @@ import brooklyn.policy.Policy
 import brooklyn.policy.ResizerPolicy
 
 import com.google.common.base.Preconditions
+import brooklyn.management.internal.AbstractManagementContext
+import brooklyn.launcher.WebAppRunner
 
 /**
  * The application demonstrates the following:
@@ -75,7 +77,7 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
             controller = new NginxController(
                 owner: this,
                 cluster: cluster,
-                domain: 'localhost',
+                domain: 'cloudsoft.geopaas.org',
                 port: 8000,
                 portNumberSensor: JavaWebApp.HTTP_PORT
             )
@@ -107,8 +109,14 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
     MultiLocationWebAppDemo(Map props=[:]) {
         super(props)
         
-        DynamicFabric fabric = new DynamicFabric(newEntity: { properties -> return new WebClusterEntity(properties) }, this)
-        DynamicGroup nginxEntities = [ this, { Entity e -> (e instanceof NginxController) } ];
+        DynamicFabric fabric = new DynamicFabric(
+            id: 'fabricID',
+            name: 'fabricName',
+            displayName: 'Fabric',
+            newEntity: { properties -> return new WebClusterEntity(properties) },
+            this)
+        Preconditions.checkState fabric.getDisplayName() == "Fabric"
+        DynamicGroup nginxEntities = new DynamicGroup([:], this, { Entity e -> (e instanceof NginxController) })
         GeoscalingDnsService geoDns = new GeoscalingDnsService(
             config: [
                 (GeoscalingDnsService.GEOSCALING_USERNAME): 'cloudsoft',
@@ -130,11 +138,13 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
 //        FixedListMachineProvisioningLocation montereyEastLocation = newMontereyEastLocation()
         MachineProvisioningLocation montereyEdinburghLocation = newMontereyEdinburghLocation()
         
-        MultiLocationWebAppDemo app = new MultiLocationWebAppDemo([:])
+        MultiLocationWebAppDemo app = new MultiLocationWebAppDemo(id: 'DemoID', name: 'DemoName', displayName: 'Demo')
 
-//        WebAppRunner web = new WebAppRunner(app.getManagementContext())
-//        web.start()
-        app.start([montereyEdinburghLocation])
+//        app.start([montereyEdinburghLocation])
+        AbstractManagementContext context = app.getManagementContext()
+        context.manage(app)
+        WebAppRunner web = new WebAppRunner(context)
+        web.start()
     }
 
     private static AwsLocation newAwsUsEastLocation() {
