@@ -1,25 +1,32 @@
 package brooklyn.policy
 
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.locks.ReentrantLock
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
+import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.group.DynamicCluster
 import brooklyn.event.AttributeSensor
 import brooklyn.event.SensorEvent
-import brooklyn.event.SensorEventListener
+import brooklyn.event.SensorEventListener;
 import brooklyn.policy.basic.AbstractPolicy
 
-public class ResizerPolicy<T extends Number> extends AbstractPolicy implements Policy, SensorEventListener {
+public class ResizerPolicy<T extends Number> extends AbstractPolicy implements SensorEventListener<T> {
     
     private static final Logger LOG = LoggerFactory.getLogger(ResizerPolicy.class)
     
-    private DynamicCluster entity
+    private DynamicCluster dynamicCluster
     private String[] metricName
     private double metricLowerBound
     private double metricUpperBound
     private int minSize
     private int maxSize = Integer.MAX_VALUE
+    
+    private final AtomicInteger desiredSize = new AtomicInteger(0)
+    private final ReentrantLock resizeLock = new ReentrantLock()
     
     AttributeSensor<T> source
     
@@ -27,8 +34,11 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements P
         this.source = source
     }
     
-    public void setEntity(DynamicCluster entity) {
+    @Override
+    public void setEntity(Entity entity) {
         super.setEntity(entity)
+        assert entity instanceof DynamicCluster
+        this.dynamicCluster = entity
         subscribe(entity, source, this)
     }
     
@@ -52,17 +62,33 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements P
         this
     }
     
+    private int resize() {
+        if (resizeLock.tryLock()) {
+            try {
+                // Groovy does not support do .. while loops!
+                int x = desiredSize.get()
+                dynamicCluster.resize(x)
+                while (x != desiredSize.get()) {
+                    x = desiredSize.get()
+                    dynamicCluster.resize(x)
+                }
+            } finally {
+                resizeLock.unlock()
+            }
+        }        
+    }
+    
     public void onEvent(SensorEvent<T> event) {
         def val = event.getValue()
-        def currentSize = entity.getCurrentSize()
-        def desiredSize = calculateDesiredSize(val)
+        def currentSize = dynamicCluster.getCurrentSize()
+        desiredSize.set(calculateDesiredSize(val))
         
-        if (desiredSize != currentSize) {
+        if (desiredSize.get() != currentSize) {
             LOG.info(String.format("policy resizer resizing: metric=%s, workrate=%s, lowerBound=%s, upperBound=%s; currentSize=%d, desiredSize=%d, minSize=%d, maxSize=%d", 
-                    Arrays.toString(metricName), val, metricLowerBound, metricUpperBound, currentSize, desiredSize, minSize, maxSize))
-            entity.resize(desiredSize)
+                    Arrays.toString(metricName), val, metricLowerBound, metricUpperBound, currentSize, desiredSize.get(), minSize, maxSize))
+            resize()
         } else {
-            LOG.trace(String.format("policy resizer doing nothing: metric=%s, workrate=%s, lowerBound=%s, upperBound=%s; currentSize=%d, minSize=%d, maxSize=%d", 
+            LOG.debug(String.format("policy resizer doing nothing: metric=%s, workrate=%s, lowerBound=%s, upperBound=%s; currentSize=%d, minSize=%d, maxSize=%d", 
                     Arrays.toString(metricName), val, metricLowerBound, metricUpperBound, currentSize, minSize, maxSize))
         }
     }
@@ -72,7 +98,7 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements P
     // TODO Could show example of overriding this to do something smarter. For example, if metric is a number then
     //      grow/shrink by some scale, e.g. grow by (metric <= lowerBound ? 0 : (metric < lowerBound*2 ? 1 : (metric < lowerBound*4 ? 2 : 3))) 
     protected int calculateDesiredSize(double currentMetric) {
-        def currentSize = entity.getCurrentSize()
+        def currentSize = dynamicCluster.getCurrentSize()
         def desiredSize
         if (0 < currentMetric - metricUpperBound) {
             desiredSize = currentSize+Math.ceil(currentSize * ((currentMetric - metricUpperBound) / metricUpperBound))// scale out
