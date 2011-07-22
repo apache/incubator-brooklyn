@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentMap
 import java.util.concurrent.ConcurrentHashMap
 import brooklyn.event.SensorEventListener
 import java.util.concurrent.ConcurrentLinkedQueue
+import brooklyn.event.AttributeSensor
 
 class EntityService {
 
@@ -46,7 +47,9 @@ class EntityService {
 
             sensorCache.putIfAbsent(entity.id, new ConcurrentHashMap<String, SensorSummary>())
             for (Sensor s : entity.entityClass.sensors) {
-                sensorCache[entity.id].putIfAbsent(s.name, new SensorSummary(s, entity.getAttribute(s)))
+                if (s instanceof AttributeSensor) {
+                    sensorCache[entity.id].putIfAbsent(s.name, new SensorSummary(s, entity.getAttribute(s)))
+                }
             }
 
             if (!subscriptions.containsKey(entity.id)) {

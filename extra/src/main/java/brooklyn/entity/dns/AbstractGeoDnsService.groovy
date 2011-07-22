@@ -14,7 +14,7 @@ abstract class AbstractGeoDnsService extends AbstractEntity {
     
 //    public static AttributeSensor<Set<HostGeoInfo>> TARGET_HOSTS = [ Set.class, "target.hosts" ];
     
-    private final Map<Entity,HostGeoInfo> targetHosts = new HashMap<Entity,HostGeoInfo>();
+    private final Map<Entity, HostGeoInfo> targetHosts = new HashMap<Entity, HostGeoInfo>();
     
 
     public AbstractGeoDnsService(Map properties = [:], Entity owner = null) {
@@ -32,19 +32,19 @@ abstract class AbstractGeoDnsService extends AbstractEntity {
 
     protected abstract void reconfigureService(Set<HostGeoInfo> targetHosts);
     
-    private void addTargetHost(Entity e) {
+    public void addTargetHost(Entity e) {
         if (targetHosts.containsKey(e)) return;
         targetHosts.put(e, HostGeoInfo.fromEntity(e));
         update();
     }
 
-    private void removeTargetHost(Entity e) {
+    public void removeTargetHost(Entity e) {
         if (targetHosts.remove(e))
             update();
     }
     
     private void update() {
-        reconfigureService(targetHosts.values());
+        reconfigureService(new LinkedHashSet<HostGeoInfo>(targetHosts.values()));
 //        emit(TARGET_HOSTS, targetHosts);
     }
     

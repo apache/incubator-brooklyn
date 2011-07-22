@@ -1,9 +1,12 @@
 package brooklyn.example
 
+import brooklyn.entity.basic.AbstractApplication
+import brooklyn.entity.trait.Startable
+
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractEntity
-import brooklyn.entity.basic.AbstractGroup
+import brooklyn.entity.basic.DynamicGroup
 import brooklyn.entity.basic.JavaApp
 import brooklyn.entity.dns.geoscaling.GeoscalingDnsService
 import brooklyn.entity.group.DynamicCluster
@@ -22,6 +25,8 @@ import brooklyn.policy.Policy
 import brooklyn.policy.ResizerPolicy
 
 import com.google.common.base.Preconditions
+import brooklyn.management.internal.AbstractManagementContext
+import brooklyn.launcher.WebAppRunner
 
 /**
  * The application demonstrates the following:
@@ -75,7 +80,7 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
             controller = new NginxController(
                 owner: this,
                 cluster: cluster,
-                domain: 'localhost',
+                domain: 'cloudsoft.geopaas.org',
                 port: 8000,
                 portNumberSensor: JavaWebApp.HTTP_PORT
             )
@@ -104,10 +109,20 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
         }
     }
 
+    final DynamicFabric fabric
+    final DynamicGroup nginxEntities
+    
     MultiLocationWebAppDemo(Map props=[:]) {
         super(props)
         
-        AbstractGroup fabric = new DynamicFabric(newEntity: { properties -> return new WebClusterEntity(properties) }, this)
+        DynamicFabric fabric = new DynamicFabric(
+            id: 'fabricID',
+            name: 'fabricName',
+            displayName: 'Fabric',
+            newEntity: { properties -> return new WebClusterEntity(properties) },
+            this)
+        Preconditions.checkState fabric.getDisplayName() == "Fabric"
+        DynamicGroup nginxEntities = new DynamicGroup([:], this, { Entity e -> (e instanceof NginxController) })
         GeoscalingDnsService geoDns = new GeoscalingDnsService(
             config: [
                 (GeoscalingDnsService.GEOSCALING_USERNAME): 'cloudsoft',
@@ -116,7 +131,7 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
                 (GeoscalingDnsService.GEOSCALING_SMART_SUBDOMAIN_NAME): 'cloudsoft',
             ],
             this)
-        geoDns.setGroup(fabric)
+        geoDns.setGroup(nginxEntities)
     }
     
     @Override
@@ -129,11 +144,13 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
 //        FixedListMachineProvisioningLocation montereyEastLocation = newMontereyEastLocation()
         MachineProvisioningLocation montereyEdinburghLocation = newMontereyEdinburghLocation()
         
-        MultiLocationWebAppDemo app = new MultiLocationWebAppDemo([:])
+        MultiLocationWebAppDemo app = new MultiLocationWebAppDemo(id: 'DemoID', name: 'DemoName', displayName: 'Demo')
 
-//        WebAppRunner web = new WebAppRunner(app.getManagementContext())
-//        web.start()
-        app.start([montereyEdinburghLocation])
+//        app.start([montereyEdinburghLocation])
+        AbstractManagementContext context = app.getManagementContext()
+        context.manage(app)
+        WebAppRunner web = new WebAppRunner(context)
+        web.start()
     }
 
     private static AwsLocation newAwsUsEastLocation() {
@@ -144,19 +161,26 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
         final String SSH_PRIVATE_KEY_PATH = "/Users/aled/id_rsa.junit.private"
         
         AWSCredentialsFromEnv creds = new AWSCredentialsFromEnv();
-        AwsLocation result = new AwsLocation(
+        AwsLocation result = new AwsLocation([
             identity:creds.getAWSAccessKeyId(),
             credential:creds.getAWSSecretKey(),
             providerLocationId:REGION_NAME,
+            sshPublicKey:new File(SSH_PUBLIC_KEY_PATH),
+            sshPrivateKey:new File(SSH_PRIVATE_KEY_PATH),
             latitude: AMAZON_US_EAST_COORDS['latitude'],
-            longitude: AMAZON_US_EAST_COORDS['longitude']
-        )   
-        result.setTagMapping([MyEntityType:[
+            longitude: AMAZON_US_EAST_COORDS['longitude']]
+        )
+        
+        result.setTagMapping([(TomcatServer.class.getName()):[
                 imageId:IMAGE_ID,
-                providerLocationId:REGION_NAME,
-                sshPublicKey:new File(SSH_PUBLIC_KEY_PATH),
-                sshPrivateKey:new File(SSH_PRIVATE_KEY_PATH),
+                securityGroups:["everything"]
             ]]) //, imageOwner:IMAGE_OWNER]])
+        
+        result.setTagMapping([(NginxController.class.getName()):[
+                imageId:IMAGE_ID,
+                securityGroups:["everything"]
+            ]]) //, imageOwner:IMAGE_OWNER]])
+        
         return result
     }
 
