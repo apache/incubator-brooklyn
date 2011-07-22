@@ -60,9 +60,10 @@ public class NginxSetup extends SshBasedAppSetup {
 	            "cd \$INSTALL/src",
                 "wget http://nginx-sticky-module.googlecode.com/files/nginx-sticky-module-1.0-rc2.tar.gz",
                 "tar xvzf nginx-sticky-module-1.0-rc2.tar.gz",
+                "which yum && yum -y install openssl-devel",
                 "cd ..",
 	            "mkdir -p dist",
-	            "./configure --prefix=\$INSTALL/dist --add-module=\$INSTALL/src/nginx-sticky-module-1.0-rc2",
+	            "./configure --prefix=\$INSTALL/dist --add-module=\$INSTALL/src/nginx-sticky-module-1.0-rc2 --without-http_rewrite_module",
 	            "make install"
             ])
     }

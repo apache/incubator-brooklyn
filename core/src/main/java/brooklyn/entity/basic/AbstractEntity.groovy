@@ -54,6 +54,7 @@ abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
     String displayName
     EntityReference owner
  
+    protected Map properties = [:]
     protected volatile EntityReference<Application> application
  
     // XXX see comments below (grkvlt)
@@ -157,7 +158,9 @@ abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
             }
             LOG.trace "Entity {} sensors: {}", id, sensorsT.keySet().join(", ")
             sensors = sensorsT
-    
+
+            properties = flags
+
             //set the owner if supplied; accept as argument or field
             if (suppliedOwner) suppliedOwner.addOwnedChild(this)
         } finally { this.@skipInvokeMethodEffectorInterception.set(false) }

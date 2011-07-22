@@ -110,8 +110,6 @@ public class AwsLocation extends AbstractLocation implements MachineProvisioning
             if (allconf.sshPrivateKey) sshConfig.keyFiles = [ allconf.sshPrivateKey.absolutePath ]
             SshMachineLocation sshLoc = new SshMachineLocation(address:vmHostname, userName:ROOT_USERNAME, config:sshConfig);
             
-            ExecResponse respone = computeService.runScriptOnNode(node.getId(), "date")
- 
             // Wait for the VM to be reachable over SSH
             LOG.info("Started VM; waiting for it to be sshable by "+ROOT_USERNAME+"@"+vmHostname);
             boolean reachable = new Repeater()
