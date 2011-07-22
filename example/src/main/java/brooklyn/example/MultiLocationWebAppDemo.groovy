@@ -31,6 +31,12 @@ import brooklyn.launcher.WebAppRunner
  */
 public class MultiLocationWebAppDemo extends AbstractApplication implements Startable {
 
+    private static final Map AMAZON_US_WEST_COORDS = [ 'latitude' : 40.0, 'longitude' : -120.0 ] // Northern California (approx)
+    private static final Map AMAZON_US_EAST_COORDS = [ 'latitude' : 38.0, 'longitude' : -76.0 ] // Northern Virginia (approx)
+    private static final Map MONTEREY_EAST_COORDS = [ 'latitude' : 41.10361, 'longitude' : -73.79583 ] // Hawthorne, NY
+    private static final Map AMAZON_EU_WEST_COORDS = [ 'latitude' : 53.34778, 'longitude' : -6.25972 ] // Dublin, Ireland
+    private static final Map EDINBURGH_COORDS = [ 'latitude' : 55.94944, 'longitude' : -3.16028 ] // Edinburgh, Scotland
+    
     /**
      * This group contains all the sub-groups and entities that go in to a single location.
      * These are:
@@ -126,7 +132,13 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
         final String SSH_PRIVATE_KEY_PATH = "/Users/aled/id_rsa.junit.private"
         
         AWSCredentialsFromEnv creds = new AWSCredentialsFromEnv();
-        AwsLocation result = new AwsLocation(identity:creds.getAWSAccessKeyId(), credential:creds.getAWSSecretKey(), providerLocationId:REGION_NAME)
+        AwsLocation result = new AwsLocation(
+            identity:creds.getAWSAccessKeyId(),
+            credential:creds.getAWSSecretKey(),
+            providerLocationId:REGION_NAME,
+            latitude: AMAZON_US_EAST_COORDS['latitude'],
+            longitude: AMAZON_US_EAST_COORDS['longitude']
+            )
         result.setTagMapping([MyEntityType:[
                 imageId:IMAGE_ID,
                 providerLocationId:REGION_NAME,
@@ -148,7 +160,11 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
                 ].collect { new SshMachineLocation(address: InetAddress.getByName(it), userName: 'cdm') }
 
         MachineProvisioningLocation<SshMachineLocation> result =
-            new FixedListMachineProvisioningLocation<SshMachineLocation>(machines: MONTEREY_EAST_PUBLIC_ADDRESSES)
+            new FixedListMachineProvisioningLocation<SshMachineLocation>(
+                machines: MONTEREY_EAST_PUBLIC_ADDRESSES,
+                latutude: MONTEREY_EAST_COORDS['latitude'],
+                longutude: MONTEREY_EAST_COORDS['longitude']
+            )
         return result
     }
 
@@ -164,7 +180,11 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
         ].collect { new SshMachineLocation(address: InetAddress.getByName(it), userName: 'cloudsoft') }
 
         MachineProvisioningLocation<SshMachineLocation> result =
-            new FixedListMachineProvisioningLocation<SshMachineLocation>(machines: MONTEREY_EDINBURGH_MACHINES)
+            new FixedListMachineProvisioningLocation<SshMachineLocation>(
+                machines: MONTEREY_EDINBURGH_MACHINES,
+                latutude: EDINBURGH_COORDS['latitude'],
+                longutude: EDINBURGH_COORDS['longitude']
+            )
         return result
     }
 }
