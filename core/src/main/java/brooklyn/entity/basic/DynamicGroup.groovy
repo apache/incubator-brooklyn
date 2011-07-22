@@ -45,7 +45,7 @@ public class DynamicGroup extends AbstractGroup {
     }
     class MyEntitySetChangeListener implements CollectionChangeListener<Entity> {
         public void onItemAdded(Entity item) { onEntityAdded(item) }
-        public void onItemRemoved(Entity item) { onEnittyRemoved(item) }
+        public void onItemRemoved(Entity item) { onEntityRemoved(item) }
     }
     volatile MyEntitySetChangeListener setChangeListener = null;
     public synchronized void onManagementBecomingMaster() {
