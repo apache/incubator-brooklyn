@@ -1,5 +1,6 @@
 package brooklyn.entity.group
 
+import java.util.Collection;
 import java.util.List
 import java.util.Map
 
@@ -84,6 +85,13 @@ public abstract class AbstractController extends AbstractService {
         addPolicy(policy)
         reset()
         policy.setGroup(cluster ?: properties.cluster)
+    }
+
+    protected Collection<Integer> getRequiredOpenPorts() {
+        Collection<Integer> result = super.getRequiredOpenPorts()
+        if (getConfig(SUGGESTED_HTTP_PORT)) result.add(getConfig(SUGGESTED_HTTP_PORT))
+        if (getConfig(PORT_NUMBER_SENSOR)) result.add(getConfig(PORT_NUMBER_SENSOR))
+        return result
     }
 
     //FIXME members locations might be remote?

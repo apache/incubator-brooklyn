@@ -1,5 +1,7 @@
 package brooklyn.entity.webapp
 
+import java.util.Collection;
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -56,6 +58,12 @@ public abstract class JavaWebApp extends JavaApp {
     }
 
     protected abstract void waitForHttpPort();
+
+    protected Collection<Integer> getRequiredOpenPorts() {
+        Collection<Integer> result = super.getRequiredOpenPorts()
+        if (getConfig(SUGGESTED_HTTP_PORT)) result.add(getConfig(SUGGESTED_HTTP_PORT))
+        return result
+    }
 
     public void initHttpSensors() {
         def host = getAttribute(JMX_HOST)

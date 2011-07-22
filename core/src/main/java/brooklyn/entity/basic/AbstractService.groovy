@@ -56,9 +56,15 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
 
     public void startInLocation(MachineProvisioningLocation loc) {
         Map<String,Object> flags = loc.getProvisioningFlags([getClass().getName()])
+        flags.inboundPorts = getRequiredOpenPorts().toArray(new Integer[0])
+        
         SshMachineLocation machine = loc.obtain(flags)
         if (machine == null) throw new NoMachinesAvailableException(loc)
         startInLocation(machine)
+    }
+    
+    protected Collection<Integer> getRequiredOpenPorts() {
+        return []
     }
     
     public void startInLocation(SshMachineLocation machine) {

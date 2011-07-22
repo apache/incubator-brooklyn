@@ -1,5 +1,6 @@
 package brooklyn.entity.webapp.tomcat
 
+import java.util.Collection
 import java.util.concurrent.TimeUnit
 
 import javax.management.InstanceNotFoundException
@@ -30,6 +31,12 @@ public class TomcatServer extends JavaWebApp {
     
     public TomcatServer(Map properties=[:], Entity owner=null) {
         super(properties, owner)
+    }
+
+    protected Collection<Integer> getRequiredOpenPorts() {
+        Collection<Integer> result = super.getRequiredOpenPorts()
+        if (getConfig(SUGGESTED_SHUTDOWN_PORT)) result.add(getConfig(SUGGESTED_SHUTDOWN_PORT))
+        return result
     }
 
     public SshBasedAppSetup getSshBasedSetup(SshMachineLocation machine) {

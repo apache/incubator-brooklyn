@@ -20,6 +20,7 @@ import brooklyn.util.internal.Repeater
 public abstract class JavaApp extends AbstractService {
     public static final Logger log = LoggerFactory.getLogger(JavaApp.class)
 
+    public static final int RMI_PORT = 1099
     public static final ConfigKey<Integer> SUGGESTED_JMX_PORT = ConfigKeys.SUGGESTED_JMX_PORT;
     public static final ConfigKey<String> SUGGESTED_JMX_HOST = ConfigKeys.SUGGESTED_JMX_HOST;
 
@@ -37,6 +38,15 @@ public abstract class JavaApp extends AbstractService {
     }
 
     protected abstract void initJmxSensors();
+
+    protected Collection<Integer> getRequiredOpenPorts() {
+        Collection<Integer> result = super.getRequiredOpenPorts()
+        if (getConfig(SUGGESTED_JMX_PORT)) {
+            result.add(RMI_PORT)
+            result.add(getConfig(SUGGESTED_JMX_PORT))
+        }
+        return result
+    }
 
     public void waitForJmx() {
         new Repeater("Wait for JMX").repeat().every(1, TimeUnit.SECONDS).until({jmxAdapter.isConnected()}).limitIterationsTo(30).run();
