@@ -108,7 +108,15 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
         super(props)
         
         AbstractGroup fabric = new DynamicFabric(newEntity: { properties -> return new WebClusterEntity(properties) }, this)
-//        GeoscalingDnsService geoDns = new GeoscalingDnsService(this, fabric)
+        GeoscalingDnsService geoDns = new GeoscalingDnsService(
+            config: [
+                (GeoscalingDnsService.GEOSCALING_USERNAME): 'cloudsoft',
+                (GeoscalingDnsService.GEOSCALING_PASSWORD): 'cl0uds0ft',
+                (GeoscalingDnsService.GEOSCALING_PRIMARY_DOMAIN_NAME): 'geopaas.org',
+                (GeoscalingDnsService.GEOSCALING_SMART_SUBDOMAIN_NAME): 'cloudsoft',
+            ],
+            this)
+        geoDns.setGroup(fabric)
     }
     
     @Override
