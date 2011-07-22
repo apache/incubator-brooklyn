@@ -1,5 +1,6 @@
 package brooklyn.entity.dns.geoscaling
 
+import java.util.Map;
 import java.util.Set
 
 import brooklyn.entity.Entity
@@ -13,7 +14,7 @@ import brooklyn.event.AttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 
 
-class GeoscalingDnsServer extends AbstractGeoDnsService {
+class GeoscalingDnsService extends AbstractGeoDnsService {
     
     public static BasicConfigKey<String> GEOSCALING_PROTOCOL = [ String.class, "geoscaling.protocol" ];
     public static BasicConfigKey<String> GEOSCALING_HOST = [ String.class, "geoscaling.host" ];
@@ -24,8 +25,8 @@ class GeoscalingDnsServer extends AbstractGeoDnsService {
     public static BasicConfigKey<String> GEOSCALING_SMART_SUBDOMAIN_NAME = [ String.class, "geoscaling.smart.subdomain.name" ];
     
 
-    public GeoscalingDnsServer(Entity owner, AbstractGroup group) {
-        super(owner, group);
+    public GeoscalingDnsService(Map properties = [:], Entity owner = null) {
+        super(properties, owner);
     }
 
     protected void reconfigureService(Set<HostGeoInfo> targetHosts) {

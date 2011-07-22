@@ -5,7 +5,7 @@ import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.basic.JavaApp
-import brooklyn.entity.dns.geoscaling.GeoscalingDnsServer;
+import brooklyn.entity.dns.geoscaling.GeoscalingDnsService
 import brooklyn.entity.group.DynamicCluster
 import brooklyn.entity.group.DynamicFabric
 import brooklyn.entity.proxy.nginx.NginxController
@@ -108,7 +108,7 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
         super(props)
         
         AbstractGroup fabric = new DynamicFabric(newEntity: { properties -> return new WebClusterEntity(properties) }, this)
-//        GeoscalingDnsServer geoDns = new GeoscalingDnsServer(this, fabric)
+//        GeoscalingDnsService geoDns = new GeoscalingDnsService(this, fabric)
     }
     
     @Override
@@ -142,7 +142,7 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
             providerLocationId:REGION_NAME,
             latitude: AMAZON_US_EAST_COORDS['latitude'],
             longitude: AMAZON_US_EAST_COORDS['longitude']
-        )
+        )   
         result.setTagMapping([MyEntityType:[
                 imageId:IMAGE_ID,
                 providerLocationId:REGION_NAME,

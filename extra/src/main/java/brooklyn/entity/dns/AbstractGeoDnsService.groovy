@@ -1,5 +1,6 @@
 package brooklyn.entity.dns
 
+import java.util.Map;
 import java.util.Set
 
 import brooklyn.entity.Entity
@@ -16,13 +17,8 @@ abstract class AbstractGeoDnsService extends AbstractEntity {
     private final Map<Entity,HostGeoInfo> targetHosts = new HashMap<Entity,HostGeoInfo>();
     
 
-    public AbstractGeoDnsService(Entity owner) {
-        super(owner);
-    }
-    
-    public AbstractGeoDnsService(Entity owner, AbstractGroup group) {
-        super(owner);
-        setGroup(group);
+    public AbstractGeoDnsService(Map properties = [:], Entity owner = null) {
+        super(properties, owner);
     }
     
     public void setGroup(AbstractGroup group) {
