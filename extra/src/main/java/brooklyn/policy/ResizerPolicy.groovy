@@ -66,11 +66,11 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
         if (resizeLock.tryLock()) {
             try {
                 // Groovy does not support do .. while loops!
-                int x = desiredSize.get()
-                dynamicCluster.resize(x)
-                while (x != desiredSize.get()) {
-                    x = desiredSize.get()
-                    dynamicCluster.resize(x)
+                int desire = desiredSize.get()
+                dynamicCluster.resize(desire)
+                while (desire != desiredSize.get()) {
+                    desire = desiredSize.get()
+                    dynamicCluster.resize(desire)
                 }
             } finally {
                 resizeLock.unlock()
