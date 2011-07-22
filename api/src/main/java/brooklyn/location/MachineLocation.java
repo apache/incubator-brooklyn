@@ -41,13 +41,4 @@ public interface MachineLocation extends Location {
      */
     void releasePort(int portNumber);
 
-    
-    /**
-     * Extends the basic interface to provide lat-long coordinates where available.
-     */
-    public interface WithCoordinates extends MachineLocation {
-        Double getLatitude();
-        Double getLongitude();
-    }
-        
 }

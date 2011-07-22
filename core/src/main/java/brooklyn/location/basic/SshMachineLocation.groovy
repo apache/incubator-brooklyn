@@ -9,7 +9,7 @@ import com.google.common.base.Preconditions
 /**
  * Operations on a machine that is accessible via ssh.
  */
-public class SshMachineLocation extends AbstractLocation implements MachineLocation.WithCoordinates {
+public class SshMachineLocation extends AbstractLocation implements MachineLocation {
     private String user = null
     private InetAddress address
     private Map config = [:]
@@ -38,8 +38,6 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     }
 
     public InetAddress getAddress() { return address }
-    public Double getLatitude() { return config['latitude']; }
-    public Double getLongitude() { return config['longitude']; }
  
     public int run(Map props=[:], String command, Map env=[:]) {
         run(props, [ command ], env)

@@ -44,4 +44,5 @@ public interface Location extends Serializable {
      * TODO A location could be in multiple iso-3166-2 locations.
      */
 //    String getCountryCode();
+
 }

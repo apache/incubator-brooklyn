@@ -34,8 +34,13 @@ abstract class AbstractGeoDnsService extends AbstractEntity {
     
     public void addTargetHost(Entity e) {
         if (targetHosts.containsKey(e)) return;
-        targetHosts.put(e, HostGeoInfo.fromEntity(e));
-        update();
+        HostGeoInfo hgi = HostGeoInfo.fromEntity(e)
+        if (hgi == null) {
+            // TODO: log warning (no geo info found for entity)
+        } else {
+            targetHosts.put(e, hgi);
+            update();
+        }
     }
 
     public void removeTargetHost(Entity e) {
@@ -43,7 +48,7 @@ abstract class AbstractGeoDnsService extends AbstractEntity {
             update();
     }
     
-    private void update() {
+    public void update() {
         reconfigureService(new LinkedHashSet<HostGeoInfo>(targetHosts.values()));
 //        emit(TARGET_HOSTS, targetHosts);
     }
