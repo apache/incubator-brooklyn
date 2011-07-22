@@ -108,7 +108,7 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
         super(props)
         
         AbstractGroup fabric = new DynamicFabric(newEntity: { properties -> return new WebClusterEntity(properties) }, this)
-        GeoscalingDnsServer geoDns = new GeoscalingDnsServer(this, fabric)
+//        GeoscalingDnsServer geoDns = new GeoscalingDnsServer(this, fabric)
     }
     
     @Override
