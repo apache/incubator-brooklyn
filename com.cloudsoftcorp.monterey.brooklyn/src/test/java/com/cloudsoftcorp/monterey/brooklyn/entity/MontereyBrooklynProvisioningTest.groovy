@@ -1,83 +1,84 @@
 package com.cloudsoftcorp.monterey.brooklyn.entity;
 
-import java.lang.reflect.InvocationTargetException;
-import java.net.InetAddress;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.lang.reflect.InvocationTargetException
+import java.net.InetAddress
+import java.net.URL
+import java.util.ArrayList
+import java.util.Arrays
+import java.util.Collection
+import java.util.Collections
+import java.util.HashSet
+import java.util.LinkedHashMap
+import java.util.LinkedHashSet
+import java.util.Map
+import java.util.Set
+import java.util.concurrent.Callable
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.ScheduledFuture
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
+import java.util.logging.Level
+import java.util.logging.Logger
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.testng.Assert
+import org.testng.annotations.AfterMethod
+import org.testng.annotations.BeforeMethod
+import org.testng.annotations.Test
 
-import brooklyn.entity.Entity;
-import brooklyn.entity.basic.AbstractApplication;
-import brooklyn.entity.basic.EntityLocal;
-import brooklyn.event.AttributeSensor;
-import brooklyn.location.Location;
-import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.entity.Entity
+import brooklyn.entity.basic.AbstractApplication
+import brooklyn.entity.basic.EntityLocal
+import brooklyn.event.AttributeSensor
+import brooklyn.location.Location
+import brooklyn.location.basic.FixedListMachineProvisioningLocation
+import brooklyn.location.basic.SshMachineLocation
 
-import com.cloudsoftcorp.monterey.CloudsoftThreadMonitoringTestFixture;
-import com.cloudsoftcorp.monterey.clouds.dto.CloudAccountDto;
-import com.cloudsoftcorp.monterey.clouds.dto.CloudEnvironmentDto;
-import com.cloudsoftcorp.monterey.clouds.dto.CloudProviderSelectionDto;
-import com.cloudsoftcorp.monterey.clouds.dto.ProvisioningConfigDto;
-import com.cloudsoftcorp.monterey.clouds.simulator.SimulatorAccountConfig;
-import com.cloudsoftcorp.monterey.clouds.simulator.SimulatorProvider;
-import com.cloudsoftcorp.monterey.control.api.SegmentSummary;
-import com.cloudsoftcorp.monterey.example.noapisimple.HelloCloudServiceLocator;
-import com.cloudsoftcorp.monterey.example.noapisimple.HelloCloudServiceLocatorImpl;
-import com.cloudsoftcorp.monterey.location.api.MontereyActiveLocation;
-import com.cloudsoftcorp.monterey.location.api.MontereyLocation;
-import com.cloudsoftcorp.monterey.location.dsl.MontereyLocationsDsl;
-import com.cloudsoftcorp.monterey.location.temp.impl.CloudAccountIdImpl;
-import com.cloudsoftcorp.monterey.network.control.api.Dmn1NetworkInfo;
-import com.cloudsoftcorp.monterey.network.control.api.Dmn1NodeType;
-import com.cloudsoftcorp.monterey.network.control.api.NodeSummary;
-import com.cloudsoftcorp.monterey.network.control.plane.GsonSerializer;
-import com.cloudsoftcorp.monterey.network.control.plane.web.DeploymentWebProxy;
-import com.cloudsoftcorp.monterey.network.control.plane.web.Dmn1NetworkInfoWebProxy;
-import com.cloudsoftcorp.monterey.network.control.plane.web.PlumberWebProxy;
-import com.cloudsoftcorp.monterey.network.control.plane.web.ProvisionerWebProxy;
-import com.cloudsoftcorp.monterey.network.control.plane.web.UserCredentialsConfig;
-import com.cloudsoftcorp.monterey.network.control.plane.web.api.ControlPlaneWebConstants.HTTP_AUTH;
-import com.cloudsoftcorp.monterey.network.control.wipapi.CloudProviderAccountAndLocationId;
-import com.cloudsoftcorp.monterey.network.control.wipapi.DmnFuture;
-import com.cloudsoftcorp.monterey.network.control.wipapi.LocationUtils;
-import com.cloudsoftcorp.monterey.network.control.wipapi.NodesRolloutConfiguration;
-import com.cloudsoftcorp.monterey.network.deployment.MontereyApplicationDescriptor;
-import com.cloudsoftcorp.monterey.network.deployment.MontereyDeploymentDescriptor;
-import com.cloudsoftcorp.monterey.node.api.NodeId;
-import com.cloudsoftcorp.monterey.servicebean.access.api.MontereyNetworkEndpointImpl;
-import com.cloudsoftcorp.util.Loggers;
-import com.cloudsoftcorp.util.TimeUtils;
-import com.cloudsoftcorp.util.condition.Conditions.ConditionWithMessage;
-import com.cloudsoftcorp.util.condition.Filter;
-import com.cloudsoftcorp.util.condition.Filters;
-import com.cloudsoftcorp.util.exception.ExceptionUtils;
-import com.cloudsoftcorp.util.exception.RuntimeInterruptedException;
-import com.cloudsoftcorp.util.javalang.ClassLoadingContext;
-import com.cloudsoftcorp.util.javalang.OsgiClassLoadingContextFromBundle;
-import com.cloudsoftcorp.util.web.client.CredentialsConfig;
-import com.google.common.collect.ImmutableMap;
-import com.google.gson.Gson;
+import com.cloudsoftcorp.monterey.CloudsoftThreadMonitoringTestFixture
+import com.cloudsoftcorp.monterey.clouds.dto.CloudAccountDto
+import com.cloudsoftcorp.monterey.clouds.dto.CloudEnvironmentDto
+import com.cloudsoftcorp.monterey.clouds.dto.CloudProviderSelectionDto
+import com.cloudsoftcorp.monterey.clouds.dto.ProvisioningConfigDto
+import com.cloudsoftcorp.monterey.clouds.simulator.SimulatorAccountConfig
+import com.cloudsoftcorp.monterey.clouds.simulator.SimulatorProvider
+import com.cloudsoftcorp.monterey.control.api.SegmentSummary
+import com.cloudsoftcorp.monterey.example.noapisimple.HelloCloudServiceLocator
+import com.cloudsoftcorp.monterey.example.noapisimple.HelloCloudServiceLocatorImpl
+import com.cloudsoftcorp.monterey.location.api.MontereyActiveLocation
+import com.cloudsoftcorp.monterey.location.api.MontereyLocation
+import com.cloudsoftcorp.monterey.location.dsl.MontereyLocationsDsl
+import com.cloudsoftcorp.monterey.location.temp.impl.CloudAccountIdImpl
+import com.cloudsoftcorp.monterey.network.control.api.Dmn1NetworkInfo
+import com.cloudsoftcorp.monterey.network.control.api.Dmn1NodeType
+import com.cloudsoftcorp.monterey.network.control.api.NodeSummary
+import com.cloudsoftcorp.monterey.network.control.plane.GsonSerializer
+import com.cloudsoftcorp.monterey.network.control.plane.web.DeploymentWebProxy
+import com.cloudsoftcorp.monterey.network.control.plane.web.Dmn1NetworkInfoWebProxy
+import com.cloudsoftcorp.monterey.network.control.plane.web.PlumberWebProxy
+import com.cloudsoftcorp.monterey.network.control.plane.web.ProvisionerWebProxy
+import com.cloudsoftcorp.monterey.network.control.plane.web.UserCredentialsConfig
+import com.cloudsoftcorp.monterey.network.control.plane.web.api.ControlPlaneWebConstants.HTTP_AUTH
+import com.cloudsoftcorp.monterey.network.control.wipapi.CloudProviderAccountAndLocationId
+import com.cloudsoftcorp.monterey.network.control.wipapi.DmnFuture
+import com.cloudsoftcorp.monterey.network.control.wipapi.LocationUtils
+import com.cloudsoftcorp.monterey.network.control.wipapi.NodesRolloutConfiguration
+import com.cloudsoftcorp.monterey.network.deployment.MontereyApplicationDescriptor
+import com.cloudsoftcorp.monterey.network.deployment.MontereyDeploymentDescriptor
+import com.cloudsoftcorp.monterey.node.api.NodeId
+import com.cloudsoftcorp.monterey.servicebean.access.api.MontereyNetworkEndpointImpl
+import com.cloudsoftcorp.util.Loggers
+import com.cloudsoftcorp.util.TimeUtils
+import com.cloudsoftcorp.util.condition.Filter
+import com.cloudsoftcorp.util.condition.Filters
+import com.cloudsoftcorp.util.condition.Conditions.ConditionWithMessage
+import com.cloudsoftcorp.util.exception.ExceptionUtils
+import com.cloudsoftcorp.util.exception.RuntimeInterruptedException
+import com.cloudsoftcorp.util.javalang.ClassLoadingContext
+import com.cloudsoftcorp.util.javalang.OsgiClassLoadingContextFromBundle
+import com.cloudsoftcorp.util.web.client.CredentialsConfig
+import com.google.common.collect.ImmutableMap
+import com.google.gson.Gson
 
 public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringTestFixture {
 
@@ -104,6 +105,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
     
     private Gson gson;
     private SshMachineLocation localhost;
+    private FixedListMachineProvisioningLocation localhostProvisioner;
     private AbstractApplication app;
     private MontereyNetwork montereyNetwork;
     private UserCredentialsConfig adminCredential = new UserCredentialsConfig("myname", "mypass", HTTP_AUTH.ADMIN_ROLE);
@@ -112,7 +114,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
     private ClassLoadingContext originalClassLoadingContext;
 
     
-    @Before
+    @BeforeMethod
     public void setUp() throws Exception {
         originalClassLoadingContext = ClassLoadingContext.Defaults.getDefaultClassLoadingContext(); 
         OsgiClassLoadingContextFromBundle classLoadingContext = new OsgiClassLoadingContextFromBundle(null, MontereyBrooklynProvisioningTest.class.getClassLoader());
@@ -125,6 +127,8 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
                 .put("address", InetAddress.getByName(SSH_HOST_NAME))
                 .put("userName", SSH_USERNAME).build());
 
+        localhostProvisioner = new FixedListMachineProvisioningLocation<SshMachineLocation>([machines:[localhost]])
+        
         app = new SimpleApp();
         montereyNetwork = new MontereyNetwork();
         montereyNetwork.setOwner(app);
@@ -134,7 +138,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         montereyNetwork.setWebUsersCredentials(Collections.singleton(adminCredential));
     }
     
-    @After
+    @AfterMethod
     public void tearDown() throws Exception {
         try {
             workloadExecutor.shutdownNow();
@@ -157,7 +161,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         montereyNetwork.setCloudEnvironment(newSimulatorCloudEnvironment());
         montereyNetwork.setAppDescriptor(newDummyMontereyDeploymentDescriptor());
         montereyNetwork.setAppBundles(Collections.<URL>emptySet());
-        montereyNetwork.start(Collections.singleton(localhost));
+        montereyNetwork.start([localhostProvisioner]);
         
         assertMontereyRunningWithApp(montereyNetwork);
     }
@@ -415,7 +419,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         montereyNetwork.setAppDescriptor(newHelloCloudMontereyDeploymentDescriptor());
         montereyNetwork.setAppBundles(Collections.singleton(HELLO_CLOUD_BUNDLE_URL));
         
-        montereyNetwork.start(Collections.singleton(localhost));
+        montereyNetwork.start([localhostProvisioner]);
     }
     
     private Map<NodeId, NodeSummary> rolloutNodes(MontereyActiveLocation loc, int lpp, int mr, int m, int tp, int spare) throws Throwable {
@@ -484,20 +488,20 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
     }
     
     private Dmn1NetworkInfoWebProxy newMontereyNetworkInfo() {
-        return new Dmn1NetworkInfoWebProxy(montereyNetwork.getManagementUrl(), gson, new CredentialsConfig("myname", "mypass", HTTP_AUTH.REALM, HTTP_AUTH.METHOD));
+        return new Dmn1NetworkInfoWebProxy(montereyNetwork.getAttribute(MontereyNetwork.MANAGEMENT_URL), gson, new CredentialsConfig("myname", "mypass", HTTP_AUTH.REALM, HTTP_AUTH.METHOD));
     }
     
     private PlumberWebProxy newMontereyPlumber() {
-        return new PlumberWebProxy(montereyNetwork.getManagementUrl(), gson, new CredentialsConfig("myname", "mypass", HTTP_AUTH.REALM, HTTP_AUTH.METHOD));
+        return new PlumberWebProxy(montereyNetwork.getAttribute(MontereyNetwork.MANAGEMENT_URL), gson, new CredentialsConfig("myname", "mypass", HTTP_AUTH.REALM, HTTP_AUTH.METHOD));
     }
     
     private ProvisionerWebProxy newMontereyProvisioner() {
-        return new ProvisionerWebProxy(montereyNetwork.getManagementUrl(), gson, new CredentialsConfig("myname", "mypass", HTTP_AUTH.REALM, HTTP_AUTH.METHOD));
+        return new ProvisionerWebProxy(montereyNetwork.getAttribute(MontereyNetwork.MANAGEMENT_URL), gson, new CredentialsConfig("myname", "mypass", HTTP_AUTH.REALM, HTTP_AUTH.METHOD));
     }
     
     private HelloCloudServiceLocator newHelloCloudServiceLocator() throws Exception {
         MontereyNetworkEndpointImpl networkEndpoint = new MontereyNetworkEndpointImpl();
-        networkEndpoint.setManagementNodeUrl(montereyNetwork.getManagementUrl());
+        networkEndpoint.setManagementNodeUrl(montereyNetwork.getAttribute(MontereyNetwork.MANAGEMENT_URL));
         networkEndpoint.setLocation("GB-EDH");
         networkEndpoint.setUsername("myname");
         networkEndpoint.setPassword("mypass");
@@ -563,7 +567,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
     }
 
     private void assertMontereyRunningWithApp(MontereyNetwork montereyNetwork) {
-        DeploymentWebProxy deploymentWebProxy = new DeploymentWebProxy(montereyNetwork.getManagementUrl(), gson, new CredentialsConfig("myname", "mypass", HTTP_AUTH.REALM, HTTP_AUTH.METHOD));
+        DeploymentWebProxy deploymentWebProxy = new DeploymentWebProxy(montereyNetwork.getAttribute(MontereyNetwork.MANAGEMENT_URL), gson, new CredentialsConfig("myname", "mypass", HTTP_AUTH.REALM, HTTP_AUTH.METHOD));
         Assert.assertTrue(deploymentWebProxy.isApplicationUndeployable());
     }
     
@@ -572,11 +576,11 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         assertSuccessWithin(new Callable<Object>() {
             public Object call() throws Exception {
                 Map<NodeId, NodeSummary> actual = networkInfo.getNodeSummaries();
-                Assert.assertEquals(lpps, countNodesOfType(actual.values(), Dmn1NodeType.LPP));
-                Assert.assertEquals(mrs, countNodesOfType(actual.values(), Dmn1NodeType.MR));
-                Assert.assertEquals(ms, countNodesOfType(actual.values(), Dmn1NodeType.M));
-                Assert.assertEquals(tps, countNodesOfType(actual.values(), Dmn1NodeType.TP));
-                Assert.assertEquals(spares, countNodesOfType(actual.values(), Dmn1NodeType.SPARE));
+                Assert.assertEquals(countNodesOfType(actual.values(), Dmn1NodeType.LPP), lpps);
+                Assert.assertEquals(countNodesOfType(actual.values(), Dmn1NodeType.MR), mrs);
+                Assert.assertEquals(countNodesOfType(actual.values(), Dmn1NodeType.M), ms);
+                Assert.assertEquals(countNodesOfType(actual.values(), Dmn1NodeType.TP), tps);
+                Assert.assertEquals(countNodesOfType(actual.values(), Dmn1NodeType.SPARE), spares);
                 return null;
             }}, TIMEOUT);
     }
@@ -586,7 +590,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         assertSuccessWithin(new Callable<Object>() {
             public Object call() throws Exception {
                 Map<String,NodeId> actual = networkInfo.getSegmentAllocations();
-                Assert.assertEquals(expected, actual);
+                Assert.assertEquals(actual, expected);
                 return null;
             }}, TIMEOUT);
     }
@@ -595,12 +599,12 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         assertSuccessWithin(new Callable<Object>() {
             public Object call() throws Exception {
                 Map<String, Segment> actualSegments = montereyNetwork.getSegments();
-                Assert.assertEquals(expected.keySet(), actualSegments.keySet());
+                Assert.assertEquals(actualSegments.keySet(), expected.keySet());
                 for (Map.Entry<String, Segment> entry : actualSegments.entrySet()) {
                     String segment = entry.getKey();
                     NodeId expectedMediator = expected.get(segment).getNodeId();
                     NodeId actualMediator = entry.getValue().getAttribute(Segment.MEDIATOR);
-                    Assert.assertEquals("segment="+segment, expectedMediator, actualMediator);
+                    Assert.assertEquals(actualMediator, expectedMediator, "segment="+segment);
                 }
                 return null;
             }}, TIMEOUT);
@@ -619,15 +623,15 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
             public Object call() throws Exception {
                 for (Dmn1NodeType nodeType : Arrays.asList(Dmn1NodeType.LPP, Dmn1NodeType.MR, Dmn1NodeType.M, Dmn1NodeType.TP, Dmn1NodeType.SPARE)) {
                     Collection<NodeId> nodesOfType = findNodesMatching(nodeType);
-                    Assert.assertEquals(expectedCounts.get(nodeType), (Integer)nodesOfType.size());
+                    Assert.assertEquals((Integer)nodesOfType.size(), expectedCounts.get(nodeType));
                     
                     for (NodeId nodeId : nodesOfType) {
                         MontereyContainerNode actualContainerNode = findContainerNode(nodeId);
                         
-                        Assert.assertEquals(nodeId, actualContainerNode.getNodeId());
+                        Assert.assertEquals(actualContainerNode.getNodeId(), nodeId);
                         AbstractMontereyNode montereyNetworkNode = actualContainerNode.getContainedMontereyNode();
                         Assert.assertNotNull(montereyNetworkNode);
-                        Assert.assertEquals(nodeType, montereyNetworkNode.getNodeType());
+                        Assert.assertEquals(montereyNetworkNode.getNodeType(), nodeType);
                     }
                 }
                 return null;
@@ -637,16 +641,16 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
     private void assertBrooklynEventuallyHasNodes(final Map<NodeId,NodeSummary> expected) throws Throwable {
         assertSuccessWithin(new Callable<Object>() {
             public Object call() throws Exception {
-                Assert.assertEquals(expected.keySet(), findContainerNodeIds());
+                Assert.assertEquals(findContainerNodeIds(), expected.keySet());
                 for (Map.Entry<NodeId,NodeSummary> e : expected.entrySet()) {
                     NodeSummary expectedNodeSummary = e.getValue();
                     MontereyContainerNode actualContainerNode = findContainerNode(e.getKey());
                     
-                    Assert.assertEquals(expectedNodeSummary.getNodeId(), actualContainerNode.getNodeId());
+                    Assert.assertEquals(actualContainerNode.getNodeId(), expectedNodeSummary.getNodeId());
 
                     AbstractMontereyNode montereyNetworkNode = actualContainerNode.getContainedMontereyNode();
                     Assert.assertNotNull(montereyNetworkNode);
-                    Assert.assertEquals(expectedNodeSummary.getType(), montereyNetworkNode.getNodeType());
+                    Assert.assertEquals(montereyNetworkNode.getNodeType(), expectedNodeSummary.getType());
                 }
                 return null;
             }}, TIMEOUT);
@@ -656,7 +660,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         assertSuccessWithin(new Callable<Object>() {
             public Object call() throws Exception {
                 Map<String, Segment> actual = montereyNetwork.getSegments();
-                Assert.assertEquals(expected.keySet(), actual.keySet());
+                Assert.assertEquals(actual.keySet(), expected.keySet());
                 return null;
             }}, TIMEOUT);
     }
@@ -668,7 +672,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
                     NodeId sourceId = entry.getKey();
                     NodeId expectedDownstreamId = entry.getValue();
                     AbstractMontereyNode montereyNetworkNode = montereyNetwork.getMontereyNodes().get(sourceId);
-                    Assert.assertEquals(expectedDownstreamId, montereyNetworkNode.getAttribute(LppNode.DOWNSTREAM_ROUTER));
+                    Assert.assertEquals(montereyNetworkNode.getAttribute(LppNode.DOWNSTREAM_ROUTER), expectedDownstreamId);
                 }
                 return null;
             }}, TIMEOUT);
@@ -682,8 +686,8 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
             public Object call() throws Exception {
                 for (Dmn1NodeType nodeType : Arrays.asList(Dmn1NodeType.LPP, Dmn1NodeType.MR, Dmn1NodeType.M, Dmn1NodeType.TP)) {
                     MontereyTypedGroup fabric = montereyNetwork.getFabric(nodeType);
-                    Assert.assertEquals(expectedLocs, new LinkedHashSet<Location>(fabric.getLocations()));
-                    Assert.assertEquals(nodeType, fabric.getNodeType());
+                    Assert.assertEquals(new LinkedHashSet<Location>(fabric.getLocations()), expectedLocs);
+                    Assert.assertEquals(fabric.getNodeType(), nodeType);
                 }
                 return null;
             }}, TIMEOUT);
@@ -697,7 +701,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
             public Object call() throws Exception {
                 for (Dmn1NodeType nodeType : Arrays.asList(Dmn1NodeType.LPP, Dmn1NodeType.MR, Dmn1NodeType.M, Dmn1NodeType.TP)) {
                     Map<Location,MontereyTypedGroup> clusters = montereyNetwork.getClusters(nodeType);
-                    Assert.assertEquals("type="+nodeType, expectedLocs, clusters.keySet());
+                    Assert.assertEquals(expectedLocs, clusters.keySet(), "type="+nodeType);
                     
                     for (MontereyActiveLocation montereyLoc : expectedMontereyLocs) {
                         Location loc = toBrooklynLocation(montereyLoc);
@@ -707,16 +711,15 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
                         for (Entity e : cluster.getMembers()) {
                             actualNodeIds.add( ((AbstractMontereyNode)e).getNodeId() );
                         }
-                        Assert.assertEquals("loc="+loc+",type="+nodeType, Collections.singleton(loc), new HashSet<Location>(cluster.getLocations()));
-                        Assert.assertEquals("loc="+loc+",type="+nodeType, nodeType, cluster.getNodeType());
-                        Assert.assertEquals("loc="+loc+",type="+nodeType, expectedNodeIds, actualNodeIds);
+                        Assert.assertEquals(new HashSet<Location>(cluster.getLocations()), Collections.singleton(loc), "loc="+loc+",type="+nodeType);
+                        Assert.assertEquals(cluster.getNodeType(), nodeType, "loc="+loc+",type="+nodeType);
+                        Assert.assertEquals(actualNodeIds, expectedNodeIds, "loc="+loc+",type="+nodeType);
                     }
                 }
                 return null;
             }}, TIMEOUT);
     }
 
-    @SuppressWarnings("rawtypes")
     private void assertBrooklynEventuallyHasExpectedNodeAttributeValues(final Map<NodeId,Map<AttributeSensor,Filter>> expectedNodes) throws Throwable {
         assertSuccessWithin(new Callable<Object>() {
             public Object call() throws Exception {
@@ -734,7 +737,6 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
             }}, TIMEOUT);
     }
     
-    @SuppressWarnings("rawtypes")
     private void assertBrooklynEventuallyHasExpectedSegmentAttributeValues(final Map<String,Map<AttributeSensor,Filter>> expectedSegments) throws Throwable {
         assertSuccessWithin(new Callable<Object>() {
             public Object call() throws Exception {
@@ -752,14 +754,13 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
             }}, TIMEOUT);
     }
     
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     private Map<AttributeSensor,Object> assertEntityAttributes(EntityLocal entity, Map<AttributeSensor,Filter> expectations) throws Exception {
         Map<AttributeSensor,Object> result = new LinkedHashMap<AttributeSensor, Object>();
         for (Map.Entry<AttributeSensor,Filter> entry : expectations.entrySet()) {
             AttributeSensor sensor = entry.getKey();
             Filter filter = entry.getValue();
             Object actualVal = entity.getAttribute(sensor);
-            Assert.assertTrue("entity="+entity+"; sensor="+sensor+", val="+actualVal, filter.accept(actualVal));
+            Assert.assertTrue(filter.accept(actualVal), "entity="+entity+"; sensor="+sensor+", val="+actualVal);
             result.put(sensor, actualVal);
         }
         return result;

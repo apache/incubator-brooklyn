@@ -1,17 +1,5 @@
 package com.cloudsoftcorp.monterey.brooklyn.entity
 
-import com.cloudsoftcorp.util.Loggers;
-
-import java.util.Map
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledFuture
-import java.util.concurrent.TimeUnit
-import java.util.logging.Level
-import java.util.logging.Logger
-
-import java.io.File
-import java.io.IOException
 import java.net.URL
 import java.util.Collection
 import java.util.Collections
@@ -20,7 +8,9 @@ import java.util.Map
 import java.util.Set
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.ScheduledFuture
+import java.util.concurrent.ThreadFactory
 import java.util.concurrent.TimeUnit
 import java.util.logging.Level
 import java.util.logging.Logger
@@ -30,9 +20,6 @@ import brooklyn.entity.trait.Startable
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.Location
 import brooklyn.location.MachineProvisioningLocation
-import brooklyn.location.NoMachinesAvailableException
-import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.internal.BrooklynSystemProperties
 
 import com.cloudsoftcorp.monterey.clouds.NetworkId
 import com.cloudsoftcorp.monterey.clouds.basic.DeploymentUtils
@@ -44,29 +31,18 @@ import com.cloudsoftcorp.monterey.network.control.api.Dmn1NetworkInfo
 import com.cloudsoftcorp.monterey.network.control.api.Dmn1NodeType
 import com.cloudsoftcorp.monterey.network.control.api.NodeSummary
 import com.cloudsoftcorp.monterey.network.control.deployment.DescriptorLoader
-import com.cloudsoftcorp.monterey.network.control.plane.GsonSerializer
-import com.cloudsoftcorp.monterey.network.control.plane.web.DeploymentWebProxy
-import com.cloudsoftcorp.monterey.network.control.plane.web.Dmn1NetworkInfoWebProxy
-import com.cloudsoftcorp.monterey.network.control.plane.web.PingWebProxy
-import com.cloudsoftcorp.monterey.network.control.plane.web.PlumberWebProxy
 import com.cloudsoftcorp.monterey.network.control.plane.web.UserCredentialsConfig
 import com.cloudsoftcorp.monterey.network.deployment.MontereyDeploymentDescriptor
 import com.cloudsoftcorp.monterey.network.m.MediationWorkrateItem.MediationWorkrateItemNames
 import com.cloudsoftcorp.monterey.node.api.NodeId
 import com.cloudsoftcorp.util.Loggers
-import com.cloudsoftcorp.util.TimeUtils
 import com.cloudsoftcorp.util.exception.ExceptionUtils
-import com.cloudsoftcorp.util.exception.RuntimeWrappedException
-import com.cloudsoftcorp.util.javalang.ClassLoadingContext
 import com.cloudsoftcorp.util.osgi.BundleSet
-import com.cloudsoftcorp.util.proc.ProcessExecutionFailureException
 import com.cloudsoftcorp.util.web.client.CredentialsConfig
-import com.cloudsoftcorp.util.web.server.WebConfig
-import com.cloudsoftcorp.util.web.server.WebServer
 import com.google.common.annotations.VisibleForTesting
+import com.google.common.base.Throwables
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
-import com.google.gson.Gson
 
 /**
  * Represents a Monterey network.
@@ -99,22 +75,20 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
 
     private static final int POLL_PERIOD = 1000;
     
-    private final Gson gson;
-
+    private final NetworkId networkId = NetworkId.Factory.newId();
+    
     private String managementNodeInstallDir;
     private String name;
     private Collection<URL> appBundles;
     private URL appDescriptorUrl;
     private MontereyDeploymentDescriptor appDescriptor;
     private CloudEnvironmentDto cloudEnvironmentDto = CloudEnvironmentDto.EMPTY;
-
     private MontereyNetworkConfig config = new MontereyNetworkConfig();
     private Collection<UserCredentialsConfig> webUsersCredentials;
     private CredentialsConfig webAdminCredential;
-    private NetworkId networkId = NetworkId.Factory.newId();
-
-    private SshMachineLocation host;
-    private URL managementUrl;
+    private initialTopologyPerLocation = [lpp:0,mr:0,m:0,tp:0,spare:0]
+    
+    private MontereyManagementNode managementNode;
     private MontereyNetworkConnectionDetails connectionDetails;
     private String applicationName;
 
@@ -123,12 +97,10 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     private final Map<String,Segment> segments = new ConcurrentHashMap<String,Segment>();
     private final Map<Location,Map<Dmn1NodeType,MontereyTypedGroup>> clustersByLocationAndType = new ConcurrentHashMap<Location,Map<Dmn1NodeType,MontereyTypedGroup>>();
     private final Map<Dmn1NodeType,MontereyTypedGroup> typedFabrics = [:];
+    private ScheduledExecutorService scheduledExecutor;
     private ScheduledFuture<?> monitoringTask;
     
     public MontereyNetwork() {
-        ClassLoadingContext classloadingContext = ClassLoadingContext.Defaults.getDefaultClassLoadingContext();
-        GsonSerializer gsonSerializer = new GsonSerializer(classloadingContext);
-        gson = gsonSerializer.getGson();
     }
 
     public void setName(String val) {
@@ -166,15 +138,6 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
 
     public void setWebAdminCredential(CredentialsConfig val) {
         this.webAdminCredential = val;
-    }
-
-    public void setNetworkId(NetworkId val) {
-        networkId = val;
-    }
-
-    // FIXME Use attributes instead of getters
-    public String getManagementUrl() {
-        return managementUrl;
     }
 
     public Collection<MontereyContainerNode> getContainerNodes() {
@@ -222,7 +185,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
 
     // TODO Use attribute? Method is used to guard call to stop. Or should stop be idempotent?
     public boolean isRunning() {
-        return host != null;
+        return managementNode?.isRunning() ?: false
     }
     
     @VisibleForTesting    
@@ -231,7 +194,8 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     }
 
     public void dispose() {
-        if (monitoringTask != null) monitoringTask.cancel(true);
+        monitoringTask?.cancel(true);
+        scheduledExecutor?.shutdownNow();
     }
     
     @Override
@@ -245,97 +209,43 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     }
 
     public void startInLocation(Collection<Location> locs) {
-        // TODO how do we deal with different types of location?
+        locations.clear()
+        locations.addAll(locs)
         
-        SshMachineLocation machineLoc = locs.find({ it instanceof SshMachineLocation });
         MachineProvisioningLocation provisioningLoc = locs.find({ it instanceof MachineProvisioningLocation });
-        if (machineLoc) {
-            startInLocation(machineLoc)
-        } else if (provisioningLoc) {
-            startInLocation(provisioningLoc)
-        } else {
+        if (!provisioningLoc) {
             throw new IllegalArgumentException("Unsupported location types creating monterey network, $locations")
         }
-    }
-
-    public void startInLocation(MachineProvisioningLocation loc) {
-        SshMachineLocation machine = loc.obtain()
-        if (machine == null) throw new NoMachinesAvailableException(loc)
-        startInLocation(machine)
-    }
-
-    public void startInLocation(SshMachineLocation host) {
-        /*
-         * TODO: Assumes the following are already set on SshMachine:
-         * sshAddress
-         * sshPort
-         * sshUsername
-         * sshKey/sshKeyFile
-         * HostKeyChecking hostKeyChecking = HostKeyChecking.NO;
-         */
-
-        LOG.info("Creating new monterey network "+networkId+" on "+host);
-
-        File webUsersConfFile = DeploymentUtils.toEncryptedWebUsersConfFile(webUsersCredentials);
-        String username = System.getenv("USER");
-
-        WebConfig web = new WebConfig(true, config.getMontereyWebApiPort(), config.getMontereyWebApiProtocol(), null);
-        web.setSslKeystore(managementNodeInstallDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_SSL_KEYSTORE_RELATIVE_PATH);
-        web.setSslKeystorePassword(config.getMontereyWebApiSslKeystorePassword());
-        web.setSslKeyPassword(config.getMontereyWebApiSslKeyPassword());
-        File webConf = DeploymentUtils.toWebConfFile(web);
-
+        
         try {
-            host.copyTo(webUsersConfFile, managementNodeInstallDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_WEBUSERS_FILE_RELATIVE_PATH);
-
-            if (config.getLoggingFileOverride() != null) {
-                host.copyTo(config.getLoggingFileOverride(), managementNodeInstallDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_LOGGING_FILE_OVERRIDE_RELATIVE_PATH);
-                host.copyTo(config.getLoggingFileOverride(), managementNodeInstallDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_LOGGING_FILE_RELATIVE_PATH);
-            }
-
-            host.copyTo(webConf, managementNodeInstallDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_WEB_CONF_FILE_RELATIVE_PATH);
-            if (config.getMontereyWebApiProtocol().equals(WebServer.HTTPS)) {
-                host.copyTo(config.getMontereyWebApiSslKeystore(), managementNodeInstallDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_SSL_KEYSTORE_RELATIVE_PATH);
-            }
-
-            this.managementUrl = new URL(config.getMontereyWebApiProtocol()+"://"+host.getAddress().getHostName()+":"+config.getMontereyWebApiPort());
-            this.host = host;
-
-            // Convenient for testing: create the management-node directly in-memory, rather than starting it in a separate process
-            // Please leave this commented out code here, to make subsequent debugging easier!
-            // Or you could refactor to have a private static final constant that switches the behaviour?
-            //            MainArguments mainArgs = new MainArguments(new File(managementNodeInstallDir), null, null, null, null, null, networkId.getId());
-            //            new ManagementNodeStarter(mainArgs).start();
-
-            host.run(out: System.out,
-                    managementNodeInstallDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_START_SCRIPT_RELATIVE_PATH+
-                    " -address "+host.getAddress().getHostName()+
-                    " -port "+Integer.toString(config.getMontereyNodePort())+
-                    " -networkId "+networkId.getId()+
-                    " -key "+networkId.getId()+
-                    " -webConfig "+managementNodeInstallDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_WEB_CONF_FILE_RELATIVE_PATH+";"+
-                    "exit");
-
-            PingWebProxy pingWebProxy = new PingWebProxy(managementUrl.toString(), webAdminCredential,
-                    (config.getMontereyWebApiSslKeystore() != null ? config.getMontereyWebApiSslKeystore().getPath() : null),
-                    config.getMontereyWebApiSslKeystorePassword());
-            boolean reachable = pingWebProxy.waitForReachable(MontereyNetworkConfig.TIMEOUT_FOR_NEW_NETWORK_ON_HOST);
-            if (!reachable) {
-                throw new IllegalStateException("Management plane not reachable via web-api within "+TimeUtils.makeTimeString(MontereyNetworkConfig.TIMEOUT_FOR_NEW_NETWORK_ON_HOST)+": url="+managementUrl);
-            }
-
-            PlumberWebProxy plumberProxy = new PlumberWebProxy(managementUrl, gson, webAdminCredential);
-            NodeId controlNodeId = plumberProxy.getControlNodeId();
+            managementNode = new MontereyManagementNode([owner:this])
+            managementNode.networkId = networkId
+            managementNode.managementNodeInstallDir = managementNodeInstallDir
+            managementNode.config = config
+            managementNode.webUsersCredentials = webUsersCredentials
+            managementNode.webAdminCredential = webAdminCredential
             
-            this.connectionDetails = new MontereyNetworkConnectionDetails(networkId, managementUrl, webAdminCredential, controlNodeId, controlNodeId);
+            managementNode.start([provisioningLoc])
             
-            setAttribute MANAGEMENT_URL, managementUrl
-            setAttribute NETWORK_ID, networkId.getId()
-
+            connectionDetails = managementNode.connectionDetails
+            setAttribute NETWORK_ID, networkId
+            mirrorManagementNodeAttributes()
+            
+            // Create fabrics for each node-type
+            typedFabrics.put(Dmn1NodeType.LPP, MontereyTypedGroup.newAllLocationsInstance(connectionDetails, Dmn1NodeType.LPP, locations));
+            typedFabrics.put(Dmn1NodeType.MR, MontereyTypedGroup.newAllLocationsInstance(connectionDetails, Dmn1NodeType.MR, locations));
+            typedFabrics.put(Dmn1NodeType.M, MediatorGroup.newAllLocationsInstance(connectionDetails, locations));
+            typedFabrics.put(Dmn1NodeType.TP, MontereyTypedGroup.newAllLocationsInstance(connectionDetails, Dmn1NodeType.TP, locations));
+            
+            typedFabrics.values().each { addOwnedChild(it) }
+    
+            updateClusterTopologies();
+            
             // TODO want to call executionContext.scheduleAtFixedRate or some such
-            monitoringTask = Executors.newScheduledThreadPool(1).scheduleAtFixedRate({ updateAll() }, POLL_PERIOD, POLL_PERIOD, TimeUnit.MILLISECONDS)
+            scheduledExecutor = Executors.newScheduledThreadPool(1, {return new Thread(it, "monterey-network-poller")} as ThreadFactory)
+            monitoringTask = scheduledExecutor.scheduleAtFixedRate({ updateAll() }, POLL_PERIOD, POLL_PERIOD, TimeUnit.MILLISECONDS)
 
-            LOG.info("Created new monterey network: "+connectionDetails);
+            LOG.info("Created new monterey network: "+networkId);
 
             if (!appDescriptor) {
                 if (appDescriptorUrl) {
@@ -344,48 +254,22 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
             }
             
             if (appDescriptor) {
-                deployCloudEnvironment(cloudEnvironmentDto);
-                
                 BundleSet bundleSet = (appBundles) ? BundleSet.fromUrls(appBundles) : BundleSet.EMPTY;
-                deployApplication(appDescriptor, bundleSet);
+                managementNode.deployCloudEnvironment(cloudEnvironmentDto);
+                managementNode.deployApplication(appDescriptor, bundleSet);
             }
 
         } catch (Exception e) {
-            LOG.log(Level.WARNING, "Error creating monterey network", e);
-
-            if (BrooklynSystemProperties.DEBUG.isEnabled()) {
-                // Not releasing failed instance, because that would make debugging hard!
-                LOG.log(Level.WARNING, "Error creating monterey network; leaving failed instance "+host, e);
-            } else {
-                LOG.log(Level.WARNING, "Error creating monterey network; terminating failed instance "+host, e);
-                try {
-                    shutdownManagementNodeProcess(config, host, networkId);
-                } catch (ProcessExecutionFailureException e2) {
-                    LOG.log(Level.WARNING, "Error cleaning up monterey network after failure to start: machine="+host, e2);
-                }
-            }
-
-            throw new RuntimeWrappedException("Error creating monterey network on "+host, e);
+            // TODO If successfully created management node, but then get exception, do we want to shut it down?
+            LOG.log(Level.WARNING, "Error creating monterey network; stopping management node and rethrowing", e);
+            managementNode?.stop()
+            throw Throwables.propagate(e)
         }
     }
 
-    public void deployCloudEnvironment(CloudEnvironmentDto cloudEnvironmentDto) {
-        int DEPLOY_TIMEOUT = 5*60*1000;
-        DeploymentWebProxy deployer = new DeploymentWebProxy(managementUrl, gson, webAdminCredential, DEPLOY_TIMEOUT);
-        deployer.deployCloudEnvironment(cloudEnvironmentDto);
-    }
-
-    public void deployApplication(MontereyDeploymentDescriptor descriptor, BundleSet bundles) {
-        int DEPLOY_TIMEOUT = 5*60*1000;
-        DeploymentWebProxy deployer = new DeploymentWebProxy(managementUrl, gson, webAdminCredential, DEPLOY_TIMEOUT);
-        boolean result = deployer.deployApplication(descriptor, bundles);
-    }
-
-    public MontereyContainerNode provisionNode(Collection<Location> locs) {
-        if (!locs) {
-            throw new IllegalArgumentException("No locations supplied when provisioning nodes, locs=$locs")
-        }
-        provisionNode(locs.iterator().next())
+    private void mirrorManagementNodeAttributes() {
+        setAttribute MANAGEMENT_URL, managementNode.getAttribute(MontereyManagementNode.MANAGEMENT_URL)
+        setAttribute STATUS, managementNode.getAttribute(MontereyManagementNode.STATUS)
     }
     
     public MontereyContainerNode provisionNode(Location loc) {
@@ -417,42 +301,10 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
 
     @Override
     public void stop() {
-        // TODO Guard so can only shutdown if network nodes are not running?
-        if (host == null) {
-            throw new IllegalStateException("Monterey network is not running; cannot stop");
-        }
-        shutdownManagementNodeProcess(this.config, host, networkId)
+        managementNode?.stop()
         
         // TODO Race: monitoringTask could still be executing, and could get NPE when it tries to get connectionDetails
-        if (monitoringTask != null) monitoringTask.cancel(true);
-        
-        host = null;
-        managementUrl = null;
-        connectionDetails = null;
-        applicationName = null;
-    }
-
-    private void shutdownManagementNodeProcess(MontereyNetworkConfig config, SshMachineLocation host, NetworkId networkId) {
-        String killScript = managementNodeInstallDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_KILL_SCRIPT_RELATIVE_PATH;
-        try {
-            LOG.info("Releasing management node on "+toString());
-            host.run(out: System.out,
-                    killScript+" -key "+networkId.getId()+";"+
-                    "exit");
-
-        } catch (IllegalStateException e) {
-            if (e.toString().contains("No such process")) {
-                // the process hadn't started or was killed externally? Our work is done.
-                LOG.info("Management node process not running; termination is a no-op: networkId="+networkId+"; machine="+host);
-            } else {
-                LOG.log(Level.WARNING, "Error termining monterey management node process: networkId="+networkId+"; machine="+host, e);
-            }
-        } catch (ProcessExecutionFailureException e) {
-            LOG.log(Level.WARNING, "Error termining monterey management node process: networkId="+networkId+"; machine="+host, e);
-
-        } catch (IOException e) {
-            LOG.log(Level.WARNING, "Error termining monterey management node process: networkId="+networkId+"; machine="+host, e);
-        }
+        monitoringTask?.cancel(true);
     }
 
     private void updateAll() {
@@ -470,16 +322,13 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     }
 
     private boolean updateStatus() {
-        PingWebProxy pinger = new PingWebProxy(connectionDetails.getManagementUrl(), connectionDetails.getWebApiAdminCredential());
-        boolean isup = pinger.ping();
-        String status = (isup) ? "UP" : "DOWN";
-        setAttribute(STATUS, status);
-        return isup;
+        boolean result = managementNode.updateStatus()
+        mirrorManagementNodeAttributes()
+        return result
     }
     
     private void updateAppName() {
-        DeploymentWebProxy deployer = new DeploymentWebProxy(connectionDetails.getManagementUrl(), gson, connectionDetails.getWebApiAdminCredential());
-        MontereyDeploymentDescriptor currentApp = deployer.getApplicationDeploymentDescriptor();
+        MontereyDeploymentDescriptor currentApp = managementNode.getDeploymentProxy().getApplicationDeploymentDescriptor();
         String currentAppName = currentApp?.getName();
         if (!(applicationName != null ? applicationName.equals(currentAppName) : currentAppName == null)) {
             applicationName = currentAppName;
@@ -489,15 +338,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     
 //    private NodeSummary 
     private void updateTopology() {
-        Dmn1NetworkInfo networkInfo = new Dmn1NetworkInfoWebProxy(connectionDetails.getManagementUrl(), gson, connectionDetails.getWebApiAdminCredential());
-        Collection<MontereyActiveLocation> montereyLocations = networkInfo.getActiveLocations();
-        Collection<Location> locations = montereyLocations.collect { locationRegistry.getConvertedLocation(it) }
-        
-        // Update locations, if they've changed
-        if (!this.locations.equals(locations)) {
-            this.locations.clear();
-            this.locations.addAll(locations);
-        }
+        Dmn1NetworkInfo networkInfo = managementNode.getNetworkInfo()
         
         updateFabricTopologies();
         updateClusterTopologies();
@@ -506,16 +347,6 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     }
 
     private void updateFabricTopologies() {
-        // Create fabrics (if have not already done so)
-        if (typedFabrics.isEmpty()) {
-            typedFabrics.put(Dmn1NodeType.LPP, MontereyTypedGroup.newAllLocationsInstance(connectionDetails, Dmn1NodeType.LPP, locations));
-            typedFabrics.put(Dmn1NodeType.MR, MontereyTypedGroup.newAllLocationsInstance(connectionDetails, Dmn1NodeType.MR, locations));
-            typedFabrics.put(Dmn1NodeType.M, MediatorGroup.newAllLocationsInstance(connectionDetails, locations));
-            typedFabrics.put(Dmn1NodeType.TP, MontereyTypedGroup.newAllLocationsInstance(connectionDetails, Dmn1NodeType.TP, locations));
-            
-            typedFabrics.values().each { addOwnedChild(it) }
-        }
-        
         typedFabrics.values().each {
             it.refreshLocations(locations);
         }
@@ -551,7 +382,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     }
     
     private void updateNodeTopologies() {
-        Dmn1NetworkInfo networkInfo = new Dmn1NetworkInfoWebProxy(connectionDetails.getManagementUrl(), gson, connectionDetails.getWebApiAdminCredential());
+        Dmn1NetworkInfo networkInfo = managementNode.getNetworkInfo();
         Map<NodeId, NodeSummary> nodeSummaries = networkInfo.getNodeSummaries();
         Map<NodeId,Collection<NodeId>> downstreamNodes = networkInfo.getTopology().getAllTargets();
         
@@ -590,7 +421,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     }
     
     private void updateSegmentTopologies() {
-        Dmn1NetworkInfo networkInfo = new Dmn1NetworkInfoWebProxy(connectionDetails.getManagementUrl(), gson, connectionDetails.getWebApiAdminCredential());
+        Dmn1NetworkInfo networkInfo = managementNode.getNetworkInfo();
         Map<String, SegmentSummary> segmentSummaries = networkInfo.getSegmentSummaries();
         Map<String, NodeId> segmentAllocations = networkInfo.getSegmentAllocations();
         
@@ -624,7 +455,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     }
     
     private void updateWorkrates() {
-        Dmn1NetworkInfo networkInfo = new Dmn1NetworkInfoWebProxy(connectionDetails.getManagementUrl(), gson, connectionDetails.getWebApiAdminCredential());
+        Dmn1NetworkInfo networkInfo = managementNode.getNetworkInfo();
         Map<NodeId, WorkrateReport> workrates = networkInfo.getActivityModel().getAllWorkrateReports();
 
         workrates.entrySet().each {

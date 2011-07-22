@@ -46,7 +46,7 @@ public class MontereyExampleApp extends AbstractApplication {
         app.mn.appDescriptorUrl = appDescriptorUrl
         app.mn.managementNodeInstallDir = MONTEREY_MANAGEMENT_NODE_PATH
         app.mn.webUsersCredentials = [adminCredential]
-    
+        app.mn.initialTopologyPerLocation = [lpp:1,mr:1,m:1,tp:1,spare:1]
         //app.mm.policy << new MontereyLatencyOptimisationPolicy()
         app.start([loc])
     }

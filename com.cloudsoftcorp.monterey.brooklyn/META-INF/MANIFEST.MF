@@ -14,6 +14,7 @@ Require-Bundle: com.google.guava;bundle-version="8.0.0",
  com.cloudsoftcorp.monterey.management,
  com.cloudsoftcorp.monterey.simulator,
  org.junit;bundle-version=4;resolution:=optional,
+ org.testng.eclipse;bundle-version="6.0.1";resolution:=optional,
  com.cloudsoftcorp.util.tests;resolution:=optional,
  com.cloudsoftcorp.monterey.network.tests;resolution:=optional,
  com.cloudsoftcorp.monterey.management.tests;resolution:=optional
