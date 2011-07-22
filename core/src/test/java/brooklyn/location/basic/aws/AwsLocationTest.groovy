@@ -1,8 +1,9 @@
 package brooklyn.location.basic.aws
 
+import static org.testng.Assert.*
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.testng.Assert
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
@@ -15,15 +16,22 @@ class AwsLocationTest {
     private static final String REGION_NAME = "us-east-1" // "eu-west-1"
     private static final String IMAGE_ID = REGION_NAME+"/"+"ami-0859bb61" // "ami-d7bb90a3"
     private static final String IMAGE_OWNER = "411009282317"
-    private static final String SSH_PUBLIC_KEY_PATH = "/Users/adk/.ssh/id_rsa.pub"
-    private static final String SSH_PRIVATE_KEY_PATH = "/Users/adk/.ssh/id_rsa"
     
     private AwsLocation loc;
     private Collection<SshMachineLocation> machines = []
+    private File sshPrivateKey
+    private File sshPublicKey
     
     @BeforeMethod(groups = "Live")
     public void setUp() {
-        AWSCredentialsFromEnv creds = new AWSCredentialsFromEnv();
+        URL resource = getClass().getClassLoader().getResource("jclouds/id_rsa.private")
+        assertNotNull resource
+        sshPrivateKey = new File(resource.path)
+        resource = getClass().getClassLoader().getResource("jclouds/id_rsa.pub")
+        assertNotNull resource
+        sshPublicKey = new File(resource.path)
+        
+        CredentialsFromEnv creds = new CredentialsFromEnv();
         loc = new AwsLocation(identity:creds.getAWSAccessKeyId(), credential:creds.getAWSSecretKey(), providerLocationId:REGION_NAME)
     }
     
@@ -48,14 +56,14 @@ class AwsLocationTest {
         loc.setTagMapping([MyEntityType:[
             imageId:IMAGE_ID,
             providerLocationId:REGION_NAME,
-            sshPublicKey:new File(SSH_PUBLIC_KEY_PATH),
-            sshPrivateKey:new File(SSH_PRIVATE_KEY_PATH),
+            sshPublicKey:sshPublicKey,
+            sshPrivateKey:sshPrivateKey
         ]]) //, imageOwner:IMAGE_OWNER]])
         
         Map flags = loc.getProvisioningFlags(["MyEntityType"])
         SshMachineLocation machine = obtainMachine(flags)
         
-        Assert.assertTrue machine.isSshable()
+        assertTrue machine.isSshable()
     }
     
     // Use this utility method to ensure 

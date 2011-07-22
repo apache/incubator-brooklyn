@@ -29,7 +29,6 @@ public class DynamicCluster extends AbstractGroup implements Startable, Resizabl
 
     Closure<Entity> newEntity
     int initialSize
-    Map properties
 
     private Location location
 
@@ -56,8 +55,6 @@ public class DynamicCluster extends AbstractGroup implements Startable, Resizabl
         
         initialSize = getConfig(INITIAL_SIZE) ?: properties.initialSize ?: 0
         setConfig(INITIAL_SIZE, initialSize)
-
-        this.properties = properties
 
         setAttribute(SERVICE_UP, false)
     }
