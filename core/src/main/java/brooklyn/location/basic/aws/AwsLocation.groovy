@@ -199,10 +199,10 @@ public class AwsLocation extends AbstractLocation implements MachineProvisioning
 
         if (properties.imagePattern) {
             switch (getImagePatternType()) {
-                case NAME:
+                case ImagePatternType.NAME:
                     templateBuilder.imageNameMatches(properties.imagePattern);
                     break;
-                case DESCRIPTION:
+                case ImagePatternType.DESCRIPTION:
                     templateBuilder.imageDescriptionMatches(properties.imagePattern);
                     break;
                 default:
