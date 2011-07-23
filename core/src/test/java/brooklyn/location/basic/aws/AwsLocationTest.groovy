@@ -13,10 +13,14 @@ import brooklyn.location.basic.SshMachineLocation
 class AwsLocationTest {
     private static final Logger LOG = LoggerFactory.getLogger(AwsLocationTest.class)
     
-    private static final String REGION_NAME = "us-east-1" // "eu-west-1"
-    private static final String IMAGE_ID = REGION_NAME+"/"+"ami-0859bb61" // "ami-d7bb90a3"
+    private static final String EUWEST_REGION_NAME = "eu-west-1" 
+    private static final String USEAST_REGION_NAME = "us-east-1" 
+    private static final String EUWEST_IMAGE_ID = EUWEST_REGION_NAME+"/"+"ami-89def4fd"
+    private static final String USEAST_IMAGE_ID = USEAST_REGION_NAME+"/"+"ami-2342a94a"
     private static final String IMAGE_OWNER = "411009282317"
+    private static final String IMAGE_PATTERN = ".*RightImage_CentOS_5.4_i386_v5.5.9_EBS.*"
     
+    private AwsLocationFactory locFactory;
     private AwsLocation loc;
     private Collection<SshMachineLocation> machines = []
     private File sshPrivateKey
@@ -32,7 +36,11 @@ class AwsLocationTest {
         sshPublicKey = new File(resource.path)
         
         CredentialsFromEnv creds = new CredentialsFromEnv();
-        loc = new AwsLocation(identity:creds.getAWSAccessKeyId(), credential:creds.getAWSSecretKey(), providerLocationId:REGION_NAME)
+        locFactory = new AwsLocationFactory([
+                identity:creds.getAWSAccessKeyId(), 
+                credential:creds.getAWSSecretKey(), 
+                sshPublicKey:sshPublicKey,
+                sshPrivateKey:sshPrivateKey])
     }
     
     @AfterMethod(groups = "Live")
@@ -52,13 +60,52 @@ class AwsLocationTest {
     }
     
     @Test(groups = ["Live", "WIP"] )
-    public void testProvisionVm() {
+    public void testProvisionVmInEuWestUsingImageId() {
+        loc = locFactory.newLocation(EUWEST_REGION_NAME)
         loc.setTagMapping([MyEntityType:[
-            imageId:IMAGE_ID,
-            providerLocationId:REGION_NAME,
-            sshPublicKey:sshPublicKey,
-            sshPrivateKey:sshPrivateKey
+            imageId:EUWEST_IMAGE_ID,
         ]]) //, imageOwner:IMAGE_OWNER]])
+        
+        Map flags = loc.getProvisioningFlags(["MyEntityType"])
+        SshMachineLocation machine = obtainMachine(flags)
+        
+        assertTrue machine.isSshable()
+    }
+    
+    @Test(groups = ["Live", "WIP"] )
+    public void testProvisionVmInUsEastUsingImageId() {
+        loc = locFactory.newLocation(USEAST_REGION_NAME)
+        loc.setTagMapping([MyEntityType:[
+            imageId:USEAST_IMAGE_ID,
+        ]]) //, imageOwner:IMAGE_OWNER]])
+        
+        Map flags = loc.getProvisioningFlags(["MyEntityType"])
+        SshMachineLocation machine = obtainMachine(flags)
+        
+        assertTrue machine.isSshable()
+    }
+    
+    @Test(groups = ["Live", "WIP"] )
+    public void testProvisionVmInEuWestUsingImagePattern() {
+        loc = locFactory.newLocation(EUWEST_REGION_NAME)
+        loc.setTagMapping([MyEntityType:[
+            imagePattern:IMAGE_PATTERN,
+            imageOwner:IMAGE_OWNER
+        ]])
+        
+        Map flags = loc.getProvisioningFlags(["MyEntityType"])
+        SshMachineLocation machine = obtainMachine(flags)
+        
+        assertTrue machine.isSshable()
+    }
+    
+    @Test(groups = ["Live", "WIP"] )
+    public void testProvisionVmInUsEastUsingImagePattern() {
+        loc = locFactory.newLocation(USEAST_REGION_NAME)
+        loc.setTagMapping([MyEntityType:[
+            imagePattern:IMAGE_PATTERN,
+            imageOwner:IMAGE_OWNER
+        ]])
         
         Map flags = loc.getProvisioningFlags(["MyEntityType"])
         SshMachineLocation machine = obtainMachine(flags)

@@ -15,18 +15,19 @@ import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.DynamicWebAppCluster
 import brooklyn.entity.webapp.JavaWebApp
 import brooklyn.entity.webapp.tomcat.TomcatServer
+import brooklyn.launcher.WebAppRunner
 import brooklyn.location.Location
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.basic.FixedListMachineProvisioningLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.aws.AWSCredentialsFromEnv
 import brooklyn.location.basic.aws.AwsLocation
+import brooklyn.location.basic.aws.AwsLocationFactory
+import brooklyn.management.internal.AbstractManagementContext
 import brooklyn.policy.Policy
 import brooklyn.policy.ResizerPolicy
 
 import com.google.common.base.Preconditions
-import brooklyn.management.internal.AbstractManagementContext
-import brooklyn.launcher.WebAppRunner
 
 /**
  * The application demonstrates the following:
@@ -37,10 +38,7 @@ import brooklyn.launcher.WebAppRunner
  */
 public class MultiLocationWebAppDemo extends AbstractApplication implements Startable {
 
-    private static final Map AMAZON_US_WEST_COORDS = [ 'latitude' : 40.0, 'longitude' : -120.0 ] // Northern California (approx)
-    private static final Map AMAZON_US_EAST_COORDS = [ 'latitude' : 38.0, 'longitude' : -76.0 ] // Northern Virginia (approx)
     private static final Map MONTEREY_EAST_COORDS = [ 'latitude' : 41.10361, 'longitude' : -73.79583 ] // Hawthorne, NY
-    private static final Map AMAZON_EU_WEST_COORDS = [ 'latitude' : 53.34778, 'longitude' : -6.25972 ] // Dublin, Ireland
     private static final Map EDINBURGH_COORDS = [ 'latitude' : 55.94944, 'longitude' : -3.16028 ] // Edinburgh, Scotland
     
     /**
@@ -115,7 +113,7 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
     MultiLocationWebAppDemo(Map props=[:]) {
         super(props)
         
-        DynamicFabric fabric = new DynamicFabric(
+        fabric = new DynamicFabric(
             [id: 'fabricID',
             name: 'fabricName',
             displayName: 'Fabric',
@@ -142,6 +140,7 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
     
     public static void main(String[] args) {
         AwsLocation awsUsEastLocation = newAwsUsEastLocation()
+        AwsLocation awsEuWestLocation = newAwsEuWestLocation()
 //        FixedListMachineProvisioningLocation montereyEastLocation = newMontereyEastLocation()
         MachineProvisioningLocation montereyEdinburghLocation = newMontereyEdinburghLocation()
         
@@ -152,29 +151,15 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
         WebAppRunner web = new WebAppRunner(context)
         web.start()
         
-        app.start([montereyEdinburghLocation])
+        app.start([awsUsEastLocation, awsEuWestLocation])
     }
 
     private static AwsLocation newAwsUsEastLocation() {
         final String REGION_NAME = "us-east-1" // "eu-west-1"
         final String IMAGE_ID = REGION_NAME+"/"+"ami-2342a94a" // "ami-d7bb90a3"
         final String IMAGE_OWNER = "411009282317"
-        
-        ClassLoader classLoader = getClass().getClassLoader()
-        
-        File sshPrivateKey = new File(classLoader.getResource("jclouds/id_rsa.private").path)
-        File sshPublicKey = new File(classLoader.getResource("jclouds/id_rsa.pub").path)
-        
-        AWSCredentialsFromEnv creds = new AWSCredentialsFromEnv();
-        AwsLocation result = new AwsLocation([
-            identity:creds.getAWSAccessKeyId(),
-            credential:creds.getAWSSecretKey(),
-            providerLocationId:REGION_NAME,
-            sshPublicKey:sshPublicKey,
-            sshPrivateKey:sshPrivateKey,
-            latitude: AMAZON_US_EAST_COORDS['latitude'],
-            longitude: AMAZON_US_EAST_COORDS['longitude']]
-        )
+        AwsLocationFactory factory = newAwsLocationFactory()
+        AwsLocation result = factory.newLocation(REGION_NAME)
         
         result.setTagMapping([
             (TomcatServer.class.getName()):[
@@ -186,6 +171,39 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
             ]) //, imageOwner:IMAGE_OWNER]])
         
         return result
+    }
+
+    private static AwsLocation newAwsEuWestLocation() {
+        final String REGION_NAME = "eu-west-1"
+        final String IMAGE_ID = REGION_NAME+"/"+"ami-89def4fd"
+        final String IMAGE_OWNER = "411009282317"
+        AwsLocationFactory factory = newAwsLocationFactory()
+        AwsLocation result = factory.newLocation(REGION_NAME)
+        
+        result.setTagMapping([
+            (TomcatServer.class.getName()):[
+                    imageId:IMAGE_ID,
+                    securityGroups:["everything"]],
+            (NginxController.class.getName()):[
+                    imageId:IMAGE_ID,
+                    securityGroups:["everything"]]
+            ]) //, imageOwner:IMAGE_OWNER]])
+        
+        return result
+    }
+
+    private static AwsLocationFactory newAwsLocationFactory() {
+        ClassLoader classLoader = getClass().getClassLoader()
+        
+        File sshPrivateKey = new File(classLoader.getResource("jclouds/id_rsa.private").path)
+        File sshPublicKey = new File(classLoader.getResource("jclouds/id_rsa.pub").path)
+        
+        AWSCredentialsFromEnv creds = new AWSCredentialsFromEnv();
+        return new AwsLocationFactory([
+                identity:creds.getAWSAccessKeyId(),
+                credential:creds.getAWSSecretKey(),
+                sshPrivateKey:sshPrivateKey,
+                sshPublicKey:sshPublicKey])
     }
 
     private static FixedListMachineProvisioningLocation newMontereyEastLocation() {
