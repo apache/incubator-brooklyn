@@ -11,7 +11,7 @@ import brooklyn.management.Task
 import brooklyn.management.internal.AbstractManagementContext
 import brooklyn.management.internal.LocalManagementContext
 
-public abstract class AbstractApplication extends AbstractGroup implements Application, Changeable {
+public abstract class AbstractApplication extends AbstractGroup implements Startable, Application {
 
     private volatile AbstractManagementContext mgmt = null;
     private boolean deployed = false
@@ -29,7 +29,7 @@ public abstract class AbstractApplication extends AbstractGroup implements Appli
      * Default start will start all Startable children
      */
     public void start(Collection<Location> locations) {
-//        getManagementContext().manage(this)
+        getManagementContext().manage(this)
         List<Entity> startable = ownedChildren.findAll { it in Startable }
         if (startable && !startable.isEmpty() && locations && !locations.isEmpty()) {
 	        Task start = invokeEffectorList(startable, Startable.START, [ locations:locations ])
@@ -46,6 +46,7 @@ public abstract class AbstractApplication extends AbstractGroup implements Appli
      * Default stop will stop all Startable children
      */
     public void stop() {
+        getManagementContext().unmanage(this)
         List<Entity> startable = ownedChildren.findAll { it in Startable }
         if (startable && !startable.isEmpty()) {
             Task task = invokeEffectorList(startable, Startable.STOP)
@@ -58,6 +59,11 @@ public abstract class AbstractApplication extends AbstractGroup implements Appli
         deployed = false
     }
 
+    public void restart() {
+        throw new UnsupportedOperationException()
+    }
+
+    @Override
     public synchronized AbstractManagementContext getManagementContext() {
         if (mgmt) return mgmt
 
@@ -75,5 +81,4 @@ public abstract class AbstractApplication extends AbstractGroup implements Appli
         // TODO How to tell if we're deployed? What if sub-class overrides start 
         return deployed
     }
-    
 }
