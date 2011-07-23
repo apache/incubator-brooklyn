@@ -9,6 +9,7 @@ import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.DynamicGroup
 import brooklyn.entity.basic.JavaApp
 import brooklyn.entity.dns.geoscaling.GeoscalingDnsService
+import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.group.DynamicFabric
 import brooklyn.entity.proxy.nginx.NginxController
 import brooklyn.entity.trait.Startable
@@ -193,7 +194,7 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
     }
 
     private static AwsLocationFactory newAwsLocationFactory() {
-        ClassLoader classLoader = getClass().getClassLoader()
+        ClassLoader classLoader = MultiLocationWebAppDemo.class.getClassLoader()
         
         File sshPrivateKey = new File(classLoader.getResource("jclouds/id_rsa.private").path)
         File sshPublicKey = new File(classLoader.getResource("jclouds/id_rsa.pub").path)
