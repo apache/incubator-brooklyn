@@ -9,10 +9,10 @@ import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.DynamicGroup
 import brooklyn.entity.basic.JavaApp
 import brooklyn.entity.dns.geoscaling.GeoscalingDnsService
-import brooklyn.entity.group.DynamicCluster
 import brooklyn.entity.group.DynamicFabric
 import brooklyn.entity.proxy.nginx.NginxController
 import brooklyn.entity.trait.Startable
+import brooklyn.entity.webapp.DynamicWebAppCluster
 import brooklyn.entity.webapp.JavaWebApp
 import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.location.Location
@@ -54,7 +54,7 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
         private static final String springTravelPath
         private static final String warName = "swf-booking-mvc.war"
 
-        private DynamicCluster cluster
+        private DynamicWebAppCluster cluster
         private NginxController controller
         private Policy policy
 
@@ -74,7 +74,7 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
                     server.setConfig(JavaWebApp.WAR, springTravelPath)
                     return server;
                 }
-            cluster = new DynamicCluster(newEntity:template, this)
+            cluster = new DynamicWebAppCluster(newEntity:template, this)
             cluster.setConfig(DynamicCluster.INITIAL_SIZE, 0)
         }
 
@@ -84,11 +84,11 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
             cluster.resize(1)
             
             controller = new NginxController(
-                owner: this,
-                cluster: cluster,
-                domain: 'cloudsoft.geopaas.org',
-                port: 8000,
-                portNumberSensor: JavaWebApp.HTTP_PORT
+                owner:this,
+                cluster:cluster,
+                domain:'cloudsoft.geopaas.org',
+                port:8000,
+                portNumberSensor:JavaWebApp.HTTP_PORT
             )
 
             policy = new ResizerPolicy(JavaWebApp.AVG_REQUESTS_PER_SECOND)
@@ -170,8 +170,8 @@ public class MultiLocationWebAppDemo extends AbstractApplication implements Star
             identity:creds.getAWSAccessKeyId(),
             credential:creds.getAWSSecretKey(),
             providerLocationId:REGION_NAME,
-            sshPublicKey:sshPublicKey
-            sshPrivateKey:sshPrivateKey
+            sshPublicKey:sshPublicKey,
+            sshPrivateKey:sshPrivateKey,
             latitude: AMAZON_US_EAST_COORDS['latitude'],
             longitude: AMAZON_US_EAST_COORDS['longitude']]
         )
