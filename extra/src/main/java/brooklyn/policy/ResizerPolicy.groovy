@@ -1,17 +1,16 @@
 package brooklyn.policy
 
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.locks.ReentrantLock
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
-import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.group.DynamicCluster
 import brooklyn.event.AttributeSensor
 import brooklyn.event.SensorEvent
-import brooklyn.event.SensorEventListener;
+import brooklyn.event.SensorEventListener
 import brooklyn.policy.basic.AbstractPolicy
 
 public class ResizerPolicy<T extends Number> extends AbstractPolicy implements SensorEventListener<T> {
@@ -26,7 +25,11 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
     private int maxSize = Integer.MAX_VALUE
     
     private final AtomicInteger desiredSize = new AtomicInteger(0)
-    private final ReentrantLock resizeLock = new ReentrantLock()
+    
+    /**
+     * Set this to true if we are in the process of resizing.
+     */
+    private final AtomicBoolean resizing = new AtomicBoolean(false)
     
     AttributeSensor<T> source
     
@@ -63,7 +66,7 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
     }
     
     private int resize() {
-        if (resizeLock.tryLock()) {
+        if (resizing.compareAndSet(false, true)) {
             try {
                 // Groovy does not support do .. while loops!
                 int desire = desiredSize.get()
@@ -73,7 +76,7 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
                     dynamicCluster.resize(desire)
                 }
             } finally {
-                resizeLock.unlock()
+                resizing.set(false)
             }
         }        
     }
@@ -84,12 +87,12 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
         desiredSize.set(calculateDesiredSize(val))
         
         if (desiredSize.get() != currentSize) {
-            LOG.info(String.format("policy resizer resizing: metric=%s, workrate=%s, lowerBound=%s, upperBound=%s; currentSize=%d, desiredSize=%d, minSize=%d, maxSize=%d", 
-                    Arrays.toString(metricName), val, metricLowerBound, metricUpperBound, currentSize, desiredSize.get(), minSize, maxSize))
+            LOG.info "policy resizer resizing: metric={}, workrate={}, lowerBound={}, upperBound={}; currentSize={}, desiredSize={}, minSize={}, maxSize={}", 
+                    Arrays.toString(metricName), val, metricLowerBound, metricUpperBound, currentSize, desiredSize.get(), minSize, maxSize
             resize()
         } else {
-            LOG.debug(String.format("policy resizer doing nothing: metric=%s, workrate=%s, lowerBound=%s, upperBound=%s; currentSize=%d, minSize=%d, maxSize=%d", 
-                    Arrays.toString(metricName), val, metricLowerBound, metricUpperBound, currentSize, minSize, maxSize))
+            LOG.debug "policy resizer doing nothing: metric={}, workrate={}, lowerBound={}, upperBound={}; currentSize={}, minSize={}, maxSize={}", 
+                    Arrays.toString(metricName), val, metricLowerBound, metricUpperBound, currentSize, minSize, maxSize
         }
     }
     
