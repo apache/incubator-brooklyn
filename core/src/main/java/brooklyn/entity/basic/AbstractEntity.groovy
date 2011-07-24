@@ -356,7 +356,7 @@ abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
 
     @Override
     public <T> T setAttribute(AttributeSensor<T> attribute, T val) {
-        LOG.trace "setting attribute {} to {}", attribute.name, val
+        LOG.info "setting attribute {} to {} on {}", attribute.name, val, this
         attributesInternal.update(attribute, val);
     }
 
