@@ -110,7 +110,7 @@ public class NginxAmazonTest {
 
             // Tomcat URL is available
             cluster.members.each {
-                assertTrue urlRespondsWithStatusCode200(it.getAttribute(TomcatServer.ROOT_URL) + "hello-world")
+                assertTrue urlRespondsWithStatusCode200(it.getAttribute(TomcatServer.ROOT_URL) + "swf-booking-mvc")
             }
         })
 
