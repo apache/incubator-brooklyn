@@ -2,6 +2,23 @@ Brooklyn.jsTree = (function(parent) {
 
     var currentTree;
 
+    function typeTest(a, b) {
+        return (typeof a == typeof b)
+    }
+
+    function testEquivalent(a, b) {
+        var result = true;
+        if (!typeTest(a, b)) return false;
+        if (typeof a == 'object') {
+            for (var p in a) {
+                result = testEquivalent(a[p], b[p]);
+                if (!result) return false;
+            }
+            return result;
+        }
+        return (a == b);
+    }
+
     function getLatestTree(){
         $.getJSON("jstree?name=" + $("#search-input").val().toLowerCase(), refreshTreeIfChanged).error(
             function() {$(Brooklyn.eventBus).trigger('update_failed', "Could not get new entity data.");}
@@ -9,7 +26,7 @@ Brooklyn.jsTree = (function(parent) {
     }
 
     function refreshTreeIfChanged(json){
-        if(currentTree == null || json.toString() != currentTree.toString()){
+        if (currentTree == undefined || !testEquivalent(json, currentTree)){
             currentTree = json;
             loadJstree();
         }
