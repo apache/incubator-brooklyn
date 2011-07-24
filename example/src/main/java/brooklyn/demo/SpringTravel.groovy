@@ -3,23 +3,14 @@ package brooklyn.demo
 import brooklyn.entity.basic.AbstractApplication
 import java.util.Map
 
-import brooklyn.entity.Application
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.DynamicGroup
 import brooklyn.entity.dns.geoscaling.GeoscalingDnsService
 import brooklyn.entity.group.DynamicFabric
 import brooklyn.entity.proxy.nginx.NginxController
-import brooklyn.entity.webapp.tomcat.TomcatServer
-import brooklyn.launcher.WebAppRunner
-import brooklyn.location.Location
-import brooklyn.location.MachineProvisioningLocation
-import brooklyn.location.basic.FixedListMachineProvisioningLocation
-import brooklyn.location.basic.SshMachineLocation
-import brooklyn.location.basic.aws.AWSCredentialsFromEnv
-import brooklyn.location.basic.aws.AwsLocation
-import brooklyn.location.basic.aws.AwsLocationFactory
-import brooklyn.management.internal.AbstractManagementContext
+import brooklyn.entity.webapp.JavaWebApp
+import brooklyn.policy.ResizerPolicy
 
 import com.google.common.base.Preconditions
 
@@ -34,6 +25,10 @@ import com.google.common.base.Preconditions
  * </ul>
  */
 public class SpringTravel extends AbstractApplication {
+    // XXX change these paths before running the demo
+    private static final String SPRING_TRAVEL_PATH = "/Users/aled/eclipse-workspaces/overpaas/brooklyn/example/src/main/resources/swf-booking-mvc.war"
+//    private static final String SPRING_TRAVEL_PATH = "/Users/adk/Workspaces/Cloudsoft/brooklyn/example/src/main/resources/swf-booking-mvc.war"
+    
     final DynamicFabric fabric
     final DynamicGroup nginxEntities
     
@@ -45,9 +40,22 @@ public class SpringTravel extends AbstractApplication {
                 id : 'fabricID',
 	            name : 'fabricName',
 	            displayName : 'Fabric',
-	            newEntity : { Map properties -> return new WebCluster(properties) }
+	            newEntity : { Map properties -> 
+                    WebCluster cluster = new WebCluster(properties)
+                    
+                    ResizerPolicy policy = new ResizerPolicy(JavaWebApp.AVG_REQUESTS_PER_SECOND)
+                    policy.setMinSize(1)
+                    policy.setMaxSize(5)
+                    policy.setMetricLowerBound(10)
+                    policy.setMetricUpperBound(100)
+                    cluster.cluster.addPolicy(policy)
+            
+                    return cluster
+                }
             ],
             this)
+        fabric.setConfig(JavaWebApp.WAR, SPRING_TRAVEL_PATH)
+        
         Preconditions.checkState fabric.displayName == "Fabric"
 
         nginxEntities = new DynamicGroup([:], this, { Entity e -> (e instanceof NginxController) })
