@@ -22,7 +22,8 @@ public class Demo {
             "us-east-1":"ami-2342a94a",
             "us-west-1":"ami-25df8e60",
             "ap-southeast-1":"ami-21c2bd73",
-            "ap-northeast-1":"ami-f0e842f1"]
+            "ap-northeast-1":"ami-f0e842f1",
+        ]
     
     public static void main(String[] args) {
         // Obtain Brooklyn locations from our factory class
@@ -43,7 +44,7 @@ public class Demo {
             locations.add(result)
         }
 //        FixedListMachineProvisioningLocation montereyEastLocation = Locations.newMontereyEastLocation()
-        MachineProvisioningLocation montereyEdinburghLocation = Locations.newMontereyEdinburghLocation()
+//        MachineProvisioningLocation montereyEdinburghLocation = Locations.newMontereyEdinburghLocation()
         
         // Initialize the Spring Travel application entity
         SpringTravel app = new SpringTravel(name:'brooklyn-wide-area-demo', displayName:'Brooklyn Wide-Area Spring Travel Demo Application')

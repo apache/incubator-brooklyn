@@ -51,19 +51,18 @@ public class DynamicFabric extends AbstractEntity implements Startable {
         this.properties = properties
     }
 
-    public void start(Collection<? extends Location> locations) {
+    public void start(Collection<Location> locations) {
         Preconditions.checkNotNull locations, "locations must be supplied"
         Preconditions.checkArgument locations.size() >= 1, "One or more location must be supplied"
         this.locations.addAll(locations)
         
-        // TODO This will have already executed the start on each cluster; so don't want to resubmit them in the ParallelTask?
         Collection<Task> tasks = locations.collect {
             Entity e = addCluster()
             Task task = e.invoke(Startable.START, [locations:[it]])
             return task
         }
 
-        ParallelTask invoke = new ParallelTask(tasks)
+        Task invoke = new ParallelTask(tasks)
         executionContext.submit(invoke)
 
         if (invoke) {
@@ -76,7 +75,7 @@ public class DynamicFabric extends AbstractEntity implements Startable {
     }
 
     public void stop() {
-        invoke = invokeEffectorList(ownedChildren, Startable.STOP)
+        Task invoke = invokeEffectorList(ownedChildren, Startable.STOP)
         try {
             invoke.get()
         } catch (ExecutionException ee) {
