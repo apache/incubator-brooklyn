@@ -28,17 +28,17 @@ public class Demo {
         // Obtain Brooklyn locations from our factory class
         List<Location> locations = []
         AwsLocationFactory factory = Locations.newAwsLocationFactory()
-        ["eu-west-1", "us-east-1"].each {
+        ["eu-west-1", "us-east-1", "us-west-1", "ap-southeast-1", "ap-northeast-1"].each {
             String regionName = it
             String imageId = regionName+"/"+DEFAULT_IMAGE_ID_PER_REGION.get(regionName)
             AwsLocation result = factory.newLocation(regionName)
             result.setTagMapping([
                     (TomcatServer.class.getName()):[
                             imageId:imageId,
-                            securityGroups:["everything"]],
+                            securityGroups:["brooklyn-all"]],
                     (NginxController.class.getName()):[
                             imageId:imageId,
-                            securityGroups:["everything"]]])
+                            securityGroups:["brooklyn-all"]]])
             
             locations.add(result)
         }
@@ -53,8 +53,9 @@ public class Demo {
         context.manage(app)
 
         // Start the web console service
+        WebAppRunner web;
         try {
-            WebAppRunner web = new WebAppRunner(context)
+            web = new WebAppRunner(context)
             web.start()
         } catch (Exception e) {
             LOG.warn("Failed to start web-console", e)
@@ -62,5 +63,10 @@ public class Demo {
         
         // Start the application
         app.start(locations)
+        
+        addShutdownHook {
+            app?.stop()
+            web?.stop()
+        }
     }
 }
