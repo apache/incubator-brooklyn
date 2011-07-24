@@ -59,7 +59,7 @@ class AwsLocationTest {
         }
     }
     
-    @Test(groups = ["Live", "WIP"] )
+    @Test(groups = "Live")
     public void testProvisionVmInEuWestUsingImageId() {
         loc = locFactory.newLocation(EUWEST_REGION_NAME)
         loc.setTagMapping([MyEntityType:[
@@ -72,7 +72,7 @@ class AwsLocationTest {
         assertTrue machine.isSshable()
     }
     
-    @Test(groups = ["Live", "WIP"] )
+    @Test(groups = "Live")
     public void testProvisionVmInUsEastUsingImageId() {
         loc = locFactory.newLocation(USEAST_REGION_NAME)
         loc.setTagMapping([MyEntityType:[
@@ -85,7 +85,7 @@ class AwsLocationTest {
         assertTrue machine.isSshable()
     }
     
-    @Test(groups = ["Live", "WIP"] )
+    @Test(groups = "Live")
     public void testProvisionVmInEuWestUsingImagePattern() {
         loc = locFactory.newLocation(EUWEST_REGION_NAME)
         loc.setTagMapping([MyEntityType:[
@@ -99,7 +99,7 @@ class AwsLocationTest {
         assertTrue machine.isSshable()
     }
     
-    @Test(groups = ["Live", "WIP"] )
+    @Test(groups = "Live" )
     public void testProvisionVmInUsEastUsingImagePattern() {
         loc = locFactory.newLocation(USEAST_REGION_NAME)
         loc.setTagMapping([MyEntityType:[
