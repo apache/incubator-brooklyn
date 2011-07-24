@@ -13,7 +13,7 @@ public class SensorSummary {
     public final Object value
     public final String timestamp
 
-    DateFormat formatter = new SimpleDateFormat("hh:mm:ss dd/MM/yyyy ")
+    DateFormat formatter = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy ")
     Calendar date = Calendar.getInstance();
 
     public SensorSummary(Sensor sensor, Object value) {
