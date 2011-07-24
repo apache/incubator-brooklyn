@@ -101,15 +101,18 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
 
     public void stop() {
         setAttribute(SERVICE_STATUS, "stopping")
-        if (setup) {
-            setup.stop()
-	        Location parent = setup.machine.parentLocation
-	        if (parent instanceof MachineProvisioningLocation) {
-	            ((MachineProvisioningLocation) parent).release(setup.machine)
-	        }
-        }
+        MachineLocation machine = locations.find { it in MachineLocation }
+        shutdownInLocation(machine)
         setAttribute(SERVICE_STATUS, "stopped")
         setAttribute(SERVICE_UP, false)
+    }
+
+    public void shutdownInLocation(MachineLocation machine) {
+        if (setup) setup.stop()
+        Location parent = machine.parentLocation
+        if (parent instanceof MachineProvisioningLocation) {
+            ((MachineProvisioningLocation) parent).release(setup.machine)
+        }
     }
 
     public void restart() {
