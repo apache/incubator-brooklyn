@@ -75,8 +75,11 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
         locations.add(machine)
         setup = getSshBasedSetup(machine)
         setAttribute(SERVICE_STATUS, "starting")
-        setup.start()
-        waitForEntityStart()
+        if (setup) {
+	        setup.start()
+	        waitForEntityStart()
+        }
+        setAttribute(SERVICE_STATUS, "running")
     }
 
     // TODO Find a better way to detect early death of process.
@@ -94,21 +97,27 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
             setAttribute(SERVICE_STATUS, "failed")
             throw new IllegalStateException("$this aborted soon after startup")
         }
-        setAttribute(SERVICE_STATUS, "running")
     }
 
     public void stop() {
         setAttribute(SERVICE_STATUS, "stopping")
-        setup.stop()
-        Location parent = setup.machine.parentLocation
-        if (parent instanceof MachineProvisioningLocation) {
-            ((MachineProvisioningLocation) parent).release(setup.machine)
-        }
+        MachineLocation machine = locations.find { it in MachineLocation }
+        shutdownInLocation(machine)
         setAttribute(SERVICE_STATUS, "stopped")
         setAttribute(SERVICE_UP, false)
     }
 
+    public void shutdownInLocation(MachineLocation machine) {
+        if (setup) setup.stop()
+        Location parent = machine.parentLocation
+        if (parent instanceof MachineProvisioningLocation) {
+            ((MachineProvisioningLocation) parent).release(setup.machine)
+        }
+    }
+
     public void restart() {
-        setup.restart()
+        if (setup) {
+            setup.restart()
+        }
     }
 }

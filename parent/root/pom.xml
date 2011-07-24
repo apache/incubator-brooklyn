@@ -582,7 +582,7 @@
         <profile>
             <id>Live</id>
             <properties>
-                <includedTestGroups>Live,Integration</includedTestGroups>
+                <includedTestGroups>Live</includedTestGroups>
                 <excludedTestGroups>WIP</excludedTestGroups>
             </properties>
             <build>

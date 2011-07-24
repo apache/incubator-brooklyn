@@ -12,6 +12,7 @@ import brooklyn.entity.group.DynamicFabric
 import brooklyn.entity.proxy.nginx.NginxController
 import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.launcher.WebAppRunner
+import brooklyn.location.Location
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.basic.FixedListMachineProvisioningLocation
 import brooklyn.location.basic.SshMachineLocation
@@ -36,6 +37,13 @@ public class SpringTravel extends AbstractApplication {
     private static final Map MONTEREY_EAST_COORDS = [ 'latitude' : 41.10361, 'longitude' : -73.79583 ] // Hawthorne, NY
     private static final Map EDINBURGH_COORDS = [ 'latitude' : 55.94944, 'longitude' : -3.16028 ] // Edinburgh, Scotland
    
+    private static final Map DEFAULT_IMAGE_ID_PER_REGION = [
+            "eu-west-1":"ami-89def4fd",
+            "us-east-1":"ami-2342a94a",
+            "us-west-1":"ami-25df8e60",
+            "ap-southeast-1":"ami-21c2bd73",
+            "ap-northeast-1":"ami-f0e842f1"]
+
     final DynamicFabric fabric
     final DynamicGroup nginxEntities
     
@@ -70,57 +78,40 @@ public class SpringTravel extends AbstractApplication {
     }
     
     public static void main(String[] args) {
-        AwsLocation awsUsEastLocation = newAwsUsEastLocation()
-        AwsLocation awsEuWestLocation = newAwsEuWestLocation()
+        println("logging.properties="+SpringTravel.class.getClassLoader().getResource("logging.properties"))
+        
+        List<Location> locations = []
+        AwsLocationFactory factory = newAwsLocationFactory()
+        ["eu-west-1", "us-east-1"].each {
+            String regionName = it
+            String imageId = regionName+"/"+DEFAULT_IMAGE_ID_PER_REGION.get(regionName)
+            AwsLocation result = factory.newLocation(regionName)
+            result.setTagMapping([
+                    (TomcatServer.class.getName()):[
+                            imageId:imageId,
+                            securityGroups:["everything"]],
+                    (NginxController.class.getName()):[
+                            imageId:imageId,
+                            securityGroups:["everything"]]])
+            
+            locations.add(result)
+        }
+    
 //        FixedListMachineProvisioningLocation montereyEastLocation = newMontereyEastLocation()
         MachineProvisioningLocation montereyEdinburghLocation = newMontereyEdinburghLocation()
         
-        Application app = new SpringTravel(id: 'DemoID', name: 'DemoName', displayName: 'Demo')
-
+        SpringTravel app = new SpringTravel(id: 'DemoID', name: 'DemoName', displayName: 'Demo')
         AbstractManagementContext context = app.getManagementContext()
         context.manage(app)
-        WebAppRunner web = new WebAppRunner(context)
-        web.start()
-        
-        app.start([awsUsEastLocation, awsEuWestLocation])
-    }
 
-    private static AwsLocation newAwsUsEastLocation() {
-        final String REGION_NAME = "us-east-1" // "eu-west-1"
-        final String IMAGE_ID = REGION_NAME+"/"+"ami-2342a94a" // "ami-d7bb90a3"
-        final String IMAGE_OWNER = "411009282317"
-        AwsLocationFactory factory = newAwsLocationFactory()
-        AwsLocation result = factory.newLocation(REGION_NAME)
+        try {
+            WebAppRunner web = new WebAppRunner(context)
+            web.start()
+        } catch (Exception e) {
+            LOG.warn("Failed to start web-console", e)
+        }
         
-        result.setTagMapping([
-            (TomcatServer.class.getName()):[
-                    imageId:IMAGE_ID,
-                    securityGroups:["everything"]],
-            (NginxController.class.getName()):[
-                    imageId:IMAGE_ID,
-                    securityGroups:["everything"]]
-            ]) //, imageOwner:IMAGE_OWNER]])
-        
-        return result
-    }
-
-    private static AwsLocation newAwsEuWestLocation() {
-        final String REGION_NAME = "eu-west-1"
-        final String IMAGE_ID = REGION_NAME+"/"+"ami-89def4fd"
-        final String IMAGE_OWNER = "411009282317"
-        AwsLocationFactory factory = newAwsLocationFactory()
-        AwsLocation result = factory.newLocation(REGION_NAME)
-        
-        result.setTagMapping([
-            (TomcatServer.class.getName()):[
-                    imageId:IMAGE_ID,
-                    securityGroups:["everything"]],
-            (NginxController.class.getName()):[
-                    imageId:IMAGE_ID,
-                    securityGroups:["everything"]]
-            ]) //, imageOwner:IMAGE_OWNER]])
-        
-        return result
+        app.start(locations)
     }
 
     private static AwsLocationFactory newAwsLocationFactory() {

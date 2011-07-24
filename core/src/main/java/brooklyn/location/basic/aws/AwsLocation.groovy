@@ -120,7 +120,7 @@ public class AwsLocation extends AbstractLocation implements MachineProvisioning
             SshMachineLocation sshLoc = new SshMachineLocation(address:vmHostname, userName:ROOT_USERNAME, config:sshConfig);
             
             // Wait for the VM to be reachable over SSH
-            LOG.info("Started VM; waiting for it to be sshable by "+ROOT_USERNAME+"@"+vmHostname);
+            LOG.info("Started VM in ${allconf.providerLocationId}; waiting for it to be sshable by "+ROOT_USERNAME+"@"+vmHostname);
             boolean reachable = new Repeater()
                     .repeat( { } )
                     .every(1, TimeUnit.SECONDS)
