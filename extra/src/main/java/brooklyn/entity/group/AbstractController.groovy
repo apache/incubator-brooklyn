@@ -114,8 +114,8 @@ public abstract class AbstractController extends AbstractService {
 
     public void reset() {
         policy.reset()
-        policy.setGroup(cluster)
         addresses = new HashMap<InetAddress,List<Integer>>().withDefault { new ArrayList<Integer>() }
+        policy.setGroup(cluster)
     }
 
     @Override
