@@ -7,6 +7,10 @@ import brooklyn.entity.Entity;
 import brooklyn.management.Task;
 import java.util.Map
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory;
+
+import brooklyn.entity.Application;
 import brooklyn.entity.Effector
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEffector
@@ -19,6 +23,8 @@ import brooklyn.util.task.BasicExecutionContext
 import brooklyn.util.task.BasicExecutionManager
 
 public abstract class AbstractManagementContext implements ManagementContext  {
+    private static final Logger log = LoggerFactory.getLogger(AbstractManagementContext.class)
+    
     public ExecutionContext getExecutionContext(Entity e) { 
         new BasicExecutionContext(tag:e, getExecutionManager());
     }
@@ -38,14 +44,23 @@ public abstract class AbstractManagementContext implements ManagementContext  {
      * this might push it out to one or more remote management nodes.
      */
     public void manage(Entity e) {
+        if (isManaged(e)) {
+            log.warn("call to manage entity $e but it is already managed (known at $this); skipping, and all descendants")
+            new Throwable("source of duplicate management").printStackTrace()
+            return
+        }
         if (manageNonRecursive(e))
             ((AbstractEntity)e).onManagementBecomingMaster()
-        for (Entity ei : e.getOwnedChildren())
+        for (Entity ei : e.getOwnedChildren()) {
             manage(ei);
+        }
     }
 
     /**
+     * Implementor-supplied internal method.
+     * <p>
      * Should ensure that the entity is now managed somewhere, and known about in all the lists.
+     * Returns true if the entity has now become managed; false if it was already managed (anything else throws exception)
      */
     protected abstract boolean manageNonRecursive(Entity e);
 
@@ -54,14 +69,22 @@ public abstract class AbstractManagementContext implements ManagementContext  {
      * (for instance because the entity is no longer relevant)
      */
     public void unmanage(Entity e) {
-        for (Entity ei : e.getOwnedChildren())
+        if (!isManaged(e)) {
+            log.warn("call to unmanage entity $e but it is not known at $this; skipping, and all descendants")
+            return
+        }
+        for (Entity ei : e.getOwnedChildren()) {
             unmanage(ei);
+        }
         if (unmanageNonRecursive(e))
             ((AbstractEntity)e).onManagementNoLongerMaster()
     }
 
     /**
+     * Implementor-supplied internal method.
+     * <p>
      * Should ensure that the entity is no longer managed anywhere, remove from all lists.
+     * Returns true if the entity has been removed from management; if it was not previously managed (anything else throws exception) 
      */
     protected abstract boolean unmanageNonRecursive(Entity e);
 
@@ -84,6 +107,11 @@ public abstract class AbstractManagementContext implements ManagementContext  {
         Task current = BasicExecutionManager.currentTask
         if (!current || !current.tags.contains(entity) || !isManagedLocally(entity)) {
             // Wrap in a task if we aren't already in a task that is tagged with this entity
+            if ((entity in Application) && !isManaged(entity) && eff.name=="start") {
+                // Auto-magically begin application management without warnings
+                log.info("Activating management on start of application $entity")
+                manage(entity)
+            }
             runAtEntity(entity, { invokeEffectorMethodLocal(entity, eff, args); },
                 description:"invoking ${eff.name} on ${entity}" ).
             get()

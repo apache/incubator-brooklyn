@@ -29,8 +29,8 @@ public abstract class AbstractApplication extends AbstractGroup implements Start
      * Default start will start all Startable children
      */
     public void start(Collection<Location> locations) {
-        //should already be managed, but shouldn't hurt; TODO review mgmt start/stop
-        getManagementContext().manage(this)
+        //causes duplicate management problems, shouldn't hurt more than warnings; TODO review mgmt start/stop
+//      getManagementContext().manage(this)
         
         List<Entity> startable = ownedChildren.findAll { it in Startable }
         if (startable && !startable.isEmpty() && locations && !locations.isEmpty()) {
@@ -48,7 +48,8 @@ public abstract class AbstractApplication extends AbstractGroup implements Start
      * Default stop will stop all Startable children
      */
     public void stop() {
-        //TODO review mgmt destroy lifecycle; destroy on stop?
+        //TODO review mgmt destroy lifecycle; i (Alex) don't think we want to forget all about it on stop, 
+        //since we may still be interested in things recently stopped
         getManagementContext().unmanage(this)
         
         List<Entity> startable = ownedChildren.findAll { it in Startable }

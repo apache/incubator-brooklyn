@@ -35,9 +35,9 @@ public class LocalManagementContext extends AbstractManagementContext {
         Object old = entitiesById.put(e.getId(), e);
         if (old!=null) {
             if (old.is(e))
-                log.warn("call to manage entity $e but it is already known at $this")
+                log.warn("call to manage entity $e but it is already managed (known at $this)")
             else
-                log.warn("call to manage entity $e but different entity $old already known under that id at $this")
+                throw new IllegalStateException("call to manage entity $e but different entity $old already known under that id at $this")
             return false
         } else {
             entities.add(e)
@@ -90,7 +90,7 @@ public class LocalManagementContext extends AbstractManagementContext {
                     break;
                 rootUnmanaged = candidateUnmanagedOwner;
             }
-            log.info("Activating management for $rootUnmanaged due to invocation of $entity "+flags+" - "+c.toString())
+            log.warn("Activating management for $rootUnmanaged due to running code on $entity: "+flags+" - "+c.toString())
             manage(rootUnmanaged)
         }
         entity.executionContext.submit(flags, c);
