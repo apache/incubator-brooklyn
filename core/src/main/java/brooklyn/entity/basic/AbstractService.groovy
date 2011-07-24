@@ -54,12 +54,12 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
         startInLocation(loc)
     }
 
-    public void startInLocation(MachineProvisioningLocation loc) {
-        Map<String,Object> flags = loc.getProvisioningFlags([getClass().getName()])
+    public void startInLocation(MachineProvisioningLocation location) {
+        Map<String,Object> flags = location.getProvisioningFlags([getClass().getName()])
         flags.inboundPorts = getRequiredOpenPorts()
         
-        SshMachineLocation machine = loc.obtain(flags)
-        if (machine == null) throw new NoMachinesAvailableException(loc)
+        SshMachineLocation machine = location.obtain(flags)
+        if (machine == null) throw new NoMachinesAvailableException(location)
         startInLocation(machine)
     }
     
@@ -99,8 +99,12 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
         shutdownInLocation(locations.find({ it instanceof MachineLocation }))
     }
 
-    public void shutdownInLocation(MachineLocation loc) {
-        getSshBasedSetup(loc).stop()
+    public void shutdownInLocation(MachineLocation machine) {
+        getSshBasedSetup(machine).stop()
+        Location parent = machine.parentLocation
+        if (parent instanceof MachineProvisioningLocation) {
+            ((MachineProvisioningLocation) parent).release(machine)
+        }
         setAttribute(SERVICE_STATUS, "stopped")
         setAttribute(SERVICE_UP, false)
     }

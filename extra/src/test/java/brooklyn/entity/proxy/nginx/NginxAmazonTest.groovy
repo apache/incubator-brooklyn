@@ -70,7 +70,7 @@ public class NginxAmazonTest {
         aws = new AwsLocation(identity:creds.getAWSAccessKeyId(), credential:creds.getAWSSecretKey(), providerLocationId:REGION_NAME)
     }
     
-    @Test(groups = ["Live", "WIP"] )
+    @Test(groups = "Live")
     public void testProvisionAwsCluster() {
         Map imageData = [
 	            imageId:IMAGE_ID,
@@ -114,6 +114,6 @@ public class NginxAmazonTest {
             }
         })
 
-		Thread.sleep 60*1000
+		nginx.stop()
     }
 }
