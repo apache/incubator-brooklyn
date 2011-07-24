@@ -29,8 +29,6 @@ public class DynamicFabric extends AbstractEntity implements Startable {
     int initialSize
     Map properties
 
-    private Location location
-
     /**
      * Instantiate a new DynamicFabric.
      * 
@@ -58,7 +56,7 @@ public class DynamicFabric extends AbstractEntity implements Startable {
         Preconditions.checkArgument locations.size() >= 1, "One or more location must be supplied"
         this.locations.addAll(locations)
         
-        // FIXME This will have already executed the start on each cluster; so don't want to resubmit them in the ParallelTask?
+        // TODO This will have already executed the start on each cluster; so don't want to resubmit them in the ParallelTask?
         Collection<Task> tasks = locations.collect {
             Entity e = addCluster()
             Task task = e.invoke(Startable.START, [locations:[it]])
