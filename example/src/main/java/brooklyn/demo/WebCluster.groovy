@@ -1,24 +1,36 @@
+package brooklyn.demo
+
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.trait.Startable
 
-import java.util.Collection;
-import java.util.Map;
+import java.util.Collection
+import java.util.Map
 
-import brooklyn.entity.Entity;
-import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.entity.proxy.nginx.NginxController;
-import brooklyn.entity.trait.Startable;
-import brooklyn.entity.webapp.DynamicWebAppCluster;
-import brooklyn.location.Location;
-import brooklyn.policy.Policy;
+import brooklyn.entity.Entity
+import brooklyn.entity.basic.AbstractEntity
+import brooklyn.entity.basic.JavaApp
+import brooklyn.entity.group.DynamicCluster
+import brooklyn.entity.proxy.nginx.NginxController
+import brooklyn.entity.trait.Startable
+import brooklyn.entity.webapp.DynamicWebAppCluster
+import brooklyn.entity.webapp.JavaWebApp
+import brooklyn.entity.webapp.tomcat.TomcatServer
+import brooklyn.location.Location
+import brooklyn.policy.Policy
+import brooklyn.policy.ResizerPolicy
+
+import com.google.common.base.Preconditions
 
 /**
-* This group contains all the sub-groups and entities that go in to a single location.
-* These are:
-* <ul><li>a @{link DynamicCluster} of @{link JavaWebApp}s</li>
-* <li>a cluster controller</li>
-* <li>a @{link Policy} to resize the DynamicCluster</li></ul>
-*/
+ * This group contains all the sub-groups and entities that go in to a single location.
+ *
+ * These are:
+ * <ul>
+ * <li>a {@link DynamicCluster} of {@link JavaWebApp}s
+ * <li>a cluster controller
+ * <li>a {@link Policy} to resize the DynamicCluster
+ * </ul>
+ */
 public class WebCluster extends AbstractEntity implements Startable {
    private static final String springTravelPath
    private static final String warName = "swf-booking-mvc.war"
@@ -28,7 +40,7 @@ public class WebCluster extends AbstractEntity implements Startable {
    private Policy policy
 
    static {
-       URL resource = MultiLocationWebAppDemo.class.getClassLoader().getResource(warName)
+       URL resource = WebCluster.class.getClassLoader().getResource(warName)
        Preconditions.checkState resource != null, "Unable to locate resource $warName"
        springTravelPath = resource.getPath()
    }
