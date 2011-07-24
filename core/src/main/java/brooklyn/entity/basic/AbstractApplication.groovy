@@ -29,7 +29,9 @@ public abstract class AbstractApplication extends AbstractGroup implements Start
      * Default start will start all Startable children
      */
     public void start(Collection<Location> locations) {
+        //should already be managed, but shouldn't hurt; TODO review mgmt start/stop
         getManagementContext().manage(this)
+        
         List<Entity> startable = ownedChildren.findAll { it in Startable }
         if (startable && !startable.isEmpty() && locations && !locations.isEmpty()) {
 	        Task start = invokeEffectorList(startable, Startable.START, [ locations:locations ])
@@ -46,7 +48,9 @@ public abstract class AbstractApplication extends AbstractGroup implements Start
      * Default stop will stop all Startable children
      */
     public void stop() {
+        //TODO review mgmt destroy lifecycle; destroy on stop?
         getManagementContext().unmanage(this)
+        
         List<Entity> startable = ownedChildren.findAll { it in Startable }
         if (startable && !startable.isEmpty()) {
             Task task = invokeEffectorList(startable, Startable.STOP)
