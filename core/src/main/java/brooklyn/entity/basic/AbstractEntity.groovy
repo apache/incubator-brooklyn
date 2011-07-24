@@ -315,6 +315,7 @@ abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
             return;
         }
         this.application = new EntityReference(this, app);
+        app.getManagementContext().manage(this)
     }
 
     @Override
@@ -376,7 +377,7 @@ abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
             v = v.get()
         }
         
-        v
+        v = v ?: key.defaultValue
     }
 
     @Override

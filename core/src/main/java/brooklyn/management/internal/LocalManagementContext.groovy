@@ -45,10 +45,11 @@ public class LocalManagementContext extends AbstractManagementContext {
             return true
         }
     }
+
     protected synchronized boolean unmanageNonRecursive(Entity e) {
         ((AbstractEntity)e).managementData = null;
         if (e in Application) applications.remove(e)
-        entities.add(e)
+        entities.remove(e)
         Object old = entitiesById.remove(e.getId());
         if (old!=e) {
             log.warn("call to unmanage entity $e but it is not known at $this")
@@ -94,6 +95,7 @@ public class LocalManagementContext extends AbstractManagementContext {
         }
         entity.executionContext.submit(flags, c);
     }
+
     public boolean isManagedLocally(Entity e) {
         return true;
     }
@@ -101,6 +103,7 @@ public class LocalManagementContext extends AbstractManagementContext {
     public void addEntitySetListener(CollectionChangeListener<Entity> listener) {
         entities.addPropertyChangeListener(new GroovyObservablesPropertyChangeToCollectionChangeAdapter(listener))
     }
+
     public void removeEntitySetListener(CollectionChangeListener<Entity> listener) {
         entities.removePropertyChangeListener(new GroovyObservablesPropertyChangeToCollectionChangeAdapter(listener))
     }

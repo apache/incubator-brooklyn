@@ -154,6 +154,17 @@ public class JCloudsUtil {
         properties.setProperty(Constants.PROPERTY_TRUST_ALL_CERTS, Boolean.toString(true))
         properties.setProperty(Constants.PROPERTY_RELAX_HOSTNAME, Boolean.toString(true))
         
+        // FIXME hack!
+        Map endpoints = [
+                "eu-west-1":"https://ec2.eu-west-1.amazonaws.com",
+                "us-east-1":"https://ec2.us-east-1.amazonaws.com", 
+                "us-west-1":"https://ec2.us-west-1.amazonaws.com", 
+                "ap-southeast-1":"https://ec2.ap-southeast-1.amazonaws.com",
+                "ap-northeast-1":"https://ec2.ap-northeast-1.amazonaws.com",
+                ]
+        String endpoint = endpoints.get(conf.providerLocationId)
+        properties.setProperty(Constants.PROPERTY_ENDPOINT, endpoint);
+        
         if (conf.imageOwner) {
             properties.setProperty("jclouds.ec2.ami-owners", conf.imageOwner)
         } else {

@@ -6,15 +6,13 @@ import static org.testng.Assert.*
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.testng.Assert
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.Application
-import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.webapp.JavaWebApp
-import brooklyn.event.adapter.AttributePoller
+import brooklyn.test.entity.TestApplication
 
 /**
  * This tests the operation of the {@link TomcatServer} entity.
@@ -24,13 +22,6 @@ import brooklyn.event.adapter.AttributePoller
  */
 class TomcatServerTest {
     private static final Logger logger = LoggerFactory.getLogger(TomcatServerTest.class)
-
-//    @InheritConstructors
-    static class TestApplication extends AbstractApplication {
-        public TestApplication(Map properties=[:]) {
-            super(properties)
-        }
-    }
 
     @BeforeMethod
     public void patchInSimulator() {

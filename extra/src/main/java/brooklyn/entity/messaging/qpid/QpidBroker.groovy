@@ -18,8 +18,7 @@ import brooklyn.entity.messaging.Topic
 import brooklyn.event.adapter.AttributePoller
 import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.adapter.ValueProvider
-import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.event.basic.BasicConfigKey
+import brooklyn.event.basic.ConfiguredAttributeSensor
 import brooklyn.location.Location
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedAppSetup
@@ -32,21 +31,21 @@ import com.google.common.base.Preconditions
 public class QpidBroker extends JavaApp {
     private static final Logger log = LoggerFactory.getLogger(QpidBroker.class)
 
-    public static final BasicConfigKey<Integer> SUGGESTED_AMQP_PORT = [Integer, "qpid.amqpPort", "Suggested AMQP port" ]
-    public static final BasicConfigKey<String> VIRTUAL_HOST_NAME = [String, "qpid.virtualHost", "Qpid virtual host name" ]
-
-    public static final BasicAttributeSensor<Integer> AMQP_PORT = Attributes.AMQP_PORT
+    public static final ConfiguredAttributeSensor<Integer> AMQP_PORT = Attributes.AMQP_PORT
+    public static final ConfiguredAttributeSensor<String> VIRTUAL_HOST_NAME = [String, "qpid.virtualHost", "Qpid virtual host name", "localhost" ]
 
     String virtualHost
     Collection<String> queueNames = []
-    Map<String,QpidQueue> queues = [:]
+    Map<String, QpidQueue> queues = [:]
     Collection<String> topicNames = []
-    Map<String,QpidTopic> topics = [:]
+    Map<String, QpidTopic> topics = [:]
 
     public QpidBroker(Map properties=[:]) {
         super(properties)
-        virtualHost = getConfig(VIRTUAL_HOST_NAME) ?: properties.virtualHost ?: "localhost"
-        setConfig(VIRTUAL_HOST_NAME, virtualHost)
+        virtualHost = properties.virtualHost ?: getConfig(VIRTUAL_HOST_NAME.configKey)
+        setAttribute(VIRTUAL_HOST_NAME, virtualHost)
+
+        if (properties.amqpPort) setConfig(Attributes.AMQP_PORT.configKey, properties.remove("amqpPort"))
 
         setAttribute(Attributes.JMX_USER, properties.user ?: "admin")
         setAttribute(Attributes.JMX_PASSWORD, properties.password ?: "admin")
@@ -112,7 +111,6 @@ public class QpidBroker extends JavaApp {
 
 public abstract class QpidBinding extends AbstractEntity {
     String virtualHost
-    String name
 
     protected ObjectName virtualHostManager
     protected ObjectName exchange
@@ -123,15 +121,14 @@ public abstract class QpidBinding extends AbstractEntity {
     public QpidBinding(Map properties=[:], Entity owner=null) {
         super(properties, owner)
 
-        Preconditions.checkNotNull properties.name, "Name must be specified"
-        name = properties.name
+        Preconditions.checkNotNull name, "Name must be specified"
 
-        virtualHost = getConfig(QpidBroker.VIRTUAL_HOST_NAME) ?: properties.virtualHost ?: "localhost"
-        setConfig(QpidBroker.VIRTUAL_HOST_NAME, virtualHost)
+        virtualHost = properties.virtualHost ?: getConfig(QpidBroker.VIRTUAL_HOST_NAME.configKey)
+        setAttribute(QpidBroker.VIRTUAL_HOST_NAME, virtualHost)
         virtualHostManager = new ObjectName("org.apache.qpid:type=VirtualHost.VirtualHostManager,VirtualHost=\"${virtualHost}\"")
         init()
 
-        jmxAdapter = ((QpidBroker) this.owner).jmxAdapter
+        jmxAdapter = ((QpidBroker) getOwner()).jmxAdapter
         attributePoller = new AttributePoller(this)
 
         create()
@@ -144,7 +141,7 @@ public abstract class QpidBinding extends AbstractEntity {
     public abstract void removeJmxSensors()
 
     public void create() {
-        jmxAdapter.operation(virtualHostManager, "createNewQueue", name, owner.getAttribute(Attributes.JMX_USER), true)
+        jmxAdapter.operation(virtualHostManager, "createNewQueue", name, getOwner().getAttribute(Attributes.JMX_USER), true)
         jmxAdapter.operation(exchange, "createNewBinding", name, name)
         addJmxSensors()
     }
@@ -178,7 +175,7 @@ public class QpidQueue extends QpidBinding implements Queue {
     }
 
     public void init() {
-        setConfig QUEUE_NAME, name
+        setAttribute QUEUE_NAME, name
         exchange = new ObjectName("org.apache.qpid:type=VirtualHost.Exchange,VirtualHost=\"${virtualHost}\",name=\"amq.direct\",ExchangeType=direct")
     }
 
@@ -201,7 +198,7 @@ public class QpidTopic extends QpidBinding implements Topic {
     }
 
     public void init() {
-        setConfig TOPIC_NAME, name
+        setAttribute TOPIC_NAME, name
         exchange = new ObjectName("org.apache.qpid:type=VirtualHost.Exchange,VirtualHost=\"${virtualHost}\",name=\"amq.topic\",ExchangeType=topic")
     }
 

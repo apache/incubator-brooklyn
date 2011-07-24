@@ -19,13 +19,12 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.Application
-import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.JavaApp
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
-import brooklyn.management.Task
+import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.EntityStartUtils
 import brooklyn.util.internal.TimeExtras
 
@@ -42,12 +41,6 @@ public class QpidIntegrationTest {
     private Application app
     private Location testLocation
     private QpidBroker qpid
-
-    static class TestApplication extends AbstractApplication {
-        public TestApplication(Map properties=[:]) {
-            super(properties)
-        }
-    }
 
     @BeforeMethod(groups = "Integration")
     public void setup() {

@@ -2,24 +2,19 @@ package brooklyn.web.console
 
 import static org.testng.Assert.*
 
-import java.util.Collection;
+import org.testng.annotations.BeforeTest
+import org.testng.annotations.Test
 
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
-import brooklyn.management.ExecutionContext
-import brooklyn.management.ExecutionManager
-import brooklyn.management.SubscriptionManager
-import brooklyn.management.SubscriptionContext
-import brooklyn.management.ManagementContext
 import brooklyn.entity.basic.AbstractApplication
-import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.basic.AbstractEntity
+import brooklyn.entity.basic.AbstractGroup
+import brooklyn.test.entity.MockLocation
 
-import org.testng.annotations.Test
-import org.testng.annotations.BeforeTest
+import com.google.common.collect.Iterables
 
 class EntityServiceTest {
-
     def testService
 
     Entity testEntity
@@ -29,8 +24,10 @@ class EntityServiceTest {
     @BeforeTest
     protected void setUp() {
         testService = new EntityService()
-        testService.managementContextService = new TestManagementContext()
-        testCollection.add(new TestApplication())
+        Application testApp = new TestApplication()
+        testApp.start([ new MockLocation() ])
+        testService.managementContextService = testApp.managementContext
+        testCollection.add(testApp)
 
         testEntity = testCollection.get(0).testEntity()
         testEntities = Collections.singletonList(testEntity);
@@ -39,7 +36,7 @@ class EntityServiceTest {
     @Test
     public void testGetTopLevelEntities() {
         assertEquals(1, testService.getTopLevelEntities().size())
-        assertEquals(testCollection.get(0).getDisplayName(), testService.getTopLevelEntities()[0].getDisplayName())
+        assertEquals(testCollection.get(0).getDisplayName(), Iterables.getFirst(testService.getTopLevelEntities(), null).getDisplayName())
     }
 
     @Test
@@ -62,43 +59,6 @@ class EntityServiceTest {
     @Test
     public void testIsChildOf() {
         assertTrue(testService.isChildOf(testEntity.ownedChildren.asList().get(0), testEntities))
-    }
-}
-
-//TODO no need for this mock (or for other mock impls of ManagementContext?) -- just 
-//use the real management context ... e.g. new TestApplication().getManagementContext() ... no?  (Alex's suggest'n)
-private class TestManagementContext implements ManagementContext{
-    Collection<Application> getApplications() {
-        return Collections.singletonList(new TestApplication());
-    }
-
-    @Override
-    public Collection<Entity> getEntities() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean isManaged(Entity entity) {
-        throw new UnsupportedOperationException();
-    }
-
-    Entity getEntity(String id) {
-        throw new UnsupportedOperationException();
-    }
-
-    public ExecutionManager getExecutionManager() {
-        throw new UnsupportedOperationException();
-    }
-    public SubscriptionManager getSubscriptionManager() {
-        throw new UnsupportedOperationException();
-    }
-
-    public ExecutionContext getExecutionContext(Entity entity) {
-        throw new UnsupportedOperationException();
-    }
-
-    public SubscriptionContext getSubscriptionContext(Entity entity) {
-        throw new UnsupportedOperationException();
     }
 }
 
@@ -145,4 +105,3 @@ private class TestApplication extends AbstractApplication {
         }
     }
 }
-	

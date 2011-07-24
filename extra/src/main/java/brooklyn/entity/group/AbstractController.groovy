@@ -1,6 +1,6 @@
 package brooklyn.entity.group
 
-import java.util.Collection;
+import java.util.Collection
 import java.util.List
 import java.util.Map
 
@@ -8,16 +8,12 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
-import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.basic.AbstractService
 import brooklyn.entity.basic.Attributes
-import brooklyn.event.SensorEventListener
 import brooklyn.event.Sensor
-import brooklyn.event.SensorEvent;
-import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
+import brooklyn.event.basic.ConfiguredAttributeSensor
 import brooklyn.location.MachineLocation
-import brooklyn.management.SubscriptionHandle
 
 import com.google.common.base.Preconditions
 
@@ -27,15 +23,14 @@ import com.google.common.base.Preconditions
 public abstract class AbstractController extends AbstractService {
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractController.class)
 
-    public static final BasicConfigKey<Integer> SUGGESTED_HTTP_PORT = [ Integer, "proxy.httpPort", "Suggested proxy HTTP port" ]
     public static final BasicConfigKey<Sensor> PORT_NUMBER_SENSOR = [ String, "member.sensor.portNumber", "Port number sensor on members" ]
 
-    public static final BasicAttributeSensor<Integer> HTTP_PORT = Attributes.HTTP_PORT
-    public static final BasicAttributeSensor<String> DOMAIN_NAME = [ String, "proxy.domainName", "Domain name" ]
-    public static final BasicAttributeSensor<String> PROTOCOL = [ String, "proxy.portNumber", "Protocol" ]
-    public static final BasicAttributeSensor<String> URL = [ String, "proxy.url", "URL" ]
+    public static final ConfiguredAttributeSensor<Integer> HTTP_PORT = Attributes.HTTP_PORT
+    public static final ConfiguredAttributeSensor<String> PROTOCOL = [ String, "proxy.protocol", "Protocol", "http" ]
+    public static final ConfiguredAttributeSensor<String> DOMAIN_NAME = [ String, "proxy.domainName", "Domain name" ]
+    public static final ConfiguredAttributeSensor<String> URL = [ String, "proxy.url", "URL" ]
 
-    AbstractGroup cluster
+    Cluster cluster
     String domain
     int port
     String protocol
@@ -46,31 +41,33 @@ public abstract class AbstractController extends AbstractService {
     protected Map<InetAddress,List<Integer>> addresses
     
 
-    public AbstractController(Map properties=[:], Entity owner=null, AbstractGroup cluster=null) {
+    public AbstractController(Map properties=[:], Entity owner=null, Cluster cluster=null) {
         super(properties, owner)
 
-        portNumber = getConfig(PORT_NUMBER_SENSOR) ?: properties.portNumberSensor
+        portNumber = properties.portNumberSensor ?: getConfig(PORT_NUMBER_SENSOR)
         Preconditions.checkNotNull(portNumber, "The port number sensor must be supplied")
 
-        if (getAttribute(PROTOCOL) || properties.containsKey("url")) {
-	        url = getAttribute(URL) ?: properties.remove("url")
+        if (getConfig(URL.configKey) || properties.containsKey("url")) {
+	        url = properties.url ?: getConfig(URL.configKey)
 	        setAttribute(URL, url)
 
-            // Set config properties from URL
-            port = url.port
+            // Set attributes from URL
+            URI uri = new URI(url)
+            port = uri.port
             setAttribute(HTTP_PORT, port)
-            porotocol = url.protocol
+            protocol = uri.scheme
             setAttribute(PROTOCOL, protocol)
-            domain = url.host
+            domain = uri.host
             setAttribute(DOMAIN_NAME, domain)
         } else {
-	        port = properties.port ?: 80
+            // Set attributes from properties or config with defaults
+	        port = properties.port ?: getConfig(HTTP_PORT.configKey)
 	        setAttribute(HTTP_PORT, port)
 
-	        protocol = getAttribute(PROTOCOL) ?: properties.protocol ?: "http"
+	        protocol = properties.protocol ?: getConfig(PROTOCOL.configKey)
 	        setAttribute(PROTOCOL, protocol)
 
-            domain = getAttribute(DOMAIN_NAME) ?: properties.domain
+            domain = properties.domain ?: getConfig(DOMAIN_NAME.configKey)
             Preconditions.checkNotNull(domain, "Domain must be set for controller")
             setAttribute(DOMAIN_NAME, domain)
 
@@ -81,16 +78,16 @@ public abstract class AbstractController extends AbstractService {
             protected void onEntityAdded(Entity member) { addEntity(member); }
             protected void onEntityRemoved(Entity member) { removeEntity(member); }
         }
-        
+
+        this.cluster = cluster ?: properties.cluster
         addPolicy(policy)
         reset()
-        policy.setGroup(cluster ?: properties.cluster)
     }
 
+    @Override
     protected Collection<Integer> getRequiredOpenPorts() {
         Collection<Integer> result = super.getRequiredOpenPorts()
-        if (getConfig(SUGGESTED_HTTP_PORT)) result.add(getConfig(SUGGESTED_HTTP_PORT))
-        if (getConfig(PORT_NUMBER_SENSOR)) result.add(getConfig(PORT_NUMBER_SENSOR))
+        if (getAttribute(HTTP_PORT)) result.add(getAttribute(HTTP_PORT))
         return result
     }
 
@@ -119,11 +116,13 @@ public abstract class AbstractController extends AbstractService {
     public void reset() {
         policy.reset()
         addresses = new HashMap<InetAddress,List<Integer>>().withDefault { new ArrayList<Integer>() }
+        policy.setGroup(cluster)
     }
 
     @Override
     public void stop() {
         reset()
+        cluster.stop()
         super.stop()
     }
 

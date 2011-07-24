@@ -28,6 +28,7 @@ class BasicConfigKey<T> implements ConfigKey, Serializable {
         this.name = name
         this.type = type
         this.typeName = type.name
+        this.defaultValue = defaultValue
     }
 
     /** @see ConfigKey#getName() */

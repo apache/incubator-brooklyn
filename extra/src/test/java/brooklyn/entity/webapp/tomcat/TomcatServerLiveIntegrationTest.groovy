@@ -1,8 +1,7 @@
 package brooklyn.entity.webapp.tomcat
 
-import static brooklyn.entity.basic.ConfigKeys.SUGGESTED_HTTP_PORT
-import static brooklyn.entity.basic.ConfigKeys.SUGGESTED_JMX_PORT
-import static brooklyn.entity.webapp.tomcat.TomcatServer.SUGGESTED_SHUTDOWN_PORT
+import static brooklyn.entity.basic.ConfigKeys.*
+import static brooklyn.entity.webapp.tomcat.TomcatServer.*
 
 import java.util.concurrent.TimeUnit
 
@@ -13,12 +12,12 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.ConfigKeys
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.aws.AWSCredentialsFromEnv
 import brooklyn.location.basic.aws.AwsLocation
-import brooklyn.test.TestUtils;
+import brooklyn.test.TestUtils
+import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
 
@@ -37,31 +36,30 @@ public class TomcatServerLiveIntegrationTest {
     private static final String REGION_NAME = "us-east-1" // "eu-west-1"
     private static final String IMAGE_ID = REGION_NAME+"/"+"ami-0859bb61" // "ami-d7bb90a3"
     private static final String IMAGE_OWNER = "411009282317"
-    private static final String SSH_PUBLIC_KEY_PATH = "/Users/aled/id_rsa.junit.pub"
-    private static final String SSH_PRIVATE_KEY_PATH = "/Users/aled/id_rsa.junit.private"
 
     static { TimeExtras.init() }
-
-    protected static class TestApplication extends AbstractApplication {
-        public TestApplication(Map properties=[:]) {
-            super(properties)
-        }
-    }
 
     private AwsLocation loc;
     private Collection<SshMachineLocation> machines = []
     private TomcatServer tc
-    
+
+    private File getResource(String path) {
+        URL resource = getClass().getClassLoader().getResource(path)
+        return new File(resource.path)
+    }
+
     @BeforeMethod(groups = "Live")
     public void setUp() {
+        File sshPrivateKey = getResource("jclouds/id_rsa.private")
+        File sshPublicKey = getResource("jclouds/id_rsa.pub")
         AWSCredentialsFromEnv creds = new AWSCredentialsFromEnv();
         loc = new AwsLocation([identity:creds.getAWSAccessKeyId(), credential:creds.getAWSSecretKey(), 
                 providerLocationId:REGION_NAME])
         loc.setTagMapping([(TomcatServer.class.getName()):[
                 imageId:IMAGE_ID,
                 securityGroups:["everything"],
-                sshPublicKey:new File(SSH_PUBLIC_KEY_PATH),
-                sshPrivateKey:new File(SSH_PRIVATE_KEY_PATH),
+                sshPublicKey:sshPublicKey,
+                sshPrivateKey:sshPrivateKey,
                 ]]) //, imageOwner:IMAGE_OWNER]])
     }
     
@@ -118,8 +116,7 @@ public class TomcatServerLiveIntegrationTest {
     @Test(groups = [ "Live" ])
     public void testStartsTomcatInAws() {
         TomcatServer tc = new TomcatServer([ owner:new TestApplication(), httpPort:HTTP_PORT, 
-                config:[(SUGGESTED_SHUTDOWN_PORT):SHUTDOWN_PORT, (SUGGESTED_HTTP_PORT):HTTP_PORT, (SUGGESTED_HTTP_PORT):HTTP_PORT, 
-                (SUGGESTED_JMX_PORT):JMX_PORT] ])
+                config:[(SUGGESTED_SHUTDOWN_PORT):SHUTDOWN_PORT, (SUGGESTED_JMX_PORT):JMX_PORT] ])
         tc.start([ loc ])
         TestUtils.executeUntilSucceedsWithFinallyBlock ([:],
                 { Assert.assertTrue(tc.getAttribute(TomcatServer.SERVICE_UP)) }, 

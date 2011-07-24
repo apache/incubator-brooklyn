@@ -21,6 +21,8 @@ import com.google.common.base.Preconditions
 
 /**
 * An {@link brooklyn.entity.Entity} representing an abstract service process.
+*
+* A service can only run on a single {@link MachineLocation} at a time.
 */
 public abstract class AbstractService extends AbstractEntity implements Startable {
     public static final Logger log = LoggerFactory.getLogger(AbstractService.class)
@@ -30,6 +32,8 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
     public static final ConfigKey<String> SUGGESTED_RUN_DIR = ConfigKeys.SUGGESTED_RUN_DIR;
 
     public static final BasicAttributeSensor<String> SERVICE_STATUS = [ String, "service.status", "Service status" ]
+
+    protected SshBasedAppSetup setup
     
     AbstractService(Map properties=[:], Entity owner=null) {
         super(properties, owner)
@@ -54,12 +58,12 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
         startInLocation(loc)
     }
 
-    public void startInLocation(MachineProvisioningLocation loc) {
-        Map<String,Object> flags = loc.getProvisioningFlags([getClass().getName()])
+    public void startInLocation(MachineProvisioningLocation location) {
+        Map<String,Object> flags = location.getProvisioningFlags([getClass().getName()])
         flags.inboundPorts = getRequiredOpenPorts()
         
-        SshMachineLocation machine = loc.obtain(flags)
-        if (machine == null) throw new NoMachinesAvailableException(loc)
+        SshMachineLocation machine = location.obtain(flags)
+        if (machine == null) throw new NoMachinesAvailableException(location)
         startInLocation(machine)
     }
     
@@ -69,14 +73,14 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
     
     public void startInLocation(SshMachineLocation machine) {
         locations.add(machine)
-        SshBasedAppSetup setup = getSshBasedSetup(machine)
+        setup = getSshBasedSetup(machine)
         setAttribute(SERVICE_STATUS, "starting")
         setup.start()
-        waitForEntityStart(setup)
+        waitForEntityStart()
     }
 
     // TODO Find a better way to detect early death of process.
-    public void waitForEntityStart(SshBasedAppSetup setup) throws IllegalStateException {
+    public void waitForEntityStart() throws IllegalStateException {
         log.debug "waiting to ensure $this doesn't abort prematurely"
         long startTime = System.currentTimeMillis()
         long waitTime = startTime + 75000 // FIXME magic number
@@ -93,19 +97,18 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
         setAttribute(SERVICE_STATUS, "running")
     }
 
-    // FIXME: should MachineLocations below actually be SshMachineLocation? That's what XSshSetup requires, but not what the unit tests offer.
     public void stop() {
         setAttribute(SERVICE_STATUS, "stopping")
-        shutdownInLocation(locations.find({ it instanceof MachineLocation }))
-    }
-
-    public void shutdownInLocation(MachineLocation loc) {
-        getSshBasedSetup(loc).stop()
+        setup.stop()
+        Location parent = setup.machine.parentLocation
+        if (parent instanceof MachineProvisioningLocation) {
+            ((MachineProvisioningLocation) parent).release(setup.machine)
+        }
         setAttribute(SERVICE_STATUS, "stopped")
         setAttribute(SERVICE_UP, false)
     }
 
     public void restart() {
-        locations.each { MachineLocation machine -> getSshBasedSetup(machine).restart() }
+        setup.restart()
     }
 }

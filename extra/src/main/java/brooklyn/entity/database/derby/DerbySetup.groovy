@@ -1,4 +1,4 @@
-package brooklyn.entity.messaging.qpid
+package brooklyn.entity.database.derby
 
 import java.util.List
 import java.util.Map
@@ -10,33 +10,35 @@ import brooklyn.util.SshBasedJavaAppSetup;
 import brooklyn.util.SshBasedJavaWebAppSetup
 
 /**
- * Start a {@link QpidBroker} in a {@link Location} accessible over ssh.
+ * Start a {@link DerbyDatabase} in a {@link Location} accessible over ssh.
+ *
+ * TODO work in progress
  */
-public class QpidSetup extends SshBasedJavaAppSetup {
-    public static final String DEFAULT_VERSION = "0.10"
-    public static final String DEFAULT_INSTALL_DIR = DEFAULT_INSTALL_BASEDIR+"/"+"qpid"
+public class DerbySetup extends SshBasedJavaAppSetup {
+    public static final String DEFAULT_VERSION = "10.8.1.2"
+    public static final String DEFAULT_INSTALL_DIR = DEFAULT_INSTALL_BASEDIR+"/"+"derby"
     public static final int DEFAULT_FIRST_AMQP_PORT = 5672
 
     private int amqpPort
     private int rmiPort
 
-    public static QpidSetup newInstance(QpidBroker entity, SshMachineLocation machine) {
-        Integer suggestedVersion = entity.getConfig(QpidBroker.SUGGESTED_VERSION)
-        String suggestedInstallDir = entity.getConfig(QpidBroker.SUGGESTED_INSTALL_DIR)
-        String suggestedRunDir = entity.getConfig(QpidBroker.SUGGESTED_RUN_DIR)
-        Integer suggestedJmxPort = entity.getConfig(QpidBroker.SUGGESTED_JMX_PORT)
-        String suggestedJmxHost = entity.getConfig(QpidBroker.SUGGESTED_JMX_HOST)
-        Integer suggestedAmqpPort = entity.getConfig(QpidBroker.AMQP_PORT.configKey)
+    public static DerbySetup newInstance(DerbyDatabase entity, SshMachineLocation machine) {
+        Integer suggestedVersion = entity.getConfig(DerbyDatabase.SUGGESTED_VERSION)
+        String suggestedInstallDir = entity.getConfig(DerbyDatabase.SUGGESTED_INSTALL_DIR)
+        String suggestedRunDir = entity.getConfig(DerbyDatabase.SUGGESTED_RUN_DIR)
+        Integer suggestedJmxPort = entity.getConfig(DerbyDatabase.SUGGESTED_JMX_PORT)
+        String suggestedJmxHost = entity.getConfig(DerbyDatabase.SUGGESTED_JMX_HOST)
+        Integer suggestedAmqpPort = entity.getConfig(DerbyDatabase.SUGGESTED_AMQP_PORT)
 
         String version = suggestedVersion ?: DEFAULT_VERSION
-        String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"${version}"+"/"+"qpid-broker-${version}")
-        String runDir = suggestedRunDir ?: (BROOKLYN_HOME_DIR+"/"+"${entity.application.id}"+"/"+"qpid-${entity.id}")
+        String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"${version}"+"/"+"derby-broker-${version}")
+        String runDir = suggestedRunDir ?: (BROOKLYN_HOME_DIR+"/"+"${entity.application.id}"+"/"+"derby-${entity.id}")
         String jmxHost = suggestedJmxHost ?: machine.getAddress().getHostName()
         int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort, DEFAULT_FIRST_JMX_PORT))
         int rmiPort = machine.obtainPort(toDesiredPortRange(jmxPort - 100))
         int amqpPort = machine.obtainPort(toDesiredPortRange(suggestedAmqpPort, DEFAULT_FIRST_AMQP_PORT))
 
-        QpidSetup result = new QpidSetup(entity, machine)
+        DerbySetup result = new DerbySetup(entity, machine)
         result.setRmiPort(rmiPort)
         result.setJmxPort(jmxPort)
         result.setJmxHost(jmxHost)
@@ -48,16 +50,16 @@ public class QpidSetup extends SshBasedJavaAppSetup {
         return result
     }
 
-    public QpidSetup(QpidBroker entity, SshMachineLocation machine) {
+    public DerbySetup(DerbyDatabase entity, SshMachineLocation machine) {
         super(entity, machine)
     }
 
-    public QpidSetup setAmqpPort(int val) {
+    public DerbySetup setAmqpPort(int val) {
         amqpPort = val
         return this
     }
 
-    public QpidSetup setRmiPort(int val) {
+    public DerbySetup setRmiPort(int val) {
         rmiPort = val
         return this
     }
@@ -77,34 +79,34 @@ public class QpidSetup extends SshBasedJavaAppSetup {
     @Override
     public List<String> getInstallScript() {
         makeInstallScript([
-                "wget http://download.nextag.com/apache/qpid/${version}/qpid-java-broker-${version}.tar.gz",
-                "tar xvzf qpid-java-broker-${version}.tar.gz",
+                "wget http://www.mirrorservice.org/sites/ftp.apache.org//db/derby/db-derby-${version}/db-derby-${version}-lib.zip",
+                "tar xvzf derby-java-broker-${version}.tar.gz",
             ])
     }
 
     /**
-     * Creates the directories Qpid needs to run in a different location from where it is installed.
+     * Creates the directories Derby needs to run in a different location from where it is installed.
      */
     public List<String> getRunScript() {
         List<String> script = [
             "cd ${runDir}",
-			"nohup ./bin/qpid-server -m ${jmxPort} -p ${amqpPort} --exclude-0-10 ${amqpPort} &",
+			"nohup ./bin/derby-server -m ${jmxPort} -p ${amqpPort} --exclude-0-10 ${amqpPort} &",
         ]
         return script
     }
 
     public Map<String, String> getRunEnvironment() {
         Map<String, String> env = [
-			"QPID_HOME" : "${runDir}",
-			"QPID_WORK" : "${runDir}",
-			"QPID_OPTS" : toJavaDefinesString(getJvmStartupProperties()),
+			"DERBY_HOME" : "${runDir}",
+			"DERBY_WORK" : "${runDir}",
+			"DERBY_OPTS" : toJavaDefinesString(getJvmStartupProperties()),
         ]
         return env
     }
 
     /** @see SshBasedJavaAppSetup#getCheckRunningScript() */
     public List<String> getCheckRunningScript() {
-       return makeCheckRunningScript("qpid", "qpid-server.pid")
+       return makeCheckRunningScript("derby", "derby-server.pid")
     }
 
     @Override
@@ -119,12 +121,12 @@ public class QpidSetup extends SshBasedJavaAppSetup {
 
     @Override
     public List<String> getRestartScript() {
-       return makeRestartScript("qpid-server.pid")
+       return makeRestartScript("derby-server.pid")
     }
 
     @Override
     public List<String> getShutdownScript() {
-       return makeShutdownScript("qpid-server.pid")
+       return makeShutdownScript("derby-server.pid")
     }
 
     @Override

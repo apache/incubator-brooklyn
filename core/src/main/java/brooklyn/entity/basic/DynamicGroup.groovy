@@ -26,14 +26,9 @@ public class DynamicGroup extends AbstractGroup {
         rescanEntities()
     }
     
-    public synchronized void setOwner(Entity entity) {
-        super.setOwner(entity);
-    }
-    
     protected boolean acceptsEntity(Entity e) {
         return (entityFilter!=null && entityFilter.call(e))
     }
-
     
     protected void onEntityAdded(Entity item) {
         log.info("$this detected item add $item")
@@ -43,11 +38,15 @@ public class DynamicGroup extends AbstractGroup {
         log.info("$this detected item removal $item")
         removeMember(item)
     }
+    
     class MyEntitySetChangeListener implements CollectionChangeListener<Entity> {
         public void onItemAdded(Entity item) { onEntityAdded(item) }
         public void onItemRemoved(Entity item) { onEntityRemoved(item) }
     }
+
     volatile MyEntitySetChangeListener setChangeListener = null;
+
+    @Override
     public synchronized void onManagementBecomingMaster() {
         if (setChangeListener!=null) {
             log.warn("$this becoming master twice");
@@ -57,6 +56,8 @@ public class DynamicGroup extends AbstractGroup {
         ((AbstractManagementContext)getManagementContext()).addEntitySetListener(setChangeListener)
         rescanEntities();
     }
+
+    @Override
     public synchronized void onManagementNoLongerMaster() {
         if (setChangeListener==null) {
             log.warn("$this no longer master twice");
@@ -77,7 +78,7 @@ public class DynamicGroup extends AbstractGroup {
         }
         Collection<Entity> toRemove = []
         toRemove.addAll(super.getMembers());
-        ((AbstractManagementContext)getManagementContext()).getEntities().each {
+        ((AbstractManagementContext) getManagementContext()).getEntities().each {
             if (acceptsEntity(it)) {
                 addMember(it)
                 toRemove.remove(it)

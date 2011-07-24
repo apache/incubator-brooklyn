@@ -1,21 +1,17 @@
 package brooklyn.policy
 
 import static brooklyn.test.TestUtils.*
-import static org.testng.AssertJUnit.*
 import static java.util.concurrent.TimeUnit.*
-
-import groovy.transform.InheritConstructors
-
-import java.util.Map
+import static org.testng.AssertJUnit.*
 
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import brooklyn.entity.basic.AbstractApplication
-import brooklyn.entity.group.DynamicCluster
 import brooklyn.entity.webapp.DynamicWebAppCluster
 import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
+import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestCluster
 import brooklyn.util.internal.TimeExtras
 
 class ResizerPolicyTest {
@@ -104,12 +100,10 @@ class ResizerPolicyTest {
         assertEquals 7, policyNoResize.calculateDesiredSize(175)
     }
     
-    @Test
+    // what is this i don't even
+    @Test(enabled = false)
     public void multipleThreadsSettingDesiredSize() {
-        /**
-         * t1: set t
-         * 
-         */
+        /* t1: set t */
     }
     
     @Test(groups=["Integration"])
@@ -125,11 +119,11 @@ class ResizerPolicyTest {
          * assert cluster size 2 
          */
         
-        Integer port = 9000
+        Integer port = 7880
         Integer jmxP = 32199
         Integer shutdownP = 31880
         DynamicWebAppCluster cluster = new DynamicWebAppCluster(
-            newEntity: { properties ->
+            newEntity: { Map properties ->
                 properties.httpPort = port++
                 def tc = new TomcatServer(properties)
                 tc.setConfig(TomcatServer.SUGGESTED_JMX_PORT, jmxP++)
@@ -144,7 +138,7 @@ class ResizerPolicyTest {
         p.setMetricLowerBound(0).setMetricUpperBound(1).setMinSize(1)
         cluster.addPolicy(p)
         
-        cluster.start([new LocalhostMachineProvisioningLocation(name:'london', count:2)])
+        cluster.start([new LocalhostMachineProvisioningLocation(name:'london', count:4)])
         assertEquals 1, cluster.currentSize
         
         TomcatServer tc = cluster.getMembers().toArray()[0]
@@ -163,28 +157,4 @@ class ResizerPolicyTest {
             println "locked, should be looping"
         }, timeout: 10*SECONDS)
     }
-    
-    @InheritConstructors
-    private static class TestCluster extends DynamicCluster {
-        
-        public int size
-        
-        TestCluster(int initialSize) {
-            super(newEntity: {})
-            size = initialSize
-        }
-        
-        @Override
-        public int getCurrentSize() {
-            return size
-        }
-        
-    }
-    
-    protected static class TestApplication extends AbstractApplication {
-        public TestApplication(Map properties=[:]) {
-            super(properties)
-        }
-    }
-    
 }

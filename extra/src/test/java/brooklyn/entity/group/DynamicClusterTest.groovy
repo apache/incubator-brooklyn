@@ -2,22 +2,16 @@ package brooklyn.entity.group
 
 import static org.testng.AssertJUnit.*
 
-import groovy.transform.InheritConstructors
-
-import java.util.concurrent.atomic.AtomicInteger
-
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.testng.annotations.Test
 
 import brooklyn.entity.Application
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractEntity
-import brooklyn.entity.trait.Resizable
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
 import brooklyn.location.basic.GeneralPurposeLocation
-import brooklyn.management.Task
+import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestEntity
 
 class DynamicClusterTest {
     @Test(expectedExceptions = IllegalArgumentException.class)
@@ -157,20 +151,5 @@ class DynamicClusterTest {
         assertEquals 1, entity.counter.get()
         cluster.stop()
         assertEquals 0, entity.counter.get()
-    }
-
-    @InheritConstructors
-    private static class TestApplication extends AbstractApplication {
-        @Override String toString() { return "Application["+id[-8..-1]+"]" }
-    }
- 
-    @InheritConstructors
-    private static class TestEntity extends AbstractEntity implements Startable {
-        private static final Logger logger = LoggerFactory.getLogger(DynamicCluster)
-        AtomicInteger counter = new AtomicInteger(0)
-        void start(Collection<? extends Location> loc) { logger.trace "Start $this"; counter.incrementAndGet() }
-        void stop() { logger.trace "Stop"; counter.decrementAndGet() }
-        void restart() { }
-        @Override String toString() { return "Entity["+id[-8..-1]+"]" }
     }
 }

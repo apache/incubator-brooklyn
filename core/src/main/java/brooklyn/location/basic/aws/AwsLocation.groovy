@@ -128,8 +128,6 @@ public class AwsLocation extends AbstractLocation implements MachineProvisioning
                     .until( {
                         Statement statement = Statements.newStatementList(exec('date'))
                         ExecResponse response = computeService.runScriptOnNode(node.getId(), statement)
-                        LOG.warn "stdout: {}", response.output
-                        LOG.warn "stderr: {}", response.error
                         response.exitCode } )
                     .limitTimeTo(START_SSHABLE_TIMEOUT, TimeUnit.MILLISECONDS)
                     .run()
@@ -170,7 +168,6 @@ public class AwsLocation extends AbstractLocation implements MachineProvisioning
         try {
             computeService = JCloudsUtil.buildComputeService(conf);
             computeService.destroyNode(instanceId);
-
         } finally {
             if (computeService != null) {
                 try {
@@ -199,10 +196,10 @@ public class AwsLocation extends AbstractLocation implements MachineProvisioning
 
         if (properties.imagePattern) {
             switch (getImagePatternType()) {
-                case NAME:
+                case ImagePatternType.NAME:
                     templateBuilder.imageNameMatches(properties.imagePattern);
                     break;
-                case DESCRIPTION:
+                case ImagePatternType.DESCRIPTION:
                     templateBuilder.imageDescriptionMatches(properties.imagePattern);
                     break;
                 default:

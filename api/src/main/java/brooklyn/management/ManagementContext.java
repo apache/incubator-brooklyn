@@ -63,4 +63,13 @@ public interface ManagementContext {
      */
     SubscriptionContext getSubscriptionContext(Entity entity);
 
+    /**
+     * Manage an entity.
+     */
+    void manage(Entity e);
+    
+    /**
+     * Unmanage an entity.
+     */
+    void unmanage(Entity e);
 }

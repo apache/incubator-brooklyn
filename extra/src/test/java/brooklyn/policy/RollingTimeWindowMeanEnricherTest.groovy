@@ -10,12 +10,8 @@ import brooklyn.entity.LocallyManagedEntity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.Sensor
-
-import brooklyn.event.basic.BasicAttributeSensor;
-
-
+import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.management.SubscriptionContext
-
 import brooklyn.policy.RollingTimeWindowMeanEnricher.ConfidenceQualifiedNumber
 
 class RollingTimeWindowMeanEnricherTest {
@@ -110,5 +106,4 @@ class RollingTimeWindowMeanEnricherTest {
         assertEquals(average.value, 50d)
         assertEquals(average.confidence, 0d)
     }
-
 }

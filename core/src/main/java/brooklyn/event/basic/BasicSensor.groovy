@@ -1,9 +1,8 @@
-package brooklyn.event.basic;
-
-import groovy.transform.InheritConstructors
+package brooklyn.event.basic
 
 import java.util.List
 
+import brooklyn.entity.ConfigKey
 import brooklyn.entity.Entity
 import brooklyn.event.AttributeSensor
 import brooklyn.event.Sensor
@@ -78,7 +77,6 @@ public class BasicSensor<T> implements Sensor<T> {
 /**
  * A {@link Sensor} describing an attribute change.
  */
-@InheritConstructors
 public class BasicAttributeSensor<T> extends BasicSensor<T> implements AttributeSensor<T> {
     private static final long serialVersionUID = -7670909215973264600L;
 
@@ -88,9 +86,27 @@ public class BasicAttributeSensor<T> extends BasicSensor<T> implements Attribute
 }
 
 /**
+ * A {@link Sensor} describing an attribute that can be configured with a default value.
+ *
+ * The {@link ConfigKey} has the same type, name and description as the sensor.
+ */
+public class ConfiguredAttributeSensor<T> extends BasicAttributeSensor<T> {
+    private static final long serialVersionUID = -7670909215973264600L;
+
+    private ConfigKey<T> configKey
+
+    public ConfiguredAttributeSensor(Class<T> type, String name, String description=name, T defaultValue=null) {
+        super(type, name, description)
+
+        configKey = new BasicConfigKey<T>(type, name, description, defaultValue)
+    }
+
+    public ConfigKey getConfigKey() { return configKey }
+}
+
+/**
  * A {@link Sensor} used to notify subscribers about events.
  */
-@InheritConstructors
 public class BasicNotificationSensor<T> extends BasicSensor<T> {
     private static final long serialVersionUID = -7670909215973264600L;
 
@@ -102,7 +118,6 @@ public class BasicNotificationSensor<T> extends BasicSensor<T> {
 /**
  * A {@link Sensor} describing a log message or exceptional condition.
  */
-@InheritConstructors
 public class LogSensor<T> extends BasicSensor<T> {
     private static final long serialVersionUID = 4713993465669948212L;
 
