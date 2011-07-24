@@ -112,7 +112,6 @@ public class QpidBroker extends JavaApp {
 
 public abstract class QpidBinding extends AbstractEntity {
     String virtualHost
-    String name
 
     protected ObjectName virtualHostManager
     protected ObjectName exchange
@@ -123,8 +122,7 @@ public abstract class QpidBinding extends AbstractEntity {
     public QpidBinding(Map properties=[:], Entity owner=null) {
         super(properties, owner)
 
-        Preconditions.checkNotNull properties.name, "Name must be specified"
-        name = properties.name
+        Preconditions.checkNotNull name, "Name must be specified"
 
         virtualHost = getConfig(QpidBroker.VIRTUAL_HOST_NAME) ?: properties.virtualHost ?: "localhost"
         setConfig(QpidBroker.VIRTUAL_HOST_NAME, virtualHost)
