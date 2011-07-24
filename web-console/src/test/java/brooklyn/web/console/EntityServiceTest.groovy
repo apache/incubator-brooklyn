@@ -100,6 +100,14 @@ private class TestManagementContext implements ManagementContext{
     public SubscriptionContext getSubscriptionContext(Entity entity) {
         throw new UnsupportedOperationException();
     }
+    
+    void manage(Entity e) {
+        throw new UnsupportedOperationException();
+    }
+    
+    void unmanage(Entity e) {
+        throw new UnsupportedOperationException();
+    }
 }
 
 private class TestApplication extends AbstractApplication {
