@@ -33,6 +33,7 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
 
     public static final BasicAttributeSensor<String> SERVICE_STATUS = [ String, "service.status", "Service status" ]
 
+    private MachineProvisioningLocation provisioningLoc
     protected SshBasedAppSetup setup
     
     AbstractService(Map properties=[:], Entity owner=null) {
@@ -62,6 +63,7 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
         Map<String,Object> flags = location.getProvisioningFlags([getClass().getName()])
         flags.inboundPorts = getRequiredOpenPorts()
         
+        provisioningLoc = location
         SshMachineLocation machine = location.obtain(flags)
         if (machine == null) throw new NoMachinesAvailableException(location)
         startInLocation(machine)
@@ -109,10 +111,9 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
 
     public void shutdownInLocation(MachineLocation machine) {
         if (setup) setup.stop()
-        Location parent = machine.parentLocation
-        if (parent instanceof MachineProvisioningLocation) {
-            ((MachineProvisioningLocation) parent).release(setup.machine)
-        }
+        
+        // Only release this machine if we ourselves provisioned it (e.g. it might be running multiple services)
+        provisioningLoc?.release(machine)
     }
 
     public void restart() {
