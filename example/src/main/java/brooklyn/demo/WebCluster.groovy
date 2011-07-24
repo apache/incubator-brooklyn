@@ -50,7 +50,7 @@ public class WebCluster extends AbstractEntity implements Startable {
        def template = { Map properties ->
                def server = new TomcatServer(properties)
                server.setConfig(JavaApp.SUGGESTED_JMX_PORT, 32199)
-               server.setConfig(JavaWebApp.SUGGESTED_HTTP_PORT, 8080)
+               server.setConfig(JavaWebApp.HTTP_PORT.configKey, 8080)
                server.setConfig(TomcatServer.SUGGESTED_SHUTDOWN_PORT, 31880)
                server.setConfig(JavaWebApp.WAR, springTravelPath)
                return server;

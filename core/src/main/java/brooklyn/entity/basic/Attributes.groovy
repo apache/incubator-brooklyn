@@ -4,7 +4,7 @@ import java.util.List
 
 import brooklyn.event.Sensor
 import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.event.basic.ConfiguredAttributeSensor
 
 /**
  * This interface should be used to access {@link Sensor} definitions.
@@ -32,10 +32,10 @@ public interface Attributes {
     BasicAttributeSensor<List<Integer>> PORT_NUMBERS = [ List, "port.list", "List of port numbers" ]
     BasicAttributeSensor<List<Sensor<Integer>>> PORT_SENSORS = [ List, "port.list.sensors", "List of port number attributes" ]
 
-    BasicAttributeSensor<Integer> SSH_PORT = [ Integer, "ssh.port", "SSH port" ]
-    BasicAttributeSensor<Integer> SMTP_PORT = [ Integer, "smtp.port", "SMTP port" ]
-    BasicAttributeSensor<Integer> DNS_PORT = [ Integer, "dns.port", "DNS port" ]
-    BasicAttributeSensor<Integer> HTTP_PORT = [ Integer, "http.port", "HTTP port" ]
-    BasicAttributeSensor<Integer> HTTPS_PORT = [ Integer, "https.port", "HTTP port (with SSL/TLS)" ]
-    BasicAttributeSensor<Integer> AMQP_PORT = [ Integer, "amqp.port", "AMQP port" ]
+    ConfiguredAttributeSensor<Integer> SSH_PORT = [ Integer, "ssh.port", "SSH port", 22 ]
+    ConfiguredAttributeSensor<Integer> SMTP_PORT = [ Integer, "smtp.port", "SMTP port", 25 ]
+    ConfiguredAttributeSensor<Integer> DNS_PORT = [ Integer, "dns.port", "DNS port", 53 ]
+    ConfiguredAttributeSensor<Integer> HTTP_PORT = [ Integer, "http.port", "HTTP port", 80 ]
+    ConfiguredAttributeSensor<Integer> HTTPS_PORT = [ Integer, "https.port", "HTTP port (with SSL/TLS)", 443 ]
+    ConfiguredAttributeSensor<Integer> AMQP_PORT = [ Integer, "amqp.port", "AMQP port", 5672 ]
 }

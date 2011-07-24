@@ -26,7 +26,7 @@ public class QpidSetup extends SshBasedJavaAppSetup {
         String suggestedRunDir = entity.getConfig(QpidBroker.SUGGESTED_RUN_DIR)
         Integer suggestedJmxPort = entity.getConfig(QpidBroker.SUGGESTED_JMX_PORT)
         String suggestedJmxHost = entity.getConfig(QpidBroker.SUGGESTED_JMX_HOST)
-        Integer suggestedAmqpPort = entity.getConfig(QpidBroker.SUGGESTED_AMQP_PORT)
+        Integer suggestedAmqpPort = entity.getConfig(QpidBroker.AMQP_PORT.configKey)
 
         String version = suggestedVersion ?: DEFAULT_VERSION
         String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"${version}"+"/"+"qpid-broker-${version}")

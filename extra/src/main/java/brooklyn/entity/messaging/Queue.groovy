@@ -1,13 +1,13 @@
 package brooklyn.entity.messaging
 
 import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.event.basic.BasicConfigKey
+import brooklyn.event.basic.ConfiguredAttributeSensor
 
 /**
  * An interface that describes a single JMS Queue.
  */
 public interface Queue {
-    BasicConfigKey<String> QUEUE_NAME = [ String, "jms.queue.name", "JMS queue name" ]
+    ConfiguredAttributeSensor<String> QUEUE_NAME = [ String, "jms.queue.name", "JMS queue name" ]
 
     BasicAttributeSensor<Integer> QUEUE_DEPTH = [ Integer, "jms.queue.depth", "Queue depth in bytes" ]
     BasicAttributeSensor<Integer> MESSAGE_COUNT = [ Integer, "jms.message.count", "Number of messages" ]

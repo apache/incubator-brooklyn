@@ -32,7 +32,7 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
         Integer suggestedJmxPort = entity.getConfig(TomcatServer.SUGGESTED_JMX_PORT)
         String suggestedJmxHost = entity.getConfig(TomcatServer.SUGGESTED_JMX_HOST)
         Integer suggestedShutdownPort = entity.getConfig(TomcatServer.SUGGESTED_SHUTDOWN_PORT)
-        Integer suggestedHttpPort = entity.getConfig(TomcatServer.SUGGESTED_HTTP_PORT)
+        Integer suggestedHttpPort = entity.getConfig(TomcatServer.HTTP_PORT.configKey)
         
         String version = suggestedTomcatVersion ?: DEFAULT_VERSION
         String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"${version}"+"/"+"apache-tomcat-${version}")

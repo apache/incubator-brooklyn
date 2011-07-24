@@ -13,7 +13,6 @@ import brooklyn.util.SshBasedAppSetup
 public class NginxSetup extends SshBasedAppSetup {
     public static final String DEFAULT_VERSION = "1.0.4"
     public static final String DEFAULT_INSTALL_DIR = DEFAULT_INSTALL_BASEDIR+"/"+"nginx"
-    public static final int DEFAULT_HTTP_PORT = 80
 
     private int httpPort
 
@@ -21,12 +20,16 @@ public class NginxSetup extends SshBasedAppSetup {
         Integer suggestedVersion = entity.getConfig(NginxController.SUGGESTED_VERSION)
         String suggestedInstallDir = entity.getConfig(NginxController.SUGGESTED_INSTALL_DIR)
         String suggestedRunDir = entity.getConfig(NginxController.SUGGESTED_RUN_DIR)
-        Integer suggestedHttpPort = entity.getConfig(NginxController.SUGGESTED_HTTP_PORT)
 
         String version = suggestedVersion ?: DEFAULT_VERSION
         String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"${version}"+"/"+"nginx-${version}")
         String runDir = suggestedRunDir ?: (BROOKLYN_HOME_DIR+"/"+"${entity.application.id}"+"/"+"nginx-${entity.id}")
-        int httpPort = machine.obtainPort(toDesiredPortRange(suggestedHttpPort, DEFAULT_HTTP_PORT))
+
+        // We must have the specified HTTP port as this is part of the public URL
+        int httpPort = entity.getAttribute(Attributes.HTTP_PORT)
+        if (!machine.obtainSpecificPort(httpPort)) {
+            throw new IllegalStateException("Could not allocate port ${httpPort} for Nginx")
+        }
 
         NginxSetup result = new NginxSetup(entity, machine)
         result.setHttpPort(httpPort)
