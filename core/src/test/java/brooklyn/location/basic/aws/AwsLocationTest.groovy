@@ -57,6 +57,7 @@ class AwsLocationTest {
         if (exceptions) {
             throw exceptions.get(0)
         }
+        machines.clear()
     }
     
     @Test(groups = "Live")
