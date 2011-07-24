@@ -1,8 +1,7 @@
 package brooklyn.entity.webapp.tomcat
 
-import static brooklyn.entity.basic.ConfigKeys.SUGGESTED_HTTP_PORT
-import static brooklyn.entity.basic.ConfigKeys.SUGGESTED_JMX_PORT
-import static brooklyn.entity.webapp.tomcat.TomcatServer.SUGGESTED_SHUTDOWN_PORT
+import static brooklyn.entity.basic.ConfigKeys.*
+import static brooklyn.entity.webapp.tomcat.TomcatServer.*
 
 import java.util.concurrent.TimeUnit
 
@@ -13,12 +12,12 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.ConfigKeys
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.aws.AWSCredentialsFromEnv
 import brooklyn.location.basic.aws.AwsLocation
-import brooklyn.test.TestUtils;
+import brooklyn.test.TestUtils
+import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
 
@@ -41,12 +40,6 @@ public class TomcatServerLiveIntegrationTest {
     private static final String SSH_PRIVATE_KEY_PATH = "/Users/aled/id_rsa.junit.private"
 
     static { TimeExtras.init() }
-
-    protected static class TestApplication extends AbstractApplication {
-        public TestApplication(Map properties=[:]) {
-            super(properties)
-        }
-    }
 
     private AwsLocation loc;
     private Collection<SshMachineLocation> machines = []

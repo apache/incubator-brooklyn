@@ -2,12 +2,9 @@ package brooklyn.entity.dns;
 
 import static org.testng.AssertJUnit.*
 import groovy.lang.MetaClass
-import groovy.transform.InheritConstructors
 
-import java.util.Collection
 import java.util.Map
 import java.util.Set
-import java.util.concurrent.atomic.AtomicInteger
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -18,7 +15,6 @@ import org.testng.annotations.Test
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
-import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.DynamicGroup
 import brooklyn.entity.group.DynamicFabric
 import brooklyn.entity.trait.Startable
@@ -26,6 +22,7 @@ import brooklyn.location.CoordinatesProvider
 import brooklyn.location.Location
 import brooklyn.location.basic.GeneralPurposeLocation
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.test.entity.TestEntity
 import brooklyn.util.internal.EntityStartUtils
 import brooklyn.util.internal.TimeExtras
 
@@ -101,7 +98,6 @@ public class AbstractGeoDnsServiceTest {
         // TODO
     }
     
-    
     private class TestService extends AbstractGeoDnsService {
         public Map<String, HostGeoInfo> targetHostsByName = new LinkedHashMap<String, HostGeoInfo>();
         
@@ -116,29 +112,7 @@ public class AbstractGeoDnsServiceTest {
                 if (host != null) targetHostsByName.put(host.displayName, host);
             }
         }
-    };
-
-
-    @InheritConstructors
-    private static class TestEntity extends AbstractEntity implements Startable {
-        AtomicInteger counter = new AtomicInteger(0)
-        
-        void start(Collection<? extends Location> locs) {
-            log.trace "Start $this"; 
-            counter.incrementAndGet(); 
-            locations.addAll(locs)
-        }
-        void stop() { 
-            log.trace "Stop"; 
-            counter.decrementAndGet()
-        }
-        void restart() {
-        }
-        @Override String toString() {
-            return "TestEntity["+id[-8..-1]+"]"
-        }
     }
-    
     
     private static class GeoLocation extends GeneralPurposeLocation implements CoordinatesProvider {
         private final double latitude;
@@ -153,5 +127,4 @@ public class AbstractGeoDnsServiceTest {
         double getLatitude() { return latitude; }
         double getLongitude() { return longitude; }
     }
-    
 }

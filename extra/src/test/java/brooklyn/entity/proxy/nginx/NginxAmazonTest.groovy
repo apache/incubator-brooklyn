@@ -1,4 +1,4 @@
-package brooklyn.test
+package brooklyn.entity.proxy.nginx
 
 import static brooklyn.test.TestUtils.*
 import static org.testng.Assert.*
@@ -12,7 +12,6 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.Application
-import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.group.DynamicCluster
 import brooklyn.entity.proxy.nginx.NginxController
 import brooklyn.entity.trait.Startable
@@ -20,10 +19,17 @@ import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.location.MachineLocation
 import brooklyn.location.basic.aws.AwsLocation
 import brooklyn.location.basic.aws.CredentialsFromEnv
+import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.EntityStartUtils
 
-class AwsLocationTest {
-    private static final Logger LOG = LoggerFactory.getLogger(AwsLocationTest.class)
+/**
+ * Test Nginx proxying a cluster of TomcatServer entities on AWS for ENGR-1689.
+ *
+ * This test is a proof-of-concept for the Brooklyn demo application, with each
+ * service running on a separate Amazon EC2 instance.
+ */
+public class NginxAmazonTest {
+    private static final Logger LOG = LoggerFactory.getLogger(NginxAmazonTest.class)
     
     private static final String REGION_NAME = "us-east-1"
     private static final String IMAGE_ID = REGION_NAME+"/"+"ami-2342a94a"
@@ -35,12 +41,6 @@ class AwsLocationTest {
     private Application app
     private NginxController nginx
     private DynamicCluster cluster
-
-    static class TestApplication extends AbstractApplication {
-        public TestApplication(Map properties=[:]) {
-            super(properties)
-        }
-    }
 
     @BeforeMethod(groups = "Live")
     public void setup() {

@@ -1,5 +1,6 @@
 package brooklyn.entity.hello;
 
+import static brooklyn.event.basic.DependentConfiguration.*
 import static org.testng.Assert.*
 
 import java.util.concurrent.atomic.AtomicReference
@@ -7,24 +8,14 @@ import java.util.concurrent.atomic.AtomicReference
 import org.testng.annotations.Test
 
 import brooklyn.entity.basic.AbstractApplication
-import brooklyn.event.SensorEventListener
 import brooklyn.event.SensorEvent
+import brooklyn.event.SensorEventListener
 import brooklyn.management.Task
-import brooklyn.location.Location
-import brooklyn.management.ExecutionContext
-import brooklyn.management.SubscriptionHandle
-import brooklyn.util.task.BasicTask
-import brooklyn.util.task.ParallelTask;
-
-import static brooklyn.event.basic.DependentConfiguration.*
-import brooklyn.location.basic.AbstractLocation;
+import brooklyn.test.entity.MockLocation
+import brooklyn.util.task.ParallelTask
 
 /** tests effector invocation and a variety of sensor accessors and subscribers */
 class LocalEntitiesTest {
-
-    private static class MockLocation extends AbstractLocation {
-    }
-
     @Test
     public void testEffectorUpdatesAttributeSensor() {
         AbstractApplication a = new AbstractApplication() {}

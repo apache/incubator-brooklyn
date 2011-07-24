@@ -27,7 +27,7 @@
         <dependency>
             <groupId>brooklyn</groupId>
             <artifactId>brooklyn-core</artifactId>
-            <version>${project.version}</version>
+            <version>${project.version}</version><!--$NO-MVN-MAN-VER$-->
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>

@@ -6,9 +6,11 @@ import java.util.Map
 
 import org.testng.annotations.Test
 
-import brooklyn.event.basic.BasicConfigKey
 import brooklyn.entity.ConfigKey
-import brooklyn.location.basic.AbstractLocation;
+import brooklyn.event.basic.BasicConfigKey
+import brooklyn.test.entity.MockLocation
+import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestEntity
 
 /**
  * Test that configuration properties are usable and inherited correctly.
@@ -128,18 +130,4 @@ public class InheritedConfigTest {
         
         assertEquals(null, entity.getConfig(akey))
     }
-
-    private static class TestApplication extends AbstractApplication {
-        public TestApplication(Map properties=[:]) {
-            super(properties)
-        }
-    }
-    
-    private static class TestEntity extends AbstractEntity {
-        public TestEntity(Map properties=[:]) {
-            super(properties)
-        }
-    }
-    
-    private static class MockLocation extends AbstractLocation {}
 }

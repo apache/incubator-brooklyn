@@ -14,10 +14,10 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.Application
-import brooklyn.entity.basic.AbstractApplication
 import brooklyn.event.EntityStartException
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.policy.RollingTimeWindowMeanEnricher.ConfidenceQualifiedNumber
+import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
 
@@ -33,12 +33,6 @@ public class TomcatServerIntegrationTest {
     static int DEFAULT_HTTP_PORT = 7880
 
     static { TimeExtras.init() }
-
-    protected static class TestApplication extends AbstractApplication {
-        public TestApplication(Map properties=[:]) {
-            super(properties)
-        }
-    }
 
     static boolean httpPortLeftOpen = false;
     private int oldHttpPort = -1;

@@ -11,12 +11,12 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.Application
-import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractService
 import brooklyn.entity.group.DynamicCluster
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
+import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.EntityStartUtils
 import brooklyn.util.internal.TimeExtras
 
@@ -35,12 +35,6 @@ public class NginxIntegrationTest {
     private Application app
     private NginxController nginx
     private DynamicCluster cluster
-
-    static class TestApplication extends AbstractApplication {
-        public TestApplication(Map properties=[:]) {
-            super(properties)
-        }
-    }
 
     @BeforeMethod(groups = "Integration")
     public void setup() {
