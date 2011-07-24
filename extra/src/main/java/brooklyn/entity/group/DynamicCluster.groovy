@@ -26,6 +26,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     int initialSize
 
     private Location location
+    private Map createFlags
 
     /**
      * Instantiate a new DynamicCluster.
@@ -48,8 +49,11 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         Preconditions.checkArgument properties.get('newEntity') instanceof Closure, "'newEntity' must be a closure"
         newEntity = properties.remove('newEntity')
         
-        initialSize = getConfig(INITIAL_SIZE) ?: properties.initialSize ?: 0
+        initialSize = getConfig(INITIAL_SIZE) ?: properties.remove("initialSize") ?: 0
         setConfig(INITIAL_SIZE, initialSize)
+
+        // Save remaining properties for use when creating members
+        createFlags = properties
 
         setAttribute(SERVICE_UP, false)
     }
@@ -98,7 +102,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
 
     protected Entity addNode() {
         Map creation = [:]
-        creation << properties
+        creation << createFlags
         creation.put("owner", this)
         logger.trace "Adding a node to {} with properties {}", id, creation
 

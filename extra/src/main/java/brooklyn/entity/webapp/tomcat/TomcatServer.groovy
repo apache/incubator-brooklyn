@@ -33,6 +33,7 @@ public class TomcatServer extends JavaWebApp {
         super(properties, owner)
     }
 
+    @Override
     protected Collection<Integer> getRequiredOpenPorts() {
         Collection<Integer> result = super.getRequiredOpenPorts()
         if (getConfig(SUGGESTED_SHUTDOWN_PORT)) result.add(getConfig(SUGGESTED_SHUTDOWN_PORT))

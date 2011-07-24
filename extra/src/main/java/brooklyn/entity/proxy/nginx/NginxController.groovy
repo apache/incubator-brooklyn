@@ -17,7 +17,7 @@ import com.google.common.base.Charsets
 import com.google.common.io.Files
 
 /**
- * An entity that represents an NIGINX proxy controlling a cluster.
+ * An entity that represents an Nginx proxy controlling a cluster.
  */
 public class NginxController extends AbstractController {
     transient HttpSensorAdapter httpAdapter

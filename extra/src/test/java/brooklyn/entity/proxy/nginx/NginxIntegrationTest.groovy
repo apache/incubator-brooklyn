@@ -56,7 +56,7 @@ public class NginxIntegrationTest {
      */
     @Test(groups = "Integration")
     public void canStartupAndShutdown() {
-        def template = { properties -> new TomcatServer(properties) }
+        def template = { Map properties -> new TomcatServer(properties) }
         URL war = getClass().getClassLoader().getResource("hello-world.war")
         Preconditions.checkState war != null, "Unable to locate resource $war"
         
