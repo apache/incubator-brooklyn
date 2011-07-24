@@ -64,9 +64,4 @@ public class SpringTravel extends AbstractApplication {
         nginxEntities.rescanEntities()
         geoDns.setGroup(nginxEntities)
     }
-    
-    @Override
-    public void restart() {
-        throw new UnsupportedOperationException()
-    }
 }
