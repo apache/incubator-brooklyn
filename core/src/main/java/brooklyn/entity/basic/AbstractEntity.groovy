@@ -363,7 +363,7 @@ abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
     public <T> T getConfig(ConfigKey<T> key) {
         // FIXME What about inherited task in config?!
         Object v = ownConfig.get(key);
-        v = v ?: inheritedConfig.get(key)
+        v = v!=null ? v : inheritedConfig.get(key)
 
         //if config is set as a task, we wait for the task to complete
         if (v in Task) {
@@ -376,7 +376,7 @@ abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
             v = v.get()
         }
         
-        v = v ?: key.defaultValue
+        v = v!=null ? v : inheritedConfig.get(key)
     }
 
     @Override
