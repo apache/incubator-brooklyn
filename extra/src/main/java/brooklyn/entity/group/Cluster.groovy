@@ -9,6 +9,8 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
+import brooklyn.entity.Group
+import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.trait.Resizable
 import brooklyn.entity.trait.Startable
 import brooklyn.event.basic.BasicAttributeSensor
@@ -17,28 +19,15 @@ import brooklyn.location.Location
 import brooklyn.util.internal.EntityStartUtils
 
 /**
- * intended to represent a group of homogeneous entities in a single location;
- * subclass must implement {@link #expand()} and {@link #shrink()} to specify how to create/remove nodes; 
- * caller must supply location as field either in constructor or call to start;
- * initialSize property determines initial size when started (defaults to 1)
+ * Intended to represent a group of homogeneous entities in a single location.
  */
-public abstract class Cluster extends Tier implements Startable {
-    public static final BasicConfigKey<Integer> INITIAL_SIZE = [ Integer, "initial.size", "Initial cluster size" ]
+public interface Cluster extends Group, Startable, Resizable {
+    BasicConfigKey<Integer> INITIAL_SIZE = [ Integer, "cluster.initial.size", "Initial cluster size" ]
 
-    public static final BasicAttributeSensor<String> CLUSTER_SIZE = [ Integer, "cluster.size", "Cluster size" ]
-
-    int initialSize
-
-    public Cluster(Map properties=[:], Entity owner=null) {
-        super(properties, owner)
-        initialSize = getConfig(INITIAL_SIZE) ?: properties?.initialSize ?: 1
-        setConfig(INITIAL_SIZE, initialSize)
-    }
-    
-    // TODO single location
+    BasicAttributeSensor<String> CLUSTER_SIZE = [ Integer, "cluster.size", "Cluster size" ]
 }
 
-public abstract class ClusterFromTemplate extends Cluster implements Resizable {
+public abstract class ClusterFromTemplate extends  AbstractGroup implements Cluster {
     final static Logger log = LoggerFactory.getLogger(ClusterFromTemplate.class);
 
     Entity template = null

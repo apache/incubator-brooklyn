@@ -35,7 +35,7 @@ public abstract class AbstractController extends AbstractService {
     public static final BasicAttributeSensor<String> PROTOCOL = [ String, "proxy.portNumber", "Protocol" ]
     public static final BasicAttributeSensor<String> URL = [ String, "proxy.url", "URL" ]
 
-    AbstractGroup cluster
+    Cluster cluster
     String domain
     int port
     String protocol
@@ -46,7 +46,7 @@ public abstract class AbstractController extends AbstractService {
     protected Map<InetAddress,List<Integer>> addresses
     
 
-    public AbstractController(Map properties=[:], Entity owner=null, AbstractGroup cluster=null) {
+    public AbstractController(Map properties=[:], Entity owner=null, Cluster clusterr=null) {
         super(properties, owner)
 
         portNumber = getConfig(PORT_NUMBER_SENSOR) ?: properties.portNumberSensor
@@ -81,10 +81,10 @@ public abstract class AbstractController extends AbstractService {
             protected void onEntityAdded(Entity member) { addEntity(member); }
             protected void onEntityRemoved(Entity member) { removeEntity(member); }
         }
-        
+
+        this.cluster = cluster ?: properties.cluster
         addPolicy(policy)
         reset()
-        policy.setGroup(cluster ?: properties.cluster)
     }
 
     protected Collection<Integer> getRequiredOpenPorts() {
@@ -118,6 +118,7 @@ public abstract class AbstractController extends AbstractService {
 
     public void reset() {
         policy.reset()
+        policy.setGroup(cluster)
         addresses = new HashMap<InetAddress,List<Integer>>().withDefault { new ArrayList<Integer>() }
     }
 

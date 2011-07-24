@@ -7,25 +7,20 @@ import java.util.concurrent.ExecutionException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.entity.Effector
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractGroup
-import brooklyn.entity.trait.Resizable
 import brooklyn.entity.trait.Startable
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.Location
 import brooklyn.management.Task
-import brooklyn.util.task.ParallelTask
 
 import com.google.common.base.Preconditions
 
 /**
  * A cluster of entities that can dynamically increase or decrease the number of entities.
  */
-public class DynamicCluster extends AbstractGroup implements Startable, Resizable {
+public class DynamicCluster extends AbstractGroup implements Cluster {
     private static final Logger logger = LoggerFactory.getLogger(DynamicCluster)
-
-    public static final BasicConfigKey<Integer> INITIAL_SIZE = [ Integer, "cluster.initial.size", "Initial cluster size" ]
 
     Closure<Entity> newEntity
     int initialSize
@@ -59,7 +54,7 @@ public class DynamicCluster extends AbstractGroup implements Startable, Resizabl
         setAttribute(SERVICE_UP, false)
     }
 
-    public void start(Collection<? extends Location> locations) {
+    public void start(Collection<Location> locations) {
         Preconditions.checkNotNull locations, "locations must be supplied"
         Preconditions.checkArgument locations.size() == 1, "Exactly one location must be supplied"
         location = locations.find { true }
