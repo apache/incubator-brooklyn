@@ -119,11 +119,11 @@ class ResizerPolicyTest {
          * assert cluster size 2 
          */
         
-        Integer port = 9000
+        Integer port = 7880
         Integer jmxP = 32199
         Integer shutdownP = 31880
         DynamicWebAppCluster cluster = new DynamicWebAppCluster(
-            newEntity: { properties ->
+            newEntity: { Map properties ->
                 properties.httpPort = port++
                 def tc = new TomcatServer(properties)
                 tc.setConfig(TomcatServer.SUGGESTED_JMX_PORT, jmxP++)
@@ -138,7 +138,7 @@ class ResizerPolicyTest {
         p.setMetricLowerBound(0).setMetricUpperBound(1).setMinSize(1)
         cluster.addPolicy(p)
         
-        cluster.start([new LocalhostMachineProvisioningLocation(name:'london', count:2)])
+        cluster.start([new LocalhostMachineProvisioningLocation(name:'london', count:4)])
         assertEquals 1, cluster.currentSize
         
         TomcatServer tc = cluster.getMembers().toArray()[0]

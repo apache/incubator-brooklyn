@@ -2,6 +2,8 @@ package brooklyn.policy
 
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.locks.Lock
+import java.util.concurrent.locks.ReentrantLock
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -14,7 +16,6 @@ import brooklyn.event.SensorEventListener
 import brooklyn.policy.basic.AbstractPolicy
 
 public class ResizerPolicy<T extends Number> extends AbstractPolicy implements SensorEventListener<T> {
-    
     private static final Logger LOG = LoggerFactory.getLogger(ResizerPolicy.class)
     
     private DynamicCluster dynamicCluster
@@ -26,10 +27,8 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
     
     private final AtomicInteger desiredSize = new AtomicInteger(0)
     
-    /**
-     * Set this to true if we are in the process of resizing.
-     */
-    private final AtomicBoolean resizing = new AtomicBoolean(false)
+    /** Lock held if we are in the process of resizing. */
+    private final Lock resizeLock = new ReentrantLock()
     
     AttributeSensor<T> source
     
@@ -66,7 +65,7 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
     }
     
     private int resize() {
-        if (resizing.compareAndSet(false, true)) {
+        if (resizeLock.tryLock()) {
             try {
                 // Groovy does not support do .. while loops!
                 int desire = desiredSize.get()
@@ -76,7 +75,7 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
                     dynamicCluster.resize(desire)
                 }
             } finally {
-                resizing.set(false)
+                resizeLock.unlock()
             }
         }        
     }
