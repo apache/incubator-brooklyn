@@ -82,6 +82,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     // TODO Does not yet check if the port really is free on this machine
     public boolean obtainSpecificPort(int portNumber) {
         if (ports.contains(portNumber)) {
+            System.err.println ports.join(", ")
             return false
         } else {
             ports.add(portNumber)

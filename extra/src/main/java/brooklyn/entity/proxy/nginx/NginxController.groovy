@@ -63,14 +63,13 @@ public class NginxController extends AbstractController {
 
     public synchronized void configure() {
         MachineLocation machine = locations.first()
-        SshBasedAppSetup setup = getSshBasedSetup(machine)
         File file = new File("/tmp/${id}")
         file.deleteOnExit()
-        Files.write(getConfigFile(setup), file, Charsets.UTF_8)
+        Files.write(getConfigFile(), file, Charsets.UTF_8)
 		setup.machine.copyTo file, "${setup.runDir}/conf/server.conf"
     }
 
-    public String getConfigFile(SshBasedAppSetup setup) {
+    public String getConfigFile() {
         List<String> servers = []
         addresses.each { InetAddress host, portList -> portList.collect(servers, { int port -> host.hostAddress + ":" + port }) }
         StringBuffer config = []

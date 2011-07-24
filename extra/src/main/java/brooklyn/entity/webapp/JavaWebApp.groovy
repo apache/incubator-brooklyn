@@ -98,8 +98,7 @@ public abstract class JavaWebApp extends JavaApp {
     }
 
     public void deploy(String file) {
-        getSshBasedSetup(locations.find({ it instanceof MachineLocation })).deploy(new File(file))
+        setup.deploy(new File(file))
     }
-
 }
 

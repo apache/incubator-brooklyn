@@ -79,15 +79,14 @@ public class RedisStore extends AbstractService implements DataStore {
 
     public synchronized void configure() {
         MachineLocation machine = locations.first()
-        SshBasedAppSetup setup = getSshBasedSetup(machine)
         File file = new File("/tmp/${id}")
         file.deleteOnExit()
-        Files.write(getConfigFile(setup), file, Charsets.UTF_8)
+        Files.write(getConfigFile(), file, Charsets.UTF_8)
 		setup.machine.copyTo file, "${setup.runDir}/redis.conf"
         if (configFile && configFile.exists()) setup.machine.copyTo configFile, "${setup.runDir}/include.conf"
     }
 
-    public String getConfigFile(SshBasedAppSetup setup) {
+    public String getConfigFile() {
         StringBuffer config = []
         config.append """
 daemonize yes
