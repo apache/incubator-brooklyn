@@ -32,8 +32,8 @@ public class AbstractGeoDnsServiceTest {
 
     private static final String MONTEREY_WEST_IP = "208.95.232.123";
     private static final String MONTEREY_EAST_IP = "216.150.144.82";
-    private static final Map CALIFORNIA_COORDS = [ 'latitude' : 37.43472d, 'longitude' : -121.89500d ];
-    private static final Map NEW_YORK_COORDS = [ 'latitude' : 41.10361d, 'longitude' : -73.79583d ];
+    private static final Map CALIFORNIA_COORDS = [ 'latitude' : 37.43472, 'longitude' : -121.89500 ];
+    private static final Map NEW_YORK_COORDS   = [ 'latitude' : 41.10361, 'longitude' :  -73.79583 ];
     
     private static final Location CALIFORNIA = new GeneralPurposeLocation(
         name: "California",
