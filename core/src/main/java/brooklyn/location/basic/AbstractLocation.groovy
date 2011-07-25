@@ -64,11 +64,11 @@ public abstract class AbstractLocation implements Location {
         }
     }
     
-    public boolean hasProperty(String key) { return leftoverProperties.containsKey(key); }
-    public Object getProperty(String key) { return leftoverProperties.get(key); }
-    public Object findProperty(String key) {
-        if (hasProperty(key)) return getProperty(key);
-        if (parentLocation != null) return parentLocation.findProperty(key);
+    public boolean hasLocationProperty(String key) { return leftoverProperties.containsKey(key); }
+    public Object getLocationProperty(String key) { return leftoverProperties.get(key); }
+    public Object findLocationProperty(String key) {
+        if (hasLocationProperty(key)) return getLocationProperty(key);
+        if (parentLocation != null) return parentLocation.findLocationProperty(key);
         return null;
     }
 }
