@@ -4,6 +4,7 @@ import java.net.InetAddress;
 
 import brooklyn.entity.Entity;
 import brooklyn.location.Location;
+import brooklyn.location.MachineLocation;
 
 /**
  * Encapsulates geo-IP information for a given host.
@@ -16,9 +17,9 @@ public class HostGeoInfo {
 
     
     public static HostGeoInfo fromLocation(Location l) {
-        InetAddress address = LocationUtils.findIpAddress(l);
-        Double latitude = LocationUtils.findLatitude(l);
-        Double longitude = LocationUtils.findLongitude(l);
+        InetAddress address = findIpAddress(l);
+        Double latitude = (Double) l.findLocationProperty("latitude");
+        Double longitude = (Double) l.findLocationProperty("longitude");
 
         if (address == null || latitude == null || longitude == null)
             return null;
@@ -33,6 +34,14 @@ public class HostGeoInfo {
                 return hgi;
         }
         return null;
+    }
+    
+    public static InetAddress findIpAddress(Location l) {
+        if (l == null)
+            return null;
+        if (l instanceof MachineLocation)
+            return ((MachineLocation) l).getAddress();
+        return findIpAddress(l.getParentLocation());
     }
     
     

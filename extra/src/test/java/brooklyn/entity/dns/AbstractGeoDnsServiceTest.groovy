@@ -32,15 +32,15 @@ public class AbstractGeoDnsServiceTest {
 
     private static final String MONTEREY_WEST_IP = "208.95.232.123";
     private static final String MONTEREY_EAST_IP = "216.150.144.82";
-    private static final Map CALIFORNIA_COORDS = [ 'latitude' : 37.43472, 'longitude' : -121.89500 ];
-    private static final Map NEW_YORK_COORDS = [ 'latitude' : 41.10361, 'longitude' : -73.79583 ];
+    private static final Map CALIFORNIA_COORDS = [ 'latitude' : 37.43472d, 'longitude' : -121.89500d ];
+    private static final Map NEW_YORK_COORDS = [ 'latitude' : 41.10361d, 'longitude' : -73.79583d ];
     
-    private static final Location CALIFORNIA = new GeoLocation(
+    private static final Location CALIFORNIA = new GeneralPurposeLocation(
         name: "California",
         latitude: CALIFORNIA_COORDS.latitude,
         longitude: CALIFORNIA_COORDS.longitude);
     
-    private static final Location NEW_YORK = new GeoLocation(
+    private static final Location NEW_YORK = new GeneralPurposeLocation(
         name: "New York",
         latitude: NEW_YORK_COORDS.latitude,
         longitude: NEW_YORK_COORDS.longitude);
@@ -114,17 +114,4 @@ public class AbstractGeoDnsServiceTest {
         }
     }
     
-    private static class GeoLocation extends GeneralPurposeLocation implements CoordinatesProvider {
-        private final double latitude;
-        private final double longitude;
-        
-        public GeoLocation(Map properties = [:]) {
-            super(properties);
-            latitude = properties['latitude'];
-            longitude = properties['longitude'];
-        }
-        
-        double getLatitude() { return latitude; }
-        double getLongitude() { return longitude; }
-    }
 }
