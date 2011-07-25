@@ -11,6 +11,8 @@ import java.util.logging.Logger
 import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
+import brooklyn.location.MachineProvisioningLocation
+import brooklyn.location.NoMachinesAvailableException
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.internal.LanguageUtils
 
@@ -62,7 +64,7 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
     private String networkHome = "~/monterey-network-node-copy1";
     
     private AbstractMontereyNode node;
-    
+    private MachineProvisioningLocation provisioningLoc;
     private final Gson gson;
 
     MontereyContainerNode(MontereyNetworkConnectionDetails connectionDetails) {
@@ -93,6 +95,11 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
         return node;
     }
 
+    protected List<Integer> getRequiredOpenPorts() {
+        // FIXME Include montereyNetworkPort, lppProxyPort, etc
+        return [22]
+    }
+    
     public void dispose() {
         synchronized (running) {
             running.set(false);
@@ -114,22 +121,6 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
     }
 
     @Override
-    public void start(Collection<? extends Location> locs) {
-        startInLocation(locs)
-    }
-    
-    public void startInLocation(Collection<? extends Location> locs) {
-        if (locs.isEmpty()) throw new IllegalArgumentException("Locations empty; cannot start monterey node");
-        Location loc = locs.iterator().next();
-        
-        if (loc instanceof SshMachineLocation) {
-            startInLocation((SshMachineLocation)loc);
-        } else {
-            throw new UnsupportedOperationException("Unsupported location type "+loc);
-        }
-    }
-
-    @Override
     public void restart() {
         throw new UnsupportedOperationException();
     }
@@ -137,6 +128,33 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
     @Override
     public void stop() {
         release();
+    }
+
+    @Override
+    public void start(Collection<? extends Location> locs) {
+        startInLocation(locs)
+    }
+    
+    public void startInLocation(Collection<? extends Location> locs) {
+        MachineProvisioningLocation provisioningLoc = locs.find { it instanceof MachineProvisioningLocation }
+        SshMachineLocation machineLoc = locs.find { it instanceof SshMachineLocation }
+        if (provisioningLoc) {
+            startInLocation((MachineProvisioningLocation)provisioningLoc)
+        } else if (machineLoc) {
+            startInLocation((SshMachineLocation)machineLoc)
+        } else {
+            throw new UnsupportedOperationException("No supported location type in "+locs);
+        }
+    }
+
+    public void startInLocation(MachineProvisioningLocation location) {
+        Map<String,Object> flags = location.getProvisioningFlags([getClass().getName()])
+        flags.inboundPorts = getRequiredOpenPorts()
+        
+        provisioningLoc = location
+        SshMachineLocation machine = location.obtain(flags)
+        if (machine == null) throw new NoMachinesAvailableException(location)
+        startInLocation(machine)
     }
 
     public void startInLocation(SshMachineLocation host) {
@@ -205,6 +223,10 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
         }
         
         Location loc = (locations) ? locations.iterator().next() : null;
+        if (provisioningLoc) {
+            provisioningLoc.release(loc)
+        }
+        
         if (loc instanceof SshMachineLocation) {
             kill((SshMachineLocation)loc);
         } else if (loc == null) {

@@ -1,13 +1,25 @@
 package com.cloudsoftcorp.monterey.brooklyn.entity
 
+import java.util.Collection
+
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
+import brooklyn.entity.Entity
 import brooklyn.entity.basic.DynamicGroup
+import brooklyn.location.Location
+
+import com.cloudsoftcorp.monterey.network.control.api.Dmn1NodeType
+import com.cloudsoftcorp.monterey.network.control.plane.GsonSerializer
+import com.cloudsoftcorp.util.javalang.ClassLoadingContext
+import com.google.gson.Gson
 
 
 public class MontereyTypedGroup extends DynamicGroup {
 
     // FIXME Implement Startable
     
-    private static final Logger LOG = Loggers.getLogger(MediatorNode.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MediatorNode.class)
 
     final Dmn1NodeType nodeType;
     
@@ -25,6 +37,7 @@ public class MontereyTypedGroup extends DynamicGroup {
     
     MontereyTypedGroup(MontereyNetworkConnectionDetails connectionDetails, MontereyProvisioner montereyProvisioner, Dmn1NodeType nodeType, Collection<Location> locs, Closure locFilter) {
         this.connectionDetails = connectionDetails;
+        this.montereyProvisioner = montereyProvisioner;
         this.nodeType = nodeType;
         this.locations.addAll(locs);
         ClassLoadingContext classloadingContext = ClassLoadingContext.Defaults.getDefaultClassLoadingContext();
@@ -48,26 +61,32 @@ public class MontereyTypedGroup extends DynamicGroup {
     }
     
     public void provisionNodes(int num) {
-        for (i in 0..num) {
-            MontereyContainerNode node = montereyProvisioner.requestNode(locations)
-            node.rollout(nodeType)
+        Collection<MontereyContainerNode> nodes = montereyProvisioner.requestNodes(locations, num)
+        nodes.each {
+            it.rollout(nodeType)
         }
     }
     
     public void resize(Integer desiredSize) {
         int currentSize = getExpecteSize()
+        LOG.info("Resizing "+nodeType+" group in "+locations+"; from "+currentSize+" to "+desiredSize)
         if (currentSize < desiredSize) {
-            
+            provisionNodes(desiredSize-currentSize)
+        } else if (currentSize > desiredSize) {
+            // TODO sensible decision of which to release?
+            int numTorelease = currentSize-desiredSize;
+            List<Entity> members = getMembers() as ArrayList
+            List<Entity> torelease = getMembers().subList(0, Math.min(numTorelease, members.size()))
+            for (Entity member in torelease) {
+                montereyProvisioner.releaseNode(member)
+            }
+        } else {
+            // no-op; it's the same size
         }
     }
     
-    private MontereyNetwork getMontereyNetwork() {
-        Entity contender = this
-        while (contender != null) {
-            if (contender instanceof MontereyNetwork) return (MontereyNetwork)contender
-            contender = contender.getOwner()
-        }
-        
-        return null
+    public int getExpecteSize() {
+        // TODO What about nodes that are still being provisioned?
+        return getMembers().size()
     }
 }

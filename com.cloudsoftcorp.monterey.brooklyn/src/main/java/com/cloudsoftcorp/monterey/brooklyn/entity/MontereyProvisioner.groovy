@@ -26,20 +26,18 @@ class MontereyProvisioner extends AbstractEntity {
         }
     }
 
+    public Collection<MontereyContainerNode> addSpareNodes(Location loc, int num) {
+        // FIXME requestNodes should take from spares pool; so won't be able to reuse method exactly
+        return requestNodes(loc, num)
+    }
+
     public Collection<MontereyContainerNode> requestNodes(Collection<Location> locs, int num) {
         return requestNodes(locs.iterator().next(), num)
     }
     
     public Collection<MontereyContainerNode> requestNodes(Location loc, int num) {
-        Collection<MontereyContainerNode> result = []
-        ParallelTask task = new ParallelTask( {
-                    MontereyContainerNode node = network.provisionNode(loc)
-                    result.add(node)
-                })
-        executionContext.submit(task)
-        
+        // FIXME Parallelize starting; but execute tasks as though by submitter?
         for (i in 0..num) {
-            // TODO Parallelise starting
             MontereyContainerNode node = network.provisionNode(loc)
             result.add(node)
         }

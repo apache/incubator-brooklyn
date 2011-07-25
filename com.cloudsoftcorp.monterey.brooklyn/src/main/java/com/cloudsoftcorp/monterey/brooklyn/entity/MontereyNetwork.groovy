@@ -23,10 +23,17 @@ import brooklyn.location.MachineProvisioningLocation
 
 import com.cloudsoftcorp.monterey.clouds.NetworkId
 import com.cloudsoftcorp.monterey.clouds.basic.DeploymentUtils
+import com.cloudsoftcorp.monterey.clouds.dto.CloudAccountDto;
 import com.cloudsoftcorp.monterey.clouds.dto.CloudEnvironmentDto
+import com.cloudsoftcorp.monterey.clouds.dto.CloudProviderSelectionDto;
+import com.cloudsoftcorp.monterey.clouds.dto.ProvisioningConfigDto;
 import com.cloudsoftcorp.monterey.control.api.SegmentSummary
 import com.cloudsoftcorp.monterey.control.workrate.api.WorkrateReport
 import com.cloudsoftcorp.monterey.location.api.MontereyActiveLocation
+import com.cloudsoftcorp.monterey.location.api.MontereyLocation;
+import com.cloudsoftcorp.monterey.location.impl.MontereyLocationBuilder;
+import com.cloudsoftcorp.monterey.location.impl.MontereyLocationImpl;
+import com.cloudsoftcorp.monterey.location.temp.impl.CloudAccountIdImpl;
 import com.cloudsoftcorp.monterey.network.control.api.Dmn1NetworkInfo
 import com.cloudsoftcorp.monterey.network.control.api.Dmn1NodeType
 import com.cloudsoftcorp.monterey.network.control.api.NodeSummary
@@ -35,6 +42,8 @@ import com.cloudsoftcorp.monterey.network.control.plane.web.UserCredentialsConfi
 import com.cloudsoftcorp.monterey.network.deployment.MontereyDeploymentDescriptor
 import com.cloudsoftcorp.monterey.network.m.MediationWorkrateItem.MediationWorkrateItemNames
 import com.cloudsoftcorp.monterey.node.api.NodeId
+import com.cloudsoftcorp.monterey.provisioning.noop.NoopCloudProvider
+import com.cloudsoftcorp.monterey.provisioning.noop.NoopResourceProvisionerFactory
 import com.cloudsoftcorp.util.Loggers
 import com.cloudsoftcorp.util.exception.ExceptionUtils
 import com.cloudsoftcorp.util.osgi.BundleSet
@@ -82,7 +91,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     private Collection<URL> appBundles;
     private URL appDescriptorUrl;
     private MontereyDeploymentDescriptor appDescriptor;
-    private CloudEnvironmentDto cloudEnvironmentDto = CloudEnvironmentDto.EMPTY;
+    private CloudEnvironmentDto cloudEnvironmentDto;
     private MontereyNetworkConfig config = new MontereyNetworkConfig();
     private Collection<UserCredentialsConfig> webUsersCredentials;
     private CredentialsConfig webAdminCredential;
@@ -234,29 +243,49 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
             
             montereyProvisioner = new MontereyProvisioner(connectionDetails, this)
             
+            // TODO want to call executionContext.scheduleAtFixedRate or some such
+            scheduledExecutor = Executors.newScheduledThreadPool(1, {return new Thread(it, "monterey-network-poller")} as ThreadFactory)
+            monitoringTask = scheduledExecutor.scheduleAtFixedRate({ updateAll() }, POLL_PERIOD, POLL_PERIOD, TimeUnit.MILLISECONDS)
+
+            if (!cloudEnvironmentDto) {
+                String cloudEnvironmentId = networkId;
+                CloudAccountDto cloudAccountDto = new CloudAccountDto(
+                        new CloudAccountIdImpl("accid"), NoopCloudProvider.PROVIDER_ID);
+                Collection<MontereyLocation> montereyLocations = locations.collect {
+                    return new MontereyLocationBuilder(it.name) // TODO use an id?
+                            .withProvider(NoopCloudProvider.PROVIDER_ID)
+                            .withAbbr(it.findLocationProperty("abbreviatedName") ?: "")
+                            .withTimeZone(it.findLocationProperty("timeZone") ?: "")
+                            .withMontereyProvisionerId(NoopResourceProvisionerFactory.MONTEREY_PROVISIONER_ID)
+                            .withDisplayName(it.findLocationProperty("displayName") ?: "")
+                            .withIso3166Codes(it.findLocationProperty("iso3166") ?: "")
+                            .build();
+                }
+                ProvisioningConfigDto provisioningConfig = new ProvisioningConfigDto(new Properties());
+                CloudProviderSelectionDto providerSelectionDto = new CloudProviderSelectionDto(
+                        cloudAccountDto, montereyLocations, provisioningConfig)
+                
+                cloudEnvironmentDto = new CloudEnvironmentDto(cloudEnvironmentId, Collections.singleton(providerSelectionDto));
+            }
+            managementNode.deployCloudEnvironment(cloudEnvironmentDto);
+            
+            if (!appDescriptor) {
+                if (appDescriptorUrl) {
+                    appDescriptor = DescriptorLoader.loadDescriptor(appDescriptorUrl);
+                }
+            }
+            if (appDescriptor) {
+                BundleSet bundleSet = (appBundles) ? BundleSet.fromUrls(appBundles) : BundleSet.EMPTY;
+                managementNode.deployApplication(appDescriptor, bundleSet);
+            }
+            
             // Create fabrics and clusters for each node-type
             startFabricLayers()
             locations.each {
                 startClusterLayersInLocation(it, initialTopologyPerLocation)
             }
             
-            // TODO want to call executionContext.scheduleAtFixedRate or some such
-            scheduledExecutor = Executors.newScheduledThreadPool(1, {return new Thread(it, "monterey-network-poller")} as ThreadFactory)
-            monitoringTask = scheduledExecutor.scheduleAtFixedRate({ updateAll() }, POLL_PERIOD, POLL_PERIOD, TimeUnit.MILLISECONDS)
-
             LOG.info("Created new monterey network: "+networkId);
-
-            if (!appDescriptor) {
-                if (appDescriptorUrl) {
-                    appDescriptor = DescriptorLoader.loadDescriptor(appDescriptorUrl);
-                }
-            }
-            
-            if (appDescriptor) {
-                BundleSet bundleSet = (appBundles) ? BundleSet.fromUrls(appBundles) : BundleSet.EMPTY;
-                managementNode.deployCloudEnvironment(cloudEnvironmentDto);
-                managementNode.deployApplication(appDescriptor, bundleSet);
-            }
 
         } catch (Exception e) {
             // TODO If successfully created management node, but then get exception, do we want to shut it down?
@@ -358,10 +387,10 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     }
     
     private void startFabricLayers() {
-        typedFabrics.put(Dmn1NodeType.LPP, MontereyTypedGroup.newAllLocationsInstance(connectionDetails, Dmn1NodeType.LPP, locations));
-        typedFabrics.put(Dmn1NodeType.MR, MontereyTypedGroup.newAllLocationsInstance(connectionDetails, Dmn1NodeType.MR, locations));
-        typedFabrics.put(Dmn1NodeType.M, MediatorGroup.newAllLocationsInstance(connectionDetails, locations));
-        typedFabrics.put(Dmn1NodeType.TP, MontereyTypedGroup.newAllLocationsInstance(connectionDetails, Dmn1NodeType.TP, locations));
+        typedFabrics.put(Dmn1NodeType.LPP, MontereyTypedGroup.newAllLocationsInstance(connectionDetails, montereyProvisioner, Dmn1NodeType.LPP, locations));
+        typedFabrics.put(Dmn1NodeType.MR, MontereyTypedGroup.newAllLocationsInstance(connectionDetails, montereyProvisioner, Dmn1NodeType.MR, locations));
+        typedFabrics.put(Dmn1NodeType.M, MediatorGroup.newAllLocationsInstance(connectionDetails, montereyProvisioner, locations));
+        typedFabrics.put(Dmn1NodeType.TP, MontereyTypedGroup.newAllLocationsInstance(connectionDetails, montereyProvisioner, Dmn1NodeType.TP, locations));
         
         typedFabrics.values().each { addOwnedChild(it) }
     }
@@ -371,17 +400,21 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         Map<Dmn1NodeType,MontereyTypedGroup> clustersByType = [:]
         clustersByLocationAndType.put(loc, clustersByType)
 
-        clustersByType.put(Dmn1NodeType.LPP, MontereyTypedGroup.newSingleLocationInstance(connectionDetails, Dmn1NodeType.LPP, loc));
-        clustersByType.put(Dmn1NodeType.MR, MontereyTypedGroup.newSingleLocationInstance(connectionDetails, Dmn1NodeType.MR, loc));
-        clustersByType.put(Dmn1NodeType.M, MediatorGroup.newSingleLocationInstance(connectionDetails, loc));
-        clustersByType.put(Dmn1NodeType.TP, MontereyTypedGroup.newSingleLocationInstance(connectionDetails, Dmn1NodeType.TP, loc));
-        clustersByType.put(Dmn1NodeType.SPARE, MontereyTypedGroup.newSingleLocationInstance(connectionDetails, Dmn1NodeType.SPARE, loc));
+        clustersByType.put(Dmn1NodeType.LPP, MontereyTypedGroup.newSingleLocationInstance(connectionDetails, montereyProvisioner, Dmn1NodeType.LPP, loc));
+        clustersByType.put(Dmn1NodeType.MR, MontereyTypedGroup.newSingleLocationInstance(connectionDetails, montereyProvisioner, Dmn1NodeType.MR, loc));
+        clustersByType.put(Dmn1NodeType.M, MediatorGroup.newSingleLocationInstance(connectionDetails, montereyProvisioner, loc));
+        clustersByType.put(Dmn1NodeType.TP, MontereyTypedGroup.newSingleLocationInstance(connectionDetails, montereyProvisioner, Dmn1NodeType.TP, loc));
         
         clustersByType.values().each { it.setOwner(typedFabrics.get(it.nodeType)) }
         
         // Start the required nodes in each
-        [Dmn1NodeType.TP, Dmn1NodeType.M, Dmn1NodeType.MR, Dmn1NodeType.LPP, Dmn1NodeType.SPARE].each {
-            clustersByType.get(it).resize(initialTopologyPerLocation.get(it))
+        [Dmn1NodeType.TP, Dmn1NodeType.M, Dmn1NodeType.MR, Dmn1NodeType.LPP].each {
+            if (initialTopologyPerLocation.get(it) != null) {
+                clustersByType.get(it).resize(initialTopologyPerLocation.get(it))
+            }
+        }
+        if (initialTopologyPerLocation.get(Dmn1NodeType.SPARE) != null) {
+            montereyProvisioner.addSpareNodes(loc, initialTopologyPerLocation.get(Dmn1NodeType.SPARE))
         }
     }
 
