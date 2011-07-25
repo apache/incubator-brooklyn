@@ -133,7 +133,7 @@ abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
             if (suppliedOwnConfig) ownConfig.putAll(suppliedOwnConfig)
         
             name = flags.remove('name') ?: (getClass().getSimpleName() + ":" + id)
-            displayName = flags.remove('displayName') ?: name
+            displayName = flags.remove('displayName') ?: getClass().getSimpleName()
 
             // initialize the effectors defined on the class
             // (dynamic effectors could still be added; see #getEffectors
