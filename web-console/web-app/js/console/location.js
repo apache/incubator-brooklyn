@@ -41,6 +41,8 @@ Brooklyn.location = (function() {
         var lat = location.lat;
         var lon = location.lon;
         var name = location.name;
+        var iso = location.iso;
+        var description = location.description;
         if(address!=null){
         new google.maps.Geocoder().geocode( { 'address': address}, function(results, status) {
             if (status === google.maps.GeocoderStatus.OK) { 
@@ -115,7 +117,10 @@ Brooklyn.location = (function() {
                 appLocations[i].locationNumber = i;
                 locationNumber = locationNumber + 1;
                 map.setCenter(loc);
-
+        }
+        else if(iso!=null){
+            // use ISO code TBI
+            alert("use of ISO Code TBI");
         }
         else{alert("No geolocation information available from server for "+location.name);}
     }
@@ -166,11 +171,13 @@ Brooklyn.location = (function() {
         if (locations.length > 0) {
             for(i in locations){
                 var description = locations[i].description;
-                var name = locations[i].displayName;
+                var displayname = locations[i].displayName;
+                var name = locations[i].name;
                 var lat = locations[i].latitude;
                 var lon = locations[i].longitude;
                 var add = locations[i].streetAddress;
-                var jsonLoc = {name: name, description: description, lat: lat, lon: lon, add: add};
+                var iso = locations[i].iso;
+                var jsonLoc = {name: name, displayname: displayname, description: description, lat: lat, lon: lon, add: add, iso: iso};
                 appLocations.push(jsonLoc);
             }
             updateLocations();
