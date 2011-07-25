@@ -123,9 +123,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         gson = gsonSerializer.getGson();
 
         // FIXME Delete SSH_USERNAME
-        localhost = new SshMachineLocation(ImmutableMap.builder()
-                .put("address", InetAddress.getByName(SSH_HOST_NAME))
-                .put("userName", SSH_USERNAME).build());
+        localhost = new SshMachineLocation([address:InetAddress.getByName(SSH_HOST_NAME), userName:SSH_USERNAME]);
 
         localhostProvisioner = new FixedListMachineProvisioningLocation<SshMachineLocation>([machines:[localhost]])
         

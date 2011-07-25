@@ -62,6 +62,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         Preconditions.checkNotNull locations, "locations must be supplied"
         Preconditions.checkArgument locations.size() == 1, "Exactly one location must be supplied"
         location = locations.find { true }
+        locations.add(location)
         resize(initialSize)
         setAttribute(SERVICE_UP, true)
     }

@@ -32,8 +32,11 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
     
     AttributeSensor<T> source
     
-    public ResizerPolicy(AttributeSensor<T> source) {
-        this.source = source
+    /**
+     * @param averagingSource - A sensor that averages a relevant metric across the attaching entity
+     */
+    public ResizerPolicy(AttributeSensor<T> averagingSource) {
+        this.source = averagingSource
     }
     
     @Override

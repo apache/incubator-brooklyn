@@ -86,12 +86,13 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     private MontereyNetworkConfig config = new MontereyNetworkConfig();
     private Collection<UserCredentialsConfig> webUsersCredentials;
     private CredentialsConfig webAdminCredential;
-    private initialTopologyPerLocation = [lpp:0,mr:0,m:0,tp:0,spare:0]
+    private initialTopologyPerLocation = [(Dmn1NodeType.LPP):0,(Dmn1NodeType.MR):0,(Dmn1NodeType.M):0,(Dmn1NodeType.TP):0,(Dmn1NodeType.SPARE):0]
     
     private MontereyManagementNode managementNode;
+    private MontereyProvisioner montereyProvisioner;
     private MontereyNetworkConnectionDetails connectionDetails;
     private String applicationName;
-
+    
     private final LocationRegistry locationRegistry = new LocationRegistry();
     private final Map<String,MontereyContainerNode> nodesByCreationId = new ConcurrentHashMap<String,MontereyContainerNode>();
     private final Map<String,Segment> segments = new ConcurrentHashMap<String,Segment>();
@@ -231,15 +232,13 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
             setAttribute NETWORK_ID, networkId
             mirrorManagementNodeAttributes()
             
-            // Create fabrics for each node-type
-            typedFabrics.put(Dmn1NodeType.LPP, MontereyTypedGroup.newAllLocationsInstance(connectionDetails, Dmn1NodeType.LPP, locations));
-            typedFabrics.put(Dmn1NodeType.MR, MontereyTypedGroup.newAllLocationsInstance(connectionDetails, Dmn1NodeType.MR, locations));
-            typedFabrics.put(Dmn1NodeType.M, MediatorGroup.newAllLocationsInstance(connectionDetails, locations));
-            typedFabrics.put(Dmn1NodeType.TP, MontereyTypedGroup.newAllLocationsInstance(connectionDetails, Dmn1NodeType.TP, locations));
+            montereyProvisioner = new MontereyProvisioner(connectionDetails, this)
             
-            typedFabrics.values().each { addOwnedChild(it) }
-    
-            updateClusterTopologies();
+            // Create fabrics and clusters for each node-type
+            startFabricLayers()
+            locations.each {
+                startClusterLayersInLocation(it, initialTopologyPerLocation)
+            }
             
             // TODO want to call executionContext.scheduleAtFixedRate or some such
             scheduledExecutor = Executors.newScheduledThreadPool(1, {return new Thread(it, "monterey-network-poller")} as ThreadFactory)
@@ -272,7 +271,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         setAttribute STATUS, managementNode.getAttribute(MontereyManagementNode.STATUS)
     }
     
-    public MontereyContainerNode provisionNode(Location loc) {
+    MontereyContainerNode provisionNode(Location loc) {
         MontereyContainerNode node = new MontereyContainerNode(connectionDetails);
         nodesByCreationId.put(node.creationId, node);
         addOwnedChild(node);
@@ -280,6 +279,11 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         node
     }
     
+    void releaseNode(MontereyContainerNode node) {
+        node.stop();
+        nodesByCreationId.remove(node.creationId);
+    }
+
     public void releaseAllNodes() {
         // TODO Releasing in the right order; but what if revert/rollout is happening concurrently?
         //      Can we delegate to management node, or have brooklyn more aware of what's going on?
@@ -338,10 +342,11 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     
 //    private NodeSummary 
     private void updateTopology() {
+        // TODO What if a location is added or removed? Currently we don't add/remove the cluster(s)
+        
         Dmn1NetworkInfo networkInfo = managementNode.getNetworkInfo()
         
         updateFabricTopologies();
-        updateClusterTopologies();
         updateNodeTopologies();
         updateSegmentTopologies();
     }
@@ -352,35 +357,34 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         }
     }
     
-    private void updateClusterTopologies() {
-        // Create/destroy clusters
-        Collection<Location> newLocations = []
-        Collection<Location> removedLocations = []
+    private void startFabricLayers() {
+        typedFabrics.put(Dmn1NodeType.LPP, MontereyTypedGroup.newAllLocationsInstance(connectionDetails, Dmn1NodeType.LPP, locations));
+        typedFabrics.put(Dmn1NodeType.MR, MontereyTypedGroup.newAllLocationsInstance(connectionDetails, Dmn1NodeType.MR, locations));
+        typedFabrics.put(Dmn1NodeType.M, MediatorGroup.newAllLocationsInstance(connectionDetails, locations));
+        typedFabrics.put(Dmn1NodeType.TP, MontereyTypedGroup.newAllLocationsInstance(connectionDetails, Dmn1NodeType.TP, locations));
         
-        newLocations.addAll(locations); newLocations.removeAll(clustersByLocationAndType.keySet());
-        removedLocations.addAll(clustersByLocationAndType.keySet()); removedLocations.removeAll(locations);
-
-        newLocations.each { Location loc ->
-            Map<Dmn1NodeType,MontereyTypedGroup> clustersByType = [:]
-            clustersByLocationAndType.put(loc, clustersByType)
-
-            clustersByType.put(Dmn1NodeType.LPP, MontereyTypedGroup.newSingleLocationInstance(connectionDetails, Dmn1NodeType.LPP, loc));
-            clustersByType.put(Dmn1NodeType.MR, MontereyTypedGroup.newSingleLocationInstance(connectionDetails, Dmn1NodeType.MR, loc));
-            clustersByType.put(Dmn1NodeType.M, MediatorGroup.newSingleLocationInstance(connectionDetails, loc));
-            clustersByType.put(Dmn1NodeType.TP, MontereyTypedGroup.newSingleLocationInstance(connectionDetails, Dmn1NodeType.TP, loc));
-
-            clustersByType.values().each { it.setOwner(typedFabrics.get(it.nodeType)) }
-        }
-
-        removedLocations.each { Location loc ->
-            Map<Dmn1NodeType,MontereyTypedGroup> clustersByType = clustersByLocationAndType.remove(loc)
-            clustersByType?.values().each { MontereyTypedGroup cluster ->
-                cluster.dispose();
-                removeOwnedChild(cluster);
-            }
-        }
+        typedFabrics.values().each { addOwnedChild(it) }
     }
     
+    private void startClusterLayersInLocation(Location loc, Map initialTopologyPerLocation) {
+        // Instantiate clusters
+        Map<Dmn1NodeType,MontereyTypedGroup> clustersByType = [:]
+        clustersByLocationAndType.put(loc, clustersByType)
+
+        clustersByType.put(Dmn1NodeType.LPP, MontereyTypedGroup.newSingleLocationInstance(connectionDetails, Dmn1NodeType.LPP, loc));
+        clustersByType.put(Dmn1NodeType.MR, MontereyTypedGroup.newSingleLocationInstance(connectionDetails, Dmn1NodeType.MR, loc));
+        clustersByType.put(Dmn1NodeType.M, MediatorGroup.newSingleLocationInstance(connectionDetails, loc));
+        clustersByType.put(Dmn1NodeType.TP, MontereyTypedGroup.newSingleLocationInstance(connectionDetails, Dmn1NodeType.TP, loc));
+        clustersByType.put(Dmn1NodeType.SPARE, MontereyTypedGroup.newSingleLocationInstance(connectionDetails, Dmn1NodeType.SPARE, loc));
+        
+        clustersByType.values().each { it.setOwner(typedFabrics.get(it.nodeType)) }
+        
+        // Start the required nodes in each
+        [Dmn1NodeType.TP, Dmn1NodeType.M, Dmn1NodeType.MR, Dmn1NodeType.LPP, Dmn1NodeType.SPARE].each {
+            clustersByType.get(it).resize(initialTopologyPerLocation.get(it))
+        }
+    }
+
     private void updateNodeTopologies() {
         Dmn1NetworkInfo networkInfo = managementNode.getNetworkInfo();
         Map<NodeId, NodeSummary> nodeSummaries = networkInfo.getNodeSummaries();

@@ -134,7 +134,7 @@ class ResizerPolicyTest {
             owner: new TestApplication()
         )
         
-        ResizerPolicy p = new ResizerPolicy(DynamicWebAppCluster.TOTAL_REQUEST_COUNT)
+        ResizerPolicy p = new ResizerPolicy(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)
         p.setMetricLowerBound(0).setMetricUpperBound(1).setMinSize(1)
         cluster.addPolicy(p)
         
@@ -145,12 +145,13 @@ class ResizerPolicyTest {
         2.times { connectToURL(tc.getAttribute(TomcatServer.ROOT_URL)) }
         
         executeUntilSucceeds(timeout: 3*SECONDS, {
-            assertEquals 2, cluster.getAttribute(DynamicWebAppCluster.TOTAL_REQUEST_COUNT)
+            assertEquals 2.0d/cluster.currentSize, cluster.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)
         })
         
         executeUntilSucceedsWithShutdown(cluster, {
             if (!p.resizeLock.isLocked()) {
-                println cluster.currentSize
+                assertEquals 1.0d, cluster.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)
+                assertEquals 2, policy.calculateDesiredSize(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)
                 assertEquals 2, cluster.currentSize
                 return true
             }

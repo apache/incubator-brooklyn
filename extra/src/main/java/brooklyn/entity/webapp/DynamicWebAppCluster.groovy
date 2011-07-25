@@ -37,7 +37,7 @@ class DynamicWebAppCluster extends DynamicCluster {
             [ Double, "cluster.reqs.persec.average", "Cluster entity requests/sec average" ]
 
     public static final BasicAttributeSensor<Integer> TOTAL_PROCESSING_TIME = 
-            [ Integer, "cluster.reqs.processing-time", "Cluster-wide entity total processing time" ]
+            [ Integer, "cluster.reqs.processing-time.total", "Cluster-wide entity total processing time" ]
     public static final BasicAttributeSensor<Integer> AVERAGE_PROCESSING_TIME =
             [ Integer, "cluster.reqs.processing-time.average", "Cluster entity average total processing time" ]
 
