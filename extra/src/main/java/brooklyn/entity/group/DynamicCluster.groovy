@@ -104,10 +104,10 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     protected Entity addNode() {
         Map creation = [:]
         creation << createFlags
-        creation.put("owner", this)
         logger.trace "Adding a node to {} with properties {}", id, creation
 
         Entity entity = newEntity.call(creation)
+        addOwnedChild(entity)
         Preconditions.checkNotNull entity, "newEntity call returned null"
         Preconditions.checkState entity instanceof Entity, "newEntity call returned an object that is not an Entity"
         Preconditions.checkState entity instanceof Startable, "newEntity call returned an object that is not Startable"

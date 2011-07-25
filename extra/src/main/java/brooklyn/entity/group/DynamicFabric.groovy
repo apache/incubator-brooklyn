@@ -90,10 +90,10 @@ public class DynamicFabric extends AbstractEntity implements Startable {
     protected Entity addCluster() {
         Map creation = [:]
         creation << properties
-        creation.put("owner", this)
         logger.trace "Adding a cluster to {} with properties {}", id, creation
 
         Entity entity = newEntity.call(creation)
+        addOwnedChild(entity)
         Preconditions.checkNotNull entity, "newEntity call returned null"
         Preconditions.checkState entity instanceof Entity, "newEntity call returned an object that is not an Entity"
         Preconditions.checkState entity instanceof Startable, "newEntity call returned an object that is not Startable"
