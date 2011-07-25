@@ -311,7 +311,7 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
                     if (verbosity == 1) rv += " ("+error+")"
                     else {
                         StringWriter sw = new StringWriter()
-                        error.printStackTrace new PrintWriter(sw), true
+                        error.printStackTrace(new PrintWriter(sw))
                         rv += "\n"+sw.getBuffer()
                     }
                 }
