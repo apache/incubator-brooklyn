@@ -53,7 +53,7 @@ public class WebCluster extends AbstractEntity implements Startable {
         controller = new NginxController(
             owner:this,
             cluster:cluster,
-            domain:'cloudsoft.geopaas.org',
+            domain:'brooklyn.geopaas.org',
             port:8000,
             portNumberSensor:JavaWebApp.HTTP_PORT
         )
