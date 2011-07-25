@@ -38,6 +38,10 @@ Brooklyn.location = (function() {
 
     function addLocationToMap(location , i){
         var address = location.add;
+        var lat = location.lat;
+        var lon = location.lon;
+        var name = location.name;
+        if(address!=null){
         new google.maps.Geocoder().geocode( { 'address': address}, function(results, status) {
             if (status === google.maps.GeocoderStatus.OK) { 
                 loc = results[0].geometry.location;
@@ -76,7 +80,44 @@ Brooklyn.location = (function() {
             } else {
                 alert("Geocode was not successful for the following reason: " + status);
             }
-        });
+        });}
+        else if(lat!=null&&lon!=null){
+                loc = new google.maps.LatLng(lat,lon);
+                appLocations[i].location = loc;
+                var contentString = '<div id="content" style="height:80px">'+
+                    '<h1>'+'address'+'</h1>'+
+                    '<table border="1">'+
+                    '<tr>'+
+                    '<td>Address</td>'+
+                    '<td>Active</td>'+
+                    '<td>Resources</td>'+
+                    '</tr>'+
+                    '<tr>'+
+                    '<td>'+'address'+'</td>'+
+                    '<td>True</td>'+
+                    '<td>'+'resources'+'</td>'+
+                    '</tr>'+
+                    '</table>'+
+                    '</div>';
+                var marker = new google.maps.Marker({
+                    map: map,
+                    position: loc ,
+                    title: "Title"
+                });
+                var infowindow = new google.maps.InfoWindow({
+                    content: contentString
+                });
+                google.maps.event.addListener(marker, 'click' , function(){
+                    infowindow.open(map , marker);
+                });
+                appLocations[i].marker = marker;
+                appLocations[i].infowindow = infowindow;
+                appLocations[i].locationNumber = i;
+                locationNumber = locationNumber + 1;
+                map.setCenter(loc);
+
+        }
+        else{alert("No geolocation information available from server for "+location.name);}
     }
 
     function toggleLocation(e){

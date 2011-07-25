@@ -155,7 +155,7 @@ class ManagementContextService {
                 this.locations = [ 
                                     new GeneralPurposeLocation([name:"US-East-1",displayName:"US-East-1",streetAddress:"Northern Virginia, USA",description:"Northern Virginia (approx)",
                                         latitude:38.0,longitude:-76.0]),
-                                    new GeneralPurposeLocation([name:"US-West-1",displayName:"US-West-1",streetAddress:"Northern California, USA",description:"Northern California",
+                                    new GeneralPurposeLocation([name:"US-West-1",displayName:"US-West-1",description:"Northern California",
                                         latitude:40.0,longitude:-120.0])]
                 // Stealing the sensors from TomcatNode
                 this.sensors.putAll(new TomcatServer().sensors)
