@@ -25,7 +25,7 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
     public synchronized Entity addMember(Entity member) {
         member.addGroup(this)
         if (members.add(member)) {
-            emit(MEMBER_ADDED, MEMBER_ADDED.newEvent(this, member))
+            emit(MEMBER_ADDED, member)
             setAttribute(Changeable.GROUP_SIZE, currentSize)
         }
         member
@@ -33,7 +33,7 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
  
     public synchronized boolean removeMember(Entity member) {
         if (members.remove(member)) {
-            emit(MEMBER_REMOVED, MEMBER_REMOVED.newEvent(this, member))
+            emit(MEMBER_REMOVED, member)
             setAttribute(Changeable.GROUP_SIZE, currentSize)
         }
         member
