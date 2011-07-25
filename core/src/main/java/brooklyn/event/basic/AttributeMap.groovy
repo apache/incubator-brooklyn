@@ -39,7 +39,7 @@ public class AttributeMap implements Serializable {
             key = it
             val = map.get(it)
         }
-        log.debug "putting at $path, $key under $map"
+        log.trace "putting at $path, $key under $map"
         def oldValue = map.put(key, newValue)
         oldValue
     }
@@ -47,7 +47,7 @@ public class AttributeMap implements Serializable {
     public <T> void update(Sensor<T> sensor, T newValue) {
         Preconditions.checkArgument(sensor in AttributeSensor, "AttributeMap can only update an attribute sensor's value, not %s", sensor)
         def oldValue = update(sensor.getNameParts(), newValue)
-        log.debug "sensor {} set to {}", sensor.name, newValue
+        log.trace "sensor {} set to {}", sensor.name, newValue
         entity.emitInternal sensor, newValue
         oldValue
     }

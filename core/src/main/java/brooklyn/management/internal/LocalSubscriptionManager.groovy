@@ -170,7 +170,7 @@ public class LocalSubscriptionManager implements SubscriptionManager {
         
         //note, generating the notifications must be done in the calling thread to preserve order
         //e.g. emit(A); emit(B); should cause onEvent(A); onEvent(B) in that order
-        LOG.debug "$this got a $event event"
+        LOG.trace "$this got a $event event"
         Set<Subscription> subs = getSubscriptionsForEntitySensor(event.source, event.sensor)
         if (subs) {
             LOG.trace "sending {} to {}", event.sensor.name, subs.join(",")
@@ -178,7 +178,7 @@ public class LocalSubscriptionManager implements SubscriptionManager {
                 if (s.eventFilter!=null && !s.eventFilter.apply(event))
                     continue;
                 def final sAtClosureCreation = s
-                LOG.debug "publishing {} to {}", event, s
+                LOG.trace "publishing {} to {}", event, s
                 em.submit(tags: s.subscriberExecutionManagerTag, { sAtClosureCreation.listener.onEvent(event) })
             }
         }
