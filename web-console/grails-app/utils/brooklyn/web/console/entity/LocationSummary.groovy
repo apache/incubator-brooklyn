@@ -15,11 +15,15 @@ public class LocationSummary {
 
     final String name;
     final String displayName;
+    final String description;
+    final String streetAddress;
     final String longitude;
     final String latitude;
 
     public LocationSummary(Location location) {
         this.name = location.getName();
+        this.description = location.getLocationProperty('description');
+        this.streetAddress = location.getLocationProperty('streetAddress');
         this.displayName = location.getLocationProperty('displayName');
         this.latitude = location.getLocationProperty('latitude');
         this.longitude = location.getLocationProperty('longitude');

@@ -36,10 +36,10 @@ Brooklyn.location = (function() {
         appLocations[locationNumber].infowindow.open(map , appLocations[locationNumber].marker);
     }
 
-    function addLocationToMap(address , i){
+    function addLocationToMap(location , i){
+        var address = location.add;
         new google.maps.Geocoder().geocode( { 'address': address}, function(results, status) {
-            if (status === google.maps.GeocoderStatus.OK) {
-                loctext = results[0].formatted_address;
+            if (status === google.maps.GeocoderStatus.OK) { 
                 loc = results[0].geometry.location;
                 appLocations[i].location = loc;
                 var contentString = '<div id="content" style="height:80px">'+
@@ -51,7 +51,7 @@ Brooklyn.location = (function() {
                     '<td>Resources</td>'+
                     '</tr>'+
                     '<tr>'+
-                    '<td>'+loctext+'</td>'+
+                    '<td>'+address+'</td>'+
                     '<td>True</td>'+
                     '<td>'+'resources'+'</td>'+
                     '</tr>'+
@@ -60,7 +60,7 @@ Brooklyn.location = (function() {
                 var marker = new google.maps.Marker({
                     map: map,
                     position: loc ,
-                    title: loctext
+                    title: address
                 });
                 var infowindow = new google.maps.InfoWindow({
                     content: contentString
@@ -96,7 +96,7 @@ Brooklyn.location = (function() {
 
         map = new google.maps.Map(document.getElementById("map-canvas"), myOptions);
         for(i in appLocations) {
-            addLocationToMap(appLocations[i].name, i);
+            addLocationToMap(appLocations[i], i);
         }
         Brooklyn.tabs.getDataTable(tableId, '.', aoColumns, updateLocation, appLocations);
     }
@@ -124,8 +124,12 @@ Brooklyn.location = (function() {
         appLocations = new Array();
         if (locations.length > 0) {
             for(i in locations){
-                var location = locations[i].displayName;
-                var jsonLoc = {name: location, resources: '500'};
+                var description = locations[i].description;
+                var name = locations[i].displayName;
+                var lat = locations[i].latitude;
+                var lon = locations[i].longitude;
+                var add = locations[i].streetAddress;
+                var jsonLoc = {name: name, description: description, lat: lat, lon: lon, add: add};
                 appLocations.push(jsonLoc);
             }
             updateLocations();
