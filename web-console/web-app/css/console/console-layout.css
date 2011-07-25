@@ -11,6 +11,8 @@ body{
     height: 100%;
 }
 
+#map_canvas { height: 300px }
+
 /* TEMPLATE LAYOUT CONTAINERS */
 
 #console-header {
