@@ -65,7 +65,7 @@ public class SpringTravel extends AbstractApplication {
                 (GeoscalingDnsService.GEOSCALING_USERNAME): 'cloudsoft',
                 (GeoscalingDnsService.GEOSCALING_PASSWORD): 'cl0uds0ft',
                 (GeoscalingDnsService.GEOSCALING_PRIMARY_DOMAIN_NAME): 'geopaas.org',
-                (GeoscalingDnsService.GEOSCALING_SMART_SUBDOMAIN_NAME): 'cloudsoft',
+                (GeoscalingDnsService.GEOSCALING_SMART_SUBDOMAIN_NAME): 'brooklyn',
             ],
             this)
 
