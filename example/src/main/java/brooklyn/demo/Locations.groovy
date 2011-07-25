@@ -2,18 +2,15 @@ package brooklyn.demo
 
 import java.util.Map
 
-import brooklyn.entity.proxy.nginx.NginxController
-import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.basic.FixedListMachineProvisioningLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.aws.AWSCredentialsFromEnv
-import brooklyn.location.basic.aws.AwsLocation
 import brooklyn.location.basic.aws.AwsLocationFactory
 
 public class Locations {
-    private static final Map MONTEREY_EAST_COORDS = [ 'latitude' : 41.10361, 'longitude' : -73.79583 ] // Hawthorne, NY
-    private static final Map EDINBURGH_COORDS = [ 'latitude' : 55.94944, 'longitude' : -3.16028 ] // Edinburgh, Scotland
+    private static final Map MONTEREY_EAST_COORDS = [ 'latitude' : 41.10361d, 'longitude' : -73.79583d, iso3166:"US-NY" ] // Hawthorne, NY
+    private static final Map EDINBURGH_COORDS = [ 'latitude' : 55.94944d, 'longitude' : -3.16028d, iso3166:"GB-EDH" ] // Edinburgh, Scotland
    
     private Locations() { }
 
@@ -21,7 +18,7 @@ public class Locations {
 	    // XXX change these paths before running the demo
         File sshPrivateKey = new File("/Users/adk/Workspaces/Cloudsoft/brooklyn/example/src/main/resources/jclouds/id_rsa.private")
         File sshPublicKey = new File("/Users/adk/Workspaces/Cloudsoft/brooklyn/example/src/main/resources/jclouds/id_rsa.pub")
-        
+
         AWSCredentialsFromEnv creds = new AWSCredentialsFromEnv();
         return new AwsLocationFactory([
                 identity : creds.getAWSAccessKeyId(),
