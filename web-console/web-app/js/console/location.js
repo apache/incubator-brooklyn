@@ -80,7 +80,8 @@ Brooklyn.location = (function() {
                 locationNumber = locationNumber + 1;
                 map.setCenter(loc);
             } else {
-                alert("Geocode was not successful for the following reason: " + status);
+                $(Brooklyn.eventBus).trigger('update_failed', "Got data from server but could not geocode an entity: "
+                                             + status);
             }
         });}
         else if(lat!=null&&lon!=null){
