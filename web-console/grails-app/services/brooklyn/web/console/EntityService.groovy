@@ -1,7 +1,6 @@
 package brooklyn.web.console
 
 import brooklyn.entity.Entity
-import brooklyn.management.Task
 import brooklyn.web.console.entity.SensorSummary
 import brooklyn.event.Sensor
 import brooklyn.entity.Effector
@@ -87,13 +86,7 @@ class EntityService {
     }
 
     public Collection<Entity> getChildren(Entity parent) {
-        Set<Entity> result = []
-
-        if (parent.properties.containsKey("ownedChildren")) {
-            parent.ownedChildren.each { result << it }
-        }
-
-        result
+        return parent.ownedChildren
     }
 
     public List<Entity> getAncestorsOf(Entity child) {
