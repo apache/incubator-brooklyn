@@ -10,6 +10,7 @@ import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.basic.BasicParameterType
 import brooklyn.entity.webapp.tomcat.TomcatServer
+import brooklyn.location.basic.GeneralPurposeLocation
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.management.ExecutionManager
 import brooklyn.management.ManagementContext
@@ -110,7 +111,11 @@ class ManagementContextService {
 
                 this.displayName = displayName
                 this.id = "leaf-" + ManagementContextService.ID_GENERATOR.incrementAndGet()
-                this.locations = ["Fairbanks, Alaska", "Dubai"]
+                //this.locations = ["Fairbanks, Alaska", "Dubai"]
+                this.locations = [
+                                    new GeneralPurposeLocation([name:"Tokyo, Japan",displayName:"Tokyo, Japan",description:"big place",latitude:10,longitude:10]),
+                                    new GeneralPurposeLocation([name:"NYC, USA",displayName:"NYC, USA",description:"big place",latitude:10,longitude:10])
+                                    ] //"Fairbanks,Alaska","Dubai"
 
                 TestEffector startDB = new TestEffector("Start DB", "This will start the database",
                         new ArrayList<ParameterType<?>>())
@@ -145,7 +150,7 @@ class ManagementContextService {
                 super([:], owner)
                 this.displayName = displayName
                 this.id = "leaf-" + ManagementContextService.ID_GENERATOR.incrementAndGet()
-                this.locations = ["Kuala Lumpur"]
+                this.locations = [new GeneralPurposeLocation([name:"Edinburgh, UK",displayName:"Edinburgh, UK",description:"big place",latitude:10,longitude:10])]
                 // Stealing the sensors from TomcatNode
                 this.sensors.putAll(new TomcatServer().sensors)
 

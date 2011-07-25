@@ -6,12 +6,15 @@ Brooklyn.summary = (function() {
         var name_html = '<p><span class="label">Name:</span> ' + json.displayName + "</p>";
         var locations_html = '<h4>Locations</h4>';
         if (json.locations.length > 0) {
-            locations_html += '<ul id="#summary-locations">\n<li>';
-            locations_html += json.locations.join("</li>\n<li>");
+            locations_html += '<ul id="#summary-locations">\n';
+            for (l in json.locations){
+                locations_html += "<li>"+json.locations[l].name+"</li>\n";
+            }
             locations_html += "</ul>";
         } else {
             locations_html += "None set";
         }
+        //alert(locations_html)
         $("#summary-basic-info").html(name_html + locations_html);
 
         var status_html = '<span class="label">Status: </span>TODO';

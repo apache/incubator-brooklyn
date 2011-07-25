@@ -124,8 +124,8 @@ Brooklyn.location = (function() {
         appLocations = new Array();
         if (locations.length > 0) {
             for(i in locations){
-                var location = locations[i];
-                var jsonLoc = {name: locations[i], resources: '500'};
+                var location = locations[i].displayName;
+                var jsonLoc = {name: location, resources: '500'};
                 appLocations.push(jsonLoc);
             }
             updateLocations();

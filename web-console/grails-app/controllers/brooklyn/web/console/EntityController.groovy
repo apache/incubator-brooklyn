@@ -5,6 +5,9 @@ import grails.plugins.springsecurity.Secured
 
 import brooklyn.entity.Entity
 import brooklyn.web.console.entity.EntitySummary
+import brooklyn.web.console.entity.LocationSummary
+import brooklyn.location.Location
+import brooklyn.location.basic.AbstractLocation
 
 import brooklyn.web.console.entity.JsTreeNode
 import brooklyn.management.Task
@@ -92,7 +95,13 @@ class EntityController {
             render(status: 500, text: '{message: "Two entities with that ID were found. This should not happen."}')
         } else {
             Entity e = es.toArray()[0]
-            render(e.getLocations() as JSON)
+            List<AbstractLocation> entityLocations = e.getLocations()
+            def locationSummaries = []
+            for (loc in entityLocations){
+                //for each loc create location summary and push to array
+                locationSummaries += toLocationSummary(loc)
+            }
+            render(locationSummaries as JSON)
         }
     }
 
@@ -146,6 +155,10 @@ class EntityController {
 
     private EntitySummary toEntitySummary(Entity entity) {
         return new EntitySummary(entity);
+    }
+
+    private LocationSummary toLocationSummary(Location location){
+        return new LocationSummary(location);
     }
 
     private Set<EntitySummary> toEntitySummaries(Collection<Entity> entities) {
