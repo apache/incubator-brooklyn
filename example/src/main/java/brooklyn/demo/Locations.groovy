@@ -12,8 +12,8 @@ import brooklyn.location.basic.aws.AwsLocation
 import brooklyn.location.basic.aws.AwsLocationFactory
 
 public class Locations {
-    private static final Map MONTEREY_EAST_COORDS = [ 'latitude' : 41.10361, 'longitude' : -73.79583 ] // Hawthorne, NY
-    private static final Map EDINBURGH_COORDS = [ 'latitude' : 55.94944, 'longitude' : -3.16028 ] // Edinburgh, Scotland
+    private static final Map MONTEREY_EAST_COORDS = [ 'latitude' : 41.10361d, 'longitude' : -73.79583d ] // Hawthorne, NY
+    private static final Map EDINBURGH_COORDS = [ 'latitude' : 55.94944d, 'longitude' : -3.16028d ] // Edinburgh, Scotland
    
     private Locations() { }
 
