@@ -5,10 +5,12 @@ import org.testng.annotations.Test
 import static org.testng.Assert.assertNotNull
 
 class WebAppRunnerTest {
-
-    @Test
+    /**
+     * This test requires the web-console.war to work.
+     */
+    @Test(enabled = false)
     public void ping() {
-        WebAppRunner launcher = new WebAppRunner(new LocalManagementContext(), 8090,"/web-console.war");
+        WebAppRunner launcher = new WebAppRunner(new LocalManagementContext(), 8090, "/web-console.war");
         assertNotNull(launcher);
         
         launcher.start();
