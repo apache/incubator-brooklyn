@@ -29,7 +29,7 @@ Brooklyn.location = (function() {
       center: latlng,
       mapTypeId: google.maps.MapTypeId.ROADMAP
     };
-      map = new google.maps.Map(document.getElementById("map_canvas"),
+      map = new google.maps.Map(document.getElementById("circles-map"),
                                 myOptions);
   }
 
