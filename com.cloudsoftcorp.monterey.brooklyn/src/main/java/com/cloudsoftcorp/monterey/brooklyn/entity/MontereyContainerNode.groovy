@@ -212,6 +212,8 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
         } else {
             LOG.warning("No-op killing monterey network node; unsupported location type $locations, creationId=$creationId");
         }
+        
+        setOwner(null)
     }
     
     private void kill(SshMachineLocation host) {

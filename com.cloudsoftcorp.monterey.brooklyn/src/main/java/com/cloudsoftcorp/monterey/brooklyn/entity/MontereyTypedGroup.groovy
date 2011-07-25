@@ -2,18 +2,6 @@ package com.cloudsoftcorp.monterey.brooklyn.entity
 
 import brooklyn.entity.basic.DynamicGroup
 
-import java.util.Collection
-import java.util.logging.Logger
-
-import brooklyn.entity.Entity
-import brooklyn.entity.basic.DynamicGroup
-import brooklyn.location.Location
-
-import com.cloudsoftcorp.monterey.network.control.api.Dmn1NodeType
-import com.cloudsoftcorp.monterey.network.control.plane.GsonSerializer
-import com.cloudsoftcorp.util.Loggers
-import com.cloudsoftcorp.util.javalang.ClassLoadingContext
-import com.google.gson.Gson
 
 public class MontereyTypedGroup extends DynamicGroup {
 
@@ -23,18 +11,19 @@ public class MontereyTypedGroup extends DynamicGroup {
 
     final Dmn1NodeType nodeType;
     
+    protected final MontereyProvisioner montereyProvisioner;
     protected final Gson gson;
     protected final MontereyNetworkConnectionDetails connectionDetails;
     
-    static MontereyTypedGroup newSingleLocationInstance(MontereyNetworkConnectionDetails connectionDetails, Dmn1NodeType nodeType, final Location loc) {
-        return new MontereyTypedGroup(connectionDetails, nodeType, Collections.singleton(loc), { it.contains(loc) } );
+    static MontereyTypedGroup newSingleLocationInstance(MontereyNetworkConnectionDetails connectionDetails, MontereyProvisioner montereyProvisioner, Dmn1NodeType nodeType, final Location loc) {
+        return new MontereyTypedGroup(connectionDetails, montereyProvisioner, nodeType, Collections.singleton(loc), { it.contains(loc) } );
     }
     
-    static MontereyTypedGroup newAllLocationsInstance(MontereyNetworkConnectionDetails connectionDetails, Dmn1NodeType nodeType, Collection<Location> locs) {
-        return new MontereyTypedGroup(connectionDetails, nodeType, locs, { true } );
+    static MontereyTypedGroup newAllLocationsInstance(MontereyNetworkConnectionDetails connectionDetails, MontereyProvisioner montereyProvisioner, Dmn1NodeType nodeType, Collection<Location> locs) {
+        return new MontereyTypedGroup(connectionDetails, montereyProvisioner, nodeType, locs, { true } );
     }
     
-    MontereyTypedGroup(MontereyNetworkConnectionDetails connectionDetails, Dmn1NodeType nodeType, Collection<Location> locs, Closure locFilter) {
+    MontereyTypedGroup(MontereyNetworkConnectionDetails connectionDetails, MontereyProvisioner montereyProvisioner, Dmn1NodeType nodeType, Collection<Location> locs, Closure locFilter) {
         this.connectionDetails = connectionDetails;
         this.nodeType = nodeType;
         this.locations.addAll(locs);
@@ -59,10 +48,16 @@ public class MontereyTypedGroup extends DynamicGroup {
     }
     
     public void provisionNodes(int num) {
-        MontereyNetwork mn = getMontereyNetwork()
         for (i in 0..num) {
-            MontereyContainerNode node = mn.provisionNode(locations)
+            MontereyContainerNode node = montereyProvisioner.requestNode(locations)
             node.rollout(nodeType)
+        }
+    }
+    
+    public void resize(Integer desiredSize) {
+        int currentSize = getExpecteSize()
+        if (currentSize < desiredSize) {
+            
         }
     }
     
