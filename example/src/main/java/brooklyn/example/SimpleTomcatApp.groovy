@@ -1,14 +1,19 @@
 package brooklyn.example
 
+import java.util.concurrent.TimeUnit
+
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractService
-import brooklyn.entity.basic.JavaApp
+import brooklyn.entity.proxy.nginx.NginxController
 import brooklyn.entity.webapp.DynamicWebAppCluster
 import brooklyn.entity.webapp.JavaWebApp
 import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.location.Location
 import brooklyn.location.basic.FixedListMachineProvisioningLocation
+import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.policy.ResizerPolicy
+import brooklyn.util.internal.Repeater
 
 import com.google.common.base.Preconditions
 
@@ -32,10 +37,13 @@ public class SimpleTomcatApp extends AbstractApplication {
 
     public static void main(String[] argv) {
         def app = new SimpleTomcatApp()
-        // TODO:
-        // app.tc.policy << new ElasticityPolicy(app.tc, TomcatCluster.REQS_PER_SEC, low:100, high:250);
-        app.tc.initialSize = 3  //override initial size
+        
+        app.tc.initialSize = 1  //override initial size
 
+        ResizerPolicy p = new ResizerPolicy(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND)
+        p.setMinSize(1).setMaxSize(4).setMetricLowerBound(20).setMetricUpperBound(50)
+        app.tc.addPolicy p
+        
         Collection<InetAddress> hosts = [
             Inet4Address.getByAddress((byte[])[192, 168, 144, 241]),
             Inet4Address.getByAddress((byte[])[192, 168, 144, 242]),
@@ -48,53 +56,41 @@ public class SimpleTomcatApp extends AbstractApplication {
             new SshMachineLocation(address: it, userName: "cloudsoft")
         }
         Location location = new FixedListMachineProvisioningLocation<SshMachineLocation>(machines: machines, name: "London")
-
         app.tc.start([location])
 
+        def nginx = new NginxController([
+            "owner" : app,
+            "cluster" : app.tc,
+            "domain" : "localhost",
+            "port" : 8000,
+            "portNumberSensor" : TomcatServer.HTTP_PORT,
+        ])
+        nginx.start([ new LocalhostMachineProvisioningLocation(count:1) ])
+  
         Thread t = []
-        t.start {
-            while (!t.isInterrupted()) {
-                Thread.sleep 5000
-                app.getEntities().each {
-                    if (it in TomcatServer) {
-                        println "${it.toString()}: ${it.getAttribute(JavaWebApp.REQUEST_COUNT)} requests (" +
-                                "${it.getAttribute(JavaWebApp.REQUESTS_PER_SECOND)} per second), " +
-                                "${it.getAttribute(JavaWebApp.ERROR_COUNT)} errors"
-                    }
-                }
-                println "Cluster stats: ${app.tc.getAttribute(DynamicWebAppCluster.TOTAL_REQUEST_COUNT)} requests, " +
-                        "average ${app.tc.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)} per entity"
-            }
-        }
-
-        Thread activity = []
-        activity.start {
-            def rand = new Random()
-            def sleep = 3000
-            while (!activity.isInterrupted()) {
-                def ents = app.getEntities().findAll { it instanceof TomcatServer }
-                ents.each {
-                    def requests = rand.nextInt(5) + 1
-                    if (it.getAttribute(AbstractService.SERVICE_UP)) {
-                        URL url = [
-                            "http://${it.getAttribute(JavaApp.JMX_HOST)}:${it.getAttribute(JavaWebApp.HTTP_PORT)}"
-                        ]
-                        println "Making $requests requests to $url"
-                        requests.times {
-                            try {
-                                URLConnection connection = url.openConnection()
-                                connection.connect()
-                                connection.getContentLength()
-                            } catch (Exception e) {
-                                // Suppress exceptions caused by shutdown
+        t.start({
+            boolean activityShutdown = false;
+            new Repeater("Activity logger")
+                .repeat({
+                    app.tc.members.each {
+                        if (it in TomcatServer) {
+                            if (it.getAttribute(AbstractService.SERVICE_UP)) {
+                                println "${it.toString()}: ${it.getAttribute(JavaWebApp.REQUEST_COUNT)} requests (" +
+                                        "${it.getAttribute(JavaWebApp.REQUESTS_PER_SECOND)} per second), " +
+                                        "${it.getAttribute(JavaWebApp.ERROR_COUNT)} errors"
+                            } else {
+                                println "${it.toString()} status: ${it.getAttribute(AbstractService.SERVICE_STATUS)}, " +
+                                        "node up: ${it.getAttribute(AbstractService.SERVICE_UP)}"
                             }
                         }
                     }
-                }
-                Thread.sleep sleep
-            }
-        }
-
+                    println "Cluster stats: ${app.tc.getAttribute(DynamicWebAppCluster.TOTAL_REQUEST_COUNT)} requests, " +
+                            "average ${app.tc.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)} per entity"
+                })
+                .every(5, TimeUnit.SECONDS)
+                .until({ activityShutdown })
+                .run()
+        })
 //        println "launching a groovy shell, with 'app' set"
 //        IO io = new IO()
 //        def code = 0;
@@ -133,11 +129,12 @@ public class SimpleTomcatApp extends AbstractApplication {
         println "waiting for readln then will kill the tomcats"
         System.in.read()
         t.interrupt()
-        activity.interrupt()
+//        activityShutdown = true
 
-        //TODO find a better way to shutdown a cluster?
         println "shutting down..."
-        app.entities.each { if (it in TomcatServer) it.stop() }
+        app.tc.stop()
+        nginx.stop()
+
         //TODO there is still an executor service running, not doing anything but not marked as a daemon,
         //so doesn't quit immediately (i think it will time out but haven't verified)
         //app shutdown should exist and handle that???

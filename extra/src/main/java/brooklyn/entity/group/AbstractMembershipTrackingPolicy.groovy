@@ -6,10 +6,14 @@ import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.policy.basic.AbstractPolicy
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 import com.google.common.base.Preconditions
 
 
 abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractMembershipTrackingPolicy.class)
     private AbstractGroup group;
     
     

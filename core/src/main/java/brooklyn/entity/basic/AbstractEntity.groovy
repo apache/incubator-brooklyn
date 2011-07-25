@@ -19,6 +19,7 @@ import brooklyn.entity.Group
 import brooklyn.event.AttributeSensor
 import brooklyn.event.SensorEventListener
 import brooklyn.event.Sensor
+import brooklyn.event.SensorEvent
 import brooklyn.event.basic.AttributeMap
 import brooklyn.location.Location
 import brooklyn.management.ExecutionContext
@@ -355,7 +356,7 @@ abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
 
     @Override
     public <T> T setAttribute(AttributeSensor<T> attribute, T val) {
-        LOG.info "setting attribute {} to {} on {}", attribute.name, val, this
+        LOG.trace "setting attribute {} to {} on {}", attribute.name, val, this
         attributesInternal.update(attribute, val);
     }
 
@@ -473,7 +474,11 @@ abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
     public <T> void emit(Sensor<T> sensor, T val) {
         if (sensor instanceof AttributeSensor) {
             LOG.warn("Strongly discouraged use of emit with attribute sensor $sensor $val; use setAttribute instead!", 
-                new Throwable("location of discouraged $sensor emit"))
+                new Throwable("location of discouraged attribute $sensor emit"))
+        }
+        if (val instanceof SensorEvent) {
+            LOG.warn("Strongly discouraged use of emit with sensor event as value $sensor $val; value should be unpacked!",
+                new Throwable("location of discouraged event $sensor emit"))
         }
         emitInternal(sensor, val);
     }

@@ -2,6 +2,9 @@ package brooklyn.event.basic
 
 import java.util.List
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.entity.ConfigKey
 import brooklyn.entity.Entity
 import brooklyn.event.AttributeSensor
@@ -18,6 +21,7 @@ import com.google.common.collect.Lists
  */
 public class BasicSensor<T> implements Sensor<T> {
     private static final long serialVersionUID = -3762018534086101323L;
+    private static final Logger LOG = LoggerFactory.getLogger(BasicSensor.class)
     
     private static final Splitter dots = Splitter.on('.');
 
