@@ -9,8 +9,16 @@ import brooklyn.location.basic.aws.AWSCredentialsFromEnv
 import brooklyn.location.basic.aws.AwsLocationFactory
 
 public class Locations {
-    private static final Map MONTEREY_EAST_COORDS = [ 'latitude' : 41.10361d, 'longitude' : -73.79583d, iso3166:"US-NY" ] // Hawthorne, NY
-    private static final Map EDINBURGH_COORDS = [ 'latitude' : 55.94944d, 'longitude' : -3.16028d, iso3166:"GB-EDH" ] // Edinburgh, Scotland
+    private static final Map MONTEREY_EAST_COORDS = [ 
+            displayName:"Hawthorne, NY", 
+            streetAddress:"Hawthorne, NY",
+            'latitude' : 41.10361d, 'longitude' : -73.79583d, 
+            iso3166:"US-NY" ] // Hawthorne, NY
+    private static final Map EDINBURGH_COORDS = [ 
+            displayName:"HQ, Edinburgh", 
+            streetAddress:"Appleton Tower, Edinburgh",
+            'latitude' : 55.94944d, 'longitude' : -3.16028d, 
+            iso3166:"GB-EDH" ] // Edinburgh, Scotland
    
     private Locations() { }
 
