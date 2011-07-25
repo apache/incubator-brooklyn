@@ -80,11 +80,15 @@ public class DynamicGroup extends AbstractGroup {
         toRemove.addAll(super.getMembers());
         ((AbstractManagementContext) getManagementContext()).getEntities().each {
             if (acceptsEntity(it)) {
+                log.info("$this rescan detected new item $it")
                 addMember(it)
                 toRemove.remove(it)
             }
         }
-        toRemove.each { removeMember(it) }
+        toRemove.each { 
+            log.info("$this rescan detected vanished item $it")
+            removeMember(it) 
+        }
         log.info("$this rescan complete, members now ${getMembers()}")
     }
     
