@@ -31,6 +31,7 @@ public class SpringTravel extends AbstractApplication {
 
     final DynamicFabric fabric
     final DynamicGroup nginxEntities
+    final GeoscalingDnsService geoDns
     
     SpringTravel(Map props=[:]) {
         super(props)
@@ -60,7 +61,7 @@ public class SpringTravel extends AbstractApplication {
 
         nginxEntities = new DynamicGroup([:], this, { Entity e -> (e instanceof NginxController) })
 
-        GeoscalingDnsService geoDns = new GeoscalingDnsService(
+        geoDns = new GeoscalingDnsService(
             config: [
                 (GeoscalingDnsService.GEOSCALING_USERNAME): 'cloudsoft',
                 (GeoscalingDnsService.GEOSCALING_PASSWORD): 'cl0uds0ft',
@@ -69,7 +70,9 @@ public class SpringTravel extends AbstractApplication {
             ],
             this)
 
+        //TODO: remove this call to rescanEntities() when the group updates dynamically and updates subscribers
         nginxEntities.rescanEntities()
         geoDns.setGroup(nginxEntities)
     }
+    
 }
