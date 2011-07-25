@@ -1,6 +1,6 @@
 package brooklyn.location.basic
 
-import static org.testng.Assert.*
+import static org.testng.AssertJUnit.*
 import org.testng.annotations.Test
 
 public class AbstractLocationTest {
