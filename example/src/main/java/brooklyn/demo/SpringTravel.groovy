@@ -41,7 +41,7 @@ public class SpringTravel extends AbstractApplication {
 	            name : 'fabricName',
 	            displayName : 'Fabric',
 	            newEntity : { Map properties -> 
-                    WebCluster cluster = new WebCluster(properties)
+                    WebCluster cluster = new WebCluster(properties, fabric)
                     
                     ResizerPolicy policy = new ResizerPolicy(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND)
                     policy.setMinSize(1)
