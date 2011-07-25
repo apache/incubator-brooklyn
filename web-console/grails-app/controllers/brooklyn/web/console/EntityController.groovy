@@ -10,10 +10,8 @@ import brooklyn.location.Location
 import brooklyn.location.basic.AbstractLocation
 
 import brooklyn.web.console.entity.JsTreeNode
-import brooklyn.management.Task
-import brooklyn.web.console.entity.SensorSummary
-import brooklyn.web.console.entity.TaskSummary
 import brooklyn.web.console.EntityService.NoSuchEntity
+import brooklyn.entity.Effector
 
 @Secured(['ROLE_ADMIN'])
 class EntityController {
@@ -29,86 +27,69 @@ class EntityController {
 
     def info = {
         String id = params.id
-        if (!id) {
-            render(status: 400, text: '{message: "You must provide an entity id"}')
-            return
-        }
-
-        Set <Entity> es = entityService.getEntitiesMatchingCriteria(null, id, null)
-        if (es.size() == 0) {
-            render(status: 404, text: '{message: "Cannot retrieve info: Entity with specified id '+ params.id + ' does not exist"}')
-        }
-        else if (es.size() > 1) {
-            render(status: 500, text: '{message: "Two entities with that ID were found. This should not happen."}')
+        if (id) {
+            Entity entity = entityService.getEntity(id)
+            if (entity != null) {
+                render(toEntitySummary(entity) as JSON)
+            } else {
+                render(status: 404, text: '{message: "Cannot retrieve info: Entity with specified id '+ params.id + ' does not exist"}')
+            }
         } else {
-            Entity e = es.toArray()[0]
-            render(toEntitySummary(e) as JSON)
+            render(status: 400, text: '{message: "You must provide an entity id"}')
         }
     }
 
     def search = {
-        render(toEntitySummaries(entityService.getEntitiesMatchingCriteria(params.name, params.id, params.applicationId))
-               as JSON)
+        render(toEntitySummaries(entityService.getEntitiesMatchingCriteria(params.name, params.id, params.applicationId)) as JSON)
     }
 
     def breadcrumbs = {
         String id = params.id
-        if (!id) {
-            render(status: 400, text: '{message: "You must provide an entity id"}')
-            return
-        }
-
-        Set <Entity> es = entityService.getEntitiesMatchingCriteria(null, id, null)
-        if (es.size() == 0) {
-            render(status: 404, text: '{message: "Cannot retrieve info: Entity with specified id '+ params.id + ' does not exist"}')
-        }
-        else if (es.size() > 1) {
-            render(status: 500, text: '{message: "Two entities with that ID were found. This should not happen."}')
-        } else {
-        //could just do a recursive loop in here until ownerId = null
-            Entity e = es.toArray()[0]
-            List<Entity> parents = entityService.getAncestorsOf(e);
-            parents.reverse()
-            String childName = e.displayName
-            def result = []
-            result += childName
-            for(p in parents){
-                Entity parent = p
-                result += parent.displayName
+        if (id) {
+            Entity entity = entityService.getEntity(id)
+            if (entity != null) {
+                List<Entity> parents = entityService.getAncestorsOf(entity);
+                parents.reverse()
+                String childName = entity.displayName
+                def result = []
+                result += childName
+                for(p in parents){
+                    Entity parent = p
+                    result += parent.displayName
+                }
+                render(result as JSON)
+            } else {
+                render(status: 404, text: '{message: "Cannot retrieve info: Entity with specified id '+ params.id + ' does not exist"}')
             }
-            render(result as JSON)
+        } else {
+            render(status: 400, text: '{message: "You must provide an entity id"}')
         }
     }
 
     def locations = {
         String id = params.id
-        if (!id) {
-            render(status: 400, text: '{message: "You must provide an entity id"}')
-            return
-        }
-
-        Set <Entity> es = entityService.getEntitiesMatchingCriteria(null, id, null)
-        if (es.size() == 0) {
-            render(status: 404, text: '{message: "Cannot retrieve info: Entity with specified id '+ params.id + ' does not exist"}')
-        }
-        else if (es.size() > 1) {
-            render(status: 500, text: '{message: "Two entities with that ID were found. This should not happen."}')
-        } else {
-            Entity e = es.toArray()[0]
-            List<AbstractLocation> entityLocations = e.getLocations()
-            def locationSummaries = []
-            for (loc in entityLocations){
-                //for each loc create location summary and push to array
-                locationSummaries += toLocationSummary(loc)
+        if (id) {
+            Entity entity = entityService.getEntity(id)
+            if (entity != null) {
+                List<AbstractLocation> entityLocations = entity.getLocations()
+                def locationSummaries = []
+                for (loc in entityLocations){
+                    //for each loc create location summary and push to array
+                    locationSummaries += toLocationSummary(loc)
+                }
+                render(locationSummaries as JSON)
             }
-            render(locationSummaries as JSON)
+             else {
+                render(status: 404, text: '{message: "Cannot retrieve info: Entity with specified id '+ params.id + ' does not exist"}')
+            }
+        } else {
+            render(status: 400, text: '{message: "You must provide an entity id"}')
         }
     }
 
     def effectors = {
         if (!params.id) {
             render(status: 400, text: '{message: "You must provide an entity id"}')
-            return
         }
         render entityService.getEffectorsOfEntity(params.id) as JSON
     }
@@ -116,11 +97,10 @@ class EntityController {
     def sensors = {
         if (!params.id) {
             render(status: 400, text: '{message: "You must provide an entity id"}')
-            return
         }
 
         try {
-            render entityService.getSensorsOfEntity(params.id) as JSON
+            render entityService.getSensorData(params.id) as JSON
         } catch (NoSuchEntity e) {
             render(status: 404, text: '{message: "Entity with specified id does not exist"}')
         }
@@ -162,34 +142,11 @@ class EntityController {
         return new EntitySummary(entity);
     }
 
-    private LocationSummary toLocationSummary(Location location){
-        return new LocationSummary(location);
-    }
-
     private Set<EntitySummary> toEntitySummaries(Collection<Entity> entities) {
         entities.collect { toEntitySummary(it) }
     }
-
-
-    private TaskSummary toTaskSummary(Task task) {
-        return new TaskSummary(task)
-    }
-
-    private Set<EntitySummary> toTaskSummaries(Collection<Task> tasks) {
-        tasks.collect { toTaskSummary(it) }
-    }
-
-    private Entity getEntityMatchingId(String id) {
-        Set<Entity> entities = entityService.getEntitiesMatchingCriteria(null, id, null)
-
-        if (!id) {
-            return null;
-        }
-
-        if (entities.size() == 0) {
-            return null;
-        }
-
-        return entities.toArray()[0]
+    
+    private LocationSummary toLocationSummary(Location location){
+        return new LocationSummary(location);
     }
 }
