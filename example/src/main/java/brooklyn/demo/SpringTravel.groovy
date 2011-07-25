@@ -9,6 +9,7 @@ import brooklyn.entity.basic.DynamicGroup
 import brooklyn.entity.dns.geoscaling.GeoscalingDnsService
 import brooklyn.entity.group.DynamicFabric
 import brooklyn.entity.proxy.nginx.NginxController
+import brooklyn.entity.webapp.DynamicWebAppCluster
 import brooklyn.entity.webapp.JavaWebApp
 import brooklyn.policy.ResizerPolicy
 
@@ -43,7 +44,7 @@ public class SpringTravel extends AbstractApplication {
 	            newEntity : { Map properties -> 
                     WebCluster cluster = new WebCluster(properties)
                     
-                    ResizerPolicy policy = new ResizerPolicy(JavaWebApp.AVG_REQUESTS_PER_SECOND)
+                    ResizerPolicy policy = new ResizerPolicy(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND)
                     policy.setMinSize(1)
                     policy.setMaxSize(5)
                     policy.setMetricLowerBound(10)
