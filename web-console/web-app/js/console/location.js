@@ -43,87 +43,88 @@ Brooklyn.location = (function() {
         var name = location.name;
         var iso = location.iso;
         var description = location.description;
-        if(address!=null){
-        new google.maps.Geocoder().geocode( { 'address': address}, function(results, status) {
-            if (status === google.maps.GeocoderStatus.OK) { 
-                loc = results[0].geometry.location;
-                appLocations[i].location = loc;
-                var contentString = '<div id="content" style="height:80px">'+
-                    '<h1>'+address+'</h1>'+
-                    '<table border="1">'+
-                    '<tr>'+
-                    '<td>Address</td>'+
-                    '<td>Active</td>'+
-                    '<td>Resources</td>'+
-                    '</tr>'+
-                    '<tr>'+
-                    '<td>'+address+'</td>'+
-                    '<td>True</td>'+
-                    '<td>'+'resources'+'</td>'+
-                    '</tr>'+
-                    '</table>'+
-                    '</div>';
-                var marker = new google.maps.Marker({
-                    map: map,
-                    position: loc ,
-                    title: address
-                });
-                var infowindow = new google.maps.InfoWindow({
-                    content: contentString
-                });
-                google.maps.event.addListener(marker, 'click' , function(){
-                    infowindow.open(map , marker);
-                });
-                appLocations[i].marker = marker;
-                appLocations[i].infowindow = infowindow;
-                appLocations[i].locationNumber = i;
-                locationNumber = locationNumber + 1;
-                map.setCenter(loc);
-            } else {
-                $(Brooklyn.eventBus).trigger('update_failed', "Got data from server but could not geocode an entity: "
-                                             + status);
-            }
-        });}
-        else if(lat!=null&&lon!=null){
-                loc = new google.maps.LatLng(lat,lon);
-                appLocations[i].location = loc;
-                var contentString = '<div id="content" style="height:80px">'+
-                    '<h1>'+'address'+'</h1>'+
-                    '<table border="1">'+
-                    '<tr>'+
-                    '<td>Address</td>'+
-                    '<td>Active</td>'+
-                    '<td>Resources</td>'+
-                    '</tr>'+
-                    '<tr>'+
-                    '<td>'+'address'+'</td>'+
-                    '<td>True</td>'+
-                    '<td>'+'resources'+'</td>'+
-                    '</tr>'+
-                    '</table>'+
-                    '</div>';
-                var marker = new google.maps.Marker({
-                    map: map,
-                    position: loc ,
-                    title: "Title"
-                });
-                var infowindow = new google.maps.InfoWindow({
-                    content: contentString
-                });
-                google.maps.event.addListener(marker, 'click' , function(){
-                    infowindow.open(map , marker);
-                });
-                appLocations[i].marker = marker;
-                appLocations[i].infowindow = infowindow;
-                appLocations[i].locationNumber = i;
-                locationNumber = locationNumber + 1;
-                map.setCenter(loc);
-        }
-        else if (iso != null) {
+
+        if (address != null) {
+            new google.maps.Geocoder().geocode( { 'address': address}, function(results, status) {
+                if (status === google.maps.GeocoderStatus.OK) { 
+                    loc = results[0].geometry.location;
+                    appLocations[i].location = loc;
+                    var contentString = '<div id="content" style="height:80px">'+
+                        '<h1>'+address+'</h1>'+
+                        '<table border="1">'+
+                        '<tr>'+
+                        '<td>Address</td>'+
+                        '<td>Active</td>'+
+                        '<td>Resources</td>'+
+                        '</tr>'+
+                        '<tr>'+
+                        '<td>'+address+'</td>'+
+                        '<td>True</td>'+
+                        '<td>'+'resources'+'</td>'+
+                        '</tr>'+
+                        '</table>'+
+                        '</div>';
+                    var marker = new google.maps.Marker({
+                        map: map,
+                        position: loc,
+                        title: address
+                    });
+                    var infowindow = new google.maps.InfoWindow({
+                        content: contentString
+                    });
+                    google.maps.event.addListener(marker, 'click' , function(){
+                        infowindow.open(map, marker);
+                    });
+                    appLocations[i].marker = marker;
+                    appLocations[i].infowindow = infowindow;
+                    appLocations[i].locationNumber = i;
+                    locationNumber = locationNumber + 1;
+                    map.setCenter(loc);
+                } else {
+                    $(Brooklyn.eventBus).trigger('update_failed', "Got data from server but could not geocode an entity: "
+                                                 + status);
+                }
+            });
+        } else if (lat != null && lon != null) {
+            loc = new google.maps.LatLng(lat, lon);
+            appLocations[i].location = loc;
+            var contentString = '<div id="content" style="height:80px">'+
+                '<h1>'+'address'+'</h1>'+
+                '<table border="1">'+
+                '<tr>'+
+                '<td>Address</td>'+
+                '<td>Active</td>'+
+                '<td>Resources</td>'+
+                '</tr>'+
+                '<tr>'+
+                '<td>'+'address'+'</td>'+
+                '<td>True</td>'+
+                '<td>'+'resources'+'</td>'+
+                '</tr>'+
+                '</table>'+
+                '</div>';
+            var marker = new google.maps.Marker({
+                map: map,
+                position: loc ,
+                title: "Title"
+            });
+            var infowindow = new google.maps.InfoWindow({
+                content: contentString
+            });
+            google.maps.event.addListener(marker, 'click' , function(){
+                infowindow.open(map , marker);
+            });
+            appLocations[i].marker = marker;
+            appLocations[i].infowindow = infowindow;
+            appLocations[i].locationNumber = i;
+            locationNumber = locationNumber + 1;
+            map.setCenter(loc);
+        } else if (iso != null) {
             // use ISO code TBI
             alert("use of ISO Code TBI");
         } else {
-            $(Brooklyn.eventBus).trigger('update_failed', "No geolocation information available from google for " + location.name);
+            $(Brooklyn.eventBus).trigger('update_failed',
+                                         "No geolocation information available from google for " + location.name);
         }
     }
 
