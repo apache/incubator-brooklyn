@@ -376,7 +376,7 @@ abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
             v = v.get()
         }
         
-        v = v!=null ? v : inheritedConfig.get(key)
+        v = v!=null ? v : inheritedConfig.get(key) ?: key.defaultValue
     }
 
     @Override
