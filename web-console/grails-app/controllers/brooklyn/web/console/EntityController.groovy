@@ -118,7 +118,12 @@ class EntityController {
             render(status: 400, text: '{message: "You must provide an entity id"}')
             return
         }
-        render entityService.getSensorData(params.id) as JSON
+
+        try {
+            render entityService.getSensorsOfEntity(params.id) as JSON
+        } catch (NoSuchEntity e) {
+            render(status: 404, text: '{message: "Entity with specified id does not exist"}')
+        }
     }
 
     def activity = {
