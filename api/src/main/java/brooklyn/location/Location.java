@@ -45,4 +45,7 @@ public interface Location extends Serializable {
      */
 //    String getCountryCode();
 
+    boolean hasProperty(String key);
+    Object getProperty(String key);
+    Object findProperty(String key);
 }
