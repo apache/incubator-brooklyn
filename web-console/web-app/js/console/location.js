@@ -36,7 +36,7 @@ Brooklyn.location = (function() {
         appLocations[locationNumber].infowindow.open(map , appLocations[locationNumber].marker);
     }
 
-    function addLocationToMap(location , i){
+    function addLocationToMap(location, i){
         var address = location.add;
         var lat = location.lat;
         var lon = location.lon;
@@ -177,7 +177,14 @@ Brooklyn.location = (function() {
                 var lon = locations[i].longitude;
                 var add = locations[i].streetAddress;
                 var iso = locations[i].iso;
-                var jsonLoc = {name: name, displayname: displayname, description: description, lat: lat, lon: lon, add: add, iso: iso};
+                var jsonLoc = {name: name,
+                               displayname: displayname,
+                               description: description,
+                               lat: lat,
+                               lon: lon,
+                               add: add,
+                               iso: iso};
+
                 appLocations.push(jsonLoc);
             }
             updateLocations();
