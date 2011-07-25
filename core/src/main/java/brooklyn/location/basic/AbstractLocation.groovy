@@ -30,7 +30,17 @@ public abstract class AbstractLocation implements Location {
      * <li>name - a name for the location
      * <li>parentLocation - the parent {@link Location}
      * </ul>
-     *
+     * 
+     * Other common properties (retrieved via get/findLocationProperty) include:
+     * <ul>
+     * <li>latitude
+     * <li>longitude
+     * <li>displayName
+     * <li>iso3166 - list of iso3166-2 code strings
+     * <li>timeZone
+     * <li>abbreviatedName
+     * </ul>
+     * 
      * @param properties
      */
     public AbstractLocation(Map properties = [:]) {
