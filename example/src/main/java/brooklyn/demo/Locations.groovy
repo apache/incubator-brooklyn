@@ -19,8 +19,8 @@ public class Locations {
 
     public static AwsLocationFactory newAwsLocationFactory() {
 	    // XXX change these paths before running the demo
-        File sshPrivateKey = new File("/Users/adk/Workspaces/Cloudsoft/brooklyn/example/src/main/resources/jclouds/id_rsa.private")
-        File sshPublicKey = new File("/Users/adk/Workspaces/Cloudsoft/brooklyn/example/src/main/resources/jclouds/id_rsa.pub")
+        File sshPrivateKey = new File("src/main/resources/jclouds/id_rsa.private")
+        File sshPublicKey = new File("src/main/resources/jclouds/id_rsa.pub")
         
         AWSCredentialsFromEnv creds = new AWSCredentialsFromEnv();
         return new AwsLocationFactory([

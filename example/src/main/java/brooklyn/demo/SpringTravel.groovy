@@ -27,9 +27,8 @@ import com.google.common.base.Preconditions
  */
 public class SpringTravel extends AbstractApplication {
     // XXX change these paths before running the demo
-    private static final String SPRING_TRAVEL_PATH = "/Users/aled/eclipse-workspaces/overpaas/brooklyn/example/src/main/resources/swf-booking-mvc.war"
-//    private static final String SPRING_TRAVEL_PATH = "/Users/adk/Workspaces/Cloudsoft/brooklyn/example/src/main/resources/swf-booking-mvc.war"
-    
+    private static final String SPRING_TRAVEL_PATH = "src/main/resources/swf-booking-mvc.war"
+
     final DynamicFabric fabric
     final DynamicGroup nginxEntities
     
