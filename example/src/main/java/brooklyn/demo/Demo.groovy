@@ -24,7 +24,7 @@ public class Demo {
             "ap-southeast-1":"ami-21c2bd73",
             "ap-northeast-1":"ami-f0e842f1",
         ]
-    
+
     public static void main(String[] args) {
         // Obtain Brooklyn locations from our factory class
         List<Location> locations = []
@@ -47,7 +47,8 @@ public class Demo {
 //        MachineProvisioningLocation montereyEdinburghLocation = Locations.newMontereyEdinburghLocation()
         
         // Initialize the Spring Travel application entity
-        SpringTravel app = new SpringTravel(name:'brooklyn-wide-area-demo', displayName:'Brooklyn Wide-Area Spring Travel Demo Application')
+        SpringTravel app = new SpringTravel(name:'brooklyn-wide-area-demo',
+                                            displayName:'Brooklyn Wide-Area Spring Travel Demo Application')
 
         // Locate the management context
         AbstractManagementContext context = app.getManagementContext()

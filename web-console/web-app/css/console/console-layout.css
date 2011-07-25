@@ -282,3 +282,7 @@ textarea#logbox{
     width: 100%;
     margin-left: -3px;
 }
+
+#circles-map {
+    height: 100%;
+}
