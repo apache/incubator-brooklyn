@@ -119,11 +119,12 @@ Brooklyn.location = (function() {
                 locationNumber = locationNumber + 1;
                 map.setCenter(loc);
         }
-        else if(iso!=null){
+        else if (iso != null) {
             // use ISO code TBI
             alert("use of ISO Code TBI");
+        } else {
+            $(Brooklyn.eventBus).trigger('update_failed', "No geolocation information available from google for " + location.name);
         }
-        else{alert("No geolocation information available from server for "+location.name);}
     }
 
     function toggleLocation(e){
