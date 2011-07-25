@@ -31,6 +31,7 @@ public abstract class AbstractApplication extends AbstractGroup implements Start
     public void start(Collection<Location> locations) {
         //causes duplicate management problems, shouldn't hurt more than warnings; TODO review mgmt start/stop
 //      getManagementContext().manage(this)
+        this.locations.addAll(locations)
         
         List<Entity> startable = ownedChildren.findAll { it in Startable }
         if (startable && !startable.isEmpty() && locations && !locations.isEmpty()) {
