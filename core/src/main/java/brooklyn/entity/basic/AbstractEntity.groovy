@@ -165,7 +165,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     /**
      * Adds this as a member of the given group, registers with application if necessary
      */
-    public synchronized void setOwner(Entity entity) {
+    public void setOwner(Entity entity) {
         if (owner != null) {
             // If we are changing to the same owner...
             if (owner.get() == entity) return
@@ -193,7 +193,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         getApplication()
     }
 
-    public synchronized void clearOwner() {
+    public void clearOwner() {
         if (owner == null) return
         Entity oldOwner = owner.get()
         owner = null
@@ -231,17 +231,21 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
      * returns argument passed in, for convenience.
      */
     @Override
-    public  synchronized Entity addOwnedChild(Entity child) {
-        if (isAncestor(child)) throw new IllegalStateException("loop detected trying to add child $child to $this; it is already an ancestor")
-        child.setOwner(this)
-        ownedChildren.add(child)
+    public Entity addOwnedChild(Entity child) {
+        synchronized (ownedChildren) {
+	        if (isAncestor(child)) throw new IllegalStateException("loop detected trying to add child $child to $this; it is already an ancestor")
+	        child.setOwner(this)
+	        ownedChildren.add(child)
+        }
         child
     }
 
     @Override
-    public synchronized boolean removeOwnedChild(Entity child) {
-        ownedChildren.remove child
-        child.clearOwner()
+    public boolean removeOwnedChild(Entity child) {
+        synchronized (ownedChildren) {
+	        ownedChildren.remove child
+	        child.clearOwner()
+        }
     }
 
     /**
@@ -291,7 +295,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     }
 
     @Override
-    public ManagementContext getManagementContext() {
+    public synchronized ManagementContext getManagementContext() {
         ManagementContext m = managementContext
         if (m) return m
         managementContext = getApplication()?.getManagementContext()

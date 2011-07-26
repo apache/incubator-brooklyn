@@ -18,21 +18,25 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
      * Adds the given entity as a member of this group <em>and</em> this group as one of the groups of the child;
      * returns argument passed in, for convenience.
      */
-    public synchronized Entity addMember(Entity member) {
-        member.addGroup(this)
-        if (members.add(member)) {
-            emit(MEMBER_ADDED, member)
-            setAttribute(Changeable.GROUP_SIZE, currentSize)
-        }
-        member
+    public Entity addMember(Entity member) {
+        synchronized (members) {
+	        member.addGroup(this)
+	        if (members.add(member)) {
+	            emit(MEMBER_ADDED, member)
+	            setAttribute(Changeable.GROUP_SIZE, currentSize)
+	        }
+	        member
+	    }
     }
  
-    public synchronized boolean removeMember(Entity member) {
-        if (member != null && members.remove(member)) {
-            emit(MEMBER_REMOVED, member)
-            setAttribute(Changeable.GROUP_SIZE, currentSize)
+    public boolean removeMember(Entity member) {
+        synchronized (members) {
+            if (member != null && members.remove(member)) {
+	            emit(MEMBER_REMOVED, member)
+	            setAttribute(Changeable.GROUP_SIZE, currentSize)
+	        }
+	        member
         }
-        member
     }
  
     // Declared so can be overridden (the default auto-generated getter is final!)
@@ -43,5 +47,4 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
     public int getCurrentSize() {
         return getMembers().size()
     }
-
 }
