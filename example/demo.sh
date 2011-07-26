@@ -7,7 +7,7 @@
 VERSION=0.0.1
 ROOT=$(cd $(dirname $0) && pwd)
 JAVA_OPTS="-Xmx256m -Xmx1g -XX:MaxPermSize=256m"
-CLASSPATH=target/brooklyn-example-${VERSION}-SNAPSHOT-with-dependencies.jar
+export CLASSPATH=./target/brooklyn-example-${VERSION}-SNAPSHOT-with-dependencies.jar
 
 if [ $# -gt 0 ]; then
     LOCATIONS="$*"
