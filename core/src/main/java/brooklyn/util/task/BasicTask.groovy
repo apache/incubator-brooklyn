@@ -363,10 +363,12 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
                 }
             }
             if (verbosity>=2) {
-                if (ti.getStackTrace()!=null && ti.getStackTrace().length>0)
-                    rv += "\n" +"At: "+ti.getStackTrace()[0]
-                for (int ii=1; ii<ti.getStackTrace().length; ii++) {
-                    rv += "\n" +"    "+ti.getStackTrace()[ii]
+                List<StackTraceElement> st = ti.getStackTrace()
+                st = StackTraceSimplifier.cleanStackTrace(st)
+                if (st!=null && st.size()>0)
+                    rv += "\n" +"At: "+st[0]
+                for (int ii=1; ii<st.size(); ii++) {
+                    rv += "\n" +"    "+st[ii]
                 }
             }
         }
