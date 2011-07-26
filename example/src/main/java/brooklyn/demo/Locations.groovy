@@ -76,7 +76,8 @@ public class Locations {
         return new LocalhostMachineProvisioningLocation(
             count: numberOfInstances,
             latitude : LOCALHOST_COORDS['latitude'],
-            longitude : LOCALHOST_COORDS['longitude']
+            longitude : LOCALHOST_COORDS['longitude'],
+            displayName : 'Localhost'
         )
     }
 
@@ -95,7 +96,8 @@ public class Locations {
             new FixedListMachineProvisioningLocation<SshMachineLocation>(
                 machines : MONTEREY_EAST_PUBLIC_ADDRESSES,
                 latitude : MONTEREY_EAST_COORDS['latitude'],
-                longitude : MONTEREY_EAST_COORDS['longitude']
+                longitude : MONTEREY_EAST_COORDS['longitude'],
+                displayName : 'Monterey East'
             )
         return result
     }
@@ -115,7 +117,8 @@ public class Locations {
             new FixedListMachineProvisioningLocation<SshMachineLocation>(
                 machines : MONTEREY_EDINBURGH_MACHINES,
                 latitude : EDINBURGH_COORDS['latitude'],
-                longitude : EDINBURGH_COORDS['longitude']
+                longitude : EDINBURGH_COORDS['longitude'],
+                displayName : 'Monterey Edinburgh'
             )
         return result
     }

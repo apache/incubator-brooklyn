@@ -59,7 +59,7 @@ public class DynamicFabric extends AbstractEntity implements Startable {
         this.locations.addAll(locations)
         
         Collection<Task> tasks = locations.collect {
-            Entity e = addCluster()
+            Entity e = addCluster(it)
             // FIXME: this is a quick workaround to ensure that the location is available to any membership change
             //        listeners (notably AbstractDeoDnsService). A more robust mechanism is required; see ENGR-????
             //        for ideas and discussion.
@@ -97,10 +97,11 @@ public class DynamicFabric extends AbstractEntity implements Startable {
         throw new UnsupportedOperationException()
     }
 
-    protected Entity addCluster() {
+    protected Entity addCluster(Location location) {
         Map creation = [:]
         creation << properties
-        logger.trace "Adding a cluster to {} with properties {}", id, creation
+        creation.displayName = (properties.displayNamePrefix?:"") + (location.getLocationProperty("displayName")?:location.name?:"unnamed") + (properties.displayNameSuffix?:"")
+        logger.info "Adding a cluster to {} with properties {}", id, creation
 
         Entity entity = newEntity.call(creation)
         if (entity.owner == null) addOwnedChild(entity)

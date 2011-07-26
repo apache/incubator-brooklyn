@@ -40,6 +40,8 @@ public class SpringTravel extends AbstractApplication {
                 id : 'fabricID',
 	            name : 'fabricName',
 	            displayName : 'Fabric',
+                displayNamePrefix : '',
+                displayNameSuffix : ' web cluster',
 	            newEntity : { Map properties -> 
                     WebCluster cluster = new WebCluster(properties, fabric)
                     
