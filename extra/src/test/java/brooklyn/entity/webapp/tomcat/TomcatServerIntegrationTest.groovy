@@ -115,12 +115,12 @@ public class TomcatServerIntegrationTest {
         TomcatServer tc = new TomcatServer(owner:app, httpPort:DEFAULT_HTTP_PORT);
         tc.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         executeUntilSucceedsWithShutdown(tc, {
-                ConfidenceQualifiedNumber activityValue = tc.getAttribute(TomcatServer.AVG_REQUESTS_PER_SECOND)
+                Double activityValue = tc.getAttribute(TomcatServer.AVG_REQUESTS_PER_SECOND)
                 if (activityValue == null) 
                     return new BooleanWithMessage(false, "activity not set yet ($activityValue)")
 
-                assertEquals activityValue.class, ConfidenceQualifiedNumber
-                assertEquals activityValue.value, 0d, 1
+                assertTrue activityValue in Double
+                assertEquals activityValue, 0.0d
                 
 		        String url = tc.getAttribute(TomcatServer.ROOT_URL) + "foo"
 
@@ -138,7 +138,7 @@ public class TomcatServerIntegrationTest {
                 }
 
                 activityValue = tc.getAttribute(TomcatServer.AVG_REQUESTS_PER_SECOND)
-                assertEquals activityValue.value, 10.0d, 1
+                assertEquals activityValue, 10.0d, 0.5d
 
                 true
             }, timeout:10*SECONDS, useGroovyTruth:true)
