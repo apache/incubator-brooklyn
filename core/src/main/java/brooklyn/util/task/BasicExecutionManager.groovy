@@ -77,9 +77,9 @@ public class BasicExecutionManager implements ExecutionManager {
 
     public Set<Task> getAllTasks() { synchronized (knownTasks) { return new LinkedHashSet(knownTasks) }}
 
-    public Task<?> submit(Map flags=[:], Runnable r) { submit flags, new BasicTask(r) }
+    public Task<?> submit(Map flags=[:], Runnable r) { submit flags, new BasicTask(flags, r) }
 
-    public <T> Task<T> submit(Map flags=[:], Callable<T> c) { submit flags, new BasicTask<T>(c) }
+    public <T> Task<T> submit(Map flags=[:], Callable<T> c) { submit flags, new BasicTask<T>(flags, c) }
 
     public <T> Task<T> submit(Map flags=[:], Task<T> task) {
         synchronized (task) {

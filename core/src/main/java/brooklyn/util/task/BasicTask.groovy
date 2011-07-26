@@ -75,13 +75,12 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
 
     public BasicTask(Map flags=[:], Closure<T> job) {
         this.job = job
-        description = flags.remove("description")
-        displayName = flags.remove("displayName")
 
         if (flags.tag) tags.add flags.remove("tag")
         if (flags.tags) tags.addAll flags.remove("tags")
 
-        if (flags) throw new IllegalArgumentException("Unsupported flags passed to task: "+flags)
+        description = flags.remove("description") ?: ""
+        displayName = flags.remove("displayName") ?: tags.join("-")
     }
 
     public BasicTask(Map flags=[:], Runnable job)    { this(flags, closureFromRunnable(job) as Closure) }
