@@ -566,7 +566,7 @@ abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
         getManagementContext().invokeEffector(this, eff, parameters);
     }
 
-    public <T> Task<List<T>> invokeEffectorList(Collection<Entity> entities, Effector<T> effector, Map<String,?> parameters) {
+    public <T> Task<List<T>> invokeEffectorList(Collection<Entity> entities, Effector<T> effector, Map<String,?> parameters=[:]) {
         if (!entities || entities.isEmpty()) return null
         List<Task> tasks = entities.collect { it.invoke(effector, parameters) }
         ParallelTask invoke = new ParallelTask(tasks)
