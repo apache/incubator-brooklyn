@@ -37,7 +37,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         }
 
         if (name == null) {
-            name = (user ? "${user}@" : "") + address.toString
+            name = (user ? "${user}@" : "") + address.hostName
         }
     }
 
