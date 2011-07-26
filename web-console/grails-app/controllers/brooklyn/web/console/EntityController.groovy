@@ -35,7 +35,8 @@ class EntityController {
             if (entity != null) {
                 render(toEntitySummary(entity) as JSON)
             } else {
-                render(status: 404, text: '{message: "Cannot retrieve info: Entity with specified id '+ params.id + ' does not exist"}')
+                render(status: 404,
+                       text: '{message: "Cannot retrieve info: Entity with specified id '+ params.id + ' does not exist"}')
             }
         } else {
             render(status: 400, text: '{message: "You must provide an entity id"}')
@@ -43,7 +44,8 @@ class EntityController {
     }
 
     def search = {
-        render(toEntitySummaries(entityService.getEntitiesMatchingCriteria(params.name, params.id, params.applicationId)) as JSON)
+        render(toEntitySummaries(entityService.getEntitiesMatchingCriteria(params.name, params.id, params.applicationId))
+               as JSON)
     }
 
     def breadcrumbs = {
@@ -62,7 +64,8 @@ class EntityController {
                 }
                 render(result as JSON)
             } else {
-                render(status: 404, text: '{message: "Cannot retrieve info: Entity with specified id '+ params.id + ' does not exist"}')
+                render(status: 404,
+                       text: '{message: "Cannot retrieve info: Entity with specified id '+ params.id + ' does not exist"}')
             }
         } else {
             render(status: 400, text: '{message: "You must provide an entity id"}')
@@ -83,7 +86,8 @@ class EntityController {
                 render(locationSummaries as JSON)
             }
              else {
-                render(status: 404, text: '{message: "Cannot retrieve info: Entity with specified id '+ params.id + ' does not exist"}')
+                render(status: 404,
+                       text: '{message: "Cannot retrieve info: Entity with specified id '+ params.id + ' does not exist"}')
             }
         } else {
             render(status: 400, text: '{message: "You must provide an entity id"}')
