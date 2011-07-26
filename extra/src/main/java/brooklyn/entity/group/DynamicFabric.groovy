@@ -58,6 +58,10 @@ public class DynamicFabric extends AbstractEntity implements Startable {
         
         Collection<Task> tasks = locations.collect {
             Entity e = addCluster()
+            // FIXME: this is a quick workaround to ensure that the location is available to any membership change
+            //        listeners (notably AbstractDeoDnsService). A more robust mechanism is required; see ENGR-????
+            //        for ideas and discussion.
+            e.setLocations([it])
             Task task = e.invoke(Startable.START, [locations:[it]])
             return task
         }
