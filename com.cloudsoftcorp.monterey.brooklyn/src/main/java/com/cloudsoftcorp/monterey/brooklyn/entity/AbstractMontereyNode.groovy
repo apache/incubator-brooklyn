@@ -1,5 +1,7 @@
 package com.cloudsoftcorp.monterey.brooklyn.entity
 
+import java.util.logging.Logger
+
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.Location
@@ -8,6 +10,7 @@ import com.cloudsoftcorp.monterey.control.workrate.api.WorkrateReport
 import com.cloudsoftcorp.monterey.network.control.api.Dmn1NodeType
 import com.cloudsoftcorp.monterey.network.control.api.NodeSummary
 import com.cloudsoftcorp.monterey.node.api.NodeId
+import com.cloudsoftcorp.util.Loggers
 
 /**
  * Represents a network-node (e.g. LPP, MR, M, TP, or Spare). 
@@ -21,6 +24,8 @@ import com.cloudsoftcorp.monterey.node.api.NodeId
  */
 abstract class AbstractMontereyNode extends AbstractEntity {
 
+    private static final Logger LOG = Loggers.getLogger(AbstractMontereyNode.class);
+    
     public static final BasicAttributeSensor<Integer> WORKRATE_MSGS_PER_SEC = [ Double, "monterey.workrate.msgsPerSec", "Messages per sec" ]
     public static final BasicAttributeSensor<Dmn1NodeType> NODE_TYPE = [ Dmn1NodeType.class, "monterey.node-type", "Messages per sec" ]
     
@@ -33,6 +38,8 @@ abstract class AbstractMontereyNode extends AbstractEntity {
         this.nodeId = nodeId;
         this.nodeType = nodeType;
         locations.add(loc);
+        
+        LOG.info("Monterey network node $nodeId in $loc of type $nodeType");
     }
     
     public NodeId getNodeId() {

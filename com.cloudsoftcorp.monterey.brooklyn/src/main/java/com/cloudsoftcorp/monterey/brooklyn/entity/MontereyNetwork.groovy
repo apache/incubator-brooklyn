@@ -23,17 +23,16 @@ import brooklyn.location.MachineProvisioningLocation
 
 import com.cloudsoftcorp.monterey.clouds.NetworkId
 import com.cloudsoftcorp.monterey.clouds.basic.DeploymentUtils
-import com.cloudsoftcorp.monterey.clouds.dto.CloudAccountDto;
+import com.cloudsoftcorp.monterey.clouds.dto.CloudAccountDto
 import com.cloudsoftcorp.monterey.clouds.dto.CloudEnvironmentDto
-import com.cloudsoftcorp.monterey.clouds.dto.CloudProviderSelectionDto;
-import com.cloudsoftcorp.monterey.clouds.dto.ProvisioningConfigDto;
+import com.cloudsoftcorp.monterey.clouds.dto.CloudProviderSelectionDto
+import com.cloudsoftcorp.monterey.clouds.dto.ProvisioningConfigDto
 import com.cloudsoftcorp.monterey.control.api.SegmentSummary
 import com.cloudsoftcorp.monterey.control.workrate.api.WorkrateReport
 import com.cloudsoftcorp.monterey.location.api.MontereyActiveLocation
-import com.cloudsoftcorp.monterey.location.api.MontereyLocation;
-import com.cloudsoftcorp.monterey.location.impl.MontereyLocationBuilder;
-import com.cloudsoftcorp.monterey.location.impl.MontereyLocationImpl;
-import com.cloudsoftcorp.monterey.location.temp.impl.CloudAccountIdImpl;
+import com.cloudsoftcorp.monterey.location.api.MontereyLocation
+import com.cloudsoftcorp.monterey.location.impl.MontereyLocationBuilder
+import com.cloudsoftcorp.monterey.location.temp.impl.CloudAccountIdImpl
 import com.cloudsoftcorp.monterey.network.control.api.Dmn1NetworkInfo
 import com.cloudsoftcorp.monterey.network.control.api.Dmn1NodeType
 import com.cloudsoftcorp.monterey.network.control.api.NodeSummary
@@ -71,9 +70,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
      *       per known location?
      */
     
-    private final Logger LOG = Loggers.getLogger(MontereyNetwork.class);
-
-    private static final Logger logger = Loggers.getLogger(MontereyNetwork.class);
+    private static final Logger LOG = Loggers.getLogger(MontereyNetwork.class);
 
     public static final BasicAttributeSensor<URL> MANAGEMENT_URL = [ URL.class, "monterey.management-url", "Management URL" ]
     public static final BasicAttributeSensor<String> NETWORK_ID = [ String.class, "monterey.network-id", "Network id" ]

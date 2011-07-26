@@ -37,7 +37,8 @@ class MontereyProvisioner extends AbstractEntity {
     
     public Collection<MontereyContainerNode> requestNodes(Location loc, int num) {
         // FIXME Parallelize starting; but execute tasks as though by submitter?
-        for (i in 0..num) {
+        Collection<MontereyContainerNode> result = []
+        for (int i = 0; i < num; i++) {
             MontereyContainerNode node = network.provisionNode(loc)
             result.add(node)
         }

@@ -59,8 +59,6 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
     private File truststore = null;
     private int montereyNodePort = 0;
     private int montereyHubLppPort = 0;
-    private String locationId;
-    private String accountId;
     private String networkHome = "~/monterey-network-node-copy1";
     
     private AbstractMontereyNode node;
@@ -96,8 +94,10 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
     }
 
     protected List<Integer> getRequiredOpenPorts() {
-        // FIXME Include montereyNetworkPort, lppProxyPort, etc
-        return [22]
+        List<Integer> result = [22]
+        if (montereyNodePort > 0) result.add(montereyNodePort) 
+        if (montereyHubLppPort > 0) result.add(montereyHubLppPort)
+        return result 
     }
     
     public void dispose() {
@@ -164,6 +164,8 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
         LOG.info("Creating new monterey node "+creationId+" on "+host);
 
         PropertiesContext nodeProperties = new PropertiesContext();
+        String locationId = host.getParentLocation()?.getName() ?: host.getName();
+        String accountId = "accid";
         try {
             SocketAddress address = new SocketAddress(new InetSocketAddress(host.getAddress().getHostName(), montereyNodePort));
             nodeProperties.getProperties().add(ProvisioningConstants.NODE_LOCATION_PROPERTY, locationId);
@@ -174,7 +176,7 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
             nodeProperties.getProperties().add(ProvisioningConstants.LPP_HUB_LISTENER_PORT_PROPERTY, ""+montereyHubLppPort);
             nodeProperties.getProperties().add(ProvisioningConstants.MONITOR_ADDRESS_PROPERTY, JarUrlUtils.toStringUsingDefaultClassloadingContext(connectionDetails.getMonitorAddress()));
             nodeProperties.getProperties().add(ProvisioningConstants.MANAGER_ADDRESS_PROPERTY, JarUrlUtils.toStringUsingDefaultClassloadingContext(connectionDetails.getManagerAddress()));
-
+        
             // TODO Set comms class/bundle (and location latencies); see ManagementNodeConfig.getDefaultNodeProperties
         
             if (truststore != null) nodeProperties.getProperties().add(ProvisioningConstants.JAVAX_NET_SSL_TRUSTSTORE, networkHome+"/"+AccountConfig.NETWORK_NODE_SSL_TRUSTSTORE_RELATIVE_PATH);
