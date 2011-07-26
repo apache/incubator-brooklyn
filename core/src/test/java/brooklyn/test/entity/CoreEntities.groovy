@@ -73,7 +73,9 @@ public class TestEntity extends AbstractEntity implements Startable {
 
     public void start(Collection<? extends Location> locs) {
         LOG.trace "Starting {}", this
-        counter.incrementAndGet(); 
+        counter.incrementAndGet();
+        // FIXME: Shouldn't need to clear() the locations, but for the dirty workaround implemented in DynamicFabric
+        locations.clear(); 
         locations.addAll(locs)
     }
 
