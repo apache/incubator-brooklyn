@@ -2,13 +2,14 @@ package brooklyn.demo
 
 import brooklyn.entity.proxy.nginx.NginxController
 import brooklyn.entity.webapp.tomcat.TomcatServer
+import brooklyn.location.Location
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.basic.FixedListMachineProvisioningLocation
+import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.aws.AWSCredentialsFromEnv
+import brooklyn.location.basic.aws.AwsLocation
 import brooklyn.location.basic.aws.AwsLocationFactory
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation
-import brooklyn.location.Location
 
 public class Locations {
     public static final String LOCALHOST = "localhost"
@@ -123,4 +124,18 @@ public class Locations {
         }
         return locations
     }
+    
+    public static AwsLocation lookupAwsRegion(String regionName) {
+        String imageId = regionName+"/"+EC2_IMAGES.get(regionName)
+        AwsLocation region = AWS_FACTORY.newLocation(regionName)
+        region.setTagMapping([
+            (TomcatServer.class.getName()):[
+                imageId:imageId,
+                securityGroups:["brooklyn-all"]],
+            (NginxController.class.getName()):[
+                imageId:imageId,
+                securityGroups:["brooklyn-all"]]])
+        return region
+    }
+    
 }
