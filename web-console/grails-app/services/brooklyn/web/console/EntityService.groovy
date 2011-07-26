@@ -160,4 +160,27 @@ class EntityService {
         }
         return null
     }
+
+    private List<Entity> leaves(Entity e) {
+        def children = getChildren(e);
+
+        if (children.size() == 0) return e;
+        // inject is foldl
+        return children.collect { leaves(it) }.inject([]) { a, b -> a + b }
+    }
+
+    public List<Entity> getAllLeafEntities(List<Entity> es) {
+        return children.collect { leaves(it) }.inject([]) { a, b -> a + b }
+    }
+
+    private Location getNearestAncestorWithCoordinates(Location l) {
+        // if l has coords, return l
+        // else try parent
+        throw new Exception("todo");
+    }
+
+    /* Returns the number of entites at each location for which the geographic coordinates are known. */
+    public Map<Location, Int> entityCountsAtLocatedLocations() {
+        throw new Exception("todo");
+    }
 }
