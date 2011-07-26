@@ -21,7 +21,7 @@ import com.google.common.base.Preconditions
  * <ul>
  * <li>Dynamic clusters of web application servers
  * <li>Multiple geographic locations
- * <li>Use of any geo-redirecting DNS provider to route users to their closest cluster of web servers
+ * <li>Use of a geo-redirecting DNS provider to route users to their closest cluster of web servers
  * <li>Resizing the clusters to meet client demand
  * </ul>
  */
@@ -69,9 +69,8 @@ public class SpringTravel extends AbstractApplication {
             ],
             this)
 
-        //TODO: remove this call to rescanEntities() when the group updates dynamically and updates subscribers
-        nginxEntities.rescanEntities()
-        geoDns.setGroup(nginxEntities)
+        // TODO: revisit this
+        geoDns.setTargetEntityProvider(nginxEntities)
     }
     
 }

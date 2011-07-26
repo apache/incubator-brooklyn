@@ -12,13 +12,11 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import brooklyn.entity.Application
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.DynamicGroup
 import brooklyn.entity.group.DynamicFabric
 import brooklyn.entity.trait.Startable
-import brooklyn.location.CoordinatesProvider
 import brooklyn.location.Location
 import brooklyn.location.basic.GeneralPurposeLocation
 import brooklyn.location.basic.SshMachineLocation
@@ -55,7 +53,7 @@ public class AbstractGeoDnsServiceTest {
         address: MONTEREY_EAST_IP,
         parentLocation: NEW_YORK); 
     
-    private Application app;
+    private AbstractApplication app;
     private DynamicFabric fabric
     private AbstractGeoDnsService geoDns;
     
@@ -77,12 +75,11 @@ public class AbstractGeoDnsServiceTest {
     @Test
     public void geoInfoOnLocations() {
         DynamicFabric fabric = new DynamicFabric(newEntity:{ properties -> return new TestEntity(properties) }, app)
-        fabric.start( [ CALIFORNIA_MACHINE, NEW_YORK_MACHINE ] );
-        
         DynamicGroup testEntities = new DynamicGroup([:], app, { Entity e -> (e instanceof TestEntity) });
-        testEntities.rescanEntities();
         geoDns = new TestService(app);
-        geoDns.setGroup(testEntities);
+        geoDns.setTargetEntityProvider(testEntities);
+        
+        app.start( [ CALIFORNIA_MACHINE, NEW_YORK_MACHINE ] );
         
         assertTrue(geoDns.targetHostsByName.containsKey("California machine"));
         assertTrue(geoDns.targetHostsByName.containsKey("New York machine"));
