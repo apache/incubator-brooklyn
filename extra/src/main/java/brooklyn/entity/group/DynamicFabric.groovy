@@ -76,6 +76,8 @@ public class DynamicFabric extends AbstractEntity implements Startable {
                 throw ee.cause
             }
         }
+
+        setAttribute(SERVICE_UP, true)
     }
 
     public void stop() {
@@ -85,6 +87,8 @@ public class DynamicFabric extends AbstractEntity implements Startable {
         } catch (ExecutionException ee) {
             throw ee.cause
         }
+
+        setAttribute(SERVICE_UP, false)
     }
 
     public void restart() {
