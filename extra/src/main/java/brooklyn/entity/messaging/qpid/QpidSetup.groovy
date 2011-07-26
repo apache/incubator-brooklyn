@@ -34,7 +34,7 @@ public class QpidSetup extends SshBasedJavaAppSetup {
         String jmxHost = suggestedJmxHost ?: machine.getAddress().getHostName()
         int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort, DEFAULT_FIRST_JMX_PORT))
         int rmiPort = machine.obtainPort(toDesiredPortRange(jmxPort - 100))
-        int amqpPort = machine.obtainPort(toDesiredPortRange(suggestedAmqpPort, DEFAULT_FIRST_AMQP_PORT))
+        int amqpPort = machine.obtainPort(toDesiredPortRange(suggestedAmqpPort, QpidBroker.AMQP_PORT.configKey.defaultValue))
 
         QpidSetup result = new QpidSetup(entity, machine)
         result.setRmiPort(rmiPort)
