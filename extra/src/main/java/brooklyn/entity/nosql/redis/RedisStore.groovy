@@ -23,10 +23,13 @@ import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedAppSetup
 
 import com.google.common.base.Charsets
+import com.google.common.base.Preconditions
 import com.google.common.io.Files
 
 /**
  * An entity that represents a Redis key-value store service.
+ *
+ * TODO add sensors with Redis statistics using INFO command
  */
 public class RedisStore extends AbstractService implements DataStore {
     protected static final Logger LOG = LoggerFactory.getLogger(RedisStore.class)
@@ -103,6 +106,32 @@ port ${port}
             config.append("include ${setup.runDir}/include.conf\n")
         }
         config.toString()
+    }
+}
+
+/**
+ * A {@link RedisStore} configured as a slave.
+ *
+ * The {@code master} property must be set to the master Redis store entity.
+ */
+public class RedisSlave extends RedisStore {
+    RedisStore master
+
+    public RedisSlave(Map properties=[:], Entity owner=null) {
+        super(properties, owner)
+
+        Preconditions.checkArgument properties.containsKey("master"), "The Redis master entity must be specified"
+        master = properties.master
+    }
+
+    @Override
+    public String getConfigFile() {
+        String masterAddress = master.setup.machine.address.hostAddress
+        int masterPort = owner.getAttribute(RedisStore.REDIS_PORT)
+        String config = super.getConfigFile()
+        config += """
+slaveof ${masterAddress} ${masterPort}
+"""
     }
 }
 
