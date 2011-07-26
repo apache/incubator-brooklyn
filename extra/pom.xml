@@ -43,6 +43,12 @@
 		    <version>0.10</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+			<groupId>redis.clients</groupId>
+			<artifactId>jedis</artifactId>
+			<version>1.5.2</version>
+            <scope>test</scope>
+		</dependency>
 
         <!-- required for GeoScaling DNS (entity accesses management service via HTTP) -->
         <dependency>

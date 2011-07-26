@@ -1,6 +1,5 @@
 package brooklyn.entity.nosql.redis
 
-import java.net.InetAddress
 import java.util.Collection
 import java.util.List
 import java.util.Map
@@ -9,24 +8,21 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
-import brooklyn.entity.basic.AbstractGroup
+import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.AbstractService
-import brooklyn.entity.basic.Attributes
-import brooklyn.entity.group.AbstractController
 import brooklyn.entity.nosql.DataStore
-import brooklyn.event.Sensor
+import brooklyn.entity.nosql.Shard
 import brooklyn.event.adapter.AttributePoller
-import brooklyn.event.adapter.HttpSensorAdapter
+import brooklyn.event.adapter.SshSensorAdapter
 import brooklyn.event.adapter.ValueProvider
 import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.event.basic.BasicConfigKey
+import brooklyn.event.basic.ConfiguredAttributeSensor
 import brooklyn.location.Location
 import brooklyn.location.MachineLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedAppSetup
 
 import com.google.common.base.Charsets
-import com.google.common.base.Preconditions
 import com.google.common.io.Files
 
 /**
@@ -35,23 +31,25 @@ import com.google.common.io.Files
 public class RedisStore extends AbstractService implements DataStore {
     protected static final Logger LOG = LoggerFactory.getLogger(RedisStore.class)
 
-    public static final BasicConfigKey<Integer> SUGGESTED_REDIS_PORT = [ Integer, "redis.port", "Suggested Redis port" ]
-
-    public static final BasicAttributeSensor<Integer> REDIS_PORT = [ Integer, "redis.port", "Redis port number" ]
+    public static final ConfiguredAttributeSensor<Integer> REDIS_PORT = [ Integer, "redis.port", "Redis port number", 6379 ]
+    public static final BasicAttributeSensor<Integer> UPTIME = [ Integer, "redis.uptime", "Redis uptime in seconds" ]
 
     int port
     File configFile
 
-    transient HttpSensorAdapter httpAdapter
+    transient SshSensorAdapter sshAdapter
     transient AttributePoller attributePoller
     
-    public RedisStore(Map properties=[:], Entity owner=null, AbstractGroup cluster=null) {
+    public RedisStore(Map properties=[:], Entity owner=null) {
         super(properties, owner)
+
+        if (properties.redisPort) setConfig(REDIS_PORT.configKey, properties.remove("redisPort"))
+        port = getConfig(REDIS_PORT.configKey)
     }
 
     protected Collection<Integer> getRequiredOpenPorts() {
         Collection<Integer> result = super.getRequiredOpenPorts()
-        if (getConfig(SUGGESTED_REDIS_PORT)) result.add(getConfig(SUGGESTED_REDIS_PORT))
+        result.add(getConfig(REDIS_PORT.configKey))
         return result
     }
 
@@ -59,9 +57,9 @@ public class RedisStore extends AbstractService implements DataStore {
     public void start(List<Location> locations) {
         super.start(locations)
 
-        httpAdapter = new HttpSensorAdapter(this)
+        sshAdapter = new SshSensorAdapter(this, setup.machine)
         attributePoller = new AttributePoller(this)
-        initHttpSensors()
+        initSshSensors()
     }
 
     @Override
@@ -70,7 +68,15 @@ public class RedisStore extends AbstractService implements DataStore {
         super.stop()
     }
 
-    public void initHttpSensors() {
+    public void initSshSensors() {
+        attributePoller.addSensor(SERVICE_UP, sshAdapter.newMatchValueProvider("${setup.runDir}/bin/redis-cli ping", /PONG/))
+        attributePoller.addSensor(UPTIME, {} as ValueProvider)
+    }
+    
+    private Integer computeUptime() {
+        String output = sshAdapter.newOutputValueProvider("${setup.runDir}/bin/redis-cli info | grep uptime_in_seconds")
+        int colon = output.lastIndexOf(":")
+        return Integer.parseInt(output.substring(colon))
     }
 
     public SshBasedAppSetup getSshBasedSetup(SshMachineLocation machine) {
@@ -91,11 +97,17 @@ public class RedisStore extends AbstractService implements DataStore {
         config.append """
 daemonize yes
 pidfile ${setup.runDir}/pid.txt
-port ${getAttribute(REDIS_PORT)}
+port ${port}
 """
         if (configFile && configFile.exists()) {
             config.append("include ${setup.runDir}/include.conf\n")
         }
         config.toString()
+    }
+}
+
+public class RedisShard extends AbstractEntity implements Shard {
+    public RedisShard(Map properties=[:], Entity owner=null) {
+        super(properties, owner)
     }
 }
