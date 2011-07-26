@@ -16,11 +16,11 @@ import com.google.common.base.Preconditions
 public abstract class AbstractLocation implements Location {
     public static final Logger LOG = LoggerFactory.getLogger(Location.class)
  
-    private String name
     private Location parentLocation
     private final Collection<Location> childLocations = []
     private final Collection<Location> childLocationsReadOnly = Collections.unmodifiableCollection(childLocations)
     protected Map leftoverProperties
+    protected String name
 
     /**
      * Construct a new instance of an AbstractLocation.
