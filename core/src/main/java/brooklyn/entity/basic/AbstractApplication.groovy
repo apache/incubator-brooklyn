@@ -23,6 +23,8 @@ public abstract class AbstractApplication extends AbstractGroup implements Start
         if (properties.mgmt) {
             mgmt = (AbstractManagementContext) properties.remove("mgmt")
         }
+
+        setAttribute(SERVICE_UP, false)
     }
     
     /**

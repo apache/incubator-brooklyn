@@ -49,6 +49,8 @@ public class DynamicFabric extends AbstractEntity implements Startable {
         newEntity = properties.remove('newEntity')
         
         this.properties = properties
+
+        setAttribute(SERVICE_UP, false)
     }
 
     public void start(Collection<Location> locations) {
