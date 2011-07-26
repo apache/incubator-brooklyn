@@ -4,6 +4,10 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import javax.swing.plaf.basic.BasicEditorPaneUI;
 
 /** 
  * This class manages the execution of a number of jobs with tags.
@@ -31,6 +35,11 @@ import java.util.concurrent.Callable;
  * <p>
  * It has been developed for multi-location provisioning and management to track work being
  * done by each {@link Entity}.
+ * <p>
+ * Note the use of the environment variable {@code THREAD_POOL_SIZE} which is used to size
+ * the {@link ExecutorService} thread pool. The default is calculated as twice the number
+ * of CPUs in the system plus two, giving 10 for a four core system, 18 for an eight CPU
+ * server and so on.
  */
 public interface ExecutionManager {
     public Set<Task<?>> getTasksWithTag(Object tag);

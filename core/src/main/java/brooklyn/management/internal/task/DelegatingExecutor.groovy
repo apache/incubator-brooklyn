@@ -11,8 +11,10 @@ import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 
+import brooklyn.management.ExecutionManager
+
 class DelegatingExecutor implements Executor {
-    ExecutorService executor = Executors.newCachedThreadPool();
+    ExecutorService executor = Executors.newCachedThreadPool()
     TimeDuration timeout = null;
     Closure<?> preTask=null, postTask=null;
     

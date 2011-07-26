@@ -31,7 +31,7 @@ public class BasicExecutionManager implements ExecutionManager {
 
     public static Task getCurrentTask() { return getPerThreadCurrentTask().get() }
     
-    private ExecutorService runner = Executors.newCachedThreadPool() 
+    private ExecutorService runner = Executors.newCachedThreadPool()
     
     private Set<Task> knownTasks = new CopyOnWriteArraySet<Task>()
 
