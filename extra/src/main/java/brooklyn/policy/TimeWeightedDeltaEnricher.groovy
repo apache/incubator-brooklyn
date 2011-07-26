@@ -34,7 +34,7 @@ class TimeWeightedDeltaEnricher<T extends Number> extends AbstractTransformingEn
     public void onEvent(SensorEvent<T> event, long eventTime) {
         Number current = event.getValue() ?: 0
         
-        if (eventTime > lastTime && current != lastValue) {
+        if (eventTime > lastTime) {
             double delta
             if (lastValue == null) {
                 delta = current
