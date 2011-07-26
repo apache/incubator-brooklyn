@@ -12,7 +12,7 @@ import brooklyn.management.internal.AbstractManagementContext;
 import brooklyn.management.internal.CollectionChangeListener
 
 public class DynamicGroup extends AbstractGroup {
-    private static final Logger log = LoggerFactory.getLogger(DynamicGroup.class)
+    public static final Logger log = LoggerFactory.getLogger(DynamicGroup.class)
     
     private Closure entityFilter
     
