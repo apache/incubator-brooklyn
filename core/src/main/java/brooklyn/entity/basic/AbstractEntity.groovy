@@ -200,9 +200,9 @@ abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
 
     public synchronized void clearOwner() {
         if (owner == null) return
-        Entity oldOwner = owner
+        Entity oldOwner = owner.get()
         owner = null
-        oldOwner.removeOwnedChild(this)
+        oldOwner?.removeOwnedChild(this)
     }
 
     public boolean isAncestor(Entity oldee) {
