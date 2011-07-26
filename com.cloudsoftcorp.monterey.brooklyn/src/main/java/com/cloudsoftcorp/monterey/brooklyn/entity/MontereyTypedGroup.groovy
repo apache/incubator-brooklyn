@@ -27,8 +27,25 @@ public class MontereyTypedGroup extends DynamicGroup {
     protected final Gson gson;
     protected final MontereyNetworkConnectionDetails connectionDetails;
     
+    static Closure closureForMatchingLocation(final Location desired) {
+        return { Collection<Location> locs ->
+            boolean result = false
+            locs.each {
+                Location loc = it
+                while (loc != null) {
+                    if (desired.equals(loc)) {
+                        result = true
+                        break;
+                    }
+                    loc = loc.getParentLocation()
+                }
+            }
+            return result
+        }
+    }
+    
     static MontereyTypedGroup newSingleLocationInstance(MontereyNetworkConnectionDetails connectionDetails, MontereyProvisioner montereyProvisioner, Dmn1NodeType nodeType, final Location loc) {
-        return new MontereyTypedGroup(connectionDetails, montereyProvisioner, nodeType, Collections.singleton(loc), { it.contains(loc) } );
+        return new MontereyTypedGroup(connectionDetails, montereyProvisioner, nodeType, Collections.singleton(loc), closureForMatchingLocation(loc) );
     }
     
     static MontereyTypedGroup newAllLocationsInstance(MontereyNetworkConnectionDetails connectionDetails, MontereyProvisioner montereyProvisioner, Dmn1NodeType nodeType, Collection<Location> locs) {

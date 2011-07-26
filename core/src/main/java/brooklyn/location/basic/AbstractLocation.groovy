@@ -60,13 +60,26 @@ public abstract class AbstractLocation implements Location {
     public String getName() { return name; }
     public Location getParentLocation() { return parentLocation; }
     public Collection<Location> getChildLocations() { return childLocationsReadOnly; }
-    protected void addChildLocation(Location child) { childLocations.add(child); }
-    protected boolean removeChildLocation(Location child) { return childLocations.remove(child); }
+    
+    protected void addChildLocation(Location child) {
+        childLocations.add(child); 
+    }
+    
+    protected boolean removeChildLocation(Location child) {
+        return childLocations.remove(child);
+    }
 
     public void setParentLocation(Location parent) {
+        if (parent == this) {
+            throw new IllegalArgumentException("Location cannot be its own parent: "+this)
+        }
+        if (parent == parentLocation) {
+            return // no-op; already have desired parent
+        }
         if (parentLocation != null) {
-            parentLocation.removeChildLocation(this);
+            Location oldParent = parentLocation;
             parentLocation = null;
+            oldParent.removeChildLocation(this);
         }
         if (parent != null) {
             parentLocation = parent;

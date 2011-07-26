@@ -13,7 +13,7 @@ import com.google.gson.Gson
 public class MediatorGroup extends MontereyTypedGroup implements Balanceable {
 
     static MediatorGroup newSingleLocationInstance(MontereyNetworkConnectionDetails connectionDetails, MontereyProvisioner montereyProvisioner, Location loc) {
-        return new MediatorGroup(connectionDetails, montereyProvisioner, Collections.singleton(loc), { it.contains(loc) } );
+        return new MediatorGroup(connectionDetails, montereyProvisioner, Collections.singleton(loc), closureForMatchingLocation(loc) );
     }
     
     static MediatorGroup newAllLocationsInstance(MontereyNetworkConnectionDetails connectionDetails, MontereyProvisioner montereyProvisioner, Collection<Location> locs) {
