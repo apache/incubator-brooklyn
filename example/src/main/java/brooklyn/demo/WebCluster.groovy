@@ -59,11 +59,15 @@ public class WebCluster extends AbstractEntity implements Startable {
         )
 
         controller.start(locations)
+
+        setAttribute(SERVICE_UP, true)
     }
 
     void stop() {
         controller.stop()
         cluster.stop()
+
+        setAttribute(SERVICE_UP, false)
     }
 
     void restart() {
