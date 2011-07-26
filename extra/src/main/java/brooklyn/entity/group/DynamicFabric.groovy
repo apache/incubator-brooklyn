@@ -27,7 +27,7 @@ public class DynamicFabric extends AbstractEntity implements Startable {
 
     Closure<Entity> newEntity
     int initialSize
-    Map properties
+    Map createFlags
 
     /**
      * Instantiate a new DynamicFabric.
@@ -48,7 +48,7 @@ public class DynamicFabric extends AbstractEntity implements Startable {
         Preconditions.checkArgument properties.get('newEntity') instanceof Closure, "'newEntity' must be a closure"
         newEntity = properties.remove('newEntity')
         
-        this.properties = properties
+        this.createFlags = properties
 
         setAttribute(SERVICE_UP, false)
     }
@@ -99,8 +99,8 @@ public class DynamicFabric extends AbstractEntity implements Startable {
 
     protected Entity addCluster(Location location) {
         Map creation = [:]
-        creation << properties
-        creation.displayName = (properties.displayNamePrefix?:"") + (location.getLocationProperty("displayName")?:location.name?:"unnamed") + (properties.displayNameSuffix?:"")
+        creation << createFlags
+        creation.displayName = (createFlags.displayNamePrefix?:"") + (location.getLocationProperty("displayName")?:location.name?:"unnamed") + (createFlags.displayNameSuffix?:"")
         logger.info "Adding a cluster to {} with properties {}", id, creation
 
         Entity entity = newEntity.call(creation)
