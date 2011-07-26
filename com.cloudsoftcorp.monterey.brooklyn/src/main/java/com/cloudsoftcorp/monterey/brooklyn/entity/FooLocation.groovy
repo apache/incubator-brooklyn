@@ -11,6 +11,7 @@ class FooLocation extends AbstractLocation {
     private final MontereyActiveLocation montereyLocation;
     
     FooLocation(MontereyActiveLocation montereyLocation) {
+        super(name:montereyLocation.getLocation().getId())
         this.montereyLocation = Preconditions.checkNotNull(montereyLocation, "montereyLocation");
     }
     

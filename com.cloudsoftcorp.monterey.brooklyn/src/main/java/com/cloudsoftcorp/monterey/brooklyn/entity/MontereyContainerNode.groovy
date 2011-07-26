@@ -10,6 +10,7 @@ import java.util.logging.Logger
 
 import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.trait.Startable
+import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.Location
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.NoMachinesAvailableException
@@ -48,7 +49,12 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
     // TODO Would be great if we supported a "container", aka protonode, being able to host M,TP,etc
 
     private static final Logger LOG = Loggers.getLogger(MontereyContainerNode.class);
-        
+    
+    public static final BasicConfigKey<String> SUGGESTED_NETWORK_NODE_INSTALL_DIR = [String.class, "monterey.networknode.installdir", "Monterey network node installation directory" ]
+    public static final BasicConfigKey<String> SUGGESTED_TRUST_STORE = [String.class, "monterey.networknode.truststore", "Monterey network node truststore" ]
+    public static final BasicConfigKey<Integer> SUGGESTED_MONTEREY_NODE_PORT = [Integer.class, "monterey.networknode.nodeport", "Monterey network node comms port" ]
+    public static final BasicConfigKey<Integer> SUGGESTED_MONTEREY_HUB_LPP_PORT = [Integer.class, "monterey.networknode.hublpp.port", "Monterey network node hub lpp port" ]
+    
     private final MontereyNetworkConnectionDetails connectionDetails;
     private String creationId;
     private NodeId nodeId;
@@ -159,6 +165,7 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
 
     public void startInLocation(SshMachineLocation host) {
         running.set(true);
+        location = host;
         locations.add(host);
         
         LOG.info("Creating new monterey node "+creationId+" on "+host);
@@ -259,11 +266,13 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
     }
 
     public void rollout(Dmn1NodeType type) {
+        LOG.info("Rolling out node $nodeId in $locations as $type")
         PlumberWebProxy plumber = new PlumberWebProxy(connectionDetails.getManagementUrl(), gson, connectionDetails.getWebApiAdminCredential());
         DmnFuture<Collection<NodeId>> future = plumber.rolloutNodes(new NodesRolloutConfiguration.Builder()
                 .nodesToUse(Collections.singleton(nodeId))
                 .ofType(type, 1)
                 .build());
+        future.get();
     }
     
     public void revert() {
@@ -309,10 +318,7 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
             // already has correct type; nothing to do
             return;
         }
-        
-        if (node != null) {
-            node.dispose();
-        }
+        AbstractMontereyNode oldNode = node
         
         switch (nodeSummary.getType()) {
             case Dmn1NodeType.M:
@@ -341,8 +347,18 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
                 throw new IllegalStateException("Cannot create entity for mediator node type "+nodeSummary.getType()+" at "+nodeId);
         }
 
-        if (node != null) {
-            addOwnedChild(node)
+        if (node == oldNode) {
+            // no change;
+        } else {
+            if (oldNode != null) {
+                oldNode.dispose();
+                removeOwnedChild(oldNode)
+                getManagementContext().unmanage(oldNode)
+            }
+            if (node != null) {
+                addOwnedChild(node)
+                getManagementContext().manage(node)
+            }
         }
         
         LOG.info("Node "+nodeId+" changed type to "+nodeSummary.getType());        

@@ -37,12 +37,7 @@ public class MontereyExampleApp extends AbstractApplication {
 
         FixedListMachineProvisioningLocation loc = new FixedListMachineProvisioningLocation<SshMachineLocation>(
             machines:[],name:"localhost-microcloud")
-        for (i in 0..5) {
-            loc.addChildLocation(new SshMachineLocation([address:InetAddress.getByName(SSH_HOST_NAME), userName:SSH_USERNAME]))
-            loc.addChildLocation(new SshMachineLocation([address:InetAddress.getByName(SSH_HOST_NAME), userName:SSH_USERNAME]))
-            loc.addChildLocation(new SshMachineLocation([address:InetAddress.getByName(SSH_HOST_NAME), userName:SSH_USERNAME]))
-            loc.addChildLocation(new SshMachineLocation([address:InetAddress.getByName(SSH_HOST_NAME), userName:SSH_USERNAME]))
-            loc.addChildLocation(new SshMachineLocation([address:InetAddress.getByName(SSH_HOST_NAME), userName:SSH_USERNAME]))
+        for (i in 1..5) {
             loc.addChildLocation(new SshMachineLocation([address:InetAddress.getByName(SSH_HOST_NAME), userName:SSH_USERNAME]))
         }
 

@@ -18,6 +18,7 @@ import java.util.logging.Logger
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.trait.Startable
 import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.Location
 import brooklyn.location.MachineProvisioningLocation
 
@@ -99,13 +100,17 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     private MontereyNetworkConnectionDetails connectionDetails;
     private String applicationName;
     
-    private final LocationRegistry locationRegistry = new LocationRegistry();
     private final Map<String,MontereyContainerNode> nodesByCreationId = new ConcurrentHashMap<String,MontereyContainerNode>();
     private final Map<String,Segment> segments = new ConcurrentHashMap<String,Segment>();
     private final Map<Location,Map<Dmn1NodeType,MontereyTypedGroup>> clustersByLocationAndType = new ConcurrentHashMap<Location,Map<Dmn1NodeType,MontereyTypedGroup>>();
     private final Map<Dmn1NodeType,MontereyTypedGroup> typedFabrics = [:];
     private ScheduledExecutorService scheduledExecutor;
     private ScheduledFuture<?> monitoringTask;
+    
+    public static final BasicConfigKey<Collection<URL>> SUGGESTED_APP_BUNDLES = [Collection.class, "monterey.app.bundles", "Application bundles" ]
+    public static final BasicConfigKey<URL> SUGGESTED_APP_DESCRIPTOR_URL = [URL.class, "monterey.app.descriptorUrl", "Application descriptor URL" ]
+    public static final BasicConfigKey<Collection> SUGGESTED_WEB_USERS_CREDENTIAL = [Collection.class, "monterey.managementnode.webusers", "Monterey management node web-user credentials" ]
+    public static final BasicConfigKey<String> SUGGESTED_MANAGEMENT_NODE_INSTALL_DIR = [String.class, "monterey.managementnode.installdir", "Monterey management node installation directory" ]
     
     public MontereyNetwork() {
     }
@@ -195,11 +200,6 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         return managementNode?.isRunning() ?: false
     }
     
-    @VisibleForTesting    
-    LocationRegistry getLocationRegistry() {
-        return locationRegistry;
-    }
-
     public void dispose() {
         monitoringTask?.cancel(true);
         scheduledExecutor?.shutdownNow();
@@ -242,7 +242,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
             
             // TODO want to call executionContext.scheduleAtFixedRate or some such
             scheduledExecutor = Executors.newScheduledThreadPool(1, {return new Thread(it, "monterey-network-poller")} as ThreadFactory)
-            monitoringTask = scheduledExecutor.scheduleAtFixedRate({ updateAll() }, POLL_PERIOD, POLL_PERIOD, TimeUnit.MILLISECONDS)
+            monitoringTask = scheduledExecutor.scheduleAtFixedRate({ updateAll() } as Runnable, POLL_PERIOD, POLL_PERIOD, TimeUnit.MILLISECONDS)
 
             if (!cloudEnvironmentDto) {
                 String cloudEnvironmentId = networkId;
@@ -305,6 +305,26 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         node
     }
     
+    Collection<MontereyContainerNode> rolloutNodes(Location loc, Map<Dmn1NodeType,Integer> nums) {
+        int totalNum = 0;
+        nums.values().each { totalNum += (it ?: 0) }
+        
+        Collection<MontereyContainerNode> nodes = montereyProvisioner.requestNodes(loc, totalNum)
+        Collection<MontereyContainerNode> unusedNodes = new ArrayList(nodes)
+        
+        Collection<Dmn1NodeType> orderToRollout = [Dmn1NodeType.TP, Dmn1NodeType.M, Dmn1NodeType.MR, Dmn1NodeType.LPP]
+        orderToRollout.each {
+            Dmn1NodeType type = it
+            Integer numOfType = nums.get(type)
+            if (numOfType != null) {
+                for (int i = 0; i < numOfType; i++) {
+                    MontereyContainerNode node = unusedNodes.remove(0)
+                    node.rollout(type)
+                }
+            }
+        }
+    }
+    
     void releaseNode(MontereyContainerNode node) {
         node.stop();
         nodesByCreationId.remove(node.creationId);
@@ -339,6 +359,8 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
 
     private void updateAll() {
         try {
+            LOG.info("Polling monterey management node for current state, on "+connectionDetails.managementUrl)
+            
             boolean isup = updateStatus();
             if (isup) {
                 updateAppName();
@@ -346,7 +368,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
                 updateWorkrates();
             }
         } catch (Throwable t) {
-            LOG.log Level.WARNING, "Error updating brooklyn entities of Monterey Network "+managementUrl, t
+            LOG.log Level.WARNING, "Error updating brooklyn entities of Monterey Network "+connectionDetails.managementUrl, t
             ExceptionUtils.throwRuntime t
         }
     }
@@ -433,7 +455,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         newNodes.each {
             // Node started externally
             MontereyActiveLocation montereyLocation = it.getMontereyActiveLocation();
-            Location location = locationRegistry.getConvertedLocation(montereyLocation);
+            Location location = locations.find { montereyLocation.getLocation().getId().equals(it.getName()) }
             MontereyContainerNode containerNode = new MontereyContainerNode(connectionDetails, it.creationUid);
             containerNode.connectToExisting(it, location)
             addOwnedChild(containerNode);
