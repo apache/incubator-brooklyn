@@ -10,7 +10,7 @@ import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedAppSetup
 
 /**
- * Start a {@link QpidNode} in a {@link Location} accessible over ssh.
+ * Start a {@link RedisStore} in a {@link Location} accessible over ssh.
  */
 public class RedisSetup extends SshBasedAppSetup {
     public static final String DEFAULT_VERSION = "2.2.12"
@@ -70,7 +70,7 @@ public class RedisSetup extends SshBasedAppSetup {
     public List<String> getRunScript() {
         List<String> script = [
             "cd ${runDir}",
-            "nohup ./bin/redis-server redis.conf &",
+            "./bin/redis-server redis.conf",
         ]
         return script
     }
