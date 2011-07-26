@@ -1,7 +1,5 @@
 package brooklyn.demo
 
-import java.util.Map
-
 import brooklyn.entity.proxy.nginx.NginxController
 import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.location.MachineProvisioningLocation
@@ -10,8 +8,17 @@ import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.aws.AWSCredentialsFromEnv
 import brooklyn.location.basic.aws.AwsLocation
 import brooklyn.location.basic.aws.AwsLocationFactory
+import brooklyn.location.basic.LocalhostMachineProvisioningLocation
+import brooklyn.location.Location
 
 public class Locations {
+    public static final String LOCALHOST = "localhost"
+    public static final Map LOCALHOST_COORDS = [
+            id : LOCALHOST,
+            displayName : "Localhost",
+            streetAddress : "Appleton Tower, Edinburgh",
+            'latitude' : 55.94944, 'longitude' : -3.16028,
+            iso3166 : "GB-EDH" ]
     public static final String MONTEREY_EAST = "monterey-east"
     public static final Map MONTEREY_EAST_COORDS = [
             id : MONTEREY_EAST,
@@ -65,6 +72,14 @@ public class Locations {
         return region
     }
 
+    public static LocalhostMachineProvisioningLocation newLocalhostLocation(int numberOfInstances) {
+        return new LocalhostMachineProvisioningLocation(
+            count: numberOfInstances,
+            latitude : LOCALHOST_COORDS['latitude'],
+            longitude : LOCALHOST_COORDS['longitude']
+        )
+    }
+
     public static FixedListMachineProvisioningLocation newMontereyEastLocation() {
         // The definition of the Monterey East location
         final Collection<SshMachineLocation> MONTEREY_EAST_PUBLIC_ADDRESSES = [
@@ -103,5 +118,20 @@ public class Locations {
                 longitude : EDINBURGH_COORDS['longitude']
             )
         return result
+    }
+
+    public static List<Location> getLocationsById(List<String> ids) {
+        List<Location> locations = ids.collect { String location ->
+            if (Locations.AWS_REGIONS.contains(location)) {
+                Locations.lookupAwsRegion(location)
+            } else if (Locations.LOCALHOST == location) {
+                Locations.newLocalhostLocation(5)
+            } else if (Locations.MONTEREY_EAST == location) {
+                Locations.newMontereyEastLocation()
+            } else if (Locations.EDINBURGH == location) {
+                Locations.newMontereyEdinburghLocation()
+            }
+        }
+        return locations
     }
 }

@@ -12,7 +12,7 @@ export CLASSPATH=./target/brooklyn-example-${VERSION}-SNAPSHOT-with-dependencies
 if [ $# -gt 0 ]; then
     LOCATIONS="$*"
 else
-    LOCATIONS="eu-west-1 edinburgh"
+    LOCATIONS="localhost"
     #LOCATIONS="eu-west-1 us-west-1 monterey-east"
     #LOCATIONS="eu-west-1 us-east-1 us-west-1 ap-northeast-1 ap-southeast-1 monterey-east edinburgh"
 fi
