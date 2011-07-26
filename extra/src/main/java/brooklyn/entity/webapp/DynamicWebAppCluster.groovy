@@ -22,9 +22,9 @@ import brooklyn.policy.Policy
 class DynamicWebAppCluster extends DynamicCluster {
 
     public static final BasicAttributeSensor TOTAL_REQUEST_COUNT =
-            [ Integer, "cluster.reqs.total", "Cluster-wide entity request count" ]
+            [ Integer, "cluster.reqs.count.total", "Cluster-wide entity request count" ]
     public static final BasicAttributeSensor AVERAGE_REQUEST_COUNT =
-            [ Double, "cluster.reqs.average", "Cluster entity request average" ]
+            [ Double, "cluster.reqs.count.average", "Cluster entity request average" ]
 
     public static final BasicAttributeSensor TOTAL_ERROR_COUNT = 
             [ Integer, "cluster.reqs.errors.total", "Cluster-wide entity request error count" ]
