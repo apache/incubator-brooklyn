@@ -17,6 +17,27 @@ public class AbstractLocationTest {
     }
 
     @Test
+    public void testSettingParentLocation() {
+        AbstractLocation location = new ConcreteLocation()
+        AbstractLocation locationSub = new ConcreteLocation()
+        locationSub.setParentLocation(location)
+        
+        assertEquals(location.getChildLocations() as List, [locationSub])
+        assertEquals(locationSub.getParentLocation(), location)
+    }
+
+    @Test
+    public void testClearingParentLocation() {
+        AbstractLocation location = new ConcreteLocation()
+        AbstractLocation locationSub = new ConcreteLocation()
+        locationSub.setParentLocation(location)
+        
+        locationSub.setParentLocation(null)
+        assertEquals(location.getChildLocations() as List, [])
+        assertEquals(locationSub.getParentLocation(), null)
+    }
+
+    @Test
     public void queryingNameReturnsNameGivenInConstructor() {
         String name = "Outer Mongolia"
         AbstractLocation location = new ConcreteLocation(name: "Outer Mongolia")
