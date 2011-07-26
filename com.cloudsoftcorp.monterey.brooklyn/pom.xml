@@ -27,10 +27,6 @@
             <groupId>brooklyn</groupId>
             <artifactId>brooklyn-extra</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
 
         <!-- TODO this should probably come from one or all monterey depdendencies -->
         <dependency>

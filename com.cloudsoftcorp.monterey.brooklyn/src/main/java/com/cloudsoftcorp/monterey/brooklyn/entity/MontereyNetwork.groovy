@@ -42,6 +42,8 @@ import com.cloudsoftcorp.monterey.network.control.plane.web.UserCredentialsConfi
 import com.cloudsoftcorp.monterey.network.deployment.MontereyDeploymentDescriptor
 import com.cloudsoftcorp.monterey.network.m.MediationWorkrateItem.MediationWorkrateItemNames
 import com.cloudsoftcorp.monterey.node.api.NodeId
+import com.cloudsoftcorp.monterey.provisioning.noop.NoopCloudProvider
+import com.cloudsoftcorp.monterey.provisioning.noop.NoopResourceProvisionerFactory
 import com.cloudsoftcorp.util.Loggers
 import com.cloudsoftcorp.util.exception.ExceptionUtils
 import com.cloudsoftcorp.util.osgi.BundleSet
