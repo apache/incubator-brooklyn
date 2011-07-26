@@ -60,13 +60,8 @@ public class SpringTravel extends AbstractApplication {
 
         nginxEntities = new DynamicGroup([:], this, { Entity e -> (e instanceof NginxController) })
 
-        geoDns = new GeoscalingDnsService(
-            config: [
-                (GeoscalingDnsService.GEOSCALING_USERNAME): 'cloudsoft',
-                (GeoscalingDnsService.GEOSCALING_PASSWORD): 'cl0uds0ft',
-                (GeoscalingDnsService.GEOSCALING_PRIMARY_DOMAIN_NAME): 'geopaas.org',
-                (GeoscalingDnsService.GEOSCALING_SMART_SUBDOMAIN_NAME): 'brooklyn',
-            ],
+        geoDns = new GeoscalingDnsService(username: 'cloudsoft', password: 'cl0uds0ft',
+            primaryDomainName: 'geopaas.org', smartSubdomainName: 'brooklyn',
             this)
 
         // TODO: revisit this
