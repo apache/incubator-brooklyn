@@ -33,7 +33,7 @@ public class Locations {
             "ap-southeast-1":"ami-21c2bd73",
             "ap-northeast-1":"ami-f0e842f1",
         ]
-    public static final List AWS_REGIONS = EC2_IMAGES.keySet()
+    public static final Collection AWS_REGIONS = EC2_IMAGES.keySet()
 
     private static final AwsLocationFactory AWS_FACTORY = newAwsLocationFactory()
    
