@@ -1,5 +1,6 @@
 package com.cloudsoftcorp.monterey.brooklyn.entity
 
+import java.net.URL;
 import java.util.Collection
 
 import org.slf4j.Logger
@@ -7,6 +8,7 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.DynamicGroup
+import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.location.Location
 
 import com.cloudsoftcorp.monterey.network.control.api.Dmn1NodeType
@@ -15,12 +17,14 @@ import com.cloudsoftcorp.util.javalang.ClassLoadingContext
 import com.google.gson.Gson
 
 
-public class MontereyTypedGroup extends DynamicGroup {
+public class MontereyNodeGroup extends DynamicGroup {
 
     // FIXME Implement Startable
     
     private static final Logger LOG = LoggerFactory.getLogger(MediatorNode.class)
 
+    public static final BasicAttributeSensor<Dmn1NodeType> NODE_TYPE = [ Dmn1NodeType.class, "monterey.node-type", "Node type" ]
+    
     final Dmn1NodeType nodeType;
     
     protected final MontereyProvisioner montereyProvisioner;
@@ -44,15 +48,16 @@ public class MontereyTypedGroup extends DynamicGroup {
         }
     }
     
-    static MontereyTypedGroup newSingleLocationInstance(MontereyNetworkConnectionDetails connectionDetails, MontereyProvisioner montereyProvisioner, Dmn1NodeType nodeType, final Location loc) {
-        return new MontereyTypedGroup(connectionDetails, montereyProvisioner, nodeType, Collections.singleton(loc), closureForMatchingLocation(loc) );
+    static MontereyNodeGroup newSingleLocationInstance(Map flags=[:], MontereyNetworkConnectionDetails connectionDetails, MontereyProvisioner montereyProvisioner, Dmn1NodeType nodeType, final Location loc) {
+        return new MontereyNodeGroup(flags, connectionDetails, montereyProvisioner, nodeType, Collections.singleton(loc), closureForMatchingLocation(loc) );
     }
     
-    static MontereyTypedGroup newAllLocationsInstance(MontereyNetworkConnectionDetails connectionDetails, MontereyProvisioner montereyProvisioner, Dmn1NodeType nodeType, Collection<Location> locs) {
-        return new MontereyTypedGroup(connectionDetails, montereyProvisioner, nodeType, locs, { true } );
+    static MontereyNodeGroup newAllLocationsInstance(Map flags=[:], MontereyNetworkConnectionDetails connectionDetails, MontereyProvisioner montereyProvisioner, Dmn1NodeType nodeType, Collection<Location> locs) {
+        return new MontereyNodeGroup(flags, connectionDetails, montereyProvisioner, nodeType, locs, { true } );
     }
     
-    MontereyTypedGroup(MontereyNetworkConnectionDetails connectionDetails, MontereyProvisioner montereyProvisioner, Dmn1NodeType nodeType, Collection<Location> locs, Closure locFilter) {
+    MontereyNodeGroup(Map flags=[:], MontereyNetworkConnectionDetails connectionDetails, MontereyProvisioner montereyProvisioner, Dmn1NodeType nodeType, Collection<Location> locs, Closure locFilter) {
+        super(flags)
         this.connectionDetails = connectionDetails;
         this.montereyProvisioner = montereyProvisioner;
         this.nodeType = nodeType;
@@ -67,6 +72,14 @@ public class MontereyTypedGroup extends DynamicGroup {
         }
         
         LOG.info("Group created for node type $nodeType in locations $locations");        
+    }
+
+    // Override to intercept when we are able to set attributes...
+    @Override    
+    public void setOwner(Entity owner) {
+        super.setOwner(owner)
+        
+        setAttribute(NODE_TYPE, nodeType)
     }
     
     void refreshLocations(Collection<Location> locs) {

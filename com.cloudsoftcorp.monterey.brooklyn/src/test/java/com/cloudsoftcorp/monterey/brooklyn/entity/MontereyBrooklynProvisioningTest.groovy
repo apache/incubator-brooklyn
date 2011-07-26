@@ -27,6 +27,8 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.entity.ConfigKey
+import brooklyn.entity.Group
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.AttributeSensor
@@ -135,10 +137,9 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         app = new SimpleApp();
         montereyNetwork = new MontereyNetwork();
         montereyNetwork.setOwner(app);
-        montereyNetwork.setManagementNodeInstallDir(MONTEREY_MANAGEMENT_NODE_PATH);
-        MontereyNetworkConfig config = new MontereyNetworkConfig();
-        montereyNetwork.setConfig(config);
-        montereyNetwork.setWebUsersCredentials(Collections.singleton(adminCredential));
+        montereyNetwork.setConfig(MontereyManagementNode.SUGGESTED_MANAGEMENT_NODE_INSTALL_DIR, MONTEREY_MANAGEMENT_NODE_PATH);
+        //montereyNetwork.setConfig(new MontereyNetworkConfig()); // using defaults; TODO externalize as configKeys
+        montereyNetwork.setConfig(MontereyManagementNode.SUGGESTED_WEB_USERS_CREDENTIAL, Collections.singleton(adminCredential));
         app.getManagementContext().manage(app)
     }
     
@@ -175,6 +176,23 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         assertBrooklynEventuallyHasNodes(0,0,0,0,1);
     }
 
+    @Test
+    public void testInitialClusterSizeStartsNodes() throws Throwable {
+        rolloutManagementPlane([(MontereyNetwork.INITIAL_TOPOLOGY_PER_LOCATION):
+                [(Dmn1NodeType.LPP):1, (Dmn1NodeType.M):1, (Dmn1NodeType.MR):1, (Dmn1NodeType.TP):1, (Dmn1NodeType.SPARE):1]]);
+        assertBrooklynEventuallyHasNodes(1,1,1,1,1);
+    }
+    
+    @Test
+    public void testNetworkNodesAddedToClusterGroups() throws Throwable {
+        rolloutManagementPlane();
+        rolloutNodes(1,1,1,1,0);
+        assertBrooklynEventuallyHasNodes(1,1,1,1,0);
+        
+        montereyNetwork.getClusters(localhostProvisioner).values().each { it.rescanEntities() }
+        assertBrooklynEventuallyHasNodesInExpectedClusters()
+    }
+    
     @Test
     public void testStartMontereyNetworkNodeOfEachType() throws Throwable {
         rolloutManagementPlane();
@@ -216,6 +234,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
     public void testLppRouterSwitchover() throws Throwable {
         rolloutManagementPlane();
         rolloutNodes(1,2,1,1,0);
+        assertBrooklynEventuallyHasNodes(1,2,1,1,0);
         
         // Get LPP, and rewire it
         NodeId lppId = findNodesMatching(Dmn1NodeType.LPP).iterator().next();
@@ -234,6 +253,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
     public void testMediatorRouterSwitchover() throws Throwable {
         rolloutManagementPlane();
         rolloutNodes(1,1,1,2,0);
+        assertBrooklynEventuallyHasNodes(1,1,1,2,0);
         
         // Get M, and rewire it
         NodeId lppId = findNodesMatching(Dmn1NodeType.M).iterator().next();
@@ -337,9 +357,13 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
                 .build());
     }
 
-    private void rolloutManagementPlane() throws Throwable {
+    private void rolloutManagementPlane(Map<? extends ConfigKey, ? extends Object> config=[:]) throws Throwable {
         montereyNetwork.setAppDescriptor(newHelloCloudMontereyDeploymentDescriptor());
-        montereyNetwork.setAppBundles(Collections.singleton(HELLO_CLOUD_BUNDLE_URL));
+        montereyNetwork.setConfig(MontereyNetwork.APP_BUNDLES, Collections.singleton(HELLO_CLOUD_BUNDLE_URL));
+        
+        for (Map.Entry<? extends ConfigKey, ? extends Object> entry in config.entrySet()) {
+            montereyNetwork.setConfig(entry.key, entry.value)
+        }
         
         montereyNetwork.start([localhostProvisioner]);
     }
@@ -577,6 +601,22 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
             }}, TIMEOUT);
     }
     
+    private void assertBrooklynEventuallyHasNodesInExpectedClusters() {
+        assertSuccessWithin(new Callable<Object>() {
+            public Object call() throws Exception {
+                montereyNetwork.getMontereyNodes().values().each {
+                    if (it) {
+                        // expect to be a member of "cluster" and "fabric"
+                        Assert.assertEquals(it.groups.size(), 2)
+                        it.groups.each { Group group ->
+                            Assert.assertEquals(it.nodeType, group.nodeType)
+                            assertContainsLocation(group.locations, it.locations.iterator().next())
+                        }
+                    }
+                }
+            }}, TIMEOUT);
+    }
+    
     private void assertBrooklynEventuallyHasExpectedNodes() throws Throwable {
         Dmn1NetworkInfoWebProxy networkInfo = newMontereyNetworkInfo();
         assertBrooklynEventuallyHasNodes(networkInfo.getNodeSummaries())
@@ -626,7 +666,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         assertSuccessWithin(new Callable<Object>() {
             public Object call() throws Exception {
                 for (Dmn1NodeType nodeType : Arrays.asList(Dmn1NodeType.LPP, Dmn1NodeType.MR, Dmn1NodeType.M, Dmn1NodeType.TP)) {
-                    MontereyTypedGroup fabric = montereyNetwork.getFabric(nodeType);
+                    MontereyNodeGroup fabric = montereyNetwork.getFabric(nodeType);
                     Assert.assertEquals(new LinkedHashSet<Location>(fabric.getLocations()), expectedLocs);
                     Assert.assertEquals(fabric.getNodeType(), nodeType);
                 }
@@ -638,11 +678,11 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         assertSuccessWithin(new Callable<Object>() {
             public Object call() throws Exception {
                 for (Dmn1NodeType nodeType : Arrays.asList(Dmn1NodeType.LPP, Dmn1NodeType.MR, Dmn1NodeType.M, Dmn1NodeType.TP)) {
-                    Map<Location,MontereyTypedGroup> clusters = montereyNetwork.getClusters(nodeType);
+                    Map<Location,MontereyNodeGroup> clusters = montereyNetwork.getClusters(nodeType);
                     Assert.assertEquals(expectedLocs, clusters.keySet(), "type="+nodeType);
                     
                     for (Location loc : expectedLocs) {
-                        MontereyTypedGroup cluster = clusters.get(loc);
+                        MontereyNodeGroup cluster = clusters.get(loc);
                         Assert.assertEquals(new HashSet<Location>(cluster.getLocations()), Collections.singleton(loc), "loc="+loc+",type="+nodeType);
                     }
                 }
@@ -656,7 +696,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
                 for (Map.Entry<Dmn1NodeType,Integer> entry in expectedNodesPerCluster.entrySet()) {
                     Dmn1NodeType nodeType = entry.key
                     Integer numExpected = entry.value
-                    MontereyTypedGroup cluster = montereyNetwork.getClusters(nodeType).get(loc);
+                    MontereyNodeGroup cluster = montereyNetwork.getClusters(nodeType).get(loc);
                     Collection<AbstractMontereyNode> preScanMembers = cluster.getMembers();
                     
                     cluster.rescanEntities()
@@ -718,6 +758,17 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         return result;
     }
     
+    private void assertContainsLocation(Collection<Location> containers, Location sub) {
+        for (Location container : containers) {
+            Location sub2 = sub
+            while (sub2 != null) {
+                if (container == sub2) return
+                sub2 = sub2.getParentLocation()
+            }
+        }
+        Assert.fail("Location $sub is not contained within $containers")
+    }
+            
     private <T> T assertSuccessWithin(final Callable<T> callable, final long timeout) throws Throwable {
         final AtomicReference<T> result = new AtomicReference<T>();
         final AtomicReference<Throwable> lastError = new AtomicReference<Throwable>();

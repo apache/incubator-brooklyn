@@ -654,7 +654,7 @@ public class MontereyBrooklynMonitoringMontereyTest extends CloudsoftThreadMonit
         assertSuccessWithin(new Callable<Object>() {
             public Object call() throws Exception {
                 for (Dmn1NodeType nodeType : Arrays.asList(Dmn1NodeType.LPP, Dmn1NodeType.MR, Dmn1NodeType.M, Dmn1NodeType.TP)) {
-                    MontereyTypedGroup fabric = montereyNetwork.getFabric(nodeType);
+                    MontereyNodeGroup fabric = montereyNetwork.getFabric(nodeType);
                     Assert.assertEquals(new LinkedHashSet<Location>(fabric.getLocations()), expectedLocs);
                     Assert.assertEquals(fabric.getNodeType(), nodeType);
                 }
@@ -669,13 +669,13 @@ public class MontereyBrooklynMonitoringMontereyTest extends CloudsoftThreadMonit
         assertSuccessWithin(new Callable<Object>() {
             public Object call() throws Exception {
                 for (Dmn1NodeType nodeType : Arrays.asList(Dmn1NodeType.LPP, Dmn1NodeType.MR, Dmn1NodeType.M, Dmn1NodeType.TP)) {
-                    Map<Location,MontereyTypedGroup> clusters = montereyNetwork.getClusters(nodeType);
+                    Map<Location,MontereyNodeGroup> clusters = montereyNetwork.getClusters(nodeType);
                     Assert.assertEquals(expectedLocs, clusters.keySet(), "type="+nodeType);
                     
                     for (MontereyActiveLocation montereyLoc : expectedMontereyLocs) {
                         Location loc = toBrooklynLocation(montereyLoc);
                         Collection<NodeId> expectedNodeIds = findNodesMatching(nodeType, montereyLoc);
-                        MontereyTypedGroup cluster = clusters.get(loc);
+                        MontereyNodeGroup cluster = clusters.get(loc);
                         Collection<NodeId> actualNodeIds = new LinkedHashSet<NodeId>();
                         for (Entity e : cluster.getMembers()) {
                             actualNodeIds.add( ((AbstractMontereyNode)e).getNodeId() );

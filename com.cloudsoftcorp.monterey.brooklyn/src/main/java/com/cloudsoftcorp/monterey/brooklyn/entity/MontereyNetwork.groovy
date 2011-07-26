@@ -15,15 +15,15 @@ import java.util.concurrent.TimeUnit
 import java.util.logging.Level
 import java.util.logging.Logger
 
+import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.trait.Startable
 import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.Location
 import brooklyn.location.MachineProvisioningLocation
 
 import com.cloudsoftcorp.monterey.clouds.NetworkId
-import com.cloudsoftcorp.monterey.clouds.basic.DeploymentUtils
 import com.cloudsoftcorp.monterey.clouds.dto.CloudAccountDto
 import com.cloudsoftcorp.monterey.clouds.dto.CloudEnvironmentDto
 import com.cloudsoftcorp.monterey.clouds.dto.CloudProviderSelectionDto
@@ -38,7 +38,6 @@ import com.cloudsoftcorp.monterey.network.control.api.Dmn1NetworkInfo
 import com.cloudsoftcorp.monterey.network.control.api.Dmn1NodeType
 import com.cloudsoftcorp.monterey.network.control.api.NodeSummary
 import com.cloudsoftcorp.monterey.network.control.deployment.DescriptorLoader
-import com.cloudsoftcorp.monterey.network.control.plane.web.UserCredentialsConfig
 import com.cloudsoftcorp.monterey.network.deployment.MontereyDeploymentDescriptor
 import com.cloudsoftcorp.monterey.network.m.MediationWorkrateItem.MediationWorkrateItemNames
 import com.cloudsoftcorp.monterey.node.api.NodeId
@@ -47,8 +46,6 @@ import com.cloudsoftcorp.monterey.provisioning.noop.NoopResourceProvisionerFacto
 import com.cloudsoftcorp.util.Loggers
 import com.cloudsoftcorp.util.exception.ExceptionUtils
 import com.cloudsoftcorp.util.osgi.BundleSet
-import com.cloudsoftcorp.util.web.client.CredentialsConfig
-import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Throwables
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
@@ -73,6 +70,10 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     
     private static final Logger LOG = Loggers.getLogger(MontereyNetwork.class);
 
+    public static final BasicConfigKey<Collection<URL>> APP_BUNDLES = [Collection.class, "monterey.app.bundles", "Application bundles" ]
+    public static final BasicConfigKey<URL> APP_DESCRIPTOR_URL = [URL.class, "monterey.app.descriptorUrl", "Application descriptor URL" ]
+    public static final BasicConfigKey<Map<Dmn1NodeType,Integer>> INITIAL_TOPOLOGY_PER_LOCATION = [ Map.class, "monterey.cluster.initialTopology", "Initial topology per cluster" ]
+
     public static final BasicAttributeSensor<URL> MANAGEMENT_URL = [ URL.class, "monterey.management-url", "Management URL" ]
     public static final BasicAttributeSensor<String> NETWORK_ID = [ String.class, "monterey.network-id", "Network id" ]
     public static final BasicAttributeSensor<String> APPLICTION_NAME = [ String.class, "monterey.application-name", "Application name" ]
@@ -84,16 +85,9 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     
     private final NetworkId networkId = NetworkId.Factory.newId();
     
-    private String managementNodeInstallDir;
-    private String name;
-    private Collection<URL> appBundles;
-    private URL appDescriptorUrl;
     private MontereyDeploymentDescriptor appDescriptor;
     private CloudEnvironmentDto cloudEnvironmentDto;
     private MontereyNetworkConfig config = new MontereyNetworkConfig();
-    private Collection<UserCredentialsConfig> webUsersCredentials;
-    private CredentialsConfig webAdminCredential;
-    private initialTopologyPerLocation = [(Dmn1NodeType.LPP):0,(Dmn1NodeType.MR):0,(Dmn1NodeType.M):0,(Dmn1NodeType.TP):0,(Dmn1NodeType.SPARE):0]
     
     private MontereyManagementNode managementNode;
     private MontereyProvisioner montereyProvisioner;
@@ -102,54 +96,32 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     
     private final Map<String,MontereyContainerNode> nodesByCreationId = new ConcurrentHashMap<String,MontereyContainerNode>();
     private final Map<String,Segment> segments = new ConcurrentHashMap<String,Segment>();
-    private final Map<Location,Map<Dmn1NodeType,MontereyTypedGroup>> clustersByLocationAndType = new ConcurrentHashMap<Location,Map<Dmn1NodeType,MontereyTypedGroup>>();
-    private final Map<Dmn1NodeType,MontereyTypedGroup> typedFabrics = [:];
+    private final Map<Location,Map<Dmn1NodeType,MontereyNodeGroup>> clustersByLocationAndType = new ConcurrentHashMap<Location,Map<Dmn1NodeType,MontereyNodeGroup>>();
+    private final Map<Dmn1NodeType,MontereyNodeGroup> typedFabrics = [:];
     private ScheduledExecutorService scheduledExecutor;
     private ScheduledFuture<?> monitoringTask;
     
-    public static final BasicConfigKey<Collection<URL>> SUGGESTED_APP_BUNDLES = [Collection.class, "monterey.app.bundles", "Application bundles" ]
-    public static final BasicConfigKey<URL> SUGGESTED_APP_DESCRIPTOR_URL = [URL.class, "monterey.app.descriptorUrl", "Application descriptor URL" ]
-    public static final BasicConfigKey<Collection> SUGGESTED_WEB_USERS_CREDENTIAL = [Collection.class, "monterey.managementnode.webusers", "Monterey management node web-user credentials" ]
-    public static final BasicConfigKey<String> SUGGESTED_MANAGEMENT_NODE_INSTALL_DIR = [String.class, "monterey.managementnode.installdir", "Monterey management node installation directory" ]
-    
-    public MontereyNetwork() {
+    public MontereyNetwork(Map props=[:], Entity owner=null) {
+        super(props, owner);
     }
 
-    public void setName(String val) {
-        this.name = name
+    public String getDisplayName() {
+        return "Monterey network ("+(getAttribute(APPLICTION_NAME) ?: "no-app")+")"
     }
     
-    public void setAppBundles(Collection<URL> val) {
-        this.appBundles = new ArrayList<String>(val)
-    }
-    
-    public void setAppDescriptorUrl(URL val) {
-        this.appDescriptorUrl = val
-    }
-    
+    // Programmatically set the application descriptor (rather than supplying a config file)
     public void setAppDescriptor(MontereyDeploymentDescriptor val) {
         this.appDescriptor = val
     }
     
+    // Programmatically set the cloud environment (rather than using the default, which 
+    // pushes the start-locs to the monterey-management-node)
     public void setCloudEnvironment(CloudEnvironmentDto val) {
         cloudEnvironmentDto = val
     }
         
-    public void setManagementNodeInstallDir(String val) {
-        this.managementNodeInstallDir = val;
-    }
-
     public void setConfig(MontereyNetworkConfig val) {
         this.config = val;
-    }
-
-    public void setWebUsersCredentials(Collection<UserCredentialsConfig> val) {
-        this.webUsersCredentials = val;
-        this.webAdminCredential = DeploymentUtils.findWebApiAdminCredential(webUsersCredentials);
-    }
-
-    public void setWebAdminCredential(CredentialsConfig val) {
-        this.webAdminCredential = val;
     }
 
     public Collection<MontereyContainerNode> getContainerNodes() {
@@ -164,14 +136,14 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         return Collections.unmodifiableMap(result);
     }
 
-    public MontereyTypedGroup getFabric(Dmn1NodeType nodeType) {
+    public MontereyNodeGroup getFabric(Dmn1NodeType nodeType) {
         return typedFabrics.get(nodeType);
     }
 
-    public Map<Location, MontereyTypedGroup> getClusters(Dmn1NodeType nodeType) {
-        Map<Location, MontereyTypedGroup> result = [:]
+    public Map<Location, MontereyNodeGroup> getClusters(Dmn1NodeType nodeType) {
+        Map<Location, MontereyNodeGroup> result = [:]
         clustersByLocationAndType.each {
-            MontereyTypedGroup cluster = it.getValue().getAt(nodeType)
+            MontereyNodeGroup cluster = it.getValue().getAt(nodeType)
             if (cluster != null) {
                 result.put(it.getKey(), cluster)
             }
@@ -179,7 +151,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         return result
     }
     
-    public Map<Dmn1NodeType, MontereyTypedGroup> getClusters(Location loc) {
+    public Map<Dmn1NodeType, MontereyNodeGroup> getClusters(Location loc) {
         return clustersByLocationAndType.get(loc)?.asImmutable() ?: [:];
     }
     
@@ -227,10 +199,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         try {
             managementNode = new MontereyManagementNode([owner:this])
             managementNode.networkId = networkId
-            managementNode.managementNodeInstallDir = managementNodeInstallDir
             managementNode.config = config
-            managementNode.webUsersCredentials = webUsersCredentials
-            managementNode.webAdminCredential = webAdminCredential
             
             managementNode.start([provisioningLoc])
             
@@ -267,16 +236,19 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
             managementNode.deployCloudEnvironment(cloudEnvironmentDto);
             
             if (!appDescriptor) {
+                URL appDescriptorUrl = getConfig(APP_DESCRIPTOR_URL)
                 if (appDescriptorUrl) {
                     appDescriptor = DescriptorLoader.loadDescriptor(appDescriptorUrl);
                 }
             }
             if (appDescriptor) {
-                BundleSet bundleSet = (appBundles) ? BundleSet.fromUrls(appBundles) : BundleSet.EMPTY;
+                Collection<URL> bundleUrls = getConfig(APP_BUNDLES)
+                BundleSet bundleSet = (bundleUrls) ? BundleSet.fromUrls(bundleUrls) : BundleSet.EMPTY;
                 managementNode.deployApplication(appDescriptor, bundleSet);
             }
             
             // Create fabrics and clusters for each node-type
+            Map<Dmn1NodeType,Integer> initialTopologyPerLocation = getConfig(INITIAL_TOPOLOGY_PER_LOCATION) ?: [:]
             startFabricLayers()
             locations.each {
                 startClusterLayersInLocation(it, initialTopologyPerLocation)
@@ -359,7 +331,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
 
     private void updateAll() {
         try {
-            LOG.info("Polling monterey management node for current state, on "+connectionDetails.managementUrl)
+            LOG.finer("Polling monterey management node for current state, on "+connectionDetails.managementUrl)
             
             boolean isup = updateStatus();
             if (isup) {
@@ -406,25 +378,32 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     }
     
     private void startFabricLayers() {
-        typedFabrics.put(Dmn1NodeType.LPP, MontereyTypedGroup.newAllLocationsInstance(connectionDetails, montereyProvisioner, Dmn1NodeType.LPP, locations));
-        typedFabrics.put(Dmn1NodeType.MR, MontereyTypedGroup.newAllLocationsInstance(connectionDetails, montereyProvisioner, Dmn1NodeType.MR, locations));
-        typedFabrics.put(Dmn1NodeType.M, MediatorGroup.newAllLocationsInstance(connectionDetails, montereyProvisioner, locations));
-        typedFabrics.put(Dmn1NodeType.TP, MontereyTypedGroup.newAllLocationsInstance(connectionDetails, montereyProvisioner, Dmn1NodeType.TP, locations));
+        typedFabrics.put(Dmn1NodeType.LPP, MontereyNodeGroup.newAllLocationsInstance([displayName:"LPP fabric"], connectionDetails, montereyProvisioner, Dmn1NodeType.LPP, locations));
+        typedFabrics.put(Dmn1NodeType.MR, MontereyNodeGroup.newAllLocationsInstance([displayName:"MR fabric"], connectionDetails, montereyProvisioner, Dmn1NodeType.MR, locations));
+        typedFabrics.put(Dmn1NodeType.M, MediatorGroup.newAllLocationsInstance([displayName:"Mediator fabric"], connectionDetails, montereyProvisioner, locations));
+        typedFabrics.put(Dmn1NodeType.TP, MontereyNodeGroup.newAllLocationsInstance([displayName:"TP fabric"], connectionDetails, montereyProvisioner, Dmn1NodeType.TP, locations));
         
-        typedFabrics.values().each { addOwnedChild(it) }
+        typedFabrics.values().each { 
+            addOwnedChild(it)
+            getManagementContext().manage(it)
+        }
     }
     
     private void startClusterLayersInLocation(Location loc, Map initialTopologyPerLocation) {
         // Instantiate clusters
-        Map<Dmn1NodeType,MontereyTypedGroup> clustersByType = [:]
+        Map<Dmn1NodeType,MontereyNodeGroup> clustersByType = [:]
         clustersByLocationAndType.put(loc, clustersByType)
 
-        clustersByType.put(Dmn1NodeType.LPP, MontereyTypedGroup.newSingleLocationInstance(connectionDetails, montereyProvisioner, Dmn1NodeType.LPP, loc));
-        clustersByType.put(Dmn1NodeType.MR, MontereyTypedGroup.newSingleLocationInstance(connectionDetails, montereyProvisioner, Dmn1NodeType.MR, loc));
-        clustersByType.put(Dmn1NodeType.M, MediatorGroup.newSingleLocationInstance(connectionDetails, montereyProvisioner, loc));
-        clustersByType.put(Dmn1NodeType.TP, MontereyTypedGroup.newSingleLocationInstance(connectionDetails, montereyProvisioner, Dmn1NodeType.TP, loc));
+        String abbreviatedLoc = loc.findLocationProperty("abbreviatedName") ?: loc.getName()
+        clustersByType.put(Dmn1NodeType.LPP, MontereyNodeGroup.newSingleLocationInstance([displayName:"LPP cluster ("+abbreviatedLoc+")"], connectionDetails, montereyProvisioner, Dmn1NodeType.LPP, loc));
+        clustersByType.put(Dmn1NodeType.MR, MontereyNodeGroup.newSingleLocationInstance([displayName:"MR cluster ("+abbreviatedLoc+")"], connectionDetails, montereyProvisioner, Dmn1NodeType.MR, loc));
+        clustersByType.put(Dmn1NodeType.M, MediatorGroup.newSingleLocationInstance([displayName:"Mediator cluster ("+abbreviatedLoc+")"], connectionDetails, montereyProvisioner, loc));
+        clustersByType.put(Dmn1NodeType.TP, MontereyNodeGroup.newSingleLocationInstance([displayName:"TP cluster ("+abbreviatedLoc+")"], connectionDetails, montereyProvisioner, Dmn1NodeType.TP, loc));
         
-        clustersByType.values().each { it.setOwner(typedFabrics.get(it.nodeType)) }
+        clustersByType.values().each {
+            it.setOwner(typedFabrics.get(it.nodeType))
+            getManagementContext().manage(it)
+        }
         
         // Start the required nodes in each
         [Dmn1NodeType.TP, Dmn1NodeType.M, Dmn1NodeType.MR, Dmn1NodeType.LPP].each {
@@ -534,7 +513,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     private Collection<AbstractMontereyNode> findNodesOfType(Dmn1NodeType type) {
         Collection<AbstractMontereyNode> result = []
         montereyNodes.values().each {
-            if (type == it.nodeType) result.add(it)
+            if (it != null && type == it.nodeType) result.add(it)
         }
         return result
     }

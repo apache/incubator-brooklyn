@@ -16,6 +16,7 @@ import java.util.logging.Logger
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.trait.Startable
 import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.Location
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.NoMachinesAvailableException
@@ -56,29 +57,24 @@ public class MontereyManagementNode extends AbstractEntity implements Startable 
 
     private static final Logger LOG = Loggers.getLogger(MontereyManagementNode.class);
 
+    public static final BasicConfigKey<String> SUGGESTED_MANAGEMENT_NODE_INSTALL_DIR = [String.class, "monterey.managementnode.installdir", "Monterey management node installation directory" ]
+    public static final BasicConfigKey<Collection> SUGGESTED_WEB_USERS_CREDENTIAL = [Collection.class, "monterey.managementnode.webusers", "Monterey management node web-user credentials" ]
+
     public static final BasicAttributeSensor<URL> MANAGEMENT_URL = [ URL.class, "monterey.management-url", "Management URL" ]
 
     /** up, down, etc? */
     public static final BasicAttributeSensor<String> STATUS = [ String, "monterey.status", "Status" ]
 
+    private static final String DEFAULT_MANAGEMENT_NODE_INSTALL_DIR = "~/monterey-management-node"
+    
     private final Gson gson;
-
-    private String managementNodeInstallDir;
 
     private MontereyNetworkConfig config = new MontereyNetworkConfig();
     
     private MachineProvisioningLocation machineProvisioner;
     private SshMachineLocation machine;
     private MontereyNetworkConnectionDetails connectionDetails;
-    private Collection<UserCredentialsConfig> webUsersCredentials;
-    private CredentialsConfig webAdminCredential;
     private NetworkId networkId;
-    
-    private final LocationRegistry locationRegistry = new LocationRegistry();
-    private final Map<String,MontereyContainerNode> nodesByCreationId = new ConcurrentHashMap<String,MontereyContainerNode>();
-    private final Map<String,Segment> segments = new ConcurrentHashMap<String,Segment>();
-    private final Map<Location,Map<Dmn1NodeType,MontereyTypedGroup>> clustersByLocationAndType = new ConcurrentHashMap<Location,Map<Dmn1NodeType,MontereyTypedGroup>>();
-    private final Map<Dmn1NodeType,MontereyTypedGroup> typedFabrics = [:];
     
     public MontereyManagementNode(Map props=[:], owner=null) {
         super(props, owner);
@@ -87,21 +83,8 @@ public class MontereyManagementNode extends AbstractEntity implements Startable 
         gson = gsonSerializer.getGson();
     }
 
-    public void setManagementNodeInstallDir(String val) {
-        this.managementNodeInstallDir = val;
-    }
-
     public void setConfig(MontereyNetworkConfig val) {
         this.config = val;
-    }
-
-    public void setWebUsersCredentials(Collection<UserCredentialsConfig> val) {
-        this.webUsersCredentials = val;
-        this.webAdminCredential = DeploymentUtils.findWebApiAdminCredential(webUsersCredentials);
-    }
-
-    public void setWebAdminCredential(CredentialsConfig val) {
-        this.webAdminCredential = val;
     }
 
     public void setNetworkId(NetworkId val) {
@@ -168,9 +151,14 @@ public class MontereyManagementNode extends AbstractEntity implements Startable 
 
         locations << machine
         
+        Collection<UserCredentialsConfig> webUsersCredentials = getConfig(SUGGESTED_WEB_USERS_CREDENTIAL) ?: []
+        CredentialsConfig webAdminCredential = DeploymentUtils.findWebApiAdminCredential(webUsersCredentials);
+    
         File webUsersConfFile = DeploymentUtils.toEncryptedWebUsersConfFile(webUsersCredentials);
         String username = System.getenv("USER");
 
+        String managementNodeInstallDir = getConfig(SUGGESTED_MANAGEMENT_NODE_INSTALL_DIR) ?: DEFAULT_MANAGEMENT_NODE_INSTALL_DIR
+        
         WebConfig web = new WebConfig(true, config.getMontereyWebApiPort(), config.getMontereyWebApiProtocol(), null);
         web.setSslKeystore(managementNodeInstallDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_SSL_KEYSTORE_RELATIVE_PATH);
         web.setSslKeystorePassword(config.getMontereyWebApiSslKeystorePassword());
@@ -247,7 +235,7 @@ public class MontereyManagementNode extends AbstractEntity implements Startable 
 
     public void deployCloudEnvironment(CloudEnvironmentDto cloudEnvironmentDto) {
         int DEPLOY_TIMEOUT = 5*60*1000;
-        DeploymentWebProxy deployer = new DeploymentWebProxy(connectionDetails.managementUrl, gson, webAdminCredential, DEPLOY_TIMEOUT);
+        DeploymentWebProxy deployer = new DeploymentWebProxy(connectionDetails.managementUrl, gson, connectionDetails.webApiAdminCredential, DEPLOY_TIMEOUT);
         deployer.deployCloudEnvironment(cloudEnvironmentDto);
     }
 
@@ -271,6 +259,7 @@ public class MontereyManagementNode extends AbstractEntity implements Startable 
     }
 
     private void shutdownManagementNodeProcess(MontereyNetworkConfig config, SshMachineLocation machine, NetworkId networkId) {
+        String managementNodeInstallDir = getConfig(SUGGESTED_MANAGEMENT_NODE_INSTALL_DIR) ?: DEFAULT_MANAGEMENT_NODE_INSTALL_DIR
         String killScript = managementNodeInstallDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_KILL_SCRIPT_RELATIVE_PATH;
         try {
             LOG.info("Releasing management node on "+toString());
