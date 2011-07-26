@@ -21,7 +21,6 @@ import brooklyn.test.entity.TestEntity
 import brooklyn.util.internal.Repeater
 
 class DynamicFabricTest {
-
     private static final Logger logger = LoggerFactory.getLogger(DynamicFabricTest)
     
     @Test
