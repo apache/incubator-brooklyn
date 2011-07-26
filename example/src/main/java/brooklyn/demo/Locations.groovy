@@ -17,21 +17,21 @@ public class Locations {
             id : LOCALHOST,
             displayName : "Localhost",
             streetAddress : "Appleton Tower, Edinburgh",
-            'latitude' : 55.94944, 'longitude' : -3.16028,
+            latitude : 55.94944, longitude : -3.16028,
             iso3166 : "GB-EDH" ]
     public static final String MONTEREY_EAST = "monterey-east"
     public static final Map MONTEREY_EAST_COORDS = [
             id : MONTEREY_EAST,
             displayName : "Hawthorne, NY", 
             streetAddress : "Hawthorne, NY",
-            'latitude' : 41.10361, 'longitude' : -73.79583, 
+            latitude : 41.10361, longitude : -73.79583, 
             iso3166 : "US-NY" ]
     public static final String EDINBURGH = "edinburgh"
     public static final Map EDINBURGH_COORDS = [ 
             id : EDINBURGH,
             displayName : "HQ, Edinburgh", 
             streetAddress : "Appleton Tower, Edinburgh",
-            'latitude' : 55.94944, 'longitude' : -3.16028, 
+            latitude : 55.94944, longitude : -3.16028, 
             iso3166 : "GB-EDH" ]
     public static final Map EC2_IMAGES = [
             "eu-west-1":"ami-89def4fd",
