@@ -16,7 +16,7 @@ import com.google.common.base.Preconditions
 public abstract class AbstractLocation implements Location {
     public static final Logger LOG = LoggerFactory.getLogger(Location.class)
  
-    private final String name
+    private String name
     private Location parentLocation
     private final Collection<Location> childLocations = []
     private final Collection<Location> childLocationsReadOnly = Collections.unmodifiableCollection(childLocations)
