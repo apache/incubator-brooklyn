@@ -60,7 +60,6 @@ class AwsLocationFactory {
         Map allconf = [:]
         allconf << conf
         allconf << locationSpecificConf.get(locationId)
-		allconf.put('name', locationId)
         allconf.put(Constants.PROPERTY_ENDPOINT, "https://ec2.${locationId}.amazonaws.com/");
         return new AwsLocation(allconf);
     }
