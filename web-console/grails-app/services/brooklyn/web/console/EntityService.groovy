@@ -19,7 +19,8 @@ class EntityService {
     def managementContextService
 
     private static final int CACHE_LIMIT = 10
-    ConcurrentMap<String, ConcurrentMap<String, SensorSummary>> sensorCache = new ConcurrentHashMap<String, ConcurrentMap<String, SensorSummary>>()
+    ConcurrentMap<String, ConcurrentMap<String, SensorSummary>> sensorCache =
+        new ConcurrentHashMap<String, ConcurrentMap<String, SensorSummary>>()
     ConcurrentMap<String, SubscriptionHandle> subscriptions = new ConcurrentHashMap<String, SubscriptionHandle>()
 
     ConcurrentLinkedQueue<String> cacheQueue = new ConcurrentLinkedQueue<String>();
