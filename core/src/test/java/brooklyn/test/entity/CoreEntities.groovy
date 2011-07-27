@@ -119,4 +119,7 @@ public class BlockingEntity extends TestEntity {
  */
 public class MockLocation extends AbstractLocation {
     // TODO add more mock methods
+    MockLocation(Map m = [:]) {
+        super(m);
+    }
 }
