@@ -1,6 +1,8 @@
 package brooklyn.policy
 
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.Executor
+import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
@@ -25,11 +27,18 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
     private int minSize
     private int maxSize = Integer.MAX_VALUE
     
+    private Executor executor = Executors.newSingleThreadExecutor()
+    private Closure resizeAction = {
+        int desire = desiredSize.get()
+        dynamicCluster.resize(desire)
+        while (desire != desiredSize.get()) {
+            desire = desiredSize.get()
+            dynamicCluster.resize(desire)
+        }
+    }
+
     private final AtomicInteger desiredSize = new AtomicInteger(0)
     private final AtomicBoolean suspended = new AtomicBoolean(false)
-
-    /** Lock held if we are in the process of resizing. */
-    private final Lock resizeLock = new ReentrantLock()
 
     AttributeSensor<T> source
 
@@ -77,19 +86,7 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
     }
 
     private void resize() {
-        if (!suspended.get() && dynamicCluster.getAttribute(DynamicCluster.SERVICE_UP) && resizeLock.tryLock()) {
-            try {
-                // Groovy does not support do .. while loops!
-                int desire = desiredSize.get()
-                dynamicCluster.resize(desire)
-                while (desire != desiredSize.get()) {
-                    desire = desiredSize.get()
-                    dynamicCluster.resize(desire)
-                }
-            } finally {
-                resizeLock.unlock()
-            }
-        }
+        executor.execute(resizeAction)
     }
 
     public void onEvent(SensorEvent<T> event) {
