@@ -12,15 +12,15 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
-import brooklyn.event.SensorEventListener
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
+import brooklyn.event.SensorEventListener
 import brooklyn.management.ExecutionManager
 import brooklyn.management.SubscriptionHandle
 import brooklyn.management.SubscriptionManager
 import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.task.BasicExecutionManager
-import brooklyn.util.task.SingleThreadedExecution
+import brooklyn.util.task.SingleThreadedScheduler
 
 import com.google.common.base.Predicate
 
@@ -58,7 +58,7 @@ public class LocalSubscriptionManager implements SubscriptionManager {
      * interface:
      * <ul>
      * <li>subscriberExecutionManagerTag - a tag to pass to execution manager (without setting any execution semantics / TaskPreprocessor);
-     *      if not supplied and there is a subscriber, this will be inferred from the subscriber and set up with SingleThreadedExecution
+     *      if not supplied and there is a subscriber, this will be inferred from the subscriber and set up with SingleThreadedScheduler
      *      (supply this flag with value null to prevent any task preprocessor from being set)
      * <li>eventFilter - a Predicate&lt;SensorEvent&gt; instance to filter what events are delivered
      * </ul>
@@ -88,7 +88,7 @@ public class LocalSubscriptionManager implements SubscriptionManager {
             LanguageUtils.addToMapOfSets(subscriptionsBySubscriber, s.subscriber, s);
         }
         if (!s.subscriberExecutionManagerTagSupplied && s.subscriberExecutionManagerTag!=null) {
-            ((BasicExecutionManager) em).setTaskPreprocessorForTag(s.subscriberExecutionManagerTag, SingleThreadedExecution.class);
+            ((BasicExecutionManager) em).setTaskSchedulerForTag(s.subscriberExecutionManagerTag, SingleThreadedScheduler.class);
         }
         s
     }
@@ -140,7 +140,7 @@ public class LocalSubscriptionManager implements SubscriptionManager {
                 ((BasicExecutionManager)em).clearTaskPreprocessorForTag(s.subscriberExecutionManagerTag)
         }
 
-        ((BasicExecutionManager) em).setTaskPreprocessorForTag(s.subscriberExecutionManagerTag, SingleThreadedExecution.class);
+        ((BasicExecutionManager) em).setTaskSchedulerForTag(s.subscriberExecutionManagerTag, SingleThreadedScheduler.class);
         return b1
     }
 
@@ -162,11 +162,11 @@ public class LocalSubscriptionManager implements SubscriptionManager {
         
         // delivery in parallel/background, using execution manager
         
-        // subscriptions, should define SingleThreadedExecution for any subscriber ID tag
+        // subscriptions, should define SingleThreadedScheduler for any subscriber ID tag
         // in order to ensure callbacks are invoked in the order they are submitted
         // (recommend exactly one per subscription to prevent deadlock)
         // this is done with:
-        // em.setTaskPreprocessorForTag(subscriberId, SingleThreadedExecution.class);
+        // em.setTaskSchedulerForTag(subscriberId, SingleThreadedScheduler.class);
         
         //note, generating the notifications must be done in the calling thread to preserve order
         //e.g. emit(A); emit(B); should cause onEvent(A); onEvent(B) in that order

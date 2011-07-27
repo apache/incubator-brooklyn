@@ -5,9 +5,9 @@ import java.util.concurrent.CancellationException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
 import java.util.concurrent.CopyOnWriteArraySet
-import java.util.concurrent.Executor
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.Future
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -42,6 +42,12 @@ public class BasicExecutionManager implements ExecutionManager {
 
     private ConcurrentMap<Object, TaskPreprocessor> preprocessorByTag = new ConcurrentHashMap()
 
+    private ConcurrentMap<Object, TaskScheduler> schedulerByTag = new ConcurrentHashMap()
+    
+    public void shutdownNow() {
+        runner.shutdownNow()
+    }
+    
     public Set<Task> getTasksWithTag(Object tag) {
         Set<Task> tasksWithTag
         synchronized (tasksByTag) {
@@ -90,9 +96,12 @@ public class BasicExecutionManager implements ExecutionManager {
 
     protected <T> Task<T> submitNewTask(Map flags, Task<T> task) {
         beforeSubmit(flags, task)
+        
         Closure job = {
             Object result = null
+            String oldThreadName = Thread.currentThread().getName();
             try {
+                Thread.currentThread().setName(oldThreadName+"-"+task.getDisplayName()+"["+task.id[0..8]+"]")
                 beforeStart(flags, task)
                 if (!task.isCancelled()) {
                     result = task.job.call()
@@ -100,6 +109,7 @@ public class BasicExecutionManager implements ExecutionManager {
             } catch(Exception e) {
                 result = e
             } finally {
+                Thread.currentThread().setName(oldThreadName)
                 afterEnd(flags, task)
             }
             if (result instanceof Exception) {
@@ -109,8 +119,22 @@ public class BasicExecutionManager implements ExecutionManager {
             result
         }
         task.initExecutionManager(this)
+        
+        // If there's a scheduler then use that; otherwise execute it directly
         // 'as Callable' to prevent being treated as Runnable and returning a future that gives null
-        task.initResult(runner.submit(job as Callable))
+        List<TaskScheduler> schedulers = []
+        task.@tags.each {
+            TaskScheduler scheduler = getTaskSchedulerForTag(it)
+            if (scheduler) schedulers << scheduler
+        }
+        Future future
+        if (schedulers) {
+            future = schedulers.get(0).submit(job as Callable)
+        } else {
+            future = runner.submit(job as Callable)
+        }
+
+        task.initResult(future)
         task
     }
 
@@ -213,6 +237,10 @@ public class BasicExecutionManager implements ExecutionManager {
         }
     }
 
+    public TaskScheduler getTaskSchedulerForTag(Object tag) {
+        return schedulerByTag.get(tag)
+    }
+    
     /**
      * Forgets that any preprocessor was associated with a tag.
      *
@@ -222,6 +250,54 @@ public class BasicExecutionManager implements ExecutionManager {
     public boolean clearTaskPreprocessorForTag(Object tag) {
         synchronized (preprocessorByTag) {
             def old = preprocessorByTag.remove(tag)
+            return (old!=null)
+        }
+    }
+    
+    public void setTaskSchedulerForTag(Object tag, Class<? extends TaskScheduler> scheduler) {
+        synchronized (schedulerByTag) {
+            TaskScheduler old = getTaskSchedulerForTag(tag)
+            if (old!=null) {
+                if (scheduler.isAssignableFrom(old.getClass())) {
+                    /* already have such an instance */
+                    return
+                }
+                //might support multiple in future...
+                throw new IllegalStateException("Not allowed to set multiple TaskSchedulers on ExecutionManager tag (tag $tag, has $old, setting new $scheduler)")
+            }
+            setTaskSchedulerForTag(tag, scheduler.newInstance())
+        }
+    }
+    
+    /**
+     * Defines a {@link TaskScheduler} to run on all subsequently submitted jobs with the given tag.
+     *
+     * Maximum of one allowed currently. Resubmissions of the same scheduler (or scheduler class)
+     * allowed. If changing, you must call {@link #clearTaskSchedulerForTag(Object)} between the two.
+     *
+     * @see #setTaskSchedulerForTag(Object, Class)
+     */
+    public void setTaskSchedulerForTag(Object tag, TaskScheduler scheduler) {
+        synchronized (schedulerByTag) {
+            scheduler.injectExecutor(runner)
+
+            def old = schedulerByTag.put(tag, scheduler)
+            if (old!=null && old!=scheduler) {
+                //might support multiple in future...
+                throw new IllegalStateException("Not allowed to set multiple TaskSchedulers on ExecutionManager tag (tag $tag)")
+            }
+        }
+    }
+
+    /**
+     * Forgets that any scheduler was associated with a tag.
+     *
+     * @see #setTaskSchedulerForTag(Object, TaskScheduler)
+     * @see #setTaskSchedulerForTag(Object, Class)
+     */
+    public boolean clearTaskSchedulerForTag(Object tag) {
+        synchronized (schedulerByTag) {
+            def old = schedulerByTag.remove(tag)
             return (old!=null)
         }
     }
