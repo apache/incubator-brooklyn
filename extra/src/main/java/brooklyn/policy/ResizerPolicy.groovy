@@ -3,9 +3,8 @@ package brooklyn.policy
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.locks.Lock
-import java.util.concurrent.locks.ReentrantLock
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -30,15 +29,22 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
     private final AtomicInteger desiredSize = new AtomicInteger(0)
 
     /** Lock held if we are in the process of resizing. */
-    private final Lock resizeLock = new ReentrantLock()
+    private final AtomicBoolean resizing = new AtomicBoolean(false)
     
-    private Executor executor = Executors.newSingleThreadExecutor()
+    private Executor executor = Executors.newSingleThreadExecutor() //FIXME: should be using Tasks
     private Closure resizeAction = {
-        int desire = desiredSize.get()
-        dynamicCluster.resize(desire)
-        while (desire != desiredSize.get()) {
-            desire = desiredSize.get()
+        try {
+            LOG.info "policy resizer performing resizing..."
+            int desire = desiredSize.get()
             dynamicCluster.resize(desire)
+            while (desire != desiredSize.get()) {
+                LOG.info "policy resizer performing re-resizing..."
+                desire = desiredSize.get()
+                dynamicCluster.resize(desire)
+            }
+            LOG.info "policy resizer resizing complete"
+        } finally {
+            resizing.set(false)
         }
     }
 
@@ -90,12 +96,8 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
     }
 
     private void resize() {
-        if (resizeLock.tryLock()) {
-            try {
-                executor.execute(resizeAction)
-            } finally {
-                resizeLock.unlock()
-            }
+        if (resizing.compareAndSet(false, true)) {
+            executor.execute(resizeAction)
         }
     }
 
