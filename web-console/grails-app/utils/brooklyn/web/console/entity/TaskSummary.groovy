@@ -18,7 +18,7 @@ public class TaskSummary {
     final String currentStatus;
     final String detailedStatus;
 
-    private DateFormat formatter = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy")
+    private static DateFormat formatter = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy")
 
     public TaskSummary(Task task) {
         this.displayName = task.displayName

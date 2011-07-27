@@ -16,11 +16,11 @@ import com.google.common.base.Preconditions
 public abstract class AbstractLocation implements Location {
     public static final Logger LOG = LoggerFactory.getLogger(Location.class)
  
-    private final String name
     private Location parentLocation
     private final Collection<Location> childLocations = []
     private final Collection<Location> childLocationsReadOnly = Collections.unmodifiableCollection(childLocations)
     protected Map leftoverProperties
+    protected String name
 
     /**
      * Construct a new instance of an AbstractLocation.
@@ -60,13 +60,35 @@ public abstract class AbstractLocation implements Location {
     public String getName() { return name; }
     public Location getParentLocation() { return parentLocation; }
     public Collection<Location> getChildLocations() { return childLocationsReadOnly; }
-    protected void addChildLocation(Location child) { childLocations.add(child); }
-    protected boolean removeChildLocation(Location child) { return childLocations.remove(child); }
+    
+    public boolean containsLocation(Location potentialDescendent) {
+        Location loc = potentialDescendent
+        while (loc != null) {
+            if (this == loc) return true
+            loc = loc.getParentLocation()
+        }
+        return false
+    }
+    
+    protected void addChildLocation(Location child) {
+        childLocations.add(child); 
+    }
+    
+    protected boolean removeChildLocation(Location child) {
+        return childLocations.remove(child);
+    }
 
     public void setParentLocation(Location parent) {
+        if (parent == this) {
+            throw new IllegalArgumentException("Location cannot be its own parent: "+this)
+        }
+        if (parent == parentLocation) {
+            return // no-op; already have desired parent
+        }
         if (parentLocation != null) {
-            parentLocation.removeChildLocation(this);
+            Location oldParent = parentLocation;
             parentLocation = null;
+            oldParent.removeChildLocation(this);
         }
         if (parent != null) {
             parentLocation = parent;

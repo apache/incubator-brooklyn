@@ -3,13 +3,23 @@ package com.cloudsoftcorp.monterey.brooklyn.entity
 import com.cloudsoftcorp.monterey.node.api.PropertiesContext;
 import java.io.IOException
 import java.net.InetSocketAddress
+import java.util.Arrays
 import java.util.Collection
+import java.util.Collections
+import java.util.Map
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.logging.Level
 import java.util.logging.Logger
 
+import brooklyn.entity.Effector
+import brooklyn.entity.ParameterType
 import brooklyn.entity.basic.AbstractGroup
+import brooklyn.entity.basic.BasicParameterType
+import brooklyn.entity.basic.EffectorInferredFromAnnotatedMethod
+import brooklyn.entity.basic.EffectorWithExplicitImplementation
 import brooklyn.entity.trait.Startable
+import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.Location
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.NoMachinesAvailableException
@@ -48,17 +58,35 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
     // TODO Would be great if we supported a "container", aka protonode, being able to host M,TP,etc
 
     private static final Logger LOG = Loggers.getLogger(MontereyContainerNode.class);
-        
+    
+    public static final BasicConfigKey<String> SUGGESTED_NETWORK_NODE_INSTALL_DIR = [String.class, "monterey.networknode.installdir", "Monterey network node installation directory" ]
+    public static final BasicConfigKey<String> SUGGESTED_TRUST_STORE = [String.class, "monterey.networknode.truststore", "Monterey network node truststore" ]
+    public static final BasicConfigKey<Integer> SUGGESTED_MONTEREY_NODE_PORT = [Integer.class, "monterey.networknode.nodeport", "Monterey network node comms port" ]
+    public static final BasicConfigKey<Integer> SUGGESTED_MONTEREY_HUB_LPP_PORT = [Integer.class, "monterey.networknode.hublpp.port", "Monterey network node hub lpp port" ]
+    
+    public static final BasicAttributeSensor<Integer> CREATION_ID = [ String, "monterey.networknode.creationId", "Node creation id" ]
+    public static final BasicAttributeSensor<NodeId> NODE_ID = [ NodeId.class, "monterey.networknode.nodeId", "Node node id" ]
+    public static final BasicAttributeSensor<String> STATUS = [ String, "monterey.networknode.status", "Node status" ]
+                                    
+    public static final Effector<Void> REVERT = new EffectorInferredFromAnnotatedMethod<Void>(MontereyContainerNode.class, "revert", "Revert the entity");
+    public static final Effector<Void> RELEASE = new EffectorInferredFromAnnotatedMethod<Void>(MontereyContainerNode.class, "release", "Release (i.e. shutdown) the entity");
+    public static final Effector<Void> KILL = new EffectorInferredFromAnnotatedMethod<Void>(MontereyContainerNode.class, "kill", "Kill the entity");
+    public static final Effector<Void> ROLLOUT = new EffectorWithExplicitImplementation<MontereyContainerNode, Void>("rollout", Void.TYPE,
+            Arrays.<ParameterType<?>>asList(new BasicParameterType<Dmn1NodeType>("type", Dmn1NodeType.class, "The type that this node should become", null)),
+            "Rollout the node as a specific type") {
+        private static final long serialVersionUID = 6316740447259603273L;
+        public Void invokeEffector(MontereyContainerNode entity, Map m) {
+            entity.rollout((Dmn1NodeType) m.get("type"));
+            return null;
+        }
+    };
+
     private final MontereyNetworkConnectionDetails connectionDetails;
     private String creationId;
     private NodeId nodeId;
     private Location location;
     private final AtomicBoolean running = new AtomicBoolean(false)
     
-    // TODO use these or delete them?
-    private File truststore = null;
-    private int montereyNodePort = 0;
-    private int montereyHubLppPort = 0;
     private String networkHome = "~/monterey-network-node-copy1";
     
     private AbstractMontereyNode node;
@@ -76,15 +104,12 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
         GsonSerializer gsonSerializer = new GsonSerializer(classloadingContext);
         gson = gsonSerializer.getGson();
     }
-    
-    public void setTruststore(File val) {
-        this.truststore = val;
+
+    @Override
+    public String getDisplayName() {
+        return "Container node "+(nodeId ? "("+nodeId+")" : "<uninitialized>")
     }
-    
-    public void setMontereyNodePort(int val) {
-        this.montereyNodePort = val;
-    }
-    
+
     public NodeId getNodeId() {
         return nodeId;
     }
@@ -95,7 +120,10 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
 
     protected List<Integer> getRequiredOpenPorts() {
         List<Integer> result = [22]
-        if (montereyNodePort > 0) result.add(montereyNodePort) 
+        
+        Integer montereyNodePort = getConfig(SUGGESTED_MONTEREY_NODE_PORT)
+        Integer montereyHubLppPort = getConfig(SUGGESTED_MONTEREY_HUB_LPP_PORT)
+        if (montereyNodePort != null && montereyNodePort > 0) result.add(montereyNodePort) 
         if (montereyHubLppPort > 0) result.add(montereyHubLppPort)
         return result 
     }
@@ -159,13 +187,19 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
 
     public void startInLocation(SshMachineLocation host) {
         running.set(true);
+        location = host;
         locations.add(host);
         
         LOG.info("Creating new monterey node "+creationId+" on "+host);
 
+        setAttribute(STATUS, "starting")
+        setAttribute(CREATION_ID, creationId)
+        
         PropertiesContext nodeProperties = new PropertiesContext();
         String locationId = host.getParentLocation()?.getName() ?: host.getName();
         String accountId = "accid";
+        int montereyNodePort = getConfig(SUGGESTED_MONTEREY_NODE_PORT) ?: 0
+        int montereyHubLppPort = getConfig(SUGGESTED_MONTEREY_HUB_LPP_PORT) ?: 0
         try {
             SocketAddress address = new SocketAddress(new InetSocketAddress(host.getAddress().getHostName(), montereyNodePort));
             nodeProperties.getProperties().add(ProvisioningConstants.NODE_LOCATION_PROPERTY, locationId);
@@ -173,12 +207,15 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
             nodeProperties.getProperties().add(ProvisioningConstants.NODE_CREATION_UID_PROPERTY, creationId);
             nodeProperties.getProperties().add(ProvisioningConstants.PREFERRED_HOSTNAME_PROPERTY, host.getAddress().getHostName());
             nodeProperties.getProperties().add(ProvisioningConstants.PREFERRED_SOCKET_ADDRESS_PROPERTY,address.getConstructionString());
-            nodeProperties.getProperties().add(ProvisioningConstants.LPP_HUB_LISTENER_PORT_PROPERTY, ""+montereyHubLppPort);
             nodeProperties.getProperties().add(ProvisioningConstants.MONITOR_ADDRESS_PROPERTY, JarUrlUtils.toStringUsingDefaultClassloadingContext(connectionDetails.getMonitorAddress()));
             nodeProperties.getProperties().add(ProvisioningConstants.MANAGER_ADDRESS_PROPERTY, JarUrlUtils.toStringUsingDefaultClassloadingContext(connectionDetails.getManagerAddress()));
+            nodeProperties.getProperties().add(ProvisioningConstants.LPP_HUB_LISTENER_PORT_PROPERTY, ""+montereyHubLppPort);
         
             // TODO Set comms class/bundle (and location latencies); see ManagementNodeConfig.getDefaultNodeProperties
         
+            String truststorePath = getConfig(SUGGESTED_TRUST_STORE)
+            File truststore = truststorePath ? new File(truststorePath) : null
+            
             if (truststore != null) nodeProperties.getProperties().add(ProvisioningConstants.JAVAX_NET_SSL_TRUSTSTORE, networkHome+"/"+AccountConfig.NETWORK_NODE_SSL_TRUSTSTORE_RELATIVE_PATH);
             
             String args = networkHome+"/"+MontereyNetworkConfig.NETWORK_NODE_START_SCRIPT_RELATIVE_PATH+
@@ -191,7 +228,11 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
                 }
                 host.run(out: System.out, args);
                 
+                LOG.info("Launched and waiting for new monterey node "+creationId+" on "+host);
                 waitForStartOrFailed();
+                
+                setAttribute(STATUS, (running.get() ? "running" : "failed"))
+                setAttribute(NODE_ID, nodeId)
                 
             } catch (IllegalStateException e) {
               throw e; // TODO throw as something nicer?
@@ -205,7 +246,7 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
             
         } catch (RuntimeException e) {
             LOG.log(Level.SEVERE, "Error starting node("+nodeProperties+") on "+host, e);
-            kill(host);
+            killInLocation(host);
             throw e;
         }
     }
@@ -222,6 +263,7 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
         synchronized (running) {
             running.set(false);
             running.notifyAll();
+            setAttribute(STATUS, "stopped")
         }
         
         Location loc = (locations) ? locations.iterator().next() : null;
@@ -230,7 +272,7 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
         }
         
         if (loc instanceof SshMachineLocation) {
-            kill((SshMachineLocation)loc);
+            killInLocation((SshMachineLocation)loc);
         } else if (loc == null) {
             LOG.info("No-op killing monterey network node; no location: creationId=$creationId");
         } else {
@@ -240,7 +282,7 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
         setOwner(null)
     }
     
-    private void kill(SshMachineLocation host) {
+    private void killInLocation(SshMachineLocation host) {
         String args = networkHome+"/"+MontereyNetworkConfig.NETWORK_NODE_KILL_SCRIPT_RELATIVE_PATH+
                 " -key $creationId";
 
@@ -259,11 +301,13 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
     }
 
     public void rollout(Dmn1NodeType type) {
+        LOG.info("Rolling out node $nodeId in $locations as $type")
         PlumberWebProxy plumber = new PlumberWebProxy(connectionDetails.getManagementUrl(), gson, connectionDetails.getWebApiAdminCredential());
         DmnFuture<Collection<NodeId>> future = plumber.rolloutNodes(new NodesRolloutConfiguration.Builder()
                 .nodesToUse(Collections.singleton(nodeId))
                 .ofType(type, 1)
                 .build());
+        future.get();
     }
     
     public void revert() {
@@ -293,8 +337,8 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
     }
 
     void updateContents(NodeSummary nodeSummary, Collection<NodeId> downstreamNodes) {
-        if (!nodeId) {
-            synchronized (running) {
+        synchronized (running) {
+            if (!nodeId) {
                 nodeId = nodeSummary.nodeId
                 running.notifyAll();
             }
@@ -309,10 +353,7 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
             // already has correct type; nothing to do
             return;
         }
-        
-        if (node != null) {
-            node.dispose();
-        }
+        AbstractMontereyNode oldNode = node
         
         switch (nodeSummary.getType()) {
             case Dmn1NodeType.M:
@@ -341,8 +382,18 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
                 throw new IllegalStateException("Cannot create entity for mediator node type "+nodeSummary.getType()+" at "+nodeId);
         }
 
-        if (node != null) {
-            addOwnedChild(node)
+        if (node == oldNode) {
+            // no change;
+        } else {
+            if (oldNode != null) {
+                oldNode.dispose();
+                removeOwnedChild(oldNode)
+                getManagementContext().unmanage(oldNode)
+            }
+            if (node != null) {
+                addOwnedChild(node)
+                getManagementContext().manage(node)
+            }
         }
         
         LOG.info("Node "+nodeId+" changed type to "+nodeSummary.getType());        

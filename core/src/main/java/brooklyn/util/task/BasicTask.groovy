@@ -75,13 +75,12 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
 
     public BasicTask(Map flags=[:], Closure<T> job) {
         this.job = job
-        description = flags.remove("description")
-        displayName = flags.remove("displayName")
 
         if (flags.tag) tags.add flags.remove("tag")
         if (flags.tags) tags.addAll flags.remove("tags")
 
-        if (flags) throw new IllegalArgumentException("Unsupported flags passed to task: "+flags)
+        description = flags.remove("description") ?: ""
+        displayName = flags.remove("displayName") ?: tags.join("-")
     }
 
     public BasicTask(Map flags=[:], Runnable job)    { this(flags, closureFromRunnable(job) as Closure) }
@@ -363,10 +362,12 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
                 }
             }
             if (verbosity>=2) {
-                if (ti.getStackTrace()!=null && ti.getStackTrace().length>0)
-                    rv += "\n" +"At: "+ti.getStackTrace()[0]
-                for (int ii=1; ii<ti.getStackTrace().length; ii++) {
-                    rv += "\n" +"    "+ti.getStackTrace()[ii]
+                List<StackTraceElement> st = ti.getStackTrace()
+                st = StackTraceSimplifier.cleanStackTrace(st)
+                if (st!=null && st.size()>0)
+                    rv += "\n" +"At: "+st[0]
+                for (int ii=1; ii<st.size(); ii++) {
+                    rv += "\n" +"    "+st[ii]
                 }
             }
         }

@@ -40,6 +40,8 @@ public class SpringTravel extends AbstractApplication {
                 id : 'fabricID',
 	            name : 'fabricName',
 	            displayName : 'Fabric',
+                displayNamePrefix : '',
+                displayNameSuffix : ' web cluster',
 	            newEntity : { Map properties -> 
                     WebCluster cluster = new WebCluster(properties, fabric)
                     
@@ -58,7 +60,7 @@ public class SpringTravel extends AbstractApplication {
         
         Preconditions.checkState fabric.displayName == "Fabric"
 
-        nginxEntities = new DynamicGroup([:], this, { Entity e -> (e instanceof NginxController) })
+        nginxEntities = new DynamicGroup([displayName:"nginx group"], this, { Entity e -> (e instanceof NginxController) })
 
         geoDns = new GeoscalingDnsService(username: 'cloudsoft', password: 'cl0uds0ft',
             primaryDomainName: 'geopaas.org', smartSubdomainName: 'brooklyn',

@@ -44,6 +44,8 @@ public class WebCluster extends AbstractEntity implements Startable {
             }
         cluster = new DynamicWebAppCluster(newEntity:template, this)
         cluster.setConfig(DynamicCluster.INITIAL_SIZE, 0)
+
+        setAttribute(SERVICE_UP, false)
     }
 
     void start(Collection<Location> locations) {

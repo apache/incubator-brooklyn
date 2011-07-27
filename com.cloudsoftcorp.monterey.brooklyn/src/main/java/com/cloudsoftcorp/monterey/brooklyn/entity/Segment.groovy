@@ -21,6 +21,8 @@ public class Segment extends AbstractEntity {
     // Currently leaving that in the logic behind Dmn1NetworkInfo.getActivityModel.
 
     // TODO Share constant for all nodes plus segment?
+    public static final BasicAttributeSensor<String> ID = [ String, "monterey.segment.id", "Segment id" ]
+    public static final BasicAttributeSensor<String> NAME = [ String, "monterey.segment.name", "Segment name" ]
     public static final BasicAttributeSensor<Integer> WORKRATE_MSGS_PER_SEC = [ Double, "monterey.workrate.msgsPerSec", "Messages per sec" ]
     public static final BasicAttributeSensor<NodeId> MEDIATOR = [ NodeId, "monterey.segment.mediator", "Mediator that contains this segment" ]
     
@@ -34,11 +36,18 @@ public class Segment extends AbstractEntity {
         LOG.info("Segment "+segmentId+" created");        
     }
     
+    @Override
+    public String getDisplayName() {
+        return (segmentId ? "Segment ("+segmentId+")" : super.getDisplayName())    
+    }
+    
     public String segmentId() {
         return segmentId;
     }
 
     public void updateTopology(SegmentSummary summary, NodeId mediator) {
+        setAttribute ID, summary.getUid() // TODO dont' keep re-publishing!
+        setAttribute NAME, summary.getDisplayName()
         setAttribute MEDIATOR, mediator
     }
 

@@ -1,16 +1,17 @@
 package brooklyn.util.task
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.*
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.Semaphore;
+import java.util.Map
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.atomic.AtomicInteger
 
-import org.testng.annotations.Test;
+import brooklyn.test.TestUtils
 
-import brooklyn.management.ExecutionManager;
-import brooklyn.management.Task;
+import org.testng.Assert
+import org.testng.annotations.Test
 
+@Deprecated // use SingleThreadedScheduler; FIXME delete this class when we're definitely happy with SingleThreadedScheduler 
 class SynchronizedExecutionTest {
     List data = new ArrayList()
     
@@ -51,6 +52,31 @@ class SynchronizedExecutionTest {
         assertDataInOrder(size:3, last:2)
         
         mon.interrupt()
+    }
+
+    @Test(enabled=false)
+    public void runManySynchedTasks() {
+        BasicExecutionManager em = []
+        try {
+            em.setTaskPreprocessorForTag("category1", SingleThreadedExecution.class);
+            
+            final CountDownLatch latch = new CountDownLatch(1)
+            BasicTask blockingTask = [ { latch.await() } ]
+            em.submit tag:"category1", blockingTask
+            
+            final AtomicInteger counter = new AtomicInteger(0)
+            for (i in 1..10000) {
+                BasicTask t = [ {counter.incrementAndGet()} ]
+                em.submit tag:"category1", t
+            }
+    
+            Thread.sleep(10000)
+            latch.countDown()
+    
+            TestUtils.executeUntilSucceeds( {Assert.assertEquals(counter.get(), 10000)} )
+        } finally {
+            em?.shutdownNow()
+        } 
     }
 
     @Test(enabled = false)

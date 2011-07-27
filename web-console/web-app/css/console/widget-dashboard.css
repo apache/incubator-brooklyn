@@ -1,0 +1,48 @@
+.column {
+    width: 320px;
+    float: left;
+    padding-bottom: 0px;
+}
+
+.portlet {
+    margin: 0 1em 1em 0;
+}
+
+.portlet-header {
+    margin: 0.3em;
+    padding-bottom: 4px;
+    padding-left: 0.2em;
+}
+
+.portlet-header .ui-icon {
+    float: right;
+}
+
+.portlet-content {
+    padding: 0.4em;
+}
+
+.ui-sortable-placeholder {
+    border: 1px dotted black;
+    visibility: visible !important;
+    height: 50px !important;
+}
+
+.ui-sortable-placeholder * {
+    visibility: hidden; 
+}
+
+#dashboard-container{
+    overflow:auto;
+    position:absolute;
+    top:50px;
+    bottom:0px;
+}
+
+#log-widget-textbox{
+    width:100%;
+    height:250px;
+    background:black;
+    color:green;
+}
+

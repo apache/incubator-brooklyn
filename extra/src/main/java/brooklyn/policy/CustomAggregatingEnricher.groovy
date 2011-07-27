@@ -82,7 +82,7 @@ class CustomAggregatingEnricher<T> extends AbstractPolicy implements SensorEvent
     public static <R extends Number> CustomAggregatingEnricher<R> getAveragingEnricher(
             List<Entity> producer, Sensor<R> source, Sensor<Double> target) {
         return new CustomAggregatingEnricher<R>(producer, source, target, {
-            it.isEmpty() ? 0d : (Double) it.sum() / it.size()
+            it.isEmpty() ? 0d : (Double) it.sum(0) / it.size()
         }, 0d)
     }
 

@@ -10,22 +10,13 @@ import brooklyn.management.internal.AbstractManagementContext
 public class Demo {
     public static final Logger LOG = LoggerFactory.getLogger(Demo)
 
-    public static final List<String> DEFAULT_LOCATIONS = ["eu-west-1", "ap-northeast-1", "monterey-east" ]
+    public static final List<String> DEFAULT_LOCATIONS = [ Locations.LOCALHOST ]
 
     public static void main(String[] argv) {
         // Parse arguments for location ids and resolve each into a location
         List<String> ids = argv.length == 0 ? DEFAULT_LOCATIONS : Arrays.asList(argv)
-        println "Starting in locations: "
-        ids.each { println it }
-        List<Location> locations = ids.collect { String location ->
-	        if (Locations.AWS_REGIONS.contains(location)) {
-	            Locations.lookupAwsRegion(location)     
-	        } else if (Locations.MONTEREY_EAST == location) {
-		        Locations.newMontereyEastLocation()
-	        } else if (Locations.EDINBURGH == location) {
-		        Locations.newMontereyEdinburghLocation()
-	        }
-        }
+        println "Starting in locations: "+ids
+        List<Location> locations = Locations.getLocationsById(ids)
 
         // Initialize the Spring Travel application entity
         SpringTravel app = new SpringTravel(name:'brooklyn-wide-area-demo',
