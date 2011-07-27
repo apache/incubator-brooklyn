@@ -22,6 +22,7 @@ Brooklyn.circles = (function() {
 
     function hardcodedCircleDrawer() {
         drawCircle(56, -2, 100000);
+
     }
 
     function drawCirclesFromJSON(json) {
