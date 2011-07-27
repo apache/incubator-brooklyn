@@ -77,20 +77,25 @@ public class DynamicGroup extends AbstractGroup {
             log.warn "$this not (yet) scanning for children of $this: no application defined"
             return
         }
+        boolean changed = false
+        Collection<Entity> currentMembers = super.getMembers()
         Collection<Entity> toRemove = []
-        toRemove.addAll(super.getMembers());
+        toRemove.addAll(currentMembers);
         ((AbstractManagementContext) getManagementContext()).getEntities().each {
-            if (acceptsEntity(it)) {
+            if (acceptsEntity(it) && !currentMembers.contains(it)) {
                 log.info("$this rescan detected new item $it")
                 addMember(it)
                 toRemove.remove(it)
+                changed = true
             }
         }
         toRemove.each { 
             log.info("$this rescan detected vanished item $it")
-            removeMember(it) 
+            removeMember(it)
+            changed = true
         }
-        log.info("$this rescan complete, members now ${getMembers()}")
+        if (changed)
+            log.info("$this rescan complete, members now ${getMembers()}")
     }
     
 }
