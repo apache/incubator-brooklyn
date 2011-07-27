@@ -83,7 +83,7 @@ private class TestApplication extends AbstractApplication {
         ])
     }
 
-    AbstractGroup addOwnedChildren(Collection<Entity> children) {
+    AbstractEntity addOwnedChildren(Collection<Entity> children) {
         children.each { addOwnedChild(it) }
         return this
     }
