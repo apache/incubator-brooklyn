@@ -113,13 +113,3 @@ public class BlockingEntity extends TestEntity {
         super.start(locs)
     }
 }
-
-/**
- * Mock location for testing.
- */
-public class MockLocation extends AbstractLocation {
-    // TODO add more mock methods
-    MockLocation(Map m = [:]) {
-        super(m);
-    }
-}
