@@ -26,6 +26,11 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
     private double metricUpperBound
     private int minSize
     private int maxSize = Integer.MAX_VALUE
+
+    private final AtomicInteger desiredSize = new AtomicInteger(0)
+
+    /** Lock held if we are in the process of resizing. */
+    private final Lock resizeLock = new ReentrantLock()
     
     private Executor executor = Executors.newSingleThreadExecutor()
     private Closure resizeAction = {
@@ -37,7 +42,6 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
         }
     }
 
-    private final AtomicInteger desiredSize = new AtomicInteger(0)
     private final AtomicBoolean suspended = new AtomicBoolean(false)
 
     AttributeSensor<T> source
@@ -86,7 +90,13 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
     }
 
     private void resize() {
-        executor.execute(resizeAction)
+        if (resizeLock.tryLock()) {
+            try {
+                executor.execute(resizeAction)
+            } finally {
+                resizeLock.unlock()
+            }
+        }
     }
 
     public void onEvent(SensorEvent<T> event) {
@@ -96,11 +106,11 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
 
         if (desiredSize.get() != currentSize) {
             LOG.info "policy resizer resizing: metric={}, workrate={}, lowerBound={}, upperBound={}; currentSize={}, desiredSize={}, minSize={}, maxSize={}",
-                    Arrays.toString(metricName), val, metricLowerBound, metricUpperBound, currentSize, desiredSize.get(), minSize, maxSize
+                    source, val, metricLowerBound, metricUpperBound, currentSize, desiredSize.get(), minSize, maxSize
             resize()
         } else {
             LOG.debug "policy resizer doing nothing: metric={}, workrate={}, lowerBound={}, upperBound={}; currentSize={}, minSize={}, maxSize={}",
-                    Arrays.toString(metricName), val, metricLowerBound, metricUpperBound, currentSize, minSize, maxSize
+                    source, val, metricLowerBound, metricUpperBound, currentSize, minSize, maxSize
         }
     }
 
