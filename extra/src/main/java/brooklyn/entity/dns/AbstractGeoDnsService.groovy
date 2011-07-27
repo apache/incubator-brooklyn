@@ -59,7 +59,7 @@ abstract class AbstractGeoDnsService extends AbstractEntity {
                     return;
                 HostGeoInfo hgi = HostGeoInfo.fromEntity(e)
                 if (hgi == null)
-                    log.warn("Failed to derive geo information for entity $e");
+                    AbstractGeoDnsService.log.warn("Failed to derive geo information for entity $e");
                 else {
                     targetHosts.put(e, hgi);
                     changed = true;
