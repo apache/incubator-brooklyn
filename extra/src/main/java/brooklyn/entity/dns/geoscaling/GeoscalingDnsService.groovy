@@ -17,10 +17,10 @@ import brooklyn.event.basic.ConfiguredAttributeSensor
 
 class GeoscalingDnsService extends AbstractGeoDnsService {
     
-    public static BasicConfigKey<String> GEOSCALING_USERNAME = [ String.class, "geoscaling.username" ];
-    public static BasicConfigKey<String> GEOSCALING_PASSWORD = [ String.class, "geoscaling.password" ];
-    public static BasicConfigKey<String> GEOSCALING_PRIMARY_DOMAIN_NAME = [ String.class, "geoscaling.primary.domain.name" ];
-    public static BasicConfigKey<String> GEOSCALING_SMART_SUBDOMAIN_NAME = [ String.class, "geoscaling.smart.subdomain.name" ];
+    public static final BasicConfigKey GEOSCALING_USERNAME = [ String, "geoscaling.username" ];
+    public static final BasicConfigKey GEOSCALING_PASSWORD = [ String, "geoscaling.password" ];
+    public static final BasicConfigKey GEOSCALING_PRIMARY_DOMAIN_NAME = [ String, "geoscaling.primary.domain.name" ];
+    public static final BasicConfigKey GEOSCALING_SMART_SUBDOMAIN_NAME = [ String, "geoscaling.smart.subdomain.name" ];
 
     public static final BasicAttributeSensor GEOSCALING_ACCOUNT =
         [ String, "geoscaling.account", "Active user account for the GeoScaling.com service" ];
