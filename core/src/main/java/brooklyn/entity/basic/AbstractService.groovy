@@ -41,7 +41,7 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
 
         if (properties.version) setConfig(SUGGESTED_VERSION, properties.remove("version"))
         if (properties.installDir) setConfig(SUGGESTED_INSTALL_DIR, properties.remove("installDir"))
-        if (properties.runDir) setConfig(SUGGESTED_INSTALL_DIR, properties.remove("runDir"))
+        if (properties.runDir) setConfig(SUGGESTED_RUN_DIR, properties.remove("runDir"))
  
         setAttribute(SERVICE_UP, false)
     }
