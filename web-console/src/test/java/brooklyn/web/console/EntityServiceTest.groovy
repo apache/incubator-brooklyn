@@ -98,6 +98,12 @@ class EntityServiceTest {
         Location c3 = new MockLocation(parentLocation: p3);
         assertEquals(testService.getNearestAncestorWithCoordinates(c3), p);
     }
+
+    @Test
+    public void testGetNearestAncestorWithCoordinates() {
+        assertEquals(testService.getNearestAncestorWithCoordinates(new MockLocation()), null);
+        assertEquals(testLocation, testService.getNearestAncestorWithCoordinates(testLocation));
+    }
 }
 
 private class TestApplication extends AbstractApplication {
