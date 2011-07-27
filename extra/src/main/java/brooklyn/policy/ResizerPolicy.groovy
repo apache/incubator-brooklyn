@@ -1,5 +1,6 @@
 package brooklyn.policy
 
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
@@ -23,8 +24,9 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
     private double metricUpperBound
     private int minSize
     private int maxSize = Integer.MAX_VALUE
-
+    
     private final AtomicInteger desiredSize = new AtomicInteger(0)
+    private final AtomicBoolean suspended = new AtomicBoolean(false)
 
     /** Lock held if we are in the process of resizing. */
     private final Lock resizeLock = new ReentrantLock()
@@ -65,9 +67,17 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
         this.maxSize = val
         this
     }
+    
+    public void suspend() {
+        suspended.set(true)
+    }
+    
+    public void resume() {
+        suspended.set(false)
+    }
 
     private void resize() {
-        if (resizeLock.tryLock()) {
+        if (!suspended.get() && dynamicCluster.getAttribute(DynamicCluster.SERVICE_UP) && resizeLock.tryLock()) {
             try {
                 // Groovy does not support do .. while loops!
                 int desire = desiredSize.get()

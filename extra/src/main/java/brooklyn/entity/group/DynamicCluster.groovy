@@ -10,9 +10,9 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.trait.Startable
-import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.Location
 import brooklyn.management.Task
+import brooklyn.policy.ResizerPolicy
 
 import com.google.common.base.Preconditions
 
@@ -64,10 +64,12 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         location = locations.find { true }
         locations.add(location)
         resize(initialSize)
+        policies.each { if (it instanceof ResizerPolicy) it.resume() }
         setAttribute(SERVICE_UP, true)
     }
 
     public void stop() {
+        policies.each { if (it instanceof ResizerPolicy) it.suspend() }
         resize(0)
         setAttribute(SERVICE_UP, false)
     }
