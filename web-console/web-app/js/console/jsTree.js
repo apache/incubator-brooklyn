@@ -26,7 +26,7 @@ Brooklyn.jsTree = (function(parent) {
     }
 
     function refreshTreeIfChanged(json){
-        if (currentTree == undefined || !testEquivalent(json, currentTree)){
+        if (currentTree == undefined || json[0][0] == undefined || !testEquivalent(json, currentTree)){
             currentTree = json;
             loadJstree();
         }
