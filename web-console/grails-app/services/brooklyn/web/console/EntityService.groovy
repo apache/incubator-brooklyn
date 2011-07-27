@@ -90,10 +90,6 @@ class EntityService {
         return results
     }
 
-    public Collection<Entity> getChildren(Entity parent) {
-        return parent.ownedChildren
-    }
-
     public List<Entity> getAncestorsOf(Entity child) {
         List<Entity> result = []
         Entity ancestor = child.getOwner()
@@ -107,7 +103,7 @@ class EntityService {
 
     public boolean isChildOf(Entity child, Collection<Entity> parents) {
         parents.find { parent ->
-            getChildren(parent).contains(child) || isChildOf(child, getChildren(parent))
+            parent.getOwnedChildren().contains(child) || isChildOf(child, parent.getOwnedChildren())
         }
     }
 
@@ -124,7 +120,7 @@ class EntityService {
         entities.each {
             e ->
             flattenedList.add(e)
-            getChildren(e).each {
+            e.getOwnedChildren().each {
                 flattenedList.addAll(flattenEntities([it]))
             }
         }
@@ -156,7 +152,7 @@ class EntityService {
     }
 
     private List<Entity> leaves(Entity e) {
-        def children = getChildren(e);
+        def children = e.getOwnedChildren();
 
         if (children.size() == 0) return e;
         // inject is foldl
