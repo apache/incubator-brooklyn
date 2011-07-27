@@ -40,8 +40,8 @@ class SynchronizedExecutionTest {
         BasicExecutionManager em = []
         
         //for debug
-        Thread mon = new Thread({ try { Thread.sleep(1000); println "tasks for $em"; em.allTasks.each { println "$it: "+it.getStatusDetail(true); } } catch (Throwable t) {} })
-        mon.start();
+//        Thread mon = new Thread({ try { Thread.sleep(1000); println "tasks for $em"; em.allTasks.each { println "$it: "+it.getStatusDetail(true); } } catch (Throwable t) {} })
+//        mon.start();
         
         em.setTaskPreprocessorForTag("category1", SingleThreadedExecution.class);
         
@@ -51,7 +51,7 @@ class SynchronizedExecutionTest {
         t2.get()
         assertDataInOrder(size:3, last:2)
         
-        mon.interrupt()
+//        mon.interrupt()
     }
 
     @Test(enabled=false)

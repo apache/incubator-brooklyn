@@ -52,7 +52,7 @@ public interface ExecutionManager {
     public Set<Object> getTaskTags();
 
     /** returns all tasks known to this manager (immutable) */
-    public Set<Task<?>> getAllTasks();
+//    public Set<Task<?>> getAllTasks();
 
     /** see {@link #submit(Map, Task)} */
     public Task<?> submit(Runnable r);

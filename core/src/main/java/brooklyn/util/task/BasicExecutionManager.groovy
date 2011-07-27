@@ -38,7 +38,7 @@ public class BasicExecutionManager implements ExecutionManager {
     
     private Set<Task> knownTasks = new CopyOnWriteArraySet<Task>()
 
-    private Map<Object,Set<Task>> tasksByTag = new LinkedHashMap()
+    private ConcurrentMap<Object,Set<Task>> tasksByTag = new ConcurrentHashMap()
     //access to the above is synchronized in code in this class, to allow us to preserve order while guaranteeing thread-safe
     //(but more testing is needed before we are sure it is thread-safe!)
     //synch blocks are as finely grained as possible for efficiency
@@ -52,12 +52,8 @@ public class BasicExecutionManager implements ExecutionManager {
     }
     
     public Set<Task> getTasksWithTag(Object tag) {
-        Set<Task> tasksWithTag
-        synchronized (tasksByTag) {
-            tasksWithTag = tasksByTag.get(tag)
-	        if (tasksWithTag == null) return Collections.emptySet()
-	        return new LinkedHashSet(tasksWithTag)
-        }
+        tasksByTag.putIfAbsent(tag, new CopyOnWriteArraySet<Task>())
+        return tasksByTag.get(tag)
     }
 
     public Set<Task> getTasksWithAnyTag(Iterable tags) {
@@ -70,21 +66,20 @@ public class BasicExecutionManager implements ExecutionManager {
         //NB: for this method retrieval for multiple tags could be made (much) more efficient (if/when it is used with multiple tags!)
         //by first looking for the least-used tag, getting those tasks, and then for each of those tasks
         //checking whether it contains the other tags (looking for second-least used, then third-least used, etc)
-        Set result = null
-        tags.each {
-            tag ->
-            if (result==null) result = getTasksWithTag(tag)
-            else {
-                result.retainAll getTasksWithTag(tag)
-                if (!result) return result  //abort if we are already empty
+        Set result = new HashSet<Task>()
+        tags.each { tag -> 
+            if (result.isEmpty()) { 
+                result.addAll(getTasksWithTag(tag))
+            } else {
+                result.retainAll(getTasksWithTag(tag))
             }
         }
         result
     }
 
-    public Set<Object> getTaskTags() { synchronized (tasksByTag) { return new LinkedHashSet(tasksByTag.keySet()) }}
+    public Set<Object> getTaskTags() { return tasksByTag.keySet() }
 
-    public Set<Task> getAllTasks() { synchronized (knownTasks) { return new LinkedHashSet(knownTasks) }}
+//    public Set<Task> getAllTasks() { return knownTasks }
 
     public Task<?> submit(Map flags=[:], Runnable r) { submit flags, new BasicTask(flags, r) }
 
@@ -144,28 +139,15 @@ public class BasicExecutionManager implements ExecutionManager {
     protected void beforeSubmit(Map flags, Task<?> task) {
         task.submittedByTask = getCurrentTask()
         task.submitTimeUtc = System.currentTimeMillis()
-        synchronized (knownTasks) {
-            knownTasks << task
-        }
+//        knownTasks.add task
+        
         if (flags.tag) task.@tags.add flags.remove("tag")
         if (flags.tags) task.@tags.addAll flags.remove("tags")
 
-        List tagBuckets = []
-        synchronized (tasksByTag) {
-            task.@tags.each { tag ->
-                Set tagBucket = tasksByTag.get tag
-                if (tagBucket==null) {
-                    tagBucket = new LinkedHashSet()
-                    tasksByTag.put tag, tagBucket
-                }
-                tagBuckets.add tagBucket
-            }
+        task.@tags.each { tag -> 
+            getTasksWithTag(tag) << task
         }
-        tagBuckets.each { bucket ->
-            synchronized (bucket) {
-                bucket << task
-            }
-        }
+        
         List tagLinkedPreprocessors = []
         task.@tags.each {
             TaskPreprocessor p = getTaskPreprocessorForTag(it)
