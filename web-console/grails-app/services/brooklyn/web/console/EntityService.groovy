@@ -69,21 +69,10 @@ class EntityService {
         Entity entity = getEntity(entityId)
         if (!entity) throw new NoSuchEntity()
 
-        // FIXME subscription not working. Removing that for the demo...
-        // Needs retested; it could have just been the bug in EntityController calling getSensorsOfEntity instead of getSensorData
-        
-        Collection<SensorSummary> result = []
-        for (Sensor s : entity.entityClass.sensors) {
-            if (s instanceof AttributeSensor) {
-                result.add(new SensorSummary(s, entity.getAttribute(s)))
-            }
+        if (!sensorCache.containsKey(entityId) || sensorCache[entityId].isEmpty()) {
+            initializeEntitySensors(entity)
         }
-        return result
-        
-//        if (!sensorCache.containsKey(entityId) || sensorCache[entityId].isEmpty()) {
-//            initializeEntitySensors(entity)
-//        }
-//        return sensorCache[entityId].values()
+        return sensorCache[entityId].values()
     }
 
     public Collection<Effector> getEffectorsOfEntity(String entityId) {
