@@ -48,7 +48,7 @@ Brooklyn.main = (function() {
     }
 
     function updateFailed(e, message) {
-        $("#status-message").html("Error" + (message ? ": " + message : ""));
+        $("#status-message").html("Failed at " + currentTimeAsString() + " (" + (message ? message : "unknown error") + ")");
     }
 
     function handleBreadCrumbs(json){
