@@ -10,6 +10,9 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 /**
  * Instances of this class ensures that {@link Task}s it is shown execute with in-order
  * single-threaded semantics.
@@ -23,6 +26,8 @@ import java.util.concurrent.atomic.AtomicBoolean
  * <em>before</em> the {@link Task#job} actually gets invoked.
  */
 public class SingleThreadedScheduler implements TaskScheduler {
+    private static final Logger LOG = LoggerFactory.getLogger(SingleThreadedScheduler.class)
+    
     private final Queue<QueuedSubmission> order = new ConcurrentLinkedQueue<QueuedSubmission>()
     private final AtomicBoolean running = new AtomicBoolean(false)
     
@@ -38,6 +43,7 @@ public class SingleThreadedScheduler implements TaskScheduler {
             order.add(new QueuedSubmission(c, f))
             return f
         }
+        if(order.size() > 10) LOG.info "$this is backing up, $order.size() tasks queued"
     }
 
     private synchronized void onEnd() {
