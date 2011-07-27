@@ -1,9 +1,10 @@
 package brooklyn.demo
 
-import java.util.Map;
+import java.util.Map
 
 import org.jclouds.ec2.domain.InstanceType
 
+import brooklyn.entity.nosql.gemfire.GemfireServer
 import brooklyn.entity.proxy.nginx.NginxController
 import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.location.Location
@@ -50,6 +51,13 @@ public class Locations {
         "us-west-1":"ami-01e7b544",
         "ap-southeast-1":"ami-bcd1a9ee",
         "ap-northeast-1":"ami-98ce7b99",
+        ]
+    public static final Map EC2_GEMFIRE_IMAGES = [
+            "eu-west-1":"ami-ca2f1fbe",
+            "us-east-1":"ami-837fb8ea",
+            "us-west-1":"ami-not-available",
+            "ap-southeast-1":"ami-not-available",
+            "ap-northeast-1":"ami-not-available",
         ]
 
     public static final Collection AWS_REGIONS = EC2_VANILLA_IMAGES.keySet()
@@ -140,6 +148,7 @@ public class Locations {
     public static AwsLocation lookupAwsRegion(String regionName) {
         String imageIdVanilla = regionName+"/"+EC2_VANILLA_IMAGES.get(regionName)
         String imageIdMonterey = regionName+"/"+EC2_MONTEREY_IMAGES.get(regionName)
+        String imageIdGemfire = regionName+"/"+EC2_GEMFIRE_IMAGES.get(regionName)
         AwsLocation region = AWS_FACTORY.newLocation(regionName)
         region.setTagMapping([
             (TomcatServer.class.getName()):[
@@ -148,15 +157,18 @@ public class Locations {
             (NginxController.class.getName()):[
                 imageId:imageIdVanilla,
                 securityGroups:["brooklyn-all"]],
-            ("com.cloudsoftcorp.monterey.brooklyn.example.MontereyManagementNode".class.getName()):[
+            ("com.cloudsoftcorp.monterey.brooklyn.example.MontereyManagementNode"):[
                 imageId:imageIdMonterey,
                 hardwareId:InstanceType.M1_SMALL,
                 securityGroups:["brooklyn-all"]],
-            ("com.cloudsoftcorp.monterey.brooklyn.example.MontereyContainerNode".class.getName()):[
+            ("com.cloudsoftcorp.monterey.brooklyn.example.MontereyContainerNode"):[
                 imageId:imageIdMonterey,
                 hardwareId:InstanceType.M1_SMALL,
-                securityGroups:["brooklyn-all"]]
-		])
+                securityGroups:["brooklyn-all"]],
+            (GemfireServer.class.getName()):[
+                imageId:imageIdGemfire,
+                securityGroups:["brooklyn-all"]]])
+        
         return region
     }
     
