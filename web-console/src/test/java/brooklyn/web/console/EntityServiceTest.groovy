@@ -22,14 +22,14 @@ class EntityServiceTest {
     Entity testEntity
     Collection<Entity> testEntities = new ArrayList<Application>()
     Collection<Application> testCollection = new ArrayList<Application>()
+    Location testLocation = new MockLocation([latitude: 56, longitude: -2.5]);
 
     @BeforeTest
     protected void setUp() {
         testService = new EntityService()
         Application testApp = new TestApplication()
 
-        Location l = new MockLocation([latitude: 56, longitude: -2.5]);
-        testApp.start([ l ])
+        testApp.start([ testLocation ])
 
         testService.managementContextService = testApp.managementContext
         testCollection.add(testApp)
@@ -71,6 +71,12 @@ class EntityServiceTest {
     public void testEntityCountsAtLocatedLocations() {
         Map <Location, Integer> cs = testService.entityCountsAtLocatedLocations();
         assertEquals(0, cs.size());
+    }
+
+    @Test
+    public void testGetNearestAncestorWithCoordinates() {
+        assertEquals(testService.getNearestAncestorWithCoordinates(new MockLocation()), null);
+        assertEquals(testLocation, testService.getNearestAncestorWithCoordinates(testLocation));
     }
 }
 
