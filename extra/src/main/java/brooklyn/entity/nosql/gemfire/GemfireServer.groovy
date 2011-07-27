@@ -1,13 +1,16 @@
 package brooklyn.entity.nosql.gemfire
 
-import groovy.lang.MetaClass
-
 import java.net.URL
 import java.util.Collection
 import java.util.Map
 
+import brooklyn.entity.Effector
 import brooklyn.entity.Entity
+import brooklyn.entity.ParameterType
+import brooklyn.entity.BasicParameterType
 import brooklyn.entity.basic.AbstractService
+import brooklyn.entity.basic.BasicParameterType
+import brooklyn.entity.basic.EffectorWithExplicitImplementation
 import brooklyn.entity.group.AbstractController
 import brooklyn.entity.trait.Startable
 import brooklyn.event.adapter.AttributePoller
@@ -15,7 +18,6 @@ import brooklyn.event.adapter.HttpSensorAdapter
 import brooklyn.event.adapter.ValueProvider
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
-import brooklyn.location.Location
 import brooklyn.location.MachineLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedAppSetup
@@ -31,6 +33,16 @@ class GemfireServer extends AbstractService implements Startable {
     public static final BasicAttributeSensor<String> HOSTNAME = [ String.class, "gemfire.server.hostname", "Gemfire server hostname" ]
     public static final BasicAttributeSensor<Integer> HUB_PORT = [ Integer.class, "gemfire.server.hubPort", "Gemfire gateway hub port" ]
     public static final BasicAttributeSensor<URL> CONTROL_URL = [ URL.class, "gemfire.server.controlUrl", "URL for perfoming management actions" ]
+
+    public static final Effector<Void> ADD_GATEWAYS = new EffectorWithExplicitImplementation<GemfireServer, Void>("addGateways", Void.TYPE,
+            Arrays.<ParameterType<?>>asList(new BasicParameterType<Collection>("gateways", Collection.class, "Gatways to be added", Collections.emptyList())),
+            "Add gateways to this server, to replicate to/from other clusters") {
+        public Void invokeEffector(GemfireServer entity, Map m) {
+            entity.addGateways((Collection<GatewayConnectionDetails>) m.get("gateways"));
+            return null;
+        }
+    };
+
 
     private static final int CONTROL_PORT_VAL = 8084    
     transient HttpSensorAdapter httpAdapter
@@ -69,7 +81,7 @@ class GemfireServer extends AbstractService implements Startable {
     }
 
     private boolean computeNodeUp() {
-        String url = getAttribute(AbstractController.URL)
+        String url = getAttribute(CONTROL_URL)
         ValueProvider<Integer> provider = httpAdapter.newStatusValueProvider(url)
         try {
             Integer statusCode = provider.compute()
@@ -104,14 +116,22 @@ class GemfireServer extends AbstractService implements Startable {
     }
     
     public void addGateways(Collection<GatewayConnectionDetails> gateways) {
-        String urlstr = getAttribute(CONTROL_URL)+"/add?id=EU&endpointId=EU-1&port=11111&host=ec2-184-73-13-122.compute-1.amazonaws.com"
-        URL url = new URL(urlstr)
-        HttpURLConnection connection = url.openConnection()
-        connection.connect()
-        int responseCode = connection.getResponseCode()
-        if (responseCode < 200 || responseCode >= 300) {
-            throw new IllegalStateException("Failed to add gateway to server, response code $responseCode for using $url")
+        int counter = 0
+        gateways.each { GatewayConnectionDetails gateway ->
+            String clusterId = gateway.clusterAbbreviatedName
+            String endpointId = clusterId+"-"+(++counter)
+            int port = gateway.port
+            String hostname = gateway.host
+            String controlUrl = getAttribute(CONTROL_URL)?.toString()
+            
+            String urlstr = controlUrl+"/add?id="+clusterId+"&endpointId="+endpointId+"&port="+port+"&host="+hostname
+            URL url = new URL(urlstr)
+            HttpURLConnection connection = url.openConnection()
+            connection.connect()
+            int responseCode = connection.getResponseCode()
+            if (responseCode < 200 || responseCode >= 300) {
+                throw new IllegalStateException("Failed to add gateway to server, response code $responseCode for using $url")
+            }
         }
-
     }
 }

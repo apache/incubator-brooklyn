@@ -27,7 +27,7 @@ public class GemfireSetup extends SshBasedAppSetup {
         result.setInstallDir(installDir)
         result.setConfigFile(configFile)
         result.setJarFile(jarFile)
-        
+        result.setRunDir(installDir)
         return result
     }
 
@@ -73,8 +73,8 @@ public class GemfireSetup extends SshBasedAppSetup {
         String startArgs = configFileServersidePath+" "+
                 (jarFileServersidePath ? jarFileServersidePath : "");
         List<String> script = [
-            "cd ${installDir}",
-            "nohup ./start.sh ${startArgs} &",
+            "cd ${runDir}",
+            "nohup ${installDir}/start.sh ${startArgs} &",
         ]
         return script
     }
@@ -82,13 +82,8 @@ public class GemfireSetup extends SshBasedAppSetup {
     /** @see SshBasedAppSetup#getRunEnvironment() */
     public Map<String, String> getRunEnvironment() { [:] }
 
-    public boolean isRunning() {
-        // FIXME Check how?
-        return true
-    }
-
     public List<String> getCheckRunningScript() {
-        return []
+        return ["ps -p `cat ${runDir}/gemfire.pid`"]
     }
     
     /**
