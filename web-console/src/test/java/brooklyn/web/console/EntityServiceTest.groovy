@@ -7,6 +7,7 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
+import brooklyn.entity.Group
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.AbstractGroup
@@ -82,14 +83,12 @@ private class TestApplication extends AbstractApplication {
     TestApplication(Map props=[:]) {
         super(props)
         displayName = "Application";
-        addOwnedChildren([
-            new TestGroupEntity("tomcat tier 1").addOwnedChildren([
-                new TestGroupEntity("tomcat cluster 1a").addOwnedChildren([
-                    new TestLeafEntity("tomcat node 1a.1"),
-                    new TestLeafEntity("tomcat node 1a.2")
-                ])
-            ])
-        ])
+
+        Group tomcatCluster = new TestGroupEntity("tomcat cluster 1a")
+            .addOwnedChildren([new TestLeafEntity("tomcat node 1a.1"),
+                               new TestLeafEntity("tomcat node 1a.2")]);
+
+        addOwnedChildren([new TestGroupEntity("tomcat tier 1").addOwnedChildren([tomcatCluster])]);
     }
 
     Entity testEntity(){
