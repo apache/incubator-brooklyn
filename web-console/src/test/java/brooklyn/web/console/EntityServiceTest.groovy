@@ -26,7 +26,10 @@ class EntityServiceTest {
     protected void setUp() {
         testService = new EntityService()
         Application testApp = new TestApplication()
-        testApp.start([ new MockLocation() ])
+
+        Location l = new MockLocation([latitude: 56, longitude: -2.5]);
+        testApp.start([ l ])
+
         testService.managementContextService = testApp.managementContext
         testCollection.add(testApp)
 
