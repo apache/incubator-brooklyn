@@ -12,56 +12,19 @@
         %g:javascript{:src=>"console/activity.js"}
         %g:javascript{:src=>"console/sensors.js"}
         %g:javascript{:src=>"console/location.js"}
+        %g:javascript{:src=>"console/widget-dashboard.js"}
         %g:javascript{:src=>"jquery/jquery.corner.js"}
         %g:javascript{:src=>"jquery/jquery.jstree.js"}
     %body
-        #layout-middle-content
-            .layout-left-column
-                #brooklyn-logo
-                    %h1{:id=>"brooklyn-header"}
-                .tree-components
-                    .search-box
-                        %input{:type=>"search", :placeholder=>"Search", :name=>"name", :class=>"search-input", :id=>"search-input", :results=>"5", :autosave=>"brooklynEntity"}
-                    %div{:id=>"jstree", :class=>"jstree"}
-            .layout-main-content
-                #navigation{:align=>"left"}
-                #tabs
-                    %ul
-                        %li
-                            %a{:href=>"#summary"}Summary
-                        %li
-                            %a{:href=>"#sensors"}Sensors
-                        %li
-                            %a{:href=>"#effectors"}Effectors
-                        %li
-                            %a{:href=>"#activity"}Activity
-                        %li
-                            %a{:href=>"#location"}Location
-                        %li
-                            %a{:href=>"#health"}Health
-                        %li
-                            %a{:href=>"#structure"}Structure
-                    #summary
-                        #summary-basic-info
-                        #summary-status
-                        #summary-groups
-                        #summary-activity
-                    #sensors
-                        %h2 Sensors
-                        .tab-content-full-size
-                            %table{:id=>"sensor-data", :class=>"tab-content-table"}
-                    #effectors
-                        %h2 Effectors
-                        %g:render{:template=>"/tabs/effectors"}
-                    #location
-                        %h2 Location
-                        %g:render{:template=>"/tabs/location"}
-                    #activity
-                        %h2 Activity
-                        %g:render{:template=>"/tabs/activity"}
-                    #health
-                        %h2 Health
-                    #structure
-                        %h2 Structure
-                    %p{:class=>"bottom-filler"} &nbsp;
-                #status Last Update: <span id="status-message">No data yet.</span>
+        #tabs{:class=>"master-tabs"}
+            %h1{:id=>"brooklyn-header"}
+            %ul{:id=>"master-tabs-container"}
+                %li{:id=>"master-filler-tab"}
+                %li{:style=>"top:13px"}
+                    %a{:href=>"#dashboard"}Dashboard
+                %li{:style=>"top:13px"}
+                    %a{:href=>"#debug"}Debug
+            #dashboard
+                %g:render{:template=>"/tabs/dashboard"}
+            #debug
+                %g:render{:template=>"/tabs/debug"}

@@ -122,7 +122,7 @@ Brooklyn.location = (function() {
             // use ISO code TBI
             alert("use of ISO Code TBI");
         }
-        else{alert("No geolocation information available from server for "+location.name);}
+        else{alert("No geolocation information available from server for "+name);}
     }
 
     function toggleLocation(e){

@@ -24,9 +24,10 @@ body{
 }
 
 h1#brooklyn-header{
-    height:100%;
-    width:175px;
-    background-image:url("../../images/brooklyn/brooklynbannerone.png");
+    height:46px;
+    width:192px;
+    background-image:url("../../images/brooklyn/brooklynbannertwo.png");
+    position:absolute;
 }
 
 #brooklyn-logo{
@@ -38,11 +39,21 @@ h1#brooklyn-header{
     height:100px;
     width:220px;
 }
-.tree-components{
-    position:absolute;
-    top:100px;
-    bottom:2.3em;
-    width:214px;
+.debug-tree-components{
+    height:100%;
+}
+
+ul#master-tabs-container{
+    height:42px;
+}
+
+li.master-tabs-tab{
+    top:13px;
+}
+
+li#master-filler-tab{
+    top:13px;
+    width:200px;
 }
 
 div#navigation{
@@ -50,12 +61,12 @@ div#navigation{
     background:#c0c0c0;
 }
 
-#layout-middle-content{
+#debug-layout-middle-content{
     height:100%;
     clear: both;
     bottom:2.3em;
     overflow:hidden;
-    width: 980px;
+    width: 100%;
 }
 
 #console-footer{
@@ -66,27 +77,35 @@ div#navigation{
     border-width:medium;
     border-top:solid;
     clear: both;
-    width: 980px;
+    width: 1000px;
 }
 
-.layout-left-column{
+.debug-layout-left-column{
     float: left;
     border-right:solid;
     border-width:medium;
-    height:100%;
-    width: 220px;
+    width: 230px;
+    position:absolute;
+    left:0px;
+    top:50px;
+    bottom:0px;
 }
 
-.layout-main-content{
+.debug-layout-main-content{
     background-color:white;
     float: right;
     clear: right;
-    overflow: hidden;
+    overflow: auto;
     padding: 5px;
-    width: 745px;
+    width: 740px;
+    position:absolute;
+    top:50px;
+    bottom:0px;
+    right:0px;
+    left:240px;
 }
 
-.search-box {
+.debug-search-box {
     margin-bottom: 3px;
     padding: 5px;
     padding-right: 8px;
@@ -105,7 +124,14 @@ div#navigation{
     height:90%;
     padding:3px;
     margin-bottom:3px;
-    width:100%;
+    width:220px;
+}
+
+.master-tabs{
+    bottom:2.3em;
+    top:0px;
+    position:absolute;
+    width:995px;
 }
 
 .tab-content-left-column {
@@ -132,7 +158,8 @@ div#navigation{
 }
 
 .tab-content-full-size {
-    width: 700px;
+    width: 100%;
+    height:100%;
 }
 
 .tab-content-buttons{
