@@ -63,7 +63,7 @@ class GeoscalingScriptGenerator {
                 sb.append(line).append("\n");
             return sb.toString();
             
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new RuntimeException("Problem reading resource '"+resourceName+"': "+e, e);
             
         } finally {
