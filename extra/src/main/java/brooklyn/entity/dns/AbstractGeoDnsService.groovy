@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import edu.emory.mathcs.backport.java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
