@@ -54,7 +54,7 @@ class SynchronizedExecutionTest {
         mon.interrupt()
     }
 
-    @Test
+    @Test(enabled=false)
     public void runManySynchedTasks() {
         BasicExecutionManager em = []
         try {
