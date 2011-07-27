@@ -175,7 +175,7 @@ Brooklyn.location = (function() {
             for(i in locations){
                 var description = locations[i].description;
                 var displayname = locations[i].displayName;
-                var name = locations[i].name;
+                var name = locations[i].displayName;
                 var lat = locations[i].latitude;
                 var lon = locations[i].longitude;
                 var add = locations[i].streetAddress;
