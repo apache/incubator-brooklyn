@@ -1,7 +1,7 @@
 .column {
     width: 320px;
     float: left;
-    padding-bottom: 100px;
+    padding-bottom: 0px;
 }
 
 .portlet {
@@ -30,5 +30,12 @@
 
 .ui-sortable-placeholder * {
     visibility: hidden; 
+}
+
+#dashboard-container{
+    overflow:auto;
+    position:absolute;
+    top:50px;
+    bottom:0px;
 }
 
