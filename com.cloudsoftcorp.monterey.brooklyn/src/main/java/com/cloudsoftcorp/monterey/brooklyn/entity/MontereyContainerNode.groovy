@@ -228,6 +228,7 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
                 }
                 host.run(out: System.out, args);
                 
+                LOG.info("Launched and waiting for new monterey node "+creationId+" on "+host);
                 waitForStartOrFailed();
                 
                 setAttribute(STATUS, (running.get() ? "running" : "failed"))
@@ -336,8 +337,8 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
     }
 
     void updateContents(NodeSummary nodeSummary, Collection<NodeId> downstreamNodes) {
-        if (!nodeId) {
-            synchronized (running) {
+        synchronized (running) {
+            if (!nodeId) {
                 nodeId = nodeSummary.nodeId
                 running.notifyAll();
             }

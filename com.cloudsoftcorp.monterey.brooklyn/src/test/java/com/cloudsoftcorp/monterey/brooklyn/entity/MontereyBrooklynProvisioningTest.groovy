@@ -86,6 +86,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
 
     private static final String SIMULATOR_LOCATIONS_CONF_PATH = "/locations-simulator.conf";
     
+    private static final String MONTEREY_NETWORK_NODE_PATH = "~/monterey-management-node-copy1";
     private static final String MONTEREY_MANAGEMENT_NODE_PATH = "~/monterey-management-node";
     private static final String SSH_HOST_NAME = "localhost";
     private static final String SSH_USERNAME = "aled";
@@ -106,6 +107,9 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
             SegmentSummary.Factory.newInstance("b"),
             SegmentSummary.Factory.newInstance("c"))
 
+    // I'm re-using my ~/monterey-network-node directory, so can only start one at a time (otherwise risk zip corrupted exceptions)
+    private static final int MAX_CONCURRENT_PROVISIONINGS_PER_LOCATION_VAL = 1
+    
     private static final long TIMEOUT = 15*1000;
     
     private Gson gson;
@@ -137,9 +141,11 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         app = new SimpleApp();
         montereyNetwork = new MontereyNetwork();
         montereyNetwork.setOwner(app);
+        montereyNetwork.setConfig(MontereyContainerNode.SUGGESTED_NETWORK_NODE_INSTALL_DIR, MONTEREY_NETWORK_NODE_PATH);
         montereyNetwork.setConfig(MontereyManagementNode.SUGGESTED_MANAGEMENT_NODE_INSTALL_DIR, MONTEREY_MANAGEMENT_NODE_PATH);
         //montereyNetwork.setConfig(new MontereyNetworkConfig()); // using defaults; TODO externalize as configKeys
         montereyNetwork.setConfig(MontereyManagementNode.SUGGESTED_WEB_USERS_CREDENTIAL, Collections.singleton(adminCredential));
+        montereyNetwork.setConfig(MontereyNetwork.MAX_CONCURRENT_PROVISIONINGS_PER_LOCATION, MAX_CONCURRENT_PROVISIONINGS_PER_LOCATION_VAL)
         app.getManagementContext().manage(app)
     }
     
@@ -360,7 +366,6 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
     private void rolloutManagementPlane(Map<? extends ConfigKey, ? extends Object> config=[:]) throws Throwable {
         montereyNetwork.setAppDescriptor(newHelloCloudMontereyDeploymentDescriptor());
         montereyNetwork.setConfig(MontereyNetwork.APP_BUNDLES, Collections.singleton(HELLO_CLOUD_BUNDLE_URL));
-        
         for (Map.Entry<? extends ConfigKey, ? extends Object> entry in config.entrySet()) {
             montereyNetwork.setConfig(entry.key, entry.value)
         }

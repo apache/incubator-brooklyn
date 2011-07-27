@@ -72,8 +72,12 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
 
     public static final BasicConfigKey<Collection<URL>> APP_BUNDLES = [Collection.class, "monterey.app.bundles", "Application bundles" ]
     public static final BasicConfigKey<URL> APP_DESCRIPTOR_URL = [URL.class, "monterey.app.descriptorUrl", "Application descriptor URL" ]
-    public static final BasicConfigKey<Map<Dmn1NodeType,Integer>> INITIAL_TOPOLOGY_PER_LOCATION = [ Map.class, "monterey.cluster.initialTopology", "Initial topology per cluster" ]
-
+    public static final BasicConfigKey<Map<Dmn1NodeType,Integer>> INITIAL_TOPOLOGY_PER_LOCATION = [ Map.class, 
+            "monterey.cluster.initialTopology", "Initial topology per cluster" ]
+    public static final BasicConfigKey<Boolean> MAX_CONCURRENT_PROVISIONINGS_PER_LOCATION = 
+            [ Integer, "monterey.provisioning.maxConcurrentProvisioningsPerLocation", 
+            "The maximum number of nodes that can be concurrently provisioned per location", Integer.MAX_VALUE ]
+    
     public static final BasicAttributeSensor<URL> MANAGEMENT_URL = [ URL.class, "monterey.management-url", "Management URL" ]
     public static final BasicAttributeSensor<String> NETWORK_ID = [ String.class, "monterey.network-id", "Network id" ]
     public static final BasicAttributeSensor<String> APPLICTION_NAME = [ String.class, "monterey.application-name", "Application name" ]
@@ -207,7 +211,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
             setAttribute NETWORK_ID, networkId
             mirrorManagementNodeAttributes()
             
-            montereyProvisioner = new MontereyProvisioner(connectionDetails, this)
+            montereyProvisioner = new MontereyProvisioner(connectionDetails, this, getConfig(MAX_CONCURRENT_PROVISIONINGS_PER_LOCATION))
             
             // TODO want to call executionContext.scheduleAtFixedRate or some such
             scheduledExecutor = Executors.newScheduledThreadPool(1, {return new Thread(it, "monterey-network-poller")} as ThreadFactory)
@@ -404,15 +408,18 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
             it.setOwner(typedFabrics.get(it.nodeType))
             getManagementContext().manage(it)
         }
+
+        // Kick-off provisioning of spare nodes immediately
+        int totalNumNodes = 0
+        initialTopologyPerLocation.values().each { totalNumNodes += (it ?: 0) }
         
-        // Start the required nodes in each
+        montereyProvisioner.addSpareNodesAsync(loc, totalNumNodes)
+        
+        // Rollout the required nodes of each type (via the clusters)
         [Dmn1NodeType.TP, Dmn1NodeType.M, Dmn1NodeType.MR, Dmn1NodeType.LPP].each {
             if (initialTopologyPerLocation.get(it) != null) {
                 clustersByType.get(it).resize(initialTopologyPerLocation.get(it))
             }
-        }
-        if (initialTopologyPerLocation.get(Dmn1NodeType.SPARE) != null) {
-            montereyProvisioner.addSpareNodes(loc, initialTopologyPerLocation.get(Dmn1NodeType.SPARE))
         }
     }
 
