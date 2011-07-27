@@ -178,7 +178,14 @@ class EntityService {
         Map<Location, Integer> cs = [:]
         
         List<Entity> es = getAllLeafEntities()
-        List<Location> ls = es.collect {it.getNearestAncestorWithCoordinates()}
+
+        // Will count once for each location of an entitiy. This probably makes sense but maybe should only count as a fraction
+        // of an entity in each place.
+        List<Location> ls = es.collect {
+            it.getLocations().collect {
+                getNearestAncestorWithCoordinates(it)
+            }}.inject([]) { a, b -> a + b }
+
         ls = ls.find {it != null}
         ls.each {
             cs[l]++;
