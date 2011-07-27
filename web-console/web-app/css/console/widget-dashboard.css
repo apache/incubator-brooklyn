@@ -1,5 +1,4 @@
 .column {
-    width: 320px;
     float: left;
     padding-bottom: 0px;
 }
@@ -20,6 +19,7 @@
 
 .portlet-content {
     padding: 0.4em;
+    overflow:auto;
 }
 
 .ui-sortable-placeholder {
@@ -38,6 +38,7 @@
     top:50px;
     bottom:0px;
     width: 100%;
+    left:0px;
 }
 
 #log-widget-textbox{
@@ -48,6 +49,20 @@
 }
 
 #circles-map {
-    width: 300px;
+    width: 800px;
     height: 300px;
+}
+
+.widget-container{
+    width:100%;
+}
+.small-widget-column{
+    width:33%;
+}
+.medium-widget-column{
+    width:50%;
+}
+.big-widget-column{
+    width:100%;
+    padding-bottom:10px;
 }
