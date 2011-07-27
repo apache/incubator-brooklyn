@@ -39,10 +39,10 @@ public class SimpleTomcatApp extends AbstractApplication {
     public static void main(String[] argv) {
         def app = new SimpleTomcatApp()
         
-        app.tc.initialSize = 1  //override initial size
+        app.tc.initialSize = 2  //override initial size
 
         ResizerPolicy p = new ResizerPolicy(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND)
-        p.setMinSize(1).setMaxSize(4).setMetricLowerBound(20).setMetricUpperBound(50)
+        p.setMinSize(2).setMaxSize(4).setMetricLowerBound(20).setMetricUpperBound(50)
         app.tc.addPolicy p
         
         Collection<InetAddress> hosts = [
@@ -85,7 +85,8 @@ public class SimpleTomcatApp extends AbstractApplication {
                             }
                         }
                     }
-                    println "Cluster stats: ${app.tc.getAttribute(DynamicWebAppCluster.TOTAL_REQUEST_COUNT)} requests, " +
+                    println "Cluster stats: ${app.tc.getAttribute(DynamicWebAppCluster.TOTAL_REQUEST_COUNT)} requests " +
+                            "(${app.tc.getAttribute(DynamicWebAppCluster.TOTAL_REQUESTS_PER_SECOND)} per second), " +
                             "average ${app.tc.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)} per entity"
                 })
                 .every(5, TimeUnit.SECONDS)
