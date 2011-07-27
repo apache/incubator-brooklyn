@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap
 import brooklyn.event.SensorEventListener
 import java.util.concurrent.ConcurrentLinkedQueue
 import brooklyn.event.AttributeSensor
+import brooklyn.management.internal.AbstractManagementContext
 
 class EntityService {
 
@@ -27,7 +28,9 @@ class EntityService {
     public static class NoSuchEntity extends Exception {}
 
     public Collection<TaskSummary> getTasksOfEntity(String entityId) {
-        return managementContextService.executionManager.getTasksWithTag(getEntity(entityId)).collect { new TaskSummary(it) }
+        Entity e = getEntity(entityId)
+        return managementContextService.executionManager.getTasksWithAllTags(
+                [e, AbstractManagementContext.EFFECTOR_TAG]).collect { new TaskSummary(it) }
     }
 
     private synchronized void unsubscribeEntitySensors(){

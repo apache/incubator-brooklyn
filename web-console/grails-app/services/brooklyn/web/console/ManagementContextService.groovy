@@ -182,7 +182,7 @@ class ManagementContextService {
                                     "Stop Tomcat": stopTomcat,
                                     "Restart Tomcat": restartTomcat])
 
-                this.getExecutionContext().submit([tag:this, displayName: "myTask", description: "some task or other"],
+                this.getExecutionContext().submit([tags:["EFFECTOR"], tag:this, displayName: "myTask", description: "some task or other"],
                                                   new MyRunnable(this));
             }
 
