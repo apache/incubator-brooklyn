@@ -1,11 +1,10 @@
 package brooklyn.entity.nosql.gemfire
 
-import groovy.lang.MetaClass
-
 import java.util.Arrays
 import java.util.Collection
 import java.util.Collections
 import java.util.Map
+import java.util.concurrent.ExecutionException
 
 import brooklyn.entity.Effector
 import brooklyn.entity.Entity
@@ -14,8 +13,8 @@ import brooklyn.entity.basic.BasicParameterType
 import brooklyn.entity.basic.EffectorWithExplicitImplementation
 import brooklyn.entity.group.DynamicCluster
 import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.location.Location
 import brooklyn.management.Task
+import brooklyn.util.internal.LanguageUtils
 
 public class GemfireCluster extends DynamicCluster {
 
@@ -30,8 +29,11 @@ public class GemfireCluster extends DynamicCluster {
         }
     };
 
+    private String abbreviatedName
+
     public GemfireCluster(Map flags=[:], Entity owner=null) {
         super(augmentedFlags(flags), owner)
+        abbreviatedName = flags.abbreviatedName ?: LanguageUtils.newUid()
     }
     
     private static Map augmentedFlags(Map flags) {
@@ -43,8 +45,27 @@ public class GemfireCluster extends DynamicCluster {
         return result
     }
     
-
+    public Integer resize(Integer desiredSize) {
+        super.resize(desiredSize)
+        
+        if (ownedChildren) {
+            GemfireServer gemfireServer = ownedChildren.iterator().next()
+            String host = gemfireServer.getAttribute(GemfireServer.HOSTNAME)
+            int port = gemfireServer.getAttribute(GemfireServer.HUB_PORT)
+            GatewayConnectionDetails gatewayConnectionDetails = new GatewayConnectionDetails(abbreviatedName, host, port)
+            setAttribute(GATEWAY_CONNECTION_DETAILS, gatewayConnectionDetails)
+        } else {
+            setAttribute(GATEWAY_CONNECTION_DETAILS, null)
+        }
+    }
+    
     public void addGateways(Collection<GatewayConnectionDetails> gateways) {
-        // TODO Call on each server in cluster
+        Task<List<?>> task = invokeEffectorList(ownedChildren, GemfireServer.ADD_GATEWAYS, [gateways:gateways])
+        
+        try {
+            task.get()
+        } catch (ExecutionException ee) {
+            throw ee.cause
+        }
     }
 }

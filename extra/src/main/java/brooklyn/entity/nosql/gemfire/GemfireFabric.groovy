@@ -2,6 +2,7 @@ package brooklyn.entity.nosql.gemfire
 
 import groovy.lang.MetaClass
 
+import java.util.Collection;
 import java.util.Map
 import java.util.concurrent.ExecutionException
 
@@ -20,14 +21,14 @@ class GemfireFabric extends DynamicFabric {
     private static Map augmentedFlags(Map flags) {
         Map result = new LinkedHashMap(flags)
         if (!result.displayName) result.displayName = "Gemfire Fabric"
-        if (!result.newEntity) result.newEntity = { Map properties ->
-                    return new GemfireCluster(properties)
+        if (!result.newEntity) result.newEntity = { Map properties, Entity fabric ->
+                    return new GemfireCluster(properties, fabric)
                 }
         return result
     }
     
-    public void start(Location[] locs) {
-        super.start(locs)
+    public void start(Collection<Location> locations) {
+        super.start(locations)
         
         Map<GemfireCluster,GatewayConnectionDetails> gateways = [:]
         ownedChildren.each {
@@ -38,7 +39,7 @@ class GemfireFabric extends DynamicFabric {
             Map<GemfireCluster,GatewayConnectionDetails> otherGateways = new LinkedHashMap(gateways)
             otherGateways.remove(it)
             
-            Task task = it.invoke(GemfireCluster.ADD_GATEWAYS, [gateways:otherGateways])
+            Task task = it.invoke(GemfireCluster.ADD_GATEWAYS, [gateways:otherGateways.values()])
             return task
         }
         
