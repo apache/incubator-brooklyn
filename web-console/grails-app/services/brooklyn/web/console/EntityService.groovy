@@ -164,7 +164,7 @@ class EntityService {
     }
 
     public List<Entity> getAllLeafEntities(List<Entity> es) {
-        return children.collect { leaves(it) }.inject([]) { a, b -> a + b }
+        return es.collect { leaves(it) }.inject([]) { a, b -> a + b }
     }
 
     private Location getNearestAncestorWithCoordinates(Location l) {
