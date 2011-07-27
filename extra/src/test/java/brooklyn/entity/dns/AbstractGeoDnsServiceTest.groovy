@@ -6,8 +6,6 @@ import groovy.lang.MetaClass
 import java.util.Map
 import java.util.Set
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
@@ -22,7 +20,6 @@ import brooklyn.location.basic.GeneralPurposeLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.test.entity.TestEntity
 import brooklyn.util.internal.EntityStartUtils
-import brooklyn.util.internal.TimeExtras
 
 public class AbstractGeoDnsServiceTest {
     private static final String MONTEREY_WEST_IP = "208.95.232.123";
@@ -65,7 +62,7 @@ public class AbstractGeoDnsServiceTest {
     
     @Test(enabled=false)
     public void geoInfoOnLocations() {
-        DynamicFabric fabric = new DynamicFabric(newEntity:{ properties -> return new TestEntity(properties) }, app)
+        DynamicFabric fabric = new DynamicFabric([newEntity:{ Map properties -> return new TestEntity(properties) }], app)
         DynamicGroup testEntities = new DynamicGroup([:], app, { Entity e -> (e instanceof TestEntity) });
         geoDns = new TestService(app);
         geoDns.setTargetEntityProvider(testEntities);
