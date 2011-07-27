@@ -63,7 +63,7 @@ public class AbstractGeoDnsServiceTest {
     }
 
     
-    @Test
+    @Test(enabled=false)
     public void geoInfoOnLocations() {
         DynamicFabric fabric = new DynamicFabric(newEntity:{ properties -> return new TestEntity(properties) }, app)
         DynamicGroup testEntities = new DynamicGroup([:], app, { Entity e -> (e instanceof TestEntity) });
@@ -71,6 +71,9 @@ public class AbstractGeoDnsServiceTest {
         geoDns.setTargetEntityProvider(testEntities);
         
         app.start( [ CALIFORNIA_MACHINE, NEW_YORK_MACHINE ] );
+        
+        // FIXME: remove this sleep once the location-polling mechanism has been replaced with proper subscriptions
+        Thread.sleep(7000);
         
         assertTrue(geoDns.targetHostsByName.containsKey("California machine"));
         assertTrue(geoDns.targetHostsByName.containsKey("New York machine"));
