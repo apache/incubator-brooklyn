@@ -1,10 +1,7 @@
 Brooklyn.location = (function() {
     var map;
 
-    function drawCircles() {
-        var lat = 55;
-        var lng = -2.5;
-
+    function drawCircle(lat, lng, radius) {
         var circle_latlong = new google.maps.LatLng(lat, lng);
         var circle_options = {
             map: map,
@@ -12,7 +9,7 @@ Brooklyn.location = (function() {
             clickableboolean: false,
             fillColor: "#FF0000",
             fillOpacity: 0.4,
-            radius: 50000, // meters
+            radius: radius, // meters
             strokeColor: "#FF0000",
             strokeOpacity: 1,
             strokeWeight: 1,
@@ -20,6 +17,20 @@ Brooklyn.location = (function() {
         };
 
         var circle = new google.maps.Circle(circle_options);
+    }
+
+    function hardcodedCircleDrawer() {
+        drawCircle(-2, 56, 100000);
+    }
+
+    function drawCircles() {
+        $.getJSON("circles", drawCirclesFromJSON).error(
+                function() {$(Brooklyn.eventBus).trigger('update_failed', "Could not get location size data for circle drawing.");}
+            );
+    }
+
+    function drawCirclesFromJSON(json) {
+        // TODO
     }
 
   function drawMap() {
@@ -35,7 +46,8 @@ Brooklyn.location = (function() {
 
     function init() {
         drawMap();
-        drawCircles();
+        hardcodedCircleDrawer();
+//        drawCircles();
     }
 
     return {init: init};
