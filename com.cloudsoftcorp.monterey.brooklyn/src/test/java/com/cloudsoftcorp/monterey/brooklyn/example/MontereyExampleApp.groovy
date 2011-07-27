@@ -26,19 +26,23 @@ public class MontereyExampleApp extends AbstractApplication {
 
     // FIXME Use MONTEREY_NETWORK_NODE_PATH
     
-    private static final String MONTEREY_MANAGEMENT_NODE_PATH = "~/monterey-management-node"
-    private static final String MONTEREY_NETWORK_NODE_PATH = "~/monterey-network-node-copy1"
+    public static final String MONTEREY_HOME_AWS = "/home/monterey"
+    private static final String MONTEREY_MANAGEMENT_NODE_PATH_AWS = MONTEREY_HOME_AWS+"/monterey-management-node"
+    private static final String MONTEREY_NETWORK_NODE_PATH_AWS = MONTEREY_HOME_AWS+"/monterey-network-node"
+    private static final String MONTEREY_MANAGEMENT_NODE_PATH_LOCAL = "~/monterey-management-node"
+    private static final String MONTEREY_NETWORK_NODE_PATH_LOCAL = "~/monterey-network-node-copy1"
     private static final String SSH_HOST_NAME = "localhost"
     private static final String SSH_USERNAME = "aled"
     private static final String APP_BUNDLE_RESOURCE_PATH = "com.cloudsoftcorp.monterey.example.noapisimple.jar"
     private static final String APP_CONFIG_RESOURCE_PATH = "HelloCloud.conf"
     
+    // Monterey images
     public static final Map EC2_IMAGES = [
-        "eu-west-1":"ami-89def4fd",
-        "us-east-1":"ami-2342a94a",
-        "us-west-1":"ami-25df8e60",
-        "ap-southeast-1":"ami-21c2bd73",
-        "ap-northeast-1":"ami-f0e842f1",
+        "eu-west-1":"ami-01e7b544",
+        "us-east-1":"ami-3d814754",
+        "us-west-1":"ami-901323e4",
+        "ap-southeast-1":"ami-bcd1a9ee",
+        "ap-northeast-1":"ami-98ce7b99",
         ]
                 
     MontereyNetwork mn
@@ -51,10 +55,10 @@ public class MontereyExampleApp extends AbstractApplication {
         OsgiClassLoadingContextFromBundle classLoadingContext = new OsgiClassLoadingContextFromBundle(null, MontereyExampleApp.class.getClassLoader());
         ClassLoadingContext.Defaults.setDefaultClassLoadingContext(classLoadingContext);
 
-        FixedListMachineProvisioningLocation loc = new FixedListMachineProvisioningLocation<SshMachineLocation>(
+        FixedListMachineProvisioningLocation localLoc = new FixedListMachineProvisioningLocation<SshMachineLocation>(
                 machines:[],name:"localhost-microcloud", latitude : 55.94944, longitude : -3.16028, streetAddress:"York, UK")
         for (i in 1..10) {
-            new SshMachineLocation([address:InetAddress.getByName(SSH_HOST_NAME), userName:SSH_USERNAME]).setParentLocation(loc)
+            new SshMachineLocation([address:InetAddress.getByName(SSH_HOST_NAME), userName:SSH_USERNAME]).setParentLocation(localLoc)
         }
 
         URL bundleUrl = MontereyExampleApp.class.getClassLoader().getResource(APP_BUNDLE_RESOURCE_PATH);
@@ -65,7 +69,8 @@ public class MontereyExampleApp extends AbstractApplication {
         app.mn.name = "HelloCloud"
         app.mn.setConfig(MontereyNetwork.APP_BUNDLES, [bundleUrl])
         app.mn.setConfig(MontereyNetwork.APP_DESCRIPTOR_URL, appDescriptorUrl)
-        app.mn.setConfig(MontereyManagementNode.SUGGESTED_MANAGEMENT_NODE_INSTALL_DIR, MONTEREY_MANAGEMENT_NODE_PATH)
+        app.mn.setConfig(MontereyManagementNode.SUGGESTED_MANAGEMENT_NODE_INSTALL_DIR, MONTEREY_MANAGEMENT_NODE_PATH_AWS)
+        app.mn.setConfig(MontereyContainerNode.SUGGESTED_NETWORK_NODE_INSTALL_DIR, MONTEREY_NETWORK_NODE_PATH_AWS)
         app.mn.setConfig(MontereyManagementNode.SUGGESTED_WEB_USERS_CREDENTIAL, [adminCredential])
         app.mn.setConfig(MontereyNetwork.INITIAL_TOPOLOGY_PER_LOCATION, [(Dmn1NodeType.LPP):1,(Dmn1NodeType.MR):1,(Dmn1NodeType.M):1,(Dmn1NodeType.TP):1,(Dmn1NodeType.SPARE):1])
         
@@ -77,8 +82,8 @@ public class MontereyExampleApp extends AbstractApplication {
         // Start the web console service
         WebAppRunner web
         try {
-            web = new WebAppRunner(context)
-            web.start()
+//            web = new WebAppRunner(context)
+//            web.start()
         } catch (Exception e) {
             LOG.warn("Failed to start web-console", e)
         }
@@ -86,13 +91,15 @@ public class MontereyExampleApp extends AbstractApplication {
         AwsLocation euwestLoc = newAwsLocationFactory().newLocation("eu-west-1")
         AwsLocation useastLoc = newAwsLocationFactory().newLocation("us-east-1")
         euwestLoc.setTagMapping([
-                (MontereyManagementNode.class.getName()):[imageId:"abc"],
-                (MontereyContainerNode.class.getName()):[imageId:"abc"]])
+                (MontereyManagementNode.class.getName()):[imageId:EC2_IMAGES.get("eu-west-1")],
+                (MontereyContainerNode.class.getName()):[imageId:EC2_IMAGES.get("eu-west-1")]])
         useastLoc.setTagMapping([
-                (MontereyManagementNode.class.getName()):[imageId:"abc"],
-                (MontereyContainerNode.class.getName()):[imageId:"abc"]])
+                (MontereyManagementNode.class.getName()):[imageId:EC2_IMAGES.get("us-east-1")],
+                (MontereyContainerNode.class.getName()):[imageId:EC2_IMAGES.get("us-east-1")]])
 
-        app.start([euwestLoc,useastLoc])
+        app.start([euwestLoc])
+//        app.start([localLoc])
+//        app.start([euwestLoc,useastLoc])
     }
     
     private static final AwsLocationFactory newAwsLocationFactory() {
