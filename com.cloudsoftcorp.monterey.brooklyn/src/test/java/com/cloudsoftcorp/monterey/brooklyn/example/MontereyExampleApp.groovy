@@ -4,6 +4,8 @@ import java.net.InetAddress
 import java.net.URL
 import java.util.Map
 
+import org.jclouds.ec2.domain.InstanceType
+
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.launcher.WebAppRunner
 import brooklyn.location.basic.FixedListMachineProvisioningLocation
@@ -38,9 +40,9 @@ public class MontereyExampleApp extends AbstractApplication {
     
     // Monterey images
     public static final Map EC2_IMAGES = [
-        "eu-west-1":"ami-01e7b544",
+        "eu-west-1":"ami-901323e4",
         "us-east-1":"ami-3d814754",
-        "us-west-1":"ami-901323e4",
+        "us-west-1":"ami-01e7b544",
         "ap-southeast-1":"ami-bcd1a9ee",
         "ap-northeast-1":"ami-98ce7b99",
         ]
@@ -91,11 +93,23 @@ public class MontereyExampleApp extends AbstractApplication {
         AwsLocation euwestLoc = newAwsLocationFactory().newLocation("eu-west-1")
         AwsLocation useastLoc = newAwsLocationFactory().newLocation("us-east-1")
         euwestLoc.setTagMapping([
-                (MontereyManagementNode.class.getName()):[imageId:EC2_IMAGES.get("eu-west-1")],
-                (MontereyContainerNode.class.getName()):[imageId:EC2_IMAGES.get("eu-west-1")]])
+                (MontereyManagementNode.class.getName()):[
+                        imageId:"eu-west-1/"+EC2_IMAGES.get("eu-west-1"),
+                        hardwareId:InstanceType.M1_SMALL,
+                        securityGroups:["brooklyn-all"]],
+                (MontereyContainerNode.class.getName()):[
+                        imageId:"eu-west-1/"+EC2_IMAGES.get("eu-west-1"),
+                        hardwareId:InstanceType.M1_SMALL,
+                        securityGroups:["brooklyn-all"]]])
         useastLoc.setTagMapping([
-                (MontereyManagementNode.class.getName()):[imageId:EC2_IMAGES.get("us-east-1")],
-                (MontereyContainerNode.class.getName()):[imageId:EC2_IMAGES.get("us-east-1")]])
+                (MontereyManagementNode.class.getName()):[
+                        imageId:"us-east-1/"+EC2_IMAGES.get("us-east-1"),
+                        hardwareId:InstanceType.M1_SMALL,
+                        securityGroups:["brooklyn-all"]],
+                (MontereyContainerNode.class.getName()):[
+                        imageId:"us-east-1/"+EC2_IMAGES.get("us-east-1"),
+                        hardwareId:InstanceType.M1_SMALL,
+                        securityGroups:["brooklyn-all"]]])
 
         app.start([euwestLoc])
 //        app.start([localLoc])

@@ -192,11 +192,15 @@ public class AwsLocation extends AbstractLocation implements MachineProvisioning
         }
         
         if (properties.hardwareId) {
-            templateBuilder.hardwareId(hardwareId);
+            templateBuilder.hardwareId(properties.hardwareId);
         }
         
         if (properties.imageId) {
             templateBuilder.imageId(properties.imageId);
+        }
+
+        if (properties.imageSize) {
+            templateBuilder.imageSize(properties.imageId);
         }
 
         if (properties.imagePattern) {
