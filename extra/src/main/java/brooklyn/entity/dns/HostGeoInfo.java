@@ -28,7 +28,7 @@ public class HostGeoInfo {
         if (!(latitude instanceof Double) || !(longitude instanceof Double))
             throw new IllegalArgumentException("Passed location specifies invalid type of lat/long");
         
-        return new HostGeoInfo(address.toString(), l.getName(), (Double) latitude, (Double) longitude);
+        return new HostGeoInfo(address.getHostAddress(), l.getName(), (Double) latitude, (Double) longitude);
     }
     
     public static HostGeoInfo fromEntity(Entity e) {

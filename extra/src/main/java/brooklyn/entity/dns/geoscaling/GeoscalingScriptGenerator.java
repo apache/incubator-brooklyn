@@ -30,7 +30,7 @@ class GeoscalingScriptGenerator {
         String datestamp = sdf.format(generationTime);
         String declarations = getHostsDeclaration(hosts);
         return template
-            .replace(DATESTAMP_MARKER, datestamp)
+            .replaceAll(DATESTAMP_MARKER, datestamp)
             .replace(HOSTS_DECLARATIONS_MARKER, declarations);
     }
     
@@ -63,7 +63,7 @@ class GeoscalingScriptGenerator {
                 sb.append(line).append("\n");
             return sb.toString();
             
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new RuntimeException("Problem reading resource '"+resourceName+"': "+e, e);
             
         } finally {

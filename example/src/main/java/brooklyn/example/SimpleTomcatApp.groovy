@@ -30,6 +30,7 @@ public class SimpleTomcatApp extends AbstractApplication {
             def ts = new TomcatServer(properties)
             URL resource = SimpleTomcatApp.class.getClassLoader().getResource("hello-world.war")
             Preconditions.checkState resource != null, "Unable to locate resource hello-world.war"
+            ts.setConfig(JavaWebApp.HTTP_PORT.configKey, 8080)
             ts.setConfig(TomcatServer.WAR, resource.getPath())
             return ts;
         },

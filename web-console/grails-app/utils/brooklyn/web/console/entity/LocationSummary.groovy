@@ -25,7 +25,7 @@ public class LocationSummary {
         this.name = location.getName();
         this.description = location.getLocationProperty('description');
         this.streetAddress = location.getLocationProperty('streetAddress');
-        this.displayName = location.getLocationProperty('displayName');
+        this.displayName = location.getLocationProperty('displayName') ?: location.getName();
         this.latitude = location.getLocationProperty('latitude');
         this.longitude = location.getLocationProperty('longitude');
         this.isoCode = location.getLocationProperty('iso');

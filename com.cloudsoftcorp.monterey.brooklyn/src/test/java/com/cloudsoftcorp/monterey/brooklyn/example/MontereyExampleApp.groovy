@@ -32,7 +32,7 @@ public class MontereyExampleApp extends AbstractApplication {
     private static final String MONTEREY_MANAGEMENT_NODE_PATH_AWS = MONTEREY_HOME_AWS+"/monterey-management-node"
     private static final String MONTEREY_NETWORK_NODE_PATH_AWS = MONTEREY_HOME_AWS+"/monterey-network-node"
     private static final String MONTEREY_MANAGEMENT_NODE_PATH_LOCAL = "~/monterey-management-node"
-    private static final String MONTEREY_NETWORK_NODE_PATH_LOCAL = "~/monterey-network-node-copy1"
+    private static final String MONTEREY_NETWORK_NODE_PATH_LOCAL = "~/monterey-network-node"
     private static final String SSH_HOST_NAME = "localhost"
     private static final String SSH_USERNAME = "aled"
     private static final String APP_BUNDLE_RESOURCE_PATH = "com.cloudsoftcorp.monterey.example.noapisimple.jar"
@@ -84,8 +84,8 @@ public class MontereyExampleApp extends AbstractApplication {
         // Start the web console service
         WebAppRunner web
         try {
-//            web = new WebAppRunner(context)
-//            web.start()
+            web = new WebAppRunner(context)
+            web.start()
         } catch (Exception e) {
             LOG.warn("Failed to start web-console", e)
         }

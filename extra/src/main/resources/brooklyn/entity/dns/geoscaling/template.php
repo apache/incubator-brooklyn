@@ -39,6 +39,7 @@ $closest_host = findClosestHost($city_info['latitude'], $city_info['longitude'],
 
 if (isset($closest_host)) {
     $output[] = array("A", $closest_host['ip']);
+    $output[] = array("TXT", "GeoScaling config last auto-updated: DATESTAMP");
     $output[] = array("TXT", "Chosen closest host is ".$closest_host['name']);
     $output[] = array("TXT", "Request originated from [".$city_info['latitude'].",".$city_info['longitude']."]");
 } else {
