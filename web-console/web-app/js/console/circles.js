@@ -1,5 +1,6 @@
 Brooklyn.location = (function() {
     var map;
+    var circles = [];
 
     function drawCircle(lat, lng, radius) {
         var circle_latlong = new google.maps.LatLng(lat, lng);
@@ -16,38 +17,50 @@ Brooklyn.location = (function() {
             zIndex: 1
         };
 
-        var circle = new google.maps.Circle(circle_options);
+        return new google.maps.Circle(circle_options);
     }
 
     function hardcodedCircleDrawer() {
-        drawCircle(-2, 56, 100000);
+        drawCircle(56, -2, 100000);
     }
 
     function drawCircles() {
         $.getJSON("circles", drawCirclesFromJSON).error(
-                function() {$(Brooklyn.eventBus).trigger('update_failed', "Could not get location size data for circle drawing.");}
-            );
+            function() {$(Brooklyn.eventBus).trigger('update_failed', "Could not get location size data for circle drawing.");}
+        );
     }
 
     function drawCirclesFromJSON(json) {
-        // TODO
+        // Remove all existing circles
+        for (c in circles) {
+            c.setMap(null);
+        }
+
+        // Draw the new ones
+        for (location in json) {
+            circles.push(drawCircle(location.lat, location.long, location.radius));
+        }
     }
 
-  function drawMap() {
-    var latlng = new google.maps.LatLng(55.6, -2.5);
-    var myOptions = {
-      zoom: 2,
-      center: latlng,
-      mapTypeId: google.maps.MapTypeId.ROADMAP
-    };
-      map = new google.maps.Map(document.getElementById("circles-map"),
-                                myOptions);
-  }
+    function drawMap() {
+        var latlng = new google.maps.LatLng(55.6, -2.5);
+        var myOptions = {
+            zoom: 2,
+            center: latlng,
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+        map = new google.maps.Map(document.getElementById("circles-map"),
+                                  myOptions);
+    }
+
+    function update() {
+        drawCircles();
+    }
 
     function init() {
         drawMap();
         hardcodedCircleDrawer();
-//        drawCircles();
+        $(Brooklyn.eventBus).bind("update", update);
     }
 
     return {init: init};
