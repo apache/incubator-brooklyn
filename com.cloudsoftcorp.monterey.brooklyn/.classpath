@@ -7,7 +7,7 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/brooklyn-api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/brooklyn-core"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/brooklyn-extra"/>
-	<classpathentry kind="lib" path="build/lib/slf4j-api-1.6.1.jar"/>
-	<classpathentry kind="lib" path="build/lib/slf4j-jdk14-1.6.1.jar"/>
+	<classpathentry exported="true" kind="con" path="GROOVY_SUPPORT"/>
+	<classpathentry kind="lib" path="build/lib/brooklyn-launcher-0.0.1-SNAPSHOT-with-dependencies.jar"/>
 	<classpathentry kind="output" path="build/out"/>
 </classpath>
