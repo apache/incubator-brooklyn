@@ -87,7 +87,7 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
     private Location location;
     private final AtomicBoolean running = new AtomicBoolean(false)
     
-    private String networkHome = "~/monterey-network-node";
+    private String networkHome = "/home/monterey/monterey-network-node";
     
     private AbstractMontereyNode node;
     private MachineProvisioningLocation provisioningLoc;

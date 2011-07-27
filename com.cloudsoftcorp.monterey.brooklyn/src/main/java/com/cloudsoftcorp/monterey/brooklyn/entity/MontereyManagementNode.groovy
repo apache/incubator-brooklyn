@@ -65,7 +65,7 @@ public class MontereyManagementNode extends AbstractEntity implements Startable 
     /** up, down, etc? */
     public static final BasicAttributeSensor<String> STATUS = [ String, "monterey.status", "Status" ]
 
-    private static final String DEFAULT_MANAGEMENT_NODE_INSTALL_DIR = "~/monterey-management-node"
+    private static final String DEFAULT_MANAGEMENT_NODE_INSTALL_DIR = "/home/monterey/monterey-management-node"
     
     private final Gson gson;
 

@@ -26,15 +26,6 @@ import com.cloudsoftcorp.util.javalang.OsgiClassLoadingContextFromBundle
 
 public class MontereyExampleApp extends AbstractApplication {
 
-    // FIXME Use MONTEREY_NETWORK_NODE_PATH
-    
-    public static final String MONTEREY_HOME_AWS = "/home/monterey"
-    private static final String MONTEREY_MANAGEMENT_NODE_PATH_AWS = MONTEREY_HOME_AWS+"/monterey-management-node"
-    private static final String MONTEREY_NETWORK_NODE_PATH_AWS = MONTEREY_HOME_AWS+"/monterey-network-node"
-    private static final String MONTEREY_MANAGEMENT_NODE_PATH_LOCAL = "~/monterey-management-node"
-    private static final String MONTEREY_NETWORK_NODE_PATH_LOCAL = "~/monterey-network-node"
-    private static final String SSH_HOST_NAME = "localhost"
-    private static final String SSH_USERNAME = "aled"
     private static final String APP_BUNDLE_RESOURCE_PATH = "com.cloudsoftcorp.monterey.example.noapisimple.jar"
     private static final String APP_CONFIG_RESOURCE_PATH = "HelloCloud.conf"
     
@@ -57,12 +48,6 @@ public class MontereyExampleApp extends AbstractApplication {
         OsgiClassLoadingContextFromBundle classLoadingContext = new OsgiClassLoadingContextFromBundle(null, MontereyExampleApp.class.getClassLoader());
         ClassLoadingContext.Defaults.setDefaultClassLoadingContext(classLoadingContext);
 
-        FixedListMachineProvisioningLocation localLoc = new FixedListMachineProvisioningLocation<SshMachineLocation>(
-                machines:[],name:"localhost-microcloud", latitude : 55.94944, longitude : -3.16028, streetAddress:"York, UK")
-        for (i in 1..10) {
-            new SshMachineLocation([address:InetAddress.getByName(SSH_HOST_NAME), userName:SSH_USERNAME]).setParentLocation(localLoc)
-        }
-
         URL bundleUrl = MontereyExampleApp.class.getClassLoader().getResource(APP_BUNDLE_RESOURCE_PATH);
         URL appDescriptorUrl = MontereyExampleApp.class.getClassLoader().getResource(APP_CONFIG_RESOURCE_PATH);
         UserCredentialsConfig adminCredential = new UserCredentialsConfig("myname", "mypass", HTTP_AUTH.ADMIN_ROLE);
@@ -71,8 +56,6 @@ public class MontereyExampleApp extends AbstractApplication {
         app.mn.name = "HelloCloud"
         app.mn.setConfig(MontereyNetwork.APP_BUNDLES, [bundleUrl])
         app.mn.setConfig(MontereyNetwork.APP_DESCRIPTOR_URL, appDescriptorUrl)
-        app.mn.setConfig(MontereyManagementNode.SUGGESTED_MANAGEMENT_NODE_INSTALL_DIR, MONTEREY_MANAGEMENT_NODE_PATH_AWS)
-        app.mn.setConfig(MontereyContainerNode.SUGGESTED_NETWORK_NODE_INSTALL_DIR, MONTEREY_NETWORK_NODE_PATH_AWS)
         app.mn.setConfig(MontereyManagementNode.SUGGESTED_WEB_USERS_CREDENTIAL, [adminCredential])
         app.mn.setConfig(MontereyNetwork.INITIAL_TOPOLOGY_PER_LOCATION, [(Dmn1NodeType.LPP):1,(Dmn1NodeType.MR):1,(Dmn1NodeType.M):1,(Dmn1NodeType.TP):1,(Dmn1NodeType.SPARE):1])
         
@@ -112,7 +95,6 @@ public class MontereyExampleApp extends AbstractApplication {
                         securityGroups:["brooklyn-all"]]])
 
         app.start([euwestLoc])
-//        app.start([localLoc])
 //        app.start([euwestLoc,useastLoc])
     }
     

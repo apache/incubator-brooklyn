@@ -39,8 +39,6 @@ public class MontereyNetworkConfig implements Serializable {
     // TODO standardise on one representation that works everywhere
     public static final String MONTEREY_MANAGER_HOME = MONTEREY_HOME+"/monterey-management-node";
     public static final String MONTEREY_NETWORK_HOME = MONTEREY_HOME+"/monterey-network-node";
-    public static final String DEFAULT_NETWORK_HOME = "~/monterey-network-node";
-    public static final String DEFAULT_MANAGER_HOME = "~/monterey-manager-node";
 
     public static final String MANAGER_SIDE_START_SCRIPT_RELATIVE_PATH = "scripts/osgi-management-node-start.sh";
     public static final String MANAGER_SIDE_KILL_SCRIPT_RELATIVE_PATH = "scripts/management-node-kill.sh";
