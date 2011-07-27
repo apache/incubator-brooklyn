@@ -57,19 +57,17 @@ class EntityServiceTest {
         assertTrue(testService.isChildOf(testEntity.ownedChildren.asList().get(0), testEntities))
     }
 
-
     @Test
     public void testGetAllLeafEntities() {
-        List<Entity> leaves = getAllLeafEntities(testCollection);
-        assertEquals(4, leaves.size())
+        List<Entity> leaves = testService.getAllLeafEntities(testCollection);
+        assertEquals(leaves.size(), 2)
     }
 
     @Test
     public void testEntityCountsAtLocatedLocations() {
-        Map <Location, Integer> cs = entityCountsAtLocatedLocations();
+        Map <Location, Integer> cs = testService.entityCountsAtLocatedLocations();
         assertEquals(0, cs.size());
     }
-
 }
 
 private class TestApplication extends AbstractApplication {
