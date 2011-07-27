@@ -40,6 +40,11 @@ public interface Location extends Serializable {
     void setParentLocation(Location newParent);
 
     /**
+     * Answers true if this location equals or is an ancestor of the given location.
+     */
+    boolean containsLocation(Location potentialDescendent);
+    
+    /**
      * TODO Return the ISO-3166 country code.
      * TODO A location could be in multiple iso-3166-2 locations.
      */

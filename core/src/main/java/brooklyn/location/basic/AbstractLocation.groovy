@@ -61,6 +61,15 @@ public abstract class AbstractLocation implements Location {
     public Location getParentLocation() { return parentLocation; }
     public Collection<Location> getChildLocations() { return childLocationsReadOnly; }
     
+    public boolean containsLocation(Location potentialDescendent) {
+        Location loc = potentialDescendent
+        while (loc != null) {
+            if (this == loc) return true
+            loc = loc.getParentLocation()
+        }
+        return false
+    }
+    
     protected void addChildLocation(Location child) {
         childLocations.add(child); 
     }
