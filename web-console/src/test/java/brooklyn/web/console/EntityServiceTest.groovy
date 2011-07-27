@@ -11,7 +11,7 @@ import brooklyn.entity.Group
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.AbstractGroup
-import brooklyn.test.entity.MockLocation
+import brooklyn.test.location.MockLocation
 import brooklyn.location.Location;
 
 import com.google.common.collect.Iterables
