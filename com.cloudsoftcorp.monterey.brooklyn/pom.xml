@@ -25,7 +25,9 @@
 		
         <dependency>
             <groupId>brooklyn</groupId>
-            <artifactId>brooklyn-extra</artifactId>
+            <artifactId>brooklyn-example</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <classifier>with-sependencies</classifier>
         </dependency>
 
         <!-- TODO this should probably come from one or all monterey depdendencies -->

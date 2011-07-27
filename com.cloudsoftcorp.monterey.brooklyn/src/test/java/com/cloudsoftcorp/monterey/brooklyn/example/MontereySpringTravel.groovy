@@ -49,6 +49,9 @@ public class MontereySpringTravel extends SpringTravel {
         mn.setConfig(MontereyManagementNode.SUGGESTED_WEB_USERS_CREDENTIAL, [adminCredential])
         mn.setConfig(MontereyNetwork.INITIAL_TOPOLOGY_PER_LOCATION, [(Dmn1NodeType.LPP):1,(Dmn1NodeType.MR):1,(Dmn1NodeType.M):1,(Dmn1NodeType.TP):1,(Dmn1NodeType.SPARE):1])
         //mn.policy << new MontereyLatencyOptimisationPolicy()
+        
+        mn.getAttribute(MANAGEMENT_URL)
+        tomcat.setConfig()
     }
 
 }
