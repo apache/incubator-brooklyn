@@ -30,12 +30,18 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
     public GeoscalingDnsService(Map properties = [:], Entity owner = null) {
         super(properties, owner);
         
-        username = getConfig(GEOSCALING_USERNAME);
-        password = getConfig(GEOSCALING_PASSWORD);
-        primaryDomainName = getConfig(GEOSCALING_PRIMARY_DOMAIN_NAME);
-        smartSubdomainName = getConfig(GEOSCALING_SMART_SUBDOMAIN_NAME);
+        username = retrieveFromPropertyOrConfig(properties, "username", GEOSCALING_USERNAME);
+        password = retrieveFromPropertyOrConfig(properties, "password", GEOSCALING_PASSWORD);
+        primaryDomainName = retrieveFromPropertyOrConfig(properties, "primaryDomainName", GEOSCALING_PRIMARY_DOMAIN_NAME);
+        smartSubdomainName = retrieveFromPropertyOrConfig(properties, "smartSubdomainName", GEOSCALING_SMART_SUBDOMAIN_NAME);
         
         // FIXME: complain about any missing config
+    }
+    
+    private static <T> T retrieveFromPropertyOrConfig(Map properties, String propertyKey, BasicConfigKey<T> configKey) {
+        Object p = properties.get(propertyKey);
+        if (p instanceof T) return (T) p;
+        return getConfig(configKey);
     }
 
     protected void reconfigureService(Set<HostGeoInfo> targetHosts) {

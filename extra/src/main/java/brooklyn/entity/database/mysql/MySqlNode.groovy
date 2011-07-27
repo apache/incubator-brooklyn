@@ -1,4 +1,4 @@
-package brooklyn.entity.data.mysql
+package brooklyn.entity.database.mysql
 
 class MySqlNode {
 

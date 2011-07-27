@@ -23,14 +23,14 @@ public abstract class AbstractApplication extends AbstractGroup implements Start
         if (properties.mgmt) {
             mgmt = (AbstractManagementContext) properties.remove("mgmt")
         }
+
+        setAttribute(SERVICE_UP, false)
     }
     
     /**
      * Default start will start all Startable children
      */
     public void start(Collection<Location> locations) {
-        //causes duplicate management problems, shouldn't hurt more than warnings; TODO review mgmt start/stop
-//      getManagementContext().manage(this)
         this.locations.addAll(locations)
         
         List<Entity> startable = ownedChildren.findAll { it in Startable }
@@ -42,6 +42,8 @@ public abstract class AbstractApplication extends AbstractGroup implements Start
 	            throw ee.cause
 	        }
         }
+
+        setAttribute(SERVICE_UP, true)
         deployed = true
     }
 
@@ -62,6 +64,8 @@ public abstract class AbstractApplication extends AbstractGroup implements Start
                 throw ee.cause
             }
         }
+
+        setAttribute(SERVICE_UP, false)
         deployed = false
     }
 

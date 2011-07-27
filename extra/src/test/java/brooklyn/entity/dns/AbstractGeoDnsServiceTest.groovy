@@ -12,13 +12,11 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import brooklyn.entity.Application
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.DynamicGroup
 import brooklyn.entity.group.DynamicFabric
 import brooklyn.entity.trait.Startable
-import brooklyn.location.CoordinatesProvider
 import brooklyn.location.Location
 import brooklyn.location.basic.GeneralPurposeLocation
 import brooklyn.location.basic.SshMachineLocation
@@ -27,35 +25,25 @@ import brooklyn.util.internal.EntityStartUtils
 import brooklyn.util.internal.TimeExtras
 
 public class AbstractGeoDnsServiceTest {
-    private static final Logger log = LoggerFactory.getLogger(AbstractGeoDnsServiceTest.class)
-    static { TimeExtras.init() }
-
     private static final String MONTEREY_WEST_IP = "208.95.232.123";
     private static final String MONTEREY_EAST_IP = "216.150.144.82";
-    private static final Map CALIFORNIA_COORDS = [ 'latitude' : 37.43472, 'longitude' : -121.89500 ];
-    private static final Map NEW_YORK_COORDS   = [ 'latitude' : 41.10361, 'longitude' :  -73.79583 ];
+    private static final double CALIFORNIA_LATITUDE = 37.43472, CALIFORNIA_LONGITUDE = -121.89500;
+    private static final double NEW_YORK_LATITUDE = 41.10361, NEW_YORK_LONGITUDE = -73.79583;
     
     private static final Location CALIFORNIA = new GeneralPurposeLocation(
-        name: "California",
-        latitude: CALIFORNIA_COORDS.latitude,
-        longitude: CALIFORNIA_COORDS.longitude);
+        name: "California", latitude: CALIFORNIA_LATITUDE, longitude: CALIFORNIA_LONGITUDE);
     
     private static final Location NEW_YORK = new GeneralPurposeLocation(
-        name: "New York",
-        latitude: NEW_YORK_COORDS.latitude,
-        longitude: NEW_YORK_COORDS.longitude);
+        name: "New York", latitude: NEW_YORK_LATITUDE, longitude: NEW_YORK_LONGITUDE);
 
     private static final Location CALIFORNIA_MACHINE = new SshMachineLocation(
-        name: "California machine",
-        address: MONTEREY_WEST_IP,
-        parentLocation: CALIFORNIA); 
+        name: "California machine", address: MONTEREY_WEST_IP, parentLocation: CALIFORNIA); 
         
     private static final Location NEW_YORK_MACHINE = new SshMachineLocation(
-        name: "New York machine",
-        address: MONTEREY_EAST_IP,
-        parentLocation: NEW_YORK); 
+        name: "New York machine", address: MONTEREY_EAST_IP, parentLocation: NEW_YORK); 
     
-    private Application app;
+    
+    private AbstractApplication app;
     private DynamicFabric fabric
     private AbstractGeoDnsService geoDns;
     
@@ -74,15 +62,15 @@ public class AbstractGeoDnsServiceTest {
         }
     }
 
+    
     @Test
     public void geoInfoOnLocations() {
         DynamicFabric fabric = new DynamicFabric(newEntity:{ properties -> return new TestEntity(properties) }, app)
-        fabric.start( [ CALIFORNIA_MACHINE, NEW_YORK_MACHINE ] );
-        
         DynamicGroup testEntities = new DynamicGroup([:], app, { Entity e -> (e instanceof TestEntity) });
-        testEntities.rescanEntities();
         geoDns = new TestService(app);
-        geoDns.setGroup(testEntities);
+        geoDns.setTargetEntityProvider(testEntities);
+        
+        app.start( [ CALIFORNIA_MACHINE, NEW_YORK_MACHINE ] );
         
         assertTrue(geoDns.targetHostsByName.containsKey("California machine"));
         assertTrue(geoDns.targetHostsByName.containsKey("New York machine"));
@@ -97,6 +85,7 @@ public class AbstractGeoDnsServiceTest {
     public void emptyGroup() {
         // TODO
     }
+    
     
     private class TestService extends AbstractGeoDnsService {
         public Map<String, HostGeoInfo> targetHostsByName = new LinkedHashMap<String, HostGeoInfo>();

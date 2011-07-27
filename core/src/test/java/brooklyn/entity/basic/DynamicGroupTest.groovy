@@ -4,6 +4,8 @@ import org.testng.Assert
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.entity.Entity
+
 class DynamicGroupTest {
 
     private AbstractApplication app
@@ -43,4 +45,15 @@ class DynamicGroupTest {
         def a = group.getMembers() as HashSet
         Assert.assertEquals(group.getMembers() as HashSet, [e1, e2, app, group] as HashSet)
     }
+    
+    @Test
+    public void testGroupDetectsNewlyManagedMatchingMember() {
+        Entity e3 = new AbstractEntity() {}
+        group.setEntityFilter( { it.getId().equals(e3.getId()) } )
+        
+        e3.setOwner(app)
+        e3.getManagementContext().manage(e3)
+        Assert.assertEquals(group.getMembers(), [e3])
+    }
+    
 }

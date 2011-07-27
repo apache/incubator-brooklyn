@@ -42,7 +42,7 @@ public abstract class JavaWebApp extends JavaApp {
 
     public static final Integer AVG_REQUESTS_PER_SECOND_PERIOD = 30*1000
     // FIXME: this value can actually go stale when we aren't receiving request count messages 
-    public static final BasicAttributeSensor<ConfidenceQualifiedNumber> AVG_REQUESTS_PER_SECOND = [ ConfidenceQualifiedNumber, 
+    public static final BasicAttributeSensor<Double> AVG_REQUESTS_PER_SECOND = [ Double, 
         "webapp.reqs.persec.avg.$AVG_REQUESTS_PER_SECOND_PERIOD", "Average Reqs/Sec (over the last ${AVG_REQUESTS_PER_SECOND_PERIOD}ms)" ]
 
     public static final BasicAttributeSensor<String> ROOT_URL = [ String, "webapp.url", "URL" ]

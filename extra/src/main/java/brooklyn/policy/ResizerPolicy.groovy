@@ -66,7 +66,7 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
         this
     }
 
-    private synchronized void resize() {
+    private void resize() {
         if (resizeLock.tryLock()) {
             try {
                 // Groovy does not support do .. while loops!

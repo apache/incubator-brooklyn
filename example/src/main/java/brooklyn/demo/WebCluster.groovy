@@ -44,6 +44,8 @@ public class WebCluster extends AbstractEntity implements Startable {
             }
         cluster = new DynamicWebAppCluster(newEntity:template, this)
         cluster.setConfig(DynamicCluster.INITIAL_SIZE, 0)
+
+        setAttribute(SERVICE_UP, false)
     }
 
     void start(Collection<Location> locations) {
@@ -53,17 +55,21 @@ public class WebCluster extends AbstractEntity implements Startable {
         controller = new NginxController(
             owner:this,
             cluster:cluster,
-            domain:'cloudsoft.geopaas.org',
+            domain:'brooklyn.geopaas.org',
             port:8000,
             portNumberSensor:JavaWebApp.HTTP_PORT
         )
 
         controller.start(locations)
+
+        setAttribute(SERVICE_UP, true)
     }
 
     void stop() {
         controller.stop()
         cluster.stop()
+
+        setAttribute(SERVICE_UP, false)
     }
 
     void restart() {

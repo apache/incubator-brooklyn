@@ -22,9 +22,9 @@ import brooklyn.policy.Policy
 class DynamicWebAppCluster extends DynamicCluster {
 
     public static final BasicAttributeSensor TOTAL_REQUEST_COUNT =
-            [ Integer, "cluster.reqs.total", "Cluster-wide entity request count" ]
+            [ Integer, "cluster.reqs.count.total", "Cluster-wide entity request count" ]
     public static final BasicAttributeSensor AVERAGE_REQUEST_COUNT =
-            [ Double, "cluster.reqs.average", "Cluster entity request average" ]
+            [ Double, "cluster.reqs.count.average", "Cluster entity request average" ]
 
     public static final BasicAttributeSensor TOTAL_ERROR_COUNT = 
             [ Integer, "cluster.reqs.errors.total", "Cluster-wide entity request error count" ]
@@ -52,7 +52,7 @@ class DynamicWebAppCluster extends DynamicCluster {
         List<BasicAttributeSensor> enricherSetup = [
             [JavaWebApp.REQUEST_COUNT, TOTAL_REQUEST_COUNT, AVERAGE_REQUEST_COUNT],
             [JavaWebApp.ERROR_COUNT, TOTAL_ERROR_COUNT, AVERAGE_ERROR_COUNT],
-            [JavaWebApp.AVG_REQUESTS_PER_SECOND_PERIOD, TOTAL_REQUESTS_PER_SECOND, AVERAGE_REQUESTS_PER_SECOND],
+            [JavaWebApp.AVG_REQUESTS_PER_SECOND, TOTAL_REQUESTS_PER_SECOND, AVERAGE_REQUESTS_PER_SECOND],
             [JavaWebApp.TOTAL_PROCESSING_TIME, TOTAL_PROCESSING_TIME, AVERAGE_PROCESSING_TIME]
         ]
         

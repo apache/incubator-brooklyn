@@ -23,7 +23,8 @@ abstract class AbstractGeoDnsService extends AbstractEntity {
         super(properties, owner);
     }
     
-    public void setGroup(AbstractGroup group) {
+    // FIXME: also accept a closure in case the group doesn't exist yet
+    public void setTargetEntityProvider(AbstractGroup group) {
         AbstractMembershipTrackingPolicy amtp = new AbstractMembershipTrackingPolicy() {
             protected void onEntityAdded(Entity entity) { addTargetHost(entity); }
             protected void onEntityRemoved(Entity entity) { removeTargetHost(entity); }
@@ -34,8 +35,11 @@ abstract class AbstractGeoDnsService extends AbstractEntity {
 
     protected abstract void reconfigureService(Set<HostGeoInfo> targetHosts);
     
-    public void addTargetHost(Entity e) {
-        if (targetHosts.containsKey(e)) return;
+    protected void addTargetHost(Entity e) {
+        if (targetHosts.containsKey(e)) {
+            log.warn("Ignoring already-added entity "+e);
+            return;
+        }
         HostGeoInfo hgi = HostGeoInfo.fromEntity(e)
         if (hgi == null) {
             log.warn("Failed to derive geo information for entity "+e);
@@ -45,12 +49,12 @@ abstract class AbstractGeoDnsService extends AbstractEntity {
         }
     }
 
-    public void removeTargetHost(Entity e) {
+    protected void removeTargetHost(Entity e) {
         if (targetHosts.remove(e))
             update();
     }
     
-    public void update() {
+    protected void update() {
         reconfigureService(new LinkedHashSet<HostGeoInfo>(targetHosts.values()));
 //        emit(TARGET_HOSTS, targetHosts);
     }

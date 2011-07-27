@@ -36,8 +36,6 @@ import brooklyn.util.task.ParallelTask
 /**
  * Default {@link Entity} implementation.
  *
- * FIXME rewrite documentation below
- *
  * Provides several common fields ({@link #name}, {@link #id});
  * a map {@link #config} which contains arbitrary config data;
  * sensors and effectors; policies; managementContext.
@@ -47,8 +45,8 @@ import brooklyn.util.task.ParallelTask
  * by children, whereas the fields are not. (Attributes cannot be so accessed,
  * nor are they inherited.)
  */
-abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractEntity.class)
+public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
+    protected static final Logger LOG = LoggerFactory.getLogger(AbstractEntity.class)
 
     String id = LanguageUtils.newUid()
     String name
@@ -57,9 +55,6 @@ abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
  
     protected Map properties = [:]
     protected volatile EntityReference<Application> application
- 
-    // XXX see comments below (grkvlt)
-//    private final Object ownedChildrenLock = new Object();
  
     final EntityCollectionReference ownedChildren = new EntityCollectionReference<Entity>(this);
     final EntityCollectionReference<Group> groups = new EntityCollectionReference<Group>(this);
@@ -200,9 +195,9 @@ abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
 
     public synchronized void clearOwner() {
         if (owner == null) return
-        Entity oldOwner = owner
+        Entity oldOwner = owner.get()
         owner = null
-        oldOwner.removeOwnedChild(this)
+        oldOwner?.removeOwnedChild(this)
     }
 
     public boolean isAncestor(Entity oldee) {
@@ -230,35 +225,6 @@ abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
         
         return false
     }
-
-    /**
-     * Access the set of owned children in a thread-safe manner. The supplied closure is passed a reference to the
-     * @{link Set} of owned children, and is run while an exclusive lock is held. The operation is synchronous, i.e., this
-     * method will block until the mutex can be obtained and the closure has finished executing.
-     *
-     * Example:
-     * <code>
-     *     // This code queries the set of children, and then removes one of its entries. Between the two operations there is
-     *     // scope for a race condition, so it must be run while holding an exclusive lock on the set of children.
-     *     entity.accessOwnedChildrenSynchronized({ Set<Entity> children ->
-     *         Entity child = children.iterator().next()
-     *         entity.removeOwnedChild(child)
-     *     })
-     * </code>
-     * @param closure a block of code to run while holding the exclusive lock.
-     * @deprecated see comments below
-     */
-    // XXX the group methods addMember and removeMember are now synchronized on the group itself, and the resize effector
-    //      implementation for dymanic cluster is also synchronized on the owning group. the members collection returned
-    //      is immutable, so group membership changes should be intrinsicly thread safe, meaning this is not required.
-    //      Note that set and clear of owner are also synchronized.
-    // FIXME If this method is present the Web Console build barfs with error:
-    // Compilation error: BUG! exception in phase 'semantic analysis' in source unit '<https://ccweb.cloudsoftcorp.com/jenkins/job/Brooklyn/ws/web-console/grails-app/services/brooklyn/web/console/ManagementContextService.groovy'> null
-//    protected <T> T accessOwnedChildrenSynchronized(Closure<T> closure) {
-//        synchronized(ownedChildrenLock) {
-//            return closure.call(ownedChildren)
-//        }
-//    }
 
     /**
      * Adds the given entity as a member of this group <em>and</em> this group as one of the groups of the child;
@@ -308,6 +274,7 @@ abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
         }
         app
     }
+
     protected synchronized void setApplication(Application app) {
         if (application) {
             if (this.@application.id!=app.id) {
@@ -377,7 +344,7 @@ abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
             v = v.get()
         }
         
-        v = v!=null ? v : inheritedConfig.get(key) ?: key.defaultValue
+        v = v != null ? v : inheritedConfig.get(key) ?: key.defaultValue
     }
 
     @Override
@@ -434,7 +401,7 @@ abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
         execution = new BasicExecutionContext(tag:this, getManagementContext().executionManager)
     }
 
-    /** default toString is simplified name of class, together with selected arguments */
+    /** Default String representation is simplified name of class, together with selected fields. */
     @Override
     public String toString() {
         StringBuffer result = []
@@ -490,11 +457,11 @@ abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
 
     
     /**
-     * Sensors available on this entit5
+     * Sensors available on this entity.
      */
     public Map<String,Sensor<?>> getSensors() { sensors }
 
-    /** convenience for finding named sensor in {@link #getSensor()} map */
+    /** Convenience for finding named sensor in {@link #getSensor()} {@link Map}. */
     public <T> Sensor<T> getSensor(String sensorName) { getSensors()[sensorName] }
 
     /**
@@ -509,7 +476,7 @@ abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
 
     // -------- EFFECTORS --------------
 
-    /** flag needed internally to prevent invokeMethod from recursing on itself */     
+    /** Flag needed internally to prevent invokeMethod from recursing on itself. */     
     private ThreadLocal<Boolean> skipInvokeMethodEffectorInterception = new ThreadLocal() { protected Object initialValue() { Boolean.FALSE } }
 
     /** 
@@ -549,7 +516,7 @@ abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
      */
     public Map<String,Effector> getEffectors() { effectors }
 
-    /** convenience for finding named effector in {@link #getEffectors()} map */
+    /** Convenience for finding named effector in {@link #getEffectors()} {@link Map}. */
     public <T> Effector<T> getEffector(String effectorName) { effectors[effectorName] }
 
     /** Invoke an {@link Effector} directly. */
@@ -564,12 +531,9 @@ abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
      */
     public <T> Task<T> invoke(Effector<T> eff, Map parameters) {
         getManagementContext().invokeEffector(this, eff, parameters);
-//        executionContext.submit(
-//                { effector.call(this, parameters) } as Callable<T>,
-//                description:"invocation of effector ${effector}")
     }
 
-    public <T> Task<List<T>> invokeEffectorList(Collection<Entity> entities, Effector<T> effector, Map<String,?> parameters) {
+    public <T> Task<List<T>> invokeEffectorList(Collection<Entity> entities, Effector<T> effector, Map<String,?> parameters=[:]) {
         if (!entities || entities.isEmpty()) return null
         List<Task> tasks = entities.collect { it.invoke(effector, parameters) }
         ParallelTask invoke = new ParallelTask(tasks)
@@ -577,18 +541,22 @@ abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
         invoke
     }
 
-    /** invoked by management context when this entity becomes managed by a given management context (e.g. at a particular management node);
-     * including the initial management started and subsequent management node master-change for this entity */
+    /**
+     * Invoked by {@link ManagementContext} when this entity becomes managed at a particular management node,
+     * including the initial management started and subsequent management node master-change for this entity.
+     */
     public void onManagementBecomingMaster() {}
     
-    /** invoked by management context when this entity becomes mastered by a given management context (e.g. at a particular management node),
-     * including the final management end and subsequent management node master-change for this entity */
+    /**
+     * Invoked by {@link ManagementContext} when this entity becomes mastered at a particular management node,
+     * including the final management end and subsequent management node master-change for this entity.
+     */
     public void onManagementNoLongerMaster() {}
 
-    /** field for use only by management plane, to record remote destination when proxied */
+    /** Field for use only by management plane, to record remote destination when proxied. */
     public Object managementData = null;
 
-    /** for use by management plane, to invalidate all fields (e.g. when an entity is changing to being proxied) */
+    /** For use by management plane, to invalidate all fields (e.g. when an entity is changing to being proxied) */
     public void invalidate() {
         this.@owner.invalidate();
         this.@application.invalidate();

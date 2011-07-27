@@ -1,7 +1,7 @@
 Brooklyn.effectors = (function() {
     // Config
     var id = '#effector-data';
-    var aoColumns = [ { "mDataProp": "name", "sTitle": "name", "sWidth":"100%"  }];
+    var aoColumns = [ { "mDataProp": "name", "sTitle": "name", "sWidth":"100%", "bSortable": false }];
 
     // State
     var selectedRowData;
@@ -73,7 +73,7 @@ Brooklyn.effectors = (function() {
     }
 
     function init() {
-        $('#effector-invoke').submit(invokeEffector);
+        $('#effector-invoke').click(invokeEffector);
         $(Brooklyn.eventBus).bind("entity_selected", updateList);
     }
 

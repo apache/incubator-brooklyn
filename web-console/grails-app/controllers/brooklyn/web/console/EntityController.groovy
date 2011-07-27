@@ -21,6 +21,9 @@ class EntityController {
 
     def index = {}
 
+    def circles = {
+    }
+
     def list = {
         render(toEntitySummaries(entityService.getAllEntities()) as JSON)
     }

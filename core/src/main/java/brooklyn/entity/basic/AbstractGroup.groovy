@@ -1,9 +1,5 @@
 package brooklyn.entity.basic
 
-import groovy.util.ObservableList.ElementAddedEvent
-import groovy.util.ObservableList.ElementRemovedEvent
-
-import java.beans.PropertyChangeListener
 import java.util.Collection
 import java.util.Map
 
@@ -32,7 +28,7 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
     }
  
     public synchronized boolean removeMember(Entity member) {
-        if (members.remove(member)) {
+        if (member != null && members.remove(member)) {
             emit(MEMBER_REMOVED, member)
             setAttribute(Changeable.GROUP_SIZE, currentSize)
         }

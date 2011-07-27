@@ -35,10 +35,14 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             Preconditions.checkArgument properties.config instanceof Map, "'config' value must be a Map"
             this.config = properties.config
         }
+
+        if (name == null) {
+            name = (user ? "${user}@" : "") + address.hostName
+        }
     }
 
     public InetAddress getAddress() { return address }
- 
+
     public int run(Map props=[:], String command, Map env=[:]) {
         run(props, [ command ], env)
     }
@@ -97,7 +101,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public void releasePort(int portNumber) {
         ports.remove((Object) portNumber);
     }
-    
+
     public boolean isSshable() {
         String cmd = "date";
         try {

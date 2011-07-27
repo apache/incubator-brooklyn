@@ -41,12 +41,15 @@ public class AwsLocation extends AbstractLocation implements MachineProvisioning
     private final Map<SshMachineLocation,String> vmInstanceIds = [:]
 
     AwsLocation(Map conf) {
+        super(conf)
         this.conf.putAll(conf)
         this.conf.provider = "aws-ec2"
     }
     
     AwsLocation(String identity, String credential, String providerLocationId) {
         this([identity:identity, credential:credential, providerLocationId:providerLocationId])
+
+        name = providerLocationId
     }
     
     public void setSshPublicKey(String val) {

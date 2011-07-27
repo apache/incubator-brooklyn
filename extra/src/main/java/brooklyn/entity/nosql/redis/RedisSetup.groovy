@@ -3,17 +3,18 @@ package brooklyn.entity.nosql.redis
 import java.util.List
 import java.util.Map
 
+import com.google.common.base.Preconditions;
+
 import brooklyn.entity.basic.Attributes
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedAppSetup
 
 /**
- * Start a {@link QpidNode} in a {@link Location} accessible over ssh.
+ * Start a {@link RedisStore} in a {@link Location} accessible over ssh.
  */
 public class RedisSetup extends SshBasedAppSetup {
     public static final String DEFAULT_VERSION = "2.2.12"
     public static final String DEFAULT_INSTALL_DIR = DEFAULT_INSTALL_BASEDIR+"/"+"redis"
-    public static final int DEFAULT_REDIS_PORT = 6379
 
     private int redisPort
 
@@ -21,12 +22,13 @@ public class RedisSetup extends SshBasedAppSetup {
         Integer suggestedVersion = entity.getConfig(RedisStore.SUGGESTED_VERSION)
         String suggestedInstallDir = entity.getConfig(RedisStore.SUGGESTED_INSTALL_DIR)
         String suggestedRunDir = entity.getConfig(RedisStore.SUGGESTED_RUN_DIR)
-        Integer suggestedRedisPort = entity.getConfig(RedisStore.SUGGESTED_REDIS_PORT)
 
         String version = suggestedVersion ?: DEFAULT_VERSION
         String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"${version}"+"/"+"redis-${version}")
         String runDir = suggestedRunDir ?: (BROOKLYN_HOME_DIR+"/"+"${entity.application.id}"+"/"+"redis-${entity.id}")
-        int redisPort = machine.obtainPort(toDesiredPortRange(suggestedRedisPort, DEFAULT_REDIS_PORT))
+
+        int redisPort = entity.getConfig(RedisStore.REDIS_PORT.configKey)
+        Preconditions.checkState machine.obtainSpecificPort(redisPort), "The port ${redisPort} must be available"
 
         RedisSetup result = new RedisSetup(entity, machine)
         result.setRedisPort(redisPort)
@@ -57,6 +59,7 @@ public class RedisSetup extends SshBasedAppSetup {
         makeInstallScript([
                 "wget http://redis.googlecode.com/files/redis-${version}.tar.gz",
                 "tar xvzf redis-${version}.tar.gz",
+                "cd redis-${version}",
 	            "make"
             ])
     }
@@ -67,7 +70,7 @@ public class RedisSetup extends SshBasedAppSetup {
     public List<String> getRunScript() {
         List<String> script = [
             "cd ${runDir}",
-            "nohup ./bin/redis-server redis.conf &",
+            "./bin/redis-server redis.conf",
         ]
         return script
     }
@@ -108,7 +111,7 @@ public class RedisSetup extends SshBasedAppSetup {
 
     @Override
     protected void postShutdown() {
-        machine.releasePort(httpPort);
+        machine.releasePort(redisPort);
     }
     
     @Override

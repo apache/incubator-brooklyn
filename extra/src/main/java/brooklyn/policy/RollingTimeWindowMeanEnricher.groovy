@@ -60,7 +60,7 @@ class RollingTimeWindowMeanEnricher<T extends Number> extends AbstractTransformi
         values.addLast(event.getValue())
         timestamps.addLast(eventTime)
         pruneValues(eventTime)
-        entity.setAttribute(target, getAverage(eventTime)) //TODO this can potentially go stale... maybe we need to timestamp as well?
+        entity.setAttribute(target, getAverage(eventTime).value) //TODO this can potentially go stale... maybe we need to timestamp as well?
     }
     
     public ConfidenceQualifiedNumber getAverage() {

@@ -21,16 +21,16 @@ import com.google.common.base.Preconditions
  * <ul>
  * <li>Dynamic clusters of web application servers
  * <li>Multiple geographic locations
- * <li>Use of any geo-redirecting DNS provider to route users to their closest cluster of web servers
+ * <li>Use of a geo-redirecting DNS provider to route users to their closest cluster of web servers
  * <li>Resizing the clusters to meet client demand
  * </ul>
  */
 public class SpringTravel extends AbstractApplication {
-    // XXX change these paths before running the demo
     private static final String SPRING_TRAVEL_PATH = "src/main/resources/swf-booking-mvc.war"
 
     final DynamicFabric fabric
     final DynamicGroup nginxEntities
+    final GeoscalingDnsService geoDns
     
     SpringTravel(Map props=[:]) {
         super(props)
@@ -40,6 +40,8 @@ public class SpringTravel extends AbstractApplication {
                 id : 'fabricID',
 	            name : 'fabricName',
 	            displayName : 'Fabric',
+                displayNamePrefix : '',
+                displayNameSuffix : ' web cluster',
 	            newEntity : { Map properties -> 
                     WebCluster cluster = new WebCluster(properties, fabric)
                     
@@ -60,16 +62,12 @@ public class SpringTravel extends AbstractApplication {
 
         nginxEntities = new DynamicGroup([:], this, { Entity e -> (e instanceof NginxController) })
 
-        GeoscalingDnsService geoDns = new GeoscalingDnsService(
-            config: [
-                (GeoscalingDnsService.GEOSCALING_USERNAME): 'cloudsoft',
-                (GeoscalingDnsService.GEOSCALING_PASSWORD): 'cl0uds0ft',
-                (GeoscalingDnsService.GEOSCALING_PRIMARY_DOMAIN_NAME): 'geopaas.org',
-                (GeoscalingDnsService.GEOSCALING_SMART_SUBDOMAIN_NAME): 'brooklyn',
-            ],
+        geoDns = new GeoscalingDnsService(username: 'cloudsoft', password: 'cl0uds0ft',
+            primaryDomainName: 'geopaas.org', smartSubdomainName: 'brooklyn',
             this)
 
-        nginxEntities.rescanEntities()
-        geoDns.setGroup(nginxEntities)
+        // TODO: revisit this
+        geoDns.setTargetEntityProvider(nginxEntities)
     }
+    
 }

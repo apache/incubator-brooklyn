@@ -1,31 +1,54 @@
 package brooklyn.demo
 
-import java.util.Map
-
+import brooklyn.entity.proxy.nginx.NginxController
+import brooklyn.entity.webapp.tomcat.TomcatServer
+import brooklyn.location.Location
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.basic.FixedListMachineProvisioningLocation
+import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.aws.AWSCredentialsFromEnv
+import brooklyn.location.basic.aws.AwsLocation
 import brooklyn.location.basic.aws.AwsLocationFactory
 
 public class Locations {
-    private static final Map MONTEREY_EAST_COORDS = [ 
-            displayName:"Hawthorne, NY", 
-            streetAddress:"Hawthorne, NY",
-            'latitude' : 41.10361d, 'longitude' : -73.79583d, 
-            iso3166:"US-NY" ] // Hawthorne, NY
-    private static final Map EDINBURGH_COORDS = [ 
-            displayName:"HQ, Edinburgh", 
-            streetAddress:"Appleton Tower, Edinburgh",
-            'latitude' : 55.94944d, 'longitude' : -3.16028d, 
-            iso3166:"GB-EDH" ] // Edinburgh, Scotland
+    public static final String LOCALHOST = "localhost"
+    public static final Map LOCALHOST_COORDS = [
+            id : LOCALHOST,
+            displayName : "Localhost",
+            streetAddress : "Appleton Tower, Edinburgh",
+            latitude : 55.94944, longitude : -3.16028,
+            iso3166 : "GB-EDH" ]
+    public static final String MONTEREY_EAST = "monterey-east"
+    public static final Map MONTEREY_EAST_COORDS = [
+            id : MONTEREY_EAST,
+            displayName : "Hawthorne, NY", 
+            streetAddress : "Hawthorne, NY",
+            latitude : 41.10361, longitude : -73.79583, 
+            iso3166 : "US-NY" ]
+    public static final String EDINBURGH = "edinburgh"
+    public static final Map EDINBURGH_COORDS = [ 
+            id : EDINBURGH,
+            displayName : "HQ, Edinburgh", 
+            streetAddress : "Appleton Tower, Edinburgh",
+            latitude : 55.94944, longitude : -3.16028, 
+            iso3166 : "GB-EDH" ]
+    public static final Map EC2_IMAGES = [
+            "eu-west-1":"ami-89def4fd",
+            "us-east-1":"ami-2342a94a",
+            "us-west-1":"ami-25df8e60",
+            "ap-southeast-1":"ami-21c2bd73",
+            "ap-northeast-1":"ami-f0e842f1",
+        ]
+    public static final Collection AWS_REGIONS = EC2_IMAGES.keySet()
+
+    private static final AwsLocationFactory AWS_FACTORY = newAwsLocationFactory()
    
     private Locations() { }
 
-    public static AwsLocationFactory newAwsLocationFactory() {
-	    // XXX change these paths before running the demo
-        File sshPrivateKey = new File("/Users/adk/Workspaces/Cloudsoft/brooklyn/example/src/main/resources/jclouds/id_rsa.private")
-        File sshPublicKey = new File("/Users/adk/Workspaces/Cloudsoft/brooklyn/example/src/main/resources/jclouds/id_rsa.pub")
+    private static final AwsLocationFactory newAwsLocationFactory() {
+        File sshPrivateKey = new File("src/main/resources/jclouds/id_rsa.private")
+        File sshPublicKey = new File("src/main/resources/jclouds/id_rsa.pub")
 
         AWSCredentialsFromEnv creds = new AWSCredentialsFromEnv();
         return new AwsLocationFactory([
@@ -34,6 +57,15 @@ public class Locations {
                 sshPrivateKey : sshPrivateKey,
                 sshPublicKey : sshPublicKey
             ])
+    }
+
+    public static LocalhostMachineProvisioningLocation newLocalhostLocation(int numberOfInstances) {
+        return new LocalhostMachineProvisioningLocation(
+            count: numberOfInstances,
+            latitude : LOCALHOST_COORDS['latitude'],
+            longitude : LOCALHOST_COORDS['longitude'],
+            displayName : 'Localhost'
+        )
     }
 
     public static FixedListMachineProvisioningLocation newMontereyEastLocation() {
@@ -51,7 +83,8 @@ public class Locations {
             new FixedListMachineProvisioningLocation<SshMachineLocation>(
                 machines : MONTEREY_EAST_PUBLIC_ADDRESSES,
                 latitude : MONTEREY_EAST_COORDS['latitude'],
-                longitude : MONTEREY_EAST_COORDS['longitude']
+                longitude : MONTEREY_EAST_COORDS['longitude'],
+                displayName : 'Monterey East'
             )
         return result
     }
@@ -71,8 +104,38 @@ public class Locations {
             new FixedListMachineProvisioningLocation<SshMachineLocation>(
                 machines : MONTEREY_EDINBURGH_MACHINES,
                 latitude : EDINBURGH_COORDS['latitude'],
-                longitude : EDINBURGH_COORDS['longitude']
+                longitude : EDINBURGH_COORDS['longitude'],
+                displayName : 'Monterey Edinburgh'
             )
         return result
     }
+
+    public static List<Location> getLocationsById(List<String> ids) {
+        List<Location> locations = ids.collect { String location ->
+            if (Locations.AWS_REGIONS.contains(location)) {
+                Locations.lookupAwsRegion(location)
+            } else if (Locations.LOCALHOST == location) {
+                Locations.newLocalhostLocation(5)
+            } else if (Locations.MONTEREY_EAST == location) {
+                Locations.newMontereyEastLocation()
+            } else if (Locations.EDINBURGH == location) {
+                Locations.newMontereyEdinburghLocation()
+            }
+        }
+        return locations
+    }
+    
+    public static AwsLocation lookupAwsRegion(String regionName) {
+        String imageId = regionName+"/"+EC2_IMAGES.get(regionName)
+        AwsLocation region = AWS_FACTORY.newLocation(regionName)
+        region.setTagMapping([
+            (TomcatServer.class.getName()):[
+                imageId:imageId,
+                securityGroups:["brooklyn-all"]],
+            (NginxController.class.getName()):[
+                imageId:imageId,
+                securityGroups:["brooklyn-all"]]])
+        return region
+    }
+    
 }

@@ -13,23 +13,19 @@ public class SensorSummary {
     public final Object value
     public final String timestamp
 
-    DateFormat formatter = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy ")
-    Calendar date = Calendar.getInstance();
+    private static DateFormat formatter = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy ")
 
     public SensorSummary(Sensor sensor, Object value) {
         this.name = sensor.name
         this.description = sensor.description
         this.value = value
-        date.setTimeInMillis(System.currentTimeMillis())
-        this.timestamp = formatter.format(date.getTime())
-
+        this.timestamp = formatter.format(new Date())
     }
 
     public SensorSummary(SensorEvent event) {
         this.name = event.sensor.name
         this.description = event.sensor.description
         this.value = event.value
-        date.setTimeInMillis(event.timestamp)
-        this.timestamp = formatter.format(date.getTime())
+        this.timestamp = formatter.format(new Date(event.timestamp))
     }
 }
