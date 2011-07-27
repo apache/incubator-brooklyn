@@ -57,11 +57,6 @@ class EntityServiceTest {
     }
 
     @Test
-    public void testGetChildren() {
-        assertEquals(2, testService.getChildren(testEntity).size())
-    }
-
-    @Test
     public void testIsChildOf() {
         assertTrue(testService.isChildOf(testEntity.ownedChildren.asList().get(0), testEntities))
     }

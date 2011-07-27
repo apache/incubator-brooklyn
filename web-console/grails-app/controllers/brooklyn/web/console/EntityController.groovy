@@ -134,7 +134,7 @@ class EntityController {
 
         entities.each {
             entity ->
-            entityService.getChildren(entity).each {
+                entity.getOwnedChildren().each {
                 child -> nodeMap[entity.id].children.add(nodeMap[child.id])
             }
         }
