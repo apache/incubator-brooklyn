@@ -1,5 +1,9 @@
 package brooklyn.demo
 
+import java.util.Map;
+
+import org.jclouds.ec2.domain.InstanceType
+
 import brooklyn.entity.proxy.nginx.NginxController
 import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.location.Location
@@ -33,14 +37,22 @@ public class Locations {
             streetAddress : "Appleton Tower, Edinburgh",
             latitude : 55.94944, longitude : -3.16028, 
             iso3166 : "GB-EDH" ]
-    public static final Map EC2_IMAGES = [
+    public static final Map EC2_VANILLA_IMAGES = [
             "eu-west-1":"ami-89def4fd",
             "us-east-1":"ami-2342a94a",
             "us-west-1":"ami-25df8e60",
             "ap-southeast-1":"ami-21c2bd73",
             "ap-northeast-1":"ami-f0e842f1",
         ]
-    public static final Collection AWS_REGIONS = EC2_IMAGES.keySet()
+    public static final Map EC2_MONTEREY_IMAGES = [
+        "eu-west-1":"ami-901323e4",
+        "us-east-1":"ami-3d814754",
+        "us-west-1":"ami-01e7b544",
+        "ap-southeast-1":"ami-bcd1a9ee",
+        "ap-northeast-1":"ami-98ce7b99",
+        ]
+
+    public static final Collection AWS_REGIONS = EC2_VANILLA_IMAGES.keySet()
 
     private static final AwsLocationFactory AWS_FACTORY = newAwsLocationFactory()
    
@@ -126,15 +138,25 @@ public class Locations {
     }
     
     public static AwsLocation lookupAwsRegion(String regionName) {
-        String imageId = regionName+"/"+EC2_IMAGES.get(regionName)
+        String imageIdVanilla = regionName+"/"+EC2_VANILLA_IMAGES.get(regionName)
+        String imageIdMonterey = regionName+"/"+EC2_MONTEREY_IMAGES.get(regionName)
         AwsLocation region = AWS_FACTORY.newLocation(regionName)
         region.setTagMapping([
             (TomcatServer.class.getName()):[
-                imageId:imageId,
+                imageId:imageIdVanilla,
                 securityGroups:["brooklyn-all"]],
             (NginxController.class.getName()):[
-                imageId:imageId,
-                securityGroups:["brooklyn-all"]]])
+                imageId:imageIdVanilla,
+                securityGroups:["brooklyn-all"]],
+            ("com.cloudsoftcorp.monterey.brooklyn.example.MontereyManagementNode".class.getName()):[
+                imageId:imageIdMonterey,
+                hardwareId:InstanceType.M1_SMALL,
+                securityGroups:["brooklyn-all"]],
+            ("com.cloudsoftcorp.monterey.brooklyn.example.MontereyContainerNode".class.getName()):[
+                imageId:imageIdMonterey,
+                hardwareId:InstanceType.M1_SMALL,
+                securityGroups:["brooklyn-all"]]
+		])
         return region
     }
     
