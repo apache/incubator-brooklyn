@@ -22,7 +22,7 @@ import brooklyn.management.internal.LocalManagementContext
 
 
 abstract class AbstractGeoDnsService extends AbstractEntity {
-    private static final Logger log = LoggerFactory.getLogger(AbstractGeoDnsService.class);
+    protected static final Logger log = LoggerFactory.getLogger(AbstractGeoDnsService.class);
     protected Group targetEntityProvider = null;
     protected Map<Entity, HostGeoInfo> targetHosts = new HashMap<Entity, HostGeoInfo>();
     
