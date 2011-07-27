@@ -8,14 +8,14 @@ Brooklyn.summary = (function() {
         if (json.locations.length > 0) {
             locations_html += '<ul id="#summary-locations">\n';
             for (l in json.locations){
-                locations_html += "<li>"+json.locations[l].name+"</li>\n";
+                locations_html += "<li>"+json.locations[l].displayName+"</li>\n";
             }
             locations_html += "</ul>";
         } else {
             locations_html += "None set";
         }
         //alert(locations_html)
-        $("#summary-basic-info").html(name_html + locations_html);
+        $("#summary-basic-info").html(name_html + locations_html) ;
 
         var status_html = '<span class="label">Status: </span>TODO';
         $("#summary-status").html(status_html);
