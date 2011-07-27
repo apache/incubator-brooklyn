@@ -96,7 +96,7 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
     }
 
     private void resize() {
-        if (resizing.compareAndSet(false, true)) {
+        if (!suspended.get() && dynamicCluster.getAttribute(DynamicCluster.SERVICE_UP) && resizing.compareAndSet(false, true)) {
             executor.execute(resizeAction)
         }
     }
