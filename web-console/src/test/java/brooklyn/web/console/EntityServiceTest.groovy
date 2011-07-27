@@ -11,6 +11,7 @@ import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.AbstractGroup
 import brooklyn.test.entity.MockLocation
+import brooklyn.location.Location;
 
 import com.google.common.collect.Iterables
 
@@ -60,6 +61,18 @@ class EntityServiceTest {
     public void testIsChildOf() {
         assertTrue(testService.isChildOf(testEntity.ownedChildren.asList().get(0), testEntities))
     }
+
+    @Test
+    public void testGetAllLeafEntities() {
+        List<Entity> leaves = getAllLeafEntities(testCollection);
+        assertEquals(4, leaves.size())
+    }
+
+    @Test
+    public void testEntityCountsAtLocatedLocations() {
+        Map <Location, Integer> cs = entityCountsAtLocatedLocations();
+        assertEquals(0, cs.size());
+    }        
 }
 
 private class TestApplication extends AbstractApplication {

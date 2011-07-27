@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap
 import brooklyn.event.SensorEventListener
 import java.util.concurrent.ConcurrentLinkedQueue
 import brooklyn.event.AttributeSensor
+import brooklyn.location.Location;
 
 class EntityService {
 
@@ -175,13 +176,22 @@ class EntityService {
     }
 
     private Location getNearestAncestorWithCoordinates(Location l) {
-        // if l has coords, return l
-        // else try parent
-        throw new Exception("todo");
+        if (l == null) return null;
+        if (l.getLocationProperty("latitude") && l.getLocationProperty("longitude")) return l;
+        return getNearestAncestorWithCoordinates(l.getParentLocation());
     }
 
     /* Returns the number of entites at each location for which the geographic coordinates are known. */
-    public Map<Location, Int> entityCountsAtLocatedLocations() {
-        throw new Exception("todo");
+    public Map<Location, Integer> entityCountsAtLocatedLocations() {
+        Map<Location, Integer> cs = [:]
+        
+        List<Entity> es = getAllLeafEntities()
+        List<Location> ls = es.collect {it.getNearestAncestorWithCoordinates()}
+        ls = ls.find {it != null}
+        ls.each {
+            cs[l]++;
+        }
+
+        return cs;
     }
 }
