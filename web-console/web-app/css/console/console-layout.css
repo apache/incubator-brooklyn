@@ -23,6 +23,10 @@ body{
     width: 980px;
 }
 
+#test-body{
+    height:100%;
+}
+
 h1#brooklyn-header{
     height:46px;
     width:192px;
