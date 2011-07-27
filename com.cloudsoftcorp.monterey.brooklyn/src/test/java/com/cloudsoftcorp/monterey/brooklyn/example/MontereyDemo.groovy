@@ -12,7 +12,7 @@ class MontereyDemo extends Demo {
 
     @Override
     protected AbstractApplication createApplication() {
-        MontereyExampleApp app = new MontereyExampleApp(name:'brooklyn-wide-area-demo',
+        MontereySpringTravel app = new MontereySpringTravel(name:'brooklyn-wide-area-demo',
                 displayName:'Brooklyn Wide-Area Spring Travel Demo Application')
         return app
     }

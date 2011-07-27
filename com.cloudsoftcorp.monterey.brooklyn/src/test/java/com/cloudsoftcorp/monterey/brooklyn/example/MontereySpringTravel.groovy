@@ -25,14 +25,14 @@ import com.cloudsoftcorp.monterey.network.control.plane.web.api.ControlPlaneWebC
 import com.cloudsoftcorp.util.javalang.ClassLoadingContext
 import com.cloudsoftcorp.util.javalang.OsgiClassLoadingContextFromBundle
 
-public class MontereyExampleApp extends SpringTravel {
+public class MontereySpringTravel extends SpringTravel {
 
     private static final String APP_BUNDLE_RESOURCE_PATH = "com.cloudsoftcorp.monterey.example.noapisimple.jar"
     private static final String APP_CONFIG_RESOURCE_PATH = "HelloCloud.conf"
     
     MontereyNetwork mn
     
-    public MontereyExampleApp(Map props=[:]) {
+    public MontereySpringTravel(Map props=[:]) {
         super(props)
 
         OsgiClassLoadingContextFromBundle classLoadingContext = new OsgiClassLoadingContextFromBundle(null, MontereyExampleApp.class.getClassLoader());
