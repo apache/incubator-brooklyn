@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap
 import brooklyn.event.SensorEventListener
 import java.util.concurrent.ConcurrentLinkedQueue
 import brooklyn.event.AttributeSensor
-import brooklyn.location.Location;
+import brooklyn.location.Location
 import brooklyn.management.internal.AbstractManagementContext
 
 class EntityService {
@@ -156,9 +156,9 @@ class EntityService {
     }
 
     private List<Entity> leaves(Entity e) {
-        def children = getChildren(e);
+        Collection<Entity> children = e.getOwnedChildren();
 
-        if (children.size() == 0) return e;
+        if (children.size() == 0) return [e];
         // inject is foldl
         return children.collect { leaves(it) }.inject([]) { a, b -> a + b }
     }
