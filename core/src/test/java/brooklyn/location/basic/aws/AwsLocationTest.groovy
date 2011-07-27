@@ -70,6 +70,7 @@ class AwsLocationTest {
         Map flags = loc.getProvisioningFlags(["MyEntityType"])
         SshMachineLocation machine = obtainMachine(flags)
         
+        LOG.info("Provisioned AWS vm $machine; checking if ssh'able")
         assertTrue machine.isSshable()
     }
     
@@ -83,6 +84,7 @@ class AwsLocationTest {
         Map flags = loc.getProvisioningFlags(["MyEntityType"])
         SshMachineLocation machine = obtainMachine(flags)
         
+        LOG.info("Provisioned AWS vm $machine; checking if ssh'able")
         assertTrue machine.isSshable()
     }
     
@@ -97,6 +99,7 @@ class AwsLocationTest {
         Map flags = loc.getProvisioningFlags(["MyEntityType"])
         SshMachineLocation machine = obtainMachine(flags)
         
+        LOG.info("Provisioned AWS vm $machine; checking if ssh'able")
         assertTrue machine.isSshable()
     }
     
@@ -111,6 +114,7 @@ class AwsLocationTest {
         Map flags = loc.getProvisioningFlags(["MyEntityType"])
         SshMachineLocation machine = obtainMachine(flags)
         
+        LOG.info("Provisioned AWS vm $machine; checking if ssh'able")
         assertTrue machine.isSshable()
     }
     

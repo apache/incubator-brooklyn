@@ -117,13 +117,10 @@ public class AwsLocation extends AbstractLocation implements MachineProvisioning
                 throw new IllegalStateException("No nodes returned by jclouds create-nodes in location ${allconf.providerLocationId}");
             }
 
-            String vmHostname = JCloudsUtil.getFirstReachableAddress(node);
-            Map sshConfig = [:]
-            if (allconf.sshPrivateKey) sshConfig.keyFiles = [ allconf.sshPrivateKey.absolutePath ]
-            SshMachineLocation sshLoc = new SshMachineLocation(address:vmHostname, userName:ROOT_USERNAME, config:sshConfig);
+            String vmIp = JCloudsUtil.getFirstReachableAddress(node);
             
             // Wait for the VM to be reachable over SSH
-            LOG.info("Started VM in ${allconf.providerLocationId}; waiting for it to be sshable by "+ROOT_USERNAME+"@"+vmHostname);
+            LOG.info("Started VM in ${allconf.providerLocationId}; waiting for it to be sshable by "+ROOT_USERNAME+"@"+vmIp);
             boolean reachable = new Repeater()
                     .repeat( { } )
                     .every(1, TimeUnit.SECONDS)
@@ -136,13 +133,18 @@ public class AwsLocation extends AbstractLocation implements MachineProvisioning
                     .run()
         
             if (!reachable) {
-                throw new IllegalStateException("SSH failed for "+ROOT_USERNAME+"@"+vmHostname+" after waiting "+START_SSHABLE_TIMEOUT+"ms");
+                throw new IllegalStateException("SSH failed for "+ROOT_USERNAME+"@"+vmIp+" after waiting "+START_SSHABLE_TIMEOUT+"ms");
             }
 
-            sshLoc.setParentLocation(this)
-            vmInstanceIds.put(sshLoc, node.getId())
+            String vmHostname = getPublicHostname(node, allconf)
+            Map sshConfig = [:]
+            if (allconf.sshPrivateKey) sshConfig.keyFiles = [ allconf.sshPrivateKey.absolutePath ]
+            SshMachineLocation sshLocByHostname = new SshMachineLocation(address:vmHostname, userName:ROOT_USERNAME, config:sshConfig);
+
+            sshLocByHostname.setParentLocation(this)
+            vmInstanceIds.put(sshLocByHostname, node.getId())
             
-            return sshLoc
+            return sshLocByHostname
         } catch (RunNodesException e) {
             if (e.getNodeErrors().size() > 0) {
                 node = Iterables.get(e.getNodeErrors().keySet(), 0);
@@ -248,6 +250,23 @@ public class AwsLocation extends AbstractLocation implements MachineProvisioning
 
     private String customScriptSnippetForHostnameRetrieval(NodeMetadata node) {
         return "`curl --silent --retry 20 http://169.254.169.254/latest/meta-data/public-hostname`";
+    }
+
+    private String getPublicHostname(NodeMetadata node, Map allconf) {
+        String vmIp = JCloudsUtil.getFirstReachableAddress(node);
+        
+        Map sshConfig = [:]
+        if (allconf.sshPrivateKey) sshConfig.keyFiles = [ allconf.sshPrivateKey.absolutePath ]
+        SshMachineLocation sshLocByIp = new SshMachineLocation(address:vmIp, userName:ROOT_USERNAME, config:sshConfig);
+        ByteArrayOutputStream outStream = new ByteArrayOutputStream()
+        ByteArrayOutputStream errStream = new ByteArrayOutputStream()
+        int exitcode = sshLocByIp.run([out:outStream,err:errStream], "echo `curl --silent --retry 20 http://169.254.169.254/latest/meta-data/public-hostname`; exit")
+        String outString = new String(outStream.toByteArray())
+        String[] outLines = outString.split("\n")
+        for (String line : outLines) {
+            if (line.startsWith("ec2-")) return line.trim()
+        }
+        throw new IllegalStateException("Could not obtain hostname for AWS vm $vmIp ("+node.getId()+"); exitcode="+exitcode+"; stdout="+outString+"; stderr="+new String(errStream.toByteArray()))
     }
     
     private static Map union(Map... maps) {
