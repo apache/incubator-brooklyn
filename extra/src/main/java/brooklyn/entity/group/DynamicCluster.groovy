@@ -76,27 +76,29 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         throw new UnsupportedOperationException()
     }
 
-    public synchronized Integer resize(Integer desiredSize) {
-        int delta = desiredSize - currentSize
-        logger.info "Resize from {} to {}; delta = {}", currentSize, desiredSize, delta
-
-        Collection<Entity> addedEntities = []
-        Collection<Entity> removedEntities = []
-
-        Task invoke
-        if (delta > 0) {
-            delta.times { addedEntities += addNode() }
-            invoke = invokeEffectorList(addedEntities, Startable.START, [locations:[ location ]])
-        } else if (delta < 0) {
-            (-delta).times { removedEntities += removeNode() }
-            invoke = invokeEffectorList(removedEntities, Startable.STOP, [:])
-        }
-        if (invoke) {
-	        try {
-	            invoke.get()
-	        } catch (ExecutionException ee) {
-	            throw ee.cause
-	        }
+    public Integer resize(Integer desiredSize) {
+        synchronized (members) {
+            int delta = desiredSize - currentSize
+            logger.info "Resize from {} to {}; delta = {}", currentSize, desiredSize, delta
+    
+            Collection<Entity> addedEntities = []
+            Collection<Entity> removedEntities = []
+    
+            Task invoke
+            if (delta > 0) {
+                delta.times { addedEntities += addNode() }
+                invoke = invokeEffectorList(addedEntities, Startable.START, [locations:[ location ]])
+            } else if (delta < 0) {
+                (-delta).times { removedEntities += removeNode() }
+                invoke = invokeEffectorList(removedEntities, Startable.STOP, [:])
+            }
+            if (invoke) {
+    	        try {
+    	            invoke.get()
+    	        } catch (ExecutionException ee) {
+    	            throw ee.cause
+    	        }
+            }
         }
         return currentSize
     }

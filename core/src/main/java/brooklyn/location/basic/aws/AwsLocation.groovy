@@ -33,7 +33,7 @@ import com.google.common.io.Files
 public class AwsLocation extends AbstractLocation implements MachineProvisioningLocation<SshMachineLocation>, CoordinatesProvider {
 
     public static final String ROOT_USERNAME = "root";
-    public static final int START_SSHABLE_TIMEOUT = 15*60*1000;
+    public static final int START_SSHABLE_TIMEOUT = 5*60*1000;
 
     private final Map conf = [:];
     
@@ -44,12 +44,12 @@ public class AwsLocation extends AbstractLocation implements MachineProvisioning
         super(conf)
         this.conf.putAll(conf)
         this.conf.provider = "aws-ec2"
+
+        name = conf.providerLocationId
     }
     
     AwsLocation(String identity, String credential, String providerLocationId) {
         this([identity:identity, credential:credential, providerLocationId:providerLocationId])
-
-        name = providerLocationId
     }
     
     public void setSshPublicKey(String val) {
@@ -192,11 +192,15 @@ public class AwsLocation extends AbstractLocation implements MachineProvisioning
         }
         
         if (properties.hardwareId) {
-            templateBuilder.hardwareId(hardwareId);
+            templateBuilder.hardwareId(properties.hardwareId);
         }
         
         if (properties.imageId) {
             templateBuilder.imageId(properties.imageId);
+        }
+
+        if (properties.imageSize) {
+            templateBuilder.imageSize(properties.imageId);
         }
 
         if (properties.imagePattern) {

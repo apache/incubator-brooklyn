@@ -34,6 +34,7 @@ public class DynamicGroup extends AbstractGroup {
         log.info("$this detected item add $item")
         if (acceptsEntity(item)) addMember(item)
     }
+    
     protected void onEntityRemoved(Entity item) {
         log.info("$this detected item removal $item")
         removeMember(item)

@@ -18,6 +18,8 @@ import brooklyn.entity.basic.NamedParameter
 import brooklyn.entity.trait.Startable;
 import brooklyn.management.ManagementContext
 import brooklyn.management.internal.LocalManagementContext
+import brooklyn.management.Task
+import brooklyn.management.ExecutionContext
 
 /**
  * Test the operation of the {@link Effector} implementations.
@@ -84,6 +86,7 @@ public class EffectorSayHiTest {
         def args = ["Bob", "hello"] as Object[]
         assertEquals("hello Bob", e.metaClass.invokeMethod(e, name, args))
     }
+
     @Test
     public void testInvokeEffectorMethod2BypassInterception() {
         MyEntity e = new MyEntity();
@@ -111,6 +114,7 @@ public class EffectorSayHiTest {
         assertEquals("hello Bob", e.SAY_HI_1.call(e, [name:"Bob"]) )
         assertEquals("hello Bob", e.invoke(e.SAY_HI_1, [name:"Bob"]).get() );
     }
+
     @Test
     public void testInvokeEffectors2() {
         MyEntity e = new MyEntity();
@@ -125,8 +129,30 @@ public class EffectorSayHiTest {
         assertEquals("hello Bob", e.invoke(e.SAY_HI_2, [name:"Bob"]).get() );
     }
 
+    @Test
+    public void testCanRetrieveTaskForEffector() {
+        MyEntity e = new MyEntity();
+        e.sayHi1("Bob", "hi")
+
+        ManagementContext managementContext = e.getManagementContext()
+
+        Set<Task> tasks = managementContext.getExecutionManager().getTasksWithAllTags([e,"EFFECTOR"])
+        assertEquals(tasks.size(), 1)
+        assertTrue(tasks.iterator().next().getDescription().contains("sayHi1"))
+    }
+
+    @Test
+    public void testCanExcludeNonEffectorTasks() {
+        MyEntity e = new MyEntity()
+        ManagementContext managementContext = e.getManagementContext()
+        ExecutionContext executionContext = managementContext.getExecutionContext()
+        executionContext.submit( {} as Runnable)
+
+        Set<Task> effectTasks = managementContext.getExecutionManager().getTasksWithAllTags([e,"EFFECTOR"])
+        assertEquals(effectTasks.size(), 0)
+    }
+
     //TODO test edge/error conditions
     //(missing parameters, wrong number of params, etc)
-
 }
 

@@ -12,8 +12,11 @@ import java.util.concurrent.Future
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import com.google.common.base.CaseFormat;
+
 import brooklyn.management.ExecutionManager
 import brooklyn.management.Task
+import brooklyn.util.internal.LanguageUtils;
 
 /**
  * TODO javadoc
@@ -31,7 +34,7 @@ public class BasicExecutionManager implements ExecutionManager {
 
     public static Task getCurrentTask() { return getPerThreadCurrentTask().get() }
     
-    private ExecutorService runner = Executors.newCachedThreadPool() 
+    private ExecutorService runner = Executors.newCachedThreadPool()
     
     private Set<Task> knownTasks = new CopyOnWriteArraySet<Task>()
 
@@ -177,6 +180,7 @@ public class BasicExecutionManager implements ExecutionManager {
         log.trace "$this beforeStart, task: $task"
         if (!task.isCancelled()) {
             task.thread = Thread.currentThread()
+            task.thread.setName("brooklyn-" + CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL, task.displayName.replace(" ", "")) + "-" + task.id[0..7])
             perThreadCurrentTask.set task
             task.startTimeUtc = System.currentTimeMillis()
         }
@@ -193,6 +197,7 @@ public class BasicExecutionManager implements ExecutionManager {
         perThreadCurrentTask.remove()
         task.endTimeUtc = System.currentTimeMillis()
         //clear thread _after_ endTime set, so we won't get a null thread when there is no end-time
+        task.thread.setName("brooklyn-"+LanguageUtils.newUid())
         task.thread = null
         synchronized (task) { task.notifyAll() }
     }

@@ -13,6 +13,7 @@ import brooklyn.event.SensorEventListener
 import java.util.concurrent.ConcurrentLinkedQueue
 import brooklyn.event.AttributeSensor
 import brooklyn.location.Location;
+import brooklyn.management.internal.AbstractManagementContext
 
 class EntityService {
 
@@ -29,7 +30,9 @@ class EntityService {
     public static class NoSuchEntity extends Exception {}
 
     public Collection<TaskSummary> getTasksOfEntity(String entityId) {
-        return managementContextService.executionManager.getTasksWithTag(getEntity(entityId)).collect { new TaskSummary(it) }
+        Entity e = getEntity(entityId)
+        return managementContextService.executionManager.getTasksWithAllTags(
+                [e, AbstractManagementContext.EFFECTOR_TAG]).collect { new TaskSummary(it) }
     }
 
     private synchronized void unsubscribeEntitySensors(){
@@ -71,21 +74,10 @@ class EntityService {
         Entity entity = getEntity(entityId)
         if (!entity) throw new NoSuchEntity()
 
-        // FIXME subscription not working. Removing that for the demo...
-        // Needs retested; it could have just been the bug in EntityController calling getSensorsOfEntity instead of getSensorData
-        
-        Collection<SensorSummary> result = []
-        for (Sensor s : entity.entityClass.sensors) {
-            if (s instanceof AttributeSensor) {
-                result.add(new SensorSummary(s, entity.getAttribute(s)))
-            }
+        if (!sensorCache.containsKey(entityId) || sensorCache[entityId].isEmpty()) {
+            initializeEntitySensors(entity)
         }
-        return result
-        
-//        if (!sensorCache.containsKey(entityId) || sensorCache[entityId].isEmpty()) {
-//            initializeEntitySensors(entity)
-//        }
-//        return sensorCache[entityId].values()
+        return sensorCache[entityId].values()
     }
 
     public Collection<Effector> getEffectorsOfEntity(String entityId) {

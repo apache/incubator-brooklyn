@@ -11,8 +11,7 @@ import brooklyn.management.Task
 import brooklyn.management.internal.AbstractManagementContext
 import brooklyn.management.internal.LocalManagementContext
 
-public abstract class AbstractApplication extends AbstractGroup implements Startable, Application {
-
+public abstract class AbstractApplication extends AbstractEntity implements Startable, Application {
     private volatile AbstractManagementContext mgmt = null;
     private boolean deployed = false
     

@@ -30,7 +30,6 @@ public class BasicExecutionContext implements ExecutionContext {
 
         if (flags.tag) tags.add flags.remove("tag")
         if (flags.tags) tags.addAll flags.remove("tags")
-        if (flags) throw new IllegalArgumentException("Unsupported flags passed to task: "+flags)
     }
 
     /** returns tasks started by this context (or tasks which have all the tags on this object) */
