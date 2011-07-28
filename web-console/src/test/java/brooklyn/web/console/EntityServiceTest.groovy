@@ -75,7 +75,7 @@ class EntityServiceTest {
     @Test
     public void testEntityCountsAtLocatedLocations() {
         Map <Location, Integer> cs = testService.entityCountsAtLocatedLocations();
-        assertEquals(0, cs.size());
+        assertEquals(2, cs.size());
     }
 
     @Test

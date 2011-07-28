@@ -202,6 +202,8 @@ class EntityService {
                                            latitude:40.0,longitude:-120.0]), 3);
         ls.put(new GeneralPurposeLocation(([name:"EU-West-1",displayName:"EU-West-1",streetAddress:"Dublin, Ireland, UK",description:"Dublin, Ireland",
                                             latitude:53.34778,longitude:-6.25972])), 10);
+        ls.put(new GeneralPurposeLocation(([name:"Timbuktu",displayName:"Timbuktu",description:"Timbuktu",
+                                            latitude:16.775833,longitude:3.009444])), 10);
         return ls;
     }
 }
