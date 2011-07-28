@@ -2,6 +2,8 @@
 
 html,body{
     height:100%;
+    width:100%;
+    overflow:auto;
 }
 
 body{
@@ -25,6 +27,12 @@ body{
 
 #test-body{
     height:100%;
+    width:100%;
+}
+
+.panetest{
+    height:100px;
+    width:100px;
 }
 
 h1#brooklyn-header{

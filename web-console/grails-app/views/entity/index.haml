@@ -12,7 +12,6 @@
         %g:javascript{:src=>"console/activity.js"}
         %g:javascript{:src=>"console/sensors.js"}
         %g:javascript{:src=>"console/location.js"}
-        %g:javascript{:src=>"console/debug-layout.js"}
         %g:javascript{:src=>"console/widget-dashboard.js"}
         %g:javascript{:src=>"jquery/jquery.corner.js"}
         %g:javascript{:src=>"jquery/jquery.jstree.js"}
@@ -25,11 +24,7 @@
                     %a{:href=>"#dashboard"}Dashboard
                 %li{:style=>"top:13px"}
                     %a{:href=>"#debug"}Debug
-                %li{:style=>"top:13px"}
-                    %a{:href=>"#test"}Test
             #dashboard
                 %g:render{:template=>"/tabs/dashboard"}
             #debug
                 %g:render{:template=>"/tabs/debug"}
-            #test
-                %g:render{:template=>"/tabs/test"}
