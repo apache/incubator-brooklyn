@@ -40,20 +40,20 @@ class EntityServiceTest {
 
     @Test
     public void testGetTopLevelEntities() {
-        assertEquals(1, testService.getTopLevelEntities().size())
+        assertEquals(testService.getTopLevelEntities().size(), 1)
         assertEquals(testCollection.get(0).getDisplayName(), Iterables.getFirst(testService.getTopLevelEntities(), null).getDisplayName())
     }
 
     @Test
     public void testGetEntitiesMatchingCriteria() {
-        assertEquals(4, testService.getEntitiesMatchingCriteria("tomcat", null, null).size())
-        assertEquals(5, testService.getEntitiesMatchingCriteria(null, null, null).size())
-        assertEquals(0, testService.getEntitiesMatchingCriteria(null, "testString", null).size())
+        assertEquals(testService.getEntitiesMatchingCriteria("tomcat", null, null).size(), 4)
+        assertEquals(testService.getEntitiesMatchingCriteria(null, null, null).size(), 5)
+        assertEquals(testService.getEntitiesMatchingCriteria(null, "testString", null).size(), 0)
     }
 
     @Test
     public void testFlattenEntities() {
-        assertEquals(5, testService.flattenEntities(testCollection).size())
+        assertEquals(testService.flattenEntities(testCollection).size(), 5)
     }
 
     @Test
@@ -75,7 +75,7 @@ class EntityServiceTest {
     @Test
     public void testEntityCountsAtLocatedLocations() {
         Map <Location, Integer> cs = testService.entityCountsAtLocatedLocations();
-        assertEquals(2, cs.size());
+        assertEquals(cs.size(), 2);
     }
 
     @Test
@@ -95,7 +95,7 @@ class EntityServiceTest {
         // Parent has only latitude set, should not use this, should next ancestor.
         Location p3 = new MockLocation(latitude: 17, parentLocation: p);
         Location c3 = new MockLocation(parentLocation: p3);
-        assertEquals(p, testService.getNearestAncestorWithCoordinates(c3));
+        assertEquals(testService.getNearestAncestorWithCoordinates(c3), p);
     }
 }
 
