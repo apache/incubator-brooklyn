@@ -5,6 +5,7 @@ import java.util.List
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.entity.basic.AbstractService
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.location.PortRange
 import brooklyn.location.basic.BasicPortRange
@@ -230,7 +231,17 @@ public abstract class SshBasedAppSetup {
      */
     public void runApp() {
         log.info "starting entity {} on {}", entity, machine
-        def result = machine.run(out:System.out, getRunScript(), getRunEnvironment())
+        Map environment = [:]
+        environment << getRunEnvironment()
+        Map configured = entity.getConfig(AbstractService.ENVIRONMENT)
+        configured.each { key, value ->
+            if (value in Closure) {
+                environment.put(key, ((Closure) value).call())
+            } else {
+                environment.put(key, value)
+            }
+        }
+        def result = machine.run(out:System.out, getRunScript(), environment)
 
         if (result) throw new IllegalStateException("failed to start $entity (exit code $result)")
     }

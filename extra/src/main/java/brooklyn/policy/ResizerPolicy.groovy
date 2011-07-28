@@ -31,7 +31,7 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
     /** Lock held if we are in the process of resizing. */
     private final AtomicBoolean resizing = new AtomicBoolean(false)
     
-    private Executor executor = Executors.newSingleThreadExecutor() //FIXME: should be using Tasks
+    private Executor executor = Executors.newSingleThreadExecutor() 
     private Closure resizeAction = {
         try {
             LOG.info "policy resizer performing resizing..."

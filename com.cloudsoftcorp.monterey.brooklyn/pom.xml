@@ -37,11 +37,13 @@
             <version>4.3.0</version>
         </dependency>
 
+        <!--
         <dependency>
             <groupId>com.cloudsoftcorp.monterey</groupId>
             <artifactId>com.cloudsoftcorp.monterey.activemq</artifactId>
             <version>${monterey.version}</version>
         </dependency>
+        -->
         <dependency>
             <groupId>com.cloudsoftcorp.monterey</groupId>
             <artifactId>com.cloudsoftcorp.monterey.amqp</artifactId>
@@ -87,4 +89,24 @@
         </repository>
     </repositories>
 
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-shade-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <shadedArtifactAttached>true</shadedArtifactAttached>
+                            <shadedClassifierName>with-dependencies</shadedClassifierName>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

@@ -14,9 +14,13 @@ import brooklyn.event.EntityStartException
 import brooklyn.event.adapter.ValueProvider
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
+import brooklyn.location.MachineLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedAppSetup
 import brooklyn.util.internal.Repeater
+
+import com.google.common.base.Charsets
+import com.google.common.io.Files
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Tomcat instance.
@@ -25,6 +29,8 @@ public class TomcatServer extends JavaWebApp {
     private static final Logger log = LoggerFactory.getLogger(TomcatServer.class)
     
     public static final BasicConfigKey<Integer> SUGGESTED_SHUTDOWN_PORT = [Integer, "tomcat.shutdownport", "Suggested shutdown port" ]
+    public static final BasicConfigKey<Map> PROPERTIES = [Integer, "tomcat.properties", "Properties for configuration" ]
+    public static final BasicConfigKey<String> PROPERTIES_FILE = [Integer, "tomcat.propertiesFile", "File to store configuration properties" ]
     
     public static final BasicAttributeSensor<Integer> TOMCAT_SHUTDOWN_PORT = [ Integer, "webapp.tomcat.shutdownPort", "Port to use for shutting down" ];
     public static final BasicAttributeSensor<String> CONNECTOR_STATUS = [String, "webapp.tomcat.connectorStatus", "Catalina connector state name"]
@@ -89,5 +95,13 @@ public class TomcatServer extends JavaWebApp {
     protected boolean computeNodeUp() {
         String connectorStatus = getAttribute(CONNECTOR_STATUS)
         return (connectorStatus == "STARTED")
+    }
+    
+    public void injectConfig(String fileName, String contents) {
+        MachineLocation machine = locations.first()
+        File file = new File("/tmp/${id}")
+        Files.write(contents, file, Charsets.UTF_8)
+        setup.machine.copyTo file, "${setup.runDir}/" + fileName
+        file.delete()
     }
 }
