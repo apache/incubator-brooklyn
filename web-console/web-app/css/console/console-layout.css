@@ -237,8 +237,9 @@ textarea#logbox{
 }
 .map-container{
     height:500px;
-    width:450px;
+    width:70%;
     float:left;
+    margin-left: 10px;
 }
 #map-canvas{
     float:left;
