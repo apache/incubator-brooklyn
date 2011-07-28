@@ -24,22 +24,24 @@ Brooklyn.circles = (function() {
         drawCircle(56, -2, 100000);
     }
 
-    function drawCircles() {
-        $.getJSON("circles", drawCirclesFromJSON).error(
-            function() {$(Brooklyn.eventBus).trigger('update_failed', "Could not get location size data for circle drawing.");}
-        );
-    }
-
     function drawCirclesFromJSON(json) {
         // Remove all existing circles
-        for (c in circles) {
+        for (i in circles) {
+            var c = circles[i];
             c.setMap(null);
         }
 
         // Draw the new ones
-        for (location in json) {
-            circles.push(drawCircle(location.lat, location.long, location.radius));
+        for (var i in json) {
+            var l = json[i];
+            circles.push(drawCircle(l.lat, l.lng, l.radius));
         }
+    }
+
+    function drawCircles() {
+        $.getJSON("circles", drawCirclesFromJSON).error(
+            function() {$(Brooklyn.eventBus).trigger('update_failed', "Could not get location size data for circle drawing.");}
+        );
     }
 
     function drawMap() {

@@ -24,7 +24,7 @@ class EntityController {
     def circles = {
         Map<Location, Integer> ls = entityService.entityCountsAtLocatedLocations()
         def forJSON = ls.collect { l, count -> [ lat: l.getLocationProperty("latitude"),
-                                                 long: l.getLocationProperty("longitude"),
+                                                 lng: l.getLocationProperty("longitude"),
                                                  radius: 100000 * count ] }
         render(forJSON as JSON)
     }
