@@ -1,4 +1,4 @@
-Brooklyn.location = (function() {
+Brooklyn.circles = (function() {
     var map;
     var circles = [];
 
@@ -66,4 +66,4 @@ Brooklyn.location = (function() {
     return {init: init};
 })();
 
-$(document).ready(Brooklyn.location.init);
+$(document).ready(Brooklyn.circles.init);
