@@ -82,6 +82,20 @@ class EntityServiceTest {
     public void testGetNearestAncestorWithCoordinates() {
         assertEquals(testService.getNearestAncestorWithCoordinates(new MockLocation()), null);
         assertEquals(testLocation, testService.getNearestAncestorWithCoordinates(testLocation));
+
+        Location p = new MockLocation(latitude: 23, longitude: 34);
+        Location c = new MockLocation(parentLocation: p);
+        assertEquals(p, testService.getNearestAncestorWithCoordinates(c));
+
+        // Parent has only latitude set, should not use this.
+        Location p2 = new MockLocation(latitude: 17);
+        Location c2 = new MockLocation(parentLocation: p2);
+        assertEquals(null, testService.getNearestAncestorWithCoordinates(c2));
+
+        // Parent has only latitude set, should not use this, should next ancestor.
+        Location p3 = new MockLocation(latitude: 17, parentLocation: p);
+        Location c3 = new MockLocation(parentLocation: p3);
+        assertEquals(p, testService.getNearestAncestorWithCoordinates(c3));
     }
 }
 
