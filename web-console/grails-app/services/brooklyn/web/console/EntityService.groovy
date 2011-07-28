@@ -13,6 +13,7 @@ import brooklyn.event.SensorEventListener
 import java.util.concurrent.ConcurrentLinkedQueue
 import brooklyn.event.AttributeSensor
 import brooklyn.location.Location
+import brooklyn.location.basic.GeneralPurposeLocation
 import brooklyn.management.internal.AbstractManagementContext
 
 class EntityService {
@@ -174,6 +175,7 @@ class EntityService {
     }
 
     /* Returns the number of entites at each location for which the geographic coordinates are known. */
+    /*
     public Map<Location, Integer> entityCountsAtLocatedLocations() {
         Map<Location, Integer> cs = [:]
         
@@ -192,5 +194,14 @@ class EntityService {
         }
 
         return cs;
+    }
+    */
+    public Map<Location, Integer> entityCountsAtLocatedLocations() {
+        Map<Location, Integer> ls = new HashMap<Location, Integer>();
+        ls.put(new GeneralPurposeLocation([name:"US-West-1",displayName:"US-West-1",streetAddress:"Northern California, USA",description:"Northern California",
+                                           latitude:40.0,longitude:-120.0]), 3);
+        ls.put(new GeneralPurposeLocation(([name:"EU-West-1",displayName:"EU-West-1",streetAddress:"Dublin, Ireland, UK",description:"Dublin, Ireland",
+                                            latitude:53.34778,longitude:-6.25972])), 10);
+        return ls;
     }
 }
