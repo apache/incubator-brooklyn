@@ -182,8 +182,12 @@ class ManagementContextService {
                                     "Stop Tomcat": stopTomcat,
                                     "Restart Tomcat": restartTomcat])
 
-                this.getExecutionContext().submit([tags:["EFFECTOR"], tag:this, displayName: "SuperLongNameForATaskThatShouldBreak", description: "OneLongDescriptionWithNoSpaces"],
-                                                  new MyRunnable(this));
+                this.getExecutionContext().submit([
+                                                tags:["EFFECTOR"],
+                                                tag:this,
+                                                displayName: "Update values",
+                                                description: "This updates sensor values"],
+                                                    new MyRunnable(this));
             }
 
             protected class MyRunnable implements Runnable {
