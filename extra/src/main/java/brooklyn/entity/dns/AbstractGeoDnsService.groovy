@@ -22,7 +22,7 @@ import brooklyn.management.internal.LocalManagementContext
 
 
 abstract class AbstractGeoDnsService extends AbstractEntity {
-    private static final Logger log = LoggerFactory.getLogger(AbstractGeoDnsService.class);
+    protected static final Logger log = LoggerFactory.getLogger(AbstractGeoDnsService.class);
     protected Group targetEntityProvider = null;
     protected Map<Entity, HostGeoInfo> targetHosts = new HashMap<Entity, HostGeoInfo>();
     
@@ -59,7 +59,7 @@ abstract class AbstractGeoDnsService extends AbstractEntity {
                     return;
                 HostGeoInfo hgi = HostGeoInfo.fromEntity(e)
                 if (hgi == null)
-                    log.warn("Failed to derive geo information for entity $e");
+                    AbstractGeoDnsService.log.warn("Failed to derive geo information for entity $e");
                 else {
                     targetHosts.put(e, hgi);
                     changed = true;

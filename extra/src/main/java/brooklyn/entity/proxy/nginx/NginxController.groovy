@@ -64,9 +64,9 @@ public class NginxController extends AbstractController {
     public synchronized void configure() {
         MachineLocation machine = locations.first()
         File file = new File("/tmp/${id}")
-        file.deleteOnExit()
         Files.write(getConfigFile(), file, Charsets.UTF_8)
 		setup.machine.copyTo file, "${setup.runDir}/conf/server.conf"
+        file.delete()
     }
 
     public String getConfigFile() {

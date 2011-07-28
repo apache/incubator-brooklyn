@@ -15,12 +15,12 @@ import brooklyn.event.AttributeSensor
 import brooklyn.location.Location
 import brooklyn.management.internal.AbstractManagementContext
 
-class EntityService {
-
+public class EntityService {
     static transactional = false
     def managementContextService
 
     private static final int CACHE_LIMIT = 10
+
     ConcurrentMap<String, ConcurrentMap<String, SensorSummary>> sensorCache =
         new ConcurrentHashMap<String, ConcurrentMap<String, SensorSummary>>()
     ConcurrentMap<String, SubscriptionHandle> subscriptions = new ConcurrentHashMap<String, SubscriptionHandle>()
@@ -35,9 +35,9 @@ class EntityService {
                 [e, AbstractManagementContext.EFFECTOR_TAG]).collect { new TaskSummary(it) }
     }
 
-    private synchronized void unsubscribeEntitySensors(){
+    private void unsubscribeEntitySensors() {
         String oldestEntity = cacheQueue.poll()
-        if(managementContextService.subscriptionManager.unsubscribe(subscriptions.get(oldestEntity))){
+        if (oldestEntity && managementContextService.subscriptionManager.unsubscribe(subscriptions.get(oldestEntity))) {
             sensorCache.remove(oldestEntity)
             subscriptions.remove(oldestEntity)
         }
@@ -45,7 +45,7 @@ class EntityService {
 
     private void initializeEntitySensors(Entity entity) {
         synchronized (entity) {
-            if(sensorCache.size() >= CACHE_LIMIT){
+            if (sensorCache.size() >= CACHE_LIMIT){
                 unsubscribeEntitySensors()
             }
 

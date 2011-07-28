@@ -120,16 +120,18 @@ public class BasicTaskExecutionTest {
     public void runMultipleBasicTasksMultipleTags() {
         data.clear()
         data.put(1, 1)
-        em.submit tag:"A", new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } })
-        em.submit tags:["A","B"], new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } })
-        em.submit tags:["B","C"], new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } })
-        em.submit tags:["D"], new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } })
+        Collection<Task> tasks = []
+        tasks += em.submit tag:"A", new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } })
+        tasks += em.submit tags:["A","B"], new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } })
+        tasks += em.submit tags:["B","C"], new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } })
+        tasks += em.submit tags:["D"], new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } })
         int total = 0;
-//        em.getAllTasks().each { Task t ->
-//                log.debug "BasicTask {}, has {}", t, t.get()
-//                total += t.get()
-//            }
-//        assertEquals(10, total)
+
+        tasks.each { Task t ->
+                log.debug "BasicTask {}, has {}", t, t.get()
+                total += t.get()
+            }
+        assertEquals(10, total)
  
         //now that all have completed:
         assertEquals data.get(1), 5
