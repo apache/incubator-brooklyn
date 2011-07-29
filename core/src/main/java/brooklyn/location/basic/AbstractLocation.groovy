@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory
 import brooklyn.location.Location
 
 import com.google.common.base.Preconditions
+import brooklyn.util.internal.LanguageUtils
 
 /**
  * A basic implementation of the {@link Location} interface.
@@ -15,7 +16,8 @@ import com.google.common.base.Preconditions
  */
 public abstract class AbstractLocation implements Location {
     public static final Logger LOG = LoggerFactory.getLogger(Location.class)
- 
+
+    final String id = LanguageUtils.newUid()
     private Location parentLocation
     private final Collection<Location> childLocations = []
     private final Collection<Location> childLocationsReadOnly = Collections.unmodifiableCollection(childLocations)
