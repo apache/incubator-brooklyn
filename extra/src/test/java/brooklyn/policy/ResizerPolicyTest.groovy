@@ -149,7 +149,7 @@ class ResizerPolicyTest {
         })
         
         executeUntilSucceedsWithShutdown(cluster, {
-            if (!p.resizeLock.isLocked()) {
+            if (!p.resizing.get()) {
                 assertEquals 1.0d, cluster.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)
                 assertEquals 2, policy.calculateDesiredSize(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)
                 assertEquals 2, cluster.currentSize
