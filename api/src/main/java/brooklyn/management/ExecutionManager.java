@@ -5,9 +5,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-import javax.swing.plaf.basic.BasicEditorPaneUI;
 
 /** 
  * This class manages the execution of a number of jobs with tags.

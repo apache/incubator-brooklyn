@@ -1,14 +1,13 @@
 package brooklyn.entity.basic;
 
-import java.util.Collection;
 import java.util.Map;
 
 import brooklyn.entity.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.SensorEventListener;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
+import brooklyn.event.SensorEventListener;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionHandle;
 import brooklyn.policy.Policy;
