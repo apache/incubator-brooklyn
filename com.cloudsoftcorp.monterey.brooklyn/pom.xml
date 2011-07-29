@@ -9,7 +9,7 @@
     <parent>
         <groupId>brooklyn</groupId>
         <artifactId>brooklyn-parent-root</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>0.0.21-SNAPSHOT</version>
         <relativePath>../parent/root/pom.xml</relativePath>
     </parent>
 
@@ -26,7 +26,7 @@
         <dependency>
             <groupId>brooklyn</groupId>
             <artifactId>brooklyn-example</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>0.0.21-SNAPSHOT</version>
             <classifier>with-dependencies</classifier>
         </dependency>
 

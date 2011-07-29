@@ -4,7 +4,7 @@
 #
 #set -x # debug
 
-VERSION=0.0.1-SNAPSHOT
+VERSION=0.0.21-SNAPSHOT
 ROOT=$(cd $(dirname $0) && pwd)
 export JAVA_OPTS="-Xms256m -Xmx1g -XX:MaxPermSize=512m"
 export CLASSPATH=./target/brooklyn-monterey-integration-${VERSION}-with-dependencies.jar
