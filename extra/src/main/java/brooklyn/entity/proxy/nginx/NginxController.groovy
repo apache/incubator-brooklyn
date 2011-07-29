@@ -28,7 +28,7 @@ public class NginxController extends AbstractController {
     }
 
     @Override
-    public void start(List<Location> locations) {
+    public void start(Collection<Location> locations) {
         super.start(locations)
 
         httpAdapter = new HttpSensorAdapter(this)
@@ -61,7 +61,8 @@ public class NginxController extends AbstractController {
         return NginxSetup.newInstance(this, machine)
     }
 
-    public synchronized void configure() {
+    @Override
+    public void configure() {
         MachineLocation machine = locations.first()
         File file = new File("/tmp/${id}")
         Files.write(getConfigFile(), file, Charsets.UTF_8)

@@ -214,6 +214,8 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
             montereyProvisioner = new MontereyProvisioner(connectionDetails, this, getConfig(MAX_CONCURRENT_PROVISIONINGS_PER_LOCATION))
             
             // TODO want to call executionContext.scheduleAtFixedRate or some such
+            Thread.sleep(1000)
+            LOG.info("Scheduling poller: "+connectionDetails.getManagementUrl()+"; "+connectionDetails.adminCredential.getUsername()+"; "+connectionDetails.adminCredential.getPassword())
             scheduledExecutor = Executors.newScheduledThreadPool(1, {return new Thread(it, "monterey-network-poller")} as ThreadFactory)
             monitoringTask = scheduledExecutor.scheduleAtFixedRate({ updateAll() } as Runnable, POLL_PERIOD, POLL_PERIOD, TimeUnit.MILLISECONDS)
 
@@ -335,7 +337,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
 
     private void updateAll() {
         try {
-            LOG.finer("Polling monterey management node for current state, on "+connectionDetails.managementUrl)
+            LOG.info("Polling monterey management node for current state, on "+connectionDetails.managementUrl)
             
             boolean isup = updateStatus();
             if (isup) {
@@ -351,7 +353,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
 
     private boolean updateStatus() {
         boolean result = managementNode.updateStatus()
-        mirrorManagementNodeAttributes()
+        if (result) mirrorManagementNodeAttributes()
         return result
     }
     

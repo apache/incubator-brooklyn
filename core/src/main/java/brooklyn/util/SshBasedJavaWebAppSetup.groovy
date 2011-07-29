@@ -25,26 +25,36 @@ public abstract class SshBasedJavaWebAppSetup extends SshBasedJavaAppSetup {
     }
 
     /**
-     * Copies a file to the {@link #runDir} and invokes {@link #getDeployScript()}
-     * for further processing on server.
+     * Copy a file to the {@link #runDir} on the server.
+     *
+     * @return The location of the file on the server
      */
-    public void deploy(File f) {
-        String target = runDir + "/" + f.name
-        log.debug "Deploying file {} to {} on {}", f.name, target, machine
+    public String copy(File file) {
+        String target = runDir + "/" + file.name
+        log.debug "Deploying file {} to {} on {}", file.name, target, machine
         try {
-	        machine.copyTo f, target
+            machine.copyTo file, target
         } catch (IOException ioe) {
-            log.error "Failed to copy {} to {}: {}", f.name, machine, ioe.message
-            throw new IllegalStateException("Failed to copy ${f.name} to ${machine}", ioe)
+            log.error "Failed to copy {} to {}: {}", file.name, machine, ioe.message
+            throw new IllegalStateException("Failed to copy ${file.name} to ${machine}", ioe)
         }
+        return target
+    }
+
+    /**
+     * Copies a file to the server and invokes {@link #getDeployScript()}
+     * for further processing.
+     */
+    public void deploy(File file) {
+        String target = copy(file)
         List<String> deployScript = getDeployScript(target)
         if (deployScript && !deployScript.isEmpty()) {
             int result = machine.run(out:System.out, deployScript)
             if (result != 0) {
-                log.error "Failed to deploy {} on {}, result {}", f.name, machine, result
-	            throw new IllegalStateException("Failed to deploy ${f.name} on ${machine}")
+                log.error "Failed to deploy {} on {}, result {}", file.name, machine, result
+	            throw new IllegalStateException("Failed to deploy ${file.name} on ${machine}")
             } else {
-                log.debug "Deployed {} on {}", f.name, machine
+                log.debug "Deployed {} on {}", file.name, machine
             }
         }
     }

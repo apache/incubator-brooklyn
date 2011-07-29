@@ -662,12 +662,12 @@ private class EntityCollectionReference<T extends Entity> implements Serializabl
         }
     }
 
-    public Collection<T> get() {
+    public synchronized Collection<T> get() {
         Collection<T> result = entities;
         if (result==null) {
             result = find();
         }
-        return Collections.unmodifiableCollection(result);
+        return new ArrayList<T>(result)
     }
 
     protected synchronized Collection<T> find() {
