@@ -58,9 +58,11 @@
 }
 .small-widget-column{
     width:33%;
+    padding-bottom:10px;
 }
 .medium-widget-column{
     width:50%;
+    padding-bottom:10px;
 }
 .big-widget-column{
     width:100%;

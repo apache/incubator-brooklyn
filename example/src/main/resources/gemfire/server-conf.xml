@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<!DOCTYPE cache PUBLIC
+    "-//GemStone Systems, Inc.//GemFire Declarative Caching 6.5//EN" 
+"http://www.gemstone.com/dtd/cache6_5.dtd">
+<cache>
+
+<!--
+	<gateway-hub id="amazon-uswest" port="22222" socket-buffer-size="256000">
+		<gateway id="monterey-east" socket-buffer-size="256000"> 
+			<gateway-endpoint id="monterey-east" host="montereyeasthost" port="22222"/>
+		</gateway>
+		<gateway id="monterey-west" socket-buffer-size="256000"> 
+			<gateway-endpoint id="monterey-west" host="montereywesthost" port="22222"/>
+		</gateway>
+	</gateway-hub>
+-->
+
+	<cache-server port="40404"/>
+
+	<region name="bookings" refid="REPLICATE">
+		<region-attributes enable-gateway="true">
+			<value-constraint>com.cloudsoftcorp.demo.bixby.datamodel.Booking</value-constraint>
+		</region-attributes>
+	</region>
+
+	<region name="hotels" refid="REPLICATE">
+		<region-attributes enable-gateway="true">
+			<value-constraint>com.cloudsoftcorp.demo.bixby.datamodel.Hotel</value-constraint>
+		</region-attributes>
+	</region>
+
+</cache>

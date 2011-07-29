@@ -8,7 +8,7 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.ConfigKey
 import brooklyn.event.basic.BasicConfigKey
-import brooklyn.test.entity.MockLocation
+import brooklyn.test.location.MockLocation
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 

@@ -103,7 +103,13 @@ public class DynamicFabric extends AbstractEntity implements Startable {
         creation.displayName = (createFlags.displayNamePrefix?:"") + (location.getLocationProperty("displayName")?:location.name?:"unnamed") + (createFlags.displayNameSuffix?:"")
         logger.info "Adding a cluster to {} with properties {}", id, creation
 
-        Entity entity = newEntity.call(creation)
+        
+        Entity entity
+        if (newEntity.maximumNumberOfParameters > 1) {
+            entity = newEntity.call(creation, this)
+        } else {
+            entity = newEntity.call(creation)
+        } 
         if (entity.owner == null) addOwnedChild(entity)
         Preconditions.checkNotNull entity, "newEntity call returned null"
         Preconditions.checkState entity instanceof Entity, "newEntity call returned an object that is not an Entity"

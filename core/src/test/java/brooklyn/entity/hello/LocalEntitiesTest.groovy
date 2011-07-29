@@ -11,7 +11,7 @@ import brooklyn.entity.basic.AbstractApplication
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.management.Task
-import brooklyn.test.entity.MockLocation
+import brooklyn.test.location.MockLocation
 import brooklyn.util.task.ParallelTask
 
 /** tests effector invocation and a variety of sensor accessors and subscribers */
