@@ -26,12 +26,12 @@ public class MontereySpringTravel extends AbstractApplication {
     final DynamicFabric webFabric
     final DynamicGroup nginxEntities
     final GeoscalingDnsService geoDns
- 
+    final MontereyNetwork montereyNetwork
+   
+
     private static final String SPRING_TRAVEL_PATH = "src/main/resources/booking-mvc.war"
     private static final String APP_BUNDLE_RESOURCE_PATH = "com.cloudsoftcorp.sample.booking.svc.impl_3.2.0.v20110502-351-10779.jar"
     private static final String APP_CONFIG_RESOURCE_PATH = "BookingAvailabilityApplication.conf"
-    
-    MontereyNetwork mn
     
     public MontereySpringTravel(Map props=[:]) {
         super(props)
@@ -43,13 +43,14 @@ public class MontereySpringTravel extends AbstractApplication {
         URL appDescriptorUrl = MontereySpringTravel.class.getClassLoader().getResource(APP_CONFIG_RESOURCE_PATH);
         UserCredentialsConfig adminCredential = new UserCredentialsConfig("myname", "mypass", HTTP_AUTH.ADMIN_ROLE);
 
-        mn = new MontereyNetwork(owner:this)
-        mn.name = "Spring Travel"
-        mn.setConfig(MontereyNetwork.APP_BUNDLES, [bundleUrl])
-        mn.setConfig(MontereyNetwork.APP_DESCRIPTOR_URL, appDescriptorUrl)
-        mn.setConfig(MontereyManagementNode.SUGGESTED_WEB_USERS_CREDENTIAL, [adminCredential])
-        mn.setConfig(MontereyNetwork.INITIAL_TOPOLOGY_PER_LOCATION, [(Dmn1NodeType.LPP):1,(Dmn1NodeType.MR):1,(Dmn1NodeType.M):1,(Dmn1NodeType.TP):1,(Dmn1NodeType.SPARE):1])
-        //mn.policy << new MontereyLatencyOptimisationPolicy()
+        montereyNetwork = new MontereyNetwork(owner:this)
+        montereyNetwork.name = "Spring Travel"
+        montereyNetwork.setConfig(MontereyNetwork.APP_BUNDLES, [bundleUrl])
+        montereyNetwork.setConfig(MontereyNetwork.APP_DESCRIPTOR_URL, appDescriptorUrl)
+        montereyNetwork.setConfig(MontereyManagementNode.SUGGESTED_WEB_USERS_CREDENTIAL, [adminCredential])
+        montereyNetwork.setConfig(MontereyNetwork.INITIAL_TOPOLOGY_PER_LOCATION,
+            [(Dmn1NodeType.LPP):1,(Dmn1NodeType.MR):1,(Dmn1NodeType.M):1,(Dmn1NodeType.TP):1,(Dmn1NodeType.SPARE):1])
+        //montereyNetwork.policy << new MontereyLatencyOptimisationPolicy()
     
         webFabric = new DynamicFabric(
             [
@@ -58,7 +59,7 @@ public class MontereySpringTravel extends AbstractApplication {
                 displayNamePrefix : '',
                 displayNameSuffix : ' web cluster',
                 newEntity : { Map properties -> 
-                    MontereyWebCluster webCluster = new MontereyWebCluster(properties, webFabric, mn)
+                    MontereyWebCluster webCluster = new MontereyWebCluster(properties, webFabric, montereyNetwork)
                     
                     ResizerPolicy policy = new ResizerPolicy(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND)
                     policy.setMinSize(1)
@@ -76,7 +77,7 @@ public class MontereySpringTravel extends AbstractApplication {
         Preconditions.checkState webFabric.displayName == "Fabric"
 
         nginxEntities = new DynamicGroup([displayName: 'Web Fronts'], this, { Entity e -> (e instanceof NginxController) })
-        geoDns = new GeoscalingDnsService(displayName: 'Geo-DNS (brooklyn.geopaas.org)',
+        geoDns = new GeoscalingDnsService(displayName: 'Geo-DNS',
             username: 'cloudsoft', password: 'cl0uds0ft', primaryDomainName: 'geopaas.org', smartSubdomainName: 'brooklyn',
             this)
         geoDns.setTargetEntityProvider(nginxEntities)
