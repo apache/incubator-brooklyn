@@ -25,15 +25,20 @@ body{
     width: 100%;
 }
 
-#test-body{
-    height:100%;
-    width:100%;
+#insideTab{
+    height:500px;
+    width:500px;
 }
 
-.panetest{
-    height:100px;
-    width:100px;
+#debugcont {
+    height:600px;
+    width:600px; /* min-width for IE6 */
 }
+
+.pane {
+    display:none; /* will appear when layout inits */
+}
+
 
 h1#brooklyn-header{
     height:46px;

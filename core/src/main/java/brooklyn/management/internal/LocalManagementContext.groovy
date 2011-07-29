@@ -60,11 +60,11 @@ public class LocalManagementContext extends AbstractManagementContext {
     }
 
     @Override
-    public Collection<Application> getApplications() {
-        return applications
+    public synchronized Collection<Application> getApplications() {
+        return new ArrayList<Application>(applications)
     }
-    public Collection<Entity> getEntities() {
-        return entitiesById.values();
+    public synchronized Collection<Entity> getEntities() {
+        return new ArrayList<Entity>(entitiesById.values())
     }
     
     public Entity getEntity(String id) {

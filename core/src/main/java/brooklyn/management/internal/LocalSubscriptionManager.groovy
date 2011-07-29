@@ -67,7 +67,7 @@ public class LocalSubscriptionManager implements SubscriptionManager {
      */
     public synchronized <T> SubscriptionHandle subscribe(Map<String, Object> flags, Entity producer, Sensor<T> sensor, SensorEventListener<T> listener) {
         Subscription s = new Subscription(producer:producer, sensor:sensor, listener:listener)
-        s.subscriber = flags.remove("subscriber")
+        s.subscriber = flags.remove("subscriber") ?: listener
         if (flags.containsKey("subscriberExecutionManagerTag")) {
             s.subscriberExecutionManagerTag = flags.remove("subscriberExecutionManagerTag");
             s.subscriberExecutionManagerTagSupplied = true

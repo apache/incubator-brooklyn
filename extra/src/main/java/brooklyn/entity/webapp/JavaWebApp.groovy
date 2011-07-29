@@ -27,6 +27,7 @@ public abstract class JavaWebApp extends JavaApp {
     public static final Logger log = LoggerFactory.getLogger(JavaWebApp.class)
 
     public static final BasicConfigKey<String> WAR = [ String, "war", "Path of WAR file to deploy" ]
+    public static final BasicConfigKey<List<String>> RESOURCES = [ List, "resources", "List of names of resources to copy to run directory" ]
 
     public static final ConfiguredAttributeSensor<Integer> HTTP_PORT = Attributes.HTTP_PORT
 
@@ -41,8 +42,7 @@ public abstract class JavaWebApp extends JavaApp {
     public static final BasicAttributeSensor<Double> REQUESTS_PER_SECOND = [ Double, "webapp.reqs.persec.last", "Reqs/Sec" ]
 
     public static final Integer AVG_REQUESTS_PER_SECOND_PERIOD = 30*1000
-    // FIXME: this value can actually go stale when we aren't receiving request count messages 
-    public static final BasicAttributeSensor<Double> AVG_REQUESTS_PER_SECOND = [ Double, 
+    public static final BasicAttributeSensor<Double> AVG_REQUESTS_PER_SECOND = [ Double,
         "webapp.reqs.persec.avg.$AVG_REQUESTS_PER_SECOND_PERIOD", "Average Reqs/Sec (over the last ${AVG_REQUESTS_PER_SECOND_PERIOD}ms)" ]
 
     public static final BasicAttributeSensor<String> ROOT_URL = [ String, "webapp.url", "URL" ]
@@ -50,6 +50,8 @@ public abstract class JavaWebApp extends JavaApp {
     public static final BasicAttributeSensor<Integer> HTTP_STATUS = [ Integer, "webapp.http.status", " HTTP response code for the server" ]
 
     transient HttpSensorAdapter httpAdapter
+
+    Map environment = [:]
 
     public JavaWebApp(Map properties=[:], Entity owner=null) {
         super(properties, owner)

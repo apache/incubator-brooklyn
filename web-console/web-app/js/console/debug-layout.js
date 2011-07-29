@@ -1,3 +1,4 @@
  $(document).ready(function () {
-        $('#debug-test').layout({ applyDefaultStyles: true });
+        //var debugLayout = $('body').layout({ applyDefaultStyles:true });
+        //var insideTabLayout = $('#insideTab').layout({ applyDefaultStyles:true });
     });

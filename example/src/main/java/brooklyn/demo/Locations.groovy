@@ -157,11 +157,14 @@ public class Locations {
             (NginxController.class.getName()):[
                 imageId:imageIdVanilla,
                 securityGroups:["brooklyn-all"]],
-            ("com.cloudsoftcorp.monterey.brooklyn.example.MontereyManagementNode"):[
+            ("com.cloudsoftcorp.monterey.brooklyn.example.MontereyTomcatServer"):[
+                imageId:imageIdVanilla,
+                securityGroups:["brooklyn-all"]],
+            ("com.cloudsoftcorp.monterey.brooklyn.entity.MontereyManagementNode"):[
                 imageId:imageIdMonterey,
                 hardwareId:InstanceType.M1_SMALL,
                 securityGroups:["brooklyn-all"]],
-            ("com.cloudsoftcorp.monterey.brooklyn.example.MontereyContainerNode"):[
+            ("com.cloudsoftcorp.monterey.brooklyn.entity.MontereyContainerNode"):[
                 imageId:imageIdMonterey,
                 hardwareId:InstanceType.M1_SMALL,
                 securityGroups:["brooklyn-all"]],

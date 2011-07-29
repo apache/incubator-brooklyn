@@ -1,5 +1,7 @@
 package brooklyn.entity.dns.geoscaling
 
+import static brooklyn.entity.dns.geoscaling.GeoscalingWebClient.*
+
 import brooklyn.entity.dns.AbstractGeoDnsService
 
 import java.util.Map
@@ -61,13 +63,7 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
             smartSubdomain = primaryDomain.getSmartSubdomain(smartSubdomainName);
         }
         
-        smartSubdomain.configure(
-                false, // provide network info
-                true,  // provide city info
-                false, // provide country info
-                false, // provide "extra" info
-                false, // provide uptime info
-                script);
+        smartSubdomain.configure(PROVIDE_CITY_INFO, script);
         
         gwc.logout();
     }
