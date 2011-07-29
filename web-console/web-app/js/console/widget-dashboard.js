@@ -1,10 +1,14 @@
 Brooklyn.dashboard = (function(parent){
     function loadWidgets(){
         $( ".column" ).sortable({
-			connectWith: ".column"
+			connectWith: ".column",
+            handle: ".portlet-header",
+            cursor: "crosshair"
 		});
         $( ".master-column-wrapper" ).sortable({
-			connectWith: ".master-column-wrapper"
+			connectWith: ".master-column-wrapper",
+            handle: ".portlet-header",
+            cursor: "crosshair"
 		});
 		$( ".portlet" ).addClass( "ui-widget ui-widget-content ui-helper-clearfix ui-corner-all" )
 			.find( ".portlet-header" )
