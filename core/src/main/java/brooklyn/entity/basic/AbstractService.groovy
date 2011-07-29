@@ -8,8 +8,10 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.ConfigKey
 import brooklyn.entity.Entity
+import brooklyn.entity.trait.Configurable;
 import brooklyn.entity.trait.Startable
 import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.Location
 import brooklyn.location.MachineLocation
 import brooklyn.location.MachineProvisioningLocation
@@ -24,12 +26,13 @@ import com.google.common.base.Preconditions
 *
 * A service can only run on a single {@link MachineLocation} at a time.
 */
-public abstract class AbstractService extends AbstractEntity implements Startable {
+public abstract class AbstractService extends AbstractEntity implements Startable, Configurable {
     public static final Logger log = LoggerFactory.getLogger(AbstractService.class)
 
     public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.SUGGESTED_VERSION;
     public static final ConfigKey<String> SUGGESTED_INSTALL_DIR = ConfigKeys.SUGGESTED_INSTALL_DIR;
     public static final ConfigKey<String> SUGGESTED_RUN_DIR = ConfigKeys.SUGGESTED_RUN_DIR;
+    public static final BasicConfigKey<Map> ENVIRONMENT = [ Map, "environment", "Map of environment variables to set at runtime", [:] ]
 
     public static final BasicAttributeSensor<String> SERVICE_STATUS = [ String, "service.status", "Service status" ]
 
@@ -78,7 +81,11 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
         setup = getSshBasedSetup(machine)
         setAttribute(SERVICE_STATUS, "starting")
         if (setup) {
-	        setup.start()
+            setup.install()
+            setup.config()
+	        configure()
+            setup.runApp()
+            setup.postStart()
 	        waitForEntityStart()
         }
         setAttribute(SERVICE_STATUS, "running")
@@ -121,4 +128,13 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
             setup.restart()
         }
     }
+
+    /**
+     * Configure the service.
+     *
+     * This is a NO-OP but should be overridden in implementing classes. It will be called after the {@link #setup}
+     * field is available and any {@link MachineLocation} is is instantiated, but before the {@link SshBasedAppSetup#start()}
+     * method is called.
+     */
+    public void configure() { }
 }

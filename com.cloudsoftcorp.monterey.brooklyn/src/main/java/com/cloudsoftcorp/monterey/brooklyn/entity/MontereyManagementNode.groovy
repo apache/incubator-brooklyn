@@ -53,8 +53,7 @@ import com.google.gson.Gson
  * 
  * @author aled
  */
-public class MontereyManagementNode extends AbstractEntity implements Startable { // FIXME , AbstractGroup
-
+public class MontereyManagementNode extends AbstractEntity implements Startable {
     private static final Logger LOG = Loggers.getLogger(MontereyManagementNode.class);
 
     public static final BasicConfigKey<String> SUGGESTED_MANAGEMENT_NODE_INSTALL_DIR = [String.class, "monterey.managementnode.installdir", "Monterey management node installation directory" ]

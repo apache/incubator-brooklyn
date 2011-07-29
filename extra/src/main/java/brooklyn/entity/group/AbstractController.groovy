@@ -125,11 +125,4 @@ public abstract class AbstractController extends AbstractService {
         cluster.stop()
         super.stop()
     }
-
-    // TODO use blocking config mechanism to wait for the port number attribute to become available
-
-    /**
-     * Configure the controller based on the cluster membership list.
-     */
-    public abstract void configure()
 }
