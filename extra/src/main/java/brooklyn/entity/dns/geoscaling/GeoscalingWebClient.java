@@ -26,6 +26,12 @@ import org.w3c.dom.NodeList;
 import org.w3c.tidy.Tidy;
 
 public class GeoscalingWebClient {
+    public static final long PROVIDE_NETWORK_INFO = 1 << 0;
+    public static final long PROVIDE_CITY_INFO    = 1 << 1;
+    public static final long PROVIDE_COUNTRY_INFO = 1 << 2;
+    public static final long PROVIDE_EXTRA_INFO   = 1 << 3;
+    public static final long PROVIDE_UPTIME_INFO  = 1 << 4;
+    
     private static final String HOST ="www.geoscaling.com";
     private static final String PATH ="dns2/index.php";
     private DefaultHttpClient httpClient;
@@ -96,12 +102,8 @@ public class GeoscalingWebClient {
             this.name = name;
         }
         
-        public void configure(boolean shareNetworkInfo, boolean shareCityInfo, boolean shareCountryName,
-                boolean shareExtraInfo, boolean shareUptimeInfo, String phpScript) {
-            
-            configureSmartSubdomain(
-                    parent.id, id, name,
-                    shareNetworkInfo, shareCityInfo, shareCountryName, shareExtraInfo, shareUptimeInfo, phpScript);
+        public void configure(String phpScript, long flags) {
+            configureSmartSubdomain(parent.id, id, name, flags, phpScript);
         }
         
         public void delete() {
@@ -325,10 +327,8 @@ public class GeoscalingWebClient {
         }
     }
     
-    private void configureSmartSubdomain(int primaryDomainId, int smartSubdomainId,
-            String smartSubdomainName, boolean shareNetworkInfo, boolean shareCityInfo,
-            boolean shareCountryName, boolean shareExtraInfo, boolean shareUptimeInfo,
-            String phpScript) {
+    private void configureSmartSubdomain(int primaryDomainId, int smartSubdomainId, String smartSubdomainName,
+            long flags, String phpScript) {
         
         try {
             String url = MessageFormat.format(
@@ -339,11 +339,11 @@ public class GeoscalingWebClient {
             List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
             nameValuePairs.add(new BasicNameValuePair("MAX_FILE_SIZE", "65536"));
             nameValuePairs.add(new BasicNameValuePair("name", smartSubdomainName));
-            if (shareNetworkInfo) nameValuePairs.add(new BasicNameValuePair("share_as_info", "on"));
-            if (shareCountryName) nameValuePairs.add(new BasicNameValuePair("share_country_info", "on"));
-            if (shareCityInfo) nameValuePairs.add(new BasicNameValuePair("share_city_info", "on"));
-            if (shareExtraInfo) nameValuePairs.add(new BasicNameValuePair("share_extra_info", "on"));
-            if (shareUptimeInfo) nameValuePairs.add(new BasicNameValuePair("share_uptime_info", "on"));
+            if ((flags & PROVIDE_NETWORK_INFO) != 0) nameValuePairs.add(new BasicNameValuePair("share_as_info", "on"));
+            if ((flags & PROVIDE_CITY_INFO) != 0) nameValuePairs.add(new BasicNameValuePair("share_city_info", "on"));
+            if ((flags & PROVIDE_COUNTRY_INFO) != 0) nameValuePairs.add(new BasicNameValuePair("share_country_info", "on"));
+            if ((flags & PROVIDE_EXTRA_INFO) != 0) nameValuePairs.add(new BasicNameValuePair("share_extra_info", "on"));
+            if ((flags & PROVIDE_UPTIME_INFO) != 0) nameValuePairs.add(new BasicNameValuePair("share_uptime_info", "on"));
             nameValuePairs.add(new BasicNameValuePair("code", phpScript));
             request.setEntity(new UrlEncodedFormEntity(nameValuePairs));
             
