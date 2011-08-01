@@ -41,7 +41,7 @@ public class LppNode extends AbstractMontereyNode {
     }
     
     public void routerSwitchover(MrNode newRouter) {
-        Dmn1PlumberInternalAsync plumber = new PlumberWebProxy(connectionDetails.getManagementUrl(), gson, connectionDetails.getWebApiAdminCredential());
+        Dmn1PlumberInternalAsync plumber = new PlumberWebProxy(connectionDetails.managementUrl, gson, connectionDetails.webApiAdminCredential);
         plumber.routerSwitchover(nodeId, newRouter.getNodeId());
     }
 }

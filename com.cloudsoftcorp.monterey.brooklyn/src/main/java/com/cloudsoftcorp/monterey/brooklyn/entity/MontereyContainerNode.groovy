@@ -205,8 +205,8 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
             nodeProperties.getProperties().add(ProvisioningConstants.NODE_CREATION_UID_PROPERTY, creationId);
             nodeProperties.getProperties().add(ProvisioningConstants.PREFERRED_HOSTNAME_PROPERTY, host.getAddress().getHostName());
             nodeProperties.getProperties().add(ProvisioningConstants.PREFERRED_SOCKET_ADDRESS_PROPERTY,address.getConstructionString());
-            nodeProperties.getProperties().add(ProvisioningConstants.MONITOR_ADDRESS_PROPERTY, JarUrlUtils.toStringUsingDefaultClassloadingContext(connectionDetails.getMonitorAddress()));
-            nodeProperties.getProperties().add(ProvisioningConstants.MANAGER_ADDRESS_PROPERTY, JarUrlUtils.toStringUsingDefaultClassloadingContext(connectionDetails.getManagerAddress()));
+            nodeProperties.getProperties().add(ProvisioningConstants.MONITOR_ADDRESS_PROPERTY, JarUrlUtils.toStringUsingDefaultClassloadingContext(connectionDetails.monitorAddress));
+            nodeProperties.getProperties().add(ProvisioningConstants.MANAGER_ADDRESS_PROPERTY, JarUrlUtils.toStringUsingDefaultClassloadingContext(connectionDetails.managerAddress));
             nodeProperties.getProperties().add(ProvisioningConstants.LPP_HUB_LISTENER_PORT_PROPERTY, ""+montereyHubLppPort);
         
             // TODO Set comms class/bundle (and location latencies); see ManagementNodeConfig.getDefaultNodeProperties
@@ -303,7 +303,7 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
 
     public void rollout(Dmn1NodeType type) {
         LOG.info("Rolling out node $nodeId in $locations as $type")
-        PlumberWebProxy plumber = new PlumberWebProxy(connectionDetails.getManagementUrl(), gson, connectionDetails.getWebApiAdminCredential());
+        PlumberWebProxy plumber = new PlumberWebProxy(connectionDetails.managementUrl, gson, connectionDetails.webApiAdminCredential);
         DmnFuture<Collection<NodeId>> future = plumber.rolloutNodes(new NodesRolloutConfiguration.Builder()
                 .nodesToUse(Collections.singleton(nodeId))
                 .ofType(type, 1)
@@ -313,7 +313,7 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
     
     public void revert() {
         if (nodeId != null) {
-            PlumberWebProxy plumber = new PlumberWebProxy(connectionDetails.getManagementUrl(), gson, connectionDetails.getWebApiAdminCredential());
+            PlumberWebProxy plumber = new PlumberWebProxy(connectionDetails.managementUrl, gson, connectionDetails.webApiAdminCredential);
             DmnFuture<?> future = plumber.revert(nodeId);
             future.get();
         } else {
@@ -323,7 +323,7 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
     
     public void release() {
         if (nodeId != null) {
-            PlumberWebProxy plumber = new PlumberWebProxy(connectionDetails.getManagementUrl(), gson, connectionDetails.getWebApiAdminCredential());
+            PlumberWebProxy plumber = new PlumberWebProxy(connectionDetails.managementUrl, gson, connectionDetails.webApiAdminCredential);
             DmnFuture<?> future = plumber.release(nodeId);
             future.get();
         } else {

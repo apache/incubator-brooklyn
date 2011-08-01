@@ -25,7 +25,7 @@ public class MediatorGroup extends MontereyNodeGroup implements Balanceable {
     }
 
     public void moveSegment(String segmentId, MediatorNode destination) {
-        Dmn1PlumberInternalAsync plumber = new PlumberWebProxy(connectionDetails.getManagementUrl(), gson, connectionDetails.getWebApiAdminCredential());
+        Dmn1PlumberInternalAsync plumber = new PlumberWebProxy(connectionDetails.managementUrl, gson, connectionDetails.webApiAdminCredential);
         Future<?> future = plumber.migrateSegment(segmentId, destination.getNodeId());
         future.get();
     }

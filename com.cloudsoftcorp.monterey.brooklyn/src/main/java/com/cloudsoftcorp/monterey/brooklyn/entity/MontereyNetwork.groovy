@@ -45,6 +45,8 @@ import com.cloudsoftcorp.monterey.provisioning.noop.NoopCloudProvider
 import com.cloudsoftcorp.monterey.provisioning.noop.NoopResourceProvisionerFactory
 import com.cloudsoftcorp.util.Loggers
 import com.cloudsoftcorp.util.exception.ExceptionUtils
+import com.cloudsoftcorp.util.javalang.ClassLoadingContext
+import com.cloudsoftcorp.util.javalang.OsgiClassLoadingContextFromBundle
 import com.cloudsoftcorp.util.osgi.BundleSet
 import com.cloudsoftcorp.util.web.client.CredentialsConfig
 import com.google.common.base.Throwables
@@ -108,6 +110,9 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     
     public MontereyNetwork(Map props=[:], Entity owner=null) {
         super(props, owner);
+        
+        OsgiClassLoadingContextFromBundle classLoadingContext = new OsgiClassLoadingContextFromBundle(null, MontereyNetwork.class.getClassLoader());
+        ClassLoadingContext.Defaults.setDefaultClassLoadingContext(classLoadingContext);
     }
 
     public String getDisplayName() {
@@ -220,7 +225,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
             
             // TODO want to call executionContext.scheduleAtFixedRate or some such
             Thread.sleep(1000)
-            LOG.info("Scheduling poller: "+connectionDetails.getManagementUrl()+"; "+connectionDetails.adminCredential.getUsername()+"; "+connectionDetails.adminCredential.getPassword())
+            LOG.info("Scheduling poller: "+connectionDetails.managementUrl+"; "+connectionDetails.webApiAdminCredential.getUsername()+"; "+connectionDetails.webApiAdminCredential.getPassword())
             scheduledExecutor = Executors.newScheduledThreadPool(1, {return new Thread(it, "monterey-network-poller")} as ThreadFactory)
             monitoringTask = scheduledExecutor.scheduleAtFixedRate({ updateAll() } as Runnable, POLL_PERIOD, POLL_PERIOD, TimeUnit.MILLISECONDS)
 
