@@ -28,8 +28,9 @@ import com.google.common.io.Files
 public class TomcatServer extends JavaWebApp {
     private static final Logger log = LoggerFactory.getLogger(TomcatServer.class)
     
-    public static final BasicConfigKey<Integer> SUGGESTED_SHUTDOWN_PORT = [Integer, "tomcat.shutdownport", "Suggested shutdown port" ]
+    public static final BasicConfigKey<Integer> SUGGESTED_SHUTDOWN_PORT = [Integer, "tomcat.shutdownport", "Suggested shutdown port", 31880 ]
     public static final BasicConfigKey<Map> PROPERTIES = [Integer, "tomcat.properties", "Properties for configuration" ]
+
     public static final BasicConfigKey<String> PROPERTIES_FILE = [Integer, "tomcat.propertiesFile", "File to store configuration properties" ]
     
     public static final BasicAttributeSensor<Integer> TOMCAT_SHUTDOWN_PORT = [ Integer, "webapp.tomcat.shutdownPort", "Port to use for shutting down" ];

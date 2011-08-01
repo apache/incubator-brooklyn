@@ -7,7 +7,7 @@ import brooklyn.event.basic.BasicConfigKey
  * Dictionary of {@link ConfigKey} entries.
  */
 class ConfigKeys {
-    public static final BasicConfigKey<Integer> SUGGESTED_JMX_PORT = [ Integer, "jmx.port", "Suggested JMX port" ]
+    public static final BasicConfigKey<Integer> SUGGESTED_JMX_PORT = [ Integer, "jmx.port", "Suggested JMX port", 32199 ]
     public static final BasicConfigKey<String> SUGGESTED_JMX_HOST = [ String, "jmx.host", "Suggested JMX host" ]
     
     public static final BasicConfigKey<String> SUGGESTED_VERSION = [ String, "install.version", "Suggested version" ]
