@@ -135,6 +135,13 @@ public class InheritedConfigTest {
     }
     
     @Test
+    public void testConfigReturnsDefaultValueIfNotSet() throws Exception {
+        TestApplication app = new TestApplication();
+        TestEntity entity = new TestEntity([owner:app])
+        assertEquals(entity.getConfig(TestEntity.CONF_NAME), "defaultval")
+    }
+    
+    @Test
     public void testGetFutureConfigWhenReady() throws Exception {
         TestApplication app = new TestApplication();
         TestEntity entity = new TestEntity([owner:app])
