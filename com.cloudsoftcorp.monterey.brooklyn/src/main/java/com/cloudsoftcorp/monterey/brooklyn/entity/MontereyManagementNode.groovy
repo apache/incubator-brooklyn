@@ -56,16 +56,14 @@ import com.google.gson.Gson
 public class MontereyManagementNode extends AbstractEntity implements Startable {
     private static final Logger LOG = Loggers.getLogger(MontereyManagementNode.class);
 
-    public static final BasicConfigKey<String> SUGGESTED_MANAGEMENT_NODE_INSTALL_DIR = [String.class, "monterey.managementnode.installdir", "Monterey management node installation directory" ]
-    public static final BasicConfigKey<Collection> SUGGESTED_WEB_USERS_CREDENTIAL = [Collection.class, "monterey.managementnode.webusers", "Monterey management node web-user credentials" ]
+    public static final BasicConfigKey<String> MANAGEMENT_NODE_INSTALL_DIR = [String.class, "monterey.managementnode.installdir", "Monterey management node installation directory", "/home/monterey/monterey-management-node" ]
+    public static final BasicConfigKey<Collection> WEB_USERS_CREDENTIAL = [Collection.class, "monterey.managementnode.webusers", "Monterey management node web-user credentials" ]
 
     public static final BasicAttributeSensor<URL> MANAGEMENT_URL = [ URL.class, "monterey.management-url", "Management URL" ]
 
     /** up, down, etc? */
     public static final BasicAttributeSensor<String> STATUS = [ String, "monterey.status", "Status" ]
 
-    private static final String DEFAULT_MANAGEMENT_NODE_INSTALL_DIR = "/home/monterey/monterey-management-node"
-    
     private final Gson gson;
 
     private MontereyNetworkConfig config = new MontereyNetworkConfig();
@@ -150,13 +148,13 @@ public class MontereyManagementNode extends AbstractEntity implements Startable 
 
         locations << machine
         
-        Collection<UserCredentialsConfig> webUsersCredentials = getConfig(SUGGESTED_WEB_USERS_CREDENTIAL) ?: []
+        Collection<UserCredentialsConfig> webUsersCredentials = getConfig(WEB_USERS_CREDENTIAL) ?: []
         CredentialsConfig webAdminCredential = DeploymentUtils.findWebApiAdminCredential(webUsersCredentials);
-    
+        CredentialsConfig webClientCredential = DeploymentUtils.findWebApiClientCredential(webUsersCredentials);
         File webUsersConfFile = DeploymentUtils.toEncryptedWebUsersConfFile(webUsersCredentials);
         String username = System.getenv("USER");
 
-        String managementNodeInstallDir = getConfig(SUGGESTED_MANAGEMENT_NODE_INSTALL_DIR) ?: DEFAULT_MANAGEMENT_NODE_INSTALL_DIR
+        String managementNodeInstallDir = getConfig(MANAGEMENT_NODE_INSTALL_DIR)
         
         WebConfig web = new WebConfig(true, config.getMontereyWebApiPort(), config.getMontereyWebApiProtocol(), null);
         web.setSslKeystore(managementNodeInstallDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_SSL_KEYSTORE_RELATIVE_PATH);
@@ -207,7 +205,7 @@ public class MontereyManagementNode extends AbstractEntity implements Startable 
             PlumberWebProxy plumberProxy = new PlumberWebProxy(managementUrl, gson, webAdminCredential);
             NodeId controlNodeId = plumberProxy.getControlNodeId();
             
-            this.connectionDetails = new MontereyNetworkConnectionDetails(networkId, managementUrl, webAdminCredential, controlNodeId, controlNodeId);
+            this.connectionDetails = new MontereyNetworkConnectionDetails(networkId, managementUrl, webAdminCredential, webClientCredential, controlNodeId, controlNodeId);
             
             setAttribute MANAGEMENT_URL, managementUrl
 
@@ -258,7 +256,7 @@ public class MontereyManagementNode extends AbstractEntity implements Startable 
     }
 
     private void shutdownManagementNodeProcess(MontereyNetworkConfig config, SshMachineLocation machine, NetworkId networkId) {
-        String managementNodeInstallDir = getConfig(SUGGESTED_MANAGEMENT_NODE_INSTALL_DIR) ?: DEFAULT_MANAGEMENT_NODE_INSTALL_DIR
+        String managementNodeInstallDir = getConfig(MANAGEMENT_NODE_INSTALL_DIR)
         String killScript = managementNodeInstallDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_KILL_SCRIPT_RELATIVE_PATH;
         try {
             LOG.info("Releasing management node on "+toString());
