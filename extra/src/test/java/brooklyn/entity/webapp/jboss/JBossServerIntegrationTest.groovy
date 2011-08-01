@@ -17,7 +17,7 @@ import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.TimeExtras
 
 /**
- * Test the operation of the {@link JBossServer} class.
+ * Test the operation of the {@link JBoss6Server} class.
  * 
  * TODO clarify test purpose
  */
@@ -40,7 +40,7 @@ public class JBossServerIntegrationTest {
     
     @Test(groups = "Integration")
     public void canStartupAndShutdown() {
-        JBossServer jb = new JBossServer(owner:app, portIncrement: PORT_INCREMENT);
+        JBoss6Server jb = new JBoss6Server(owner:app, portIncrement: PORT_INCREMENT);
         jb.start([ testLocation ])
         executeUntilSucceedsWithFinallyBlock ([:], {
             assertTrue jb.getAttribute(JavaWebApp.SERVICE_UP)
@@ -52,16 +52,16 @@ public class JBossServerIntegrationTest {
     @Test(enabled = false, groups = [ "Integration" ])
     public void canStartMultipleJBossServers() {
         def aInc = 400
-        JBossServer nodeA = new JBossServer(owner:app, portIncrement:aInc);
+        JBoss6Server nodeA = new JBoss6Server(owner:app, portIncrement:aInc);
         nodeA.start([ testLocation ])
         
         def bInc = 450
-        JBossServer nodeB = new JBossServer(owner:app, portIncrement:bInc);
+        JBoss6Server nodeB = new JBoss6Server(owner:app, portIncrement:bInc);
         nodeB.start([ testLocation ])
         
         executeUntilSucceedsWithFinallyBlock({
-            String aUrl = nodeA.getAttribute(JBossServer.ROOT_URL)
-            String bUrl = nodeB.getAttribute(JBossServer.ROOT_URL)
+            String aUrl = nodeA.getAttribute(JBoss6Server.ROOT_URL)
+            String bUrl = nodeB.getAttribute(JBoss6Server.ROOT_URL)
             assertTrue urlRespondsWithStatusCode200(aUrl)
             assertTrue urlRespondsWithStatusCode200(bUrl)
             true
@@ -73,15 +73,15 @@ public class JBossServerIntegrationTest {
     
     @Test(groups = [ "Integration" ])
     public void publishesErrorCountMetric() {
-        JBossServer jb = new JBossServer(owner:app, portIncrement:PORT_INCREMENT);
+        JBoss6Server jb = new JBoss6Server(owner:app, portIncrement:PORT_INCREMENT);
         jb.start([ testLocation ])
         executeUntilSucceedsWithShutdown(jb, {
-            def errorCount = jb.getAttribute(JBossServer.ERROR_COUNT)
+            def errorCount = jb.getAttribute(JBoss6Server.ERROR_COUNT)
             if (errorCount == null) return new BooleanWithMessage(false, "errorCount not set yet ($errorCount)")
 
             // Connect to non-existent URL n times
             int n = 5
-            String url = jb.getAttribute(JBossServer.ROOT_URL) + "does_not_exist"
+            String url = jb.getAttribute(JBoss6Server.ROOT_URL) + "does_not_exist"
             log.info "connect to {}", url
             n.times {
                 def connection = connectToURL(url)
@@ -89,7 +89,7 @@ public class JBossServerIntegrationTest {
                 log.info "connection to {} gives {}", url, status
             }
             Thread.sleep(1000L)
-            errorCount = jb.getAttribute(JBossServer.ERROR_COUNT)
+            errorCount = jb.getAttribute(JBoss6Server.ERROR_COUNT)
             println "$errorCount errors in total"
 
             assertTrue errorCount > 0
