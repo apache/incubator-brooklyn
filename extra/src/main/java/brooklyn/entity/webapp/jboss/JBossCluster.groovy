@@ -12,7 +12,7 @@ public class JBossCluster extends ClusterFromTemplate {
     // hierarchy. There may be a group of jboss nodes and a separate entity for the cluster.
     // How should these be related?
 
-    public JBossCluster(Map props=[:], JBossServer template=new JBossServer()) {
+    public JBossCluster(Map props=[:], JBoss6Server template=new JBoss6Server()) {
         super(props, template)
     }
 }

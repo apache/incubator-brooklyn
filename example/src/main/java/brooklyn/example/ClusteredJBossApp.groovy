@@ -5,7 +5,7 @@ import brooklyn.entity.basic.AbstractService
 import brooklyn.entity.basic.JavaApp
 import brooklyn.entity.webapp.DynamicWebAppCluster
 import brooklyn.entity.webapp.JavaWebApp
-import brooklyn.entity.webapp.jboss.JBossServer
+import brooklyn.entity.webapp.jboss.JBoss6Server
 import brooklyn.location.Location
 import brooklyn.location.basic.FixedListMachineProvisioningLocation
 import brooklyn.location.basic.SshMachineLocation
@@ -13,13 +13,13 @@ import brooklyn.location.basic.SshMachineLocation
 class ClusteredJBossApp extends AbstractApplication {
 
     DynamicWebAppCluster cluster = new DynamicWebAppCluster(displayName: "SimpleJBossCluster", initialSize: 1, 
-        newEntity: { properties -> new JBossServer(properties) }, owner: this)
+        newEntity: { properties -> new JBoss6Server(properties) }, owner: this)
 
     public static void main(String[] args) {
 
         def app = new ClusteredJBossApp()
-        app.cluster.setConfig(JBossServer.SUGGESTED_CLUSTER_NAME, "SimpleJBossCluster")
-        app.cluster.setConfig(JBossServer.SUGGESTED_SERVER_PROFILE, "all")
+        app.cluster.setConfig(JBoss6Server.SUGGESTED_CLUSTER_NAME, "SimpleJBossCluster")
+        app.cluster.setConfig(JBoss6Server.SUGGESTED_SERVER_PROFILE, "all")
         
         Collection<InetAddress> hosts = [
             Inet4Address.getByAddress((byte[]) [192, 168, 144, 243]),
@@ -40,7 +40,7 @@ class ClusteredJBossApp extends AbstractApplication {
                 Thread.sleep 5000
                 
                 app.getEntities().each {
-                    if (it instanceof JBossServer) {
+                    if (it instanceof JBoss6Server) {
                         if (it.getAttribute(AbstractService.SERVICE_UP)) {
                             println "${it.toString()}: ${it.getAttribute(JavaWebApp.REQUEST_COUNT)} requests (" +
                                     "${it.getAttribute(JavaWebApp.REQUESTS_PER_SECOND)} per second), " +
@@ -61,7 +61,7 @@ class ClusteredJBossApp extends AbstractApplication {
             def rand = new Random()
             def sleep = 3000
             while (!activity.isInterrupted()) {
-                def ents = app.getEntities().findAll { it instanceof JBossServer }
+                def ents = app.getEntities().findAll { it instanceof JBoss6Server }
                 ents.each {
                     def requests = rand.nextInt(5) + 1
                     if (it.getAttribute(AbstractService.SERVICE_UP)) {

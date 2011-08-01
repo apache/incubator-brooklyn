@@ -13,8 +13,8 @@ import brooklyn.util.SshBasedAppSetup
 /**
  * JBoss web application server.
  */
-public class JBossServer extends JavaWebApp {
-    private static final Logger log = LoggerFactory.getLogger(JBossServer.class)
+public class JBoss6Server extends JavaWebApp {
+    private static final Logger log = LoggerFactory.getLogger(JBoss6Server.class)
 
     public static BasicConfigKey<String>  SUGGESTED_SERVER_PROFILE = 
             [ String, "jboss.serverProfile", "Profile used when running server" ] 
@@ -26,7 +26,7 @@ public class JBossServer extends JavaWebApp {
     // Jboss specific
     public static final BasicAttributeSensor<Integer> PORT_INCREMENT = [ Integer, "webapp.portIncrement", "Increment added to default JBoss ports" ];
             
-    public JBossServer(Map properties=[:], Entity owner=null) {
+    public JBoss6Server(Map properties=[:], Entity owner=null) {
         super(properties, owner)
 
         def portIncrement = properties.portIncrement ?: 0
