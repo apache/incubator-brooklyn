@@ -62,8 +62,6 @@ public class Locations {
 
     public static final Collection AWS_REGIONS = EC2_VANILLA_IMAGES.keySet()
 
-    private static final AwsLocationFactory AWS_FACTORY = newAwsLocationFactory()
-   
     private Locations() { }
 
     private static final AwsLocationFactory newAwsLocationFactory() {
@@ -149,7 +147,8 @@ public class Locations {
         String imageIdVanilla = regionName+"/"+EC2_VANILLA_IMAGES.get(regionName)
         String imageIdMonterey = regionName+"/"+EC2_MONTEREY_IMAGES.get(regionName)
         String imageIdGemfire = regionName+"/"+EC2_GEMFIRE_IMAGES.get(regionName)
-        AwsLocation region = AWS_FACTORY.newLocation(regionName)
+        AwsLocationFactory awsFactory = newAwsLocationFactory()
+        AwsLocation region = awsFactory.newLocation(regionName)
         region.setTagMapping([
             (TomcatServer.class.getName()):[
                 imageId:imageIdVanilla,
