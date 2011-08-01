@@ -6,6 +6,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CopyOnWriteArraySet
 import java.util.concurrent.CancellationException
 import java.util.concurrent.ExecutionException
+import java.util.concurrent.Future
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -334,21 +335,8 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     @Override
     public <T> T getConfig(ConfigKey<T> key) {
         // FIXME What about inherited task in config?!
-        Object v = ownConfig.get(key);
-        v = v!=null ? v : inheritedConfig.get(key)
-
-        //if config is set as a task, we wait for the task to complete
-        if (v in Task) {
-            if ( !((Task)v).isSubmitted() ) {
-                def exec = getExecutionContext()
-//                if (exec==null || !getApplication().isDeployed())
-//                    throw new IllegalStateException("Not permitted to access deferred config until application is deployed");
-                exec.submit((Task)v)
-            }
-            v = v.get()
-        }
-        
-        v = v != null ? v : inheritedConfig.get(key) ?: key.defaultValue
+        Object v = key.extractValue(ownConfig, getExecutionContext())
+        return (v != null) ? v : key.extractValue(inheritedConfig, getExecutionContext())
     }
 
     @Override

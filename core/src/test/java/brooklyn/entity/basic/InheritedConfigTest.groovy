@@ -3,14 +3,17 @@ package brooklyn.entity.basic
 import static org.testng.Assert.*
 
 import java.util.Map
+import java.util.concurrent.Callable
+import java.util.concurrent.CountDownLatch
 
 import org.testng.annotations.Test
 
 import brooklyn.entity.ConfigKey
 import brooklyn.event.basic.BasicConfigKey
-import brooklyn.test.location.MockLocation
+import brooklyn.event.basic.DependentConfiguration
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
+import brooklyn.test.location.MockLocation
 
 /**
  * Test that configuration properties are usable and inherited correctly.
@@ -129,5 +132,105 @@ public class InheritedConfigTest {
         }
         
         assertEquals(null, entity.getConfig(akey))
+    }
+    
+    @Test
+    public void testGetFutureConfigWhenReady() throws Exception {
+        TestApplication app = new TestApplication();
+        TestEntity entity = new TestEntity([owner:app])
+        entity.setConfig(TestEntity.CONF_NAME, DependentConfiguration.whenDone( {return "aval"} as Callable))
+
+        assertEquals(entity.getConfig(TestEntity.CONF_NAME), "aval")
+    }
+    
+    @Test
+    public void testGetFutureConfigBlocksUntilReady() throws Exception {
+        TestApplication app = new TestApplication();
+        TestEntity entity = new TestEntity([owner:app])
+        final CountDownLatch latch = new CountDownLatch(1)
+        entity.setConfig(TestEntity.CONF_NAME, DependentConfiguration.whenDone( {latch.await(); return "aval"} as Callable))
+
+        Thread t = new Thread( { Thread.sleep(10); latch.countDown() } )
+        try {
+            long starttime = System.currentTimeMillis()
+            t.start()
+            assertEquals(entity.getConfig(TestEntity.CONF_NAME), "aval")
+            long endtime = System.currentTimeMillis()
+            
+            assertTrue((endtime - starttime) > 10, "starttime=$starttime; endtime=$endtime")
+            
+        } finally {
+            t.interrupt()
+        }
+    }
+    
+    @Test
+    public void testGetAttributeWhenReadyConfigReturnsWhenSet() throws Exception {
+        TestApplication app = new TestApplication();
+        TestEntity entity = new TestEntity([owner:app])
+        TestEntity entity2 = new TestEntity([owner:app])
+        entity.setConfig(TestEntity.CONF_NAME, DependentConfiguration.attributeWhenReady(entity2, TestEntity.NAME))
+        app.start([new MockLocation()])
+        
+        entity2.setAttribute(TestEntity.NAME, "aval")
+        assertEquals(entity.getConfig(TestEntity.CONF_NAME), "aval")
+    }
+    
+    @Test
+    public void testGetAttributeWhenReadyConfigBlocksUntilSet() throws Exception {
+        TestApplication app = new TestApplication();
+        TestEntity entity = new TestEntity([owner:app])
+        TestEntity entity2 = new TestEntity([owner:app])
+        entity.setConfig(TestEntity.CONF_NAME, DependentConfiguration.attributeWhenReady(entity2, TestEntity.NAME))
+        app.start([new MockLocation()])
+        
+        Thread t = new Thread( { Thread.sleep(10); entity2.setAttribute(TestEntity.NAME, "aval") } )
+        try {
+            long starttime = System.currentTimeMillis()
+            t.start()
+            assertEquals(entity.getConfig(TestEntity.CONF_NAME), "aval")
+            long endtime = System.currentTimeMillis()
+            
+            assertTrue((endtime - starttime) > 10, "starttime=$starttime; endtime=$endtime")
+            
+        } finally {
+            t.interrupt()
+        }
+    }
+
+    @Test    
+    public void testMapConfigKeyCanStoreAndRetrieveVals() throws Exception {
+        TestApplication app = new TestApplication();
+        TestEntity entity = new TestEntity([owner:app])
+        entity.setConfig(TestEntity.CONF_MAP_THING.subKey("akey"), "aval")
+        entity.setConfig(TestEntity.CONF_MAP_THING.subKey("bkey"), "bval")
+        assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING), [akey:"aval",bkey:"bval"])
+    }
+    
+    @Test
+    public void testMapConfigKeyCanStoreAndRetrieveFutureVals() throws Exception {
+        TestApplication app = new TestApplication();
+        TestEntity entity = new TestEntity([owner:app])
+        entity.setConfig(TestEntity.CONF_MAP_THING.subKey("akey"), DependentConfiguration.whenDone( {return "aval"} as Callable))
+        entity.setConfig(TestEntity.CONF_MAP_THING.subKey("bkey"), DependentConfiguration.whenDone( {return "bval"} as Callable))
+        assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING), [akey:"aval",bkey:"bval"])
+    }
+
+    @Test    
+    public void testListConfigKeyCanStoreAndRetrieveVals() throws Exception {
+        TestApplication app = new TestApplication();
+        TestEntity entity = new TestEntity([owner:app])
+        entity.setConfig(TestEntity.CONF_LIST_THING.subKey(), "aval")
+        entity.setConfig(TestEntity.CONF_LIST_THING.subKey(), "bval")
+        assertEquals(entity.getConfig(TestEntity.CONF_LIST_THING), ["aval","bval"])
+    }
+    
+    @Test
+    public void testListConfigKeyCanStoreAndRetrieveFutureVals() throws Exception {
+        TestApplication app = new TestApplication();
+        TestEntity entity = new TestEntity([owner:app])
+        entity.setConfig(TestEntity.CONF_LIST_THING.subKey(), DependentConfiguration.whenDone( {return "aval"} as Callable))
+        entity.setConfig(TestEntity.CONF_LIST_THING.subKey(), DependentConfiguration.whenDone( {return "bval"} as Callable))
+        assertEquals(entity.getConfig(TestEntity.CONF_LIST_THING), ["aval","bval"])
     }
 }

@@ -1,6 +1,9 @@
 package brooklyn.event.basic;
 
 import groovy.lang.Closure
+
+import java.util.concurrent.Callable
+
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.event.AttributeSensor
@@ -29,12 +32,14 @@ public class DependentConfiguration {
     public static <T> Task<T> attributeWhenReady(Entity source, AttributeSensor<T> sensor, Closure ready = { it }) {
         attributeWhenReady(source, sensor, new Predicate() { public boolean apply(Object o) { ready.call(o) } })
     }
+    
     /** returns a {@link Task} which blocks until the given sensor on the given source entity gives a value that satisfies ready, then returns that value;
      * particular useful in Entity configuration where config will block until Tasks have a value
      */
     public static <T> Task<T> attributeWhenReady(Entity source, AttributeSensor<T> sensor, Predicate ready) {
         new BasicTask<T>(tag:"attributeWhenReady", displayName:"retrieving $source $sensor", { waitInTaskForAttributeReady(source, sensor, ready); } )    
     }
+    
     private static <T> T waitInTaskForAttributeReady(Entity source, AttributeSensor<T> sensor, Predicate ready) {
         T v = ((AbstractEntity)source).getAttribute(sensor);
         if (ready.apply(v)) 
@@ -67,6 +72,12 @@ public class DependentConfiguration {
         }
     }
     
+    /** returns a {@link Task} which blocks until the given job returns, then returns the value of that job.
+     */
+    public static <T> Task<T> whenDone(Callable<T> job) {
+        return new BasicTask<T>([tag:"whenDone", displayName:"waiting for job"], job)
+    }
+
     /** returns a {@link Task} which waits for the result of first parameter, then applies the function in the second parameter to it, returning that result;
      * particular useful in Entity configuration where config will block until Tasks have completed,
      * allowing for example an {@link #attributeWhenReady} expression to be passed in the first argument
