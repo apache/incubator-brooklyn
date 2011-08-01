@@ -96,6 +96,10 @@ class SubElementConfigKey<T> extends BasicConfigKey<T> {
         super(type, name, description, defaultValue)
         this.parent = parent
     }
+    
+    public T extractValue(Map vals, ExecutionContext exec) {
+        return super.extractValue(vals, exec)
+    }
 }
 
 // TODO Create interface
@@ -112,11 +116,11 @@ class MapConfigKey<V> extends BasicConfigKey<Map<String,V>> {
     }
     
     public boolean isSubKey(ConfigKey<?> contender) {
-        return (contender instanceof SubElementConfigKey && this.equals(((SubElementConfigKey)contender).parent))
+        return (contender instanceof SubElementConfigKey && this == ((SubElementConfigKey)contender).parent)
     }
     
     public String extractSubKeyName(ConfigKey<?> subKey) {
-        return subKey.name.subString(name.length+1)
+        return subKey.name.substring(name.length()+1)
     }
     
     public Map<String,V> extractValue(Map vals, ExecutionContext exec) {
@@ -145,14 +149,15 @@ class ListConfigKey<V> extends BasicConfigKey<List<V>> {
     }
     
     public boolean isSubKey(ConfigKey<?> contender) {
-        return (contender instanceof SubElementConfigKey && this.equals(((SubElementConfigKey)contender).parent))
+        return (contender instanceof SubElementConfigKey && this == ((SubElementConfigKey)contender).parent)
     }
     
     public List<V> extractValue(Map vals, ExecutionContext exec) {
         List<V> result = []
         for (Map.Entry<ConfigKey,Object> entry in vals.entrySet()) {
             if (isSubKey(entry.key)) {
-                result.add(entry.key.extractValue(vals, exec))
+                SubElementConfigKey subKey = entry.key
+                result.add(subKey.extractValue(vals, exec))
             }
         }
         return result
