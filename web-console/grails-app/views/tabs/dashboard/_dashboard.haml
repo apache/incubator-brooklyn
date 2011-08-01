@@ -1,0 +1,7 @@
+#dashboard-container
+    .master-column-wrapper
+        .widget-container
+            .column{:class=>"medium-widget-column"}
+                %g:render{:template=>"/widgets/circles"}
+            .column{:class=>"medium-widget-column"}
+                %g:render{:template=>"/widgets/logger"}

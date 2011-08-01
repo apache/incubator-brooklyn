@@ -1,0 +1,20 @@
+!!! 5
+%html
+    %head
+        %title
+            %g:layoutTitle{:default=>"Brooklyn Webconsole"}
+        %g:javascript{:library=>"jquery/jquery-1.6.2"}
+        %g:javascript{:library=>"jquery/ui/jquery-ui-1.8.14"}
+        %g:javascript{:library=>"jquery/jquery.datatables.1.8.1"}
+        %g:javascript{:library=>"jquery/jquery.layout-latest"}
+        %g:javascript{:src=>"jquery/jquery.corner.js"}
+        %g:javascript{:src=>"jquery/jquery.jstree.js"}
+        %g:layoutHead
+        %link{:rel=>"shortcut icon",:href=>"${resource(dir:'images',file:'favicon.ico')}",:type=>"image/x-icon"}
+        %link{:rel=>"stylesheet",:type=>"text/css",:href=>"${resource(dir:'css',file:'reset.css')}"}
+        %link{:rel=>"stylesheet",:type=>"text/css",:href=>"${resource(dir:'css/smoothness',file:'jquery-ui-1.8.14.css')}"}
+        %link{:rel=>"stylesheet",:type=>"text/css",:href=>"${resource(dir:'css/console',file:'brooklyn-console.css')}"}
+        %link{:rel=>"stylesheet",:type=>"text/css",:href=>"${resource(dir:'css/console',file:'widget-dashboard.css')}"}
+    %body
+        .ui-layout-center{:class=>"outer-layout-container",:style=>"padding:0px !important;"}
+            %g:layoutBody/

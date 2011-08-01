@@ -1,0 +1,293 @@
+/* GENERAL BODY */
+
+html,body{
+    height:100%;
+    width:100%;
+    padding: 0px;
+    overflow:auto;
+}
+
+body{
+    font-family:"lucida grande",tahoma,verdana,arial,sans-serif;
+    font-size:11px;
+    width: 100%;
+    height: 100%;
+}
+
+/* MASTER TABS AND MASTER LAYOUT */
+
+#master-tabs{
+    height:100%;
+    width:100%;
+    padding:0px;
+    border:none;
+}
+
+.master-tab{
+    left:0px;
+    right:0px;
+    bottom:0px;
+    top:50px;
+    padding:0px;
+    position:absolute;
+}
+
+#dashboard{
+    padding:0px;
+}
+
+#detail{
+    padding:0px;
+}
+
+h1.brooklyn-header{
+    height:46px;
+    width:192px;
+    background-image:url("../../images/brooklyn/brooklynbannertwo.png");
+    position:absolute;
+    top:0px;
+    left:0px;
+    margin:0px;
+}
+
+li.master-filler-tab{
+    top:13px;
+    width:200px;
+}
+
+ul.master-tabs-container{
+    height:42px;
+}
+
+li.master-tabs-tab{
+    top:13px !important;
+}
+
+li#master-filler-tab{
+    top:13px;
+    width:200px;
+}
+
+.outer-layout-container{
+    padding:0px !important;
+    height: auto !important;
+    min-height:100%;
+    position:relative;
+    width:100%;
+}
+
+/* TEMPLATE LAYOUT CONTAINERS */
+
+.debug-tree-components{
+    height:100%;
+    width:100%;
+}
+
+div#navigation{
+    height:20px;
+    background:#c0c0c0;
+}
+
+.debug-search-box {
+    margin-bottom: 3px;
+    padding: 5px;
+    padding-right: 8px;
+    height:5%;
+}
+
+.search-input {
+    width: 90%;
+    background-image: url("../../images/brooklyn/magnifying-glass.gif");
+    background-repeat:no-repeat;
+    padding-left:20px;
+}
+
+.jstree {
+    overflow:auto;
+    height:90%;
+    padding:3px;
+    margin-bottom:3px;
+    width:100%;
+}
+/* DETAIL TABS CSS */
+.tab-content-left-column {
+    clear: left;
+    float: left;
+    width: 100%;
+    height:100%;
+    border:1px solid #CCCCCC;
+}
+
+.tab-content-right-column {
+    clear: right;
+    float: left;
+    width: 300px;
+    height:100%;
+    border:1px solid #CCCCCC;
+}
+
+.tab-content-mini-column {
+    float: left;
+    width: 200px;
+    height:100%;
+    border:1px solid #CCCCCC;
+}
+
+.tab-content-full-size {
+    width: 100%;
+    height:100%;
+}
+
+.tab-content-buttons{
+     border:1px solid #CCCCCC;
+}
+
+table, th, td {
+    border: 2px solid #ccc;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 0.2em;
+    text-align: left;
+}
+
+ul {
+  margin-left: 1em;
+}
+
+.bottom-filler {
+    clear: both;
+    width:100%;
+    height:100%;
+}
+
+h2 {
+    clear: both;
+    margin-bottom: 0.5em;
+}
+
+select {
+    margin: 5%;
+    width: 90%;
+}
+
+fieldset {
+    display:block;
+    font-family:Verdana, Arial, Helvetica, sans-serif;
+    font-size:12px;
+    margin-top:5px;
+    margin-left:5px;
+    border:1px solid #CCCCCC;
+}
+
+fieldset label {
+    text-align:right;
+    width:70px;
+    float:left;
+    padding:0.2em;
+    margin:0;
+    margin-top:0.3em;
+}
+
+fieldset legend {
+    padding:2px 5px;
+}
+
+textarea#logbox{
+    height:250px;
+    width:99%;
+    resize: none;
+}
+.map-container{
+    height:500px;
+    width:70%;
+    float:left;
+    margin-left: 10px;
+}
+#map-canvas{
+    float:left;
+    width:400px;
+}
+
+.dataTables_info {
+    padding: 2px;
+    font-size: 10px;
+}
+
+.dataTables_filter {
+    width: 200px;
+    padding: 2px;
+}
+
+.dataTables_filter input {
+    width: 90%;
+    background-image: url("../../images/brooklyn/magnifying-glass.gif");
+    background-repeat:no-repeat;
+    padding-left:20px;
+}
+
+.tab-content-table {
+    width:100%;
+}
+
+.row_selected {
+    background-color: #888888;
+}
+
+.effector-args p {
+    padding: 5px;
+}
+
+.effector-args div {
+    clear: both;
+    width: 100%;
+}
+
+#summary-basic-info {
+    float: left;
+    margin-bottom: 1em;
+}
+
+#summary-status {
+    float: right;
+    margin-right: 130px;
+}
+
+#summary-groups {
+    float: left;
+    clear: left;
+    margin-bottom: 1em;
+}
+
+#summary-activity {
+    float: right;
+    margin-right: 116px;
+}
+
+#summary ul {
+    list-style-type: none;
+}
+
+#summary h4 {
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+}
+
+.label {
+    font-weight: bold;
+}
+
+#activityFieldset {
+    width: 99%;
+}
+
+#effector-fieldset {
+    width: 100%;
+    margin-left: -3px;
+}
+
+#circles-map {
+    height: 300px;
+    width: 100%;
+}
