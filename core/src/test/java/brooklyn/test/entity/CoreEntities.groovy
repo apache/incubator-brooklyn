@@ -1,15 +1,12 @@
 package brooklyn.test.entity
 
-import groovy.transform.InheritConstructors;
-
 import java.util.Collection
 import java.util.Map
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicInteger
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.testng.TestException;
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
@@ -18,12 +15,11 @@ import brooklyn.entity.trait.Startable
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEventListener
 import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.event.basic.BasicConfigKey
+import brooklyn.event.basic.ListConfigKey
+import brooklyn.event.basic.MapConfigKey
 import brooklyn.location.Location
-import brooklyn.location.basic.AbstractLocation
-import brooklyn.location.basic.SshMachineLocation
-import brooklyn.management.ExecutionContext
 import brooklyn.management.SubscriptionHandle
-import brooklyn.util.SshBasedAppSetup
 
 /**
  * Mock application for testing.
@@ -52,8 +48,13 @@ public class TestApplication extends AbstractApplication {
  */
 public class TestEntity extends AbstractEntity implements Startable {
 	protected static final Logger LOG = LoggerFactory.getLogger(TestEntity)
+
+    public static final BasicConfigKey<String> CONF_NAME = [ String, "test.confName", "Configuration key, my name" ]
+    public static final MapConfigKey<String> CONF_MAP_THING = [ String, "test.confMapThing", "Configuration key that's a map thing" ]
+    public static final ListConfigKey<String> CONF_LIST_THING = [ String, "test.confListThing", "Configuration key that's a list thing" ]
     
     public static final BasicAttributeSensor<Integer> SEQUENCE = [ Integer, "test.sequence", "Test Sequence" ]
+    public static final BasicAttributeSensor<String> NAME = [ String, "test.name", "Test name" ]
     
     int sequenceValue = 0
     AtomicInteger counter = new AtomicInteger(0)

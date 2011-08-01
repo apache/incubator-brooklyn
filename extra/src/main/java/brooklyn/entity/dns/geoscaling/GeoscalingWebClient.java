@@ -102,7 +102,7 @@ public class GeoscalingWebClient {
             this.name = name;
         }
         
-        public void configure(String phpScript, long flags) {
+        public void configure(long flags, String phpScript) {
             configureSmartSubdomain(parent.id, id, name, flags, phpScript);
         }
         

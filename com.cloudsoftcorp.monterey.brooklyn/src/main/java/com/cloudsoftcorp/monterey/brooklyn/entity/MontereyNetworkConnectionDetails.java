@@ -17,41 +17,20 @@ public class MontereyNetworkConnectionDetails implements Serializable {
 
     private static final long serialVersionUID = 4356143284218945471L;
     
-    private NetworkId networkId;
-    private URL managementUrl;
-    private CredentialsConfig adminCredential;
-    private NodeId monitorAddress;
-    private NodeId managerAddress;
+    final NetworkId networkId;
+    final URL managementUrl;
+    final CredentialsConfig webApiAdminCredential;
+    final CredentialsConfig webApiClientCredential;
+    final NodeId monitorAddress;
+    final NodeId managerAddress;
     
-    public MontereyNetworkConnectionDetails(NetworkId networkId, URL managementUrl, CredentialsConfig adminCredential, NodeId monitorAddress, NodeId managerAddress) {
+    public MontereyNetworkConnectionDetails(NetworkId networkId, URL managementUrl, CredentialsConfig adminCredential, CredentialsConfig clientCredential, NodeId monitorAddress, NodeId managerAddress) {
         this.networkId = Preconditions.checkNotNull(networkId, "networkId");
         this.managementUrl = Preconditions.checkNotNull(managementUrl, "managementUrl");
-        this.adminCredential = Preconditions.checkNotNull(adminCredential, "managementUrl");
+        this.webApiAdminCredential = Preconditions.checkNotNull(adminCredential, "adminCredential");
+        this.webApiClientCredential = Preconditions.checkNotNull(clientCredential, "clientCredential");
         this.monitorAddress = Preconditions.checkNotNull(monitorAddress, "monitorAddress");
         this.managerAddress = Preconditions.checkNotNull(managerAddress, "managerAddress");
-    }
-    
-    @SuppressWarnings("unused")
-    private MontereyNetworkConnectionDetails() { /* for gson */ }
-
-    public NetworkId getNetworkId() {
-        return networkId;
-    }
-
-    public URL getManagementUrl() {
-        return managementUrl;
-    }
-    
-    public CredentialsConfig getWebApiAdminCredential() {
-        return adminCredential;
-    }
-
-    public NodeId getMonitorAddress() {
-        return monitorAddress;
-    }
-    
-    public NodeId getManagerAddress() {
-        return managerAddress;
     }
     
     @Override

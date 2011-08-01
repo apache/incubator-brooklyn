@@ -84,6 +84,17 @@ public abstract class AbstractController extends AbstractService {
         reset()
     }
 
+    /**
+     * Expect to be passed the flags below, or to already have them from constructor:
+     *  - cluster
+     *  - domain
+     *  - port
+     *  - portNumberSensor
+     */
+    public void bind(Map flags) {
+       throw new UnsupportedOperationException("TODO Move init of cluster etc to here?")
+    }
+   
     @Override
     protected Collection<Integer> getRequiredOpenPorts() {
         Collection<Integer> result = super.getRequiredOpenPorts()

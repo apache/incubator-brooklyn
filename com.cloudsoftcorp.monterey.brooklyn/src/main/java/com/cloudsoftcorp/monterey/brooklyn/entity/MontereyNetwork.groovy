@@ -46,6 +46,7 @@ import com.cloudsoftcorp.monterey.provisioning.noop.NoopResourceProvisionerFacto
 import com.cloudsoftcorp.util.Loggers
 import com.cloudsoftcorp.util.exception.ExceptionUtils
 import com.cloudsoftcorp.util.osgi.BundleSet
+import com.cloudsoftcorp.util.web.client.CredentialsConfig
 import com.google.common.base.Throwables
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
@@ -128,6 +129,10 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         this.config = val;
     }
 
+    public CredentialsConfig getClientCredential() {
+        return connectionDetails.webApiClientCredential
+    }
+    
     public Collection<MontereyContainerNode> getContainerNodes() {
         return ImmutableSet.copyOf(nodesByCreationId.values());
     }

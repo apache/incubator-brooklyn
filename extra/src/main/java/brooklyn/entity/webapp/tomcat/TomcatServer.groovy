@@ -14,6 +14,7 @@ import brooklyn.event.EntityStartException
 import brooklyn.event.adapter.ValueProvider
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
+import brooklyn.event.basic.MapConfigKey
 import brooklyn.location.MachineLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedAppSetup
@@ -28,9 +29,11 @@ import com.google.common.io.Files
 public class TomcatServer extends JavaWebApp {
     private static final Logger log = LoggerFactory.getLogger(TomcatServer.class)
     
-    public static final BasicConfigKey<Integer> SUGGESTED_SHUTDOWN_PORT = [Integer, "tomcat.shutdownport", "Suggested shutdown port" ]
-    public static final BasicConfigKey<Map> PROPERTIES = [Integer, "tomcat.properties", "Properties for configuration" ]
-    public static final BasicConfigKey<String> PROPERTIES_FILE = [Integer, "tomcat.propertiesFile", "File to store configuration properties" ]
+    public static final BasicConfigKey<Integer> SUGGESTED_SHUTDOWN_PORT = [Integer, "tomcat.shutdownport", 
+            "Suggested shutdown port", 31880 ]
+    public static final MapConfigKey<String> PROPERTIES_FILES_REFFED_BY_ENVIRONMENT_VARIABLES = 
+            [String, "tomcat.propertyFilesReffedByEnvironmentVariables", 
+            "Properties files to be generated, and to be referenced by an environment variable" ]
     
     public static final BasicAttributeSensor<Integer> TOMCAT_SHUTDOWN_PORT = [ Integer, "webapp.tomcat.shutdownPort", "Port to use for shutting down" ];
     public static final BasicAttributeSensor<String> CONNECTOR_STATUS = [String, "webapp.tomcat.connectorStatus", "Catalina connector state name"]

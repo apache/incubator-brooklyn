@@ -141,10 +141,10 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         app = new SimpleApp();
         montereyNetwork = new MontereyNetwork();
         montereyNetwork.setOwner(app);
-        montereyNetwork.setConfig(MontereyContainerNode.SUGGESTED_NETWORK_NODE_INSTALL_DIR, MONTEREY_NETWORK_NODE_PATH);
-        montereyNetwork.setConfig(MontereyManagementNode.SUGGESTED_MANAGEMENT_NODE_INSTALL_DIR, MONTEREY_MANAGEMENT_NODE_PATH);
+        montereyNetwork.setConfig(MontereyContainerNode.NETWORK_NODE_INSTALL_DIR, MONTEREY_NETWORK_NODE_PATH);
+        montereyNetwork.setConfig(MontereyManagementNode.MANAGEMENT_NODE_INSTALL_DIR, MONTEREY_MANAGEMENT_NODE_PATH);
         //montereyNetwork.setConfig(new MontereyNetworkConfig()); // using defaults; TODO externalize as configKeys
-        montereyNetwork.setConfig(MontereyManagementNode.SUGGESTED_WEB_USERS_CREDENTIAL, Collections.singleton(adminCredential));
+        montereyNetwork.setConfig(MontereyManagementNode.WEB_USERS_CREDENTIAL, Collections.singleton(adminCredential));
         montereyNetwork.setConfig(MontereyNetwork.MAX_CONCURRENT_PROVISIONINGS_PER_LOCATION, MAX_CONCURRENT_PROVISIONINGS_PER_LOCATION_VAL)
         app.getManagementContext().manage(app)
     }
@@ -167,13 +167,13 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         }
     }
     
-    @Test
+    @Test(groups = [ "Integration", "Live" ])
     public void testStartMontereyManagementNodeAndDeployApp() throws Exception {
         rolloutManagementPlane();
         assertMontereyRunningWithApp(montereyNetwork);
     }
 
-    @Test
+    @Test(groups = [ "Integration", "Live" ])
     public void testStartMontereyNetworkNode() throws Throwable {
         rolloutManagementPlane();
         
@@ -182,14 +182,14 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         assertBrooklynEventuallyHasNodes(0,0,0,0,1);
     }
 
-    @Test
+    @Test(groups = [ "Integration", "Live" ])
     public void testInitialClusterSizeStartsNodes() throws Throwable {
         rolloutManagementPlane([(MontereyNetwork.INITIAL_TOPOLOGY_PER_LOCATION):
                 [(Dmn1NodeType.LPP):1, (Dmn1NodeType.M):1, (Dmn1NodeType.MR):1, (Dmn1NodeType.TP):1, (Dmn1NodeType.SPARE):1]]);
         assertBrooklynEventuallyHasNodes(1,1,1,1,1);
     }
     
-    @Test
+    @Test(groups = [ "Integration", "Live" ])
     public void testNetworkNodesAddedToClusterGroups() throws Throwable {
         rolloutManagementPlane();
         rolloutNodes(1,1,1,1,0);
@@ -199,7 +199,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         assertBrooklynEventuallyHasNodesInExpectedClusters()
     }
     
-    @Test
+    @Test(groups = [ "Integration", "Live" ])
     public void testStartMontereyNetworkNodeOfEachType() throws Throwable {
         rolloutManagementPlane();
         Map<NodeId, NodeSummary> nodes = rolloutNodes(1,1,1,1,1);
@@ -207,7 +207,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         assertBrooklynEventuallyHasNodes(nodes);
     }
     
-    @Test
+    @Test(groups = [ "Integration", "Live" ])
     public void testBrooklynEntityRolloutEffector() throws Throwable {
         rolloutManagementPlane();
         MontereyContainerNode node = montereyNetwork.provisionNode(localhostProvisioner);
@@ -224,7 +224,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         assertBrooklynEventuallyHasExpectedNodes();
     }
 
-    @Test
+    @Test(groups = [ "Integration", "Live" ])
     public void testBrooklynEntitiesHaveSegmentsDefinedInDescriptor() throws Throwable {
         rolloutManagementPlane();
 
@@ -236,7 +236,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         assertBrooklynEventuallyHasSegments(expectedSegments);
     }
 
-    @Test
+    @Test(groups = [ "Integration", "Live" ])
     public void testLppRouterSwitchover() throws Throwable {
         rolloutManagementPlane();
         rolloutNodes(1,2,1,1,0);
@@ -255,7 +255,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         assertBrooklynEventuallyHasDownstreamRouters(Collections.singletonMap(lppId, newMrId));
     }
     
-    @Test
+    @Test(groups = [ "Integration", "Live" ])
     public void testMediatorRouterSwitchover() throws Throwable {
         rolloutManagementPlane();
         rolloutNodes(1,1,1,2,0);
@@ -274,7 +274,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         assertBrooklynEventuallyHasDownstreamRouters(Collections.singletonMap(lppId, newTpId));
     }
     
-    @Test
+    @Test(groups = [ "Integration", "Live" ])
     public void testClustersAndFabricsCreatedPerEmptyLocation() throws Throwable {
         rolloutManagementPlane();
 
@@ -283,7 +283,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         assertBrooklynEventuallyHasClusters([localhostProvisioner]);
     }
     
-    @Test
+    @Test(groups = [ "Integration", "Live" ])
     public void testClustersAndFabricsCreatedPerLocationIncludeNodes() throws Throwable {
         rolloutManagementPlane();
         
@@ -295,7 +295,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
                 (Dmn1NodeType.M):1, (Dmn1NodeType.TP):1]);
     }
     
-    @Test
+    @Test(groups = [ "Integration", "Live" ])
     public void testMediatorGroupMigrateSegmentEffector() throws Throwable {
         rolloutManagementPlane();
         
@@ -321,7 +321,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         assertBrooklynEventuallyHasSegmentAllocation(Collections.singletonMap("a", mediator2));
     }
     
-    @Test
+    @Test(groups = [ "Integration", "Live" ])
     public void testNodesAndSegmentsReportWorkrate() throws Throwable {
         rolloutManagementPlane();
         rolloutNodes(localhostProvisioner, 1,1,1,1,0);

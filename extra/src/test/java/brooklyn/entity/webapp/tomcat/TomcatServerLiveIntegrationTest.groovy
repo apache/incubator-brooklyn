@@ -16,6 +16,7 @@ import brooklyn.entity.basic.ConfigKeys
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.aws.AWSCredentialsFromEnv
 import brooklyn.location.basic.aws.AwsLocation
+import brooklyn.location.basic.aws.AwsLocationFactory
 import brooklyn.test.TestUtils
 import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.Repeater
@@ -33,12 +34,15 @@ public class TomcatServerLiveIntegrationTest {
     private static final int HTTP_PORT = 8080//40122
     private static final int SHUTDOWN_PORT = 31880//40123
     private static final int JMX_PORT = 32199//40124
-    private static final String REGION_NAME = "us-east-1" // "eu-west-1"
-    private static final String IMAGE_ID = REGION_NAME+"/"+"ami-0859bb61" // "ami-d7bb90a3"
+    private static final String USEAST_REGION_NAME = "us-east-1"
+    private static final String USEAST_IMAGE_ID = USEAST_REGION_NAME+"/"+"ami-2342a94a"
+    private static final String EUWEST_REGION_NAME = "eu-west-1"
+    private static final String EUWEST_IMAGE_ID = EUWEST_REGION_NAME+"/"+"ami-89def4fd"
     private static final String IMAGE_OWNER = "411009282317"
 
     static { TimeExtras.init() }
 
+    private AwsLocationFactory locFactory;
     private AwsLocation loc;
     private Collection<SshMachineLocation> machines = []
     private TomcatServer tc
@@ -53,14 +57,17 @@ public class TomcatServerLiveIntegrationTest {
         File sshPrivateKey = getResource("jclouds/id_rsa.private")
         File sshPublicKey = getResource("jclouds/id_rsa.pub")
         AWSCredentialsFromEnv creds = new AWSCredentialsFromEnv();
-        loc = new AwsLocation([identity:creds.getAWSAccessKeyId(), credential:creds.getAWSSecretKey(), 
-                providerLocationId:REGION_NAME])
-        loc.setTagMapping([(TomcatServer.class.getName()):[
-                imageId:IMAGE_ID,
-                securityGroups:["everything"],
+        locFactory = new AwsLocationFactory([
+                identity:creds.getAWSAccessKeyId(), 
+                credential:creds.getAWSSecretKey(),
                 sshPublicKey:sshPublicKey,
-                sshPrivateKey:sshPrivateKey,
-                ]]) //, imageOwner:IMAGE_OWNER]])
+                sshPrivateKey:sshPrivateKey])
+
+        loc = locFactory.newLocation(USEAST_REGION_NAME)
+        loc.setTagMapping([(TomcatServer.class.getName()):[
+                imageId:USEAST_IMAGE_ID,
+                securityGroups:["brooklyn-all"],
+                ]])
     }
     
     @AfterMethod(groups = "Live")

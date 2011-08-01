@@ -48,8 +48,8 @@ class GeoscalingWebClientTest {
         assertNotNull(smartSubdomain);
         
         smartSubdomain.configure(
-            DEFAULT_SCRIPT,
-            PROVIDE_NETWORK_INFO | PROVIDE_CITY_INFO | PROVIDE_COUNTRY_INFO | PROVIDE_EXTRA_INFO | PROVIDE_UPTIME_INFO);
+            PROVIDE_NETWORK_INFO | PROVIDE_CITY_INFO | PROVIDE_COUNTRY_INFO | PROVIDE_EXTRA_INFO | PROVIDE_UPTIME_INFO,
+            DEFAULT_SCRIPT);
         
         // TODO: read-back config and verify is as expected?
         // TODO: send actual config, test ping/dig from multiple locations?

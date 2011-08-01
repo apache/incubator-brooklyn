@@ -59,7 +59,7 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
 
     private static final Logger LOG = Loggers.getLogger(MontereyContainerNode.class);
     
-    public static final BasicConfigKey<String> SUGGESTED_NETWORK_NODE_INSTALL_DIR = [String.class, "monterey.networknode.installdir", "Monterey network node installation directory" ]
+    public static final BasicConfigKey<String> NETWORK_NODE_INSTALL_DIR = [String.class, "monterey.networknode.installdir", "Monterey network node installation directory", "/home/monterey/monterey-network-node" ]
     public static final BasicConfigKey<String> SUGGESTED_TRUST_STORE = [String.class, "monterey.networknode.truststore", "Monterey network node truststore" ]
     public static final BasicConfigKey<Integer> SUGGESTED_MONTEREY_NODE_PORT = [Integer.class, "monterey.networknode.nodeport", "Monterey network node comms port" ]
     public static final BasicConfigKey<Integer> SUGGESTED_MONTEREY_HUB_LPP_PORT = [Integer.class, "monterey.networknode.hublpp.port", "Monterey network node hub lpp port" ]
@@ -86,8 +86,6 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
     private NodeId nodeId;
     private Location location;
     private final AtomicBoolean running = new AtomicBoolean(false)
-    
-    private String networkHome = "/home/monterey/monterey-network-node";
     
     private AbstractMontereyNode node;
     private MachineProvisioningLocation provisioningLoc;
@@ -213,6 +211,7 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
         
             // TODO Set comms class/bundle (and location latencies); see ManagementNodeConfig.getDefaultNodeProperties
         
+            String networkHome = getConfig(NETWORK_NODE_INSTALL_DIR)
             String truststorePath = getConfig(SUGGESTED_TRUST_STORE)
             File truststore = truststorePath ? new File(truststorePath) : null
             
@@ -283,6 +282,8 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
     }
     
     private void killInLocation(SshMachineLocation host) {
+        String networkHome = getConfig(NETWORK_NODE_INSTALL_DIR)
+        
         String args = networkHome+"/"+MontereyNetworkConfig.NETWORK_NODE_KILL_SCRIPT_RELATIVE_PATH+
                 " -key $creationId";
 
