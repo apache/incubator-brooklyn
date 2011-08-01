@@ -12,18 +12,24 @@
         %g:javascript{:src=>"console/activity.js"}
         %g:javascript{:src=>"console/sensors.js"}
         %g:javascript{:src=>"console/location.js"}
-        %g:javascript{:src=>"console/debug-layout.js"}
+        //%g:javascript{:src=>"console/debug-layout.js"}
+        %g:javascript{:src=>"console/console-layout-jquery.js"}
         %g:javascript{:src=>"console/widget-dashboard.js"}
-    %body
-        #tabs{:class=>"master-tabs"}
-            %h1{:id=>"brooklyn-header"}
-            %ul{:id=>"master-tabs-container"}
-                %li{:id=>"master-filler-tab"}
-                %li{:style=>"top:13px"}
+    %body{:style=>"height:100%;width:100%;"}
+        #master-tabs
+            %h1{:class=>"brooklyn-header"}
+            %ul{:class=>"master-tabs-container"}
+                %li{:class=>"master-filler-tab master-tabs-tab"}
+                %li{:class=>"master-tabs-tab"}
                     %a{:href=>"#dashboard"}Dashboard
-                %li{:style=>"top:13px"}
-                    %a{:href=>"#debug"}Debug
-            #dashboard
-                %g:render{:template=>"/tabs/dashboard"}
-            #debug
-                %g:render{:template=>"/tabs/debug"}
+                %li{:class=>"master-tabs-tab"}
+                    %a{:href=>"#detail"}Detail
+            #dashboard{:class=>"master-tab"}
+                .ui-layout-center
+                    %g:render{:template=>"/tabs/dashboard"}
+            #detail{:class=>"master-tab"}
+                .ui-layout-west
+                    %g:render{:template=>"/tabs/detail/tree-components"}
+                .ui-layout-center
+                    %g:render{:template=>"/tabs/detail/main"}
+

@@ -1,92 +1,24 @@
-   /*
-    * THIS SCRIPT FILE DEFINES LAYOUT FOR THE PAGE AND CONTAINER BEHAVIOUR WHEN USING JQUERY UI LAYOUT CONTAINERS
-    *
-    * So when the page loads we set the layouts for both the seperate containers.
-    * one layout variable will be for header and footer and the other for the inner container.
-    *
-    */
-    var outerLayout, innerLayout;
+//*** This JS File is for defining the top level layout for the brooklyn web console ***//
 
-    $(document).ready(function () {
-     <!-- CREATE TWO LAYOUT OBJECTS AND THEN GIVE THEM SETTINGS WHICH ARE DEFINED BELOW -->
-        outerLayout=$("body").layout( outerLayoutSettings );
-        innerLayout=$("body > .ui-layout-center").layout( innerLayoutSettings );
-        innerWestLayout=$("body > .ui-layout-center > .ui-layout-west").layout(leftSideLayoutSettings);
-        var resizeTree = innerLayout.options.west.resizable;
-        resizeTree=true;
+$(document).ready(function () {
+     $("body").layout({ applyDefaultStyles:true });
+     //the option set in the master tab means that everytime the user selects a tab, we relayout the tabs content.
+     $("#master-tabs").tabs({
+     show: function (evt, ui) {
+					var tabLayout = $(ui.panel).data("layout");
+					if ( tabLayout ) tabLayout.resizeAll();
+		            var pageLayout = $("body").data("layout");
+		            if (pageLayout) pageLayout.resizeAll();
+				}
 
-    });
+     
+     });
+    //finally layout eavh master tab. Can't do this by class for some reason?
+    //$(".master-tab").layout();
+    //$("#dashboard").layout();
+    $("#detail").layout({ applyDefaultStyles:true });
+    //$("#subtabs").tabs();
 
-    var outerLayoutSettings = {
-                name: "headerFooterSettings",
-                defaults:{
-                applyDefaultStyles:   true,
-                closable:             false,
-                initClosed:           false,
-                spacing_open: 0
-                },
-                north:{
+});
 
 
-                },
-                south:{
-
-                },
-                west:{
-
-
-                },
-                east:{
-
-                },
-                center:{}
-
-    }
-
-    var innerLayoutSettings = {
-                 name: "headerFooterSettings",
-                 defaults:{
-                 applyDefaultStyles:  true,
-                 closable:             false,
-                 initClosed:           false,
-
-                 },
-                 north:{
-
-
-                 },
-                 south:{
-
-                 },
-                 west:{
-                 closable: true,
-                 size: 250
-
-                 },
-                 east:{
-
-                 },
-                 center:{}
-
-    }
-
-    var leftSideLayoutSettings = {
-                 name: "headerFooterSettings",
-                 defaults:{
-                       applyDefaultStyles:true
-                 },
-                 north:{
-
-                 },
-                 south:{
-
-                 },
-                 west:{
-
-                 },
-                 east:{
-
-                 },
-                 center:{   }
-
-    }

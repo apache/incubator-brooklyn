@@ -1,6 +1,6 @@
 Brooklyn.tabs = (function() {
     function enableTabs() {
-        $("#tabs,#subtabs").tabs("option", "disabled", false);
+        $("#subtabs").tabs("option", "disabled", false);
     }
 
     function disableTabs() {
@@ -10,7 +10,7 @@ Brooklyn.tabs = (function() {
     }
 
     function init() {
-        $("#tabs,#subtabs").tabs({
+        $("#subtabs").tabs({
             show: function(event, ui) {
                 $(Brooklyn.eventBus).trigger('tab_selected', ui.panel.id);
             }

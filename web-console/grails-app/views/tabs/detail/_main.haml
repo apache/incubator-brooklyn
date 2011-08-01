@@ -1,0 +1,41 @@
+#navigation{:align=>"left"}
+#subtabs
+    %ul
+        %li
+            %a{:href=>"#summary"}Summary
+        %li
+            %a{:href=>"#sensors"}Sensors
+        %li
+            %a{:href=>"#effectors"}Effectors
+        %li
+            %a{:href=>"#activity"}Activity
+        %li
+            %a{:href=>"#location"}Location
+        %li
+            %a{:href=>"#health"}Health
+        %li
+            %a{:href=>"#structure"}Structure
+    #summary
+        #summary-basic-info
+        #summary-status
+        #summary-groups
+        #summary-activity
+    #sensors
+        %h2 Sensors
+        .tab-content-full-size
+            %table{:id=>"sensor-data", :class=>"tab-content-table"}
+    #effectors
+        %h2 Effectors
+        %g:render{:template=>"/tabs/effectors"}
+    #location
+        %h2 Location
+        %g:render{:template=>"/tabs/location"}
+    #activity
+        %h2 Activity
+        %g:render{:template=>"/tabs/activity"}
+    #health
+        %h2 Health
+    #structure
+        %h2 Structure
+    %p{:class=>"bottom-filler"} &nbsp;
+#status Last update: <span id="status-message">No data yet.</span>

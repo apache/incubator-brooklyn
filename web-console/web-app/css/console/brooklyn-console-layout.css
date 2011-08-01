@@ -1,0 +1,53 @@
+html,body{
+    padding:0px;
+    height:100%;
+    width:100%;
+}
+
+#dashboard{
+    padding:0px;
+}
+
+#detail{
+    padding:0px;
+}
+
+#master-tabs{
+    height:100%;
+    width:100%;
+    padding:0px;
+    border:none;
+}
+
+.master-tab{
+    left:0px;
+    right:0px;
+    bottom:0px;
+    top:50px;
+    padding:0px;
+    position:absolute;
+}
+
+.outer-layout-container{
+    padding:0px !important;
+    height: auto !important;
+    min-height:100%;
+    position:relative;
+    width:100%;
+}
+
+h1.brooklyn-header{
+    height:46px;
+    width:192px;
+    background-image:url("../../images/brooklyn/brooklynbannertwo.png");
+    position:absolute;
+    top:0px;
+    left:0px;
+    margin:0px;
+}
+
+li.master-filler-tab{
+    top:13px;
+    width:200px;
+}
+

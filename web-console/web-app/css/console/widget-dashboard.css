@@ -34,11 +34,8 @@
 
 #dashboard-container{
     overflow:auto;
-    position:absolute;
-    top:50px;
-    bottom:0px;
     width: 100%;
-    left:0px;
+    height: 100%;
 }
 
 #log-widget-textbox{

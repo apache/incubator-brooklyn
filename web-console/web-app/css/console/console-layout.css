@@ -60,12 +60,12 @@ h1#brooklyn-header{
     height:100%;
 }
 
-ul#master-tabs-container{
+ul.master-tabs-container{
     height:42px;
 }
 
 li.master-tabs-tab{
-    top:13px;
+    top:13px !important;
 }
 
 li#master-filler-tab{
