@@ -37,9 +37,7 @@ public class WebCluster extends AbstractEntity implements Startable {
         super(props, owner)
         def template = { Map properties ->
                 def server = new TomcatServer(properties)
-                server.setConfig(JavaApp.SUGGESTED_JMX_PORT, 32199)
                 server.setConfig(JavaWebApp.HTTP_PORT.configKey, 8080)
-                server.setConfig(TomcatServer.SUGGESTED_SHUTDOWN_PORT, 31880)
                 return server;
             }
         cluster = new DynamicWebAppCluster(newEntity:template, this)
