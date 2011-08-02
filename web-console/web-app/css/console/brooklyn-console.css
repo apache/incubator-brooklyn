@@ -236,7 +236,7 @@ textarea#logbox{
 }
 
 .tab-content-table tbody tr:hover {
-    cursor:pointer;
+    cursor:pointer; background-color: #cccccc;
 }
 
 /* TODO remove this when we respond to clicking on a sensor */
