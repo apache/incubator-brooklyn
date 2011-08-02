@@ -82,7 +82,8 @@ public class Locations {
             count: numberOfInstances,
             latitude : LOCALHOST_COORDS['latitude'],
             longitude : LOCALHOST_COORDS['longitude'],
-            displayName : 'Localhost'
+            displayName : 'Localhost',
+            iso3166 : [LOCALHOST_COORDS['iso3166']]
         )
     }
 
