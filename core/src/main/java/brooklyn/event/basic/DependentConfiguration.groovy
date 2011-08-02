@@ -39,7 +39,16 @@ public class DependentConfiguration {
     public static <T> Task<T> attributeWhenReady(Entity source, AttributeSensor<T> sensor, Predicate ready) {
         new BasicTask<T>(tag:"attributeWhenReady", displayName:"retrieving $source $sensor", { waitInTaskForAttributeReady(source, sensor, ready); } )    
     }
+
+    public static <T> Task<T> attributePostProcessedWhenReady(Entity source, AttributeSensor<T> sensor, Closure ready = { it }, Closure postProcess = { it }) {
+        attributePostProcessedWhenReady(source, sensor, new Predicate() { public boolean apply(Object o) { ready.call(o) } }, postProcess)
+    }
     
+    public static <T> Task<T> attributePostProcessedWhenReady(Entity source, AttributeSensor<T> sensor, Predicate ready, Closure postProcess = { it }) {
+        new BasicTask<T>(tag:"attributePostProcessedWhenReady", displayName:"retrieving $source $sensor", 
+                { def result = waitInTaskForAttributeReady(source, sensor, ready); return postProcess.call(result) } )
+    }
+
     private static <T> T waitInTaskForAttributeReady(Entity source, AttributeSensor<T> sensor, Predicate ready) {
         T v = ((AbstractEntity)source).getAttribute(sensor);
         if (ready.apply(v)) 
