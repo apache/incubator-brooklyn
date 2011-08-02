@@ -4,6 +4,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.location.Location
+import brooklyn.util.internal.LanguageUtils
 
 import com.google.common.base.Preconditions
 
@@ -15,7 +16,8 @@ import com.google.common.base.Preconditions
  */
 public abstract class AbstractLocation implements Location {
     public static final Logger LOG = LoggerFactory.getLogger(Location.class)
- 
+
+    final String id = LanguageUtils.newUid()
     private Location parentLocation
     private final Collection<Location> childLocations = []
     private final Collection<Location> childLocationsReadOnly = Collections.unmodifiableCollection(childLocations)
@@ -57,6 +59,7 @@ public abstract class AbstractLocation implements Location {
         leftoverProperties = properties
     }
 
+    public String getId() { return id; }
     public String getName() { return name; }
     public Location getParentLocation() { return parentLocation; }
     public Collection<Location> getChildLocations() { return childLocationsReadOnly; }
