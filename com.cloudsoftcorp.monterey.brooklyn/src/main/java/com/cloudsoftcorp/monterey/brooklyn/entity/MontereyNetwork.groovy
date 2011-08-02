@@ -84,6 +84,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     public static final BasicAttributeSensor<URL> MANAGEMENT_URL = [ URL.class, "monterey.management-url", "Management URL" ]
     public static final BasicAttributeSensor<String> NETWORK_ID = [ String.class, "monterey.network-id", "Network id" ]
     public static final BasicAttributeSensor<String> APPLICTION_NAME = [ String.class, "monterey.application-name", "Application name" ]
+    public static final BasicAttributeSensor<CredentialsConfig> CLIENT_CREDENTIAL = [ CredentialsConfig.class, "monterey.management.clientCredential", "Client credentials for connecting to web-api" ]
 
     /** up, down, etc? */
     public static final BasicAttributeSensor<String> STATUS = [ String, "monterey.status", "Status" ]
@@ -240,7 +241,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
                             .withTimeZone(it.findLocationProperty("timeZone") ?: "")
                             .withMontereyProvisionerId(NoopResourceProvisionerFactory.MONTEREY_PROVISIONER_ID)
                             .withDisplayName(it.findLocationProperty("displayName") ?: "")
-                            .withIso3166Codes(it.findLocationProperty("iso3166") ?: "")
+                            .withIso3166Codes(it.findLocationProperty("iso3166") ?: [])
                             .build();
                 }
                 ProvisioningConfigDto provisioningConfig = new ProvisioningConfigDto(new Properties());
@@ -283,6 +284,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     private void mirrorManagementNodeAttributes() {
         setAttribute MANAGEMENT_URL, managementNode.getAttribute(MontereyManagementNode.MANAGEMENT_URL)
         setAttribute STATUS, managementNode.getAttribute(MontereyManagementNode.STATUS)
+        setAttribute CLIENT_CREDENTIAL, managementNode.connectionDetails.webApiClientCredential
     }
     
     MontereyContainerNode provisionNode(Location loc) {
