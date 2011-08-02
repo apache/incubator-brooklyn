@@ -5,6 +5,7 @@ import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
 import java.net.URL
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
@@ -15,9 +16,12 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.Application
 import brooklyn.event.EntityStartException
+import brooklyn.event.SensorEvent
+import brooklyn.event.SensorEventListener
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.test.TestUtils.BooleanWithMessage
+import brooklyn.management.SubscriptionContext
+import brooklyn.management.SubscriptionHandle
 import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
@@ -143,6 +147,43 @@ public class TomcatServerIntegrationTest {
 
                 true
             }, timeout:10*SECONDS, useGroovyTruth:true)
+    }
+    
+    /**
+     * Tests that we get consecutive events with zero workrate, and with suitably small timestamps between them.
+     */
+    @Test(groups = [ "Integration" ])
+    public void publishesRequestsPerSecondMetricRepeatedly() {
+        final int MAX_INTERVAL_BETWEEN_EVENTS = 1000 // should be every 500ms
+        final int NUM_CONSECUTIVE_EVENTS = 3
+        
+        Application app = new TestApplication();
+        TomcatServer tc = new TomcatServer(owner:app, httpPort:DEFAULT_HTTP_PORT);
+        tc.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
+        SubscriptionHandle subscriptionHandle
+        SubscriptionContext subContext = app.getManagementContext().getSubscriptionContext(tc)
+        try {
+            final List<SensorEvent> events = new CopyOnWriteArrayList<SensorEvent>()
+            subscriptionHandle = subContext.subscribe(tc, TomcatServer.AVG_REQUESTS_PER_SECOND, { 
+                    println("publishesRequestsPerSecondMetricRepeatedly.onEvent: $it"); events.add(it) } as SensorEventListener)
+            
+            executeUntilSucceeds( {
+                    assertTrue(events.size() > NUM_CONSECUTIVE_EVENTS)
+                    long eventTime = 0
+                    
+                    for (SensorEvent event in events.subList(events.size()-NUM_CONSECUTIVE_EVENTS, events.size())) {
+                        assertEquals(tc, event.getSource())
+                        assertEquals(TomcatServer.AVG_REQUESTS_PER_SECOND, event.getSensor())
+                        assertEquals(0.0d, event.getValue())
+                        if (eventTime > 0) assertTrue(event.getTimestamp()-eventTime < MAX_INTERVAL_BETWEEN_EVENTS)
+                        eventTime = event.getTimestamp()
+                    }
+                })
+
+        } finally {
+            if (subscriptionHandle) subContext.unsubscribe(subscriptionHandle)
+            tc.stop()
+        }
     }
     
     @Test(groups = [ "Integration" ])

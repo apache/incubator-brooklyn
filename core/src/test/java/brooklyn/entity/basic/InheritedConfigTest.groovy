@@ -187,6 +187,18 @@ public class InheritedConfigTest {
     }
     
     @Test
+    public void testGetAttributeWhenReadyWithPostProcessingConfigReturnsWhenSet() throws Exception {
+        TestApplication app = new TestApplication();
+        TestEntity entity = new TestEntity([owner:app])
+        TestEntity entity2 = new TestEntity([owner:app])
+        entity.setConfig(TestEntity.CONF_NAME, DependentConfiguration.attributePostProcessedWhenReady(entity2, TestEntity.NAME, {it}, { it+"mysuffix"}))
+        app.start([new MockLocation()])
+        
+        entity2.setAttribute(TestEntity.NAME, "aval")
+        assertEquals(entity.getConfig(TestEntity.CONF_NAME), "avalmysuffix")
+    }
+    
+    @Test
     public void testGetAttributeWhenReadyConfigBlocksUntilSet() throws Exception {
         TestApplication app = new TestApplication();
         TestEntity entity = new TestEntity([owner:app])

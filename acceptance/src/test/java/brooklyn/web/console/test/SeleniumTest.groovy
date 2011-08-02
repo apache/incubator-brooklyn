@@ -38,21 +38,19 @@ public class SeleniumTest {
     @BeforeSuite
     private static void startJetty() {
         LOG.info("Starting Jetty")
-        if (!launcher) {
-            ManagementContext context = new LocalManagementContext();
-            context.applications.add(new TestApplication([mgmt:context]));
-            launcher = new WebAppRunner(context, 9090)
-            launcher.start()
+        ManagementContext context = new LocalManagementContext();
+        context.manage(new TestApplication(mgmt: context));
+        launcher = new WebAppRunner(context, 9090)
+        launcher.start()
 
-            // hold everything up till we have something running
-            for (int i = 0; i < 60; i++) {
-                try {
-                    new URL("http://localhost:9090/entity/").content
-                    break
-                } catch (IOException e) {
-                    if (e.message.contains("401")) {
-                        break;
-                    }
+        // hold everything up till we have something running
+        for (int i = 0; i < 60; i++) {
+            try {
+                new URL("http://localhost:9090/entity/").content
+                break
+            } catch (IOException e) {
+                if (e.message.contains("401")) {
+                    break;
                 }
             }
         }

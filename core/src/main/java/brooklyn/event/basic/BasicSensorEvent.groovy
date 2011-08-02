@@ -34,4 +34,8 @@ public class BasicSensorEvent<T> implements SensorEvent<T> {
             this.timestamp = System.currentTimeMillis();
         }
     }
+    
+    public String toString() {
+        return "${source}.$sensor=$value @ $timestamp"
+    }
 }
