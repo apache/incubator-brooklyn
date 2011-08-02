@@ -52,6 +52,11 @@ public abstract class AbstractLocation implements Location {
                 "'name' property should be a string"
             name = properties.remove("name")
         }
+        if (properties.id) {
+            Preconditions.checkArgument properties.id == null || properties.id instanceof String,
+                "'id' property should be a string"
+            id = properties.remove("id")
+        }
         if (properties.parentLocation) {
             Preconditions.checkArgument properties.parentLocation == null || properties.parentLocation instanceof Location,
                 "'parentLocation' property should be a Location instance"
