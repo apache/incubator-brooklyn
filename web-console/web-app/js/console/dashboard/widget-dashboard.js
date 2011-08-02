@@ -3,12 +3,12 @@ Brooklyn.dashboard = (function(parent){
         $( ".column" ).sortable({
 			connectWith: ".column",
             handle: ".portlet-header",
-            cursor: "crosshair"
+            cursor: "pointer"
 		});
         $( ".master-column-wrapper" ).sortable({
 			connectWith: ".master-column-wrapper",
             handle: ".portlet-header",
-            cursor: "crosshair"
+            cursor: "pointer"
 		});
 		$( ".portlet" ).addClass( "ui-widget ui-widget-content ui-helper-clearfix ui-corner-all" )
 			.find( ".portlet-header" )
@@ -20,7 +20,7 @@ Brooklyn.dashboard = (function(parent){
 			$( this ).toggleClass( "ui-icon-minusthick" ).toggleClass( "ui-icon-plusthick" );
 			$( this ).parents( ".portlet:first" ).find( ".portlet-content" ).toggle();
 		});
-		$( ".column" ).disableSelection();
+		//$( ".column" ).disableSelection();
     }
     function init(){
         loadWidgets();
