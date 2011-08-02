@@ -35,8 +35,6 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
         
         controller = Preconditions.checkNotNull flags.get('controller'), "'controller' property is mandatory"
         webServerFactory = Preconditions.checkNotNull flags.get('webServerFactory'), "'webServerFactory' property is mandatory"
-        Preconditions.checkArgument controller instanceof Entity, "'controller' must be an Entity"
-        Preconditions.checkArgument webServerFactory instanceof Closure, "'webServerFactory' must be a closure"
         
         addOwnedChild(controller)
         cluster = new DynamicWebAppCluster(newEntity:webServerFactory, this)
