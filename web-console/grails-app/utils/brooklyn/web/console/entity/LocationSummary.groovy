@@ -19,16 +19,16 @@ public class LocationSummary {
     final String streetAddress;
     final String longitude;
     final String latitude;
-    final String isoCode;
+    final String iso3166Code;
 
     public LocationSummary(Location location) {
         this.name = location.getName();
-        this.description = location.getLocationProperty('description');
-        this.streetAddress = location.getLocationProperty('streetAddress');
-        this.displayName = location.getLocationProperty('displayName') ?: location.getName();
-        this.latitude = location.getLocationProperty('latitude');
-        this.longitude = location.getLocationProperty('longitude');
-        this.isoCode = location.getLocationProperty('iso');
+        this.description = location.findLocationProperty('description');
+        this.streetAddress = location.findLocationProperty('streetAddress');
+        this.displayName = location.findLocationProperty('displayName') ?: location.getName();
+        this.latitude = location.findLocationProperty('latitude');
+        this.longitude = location.findLocationProperty('longitude');
+        this.iso3166Code = location.findLocationProperty('iso');
     }
 }
 
