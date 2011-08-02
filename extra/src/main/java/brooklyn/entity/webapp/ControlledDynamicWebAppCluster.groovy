@@ -8,10 +8,9 @@ import java.util.Map
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
-import brooklyn.entity.proxy.nginx.NginxController
+import brooklyn.entity.group.AbstractController
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
-import brooklyn.policy.Policy
 
 import com.google.common.base.Preconditions
 
@@ -27,20 +26,20 @@ import com.google.common.base.Preconditions
  */
 public class ControlledDynamicWebAppCluster extends AbstractEntity implements Startable {
 
-    ControlledDynamicWebAppCluster cluster
-    NginxController controller
+    DynamicWebAppCluster cluster
+    AbstractController controller
     Closure webServerFactory
     
-    ControlledDynamicWebAppCluster(Map props, Entity owner = null) {
-        super(props, owner)
+    ControlledDynamicWebAppCluster(Map flags, Entity owner = null) {
+        super(flags, owner)
         
-        controller = Preconditions.checkArgument properties.remove('controller'), "'controller' property is mandatory"
-        webServerFactory = Preconditions.checkArgument properties.remove('webServerFactory'), "'webServerFactory' property is mandatory"
+        controller = Preconditions.checkNotNull flags.get('controller'), "'controller' property is mandatory"
+        webServerFactory = Preconditions.checkNotNull flags.get('webServerFactory'), "'webServerFactory' property is mandatory"
         Preconditions.checkArgument controller instanceof Entity, "'controller' must be an Entity"
         Preconditions.checkArgument webServerFactory instanceof Closure, "'webServerFactory' must be a closure"
         
         addOwnedChild(controller)
-        cluster = new ControlledDynamicWebAppCluster(newEntity:webServerFactory, this)
+        cluster = new DynamicWebAppCluster(newEntity:webServerFactory, this)
         
         setAttribute(SERVICE_UP, false)
     }

@@ -87,9 +87,9 @@ public class MontereySpringTravelDemo extends AbstractApplication {
         montereyNetwork.setConfig(MontereyNetwork.INITIAL_TOPOLOGY_PER_LOCATION, [(LPP):1,(MR):1,(M):1,(TP):1,(SPARE):1])
         
         // FIXME For local testing only...
-//        montereyNetwork.setConfig(MontereyManagementNode.MANAGEMENT_NODE_INSTALL_DIR, "/Users/aled/monterey-management-node")
-//        montereyNetwork.setConfig(MontereyContainerNode.NETWORK_NODE_INSTALL_DIR, "/Users/aled/monterey-network-node-copy1")
-//        montereyNetwork.setConfig(MontereyNetwork.MAX_CONCURRENT_PROVISIONINGS_PER_LOCATION, 1)
+        montereyNetwork.setConfig(MontereyManagementNode.MANAGEMENT_NODE_INSTALL_DIR, "/Users/aled/monterey-management-node")
+        montereyNetwork.setConfig(MontereyContainerNode.NETWORK_NODE_INSTALL_DIR, "/Users/aled/monterey-network-node-copy1")
+        montereyNetwork.setConfig(MontereyNetwork.MAX_CONCURRENT_PROVISIONINGS_PER_LOCATION, 1)
         
         //mn.policy << new MontereyLatencyOptimisationPolicy()
 
@@ -110,15 +110,16 @@ public class MontereySpringTravelDemo extends AbstractApplication {
             return server;
         }
         
-        Closure webClusterFactory = { Map properties ->
+        Closure webClusterFactory = { Map flags, Entity owner ->
             NginxController nginxController = new NginxController(
                     domain:'brooklyn.geopaas.org',
                     port:8000,
                     portNumberSensor:JavaWebApp.HTTP_PORT)
 
-            ControlledDynamicWebAppCluster webCluster = new ControlledDynamicWebAppCluster(properties, 
-                    controller:nginxController,
-                    webServerFactory:webServerFactory)
+            Map clusterFlags = flags.clone()
+            clusterFlags.controller = nginxController
+            clusterFlags.webServerFactory = webServerFactory
+            ControlledDynamicWebAppCluster webCluster = new ControlledDynamicWebAppCluster(clusterFlags, owner)
             
             ResizerPolicy policy = new ResizerPolicy(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND)
             policy.setMinSize(1)
