@@ -234,7 +234,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
                 CloudAccountDto cloudAccountDto = new CloudAccountDto(
                         new CloudAccountIdImpl("accid"), NoopCloudProvider.PROVIDER_ID);
                 Collection<MontereyLocation> montereyLocations = locations.collect {
-                    return new MontereyLocationBuilder(it.name) // TODO use an id?
+                    return new MontereyLocationBuilder(it.id)
                             .withProvider(NoopCloudProvider.PROVIDER_ID)
                             .withAbbr(it.findLocationProperty("abbreviatedName") ?: "")
                             .withTimeZone(it.findLocationProperty("timeZone") ?: "")
