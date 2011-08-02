@@ -36,6 +36,10 @@ public class TaskSummary {
     };
 
     public TaskSummary(Task task) {
+        Entity entity = task.tags.find { it instanceof Entity }
+        this.entityId = entity?.id ?: ""
+        this.entityDisplayName = entity?.displayName ?: ""
+        
         this.displayName = task.displayName
         this.description = task.description
         this.id = task.id
