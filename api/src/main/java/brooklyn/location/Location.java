@@ -7,6 +7,12 @@ import java.util.Collection;
  *  Location.
  */
 public interface Location extends Serializable {
+
+    /**
+     * A unique id for this location.
+     */
+    String getId();
+
     /**
      * Get the unique id of this location.
      *

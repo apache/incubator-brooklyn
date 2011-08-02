@@ -11,6 +11,7 @@ import org.testng.annotations.Test
 import brooklyn.entity.ConfigKey
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.DependentConfiguration
+import brooklyn.test.location.MockLocation
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 import brooklyn.test.location.MockLocation

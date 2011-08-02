@@ -1,4 +1,4 @@
-Brooklyn.location = (function() {
+Brooklyn.circles = (function() {
     var map;
     var circles = [];
 
@@ -20,26 +20,24 @@ Brooklyn.location = (function() {
         return new google.maps.Circle(circle_options);
     }
 
-    function hardcodedCircleDrawer() {
-        drawCircle(56, -2, 100000);
+    function drawCirclesFromJSON(json) {
+        // Remove all existing circles
+        for (i in circles) {
+            var c = circles[i];
+            c.setMap(null);
+        }
+
+        // Draw the new ones
+        for (var i in json) {
+            var l = json[i];
+            circles.push(drawCircle(l.lat, l.lng, l.radius));
+        }
     }
 
     function drawCircles() {
         $.getJSON("circles", drawCirclesFromJSON).error(
             function() {$(Brooklyn.eventBus).trigger('update_failed', "Could not get location size data for circle drawing.");}
         );
-    }
-
-    function drawCirclesFromJSON(json) {
-        // Remove all existing circles
-        for (c in circles) {
-            c.setMap(null);
-        }
-
-        // Draw the new ones
-        for (location in json) {
-            circles.push(drawCircle(location.lat, location.long, location.radius));
-        }
     }
 
     function drawMap() {
@@ -59,11 +57,10 @@ Brooklyn.location = (function() {
 
     function init() {
         drawMap();
-        hardcodedCircleDrawer();
         $(Brooklyn.eventBus).bind("update", update);
     }
 
     return {init: init};
 })();
 
-$(document).ready(Brooklyn.location.init);
+$(document).ready(Brooklyn.circles.init);

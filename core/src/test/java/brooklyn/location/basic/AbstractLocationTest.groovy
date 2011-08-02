@@ -13,6 +13,15 @@ public class AbstractLocationTest {
     }
 
     @Test
+    public void testEquals() {
+        AbstractLocation l1 = new ConcreteLocation(id: "3", name: "bob");
+        AbstractLocation l2 = new ConcreteLocation(id: "3", name: "frank");
+        AbstractLocation l3 = new ConcreteLocation(id: "10", name: "frank");
+        assertEquals(l1, l2);
+        assertNotEquals(l2, l3);
+    }
+
+    @Test
     public void nullNameAndParentLocationIsAcceptable() {
         AbstractLocation location = new ConcreteLocation(name: null, parentLocation: null)
     }

@@ -7,6 +7,7 @@ import brooklyn.location.Location
 import brooklyn.util.internal.LanguageUtils
 
 import com.google.common.base.Preconditions
+import brooklyn.util.internal.LanguageUtils
 
 /**
  * A basic implementation of the {@link Location} interface.
@@ -63,7 +64,22 @@ public abstract class AbstractLocation implements Location {
     public String getName() { return name; }
     public Location getParentLocation() { return parentLocation; }
     public Collection<Location> getChildLocations() { return childLocationsReadOnly; }
-    
+
+    public boolean equals(Object o) {
+        if (! (o instanceof Location)) {
+            return false;
+        }
+
+        Location l = (Location) o;
+        if (this.getId() == l.getId()) {
+            return true;
+        }
+    }
+
+    public int hashCode() {
+        return this.getId().hashCode();
+    }
+
     public boolean containsLocation(Location potentialDescendent) {
         Location loc = potentialDescendent
         while (loc != null) {

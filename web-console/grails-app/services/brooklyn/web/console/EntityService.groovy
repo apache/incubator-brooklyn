@@ -13,6 +13,7 @@ import brooklyn.event.SensorEventListener
 import java.util.concurrent.ConcurrentLinkedQueue
 import brooklyn.event.AttributeSensor
 import brooklyn.location.Location
+import brooklyn.location.basic.GeneralPurposeLocation
 import brooklyn.management.internal.AbstractManagementContext
 
 public class EntityService {
@@ -165,13 +166,12 @@ public class EntityService {
 
     private List<Entity> leaves(Entity e) {
         Collection<Entity> children = e.getOwnedChildren();
-
         if (children.size() == 0) return [e];
         // inject is foldl
         return children.collect { leaves(it) }.inject([]) { a, b -> a + b }
     }
 
-    public List<Entity> getAllLeafEntities(List<Entity> es) {
+    public List<Entity> getAllLeafEntities(Collection<Entity> es) {
         return es.collect { leaves(it) }.inject([]) { a, b -> a + b }
     }
 
@@ -185,20 +185,41 @@ public class EntityService {
     public Map<Location, Integer> entityCountsAtLocatedLocations() {
         Map<Location, Integer> cs = [:]
         
-        List<Entity> es = getAllLeafEntities()
+        List<Entity> es = getAllLeafEntities(getTopLevelEntities())
 
         // Will count once for each location of an entitiy. This probably makes sense but maybe should only count as a fraction
         // of an entity in each place.
-        List<Location> ls = es.collect {
+        List<Location> ls =
+            (
+            // a list of lists of locations
+            (es.collect {
+            // a list of locations
             it.getLocations().collect {
                 getNearestAncestorWithCoordinates(it)
-            }}.inject([]) { a, b -> a + b }
+            }})
+           // collapse into a list of locations
+            .inject([]) { a, b -> a + b })
 
-        ls = ls.find {it != null}
         ls.each {
-            cs[l]++;
+            if (it != null) {
+                if (cs[it] == null) cs[it] = 0;
+                cs[it]++;
+            }
         }
 
         return cs;
     }
+
+    /*
+    public Map<Location, Integer> entityCountsAtLocatedLocations() {
+        Map<Location, Integer> ls = new HashMap<Location, Integer>();
+        ls.put(new GeneralPurposeLocation([name:"US-West-1",displayName:"US-West-1",streetAddress:"Northern California, USA",description:"Northern California",
+                                           latitude:40.0,longitude:-120.0]), 3);
+        ls.put(new GeneralPurposeLocation(([name:"EU-West-1",displayName:"EU-West-1",streetAddress:"Dublin, Ireland, UK",description:"Dublin, Ireland",
+                                            latitude:53.34778,longitude:-6.25972])), 10);
+        ls.put(new GeneralPurposeLocation(([name:"Timbuktu",displayName:"Timbuktu",description:"Timbuktu",
+                                            latitude:16.775833,longitude:3.009444])), 10);
+        return ls;
+    }
+    */
 }
