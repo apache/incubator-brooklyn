@@ -33,6 +33,7 @@ import brooklyn.event.basic.DependentConfiguration
 import brooklyn.location.Location
 import brooklyn.policy.ResizerPolicy
 
+import com.cloudsoftcorp.monterey.brooklyn.entity.MontereyContainerNode
 import com.cloudsoftcorp.monterey.brooklyn.entity.MontereyManagementNode
 import com.cloudsoftcorp.monterey.brooklyn.entity.MontereyNetwork
 import com.cloudsoftcorp.monterey.network.control.api.Dmn1NodeType
@@ -41,11 +42,14 @@ import com.cloudsoftcorp.monterey.network.control.plane.web.UserCredentialsConfi
 public class MontereySpringTravelDemo extends AbstractApplication {
  
     private static final URL SPRING_TRAVEL_URL = new File("src/main/resources/booking-mvc.war").toURI().toURL()
-    private static final URL MONTEREY_APP_BUNDLE_URL = new File("src/main/resources/com.cloudsoftcorp.sample.booking.svc.impl_3.2.0.v20110502-351-10779.jar").toURI().toURL()
+    private static final List<URL> MONTEREY_APP_BUNDLE_URLS = [
+            new File("src/main/resources/com.cloudsoftcorp.sample.booking.svc.api.jar").toURI().toURL(),
+            new File("src/main/resources/com.cloudsoftcorp.sample.booking.svc.impl_3.2.0.v20110502-351-10779.jar").toURI().toURL()]
+    
     private static final URL MONTEREY_APP_DESCRIPTOR_URL = new File("src/main/resources/BookingAvailabilityApplication.conf").toURI().toURL()
     private static final UserCredentialsConfig MONTEREY_ADMIN_CREDENTIAL = new UserCredentialsConfig("myname", "mypass", "admin");
     private static final Map MONTEREY_TOPOLOGY_PER_LOCATION = [(LPP):1,(MR):1,(M):1,(TP):1,(SPARE):1]
- 
+    
     public static final List<String> DEFAULT_LOCATIONS = [ Locations.LOCALHOST ]
     
     public static void main(String[] argv) {
@@ -76,11 +80,16 @@ public class MontereySpringTravelDemo extends AbstractApplication {
 
         montereyNetwork = new MontereyNetwork(owner:this)
         montereyNetwork.name = "Spring Travel"
-        montereyNetwork.setConfig(MontereyNetwork.APP_BUNDLES, [MONTEREY_APP_BUNDLE_URL])
+        montereyNetwork.setConfig(MontereyNetwork.APP_BUNDLES, MONTEREY_APP_BUNDLE_URLS)
         montereyNetwork.setConfig(MontereyNetwork.APP_DESCRIPTOR_URL, MONTEREY_APP_DESCRIPTOR_URL)
         montereyNetwork.setConfig(MontereyNetwork.APP_DESCRIPTOR_URL, MONTEREY_APP_DESCRIPTOR_URL)
         montereyNetwork.setConfig(MontereyManagementNode.WEB_USERS_CREDENTIAL, [MONTEREY_ADMIN_CREDENTIAL])
         montereyNetwork.setConfig(MontereyNetwork.INITIAL_TOPOLOGY_PER_LOCATION, [(LPP):1,(MR):1,(M):1,(TP):1,(SPARE):1])
+        
+        // FIXME For local testing only...
+//        montereyNetwork.setConfig(MontereyManagementNode.MANAGEMENT_NODE_INSTALL_DIR, "/Users/aled/monterey-management-node")
+//        montereyNetwork.setConfig(MontereyContainerNode.NETWORK_NODE_INSTALL_DIR, "/Users/aled/monterey-network-node-copy1")
+//        montereyNetwork.setConfig(MontereyNetwork.MAX_CONCURRENT_PROVISIONINGS_PER_LOCATION, 1)
         
         //mn.policy << new MontereyLatencyOptimisationPolicy()
 
@@ -102,9 +111,14 @@ public class MontereySpringTravelDemo extends AbstractApplication {
         }
         
         Closure webClusterFactory = { Map properties ->
+            NginxController nginxController = new NginxController(
+                    domain:'brooklyn.geopaas.org',
+                    port:8000,
+                    portNumberSensor:JavaWebApp.HTTP_PORT)
+
             ControlledDynamicWebAppCluster webCluster = new ControlledDynamicWebAppCluster(properties, 
-                controller:new NginxController(),
-                webServerFactory:webServerFactory)
+                    controller:nginxController,
+                    webServerFactory:webServerFactory)
             
             ResizerPolicy policy = new ResizerPolicy(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND)
             policy.setMinSize(1)
