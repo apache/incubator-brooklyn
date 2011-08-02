@@ -22,7 +22,7 @@ import brooklyn.util.internal.EntityStartUtils
  * Intended to represent a group of homogeneous entities in a single location.
  */
 public interface Cluster extends Group, Startable, Resizable {
-    BasicConfigKey<Integer> INITIAL_SIZE = [ Integer, "cluster.initial.size", "Initial cluster size" ]
+    BasicConfigKey<Integer> INITIAL_SIZE = [ Integer, "cluster.initial.size", "Initial cluster size", 0 ]
 
     BasicAttributeSensor<String> CLUSTER_SIZE = [ Integer, "cluster.size", "Cluster size" ]
 }

@@ -49,7 +49,9 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         Preconditions.checkArgument properties.get('newEntity') instanceof Closure, "'newEntity' must be a closure"
         newEntity = properties.remove('newEntity')
         
-        initialSize = getConfig(INITIAL_SIZE) ?: properties.remove("initialSize") ?: 0
+        // TODO Set the default in config's INITIAL_SIZE; but then wouldn't read properties.initialSize!
+        
+        initialSize =  properties.remove("initialSize") ?: getConfig(INITIAL_SIZE)
         setConfig(INITIAL_SIZE, initialSize)
 
         // Save remaining properties for use when creating members
@@ -61,8 +63,8 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     public void start(Collection<Location> locations) {
         Preconditions.checkNotNull locations, "locations must be supplied"
         Preconditions.checkArgument locations.size() == 1, "Exactly one location must be supplied"
-        location = locations.find { true }
-        locations.add(location)
+        this.location = locations.find { true }
+        this.locations.add(location)
         resize(initialSize)
         policies.each { if (it instanceof ResizerPolicy) it.resume() }
         setAttribute(SERVICE_UP, true)
