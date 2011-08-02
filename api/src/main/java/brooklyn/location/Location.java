@@ -8,6 +8,13 @@ import java.util.Collection;
  */
 public interface Location extends Serializable {
     /**
+     * Get the unique id of this location.
+     *
+     * @return the unique id of this location.
+     */
+    String getId();
+
+    /**
      * Get the name assigned to this location.
      *
      * @return the name assigned to the location.

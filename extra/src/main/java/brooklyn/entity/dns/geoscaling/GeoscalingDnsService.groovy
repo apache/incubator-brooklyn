@@ -37,6 +37,10 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
     
     public GeoscalingDnsService(Map properties = [:], Entity owner = null) {
         super(properties, owner);
+    
+        // TODO But what if config has not been set yet? e.g. user calls:
+        //   def geo = GeoscalingDnsService()
+        //   geo.setConfig(GEOSCALING_USERNAME, "myname")
         
         username = retrieveFromPropertyOrConfig(properties, "username", GEOSCALING_USERNAME);
         password = retrieveFromPropertyOrConfig(properties, "password", GEOSCALING_PASSWORD);

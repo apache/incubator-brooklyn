@@ -93,7 +93,7 @@ public class NginxSetup extends SshBasedAppSetup {
         List<String> script = [
             "cd ${runDir}",
             "test -f logs/nginx.pid || exit 1",
-            "./sbin/nginx -p ${runDir}/ -s restart",
+            "./sbin/nginx -p ${runDir}/ -s reload",
         ]
         return script
     }

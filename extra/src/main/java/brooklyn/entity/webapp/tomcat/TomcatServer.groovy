@@ -31,10 +31,11 @@ public class TomcatServer extends JavaWebApp {
     
     public static final BasicConfigKey<Integer> SUGGESTED_SHUTDOWN_PORT = [Integer, "tomcat.shutdownport", 
             "Suggested shutdown port", 31880 ]
-    public static final MapConfigKey<String> PROPERTIES_FILES_REFFED_BY_ENVIRONMENT_VARIABLES = 
-            [String, "tomcat.propertyFilesReffedByEnvironmentVariables", 
-            "Properties files to be generated, and to be referenced by an environment variable" ]
     
+    public static final MapConfigKey<String> PROPERTIES_FILES_REFFED_BY_ENVIRONMENT_VARIABLES =
+            [String, "tomcat.propertyFilesReffedByEnvironmentVariables",
+            "Properties files to be generated, and to be referenced by an environment variable" ]
+
     public static final BasicAttributeSensor<Integer> TOMCAT_SHUTDOWN_PORT = [ Integer, "webapp.tomcat.shutdownPort", "Port to use for shutting down" ];
     public static final BasicAttributeSensor<String> CONNECTOR_STATUS = [String, "webapp.tomcat.connectorStatus", "Catalina connector state name"]
     

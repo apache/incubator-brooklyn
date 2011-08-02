@@ -17,17 +17,13 @@
         #summary-groups
         #summary-activity
     #sensors
-        %h2 Sensors
         .tab-content-full-size
             %table{:id=>"sensor-data", :class=>"tab-content-table"}
     #effectors
-        %h2 Effectors
         %g:render{:template=>"/tabs/detail/detail-tabs/effectors"}
     #location
-        %h2 Location
         %g:render{:template=>"/tabs/detail/detail-tabs/location"}
     #activity
-        %h2 Activity
         %g:render{:template=>"/tabs/detail/detail-tabs/activity"}
     %p{:class=>"bottom-filler"} &nbsp;
 #status Last update: <span id="status-message">No data yet.</span>

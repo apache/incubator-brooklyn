@@ -227,8 +227,21 @@ textarea#logbox{
     padding-left:20px;
 }
 
+.DataTables_sort_icon {
+    cursor:pointer;
+}
+
 .tab-content-table {
     width:100%;
+}
+
+.tab-content-table tbody tr:hover {
+    cursor:pointer;
+}
+
+/* TODO remove this when we respond to clicking on a sensor */
+#sensors .tab-content-table tbody tr:hover {
+    cursor:text;
 }
 
 .row_selected {

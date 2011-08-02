@@ -123,8 +123,7 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <configuration>
                     <instructions>
-                        <Include-Resource>{maven-resources}</Include-Resource>
-                        <Include-Resource>target/classes/web-console.war</Include-Resource>
+                        <Include-Resource>{maven-resources}, target/classes/web-console.war</Include-Resource>
                         <Bundle-Activator>brooklyn.launcher.Activator</Bundle-Activator>
                         <Main-class>brooklyn.launcher.Main</Main-class>
                     </instructions>

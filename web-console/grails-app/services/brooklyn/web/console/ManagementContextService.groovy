@@ -18,6 +18,8 @@ import brooklyn.management.SubscriptionManager
 import brooklyn.web.console.entity.TestEffector
 import brooklyn.management.internal.LocalManagementContext
 import org.codehaus.groovy.grails.web.context.ServletContextHolder
+import brooklyn.management.Task
+import brooklyn.entity.Effector
 
 class ManagementContextService {
     private ManagementContext managementContext
@@ -57,7 +59,6 @@ class ManagementContextService {
     private class TestApplication extends AbstractApplication {
         TestApplication(Map props) {
             super(props)
-            this.id = "app-" + ManagementContextService.ID_GENERATOR.incrementAndGet()
             displayName = "Application";
 
             Entity testExtraGroup = new TestGroupEntity(this, "Another group for testing");
@@ -89,11 +90,14 @@ class ManagementContextService {
             setAttribute(getSensor("Children"), getOwnedChildren().size())
         }
 
+        public <T> Task<T> invoke(Effector<T> eff, Map<String, ?> parameters) {
+            return null  //To change body of implemented methods use File | Settings | File Templates.
+        }
+
         private class TestGroupEntity extends AbstractGroup {
             TestGroupEntity(Entity owner, String displayName) {
                 super([:], owner)
                 this.displayName = displayName
-                this.id = "group-" + ManagementContextService.ID_GENERATOR.incrementAndGet()
                 sensors.putAll([Children: new BasicAttributeSensor<Integer>(Integer.class, "Children",
                         "Direct children of this group"), DataRate: new BasicAttributeSensor<String>(String.class, "DataRate")])
             }
@@ -103,6 +107,10 @@ class ManagementContextService {
                 setAttribute(getSensor("Children"), ownedChildren.size())
                 return this
             }
+
+            public <T> Task<T> invoke(Effector<T> eff, Map<String, ?> parameters) {
+                return null
+            }
         }
 
         private class TestDataEntity extends AbstractEntity {
@@ -110,7 +118,6 @@ class ManagementContextService {
                 super([:], owner)
 
                 this.displayName = displayName
-                this.id = "leaf-" + ManagementContextService.ID_GENERATOR.incrementAndGet()
                 //this.locations = ["Fairbanks, Alaska", "Dubai"]
                 this.locations = [
                                     new GeneralPurposeLocation([name:"US-West-1",displayName:"US-West-1",streetAddress:"Northern California, USA",description:"Northern California",
@@ -138,6 +145,10 @@ class ManagementContextService {
                 setAttribute(getSensor("Cache"), 200)
                 setAttribute(getSensor("Sync"), "Moop")
             }
+
+            public <T> Task<T> invoke(Effector<T> eff, Map<String, ?> parameters) {
+                return null
+            }
         }
 
         private class TestTomcatEntity extends AbstractEntity {
@@ -151,8 +162,7 @@ class ManagementContextService {
             public TestTomcatEntity(Entity owner, String displayName) {
                 super([:], owner)
                 this.displayName = displayName
-                this.id = "leaf-" + ManagementContextService.ID_GENERATOR.incrementAndGet()
-                this.locations = [ 
+                this.locations = [
                                     new GeneralPurposeLocation([name:"US-East-1",displayName:"US-East-1",streetAddress:"Northern Virginia, USA",description:"Northern Virginia (approx)",
                                         latitude:38.0,longitude:-76.0]),
                                     new GeneralPurposeLocation([name:"US-West-1",displayName:"US-West-1",description:"Northern California",
@@ -188,6 +198,10 @@ class ManagementContextService {
                                                 displayName: "Update values",
                                                 description: "This updates sensor values"],
                                                     new MyRunnable(this));
+            }
+
+            public <T> Task<T> invoke(Effector<T> eff, Map<String, ?> parameters) {
+                return null
             }
 
             protected class MyRunnable implements Runnable {

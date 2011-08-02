@@ -8,15 +8,12 @@ import java.util.Map
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
-import brooklyn.entity.basic.JavaApp
-import brooklyn.entity.group.DynamicCluster
 import brooklyn.entity.proxy.nginx.NginxController
 import brooklyn.entity.trait.Startable
-import brooklyn.entity.webapp.ControlledDynamicWebAppCluster
-import brooklyn.entity.webapp.JavaWebApp
-import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.location.Location
 import brooklyn.policy.Policy
+
+import com.google.common.base.Preconditions
 
 /**
  * This group contains all the sub-groups and entities that go in to a single location.
@@ -51,12 +48,7 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
     void start(Collection<Location> locations) {
         cluster.start(locations)
 
-        controller.bind(
-                cluster:cluster,
-                domain:'brooklyn.geopaas.org',
-                port:8000,
-                portNumberSensor:JavaWebApp.HTTP_PORT)
-
+        controller.bind(cluster:cluster)
         controller.start(locations)
 
         setAttribute(SERVICE_UP, true)

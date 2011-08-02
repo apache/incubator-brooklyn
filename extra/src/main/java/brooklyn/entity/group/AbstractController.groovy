@@ -13,6 +13,7 @@ import brooklyn.entity.basic.Attributes
 import brooklyn.event.Sensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.ConfiguredAttributeSensor
+import brooklyn.location.Location
 import brooklyn.location.MachineLocation
 
 import com.google.common.base.Preconditions
@@ -80,21 +81,24 @@ public abstract class AbstractController extends AbstractService {
         }
 
         this.cluster = cluster ?: properties.cluster
-        addPolicy(policy)
-        reset()
     }
 
     /**
-     * Expect to be passed the flags below, or to already have them from constructor:
-     *  - cluster
-     *  - domain
-     *  - port
-     *  - portNumberSensor
+     * Opportunity to do late-binding of the cluster that is being controlled. Must be called before start().
+     * Can pass in the 'cluster'.
      */
     public void bind(Map flags) {
-       throw new UnsupportedOperationException("TODO Move init of cluster etc to here?")
+        this.cluster = flags.cluster ?: this.cluster
     }
-   
+
+    @Override
+    public void start(Collection<Location> locations) {
+        addPolicy(policy)
+        reset()
+        
+        super.start(locations)
+    }
+
     @Override
     protected Collection<Integer> getRequiredOpenPorts() {
         Collection<Integer> result = super.getRequiredOpenPorts()

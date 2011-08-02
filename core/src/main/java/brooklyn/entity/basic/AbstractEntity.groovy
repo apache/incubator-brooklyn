@@ -49,7 +49,7 @@ import brooklyn.util.task.ParallelTask
 public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractEntity.class)
 
-    String id = LanguageUtils.newUid()
+    final String id = LanguageUtils.newUid()
     String name
     String displayName
     EntityReference owner
@@ -338,7 +338,8 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         // FIXME What if someone calls getConfig on a task, before setting parent app?
         ExecutionContext exec = (getApplication()) ? getExecutionContext() : null
         Object v = key.extractValue(ownConfig, exec)
-        return (v != null) ? v : key.extractValue(inheritedConfig, exec)
+        v = (v != null) ? v : key.extractValue(inheritedConfig, exec)
+        return (v != null) ? v : key.getDefaultValue()
     }
 
     @Override
@@ -523,7 +524,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
      *
      * @see #invoke(Effector)
      */
-    public <T> Task<T> invoke(Effector<T> eff, Map parameters) {
+    public <T> Task<T> invoke(Effector<T> eff, Map<String,?> parameters) {
         getManagementContext().invokeEffector(this, eff, parameters);
     }
 

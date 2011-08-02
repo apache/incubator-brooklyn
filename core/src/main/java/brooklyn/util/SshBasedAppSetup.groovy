@@ -218,6 +218,14 @@ public abstract class SshBasedAppSetup {
         }
     }
 
+    protected void exec(List<String> script, String summaryForLogging="execute for") {
+        synchronized (entity) {
+            log.info(summaryForLogging+" entity {} on machine {}", entity, machine)
+            int result = machine.run(out:System.out, script)
+            if (result) throw new IllegalStateException("failed to "+summaryForLogging+" $entity (exit code $result)")
+        }
+    }
+
     /**
      * Run the application on this machine.
      *

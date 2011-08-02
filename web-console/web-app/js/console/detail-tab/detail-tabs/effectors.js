@@ -68,7 +68,7 @@ Brooklyn.effectors = (function() {
     }
 
     function invokeEffector(event){
-        alert('Effector: "' + selectedRowData.name + '" invoked');
+        alert('Invoking effectors is currently unsupported');
         return false;
     }
 
