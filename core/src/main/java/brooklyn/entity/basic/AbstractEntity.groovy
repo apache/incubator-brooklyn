@@ -49,7 +49,7 @@ import brooklyn.util.task.ParallelTask
 public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractEntity.class)
 
-    String id = LanguageUtils.newUid()
+    final String id = LanguageUtils.newUid()
     String name
     String displayName
     EntityReference owner
