@@ -25,7 +25,7 @@ class EntityController {
         Map<Location, Integer> ls = entityService.entityCountsAtLocatedLocations()
         def forJSON = ls.collect { l, count -> [ lat: l.getLocationProperty("latitude"),
                                                  lng: l.getLocationProperty("longitude"),
-                                                 radius: 100000 * count ] }
+                                                 entity_count: count ] }
         render(forJSON as JSON)
     }
 

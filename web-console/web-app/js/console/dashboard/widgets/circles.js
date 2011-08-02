@@ -2,6 +2,9 @@ Brooklyn.circles = (function() {
     var map;
     var circles = [];
 
+    // meters radius per entity at each location
+    var circle_size = 50000;
+
     function drawCircle(lat, lng, radius) {
         var circle_latlong = new google.maps.LatLng(lat, lng);
         var circle_options = {
@@ -30,7 +33,7 @@ Brooklyn.circles = (function() {
         // Draw the new ones
         for (var i in json) {
             var l = json[i];
-            circles.push(drawCircle(l.lat, l.lng, l.radius));
+            circles.push(drawCircle(l.lat, l.lng, l.entity_count * circle_size));
         }
     }
 
