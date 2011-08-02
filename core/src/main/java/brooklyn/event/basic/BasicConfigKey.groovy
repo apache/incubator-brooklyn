@@ -72,8 +72,11 @@ class BasicConfigKey<T> implements ConfigKey, Serializable {
     // TODO Put on an interface, so AbstractEntity can handle ConfigKeys that don't extend BasicConfigKey?
     public T extractValue(Map vals, ExecutionContext exec) {
         Object v = vals.get(this)
-        
-        //if config is set as a task, we wait for the task to complete
+        return resolveValue(v, exec)
+    }
+    
+    private Object resolveValue(Object v, ExecutionContext exec) {
+        //if it's a task, we wait for the task to complete
         if (v in Task) {
             if ( !((Task)v).isSubmitted() ) {
 //                if (exec==null || !getApplication().isDeployed())
@@ -84,7 +87,20 @@ class BasicConfigKey<T> implements ConfigKey, Serializable {
         if (v instanceof Future) {
             v = ((Future<?>)v).get()
         }
-        
+        if (v instanceof Map) {
+            Map result = [:]
+            for (Map.Entry entry : ((Map)v).entrySet()) {
+                result.put(entry.key, resolveValue(entry.value, exec))
+            }
+            v = result
+        }
+        if (v instanceof List) {
+            List result = []
+            for (Object entry : ((List)v)) {
+                result.add(resolveValue(entry, exec))
+            }
+            v = result
+        }
         return v
     }
 }
