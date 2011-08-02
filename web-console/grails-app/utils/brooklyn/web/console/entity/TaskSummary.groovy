@@ -10,6 +10,9 @@ import brooklyn.management.Task
 /** Summary of a Brooklyn Task   */
 public class TaskSummary {
 
+    // TODO Shoud the times be left as long, and then be converted on the client-side 
+    // (rather than putting display/format logic here)?
+    
     final String entityId;
     final String entityDisplayName;
     final String displayName;
