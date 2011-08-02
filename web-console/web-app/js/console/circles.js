@@ -20,11 +20,6 @@ Brooklyn.circles = (function() {
         return new google.maps.Circle(circle_options);
     }
 
-    function hardcodedCircleDrawer() {
-        drawCircle(56, -2, 100000);
-
-    }
-
     function drawCirclesFromJSON(json) {
         // Remove all existing circles
         for (i in circles) {
@@ -62,7 +57,6 @@ Brooklyn.circles = (function() {
 
     function init() {
         drawMap();
-        hardcodedCircleDrawer();
         $(Brooklyn.eventBus).bind("update", update);
     }
 
