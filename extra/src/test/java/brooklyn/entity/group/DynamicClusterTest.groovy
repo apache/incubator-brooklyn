@@ -7,6 +7,7 @@ import org.testng.annotations.Test
 import brooklyn.entity.Application
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractEntity
+import brooklyn.entity.trait.Changeable;
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
 import brooklyn.location.basic.GeneralPurposeLocation
@@ -84,16 +85,19 @@ class DynamicClusterTest {
 
         cluster.start(locations)
         assertEquals 0, cluster.currentSize
+        assertEquals 0, cluster.getAttribute(Changeable.GROUP_SIZE)
 
         int newSize = cluster.resize(1)
         assertEquals newSize, 1
         assertEquals newSize, cluster.currentSize
         assertEquals newSize, cluster.members.size()
+        assertEquals newSize, cluster.getAttribute(Changeable.GROUP_SIZE)
 
         newSize = cluster.resize(4)
         assertEquals newSize, 4
         assertEquals newSize, cluster.currentSize
         assertEquals newSize, cluster.members.size()
+        assertEquals newSize, cluster.getAttribute(Changeable.GROUP_SIZE)
     }
 
     @Test
@@ -104,6 +108,7 @@ class DynamicClusterTest {
         cluster.start(locations)
         assertEquals cluster.currentSize, 2
         assertEquals cluster.members.size(), 2
+        assertEquals cluster.getAttribute(Changeable.GROUP_SIZE), 2
     }
 
     @Test
