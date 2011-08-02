@@ -58,7 +58,8 @@ public class MontereyManagementNode extends AbstractEntity implements Startable 
 
     public static final BasicConfigKey<String> MANAGEMENT_NODE_INSTALL_DIR = [String.class, "monterey.managementnode.installdir", "Monterey management node installation directory", "/home/monterey/monterey-management-node" ]
     public static final BasicConfigKey<Collection> WEB_USERS_CREDENTIAL = [Collection.class, "monterey.managementnode.webusers", "Monterey management node web-user credentials" ]
-
+    public static final BasicConfigKey<Collection> WEB_API_PORT = [Integer.class, "monterey.managementnode.webApiPort", "Monterey management node web-api port", 8080 ]
+    
     public static final BasicAttributeSensor<URL> MANAGEMENT_URL = [ URL.class, "monterey.management-url", "Management URL" ]
 
     /** up, down, etc? */
@@ -156,7 +157,7 @@ public class MontereyManagementNode extends AbstractEntity implements Startable 
 
         String managementNodeInstallDir = getConfig(MANAGEMENT_NODE_INSTALL_DIR)
         
-        WebConfig web = new WebConfig(true, config.getMontereyWebApiPort(), config.getMontereyWebApiProtocol(), null);
+        WebConfig web = new WebConfig(true, getConfig(WEB_API_PORT), config.getMontereyWebApiProtocol(), null);
         web.setSslKeystore(managementNodeInstallDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_SSL_KEYSTORE_RELATIVE_PATH);
         web.setSslKeystorePassword(config.getMontereyWebApiSslKeystorePassword());
         web.setSslKeyPassword(config.getMontereyWebApiSslKeyPassword());
@@ -175,7 +176,7 @@ public class MontereyManagementNode extends AbstractEntity implements Startable 
                 machine.copyTo(config.getMontereyWebApiSslKeystore(), managementNodeInstallDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_SSL_KEYSTORE_RELATIVE_PATH);
             }
 
-            URL managementUrl = new URL(config.getMontereyWebApiProtocol()+"://"+machine.getAddress().getHostName()+":"+config.getMontereyWebApiPort());
+            URL managementUrl = new URL(config.getMontereyWebApiProtocol()+"://"+machine.getAddress().getHostName()+":"+getConfig(WEB_API_PORT));
             this.machine = machine;
 
             // Convenient for testing: create the management-node directly in-memory, rather than starting it in a separate process

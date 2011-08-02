@@ -74,7 +74,6 @@ public class MontereyNetworkConfig implements Serializable {
     protected int montereyHubLppPort;
     protected int sshPort;
     
-    protected int montereyWebApiPort;
     protected String montereyWebApiProtocol;
     protected File montereyWebApiSslKeystore = null;
     protected String montereyWebApiSslKeystoreData = null;
@@ -86,7 +85,6 @@ public class MontereyNetworkConfig implements Serializable {
     public MontereyNetworkConfig() { /* for gson; and for default :-( */
         montereyNodePort = getDefaultMontereyNodePort();
         montereyHubLppPort = getDefaultMontereyHubLppPort();
-        montereyWebApiPort = WebServer.DEFAULT_HTTP_PORT;
         montereyWebApiProtocol = WebServer.HTTP;
         sshPort = getDefaultSSHPort();
     }
@@ -110,9 +108,6 @@ public class MontereyNetworkConfig implements Serializable {
 
     public int getMontereyNodePort() { return montereyNodePort; }
     public void setMontereyNodePort(int montereyNodePort) { this.montereyNodePort = montereyNodePort; }
-
-    public int getMontereyWebApiPort() { return montereyWebApiPort; }
-    public void setMontereyWebApiPort(int montereyWebApiPort) { this.montereyWebApiPort = montereyWebApiPort; }
 
     public String getMontereyWebApiProtocol() { return montereyWebApiProtocol; }
     public void setMontereyWebApiProtocol(String montereyWebApiProtocol) { this.montereyWebApiProtocol = montereyWebApiProtocol; }

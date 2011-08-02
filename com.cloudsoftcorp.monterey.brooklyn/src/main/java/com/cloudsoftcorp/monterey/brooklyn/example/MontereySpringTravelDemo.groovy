@@ -41,7 +41,7 @@ import com.cloudsoftcorp.monterey.network.control.plane.web.UserCredentialsConfi
 
 public class MontereySpringTravelDemo extends AbstractApplication {
  
-    private static final URL SPRING_TRAVEL_URL = new File("src/main/resources/booking-mvc.war").toURI().toURL()
+    private static final File SPRING_TRAVEL_WAR_FILE = new File("src/main/resources/booking-mvc.war")
     private static final List<URL> MONTEREY_APP_BUNDLE_URLS = [
             new File("src/main/resources/com.cloudsoftcorp.sample.booking.svc.api.jar").toURI().toURL(),
             new File("src/main/resources/com.cloudsoftcorp.sample.booking.svc.impl_3.2.0.v20110502-351-10779.jar").toURI().toURL()]
@@ -87,9 +87,10 @@ public class MontereySpringTravelDemo extends AbstractApplication {
         montereyNetwork.setConfig(MontereyNetwork.INITIAL_TOPOLOGY_PER_LOCATION, [(LPP):1,(MR):1,(M):1,(TP):1,(SPARE):1])
         
         // FIXME For local testing only...
-        montereyNetwork.setConfig(MontereyManagementNode.MANAGEMENT_NODE_INSTALL_DIR, "/Users/aled/monterey-management-node")
-        montereyNetwork.setConfig(MontereyContainerNode.NETWORK_NODE_INSTALL_DIR, "/Users/aled/monterey-network-node-copy1")
-        montereyNetwork.setConfig(MontereyNetwork.MAX_CONCURRENT_PROVISIONINGS_PER_LOCATION, 1)
+//        montereyNetwork.setConfig(MontereyManagementNode.MANAGEMENT_NODE_INSTALL_DIR, "/Users/aled/monterey-management-node")
+//        montereyNetwork.setConfig(MontereyContainerNode.NETWORK_NODE_INSTALL_DIR, "/Users/aled/monterey-network-node-copy1")
+//        montereyNetwork.setConfig(MontereyNetwork.MAX_CONCURRENT_PROVISIONINGS_PER_LOCATION, 1)
+//        montereyNetwork.setConfig(MontereyManagementNode.WEB_API_PORT, 8090)
         
         //mn.policy << new MontereyLatencyOptimisationPolicy()
 
@@ -98,7 +99,7 @@ public class MontereySpringTravelDemo extends AbstractApplication {
             server.setConfig(JavaWebApp.HTTP_PORT.configKey, 8080)
             server.setConfig(TomcatServer.PROPERTIES_FILES_REFFED_BY_ENVIRONMENT_VARIABLES.subKey("MONTEREY_PROPERTIES"),
                     [
-                        montereyManagementUrl:DependentConfiguration.attributeWhenReady(montereyNetwork, MontereyNetwork.MANAGEMENT_URL),
+                        montereyManagementUrl:DependentConfiguration.attributePostProcessedWhenReady(montereyNetwork, MontereyNetwork.MANAGEMENT_URL, {it}, {it.toString()}),
                         montereyUser:DependentConfiguration.attributePostProcessedWhenReady(montereyNetwork, MontereyNetwork.CLIENT_CREDENTIAL, {it}, {it.username}),
                         montereyPassword:DependentConfiguration.attributePostProcessedWhenReady(montereyNetwork, MontereyNetwork.CLIENT_CREDENTIAL, {it}, {it.password}),
                         montereyLocation:cluster.locations.first().findLocationProperty("iso3166").first()])
@@ -139,7 +140,7 @@ public class MontereySpringTravelDemo extends AbstractApplication {
                 displayNameSuffix : ' web cluster',
                 newEntity : webClusterFactory],
             this)
-        webFabric.setConfig(JavaWebApp.WAR, SPRING_TRAVEL_URL) // TODO Using URL instead of file path?
+        webFabric.setConfig(JavaWebApp.WAR, SPRING_TRAVEL_WAR_FILE)
         webFabric.setConfig(Cluster.INITIAL_SIZE, 1)
         
         nginxEntities = new DynamicGroup([displayName: 'Web Fronts'], this, { Entity e -> (e instanceof NginxController) })
