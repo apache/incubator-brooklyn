@@ -3,6 +3,7 @@ package brooklyn.event.basic;
 import groovy.lang.Closure
 
 import java.util.concurrent.Callable
+import java.util.concurrent.Semaphore
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
@@ -59,23 +60,20 @@ public class DependentConfiguration {
         AbstractEntity e = t.getTags().find { it in Entity }
         if (e==null) throw new IllegalStateException("should only be invoked in a running task with an entity tag; $t has no entity tag ("+t.getStatusDetail(false)+")");
         T[] data = new T[1]
+        Semaphore semaphore = new Semaphore(0)
         SubscriptionHandle sub
         try {
-            synchronized (data) {
-                sub = e.getSubscriptionContext().subscribe(source, sensor, {
-                    synchronized (data) {
-                        data[0] = it.value
-                        data.notifyAll()
-                    }
-                });
-                v = source.getAttribute(sensor)
-                while (!ready.apply(v)) {
-                    t.setBlockingDetails("waiting for notification from subscription on $source $sensor")
-                    data.wait()
-                    v = data[0]
-                }
-                return v
+            sub = e.getSubscriptionContext().subscribe(source, sensor, {
+                data[0] = it.value
+                semaphore.release()
+            });
+            v = source.getAttribute(sensor)
+            while (!ready.apply(v)) {
+                t.setBlockingDetails("waiting for notification from subscription on $source $sensor")
+                semaphore.acquire()
+                v = data[0]
             }
+            return v
         } finally {
             e.getSubscriptionContext().unsubscribe(sub)
         }
