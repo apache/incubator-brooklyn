@@ -195,12 +195,12 @@ public class AwsLocation extends AbstractLocation implements MachineProvisioning
             templateBuilder.hardwareId(properties.hardwareId);
         }
         
-        if (properties.imageId) {
-            templateBuilder.imageId(properties.imageId);
-        }
-
         if (properties.imageSize) {
             templateBuilder.imageSize(properties.imageId);
+        }
+        
+        if (properties.imageId) {
+            templateBuilder.imageId(properties.imageId);
         }
 
         if (properties.imagePattern) {
@@ -214,6 +214,10 @@ public class AwsLocation extends AbstractLocation implements MachineProvisioning
                 default:
                     throw new IllegalStateException("Unhandled imagePatternType: "+getImagePatternType());
             }
+        }
+
+        if (!(properties.imageId || properties.imagePattern) && properties.defaultImageId) {
+            templateBuilder.imageId(properties.defaultImageId);
         }
 
         templateBuilder.locationId(providerLocationId);
