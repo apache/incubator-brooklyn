@@ -100,7 +100,10 @@ public abstract class JavaWebApp extends JavaApp {
     }
 
     public void deploy(String file) {
-        setup.deploy(new File(file))
+        deploy(new File(file))
+    }
+    
+    public void deploy(File file) {
+        setup.deploy(file)
     }
 }
-
