@@ -15,6 +15,7 @@ import brooklyn.management.Task
 import brooklyn.policy.trait.Suspendable
 
 import com.google.common.base.Preconditions
+import com.google.common.collect.Iterables
 
 /**
  * A cluster of entities that can dynamically increase or decrease the number of entities.
@@ -63,7 +64,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     public void start(Collection<Location> locations) {
         Preconditions.checkNotNull locations, "locations must be supplied"
         Preconditions.checkArgument locations.size() == 1, "Exactly one location must be supplied"
-        this.location = locations.find { true }
+        location = Iterables.getOnlyElement(locations)
         this.locations.add(location)
         resize(initialSize)
         policies.each { if (it instanceof Suspendable) it.resume() }
