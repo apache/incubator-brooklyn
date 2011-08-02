@@ -126,6 +126,10 @@ class EntityController {
         render entityService.getTasksOfEntity(params.id) as JSON
     }
 
+    def allActivity = {
+        render entityService.getTasksOfAllEntities() as JSON
+    }
+
     def jstree = {
         Map<String, JsTreeNode> nodeMap = [:]
         Collection<Entity> entities = entityService.getAllEntities()

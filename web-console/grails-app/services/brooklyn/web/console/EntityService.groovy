@@ -29,6 +29,18 @@ public class EntityService {
 
     public static class NoSuchEntity extends Exception {}
 
+    // TODO Should this return Task objects, and let the EntityController convert them to TaskSummary?
+    public List<TaskSummary> getTasksOfAllEntities() {
+        List<TaskSummary> result = managementContextService.executionManager.getTasksWithAllTags(
+                [AbstractManagementContext.EFFECTOR_TAG]).collect { new TaskSummary(it) }
+                
+        Collections.sort(result, {TaskSummary t1, TaskSummary t2 -> 
+                return new Long(t2.rawSubmitTimeUtc - t1.rawSubmitTimeUtc).intValue() } as Comparator)
+        
+        return result
+    }
+
+    // TODO Should this return Task objects, and let the EntityController convert them to TaskSummary?
     public Collection<TaskSummary> getTasksOfEntity(String entityId) {
         Entity e = getEntity(entityId)
         return managementContextService.executionManager.getTasksWithAllTags(

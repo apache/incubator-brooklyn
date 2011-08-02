@@ -2,17 +2,21 @@ package brooklyn.web.console
 
 import static org.testng.Assert.*
 
-import org.testng.annotations.BeforeTest
+import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.Application
+import brooklyn.entity.Effector
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.AbstractGroup
+import brooklyn.entity.basic.EffectorInferredFromAnnotatedMethod
+import brooklyn.entity.trait.Startable
+import brooklyn.location.Location
 import brooklyn.test.location.MockLocation
-import brooklyn.location.Location;
+import brooklyn.web.console.entity.TaskSummary
 
 import com.google.common.collect.Iterables
 
@@ -20,12 +24,15 @@ class EntityServiceTest {
     def testService
 
     Entity testEntity
-    Collection<Entity> testEntities = new ArrayList<Application>()
-    Collection<Application> testCollection = new ArrayList<Application>()
+    List<Entity> testEntities
+    List<Application> testCollection
     Location testLocation = new MockLocation([latitude: 56, longitude: -2.5]);
 
-    @BeforeTest
+    @BeforeMethod
     protected void setUp() {
+        testEntities = []
+        testCollection = []
+        
         testService = new EntityService()
         Application testApp = new TestApplication()
 
@@ -78,9 +85,55 @@ class EntityServiceTest {
         assertEquals(testService.getNearestAncestorWithCoordinates(new MockLocation()), null);
         assertEquals(testLocation, testService.getNearestAncestorWithCoordinates(testLocation));
     }
+    
+    @Test
+    public void testGetTasksOfEntity() {
+        // The group is not startable, so expect nothing initially. Same for the group's child
+        TestApplication app = testCollection.get(0)
+        TestGroupEntity tier = app.ownedChildren.iterator().next()
+        TestGroupEntity cluster = tier.ownedChildren.iterator().next()
+
+        println "app=${app.id}, tier=${tier.id}, cluster=${cluster.id}, app.children=${app.ownedChildren}, tier.children=${tier.ownedChildren}"
+                
+        assertEquals(testService.getTasksOfEntity(tier.id), [], ""+testService.getTasksOfEntity(tier.id))
+        
+        tier.invoke(TestGroupEntity.MY_GROUP_EFFECTOR)
+        List<TaskSummary> tasks = testService.getTasksOfEntity(tier.id)
+        assertEquals(tasks.size(), 1, ""+tasks)
+        assertExpectedTask(tasks.get(0), tier, TestGroupEntity.MY_GROUP_EFFECTOR)
+        
+        assertEquals(testService.getTasksOfEntity(cluster.id), [], ""+testService.getTasksOfEntity(cluster.id))
+    }
+
+    @Test
+    public void testGetTasksOfAllEntities() {
+        // The app will have had start called on it; the other things are not startable
+        TestApplication app = testCollection.get(0)
+        TestGroupEntity tier = app.ownedChildren.iterator().next()
+        TestGroupEntity cluster = tier.ownedChildren.iterator().next()
+
+        // Initial tasks has app.start()        
+        List<TaskSummary> initialTasks = testService.getTasksOfAllEntities()
+        assertEquals(initialTasks.size(), 1, ""+initialTasks)
+        assertExpectedTask(initialTasks.get(0), app, Startable.START)
+        
+        tier.invoke(TestGroupEntity.MY_GROUP_EFFECTOR)
+        List<TaskSummary> tasks = testService.getTasksOfAllEntities()
+        assertEquals(tasks.size(), 2, ""+tasks)
+        assertExpectedTask(tasks.get(0), tier, TestGroupEntity.MY_GROUP_EFFECTOR)
+        assertExpectedTask(tasks.get(1), app, Startable.START)
+    }
+    
+    private void assertExpectedTask(TaskSummary actual, Entity entity, Effector effector) {
+        assertEquals(actual.entityDisplayName, entity.displayName, ""+actual)
+        assertEquals(actual.entityId, entity.id, ""+actual)
+        assertTrue(actual.description.contains(effector.getName()), ""+actual)
+    }
 }
 
-private class TestApplication extends AbstractApplication {
+class TestApplication extends AbstractApplication {
+    public static final Effector<Void> MY_APP_EFFECTOR = new EffectorInferredFromAnnotatedMethod<Void>(TestApplication.class, "myAppEffector", "Do something");
+    
     TestApplication(Map props=[:]) {
         super(props)
         displayName = "Application";
@@ -92,6 +145,9 @@ private class TestApplication extends AbstractApplication {
         addOwnedChildren([new TestGroupEntity("tomcat tier 1").addOwnedChildren([tomcatCluster])]);
     }
 
+    public void myAppEffector() {
+    }
+    
     Entity testEntity(){
         new TestGroupEntity("tomcat cluster 1a").addOwnedChildren([
             new TestLeafEntity("tomcat node 1a.1"),
@@ -103,21 +159,26 @@ private class TestApplication extends AbstractApplication {
         children.each { addOwnedChild(it) }
         return this
     }
+}
 
-    private class TestGroupEntity extends AbstractGroup {
-        TestGroupEntity(String displayName) {
-            this.displayName = displayName
-        }
-
-        TestGroupEntity addOwnedChildren(Collection<Entity> children) {
-            children.each { addOwnedChild(it) }
-            return this
-        }
+class TestGroupEntity extends AbstractGroup {
+    public static final Effector<Void> MY_GROUP_EFFECTOR = new EffectorInferredFromAnnotatedMethod<Void>(TestGroupEntity.class, "myGroupEffector", "Do something");
+    
+    TestGroupEntity(String displayName) {
+        this.displayName = displayName
     }
 
-    private class TestLeafEntity extends AbstractEntity {
-        TestLeafEntity(String displayName) {
-            this.displayName = displayName;
-        }
+    public void myGroupEffector() {
+    }
+    
+    TestGroupEntity addOwnedChildren(Collection<Entity> children) {
+        children.each { addOwnedChild(it) }
+        return this
+    }
+}
+
+class TestLeafEntity extends AbstractEntity {
+    TestLeafEntity(String displayName) {
+        this.displayName = displayName;
     }
 }
