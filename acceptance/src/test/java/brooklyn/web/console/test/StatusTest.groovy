@@ -8,6 +8,7 @@ public class StatusTest {
 
     @Test public void statusIndicator() {
         selenium.open("/entity/");
+        selenium.click("link=Detail")
 
         selenium.isTextPresent("No data yet.")
 

@@ -10,6 +10,7 @@ public class EffectorsTabTest {
     @Test(groups="Selenium1")
     public void effectorsTabShows() throws Exception {
         selenium.open("/entity/");
+        selenium.click("link=Detail")
 
         // Wait for tree to load
         waitFor({selenium.isTextPresent("tomcat node 1a.3")});

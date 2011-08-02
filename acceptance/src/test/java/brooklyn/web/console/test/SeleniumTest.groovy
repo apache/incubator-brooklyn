@@ -40,7 +40,7 @@ public class SeleniumTest {
         LOG.info("Starting Jetty")
         if (!launcher) {
             ManagementContext context = new LocalManagementContext();
-            context.applications.add(new TestApplication([mgmt:context]));
+            context.manage(new TestApplication(mgmt: context));
             launcher = new WebAppRunner(context, 9090)
             launcher.start()
 

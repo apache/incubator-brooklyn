@@ -7,10 +7,13 @@ import brooklyn.event.basic.BasicAttributeSensor
 import java.util.concurrent.atomic.AtomicInteger
 import javax.naming.OperationNotSupportedException
 import brooklyn.entity.basic.*
+import brooklyn.entity.Effector
+import brooklyn.management.Task
+import brooklyn.location.basic.GeneralPurposeLocation
 
-public class TestEffector extends AbstractEffector{
+public class TestEffector extends AbstractEffector {
 
-    TestEffector(String name, String description, List<ParameterType<?>> parameters){
+    TestEffector(String name, String description, List<ParameterType<?>> parameters) {
         super(name, Void.class, parameters, description)
     }
 
@@ -20,12 +23,9 @@ public class TestEffector extends AbstractEffector{
     }
 }
 
-public class TestApplication extends AbstractApplication {
-    public static final AtomicInteger ID_GENERATOR = new AtomicInteger(0)
-
+private class TestApplication extends AbstractApplication {
     TestApplication(Map props) {
         super(props)
-        this.id = "app-" + ID_GENERATOR.incrementAndGet()
         displayName = "Application";
 
         Entity testExtraGroup = new TestGroupEntity(this, "Another group for testing");
@@ -57,11 +57,14 @@ public class TestApplication extends AbstractApplication {
         setAttribute(getSensor("Children"), getOwnedChildren().size())
     }
 
+    public <T> Task<T> invoke(Effector<T> eff, Map<String, ?> parameters) {
+        return null  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
     private class TestGroupEntity extends AbstractGroup {
         TestGroupEntity(Entity owner, String displayName) {
             super([:], owner)
             this.displayName = displayName
-            this.id = "group-" + TestApplication.ID_GENERATOR.incrementAndGet()
             sensors.putAll([Children: new BasicAttributeSensor<Integer>(Integer.class, "Children",
                     "Direct children of this group"), DataRate: new BasicAttributeSensor<String>(String.class, "DataRate")])
         }
@@ -71,6 +74,10 @@ public class TestApplication extends AbstractApplication {
             setAttribute(getSensor("Children"), ownedChildren.size())
             return this
         }
+
+        public <T> Task<T> invoke(Effector<T> eff, Map<String, ?> parameters) {
+            return null
+        }
     }
 
     private class TestDataEntity extends AbstractEntity {
@@ -78,8 +85,13 @@ public class TestApplication extends AbstractApplication {
             super([:], owner)
 
             this.displayName = displayName
-            this.id = "leaf-" + TestApplication.ID_GENERATOR.incrementAndGet()
-            this.locations = ["Fairbanks, Alaska", "Dubai"]
+            //this.locations = ["Fairbanks, Alaska", "Dubai"]
+            this.locations = [
+                    new GeneralPurposeLocation([name: "US-West-1", displayName: "US-West-1", streetAddress: "Northern California, USA", description: "Northern California",
+                            latitude: 40.0, longitude: -120.0]),
+                    new GeneralPurposeLocation([name: "EU-West-1", displayName: "EU-West-1", streetAddress: "Dublin, Ireland, UK", description: "Dublin, Ireland",
+                            latitude: 53.34778, longitude: -6.25972])
+            ] //"Fairbanks,Alaska","Dubai"
 
             TestEffector startDB = new TestEffector("Start DB", "This will start the database",
                     new ArrayList<ParameterType<?>>())
@@ -100,6 +112,10 @@ public class TestApplication extends AbstractApplication {
             setAttribute(getSensor("Cache"), 200)
             setAttribute(getSensor("Sync"), "Moop")
         }
+
+        public <T> Task<T> invoke(Effector<T> eff, Map<String, ?> parameters) {
+            return null
+        }
     }
 
     private class TestTomcatEntity extends AbstractEntity {
@@ -113,8 +129,11 @@ public class TestApplication extends AbstractApplication {
         public TestTomcatEntity(Entity owner, String displayName) {
             super([:], owner)
             this.displayName = displayName
-            this.id = "leaf-" + TestApplication.ID_GENERATOR.incrementAndGet()
-            this.locations = ["Kuala Lumpur"]
+            this.locations = [
+                    new GeneralPurposeLocation([name: "US-East-1", displayName: "US-East-1", streetAddress: "Northern Virginia, USA", description: "Northern Virginia (approx)",
+                            latitude: 38.0, longitude: -76.0]),
+                    new GeneralPurposeLocation([name: "US-West-1", displayName: "US-West-1", description: "Northern California",
+                            latitude: 40.0, longitude: -120.0])]
             // Stealing the sensors from TomcatNode
             this.sensors.putAll(new TomcatServer().sensors)
 
@@ -139,8 +158,16 @@ public class TestApplication extends AbstractApplication {
                     "Stop Tomcat": stopTomcat,
                     "Restart Tomcat": restartTomcat])
 
-            this.getExecutionContext().submit([tag: this, displayName: "myTask", description: "some task or other"],
+            this.getExecutionContext().submit([
+                    tags: ["EFFECTOR"],
+                    tag: this,
+                    displayName: "Update values",
+                    description: "This updates sensor values"],
                     new MyRunnable(this));
+        }
+
+        public <T> Task<T> invoke(Effector<T> eff, Map<String, ?> parameters) {
+            return null
         }
 
         protected class MyRunnable implements Runnable {
@@ -153,9 +180,7 @@ public class TestApplication extends AbstractApplication {
             void run() {
                 while (true) {
                     for (String key: hackMeIn.keySet()) {
-                        entity.setAttribute(entity.getSensor(key),
-                                hackMeIn[key] + TestApplication.ID_GENERATOR +
-                                        ((int) 1000 * Math.random()))
+                        entity.setAttribute(entity.getSensor(key), hackMeIn[key] + ((int) 1000 * Math.random()))
                     }
                     Thread.sleep(5000)
                 }
