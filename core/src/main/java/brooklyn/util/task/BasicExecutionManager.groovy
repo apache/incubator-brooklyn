@@ -12,11 +12,11 @@ import java.util.concurrent.Future
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import com.google.common.base.CaseFormat;
-
 import brooklyn.management.ExecutionManager
 import brooklyn.management.Task
-import brooklyn.util.internal.LanguageUtils;
+import brooklyn.util.internal.LanguageUtils
+
+import com.google.common.base.CaseFormat
 
 /**
  * TODO javadoc
@@ -57,7 +57,7 @@ public class BasicExecutionManager implements ExecutionManager {
     }
 
     public Set<Task> getTasksWithAnyTag(Iterable tags) {
-        Set result = []
+        Set result = new LinkedHashSet<Task>()
         tags.each { tag -> result.addAll getTasksWithTag(tag) }
         result
     }
@@ -66,9 +66,11 @@ public class BasicExecutionManager implements ExecutionManager {
         //NB: for this method retrieval for multiple tags could be made (much) more efficient (if/when it is used with multiple tags!)
         //by first looking for the least-used tag, getting those tasks, and then for each of those tasks
         //checking whether it contains the other tags (looking for second-least used, then third-least used, etc)
-        Set result = new HashSet<Task>()
+        Set result = new LinkedHashSet<Task>()
+        boolean first = true
         tags.each { tag -> 
-            if (result.isEmpty()) { 
+            if (first) { 
+                first = false
                 result.addAll(getTasksWithTag(tag))
             } else {
                 result.retainAll(getTasksWithTag(tag))

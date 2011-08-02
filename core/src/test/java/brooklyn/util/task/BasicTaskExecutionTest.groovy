@@ -183,6 +183,16 @@ public class BasicTaskExecutionTest {
         assertEquals(em.getTasksWithAllTags(["A"]), [t]);
         assertEquals(em.getTasksWithAllTags(["B"]), [t]);
     }
+
+    // ENGR-1796: if nothing matched first tag, then returned whatever matched second tag!
+    @Test
+    public void testRetrievingTasksWithAllTagsWhenFirstNotMatched() {
+        Task t = new BasicTask({ /*no-op*/ })
+        em.submit tags:["A"], t
+        t.get();
+
+        assertEquals(em.getTasksWithAllTags(["not_there","A"]), []);
+    }
     
     @Test
     public void testRetrievedTasksIncludesTasksInProgress() {
