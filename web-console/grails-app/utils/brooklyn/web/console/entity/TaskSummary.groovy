@@ -18,15 +18,16 @@ public class TaskSummary {
     final String currentStatus;
     final String detailedStatus;
 
-    private static DateFormat formatter = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy")
+    private static DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 
     public TaskSummary(Task task) {
+        formatter.setTimeZone(TimeZone.getTimeZone("GMT"))
         this.displayName = task.displayName
         this.description = task.description
         this.id = task.id
-        this.submitTimeUtc = formatter.format(new Date(task.submitTimeUtc))
-        this.startTimeUtc = formatter.format(new Date(task.startTimeUtc))
-        this.endTimeUtc = formatter.format(new Date(task.endTimeUtc))
+        this.submitTimeUtc = (task.submitTimeUtc == -1) ? "" : formatter.format(new Date(task.submitTimeUtc))
+        this.startTimeUtc = (task.startTimeUtc == -1) ? "" : formatter.format(new Date(task.startTimeUtc))
+        this.endTimeUtc = (task.endTimeUtc == -1) ? "" : formatter.format(new Date(task.endTimeUtc))
         this.currentStatus = task.statusSummary
         this.detailedStatus = task.getStatusDetail(true)
     }
