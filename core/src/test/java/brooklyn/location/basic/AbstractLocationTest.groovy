@@ -18,7 +18,7 @@ public class AbstractLocationTest {
         AbstractLocation l2 = new ConcreteLocation(id: "3", name: "frank");
         AbstractLocation l3 = new ConcreteLocation(id: "10", name: "frank");
         assertEquals(l1, l2);
-        assertNotEquals(l2, l3);
+        assertFalse(l2.equals(l3));
     }
 
     @Test

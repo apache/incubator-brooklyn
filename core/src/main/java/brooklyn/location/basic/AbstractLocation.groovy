@@ -76,7 +76,12 @@ public abstract class AbstractLocation implements Location {
         }
 
         Location l = (Location) o;
-        if (this.getId() == l.getId()) {
+
+        if ((this.getId() == null) || (l.getId() == null)) {
+            return false;
+        }
+
+        if (this.getId().equals(l.getId())) {
             return true;
         }
     }
