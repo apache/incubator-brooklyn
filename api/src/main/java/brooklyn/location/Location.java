@@ -11,7 +11,7 @@ public interface Location extends Serializable {
     /**
      * A unique id for this location.
      */
-    String getID();
+    String getId();
 
     /**
      * Get the name assigned to this location.
