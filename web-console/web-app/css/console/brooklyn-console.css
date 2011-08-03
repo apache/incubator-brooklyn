@@ -236,6 +236,10 @@ textarea#logbox{
     cursor:pointer; background-color: #E0E0E0;
 }
 
+.DataTables_sort_icon {
+    float: right;
+}
+
 /* TODO remove this when we respond to clicking on a sensor */
 #sensors .tab-content-table tbody tr:hover {
     cursor:text;
