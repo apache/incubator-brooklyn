@@ -128,13 +128,6 @@ Brooklyn.location = (function() {
         }
     }
 
-    function toggleLocation(e){
-        if(appLocations.length <= ++locationNumber) {
-            locationNumber = 0;
-        }
-        moveToLoc();
-    }
-
     // TODO call when set of locations changes?
     function updateLocations() {
         var myOptions = {
@@ -198,7 +191,6 @@ Brooklyn.location = (function() {
     
 
     function init() {
-        $('#toggle-location').click(toggleLocation);
         $(Brooklyn.eventBus).bind("tab_selected", resize);
         $(Brooklyn.eventBus).bind("entity_selected", getLocations);
     }
