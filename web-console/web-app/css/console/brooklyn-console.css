@@ -90,9 +90,6 @@ div#navigation{
 
 .debug-search-box {
     margin-bottom: 3px;
-    padding: 5px;
-    padding-right: 8px;
-    height:5%;
 }
 
 .search-input {
@@ -216,7 +213,7 @@ textarea#logbox{
 }
 
 .dataTables_filter {
-    width: 200px;
+    width: 180px;
     padding: 2px;
 }
 
@@ -298,4 +295,11 @@ textarea#logbox{
 #effector-fieldset {
     width: 100%;
     margin-left: -3px;
+}
+
+.effector-args{
+    height:100%;
+    width:70%;
+    float:left;
+    margin-left: 10px;
 }
