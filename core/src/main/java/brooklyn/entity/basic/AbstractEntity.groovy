@@ -34,6 +34,7 @@ import brooklyn.util.task.BasicExecutionContext
 import brooklyn.util.task.BasicTask
 import brooklyn.util.task.ParallelTask
 
+
 /**
  * Default {@link Entity} implementation.
  *
@@ -242,7 +243,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     }
 
     @Override
-    public boolean removeOwnedChild(Entity child) {
+    public void removeOwnedChild(Entity child) {
         synchronized (ownedChildren) {
 	        ownedChildren.remove child
 	        child.clearOwner()

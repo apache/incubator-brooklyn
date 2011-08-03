@@ -46,6 +46,7 @@ public interface Entity extends Serializable {
      * The owner is normally the entity responsible for creating/destroying this entity.
      *
      * @see #setOwner(Group)
+     * @see #clearOwner
      */
     Entity getOwner();
 
@@ -58,13 +59,27 @@ public interface Entity extends Serializable {
      * Sets the owner of this entity.
      *
      * @see #getOwner
+     * @see #clearOwner
      */
     void setOwner(Entity group);
+    
+    /**
+     * Clears the owner of this entity. Also cleans up any references within its parent entity.
+     *
+     * @see #getOwner
+     * @see #setOwner
+     */
+    void clearOwner();
     
     /** 
      * Add a child {@link Entity}, and set this entity as its owner.
      */
     Entity addOwnedChild(Entity child);
+    
+    /** 
+     * Removes the specified child {@link Entity}; its owner will be set to null.
+     */
+    void removeOwnedChild(Entity child);
     
     /**
      * @return an immutable thread-safe view of the policies.
