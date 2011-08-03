@@ -233,7 +233,7 @@ textarea#logbox{
 }
 
 .tab-content-table tbody tr:hover {
-    cursor:pointer; background-color: #cccccc;
+    cursor:pointer; background-color: #E0E0E0;
 }
 
 /* TODO remove this when we respond to clicking on a sensor */
@@ -242,7 +242,7 @@ textarea#logbox{
 }
 
 .row_selected {
-    background-color: #888888;
+    background-color: #cccccc;
 }
 
 .effector-args p {
