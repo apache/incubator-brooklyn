@@ -8,6 +8,7 @@ import java.util.concurrent.Semaphore
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.event.AttributeSensor
+import brooklyn.event.SensorEvent
 import brooklyn.management.SubscriptionHandle
 import brooklyn.management.Task
 import brooklyn.util.task.BasicExecutionContext
@@ -51,44 +52,47 @@ public class DependentConfiguration {
     }
 
     private static <T> T waitInTaskForAttributeReady(Entity source, AttributeSensor<T> sensor, Predicate ready) {
-        T v = ((AbstractEntity)source).getAttribute(sensor);
-        if (ready.apply(v)) 
-            return v
-        BasicTask t = BasicExecutionContext.getCurrentExecutionContext().getCurrentTask();
-        if (t==null) throw new IllegalStateException("should only be invoked in a running task");
-//        println "waiting in $t with tags "+t.getTags()
-        AbstractEntity e = t.getTags().find { it in Entity }
-        if (e==null) throw new IllegalStateException("should only be invoked in a running task with an entity tag; $t has no entity tag ("+t.getStatusDetail(false)+")");
-        T[] data = new T[1]
-        Semaphore semaphore = new Semaphore(0)
-        SubscriptionHandle sub
+        T value = source.getAttribute(sensor);
+        if (ready.apply(value)) return value
+        BasicTask current = BasicExecutionContext.currentExecutionContext.currentTask
+        if (!current) throw new IllegalStateException("Should only be invoked in a running task")
+        AbstractEntity entity = current.tags.find { it in AbstractEntity }
+        if (!entity) throw new IllegalStateException("Should only be invoked in a running task with an entity tag; ${current} has no entity tag ("+current.getStatusDetail(false)+")");
+        T data
+        Semaphore semaphore = new Semaphore(0) // could use Exchanger
+        SubscriptionHandle subscription
         try {
-            sub = e.getSubscriptionContext().subscribe(source, sensor, {
-                data[0] = it.value
-                semaphore.release()
-            });
-            v = source.getAttribute(sensor)
-            while (!ready.apply(v)) {
-                t.setBlockingDetails("waiting for notification from subscription on $source $sensor")
+            subscription = entity.subscriptionContext.subscribe source, sensor, { SensorEvent event ->
+	                data = event.value
+	                semaphore.release()
+	            }
+            value = source.getAttribute(sensor)
+            while (!ready.apply(value)) {
+                current.setBlockingDetails("Waiting for notification from subscription on $source $sensor")
                 semaphore.acquire()
-                v = data[0]
+                value = data
             }
-            return v
+            return value
         } finally {
-            e.getSubscriptionContext().unsubscribe(sub)
+            entity.subscriptionContext.unsubscribe(subscription)
         }
     }
     
-    /** returns a {@link Task} which blocks until the given job returns, then returns the value of that job.
+    /**
+     * Returns a {@link Task} which blocks until the given job returns, then returns the value of that job.
      */
     public static <T> Task<T> whenDone(Callable<T> job) {
         return new BasicTask<T>([tag:"whenDone", displayName:"waiting for job"], job)
     }
 
-    /** returns a {@link Task} which waits for the result of first parameter, then applies the function in the second parameter to it, returning that result;
-     * particular useful in Entity configuration where config will block until Tasks have completed,
-     * allowing for example an {@link #attributeWhenReady} expression to be passed in the first argument
-     * then transformed by the function in the second argument to generate the value that is used for the configuration
+    /**
+     * Returns a {@link Task} which waits for the result of first parameter, then applies the function in the second
+     * parameter to it, returning that result.
+     *
+     * Particular useful in Entity configuration where config will block until Tasks have completed,
+     * allowing for example an {@link #attributeWhenReady(Entity, AttributeSensor, Predicate)} expression to be
+     * passed in the first argument then transformed by the function in the second argument to generate
+     * the value that is used for the configuration
      */
     public static <U,T> Task<T> transform(Task<U> f, Function<U,T> g) {
         new BasicTask<T>( {
