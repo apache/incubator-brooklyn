@@ -1,6 +1,7 @@
 Brooklyn.sensors = (function() {
+    var id = 'sensors';
+
     // Config
-    var id = '#sensor-data';
     var aoColumns = [ { "mDataProp": "name", "sTitle": "name", "sWidth":"30%"  },
                       { "mDataProp": "description", "sTitle": "description", "sWidth":"30%" },
                       { "mDataProp": "value", "sTitle": "value", "sWidth":"20%", "bSortable": false },
@@ -10,7 +11,7 @@ Brooklyn.sensors = (function() {
     var entity_id;
 
     function updateTableData(json) {
-        Brooklyn.tabs.getDataTable(id, ".", aoColumns, undefined, json);
+        Brooklyn.tabs.getDataTable('#sensor-data', ".", aoColumns, undefined, json);
         $(Brooklyn.eventBus).trigger('update_ok');
     }
 
@@ -30,9 +31,25 @@ Brooklyn.sensors = (function() {
         update();
     }
 
+    function tabSelectedHandler(e, tab_id) {
+        tabSelected(tab_id, id);
+    }
+
+    function tabSelected(tab_id, my_tab_id) {
+        console.log(tab_id + "   " + id);
+        if (tab_id === id) {
+            console.log("binding");
+            update();
+            $(Brooklyn.eventBus).bind("update", update);
+        } else {
+            console.log("unbinding");
+            $(Brooklyn.eventBus).unbind("update", update);
+        }
+    }
+
     function init() {
         $(Brooklyn.eventBus).bind("entity_selected", setEntityIdAndUpdate);
-        $(Brooklyn.eventBus).bind("update", update);
+        $(Brooklyn.eventBus).bind("tab_selected", tabSelectedHandler);
     }
 
     return {
