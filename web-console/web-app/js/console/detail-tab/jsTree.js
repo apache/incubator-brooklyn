@@ -20,7 +20,7 @@ Brooklyn.jsTree = (function(parent) {
     }
 
     function getLatestTree(){
-        $.getJSON("jstree?name=" + $("#search-input").val().toLowerCase(), refreshTreeIfChanged).error(
+        $.getJSON("../entity/jstree?name=" + $("#search-input").val().toLowerCase(), refreshTreeIfChanged).error(
             function() {$(Brooklyn.eventBus).trigger('update_failed', "Could not get new entity data.");}
         );
     }

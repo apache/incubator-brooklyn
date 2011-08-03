@@ -164,7 +164,7 @@ Brooklyn.location = (function() {
     }
     function getLocations(e,id){
         if (typeof id !== 'undefined') {
-            $.getJSON("locations?id=" + id, handleLocations).error(
+            $.getJSON("../entity/locations?id=" + id, handleLocations).error(
                 function() {$(Brooklyn.eventBus).trigger('update_failed', "Location view could not get locations.");});
         }
     }

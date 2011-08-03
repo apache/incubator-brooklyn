@@ -19,7 +19,9 @@ class EntityController {
     // Injected
     def entityService
 
-    def index = {}
+    def index = {
+        redirect(uri:"/dashboard/")
+    }
 
     def circles = {
         Map<Location, Integer> ls = entityService.entityCountsAtLocatedLocations()

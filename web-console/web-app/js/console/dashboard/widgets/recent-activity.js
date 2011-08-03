@@ -27,7 +27,7 @@ Brooklyn.activitywidget = ( function(){
     }
 
     function getRecentActivity(){
-        $.getJSON("allActivity", updateWidgetTable).error(
+        $.getJSON("../entity/allActivity", updateWidgetTable).error(
             function(){$(Brooklyn.eventBus).trigger('update_failed', 'Could not obtain recent activity');}
         );
     }

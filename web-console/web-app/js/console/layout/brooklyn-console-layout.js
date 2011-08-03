@@ -13,11 +13,8 @@ $(document).ready(function () {
 
      
      });
-    //finally layout eavh master tab. Can't do this by class for some reason?
-    //$(".master-tab").layout();
-    //$("#dashboard").layout();
+    //finally layout each master tab. Can't do this by class for some reason?
     $("#detail").layout({ applyDefaultStyles:true });
-    //$("#subtabs").tabs();
 
 });
 

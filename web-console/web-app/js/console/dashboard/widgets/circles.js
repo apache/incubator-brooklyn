@@ -38,7 +38,7 @@ Brooklyn.circles = (function() {
     }
 
     function drawCircles() {
-        $.getJSON("circles", drawCirclesFromJSON).error(
+        $.getJSON("../entity/circles", drawCirclesFromJSON).error(
             function() {$(Brooklyn.eventBus).trigger('update_failed', "Could not get location size data for circle drawing.");}
         );
     }
