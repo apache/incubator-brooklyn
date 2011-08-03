@@ -28,6 +28,7 @@ class JBoss7ServerIntegrationTest {
     @Test(enabled=false, groups="Integration")
     public void canStartupAndShutdown() {
         JBoss7Server jb = new JBoss7Server(owner:app, httpPort: DEFAULT_HTTP_PORT);
+        jb.setConfig(JBoss7Server.SUGGESTED_JMX_HOST, "127.0.0.1")
         jb.start([ testLocation ])
         executeUntilSucceedsWithFinallyBlock ([:], {
             assertTrue jb.getAttribute(JavaWebApp.SERVICE_UP)

@@ -12,7 +12,7 @@ class JBoss7Server extends JavaWebApp {
 
     public static final ConfiguredAttributeSensor<Integer> HTTP_PORT = Attributes.HTTP_PORT
     public static final ConfiguredAttributeSensor<Integer> MANAGEMENT_PORT = 
-            [ Integer, "http.managementPort", "HTTP port", 9990 ]
+            [ Integer, "http.managementPort", "Management port", 9990 ]
     
     public JBoss7Server(Map properties=[:], Entity owner=null) {
         super(properties, owner)
