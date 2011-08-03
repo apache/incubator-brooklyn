@@ -35,6 +35,11 @@ Brooklyn.jsTree = (function(parent) {
     function loadJstree() {
         $("#jstree").jstree({
                 "plugins" : [ "themes", "json_data", "ui" ],
+                "themes" : {
+                    "theme" : "apple",
+                    "dots" : true,
+                    "icons" : true
+                 },
                 "json_data" : {
                     data : currentTree
                 }
