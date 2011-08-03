@@ -97,7 +97,7 @@ public class MontereySpringTravelDemo extends AbstractApplication {
         Closure webServerFactory = { Map properties, Entity cluster ->
             def server = new TomcatServer(properties)
             server.setConfig(JavaWebApp.HTTP_PORT.configKey, 8080)
-            server.setConfig(TomcatServer.PROPERTIES_FILES_REFFED_BY_ENVIRONMENT_VARIABLES.subKey("MONTEREY_PROPERTIES"),
+            server.setConfig(TomcatServer.PROPERTY_FILES.subKey("MONTEREY_PROPERTIES"),
                     [
                         montereyManagementUrl:DependentConfiguration.attributePostProcessedWhenReady(montereyNetwork, MontereyNetwork.MANAGEMENT_URL, {it}, {it.toString()}),
                         montereyUser:DependentConfiguration.attributePostProcessedWhenReady(montereyNetwork, MontereyNetwork.CLIENT_CREDENTIAL, {it}, {it.username}),
