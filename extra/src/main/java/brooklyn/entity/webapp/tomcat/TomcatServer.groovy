@@ -54,7 +54,7 @@ public class TomcatServer extends JavaWebApp {
         return Tomcat7SshSetup.newInstance(this, machine)
     }
     
-    public void initJmxSensors() {
+    public void initSensors() {
         attributePoller.addSensor(ERROR_COUNT, jmxAdapter.newAttributeProvider("Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "errorCount"))
         attributePoller.addSensor(REQUEST_COUNT, jmxAdapter.newAttributeProvider("Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "requestCount"))
         attributePoller.addSensor(TOTAL_PROCESSING_TIME, jmxAdapter.newAttributeProvider("Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "processingTime"))

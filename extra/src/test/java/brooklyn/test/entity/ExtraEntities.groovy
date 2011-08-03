@@ -26,7 +26,7 @@ public class TestJavaWebAppEntity extends JavaWebApp {
 
 	public SshBasedAppSetup getSshBasedSetup(SshMachineLocation loc) { null }
 
-	public void initJmxSensors() { }
+	public void initSensors() { }
 
     @Override
 	public void start(Collection<Location> loc) {

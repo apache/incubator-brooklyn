@@ -25,7 +25,7 @@ class JBoss7Server extends JavaWebApp {
     }
 
     @Override
-    protected void initJmxSensors() {
+    protected void initSensors() {
         // TODO Auto-generated method stub
 
     }

@@ -37,7 +37,7 @@ public abstract class JavaApp extends AbstractService {
         if (properties.jmxHost) setConfig(SUGGESTED_JMX_HOST, properties.remove("jmxHost"))
     }
 
-    protected abstract void initJmxSensors();
+    protected abstract void initSensors();
 
     protected Collection<Integer> getRequiredOpenPorts() {
         Collection<Integer> result = super.getRequiredOpenPorts()
@@ -64,7 +64,7 @@ public abstract class JavaApp extends AbstractService {
         jmxAdapter.connect();
         waitForJmx()
 
-        initJmxSensors()
+        initSensors()
     }
 
     @Override

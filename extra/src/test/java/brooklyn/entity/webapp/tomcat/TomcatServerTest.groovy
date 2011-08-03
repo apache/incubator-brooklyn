@@ -114,8 +114,8 @@ class TomcatServerTest {
     public void ensureRequestsPerSecondIsReportedCorrectly() {
         Application app = new TestApplication();
         TomcatServer tc = new TomcatServer(owner: app) {
-            public void initJmxSensors() {
-                super.initJmxSensors()
+            public void initSensors() {
+                super.initSensors()
                 attributePoller.removeSensor(TomcatServer.REQUEST_COUNT)
             }
         }

@@ -60,7 +60,7 @@ public class DerbyDatabase extends JavaApp implements Database {
         return DerbySetup.newInstance(this, machine)
     }
 
-    public void initJmxSensors() {
+    public void initSensors() {
         attributePoller.addSensor(JavaApp.SERVICE_UP, { computeNodeUp() } as ValueProvider)
     }
 

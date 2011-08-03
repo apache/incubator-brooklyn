@@ -61,7 +61,7 @@ public class QpidBroker extends JavaApp {
         return QpidSetup.newInstance(this, machine)
     }
 
-    public void initJmxSensors() {
+    public void initSensors() {
         attributePoller.addSensor(JavaApp.SERVICE_UP, { computeNodeUp() } as ValueProvider)
     }
 
