@@ -47,10 +47,11 @@ public class LocalManagementContext extends AbstractManagementContext {
     }
 
     protected synchronized boolean unmanageNonRecursive(Entity e) {
-        ((AbstractEntity)e).managementData = null;
+        ((AbstractEntity)e).managementData = null
+        e.clearOwner()
         if (e in Application) applications.remove(e)
         entities.remove(e)
-        Object old = entitiesById.remove(e.getId());
+        Object old = entitiesById.remove(e.getId())
         if (old!=e) {
             log.warn("call to unmanage entity $e but it is not known at $this")
             return false
