@@ -52,12 +52,12 @@ Brooklyn.main = (function() {
     }
 
     function handleBreadCrumbs(json){
-        newContent = '<b>'+ json[json.length-1] + '<b>';
-        if(json.length > 1) {
-            for(var p = json.length-2;p>=0;p--){
-                var parent = json[p]
-                parentHTML = ' > '+'<b>'+parent+'</b>'
-                newContent += parentHTML
+        var newContent = '<b>'+ json[json.length-1] + '<b>';
+        if (json.length > 1) {
+            for (var p = json.length - 2; p >= 0; p--) {
+                var parent = json[p];
+                var parentHTML = ' > '+'<b>'+parent+'</b>';
+                newContent += parentHTML;
             }
         }
         document.getElementById('navigation').innerHTML = newContent;
