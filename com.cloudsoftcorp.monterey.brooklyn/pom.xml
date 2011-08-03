@@ -19,16 +19,14 @@
 
     <dependencies>
 		<dependency>
+			<groupId>brooklyn</groupId>
+			<artifactId>brooklyn-extra</artifactId>
+		</dependency>
+
+		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
 		</dependency>
-		
-        <dependency>
-            <groupId>brooklyn</groupId>
-            <artifactId>brooklyn-example</artifactId>
-            <version>0.0.21-SNAPSHOT</version>
-            <classifier>with-dependencies</classifier>
-        </dependency>
 
         <!-- TODO this should probably come from one or all monterey depdendencies -->
         <dependency>
@@ -88,25 +86,4 @@
             </snapshots>
         </repository>
     </repositories>
-
-
-    <build>
-        <plugins>
-            <plugin>
-                <artifactId>maven-shade-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                        <configuration>
-                            <shadedArtifactAttached>true</shadedArtifactAttached>
-                            <shadedClassifierName>with-dependencies</shadedClassifierName>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 </project>

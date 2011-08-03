@@ -1,0 +1,53 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>brooklyn-monterey-example</artifactId>
+    <packaging>bundle</packaging>
+    <name>Brooklyn Monterey Examples</name>
+
+    <parent>
+        <groupId>brooklyn</groupId>
+        <artifactId>brooklyn-parent-root</artifactId>
+        <version>0.0.21-SNAPSHOT</version>
+        <relativePath>../parent/root/pom.xml</relativePath>
+    </parent>
+
+    <properties>
+        <monterey.version>3.3.0-SNAPSHOT</monterey.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>brooklyn</groupId>
+            <artifactId>brooklyn-monterey-integration</artifactId>
+            <version>0.0.21-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>brooklyn</groupId>
+            <artifactId>brooklyn-example</artifactId>
+            <version>0.0.21-SNAPSHOT</version>
+            <classifier>with-dependencies</classifier>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-shade-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <shadedArtifactAttached>true</shadedArtifactAttached>
+                            <shadedClassifierName>with-dependencies</shadedClassifierName>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
