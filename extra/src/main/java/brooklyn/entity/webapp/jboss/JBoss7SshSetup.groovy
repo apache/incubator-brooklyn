@@ -19,7 +19,6 @@ class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
     
     private final String brooklynConfig = "standalone-brooklyn.xml"
     
-    private int httpPort
     private int managementPort
     
     public JBoss7SshSetup(JBoss7Server entity, SshMachineLocation machine) {
