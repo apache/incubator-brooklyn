@@ -31,14 +31,17 @@ public class EntityService {
     public static class NoSuchEntity extends Exception {}
 
     // TODO Should this return Task objects, and let the EntityController convert them to TaskSummary?
+    // TODO Want to handle pagination better; for now we just restrict list to 20 most recent
     public List<TaskSummary> getTasksOfAllEntities() {
+        final int MAX_NUM_RETURNED = 20
+        
         List<TaskSummary> result = managementContextService.executionManager.getTasksWithAllTags(
                 [AbstractManagementContext.EFFECTOR_TAG]).collect { new TaskSummary(it) }
                 
         Collections.sort(result, {TaskSummary t1, TaskSummary t2 -> 
                 return new Long(t2.rawSubmitTimeUtc - t1.rawSubmitTimeUtc).intValue() } as Comparator)
         
-        return result
+        return result.subList(0, Math.min(MAX_NUM_RETURNED, result.size()))
     }
 
     // TODO Should this return Task objects, and let the EntityController convert them to TaskSummary?

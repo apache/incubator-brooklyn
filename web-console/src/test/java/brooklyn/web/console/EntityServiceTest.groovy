@@ -140,6 +140,18 @@ class EntityServiceTest {
         assertExpectedTask(tasks.get(0), tier, TestGroupEntity.MY_GROUP_EFFECTOR)
         assertExpectedTask(tasks.get(1), app, Startable.START)
     }
+
+    @Test
+    public void testGetTasksOfAllEntitiesReturnsFirstTwentyOnly() {
+        TestApplication app = testCollection.get(0)
+        TestGroupEntity tier = app.ownedChildren.iterator().next()
+
+        for (i in 1..21) {
+            tier.invoke(TestGroupEntity.MY_GROUP_EFFECTOR)
+        }
+        List<TaskSummary> tasks = testService.getTasksOfAllEntities()
+        assertEquals(tasks.size(), 20, ""+tasks)
+    }
     
     private void assertExpectedTask(TaskSummary actual, Entity entity, Effector effector) {
         assertEquals(actual.entityDisplayName, entity.displayName, ""+actual)
