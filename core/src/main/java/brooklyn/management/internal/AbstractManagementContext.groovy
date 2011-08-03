@@ -91,7 +91,7 @@ public abstract class AbstractManagementContext implements ManagementContext  {
 
     public <T> Task<T> invokeEffector(Entity entity, Effector<T> eff, Map parameters) {
         runAtEntity(entity, { eff.call(entity, parameters); },
-           description:"invoking ${eff.name} on ${entity}", displayName:entity.displayName, tags:[EFFECTOR_TAG])
+           description:"invoking ${eff.name} on ${entity.displayName}", displayName:eff.name, tags:[EFFECTOR_TAG])
     }
 
     protected <T> T invokeEffectorMethodLocal(Entity entity, Effector<T> eff, Object args) {
@@ -114,7 +114,7 @@ public abstract class AbstractManagementContext implements ManagementContext  {
                 manage(entity)
             }
             runAtEntity(entity, { invokeEffectorMethodLocal(entity, eff, args); },
-                description:"invoking ${eff.name} on ${entity}", displayName:entity.displayName, tags:[EFFECTOR_TAG]).get()
+                description:"invoking ${eff.name} on ${entity.displayName}", displayName:eff.name, tags:[EFFECTOR_TAG]).get()
         } else {
             return invokeEffectorMethodLocal(entity, eff, args)
         }

@@ -153,6 +153,23 @@ class EntityServiceTest {
         assertEquals(tasks.size(), 20, ""+tasks)
     }
     
+    @Test
+    public void testTaskSummaryHasSensibleVals() {
+        // The app will have had start called on it; the other things are not startable
+        TestApplication app = testCollection.get(0)
+        TestGroupEntity tier = app.ownedChildren.iterator().next()
+        Effector eff = TestGroupEntity.MY_GROUP_EFFECTOR
+        
+        tier.invoke(eff)
+        List<TaskSummary> tasks = testService.getTasksOfEntity(tier.id)
+        TaskSummary task = tasks.get(0)
+        
+        assertEquals(task.entityDisplayName, tier.displayName)
+        assertEquals(task.entityId, tier.id)
+        assertEquals(task.displayName, TestGroupEntity.MY_GROUP_EFFECTOR.getName())
+        assertEquals(task.description, "invoking ${eff.name} on ${tier.displayName}")
+    }
+    
     private void assertExpectedTask(TaskSummary actual, Entity entity, Effector effector) {
         assertEquals(actual.entityDisplayName, entity.displayName, ""+actual)
         assertEquals(actual.entityId, entity.id, ""+actual)
