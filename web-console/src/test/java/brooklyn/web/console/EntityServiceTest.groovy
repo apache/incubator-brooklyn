@@ -48,7 +48,8 @@ class EntityServiceTest {
     @Test
     public void testGetTopLevelEntities() {
         assertEquals(testService.getTopLevelEntities().size(), 1)
-        assertEquals(testCollection.get(0).getDisplayName(), Iterables.getFirst(testService.getTopLevelEntities(), null).getDisplayName())
+        assertEquals(testCollection.get(0).getDisplayName(),
+                     Iterables.getFirst(testService.getTopLevelEntities(), null).getDisplayName())
     }
 
     @Test
@@ -110,7 +111,8 @@ class EntityServiceTest {
         TestGroupEntity tier = app.ownedChildren.iterator().next()
         TestGroupEntity cluster = tier.ownedChildren.iterator().next()
 
-        println "app=${app.id}, tier=${tier.id}, cluster=${cluster.id}, app.children=${app.ownedChildren}, tier.children=${tier.ownedChildren}"
+        println "app=${app.id}, tier=${tier.id}, cluster=${cluster.id}, "
+                + "app.children=${app.ownedChildren}, tier.children=${tier.ownedChildren}"
                 
         assertEquals(testService.getTasksOfEntity(tier.id), [], ""+testService.getTasksOfEntity(tier.id))
         
@@ -149,7 +151,8 @@ class EntityServiceTest {
 }
 
 class TestApplication extends AbstractApplication {
-    public static final Effector<Void> MY_APP_EFFECTOR = new EffectorInferredFromAnnotatedMethod<Void>(TestApplication.class, "myAppEffector", "Do something");
+    public static final Effector<Void> MY_APP_EFFECTOR =
+        new EffectorInferredFromAnnotatedMethod<Void>(TestApplication.class, "myAppEffector", "Do something");
     
     TestApplication(Map props=[:]) {
         super(props)
@@ -179,7 +182,8 @@ class TestApplication extends AbstractApplication {
 }
 
 class TestGroupEntity extends AbstractGroup {
-    public static final Effector<Void> MY_GROUP_EFFECTOR = new EffectorInferredFromAnnotatedMethod<Void>(TestGroupEntity.class, "myGroupEffector", "Do something");
+    public static final Effector<Void> MY_GROUP_EFFECTOR =
+        new EffectorInferredFromAnnotatedMethod<Void>(TestGroupEntity.class, "myGroupEffector", "Do something");
     
     TestGroupEntity(String displayName) {
         this.displayName = displayName
