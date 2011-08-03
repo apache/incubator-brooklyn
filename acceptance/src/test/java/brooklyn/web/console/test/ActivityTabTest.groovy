@@ -8,7 +8,7 @@ import static org.testng.Assert.assertTrue
 public class ActivityTabTest {
 
     @Test(groups=["Selenium1"])
-    public void effectorsTabShows() throws Exception {
+    public void activityTabShows() throws Exception {
         selenium.open("/detail/");
 
         // Wait for tree to load
