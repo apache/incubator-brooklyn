@@ -16,9 +16,23 @@ $(document).ready(function () {
     //finally layout eavh master tab. Can't do this by class for some reason?
     //$(".master-tab").layout();
     //$("#dashboard").layout();
-    $("#detail").layout({ applyDefaultStyles:true });
+    $("#detail").layout( detailTabLayoutSettings );
     //$("#subtabs").tabs();
 
 });
 
-
+var detailTabLayoutSettings = {
+    name:"detailTabLayoutSettings",
+    defaults:{
+        applyDefaultStyles: true,
+        closable: true,
+        initClosed: false
+    },
+    north:{},
+    south:{},
+    west:{
+        size: 300
+    },
+    east:{},
+    center:{}
+}
