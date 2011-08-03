@@ -34,7 +34,7 @@ class EntityServiceTest {
         testCollection = []
         
         testService = new EntityService()
-        Application testApp = new TestApplication()
+        Application testApp = new TestApplication(testLocation: testLocation)
 
         testApp.start([ testLocation ])
 
@@ -75,14 +75,12 @@ class EntityServiceTest {
         assertEquals(leaves.size(), 2)
     }
 
-    /* TODO: Add test data to make this test useful.
     @Test
     public void testEntityCountsAtLocatedLocations() {
         Map <Location, Integer> cs = testService.entityCountsAtLocatedLocations();
         assertEquals(cs.size(), 1);
         assertEquals(cs[testLocation], 2);
     }
-    */
 
     @Test
     public void testGetNearestAncestorWithCoordinates() {
@@ -111,8 +109,8 @@ class EntityServiceTest {
         TestGroupEntity tier = app.ownedChildren.iterator().next()
         TestGroupEntity cluster = tier.ownedChildren.iterator().next()
 
-        println "app=${app.id}, tier=${tier.id}, cluster=${cluster.id}, "
-                + "app.children=${app.ownedChildren}, tier.children=${tier.ownedChildren}"
+        println "app=${app.id}, tier=${tier.id}, cluster=${cluster.id}, " +
+                "app.children=${app.ownedChildren}, tier.children=${tier.ownedChildren}"
                 
         assertEquals(testService.getTasksOfEntity(tier.id), [], ""+testService.getTasksOfEntity(tier.id))
         
@@ -157,10 +155,11 @@ class TestApplication extends AbstractApplication {
     TestApplication(Map props=[:]) {
         super(props)
         displayName = "Application";
+        Location testLocation = props.remove("testLocation");
 
         Group tomcatCluster = new TestGroupEntity("tomcat cluster 1a")
-            .addOwnedChildren([new TestLeafEntity("tomcat node 1a.1"),
-                               new TestLeafEntity("tomcat node 1a.2")]);
+        .addOwnedChildren([new TestLeafEntity("tomcat node 1a.1", testLocation),
+                           new TestLeafEntity("tomcat node 1a.2", testLocation)]);
 
         addOwnedChildren([new TestGroupEntity("tomcat tier 1").addOwnedChildren([tomcatCluster])]);
     }
@@ -201,5 +200,10 @@ class TestGroupEntity extends AbstractGroup {
 class TestLeafEntity extends AbstractEntity {
     TestLeafEntity(String displayName) {
         this.displayName = displayName;
+    }
+
+    TestLeafEntity(String displayName, Location hackInLocation) {
+        this.displayName = displayName;
+        this.locations.add(hackInLocation);
     }
 }
