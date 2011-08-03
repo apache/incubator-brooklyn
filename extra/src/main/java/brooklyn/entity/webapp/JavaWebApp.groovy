@@ -99,6 +99,15 @@ public abstract class JavaWebApp extends JavaApp {
         }
     }
 
+    public void stop() {
+        super.stop()
+        
+        // zero our workrate derived workrates.
+        // TODO might not be enough, as policy is still executing and has a record of historic vals; should remove policies
+        setAttribute(REQUESTS_PER_SECOND, 0)
+        setAttribute(AVG_REQUESTS_PER_SECOND, 0)
+    }
+    
     public void deploy(String file) {
         deploy(new File(file))
     }
