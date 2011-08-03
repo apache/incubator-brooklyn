@@ -7,8 +7,7 @@ import static brooklyn.web.console.test.SeleniumTest.waitFor
 public class StatusTest {
 
     @Test public void statusIndicator() {
-        selenium.open("/entity/");
-        selenium.click("link=Detail")
+        selenium.open("/detail/");
 
         selenium.isTextPresent("No data yet.")
 

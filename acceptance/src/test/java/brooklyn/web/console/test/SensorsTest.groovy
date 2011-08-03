@@ -9,8 +9,7 @@ public class SensorsTest {
 
     @Test(groups = "Selenium1")
     public void testSensors() {
-        selenium.open("/entity/");
-        selenium.click("link=Detail")
+        selenium.open("/detail/");
 
         // Wait for tree to load
         waitFor({selenium.isTextPresent("tomcat")});

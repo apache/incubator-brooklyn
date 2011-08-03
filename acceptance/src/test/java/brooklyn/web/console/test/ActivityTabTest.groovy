@@ -9,8 +9,7 @@ public class ActivityTabTest {
 
     @Test(groups=["Selenium1"])
     public void effectorsTabShows() throws Exception {
-        selenium.open("/entity/");
-        selenium.click("link=Detail")
+        selenium.open("/detail/");
 
         // Wait for tree to load
         waitFor({selenium.isTextPresent("tomcat node 1a.3")});

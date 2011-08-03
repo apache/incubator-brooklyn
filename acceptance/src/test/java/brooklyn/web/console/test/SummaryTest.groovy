@@ -7,8 +7,7 @@ import static brooklyn.web.console.test.SeleniumTest.waitFor
 public class SummaryTest {
     @Test(groups = "Selenium1")
     public void testInitialText() {
-        selenium.open("/entity/");
-        selenium.click("link=Detail")
+        selenium.open("/detail/");
 
         waitFor({selenium.isTextPresent("Select an entity")});
     }
