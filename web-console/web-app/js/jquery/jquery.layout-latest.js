@@ -513,7 +513,7 @@ $.fn.layout = function (opts) {
 			//	SEE c.zIndex.resizer_normal
 			}
 		,	cssDemo: { // DEMO CSS - applied if: options.PANE.applyDemoStyles=true
-				background: "#DDD"
+				background: "#deedf7"
 			,	border:		"none"
 			}
 		}
@@ -530,7 +530,7 @@ $.fn.layout = function (opts) {
 			,	zIndex: 	1
 			}
 		,	cssDemo: { // DEMO CSS - applied if: options.PANE.applyDemoStyles=true
-				background: "#AAA"
+				background: "#7CB7DF"
 			}
 		}
 	,	content: {
