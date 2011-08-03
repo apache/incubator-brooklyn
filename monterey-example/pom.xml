@@ -25,7 +25,7 @@
         </dependency>
         <dependency>
             <groupId>brooklyn</groupId>
-            <artifactId>brooklyn-example</artifactId>
+            <artifactId>brooklyn-launcher</artifactId>
             <version>0.0.21-SNAPSHOT</version>
             <classifier>with-dependencies</classifier>
         </dependency>
