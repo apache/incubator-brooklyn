@@ -137,7 +137,6 @@ public abstract class AbstractController extends AbstractService {
     @Override
     public void stop() {
         reset()
-        cluster.stop()
         super.stop()
     }
 }
