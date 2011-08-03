@@ -14,7 +14,8 @@ Brooklyn.activitywidget = ( function(){
     }
 
     function updateLog(event){
-        alert("Logs up to date");
+        //alert("Logs up to date");
+        //could do some sort of pop up with the table data maybe?
     }
 
 
@@ -22,11 +23,11 @@ Brooklyn.activitywidget = ( function(){
         //call a service to get the JSON and then update the table
         //For now it's started.
         //alert("recent activity obtained");
-        //getRecentActivity();
+        getRecentActivity();
     }
 
     function getRecentActivity(){
-        $.getJSON("recentactivity", updateWidgetTable).error(
+        $.getJSON("allActivity", updateWidgetTable).error(
             function(){$(Brooklyn.eventBus).trigger('update_failed', 'Could not obtain recent activity');}
         );
     }
