@@ -1,4 +1,6 @@
 Brooklyn.summary = (function() {
+    var id = 'summary';
+
     // State
     var entity_id;
 
@@ -33,6 +35,8 @@ Brooklyn.summary = (function() {
         var activity_html = '<h4>Recent Activity</h4>';
         activity_html += '<p>TODO</p>';
         $("#summary-activity").html(activity_html);
+
+        $(Brooklyn.eventBus).trigger('update_ok');
     }
 
     function update() {
@@ -50,8 +54,28 @@ Brooklyn.summary = (function() {
         update();
     }
 
+    function tabSelectedHandler(e, tab_id) {
+        tabSelected(tab_id, id);
+    }
+
+    function tabSelected(tab_id, my_tab_id) {
+        console.log(tab_id + "   " + id);
+        if (tab_id === id) {
+            console.log("binding");
+            update();
+            $(Brooklyn.eventBus).bind("update", update);
+        } else {
+            console.log("unbinding");
+            $(Brooklyn.eventBus).unbind("update", update);
+        }
+    }
+
     function init() {
         $(Brooklyn.eventBus).bind("entity_selected", setEntityIdAndUpdate);
+        $(Brooklyn.eventBus).bind("tab_selected", tabSelectedHandler);
+
+        // The summary tab is special. It will start listening to updates
+        // without being explicitly selected because it is shown by default.
         $(Brooklyn.eventBus).bind("update", update);
     }
 
