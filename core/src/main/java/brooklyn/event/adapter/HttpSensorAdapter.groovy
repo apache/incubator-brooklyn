@@ -1,11 +1,18 @@
 package brooklyn.event.adapter
 
+import groovy.json.JsonSlurper
+
+import java.io.BufferedReader
+import java.net.HttpURLConnection
+import java.net.URL
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.EntityLocal
 
 import com.google.common.base.Preconditions
+import com.google.common.io.ByteStreams
 import com.google.common.io.CharStreams
 
 /**
@@ -35,6 +42,10 @@ public class HttpSensorAdapter {
     public ValueProvider<String> newHeaderValueProvider(String url, String headerName) {
         return new HttpHeaderValueProvider(new URL(url), headerName, this)
     }
+    
+    public ValueProvider<Integer> newJsonIntegerProvider(String url, String key) {
+        return new HttpJsonIntegerValueProvider(new URL(url), key, this)
+    }
 
     /**
      * Returns true if the HTTP data from the URL matches the regexp.
@@ -62,12 +73,57 @@ public class HttpSensorAdapter {
         connection.connect()
         return connection.getHeaderField(headerName)
     }
+
+    /**
+     * Returns a byte array of the content returned from a connection to url.
+     */
+    public byte[] getContents(URL url) {
+        HttpURLConnection connection = url.openConnection()
+        connection.connect()
+        InputStream is = connection.getInputStream()
+        byte[] bytes = ByteStreams.toByteArray(is)
+        is.close()
+        return bytes
+    }
+
+    /**
+     * Returns the value mapped to by the given key in JSON from the given URL.
+     */
+    public String getJson(URL url, String key) {
+        String jsonOut = new String(getContents(url))
+        def slurper = new JsonSlurper()
+        def parsed = slurper.parseText(jsonOut)
+        return parsed[key]
+    }
+    
+}
+
+/**
+ * Provides integer values to a sensor via JSON+HTTP.
+ */
+public class HttpJsonIntegerValueProvider implements ValueProvider<Integer> {
+   private final URL url
+   private final String jsonKey
+   private final HttpSensorAdapter adapter
+
+   public HttpJsonIntegerValueProvider(URL url, String jsonKey, HttpSensorAdapter adapter) {
+       this.url = Preconditions.checkNotNull(url, "url")
+       this.jsonKey = Preconditions.checkNotNull(jsonKey, "jsonKey")
+       this.adapter = Preconditions.checkNotNull(adapter, "adapter")
+   }
+
+   @Override
+   public Integer compute() {
+       String out = adapter.getJson(url, jsonKey)
+       assert out != null
+       return Integer.valueOf(out)
+   }
 }
 
 /**
  * Provides values to a sensor via HTTP.
  */
-public class HttpDataValueProvider<Boolean> implements ValueProvider<Boolean> {
+public class HttpDataValueProvider implements ValueProvider<Boolean> {
     private final URL url
     private final String regexp
     private final HttpSensorAdapter adapter
@@ -86,7 +142,7 @@ public class HttpDataValueProvider<Boolean> implements ValueProvider<Boolean> {
 /**
  * Provides HTTP status values to a sensor.
  */
-public class HttpStatusValueProvider<Integer> implements ValueProvider<Integer> {
+public class HttpStatusValueProvider implements ValueProvider<Integer> {
     private final URL url
     private final HttpSensorAdapter adapter
 
@@ -103,7 +159,7 @@ public class HttpStatusValueProvider<Integer> implements ValueProvider<Integer> 
 /**
  * Provides HTTP header values to a sensor.
  */
-public class HttpHeaderValueProvider<String> implements ValueProvider<String> {
+public class HttpHeaderValueProvider implements ValueProvider<String> {
     private final URL url
     private final String headerName
     private final HttpSensorAdapter adapter
