@@ -153,7 +153,14 @@ public abstract class SshBasedAppSetup {
         ]
         return script
     }
- 
+
+    protected List<String> makeCheckPortOpenScript(int port) {
+        List<String> script = [
+            "lsof -t -i TCP:$port"
+        ]
+        return script
+    }
+
     /**
      * The script to run to on a remote machine to restart the application.
      *
