@@ -33,6 +33,7 @@ Brooklyn.tabs = (function() {
                 "bLengthChange": false,
                 "bJQueryUI": true,
                 "bPaginate": false,
+                "bStateSave": true,
                 "bDeferRender": true,
                 "sAjaxDataProp": sAjaxDataProp,
                 "aoColumns": aoColumns
