@@ -78,30 +78,28 @@ class BasicConfigKey<T> implements ConfigKey, Serializable {
     private Object resolveValue(Object v, ExecutionContext exec) {
         //if it's a task, we wait for the task to complete
         if (v in Task) {
-            if ( !((Task)v).isSubmitted() ) {
-//                if (exec==null || !getApplication().isDeployed())
-//                    throw new IllegalStateException("Not permitted to access deferred config until application is deployed");
-                exec.submit((Task)v)
+            if (!((Task) v).isSubmitted() ) {
+                exec.submit((Task) v)
             }
-        }
-        if (v instanceof Future) {
-            v = ((Future<?>)v).get()
-        }
-        if (v instanceof Map) {
+            v = ((Task) v).get()
+        } else if (v in Future) {
+            v = ((Future) v).get()
+        } else if (v in Closure) {
+            v = ((Closure) v).call()
+        } else if (v in Map) {
             Map result = [:]
-            for (Map.Entry entry : ((Map)v).entrySet()) {
+            for (Map.Entry entry : ((Map) v).entrySet()) {
                 result.put(entry.key, resolveValue(entry.value, exec))
             }
-            v = result
-        }
-        if (v instanceof List) {
+            return result
+        } else if (v in List) {
             List result = []
-            for (Object entry : ((List)v)) {
+            for (Object entry : ((List) v)) {
                 result.add(resolveValue(entry, exec))
             }
-            v = result
-        }
-        return v
+            return result
+        } else return v
+        return resolveValue(v, exec)
     }
 }
 
