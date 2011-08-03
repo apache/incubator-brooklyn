@@ -4,7 +4,6 @@ import java.util.concurrent.Callable
 import java.util.concurrent.CancellationException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
-import java.util.concurrent.CopyOnWriteArraySet
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
@@ -17,6 +16,7 @@ import brooklyn.management.Task
 import brooklyn.util.internal.LanguageUtils
 
 import com.google.common.base.CaseFormat
+import com.google.common.collect.ImmutableSet;
 
 /**
  * TODO javadoc
@@ -36,12 +36,14 @@ public class BasicExecutionManager implements ExecutionManager {
     
     private ExecutorService runner = Executors.newCachedThreadPool()
     
-    private Set<Task> knownTasks = new CopyOnWriteArraySet<Task>()
+    // TODO Could have a set of all knownTasks; but instead we're having a separate set per tag,
+    // so the same task could be listed multiple times if it has multiple tags...
 
-    private ConcurrentMap<Object,Set<Task>> tasksByTag = new ConcurrentHashMap()
-    //access to the above is synchronized in code in this class, to allow us to preserve order while guaranteeing thread-safe
+    //access to the below is synchronized in code in this class, to allow us to preserve order while guaranteeing thread-safe
     //(but more testing is needed before we are sure it is thread-safe!)
     //synch blocks are as finely grained as possible for efficiency
+    //Not using a CopyOnWriteArraySet for each, because profiling showed this being a massive perf bottleneck.
+    private ConcurrentMap<Object,Set<Task>> tasksByTag = new ConcurrentHashMap()
 
     private ConcurrentMap<Object, TaskPreprocessor> preprocessorByTag = new ConcurrentHashMap()
 
@@ -51,11 +53,18 @@ public class BasicExecutionManager implements ExecutionManager {
         runner.shutdownNow()
     }
     
-    public Set<Task> getTasksWithTag(Object tag) {
-        tasksByTag.putIfAbsent(tag, new CopyOnWriteArraySet<Task>())
+    private Set<Task> getMutableTasksWithTag(Object tag) {
+        tasksByTag.putIfAbsent(tag, Collections.synchronizedSet(new LinkedHashSet<Task>()))
         return tasksByTag.get(tag)
     }
 
+    public Set<Task> getTasksWithTag(Object tag) {
+        Set<Task> result = getMutableTasksWithTag(tag)
+        synchronized (result) {
+            return Collections.unmodifiableSet(new LinkedHashSet<Task>(result))
+        }
+    }
+    
     public Set<Task> getTasksWithAnyTag(Iterable tags) {
         Set result = new LinkedHashSet<Task>()
         tags.each { tag -> result.addAll getTasksWithTag(tag) }
@@ -80,8 +89,6 @@ public class BasicExecutionManager implements ExecutionManager {
     }
 
     public Set<Object> getTaskTags() { return tasksByTag.keySet() }
-
-//    public Set<Task> getAllTasks() { return knownTasks }
 
     public Task<?> submit(Map flags=[:], Runnable r) { submit flags, new BasicTask(flags, r) }
 
@@ -141,13 +148,12 @@ public class BasicExecutionManager implements ExecutionManager {
     protected void beforeSubmit(Map flags, Task<?> task) {
         task.submittedByTask = getCurrentTask()
         task.submitTimeUtc = System.currentTimeMillis()
-//        knownTasks.add task
         
         if (flags.tag) task.@tags.add flags.remove("tag")
         if (flags.tags) task.@tags.addAll flags.remove("tags")
 
         task.@tags.each { tag -> 
-            getTasksWithTag(tag) << task
+            getMutableTasksWithTag(tag) << task
         }
         
         List tagLinkedPreprocessors = []

@@ -338,4 +338,45 @@ public class BasicTaskExecutionTest {
         
         log.debug "BasicTask {} was submitted by {}", tb, submitter
     }
+    
+    // Previously, when we used a CopyOnWriteArraySet, performance for submitting new tasks was
+    // terrible, and it degraded significantly as the number of previously executed tasks increased
+    // (e.g. 9s for first 1000; 26s for next 1000; 42s for next 1000).
+    @Test
+    public void testExecutionManagerPerformance() {
+        final int NUM_TASKS = 1000
+        final int NUM_TIMES = 10
+        final int MAX_ACCEPTABLE_TIME = 2000
+        
+        long tWarmup = execTasksAndWaitForDone(NUM_TASKS, ["A"])
+        
+        List<Long> times = []
+        for (i in 1..NUM_TIMES) {
+            times << execTasksAndWaitForDone(NUM_TASKS, ["A"])
+        }
+        
+        assertNull( times.find({ it > MAX_ACCEPTABLE_TIME}), "warmup=$tWarmup; times=$times")
+    }
+    
+    private long execTasksAndWaitForDone(int numTasks, List tags) {
+        List<Task> tasks = []
+        long startTimestamp = System.currentTimeMillis()
+        for (i in 1..numTasks) {
+            Task t = new BasicTask({ /*no-op*/ })
+            em.submit tags:tags, t
+            tasks << t
+        }
+        long submittedTimestamp = System.currentTimeMillis()
+
+        for (Task t in tasks) {
+            t.get();
+        }
+        long endTimestamp = System.currentTimeMillis()
+        long submitTime = submittedTimestamp - startTimestamp
+        long totalTime = endTimestamp - startTimestamp
+        
+        println "Executed $numTasks tasks; ${totalTime}ms total; ${submitTime}ms to submit"
+
+        return totalTime
+    }
 }
