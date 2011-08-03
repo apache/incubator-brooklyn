@@ -127,9 +127,7 @@ class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
 
     @Override
     public List<String> getShutdownScript() {
-        return [
-            "ps aux | grep '${entity.id}' | awk '{ print \$2 }' | xargs kill -9"
-        ]
+        return ["ps aux | grep '${entity.id}' | awk '{ print \$2 }' | xargs kill -9"]
     }
     
     @Override

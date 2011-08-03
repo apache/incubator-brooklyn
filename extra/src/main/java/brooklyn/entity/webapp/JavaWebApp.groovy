@@ -46,8 +46,8 @@ public abstract class JavaWebApp extends JavaApp {
         "webapp.reqs.persec.avg.$AVG_REQUESTS_PER_SECOND_PERIOD", "Average Reqs/Sec (over the last ${AVG_REQUESTS_PER_SECOND_PERIOD}ms)" ]
 
     public static final BasicAttributeSensor<String> ROOT_URL = [ String, "webapp.url", "URL" ]
-    public static final BasicAttributeSensor<String> HTTP_SERVER = [ String, "webapp.http.server", " Server name" ]
-    public static final BasicAttributeSensor<Integer> HTTP_STATUS = [ Integer, "webapp.http.status", " HTTP response code for the server" ]
+    public static final BasicAttributeSensor<String> HTTP_SERVER = [ String, "webapp.http.server", "Server name" ]
+    public static final BasicAttributeSensor<Integer> HTTP_STATUS = [ Integer, "webapp.http.status", "HTTP response code for the server" ]
 
     transient HttpSensorAdapter httpAdapter
 

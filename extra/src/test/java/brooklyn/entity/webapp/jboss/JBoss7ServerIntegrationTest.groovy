@@ -25,7 +25,7 @@ class JBoss7ServerIntegrationTest {
         testLocation = new LocalhostMachineProvisioningLocation(name:'london', count:2)
     }
     
-    @Test(enabled=false, groups="Integration")
+    @Test(groups="Integration")
     public void canStartupAndShutdown() {
         JBoss7Server jb = new JBoss7Server(owner:app, httpPort: DEFAULT_HTTP_PORT);
         jb.setConfig(JBoss7Server.SUGGESTED_JMX_HOST, "127.0.0.1")
