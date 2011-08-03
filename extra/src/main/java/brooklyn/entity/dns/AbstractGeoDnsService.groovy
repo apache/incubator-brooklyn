@@ -3,22 +3,19 @@ package brooklyn.entity.dns
 import brooklyn.entity.Entity;
 import java.util.Map
 import java.util.Set
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.basic.DynamicGroup
-import brooklyn.entity.group.AbstractMembershipTrackingPolicy
-import brooklyn.management.internal.CollectionChangeListener
-import brooklyn.management.internal.LocalManagementContext
+
+import com.google.common.base.Throwables
 
 
 abstract class AbstractGeoDnsService extends AbstractEntity {
@@ -38,7 +35,16 @@ abstract class AbstractGeoDnsService extends AbstractEntity {
         // TODO: remove polling once locations can be determined via subscriptions
         Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
             new Runnable() {
-                public void run() { refreshGroupMembership(); }
+                public void run() {
+                    try {
+                        refreshGroupMembership();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    } catch (Throwable t) {
+                        log.warn("Error refreshing group membership", t)
+                        Throwables.propagate(t)
+                    }
+                }
             }, 0, 5, TimeUnit.SECONDS
         );
     }
