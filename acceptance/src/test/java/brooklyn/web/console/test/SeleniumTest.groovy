@@ -46,7 +46,7 @@ public class SeleniumTest {
         // hold everything up till we have something running
         for (int i = 0; i < 60; i++) {
             try {
-                new URL("http://localhost:9090/entity/").content
+                new URL("http://localhost:9090/detail/").content
                 break
             } catch (IOException e) {
                 if (e.message.contains("401")) {
@@ -67,9 +67,9 @@ public class SeleniumTest {
     @BeforeGroups(groups = "Selenium1")
     static void startSeleniumServer() {
         LOG.info("Starting Selenium")
-        seleniumServer = new SeleniumServer();
+        seleniumServer = new SeleniumServer()
         seleniumServer.start()
-        selenium = new DefaultSelenium("localhost", 4444, "*firefox", "http://admin:password@localhost:9090/")
+        selenium = new DefaultSelenium("localhost", 4444, "*firefox", "http://admin:password@localhost:9090/detail/")
         selenium.start()
     }
 
