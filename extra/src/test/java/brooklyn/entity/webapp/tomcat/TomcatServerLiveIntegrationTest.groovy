@@ -13,11 +13,11 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.basic.ConfigKeys
+import brooklyn.location.Location
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.aws.AWSCredentialsFromEnv
 import brooklyn.location.basic.aws.AwsLocation
 import brooklyn.location.basic.aws.AwsLocationFactory
-import brooklyn.test.TestUtils
 import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
@@ -27,8 +27,6 @@ import brooklyn.util.internal.TimeExtras
  */
 public class TomcatServerLiveIntegrationTest {
     private static final Logger logger = LoggerFactory.getLogger(brooklyn.entity.webapp.tomcat.TomcatServerLiveIntegrationTest.class)
-    
-    // FIXME Uses aled's ssh paths!
     
     /** don't use 8080 since that is commonly used by testing software */
     private static final int HTTP_PORT = 8080//40122
@@ -44,7 +42,6 @@ public class TomcatServerLiveIntegrationTest {
 
     private AwsLocationFactory locFactory;
     private AwsLocation loc;
-    private Collection<SshMachineLocation> machines = []
     private TomcatServer tc
 
     private File getResource(String path) {
@@ -70,22 +67,6 @@ public class TomcatServerLiveIntegrationTest {
                 ]])
     }
     
-    @AfterMethod(groups = "Live")
-    public void tearDown() {
-        List<Exception> exceptions = []
-        machines.each {
-            try {
-                loc?.release(it)
-            } catch (Exception e) {
-                LOG.warn("Error releasing machine $it; continuing...", e)
-                exceptions.add(e)
-            }
-        }
-        if (exceptions) {
-            throw exceptions.get(0)
-        }
-    }
-
     @AfterMethod(groups = [ "Live" ])
     public void ensureTomcatIsShutDown() {
         Socket shutdownSocket = null;
@@ -117,6 +98,22 @@ public class TomcatServerLiveIntegrationTest {
                 shutdownSocket.close();
                 throw new Exception("Last test run did not shut down Tomcat")
             }
+        }
+    }
+
+    @AfterMethod(groups = "Live")
+    public void tearDown() {
+        List<Exception> exceptions = []
+        for (Location child : loc.getChildLocations()) {
+            try {
+                loc?.release(child)
+            } catch (Exception e) {
+                LOG.warn("Error releasing machine $child; continuing...", e)
+                exceptions.add(e)
+            }
+        }
+        if (exceptions) {
+            throw exceptions.get(0)
         }
     }
 
