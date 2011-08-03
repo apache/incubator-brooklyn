@@ -5,8 +5,8 @@
  */
 package com.cloudsoftcorp.monterey.brooklyn.entity;
 
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Logger;
 
 import brooklyn.location.Location;
@@ -20,17 +20,13 @@ import com.cloudsoftcorp.util.Loggers;
  * @author aled
  */
 public class LocationRegistry {
-	
 	private static final Logger LOG = Loggers.getLogger(LocationRegistry.class);
 
-    private final Map<MontereyActiveLocation, Location> montereyLocationMapping = new ConcurrentHashMap<MontereyActiveLocation, Location>();
+    private final ConcurrentMap<MontereyActiveLocation, Location> montereyLocationMapping = new ConcurrentHashMap<MontereyActiveLocation, Location>();
     
     public Location getConvertedLocation(MontereyActiveLocation montereyLoc) {
+        montereyLocationMapping.putIfAbsent(montereyLoc, new FooLocation(montereyLoc));
         Location result = montereyLocationMapping.get(montereyLoc);
-        if (result == null) {
-            result = new FooLocation(montereyLoc);
-            montereyLocationMapping.put(montereyLoc, result);
-        }
         return result;
     }
 }
