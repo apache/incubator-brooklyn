@@ -109,11 +109,11 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
         desiredSize.set(calculateDesiredSize(val))
 
         if (desiredSize.get() != currentSize) {
-            LOG.info "policy resizer resizing: metric={}, workrate={}, lowerBound={}, upperBound={}; currentSize={}, desiredSize={}, minSize={}, maxSize={}",
+            LOG.debug "policy resizer resizing: metric={}, workrate={}, lowerBound={}, upperBound={}; currentSize={}, desiredSize={}, minSize={}, maxSize={}",
                     source, val, metricLowerBound, metricUpperBound, currentSize, desiredSize.get(), minSize, maxSize
             resize()
         } else {
-            LOG.debug "policy resizer doing nothing: metric={}, workrate={}, lowerBound={}, upperBound={}; currentSize={}, minSize={}, maxSize={}",
+            LOG.trace "policy resizer doing nothing: metric={}, workrate={}, lowerBound={}, upperBound={}; currentSize={}, minSize={}, maxSize={}",
                     source, val, metricLowerBound, metricUpperBound, currentSize, minSize, maxSize
         }
     }
