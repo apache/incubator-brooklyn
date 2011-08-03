@@ -27,14 +27,14 @@ public class WebAppRunner {
         File war = File.createTempFile("embedded", "war")
         war.deleteOnExit()
         InputStream is = null
-        Writer out = null
+        OutputStream out = null
 
         try {
             is = WebAppRunner.class.getResourceAsStream(warClasspathPath)
             if (!is) {
                 throw new IllegalArgumentException("WAR not found on classpath at $warClasspathPath")
             }
-            out = new FileWriter(war)
+            out = new FileOutputStream(war)
             IOUtils.copy(is, out)
         } finally {
             IOUtils.closeQuietly(is)

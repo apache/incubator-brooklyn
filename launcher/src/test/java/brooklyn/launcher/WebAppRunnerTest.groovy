@@ -8,7 +8,7 @@ class WebAppRunnerTest {
     /**
      * This test requires the web-console.war to work.
      */
-    @Test(enabled = false)
+    @Test
     public void ping() {
         WebAppRunner launcher = new WebAppRunner(new LocalManagementContext(), 8090, "/web-console.war");
         assertNotNull(launcher);
