@@ -22,6 +22,7 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.management.SubscriptionContext
 import brooklyn.management.SubscriptionHandle
+import brooklyn.test.TestUtils.BooleanWithMessage
 import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
@@ -119,41 +120,59 @@ public class TomcatServerIntegrationTest {
         Application app = new TestApplication();
         TomcatServer tc = new TomcatServer(owner:app, httpPort:DEFAULT_HTTP_PORT);
         tc.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
-        executeUntilSucceedsWithShutdown(tc, {
+        try {
+            // reqs/sec initially zero
+            executeUntilSucceeds( {
+                    Double activityValue = tc.getAttribute(TomcatServer.AVG_REQUESTS_PER_SECOND)
+                    if (activityValue == null) 
+                        return new BooleanWithMessage(false, "activity not set yet ($activityValue)")
+    
+                    assertTrue activityValue in Double
+                    assertEquals activityValue, 0.0d
+                } )
+            
+            // apply workload on 1 per sec; reqs/sec should update 
+            executeUntilSucceeds( {
+    		        String url = tc.getAttribute(TomcatServer.ROOT_URL) + "foo"
+    
+                    long startTime = System.currentTimeMillis()
+                    long elapsedTime = 0
+                    
+                    // need to maintain n requests per second for the duration of the window size
+                    while (elapsedTime < TomcatServer.AVG_REQUESTS_PER_SECOND_PERIOD) {
+                        int n = 10
+                        n.times { connectToURL url }
+                        Thread.sleep 1000
+                        def requestCount = tc.getAttribute(TomcatServer.REQUEST_COUNT)
+                        assertEquals requestCount % n, 0
+                        elapsedTime = System.currentTimeMillis() - startTime
+                    }
+    
+                    Double activityValue = tc.getAttribute(TomcatServer.AVG_REQUESTS_PER_SECOND)
+                    assertEquals activityValue, 10.0d, 0.5d
+    
+                    true
+                }, timeout:10*SECONDS, useGroovyTruth:true)
+            
+            // After suitable delay, expect to again get zero msgs/sec
+            Thread.sleep(TomcatServer.AVG_REQUESTS_PER_SECOND_PERIOD)
+            
+            executeUntilSucceeds( {
                 Double activityValue = tc.getAttribute(TomcatServer.AVG_REQUESTS_PER_SECOND)
-                if (activityValue == null) 
-                    return new BooleanWithMessage(false, "activity not set yet ($activityValue)")
-
                 assertTrue activityValue in Double
                 assertEquals activityValue, 0.0d
-                
-		        String url = tc.getAttribute(TomcatServer.ROOT_URL) + "foo"
+            } )
 
-                long startTime = System.currentTimeMillis()
-                long elapsedTime = 0
-                
-                // need to maintain n requests per second for the duration of the window size
-                while (elapsedTime < TomcatServer.AVG_REQUESTS_PER_SECOND_PERIOD) {
-                    int n = 10
-                    n.times { connectToURL url }
-                    Thread.sleep 1000
-                    def requestCount = tc.getAttribute(TomcatServer.REQUEST_COUNT)
-                    assertEquals requestCount % n, 0
-                    elapsedTime = System.currentTimeMillis() - startTime
-                }
-
-                activityValue = tc.getAttribute(TomcatServer.AVG_REQUESTS_PER_SECOND)
-                assertEquals activityValue, 10.0d, 0.5d
-
-                true
-            }, timeout:10*SECONDS, useGroovyTruth:true)
+        } finally {
+            tc.stop()
+        }
     }
     
     /**
      * Tests that we get consecutive events with zero workrate, and with suitably small timestamps between them.
      */
     @Test(groups = [ "Integration" ])
-    public void publishesRequestsPerSecondMetricRepeatedly() {
+    public void publishesZeroRequestsPerSecondMetricRepeatedly() {
         final int MAX_INTERVAL_BETWEEN_EVENTS = 1000 // should be every 500ms
         final int NUM_CONSECUTIVE_EVENTS = 3
         
