@@ -1,5 +1,7 @@
 package com.cloudsoftcorp.monterey.brooklyn.example
 
+import static brooklyn.event.basic.DependentConfiguration.*
+
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.trait.Startable
 
@@ -15,7 +17,6 @@ import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.DynamicWebAppCluster
 import brooklyn.entity.webapp.JavaWebApp
 import brooklyn.entity.webapp.tomcat.TomcatServer
-import brooklyn.event.basic.DependentConfiguration
 import brooklyn.location.Location
 import brooklyn.management.Task
 
@@ -38,15 +39,15 @@ public class MontereyWebCluster extends AbstractEntity implements Startable {
     MontereyWebCluster(Map props=[:], Entity owner=null, MontereyNetwork network) {
         super(props, owner)
         def template = { Map properties ->
-                def server = new TomcatServer(properties, network)
+                def server = new TomcatServer(properties)
                 server.setConfig(JavaApp.SUGGESTED_JMX_PORT, 32199)
                 server.setConfig(JavaWebApp.HTTP_PORT.configKey, 8080)
                 server.setConfig(TomcatServer.SUGGESTED_SHUTDOWN_PORT, 31880)
 		        server.setConfig(TomcatServer.PROPERTY_FILES.subKey("MONTEREY_CONFIG"),
                     [
-                        montereyManagementUrl : DependentConfiguration.attributeWhenReady(network, MontereyNetwork.MANAGEMENT_URL),
-                        montereyUser : network.getClientCredential().username,
-                        montereyPassword : network.getClientCredential().password,
+                        montereyManagementUrl : attributePostProcessedWhenReady(network, MontereyNetwork.MANAGEMENT_URL, { it }, { it.toString() }),
+                        montereyUser : attributePostProcessedWhenReady(network, MontereyNetwork.STATUS, { it }, { network.clientCredential.username }),
+                        montereyPassword : attributePostProcessedWhenReady(network, MontereyNetwork.STATUS, { it }, { network.clientCredential.password }),
                         montereyLocation : "GB-EDH"
                     ])
                 return server;

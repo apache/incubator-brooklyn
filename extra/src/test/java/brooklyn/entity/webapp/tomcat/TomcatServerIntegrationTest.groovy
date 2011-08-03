@@ -266,39 +266,41 @@ public class TomcatServerIntegrationTest {
         }
     }
     
-    // TODO Should clean up our .bash_profile as well!
-    @Test(groups = [ "Integration", "WIP" ])
+    @Test(groups = [ "Integration" ])
     public void createsPropertiesFilesWithEnvironmentVariables() {
         Application app = new TestApplication();
         TomcatServer tc = new TomcatServer(owner:app, httpPort:DEFAULT_HTTP_PORT);
-        tc.setConfig(TomcatServer.PROPERTIES_FILES_REFFED_BY_ENVIRONMENT_VARIABLES.subKey("MYVAR1"),[akey:"aval",bkey:"bval"])
-        tc.setConfig(TomcatServer.PROPERTIES_FILES_REFFED_BY_ENVIRONMENT_VARIABLES.subKey("MYVAR2"),[ckey:"cval",dkey:"dval"])
+        tc.setConfig(TomcatServer.PROPERTY_FILES.subKey("MYVAR1"),[akey:"aval",bkey:"bval"])
+        tc.setConfig(TomcatServer.PROPERTY_FILES.subKey("MYVAR2"),[ckey:"cval",dkey:"dval"])
         tc.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         
         try {
             SshMachineLocation machine = tc.locations.first()
-            String var1file = getEnvironmentVariable(machine, "MYVAR1")
-            String var2file = getEnvironmentVariable(machine, "MYVAR2")
-            String var1fileContents = getFileContents(machine, var1file)
-            String var2fileContents = getFileContents(machine, var2file)
+            String var1file = getEnvironmentVariable(tc, "MYVAR1")
+            String var2file = getEnvironmentVariable(tc, "MYVAR2")
+            File tmpFile1 = File.createTempFile("one", "tmp", new File("/tmp"))
+            File tmpFile2 = File.createTempFile("two", "tmp", new File("/tmp"))
+            tmpFile1.deleteOnExit()
+            tmpFile2.deleteOnExit()
+            machine.copyFrom var1file, tmpFile1.absolutePath
+            machine.copyFrom var2file, tmpFile2.absolutePath
             
             Properties var1props = new Properties()
-            var1props.load(new ByteArrayInputStream(var1fileContents.getBytes()))
+            var1props.load(new FileInputStream(tmpFile1))
             
             Properties var2props = new Properties()
-            var2props.load(new ByteArrayInputStream(var2fileContents.getBytes()))
+            var2props.load(new FileInputStream(tmpFile2))
             
             assertPropertiesEquals(var1props, [akey:"aval",bkey:"bval"])
             assertPropertiesEquals(var2props, [ckey:"cval",dkey:"dval"])
-
         } finally {
             tc.stop()
         }
     }
     
-    private String getEnvironmentVariable(SshMachineLocation machine, String var) {
+    private String getEnvironmentVariable(TomcatServer tomcat, String var) {
         ByteArrayOutputStream outstream = new ByteArrayOutputStream()
-        int result = machine.run(out:outstream, ["env"])
+        int result = tomcat.setup.machine.run(out:outstream, ["env"], tomcat.setup.runEnvironment)
         String outstr = new String(outstream.toByteArray())
         String[] outLines = outstr.split("\n")
         for (String line in outLines) {
@@ -306,14 +308,6 @@ public class TomcatServerIntegrationTest {
             if (envVariable && envVariable[0] == var) return envVariable[1]
         }
         throw new IllegalStateException("environment variable '$var' not found in $outstr")
-    }
-
-    // FIXME Returns lots of extra sysout from script, such as "Last login:..." and "[aled@Aled-Sages-MacBook-Pro ~]$ exec bash -e"
-    private String getFileContents(SshMachineLocation machine, String file) {
-        ByteArrayOutputStream outstream = new ByteArrayOutputStream()
-        int result = machine.run(out:outstream, ["cat $file"])
-        if (result) throw new IllegalStateException("failed to find file ${machine.address}:$file")
-        return new String(outstream.toByteArray())
     }
     
     private void assertPropertiesEquals(Properties props, Map expected) {

@@ -248,7 +248,7 @@ public class SshJschTool {
     /**
      * @see #createFile(Map, String, InputStream, long)
      */
-    public int transferFile(Map p=[:], String pathAndFileOnRemoteServer, InputStream input) {
+    public int transferFileTo(Map p=[:], InputStream input, String pathAndFileOnRemoteServer) {
         assertConnected()
         ChannelSftp channel=session.openChannel("sftp")
         lastChannel = channel
@@ -256,6 +256,19 @@ public class SshJschTool {
         channel.put(input, pathAndFileOnRemoteServer, p.permissions ?: 0644)
         int modified = p.lastModificationDate ?: System.currentTimeMillis()/1000
         channel.setMtime(pathAndFileOnRemoteServer, modified)
+        channel.disconnect()
+        channel.getExitStatus()
+    }
+    
+    /**
+     * @see #createFile(Map, String, InputStream, long)
+     */
+    public int transferFileFrom(Map p=[:], String pathAndFileOnRemoteServer, String pathAndFileOnLocalServer) {
+        assertConnected()
+        ChannelSftp channel=session.openChannel("sftp")
+        lastChannel = channel
+        channel.connect()
+        channel.get(pathAndFileOnRemoteServer, pathAndFileOnLocalServer)
         channel.disconnect()
         channel.getExitStatus()
     }
@@ -319,7 +332,8 @@ public class SshJschTool {
         channel.getExitStatus()
     }
 
-    /** Creates the given file with the given contents.
+    /**
+     * Creates the given file with the given contents.
      *
      * Permissions specified using 'permissions:0755'.
      */

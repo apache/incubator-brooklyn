@@ -76,6 +76,20 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         result
     }
 
+    // FIXME the return code is not a reliable indicator of success or failure
+    public int copyFrom(Map props=[:], String remote, String local) {
+        Preconditions.checkNotNull address, "host address must be specified for scp"
+
+        if (!user) user=System.getProperty "user.name"
+        Map args = [user:user, host:address.hostName]
+        args << config
+        SshJschTool ssh = new SshJschTool(args)
+        ssh.connect()
+        int result = ssh.transferFileFrom props, remote, local
+        ssh.disconnect()
+        result
+    }
+
     @Override
     public String toString() {
         return address;

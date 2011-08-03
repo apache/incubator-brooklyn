@@ -28,7 +28,7 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
     private int tomcatShutdownPort;
     
     private Map<String,Map<String,String>> propFilesToGenerate
-    private Map<String,String> envVariablesToSet
+    private Map<String,String> envVariablesToSet = [:]
     
     public static Tomcat7SshSetup newInstance(TomcatServer entity, SshMachineLocation machine) {
         Integer suggestedTomcatVersion = entity.getConfig(TomcatServer.SUGGESTED_VERSION)
@@ -38,7 +38,7 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
         String suggestedJmxHost = entity.getConfig(TomcatServer.SUGGESTED_JMX_HOST)
         Integer suggestedShutdownPort = entity.getConfig(TomcatServer.SUGGESTED_SHUTDOWN_PORT)
         Integer suggestedHttpPort = entity.getConfig(TomcatServer.HTTP_PORT.configKey)
-        Map<String,Map<String,String>> propFilesToGenerate = entity.getConfig(TomcatServer.PROPERTIES_FILES_REFFED_BY_ENVIRONMENT_VARIABLES) ?: [:]
+        Map<String,Map<String,String>> propFilesToGenerate = entity.getConfig(TomcatServer.PROPERTY_FILES) ?: [:]
         
         String version = suggestedTomcatVersion ?: DEFAULT_VERSION
         String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"${version}"+"/"+"apache-tomcat-${version}")
@@ -58,7 +58,7 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
         result.setInstallDir(installDir)
         result.setDeployDir(deployDir)
         result.setRunDir(runDir)
-        result.setPropertiesFilesReffedByEnvironmentVariables(propFilesToGenerate)
+        result.setPropertyFiles(propFilesToGenerate)
         return result
     }
     
@@ -71,7 +71,7 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
         return this
     }
     
-    public Tomcat7SshSetup setPropertiesFilesReffedByEnvironmentVariables(Map<String,Map<String,String>> propFilesToGenerate) {
+    public Tomcat7SshSetup setPropertyFiles(Map<String,Map<String,String>> propFilesToGenerate) {
         this.propFilesToGenerate = propFilesToGenerate
         return this
     }
@@ -109,13 +109,14 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
 			"CATALINA_OPTS" : toJavaDefinesString(getJvmStartupProperties()),
 			"CATALINA_PID" : "pid.txt",
         ]
+        env << envVariablesToSet
         return env
     }
 
+    @Override
     public void config() {
-        exec(["mkdir -p ${runDir}"], "create run-dir")
-        envVariablesToSet = generateAndCopyPropertyFiles()
         super.config()
+        envVariablesToSet = generateAndCopyPropertyFiles()
     }
     
     private Map<String,String> generateAndCopyPropertyFiles() {
@@ -160,11 +161,6 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
             "sed -i.bk s/8005/${tomcatShutdownPort}/g conf/server.xml",
             "sed -i.bk /8009/D conf/server.xml",
         ]
-        
-        for (Map.Entry<String,String> entry in envVariablesToSet) {
-            script.add("echo \"export ${entry.key}=${entry.value}\" >> ~/.bash_profile")
-        }
-        
         return script
     }
 
