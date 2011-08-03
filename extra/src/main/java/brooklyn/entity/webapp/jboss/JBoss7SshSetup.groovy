@@ -81,7 +81,8 @@ class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
         makeInstallScript([
             "curl -L \"${url}\" -o ${saveAs}",
             "tar xzfv ${saveAs}",
-            "mv jboss-as-$version $installDir"
+            "mv jboss-as-$version/* $installDir",
+            "rm -r jboss-as-$version"
         ])
     }
 
