@@ -61,7 +61,7 @@ Brooklyn.effectors = (function() {
 
     function updateList(e, entity_id) {
         if (entity_id) {
-             $.getJSON("effectors?id=" + entity_id, updateEffectorsList).error(
+             $.getJSON("../entity/effectors?id=" + entity_id, updateEffectorsList).error(
                 function() {$(Brooklyn.eventBus).trigger('update_failed', "Could not get effector data.");}
             );
         }

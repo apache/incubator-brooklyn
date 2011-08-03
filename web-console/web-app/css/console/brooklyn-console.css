@@ -40,11 +40,11 @@ body{
     padding:0px;
 }
 
-h1.brooklyn-header{
+.brooklyn-header{
     height:46px;
-    width:192px;
+    padding-left:192px;
     background-image:url("../../images/brooklyn/brooklynbannertwo.png");
-    position:absolute;
+    background-repeat: no-repeat;
     top:0px;
     left:0px;
     margin:0px;

@@ -68,7 +68,7 @@ Brooklyn.main = (function() {
      */
     function getBreadCrumbs(e, id) {
         if (typeof id !== 'undefined') {
-            $.getJSON("breadcrumbs?id=" + id, handleBreadCrumbs).error(
+            $.getJSON("../entity/breadcrumbs?id=" + id, handleBreadCrumbs).error(
                 function() {$(Brooklyn.eventBus).trigger('update_failed', "Could not get entity info to show in summary.");});
         }
     }

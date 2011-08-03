@@ -37,7 +37,7 @@ Brooklyn.summary = (function() {
 
     function update() {
         if (typeof entity_id !== 'undefined') {
-            $.getJSON("info?id=" + entity_id, handleSummaryData).error(
+            $.getJSON("../entity/info?id=" + entity_id, handleSummaryData).error(
                 function() {$(Brooklyn.eventBus).trigger('update_failed', "Could not get entity info to show in summary.");});
         }
     }

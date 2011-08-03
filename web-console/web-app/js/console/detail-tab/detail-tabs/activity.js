@@ -34,7 +34,7 @@ Brooklyn.activity = (function(){
 
     function updateList(e, entity_id) {
         if (entity_id) {
-            $.getJSON("activity?id=" + entity_id, updateTable).error(
+            $.getJSON("../entity/activity?id=" + entity_id, updateTable).error(
                 function() {$(Brooklyn.eventBus).trigger('update_failed', "Could not get activity data.");}
             );
             clearLog();

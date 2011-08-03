@@ -1,7 +1,7 @@
 !!! 5
 %html
     %head
-        %title Brooklyn Webconsole - Dashboard
+        %title Brooklyn Webconsole - Detail
         %meta{:name=>"layout",:content=>"brooklyn"}
         %script{:type=>"text/javascript", :src=>"http://maps.google.com/maps/api/js?sensor=false"}
         %g:javascript{:src=>"jquery/jquery.jstree.js"}
@@ -14,22 +14,16 @@
         %g:javascript{:src=>"console/detail-tab/detail-tabs/sensors.js"}
         %g:javascript{:src=>"console/detail-tab/detail-tabs/location.js"}
         %g:javascript{:src=>"console/layout/brooklyn-console-layout.js"}
-        %g:javascript{:src=>"console/dashboard/widget-dashboard.js"}
     %body{:style=>"height:100%;width:100%;"}
-        #master-tabs
-            %h1{:class=>"brooklyn-header"}
-            %ul{:class=>"master-tabs-container"}
-                %li{:class=>"master-filler-tab master-tabs-tab"}
-                %li{:class=>"master-tabs-tab"}
-                    %a{:href=>"#dashboard"}Dashboard
-                %li{:class=>"master-tabs-tab"}
-                    %a{:href=>"#detail"}Detail
-            #dashboard{:class=>"master-tab"}
-                .ui-layout-center
-                    %g:render{:template=>"/tabs/dashboard/dashboard"}
-            #detail{:class=>"master-tab"}
-                .ui-layout-west
-                    %g:render{:template=>"/tabs/detail/tree-components"}
-                .ui-layout-center
-                    %g:render{:template=>"/tabs/detail/main"}
+        .brooklyn-header
+            %ul
+                %li
+                    %a{:href=>"../dashboard/"}Dashboard
+                %li
+                    %a{:href=>"../detail/"}Detail
+        #detail{:class=>"master-tab"}
+            .ui-layout-west
+                %g:render{:template=>"/tabs/detail/tree-components"}
+            .ui-layout-center
+                %g:render{:template=>"/tabs/detail/main"}
 
