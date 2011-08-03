@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.JavaApp
 import brooklyn.entity.trait.Startable
+import brooklyn.event.adapter.ValueProvider
 import brooklyn.event.basic.ConfiguredAttributeSensor
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedAppSetup
@@ -39,24 +40,11 @@ public class Infinispan5Server extends JavaApp implements Startable {
     public SshBasedAppSetup getSshBasedSetup(SshMachineLocation machine) {
         return Infinispan5Setup.newInstance(this, machine)
     }
-    
-    public void initJmxSensors() {
-//        attributePoller.addSensor(SERVICE_UP, { computeNodeUp() } as ValueProvider)
+
+    public void initSensors() {
     }
     
-    // state values include: STARTED, FAILED, InstanceNotFound
-//    protected String computeConnectorStatus() {
-//        int port = getAttribute(HTTP_PORT)
-//        ValueProvider<String> rawProvider = jmxAdapter.newAttributeProvider("Catalina:type=Connector,port=$port", "stateName")
-//        try {
-//            return rawProvider.compute()
-//        } catch (InstanceNotFoundException infe) {
-//            return "InstanceNotFound"
-//        }
-//    }
-//    
-//    protected boolean computeNodeUp() {
-//        String connectorStatus = getAttribute(CONNECTOR_STATUS)
-//        return (connectorStatus == "STARTED")
-//    }
+    public void initJmxSensors() {
+        attributePoller.addSensor(SERVICE_UP, { return setup.isRunning() } as ValueProvider)
+    }
 }
