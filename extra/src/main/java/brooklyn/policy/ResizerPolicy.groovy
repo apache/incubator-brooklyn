@@ -15,10 +15,12 @@ import brooklyn.event.AttributeSensor
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.policy.basic.AbstractPolicy
+import brooklyn.policy.trait.Suspendable;
 
-public class ResizerPolicy<T extends Number> extends AbstractPolicy implements SensorEventListener<T> {
+public class ResizerPolicy<T extends Number> extends AbstractPolicy implements SensorEventListener<T>, Suspendable {
     private static final Logger LOG = LoggerFactory.getLogger(ResizerPolicy.class)
 
+    private AttributeSensor<T> source
     private DynamicCluster dynamicCluster
     private String[] metricName
     private double metricLowerBound
@@ -30,6 +32,7 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
 
     /** Lock held if we are in the process of resizing. */
     private final AtomicBoolean resizing = new AtomicBoolean(false)
+    private final AtomicBoolean suspended = new AtomicBoolean(false)
     
     private Executor executor = Executors.newSingleThreadExecutor() 
     private Closure resizeAction = {
@@ -48,9 +51,6 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
         }
     }
 
-    private final AtomicBoolean suspended = new AtomicBoolean(false)
-
-    AttributeSensor<T> source
 
     /**
      * @param averagingSource - A sensor that averages a relevant metric across the attaching entity
@@ -87,10 +87,12 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
         this
     }
     
+    @Override
     public void suspend() {
         suspended.set(true)
     }
-    
+
+    @Override
     public void resume() {
         suspended.set(false)
     }

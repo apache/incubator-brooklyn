@@ -12,7 +12,7 @@ import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
 import brooklyn.management.Task
-import brooklyn.policy.ResizerPolicy
+import brooklyn.policy.trait.Suspendable
 
 import com.google.common.base.Preconditions
 
@@ -66,12 +66,12 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         this.location = locations.find { true }
         this.locations.add(location)
         resize(initialSize)
-        policies.each { if (it instanceof ResizerPolicy) it.resume() }
+        policies.each { if (it instanceof Suspendable) it.resume() }
         setAttribute(SERVICE_UP, true)
     }
 
     public void stop() {
-        policies.each { if (it instanceof ResizerPolicy) it.suspend() }
+        policies.each { if (it instanceof Suspendable) it.suspend() }
         resize(0)
         setAttribute(SERVICE_UP, false)
     }
