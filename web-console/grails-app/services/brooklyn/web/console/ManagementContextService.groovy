@@ -165,9 +165,7 @@ class ManagementContextService {
 
             private List<Location> testLocations = [
                     new GeneralPurposeLocation([id: "us-east-1", name:"US-East-1", iso3166: "US-VA", displayName:"US-East-1", streetAddress:"Northern Virginia, USA", description:"Northern Virginia (approx)",
-                                                latitude:38.0,longitude:-76.0]),
-                    new GeneralPurposeLocation([id: "us-west-1", name:"US-West-1", iso3166: "US-CA", displayName:"US-West-1", streetAddress:"Northern California, USA", description:"Northern California",
-                                                latitude:40.0,longitude:-120.0])
+                                                latitude:38.0,longitude:-76.0])
             ];
 
             public TestTomcatEntity(Entity owner, String displayName) {

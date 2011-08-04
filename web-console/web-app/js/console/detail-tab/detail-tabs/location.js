@@ -71,7 +71,7 @@ Brooklyn.location = (function() {
     function updateLocationsAux(locations) {
         var myOptions = {
             width: 400,
-            mapTypeId: google.maps.MapTypeId.ROADMAP,
+            mapTypeId: google.maps.MapTypeId.ROADMAP
         }
 
         map = new google.maps.Map(document.getElementById("map-canvas"), myOptions);
@@ -85,26 +85,30 @@ Brooklyn.location = (function() {
         Brooklyn.util.getDataTable(tableId, '.', aoColumns, updateLocation, appLocations);
     }
 
-    function resize(e, id) {
+    function locationsTabSelected(e, id) {
         reset();
 
         if (id === 'location') {
             $('#map-canvas').width('98%');
             $('#map-canvas').height('500px');
 
-            google.maps.event.trigger(map, 'resize');
-
             extendMap();
         }
     }
 
     function extendMap() {
+        google.maps.event.trigger(map, 'resize');
+
         if (appLocations.length > 0) {
             var bounds = new google.maps.LatLngBounds(appLocations[0].gloc);
             for (var i in appLocations) {
                 bounds.extend(appLocations[i].gloc);
             }
             map.fitBounds(bounds);
+        }
+
+        if (appLocations.length == 1) {
+            map.setZoom(4);
         }
     }
 
@@ -121,11 +125,11 @@ Brooklyn.location = (function() {
     }
 
     function init() {
-        $(Brooklyn.eventBus).bind("tab_selected", resize);
+        $(Brooklyn.eventBus).bind("tab_selected", locationsTabSelected);
         $(Brooklyn.eventBus).bind("entity_selected", updateLocations);
     }
 
-    return { init : init, resize : resize, displayLatLong : displayLatLong }
+    return { init : init, locationsTabSelected : locationsTabSelected, displayLatLong : displayLatLong }
 
 })();
 
