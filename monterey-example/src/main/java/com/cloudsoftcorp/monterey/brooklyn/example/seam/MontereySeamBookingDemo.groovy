@@ -9,6 +9,7 @@ import static com.cloudsoftcorp.monterey.network.control.api.Dmn1NodeType.*
 
 import java.util.List
 import java.util.Map
+import java.util.concurrent.atomic.AtomicInteger
 
 import brooklyn.demo.Locations
 import brooklyn.entity.Entity
@@ -33,6 +34,9 @@ public class MontereySeamBookingDemo extends AbstractApplication {
     private static final UserCredentialsConfig MONTEREY_ADMIN_CREDENTIAL = new UserCredentialsConfig("myname", "mypass", "admin")
     
     public static final List<String> DEFAULT_LOCATIONS = [ Locations.LOCALHOST ]
+    
+    // FIXME For localhost-mode
+    AtomicInteger nextPort = new AtomicInteger(9000)
     
     public static void main(String[] argv) {
         List<Location> locations = loadLocations(argv)
@@ -69,13 +73,13 @@ public class MontereySeamBookingDemo extends AbstractApplication {
                 appDescriptor : 'src/main/resources/BookingAvailabilityApplication.conf',
                 initialTopologyPerLocation : [ LPP:1, MR:1, M:1, TP:1, SPARE:1 ],
                 webUsersCredential : [MONTEREY_ADMIN_CREDENTIAL], 
+                webApiPort : 8090,
                 
                 // FIXME For local testing only...
                 managementNodeInstallDir : "/Users/aled/monterey-management-node",
                 networkNodeInstallDir : "/Users/aled/monterey-network-node-copy1",
                 maxConcurrentProvisioningsPerLocation : 1,
-                webApiPort : 8090,
-        
+    
                 this)
         
         //montereyNetwork.policy << new MontereyLatencyOptimisationPolicy()
@@ -83,6 +87,11 @@ public class MontereySeamBookingDemo extends AbstractApplication {
         Closure webServerFactory = { Map properties, Entity cluster ->
             def server = new JBoss7Server(properties)
             server.setConfig(JBoss7Server.HTTP_PORT.configKey, 8080)
+            
+            // FIXME, for localhost
+            server.setConfig(JBoss7Server.HTTP_PORT.configKey, nextPort.incrementAndGet())
+            server.setConfig(JBoss7Server.MANAGEMENT_PORT.configKey, nextPort.incrementAndGet())
+            
             server.setConfig(JBoss7Server.PROPERTY_FILES.subKey("MONTEREY_PROPERTIES"),
                     [
                         montereyManagementUrl : attributeWhenReady(montereyNetwork, MANAGEMENT_URL),
