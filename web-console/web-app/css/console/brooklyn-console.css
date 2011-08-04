@@ -14,15 +14,6 @@ body{
     height: 100%;
 }
 
-/* MASTER TABS AND MASTER LAYOUT */
-
-#master-tabs{
-    height:100%;
-    width:100%;
-    padding:0px;
-    border:none;
-}
-
 .master-tab{
     left:0px;
     right:0px;
