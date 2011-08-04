@@ -1,7 +1,7 @@
 .portlet
     .portlet-header
         Recent Activity
-    .portlet-content
+    .portlet-content{:style=>"overflow:hidden !important;"}
         %g:javascript{:src=>"console/dashboard/widgets/recent-activity.js"}
         /* Paginate code needs to go somewhere. Remote Pagination with JSON. */
         <g:paginate controller="entity" action="allActivity" total="5" update="#recent-activity-table" />
