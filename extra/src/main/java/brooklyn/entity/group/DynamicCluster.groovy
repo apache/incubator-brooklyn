@@ -137,8 +137,6 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         Preconditions.checkNotNull entity, "No Startable member entity found to remove"
  
         removeMember(entity)
-        managementContext.unmanage(entity)
-        
         entity
     }
 }
