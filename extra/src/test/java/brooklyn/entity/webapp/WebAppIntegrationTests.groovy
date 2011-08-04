@@ -58,7 +58,7 @@ class WebAppIntegrationTests {
         TomcatServer tomcat = [owner: new TestApplication(), httpPort: DEFAULT_HTTP_PORT]
         JBoss6Server jboss6 = [owner: new TestApplication(), portIncrement: PORT_INCREMENT]
         JBoss7Server jboss7 = [owner: new TestApplication(), httpPort: DEFAULT_HTTP_PORT]
-        return [[tomcat]], [jboss6], [jboss7]]
+        return [[tomcat], [jboss6], [jboss7]]
     }
     
     @Test(groups="Integration", dataProvider="basicEntities")
