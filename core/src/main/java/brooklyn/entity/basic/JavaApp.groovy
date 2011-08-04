@@ -10,7 +10,7 @@ import brooklyn.entity.ConfigKey
 import brooklyn.entity.Entity
 import brooklyn.event.AttributeSensor
 import brooklyn.event.adapter.JmxSensorAdapter
-import brooklyn.location.Location
+import brooklyn.event.basic.MapConfigKey
 import brooklyn.util.internal.Repeater
 
 /**
@@ -22,6 +22,8 @@ public abstract class JavaApp extends AbstractService {
     public static final int RMI_PORT = 1099
     public static final ConfigKey<Integer> SUGGESTED_JMX_PORT = ConfigKeys.SUGGESTED_JMX_PORT;
     public static final ConfigKey<String> SUGGESTED_JMX_HOST = ConfigKeys.SUGGESTED_JMX_HOST;
+    public static final MapConfigKey<String> PROPERTY_FILES =
+            [ String, "javaapp.propertyFiles", "Property files to be generated, referenced by an environment variable" ]
 
     public static final AttributeSensor<Integer> JMX_PORT = Attributes.JMX_PORT;
     public static final AttributeSensor<String> JMX_HOST = Attributes.JMX_HOST;

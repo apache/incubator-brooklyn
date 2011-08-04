@@ -1,6 +1,7 @@
 package brooklyn.util
 
 import java.util.List
+import java.util.Map;
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -199,7 +200,7 @@ public abstract class SshBasedAppSetup {
             List<String> script = getInstallScript()
             if (script) {
                 log.info "installing entity {} on machine {}", entity, machine
-                int result = machine.run(out:System.out, script)
+                int result = machine.run(out:System.out, err:System.err, script)
                 if (result) throw new IllegalStateException("failed to install $entity (exit code $result)")
             } else {
                 log.debug "not installing entity {} on machine {}, as no install-script defined", entity, machine
@@ -217,7 +218,7 @@ public abstract class SshBasedAppSetup {
             List<String> script = getConfigScript()
             if (script) {
                 log.info "Configuring entity {} on machine {}", entity, machine
-                int result = machine.run(out:System.out, script)
+                int result = machine.run(out:System.out, err:System.err, script)
                 if (result) throw new IllegalStateException("failed to configure $entity (exit code $result)")
             } else {
                 log.debug "not configuring entity {} on machine {}, as no config-script defined", entity, machine
@@ -228,7 +229,7 @@ public abstract class SshBasedAppSetup {
     protected void exec(List<String> script, String summaryForLogging="execute for") {
         synchronized (entity) {
             log.info(summaryForLogging+" entity {} on machine {}", entity, machine)
-            int result = machine.run(out:System.out, script)
+            int result = machine.run(out:System.out, err:System.err, script)
             if (result) throw new IllegalStateException("failed to "+summaryForLogging+" $entity (exit code $result)")
         }
     }
@@ -256,7 +257,7 @@ public abstract class SshBasedAppSetup {
                 environment.put(key, value)
             }
         }
-        def result = machine.run(out:System.out, getRunScript(), environment)
+        def result = machine.run(out:System.out, err:System.err, getRunScript(), environment)
 
         if (result) throw new IllegalStateException("failed to start $entity (exit code $result)")
     }
@@ -267,7 +268,7 @@ public abstract class SshBasedAppSetup {
      * @see #getCheckRunningScript()
      */
     public boolean isRunning() {
-        int result = machine.run(out:System.out, getCheckRunningScript())
+        int result = machine.run(out:System.out, err:System.err, getCheckRunningScript())
         if (result==0) return true
         if (result==1) return false
         throw new IllegalStateException("$entity running check gave result code $result")
@@ -278,7 +279,7 @@ public abstract class SshBasedAppSetup {
      */
     public void shutdown() {
         log.debug "invoking shutdown script"
-        def result = machine.run(out:System.out, getShutdownScript())
+        def result = machine.run(out:System.out, err:System.err, getShutdownScript())
         if (result) log.info "non-zero result code terminating {}: {}", entity, result
         log.debug "done invoking shutdown script"
     }
@@ -331,7 +332,7 @@ public abstract class SshBasedAppSetup {
 	        postStart()
         } else {
 	        log.debug "invoking restart script"
-	        def result = machine.run(out:System.out, restartScript)
+	        def result = machine.run(out:System.out, err:System.err, restartScript)
 	        if (result) log.info "non-zero result code terminating {}: {}", entity, result
 	        log.debug "done invoking restart script"
         

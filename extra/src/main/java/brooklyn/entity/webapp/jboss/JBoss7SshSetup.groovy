@@ -34,6 +34,7 @@ class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
         String suggestedRunDir = entity.getConfig(JBoss7Server.SUGGESTED_RUN_DIR)
         Integer suggestedJmxPort = entity.getConfig(JBoss7Server.SUGGESTED_JMX_PORT)
         String suggestedJmxHost = entity.getConfig(JBoss7Server.SUGGESTED_JMX_HOST)
+        Map<String,Map<String,String>> propFilesToGenerate = entity.getConfig(JBoss7Server.PROPERTY_FILES) ?: [:]
         
         // Defaults if suggestions not given
         String installDir = suggestedInstallDir ?: "$DEFAULT_INSTALL_DIR/${DEFAULT_VERSION}/jboss-${DEFAULT_VERSION}"
@@ -52,6 +53,7 @@ class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
         result.setInstallDir installDir
         result.setDeployDir deployDir
         result.setRunDir runDir
+        result.setPropertyFiles propFilesToGenerate
         result.setJmxPort jmxPort
         result.setJmxHost jmxHost
         

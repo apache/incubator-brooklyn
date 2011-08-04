@@ -28,6 +28,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         Integer suggestedPortIncrement = entity.getConfig(JBoss6Server.SUGGESTED_PORT_INCREMENT)
         String suggestedServerProfile = entity.getConfig(JBoss6Server.SUGGESTED_SERVER_PROFILE)
         String suggestedClusterName = entity.getConfig(JBoss6Server.SUGGESTED_CLUSTER_NAME)
+        Map<String,Map<String,String>> propFilesToGenerate = entity.getConfig(JBoss7Server.PROPERTY_FILES) ?: [:]
         
         String version = suggestedJbossVersion ?: DEFAULT_VERSION
         String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"${version}"+"/"+"jboss-${version}")
@@ -47,6 +48,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         result.setInstallDir(installDir)
         result.setDeployDir(deployDir)
         result.setRunDir(runDir)
+        result.setPropertyFiles(propFilesToGenerate)
         result.setPortIncrement(portIncrement)
         result.setHttpPort(DEFAULT_HTTP_PORT+portIncrement)
         result.setServerProfile(serverProfile)

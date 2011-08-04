@@ -26,7 +26,7 @@ class JBoss7Server extends JavaWebApp {
     public JBoss7Server(Map flags=[:], Entity owner=null) {
         super(flags, owner)
         
-        setConfigIfValNonNull(MANAGEMENT_PORT, flags.managementPort)
+        setConfigIfValNonNull(MANAGEMENT_PORT.configKey, flags.managementPort)
     }
     
     @Override
