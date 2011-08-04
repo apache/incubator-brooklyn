@@ -280,7 +280,7 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
      * @param verbosity 0 = brief, 1 = one-line with some detail, 2 = lots of detail
      */
     protected String getStatusString(int verbosity) {
-        volatile Thread t = getThread()
+        Thread t = getThread()
         String rv
         if (submitTimeUtc <= 0) rv = "Not submitted"
         else if (!isCancelled() && startTimeUtc <= 0) {
