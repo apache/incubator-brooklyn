@@ -1,12 +1,5 @@
 package com.cloudsoftcorp.monterey.brooklyn.example
 
-import brooklyn.entity.basic.AbstractApplication
-import brooklyn.entity.basic.DynamicGroup
-import brooklyn.entity.dns.geoscaling.GeoscalingDnsService
-import brooklyn.entity.group.DynamicFabric
-
-import com.cloudsoftcorp.monterey.network.control.plane.web.UserCredentialsConfig
-
 import static com.cloudsoftcorp.monterey.network.control.api.Dmn1NodeType.LPP
 import static com.cloudsoftcorp.monterey.network.control.api.Dmn1NodeType.M
 import static com.cloudsoftcorp.monterey.network.control.api.Dmn1NodeType.MR
@@ -30,6 +23,7 @@ import brooklyn.entity.webapp.DynamicWebAppCluster
 import brooklyn.entity.webapp.JavaWebApp
 import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.event.basic.DependentConfiguration
+import brooklyn.launcher.BrooklynLauncher
 import brooklyn.location.Location
 import brooklyn.policy.ResizerPolicy
 
