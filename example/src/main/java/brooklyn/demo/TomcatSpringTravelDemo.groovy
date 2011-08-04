@@ -32,14 +32,14 @@ public class TomcatSpringTravelDemo extends AbstractApplication {
         println "Starting in locations: "+ids
         List<Location> locations = Locations.getLocationsById(ids)
 
-        SpringTravel app = new TomcatSpringTravelDemo(name:'brooklyn-tomcat-wide-area-demo',
+        TomcatSpringTravelDemo app = new TomcatSpringTravelDemo(name:'brooklyn-tomcat-wide-area-demo',
                 displayName:'Brooklyn Tomcat Wide-Area Spring Travel Demo Application')
 
         BrooklynLauncher.manage(app)
         app.start(locations)
     }
     
-    final DynamicFabric fabric
+    final DynamicFabric webFabric
     final DynamicGroup nginxEntities
     final GeoscalingDnsService geoDns
     
