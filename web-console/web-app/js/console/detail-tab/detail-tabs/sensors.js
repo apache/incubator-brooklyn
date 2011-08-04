@@ -1,38 +1,35 @@
 Brooklyn.sensors = (function() {
-    // Config
-    var id = '#sensor-data';
-    var aoColumns = [ { "mDataProp": "name", "sTitle": "name", "sWidth":"30%"  },
-                      { "mDataProp": "description", "sTitle": "description", "sWidth":"30%" },
-                      { "mDataProp": "value", "sTitle": "value", "sWidth":"20%", "bSortable": false },
-                      { "mDataProp": "timestamp", "sTitle": "last updated", "sWidth":"20%"}];
+    function SensorsTab() {
+        this.id = 'sensors';
 
-    // State
-    var entity_id;
+        this.update = function() {
+            if (typeof this.entity_id !== 'undefined') {
+                $.getJSON("../entity/sensors?id=" + this.entity_id, this.updateTableData).error(
+                    function() {$(Brooklyn.eventBus).trigger('update_failed', "Could not get sensor data.");}
+                );
+            }
+        };
 
-    function updateTableData(json) {
-        Brooklyn.util.getDataTable(id, ".", aoColumns, undefined, json, false);
-        $(Brooklyn.eventBus).trigger('update_ok');
-    }
+        this.updateTableData = function(json) {
+            // Config
+            var aoColumns = [ { "mDataProp": "name", "sTitle": "name", "sWidth":"30%"  },
+                              { "mDataProp": "description", "sTitle": "description", "sWidth":"30%" },
+                              { "mDataProp": "value", "sTitle": "value", "sWidth":"20%", "bSortable": false },
+                              { "mDataProp": "timestamp", "sTitle": "last updated", "sWidth":"20%"}];
 
-    function update() {
-        if (typeof entity_id !== 'undefined') {
-            $.getJSON("../entity/sensors?id=" + entity_id, updateTableData).error(
-                function() {$(Brooklyn.eventBus).trigger('update_failed', "Could not get sensor data.");}
-            );
+            Brooklyn.util.getDataTable('#sensor-data', ".", aoColumns, undefined, json, false);
+            $(Brooklyn.eventBus).trigger('update_ok');
         }
-    }
 
-    /* This method is intended to be called as an event handler. The e paramater is
-     * unused.
-     */
-    function setEntityIdAndUpdate(e, id) {
-        entity_id = id;
-        update();
+        this.makeHandlers();
     }
+    SensorsTab.prototype = new Brooklyn.tabs.Tab();
 
     function init() {
-        $(Brooklyn.eventBus).bind("entity_selected", setEntityIdAndUpdate);
-        $(Brooklyn.eventBus).bind("update", update);
+        var tab = new SensorsTab();
+
+        $(Brooklyn.eventBus).bind("entity_selected", tab.handler.entitySelected);
+        $(Brooklyn.eventBus).bind("tab_selected", tab.handler.tabSelected);
     }
 
     return {
