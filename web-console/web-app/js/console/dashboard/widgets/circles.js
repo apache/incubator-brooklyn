@@ -60,6 +60,7 @@ Brooklyn.circles = (function() {
 
     function init() {
         drawMap();
+        drawCircles();
         $(Brooklyn.eventBus).bind("update", update);
     }
 
