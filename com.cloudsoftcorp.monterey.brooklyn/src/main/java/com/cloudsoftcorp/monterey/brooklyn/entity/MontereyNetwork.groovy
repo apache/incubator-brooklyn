@@ -118,7 +118,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     }
 
     public String getDisplayName() {
-        return "Monterey network ("+(getAttribute(APPLICTION_NAME) ?: "no-app")+")"
+        return "Monterey network ("+(getAttribute(APPLICATION_NAME) ?: "no-app")+")"
     }
     
     // Programmatically set the application descriptor (rather than supplying a config file)
@@ -374,8 +374,14 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         MontereyDeploymentDescriptor currentApp = managementNode.getDeploymentProxy().getApplicationDeploymentDescriptor();
         String currentAppName = currentApp?.getName();
         if (!(applicationName != null ? applicationName.equals(currentAppName) : currentAppName == null)) {
-            applicationName = currentAppName;
-            setAttribute(APPLICTION_NAME, applicationName);
+            try {
+	            URL configLocation = new URL(currentAppName)
+	            File configFile = new File(configLocation.path)
+	            applicationName = configFile.name
+            } catch (Exception e) {
+	            applicationName = currentAppName;
+            }
+            setAttribute(APPLICATION_NAME, applicationName);
         }
     }
     
@@ -391,8 +397,8 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     }
 
     private void updateFabricTopologies() {
-        typedFabrics.values().each {
-            it.refreshLocations(locations);
+        typedFabrics.each { key, fabric ->
+            fabric.refreshLocations(locations);
         }
     }
     
