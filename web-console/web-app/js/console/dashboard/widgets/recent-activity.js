@@ -20,16 +20,25 @@ Brooklyn.activitywidget = ( function(){
 
 
     function init(){
-        //call a service to get the JSON and then update the table
-        //For now it's started.
-        //alert("recent activity obtained");
         getRecentActivity();
+        $(Brooklyn.eventBus).bind("update", update);
     }
 
     function getRecentActivity(){
         $.getJSON("../entity/allActivity", updateWidgetTable).error(
             function(){$(Brooklyn.eventBus).trigger('update_failed', 'Could not obtain recent activity');}
         );
+    }
+
+    function update(){
+    // if auto refresh then getRecentActivity else do nothing.
+    var checked = document.getElementById("updateCheck").checked;
+        if(checked){
+            getRecentActivity();
+            }
+        else{
+            alert("NOT AUTO REFRESHING");
+            }
     }
 
     return {
