@@ -14,6 +14,7 @@ import brooklyn.management.internal.CollectionChangeListener
 public class DynamicGroup extends AbstractGroup {
     public static final Logger log = LoggerFactory.getLogger(DynamicGroup.class)
     
+    private volatile MyEntitySetChangeListener setChangeListener = null;
     private Closure entityFilter
     
     public DynamicGroup(Map properties=[:], Entity owner=null, Closure entityFilter=null) {
@@ -27,17 +28,19 @@ public class DynamicGroup extends AbstractGroup {
     }
     
     protected boolean acceptsEntity(Entity e) {
-        return (entityFilter!=null && entityFilter.call(e))
+        return (entityFilter != null && entityFilter.call(e))
     }
     
     protected void onEntityAdded(Entity item) {
-        log.info("$this detected item add $item")
-        if (acceptsEntity(item)) addMember(item)
+        if (acceptsEntity(item)) {
+            log.info("$this detected item add $item")
+            addMember(item)
+        }
     }
     
     protected void onEntityRemoved(Entity item) {
-        log.info("$this detected item removal $item")
-        removeMember(item)
+        if (removeMember(item))
+            log.info("$this detected item removal $item")
     }
     
     class MyEntitySetChangeListener implements CollectionChangeListener<Entity> {
@@ -45,11 +48,9 @@ public class DynamicGroup extends AbstractGroup {
         public void onItemRemoved(Entity item) { onEntityRemoved(item) }
     }
 
-    volatile MyEntitySetChangeListener setChangeListener = null;
-
     @Override
     public synchronized void onManagementBecomingMaster() {
-        if (setChangeListener!=null) {
+        if (setChangeListener != null) {
             log.warn("$this becoming master twice");
             return;
         }
@@ -60,11 +61,11 @@ public class DynamicGroup extends AbstractGroup {
 
     @Override
     public synchronized void onManagementNoLongerMaster() {
-        if (setChangeListener==null) {
+        if (setChangeListener == null) {
             log.warn("$this no longer master twice");
             return;
         }
-        ((AbstractManagementContext)getManagementContext()).removeEntitySetListener(setChangeListener)
+        ((AbstractManagementContext) getManagementContext()).removeEntitySetListener(setChangeListener)
         setChangeListener = null
     }
     
