@@ -44,7 +44,7 @@ class WebAppIntegrationTests {
     // Don't use 8080 since that is commonly used by testing software
     static int DEFAULT_HTTP_PORT = 7880
     
-    // Port incremenet for JBoss 6.
+    // Port increment for JBoss 6.
     final static int PORT_INCREMENT = 400
     
     @BeforeMethod(groups = [ "Integration" ])
