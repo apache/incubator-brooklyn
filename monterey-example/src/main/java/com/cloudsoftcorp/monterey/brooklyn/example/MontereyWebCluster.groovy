@@ -32,6 +32,7 @@ import com.cloudsoftcorp.monterey.brooklyn.entity.MontereyNetwork
  * <li>a {@link Policy} to resize the DynamicCluster
  * </ul>
  */
+@Deprecated // use MontereySpringTravelDemo instead
 public class MontereyWebCluster extends AbstractEntity implements Startable {
     DynamicWebAppCluster cluster
     NginxController controller

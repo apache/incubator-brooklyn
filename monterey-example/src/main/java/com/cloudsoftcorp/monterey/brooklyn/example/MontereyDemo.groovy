@@ -6,6 +6,7 @@ import brooklyn.demo.Locations
 import brooklyn.launcher.BrooklynLauncher
 import brooklyn.location.Location
 
+@Deprecated // use MontereySpringTravelDemo instead
 class MontereyDemo {
 
     public static final List<String> DEFAULT_LOCATIONS = [ Locations.LOCALHOST ]

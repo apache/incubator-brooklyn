@@ -22,6 +22,8 @@ import com.cloudsoftcorp.util.javalang.ClassLoadingContext
 import com.cloudsoftcorp.util.javalang.OsgiClassLoadingContextFromBundle
 import com.google.common.base.Preconditions
 
+
+@Deprecated // use MontereySpringTravelDemo instead
 public class MontereySpringTravel extends AbstractApplication {
     final DynamicFabric webFabric
     final DynamicGroup nginxEntities
