@@ -41,7 +41,7 @@ public abstract class JavaWebApp extends JavaApp {
      */
     public static final BasicAttributeSensor<Double> REQUESTS_PER_SECOND = [ Double, "webapp.reqs.persec.last", "Reqs/Sec" ]
 
-    public static final Integer AVG_REQUESTS_PER_SECOND_PERIOD = 30*1000
+    public static final Integer AVG_REQUESTS_PER_SECOND_PERIOD = 10*1000
     public static final BasicAttributeSensor<Double> AVG_REQUESTS_PER_SECOND = [ Double,
         "webapp.reqs.persec.avg.$AVG_REQUESTS_PER_SECOND_PERIOD", "Average Reqs/Sec (over the last ${AVG_REQUESTS_PER_SECOND_PERIOD}ms)" ]
 
