@@ -18,4 +18,4 @@ else
 fi
 
 cd $ROOT
-java ${JAVA_OPTS} com.cloudsoftcorp.monterey.brooklyn.example.seam.MontereySeamBookingDemo ${LOCATIONS}
+java ${JAVA_OPTS} com.cloudsoftcorp.monterey.brooklyn.example.MontereyDemo ${LOCATIONS}
