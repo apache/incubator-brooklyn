@@ -38,8 +38,10 @@ public class TomcatServer extends JavaWebApp {
     public static final BasicAttributeSensor<Integer> TOMCAT_SHUTDOWN_PORT = [ Integer, "webapp.tomcat.shutdownPort", "Port to use for shutting down" ];
     public static final BasicAttributeSensor<String> CONNECTOR_STATUS = [String, "webapp.tomcat.connectorStatus", "Catalina connector state name"]
     
-    public TomcatServer(Map properties=[:], Entity owner=null) {
-        super(properties, owner)
+    public TomcatServer(Map flags=[:], Entity owner=null) {
+        super(flags, owner)
+        
+        setConfigIfValNonNull(SUGGESTED_SHUTDOWN_PORT, flags.shutdownPort)
     }
 
     @Override

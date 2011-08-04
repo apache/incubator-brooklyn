@@ -53,11 +53,12 @@ public abstract class JavaWebApp extends JavaApp {
 
     Map environment = [:]
 
-    public JavaWebApp(Map properties=[:], Entity owner=null) {
-        super(properties, owner)
+    public JavaWebApp(Map flags=[:], Entity owner=null) {
+        super(flags, owner)
 
-        if (properties.httpPort) setConfig(HTTP_PORT.configKey, properties.remove("httpPort"))
-
+        setConfigIfValNonNull(HTTP_PORT.configKey, flags.httpPort)
+        setConfigIfValNonNull(WAR, flags.war)
+        
         setAttribute(SERVICE_STATUS, "uninitialized")
     }
 

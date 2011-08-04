@@ -23,8 +23,10 @@ class JBoss7Server extends JavaWebApp {
     public static final BasicAttributeSensor<Integer> BYTES_SENT =
             [ Integer, "webapp.reqs.bytes.sent", "Total bytes sent by the webserver" ]
     
-    public JBoss7Server(Map properties=[:], Entity owner=null) {
-        super(properties, owner)
+    public JBoss7Server(Map flags=[:], Entity owner=null) {
+        super(flags, owner)
+        
+        setConfigIfValNonNull(MANAGEMENT_PORT, flags.managementPort)
     }
     
     @Override

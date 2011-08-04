@@ -31,8 +31,8 @@ public abstract class JavaApp extends AbstractService {
     public JavaApp(Map properties=[:], Entity owner=null) {
         super(properties, owner)
 
-        if (properties.jmxPort) setConfig(SUGGESTED_JMX_PORT, properties.remove("jmxPort"))
-        if (properties.jmxHost) setConfig(SUGGESTED_JMX_HOST, properties.remove("jmxHost"))
+        setConfigIfValNonNull(SUGGESTED_JMX_PORT, properties.jmxPort)
+        setConfigIfValNonNull(SUGGESTED_JMX_HOST, properties.jmxHost)
     }
 
     protected void initSensors() {

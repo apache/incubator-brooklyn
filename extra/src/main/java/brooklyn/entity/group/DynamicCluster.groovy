@@ -30,7 +30,6 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     private static final Logger logger = LoggerFactory.getLogger(DynamicCluster)
 
     Closure<Entity> newEntity
-    int initialSize
 
     Location location
     private Map createFlags
@@ -56,12 +55,11 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         Preconditions.checkArgument properties.get('newEntity') instanceof Closure, "'newEntity' must be a closure"
         newEntity = properties.remove('newEntity')
         
-        // TODO Set the default in config's INITIAL_SIZE; but then wouldn't read properties.initialSize!
-        
-        initialSize =  properties.remove("initialSize") ?: getConfig(INITIAL_SIZE)
-        setConfig(INITIAL_SIZE, initialSize)
+        setConfigIfValNonNull(INITIAL_SIZE, properties.initialSize)
 
-        // Save remaining properties for use when creating members
+        // Save flags for use when creating members
+        // TODO But we aren't calling remove anymore; passing them to the child isn't good because the 
+        // string in the properties isn't as unique as the ConfigKey constant!
         createFlags = properties
 
         setAttribute(SERVICE_UP, false)
@@ -72,7 +70,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         Preconditions.checkArgument locations.size() == 1, "Exactly one location must be supplied"
         location = Iterables.getOnlyElement(locations)
         this.locations.add(location)
-        resize(initialSize)
+        resize(getConfig(INITIAL_SIZE))
         policies.each { if (it instanceof Suspendable) it.resume() }
         setAttribute(SERVICE_UP, true)
     }

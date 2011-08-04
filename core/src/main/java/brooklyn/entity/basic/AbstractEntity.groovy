@@ -359,6 +359,10 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         oldVal
     }
 
+    protected void setConfigIfValNonNull(ConfigKey key, Object val) {
+        if (val != null) setConfig(key, val)
+    }
+
     public void refreshInheritedConfig() {
         if (getOwner() != null) {
             inheritedConfig.putAll(getOwner().getAllConfig())

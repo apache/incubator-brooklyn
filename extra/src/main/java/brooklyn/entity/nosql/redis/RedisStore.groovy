@@ -46,8 +46,7 @@ public class RedisStore extends AbstractService implements DataStore {
     public RedisStore(Map properties=[:], Entity owner=null) {
         super(properties, owner)
 
-        if (properties.redisPort) setConfig(REDIS_PORT.configKey, properties.remove("redisPort"))
-        port = getConfig(REDIS_PORT.configKey)
+        setConfigIfValNonNull(REDIS_PORT.configKey, properties.redisPort)
     }
 
     protected Collection<Integer> getRequiredOpenPorts() {
@@ -59,7 +58,8 @@ public class RedisStore extends AbstractService implements DataStore {
     @Override
     public void start(List<Location> locations) {
         super.start(locations)
-
+        
+        port = getConfig(REDIS_PORT.configKey)
         sshAdapter = new SshSensorAdapter(this, setup.machine)
         attributePoller = new AttributePoller(this)
         initSshSensors()

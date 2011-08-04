@@ -115,6 +115,15 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         
         OsgiClassLoadingContextFromBundle classLoadingContext = new OsgiClassLoadingContextFromBundle(null, getClass().classLoader);
         ClassLoadingContext.Defaults.setDefaultClassLoadingContext(classLoadingContext);
+        
+        setConfigIfValNonNull(APP_BUNDLES, props.appBundles)
+        setConfigIfValNonNull(APP_DESCRIPTOR_URL, props.appDescriptor)
+        setConfigIfValNonNull(INITIAL_TOPOLOGY_PER_LOCATION, props.initialTopologyPerLocation)
+        setConfigIfValNonNull(MAX_CONCURRENT_PROVISIONINGS_PER_LOCATION, props.maxConcurrentProvisioningsPerLocation)
+        setConfigIfValNonNull(MontereyManagementNode.WEB_USERS_CREDENTIAL, props.webUsersCredential)
+        setConfigIfValNonNull(MontereyManagementNode.MANAGEMENT_NODE_INSTALL_DIR, props.managementNodeInstallDir)
+        setConfigIfValNonNull(MontereyManagementNode.WEB_API_PORT, props.webApiPort)
+        setConfigIfValNonNull(MontereyContainerNode.NETWORK_NODE_INSTALL_DIR, props.networkNodeInstallDir)
     }
 
     public String getDisplayName() {

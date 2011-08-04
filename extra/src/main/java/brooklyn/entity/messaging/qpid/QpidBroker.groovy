@@ -45,7 +45,7 @@ public class QpidBroker extends JavaApp {
         virtualHost = properties.virtualHost ?: getConfig(VIRTUAL_HOST_NAME.configKey)
         setAttribute(VIRTUAL_HOST_NAME, virtualHost)
 
-        if (properties.amqpPort) setConfig(Attributes.AMQP_PORT.configKey, properties.remove("amqpPort"))
+        setConfigIfValNonNull(Attributes.AMQP_PORT.configKey, properties.amqpPort)
 
         setAttribute(Attributes.JMX_USER, properties.user ?: "admin")
         setAttribute(Attributes.JMX_PASSWORD, properties.password ?: "admin")

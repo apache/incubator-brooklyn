@@ -45,7 +45,16 @@ public abstract class AbstractController extends AbstractService {
     public AbstractController(Map properties=[:], Entity owner=null, Cluster cluster=null) {
         super(properties, owner)
 
-        portNumber = properties.portNumberSensor ?: getConfig(PORT_NUMBER_SENSOR)
+        setConfigIfValNonNull(PORT_NUMBER_SENSOR, properties.portNumberSensor)
+        setConfigIfValNonNull(URL.configKey, properties.url)
+        setConfigIfValNonNull(HTTP_PORT.configKey, properties.port)
+        setConfigIfValNonNull(PROTOCOL.configKey, properties.protocol)
+        setConfigIfValNonNull(DOMAIN_NAME.configKey, properties.domain)
+        
+        // TODO Are these checks too early? What if someone subsequently calls setConfig;
+        // why must they have already set the URL etc?
+
+        portNumber = getConfig(PORT_NUMBER_SENSOR)
         Preconditions.checkNotNull(portNumber, "The port number sensor must be supplied")
 
         if (getConfig(URL.configKey) || properties.containsKey("url")) {

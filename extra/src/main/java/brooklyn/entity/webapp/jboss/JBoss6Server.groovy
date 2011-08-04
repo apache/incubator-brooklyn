@@ -26,18 +26,16 @@ public class JBoss6Server extends JavaWebApp {
     // Jboss specific
     public static final BasicAttributeSensor<Integer> PORT_INCREMENT = [ Integer, "webapp.portIncrement", "Increment added to default JBoss ports" ];
             
-    public JBoss6Server(Map properties=[:], Entity owner=null) {
-        super(properties, owner)
+    public JBoss6Server(Map flags=[:], Entity owner=null) {
+        super(flags, owner)
 
-        def portIncrement = properties.portIncrement ?: 0
+        def portIncrement = flags.portIncrement ?: 0
         if (portIncrement < 0) {
             throw new IllegalArgumentException("JBoss port increment cannot be negative")
         }
         setConfig SUGGESTED_PORT_INCREMENT, portIncrement
-        
-        if (properties.clusterName) {
-            setConfig SUGGESTED_CLUSTER_NAME, properties.clusterName
-        }
+        setConfigIfValNonNull(SUGGESTED_CLUSTER_NAME, flags.clusterName)
+        setConfigIfValNonNull(SUGGESTED_SERVER_PROFILE, flags.serverProfile)
     }
 
     public SshBasedAppSetup getSshBasedSetup(SshMachineLocation loc) {
