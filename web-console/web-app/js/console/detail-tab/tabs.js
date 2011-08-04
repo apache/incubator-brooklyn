@@ -45,14 +45,14 @@ Brooklyn.tabs = (function() {
      * this.update(). If the tab is deselected, it stops listening.
      */
     Tab.prototype.tabSelected = function(tab_id) {
-        console.log(tab_id + "   " + id);
+        console.log(tab_id + "   " + this.id);
         if (tab_id === this.id) {
             console.log("binding");
-            update();
-            $(Brooklyn.eventBus).bind("update", update);
+            this.handler.update();
+            $(Brooklyn.eventBus).bind("update", this.handler.update);
         } else {
             console.log("unbinding");
-            $(Brooklyn.eventBus).unbind("update", update);
+            $(Brooklyn.eventBus).unbind("update", this.handler.update);
         }
     }
 

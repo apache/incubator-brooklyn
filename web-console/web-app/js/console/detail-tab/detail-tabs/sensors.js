@@ -1,55 +1,35 @@
 Brooklyn.sensors = (function() {
-    var id = 'sensors';
+    function SensorsTab() {
+        this.id = 'sensors';
 
-    // Config
-    var aoColumns = [ { "mDataProp": "name", "sTitle": "name", "sWidth":"30%"  },
-                      { "mDataProp": "description", "sTitle": "description", "sWidth":"30%" },
-                      { "mDataProp": "value", "sTitle": "value", "sWidth":"20%", "bSortable": false },
-                      { "mDataProp": "timestamp", "sTitle": "last updated", "sWidth":"20%"}];
+        this.update = function() {
+            if (typeof this.entity_id !== 'undefined') {
+                $.getJSON("../entity/sensors?id=" + this.entity_id, this.updateTableData).error(
+                    function() {$(Brooklyn.eventBus).trigger('update_failed', "Could not get sensor data.");}
+                );
+            }
+        };
 
-    // State
-    var entity_id;
+        this.updateTableData = function(json) {
+            // Config
+            var aoColumns = [ { "mDataProp": "name", "sTitle": "name", "sWidth":"30%"  },
+                              { "mDataProp": "description", "sTitle": "description", "sWidth":"30%" },
+                              { "mDataProp": "value", "sTitle": "value", "sWidth":"20%", "bSortable": false },
+                              { "mDataProp": "timestamp", "sTitle": "last updated", "sWidth":"20%"}];
 
-    function updateTableData(json) {
-        Brooklyn.tabs.getDataTable('#sensor-data', ".", aoColumns, undefined, json);
-        $(Brooklyn.eventBus).trigger('update_ok');
-    }
-
-    function update() {
-        if (typeof entity_id !== 'undefined') {
-            $.getJSON("../entity/sensors?id=" + entity_id, updateTableData).error(
-                function() {$(Brooklyn.eventBus).trigger('update_failed', "Could not get sensor data.");}
-            );
+            Brooklyn.tabs.getDataTable('#sensor-data', ".", aoColumns, undefined, json);
+            $(Brooklyn.eventBus).trigger('update_ok');
         }
-    }
 
-    /* This method is intended to be called as an event handler. The e paramater is
-     * unused.
-     */
-    function setEntityIdAndUpdate(e, id) {
-        entity_id = id;
-        update();
+        this.makeHandlers();
     }
-
-    function tabSelectedHandler(e, tab_id) {
-        tabSelected(tab_id, id);
-    }
-
-    function tabSelected(tab_id, my_tab_id) {
-        console.log(tab_id + "   " + id);
-        if (tab_id === id) {
-            console.log("binding");
-            update();
-            $(Brooklyn.eventBus).bind("update", update);
-        } else {
-            console.log("unbinding");
-            $(Brooklyn.eventBus).unbind("update", update);
-        }
-    }
+    SensorsTab.prototype = new Brooklyn.tabs.Tab();
 
     function init() {
-        $(Brooklyn.eventBus).bind("entity_selected", setEntityIdAndUpdate);
-        $(Brooklyn.eventBus).bind("tab_selected", tabSelectedHandler);
+        var tab = new SensorsTab();
+
+        $(Brooklyn.eventBus).bind("entity_selected", tab.handler.entitySelected);
+        $(Brooklyn.eventBus).bind("tab_selected", tab.handler.tabSelected);
     }
 
     return {
