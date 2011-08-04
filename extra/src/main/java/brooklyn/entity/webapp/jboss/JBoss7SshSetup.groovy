@@ -14,8 +14,8 @@ class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
     public static final String DEFAULT_VERSION = "7.0.0.Final"
     public static final int DEFAULT_FIRST_HTTP_PORT  = 8080
     public static final int DEFAULT_FIRST_MANAGEMENT_PORT  = 9990
-    public static final String DEPLOY_SUBDIR = "deployments"
     public static final String SERVER_TYPE = "standalone"
+    public static final String DEPLOY_SUBDIR = "standalone/deployments"
     
     private final String brooklynConfig = "standalone-brooklyn.xml"
     

@@ -4,9 +4,6 @@ import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
-import java.util.Map
-import java.util.Properties
-import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
@@ -15,17 +12,7 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import brooklyn.entity.Application
-import brooklyn.entity.webapp.tomcat.Tomcat7SshSetup
-import brooklyn.entity.webapp.tomcat.TomcatServer
-import brooklyn.event.EntityStartException
-import brooklyn.event.SensorEvent
-import brooklyn.event.SensorEventListener
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
-import brooklyn.location.basic.SshMachineLocation
-import brooklyn.management.SubscriptionContext
-import brooklyn.management.SubscriptionHandle
-import brooklyn.test.TestUtils.BooleanWithMessage
 import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
@@ -53,7 +40,7 @@ class Infinispan5ServerIntegrationTest {
         Socket shutdownSocket = null;
         SocketException gotException = null;
 
-        boolean socketClosed = new Repeater("Checking Tomcat has shut down")
+        boolean socketClosed = new Repeater("Checking Infinispan has shut down")
             .repeat({
                     if (shutdownSocket) shutdownSocket.close();
                     try { shutdownSocket = new Socket(InetAddress.localHost, DEFAULT_PORT); }
@@ -71,15 +58,24 @@ class Infinispan5ServerIntegrationTest {
         }
     }
 
+    public void ensureIsUp() {
+        Socket socket = new Socket(InetAddress.localHost, DEFAULT_PORT);
+        socket.close();
+    }
+
     @Test(groups = [ "Integration", "WIP" ])
     public void testInfinispanStartsAndStops() {
         final Infinispan5Server infini = new Infinispan5Server(owner:new TestApplication())
         infini.setConfig(Infinispan5Server.PORT.getConfigKey(), DEFAULT_PORT)
         infini.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
-        executeUntilSucceedsWithFinallyBlock ([:], {
-            assertTrue infini.getAttribute(Infinispan5Server.SERVICE_UP)
-        }, {
+        try {
+            executeUntilSucceeds ([:], {
+                assertTrue infini.getAttribute(Infinispan5Server.SERVICE_UP)
+                Socket socket = new Socket(InetAddress.localHost, DEFAULT_PORT);
+                socket.close();
+            })
+        } finally {
             infini.stop()
-        })
+        }
     }
 }

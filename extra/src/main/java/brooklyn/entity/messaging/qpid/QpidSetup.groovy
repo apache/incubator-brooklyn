@@ -119,12 +119,12 @@ public class QpidSetup extends SshBasedJavaAppSetup {
 
     @Override
     public List<String> getRestartScript() {
-       return makeRestartScript("qpid-server.pid")
+       return makeRestartScript("qpid", "qpid-server.pid")
     }
 
     @Override
     public List<String> getShutdownScript() {
-       return makeShutdownScript("qpid-server.pid")
+       return makeShutdownScript("qpid", "qpid-server.pid")
     }
 
     @Override

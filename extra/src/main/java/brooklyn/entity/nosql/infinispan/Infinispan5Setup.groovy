@@ -100,12 +100,7 @@ public class Infinispan5Setup extends SshBasedJavaAppSetup {
 
     /** @see SshBasedJavaAppSetup#getCheckRunningScript() */
     public List<String> getCheckRunningScript() {
-        List<String> checkRunning = makeCheckRunningScript("startServer.sh", "pid.txt")
-        List<String> checkOpen = makeCheckPortOpenScript(port)
-        List<String> result = []
-        result.addAll(checkRunning)
-        result.addAll(checkOpen)
-        return result
+        return makeCheckRunningScript("startServer.sh", "pid.txt") + makeCheckPortOpenScript(port)
     }
     
     @Override

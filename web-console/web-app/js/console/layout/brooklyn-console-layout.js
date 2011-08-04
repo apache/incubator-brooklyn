@@ -3,16 +3,7 @@
 $(document).ready(function () {
      $("body").layout({ applyDefaultStyles:true });
      //the option set in the master tab means that everytime the user selects a tab, we relayout the tabs content.
-     $("#master-tabs").tabs({
-     show: function (evt, ui) {
-					var tabLayout = $(ui.panel).data("layout");
-					if ( tabLayout ) tabLayout.resizeAll();
-		            var pageLayout = $("body").data("layout");
-		            if (pageLayout) pageLayout.resizeAll();
-				}
 
-     
-     });
     //have to layout each master tab, can't do it by class for some reason.
     $("#detail").layout( detailTabLayoutSettings );
 });

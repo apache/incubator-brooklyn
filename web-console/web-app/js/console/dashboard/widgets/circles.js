@@ -2,8 +2,8 @@ Brooklyn.circles = (function() {
     var map;
     var circles = [];
 
-    // meters radius per entity at each location
-    var circle_size = 50000;
+    // meters squared per entity
+    var area_per_entity = 300000000000;
 
     function drawCircle(lat, lng, radius) {
         var circle_latlong = new google.maps.LatLng(lat, lng);
@@ -23,6 +23,17 @@ Brooklyn.circles = (function() {
         return new google.maps.Circle(circle_options);
     }
 
+    /* Returns the area in square meters that a circle should be to represent
+     * count entities at a location. */
+    function location_area(count) {
+        return area_per_entity * count;
+    }
+
+    /* Returns the radius of a circle of the given area. */
+    function radius(area) {
+        return Math.sqrt(area / Math.PI);
+    }
+
     function drawCirclesFromJSON(json) {
         // Remove all existing circles
         for (i in circles) {
@@ -33,7 +44,7 @@ Brooklyn.circles = (function() {
         // Draw the new ones
         for (var i in json) {
             var l = json[i];
-            circles.push(drawCircle(l.lat, l.lng, l.entity_count * circle_size));
+            circles.push(drawCircle(l.lat, l.lng, radius(location_area(l.entity_count))));
         }
     }
 
@@ -60,6 +71,7 @@ Brooklyn.circles = (function() {
 
     function init() {
         drawMap();
+        drawCircles();
         $(Brooklyn.eventBus).bind("update", update);
     }
 

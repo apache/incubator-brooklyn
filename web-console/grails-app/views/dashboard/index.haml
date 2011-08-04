@@ -9,12 +9,14 @@
         %g:javascript{:src=>"console/util/datatable-pagination.js"}
         %g:javascript{:src=>"console/dashboard/widget-dashboard.js"}
     %body{:style=>"height:100%;width:100%;"}
-        .brooklyn-header
-            %ul
-                %li
-                    %a{:href=>"../dashboard/"}Dashboard
-                %li
-                    %a{:href=>"../detail/"}Detail
+        .ui-tabs.ui-widget.ui-widget-content.ui-corner-all
+            .brooklyn-header
+            %div
+                %ul{:class=>"ui-tabs-nav ui-helper-reset ui-helper-clearfix ui-widget-header ui-corner-all",:style=>"padding:1.2em 0em 0em 0em"}
+                    %li{:class=>"ui-state-default ui-corner-top ui-tabs-selected ui-state-active"}
+                        %a{:href=>"../dashboard/"}Dashboard
+                    %li{:class=>"ui-state-default ui-corner-top"}
+                        %a{:href=>"../detail/"}Detail
         #dashboard
             .ui-layout-center
                 %g:render{:template=>"dashboard"}

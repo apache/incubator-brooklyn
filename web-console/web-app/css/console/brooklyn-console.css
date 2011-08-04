@@ -14,15 +14,6 @@ body{
     height: 100%;
 }
 
-/* MASTER TABS AND MASTER LAYOUT */
-
-#master-tabs{
-    height:100%;
-    width:100%;
-    padding:0px;
-    border:none;
-}
-
 .master-tab{
     left:0px;
     right:0px;
@@ -48,6 +39,7 @@ body{
     top:0px;
     left:0px;
     margin:0px;
+    float:left;
 }
 
 li.master-filler-tab{
@@ -128,11 +120,6 @@ div#navigation{
     width: 200px;
     height:100%;
     border:1px solid #CCCCCC;
-}
-
-.tab-content-full-size {
-    width: 100%;
-    height:100%;
 }
 
 .tab-content-buttons{
@@ -306,4 +293,27 @@ textarea#logbox{
     width:70%;
     float:left;
     margin-left: 10px;
+}
+
+.activity-table {
+    min-height: 100px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.sensor-table {
+    min-height: 400px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.mapbox dl {
+    padding-bottom: 3px;
+}
+
+.mapbox dt {
+    float:left;
+    clear:left;
+    font-weight: bold;
+    padding-right: 5px;
 }

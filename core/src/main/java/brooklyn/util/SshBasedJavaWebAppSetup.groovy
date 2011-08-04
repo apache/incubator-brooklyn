@@ -31,7 +31,7 @@ public abstract class SshBasedJavaWebAppSetup extends SshBasedJavaAppSetup {
      */
     public String copy(File file) {
         String target = runDir + "/" + file.name
-        log.debug "Deploying file {} to {} on {}", file.name, target, machine
+        log.info "Deploying file {} to {} on {}", file.name, target, machine
         try {
             machine.copyTo file, target
         } catch (IOException ioe) {

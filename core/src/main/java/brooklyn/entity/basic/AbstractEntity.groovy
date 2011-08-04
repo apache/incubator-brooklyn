@@ -34,6 +34,7 @@ import brooklyn.util.task.BasicExecutionContext
 import brooklyn.util.task.BasicTask
 import brooklyn.util.task.ParallelTask
 
+
 /**
  * Default {@link Entity} implementation.
  *
@@ -47,6 +48,9 @@ import brooklyn.util.task.ParallelTask
  * nor are they inherited.)
  */
 public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
+    
+    // FIXME Remove name? Why have name and displayName? Same for Location...
+    
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractEntity.class)
 
     final String id = LanguageUtils.newUid()
@@ -242,7 +246,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     }
 
     @Override
-    public boolean removeOwnedChild(Entity child) {
+    public void removeOwnedChild(Entity child) {
         synchronized (ownedChildren) {
 	        ownedChildren.remove child
 	        child.clearOwner()

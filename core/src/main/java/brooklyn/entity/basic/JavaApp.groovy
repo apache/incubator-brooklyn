@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.ConfigKey
 import brooklyn.entity.Entity
 import brooklyn.event.AttributeSensor
-import brooklyn.event.adapter.AttributePoller
 import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.location.Location
 import brooklyn.util.internal.Repeater
@@ -28,7 +27,6 @@ public abstract class JavaApp extends AbstractService {
     public static final AttributeSensor<String> JMX_HOST = Attributes.JMX_HOST;
 
     transient JmxSensorAdapter jmxAdapter
-    transient AttributePoller attributePoller
 
     public JavaApp(Map properties=[:], Entity owner=null) {
         super(properties, owner)
@@ -37,7 +35,16 @@ public abstract class JavaApp extends AbstractService {
         if (properties.jmxHost) setConfig(SUGGESTED_JMX_HOST, properties.remove("jmxHost"))
     }
 
-    protected abstract void initSensors();
+    protected void initSensors() {
+        super.initSensors()
+        
+        if (!(getAttribute(JMX_HOST) && getAttribute(JMX_PORT)))
+        throw new IllegalStateException("JMX is not available")
+
+        jmxAdapter = new JmxSensorAdapter(this, 60*1000)
+        jmxAdapter.connect();
+        waitForJmx()
+    }
 
     protected Collection<Integer> getRequiredOpenPorts() {
         Collection<Integer> result = super.getRequiredOpenPorts()
@@ -53,23 +60,7 @@ public abstract class JavaApp extends AbstractService {
     }
 
     @Override
-    public void start(Collection<Location> locations) {
-        super.start locations
-
-        if (!(getAttribute(JMX_HOST) && getAttribute(JMX_PORT)))
-            throw new IllegalStateException("JMX is not available")
-
-        attributePoller = new AttributePoller(this)
-        jmxAdapter = new JmxSensorAdapter(this, 60*1000)
-        jmxAdapter.connect();
-        waitForJmx()
-
-        initSensors()
-    }
-
-    @Override
     public void stop() {
-        if (attributePoller) attributePoller.close()
         if (jmxAdapter) jmxAdapter.disconnect();
 
         super.stop()
