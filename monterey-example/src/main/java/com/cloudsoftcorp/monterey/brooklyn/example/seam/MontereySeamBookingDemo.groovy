@@ -19,7 +19,7 @@ import brooklyn.entity.group.DynamicFabric
 import brooklyn.entity.proxy.nginx.NginxController
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster
 import brooklyn.entity.webapp.DynamicWebAppCluster
-import brooklyn.entity.webapp.tomcat.TomcatServer
+import brooklyn.entity.webapp.jboss.JBoss7Server
 import brooklyn.launcher.BrooklynLauncher
 import brooklyn.location.Location
 import brooklyn.policy.ResizerPolicy
@@ -62,20 +62,28 @@ public class MontereySeamBookingDemo extends AbstractApplication {
     public MontereySeamBookingDemo(Map props=[:]) {
         super(props)
 
-        montereyNetwork = new MontereyNetwork(owner:this)
-        montereyNetwork.name = "Seam Booking"
-        montereyNetwork.setConfig APP_BUNDLES,
-                [ "src/main/resources/com.cloudsoftcorp.sample.booking.svc.api.jar",
-                  "src/main/resources/com.cloudsoftcorp.sample.booking.svc.impl_3.2.0.v20110502-351-10779.jar" ]
-        montereyNetwork.setConfig APP_DESCRIPTOR_URL, "src/main/resources/BookingAvailabilityApplication.conf"
-        montereyNetwork.setConfig WEB_USERS_CREDENTIAL, [ MONTEREY_ADMIN_CREDENTIAL ]
-        montereyNetwork.setConfig INITIAL_TOPOLOGY_PER_LOCATION,  [ LPP:1, MR:1, M:1, TP:1, SPARE:1 ]
+        montereyNetwork = new MontereyNetwork(
+                name : 'Seam Booking',
+                appBundles : [ "src/main/resources/com.cloudsoftcorp.sample.booking.svc.api.jar",
+                        "src/main/resources/com.cloudsoftcorp.sample.booking.svc.impl_3.2.0.v20110502-351-10779.jar" ],
+                appDescriptor : 'src/main/resources/BookingAvailabilityApplication.conf',
+                initialTopologyPerLocation : [ LPP:1, MR:1, M:1, TP:1, SPARE:1 ],
+                webUsersCredential : [MONTEREY_ADMIN_CREDENTIAL], 
+                
+                // FIXME For local testing only...
+                managementNodeInstallDir : "/Users/aled/monterey-management-node",
+                networkNodeInstallDir : "/Users/aled/monterey-network-node-copy1",
+                maxConcurrentProvisioningsPerLocation : 1,
+                webApiPort : 8090,
+        
+                this)
+        
         //montereyNetwork.policy << new MontereyLatencyOptimisationPolicy()
 
         Closure webServerFactory = { Map properties, Entity cluster ->
-            def server = new TomcatServer(properties)
-            server.setConfig(HTTP_PORT.configKey, 8080)
-            server.setConfig(TomcatServer.PROPERTY_FILES.subKey("MONTEREY_PROPERTIES"),
+            def server = new JBoss7Server(properties)
+            server.setConfig(JBoss7Server.HTTP_PORT.configKey, 8080)
+            server.setConfig(JBoss7Server.PROPERTY_FILES.subKey("MONTEREY_PROPERTIES"),
                     [
                         montereyManagementUrl : attributeWhenReady(montereyNetwork, MANAGEMENT_URL),
                         montereyUser : attributePostProcessedWhenReady(montereyNetwork, CLIENT_CREDENTIAL, { CredentialsConfig config -> config.username }),
@@ -97,8 +105,8 @@ public class MontereySeamBookingDemo extends AbstractApplication {
             ResizerPolicy policy = new ResizerPolicy(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND)
             policy.minSize = 1
             policy.maxSize = 5
-            policy.metricLowerBound = 10
-            policy.metricUpperBound = 100
+            policy.metricLowerBound = 5
+            policy.metricUpperBound = 30
             webCluster.cluster.addPolicy(policy)
 
             return webCluster

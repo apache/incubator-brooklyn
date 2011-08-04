@@ -46,8 +46,8 @@ public class MontereySpringTravelDemo extends AbstractApplication {
         app.start(locations)
     }
 
+    // Parse arguments for location ids and resolve each into a location
     private static List<Location> loadLocations(String[] argv) {
-        // Parse arguments for location ids and resolve each into a location
         List<String> ids = argv.length == 0 ? DEFAULT_LOCATIONS : Arrays.asList(argv)
         List<Location> locations = Locations.getLocationsById(ids)
         println "Starting in locations: "+ids
@@ -62,22 +62,23 @@ public class MontereySpringTravelDemo extends AbstractApplication {
     public MontereySpringTravelDemo(Map props=[:]) {
         super(props)
 
-        montereyNetwork = new MontereyNetwork(owner:this)
-        montereyNetwork.name = "Spring Travel"
-        montereyNetwork.setConfig APP_BUNDLES,
-                [ "src/main/resources/com.cloudsoftcorp.sample.booking.svc.api.jar",
-                  "src/main/resources/com.cloudsoftcorp.sample.booking.svc.impl_3.2.0.v20110502-351-10779.jar" ]
-        montereyNetwork.setConfig APP_DESCRIPTOR_URL, "src/main/resources/BookingAvailabilityApplication.conf"
-        montereyNetwork.setConfig WEB_USERS_CREDENTIAL, [ MONTEREY_ADMIN_CREDENTIAL ]
-        montereyNetwork.setConfig INITIAL_TOPOLOGY_PER_LOCATION,  [ LPP:1, MR:1, M:1, TP:1, SPARE:1 ]
+        montereyNetwork = new MontereyNetwork(
+                name : 'Spring Travel',
+                appBundles : [ "src/main/resources/com.cloudsoftcorp.sample.booking.svc.api.jar",
+                        "src/main/resources/com.cloudsoftcorp.sample.booking.svc.impl_3.2.0.v20110502-351-10779.jar" ],
+                appDescriptor : 'src/main/resources/BookingAvailabilityApplication.conf',
+                initialTopologyPerLocation : [ LPP:1, MR:1, M:1, TP:1, SPARE:1 ],
+                webUsersCredential : [MONTEREY_ADMIN_CREDENTIAL],
+                this)
+
         //montereyNetwork.policy << new MontereyLatencyOptimisationPolicy()
 
         Closure webServerFactory = { Map properties, Entity cluster ->
             def server = new TomcatServer(properties)
-            server.setConfig(HTTP_PORT.configKey, 8080)
+            server.setConfig(TomcatServer.HTTP_PORT.configKey, 8080)
             server.setConfig(TomcatServer.PROPERTY_FILES.subKey("MONTEREY_PROPERTIES"),
                     [
-                        montereyManagementUrl : attributePostProcessedWhenReady(montereyNetwork, MANAGEMENT_URL),
+                        montereyManagementUrl : attributeWhenReady(montereyNetwork, MANAGEMENT_URL),
                         montereyUser : attributePostProcessedWhenReady(montereyNetwork, CLIENT_CREDENTIAL, { CredentialsConfig config -> config.username }),
                         montereyPassword : attributePostProcessedWhenReady(montereyNetwork, CLIENT_CREDENTIAL, { CredentialsConfig config -> config.password }),
                         montereyLocation : cluster.locations.first().findLocationProperty("iso3166").first()
@@ -97,8 +98,8 @@ public class MontereySpringTravelDemo extends AbstractApplication {
             ResizerPolicy policy = new ResizerPolicy(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND)
             policy.minSize = 1
             policy.maxSize = 5
-            policy.metricLowerBound = 10
-            policy.metricUpperBound = 100
+            policy.metricLowerBound = 5
+            policy.metricUpperBound = 30
             webCluster.cluster.addPolicy(policy)
 
             return webCluster
@@ -113,7 +114,7 @@ public class MontereySpringTravelDemo extends AbstractApplication {
                 this)
         webFabric.setConfig(WAR, "src/main/resources/booking-mvc.war")
         webFabric.setConfig(INITIAL_SIZE, 1)
-        
+
         nginxEntities = new DynamicGroup(
                 displayName : 'Web Fronts',
                 this, { Entity e -> (e instanceof NginxController) })
