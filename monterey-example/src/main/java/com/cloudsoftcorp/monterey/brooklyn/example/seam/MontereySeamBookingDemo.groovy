@@ -59,7 +59,7 @@ public class MontereySeamBookingDemo extends AbstractApplication {
     final DynamicGroup nginxEntities
     final GeoscalingDnsService geoDns
     
-    public MontereSeamBookingDemo(Map props=[:]) {
+    public MontereySeamBookingDemo(Map props=[:]) {
         super(props)
 
         montereyNetwork = new MontereyNetwork(owner:this)
