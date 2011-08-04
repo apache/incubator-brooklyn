@@ -1,7 +1,7 @@
 package com.cloudsoftcorp.monterey.brooklyn.example.spring
 
-import static brooklyn.entity.webapp.JavaWebApp.*
 import static brooklyn.entity.group.Cluster.*
+import static brooklyn.entity.webapp.JavaWebApp.*
 import static brooklyn.event.basic.DependentConfiguration.*
 import static com.cloudsoftcorp.monterey.brooklyn.entity.MontereyManagementNode.*
 import static com.cloudsoftcorp.monterey.brooklyn.entity.MontereyNetwork.*

@@ -1,7 +1,7 @@
 package com.cloudsoftcorp.monterey.brooklyn.example.seam
 
-import static brooklyn.entity.webapp.JavaWebApp.*
 import static brooklyn.entity.group.Cluster.*
+import static brooklyn.entity.webapp.JavaWebApp.*
 import static brooklyn.event.basic.DependentConfiguration.*
 import static com.cloudsoftcorp.monterey.brooklyn.entity.MontereyManagementNode.*
 import static com.cloudsoftcorp.monterey.brooklyn.entity.MontereyNetwork.*
@@ -29,7 +29,7 @@ import com.cloudsoftcorp.monterey.brooklyn.entity.MontereyNetwork
 import com.cloudsoftcorp.monterey.network.control.plane.web.UserCredentialsConfig
 import com.cloudsoftcorp.util.web.client.CredentialsConfig
 
-public class MontereSeamBookingDemo extends AbstractApplication {
+public class MontereySeamBookingDemo extends AbstractApplication {
     private static final UserCredentialsConfig MONTEREY_ADMIN_CREDENTIAL = new UserCredentialsConfig("myname", "mypass", "admin")
     
     public static final List<String> DEFAULT_LOCATIONS = [ Locations.LOCALHOST ]
@@ -37,7 +37,7 @@ public class MontereSeamBookingDemo extends AbstractApplication {
     public static void main(String[] argv) {
         List<Location> locations = loadLocations(argv)
 
-        MontereSeamBookingDemo app = new MontereSeamBookingDemo(
+        MontereySeamBookingDemo app = new MontereySeamBookingDemo(
                 name : 'brooklyn-wide-area-demo',
                 displayName : 'Brooklyn Wide-Area Seam Booking Demo Application'
             )
