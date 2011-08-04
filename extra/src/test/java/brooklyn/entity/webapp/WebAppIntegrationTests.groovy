@@ -114,7 +114,7 @@ class WebAppIntegrationTests {
 
                 assertTrue activityValue in Double
                 assertEquals activityValue, 0.0d
-            })
+            }, useGroovyTruth: true)
             
             // apply workload on 1 per sec; reqs/sec should update
             executeUntilSucceeds({
