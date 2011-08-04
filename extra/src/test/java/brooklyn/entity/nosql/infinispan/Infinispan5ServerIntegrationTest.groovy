@@ -71,7 +71,7 @@ class Infinispan5ServerIntegrationTest {
         }
     }
 
-    @Test(groups = [ "Integration" ])
+    @Test(groups = [ "Integration", "WIP" ])
     public void testInfinispanStartsAndStops() {
         final Infinispan5Server infini = new Infinispan5Server(owner:new TestApplication())
         infini.setConfig(Infinispan5Server.PORT.getConfigKey(), DEFAULT_PORT)
