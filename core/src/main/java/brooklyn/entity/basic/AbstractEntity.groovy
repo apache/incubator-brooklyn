@@ -48,6 +48,9 @@ import brooklyn.util.task.ParallelTask
  * nor are they inherited.)
  */
 public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
+    
+    // FIXME Remove name? Why have name and displayName? Same for Location...
+    
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractEntity.class)
 
     final String id = LanguageUtils.newUid()

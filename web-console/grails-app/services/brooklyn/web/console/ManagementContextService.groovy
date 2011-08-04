@@ -114,16 +114,16 @@ class ManagementContextService {
             }
         }
 
-        private List<Location> testLocations = [
-            new GeneralPurposeLocation([id: "us-east-1", name:"US-East-1",displayName:"US-East-1",streetAddress:"Northern Virginia, USA",description:"Northern Virginia (approx)",
-                                        latitude:38.0,longitude:-76.0]),
-            new GeneralPurposeLocation([id: "us-west-1", name:"US-West-1",displayName:"US-West-1",streetAddress:"Northern California, USA",description:"Northern California",
-                                        latitude:40.0,longitude:-120.0]),
-            new GeneralPurposeLocation([id: "eu-west-1", name:"EU-West-1",displayName:"EU-West-1",streetAddress:"Dublin, Ireland, UK",description:"Dublin, Ireland",
-                                        latitude:53.34778,longitude:-6.25972])
-        ];
 
         private class TestDataEntity extends AbstractEntity {
+            private List<Location> testLocations = [
+                new GeneralPurposeLocation([id: "us-east-1", name:"US-East-1", iso3166: "US-CA", displayName:"US-East-1", streetAddress:"Northern Virginia, USA", description:"Northern Virginia (approx)",
+                                            latitude:38.0,longitude:-76.0]),
+                new GeneralPurposeLocation([id: "us-west-1", name:"US-West-1", iso3166: "US-VA", displayName:"US-West-1", streetAddress:"Northern California, USA", description:"Northern California",
+                                            latitude:40.0,longitude:-120.0]),
+                new GeneralPurposeLocation([id: "eu-west-1", name:"EU-West-1", iso3166: "IE", displayName:"EU-West-1", streetAddress:"Dublin, Ireland", description:"Dublin, Ireland",
+                                            latitude:53.34778,longitude:-6.25972])
+            ];
             TestDataEntity(Entity owner, String displayName) {
                 super([:], owner)
 
@@ -162,6 +162,13 @@ class ManagementContextService {
                     "jmx.port": 1000,
                     "webapp.reqs.processing.time": 100
             ]
+
+            private List<Location> testLocations = [
+                    new GeneralPurposeLocation([id: "us-east-1", name:"US-East-1", iso3166: "US-VA", displayName:"US-East-1", streetAddress:"Northern Virginia, USA", description:"Northern Virginia (approx)",
+                                                latitude:38.0,longitude:-76.0]),
+                    new GeneralPurposeLocation([id: "us-west-1", name:"US-West-1", iso3166: "US-CA", displayName:"US-West-1", streetAddress:"Northern California, USA", description:"Northern California",
+                                                latitude:40.0,longitude:-120.0])
+            ];
 
             public TestTomcatEntity(Entity owner, String displayName) {
                 super([:], owner)

@@ -8,13 +8,13 @@ Brooklyn.util = (function(){
                 "bAutoWidth": false,
                 "bLengthChange": false,
                 "bJQueryUI": true,
-                "bPaginate": paginate,
+                "bPaginate": false,
                 "bStateSave": true,
                 "bDeferRender": true,
                 "sAjaxDataProp": sAjaxDataProp,
                 "aoColumns": aoColumns
         });
-
+        
         if (clickCallback) {
             $(id + " tbody").click(clickCallback);
         }
@@ -36,7 +36,11 @@ Brooklyn.util = (function(){
     function getDataTableSelectedRowData(id, event) {
         var row = getDataTableSelectedRow(id, event);
         // TODO bit hacky!
-        return row._aData;
+        if (row) {
+            return row._aData;
+        } else {
+            return {};
+        }
     }
 
     return {

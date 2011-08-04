@@ -21,29 +21,21 @@ import com.google.common.io.Files
  */
 public class NginxController extends AbstractController {
     transient HttpSensorAdapter httpAdapter
-    transient AttributePoller attributePoller
 
     public NginxController(Map properties=[:], Entity owner=null) {
         super(properties, owner)
     }
 
-    @Override
-    public void start(Collection<Location> locations) {
-        super.start(locations)
-
+    protected void initSensors() {
+        super.initSensors()
         httpAdapter = new HttpSensorAdapter(this)
-        attributePoller = new AttributePoller(this)
-        initHttpSensors()
+        attributePoller.addSensor(SERVICE_UP, { computeNodeUp() } as ValueProvider)
     }
-
+    
     @Override
     public void stop() {
         attributePoller.close()
         super.stop()
-    }
-
-    public void initHttpSensors() {
-        attributePoller.addSensor(SERVICE_UP, { computeNodeUp() } as ValueProvider)
     }
 
     private boolean computeNodeUp() {

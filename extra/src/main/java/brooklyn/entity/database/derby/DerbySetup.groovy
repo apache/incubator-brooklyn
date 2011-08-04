@@ -121,12 +121,12 @@ public class DerbySetup extends SshBasedJavaAppSetup {
 
     @Override
     public List<String> getRestartScript() {
-       return makeRestartScript("derby-server.pid")
+       return makeRestartScript("derby", "derby-server.pid")
     }
 
     @Override
     public List<String> getShutdownScript() {
-       return makeShutdownScript("derby-server.pid")
+       return makeShutdownScript("derby", "derby-server.pid")
     }
 
     @Override

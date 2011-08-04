@@ -1,4 +1,4 @@
-package com.cloudsoftcorp.monterey.brooklyn.example
+package brooklyn.launcher
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

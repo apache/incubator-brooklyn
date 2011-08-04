@@ -169,8 +169,8 @@ public abstract class SshBasedAppSetup {
     public List<String> getRestartScript() { makeRestartScript() }
 
     /** @see SshBasedJavaSetup#getRestartScript() */
-    protected List<String> makeRestartScript(String pidFile = "pid.txt") {
-        return makeCheckRunningScript(entity.id, pidFile) + [ "kill -HUP \$(cat ${pidFile})" ]
+    protected List<String> makeRestartScript(String service = null, String pidFile = "pid.txt") {
+        return makeCheckRunningScript(service, pidFile) + [ "kill -HUP \$(cat ${pidFile})" ]
     }
 
     /**
@@ -181,8 +181,8 @@ public abstract class SshBasedAppSetup {
     public List<String> getShutdownScript() { makeShutdownScript() }
 
     /** @see SshBasedJavaSetup#getShutdownScript() */
-    protected List<String> makeShutdownScript(String pidFile = "pid.txt") {
-        return makeCheckRunningScript(entity.id, pidFile) + [
+    protected List<String> makeShutdownScript(String service = null, String pidFile = "pid.txt") {
+        return makeCheckRunningScript(service, pidFile) + [
             "kill \$(cat ${pidFile})",
             "sleep 1",
             "kill -9 \$(cat ${pidFile}) || exit 0",

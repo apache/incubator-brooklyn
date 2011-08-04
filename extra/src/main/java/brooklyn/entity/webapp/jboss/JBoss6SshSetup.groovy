@@ -11,7 +11,7 @@ import brooklyn.util.SshBasedJavaWebAppSetup
 public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     public static final String DEFAULT_VERSION = "6.0.0.Final"
     public static final String DEFAULT_INSTALL_DIR = DEFAULT_INSTALL_BASEDIR+"/"+"jboss"
-    public static final String DEFAULT_DEPLOY_SUBDIR = "webapps"
+    public static final String DEFAULT_SERVER_TYPE = "standard"
     public static final int DEFAULT_HTTP_PORT = 8080;
 
     private static final portGroupName = "ports-brooklyn"
@@ -32,8 +32,8 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         String version = suggestedJbossVersion ?: DEFAULT_VERSION
         String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"${version}"+"/"+"jboss-${version}")
         String runDir = suggestedRunDir ?: (BROOKLYN_HOME_DIR+"/"+"${entity.application.id}"+"/"+"jboss-${entity.id}")
-        String deployDir = runDir+"/"+DEFAULT_DEPLOY_SUBDIR
-        String serverProfile = suggestedServerProfile ?: "standard"
+        String serverProfile = suggestedServerProfile ?: DEFAULT_SERVER_TYPE
+        String deployDir = "$runDir/server/$serverProfile/deploy"
         String clusterName = suggestedClusterName ?: ""
         
         String jmxHost = suggestedJmxHost ?: machine.getAddress().getHostName()

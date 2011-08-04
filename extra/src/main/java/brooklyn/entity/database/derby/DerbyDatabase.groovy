@@ -61,6 +61,7 @@ public class DerbyDatabase extends JavaApp implements Database {
     }
 
     public void initSensors() {
+        super.initSensors()
         attributePoller.addSensor(JavaApp.SERVICE_UP, { computeNodeUp() } as ValueProvider)
     }
 

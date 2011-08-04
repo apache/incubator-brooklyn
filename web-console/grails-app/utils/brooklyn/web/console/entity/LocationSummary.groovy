@@ -19,7 +19,7 @@ public class LocationSummary {
     final String streetAddress;
     final String longitude;
     final String latitude;
-    final String iso3166Code;
+    final String iso3166;
 
     public LocationSummary(Location location) {
         this.name = location.getName();
@@ -28,7 +28,7 @@ public class LocationSummary {
         this.displayName = location.findLocationProperty('displayName') ?: location.getName();
         this.latitude = location.findLocationProperty('latitude');
         this.longitude = location.findLocationProperty('longitude');
-        this.iso3166Code = location.findLocationProperty('iso');
+        this.iso3166 = location.findLocationProperty('iso3166');
     }
 }
 
