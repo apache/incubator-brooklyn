@@ -1,19 +1,24 @@
 package com.cloudsoftcorp.monterey.brooklyn.example
 
-import brooklyn.demo.Demo;
-import brooklyn.entity.basic.AbstractApplication;
+import java.util.List
 
-class MontereyDemo extends Demo {
+import brooklyn.demo.Locations
+import brooklyn.launcher.BrooklynLauncher
+import brooklyn.location.Location
+
+class MontereyDemo {
+
+    public static final List<String> DEFAULT_LOCATIONS = [ Locations.LOCALHOST ]
 
     public static void main(String[] argv) {
-        MontereyDemo demoRunner = new MontereyDemo()
-        demoRunner.start(argv)
-    }
+        List<String> ids = argv.length == 0 ? DEFAULT_LOCATIONS : Arrays.asList(argv)
+        println "Starting in locations: "+ids
+        List<Location> locations = Locations.getLocationsById(ids)
 
-    @Override
-    protected AbstractApplication createApplication() {
         MontereySpringTravel app = new MontereySpringTravel(name:'brooklyn-wide-area-demo',
-                displayName:'Brooklyn Wide-Area Spring Travel Demo Application')
-        return app
+            displayName:'Brooklyn Wide-Area Spring Travel Demo Application')
+
+        BrooklynLauncher.manage(app)
+        app.start(locations)
     }
 }

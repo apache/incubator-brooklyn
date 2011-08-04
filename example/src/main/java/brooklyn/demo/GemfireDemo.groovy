@@ -11,9 +11,8 @@ import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.group.Cluster
 import brooklyn.entity.nosql.gemfire.GemfireFabric
 import brooklyn.entity.nosql.gemfire.GemfireServer
-import brooklyn.launcher.WebAppRunner
+import brooklyn.launcher.BrooklynLauncher
 import brooklyn.location.Location
-import brooklyn.management.internal.AbstractManagementContext
 
 class GemfireDemo extends AbstractApplication {
     
@@ -21,11 +20,11 @@ class GemfireDemo extends AbstractApplication {
     // FIXME Change GemfireSetup's start (should it be "&"), and isRunning
     // FIXME Change GemfireServer.waitForEntityStart, to wait for service to really be up? Rather than just process
     
+    public static final Logger LOG = LoggerFactory.getLogger(GemfireDemo)
+    
     private static final File GEMFIRE_CONF_FILE = new File("src/main/resources/gemfire/server-conf.xml")
     private static final File GEMFIRE_JAR_FILE = new File("src/main/resources/gemfire/springtravel-datamodel.jar")
     private static final String GEMFIRE_INSTALL_DIR = "/Users/aled/temp/gemfire"//"/gemfire"
-    
-    public static final Logger LOG = LoggerFactory.getLogger(Demo)
     
     public static final List<String> DEFAULT_LOCATIONS = [ Locations.LOCALHOST, Locations.LOCALHOST ]
 
@@ -53,25 +52,7 @@ class GemfireDemo extends AbstractApplication {
         GemfireDemo app = new GemfireDemo(name:'gemfire-wide-area-demo',
                                             displayName:'Gemfire Wide-Area Demo')
 
-        // Locate the management context
-        AbstractManagementContext context = app.getManagementContext()
-        context.manage(app)
-
-        // Start the web console service
-        WebAppRunner web
-        try {
-            web = new WebAppRunner(context)
-            web.start()
-        } catch (Exception e) {
-            LOG.warn("Failed to start web-console", e)
-        }
-        
-        // Start the application
+        BrooklynLauncher.manage(app)
         app.start(locations)
-        
-        addShutdownHook {
-            app?.stop()
-            web?.stop()
-        }
     }
 }
