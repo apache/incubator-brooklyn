@@ -6,6 +6,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
+import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.DynamicGroup
 import brooklyn.entity.dns.geoscaling.GeoscalingDnsService
 import brooklyn.entity.group.Cluster
@@ -19,7 +20,7 @@ import brooklyn.launcher.BrooklynLauncher
 import brooklyn.location.Location
 import brooklyn.policy.ResizerPolicy
 
-public class TomcatSpringTravelDemo {
+public class TomcatSpringTravelDemo extends AbstractApplication {
     public static final Logger LOG = LoggerFactory.getLogger(TomcatSpringTravelDemo)
 
     public static final List<String> DEFAULT_LOCATIONS = [ Locations.LOCALHOST ]
