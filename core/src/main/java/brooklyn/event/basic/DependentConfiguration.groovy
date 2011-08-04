@@ -42,11 +42,23 @@ public class DependentConfiguration {
         new BasicTask<T>(tag:"attributeWhenReady", displayName:"retrieving $source $sensor", { waitInTaskForAttributeReady(source, sensor, ready); } )    
     }
 
-    public static <T> Task<T> attributePostProcessedWhenReady(Entity source, AttributeSensor<T> sensor, Closure ready = { it }, Closure postProcess = { it }) {
+    public static <T> Task<T> attributePostProcessedWhenReady(Entity source, AttributeSensor<T> sensor, Closure ready, Closure postProcess) {
         attributePostProcessedWhenReady(source, sensor, new Predicate() { public boolean apply(Object o) { ready.call(o) } }, postProcess)
     }
+
+    public static <T> Task<T> attributePostProcessedWhenReady(Entity source, AttributeSensor<T> sensor, Closure postProcess) {
+        attributePostProcessedWhenReady(source, sensor, { it }, postProcess)
+    }
+
+    public static <T> Task<T> valueWhenAttributeReady(Entity source, AttributeSensor<T> sensor, Object value) {
+        attributePostProcessedWhenReady(source, sensor, { it }, { value })
+    }
+
+    public static <T> Task<T> valueWhenAttributeReady(Entity source, AttributeSensor<T> sensor, Closure valueProvider) {
+        attributePostProcessedWhenReady(source, sensor, { it }, valueProvider)
+    }
     
-    public static <T> Task<T> attributePostProcessedWhenReady(Entity source, AttributeSensor<T> sensor, Predicate ready, Closure postProcess = { it }) {
+    public static <T> Task<T> attributePostProcessedWhenReady(Entity source, AttributeSensor<T> sensor, Predicate ready, Closure postProcess) {
         new BasicTask<T>(tag:"attributePostProcessedWhenReady", displayName:"retrieving $source $sensor", 
                 { def result = waitInTaskForAttributeReady(source, sensor, ready); return postProcess.call(result) } )
     }
