@@ -36,10 +36,7 @@ Brooklyn.activitywidget = ( function(){
         if(checked){
             getRecentActivity();
             }
-        else{
-            alert("NOT AUTO REFRESHING");
-            }
-    }
+        }
 
     return {
         init: init
