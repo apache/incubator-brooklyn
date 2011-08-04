@@ -198,10 +198,10 @@ class WebAppIntegrationTests {
         // Everything can deploy hello world
         basicEntities().collect {
             [it[0], "hello-world.war", "hello-world"]
-        } /*+ (ignore travel wars for the moment)
+        } +
         // Tomcat can deploy Spring travel
         [[new TomcatServer(owner: new TestApplication(), httpPort: DEFAULT_HTTP_PORT), 
-                "swf-booking-mvc.war", "swf-booking-mvc/spring/intro"]] + 
+                "swf-booking-mvc.war", "swf-booking-mvc/spring/intro"]] /*+
         // JBoss can deploy Seam travel
         [
             [new JBoss6Server(owner: new TestApplication(), httpPort: DEFAULT_HTTP_PORT), null, null],
