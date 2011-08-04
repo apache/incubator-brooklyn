@@ -7,13 +7,10 @@ import java.util.Map
 import brooklyn.entity.Effector
 import brooklyn.entity.Entity
 import brooklyn.entity.ParameterType
-import brooklyn.entity.BasicParameterType
 import brooklyn.entity.basic.AbstractService
 import brooklyn.entity.basic.BasicParameterType
 import brooklyn.entity.basic.EffectorWithExplicitImplementation
-import brooklyn.entity.group.AbstractController
 import brooklyn.entity.trait.Startable
-import brooklyn.event.adapter.AttributePoller
 import brooklyn.event.adapter.HttpSensorAdapter
 import brooklyn.event.adapter.ValueProvider
 import brooklyn.event.basic.BasicAttributeSensor
@@ -46,18 +43,25 @@ class GemfireServer extends AbstractService implements Startable {
 
     private static final int CONTROL_PORT_VAL = 8084    
     transient HttpSensorAdapter httpAdapter
-    transient AttributePoller attributePoller
 
     public GemfireServer(Map properties=[:], Entity owner=null) {
         super(properties, owner)
     }
 
-    @Override
-    public void stop() {
-        attributePoller.close()
-        super.stop()
+    protected void initSensors() {
+        super.initSensors()
+        
+        int hubPort = getConfig(SUGGESTED_HUB_PORT)
+        MachineLocation machine = locations.first()
+        
+        setAttribute(HUB_PORT, hubPort)
+        setAttribute(HOSTNAME, machine.address.hostAddress)
+        setAttribute(CONTROL_URL, "http://"+machine.address.hostAddress+":"+CONTROL_PORT_VAL)
+        
+        httpAdapter = new HttpSensorAdapter(this)
+        attributePoller.addSensor(SERVICE_UP, { computeNodeUp() } as ValueProvider)
     }
-
+    
     @Override
     public void restart() {
         throw new UnsupportedOperationException()
@@ -67,19 +71,6 @@ class GemfireServer extends AbstractService implements Startable {
         return GemfireSetup.newInstance(this, loc)
     }
     
-    public void startInLocation(SshMachineLocation machine) {
-        super.startInLocation(machine)
-        
-        int hubPort = getConfig(SUGGESTED_HUB_PORT)
-        setAttribute(HUB_PORT, hubPort)
-        setAttribute(HOSTNAME, machine.address.hostAddress)
-        setAttribute(CONTROL_URL, "http://"+machine.address.hostAddress+":"+CONTROL_PORT_VAL)
-        
-        attributePoller = new AttributePoller(this)
-        httpAdapter = new HttpSensorAdapter(this)
-        attributePoller.addSensor(SERVICE_UP, { computeNodeUp() } as ValueProvider)
-    }
-
     private boolean computeNodeUp() {
         String url = getAttribute(CONTROL_URL)
         ValueProvider<Integer> provider = httpAdapter.newStatusValueProvider(url)
@@ -108,13 +99,6 @@ class GemfireServer extends AbstractService implements Startable {
         }
     }
 
-    public void shutdownInLocation(MachineLocation machine) {
-        if (setup) setup.stop()
-        
-        // Only release this machine if we ourselves provisioned it (e.g. it might be running multiple services)
-        provisioningLoc?.release(machine)
-    }
-    
     public void addGateways(Collection<GatewayConnectionDetails> gateways) {
         int counter = 0
         gateways.each { GatewayConnectionDetails gateway ->

@@ -8,8 +8,9 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.ConfigKey
 import brooklyn.entity.Entity
-import brooklyn.entity.trait.Configurable;
+import brooklyn.entity.trait.Configurable
 import brooklyn.entity.trait.Startable
+import brooklyn.event.adapter.AttributePoller
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.Location
@@ -38,6 +39,7 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
 
     private MachineProvisioningLocation provisioningLoc
     protected SshBasedAppSetup setup
+    protected transient AttributePoller attributePoller
     
     AbstractService(Map properties=[:], Entity owner=null) {
         super(properties, owner)
@@ -51,8 +53,22 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
 
     public abstract SshBasedAppSetup getSshBasedSetup(SshMachineLocation loc);
 
+    protected void initSensors() {
+    }
+
     public void start(Collection<Location> locations) {
+        doStart(locations)
+        initSensors()
+    }
+
+    /**
+     * Separate doStart method, to be called by sub-classes that override start to do extra stuff
+     * before invoking initSensors
+     */
+    protected void doStart(Collection<Location> locations) {
         startInLocation locations
+        
+        attributePoller = new AttributePoller(this)
     }
 
     public void startInLocation(Collection<Location> locs) {
@@ -117,6 +133,8 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
     }
 
     public void shutdownInLocation(MachineLocation machine) {
+        if (attributePoller) attributePoller.close()
+        
         if (setup) setup.stop()
         
         // Only release this machine if we ourselves provisioned it (e.g. it might be running multiple services)

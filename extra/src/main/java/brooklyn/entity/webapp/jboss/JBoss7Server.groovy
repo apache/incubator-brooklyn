@@ -34,6 +34,8 @@ class JBoss7Server extends JavaWebApp {
 
     @Override
     protected void initSensors() {
+        super.initSensors()
+        
         def host = getAttribute(JMX_HOST)
         def port = getAttribute(MANAGEMENT_PORT)
         
