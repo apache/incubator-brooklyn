@@ -1,16 +1,22 @@
 package brooklyn.web.console.entity
 
-import brooklyn.event.Sensor
-import brooklyn.event.SensorEvent
 import java.text.DateFormat
 import java.text.SimpleDateFormat
+
+import brooklyn.event.Sensor
+import brooklyn.event.SensorEvent
 
 /**
  */
 public class SensorSummary {
+    
+    // TODO ENGR-1808: want a nicer way to render values; what if it doesn't have a nice toString?
+    // Can we move the rendering decision out of here, and into EntityController.sensors
+    // When we have a RESTful api then more important we give the raw values
+    
     public final String name
     public final String description
-    public final Object value
+    public final String value
     public final String timestamp
 
     // formatter is not thread-safe; use thread-local storage
@@ -32,7 +38,7 @@ public class SensorSummary {
     public SensorSummary(SensorEvent event) {
         this.name = event.sensor.name
         this.description = event.sensor.description
-        this.value = event.value
+        this.value = event.value?.toString()
         this.timestamp = formatter.get().format(new Date(event.timestamp))
     }
 }
