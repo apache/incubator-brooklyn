@@ -130,11 +130,6 @@ div#navigation{
     border:1px solid #CCCCCC;
 }
 
-.tab-content-full-size {
-    width: 100%;
-    height:100%;
-}
-
 .tab-content-buttons{
      border:1px solid #CCCCCC;
 }
@@ -311,5 +306,11 @@ textarea#logbox{
 .activity-table {
     min-height: 100px;
     max-height: 200px;
+    overflow-y: auto;
+}
+
+.sensor-table {
+    min-height: 400px;
+    max-height: 400px;
     overflow-y: auto;
 }
