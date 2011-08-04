@@ -99,7 +99,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
                 delta.times { addedEntities += addNode() }
                 Map<Entity, Task> tasks = [:]
                 addedEntities.each { entity ->
-                    tasks.put(entity, entity.invoke(Startable.START, [locations:[ location ]]))
+                    tasks.put(entity, entity.invoke(Startable.START, [:]))
                 }
 
                 // TODO Could have CompoundException, rather than propagating first
