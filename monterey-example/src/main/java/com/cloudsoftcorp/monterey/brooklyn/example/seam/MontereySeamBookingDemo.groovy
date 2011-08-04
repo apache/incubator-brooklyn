@@ -36,7 +36,7 @@ public class MontereySeamBookingDemo extends AbstractApplication {
     public static final List<String> DEFAULT_LOCATIONS = [ Locations.LOCALHOST ]
     
     // FIXME For localhost-mode
-    AtomicInteger nextPort = new AtomicInteger(9000)
+//    AtomicInteger nextPort = new AtomicInteger(9000)
     
     public static void main(String[] argv) {
         List<Location> locations = loadLocations(argv)
@@ -76,9 +76,9 @@ public class MontereySeamBookingDemo extends AbstractApplication {
                 webApiPort : 8090,
                 
                 // FIXME For local testing only...
-                managementNodeInstallDir : "/Users/aled/monterey-management-node",
-                networkNodeInstallDir : "/Users/aled/monterey-network-node-copy1",
-                maxConcurrentProvisioningsPerLocation : 1,
+//                managementNodeInstallDir : "/Users/aled/monterey-management-node",
+//                networkNodeInstallDir : "/Users/aled/monterey-network-node-copy1",
+//                maxConcurrentProvisioningsPerLocation : 1,
     
                 this)
         
@@ -89,8 +89,8 @@ public class MontereySeamBookingDemo extends AbstractApplication {
             server.setConfig(JBoss7Server.HTTP_PORT.configKey, 8080)
             
             // FIXME, for localhost
-            server.setConfig(JBoss7Server.HTTP_PORT.configKey, nextPort.incrementAndGet())
-            server.setConfig(JBoss7Server.MANAGEMENT_PORT.configKey, nextPort.incrementAndGet())
+//            server.setConfig(JBoss7Server.HTTP_PORT.configKey, nextPort.incrementAndGet())
+//            server.setConfig(JBoss7Server.MANAGEMENT_PORT.configKey, nextPort.incrementAndGet())
             
             server.setConfig(JBoss7Server.PROPERTY_FILES.subKey("MONTEREY_PROPERTIES"),
                     [
