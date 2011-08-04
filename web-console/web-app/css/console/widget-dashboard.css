@@ -41,15 +41,15 @@
 }
 .small-widget-column{
     width:33%;
-    padding-bottom:10px;
+    padding-bottom:5px;
 }
 .medium-widget-column{
     width:50%;
-    padding-bottom:10px;
+    padding-bottom:5px;
 }
 .big-widget-column{
     width:100%;
-    padding-bottom:10px;
+    padding-bottom:5px;
 }
 
 #dashboard-container{
@@ -70,4 +70,12 @@
 #circles-map {
     width: 100%;
     height: 300px;
+}
+
+#activity-table-container {
+    width: 100%;
+}
+
+#recent-activity-table {
+    width: 100%;
 }

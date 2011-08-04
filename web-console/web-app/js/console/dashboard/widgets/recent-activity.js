@@ -3,11 +3,11 @@ Brooklyn.activitywidget = ( function(){
 
 /* INITIAL CONFIG */
     var id = "#recent-activity-table";
-    var aoColumns = [   { "mDataProp": "entityDisplayName", "sTitle": "Entity Name", "sWidth":"16%" },
-                        { "mDataProp": "displayName", "sTitle": "Task Name", "sWidth":"17%" },
-                        { "mDataProp": "submitTimeUtc", "sTitle": "Submit time", "sWidth":"17%" },
-                        { "mDataProp": "endTimeUtc", "sTitle": "End time", "sWidth":"17%" },
-                        { "mDataProp": "currentStatus", "sTitle": "Status", "sWidth":"15%" }];
+    var aoColumns = [   { "mDataProp": "entityDisplayName", "sTitle": "Entity Name", "sWidth":"20%" },
+                        { "mDataProp": "displayName", "sTitle": "Task Name", "sWidth":"20%" },
+                        { "mDataProp": "submitTimeUtc", "sTitle": "Submit time", "sWidth":"20%" },
+                        { "mDataProp": "endTimeUtc", "sTitle": "End time", "sWidth":"20%" },
+                        { "mDataProp": "currentStatus", "sTitle": "Status", "sWidth":"20%" }];
     
     function updateWidgetTable(json){
         Brooklyn.tabs.getDataTable(id, ".", aoColumns, updateLog, json);
