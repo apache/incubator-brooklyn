@@ -5,9 +5,11 @@ import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
@@ -15,13 +17,16 @@ import org.testng.annotations.Test
 import brooklyn.entity.basic.JavaApp
 import brooklyn.entity.webapp.jboss.JBoss6Server
 import brooklyn.entity.webapp.jboss.JBoss7Server
+import brooklyn.entity.webapp.tomcat.Tomcat7SshSetup
 import brooklyn.entity.webapp.tomcat.TomcatServer
+import brooklyn.event.EntityStartException
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.management.SubscriptionContext
 import brooklyn.management.SubscriptionHandle
 import brooklyn.test.entity.TestApplication
+import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
 
 /**
@@ -50,6 +55,35 @@ class WebAppIntegrationTests {
         }
     }
     
+    @AfterMethod(groups = [ "Integration" ])
+    public void ensureTomcatIsShutDown() {
+        Socket shutdownSocket = null;
+        SocketException gotException = null;
+
+        boolean socketClosed = new Repeater("Checking Tomcat has shut down")
+            .repeat({
+                if (shutdownSocket) shutdownSocket.close();
+                try { shutdownSocket = new Socket(InetAddress.localHost, Tomcat7SshSetup.DEFAULT_FIRST_SHUTDOWN_PORT); }
+                catch (SocketException e) { gotException = e; return; }
+                gotException = null
+            })
+            .every(100, TimeUnit.MILLISECONDS)
+            .until({ gotException })
+            .limitIterationsTo(25)
+            .run();
+
+        if (socketClosed == false) {
+            logger.error "Tomcat did not shut down - this is a failure of the last test run";
+            logger.warn "I'm sending a message to the Tomcat shutdown port";
+            OutputStreamWriter writer = new OutputStreamWriter(shutdownSocket.getOutputStream());
+            writer.write("SHUTDOWN\r\n");
+            writer.flush();
+            writer.close();
+            shutdownSocket.close();
+            throw new Exception("Last test run did not shut down Tomcat")
+        }
+    }
+    
     /**
      * Provides instances of TomcatServer and JBoss{6,7}Server to the tests below.
      */
@@ -60,7 +94,10 @@ class WebAppIntegrationTests {
         JBoss7Server jboss7 = [owner: new TestApplication(), httpPort: DEFAULT_HTTP_PORT]
         return [[tomcat], [jboss6], [jboss7]]
     }
-    
+
+    /**
+     * Checks an entity can start, set SERVICE_UP to true and shutdown again.
+     */
     @Test(groups="Integration", dataProvider="basicEntities")
     public void canStartupAndShutdown(JavaWebApp entity) {
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
@@ -68,9 +105,14 @@ class WebAppIntegrationTests {
             assertTrue entity.getAttribute(JavaApp.SERVICE_UP)
         }, {
             entity.stop()
+            assertFalse entity.getAttribute(JavaApp.SERVICE_UP)
         })
     }
     
+    /**
+     * Checks that an entity correctly sets request and error count metrics by
+     * connecting to a non-existent URL several times.
+     */
     @Test(groups="Integration", dataProvider="basicEntities")
     public void publishesRequestAndErrorCountMetrics(JavaWebApp entity) {
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
@@ -102,6 +144,10 @@ class WebAppIntegrationTests {
         }, useGroovyTruth:true, timeout:60*SECONDS)
     }
     
+    /**
+     * Checks an entity publishes correct requests/second figures and that these figures
+     * fall to zero after a period of no activity.
+     */
     @Test(groups="Integration", dataProvider="basicEntities")
     public void publishesRequestsPerSecondMetric(JavaWebApp entity) {
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
@@ -198,12 +244,10 @@ class WebAppIntegrationTests {
         // Everything can deploy hello world
         basicEntities().collect {
             [it[0], "hello-world.war", "hello-world"]
-        } +
-        // Tomcat can deploy Spring travel
-        [[new TomcatServer(owner: new TestApplication(), httpPort: DEFAULT_HTTP_PORT), 
-                "swf-booking-mvc.war", "swf-booking-mvc/spring/intro"]] /*+
-        // JBoss can deploy Seam travel
-        [
+        } + [ // Tomcat can deploy Spring travel
+            [new TomcatServer(owner: new TestApplication(), httpPort: DEFAULT_HTTP_PORT), 
+                "swf-booking-mvc.war", "swf-booking-mvc/spring/intro"]
+        ] /*+ [ // JBoss can deploy Seam travel
             [new JBoss6Server(owner: new TestApplication(), httpPort: DEFAULT_HTTP_PORT), null, null],
             [new JBoss7Server(owner: new TestApplication(), httpPort: DEFAULT_HTTP_PORT), null, null],
         ]*/
