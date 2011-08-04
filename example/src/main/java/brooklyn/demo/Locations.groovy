@@ -6,6 +6,8 @@ import org.jclouds.ec2.domain.InstanceType
 
 import brooklyn.entity.nosql.gemfire.GemfireServer
 import brooklyn.entity.proxy.nginx.NginxController
+import brooklyn.entity.webapp.jboss.JBoss6Server
+import brooklyn.entity.webapp.jboss.JBoss7Server
 import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.location.Location
 import brooklyn.location.MachineProvisioningLocation
@@ -152,6 +154,12 @@ public class Locations {
         AwsLocation region = awsFactory.newLocation(regionName)
         region.setTagMapping([
             (TomcatServer.class.getName()):[
+                imageId:imageIdVanilla,
+                securityGroups:["brooklyn-all"]],
+            (JBoss6Server.class.getName()):[
+                imageId:imageIdVanilla,
+                securityGroups:["brooklyn-all"]],
+            (JBoss7Server.class.getName()):[
                 imageId:imageIdVanilla,
                 securityGroups:["brooklyn-all"]],
             (NginxController.class.getName()):[

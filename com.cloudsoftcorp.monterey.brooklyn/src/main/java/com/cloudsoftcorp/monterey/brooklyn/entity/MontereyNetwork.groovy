@@ -73,18 +73,19 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     
     private static final Logger LOG = Loggers.getLogger(MontereyNetwork.class);
 
-    public static final BasicConfigKey<Collection<URL>> APP_BUNDLES = [Collection.class, "monterey.app.bundles", "Application bundles" ]
-    public static final BasicConfigKey<URL> APP_DESCRIPTOR_URL = [URL.class, "monterey.app.descriptorUrl", "Application descriptor URL" ]
-    public static final BasicConfigKey<Map<Dmn1NodeType,Integer>> INITIAL_TOPOLOGY_PER_LOCATION = [ Map.class, 
-            "monterey.cluster.initialTopology", "Initial topology per cluster" ]
-    public static final BasicConfigKey<Boolean> MAX_CONCURRENT_PROVISIONINGS_PER_LOCATION = 
+    public static final BasicConfigKey<Collection<String>> APP_BUNDLES = [ Collection, "monterey.app.bundles", "Application bundles" ]
+    public static final BasicConfigKey<String> APP_DESCRIPTOR_URL = [ String, "monterey.app.descriptorUrl", "Application descriptor URL" ]
+    public static final BasicConfigKey<Map<String,Integer>> INITIAL_TOPOLOGY_PER_LOCATION =
+            [ Map, "monterey.cluster.initialTopology", "Initial topology per cluster" ]
+    public static final BasicConfigKey<Integer> MAX_CONCURRENT_PROVISIONINGS_PER_LOCATION = 
             [ Integer, "monterey.provisioning.maxConcurrentProvisioningsPerLocation", 
             "The maximum number of nodes that can be concurrently provisioned per location", Integer.MAX_VALUE ]
     
-    public static final BasicAttributeSensor<URL> MANAGEMENT_URL = [ URL.class, "monterey.management-url", "Management URL" ]
-    public static final BasicAttributeSensor<String> NETWORK_ID = [ String.class, "monterey.network-id", "Network id" ]
-    public static final BasicAttributeSensor<String> APPLICTION_NAME = [ String.class, "monterey.application-name", "Application name" ]
-    public static final BasicAttributeSensor<CredentialsConfig> CLIENT_CREDENTIAL = [ CredentialsConfig.class, "monterey.management.clientCredential", "Client credentials for connecting to web-api" ]
+    public static final BasicAttributeSensor<String> MANAGEMENT_URL = [ String, "monterey.management-url", "Management URL" ]
+    public static final BasicAttributeSensor<String> NETWORK_ID = [ String, "monterey.network-id", "Network id" ]
+    public static final BasicAttributeSensor<String> APPLICATION_NAME = [ String, "monterey.application-name", "Application name" ]
+    public static final BasicAttributeSensor<CredentialsConfig> CLIENT_CREDENTIAL =
+            [ CredentialsConfig, "monterey.management.clientCredential", "Client credentials for connecting to web-api" ]
 
     /** up, down, etc? */
     public static final BasicAttributeSensor<String> STATUS = [ String, "monterey.status", "Status" ]
@@ -112,7 +113,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
     public MontereyNetwork(Map props=[:], Entity owner=null) {
         super(props, owner);
         
-        OsgiClassLoadingContextFromBundle classLoadingContext = new OsgiClassLoadingContextFromBundle(null, MontereyNetwork.class.getClassLoader());
+        OsgiClassLoadingContextFromBundle classLoadingContext = new OsgiClassLoadingContextFromBundle(null, getClass().classLoader);
         ClassLoadingContext.Defaults.setDefaultClassLoadingContext(classLoadingContext);
     }
 
@@ -253,22 +254,22 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
             managementNode.deployCloudEnvironment(cloudEnvironmentDto);
             
             if (!appDescriptor) {
-                URL appDescriptorUrl = getConfig(APP_DESCRIPTOR_URL)
+                String appDescriptorUrl = getConfig(APP_DESCRIPTOR_URL)
                 if (appDescriptorUrl) {
                     appDescriptor = DescriptorLoader.loadDescriptor(appDescriptorUrl);
                 }
             }
             if (appDescriptor) {
-                Collection<URL> bundleUrls = getConfig(APP_BUNDLES)
-                BundleSet bundleSet = (bundleUrls) ? BundleSet.fromUrls(bundleUrls) : BundleSet.EMPTY;
+                Collection<String> bundleUrls = getConfig(APP_BUNDLES)
+                BundleSet bundleSet = (bundleUrls) ? BundleSet.fromUrls(bundleUrls.collect { String url -> new File(url).toURI().toURL() }) : BundleSet.EMPTY;
                 managementNode.deployApplication(appDescriptor, bundleSet);
             }
             
             // Create fabrics and clusters for each node-type
-            Map<Dmn1NodeType,Integer> initialTopologyPerLocation = getConfig(INITIAL_TOPOLOGY_PER_LOCATION) ?: [:]
+            Map<String,Integer> initial = getConfig(INITIAL_TOPOLOGY_PER_LOCATION) ?: [:]
             startFabricLayers()
             locations.each {
-                startClusterLayersInLocation(it, initialTopologyPerLocation)
+                startClusterLayersInLocation(it, initial.collectEntries { String key, Integer value -> [ Dmn1NodeType.valueOf(key), value ] })
             }
             
             LOG.info("Created new monterey network: "+networkId);

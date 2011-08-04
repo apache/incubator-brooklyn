@@ -56,11 +56,11 @@ import com.google.gson.Gson
 public class MontereyManagementNode extends AbstractEntity implements Startable {
     private static final Logger LOG = Loggers.getLogger(MontereyManagementNode.class);
 
-    public static final BasicConfigKey<String> MANAGEMENT_NODE_INSTALL_DIR = [String.class, "monterey.managementnode.installdir", "Monterey management node installation directory", "/home/monterey/monterey-management-node" ]
-    public static final BasicConfigKey<Collection> WEB_USERS_CREDENTIAL = [Collection.class, "monterey.managementnode.webusers", "Monterey management node web-user credentials" ]
-    public static final BasicConfigKey<Collection> WEB_API_PORT = [Integer.class, "monterey.managementnode.webApiPort", "Monterey management node web-api port", 8080 ]
+    public static final BasicConfigKey<String> MANAGEMENT_NODE_INSTALL_DIR = [ String, "monterey.managementnode.installdir", "Monterey management node installation directory", "/home/monterey/monterey-management-node" ]
+    public static final BasicConfigKey<Collection> WEB_USERS_CREDENTIAL = [ Collection, "monterey.managementnode.webusers", "Monterey management node web-user credentials" ]
+    public static final BasicConfigKey<Integer> WEB_API_PORT = [ Integer, "monterey.managementnode.webApiPort", "Monterey management node web-api port", 8080 ]
     
-    public static final BasicAttributeSensor<URL> MANAGEMENT_URL = [ URL.class, "monterey.management-url", "Management URL" ]
+    public static final BasicAttributeSensor<String> MANAGEMENT_URL = [ String, "monterey.management-url", "Management URL" ]
 
     /** up, down, etc? */
     public static final BasicAttributeSensor<String> STATUS = [ String, "monterey.status", "Status" ]
@@ -208,7 +208,7 @@ public class MontereyManagementNode extends AbstractEntity implements Startable 
             
             this.connectionDetails = new MontereyNetworkConnectionDetails(networkId, managementUrl, webAdminCredential, webClientCredential, controlNodeId, controlNodeId);
             
-            setAttribute MANAGEMENT_URL, managementUrl
+            setAttribute MANAGEMENT_URL, managementUrl.toExternalForm()
 
             LOG.info("Created new monterey management node: "+connectionDetails);
 
