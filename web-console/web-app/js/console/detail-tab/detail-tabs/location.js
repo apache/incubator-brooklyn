@@ -1,111 +1,49 @@
 Brooklyn.location = (function() {
     // Config
     var tableId = '#location-data';
-    var aoColumns = [ { "mDataProp": "name", "sTitle": "Location", "sWidth":"100%"  }];
+    var aoColumns = [ { "mDataProp": "name", "sWidth":"100%"  }];
     var appLocations;
     // Status
     var map;
     var loc;
-    var locationNumber = 0;
 
     function updateLocation(event) {
-        var result = Brooklyn.tabs.getDataTableSelectedRowData(tableId, event);
+        reset();
+        $(event.target.parentNode).addClass('row_selected');
 
-        // TODO why is this necessary? (location, etc should be in result!)
-        for (i in appLocations) {
-            if (appLocations[i].name === result.name) {
-                locationNumber = i;
-                moveToLoc();
-                break;
-            }
-        }
- 	$(event.target.parentNode).addClass('row_selected');
+        var result = Brooklyn.util.getDataTableSelectedRowData(tableId, event);
+        //map.setCenter(result.marker.position);
+        result.infowindow.open(map, result.marker);
     }
 
-    function moveToLoc() {
-        var settings = Brooklyn.tabs.getDataTable(tableId).fnSettings().aoData;
-        for(row in settings) {
-       	    $(settings[row].nTr).removeClass('row_selected');
-   	}
-
-        for(i in appLocations) {
-            appLocations[i].infowindow.close(map , appLocations[i].marker);
+    function reset() {
+        var settings = Brooklyn.util.getDataTable(tableId).fnSettings().aoData;
+        for(var row in settings) {
+            $(settings[row].nTr).removeClass('row_selected');
+            // TODO bit hacky!
+            settings[row]._aData.infowindow.close(map, settings[row]._aData.marker);
         }
-
-        map.setCenter(appLocations[locationNumber].location);
-        appLocations[locationNumber].infowindow.open(map , appLocations[locationNumber].marker);
     }
 
-    function addLocationToMap(location, i){
-        var address = location.add;
-        var lat = location.lat;
-        var lon = location.lon;
-        var name = location.name;
-        var iso = location.iso;
-        var description = location.description;
+    function buildAppLocation(loc) {
+        var lon = loc.longitude;
+        var lat = loc.latitude;
+        var name = loc.displayName;
 
-        if (address != null) {
-            new google.maps.Geocoder().geocode( { 'address': address}, function(results, status) {
-                if (status === google.maps.GeocoderStatus.OK) { 
-                    loc = results[0].geometry.location;
-                    appLocations[i].location = loc;
-                    var contentString = '<div id="content" style="height:80px">'+
-                        '<h1>'+address+'</h1>'+
-                        '<table border="1">'+
-                        '<tr>'+
-                        '<td>Address</td>'+
-                        '<td>Active</td>'+
-                        '<td>Resources</td>'+
-                        '</tr>'+
-                        '<tr>'+
-                        '<td>'+address+'</td>'+
-                        '<td>True</td>'+
-                        '<td>'+'resources'+'</td>'+
-                        '</tr>'+
-                        '</table>'+
-                        '</div>';
-                    var marker = new google.maps.Marker({
-                        map: map,
-                        position: loc,
-                        title: address
-                    });
-                    var infowindow = new google.maps.InfoWindow({
-                        content: contentString
-                    });
-                    google.maps.event.addListener(marker, 'click' , function(){
-                        infowindow.open(map, marker);
-                    });
-                    appLocations[i].marker = marker;
-                    appLocations[i].infowindow = infowindow;
-                    appLocations[i].locationNumber = i;
-                    locationNumber = locationNumber + 1;
-                    map.setCenter(loc);
-                } else {
-                    $(Brooklyn.eventBus).trigger('update_failed', "Got data from server but could not geocode an entity: "
-                                                 + status);
-                }
-            });
-        } else if (lat != null && lon != null) {
-            loc = new google.maps.LatLng(lat, lon);
-            appLocations[i].location = loc;
-            var contentString = '<div id="content" style="height:80px">'+
-                '<h1>'+'address'+'</h1>'+
-                '<table border="1">'+
-                '<tr>'+
-                '<td>Address</td>'+
-                '<td>Active</td>'+
-                '<td>Resources</td>'+
-                '</tr>'+
-                '<tr>'+
-                '<td>'+'address'+'</td>'+
-                '<td>True</td>'+
-                '<td>'+'resources'+'</td>'+
-                '</tr>'+
-                '</table>'+
+        if (lat != null && lon != null) {
+            var contentString =
+                '<div id="content" class="mapbox">'+
+                '<dl>' +
+                '<dt>Name:</dt><dd>' + name + '</dd>' +
+                '<dt>ISO-3166:</dt><dd> ' + loc.iso3166 + '</dd>' +
+                '<dt>Lat-Long:</dt><dd> ' + displayLatLong(lat, lon) + '</dd>' +
+                '<dt>Address:</dt><dd> ' + loc.streetAddress + '</dd>' +
+                '</dl>' +
                 '</div>';
+            var gloc = new google.maps.LatLng(lat, lon);
             var marker = new google.maps.Marker({
                 map: map,
-                position: loc ,
+                position: gloc,
                 title: "Title"
             });
             var infowindow = new google.maps.InfoWindow({
@@ -114,88 +52,81 @@ Brooklyn.location = (function() {
             google.maps.event.addListener(marker, 'click' , function(){
                 infowindow.open(map , marker);
             });
-            appLocations[i].marker = marker;
-            appLocations[i].infowindow = infowindow;
-            appLocations[i].locationNumber = i;
-            locationNumber = locationNumber + 1;
-            map.setCenter(loc);
-        } else if (iso != null) {
+            var newLoc = {
+                name : name,
+                marker : marker,
+                infowindow : infowindow,
+                gloc : gloc
+            };
+            newLoc.locationNumber = appLocations.length;
+            appLocations.push(newLoc);
+        } else if (loc.iso3166 != null) {
             // use ISO code TBI
             alert("use of ISO Code TBI");
         } else {
-            $(Brooklyn.eventBus).trigger('update_failed',
-                                         "No geolocation information available from google for " + location.name);
+            alert("need latitude and longditude (note ISO code TBI)");
         }
     }
 
-    // TODO call when set of locations changes?
-    function updateLocations() {
+    function updateLocationsAux(locations) {
         var myOptions = {
             width: 400,
-            zoom: 7,
-            mapTypeId: google.maps.MapTypeId.ROADMAP
+            mapTypeId: google.maps.MapTypeId.ROADMAP,
         }
 
         map = new google.maps.Map(document.getElementById("map-canvas"), myOptions);
-        for(i in appLocations) {
-            addLocationToMap(appLocations[i], i);
+        appLocations = new Array();
+        for(var i in locations) {
+            buildAppLocation(locations[i]);
         }
-        Brooklyn.util.getDataTable(tableId, '.', aoColumns, updateLocation, appLocations, false);
+
+        extendMap();
+
+        Brooklyn.util.getDataTable(tableId, '.', aoColumns, updateLocation, appLocations);
     }
 
     function resize(e, id) {
+        reset();
+
         if (id === 'location') {
             $('#map-canvas').width('98%');
             $('#map-canvas').height('500px');
 
             google.maps.event.trigger(map, 'resize');
-            if(appLocations.length <= locationNumber) {
-                locationNumber = 0;
-            }
-            map.setCenter(appLocations[locationNumber].location);
+
+            extendMap();
         }
     }
-    function getLocations(e,id){
+
+    function extendMap() {
+        if (appLocations.length > 0) {
+            var bounds = new google.maps.LatLngBounds(appLocations[0].gloc);
+            for (var i in appLocations) {
+                bounds.extend(appLocations[i].gloc);
+            }
+            map.fitBounds(bounds);
+        }
+    }
+
+    function updateLocations(e,id) {
         if (typeof id !== 'undefined') {
-            $.getJSON("../entity/locations?id=" + id, handleLocations).error(
+            $.getJSON("../entity/locations?id=" + id, updateLocationsAux).error(
                 function() {$(Brooklyn.eventBus).trigger('update_failed', "Location view could not get locations.");});
         }
     }
 
-    function handleLocations(locations){
-        appLocations = new Array();
-        if (locations.length > 0) {
-            for(i in locations){
-                var description = locations[i].description;
-                var displayname = locations[i].displayName;
-                var name = locations[i].displayName;
-                var lat = locations[i].latitude;
-                var lon = locations[i].longitude;
-                var add = locations[i].streetAddress;
-                var iso = locations[i].iso;
-                var jsonLoc = {name: name,
-                               displayname: displayname,
-                               description: description,
-                               lat: lat,
-                               lon: lon,
-                               add: add,
-                               iso: iso};
-
-                appLocations.push(jsonLoc);
-            }
-            updateLocations();
-        } else {
-            updateLocations();
-        }
+    function displayLatLong(lat, lon) {
+        var displayLatLng =  (!lat || lat > 0 ? '+' : '') + lat + ' ' + (!lon || lon > 0 ? '+' : '') + lon;
+        return displayLatLng.replace(/-/g, '&#8209;');
     }
-    
 
     function init() {
         $(Brooklyn.eventBus).bind("tab_selected", resize);
-        $(Brooklyn.eventBus).bind("entity_selected", getLocations);
+        $(Brooklyn.eventBus).bind("entity_selected", updateLocations);
     }
 
-    return { init : init, resize : resize, locationNumber: locationNumber, appLocations: appLocations }
+    return { init : init, resize : resize, displayLatLong : displayLatLong }
+
 })();
 
 $(document).ready(Brooklyn.location.init);

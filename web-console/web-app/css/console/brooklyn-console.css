@@ -315,3 +315,14 @@ textarea#logbox{
     max-height: 400px;
     overflow-y: auto;
 }
+
+.mapbox dl {
+    padding-bottom: 3px;
+}
+
+.mapbox dt {
+    float:left;
+    clear:left;
+    font-weight: bold;
+    padding-right: 5px;
+}

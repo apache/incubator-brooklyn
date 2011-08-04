@@ -36,7 +36,11 @@ Brooklyn.util = (function(){
     function getDataTableSelectedRowData(id, event) {
         var row = getDataTableSelectedRow(id, event);
         // TODO bit hacky!
-        return row._aData;
+        if (row) {
+            return row._aData;
+        } else {
+            return {};
+        }
     }
 
     return {
