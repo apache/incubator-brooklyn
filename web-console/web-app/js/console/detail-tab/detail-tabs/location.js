@@ -30,16 +30,20 @@ Brooklyn.location = (function() {
         var lat = loc.latitude;
         var name = loc.displayName;
 
+        var locationInfo = {"Name": name,
+                            "ISO-3166": loc.iso3166,
+                            "Lat-Long": displayLatLong(lat, lon),
+                            "Address": loc.streetAddress};
+
         if (lat != null && lon != null) {
-            var contentString =
-                '<div id="content" class="mapbox">'+
-                '<dl>' +
-                '<dt>Name:</dt><dd>' + name + '</dd>' +
-                '<dt>ISO-3166:</dt><dd> ' + loc.iso3166 + '</dd>' +
-                '<dt>Lat-Long:</dt><dd> ' + displayLatLong(lat, lon) + '</dd>' +
-                '<dt>Address:</dt><dd> ' + loc.streetAddress + '</dd>' +
-                '</dl>' +
-                '</div>';
+            var contentString = '<div id="content" class="mapbox"><dl>';
+
+            for (var key in locationInfo) {
+                contentString += '<dt>' + key + '</dt>' + '<dd>' + locationInfo[key] + '</dd>';
+            }
+
+            contentString += '</dl> </div>';
+
             var gloc = new google.maps.LatLng(lat, lon);
             var marker = new google.maps.Marker({
                 map: map,

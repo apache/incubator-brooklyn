@@ -317,3 +317,7 @@ textarea#logbox{
     font-weight: bold;
     padding-right: 5px;
 }
+
+.mapbox dt:after {
+    content: ":";
+}
