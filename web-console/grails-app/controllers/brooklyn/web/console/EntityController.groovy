@@ -32,7 +32,7 @@ class EntityController {
     }
 
     def list = {
-        render(toEntitySummaries(entityService.getAllEntities()) as JSON)
+        render(entityService.getAllEntities().collect {new EntitySummary(it)} as JSON)
     }
 
     def info = {
@@ -40,7 +40,7 @@ class EntityController {
         if (id) {
             Entity entity = entityService.getEntity(id)
             if (entity != null) {
-                render(toEntitySummary(entity) as JSON)
+                render(new EntitySummary(entity) as JSON)
             } else {
                 render(status: 404,
                        text: '{message: "Cannot retrieve info: Entity with specified id '+ params.id + ' does not exist"}')
@@ -51,8 +51,8 @@ class EntityController {
     }
 
     def search = {
-        render(toEntitySummaries(entityService.getEntitiesMatchingCriteria(params.name, params.id, params.applicationId))
-               as JSON)
+        render(entityService.getEntitiesMatchingCriteria(params.name, params.id, params.applicationId)
+               .collect {new EntitySummary (it)} as JSON)
     }
 
     def breadcrumbs = {
@@ -88,7 +88,7 @@ class EntityController {
                 def locationSummaries = []
                 for (loc in entityLocations){
                     //for each loc create location summary and push to array
-                    locationSummaries += toLocationSummary(loc)
+                    locationSummaries += new LocationSummary(loc)
                 }
                 render(locationSummaries as JSON)
             }
@@ -154,17 +154,5 @@ class EntityController {
         }
 
         render([roots] as JSON)
-    }
-
-    private EntitySummary toEntitySummary(Entity entity) {
-        return new EntitySummary(entity);
-    }
-
-    private Set<EntitySummary> toEntitySummaries(Collection<Entity> entities) {
-        entities.collect { toEntitySummary(it) }
-    }
-    
-    private LocationSummary toLocationSummary(Location location){
-        return new LocationSummary(location);
     }
 }
