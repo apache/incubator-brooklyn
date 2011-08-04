@@ -81,13 +81,15 @@ public class DynamicGroup extends AbstractGroup {
         boolean changed = false
         Collection<Entity> currentMembers = super.getMembers()
         Collection<Entity> toRemove = []
-        toRemove.addAll(currentMembers);
+        toRemove.addAll(currentMembers)
         ((AbstractManagementContext) getManagementContext()).getEntities().each {
-            if (acceptsEntity(it) && !currentMembers.contains(it)) {
-                log.info("$this rescan detected new item $it")
-                addMember(it)
+            if (acceptsEntity(it)) {
                 toRemove.remove(it)
-                changed = true
+                if (!currentMembers.contains(it)) {
+                    log.info("$this rescan detected new item $it")
+                    addMember(it)
+                    changed = true
+                }
             }
         }
         toRemove.each { 
