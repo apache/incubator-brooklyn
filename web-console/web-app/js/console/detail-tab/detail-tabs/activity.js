@@ -10,7 +10,7 @@ Brooklyn.activity = (function(){
                       { "mDataProp": "currentStatus", "sTitle": "Status", "sWidth":"15%" }];
 
     function updateTable(json){
-        Brooklyn.tabs.getDataTable(id, ".", aoColumns, updateLog, json);
+        Brooklyn.util.getDataTable(id, ".", aoColumns, updateLog, json);
     }
 
     function clearLog(event){
@@ -19,13 +19,13 @@ Brooklyn.activity = (function(){
     }
 
     function updateLog(event){
-        var settings = Brooklyn.tabs.getDataTable(id).fnSettings().aoData;
+        var settings = Brooklyn.util.getDataTable(id).fnSettings().aoData;
         for(row in settings) {
        		$(settings[row].nTr).removeClass('row_selected');
    		}
  		$(event.target.parentNode).addClass('row_selected');
 
-        var result = Brooklyn.tabs.getDataTableSelectedRowData(id, event);
+        var result = Brooklyn.util.getDataTableSelectedRowData(id, event);
         if(result) {
             var logBox=document.getElementById("logbox");
             logBox.value=result.detailedStatus;

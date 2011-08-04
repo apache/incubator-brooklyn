@@ -10,7 +10,7 @@ Brooklyn.activitywidget = ( function(){
                         { "mDataProp": "currentStatus", "sTitle": "Status", "sWidth":"20%" }];
     
     function updateWidgetTable(json){
-        Brooklyn.tabs.getDataTable(id, ".", aoColumns, updateLog, json);
+        Brooklyn.util.getDataTable(id, ".", aoColumns, updateLog, json, true);
     }
 
     function updateLog(event){

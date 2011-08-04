@@ -66,12 +66,12 @@
     background:black;
     color:green;
 }
-
+/* WORLD MAP */
 #circles-map {
     width: 100%;
     height: 300px;
 }
-
+/* RECENT ACTIVITY */
 #activity-table-container {
     width: 100%;
 }

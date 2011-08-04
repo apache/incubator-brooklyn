@@ -140,7 +140,7 @@ Brooklyn.location = (function() {
         for(i in appLocations) {
             addLocationToMap(appLocations[i], i);
         }
-        Brooklyn.tabs.getDataTable(tableId, '.', aoColumns, updateLocation, appLocations);
+        Brooklyn.util.getDataTable(tableId, '.', aoColumns, updateLocation, appLocations, false);
     }
 
     function resize(e, id) {

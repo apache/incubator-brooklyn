@@ -10,7 +10,7 @@ Brooklyn.sensors = (function() {
     var entity_id;
 
     function updateTableData(json) {
-        Brooklyn.tabs.getDataTable(id, ".", aoColumns, undefined, json);
+        Brooklyn.util.getDataTable(id, ".", aoColumns, undefined, json, false);
         $(Brooklyn.eventBus).trigger('update_ok');
     }
 

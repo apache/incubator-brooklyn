@@ -7,7 +7,7 @@ Brooklyn.effectors = (function() {
     var selectedRowData;
 
     function updateEffectorsList(json) {
-        Brooklyn.tabs.getDataTable(id, ".", aoColumns, updateParameters, json);
+        Brooklyn.util.getDataTable(id, ".", aoColumns, updateParameters, json, false);
 
         $('#effector-args').empty();
         var noSelectedEffector = document.createElement("p");
@@ -19,13 +19,13 @@ Brooklyn.effectors = (function() {
     }
 
     function updateParameters(event) {
-        var settings = Brooklyn.tabs.getDataTable(id).fnSettings().aoData;
+        var settings = Brooklyn.util.getDataTable(id).fnSettings().aoData;
         for(row in settings) {
        		$(settings[row].nTr).removeClass('row_selected');
    		}
  		$(event.target.parentNode).addClass('row_selected');
 
-        selectedRowData = Brooklyn.tabs.getDataTableSelectedRowData(id, event);
+        selectedRowData = Brooklyn.util.getDataTableSelectedRowData(id, event);
 
         $('#effectors-invoke-button').removeAttr("disabled")
 
