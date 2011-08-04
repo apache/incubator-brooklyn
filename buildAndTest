@@ -16,8 +16,8 @@ cleanup(){
     PROCS=$(ps ax | grep '[j]ava' | grep -v set_tab_title)
     if [ ! -z "${PROCS}" ]; then
 	echo "These Java processes are running:"
-	echo -n ${PROCS}
-	echo -n "Kill them? Y=yes, N=no, X=abort: "
+	echo ${PROCS}
+	echo -n "Kill them? y=yes, n=no, x=abort: "
 	read $RESPONSE
 	[ "${RESPONSE}" = "y" ] && killall java && sleep 1s
 	[ "${RESPONSE}" = "x" ] && exit 50
