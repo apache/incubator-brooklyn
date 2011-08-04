@@ -2,13 +2,17 @@ package brooklyn.entity.group
 
 import static org.testng.AssertJUnit.*
 
+import java.util.Collection
+import java.util.concurrent.atomic.AtomicInteger
+
 import org.testng.annotations.Test
 
 import brooklyn.entity.Application
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractEntity
-import brooklyn.entity.trait.Changeable;
+import brooklyn.entity.trait.Changeable
 import brooklyn.entity.trait.Startable
+import brooklyn.event.EntityStartException
 import brooklyn.location.Location
 import brooklyn.location.basic.GeneralPurposeLocation
 import brooklyn.test.entity.TestApplication
@@ -156,5 +160,41 @@ class DynamicClusterTest {
         assertEquals 1, entity.counter.get()
         cluster.stop()
         assertEquals 0, entity.counter.get()
+    }
+    
+    @Test
+    public void foo() {
+        Application app = new TestApplication()
+        TestEntity entity
+        final int failNum = 2
+        final AtomicInteger counter = new AtomicInteger(0)
+        DynamicCluster cluster = new DynamicCluster([ newEntity:{ properties -> 
+                    int num = counter.incrementAndGet();
+                    return new FailingEntity(properties, (num==failNum)) 
+                }, initialSize:0 ], app)
+        
+        cluster.start([new GeneralPurposeLocation()])
+        cluster.resize(3)
+        assertEquals(cluster.currentSize, 2)
+        assertEquals(cluster.ownedChildren.size(), 2)
+        cluster.ownedChildren.each {
+            assertEquals(((FailingEntity)it).fail, false)
+        }
+    }
+}
+
+class FailingEntity extends TestEntity {
+    boolean fail
+    
+    FailingEntity(Map flags, boolean fail) {
+        super(flags)
+        this.fail = fail
+    }
+    
+    @Override
+    public void start(Collection<? extends Location> locs) {
+        if (fail) {
+            throw new EntityStartException("Simulating entity start failure for test")
+        }
     }
 }

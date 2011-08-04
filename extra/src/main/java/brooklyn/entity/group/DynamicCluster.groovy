@@ -1,8 +1,12 @@
 package brooklyn.entity.group
 
+import brooklyn.entity.basic.AbstractGroup
+
 import java.util.Collection
 import java.util.Map
 import java.util.concurrent.ExecutionException
+
+import javax.management.InstanceOfQueryExp;
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -11,6 +15,7 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.trait.Changeable
 import brooklyn.entity.trait.Startable
+import brooklyn.event.EntityStartException
 import brooklyn.location.Location
 import brooklyn.management.Task
 import brooklyn.policy.trait.Suspendable
@@ -89,28 +94,57 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     
             Collection<Entity> addedEntities = []
             Collection<Entity> removedEntities = []
-    
-            Task invoke
+
             if (delta > 0) {
                 delta.times { addedEntities += addNode() }
-                invoke = invokeEffectorList(addedEntities, Startable.START, [locations:[ location ]])
+                Map<Entity, Task> tasks = [:]
+                addedEntities.each { entity ->
+                    tasks.put(entity, entity.invoke(Startable.START, [locations:[ location ]]))
+                }
+
+                // TODO Could have CompoundException, rather than propagating first
+                Throwable toPropagate = null
+                tasks.each { Entity entity, Task task ->
+                    try {
+                        try {
+                            task.get()
+                        } catch (Exception e) {
+                            throw unwrapException(e)
+                        }
+                    } catch (EntityStartException e) {
+                        logger.error("Cluster $this failed to start entity $entity", e)
+                        removeNode(entity)
+                    } catch (InterruptedException e) {
+                        throw e
+                    } catch (Exception e) {
+                        if (!toPropagate) toPropagate = e
+                    }
+                }
+                if (toPropagate) throw toPropagate
+                
             } else if (delta < 0) {
                 (-delta).times { removedEntities += removeNode() }
-                invoke = invokeEffectorList(removedEntities, Startable.STOP, [:])
+
+                Task invoke = invokeEffectorList(removedEntities, Startable.STOP, [:])
+                invoke.get()
+                
             } else {
-	            setAttribute(Changeable.GROUP_SIZE, currentSize)
-            }
-            if (invoke) {
-    	        try {
-    	            invoke.get()
-    	        } catch (ExecutionException ee) {
-    	            throw ee.cause
-    	        }
+                setAttribute(Changeable.GROUP_SIZE, currentSize)
             }
         }
         return currentSize
     }
 
+    private Throwable unwrapException(Exception e) {
+        if (e instanceof ExecutionException) {
+            return unwrapException(e.cause)
+        } else if (e instanceof org.codehaus.groovy.runtime.InvokerInvocationException) {
+            return unwrapException(e.cause)
+        } else {
+            return e
+        }
+    }
+    
     protected Entity addNode() {
         Map creation = [:]
         creation << createFlags
@@ -135,7 +169,10 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         logger.info "Removing a node"
         Entity entity = members.find { it instanceof Startable } // TODO use specific criteria
         Preconditions.checkNotNull entity, "No Startable member entity found to remove"
- 
+        removeNode(entity)
+    }
+    
+    protected Entity removeNode(Entity entity) {
         removeMember(entity)
         managementContext.unmanage(entity)
         
