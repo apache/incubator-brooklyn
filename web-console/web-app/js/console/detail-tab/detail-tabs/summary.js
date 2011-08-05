@@ -15,7 +15,11 @@ Brooklyn.summary = (function() {
             if (json.locations.length > 0) {
                 locations_html += '<ul id="#summary-locations">\n';
                 for (l in json.locations){
-                    locations_html += "<li>"+json.locations[l].displayName+"</li>\n";
+                    locations_html += "<li>"+json.locations[l].displayName
+                    for (k in json.locations[l].parentLocations) {
+                        locations_html += ", "+json.locations[l].parentLocations[k];
+                    }
+                    locations_html += "</li>\n";
                 }
                 locations_html += "</ul>";
             } else {
