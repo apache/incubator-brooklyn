@@ -55,8 +55,8 @@ class GemfireServer extends AbstractService implements Startable {
         MachineLocation machine = locations.first()
         
         setAttribute(HUB_PORT, hubPort)
-        setAttribute(HOSTNAME, machine.address.hostAddress)
-        setAttribute(CONTROL_URL, "http://"+machine.address.hostAddress+":"+CONTROL_PORT_VAL)
+        setAttribute(HOSTNAME, machine.address.hostName)
+        setAttribute(CONTROL_URL, "http://"+machine.address.hostName+":"+CONTROL_PORT_VAL)
         
         httpAdapter = new HttpSensorAdapter(this)
         attributePoller.addSensor(SERVICE_UP, { computeNodeUp() } as ValueProvider)

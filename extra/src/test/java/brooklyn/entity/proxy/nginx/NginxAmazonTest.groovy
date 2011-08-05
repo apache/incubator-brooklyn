@@ -105,7 +105,7 @@ public class NginxAmazonTest {
         executeUntilSucceeds([:], {
             // Nginx URL is available
             MachineLocation machine = nginx.locations.find { true }
-            String url = "http://" + machine.address.hostAddress + ":" + nginx.getAttribute(NginxController.HTTP_PORT) + "/swf-booking-mvc"
+            String url = "http://" + machine.address.hostName + ":" + nginx.getAttribute(NginxController.HTTP_PORT) + "/swf-booking-mvc"
             assertTrue urlRespondsWithStatusCode200(url)
 
             // Tomcat URL is available

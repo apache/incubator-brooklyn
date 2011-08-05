@@ -73,7 +73,7 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
         entity.setAttribute(Attributes.JMX_PORT, jmxPort)
         entity.setAttribute(Attributes.JMX_HOST, jmxHost)
         entity.setAttribute(Attributes.HTTP_PORT, httpPort)
-        entity.setAttribute(JavaWebApp.ROOT_URL, "http://${machine.address.hostAddress}:${httpPort}/")
+        entity.setAttribute(JavaWebApp.ROOT_URL, "http://${machine.address.hostName}:${httpPort}/")
         entity.setAttribute(Attributes.VERSION, version)
         entity.setAttribute(TomcatServer.TOMCAT_SHUTDOWN_PORT, tomcatShutdownPort)
     }
