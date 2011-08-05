@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import org.testng.annotations.Test
 
 import brooklyn.entity.Application
+import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.trait.Changeable
@@ -180,6 +181,30 @@ class DynamicClusterTest {
         cluster.ownedChildren.each {
             assertEquals(((FailingEntity)it).fail, false)
         }
+    }
+    
+    @Test
+    public void shutsDownNewestFirstWhenResizing() {
+        Application app = new TestApplication()
+        TestEntity entity
+        final int failNum = 2
+        final List<Entity> creationOrder = []
+        DynamicCluster cluster = new DynamicCluster([ newEntity:{ properties -> 
+                    Entity result = new TestEntity(properties)
+                    creationOrder << result
+                    return result
+                }, initialSize:0 ], app)
+        
+        cluster.start([new GeneralPurposeLocation()])
+        cluster.resize(1)
+        cluster.resize(2)
+        assertEquals(cluster.currentSize, 2)
+        assertEquals(cluster.ownedChildren as List, creationOrder)
+        
+        // Now stop one
+        cluster.resize(1)
+        assertEquals(cluster.currentSize, 1)
+        assertEquals(cluster.ownedChildren, creationOrder.subList(0, 1))
     }
 }
 

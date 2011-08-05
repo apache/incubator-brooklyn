@@ -164,8 +164,13 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     }
 
     protected Entity removeNode() {
+        // TODO use pluggable strategy; default is to remove newest
+        // TODO inefficient impl
         logger.info "Removing a node"
-        Entity entity = members.find { it instanceof Startable } // TODO use specific criteria
+        Entity entity
+        members.each {
+            if (it instanceof Startable) entity = it
+        }
         Preconditions.checkNotNull entity, "No Startable member entity found to remove"
         removeNode(entity)
     }
