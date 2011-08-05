@@ -58,6 +58,8 @@ public class NginxController extends AbstractController {
 
     @Override
     public void configure() {
+        LOG.info("Reconfiguring $displayName, members are $addresses")
+        
         MachineLocation machine = locations.first()
         File file = new File("/tmp/${id}."+counter.incrementAndGet())
         Files.write(getConfigFile(), file, Charsets.UTF_8)

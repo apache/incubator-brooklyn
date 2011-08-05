@@ -121,9 +121,12 @@ public abstract class AbstractController extends AbstractService {
 
     //FIXME members locations might be remote?
     public void addEntity(Entity member) {
+        LOG.trace("About to add to $displayName, new member ${member.displayName} in locations ${member.locations} - waiting for service to be up")
         Task started = DependentConfiguration.attributeWhenReady(member, AbstractService.SERVICE_UP)
         executionContext.submit(started)
         started.get()
+        
+        LOG.info("Adding to $displayName, new member ${member.displayName} in locations ${member.locations}")
         member.locations.each { MachineLocation machine ->
             String ip = machine.address.hostAddress
             int port = member.getAttribute(portNumber)
@@ -133,6 +136,8 @@ public abstract class AbstractController extends AbstractService {
     }
     
     public void removeEntity(Entity member) {
+        LOG.info("Removing from $displayName, member ${member.displayName} previously in locations ${member.locations}")
+        
         member.locations.each { MachineLocation machine ->
             String ip = machine.address.hostAddress
             int port = member.getAttribute(portNumber)
