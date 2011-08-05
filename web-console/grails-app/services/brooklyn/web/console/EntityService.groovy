@@ -127,6 +127,12 @@ public class EntityService {
         return managementContextService.applications
     }
 
+    /* List of all locations configured in all applications. */
+    public List<Entity> applicationLocations() {
+        def apps = managementContextService.getApplications();
+        return apps.collect {it.locations}.inject([]) {a, b -> a + b}.unique()
+    }
+
     public Collection<Entity> getAllEntities() {
         return flattenEntities(getTopLevelEntities());
     }

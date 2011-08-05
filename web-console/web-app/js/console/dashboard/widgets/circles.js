@@ -44,7 +44,7 @@ Brooklyn.circles = (function() {
         // Draw the new ones
         for (var i in json) {
             var l = json[i];
-            circles.push(drawCircle(l.lat, l.lng, radius(location_area(l.entity_count))));
+            circles.push(drawCircle(l.lat, l.lng, radius(location_area(l.entity_count || 1))));
         }
     }
 
