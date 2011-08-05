@@ -76,7 +76,8 @@ abstract class AbstractGeoDnsService extends AbstractEntity {
                     }
                 }
                 else {
-                    entitiesWithoutGeoInfo.remove(e);
+                    if (entitiesWithoutGeoInfo.remove(e))
+                        AbstractGeoDnsService.log.info("Geo information now available for entity $e");
                     targetHosts.put(e, hgi);
                     changed = true;
                 }
