@@ -3,6 +3,8 @@ package brooklyn.entity.group
 import java.util.Collection
 import java.util.List
 import java.util.Map
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentMap
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -13,8 +15,10 @@ import brooklyn.entity.basic.Attributes
 import brooklyn.event.Sensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.ConfiguredAttributeSensor
+import brooklyn.event.basic.DependentConfiguration
 import brooklyn.location.Location
 import brooklyn.location.MachineLocation
+import brooklyn.management.Task
 
 import com.google.common.base.Preconditions
 
@@ -39,7 +43,7 @@ public abstract class AbstractController extends AbstractService {
     Sensor portNumber
 
     AbstractMembershipTrackingPolicy policy
-    protected Map<InetAddress,List<Integer>> addresses
+    protected List<String> addresses = new LinkedList<String>()
     
 
     public AbstractController(Map properties=[:], Entity owner=null, Cluster cluster=null) {
@@ -117,17 +121,24 @@ public abstract class AbstractController extends AbstractService {
 
     //FIXME members locations might be remote?
     public void addEntity(Entity member) {
+        Task started = DependentConfiguration.attributeWhenReady(member, AbstractService.SERVICE_UP)
+        executionContext.submit(started)
+        started.get()
         member.locations.each { MachineLocation machine ->
-            addresses[machine.address] += member.getAttribute(portNumber)
+            String ip = machine.address.hostAddress
+            int port = member.getAttribute(portNumber)
+            addresses.add("${ip}:${port}")
         }
-        update();
+        update()
     }
     
     public void removeEntity(Entity member) {
         member.locations.each { MachineLocation machine ->
-            addresses[machine.address] -= member.getAttribute(portNumber)
+            String ip = machine.address.hostAddress
+            int port = member.getAttribute(portNumber)
+            addresses.remove("${ip}:${port}")
         }
-        update();
+        update()
     }
     
     public void update() {
@@ -139,7 +150,7 @@ public abstract class AbstractController extends AbstractService {
 
     public void reset() {
         policy.reset()
-        addresses = new HashMap<InetAddress,List<Integer>>().withDefault { new ArrayList<Integer>() }
+        addresses.clear()
         policy.setGroup(cluster)
     }
 

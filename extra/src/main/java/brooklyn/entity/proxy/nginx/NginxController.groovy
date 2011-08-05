@@ -1,6 +1,7 @@
 package brooklyn.entity.proxy.nginx
 
 import java.util.Map
+import java.util.concurrent.atomic.AtomicLong
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.Attributes
@@ -14,6 +15,7 @@ import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedAppSetup
 
 import com.google.common.base.Charsets
+import com.google.common.collect.Iterables
 import com.google.common.io.Files
 
 /**
@@ -21,6 +23,7 @@ import com.google.common.io.Files
  */
 public class NginxController extends AbstractController {
     transient HttpSensorAdapter httpAdapter
+    transient AtomicLong counter = new AtomicLong(0)
 
     public NginxController(Map properties=[:], Entity owner=null) {
         super(properties, owner)
@@ -56,15 +59,13 @@ public class NginxController extends AbstractController {
     @Override
     public void configure() {
         MachineLocation machine = locations.first()
-        File file = new File("/tmp/${id}")
+        File file = new File("/tmp/${id}."+counter.incrementAndGet())
         Files.write(getConfigFile(), file, Charsets.UTF_8)
 		setup.machine.copyTo file, "${setup.runDir}/conf/server.conf"
         file.delete()
     }
 
     public String getConfigFile() {
-        List<String> servers = []
-        addresses.each { InetAddress host, portList -> portList.collect(servers, { int port -> host.hostAddress + ":" + port }) }
         StringBuffer config = []
         config.append """
 pid ${setup.runDir}/logs/nginx.pid;
@@ -75,7 +76,7 @@ http {
   upstream ${id} {
     sticky;
 """
-        servers.each { String address -> config.append("    server ${address};\n") }
+        addresses.each { String address -> config.append("    server ${address};\n") }
         config.append """
   }
   server {

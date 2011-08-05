@@ -91,15 +91,16 @@ public abstract class JavaWebApp extends JavaApp {
             AVG_REQUESTS_PER_SECOND_PERIOD))
 
         waitForHttpPort()
-//        initHttpSensors()
 
-        if (getConfig(WAR)) {
-            log.debug "Deploying {} to {}", getConfig(WAR), this.locations
-            deploy(getConfig(WAR))
-            log.debug "Deployed {} to {}", getConfig(WAR), this.locations
+        def warFile = getConfig(WAR)
+        if (warFile) {
+            log.debug "Deploying {} to {}", warFile, this.locations
+            deploy warFile
+            log.debug "Deployed {} to {}", warFile, this.locations
         }
     }
 
+    @Override
     public void stop() {
         super.stop()
         
