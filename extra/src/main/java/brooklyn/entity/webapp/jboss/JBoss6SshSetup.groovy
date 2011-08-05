@@ -81,7 +81,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         entity.setAttribute(Attributes.JMX_PORT, jmxPort)
         entity.setAttribute(Attributes.JMX_HOST, jmxHost)
         entity.setAttribute(Attributes.HTTP_PORT, httpPort)
-        entity.setAttribute(JavaWebApp.ROOT_URL, "http://${machine.address.hostAddress}:${httpPort}/")
+        entity.setAttribute(JavaWebApp.ROOT_URL, "http://${machine.address.hostName}:${httpPort}/")
         entity.setAttribute(Attributes.VERSION, version)
     }
     
@@ -105,7 +105,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         List<String> script = [
             "${installDir}/bin/run.sh -Djboss.service.binding.set=${portGroupName} -Djboss.server.base.dir=\$RUN/server " +
                     "-Djboss.server.base.url=file://\$RUN/server -Djboss.messaging.ServerPeerID=${entity.id} " +
-                    "-b 0.0.0.0 ${clusterArg} -c ${serverProfile} " + // ${machine.address.hostAddress}
+                    "-b 0.0.0.0 ${clusterArg} -c ${serverProfile} " + // ${machine.address.hostName}
                     ">>\$RUN/console 2>&1 </dev/null &",
         ]
         return script

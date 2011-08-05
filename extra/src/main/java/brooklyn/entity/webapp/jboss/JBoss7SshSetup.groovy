@@ -71,7 +71,7 @@ class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
         entity.setAttribute(Attributes.JMX_HOST, jmxHost)
         entity.setAttribute(Attributes.HTTP_PORT, httpPort)
         entity.setAttribute(JBoss7Server.MANAGEMENT_PORT, managementPort)
-        entity.setAttribute(JavaWebApp.ROOT_URL, "http://${machine.address.hostAddress}:${httpPort}/")
+        entity.setAttribute(JavaWebApp.ROOT_URL, "http://${machine.address.hostName}:${httpPort}/")
         entity.setAttribute(Attributes.VERSION, version)
     }
     
@@ -102,7 +102,12 @@ class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
     }
  
     public Map<String, String> getRunEnvironment() {
-        return [ "JAVA_OPTS" : "-Xmx256m -Xms128m" ]
+        return super.getRunEnvironment() +
+                ["JAVA_OPTS" : toJavaDefinesString(getJvmStartupProperties())+" -Xmx256m -Xms128m "+
+                        "-Djava.util.logging.manager=org.jboss.logmanager.LogManager "+
+                        "-Dorg.jboss.logging.Logger.pluginClass=org.jboss.logging.logmanager.LoggerPluginImpl",
+//                "JBOSS_CLASSPATH" : "lib/jboss-logmanager.jar"
+                ]
     }
 
     /** @see SshBasedJavaAppSetup#getCheckRunningScript() */
