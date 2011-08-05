@@ -1,3 +1,5 @@
+#!/bin/bash
+
 INSTANCES=`cat instances.txt | cut -d " " -f 2`
 
 if [ -n "$*" ]; then
@@ -14,6 +16,7 @@ for instance in $INSTANCES ; do
   export EC2_URL=https://$REGION.ec2.amazonaws.com
   echo "stopping $instance"
   ec2-stop-instances $instance
+  sed -i.bk /${instance}/D instances.txt
 done
 
 wait

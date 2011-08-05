@@ -1,3 +1,5 @@
+#!/bin/bash
+
 if [ -z "$1" ]; then
    echo "command not found"
    echo "Usage: $0  <ssh command> [regions]"
