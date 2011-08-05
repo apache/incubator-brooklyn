@@ -79,6 +79,19 @@ class EntityController {
         }
     }
 
+    def locationentities = {
+        String location = params.location
+        if(location){
+        // Do something on the entity service which get a list of all entities and then checks them for location matching
+            render(entityService.getEntitiesForLocation(location) as JSON)
+        }
+        else{
+            render(status: 400, text: '{message: "You must provide a valid location"}')
+        }
+    
+    
+    }
+
     def locations = {
         String id = params.id
         if (id) {

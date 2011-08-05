@@ -213,6 +213,19 @@ public class EntityService {
         return cs;
     }
 
+    public List<Entity> getEntitiesForLocation(String locationName){
+        def locationEntities = []
+        for(entity in getAllEntities()){
+                for(location in entity.getLocations()){
+                    if(location.name == locationName){
+                        locationEntities += (entity.displayName)
+                        break
+                    }
+                }
+        }
+        return locationEntities;
+    }
+
     /*
     public Map<Location, Integer> entityCountsAtLocatedLocations() {
         Map<Location, Integer> ls = new HashMap<Location, Integer>();
