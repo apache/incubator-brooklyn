@@ -115,6 +115,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     protected Map getJavaConfigOptions() {
         Map<String, String> options = [
             "jboss.platform.mbeanserver" : null,
+            "javax.management.builder.initial" : "org.jboss.system.server.jmx.MBeanServerBuilderImpl",
             "java.util.logging.manager" : "org.jboss.logmanager.LogManager",
             "org.jboss.logging.Logger.pluginClass" : "org.jboss.logging.logmanager.LoggerPluginImpl",
         ]
