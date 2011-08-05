@@ -76,6 +76,7 @@ while [ "$instance_status" != "running" ]; do
    result=`ec2-describe-instances | grep $instance`
    instance_status=`echo "$result" | cut -f 6`
    address=`echo "$result" | cut -f 4`
+   instance_id=`echo "$result" | cut -f 2`
 done
 echo "   done ($address)"
 
@@ -97,6 +98,6 @@ if [ ! -z "$AUTHORIZED_KEY_FILE" ]; then
     "
 fi
 
-echo $REGION $address >> instances.txt
+echo $REGION $instance_id $address >> instances.txt
 
 echo "   created $instance, $address in $REGION"
