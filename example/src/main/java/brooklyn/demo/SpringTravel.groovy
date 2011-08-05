@@ -12,6 +12,7 @@ import brooklyn.entity.proxy.nginx.NginxController
 import brooklyn.entity.webapp.DynamicWebAppCluster
 import brooklyn.entity.webapp.JavaWebApp
 import brooklyn.policy.ResizerPolicy
+import brooklyn.util.IdGenerator
 
 import com.google.common.base.Preconditions
 
@@ -61,8 +62,9 @@ public class SpringTravel extends AbstractApplication {
         Preconditions.checkState fabric.displayName == "Fabric"
 
         nginxEntities = new DynamicGroup([displayName: 'Web Fronts'], this, { Entity e -> (e instanceof NginxController) })
+        String randomSubdomain = 'brooklyn-'+IdGenerator.makeRandomId(8)
         geoDns = new GeoscalingDnsService(displayName: 'Geo-DNS',
-            username: 'cloudsoft', password: 'cl0uds0ft', primaryDomainName: 'geopaas.org', smartSubdomainName: 'brooklyn',
+            username: 'cloudsoft', password: 'cl0uds0ft', primaryDomainName: 'geopaas.org', smartSubdomainName: randomSubdomain,
             this)
         geoDns.setTargetEntityProvider(nginxEntities)
     }
