@@ -136,7 +136,7 @@ public class MontereyBrooklynMonitoringMontereyTest extends CloudsoftThreadMonit
 
         localhostProvisioner = new FixedListMachineProvisioningLocation<SshMachineLocation>([machines:[localhost]])
         
-        app = new SimpleApp();
+        app = new AbstractApplication() {};
         montereyNetwork = new MontereyNetwork();
         montereyNetwork.setOwner(app);
         montereyNetwork.setManagementNodeInstallDir(MONTEREY_MANAGEMENT_NODE_PATH);

@@ -34,6 +34,7 @@ import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.AttributeSensor
 import brooklyn.location.Location
 import brooklyn.location.basic.FixedListMachineProvisioningLocation
+import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.location.basic.SshMachineLocation
 
 import com.cloudsoftcorp.monterey.CloudsoftThreadMonitoringTestFixture
@@ -86,7 +87,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
 
     private static final String SIMULATOR_LOCATIONS_CONF_PATH = "/locations-simulator.conf";
     
-    private static final String MONTEREY_NETWORK_NODE_PATH = "~/monterey-management-node-copy1";
+    private static final String MONTEREY_NETWORK_NODE_PATH = "~/monterey-network-node-copy1";
     private static final String MONTEREY_MANAGEMENT_NODE_PATH = "~/monterey-management-node";
     private static final String SSH_HOST_NAME = "localhost";
     private static final String SSH_USERNAME = "aled";
@@ -132,20 +133,22 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
 
         workloadExecutor = Executors.newScheduledThreadPool(10);
         
-        localhostProvisioner = new FixedListMachineProvisioningLocation<SshMachineLocation>(
-            [machines:[], name:"localhost-microcloud"])
-        for (i in 1..10) {
-            new SshMachineLocation([address:InetAddress.getByName(SSH_HOST_NAME), userName:SSH_USERNAME]).setParentLocation(localhostProvisioner)
-        }
-        
-        app = new SimpleApp();
-        montereyNetwork = new MontereyNetwork();
-        montereyNetwork.setOwner(app);
-        montereyNetwork.setConfig(MontereyContainerNode.NETWORK_NODE_INSTALL_DIR, MONTEREY_NETWORK_NODE_PATH);
-        montereyNetwork.setConfig(MontereyManagementNode.MANAGEMENT_NODE_INSTALL_DIR, MONTEREY_MANAGEMENT_NODE_PATH);
+        localhostProvisioner = new LocalhostMachineProvisioningLocation(
+                count: 10,
+                displayName : 'Localhost',
+                latitude : 55.94944, 
+                longitude : -3.16028,
+                iso3166 : ["GB-EDH"])
+
+        app = new AbstractApplication() {};
+        montereyNetwork = new MontereyNetwork(
+                networkNodeInstallDir : MONTEREY_NETWORK_NODE_PATH,
+                managementNodeInstallDir : MONTEREY_MANAGEMENT_NODE_PATH,
+                webUsersCredential : [adminCredential],
+                maxConcurrentProvisioningsPerLocation : MAX_CONCURRENT_PROVISIONINGS_PER_LOCATION_VAL,
+                app)
         //montereyNetwork.setConfig(new MontereyNetworkConfig()); // using defaults; TODO externalize as configKeys
-        montereyNetwork.setConfig(MontereyManagementNode.WEB_USERS_CREDENTIAL, Collections.singleton(adminCredential));
-        montereyNetwork.setConfig(MontereyNetwork.MAX_CONCURRENT_PROVISIONINGS_PER_LOCATION, MAX_CONCURRENT_PROVISIONINGS_PER_LOCATION_VAL)
+        
         app.getManagementContext().manage(app)
     }
     
@@ -185,7 +188,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
     @Test(groups = [ "Integration", "Live" ])
     public void testInitialClusterSizeStartsNodes() throws Throwable {
         rolloutManagementPlane([(MontereyNetwork.INITIAL_TOPOLOGY_PER_LOCATION):
-                [(Dmn1NodeType.LPP):1, (Dmn1NodeType.M):1, (Dmn1NodeType.MR):1, (Dmn1NodeType.TP):1, (Dmn1NodeType.SPARE):1]]);
+                [LPP:1, M:1, MR:1, TP:1, SPARE:1]]);
         assertBrooklynEventuallyHasNodes(1,1,1,1,1);
     }
     
@@ -291,8 +294,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
 
         assertBrooklynEventuallyHasFabrics([localhostProvisioner]);
         assertBrooklynEventuallyHasClusters([localhostProvisioner]);
-        assertBrooklynEventuallyHasNodesInCluster(localhostProvisioner, [(Dmn1NodeType.LPP):1, (Dmn1NodeType.MR):1, 
-                (Dmn1NodeType.M):1, (Dmn1NodeType.TP):1]);
+        assertBrooklynEventuallyHasNodesInCluster(localhostProvisioner, [LPP:1, MR:1, M:1, TP:1]);
     }
     
     @Test(groups = [ "Integration", "Live" ])
@@ -304,8 +306,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         // One of each lpp, mr, tp; plus 2 mediators
         rolloutNodes(localhostProvisioner, 1,1,2,1,0);
 
-        assertBrooklynEventuallyHasNodesInCluster(localhostProvisioner, [(Dmn1NodeType.LPP):1, (Dmn1NodeType.MR):1,
-                (Dmn1NodeType.M):2, (Dmn1NodeType.TP):1]);
+        assertBrooklynEventuallyHasNodesInCluster(localhostProvisioner, [LPP:1, MR:1, M:2, TP:1]);
 
         // Pick a group; allocate a segment there; try to move the segment
         MediatorGroup mediatorGroup = montereyNetwork.getMediatorClusters().values().iterator().next();
@@ -378,7 +379,7 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
     }
     
     private Map<NodeId, NodeSummary> rolloutNodes(Location loc, int lpp, int mr, int m, int tp, int spare) throws Throwable {
-        montereyNetwork.rolloutNodes(loc, [(Dmn1NodeType.LPP):lpp, (Dmn1NodeType.MR):mr, (Dmn1NodeType.M):m, (Dmn1NodeType.TP):tp, (Dmn1NodeType.SPARE):spare]);
+        montereyNetwork.rolloutNodes(loc, [LPP:lpp, MR:mr, M:m, TP:tp, SPARE:spare]);
         
         Dmn1NetworkInfoWebProxy networkInfo = newMontereyNetworkInfo();
         return networkInfo.getNodeSummaries();
@@ -695,7 +696,9 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
             }}, TIMEOUT);
     }
 
-    private void assertBrooklynEventuallyHasNodesInCluster(final Location loc, final Map<Dmn1NodeType,Integer> expectedNodesPerCluster) throws Throwable {
+    private void assertBrooklynEventuallyHasNodesInCluster(final Location loc, final Map<String,Integer> rawExpectedNodesPerCluster) throws Throwable {
+        final Map<Dmn1NodeType,Integer> expectedNodesPerCluster = rawExpectedNodesPerCluster.collectEntries { String key, Integer value -> [ Dmn1NodeType.valueOf(key), value ] }
+        
         assertSuccessWithin(new Callable<Object>() {
             public Object call() throws Exception {
                 for (Map.Entry<Dmn1NodeType,Integer> entry in expectedNodesPerCluster.entrySet()) {
