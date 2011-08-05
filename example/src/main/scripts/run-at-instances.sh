@@ -9,19 +9,19 @@ fi
 CMD=$1
 shift
 
-INSTANCES=`cat instances.txt | cut -d " " -f2-`
+INSTANCES=`cat instances.txt | cut -d " " -f3-`
 
 if [ -n "$*" ]; then
 	INSTANCES=""
 	for region in $* ; do
-		INSTANCE=`grep $region instances.txt | cut -d " " -f2-`
+		INSTANCE=`grep $region instances.txt | cut -d " " -f3-`
 		INSTANCES=${INSTANCES}${INSTANCE}' '
 	done
 fi
 
 for instance in $INSTANCES ; do
   echo invoking $CMD at $instance
-  ssh -f $instance "$CMD" | awk '{print "OUTPUT '$instance': " $0}' &
+  ssh -f root@$instance "$CMD" | awk '{print "OUTPUT '$instance': " $0}' &
 done
 
 wait
