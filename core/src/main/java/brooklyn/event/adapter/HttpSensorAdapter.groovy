@@ -43,8 +43,8 @@ public class HttpSensorAdapter {
         return new HttpHeaderValueProvider(new URL(url), headerName, this)
     }
     
-    public ValueProvider<Integer> newJsonIntegerProvider(String url, String key) {
-        return new HttpJsonIntegerValueProvider(new URL(url), key, this)
+    public ValueProvider<Long> newJsonLongProvider(String url, String key) {
+        return new HttpJsonLongValueProvider(new URL(url), key, this)
     }
 
     /**
@@ -101,22 +101,22 @@ public class HttpSensorAdapter {
 /**
  * Provides integer values to a sensor via JSON+HTTP.
  */
-public class HttpJsonIntegerValueProvider implements ValueProvider<Integer> {
+public class HttpJsonLongValueProvider implements ValueProvider<Long> {
    private final URL url
    private final String jsonKey
    private final HttpSensorAdapter adapter
 
-   public HttpJsonIntegerValueProvider(URL url, String jsonKey, HttpSensorAdapter adapter) {
+   public HttpJsonLongValueProvider(URL url, String jsonKey, HttpSensorAdapter adapter) {
        this.url = Preconditions.checkNotNull(url, "url")
        this.jsonKey = Preconditions.checkNotNull(jsonKey, "jsonKey")
        this.adapter = Preconditions.checkNotNull(adapter, "adapter")
    }
 
    @Override
-   public Integer compute() {
+   public Long compute() {
        String out = adapter.getJson(url, jsonKey)
        assert out != null
-       return Integer.valueOf(out)
+       return Long.valueOf(out)
    }
 }
 

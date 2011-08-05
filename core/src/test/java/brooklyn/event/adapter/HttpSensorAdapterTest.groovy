@@ -13,7 +13,7 @@ import brooklyn.entity.basic.AbstractEntity
 class HttpSensorAdapterTest {
 
     @Test
-    public void testJsonIntegerProvider() {
+    public void testJsonLongProvider() {
         Entity entity = new AbstractEntity() {}
         HttpSensorAdapter adapter = new HttpSensorAdapter(entity) {
             public byte[] getContents(URL url) {
@@ -21,6 +21,18 @@ class HttpSensorAdapterTest {
             }
         }
         String url = 
-        assertEquals(10, adapter.newJsonIntegerProvider("http://myurl", "abc").compute())
+        assertEquals(10, adapter.newJsonLongProvider("http://myurl", "abc").compute())
+    }
+    
+    @Test
+    public void testJsonLongProviderForValueGreaterThanIntegerMaxVal() {
+        Entity entity = new AbstractEntity() {}
+        HttpSensorAdapter adapter = new HttpSensorAdapter(entity) {
+            public byte[] getContents(URL url) {
+                return '{"abc":"2845050317"}'.getBytes()
+            }
+        }
+        String url = 
+        assertEquals(2845050317, adapter.newJsonLongProvider("http://myurl", "abc").compute())
     }
 }

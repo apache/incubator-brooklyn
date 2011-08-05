@@ -47,12 +47,12 @@ class JBoss7Server extends JavaWebApp {
         attributePoller.addSensor(SERVICE_UP, { getAttribute(MANAGEMENT_STATUS) == 200 } as ValueProvider<Boolean>)
         
         String queryUrl = "http://$host:$port/management/subsystem/web/connector/http/read-resource?include-runtime"
-        attributePoller.addSensor(REQUEST_COUNT, httpAdapter.newJsonIntegerProvider(queryUrl, "requestCount"))
-        attributePoller.addSensor(ERROR_COUNT, httpAdapter.newJsonIntegerProvider(queryUrl, "errorCount"))
-        attributePoller.addSensor(TOTAL_PROCESSING_TIME, httpAdapter.newJsonIntegerProvider(queryUrl, "processingTime"))
-        attributePoller.addSensor(MAX_PROCESSING_TIME, httpAdapter.newJsonIntegerProvider(queryUrl, "maxTime"))
-        attributePoller.addSensor(BYTES_RECEIVED, httpAdapter.newJsonIntegerProvider(queryUrl, "bytesReceived"))
-        attributePoller.addSensor(BYTES_SENT, httpAdapter.newJsonIntegerProvider(queryUrl, "bytesSent"))
+        attributePoller.addSensor(REQUEST_COUNT, httpAdapter.newJsonLongProvider(queryUrl, "requestCount"))
+        attributePoller.addSensor(ERROR_COUNT, httpAdapter.newJsonLongProvider(queryUrl, "errorCount"))
+        attributePoller.addSensor(TOTAL_PROCESSING_TIME, httpAdapter.newJsonLongProvider(queryUrl, "processingTime"))
+        attributePoller.addSensor(MAX_PROCESSING_TIME, httpAdapter.newJsonLongProvider(queryUrl, "maxTime"))
+        attributePoller.addSensor(BYTES_RECEIVED, httpAdapter.newJsonLongProvider(queryUrl, "bytesReceived"))
+        attributePoller.addSensor(BYTES_SENT, httpAdapter.newJsonLongProvider(queryUrl, "bytesSent"))
     }
 
     @Override
