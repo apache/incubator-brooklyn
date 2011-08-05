@@ -17,5 +17,5 @@ else
     #LOCATIONS="eu-west-1 us-east-1 us-west-1 ap-northeast-1 ap-southeast-1 monterey-east edinburgh"
 fi
 
-cd $ROOT
-java ${JAVA_OPTS} com.cloudsoftcorp.monterey.brooklyn.example.MontereyDemo ${LOCATIONS}
+cd ${ROOT}
+java ${JAVA_OPTS} com.cloudsoftcorp.monterey.brooklyn.example.seam.MontereySeamBookingDemo ${LOCATIONS}

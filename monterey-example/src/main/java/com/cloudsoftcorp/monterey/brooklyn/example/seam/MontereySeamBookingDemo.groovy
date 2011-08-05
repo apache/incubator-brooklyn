@@ -92,7 +92,7 @@ public class MontereySeamBookingDemo extends AbstractApplication {
 //            server.setConfig(JBoss7Server.HTTP_PORT.configKey, nextPort.incrementAndGet())
 //            server.setConfig(JBoss7Server.MANAGEMENT_PORT.configKey, nextPort.incrementAndGet())
             
-            server.setConfig(JBoss7Server.PROPERTY_FILES.subKey("MONTEREY_PROPERTIES"),
+            server.setConfig(JBoss7Server.PROPERTY_FILES.subKey("MONTEREY_CONFIG"),
                     [
                         montereyManagementUrl : attributeWhenReady(montereyNetwork, MANAGEMENT_URL),
                         montereyUser : attributePostProcessedWhenReady(montereyNetwork, CLIENT_CREDENTIAL, { CredentialsConfig config -> config.username }),
@@ -128,7 +128,7 @@ public class MontereySeamBookingDemo extends AbstractApplication {
                 displayNameSuffix : ' web cluster',
                 newEntity : webClusterFactory,
                 this)
-        webFabric.setConfig(WAR, "src/main/resources/seam-booking.war")
+        webFabric.setConfig(WAR, "src/main/resources/jboss-booking.war")
         webFabric.setConfig(INITIAL_SIZE, 1)
         
         nginxEntities = new DynamicGroup(
