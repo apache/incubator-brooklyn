@@ -36,8 +36,12 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             this.config = properties.config
         }
 
+        String host = (user ? "${user}@" : "") + address.hostName
         if (name == null) {
-            name = (user ? "${user}@" : "") + address.hostName
+            name = host
+        }
+        if (leftoverProperties.displayName) {
+            leftoverProperties.displayName = host
         }
     }
 

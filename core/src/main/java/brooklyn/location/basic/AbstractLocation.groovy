@@ -42,19 +42,19 @@ public abstract class AbstractLocation implements Location {
      * <li>iso3166 - list of iso3166-2 code strings
      * <li>timeZone
      * <li>abbreviatedName
+     * <li>displayName
      * </ul>
      * 
      * @param properties
      */
     public AbstractLocation(Map properties = [:]) {
         if (properties.name) {
-            Preconditions.checkArgument properties.name == null || properties.name instanceof String,
-                "'name' property should be a string"
-            name = properties.remove("name")
+            Preconditions.checkArgument properties.name instanceof String, "'name' property should be a string"
+            name = properties.name
         } else if (properties.displayName) {
+            Preconditions.checkArgument properties.displayName instanceof String, "'displayName' property should be a string"
             name = properties.displayName
         }
-        
         if (properties.id) {
             Preconditions.checkArgument properties.id == null || properties.id instanceof String,
                 "'id' property should be a string"
