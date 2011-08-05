@@ -270,7 +270,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
             }
             if (appDescriptor) {
                 Collection<String> bundleUrls = getConfig(APP_BUNDLES)
-                BundleSet bundleSet = (bundleUrls) ? BundleSet.fromUrls(bundleUrls.collect { String url -> new File(url).toURI().toURL() }) : BundleSet.EMPTY;
+                BundleSet bundleSet = (bundleUrls) ? BundleSet.fromUrls(bundleUrls.collect { toUrl(it) }) : BundleSet.EMPTY;
                 managementNode.deployApplication(appDescriptor, bundleSet);
             }
             
@@ -291,6 +291,27 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         }
     }
 
+    private URL toUrl(Object val) {
+        if (val instanceof URL) {
+            return (URL)val
+        } else if (val instanceof URI) {
+            return ((URI)val).toURL()
+        } else if (val instanceof File) {
+            return ((File)val).toURI().toURL()
+        } else if (val instanceof String) {
+            try {
+                return new URI((String)val).toURL()
+            } catch (IllegalArgumentException e) {
+                // URI is not absolute; presumably it's a file
+                return new File((String)val).toURI().toURL()
+            } catch (URISyntaxException e) {
+                return new File((String)val).toURI().toURL()
+            }
+        } else {
+            throw new IllegalArgumentException("Cannot convert value to URL: "+(val!=null ? "type=${val.getClass()}; " : "")+"val="+val)
+        }
+    }
+    
     private void mirrorManagementNodeAttributes() {
         setAttribute MANAGEMENT_URL, managementNode.getAttribute(MontereyManagementNode.MANAGEMENT_URL)
         setAttribute STATUS, managementNode.getAttribute(MontereyManagementNode.STATUS)
@@ -305,7 +326,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         node
     }
     
-    Collection<MontereyContainerNode> rolloutNodes(Location loc, Map<Dmn1NodeType,Integer> nums) {
+    Collection<MontereyContainerNode> rolloutNodes(Location loc, Map<String,Integer> nums) {
         int totalNum = 0;
         nums.values().each { totalNum += (it ?: 0) }
         
@@ -315,7 +336,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         Collection<Dmn1NodeType> orderToRollout = [Dmn1NodeType.TP, Dmn1NodeType.M, Dmn1NodeType.MR, Dmn1NodeType.LPP]
         orderToRollout.each {
             Dmn1NodeType type = it
-            Integer numOfType = nums.get(type)
+            Integer numOfType = nums.get(type) ?: nums.get(type.toString())
             if (numOfType != null) {
                 for (int i = 0; i < numOfType; i++) {
                     MontereyContainerNode node = unusedNodes.remove(0)
@@ -345,7 +366,7 @@ public class MontereyNetwork extends AbstractEntity implements Startable { // FI
         relativeComplement(nodesByCreationId.values(), torelease).each { torelease.add(torelease) }
         
         for (MontereyContainerNode node : torelease) {
-            node.release();
+            if (node != null) node.release();
         }
     }
 
