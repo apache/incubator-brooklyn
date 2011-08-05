@@ -14,6 +14,10 @@ Brooklyn.jsTree = (function(parent) {
                 result = testEquivalent(a[p], b[p]);
                 if (!result) return false;
             }
+            for (var p in b) {
+                result = testEquivalent(b[p], a[p]);
+                if (!result) return false;
+            }
             return result;
         }
         return (a == b);
