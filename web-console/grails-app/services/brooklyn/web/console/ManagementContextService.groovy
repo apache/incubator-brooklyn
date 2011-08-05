@@ -68,7 +68,9 @@ class ManagementContextService {
                 new GeneralPurposeLocation([id: "us-west-1", name:"US-West-1", iso3166: "US-VA", displayName:"US-West-1", streetAddress:"Northern California, USA", description:"Northern California",
                                             latitude:40.0,longitude:-120.0]),
                 new GeneralPurposeLocation([id: "eu-west-1", name:"EU-West-1", iso3166: "IE", displayName:"EU-West-1", streetAddress:"Dublin, Ireland", description:"Dublin, Ireland",
-                                            latitude:53.34778,longitude:-6.25972])
+                                            latitude:53.34778,longitude:-6.25972]),
+                new GeneralPurposeLocation([id: "fruitcake", name:"Unused location in cakeland", iso3166: "IE", displayName:"Unused location in cakeland", streetAddress:"Nowhere, cakeland", description:"Nowhere",
+                                            latitude:0,longitude:0])
             ];
 
             Entity testExtraGroup = new TestGroupEntity(this, "Another group for testing");

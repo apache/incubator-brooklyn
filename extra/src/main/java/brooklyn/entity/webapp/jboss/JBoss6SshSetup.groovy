@@ -103,7 +103,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         def clusterArg = (clusterName == "") ? "" : "-g $clusterName"
         // run.sh must be backgrounded otherwise the script will never return.
         List<String> script = [
-            "\$JBOSS_HOME/bin/run.sh -Djboss.service.binding.set=${portGroupName} -Djboss.server.base.dir=\$RUN/server " +
+            "${installDir}/bin/run.sh -Djboss.service.binding.set=${portGroupName} -Djboss.server.base.dir=\$RUN/server " +
                     "-Djboss.server.base.url=file://\$RUN/server -Djboss.messaging.ServerPeerID=${entity.id} " +
                     "-b 0.0.0.0 ${clusterArg} -c ${serverProfile} " + // ${machine.address.hostAddress}
                     ">>\$RUN/console 2>&1 </dev/null &",
@@ -126,9 +126,8 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         // LAUNCH_JBOSS_IN_BACKGROUND relays OS signals sent to the run.sh process to the JBoss process.
         Map<String, String> env = [
 	        "LAUNCH_JBOSS_IN_BACKGROUND" : "1",
-	        "JBOSS_HOME" : "${installDir}",
 	        "JAVA_OPTS" : toJavaDefinesString(getJvmStartupProperties())+" -Xmx256m -Xms128m",
-	        "JBOSS_CLASSPATH" : "\$JBOSS_HOME/lib/jboss-logmanager.jar",
+	        "JBOSS_CLASSPATH" : "${installDir}/lib/jboss-logmanager.jar",
 	        "RUN" : "${runDir}",
         ]
         return env

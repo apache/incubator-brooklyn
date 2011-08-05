@@ -23,6 +23,11 @@ abstract class AbstractGeoDnsService extends AbstractEntity {
     protected Group targetEntityProvider = null;
     protected Map<Entity, HostGeoInfo> targetHosts = new HashMap<Entity, HostGeoInfo>();
     
+    // We complain when we encounter a target entity for whom we can't derive geo information; the commonest case is a
+    // transient condition between the time the entity is created and the time it is started (at which point the location is
+    // specified). This set contains those entities we've complained about already, to avoid repetitive logging.
+    transient protected Set<Entity> entitiesWithoutGeoInfo = new HashSet<Entity>();
+    
 
     public AbstractGeoDnsService(Map properties = [:], Entity owner = null) {
         super(properties, owner);
@@ -64,9 +69,15 @@ abstract class AbstractGeoDnsService extends AbstractEntity {
                 if (targetHosts.containsKey(e))
                     return;
                 HostGeoInfo hgi = HostGeoInfo.fromEntity(e)
-                if (hgi == null)
-                    AbstractGeoDnsService.log.warn("Failed to derive geo information for entity $e");
+                if (hgi == null) {
+                    if (!entitiesWithoutGeoInfo.contains(e)) {
+                        AbstractGeoDnsService.log.warn("Failed to derive geo information for entity $e");
+                        entitiesWithoutGeoInfo.add(e);
+                    }
+                }
                 else {
+                    if (entitiesWithoutGeoInfo.remove(e))
+                        AbstractGeoDnsService.log.info("Geo information now available for entity $e");
                     targetHosts.put(e, hgi);
                     changed = true;
                 }

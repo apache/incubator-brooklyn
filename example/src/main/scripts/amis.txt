@@ -1,0 +1,5 @@
+eu-west-1 ami-89def4fd
+us-east-1 ami-2342a94a
+us-west-1 ami-25df8e60
+ap-southeast-1 ami-21c2bd73
+ap-northeast-1 ami-f0e842f1

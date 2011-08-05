@@ -73,7 +73,7 @@ Brooklyn.effectors = (function() {
     }
 
     function init() {
-        $('#effector-invoke').click(invokeEffector);
+        $('#effectors-invoke-button').click(invokeEffector);
         $(Brooklyn.eventBus).bind("entity_selected", updateList);
     }
 

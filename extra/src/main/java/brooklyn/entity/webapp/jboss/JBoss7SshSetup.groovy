@@ -123,7 +123,7 @@ class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
             "sed -i.bk 's/8080/${httpPort}/' $brooklynConfig",
             "sed -i.bk 's/9990/${managementPort}/' $brooklynConfig",
             "sed -i.bk 's/1090/${jmxPort}/' $brooklynConfig",
-            "sed -i.bk 's/127.0.0.1/${machine.address.hostAddress}/' $brooklynConfig"
+            "sed -i.bk 's/127.0.0.1/${machine.address.hostName}/' $brooklynConfig"
         ]
         return script
     }
