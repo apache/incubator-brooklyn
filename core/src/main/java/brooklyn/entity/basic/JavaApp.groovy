@@ -43,7 +43,7 @@ public abstract class JavaApp extends AbstractService {
         
         if (jmxEnabled) {
             if (!(getAttribute(JMX_HOST) && getAttribute(JMX_PORT)))
-            throw new IllegalStateException("JMX is not available")
+                throw new IllegalStateException("JMX is not available")
 
             jmxAdapter = new JmxSensorAdapter(this, 60*1000)
             jmxAdapter.connect();
@@ -61,7 +61,12 @@ public abstract class JavaApp extends AbstractService {
     }
 
     public void waitForJmx() {
-        new Repeater("Wait for JMX").repeat().every(1, TimeUnit.SECONDS).until({jmxAdapter.isConnected()}).limitIterationsTo(30).run();
+        new Repeater("Wait for JMX")
+                .repeat()
+                .every(1, TimeUnit.SECONDS)
+                .until({jmxAdapter.isConnected()})
+                .limitIterationsTo(30)
+                .run();
     }
 
     @Override
