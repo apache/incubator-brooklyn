@@ -9,11 +9,11 @@ class AwsLocationFactory {
     // FIXME streetAddress is temporary, until we get lat-lon working in google maps properly
     
     private static final Map EC2_DEFAULT_IMAGE_IDS = [
-            "eu-west-1":"ami-89def4fd",
-            "us-east-1":"ami-2342a94a",
-            "us-west-1":"ami-25df8e60",
-            "ap-southeast-1":"ami-21c2bd73",
-            "ap-northeast-1":"ami-f0e842f1",
+            "eu-west-1":"eu-west-1/ami-89def4fd",
+            "us-east-1":"us-east-1/ami-2342a94a",
+            "us-west-1":"us-west-1/ami-25df8e60",
+            "ap-southeast-1":"ap-southeast-1/ami-21c2bd73",
+            "ap-northeast-1":"ap-northeast-1/ami-f0e842f1",
             ]
 
     private static final Map locationSpecificConf = [
