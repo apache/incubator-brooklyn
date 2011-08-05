@@ -71,8 +71,6 @@ class Infinispan5ServerIntegrationTest {
         try {
             executeUntilSucceeds ([:], {
                 assertTrue infini.getAttribute(Infinispan5Server.SERVICE_UP)
-                Socket socket = new Socket(InetAddress.localHost, DEFAULT_PORT);
-                socket.close();
             })
         } finally {
             infini.stop()
