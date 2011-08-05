@@ -136,7 +136,7 @@ public class Locations {
             if (Locations.AWS_REGIONS.contains(location)) {
                 Locations.lookupAwsRegion(location)
             } else if (Locations.LOCALHOST == location) {
-                Locations.newLocalhostLocation(10)
+                Locations.newLocalhostLocation(20)
             } else if (Locations.MONTEREY_EAST == location) {
                 Locations.newMontereyEastLocation()
             } else if (Locations.EDINBURGH == location) {
