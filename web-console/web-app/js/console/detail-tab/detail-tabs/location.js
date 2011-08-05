@@ -26,40 +26,29 @@ Brooklyn.location = (function() {
     }
 
     function buildAppLocation(loc) {
-        var lon = loc.longitude;
         var lat = loc.latitude;
+        var lon = loc.longitude;
         var name = loc.displayName;
 
-        var locationInfo = {"Name": name,
-                            "ISO-3166": loc.iso3166,
-                            "Lat-Long": displayLatLong(lat, lon),
-                            "Address": loc.streetAddress};
-
         if (lat != null && lon != null) {
-            var contentString = '<div id="content" class="mapbox"><dl>';
-
-            for (var key in locationInfo) {
-                contentString += '<dt>' + key + '</dt>' + '<dd>' + locationInfo[key] + '</dd>';
-            }
-
-            contentString += '</dl> </div>';
-
             var gloc = new google.maps.LatLng(lat, lon);
             var marker = new google.maps.Marker({
                 map: map,
                 position: gloc,
                 title: "Title"
             });
-            var infowindow = new google.maps.InfoWindow({
-                content: contentString
-            });
-            google.maps.event.addListener(marker, 'click' , function(){
-                infowindow.open(map , marker);
-            });
+
+            var locationInfo = {"Name": name,
+                                "ISO-3166": loc.iso3166,
+                                "Lat-Long": displayLatLong(lat, lon),
+                                "Address": loc.streetAddress};
+
+            var liw = new Brooklyn.gmaps.ListInfoWindow(locationInfo, map, marker);
+
             var newLoc = {
                 name : name,
                 marker : marker,
-                infowindow : infowindow,
+                infowindow : liw.getInfoWindow(),
                 gloc : gloc
             };
             newLoc.locationNumber = appLocations.length;
