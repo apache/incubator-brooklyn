@@ -158,7 +158,7 @@ class EntityController {
         Map<String, JsTreeNode> nodeMap = [:]
         Collection<Entity> entities = entityService.getAllEntities()
 
-        entities.each { nodeMap.put(it.id, new JsTreeNode(it, true)) }
+        entities.each { nodeMap.put(it.id, new JsTreeNode(it)) }
 
         entities.each {
             entity ->

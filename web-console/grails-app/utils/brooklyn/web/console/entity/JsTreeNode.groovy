@@ -9,7 +9,7 @@ public class JsTreeNode {
     private List<JsTreeNode> children = []
     public transient boolean matched
 
-    public JsTreeNode(Entity e, Boolean matched=false) {
+    public JsTreeNode(Entity e) {
         this.data.put("title", e.displayName)
 
         // Set html attributes on the a elements jstree uses to display nodes
@@ -19,8 +19,6 @@ public class JsTreeNode {
         // Here you can store anything you like.
         // The data is then available with jQuery's .data() mechanism.
         this.metadata.put("id", e.id)
-
-        this.matched = matched
     }
 
     public String getId() {
@@ -29,7 +27,7 @@ public class JsTreeNode {
 
     public String getState() {
         if (children) {
-            return matched ? "open" : "closed"
+            return "open"
         } else {
             return "leaf"
         }
