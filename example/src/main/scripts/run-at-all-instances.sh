@@ -1,8 +1,27 @@
-CMD=$1
+if [ -z "$1" ]; then
+   echo "command not found"
+   echo "Usage: $0  <ssh command> [regions]"
+   echo "       where ssh command is the command to run at each instance"
+   echo "       where regions is an option list of regions to use, such as eu-west-1 us-east-1; defaults to all regions"
+   exit 1
+fi
 
-for x in `cat instances.txt | cut -d " " -f2-` ; do
-  echo invoking $CMD at $x
-  ssh -f $x "$CMD" | awk '{print "OUTPUT '$x': " $0}' &
+CMD=$1
+shift
+
+INSTANCES=`cat instances.txt | cut -d " " -f2-`
+
+if [ -n "$*" ]; then
+	INSTANCES=""
+	for region in $* ; do
+		INSTANCE=`grep $region instances.txt | cut -d " " -f2-`
+		INSTANCES=${INSTANCES}${INSTANCE}' '
+	done
+fi
+
+for instance in $INSTANCES ; do
+  echo invoking $CMD at $instance
+  ssh -f $instance "$CMD" | awk '{print "OUTPUT '$instance': " $0}' &
 done
 
 wait
