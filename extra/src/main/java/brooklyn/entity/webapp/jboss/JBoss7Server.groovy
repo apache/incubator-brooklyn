@@ -27,6 +27,7 @@ class JBoss7Server extends JavaWebApp {
         super(flags, owner)
         
         setConfigIfValNonNull(MANAGEMENT_PORT.configKey, flags.managementPort)
+        jmxEnabled = false
     }
     
     @Override

@@ -22,6 +22,7 @@ public abstract class SshBasedJavaAppSetup extends SshBasedAppSetup {
 
     public static final int DEFAULT_FIRST_JMX_PORT = 32199
 
+    protected boolean jmxEnabled = true
     protected int jmxPort
     protected String jmxHost
     protected Map<String,Map<String,String>> propFilesToGenerate = [:]
@@ -31,6 +32,12 @@ public abstract class SshBasedJavaAppSetup extends SshBasedAppSetup {
         super(entity, machine)
         jmxHost = machine.getAddress().getHostName()
     }
+
+    public SshBasedJavaAppSetup setJmxEnabled(boolean val) {
+        jmxEnabled = val
+        return this
+    }
+
 
     public SshBasedJavaAppSetup setJmxPort(int val) {
         jmxPort = val
@@ -117,7 +124,7 @@ public abstract class SshBasedJavaAppSetup extends SshBasedAppSetup {
      * @see #toJavaDefinesString(Map)
      */
     protected Map getJvmStartupProperties() {
-        getJavaConfigOptions() + getJmxConfigOptions()
+        getJavaConfigOptions() + (jmxEnabled ? getJmxConfigOptions() : [:])
     }
 
     /**

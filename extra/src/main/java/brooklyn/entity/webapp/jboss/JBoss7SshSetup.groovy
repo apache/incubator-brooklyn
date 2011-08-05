@@ -54,8 +54,7 @@ class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
         result.setDeployDir deployDir
         result.setRunDir runDir
         result.setPropertyFiles propFilesToGenerate
-        result.setJmxPort jmxPort
-        result.setJmxHost jmxHost
+        result.jmxEnabled = false
         
         return result
     }
@@ -97,19 +96,11 @@ class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
     }
     
     @Override
-    protected Map getJavaConfigOptions() {
-        return [:]
-    }
- 
     public Map<String, String> getRunEnvironment() {
-        return super.getRunEnvironment() +
-                ["JAVA_OPTS" : toJavaDefinesString(getJvmStartupProperties())+" -Xmx256m -Xms128m "+
-                        "-Djava.util.logging.manager=org.jboss.logmanager.LogManager "+
-                        "-Dorg.jboss.logging.Logger.pluginClass=org.jboss.logging.logmanager.LoggerPluginImpl",
-//                "JBOSS_CLASSPATH" : "lib/jboss-logmanager.jar"
-                ]
+        return super.getRunEnvironment() + 
+                ["JAVA_OPTS" : toJavaDefinesString(getJvmStartupProperties())+" -Xmx256m -Xms128m"]
     }
-
+    
     /** @see SshBasedJavaAppSetup#getCheckRunningScript() */
     public List<String> getCheckRunningScript() {
         return [

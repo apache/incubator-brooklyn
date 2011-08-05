@@ -28,8 +28,9 @@ public abstract class JavaApp extends AbstractService {
     public static final AttributeSensor<Integer> JMX_PORT = Attributes.JMX_PORT;
     public static final AttributeSensor<String> JMX_HOST = Attributes.JMX_HOST;
 
+    boolean jmxEnabled = true
     transient JmxSensorAdapter jmxAdapter
-
+    
     public JavaApp(Map properties=[:], Entity owner=null) {
         super(properties, owner)
 
@@ -40,12 +41,14 @@ public abstract class JavaApp extends AbstractService {
     protected void initSensors() {
         super.initSensors()
         
-        if (!(getAttribute(JMX_HOST) && getAttribute(JMX_PORT)))
-        throw new IllegalStateException("JMX is not available")
+        if (jmxEnabled) {
+            if (!(getAttribute(JMX_HOST) && getAttribute(JMX_PORT)))
+            throw new IllegalStateException("JMX is not available")
 
-        jmxAdapter = new JmxSensorAdapter(this, 60*1000)
-        jmxAdapter.connect();
-        waitForJmx()
+            jmxAdapter = new JmxSensorAdapter(this, 60*1000)
+            jmxAdapter.connect();
+            waitForJmx()
+        }
     }
 
     protected Collection<Integer> getRequiredOpenPorts() {
