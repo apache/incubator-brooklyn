@@ -9,14 +9,13 @@ import java.io.IOException
 import java.net.URL
 import java.util.Collection
 import java.util.Map
-import java.util.concurrent.ConcurrentHashMap
 import java.util.logging.Level
 import java.util.logging.Logger
 
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.trait.Startable
 import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.Location
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.NoMachinesAvailableException
@@ -27,7 +26,6 @@ import com.cloudsoftcorp.monterey.clouds.NetworkId
 import com.cloudsoftcorp.monterey.clouds.basic.DeploymentUtils
 import com.cloudsoftcorp.monterey.clouds.dto.CloudEnvironmentDto
 import com.cloudsoftcorp.monterey.network.control.api.Dmn1NetworkInfo
-import com.cloudsoftcorp.monterey.network.control.api.Dmn1NodeType
 import com.cloudsoftcorp.monterey.network.control.plane.GsonSerializer
 import com.cloudsoftcorp.monterey.network.control.plane.web.DeploymentWebProxy
 import com.cloudsoftcorp.monterey.network.control.plane.web.Dmn1NetworkInfoWebProxy
@@ -185,7 +183,7 @@ public class MontereyManagementNode extends AbstractEntity implements Startable 
             //            MainArguments mainArgs = new MainArguments(new File(managementNodeInstallDir), null, null, null, null, null, networkId.getId());
             //            new ManagementNodeStarter(mainArgs).start();
 
-            machine.run(out: System.out,
+            int result = machine.run(out: System.out, err: System.err,
                     managementNodeInstallDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_START_SCRIPT_RELATIVE_PATH+
                     " -address "+machine.getAddress().getHostName()+
                     " -port "+Integer.toString(config.getMontereyNodePort())+
@@ -193,7 +191,8 @@ public class MontereyManagementNode extends AbstractEntity implements Startable 
                     " -key "+networkId.getId()+
                     " -webConfig "+managementNodeInstallDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_WEB_CONF_FILE_RELATIVE_PATH+";"+
                     "exit");
-
+            if (result) throw new IllegalStateException("failed to start Monterey management node on $machine (exit code $result)")
+                
             // TODO Use repeat...until...?
             PingWebProxy pingWebProxy = new PingWebProxy(managementUrl.toString(), webAdminCredential,
                     (config.getMontereyWebApiSslKeystore() != null ? config.getMontereyWebApiSslKeystore().getPath() : null),
@@ -261,10 +260,11 @@ public class MontereyManagementNode extends AbstractEntity implements Startable 
         String killScript = managementNodeInstallDir+"/"+MontereyNetworkConfig.MANAGER_SIDE_KILL_SCRIPT_RELATIVE_PATH;
         try {
             LOG.info("Releasing management node on "+toString());
-            machine.run(out: System.out,
+            int result = machine.run(out: System.out, err: System.err,
                     killScript+" -key "+networkId.getId()+";"+
                     "exit");
-
+            if (result) LOG.info("failed to gracefully stop Monterey management node on $machine (exit code $result)")
+            
         } catch (IllegalStateException e) {
             if (e.toString().contains("No such process")) {
                 // the process hadn't started or was killed externally? Our work is done.

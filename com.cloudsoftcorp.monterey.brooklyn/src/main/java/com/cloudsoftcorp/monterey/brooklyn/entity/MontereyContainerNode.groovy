@@ -225,7 +225,8 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
                 if (truststore != null) {
                     host.copyTo(truststore, networkHome+"/"+AccountConfig.NETWORK_NODE_SSL_TRUSTSTORE_RELATIVE_PATH);
                 }
-                host.run(out: System.out, args);
+                int result = host.run(out: System.out, err:System.err, args);
+                if (result) throw new IllegalStateException("failed to start monterey network node on $host (exit code $result)")
                 
                 LOG.info("Launched and waiting for new monterey node "+creationId+" on "+host);
                 waitForStartOrFailed();
@@ -288,7 +289,9 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
                 " -key $creationId";
 
         try {
-            host.run(out: System.out, args);
+            int result = host.run(out: System.out, err: System.err, args);
+            if (result) LOG.info("Failed to gracefully stop Monterey network node on $host (exit code $result)")
+            
         } catch (IllegalStateException e) {
             if (e.toString().contains("No such process")) {
                 // the process hadn't started or was killed externally? Our work is done.
