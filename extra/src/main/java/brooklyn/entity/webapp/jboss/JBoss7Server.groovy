@@ -18,10 +18,10 @@ class JBoss7Server extends JavaWebApp {
 
     public static final BasicAttributeSensor<Integer> MANAGEMENT_STATUS =
             [ Integer, "webapp.http.managementStatus", "HTTP response code for the management server" ]
-    public static final BasicAttributeSensor<Integer> BYTES_RECEIVED =
-            [ Integer, "webapp.reqs.bytes.received", "Total bytes received by the webserver" ]
-    public static final BasicAttributeSensor<Integer> BYTES_SENT =
-            [ Integer, "webapp.reqs.bytes.sent", "Total bytes sent by the webserver" ]
+    public static final BasicAttributeSensor<Long> BYTES_RECEIVED =
+            [ Long, "webapp.reqs.bytes.received", "Total bytes received by the webserver" ]
+    public static final BasicAttributeSensor<Long> BYTES_SENT =
+            [ Long, "webapp.reqs.bytes.sent", "Total bytes sent by the webserver" ]
     
     public JBoss7Server(Map flags=[:], Entity owner=null) {
         super(flags, owner)
