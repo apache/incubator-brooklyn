@@ -1,6 +1,6 @@
 Brooklyn.circles = (function() {
     var map;
-    var circles = [];
+    var locationMarkers = {};
 
     // meters squared per entity
     var area_per_entity = 300000000000;
@@ -35,17 +35,60 @@ Brooklyn.circles = (function() {
     }
 
     function drawCirclesFromJSON(json) {
-        // Remove all existing circles
-        for (i in circles) {
-            var c = circles[i];
-            c.setMap(null);
+        var newLocs = {};
+        var id;
+        var lm;
+
+        for (id in json) {
+            var l = json[id];
+            if (lm = locationMarkers[id]) {
+                console.log("Updating " + id);
+                // Update
+
+                var latlng = new google.maps.LatLng(l.lat, l.lng);
+
+                lm.circle.setRadius(radius(location_area(l.entity_count || 1)));
+                lm.circle.setCenter(latlng);
+
+                lm.marker.setPosition(latlng);
+
+                lm.infoWindow.setPairs(l);
+
+                newLocs[id] = lm;
+            } else {
+                // Add
+                console.log("Adding " + id);
+                var circle = drawCircle(l.lat, l.lng, radius(location_area(l.entity_count || 1)));
+
+                var marker = new google.maps.Marker({
+                    map: map,
+                    position: new google.maps.LatLng(l.lat, l.lng),
+                    title: "Bleh",
+                });
+
+
+                var locationInfo = {name: "bob"};
+                var infoWindow = new Brooklyn.gmaps.ListInfoWindow(locationInfo, map, marker);
+
+                circle.bindTo('center', marker, 'position');
+
+                newLocs[id] = {circle: circle,
+                               marker: marker,
+                               infoWindow: infoWindow};
+            }
         }
 
-        // Draw the new ones
-        for (var i in json) {
-            var l = json[i];
-            circles.push(drawCircle(l.lat, l.lng, radius(location_area(l.entity_count || 1))));
+        for (id in locationMarkers) {
+            if (! newLocs[id]) {
+                // location has been removed
+                console.log("Deleting " + id);
+                var lm = locationMarkers[id];
+                lm.circle.setMap(null);
+                lm.marker.setMap(null);
+                lm.infoWindow.getInfoWindow().setMap(null);
+            }
         }
+        locationMarkers = newLocs;
     }
 
     function drawCircles() {
