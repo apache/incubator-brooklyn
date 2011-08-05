@@ -20,7 +20,6 @@ import brooklyn.entity.webapp.jboss.JBoss7Server
 import brooklyn.launcher.BrooklynLauncher
 import brooklyn.location.Location
 import brooklyn.policy.ResizerPolicy
-import brooklyn.util.IdGenerator
 
 public class JbossSeamTravelDemo extends AbstractApplication {
     public static final Logger LOG = LoggerFactory.getLogger(JbossSeamTravelDemo)
@@ -85,9 +84,8 @@ public class JbossSeamTravelDemo extends AbstractApplication {
         webFabric.setConfig(Cluster.INITIAL_SIZE, 1)
         
         nginxEntities = new DynamicGroup([displayName: 'Web Fronts'], this, { Entity e -> (e instanceof NginxController) })
-        String randomSubdomain = 'brooklyn-'+IdGenerator.makeRandomId(8)
         geoDns = new GeoscalingDnsService(displayName: 'Geo-DNS',
-            username: 'cloudsoft', password: 'cl0uds0ft', primaryDomainName: 'geopaas.org', smartSubdomainName: randomSubdomain,
+            username: 'cloudsoft', password: 'cl0uds0ft', primaryDomainName: 'geopaas.org', smartSubdomainName: 'brooklyn',
             this)
         geoDns.setTargetEntityProvider(nginxEntities)
     }

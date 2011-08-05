@@ -2,8 +2,6 @@ package brooklyn.entity.dns.geoscaling
 
 import static brooklyn.entity.dns.geoscaling.GeoscalingWebClient.*
 
-import brooklyn.entity.dns.AbstractGeoDnsService
-
 import java.util.Map
 import java.util.Set
 
@@ -15,15 +13,16 @@ import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.SmartSubdomain
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.ConfiguredAttributeSensor
+import brooklyn.util.IdGenerator;
 
 
 class GeoscalingDnsService extends AbstractGeoDnsService {
-    
+    public static final boolean RANDOMIZE_SUBDOMAIN_NAME = true;
     public static final BasicConfigKey GEOSCALING_USERNAME = [ String, "geoscaling.username" ];
     public static final BasicConfigKey GEOSCALING_PASSWORD = [ String, "geoscaling.password" ];
     public static final BasicConfigKey GEOSCALING_PRIMARY_DOMAIN_NAME = [ String, "geoscaling.primary.domain.name" ];
     public static final BasicConfigKey GEOSCALING_SMART_SUBDOMAIN_NAME = [ String, "geoscaling.smart.subdomain.name" ];
-
+    
     public static final BasicAttributeSensor GEOSCALING_ACCOUNT =
         [ String, "geoscaling.account", "Active user account for the GeoScaling.com service" ];
     public static final BasicAttributeSensor MANAGED_DOMAIN =
@@ -33,11 +32,11 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
     private String password;
     private String primaryDomainName;
     private String smartSubdomainName;
-
+    
     
     public GeoscalingDnsService(Map properties = [:], Entity owner = null) {
         super(properties, owner);
-    
+        
         // TODO But what if config has not been set yet? e.g. user calls:
         //   def geo = GeoscalingDnsService()
         //   geo.setConfig(GEOSCALING_USERNAME, "myname")
@@ -47,6 +46,9 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
         primaryDomainName = retrieveFromPropertyOrConfig(properties, "primaryDomainName", GEOSCALING_PRIMARY_DOMAIN_NAME);
         smartSubdomainName = retrieveFromPropertyOrConfig(properties, "smartSubdomainName", GEOSCALING_SMART_SUBDOMAIN_NAME);
         
+        if (RANDOMIZE_SUBDOMAIN_NAME)
+            smartSubdomainName += "-"+IdGenerator.makeRandomId(8);
+        
         // FIXME: complain about any missing config
         
         String fullDomain = smartSubdomainName+"."+primaryDomainName;
@@ -54,7 +56,26 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
         setAttribute(GEOSCALING_ACCOUNT, username);
         setAttribute(MANAGED_DOMAIN, fullDomain);
     }
-
+    
+    @Override
+    public void destroy() {
+        // Don't leave randomized subdomains configured on our GeoScaling account.
+        if (RANDOMIZE_SUBDOMAIN_NAME) {
+            GeoscalingWebClient gwc = [ ];
+            gwc.login(username, password);
+            Domain primaryDomain = gwc.getPrimaryDomain(primaryDomainName);
+            SmartSubdomain smartSubdomain = primaryDomain?.getSmartSubdomain(smartSubdomainName);
+            if (smartSubdomain) {
+                log.info("Deleting randomized GeoScaling smart subdomain '"+smartSubdomainName+"."+primaryDomainName+"'");
+                smartSubdomain.delete();
+            }
+            gwc.logout();
+        }
+        
+        super.destroy();
+    }
+    
+    
     protected void reconfigureService(Set<HostGeoInfo> targetHosts) {
         String script = GeoscalingScriptGenerator.generateScriptString(targetHosts);
         
@@ -79,5 +100,5 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
         if (p instanceof T) return (T) p;
         return getConfig(configKey);
     }
-
+    
 }
