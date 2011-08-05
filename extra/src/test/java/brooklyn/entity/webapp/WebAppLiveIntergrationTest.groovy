@@ -26,6 +26,7 @@ import brooklyn.location.basic.aws.AwsLocation
 import brooklyn.location.basic.aws.AwsLocationFactory
 import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.TimeExtras
+import brooklyn.test.TestUtils
 
 /**
  * This tests that we can run jboss entity on AWS.
@@ -78,18 +79,11 @@ public class WebAppLiveIntergrationTest {
                 sshPrivateKey:sshPrivateKey])
 
         loc = locFactory.newLocation(USEAST_REGION_NAME)
-        loc.setTagMapping([(JBoss6Server.class.getName()):[
-                imageId:USEAST_IMAGE_ID,
-                securityGroups:["brooklyn-all"],
-                ]])
-        loc.setTagMapping([(JBoss7Server.class.getName()):[
-                imageId:USEAST_IMAGE_ID,
-                securityGroups:["brooklyn-all"],
-                ]])
-        loc.setTagMapping([(TomcatServer.class.getName()):[
-                imageId:USEAST_IMAGE_ID,
-                securityGroups:["brooklyn-all"],
-                ]])
+        loc.setTagMapping( [
+                (JBoss6Server.class.getName()):[imageId:USEAST_IMAGE_ID,securityGroups:["brooklyn-all"]],
+                (JBoss7Server.class.getName()):[imageId:USEAST_IMAGE_ID,securityGroups:["brooklyn-all"]],
+                (TomcatServer.class.getName()):[imageId:USEAST_IMAGE_ID,securityGroups:["brooklyn-all"]]
+                ])
     }
     
     @AfterMethod(groups = "Live")
