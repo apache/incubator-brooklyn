@@ -49,8 +49,10 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
         
         // FIXME: complain about any missing config
         
+        String fullDomain = smartSubdomainName+"."+primaryDomainName;
+        log.info("GeoScaling service will configure redirection for '"+fullDomain+"' domain");
         setAttribute(GEOSCALING_ACCOUNT, username);
-        setAttribute(MANAGED_DOMAIN, smartSubdomainName+"."+primaryDomainName);
+        setAttribute(MANAGED_DOMAIN, fullDomain);
     }
 
     protected void reconfigureService(Set<HostGeoInfo> targetHosts) {
