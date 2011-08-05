@@ -160,6 +160,7 @@ class WebAppIntegrationTests {
 
                 assertTrue activityValue in Double
                 assertEquals activityValue, 0.0d
+                true
             }, useGroovyTruth: true)
             
             // apply workload on 1 per sec; reqs/sec should update
@@ -192,6 +193,7 @@ class WebAppIntegrationTests {
                 Double activityValue = entity.getAttribute(JavaWebApp.AVG_REQUESTS_PER_SECOND)
                 assertTrue activityValue in Double
                 assertEquals activityValue, 0.0d
+                true
             })
 
         } finally {
