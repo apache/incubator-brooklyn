@@ -47,7 +47,7 @@ class WebAppIntegrationTests {
     // Port increment for JBoss 6.
     final static int PORT_INCREMENT = 400
     
-    @BeforeMethod(groups = [ "Integration" ])
+    @BeforeMethod(groups=["Integration"])
     public void failIfHttpPortInUse() {
         if (isPortInUse(DEFAULT_HTTP_PORT, 5000L)) {
             httpPortLeftOpen = true;
@@ -55,7 +55,7 @@ class WebAppIntegrationTests {
         }
     }
     
-    @AfterMethod(groups = [ "Integration" ])
+    @AfterMethod(groups=["Integration"])
     public void ensureTomcatIsShutDown() {
         Socket shutdownSocket = null;
         SocketException gotException = null;
@@ -98,7 +98,7 @@ class WebAppIntegrationTests {
     /**
      * Checks an entity can start, set SERVICE_UP to true and shutdown again.
      */
-    @Test(groups="Integration", dataProvider="basicEntities")
+    @Test(groups=["Integration"], dataProvider="basicEntities")
     public void canStartupAndShutdown(JavaWebApp entity) {
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         executeUntilSucceedsWithFinallyBlock ([:], {
@@ -113,7 +113,7 @@ class WebAppIntegrationTests {
      * Checks that an entity correctly sets request and error count metrics by
      * connecting to a non-existent URL several times.
      */
-    @Test(groups="Integration", dataProvider="basicEntities")
+    @Test(groups=["Integration"], dataProvider="basicEntities")
     public void publishesRequestAndErrorCountMetrics(JavaWebApp entity) {
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         String url = entity.getAttribute(JavaWebApp.ROOT_URL) + "does_not_exist"
@@ -148,7 +148,7 @@ class WebAppIntegrationTests {
      * Checks an entity publishes correct requests/second figures and that these figures
      * fall to zero after a period of no activity.
      */
-    @Test(groups="Integration", dataProvider="basicEntities")
+    @Test(groups=["Integration"], dataProvider="basicEntities")
     public void publishesRequestsPerSecondMetric(JavaWebApp entity) {
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         try {
@@ -202,7 +202,7 @@ class WebAppIntegrationTests {
     /**
      * Tests that we get consecutive events with zero workrate, and with suitably small timestamps between them.
      */
-    @Test(groups="Integration", dataProvider="basicEntities")
+    @Test(groups=["Integration"], dataProvider="basicEntities")
     public void publishesZeroRequestsPerSecondMetricRepeatedly(JavaWebApp entity) {
         final int MAX_INTERVAL_BETWEEN_EVENTS = 1000 // should be every 500ms
         final int NUM_CONSECUTIVE_EVENTS = 3
@@ -233,7 +233,7 @@ class WebAppIntegrationTests {
             entity.stop()
         }
     }
-    
+
     /**
      * Twins the entities given by basicEntities() with links to WAR files
      * they should be able to deploy.  Correct deployment can be checked by
@@ -256,7 +256,7 @@ class WebAppIntegrationTests {
     /**
      * Tests given entity can deploy the given war.  Checks given httpURL to confirm success.
      */
-    @Test(groups="Integration", dataProvider="entitiesWithWARAndURL")
+    @Test(groups=["Integration"], dataProvider="entitiesWithWARAndURL")
     public void warDeployments(JavaWebApp entity, String war, String httpURL) {
         URL resource = getClass().getClassLoader().getResource(war)
         assertNotNull resource
@@ -269,6 +269,5 @@ class WebAppIntegrationTests {
             true
         }, abortOnError:false, timeout: 10*SECONDS)
     }
-    
 
 }
