@@ -6,7 +6,8 @@ Brooklyn.gmaps = (function(){
      * Pairs is an object of key value pairs to be displayed as a definition list.
      * Map and Marker are optional. They specify a marker to attach the info window to.
      */
-    function ListInfoWindow(pairs, map, marker) {
+
+    function makeContentString(pairs) {
         var contentString = '<div id="content" class="mapbox"><dl>';
 
         for (var key in pairs) {
@@ -14,9 +15,12 @@ Brooklyn.gmaps = (function(){
         }
 
         contentString += '</dl> </div>';
+        return contentString;
+    }
 
+    function ListInfoWindow(pairs, map, marker) {
         this.infowindow = new google.maps.InfoWindow({
-            content: contentString
+            content: makeContentString(pairs),
         });
 
         if ((typeof marker) !== 'undefined') {
@@ -37,6 +41,11 @@ Brooklyn.gmaps = (function(){
 
     ListInfoWindow.prototype.getInfoWindow = function() {
         return this.infowindow;
+    }
+
+    /* Update the contents. */
+    ListInfoWindow.prototype.setPairs = function(pairs) {
+        this.infowindow.setContent(makeContentString(pairs));
     }
 
     return {
