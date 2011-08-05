@@ -139,7 +139,11 @@ public class AwsLocation extends AbstractLocation implements MachineProvisioning
             String vmHostname = getPublicHostname(node, allconf)
             Map sshConfig = [:]
             if (allconf.sshPrivateKey) sshConfig.keyFiles = [ allconf.sshPrivateKey.absolutePath ]
-            SshMachineLocation sshLocByHostname = new SshMachineLocation(address:vmHostname, userName:ROOT_USERNAME, config:sshConfig);
+            SshMachineLocation sshLocByHostname = new SshMachineLocation(
+                    address:vmHostname, 
+                    displayName:vmHostname,
+                    userName:ROOT_USERNAME, 
+                    config:sshConfig);
 
             sshLocByHostname.setParentLocation(this)
             vmInstanceIds.put(sshLocByHostname, node.getId())
