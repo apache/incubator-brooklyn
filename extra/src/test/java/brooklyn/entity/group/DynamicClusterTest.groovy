@@ -163,7 +163,7 @@ class DynamicClusterTest {
     }
     
     @Test
-    public void foo() {
+    public void failingEntitiesDontBreakClusterActions() {
         Application app = new TestApplication()
         TestEntity entity
         final int failNum = 2
