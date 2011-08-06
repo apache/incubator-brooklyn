@@ -43,10 +43,10 @@ class JBoss7Server extends JavaWebApp {
         def port = getAttribute(MANAGEMENT_PORT)
         
         httpAdapter = new HttpSensorAdapter(this)
-        attributePoller.addSensor(MANAGEMENT_STATUS, httpAdapter.newStatusValueProvider("http://$host:$port/management/"))
+        String queryUrl = "http://$host:$port/management/subsystem/web/connector/http/read-resource?include-runtime"
+        attributePoller.addSensor(MANAGEMENT_STATUS, httpAdapter.newStatusValueProvider(queryUrl))
         attributePoller.addSensor(SERVICE_UP, { getAttribute(MANAGEMENT_STATUS) == 200 } as ValueProvider<Boolean>)
         
-        String queryUrl = "http://$host:$port/management/subsystem/web/connector/http/read-resource?include-runtime"
         attributePoller.addSensor(REQUEST_COUNT, httpAdapter.newJsonLongProvider(queryUrl, "requestCount"))
         attributePoller.addSensor(ERROR_COUNT, httpAdapter.newJsonLongProvider(queryUrl, "errorCount"))
         attributePoller.addSensor(TOTAL_PROCESSING_TIME, httpAdapter.newJsonLongProvider(queryUrl, "processingTime"))
@@ -59,5 +59,4 @@ class JBoss7Server extends JavaWebApp {
     public SshBasedAppSetup getSshBasedSetup(SshMachineLocation machine) {
         return JBoss7SshSetup.newInstance(this, machine)
     }
-
 }
