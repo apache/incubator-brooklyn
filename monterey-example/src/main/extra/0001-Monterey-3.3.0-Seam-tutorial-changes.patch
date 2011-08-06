@@ -1,0 +1,270 @@
+From 85dd4aa5b66abf034026c7a72b5f94ce99ae81cf Mon Sep 17 00:00:00 2001
+From: Andrew Donald Kennedy <andrew.kennedy@cloudsoftcorp.com>
+Date: Sat, 6 Aug 2011 08:49:20 +0100
+Subject: [PATCH] Monterey 3.3.0 Seam tutorial changes
+
+---
+ booking/pom.xml                                    |   18 +++++++
+ .../examples/booking/booking/BookingAgent.java     |   28 +++++++++--
+ .../examples/booking/booking/BookingHistory.java   |   14 +++++-
+ .../RemoteBookingAvailabilityServiceLocator.java   |   50 ++++++++++++++++++++
+ .../jboss/seam/examples/booking/model/Booking.java |    9 ++++
+ .../seam/examples/booking/model/Booking_.java      |    2 +-
+ booking/src/main/resources/monterey.properties     |    5 ++
+ 7 files changed, 118 insertions(+), 8 deletions(-)
+ create mode 100644 booking/src/main/java/org/jboss/seam/examples/booking/booking/RemoteBookingAvailabilityServiceLocator.java
+ create mode 100644 booking/src/main/resources/monterey.properties
+
+diff --git a/booking/pom.xml b/booking/pom.xml
+index ba91324..b2ef1c1 100644
+--- a/booking/pom.xml
++++ b/booking/pom.xml
+@@ -44,7 +44,25 @@
+         <jersey.version>1.5</jersey.version>
+     </properties>
+ 
++	<repositories>
++	    <repository>
++	        <id>com.cloudsoftcorp.releases</id>
++	        <name>Cloudsoft Releases</name>
++	        <url>http://developers.cloudsoftcorp.com/download/maven2/</url>
++	   </repository>
++	</repositories>
++
+     <dependencies>
++	    <dependency>
++	        <groupId>com.cloudsoftcorp.sample.booking</groupId>
++	        <artifactId>com.cloudsoftcorp.sample.booking.svc.api</artifactId>
++	        <version>3.3.0-SNAPSHOT</version>
++	    </dependency>
++	    <dependency>
++	        <groupId>com.cloudsoftcorp.monterey</groupId>
++	        <artifactId>com.cloudsoftcorp.monterey.embedded</artifactId>
++	        <version>3.3.0-SNAPSHOT</version>
++	    </dependency>
+         <!-- Annotation processor for generating typed loggers -->
+         <dependency>
+             <groupId>org.jboss.seam.solder</groupId>
+diff --git a/booking/src/main/java/org/jboss/seam/examples/booking/booking/BookingAgent.java b/booking/src/main/java/org/jboss/seam/examples/booking/booking/BookingAgent.java
+index 67db0f2..c914b83 100644
+--- a/booking/src/main/java/org/jboss/seam/examples/booking/booking/BookingAgent.java
++++ b/booking/src/main/java/org/jboss/seam/examples/booking/booking/BookingAgent.java
+@@ -16,6 +16,8 @@
+  */
+ package org.jboss.seam.examples.booking.booking;
+ 
++import static javax.persistence.PersistenceContextType.EXTENDED;
++
+ import java.util.Locale;
+ 
+ import javax.ejb.Stateful;
+@@ -32,7 +34,6 @@ import javax.inject.Named;
+ import javax.persistence.EntityManager;
+ import javax.persistence.PersistenceContext;
+ 
+-import com.ocpsoft.pretty.time.PrettyTime;
+ import org.jboss.seam.examples.booking.account.Authenticated;
+ import org.jboss.seam.examples.booking.i18n.DefaultBundleKey;
+ import org.jboss.seam.examples.booking.log.BookingLog;
+@@ -43,9 +44,12 @@ import org.jboss.seam.faces.context.conversation.Begin;
+ import org.jboss.seam.faces.context.conversation.End;
+ import org.jboss.seam.international.status.Messages;
+ import org.jboss.seam.international.status.builder.TemplateMessage;
++import org.jboss.seam.solder.core.Exact;
+ import org.jboss.seam.solder.logging.TypedCategory;
+ 
+-import static javax.persistence.PersistenceContextType.EXTENDED;
++import com.ocpsoft.pretty.time.PrettyTime;
++
++import com.cloudsoftcorp.sample.booking.svc.BookingAvailabilityServiceLocator;
+ 
+ /**
+  * @author <a href="http://community.jboss.org/people/dan.j.allen">Dan Allen</a>
+@@ -57,6 +61,10 @@ public class BookingAgent {
+     @Inject
+     @TypedCategory(BookingAgent.class)
+     private BookingLog log;
++    
++    @Inject
++    @Exact(RemoteBookingAvailabilityServiceLocator.class)
++    private BookingAvailabilityServiceLocator serviceLocator;
+ 
+     @PersistenceContext(type = EXTENDED)
+     private EntityManager em;
+@@ -113,13 +121,21 @@ public class BookingAgent {
+     public void validate() {
+         log.hotelEntityInPersistenceContext(em.contains(booking.getHotel()));
+         // if we got here, all validations passed
+-        bookingValid = true;
++        booking.setBookingReference(serviceLocator
++                .getService(booking.getHotel().getName())
++                .createProvisionalBooking(booking.getCheckinDate(),
++                booking.getCheckoutDate()));
+     }
+ 
+     @End
+     public void confirm() {
+-        em.persist(booking);
+-        bookingConfirmedEventSrc.fire(booking);
++    	if (serviceLocator.getService(booking.getHotel().getName()).confirm(booking.getBookingReference())) {
++            em.persist(booking);
++            bookingConfirmedEventSrc.fire(booking);
++        } else {
++            messages.warn("Failed to confirm booking - please try again...");
++            cancel();
++        }
+     }
+ 
+     @End
+@@ -149,6 +165,6 @@ public class BookingAgent {
+     }
+ 
+     public boolean isBookingValid() {
+-        return bookingValid;
++        return booking != null && booking.getBookingReference() != null;
+     }
+ }
+diff --git a/booking/src/main/java/org/jboss/seam/examples/booking/booking/BookingHistory.java b/booking/src/main/java/org/jboss/seam/examples/booking/booking/BookingHistory.java
+index e33b7b8..cb0a73f 100644
+--- a/booking/src/main/java/org/jboss/seam/examples/booking/booking/BookingHistory.java
++++ b/booking/src/main/java/org/jboss/seam/examples/booking/booking/BookingHistory.java
+@@ -45,6 +45,10 @@ import org.jboss.seam.examples.booking.model.User;
+ import org.jboss.seam.examples.booking.model.User_;
+ import org.jboss.seam.international.status.Messages;
+ import org.jboss.seam.security.Identity;
++import org.jboss.seam.solder.core.Exact;
++
++import com.cloudsoftcorp.sample.booking.svc.BookingAvailabilityService;
++import com.cloudsoftcorp.sample.booking.svc.BookingAvailabilityServiceLocator;
+ 
+ /**
+  * The booking history exposes the current users existing bookings
+@@ -69,7 +73,11 @@ public class BookingHistory {
+ 
+     @Inject
+     @Authenticated
+-    private Instance<User> currentUserInstance;
++    private Instance<User> currentUserInstance;  
++
++    @Inject
++    @Exact(RemoteBookingAvailabilityServiceLocator.class)
++    private BookingAvailabilityServiceLocator serviceLocator;
+ 
+     private List<Booking> bookingsForUser = null;
+ 
+@@ -100,6 +108,10 @@ public class BookingHistory {
+         Booking booking = entityManager.find(Booking.class, selectedBooking.getId());
+         if (booking != null) {
+             entityManager.remove(booking);
++            BookingAvailabilityService service = serviceLocator.getService(booking.getHotel().getName());
++            if (!service.cancel(booking.getBookingReference())) {
++                messages.warn("Failed to cancel booking " + booking.getBookingReference());
++            }
+             messages.info(new DefaultBundleKey("booking_canceled"))
+                     .defaults("The booking at the {0} on {1} has been canceled.")
+                     .params(selectedBooking.getHotel().getName(),
+diff --git a/booking/src/main/java/org/jboss/seam/examples/booking/booking/RemoteBookingAvailabilityServiceLocator.java b/booking/src/main/java/org/jboss/seam/examples/booking/booking/RemoteBookingAvailabilityServiceLocator.java
+new file mode 100644
+index 0000000..d289617
+--- /dev/null
++++ b/booking/src/main/java/org/jboss/seam/examples/booking/booking/RemoteBookingAvailabilityServiceLocator.java
+@@ -0,0 +1,50 @@
++package org.jboss.seam.examples.booking.booking;
++
++import java.io.FileInputStream;
++import java.io.IOException;
++import java.util.Properties;
++import java.util.concurrent.TimeoutException;
++
++import javax.enterprise.context.ApplicationScoped;
++import javax.inject.Inject;
++
++import com.cloudsoftcorp.monterey.servicebean.access.api.MontereyNetworkEndpointImpl;
++import com.cloudsoftcorp.sample.booking.svc.BookingAvailabilityMontereyServiceLocator;
++import com.cloudsoftcorp.sample.booking.svc.BookingAvailabilityService;
++import com.cloudsoftcorp.sample.booking.svc.BookingAvailabilityServiceLocator;
++
++@ApplicationScoped
++public class RemoteBookingAvailabilityServiceLocator implements BookingAvailabilityServiceLocator {
++	private BookingAvailabilityMontereyServiceLocator service;
++
++	/** Obtain monterey properties from external file, with defaults from classpath. */
++	@Inject
++	public void setProperties() throws TimeoutException {
++		String fileName = System.getenv("MONTEREY_CONFIG");
++		Properties montereyConfig = new Properties();
++		try {
++			montereyConfig.load(getClass().getClassLoader().getResourceAsStream("monterey.properties")); // defaults
++			if (fileName != null) { // check variable set
++                montereyConfig.load(new FileInputStream(fileName.trim()));
++            }
++		} catch (IOException ioe) {
++			throw new RuntimeException("Error loading properties", ioe);
++		}
++		setProperties(montereyConfig);
++	}
++
++	/** Set monterey network configuration using properties. */
++	public void setProperties(Properties p) throws TimeoutException {
++		MontereyNetworkEndpointImpl network = new MontereyNetworkEndpointImpl();
++		network.setManagementNodeUrl(p.getProperty("montereyManagementUrl"));
++		network.setUsername(p.getProperty("montereyUser"));
++		network.setPassword(p.getProperty("montereyPassword"));
++		network.setLocation(p.getProperty("montereyLocation"));
++		network.start();
++		service = new BookingAvailabilityMontereyServiceLocator(network);
++	}
++
++	public BookingAvailabilityService getService(String hotel) {
++		return service.getService(hotel);
++	}
++}
+diff --git a/booking/src/main/java/org/jboss/seam/examples/booking/model/Booking.java b/booking/src/main/java/org/jboss/seam/examples/booking/model/Booking.java
+index 43e3b54..696a439 100644
+--- a/booking/src/main/java/org/jboss/seam/examples/booking/model/Booking.java
++++ b/booking/src/main/java/org/jboss/seam/examples/booking/model/Booking.java
+@@ -61,10 +61,19 @@ public class Booking implements Serializable {
+     private int creditCardExpiryYear;
+     private boolean smoking;
+     private int beds;
++    private String bookingReference;
+ 
+     public Booking() {
+     }
+ 
++    public void setBookingReference(String bookingReference) {
++        this.bookingReference = bookingReference;
++    }
++
++    public String getBookingReference() {
++        return bookingReference;
++    }
++
+     public Booking(Hotel hotel, User user, int daysFromNow, int nights) {
+         this.hotel = hotel;
+         this.user = user;
+diff --git a/booking/src/main/java/org/jboss/seam/examples/booking/model/Booking_.java b/booking/src/main/java/org/jboss/seam/examples/booking/model/Booking_.java
+index f12e4ee..7eeaa44 100644
+--- a/booking/src/main/java/org/jboss/seam/examples/booking/model/Booking_.java
++++ b/booking/src/main/java/org/jboss/seam/examples/booking/model/Booking_.java
+@@ -20,5 +20,5 @@ public abstract class Booking_ {
+     public static volatile SingularAttribute<Booking, Date> checkoutDate;
+     public static volatile SingularAttribute<Booking, User> user;
+     public static volatile SingularAttribute<Booking, CreditCardType> creditCardType;
+-
++    public static volatile SingularAttribute<Booking, String> bookingReference;
+ }
+diff --git a/booking/src/main/resources/monterey.properties b/booking/src/main/resources/monterey.properties
+new file mode 100644
+index 0000000..af989b0
+--- /dev/null
++++ b/booking/src/main/resources/monterey.properties
+@@ -0,0 +1,5 @@
++# Monterey network configuration default settings
++montereyManagementUrl = http://127.0.0.1:8081
++montereyUser = guest
++montereyPassword = password
++montereyLocation = GB-EDH
+-- 
+1.7.6
+

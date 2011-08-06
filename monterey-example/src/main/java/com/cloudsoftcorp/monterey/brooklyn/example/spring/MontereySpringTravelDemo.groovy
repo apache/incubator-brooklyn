@@ -1,6 +1,7 @@
 package com.cloudsoftcorp.monterey.brooklyn.example.spring
 
 import static brooklyn.entity.group.Cluster.*
+import static brooklyn.entity.basic.Attributes.*
 import static brooklyn.entity.webapp.JavaWebApp.*
 import static brooklyn.event.basic.DependentConfiguration.*
 import static com.cloudsoftcorp.monterey.brooklyn.entity.MontereyManagementNode.*
@@ -19,6 +20,7 @@ import brooklyn.entity.group.DynamicFabric
 import brooklyn.entity.proxy.nginx.NginxController
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster
 import brooklyn.entity.webapp.DynamicWebAppCluster
+import brooklyn.entity.webapp.JavaWebApp
 import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.launcher.BrooklynLauncher
 import brooklyn.location.Location
@@ -38,8 +40,8 @@ public class MontereySpringTravelDemo extends AbstractApplication {
         List<Location> locations = loadLocations(argv)
 
         MontereySpringTravelDemo app = new MontereySpringTravelDemo(
-                name : 'brooklyn-wide-area-demo',
-                displayName : 'Brooklyn Wide-Area Spring Travel Demo Application'
+                name : "brooklyn-wide-area-demo",
+                displayName : "Brooklyn Wide-Area Spring Travel Demo Application"
             )
         
         BrooklynLauncher.manage(app)
@@ -63,10 +65,10 @@ public class MontereySpringTravelDemo extends AbstractApplication {
         super(props)
 
         montereyNetwork = new MontereyNetwork(
-                name : 'Spring Travel',
+                name : "Spring Travel",
                 appBundles : [ "src/main/resources/com.cloudsoftcorp.sample.booking.svc.api.jar",
-                        "src/main/resources/com.cloudsoftcorp.sample.booking.svc.impl_3.2.0.v20110502-351-10779.jar" ],
-                appDescriptor : 'src/main/resources/BookingAvailabilityApplication.conf',
+		                       "src/main/resources/com.cloudsoftcorp.sample.booking.svc.impl_3.2.0.v20110502-351-10779.jar" ],
+                appDescriptor : "src/main/resources/BookingAvailabilityApplication.conf",
                 initialTopologyPerLocation : [ LPP:1, MR:1, M:1, TP:1, SPARE:1 ],
                 webUsersCredential : [MONTEREY_ADMIN_CREDENTIAL],
                 this)
@@ -75,8 +77,8 @@ public class MontereySpringTravelDemo extends AbstractApplication {
 
         Closure webServerFactory = { Map properties, Entity cluster ->
             def server = new TomcatServer(properties)
-            server.setConfig(TomcatServer.HTTP_PORT.configKey, 8080)
-            server.setConfig(TomcatServer.PROPERTY_FILES.subKey("MONTEREY_PROPERTIES"),
+            server.setConfig(HTTP_PORT.configKey, 8080)
+            server.setConfig(PROPERTY_FILES.subKey("MONTEREY_CONFIG"),
                     [
                         montereyManagementUrl : attributeWhenReady(montereyNetwork, MANAGEMENT_URL),
                         montereyUser : attributePostProcessedWhenReady(montereyNetwork, CLIENT_CREDENTIAL, { CredentialsConfig config -> config.username }),
@@ -88,9 +90,9 @@ public class MontereySpringTravelDemo extends AbstractApplication {
         
         Closure webClusterFactory = { Map flags, Entity owner ->
             NginxController nginxController = new NginxController(
-                    domain:'brooklyn.geopaas.org',
-                    port:8000,
-                    portNumberSensor:HTTP_PORT)
+                    domain : "brooklyn.geopaas.org",
+                    port : 8000,
+                    portNumberSensor : HTTP_PORT)
 
             Map clusterFlags = [ controller : nginxController, webServerFactory : webServerFactory] << flags
             ControlledDynamicWebAppCluster webCluster = new ControlledDynamicWebAppCluster(clusterFlags, owner)
@@ -106,24 +108,24 @@ public class MontereySpringTravelDemo extends AbstractApplication {
         }
         
         webFabric = new DynamicFabric(
-                name : 'web-cluster-fabric',
-                displayName : 'Fabric',
-                displayNamePrefix : '',
-                displayNameSuffix : ' web cluster',
+                name : "web-cluster-fabric",
+                displayName : "Fabric",
+                displayNamePrefix : "",
+                displayNameSuffix : " web cluster",
                 newEntity : webClusterFactory,
                 this)
         webFabric.setConfig(WAR, "src/main/resources/booking-mvc.war")
         webFabric.setConfig(INITIAL_SIZE, 1)
 
         nginxEntities = new DynamicGroup(
-                displayName : 'Web Fronts',
+                displayName : "Web Fronts",
                 this, { Entity e -> (e instanceof NginxController) })
         geoDns = new GeoscalingDnsService(
-                displayName : 'Geo-DNS',
-                username: 'cloudsoft',
-                password: 'cl0uds0ft',
-                primaryDomainName: 'geopaas.org',
-                smartSubdomainName: 'brooklyn',
+                displayName : "Geo-DNS",
+                username: "cloudsoft",
+                password: "cl0uds0ft",
+                primaryDomainName: "geopaas.org",
+                smartSubdomainName: "brooklyn",
                 this)
         geoDns.setTargetEntityProvider(nginxEntities)
     }

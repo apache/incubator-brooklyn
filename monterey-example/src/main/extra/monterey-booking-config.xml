@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:webflow="http://www.springframework.org/schema/webflow-config"
+       xsi:schemaLocation="
+           http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+           http://www.springframework.org/schema/webflow-config
+           http://www.springframework.org/schema/webflow-config/spring-webflow-config-2.0.xsd">
+    <!--lookup environment variable-->
+    <bean id="montereyConfig" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean" >
+        <property name="targetClass" value="java.lang.String" />
+        <property name="staticMethod" value="java.lang.System.getenv" />
+        <property name="arguments">
+            <list>
+                <value>MONTEREY_CONFIG</value>
+            </list>
+         </property>
+    </bean>
+    
+    <!--load properties file -->  
+    <bean id="placeholderConfig" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">     
+        <property name="locations">
+            <list>
+                <value>classpath:monterey.properties</value><!--defaults-->
+                <value>file://${montereyConfig}</value>
+            </list>
+        </property>
+        <property name="ignoreResourceNotFound" value="true" />
+    </bean>
+    
+    <!--monterey configuration from properties-->
+    <bean name="montereyEndpoint" class="com.cloudsoftcorp.monterey.servicebean.access.api.MontereyNetworkEndpointImpl" init-method="start" destroy-method="shutdown">
+        <property name="managementNodeUrl" value="${montereyManagementUrl}"/>
+        <property name="username" value="${montereyUser}"/>
+        <property name="password" value="${montereyPassword}"/>
+        <property name="location" value="${montereyLocation}"/>
+    </bean>
+    <bean name="bookingAvailabilityServiceLocator" class="com.cloudsoftcorp.sample.booking.svc.BookingAvailabilityMontereyServiceLocator">
+        <constructor-arg ref="montereyEndpoint"/>
+    </bean>
+</beans>
