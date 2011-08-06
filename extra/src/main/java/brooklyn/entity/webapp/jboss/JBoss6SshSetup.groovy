@@ -126,7 +126,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         // LAUNCH_JBOSS_IN_BACKGROUND relays OS signals sent to the run.sh process to the JBoss process.
         Map<String, String> env = [
 	        "LAUNCH_JBOSS_IN_BACKGROUND" : "1",
-	        "JAVA_OPTS" : toJavaDefinesString(getJvmStartupProperties())+" -Xmx256m -Xms128m",
+	        "JAVA_OPTS" : toJavaDefinesString(getJvmStartupProperties())+" -Xms200m -Xmx800m -XX:MaxPermSize=400m",
 	        "JBOSS_CLASSPATH" : "${installDir}/lib/jboss-logmanager.jar",
 	        "RUN" : "${runDir}",
         ]

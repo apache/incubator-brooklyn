@@ -6,7 +6,7 @@
 
 VERSION=0.0.21-SNAPSHOT
 ROOT=$(cd $(dirname $0) && pwd)
-export JAVA_OPTS="-Xms256m -Xmx1g -XX:MaxPermSize=512m"
+export JAVA_OPTS="-Xms200m -Xmx1200m -XX:MaxPermSize=600m"
 export CLASSPATH=./target/brooklyn-monterey-example-${VERSION}-with-dependencies.jar
 
 if [ $# -gt 0 ]; then

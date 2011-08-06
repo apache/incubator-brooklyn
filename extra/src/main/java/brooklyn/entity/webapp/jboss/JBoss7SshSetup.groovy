@@ -98,7 +98,7 @@ class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
     @Override
     public Map<String, String> getRunEnvironment() {
         return super.getRunEnvironment() + 
-                ["JAVA_OPTS" : toJavaDefinesString(getJvmStartupProperties())+" -Xmx256m -Xms128m"]
+                ["JAVA_OPTS" : toJavaDefinesString(getJvmStartupProperties())+" -Xms200m -Xmx800m -XX:MaxPermSize=400m"]
     }
     
     /** @see SshBasedJavaAppSetup#getCheckRunningScript() */
