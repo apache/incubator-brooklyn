@@ -46,9 +46,8 @@ public class DerbySetup extends SshBasedJavaAppSetup {
         super(entity, machine)
     }
 
-    public DerbySetup setRmiPort(int val) {
+    public void setRmiPort(int val) {
         rmiPort = val
-        return this
     }
 
     /** JMX is configured using command line switch. */

@@ -58,19 +58,16 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         super(entity, machine)
     }
     
-    public JBoss6SshSetup setPortIncrement(int val) {
+    public void setPortIncrement(int val) {
         portIncrement = val
-        return this
     }
     
-    public JBoss6SshSetup setServerProfile(String val) {
+    public void setServerProfile(String val) {
         serverProfile = val
-        return this
     }
     
-    public JBoss6SshSetup setClusterName(String val) {
+    public void setClusterName(String val) {
         this.clusterName = val
-        return this
     }
     
     @Override

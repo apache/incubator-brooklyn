@@ -44,9 +44,8 @@ public class NginxSetup extends SshBasedAppSetup {
         super(entity, machine)
     }
 
-    public NginxSetup setHttpPort(int val) {
+    public void setHttpPort(int val) {
         httpPort = val
-        return this
     }
 
     @Override

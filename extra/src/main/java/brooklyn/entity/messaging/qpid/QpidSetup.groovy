@@ -49,14 +49,12 @@ public class QpidSetup extends SshBasedJavaAppSetup {
         super(entity, machine)
     }
 
-    public QpidSetup setAmqpPort(int val) {
+    public void setAmqpPort(int val) {
         amqpPort = val
-        return this
     }
 
-    public QpidSetup setRmiPort(int val) {
+    public void setRmiPort(int val) {
         rmiPort = val
-        return this
     }
 
     /** JMX is configured using command line switch. */

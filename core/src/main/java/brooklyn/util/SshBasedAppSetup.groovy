@@ -40,19 +40,16 @@ public abstract class SshBasedAppSetup {
         this.machine = machine
     }
 
-	public SshBasedAppSetup setInstallDir(String val) {
+	public void setInstallDir(String val) {
         installDir = val
-        return this
     }
 
-    public SshBasedAppSetup setRunDir(String val) {
+    public void setRunDir(String val) {
         runDir = val
-        return this
     }
 
-    public SshBasedAppSetup setVersion(String val) {
+    public void setVersion(String val) {
         version = val
-        return this
     }
 
     /**

@@ -31,20 +31,16 @@ public abstract class SshBasedJavaAppSetup extends SshBasedAppSetup {
         super(entity, machine)
     }
 
-    public SshBasedJavaAppSetup setJmxEnabled(boolean val) {
+    public void setJmxEnabled(boolean val) {
         jmxEnabled = val
-        return this
     }
 
-
-    public SshBasedJavaAppSetup setJmxPort(int val) {
+    public void setJmxPort(int val) {
         jmxPort = val
-        return this
     }
 
-    public SshBasedJavaAppSetup setPropertyFiles(Map<String,Map<String,String>> propFilesToGenerate) {
+    public void setPropertyFiles(Map<String,Map<String,String>> propFilesToGenerate) {
         this.propFilesToGenerate = propFilesToGenerate
-        return this
     }
 
     @Override

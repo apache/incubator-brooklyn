@@ -35,18 +35,12 @@ public class GemfireSetup extends SshBasedAppSetup {
         super(entity, machine)
     }
 
-    public GemfireSetup setConfigFile(File val) {
+    public void setConfigFile(File val) {
         configFile = val
-        return this
     }
 
-    public GemfireSetup setJarFile(File val) {
+    public void setJarFile(File val) {
         jarFile = val
-        return this
-    }
-
-    @Override
-    protected void postStart() {
     }
 
     @Override
@@ -94,9 +88,5 @@ public class GemfireSetup extends SshBasedAppSetup {
         // FIXME not cleanly shutting down yet!
         List<String> script = []
         return script
-    }
-
-    @Override
-    protected void postShutdown() {
     }
 }

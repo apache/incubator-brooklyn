@@ -60,9 +60,8 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
         super(entity, machine)
     }
 
-    public Tomcat7SshSetup setShutdownPort(int val) {
+    public void setShutdownPort(int val) {
         tomcatShutdownPort = val
-        return this
     }
     
     @Override

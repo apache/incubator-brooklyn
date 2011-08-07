@@ -57,9 +57,8 @@ class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
         return result
     }
     
-    public JBoss7SshSetup setManagementPort(int val) {
+    public void setManagementPort(int val) {
         this.managementPort = val
-        return this    
     }
     
     @Override

@@ -45,14 +45,12 @@ public class Infinispan5Setup extends SshBasedJavaAppSetup {
         super(entity, machine)
     }
 
-    public Infinispan5Setup setProtocol(String val) {
+    public void setProtocol(String val) {
         this.protocol = val
-        return this
     }
     
-    public Infinispan5Setup setPort(Integer val) {
+    public void setPort(Integer val) {
         this.port = val
-        return this
     }
     
     @Override
@@ -103,9 +101,5 @@ public class Infinispan5Setup extends SshBasedJavaAppSetup {
     @Override
     public List<String> getShutdownScript() {
         return makeShutdownScript("startServer.sh", "pid.txt")
-    }
-
-    @Override
-    protected void postShutdown() {
     }
 }

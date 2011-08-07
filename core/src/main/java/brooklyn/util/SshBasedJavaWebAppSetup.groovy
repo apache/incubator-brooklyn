@@ -14,14 +14,12 @@ public abstract class SshBasedJavaWebAppSetup extends SshBasedJavaAppSetup {
         super(entity, machine);
     }
 
-    public SshBasedJavaWebAppSetup setDeployDir(String val) {
+    public void setDeployDir(String val) {
         deployDir = val
-        return this
     }
     
-    public SshBasedJavaWebAppSetup setHttpPort(int val) {
+    public void setHttpPort(int val) {
         httpPort = val
-        return this
     }
 
     /**
