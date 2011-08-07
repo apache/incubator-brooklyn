@@ -133,7 +133,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         return currentSize
     }
 
-    private Throwable unwrapException(Exception e) {
+    protected Throwable unwrapException(Exception e) {
         if (e instanceof ExecutionException) {
             return unwrapException(e.cause)
         } else if (e instanceof org.codehaus.groovy.runtime.InvokerInvocationException) {
