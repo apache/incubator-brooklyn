@@ -46,6 +46,7 @@ class AbstractControllerTest {
                 domain:"mydomain") {
 
             public void update() {
+                println "update, with addresses $addresses"
                 updates.add(addresses)
             }
             public SshBasedAppSetup getSshBasedSetup(SshMachineLocation machine) {
