@@ -33,7 +33,6 @@ class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
         String suggestedInstallDir = entity.getConfig(JBoss7Server.SUGGESTED_INSTALL_DIR)
         String suggestedRunDir = entity.getConfig(JBoss7Server.SUGGESTED_RUN_DIR)
         Integer suggestedJmxPort = entity.getConfig(JBoss7Server.SUGGESTED_JMX_PORT)
-        String suggestedJmxHost = entity.getConfig(JBoss7Server.SUGGESTED_JMX_HOST)
         Map<String,Map<String,String>> propFilesToGenerate = entity.getConfig(JBoss7Server.PROPERTY_FILES) ?: [:]
         
         // Defaults if suggestions not given
@@ -42,7 +41,6 @@ class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
         String deployDir = "$runDir/$DEPLOY_SUBDIR"
         int httpPort = machine.obtainPort(toDesiredPortRange(suggestedHttpPort, DEFAULT_FIRST_HTTP_PORT))
         int managementPort = machine.obtainPort(toDesiredPortRange(suggestedManagementPort, DEFAULT_FIRST_MANAGEMENT_PORT))
-        String jmxHost = suggestedJmxHost ?: machine.getAddress().getHostName()
         int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort, DEFAULT_FIRST_JMX_PORT))
         
         // Setup instance
@@ -66,11 +64,11 @@ class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
     
     @Override
     protected void postStart() {
+        def host = entity.getAttribute(Attributes.HOSTNAME)
         entity.setAttribute(Attributes.JMX_PORT, jmxPort)
-        entity.setAttribute(Attributes.JMX_HOST, jmxHost)
         entity.setAttribute(Attributes.HTTP_PORT, httpPort)
         entity.setAttribute(JBoss7Server.MANAGEMENT_PORT, managementPort)
-        entity.setAttribute(JavaWebApp.ROOT_URL, "http://${machine.address.hostName}:${httpPort}/")
+        entity.setAttribute(JavaWebApp.ROOT_URL, "http://${host}:${httpPort}/")
         entity.setAttribute(Attributes.VERSION, version)
     }
     

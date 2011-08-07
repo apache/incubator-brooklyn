@@ -36,6 +36,8 @@ class TomcatServerTest {
             assertEquals loc, sim.location
             sim.shutdown()
         }
+        TomcatServer.metaClass.initHttpSensors { }
+        TomcatServer.metaClass.waitForHttpPort { }
     }
 
     @AfterMethod

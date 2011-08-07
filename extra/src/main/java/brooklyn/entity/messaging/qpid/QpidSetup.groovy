@@ -25,13 +25,11 @@ public class QpidSetup extends SshBasedJavaAppSetup {
         String suggestedInstallDir = entity.getConfig(QpidBroker.SUGGESTED_INSTALL_DIR)
         String suggestedRunDir = entity.getConfig(QpidBroker.SUGGESTED_RUN_DIR)
         Integer suggestedJmxPort = entity.getConfig(QpidBroker.SUGGESTED_JMX_PORT)
-        String suggestedJmxHost = entity.getConfig(QpidBroker.SUGGESTED_JMX_HOST)
         Integer suggestedAmqpPort = entity.getConfig(QpidBroker.AMQP_PORT.configKey)
 
         String version = suggestedVersion ?: DEFAULT_VERSION
         String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"${version}"+"/"+"qpid-broker-${version}")
         String runDir = suggestedRunDir ?: (BROOKLYN_HOME_DIR+"/"+"${entity.application.id}"+"/"+"qpid-${entity.id}")
-        String jmxHost = suggestedJmxHost ?: machine.getAddress().getHostName()
         int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort, DEFAULT_FIRST_JMX_PORT))
         int rmiPort = machine.obtainPort(toDesiredPortRange(jmxPort - 100))
         int amqpPort = machine.obtainPort(toDesiredPortRange(suggestedAmqpPort, QpidBroker.AMQP_PORT.configKey.defaultValue))
@@ -39,7 +37,6 @@ public class QpidSetup extends SshBasedJavaAppSetup {
         QpidSetup result = new QpidSetup(entity, machine)
         result.setRmiPort(rmiPort)
         result.setJmxPort(jmxPort)
-        result.setJmxHost(jmxHost)
         result.setAmqpPort(amqpPort)
         result.setVersion(version)
         result.setInstallDir(installDir)
@@ -69,7 +66,6 @@ public class QpidSetup extends SshBasedJavaAppSetup {
     @Override
     protected void postStart() {
         entity.setAttribute(Attributes.JMX_PORT, jmxPort)
-        entity.setAttribute(Attributes.JMX_HOST, jmxHost)
         entity.setAttribute(Attributes.AMQP_PORT, amqpPort)
         entity.setAttribute(Attributes.VERSION, version)
     }

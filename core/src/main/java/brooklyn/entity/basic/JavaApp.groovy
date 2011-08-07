@@ -20,13 +20,11 @@ public abstract class JavaApp extends AbstractService {
     public static final Logger log = LoggerFactory.getLogger(JavaApp.class)
 
     public static final int RMI_PORT = 1099
-    public static final ConfigKey<Integer> SUGGESTED_JMX_PORT = ConfigKeys.SUGGESTED_JMX_PORT;
-    public static final ConfigKey<String> SUGGESTED_JMX_HOST = ConfigKeys.SUGGESTED_JMX_HOST;
+    public static final ConfigKey<Integer> SUGGESTED_JMX_PORT = ConfigKeys.SUGGESTED_JMX_PORT
     public static final MapConfigKey<String> PROPERTY_FILES =
             [ String, "javaapp.propertyFiles", "Property files to be generated, referenced by an environment variable" ]
 
     public static final AttributeSensor<Integer> JMX_PORT = Attributes.JMX_PORT;
-    public static final AttributeSensor<String> JMX_HOST = Attributes.JMX_HOST;
 
     boolean jmxEnabled = true
     transient JmxSensorAdapter jmxAdapter
@@ -35,14 +33,13 @@ public abstract class JavaApp extends AbstractService {
         super(properties, owner)
 
         setConfigIfValNonNull(SUGGESTED_JMX_PORT, properties.jmxPort)
-        setConfigIfValNonNull(SUGGESTED_JMX_HOST, properties.jmxHost)
     }
 
     protected void initSensors() {
         super.initSensors()
         
         if (jmxEnabled) {
-            if (!(getAttribute(JMX_HOST) && getAttribute(JMX_PORT)))
+            if (!(getAttribute(HOSTNAME) && getAttribute(JMX_PORT)))
                 throw new IllegalStateException("JMX is not available")
 
             jmxAdapter = new JmxSensorAdapter(this, 60*1000)

@@ -24,7 +24,6 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         String suggestedInstallDir = entity.getConfig(JBoss6Server.SUGGESTED_INSTALL_DIR)
         String suggestedRunDir = entity.getConfig(JBoss6Server.SUGGESTED_RUN_DIR)
         Integer suggestedJmxPort = entity.getConfig(JBoss6Server.SUGGESTED_JMX_PORT)
-        String suggestedJmxHost = entity.getConfig(JBoss6Server.SUGGESTED_JMX_HOST)
         Integer suggestedPortIncrement = entity.getConfig(JBoss6Server.SUGGESTED_PORT_INCREMENT)
         String suggestedServerProfile = entity.getConfig(JBoss6Server.SUGGESTED_SERVER_PROFILE)
         String suggestedClusterName = entity.getConfig(JBoss6Server.SUGGESTED_CLUSTER_NAME)
@@ -37,13 +36,11 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         String deployDir = "$runDir/server/$serverProfile/deploy"
         String clusterName = suggestedClusterName ?: ""
         
-        String jmxHost = suggestedJmxHost ?: machine.getAddress().getHostName()
         int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort, DEFAULT_FIRST_JMX_PORT))
         int portIncrement = suggestedPortIncrement ?: 0
         
         JBoss6SshSetup result = new JBoss6SshSetup(entity, machine)
         result.setJmxPort(jmxPort)
-        result.setJmxHost(jmxHost)
         result.setVersion(version)
         result.setInstallDir(installDir)
         result.setDeployDir(deployDir)
@@ -78,10 +75,10 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     
     @Override
     protected void postStart() {
+        def host = entity.getAttribute(Attributes.HOSTNAME)
         entity.setAttribute(Attributes.JMX_PORT, jmxPort)
-        entity.setAttribute(Attributes.JMX_HOST, jmxHost)
         entity.setAttribute(Attributes.HTTP_PORT, httpPort)
-        entity.setAttribute(JavaWebApp.ROOT_URL, "http://${machine.address.hostName}:${httpPort}/")
+        entity.setAttribute(JavaWebApp.ROOT_URL, "http://${host}:${httpPort}/")
         entity.setAttribute(Attributes.VERSION, version)
     }
     
@@ -135,7 +132,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
 
     /** @see SshBasedJavaAppSetup#getCheckRunningScript() */
     public List<String> getCheckRunningScript() { 
-        def host = entity.getAttribute(Attributes.JMX_HOST)
+        def host = entity.getAttribute(Attributes.HOSTNAME)
         def port = entity.getAttribute(Attributes.JMX_PORT)
         List<String> script = [
             "${installDir}/bin/twiddle.sh --host ${host} --port ${port} get \"jboss.system:type=Server\" Started | grep false && exit 1"
@@ -165,7 +162,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
 
     @Override
     public List<String> getShutdownScript() {
-        def host = entity.getAttribute(Attributes.JMX_HOST)
+        def host = entity.getAttribute(Attributes.HOSTNAME)
         def port = entity.getAttribute(Attributes.JMX_PORT)
         List<String> script = [
 	            "${installDir}/bin/shutdown.sh --host ${host} --port ${port} -S",

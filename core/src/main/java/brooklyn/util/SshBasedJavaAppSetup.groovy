@@ -24,13 +24,11 @@ public abstract class SshBasedJavaAppSetup extends SshBasedAppSetup {
 
     protected boolean jmxEnabled = true
     protected int jmxPort
-    protected String jmxHost
     protected Map<String,Map<String,String>> propFilesToGenerate = [:]
     protected Map<String,String> envVariablesToSet = [:]
 
     public SshBasedJavaAppSetup(EntityLocal entity, SshMachineLocation machine) {
         super(entity, machine)
-        jmxHost = machine.getAddress().getHostName()
     }
 
     public SshBasedJavaAppSetup setJmxEnabled(boolean val) {
@@ -41,11 +39,6 @@ public abstract class SshBasedJavaAppSetup extends SshBasedAppSetup {
 
     public SshBasedJavaAppSetup setJmxPort(int val) {
         jmxPort = val
-        return this
-    }
-
-    public SshBasedJavaAppSetup setJmxHost(String val) {
-        jmxHost = val
         return this
     }
 
@@ -148,7 +141,7 @@ public abstract class SshBasedJavaAppSetup extends SshBasedAppSetup {
           "com.sun.management.jmxremote.port" : jmxPort,
           "com.sun.management.jmxremote.ssl" : false,
           "com.sun.management.jmxremote.authenticate" : false,
-          "java.rmi.server.hostname" : jmxHost,
+          "java.rmi.server.hostname" : machine.address.hostName,
         ]
     }
 }

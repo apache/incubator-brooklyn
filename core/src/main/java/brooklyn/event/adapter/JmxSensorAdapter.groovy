@@ -44,7 +44,7 @@ public class JmxSensorAdapter {
     public JmxSensorAdapter(EntityLocal entity, long timeout = -1) {
         this.entity = entity
  
-        String host = entity.getAttribute(Attributes.JMX_HOST);
+        String host = entity.getAttribute(Attributes.HOSTNAME);
         int port = entity.getAttribute(Attributes.JMX_PORT);
  
         this.jmxUrl = "service:jmx:rmi:///jndi/rmi://${host}:${port}/jmxrmi";

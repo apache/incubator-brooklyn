@@ -12,6 +12,7 @@ import brooklyn.entity.trait.Configurable
 import brooklyn.entity.trait.Startable
 import brooklyn.event.adapter.AttributePoller
 import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.event.AttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.Location
 import brooklyn.location.MachineLocation
@@ -34,6 +35,9 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
     public static final ConfigKey<String> SUGGESTED_INSTALL_DIR = ConfigKeys.SUGGESTED_INSTALL_DIR;
     public static final ConfigKey<String> SUGGESTED_RUN_DIR = ConfigKeys.SUGGESTED_RUN_DIR;
     public static final BasicConfigKey<Map> ENVIRONMENT = [ Map, "environment", "Map of environment variables to set at runtime", [:] ]
+
+    public static final AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME;
+    public static final AttributeSensor<String> ADDRESS = Attributes.ADDRESS;
 
     public static final BasicAttributeSensor<String> SERVICE_STATUS = [ String, "service.status", "Service status" ]
 
@@ -94,8 +98,12 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
     
     public void startInLocation(SshMachineLocation machine) {
         locations.add(machine)
-        setup = getSshBasedSetup(machine)
+
         setAttribute(SERVICE_STATUS, "starting")
+        setAttribute(HOSTNAME, machine.address.hostName)
+        setAttribute(ADDRESS, machine.address.hostAddress)
+
+        setup = getSshBasedSetup(machine)
         if (setup) {
             setup.install()
             setup.config()

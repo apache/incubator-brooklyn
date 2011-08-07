@@ -21,7 +21,6 @@ public interface Attributes {
      */
 
     BasicAttributeSensor<Integer> JMX_PORT = [ Integer, "jmx.port", "JMX port" ]
-    BasicAttributeSensor<String> JMX_HOST = [ String, "jmx.host", "JMX host" ]
     BasicAttributeSensor<Integer> JMX_USER = [ Integer, "jmx.user", "JMX username" ]
     BasicAttributeSensor<String> JMX_PASSWORD = [ String, "jmx.password", "JMX password" ]
 
@@ -38,4 +37,11 @@ public interface Attributes {
     ConfiguredAttributeSensor<Integer> HTTP_PORT = [ Integer, "http.port", "HTTP port", 80 ]
     ConfiguredAttributeSensor<Integer> HTTPS_PORT = [ Integer, "https.port", "HTTP port (with SSL/TLS)", 443 ]
     ConfiguredAttributeSensor<Integer> AMQP_PORT = [ Integer, "amqp.port", "AMQP port", 5672 ]
+
+    /*
+     * Other attributes.
+     */
+
+    BasicAttributeSensor<String> HOSTNAME = [ String, "host.name", "Host name" ]
+    BasicAttributeSensor<String> ADDRESS = [ String, "host.address", "Host IP address" ]
 }

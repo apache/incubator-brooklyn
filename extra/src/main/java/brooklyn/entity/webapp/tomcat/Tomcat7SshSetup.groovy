@@ -32,7 +32,6 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
         String suggestedInstallDir = entity.getConfig(TomcatServer.SUGGESTED_INSTALL_DIR)
         String suggestedRunDir = entity.getConfig(TomcatServer.SUGGESTED_RUN_DIR)
         Integer suggestedJmxPort = entity.getConfig(TomcatServer.SUGGESTED_JMX_PORT)
-        String suggestedJmxHost = entity.getConfig(TomcatServer.SUGGESTED_JMX_HOST)
         Integer suggestedShutdownPort = entity.getConfig(TomcatServer.SUGGESTED_SHUTDOWN_PORT)
         Integer suggestedHttpPort = entity.getConfig(TomcatServer.HTTP_PORT.configKey)
         Map<String,Map<String,String>> propFilesToGenerate = entity.getConfig(TomcatServer.PROPERTY_FILES) ?: [:]
@@ -41,14 +40,12 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
         String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"${version}"+"/"+"apache-tomcat-${version}")
         String runDir = suggestedRunDir ?: (BROOKLYN_HOME_DIR+"/"+"${entity.application.id}"+"/"+"tomcat-${entity.id}")
         String deployDir = runDir+"/"+DEFAULT_DEPLOY_SUBDIR
-        String jmxHost = suggestedJmxHost ?: machine.getAddress().getHostName()
         int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort, DEFAULT_FIRST_JMX_PORT))
         int httpPort = machine.obtainPort(toDesiredPortRange(suggestedHttpPort, DEFAULT_FIRST_HTTP_PORT))
         int shutdownPort = machine.obtainPort(toDesiredPortRange(suggestedShutdownPort, DEFAULT_FIRST_SHUTDOWN_PORT))
         
         Tomcat7SshSetup result = new Tomcat7SshSetup(entity, machine)
         result.setJmxPort(jmxPort)
-        result.setJmxHost(jmxHost)
         result.setHttpPort(httpPort)
         result.setShutdownPort(shutdownPort)
         result.setVersion(version)
@@ -70,10 +67,10 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
     
     @Override
     protected void postStart() {
+        def host = entity.getAttribute(Attributes.HOSTNAME)
         entity.setAttribute(Attributes.JMX_PORT, jmxPort)
-        entity.setAttribute(Attributes.JMX_HOST, jmxHost)
         entity.setAttribute(Attributes.HTTP_PORT, httpPort)
-        entity.setAttribute(JavaWebApp.ROOT_URL, "http://${machine.address.hostName}:${httpPort}/")
+        entity.setAttribute(JavaWebApp.ROOT_URL, "http://${host}:${httpPort}/")
         entity.setAttribute(Attributes.VERSION, version)
         entity.setAttribute(TomcatServer.TOMCAT_SHUTDOWN_PORT, tomcatShutdownPort)
     }

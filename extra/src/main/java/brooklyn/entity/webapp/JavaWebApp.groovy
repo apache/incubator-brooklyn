@@ -87,7 +87,7 @@ public abstract class JavaWebApp extends JavaApp {
 
     public void initHttpSensors() {
         httpAdapter = new HttpSensorAdapter(this)
-        def host = getAttribute(JMX_HOST)
+        def host = getAttribute(HOSTNAME)
         def port = getAttribute(HTTP_PORT)
         attributePoller.addSensor(HTTP_STATUS, httpAdapter.newStatusValueProvider("http://${host}:${port}/"))
         attributePoller.addSensor(HTTP_SERVER, httpAdapter.newHeaderValueProvider("http://${host}:${port}/", "Server"))
@@ -98,8 +98,8 @@ public abstract class JavaWebApp extends JavaApp {
     public void start(Collection<Location> locations) {
         super.start(locations)
 
-        log.debug "started $this: httpPort {}, jmxHost {} and jmxPort {}",
-                getAttribute(HTTP_PORT), getAttribute(JMX_HOST), getAttribute(JMX_PORT)
+        log.debug "started $this: httpPort {}, host {} and jmxPort {}",
+                getAttribute(HTTP_PORT), getAttribute(HOSTNAME), getAttribute(JMX_PORT)
 
         // TODO Want to wire this up so doesn't go through SubscriptionManager;
         // but that's an optimisation we'll do later.

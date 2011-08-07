@@ -42,7 +42,7 @@ public class TomcatSimulator {
             processingTime: 0
 
         entity.setAttribute(TomcatServer.HTTP_PORT, httpPort)
-        entity.setAttribute(TomcatServer.JMX_HOST, jmxService.jmxHost)
+        entity.setAttribute(TomcatServer.HOSTNAME, jmxService.jmxHost)
         entity.setAttribute(TomcatServer.JMX_PORT, jmxService.jmxPort)
     }
 

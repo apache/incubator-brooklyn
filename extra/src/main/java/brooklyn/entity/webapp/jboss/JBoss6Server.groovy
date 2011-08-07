@@ -51,7 +51,7 @@ public class JBoss6Server extends JavaWebApp {
     }
 
     public void waitForHttpPort() {
-        log.debug "started jboss server: jmxHost {} and jmxPort {}", getAttribute(JMX_HOST), getAttribute(JMX_PORT)
+        log.debug "started jboss server: host {} and jmxPort {}", getAttribute(HOSTNAME), getAttribute(JMX_PORT)
 	}
     
 }

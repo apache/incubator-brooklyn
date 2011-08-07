@@ -65,7 +65,9 @@ class ClusteredJBossApp extends AbstractApplication {
                 ents.each {
                     def requests = rand.nextInt(5) + 1
                     if (it.getAttribute(AbstractService.SERVICE_UP)) {
-                        URL url = ["http://${it.getAttribute(JavaApp.JMX_HOST)}:${it.getAttribute(JavaWebApp.HTTP_PORT)}"]
+                        def host = it.getAttribute(JavaApp.HOSTNAME)
+                        def port = it.getAttribute(JavaWebApp.HTTP_PORT)
+                        URL url = ["http://${host}:${port}"]
                         println "Making $requests requests to $url"
                         requests.times {
                             try {
