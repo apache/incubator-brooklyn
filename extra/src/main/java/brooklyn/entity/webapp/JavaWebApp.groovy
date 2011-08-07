@@ -1,6 +1,7 @@
 package brooklyn.entity.webapp
 
 import java.util.Collection
+import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -9,16 +10,16 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.JavaApp
 import brooklyn.event.AttributeSensor
+import brooklyn.event.EntityStartException
 import brooklyn.event.adapter.AttributePoller
 import brooklyn.event.adapter.HttpSensorAdapter
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.ConfiguredAttributeSensor
 import brooklyn.location.Location
-import brooklyn.location.MachineLocation
 import brooklyn.policy.RollingTimeWindowMeanEnricher
 import brooklyn.policy.TimeWeightedDeltaEnricher
-import brooklyn.policy.RollingTimeWindowMeanEnricher.ConfidenceQualifiedNumber
+import brooklyn.util.internal.Repeater
 
 /**
 * An {@link Entity} representing a single java web application server instance.
@@ -61,8 +62,22 @@ public abstract class JavaWebApp extends JavaApp {
         
         setAttribute(SERVICE_STATUS, "uninitialized")
     }
+    
+    protected void waitForHttpPort() {
+        boolean status = new Repeater("Wait for valid HTTP status (200 or 404)")
+            .repeat()
+            .every(1, TimeUnit.SECONDS)
+            .until({
+                Integer response = getAttribute(HTTP_STATUS)
+                return (response == 200 || response == 404)
+             })
+            .limitIterationsTo(30)
+            .run()
 
-    protected abstract void waitForHttpPort();
+        if (!status) {
+            throw new EntityStartException("HTTP service on port "+getAttribute(HTTP_PORT)+" failed")
+        }
+    }
 
     protected Collection<Integer> getRequiredOpenPorts() {
         Collection<Integer> result = super.getRequiredOpenPorts()
@@ -71,10 +86,12 @@ public abstract class JavaWebApp extends JavaApp {
     }
 
     public void initHttpSensors() {
+        httpAdapter = new HttpSensorAdapter(this)
         def host = getAttribute(JMX_HOST)
         def port = getAttribute(HTTP_PORT)
         attributePoller.addSensor(HTTP_STATUS, httpAdapter.newStatusValueProvider("http://${host}:${port}/"))
         attributePoller.addSensor(HTTP_SERVER, httpAdapter.newHeaderValueProvider("http://${host}:${port}/", "Server"))
+        waitForHttpPort()
     }
 
     @Override
@@ -90,7 +107,7 @@ public abstract class JavaWebApp extends JavaApp {
         addPolicy(new RollingTimeWindowMeanEnricher<Double>(this, REQUESTS_PER_SECOND, AVG_REQUESTS_PER_SECOND,
             AVG_REQUESTS_PER_SECOND_PERIOD))
 
-        waitForHttpPort()
+        initHttpSensors()
 
         def warFile = getConfig(WAR)
         if (warFile) {

@@ -51,49 +51,69 @@ public class HttpSensorAdapter {
      * Returns true if the HTTP data from the URL matches the regexp.
      */
     private Boolean checkHttpData(URL url, String regexp) {
-        HttpURLConnection connection = url.openConnection()
-        List<String> lines = CharStreams.readLines(connection.inputStream)
-        return lines.any { it =~ regexp }
+        try {
+	        HttpURLConnection connection = url.openConnection()
+	        List<String> lines = CharStreams.readLines(connection.inputStream)
+	        return lines.any { it =~ regexp }
+        } catch (java.io.IOException ioe) {
+            return Boolean.FALSE
+        }
     }
 
     /**
      * Returns the HTTP status code when retrieving the URL.
      */
     private Integer getHttpStatus(URL url) {
-        HttpURLConnection connection = url.openConnection()
-        connection.connect()
-        return connection.getResponseCode()
+        try {
+	        HttpURLConnection connection = url.openConnection()
+	        connection.connect()
+	        return connection.getResponseCode()
+        } catch (java.io.IOException ioe) {
+            return -1
+        }
     }
 
     /**
-     * Returns data matching the regexp from the given HTTP URL.
+     * Returns the contents of an HTTP header.
      */
     private String getHttpHeader(URL url, String headerName) {
-        HttpURLConnection connection = url.openConnection()
-        connection.connect()
-        return connection.getHeaderField(headerName)
+        try {
+	        HttpURLConnection connection = url.openConnection()
+	        connection.connect()
+	        return connection.getHeaderField(headerName)
+        } catch (java.io.IOException ioe) {
+            return null
+        }
     }
 
     /**
      * Returns a byte array of the content returned from a connection to url.
      */
     public byte[] getContents(URL url) {
-        HttpURLConnection connection = url.openConnection()
-        connection.connect()
-        InputStream is = connection.getInputStream()
-        byte[] bytes = ByteStreams.toByteArray(is)
-        is.close()
-        return bytes
+        try {
+            HttpURLConnection connection = url.openConnection()
+            connection.connect()
+            InputStream is = connection.getInputStream()
+            byte[] bytes = ByteStreams.toByteArray(is)
+            is.close()
+            return bytes
+        } catch (java.io.IOException ioe) {
+            return new byte[0]
+        }
     }
 
     /**
      * Returns the value mapped to by the given key in JSON from the given URL.
      */
     public String getJson(URL url, String key) {
-        String jsonOut = new String(getContents(url))
-        def slurper = new JsonSlurper()
-        def parsed = slurper.parseText(jsonOut)
-        return parsed[key]
+        try {
+	        String jsonOut = new String(getContents(url))
+	        def slurper = new JsonSlurper()
+	        def parsed = slurper.parseText(jsonOut)
+	        return parsed[key]
+        } catch (java.io.IOException ioe) {
+            return null
+        }
     }
     
 }
@@ -115,8 +135,7 @@ public class HttpJsonLongValueProvider implements ValueProvider<Long> {
    @Override
    public Long compute() {
        String out = adapter.getJson(url, jsonKey)
-       assert out != null
-       return Long.valueOf(out)
+       return out ? Long.valueOf(out) : -1L
    }
 }
 
@@ -171,6 +190,6 @@ public class HttpHeaderValueProvider implements ValueProvider<String> {
     }
 
     public String compute() {
-        return adapter.getHttpHeader(url, headerName)
+        return adapter.getHttpHeader(url, headerName) ?: ""
     }
 }

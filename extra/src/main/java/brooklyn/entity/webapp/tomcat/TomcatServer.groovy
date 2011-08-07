@@ -47,6 +47,7 @@ public class TomcatServer extends JavaWebApp {
         return Tomcat7SshSetup.newInstance(this, machine)
     }
     
+    @Override
     public void initSensors() {
         super.initSensors()
         attributePoller.addSensor(ERROR_COUNT, jmxAdapter.newAttributeProvider("Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "errorCount"))
@@ -54,24 +55,6 @@ public class TomcatServer extends JavaWebApp {
         attributePoller.addSensor(TOTAL_PROCESSING_TIME, jmxAdapter.newAttributeProvider("Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "processingTime"))
         attributePoller.addSensor(CONNECTOR_STATUS, { computeConnectorStatus() } as ValueProvider)
         attributePoller.addSensor(SERVICE_UP, { computeNodeUp() } as ValueProvider)
-    }
-
-    public void waitForHttpPort() {
-        String state = null;
-        new Repeater("Wait for Tomcat HTTP port status")
-            .repeat({
-                state = getAttribute(CONNECTOR_STATUS)
-            })
-            .every(1, TimeUnit.SECONDS)
-            .until({
-                state == "STARTED" || state == "FAILED" || state == "InstanceNotFound"
-            })
-            .limitIterationsTo(30)
-            .run();
-
-        if (state != "STARTED") {
-            throw new EntityStartException("Tomcat connector for port "+getAttribute(HTTP_PORT)+" is in state $state")
-        }
     }
     
     @Override
