@@ -92,9 +92,10 @@ public class TomcatServerIntegrationTest {
             try {
                 tc.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
                 fail("Should have thrown start-exception")
-            } catch (EntityStartException e) {
-                // success
-                logger.debug "The exception that was thrown was:", caught
+            } catch (Exception e) {
+                caught = e
+                assertTrue e instanceof EntityStartException
+                assertEquals e.message, "HTTP service on port ${DEFAULT_HTTP_PORT} failed"
             } finally {
                 tc.stop()
             }
