@@ -27,6 +27,10 @@ class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
     
     public static JBoss7SshSetup newInstance(JBoss7Server entity, SshMachineLocation machine) {
         
+        // FIXME Don't call entity.getConfig(JBoss7Server.PROPERTY_FILES) until absolutely necessary.
+        // Calling it here blocks until the val is available, which prevents us from downoading and installing
+        // as7 asap...
+        
         // Suggestions
         Integer suggestedHttpPort = entity.getConfig(JBoss7Server.HTTP_PORT.configKey)
         Integer suggestedManagementPort = entity.getConfig(JBoss7Server.MANAGEMENT_PORT.configKey)
