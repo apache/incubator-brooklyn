@@ -105,6 +105,7 @@ class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
         ]
     }
 
+    // TODO: Too much sed! The last one is especially nasty.
     @Override
     public List<String> getConfigScript() {
         List<String> script = [
@@ -116,7 +117,8 @@ class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
             "sed -i.bk 's/8080/${httpPort}/' $brooklynConfig",
             "sed -i.bk 's/9990/${managementPort}/' $brooklynConfig",
             "sed -i.bk 's/1090/${jmxPort}/' $brooklynConfig",
-            "sed -i.bk 's/127.0.0.1/${machine.address.hostName}/' $brooklynConfig"
+            "sed -i.bk 's/127.0.0.1/${machine.address.hostName}/' $brooklynConfig",
+            "sed -i.bk 's/\\(path=\"deployments\"\\)/\\1 deployment-timeout=\"600\"/' $brooklynConfig"
         ]
         return script
     }
