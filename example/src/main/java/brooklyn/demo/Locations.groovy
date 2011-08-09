@@ -158,9 +158,11 @@ public class Locations {
                 securityGroups:["brooklyn-all"]],
             (JBoss6Server.class.getName()):[
                 imageId:imageIdVanilla,
+                hardwareId:InstanceType.M1_SMALL,
                 securityGroups:["brooklyn-all"]],
             (JBoss7Server.class.getName()):[
                 imageId:imageIdVanilla,
+                hardwareId:InstanceType.M1_SMALL,
                 securityGroups:["brooklyn-all"]],
             (NginxController.class.getName()):[
                 imageId:imageIdVanilla,
