@@ -61,7 +61,7 @@ class TomcatServerTest {
         }
     }
     
-    @Test
+    @Test(dependsOnMethods = [ "ensureNodeCanStartAndShutdown" ])
     public void ensureNodeShutdownCleansUp() {
         Application app = new TestApplication();
         TomcatServer tc1 = new TomcatServer(owner: app);
@@ -81,7 +81,7 @@ class TomcatServerTest {
         }
     }
     
-    @Test
+    @Test(dependsOnMethods = [ "ensureNodeCanStartAndShutdown" ])
     public void detectEarlyDeathOfTomcatProcess() {
         Application app = new TestApplication();
         TomcatServer tc1 = new TomcatServer(owner: app);
@@ -98,7 +98,7 @@ class TomcatServerTest {
         }
     }
 
-    @Test
+    @Test(dependsOnMethods = [ "ensureNodeCanStartAndShutdown" ])
     public void rejectIfLocationNotSupplied() {
         Application app = new TestApplication();
         boolean caught = false
@@ -112,7 +112,7 @@ class TomcatServerTest {
         assertEquals(true, caught)
     }
     
-    @Test
+    @Test(dependsOnMethods = [ "ensureNodeCanStartAndShutdown" ])
     public void ensureRequestsPerSecondIsReportedCorrectly() {
         Application app = new TestApplication();
         TomcatServer tc = new TomcatServer(owner: app) {
