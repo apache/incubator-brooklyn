@@ -1,6 +1,7 @@
 package brooklyn.entity.dns.geoscaling;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.text.MessageFormat;
@@ -134,7 +135,7 @@ public class GeoscalingWebClient {
     
     public void login(String username, String password) {
         try {
-            String url = MessageFormat.format("http://{0}/{1}?module=auth", HOST, PATH);
+            String url = MessageFormat.format("https://{0}/{1}?module=auth", HOST, PATH);
             
             HttpPost request = new HttpPost(url);
             List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
@@ -153,7 +154,7 @@ public class GeoscalingWebClient {
     
     public void logout() {
         try {
-            String url = MessageFormat.format("http://{0}/{1}?module=auth&logout", HOST, PATH);
+            String url = MessageFormat.format("https://{0}/{1}?module=auth&logout", HOST, PATH);
             HttpResponse response = httpClient.execute(new HttpGet(url));
             if (response.getEntity() != null)
                 EntityUtils.consume(response.getEntity());
@@ -185,7 +186,7 @@ public class GeoscalingWebClient {
     
     public void createPrimaryDomain(String name) {
         try {
-            String url = MessageFormat.format("http://{0}/{1}?module=domains", HOST, PATH);
+            String url = MessageFormat.format("https://{0}/{1}?module=domains", HOST, PATH);
             
             HttpPost request = new HttpPost(url);
             List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
@@ -207,8 +208,7 @@ public class GeoscalingWebClient {
     private List<Domain> fetchPrimaryDomains() {
         try {
             List<Domain> domains = new LinkedList<Domain>();
-            String url = MessageFormat.format("http://{0}/{1}?module=domains", HOST, PATH);
-            
+            String url = MessageFormat.format("https://{0}/{1}?module=domains", HOST, PATH);
             HttpResponse response = httpClient.execute(new HttpGet(url));
             HttpEntity entity = response.getEntity();
             if (entity != null) {
@@ -241,7 +241,7 @@ public class GeoscalingWebClient {
     private void deletePrimaryDomain(int primaryDomainId) {
         try {
             String url = MessageFormat.format(
-                    "http://{0}/{1}?module=domain&id={2,number,#}&delete=1",
+                    "https://{0}/{1}?module=domain&id={2,number,#}&delete=1",
                     HOST, PATH, primaryDomainId);
             
             HttpResponse response = httpClient.execute(new HttpGet(url));
@@ -258,7 +258,7 @@ public class GeoscalingWebClient {
             List<SmartSubdomain> subdomains = new LinkedList<SmartSubdomain>();
             
             String url = MessageFormat.format(
-                    "http://{0}/{1}?module=smart_subdomains&id={2,number,#}",
+                    "https://{0}/{1}?module=smart_subdomains&id={2,number,#}",
                     HOST, PATH, parent.id);
             
             HttpResponse response = httpClient.execute(new HttpGet(url));
@@ -294,7 +294,7 @@ public class GeoscalingWebClient {
     private void createSmartSubdomain(int primaryDomainId, String smartSubdomainName) {
         try {
             String url = MessageFormat.format(
-                    "http://{0}/{1}?module=smart_subdomains&id={2,number,#}",
+                    "https://{0}/{1}?module=smart_subdomains&id={2,number,#}",
                     HOST, PATH, primaryDomainId);
             
             HttpPost request = new HttpPost(url);
@@ -315,7 +315,7 @@ public class GeoscalingWebClient {
     private void deleteSmartSubdomain(int primaryDomainId, int smartSubdomainId) {
         try {
             String url = MessageFormat.format(
-                    "http://{0}/{1}?module=smart_subdomains&id={2,number,#}&delete={3,number,#}",
+                    "https://{0}/{1}?module=smart_subdomains&id={2,number,#}&delete={3,number,#}",
                     HOST, PATH, primaryDomainId, smartSubdomainId);
             
             HttpResponse response = httpClient.execute(new HttpGet(url));
@@ -332,7 +332,7 @@ public class GeoscalingWebClient {
         
         try {
             String url = MessageFormat.format(
-                    "http://{0}/{1}?module=smart_subdomain&id={2,number,#}&subdomain_id={3,number,#}",
+                    "https://{0}/{1}?module=smart_subdomain&id={2,number,#}&subdomain_id={3,number,#}",
                     HOST, PATH, primaryDomainId, smartSubdomainId);
             
             HttpPost request = new HttpPost(url);
