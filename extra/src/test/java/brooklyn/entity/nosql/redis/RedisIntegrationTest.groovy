@@ -50,7 +50,7 @@ public class RedisIntegrationTest {
     /**
      * Test that the server starts up and sets SERVICE_UP correctly.
      */
-    @Test(enabled=false, groups = "Integration")
+    @Test(groups = "Integration")
     public void canStartupAndShutdown() {
         redis = new RedisStore(owner:app);
         redis.start([ testLocation ])
@@ -65,7 +65,7 @@ public class RedisIntegrationTest {
     /**
      * Test that a client can connect to the service.
      */
-    @Test(enabled=false, groups = "Integration")
+    @Test(groups = "Integration")
     public void testRedisConnection() {
         // Start Redis
         redis = new RedisStore(owner:app)

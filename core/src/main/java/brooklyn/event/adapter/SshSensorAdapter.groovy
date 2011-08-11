@@ -50,7 +50,6 @@ public class SshSensorAdapter {
         ByteArrayOutputStream out = new ByteArrayOutputStream()
         int status = machine.run(out:out, command)
         if (status == 0) {
-            log.error "*** {} ***", out
             return out.toString()
         } else return null
     }
@@ -77,8 +76,8 @@ public class SshReturnValueProvider<Integer> implements ValueProvider<Integer> {
         this.adapter = Preconditions.checkNotNull(adapter, "adapter")
     }
 
-    public Boolean compute() {
-        return adapter.executeCommand(command)
+    public Integer compute() {
+        return adapter.getExitStatus(command)
     }
 }
 
@@ -94,7 +93,7 @@ public class SshOutputValueProvider<String> implements ValueProvider<String> {
         this.adapter = Preconditions.checkNotNull(adapter, "adapter")
     }
 
-    public Boolean compute() {
+    public String compute() {
         return adapter.getCommandOutput(command)
     }
 }

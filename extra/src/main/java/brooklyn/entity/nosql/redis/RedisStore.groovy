@@ -16,6 +16,7 @@ import brooklyn.event.adapter.AttributePoller
 import brooklyn.event.adapter.SshSensorAdapter
 import brooklyn.event.adapter.ValueProvider
 import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.ConfiguredAttributeSensor
 import brooklyn.location.Location
 import brooklyn.location.MachineLocation
@@ -35,6 +36,7 @@ public class RedisStore extends AbstractService implements DataStore {
     protected static final Logger LOG = LoggerFactory.getLogger(RedisStore.class)
 
     public static final ConfiguredAttributeSensor<Integer> REDIS_PORT = [ Integer, "redis.port", "Redis port number", 6379 ]
+    public static final BasicConfigKey<String> REDIS_CONFIG_FILE = [ String, "redis.config.file", "Redis user configuration file" ]
     public static final BasicAttributeSensor<Integer> UPTIME = [ Integer, "redis.uptime", "Redis uptime in seconds" ]
 
     int port
@@ -47,11 +49,12 @@ public class RedisStore extends AbstractService implements DataStore {
         super(properties, owner)
 
         setConfigIfValNonNull(REDIS_PORT.configKey, properties.redisPort)
+        setConfigIfValNonNull(REDIS_CONFIG_FILE, properties.configFile)
     }
 
     protected Collection<Integer> getRequiredOpenPorts() {
         Collection<Integer> result = super.getRequiredOpenPorts()
-        result.add(getConfig(REDIS_PORT.configKey))
+        result.add(getAttribute(REDIS_PORT))
         return result
     }
 
@@ -59,7 +62,6 @@ public class RedisStore extends AbstractService implements DataStore {
     public void start(List<Location> locations) {
         super.start(locations)
         
-        port = getConfig(REDIS_PORT.configKey)
         sshAdapter = new SshSensorAdapter(this, setup.machine)
         attributePoller = new AttributePoller(this)
         initSshSensors()
@@ -73,26 +75,41 @@ public class RedisStore extends AbstractService implements DataStore {
 
     public void initSshSensors() {
         attributePoller.addSensor(SERVICE_UP, sshAdapter.newMatchValueProvider("${setup.runDir}/bin/redis-cli ping", /PONG/))
-        attributePoller.addSensor(UPTIME, {} as ValueProvider)
+        attributePoller.addSensor(UPTIME, { computeUptime() } as ValueProvider)
     }
     
     private Integer computeUptime() {
-        String output = sshAdapter.newOutputValueProvider("${setup.runDir}/bin/redis-cli info | grep uptime_in_seconds")
-        int colon = output.lastIndexOf(":")
-        return Integer.parseInt(output.substring(colon))
+        String output = sshAdapter.newOutputValueProvider("${setup.runDir}/bin/redis-cli info").compute()
+        for (String line : output.split("\n")) {
+            if (line =~ /^uptime_in_seconds:/) {
+                String data = line.trim()
+		        int colon = data.indexOf(":")
+		        return Integer.parseInt(data.substring(colon + 1))
+            }
+        }
+        return null
     }
 
     public SshBasedAppSetup getSshBasedSetup(SshMachineLocation machine) {
         return RedisSetup.newInstance(this, machine)
     }
 
+    @Override
     public synchronized void configure() {
+        port = getConfig(REDIS_PORT.configKey)
+        setAttribute(REDIS_PORT, port)
+
         MachineLocation machine = locations.first()
         File file = new File("/tmp/${id}")
         file.deleteOnExit()
         Files.write(getConfigFile(), file, Charsets.UTF_8)
 		setup.machine.copyTo file, "${setup.runDir}/redis.conf"
-        if (configFile && configFile.exists()) setup.machine.copyTo configFile, "${setup.runDir}/include.conf"
+
+        String configFileName = getConfig(REDIS_CONFIG_FILE)
+        if (configFileName) {
+            configFile = new File(configFileName)
+	        if (configFile.exists()) setup.machine.copyTo configFile, "${setup.runDir}/include.conf"
+        }
     }
 
     public String getConfigFile() {
@@ -127,7 +144,7 @@ public class RedisSlave extends RedisStore {
     @Override
     public String getConfigFile() {
         String masterAddress = master.setup.machine.address.hostAddress
-        int masterPort = owner.getAttribute(RedisStore.REDIS_PORT)
+        int masterPort = owner.getAttribute(REDIS_PORT)
         String config = super.getConfigFile()
         config += """
 slaveof ${masterAddress} ${masterPort}
