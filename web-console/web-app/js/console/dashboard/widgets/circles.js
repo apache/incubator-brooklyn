@@ -63,12 +63,10 @@ Brooklyn.circles = (function() {
                 var marker = new google.maps.Marker({
                     map: map,
                     position: new google.maps.LatLng(l.lat, l.lng),
-                    title: "Bleh",
                 });
 
 
-                var locationInfo = {name: "bob"};
-                var infoWindow = new Brooklyn.gmaps.ListInfoWindow(locationInfo, map, marker);
+                var infoWindow = new Brooklyn.gmaps.ListInfoWindow(l, map, marker);
 
                 circle.bindTo('center', marker, 'position');
 
