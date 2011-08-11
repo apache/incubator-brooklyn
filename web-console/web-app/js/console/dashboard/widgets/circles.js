@@ -73,7 +73,6 @@ Brooklyn.circles = (function() {
         for (id in locationMarkers) {
             if (! newLocs[id]) {
                 // location has been removed
-                console.log("Deleting " + id);
                 lm = locationMarkers[id];
                 lm.circle.setMap(null);
                 lm.marker.setMap(null);
