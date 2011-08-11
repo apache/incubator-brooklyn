@@ -31,8 +31,8 @@ import brooklyn.test.TestUtils
 /**
  * This tests that we can run jboss entity on AWS.
  */
-public class WebAppLiveIntergrationTest {
-    private static final Logger logger = LoggerFactory.getLogger(brooklyn.entity.webapp.jboss.JBossServerLiveIntergrationTest.class)
+public class WebAppLiveIntegrationTest {
+    private static final Logger logger = LoggerFactory.getLogger(WebAppLiveIntegrationTest.class)
     
     /** don't use 8080 since that is commonly used by testing software */
     private static final int HTTP_PORT = 8080
