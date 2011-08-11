@@ -20,7 +20,7 @@ Brooklyn.gmaps = (function(){
 
     function ListInfoWindow(pairs, map, marker) {
         this.infowindow = new google.maps.InfoWindow({
-            content: makeContentString(pairs),
+            content: makeContentString(pairs)
         });
 
         if ((typeof marker) !== 'undefined') {
@@ -37,19 +37,19 @@ Brooklyn.gmaps = (function(){
         google.maps.event.addListener(marker, 'click' , function(){
             iw.open(map, marker);
         });
-    }
+    };
 
     ListInfoWindow.prototype.getInfoWindow = function() {
         return this.infowindow;
-    }
+    };
 
     /* Update the contents. */
     ListInfoWindow.prototype.setPairs = function(pairs) {
         this.infowindow.setContent(makeContentString(pairs));
-    }
+    };
 
     return {
-        ListInfoWindow: ListInfoWindow,
+        ListInfoWindow: ListInfoWindow
     };
 
 }());

@@ -43,26 +43,21 @@ Brooklyn.circles = (function() {
             var l = json[id];
             if (lm = locationMarkers[id]) {
                 // Update
-                //console.log("Updating " + id);
-
                 var latlng = new google.maps.LatLng(l.lat, l.lng);
 
                 lm.circle.setRadius(radius(location_area(l.entity_count)));
                 lm.circle.setCenter(latlng);
-
                 lm.marker.setPosition(latlng);
-
                 lm.infoWindow.setPairs(l);
 
                 newLocs[id] = lm;
             } else {
                 // Add
-                //console.log("Adding " + id);
                 var circle = drawCircle(l.lat, l.lng, radius(location_area(l.entity_count)));
 
                 var marker = new google.maps.Marker({
                     map: map,
-                    position: new google.maps.LatLng(l.lat, l.lng),
+                    position: new google.maps.LatLng(l.lat, l.lng)
                 });
 
                 var infoWindow = new Brooklyn.gmaps.ListInfoWindow(l, map, marker);
@@ -79,7 +74,7 @@ Brooklyn.circles = (function() {
             if (! newLocs[id]) {
                 // location has been removed
                 console.log("Deleting " + id);
-                var lm = locationMarkers[id];
+                lm = locationMarkers[id];
                 lm.circle.setMap(null);
                 lm.marker.setMap(null);
                 lm.infoWindow.getInfoWindow().setMap(null);
