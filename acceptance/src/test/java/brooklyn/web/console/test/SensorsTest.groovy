@@ -20,7 +20,6 @@ public class SensorsTest {
 
         assertTrue(selenium.isTextPresent("http.port"));
         assertTrue(selenium.isTextPresent("HTTP port"));
-        assertTrue(selenium.isTextPresent("JMX host"));
         assertTrue(selenium.isTextPresent("JMX port"));
     }
 }
