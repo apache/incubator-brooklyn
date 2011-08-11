@@ -19,7 +19,6 @@ import brooklyn.entity.webapp.jboss.JBoss6Server
 import brooklyn.entity.webapp.jboss.JBoss7Server
 import brooklyn.entity.webapp.tomcat.Tomcat7SshSetup
 import brooklyn.entity.webapp.tomcat.TomcatServer
-import brooklyn.event.EntityStartException
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
@@ -35,9 +34,9 @@ import brooklyn.util.internal.TimeExtras
  * 
  * Currently tests TomcatServer, JBoss6Server and JBoss7Server.
  */
-class WebAppIntegrationTests {
+class WebAppIntegrationTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(WebAppIntegrationTests.class)
+    private static final Logger logger = LoggerFactory.getLogger(WebAppIntegrationTest.class)
     
     static { TimeExtras.init() }
     
