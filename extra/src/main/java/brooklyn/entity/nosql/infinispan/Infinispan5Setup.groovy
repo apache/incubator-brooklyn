@@ -54,10 +54,9 @@ public class Infinispan5Setup extends SshBasedJavaAppSetup {
     }
     
     @Override
-    protected void postStart() {
+    protected void setCustomAttributes() {
         entity.setAttribute(Infinispan5Server.PROTOCOL, protocol)
-        entity.setAttribute(Infinispan5Server.PORT, jmxHost)
-        entity.setAttribute(Attributes.VERSION, version)
+        entity.setAttribute(Infinispan5Server.PORT, port)
     }
     
     @Override

@@ -33,9 +33,7 @@ class JBoss7Server extends JavaWebApp {
     }
 
     @Override
-    void initHttpSensors() {
-        super.initHttpSensors()
-
+    public void addHttpSensors() {
         def host = getAttribute(HOSTNAME)
         def port = getAttribute(MANAGEMENT_PORT)
         String queryUrl = "http://$host:$port/management/subsystem/web/connector/http/read-resource?include-runtime"

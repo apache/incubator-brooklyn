@@ -105,11 +105,9 @@ public abstract class AbstractController extends AbstractService {
     }
 
     @Override
-    public void start(Collection<Location> locations) {
+    public void preStart() {
         addPolicy(policy)
         reset()
-        
-        super.start(locations)
     }
 
     @Override
@@ -160,8 +158,7 @@ public abstract class AbstractController extends AbstractService {
     }
 
     @Override
-    public void stop() {
+    public void preStop() {
         reset()
-        super.stop()
     }
 }

@@ -43,15 +43,13 @@ public class RedisSetup extends SshBasedAppSetup {
         super(entity, machine)
     }
 
-    public RedisSetup setRedisPort(int val) {
+    public void setRedisPort(int val) {
         redisPort = val
-        return this
     }
 
     @Override
-    protected void postStart() {
+    protected void setCustomAttributes() {
         entity.setAttribute(RedisStore.REDIS_PORT, redisPort)
-        entity.setAttribute(Attributes.VERSION, version)
     }
 
     @Override

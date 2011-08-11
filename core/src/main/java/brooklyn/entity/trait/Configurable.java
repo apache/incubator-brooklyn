@@ -8,7 +8,7 @@ import brooklyn.event.Sensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 
 /**
- * This interface describes an {@link Entity} that can be configured externally, usually an {@link Startable} service.
+ * This interface describes an {@link Entity} that can be configured externally, usually a {@link Startable} service.
  * 
  * The {@link Effector} available is {@link #CONFIGURE}, and the {@link Sensor} is {@link #SERVICE_CONFIGURED}. An entity
  * should implement the {@link #configure()} method to inspect its {@link Sensor}s and {@link ConfigKey}s and then
@@ -17,7 +17,7 @@ import brooklyn.event.basic.BasicAttributeSensor;
 public interface Configurable {
     Sensor<Boolean> SERVICE_CONFIGURED = new BasicAttributeSensor<Boolean>(Boolean.class, "service.isConfigured", "Service configured");
 
-    Effector<Void> CONFIGURE = new EffectorInferredFromAnnotatedMethod<Void>(Configurable.class, "configure", "Configutre an entity");
+    Effector<Void> CONFIGURE = new EffectorInferredFromAnnotatedMethod<Void>(Configurable.class, "configure", "Configure an entity");
 
     /**
      * Configure the entity before it starts.

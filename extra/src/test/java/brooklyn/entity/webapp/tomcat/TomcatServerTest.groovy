@@ -114,14 +114,15 @@ class TomcatServerTest {
     public void ensureRequestsPerSecondIsReportedCorrectly() {
         Application app = new TestApplication();
         TomcatServer tc = new TomcatServer(owner: app) {
-            public void initSensors() {
-                super.initSensors()
+            @Override
+            public void addJmxSensors() {
+                super.addJmxSensors()
                 attributePoller.removeSensor(TomcatServer.REQUEST_COUNT)
             }
         }
         
         tc.start([ new SimulatedLocation() ]);
-        
+
         tc.emit(TomcatServer.REQUEST_COUNT, 0);
         Thread.sleep(1000)
         tc.emit(TomcatServer.REQUEST_COUNT, 10);

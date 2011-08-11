@@ -23,17 +23,12 @@ public class JBoss6Server extends JavaWebApp {
     public static BasicConfigKey<Integer> SUGGESTED_CLUSTER_NAME =
             [ String, "jboss.clusterName", "Identifier used to group JBoss instances" ]
   
-    // Jboss specific
     public static final BasicAttributeSensor<Integer> PORT_INCREMENT = [ Integer, "webapp.portIncrement", "Increment added to default JBoss ports" ];
             
     public JBoss6Server(Map flags=[:], Entity owner=null) {
         super(flags, owner)
 
-        def portIncrement = flags.portIncrement ?: 0
-        if (portIncrement < 0) {
-            throw new IllegalArgumentException("JBoss port increment cannot be negative")
-        }
-        setConfig SUGGESTED_PORT_INCREMENT, portIncrement
+        setConfigIfValNonNull(SUGGESTED_PORT_INCREMENT, flags.portIncrement)
         setConfigIfValNonNull(SUGGESTED_CLUSTER_NAME, flags.clusterName)
         setConfigIfValNonNull(SUGGESTED_SERVER_PROFILE, flags.serverProfile)
     }
@@ -42,16 +37,10 @@ public class JBoss6Server extends JavaWebApp {
         return JBoss6SshSetup.newInstance(this, loc);
     }
     
-    public void initSensors() {
-        super.initSensors()
+    public void addJmxSensors() {
         attributePoller.addSensor(ERROR_COUNT, jmxAdapter.newAttributeProvider("jboss.web:type=GlobalRequestProcessor,name=http-*", "errorCount"))
         attributePoller.addSensor(REQUEST_COUNT, jmxAdapter.newAttributeProvider("jboss.web:type=GlobalRequestProcessor,name=http-*", "requestCount"))
         attributePoller.addSensor(TOTAL_PROCESSING_TIME, jmxAdapter.newAttributeProvider("jboss.web:type=GlobalRequestProcessor,name=http-*", "processingTime"))
         attributePoller.addSensor(SERVICE_UP, jmxAdapter.newAttributeProvider("jboss.system:type=Server", "Started"))
     }
-
-    public void waitForHttpPort() {
-        log.debug "started jboss server: host {} and jmxPort {}", getAttribute(HOSTNAME), getAttribute(JMX_PORT)
-	}
-    
 }

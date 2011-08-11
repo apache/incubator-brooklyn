@@ -66,13 +66,8 @@ class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
     }
     
     @Override
-    protected void postStart() {
-        def host = entity.getAttribute(Attributes.HOSTNAME)
-        entity.setAttribute(Attributes.JMX_PORT, jmxPort)
-        entity.setAttribute(Attributes.HTTP_PORT, httpPort)
+    protected void setCustomAttributes() {
         entity.setAttribute(JBoss7Server.MANAGEMENT_PORT, managementPort)
-        entity.setAttribute(JavaWebApp.ROOT_URL, "http://${host}:${httpPort}/")
-        entity.setAttribute(Attributes.VERSION, version)
     }
     
     @Override

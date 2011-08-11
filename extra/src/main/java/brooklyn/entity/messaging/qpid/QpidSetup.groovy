@@ -62,10 +62,8 @@ public class QpidSetup extends SshBasedJavaAppSetup {
     protected Map getJmxConfigOptions() { [:] }
 
     @Override
-    protected void postStart() {
-        entity.setAttribute(Attributes.JMX_PORT, jmxPort)
+    protected void setCustomAttributes() {
         entity.setAttribute(Attributes.AMQP_PORT, amqpPort)
-        entity.setAttribute(Attributes.VERSION, version)
     }
 
     @Override

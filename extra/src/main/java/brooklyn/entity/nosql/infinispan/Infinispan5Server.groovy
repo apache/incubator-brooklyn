@@ -14,9 +14,9 @@ import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedAppSetup
 
 /**
- * An {@link brooklyn.entity.Entity} that represents a single Tomcat instance.
+ * An {@link brooklyn.entity.Entity} that represents an Infinispan service
  */
-public class Infinispan5Server extends AbstractService implements Startable {
+public class Infinispan5Server extends AbstractService {
     private static final Logger log = LoggerFactory.getLogger(Infinispan5Server.class)
     
     public static final ConfiguredAttributeSensor<String> PROTOCOL = [String, "infinispan.server.protocol", 
@@ -42,7 +42,6 @@ public class Infinispan5Server extends AbstractService implements Startable {
     }
 
     public void initSensors() {
-        super.initSensors()
         attributePoller.addSensor(SERVICE_UP, { return setup.isRunning() } as ValueProvider)
     }
 }

@@ -65,12 +65,7 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
     }
     
     @Override
-    protected void postStart() {
-        def host = entity.getAttribute(Attributes.HOSTNAME)
-        entity.setAttribute(Attributes.JMX_PORT, jmxPort)
-        entity.setAttribute(Attributes.HTTP_PORT, httpPort)
-        entity.setAttribute(JavaWebApp.ROOT_URL, "http://${host}:${httpPort}/")
-        entity.setAttribute(Attributes.VERSION, version)
+    protected void setCustomAttributes() {
         entity.setAttribute(TomcatServer.TOMCAT_SHUTDOWN_PORT, tomcatShutdownPort)
     }
     

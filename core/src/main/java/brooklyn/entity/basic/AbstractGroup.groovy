@@ -8,11 +8,12 @@ import brooklyn.entity.Group
 import brooklyn.entity.trait.Changeable
 
 public abstract class AbstractGroup extends AbstractEntity implements Group, Changeable {
+    final EntityCollectionReference<Entity> members = new EntityCollectionReference<Entity>(this);
+
     public AbstractGroup(Map props=[:], Entity owner=null) {
         super(props, owner)
+        setAttribute(Changeable.GROUP_SIZE, 0)
     }
-
-    final EntityCollectionReference<Entity> members = new EntityCollectionReference<Entity>(this);
 
     /**
      * Adds the given entity as a member of this group <em>and</em> this group as one of the groups of the child;

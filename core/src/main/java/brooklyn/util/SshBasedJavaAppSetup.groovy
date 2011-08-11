@@ -5,6 +5,7 @@ import java.util.Map
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.internal.LanguageUtils
@@ -41,6 +42,12 @@ public abstract class SshBasedJavaAppSetup extends SshBasedAppSetup {
 
     public void setPropertyFiles(Map<String,Map<String,String>> propFilesToGenerate) {
         this.propFilesToGenerate = propFilesToGenerate
+    }
+
+    @Override
+    protected void setEntityAttributes() {
+        super.setEntityAttributes()
+        entity.setAttribute(Attributes.JMX_PORT, jmxPort)
     }
 
     @Override

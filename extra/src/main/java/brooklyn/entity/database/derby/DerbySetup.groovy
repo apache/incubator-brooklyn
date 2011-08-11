@@ -55,12 +55,6 @@ public class DerbySetup extends SshBasedJavaAppSetup {
     protected Map getJmxConfigOptions() { [:] }
 
     @Override
-    protected void postStart() {
-        entity.setAttribute(Attributes.JMX_PORT, jmxPort)
-        entity.setAttribute(Attributes.VERSION, version)
-    }
-
-    @Override
     public List<String> getInstallScript() {
         makeInstallScript([
                 "wget http://www.mirrorservice.org/sites/ftp.apache.org//db/derby/db-derby-${version}/db-derby-${version}-lib.tar.gz",

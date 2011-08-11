@@ -71,15 +71,6 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     }
     
     @Override
-    protected void postStart() {
-        def host = entity.getAttribute(Attributes.HOSTNAME)
-        entity.setAttribute(Attributes.JMX_PORT, jmxPort)
-        entity.setAttribute(Attributes.HTTP_PORT, httpPort)
-        entity.setAttribute(JavaWebApp.ROOT_URL, "http://${host}:${httpPort}/")
-        entity.setAttribute(Attributes.VERSION, version)
-    }
-    
-    @Override
     public List<String> getInstallScript() {
         String url = "http://downloads.sourceforge.net/project/jboss/JBoss/JBoss-${version}/jboss-as-distribution-${version}.zip?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fjboss%2Ffiles%2FJBoss%2F${version}%2F&ts=1307104229&use_mirror=kent"
         String saveAs  = "jboss-as-distribution-${version}"

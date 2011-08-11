@@ -97,12 +97,13 @@ public abstract class JavaWebApp extends JavaApp {
             attributePoller.addSensor(HTTP_SERVER, httpAdapter.newHeaderValueProvider("http://${host}:${port}/", "Server"))
             waitForHttpPort()
         }
+        addHttpSensors()
     }
 
-    @Override
-    public void start(Collection<Location> locations) {
-        super.start(locations)
+    public void addHttpSensors() { }
 
+    @Override
+    public void postStart() {
         log.debug "started $this: httpPort {}, host {} and jmxPort {}",
                 getAttribute(HTTP_PORT), getAttribute(HOSTNAME), getAttribute(JMX_PORT)
 
@@ -123,9 +124,7 @@ public abstract class JavaWebApp extends JavaApp {
     }
 
     @Override
-    public void stop() {
-        super.stop()
-        
+    public void preStop() {
         // zero our workrate derived workrates.
         // TODO might not be enough, as policy is still executing and has a record of historic vals; should remove policies
         setAttribute(REQUESTS_PER_SECOND, 0)

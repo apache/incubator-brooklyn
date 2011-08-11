@@ -22,12 +22,13 @@ import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedAppSetup
 
 import com.google.common.base.Preconditions
+import com.google.common.collect.Iterables;
 
 /**
-* An {@link brooklyn.entity.Entity} representing an abstract service process.
-*
-* A service can only run on a single {@link MachineLocation} at a time.
-*/
+ * An {@link Entity} representing an abstract service process.
+ *
+ * A service can only run on a single {@link MachineLocation} at a time.
+ */
 public abstract class AbstractService extends AbstractEntity implements Startable, Configurable {
     public static final Logger log = LoggerFactory.getLogger(AbstractService.class)
 
@@ -53,37 +54,37 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
         setConfigIfValNonNull(SUGGESTED_RUN_DIR, properties.runDir)
  
         setAttribute(SERVICE_UP, false)
+        setAttribute(SERVICE_CONFIGURED, false)
     }
 
     public abstract SshBasedAppSetup getSshBasedSetup(SshMachineLocation loc);
 
-    protected void initSensors() {
-    }
+    protected void preStart() { }
+    protected void postConfig() { }
+    protected void initSensors() { }
+    protected void postStart() { }
+    protected void preStop() { }
+    protected void postStop() { }
 
     public void start(Collection<Location> locations) {
-        doStart(locations)
-        initSensors()
-    }
-
-    /**
-     * Separate doStart method, to be called by sub-classes that override start to do extra stuff
-     * before invoking initSensors
-     */
-    protected void doStart(Collection<Location> locations) {
-        startInLocation locations
-        
         attributePoller = new AttributePoller(this)
+        
+        preStart()
+        startInLocation locations
+        initSensors()
+        postStart()
+
+        setAttribute(SERVICE_STATUS, "running")
     }
 
-    public void startInLocation(Collection<Location> locs) {
-        // TODO check has exactly one?
-        MachineProvisioningLocation loc = locs.find { it instanceof MachineProvisioningLocation }
-        Preconditions.checkArgument loc != null, "None of the provided locations is a MachineProvisioningLocation"
-        startInLocation(loc)
+    public void startInLocation(Collection<Location> locations) {
+        Preconditions.checkArgument locations.size() == 1
+        Location location = Iterables.getOnlyElement(locations)
+        startInLocation(location)
     }
 
     public void startInLocation(MachineProvisioningLocation location) {
-        Map<String,Object> flags = location.getProvisioningFlags([getClass().getName()])
+        Map<String,Object> flags = location.getProvisioningFlags([ getClass().getName() ])
         flags.inboundPorts = getRequiredOpenPorts()
         
         provisioningLoc = location
@@ -108,11 +109,11 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
             setup.install()
             setup.config()
 	        configure()
+	        postConfig()
             setup.runApp()
             setup.postStart()
 	        waitForEntityStart()
         }
-        setAttribute(SERVICE_STATUS, "running")
     }
 
     // TODO Find a better way to detect early death of process.
@@ -143,7 +144,9 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
     public void shutdownInLocation(MachineLocation machine) {
         if (attributePoller) attributePoller.close()
         
+        preStop()
         if (setup) setup.stop()
+        postStop()
         
         // Only release this machine if we ourselves provisioned it (e.g. it might be running multiple services)
         provisioningLoc?.release(machine)
@@ -159,8 +162,10 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
      * Configure the service.
      *
      * This is a NO-OP but should be overridden in implementing classes. It will be called after the {@link #setup}
-     * field is available and any {@link MachineLocation} is is instantiated, but before the {@link SshBasedAppSetup#start()}
+     * field is available and any {@link MachineLocation} is is instantiated, but before the {@link SshBasedAppSetup#runApp()}
      * method is called.
      */
-    public void configure() { }
+    public void configure() {
+        setAttribute(SERVICE_CONFIGURED, true)
+    }
 }

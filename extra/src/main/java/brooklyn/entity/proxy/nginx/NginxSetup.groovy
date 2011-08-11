@@ -49,9 +49,8 @@ public class NginxSetup extends SshBasedAppSetup {
     }
 
     @Override
-    protected void postStart() {
+    protected void setCustomAttributes() {
         entity.setAttribute(Attributes.HTTP_PORT, httpPort)
-        entity.setAttribute(Attributes.VERSION, version)
     }
 
     @Override
@@ -92,7 +91,7 @@ public class NginxSetup extends SshBasedAppSetup {
         List<String> script = [
             "cd ${runDir}",
             "test -f logs/nginx.pid || exit 1",
-            "./sbin/nginx -p ${runDir}/ -s reload",
+            "./sbin/nginx -p ${runDir}/ -c conf/server.conf -s reload",
         ]
         return script
     }
@@ -110,7 +109,7 @@ public class NginxSetup extends SshBasedAppSetup {
         List<String> script = [
             "cd ${runDir}",
             "test -f logs/nginx.pid || exit 1",
-            "./sbin/nginx -p ${runDir}/ -s quit",
+            "./sbin/nginx -p ${runDir}/ -c conf/server.conf -s quit",
         ]
         return script
     }
@@ -127,11 +126,5 @@ public class NginxSetup extends SshBasedAppSetup {
     @Override
     protected void postShutdown() {
         machine.releasePort(httpPort);
-    }
-    
-    @Override
-    public void config() {
-        super.config()
-        entity.configure()
     }
 }

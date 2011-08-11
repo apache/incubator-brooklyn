@@ -1,12 +1,13 @@
 package brooklyn.util
 
 import java.util.List
-import java.util.Map;
+import java.util.Map
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.AbstractService
+import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.location.PortRange
 import brooklyn.location.basic.BasicPortRange
@@ -51,6 +52,12 @@ public abstract class SshBasedAppSetup {
     public void setVersion(String val) {
         version = val
     }
+
+    protected void setEntityAttributes() {
+        entity.setAttribute(Attributes.VERSION, version)
+    }
+
+    protected void setCustomAttributes() { }
 
     /**
      * Add generic commands to an application specific installation script.
@@ -212,6 +219,9 @@ public abstract class SshBasedAppSetup {
      */
     public void config() {
         synchronized (entity) {
+            setEntityAttributes()
+            setCustomAttributes()
+
             List<String> script = getConfigScript()
             if (script) {
                 log.info "Configuring entity {} on machine {}", entity, machine

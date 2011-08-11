@@ -1,8 +1,5 @@
 package brooklyn.entity.webapp
 
-import brooklyn.entity.basic.AbstractEntity
-import brooklyn.entity.trait.Startable
-
 import java.util.Collection
 import java.util.Map
 
@@ -25,7 +22,6 @@ import com.google.common.base.Preconditions
  * </ul>
  */
 public class ControlledDynamicWebAppCluster extends AbstractEntity implements Startable {
-
     DynamicWebAppCluster cluster
     AbstractController controller
     Closure webServerFactory

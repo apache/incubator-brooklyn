@@ -21,8 +21,8 @@ public interface Attributes {
      */
 
     BasicAttributeSensor<Integer> JMX_PORT = [ Integer, "jmx.port", "JMX port" ]
-    BasicAttributeSensor<Integer> JMX_USER = [ Integer, "jmx.user", "JMX username" ]
-    BasicAttributeSensor<String> JMX_PASSWORD = [ String, "jmx.password", "JMX password" ]
+    ConfiguredAttributeSensor<Integer> JMX_USER = [ Integer, "jmx.user", "JMX username" ]
+    ConfiguredAttributeSensor<String> JMX_PASSWORD = [ String, "jmx.password", "JMX password" ]
 
     /*
      * Port number attributes.

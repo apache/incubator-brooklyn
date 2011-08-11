@@ -76,6 +76,4 @@ class DynamicWebAppCluster extends DynamicCluster {
         policies.each { if (it in CustomAggregatingEnricher) it.removeProducer(member); }
         super.removeMember(member)
     }
-    
-    
 }

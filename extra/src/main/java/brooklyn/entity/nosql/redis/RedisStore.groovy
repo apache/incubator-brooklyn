@@ -39,11 +39,7 @@ public class RedisStore extends AbstractService implements DataStore {
     public static final BasicConfigKey<String> REDIS_CONFIG_FILE = [ String, "redis.config.file", "Redis user configuration file" ]
     public static final BasicAttributeSensor<Integer> UPTIME = [ Integer, "redis.uptime", "Redis uptime in seconds" ]
 
-    int port
-    File configFile
-
     transient SshSensorAdapter sshAdapter
-    transient AttributePoller attributePoller
     
     public RedisStore(Map properties=[:], Entity owner=null) {
         super(properties, owner)
@@ -52,28 +48,29 @@ public class RedisStore extends AbstractService implements DataStore {
         setConfigIfValNonNull(REDIS_CONFIG_FILE, properties.configFile)
     }
 
+    @Override
     protected Collection<Integer> getRequiredOpenPorts() {
         Collection<Integer> result = super.getRequiredOpenPorts()
         result.add(getAttribute(REDIS_PORT))
         return result
     }
+    
+    @Override
+    protected void preStart() {
+    }
 
     @Override
-    public void start(List<Location> locations) {
-        super.start(locations)
-        
-        sshAdapter = new SshSensorAdapter(this, setup.machine)
-        attributePoller = new AttributePoller(this)
+    public void postStart() {
         initSshSensors()
     }
 
-    @Override
-    public void stop() {
-        attributePoller.close()
-        super.stop()
+    protected void initSshSensors() {
+        sshAdapter = new SshSensorAdapter(this, setup.machine)
+ 
+        addSshSensors()
     }
 
-    public void initSshSensors() {
+    protected void addSshSensors() {
         attributePoller.addSensor(SERVICE_UP, sshAdapter.newMatchValueProvider("${setup.runDir}/bin/redis-cli ping", /PONG/))
         attributePoller.addSensor(UPTIME, { computeUptime() } as ValueProvider)
     }
@@ -95,34 +92,35 @@ public class RedisStore extends AbstractService implements DataStore {
     }
 
     @Override
-    public synchronized void configure() {
-        port = getConfig(REDIS_PORT.configKey)
-        setAttribute(REDIS_PORT, port)
+    public void configure() {
+	    int port = getAttribute(REDIS_PORT)
+        boolean include = false
 
-        MachineLocation machine = locations.first()
-        File file = new File("/tmp/${id}")
-        file.deleteOnExit()
-        Files.write(getConfigFile(), file, Charsets.UTF_8)
-		setup.machine.copyTo file, "${setup.runDir}/redis.conf"
-
-        String configFileName = getConfig(REDIS_CONFIG_FILE)
-        if (configFileName) {
-            configFile = new File(configFileName)
-	        if (configFile.exists()) setup.machine.copyTo configFile, "${setup.runDir}/include.conf"
+        String includeName = getConfig(REDIS_CONFIG_FILE)
+        if (includeName) {
+            File includeFile = new File(includeName)
+	        include = includeFile.exists()
         }
+
+        File config = new File("/tmp/${id}")
+        Files.write(getConfigData(port, include), config, Charsets.UTF_8)
+		setup.machine.copyTo config, "${setup.runDir}/redis.conf"
+        config.delete()
+        if (include) setup.machine.copyTo configFile, "${setup.runDir}/include.conf"
+        
+        super.configure()
     }
 
-    public String getConfigFile() {
-        StringBuffer config = []
-        config.append """
+    public String getConfigData(int port, boolean include) {
+        String data = """
 daemonize yes
 pidfile ${setup.runDir}/pid.txt
 port ${port}
 """
-        if (configFile && configFile.exists()) {
-            config.append("include ${setup.runDir}/include.conf\n")
-        }
-        config.toString()
+        if (include) data += """
+include ${setup.runDir}/include.conf
+"""
+        data
     }
 }
 
@@ -142,11 +140,11 @@ public class RedisSlave extends RedisStore {
     }
 
     @Override
-    public String getConfigFile() {
+    public String getConfigData(int port, boolean include) {
         String masterAddress = master.setup.machine.address.hostAddress
         int masterPort = owner.getAttribute(REDIS_PORT)
-        String config = super.getConfigFile()
-        config += """
+
+        super.getConfigData(port, include) + """
 slaveof ${masterAddress} ${masterPort}
 """
     }

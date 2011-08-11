@@ -47,8 +47,8 @@ public class QpidBroker extends JavaApp {
 
         setConfigIfValNonNull(Attributes.AMQP_PORT.configKey, properties.amqpPort)
 
-        setAttribute(Attributes.JMX_USER, properties.user ?: "admin")
-        setAttribute(Attributes.JMX_PASSWORD, properties.password ?: "admin")
+        setConfigIfValNonNull(Attributes.JMX_USER.configKey, properties.user ?: "admin")
+        setConfigIfValNonNull(Attributes.JMX_PASSWORD.configKey, properties.password ?: "admin")
 
         if (properties.queue) queueNames.add properties.queue
         if (properties.queues) queueNames.addAll properties.queues
@@ -61,25 +61,27 @@ public class QpidBroker extends JavaApp {
         return QpidSetup.newInstance(this, machine)
     }
 
+    @Override
     public void initSensors() {
-        super.initSensors()
         attributePoller.addSensor(JavaApp.SERVICE_UP, { computeNodeUp() } as ValueProvider)
     }
 
     @Override
-    public void start(Collection<Location> locations) {
-        super.start(locations)
+    protected void postConfig() {
+        setAttribute(Attributes.JMX_USER)
+        setAttribute(Attributes.JMX_PASSWORD)
+    }
 
+    @Override
+    protected void postStart() {
         queueNames.each { String name -> createQueue(name) }
         topicNames.each { String name -> createTopic(name) }
     }
 
     @Override
-    public void stop() {
+    protected void preStop() {
         queues.each { String name, QpidQueue queue -> queue.destroy() }
         topics.each { String name, QpidTopic topic -> topic.destroy() }
-
-        super.stop()
     }
 
     public void createQueue(String name, Map properties=[:]) {

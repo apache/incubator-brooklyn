@@ -23,24 +23,17 @@ import com.google.common.io.Files
  */
 public class NginxController extends AbstractController {
     transient HttpSensorAdapter httpAdapter
-    transient AtomicLong counter = new AtomicLong(0)
 
     public NginxController(Map properties=[:], Entity owner=null) {
         super(properties, owner)
     }
 
+    @Override
     protected void initSensors() {
-        super.initSensors()
         httpAdapter = new HttpSensorAdapter(this)
         attributePoller.addSensor(SERVICE_UP, { computeNodeUp() } as ValueProvider)
     }
     
-    @Override
-    public void stop() {
-        attributePoller.close()
-        super.stop()
-    }
-
     private boolean computeNodeUp() {
         String url = getAttribute(AbstractController.URL)
         ValueProvider<String> provider = httpAdapter.newHeaderValueProvider(url, "Server")
@@ -61,10 +54,12 @@ public class NginxController extends AbstractController {
         LOG.info("Reconfiguring $displayName, members are $addresses")
         
         MachineLocation machine = locations.first()
-        File file = new File("/tmp/${id}."+counter.incrementAndGet())
+        File file = new File("/tmp/${id}")
         Files.write(getConfigFile(), file, Charsets.UTF_8)
 		setup.machine.copyTo file, "${setup.runDir}/conf/server.conf"
         file.delete()
+
+        super.configure()
     }
 
     public String getConfigFile() {
