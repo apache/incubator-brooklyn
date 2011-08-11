@@ -111,7 +111,7 @@ class WebAppIntegrationTest {
      * Checks that an entity correctly sets request and error count metrics by
      * connecting to a non-existent URL several times.
      */
-    @Test(groups=["Integration"], dataProvider="basicEntities", dependsOnMethods=["canStartAndStop"])
+    @Test(groups=["Integration"], dataProvider="basicEntities")
     public void publishesRequestAndErrorCountMetrics(JavaWebApp entity) {
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         String url = entity.getAttribute(JavaWebApp.ROOT_URL) + "does_not_exist"
@@ -146,7 +146,7 @@ class WebAppIntegrationTest {
      * Checks an entity publishes correct requests/second figures and that these figures
      * fall to zero after a period of no activity.
      */
-    @Test(groups=["Integration"], dataProvider="basicEntities", dependsOnMethods=["canStartAndStop"])
+    @Test(groups=["Integration"], dataProvider="basicEntities")
     public void publishesRequestsPerSecondMetric(JavaWebApp entity) {
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         try {
@@ -202,7 +202,7 @@ class WebAppIntegrationTest {
     /**
      * Tests that we get consecutive events with zero workrate, and with suitably small timestamps between them.
      */
-    @Test(groups=["Integration"], dataProvider="basicEntities", dependsOnMethods=["canStartAndStop"])
+    @Test(groups=["Integration"], dataProvider="basicEntities")
     public void publishesZeroRequestsPerSecondMetricRepeatedly(JavaWebApp entity) {
         final int MAX_INTERVAL_BETWEEN_EVENTS = 1000 // should be every 500ms
         final int NUM_CONSECUTIVE_EVENTS = 3
@@ -256,7 +256,7 @@ class WebAppIntegrationTest {
     /**
      * Tests given entity can deploy the given war.  Checks given httpURL to confirm success.
      */
-    @Test(groups=["Integration"], dataProvider="entitiesWithWARAndURL", dependsOnMethods=["canStartAndStop"])
+    @Test(groups=["Integration"], dataProvider="entitiesWithWARAndURL")
     public void warDeployments(JavaWebApp entity, String war, String httpURL) {
         URL resource = getClass().getClassLoader().getResource(war)
         assertNotNull resource
