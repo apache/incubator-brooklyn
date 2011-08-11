@@ -19,6 +19,7 @@ public class TomcatSimulator {
     private Location location
     private EntityLocal entity
     private JmxService jmxService
+    Thread httpServerThread
 
     TomcatSimulator(Location location, EntityLocal entity) {
         assertNotNull(location)
@@ -34,7 +35,7 @@ public class TomcatSimulator {
 
         jmxService = new JmxService();
 
-        int httpPort = 8080
+        int httpPort = new Random().nextInt(1000) + 7000
         jmxService.registerMBean "Catalina:type=Connector,port="+httpPort, stateName: "STARTED"
         jmxService.registerMBean "Catalina:type=GlobalRequestProcessor,name=http-"+httpPort,
             errorCount: 0,
@@ -44,9 +45,31 @@ public class TomcatSimulator {
         entity.setAttribute(TomcatServer.HTTP_PORT, httpPort)
         entity.setAttribute(TomcatServer.HOSTNAME, jmxService.jmxHost)
         entity.setAttribute(TomcatServer.JMX_PORT, jmxService.jmxPort)
+
+        final ServerSocket server
+        try {
+            server = new ServerSocket(httpPort)
+        } catch (Exception e) {
+            LOG.warn "Unable to start HTTP server on ${httpPort}", e
+            server = null
+        }
+
+        httpServerThread = new Thread(){
+            @Override void run() {
+                while(true) {
+                    Socket socket = server.accept()
+                    socket << "HTTP/1.0 200 OK\r\n"
+                    socket << "\r\n"
+                    socket << "\r\n"
+                    socket.close()
+                }
+            }
+        }
+        httpServerThread.start()
     }
 
     public void shutdown() {
+        httpServerThread.stop()
         if (jmxService) jmxService.shutdown();
         jmxService = null;
         synchronized (activeInstances) { activeInstances.remove(this) }

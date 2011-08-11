@@ -31,13 +31,11 @@ class TomcatServerTest {
             delegate.metaClass.simulator = sim
             sim.start()
         }
-        TomcatServer.metaClass.shutdownInLocation { SimulatedLocation loc ->
+        TomcatServer.metaClass.shutdownInLocation = { SimulatedLocation loc ->
             TomcatSimulator sim = delegate.simulator
             assertEquals loc, sim.location
             sim.shutdown()
         }
-        TomcatServer.metaClass.initHttpSensors { }
-        TomcatServer.metaClass.waitForHttpPort { }
     }
 
     @AfterMethod
