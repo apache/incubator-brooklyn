@@ -47,7 +47,7 @@ Brooklyn.circles = (function() {
 
                 var latlng = new google.maps.LatLng(l.lat, l.lng);
 
-                lm.circle.setRadius(radius(location_area(l.entity_count || 1)));
+                lm.circle.setRadius(radius(location_area(l.entity_count)));
                 lm.circle.setCenter(latlng);
 
                 lm.marker.setPosition(latlng);
@@ -58,7 +58,7 @@ Brooklyn.circles = (function() {
             } else {
                 // Add
                 console.log("Adding " + id);
-                var circle = drawCircle(l.lat, l.lng, radius(location_area(l.entity_count || 1)));
+                var circle = drawCircle(l.lat, l.lng, radius(location_area(l.entity_count)));
 
                 var marker = new google.maps.Marker({
                     map: map,
