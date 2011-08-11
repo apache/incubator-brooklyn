@@ -42,8 +42,8 @@ Brooklyn.circles = (function() {
         for (id in json) {
             var l = json[id];
             if (lm = locationMarkers[id]) {
-                console.log("Updating " + id);
                 // Update
+                //console.log("Updating " + id);
 
                 var latlng = new google.maps.LatLng(l.lat, l.lng);
 
@@ -57,14 +57,13 @@ Brooklyn.circles = (function() {
                 newLocs[id] = lm;
             } else {
                 // Add
-                console.log("Adding " + id);
+                //console.log("Adding " + id);
                 var circle = drawCircle(l.lat, l.lng, radius(location_area(l.entity_count)));
 
                 var marker = new google.maps.Marker({
                     map: map,
                     position: new google.maps.LatLng(l.lat, l.lng),
                 });
-
 
                 var infoWindow = new Brooklyn.gmaps.ListInfoWindow(l, map, marker);
 
