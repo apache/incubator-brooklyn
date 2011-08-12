@@ -120,7 +120,8 @@ class WebAppIntegrationTest {
             assertTrue entity.getAttribute(JavaApp.SERVICE_UP)
         })
         
-        10.times {
+        final int num_reqs = 10
+        num_reqs.times {
             def connection = connectToURL(url)
             int status = ((HttpURLConnection) connection).getResponseCode()
             log.info "connection to {} gives {}", url, status
@@ -134,12 +135,13 @@ class WebAppIntegrationTest {
             if (errorCount == null) {
                 return new BooleanWithMessage(false, "errorCount not set yet ($errorCount)")
             } else {
-                logger.info "$errorCount errors in total"
-                assertTrue errorCount > 0
-                assertEquals requestCount, errorCount
+                assertEquals errorCount, num_reqs
+                // AS 7 seems to take a very long time to report error counts,
+                // hence not using ==.  >= in case error pages include a favicon, etc.
+                assertTrue requestCount >= errorCount
             }
             true
-        }, useGroovyTruth:true, timeout:60*SECONDS)
+        }, useGroovyTruth:true, timeout:20*SECONDS)
     }
     
     /**
