@@ -26,7 +26,7 @@ Brooklyn.summary = (function() {
                 locations_html += "None set";
             }
 
-            $("#summary-basic-info").html(name_html + locations_html) ;
+            $("#summary-basic-info").html(name_html + locations_html);
 
             var status_html = '<span class="label">Status: </span>TODO';
             $("#summary-status").html(status_html);
