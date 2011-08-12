@@ -4,6 +4,9 @@ import static org.testng.Assert.*
 
 import java.util.concurrent.Semaphore
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.location.Location
 import brooklyn.test.JmxService
@@ -13,7 +16,8 @@ import brooklyn.test.JmxService
  */
 public class TomcatSimulator {
     private static final int MAXIMUM_LOCKS = 1
-
+    private static final Logger LOG = LoggerFactory.getLogger(brooklyn.entity.webapp.tomcat.TomcatServerIntegrationTest.class)
+    
     private static Semaphore lock = new Semaphore(MAXIMUM_LOCKS)
     private static Collection<TomcatSimulator> activeInstances = []
     private Location location
