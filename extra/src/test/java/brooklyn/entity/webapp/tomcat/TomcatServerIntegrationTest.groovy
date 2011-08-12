@@ -33,7 +33,7 @@ import brooklyn.util.internal.TimeExtras
  * TODO clarify test purpose
  */
 public class TomcatServerIntegrationTest {
-    private static final Logger logger = LoggerFactory.getLogger(brooklyn.entity.webapp.tomcat.TomcatServerIntegrationTest.class)
+    private static final Logger LOG = LoggerFactory.getLogger(TomcatServerIntegrationTest.class)
     
     /** don't use 8080 since that is commonly used by testing software */
     static int DEFAULT_HTTP_PORT = 7880
@@ -69,8 +69,8 @@ public class TomcatServerIntegrationTest {
 	        .run();
 
         if (socketClosed == false) {
-            logger.error "Tomcat did not shut down - this is a failure of the last test run";
-            logger.warn "I'm sending a message to the Tomcat shutdown port";
+            LOG.error "Tomcat did not shut down - this is a failure of the last test run";
+            LOG.warn "I'm sending a message to the Tomcat shutdown port";
             OutputStreamWriter writer = new OutputStreamWriter(shutdownSocket.getOutputStream());
             writer.write("SHUTDOWN\r\n");
             writer.flush();
