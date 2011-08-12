@@ -55,9 +55,18 @@ public class TestUtils {
         connection.getContentLength() // Make sure the connection is made.
         return connection
     }
-
+    
     public static void executeUntilSucceeds(Map flags=[:], Runnable r) {
         executeUntilSucceedsWithFinallyBlock(flags, r, {})
+    }
+    
+    public static void executeUntilSucceedsElseShutdown(Map flags=[:], Entity entity, Runnable r) {
+        try { 
+            executeUntilSucceedsWithFinallyBlock(flags, r, {})
+        } catch (Throwable t) {
+            entity.stop()
+            throw t
+        }
     }
 
     /** convenience for entities to ensure they shutdown afterwards */

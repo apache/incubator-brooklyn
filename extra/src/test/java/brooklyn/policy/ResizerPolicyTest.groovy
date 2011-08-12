@@ -100,12 +100,6 @@ class ResizerPolicyTest {
         assertEquals 7, policyNoResize.calculateDesiredSize(175)
     }
     
-    // what is this i don't even
-    @Test(enabled = false)
-    public void multipleThreadsSettingDesiredSize() {
-        /* t1: set t */
-    }
-    
     @Test(groups=["Integration"])
     public void testWithTomcatServers() {
         /**
@@ -144,7 +138,7 @@ class ResizerPolicyTest {
         TomcatServer tc = cluster.getMembers().toArray()[0]
         2.times { connectToURL(tc.getAttribute(TomcatServer.ROOT_URL)) }
         
-        executeUntilSucceeds(timeout: 3*SECONDS, {
+        executeUntilSucceeds(timeout: 3*SECONDS, cluster, {
             assertEquals 2.0d/cluster.currentSize, cluster.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)
         })
         
