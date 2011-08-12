@@ -100,7 +100,7 @@ class ResizerPolicyTest {
         assertEquals 7, policyNoResize.calculateDesiredSize(175)
     }
     
-    @Test(groups=["Integration"])
+    @Test(enabled=false, groups=["Integration"])
     public void testWithTomcatServers() {
         /**
          * One DynamicWebAppClster with resizer policy
