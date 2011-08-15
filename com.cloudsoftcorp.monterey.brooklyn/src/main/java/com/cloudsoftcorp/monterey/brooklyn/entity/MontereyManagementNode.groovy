@@ -92,11 +92,6 @@ public class MontereyManagementNode extends AbstractEntity implements Startable 
         return machine != null;
     }
     
-    @VisibleForTesting    
-    LocationRegistry getLocationRegistry() {
-        return locationRegistry;
-    }
-
     public void dispose() {
         if (monitoringTask != null) monitoringTask.cancel(true);
     }

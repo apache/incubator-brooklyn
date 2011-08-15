@@ -519,16 +519,6 @@ public class MontereyBrooklynProvisioningTest extends CloudsoftThreadMonitoringT
         }
         throw new IllegalArgumentException("Node id not found, "+nodeId);
     }
-    
-    private Location toBrooklynLocation(MontereyActiveLocation loc) {
-        return montereyNetwork.getLocationRegistry().getConvertedLocation(loc);
-    }
-
-    private Set<Location> toBrooklynLocations(Collection<MontereyActiveLocation> locs) {
-        final Set<Location> result = new LinkedHashSet<Location>();
-        for (MontereyActiveLocation loc : locs) result.add(toBrooklynLocation(loc));
-        return result;
-    }
 
     private void assertMontereyRunningWithApp(MontereyNetwork montereyNetwork) {
         DeploymentWebProxy deploymentWebProxy = new DeploymentWebProxy(montereyNetwork.getAttribute(MontereyNetwork.MANAGEMENT_URL), gson, new CredentialsConfig("myname", "mypass", HTTP_AUTH.REALM, HTTP_AUTH.METHOD));
