@@ -18,6 +18,24 @@ import brooklyn.policy.basic.AbstractPolicy
 import brooklyn.policy.trait.Suspendable;
 
 public class ResizerPolicy<T extends Number> extends AbstractPolicy implements SensorEventListener<T>, Suspendable {
+    
+    // TODO Need a better approach for resume/suspend: currently DynamicCluster calls this on start/stop,
+    // but other entities do not!
+    
+    // TODO ResizerPolicy should work with anything that is "Resizable", rather than only DynamicCluster.
+    // Should not lookup DynamicCluster.SERVICE_UP or Group.getCurrentSize
+    
+    // TODO The onEvent and policy generics say <T extends Number>, but then it is treated as a double in calculateDesiredSize.
+    // Should be documented...
+
+    // TODO It's unfortunate we need to use an executor, and bad that we instantiate a single-threaded executor here.
+    // Want a better way...
+    
+    // TODO Currently only does one resize at a time.
+    // Imagine the threshold is set to 100. If we ramp up workrate to 450, but the policy sees events for 101 then 450, 
+    // the first event will cause it to provision a single new instance. After the several minutes that this takes, it 
+    // will then concurrently provision up to the correct number of instances (in this case, 5).
+    
     private static final Logger LOG = LoggerFactory.getLogger(ResizerPolicy.class)
 
     private AttributeSensor<T> source
@@ -120,8 +138,7 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
 
     // TODO Could have throttling etc so don't repeatedly call grow; standard control theory stuff such as
     //      PID design (proportional-integral-derivative)
-    // TODO Could show example of overriding this to do something smarter. For example, if metric is a number then
-    //      grow/shrink by some scale, e.g. grow by (metric <= lowerBound ? 0 : (metric < lowerBound*2 ? 1 : (metric < lowerBound*4 ? 2 : 3)))
+    // TODO Could show example of overriding this to do something smarter
     protected int calculateDesiredSize(double currentMetric) {
         def currentSize = dynamicCluster.getCurrentSize()
         def desiredSize
