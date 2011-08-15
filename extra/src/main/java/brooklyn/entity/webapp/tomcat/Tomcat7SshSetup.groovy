@@ -14,7 +14,7 @@ import brooklyn.util.internal.LanguageUtils
  * Start a {@link TomcatServer} in a {@link Location} accessible over ssh.
  */
 public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
-    public static final String DEFAULT_VERSION = "7.0.19"
+    public static final String DEFAULT_VERSION = "7.0.20"
     public static final String DEFAULT_INSTALL_DIR = DEFAULT_INSTALL_BASEDIR+"/"+"tomcat"
     public static final String DEFAULT_DEPLOY_SUBDIR = "webapps"
     public static final int DEFAULT_FIRST_HTTP_PORT = 8080
