@@ -7,12 +7,28 @@ Brooklyn.location = (function() {
     var map;
     var loc;
 
+    function LocationTab() {
+        this.id = 'location';
+
+         this.update = function() {
+            if (typeof this.entity_id !== 'undefined') {
+                $.getJSON("../entity/locations?id=" + this.entity_id, updateLocationsAux).error(
+                    function() {$(Brooklyn.eventBus).trigger('update_failed', "Location view could not get locations.");});
+            }
+        }
+
+        this.makeHandlers();
+    }
+
+    LocationTab.prototype = new Brooklyn.tabs.Tab();
+
+    
     function updateLocation(event) {
         reset();
         $(event.target.parentNode).addClass('row_selected');
 
         var result = Brooklyn.util.getDataTableSelectedRowData(tableId, event);
-        //map.setCenter(result.marker.position);
+
         result.infowindow.open(map, result.marker);
     }
 
@@ -105,24 +121,21 @@ Brooklyn.location = (function() {
         }
     }
 
-    function updateLocations(e,id) {
-        if (typeof id !== 'undefined') {
-            $.getJSON("../entity/locations?id=" + id, updateLocationsAux).error(
-                function() {$(Brooklyn.eventBus).trigger('update_failed', "Location view could not get locations.");});
-        }
-    }
-
     function displayLatLong(lat, lon) {
         var displayLatLng =  (!lat || lat > 0 ? '+' : '') + lat + ' ' + (!lon || lon > 0 ? '+' : '') + lon;
         return displayLatLng.replace(/-/g, '&#8209;');
     }
 
     function init() {
+        var locationTab = new LocationTab();
+        $(Brooklyn.eventBus).bind("entity_selected", locationTab.handler.entitySelected);
+        $(Brooklyn.eventBus).bind("tab_selected", locationTab.handler.tabSelected);
         $(Brooklyn.eventBus).bind("tab_selected", locationsTabSelected);
-        $(Brooklyn.eventBus).bind("entity_selected", updateLocations);
     }
 
-    return { init : init, locationsTabSelected : locationsTabSelected, displayLatLong : displayLatLong }
+    return {
+        init : init
+    }
 
 })();
 

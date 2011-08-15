@@ -1,48 +1,59 @@
 Brooklyn.activity = (function(){
+    function ActivityTab() {
+        this.id = 'activity';
 
-    // Config
-    var id = '#activity-data';
-    var aoColumns = [ { "mDataProp": "displayName", "sTitle": "Name", "sWidth":"16%" },
-                      { "mDataProp": "description", "sTitle": "Description", "sWidth":"17%" },
-                      { "mDataProp": "submitTimeUtc", "sTitle": "Submit time", "sWidth":"17%" },
-                      { "mDataProp": "startTimeUtc", "sTitle": "Start time", "sWidth":"17%" },
-                      { "mDataProp": "endTimeUtc", "sTitle": "End time", "sWidth":"17%" },
-                      { "mDataProp": "currentStatus", "sTitle": "Status", "sWidth":"15%" }];
+        this.updateTable = function(json){
+            var aoColumns = [ { "mDataProp": "displayName", "sTitle": "Name", "sWidth":"16%" },
+                              { "mDataProp": "description", "sTitle": "Description", "sWidth":"17%" },
+                              { "mDataProp": "submitTimeUtc", "sTitle": "Submit time", "sWidth":"17%" },
+                              { "mDataProp": "startTimeUtc", "sTitle": "Start time", "sWidth":"17%" },
+                              { "mDataProp": "endTimeUtc", "sTitle": "End time", "sWidth":"17%" },
+                              { "mDataProp": "currentStatus", "sTitle": "Status", "sWidth":"15%" }];
 
-    function updateTable(json){
-        Brooklyn.util.getDataTable(id, ".", aoColumns, updateLog, json);
+            Brooklyn.util.getDataTable('#activity-data', ".", aoColumns, updateLog, json, undefined);
+            $(Brooklyn.eventBus).trigger('update_ok');
+        }
+
+        this.update = function() {
+            if (typeof this.entity_id !== 'undefined') {
+                $.getJSON("../entity/activity?id=" + this.entity_id, this.updateTable).error(
+                    function() {$(Brooklyn.eventBus).trigger('update_failed', "Could not get activity data.");}
+                );
+                clearLog();
+            }
+        }
+
+        this.makeHandlers();
     }
 
-    function clearLog(event){
+    ActivityTab.prototype = new Brooklyn.tabs.Tab();
+
+    function updateLog(event){
+        var settings = Brooklyn.util.getDataTable('#activity-data').fnSettings().aoData;
+        for(row in settings) {
+            var currentRow = $(settings[row].nTr)
+            if(currentRow.hasClass('row_selected')){
+                currentRow.removeClass('row_selected');
+                break;
+            }
+        }
+
+        $(event.target.parentNode).addClass('row_selected');
+
+        var result = Brooklyn.util.getDataTableSelectedRowData('#activity-data', event);
+        var logBox=document.getElementById("logbox");
+        logBox.value=result.detailedStatus;
+    }
+
+    function clearLog(){
         var logBox = document.getElementById("logbox");
         logBox.value="";
     }
 
-    function updateLog(event){
-        var settings = Brooklyn.util.getDataTable(id).fnSettings().aoData;
-        for(row in settings) {
-       		$(settings[row].nTr).removeClass('row_selected');
-   		}
- 		$(event.target.parentNode).addClass('row_selected');
-
-        var result = Brooklyn.util.getDataTableSelectedRowData(id, event);
-        if(result) {
-            var logBox=document.getElementById("logbox");
-            logBox.value=result.detailedStatus;
-        }
-    }
-
-    function updateList(e, entity_id) {
-        if (entity_id) {
-            $.getJSON("../entity/activity?id=" + entity_id, updateTable).error(
-                function() {$(Brooklyn.eventBus).trigger('update_failed', "Could not get activity data.");}
-            );
-            clearLog();
-        }
-    }
-
     function init() {
-        $(Brooklyn.eventBus).bind("entity_selected", updateList);
+        var activityTab = new ActivityTab();
+        $(Brooklyn.eventBus).bind("entity_selected", activityTab.handler.entitySelected);
+        $(Brooklyn.eventBus).bind("tab_selected", activityTab.handler.tabSelected);
     }
 
     return {
@@ -50,5 +61,6 @@ Brooklyn.activity = (function(){
     };
 
 })();
+
 $(document).ready(Brooklyn.activity.init);
 

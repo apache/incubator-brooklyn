@@ -26,7 +26,6 @@ Brooklyn.tabs = (function() {
 
         this.handler = {};
         this.handler.entitySelected = function(e, entity_id) {
-            //console.log("entitySelected handler called with entity_id: " + entity_id);
             that.entitySelected(entity_id);
         };
 
@@ -44,13 +43,10 @@ Brooklyn.tabs = (function() {
      * this.update(). If the tab is deselected, it stops listening.
      */
     Tab.prototype.tabSelected = function(tab_id) {
-        //console.log(tab_id + "   " + this.id);
         if (tab_id === this.id) {
-            //console.log("binding");
             this.handler.update();
             $(Brooklyn.eventBus).bind("update", this.handler.update);
         } else {
-            //console.log("unbinding");
             $(Brooklyn.eventBus).unbind("update", this.handler.update);
         }
     }
