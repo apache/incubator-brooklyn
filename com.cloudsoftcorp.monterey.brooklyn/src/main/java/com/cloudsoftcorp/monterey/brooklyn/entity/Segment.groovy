@@ -21,10 +21,14 @@ public class Segment extends AbstractEntity {
     // Currently leaving that in the logic behind Dmn1NetworkInfo.getActivityModel.
 
     // TODO Share constant for all nodes plus segment?
-    public static final BasicAttributeSensor<String> ID = [ String, "monterey.segment.id", "Segment id" ]
-    public static final BasicAttributeSensor<String> NAME = [ String, "monterey.segment.name", "Segment name" ]
-    public static final BasicAttributeSensor<Integer> WORKRATE_MSGS_PER_SEC = [ Double, "monterey.workrate.msgsPerSec", "Messages per sec" ]
-    public static final BasicAttributeSensor<NodeId> MEDIATOR = [ NodeId, "monterey.segment.mediator", "Mediator that contains this segment" ]
+    public static final BasicAttributeSensor<String> ID =
+            [ String, "monterey.segment.id", "Segment id" ]
+    public static final BasicAttributeSensor<String> NAME =
+            [ String, "monterey.segment.name", "Segment name" ]
+    public static final BasicAttributeSensor<Integer> WORKRATE_MSGS_PER_SEC =
+            [ Double, "monterey.workrate.msgsPerSec", "Messages per sec" ]
+    public static final BasicAttributeSensor<NodeId> MEDIATOR = 
+            [ NodeId, "monterey.segment.mediator", "Mediator that contains this segment" ]
     
     private final MontereyNetworkConnectionDetails connectionDetails;
     private final String segmentId;
@@ -58,7 +62,10 @@ public class Segment extends AbstractEntity {
             double msgCountPerSec = (msgCount/report.getReportPeriodDuration())*1000;
             
             setAttribute WORKRATE_MSGS_PER_SEC, msgCountPerSec
-            if (LOG.isLoggable(Level.FINEST)) LOG.finest(String.format("(node=%s, msgCount=%s, duration=%s), ",report.getSourceNodeAddress(), msgCount, report.getReportPeriodDuration()));
+            if (LOG.isLoggable(Level.FINEST)) { 
+                LOG.finest(String.format("(node=%s, msgCount=%s, duration=%s), ",
+                        report.getSourceNodeAddress(), msgCount, report.getReportPeriodDuration()));
+            }
         }
     }
 }

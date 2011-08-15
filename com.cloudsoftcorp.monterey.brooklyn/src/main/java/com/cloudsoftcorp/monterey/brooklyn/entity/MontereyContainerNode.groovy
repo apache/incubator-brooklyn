@@ -59,20 +59,37 @@ public class MontereyContainerNode extends AbstractGroup implements Startable {
 
     private static final Logger LOG = Loggers.getLogger(MontereyContainerNode.class);
     
-    public static final BasicConfigKey<String> NETWORK_NODE_INSTALL_DIR = [String.class, "monterey.networknode.installdir", "Monterey network node installation directory", "/home/monterey/monterey-network-node" ]
-    public static final BasicConfigKey<String> SUGGESTED_TRUST_STORE = [String.class, "monterey.networknode.truststore", "Monterey network node truststore" ]
-    public static final BasicConfigKey<Integer> SUGGESTED_MONTEREY_NODE_PORT = [Integer.class, "monterey.networknode.nodeport", "Monterey network node comms port" ]
-    public static final BasicConfigKey<Integer> SUGGESTED_MONTEREY_HUB_LPP_PORT = [Integer.class, "monterey.networknode.hublpp.port", "Monterey network node hub lpp port" ]
+    public static final BasicConfigKey<String> NETWORK_NODE_INSTALL_DIR =
+            [ String.class, "monterey.networknode.installdir", "Monterey network node installation directory", "/home/monterey/monterey-network-node" ]
+    public static final BasicConfigKey<String> SUGGESTED_TRUST_STORE =
+            [ String.class, "monterey.networknode.truststore", "Monterey network node truststore" ]
+    public static final BasicConfigKey<Integer> SUGGESTED_MONTEREY_NODE_PORT =
+            [ Integer.class, "monterey.networknode.nodeport", "Monterey network node comms port" ]
+    public static final BasicConfigKey<Integer> SUGGESTED_MONTEREY_HUB_LPP_PORT =
+            [ Integer.class, "monterey.networknode.hublpp.port", "Monterey network node hub lpp port" ]
     
-    public static final BasicAttributeSensor<Integer> CREATION_ID = [ String, "monterey.networknode.creationId", "Node creation id" ]
-    public static final BasicAttributeSensor<NodeId> NODE_ID = [ NodeId.class, "monterey.networknode.nodeId", "Node node id" ]
-    public static final BasicAttributeSensor<String> STATUS = [ String, "monterey.networknode.status", "Node status" ]
+    public static final BasicAttributeSensor<Integer> CREATION_ID =
+            [ String, "monterey.networknode.creationId", "Node creation id" ]
+    public static final BasicAttributeSensor<NodeId> NODE_ID =
+            [ NodeId.class, "monterey.networknode.nodeId", "Node node id" ]
+    public static final BasicAttributeSensor<String> STATUS =
+            [ String, "monterey.networknode.status", "Node status" ]
                                     
-    public static final Effector<Void> REVERT = new EffectorInferredFromAnnotatedMethod<Void>(MontereyContainerNode.class, "revert", "Revert the entity");
-    public static final Effector<Void> RELEASE = new EffectorInferredFromAnnotatedMethod<Void>(MontereyContainerNode.class, "release", "Release (i.e. shutdown) the entity");
-    public static final Effector<Void> KILL = new EffectorInferredFromAnnotatedMethod<Void>(MontereyContainerNode.class, "kill", "Kill the entity");
-    public static final Effector<Void> ROLLOUT = new EffectorWithExplicitImplementation<MontereyContainerNode, Void>("rollout", Void.TYPE,
-            Arrays.<ParameterType<?>>asList(new BasicParameterType<Dmn1NodeType>("type", Dmn1NodeType.class, "The type that this node should become", null)),
+    public static final Effector<Void> REVERT = 
+            new EffectorInferredFromAnnotatedMethod<Void>(MontereyContainerNode.class, "revert", "Revert the entity");
+    public static final Effector<Void> RELEASE =
+            new EffectorInferredFromAnnotatedMethod<Void>(MontereyContainerNode.class, "release", "Release (i.e. shutdown) the entity");
+    public static final Effector<Void> KILL =
+            new EffectorInferredFromAnnotatedMethod<Void>(MontereyContainerNode.class, "kill", "Kill the entity");
+
+    public static final Effector<Void> ROLLOUT = new EffectorWithExplicitImplementation<MontereyContainerNode, Void>(
+            "rollout",
+            Void.TYPE,
+            Arrays.<ParameterType<?>>asList(
+                new BasicParameterType<Dmn1NodeType>("type", 
+                    Dmn1NodeType.class,
+                    "The type that this node should become",
+                    null)),
             "Rollout the node as a specific type") {
         private static final long serialVersionUID = 6316740447259603273L;
         public Void invokeEffector(MontereyContainerNode entity, Map m) {
