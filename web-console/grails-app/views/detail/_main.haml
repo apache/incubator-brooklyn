@@ -16,14 +16,14 @@
         #summary-status
         #summary-groups
         #summary-activity
-    #sensors
+    #sensors{:tabindex=>"1"}
         .sensor-table
             %table{:id=>"sensor-data", :class=>"tab-content-table"}
-    #effectors
+    #effectors{:tabindex=>"2"}
         %g:render{:template=>"detail-tabs/effectors"}
-    #location
+    #location{:tabindex=>"3"}
         %g:render{:template=>"detail-tabs/location"}
-    #activity
+    #activity{:tabindex=>"4"}
         %g:render{:template=>"detail-tabs/activity"}
     %p{:class=>"bottom-filler"} &nbsp;
 #status Last update: <span id="status-message">No data yet.</span>
