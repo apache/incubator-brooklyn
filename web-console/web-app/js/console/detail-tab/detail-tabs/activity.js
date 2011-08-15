@@ -54,6 +54,10 @@ Brooklyn.activity = (function(){
         var activityTab = new ActivityTab();
         $(Brooklyn.eventBus).bind("entity_selected", activityTab.handler.entitySelected);
         $(Brooklyn.eventBus).bind("tab_selected", activityTab.handler.tabSelected);
+
+        $('#activity').focus(function() {
+            Brooklyn.util.pauseUpdate(activityTab);
+        });
     }
 
     return {

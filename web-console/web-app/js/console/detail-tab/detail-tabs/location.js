@@ -131,6 +131,10 @@ Brooklyn.location = (function() {
         $(Brooklyn.eventBus).bind("entity_selected", locationTab.handler.entitySelected);
         $(Brooklyn.eventBus).bind("tab_selected", locationTab.handler.tabSelected);
         $(Brooklyn.eventBus).bind("tab_selected", locationsTabSelected);
+
+        $('#location').focus(function() {
+            Brooklyn.util.pauseUpdate(locationTab);
+        });
     }
 
     return {

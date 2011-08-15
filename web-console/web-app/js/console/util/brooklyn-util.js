@@ -1,5 +1,17 @@
 Brooklyn.util = (function(){
 
+    function pauseUpdate(tab){
+        $(Brooklyn.eventBus).unbind("update", tab.handler.update);
+        setTimeout(function () {rebindUpdate(tab)}, 20000);
+        console.log("Updating paused")
+    }
+
+    function rebindUpdate(tab){
+        tab.handler.update();
+        $(Brooklyn.eventBus).bind("update", tab.handler.update);
+        console.log("Updating resumed")
+    }
+
     function typeTest(a, b) {
         return (typeof a == typeof b)
     }
@@ -66,6 +78,7 @@ Brooklyn.util = (function(){
     }
 
     return {
+        pauseUpdate: pauseUpdate,
         getDataTable: getDataTable,
         getDataTableSelectedRowData: getDataTableSelectedRowData,
         testEquivalent: testEquivalent

@@ -62,6 +62,10 @@ Brooklyn.summary = (function() {
         // The summary tab is special. It should start listening to updates
         // without being explicitly selected because it is shown by default.
         $(Brooklyn.eventBus).bind("update", summaryTab.handler.update);
+
+        $('#summary').focus(function() {
+            Brooklyn.util.pauseUpdate(summaryTab);
+        });
     }
 
    return {

@@ -27,9 +27,12 @@ Brooklyn.sensors = (function() {
 
     function init() {
         var tab = new SensorsTab();
-
         $(Brooklyn.eventBus).bind("entity_selected", tab.handler.entitySelected);
         $(Brooklyn.eventBus).bind("tab_selected", tab.handler.tabSelected);
+
+        $('#sensors').focus(function() {
+            Brooklyn.util.pauseUpdate(tab);
+        });
     }
 
     return {
