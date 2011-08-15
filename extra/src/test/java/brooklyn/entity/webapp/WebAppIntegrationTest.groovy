@@ -113,7 +113,9 @@ class WebAppIntegrationTest {
      */
     @Test(groups=["Integration"], dataProvider="basicEntities")
     public void publishesRequestAndErrorCountMetrics(JavaWebApp entity) {
+        entity.pollForHttpStatus = false
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
+        
         String url = entity.getAttribute(JavaWebApp.ROOT_URL) + "does_not_exist"
         
         executeUntilSucceeds(timeout: 10*SECONDS, {
@@ -135,9 +137,9 @@ class WebAppIntegrationTest {
             if (errorCount == null) {
                 return new BooleanWithMessage(false, "errorCount not set yet ($errorCount)")
             } else {
-                assertEquals errorCount, num_reqs
                 // AS 7 seems to take a very long time to report error counts,
                 // hence not using ==.  >= in case error pages include a favicon, etc.
+                assertEquals errorCount, num_reqs
                 assertTrue requestCount >= errorCount
             }
             true
@@ -150,7 +152,9 @@ class WebAppIntegrationTest {
      */
     @Test(groups=["Integration"], dataProvider="basicEntities")
     public void publishesRequestsPerSecondMetric(JavaWebApp entity) {
+        entity.pollForHttpStatus = false
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
+        
         try {
             // reqs/sec initially zero
             executeUntilSucceeds({
@@ -208,8 +212,10 @@ class WebAppIntegrationTest {
     public void publishesZeroRequestsPerSecondMetricRepeatedly(JavaWebApp entity) {
         final int MAX_INTERVAL_BETWEEN_EVENTS = 1000 // should be every 500ms
         final int NUM_CONSECUTIVE_EVENTS = 3
-        
+
+        entity.pollForHttpStatus = false
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
+        
         SubscriptionHandle subscriptionHandle
         SubscriptionContext subContext = entity.owner.getManagementContext().getSubscriptionContext(entity)
         try {
@@ -222,9 +228,9 @@ class WebAppIntegrationTest {
                 long eventTime = 0
                 
                 for (SensorEvent event in events.subList(events.size()-NUM_CONSECUTIVE_EVENTS, events.size())) {
-                    assertEquals(entity, event.getSource())
-                    assertEquals(JavaWebApp.AVG_REQUESTS_PER_SECOND, event.getSensor())
-                    assertEquals(0.0d, event.getValue())
+                    assertEquals event.getSource(), entity
+                    assertEquals event.getSensor(), JavaWebApp.AVG_REQUESTS_PER_SECOND
+                    assertEquals event.getValue(), 0d
                     if (eventTime > 0) assertTrue(event.getTimestamp()-eventTime < MAX_INTERVAL_BETWEEN_EVENTS)
                     eventTime = event.getTimestamp()
                 }

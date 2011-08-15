@@ -53,6 +53,9 @@ public abstract class JavaWebApp extends JavaApp {
     transient HttpSensorAdapter httpAdapter
 
     Map environment = [:]
+    
+    // Set to false to prevent HTTP_SERVER and HTTP_STATUS being updated (useful for integration tests)
+    boolean pollForHttpStatus = true
 
     public JavaWebApp(Map flags=[:], Entity owner=null) {
         super(flags, owner)
@@ -87,11 +90,13 @@ public abstract class JavaWebApp extends JavaApp {
 
     public void initHttpSensors() {
         httpAdapter = new HttpSensorAdapter(this)
-        def host = getAttribute(HOSTNAME)
-        def port = getAttribute(HTTP_PORT)
-        attributePoller.addSensor(HTTP_STATUS, httpAdapter.newStatusValueProvider("http://${host}:${port}/"))
-        attributePoller.addSensor(HTTP_SERVER, httpAdapter.newHeaderValueProvider("http://${host}:${port}/", "Server"))
-        waitForHttpPort()
+        if (pollForHttpStatus) {
+            def host = getAttribute(HOSTNAME)
+            def port = getAttribute(HTTP_PORT)
+            attributePoller.addSensor(HTTP_STATUS, httpAdapter.newStatusValueProvider("http://${host}:${port}/"))
+            attributePoller.addSensor(HTTP_SERVER, httpAdapter.newHeaderValueProvider("http://${host}:${port}/", "Server"))
+            waitForHttpPort()
+        }
     }
 
     @Override

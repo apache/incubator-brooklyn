@@ -100,7 +100,7 @@ class ResizerPolicyTest {
         assertEquals 7, policyNoResize.calculateDesiredSize(175)
     }
     
-    @Test(enabled=false, groups=["Integration"])
+    @Test(groups=["Integration"])
     public void testWithTomcatServers() {
         /**
          * One DynamicWebAppClster with resizer policy
@@ -120,6 +120,7 @@ class ResizerPolicyTest {
             newEntity: { Map properties ->
                 properties.httpPort = port++
                 def tc = new TomcatServer(properties)
+                tc.pollForHttpStatus = false
                 tc.setConfig(TomcatServer.SUGGESTED_JMX_PORT, jmxP++)
                 tc.setConfig(TomcatServer.SUGGESTED_SHUTDOWN_PORT, shutdownP++)
                 tc
@@ -138,18 +139,22 @@ class ResizerPolicyTest {
         TomcatServer tc = cluster.getMembers().toArray()[0]
         2.times { connectToURL(tc.getAttribute(TomcatServer.ROOT_URL)) }
         
-        executeUntilSucceeds(timeout: 3*SECONDS, cluster, {
-            assertEquals 2.0d/cluster.currentSize, cluster.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)
-        })
-        
-        executeUntilSucceedsWithShutdown(cluster, {
-            if (!p.resizing.get()) {
-                assertEquals 1.0d, cluster.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)
-                assertEquals 2, policy.calculateDesiredSize(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)
-                assertEquals 2, cluster.currentSize
-                return true
-            }
-            println "locked, should be looping"
-        }, timeout: 10*SECONDS)
+        try {
+            executeUntilSucceeds(timeout: 3*SECONDS, {
+                assertEquals 2.0d/cluster.currentSize, cluster.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)
+            })
+
+            executeUntilSucceeds(timeout: 10*SECONDS, {
+                if (!p.resizing.get()) {
+                    assertEquals 1.0d, cluster.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)
+                    assertEquals 2, policy.calculateDesiredSize(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)
+                    assertEquals 2, cluster.currentSize
+                    return true
+                }
+                println "locked, should be looping"
+            })
+        } finally {
+            cluster.stop()
+        }
     }
 }
