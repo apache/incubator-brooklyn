@@ -269,16 +269,15 @@ public class WebAppIntegrationTest {
                 "swf-booking-mvc.war",
                 "swf-booking-mvc/spring/intro",
             ],
-            [   new JBoss6Server(owner:application, portIncrement:PORT_INCREMENT),
-                "swf-booking-mvc.war",
-                "swf-booking-mvc/spring/intro",
-                // FIXME latest seam-booking does not work with AS6
-				// "seam-booking-as6.war", "seam-booking-as6/",
-            ],
-            [   new JBoss7Server(owner:application, httpPort:DEFAULT_HTTP_PORT),
-                "seam-booking-as7.war",
-                "seam-booking-as7/", // TODO replace with correct full path
-            ],
+            // FIXME seam-booking does not work
+//            [   new JBoss6Server(owner:application, portIncrement:PORT_INCREMENT),
+//				"seam-booking-as6.war",
+//                "seam-booking-as6/",
+//            ],
+//            [   new JBoss7Server(owner:application, httpPort:DEFAULT_HTTP_PORT),
+//                "seam-booking-as7.war",
+//                "seam-booking-as7/",
+//            ],
         ]
     }
 
