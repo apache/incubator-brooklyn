@@ -194,12 +194,14 @@ private class TestWebApplication extends AbstractApplication {
                                 "Stop Tomcat": stopTomcat,
                                 "Restart Tomcat": restartTomcat])
 
-            this.getExecutionContext().submit([
-                                            tags:["EFFECTOR"],
-                                            tag:this,
-                                            displayName: "Update values",
-                                            description: "This updates sensor values"],
-                                                new MyRunnable(this));
+            for (def i = 0; i < 10; ++i) {
+                this.getExecutionContext().submit([
+                                                      tags:["EFFECTOR"],
+                                                      tag:this,
+                                                      displayName: "Update values (test " + i + ")",
+                                                      description: "This updates sensor values"],
+                                                  new MyRunnable(this));
+            }
         }
 
         public <T> Task<T> invoke(Effector<T> eff, Map<String, ?> parameters) {
