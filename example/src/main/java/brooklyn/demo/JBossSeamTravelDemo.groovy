@@ -33,14 +33,14 @@ public class JBossSeamTravelDemo extends AbstractApplication {
         println "Starting in locations: "+ids
         List<Location> locations = Locations.getLocationsById(ids)
 
-        SpringTravel app = new JBossSeamTravelDemo(name:'brooklyn-jboss-wide-area-demo',
+        JBossSeamTravelDemo app = new JBossSeamTravelDemo(name:'brooklyn-jboss-wide-area-demo',
                 displayName:'Brooklyn Wide-Area Seam Travel Demo Application')
 
         BrooklynLauncher.manage(app)
         app.start(locations)
     }
     
-    final DynamicFabric fabric
+    final DynamicFabric webFabric
     final DynamicGroup nginxEntities
     final GeoscalingDnsService geoDns
     
