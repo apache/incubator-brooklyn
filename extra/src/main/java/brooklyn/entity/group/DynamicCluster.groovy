@@ -88,6 +88,9 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     public Integer resize(Integer desiredSize) {
         synchronized (members) {
             int delta = desiredSize - currentSize
+            // Make a local copy of this - otherwise the closure later on tries to bind to a variable called logger in
+            // the context of the class that is invoking the closure (maybe related to it being a static class member?)
+            final Logger logger = DynamicCluster.logger
             logger.info "Resize from {} to {}; delta = {}", currentSize, desiredSize, delta
     
             Collection<Entity> addedEntities = []
