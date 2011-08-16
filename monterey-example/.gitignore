@@ -3,3 +3,5 @@ test-output/
 target/
 .classpath
 .project
+brooklyn.log
+brooklyn.log.*
