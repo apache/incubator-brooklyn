@@ -40,6 +40,13 @@ public class Locations {
             streetAddress : "Appleton Tower, Edinburgh",
             latitude : 55.94944, longitude : -3.16028, 
             iso3166 : "GB-EDH" ]
+    public static final String MAGENTA = "magenta"
+    public static final Map MAGENTA_COORDS = [
+            id : LOCALHOST,
+            displayName : "Magenta",
+            streetAddress : "Torphichen Place, Edinburgh",
+            latitude : 55.94944, longitude : -3.16028,
+            iso3166 : "GB-EDH" ]
     public static final Map EC2_VANILLA_IMAGES = [
             "eu-west-1":"ami-89def4fd",
             "us-east-1":"ami-2342a94a",
@@ -48,11 +55,11 @@ public class Locations {
             "ap-northeast-1":"ami-f0e842f1",
         ]
     public static final Map EC2_MONTEREY_IMAGES = [
-        "eu-west-1":"ami-901323e4",
-        "us-east-1":"ami-3d814754",
-        "us-west-1":"ami-01e7b544",
-        "ap-southeast-1":"ami-bcd1a9ee",
-        "ap-northeast-1":"ami-98ce7b99",
+	        "eu-west-1":"ami-901323e4",
+	        "us-east-1":"ami-3d814754",
+	        "us-west-1":"ami-01e7b544",
+	        "ap-southeast-1":"ami-bcd1a9ee",
+	        "ap-northeast-1":"ami-98ce7b99",
         ]
     public static final Map EC2_GEMFIRE_IMAGES = [
             "eu-west-1":"ami-ca2f1fbe",
@@ -131,6 +138,37 @@ public class Locations {
         return result
     }
 
+    /** Andrew's Magenta Cluster Location */
+    public static FixedListMachineProvisioningLocation newMagentaClusterLocation() {
+        final Collection<SshMachineLocation> MAGENTA_CLUSTER_MACHINES = [
+	            "aqua",
+	            "black",
+	            "blue",
+	            "fuchsia",
+	            "gray",
+	            "green",
+	            "lime",
+	            "maroon",
+	            "navy",
+	            "olive",
+	            "purple",
+	            "red",
+	            "silver",
+	            "yellow",
+				// Not enough physical RAM for all 16 VMs
+				// "teal", "white",
+            ].collect { new SshMachineLocation(address:InetAddress.getByName(it), userName:"root") }
+
+        MachineProvisioningLocation<SshMachineLocation> result =
+            new FixedListMachineProvisioningLocation<SshMachineLocation>(
+                machines : MAGENTA_CLUSTER_MACHINES,
+                latitude : MAGENTA_COORDS["latitude"],
+                longitude : MAGENTA_COORDS["longitude"],
+                displayName : "Magenta Cluster"
+            )
+        return result
+    }
+
     public static List<Location> getLocationsById(List<String> ids) {
         List<Location> locations = ids.collect { String location ->
             if (Locations.AWS_REGIONS.contains(location)) {
@@ -141,6 +179,8 @@ public class Locations {
                 Locations.newMontereyEastLocation()
             } else if (Locations.EDINBURGH == location) {
                 Locations.newMontereyEdinburghLocation()
+            } else if (Locations.MAGENTA == location) {
+                Locations.newMagentaClusterLocation()
             }
         }
         return locations
