@@ -121,7 +121,7 @@ class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
             "sed -i.bk 's/8080/${httpPort}/' $brooklynConfig",
             "sed -i.bk 's/9990/${managementPort}/' $brooklynConfig",
             "sed -i.bk 's/1090/${jmxPort}/' $brooklynConfig",
-            "sed -i.bk 's/127.0.0.1/${machine.address.hostName}/' $brooklynConfig",
+            "sed -i.bk 's/inet-address value=\"127.0.0.1\"/any-address/' $brooklynConfig",
             "sed -i.bk 's/\\(path=\"deployments\"\\)/\\1 deployment-timeout=\"600\"/' $brooklynConfig"
         ]
         return script
