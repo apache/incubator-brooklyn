@@ -21,8 +21,8 @@ import brooklyn.launcher.BrooklynLauncher
 import brooklyn.location.Location
 import brooklyn.policy.ResizerPolicy
 
-public class JbossSeamTravelDemo extends AbstractApplication {
-    public static final Logger LOG = LoggerFactory.getLogger(JbossSeamTravelDemo)
+public class JBossSeamTravelDemo extends AbstractApplication {
+    public static final Logger LOG = LoggerFactory.getLogger(JBossSeamTravelDemo)
 
     public static final List<String> DEFAULT_LOCATIONS = [ Locations.LOCALHOST ]
 
@@ -33,7 +33,7 @@ public class JbossSeamTravelDemo extends AbstractApplication {
         println "Starting in locations: "+ids
         List<Location> locations = Locations.getLocationsById(ids)
 
-        SpringTravel app = new JbossSeamTravelDemo(name:'brooklyn-jboss-wide-area-demo',
+        SpringTravel app = new JBossSeamTravelDemo(name:'brooklyn-jboss-wide-area-demo',
                 displayName:'Brooklyn Wide-Area Seam Travel Demo Application')
 
         BrooklynLauncher.manage(app)
@@ -44,7 +44,7 @@ public class JbossSeamTravelDemo extends AbstractApplication {
     final DynamicGroup nginxEntities
     final GeoscalingDnsService geoDns
     
-    JbossSeamTravelDemo(Map props=[:]) {
+    JBossSeamTravelDemo(Map props=[:]) {
         super(props)
         
         Closure webServerFactory = { Map properties, Entity cluster ->
