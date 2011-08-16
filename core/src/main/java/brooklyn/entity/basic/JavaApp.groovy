@@ -35,6 +35,7 @@ public abstract class JavaApp extends AbstractService {
         setConfigIfValNonNull(SUGGESTED_JMX_PORT, properties.jmxPort)
     }
 
+    @Override
     protected void initSensors() {
         initJmxSensors()
     }

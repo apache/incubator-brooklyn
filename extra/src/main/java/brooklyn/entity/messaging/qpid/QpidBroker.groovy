@@ -62,7 +62,7 @@ public class QpidBroker extends JavaApp {
     }
 
     @Override
-    public void initSensors() {
+    public void addJmxSensors() {
         attributePoller.addSensor(JavaApp.SERVICE_UP, { computeNodeUp() } as ValueProvider)
     }
 
@@ -112,7 +112,7 @@ public class QpidBroker extends JavaApp {
     }
 }
 
-public abstract class QpidBinding extends AbstractEntity {
+public abstract class QpidDestination extends AbstractEntity {
     String virtualHost
 
     protected ObjectName virtualHostManager
@@ -121,7 +121,7 @@ public abstract class QpidBinding extends AbstractEntity {
     transient JmxSensorAdapter jmxAdapter
     transient AttributePoller attributePoller
 
-    public QpidBinding(Map properties=[:], Entity owner=null) {
+    public QpidDestination(Map properties=[:], Entity owner=null) {
         super(properties, owner)
 
         Preconditions.checkNotNull name, "Name must be specified"
@@ -172,7 +172,7 @@ public abstract class QpidBinding extends AbstractEntity {
     }
 }
 
-public class QpidQueue extends QpidBinding implements Queue {
+public class QpidQueue extends QpidDestination implements Queue {
     public QpidQueue(Map properties=[:], Entity owner=null) {
         super(properties, owner)
     }
@@ -195,7 +195,7 @@ public class QpidQueue extends QpidBinding implements Queue {
     }
 }
 
-public class QpidTopic extends QpidBinding implements Topic {
+public class QpidTopic extends QpidDestination implements Topic {
     public QpidTopic(Map properties=[:], Entity owner=null) {
         super(properties, owner)
     }

@@ -22,6 +22,7 @@ import brooklyn.event.SensorEventListener
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
 import brooklyn.event.basic.AttributeMap
+import brooklyn.event.basic.ConfiguredAttributeSensor
 import brooklyn.location.Location
 import brooklyn.management.ExecutionContext
 import brooklyn.management.ManagementContext
@@ -334,6 +335,10 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     public <T> T setAttribute(AttributeSensor<T> attribute, T val) {
         LOG.trace "setting attribute {} to {} on {}", attribute.name, val, this
         attributesInternal.update(attribute, val);
+    }
+
+    public <T> T setAttribute(ConfiguredAttributeSensor<T> configuredSensor) {
+        setAttribute(configuredSensor, getConfig(configuredSensor.configKey))
     }
 
     @Override
