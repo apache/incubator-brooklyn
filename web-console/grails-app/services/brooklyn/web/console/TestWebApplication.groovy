@@ -74,7 +74,7 @@ private class TestWebApplication extends AbstractApplication {
             Entity e;
             void run() {
                 while (true) {
-                    if ( e!=null ) {
+                    if (e != null) {
                         application.removeOwnedChild(e)
                         e = null;
                         Thread.sleep(20*1000L);
