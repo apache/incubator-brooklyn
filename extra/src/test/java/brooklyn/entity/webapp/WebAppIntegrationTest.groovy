@@ -14,6 +14,7 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
+import brooklyn.entity.Application
 import brooklyn.entity.basic.JavaApp
 import brooklyn.entity.webapp.jboss.JBoss6Server
 import brooklyn.entity.webapp.jboss.JBoss7Server
@@ -32,28 +33,30 @@ import brooklyn.util.internal.TimeExtras
  * Tests that implementations of JavaWebApp can start up and shutdown, 
  * post request and error count metrics and deploy wars, etc.
  * 
- * Currently tests TomcatServer, JBoss6Server and JBoss7Server.
+ * Currently tests {@link TomcatServer}, {@link JBoss6Server} and {@link JBoss7Server}.
  */
-class WebAppIntegrationTest {
-
+public class WebAppIntegrationTest {
     private static final Logger logger = LoggerFactory.getLogger(WebAppIntegrationTest.class)
     
     static { TimeExtras.init() }
     
     // Don't use 8080 since that is commonly used by testing software
-    static int DEFAULT_HTTP_PORT = 7880
+    public static final int DEFAULT_HTTP_PORT = 7880
     
     // Port increment for JBoss 6.
-    final static int PORT_INCREMENT = 400
+    public static final int PORT_INCREMENT = 400
+
+    // The owner application entity for these tests
+    Application application = new TestApplication()
     
-    @BeforeMethod(groups=["Integration"])
+    @BeforeMethod(groups = "Integration")
     public void failIfHttpPortInUse() {
         if (isPortInUse(DEFAULT_HTTP_PORT, 5000L)) {
             fail "someone is already listening on port $DEFAULT_HTTP_PORT; tests assume that port $DEFAULT_HTTP_PORT is free on localhost"
         }
     }
     
-    @AfterMethod(groups=["Integration"])
+    @AfterMethod(groups = "Integration")
     public void ensureTomcatIsShutDown() {
         Socket shutdownSocket = null;
         SocketException gotException = null;
@@ -72,7 +75,6 @@ class WebAppIntegrationTest {
 
         if (socketClosed == false) {
             logger.error "Tomcat did not shut down - this is a failure of the last test run";
-            logger.warn "I'm sending a message to the Tomcat shutdown port";
             OutputStreamWriter writer = new OutputStreamWriter(shutdownSocket.getOutputStream());
             writer.write("SHUTDOWN\r\n");
             writer.flush();
@@ -83,20 +85,24 @@ class WebAppIntegrationTest {
     }
     
     /**
-     * Provides instances of TomcatServer and JBoss{6,7}Server to the tests below.
+     * Provides instances of {@link TomcatServer}, {@link JBoss6Server} and {@link JBoss7Server} to the tests below.
+     *
+     * TODO combine the data provider here with live integration test
+     *
+     * @see WebAppLiveIntegrationTest#basicEntities()
      */
-    @DataProvider(name="basicEntities")
+    @DataProvider(name = "basicEntities")
     public Object[][] basicEntities() {
-        TomcatServer tomcat = [owner: new TestApplication(), httpPort: DEFAULT_HTTP_PORT]
-        JBoss6Server jboss6 = [owner: new TestApplication(), portIncrement: PORT_INCREMENT]
-        JBoss7Server jboss7 = [owner: new TestApplication(), httpPort: DEFAULT_HTTP_PORT]
-        return [[tomcat], [jboss6], [jboss7]]
+        TomcatServer tomcat = [ owner:application, httpPort:DEFAULT_HTTP_PORT ]
+        JBoss6Server jboss6 = [ owner:application, portIncrement:PORT_INCREMENT ]
+        JBoss7Server jboss7 = [ owner:application, httpPort:DEFAULT_HTTP_PORT ]
+        return [ [ tomcat ], [ jboss6 ], [ jboss7 ] ]
     }
 
     /**
      * Checks an entity can start, set SERVICE_UP to true and shutdown again.
      */
-    @Test(groups=["Integration"], dataProvider="basicEntities")
+    @Test(groups = "Integration", dataProvider = "basicEntities")
     public void canStartAndStop(JavaWebApp entity) {
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         executeUntilSucceedsWithFinallyBlock ([:], {
@@ -111,19 +117,19 @@ class WebAppIntegrationTest {
      * Checks that an entity correctly sets request and error count metrics by
      * connecting to a non-existent URL several times.
      */
-    @Test(groups=["Integration"], dataProvider="basicEntities")
+    @Test(groups = "Integration", dataProvider = "basicEntities")
     public void publishesRequestAndErrorCountMetrics(JavaWebApp entity) {
         entity.pollForHttpStatus = false
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         
         String url = entity.getAttribute(JavaWebApp.ROOT_URL) + "does_not_exist"
         
-        executeUntilSucceeds(timeout: 10*SECONDS, {
+        executeUntilSucceeds(timeout:10*SECONDS, {
             assertTrue entity.getAttribute(JavaApp.SERVICE_UP)
         })
         
-        final int num_reqs = 10
-        num_reqs.times {
+        final int n = 10
+        n.times {
             def connection = connectToURL(url)
             int status = ((HttpURLConnection) connection).getResponseCode()
             log.info "connection to {} gives {}", url, status
@@ -136,12 +142,12 @@ class WebAppIntegrationTest {
             
             if (errorCount == null) {
                 return new BooleanWithMessage(false, "errorCount not set yet ($errorCount)")
-            } else {
-                // AS 7 seems to take a very long time to report error counts,
-                // hence not using ==.  >= in case error pages include a favicon, etc.
-                assertEquals errorCount, num_reqs
-                assertTrue requestCount >= errorCount
             }
+
+            // AS 7 seems to take a very long time to report error counts,
+            // hence not using ==.  >= in case error pages include a favicon, etc.
+            assertEquals errorCount, n
+            assertTrue requestCount >= errorCount
             true
         }, useGroovyTruth:true, timeout:20*SECONDS)
     }
@@ -150,7 +156,7 @@ class WebAppIntegrationTest {
      * Checks an entity publishes correct requests/second figures and that these figures
      * fall to zero after a period of no activity.
      */
-    @Test(groups=["Integration"], dataProvider="basicEntities")
+    @Test(groups = "Integration", dataProvider = "basicEntities")
     public void publishesRequestsPerSecondMetric(JavaWebApp entity) {
         entity.pollForHttpStatus = false
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
@@ -162,10 +168,9 @@ class WebAppIntegrationTest {
                 if (activityValue == null)
                     return new BooleanWithMessage(false, "activity not set yet ($activityValue)")
 
-                assertTrue activityValue in Double
                 assertEquals activityValue, 0.0d
                 true
-            }, useGroovyTruth: true)
+            }, useGroovyTruth:true)
             
             // apply workload on 1 per sec; reqs/sec should update
             executeUntilSucceeds({
@@ -195,11 +200,10 @@ class WebAppIntegrationTest {
             
             executeUntilSucceeds({
                 Double activityValue = entity.getAttribute(JavaWebApp.AVG_REQUESTS_PER_SECOND)
-                assertTrue activityValue in Double
+                assertNotNull activityValue
                 assertEquals activityValue, 0.0d
                 true
             })
-
         } finally {
             entity.stop()
         }
@@ -208,7 +212,7 @@ class WebAppIntegrationTest {
     /**
      * Tests that we get consecutive events with zero workrate, and with suitably small timestamps between them.
      */
-    @Test(groups=["Integration"], dataProvider="basicEntities")
+    @Test(groups = "Integration", dataProvider = "basicEntities")
     public void publishesZeroRequestsPerSecondMetricRepeatedly(JavaWebApp entity) {
         final int MAX_INTERVAL_BETWEEN_EVENTS = 1000 // should be every 500ms
         final int NUM_CONSECUTIVE_EVENTS = 3
@@ -217,25 +221,25 @@ class WebAppIntegrationTest {
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         
         SubscriptionHandle subscriptionHandle
-        SubscriptionContext subContext = entity.owner.getManagementContext().getSubscriptionContext(entity)
+        SubscriptionContext subContext = entity.owner.managementContext.getSubscriptionContext(entity)
+
         try {
             final List<SensorEvent> events = new CopyOnWriteArrayList<SensorEvent>()
             subscriptionHandle = subContext.subscribe(entity, JavaWebApp.AVG_REQUESTS_PER_SECOND, {
                     println("publishesRequestsPerSecondMetricRepeatedly.onEvent: $it"); events.add(it) } as SensorEventListener)
             
             executeUntilSucceeds({
-                assertTrue(events.size() > NUM_CONSECUTIVE_EVENTS)
+                assertTrue events.size() > NUM_CONSECUTIVE_EVENTS
                 long eventTime = 0
                 
                 for (SensorEvent event in events.subList(events.size()-NUM_CONSECUTIVE_EVENTS, events.size())) {
-                    assertEquals event.getSource(), entity
-                    assertEquals event.getSensor(), JavaWebApp.AVG_REQUESTS_PER_SECOND
-                    assertEquals event.getValue(), 0d
+                    assertEquals event.source, entity
+                    assertEquals event.sensor, JavaWebApp.AVG_REQUESTS_PER_SECOND
+                    assertEquals event.value, 0.0d
                     if (eventTime > 0) assertTrue(event.getTimestamp()-eventTime < MAX_INTERVAL_BETWEEN_EVENTS)
                     eventTime = event.getTimestamp()
                 }
             })
-
         } finally {
             if (subscriptionHandle) subContext.unsubscribe(subscriptionHandle)
             entity.stop()
@@ -246,25 +250,42 @@ class WebAppIntegrationTest {
      * Twins the entities given by basicEntities() with links to WAR files
      * they should be able to deploy.  Correct deployment can be checked by
      * pinging the given URL.
+     *
+     * <ul>
+     * <li>Everything can deploy hello world
+     * <li>Tomcat can deploy Spring travel
+     * <li>JBoss can deploy Seam travel
+     * </ul>
      */
-    @DataProvider(name="entitiesWithWARAndURL")
+    @DataProvider(name = "entitiesWithWARAndURL")
     public Object[][] entitiesWithWAR() {
-        // Everything can deploy hello world
         basicEntities().collect {
-            [it[0], "hello-world.war", "hello-world"]
-        } + [ // Tomcat can deploy Spring travel
-            [new TomcatServer(owner: new TestApplication(), httpPort: DEFAULT_HTTP_PORT), 
-                "swf-booking-mvc.war", "swf-booking-mvc/spring/intro"]
-        ] /*+ [ // JBoss can deploy Seam travel
-            [new JBoss6Server(owner: new TestApplication(), httpPort: DEFAULT_HTTP_PORT), null, null],
-            [new JBoss7Server(owner: new TestApplication(), httpPort: DEFAULT_HTTP_PORT), null, null],
-        ]*/
+            [   it[0],
+                "hello-world.war",
+                "hello-world/",
+            ]
+        } + [
+            [   new TomcatServer(owner:application, httpPort:DEFAULT_HTTP_PORT), 
+                "swf-booking-mvc.war",
+                "swf-booking-mvc/spring/intro",
+            ],
+            [   new JBoss6Server(owner:application, portIncrement:PORT_INCREMENT),
+                "swf-booking-mvc.war",
+                "swf-booking-mvc/spring/intro",
+                // FIXME latest seam-booking does not work with AS6
+				// "seam-booking-as6.war", "seam-booking-as6/",
+            ],
+            [   new JBoss7Server(owner:application, httpPort:DEFAULT_HTTP_PORT),
+                "seam-booking-as7.war",
+                "seam-booking-as7/", // TODO replace with correct full path
+            ],
+        ]
     }
 
     /**
      * Tests given entity can deploy the given war.  Checks given httpURL to confirm success.
      */
-    @Test(groups=["Integration"], dataProvider="entitiesWithWARAndURL")
+    @Test(groups = "Integration", dataProvider = "entitiesWithWARAndURL")
     public void warDeployments(JavaWebApp entity, String war, String httpURL) {
         URL resource = getClass().getClassLoader().getResource(war)
         assertNotNull resource
@@ -275,7 +296,6 @@ class WebAppIntegrationTest {
             // TODO get this URL from a WAR file entity
             assertTrue urlRespondsWithStatusCode200(entity.getAttribute(JavaWebApp.ROOT_URL) + httpURL)
             true
-        }, abortOnError:false, timeout: 10*SECONDS)
+        }, abortOnError:false, timeout:10*SECONDS)
     }
-
 }
