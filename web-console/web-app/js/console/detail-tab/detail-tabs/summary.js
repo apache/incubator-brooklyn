@@ -63,7 +63,7 @@ Brooklyn.summary = (function() {
         // without being explicitly selected because it is shown by default.
         $(Brooklyn.eventBus).bind("update", summaryTab.handler.update);
 
-        $('#summary').focus(function() {
+        $('#summary').click(function() {
             Brooklyn.util.pauseUpdate(summaryTab);
         });
     }

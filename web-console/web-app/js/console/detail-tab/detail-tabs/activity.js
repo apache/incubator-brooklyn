@@ -55,7 +55,7 @@ Brooklyn.activity = (function(){
         $(Brooklyn.eventBus).bind("entity_selected", activityTab.handler.entitySelected);
         $(Brooklyn.eventBus).bind("tab_selected", activityTab.handler.tabSelected);
 
-        $('#activity').focus(function() {
+        $('#activity-data, #logbox').click(function() {
             Brooklyn.util.pauseUpdate(activityTab);
         });
     }

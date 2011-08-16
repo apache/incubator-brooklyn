@@ -132,7 +132,7 @@ Brooklyn.location = (function() {
         $(Brooklyn.eventBus).bind("tab_selected", locationTab.handler.tabSelected);
         $(Brooklyn.eventBus).bind("tab_selected", locationsTabSelected);
 
-        $('#location').focus(function() {
+        $('#location-data, #map-canvas').click(function() {
             Brooklyn.util.pauseUpdate(locationTab);
         });
     }

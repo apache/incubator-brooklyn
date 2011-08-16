@@ -2,7 +2,7 @@ Brooklyn.util = (function(){
 
     function pauseUpdate(tab){
         $(Brooklyn.eventBus).unbind("update", tab.handler.update);
-        setTimeout(function () {rebindUpdate(tab)}, 20000);
+        setTimeout(function () {rebindUpdate(tab)}, 15000);
     }
 
     function rebindUpdate(tab){
