@@ -163,6 +163,9 @@ class DynamicClusterTest {
         assertEquals 0, entity.counter.get()
     }
     
+    /**
+     * This tests the fix for ENGR-1826.
+     */
     @Test
     public void failingEntitiesDontBreakClusterActions() {
         Application app = new TestApplication()
