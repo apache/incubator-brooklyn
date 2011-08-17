@@ -46,7 +46,7 @@ public class GeoscalingWebClient {
         
         public Domain(int id, String name) {
             this.id = id;
-            this.name = name;
+            this.name = name.toLowerCase();
         }
         
         public List<SmartSubdomain> getSmartSubdomains() {
@@ -56,6 +56,7 @@ public class GeoscalingWebClient {
         }
         
         public SmartSubdomain getSmartSubdomain(String name) {
+            name = name.toLowerCase();
             for (SmartSubdomain s : getSmartSubdomains()) {
                 if (s.name.equals(name)) return s;
             }
@@ -99,7 +100,7 @@ public class GeoscalingWebClient {
         public SmartSubdomain(Domain parent, int id, String name) {
             this.parent = parent;
             this.id = id;
-            this.name = name;
+            this.name = name.toLowerCase();
         }
         
         public void configure(long flags, String phpScript) {
@@ -170,6 +171,7 @@ public class GeoscalingWebClient {
     }
     
     public Domain getPrimaryDomain(String name) {
+        name = name.toLowerCase();
         for (Domain d : getPrimaryDomains()) {
             if (d.name.equals(name)) return d;
         }
@@ -185,6 +187,7 @@ public class GeoscalingWebClient {
     
     public void createPrimaryDomain(String name) {
         try {
+            name = name.toLowerCase();
             String url = MessageFormat.format("https://{0}/{1}?module=domains", HOST, PATH);
             
             HttpPost request = new HttpPost(url);
@@ -292,6 +295,7 @@ public class GeoscalingWebClient {
 
     private void createSmartSubdomain(int primaryDomainId, String smartSubdomainName) {
         try {
+            smartSubdomainName = smartSubdomainName.toLowerCase();
             String url = MessageFormat.format(
                     "https://{0}/{1}?module=smart_subdomains&id={2,number,#}",
                     HOST, PATH, primaryDomainId);
@@ -330,6 +334,7 @@ public class GeoscalingWebClient {
             long flags, String phpScript) {
         
         try {
+            smartSubdomainName = smartSubdomainName.toLowerCase();
             String url = MessageFormat.format(
                     "https://{0}/{1}?module=smart_subdomain&id={2,number,#}&subdomain_id={3,number,#}",
                     HOST, PATH, primaryDomainId, smartSubdomainId);
