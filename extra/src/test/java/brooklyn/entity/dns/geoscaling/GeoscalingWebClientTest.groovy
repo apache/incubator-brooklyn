@@ -33,18 +33,27 @@ class GeoscalingWebClientTest {
     
     
     @Test(groups = "Integration")
-    public void testWebClient() {
+    public void testSimpleNames() {
+        testWebClient(PRIMARY_DOMAIN, SUBDOMAIN);
+    }
+    
+    @Test(groups = "Integration")
+    public void testMixedCaseNames() {
+        testWebClient("MixedCase-"+PRIMARY_DOMAIN, "MixedCase-"+SUBDOMAIN);
+    }
+    
+    public void testWebClient(String primaryDomainName, String smartSubdomainName) {
         GeoscalingWebClient geoscaling = new GeoscalingWebClient();
         geoscaling.login(USERNAME, PASSWORD);
         
-        assertNull(geoscaling.getPrimaryDomain(PRIMARY_DOMAIN));
-        geoscaling.createPrimaryDomain(PRIMARY_DOMAIN);
-        Domain domain = geoscaling.getPrimaryDomain(PRIMARY_DOMAIN);
+        assertNull(geoscaling.getPrimaryDomain(primaryDomainName));
+        geoscaling.createPrimaryDomain(primaryDomainName);
+        Domain domain = geoscaling.getPrimaryDomain(primaryDomainName);
         assertNotNull(domain);
         
-        assertNull(domain.getSmartSubdomain(SUBDOMAIN));
-        domain.createSmartSubdomain(SUBDOMAIN);
-        SmartSubdomain smartSubdomain = domain.getSmartSubdomain(SUBDOMAIN);
+        assertNull(domain.getSmartSubdomain(smartSubdomainName));
+        domain.createSmartSubdomain(smartSubdomainName);
+        SmartSubdomain smartSubdomain = domain.getSmartSubdomain(smartSubdomainName);
         assertNotNull(smartSubdomain);
         
         smartSubdomain.configure(
@@ -56,9 +65,9 @@ class GeoscalingWebClientTest {
         // TODO: rename subdomain
         
         smartSubdomain.delete();
-        assertNull(domain.getSmartSubdomain(SUBDOMAIN));
+        assertNull(domain.getSmartSubdomain(smartSubdomainName));
         domain.delete();
-        assertNull(geoscaling.getPrimaryDomain(PRIMARY_DOMAIN));
+        assertNull(geoscaling.getPrimaryDomain(primaryDomainName));
         
         geoscaling.logout();
     }
