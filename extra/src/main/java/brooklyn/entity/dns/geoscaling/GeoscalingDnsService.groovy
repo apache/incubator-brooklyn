@@ -12,8 +12,7 @@ import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.Domain
 import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.SmartSubdomain
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
-import brooklyn.event.basic.ConfiguredAttributeSensor
-import brooklyn.util.IdGenerator;
+import brooklyn.util.IdGenerator
 
 
 class GeoscalingDnsService extends AbstractGeoDnsService {
@@ -90,7 +89,11 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
             smartSubdomain = primaryDomain.getSmartSubdomain(smartSubdomainName);
         }
         
-        smartSubdomain.configure(PROVIDE_CITY_INFO, script);
+        if (smartSubdomain)
+            smartSubdomain.configure(PROVIDE_CITY_INFO, script);
+        else
+            log.warn("Failed to retrieve or create GeoScaling smart subdomain '"+smartSubdomainName+"."+primaryDomainName+
+                "', aborting attempt to configure service");
         
         gwc.logout();
     }
