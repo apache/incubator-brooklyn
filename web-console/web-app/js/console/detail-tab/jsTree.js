@@ -33,6 +33,11 @@ Brooklyn.jsTree = (function(parent) {
                     });
     }
 
+    function selectNodeByEntityId(entityId) {
+        $('#jstree-node-id-' + entityId).click();
+        return false;
+    }
+
     function init() {
         $('#search-input').keyup(getLatestTree);
         $("#search-input").corner();
@@ -41,7 +46,7 @@ Brooklyn.jsTree = (function(parent) {
     }
 
     return {
-        init: init
+        init: init, selectNodeByEntityId: selectNodeByEntityId
     };
 
 }(Brooklyn || {}));

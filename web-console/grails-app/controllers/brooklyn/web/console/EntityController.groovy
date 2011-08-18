@@ -72,14 +72,11 @@ class EntityController {
         if (id) {
             Entity entity = entityService.getEntity(id)
             if (entity != null) {
-                List<Entity> parents = entityService.getAncestorsOf(entity);
+                List<Entity> parents = entityService.getAncestorsOf(entity)
                 parents.reverse()
-                String childName = entity.displayName
-                def result = []
-                result += childName
-                for(p in parents){
-                    Entity parent = p
-                    result += parent.displayName
+                def result = [[entity.id, entity.displayName]]
+                for(parent in parents){
+                    result.add([parent.id, parent.displayName])
                 }
                 render(result as JSON)
             } else {

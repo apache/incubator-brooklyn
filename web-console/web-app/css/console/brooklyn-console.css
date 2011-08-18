@@ -78,6 +78,7 @@ li#master-filler-tab{
 div#navigation{
     height:20px;
     background:#deedf7;
+    font-weight: bold;
 }
 
 .debug-search-box {
