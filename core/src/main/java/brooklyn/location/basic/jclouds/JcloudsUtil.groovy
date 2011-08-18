@@ -36,7 +36,6 @@ import org.jclouds.predicates.InetSocketAddressConnect;
 import org.jclouds.scriptbuilder.InitBuilder;
 import org.jclouds.scriptbuilder.domain.Statement;
 import org.jclouds.scriptbuilder.domain.Statements;
-import org.jclouds.ssh.jsch.config.JschSshClientModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -171,8 +170,8 @@ public class JcloudsUtil {
             properties.setProperty("jclouds.ec2.ami-owners", "")
         }
 
-        // ImmutableSet.<Module>of(new JschSshClientModule(), new Log4JLoggingModule()); to add log4j integration
-        Iterable<Module> modules = ImmutableSet.<Module> of(new JschSshClientModule());
+        // ImmutableSet.<Module>of(new Log4JLoggingModule()); to add log4j integration
+        Iterable<Module> modules = ImmutableSet.<Module> of();
 
         ComputeServiceContextFactory computeServiceFactory = new ComputeServiceContextFactory();
         
