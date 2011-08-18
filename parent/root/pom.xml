@@ -435,13 +435,20 @@
                                 <phase>package</phase>
                                 <configuration>
                                     <target>
+                                        <taskdef resource="net/sf/antcontrib/antcontrib.properties"
+                                                 classpathref="maven.plugin.classpath"/>
                                         <taskdef name="plantuml" classname="net.sourceforge.plantuml.ant.PlantUmlTask" classpathref="maven.plugin.classpath"/>
-                                        <plantuml output="${project.build.directory}/plantuml">
-                                            <fileset dir="${basedir}/src/main/java">
-                                                <include name="**/*.java" />
-                                                <include name="**/*.groovy" />
-                                            </fileset>
-                                        </plantuml>
+                                        <if>
+											<available file="${basedir}/src/main/java" type="dir" />
+											<then>
+		                                        <plantuml output="${project.build.directory}/plantuml">
+		                                            <fileset dir="${basedir}/src/main/java">
+		                                                <include name="**/*.java" />
+		                                                <include name="**/*.groovy" />
+		                                            </fileset>
+		                                        </plantuml>
+											</then>
+                                        </if>
                                     </target>
                                 </configuration>
                             </execution>
@@ -456,6 +463,17 @@
                                 <groupId>org.apache.ant</groupId>
                                 <artifactId>ant</artifactId>
                                 <version>${ant.version}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>ant-contrib</groupId>
+                                <artifactId>ant-contrib</artifactId>
+                                <version>1.0b3</version>
+                                <exclusions>
+                                    <exclusion>
+                                        <groupId>ant</groupId>
+                                        <artifactId>ant</artifactId>
+                                    </exclusion>
+                                </exclusions>
                             </dependency>
                             <dependency>
                                 <groupId>net.sourceforge.plantuml</groupId>
