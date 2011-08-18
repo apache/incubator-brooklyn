@@ -327,8 +327,22 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
             }
         } else {
             //active
-            if (t==null) t = getThread()  //possible race on entry with initialization, but should be resolved now (according to task.thread)
-            assert t!=null : "shouldn't be possible not to have a current thread for $this as we were started and not ended, thread is "+t
+            if (t==null) t = getThread()
+        
+            // Normally, it's not possible for thread==null as we were started and not ended
+            
+            // However, there is a race where the task starts sand completes between the calls to getThread()
+            // at the start of the method and this call to getThread(), so both return null even though
+            // the intermediate checks returned started==true isDone()==false.
+            
+            
+            if (t == null) {
+                if (isDone()) {
+                    return getStatusString(verbosity)
+                } else {
+                    throw new IllegalStateException("Task $this has no thread set but is started and not done!")
+                }
+            }
 
             ThreadInfo ti = ManagementFactory.threadMXBean.getThreadInfo t.getId(), (verbosity<=0 ? 0 : verbosity==1 ? 1 : Integer.MAX_VALUE)
             if (getThread()==null)
