@@ -86,7 +86,9 @@ class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
         // script must be backgrounded otherwise it will never return.
         List<String> script = [
             "$installDir/bin/${SERVER_TYPE}.sh --server-config $brooklynConfig -Djboss.server.base.dir=$runDir/$SERVER_TYPE " + 
-                "-Djboss.server.base.url=file://$runDir/$SERVER_TYPE >> $runDir/console 2>&1 </dev/null &",
+                "-Djboss.server.base.url=file://$runDir/$SERVER_TYPE " +
+                "-Djava.net.preferIPv4Stack=true -Djava.net.preferIPv6Addresses=false" +
+                " >> $runDir/console 2>&1 </dev/null &",
         ]
         return script
     }
