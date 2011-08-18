@@ -136,8 +136,6 @@ public enum Lifecycle {
     }
 }
 
-
-
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.PARAMETER)
 public @interface Create {
@@ -155,26 +153,31 @@ public @interface Error {
 public @interface PreStart {
     String value();
 }
+
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.PARAMETER)
 public @interface Configure {
     String value();
 }
+
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.PARAMETER)
 public @interface PostStart {
     String value();
 }
+
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.PARAMETER)
 public @interface PreSop {
     String value();
 }
+
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.PARAMETER)
 public @interface PostStop {
     String value();
 }
+
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.PARAMETER)
 public @interface Destroy {
