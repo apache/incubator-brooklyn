@@ -3,7 +3,7 @@
  * Supplied under license http://www.cloudsoftcorp.com/license/montereyDeveloperEdition
  * or such subsequent license agreed between Cloudsoft Corporation Ltd and the licensee.
  */
-package brooklyn.location.basic.aws;
+package brooklyn.location.basic.jclouds;
 
 import static org.jclouds.compute.util.ComputeServiceUtils.execHttpResponse;
 import static org.jclouds.scriptbuilder.domain.Statements.appendFile;
@@ -52,8 +52,8 @@ import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import com.google.inject.Module;
 
-public class JCloudsUtil {
-    private static final Logger LOG = LoggerFactory.getLogger(JCloudsUtil.class);
+public class JcloudsUtil {
+    private static final Logger LOG = LoggerFactory.getLogger(JcloudsUtil.class);
     
     public static String APT_INSTALL = "apt-get install -f -y -qq --force-yes";
 
@@ -96,7 +96,7 @@ public class JCloudsUtil {
         // TODO Includes workaround for NodeMetadata's equals/hashcode method being wrong.
         
         Map<? extends NodeMetadata, ExecResponse> scriptResults = computeService.runScriptOnNodesMatching(
-                JCloudsUtil.predicateMatchingById(node), 
+                JcloudsUtil.predicateMatchingById(node), 
                 statement,
                 new RunScriptOptions().nameTask(scriptName));
         if (scriptResults.isEmpty()) {
@@ -163,7 +163,7 @@ public class JCloudsUtil {
                 "ap-northeast-1":"https://ec2.ap-northeast-1.amazonaws.com",
                 ]
         String endpoint = endpoints.get(conf.providerLocationId)
-        properties.setProperty(Constants.PROPERTY_ENDPOINT, endpoint);
+        if (endpoint != null) properties.setProperty(Constants.PROPERTY_ENDPOINT, endpoint);
         
         if (conf.imageOwner) {
             properties.setProperty("jclouds.ec2.ami-owners", conf.imageOwner)
@@ -253,7 +253,7 @@ public class JCloudsUtil {
      * also be a public one. The method tries to guess what will work.
      */
     public static String getNodeAddress(NodeMetadata node) {
-        String addr = JCloudsUtil.getFirstReachableAddress(node);
+        String addr = JcloudsUtil.getFirstReachableAddress(node);
 
         if (addr != null) {
             return addr;

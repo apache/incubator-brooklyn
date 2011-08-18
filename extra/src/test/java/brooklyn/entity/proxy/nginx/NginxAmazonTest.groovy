@@ -13,12 +13,11 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.Application
 import brooklyn.entity.group.DynamicCluster
-import brooklyn.entity.proxy.nginx.NginxController
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.location.MachineLocation
+import brooklyn.location.basic.aws.AWSCredentialsFromEnv
 import brooklyn.location.basic.aws.AwsLocation
-import brooklyn.location.basic.aws.CredentialsFromEnv
 import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.EntityStartUtils
 
@@ -66,7 +65,7 @@ public class NginxAmazonTest {
         assertNotNull resource
         sshPublicKey = new File(resource.path)
         
-        CredentialsFromEnv creds = new CredentialsFromEnv();
+        AWSCredentialsFromEnv creds = new AWSCredentialsFromEnv();
         aws = new AwsLocation(identity:creds.getAWSAccessKeyId(), credential:creds.getAWSSecretKey(), providerLocationId:REGION_NAME)
     }
     

@@ -9,6 +9,7 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.location.basic.aws.AWSCredentialsFromEnv;
 
 class AwsLocationTest {
     private static final Logger LOG = LoggerFactory.getLogger(AwsLocationTest.class)
@@ -35,7 +36,7 @@ class AwsLocationTest {
         assertNotNull resource
         sshPublicKey = new File(resource.path)
         
-        CredentialsFromEnv creds = new CredentialsFromEnv();
+        AWSCredentialsFromEnv creds = new AWSCredentialsFromEnv();
         locFactory = new AwsLocationFactory([
                 identity:creds.getAWSAccessKeyId(), 
                 credential:creds.getAWSSecretKey(), 

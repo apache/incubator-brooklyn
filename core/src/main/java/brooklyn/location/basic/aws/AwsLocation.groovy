@@ -22,6 +22,7 @@ import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.NoMachinesAvailableException
 import brooklyn.location.basic.AbstractLocation
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.location.basic.jclouds.JcloudsUtil;
 import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.internal.Repeater
 
@@ -104,7 +105,7 @@ public class AwsLocation extends AbstractLocation implements MachineProvisioning
         String groupId = (allconf.groupId ?: LanguageUtils.newUid()).replace("-", "")
         allconf.userName = ROOT_USERNAME
  
-        ComputeService computeService = JCloudsUtil.buildComputeService(allconf);
+        ComputeService computeService = JcloudsUtil.buildComputeService(allconf);
         
         NodeMetadata node = null;
         try {
@@ -117,7 +118,7 @@ public class AwsLocation extends AbstractLocation implements MachineProvisioning
                 throw new IllegalStateException("No nodes returned by jclouds create-nodes in location ${allconf.providerLocationId}");
             }
 
-            String vmIp = JCloudsUtil.getFirstReachableAddress(node);
+            String vmIp = JcloudsUtil.getFirstReachableAddress(node);
             
             // Wait for the VM to be reachable over SSH
             LOG.info("Started VM in ${allconf.providerLocationId}; waiting for it to be sshable by "+ROOT_USERNAME+"@"+vmIp);
@@ -176,7 +177,7 @@ public class AwsLocation extends AbstractLocation implements MachineProvisioning
 
             ComputeService computeService = null;
             try {
-                computeService = JCloudsUtil.buildComputeService(conf);
+            computeService = JcloudsUtil.buildComputeService(conf);
                 computeService.destroyNode(instanceId);
             } finally {
                 if (computeService != null) {
@@ -252,7 +253,7 @@ public class AwsLocation extends AbstractLocation implements MachineProvisioning
         
         // setup the users
         if (properties.userName && properties.userName != ROOT_USERNAME) {
-            Statement setupUserStatement = JCloudsUtil.setupUserAndExecuteStatements(properties.userName, properties.sshPublicKey,
+            Statement setupUserStatement = JcloudsUtil.setupUserAndExecuteStatements(properties.userName, properties.sshPublicKey,
                     Collections.<Statement>emptyList());
             options.runScript(setupUserStatement);
         }
@@ -269,7 +270,7 @@ public class AwsLocation extends AbstractLocation implements MachineProvisioning
     }
 
     private String getPublicHostname(NodeMetadata node, Map allconf) {
-        String vmIp = JCloudsUtil.getFirstReachableAddress(node);
+        String vmIp = JcloudsUtil.getFirstReachableAddress(node);
         
         Map sshConfig = [:]
         if (allconf.sshPrivateKey) sshConfig.keyFiles = [ allconf.sshPrivateKey.absolutePath ]
