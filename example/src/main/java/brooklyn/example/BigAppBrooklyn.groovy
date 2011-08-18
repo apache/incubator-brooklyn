@@ -12,6 +12,9 @@ import brooklyn.example.PretendLocations.VcloudLocation
 
 
 public class BigAppBrooklyn extends AbstractApplication {
+
+    // FIXME Aspirational for what simple app definition would look like
+    
     Fabric jb = new JBossFabric(displayName:'SeamBookingWebApp', war:'seam-booking.war', this);
     
     MontereyFabric mm = new MontereyFabric(displayName:'SeamBookingTransactions', 

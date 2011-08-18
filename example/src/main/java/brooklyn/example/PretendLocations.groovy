@@ -53,6 +53,11 @@ public class PretendLocations {
         public void propertyMissing(String name, value) { super.propertyMissing(name, value) }
         public Object propertyMissing(String name) { super.propertyMissing(name) }
     }
+    public static class TomcatFabric extends Fabric {
+        public TomcatFabric(Map properties=[:], Group parent=null, Entity template=null) { super(properties, parent, template); }
+        public void propertyMissing(String name, value) { super.propertyMissing(name, value) }
+        public Object propertyMissing(String name) { super.propertyMissing(name) }
+    }
     public static class JBossFabric extends Fabric {
         public JBossFabric(Map properties=[:], Group parent=null, Entity template=null) { super(properties, parent, template); }
         public void propertyMissing(String name, value) { super.propertyMissing(name, value) }

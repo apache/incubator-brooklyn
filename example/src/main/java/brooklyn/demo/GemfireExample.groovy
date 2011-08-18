@@ -14,13 +14,15 @@ import brooklyn.entity.nosql.gemfire.GemfireServer
 import brooklyn.launcher.BrooklynLauncher
 import brooklyn.location.Location
 
-class GemfireDemo extends AbstractApplication {
+class GemfireExample extends AbstractApplication {
+    
+    // FIXME Work in progress; gemfire entities not yet completed...
     
     // FIXME Change GEMFIRE_INSTALL_DIR
     // FIXME Change GemfireSetup's start (should it be "&"), and isRunning
     // FIXME Change GemfireServer.waitForEntityStart, to wait for service to really be up? Rather than just process
     
-    public static final Logger LOG = LoggerFactory.getLogger(GemfireDemo)
+    public static final Logger LOG = LoggerFactory.getLogger(GemfireExample)
     
     private static final File GEMFIRE_CONF_FILE = new File("src/main/resources/gemfire/server-conf.xml")
     private static final File GEMFIRE_JAR_FILE = new File("src/main/resources/gemfire/springtravel-datamodel.jar")
@@ -30,7 +32,7 @@ class GemfireDemo extends AbstractApplication {
 
     final GemfireFabric fabric
     
-    GemfireDemo(Map props=[:]) {
+    GemfireExample(Map props=[:]) {
         super(props)
         
         fabric = new GemfireFabric(owner:this)
@@ -44,13 +46,11 @@ class GemfireDemo extends AbstractApplication {
     
     public static void main(String[] argv) {
         // Parse arguments for location ids and resolve each into a location
-        List<String> ids = argv.length == 0 ? DEFAULT_LOCATIONS : Arrays.asList(argv)
-        println "Starting in locations: "+ids
-        List<Location> locations = Locations.getLocationsById(ids)
+        List<Location> locations = Locations.getLocationsById(Arrays.asList(argv) ?: DEFAULT_LOCATIONS)
 
         // Initialize the Spring Travel application entity
-        GemfireDemo app = new GemfireDemo(name:'gemfire-wide-area-demo',
-                                            displayName:'Gemfire Wide-Area Demo')
+        GemfireExample app = new GemfireExample(name:'gemfire-wide-area-example',
+                displayName:'Gemfire Wide-Area Example')
 
         BrooklynLauncher.manage(app)
         app.start(locations)

@@ -17,41 +17,30 @@ import brooklyn.entity.webapp.ControlledDynamicWebAppCluster
 import brooklyn.entity.webapp.DynamicWebAppCluster
 import brooklyn.entity.webapp.JavaWebApp
 import brooklyn.entity.webapp.jboss.JBoss7Server
+import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.launcher.BrooklynLauncher
 import brooklyn.location.Location
 import brooklyn.policy.ResizerPolicy
 
-public class JBossSeamTravelDemo extends AbstractApplication {
-    public static final Logger LOG = LoggerFactory.getLogger(JBossSeamTravelDemo)
+public abstract class WebAppWideAreaExample extends AbstractApplication {
+    public static final Logger LOG = LoggerFactory.getLogger(WebAppWideAreaExample)
 
     public static final List<String> DEFAULT_LOCATIONS = [ Locations.LOCALHOST ]
 
     private static final String WAR_PATH = "src/main/resources/swf-booking-mvc.war"
 
-    public static void main(String[] argv) {
-        List<String> ids = argv.length == 0 ? DEFAULT_LOCATIONS : Arrays.asList(argv)
-        println "Starting in locations: "+ids
-        List<Location> locations = Locations.getLocationsById(ids)
-
-        JBossSeamTravelDemo app = new JBossSeamTravelDemo(name:'brooklyn-jboss-wide-area-demo',
-                displayName:'Brooklyn Wide-Area Seam Travel Demo Application')
-
-        BrooklynLauncher.manage(app)
-        app.start(locations)
+    private DynamicFabric webFabric
+    private DynamicGroup nginxEntities
+    private GeoscalingDnsService geoDns
+    
+    protected abstract Closure getWebServerFactory();
+    
+    WebAppWideAreaExample(Map props=[:]) {
+        super(props)
     }
     
-    final DynamicFabric webFabric
-    final DynamicGroup nginxEntities
-    final GeoscalingDnsService geoDns
-    
-    JBossSeamTravelDemo(Map props=[:]) {
-        super(props)
-        
-        Closure webServerFactory = { Map properties, Entity cluster ->
-            def server = new JBoss7Server(properties)
-            server.setConfig(JavaWebApp.HTTP_PORT.configKey, 8080)
-            return server;
-        }
+    void init() {
+        Closure webServerFactory = getWebServerFactory()
         
         Closure webClusterFactory = { Map flags, Entity owner ->
             NginxController nginxController = new NginxController(
@@ -88,5 +77,46 @@ public class JBossSeamTravelDemo extends AbstractApplication {
             username: 'cloudsoft', password: 'cl0uds0ft', primaryDomainName: 'geopaas.org', smartSubdomainName: 'brooklyn',
             this)
         geoDns.setTargetEntityProvider(nginxEntities)
+    }
+}
+
+public class JBossWideAreaExample extends WebAppWideAreaExample {
+    public static void main(String[] argv) {
+        List<Location> locations = Locations.getLocationsById(Arrays.asList(argv) ?: DEFAULT_LOCATIONS)
+
+        JBossWideAreaExample app = new JBossWideAreaExample(name:'brooklyn-jboss-wide-area-example',
+                displayName:'Brooklyn Wide-Area Seam Booking Example Application')
+
+        BrooklynLauncher.manage(app)
+        app.start(locations)
+    }
+
+    protected Closure getWebServerFactory() {
+        return { Map properties, Entity cluster ->
+            def server = new JBoss7Server(properties)
+            server.setConfig(JavaWebApp.HTTP_PORT.configKey, 8080)
+            return server;
+        }
+
+    }
+}
+
+public class TomcatWideAreaExample extends WebAppWideAreaExample {
+    public static void main(String[] argv) {
+        List<Location> locations = Locations.getLocationsById(Arrays.asList(argv) ?: DEFAULT_LOCATIONS)
+
+        TomcatWideAreaExample app = new TomcatWideAreaExample(name:'tomcat-wide-area-example',
+                displayName:'Tomcat Wide-Area Example Application')
+
+        BrooklynLauncher.manage(app)
+        app.start(locations)
+    }
+
+    protected Closure getWebServerFactory() {
+        return { Map properties, Entity cluster ->
+            def server = new TomcatServer(properties)
+            server.setConfig(JavaWebApp.HTTP_PORT.configKey, 8080)
+            return server;
+        }
     }
 }
