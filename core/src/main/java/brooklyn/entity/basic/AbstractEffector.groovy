@@ -1,35 +1,34 @@
 package brooklyn.entity.basic;
 
-import groovy.transform.EqualsAndHashCode;
-import groovy.transform.InheritConstructors;
-
 import java.lang.annotation.Annotation
 import java.lang.annotation.ElementType
 import java.lang.annotation.Retention
 import java.lang.annotation.RetentionPolicy
 import java.lang.annotation.Target
-import java.lang.reflect.AnnotatedElement
 import java.lang.reflect.Method
 import java.util.Collections
 import java.util.List
-import java.util.concurrent.Callable
 
-import org.codehaus.groovy.runtime.DefaultGroovyMethods;
-
-import com.google.common.base.Objects;
+import org.codehaus.groovy.runtime.DefaultGroovyMethods
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Effector
 import brooklyn.entity.Entity
 import brooklyn.entity.ParameterType
 import brooklyn.util.internal.LanguageUtils
 
-/** abstract effector implementation whose concrete subclass (often anonymous) will supply
- * the "call(EntityType, Map parameters)" implementation (and the fields in the constructor)
- *
- * @param <EntityType> type of Entity that is supported (Entity for all Entities, or a trait...)
- * @param <T> return type of effector
+import com.google.common.base.Objects
+
+/**
+ * The abstract {@link Effector} implementation.
+ * 
+ * The concrete subclass (often anonymous) will supply the {@link #call(EntityType, Map)} implementation,
+ * and the fields in the constructor.
  */
 public abstract class AbstractEffector<T> implements Effector<T> {
+    public static final Logger LOG = LoggerFactory.getLogger(Effector)
+
     private static final long serialVersionUID = 1832435915652457843L;
 
     private final String name;
