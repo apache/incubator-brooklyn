@@ -50,6 +50,7 @@
         <guava.version>r09</guava.version>
         <ivy.version>2.2.0</ivy.version>
         <ant.version>1.8.2</ant.version>
+        <jclouds.version>1.0.0</jclouds.version>
         <plantuml.version>6121</plantuml.version>
 
         <includedTestGroups></includedTestGroups>
@@ -127,7 +128,7 @@
             <dependency>
             	<groupId>org.jclouds</groupId>
             	<artifactId>jclouds-allcompute</artifactId>
-            	<version>1.0.0</version>
+            	<version>${jclouds.version}</version>
             	<type>jar</type>
             </dependency>
             <dependency>
