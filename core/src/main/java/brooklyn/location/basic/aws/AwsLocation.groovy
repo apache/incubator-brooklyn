@@ -166,25 +166,29 @@ public class AwsLocation extends AbstractLocation implements MachineProvisioning
     }
 
     void release(SshMachineLocation machine) {
-        String instanceId = vmInstanceIds.remove(machine)
-        if (!instanceId) {
-            throw new IllegalArgumentException("Unknown AWS machine "+machine)
-        }
-        
-        LOG.info("Releasing machine $machine in $this, instance id $instanceId");
-        
-        ComputeService computeService = null;
-        try {
-            computeService = JCloudsUtil.buildComputeService(conf);
-            computeService.destroyNode(instanceId);
-        } finally {
-            if (computeService != null) {
-                try {
-                    computeService.getContext().close();
-                } catch (Exception e) {
-                    LOG.error "Problem closing compute-service's context; continuing...", e
+        synchronized(machine) {
+            String instanceId = vmInstanceIds.remove(machine)
+            if (!instanceId) {
+                throw new IllegalArgumentException("Unknown AWS machine "+machine)
+            }
+
+            LOG.info("Releasing machine $machine in $this, instance id $instanceId");
+
+            ComputeService computeService = null;
+            try {
+                computeService = JCloudsUtil.buildComputeService(conf);
+                computeService.destroyNode(instanceId);
+            } finally {
+                if (computeService != null) {
+                    try {
+                        computeService.getContext().close();
+                    } catch (Exception e) {
+                        LOG.error "Problem closing compute-service's context; continuing...", e
+                    }
                 }
             }
+
+            machine.setParentLocation(null)
         }
     }
     
