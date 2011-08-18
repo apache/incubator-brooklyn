@@ -190,7 +190,7 @@ public class WebAppIntegrationTest {
                 }
 
                 Double activityValue = entity.getAttribute(JavaWebApp.AVG_REQUESTS_PER_SECOND)
-                assertEquals activityValue, 10.0d, 0.5d
+                assertEquals activityValue, 10.0d, 1.0d
 
                 true
             }, timeout:10*SECONDS, useGroovyTruth:true)
