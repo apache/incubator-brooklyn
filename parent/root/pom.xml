@@ -49,7 +49,9 @@
         <jansi.version>1.2.1</jansi.version>
         <guava.version>r09</guava.version>
         <ivy.version>2.2.0</ivy.version>
- 
+        <ant.version>1.8.2</ant.version>
+        <plantuml.version>6121</plantuml.version>
+
         <includedTestGroups></includedTestGroups>
         <excludedTestGroups>Integration,Live,WIP</excludedTestGroups>
     </properties>
@@ -127,7 +129,21 @@
             	<artifactId>jclouds-allcompute</artifactId>
             	<version>1.0.0</version>
             	<type>jar</type>
-            	<scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.ant</groupId>
+                <artifactId>ant</artifactId>
+                <version>${ant.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.ant</groupId>
+                <artifactId>ant-launcher</artifactId>
+                <version>${ant.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.sourceforge.plantuml</groupId>
+                <artifactId>plantuml</artifactId>
+                <version>${plantuml.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -364,6 +380,47 @@
                             <author>false</author>
                         </configuration>
                     </plugin>
+		            <plugin>
+		                <artifactId>maven-antrun-plugin</artifactId>
+		                <inherited>true</inherited>
+		                <executions>
+		                    <execution>
+		                        <id>generate-plantuml</id>
+		                        <goals>
+		                            <goal>run</goal>
+		                        </goals>
+		                        <phase>package</phase>
+		                        <configuration>
+		                            <target>
+		                                <taskdef name="plantuml" classname="net.sourceforge.plantuml.ant.PlantUmlTask" classpathref="maven.plugin.classpath"/>
+		                                <plantuml output="${project.build.directory}/plantuml">
+		                                    <fileset dir="${basedir}/src/main/java">
+		                                        <include name="**/*.java" />
+		                                        <include name="**/*.groovy" />
+		                                    </fileset>
+		                                </plantuml>
+		                            </target>
+		                        </configuration>
+		                    </execution>
+		                </executions>
+		                <dependencies>
+		                    <dependency>
+		                        <groupId>org.apache.ant</groupId>
+		                        <artifactId>ant-launcher</artifactId>
+		                        <version>${ant.version}</version>
+		                    </dependency>
+		                    <dependency>
+		                        <groupId>org.apache.ant</groupId>
+		                        <artifactId>ant</artifactId>
+		                        <version>${ant.version}</version>
+		                    </dependency>
+		                    <dependency>
+		                        <groupId>net.sourceforge.plantuml</groupId>
+		                        <artifactId>plantuml</artifactId>
+		                        <version>${plantuml.version}</version>
+		                    </dependency>
+		                </dependencies>
+		            </plugin>
                     <plugin>
                         <artifactId>maven-jar-plugin</artifactId>
                         <inherited>true</inherited>
@@ -449,12 +506,12 @@
                             <dependency>
                                 <groupId>org.apache.ant</groupId>
                                 <artifactId>ant-launcher</artifactId>
-                                <version>1.8.2</version>
+                                <version>${ant.version}</version>
                             </dependency>
                             <dependency>
                                 <groupId>org.apache.ant</groupId>
                                 <artifactId>ant</artifactId>
-                                <version>1.8.2</version>
+                                <version>${ant.version}</version>
                             </dependency>
                             <dependency>
                                 <groupId>org.testng</groupId>
@@ -716,12 +773,12 @@
                             <dependency>
                                 <groupId>org.apache.ant</groupId>
                                 <artifactId>ant-launcher</artifactId>
-                                <version>1.8.2</version>
+                                <version>${ant.version}</version>
                             </dependency>
                             <dependency>
                                 <groupId>org.apache.ant</groupId>
                                 <artifactId>ant</artifactId>
-                                <version>1.8.2</version>
+                                <version>${ant.version}</version>
                             </dependency>
                             <dependency>
                                 <groupId>org.testng</groupId>
