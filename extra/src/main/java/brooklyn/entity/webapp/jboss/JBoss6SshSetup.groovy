@@ -90,8 +90,8 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         List<String> script = [
             "${installDir}/bin/run.sh -Djboss.service.binding.set=${portGroupName} -Djboss.server.base.dir=\$RUN/server " +
                     "-Djboss.server.base.url=file://\$RUN/server -Djboss.messaging.ServerPeerID=${entity.id} " +
-                    "-b 0.0.0.0 ${clusterArg} -c ${serverProfile} " + // ${machine.address.hostName}
-                    ">>\$RUN/console 2>&1 </dev/null &",
+                    "-b 0.0.0.0 ${clusterArg} -c ${serverProfile} " +
+                    ">>\$RUN/console 2>&1 </dev/null &"
         ]
         return script
     }
@@ -103,6 +103,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
             "javax.management.builder.initial" : "org.jboss.system.server.jmx.MBeanServerBuilderImpl",
             "java.util.logging.manager" : "org.jboss.logmanager.LogManager",
             "org.jboss.logging.Logger.pluginClass" : "org.jboss.logging.logmanager.LoggerPluginImpl",
+            "jboss.boot.server.log.dir" : "${runDir}/server/${serverProfile}/log"
         ]
         return options
     }
@@ -133,7 +134,6 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         /* Configuring ports:
            http://community.jboss.org/wiki/ConfiguringMultipleJBossInstancesOnOneMachine
            http://community.jboss.org/wiki/ConfigurePorts
-           http://community.jboss.org/wiki/AS5ServiceBindingManager
            .. changing port numbers with sed is pretty brittle.
         */
         List<String> script = [
