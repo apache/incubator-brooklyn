@@ -1,11 +1,12 @@
 package brooklyn.launcher
 
 import brooklyn.management.ManagementContext
-import org.apache.commons.io.IOUtils
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.webapp.WebAppContext
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import com.google.common.io.ByteStreams
+import com.google.common.io.Closeables
 
 public class WebAppRunner {
     static final Logger log = LoggerFactory.getLogger(WebAppRunner.class);
@@ -35,10 +36,10 @@ public class WebAppRunner {
                 throw new IllegalArgumentException("WAR not found on classpath at $warClasspathPath")
             }
             out = new FileOutputStream(war)
-            IOUtils.copy(is, out)
+            ByteStreams.copy(is, out)
         } finally {
-            IOUtils.closeQuietly(is)
-            IOUtils.closeQuietly(out)
+            Closeables.closeQuietly(is)
+            Closeables.closeQuietly(out)
         }
 
         server = new Server(port)
