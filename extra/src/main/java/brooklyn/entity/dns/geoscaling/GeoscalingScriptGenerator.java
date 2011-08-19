@@ -1,9 +1,5 @@
 package brooklyn.entity.dns.geoscaling;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
@@ -11,6 +7,7 @@ import java.util.Set;
 import java.util.TimeZone;
 
 import brooklyn.entity.dns.HostGeoInfo;
+import brooklyn.util.ResourceUtils;
 
 class GeoscalingScriptGenerator {
     
@@ -24,7 +21,7 @@ class GeoscalingScriptGenerator {
     }
     
     public static String generateScriptString(Date generationTime, Set<HostGeoInfo> hosts) {
-        String template = loadResource(PHP_SCRIPT_TEMPLATE_RESOURCE);
+        String template = ResourceUtils.loadResource(GeoscalingScriptGenerator.class, PHP_SCRIPT_TEMPLATE_RESOURCE);
         SimpleDateFormat sdf = new SimpleDateFormat("E, dd MMM yyyy 'at' HH:mm:ss 'UTC'");
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
         String datestamp = sdf.format(generationTime);
@@ -49,32 +46,6 @@ class GeoscalingScriptGenerator {
         }
         sb.append(");\n");
         return sb.toString();
-    }
-    
-    // TODO: move to sensible "general utilities" location
-    public static String loadResource(String resourceName) {
-        BufferedReader reader = null;
-        try {
-            InputStream is = GeoscalingScriptGenerator.class.getResourceAsStream(resourceName);
-            reader = new BufferedReader(new InputStreamReader(is));
-            StringBuffer sb = new StringBuffer();
-            String line;
-            while ((line = reader.readLine()) != null)
-                sb.append(line).append("\n");
-            return sb.toString();
-            
-        } catch (Exception e) {
-            throw new RuntimeException("Problem reading resource '"+resourceName+"': "+e, e);
-            
-        } finally {
-            try {
-                if (reader != null)
-                    reader.close();
-                
-            } catch (IOException e) {
-                // Um, ignore.
-            }
-        }
     }
     
 }
