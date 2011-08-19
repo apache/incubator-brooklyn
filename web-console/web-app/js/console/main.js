@@ -52,11 +52,11 @@ Brooklyn.main = (function() {
     }
 
     function handleBreadCrumbs(json){
-        var newContent = '';
+        var newContent = '<ul>';
         for (var p = json.length - 1; p > 0; p--) {
-            newContent += ' <a href="#" onClick="Brooklyn.jsTree.selectNodeByEntityId(\'' + json[p] + '\')">' + json[p][1] + '</a> &gt; ';
+            newContent += '<li><a href="#" onClick="Brooklyn.jsTree.selectNodeByEntityId(\'' + json[p] + '\')">' + json[p][1] + '</a></li>';
         }
-        newContent += json[p][1];
+        newContent += '<li>' + json[p][1] + '</li></ul>';
         document.getElementById('navigation').innerHTML = newContent;
     }
 

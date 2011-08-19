@@ -76,9 +76,29 @@ li#master-filler-tab{
 }
 
 div#navigation{
-    height:20px;
+    padding: 5px;
     background:#deedf7;
     font-weight: bold;
+}
+
+div#navigation li  a {
+    white-space: nowrap;
+}
+
+div#navigation li {
+    display: inline;
+}
+
+div#navigation li:after {
+    content: " > ";
+}
+
+div#navigation li:last-child {
+    white-space: nowrap;
+}
+
+div#navigation li:last-child:after {
+    content: "";
 }
 
 .debug-search-box {
