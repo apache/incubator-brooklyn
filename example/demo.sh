@@ -18,4 +18,4 @@ else
 fi
 
 cd $ROOT
-java brooklyn.demo.TomcatSpringTravelDemo ${LOCATIONS}
+java brooklyn.demo.TomcatWideAreaExample ${LOCATIONS}
