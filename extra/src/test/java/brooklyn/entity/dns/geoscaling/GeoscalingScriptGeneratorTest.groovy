@@ -8,6 +8,7 @@ import java.util.Set
 import org.testng.annotations.Test
 
 import brooklyn.entity.dns.HostGeoInfo
+import brooklyn.util.ResourceUtils
 
 
 /**
@@ -26,7 +27,7 @@ class GeoscalingScriptGeneratorTest {
     public void testScriptGeneration() {
         Date generationTime = new Date(0);
         String generatedScript = GeoscalingScriptGenerator.generateScriptString(generationTime, HOSTS);
-        String expectedScript = GeoscalingScriptGenerator.loadResource("/brooklyn/entity/dns/geoscaling/expectedScript.php");
+        String expectedScript = ResourceUtils.loadResource(GeoscalingScriptGeneratorTest.class, "/brooklyn/entity/dns/geoscaling/expectedScript.php");
         assertEquals(expectedScript, generatedScript);
     }
     
