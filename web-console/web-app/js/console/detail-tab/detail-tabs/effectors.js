@@ -5,6 +5,7 @@ Brooklyn.effectors = (function() {
 
     // State
     var selectedRowData;
+    var selectedEntityId;
 
     function updateEffectorsList(json) {
         Brooklyn.util.getDataTable(id, ".", aoColumns, updateParameters, json, false);
@@ -46,6 +47,7 @@ Brooklyn.effectors = (function() {
                 var div = document.createElement('div');
                 var parameterName = selectedRowData.parameters[parameter].name
 
+                textBox.setAttribute("id", parameterName);
                 argumentLabel.setAttribute("name", parameterName + "Label");
                 argumentLabel.setAttribute("for", parameterName + "Input");
                 argumentLabel.textContent = parameterName + ":";
@@ -64,12 +66,30 @@ Brooklyn.effectors = (function() {
              $.getJSON("../entity/effectors?id=" + entity_id, updateEffectorsList).error(
                 function() {$(Brooklyn.eventBus).trigger('update_failed', "Could not get effector data.");}
             );
+            selectedEntityId = entity_id;
         }
     }
 
     function invokeEffector(event){
-        alert('Invoking effectors is currently unsupported');
-        return false;
+        var dataMap = new Object();
+        dataMap["entityId"] = selectedEntityId;
+        dataMap["effectorName"] = selectedRowData.name;
+
+        if(selectedRowData.parameters.length != 0 ){
+            for(parameter in selectedRowData.parameters){
+                var parameterName = selectedRowData.parameters[parameter].name;
+                var parameterValue = $('#'+parameterName).val();
+                dataMap[parameterName] = parameterValue;
+            }
+        }
+
+        $.ajax({
+            url: "../entity/invoke",
+            data: dataMap,
+            success: function(){
+                alert('Effector: "' + selectedRowData.name + '" invoked');
+            }
+        });
     }
 
     function init() {

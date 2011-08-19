@@ -173,8 +173,8 @@ private class TestWebApplication extends AbstractApplication {
             this.sensors.putAll(new TomcatServer().sensors)
 
             List<ParameterType<?>> parameterTypeList = new ArrayList<ParameterType<?>>()
-            ParameterType tomcatStartLocation = new BasicParameterType("Location", Void.class)
-            ParameterType actionDate = new BasicParameterType("Date", Void.class)
+            ParameterType tomcatStartLocation = new BasicParameterType("Location", String.class)
+            ParameterType actionDate = new BasicParameterType("Date", Date.class)
             parameterTypeList.add(tomcatStartLocation)
             parameterTypeList.add(actionDate)
 

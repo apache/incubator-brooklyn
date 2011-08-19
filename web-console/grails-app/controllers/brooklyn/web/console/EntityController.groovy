@@ -12,6 +12,8 @@ import brooklyn.location.basic.AbstractLocation
 import brooklyn.web.console.entity.JsTreeNode
 import brooklyn.web.console.EntityService.NoSuchEntity
 import brooklyn.entity.Effector
+import brooklyn.entity.ParameterType
+import brooklyn.entity.basic.BasicParameterType
 
 @Secured(['ROLE_ADMIN'])
 class EntityController {
@@ -163,5 +165,33 @@ class EntityController {
         }
 
         render([roots] as JSON)
+    }
+
+
+    def invoke = {
+        Entity entity = entityService.getEntity(params.entityId)
+        Collection<Effector> effectorsOfEntity = entityService.getEffectorsOfEntity(entity.id)
+
+        if(effectorsOfEntity != null){
+            Effector effector = effectorsOfEntity.find {
+                it.name.equals(params.effectorName)
+            }
+
+            if(effector != null){
+                List<ParameterType<?>> parameterList = effector.parameters
+                Map<String,?> parameters = new HashMap<String,?>()
+
+                parameterList.each {
+                    String parameterName = it.name
+                    parameters.put(parameterName, (it.parameterClass.newInstance(params.get(parameterName))))
+                }
+
+                entity.invoke(effector, parameters)
+            }
+            else {
+                render(status: 404, text: '{message: "Cannot invoke effector '+ params.effectorName + ' does not exist"}')
+            }
+        }
+        render true
     }
 }
