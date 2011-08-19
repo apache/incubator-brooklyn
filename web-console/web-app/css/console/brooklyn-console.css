@@ -83,6 +83,7 @@ div#navigation{
 
 div#navigation li  a {
     white-space: nowrap;
+    color: #0000ff;
 }
 
 div#navigation li {
