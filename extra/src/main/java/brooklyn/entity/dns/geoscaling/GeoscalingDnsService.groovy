@@ -1,6 +1,7 @@
 package brooklyn.entity.dns.geoscaling
 
 import static brooklyn.entity.dns.geoscaling.GeoscalingWebClient.*
+import static com.google.common.base.Preconditions.*;
 
 import java.util.Map
 import java.util.Set
@@ -10,13 +11,14 @@ import brooklyn.entity.dns.AbstractGeoDnsService
 import brooklyn.entity.dns.HostGeoInfo
 import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.Domain
 import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.SmartSubdomain
+import brooklyn.entity.trait.Configurable
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.util.IdGenerator
 
 
-class GeoscalingDnsService extends AbstractGeoDnsService {
-    public static final boolean RANDOMIZE_SUBDOMAIN_NAME = true;
+class GeoscalingDnsService extends AbstractGeoDnsService implements Configurable {
+    public static final BasicConfigKey RANDOMIZE_SUBDOMAIN_NAME = [ Boolean, "randomize.subdomain.name" ];
     public static final BasicConfigKey GEOSCALING_USERNAME = [ String, "geoscaling.username" ];
     public static final BasicConfigKey GEOSCALING_PASSWORD = [ String, "geoscaling.password" ];
     public static final BasicConfigKey GEOSCALING_PRIMARY_DOMAIN_NAME = [ String, "geoscaling.primary.domain.name" ];
@@ -27,6 +29,9 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
     public static final BasicAttributeSensor MANAGED_DOMAIN =
         [ String, "geoscaling.managed.domain", "Fully qualified domain name that will be geo-redirected" ];
     
+    
+    // These are available only after the configure() method has been invoked.
+    private boolean randomizeSmartSubdomainName;
     private String username;
     private String password;
     private String primaryDomainName;
@@ -36,19 +41,29 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
     public GeoscalingDnsService(Map properties = [:], Entity owner = null) {
         super(properties, owner);
         
-        // TODO But what if config has not been set yet? e.g. user calls:
-        //   def geo = GeoscalingDnsService()
-        //   geo.setConfig(GEOSCALING_USERNAME, "myname")
+        setConfig(RANDOMIZE_SUBDOMAIN_NAME, true); // TODO: remove this eventually?
+        setConfigIfValNonNull(RANDOMIZE_SUBDOMAIN_NAME, properties.randomizeSubdomainName);
+        setConfigIfValNonNull(GEOSCALING_USERNAME, properties.username);
+        setConfigIfValNonNull(GEOSCALING_PASSWORD, properties.password);
+        setConfigIfValNonNull(GEOSCALING_PRIMARY_DOMAIN_NAME, properties.primaryDomainName);
+        setConfigIfValNonNull(GEOSCALING_SMART_SUBDOMAIN_NAME, properties.smartSubdomainName);
+    }
+    
+    public void configure() {
+        randomizeSmartSubdomainName = getConfig(RANDOMIZE_SUBDOMAIN_NAME);
+        username = getConfig(GEOSCALING_USERNAME);
+        password = getConfig(GEOSCALING_PASSWORD);
+        primaryDomainName = getConfig(GEOSCALING_PRIMARY_DOMAIN_NAME);
+        smartSubdomainName = getConfig(GEOSCALING_SMART_SUBDOMAIN_NAME);
+
+        // Ensure all mandatory configuration is provided.
+        checkNotNull(username, "The GeoScaling username is not specified");
+        checkNotNull(password, "The GeoScaling password is not specified");
+        checkNotNull(primaryDomainName, "The GeoScaling primary domain name is not specified");
+        checkNotNull(smartSubdomainName, "The GeoScaling smart subdomain name is not specified");
         
-        username = retrieveFromPropertyOrConfig(properties, "username", GEOSCALING_USERNAME);
-        password = retrieveFromPropertyOrConfig(properties, "password", GEOSCALING_PASSWORD);
-        primaryDomainName = retrieveFromPropertyOrConfig(properties, "primaryDomainName", GEOSCALING_PRIMARY_DOMAIN_NAME);
-        smartSubdomainName = retrieveFromPropertyOrConfig(properties, "smartSubdomainName", GEOSCALING_SMART_SUBDOMAIN_NAME);
-        
-        if (RANDOMIZE_SUBDOMAIN_NAME)
+        if (randomizeSmartSubdomainName)
             smartSubdomainName += "-"+IdGenerator.makeRandomId(8);
-        
-        // FIXME: complain about any missing config
         
         String fullDomain = smartSubdomainName+"."+primaryDomainName;
         log.info("GeoScaling service will configure redirection for '"+fullDomain+"' domain");
@@ -59,7 +74,7 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
     @Override
     public void destroy() {
         // Don't leave randomized subdomains configured on our GeoScaling account.
-        if (RANDOMIZE_SUBDOMAIN_NAME) {
+        if (randomizeSmartSubdomainName) {
             GeoscalingWebClient gwc = [ ];
             gwc.login(username, password);
             Domain primaryDomain = gwc.getPrimaryDomain(primaryDomainName);
@@ -73,7 +88,6 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
         
         super.destroy();
     }
-    
     
     protected void reconfigureService(Set<HostGeoInfo> targetHosts) {
         String script = GeoscalingScriptGenerator.generateScriptString(targetHosts);
@@ -93,15 +107,9 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
             smartSubdomain.configure(PROVIDE_CITY_INFO, script);
         else
             log.warn("Failed to retrieve or create GeoScaling smart subdomain '"+smartSubdomainName+"."+primaryDomainName+
-                "', aborting attempt to configure service");
+                    "', aborting attempt to configure service");
         
         gwc.logout();
-    }
-    
-    private static <T> T retrieveFromPropertyOrConfig(Map properties, String propertyKey, BasicConfigKey<T> configKey) {
-        Object p = properties.get(propertyKey);
-        if (p instanceof T) return (T) p;
-        return getConfig(configKey);
     }
     
 }
