@@ -50,7 +50,7 @@
         <guava.version>r09</guava.version>
         <ivy.version>2.2.0</ivy.version>
         <ant.version>1.8.2</ant.version>
-        <jclouds.version>1.0.0</jclouds.version>
+        <jclouds.version>1.1.1</jclouds.version>
         <plantuml.version>6121</plantuml.version>
 
         <includedTestGroups></includedTestGroups>
