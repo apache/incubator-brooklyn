@@ -5,6 +5,7 @@ import groovy.lang.MetaClass
 
 import java.util.Map
 import java.util.Set
+import java.util.concurrent.TimeUnit;
 
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
@@ -20,6 +21,7 @@ import brooklyn.location.basic.GeneralPurposeLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.test.entity.TestEntity
 import brooklyn.util.internal.EntityStartUtils
+import brooklyn.util.internal.Repeater;
 
 
 public class AbstractGeoDnsServiceTest {
@@ -37,16 +39,16 @@ public class AbstractGeoDnsServiceTest {
         latitude: WEST_LATITUDE, longitude: WEST_LONGITUDE); 
     
     private static final Location EAST_PARENT = new GeneralPurposeLocation(
-            name: "East parent", latitude: EAST_LATITUDE, longitude: EAST_LONGITUDE);
+        name: "East parent", latitude: EAST_LATITUDE, longitude: EAST_LONGITUDE);
     private static final Location EAST_CHILD = new SshMachineLocation(
-            name: "East child", address: EAST_IP, parentLocation: EAST_PARENT); 
+        name: "East child", address: EAST_IP, parentLocation: EAST_PARENT); 
     private static final Location EAST_CHILD_WITH_LOCATION = new SshMachineLocation(
         name: "East child with location", address: EAST_IP, parentLocation: EAST_PARENT,
         latitude: EAST_LATITUDE, longitude: EAST_LONGITUDE); 
     
     private AbstractApplication app;
     private DynamicFabric fabric
-    private AbstractGeoDnsService geoDns;
+    private TestService geoDns;
     
 
     @BeforeMethod
@@ -73,9 +75,7 @@ public class AbstractGeoDnsServiceTest {
         
         app.start( [ WEST_CHILD_WITH_LOCATION, EAST_CHILD_WITH_LOCATION ] );
         
-        // FIXME: remove this sleep once the location-polling mechanism has been replaced with proper subscriptions
-        Thread.sleep(7000);
-        
+        waitForTargetHosts(geoDns);
         assertTrue(geoDns.targetHostsByName.containsKey("West child with location"));
         assertTrue(geoDns.targetHostsByName.containsKey("East child with location"));
     }
@@ -89,9 +89,7 @@ public class AbstractGeoDnsServiceTest {
         
         app.start( [ WEST_CHILD, EAST_CHILD ] );
         
-        // FIXME: remove this sleep once the location-polling mechanism has been replaced with proper subscriptions
-        Thread.sleep(7000);
-        
+        waitForTargetHosts(geoDns);
         assertTrue(geoDns.targetHostsByName.containsKey("West child"));
         assertTrue(geoDns.targetHostsByName.containsKey("East child"));
     }
@@ -104,6 +102,15 @@ public class AbstractGeoDnsServiceTest {
     @Test
     public void testEmptyGroup() {
         // TODO
+    }
+    
+    private static void waitForTargetHosts(TestService service) {
+        new Repeater("Wait for target hosts")
+            .repeat( { } )
+            .every(500, TimeUnit.MILLISECONDS)
+            .until( { service.targetHostsByName.size() == 2 } )
+            .limitIterationsTo(20)
+            .run();
     }
     
     
