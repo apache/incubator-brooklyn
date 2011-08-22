@@ -30,8 +30,9 @@ class GeoscalingDnsService extends AbstractGeoDnsService implements Configurable
     public static final BasicAttributeSensor MANAGED_DOMAIN =
         [ String, "geoscaling.managed.domain", "Fully qualified domain name that will be geo-redirected" ];
     
+    // Must remember any desired redirection targets if they're specified before configure() has been called.
+    private Set<HostGeoInfo> rememberedTargetHosts;
     private final GeoscalingWebClient webClient = [ ];
-    private Set<HostGeoInfo> targetHosts;
     
     // These are available only after the configure() method has been invoked.
     private boolean randomizeSmartSubdomainName;
@@ -84,8 +85,10 @@ class GeoscalingDnsService extends AbstractGeoDnsService implements Configurable
         setAttribute(MANAGED_DOMAIN, fullDomain);
         
         setAttribute(SERVICE_CONFIGURED, true);
-        if (targetHosts != null)
-            reconfigureService(targetHosts);
+        if (rememberedTargetHosts != null) {
+            reconfigureService(rememberedTargetHosts);
+            rememberedTargetHosts = null;
+        }
     }
     
     @Override
@@ -108,8 +111,10 @@ class GeoscalingDnsService extends AbstractGeoDnsService implements Configurable
     }
     
     protected void reconfigureService(Set<HostGeoInfo> targetHosts) {
-        this.targetHosts = targetHosts;
-        if (!getAttribute(SERVICE_CONFIGURED)) return;
+        if (!getAttribute(SERVICE_CONFIGURED)) {
+            this.rememberedTargetHosts = targetHosts;
+            return;
+        }
         
         webClient.login(username, password);
         Domain primaryDomain = webClient.getPrimaryDomain(primaryDomainName);
