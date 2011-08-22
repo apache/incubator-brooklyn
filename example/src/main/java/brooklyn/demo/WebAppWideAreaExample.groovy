@@ -86,7 +86,8 @@ public class JBossWideAreaExample extends WebAppWideAreaExample {
 
         JBossWideAreaExample app = new JBossWideAreaExample(name:'brooklyn-jboss-wide-area-example',
                 displayName:'Brooklyn Wide-Area Seam Booking Example Application')
-
+        app.init()
+        
         BrooklynLauncher.manage(app)
         app.start(locations)
     }
@@ -107,7 +108,8 @@ public class TomcatWideAreaExample extends WebAppWideAreaExample {
 
         TomcatWideAreaExample app = new TomcatWideAreaExample(name:'tomcat-wide-area-example',
                 displayName:'Tomcat Wide-Area Example Application')
-
+        app.init()
+        
         BrooklynLauncher.manage(app)
         app.start(locations)
     }
