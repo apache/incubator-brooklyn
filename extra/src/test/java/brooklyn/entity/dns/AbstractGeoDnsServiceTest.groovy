@@ -1,6 +1,6 @@
 package brooklyn.entity.dns;
 
-import static org.testng.AssertJUnit.*
+import static org.testng.Assert.*
 import groovy.lang.MetaClass
 
 import java.util.Map
@@ -21,24 +21,28 @@ import brooklyn.location.basic.SshMachineLocation
 import brooklyn.test.entity.TestEntity
 import brooklyn.util.internal.EntityStartUtils
 
-public class AbstractGeoDnsServiceTest {
-    private static final String MONTEREY_WEST_IP = "208.95.232.123";
-    private static final String MONTEREY_EAST_IP = "216.150.144.82";
-    private static final double CALIFORNIA_LATITUDE = 37.43472, CALIFORNIA_LONGITUDE = -121.89500;
-    private static final double NEW_YORK_LATITUDE = 41.10361, NEW_YORK_LONGITUDE = -73.79583;
-    
-    private static final Location CALIFORNIA = new GeneralPurposeLocation(
-        name: "California", latitude: CALIFORNIA_LATITUDE, longitude: CALIFORNIA_LONGITUDE);
-    
-    private static final Location NEW_YORK = new GeneralPurposeLocation(
-        name: "New York", latitude: NEW_YORK_LATITUDE, longitude: NEW_YORK_LONGITUDE);
 
-    private static final Location CALIFORNIA_MACHINE = new SshMachineLocation(
-        name: "California machine", address: MONTEREY_WEST_IP, parentLocation: CALIFORNIA); 
-        
-    private static final Location NEW_YORK_MACHINE = new SshMachineLocation(
-        name: "New York machine", address: MONTEREY_EAST_IP, parentLocation: NEW_YORK); 
+public class AbstractGeoDnsServiceTest {
+    private static final String WEST_IP = "208.95.232.123";
+    private static final String EAST_IP = "216.150.144.82";
+    private static final double WEST_LATITUDE = 37.43472, WEST_LONGITUDE = -121.89500;
+    private static final double EAST_LATITUDE = 41.10361, EAST_LONGITUDE = -73.79583;
     
+    private static final Location WEST_PARENT = new GeneralPurposeLocation(
+        name: "West parent", latitude: WEST_LATITUDE, longitude: WEST_LONGITUDE);
+    private static final Location WEST_CHILD = new SshMachineLocation(
+        name: "West child", address: WEST_IP, parentLocation: WEST_PARENT); 
+    private static final Location WEST_CHILD_WITH_LOCATION = new SshMachineLocation(
+        name: "West child with location", address: WEST_IP, parentLocation: WEST_PARENT,
+        latitude: WEST_LATITUDE, longitude: WEST_LONGITUDE); 
+    
+    private static final Location EAST_PARENT = new GeneralPurposeLocation(
+            name: "East parent", latitude: EAST_LATITUDE, longitude: EAST_LONGITUDE);
+    private static final Location EAST_CHILD = new SshMachineLocation(
+            name: "East child", address: EAST_IP, parentLocation: EAST_PARENT); 
+    private static final Location EAST_CHILD_WITH_LOCATION = new SshMachineLocation(
+        name: "East child with location", address: EAST_IP, parentLocation: EAST_PARENT,
+        latitude: EAST_LATITUDE, longitude: EAST_LONGITUDE); 
     
     private AbstractApplication app;
     private DynamicFabric fabric
@@ -60,29 +64,45 @@ public class AbstractGeoDnsServiceTest {
     }
 
     
-    @Test(enabled=false)
-    public void geoInfoOnLocations() {
+    @Test
+    public void testGeoInfoOnLocation() {
         DynamicFabric fabric = new DynamicFabric([newEntity:{ Map properties -> return new TestEntity(properties) }], app)
         DynamicGroup testEntities = new DynamicGroup([:], app, { Entity e -> (e instanceof TestEntity) });
         geoDns = new TestService(app);
         geoDns.setTargetEntityProvider(testEntities);
         
-        app.start( [ CALIFORNIA_MACHINE, NEW_YORK_MACHINE ] );
+        app.start( [ WEST_CHILD_WITH_LOCATION, EAST_CHILD_WITH_LOCATION ] );
         
         // FIXME: remove this sleep once the location-polling mechanism has been replaced with proper subscriptions
         Thread.sleep(7000);
         
-        assertTrue(geoDns.targetHostsByName.containsKey("California machine"));
-        assertTrue(geoDns.targetHostsByName.containsKey("New York machine"));
+        assertTrue(geoDns.targetHostsByName.containsKey("West child with location"));
+        assertTrue(geoDns.targetHostsByName.containsKey("East child with location"));
     }
     
     @Test
-    public void geoInfoNotFound() {
+    public void testGeoInfoOnParentLocation() {
+        DynamicFabric fabric = new DynamicFabric([newEntity:{ Map properties -> return new TestEntity(properties) }], app)
+        DynamicGroup testEntities = new DynamicGroup([:], app, { Entity e -> (e instanceof TestEntity) });
+        geoDns = new TestService(app);
+        geoDns.setTargetEntityProvider(testEntities);
+        
+        app.start( [ WEST_CHILD, EAST_CHILD ] );
+        
+        // FIXME: remove this sleep once the location-polling mechanism has been replaced with proper subscriptions
+        Thread.sleep(7000);
+        
+        assertTrue(geoDns.targetHostsByName.containsKey("West child"));
+        assertTrue(geoDns.targetHostsByName.containsKey("East child"));
+    }
+    
+    @Test
+    public void testMissingGeoInfo() {
         // TODO
     }
     
     @Test
-    public void emptyGroup() {
+    public void testEmptyGroup() {
         // TODO
     }
     
