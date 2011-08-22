@@ -42,23 +42,49 @@ Brooklyn.effectors = (function() {
             $('#effector-args').append(argumentLabel);
         } else {
             for (parameter in selectedRowData.parameters){
-                var textBox = document.createElement("input");
+                var parameterClassName = selectedRowData.parameters[parameter].parameterClassName
                 var argumentLabel = document.createElement('label');
                 var div = document.createElement('div');
                 var parameterName = selectedRowData.parameters[parameter].name
+                var isList = false;
+                var textBox;
 
-                textBox.setAttribute("id", parameterName);
                 argumentLabel.setAttribute("name", parameterName + "Label");
-                argumentLabel.setAttribute("for", parameterName + "Input");
+                argumentLabel.setAttribute("for", parameterName);
                 argumentLabel.textContent = parameterName + ":";
                 div.appendChild(argumentLabel);
 
-                textBox.setAttribute("name", parameterName + "Input");
+                if (parameterClassName && /(Collection|List)$/.test(parameterClassName)) {
+                    isList = true;
+                }
+
+                if (isList) {
+                    textBox = document.createElement("textarea");
+                } else {
+                    textBox = document.createElement("input");
+                }
+
+                textBox.setAttribute("id", 'effector-args-' + parameterName);
+                textBox.setAttribute("name", parameterName);
                 div.appendChild(textBox);
 
+                if (isList) {
+                    var instructions = document.createElement('span');
+                    instructions.textContent = 'one per line';
+                    div.appendChild(instructions);
+                }
+
                 $('#effector-args').append(div);
+
+                if (/Date$/.test(parameterClassName)) {
+                    $('#effector-args-' + parameterName).datepicker();
+                }
             }
         }
+    }
+
+    function addParameter(event) {
+
     }
 
     function updateList(e, entity_id) {
@@ -78,7 +104,7 @@ Brooklyn.effectors = (function() {
         if(selectedRowData.parameters.length != 0 ){
             for(parameter in selectedRowData.parameters){
                 var parameterName = selectedRowData.parameters[parameter].name;
-                var parameterValue = $('#'+parameterName).val();
+                var parameterValue = $('#effector-args-'+parameterName).val();
                 dataMap[parameterName] = parameterValue;
             }
         }

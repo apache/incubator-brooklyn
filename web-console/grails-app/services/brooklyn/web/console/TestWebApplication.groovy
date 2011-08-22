@@ -13,6 +13,7 @@ import brooklyn.location.Location
 import brooklyn.location.basic.GeneralPurposeLocation
 import brooklyn.management.Task
 import brooklyn.web.console.entity.TestEffector
+import grails.converters.JSON
 
 // TODO remove these test classes as soon as the group agrees they're unnecessary!
 private class TestWebApplication extends AbstractApplication {
@@ -82,7 +83,6 @@ private class TestWebApplication extends AbstractApplication {
                         e = new TestGroupEntity(application, "Now you see me");
                         Thread.sleep(20*1000L);
                     }
-
                 }
             }
 
@@ -173,7 +173,7 @@ private class TestWebApplication extends AbstractApplication {
             this.sensors.putAll(new TomcatServer().sensors)
 
             List<ParameterType<?>> parameterTypeList = new ArrayList<ParameterType<?>>()
-            ParameterType tomcatStartLocation = new BasicParameterType("Location", String.class)
+            ParameterType tomcatStartLocation = new BasicParameterType("Location", new ArrayList<String>().class)
             ParameterType actionDate = new BasicParameterType("Date", Date.class)
             parameterTypeList.add(tomcatStartLocation)
             parameterTypeList.add(actionDate)
@@ -205,6 +205,7 @@ private class TestWebApplication extends AbstractApplication {
         }
 
         public <T> Task<T> invoke(Effector<T> eff, Map<String, ?> parameters) {
+            System.out.println(parameters as JSON)
             return null
         }
 

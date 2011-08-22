@@ -95,7 +95,7 @@ class EntityController {
         if (id) {
             Entity entity = entityService.getEntity(id)
             if (entity != null) {
-                List<AbstractLocation> entityLocations = entity.getLocations()
+                Collection<AbstractLocation> entityLocations = entity.getLocations()
                 def locationSummaries = []
                 for (loc in entityLocations){
                     //for each loc create location summary and push to array
@@ -178,17 +178,19 @@ class EntityController {
             }
 
             if(effector != null){
-                List<ParameterType<?>> parameterList = effector.parameters
                 Map<String,?> parameters = new HashMap<String,?>()
-
-                parameterList.each {
-                    String parameterName = it.name
-                    parameters.put(parameterName, (it.parameterClass.newInstance(params.get(parameterName))))
+                effector.parameters.each {
+                    if (params.get(it.name)) {
+                        String parameterName = it.name
+                        Class parameterClass = it.parameterClass
+                        parameters.put(parameterName,
+                                Collection.isAssignableFrom(parameterClass) ?
+                                params.get(parameterName).split('\n') :
+                                parameterClass.newInstance(params.get(parameterName)))
+                    }
                 }
-
                 entity.invoke(effector, parameters)
-            }
-            else {
+            } else {
                 render(status: 404, text: '{message: "Cannot invoke effector '+ params.effectorName + ' does not exist"}')
             }
         }

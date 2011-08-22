@@ -267,6 +267,17 @@ textarea#logbox{
     width: 100%;
 }
 
+.effector-args div label {
+    font-weight: bold;
+}
+
+.effector-args div span {
+    float:left;
+    clear: both;
+    font-size: 80%;
+    padding: 5px;
+}
+
 #summary-basic-info {
     float: left;
     margin-bottom: 1em;
