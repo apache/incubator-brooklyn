@@ -37,6 +37,23 @@ class CustomAggregatingEnricherTest {
     }
 
     @Test
+    public void testSummingEnricherWhenNoSensorValuesYet() {
+        CustomAggregatingEnricher<Integer> cae = CustomAggregatingEnricher.<Integer>getSummingEnricher([producer],
+                intSensor, target)
+        producer.addPolicy(cae)
+        assertEquals cae.getAggregate(), 0
+    }
+
+    @Test
+    public void testSummingEnricherWhenNullSensorValue() {
+        CustomAggregatingEnricher<Integer> cae = CustomAggregatingEnricher.<Integer>getSummingEnricher([producer],
+                intSensor, target)
+        producer.addPolicy(cae)
+        cae.onEvent(intSensor.newEvent(producer, null))
+        assertEquals cae.getAggregate(), 0
+    }
+    
+    @Test
     public void testSingleProducerSum() {
         CustomAggregatingEnricher<Integer> cae = CustomAggregatingEnricher.<Integer>getSummingEnricher([producer],
                 intSensor, target)
@@ -66,6 +83,28 @@ class CustomAggregatingEnricherTest {
 
     }
     
+    @Test
+    public void testAveragingEnricherWhenNoSensorValuesYet() {
+        List<LocallyManagedEntity> producers = [
+                [owner: app] as LocallyManagedEntity]
+        CustomAggregatingEnricher<Double> cae = CustomAggregatingEnricher.<Double>getAveragingEnricher(producers,
+            intSensor, new BasicAttributeSensor<Double>(Double.class, "target sensor"))
+        producer.addPolicy(cae)
+        assertEquals cae.getAggregate(), 0d
+    }
+
+    @Test
+    public void testAveragingEnricherWhenNullSensorValue() {
+        List<LocallyManagedEntity> producers = [
+                [owner: app] as LocallyManagedEntity]
+        CustomAggregatingEnricher<Double> cae = CustomAggregatingEnricher.<Double>getAveragingEnricher(producers,
+            intSensor, new BasicAttributeSensor<Double>(Double.class, "target sensor"))
+        producer.addPolicy(cae)
+        
+        cae.onEvent(intSensor.newEvent(producers[0], null))
+        assertEquals cae.getAggregate(), 0d
+    }
+
     @Test
     public void testMultipleProducersAverage() {
         List<LocallyManagedEntity> producers = [
