@@ -56,8 +56,7 @@ class EntityController {
             if (entity != null) {
                 render(new EntitySummary(entity) as JSON)
             } else {
-                render(status: 404,
-                       text: '{message: "Cannot retrieve info: Entity with specified id '+ params.id + ' does not exist"}')
+            render(status: 404, text: '{message: "Entity with specified id '+params.id+'does not exist"}')
             }
         } else {
             render(status: 400, text: '{message: "You must provide an entity id"}')
@@ -82,8 +81,7 @@ class EntityController {
                 }
                 render(result as JSON)
             } else {
-                render(status: 404,
-                       text: '{message: "Cannot retrieve info: Entity with specified id '+ params.id + ' does not exist"}')
+            render(status: 404, text: '{message: "Entity with specified id '+params.id+'does not exist"}')
             }
         } else {
             render(status: 400, text: '{message: "You must provide an entity id"}')
@@ -104,8 +102,7 @@ class EntityController {
                 render(locationSummaries as JSON)
             }
              else {
-                render(status: 404,
-                       text: '{message: "Cannot retrieve info: Entity with specified id '+ params.id + ' does not exist"}')
+            render(status: 404, text: '{message: "Entity with specified id '+params.id+'does not exist"}')
             }
         } else {
             render(status: 400, text: '{message: "You must provide an entity id"}')
@@ -116,7 +113,12 @@ class EntityController {
         if (!params.id) {
             render(status: 400, text: '{message: "You must provide an entity id"}')
         }
-        render entityService.getEffectorsOfEntity(params.id) as JSON
+        
+        try {
+            render entityService.getEffectorsOfEntity(params.id) as JSON
+        } catch (NoSuchEntity e) {
+            render(status: 404, text: '{message: "Entity with specified id '+params.id+'does not exist"}')
+        }
     }
 
     def sensors = {
@@ -127,7 +129,7 @@ class EntityController {
         try {
             render entityService.getSensorData(params.id) as JSON
         } catch (NoSuchEntity e) {
-            render(status: 404, text: '{message: "Entity with specified id does not exist"}')
+            render(status: 404, text: '{message: "Entity with specified id '+params.id+'does not exist"}')
         }
     }
 
@@ -136,7 +138,12 @@ class EntityController {
             render(status: 400, text: '{message: "You must provide an entity id"}')
             return
         }
-        render entityService.getTasksOfEntity(params.id) as JSON
+        
+        try {
+            render entityService.getTasksOfEntity(params.id) as JSON
+        } catch (NoSuchEntity e) {
+            render(status: 404, text: '{message: "Entity with specified id '+params.id+'does not exist"}')
+        }
     }
 
     def allActivity = {
@@ -170,6 +177,11 @@ class EntityController {
 
     def invoke = {
         Entity entity = entityService.getEntity(params.entityId)
+        if (!entity) {
+            render(status: 404, text: '{message: "Entity with specified id '+params.entityId+'does not exist"}')
+            return
+        }
+        
         Collection<Effector> effectorsOfEntity = entityService.getEffectorsOfEntity(entity.id)
 
         if(effectorsOfEntity != null){

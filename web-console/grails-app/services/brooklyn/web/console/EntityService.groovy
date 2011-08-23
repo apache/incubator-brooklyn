@@ -47,6 +47,8 @@ public class EntityService {
     // TODO Should this return Task objects, and let the EntityController convert them to TaskSummary?
     public Collection<TaskSummary> getTasksOfEntity(String entityId) {
         Entity e = getEntity(entityId)
+        if (!e) throw new NoSuchEntity()
+
         return managementContextService.executionManager.getTasksWithAllTags(
                 [e, AbstractManagementContext.EFFECTOR_TAG]).collect { new TaskSummary(it) }
     }
@@ -97,13 +99,10 @@ public class EntityService {
     }
 
     public Collection<Effector> getEffectorsOfEntity(String entityId) {
-        Set<Effector> results = []
         Entity entity = getEntity(entityId)
-        if (entity) {
-            results.addAll(entity.entityClass.effectors)
-        }
-
-        return results
+        if (!entity) throw new NoSuchEntity()
+        
+        return entity.entityClass.effectors
     }
 
     public List<Entity> getAncestorsOf(Entity child) {
