@@ -251,6 +251,8 @@ public class AwsLocation extends AbstractLocation implements MachineProvisioning
             options.overrideLoginCredentialWith(keyData)
         }
 
+        // TODO unfortunately jclouds 1.1.1 doesn't support tags on aws-ec2 instances (see http://code.google.com/p/jclouds/issues/detail?id=612)
+        // The TemplateOptions.tags does not relate to aws tags.
         Iterable<String> customTags = []
         if (properties.tags) {
             customTags = (properties.tags.getClass().isArray()) ? Arrays.asList(properties.tags) : properties.tags
