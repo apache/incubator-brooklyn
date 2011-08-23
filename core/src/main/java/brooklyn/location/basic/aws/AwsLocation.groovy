@@ -22,7 +22,7 @@ import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.NoMachinesAvailableException
 import brooklyn.location.basic.AbstractLocation
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.location.basic.jclouds.JcloudsUtil;
+import brooklyn.location.basic.jclouds.JcloudsUtil
 import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.internal.Repeater
 
@@ -250,7 +250,14 @@ public class AwsLocation extends AbstractLocation implements MachineProvisioning
             String keyData = Files.toString(properties.sshPrivateKey, Charsets.UTF_8)
             options.overrideLoginCredentialWith(keyData)
         }
-        
+
+        Iterable<String> customTags = []
+        if (properties.tags) {
+            customTags = (properties.tags.getClass().isArray()) ? Arrays.asList(properties.tags) : properties.tags
+        }
+        Collection<String> tags = ["brooklyn", System.getProperty("user.name")] + customTags
+        template.getOptions().tags(tags);
+
         // setup the users
         if (properties.userName && properties.userName != ROOT_USERNAME) {
             Statement setupUserStatement = JcloudsUtil.setupUserAndExecuteStatements(properties.userName, properties.sshPublicKey,
