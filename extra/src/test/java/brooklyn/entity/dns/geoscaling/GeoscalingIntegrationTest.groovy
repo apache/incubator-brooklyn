@@ -35,7 +35,7 @@ class GeoscalingIntegrationTest {
     private final InetAddress addr = InetAddress.localHost
     private final SshMachineLocation loc = new SshMachineLocation(address:addr, name:'Edinburgh', latitude : 55.94944, longitude : -3.16028, iso3166 : ["GB-EDH"])
     
-    @Test(groups = [ "WIP" ])
+    @Test(groups=["Integration"])
     public void testRoutesToExpectedLocation() {
         AbstractApplication app = new TestApplication()
         TestEntity target = new TestEntity(owner:app)
