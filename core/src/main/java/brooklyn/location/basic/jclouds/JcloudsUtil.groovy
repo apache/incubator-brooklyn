@@ -154,6 +154,8 @@ public class JcloudsUtil {
         
         if (conf.imageOwner) {
             properties.setProperty("jclouds.ec2.ami-query", "owner-id="+conf.imageOwner+";state=available;image-type=machine")
+        } else {
+            properties.setProperty("jclouds.ec2.ami-query", "state=available;image-type=machine")
         }
 
         // ImmutableSet.<Module>of(new Log4JLoggingModule()); to add log4j integration
