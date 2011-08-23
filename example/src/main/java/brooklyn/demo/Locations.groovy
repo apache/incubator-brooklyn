@@ -55,11 +55,11 @@ public class Locations {
             "ap-northeast-1":"ami-f0e842f1",
         ]
     public static final Map EC2_MONTEREY_IMAGES = [
-	        "eu-west-1":"ami-901323e4",
-	        "us-east-1":"ami-3d814754",
-	        "us-west-1":"ami-01e7b544",
-	        "ap-southeast-1":"ami-bcd1a9ee",
-	        "ap-northeast-1":"ami-98ce7b99",
+	        "eu-west-1":"ami-7867540c",
+	        "us-east-1":"ami-735d9c1a",
+	        "us-west-1":"ami-71451834",
+	        "ap-southeast-1":"ami-d07d0682",
+	        "ap-northeast-1":"ami-0e8c390f",
         ]
     public static final Map EC2_GEMFIRE_IMAGES = [
             "eu-west-1":"ami-ca2f1fbe",
