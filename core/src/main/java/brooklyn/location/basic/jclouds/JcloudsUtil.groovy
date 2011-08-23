@@ -5,51 +5,50 @@
  */
 package brooklyn.location.basic.jclouds;
 
-import static org.jclouds.compute.util.ComputeServiceUtils.execHttpResponse;
-import static org.jclouds.scriptbuilder.domain.Statements.appendFile;
-import static org.jclouds.scriptbuilder.domain.Statements.exec;
-import static org.jclouds.scriptbuilder.domain.Statements.interpret;
-import static org.jclouds.scriptbuilder.domain.Statements.newStatementList;
+import static org.jclouds.compute.util.ComputeServiceUtils.execHttpResponse
+import static org.jclouds.scriptbuilder.domain.Statements.appendFile
+import static org.jclouds.scriptbuilder.domain.Statements.exec
+import static org.jclouds.scriptbuilder.domain.Statements.interpret
+import static org.jclouds.scriptbuilder.domain.Statements.newStatementList
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.io.File
+import java.io.IOException
+import java.net.URI
+import java.util.List
+import java.util.Map
+import java.util.Properties
 
-import org.jclouds.Constants;
-import org.jclouds.compute.ComputeService;
-import org.jclouds.compute.ComputeServiceContextFactory;
-import org.jclouds.compute.RunScriptOnNodesException;
-import org.jclouds.compute.domain.ExecResponse;
-import org.jclouds.compute.domain.NodeMetadata;
-import org.jclouds.compute.domain.OperatingSystem;
-import org.jclouds.compute.options.RunScriptOptions;
-import org.jclouds.compute.predicates.OperatingSystemPredicates;
-import org.jclouds.compute.predicates.RetryIfSocketNotYetOpen;
-import org.jclouds.compute.reference.ComputeServiceConstants;
-import org.jclouds.compute.reference.ComputeServiceConstants.Timeouts;
-import org.jclouds.compute.util.ComputeServiceUtils;
-import org.jclouds.net.IPSocket;
-import org.jclouds.predicates.InetSocketAddressConnect;
-import org.jclouds.scriptbuilder.InitBuilder;
-import org.jclouds.scriptbuilder.domain.Statement;
-import org.jclouds.scriptbuilder.domain.Statements;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jclouds.Constants
+import org.jclouds.compute.ComputeService
+import org.jclouds.compute.ComputeServiceContextFactory
+import org.jclouds.compute.RunScriptOnNodesException
+import org.jclouds.compute.domain.ExecResponse
+import org.jclouds.compute.domain.NodeMetadata
+import org.jclouds.compute.domain.OperatingSystem
+import org.jclouds.compute.options.RunScriptOptions
+import org.jclouds.compute.predicates.OperatingSystemPredicates
+import org.jclouds.compute.predicates.RetryIfSocketNotYetOpen
+import org.jclouds.compute.reference.ComputeServiceConstants
+import org.jclouds.compute.reference.ComputeServiceConstants.Timeouts
+import org.jclouds.compute.util.ComputeServiceUtils
+import org.jclouds.net.IPSocket
+import org.jclouds.predicates.InetSocketAddressConnect
+import org.jclouds.scriptbuilder.InitBuilder
+import org.jclouds.scriptbuilder.domain.Statement
+import org.jclouds.scriptbuilder.domain.Statements
+import org.jclouds.sshj.config.SshjSshClientModule
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
-import brooklyn.entity.basic.AbstractEntity;
-
-import com.google.common.base.Charsets;
-import com.google.common.base.Predicate;
-import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.io.Files;
-import com.google.inject.Module;
+import com.google.common.base.Charsets
+import com.google.common.base.Predicate
+import com.google.common.base.Splitter
+import com.google.common.collect.ImmutableList
+import com.google.common.collect.ImmutableMap
+import com.google.common.collect.ImmutableSet
+import com.google.common.collect.Iterables
+import com.google.common.io.Files
+import com.google.inject.Module
 
 public class JcloudsUtil {
     private static final Logger LOG = LoggerFactory.getLogger(JcloudsUtil.class);
@@ -153,26 +152,13 @@ public class JcloudsUtil {
         properties.setProperty(Constants.PROPERTY_TRUST_ALL_CERTS, Boolean.toString(true))
         properties.setProperty(Constants.PROPERTY_RELAX_HOSTNAME, Boolean.toString(true))
         
-        // FIXME hack!
-        Map endpoints = [
-                "eu-west-1":"https://ec2.eu-west-1.amazonaws.com",
-                "us-east-1":"https://ec2.us-east-1.amazonaws.com", 
-                "us-west-1":"https://ec2.us-west-1.amazonaws.com", 
-                "ap-southeast-1":"https://ec2.ap-southeast-1.amazonaws.com",
-                "ap-northeast-1":"https://ec2.ap-northeast-1.amazonaws.com",
-                ]
-        String endpoint = endpoints.get(conf.providerLocationId)
-        if (endpoint != null) properties.setProperty(Constants.PROPERTY_ENDPOINT, endpoint);
-        
         if (conf.imageOwner) {
-            properties.setProperty("jclouds.ec2.ami-owners", conf.imageOwner)
-        } else {
-            properties.setProperty("jclouds.ec2.ami-owners", "")
+            properties.setProperty("jclouds.ec2.ami-query", "owner-id="+conf.imageOwner+";state=available;image-type=machine")
         }
 
         // ImmutableSet.<Module>of(new Log4JLoggingModule()); to add log4j integration
-        Iterable<Module> modules = ImmutableSet.<Module> of();
-
+        Iterable<Module> modules = ImmutableSet.<Module> of(new SshjSshClientModule());
+        
         ComputeServiceContextFactory computeServiceFactory = new ComputeServiceContextFactory();
         
         ComputeService computeService = computeServiceFactory

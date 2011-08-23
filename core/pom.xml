@@ -49,6 +49,10 @@
 			<groupId>org.jclouds</groupId>
 			<artifactId>jclouds-allcompute</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.jclouds.driver</groupId>
+			<artifactId>jclouds-sshj</artifactId>
+		</dependency>
 
         <dependency>
             <groupId>mx4j</groupId>
