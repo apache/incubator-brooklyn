@@ -15,7 +15,7 @@ import org.testng.annotations.Test
 
 import brooklyn.test.TestUtils
 
-class SingleThreadedSchedulerTest {
+public class SingleThreadedSchedulerTest {
 
     private BasicExecutionManager em
     
