@@ -108,6 +108,8 @@ public class HttpSensorAdapter {
     public String getJson(URL url, String key) {
         try {
 	        String jsonOut = new String(getContents(url))
+            if (jsonOut == null || jsonOut.isEmpty()) return null
+            
 	        def slurper = new JsonSlurper()
 	        def parsed = slurper.parseText(jsonOut)
 	        return parsed[key]
