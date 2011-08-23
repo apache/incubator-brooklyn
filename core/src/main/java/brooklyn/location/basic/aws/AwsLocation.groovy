@@ -205,7 +205,7 @@ public class AwsLocation extends AbstractLocation implements MachineProvisioning
         }
         
         if (properties.imageSize) {
-            templateBuilder.imageSize(properties.imageId);
+            templateBuilder.imageSize(properties.imageSize);
         }
         
         if (properties.imageId) {
