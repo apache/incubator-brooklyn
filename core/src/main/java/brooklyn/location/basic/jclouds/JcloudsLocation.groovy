@@ -51,15 +51,15 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     }
     
     public void setSshPublicKey(String val) {
-        conf.putAt("sshPublicKey", val)
+        conf.put("sshPublicKey", val)
     }
     
     public void setSshPrivateKey(String val) {
-        conf.putAt("sshPrivateKey", val)
+        conf.put("sshPrivateKey", val)
     }
     
     public void setUserName(String val) {
-        conf.putAt("userName", val)
+        conf.put("userName", val)
     }
     
     public void setTagMapping(Map<String,Map<String, ? extends Object>> val) {
@@ -255,6 +255,14 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     }
 
     private String getPublicHostname(NodeMetadata node, Map allconf) {
+        if (allconf.provider.equals("aws-ec2")) {
+            return getPublicHostnameAws(node, allconf);
+        } else {
+            return getPublicHostnameGeneric(node, allconf);
+        }
+    }
+    
+    private String getPublicHostnameGeneric(NodeMetadata node, Map allconf) {
         if (node.getHostname()) {
             return node.getHostname()
         } else if (node.getPublicAddresses()) {
@@ -266,7 +274,6 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         }
     }
     
-    // FIXME for aws; not being called currently!
     private String getPublicHostnameAws(NodeMetadata node, Map allconf) {
         String vmIp = JcloudsUtil.getFirstReachableAddress(node);
         
