@@ -168,7 +168,7 @@ public @interface PostStart {
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.PARAMETER)
-public @interface PreSop {
+public @interface PreStop {
     String value();
 }
 

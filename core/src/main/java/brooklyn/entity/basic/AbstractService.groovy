@@ -40,6 +40,7 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
     public static final AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME;
     public static final AttributeSensor<String> ADDRESS = Attributes.ADDRESS;
 
+    public static final BasicAttributeSensor<Lifecycle> SERVICE_STATE = [ Lifecycle, "service.state", "Service lifecycle state" ]
     public static final BasicAttributeSensor<String> SERVICE_STATUS = [ String, "service.status", "Service status" ]
 
     private MachineProvisioningLocation provisioningLoc
@@ -55,6 +56,7 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
  
         setAttribute(SERVICE_UP, false)
         setAttribute(SERVICE_CONFIGURED, false)
+        setAttribute(SERVICE_STATE, Lifecycle.CREATED)
     }
 
     public abstract SshBasedAppSetup getSshBasedSetup(SshMachineLocation loc);
@@ -67,14 +69,17 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
     protected void postStop() { }
 
     public void start(Collection<Location> locations) {
+        setAttribute(SERVICE_STATE, Lifecycle.STARTING)
         attributePoller = new AttributePoller(this)
         
         preStart()
         startInLocation locations
+        setAttribute(SERVICE_STATE, Lifecycle.STARTED)
+
         initSensors()
         postStart()
 
-        setAttribute(SERVICE_STATUS, "running")
+        setAttribute(SERVICE_STATE, Lifecycle.RUNNING)
     }
 
     public void startInLocation(Collection<Location> locations) {
@@ -100,7 +105,6 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
     public void startInLocation(SshMachineLocation machine) {
         locations.add(machine)
 
-        setAttribute(SERVICE_STATUS, "starting")
         setAttribute(HOSTNAME, machine.address.hostName)
         setAttribute(ADDRESS, machine.address.hostAddress)
 
@@ -128,16 +132,16 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
             log.debug "checked $this, running result $isRunningResult"
         }
         if (!isRunningResult) {
-            setAttribute(SERVICE_STATUS, "failed")
+            setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE)
             throw new IllegalStateException("$this aborted soon after startup")
         }
     }
 
     public void stop() {
-        setAttribute(SERVICE_STATUS, "stopping")
+        setAttribute(SERVICE_STATE, Lifecycle.STOPPING)
         MachineLocation machine = locations.find { it in MachineLocation }
         shutdownInLocation(machine)
-        setAttribute(SERVICE_STATUS, "stopped")
+        setAttribute(SERVICE_STATE, Lifecycle.STOPPED)
         setAttribute(SERVICE_UP, false)
     }
 
@@ -166,6 +170,7 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
      * method is called.
      */
     public void configure() {
+        setAttribute(SERVICE_STATE, Lifecycle.CONFIGURED)
         setAttribute(SERVICE_CONFIGURED, true)
     }
 }
