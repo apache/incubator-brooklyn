@@ -17,7 +17,6 @@ import brooklyn.util.internal.LanguageUtils
 
 import com.google.common.base.CaseFormat
 import com.google.common.collect.ImmutableSet;
-import brooklyn.management.ExpirationPolicy;
 
 /**
  * TODO javadoc
@@ -191,13 +190,6 @@ public class BasicExecutionManager implements ExecutionManager {
         task.thread.setName("brooklyn-"+LanguageUtils.newUid())
         task.thread = null
         synchronized (task) { task.notifyAll() }
-
-        ExpirationPolicy expirationPolicy = flags.expirationPolicy ?: ExpirationPolicy.IMMEDIATE
-        if (expirationPolicy == ExpirationPolicy.IMMEDIATE) {
-            task.@tags.each { tag ->
-                getMutableTasksWithTag(tag).remove(task)
-            }
-        }
     }
 
     /** Returns {@link TaskPreprocessor} defined for tasks with the given tag, or null if none. */

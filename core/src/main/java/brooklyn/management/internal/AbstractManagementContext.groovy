@@ -21,7 +21,6 @@ import brooklyn.management.SubscriptionContext
 import brooklyn.management.Task
 import brooklyn.util.task.BasicExecutionContext
 import brooklyn.util.task.BasicExecutionManager
-import brooklyn.management.ExpirationPolicy
 
 public abstract class AbstractManagementContext implements ManagementContext  {
     private static final Logger log = LoggerFactory.getLogger(AbstractManagementContext.class)
@@ -91,7 +90,7 @@ public abstract class AbstractManagementContext implements ManagementContext  {
     protected abstract boolean unmanageNonRecursive(Entity e);
 
     public <T> Task<T> invokeEffector(Entity entity, Effector<T> eff, Map parameters) {
-        runAtEntity(expirationPolicy: ExpirationPolicy.NEVER, entity, { eff.call(entity, parameters); },
+        runAtEntity(entity, { eff.call(entity, parameters); },
            description:"invoking ${eff.name} on ${entity.displayName}", displayName:eff.name, tags:[EFFECTOR_TAG])
     }
 
@@ -114,7 +113,7 @@ public abstract class AbstractManagementContext implements ManagementContext  {
                 log.info("Activating management on start of application $entity")
                 manage(entity)
             }
-            runAtEntity(expirationPolicy: ExpirationPolicy.NEVER, entity, { invokeEffectorMethodLocal(entity, eff, args); },
+            runAtEntity(entity, { invokeEffectorMethodLocal(entity, eff, args); },
                 description:"invoking ${eff.name} on ${entity.displayName}", displayName:eff.name, tags:[EFFECTOR_TAG]).get()
         } else {
             return invokeEffectorMethodLocal(entity, eff, args)
