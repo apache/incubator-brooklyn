@@ -9,6 +9,7 @@ import org.testng.annotations.Test
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.management.Task
 import brooklyn.test.entity.TestEntity
+import brooklyn.management.ExpirationPolicy
 
 class EntityExecutionManagerTest {
 
@@ -20,7 +21,7 @@ class EntityExecutionManagerTest {
         TestEntity e = new TestEntity([owner:app])
         
         CountDownLatch latch = new CountDownLatch(1)
-        Task task = e.executionContext.submit( { latch.countDown() } )
+        Task task = e.executionContext.submit( expirationPolicy: ExpirationPolicy.NEVER, { latch.countDown() } )
         latch.await(TIMEOUT, TimeUnit.MILLISECONDS)
         
         Collection<Task> tasks = app.managementContext.executionManager.getTasksWithTag(e);
