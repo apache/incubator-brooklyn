@@ -16,6 +16,7 @@ import org.testng.annotations.Test
 import brooklyn.management.ExecutionManager
 import brooklyn.management.Task
 import brooklyn.util.internal.LanguageUtils
+import brooklyn.management.ExpirationPolicy
 
 /**
  * Test the operation of the {@link BasicTask} class.
@@ -101,8 +102,8 @@ public class BasicTaskExecutionTest {
         data.clear()
         data.put(1, 1)
         BasicExecutionManager em = []
-        2.times { em.submit tag:"A", new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } }) }
-        2.times { em.submit tag:"B", new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } }) }
+        2.times { em.submit expirationPolicy: ExpirationPolicy.NEVER, tag:"A", new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } }) }
+        2.times { em.submit expirationPolicy: ExpirationPolicy.NEVER, tag:"B", new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } }) }
         int total = 0;
         em.getTaskTags().each {
                 log.debug "tag {}", it
@@ -121,10 +122,10 @@ public class BasicTaskExecutionTest {
         data.clear()
         data.put(1, 1)
         Collection<Task> tasks = []
-        tasks += em.submit tag:"A", new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } })
-        tasks += em.submit tags:["A","B"], new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } })
-        tasks += em.submit tags:["B","C"], new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } })
-        tasks += em.submit tags:["D"], new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } })
+        tasks += em.submit expirationPolicy: ExpirationPolicy.NEVER, tag:"A", new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } })
+        tasks += em.submit expirationPolicy: ExpirationPolicy.NEVER, tags:["A","B"], new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } })
+        tasks += em.submit expirationPolicy: ExpirationPolicy.NEVER, tags:["B","C"], new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } })
+        tasks += em.submit expirationPolicy: ExpirationPolicy.NEVER, tags:["D"], new BasicTask({ synchronized(data) { data.put(1, data.get(1)+1) } })
         int total = 0;
 
         tasks.each { Task t ->
@@ -148,7 +149,7 @@ public class BasicTaskExecutionTest {
     @Test
     public void testRetrievingTasksWithTagsReturnsExpectedTask() {
         Task t = new BasicTask({ /*no-op*/ })
-        em.submit tag:"A",t
+        em.submit expirationPolicy: ExpirationPolicy.NEVER, tag:"A",t
         t.get();
 
         assertEquals(em.getTasksWithTag("A"), [t]);
@@ -171,7 +172,7 @@ public class BasicTaskExecutionTest {
     @Test
     public void testRetrievingTasksWithMultipleTags() {
         Task t = new BasicTask({ /*no-op*/ })
-        em.submit tags:["A","B"], t
+        em.submit expirationPolicy: ExpirationPolicy.NEVER, tags:["A","B"], t
         t.get();
 
         assertEquals(em.getTasksWithTag("A"), [t]);
@@ -316,7 +317,7 @@ public class BasicTaskExecutionTest {
                 assertEquals(45, em.getTasksWithTag("A").iterator().next().get());
                 46 };
             45 } )
-        em.submit tag:"A", t
+        em.submit expirationPolicy: ExpirationPolicy.NEVER, tag:"A", t
 
         t.blockUntilEnded()
  
