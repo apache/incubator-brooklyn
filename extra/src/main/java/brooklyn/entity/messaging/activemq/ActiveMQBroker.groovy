@@ -10,47 +10,42 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
-import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.JavaApp
+import brooklyn.entity.messaging.JMSBroker
+import brooklyn.entity.messaging.JMSDestination
 import brooklyn.entity.messaging.Queue
 import brooklyn.entity.messaging.Topic
 import brooklyn.event.adapter.AttributePoller
 import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.adapter.ValueProvider
 import brooklyn.event.basic.ConfiguredAttributeSensor
-import brooklyn.location.Location
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedAppSetup
-
-import com.google.common.base.Preconditions
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single ActiveMQ broker instance.
  */
-public class ActiveMQBroker extends JavaApp {
+public class ActiveMQBroker extends JMSBroker<ActiveMQQueue, ActiveMQTopic> {
     private static final Logger log = LoggerFactory.getLogger(ActiveMQBroker.class)
 
     public static final ConfiguredAttributeSensor<Integer> OPEN_WIRE_PORT = [ Integer, "openwire.port", "OpenWire port", 61616 ]
 
-    Collection<String> queueNames = []
-    Map<String, ActiveMQQueue> queues = [:]
-    Collection<String> topicNames = []
-    Map<String, ActiveMQTopic> topics = [:]
-
-    public ActiveMQBroker(Map properties=[:]) {
-        super(properties)
+    public ActiveMQBroker(Map properties=[:], Entity owner=null) {
+        super(properties, owner)
 
         setConfigIfValNonNull(OPEN_WIRE_PORT.configKey, properties.openWirePort)
 
         setConfigIfValNonNull(Attributes.JMX_USER.configKey, properties.user ?: "admin")
         setConfigIfValNonNull(Attributes.JMX_PASSWORD.configKey, properties.password ?: "activemq")
+    }
 
-        if (properties.queue) queueNames.add properties.queue
-        if (properties.queues) queueNames.addAll properties.queues
+    public ActiveMQQueue createQueue(Map properties) {
+        return new ActiveMQQueue(properties);
+    }
 
-        if (properties.topic) topicNames.add properties.topic
-        if (properties.topics) topicNames.addAll properties.topics
+    public ActiveMQTopic createTopic(Map properties) {
+        return new ActiveMQTopic(properties);
     }
 
     public SshBasedAppSetup getSshBasedSetup(SshMachineLocation machine) {
@@ -60,30 +55,6 @@ public class ActiveMQBroker extends JavaApp {
     @Override
     public void addJmxSensors() {
         attributePoller.addSensor(JavaApp.SERVICE_UP, { computeNodeUp() } as ValueProvider)
-    }
-
-    @Override
-    public void postStart() {
-        queueNames.each { String name -> createQueue(name) }
-        topicNames.each { String name -> createTopic(name) }
-    }
-
-    @Override
-    public void preStop() {
-        queues.each { String name, ActiveMQQueue queue -> queue.destroy() }
-        topics.each { String name, ActiveMQTopic topic -> topic.destroy() }
-    }
-
-    public void createQueue(String name, Map properties=[:]) {
-        properties.owner = this
-        properties.name = name
-        queues.put name, new ActiveMQQueue(properties)
-    }
-
-    public void createTopic(String name, Map properties=[:]) {
-        properties.owner = this
-        properties.name = name
-        topics.put name, new ActiveMQTopic(properties)
     }
 
     @Override
@@ -101,64 +72,21 @@ public class ActiveMQBroker extends JavaApp {
             return false
         }
     }
-
-    protected boolean computeVersion() {
-        ValueProvider<String> provider = jmxAdapter.newAttributeProvider("org.apache.activemq:type=Broker,BrokerName=localhost", "BrokerVersion")
-        try {
-            String productVersion = provider.compute()
-            log.error("*** activemq version iz {} ***", productVersion)
-            return (productVersion == getAttribute(Attributes.VERSION))
-        } catch (InstanceNotFoundException infe) {
-            return false
-        }
-    }
 }
 
-public abstract class ActiveMQBinding extends AbstractEntity {
-    String virtualHost
-
+public abstract class ActiveMQDestination extends JMSDestination {
     protected ObjectName broker
 
-    transient JmxSensorAdapter jmxAdapter
-    transient AttributePoller attributePoller
-
-    public ActiveMQBinding(Map properties=[:], Entity owner=null) {
+    public ActiveMQDestination(Map properties=[:], Entity owner=null) {
         super(properties, owner)
-
-        Preconditions.checkNotNull name, "Name must be specified"
-
-        broker = new ObjectName("org.apache.activemq:Type=Broker,BrokerName=localhost")
-        init()
-
-        jmxAdapter = ((ActiveMQBroker) getOwner()).jmxAdapter
-        attributePoller = new AttributePoller(this)
-
-        create()
     }
 
-    public abstract void init();
-
-    public abstract void addJmxSensors()
-
-    public abstract void removeJmxSensors()
-
-    public abstract void create();
-
-    public abstract void delete();
-
-    @Override
-    public void destroy() {
-		attributePoller.close()
-        super.destroy()
-	}
-
-    @Override
-    public Collection<String> toStringFieldsToInclude() {
-        return super.toStringFieldsToInclude() + ['name']
+    public void init() {
+	    broker = new ObjectName("org.apache.activemq:Type=Broker,BrokerName=localhost")
     }
 }
 
-public class ActiveMQQueue extends ActiveMQBinding implements Queue {
+public class ActiveMQQueue extends ActiveMQDestination implements Queue {
     public ActiveMQQueue(Map properties=[:], Entity owner=null) {
         super(properties, owner)
     }
@@ -166,6 +94,7 @@ public class ActiveMQQueue extends ActiveMQBinding implements Queue {
     @Override
     public void init() {
         setAttribute QUEUE_NAME, name
+        super.init()
     }
 
     public void create() {
@@ -188,7 +117,7 @@ public class ActiveMQQueue extends ActiveMQBinding implements Queue {
     }
 }
 
-public class ActiveMQTopic extends ActiveMQBinding implements Topic {
+public class ActiveMQTopic extends ActiveMQDestination implements Topic {
     public ActiveMQTopic(Map properties=[:], Entity owner=null) {
         super(properties, owner)
     }
@@ -196,6 +125,7 @@ public class ActiveMQTopic extends ActiveMQBinding implements Topic {
     @Override
     public void init() {
         setAttribute TOPIC_NAME, name
+        super.init()
     }
 
     public void create() {

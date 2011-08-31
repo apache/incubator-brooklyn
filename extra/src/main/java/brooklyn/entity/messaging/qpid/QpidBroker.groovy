@@ -10,38 +10,35 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
-import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.JavaApp
+import brooklyn.entity.messaging.JMSBroker
+import brooklyn.entity.messaging.JMSDestination
 import brooklyn.entity.messaging.Queue
 import brooklyn.entity.messaging.Topic
+import brooklyn.entity.messaging.activemq.ActiveMQQueue;
+import brooklyn.entity.messaging.activemq.ActiveMQTopic;
 import brooklyn.event.adapter.AttributePoller
 import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.adapter.ValueProvider
 import brooklyn.event.basic.ConfiguredAttributeSensor
-import brooklyn.location.Location
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedAppSetup
-
-import com.google.common.base.Preconditions
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Qpid broker instance.
  */
-public class QpidBroker extends JavaApp {
+public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> {
     private static final Logger log = LoggerFactory.getLogger(QpidBroker.class)
 
     public static final ConfiguredAttributeSensor<Integer> AMQP_PORT = Attributes.AMQP_PORT
     public static final ConfiguredAttributeSensor<String> VIRTUAL_HOST_NAME = [String, "qpid.virtualHost", "Qpid virtual host name", "localhost" ]
 
     String virtualHost
-    Collection<String> queueNames = []
-    Map<String, QpidQueue> queues = [:]
-    Collection<String> topicNames = []
-    Map<String, QpidTopic> topics = [:]
 
-    public QpidBroker(Map properties=[:]) {
-        super(properties)
+    public QpidBroker(Map properties=[:], Entity owner=null) {
+        super(properties, owner)
+
         virtualHost = properties.virtualHost ?: getConfig(VIRTUAL_HOST_NAME.configKey)
         setAttribute(VIRTUAL_HOST_NAME, virtualHost)
 
@@ -49,12 +46,14 @@ public class QpidBroker extends JavaApp {
 
         setConfigIfValNonNull(Attributes.JMX_USER.configKey, properties.user ?: "admin")
         setConfigIfValNonNull(Attributes.JMX_PASSWORD.configKey, properties.password ?: "admin")
+    }
 
-        if (properties.queue) queueNames.add properties.queue
-        if (properties.queues) queueNames.addAll properties.queues
+    public QpidQueue createQueue(Map properties) {
+        return new QpidQueue(properties);
+    }
 
-        if (properties.topic) topicNames.add properties.topic
-        if (properties.topics) topicNames.addAll properties.topics
+    public QpidTopic createTopic(Map properties) {
+        return new QpidTopic(properties);
     }
 
     public SshBasedAppSetup getSshBasedSetup(SshMachineLocation machine) {
@@ -73,30 +72,6 @@ public class QpidBroker extends JavaApp {
     }
 
     @Override
-    protected void postStart() {
-        queueNames.each { String name -> createQueue(name) }
-        topicNames.each { String name -> createTopic(name) }
-    }
-
-    @Override
-    protected void preStop() {
-        queues.each { String name, QpidQueue queue -> queue.destroy() }
-        topics.each { String name, QpidTopic topic -> topic.destroy() }
-    }
-
-    public void createQueue(String name, Map properties=[:]) {
-        properties.owner = this
-        properties.name = name
-        queues.put name, new QpidQueue(properties)
-    }
-
-    public void createTopic(String name, Map properties=[:]) {
-        properties.owner = this
-        properties.name = name
-        topics.put name, new QpidTopic(properties)
-    }
-
-    @Override
     public Collection<String> toStringFieldsToInclude() {
         return super.toStringFieldsToInclude() + ['amqpPort']
     }
@@ -112,36 +87,21 @@ public class QpidBroker extends JavaApp {
     }
 }
 
-public abstract class QpidDestination extends AbstractEntity {
+public abstract class QpidDestination extends JMSDestination {
     String virtualHost
 
     protected ObjectName virtualHostManager
     protected ObjectName exchange
 
-    transient JmxSensorAdapter jmxAdapter
-    transient AttributePoller attributePoller
-
     public QpidDestination(Map properties=[:], Entity owner=null) {
         super(properties, owner)
+    }
 
-        Preconditions.checkNotNull name, "Name must be specified"
-
+    public void init() {
         virtualHost = properties.virtualHost ?: getConfig(QpidBroker.VIRTUAL_HOST_NAME.configKey)
         setAttribute(QpidBroker.VIRTUAL_HOST_NAME, virtualHost)
         virtualHostManager = new ObjectName("org.apache.qpid:type=VirtualHost.VirtualHostManager,VirtualHost=\"${virtualHost}\"")
-        init()
-
-        jmxAdapter = ((QpidBroker) getOwner()).jmxAdapter
-        attributePoller = new AttributePoller(this)
-
-        create()
     }
-
-    public abstract void init()
-
-    public abstract void addJmxSensors()
-
-    public abstract void removeJmxSensors()
 
     public void create() {
         jmxAdapter.operation(virtualHostManager, "createNewQueue", name, getOwner().getAttribute(Attributes.JMX_USER), true)
@@ -177,8 +137,10 @@ public class QpidQueue extends QpidDestination implements Queue {
         super(properties, owner)
     }
 
+    @Override
     public void init() {
         setAttribute QUEUE_NAME, name
+        super.init()
         exchange = new ObjectName("org.apache.qpid:type=VirtualHost.Exchange,VirtualHost=\"${virtualHost}\",name=\"amq.direct\",ExchangeType=direct")
     }
 
@@ -200,8 +162,10 @@ public class QpidTopic extends QpidDestination implements Topic {
         super(properties, owner)
     }
 
+    @Override
     public void init() {
         setAttribute TOPIC_NAME, name
+        super.init()
         exchange = new ObjectName("org.apache.qpid:type=VirtualHost.Exchange,VirtualHost=\"${virtualHost}\",name=\"amq.topic\",ExchangeType=topic")
     }
 
