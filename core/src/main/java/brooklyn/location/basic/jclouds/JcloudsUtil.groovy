@@ -51,6 +51,9 @@ import com.google.common.io.Files
 import com.google.inject.Module
 
 public class JcloudsUtil {
+    
+    // TODO Review what utility methods are needed, and what is now supported in jclouds 1.1
+    
     private static final Logger LOG = LoggerFactory.getLogger(JcloudsUtil.class);
     
     public static String APT_INSTALL = "apt-get install -f -y -qq --force-yes";

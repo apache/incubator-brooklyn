@@ -90,7 +90,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     }
     
     public SshMachineLocation obtain(Map flags=[:]) throws NoMachinesAvailableException {
-        Map allconf = union(flags, conf)
+        Map allconf = flags + conf
         String groupId = (allconf.groupId ?: IdGenerator.makeRandomId(8))
         allconf.userName = ROOT_USERNAME
  
@@ -198,24 +198,15 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             templateBuilder.imageId(properties.imageId);
         }
 
-        if (properties.imagePattern) {
-            switch (getImagePatternType()) {
-                case ImagePatternType.NAME:
-                    templateBuilder.imageNameMatches(properties.imagePattern);
-                    break;
-                case ImagePatternType.DESCRIPTION:
-                    templateBuilder.imageDescriptionMatches(properties.imagePattern);
-                    break;
-                default:
-                    throw new IllegalStateException("Unhandled imagePatternType: "+getImagePatternType());
-            }
+        if (properties.imageDescriptionPattern) {
+            templateBuilder.imageDescriptionMatches(properties.imageDescriptionPattern);
         }
 
         if (properties.imageNamePattern) {
             templateBuilder.imageNameMatches(properties.imageNamePattern);
         }
 
-        if (!(properties.imageId || properties.imagePattern) && properties.defaultImageId) {
+        if (!(properties.imageId || properties.imageDescriptionPattern || properties.imageNamePattern) && properties.defaultImageId) {
             templateBuilder.imageId(properties.defaultImageId);
         }
 
@@ -251,10 +242,6 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         return template;
     }
     
-    private ImagePatternType getImagePatternType() {
-        return ImagePatternType.DESCRIPTION;
-    }
-
     private String getPublicHostname(NodeMetadata node, Map allconf) {
         if (allconf.provider.equals("aws-ec2")) {
             return getPublicHostnameAws(node, allconf);
@@ -290,18 +277,5 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             if (line.startsWith("ec2-")) return line.trim()
         }
         throw new IllegalStateException("Could not obtain hostname for vm $vmIp ("+node.getId()+"); exitcode="+exitcode+"; stdout="+outString+"; stderr="+new String(errStream.toByteArray()))
-    }
-    
-    private static Map union(Map... maps) {
-        Map result = [:]
-        maps.each {
-            result.putAll(it)
-        }
-        return result
-    }
-    
-    enum ImagePatternType {
-        NAME,
-        DESCRIPTION;
     }
 }

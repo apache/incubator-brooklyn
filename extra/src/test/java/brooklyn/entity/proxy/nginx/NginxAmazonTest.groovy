@@ -67,8 +67,8 @@ public class NginxAmazonTest {
         sshPublicKey = new File(resource.path)
         
         CredentialsFromEnv creds = new CredentialsFromEnv("aws-ec2");
-		JcloudsLocationFactory locationFactory = new JcloudsLocationFactory(identity:creds.getIdentity(), credential:creds.getCredential())
-        loc = locationFactory.newLocation("aws-ec2", REGION_NAME)
+		JcloudsLocationFactory locationFactory = new JcloudsLocationFactory(provider:"aws-ec2",identity:creds.getIdentity(), credential:creds.getCredential())
+        loc = locationFactory.newLocation(REGION_NAME)
     }
     
     @Test(groups = "Live")

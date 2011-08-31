@@ -81,12 +81,13 @@ public class WebAppLiveIntegrationTest {
         File sshPublicKey = getResource("jclouds/id_rsa.pub")
         CredentialsFromEnv creds = new CredentialsFromEnv("aws-ec2");
         locFactory = new JcloudsLocationFactory([
+                provider:"aws-ec2",
                 identity:creds.getIdentity(),
                 credential:creds.getCredential(),
                 sshPublicKey:sshPublicKey,
                 sshPrivateKey:sshPrivateKey])
 
-        loc = locFactory.newLocation("aws-ec2", USEAST_REGION_NAME)
+        loc = locFactory.newLocation(USEAST_REGION_NAME)
         loc.setTagMapping( [
                 (JBoss6Server.class.getName()):[imageId:USEAST_IMAGE_ID,securityGroups:["brooklyn-all"]],
                 (JBoss7Server.class.getName()):[imageId:USEAST_IMAGE_ID,securityGroups:["brooklyn-all"]],

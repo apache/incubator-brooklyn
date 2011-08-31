@@ -79,6 +79,7 @@ public class Locations {
 
         CredentialsFromEnv creds = new CredentialsFromEnv("aws-ec2");
         return new JcloudsLocationFactory([
+                provider : "aws-ec2",
                 identity : creds.getIdentity(),
                 credential : creds.getCredential(),
                 sshPrivateKey : sshPrivateKey,
@@ -191,7 +192,7 @@ public class Locations {
         String imageIdMonterey = regionName+"/"+EC2_MONTEREY_IMAGES.get(regionName)
         String imageIdGemfire = regionName+"/"+EC2_GEMFIRE_IMAGES.get(regionName)
         JcloudsLocationFactory locationFactory = newAwsLocationFactory()
-        JcloudsLocation region = locationFactory.newLocation("aws-ec2", regionName)
+        JcloudsLocation region = locationFactory.newLocation(regionName)
         region.setTagMapping([
             (TomcatServer.class.getName()):[
                 imageId:imageIdVanilla,

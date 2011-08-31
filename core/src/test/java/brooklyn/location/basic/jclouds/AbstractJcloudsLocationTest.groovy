@@ -40,8 +40,8 @@ public abstract class AbstractJcloudsLocationTest {
     /**
      * The location, image pattern and image owner tuplets to test.
      */
-    @DataProvider(name = "fromImagePattern")
-    public abstract Object[][] cloudAndImagePatterns();
+    @DataProvider(name = "fromImageDescriptionPattern")
+    public abstract Object[][] cloudAndImageDescriptionPatterns();
 
     @BeforeMethod(groups = "Live")
     public void setUp() {
@@ -54,6 +54,7 @@ public abstract class AbstractJcloudsLocationTest {
         
         CredentialsFromEnv creds = new CredentialsFromEnv(provider);
         locFactory = new JcloudsLocationFactory([
+                provider:provider,
                 identity:creds.getIdentity(), 
                 credential:creds.getCredential(), 
                 sshPublicKey:sshPublicKey,
@@ -79,7 +80,7 @@ public abstract class AbstractJcloudsLocationTest {
     
     @Test(groups = [ "Live" ], dataProvider="fromImageId")
     public void testProvisionVmUsingImageId(String regionName, String imageId, String imageOwner) {
-        loc = locFactory.newLocation(provider, regionName)
+        loc = locFactory.newLocation(regionName)
         loc.setTagMapping([MyEntityType:[
             imageId:imageId,
             imageOwner:imageOwner
@@ -94,7 +95,7 @@ public abstract class AbstractJcloudsLocationTest {
     
     @Test(groups = [ "Live" ], dataProvider="fromImageNamePattern")
     public void testProvisionVmUsingImageNamePattern(String regionName, String imageNamePattern, String imageOwner) {
-        loc = locFactory.newLocation(provider, regionName)
+        loc = locFactory.newLocation(regionName)
         loc.setTagMapping([MyEntityType:[
             imageNamePattern:imageNamePattern,
             imageOwner:imageOwner
@@ -107,11 +108,11 @@ public abstract class AbstractJcloudsLocationTest {
         assertTrue machine.isSshable()
     }
     
-    @Test(groups = "Live", dataProvider="fromImagePattern")
-    public void testProvisionVmUsingImagePattern(String regionName, String imagePattern, String imageOwner) {
-        loc = locFactory.newLocation(provider, regionName)
+    @Test(groups = "Live", dataProvider="fromImageDescriptionPattern")
+    public void testProvisionVmUsingImageDescriptionPattern(String regionName, String imageDescriptionPattern, String imageOwner) {
+        loc = locFactory.newLocation(regionName)
         loc.setTagMapping([MyEntityType:[
-            imagePattern:imagePattern,
+            imageDescriptionPattern:imageDescriptionPattern,
             imageOwner:imageOwner
         ]])
         
@@ -122,7 +123,6 @@ public abstract class AbstractJcloudsLocationTest {
         assertTrue machine.isSshable()
     }
 
-    
     // Use this utility method to ensure 
     private SshMachineLocation obtainMachine(Map flags) {
         SshMachineLocation result = loc.obtain(flags)
