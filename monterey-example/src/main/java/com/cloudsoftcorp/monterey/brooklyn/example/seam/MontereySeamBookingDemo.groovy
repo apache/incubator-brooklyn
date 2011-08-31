@@ -101,7 +101,7 @@ public class MontereySeamBookingDemo extends AbstractApplication {
                         montereyManagementUrl : attributeWhenReady(montereyNetwork, MANAGEMENT_URL),
                         montereyUser : attributePostProcessedWhenReady(montereyNetwork, CLIENT_CREDENTIAL, { CredentialsConfig config -> config.username }),
                         montereyPassword : attributePostProcessedWhenReady(montereyNetwork, CLIENT_CREDENTIAL, { CredentialsConfig config -> config.password }),
-                        montereyLocation : cluster.locations.first().findLocationProperty("iso3166").first()
+                        montereyLocation : cluster.locations.first().findLocationProperty("iso3166")?.first()
                     ])
             return server;
         }
