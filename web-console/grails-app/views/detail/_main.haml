@@ -11,6 +11,8 @@
             %a{:href=>"#activity"}Activity
         %li
             %a{:href=>"#location"}Location
+        %li
+            %a{:href=>"#policies"}Policies
     #summary
         #summary-basic-info
         #summary-status
@@ -25,5 +27,7 @@
         %g:render{:template=>"detail-tabs/location"}
     #activity{:tabindex=>"4"}
         %g:render{:template=>"detail-tabs/activity"}
+    #policies{:tabindex=>"5"}
+        %g:render{:template=>"detail-tabs/policies"}
     %p{:class=>"bottom-filler"} &nbsp;
 #status Last update: <span id="status-message">No data yet.</span>

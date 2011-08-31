@@ -6,8 +6,11 @@ import grails.plugins.springsecurity.Secured
 import brooklyn.entity.Entity
 import brooklyn.web.console.entity.EntitySummary
 import brooklyn.web.console.entity.LocationSummary
+import brooklyn.web.console.entity.PolicySummary
 import brooklyn.location.Location
 import brooklyn.location.basic.AbstractLocation
+import brooklyn.policy.Policy
+import brooklyn.policy.basic.AbstractPolicy
 
 import brooklyn.web.console.entity.JsTreeNode
 import brooklyn.web.console.EntityService.NoSuchEntity
@@ -108,6 +111,28 @@ class EntityController {
             render(status: 400, text: '{message: "You must provide an entity id"}')
         }
     }
+
+    def policies = {
+        String id = params.id
+        if (id) {
+            Entity entity = entityService.getEntity(id)
+            if (entity != null) {
+                Collection<AbstractPolicy> entityPolicies = entity.getPolicies()
+                def policySummaries = []
+                for (policy in entityPolicies){
+                    //for each policy create policy summary and push to array
+                    policySummaries += new PolicySummary(policy)
+                }
+                render(policySummaries as JSON)
+            }
+             else {
+            render(status: 404, text: '{message: "Entity with specified id '+params.id+'does not exist"}')
+            }
+        } else {
+            render(status: 400, text: '{message: "You must provide an entity id"}')
+        }
+    }
+
 
     def effectors = {
         if (!params.id) {

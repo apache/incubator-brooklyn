@@ -47,7 +47,8 @@ class AbstractPolicy implements Policy {
        subscriptions.put(producer, handle)
        return handle
    }
-   
+   public String getName() { return displayName; }
+
    /**
     * Unsubscribes the given producer. 
     *
