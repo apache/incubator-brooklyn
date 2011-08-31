@@ -14,9 +14,9 @@ import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.basic.FixedListMachineProvisioningLocation
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.location.basic.aws.AWSCredentialsFromEnv
-import brooklyn.location.basic.aws.AwsLocation
-import brooklyn.location.basic.aws.AwsLocationFactory
+import brooklyn.location.basic.jclouds.CredentialsFromEnv
+import brooklyn.location.basic.jclouds.JcloudsLocation
+import brooklyn.location.basic.jclouds.JcloudsLocationFactory
 
 public class Locations {
     public static final String LOCALHOST = "localhost"
@@ -73,14 +73,14 @@ public class Locations {
 
     private Locations() { }
 
-    private static final AwsLocationFactory newAwsLocationFactory() {
+    private static final JcloudsLocationFactory newAwsLocationFactory() {
         File sshPrivateKey = new File("src/main/resources/jclouds/id_rsa.private")
         File sshPublicKey = new File("src/main/resources/jclouds/id_rsa.pub")
 
-        AWSCredentialsFromEnv creds = new AWSCredentialsFromEnv();
-        return new AwsLocationFactory([
-                identity : creds.getAWSAccessKeyId(),
-                credential : creds.getAWSSecretKey(),
+        CredentialsFromEnv creds = new CredentialsFromEnv("aws-ec2");
+        return new JcloudsLocationFactory([
+                identity : creds.getIdentity(),
+                credential : creds.getCredential(),
                 sshPrivateKey : sshPrivateKey,
                 sshPublicKey : sshPublicKey
             ])
@@ -186,12 +186,12 @@ public class Locations {
         return locations
     }
     
-    public static AwsLocation lookupAwsRegion(String regionName) {
+    public static JcloudsLocation lookupAwsRegion(String regionName) {
         String imageIdVanilla = regionName+"/"+EC2_VANILLA_IMAGES.get(regionName)
         String imageIdMonterey = regionName+"/"+EC2_MONTEREY_IMAGES.get(regionName)
         String imageIdGemfire = regionName+"/"+EC2_GEMFIRE_IMAGES.get(regionName)
-        AwsLocationFactory awsFactory = newAwsLocationFactory()
-        AwsLocation region = awsFactory.newLocation(regionName)
+        JcloudsLocationFactory locationFactory = newAwsLocationFactory()
+        JcloudsLocation region = locationFactory.newLocation("aws-ec2", regionName)
         region.setTagMapping([
             (TomcatServer.class.getName()):[
                 imageId:imageIdVanilla,

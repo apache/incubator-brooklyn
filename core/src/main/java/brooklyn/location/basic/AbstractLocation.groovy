@@ -79,18 +79,11 @@ public abstract class AbstractLocation implements Location {
         }
 
         Location l = (Location) o;
-
-        if ((this.getId() == null) || (l.getId() == null)) {
-            return false;
-        }
-
-        if (this.getId().equals(l.getId())) {
-            return true;
-        }
+		return getId().equals(l.getId());
     }
 
     public int hashCode() {
-        return this.getId().hashCode();
+        return getId().hashCode();
     }
 
     public boolean containsLocation(Location potentialDescendent) {

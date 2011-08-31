@@ -3,6 +3,7 @@ package brooklyn.location.basic.jclouds
 import static org.testng.Assert.*
 
 import org.testng.annotations.DataProvider
+import org.testng.annotations.Test
 
 class AwsEc2LocationTest extends AbstractJcloudsLocationTest {
     
@@ -34,5 +35,10 @@ class AwsEc2LocationTest extends AbstractJcloudsLocationTest {
     @DataProvider(name = "fromImageNamePattern")
     public Object[][] cloudAndImageNamePatterns() {
         return []
+    }
+    
+    // seems to be required in eclipse so that on the class I can runAs->testng
+    @Test
+    public void testDummy() {
     }
 }

@@ -22,9 +22,9 @@ import brooklyn.entity.webapp.jboss.JBoss6Server
 import brooklyn.entity.webapp.jboss.JBoss7Server
 import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.location.Location
-import brooklyn.location.basic.aws.AWSCredentialsFromEnv
-import brooklyn.location.basic.aws.AwsLocation
-import brooklyn.location.basic.aws.AwsLocationFactory
+import brooklyn.location.basic.jclouds.CredentialsFromEnv
+import brooklyn.location.basic.jclouds.JcloudsLocation
+import brooklyn.location.basic.jclouds.JcloudsLocationFactory
 import brooklyn.test.TestUtils
 import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.TimeExtras
@@ -52,8 +52,8 @@ public class WebAppLiveIntegrationTest {
     // The owner application entity for these tests
     Application application = new TestApplication()
 
-    private AwsLocationFactory locFactory
-    private AwsLocation loc
+    private JcloudsLocationFactory locFactory
+    private JcloudsLocation loc
 
     /**
      * Provides instances of {@link TomcatServer}, {@link JBoss6Server} and {@link JBoss7Server} to the tests below.
@@ -79,14 +79,14 @@ public class WebAppLiveIntegrationTest {
     public void setUp() {
         File sshPrivateKey = getResource("jclouds/id_rsa.private")
         File sshPublicKey = getResource("jclouds/id_rsa.pub")
-        AWSCredentialsFromEnv creds = new AWSCredentialsFromEnv();
-        locFactory = new AwsLocationFactory([
-                identity:creds.getAWSAccessKeyId(),
-                credential:creds.getAWSSecretKey(),
+        CredentialsFromEnv creds = new CredentialsFromEnv("aws-ec2");
+        locFactory = new JcloudsLocationFactory([
+                identity:creds.getIdentity(),
+                credential:creds.getCredential(),
                 sshPublicKey:sshPublicKey,
                 sshPrivateKey:sshPrivateKey])
 
-        loc = locFactory.newLocation(USEAST_REGION_NAME)
+        loc = locFactory.newLocation("aws-ec2", USEAST_REGION_NAME)
         loc.setTagMapping( [
                 (JBoss6Server.class.getName()):[imageId:USEAST_IMAGE_ID,securityGroups:["brooklyn-all"]],
                 (JBoss7Server.class.getName()):[imageId:USEAST_IMAGE_ID,securityGroups:["brooklyn-all"]],
@@ -110,7 +110,7 @@ public class WebAppLiveIntegrationTest {
         }
     }
 
-    @Test(groups = [ "Live", "WIP" ], dataProvider="basicEntities")
+    @Test(groups = [ "Live" ], dataProvider="basicEntities")
     public void testStartsWebAppInAws(final JavaWebApp entity) {
         entity.start([ loc ])
         try {

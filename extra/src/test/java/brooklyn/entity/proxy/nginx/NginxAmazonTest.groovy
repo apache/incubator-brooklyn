@@ -16,8 +16,9 @@ import brooklyn.entity.group.DynamicCluster
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.location.MachineLocation
-import brooklyn.location.basic.aws.AWSCredentialsFromEnv
-import brooklyn.location.basic.aws.AwsLocation
+import brooklyn.location.basic.jclouds.CredentialsFromEnv
+import brooklyn.location.basic.jclouds.JcloudsLocation
+import brooklyn.location.basic.jclouds.JcloudsLocationFactory
 import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.EntityStartUtils
 
@@ -33,7 +34,7 @@ public class NginxAmazonTest {
     private static final String REGION_NAME = "us-east-1"
     private static final String IMAGE_ID = REGION_NAME+"/"+"ami-2342a94a"
     
-    private AwsLocation aws
+    private JcloudsLocation loc
     private File sshPrivateKey
     private File sshPublicKey
 
@@ -65,8 +66,9 @@ public class NginxAmazonTest {
         assertNotNull resource
         sshPublicKey = new File(resource.path)
         
-        AWSCredentialsFromEnv creds = new AWSCredentialsFromEnv();
-        aws = new AwsLocation(identity:creds.getAWSAccessKeyId(), credential:creds.getAWSSecretKey(), providerLocationId:REGION_NAME)
+        CredentialsFromEnv creds = new CredentialsFromEnv("aws-ec2");
+		JcloudsLocationFactory locationFactory = new JcloudsLocationFactory(identity:creds.getIdentity(), credential:creds.getCredential())
+        loc = locationFactory.newLocation("aws-ec2", REGION_NAME)
     }
     
     @Test(groups = "Live")
@@ -78,7 +80,7 @@ public class NginxAmazonTest {
 	            sshPrivateKey:sshPrivateKey,
 	            securityGroups:[ "everything" ]
             ]
-        aws.setTagMapping([
+        loc.setTagMapping([
             "brooklyn.entity.webapp.tomcat.TomcatServer":imageData,
             "brooklyn.entity.proxy.nginx.NginxController":imageData,
         ])
@@ -89,7 +91,7 @@ public class NginxAmazonTest {
         URL war = getClass().getClassLoader().getResource("swf-booking-mvc.war")
         assertNotNull war, "Unable to locate resource $war"
         cluster.setConfig(TomcatServer.WAR, war.path)
-        cluster.start([ aws ])
+        cluster.start([ loc ])
 
         nginx = new NginxController([
                 "owner" : app,
@@ -99,7 +101,7 @@ public class NginxAmazonTest {
                 "portNumberSensor" : TomcatServer.HTTP_PORT,
             ])
 
-        nginx.start([ aws ])
+        nginx.start([ loc ])
         
         executeUntilSucceeds([:], {
             // Nginx URL is available
