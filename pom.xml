@@ -33,7 +33,7 @@
         <profile>
             <id>Monterey</id>
             <modules>
-                <module>com.cloudsoftcorp.monterey.brooklyn</module>
+                <module>monterey-integration</module>
                 <module>monterey-example</module>
             </modules>
         </profile>
