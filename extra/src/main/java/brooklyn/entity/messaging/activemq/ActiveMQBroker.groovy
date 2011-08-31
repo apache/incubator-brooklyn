@@ -33,7 +33,6 @@ public class ActiveMQBroker extends JavaApp {
 
     public static final ConfiguredAttributeSensor<Integer> OPEN_WIRE_PORT = [ Integer, "openwire.port", "OpenWire port", 61616 ]
 
-    String virtualHost
     Collection<String> queueNames = []
     Map<String, ActiveMQQueue> queues = [:]
     Collection<String> topicNames = []
@@ -44,8 +43,8 @@ public class ActiveMQBroker extends JavaApp {
 
         setConfigIfValNonNull(OPEN_WIRE_PORT.configKey, properties.openWirePort)
 
-        setAttribute(Attributes.JMX_USER, properties.user ?: "admin")
-        setAttribute(Attributes.JMX_PASSWORD, properties.password ?: "admin")
+        setConfigIfValNonNull(Attributes.JMX_USER.configKey, properties.user ?: "admin")
+        setConfigIfValNonNull(Attributes.JMX_PASSWORD.configKey, properties.password ?: "activemq")
 
         if (properties.queue) queueNames.add properties.queue
         if (properties.queues) queueNames.addAll properties.queues
@@ -63,11 +62,13 @@ public class ActiveMQBroker extends JavaApp {
         attributePoller.addSensor(JavaApp.SERVICE_UP, { computeNodeUp() } as ValueProvider)
     }
 
+    @Override
     public void postStart() {
         queueNames.each { String name -> createQueue(name) }
         topicNames.each { String name -> createTopic(name) }
     }
 
+    @Override
     public void preStop() {
         queues.each { String name, ActiveMQQueue queue -> queue.destroy() }
         topics.each { String name, ActiveMQTopic topic -> topic.destroy() }
@@ -91,10 +92,22 @@ public class ActiveMQBroker extends JavaApp {
     }
 
     protected boolean computeNodeUp() {
-        ValueProvider<String> provider = jmxAdapter.newAttributeProvider("org.apache.activemq:type=ServerInformation,name=ServerInformation", "ProductVersion")
+        String host = getAttribute(HOSTNAME)
+        ValueProvider<String> provider = jmxAdapter.newAttributeProvider("org.apache.camel:context=${host}/camel,type=components,name=\"activemq\"", "State")
+        try {
+            String state = provider.compute()
+            return (state == "Started")
+        } catch (InstanceNotFoundException infe) {
+            return false
+        }
+    }
+
+    protected boolean computeVersion() {
+        ValueProvider<String> provider = jmxAdapter.newAttributeProvider("org.apache.activemq:type=Broker,BrokerName=localhost", "BrokerVersion")
         try {
             String productVersion = provider.compute()
-	        return (productVersion == getAttribute(Attributes.VERSION))
+            log.error("*** activemq version iz {} ***", productVersion)
+            return (productVersion == getAttribute(Attributes.VERSION))
         } catch (InstanceNotFoundException infe) {
             return false
         }
@@ -104,8 +117,7 @@ public class ActiveMQBroker extends JavaApp {
 public abstract class ActiveMQBinding extends AbstractEntity {
     String virtualHost
 
-    protected ObjectName virtualHostManager
-    protected ObjectName exchange
+    protected ObjectName broker
 
     transient JmxSensorAdapter jmxAdapter
     transient AttributePoller attributePoller
@@ -115,6 +127,7 @@ public abstract class ActiveMQBinding extends AbstractEntity {
 
         Preconditions.checkNotNull name, "Name must be specified"
 
+        broker = new ObjectName("org.apache.activemq:Type=Broker,BrokerName=localhost")
         init()
 
         jmxAdapter = ((ActiveMQBroker) getOwner()).jmxAdapter
@@ -123,28 +136,15 @@ public abstract class ActiveMQBinding extends AbstractEntity {
         create()
     }
 
-    public abstract void init()
+    public abstract void init();
 
     public abstract void addJmxSensors()
 
     public abstract void removeJmxSensors()
 
-    public void create() {
-        jmxAdapter.operation(virtualHostManager, "createNewQueue", name, getOwner().getAttribute(Attributes.JMX_USER), true)
-        jmxAdapter.operation(exchange, "createNewBinding", name, name)
-        addJmxSensors()
-    }
+    public abstract void create();
 
-    public void delete() {
-        jmxAdapter.operation(exchange, "removeBinding", name, name)
-        jmxAdapter.operation(virtualHostManager, "deleteQueue", name)
-        removeJmxSensors()
-    }
-
-    /**
-     * Return the ActiveMQ BURL name for the queue.
-     */
-    public String getBindingUrl() { return String.format("BURL:%s", name) }
+    public abstract void delete();
 
     @Override
     public void destroy() {
@@ -163,20 +163,27 @@ public class ActiveMQQueue extends ActiveMQBinding implements Queue {
         super(properties, owner)
     }
 
+    @Override
     public void init() {
         setAttribute QUEUE_NAME, name
-        exchange = new ObjectName("org.apache.activemq:type=VirtualHost.Exchange,VirtualHost=\"${virtualHost}\",name=\"amq.direct\",ExchangeType=direct")
+    }
+
+    public void create() {
+        jmxAdapter.operation(broker, "addQueue", name)
+        addJmxSensors()
+    }
+
+    public void delete() {
+        jmxAdapter.operation(broker, "removeQueue", name)
+        removeJmxSensors()
     }
 
     public void addJmxSensors() {
-        String queue = "org.apache.activemq:type=VirtualHost.Queue,VirtualHost=\"${virtualHost}\",name=\"${name}\""
-        attributePoller.addSensor(QUEUE_DEPTH, jmxAdapter.newAttributeProvider(queue, "QueueDepth"))
-        attributePoller.addSensor(MESSAGE_COUNT, jmxAdapter.newAttributeProvider(queue, "MessageCount"))
+        String queue = "org.apache.activemq:Type=Queue,BrokerName=localhost,Destination=${name}"
+        attributePoller.addSensor(MESSAGE_COUNT, jmxAdapter.newAttributeProvider(queue, "QueueSize"))
     }
 
     public void removeJmxSensors() {
-        String queue = "org.apache.activemq:type=VirtualHost.Queue,VirtualHost=\"${virtualHost}\",name=\"${name}\""
-        attributePoller.removeSensor(QUEUE_DEPTH)
         attributePoller.removeSensor(MESSAGE_COUNT)
     }
 }
@@ -186,20 +193,27 @@ public class ActiveMQTopic extends ActiveMQBinding implements Topic {
         super(properties, owner)
     }
 
+    @Override
     public void init() {
         setAttribute TOPIC_NAME, name
-        exchange = new ObjectName("org.apache.activemq:type=VirtualHost.Exchange,VirtualHost=\"${virtualHost}\",name=\"amq.topic\",ExchangeType=topic")
+    }
+
+    public void create() {
+        jmxAdapter.operation(broker, "addTopic", name)
+        addJmxSensors()
+    }
+
+    public void delete() {
+        jmxAdapter.operation(broker, "removeTopic", name)
+        removeJmxSensors()
     }
 
     public void addJmxSensors() {
-        String topic = "org.apache.activemq:type=VirtualHost.Queue,VirtualHost=\"${virtualHost}\",name=\"${name}\""
-        attributePoller.addSensor(QUEUE_DEPTH, jmxAdapter.newAttributeProvider(topic, "QueueDepth"))
+        String topic = "org.apache.activemq:Type=Topic,BrokerName=localhost,Destination=${name}"
         attributePoller.addSensor(MESSAGE_COUNT, jmxAdapter.newAttributeProvider(topic, "MessageCount"))
     }
 
     public void removeJmxSensors() {
-        String topic = "org.apache.activemq:type=VirtualHost.Queue,VirtualHost=\"${virtualHost}\",name=\"${name}\""
-        attributePoller.removeSensor(QUEUE_DEPTH)
         attributePoller.removeSensor(MESSAGE_COUNT)
     }
 }

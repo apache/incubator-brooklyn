@@ -13,7 +13,7 @@ import brooklyn.util.SshBasedJavaWebAppSetup
  * Start a {@link QpidBroker} in a {@link Location} accessible over ssh.
  */
 public class QpidSetup extends SshBasedJavaAppSetup {
-    public static final String DEFAULT_VERSION = "0.10"
+    public static final String DEFAULT_VERSION = "0.12"
     public static final String DEFAULT_INSTALL_DIR = DEFAULT_INSTALL_BASEDIR+"/"+"qpid"
     public static final int DEFAULT_FIRST_AMQP_PORT = 5672
 

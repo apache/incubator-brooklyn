@@ -1,4 +1,4 @@
-package brooklyn.entity.messaging.qpid;
+package brooklyn.entity.messaging.activemq;
 
 import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
@@ -11,7 +11,7 @@ import javax.jms.Queue
 import javax.jms.Session
 import javax.jms.TextMessage
 
-import org.apache.qpid.client.AMQConnectionFactory
+import org.apache.activemq.ActiveMQConnectionFactory
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.AfterMethod
@@ -19,7 +19,6 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.Application
-import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.JavaApp
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
@@ -29,18 +28,18 @@ import brooklyn.util.internal.EntityStartUtils
 import brooklyn.util.internal.TimeExtras
 
 /**
- * Test the operation of the {@link QpidBroker} class.
+ * Test the operation of the {@link ActiveMQBroker} class.
  *
  * TODO clarify test purpose
  */
-public class QpidIntegrationTest {
-    private static final Logger log = LoggerFactory.getLogger(QpidIntegrationTest.class)
+public class ActiveMQIntegrationTest {
+    private static final Logger log = LoggerFactory.getLogger(ActiveMQIntegrationTest.class)
 
     static { TimeExtras.init() }
 
     private Application app
     private Location testLocation
-    private QpidBroker qpid
+    private ActiveMQBroker activeMQ
 
     @BeforeMethod(groups = "Integration")
     public void setup() {
@@ -50,8 +49,8 @@ public class QpidIntegrationTest {
 
     @AfterMethod(groups = "Integration")
     public void shutdown() {
-        if (qpid != null && qpid.getAttribute(Startable.SERVICE_UP)) {
-	        EntityStartUtils.stopEntity(qpid)
+        if (activeMQ != null && activeMQ.getAttribute(Startable.SERVICE_UP)) {
+	        EntityStartUtils.stopEntity(activeMQ)
         }
     }
 
@@ -60,14 +59,14 @@ public class QpidIntegrationTest {
      */
     @Test(groups = "Integration")
     public void canStartupAndShutdown() {
-        qpid = new QpidBroker(owner:app);
-        qpid.start([ testLocation ])
+        activeMQ = new ActiveMQBroker(owner:app);
+        activeMQ.start([ testLocation ])
         executeUntilSucceedsWithFinallyBlock ([:], {
-            assertTrue qpid.getAttribute(JavaApp.SERVICE_UP)
+            assertTrue activeMQ.getAttribute(JavaApp.SERVICE_UP)
         }, {
-            qpid.stop()
+            activeMQ.stop()
         })
-        assertFalse qpid.getAttribute(JavaApp.SERVICE_UP)
+        assertFalse activeMQ.getAttribute(JavaApp.SERVICE_UP)
     }
 
     /**
@@ -80,57 +79,57 @@ public class QpidIntegrationTest {
         String content = "01234567890123456789012345678901"
 
         // Start broker with a configured queue
-        qpid = new QpidBroker(owner:app, queue:queueName);
-        qpid.start([ testLocation ])
+        activeMQ = new ActiveMQBroker(owner:app, queue:queueName);
+        activeMQ.start([ testLocation ])
         executeUntilSucceeds([:], {
-            assertTrue qpid.getAttribute(JavaApp.SERVICE_UP)
+            assertTrue activeMQ.getAttribute(JavaApp.SERVICE_UP)
         })
 
         try {
             // Check queue created
-            assertFalse qpid.queueNames.isEmpty()
-            assertEquals qpid.queueNames.size(), 1
-            assertTrue qpid.queueNames.contains(queueName)
-            assertEquals qpid.ownedChildren.size(), 1
-            assertFalse qpid.queues.isEmpty()
-            assertEquals qpid.queues.size(), 1
+            assertFalse activeMQ.queueNames.isEmpty()
+            assertEquals activeMQ.queueNames.size(), 1
+            assertTrue activeMQ.queueNames.contains(queueName)
+            assertEquals activeMQ.ownedChildren.size(), 1
+            assertFalse activeMQ.queues.isEmpty()
+            assertEquals activeMQ.queues.size(), 1
 
             // Get the named queue entity
-            QpidQueue queue = qpid.queues[queueName]
+            ActiveMQQueue queue = activeMQ.queues[queueName]
             assertNotNull queue
+            assertEquals queue.name, queueName
 
             // Connect to broker using JMS and send messages
-            Connection connection = getQpidConnection(qpid)
-            clearQueue(connection, queue.bindingUrl)
+            Connection connection = getActiveMQConnection(activeMQ)
+            clearQueue(connection, queueName)
 			Thread.sleep 1000
-            assertEquals queue.getAttribute(QpidQueue.MESSAGE_COUNT), 0
-            sendMessages(connection, number, queue.bindingUrl, content)
+            assertEquals queue.getAttribute(ActiveMQQueue.MESSAGE_COUNT), 0
+            sendMessages(connection, number, queueName, content)
 
             // Check messages arrived
 			Thread.sleep 1000
-            assertEquals queue.getAttribute(QpidQueue.MESSAGE_COUNT), number
-            assertEquals queue.getAttribute(QpidQueue.QUEUE_DEPTH), number * content.length()
+            assertEquals queue.getAttribute(ActiveMQQueue.MESSAGE_COUNT), number
 
             // Clear the messages
-            assertEquals clearQueue(connection, queue.bindingUrl), number
+            assertEquals clearQueue(connection, queueName), number
 
             // Check messages cleared
 			Thread.sleep 1000
-            assertEquals queue.getAttribute(QpidQueue.MESSAGE_COUNT), 0
-            assertEquals queue.getAttribute(QpidQueue.QUEUE_DEPTH), 0
+            assertEquals queue.getAttribute(ActiveMQQueue.MESSAGE_COUNT), 0
 	        connection.close()
 
             // Close the JMS connection
         } finally {
             // Stop broker
-	        qpid.stop()
+	        activeMQ.stop()
         }
     }
 
-    private Connection getQpidConnection(QpidBroker qpid) {
-        int port = qpid.getAttribute(Attributes.AMQP_PORT)
-        AMQConnectionFactory factory = new AMQConnectionFactory("amqp://admin:admin@brooklyn/localhost?brokerlist='tcp://localhost:${port}'")
-        Connection connection = factory.createConnection();
+    private Connection getActiveMQConnection(ActiveMQBroker activeMQ) {
+        int port = activeMQ.getAttribute(ActiveMQBroker.OPEN_WIRE_PORT)
+        String address = activeMQ.getAttribute(ActiveMQBroker.ADDRESS)
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://${address}:${port}")
+        Connection connection = factory.createConnection("adfmin", "activemq");
         connection.start();
         return connection
     }

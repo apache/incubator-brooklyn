@@ -28,14 +28,12 @@ public class ActiveMQSetup extends SshBasedJavaAppSetup {
         Integer suggestedOpenWirePort = entity.getConfig(ActiveMQBroker.OPEN_WIRE_PORT.configKey)
 
         String version = suggestedVersion ?: DEFAULT_VERSION
-        String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"${version}"+"/"+"activemq-broker-${version}")
+        String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"${version}"+"/"+"apache-activemq-${version}")
         String runDir = suggestedRunDir ?: (BROOKLYN_HOME_DIR+"/"+"${entity.application.id}"+"/"+"activemq-${entity.id}")
         int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort, DEFAULT_FIRST_JMX_PORT))
-        int rmiPort = machine.obtainPort(toDesiredPortRange(jmxPort - 100))
         int openWirePort = machine.obtainPort(toDesiredPortRange(suggestedOpenWirePort, ActiveMQBroker.OPEN_WIRE_PORT.configKey.defaultValue))
 
         ActiveMQSetup result = new ActiveMQSetup(entity, machine)
-        result.setRmiPort(rmiPort)
         result.setJmxPort(jmxPort)
         result.setOpenWirePort(openWirePort)
         result.setVersion(version)
@@ -52,14 +50,6 @@ public class ActiveMQSetup extends SshBasedJavaAppSetup {
     public void setOpenWirePort(int val) {
         openWirePort = val
     }
-
-    public void setRmiPort(int val) {
-        rmiPort = val
-    }
-
-    /** JMX is configured using command line switch. */
-    @Override
-    protected Map getJmxConfigOptions() { [:] }
 
     @Override
     protected void setCustomAttributes() {
@@ -106,6 +96,9 @@ public class ActiveMQSetup extends SshBasedJavaAppSetup {
             "mkdir -p ${runDir}",
             "cd ${runDir}",
             "cp -R ${installDir}/{bin,conf,data,lib,webapps} .",
+            "sed -i.bk 's/broker /broker useJmx=\"true\" /g' conf/activemq.xml",
+            "sed -i.bk 's/managementContext createConnector=\"false\"/managementContext connectorPort=\"${jmxPort}\"/g' conf/activemq.xml",
+            "sed -i.bk 's/tcp:\\/\\/0.0.0.0:61616\"/tcp:\\/\\/${machine.address.hostName}:${openWirePort}\"/g' conf/activemq.xml",
         ]
         return script
     }
