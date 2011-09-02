@@ -28,7 +28,6 @@ Brooklyn.policies = (function(){
     }
 
     function policiesTabSelected(e,id){
-        alert('selected');
     }
 
     function executeAction(event){
