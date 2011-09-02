@@ -25,6 +25,10 @@ public abstract class AbstractJcloudsLocationTest {
         this.provider = provider
     }
     
+    protected CredentialsFromEnv getCredentials() {
+        return new CredentialsFromEnv(provider);
+    }
+        
     /**
      * The location and image id tuplets to test.
      */
@@ -52,7 +56,7 @@ public abstract class AbstractJcloudsLocationTest {
         assertNotNull resource
         sshPublicKey = new File(resource.path)
         
-        CredentialsFromEnv creds = new CredentialsFromEnv(provider);
+        CredentialsFromEnv creds = getCredentials();
         locFactory = new JcloudsLocationFactory([
                 provider:provider,
                 identity:creds.getIdentity(), 
