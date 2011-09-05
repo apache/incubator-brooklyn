@@ -33,5 +33,6 @@ public interface Resizable {
      * @return the new size of the group.
      */
     Integer resize(Integer desiredSize);
+    Integer getCurrentSize();
 }
 

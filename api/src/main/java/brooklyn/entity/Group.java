@@ -19,5 +19,5 @@ public interface Group extends Entity {
  
     boolean removeMember(Entity member);
     
-    int getCurrentSize();
+    Integer getCurrentSize();
 }
