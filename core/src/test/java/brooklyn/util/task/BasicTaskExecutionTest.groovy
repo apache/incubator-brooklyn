@@ -313,7 +313,8 @@ public class BasicTaskExecutionTest {
     @Test
     public void fieldsSetForBasicTaskSubmittedBasicTask() {
         //submitted BasicTask B is started by A, and waits for A to complete
-        BasicTask t = new BasicTask( displayName: "sample", description: "some descr", { em.submit tag:"B", {
+        BasicTask t = new BasicTask( displayName: "sample", description: "some descr", { 
+                em.submit expirationPolicy: ExpirationPolicy.NEVER, tag:"B", {
                 assertEquals(45, em.getTasksWithTag("A").iterator().next().get());
                 46 };
             45 } )
