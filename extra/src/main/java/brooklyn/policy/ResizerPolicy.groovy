@@ -1,8 +1,6 @@
 package brooklyn.policy
 
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.Executor
-import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -17,7 +15,8 @@ import brooklyn.event.AttributeSensor
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.policy.basic.AbstractPolicy
-import brooklyn.policy.trait.Suspendable;
+import brooklyn.policy.trait.Suspendable
+import brooklyn.util.task.BasicTask
 
 public class ResizerPolicy<T extends Number> extends AbstractPolicy implements SensorEventListener<T>, Suspendable {
     
@@ -27,9 +26,6 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
     // TODO The onEvent and policy generics say <T extends Number>, but then it is treated as a double in calculateDesiredSize.
     // Should be documented...
 
-    // TODO It's unfortunate we need to use an executor, and bad that we instantiate a single-threaded executor here.
-    // Want a better way...
-    
     // TODO Currently only does one resize at a time.
     // Imagine the threshold is set to 100. If we ramp up workrate to 450, but the policy sees events for 101 then 450, 
     // the first event will cause it to provision a single new instance. After the several minutes that this takes, it 
@@ -52,7 +48,6 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
     private final AtomicBoolean resizing = new AtomicBoolean(false)
     private final AtomicBoolean suspended = new AtomicBoolean(false)
     
-    private Executor executor = Executors.newSingleThreadExecutor() 
     private Closure resizeAction = {
         try {
             LOG.info "policy resizer performing resizing..."
@@ -119,9 +114,9 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
     }
 
     private void resize() {
-            executor.execute(resizeAction)
         if (!suspended.get() && (!entityStartable || entity.getAttribute(Startable.SERVICE_UP))
                 && resizing.compareAndSet(false, true)) {
+            ((EntityLocal)entity).getManagementContext().getExecutionContext(entity).submit(new BasicTask(resizeAction))
         }
     }
 
