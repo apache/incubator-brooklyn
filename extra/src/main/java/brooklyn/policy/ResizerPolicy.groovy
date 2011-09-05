@@ -10,7 +10,9 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
-import brooklyn.entity.group.DynamicCluster
+import brooklyn.entity.basic.EntityLocal
+import brooklyn.entity.trait.Resizable
+import brooklyn.entity.trait.Startable
 import brooklyn.event.AttributeSensor
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
@@ -21,9 +23,6 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
     
     // TODO Need a better approach for resume/suspend: currently DynamicCluster calls this on start/stop,
     // but other entities do not!
-    
-    // TODO ResizerPolicy should work with anything that is "Resizable", rather than only DynamicCluster.
-    // Should not lookup DynamicCluster.SERVICE_UP or Group.getCurrentSize
     
     // TODO The onEvent and policy generics say <T extends Number>, but then it is treated as a double in calculateDesiredSize.
     // Should be documented...
@@ -39,7 +38,8 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
     private static final Logger LOG = LoggerFactory.getLogger(ResizerPolicy.class)
 
     private AttributeSensor<T> source
-    private DynamicCluster dynamicCluster
+    private Resizable resizable
+    private boolean entityStartable = false
     private String[] metricName
     private double metricLowerBound
     private double metricUpperBound
@@ -57,11 +57,11 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
         try {
             LOG.info "policy resizer performing resizing..."
             int desire = desiredSize.get()
-            dynamicCluster.resize(desire)
+            resizable.resize(desire)
             while (desire != desiredSize.get()) {
                 LOG.info "policy resizer performing re-resizing..."
                 desire = desiredSize.get()
-                dynamicCluster.resize(desire)
+                resizable.resize(desire)
             }
             LOG.info "policy resizer resizing complete"
         } finally {
@@ -80,8 +80,11 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
     @Override
     public void setEntity(Entity entity) {
         super.setEntity(entity)
-        assert entity instanceof DynamicCluster
-        this.dynamicCluster = entity
+        assert entity instanceof Resizable
+        this.resizable = entity
+        if(entity instanceof Startable) {
+            entityStartable = true
+        }
         subscribe(entity, source, this)
     }
 
@@ -116,14 +119,15 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
     }
 
     private void resize() {
-        if (!suspended.get() && dynamicCluster.getAttribute(DynamicCluster.SERVICE_UP) && resizing.compareAndSet(false, true)) {
             executor.execute(resizeAction)
+        if (!suspended.get() && (!entityStartable || entity.getAttribute(Startable.SERVICE_UP))
+                && resizing.compareAndSet(false, true)) {
         }
     }
 
     public void onEvent(SensorEvent<T> event) {
         def val = event.getValue()
-        def currentSize = dynamicCluster.getCurrentSize()
+        int currentSize = resizable.getCurrentSize()
         desiredSize.set(calculateDesiredSize(val))
 
         if (desiredSize.get() != currentSize) {
@@ -140,8 +144,8 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
     //      PID design (proportional-integral-derivative)
     // TODO Could show example of overriding this to do something smarter
     protected int calculateDesiredSize(double currentMetric) {
-        def currentSize = dynamicCluster.getCurrentSize()
-        def desiredSize
+        int currentSize = resizable.getCurrentSize()
+        int desiredSize
         if (0 < currentMetric - metricUpperBound) {
             desiredSize = currentSize+Math.ceil(currentSize * ((currentMetric - metricUpperBound) / metricUpperBound))// scale out
         } else if (0 < metricLowerBound - currentMetric) {
