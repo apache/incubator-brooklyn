@@ -23,9 +23,6 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
     // TODO Need a better approach for resume/suspend: currently DynamicCluster calls this on start/stop,
     // but other entities do not!
     
-    // TODO The onEvent and policy generics say <T extends Number>, but then it is treated as a double in calculateDesiredSize.
-    // Should be documented...
-
     // TODO Currently only does one resize at a time.
     // Imagine the threshold is set to 100. If we ramp up workrate to 450, but the policy sees events for 101 then 450, 
     // the first event will cause it to provision a single new instance. After the several minutes that this takes, it 
@@ -37,8 +34,8 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
     private Resizable resizable
     private boolean entityStartable = false
     private String[] metricName
-    private double metricLowerBound
-    private double metricUpperBound
+    private T metricLowerBound
+    private T metricUpperBound
     private int minSize
     private int maxSize = Integer.MAX_VALUE
 
@@ -83,12 +80,12 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
         subscribe(entity, source, this)
     }
 
-    public ResizerPolicy setMetricLowerBound(double val) {
+    public ResizerPolicy setMetricLowerBound(T val) {
         this.metricLowerBound = val
         this
     }
 
-    public ResizerPolicy setMetricUpperBound(double val) {
+    public ResizerPolicy setMetricUpperBound(T val) {
         this.metricUpperBound = val
         this
     }
@@ -121,7 +118,7 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
     }
 
     public void onEvent(SensorEvent<T> event) {
-        def val = event.getValue()
+        T val = event.getValue()
         int currentSize = resizable.getCurrentSize()
         desiredSize.set(calculateDesiredSize(val))
 
@@ -138,7 +135,7 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
     // TODO Could have throttling etc so don't repeatedly call grow; standard control theory stuff such as
     //      PID design (proportional-integral-derivative)
     // TODO Could show example of overriding this to do something smarter
-    protected int calculateDesiredSize(double currentMetric) {
+    protected int calculateDesiredSize(T currentMetric) {
         int currentSize = resizable.getCurrentSize()
         int desiredSize
         if (0 < currentMetric - metricUpperBound) {
