@@ -11,6 +11,8 @@ import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.Location
 import brooklyn.location.basic.GeneralPurposeLocation
+import brooklyn.policy.Policy
+import brooklyn.policy.basic.GeneralPurposePolicy
 import brooklyn.management.Task
 import brooklyn.web.console.entity.TestEffector
 import grails.converters.JSON
@@ -31,6 +33,14 @@ private class TestWebApplication extends AbstractApplication {
             new GeneralPurposeLocation([id: "fruitcake", name:"Unused location in cakeland", iso3166: "IE", displayName:"Unused location in cakeland", streetAddress:"Nowhere, cakeland", description:"Nowhere",
                                         latitude:0,longitude:0])
         ];
+
+        private List<Policy> testPolicies = [
+            new GeneralPurposePolicy([id: 'CTS1', name: 'chase-the-sun', displayName: 'Chase the Sun', policyStatus: 'Suspended']),
+            new GeneralPurposePolicy([id: 'CTM1', name: 'chase-the-moon', displayName: 'Chase the Moon', policyStatus: 'Active']),
+            new GeneralPurposePolicy([id: 'FTM1', name: 'follow-the-money', displayName: 'Follow the Money', policyStatus: 'Suspended']),
+            new GeneralPurposePolicy([id: 'FTA1', name: 'follow-the-action', displayName: 'Follow the Action', policyStatus: 'Active'])
+        ];
+
 
         Entity testExtraGroup = new TestGroupEntity(this, "Another group for testing");
         setupChangingEntity(this);
@@ -120,12 +130,16 @@ private class TestWebApplication extends AbstractApplication {
             new GeneralPurposeLocation([id: "eu-west-1", name:"EU-West-1", iso3166: "IE", displayName:"EU-West-1", streetAddress:"Dublin, Ireland", description:"Dublin, Ireland",
                                         latitude:53.34778,longitude:-6.25972])
         ];
+        private List<Policy> testPolicies = [
+            new GeneralPurposePolicy([id: 'CTS1', name: 'chase-the-sun', displayName: 'Chase the Sun', policyStatus: 'Suspended', description: 'Chasing the sun, meaning chase the activity when certain parts of the earth are awake']),
+            new GeneralPurposePolicy([id: 'CTM1', name: 'chase-the-moon', displayName: 'Chase the Moon', policyStatus: 'Active'])
+        ];
         TestDataEntity(Entity owner, String displayName) {
             super([:], owner)
 
             this.displayName = displayName
             this.locations = testLocations;
-
+            this.policies = testPolicies;
             TestEffector startDB = new TestEffector("Start DB", "This will start the database",
                     new ArrayList<ParameterType<?>>())
             TestEffector stopDB = new TestEffector("Stop DB", "This will stop the database",
@@ -163,11 +177,17 @@ private class TestWebApplication extends AbstractApplication {
                 new GeneralPurposeLocation([id: "us-east-1", name:"US-East-1", iso3166: "US-VA", displayName:"US-East-1", streetAddress:"Northern Virginia, USA", description:"Northern Virginia (approx)",
                                             latitude:38.0,longitude:-76.0])
         ];
+        private List<Policy> testPolicies = [
+            new GeneralPurposePolicy([id: 'FTM1', name: 'follow-the-money', displayName: 'Follow the Money', policyStatus: 'Suspended']),
+            new GeneralPurposePolicy([id: 'FTA1', name: 'follow-the-action', displayName: 'Follow the Action', policyStatus: 'Active'])
+        ];
+
 
         public TestTomcatEntity(Entity owner, String displayName) {
             super([:], owner)
             this.displayName = displayName
             this.locations = testLocations;
+            this.policies = testPolicies;
 
             // Stealing the sensors from TomcatNode
             this.sensors.putAll(new TomcatServer().sensors)

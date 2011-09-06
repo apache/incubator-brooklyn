@@ -15,17 +15,22 @@ import brooklyn.management.SubscriptionContext
 import brooklyn.management.SubscriptionHandle
 import brooklyn.management.internal.BasicSubscriptionContext
 import brooklyn.policy.Policy
+import com.google.common.base.Preconditions
 import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.task.BasicExecutionContext;
 
 /**
  * Default {@link Policy} implementation.
  */
-class AbstractPolicy implements Policy {
+public abstract class AbstractPolicy implements Policy {
    private static final Logger log = LoggerFactory.getLogger(AbstractPolicy.class);
 
    String id = LanguageUtils.newUid();
    String displayName;
+   String policyStatus;
+   protected String name;
+   protected Map leftoverProperties
+
    
    protected transient Entity entity
    protected transient ExecutionContext execution
@@ -33,7 +38,22 @@ class AbstractPolicy implements Policy {
    
    private Map<Entity, SubscriptionHandle> subscriptions = new HashMap<Entity, SubscriptionHandle>()
    
-   public AbstractPolicy() { }
+   public AbstractPolicy(Map properties = [:]) {
+        if (properties.name) {
+            Preconditions.checkArgument properties.name instanceof String, "'name' property should be a string"
+            name = properties.name
+        } else if (properties.displayName) {
+            Preconditions.checkArgument properties.displayName instanceof String, "'displayName' property should be a string"
+            name = properties.displayName
+        }
+        if (properties.id) {
+            Preconditions.checkArgument properties.id == null || properties.id instanceof String,
+                "'id' property should be a string"
+            id = properties.remove("id")
+        }
+        leftoverProperties = properties
+
+   }
 
    public void setEntity(Entity entity) {
        this.entity = entity;
@@ -48,6 +68,7 @@ class AbstractPolicy implements Policy {
        return handle
    }
    public String getName() { return displayName; }
+   public String getId() { return id; }
 
    /**
     * Unsubscribes the given producer. 
@@ -62,4 +83,12 @@ class AbstractPolicy implements Policy {
    private ManagementContext getManagementContext() {
        entity.getManagementContext();
    }
+
+   public boolean hasPolicyProperty(String key) { return leftoverProperties.containsKey(key); }
+   public Object getPolicyProperty(String key) { return leftoverProperties.get(key); }
+   public Object findPolicyProperty(String key) {
+        if (hasPolicyProperty(key)) return getPolicyProperty(key);
+        return null;
+    }
+
 }

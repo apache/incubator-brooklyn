@@ -354,3 +354,22 @@ textarea#logbox{
 .mapbox dt:after {
     content: ":";
 }
+
+.policy-details-container{
+    margin:0px;
+}
+#policyAction{
+    width:170px;
+    margin:10px;
+}
+#policyControls{
+    padding-left:100px;
+}
+.policy-header-label{
+    width:100%;
+    text-align:left;
+}
+.policy-data-container{
+    width:100%;
+    padding-left:10px;
+}

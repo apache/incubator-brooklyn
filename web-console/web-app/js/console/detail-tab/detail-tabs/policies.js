@@ -3,6 +3,7 @@ Brooklyn.policies = (function(){
     var tableId = '#policies-data';
     var aoColumns = [   {"mDataProp": "displayName", "sTitle": "Policy Name", "sWidth": "65%"},
                         {"mDataProp": "policyStatus", "sTitle": "Status", "sWidth": "35%"}];
+    var appPolicies;
 
     function PoliciesTab() {
         this.id = 'policies';
@@ -20,8 +21,39 @@ Brooklyn.policies = (function(){
     PoliciesTab.prototype = new Brooklyn.tabs.Tab();
 
     function updatePolicySelection(event){
-    //when user selects policy from grid
+        //when user selects policy from grid
+        reset();
+        $(event.target.parentNode).addClass('row_selected');
+        document.getElementById('policyAction').disabled = false;
+        var result = Brooklyn.util.getDataTableSelectedRowData(tableId, event);
+        var name = result.displayName;
+        var description = result.description;
+        $('#policyName').empty();
+        var nameText = document.createElement("p");
+        if(name!=null){
+            nameText.textContent = name;
+        }
+        else{
+            nameText.textContent = 'The policy has no name';
+        }
+        $('#policyName').append(nameText);
+        $('#policyDescription').empty();
+        var descriptionText = document.createElement("p");
+        if(description!=null){
+            descriptionText.textContent = description;
+        }
+        else{
+            descriptionText.textContent = 'This policy has no description';
+        }
+        $('#policyDescription').append(descriptionText);
     }
+    function reset() {
+        var settings = Brooklyn.util.getDataTable(tableId).fnSettings().aoData;
+        for(var row in settings) {
+            $(settings[row].nTr).removeClass('row_selected');
+        }
+    }
+
 
     function updatePoliciesTable(policies){
         Brooklyn.util.getDataTable(tableId, '.', aoColumns, updatePolicySelection, policies);
@@ -31,8 +63,12 @@ Brooklyn.policies = (function(){
     }
 
     function executeAction(event){
-        if(confirm("Are you sure you wish to execute?")){
-            alert("YOUVE EXECUTED");
+        var chosenAction = document.getElementById('policyAction').value;
+        if(chosenAction=='default'){ alert('You must choose an action to execute!'); }
+        else{
+            if(confirm("Are you sure you wish to "+chosenAction+" this policy?")){
+                alert("YOUVE EXECUTED");
+            }
         }
     }
 

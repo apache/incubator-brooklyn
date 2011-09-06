@@ -16,10 +16,16 @@ import brooklyn.policy.basic.AbstractPolicy
 public class PolicySummary {
     final String displayName
     final String policyStatus
+    final String name
+    final String id
+    final String description
 
     public PolicySummary(Policy policy) {
-        displayName = policy.getName()
-        policyStatus = 'status'
+        id = policy.findPolicyProperty('id')
+        description = policy.findPolicyProperty('description')
+        name = policy.findPolicyProperty('name')
+        displayName = policy.findPolicyProperty('displayName')
+        policyStatus = policy.findPolicyProperty('policyStatus')
         }
 
 }
