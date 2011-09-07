@@ -67,7 +67,7 @@ public abstract class AbstractPolicy implements Policy {
        subscriptions.put(producer, handle)
        return handle
    }
-   public String getName() { return displayName; }
+   public String getName() { return name; }
    public String getId() { return id; }
 
    /**

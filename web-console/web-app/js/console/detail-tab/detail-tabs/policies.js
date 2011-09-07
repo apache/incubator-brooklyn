@@ -1,9 +1,12 @@
 Brooklyn.policies = (function(){
-    
+    var policyName;
+    var policyDescription;
+    var policyId;
     var tableId = '#policies-data';
     var aoColumns = [   {"mDataProp": "displayName", "sTitle": "Policy Name", "sWidth": "65%"},
                         {"mDataProp": "policyStatus", "sTitle": "Status", "sWidth": "35%"}];
     var appPolicies;
+    var selectedEntityId;
 
     function PoliciesTab() {
         this.id = 'policies';
@@ -13,6 +16,7 @@ Brooklyn.policies = (function(){
                     function() {
                         $(Brooklyn.eventBus).trigger('update_failed', "Policy view could not get policies");
                     });
+                selectedEntityId = this.entity_id;
             }
         }
         this.makeHandlers();
@@ -26,12 +30,13 @@ Brooklyn.policies = (function(){
         $(event.target.parentNode).addClass('row_selected');
         document.getElementById('policyAction').disabled = false;
         var result = Brooklyn.util.getDataTableSelectedRowData(tableId, event);
-        var name = result.displayName;
-        var description = result.description;
+        policyName = result.displayName;
+        policyDescription = result.description;
+        policyId = result.id;
         $('#policyName').empty();
         var nameText = document.createElement("p");
-        if(name!=null){
-            nameText.textContent = name;
+        if(policyName!=null){
+            nameText.textContent = policyName;
         }
         else{
             nameText.textContent = 'The policy has no name';
@@ -39,8 +44,8 @@ Brooklyn.policies = (function(){
         $('#policyName').append(nameText);
         $('#policyDescription').empty();
         var descriptionText = document.createElement("p");
-        if(description!=null){
-            descriptionText.textContent = description;
+        if(policyDescription!=null){
+            descriptionText.textContent = policyDescription;
         }
         else{
             descriptionText.textContent = 'This policy has no description';
@@ -67,7 +72,19 @@ Brooklyn.policies = (function(){
         if(chosenAction=='default'){ alert('You must choose an action to execute!'); }
         else{
             if(confirm("Are you sure you wish to "+chosenAction+" this policy?")){
-                alert("YOUVE EXECUTED");
+                var dataMap = new Object();
+                dataMap["entityId"] = selectedEntityId;
+                dataMap["policyId"] = policyId;
+                dataMap["chosenAction"] = chosenAction;
+                $.ajax({
+                    url: "../entity/execute",
+                    data: dataMap,
+                    success: function(){
+                        alert('Policy: "' + policyId + '" has had action ' + chosenAction + ' executed upon it');
+                        //reset UI components now.
+                    }
+                });
+
             }
         }
     }

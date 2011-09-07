@@ -14,6 +14,8 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import brooklyn.event.AttributeSensor
 import brooklyn.location.Location
 import brooklyn.location.basic.GeneralPurposeLocation
+import brooklyn.policy.Policy
+import brooklyn.policy.basic.GeneralPurposePolicy
 import brooklyn.management.internal.AbstractManagementContext
 
 public class EntityService {
@@ -103,6 +105,13 @@ public class EntityService {
         if (!entity) throw new NoSuchEntity()
         
         return entity.entityClass.effectors
+    }
+
+    public Collection<Policy> getPoliciesOfEntity(String entityId) {
+        Entity entity = getEntity(entityId)
+        if (!entity) throw new NoSuchEntity()
+
+        entity.policies
     }
 
     public List<Entity> getAncestorsOf(Entity child) {

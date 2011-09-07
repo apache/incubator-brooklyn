@@ -11,6 +11,7 @@ import brooklyn.location.Location
 import brooklyn.location.basic.AbstractLocation
 import brooklyn.policy.Policy
 import brooklyn.policy.basic.AbstractPolicy
+import brooklyn.policy.basic.GeneralPurposePolicy
 
 import brooklyn.web.console.entity.JsTreeNode
 import brooklyn.web.console.EntityService.NoSuchEntity
@@ -233,4 +234,40 @@ class EntityController {
         }
         render true
     }
+    /* Execute an action against a policy with given ID and action string*/
+    def execute = {
+        Entity entity = entityService.getEntity(params.entityId)
+        if (!entity) {
+            render(status: 404, text: '{message: "Entity with specified id '+params.entityId+'does not exist"}')
+            return
+        }
+        
+        Collection<Policy> policiesOfEntity = entityService.getPoliciesOfEntity(entity.id)
+
+        if(policiesOfEntity != null){
+            Policy policy = policiesOfEntity.find {
+                it.id.equals(params.policyId)
+            }
+
+            if(policy != null){
+                String action = params.chosenAction
+                if(action == 'pause'){
+                //pause the policy
+                //policy.pause()
+                }
+                else if(action == 'start'){
+                //start the policy
+                //policy.start()
+                }
+                else {
+                //destroy the policy
+                //policy.destroy
+                }
+            } else {
+                render(status: 404, text: '{message: "Cannot invoke policy action for '+ params.policyId + ' does not exist"}')
+            }
+        }
+        render true
+    }
+
 }

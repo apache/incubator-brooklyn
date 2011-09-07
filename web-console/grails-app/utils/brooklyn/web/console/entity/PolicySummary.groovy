@@ -21,12 +21,12 @@ public class PolicySummary {
     final String description
 
     public PolicySummary(Policy policy) {
-        id = policy.findPolicyProperty('id')
+        id = policy.getId()
         description = policy.findPolicyProperty('description')
-        name = policy.findPolicyProperty('name')
+        name = policy.getName()
         displayName = policy.findPolicyProperty('displayName')
         policyStatus = policy.findPolicyProperty('policyStatus')
-        }
+    }
 
 }
 
