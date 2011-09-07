@@ -407,7 +407,17 @@
                             </links>
                             <keywords>true</keywords>
                             <author>false</author>
+                            <quiet>true</quiet>
                         </configuration>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <phase>process-classes</phase>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
                     </plugin>
                     <plugin>
                         <artifactId>maven-jar-plugin</artifactId>
