@@ -80,6 +80,10 @@ public abstract class AbstractPolicy implements Policy {
        if (handle) subscription.unsubscribe(handle)
    }
    
+   public void start(){}
+   public void pause(){}
+   public void destroy(){}
+
    private ManagementContext getManagementContext() {
        entity.getManagementContext();
    }

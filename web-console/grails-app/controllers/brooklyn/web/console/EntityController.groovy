@@ -252,16 +252,13 @@ class EntityController {
             if(policy != null){
                 String action = params.chosenAction
                 if(action == 'pause'){
-                //pause the policy
-                //policy.pause()
+                    policy.pause()
                 }
                 else if(action == 'start'){
-                //start the policy
-                //policy.start()
+                    policy.start()
                 }
                 else {
-                //destroy the policy
-                //policy.destroy
+                    policy.destroy()
                 }
             } else {
                 render(status: 404, text: '{message: "Cannot invoke policy action for '+ params.policyId + ' does not exist"}')

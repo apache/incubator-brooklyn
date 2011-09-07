@@ -36,4 +36,14 @@ public interface Policy {
      * the parent hierarchy until it is found, or the root is reached (when this method will return <code>null</code>).
      */
     Object findPolicyProperty(String key);
+
+    /**
+     * methods for actions which can be executed against a policy
+     */
+
+    void start();
+
+    void pause();
+
+    void destroy();
 }
