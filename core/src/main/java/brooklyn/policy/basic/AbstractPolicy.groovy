@@ -34,7 +34,7 @@ public abstract class AbstractPolicy implements Policy {
    private Boolean destroyed;
 
    
-   protected transient Entity entity
+   protected transient EntityLocal entity
    protected transient ExecutionContext execution
    protected transient SubscriptionContext subscription
    
@@ -57,7 +57,7 @@ public abstract class AbstractPolicy implements Policy {
 
    }
 
-   public void setEntity(Entity entity) {
+   public void setEntity(EntityLocal entity) {
        this.entity = entity;
        this.subscription = new BasicSubscriptionContext(getManagementContext().getSubscriptionManager(), this)
        this.execution = new BasicExecutionContext([tags:[entity,this]], getManagementContext().getExecutionManager())
