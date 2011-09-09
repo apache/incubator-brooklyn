@@ -129,7 +129,7 @@ public class ActiveMQIntegrationTest {
         int port = activeMQ.getAttribute(ActiveMQBroker.OPEN_WIRE_PORT)
         String address = activeMQ.getAttribute(ActiveMQBroker.ADDRESS)
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://${address}:${port}")
-        Connection connection = factory.createConnection("adfmin", "activemq");
+        Connection connection = factory.createConnection("admin", "activemq");
         connection.start();
         return connection
     }
