@@ -1,6 +1,9 @@
 package brooklyn.event.adapter
 
 import javax.management.MBeanServerConnection
+import javax.management.Notification;
+import javax.management.NotificationFilter;
+import javax.management.NotificationListener;
 import javax.management.ObjectInstance
 import javax.management.ObjectName
 import javax.management.remote.JMXConnector
@@ -12,6 +15,7 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.EntityLocal
+import brooklyn.event.AttributeSensor
 
 import com.google.common.base.Preconditions
 
@@ -24,6 +28,10 @@ import com.google.common.base.Preconditions
  */
 public class JmxSensorAdapter {
     private static final Logger log = LoggerFactory.getLogger(JmxSensorAdapter.class);
+    
+    private static final ENABLED = new NotificationFilter() {
+        public boolean isNotificationEnabled(Notification notification) { true }
+    }
     
     private static final Map<String,String> PRIMITIVES = [
             "Integer" : Integer.TYPE.name,
@@ -113,18 +121,23 @@ public class JmxSensorAdapter {
         if (!isConnected()) throw new IllegalStateException("Not connected to JMX for entity $entity")
     }
 
-    /**
-     * Returns a specific attribute for a JMX {@link ObjectName}.
-     */
-    private Object getAttribute(ObjectName objectName, String attribute) {
-        checkConnected()
-        
+    private ObjectInstance findMBean(ObjectName objectName) {
         Set<ObjectInstance> beans = mbsc.queryMBeans(objectName, null)
         if (beans.isEmpty() || beans.size() > 1) {
             log.warn "JMX object name query returned {} values for {}", beans.size(), objectName.canonicalName
             return null
         }
         ObjectInstance bean = beans.find { true }
+        return bean
+    }
+
+    /**
+     * Returns a specific attribute for a JMX {@link ObjectName}.
+     */
+    private Object getAttribute(ObjectName objectName, String attribute) {
+        checkConnected()
+        
+        ObjectInstance bean = findMBean objectName
         def result = mbsc.getAttribute(bean.objectName, attribute)
         log.trace "got value {} for jmx attribute {}.{}", result, objectName.canonicalName, attribute
         return result
@@ -136,12 +149,7 @@ public class JmxSensorAdapter {
     private Object operation(ObjectName objectName, String method, Object...arguments) {
         checkConnected()
         
-        Set<ObjectInstance> beans = mbsc.queryMBeans(objectName, null)
-        if (beans.isEmpty() || beans.size() > 1) {
-            log.warn "JMX object name query returned {} values for {}", beans.size(), objectName.canonicalName
-            return null
-        }
-        ObjectInstance bean = beans.find { true }
+        ObjectInstance bean = findMBean objectName
         String[] signature = new String[arguments.size()]
         arguments.eachWithIndex { it, int index ->
             signature[index] =
@@ -150,6 +158,11 @@ public class JmxSensorAdapter {
         def result = mbsc.invoke(objectName, method, arguments, signature)
         log.trace "got result {} for jmx operation {}.{}", result, objectName.canonicalName, method
         return result
+    }
+
+    private void addNotification(ObjectName objectName, String attribute, NotificationListener listener) {
+        ObjectInstance bean = findMBean objectName
+        mbsc.addNotificationListener(objectName, listener, ENABLED, null)
     }
 }
 
@@ -190,5 +203,32 @@ public class JmxOperationProvider<T> implements ValueProvider<T> {
     
     public T compute() {
         return adapter.operation(objectName, method, arguments)
+    }
+}
+
+/**
+ * Provides JMX attribute values to a sensor.
+ */
+public class JmxAttributeNotifier implements NotificationListener {
+    private final JmxSensorAdapter adapter
+    private final ObjectName objectName
+    private final String attribute
+    private final EntityLocal entity
+    private final AttributeSensor sensor
+    
+    public JmxAttributeNotifier(JmxSensorAdapter adapter, ObjectName objectName, String attribute, EntityLocal entity, AttributeSensor sensor) {
+        this.adapter = Preconditions.checkNotNull(adapter, "adapter")
+        this.objectName = Preconditions.checkNotNull(objectName, "object name")
+        this.attribute = Preconditions.checkNotNull(attribute, "attribute")
+        this.entity = Preconditions.checkNotNull(entity, "entity")
+        this.sensor = Preconditions.checkNotNull(sensor, "sensor")
+        
+        adapter.addNotification(objectName, attribute, this)
+    }
+    
+    public void handleNotification(Notification notification, Object handback) {
+        if (notification.type.equals(sensor.name)) {
+            entity.setAttribute(sensor, notification.userData)
+        }
     }
 }
