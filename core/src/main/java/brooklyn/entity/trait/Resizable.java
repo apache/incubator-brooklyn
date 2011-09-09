@@ -15,6 +15,8 @@ import brooklyn.entity.basic.EffectorWithExplicitImplementation;
  * can be reduced (by shutting down some of them) or increased (by provisioning new entities.)
  */
 public interface Resizable {
+
+    /* Tell Brooklyn about the effectors of this entity. */
     @SuppressWarnings({ "rawtypes" })
     Effector<Integer> RESIZE = new EffectorWithExplicitImplementation<Resizable, Integer>("resize", Integer.class, 
             Arrays.<ParameterType<?>>asList(new BasicParameterType<Integer>("desiredSize", Integer.class, "The new size of the cluster", Integer.valueOf(0))),

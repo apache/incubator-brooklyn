@@ -18,7 +18,7 @@ import brooklyn.location.Location;
 /**
  * This interface describes an {@link Entity} that can be started and stopped.
  * 
- * The two {@link Effector}s available are {@link #START}, {@link #STOP} and {@link #RESTART}. The start effector takes
+ * The {@link Effector}s are {@link #START}, {@link #STOP} and {@link #RESTART}. The start effector takes
  * a collection of {@link Location} objects as an argument which will cause the entity to be started or stopped in all
  * these locations. The other effectors will stop or restart the entity in the location(s) it is already running in.
  */

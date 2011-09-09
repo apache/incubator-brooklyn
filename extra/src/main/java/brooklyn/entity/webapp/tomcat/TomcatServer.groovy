@@ -27,8 +27,10 @@ public class TomcatServer extends JavaWebApp {
     public static final BasicConfigKey<Integer> SUGGESTED_SHUTDOWN_PORT =
             [ Integer, "tomcat.shutdownport", "Suggested shutdown port", 31880 ]
     
-    public static final BasicAttributeSensor<Integer> TOMCAT_SHUTDOWN_PORT = [ Integer, "webapp.tomcat.shutdownPort", "Port to use for shutting down" ];
-    public static final BasicAttributeSensor<String> CONNECTOR_STATUS = [String, "webapp.tomcat.connectorStatus", "Catalina connector state name"]
+    public static final BasicAttributeSensor<Integer> TOMCAT_SHUTDOWN_PORT =
+        [ Integer, "webapp.tomcat.shutdownPort", "Port to use for shutting down" ]
+    public static final BasicAttributeSensor<String> CONNECTOR_STATUS =
+        [String, "webapp.tomcat.connectorStatus", "Catalina connector state name"]
     
     public TomcatServer(Map flags=[:], Entity owner=null) {
         super(flags, owner)
@@ -48,9 +50,12 @@ public class TomcatServer extends JavaWebApp {
     }
     
     public void addJmxSensors() {
-        attributePoller.addSensor(ERROR_COUNT, jmxAdapter.newAttributeProvider("Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "errorCount"))
-        attributePoller.addSensor(REQUEST_COUNT, jmxAdapter.newAttributeProvider("Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "requestCount"))
-        attributePoller.addSensor(TOTAL_PROCESSING_TIME, jmxAdapter.newAttributeProvider("Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "processingTime"))
+        attributePoller.addSensor(ERROR_COUNT, jmxAdapter
+                                  .newAttributeProvider("Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "errorCount"))
+        attributePoller.addSensor(REQUEST_COUNT, jmxAdapter
+                                  .newAttributeProvider("Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "requestCount"))
+        attributePoller.addSensor(TOTAL_PROCESSING_TIME, jmxAdapter
+                                  .newAttributeProvider("Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "processingTime"))
         attributePoller.addSensor(CONNECTOR_STATUS, { computeConnectorStatus() } as ValueProvider)
         attributePoller.addSensor(SERVICE_UP, { computeNodeUp() } as ValueProvider)
     }
