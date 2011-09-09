@@ -1,24 +1,24 @@
 package brooklyn.policy
 
-import java.util.Map;
+import java.util.Map
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.EntityLocal
-import brooklyn.event.SensorEventListener
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
-import brooklyn.management.SubscriptionHandle
+import brooklyn.event.SensorEventListener
 import brooklyn.policy.basic.AbstractPolicy
+import brooklyn.policy.trait.Aggregating
 
 /**
  * Subscribes to events from producers with a sensor of type T, aggregates them with the 
  * provided closure and emits the result on the target sensor.
  * @param <T>
  */
-class CustomAggregatingEnricher<T> extends AbstractPolicy implements SensorEventListener<T> {
+class CustomAggregatingEnricher<T> extends AbstractPolicy implements SensorEventListener<T>, Aggregating<T> {
     
     private static final Logger LOG = LoggerFactory.getLogger(CustomAggregatingEnricher.class)
     
@@ -62,12 +62,14 @@ class CustomAggregatingEnricher<T> extends AbstractPolicy implements SensorEvent
         return aggegator.call(values.values())
     }
     
+    @Override
     public void addProducer(Entity producer) {
         LOG.info "$this linked ($producer, $source) to $target"
         values.put(producer, defaultValue)
         subscribe(producer, source, this)
     }
     
+    @Override
     public T removeProducer(Entity producer) {
         LOG.info "$this unlinked ($producer, $source) from $target"
         unsubscribe(producer)

@@ -9,6 +9,7 @@ import brooklyn.entity.group.DynamicCluster
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.policy.CustomAggregatingEnricher
 import brooklyn.policy.Policy
+import brooklyn.policy.trait.Aggregating
 
 /**
  * DynamicWebAppClusters provide cluster-wide aggregates of entity attributes.  Currently totals and averages:
@@ -65,15 +66,14 @@ class DynamicWebAppCluster extends DynamicCluster {
         }
     }
     
-    @Override
     public synchronized Entity addMember(Entity member) {
-        policies.each { if (it in CustomAggregatingEnricher) it.addProducer(member); }
+        policies.each { if (it instanceof Aggregating) ((Aggregating)it).addProducer(member); }
         super.addMember(member)
     }
     
     @Override
     public synchronized boolean removeMember(Entity member) {
-        policies.each { if (it in CustomAggregatingEnricher) it.removeProducer(member); }
+        policies.each { if (it instanceof Aggregating) ((Aggregating)it).removeProducer(member); }
         super.removeMember(member)
     }
 }
