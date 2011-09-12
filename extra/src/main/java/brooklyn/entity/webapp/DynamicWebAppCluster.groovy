@@ -65,13 +65,11 @@ class DynamicWebAppCluster extends DynamicCluster {
     }
     
     public synchronized Entity addMember(Entity member) {
-        enrichers.each { if (it instanceof Aggregating) ((Aggregating)it).addProducer(member); }
         super.addMember(member)
     }
     
     @Override
     public synchronized boolean removeMember(Entity member) {
-        enrichers.each { if (it instanceof Aggregating) ((Aggregating)it).removeProducer(member); }
         super.removeMember(member)
     }
 }

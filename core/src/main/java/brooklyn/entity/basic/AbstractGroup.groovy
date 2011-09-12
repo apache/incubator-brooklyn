@@ -6,6 +6,7 @@ import java.util.Map
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
 import brooklyn.entity.trait.Changeable
+import brooklyn.policy.basic.BaseAggregatingEnricher
 
 public abstract class AbstractGroup extends AbstractEntity implements Group, Changeable {
     final EntityCollectionReference<Entity> members = new EntityCollectionReference<Entity>(this);
@@ -25,6 +26,7 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
 	        if (members.add(member)) {
 	            emit(MEMBER_ADDED, member)
 	            setAttribute(Changeable.GROUP_SIZE, currentSize)
+                enrichers.each { if (it instanceof BaseAggregatingEnricher) ((BaseAggregatingEnricher)it).addProducer(member); }
 	        }
 	        member
 	    }
@@ -39,6 +41,7 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
             if (changed) {
 	            emit(MEMBER_REMOVED, member)
 	            setAttribute(Changeable.GROUP_SIZE, currentSize)
+                enrichers.each { if (it instanceof BaseAggregatingEnricher) ((BaseAggregatingEnricher)it).removeProducer(member); }
 	        }
 	        changed
         }
