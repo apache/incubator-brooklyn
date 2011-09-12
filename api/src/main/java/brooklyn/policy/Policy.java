@@ -1,7 +1,7 @@
 package brooklyn.policy;
 
 /**
- * Marker interface, indicating that this is a policy that can be associated with an entity.
+ * Policy interface, indicating that this is a full policy that can be suspended and resumed
  */
 public interface Policy extends EntityAdjunct {
    /**
@@ -15,7 +15,6 @@ public interface Policy extends EntityAdjunct {
      * @return the name assigned to the policy.
      */
     String getName();
- 
     /**
      * resume the policy
      */

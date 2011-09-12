@@ -3,19 +3,19 @@ package brooklyn.policy;
 public interface EntityAdjunct {
     
     /**
-     * A unique id for this location.
+     * A unique id for this adjunct
      */
     String getId();
 
     /**
-     * Get the name assigned to this location.
+     * Get the name assigned to this adjunct
      *
-     * @return the name assigned to the location.
+     * @return the name assigned to the adjunct
      */
     String getName();
     
     /**
-     * destroy the policy
+     * destroy the adjunct
      */
     void destroy();
     
