@@ -21,7 +21,7 @@ public class QpidSetup extends SshBasedJavaAppSetup {
     private int rmiPort
 
     public static QpidSetup newInstance(QpidBroker entity, SshMachineLocation machine) {
-        Integer suggestedVersion = entity.getConfig(QpidBroker.SUGGESTED_VERSION)
+        String suggestedVersion = entity.getConfig(QpidBroker.SUGGESTED_VERSION)
         String suggestedInstallDir = entity.getConfig(QpidBroker.SUGGESTED_INSTALL_DIR)
         String suggestedRunDir = entity.getConfig(QpidBroker.SUGGESTED_RUN_DIR)
         Integer suggestedJmxPort = entity.getConfig(QpidBroker.SUGGESTED_JMX_PORT)
