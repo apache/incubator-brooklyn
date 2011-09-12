@@ -9,7 +9,11 @@ import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
 import brooklyn.event.basic.BasicAttributeSensor
 
-class DeltaEnricher<T extends Number> extends BaseTransformingEnricher {
+
+/**
+ * Converts an absolute sensor into a delta sensor (i.e. the diff between the current and previous value)
+ */
+public class DeltaEnricher<T extends Number> extends BaseTransformingEnricher {
     Number last = 0
     
     public DeltaEnricher(Entity producer, Sensor<T> source, Sensor<T> target) {

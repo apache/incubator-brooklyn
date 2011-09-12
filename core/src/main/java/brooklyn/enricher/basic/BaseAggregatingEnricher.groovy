@@ -12,6 +12,10 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.Sensor;
 
+/**
+ * AggregatingEnrichers implicitly subscribes to the same sensor on all entities inside an
+ * {@link Group}
+ */
 public abstract class BaseAggregatingEnricher<T> extends BaseEnricher {
     
     private static final Logger LOG = LoggerFactory.getLogger(BaseAggregatingEnricher.class)

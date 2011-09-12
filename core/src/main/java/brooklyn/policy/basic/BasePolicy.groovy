@@ -20,7 +20,7 @@ import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.task.BasicExecutionContext;
 
 /**
- * Default {@link Policy} implementation.
+ * Base {@link Policy} implementation; all policies should extend this or its children
  */
 public abstract class BasePolicy extends AbstractEntityAdjunct implements Policy {
     private static final Logger log = LoggerFactory.getLogger(BasePolicy.class);

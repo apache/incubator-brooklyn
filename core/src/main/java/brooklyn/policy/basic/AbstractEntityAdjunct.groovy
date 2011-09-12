@@ -14,6 +14,10 @@ import brooklyn.management.internal.BasicSubscriptionContext
 import brooklyn.policy.EntityAdjunct
 import brooklyn.util.internal.LanguageUtils
 
+
+/**
+ * Common functionality for policies and enrichers
+ */
 abstract class AbstractEntityAdjunct implements EntityAdjunct {
     String id = LanguageUtils.newUid();
     String displayName;

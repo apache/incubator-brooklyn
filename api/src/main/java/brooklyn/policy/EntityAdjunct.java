@@ -1,5 +1,9 @@
 package brooklyn.policy;
 
+/**
+ * EntityAdjuncts are supplementary logic that can be attached to Entities, providing sensor enrichment
+ * or enabling policy
+ */
 public interface EntityAdjunct {
     
     /**

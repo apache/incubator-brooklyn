@@ -1,7 +1,8 @@
 package brooklyn.policy;
 
 /**
- * Policy interface, indicating that this is a full policy that can be suspended and resumed
+ * Policies implement actions and thus must be suspendable; policies should continue to evaluate their sensors
+ * and indicate their desired planned action even if they aren't invoking them
  */
 public interface Policy extends EntityAdjunct {
    /**
