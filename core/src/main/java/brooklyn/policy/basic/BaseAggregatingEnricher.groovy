@@ -12,9 +12,9 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.Sensor;
 
-abstract class AbstractAggregatingEnricher<T> extends BaseEnricher {
+abstract class BaseAggregatingEnricher<T> extends BaseEnricher {
     
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractAggregatingEnricher.class)
+    private static final Logger LOG = LoggerFactory.getLogger(BaseAggregatingEnricher.class)
     
     private Sensor<T> source
     protected Sensor<?> target
@@ -43,7 +43,7 @@ abstract class AbstractAggregatingEnricher<T> extends BaseEnricher {
     
     public void setEntity(EntityLocal entity) {
         super.setEntity(entity)
-        AbstractAggregatingEnricher<T> reference = this // groovy doesn't seem to like 'this' inside closures
+        BaseAggregatingEnricher<T> reference = this // groovy doesn't seem to like 'this' inside closures
         values.each { reference.subscribe(it.key, source, reference) }
     }
 }

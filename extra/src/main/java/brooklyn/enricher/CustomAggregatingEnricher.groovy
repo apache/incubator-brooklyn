@@ -6,14 +6,14 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.Entity
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
-import brooklyn.policy.basic.AbstractAggregatingEnricher
+import brooklyn.policy.basic.BaseAggregatingEnricher
 
 /**
  * Subscribes to events from producers with a sensor of type T, aggregates them with the 
  * provided closure and emits the result on the target sensor.
  * @param <T>
  */
-class CustomAggregatingEnricher<T> extends AbstractAggregatingEnricher<T>  {
+class CustomAggregatingEnricher<T> extends BaseAggregatingEnricher<T>  {
     
     private static final Logger LOG = LoggerFactory.getLogger(CustomAggregatingEnricher.class)
     
