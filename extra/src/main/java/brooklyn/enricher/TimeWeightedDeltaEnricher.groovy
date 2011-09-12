@@ -3,13 +3,13 @@ package brooklyn.enricher
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.enricher.basic.BaseTransformingEnricher;
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
-import brooklyn.policy.basic.AbstractTransformingEnricher
 
-class TimeWeightedDeltaEnricher<T extends Number> extends AbstractTransformingEnricher {
+class TimeWeightedDeltaEnricher<T extends Number> extends BaseTransformingEnricher {
     private static final Logger LOG = LoggerFactory.getLogger(TimeWeightedDeltaEnricher.class)
     
     Number lastValue

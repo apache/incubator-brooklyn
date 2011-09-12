@@ -3,10 +3,10 @@ package brooklyn.entity.basic
 import java.util.Collection
 import java.util.Map
 
+import brooklyn.enricher.basic.BaseAggregatingEnricher;
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
 import brooklyn.entity.trait.Changeable
-import brooklyn.policy.basic.BaseAggregatingEnricher
 
 public abstract class AbstractGroup extends AbstractEntity implements Group, Changeable {
     final EntityCollectionReference<Entity> members = new EntityCollectionReference<Entity>(this);

@@ -1,4 +1,4 @@
-package brooklyn.policy.basic
+package brooklyn.enricher.basic
 
 import groovy.lang.Closure;
 
@@ -12,7 +12,7 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.Sensor;
 
-abstract class BaseAggregatingEnricher<T> extends BaseEnricher {
+public abstract class BaseAggregatingEnricher<T> extends BaseEnricher {
     
     private static final Logger LOG = LoggerFactory.getLogger(BaseAggregatingEnricher.class)
     

@@ -8,6 +8,7 @@ import java.util.concurrent.ExecutionException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.enricher.basic.BaseEnricher;
 import brooklyn.entity.Application
 import brooklyn.entity.ConfigKey
 import brooklyn.entity.Effector
@@ -28,7 +29,6 @@ import brooklyn.management.SubscriptionHandle
 import brooklyn.management.Task
 import brooklyn.policy.Enricher
 import brooklyn.policy.Policy
-import brooklyn.policy.basic.BaseEnricher
 import brooklyn.policy.basic.BasePolicy
 import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.task.BasicExecutionContext

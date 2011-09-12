@@ -2,6 +2,7 @@ package brooklyn.entity.basic;
 
 import java.util.Map;
 
+import brooklyn.enricher.basic.BaseEnricher;
 import brooklyn.entity.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
@@ -10,7 +11,6 @@ import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionHandle;
-import brooklyn.policy.basic.BaseEnricher;
 import brooklyn.policy.basic.BasePolicy;
 
 public interface EntityLocal extends Entity {

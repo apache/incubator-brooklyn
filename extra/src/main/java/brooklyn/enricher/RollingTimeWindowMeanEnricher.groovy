@@ -1,8 +1,8 @@
 package brooklyn.enricher
 
+import brooklyn.enricher.basic.BaseTransformingEnricher;
 import brooklyn.entity.Entity
 import brooklyn.event.SensorEvent
-import brooklyn.policy.basic.AbstractTransformingEnricher;
 import brooklyn.event.AttributeSensor
 
 /**
@@ -28,7 +28,7 @@ import brooklyn.event.AttributeSensor
  * <p>
  * The default average when no data has been received is 0, with a confidence of 0
  */
-class RollingTimeWindowMeanEnricher<T extends Number> extends AbstractTransformingEnricher {
+class RollingTimeWindowMeanEnricher<T extends Number> extends BaseTransformingEnricher {
     public static class ConfidenceQualifiedNumber {
         final Number value
         final double confidence

@@ -3,10 +3,10 @@ package brooklyn.enricher
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.enricher.basic.BaseAggregatingEnricher;
 import brooklyn.entity.Entity
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
-import brooklyn.policy.basic.BaseAggregatingEnricher
 
 /**
  * Subscribes to events from producers with a sensor of type T, aggregates them with the 
