@@ -14,10 +14,10 @@ import brooklyn.entity.trait.Startable
 import brooklyn.event.AttributeSensor
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
-import brooklyn.policy.basic.BasePolicy
+import brooklyn.policy.basic.AbstractPolicy
 import brooklyn.util.task.BasicTask
 
-public class ResizerPolicy<T extends Number> extends BasePolicy implements SensorEventListener<T> {
+public class ResizerPolicy<T extends Number> extends AbstractPolicy implements SensorEventListener<T> {
     
     // TODO Currently only does one resize at a time.
     // Imagine the threshold is set to 100. If we ramp up workrate to 450, but the policy sees events for 101 then 450, 

@@ -3,7 +3,7 @@ package brooklyn.enricher
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.enricher.basic.BaseAggregatingEnricher;
+import brooklyn.enricher.basic.AbstractAggregatingEnricher;
 import brooklyn.entity.Entity
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
@@ -13,7 +13,7 @@ import brooklyn.event.SensorEvent
  * provided closure and emits the result on the target sensor.
  * @param <T>
  */
-class CustomAggregatingEnricher<T> extends BaseAggregatingEnricher<T>  {
+class CustomAggregatingEnricher<T> extends AbstractAggregatingEnricher<T>  {
     
     private static final Logger LOG = LoggerFactory.getLogger(CustomAggregatingEnricher.class)
     

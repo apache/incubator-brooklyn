@@ -8,7 +8,7 @@ import java.util.concurrent.ExecutionException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.enricher.basic.BaseEnricher;
+import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Application
 import brooklyn.entity.ConfigKey
 import brooklyn.entity.Effector
@@ -29,7 +29,7 @@ import brooklyn.management.SubscriptionHandle
 import brooklyn.management.Task
 import brooklyn.policy.Enricher
 import brooklyn.policy.Policy
-import brooklyn.policy.basic.BasePolicy
+import brooklyn.policy.basic.AbstractPolicy
 import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.task.BasicExecutionContext
 import brooklyn.util.task.ParallelTask
@@ -65,8 +65,8 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     final EntityCollectionReference<Group> groups = new EntityCollectionReference<Group>(this);
 
     Map<String,Object> presentationAttributes = [:]
-    Collection<BasePolicy> policies = [] as CopyOnWriteArrayList
-    Collection<BaseEnricher> enrichers = [] as CopyOnWriteArrayList
+    Collection<AbstractPolicy> policies = [] as CopyOnWriteArrayList
+    Collection<AbstractEnricher> enrichers = [] as CopyOnWriteArrayList
     Collection<Location> locations = [] as CopyOnWriteArrayList
 
     // FIXME we do not currently support changing owners, but to implement a cluster that can shrink we need to support at least
@@ -433,13 +433,13 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     }
 
     @Override
-    public void addPolicy(BasePolicy policy) {
+    public void addPolicy(AbstractPolicy policy) {
         policies.add(policy)
         policy.setEntity(this)
     }
 
     @Override
-    boolean removePolicy(BasePolicy policy) {
+    boolean removePolicy(AbstractPolicy policy) {
         return policies.remove(policy)
     }
     
@@ -449,13 +449,13 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     }
 
     @Override
-    public void addEnricher(BaseEnricher enricher) {
+    public void addEnricher(AbstractEnricher enricher) {
         enrichers.add(enricher)
         enricher.setEntity(this)
     }
 
     @Override
-    boolean removeEnricher(BaseEnricher enricher) {
+    boolean removeEnricher(AbstractEnricher enricher) {
         return enrichers.remove(enricher)
     }
 

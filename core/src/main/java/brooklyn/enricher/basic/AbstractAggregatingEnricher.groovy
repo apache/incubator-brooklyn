@@ -16,9 +16,9 @@ import brooklyn.event.Sensor;
  * AggregatingEnrichers implicitly subscribes to the same sensor on all entities inside an
  * {@link Group}
  */
-public abstract class BaseAggregatingEnricher<T> extends BaseEnricher {
+public abstract class AbstractAggregatingEnricher<T> extends AbstractEnricher {
     
-    private static final Logger LOG = LoggerFactory.getLogger(BaseAggregatingEnricher.class)
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractAggregatingEnricher.class)
     
     private Sensor<T> source
     protected Sensor<?> target
@@ -47,7 +47,7 @@ public abstract class BaseAggregatingEnricher<T> extends BaseEnricher {
     
     public void setEntity(EntityLocal entity) {
         super.setEntity(entity)
-        BaseAggregatingEnricher<T> reference = this // groovy doesn't seem to like 'this' inside closures
+        AbstractAggregatingEnricher<T> reference = this // groovy doesn't seem to like 'this' inside closures
         values.each { reference.subscribe(it.key, source, reference) }
     }
 }

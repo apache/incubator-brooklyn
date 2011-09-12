@@ -2,7 +2,7 @@ package brooklyn.enricher
 
 import java.util.LinkedList
 
-import brooklyn.enricher.basic.BaseTransformingEnricher;
+import brooklyn.enricher.basic.AbstractTransformingEnricher;
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.Sensor
@@ -13,7 +13,7 @@ import brooklyn.event.basic.BasicAttributeSensor
 /**
  * Converts an absolute sensor into a delta sensor (i.e. the diff between the current and previous value)
  */
-public class DeltaEnricher<T extends Number> extends BaseTransformingEnricher {
+public class DeltaEnricher<T extends Number> extends AbstractTransformingEnricher {
     Number last = 0
     
     public DeltaEnricher(Entity producer, Sensor<T> source, Sensor<T> target) {

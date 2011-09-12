@@ -12,12 +12,12 @@ import brooklyn.event.basic.BasicAttributeSensor;
 /**
  * Convenience base for transforming a single sensor into a single new sensor
  */
-public abstract class BaseTransformingEnricher<T> extends BaseEnricher implements SensorEventListener<T> {
+public abstract class AbstractTransformingEnricher<T> extends AbstractEnricher implements SensorEventListener<T> {
     private Entity producer
     private Sensor<T> source
     protected Sensor<T> target
     
-    public BaseTransformingEnricher(Entity producer, Sensor<T> source, Sensor<T> target) {
+    public AbstractTransformingEnricher(Entity producer, Sensor<T> source, Sensor<T> target) {
         this.producer = producer
         this.source = source
         this.target = target

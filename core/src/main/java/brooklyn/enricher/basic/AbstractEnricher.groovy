@@ -6,6 +6,6 @@ import brooklyn.policy.basic.AbstractEntityAdjunct;
 /**
 * Base {@link Enricher} implementation; all enrichers should extend this or its children
 */
-public abstract class BaseEnricher extends AbstractEntityAdjunct implements Enricher {
+public abstract class AbstractEnricher extends AbstractEntityAdjunct implements Enricher {
 
 }

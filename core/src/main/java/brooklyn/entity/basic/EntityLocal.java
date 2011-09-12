@@ -2,7 +2,7 @@ package brooklyn.entity.basic;
 
 import java.util.Map;
 
-import brooklyn.enricher.basic.BaseEnricher;
+import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
@@ -11,7 +11,7 @@ import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionHandle;
-import brooklyn.policy.basic.BasePolicy;
+import brooklyn.policy.basic.AbstractPolicy;
 
 public interface EntityLocal extends Entity {
     
@@ -57,24 +57,24 @@ public interface EntityLocal extends Entity {
     /**
      * Adds the given policy to this entity. Also calls policy.setEntity if available.
      */
-    void addPolicy(BasePolicy policy);
+    void addPolicy(AbstractPolicy policy);
     
     /**
      * Removes the given policy from this entity. 
      * @return True if the policy existed at this entity; false otherwise
      */
-    boolean removePolicy(BasePolicy policy);
+    boolean removePolicy(AbstractPolicy policy);
     
     /**
      * Adds the given enricher to this entity. Also calls enricher.setEntity if available.
      */
-    void addEnricher(BaseEnricher enricher);
+    void addEnricher(AbstractEnricher enricher);
     
     /**
      * Removes the given enricher from this entity. 
      * @return True if the policy enricher at this entity; false otherwise
      */
-    boolean removeEnricher(BaseEnricher enricher);
+    boolean removeEnricher(AbstractEnricher enricher);
     
     ManagementContext getManagementContext();
 }
