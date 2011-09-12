@@ -19,17 +19,22 @@ import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedAppSetup
 
 class GemfireServer extends AbstractService {
-    public static final BasicConfigKey<String> INSTALL_DIR = [ String, "gemfire.server.installDir", "Gemfire installation directory" ]
+    public static final BasicConfigKey<String> INSTALL_DIR =
+        [ String, "gemfire.server.installDir", "Gemfire installation directory" ]
     public static final BasicConfigKey<File> CONFIG_FILE = [ File, "gemfire.server.configFile", "Gemfire configuration file" ]
     public static final BasicConfigKey<File> JAR_FILE = [ File, "gemfire.server.jarFile", "Gemfire jar file" ]
-    public static final BasicConfigKey<Integer> SUGGESTED_HUB_PORT = [ Integer, "gemfire.server.suggestedHubPort", "Gemfire gateway hub port", 11111 ]
+    public static final BasicConfigKey<Integer> SUGGESTED_HUB_PORT =
+        [ Integer, "gemfire.server.suggestedHubPort", "Gemfire gateway hub port", 11111 ]
     public static final BasicConfigKey<File> LICENSE = [ File, "gemfire.server.license", "Gemfire license file" ]
 
-    public static final BasicAttributeSensor<Integer> HUB_PORT = [ Integer, "gemfire.server.hubPort", "Gemfire gateway hub port" ]
-    public static final BasicAttributeSensor<String> CONTROL_URL = [ String, "gemfire.server.controlUrl", "URL for perfoming management actions" ]
+    public static final BasicAttributeSensor<Integer> HUB_PORT =
+        [ Integer, "gemfire.server.hubPort", "Gemfire gateway hub port" ]
+    public static final BasicAttributeSensor<String> CONTROL_URL =
+        [ String, "gemfire.server.controlUrl", "URL for perfoming management actions" ]
 
-    public static final Effector<Void> ADD_GATEWAYS = new EffectorWithExplicitImplementation<GemfireServer, Void>("addGateways", Void.TYPE,
-            Arrays.<ParameterType<?>>asList(new BasicParameterType<Collection>("gateways", Collection.class, "Gatways to be added", Collections.emptyList())),
+    public static final Effector<Void> ADD_GATEWAYS =
+        new EffectorWithExplicitImplementation<GemfireServer, Void>("addGateways", Void.TYPE,
+            Arrays.<ParameterType<?>>asList(new BasicParameterType<Collection>("gateways", Collection.class,"Gatways to be added", Collections.emptyList())),
             "Add gateways to this server, to replicate to/from other clusters") {
         public Void invokeEffector(GemfireServer entity, Map m) {
             entity.addGateways((Collection<GatewayConnectionDetails>) m.get("gateways"));
