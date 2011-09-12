@@ -1,10 +1,11 @@
-package brooklyn.policy
+package brooklyn.enricher
 
 import static org.testng.Assert.*
 
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.enricher.CustomAggregatingEnricher;
 import brooklyn.entity.LocallyManagedEntity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.EntityLocal

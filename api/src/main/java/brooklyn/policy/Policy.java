@@ -3,7 +3,7 @@ package brooklyn.policy;
 /**
  * Marker interface, indicating that this is a policy that can be associated with an entity.
  */
-public interface Policy {
+public interface Policy extends EntityAdjunct {
    /**
      * A unique id for this policy.
      */
@@ -16,6 +16,9 @@ public interface Policy {
      */
     String getName();
  
+    /**
+     * resume the policy
+     */
     void resume();
 
     void destroy();
@@ -30,5 +33,5 @@ public interface Policy {
     /**
      * whether the policy is suspended
      */
-    boolean isSuspended();
+    Boolean isSuspended();
 }

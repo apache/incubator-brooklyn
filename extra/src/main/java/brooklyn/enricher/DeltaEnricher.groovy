@@ -1,4 +1,4 @@
-package brooklyn.policy
+package brooklyn.enricher
 
 import java.util.LinkedList
 

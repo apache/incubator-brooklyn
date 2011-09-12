@@ -1,12 +1,9 @@
 package brooklyn.entity.basic
 
 import java.lang.reflect.Field
-import java.util.concurrent.Callable
-import java.util.concurrent.CopyOnWriteArrayList
-import java.util.concurrent.CopyOnWriteArraySet
 import java.util.concurrent.CancellationException
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.ExecutionException
-import java.util.concurrent.Future
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -18,9 +15,9 @@ import brooklyn.entity.Entity
 import brooklyn.entity.EntityClass
 import brooklyn.entity.Group
 import brooklyn.event.AttributeSensor
-import brooklyn.event.SensorEventListener
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
+import brooklyn.event.SensorEventListener
 import brooklyn.event.basic.AttributeMap
 import brooklyn.event.basic.ConfiguredAttributeSensor
 import brooklyn.location.Location
@@ -29,10 +26,12 @@ import brooklyn.management.ManagementContext
 import brooklyn.management.SubscriptionContext
 import brooklyn.management.SubscriptionHandle
 import brooklyn.management.Task
+import brooklyn.policy.Enricher
 import brooklyn.policy.Policy
+import brooklyn.policy.basic.BaseEnricher
+import brooklyn.policy.basic.BasePolicy
 import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.task.BasicExecutionContext
-import brooklyn.util.task.BasicTask
 import brooklyn.util.task.ParallelTask
 
 
@@ -66,7 +65,8 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     final EntityCollectionReference<Group> groups = new EntityCollectionReference<Group>(this);
 
     Map<String,Object> presentationAttributes = [:]
-    Collection<Policy> policies = [] as CopyOnWriteArrayList
+    Collection<BasePolicy> policies = [] as CopyOnWriteArrayList
+    Collection<BaseEnricher> enrichers = [] as CopyOnWriteArrayList
     Collection<Location> locations = [] as CopyOnWriteArrayList
 
     // FIXME we do not currently support changing owners, but to implement a cluster that can shrink we need to support at least
@@ -433,14 +433,30 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     }
 
     @Override
-    public void addPolicy(Policy policy) {
+    public void addPolicy(BasePolicy policy) {
         policies.add(policy)
         policy.setEntity(this)
     }
 
     @Override
-    boolean removePolicy(Policy policy) {
+    boolean removePolicy(BasePolicy policy) {
         return policies.remove(policy)
+    }
+    
+    @Override
+    public Collection<Enricher> getEnrichers() {
+        return enrichers.asImmutable()
+    }
+
+    @Override
+    public void addEnricher(BaseEnricher enricher) {
+        enrichers.add(enricher)
+        enricher.setEntity(this)
+    }
+
+    @Override
+    boolean removeEnricher(BaseEnricher enricher) {
+        return enrichers.remove(enricher)
     }
 
     // -------- SENSORS --------------------

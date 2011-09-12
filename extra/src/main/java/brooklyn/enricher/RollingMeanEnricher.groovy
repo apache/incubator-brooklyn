@@ -1,4 +1,4 @@
-package brooklyn.policy
+package brooklyn.enricher
 
 import brooklyn.entity.Entity
 import brooklyn.event.SensorEvent

@@ -98,8 +98,8 @@ public abstract class AbstractPolicy implements Policy {
         suspended = false;
    }
 
-   public Boolean isSuspended(){ return suspended; }
-   public Boolean isDestroyed(){ return destroyed; }
+   public Boolean isSuspended() { return suspended; }
+   public Boolean isDestroyed() { return destroyed; }
 
    private ManagementContext getManagementContext() {
        entity.getManagementContext();

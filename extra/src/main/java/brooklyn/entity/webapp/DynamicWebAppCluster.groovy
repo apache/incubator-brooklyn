@@ -4,12 +4,10 @@ import groovy.lang.MetaClass
 
 import java.util.Map
 
+import brooklyn.enricher.CustomAggregatingEnricher
 import brooklyn.entity.Entity
 import brooklyn.entity.group.DynamicCluster
 import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.policy.CustomAggregatingEnricher
-import brooklyn.policy.Policy
-import brooklyn.policy.trait.Aggregating
 
 /**
  * DynamicWebAppClusters provide cluster-wide aggregates of entity attributes.  Currently totals and averages:
@@ -61,19 +59,19 @@ class DynamicWebAppCluster extends DynamicCluster {
             def (t, total, average) = es
             def totaller = CustomAggregatingEnricher.<Integer>getSummingEnricher([], t, total);
             def averager = CustomAggregatingEnricher.<Double>getAveragingEnricher([], t, average);
-            this.addPolicy(totaller)
-            this.addPolicy(averager)
+            this.addEnricher(totaller)
+            this.addEnricher(averager)
         }
     }
     
     public synchronized Entity addMember(Entity member) {
-        policies.each { if (it instanceof Aggregating) ((Aggregating)it).addProducer(member); }
+        enrichers.each { if (it instanceof Aggregating) ((Aggregating)it).addProducer(member); }
         super.addMember(member)
     }
     
     @Override
     public synchronized boolean removeMember(Entity member) {
-        policies.each { if (it instanceof Aggregating) ((Aggregating)it).removeProducer(member); }
+        enrichers.each { if (it instanceof Aggregating) ((Aggregating)it).removeProducer(member); }
         super.removeMember(member)
     }
 }

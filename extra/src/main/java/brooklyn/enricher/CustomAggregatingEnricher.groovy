@@ -1,33 +1,23 @@
-package brooklyn.policy
-
-import java.util.Map
+package brooklyn.enricher
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
-import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
-import brooklyn.event.SensorEventListener
-import brooklyn.policy.basic.AbstractPolicy
-import brooklyn.policy.trait.Aggregating
+import brooklyn.policy.basic.AbstractAggregatingEnricher
 
 /**
  * Subscribes to events from producers with a sensor of type T, aggregates them with the 
  * provided closure and emits the result on the target sensor.
  * @param <T>
  */
-class CustomAggregatingEnricher<T> extends AbstractPolicy implements SensorEventListener<T>, Aggregating<T> {
+class CustomAggregatingEnricher<T> extends AbstractAggregatingEnricher<T>  {
     
     private static final Logger LOG = LoggerFactory.getLogger(CustomAggregatingEnricher.class)
     
-    private Sensor<T> source
-    protected Sensor<?> target
     private Closure aggegator
-    private T defaultValue
-    
-    private Map<Entity, T> values = new HashMap<Entity, T>()
     
     /**
      * @param aggregator Should take a list of values and return a single, aggregate value
@@ -35,16 +25,8 @@ class CustomAggregatingEnricher<T> extends AbstractPolicy implements SensorEvent
      */
     public CustomAggregatingEnricher(List<Entity> producer, Sensor<T> source, Sensor<?> target, 
             Closure aggregator, T defaultValue=null) {
-        producer.each { values.put(it, defaultValue) }
-        this.source = source
-        this.target = target
+        super(producer, source, target, defaultValue)
         this.aggegator = aggregator
-        this.defaultValue = defaultValue
-    }
-    
-    public void setEntity(EntityLocal entity) {
-        super.setEntity(entity)
-        values.each { subscribe(it.key, source, this) }
     }
     
     @Override
@@ -60,20 +42,6 @@ class CustomAggregatingEnricher<T> extends AbstractPolicy implements SensorEvent
     
     public Object getAggregate() {
         return aggegator.call(values.values())
-    }
-    
-    @Override
-    public void addProducer(Entity producer) {
-        LOG.info "$this linked ($producer, $source) to $target"
-        values.put(producer, defaultValue)
-        subscribe(producer, source, this)
-    }
-    
-    @Override
-    public T removeProducer(Entity producer) {
-        LOG.info "$this unlinked ($producer, $source) from $target"
-        unsubscribe(producer)
-        values.remove(producer)
     }
     
     public static <R extends Number> CustomAggregatingEnricher<R> getSummingEnricher(

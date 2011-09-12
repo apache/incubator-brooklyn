@@ -10,7 +10,8 @@ import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionHandle;
-import brooklyn.policy.Policy;
+import brooklyn.policy.basic.BaseEnricher;
+import brooklyn.policy.basic.BasePolicy;
 
 public interface EntityLocal extends Entity {
     
@@ -56,13 +57,24 @@ public interface EntityLocal extends Entity {
     /**
      * Adds the given policy to this entity. Also calls policy.setEntity if available.
      */
-    void addPolicy(Policy policy);
+    void addPolicy(BasePolicy policy);
     
     /**
      * Removes the given policy from this entity. 
      * @return True if the policy existed at this entity; false otherwise
      */
-    boolean removePolicy(Policy policy);
+    boolean removePolicy(BasePolicy policy);
+    
+    /**
+     * Adds the given enricher to this entity. Also calls enricher.setEntity if available.
+     */
+    void addEnricher(BaseEnricher enricher);
+    
+    /**
+     * Removes the given enricher from this entity. 
+     * @return True if the policy enricher at this entity; false otherwise
+     */
+    boolean removeEnricher(BaseEnricher enricher);
     
     ManagementContext getManagementContext();
 }

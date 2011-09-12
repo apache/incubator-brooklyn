@@ -6,7 +6,7 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.policy.Policy
-import brooklyn.policy.basic.AbstractPolicy
+import brooklyn.policy.basic.BasePolicy
 
 class PolicyRegistrationTest {
     private AbstractApplication app
@@ -18,8 +18,8 @@ class PolicyRegistrationTest {
     public void setUp() {
         app = new AbstractApplication() {}
         entity = new AbstractEntity(owner:app) {}
-        policy1 = new AbstractPolicy() {}
-        policy2 = new AbstractPolicy() {}
+        policy1 = new BasePolicy() {}
+        policy2 = new BasePolicy() {}
     }
     
     @Test
