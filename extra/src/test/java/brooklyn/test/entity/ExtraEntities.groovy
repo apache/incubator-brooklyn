@@ -64,7 +64,7 @@ public class TestCluster extends DynamicCluster {
 	}
 	        
 	@Override
-	public int getCurrentSize() {
+	public Integer getCurrentSize() {
 	    return size
 	}
 }

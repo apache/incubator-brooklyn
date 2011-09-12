@@ -49,7 +49,7 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
         return members.get()
     }
  
-    public int getCurrentSize() {
+    public Integer getCurrentSize() {
         return getMembers().size()
     }
 }

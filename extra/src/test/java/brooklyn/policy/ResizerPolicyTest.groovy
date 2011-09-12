@@ -29,7 +29,7 @@ class ResizerPolicyTest {
     @Test
     public void testUpperBounds() {
         TestCluster tc = [1]
-        policy.@dynamicCluster = tc
+        policy.@resizable = tc
         policy.setMetricLowerBound 0
         policy.setMetricUpperBound 100
         assertEquals 1, policy.calculateDesiredSize(99)
@@ -40,7 +40,7 @@ class ResizerPolicyTest {
     @Test
     public void testLowerBounds() {
         TestCluster tc = [1]
-        policy.@dynamicCluster = tc
+        policy.@resizable = tc
         policy.setMetricLowerBound 100
         policy.setMetricUpperBound 10000
         assertEquals 1, policy.calculateDesiredSize(101)
@@ -51,7 +51,7 @@ class ResizerPolicyTest {
     @Test
     public void clustersWithSeveralEntities() {
         TestCluster tc = [3]
-        policy.@dynamicCluster = tc
+        policy.@resizable = tc
         policy.setMetricLowerBound 50
         policy.setMetricUpperBound 100
         assertEquals 3, policy.calculateDesiredSize(99)
@@ -67,7 +67,7 @@ class ResizerPolicyTest {
     @Test
     public void extremeResizes() {
         TestCluster tc = [5]
-        policy.@dynamicCluster = tc
+        policy.@resizable = tc
         policy.setMetricLowerBound 50
         policy.setMetricUpperBound 100
         assertEquals 10, policy.calculateDesiredSize(200)
@@ -81,7 +81,7 @@ class ResizerPolicyTest {
     @Test
     public void obeysMinAndMaxSize() {
         TestCluster tc = [4]
-        policy.@dynamicCluster = tc
+        policy.@resizable = tc
         policy.setMinSize 2
         policy.setMaxSize 6
         policy.setMetricLowerBound 50
@@ -89,7 +89,7 @@ class ResizerPolicyTest {
         
         TestCluster tcNoResize = [4]
         ResizerPolicy policyNoResize = new ResizerPolicy(null)
-        policyNoResize.@dynamicCluster = tcNoResize
+        policyNoResize.@resizable = tcNoResize
         policyNoResize.setMetricLowerBound 50
         policyNoResize.setMetricUpperBound 100
         
