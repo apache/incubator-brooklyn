@@ -15,20 +15,20 @@ public interface Policy {
      * @return the name assigned to the policy.
      */
     String getName();
-    /**
-     * methods for actions which can be executed against a policy
-     */
-
-    void suspend();
-
+ 
     void resume();
 
     void destroy();
 
-    /**
-     * Methods for checking policy status
-     */
-    Boolean isSuspended();
-
     Boolean isDestroyed();
+
+    /**
+     * suspend the policy
+     */
+    void suspend();
+    
+    /**
+     * whether the policy is suspended
+     */
+    boolean isSuspended();
 }

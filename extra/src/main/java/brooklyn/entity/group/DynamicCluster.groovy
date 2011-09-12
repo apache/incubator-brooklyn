@@ -6,8 +6,6 @@ import java.util.Collection
 import java.util.Map
 import java.util.concurrent.ExecutionException
 
-import javax.management.InstanceOfQueryExp;
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -18,7 +16,6 @@ import brooklyn.entity.trait.Startable
 import brooklyn.event.EntityStartException
 import brooklyn.location.Location
 import brooklyn.management.Task
-import brooklyn.policy.trait.Suspendable
 
 import com.google.common.base.Preconditions
 import com.google.common.collect.Iterables
@@ -71,12 +68,12 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         location = Iterables.getOnlyElement(locations)
         this.locations.add(location)
         resize(getConfig(INITIAL_SIZE))
-        policies.each { if (it instanceof Suspendable) it.resume() }
+        policies.each { it.resume() }
         setAttribute(SERVICE_UP, true)
     }
 
     public void stop() {
-        policies.each { if (it instanceof Suspendable) it.suspend() }
+        policies.each { it.suspend() }
         resize(0)
         setAttribute(SERVICE_UP, false)
     }
