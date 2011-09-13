@@ -26,7 +26,7 @@ public abstract class AbstractAggregatingEnricher<T> extends AbstractEnricher {
     
     protected Map<Entity, T> values = new HashMap<Entity, T>()
     
-    public CustomAggregatingEnricher(List<Entity> producer, Sensor<T> source, Sensor<?> target, T defaultValue=null) {
+    public AbstractAggregatingEnricher(List<Entity> producer, Sensor<T> source, Sensor<?> target, T defaultValue=null) {
         producer.each { values.put(it, defaultValue) }
         this.source = source
         this.target = target
