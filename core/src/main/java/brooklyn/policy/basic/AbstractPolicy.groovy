@@ -1,23 +1,24 @@
 package brooklyn.policy.basic
 
-import java.util.Map;
+import java.util.Map
+import java.util.concurrent.atomic.AtomicBoolean
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.EntityLocal
-import brooklyn.event.SensorEventListener
 import brooklyn.event.Sensor
+import brooklyn.event.SensorEventListener
 import brooklyn.management.ExecutionContext
 import brooklyn.management.ManagementContext
 import brooklyn.management.SubscriptionContext
 import brooklyn.management.SubscriptionHandle
 import brooklyn.management.internal.BasicSubscriptionContext
 import brooklyn.policy.Policy
+import brooklyn.util.task.BasicExecutionContext
+
 import com.google.common.base.Preconditions
-import brooklyn.util.internal.LanguageUtils
-import brooklyn.util.task.BasicExecutionContext;
 
 /**
  * Default {@link Policy} implementation.
@@ -25,14 +26,10 @@ import brooklyn.util.task.BasicExecutionContext;
 public abstract class AbstractPolicy implements Policy {
    private static final Logger log = LoggerFactory.getLogger(AbstractPolicy.class);
 
-   String id = LanguageUtils.newUid();
-   String displayName;
-   String policyStatus;
-   protected String name;
-   protected Map leftoverProperties;
-   private Boolean suspended;
-   private Boolean destroyed;
-
+    String policyStatus;
+    protected String name;
+    protected Map leftoverProperties
+    protected AtomicBoolean suspended = new AtomicBoolean(false)
    
    protected transient EntityLocal entity
    protected transient ExecutionContext execution
@@ -98,19 +95,13 @@ public abstract class AbstractPolicy implements Policy {
         suspended = false;
    }
 
-   public Boolean isSuspended() { return suspended; }
    public Boolean isDestroyed() { return destroyed; }
 
    private ManagementContext getManagementContext() {
        entity.getManagementContext();
    }
 
-   public boolean hasPolicyProperty(String key) { return leftoverProperties.containsKey(key); }
-   public Object getPolicyProperty(String key) { return leftoverProperties.get(key); }
-   public Object findPolicyProperty(String key) {
-        if (hasPolicyProperty(key)) return getPolicyProperty(key);
-        return null;
-    }
+    public Boolean isSuspended() {return suspended.get()}
     
     @Override
     public boolean isRunning() {
