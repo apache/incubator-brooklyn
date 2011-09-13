@@ -29,6 +29,7 @@ Brooklyn.policies = (function(){
         reset();
         $(event.target.parentNode).addClass('row_selected');
         document.getElementById('policyAction').disabled = false;
+        document.getElementById('policy-action-execution-button').disabled = false;
         var result = Brooklyn.util.getDataTableSelectedRowData(tableId, event);
         policyName = result.displayName;
         policyDescription = result.description;
@@ -57,6 +58,15 @@ Brooklyn.policies = (function(){
         for(var row in settings) {
             $(settings[row].nTr).removeClass('row_selected');
         }
+        /*
+        Reset the selection box and disable it, make labels disappear etc.
+        */
+        $('#policyName').empty();
+        $('#policyDescription').empty();
+        document.getElementById('policyAction').value='default';
+        document.getElementById('policyAction').disabled=true;
+        document.getElementById('policy-action-execution-button').disabled=true;
+
     }
 
 
@@ -77,11 +87,19 @@ Brooklyn.policies = (function(){
                 dataMap["policyId"] = policyId;
                 dataMap["chosenAction"] = chosenAction;
                 $.ajax({
-                    url: "../entity/execute",
+                    url: "../entity/policyaction",
                     data: dataMap,
                     success: function(){
-                        alert('Policy: "' + policyId + '" has had action ' + chosenAction + ' executed upon it');
-                        //reset UI components now.
+                        if(chosenAction == 'destroy'){
+                            alert('Policy: "' + policyId + '" has been destroyed');
+                        }
+                        else if(chosenAction == 'suspend'){
+                            alert('Policy: "' + policyId + '" has been suspended');
+                        }
+                        else{
+                            alert('Policy: "' + policyId + '" has been resumed');
+                        }
+                        reset();
                     }
                 });
 

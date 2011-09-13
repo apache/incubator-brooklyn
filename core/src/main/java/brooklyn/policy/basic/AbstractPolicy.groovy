@@ -29,7 +29,9 @@ public abstract class AbstractPolicy implements Policy {
    String displayName;
    String policyStatus;
    protected String name;
-   protected Map leftoverProperties
+   protected Map leftoverProperties;
+   private Boolean suspended;
+   private Boolean destroyed;
 
    
    protected transient Entity entity
@@ -80,9 +82,24 @@ public abstract class AbstractPolicy implements Policy {
        if (handle) subscription.unsubscribe(handle)
    }
    
-   public void start(){}
-   public void pause(){}
-   public void destroy(){}
+   public void suspend(){
+   //TODO:implement suspend policy action
+        suspended = true;
+        destroyed = false;
+   }
+   public void resume(){
+   //TODO:implement pause policy action
+        suspended = false;
+        destroyed = false;
+   }
+   public void destroy(){
+   //TODO:implement destroy policy action
+        destroyed = true;
+        suspended = false;
+   }
+
+   public Boolean isSuspended(){ return suspended; }
+   public Boolean isDestroyed(){ return destroyed; }
 
    private ManagementContext getManagementContext() {
        entity.getManagementContext();

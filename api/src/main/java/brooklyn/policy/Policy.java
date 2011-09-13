@@ -41,9 +41,16 @@ public interface Policy {
      * methods for actions which can be executed against a policy
      */
 
-    void start();
+    void suspend();
 
-    void pause();
+    void resume();
 
     void destroy();
+
+    /**
+     * Methods for checking policy status
+     */
+    Boolean isSuspended();
+
+    Boolean isDestroyed();
 }

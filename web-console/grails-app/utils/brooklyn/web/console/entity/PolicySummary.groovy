@@ -25,7 +25,13 @@ public class PolicySummary {
         description = policy.findPolicyProperty('description')
         name = policy.getName()
         displayName = policy.findPolicyProperty('displayName')
-        policyStatus = policy.findPolicyProperty('policyStatus')
+        if (policy.isDestroyed()) {
+            policyStatus = "Destroyed"
+        } else if (policy.isSuspended()) {
+            policyStatus = "Suspended"
+        } else {
+            policyStatus = "Running"
+        }
     }
 
 }

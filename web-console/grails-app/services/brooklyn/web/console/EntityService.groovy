@@ -107,11 +107,34 @@ public class EntityService {
         return entity.entityClass.effectors
     }
 
-    public Collection<Policy> getPoliciesOfEntity(String entityId) {
-        Entity entity = getEntity(entityId)
+    public Collection<Policy> getPoliciesOfEntity(Entity entity) {
         if (!entity) throw new NoSuchEntity()
 
         entity.policies
+    }
+
+    public Policy getPolicyOfEntity(Entity entity, String policyId){
+        Policy policy
+        if(entity.policies != null){
+            policy = entity.policies.find {
+                it.id.equals(policyId)
+            }
+        }
+        return policy
+    }
+
+    public void executePolicyAction(String action, Policy policy, Entity entity){
+        if(action == 'suspend'){
+            policy.suspend()
+        }
+        else if(action == 'resume'){
+            policy.resume()
+        }
+        else {
+            policy.destroy()
+            entity.removePolicy(policy)
+        }
+
     }
 
     public List<Entity> getAncestorsOf(Entity child) {

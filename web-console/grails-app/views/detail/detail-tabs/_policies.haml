@@ -18,10 +18,10 @@
             %select{:id=>"policyAction",:disabled=>"true"}
                 %option{:value=>"default"}
                     Choose Action
-                %option{:value=>"start"}
-                    Start
-                %option{:value=>"pause"}
-                    Pause
+                %option{:value=>"suspend"}
+                    Suspend
+                %option{:value=>"resume"}
+                    Resume
                 %option{:value=>"destroy"}
                     Destroy
-            %input{:id=>"policy-action-execution-button", :type=>"button", :value=>"Execute"}
+            %input{:id=>"policy-action-execution-button", :type=>"button", :value=>"Execute", :disabled=>"true"}

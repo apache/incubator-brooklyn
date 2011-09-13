@@ -118,7 +118,7 @@ class EntityController {
         if (id) {
             Entity entity = entityService.getEntity(id)
             if (entity != null) {
-                Collection<AbstractPolicy> entityPolicies = entity.getPolicies()
+                Collection<AbstractPolicy> entityPolicies = entityService.getPoliciesOfEntity(entity)
                 def policySummaries = []
                 for (policy in entityPolicies){
                     //for each policy create policy summary and push to array
@@ -235,34 +235,18 @@ class EntityController {
         render true
     }
     /* Execute an action against a policy with given ID and action string*/
-    def execute = {
+    def policyaction = {
         Entity entity = entityService.getEntity(params.entityId)
         if (!entity) {
             render(status: 404, text: '{message: "Entity with specified id '+params.entityId+'does not exist"}')
             return
         }
-        
-        Collection<Policy> policiesOfEntity = entityService.getPoliciesOfEntity(entity.id)
-
-        if(policiesOfEntity != null){
-            Policy policy = policiesOfEntity.find {
-                it.id.equals(params.policyId)
-            }
-
-            if(policy != null){
-                String action = params.chosenAction
-                if(action == 'pause'){
-                    policy.pause()
-                }
-                else if(action == 'start'){
-                    policy.start()
-                }
-                else {
-                    policy.destroy()
-                }
-            } else {
-                render(status: 404, text: '{message: "Cannot invoke policy action for '+ params.policyId + ' does not exist"}')
-            }
+        Policy policy = entityService.getPolicyOfEntity(entity, params.policyId)
+        if(policy != null){
+            String action = params.chosenAction
+            entityService.executePolicyAction(action, policy, entity)
+        } else {
+            render(status: 404, text: '{message: "Cannot invoke policy action for '+ params.policyId + ' does not exist"}')
         }
         render true
     }
