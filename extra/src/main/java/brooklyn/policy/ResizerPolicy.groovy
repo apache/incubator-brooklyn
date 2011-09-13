@@ -39,7 +39,6 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
 
     /** Lock held if we are in the process of resizing. */
     private final AtomicBoolean resizing = new AtomicBoolean(false)
-    private final AtomicBoolean suspended = new AtomicBoolean(false)
     
     private Closure resizeAction = {
         try {
@@ -96,18 +95,9 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
         this
     }
     
-    @Override
-    public void suspend() {
-        suspended.set(true)
-    }
-
-    @Override
-    public void resume() {
-        suspended.set(false)
-    }
 
     private void resize() {
-        if (!suspended.get() && (!entityStartable || entity.getAttribute(Startable.SERVICE_UP))
+        if (!isSuspended() && (!entityStartable || entity.getAttribute(Startable.SERVICE_UP))
                 && resizing.compareAndSet(false, true)) {
             ((EntityLocal)entity).getManagementContext().getExecutionContext(entity).submit(new BasicTask(resizeAction))
         }
