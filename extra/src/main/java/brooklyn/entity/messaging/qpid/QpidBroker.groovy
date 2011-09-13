@@ -150,14 +150,13 @@ public class QpidQueue extends QpidDestination implements Queue {
 
     public void addJmxSensors() {
         String queue = "org.apache.qpid:type=VirtualHost.Queue,VirtualHost=\"${virtualHost}\",name=\"${name}\""
-        attributePoller.addSensor(QUEUE_DEPTH, jmxAdapter.newAttributeProvider(queue, "QueueDepth"))
-        attributePoller.addSensor(MESSAGE_COUNT, jmxAdapter.newAttributeProvider(queue, "MessageCount"))
+        attributePoller.addSensor(QUEUE_DEPTH_BYTES, jmxAdapter.newAttributeProvider(queue, "QueueDepth"))
+        attributePoller.addSensor(QUEUE_DEPTH_MESSAGES, jmxAdapter.newAttributeProvider(queue, "MessageCount"))
     }
 
     public void removeJmxSensors() {
-        String queue = "org.apache.qpid:type=VirtualHost.Queue,VirtualHost=\"${virtualHost}\",name=\"${name}\""
-        attributePoller.removeSensor(QUEUE_DEPTH)
-        attributePoller.removeSensor(MESSAGE_COUNT)
+        attributePoller.removeSensor(QUEUE_DEPTH_BYTES)
+        attributePoller.removeSensor(QUEUE_DEPTH_MESSAGES)
     }
 }
 
@@ -174,14 +173,9 @@ public class QpidTopic extends QpidDestination implements Topic {
     }
 
     public void addJmxSensors() {
-        String topic = "org.apache.qpid:type=VirtualHost.Queue,VirtualHost=\"${virtualHost}\",name=\"${name}\""
-        attributePoller.addSensor(QUEUE_DEPTH, jmxAdapter.newAttributeProvider(topic, "QueueDepth"))
-        attributePoller.addSensor(MESSAGE_COUNT, jmxAdapter.newAttributeProvider(topic, "MessageCount"))
+        //TODO add sensors for topic
     }
 
     public void removeJmxSensors() {
-        String topic = "org.apache.qpid:type=VirtualHost.Queue,VirtualHost=\"${virtualHost}\",name=\"${name}\""
-        attributePoller.removeSensor(QUEUE_DEPTH)
-        attributePoller.removeSensor(MESSAGE_COUNT)
     }
 }

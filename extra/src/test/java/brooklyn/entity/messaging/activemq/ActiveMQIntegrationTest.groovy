@@ -103,19 +103,19 @@ public class ActiveMQIntegrationTest {
             Connection connection = getActiveMQConnection(activeMQ)
             clearQueue(connection, queueName)
 			Thread.sleep 1000
-            assertEquals queue.getAttribute(ActiveMQQueue.MESSAGE_COUNT), 0
+            assertEquals queue.getAttribute(ActiveMQQueue.QUEUE_DEPTH_MESSAGES), 0
             sendMessages(connection, number, queueName, content)
 
             // Check messages arrived
 			Thread.sleep 1000
-            assertEquals queue.getAttribute(ActiveMQQueue.MESSAGE_COUNT), number
+            assertEquals queue.getAttribute(ActiveMQQueue.QUEUE_DEPTH_MESSAGES), number
 
             // Clear the messages
             assertEquals clearQueue(connection, queueName), number
 
             // Check messages cleared
 			Thread.sleep 1000
-            assertEquals queue.getAttribute(ActiveMQQueue.MESSAGE_COUNT), 0
+            assertEquals queue.getAttribute(ActiveMQQueue.QUEUE_DEPTH_MESSAGES), 0
 	        connection.close()
 
             // Close the JMS connection

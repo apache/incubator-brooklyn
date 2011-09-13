@@ -9,9 +9,9 @@ import brooklyn.event.basic.ConfiguredAttributeSensor
 public interface Queue {
     ConfiguredAttributeSensor<String> QUEUE_NAME = [ String, "jms.queue.name", "JMS queue name" ]
 
-    BasicAttributeSensor<Integer> QUEUE_DEPTH = [ Integer, "jms.queue.depth", "Queue depth in bytes" ]
-    BasicAttributeSensor<Integer> MESSAGE_COUNT = [ Integer, "jms.message.count", "Number of messages" ]
-
+    BasicAttributeSensor<Integer> QUEUE_DEPTH_BYTES = [ Integer, "jms.queue.depth.bytes", "Queue depth in bytes" ]
+    BasicAttributeSensor<Integer> QUEUE_DEPTH_MESSAGES = [ Integer, "jms.queue.depth.messages", "Queue depth in messages" ]
+    
     /**
      * Create the queue.
      *

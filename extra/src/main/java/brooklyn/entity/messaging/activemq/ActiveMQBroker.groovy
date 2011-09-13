@@ -113,11 +113,11 @@ public class ActiveMQQueue extends ActiveMQDestination implements Queue {
 
     public void addJmxSensors() {
         String queue = "org.apache.activemq:Type=Queue,BrokerName=localhost,Destination=${name}"
-        attributePoller.addSensor(MESSAGE_COUNT, jmxAdapter.newAttributeProvider(queue, "QueueSize"))
+        attributePoller.addSensor(QUEUE_DEPTH_MESSAGES, jmxAdapter.newAttributeProvider(queue, "QueueSize"))
     }
 
     public void removeJmxSensors() {
-        attributePoller.removeSensor(MESSAGE_COUNT)
+        attributePoller.removeSensor(QUEUE_DEPTH_MESSAGES)
     }
 }
 
@@ -143,11 +143,9 @@ public class ActiveMQTopic extends ActiveMQDestination implements Topic {
     }
 
     public void addJmxSensors() {
-        String topic = "org.apache.activemq:Type=Topic,BrokerName=localhost,Destination=${name}"
-        attributePoller.addSensor(MESSAGE_COUNT, jmxAdapter.newAttributeProvider(topic, "MessageCount"))
+        //TODO add sensors for topics
     }
 
     public void removeJmxSensors() {
-        attributePoller.removeSensor(MESSAGE_COUNT)
     }
 }

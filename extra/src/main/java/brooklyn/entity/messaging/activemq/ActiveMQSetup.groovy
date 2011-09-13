@@ -60,8 +60,6 @@ public class ActiveMQSetup extends SshBasedJavaAppSetup {
     public List<String> getInstallScript() {
         makeInstallScript([
                 "wget http://www.mirrorservice.org/sites/ftp.apache.org/activemq/apache-activemq/${version}/apache-activemq-${version}-bin.tar.gz",
-//                "wget http://www.apache.org/dist/activemq/apache-activemq/KEYS",
-//                "wget http://www.mirrorservice.org/sites/ftp.apache.org/activemq/apache-activemq/${version}/apache-activemq-${version}-bin.tar.gz.asc",
                 "tar xvzf apache-activemq-${version}-bin.tar.gz",
             ])
     }

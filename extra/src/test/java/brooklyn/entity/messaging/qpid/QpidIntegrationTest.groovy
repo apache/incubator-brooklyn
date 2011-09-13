@@ -103,21 +103,21 @@ public class QpidIntegrationTest {
             Connection connection = getQpidConnection(qpid)
             clearQueue(connection, queue.bindingUrl)
 			Thread.sleep 1000
-            assertEquals queue.getAttribute(QpidQueue.MESSAGE_COUNT), 0
+            assertEquals queue.getAttribute(QpidQueue.QUEUE_DEPTH_MESSAGES), 0
             sendMessages(connection, number, queue.bindingUrl, content)
 
             // Check messages arrived
 			Thread.sleep 1000
-            assertEquals queue.getAttribute(QpidQueue.MESSAGE_COUNT), number
-            assertEquals queue.getAttribute(QpidQueue.QUEUE_DEPTH), number * content.length()
+            assertEquals queue.getAttribute(QpidQueue.QUEUE_DEPTH_MESSAGES), number
+            assertEquals queue.getAttribute(QpidQueue.QUEUE_DEPTH_BYTES), number * content.length()
 
             // Clear the messages
             assertEquals clearQueue(connection, queue.bindingUrl), number
 
             // Check messages cleared
 			Thread.sleep 1000
-            assertEquals queue.getAttribute(QpidQueue.MESSAGE_COUNT), 0
-            assertEquals queue.getAttribute(QpidQueue.QUEUE_DEPTH), 0
+            assertEquals queue.getAttribute(QpidQueue.QUEUE_DEPTH_MESSAGES), 0
+            assertEquals queue.getAttribute(QpidQueue.QUEUE_DEPTH_BYTES), 0
 	        connection.close()
 
             // Close the JMS connection
