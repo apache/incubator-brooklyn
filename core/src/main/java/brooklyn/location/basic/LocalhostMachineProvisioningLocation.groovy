@@ -24,6 +24,10 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
         super(augmentProperties(properties))
     }
 
+    public LocalhostMachineProvisioningLocation(String name, int count) {
+        this([name: name, count: count]);
+    }
+
     private static Map augmentProperties(Map properties) {
         int numberOfMachines = 1
 
