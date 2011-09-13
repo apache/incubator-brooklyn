@@ -3,7 +3,7 @@ package brooklyn.location.basic
 import com.google.common.base.Preconditions
 
 /**
- * An implementation of {@link MachineProvisioningLocation} that can provision a {@link SshMachineLocation} for the
+ * An implementation of {@link brooklyn.location.MachineProvisioningLocation} that can provision a {@link SshMachineLocation} for the
  * local host.
  *
  * By default you can only obtain a single SshMachineLocation for the localhost. Optionally, you can "overload"

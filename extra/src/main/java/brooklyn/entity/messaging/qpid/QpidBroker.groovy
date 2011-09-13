@@ -48,6 +48,10 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> {
         setConfigIfValNonNull(Attributes.JMX_PASSWORD.configKey, properties.password ?: "admin")
     }
 
+    public void setBrokerUrl() {
+        setAttribute(BROKER_URL, String.format("tcp://%s:%d/", getAttribute(HOSTNAME), getAttribute(AMQP_PORT)))
+    }
+
     public QpidQueue createQueue(Map properties) {
         return new QpidQueue(properties);
     }

@@ -14,6 +14,7 @@ public enum Provisioning {
     SCRIPT,
     PALLET,
     CHEF,
+    PUPPET,
     PACKAGE_MANAGER,
     IMAGE,
     VIRTUAL_MACHINE,
@@ -61,6 +62,9 @@ public interface PalletSupport { }
 
 public interface ChefAware { }
 public interface ChefSupport { }
+
+public interface PuppetAware { }
+public interface PuppetSupport { }
 
 public interface PackageManagerAware { }
 public interface PackageManagerSupport { }

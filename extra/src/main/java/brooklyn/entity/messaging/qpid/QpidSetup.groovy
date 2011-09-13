@@ -10,7 +10,7 @@ import brooklyn.util.SshBasedJavaAppSetup;
 import brooklyn.util.SshBasedJavaWebAppSetup
 
 /**
- * Start a {@link QpidBroker} in a {@link Location} accessible over ssh.
+ * Start a {@link QpidBroker} in a {@link brooklyn.location.Location} accessible over ssh.
  */
 public class QpidSetup extends SshBasedJavaAppSetup {
     public static final String DEFAULT_VERSION = "0.12"

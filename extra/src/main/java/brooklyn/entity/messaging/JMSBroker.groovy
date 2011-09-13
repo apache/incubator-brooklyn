@@ -5,24 +5,18 @@ import groovy.lang.MetaClass
 import java.util.Collection
 import java.util.Map
 
-import javax.management.ObjectName
-
-import brooklyn.entity.Effector
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.JavaApp
-import brooklyn.entity.messaging.activemq.ActiveMQBroker
-import brooklyn.entity.messaging.activemq.ActiveMQQueue;
-import brooklyn.entity.messaging.activemq.ActiveMQTopic;
+import brooklyn.event.AttributeSensor
 import brooklyn.event.adapter.AttributePoller
 import brooklyn.event.adapter.JmxSensorAdapter
-import brooklyn.location.basic.SshMachineLocation
-import brooklyn.management.Task
-import brooklyn.util.SshBasedAppSetup
 
 import com.google.common.base.Preconditions
 
 public abstract class JMSBroker<Q extends JMSDestination & Queue, T extends JMSDestination & Topic> extends JavaApp {
+    public static final AttributeSensor<String> BROKER_URL = [ String, "broker.url", "Broker Connection URL" ]
+
     Collection<String> queueNames = []
     Map<String, Q> queues = [:]
     Collection<String> topicNames = []
@@ -42,7 +36,10 @@ public abstract class JMSBroker<Q extends JMSDestination & Queue, T extends JMSD
     public void postStart() {
         queueNames.each { String name -> addQueue(name) }
         topicNames.each { String name -> addTopic(name) }
+        setBrokerUrl();
     }
+
+    public abstract void setBrokerUrl();
 
     @Override
     public void preStop() {
