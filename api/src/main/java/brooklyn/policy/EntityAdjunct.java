@@ -19,13 +19,7 @@ public interface EntityAdjunct {
     String getName();
     
     /**
-     * destroy the adjunct
-     */
-    void destroy();
-    
-    /**
      * whether the adjunct is destroyed
      */
     Boolean isDestroyed();
-
 }

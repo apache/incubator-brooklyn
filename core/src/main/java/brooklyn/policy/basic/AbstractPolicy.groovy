@@ -111,5 +111,10 @@ public abstract class AbstractPolicy implements Policy {
         if (hasPolicyProperty(key)) return getPolicyProperty(key);
         return null;
     }
+    
+    /**
+    * destroy the adjunct
+    */
+   abstract void destroy();
 
 }
