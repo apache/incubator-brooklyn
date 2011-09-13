@@ -440,6 +440,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 
     @Override
     boolean removePolicy(AbstractPolicy policy) {
+        policy.destroy()
         return policies.remove(policy)
     }
     
@@ -456,6 +457,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 
     @Override
     boolean removeEnricher(AbstractEnricher enricher) {
+        enricher.destroy()
         return enrichers.remove(enricher)
     }
 
