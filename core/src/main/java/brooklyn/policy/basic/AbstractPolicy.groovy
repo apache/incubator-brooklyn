@@ -112,11 +112,6 @@ public abstract class AbstractPolicy implements Policy {
         return null;
     }
     
-    /**
-    * destroy the adjunct
-    */
-   abstract void destroy();
-
     @Override
     public boolean isRunning() {
         return !isSuspended() && !isDestroyed()

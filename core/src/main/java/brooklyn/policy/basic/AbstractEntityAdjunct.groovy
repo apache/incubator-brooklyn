@@ -61,7 +61,10 @@ abstract class AbstractEntityAdjunct implements EntityAdjunct {
         entity.getManagementContext();
     }
     
-    @Override
+    /** 
+     * Unsubscribes and clears all managed subscriptions; is called by the owning entity when a policy is removed
+     * and should always be called by any subclasses overriding this method
+     */
     public void destroy() {
         destroyed.set(true)
         subscriptions.values().each { subscription.unsubscribe(it) }
