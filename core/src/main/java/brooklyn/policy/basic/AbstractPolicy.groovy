@@ -117,4 +117,8 @@ public abstract class AbstractPolicy implements Policy {
     */
    abstract void destroy();
 
+    @Override
+    public boolean isRunning() {
+        return !isSuspended() && !isDestroyed()
+    }
 }

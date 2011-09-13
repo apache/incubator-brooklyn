@@ -72,5 +72,10 @@ abstract class AbstractEntityAdjunct implements EntityAdjunct {
     public boolean isDestroyed() {
         return destroyed.get()
     }
+    
+    @Override
+    public boolean isRunning() {
+        return !isDestroyed()
+    }
 
 }
