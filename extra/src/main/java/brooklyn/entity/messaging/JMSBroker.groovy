@@ -8,14 +8,14 @@ import java.util.Map
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.JavaApp
-import brooklyn.event.AttributeSensor
 import brooklyn.event.adapter.AttributePoller
 import brooklyn.event.adapter.JmxSensorAdapter
+import brooklyn.event.basic.BasicAttributeSensor
 
 import com.google.common.base.Preconditions
 
 public abstract class JMSBroker<Q extends JMSDestination & Queue, T extends JMSDestination & Topic> extends JavaApp {
-    public static final AttributeSensor<String> BROKER_URL = [ String, "broker.url", "Broker Connection URL" ]
+    public static final BasicAttributeSensor<String> BROKER_URL = [ String, "broker.url", "Broker Connection URL" ]
 
     Collection<String> queueNames = []
     Map<String, Q> queues = [:]
