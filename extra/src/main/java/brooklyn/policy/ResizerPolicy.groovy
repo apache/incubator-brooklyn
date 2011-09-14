@@ -104,6 +104,8 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
     }
 
     public void onEvent(SensorEvent<T> event) {
+        if (isDestroyed()) return //swallow events when destroyed
+        
         T val = event.getValue()
         int currentSize = resizable.getCurrentSize()
         desiredSize.set(calculateDesiredSize(val))
