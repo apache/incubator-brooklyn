@@ -97,8 +97,9 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
     
 
     private void resize() {
-        if (!isSuspended() && (!entityStartable || entity.getAttribute(Startable.SERVICE_UP))
-                && resizing.compareAndSet(false, true)) {
+        if (isRunning() // if I'm running
+            && (!entityStartable || entity.getAttribute(Startable.SERVICE_UP)) // my entity is up
+            && resizing.compareAndSet(false, true)) { // and I'm not in the middle of resizing already
             ((EntityLocal)entity).getManagementContext().getExecutionContext(entity).submit(new BasicTask(resizeAction))
         }
     }
