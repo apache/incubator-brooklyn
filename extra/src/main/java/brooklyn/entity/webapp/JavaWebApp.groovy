@@ -109,8 +109,8 @@ public abstract class JavaWebApp extends JavaApp {
 
         // TODO Want to wire this up so doesn't go through SubscriptionManager;
         // but that's an optimisation we'll do later.
-        addPolicy(TimeWeightedDeltaEnricher.<Integer>getPerSecondDeltaEnricher(this, REQUEST_COUNT, REQUESTS_PER_SECOND))
-        addPolicy(new RollingTimeWindowMeanEnricher<Double>(this, REQUESTS_PER_SECOND, AVG_REQUESTS_PER_SECOND,
+        addEnricher(TimeWeightedDeltaEnricher.<Integer>getPerSecondDeltaEnricher(this, REQUEST_COUNT, REQUESTS_PER_SECOND))
+        addEnricher(new RollingTimeWindowMeanEnricher<Double>(this, REQUESTS_PER_SECOND, AVG_REQUESTS_PER_SECOND,
             AVG_REQUESTS_PER_SECOND_PERIOD))
 
         initHttpSensors()
