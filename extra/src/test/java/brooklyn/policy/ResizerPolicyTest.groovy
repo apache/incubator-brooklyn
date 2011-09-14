@@ -9,6 +9,7 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.webapp.DynamicWebAppCluster
 import brooklyn.entity.webapp.tomcat.TomcatServer
+import brooklyn.event.basic.BasicSensorEvent
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestCluster
@@ -22,7 +23,7 @@ class ResizerPolicyTest {
     
     @BeforeMethod()
     public void before() {
-        policy = new ResizerPolicy(null)
+        policy = new ResizerPolicy<Integer>(null)
         policy.setMinSize 0
     }
     
@@ -98,6 +99,24 @@ class ResizerPolicyTest {
         
         assertEquals 6, policy.calculateDesiredSize(175)
         assertEquals 7, policyNoResize.calculateDesiredSize(175)
+    }
+    
+    @Test
+    public void testDestructionState() {
+        policy.destroy()
+        assertEquals true, policy.isDestroyed()
+        assertEquals false, policy.isRunning()
+    }
+    
+    @Test
+    public void testPostDestructionActions() {
+        policy.destroy()
+        policy.onEvent(new BasicSensorEvent<Integer>(null, null, null) {
+                Integer getValue() {
+                    throw new IllegalStateException("Should not be called when destroyed")
+                }
+            }
+        )
     }
     
     @Test(groups=["Integration"])
