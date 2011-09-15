@@ -14,7 +14,6 @@ import static org.jclouds.scriptbuilder.domain.Statements.newStatementList
 import java.io.File
 import java.io.IOException
 import java.net.URI
-import java.util.List
 import java.util.Map
 import java.util.Properties
 
@@ -33,7 +32,6 @@ import org.jclouds.compute.reference.ComputeServiceConstants.Timeouts
 import org.jclouds.compute.util.ComputeServiceUtils
 import org.jclouds.net.IPSocket
 import org.jclouds.predicates.InetSocketAddressConnect
-import org.jclouds.scriptbuilder.InitBuilder
 import org.jclouds.scriptbuilder.domain.Statement
 import org.jclouds.scriptbuilder.domain.Statements
 import org.jclouds.sshj.config.SshjSshClientModule
@@ -43,8 +41,6 @@ import org.slf4j.LoggerFactory
 import com.google.common.base.Charsets
 import com.google.common.base.Predicate
 import com.google.common.base.Splitter
-import com.google.common.collect.ImmutableList
-import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Iterables
 import com.google.common.io.Files
@@ -170,46 +166,6 @@ public class JcloudsUtil {
                 .createContext(conf.provider, modules, properties)
                 .getComputeService();
         return computeService;
-     }
-    
-    /**
-     * Returns a command that will create the given user. Allows that user access by adding the 
-     * given key to authorized_keys.
-     * 
-     * Note that when we use an InitBuilder then all statements have to be inside it. You cannot
-     * compose the returned statement within another 
-     * 
-     * Copied from https://github.com/jclouds/jclouds-examples/blob/master/compute-basics/src/main/java/org/jclouds/examples/compute/basics/MainApp.java
-     */
-    public static Statement setupUserAndExecuteStatements(String user, File publicKeyFile, List<Statement> statementList) throws IOException {
-        String publicKey = Files.toString(publicKeyFile, Charsets.UTF_8);
-        return setupUserAndExecuteStatements(user, publicKey, statementList);
-    }
-    
-    public static Statement setupUserAndExecuteStatements(String user, String publicKey, List<Statement> statementList) {
-        return new InitBuilder("setup-" + user,// name of the script
-                 "/tmp",// working directory
-                 "/tmp/logs",// location of stdout.log and stderr.log
-                 ImmutableMap.of("newUser", user, "defaultHome", "/home/users"), // variables
-                 ImmutableList.<Statement> of(createUserWithPublicKey(user, publicKey), makeSudoersOnlyPermitting(user)),
-                 statementList);
-     }
-
-     // must be used inside InitBuilder, as this sets the shell variables used in this statement
-     private static Statement createUserWithPublicKey(String username, String publicKey) {
-        // note directory must be created first
-        return newStatementList(interpret('mkdir -p $DEFAULT_HOME/$NEW_USER/.ssh',
-                         'useradd --shell /bin/bash -d $DEFAULT_HOME/$NEW_USER $NEW_USER\n'), 
-                 appendFile('$DEFAULT_HOME/$NEW_USER/.ssh/authorized_keys', Splitter.on('\n').split(publicKey)),
-                 interpret('chmod 600 $DEFAULT_HOME/$NEW_USER/.ssh/authorized_keys',
-                          'chown -R $NEW_USER $DEFAULT_HOME/$NEW_USER\n'));
-     }
-
-     // must be used inside InitBuilder, as this sets the shell variables used in this statement
-     private static Statement makeSudoersOnlyPermitting(String username) {
-        return newStatementList(Statements.interpret("rm /etc/sudoers", "touch /etc/sudoers", "chmod 0440 /etc/sudoers",
-                 "chown root /etc/sudoers\n"), appendFile("/etc/sudoers", ImmutableSet.of("root ALL = (ALL) ALL",
-                 "%adm ALL = (ALL) ALL", username + " ALL = (ALL) NOPASSWD: ALL")));
      }
      
      // Do this so that if there's a problem with our USERNAME's ssh key, we can still get in to check
