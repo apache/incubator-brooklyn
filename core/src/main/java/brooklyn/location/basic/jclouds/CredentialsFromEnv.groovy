@@ -14,17 +14,21 @@ package brooklyn.location.basic.jclouds;
 public class CredentialsFromEnv {
 
     private final String provider
+    private final String identity
+    private final String credential
     
     public CredentialsFromEnv(String provider) {
         this.provider = provider.toUpperCase().replace('-', '_')
+        this.identity = returnValueOrThrowException("JCLOUDS_IDENTITY_"+this.provider.toUpperCase());
+        this.credential = returnValueOrThrowException("JCLOUDS_CREDENTIAL_"+this.provider.toUpperCase());
     }
     
     public String getIdentity() {
-        return returnValueOrThrowException("JCLOUDS_IDENTITY_"+provider.toUpperCase());
+        return identity
     }
 
     public String getCredential() {
-        return returnValueOrThrowException("JCLOUDS_CREDENTIAL_"+provider.toUpperCase());
+        return credential
     }
     
     private String returnValueOrThrowException(String envProp) {

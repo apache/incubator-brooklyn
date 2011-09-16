@@ -13,9 +13,16 @@ import org.jclouds.compute.domain.NodeMetadata
 import org.jclouds.compute.domain.Template
 import org.jclouds.compute.domain.TemplateBuilder
 import org.jclouds.compute.options.TemplateOptions
+import org.jclouds.compute.predicates.RetryIfSocketNotYetOpen
+import org.jclouds.compute.reference.ComputeServiceConstants
+import org.jclouds.compute.reference.ComputeServiceConstants.Timeouts
+import org.jclouds.compute.util.ComputeServiceUtils
 import org.jclouds.ec2.compute.options.EC2TemplateOptions
+import org.jclouds.net.IPSocket
+import org.jclouds.predicates.InetSocketAddressConnect
 import org.jclouds.scriptbuilder.domain.Statement
 import org.jclouds.scriptbuilder.domain.Statements
+import org.jclouds.scriptbuilder.statements.login.UserAdd
 
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.NoMachinesAvailableException
@@ -50,18 +57,6 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         this([identity:identity, credential:credential, providerLocationId:providerLocationId])
     }
     
-    public void setSshPublicKey(String val) {
-        conf.put("sshPublicKey", val)
-    }
-    
-    public void setSshPrivateKey(String val) {
-        conf.put("sshPrivateKey", val)
-    }
-    
-    public void setUserName(String val) {
-        conf.put("userName", val)
-    }
-    
     public void setTagMapping(Map<String,Map<String, ? extends Object>> val) {
         tagMapping.clear()
         tagMapping.putAll(val)
@@ -91,8 +86,8 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     
     public SshMachineLocation obtain(Map flags=[:]) throws NoMachinesAvailableException {
         Map allconf = flags + conf
+        if (!allconf.userName) allconf.userName = ROOT_USERNAME
         String groupId = (allconf.groupId ?: IdGenerator.makeRandomId(8))
-        allconf.userName = ROOT_USERNAME
  
         ComputeService computeService = JcloudsUtil.buildComputeService(allconf);
         
@@ -110,11 +105,10 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             String vmIp = JcloudsUtil.getFirstReachableAddress(node);
             
             // Wait for the VM to be reachable over SSH
-            LOG.info("Started VM in ${allconf.providerLocationId}; waiting for it to be sshable by "+ROOT_USERNAME+"@"+vmIp);
+            LOG.info("Started VM in ${allconf.providerLocationId}; waiting for it to be sshable by "+allconf.userName+"@"+vmIp);
             boolean reachable = new Repeater()
                     .repeat( { } )
                     .every(1, TimeUnit.SECONDS)
-//                    .until( { sshLoc.isSshable() } )
                     .until( {
                         Statement statement = Statements.newStatementList(exec('date'))
                         ExecResponse response = computeService.runScriptOnNode(node.getId(), statement)
@@ -123,7 +117,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                     .run()
         
             if (!reachable) {
-                throw new IllegalStateException("SSH failed for "+ROOT_USERNAME+"@"+vmIp+" after waiting "+START_SSHABLE_TIMEOUT+"ms");
+                throw new IllegalStateException("SSH failed for "+allconf.userName+"@"+vmIp+" after waiting "+START_SSHABLE_TIMEOUT+"ms");
             }
 
             String vmHostname = getPublicHostname(node, allconf)
@@ -132,7 +126,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             SshMachineLocation sshLocByHostname = new SshMachineLocation(
                     address:vmHostname, 
                     displayName:vmHostname,
-                    userName:ROOT_USERNAME, 
+                    userName:allconf.userName, 
                     config:sshConfig);
 
             sshLocByHostname.setParentLocation(this)
@@ -168,6 +162,9 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         try {
             computeService = JcloudsUtil.buildComputeService(conf);
             computeService.destroyNode(instanceId);
+        } catch (Exception e) {
+            LOG.error "Problem releasing machine $machine in $this, instance id $instanceId; discarding instance and continuing...", e
+            Throwables.propagate(e)
         } finally {
             if (computeService != null) {
                 try {
@@ -223,20 +220,25 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             Object[] inboundPorts = (properties.inboundPorts instanceof Collection) ? properties.inboundPorts.toArray(new Integer[0]): properties.inboundPorts
             options.inboundPorts(inboundPorts);
         }
-        if (properties.sshPublicKey) {
-            String keyData = Files.toString(properties.sshPublicKey, Charsets.UTF_8)
+        if ((properties.userName == ROOT_USERNAME && properties.sshPublicKey) || properties.rootSshPublicKey) {
+            File publicKeyFile = properties.rootSshPublicKey ?: properties.sshPublicKey
+            String keyData = Files.toString(publicKeyFile, Charsets.UTF_8)
             options.authorizePublicKey(keyData)
         }
-        if (properties.sshPrivateKey) {
-            String keyData = Files.toString(properties.sshPrivateKey, Charsets.UTF_8)
+        if ((properties.userName == ROOT_USERNAME && properties.sshPrivateKey) || properties.rootSshPrivateKey) {
+            File privateKeyFile = properties.rootSshPrivateKey ?: properties.sshPrivateKey
+            String keyData = Files.toString(privateKeyFile, Charsets.UTF_8)
             options.overrideLoginCredentialWith(keyData)
         }
         
-        // setup the users
+        // Setup the user
         if (properties.userName && properties.userName != ROOT_USERNAME) {
-            Statement setupUserStatement = JcloudsUtil.setupUserAndExecuteStatements(properties.userName, properties.sshPublicKey,
-                    Collections.<Statement>emptyList());
-            options.runScript(setupUserStatement);
+            UserAdd.Builder userBuilder = UserAdd.builder();
+            userBuilder.login(properties.userName);
+            String publicKeyData = Files.toString(properties.sshPublicKey, Charsets.UTF_8)
+            userBuilder.authorizeRSAPublicKey(publicKeyData);
+            Statement userBuilderStatement = userBuilder.build();
+            options.runScript(userBuilderStatement);
         }
                 
         return template;
@@ -267,7 +269,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         
         Map sshConfig = [:]
         if (allconf.sshPrivateKey) sshConfig.keyFiles = [ allconf.sshPrivateKey.absolutePath ]
-        SshMachineLocation sshLocByIp = new SshMachineLocation(address:vmIp, userName:ROOT_USERNAME, config:sshConfig);
+        SshMachineLocation sshLocByIp = new SshMachineLocation(address:vmIp, userName:allconf.userName, config:sshConfig);
         ByteArrayOutputStream outStream = new ByteArrayOutputStream()
         ByteArrayOutputStream errStream = new ByteArrayOutputStream()
         int exitcode = sshLocByIp.run([out:outStream,err:errStream], "echo `curl --silent --retry 20 http://169.254.169.254/latest/meta-data/public-hostname`; exit")

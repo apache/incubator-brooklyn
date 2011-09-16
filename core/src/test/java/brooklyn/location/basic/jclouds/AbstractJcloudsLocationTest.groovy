@@ -10,12 +10,13 @@ import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.util.internal.SshJschTool
 
 public abstract class AbstractJcloudsLocationTest {
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractJcloudsLocationTest.class)
     
     private final String provider
-    private JcloudsLocationFactory locFactory;
+    protected JcloudsLocationFactory locFactory;
     protected JcloudsLocation loc; // if private, can't be accessed from within closure in teardown! See http://jira.codehaus.org/browse/GROOVY-4692
     private Collection<SshMachineLocation> machines = []
     private File sshPrivateKey
@@ -34,6 +35,15 @@ public abstract class AbstractJcloudsLocationTest {
      */
     @DataProvider(name = "fromImageId")
     public abstract Object[][] cloudAndImageIds();
+
+    /**
+     * A single location and image id tuplet to test.
+     */
+    @DataProvider(name = "fromFirstImageId")
+    public Object[][] cloudAndImageFirstId() {
+        Object[][] all = cloudAndImageIds();
+        return (all ? [all[0]] : []);
+    }
 
     /**
      * The location and image name pattern tuplets to test.
@@ -127,14 +137,40 @@ public abstract class AbstractJcloudsLocationTest {
         assertTrue machine.isSshable()
     }
 
+    @Test(groups = "Live", dataProvider="fromFirstImageId")
+    public void testProvisioningVmWithCustomUsername(String regionName, String imageId, String imageOwner) {
+        loc = locFactory.newLocation(regionName)
+        Map flags = [
+            imageId:imageId,
+            imageOwner:imageOwner,
+            userName:"myname",
+            rootSshPrivateKey:sshPrivateKey,
+            rootSshPublicKey:sshPublicKey,
+            sshPrivateKey:sshPrivateKey,
+            sshPublicKey:sshPublicKey
+        ]
+        
+        SshMachineLocation machine = obtainMachine(flags)
+        
+        LOG.info("Provisioned vm $machine; checking if ssh'able")
+        
+        def t = new SshJschTool(user:"myname", host:machine.address.getHostName(), publicKey:sshPublicKey.getAbsolutePath(), privateKey:sshPrivateKey.getAbsolutePath())
+        t.connect()
+        t.execCommands([ "date" ])
+        t.disconnect()
+
+        
+        assertTrue machine.isSshable()
+    }
+
     // Use this utility method to ensure 
-    private SshMachineLocation obtainMachine(Map flags) {
+    protected SshMachineLocation obtainMachine(Map flags) {
         SshMachineLocation result = loc.obtain(flags)
         machines.add(result)
         return result
     }
     
-    private SshMachineLocation release(SshMachineLocation machine) {
+    protected SshMachineLocation release(SshMachineLocation machine) {
         machines.remove(machine)
         loc.release(machine)
     }
