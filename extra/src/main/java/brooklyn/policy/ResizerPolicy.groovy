@@ -68,7 +68,7 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
     public void setEntity(Entity entity) {
         super.setEntity(entity)
         assert entity instanceof Resizable
-        this.resizable = entity
+        resizable = entity
         if(entity instanceof Startable) {
             entityStartable = true
         }

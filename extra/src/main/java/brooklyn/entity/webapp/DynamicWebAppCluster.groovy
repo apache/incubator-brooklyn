@@ -59,8 +59,8 @@ class DynamicWebAppCluster extends DynamicCluster {
             def (t, total, average) = es
             def totaller = CustomAggregatingEnricher.<Integer>getSummingEnricher([], t, total);
             def averager = CustomAggregatingEnricher.<Double>getAveragingEnricher([], t, average);
-            this.addEnricher(totaller)
-            this.addEnricher(averager)
+            addEnricher(totaller)
+            addEnricher(averager)
         }
     }
     
