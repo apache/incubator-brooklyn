@@ -31,8 +31,6 @@ public abstract class AbstractPolicy extends AbstractEntityAdjunct implements Po
 
     protected transient ExecutionContext execution
     
-    private Map<Entity, SubscriptionHandle> subscriptions = new HashMap<Entity, SubscriptionHandle>()
-
     public AbstractPolicy(Map properties = [:]) {
         if (properties.name) {
             Preconditions.checkArgument properties.name instanceof String, "'name' property should be a string"
