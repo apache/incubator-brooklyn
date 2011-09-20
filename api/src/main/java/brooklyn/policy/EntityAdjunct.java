@@ -21,7 +21,7 @@ public interface EntityAdjunct {
     /**
      * whether the adjunct is destroyed
      */
-    Boolean isDestroyed();
+    boolean isDestroyed();
     
     /**
      * whether the adjunct is available

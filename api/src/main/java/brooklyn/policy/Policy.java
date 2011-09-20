@@ -21,10 +21,6 @@ public interface Policy extends EntityAdjunct {
      */
     void resume();
 
-    void destroy();
-
-    Boolean isDestroyed();
-
     /**
      * suspend the policy
      */
@@ -33,5 +29,5 @@ public interface Policy extends EntityAdjunct {
     /**
      * whether the policy is suspended
      */
-    Boolean isSuspended();
+    boolean isSuspended();
 }

@@ -1,10 +1,10 @@
 package brooklyn.launcher;
 
-import brooklyn.management.ManagementContext;
-import brooklyn.management.internal.LocalManagementContext;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import brooklyn.management.ManagementContext;
+import brooklyn.management.internal.LocalManagementContext;
 
 public class Main {
     Map<String, String> config = new HashMap<String, String>();
