@@ -15,6 +15,8 @@ import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestCluster
 import brooklyn.util.internal.TimeExtras
 
+import com.google.common.collect.Iterables
+
 class ResizerPolicyTest {
 
     static { TimeExtras.init() }
@@ -148,14 +150,16 @@ class ResizerPolicyTest {
             owner: new TestApplication()
         )
         
-        ResizerPolicy p = new ResizerPolicy(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)
-        p.setMetricLowerBound(0).setMetricUpperBound(1).setMinSize(1)
-        cluster.addPolicy(p)
+        ResizerPolicy policy = new ResizerPolicy(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)
+        policy.setMetricLowerBound(0).setMetricUpperBound(1).setMinSize(1)
+        cluster.addPolicy(policy)
         
         cluster.start([new LocalhostMachineProvisioningLocation(name:'london', count:4)])
         assertEquals 1, cluster.currentSize
+        assertNotNull policy.@entity
+        assertNotNull policy.@resizable
         
-        TomcatServer tc = cluster.getMembers().toArray()[0]
+        TomcatServer tc = Iterables.getOnlyElement(cluster.getMembers())
         2.times { connectToURL(tc.getAttribute(TomcatServer.ROOT_URL)) }
         
         try {
@@ -164,13 +168,11 @@ class ResizerPolicyTest {
             })
 
             executeUntilSucceeds(timeout: 10*SECONDS, {
-                if (!p.resizing.get()) {
-                    assertEquals 1.0d, cluster.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)
-                    assertEquals 2, policy.calculateDesiredSize(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)
-                    assertEquals 2, cluster.currentSize
-                    return true
-                }
-                println "locked, should be looping"
+                assertTrue policy.isRunning()
+                assertFalse policy.resizing.get()
+                assertEquals 2, policy.calculateDesiredSize(cluster.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT))
+                assertEquals 2, cluster.currentSize
+                assertEquals 1.0d, cluster.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)
             })
         } finally {
             cluster.stop()
