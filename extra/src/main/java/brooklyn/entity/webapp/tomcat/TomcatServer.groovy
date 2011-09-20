@@ -50,12 +50,12 @@ public class TomcatServer extends JavaWebApp {
     }
     
     public void addJmxSensors() {
-        attributePoller.addSensor(ERROR_COUNT, jmxAdapter
-                                  .newAttributeProvider("Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "errorCount"))
-        attributePoller.addSensor(REQUEST_COUNT, jmxAdapter
-                                  .newAttributeProvider("Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "requestCount"))
-        attributePoller.addSensor(TOTAL_PROCESSING_TIME, jmxAdapter
-                                  .newAttributeProvider("Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "processingTime"))
+        attributePoller.addSensor(ERROR_COUNT, 
+				jmxAdapter.newAttributeProvider("Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "errorCount"))
+        attributePoller.addSensor(REQUEST_COUNT, 
+				jmxAdapter.newAttributeProvider("Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "requestCount"))
+        attributePoller.addSensor(TOTAL_PROCESSING_TIME, 
+				jmxAdapter.newAttributeProvider("Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "processingTime"))
         attributePoller.addSensor(CONNECTOR_STATUS, { computeConnectorStatus() } as ValueProvider)
         attributePoller.addSensor(SERVICE_UP, { computeNodeUp() } as ValueProvider)
     }
