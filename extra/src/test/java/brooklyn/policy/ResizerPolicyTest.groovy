@@ -7,6 +7,8 @@ import static org.testng.AssertJUnit.*
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.entity.LocallyManagedEntity
+import brooklyn.entity.trait.Resizable;
 import brooklyn.entity.webapp.DynamicWebAppCluster
 import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.event.basic.BasicSensorEvent
@@ -120,6 +122,63 @@ class ResizerPolicyTest {
         )
     }
     
+    @Test
+    public void testSuspendState() {
+        policy.suspend()
+        assertEquals false, policy.isDestroyed()
+        assertEquals false, policy.isRunning()
+        
+        policy.resume()
+        assertEquals false, policy.isDestroyed()
+        assertEquals true, policy.isRunning()
+    }
+
+    @Test
+    public void testPostSuspendActions() {
+        policy.@resizable = new TestCluster(1) {
+                    Integer resize(Integer newSize) {
+                        fail "Should not be resizing when suspended"
+                    }
+                }
+        policy.setMetricLowerBound 0
+        policy.setMetricUpperBound 1
+
+        policy.suspend()
+        policy.onEvent(new BasicSensorEvent<Integer>(null, null, null) {
+                    Integer getValue() {
+                        return 2
+                    }
+                })
+    }
+    
+    private class LocallyResizableEntity extends LocallyManagedEntity implements Resizable {
+            Integer resize(Integer newSize) {
+                tc.size = policy.calculateDesiredSize(newSize)
+            }
+            
+            Integer getCurrentSize() { return tc.size }
+    }
+    
+    @Test
+    public void testPostResumeActions() {
+        policy = new ResizerPolicy<Integer>(null)
+        policy.setEntity(new LocallyResizableEntity())
+        
+        policy.setMetricLowerBound 0
+        policy.setMetricUpperBound 1
+
+        policy.suspend()
+        policy.resume()
+        policy.onEvent(new BasicSensorEvent<Integer>(null, null, null) {
+                    Integer getValue() {
+                        return 2
+                    }
+                })
+        
+        executeUntilSucceeds(timeout: 3*SECONDS, {
+            assertEquals 2, tc.size
+        })
+    }
     @Test(groups=["Integration"])
     public void testWithTomcatServers() {
         /**
