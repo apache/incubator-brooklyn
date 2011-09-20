@@ -31,7 +31,7 @@ class ResizerPolicyTest {
     public static class LocallyResizableEntity extends LocallyManagedEntity implements Resizable {
         TestCluster tc
         public LocallyResizableEntity (TestCluster tc) { this.tc = tc }
-        Integer resize(Integer newSize) { tc.size = policy.calculateDesiredSize(newSize) }
+        Integer resize(Integer newSize) { tc.size = newSize }
         Integer getCurrentSize() { return tc.size }
     }
 
@@ -171,6 +171,8 @@ class ResizerPolicyTest {
         
         policy.setMetricLowerBound 0
         policy.setMetricUpperBound 1
+        
+        assertEquals 2, policy.calculateDesiredSize(2)
 
         policy.suspend()
         policy.resume()
