@@ -106,6 +106,7 @@ class ResizerPolicyTest {
         policy.destroy()
         assertEquals true, policy.isDestroyed()
         assertEquals false, policy.isRunning()
+        assertEquals 0, policy.getAllSubscriptions().size()
     }
     
     @Test
