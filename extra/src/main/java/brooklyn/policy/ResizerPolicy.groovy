@@ -65,7 +65,7 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
     }
 
     @Override
-    public void setEntity(Entity entity) {
+    public void setEntity(EntityLocal entity) {
         super.setEntity(entity)
         assert entity instanceof Resizable
         resizable = entity
