@@ -37,9 +37,9 @@ class RollingMeanEnricherTest {
         deltaSensor = new BasicAttributeSensor<Integer>(Integer.class, "delta sensor")
         avgSensor = new BasicAttributeSensor<Double>(Integer.class, "avg sensor")
         
-        producer.addPolicy(new DeltaEnricher<Integer>(producer, intSensor, deltaSensor))
+        producer.addEnricher(new DeltaEnricher<Integer>(producer, intSensor, deltaSensor))
         averager = new RollingMeanEnricher<Integer>(producer, deltaSensor, avgSensor, 4)
-        producer.addPolicy(averager)
+        producer.addEnricher(averager)
     }
 
     @AfterMethod
@@ -54,7 +54,7 @@ class RollingMeanEnricherTest {
     @Test
     public void testZeroWindowSize() {
         averager = new RollingMeanEnricher<Integer>(producer, deltaSensor, avgSensor, 0)
-        producer.addPolicy(averager)
+        producer.addEnricher(averager)
         
         averager.onEvent(intSensor.newEvent(producer, 10))
         assertEquals(averager.getAverage(), null)

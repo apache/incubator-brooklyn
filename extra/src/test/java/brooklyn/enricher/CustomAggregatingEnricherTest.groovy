@@ -33,7 +33,7 @@ class CustomAggregatingEnricherTest {
     public void testEnrichersWithNoProducers() {
         CustomAggregatingEnricher<Integer> cae = CustomAggregatingEnricher.<Integer>getSummingEnricher(
                 [], intSensor, target)
-        producer.addPolicy(cae)
+        producer.addEnricher(cae)
         assertEquals cae.getAggregate(), 0
     }
 
@@ -41,7 +41,7 @@ class CustomAggregatingEnricherTest {
     public void testSummingEnricherWhenNoSensorValuesYet() {
         CustomAggregatingEnricher<Integer> cae = CustomAggregatingEnricher.<Integer>getSummingEnricher([producer],
                 intSensor, target)
-        producer.addPolicy(cae)
+        producer.addEnricher(cae)
         assertEquals cae.getAggregate(), 0
     }
 
@@ -49,7 +49,7 @@ class CustomAggregatingEnricherTest {
     public void testSummingEnricherWhenNullSensorValue() {
         CustomAggregatingEnricher<Integer> cae = CustomAggregatingEnricher.<Integer>getSummingEnricher([producer],
                 intSensor, target)
-        producer.addPolicy(cae)
+        producer.addEnricher(cae)
         cae.onEvent(intSensor.newEvent(producer, null))
         assertEquals cae.getAggregate(), 0
     }
@@ -58,7 +58,7 @@ class CustomAggregatingEnricherTest {
     public void testSingleProducerSum() {
         CustomAggregatingEnricher<Integer> cae = CustomAggregatingEnricher.<Integer>getSummingEnricher([producer],
                 intSensor, target)
-        producer.addPolicy(cae)
+        producer.addEnricher(cae)
         assertEquals cae.getAggregate(), 0
         cae.onEvent(intSensor.newEvent(producer, 1))
         assertEquals cae.getAggregate(), 1
@@ -73,7 +73,7 @@ class CustomAggregatingEnricherTest {
         CustomAggregatingEnricher<Integer> cae = CustomAggregatingEnricher.<Integer>getSummingEnricher(producers,
             intSensor, target)
         
-        producer.addPolicy(cae)
+        producer.addEnricher(cae)
         assertEquals cae.getAggregate(), 0
         cae.onEvent(intSensor.newEvent(producers[2], 1))
         assertEquals cae.getAggregate(), 1
@@ -90,7 +90,7 @@ class CustomAggregatingEnricherTest {
                 [owner: app] as LocallyManagedEntity]
         CustomAggregatingEnricher<Double> cae = CustomAggregatingEnricher.<Double>getAveragingEnricher(producers,
             intSensor, new BasicAttributeSensor<Double>(Double.class, "target sensor"))
-        producer.addPolicy(cae)
+        producer.addEnricher(cae)
         assertEquals cae.getAggregate(), 0d
     }
 
@@ -100,7 +100,7 @@ class CustomAggregatingEnricherTest {
                 [owner: app] as LocallyManagedEntity]
         CustomAggregatingEnricher<Double> cae = CustomAggregatingEnricher.<Double>getAveragingEnricher(producers,
             intSensor, new BasicAttributeSensor<Double>(Double.class, "target sensor"))
-        producer.addPolicy(cae)
+        producer.addEnricher(cae)
         
         cae.onEvent(intSensor.newEvent(producers[0], null))
         assertEquals cae.getAggregate(), 0d
@@ -115,7 +115,7 @@ class CustomAggregatingEnricherTest {
         CustomAggregatingEnricher<Double> cae = CustomAggregatingEnricher.<Double>getAveragingEnricher(producers,
             intSensor, new BasicAttributeSensor<Double>(Double.class, "target sensor"))
         
-        producer.addPolicy(cae)
+        producer.addEnricher(cae)
         
         assertEquals cae.getAggregate(), 0d
         cae.onEvent(intSensor.newEvent(producers[0], 3))
@@ -140,7 +140,7 @@ class CustomAggregatingEnricherTest {
         CustomAggregatingEnricher<Integer> cae = CustomAggregatingEnricher.<Integer>getSummingEnricher([p1],
                 intSensor, target)
 
-        producer.addPolicy(cae)
+        producer.addEnricher(cae)
         assertEquals cae.getAggregate(), 0
         
         // Event by initial producer

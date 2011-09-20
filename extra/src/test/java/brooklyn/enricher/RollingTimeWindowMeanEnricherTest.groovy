@@ -37,9 +37,9 @@ class RollingTimeWindowMeanEnricherTest {
         deltaSensor = new BasicAttributeSensor<Integer>(Integer.class, "delta sensor")
         avgSensor = new BasicAttributeSensor<Double>(Integer.class, "avg sensor")
         
-        producer.addPolicy(new DeltaEnricher<Integer>(producer, intSensor, deltaSensor))
+        producer.addEnricher(new DeltaEnricher<Integer>(producer, intSensor, deltaSensor))
         averager = new RollingTimeWindowMeanEnricher<Integer>(producer, deltaSensor, avgSensor, 1000)
-        producer.addPolicy(averager)
+        producer.addEnricher(averager)
     }
 
     @AfterMethod
