@@ -106,16 +106,16 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
                     try {
                         try {
                             task.get()
-                        } catch (Exception e) {
-                            throw unwrapException(e)
+                        } catch (Throwable t) {
+                            throw unwrapException(t)
                         }
                     } catch (EntityStartException e) {
                         logger.error("Cluster $this failed to start entity $entity", e)
                         removeNode(entity)
                     } catch (InterruptedException e) {
                         throw e
-                    } catch (Exception e) {
-                        if (!toPropagate) toPropagate = e
+                    } catch (Throwable t) {
+                        if (!toPropagate) toPropagate = t
                     }
                 }
                 if (toPropagate) throw toPropagate
@@ -125,7 +125,6 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
 
                 Task invoke = invokeEffectorList(removedEntities, Startable.STOP, [:])
                 invoke.get()
-                
             } else {
                 setAttribute(Changeable.GROUP_SIZE, currentSize)
             }
@@ -133,7 +132,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         return currentSize
     }
 
-    protected Throwable unwrapException(Exception e) {
+    protected Throwable unwrapException(Throwable e) {
         if (e instanceof ExecutionException) {
             return unwrapException(e.cause)
         } else if (e instanceof org.codehaus.groovy.runtime.InvokerInvocationException) {
