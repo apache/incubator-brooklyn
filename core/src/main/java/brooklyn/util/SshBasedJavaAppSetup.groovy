@@ -97,7 +97,13 @@ public abstract class SshBasedJavaAppSetup extends SshBasedAppSetup {
         StringBuffer options = []
         properties.each { key, value ->
 	            options.append("-D").append(key)
-	            if (value != null && value != "") options.append("=\'").append(value).append("\'")
+	            if (value != null && value != "") {
+                    // Quote the value if it's a string containing a space.
+                    if (value instanceof String && value.indexOf(" ") >= 0)
+                        options.append("=\'").append(value).append("\'")
+                    else
+                        options.append("=").append(value)
+                }
 	            options.append(" ")
 	        }
         return options.toString().trim()
