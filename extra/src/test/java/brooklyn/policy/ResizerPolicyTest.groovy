@@ -7,8 +7,13 @@ import static org.testng.AssertJUnit.*
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.entity.LocallyManagedEntity
+import brooklyn.entity.basic.EntityLocal
+import brooklyn.entity.trait.Resizable
 import brooklyn.entity.webapp.DynamicWebAppCluster
 import brooklyn.entity.webapp.tomcat.TomcatServer
+import brooklyn.event.SensorEvent
+import brooklyn.event.SensorEventListener
 import brooklyn.event.basic.BasicSensorEvent
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.test.entity.TestApplication
@@ -18,21 +23,33 @@ import brooklyn.util.internal.TimeExtras
 import com.google.common.collect.Iterables
 
 class ResizerPolicyTest {
+    
+    /**
+     * Test class for providing a Resizable LocallyManagedEntity for policy testing
+     * It is hooked up to a TestCluster that can be used to make assertions against
+     */
+    public static class LocallyResizableEntity extends LocallyManagedEntity implements Resizable {
+        TestCluster tc
+        public LocallyResizableEntity (TestCluster tc) { this.tc = tc }
+        Integer resize(Integer newSize) { tc.size = newSize }
+        Integer getCurrentSize() { return tc.size }
+    }
 
     static { TimeExtras.init() }
     
     ResizerPolicy policy
+    TestCluster tc
     
     @BeforeMethod()
     public void before() {
         policy = new ResizerPolicy<Integer>(null)
+        tc = policy.@resizable = new TestCluster(1)
         policy.setMinSize 0
     }
     
     @Test
     public void testUpperBounds() {
-        TestCluster tc = [1]
-        policy.@resizable = tc
+        tc.size = 1
         policy.setMetricLowerBound 0
         policy.setMetricUpperBound 100
         assertEquals 1, policy.calculateDesiredSize(99)
@@ -42,7 +59,7 @@ class ResizerPolicyTest {
     
     @Test
     public void testLowerBounds() {
-        TestCluster tc = [1]
+        tc.size = 1
         policy.@resizable = tc
         policy.setMetricLowerBound 100
         policy.setMetricUpperBound 10000
@@ -53,8 +70,7 @@ class ResizerPolicyTest {
     
     @Test
     public void clustersWithSeveralEntities() {
-        TestCluster tc = [3]
-        policy.@resizable = tc
+        tc.size = 3
         policy.setMetricLowerBound 50
         policy.setMetricUpperBound 100
         assertEquals 3, policy.calculateDesiredSize(99)
@@ -69,8 +85,7 @@ class ResizerPolicyTest {
     
     @Test
     public void extremeResizes() {
-        TestCluster tc = [5]
-        policy.@resizable = tc
+        tc.size = 5
         policy.setMetricLowerBound 50
         policy.setMetricUpperBound 100
         assertEquals 10, policy.calculateDesiredSize(200)
@@ -83,8 +98,7 @@ class ResizerPolicyTest {
     
     @Test
     public void obeysMinAndMaxSize() {
-        TestCluster tc = [4]
-        policy.@resizable = tc
+        tc.size = 4
         policy.setMinSize 2
         policy.setMaxSize 6
         policy.setMetricLowerBound 50
@@ -108,6 +122,7 @@ class ResizerPolicyTest {
         policy.destroy()
         assertEquals true, policy.isDestroyed()
         assertEquals false, policy.isRunning()
+        assertEquals 0, policy.getAllSubscriptions().size()
     }
     
     @Test
@@ -119,6 +134,69 @@ class ResizerPolicyTest {
                 }
             }
         )
+    }
+    
+    @Test
+    public void testSuspendState() {
+        policy.suspend()
+        assertEquals false, policy.isDestroyed()
+        assertEquals false, policy.isRunning()
+        
+        policy.resume()
+        assertEquals false, policy.isDestroyed()
+        assertEquals true, policy.isRunning()
+    }
+
+    @Test
+    public void testPostSuspendActions() {
+        policy.@resizable = new TestCluster(1) {
+                    Integer resize(Integer newSize) {
+                        fail "Should not be resizing when suspended"
+                    }
+                }
+        policy.setMetricLowerBound 0
+        policy.setMetricUpperBound 1
+
+        policy.suspend()
+        policy.onEvent(new BasicSensorEvent<Integer>(null, null, null) {
+                    Integer getValue() {
+                        return 2
+                    }
+                })
+    }
+    
+    @Test
+    public void testPostResumeActions() {
+        policy.setEntity(new LocallyResizableEntity(tc))
+        
+        policy.setMetricLowerBound 0
+        policy.setMetricUpperBound 1
+        
+        assertEquals 2, policy.calculateDesiredSize(2)
+
+        policy.suspend()
+        policy.resume()
+        policy.onEvent(new BasicSensorEvent<Integer>(null, null, null) {
+                    Integer getValue() {
+                        return 2
+                    }
+                })
+        
+        executeUntilSucceeds(timeout: 3*SECONDS, {
+            assertEquals 2, tc.size
+        })
+    }
+
+    @Test
+    public void testDestructionUnsubscribes() {
+        EntityLocal entity = new LocallyResizableEntity(null)
+        policy.setEntity(entity)
+        policy.subscribe(entity, null, new SensorEventListener<?>(){void onEvent(SensorEvent e) {}})
+        policy.destroy()
+        
+        executeUntilSucceeds(timeout: 3*SECONDS, {
+            assertEquals 0, policy.getAllSubscriptions().size()
+        })
     }
     
     @Test(groups=["Integration"])

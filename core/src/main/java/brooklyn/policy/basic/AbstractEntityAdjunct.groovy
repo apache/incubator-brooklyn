@@ -26,8 +26,7 @@ abstract class AbstractEntityAdjunct implements EntityAdjunct {
     protected transient SubscriptionContext subscription
     private AtomicBoolean destroyed = new AtomicBoolean(false)
     
-    private Map<Entity, SubscriptionHandle> subscriptions = new HashMap<Entity, SubscriptionHandle>()
-    
+    private Map<Entity, SubscriptionHandle> subscriptions = new LinkedHashMap<Entity, SubscriptionHandle>()
 
     public String getName() { return name; }
     public String getId() { return id; }
@@ -56,6 +55,13 @@ abstract class AbstractEntityAdjunct implements EntityAdjunct {
         def handle = subscriptions.remove(producer)
         if (handle) subscription.unsubscribe(handle)
     }
+    
+    /**
+    * @return an ordered list of all subscription handles
+    */
+   protected Collection<SubscriptionHandle> getAllSubscriptions() {
+       return Collections.unmodifiableCollection(subscriptions.values())
+   }
     
     protected ManagementContext getManagementContext() {
         entity.getManagementContext();

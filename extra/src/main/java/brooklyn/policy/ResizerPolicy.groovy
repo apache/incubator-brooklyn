@@ -1,6 +1,6 @@
 package brooklyn.policy
 
-import java.util.concurrent.atomic.AtomicBoolean
+import java.util.Map
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -56,11 +56,11 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
         }
     }
 
-
     /**
      * @param averagingSource - A sensor that averages a relevant metric across the attaching entity
      */
-    public ResizerPolicy(AttributeSensor<T> averagingSource) {
+    public ResizerPolicy(Map properties = [:], AttributeSensor<T> averagingSource) {
+        super(properties)
         this.source = averagingSource
     }
 
