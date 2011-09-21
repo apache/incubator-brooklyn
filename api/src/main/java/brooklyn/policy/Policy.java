@@ -1,9 +1,10 @@
 package brooklyn.policy;
 
 /**
- * Marker interface, indicating that this is a policy that can be associated with an entity.
+ * Policies implement actions and thus must be suspendable; policies should continue to evaluate their sensors
+ * and indicate their desired planned action even if they aren't invoking them
  */
-public interface Policy {
+public interface Policy extends EntityAdjunct {
    /**
      * A unique id for this policy.
      */
@@ -16,19 +17,17 @@ public interface Policy {
      */
     String getName();
     /**
-     * methods for actions which can be executed against a policy
+     * resume the policy
      */
-
-    void suspend();
-
     void resume();
 
-    void destroy();
-
     /**
-     * Methods for checking policy status
+     * suspend the policy
      */
-    Boolean isSuspended();
-
-    Boolean isDestroyed();
+    void suspend();
+    
+    /**
+     * whether the policy is suspended
+     */
+    boolean isSuspended();
 }

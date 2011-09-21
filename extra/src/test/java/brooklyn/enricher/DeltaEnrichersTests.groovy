@@ -1,4 +1,4 @@
-package brooklyn.policy
+package brooklyn.enricher
 
 import static org.testng.Assert.*
 
@@ -6,6 +6,8 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.enricher.DeltaEnricher;
+import brooklyn.enricher.TimeWeightedDeltaEnricher;
 import brooklyn.entity.LocallyManagedEntity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.EntityLocal
@@ -45,7 +47,7 @@ class DeltaEnrichersTests {
     @Test
     public void testDeltaEnricher() {
         DeltaEnricher delta = new DeltaEnricher<Integer>(producer, intSensor, deltaSensor)
-        producer.addPolicy(delta)
+        producer.addEnricher(delta)
         
         delta.onEvent(intSensor.newEvent(producer, 0))
         delta.onEvent(intSensor.newEvent(producer, 0))
@@ -62,7 +64,7 @@ class DeltaEnrichersTests {
     public void testMonospaceTimeWeightedDeltaEnricher() {
         TimeWeightedDeltaEnricher delta = 
             TimeWeightedDeltaEnricher.<Integer>getPerSecondDeltaEnricher(producer, intSensor, deltaSensor)
-        producer.addPolicy(delta)
+        producer.addEnricher(delta)
         
         delta.onEvent(intSensor.newEvent(producer, 0), 0)
         delta.onEvent(intSensor.newEvent(producer, 0), 1000)
@@ -79,7 +81,7 @@ class DeltaEnrichersTests {
     public void testVariableTimeWeightedDeltaEnricher() {
         TimeWeightedDeltaEnricher delta = 
             TimeWeightedDeltaEnricher.<Integer>getPerSecondDeltaEnricher(producer, intSensor, deltaSensor)
-        producer.addPolicy(delta)
+        producer.addEnricher(delta)
         
         delta.onEvent(intSensor.newEvent(producer, 0), 0)
         delta.onEvent(intSensor.newEvent(producer, 0), 2000)

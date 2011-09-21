@@ -6,6 +6,8 @@ import java.util.concurrent.TimeUnit
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.enricher.RollingTimeWindowMeanEnricher;
+import brooklyn.enricher.TimeWeightedDeltaEnricher;
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.JavaApp
@@ -17,8 +19,6 @@ import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.ConfiguredAttributeSensor
 import brooklyn.location.Location
-import brooklyn.policy.RollingTimeWindowMeanEnricher
-import brooklyn.policy.TimeWeightedDeltaEnricher
 import brooklyn.util.internal.Repeater
 
 /**
@@ -109,8 +109,8 @@ public abstract class JavaWebApp extends JavaApp {
 
         // TODO Want to wire this up so doesn't go through SubscriptionManager;
         // but that's an optimisation we'll do later.
-        addPolicy(TimeWeightedDeltaEnricher.<Integer>getPerSecondDeltaEnricher(this, REQUEST_COUNT, REQUESTS_PER_SECOND))
-        addPolicy(new RollingTimeWindowMeanEnricher<Double>(this, REQUESTS_PER_SECOND, AVG_REQUESTS_PER_SECOND,
+        addEnricher(TimeWeightedDeltaEnricher.<Integer>getPerSecondDeltaEnricher(this, REQUEST_COUNT, REQUESTS_PER_SECOND))
+        addEnricher(new RollingTimeWindowMeanEnricher<Double>(this, REQUESTS_PER_SECOND, AVG_REQUESTS_PER_SECOND,
             AVG_REQUESTS_PER_SECOND_PERIOD))
 
         initHttpSensors()

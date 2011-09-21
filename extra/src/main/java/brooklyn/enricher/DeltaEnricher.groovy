@@ -1,15 +1,19 @@
-package brooklyn.policy
+package brooklyn.enricher
 
 import java.util.LinkedList
 
+import brooklyn.enricher.basic.AbstractTransformingEnricher;
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
 import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.policy.basic.AbstractTransformingEnricher
 
-class DeltaEnricher<T extends Number> extends AbstractTransformingEnricher {
+
+/**
+ * Converts an absolute sensor into a delta sensor (i.e. the diff between the current and previous value)
+ */
+public class DeltaEnricher<T extends Number> extends AbstractTransformingEnricher {
     Number last = 0
     
     public DeltaEnricher(Entity producer, Sensor<T> source, Sensor<T> target) {

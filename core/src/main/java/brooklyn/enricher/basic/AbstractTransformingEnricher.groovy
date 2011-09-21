@@ -1,4 +1,4 @@
-package brooklyn.policy.basic
+package brooklyn.enricher.basic
 
 import java.util.LinkedList;
 
@@ -9,8 +9,10 @@ import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.basic.BasicAttributeSensor;
 
-
-abstract class AbstractTransformingEnricher<T> extends AbstractPolicy implements SensorEventListener<T> {
+/**
+ * Convenience base for transforming a single sensor into a single new sensor
+ */
+public abstract class AbstractTransformingEnricher<T> extends AbstractEnricher implements SensorEventListener<T> {
     private Entity producer
     private Sensor<T> source
     protected Sensor<T> target

@@ -1,4 +1,4 @@
-package brooklyn.policy
+package brooklyn.enricher
 
 import static org.testng.Assert.*
 
@@ -6,13 +6,13 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.enricher.RollingTimeWindowMeanEnricher.ConfidenceQualifiedNumber
 import brooklyn.entity.LocallyManagedEntity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.Sensor
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.management.SubscriptionContext
-import brooklyn.policy.RollingTimeWindowMeanEnricher.ConfidenceQualifiedNumber
 
 class RollingTimeWindowMeanEnricherTest {
     
@@ -37,9 +37,9 @@ class RollingTimeWindowMeanEnricherTest {
         deltaSensor = new BasicAttributeSensor<Integer>(Integer.class, "delta sensor")
         avgSensor = new BasicAttributeSensor<Double>(Integer.class, "avg sensor")
         
-        producer.addPolicy(new DeltaEnricher<Integer>(producer, intSensor, deltaSensor))
+        producer.addEnricher(new DeltaEnricher<Integer>(producer, intSensor, deltaSensor))
         averager = new RollingTimeWindowMeanEnricher<Integer>(producer, deltaSensor, avgSensor, 1000)
-        producer.addPolicy(averager)
+        producer.addEnricher(averager)
     }
 
     @AfterMethod

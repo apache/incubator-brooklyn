@@ -15,13 +15,9 @@ import brooklyn.event.AttributeSensor
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.policy.basic.AbstractPolicy
-import brooklyn.policy.trait.Suspendable
 import brooklyn.util.task.BasicTask
 
-public class ResizerPolicy<T extends Number> extends AbstractPolicy implements SensorEventListener<T>, Suspendable {
-    
-    // TODO Need a better approach for resume/suspend: currently DynamicCluster calls this on start/stop,
-    // but other entities do not!
+public class ResizerPolicy<T extends Number> extends AbstractPolicy implements SensorEventListener<T> {
     
     // TODO Currently only does one resize at a time.
     // Imagine the threshold is set to 100. If we ramp up workrate to 450, but the policy sees events for 101 then 450, 
@@ -43,7 +39,6 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
 
     /** Lock held if we are in the process of resizing. */
     private final AtomicBoolean resizing = new AtomicBoolean(false)
-    private final AtomicBoolean suspended = new AtomicBoolean(false)
     
     private Closure resizeAction = {
         try {
@@ -70,10 +65,10 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
     }
 
     @Override
-    public void setEntity(Entity entity) {
+    public void setEntity(EntityLocal entity) {
         super.setEntity(entity)
         assert entity instanceof Resizable
-        this.resizable = entity
+        resizable = entity
         if(entity instanceof Startable) {
             entityStartable = true
         }
@@ -100,24 +95,18 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
         this
     }
     
-    @Override
-    public void suspend() {
-        suspended.set(true)
-    }
-
-    @Override
-    public void resume() {
-        suspended.set(false)
-    }
 
     private void resize() {
-        if (!suspended.get() && (!entityStartable || entity.getAttribute(Startable.SERVICE_UP))
-                && resizing.compareAndSet(false, true)) {
+        if (isRunning() // if I'm running
+            && (!entityStartable || entity.getAttribute(Startable.SERVICE_UP)) // my entity is up
+            && resizing.compareAndSet(false, true)) { // and I'm not in the middle of resizing already
             ((EntityLocal)entity).getManagementContext().getExecutionContext(entity).submit(new BasicTask(resizeAction))
         }
     }
 
     public void onEvent(SensorEvent<T> event) {
+        if (isDestroyed()) return //swallow events when destroyed
+        
         T val = event.getValue()
         int currentSize = resizable.getCurrentSize()
         desiredSize.set(calculateDesiredSize(val))

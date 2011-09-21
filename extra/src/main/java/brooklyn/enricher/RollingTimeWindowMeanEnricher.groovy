@@ -1,8 +1,8 @@
-package brooklyn.policy
+package brooklyn.enricher
 
+import brooklyn.enricher.basic.AbstractTransformingEnricher;
 import brooklyn.entity.Entity
 import brooklyn.event.SensorEvent
-import brooklyn.policy.basic.AbstractTransformingEnricher;
 import brooklyn.event.AttributeSensor
 
 /**

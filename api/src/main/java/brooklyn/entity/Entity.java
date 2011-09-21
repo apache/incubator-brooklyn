@@ -7,6 +7,7 @@ import java.util.Map;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.management.Task;
+import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
 
 /**
@@ -85,6 +86,11 @@ public interface Entity extends Serializable {
      * @return an immutable thread-safe view of the policies.
      */
     Collection<Policy> getPolicies();
+    
+    /**
+     * @return an immutable thread-safe view of the policies.
+     */
+    Collection<Enricher> getEnrichers();
     
     /**
      * The {@link Collection} of {@link Group}s that this entity is a member of.
