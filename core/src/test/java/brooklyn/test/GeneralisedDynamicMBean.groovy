@@ -30,7 +30,7 @@ class GeneralisedDynamicMBean implements DynamicMBean {
         this.attributes = initialAttributes
 
         MBeanAttributeInfo[] attrInfo = initialAttributes.entrySet().collect { Entry it ->
-            new MBeanAttributeInfo(it.key, it.value.class.name, it.key, true, false, false) }
+            new MBeanAttributeInfo(it.key, it.getValue().getClass().name, it.key, true, false, false) }
         mBeanInfo = new MBeanInfo(GeneralisedDynamicMBean.class.name, GeneralisedDynamicMBean.class.name, attrInfo,
                 null, null, null)
     }

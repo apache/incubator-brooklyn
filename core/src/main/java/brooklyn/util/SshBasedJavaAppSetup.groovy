@@ -28,6 +28,8 @@ public abstract class SshBasedJavaAppSetup extends SshBasedAppSetup {
     protected Map<String,Map<String,String>> propFilesToGenerate = [:]
     protected Map<String,String> envVariablesToSet = [:]
 
+    protected String deployDir
+
     public SshBasedJavaAppSetup(EntityLocal entity, SshMachineLocation machine) {
         super(entity, machine)
     }
@@ -152,5 +154,59 @@ public abstract class SshBasedJavaAppSetup extends SshBasedAppSetup {
           "com.sun.management.jmxremote.authenticate" : false,
           "java.rmi.server.hostname" : machine.address.hostName,
         ]
+    }
+
+    public void setDeployDir(String val) {
+        deployDir = val
+    }
+
+    /**
+     * Copy a file to the {@link #runDir} on the server.
+     *
+     * @return The location of the file on the server
+     */
+    public String copy(File file) {
+        String target = runDir + "/" + file.name
+        log.info "Deploying file {} to {} on {}", file.name, target, machine
+        try {
+            machine.copyTo file, target
+        } catch (IOException ioe) {
+            log.error "Failed to copy {} to {}: {}", file.name, machine, ioe.message
+            throw new IllegalStateException("Failed to copy ${file.name} to ${machine}", ioe)
+        }
+        return target
+    }
+
+    /**
+     * Copies a file to the server and invokes {@link #getDeployScript(String)}
+     * for further processing.
+     */
+    public void deploy(File file) {
+        String target = copy(file)
+        List<String> deployScript = getDeployScript(target)
+        if (deployScript && !deployScript.isEmpty()) {
+            int result = machine.run(out:System.out, deployScript)
+            if (result != 0) {
+                log.error "Failed to deploy {} on {}, result {}", file.name, machine, result
+	            throw new IllegalStateException("Failed to deploy ${file.name} on ${machine}")
+            } else {
+                log.debug "Deployed {} on {}", file.name, machine
+            }
+        }
+    }
+
+    /**
+     * Deploy the file found at the specified location on the server.
+     *
+     * Checks that the file exists, and fails if not accessible, otherwise copies it
+     * to the configured deploy directory. This is required because exit status from
+     * the Jsch scp command is not reliable.
+     */
+    public List<String> getDeployScript(String locOnServer) {
+        List<String> script = [
+            "test -f ${locOnServer} || exit 1",
+            "cp ${locOnServer} ${deployDir}",
+        ]
+        return script
     }
 }

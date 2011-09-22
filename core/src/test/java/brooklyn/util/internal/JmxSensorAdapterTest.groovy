@@ -19,6 +19,13 @@ import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.adapter.ValueProvider
 import brooklyn.test.GeneralisedDynamicMBean
 import brooklyn.test.JmxService
+import javax.management.openmbean.CompositeData
+import javax.management.openmbean.CompositeType
+import javax.management.openmbean.TabularDataSupport
+import javax.management.openmbean.TabularType
+import javax.management.openmbean.SimpleType
+import javax.management.openmbean.OpenType
+import javax.management.openmbean.CompositeDataSupport
 
 /**
  * Test the operation of the {@link JmxSensorAdapter} class.
@@ -51,7 +58,56 @@ public class JmxSensorAdapterTest {
         mbean.updateAttributeValue('errorCount', 64)
         assertEquals 64, valueProvider.compute()
     }
- 
+
+    @Test
+    public void tabularDataProviderReturnsMap() {
+
+        // Create the CompositeType and TabularData
+        CompositeType compositeType = new CompositeType(
+                "typeName",
+                "description",
+                ["pid", "state", "started"] as String[],    // item names
+                ["pid", "state", "started"] as String[],    // item descriptions, can't be null or empty string
+                [SimpleType.INTEGER, SimpleType.STRING, SimpleType.BOOLEAN] as OpenType<?>[]
+        )
+        TabularType tt = new TabularType(
+                "typeName",
+                "description",
+                compositeType,
+                ["pid"] as String[]
+        )
+        TabularDataSupport tds = new TabularDataSupport(tt)
+        tds.put(new CompositeDataSupport(
+                compositeType,
+                ["started", "pid", "state"] as String[],
+                [true, 1234, "on"] as Object[]
+        ))
+
+        // Create MBean
+        JmxService jmxService = new JmxService()
+        GeneralisedDynamicMBean mbean = jmxService.registerMBean(data: tds,
+                'Catalina:type=GlobalRequestProcessor,name=tables')
+
+        // Create an entity and configure it with the above JMX service
+        AbstractEntity entity = new LocallyManagedEntity()
+        entity.setAttribute(Attributes.HOSTNAME, jmxService.jmxHost)
+        entity.setAttribute(Attributes.JMX_PORT, jmxService.jmxPort)
+
+        // Create a JMX adapter, and register a sensor for the JMX attribute
+        JmxSensorAdapter jmxAdapter = new JmxSensorAdapter(entity)
+        jmxAdapter.connect()
+        ValueProvider valueProvider = jmxAdapter.newTabularDataProvider(
+                "Catalina:type=GlobalRequestProcessor,name=tables",
+                "data")
+
+        Map<String, Object> map = valueProvider.compute()
+        assertEquals 3, map.size()
+        assertEquals 1234, map.get("pid")
+        assertEquals "on", map.get("state")
+        assertTrue map.get("started")
+
+    }
+
     // TODO Test needs fixed/updated and cleaned up, or deleted
     @Test(enabled = false)
     public void testJmxSensorTool() {
