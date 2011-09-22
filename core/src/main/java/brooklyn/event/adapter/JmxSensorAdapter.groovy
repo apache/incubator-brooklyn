@@ -18,13 +18,15 @@ import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.AttributeSensor
 
 import com.google.common.base.Preconditions
+import javax.management.openmbean.TabularDataSupport
+import javax.management.openmbean.CompositeData
 
 /**
- * This class adapts JMX {@link ObjectName} dfata to {@link Sensor} data for a particular {@link Entity}, updating the
- * {@link Activity} as required.
+ * This class adapts JMX {@link ObjectName} data to {@link brooklyn.event.Sensor} data
+ * for a particular {@link brooklyn.entity.Entity}, updating the {@link Activity} as required.
  * 
- *  The adapter normally polls the JMX server every second to update sensors, which could involve aggregation of data
- *  or simply reading values and setting them in the attribute map of the activity model.
+ * The adapter normally polls the JMX server every second to update sensors, which could involve aggregation of data
+ * or simply reading values and setting them in the attribute map of the activity model.
  */
 public class JmxSensorAdapter {
     private static final Logger log = LoggerFactory.getLogger(JmxSensorAdapter.class);
@@ -66,6 +68,10 @@ public class JmxSensorAdapter {
 
     public <T> ValueProvider<T> newOperationProvider(String objectName, String method, Object...arguments) {
         return new JmxOperationProvider(this, new ObjectName(objectName), method, arguments)
+    }
+
+    public ValueProvider<HashMap> newTabularDataProvider(String objectName, String attribute) {
+        return new JmxTabularDataProvider(this, new ObjectName(objectName), attribute)
     }
     
     public boolean isConnected() {
@@ -203,6 +209,44 @@ public class JmxOperationProvider<T> implements ValueProvider<T> {
     
     public T compute() {
         return adapter.operation(objectName, method, arguments)
+    }
+}
+
+public class JmxTabularDataProvider implements ValueProvider<Map<String, Object>> {
+
+    private static final Logger log = LoggerFactory.getLogger(JmxTabularDataProvider.class);
+
+    private final JmxSensorAdapter adapter
+    private final ObjectName objectName
+    private final String attribute
+
+    public JmxTabularDataProvider(JmxSensorAdapter adapter, ObjectName objectName, String attribute) {
+        this.adapter = Preconditions.checkNotNull(adapter, "adapter")
+        this.objectName = Preconditions.checkNotNull(objectName, "object name")
+        this.attribute = Preconditions.checkNotNull(attribute, "attribute")
+    }
+
+    public Map<String, Object> compute() {
+        HashMap<String, Object> out = []
+        Object attr = adapter.getAttribute(objectName, attribute)
+        TabularDataSupport table
+        try {
+            table = (TabularDataSupport) attr;
+        } catch (ClassCastException e) {
+            log.error "($objectName, '$attribute') gave instance of ${attr.getClass()}, expected ${TabularDataSupport.class}"
+            throw e
+        }
+        // Entry set is really Map.Entry<List<?>,CompositeData>
+        for(Map.Entry<Object, Object> entry : table.entrySet()) {
+            CompositeData data = (CompositeData) entry.getValue()
+            data.getCompositeType().keySet().each {
+                def previous = out.put(it, data.get(it))
+                if (previous != null) {
+                    log.warn "JmxTabularDataProvider has overwritten key $it"
+                }
+            }
+        }
+        return out
     }
 }
 
