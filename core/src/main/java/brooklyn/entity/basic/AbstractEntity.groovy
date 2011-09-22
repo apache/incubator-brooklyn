@@ -33,7 +33,7 @@ import brooklyn.policy.basic.AbstractPolicy
 import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.task.BasicExecutionContext
 import brooklyn.util.task.ParallelTask
-
+import brooklyn.event.basic.BasicNotificationSensor
 
 /**
  * Default {@link Entity} implementation.
@@ -50,8 +50,13 @@ import brooklyn.util.task.ParallelTask
 public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
     
     // FIXME Remove name? Why have name and displayName? Same for Location...
-    
+
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractEntity.class)
+
+    public static BasicNotificationSensor<Sensor> SENSOR_ADDED = new BasicNotificationSensor<Sensor>(Sensor.class,
+            "entity.sensor.added", "Sensor dynamically added to entity")
+    public static BasicNotificationSensor<Sensor> SENSOR_REMOVED = new BasicNotificationSensor<Sensor>(Sensor.class,
+            "entity.sensor.removed", "Sensor dynamically removed from entity")
 
     final String id = LanguageUtils.newUid()
     String name
@@ -493,12 +498,20 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     /**
      * Add the given {@link Sensor} to this entity.
      */
-    public void addSensor(Sensor<?> sensor) { sensors.put(sensor.name, sensor) }
+    public void addSensor(Sensor<?> sensor) {
+        sensors.put(sensor.name, sensor)
+        emit(SENSOR_ADDED, sensor)
+    }
 
     /**
      * Remove the named {@link Sensor} from this entity.
      */
-    public void removeSensor(String sensorName) { sensors.remove(sensorName) }
+    public void removeSensor(String sensorName) {
+        Sensor removedSensor = sensors.remove(sensorName)
+        if (removedSensor != null) {
+            emit(SENSOR_REMOVED, removedSensor)
+        }
+    }
 
     // -------- EFFECTORS --------------
 
