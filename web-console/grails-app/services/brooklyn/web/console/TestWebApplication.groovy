@@ -16,6 +16,9 @@ import brooklyn.policy.basic.GeneralPurposePolicy
 import brooklyn.management.Task
 import brooklyn.web.console.entity.TestEffector
 import grails.converters.JSON
+import brooklyn.event.basic.BasicSensor
+import brooklyn.event.Sensor
+import brooklyn.event.AttributeSensor
 
 // TODO remove these test classes as soon as the group agrees they're unnecessary!
 private class TestWebApplication extends AbstractApplication {
@@ -55,6 +58,7 @@ private class TestWebApplication extends AbstractApplication {
                         Entity testTomcat = new TestTomcatEntity(cluster, "tomcat node " + clusterName + "." + i)
                         testTomcat.addGroup(testExtraGroup);
                         cluster.addOwnedChild(testTomcat)
+                        setUpAddingSensor(testTomcat)
                     } else {
                         cluster.addOwnedChild(new TestDataEntity(cluster, "data node " + clusterName + "." + i))
                     }
@@ -98,6 +102,22 @@ private class TestWebApplication extends AbstractApplication {
 
         };
 
+        new Thread(r).start();
+    }
+
+    private void setUpAddingSensor(AbstractEntity entity) {
+        Runnable r = new Runnable() {
+            void run() {
+                while (true) {
+                    Sensor sensor = new BasicAttributeSensor(Sensor.class, "test.sensor." + ((int) 1000 * Math.random()))
+                    entity.addSensor(sensor)
+                    Thread.sleep(20*1000L)
+                    entity.removeSensor(sensor.name)
+                    Thread.sleep(20*1000L)
+                }
+            }
+
+        };
         new Thread(r).start();
     }
 

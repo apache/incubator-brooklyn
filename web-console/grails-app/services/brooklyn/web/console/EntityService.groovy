@@ -1,23 +1,21 @@
 package brooklyn.web.console
 
-import brooklyn.entity.Entity
-import brooklyn.web.console.entity.SensorSummary
-import brooklyn.event.Sensor
 import brooklyn.entity.Effector
-import brooklyn.web.console.entity.TaskSummary
-import brooklyn.event.SensorEvent
-import brooklyn.management.SubscriptionHandle
-import java.util.concurrent.ConcurrentMap
-import java.util.concurrent.ConcurrentHashMap
-import brooklyn.event.SensorEventListener
-import java.util.concurrent.ConcurrentLinkedQueue
-import brooklyn.event.AttributeSensor
-import brooklyn.location.Location
-import brooklyn.location.basic.GeneralPurposeLocation
-import brooklyn.policy.Policy
-import brooklyn.policy.basic.GeneralPurposePolicy
-import brooklyn.management.internal.AbstractManagementContext
+import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
+import brooklyn.event.AttributeSensor
+import brooklyn.event.Sensor
+import brooklyn.event.SensorEvent
+import brooklyn.event.SensorEventListener
+import brooklyn.location.Location
+import brooklyn.management.SubscriptionHandle
+import brooklyn.management.internal.AbstractManagementContext
+import brooklyn.policy.Policy
+import brooklyn.web.console.entity.SensorSummary
+import brooklyn.web.console.entity.TaskSummary
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.ConcurrentMap
 
 public class EntityService {
     static transactional = false
@@ -82,15 +80,18 @@ public class EntityService {
                 unsubscribeEntitySensors()
             }
 
+            sensorCache.putIfAbsent(entity.id, new ConcurrentHashMap<String, SensorSummary>())
             for (Sensor s : entity.entityClass.sensors) {
-                addSensorToCache(entity, s)
+                if (s instanceof AttributeSensor) {
+                    sensorCache[entity.id].putIfAbsent(s.name, new SensorSummary(s, entity.getAttribute(s)))
+                }
             }
-
+            
             if (!subscriptions.containsKey(entity.id)) {
                 SubscriptionHandle handle = managementContextService.subscriptionManager.subscribe(entity, null,
                     new SensorEventListener() {
                         void onEvent(SensorEvent event) {
-                              addSensorToCache(event.source, event.sensor)
+                              addSensorToCache(event)
                         }
                     })
                 cacheQueue.add(entity.id)
@@ -101,24 +102,31 @@ public class EntityService {
 
             internalSubscriptions[entity.id].add(managementContextService.subscriptionManager.subscribe(entity,
                 AbstractEntity.SENSOR_ADDED, new SensorEventListener<Sensor>(){
-                    void onEvent(SensorEvent<Sensor> e) {
-                        addSensorToCache(e.source, e.sensor)
+                    void onEvent(SensorEvent e) {
+                        addSensorToCache(entity, e)
                     }
             }))
 
             internalSubscriptions[entity.id].add(managementContextService.subscriptionManager.subscribe(entity,
                 AbstractEntity.SENSOR_REMOVED, new SensorEventListener<Sensor>(){
-                    void onEvent(SensorEvent<Sensor> e) {
-                        removedSensorFromCache(e.source, e.sensor)
+                    void onEvent(SensorEvent e) {
+                        removedSensorFromCache(entity, e.value)
                     }
             }))
         }
     }
 
-    private void addSensorToCache(Entity entity, Sensor sensor){
-        if (sensor instanceof AttributeSensor) {
+    private void addSensorToCache(SensorEvent event){
+        if (event.value instanceof AttributeSensor) {
+            sensorCache.putIfAbsent(event.source.id, new ConcurrentHashMap<String, SensorSummary>())
+            sensorCache[event.source.id].put(event.sensor.name, new SensorSummary(event))
+        }
+    }
+
+    private void addSensorToCache(Entity entity, SensorEvent event){
+        if (event.value instanceof AttributeSensor) {
             sensorCache.putIfAbsent(entity.id, new ConcurrentHashMap<String, SensorSummary>())
-            sensorCache[entity.id].putIfAbsent(sensor.name, new SensorSummary(sensor, entity.getAttribute(sensor)))
+            sensorCache[entity.id].put(event.value.name, new SensorSummary(event.value, entity.getAttribute(event.value)))
         }
     }
 
