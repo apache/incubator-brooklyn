@@ -109,7 +109,7 @@ private class TestWebApplication extends AbstractApplication {
         Runnable r = new Runnable() {
             void run() {
                 while (true) {
-                    Sensor sensor = new BasicAttributeSensor(Sensor.class, "test.sensor." + ((int) 1000 * Math.random()))
+                    Sensor sensor = new BasicAttributeSensor(Sensor.class, "test.sensor")
                     entity.addSensor(sensor)
                     Thread.sleep(20*1000L)
                     entity.removeSensor(sensor.name)
@@ -190,7 +190,8 @@ private class TestWebApplication extends AbstractApplication {
                 "http.port": 8080,
                 "webapp.tomcat.shutdownPort": 666,
                 "jmx.port": 1000,
-                "webapp.reqs.processing.time": 100
+                "webapp.reqs.processing.time": 100,
+                "test.sensor": 17
         ]
 
         private List<Location> testLocations = [
@@ -257,9 +258,11 @@ private class TestWebApplication extends AbstractApplication {
             void run() {
                 while (true) {
                     for (String key: hackMeIn.keySet()) {
-                        entity.setAttribute(entity.getSensor(key),
-                                            hackMeIn[key] + ManagementContextService.ID_GENERATOR +
-                                                    ((int) 1000 * Math.random()))
+                        if(entity.getSensor(key) != null){
+                            entity.setAttribute(entity.getSensor(key),
+                            hackMeIn[key] + ManagementContextService.ID_GENERATOR +
+                                    ((int) 1000 * Math.random()))
+                        }
                     }
                     Thread.sleep(5000)
                 }
