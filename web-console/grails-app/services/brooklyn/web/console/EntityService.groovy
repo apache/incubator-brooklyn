@@ -117,17 +117,13 @@ public class EntityService {
     }
 
     private void addSensorToCache(SensorEvent event){
-        if (event.value instanceof AttributeSensor) {
-            sensorCache.putIfAbsent(event.source.id, new ConcurrentHashMap<String, SensorSummary>())
-            sensorCache[event.source.id].put(event.sensor.name, new SensorSummary(event))
-        }
+        sensorCache.putIfAbsent(event.source.id, new ConcurrentHashMap<String, SensorSummary>())
+        sensorCache[event.source.id].put(event.sensor.name, new SensorSummary(event))
     }
 
     private void addSensorToCache(Entity entity, SensorEvent event){
-        if (event.value instanceof AttributeSensor) {
-            sensorCache.putIfAbsent(entity.id, new ConcurrentHashMap<String, SensorSummary>())
-            sensorCache[entity.id].put(event.value.name, new SensorSummary(event.value, entity.getAttribute(event.value)))
-        }
+        sensorCache.putIfAbsent(entity.id, new ConcurrentHashMap<String, SensorSummary>())
+        sensorCache[entity.id].put(event.value.name, new SensorSummary(event.value, entity.getAttribute(event.value)))
     }
 
     private void removedSensorFromCache(Entity entity, Sensor sensor){
