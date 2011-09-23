@@ -91,7 +91,7 @@ public class EntityService {
                 SubscriptionHandle handle = managementContextService.subscriptionManager.subscribe(entity, null,
                     new SensorEventListener() {
                         void onEvent(SensorEvent event) {
-                              addSensorToCache(event)
+                            addSensorToCache(event)
                         }
                     })
                 cacheQueue.add(entity.id)
@@ -117,13 +117,17 @@ public class EntityService {
     }
 
     private void addSensorToCache(SensorEvent event){
-        sensorCache.putIfAbsent(event.source.id, new ConcurrentHashMap<String, SensorSummary>())
-        sensorCache[event.source.id].put(event.sensor.name, new SensorSummary(event))
+        if(event.sensor instanceof AttributeSensor){
+            sensorCache.putIfAbsent(event.source.id, new ConcurrentHashMap<String, SensorSummary>())
+            sensorCache[event.source.id].put(event.sensor.name, new SensorSummary(event))
+        }
     }
 
     private void addSensorToCache(Entity entity, SensorEvent event){
-        sensorCache.putIfAbsent(entity.id, new ConcurrentHashMap<String, SensorSummary>())
-        sensorCache[entity.id].put(event.value.name, new SensorSummary(event.value, entity.getAttribute(event.value)))
+        if(event.sensor instanceof AttributeSensor){
+            sensorCache.putIfAbsent(entity.id, new ConcurrentHashMap<String, SensorSummary>())
+            sensorCache[entity.id].put(event.value.name, new SensorSummary(event.value, entity.getAttribute(event.value)))
+        }
     }
 
     private void removedSensorFromCache(Entity entity, Sensor sensor){
