@@ -109,7 +109,7 @@ private class TestWebApplication extends AbstractApplication {
         Runnable r = new Runnable() {
             void run() {
                 while (true) {
-                    Sensor sensor = new BasicAttributeSensor(Sensor.class, "test.sensor")
+                    Sensor sensor = new BasicAttributeSensor(Sensor.class, "test.sensor", "Added and removed every 20s")
                     entity.addSensor(sensor)
                     Thread.sleep(20*1000L)
                     entity.removeSensor(sensor.name)

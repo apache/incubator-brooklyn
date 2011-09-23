@@ -10,6 +10,7 @@ import brooklyn.entity.basic.*
 import brooklyn.entity.Effector
 import brooklyn.management.Task
 import brooklyn.location.basic.GeneralPurposeLocation
+import brooklyn.event.Sensor
 
 public class TestEffector extends AbstractEffector {
 
@@ -40,6 +41,7 @@ private class TestApplication extends AbstractApplication {
                         Entity testTomcat = new TestTomcatEntity(cluster, "tomcat node " + clusterName + "." + i)
                         testTomcat.addGroup(testExtraGroup);
                         cluster.addOwnedChild(testTomcat)
+                        setUpAddingSensor(testTomcat)
                     } else {
                         cluster.addOwnedChild(new TestDataEntity(cluster, "data node " + clusterName + "." + i))
                     }
@@ -59,6 +61,22 @@ private class TestApplication extends AbstractApplication {
 
     public <T> Task<T> invoke(Effector<T> eff, Map<String, ?> parameters) {
         return null  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    private void setUpAddingSensor(AbstractEntity entity) {
+        Runnable r = new Runnable() {
+            void run() {
+                while (true) {
+                    Sensor sensor = new BasicAttributeSensor(Sensor.class, "test.sensor", "Added and removed every 5s")
+                    entity.addSensor(sensor)
+                    Thread.sleep(5*1000L)
+                    entity.removeSensor(sensor.name)
+                    Thread.sleep(5*1000L)
+                }
+            }
+
+        };
+        new Thread(r).start();
     }
 
     private class TestGroupEntity extends AbstractGroup {
@@ -123,7 +141,8 @@ private class TestApplication extends AbstractApplication {
                 "http.port": 8080,
                 "webapp.tomcat.shutdownPort": 666,
                 "jmx.port": 1000,
-                "webapp.reqs.processing.time": 100
+                "webapp.reqs.processing.time": 100,
+                "test.sensor": 10
         ]
 
         public TestTomcatEntity(Entity owner, String displayName) {
@@ -180,7 +199,9 @@ private class TestApplication extends AbstractApplication {
             void run() {
                 while (true) {
                     for (String key: hackMeIn.keySet()) {
-                        entity.setAttribute(entity.getSensor(key), hackMeIn[key] + ((int) 1000 * Math.random()))
+                        if(entity.getSensor(key) != null){
+                            entity.setAttribute(entity.getSensor(key), hackMeIn[key] + ((int) 1000 * Math.random()))
+                        }
                     }
                     Thread.sleep(5000)
                 }
