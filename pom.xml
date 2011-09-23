@@ -31,13 +31,6 @@
             </modules>
         </profile>
         <profile>
-            <id>Monterey</id>
-            <modules>
-                <module>monterey-integration</module>
-                <module>monterey-example</module>
-            </modules>
-        </profile>
-        <profile>
             <id>Acceptance</id>
             <modules>
                 <module>web-console</module>
