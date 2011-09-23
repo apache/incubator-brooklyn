@@ -5,7 +5,7 @@ package brooklyn.policy;
  * and indicate their desired planned action even if they aren't invoking them
  */
 public interface Policy extends EntityAdjunct {
-   /**
+    /**
      * A unique id for this policy.
      */
     String getId();
@@ -16,18 +16,19 @@ public interface Policy extends EntityAdjunct {
      * @return the name assigned to the policy.
      */
     String getName();
+
     /**
-     * resume the policy
+     * Resume the policy
      */
     void resume();
 
     /**
-     * suspend the policy
+     * Suspend the policy
      */
     void suspend();
     
     /**
-     * whether the policy is suspended
+     * Whether the policy is suspended
      */
     boolean isSuspended();
 }
