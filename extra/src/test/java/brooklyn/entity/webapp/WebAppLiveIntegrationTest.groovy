@@ -4,13 +4,13 @@ import static brooklyn.entity.basic.ConfigKeys.*
 import static brooklyn.entity.webapp.jboss.JBoss6Server.*
 import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
+import static org.testng.Assert.*
 
 import java.io.File
 import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.testng.Assert
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.DataProvider
@@ -114,13 +114,9 @@ public class WebAppLiveIntegrationTest {
     @Test(groups = [ "Live" ], dataProvider="basicEntities")
     public void testStartsWebAppInAws(final JavaWebApp entity) {
         entity.start([ loc ])
-        try {
-            TestUtils.executeUntilSucceeds( {
-                    Assert.assertTrue(entity.getAttribute(Startable.SERVICE_UP))
-                    true
-                }, abortOnError:false, timeout:75*SECONDS, useGroovyTruth:true)
-        } finally {
-            entity.stop()
+        executeUntilSucceedsWithShutdown(entity, abortOnError:false, timeout:75*SECONDS, useGroovyTruth:true) {
+            assertTrue(entity.getAttribute(Startable.SERVICE_UP))
+            true
         }
     }
 }

@@ -37,6 +37,7 @@ public class JBoss6Server extends JavaWebApp {
         return JBoss6SshSetup.newInstance(this, loc);
     }
     
+    @Override
     public void addJmxSensors() {
         attributePoller.addSensor(ERROR_COUNT, jmxAdapter.newAttributeProvider("jboss.web:type=GlobalRequestProcessor,name=http-*", "errorCount"))
         attributePoller.addSensor(REQUEST_COUNT, jmxAdapter.newAttributeProvider("jboss.web:type=GlobalRequestProcessor,name=http-*", "requestCount"))

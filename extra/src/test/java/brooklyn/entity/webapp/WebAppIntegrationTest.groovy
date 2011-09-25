@@ -62,14 +62,14 @@ public class WebAppIntegrationTest {
         SocketException gotException = null;
 
         boolean socketClosed = new Repeater("Checking Tomcat has shut down")
-            .repeat({
+            .repeat {
                 if (shutdownSocket) shutdownSocket.close();
                 try { shutdownSocket = new Socket(InetAddress.localHost, Tomcat7SshSetup.DEFAULT_FIRST_SHUTDOWN_PORT); }
                 catch (SocketException e) { gotException = e; return; }
                 gotException = null
-            })
-            .every(100, TimeUnit.MILLISECONDS)
-            .until({ gotException })
+            }
+            .every(100 * MILLISECONDS)
+            .until { gotException }
             .limitIterationsTo(25)
             .run();
 
@@ -105,12 +105,12 @@ public class WebAppIntegrationTest {
     @Test(groups = "Integration", dataProvider = "basicEntities")
     public void canStartAndStop(JavaWebApp entity) {
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
-        executeUntilSucceedsWithFinallyBlock ([:], {
+        executeUntilSucceedsWithFinallyBlock {
             assertTrue entity.getAttribute(JavaApp.SERVICE_UP)
-        }, {
+        } {
             entity.stop()
             assertFalse entity.getAttribute(JavaApp.SERVICE_UP)
-        })
+        }
     }
     
     /**
@@ -124,9 +124,9 @@ public class WebAppIntegrationTest {
         
         String url = entity.getAttribute(JavaWebApp.ROOT_URL) + "does_not_exist"
         
-        executeUntilSucceeds(timeout:10*SECONDS, {
+        executeUntilSucceeds(timeout:10*SECONDS) {
             assertTrue entity.getAttribute(JavaApp.SERVICE_UP)
-        })
+        }
         
         final int n = 10
         n.times {
@@ -135,7 +135,7 @@ public class WebAppIntegrationTest {
             log.info "connection to {} gives {}", url, status
         }
         
-        executeUntilSucceedsWithShutdown(entity, {
+        executeUntilSucceedsWithShutdown(entity, useGroovyTruth:true, timeout:20*SECONDS) {
             def requestCount = entity.getAttribute(JavaWebApp.REQUEST_COUNT)
             def errorCount = entity.getAttribute(JavaWebApp.ERROR_COUNT)
             logger.info "req=$requestCount, err=$errorCount"
@@ -149,7 +149,7 @@ public class WebAppIntegrationTest {
             assertEquals errorCount, n
             assertTrue requestCount >= errorCount
             true
-        }, useGroovyTruth:true, timeout:20*SECONDS)
+        }
     }
     
     /**
@@ -163,17 +163,17 @@ public class WebAppIntegrationTest {
         
         try {
             // reqs/sec initially zero
-            executeUntilSucceeds({
+            executeUntilSucceeds(useGroovyTruth:true) {
                 Double activityValue = entity.getAttribute(JavaWebApp.AVG_REQUESTS_PER_SECOND)
                 if (activityValue == null)
                     return new BooleanWithMessage(false, "activity not set yet ($activityValue)")
 
                 assertEquals activityValue, 0.0d
                 true
-            }, useGroovyTruth:true)
+            }
             
             // apply workload on 1 per sec; reqs/sec should update
-            executeUntilSucceeds({
+            executeUntilSucceeds(timeout:10*SECONDS, useGroovyTruth:true) {
                 String url = entity.getAttribute(JavaWebApp.ROOT_URL) + "foo"
 
                 long startTime = System.currentTimeMillis()
@@ -193,17 +193,17 @@ public class WebAppIntegrationTest {
                 assertEquals activityValue, 10.0d, 1.0d
 
                 true
-            }, timeout:10*SECONDS, useGroovyTruth:true)
+            }
             
             // After suitable delay, expect to again get zero msgs/sec
             Thread.sleep(JavaWebApp.AVG_REQUESTS_PER_SECOND_PERIOD)
             
-            executeUntilSucceeds({
+            executeUntilSucceeds {
                 Double activityValue = entity.getAttribute(JavaWebApp.AVG_REQUESTS_PER_SECOND)
                 assertNotNull activityValue
                 assertEquals activityValue, 0.0d
                 true
-            })
+            }
         } finally {
             entity.stop()
         }
@@ -228,7 +228,7 @@ public class WebAppIntegrationTest {
             subscriptionHandle = subContext.subscribe(entity, JavaWebApp.AVG_REQUESTS_PER_SECOND, {
                     println("publishesRequestsPerSecondMetricRepeatedly.onEvent: $it"); events.add(it) } as SensorEventListener)
             
-            executeUntilSucceeds({
+            executeUntilSucceeds {
                 assertTrue events.size() > NUM_CONSECUTIVE_EVENTS
                 long eventTime = 0
                 
@@ -239,7 +239,7 @@ public class WebAppIntegrationTest {
                     if (eventTime > 0) assertTrue(event.getTimestamp()-eventTime < MAX_INTERVAL_BETWEEN_EVENTS)
                     eventTime = event.getTimestamp()
                 }
-            })
+            }
         } finally {
             if (subscriptionHandle) subContext.unsubscribe(subscriptionHandle)
             entity.stop()
@@ -291,10 +291,10 @@ public class WebAppIntegrationTest {
         
         entity.setConfig(JavaWebApp.WAR, resource.path)
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
-        executeUntilSucceedsWithShutdown(entity, {
+        executeUntilSucceedsWithShutdown(entity, abortOnError:false, timeout:10*SECONDS) {
             // TODO get this URL from a WAR file entity
             assertTrue urlRespondsWithStatusCode200(entity.getAttribute(JavaWebApp.ROOT_URL) + httpURL)
             true
-        }, abortOnError:false, timeout:10*SECONDS)
+        }
     }
 }

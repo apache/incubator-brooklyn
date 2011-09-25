@@ -1,11 +1,13 @@
 package brooklyn.entity.dns;
 
+import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
+
 import groovy.lang.MetaClass
 
 import java.util.Map
 import java.util.Set
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeUnit
 
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
@@ -21,10 +23,12 @@ import brooklyn.location.basic.GeneralPurposeLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.test.entity.TestEntity
 import brooklyn.util.internal.EntityStartUtils
-import brooklyn.util.internal.Repeater;
-
+import brooklyn.util.internal.Repeater
+import brooklyn.util.internal.TimeExtras
 
 public class AbstractGeoDnsServiceTest {
+    static { TimeExtras.init() }
+
     private static final String WEST_IP = "208.95.232.123";
     private static final String EAST_IP = "216.150.144.82";
     private static final double WEST_LATITUDE = 37.43472, WEST_LONGITUDE = -121.89500;
@@ -106,9 +110,9 @@ public class AbstractGeoDnsServiceTest {
     
     private static void waitForTargetHosts(TestService service) {
         new Repeater("Wait for target hosts")
-            .repeat( { } )
-            .every(500, TimeUnit.MILLISECONDS)
-            .until( { service.targetHostsByName.size() == 2 } )
+            .repeat()
+            .every(500 * MILLISECONDS)
+            .until { service.targetHostsByName.size() == 2 }
             .limitIterationsTo(20)
             .run();
     }

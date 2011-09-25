@@ -1,10 +1,17 @@
 package brooklyn.launcher
 
-import brooklyn.management.internal.LocalManagementContext
-import org.testng.annotations.Test
-import static org.testng.Assert.assertNotNull
+import static brooklyn.test.TestUtils.*
+import static java.util.concurrent.TimeUnit.*
+import static org.testng.Assert.*
 
-class WebAppRunnerTest {
+import org.testng.annotations.Test
+
+import brooklyn.management.internal.LocalManagementContext
+import brooklyn.util.internal.TimeExtras
+
+public class WebAppRunnerTest {
+    static { TimeExtras.init() }
+
     /**
      * This test requires the web-console.war to work.
      */
@@ -14,21 +21,11 @@ class WebAppRunnerTest {
         assertNotNull(launcher);
         
         launcher.start();
-        try {
-            for (int i=0; i<50; i++) {
-                try {
-                    Thread.sleep(500)
-                    new URL("http://localhost:8090/").getContent();
-                    break;
-                } catch (IOException e) {
-                    ;
-                }
-            }
-    
-            assertNotNull(new URL("http://localhost:8090/").getContent());
-        } finally {
+        
+        executeUntilSucceedsWithFinallyBlock(timeout:500*MILLISECONDS, maxAttempts:50) {
+            assertNotNull(new URL("http://localhost:8090/").getContent())
+        } {
             launcher.stop();
         }
     }
-
 }

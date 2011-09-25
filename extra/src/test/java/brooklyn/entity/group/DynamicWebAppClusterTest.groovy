@@ -29,13 +29,13 @@ public class DynamicWebAppClusterTest {
         cluster.start([new GeneralPurposeLocation()])
         
         cluster.members.each { it.spoofRequest() }
-        executeUntilSucceeds(timeout: 3*SECONDS, {
+        executeUntilSucceeds(timeout: 3*SECONDS) {
             assertEquals 2, cluster.getAttribute(DynamicWebAppCluster.TOTAL_REQUEST_COUNT)
-        })
+        }
         
         cluster.members.each { it.spoofRequest(); it.spoofRequest() }
-        executeUntilSucceeds(timeout: 3*SECONDS, {
+        executeUntilSucceeds(timeout: 3*SECONDS) {
             assertEquals 3d, cluster.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)
-        })
+        }
     }
 }

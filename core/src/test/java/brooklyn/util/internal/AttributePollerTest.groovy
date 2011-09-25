@@ -1,6 +1,7 @@
 package brooklyn.util.internal
 
 import static org.testng.Assert.*
+import static brooklyn.test.TestUtils.*
 
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicInteger
@@ -14,7 +15,6 @@ import brooklyn.entity.basic.AbstractEntity
 import brooklyn.event.adapter.AttributePoller
 import brooklyn.event.adapter.ValueProvider
 import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.test.TestUtils
 
 /**
  * Test the operation of the {@link AttributePoller} class.
@@ -31,10 +31,13 @@ public class AttributePollerTest {
         BasicAttributeSensor<Integer> FOO = [ Integer, "foo", "My foo" ]
         attributePoller.addSensor(FOO, { return desiredVal.get() } as ValueProvider)
 
-        TestUtils.executeUntilSucceeds( { assertEquals(entity.getAttribute(FOO), 1) } as Runnable )
-
+        executeUntilSucceeds {
+            assertEquals(entity.getAttribute(FOO), 1)
+        }
         desiredVal.set(2)
-        TestUtils.executeUntilSucceeds( { assertEquals(entity.getAttribute(FOO), 2) } as Runnable )
+        executeUntilSucceeds {
+            assertEquals(entity.getAttribute(FOO), 2)
+        }
     }
     
     @Test

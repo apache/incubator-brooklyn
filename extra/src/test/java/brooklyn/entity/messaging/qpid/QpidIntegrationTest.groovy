@@ -62,11 +62,11 @@ public class QpidIntegrationTest {
     public void canStartupAndShutdown() {
         qpid = new QpidBroker(owner:app);
         qpid.start([ testLocation ])
-        executeUntilSucceedsWithFinallyBlock ([:], {
+        executeUntilSucceedsWithFinallyBlock {
             assertTrue qpid.getAttribute(JavaApp.SERVICE_UP)
-        }, {
+        } {
             qpid.stop()
-        })
+        }
         assertFalse qpid.getAttribute(JavaApp.SERVICE_UP)
     }
 
@@ -82,9 +82,9 @@ public class QpidIntegrationTest {
         // Start broker with a configured queue
         qpid = new QpidBroker(owner:app, queue:queueName);
         qpid.start([ testLocation ])
-        executeUntilSucceeds([:], {
+        executeUntilSucceeds {
             assertTrue qpid.getAttribute(JavaApp.SERVICE_UP)
-        })
+        }
 
         try {
             // Check queue created

@@ -5,7 +5,6 @@ import static org.testng.Assert.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
-import org.testng.Assert
 import org.testng.annotations.Test
 
 import brooklyn.entity.basic.AbstractGroup
@@ -57,9 +56,9 @@ public class LocalSubscriptionManagerTest {
         if (!latch.await(1, TimeUnit.SECONDS)) {
             fail "Timeout waiting for Event on parent TestEntity listener"
         }
-        Assert.assertEquals(events.size(), 1)
-        Assert.assertEquals(events.getAt(0).value, 123)
-        Assert.assertEquals(events.getAt(0).sensor, TestEntity.SEQUENCE)
-        Assert.assertEquals(events.getAt(0).source.id, member.id)
+        assertEquals(events.size(), 1)
+        assertEquals(events.getAt(0).value, 123)
+        assertEquals(events.getAt(0).sensor, TestEntity.SEQUENCE)
+        assertEquals(events.getAt(0).source.id, member.id)
     }
 }

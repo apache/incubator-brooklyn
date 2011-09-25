@@ -1,14 +1,21 @@
 package brooklyn.util.internal
 
-import org.testng.annotations.Test
+import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
+
 import java.util.concurrent.TimeUnit
 
-class RepeaterTest {
+import org.testng.annotations.Test
+
+public class RepeaterTest {
+    static { TimeExtras.init() }
 
     @Test
     public void sanityTest() {
-        new Repeater("Sanity test").repeat({}).until({true}).every(10, TimeUnit.MILLISECONDS);
+        new Repeater("Sanity test")
+            .repeat()
+            .until { true }
+            .every(10 * MILLISECONDS);
     }
 
     @Test(expectedExceptions = [ NullPointerException.class ])
@@ -19,7 +26,7 @@ class RepeaterTest {
 
     @Test
     public void repeatSucceedsIfClosureIsNonNull() {
-        new Repeater("repeatSucceedsIfClosureIsNonNull").repeat({});
+        new Repeater("repeatSucceedsIfClosureIsNonNull").repeat { true };
     }
 
     @Test(expectedExceptions = [ NullPointerException.class ])
@@ -30,18 +37,18 @@ class RepeaterTest {
 
     @Test
     public void untilSucceedsIfClosureIsNonNull() {
-        new Repeater("untilSucceedsIfClosureIsNonNull").until({true});
+        new Repeater("untilSucceedsIfClosureIsNonNull").until { true };
     }
 
     @Test(expectedExceptions = [ IllegalArgumentException.class ])
     public void everyFailsIfPeriodIsZero() {
-        new Repeater("everyFailsIfPeriodIsZero").every(0, TimeUnit.MILLISECONDS);
+        new Repeater("everyFailsIfPeriodIsZero").every(0 * MILLISECONDS);
         fail "Expected exception was not thrown"
     }
 
     @Test(expectedExceptions = [ IllegalArgumentException.class ])
     public void everyFailsIfPeriodIsNegative() {
-        new Repeater("everyFailsIfPeriodIsNegative").every(-1, TimeUnit.MILLISECONDS);
+        new Repeater("everyFailsIfPeriodIsNegative").every(-1 * MILLISECONDS);
         fail "Expected exception was not thrown"
     }
 
@@ -53,18 +60,18 @@ class RepeaterTest {
 
     @Test
     public void everySucceedsIfPeriodIsPositiveAndUnitsIsNonNull() {
-        new Repeater("repeatSucceedsIfClosureIsNonNull").every(10, TimeUnit.MILLISECONDS);
+        new Repeater("repeatSucceedsIfClosureIsNonNull").every(10 * MILLISECONDS);
     }
 
     @Test(expectedExceptions = [ IllegalArgumentException.class ])
     public void limitTimeToFailsIfPeriodIsZero() {
-        new Repeater("limitTimeToFailsIfPeriodIsZero").limitTimeTo(0, TimeUnit.MILLISECONDS);
+        new Repeater("limitTimeToFailsIfPeriodIsZero").limitTimeTo(0 * MILLISECONDS);
         fail "Expected exception was not thrown"
     }
 
     @Test(expectedExceptions = [ IllegalArgumentException.class ])
     public void limitTimeToFailsIfPeriodIsNegative() {
-        new Repeater("limitTimeToFailsIfPeriodIsNegative").limitTimeTo(-1, TimeUnit.MILLISECONDS);
+        new Repeater("limitTimeToFailsIfPeriodIsNegative").limitTimeTo(-1 * MILLISECONDS);
         fail "Expected exception was not thrown"
     }
 
@@ -76,20 +83,27 @@ class RepeaterTest {
 
     @Test
     public void limitTimeToSucceedsIfPeriodIsPositiveAndUnitsIsNonNull() {
-        new Repeater("limitTimeToSucceedsIfClosureIsNonNull").limitTimeTo(10, TimeUnit.MILLISECONDS);
+        new Repeater("limitTimeToSucceedsIfClosureIsNonNull").limitTimeTo(10 * MILLISECONDS);
     }
 
     @Test
     public void runReturnsTrueIfExitConditionIsTrue() {
         assertTrue new Repeater("runReturnsTrueIfExitConditionIsTrue")
-            .repeat({}).every(1, TimeUnit.MILLISECONDS).until({true}).run();
+            .repeat()
+            .every(1 * MILLISECONDS)
+            .until { true }
+            .run();
     }
 
     @Test
     public void runRespectsMaximumIterationLimitAndReturnsFalseIfReached() {
         int iterations = 0;
         assertFalse new Repeater("runRespectsMaximumIterationLimitAndReturnsFalseIfReached")
-            .repeat({iterations++}).every(1, TimeUnit.MILLISECONDS).until({false}).limitIterationsTo(5).run();
+            .repeat { iterations++ }
+            .every(1 * MILLISECONDS)
+            .until { false }
+            .limitIterationsTo(5)
+            .run();
         assertEquals 5, iterations;
     }
 
@@ -97,7 +111,10 @@ class RepeaterTest {
     public void runRespectsTimeLimitAndReturnsFalseIfReached() {
         final int DEADLINE = 200;
         Repeater repeater = new Repeater("runRespectsTimeLimitAndReturnsFalseIfReached")
-            .repeat({}).every(10, TimeUnit.MILLISECONDS).until({false}).limitTimeTo(DEADLINE, TimeUnit.MILLISECONDS);
+            .repeat { }
+            .every(10 * MILLISECONDS)
+            .until { false }
+            .limitTimeTo(DEADLINE * MILLISECONDS);
 
         Calendar start = Calendar.getInstance();
         boolean result = repeater.run();
@@ -112,19 +129,28 @@ class RepeaterTest {
 
     @Test(expectedExceptions = [ IllegalStateException.class ])
     public void runFailsIfBodyWasNotSet() {
-        new Repeater("runFailsIfBodyWasNotSet").every(10, TimeUnit.MILLISECONDS).until({true}).run();
+        new Repeater("runFailsIfBodyWasNotSet")
+            .every(10 * MILLISECONDS)
+            .until { true }
+            .run();
         fail "Expected exception was not thrown"
     }
 
     @Test(expectedExceptions = [ IllegalStateException.class ])
     public void runFailsIfUntilWasNotSet() {
-        new Repeater("runFailsIfUntilWasNotSet").repeat({}).every(10, TimeUnit.MILLISECONDS).run();
+        new Repeater("runFailsIfUntilWasNotSet")
+            .repeat()
+            .every(10 * MILLISECONDS)
+            .run();
         fail "Expected exception was not thrown"
     }
 
     @Test(expectedExceptions = [ IllegalStateException.class ])
     public void runFailsIfEveryWasNotSet() {
-        new Repeater("runFailsIfEveryWasNotSet").repeat({}).until({true}).run();
+        new Repeater("runFailsIfEveryWasNotSet")
+            .repeat()
+            .until { true }
+            .run();
         fail "Expected exception was not thrown"
     }
 }

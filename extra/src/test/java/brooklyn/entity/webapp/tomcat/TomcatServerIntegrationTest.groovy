@@ -57,14 +57,14 @@ public class TomcatServerIntegrationTest {
         SocketException gotException = null;
 
         boolean socketClosed = new Repeater("Checking Tomcat has shut down")
-            .repeat({
+            .repeat {
 		            if (shutdownSocket) shutdownSocket.close();
 		            try { shutdownSocket = new Socket(InetAddress.localHost, Tomcat7SshSetup.DEFAULT_FIRST_SHUTDOWN_PORT); }
 		            catch (SocketException e) { gotException = e; return; }
 		            gotException = null
-		        })
-            .every(100, TimeUnit.MILLISECONDS)
-            .until({ gotException })
+		        }
+            .every(100 * MILLISECONDS)
+            .until { gotException }
             .limitIterationsTo(25)
 	        .run();
 

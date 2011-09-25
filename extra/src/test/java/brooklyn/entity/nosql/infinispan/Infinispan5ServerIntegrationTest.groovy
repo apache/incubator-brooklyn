@@ -41,14 +41,14 @@ class Infinispan5ServerIntegrationTest {
         SocketException gotException = null;
 
         boolean socketClosed = new Repeater("Checking Infinispan has shut down")
-            .repeat({
+            .repeat {
                     if (shutdownSocket) shutdownSocket.close();
                     try { shutdownSocket = new Socket(InetAddress.localHost, DEFAULT_PORT); }
                     catch (SocketException e) { gotException = e; return; }
                     gotException = null
-                })
-            .every(100, TimeUnit.MILLISECONDS)
-            .until({ gotException })
+                }
+            .every(100 * MILLISECONDS)
+            .until { gotException }
             .limitIterationsTo(25)
             .run();
 
@@ -69,9 +69,9 @@ class Infinispan5ServerIntegrationTest {
         infini.setConfig(Infinispan5Server.PORT.getConfigKey(), DEFAULT_PORT)
         infini.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         try {
-            executeUntilSucceeds ([:], {
+            executeUntilSucceeds {
                 assertTrue infini.getAttribute(Infinispan5Server.SERVICE_UP)
-            })
+            }
         } finally {
             infini.stop()
         }

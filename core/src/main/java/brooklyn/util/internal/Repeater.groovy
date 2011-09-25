@@ -1,8 +1,8 @@
 package brooklyn.util.internal
 
 import groovy.time.Duration
+import groovy.time.TimeDuration
 
-import java.util.concurrent.Callable
 import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
@@ -11,28 +11,28 @@ import org.slf4j.LoggerFactory
 import com.google.common.base.Preconditions
 
 /**
- * Repeat a fragment of code periodically until a condition is satisfied. In its simplest case, it is passed two closures -
- * the first is executed, then the second. If the second closure returns false, the loop is repeated; if true, it finishes.
- * Further customization can be applied to set the period between loops and place a maximum limit on how long the loop should
- * run for.
- *
+ * Repeat a fragment of code periodically until a condition is satisfied.
+ * 
+ * In its simplest case, it is passed two closures - the first is executed, then the second. If the second closure returns false,
+ * the loop is repeated; if true, it finishes. Further customization can be applied to set the period between loops and place a
+ * maximum limit on how long the loop should run for.
+ * <p>
  * It is configured in a "fluent" manner - for example:
- *
- * <code>
+ * <pre>
  * new Repeater("Wait until the Frobnitzer is ready")
- * .repeat( { try { status = frobnitzer.getStatus() } catch(Exception e) { status = "Failed" } } )
- * .until( { status == "Ready" || status == "Failed" } )
+ * .repeat { try { status = frobnitzer.getStatus() } catch(Exception e) { status = "Failed" } }
+ * .until { status == "Ready" || status == "Failed" }
  * .limitIterationsTo(30)
  * .run()
- * </code>
+ * </pre>
  */
-class Repeater {
+public class Repeater {
     private static final Logger log = LoggerFactory.getLogger(Repeater.class)
 
     private final String description
-    private Runnable body
-    private Callable<Boolean> exitCondition
-    private int period = 0;
+    private Closure body
+    private Closure<Boolean> exitCondition
+    private long period = 0L;
     private TimeUnit periodUnit = null;
     private int iterationLimit = 0;
     private int deadline = 0;
@@ -40,6 +40,7 @@ class Repeater {
 
     /**
      * Construct a new instance of Repeater.
+     *
      * @param description a description of the operation that will appear in debug logs.
      */
     Repeater(String description) {
@@ -48,10 +49,11 @@ class Repeater {
 
     /**
      * Set the main body of the loop.
+     *
      * @param body a closure or other Runnable that is executed in the main body of the loop.
-     * @return <code>this<code> (to aid coding in a fluent style)
+     * @return {@literal this} to aid coding in a fluent style.
      */
-    Repeater repeat(Runnable body={}) {
+    Repeater repeat(Closure body={}) {
         Preconditions.checkNotNull body, "body must not be null"
         this.body = body;
         return this;
@@ -59,11 +61,12 @@ class Repeater {
 
     /**
      * Set how long to wait between loop iterations.
-     * @param period how long to wait between loop iterations
-     * @param unit the unit of measurement of the period
-     * @return <code>this<code> (to aid coding in a fluent style)
+     *
+     * @param period how long to wait between loop iterations.
+     * @param unit the unit of measurement of the period.
+     * @return {@literal this} to aid coding in a fluent style.
      */
-    Repeater every(int period, TimeUnit unit) {
+    Repeater every(long period, TimeUnit unit) {
         Preconditions.checkArgument period > 0, "period must be positive: %s", period
         Preconditions.checkNotNull unit, "unit must not be null"
         this.period = period;
@@ -72,22 +75,33 @@ class Repeater {
     }
 
     /**
+     * @see #every(long, TimeUnit)
+     */
+    Repeater every(Duration duration) {
+        Preconditions.checkNotNull duration, "duration must not be null"
+        return every(duration.toMilliseconds(), TimeUnit.MILLISECONDS)
+    }
+
+    /**
      * Set code fragment that tests if the loop has completed.
+     *
      * @param exitCondition a closure or other Callable that returns a boolean. If this code returns <code>true<code>, then the
      * loop will stop executing.
-     * @return <code>this<code> (to aid coding in a fluent style)
+     * @return {@literal this} to aid coding in a fluent style.
      */
-    Repeater until(Callable<Boolean> exitCondition) {
+    Repeater until(Closure<Boolean> exitCondition) {
         Preconditions.checkNotNull exitCondition, "exitCondition must not be null"
         this.exitCondition = exitCondition;
         return this;
     }
 
     /**
-     * Set the maximum number of iterations. The loop will exit if the condition has not been satisfied after this number of
-     * iterations.
+     * Set the maximum number of iterations.
+     *
+     * The loop will exit if the condition has not been satisfied after this number of iterations.
+     *
      * @param iterationLimit the maximum number of iterations.
-     * @return <code>this<code> (to aid coding in a fluent style)
+     * @return {@literal this} to aid coding in a fluent style.
      */
     Repeater limitIterationsTo(int iterationLimit) {
         Preconditions.checkArgument iterationLimit > 0, "iterationLimit must be positive: %s", iterationLimit
@@ -96,27 +110,33 @@ class Repeater {
     }
 
     /**
-     * Set the maximum execution time. The loop will exit if the condition has not been satisfied after this deadline has
-     * elapsed.
-     * @param deadline the maximum time that the loop should run
-     * @param unit the unit of measurement of the period
-     * @return <code>this<code> (to aid coding in a fluent style)
+     * Set the maximum execution time.
+     * 
+     * The loop will exit if the condition has not been satisfied after this deadline has elapsed.
+     *
+     * @param deadline the maximum time that the loop should run.
+     * @param unit the unit of measurement of the period.
+     * @return {@literal this} to aid coding in a fluent style.
      */
-    Repeater limitTimeTo(int deadline, TimeUnit unit) {
+    Repeater limitTimeTo(long deadline, TimeUnit unit) {
         Preconditions.checkArgument deadline > 0, "deadline must be positive: %s", deadline
         Preconditions.checkNotNull unit, "unit must not be null"
         this.deadline = deadline;
         this.deadlineUnit = unit;
         return this;
     }
-
+    
+    /**
+     * @see #limitTimeTo(long, TimeUnit)
+     */
     Repeater limitTimeTo(Duration duration) {
-        Preconditions.checkArgument duration > 0, "duration must be positive: %s", duration
+        Preconditions.checkNotNull duration, "duration must not be null"
         return limitTimeTo(duration.toMilliseconds(), TimeUnit.MILLISECONDS)
     }
 
     /**
      * Run the loop.
+     *
      * @return true if the exit condition was satisfied; false if the loop terminated for any other reason.
      */
     boolean run() {

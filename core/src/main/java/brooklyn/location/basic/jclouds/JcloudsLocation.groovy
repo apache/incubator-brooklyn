@@ -1,5 +1,6 @@
 package brooklyn.location.basic.jclouds
 
+import static java.util.concurrent.TimeUnit.*
 import static org.jclouds.scriptbuilder.domain.Statements.*
 
 import java.util.Collection
@@ -13,13 +14,7 @@ import org.jclouds.compute.domain.NodeMetadata
 import org.jclouds.compute.domain.Template
 import org.jclouds.compute.domain.TemplateBuilder
 import org.jclouds.compute.options.TemplateOptions
-import org.jclouds.compute.predicates.RetryIfSocketNotYetOpen
-import org.jclouds.compute.reference.ComputeServiceConstants
-import org.jclouds.compute.reference.ComputeServiceConstants.Timeouts
-import org.jclouds.compute.util.ComputeServiceUtils
 import org.jclouds.ec2.compute.options.EC2TemplateOptions
-import org.jclouds.net.IPSocket
-import org.jclouds.predicates.InetSocketAddressConnect
 import org.jclouds.scriptbuilder.domain.Statement
 import org.jclouds.scriptbuilder.domain.Statements
 import org.jclouds.scriptbuilder.statements.login.UserAdd
@@ -30,6 +25,7 @@ import brooklyn.location.basic.AbstractLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.IdGenerator
 import brooklyn.util.internal.Repeater
+import brooklyn.util.internal.TimeExtras
 
 import com.google.common.base.Charsets
 import com.google.common.base.Throwables
@@ -37,6 +33,7 @@ import com.google.common.collect.Iterables
 import com.google.common.io.Files
 
 public class JcloudsLocation extends AbstractLocation implements MachineProvisioningLocation<SshMachineLocation> {
+    static { TimeExtras.init() }
 
     public static final String ROOT_USERNAME = "root";
     public static final int START_SSHABLE_TIMEOUT = 5*60*1000;
@@ -107,13 +104,13 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             // Wait for the VM to be reachable over SSH
             LOG.info("Started VM in ${allconf.providerLocationId}; waiting for it to be sshable by "+allconf.userName+"@"+vmIp);
             boolean reachable = new Repeater()
-                    .repeat( { } )
-                    .every(1, TimeUnit.SECONDS)
-                    .until( {
+                    .repeat()
+                    .every(1 * SECONDS)
+                    .until {
                         Statement statement = Statements.newStatementList(exec('date'))
                         ExecResponse response = computeService.runScriptOnNode(node.getId(), statement)
-                        response.exitCode } )
-                    .limitTimeTo(START_SSHABLE_TIMEOUT, TimeUnit.MILLISECONDS)
+                        response.exitCode }
+                    .limitTimeTo(START_SSHABLE_TIMEOUT * MILLISECONDS)
                     .run()
         
             if (!reachable) {

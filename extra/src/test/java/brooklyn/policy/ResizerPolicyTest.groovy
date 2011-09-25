@@ -182,9 +182,9 @@ class ResizerPolicyTest {
                     }
                 })
         
-        executeUntilSucceeds(timeout: 3*SECONDS, {
+        executeUntilSucceeds(timeout: 3*SECONDS) {
             assertEquals 2, tc.size
-        })
+        }
     }
 
     @Test
@@ -194,9 +194,9 @@ class ResizerPolicyTest {
         policy.subscribe(entity, null, new SensorEventListener<?>(){void onEvent(SensorEvent e) {}})
         policy.destroy()
         
-        executeUntilSucceeds(timeout: 3*SECONDS, {
+        executeUntilSucceeds(timeout: 3*SECONDS) {
             assertEquals 0, policy.getAllSubscriptions().size()
-        })
+        }
     }
     
     @Test(groups=["Integration"])
@@ -240,20 +240,16 @@ class ResizerPolicyTest {
         TomcatServer tc = Iterables.getOnlyElement(cluster.getMembers())
         2.times { connectToURL(tc.getAttribute(TomcatServer.ROOT_URL)) }
         
-        try {
-            executeUntilSucceeds(timeout: 3*SECONDS, {
-                assertEquals 2.0d/cluster.currentSize, cluster.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)
-            })
+        executeUntilSucceeds(timeout: 3*SECONDS) {
+            assertEquals 2.0d/cluster.currentSize, cluster.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)
+        }
 
-            executeUntilSucceeds(timeout: 10*SECONDS, {
-                assertTrue policy.isRunning()
-                assertFalse policy.resizing.get()
-                assertEquals 2, policy.calculateDesiredSize(cluster.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT))
-                assertEquals 2, cluster.currentSize
-                assertEquals 1.0d, cluster.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)
-            })
-        } finally {
-            cluster.stop()
+        executeUntilSucceedsWithShutdown(cluster, timeout: 10*SECONDS) {
+            assertTrue policy.isRunning()
+            assertFalse policy.resizing.get()
+            assertEquals 2, policy.calculateDesiredSize(cluster.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT))
+            assertEquals 2, cluster.currentSize
+            assertEquals 1.0d, cluster.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)
         }
     }
 }

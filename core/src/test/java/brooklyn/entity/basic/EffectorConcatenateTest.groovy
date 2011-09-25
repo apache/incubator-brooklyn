@@ -1,10 +1,11 @@
 package brooklyn.entity.basic;
 
+import static org.testng.Assert.*
+
 import java.util.concurrent.TimeUnit;
 
 import groovy.transform.InheritConstructors
 
-import org.testng.Assert
 import org.testng.annotations.Test
 
 import brooklyn.entity.Effector
@@ -37,6 +38,6 @@ public class EffectorConcatenateTest {
         AbstractApplication app = new AbstractApplication() {}
         MyEntity e = new MyEntity([owner:app])
         Task<String> task = e.invoke(MyEntity.CONCATENATE, [first:"a",second:"b"])
-        Assert.assertEquals(task.get(TIMEOUT, TimeUnit.MILLISECONDS), "ab")
+        assertEquals(task.get(TIMEOUT, TimeUnit.MILLISECONDS), "ab")
     }
 }

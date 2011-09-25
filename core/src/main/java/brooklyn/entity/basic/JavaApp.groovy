@@ -72,7 +72,7 @@ public abstract class JavaApp extends AbstractService {
         new Repeater("Wait for JMX")
                 .repeat()
                 .every(1, TimeUnit.SECONDS)
-                .until({jmxAdapter.isConnected()})
+                .until { jmxAdapter.isConnected() }
                 .limitIterationsTo(30)
                 .run();
     }

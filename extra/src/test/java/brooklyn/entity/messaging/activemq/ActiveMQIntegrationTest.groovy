@@ -61,11 +61,11 @@ public class ActiveMQIntegrationTest {
     public void canStartupAndShutdown() {
         activeMQ = new ActiveMQBroker(owner:app);
         activeMQ.start([ testLocation ])
-        executeUntilSucceedsWithFinallyBlock ([:], {
+        executeUntilSucceedsWithFinallyBlock {
             assertTrue activeMQ.getAttribute(JavaApp.SERVICE_UP)
-        }, {
+        } {
             activeMQ.stop()
-        })
+        }
         assertFalse activeMQ.getAttribute(JavaApp.SERVICE_UP)
     }
 
@@ -81,9 +81,9 @@ public class ActiveMQIntegrationTest {
         // Start broker with a configured queue
         activeMQ = new ActiveMQBroker(owner:app, queue:queueName);
         activeMQ.start([ testLocation ])
-        executeUntilSucceeds([:], {
+        executeUntilSucceeds {
             assertTrue activeMQ.getAttribute(JavaApp.SERVICE_UP)
-        })
+        }
 
         try {
             // Check queue created

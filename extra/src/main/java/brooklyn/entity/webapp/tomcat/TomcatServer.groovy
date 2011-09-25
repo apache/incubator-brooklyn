@@ -49,6 +49,7 @@ public class TomcatServer extends JavaWebApp {
         return Tomcat7SshSetup.newInstance(this, machine)
     }
     
+    @Override
     public void addJmxSensors() {
         attributePoller.addSensor(ERROR_COUNT, 
 				jmxAdapter.newAttributeProvider("Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "errorCount"))
@@ -60,11 +61,6 @@ public class TomcatServer extends JavaWebApp {
         attributePoller.addSensor(SERVICE_UP, { computeNodeUp() } as ValueProvider)
     }
     
-    @Override
-    public Collection<String> toStringFieldsToInclude() {
-        return super.toStringFieldsToInclude() + ['tomcatHttpPort']
-    }
-
     // state values include: STARTED, FAILED, InstanceNotFound
     protected String computeConnectorStatus() {
         int port = getAttribute(HTTP_PORT)
