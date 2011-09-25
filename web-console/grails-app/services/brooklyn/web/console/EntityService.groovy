@@ -91,7 +91,7 @@ public class EntityService {
                 SubscriptionHandle handle = managementContextService.subscriptionManager.subscribe(entity, null,
                     new SensorEventListener() {
                         void onEvent(SensorEvent event) {
-                            addSensorToCache(event)
+                            addSensorToCache(event.source, event.sensor)
                         }
                     })
                 cacheQueue.add(entity.id)
@@ -103,30 +103,23 @@ public class EntityService {
             internalSubscriptions[entity.id].add(managementContextService.subscriptionManager.subscribe(entity,
                 AbstractEntity.SENSOR_ADDED, new SensorEventListener<Sensor>(){
                     void onEvent(SensorEvent e) {
-                        addSensorToCache(entity, e)
+                        addSensorToCache(e.source, (Sensor) e.value)
                     }
             }))
 
             internalSubscriptions[entity.id].add(managementContextService.subscriptionManager.subscribe(entity,
                 AbstractEntity.SENSOR_REMOVED, new SensorEventListener<Sensor>(){
                     void onEvent(SensorEvent e) {
-                        removedSensorFromCache(entity, e.value)
+                        removedSensorFromCache(e.source, (Sensor) e.value)
                     }
             }))
         }
     }
 
-    private void addSensorToCache(SensorEvent event){
-        if(event.sensor instanceof AttributeSensor){
-            sensorCache.putIfAbsent(event.source.id, new ConcurrentHashMap<String, SensorSummary>())
-            sensorCache[event.source.id].put(event.sensor.name, new SensorSummary(event))
-        }
-    }
-
-    private void addSensorToCache(Entity entity, SensorEvent event){
-        if(event.sensor instanceof AttributeSensor){
+    private void addSensorToCache(Entity entity, Sensor sensor){
+        if(sensor instanceof AttributeSensor){
             sensorCache.putIfAbsent(entity.id, new ConcurrentHashMap<String, SensorSummary>())
-            sensorCache[entity.id].put(event.value.name, new SensorSummary(event.value, entity.getAttribute(event.value)))
+            sensorCache[entity.id].put(sensor.name, new SensorSummary(sensor, entity.getAttribute(sensor)))
         }
     }
 
@@ -158,7 +151,7 @@ public class EntityService {
     }
 
     public Policy getPolicyOfEntity(Entity entity, String policyId){
-        Policy policy
+        Policy policy = null
         if(entity.policies != null){
             policy = entity.policies.find {
                 it.id.equals(policyId)
