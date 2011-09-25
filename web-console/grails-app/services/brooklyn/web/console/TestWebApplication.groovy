@@ -16,6 +16,9 @@ import brooklyn.policy.basic.GeneralPurposePolicy
 import brooklyn.management.Task
 import brooklyn.web.console.entity.TestEffector
 import grails.converters.JSON
+import brooklyn.event.basic.BasicSensor
+import brooklyn.event.Sensor
+import brooklyn.event.AttributeSensor
 
 // TODO remove these test classes as soon as the group agrees they're unnecessary!
 private class TestWebApplication extends AbstractApplication {
@@ -55,6 +58,7 @@ private class TestWebApplication extends AbstractApplication {
                         Entity testTomcat = new TestTomcatEntity(cluster, "tomcat node " + clusterName + "." + i)
                         testTomcat.addGroup(testExtraGroup);
                         cluster.addOwnedChild(testTomcat)
+                        setUpAddingSensor(testTomcat)
                     } else {
                         cluster.addOwnedChild(new TestDataEntity(cluster, "data node " + clusterName + "." + i))
                     }
@@ -98,6 +102,22 @@ private class TestWebApplication extends AbstractApplication {
 
         };
 
+        new Thread(r).start();
+    }
+
+    private void setUpAddingSensor(AbstractEntity entity) {
+        Runnable r = new Runnable() {
+            void run() {
+                while (true) {
+                    Sensor sensor = new BasicAttributeSensor(Sensor.class, "test.sensor", "Added and removed every 20s")
+                    entity.addSensor(sensor)
+                    Thread.sleep(20*1000L)
+                    entity.removeSensor(sensor.name)
+                    Thread.sleep(20*1000L)
+                }
+            }
+
+        };
         new Thread(r).start();
     }
 
@@ -170,7 +190,8 @@ private class TestWebApplication extends AbstractApplication {
                 "http.port": 8080,
                 "webapp.tomcat.shutdownPort": 666,
                 "jmx.port": 1000,
-                "webapp.reqs.processing.time": 100
+                "webapp.reqs.processing.time": 100,
+                "test.sensor": 17
         ]
 
         private List<Location> testLocations = [
@@ -237,9 +258,11 @@ private class TestWebApplication extends AbstractApplication {
             void run() {
                 while (true) {
                     for (String key: hackMeIn.keySet()) {
-                        entity.setAttribute(entity.getSensor(key),
-                                            hackMeIn[key] + ManagementContextService.ID_GENERATOR +
-                                                    ((int) 1000 * Math.random()))
+                        if(entity.getSensor(key) != null){
+                            entity.setAttribute(entity.getSensor(key),
+                            hackMeIn[key] + ManagementContextService.ID_GENERATOR +
+                                    ((int) 1000 * Math.random()))
+                        }
                     }
                     Thread.sleep(5000)
                 }

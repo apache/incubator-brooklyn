@@ -20,7 +20,7 @@ public class SeleniumTest {
     private static SeleniumServer seleniumServer;
     private static WebAppRunner launcher;
 
-    public static int timeout = 10;
+    public static int timeout = 20;
     public static Selenium selenium;
 
     public static void waitFor(c) {
