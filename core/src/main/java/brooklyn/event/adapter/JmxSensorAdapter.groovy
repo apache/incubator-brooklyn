@@ -144,9 +144,13 @@ public class JmxSensorAdapter {
         checkConnected()
         
         ObjectInstance bean = findMBean objectName
-        def result = mbsc.getAttribute(bean.objectName, attribute)
-        log.trace "got value {} for jmx attribute {}.{}", result, objectName.canonicalName, attribute
-        return result
+        if (bean != null) {
+            def result = mbsc.getAttribute(bean.objectName, attribute)
+            log.trace "got value {} for jmx attribute {}.{}", result, objectName.canonicalName, attribute
+            return result
+        } else {
+            return null
+        }
     }
 
     /**
