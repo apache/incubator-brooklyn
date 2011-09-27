@@ -1,0 +1,87 @@
+#!/bin/bash -e
+
+usage(){
+	echo >&2 'Usage: release-branch-from-master --release <version> [ --release-suffix <suffix> ]'
+	echo >&2 '                                  --master <version>  [ --master-suffix <suffix> ]'
+	echo >&2 'Creates a release branch, and updates the version number in both the branch and master.'
+	echo >&2 '<version> should be a two-part version number, such as 3.6 or 4.0.'
+	echo >&2 '<suffix> will normally be of the form ".patchlevel", plus "-RC1" or similar if required,'
+	echo >&2 'plus "-SNAPSHOT". Example: ".0.RC1-SNAPSHOT". The defaults for the suffix are normally sensible.'
+	echo >&2 'This command will preview what it is going to do and require confirmation before it makes changes.'
+}
+
+release_ver=
+release_ver_suffix=.0-RC1-SNAPSHOT
+master_ver=
+master_ver_suffix=.0-SNAPSHOT
+
+[ $# -eq 0 ] && echo >&2 "No arguments given, so I'm going to try and figure it out myself. Invoke with the --help option if you want to find how to invoke this script."
+
+while [ $# -gt 0 ]; do
+	case $1 in
+		--release)			shift; release_ver=$1;;
+		--release-suffix)	shift; release_ver_suffix=$1;;
+		--master)			shift; master_ver=$1;;
+		--master-suffix)	shift; master_ver_suffix=$1;;
+		*)					usage; exit 1;;
+	esac
+	shift
+done
+
+# Use xpath to query the current version number in the pom
+current_version=$( xpath pom.xml '/project/version/text()' 2>/dev/null )
+( set +e; echo ${current_version} | grep -qE '^([0-9]+).([0-9]+).0-SNAPSHOT$' )
+current_version_valid=$?
+if [ $current_version_valid -ne 0 -a -z "${release_ver}" -a -z "${master_ver}" ]; then
+	echo >&2 "Detected current version as '${current_version}', but I can't parse this. Please supply --release and --master parameters."
+	exit 1
+fi
+
+[ -z "${release_ver}" ] && {
+	release_ver=${current_version%-SNAPSHOT}
+	release_ver=${release_ver%.0}
+	[ -z "${release_ver}" ] && { echo >&2 Could not determine the version of the release branch. Please use the --release parameter. ; exit 1 ; }
+}
+
+[ -z "${master_ver}" ] && {
+	master_ver=$( echo ${current_version} | perl -n -e 'if (/^(\d+).(\d+)(.*)$/) { printf "%s.%s\n", $1, $2+1 }' )
+	[ -z "${master_ver}" ] && { echo >&2 Could not determine the version of the master branch. Please use the --master parameter. ; exit 1 ; }
+}
+
+branch_name=${release_ver}
+version_on_branch=${release_ver}${release_ver_suffix}
+version_on_master=${master_ver}${master_ver_suffix}
+
+# Show the details and get confirmation
+echo "The current version is:                                  ${current_version}"
+echo "The release branch will be named:                        ${branch_name}"
+echo "The version number on the release branch will be set to: ${version_on_branch}"
+echo "The version number on 'master' will be set to:           ${version_on_master}"
+echo "If you proceed, the new branch and version number changes will be pushed to GitHub."
+echo -n 'Enter "y" if this is correct, anything else to abort: '
+read input
+[ "$input" == "y" ] || { echo >&2 Aborted. ; exit 1 ; }
+
+# Fail if not in a Git repository
+[ -d .git ] || {
+	echo >&2 Error: this directory is not a git repository root. Nothing happened.
+	exit 1
+}
+
+# Warn if the current branch isn't master
+current_branch=$( git name-rev --name-only HEAD )
+[ ${current_branch} == "master" ] || {
+	echo Current branch is ${current_branch}. Usually, release branches are made from master.
+	echo -n 'Enter "y" if this is correct, anything else to abort: '
+	read input
+	[ "$input" == "y" ] || { echo >&2 Aborted. ; exit 1 ; }
+}
+
+# Get Maven to make the branch
+set -x
+mvn release:clean release:branch --batch-mode -DautoVersionSubmodules=true -DbranchName=${branch_name} -DupdateBranchVersions=true -DreleaseVersion=${version_on_branch} -DdevelopmentVersion=${version_on_master}
+set +x
+
+# Done!
+echo Completed. Your repository is still looking at ${current_branch}. To switch to the release branch, enter:
+echo git checkout ${branch_name}
