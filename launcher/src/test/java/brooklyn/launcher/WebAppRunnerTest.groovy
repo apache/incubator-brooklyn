@@ -22,10 +22,10 @@ public class WebAppRunnerTest {
         
         launcher.start();
         
-        executeUntilSucceedsWithFinallyBlock(timeout:500*MILLISECONDS, maxAttempts:50) {
+        executeUntilSucceeds(timeout:500*MILLISECONDS, maxAttempts:50) {
             assertNotNull(new URL("http://localhost:8090/").getContent())
-        } {
-            launcher.stop();
         }
+
+        launcher.stop();
     }
 }

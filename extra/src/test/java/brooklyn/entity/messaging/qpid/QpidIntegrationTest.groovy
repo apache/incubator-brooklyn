@@ -62,10 +62,8 @@ public class QpidIntegrationTest {
     public void canStartupAndShutdown() {
         qpid = new QpidBroker(owner:app);
         qpid.start([ testLocation ])
-        executeUntilSucceedsWithFinallyBlock {
+        executeUntilSucceedsWithShutdown(qpid) {
             assertTrue qpid.getAttribute(JavaApp.SERVICE_UP)
-        } {
-            qpid.stop()
         }
         assertFalse qpid.getAttribute(JavaApp.SERVICE_UP)
     }

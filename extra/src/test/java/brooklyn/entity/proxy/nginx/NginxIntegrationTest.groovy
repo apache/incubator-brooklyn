@@ -71,7 +71,7 @@ public class NginxIntegrationTest {
 	            "portNumberSensor" : TomcatServer.HTTP_PORT,
             ])
         nginx.start([ new LocalhostMachineProvisioningLocation(count:1) ])
-        executeUntilSucceedsWithFinallyBlock {
+        executeUntilSucceedsWithShutdown(nginx) {
             // Services are running
             assertTrue cluster.getAttribute(AbstractService.SERVICE_UP)
             assertTrue nginx.getAttribute(AbstractService.SERVICE_UP)
@@ -85,10 +85,8 @@ public class NginxIntegrationTest {
             cluster.members.each {
 	            assertTrue urlRespondsWithStatusCode200(it.getAttribute(TomcatServer.ROOT_URL) + "hello-world")
             }
-        } {
-            nginx.stop()
-            cluster.stop()
         }
+        cluster.stop()
 
         // Services have stopped
         assertFalse nginx.getAttribute(AbstractService.SERVICE_UP)

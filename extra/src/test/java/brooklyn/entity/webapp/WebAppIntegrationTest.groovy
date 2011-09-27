@@ -105,12 +105,10 @@ public class WebAppIntegrationTest {
     @Test(groups = "Integration", dataProvider = "basicEntities")
     public void canStartAndStop(JavaWebApp entity) {
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
-        executeUntilSucceedsWithFinallyBlock {
+        executeUntilSucceedsWithShutdown(entity) {
             assertTrue entity.getAttribute(JavaApp.SERVICE_UP)
-        } {
-            entity.stop()
-            assertFalse entity.getAttribute(JavaApp.SERVICE_UP)
         }
+        assertFalse entity.getAttribute(JavaApp.SERVICE_UP)
     }
     
     /**

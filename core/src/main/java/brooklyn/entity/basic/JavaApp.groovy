@@ -1,6 +1,7 @@
 package brooklyn.entity.basic
 
 import java.util.Collection
+import java.util.Map;
 import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
@@ -38,6 +39,10 @@ public abstract class JavaApp extends AbstractService {
     public JavaApp(Map properties=[:], Entity owner=null) {
         super(properties, owner)
 
+        setJmxConfig(properties)
+    }
+
+    public void setJmxConfig(Map properties=[:]) {
         setConfigIfValNonNull(JMX_PORT.configKey, properties.jmxPort)
         setConfigIfValNonNull(JMX_CONTEXT.configKey, properties.jmxContext)
     }
@@ -49,11 +54,11 @@ public abstract class JavaApp extends AbstractService {
 
     protected void initJmxSensors() {
         if (jmxEnabled) {
-            if (!(getAttribute(HOSTNAME) && getAttribute(JMX_PORT)))
+            if (!(getAttribute(HOSTNAME) && getAttribute(JMX_PORT))) {
                 throw new IllegalStateException("JMX is not available")
-            else
-                log.debug "Connecting to JMX on ${getAttribute(HOSTNAME)}:${getAttribute(JMX_PORT)}"
+            }
 
+            log.debug "Connecting to JMX on ${getAttribute(HOSTNAME)}:${getAttribute(JMX_PORT)}"
             jmxAdapter = new JmxSensorAdapter(this, 60*1000)
             jmxAdapter.connect();
             waitForJmx()
@@ -92,5 +97,10 @@ public abstract class JavaApp extends AbstractService {
     @Override
     public Collection<String> toStringFieldsToInclude() {
         return super.toStringFieldsToInclude() + ['jmxPort']
+    }
+
+    @Override
+    protected Map getJavaConfigOptions() {
+        return getConfig(JAVA_OPTIONS)
     }
 }
