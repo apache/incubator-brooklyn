@@ -11,7 +11,6 @@ import brooklyn.util.SshBasedJavaWebAppSetup
 public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     public static final String DEFAULT_VERSION = "6.0.0.Final"
     public static final String DEFAULT_INSTALL_DIR = DEFAULT_INSTALL_BASEDIR+"/"+"jboss"
-    public static final String DEFAULT_SERVER_TYPE = "standard"
     public static final int DEFAULT_HTTP_PORT = 8080;
 
     private static final portGroupName = "ports-brooklyn"
@@ -23,21 +22,18 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         Integer suggestedJbossVersion = entity.getConfig(JBoss6Server.SUGGESTED_VERSION)
         String suggestedInstallDir = entity.getConfig(JBoss6Server.SUGGESTED_INSTALL_DIR)
         String suggestedRunDir = entity.getConfig(JBoss6Server.SUGGESTED_RUN_DIR)
-        Integer suggestedJmxPort = entity.getConfig(JBoss6Server.SUGGESTED_JMX_PORT)
-        Integer suggestedPortIncrement = entity.getConfig(JBoss6Server.SUGGESTED_PORT_INCREMENT)
-        String suggestedServerProfile = entity.getConfig(JBoss6Server.SUGGESTED_SERVER_PROFILE)
-        String suggestedClusterName = entity.getConfig(JBoss6Server.SUGGESTED_CLUSTER_NAME)
+        Integer suggestedJmxPort = entity.getConfig(JBoss6Server.JMX_PORT.configKey)
+        Integer portIncrement = entity.getConfig(JBoss6Server.PORT_INCREMENT.configKey)
+        String serverProfile = entity.getConfig(JBoss6Server.SERVER_PROFILE.configKey)
+        String clusterName = entity.getConfig(JBoss6Server.CLUSTER_NAME)
         Map<String,Map<String,String>> propFilesToGenerate = entity.getConfig(JBoss7Server.PROPERTY_FILES) ?: [:]
         
         String version = suggestedJbossVersion ?: DEFAULT_VERSION
-        String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"${version}"+"/"+"jboss-${version}")
-        String runDir = suggestedRunDir ?: (BROOKLYN_HOME_DIR+"/"+"${entity.application.id}"+"/"+"jboss-${entity.id}")
-        String serverProfile = suggestedServerProfile ?: DEFAULT_SERVER_TYPE
-        String deployDir = "$runDir/server/$serverProfile/deploy"
-        String clusterName = suggestedClusterName ?: ""
+        String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/${version}/jboss-${version}")
+        String runDir = suggestedRunDir ?: (BROOKLYN_HOME_DIR+"/${entity.application.id}/jboss-${entity.id}")
+        String deployDir = "${runDir}/server/${serverProfile}/deploy"
         
-        int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort, DEFAULT_FIRST_JMX_PORT))
-        int portIncrement = suggestedPortIncrement ?: 0
+        int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort))
         
         JBoss6SshSetup result = new JBoss6SshSetup(entity, machine)
         result.setJmxPort(jmxPort)
@@ -45,7 +41,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         result.setInstallDir(installDir)
         result.setDeployDir(deployDir)
         result.setRunDir(runDir)
-        result.setPropertyFiles(propFilesToGenerate)
+        result.setEnvironmentPropertyFiles(propFilesToGenerate)
         result.setPortIncrement(portIncrement)
         result.setHttpPort(DEFAULT_HTTP_PORT+portIncrement)
         result.setServerProfile(serverProfile)

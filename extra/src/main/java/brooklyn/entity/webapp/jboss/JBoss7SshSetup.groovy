@@ -36,7 +36,7 @@ class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
         Integer suggestedManagementPort = entity.getConfig(JBoss7Server.MANAGEMENT_PORT.configKey)
         String suggestedInstallDir = entity.getConfig(JBoss7Server.SUGGESTED_INSTALL_DIR)
         String suggestedRunDir = entity.getConfig(JBoss7Server.SUGGESTED_RUN_DIR)
-        Integer suggestedJmxPort = entity.getConfig(JBoss7Server.SUGGESTED_JMX_PORT)
+        Integer suggestedJmxPort = entity.getConfig(JBoss7Server.JMX_PORT.configKey)
         Map<String,Map<String,String>> propFilesToGenerate = entity.getConfig(JBoss7Server.PROPERTY_FILES) ?: [:]
         
         // Defaults if suggestions not given
@@ -45,7 +45,7 @@ class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
         String deployDir = "$runDir/$DEPLOY_SUBDIR"
         int httpPort = machine.obtainPort(toDesiredPortRange(suggestedHttpPort, DEFAULT_FIRST_HTTP_PORT))
         int managementPort = machine.obtainPort(toDesiredPortRange(suggestedManagementPort, DEFAULT_FIRST_MANAGEMENT_PORT))
-        int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort, DEFAULT_FIRST_JMX_PORT))
+        int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort))
         
         // Setup instance
         JBoss7SshSetup result = new JBoss7SshSetup(entity, machine)
@@ -55,8 +55,8 @@ class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
         result.setInstallDir installDir
         result.setDeployDir deployDir
         result.setRunDir runDir
-        result.setPropertyFiles propFilesToGenerate
-        result.jmxEnabled = false
+        result.setEnvironmentPropertyFiles propFilesToGenerate
+        result.setJmxEnabled false
         
         return result
     }

@@ -24,13 +24,13 @@ public class ActiveMQSetup extends SshBasedJavaAppSetup {
         Integer suggestedVersion = entity.getConfig(ActiveMQBroker.SUGGESTED_VERSION)
         String suggestedInstallDir = entity.getConfig(ActiveMQBroker.SUGGESTED_INSTALL_DIR)
         String suggestedRunDir = entity.getConfig(ActiveMQBroker.SUGGESTED_RUN_DIR)
-        Integer suggestedJmxPort = entity.getConfig(ActiveMQBroker.SUGGESTED_JMX_PORT)
+        Integer suggestedJmxPort = entity.getConfig(ActiveMQBroker.JMX_PORT.configKey)
         Integer suggestedOpenWirePort = entity.getConfig(ActiveMQBroker.OPEN_WIRE_PORT.configKey)
 
         String version = suggestedVersion ?: DEFAULT_VERSION
         String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"${version}"+"/"+"apache-activemq-${version}")
         String runDir = suggestedRunDir ?: (BROOKLYN_HOME_DIR+"/"+"${entity.application.id}"+"/"+"activemq-${entity.id}")
-        int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort, DEFAULT_FIRST_JMX_PORT))
+        int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort))
         int openWirePort = machine.obtainPort(toDesiredPortRange(suggestedOpenWirePort, ActiveMQBroker.OPEN_WIRE_PORT.configKey.defaultValue))
 
         ActiveMQSetup result = new ActiveMQSetup(entity, machine)

@@ -31,7 +31,7 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
         Integer suggestedTomcatVersion = entity.getConfig(TomcatServer.SUGGESTED_VERSION)
         String suggestedInstallDir = entity.getConfig(TomcatServer.SUGGESTED_INSTALL_DIR)
         String suggestedRunDir = entity.getConfig(TomcatServer.SUGGESTED_RUN_DIR)
-        Integer suggestedJmxPort = entity.getConfig(TomcatServer.SUGGESTED_JMX_PORT)
+        Integer suggestedJmxPort = entity.getConfig(TomcatServer.JMX_PORT.configKey)
         Integer suggestedShutdownPort = entity.getConfig(TomcatServer.SUGGESTED_SHUTDOWN_PORT)
         Integer suggestedHttpPort = entity.getConfig(TomcatServer.HTTP_PORT.configKey)
         Map<String,Map<String,String>> propFilesToGenerate = entity.getConfig(TomcatServer.PROPERTY_FILES) ?: [:]
@@ -40,7 +40,7 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
         String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"${version}"+"/"+"apache-tomcat-${version}")
         String runDir = suggestedRunDir ?: (BROOKLYN_HOME_DIR+"/"+"${entity.application.id}"+"/"+"tomcat-${entity.id}")
         String deployDir = runDir+"/"+DEFAULT_DEPLOY_SUBDIR
-        int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort, DEFAULT_FIRST_JMX_PORT))
+        int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort))
         int httpPort = machine.obtainPort(toDesiredPortRange(suggestedHttpPort, DEFAULT_FIRST_HTTP_PORT))
         int shutdownPort = machine.obtainPort(toDesiredPortRange(suggestedShutdownPort, DEFAULT_FIRST_SHUTDOWN_PORT))
         
@@ -52,7 +52,7 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
         result.setInstallDir(installDir)
         result.setDeployDir(deployDir)
         result.setRunDir(runDir)
-        result.setPropertyFiles(propFilesToGenerate)
+        result.setEnvironmentPropertyFiles(propFilesToGenerate)
         return result
     }
     

@@ -19,7 +19,6 @@ import org.slf4j.Logger
  * service.
  */
 class JmxService {
-
     private static final Logger logger = LoggerFactory.getLogger(JmxService.class)
 
     private MBeanServer server
@@ -32,7 +31,7 @@ class JmxService {
         jmxHost = "localhost";
         jmxPort = 28000 + Math.floor(new Random().nextDouble() * 1000);
 
-        JMXServiceURL address = new JMXServiceURL("service:jmx:rmi://localhost/jndi/rmi://localhost:" + jmxPort + "/jmxrmi");
+        JMXServiceURL address = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://localhost:" + jmxPort + "/jmxrmi");
         connectorServer = JMXConnectorServerFactory.newJMXConnectorServer(address, null, null)
         server = MBeanServerFactory.createMBeanServer();
         ObjectName cntorServerName = ObjectName.getInstance("connectors:protocol=rmi");

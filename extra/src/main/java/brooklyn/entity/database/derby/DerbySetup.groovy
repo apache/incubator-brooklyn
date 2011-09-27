@@ -24,12 +24,12 @@ public class DerbySetup extends SshBasedJavaAppSetup {
         Integer suggestedVersion = entity.getConfig(DerbyDatabase.SUGGESTED_VERSION)
         String suggestedInstallDir = entity.getConfig(DerbyDatabase.SUGGESTED_INSTALL_DIR)
         String suggestedRunDir = entity.getConfig(DerbyDatabase.SUGGESTED_RUN_DIR)
-        Integer suggestedJmxPort = entity.getConfig(DerbyDatabase.SUGGESTED_JMX_PORT)
+        Integer suggestedJmxPort = entity.getConfig(DerbyDatabase.JMX_PORT.configKey)
 
         String version = suggestedVersion ?: DEFAULT_VERSION
         String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"${version}"+"/"+"derby-broker-${version}")
         String runDir = suggestedRunDir ?: (BROOKLYN_HOME_DIR+"/"+"${entity.application.id}"+"/"+"derby-${entity.id}")
-        int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort, DEFAULT_FIRST_JMX_PORT))
+        int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort))
         int rmiPort = machine.obtainPort(toDesiredPortRange(jmxPort - 100))
 
         DerbySetup result = new DerbySetup(entity, machine)

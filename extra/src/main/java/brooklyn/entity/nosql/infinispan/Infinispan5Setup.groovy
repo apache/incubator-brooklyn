@@ -24,7 +24,7 @@ public class Infinispan5Setup extends SshBasedJavaAppSetup {
         Integer suggestedInfinispanVersion = entity.getConfig(Infinispan5Server.SUGGESTED_VERSION)
         String suggestedInstallDir = entity.getConfig(Infinispan5Server.SUGGESTED_INSTALL_DIR)
         String suggestedRunDir = entity.getConfig(Infinispan5Server.SUGGESTED_RUN_DIR)
-//        Integer suggestedJmxPort = entity.getConfig(Infinispan5Server.SUGGESTED_JMX_PORT)
+//        Integer suggestedJmxPort = entity.getConfig(Infinispan5Server.JMX_PORT.configKey)
         
         String version = suggestedInfinispanVersion ?: DEFAULT_VERSION
         String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"${version}"+"/"+"infinispan-${version}")

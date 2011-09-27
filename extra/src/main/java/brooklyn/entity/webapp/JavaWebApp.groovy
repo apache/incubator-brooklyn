@@ -135,12 +135,4 @@ public abstract class JavaWebApp extends JavaApp {
         setAttribute(REQUESTS_PER_SECOND, 0)
         setAttribute(AVG_REQUESTS_PER_SECOND, 0)
     }
-    
-    public void deploy(String file) {
-        deploy(new File(file))
-    }
-    
-    public void deploy(File file) {
-        setup.deploy(file)
-    }
 }

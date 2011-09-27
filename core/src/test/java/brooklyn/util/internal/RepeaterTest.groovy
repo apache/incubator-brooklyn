@@ -111,7 +111,7 @@ public class RepeaterTest {
     public void runRespectsTimeLimitAndReturnsFalseIfReached() {
         final int DEADLINE = 200;
         Repeater repeater = new Repeater("runRespectsTimeLimitAndReturnsFalseIfReached")
-            .repeat { }
+            .repeat()
             .every(10 * MILLISECONDS)
             .until { false }
             .limitTimeTo(DEADLINE * MILLISECONDS);
@@ -123,8 +123,8 @@ public class RepeaterTest {
         assertFalse result;
 
         long difference = end.timeInMillis - start.timeInMillis
-        assertTrue difference > DEADLINE*0.9
-        assertTrue difference < DEADLINE*1.1
+        assertTrue difference > DEADLINE*0.8
+        assertTrue difference < DEADLINE*1.2
     }
 
     @Test(expectedExceptions = [ IllegalStateException.class ])

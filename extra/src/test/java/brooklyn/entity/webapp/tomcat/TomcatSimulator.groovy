@@ -49,6 +49,7 @@ public class TomcatSimulator {
         entity.setAttribute(TomcatServer.HTTP_PORT, httpPort)
         entity.setAttribute(TomcatServer.HOSTNAME, jmxService.jmxHost)
         entity.setAttribute(TomcatServer.JMX_PORT, jmxService.jmxPort)
+        entity.setAttribute(TomcatServer.JMX_CONTEXT, "jmxrmi")
 
         final ServerSocket server
         try {

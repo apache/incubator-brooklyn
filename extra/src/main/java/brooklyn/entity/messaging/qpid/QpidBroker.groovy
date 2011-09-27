@@ -49,7 +49,8 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> {
     }
 
     public void setBrokerUrl() {
-        setAttribute(BROKER_URL, String.format("tcp://%s:%d/", getAttribute(HOSTNAME), getAttribute(AMQP_PORT)))
+        String urlFormat = "amqp://guest:guest@monterey/%s?brokerlist='tcp://%s:%d'"
+        setAttribute(BROKER_URL, String.format(urlFormat, getAttribute(VIRTUAL_HOST_NAME), getAttribute(HOSTNAME), getAttribute(AMQP_PORT)))
     }
 
     public QpidQueue createQueue(Map properties) {

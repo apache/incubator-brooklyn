@@ -1,5 +1,6 @@
 package brooklyn.util
 
+import java.io.File;
 import java.util.List
 import java.util.Map
 
@@ -35,6 +36,7 @@ public abstract class SshBasedAppSetup {
     protected String version
     protected String installDir
     protected String runDir
+    protected String deployDir
 
     public SshBasedAppSetup(EntityLocal entity, SshMachineLocation machine) {
         this.entity = entity
@@ -47,6 +49,10 @@ public abstract class SshBasedAppSetup {
 
     public void setRunDir(String val) {
         runDir = val
+    }
+
+    public void setDeployDir(String val) {
+        deployDir = val
     }
 
     public void setVersion(String val) {
@@ -62,7 +68,7 @@ public abstract class SshBasedAppSetup {
     /**
      * Add generic commands to an application specific installation script.
      *
-     * The script will check for a {@code INSTALL_COMPLETION_DATE} file, and
+     * The script will check for a {@code BROOKLYN} file, and
      * skip the installation if it exists, otherwise it executes the commands
      * to install the applications and creates the file with the current
      * date and time.
@@ -79,7 +85,8 @@ public abstract class SshBasedAppSetup {
 			"mkdir -p \$INSTALL",
 			"cd \$INSTALL/..",
         ]
-        lines.each { line -> script += "${line}" }
+        script << lines
+//        lines.each { line -> script += "${line}" }
         script += "date > \$INSTALL/../BROOKLYN"
         return script
     }
@@ -414,5 +421,58 @@ public abstract class SshBasedAppSetup {
     protected int obtainPort(int suggested, boolean canIncrement) {
         if (suggested < 0) throw new IllegalArgumentException("Port $suggested must be >= 0")
         obtainPort(suggested, suggested, canIncrement)
+    }
+
+    /**
+     * Copy a file to the {@link #runDir} on the server.
+     *
+     * @return The location of the file on the server
+     */
+    public File copy(File file) {
+        File target = new File(runDir, file.name)
+        log.info "Deploying file {} to {} on {}", file.name, target, machine
+        try {
+            machine.copyTo file, target
+        } catch (IOException ioe) {
+            log.error "Failed to copy {} to {}: {}", file.name, machine, ioe.message
+            throw new IllegalStateException("Failed to copy ${file.name} to ${machine}", ioe)
+        }
+        return target
+    }
+
+    /**
+     * Copies a file to the server and invokes {@link #getDeployScript(String)}
+     * for further processing.
+     */
+    public void deploy(File local, File remote=null) {
+        File server = copy(local)
+        List<String> deployScript = getDeployScript(server, remote)
+        if (deployScript && !deployScript.isEmpty()) {
+            int result = machine.run(out:System.out, deployScript)
+            if (result != 0) {
+                log.error "Failed to deploy {} on {}, result {}", local.name, machine, result
+                throw new IllegalStateException("Failed to deploy ${local.name} on ${machine}")
+            } else {
+                log.debug "Deployed {} on {}", local.name, machine
+            }
+        }
+    }
+
+    /**
+     * Deploy the file found at the specified location on the server.
+     *
+     * Checks that the file exists, and fails if not accessible, otherwise copies it
+     * to the configured deploy directory. This is required because exit status from
+     * the Jsch scp command is not reliable.
+     */
+    public List<String> getDeployScript(File server, File target=null) {
+        if (target == null) {
+            target = new File(deployDir, server.name)
+        }
+        List<String> script = [
+            "test -f ${server} || exit 1",
+            "cp ${server} ${target}",
+        ]
+        return script
     }
 }
