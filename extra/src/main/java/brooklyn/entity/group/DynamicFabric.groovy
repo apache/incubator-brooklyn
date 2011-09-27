@@ -69,10 +69,9 @@ public class DynamicFabric extends AbstractEntity implements Startable {
         }
 
         Task invoke = new ParallelTask(tasks)
-        executionContext.submit(invoke)
-
         if (invoke) {
             try {
+		        executionContext.submit(invoke)
                 invoke.get()
             } catch (ExecutionException ee) {
                 throw ee.cause
@@ -85,7 +84,7 @@ public class DynamicFabric extends AbstractEntity implements Startable {
     public void stop() {
         Task invoke = invokeEffectorList(ownedChildren, Startable.STOP)
         try {
-            invoke.get()
+	        invoke?.get()
         } catch (ExecutionException ee) {
             throw ee.cause
         }

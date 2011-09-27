@@ -27,7 +27,7 @@ public abstract class JavaApp extends AbstractService {
     public static final ConfiguredAttributeSensor<Integer> JMX_PORT = Attributes.JMX_PORT
     public static final ConfiguredAttributeSensor<Integer> RMI_PORT = Attributes.RMI_PORT
     public static final ConfiguredAttributeSensor<String> JMX_CONTEXT = Attributes.JMX_CONTEXT
-    public static final BasicConfigKey<Map<String, String>> JAVA_OPTIONS = [ Map, "java.options", "Java options"]
+    public static final BasicConfigKey<Map<String, String>> JAVA_OPTIONS = [ Map, "java.options", "Java options", [:] ]
     public static final MapConfigKey<String> PROPERTY_FILES = [ String, "java.properties.environment", "Property files to be generated, referenced by an environment variable" ]
     public static final MapConfigKey<String> NAMED_PROPERTY_FILES = [ String, "java.properties.named", "Property files to be generated, referenced by name relative to runDir" ]
 
@@ -97,10 +97,5 @@ public abstract class JavaApp extends AbstractService {
     @Override
     public Collection<String> toStringFieldsToInclude() {
         return super.toStringFieldsToInclude() + ['jmxPort']
-    }
-
-    @Override
-    protected Map getJavaConfigOptions() {
-        return getConfig(JAVA_OPTIONS)
     }
 }

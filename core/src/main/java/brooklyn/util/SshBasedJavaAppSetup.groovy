@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.EntityLocal
+import brooklyn.entity.basic.JavaApp
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.internal.LanguageUtils
 
@@ -120,7 +121,9 @@ public abstract class SshBasedJavaAppSetup extends SshBasedAppSetup {
 
     @Override
     public Map<String, String> getRunEnvironment() {
-        return envVariablesToSet
+        return envVariablesToSet + [
+            "JAVA_OPTS" : toJavaDefinesString(getJvmStartupProperties()),
+        ]
     }
 
     /**
@@ -135,7 +138,7 @@ public abstract class SshBasedJavaAppSetup extends SshBasedAppSetup {
      * @see #toJavaDefinesString(Map)
      */
     protected Map getJvmStartupProperties() {
-        getJavaConfigOptions() + (jmxEnabled ? getJmxConfigOptions() : [:])
+        entity.getConfig(JavaApp.JAVA_OPTIONS) + getJavaConfigOptions() + (jmxEnabled ? getJmxConfigOptions() : [:])
     }
 
     /**
