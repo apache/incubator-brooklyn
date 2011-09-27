@@ -25,7 +25,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         Integer suggestedJmxPort = entity.getConfig(JBoss6Server.JMX_PORT.configKey)
         Integer portIncrement = entity.getConfig(JBoss6Server.PORT_INCREMENT.configKey)
         String serverProfile = entity.getConfig(JBoss6Server.SERVER_PROFILE.configKey)
-        String clusterName = entity.getConfig(JBoss6Server.CLUSTER_NAME)
+        String clusterName = entity.getConfig(JBoss6Server.CLUSTER_NAME.configKey)
         Map<String,Map<String,String>> propFilesToGenerate = entity.getConfig(JBoss7Server.PROPERTY_FILES) ?: [:]
         
         String version = suggestedJbossVersion ?: DEFAULT_VERSION
