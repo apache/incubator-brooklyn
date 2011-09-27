@@ -85,8 +85,7 @@ public abstract class SshBasedAppSetup {
 			"mkdir -p \$INSTALL",
 			"cd \$INSTALL/..",
         ]
-        script << lines
-//        lines.each { line -> script += "${line}" }
+        lines.each { line -> script += "${line}" }
         script += "date > \$INSTALL/../BROOKLYN"
         return script
     }
