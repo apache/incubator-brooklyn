@@ -62,7 +62,7 @@ public abstract class JavaApp extends AbstractService {
             jmxAdapter = new JmxSensorAdapter(this, 60*1000)
             jmxAdapter.connect();
             waitForJmx()
-            setAttribute(JMX_URL, jmxAdapter.jmxUrl)
+            setAttribute(JMX_URL, jmxAdapter.url)
             addJmxSensors()
         }
     }
