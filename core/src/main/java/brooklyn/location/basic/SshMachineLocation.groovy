@@ -79,7 +79,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         args << config
         SshJschTool ssh = new SshJschTool(args)
         ssh.connect()
-        int result = ssh.copyToServer props, src, destination
+        int result = ssh.copyToServer props, src, destination.path
         ssh.disconnect()
         result
     }
