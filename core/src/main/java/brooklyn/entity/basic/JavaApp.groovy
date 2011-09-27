@@ -68,8 +68,8 @@ public abstract class JavaApp extends AbstractService {
     protected Collection<Integer> getRequiredOpenPorts() {
         Collection<Integer> result = super.getRequiredOpenPorts()
         result.add(DEFAULT_JMX_PORT)
-        result.add(getConfig(JMX_PORT))
-        result.add(getConfig(RMI_PORT))
+        result.add(getConfig(JMX_PORT.configKey))
+        result.add(getConfig(RMI_PORT.configKey))
         return result
     }
 
