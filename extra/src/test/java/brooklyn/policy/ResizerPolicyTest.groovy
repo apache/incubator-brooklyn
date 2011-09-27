@@ -220,7 +220,7 @@ class ResizerPolicyTest {
                 properties.httpPort = port++
                 def tc = new TomcatServer(properties)
                 tc.pollForHttpStatus = false
-                tc.setConfig(TomcatServer.SUGGESTED_JMX_PORT, jmxP++)
+                tc.setConfig(TomcatServer.JMX_PORT, jmxP++)
                 tc.setConfig(TomcatServer.SUGGESTED_SHUTDOWN_PORT, shutdownP++)
                 tc
             },

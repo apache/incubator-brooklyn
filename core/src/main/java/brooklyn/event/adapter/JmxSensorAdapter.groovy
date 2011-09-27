@@ -63,12 +63,12 @@ public class JmxSensorAdapter {
         host = entity.getAttribute(Attributes.HOSTNAME);
         rmiRegistryPort = entity.getAttribute(Attributes.JMX_PORT);
         rmiServerPort = entity.getAttribute(Attributes.RMI_PORT);
-        jmxCtx = entity.getAttribute(Attributes.JMX_CONTEXT);
+        context = entity.getAttribute(Attributes.JMX_CONTEXT);
  
         if (rmiServerPort) {
-	        url = String.format(RMI_JMX_URL_FORMAT, host, rmiServerPort, host, rmiRegistryPort, jmxCtx)
+	        url = String.format(RMI_JMX_URL_FORMAT, host, rmiServerPort, host, rmiRegistryPort, context)
         } else {
-	        url = String.format(JMX_URL_FORMAT, host, rmiRegistryPort, jmxCtx)
+	        url = String.format(JMX_URL_FORMAT, host, rmiRegistryPort, context)
         }
 
         if (!connect(timeout)) throw new IllegalStateException("Could not connect to JMX service on ${host}:${rmiRegistryPort}")
