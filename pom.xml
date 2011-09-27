@@ -12,6 +12,12 @@
         <developerConnection>scm:git:git@github.com:cloudsoft/brooklyn.git</developerConnection>
         <url>http://github.com/cloudsoft/brooklyn</url>
     </scm>
+    <distributionManagement>
+        <repository>
+            <id>ssh-repository</id>
+            <url>scpexe://jenkins@releng3.cloudsoftcorp.com/home/jenkins/maven</url>
+        </repository>
+    </distributionManagement>
 
     <build>
         <plugins>
@@ -24,6 +30,14 @@
                 </configuration>
             </plugin>
         </plugins>
+
+        <extensions>
+            <extension>
+                <groupId>org.apache.maven.wagon</groupId>
+                <artifactId>wagon-ssh-external</artifactId>
+                <version>1.0</version>
+            </extension>
+        </extensions>
     </build>
 
     <modules>
