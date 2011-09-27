@@ -7,6 +7,11 @@
     <packaging>pom</packaging>
     <version>0.0.21-SNAPSHOT</version>
     <name>Brooklyn Top Level Project</name>
+    <scm>
+        <connection>scm:git:git://github.com/cloudsoft/brooklyn.git</connection>
+        <developerConnection>scm:git:git@github.com:cloudsoft/brooklyn.git</developerConnection>
+        <url>http://github.com/cloudsoft/brooklyn</url>
+    </scm>
 
     <modules>
         <module>parent/root</module>
