@@ -186,10 +186,10 @@ public class JmxSensorAdapter {
         checkConnected()
         
         ObjectInstance bean = findMBean objectName
-        String[] signature = new String[arguments.size()]
-        arguments.eachWithIndex { it, int index ->
-            signature[index] =
-                (PRIMITIVES.keySet().contains(it.class.simpleName) ? PRIMITIVES.get(it.class.simpleName) : it.class.name)
+        String[] signature = new String[arguments.length]
+        arguments.eachWithIndex { arg, int index ->
+            Class clazz = arg.getClass()
+            signature[index] = (PRIMITIVES.keySet().contains(clazz.simpleName) ? PRIMITIVES.get(clazz.simpleName) : clazz.name)
         }
         def result = mbsc.invoke(objectName, method, arguments, signature)
         log.trace "got result {} for jmx operation {}.{}", result, objectName.canonicalName, method
