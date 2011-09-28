@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>brooklyn</groupId>
     <artifactId>brooklyn-parent-root</artifactId>
     <packaging>pom</packaging>
-    <version>0.0.21-SNAPSHOT</version>
+    <version>0.1.0-M1-RC0-SNAPSHOT</version>
     <name>Brooklyn Parent Root</name>
 
     <description>
@@ -64,7 +63,7 @@
         <jclouds.version>1.1.1</jclouds.version>
         <plantuml.version>6121</plantuml.version>
 
-        <includedTestGroups></includedTestGroups>
+        <includedTestGroups />
         <excludedTestGroups>Integration,Live,WIP</excludedTestGroups>
     </properties>
 
@@ -290,7 +289,7 @@
                                         </goals>
                                     </pluginExecutionFilter>
                                     <action>
-                                        <ignore></ignore>
+                                        <ignore />
                                     </action>
                                 </pluginExecution>
                                 <pluginExecution>
@@ -303,7 +302,7 @@
                                         </goals>
                                     </pluginExecutionFilter>
                                     <action>
-                                        <ignore></ignore>
+                                        <ignore />
                                     </action>
                                 </pluginExecution>
                                 <pluginExecution>
@@ -319,7 +318,7 @@
                                         </goals>
                                     </pluginExecutionFilter>
                                     <action>
-                                        <ignore></ignore>
+                                        <ignore />
                                     </action>
                                 </pluginExecution>
                                 <pluginExecution>
@@ -332,7 +331,7 @@
                                         </goals>
                                     </pluginExecutionFilter>
                                     <action>
-                                        <ignore></ignore>
+                                        <ignore />
                                     </action>
                                 </pluginExecution>
                                 <pluginExecution>
@@ -345,7 +344,7 @@
                                         </goals>
                                     </pluginExecutionFilter>
                                     <action>
-                                        <ignore></ignore>
+                                        <ignore />
                                     </action>
                                 </pluginExecution>
                             </pluginExecutions>
@@ -515,9 +514,8 @@
                                 <phase>package</phase>
                                 <configuration>
                                     <target>
-                                        <taskdef resource="net/sf/antcontrib/antcontrib.properties"
-                                                 classpathref="maven.plugin.classpath"/>
-                                        <taskdef name="plantuml" classname="net.sourceforge.plantuml.ant.PlantUmlTask" classpathref="maven.plugin.classpath"/>
+                                        <taskdef resource="net/sf/antcontrib/antcontrib.properties" classpathref="maven.plugin.classpath" />
+                                        <taskdef name="plantuml" classname="net.sourceforge.plantuml.ant.PlantUmlTask" classpathref="maven.plugin.classpath" />
                                         <if>
 											<available file="${basedir}/src/main/java" type="dir" />
 											<then>
@@ -586,21 +584,12 @@
                                 <phase>test</phase>
                                 <configuration>
                                     <target unless="${skipTests}">
-                                        <taskdef resource="testngtasks" classpathref="maven.plugin.classpath"/>
-                                        <testng listeners="brooklyn.test.StatusListener"
-                                                groups="${includedTestGroups}" excludedGroups="${excludedTestGroups}"
-                                                haltonfailure="true" enableAssert="true" testNames="${test}"
-                                                classpathref="maven.test.classpath" outputDir="target/testng">
-                                            <classfileset dir="target/test-classes" includes="**/*Test.class"/>
-                                            <sysproperty
-                                                    key="java.util.logging.config.file"
-                                                    value="src/test/resources/logging.properties"/>
-                                            <sysproperty
-                                                    key="net.sourceforge.cobertura.datafile"
-                                                    value="${project.build.directory}/cobertura/cobertura.ser"/>
-                                            <sysproperty
-                                                    key="cobertura.user.java.nio"
-                                                    value="false"/>
+                                        <taskdef resource="testngtasks" classpathref="maven.plugin.classpath" />
+                                        <testng listeners="brooklyn.test.StatusListener" groups="${includedTestGroups}" excludedGroups="${excludedTestGroups}" haltonfailure="true" enableAssert="true" testNames="${test}" classpathref="maven.test.classpath" outputDir="target/testng">
+                                            <classfileset dir="target/test-classes" includes="**/*Test.class" />
+                                            <sysproperty key="java.util.logging.config.file" value="src/test/resources/logging.properties" />
+                                            <sysproperty key="net.sourceforge.cobertura.datafile" value="${project.build.directory}/cobertura/cobertura.ser" />
+                                            <sysproperty key="cobertura.user.java.nio" value="false" />
 
                                         </testng>
                                     </target>
@@ -806,27 +795,24 @@
                                 <phase>process-test-classes</phase>
                                 <configuration>
                                     <target>
-                                        <taskdef resource="net/sf/antcontrib/antcontrib.properties"
-                                                 classpathref="maven.plugin.classpath"/>
-                                        <taskdef resource="tasks.properties" classpathref="maven.plugin.classpath"/>
+                                        <taskdef resource="net/sf/antcontrib/antcontrib.properties" classpathref="maven.plugin.classpath" />
+                                        <taskdef resource="tasks.properties" classpathref="maven.plugin.classpath" />
                                         <if>
-                                            <available property="gogocobertura" file="target/test-classes"/>
+                                            <available property="gogocobertura" file="target/test-classes" />
                                             <then>
-                                                <echo message="INSTRUMENTING CLASSES FOR COBERTURA"/>
+                                                <echo message="INSTRUMENTING CLASSES FOR COBERTURA" />
                                                 <!-- Ensure any and all bits of our project are copied in first -->
                                                 <copy todir="target/cobertura/coverage-classes">
-                                                    <fileset erroronmissingdir="false" dir="target/classes"/>
+                                                    <fileset erroronmissingdir="false" dir="target/classes" />
                                                 </copy>
-                                                <cobertura-instrument datafile="target/cobertura/cobertura.ser"
-                                                                      todir="target/test-classes">
+                                                <cobertura-instrument datafile="target/cobertura/cobertura.ser" todir="target/test-classes">
                                                     <fileset erroronmissingdir="false" dir="target/classes">
-                                                        <include name="brooklyn/**/*.class"/>
-                                                        <exclude name="brooklyn/**/*Test.class"/>
+                                                        <include name="brooklyn/**/*.class" />
+                                                        <exclude name="brooklyn/**/*Test.class" />
                                                     </fileset>
-                                                    <fileset erroronmissingdir="false"
-                                                             dir="target/cobertura/dependency-classes">
-                                                        <include name="brooklyn/**/*.class"/>
-                                                        <exclude name="brooklyn/**/*Test.class"/>
+                                                    <fileset erroronmissingdir="false" dir="target/cobertura/dependency-classes">
+                                                        <include name="brooklyn/**/*.class" />
+                                                        <exclude name="brooklyn/**/*Test.class" />
                                                     </fileset>
                                                 </cobertura-instrument>
                                             </then>
@@ -842,20 +828,15 @@
                                 <phase>post-integration-test</phase>
                                 <configuration>
                                     <target>
-                                        <taskdef resource="net/sf/antcontrib/antcontrib.properties"
-                                                 classpathref="maven.plugin.classpath"/>
-                                        <taskdef resource="tasks.properties" classpathref="maven.plugin.classpath"/>
+                                        <taskdef resource="net/sf/antcontrib/antcontrib.properties" classpathref="maven.plugin.classpath" />
+                                        <taskdef resource="tasks.properties" classpathref="maven.plugin.classpath" />
                                         <if>
-                                            <available property="gogocobertura"
-                                                       file="target/cobertura/cobertura.ser"/>
+                                            <available property="gogocobertura" file="target/cobertura/cobertura.ser" />
                                             <then>
-                                                <echo message="GENERATING COBERTURA COVERAGE REPORT"/>
-                                                <cobertura-report format="xml"
-                                                                  destdir="target/site/cobertura"
-                                                                  datafile="target/cobertura/cobertura.ser">
-                                                    <fileset erroronmissingdir="false" dir="src/java"/>
-                                                    <fileset erroronmissingdir="false"
-                                                             dir="target/cobertura/dependency-sources"/>
+                                                <echo message="GENERATING COBERTURA COVERAGE REPORT" />
+                                                <cobertura-report format="xml" destdir="target/site/cobertura" datafile="target/cobertura/cobertura.ser">
+                                                    <fileset erroronmissingdir="false" dir="src/java" />
+                                                    <fileset erroronmissingdir="false" dir="target/cobertura/dependency-sources" />
                                                 </cobertura-report>
                                             </then>
                                         </if>
