@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.EntityLocal
-import brooklyn.event.AttributeSensor
 import brooklyn.event.basic.BasicNotificationSensor
 
 import com.google.common.base.Preconditions
@@ -173,6 +172,11 @@ public class JmxSensorAdapter {
         } else {
             return null
         }
+    }
+
+    /** @see #operation(ObjectName, String, Object...) */
+    public Object operation(String objectName, String method, Object...arguments) {
+        return operation(new ObjectName(objectName), method, arguments)
     }
 
     /**
