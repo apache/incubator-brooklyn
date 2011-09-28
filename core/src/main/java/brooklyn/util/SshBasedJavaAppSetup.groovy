@@ -54,7 +54,6 @@ public abstract class SshBasedJavaAppSetup extends SshBasedAppSetup {
         entity.setAttribute(Attributes.JMX_PORT, jmxPort)
         entity.setAttribute(Attributes.JMX_USER)
         entity.setAttribute(Attributes.JMX_PASSWORD)
-        entity.setAttribute(Attributes.RMI_PORT)
         entity.setAttribute(Attributes.JMX_CONTEXT)
     }
 
