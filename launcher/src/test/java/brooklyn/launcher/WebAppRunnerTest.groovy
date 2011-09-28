@@ -12,6 +12,8 @@ import brooklyn.util.internal.TimeExtras
 public class WebAppRunnerTest {
     static { TimeExtras.init() }
 
+    private static final int TIMEOUT_MS = 5000;
+    
     /**
      * This test requires the web-console.war to work.
      */
@@ -22,7 +24,7 @@ public class WebAppRunnerTest {
         
         launcher.start();
         
-        executeUntilSucceeds(timeout:500*MILLISECONDS, maxAttempts:50) {
+        executeUntilSucceeds(timeout:TIMEOUT_MS, maxAttempts:50) {
             assertNotNull(new URL("http://localhost:8090/").getContent())
         }
 
