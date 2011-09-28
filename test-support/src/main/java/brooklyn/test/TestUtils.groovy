@@ -96,7 +96,12 @@ public class TestUtils {
         boolean abortOnException = flags.abortOnException ?: false
         boolean abortOnError = flags.abortOnError ?: false
         boolean useGroovyTruth = flags.useGroovyTruth ?: false
-        TimeDuration timeout = flags.timeout ?: new TimeDuration(0, 0, 0, 30, 0)
+        TimeDuration timeout
+        if (flags.timeout instanceof Number) {
+            timeout = new TimeDuration(0, 0, 0, 0, flags.timeout)
+        } else {
+            timeout =  flags.timeout ?: new TimeDuration(0, 0, 0, 30, 0)
+        }
         TimeDuration period = flags.period ?: new TimeDuration(0, 0, 0, 5, 0)
         int maxAttempts = flags.maxAttempts ?: Integer.MAX_VALUE
         try {
