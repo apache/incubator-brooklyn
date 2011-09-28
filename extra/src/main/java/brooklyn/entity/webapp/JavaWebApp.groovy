@@ -1,13 +1,15 @@
 package brooklyn.entity.webapp
 
+import static java.util.concurrent.TimeUnit.*
+
 import java.util.Collection
 import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.enricher.RollingTimeWindowMeanEnricher;
-import brooklyn.enricher.TimeWeightedDeltaEnricher;
+import brooklyn.enricher.RollingTimeWindowMeanEnricher
+import brooklyn.enricher.TimeWeightedDeltaEnricher
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.JavaApp
@@ -18,14 +20,16 @@ import brooklyn.event.adapter.HttpSensorAdapter
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.ConfiguredAttributeSensor
-import brooklyn.location.Location
 import brooklyn.util.internal.Repeater
+import brooklyn.util.internal.TimeExtras
 
 /**
 * An {@link Entity} representing a single java web application server instance.
 */
 public abstract class JavaWebApp extends JavaApp {
     public static final Logger log = LoggerFactory.getLogger(JavaWebApp.class)
+
+    static { TimeExtras.init() }
 
     public static final BasicConfigKey<String> WAR = [ String, "war", "Path of WAR file to deploy" ]
     public static final BasicConfigKey<List<String>> RESOURCES = [ List, "resources", "List of names of resources to copy to run directory" ]
@@ -69,11 +73,11 @@ public abstract class JavaWebApp extends JavaApp {
     protected void waitForHttpPort() {
         boolean status = new Repeater("Wait for valid HTTP status (200 or 404)")
             .repeat()
-            .every(1, TimeUnit.SECONDS)
-            .until({
+            .every(1 * SECONDS)
+            .until {
                 Integer response = getAttribute(HTTP_STATUS)
                 return (response == 200 || response == 404)
-             })
+             }
             .limitIterationsTo(30)
             .run()
 
@@ -82,6 +86,7 @@ public abstract class JavaWebApp extends JavaApp {
         }
     }
 
+    @Override
     protected Collection<Integer> getRequiredOpenPorts() {
         Collection<Integer> result = super.getRequiredOpenPorts()
         if (getConfig(HTTP_PORT.configKey)) result.add(getConfig(HTTP_PORT.configKey))
@@ -129,13 +134,5 @@ public abstract class JavaWebApp extends JavaApp {
         // TODO might not be enough, as policy is still executing and has a record of historic vals; should remove policies
         setAttribute(REQUESTS_PER_SECOND, 0)
         setAttribute(AVG_REQUESTS_PER_SECOND, 0)
-    }
-    
-    public void deploy(String file) {
-        deploy(new File(file))
-    }
-    
-    public void deploy(File file) {
-        setup.deploy(file)
     }
 }

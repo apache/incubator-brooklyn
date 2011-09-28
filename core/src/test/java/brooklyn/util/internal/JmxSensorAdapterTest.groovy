@@ -45,6 +45,7 @@ public class JmxSensorAdapterTest {
         AbstractEntity entity = new LocallyManagedEntity()
         entity.setAttribute(Attributes.HOSTNAME, jmxService.jmxHost)
         entity.setAttribute(Attributes.JMX_PORT, jmxService.jmxPort)
+        entity.setAttribute(Attributes.JMX_CONTEXT)
 
         // Create a JMX adapter, and register a sensor for the JMX attribute
         JmxSensorAdapter jmxAdapter = new JmxSensorAdapter(entity)
@@ -61,7 +62,6 @@ public class JmxSensorAdapterTest {
 
     @Test
     public void tabularDataProviderReturnsMap() {
-
         // Create the CompositeType and TabularData
         CompositeType compositeType = new CompositeType(
                 "typeName",
@@ -92,6 +92,8 @@ public class JmxSensorAdapterTest {
         AbstractEntity entity = new LocallyManagedEntity()
         entity.setAttribute(Attributes.HOSTNAME, jmxService.jmxHost)
         entity.setAttribute(Attributes.JMX_PORT, jmxService.jmxPort)
+        entity.setAttribute(Attributes.RMI_PORT)
+        entity.setAttribute(Attributes.JMX_CONTEXT)
 
         // Create a JMX adapter, and register a sensor for the JMX attribute
         JmxSensorAdapter jmxAdapter = new JmxSensorAdapter(entity)

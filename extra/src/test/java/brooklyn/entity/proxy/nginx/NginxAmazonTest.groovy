@@ -103,7 +103,7 @@ public class NginxAmazonTest {
 
         nginx.start([ loc ])
         
-        executeUntilSucceeds([:], {
+        executeUntilSucceeds {
             // Nginx URL is available
             MachineLocation machine = nginx.locations.find { true }
             String url = "http://" + machine.address.hostName + ":" + nginx.getAttribute(NginxController.HTTP_PORT) + "/swf-booking-mvc"
@@ -113,7 +113,7 @@ public class NginxAmazonTest {
             cluster.members.each {
                 assertTrue urlRespondsWithStatusCode200(it.getAttribute(TomcatServer.ROOT_URL) + "swf-booking-mvc")
             }
-        })
+        }
 
 		nginx.stop()
     }

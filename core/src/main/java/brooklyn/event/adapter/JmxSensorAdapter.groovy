@@ -30,11 +30,13 @@ import javax.management.openmbean.CompositeData
  */
 public class JmxSensorAdapter {
     private static final Logger log = LoggerFactory.getLogger(JmxSensorAdapter.class);
-    
+
+    public static final String JMX_URL_FORMAT = "service:jmx:rmi:///jndi/rmi://%s:%d/%s"
+    public static final String RMI_JMX_URL_FORMAT = "service:jmx:rmi://%s:%d/jndi/rmi://%s:%d/%s"
+
     private static final ENABLED = new NotificationFilter() {
         public boolean isNotificationEnabled(Notification notification) { true }
     }
-    
     private static final Map<String,String> PRIMITIVES = [
             "Integer" : Integer.TYPE.name,
             "Long" : Long.TYPE.name,
@@ -46,7 +48,11 @@ public class JmxSensorAdapter {
         ]
  
     final EntityLocal entity
-    final String jmxUrl
+    final String host
+    final Integer rmiRegistryPort
+    final Integer rmiServerPort
+    final String context
+    final String url
     
     JMXConnector jmxc
     MBeanServerConnection mbsc
@@ -54,12 +60,18 @@ public class JmxSensorAdapter {
     public JmxSensorAdapter(EntityLocal entity, long timeout = -1) {
         this.entity = entity
  
-        String host = entity.getAttribute(Attributes.HOSTNAME);
-        int port = entity.getAttribute(Attributes.JMX_PORT);
+        host = entity.getAttribute(Attributes.HOSTNAME);
+        rmiRegistryPort = entity.getAttribute(Attributes.JMX_PORT);
+        rmiServerPort = entity.getAttribute(Attributes.RMI_PORT);
+        context = entity.getAttribute(Attributes.JMX_CONTEXT);
  
-        this.jmxUrl = "service:jmx:rmi:///jndi/rmi://${host}:${port}/jmxrmi";
-        
-        if (!connect(timeout)) throw new IllegalStateException("Could not connect to JMX service")
+        if (rmiServerPort) {
+	        url = String.format(RMI_JMX_URL_FORMAT, host, rmiServerPort, host, rmiRegistryPort, context)
+        } else {
+	        url = String.format(JMX_URL_FORMAT, host, rmiRegistryPort, context)
+        }
+
+        if (!connect(timeout)) throw new IllegalStateException("Could not connect to JMX service on ${host}:${rmiRegistryPort}")
     }
 
     public <T> ValueProvider<T> newAttributeProvider(String objectName, String attribute) {
@@ -81,7 +93,7 @@ public class JmxSensorAdapter {
     /** attempts to connect immediately */
     public void connect() throws IOException {
         if (jmxc) jmxc.close()
-        JMXServiceURL url = new JMXServiceURL(jmxUrl)
+        JMXServiceURL url = new JMXServiceURL(url)
         Hashtable env = new Hashtable();
         String user = entity.getAttribute(Attributes.JMX_USER);
         String password = entity.getAttribute(Attributes.JMX_PASSWORD);
@@ -94,24 +106,24 @@ public class JmxSensorAdapter {
     }
  
     /** continuously attempts to connect (blocking), for at least the indicated amount of time; or indefinitely if -1 */
-    public boolean connect(long timeoutMillis) {
-        log.debug "invoking connect to {}", jmxUrl
-        long thisStartTime = System.currentTimeMillis()
-        long endTime = thisStartTime + timeoutMillis
-        if (timeoutMillis==-1) endTime = Long.MAX_VALUE
+    public boolean connect(long timeout) {
+        log.info "Connecting to JMX URL: {} ({})", url, ((timeout == -1) ? "indefinitely" : "${timeout}ms timeout")
+        long start = System.currentTimeMillis()
+        long end = start + timeout
+        if (timeout == -1) end = Long.MAX_VALUE
         Throwable lastError;
-        while (thisStartTime <= endTime) {
-            thisStartTime = System.currentTimeMillis()
-            log.debug "trying connection to {} (at {})", jmxUrl, thisStartTime
+        while (start <= end) {
+            start = System.currentTimeMillis()
+            log.debug "trying connection to {}:{} at {}", host, rmiRegistryPort, start
             try {
                 connect()
                 return true
             } catch (IOException e) {
-                log.debug "failed connection to {} ({} at {})", jmxUrl, e.message, System.currentTimeMillis()
+                log.debug "failed connection to {}:{} ({})", host, rmiRegistryPort, e.message
                 lastError = e;
             }
         }
-        log.warn("unable to connect to JMX jmxUrl", lastError);
+        log.warn("unable to connect to JMX url: ${url}", lastError);
         false
     }
 
@@ -127,7 +139,7 @@ public class JmxSensorAdapter {
         if (!isConnected()) throw new IllegalStateException("Not connected to JMX for entity $entity")
     }
 
-    private ObjectInstance findMBean(ObjectName objectName) {
+    public ObjectInstance findMBean(ObjectName objectName) {
         Set<ObjectInstance> beans = mbsc.queryMBeans(objectName, null)
         if (beans.isEmpty() || beans.size() > 1) {
             log.warn "JMX object name query returned {} values for {}", beans.size(), objectName.canonicalName
@@ -140,7 +152,7 @@ public class JmxSensorAdapter {
     /**
      * Returns a specific attribute for a JMX {@link ObjectName}.
      */
-    private Object getAttribute(ObjectName objectName, String attribute) {
+    public Object getAttribute(ObjectName objectName, String attribute) {
         checkConnected()
         
         ObjectInstance bean = findMBean objectName
@@ -156,7 +168,7 @@ public class JmxSensorAdapter {
     /**
      * Executes an operation on a JMX {@link ObjectName}.
      */
-    private Object operation(ObjectName objectName, String method, Object...arguments) {
+    public Object operation(ObjectName objectName, String method, Object...arguments) {
         checkConnected()
         
         ObjectInstance bean = findMBean objectName
@@ -240,13 +252,12 @@ public class JmxTabularDataProvider implements ValueProvider<Map<String, Object>
             log.error "($objectName, '$attribute') gave instance of ${attr.getClass()}, expected ${TabularDataSupport.class}"
             throw e
         }
-        // Entry set is really Map.Entry<List<?>,CompositeData>
-        for(Map.Entry<Object, Object> entry : table.entrySet()) {
-            CompositeData data = (CompositeData) entry.getValue()
-            data.getCompositeType().keySet().each {
-                def previous = out.put(it, data.get(it))
-                if (previous != null) {
-                    log.warn "JmxTabularDataProvider has overwritten key $it"
+        for (Object entry : table.values()) {
+            CompositeData data = (CompositeData) entry //.getValue()
+            data.getCompositeType().keySet().each { String key ->
+                def old = out.put(key, data.get(key))
+                if (old) {
+                    log.warn "JmxTabularDataProvider has overwritten key {}", key
                 }
             }
         }

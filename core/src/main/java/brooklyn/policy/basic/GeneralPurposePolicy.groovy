@@ -7,8 +7,7 @@ import brooklyn.policy.Policy
 import brooklyn.policy.basic.AbstractPolicy
 
 public class GeneralPurposePolicy extends AbstractPolicy {
-
-    GeneralPurposePolicy(Map properties = [:]) {
+    public GeneralPurposePolicy(Map properties = [:]) {
         super(properties)
     }
 }

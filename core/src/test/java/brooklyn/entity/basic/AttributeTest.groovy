@@ -1,6 +1,7 @@
 package brooklyn.entity.basic;
 
-import org.testng.Assert;
+import static org.testng.Assert.*
+
 import org.testng.annotations.Test
 
 import brooklyn.entity.LocallyManagedEntity
@@ -14,13 +15,12 @@ public class AttributeTest {
     public void canGetAndSetAttribute() {
         LocallyManagedEntity e = []
         e.setAttribute(COLOR, "red")
-        Assert.assertEquals(e.getAttribute(COLOR), "red")
+        assertEquals(e.getAttribute(COLOR), "red")
     }
     
     @Test
     public void missingAttributeIsNull() {
         LocallyManagedEntity e = []
-        Assert.assertEquals(e.getAttribute(COLOR), null)
+        assertEquals(e.getAttribute(COLOR), null)
     }
-
 }

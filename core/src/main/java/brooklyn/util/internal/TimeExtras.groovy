@@ -15,8 +15,8 @@ import java.util.concurrent.TimeUnit
  * @author alex
  */
 class TimeExtras {
+    static void init() { }
 
-    static void init() {}
     static {
         Number.metaClass.multiply << { TimeUnit t -> new TimeDuration(t.toMillis(intValue())) }
         Number.metaClass.multiply << { TimeDuration t -> t.multiply(doubleValue()) }

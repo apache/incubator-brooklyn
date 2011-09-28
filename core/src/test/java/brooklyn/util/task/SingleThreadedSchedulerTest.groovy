@@ -1,5 +1,8 @@
 package brooklyn.util.task
 
+import static brooklyn.test.TestUtils.*
+import static org.testng.Assert.*
+
 import java.util.concurrent.CancellationException
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
@@ -8,12 +11,9 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicInteger
 
-import org.testng.Assert
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
-
-import brooklyn.test.TestUtils
 
 public class SingleThreadedSchedulerTest {
 
@@ -39,10 +39,12 @@ public class SingleThreadedSchedulerTest {
             em.submit(tag:"category1", { result.add(counter) })
         }
         
-        TestUtils.executeUntilSucceeds( {Assert.assertEquals(result.size(), NUM_TIMES)} )
+        executeUntilSucceeds {
+            assertEquals(result.size(), NUM_TIMES)
+        }
 
         for (i in 0..(NUM_TIMES-1)) {
-            Assert.assertEquals(result.get(i), i)
+            assertEquals(result.get(i), i)
         }        
     }
     
@@ -63,7 +65,9 @@ public class SingleThreadedSchedulerTest {
         Thread.sleep(100) // give it more of a chance to create the threads before we let them execute
         latch.countDown()
 
-        TestUtils.executeUntilSucceeds( {Assert.assertEquals(counter.get(), NUM_TIMES)} )
+        executeUntilSucceeds {
+            assertEquals(counter.get(), NUM_TIMES)
+        }
     }
     
     @Test
@@ -75,7 +79,7 @@ public class SingleThreadedSchedulerTest {
         Future future = em.submit tag:"category1", t
 
         new Thread({Thread.sleep(10);latch.countDown()}).start();
-        Assert.assertEquals(future.get(), 123)
+        assertEquals(future.get(), 123)
     }
     
     @Test
@@ -87,8 +91,8 @@ public class SingleThreadedSchedulerTest {
         Future future = em.submit tag:"category1", t
 
         try {
-            Assert.assertEquals(future.get(10, TimeUnit.MILLISECONDS), 123)
-            Assert.fail()
+            assertEquals(future.get(10, TimeUnit.MILLISECONDS), 123)
+            fail()
         } catch (TimeoutException e) {
             // success
         }
@@ -111,7 +115,7 @@ public class SingleThreadedSchedulerTest {
         } catch (CancellationException e) {
             // success
         }
-        Assert.assertFalse(executed)
+        assertFalse(executed)
     }
     
     @Test
@@ -123,6 +127,6 @@ public class SingleThreadedSchedulerTest {
         Future future = em.submit tag:"category1", t
 
         latch.countDown()
-        Assert.assertEquals(future.get(), 123)
+        assertEquals(future.get(), 123)
     }
 }

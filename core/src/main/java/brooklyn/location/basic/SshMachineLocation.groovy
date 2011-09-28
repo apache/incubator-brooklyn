@@ -65,8 +65,12 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         result
     }
 
-    // FIXME the return code is not a reliable indicator of success or failure
     public int copyTo(Map props=[:], File src, String destination) {
+        return copyTo(props, src, new File(destination))
+    }
+
+    // FIXME the return code is not a reliable indicator of success or failure
+    public int copyTo(Map props=[:], File src, File destination) {
         Preconditions.checkNotNull address, "host address must be specified for scp"
         Preconditions.checkArgument src.exists(), "File {} must exist for scp", src.name
 
@@ -75,7 +79,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         args << config
         SshJschTool ssh = new SshJschTool(args)
         ssh.connect()
-        int result = ssh.copyToServer props, src, destination
+        int result = ssh.copyToServer props, src, destination.path
         ssh.disconnect()
         result
     }

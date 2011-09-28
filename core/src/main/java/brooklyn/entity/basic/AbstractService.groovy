@@ -1,5 +1,6 @@
 package brooklyn.entity.basic
 
+import java.io.File;
 import java.util.Collection
 import java.util.Map
 
@@ -10,9 +11,10 @@ import brooklyn.entity.ConfigKey
 import brooklyn.entity.Entity
 import brooklyn.entity.trait.Configurable
 import brooklyn.entity.trait.Startable
+import brooklyn.event.AttributeSensor
+import brooklyn.event.Sensor
 import brooklyn.event.adapter.AttributePoller
 import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.event.AttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.Location
 import brooklyn.location.MachineLocation
@@ -22,7 +24,7 @@ import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedAppSetup
 
 import com.google.common.base.Preconditions
-import com.google.common.collect.Iterables;
+import com.google.common.collect.Iterables
 
 /**
  * An {@link Entity} representing an abstract service process.
@@ -59,7 +61,7 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
         setAttribute(SERVICE_STATE, Lifecycle.CREATED)
     }
 
-    public abstract SshBasedAppSetup getSshBasedSetup(SshMachineLocation loc);
+    public abstract SshBasedAppSetup getSshBasedSetup(SshMachineLocation loc)
 
     protected void preStart() { }
     protected void postConfig() { }
@@ -172,5 +174,13 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
     public void configure() {
         setAttribute(SERVICE_STATE, Lifecycle.CONFIGURED)
         setAttribute(SERVICE_CONFIGURED, true)
+    }
+    
+    public void deploy(String file) {
+        deploy(new File(file))
+    }
+    
+    public void deploy(File file, File target=null) {
+        setup.deploy(file, target)
     }
 }

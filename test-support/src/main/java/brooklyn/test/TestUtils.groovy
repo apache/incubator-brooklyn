@@ -3,8 +3,6 @@ package brooklyn.test
 import static org.testng.AssertJUnit.*
 import groovy.time.TimeDuration
 
-import java.util.concurrent.Callable
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -56,13 +54,13 @@ public class TestUtils {
         return connection
     }
     
-    public static void executeUntilSucceeds(Map flags=[:], Runnable r) {
-        executeUntilSucceedsWithFinallyBlock(flags, r, {})
+    public static void executeUntilSucceeds(Map flags=[:], Closure c) {
+        executeUntilSucceedsWithFinallyBlock(flags, c) { }
     }
     
-    public static void executeUntilSucceedsElseShutdown(Map flags=[:], Entity entity, Runnable r) {
+    public static void executeUntilSucceedsElseShutdown(Map flags=[:], Entity entity, Closure c) {
         try { 
-            executeUntilSucceedsWithFinallyBlock(flags, r, {})
+            executeUntilSucceedsWithFinallyBlock(flags, c) { }
         } catch (Throwable t) {
             entity.stop()
             throw t
@@ -70,8 +68,8 @@ public class TestUtils {
     }
 
     /** convenience for entities to ensure they shutdown afterwards */
-    public static void executeUntilSucceedsWithShutdown(Map flags=[:], Entity entity, Runnable r) {
-        executeUntilSucceedsWithFinallyBlock(flags, r, { entity.stop() })
+    public static void executeUntilSucceedsWithShutdown(Map flags=[:], Entity entity, Closure c) {
+        executeUntilSucceedsWithFinallyBlock(flags, c) { entity.stop() }
     }
 
     /**
@@ -93,7 +91,7 @@ public class TestUtils {
      * @param r
      * @param finallyBlock
      */
-    public static void executeUntilSucceedsWithFinallyBlock(Map flags=[:], Runnable r, Runnable finallyBlock={}) {
+    public static void executeUntilSucceedsWithFinallyBlock(Map flags=[:], Closure c, Closure finallyBlock={}) {
         log.debug "abortOnError = {}", flags.abortOnError
         boolean abortOnException = flags.abortOnException ?: false
         boolean abortOnError = flags.abortOnError ?: false
@@ -112,20 +110,15 @@ public class TestUtils {
                 try {
                     attempt++
                     lastAttemptTime = System.currentTimeMillis()
-                    if (r in Callable) {
-                        result = r.call();
-                        log.trace "Attempt {} after {} ms: {}", attempt, System.currentTimeMillis() - startTime, result
-                        if (useGroovyTruth) {
-                            if (result) return;
-                        } else if (result != false) {
-                            if (result instanceof BooleanWithMessage) 
-                                log.warn "Test returned an instance of BooleanWithMessage but useGroovyTruth is not set! " +
-                                         "The result of this probably isn't what you intended."
-                            return;
-                        }
-                    } else {
-                        r.run()
-                        return
+                    result = c.call()
+                    log.trace "Attempt {} after {} ms: {}", attempt, System.currentTimeMillis() - startTime, result
+                    if (useGroovyTruth) {
+                        if (result) return;
+                    } else if (result != false) {
+                        if (result instanceof BooleanWithMessage) 
+                            log.warn "Test returned an instance of BooleanWithMessage but useGroovyTruth is not set! " +
+                                     "The result of this probably isn't what you intended."
+                        return;
                     }
                     lastException = null
                 } catch(Throwable e) {
@@ -141,7 +134,7 @@ public class TestUtils {
                 throw lastException
             fail "invalid result code $result"
         } finally {
-            finallyBlock.run()
+            finallyBlock.call()
         }
     }
 

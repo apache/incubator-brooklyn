@@ -1,5 +1,6 @@
 package brooklyn.util.task
 
+import static brooklyn.test.TestUtils.*
 import static org.testng.Assert.*
 
 import java.util.Map
@@ -73,7 +74,9 @@ class SynchronizedExecutionTest {
             Thread.sleep(10000)
             latch.countDown()
     
-            TestUtils.executeUntilSucceeds( {Assert.assertEquals(counter.get(), 10000)} )
+            executeUntilSucceeds {
+                assertEquals(counter.get(), 10000)
+            }
         } finally {
             em?.shutdownNow()
         } 

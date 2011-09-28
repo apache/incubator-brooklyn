@@ -54,11 +54,9 @@ public class RedisIntegrationTest {
     public void canStartupAndShutdown() {
         redis = new RedisStore(owner:app);
         redis.start([ testLocation ])
-        executeUntilSucceedsWithFinallyBlock ([:], {
+        executeUntilSucceedsWithShutdown(redis) {
             assertTrue redis.getAttribute(JavaApp.SERVICE_UP)
-        }, {
-            redis.stop()
-        })
+        }
         assertFalse redis.getAttribute(JavaApp.SERVICE_UP)
     }
 
@@ -70,9 +68,9 @@ public class RedisIntegrationTest {
         // Start Redis
         redis = new RedisStore(owner:app)
         redis.start([ testLocation ])
-        executeUntilSucceeds([:], {
+        executeUntilSucceeds {
             assertTrue redis.getAttribute(JavaApp.SERVICE_UP)
-        })
+        }
 
         try {
             // Access Redis

@@ -1,14 +1,16 @@
 package brooklyn.entity.group
 
-import java.util.Collection
+import static org.testng.Assert.*
+import static java.util.concurrent.TimeUnit.*
+
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.testng.Assert
 import org.testng.annotations.Test
+
+import com.google.common.base.Joiner;
 
 import brooklyn.entity.Application
 import brooklyn.entity.basic.AbstractApplication
@@ -19,19 +21,22 @@ import brooklyn.management.Task
 import brooklyn.test.entity.BlockingEntity
 import brooklyn.test.entity.TestEntity
 import brooklyn.util.internal.Repeater
+import brooklyn.util.internal.TimeExtras
 
 class DynamicFabricTest {
     private static final Logger logger = LoggerFactory.getLogger(DynamicFabricTest)
+
+    static { TimeExtras.init() }
     
     @Test
     public void testDynamicFabricCreatesAndStartsEntityWhenGivenSingleLocation() {
-        Collection<Location> locs = [new GeneralPurposeLocation()]
+        Collection<Location> locs = [ new GeneralPurposeLocation() ]
         runWithLocations(locs)
     }
 
     @Test
     public void testDynamicFabricCreatesAndStartsEntityWhenGivenManyLocations() {
-        Collection<Location> locs = [new GeneralPurposeLocation(), new GeneralPurposeLocation(), new GeneralPurposeLocation()]
+        Collection<Location> locs = [ new GeneralPurposeLocation(), new GeneralPurposeLocation(), new GeneralPurposeLocation() ]
         runWithLocations(locs)
     }
     
@@ -41,14 +46,14 @@ class DynamicFabricTest {
         
         fabric.start(locs)
         
-        Assert.assertEquals(fabric.ownedChildren.size(), locs.size(), ""+fabric.ownedChildren)
+        assertEquals(fabric.ownedChildren.size(), locs.size(), Joiner.on(",").join(fabric.ownedChildren))
         fabric.ownedChildren.each {
             TestEntity child = it
-            Assert.assertEquals(child.counter.get(), 1)
-            Assert.assertEquals(child.locations.size(), 1, ""+child.locations)
-            Assert.assertTrue(locs.removeAll(child.locations))
+            assertEquals(child.counter.get(), 1)
+            assertEquals(child.locations.size(), 1, Joiner.on(",").join(child.locations))
+            assertTrue(locs.removeAll(child.locations))
         }
-        Assert.assertTrue(locs.isEmpty(), ""+locs)
+        assertTrue(locs.isEmpty(), Joiner.on(",").join(locs))
     }
     
     @Test
@@ -62,32 +67,32 @@ class DynamicFabricTest {
                         return new BlockingEntity(properties, latch) 
                 }, 
                 app)
-        Collection<Location> locs = [new GeneralPurposeLocation(), new GeneralPurposeLocation()]
+        Collection<Location> locs = [ new GeneralPurposeLocation(), new GeneralPurposeLocation() ]
         
-        Task task = fabric.invoke(Startable.START, [locations:locs])
+        Task task = fabric.invoke(Startable.START, [ locations:locs ])
 
         new Repeater("Wait until each task is executing")
-                .repeat( {} )
-                .every(100, TimeUnit.MILLISECONDS)
-                .limitTimeTo(30, TimeUnit.SECONDS)
-                .until( {startupLatches.size() == locs.size()} )
+                .repeat()
+                .every(100 * MILLISECONDS)
+                .limitTimeTo(30 * SECONDS)
+                .until { startupLatches.size() == locs.size() }
                 .run()
 
-        Assert.assertFalse(task.isDone())
+        assertFalse(task.isDone())
         
         startupLatches.each { it.countDown() }
                
         new Repeater("Wait until complete")
-                .repeat( {} )
-                .every(100, TimeUnit.MILLISECONDS)
-                .limitTimeTo(30, TimeUnit.SECONDS)
-                .until( {task.isDone()} )
+                .repeat()
+                .every(100 * MILLISECONDS)
+                .limitTimeTo(30 * SECONDS)
+                .until { task.isDone() }
                 .run()
 
-        Assert.assertEquals(fabric.ownedChildren.size(), locs.size(), ""+fabric.ownedChildren)
+        assertEquals(fabric.ownedChildren.size(), locs.size(), Joiner.on(",").join(fabric.ownedChildren))
                 
         fabric.ownedChildren.each {
-            Assert.assertEquals(it.counter.get(), 1)
+            assertEquals(it.counter.get(), 1)
         }
     }
 }

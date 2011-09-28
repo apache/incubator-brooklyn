@@ -1,13 +1,13 @@
 package brooklyn.entity.basic
 
-import org.testng.Assert
+import static org.testng.Assert.*
+
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.Entity
 
-class DynamicGroupTest {
-
+public class DynamicGroupTest {
     private AbstractApplication app
     private DynamicGroup group
     private AbstractEntity e1
@@ -24,26 +24,26 @@ class DynamicGroupTest {
     
     @Test
     public void testGroupWithNoFilterReturnsNoMembers() {
-        Assert.assertEquals(group.getMembers(), [])
+        assertTrue(group.getMembers().isEmpty())
     }
     
     @Test
     public void testGroupWithNonMatchingFilterReturnsNoMembers() {
         group.setEntityFilter( { false } )
-        Assert.assertEquals(group.getMembers(), [])
+        assertTrue(group.getMembers().isEmpty())
     }
     
     @Test
     public void testGroupWithMatchingFilterReturnsOnlyMatchingMembers() {
         group.setEntityFilter( { it.getId().equals(e1.getId()) } )
-        Assert.assertEquals(group.getMembers(), [e1])
+        assertEquals(group.getMembers(), [e1])
     }
     
     @Test
     public void testGroupWithMatchingFilterReturnsEverythingThatMatches() {
         group.setEntityFilter( { true } )
-        def a = group.getMembers() as HashSet
-        Assert.assertEquals(group.getMembers() as HashSet, [e1, e2, app, group] as HashSet)
+        assertEquals(group.getMembers().size(), 4)
+        assertTrue(group.getMembers().containsAll([e1, e2, app, group]))
     }
     
     @Test
@@ -53,7 +53,7 @@ class DynamicGroupTest {
         
         e3.setOwner(app)
         e3.getManagementContext().manage(e3)
-        Assert.assertEquals(group.getMembers(), [e3])
+        assertEquals(group.getMembers(), [e3])
     }
     
 }

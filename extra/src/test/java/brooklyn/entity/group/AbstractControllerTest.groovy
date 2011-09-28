@@ -1,7 +1,7 @@
 package brooklyn.entity.group
 
 import static brooklyn.test.TestUtils.*
-import static org.testng.AssertJUnit.*
+import static org.testng.Assert.*
 
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
@@ -71,7 +71,7 @@ class AbstractControllerTest {
 
         // Second child
         cluster.resize(2)
-        TestUtils.executeUntilSucceeds( { cluster.ownedChildren.size() == 2 }, useGroovyTruth:true)
+        executeUntilSucceeds( { cluster.ownedChildren.size() == 2 }, useGroovyTruth:true)
         Entity child2 = cluster.ownedChildren.asList().get(1)
         
         child2.setAttribute(ClusteredEntity.MY_PORT, 1234)
@@ -96,7 +96,9 @@ class AbstractControllerTest {
     }
 
     private void assertEventuallyAddressesMatchCluster() {
-        TestUtils.executeUntilSucceeds( { updates.size() > 0 && locationsToAddresses(1234, cluster.ownedChildren) == updates.last() }, useGroovyTruth:true)
+        executeUntilSucceeds(useGroovyTruth:true) {
+            updates.size() > 0 && locationsToAddresses(1234, cluster.ownedChildren) == updates.last()
+        }
     }
     
     private Collection<String> locationsToAddresses(int port, Entity... entities) {
@@ -106,7 +108,7 @@ class AbstractControllerTest {
     private Collection<String> locationsToAddresses(int port, Collection<Entity> entities) {
         List<String> result = []
         entities.each {
-            result << ""+it.locations.first().address.hostAddress+":"+port
+            result << it.locations.first().address.hostAddress+":"+port
         }
         return result
     }

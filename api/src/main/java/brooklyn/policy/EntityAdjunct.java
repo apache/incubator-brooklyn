@@ -5,7 +5,6 @@ package brooklyn.policy;
  * or enabling policy
  */
 public interface EntityAdjunct {
-    
     /**
      * A unique id for this adjunct
      */
@@ -19,12 +18,12 @@ public interface EntityAdjunct {
     String getName();
     
     /**
-     * whether the adjunct is destroyed
+     * Whether the adjunct is destroyed
      */
     boolean isDestroyed();
     
     /**
-     * whether the adjunct is available
+     * Whether the adjunct is available
      */
     boolean isRunning();
 }

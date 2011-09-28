@@ -24,15 +24,15 @@ public class QpidSetup extends SshBasedJavaAppSetup {
         String suggestedVersion = entity.getConfig(QpidBroker.SUGGESTED_VERSION)
         String suggestedInstallDir = entity.getConfig(QpidBroker.SUGGESTED_INSTALL_DIR)
         String suggestedRunDir = entity.getConfig(QpidBroker.SUGGESTED_RUN_DIR)
-        Integer suggestedJmxPort = entity.getConfig(QpidBroker.SUGGESTED_JMX_PORT)
+        Integer suggestedJmxPort = entity.getConfig(QpidBroker.JMX_PORT.configKey)
         Integer suggestedAmqpPort = entity.getConfig(QpidBroker.AMQP_PORT.configKey)
 
         String version = suggestedVersion ?: DEFAULT_VERSION
         String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"${version}"+"/"+"qpid-broker-${version}")
         String runDir = suggestedRunDir ?: (BROOKLYN_HOME_DIR+"/"+"${entity.application.id}"+"/"+"qpid-${entity.id}")
-        int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort, DEFAULT_FIRST_JMX_PORT))
+        int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort))
         int rmiPort = machine.obtainPort(toDesiredPortRange(jmxPort - 100))
-        int amqpPort = machine.obtainPort(toDesiredPortRange(suggestedAmqpPort, QpidBroker.AMQP_PORT.configKey.defaultValue))
+        int amqpPort = machine.obtainPort(toDesiredPortRange(suggestedAmqpPort))
 
         QpidSetup result = new QpidSetup(entity, machine)
         result.setRmiPort(rmiPort)
