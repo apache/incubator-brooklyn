@@ -134,9 +134,14 @@ public class JmxSensorAdapter {
 
     public void disconnect() {
         if (jmxc) {
-            jmxc.close()
-            jmxc = null
-            mbsc = null
+            try {
+	            jmxc.close()
+            } catch (Exception e) {
+                log.warn("Caught exception disconnecting from JMX at {}:{}, {}", host, rmiRegistryPort, e.message)
+            } finally {
+	            jmxc = null
+	            mbsc = null
+            }
         }
     }
 
@@ -278,7 +283,7 @@ public class JmxAttributeNotifier implements NotificationListener {
     private final ObjectName objectName
     private final String attribute
     private final EntityLocal entity
-    private final AttributeSensor sensor
+    private final BasicNotificationSensor sensor
     
     public JmxAttributeNotifier(JmxSensorAdapter adapter, ObjectName objectName, String attribute, EntityLocal entity, BasicNotificationSensor sensor) {
         this.adapter = Preconditions.checkNotNull(adapter, "adapter")
