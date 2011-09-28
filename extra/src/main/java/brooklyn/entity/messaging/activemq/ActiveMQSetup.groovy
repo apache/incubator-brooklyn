@@ -51,10 +51,6 @@ public class ActiveMQSetup extends SshBasedJavaAppSetup {
         openWirePort = val
     }
 
-    /** JMX is configured using command line switch. */
-    @Override
-    protected Map getJmxConfigOptions() { [:] }
-
     @Override
     protected void setCustomAttributes() {
         entity.setAttribute(ActiveMQBroker.OPEN_WIRE_PORT, openWirePort)
