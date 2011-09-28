@@ -1,11 +1,13 @@
 package brooklyn.event.adapter
 
 import javax.management.MBeanServerConnection
-import javax.management.Notification;
-import javax.management.NotificationFilter;
-import javax.management.NotificationListener;
+import javax.management.Notification
+import javax.management.NotificationFilter
+import javax.management.NotificationListener
 import javax.management.ObjectInstance
 import javax.management.ObjectName
+import javax.management.openmbean.CompositeData
+import javax.management.openmbean.TabularDataSupport
 import javax.management.remote.JMXConnector
 import javax.management.remote.JMXConnectorFactory
 import javax.management.remote.JMXServiceURL
@@ -16,10 +18,9 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.AttributeSensor
+import brooklyn.event.basic.BasicNotificationSensor
 
 import com.google.common.base.Preconditions
-import javax.management.openmbean.TabularDataSupport
-import javax.management.openmbean.CompositeData
 
 /**
  * This class adapts JMX {@link ObjectName} data to {@link brooklyn.event.Sensor} data
@@ -84,6 +85,10 @@ public class JmxSensorAdapter {
 
     public ValueProvider<HashMap> newTabularDataProvider(String objectName, String attribute) {
         return new JmxTabularDataProvider(this, new ObjectName(objectName), attribute)
+    }
+
+    public JmxAttributeNotifier newAttributeNotifier(String objectName, String attribute, EntityLocal entity, BasicNotificationSensor sensor) {
+        return new JmxAttributeNotifier(this, new ObjectName(objectName), attribute, entity, sensor)
     }
     
     public boolean isConnected() {
@@ -275,7 +280,7 @@ public class JmxAttributeNotifier implements NotificationListener {
     private final EntityLocal entity
     private final AttributeSensor sensor
     
-    public JmxAttributeNotifier(JmxSensorAdapter adapter, ObjectName objectName, String attribute, EntityLocal entity, AttributeSensor sensor) {
+    public JmxAttributeNotifier(JmxSensorAdapter adapter, ObjectName objectName, String attribute, EntityLocal entity, BasicNotificationSensor sensor) {
         this.adapter = Preconditions.checkNotNull(adapter, "adapter")
         this.objectName = Preconditions.checkNotNull(objectName, "object name")
         this.attribute = Preconditions.checkNotNull(attribute, "attribute")
