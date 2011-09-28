@@ -96,7 +96,7 @@ public class ActiveMQSetup extends SshBasedJavaAppSetup {
             "cp -R ${installDir}/{bin,conf,data,lib,webapps} .",
             "sed -i.bk 's/broker /broker useJmx=\"true\" /g' conf/activemq.xml",
             "sed -i.bk 's/managementContext createConnector=\"false\"/managementContext connectorPort=\"${jmxPort}\"/g' conf/activemq.xml",
-            "sed -i.bk 's/tcp:\\/\\/0.0.0.0:61616\"/tcp:\\/\\/${machine.address.hostName}:${openWirePort}\"/g' conf/activemq.xml",
+            "sed -i.bk 's/tcp:\\/\\/0.0.0.0:61616\"/tcp:\\/\\/0.0.0.0:${openWirePort}\"/g' conf/activemq.xml",
         ]
         return script
     }
