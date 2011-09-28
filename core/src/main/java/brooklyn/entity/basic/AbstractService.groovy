@@ -34,13 +34,14 @@ import com.google.common.collect.Iterables
 public abstract class AbstractService extends AbstractEntity implements Startable, Configurable {
     public static final Logger log = LoggerFactory.getLogger(AbstractService.class)
 
-    public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.SUGGESTED_VERSION;
-    public static final ConfigKey<String> SUGGESTED_INSTALL_DIR = ConfigKeys.SUGGESTED_INSTALL_DIR;
-    public static final ConfigKey<String> SUGGESTED_RUN_DIR = ConfigKeys.SUGGESTED_RUN_DIR;
+    public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.SUGGESTED_VERSION
+    public static final ConfigKey<String> SUGGESTED_INSTALL_DIR = ConfigKeys.SUGGESTED_INSTALL_DIR
+    public static final ConfigKey<String> SUGGESTED_RUN_DIR = ConfigKeys.SUGGESTED_RUN_DIR
     public static final BasicConfigKey<Map> ENVIRONMENT = [ Map, "environment", "Map of environment variables to set at runtime", [:] ]
 
-    public static final AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME;
-    public static final AttributeSensor<String> ADDRESS = Attributes.ADDRESS;
+    public static final AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME
+    public static final AttributeSensor<String> ADDRESS = Attributes.ADDRESS
+    public static final AttributeSensor<String> LOG_FILE_LOCATION = Attributes.LOG_FILE_LOCATION
 
     public static final BasicAttributeSensor<Lifecycle> SERVICE_STATE = [ Lifecycle, "service.state", "Service lifecycle state" ]
     public static final BasicAttributeSensor<String> SERVICE_STATUS = [ String, "service.status", "Service status" ]
@@ -135,7 +136,7 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
         }
         if (!isRunningResult) {
             setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE)
-            throw new IllegalStateException("$this aborted soon after startup")
+            throw new IllegalStateException("$this aborted soon after startup. Entity log file location: ${getAttribute(LOG_FILE_LOCATION)}")
         }
     }
 

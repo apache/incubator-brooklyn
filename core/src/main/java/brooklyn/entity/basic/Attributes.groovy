@@ -46,4 +46,5 @@ public interface Attributes {
 
     BasicAttributeSensor<String> HOSTNAME = [ String, "host.name", "Host name" ]
     BasicAttributeSensor<String> ADDRESS = [ String, "host.address", "Host IP address" ]
+    BasicAttributeSensor<String> LOG_FILE_LOCATION = [ String, "log.location", "log file location" ]
 }
