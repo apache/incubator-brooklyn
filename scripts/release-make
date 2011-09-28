@@ -43,8 +43,6 @@ echo -n 'Enter "y" if this is correct, anything else to abort: '
 read input
 [ "$input" == "y" ] || { echo >&2 Aborted. ; exit 1 ; }
 
-options=
-
 # Warn if the current branch is master
 [ ${current_branch} == "master" ] && {
 	echo Current branch is ${current_branch}. Usually, releases are made from a release branch.
@@ -54,7 +52,7 @@ options=
 }
 
 # Release prepare
-mvn release:clean release:prepare --batch-mode -DautoVersionSubmodules=true -DreleaseVersion=${release_tag_ver} -DdevelopmentVersion=${release_branch_ver}
+mvn release:clean release:prepare -PExample,Launcher --batch-mode -DautoVersionSubmodules=true -DreleaseVersion=${release_tag_ver} -DdevelopmentVersion=${release_branch_ver}
 
 # Release perform
-mvn release:perform ${options}
+mvn release:perform -PExample,Launcher --batch-mode

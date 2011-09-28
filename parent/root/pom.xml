@@ -361,6 +361,7 @@
                 <version>2.2.1</version>
                 <configuration>
                     <tagNameFormat>@{project.version}</tagNameFormat>
+                    <arguments>-PExample,Launcher</arguments>
                 </configuration>
             </plugin>
             <plugin>
