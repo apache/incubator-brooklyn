@@ -141,10 +141,20 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
 
     public void stop() {
         setAttribute(SERVICE_STATE, Lifecycle.STOPPING)
-        MachineLocation machine = locations.find { it in MachineLocation }
-        shutdownInLocation(machine)
+        MachineLocation machine = removeFirstMatchingLocation({ it in MachineLocation })
+        if (machine) {
+            shutdownInLocation(machine)
+        }
         setAttribute(SERVICE_STATE, Lifecycle.STOPPED)
         setAttribute(SERVICE_UP, false)
+    }
+    
+    Location removeFirstMatchingLocation(Closure matcher) {
+        synchronized (locations) {
+            Location loc = locations.find(matcher)
+            if (loc) locations.remove(loc)
+            return loc
+        }
     }
 
     public void shutdownInLocation(MachineLocation machine) {

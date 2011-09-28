@@ -1,4 +1,4 @@
-package brooklyn.entity.webapp.tomcat
+package brooklyn.location.basic
 
 import java.util.Collection
 import java.util.Map

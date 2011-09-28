@@ -12,6 +12,7 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.Application
 import brooklyn.entity.webapp.JavaWebApp
+import brooklyn.location.basic.SimulatedLocation
 import brooklyn.test.entity.TestApplication
 
 /**
