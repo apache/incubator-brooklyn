@@ -44,6 +44,7 @@ public abstract class JavaApp extends AbstractService {
 
     public void setJmxConfig(Map properties=[:]) {
         setConfigIfValNonNull(JMX_PORT.configKey, properties.jmxPort)
+        setConfigIfValNonNull(RMI_PORT.configKey, properties.rmiPort)
         setConfigIfValNonNull(JMX_CONTEXT.configKey, properties.jmxContext)
     }
 
