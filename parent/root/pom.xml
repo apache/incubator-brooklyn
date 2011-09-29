@@ -19,6 +19,17 @@
         <url>http://github.com/cloudsoft/brooklyn</url>
     </scm>
 
+	<distributionManagement>
+		<snapshotRepository>
+			<id>ssh-repository</id>
+			<url>scpexe://jenkins@releng3.cloudsoftcorp.com/home/jenkins/maven/snapshots</url>
+		</snapshotRepository>
+		<repository>
+			<id>ssh-repository</id>
+			<url>scpexe://jenkins@releng3.cloudsoftcorp.com/home/jenkins/maven/releases</url>
+		</repository>
+	</distributionManagement>
+
     <licenses>
         <license>
             <name>TBD</name>
@@ -428,26 +439,6 @@
     <!-- TODO For selenium, look at https://github.com/seam/parent/blob/master/pom.xml -->
 
     <profiles>
-    	<profile>
-    		<id>Internal</id>
-    		<activation>
-    			<activeByDefault>true</activeByDefault>
-    		</activation>
-			<distributionManagement>
-				<snapshotRepository>
-					<id>ssh-repository</id>
-					<url>scpexe://jenkins@releng3.cloudsoftcorp.com/home/jenkins/maven/snapshots</url>
-				</snapshotRepository>
-				<repository>
-					<id>ssh-repository</id>
-					<url>scpexe://jenkins@releng3.cloudsoftcorp.com/home/jenkins/maven/releases</url>
-				</repository>
-			</distributionManagement>
-            <build>
-                <plugins>
-                </plugins>
-            </build>
-    	</profile>
     	<profile>
     		<id>External</id>
 			<distributionManagement>
