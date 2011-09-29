@@ -5,8 +5,6 @@ import java.util.concurrent.Future
 import java.util.concurrent.FutureTask
 import java.util.concurrent.TimeUnit
 
-import brooklyn.util.internal.TimeExtras
-
 class DelegateFuture<T> implements Future<T> {
     FutureTask<T> target;
 
@@ -27,15 +25,11 @@ class DelegateFuture<T> implements Future<T> {
         target.run();
         return target.get();
     }
-
-    static {
-        TimeExtras.init()
-    }
     
     ThreadLocal threadTimeout = new ThreadLocal();
     
     public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException {
-        threadTimeout.set(timeout*unit)
+        threadTimeout.set(unit.toMillis(timeout))
         try {
             target.run();
             return target.get(timeout, unit);
