@@ -12,17 +12,6 @@
         <url>http://github.com/cloudsoft/brooklyn</url>
     </scm>
 
-    <distributionManagement>
-        <snapshotRepository>
-            <id>ssh-repository</id>
-            <url>scpexe://jenkins@releng3.cloudsoftcorp.com/home/jenkins/maven/snapshots</url>
-        </snapshotRepository>
-        <repository>
-            <id>ssh-repository</id>
-            <url>scpexe://jenkins@releng3.cloudsoftcorp.com/home/jenkins/maven/releases</url>
-        </repository>
-    </distributionManagement>
-
     <build>
         <plugins>
             <plugin>

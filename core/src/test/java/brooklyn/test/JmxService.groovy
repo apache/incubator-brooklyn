@@ -60,7 +60,11 @@ class JmxService {
      * @return the newly created and registered MBean
      */
     public GeneralisedDynamicMBean registerMBean(Map initialAttributes, String name) {
-        GeneralisedDynamicMBean mbean = new GeneralisedDynamicMBean(initialAttributes)
+        return registerMBean(initialAttributes, [:], name)
+    }
+    
+    public GeneralisedDynamicMBean registerMBean(Map initialAttributes, Map operations, String name) {
+        GeneralisedDynamicMBean mbean = new GeneralisedDynamicMBean(initialAttributes, operations)
         server.registerMBean(mbean, new ObjectName (name))
         return mbean
     }

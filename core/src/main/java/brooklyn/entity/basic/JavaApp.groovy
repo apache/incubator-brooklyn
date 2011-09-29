@@ -44,6 +44,7 @@ public abstract class JavaApp extends AbstractService {
 
     public void setJmxConfig(Map properties=[:]) {
         setConfigIfValNonNull(JMX_PORT.configKey, properties.jmxPort)
+        setConfigIfValNonNull(RMI_PORT.configKey, properties.rmiPort)
         setConfigIfValNonNull(JMX_CONTEXT.configKey, properties.jmxContext)
     }
 
@@ -72,9 +73,7 @@ public abstract class JavaApp extends AbstractService {
     @Override
     protected Collection<Integer> getRequiredOpenPorts() {
         Collection<Integer> result = super.getRequiredOpenPorts()
-        result.add(DEFAULT_JMX_PORT)
         result.add(getConfig(JMX_PORT.configKey))
-        result.add(getConfig(RMI_PORT.configKey))
         return result
     }
 

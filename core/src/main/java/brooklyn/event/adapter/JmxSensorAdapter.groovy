@@ -37,7 +37,8 @@ public class JmxSensorAdapter {
     private static final ENABLED = new NotificationFilter() {
         public boolean isNotificationEnabled(Notification notification) { true }
     }
-    private static final Map<String,String> PRIMITIVES = [
+
+    private static final Map<String,String> CLASSES = [
             "Integer" : Integer.TYPE.name,
             "Long" : Long.TYPE.name,
             "Boolean" : Boolean.TYPE.name,
@@ -45,6 +46,10 @@ public class JmxSensorAdapter {
             "Character" : Character.TYPE.name,
             "Double" : Double.TYPE.name,
             "Float" : Float.TYPE.name,
+            "LinkedHashMap" : Map.class.getName(),
+            "TreeMap" : Map.class.getName(),
+            "HashMap" : Map.class.getName(),
+            "ConcurrentHashMap" : Map.class.getName(),
         ]
  
     final EntityLocal entity
@@ -189,13 +194,33 @@ public class JmxSensorAdapter {
         String[] signature = new String[arguments.length]
         arguments.eachWithIndex { arg, int index ->
             Class clazz = arg.getClass()
-            signature[index] = (PRIMITIVES.keySet().contains(clazz.simpleName) ? PRIMITIVES.get(clazz.simpleName) : clazz.name)
+            signature[index] = (CLASSES.containsKey(clazz.simpleName) ? CLASSES.get(clazz.simpleName) : clazz.name)
         }
         def result = mbsc.invoke(objectName, method, arguments, signature)
         log.trace "got result {} for jmx operation {}.{}", result, objectName.canonicalName, method
         return result
     }
 
+    public Object operation(ObjectName objectName, String method) {
+        return operation(objectName, method, [] as Object[], [] as String[])
+    }
+    
+    public Object invokeOperation(String objectName, String method, Object[] arguments, Object[] signature) {
+        return invokeOperation(new ObjectName(objectName), method, arguments, signature)
+    }
+    
+    /**
+     * Executes an operation on a JMX {@link ObjectName}.
+     */
+    public Object invokeOperation(ObjectName objectName, String method, Object[] arguments, Object[] signature) {
+        checkConnected()
+        
+        ObjectInstance bean = findMBean objectName
+        def result = mbsc.invoke(objectName, method, arguments, signature)
+        log.trace "got result {} for jmx operation {}.{}", result, objectName.canonicalName, method
+        return result
+    }
+    
     private void addNotification(ObjectName objectName, String attribute, NotificationListener listener) {
         ObjectInstance bean = findMBean objectName
         mbsc.addNotificationListener(objectName, listener, ENABLED, null)
