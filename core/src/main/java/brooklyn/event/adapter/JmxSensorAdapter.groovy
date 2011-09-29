@@ -37,7 +37,8 @@ public class JmxSensorAdapter {
     private static final ENABLED = new NotificationFilter() {
         public boolean isNotificationEnabled(Notification notification) { true }
     }
-    private static final Map<String,String> PRIMITIVES = [
+
+    private static final Map<String,String> CLASSES = [
             "Integer" : Integer.TYPE.name,
             "Long" : Long.TYPE.name,
             "Boolean" : Boolean.TYPE.name,
@@ -45,6 +46,10 @@ public class JmxSensorAdapter {
             "Character" : Character.TYPE.name,
             "Double" : Double.TYPE.name,
             "Float" : Float.TYPE.name,
+            "LinkedHashMap" : Map.class.getName(),
+            "TreeMap" : Map.class.getName(),
+            "HashMap" : Map.class.getName(),
+            "ConcurrentHashMap" : Map.class.getName(),
         ]
  
     final EntityLocal entity
@@ -189,7 +194,7 @@ public class JmxSensorAdapter {
         String[] signature = new String[arguments.length]
         arguments.eachWithIndex { arg, int index ->
             Class clazz = arg.getClass()
-            signature[index] = (PRIMITIVES.keySet().contains(clazz.simpleName) ? PRIMITIVES.get(clazz.simpleName) : clazz.name)
+            signature[index] = (CLASSES.containsKey(clazz.simpleName) ? CLASSES.get(clazz.simpleName) : clazz.name)
         }
         def result = mbsc.invoke(objectName, method, arguments, signature)
         log.trace "got result {} for jmx operation {}.{}", result, objectName.canonicalName, method
