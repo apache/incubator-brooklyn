@@ -34,6 +34,17 @@
         </extensions>
     </build>
 
+	<distributionManagement>
+		<snapshotRepository>
+			<id>ssh-repository</id>
+			<url>scpexe://jenkins@releng3.cloudsoftcorp.com/home/jenkins/maven/snapshots</url>
+		</snapshotRepository>
+		<repository>
+			<id>ssh-repository</id>
+			<url>scpexe://jenkins@releng3.cloudsoftcorp.com/home/jenkins/maven/releases</url>
+		</repository>
+	</distributionManagement>
+
     <modules>
         <module>parent/root</module>
         <module>api</module>
@@ -70,5 +81,22 @@
                 <module>example</module>
             </modules>
         </profile>
+    	<profile>
+    		<id>External</id>
+			<distributionManagement>
+				<snapshotRepository>
+					<id>ssh-repository</id>
+					<url>scpexe://cruiser@releng1.cloudsoftcorp.com/var/www/downloads/maven2/snapshots</url>
+				</snapshotRepository>
+				<repository>
+					<id>ssh-repository</id>
+					<url>scpexe://cruiser@releng1.cloudsoftcorp.com/var/www/downloads/maven2/releases</url>
+				</repository>
+				<site>
+					<id>developers.cloudsoftcorp.com</id>
+					<url>scpexe://cruiser@releng1.cloudsoftcorp.com/var/www/downloads/autodocs/${project.version}</url>
+				</site>
+			</distributionManagement>
+    	</profile>
     </profiles>
 </project>
