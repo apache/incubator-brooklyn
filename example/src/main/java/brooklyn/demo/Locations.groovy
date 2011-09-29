@@ -4,6 +4,8 @@ import java.util.Map
 
 import org.jclouds.ec2.domain.InstanceType
 
+import brooklyn.entity.messaging.activemq.ActiveMQBroker
+import brooklyn.entity.messaging.qpid.QpidBroker
 import brooklyn.entity.nosql.gemfire.GemfireServer
 import brooklyn.entity.proxy.nginx.NginxController
 import brooklyn.entity.webapp.jboss.JBoss6Server
@@ -221,6 +223,17 @@ public class Locations {
                 securityGroups:["brooklyn-all"]],
             (GemfireServer.class.getName()):[
                 imageId:imageIdGemfire,
+                securityGroups:["brooklyn-all"]],
+            (ActiveMQBroker.class.getName()):[
+                imageId:imageIdVanilla,
+                hardwareId:InstanceType.M1_SMALL,
+                securityGroups:["brooklyn-all"]],
+	        (QpidBroker.class.getName()):[
+                imageId:imageIdVanilla,
+                hardwareId:InstanceType.M1_SMALL,
+                securityGroups:["brooklyn-all"]],
+            ("monterey.brooklyn.Venue"):[
+                imageId:imageIdVanilla,
                 securityGroups:["brooklyn-all"]]])
         
         return region
