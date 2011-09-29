@@ -4,7 +4,7 @@
     <groupId>brooklyn</groupId>
     <artifactId>brooklyn-parent-root</artifactId>
     <packaging>pom</packaging>
-    <version>0.1.0-M1-RC2</version>
+    <version>0.1.0-M1-RC3-SNAPSHOT</version>
     <name>Brooklyn Parent Root</name>
 
     <description>
