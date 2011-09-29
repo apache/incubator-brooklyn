@@ -24,6 +24,7 @@ public abstract class SshBasedJavaAppSetup extends SshBasedAppSetup {
 
     protected boolean jmxEnabled = true
     protected int jmxPort
+    protected int rmiPort
     protected Map<String,Map<String,String>> environmentPropertyFiles = [:]
     protected Map<String,Map<String,String>> namedPropertyFiles = [:]
     protected Map<String,String> envVariablesToSet = [:]
@@ -38,6 +39,10 @@ public abstract class SshBasedJavaAppSetup extends SshBasedAppSetup {
 
     public void setJmxPort(int val) {
         jmxPort = val
+    }
+
+    public void setRmiPort(int val) {
+        rmiPort = val
     }
 
     public void setEnvironmentPropertyFiles(Map<String,Map<String,String>> propertyFiles) {
