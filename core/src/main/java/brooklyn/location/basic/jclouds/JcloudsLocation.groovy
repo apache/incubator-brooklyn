@@ -1,12 +1,15 @@
 package brooklyn.location.basic.jclouds
 
-import static java.util.concurrent.TimeUnit.*
-import static org.jclouds.scriptbuilder.domain.Statements.*
-
-import java.util.Collection
-import java.util.Map
-import java.util.concurrent.TimeUnit
-
+import brooklyn.location.MachineProvisioningLocation
+import brooklyn.location.NoMachinesAvailableException
+import brooklyn.location.basic.AbstractLocation
+import brooklyn.location.basic.SshMachineLocation
+import brooklyn.util.IdGenerator
+import brooklyn.util.internal.Repeater
+import com.google.common.base.Charsets
+import com.google.common.base.Throwables
+import com.google.common.collect.Iterables
+import com.google.common.io.Files
 import org.jclouds.compute.ComputeService
 import org.jclouds.compute.RunNodesException
 import org.jclouds.compute.domain.ExecResponse
@@ -18,22 +21,10 @@ import org.jclouds.ec2.compute.options.EC2TemplateOptions
 import org.jclouds.scriptbuilder.domain.Statement
 import org.jclouds.scriptbuilder.domain.Statements
 import org.jclouds.scriptbuilder.statements.login.UserAdd
-
-import brooklyn.location.MachineProvisioningLocation
-import brooklyn.location.NoMachinesAvailableException
-import brooklyn.location.basic.AbstractLocation
-import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.IdGenerator
-import brooklyn.util.internal.Repeater
-import brooklyn.util.internal.TimeExtras
-
-import com.google.common.base.Charsets
-import com.google.common.base.Throwables
-import com.google.common.collect.Iterables
-import com.google.common.io.Files
+import static java.util.concurrent.TimeUnit.SECONDS
+import static org.jclouds.scriptbuilder.domain.Statements.exec
 
 public class JcloudsLocation extends AbstractLocation implements MachineProvisioningLocation<SshMachineLocation> {
-    static { TimeExtras.init() }
 
     public static final String ROOT_USERNAME = "root";
     public static final int START_SSHABLE_TIMEOUT = 5*60*1000;
@@ -105,7 +96,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             LOG.info("Started VM in ${allconf.providerLocationId}; waiting for it to be sshable by "+allconf.userName+"@"+vmIp);
             boolean reachable = new Repeater()
                     .repeat()
-                    .every(1 * SECONDS)
+                    .every(1,SECONDS)
                     .until {
                         Statement statement = Statements.newStatementList(exec('date'))
                         ExecResponse response = computeService.runScriptOnNode(node.getId(), statement)

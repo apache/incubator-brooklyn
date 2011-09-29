@@ -8,7 +8,6 @@ import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
-import brooklyn.util.internal.TimeExtras
 
 /**
  * A future value.
@@ -31,8 +30,6 @@ public class FutureValue<T> implements QualifiableFuture<T> {
         this.expression = expression;
         this.validity = validity;
     }    
-
-    static { TimeExtras.init() }
 
     protected T getBlockingUntil(long endTime) {
         synchronized (this) {
@@ -132,12 +129,12 @@ public class FutureValue<T> implements QualifiableFuture<T> {
     }
     
     public T get(TimeDuration t) {
-        if (t==null) return getBlockingUntil -1
-        return getBlockingUntil (System.currentTimeMillis() + t.toMilliseconds())
+        if (t==null) return get()
+        return get(t.toMilliseconds(),TimeUnit.MILLISECONDS)
     }
 
     public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException {
-        return get(timeout*unit)
+        return getBlockingUntil(System.currentTimeMillis() + unit.toMillis(timeout))
     }
 
     public Future<T> when(Closure condition) {
