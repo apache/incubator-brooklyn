@@ -19,17 +19,6 @@
         <url>http://github.com/cloudsoft/brooklyn</url>
     </scm>
 
-    <distributionManagement>
-        <snapshotRepository>
-            <id>ssh-repository</id>
-            <url>scpexe://jenkins@releng3.cloudsoftcorp.com/home/jenkins/maven/snapshots</url>
-        </snapshotRepository>
-        <repository>
-            <id>ssh-repository</id>
-            <url>scpexe://jenkins@releng3.cloudsoftcorp.com/home/jenkins/maven/releases</url>
-        </repository>
-    </distributionManagement>
-
     <licenses>
         <license>
             <name>TBD</name>
@@ -240,6 +229,16 @@
                 <plugin>
                     <artifactId>maven-source-plugin</artifactId>
                     <version>2.1.2</version>
+					<inherited>true</inherited>
+					<executions>
+						<execution>
+							<id>attach-sources</id>
+							<phase>verify</phase>
+							<goals>
+								<goal>jar-no-fork</goal>
+							</goals>
+						</execution>
+					</executions>
                 </plugin>
                 <plugin>
                     <artifactId>maven-surefire-plugin</artifactId>
@@ -367,19 +366,6 @@
 							<phase>process-classes</phase>
 							<goals>
 								<goal>jar</goal>
-							</goals>
-						</execution>
-					</executions>
-				</plugin>
-				<plugin>
-					<artifactId>maven-source-plugin</artifactId>
-					<inherited>true</inherited>
-					<executions>
-						<execution>
-							<id>attach-sources</id>
-							<phase>verify</phase>
-							<goals>
-								<goal>jar-no-fork</goal>
 							</goals>
 						</execution>
 					</executions>
