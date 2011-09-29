@@ -82,7 +82,8 @@ public class ActiveMQSetup extends SshBasedJavaAppSetup {
     public Map<String, String> getRunEnvironment() {
         Map<String, String> env = [
 			"ACTIVEMQ_HOME" : "${runDir}",
-			"JAVA_OPTS" : toJavaDefinesString(getJvmStartupProperties()),
+            "JAVA_OPTS" : toJavaDefinesString(getJvmStartupProperties()),
+            "ACTIVEMQ_OPTS" : toJavaDefinesString(getJvmStartupProperties()),
             "ACTIVEMQ_SUNJMX_CONTROL" : "--jmxurl service:jmx:rmi://${machine.address.hostName}:${rmiPort}/jndi/rmi://${machine.address.hostName}:${jmxPort}/jmxrmi"
         ]
         return env
