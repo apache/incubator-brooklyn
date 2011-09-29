@@ -16,6 +16,7 @@ public class ActiveMQSetup extends SshBasedJavaAppSetup {
     public static final String DEFAULT_VERSION = "5.5.0"
     public static final String DEFAULT_INSTALL_DIR = DEFAULT_INSTALL_BASEDIR+"/"+"activemq"
     public static final int DEFAULT_FIRST_OPEN_WIRE_PORT = 61616
+    public static final int DEFAULT_FIRST_RMI_PORT = 1199
 
     private int openWirePort
     private int rmiPort
@@ -25,16 +26,19 @@ public class ActiveMQSetup extends SshBasedJavaAppSetup {
         String suggestedInstallDir = entity.getConfig(ActiveMQBroker.SUGGESTED_INSTALL_DIR)
         String suggestedRunDir = entity.getConfig(ActiveMQBroker.SUGGESTED_RUN_DIR)
         Integer suggestedJmxPort = entity.getConfig(ActiveMQBroker.JMX_PORT.configKey)
+        Integer suggestedRmiPort = entity.getConfig(ActiveMQBroker.RMI_PORT.configKey)
         Integer suggestedOpenWirePort = entity.getConfig(ActiveMQBroker.OPEN_WIRE_PORT.configKey)
 
         String version = suggestedVersion ?: DEFAULT_VERSION
         String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"${version}"+"/"+"apache-activemq-${version}")
         String runDir = suggestedRunDir ?: (BROOKLYN_HOME_DIR+"/"+"${entity.application.id}"+"/"+"activemq-${entity.id}")
         int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort))
+        int rmiPort = machine.obtainPort(toDesiredPortRange(suggestedRmiPort, DEFAULT_FIRST_RMI_PORT))
         int openWirePort = machine.obtainPort(toDesiredPortRange(suggestedOpenWirePort, ActiveMQBroker.OPEN_WIRE_PORT.configKey.defaultValue))
 
         ActiveMQSetup result = new ActiveMQSetup(entity, machine)
         result.setJmxPort(jmxPort)
+        result.setRmiPort(rmiPort)
         result.setOpenWirePort(openWirePort)
         result.setVersion(version)
         result.setInstallDir(installDir)
@@ -79,6 +83,7 @@ public class ActiveMQSetup extends SshBasedJavaAppSetup {
         Map<String, String> env = [
 			"ACTIVEMQ_HOME" : "${runDir}",
 			"JAVA_OPTS" : toJavaDefinesString(getJvmStartupProperties()),
+            "ACTIVEMQ_SUNJMX_CONTROL" : "--jmxurl service:jmx:rmi://${machine.address.hostName}:${rmiPort}/jndi/rmi://${machine.address.hostName}:${jmxPort}/jmxrmi"
         ]
         return env
     }
