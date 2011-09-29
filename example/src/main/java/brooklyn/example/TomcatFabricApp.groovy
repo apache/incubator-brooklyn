@@ -13,9 +13,7 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 
 
 class TomcatFabricApp extends AbstractApplication {
-    
-    // FIXME Do we need to pass the flags/owner into ControlledDynamicWebAppCluster?
-    
+        
     public static void main(String[] argv) {
         TomcatFabricApp demo = new TomcatFabricApp(displayName : "tomcat example")
         demo.init()
@@ -30,7 +28,8 @@ class TomcatFabricApp extends AbstractApplication {
         Closure webClusterFactory = { Map flags, Entity owner ->
             return new DynamicWebAppCluster(
                     newEntity: { properties -> new TomcatServer(properties) },
-                    owner:this)
+                    owner : owner
+            )
         }
 
         DynamicFabric fabric = new DynamicFabric(
@@ -41,6 +40,7 @@ class TomcatFabricApp extends AbstractApplication {
                 this)
         
         fabric.setConfig(JavaWebApp.WAR, "/path/to/booking-mvc.war")
+        fabric.setConfig(TomcatServer.HTTP_PORT.configKey, 8080)
         fabric.setConfig(Cluster.INITIAL_SIZE, 2)
     }
 }
