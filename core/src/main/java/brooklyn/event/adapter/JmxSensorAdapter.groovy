@@ -196,6 +196,26 @@ public class JmxSensorAdapter {
         return result
     }
 
+    public Object operation(ObjectName objectName, String method) {
+        return operation(objectName, method, [] as Object[], [] as String[])
+    }
+    
+    public Object invokeOperation(String objectName, String method, Object[] arguments, Object[] signature) {
+        return invokeOperation(new ObjectName(objectName), method, arguments, signature)
+    }
+    
+    /**
+     * Executes an operation on a JMX {@link ObjectName}.
+     */
+    public Object invokeOperation(ObjectName objectName, String method, Object[] arguments, Object[] signature) {
+        checkConnected()
+        
+        ObjectInstance bean = findMBean objectName
+        def result = mbsc.invoke(objectName, method, arguments, signature)
+        log.trace "got result {} for jmx operation {}.{}", result, objectName.canonicalName, method
+        return result
+    }
+    
     private void addNotification(ObjectName objectName, String attribute, NotificationListener listener) {
         ObjectInstance bean = findMBean objectName
         mbsc.addNotificationListener(objectName, listener, ENABLED, null)

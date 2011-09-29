@@ -7,6 +7,8 @@ import javax.management.AttributeList
 import javax.management.DynamicMBean
 import javax.management.MBeanAttributeInfo
 import javax.management.MBeanInfo
+import javax.management.MBeanOperationInfo
+import javax.management.MBeanParameterInfo
 
 /**
  * A quick-and-simple general-purpose implementation of DynamicMBean.
@@ -25,14 +27,29 @@ import javax.management.MBeanInfo
 class GeneralisedDynamicMBean implements DynamicMBean {
     private final MBeanInfo mBeanInfo
     private final Map attributes
-
-    public GeneralisedDynamicMBean(Map initialAttributes) {
+    private final Map<String,Closure> operations = [:]
+    
+    public GeneralisedDynamicMBean(Map initialAttributes, Map initialOperations) {
         this.attributes = initialAttributes
 
+        initialOperations.entrySet().each {
+            String opName = (it.key instanceof String) ? it.key : it.key.getName()
+            operations.put(opName, it.value)
+        }
+        
         MBeanAttributeInfo[] attrInfo = initialAttributes.entrySet().collect { Entry it ->
             new MBeanAttributeInfo(it.key, it.getValue().getClass().name, it.key, true, false, false) }
+        
+        List<MBeanOperationInfo> opInfo = initialOperations.keySet().collect {
+            if (it instanceof MBeanOperationInfo) {
+                it
+            } else {
+                new MBeanOperationInfo(it, "my descr", [] as MBeanParameterInfo[], "void", MBeanOperationInfo.ACTION_INFO)
+            }
+        }
+        
         mBeanInfo = new MBeanInfo(GeneralisedDynamicMBean.class.name, GeneralisedDynamicMBean.class.name, attrInfo,
-                null, null, null)
+                null, opInfo as MBeanOperationInfo[], null)
     }
 
     public void updateAttributeValue(String name, Object value) {
@@ -59,7 +76,12 @@ class GeneralisedDynamicMBean implements DynamicMBean {
     }
 
     Object invoke(String s, Object[] objects, String[] strings) {
-        throw new RuntimeException("Not Yet Implemented")
+        Closure op = operations.get(s)
+        if (op != null) {
+            return op.call(objects)
+        } else {
+            throw new RuntimeException("Unknown operation "+s)
+        }
     }
 
     MBeanInfo getMBeanInfo() {
