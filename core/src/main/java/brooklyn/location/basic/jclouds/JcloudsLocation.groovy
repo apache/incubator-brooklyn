@@ -21,6 +21,7 @@ import org.jclouds.ec2.compute.options.EC2TemplateOptions
 import org.jclouds.scriptbuilder.domain.Statement
 import org.jclouds.scriptbuilder.domain.Statements
 import org.jclouds.scriptbuilder.statements.login.UserAdd
+import static java.util.concurrent.TimeUnit.MILLISECONDS
 import static java.util.concurrent.TimeUnit.SECONDS
 import static org.jclouds.scriptbuilder.domain.Statements.exec
 
@@ -101,7 +102,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                         Statement statement = Statements.newStatementList(exec('date'))
                         ExecResponse response = computeService.runScriptOnNode(node.getId(), statement)
                         response.exitCode }
-                    .limitTimeTo(START_SSHABLE_TIMEOUT * MILLISECONDS)
+                    .limitTimeTo(START_SSHABLE_TIMEOUT,MILLISECONDS)
                     .run()
         
             if (!reachable) {
