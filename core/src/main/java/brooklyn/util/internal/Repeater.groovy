@@ -44,7 +44,11 @@ public class Repeater {
      * @param description a description of the operation that will appear in debug logs.
      */
     Repeater(String description) {
-        this.description = description;
+        this.description = description ?: "Repeater";
+    }
+
+    public static Repeater create(String description=null) {
+        return new Repeater(description)
     }
 
     /**
@@ -80,6 +84,13 @@ public class Repeater {
     Repeater every(Duration duration) {
         Preconditions.checkNotNull duration, "duration must not be null"
         return every(duration.toMilliseconds(), TimeUnit.MILLISECONDS)
+    }
+
+    /**
+     * @see #every(long, TimeUnit)
+     */
+    Repeater every(long duration) {
+        return every(duration, TimeUnit.MILLISECONDS)
     }
 
     /**
@@ -132,6 +143,13 @@ public class Repeater {
     Repeater limitTimeTo(Duration duration) {
         Preconditions.checkNotNull duration, "duration must not be null"
         return limitTimeTo(duration.toMilliseconds(), TimeUnit.MILLISECONDS)
+    }
+
+    /**
+     * @see #limitTimeTo(long, TimeUnit)
+     */
+    Repeater limitTimeTo(long duration) {
+        return limitTimeTo(duration, TimeUnit.MILLISECONDS)
     }
 
     /**
