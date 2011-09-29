@@ -96,26 +96,9 @@
 					</reportPlugins>
 				</configuration>
 			</plugin>
+			<plugin>
+				<artifactId>maven-javadoc-plugin</artifactId>
+			</plugin>
 		</plugins>
 	</build>
-
-	<profiles>
-		<profile>
-			<id>External</id><!-- javadoc normally disabled for external, but this module should be publically documented -->
-			<build>
-				<plugins>
-					<plugin>
-						<artifactId>maven-javadoc-plugin</artifactId>
-						<configuration>
-							<links>
-								<link>http://download.oracle.com/javaee/6/api</link>
-							</links>
-							<keywords>true</keywords>
-							<author>false</author>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-	</profiles>
 </project>
