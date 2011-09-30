@@ -86,7 +86,7 @@ public abstract class ActiveMQDestination extends JMSDestination {
     }
 
     public void init() {
-	    broker = new ObjectName("org.apache.activemq:Type=Broker,BrokerName=localhost")
+	    broker = new ObjectName("org.apache.activemq:BrokerName=localhost,Type=Broker")
     }
 }
 
@@ -112,7 +112,7 @@ public class ActiveMQQueue extends ActiveMQDestination implements Queue {
     }
 
     public void addJmxSensors() {
-        String queue = "org.apache.activemq:Type=Queue,BrokerName=localhost,Destination=${name}"
+        String queue = "org.apache.activemq:BrokerName=localhost,Type=Queue,Destination=${name}"
         attributePoller.addSensor(QUEUE_DEPTH_MESSAGES, jmxAdapter.newAttributeProvider(queue, "QueueSize"))
     }
 
