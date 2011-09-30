@@ -289,6 +289,8 @@ public class JmxTabularDataProvider implements ValueProvider<Map<String, Object>
  * Provides JMX attribute values to a sensor.
  */
 public class JmxAttributeNotifier implements NotificationListener {
+    private static final Logger log = LoggerFactory.getLogger(JmxAttributeNotifier.class);
+
     private final JmxSensorAdapter adapter
     private final ObjectName objectName
     private final EntityLocal entity
@@ -304,8 +306,9 @@ public class JmxAttributeNotifier implements NotificationListener {
     }
     
     public void handleNotification(Notification notification, Object handback) {
-        if (notification.type.equals(sensor.name)) {
-            entity.setAttribute(sensor, notification.userData)
+        log.info "Got notification type {}: {} (sequence {})", notification.type, notification.message, notification.sequenceNumber
+        if (notification.type == sensor.name) {
+            entity.emit(sensor, notification.userData)
         }
     }
 }
