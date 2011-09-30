@@ -34,8 +34,6 @@ public class JmxSensorAdapter {
     public static final String JMX_URL_FORMAT = "service:jmx:rmi:///jndi/rmi://%s:%d/%s"
     public static final String RMI_JMX_URL_FORMAT = "service:jmx:rmi://%s:%d/jndi/rmi://%s:%d/%s"
 
-    private static final NotificationFilter EVERYTHING = new AllNotificationsFilter()
-    
     private static final Map<String,String> CLASSES = [
             "Integer" : Integer.TYPE.name,
             "Long" : Long.TYPE.name,
@@ -206,7 +204,7 @@ public class JmxSensorAdapter {
     
     public void addNotification(ObjectName objectName, NotificationListener listener) {
         ObjectInstance bean = findMBean objectName
-        mbsc.addNotificationListener(objectName, listener, EVERYTHING, null)
+        mbsc.addNotificationListener(objectName, listener, null, null)
     }
 }
 
@@ -310,8 +308,4 @@ public class JmxAttributeNotifier implements NotificationListener {
             entity.setAttribute(sensor, notification.userData)
         }
     }
-}
-
-public class AllNotificationsFilter implements NotificationFilter {
-    public boolean isNotificationEnabled(Notification notification) { true }
 }
