@@ -68,7 +68,7 @@ public class ActiveMQBroker extends JMSBroker<ActiveMQQueue, ActiveMQTopic> {
 
     protected boolean computeNodeUp() {
         String host = getAttribute(HOSTNAME)
-        ValueProvider<String> provider = jmxAdapter.newAttributeProvider("org.apache.camel:context=${host}/camel,type=components,name=\"activemq\"", "State")
+        ValueProvider<String> provider = jmxAdapter.newAttributeProvider("org.apache.camel:context=*/camel,type=components,name=\"activemq\"", "State")
         try {
             String state = provider.compute()
             return (state == "Started")

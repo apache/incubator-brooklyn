@@ -1,6 +1,7 @@
 package brooklyn.entity.messaging.activemq
 
 import static org.testng.Assert.*
+import static brooklyn.test.TestUtils.*
 import brooklyn.location.basic.SshMachineLocation
 import org.testng.annotations.Test
 import org.testng.annotations.AfterMethod
@@ -12,8 +13,8 @@ import brooklyn.location.basic.jclouds.AbstractJcloudsLocationTest
 import brooklyn.location.basic.jclouds.JcloudsLocationFactory
 import brooklyn.location.basic.jclouds.JcloudsLocation
 import brooklyn.location.basic.jclouds.CredentialsFromEnv
-import brooklyn.entity.basic.AbstractService
 import brooklyn.entity.trait.Startable
+import brooklyn.entity.Entity
 
 /**
  * Created by IntelliJ IDEA.
@@ -87,9 +88,12 @@ class ActiveMQEc2LiveTest {
         assertTrue machine.isSshable()
 
         TestApplication app = new TestApplication()
-        ActiveMQBroker amq = new ActiveMQBroker([:], app)
+        Entity entity = new ActiveMQBroker([:], app)
         app.start([machine])
-        assertTrue amq[Startable.SERVICE_UP]
+        executeUntilSucceedsWithShutdown(entity) {
+            assertTrue entity.getAttribute(Startable.SERVICE_UP)
+        }
+        assertFalse entity.getAttribute(Startable.SERVICE_UP)
     }
 
     protected SshMachineLocation obtainMachine(Map flags) {
