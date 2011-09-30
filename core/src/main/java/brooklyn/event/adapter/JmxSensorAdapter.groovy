@@ -46,6 +46,7 @@ public class JmxSensorAdapter {
             "Character" : Character.TYPE.name,
             "Double" : Double.TYPE.name,
             "Float" : Float.TYPE.name,
+            "GStringImpl" : String.class.getName(),
             "LinkedHashMap" : Map.class.getName(),
             "TreeMap" : Map.class.getName(),
             "HashMap" : Map.class.getName(),
@@ -91,8 +92,8 @@ public class JmxSensorAdapter {
         return new JmxTabularDataProvider(this, new ObjectName(objectName), attribute)
     }
 
-    public JmxAttributeNotifier newAttributeNotifier(String objectName, String attribute, EntityLocal entity, BasicNotificationSensor sensor) {
-        return new JmxAttributeNotifier(this, new ObjectName(objectName), attribute, entity, sensor)
+    public JmxAttributeNotifier newAttributeNotifier(String objectName, EntityLocal entity, BasicNotificationSensor sensor) {
+        return new JmxAttributeNotifier(this, new ObjectName(objectName), entity, sensor)
     }
     
     public boolean isConnected() {
@@ -205,23 +206,11 @@ public class JmxSensorAdapter {
         return operation(objectName, method, [] as Object[], [] as String[])
     }
     
-    public Object invokeOperation(String objectName, String method, Object[] arguments, Object[] signature) {
-        return invokeOperation(new ObjectName(objectName), method, arguments, signature)
+    public void addNotification(String objectName, NotificationListener listener) {
+        addNotification(new ObjectName(objectName), listener)
     }
     
-    /**
-     * Executes an operation on a JMX {@link ObjectName}.
-     */
-    public Object invokeOperation(ObjectName objectName, String method, Object[] arguments, Object[] signature) {
-        checkConnected()
-        
-        ObjectInstance bean = findMBean objectName
-        def result = mbsc.invoke(objectName, method, arguments, signature)
-        log.trace "got result {} for jmx operation {}.{}", result, objectName.canonicalName, method
-        return result
-    }
-    
-    private void addNotification(ObjectName objectName, String attribute, NotificationListener listener) {
+    public void addNotification(ObjectName objectName, NotificationListener listener) {
         ObjectInstance bean = findMBean objectName
         mbsc.addNotificationListener(objectName, listener, ENABLED, null)
     }
@@ -310,18 +299,16 @@ public class JmxTabularDataProvider implements ValueProvider<Map<String, Object>
 public class JmxAttributeNotifier implements NotificationListener {
     private final JmxSensorAdapter adapter
     private final ObjectName objectName
-    private final String attribute
     private final EntityLocal entity
     private final BasicNotificationSensor sensor
     
-    public JmxAttributeNotifier(JmxSensorAdapter adapter, ObjectName objectName, String attribute, EntityLocal entity, BasicNotificationSensor sensor) {
+    public JmxAttributeNotifier(JmxSensorAdapter adapter, ObjectName objectName, EntityLocal entity, BasicNotificationSensor sensor) {
         this.adapter = Preconditions.checkNotNull(adapter, "adapter")
         this.objectName = Preconditions.checkNotNull(objectName, "object name")
-        this.attribute = Preconditions.checkNotNull(attribute, "attribute")
         this.entity = Preconditions.checkNotNull(entity, "entity")
         this.sensor = Preconditions.checkNotNull(sensor, "sensor")
         
-        adapter.addNotification(objectName, attribute, this)
+        adapter.addNotification(objectName, this)
     }
     
     public void handleNotification(Notification notification, Object handback) {
