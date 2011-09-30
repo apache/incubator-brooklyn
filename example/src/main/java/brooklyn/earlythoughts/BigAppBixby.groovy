@@ -1,14 +1,13 @@
-package brooklyn.example
+package brooklyn.earlythoughts
 
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.group.Fabric
-import brooklyn.example.PretendLocations.AmazonLocation
-import brooklyn.example.PretendLocations.TomcatFabric
-import brooklyn.example.PretendLocations.GemfireFabric
-import brooklyn.example.PretendLocations.MontereyFabric
-import brooklyn.example.PretendLocations.MontereyLatencyOptimisationPolicy
-import brooklyn.example.PretendLocations.VcloudLocation
-
+import brooklyn.earlythoughts.PretendLocations.AmazonLocation
+import brooklyn.earlythoughts.PretendLocations.TomcatFabric
+import brooklyn.earlythoughts.PretendLocations.GemfireFabric
+import brooklyn.earlythoughts.PretendLocations.MontereyFabric
+import brooklyn.earlythoughts.PretendLocations.MontereyLatencyOptimisationPolicy
+import brooklyn.earlythoughts.PretendLocations.VcloudLocation
 
 public class BigAppBixby extends AbstractApplication {
 
