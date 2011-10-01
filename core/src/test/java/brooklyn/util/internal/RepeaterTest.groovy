@@ -3,6 +3,8 @@ package brooklyn.util.internal
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
+import groovy.time.TimeDuration;
+
 import java.util.concurrent.TimeUnit
 
 import org.testng.annotations.Test
@@ -13,6 +15,30 @@ public class RepeaterTest {
     @Test
     public void sanityTest() {
         new Repeater("Sanity test")
+            .repeat()
+            .until { true }
+            .every(10 * MILLISECONDS);
+    }
+
+    @Test
+    public void sanityTestDescription() {
+        new Repeater()
+            .repeat()
+            .until { true }
+            .every(10 * MILLISECONDS);
+    }
+
+    @Test
+    public void sanityTestBuilder() {
+        Repeater.create("Sanity test")
+            .repeat()
+            .until { true }
+            .every(10 * MILLISECONDS);
+    }
+
+    @Test
+    public void sanityTestBuilderDescription() {
+        Repeater.create()
             .repeat()
             .until { true }
             .every(10 * MILLISECONDS);
@@ -87,6 +113,21 @@ public class RepeaterTest {
     }
 
     @Test
+    public void everyAcceptsDuration() {
+        new Repeater("everyAcceptsDuration").every(new TimeDuration(0, 0, 1, 0));
+    }
+
+    @Test
+    public void everyAcceptsLong() {
+        new Repeater("everyAcceptsLong").every(1000L);
+    }
+
+    @Test
+    public void everyAcceptsTimeUnit() {
+        new Repeater("everyAcceptsTimeUnit").every(1000000L, TimeUnit.MICROSECONDS);
+    }
+
+    @Test
     public void runReturnsTrueIfExitConditionIsTrue() {
         assertTrue new Repeater("runReturnsTrueIfExitConditionIsTrue")
             .repeat()
@@ -152,5 +193,32 @@ public class RepeaterTest {
             .until { true }
             .run();
         fail "Expected exception was not thrown"
+    }
+
+    @Test(expectedExceptions = [ UnsupportedOperationException.class ])
+    public void testRethrowsException() {
+        boolean result = new Repeater("throwRuntimeException")
+            .repeat()
+            .every(10 * MILLISECONDS)
+            .until { throw new UnsupportedOperationException("fail") }
+            .rethrowException()
+            .limitIterationsTo(2)
+            .run();
+        fail "Expected exception was not thrown"
+    }
+
+    @Test
+    public void testNoRethrowsException() {
+        try {
+	        boolean result = new Repeater("throwRuntimeException")
+	            .repeat()
+	            .every(10 * MILLISECONDS)
+	            .until { throw new UnsupportedOperationException("fail") }
+	            .limitIterationsTo(2)
+	            .run();
+	        assertFalse result
+        } catch (RuntimeException re) {
+            fail "Exception should not have been thrown: " + re.getMessage()
+        }
     }
 }
