@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import com.google.common.base.Throwables;
+
 import brooklyn.management.ExecutionManager
 import brooklyn.management.Task
 import brooklyn.util.internal.LanguageUtils
@@ -278,7 +280,7 @@ public class BasicTaskExecutionTest {
             data.notify()
         }
         
-        try { t.get(); fail("get should have failed due to error"); } catch (Exception eo) { Exception e = LanguageUtils.getRoot(eo); assertEquals("Aaargh", e.getMessage()) }
+        try { t.get(); fail("get should have failed due to error"); } catch (Exception eo) { Exception e = Throwables.getRootCause(eo); assertEquals("Aaargh", e.getMessage()) }
         
         assertFalse(t.isCancelled())
         assertTrue(t.isError())
