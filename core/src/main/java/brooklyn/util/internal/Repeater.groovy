@@ -209,7 +209,7 @@ public class Repeater {
                 lastError = null
                 done = exitCondition.call()
             } catch (Exception e) {
-                log.warn description, e
+                log.debug description, e
                 lastError = e
             }
             if (done) {
@@ -219,7 +219,10 @@ public class Repeater {
 
             if (iterationLimit > 0 && iterations == iterationLimit) {
                 log.debug "{}: condition not satisfied and exceeded iteration limit", description
-                if (rethrowException && lastError) throw lastError
+                if (rethrowException && lastError) {
+                    log.error("{}: error caught checking condition: {}", description, lastError.getMessage())
+                    throw lastError
+                }
                 return false
             }
 
@@ -227,7 +230,10 @@ public class Repeater {
                 Calendar now = Calendar.getInstance()
                 if (now.after(actualDeadline)) {
                     log.debug "{}: condition not satisfied and deadline passed", description
-                    if (rethrowException && lastError) throw lastError
+	                if (rethrowException && lastError) {
+	                    log.error("{}: error caught checking condition: {}", description, lastError.getMessage())
+	                    throw lastError
+	                }
                     return false
                 }
             }
