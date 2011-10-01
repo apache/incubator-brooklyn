@@ -19,22 +19,21 @@ public class ActiveMQSetup extends SshBasedJavaAppSetup {
     public static final int DEFAULT_FIRST_RMI_PORT = 1199
 
     private int openWirePort
-    private int rmiPort
 
     public static ActiveMQSetup newInstance(ActiveMQBroker entity, SshMachineLocation machine) {
         Integer suggestedVersion = entity.getConfig(ActiveMQBroker.SUGGESTED_VERSION)
         String suggestedInstallDir = entity.getConfig(ActiveMQBroker.SUGGESTED_INSTALL_DIR)
         String suggestedRunDir = entity.getConfig(ActiveMQBroker.SUGGESTED_RUN_DIR)
         Integer suggestedJmxPort = entity.getConfig(ActiveMQBroker.JMX_PORT.configKey)
-        Integer suggestedRmiPort = entity.getConfig(ActiveMQBroker.RMI_PORT.configKey)
+        Integer suggestedRmiPort = entity.getConfig(ActiveMQBroker.RMI_PORT.configKey, DEFAULT_FIRST_RMI_PORT)
         Integer suggestedOpenWirePort = entity.getConfig(ActiveMQBroker.OPEN_WIRE_PORT.configKey)
 
         String version = suggestedVersion ?: DEFAULT_VERSION
         String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"${version}"+"/"+"apache-activemq-${version}")
         String runDir = suggestedRunDir ?: (BROOKLYN_HOME_DIR+"/"+"${entity.application.id}"+"/"+"activemq-${entity.id}")
         int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort))
-        int rmiPort = machine.obtainPort(toDesiredPortRange(suggestedRmiPort, DEFAULT_FIRST_RMI_PORT))
-        int openWirePort = machine.obtainPort(toDesiredPortRange(suggestedOpenWirePort, ActiveMQBroker.OPEN_WIRE_PORT.configKey.defaultValue))
+        int rmiPort = machine.obtainPort(toDesiredPortRange(suggestedRmiPort))
+        int openWirePort = machine.obtainPort(toDesiredPortRange(suggestedOpenWirePort))
 
         ActiveMQSetup result = new ActiveMQSetup(entity, machine)
         result.setJmxPort(jmxPort)
@@ -82,7 +81,7 @@ public class ActiveMQSetup extends SshBasedJavaAppSetup {
     public Map<String, String> getRunEnvironment() {
         Map<String, String> env = [
 			"ACTIVEMQ_HOME" : "${runDir}",
-            "JAVA_OPTS" : toJavaDefinesString(getJvmStartupProperties()),
+            "JAVA_OPTS" : "",
             "ACTIVEMQ_OPTS" : toJavaDefinesString(getJvmStartupProperties()),
             "ACTIVEMQ_SUNJMX_CONTROL" : "--jmxurl service:jmx:rmi://${machine.address.hostName}:${rmiPort}/jndi/rmi://${machine.address.hostName}:${jmxPort}/jmxrmi"
         ]

@@ -40,6 +40,14 @@ public class ActiveMQBroker extends JMSBroker<ActiveMQQueue, ActiveMQTopic> {
         setConfigIfValNonNull(Attributes.JMX_PASSWORD.configKey, properties.password ?: "activemq")
     }
 
+    @Override
+    protected Collection<Integer> getRequiredOpenPorts() {
+        Collection<Integer> result = super.getRequiredOpenPorts()
+        result.add(getConfig(OPEN_WIRE_PORT.configKey))
+        result.add(getConfig(RMI_PORT.configKey))
+        return result
+    }
+
     public void setBrokerUrl() {
         setAttribute(BROKER_URL, String.format("tcp://%s:%d/", getAttribute(HOSTNAME), getAttribute(OPEN_WIRE_PORT)))
     }
