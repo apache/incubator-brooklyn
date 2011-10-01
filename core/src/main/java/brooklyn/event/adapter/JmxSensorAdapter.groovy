@@ -1,8 +1,8 @@
 package brooklyn.event.adapter
 
+import javax.management.JMX
 import javax.management.MBeanServerConnection
 import javax.management.Notification
-import javax.management.NotificationFilter
 import javax.management.NotificationListener
 import javax.management.ObjectInstance
 import javax.management.ObjectName
@@ -205,6 +205,14 @@ public class JmxSensorAdapter {
     public void addNotification(ObjectName objectName, NotificationListener listener) {
         ObjectInstance bean = findMBean objectName
         mbsc.addNotificationListener(objectName, listener, null, null)
+    }
+    
+    public <M> M getProxyObject(String objectName, Class<M> mbeanInterface) {
+        return getProxyObject(new ObjectName(objectName), mbeanInterface)
+    }
+    
+    public <M> M getProxyObject(ObjectName objectName, Class<M> mbeanInterface) {
+        return JMX.newMBeanProxy(mbsc, objectName, mbeanInterface, false) 
     }
 }
 
