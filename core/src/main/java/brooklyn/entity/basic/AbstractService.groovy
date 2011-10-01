@@ -92,7 +92,8 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
 
     public void startInLocation(MachineProvisioningLocation location) {
         Map<String,Object> flags = location.getProvisioningFlags([ getClass().getName() ])
-        flags.inboundPorts = getRequiredOpenPorts()
+        // XXX port setup is fundamentally broken, I believe...
+        // flags.inboundPorts = getRequiredOpenPorts()
         
         provisioningLoc = location
         SshMachineLocation machine = location.obtain(flags)
@@ -184,6 +185,14 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
     public void configure() {
         setAttribute(SERVICE_STATE, Lifecycle.CONFIGURED)
         setAttribute(SERVICE_CONFIGURED, true)
+    }
+
+    public File copy(String file) {
+        return copy(new File(file))
+    }
+
+    public File copy(File file) {
+        return setup.copy(file)
     }
     
     public void deploy(String file) {

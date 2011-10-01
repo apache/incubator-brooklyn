@@ -11,19 +11,23 @@ import org.slf4j.LoggerFactory
 import com.google.common.base.Preconditions
 
 /**
- * Repeat a fragment of code periodically until a condition is satisfied.
- * 
+ * Simple DSL to repeat a fragment of code periodically until a condition is satisfied.
+ *
  * In its simplest case, it is passed two closures - the first is executed, then the second. If the second closure returns false,
  * the loop is repeated; if true, it finishes. Further customization can be applied to set the period between loops and place a
  * maximum limit on how long the loop should run for.
  * <p>
- * It is configured in a "fluent" manner - for example:
+ * It is configured in a <em>fluent</em> manner - for example:
  * <pre>
- * new Repeater("Wait until the Frobnitzer is ready")
- * .repeat { try { status = frobnitzer.getStatus() } catch(Exception e) { status = "Failed" } }
- * .until { status == "Ready" || status == "Failed" }
- * .limitIterationsTo(30)
- * .run()
+ * Repeater.create("Wait until the Frobnitzer is ready")
+ *     .repeat {
+ *         status = frobnitzer.getStatus()
+ *     }
+ *     .until {
+ *         status == "Ready" || status == "Failed"
+ *     }
+ *     .limitIterationsTo(30)
+ *     .run()
  * </pre>
  */
 public class Repeater {
@@ -32,11 +36,12 @@ public class Repeater {
     private final String description
     private Closure body
     private Closure<Boolean> exitCondition
-    private long period = 0L;
-    private TimeUnit periodUnit = null;
-    private int iterationLimit = 0;
-    private int deadline = 0;
-    private TimeUnit deadlineUnit = null;
+    private long period = 0L
+    private TimeUnit periodUnit = null
+    private int iterationLimit = 0
+    private int deadline = 0
+    private TimeUnit deadlineUnit = null
+    private boolean rethrowException = false
 
     /**
      * Construct a new instance of Repeater.
@@ -44,7 +49,7 @@ public class Repeater {
      * @param description a description of the operation that will appear in debug logs.
      */
     Repeater(String description) {
-        this.description = description ?: "Repeater";
+        this.description = description ?: "Repeater"
     }
 
     public static Repeater create(String description=null) {
@@ -59,8 +64,8 @@ public class Repeater {
      */
     Repeater repeat(Closure body={}) {
         Preconditions.checkNotNull body, "body must not be null"
-        this.body = body;
-        return this;
+        this.body = body
+        return this
     }
 
     /**
@@ -73,9 +78,9 @@ public class Repeater {
     Repeater every(long period, TimeUnit unit) {
         Preconditions.checkArgument period > 0, "period must be positive: %s", period
         Preconditions.checkNotNull unit, "unit must not be null"
-        this.period = period;
-        this.periodUnit = unit;
-        return this;
+        this.period = period
+        this.periodUnit = unit
+        return this
     }
 
     /**
@@ -96,14 +101,24 @@ public class Repeater {
     /**
      * Set code fragment that tests if the loop has completed.
      *
-     * @param exitCondition a closure or other Callable that returns a boolean. If this code returns <code>true<code>, then the
+     * @param exitCondition a closure or other Callable that returns a boolean. If this code returns {@literal true} then the
      * loop will stop executing.
      * @return {@literal this} to aid coding in a fluent style.
      */
     Repeater until(Closure<Boolean> exitCondition) {
         Preconditions.checkNotNull exitCondition, "exitCondition must not be null"
-        this.exitCondition = exitCondition;
-        return this;
+        this.exitCondition = exitCondition
+        return this
+    }
+
+    /**
+     * If the exit conditon check throws an exception, it will be recorded and the last exception will be thrown on failure.
+     *
+     * @return {@literal this} to aid coding in a fluent style.
+     */
+    Repeater rethrowException() {
+        this.rethrowException = true
+        return this
     }
 
     /**
@@ -116,13 +131,13 @@ public class Repeater {
      */
     Repeater limitIterationsTo(int iterationLimit) {
         Preconditions.checkArgument iterationLimit > 0, "iterationLimit must be positive: %s", iterationLimit
-        this.iterationLimit = iterationLimit;
-        return this;
+        this.iterationLimit = iterationLimit
+        return this
     }
 
     /**
      * Set the maximum execution time.
-     * 
+     *
      * The loop will exit if the condition has not been satisfied after this deadline has elapsed.
      *
      * @param deadline the maximum time that the loop should run.
@@ -132,11 +147,11 @@ public class Repeater {
     Repeater limitTimeTo(long deadline, TimeUnit unit) {
         Preconditions.checkArgument deadline > 0, "deadline must be positive: %s", deadline
         Preconditions.checkNotNull unit, "unit must not be null"
-        this.deadline = deadline;
-        this.deadlineUnit = unit;
-        return this;
+        this.deadline = deadline
+        this.deadlineUnit = unit
+        return this
     }
-    
+
     /**
      * @see #limitTimeTo(long, TimeUnit)
      */
@@ -163,51 +178,71 @@ public class Repeater {
         Preconditions.checkState period > 0, "every() method has not been called to set the loop period"
         Preconditions.checkState periodUnit != null, "every() method has not been called to set the loop period time units"
 
-        int iterations = 0;
-        Calendar actualDeadline;
+        Throwable lastError = null
+        int iterations = 0
+        Calendar actualDeadline
         if (deadline > 0) {
-            actualDeadline = Calendar.getInstance();
-            switch(deadlineUnit) {
-                case TimeUnit.DAYS: actualDeadline.add(Calendar.DATE, deadline); break;
-                case TimeUnit.HOURS: actualDeadline.add(Calendar.HOUR, deadline); break;
-                case TimeUnit.MINUTES: actualDeadline.add(Calendar.MINUTE, deadline); break;
-                case TimeUnit.SECONDS: actualDeadline.add(Calendar.SECOND, deadline); break;
-                case TimeUnit.MILLISECONDS: actualDeadline.add(Calendar.MILLISECOND, deadline); break;
+            actualDeadline = Calendar.getInstance()
+            switch (deadlineUnit) {
+                case TimeUnit.DAYS: actualDeadline.add(Calendar.DATE, deadline); break
+                case TimeUnit.HOURS: actualDeadline.add(Calendar.HOUR, deadline); break
+                case TimeUnit.MINUTES: actualDeadline.add(Calendar.MINUTE, deadline); break
+                case TimeUnit.SECONDS: actualDeadline.add(Calendar.SECOND, deadline); break
+                case TimeUnit.MILLISECONDS: actualDeadline.add(Calendar.MILLISECOND, deadline); break
             }
         } else {
-            actualDeadline = null;
+            actualDeadline = null
         }
 
-        for(;;) {
-            iterations++;
+        while (true) {
+            iterations++
             log.debug "{}: iteration {}", description, iterations
 
             try {
-                body.call();
-            } catch(Exception e) {
+                body.call()
+            } catch (Exception e) {
                 log.warn description, e
             }
 
-            boolean done = exitCondition.call();
+            boolean done = false
+            try {
+                lastError = null
+                done = exitCondition.call()
+            } catch (Exception e) {
+                log.debug description, e
+                lastError = e
+            }
             if (done) {
                 log.debug "{}: condition satisfied", description
                 return true
-            };
+            }
 
             if (iterationLimit > 0 && iterations == iterationLimit) {
                 log.debug "{}: condition not satisfied and exceeded iteration limit", description
+                if (rethrowException && lastError) {
+                    log.error("{}: error caught checking condition: {}", description, lastError.getMessage())
+                    throw lastError
+                }
                 return false
-            };
-
-            if (actualDeadline != null) {
-                Calendar now = Calendar.getInstance();
-                if (now.after(actualDeadline)) {
-                    log.debug "{}: condition not satisfied and deadline passed", description
-                    return false
-                };
             }
 
-            periodUnit.sleep(period);
+            if (actualDeadline != null) {
+                Calendar now = Calendar.getInstance()
+                if (now.after(actualDeadline)) {
+                    log.debug "{}: condition not satisfied and deadline passed", description
+	                if (rethrowException && lastError) {
+	                    log.error("{}: error caught checking condition: {}", description, lastError.getMessage())
+	                    throw lastError
+	                }
+                    return false
+                }
+            }
+
+            try {
+                periodUnit.sleep(period)
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt()
+            }
         }
     }
 }

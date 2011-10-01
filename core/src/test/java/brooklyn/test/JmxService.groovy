@@ -1,9 +1,14 @@
 package brooklyn.test
 
+import javax.management.MBeanNotificationInfo
 import javax.management.MBeanServer
 import javax.management.MBeanServerFactory
 import javax.management.MBeanServerInvocationHandler
+import javax.management.Notification
+import javax.management.NotificationBroadcasterSupport
+import javax.management.NotificationEmitter
 import javax.management.ObjectName
+import javax.management.StandardEmitterMBean
 import javax.management.remote.JMXConnectorServer
 import javax.management.remote.JMXConnectorServerFactory
 import javax.management.remote.JMXServiceURL
@@ -11,8 +16,8 @@ import javax.management.remote.JMXServiceURL
 import mx4j.tools.naming.NamingService
 import mx4j.tools.naming.NamingServiceMBean
 
-import org.slf4j.LoggerFactory
 import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 /**
  * Set up a JMX service ready for clients to connect. This consists of an MBean server, a connector server and a naming
@@ -65,7 +70,16 @@ class JmxService {
     
     public GeneralisedDynamicMBean registerMBean(Map initialAttributes, Map operations, String name) {
         GeneralisedDynamicMBean mbean = new GeneralisedDynamicMBean(initialAttributes, operations)
-        server.registerMBean(mbean, new ObjectName (name))
+        server.registerMBean(mbean, new ObjectName(name))
+        return mbean
+    }
+    
+    public StandardEmitterMBean registerMBean(List notifications, String name) {
+        String[] types = notifications.toArray(new String[0])
+        MBeanNotificationInfo info = new MBeanNotificationInfo(types, Notification.class.getName(), "Notification");
+        NotificationEmitter emitter = new NotificationBroadcasterSupport(info);
+        StandardEmitterMBean mbean = new StandardEmitterMBean(NotificationEmitter.class, emitter);
+        server.registerMBean(mbean, new ObjectName(name));
         return mbean
     }
 }

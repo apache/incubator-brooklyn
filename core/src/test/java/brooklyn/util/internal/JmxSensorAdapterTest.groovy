@@ -2,12 +2,17 @@ package brooklyn.util.internal
 
 import static org.testng.Assert.*
 
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
 import javax.management.MBeanOperationInfo
 import javax.management.MBeanParameterInfo
 import javax.management.MBeanServerConnection
+import javax.management.Notification
+import javax.management.NotificationListener
 import javax.management.ObjectName
+import javax.management.StandardEmitterMBean
 import javax.management.openmbean.CompositeDataSupport
 import javax.management.openmbean.CompositeType
 import javax.management.openmbean.OpenType
@@ -122,35 +127,63 @@ public class JmxSensorAdapterTest {
 
     @Test
     public void jmxOperationInvokesMethod() {
+        String objectName = 'JmxEffectorAdapterTest:type=Generic'
         final AtomicInteger invocationCount = new AtomicInteger()
-        GeneralisedDynamicMBean mbean = jmxService.registerMBean([:], ["myop":{invocationCount.incrementAndGet()}], 'JmxEffectorAdapterTest:type=generic')
+        GeneralisedDynamicMBean mbean = jmxService.registerMBean([:], ["myop":{invocationCount.incrementAndGet()}], objectName)
 
         // Create a JMX adapter
         JmxSensorAdapter jmxAdapter = new JmxSensorAdapter(entity)
         jmxAdapter.connect()
         
         // Invoke the operation
-        jmxAdapter.invokeOperation(new ObjectName("JmxEffectorAdapterTest:type=generic"), "myop", new Object[0], new String[0])
+        jmxAdapter.operation(objectName, "myop")
 
         assertEquals invocationCount.get(), 1
     }
-    
-    @Test(enabled = false)
-    public void jmxOperationInvokesMethodWithArgsAndReturnsValue() {
-        MBeanParameterInfo paramInfo = new MBeanParameterInfo("param1", "int", "my param1")
-        MBeanParameterInfo[] paramInfos = [paramInfo].toArray(new MBeanParameterInfo[0])
-        MBeanOperationInfo opInfo = new MBeanOperationInfo("myop", "my descr", paramInfos, "String", MBeanOperationInfo.ACTION)
+
+    @Test
+    public void jmxNotificationReceived() {
+        // Setup
+        String objectName = 'JmxEffectorAdapterTest:type=Notifier'
+        String one = 'notification.one', two = 'notification.two'
+        StandardEmitterMBean mbean = jmxService.registerMBean([ one, two ], objectName)
+        int sequence = 0
+
+        // Create a JMX adapter
+        JmxSensorAdapter adapter = new JmxSensorAdapter(entity)
+        adapter.connect()
         
-        GeneralisedDynamicMBean mbean = jmxService.registerMBean([:], [(opInfo):{String it->it+"suffix"}], 'JmxEffectorAdapterTest:type=generic')
+        // Create a listener
+        Listener listener = new Listener(one);
+        
+        // Add notification listener 
+        adapter.addNotification(objectName, listener)
+
+        Notification n = new Notification(one, mbean, sequence++, "test");
+        mbean.sendNotification(n);
+        
+        // Check 
+        assertTrue listener.waitForNotification()
+    }
+    
+    @Test
+    public void jmxOperationInvokesMethodWithArgsAndReturnsValue() {
+        String objectName = 'JmxEffectorAdapterTest:type=Generic'
+        MBeanParameterInfo paramInfo = new MBeanParameterInfo('param1', String.class.getName(), 'my param1')
+        MBeanParameterInfo[] paramInfos = [ paramInfo ].toArray(new MBeanParameterInfo[0])
+        MBeanOperationInfo opInfo = new MBeanOperationInfo('myop', "my descr", paramInfos, String.class.getName(), MBeanOperationInfo.ACTION)
+
+	    // This is awful...
+        GeneralisedDynamicMBean mbean = jmxService.registerMBean([:], [ (opInfo):{ Object[] args -> args[0]+'suffix' } ], objectName)
 
         // Create a JMX adapter
         JmxSensorAdapter jmxAdapter = new JmxSensorAdapter(entity)
         jmxAdapter.connect()
         
         // Invoke the operation
-        String result = jmxAdapter.invokeOperation("JmxEffectorAdapterTest:type=generic", "myop", [123].toArray(), ["int"].toArray(new String[0]))
+        String result = jmxAdapter.operation(objectName, 'myop', 'abc')
 
-        assertEquals result, 123+"suffix"
+        assertEquals result, 'abc'+'suffix'
     }
 
     // TODO Test needs fixed/updated and cleaned up, or deleted
@@ -178,10 +211,29 @@ public class JmxSensorAdapterTest {
         JmxSensorAdapter adapter = new JmxSensorAdapter(urlS)
         adapter.connect()
         
-        def r1 = adapter.getAttributes "Catalina:type=GlobalRequestProcessor,name=http-bio-*"
-        def rN = adapter.getAttribute "Catalina:type=GlobalRequestProcessor,name=http-bio-*", "requestCount"
+        def result = adapter.getAttribute "Catalina:type=GlobalRequestProcessor,name=http-bio-*", "requestCount"
         // TODO add assertions
 
         adapter.disconnect()
+    }
+}
+
+/** Listener class for JMX {@link Notification} testing. */
+public class Listener implements NotificationListener {
+    private String waiting;
+    private CountDownLatch latch = new CountDownLatch(1);
+            
+    public Listener(String waiting) {
+        this.waiting = waiting
+    }
+    
+    public void handleNotification(Notification notification, Object handback) {
+        if (waiting == notification.type) {
+            latch.countDown()
+        }
+    }
+            
+    public boolean waitForNotification() {
+        latch.await(1, TimeUnit.SECONDS)
     }
 }

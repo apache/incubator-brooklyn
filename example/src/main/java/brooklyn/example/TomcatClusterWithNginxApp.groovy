@@ -13,7 +13,7 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 
 
 class TomcatClusterWithNginxApp extends AbstractApplication {
-    
+
     public static void main(String[] argv) {
         TomcatClusterWithNginxApp demo = new TomcatClusterWithNginxApp(displayName : "tomcat cluster with nginx example")
         demo.init()
@@ -28,13 +28,14 @@ class TomcatClusterWithNginxApp extends AbstractApplication {
                 domain : "brooklyn.geopaas.org",
                 port : 8000,
                 portNumberSensor : Attributes.HTTP_PORT)
-    
+
         ControlledDynamicWebAppCluster cluster = new ControlledDynamicWebAppCluster(
                 controller : nginxController,
                 webServerFactory : { properties -> new TomcatServer(properties) },
                 owner : this)
-        
-        cluster.setConfig(JavaWebApp.WAR, "/path/to/booking-mvc.war")
+
+        cluster.setConfig(TomcatServer.HTTP_PORT.configKey, 8080)
         cluster.setConfig(Cluster.INITIAL_SIZE, 2)
+        cluster.setConfig(JavaWebApp.WAR, "/path/to/booking-mvc.war")
     }
 }

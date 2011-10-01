@@ -1,8 +1,8 @@
 package brooklyn.event.adapter
 
+import javax.management.JMX
 import javax.management.MBeanServerConnection
 import javax.management.Notification
-import javax.management.NotificationFilter
 import javax.management.NotificationListener
 import javax.management.ObjectInstance
 import javax.management.ObjectName
@@ -34,10 +34,6 @@ public class JmxSensorAdapter {
     public static final String JMX_URL_FORMAT = "service:jmx:rmi:///jndi/rmi://%s:%d/%s"
     public static final String RMI_JMX_URL_FORMAT = "service:jmx:rmi://%s:%d/jndi/rmi://%s:%d/%s"
 
-    private static final ENABLED = new NotificationFilter() {
-        public boolean isNotificationEnabled(Notification notification) { true }
-    }
-
     private static final Map<String,String> CLASSES = [
             "Integer" : Integer.TYPE.name,
             "Long" : Long.TYPE.name,
@@ -46,6 +42,7 @@ public class JmxSensorAdapter {
             "Character" : Character.TYPE.name,
             "Double" : Double.TYPE.name,
             "Float" : Float.TYPE.name,
+            "GStringImpl" : String.class.getName(),
             "LinkedHashMap" : Map.class.getName(),
             "TreeMap" : Map.class.getName(),
             "HashMap" : Map.class.getName(),
@@ -91,8 +88,8 @@ public class JmxSensorAdapter {
         return new JmxTabularDataProvider(this, new ObjectName(objectName), attribute)
     }
 
-    public JmxAttributeNotifier newAttributeNotifier(String objectName, String attribute, EntityLocal entity, BasicNotificationSensor sensor) {
-        return new JmxAttributeNotifier(this, new ObjectName(objectName), attribute, entity, sensor)
+    public JmxAttributeNotifier newAttributeNotifier(String objectName, EntityLocal entity, BasicNotificationSensor sensor) {
+        return new JmxAttributeNotifier(this, new ObjectName(objectName), entity, sensor)
     }
     
     public boolean isConnected() {
@@ -201,29 +198,21 @@ public class JmxSensorAdapter {
         return result
     }
 
-    public Object operation(ObjectName objectName, String method) {
-        return operation(objectName, method, [] as Object[], [] as String[])
+    public void addNotification(String objectName, NotificationListener listener) {
+        addNotification(new ObjectName(objectName), listener)
     }
     
-    public Object invokeOperation(String objectName, String method, Object[] arguments, Object[] signature) {
-        return invokeOperation(new ObjectName(objectName), method, arguments, signature)
-    }
-    
-    /**
-     * Executes an operation on a JMX {@link ObjectName}.
-     */
-    public Object invokeOperation(ObjectName objectName, String method, Object[] arguments, Object[] signature) {
-        checkConnected()
-        
+    public void addNotification(ObjectName objectName, NotificationListener listener) {
         ObjectInstance bean = findMBean objectName
-        def result = mbsc.invoke(objectName, method, arguments, signature)
-        log.trace "got result {} for jmx operation {}.{}", result, objectName.canonicalName, method
-        return result
+        mbsc.addNotificationListener(objectName, listener, null, null)
     }
     
-    private void addNotification(ObjectName objectName, String attribute, NotificationListener listener) {
-        ObjectInstance bean = findMBean objectName
-        mbsc.addNotificationListener(objectName, listener, ENABLED, null)
+    public <M> M getProxyObject(String objectName, Class<M> mbeanInterface) {
+        return getProxyObject(new ObjectName(objectName), mbeanInterface)
+    }
+    
+    public <M> M getProxyObject(ObjectName objectName, Class<M> mbeanInterface) {
+        return JMX.newMBeanProxy(mbsc, objectName, mbeanInterface, false) 
     }
 }
 
@@ -308,25 +297,26 @@ public class JmxTabularDataProvider implements ValueProvider<Map<String, Object>
  * Provides JMX attribute values to a sensor.
  */
 public class JmxAttributeNotifier implements NotificationListener {
+    private static final Logger log = LoggerFactory.getLogger(JmxAttributeNotifier.class);
+
     private final JmxSensorAdapter adapter
     private final ObjectName objectName
-    private final String attribute
     private final EntityLocal entity
     private final BasicNotificationSensor sensor
     
-    public JmxAttributeNotifier(JmxSensorAdapter adapter, ObjectName objectName, String attribute, EntityLocal entity, BasicNotificationSensor sensor) {
+    public JmxAttributeNotifier(JmxSensorAdapter adapter, ObjectName objectName, EntityLocal entity, BasicNotificationSensor sensor) {
         this.adapter = Preconditions.checkNotNull(adapter, "adapter")
         this.objectName = Preconditions.checkNotNull(objectName, "object name")
-        this.attribute = Preconditions.checkNotNull(attribute, "attribute")
         this.entity = Preconditions.checkNotNull(entity, "entity")
         this.sensor = Preconditions.checkNotNull(sensor, "sensor")
         
-        adapter.addNotification(objectName, attribute, this)
+        adapter.addNotification(objectName, this)
     }
     
     public void handleNotification(Notification notification, Object handback) {
-        if (notification.type.equals(sensor.name)) {
-            entity.setAttribute(sensor, notification.userData)
+        log.info "Got notification type {}: {} (sequence {})", notification.type, notification.message, notification.sequenceNumber
+        if (notification.type == sensor.name) {
+            entity.emit(sensor, notification.userData)
         }
     }
 }

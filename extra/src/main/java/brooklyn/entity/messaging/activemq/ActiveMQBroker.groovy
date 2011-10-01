@@ -40,6 +40,14 @@ public class ActiveMQBroker extends JMSBroker<ActiveMQQueue, ActiveMQTopic> {
         setConfigIfValNonNull(Attributes.JMX_PASSWORD.configKey, properties.password ?: "activemq")
     }
 
+    @Override
+    protected Collection<Integer> getRequiredOpenPorts() {
+        Collection<Integer> result = super.getRequiredOpenPorts()
+        result.add(getConfig(OPEN_WIRE_PORT.configKey))
+        result.add(getConfig(RMI_PORT.configKey))
+        return result
+    }
+
     public void setBrokerUrl() {
         setAttribute(BROKER_URL, String.format("tcp://%s:%d/", getAttribute(HOSTNAME), getAttribute(OPEN_WIRE_PORT)))
     }
@@ -68,7 +76,7 @@ public class ActiveMQBroker extends JMSBroker<ActiveMQQueue, ActiveMQTopic> {
 
     protected boolean computeNodeUp() {
         String host = getAttribute(HOSTNAME)
-        ValueProvider<String> provider = jmxAdapter.newAttributeProvider("org.apache.camel:context=${host}/camel,type=components,name=\"activemq\"", "State")
+        ValueProvider<String> provider = jmxAdapter.newAttributeProvider("org.apache.camel:context=*/camel,type=components,name=\"activemq\"", "State")
         try {
             String state = provider.compute()
             return (state == "Started")
@@ -86,7 +94,7 @@ public abstract class ActiveMQDestination extends JMSDestination {
     }
 
     public void init() {
-	    broker = new ObjectName("org.apache.activemq:Type=Broker,BrokerName=localhost")
+	    broker = new ObjectName("org.apache.activemq:BrokerName=localhost,Type=Broker")
     }
 }
 
@@ -112,7 +120,7 @@ public class ActiveMQQueue extends ActiveMQDestination implements Queue {
     }
 
     public void addJmxSensors() {
-        String queue = "org.apache.activemq:Type=Queue,BrokerName=localhost,Destination=${name}"
+        String queue = "org.apache.activemq:BrokerName=localhost,Type=Queue,Destination=${name}"
         attributePoller.addSensor(QUEUE_DEPTH_MESSAGES, jmxAdapter.newAttributeProvider(queue, "QueueSize"))
     }
 

@@ -9,7 +9,10 @@ import brooklyn.location.basic.jclouds.JcloudsLocationFactory
 
 
 class TomcatInAwsApp extends AbstractApplication {
-    
+
+    //For this to successfully run on AWS you will need to replace the placeholder credentials; indentity, credential,
+    //sshPrivateKey and sshPublicKey. You will also need to specify your AMI image ID and a security group.
+
     public static void main(String[] argv) {
         TomcatInAwsApp demo = new TomcatInAwsApp(displayName : "tomcat server example")
         demo.init()
@@ -23,11 +26,11 @@ class TomcatInAwsApp extends AbstractApplication {
                 sshPublicKey : new File("/home/bob/.ssh/id_rsa.pub")
             ])
 
-        JcloudsLocation loc = locFactory.newLocation("eu-west-1")
+        JcloudsLocation loc = locFactory.newLocation("us-west-1")
         
         loc.setTagMapping([
                 (TomcatServer.class.getName()):[
-                    imageId:"ami-89def4fd",
+                    imageId:"us-west-1/ami-25df8e60",
                     securityGroups:["my-security-group"]]])
         
         demo.start([loc])
@@ -36,5 +39,6 @@ class TomcatInAwsApp extends AbstractApplication {
     public void init() {
         def tomcat = new TomcatServer(owner:this)
         tomcat.setConfig(JavaWebApp.WAR, "/path/to/booking-mvc.war")
+        tomcat.setConfig(TomcatServer.HTTP_PORT.configKey, 8080)
     }
 }
