@@ -33,6 +33,16 @@ public class LanguageUtils {
         target.hasProperty(name)?.getProperty(target) ?: defaultValue
     }
 
+    public static boolean repeatUntilSuccess(String description=null, Closure action) throws Exception {
+        boolean result = new Repeater(description)
+            .repeat()
+            .every(500, TimeUnit.MILLISECONDS)
+            .until(action)
+            .rethrowException()
+            .limitIterationsTo(40)
+            .run()
+    }
+
     //TODO find with annotation
 
     public static byte[] serialize(Object orig) {
