@@ -185,6 +185,14 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
         setAttribute(SERVICE_STATE, Lifecycle.CONFIGURED)
         setAttribute(SERVICE_CONFIGURED, true)
     }
+
+    public File copy(String file) {
+        return copy(new File(file))
+    }
+
+    public File copy(File file) {
+        return setup.copy(file)
+    }
     
     public void deploy(String file) {
         deploy(new File(file))
