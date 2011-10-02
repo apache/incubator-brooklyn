@@ -177,7 +177,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         }
         
         if (properties.imageSize) {
-            templateBuilder.imageSize(properties.imageId);
+            templateBuilder.imageSize(properties.imageSize);
         }
         
         if (properties.imageId) {
