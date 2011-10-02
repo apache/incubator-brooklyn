@@ -1,5 +1,5 @@
 
-package brooklyn.example;
+package brooklyn.earlythoughts;
 
 import java.util.Map
 
