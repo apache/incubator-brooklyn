@@ -1,5 +1,7 @@
 package brooklyn.event.basic
 
+import java.util.concurrent.ConcurrentHashMap
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -16,6 +18,11 @@ public class AttributeMap implements Serializable {
     static final Logger log = LoggerFactory.getLogger(AttributeMap.class)
  
     EntityLocal entity;
+    
+    /**
+     * The values are stored as nested maps, with the key being the constituent parts of the sensor.
+     */
+    // Note that we synchronize on the top-level map, to handle concurrent updates and and gets (ENGR-2111)
     Map values = [:];
     
     public AttributeMap(EntityLocal entity) {
@@ -27,21 +34,23 @@ public class AttributeMap implements Serializable {
     public <T> T update(Collection<String> path, T newValue) {
         Map map
         String key
-        Object val = values
-        path.each { 
-            if (!(val in Map)) {
-                if (val!=null)
-                    log.debug "wrong type of value encountered when setting $path; expected map at $key but found $val; overwriting"
-                val = [:]
-                map.put(key, val)
+        synchronized (values) {
+            Object val = values
+            path.each { 
+                if (!(val in Map)) {
+                    if (val!=null)
+                        log.debug "wrong type of value encountered when setting $path; expected map at $key but found $val; overwriting"
+                    val = [:]
+                    map.put(key, val)
+                }
+                map = val
+                key = it
+                val = map.get(it)
             }
-            map = val
-            key = it
-            val = map.get(it)
+            log.trace "putting at $path=$newValue for $entity"
+            def oldValue = map.put(key, newValue)
+            return oldValue
         }
-        log.trace "putting at $path, $key under $map"
-        def oldValue = map.put(key, newValue)
-        oldValue
     }
     
     public <T> void update(Sensor<T> sensor, T newValue) {
@@ -53,11 +62,15 @@ public class AttributeMap implements Serializable {
     }
     
     public Object getValue(Collection<String> path) {
-        return getValueRecurse(values, path)
+        synchronized (values) {
+            return getValueRecurse(values, path)
+        }
     }
     
     public <T> T getValue(Sensor<T> sensor) {
-        return getValueRecurse(values, sensor.getNameParts())
+        synchronized (values) {
+            return getValueRecurse(values, sensor.getNameParts())
+        }
     }
 
     private static Object getValueRecurse(Map node, Collection<String> path) {
