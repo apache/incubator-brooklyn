@@ -52,7 +52,7 @@ read input
 }
 
 # Release prepare
-mvn release:clean release:prepare -PExample,Launcher --batch-mode -DautoVersionSubmodules=true -DreleaseVersion=${release_tag_ver} -DdevelopmentVersion=${release_branch_ver}
+mvn release:clean release:prepare -PExample,Launcher,Four,Three --batch-mode -DautoVersionSubmodules=true -DreleaseVersion=${release_tag_ver} -DdevelopmentVersion=${release_branch_ver}
 
 # Release perform
-mvn release:perform -PExample,Launcher --batch-mode
+mvn release:perform -PExample,Launcher,Four,Three --batch-mode
