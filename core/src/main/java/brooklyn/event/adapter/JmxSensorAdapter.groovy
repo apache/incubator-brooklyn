@@ -7,6 +7,7 @@ import javax.management.NotificationListener
 import javax.management.ObjectInstance
 import javax.management.ObjectName
 import javax.management.openmbean.CompositeData
+import javax.management.openmbean.TabularData
 import javax.management.openmbean.TabularDataSupport
 import javax.management.remote.JMXConnector
 import javax.management.remote.JMXConnectorFactory
@@ -47,6 +48,8 @@ public class JmxSensorAdapter {
             "TreeMap" : Map.class.getName(),
             "HashMap" : Map.class.getName(),
             "ConcurrentHashMap" : Map.class.getName(),
+            "TabularDataSupport" : TabularData.class.getName(),
+            "CompositeDataSupport" : CompositeData.class.getName(),
         ]
  
     final EntityLocal entity
