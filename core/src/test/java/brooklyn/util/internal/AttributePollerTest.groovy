@@ -1,7 +1,7 @@
 package brooklyn.util.internal
 
-import static org.testng.Assert.*
 import static brooklyn.test.TestUtils.*
+import static org.testng.Assert.*
 
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicInteger
@@ -71,6 +71,57 @@ public class AttributePollerTest {
         assertApproxPeriod(callTimes, PERIOD, 500)
     }
     
+    @Test
+    public void testRemoveSensorStopsItBeingUpdated() {
+        AbstractEntity entity = new LocallyManagedEntity()
+        AttributePoller attributePoller = new AttributePoller(entity, [period:50])
+        
+        final AtomicInteger desiredVal = new AtomicInteger(1)
+        BasicAttributeSensor<Integer> FOO = [ Integer, "foo", "My foo" ]
+        attributePoller.addSensor(FOO, { return desiredVal.get() } as ValueProvider)
+
+        attributePoller.removeSensor(FOO)
+        
+        // The poller could already be calling the value provider, so can't simply assert never called again.
+        // And want to ensure that it is never called again (after any currently executing call), so need to wait.
+        // TODO Nicer way than a sleep?
+        
+        Thread.sleep(100)
+        desiredVal.set(2)
+        Thread.sleep(100)
+        assertEquals(entity.getAttribute(FOO), 1)
+        
+        attributePoller.updateAll()
+        assertEquals(entity.getAttribute(FOO), 1)
+        
+        try {
+            attributePoller.update(FOO)
+            fail()
+        } catch (IllegalStateException e) {
+            // success
+        }
+    }
+
+    @Test
+    public void testClosePollerStopsItBeingUpdated() {
+        AbstractEntity entity = new LocallyManagedEntity()
+        AttributePoller attributePoller = new AttributePoller(entity, [period:50])
+        
+        final AtomicInteger desiredVal = new AtomicInteger(1)
+        BasicAttributeSensor<Integer> FOO = [ Integer, "foo", "My foo" ]
+        attributePoller.addSensor(FOO, { return desiredVal.get() } as ValueProvider)
+
+        attributePoller.close()
+        
+        // The poller could already be calling the value provider, so can't simply assert never called again.
+        // And want to ensure that it is never called again (after any currently executing call), so need to wait.
+        // TODO Nicer way than a sleep?
+        
+        Thread.sleep(100)
+        desiredVal.set(2)
+        Thread.sleep(100)
+        assertEquals(entity.getAttribute(FOO), 1)
+    }
 
     private void assertApproxPeriod(List<Long> actual, int expectedInterval, long expectedDuration) {
         final long ACCEPTABLE_VARIANCE = 200
