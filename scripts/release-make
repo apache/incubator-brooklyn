@@ -25,9 +25,14 @@ done
 
 # Some magic to derive the anticipated version of the release.
 # Use xpath to query the version number in the pom
-set +e
-current_version=$( xpath pom.xml '/project/version/text()' 2>/dev/null )
-set -e
+xpath='xpath'
+type -P $xpath &>/dev/null && {
+	set +e
+	current_version=$( xpath pom.xml '/project/version/text()' 2>/dev/null )
+	set -e
+} || {
+        echo "Cannot guess version number as $xpath command not found."
+}
 # If the user didn't supply the release version, strip -SNAPSHOT off the current version and use that
 [ -z "$release_tag_ver" ] && release_tag_ver=${current_version%-SNAPSHOT}
 

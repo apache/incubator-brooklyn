@@ -1,4 +1,4 @@
-#!/bin/bash -e -u
+#!/bin/bash -e
 
 usage(){
 	echo >&2 'Usage: release-branch-from-master --release <version> [ --release-suffix <suffix> ]'
@@ -29,13 +29,19 @@ while [ $# -gt 0 ]; do
 done
 
 # Use xpath to query the current version number in the pom
-set +e
-current_version=$( xpath pom.xml '/project/version/text()' 2>/dev/null )
-( echo ${current_version} | grep -qE '^([0-9]+).([0-9]+).0-SNAPSHOT$' )
-current_version_valid=$?
-set -e
+xpath='xpath'
+type -P $xpath &>/dev/null && {
+	set +e
+	current_version=$( xpath pom.xml '/project/version/text()' 2>/dev/null )
+	( echo ${current_version} | grep -qE '^([0-9]+).([0-9]+).0-SNAPSHOT$' )
+	current_version_valid=$?
+	set -e 
+} || { 
+	echo "Cannot guess version number as $xpath command not found."
+	current_version_valid=1
+}
 
-if [ $current_version_valid -ne 0 -a -z "${release_ver}" -a -z "${master_ver}" ]; then
+if [ "${current_version_valid}" -ne 0 -a -z "${release_ver}" -a -z "${master_ver}" ]; then
 	echo >&2 "Detected current version as '${current_version}', but I can't parse this. Please supply --release and --master parameters."
 	exit 1
 fi
