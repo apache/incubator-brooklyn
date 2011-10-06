@@ -111,6 +111,9 @@ public class AttributePollerTest {
         BasicAttributeSensor<Integer> FOO = [ Integer, "foo", "My foo" ]
         attributePoller.addSensor(FOO, { return desiredVal.get() } as ValueProvider)
 
+        Thread.sleep(100)
+        assertEquals(entity.getAttribute(FOO), 1)
+        
         attributePoller.close()
         
         // The poller could already be calling the value provider, so can't simply assert never called again.
