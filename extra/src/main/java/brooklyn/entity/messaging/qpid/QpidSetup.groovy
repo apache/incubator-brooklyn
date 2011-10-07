@@ -28,8 +28,10 @@ public class QpidSetup extends SshBasedJavaAppSetup {
         Integer suggestedAmqpPort = entity.getConfig(QpidBroker.AMQP_PORT.configKey)
 
         String version = suggestedVersion ?: DEFAULT_VERSION
-        String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"${version}"+"/"+"qpid-broker-${version}")
-        String runDir = suggestedRunDir ?: (BROOKLYN_HOME_DIR+"/"+"${entity.application.id}"+"/"+"qpid-${entity.id}")
+        String installDir = suggestedInstallDir ?: "$DEFAULT_INSTALL_DIR/${version}/qpid-broker-${version}"
+        String runDir = suggestedRunDir ?: "$BROOKLYN_HOME_DIR/${entity.application.id}/qpid-${entity.id}"
+        String logFileLocation = "$runDir/log/qpid.log"
+
         int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort))
         int rmiPort = machine.obtainPort(toDesiredPortRange(jmxPort - 100))
         int amqpPort = machine.obtainPort(toDesiredPortRange(suggestedAmqpPort))
@@ -41,6 +43,7 @@ public class QpidSetup extends SshBasedJavaAppSetup {
         result.setVersion(version)
         result.setInstallDir(installDir)
         result.setRunDir(runDir)
+        result.setLogFileLocation(logFileLocation)
 
         return result
     }

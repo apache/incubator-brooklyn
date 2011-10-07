@@ -29,8 +29,10 @@ public class ActiveMQSetup extends SshBasedJavaAppSetup {
         Integer suggestedOpenWirePort = entity.getConfig(ActiveMQBroker.OPEN_WIRE_PORT.configKey)
 
         String version = suggestedVersion ?: DEFAULT_VERSION
-        String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"${version}"+"/"+"apache-activemq-${version}")
-        String runDir = suggestedRunDir ?: (BROOKLYN_HOME_DIR+"/"+"${entity.application.id}"+"/"+"activemq-${entity.id}")
+        String installDir = suggestedInstallDir ?: "$DEFAULT_INSTALL_DIR/${version}/apache-activemq-${version}"
+        String runDir = suggestedRunDir ?: "$BROOKLYN_HOME_DIR/${entity.application.id}/activemq-${entity.id}"
+        String logFileLocation = "$runDir/data/activemq.log"
+
         int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort))
         int rmiPort = machine.obtainPort(toDesiredPortRange(suggestedRmiPort))
         int openWirePort = machine.obtainPort(toDesiredPortRange(suggestedOpenWirePort))
@@ -42,6 +44,7 @@ public class ActiveMQSetup extends SshBasedJavaAppSetup {
         result.setVersion(version)
         result.setInstallDir(installDir)
         result.setRunDir(runDir)
+        result.setLogFileLocation(logFileLocation)
 
         return result
     }

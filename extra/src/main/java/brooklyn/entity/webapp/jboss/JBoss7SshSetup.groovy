@@ -43,6 +43,8 @@ class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
         String installDir = suggestedInstallDir ?: "$DEFAULT_INSTALL_DIR/${DEFAULT_VERSION}/jboss-${DEFAULT_VERSION}"
         String runDir = suggestedRunDir ?: "$BROOKLYN_HOME_DIR/${entity.application.id}/jboss7-${entity.id}"
         String deployDir = "$runDir/$DEPLOY_SUBDIR"
+        String logFileLocation = "$runDir/standalone/log/server.log"
+
         int httpPort = machine.obtainPort(toDesiredPortRange(suggestedHttpPort, DEFAULT_FIRST_HTTP_PORT))
         int managementPort = machine.obtainPort(toDesiredPortRange(suggestedManagementPort, DEFAULT_FIRST_MANAGEMENT_PORT))
         int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort))
@@ -57,7 +59,8 @@ class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
         result.setRunDir runDir
         result.setEnvironmentPropertyFiles propFilesToGenerate
         result.setJmxEnabled false
-        
+        result.setLogFileLocation logFileLocation
+
         return result
     }
     
