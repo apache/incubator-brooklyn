@@ -347,7 +347,12 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     }
 
     @Override
-    public <T> T getConfig(ConfigKey<T> key, T defaultValue=null) {
+    public <T> T getConfig(ConfigKey<T> key) {
+        return getConfig(key, null)
+    }
+
+    @Override
+    public <T> T getConfig(ConfigKey<T> key, T defaultValue) {
         // FIXME What about inherited task in config?!
         // FIXME What if someone calls getConfig on a task, before setting parent app?
         ExecutionContext exec = (getApplication()) ? getExecutionContext() : null
