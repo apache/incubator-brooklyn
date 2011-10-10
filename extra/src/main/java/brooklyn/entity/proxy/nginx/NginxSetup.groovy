@@ -22,8 +22,9 @@ public class NginxSetup extends SshBasedAppSetup {
         String suggestedRunDir = entity.getConfig(NginxController.SUGGESTED_RUN_DIR)
 
         String version = suggestedVersion ?: DEFAULT_VERSION
-        String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"${version}"+"/"+"nginx-${version}")
-        String runDir = suggestedRunDir ?: (BROOKLYN_HOME_DIR+"/"+"${entity.application.id}"+"/"+"nginx-${entity.id}")
+        String installDir = suggestedInstallDir ?: "$DEFAULT_INSTALL_DIR/${version}/nginx-${version}"
+        String runDir = suggestedRunDir ?: "$BROOKLYN_HOME_DIR/${entity.application.id}/nginx-${entity.id}"
+        String logFileLocation = "$runDir/logs/error.log"
 
         // We must have the specified HTTP port as this is part of the public URL
         int httpPort = entity.getAttribute(Attributes.HTTP_PORT)
@@ -36,6 +37,7 @@ public class NginxSetup extends SshBasedAppSetup {
         result.setVersion(version)
         result.setInstallDir(installDir)
         result.setRunDir(runDir)
+        result.setLogFileLocation(logFileLocation)
 
         return result
     }

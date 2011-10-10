@@ -5,7 +5,6 @@ import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
 import java.util.concurrent.CopyOnWriteArrayList
-import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -28,6 +27,7 @@ import brooklyn.management.SubscriptionHandle
 import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
+import brooklyn.test.TestUtils.BooleanWithMessage
 
 /**
  * Tests that implementations of JavaWebApp can start up and shutdown, 
@@ -55,8 +55,13 @@ public class WebAppIntegrationTest {
             fail "someone is already listening on port $DEFAULT_HTTP_PORT; tests assume that port $DEFAULT_HTTP_PORT is free on localhost"
         }
     }
-    
-    @AfterMethod(groups = "Integration")
+
+    @AfterMethod(alwaysRun=true)
+    public void shutdownApp() {
+        application.stop()
+    }
+
+    @AfterMethod(alwaysRun=true)
     public void ensureTomcatIsShutDown() {
         Socket shutdownSocket = null;
         SocketException gotException = null;

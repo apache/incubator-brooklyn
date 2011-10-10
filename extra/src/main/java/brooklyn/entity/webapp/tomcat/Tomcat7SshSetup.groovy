@@ -37,9 +37,11 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
         Map<String,Map<String,String>> propFilesToGenerate = entity.getConfig(TomcatServer.PROPERTY_FILES) ?: [:]
         
         String version = suggestedTomcatVersion ?: DEFAULT_VERSION
-        String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"${version}"+"/"+"apache-tomcat-${version}")
-        String runDir = suggestedRunDir ?: (BROOKLYN_HOME_DIR+"/"+"${entity.application.id}"+"/"+"tomcat-${entity.id}")
-        String deployDir = runDir+"/"+DEFAULT_DEPLOY_SUBDIR
+        String installDir = suggestedInstallDir ?: "$DEFAULT_INSTALL_DIR/${version}/apache-tomcat-${version}"
+        String runDir = suggestedRunDir ?: "$BROOKLYN_HOME_DIR/${entity.application.id}/tomcat-${entity.id}"
+        String deployDir = "$runDir/$DEFAULT_DEPLOY_SUBDIR"
+        String logFileLocation = "$runDir/logs/catalina.out"
+
         int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort))
         int httpPort = machine.obtainPort(toDesiredPortRange(suggestedHttpPort, DEFAULT_FIRST_HTTP_PORT))
         int shutdownPort = machine.obtainPort(toDesiredPortRange(suggestedShutdownPort, DEFAULT_FIRST_SHUTDOWN_PORT))
@@ -53,6 +55,7 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
         result.setDeployDir(deployDir)
         result.setRunDir(runDir)
         result.setEnvironmentPropertyFiles(propFilesToGenerate)
+        result.setLogFileLocation(logFileLocation)
         return result
     }
     
@@ -106,7 +109,7 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
         return script
     }
 
-    /** @see SshBasedJavaAppSetup#getCheckRunningScript() */
+    /** @see brooklyn.util.SshBasedJavaAppSetup#getCheckRunningScript() */
     public List<String> getCheckRunningScript() {
        return makeCheckRunningScript("tomcat")
     }
