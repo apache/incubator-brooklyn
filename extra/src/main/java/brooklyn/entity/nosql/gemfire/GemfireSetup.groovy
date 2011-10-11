@@ -10,24 +10,45 @@ import brooklyn.util.SshBasedAppSetup
  * Start a {@link QpidNode} in a {@link Location} accessible over ssh.
  */
 public class GemfireSetup extends SshBasedAppSetup {
-    public static final String DEFAULT_VERSION = "1.0.4"
-    public static final String DEFAULT_INSTALL_DIR = DEFAULT_INSTALL_BASEDIR+"/"+"nginx"
-
+    public static final String DEFAULT_VERSION = "6.5"
+    
+    private int webPort
     private File configFile
     private File jarFile
+    private File licenseFile
     private String configFileServersidePath
     private String jarFileServersidePath
-
+    
     public static GemfireSetup newInstance(GemfireServer entity, SshMachineLocation machine) {
-        String installDir = entity.getConfig(GemfireServer.INSTALL_DIR)
-        File configFile = entity.getConfig(GemfireServer.CONFIG_FILE)
-        File jarFile = entity.getConfig(GemfireServer.JAR_FILE)
+        Integer suggestedVersion = entity.getConfig(GemfireServer.SUGGESTED_VERSION)
+        String suggestedLicenseFile = entity.getConfig(GemfireServer.LICENSE)
+        String suggestedInstallDir = entity.getConfig(GemfireServer.SUGGESTED_INSTALL_DIR)
+        String suggestedRunDir = entity.getConfig(GemfireServer.SUGGESTED_RUN_DIR)
+        String suggestedConfigFile = entity.getConfig(GemfireServer.CONFIG_FILE)
+        String suggestedJarFile = entity.getConfig(GemfireServer.JAR_FILE)
+        int suggestedWebPort = entity.getConfig(GemfireServer.WEB_CONTROLLER_PORT)
+        
+        // TODO Would like to auto-intall!
+        if (!suggestedInstallDir) throw new IllegalArgumentException("Installation directory must be specified; cannot auto-install gemfire server")
+        //String installDir = suggestedInstallDir ?: "$DEFAULT_INSTALL_DIR/${version}/gemfire-${version}"
+        String installDir = suggestedInstallDir
+        
+        String version = suggestedVersion ?: DEFAULT_VERSION
+        String runDir = suggestedRunDir ?: "$BROOKLYN_HOME_DIR/${entity.application.id}/gemfire-${entity.id}"
+        File configFile = checkFileExists(suggestedConfigFile, "config")
+        File jarFile = (suggestedJarFile) ? checkFileExists(suggestedJarFile, "jar") : null
+        File licenseFile = checkFileExists(suggestedLicenseFile, "license")
+        String logFileLocation = "$runDir/nohup.out"
+        int webPort = suggestedWebPort ?: 8089
         
         GemfireSetup result = new GemfireSetup(entity, machine)
         result.setInstallDir(installDir)
+        result.setRunDir(runDir)
         result.setConfigFile(configFile)
         result.setJarFile(jarFile)
-        result.setRunDir(installDir)
+        result.setLicenseFile(licenseFile)
+        result.setWebPort(webPort)
+        result.setLogFileLocation(logFileLocation)
         return result
     }
 
@@ -43,6 +64,14 @@ public class GemfireSetup extends SshBasedAppSetup {
         jarFile = val
     }
 
+    public void setLicenseFile(File val) {
+        licenseFile = val
+    }
+
+    public void setWebPort(int val) {
+        webPort = val
+    }
+    
     @Override
     public void install() {
         // no-op; already installed
@@ -50,6 +79,8 @@ public class GemfireSetup extends SshBasedAppSetup {
     
     @Override
     public void config() {
+        super.config();
+        
         if (configFile) {
             configFileServersidePath = runDir+"/"+configFile.getName()
             machine.copyTo(configFile, configFileServersidePath)
@@ -60,15 +91,23 @@ public class GemfireSetup extends SshBasedAppSetup {
         }
     }
 
+    @Override
+    public List<String> getConfigScript() {
+        return [ "mkdir -p ${runDir}" ]
+    }
+
     /**
      * Starts gemfire process.
      */
     public List<String> getRunScript() {
-        String startArgs = configFileServersidePath+" "+
-                (jarFileServersidePath ? jarFileServersidePath : "");
+        String startArgs =
+                webPort+" "+
+                configFileServersidePath+" "+
+                jarFileServersidePath;
         List<String> script = [
             "cd ${runDir}",
             "nohup ${installDir}/start.sh ${startArgs} &",
+            "echo \$! > pid.txt",
         ]
         return script
     }
@@ -77,7 +116,7 @@ public class GemfireSetup extends SshBasedAppSetup {
     public Map<String, String> getRunEnvironment() { [:] }
 
     public List<String> getCheckRunningScript() {
-        return ["ps -p `cat ${runDir}/gemfire.pid`"]
+        return makeCheckRunningScript("gemfire", "pid.txt")
     }
     
     /**
@@ -85,8 +124,17 @@ public class GemfireSetup extends SshBasedAppSetup {
      */
     @Override
     public List<String> getShutdownScript() {
-        // FIXME not cleanly shutting down yet!
-        List<String> script = []
-        return script
+        return makeShutdownScript("gemfire", "pid.txt")
+    }
+    
+    private static File checkFileExists(String path, Object errorMessage) {
+        if (!path) {
+            throw new IllegalArgumentException(String.valueOf(errorMessage)+" empty path");
+        }
+        File result = new File(path)
+        if (!(result.exists())) {
+            throw new IllegalArgumentException(String.valueOf(errorMessage)+" file does not exist");
+        }
+        return result;
     }
 }

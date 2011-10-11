@@ -19,14 +19,13 @@ import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedAppSetup
 
 class GemfireServer extends AbstractService {
-    public static final BasicConfigKey<String> INSTALL_DIR =
-        [ String, "gemfire.server.installDir", "Gemfire installation directory" ]
     public static final BasicConfigKey<File> CONFIG_FILE = [ File, "gemfire.server.configFile", "Gemfire configuration file" ]
     public static final BasicConfigKey<File> JAR_FILE = [ File, "gemfire.server.jarFile", "Gemfire jar file" ]
     public static final BasicConfigKey<Integer> SUGGESTED_HUB_PORT =
         [ Integer, "gemfire.server.suggestedHubPort", "Gemfire gateway hub port", 11111 ]
     public static final BasicConfigKey<File> LICENSE = [ File, "gemfire.server.license", "Gemfire license file" ]
-
+    public static final BasicConfigKey<Integer> WEB_CONTROLLER_PORT = [ Integer, "gemfire.server.controllerWebPort", "Gemfire controller web port", 8084 ]
+    
     public static final BasicAttributeSensor<Integer> HUB_PORT =
         [ Integer, "gemfire.server.hubPort", "Gemfire gateway hub port" ]
     public static final BasicAttributeSensor<String> CONTROL_URL =
