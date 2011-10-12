@@ -19,16 +19,25 @@
         <url>http://github.com/cloudsoft/brooklyn</url>
     </scm>
 
-	<distributionManagement>
-		<snapshotRepository>
-			<id>ssh-repository</id>
-			<url>scpexe://jenkins@releng3.cloudsoftcorp.com/home/jenkins/maven/snapshots</url>
-		</snapshotRepository>
-		<repository>
-			<id>ssh-repository</id>
-			<url>scpexe://jenkins@releng3.cloudsoftcorp.com/home/jenkins/maven/releases</url>
-		</repository>
-	</distributionManagement>
+    <distributionManagement>
+        <repository>
+            <id>release</id>
+            <name>libs-release-local</name>
+            <url>http://ccweb.cloudsoftcorp.com/maven/libs-release-local</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <snapshotRepository>
+            <id>snapshot</id>
+            <name>libs-snapshot-local</name>
+            <url>http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local</url>
+            <uniqueVersion>true</uniqueVersion>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </snapshotRepository>
+    </distributionManagement>
 
     <licenses>
         <license>

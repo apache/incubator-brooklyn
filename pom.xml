@@ -6,25 +6,8 @@
     <packaging>pom</packaging>
     <version>0.1.0-SNAPSHOT</version>
     <name>Brooklyn Top Level Project</name>
-    <scm>
-        <connection>scm:git:git://github.com/cloudsoft/brooklyn.git</connection>
-        <developerConnection>scm:git:git@github.com:cloudsoft/brooklyn.git</developerConnection>
-        <url>http://github.com/cloudsoft/brooklyn</url>
-    </scm>
 
     <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
-                <version>2.2.1</version>
-                <configuration>
-                    <tagNameFormat>release-@{project.version}</tagNameFormat>
-                    <arguments>-PExample,Launcher</arguments>
-                </configuration>
-            </plugin>
-        </plugins>
-
         <extensions>
             <extension>
                 <groupId>org.apache.maven.wagon</groupId>
@@ -33,17 +16,6 @@
             </extension>
         </extensions>
     </build>
-
-	<distributionManagement>
-		<snapshotRepository>
-			<id>ssh-repository</id>
-			<url>scpexe://jenkins@releng3.cloudsoftcorp.com/home/jenkins/maven/snapshots</url>
-		</snapshotRepository>
-		<repository>
-			<id>ssh-repository</id>
-			<url>scpexe://jenkins@releng3.cloudsoftcorp.com/home/jenkins/maven/releases</url>
-		</repository>
-	</distributionManagement>
 
     <modules>
         <module>parent/root</module>
@@ -84,10 +56,6 @@
     	<profile>
     		<id>External</id>
 			<distributionManagement>
-				<snapshotRepository>
-					<id>ssh-repository</id>
-					<url>scpexe://cruiser@releng1.cloudsoftcorp.com/var/www/downloads/maven2/snapshots</url>
-				</snapshotRepository>
 				<repository>
 					<id>ssh-repository</id>
 					<url>scpexe://cruiser@releng1.cloudsoftcorp.com/var/www/downloads/maven2/releases</url>
@@ -97,6 +65,20 @@
 					<url>scpexe://cruiser@releng1.cloudsoftcorp.com/var/www/downloads/autodocs/${project.version}</url>
 				</site>
 			</distributionManagement>
+
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-release-plugin</artifactId>
+                        <version>2.2.1</version>
+                        <configuration>
+                            <tagNameFormat>release-@{project.version}</tagNameFormat>
+                            <arguments>-PExample,Launcher</arguments>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
     	</profile>
     </profiles>
 </project>
