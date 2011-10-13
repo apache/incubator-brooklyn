@@ -2,6 +2,8 @@ package brooklyn.extras.openshift
 
 import java.util.Map;
 
+import com.google.common.base.Preconditions;
+
 import brooklyn.location.basic.AbstractLocation;
 
 class OpenshiftLocation extends AbstractLocation {
