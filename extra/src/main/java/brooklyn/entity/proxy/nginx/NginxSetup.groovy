@@ -11,7 +11,7 @@ import brooklyn.util.SshBasedAppSetup
  * Start a {@link QpidNode} in a {@link Location} accessible over ssh.
  */
 public class NginxSetup extends SshBasedAppSetup {
-    public static final String DEFAULT_VERSION = "1.0.4"
+    public static final String DEFAULT_VERSION = "1.0.8"
     public static final String DEFAULT_INSTALL_DIR = DEFAULT_INSTALL_BASEDIR+"/"+"nginx"
 
     private int httpPort
