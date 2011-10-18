@@ -30,6 +30,11 @@ import com.google.common.collect.Iterables
  * An {@link Entity} representing an abstract service process.
  *
  * A service can only run on a single {@link MachineLocation} at a time.
+ * It typically takes config keys for suggested versions and filesystem locations, and for the environment variables to set.
+ * It exposes sensors for service state (Lifecycle) and status (String), and for host info, log file location.
+ * 
+ * FIXME not happy with term "service"; it is too general; should this be AbstractProcessEntity ?; 
+ * and could we offer conveniences for the pid of what we start?
  */
 public abstract class AbstractService extends AbstractEntity implements Startable, Configurable {
     public static final Logger log = LoggerFactory.getLogger(AbstractService.class)
@@ -128,10 +133,10 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
     public void waitForEntityStart() throws IllegalStateException {
         log.debug "waiting to ensure $this doesn't abort prematurely"
         long startTime = System.currentTimeMillis()
-        long waitTime = startTime + 75000 // FIXME magic number
+        long waitTime = startTime + 75000 // FIXME magic number; should be config key with default value?
         boolean isRunningResult = false;
         while (!isRunningResult && System.currentTimeMillis() < waitTime) {
-            Thread.sleep 3000 // FIXME magic number
+            Thread.sleep 3000 // FIXME magic number; should be config key with default value?
             isRunningResult = setup.isRunning()
             log.debug "checked $this, running result $isRunningResult"
         }

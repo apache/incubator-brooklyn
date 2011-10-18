@@ -30,7 +30,7 @@ public class AttributeMapTest {
         
         try {
             for (int i = 0; i < 1000; i++) {
-                private final BasicAttributeSensor<Integer> nextSensor = [ Integer, "attributeMapTest.exampleSensor"+i, "" ]
+                final BasicAttributeSensor<Integer> nextSensor = [ Integer, "attributeMapTest.exampleSensor"+i, "" ]
                 def future = executor.submit({ map.update(nextSensor, "a") } as Runnable)
                 futures.add(future)
             }
@@ -51,7 +51,7 @@ public class AttributeMapTest {
         
         try {
             for (int i = 0; i < 1000; i++) {
-                private final BasicAttributeSensor<Integer> nextSensor = [ Integer, "attributeMapTest.exampleSensor"+i, "" ]
+                final BasicAttributeSensor<Integer> nextSensor = [ Integer, "attributeMapTest.exampleSensor"+i, "" ]
                 def future = executor.submit({ map.update(nextSensor, "a") } as Runnable)
                 def future2 = executor.submit({ map.getValue(nextSensor) } as Runnable)
                 futures.add(future)
