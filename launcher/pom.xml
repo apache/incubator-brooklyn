@@ -12,8 +12,8 @@
     </parent>
 
     <properties>
-        <jetty-version>7.4.4.v20110707</jetty-version>
-        <jsp-2-1-version>2.1.v20100127</jsp-2-1-version>
+        <jetty.version>7.4.4.v20110707</jetty.version>
+        <jsp.version>2.1.v20100127</jsp.version>
     </properties>
 
     <dependencies>
@@ -45,47 +45,47 @@
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-webapp</artifactId>
-            <version>${jetty-version}</version>
+            <version>${jetty.version}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-plus</artifactId>
-            <version>${jetty-version}</version>
+            <version>${jetty.version}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-jmx</artifactId>
-            <version>${jetty-version}</version>
+            <version>${jetty.version}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-jsp-2.1</artifactId>
-            <version>${jetty-version}</version>
+            <version>${jetty.version}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-annotations</artifactId>
-            <version>${jetty-version}</version>
+            <version>${jetty.version}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-start</artifactId>
-            <version>${jetty-version}</version>
-        </dependency>
-        <dependency>
-          <groupId>org.mortbay.jetty</groupId>
-          <artifactId>jsp-2.1-glassfish</artifactId>
-          <version>${jsp-2-1-version}</version>
+            <version>${jetty.version}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-jndi</artifactId>
-            <version>${jetty-version}</version>
+            <version>${jetty.version}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-websocket</artifactId>
-            <version>${jetty-version}</version>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>org.mortbay.jetty</groupId>
+          <artifactId>jsp-2.1-glassfish</artifactId>
+          <version>${jsp.version}</version>
         </dependency>
     </dependencies>
 
@@ -130,23 +130,12 @@
             <plugin>
                 <artifactId>maven-shade-plugin</artifactId>
             </plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-site-plugin</artifactId>
-				<version>3.0-beta-3</version>
-				<configuration>
-					<reportPlugins>
-						<plugin>
-							<groupId>org.apache.maven.plugins</groupId>
-							<artifactId>maven-javadoc-plugin</artifactId>
-							<version>2.7</version>
-						</plugin>
-					</reportPlugins>
-				</configuration>
-			</plugin>
-			<plugin>
-				<artifactId>maven-javadoc-plugin</artifactId>
-			</plugin>
+            <plugin> 
+                <artifactId>maven-site-plugin</artifactId> 
+                <configuration> 
+                    <generateReports>false</generateReports> 
+                </configuration> 
+            </plugin> 
 		</plugins>
 	</build>
 </project>
