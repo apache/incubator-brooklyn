@@ -13,7 +13,7 @@ import brooklyn.util.SshBasedJavaWebAppSetup
  * Start a {@link ActiveMQBroker} in a {@link Location} accessible over ssh.
  */
 public class ActiveMQSetup extends SshBasedJavaAppSetup {
-    public static final String DEFAULT_VERSION = "5.5.0"
+    public static final String DEFAULT_VERSION = "5.4.3"
     public static final String DEFAULT_INSTALL_DIR = DEFAULT_INSTALL_BASEDIR+"/"+"activemq"
     public static final int DEFAULT_FIRST_OPEN_WIRE_PORT = 61616
     public static final int DEFAULT_FIRST_RMI_PORT = 1199
