@@ -74,7 +74,7 @@
 			    <activeByDefault>true</activeByDefault>
 			</activation>
 			<modules>
-				<module>parent/root</module>
+				<module>parent</module>
 				<module>api</module>
 				<module>test-support</module>
 				<module>core</module>
