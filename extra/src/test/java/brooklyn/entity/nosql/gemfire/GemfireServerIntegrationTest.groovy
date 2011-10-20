@@ -16,6 +16,7 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.test.entity.TestApplication
 
 import org.testng.annotations.AfterMethod
+import brooklyn.entity.Entity
 
 /**
  * This tests the operation of the {@link GemfireServer} entity.
@@ -42,23 +43,37 @@ public class GemfireServerIntegrationTest {
     public void setUp() {
     }
 
+    private final List<Entity> createdEntities = []
     @AfterMethod(alwaysRun=true)
-    public void confirmDeath() {
+    public void callStopOnAllStartedEntities() {
+        createdEntities.each { it.stop() }
+        createdEntities.clear()
+    }
 
+    /** Creates server and returns it after adding it to the createdEntities list */
+    private GemfireServer createGemfireServer(Application owner, String installDir, String license, String config) {
+        GemfireServer entity = new GemfireServer(owner: owner)
+        entity.setConfig(GemfireServer.SUGGESTED_INSTALL_DIR, installDir)
+        entity.setConfig(GemfireServer.LICENSE, license);
+        entity.setConfig(GemfireServer.CONFIG_FILE, config)
+        createdEntities.push(entity)
+        return entity
     }
 
     @Test(groups = [ "Integration" ])
     public void testGemfireStartsAndStops() {
         Application app = new TestApplication()
-        GemfireServer entity = new GemfireServer(owner:app)
-        entity.setConfig(GemfireServer.LICENSE, pathTo(licenseFile));
-        entity.setConfig(GemfireServer.SUGGESTED_INSTALL_DIR, installDir)
-        entity.setConfig(GemfireServer.JAR_FILE, jarFile)
-        entity.setConfig(GemfireServer.CONFIG_FILE, pathTo(configFile))
+        Entity entity = createGemfireServer(app, installDir, pathTo(licenseFile), pathTo(configFile))
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         executeUntilSucceedsWithShutdown(entity) {
             assertTrue entity.getAttribute(Startable.SERVICE_UP)
         }
         assertFalse entity.getAttribute(JavaApp.SERVICE_UP)
-    }   
+    }
+
+    @Test(groups=["Integration"])
+    public void testJarDeploy() {
+//        entity.setConfig(GemfireServer.JAR_FILE, jarFile)
+
+    }
 }
