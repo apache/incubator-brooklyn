@@ -1,32 +1,26 @@
 package brooklyn.gemfire.demo;
 
+import com.gemstone.gemfire.cache.util.GatewayQueueAttributes;
+import com.sun.net.httpserver.Headers;
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.util.Map;
 import java.util.Random;
 
-import com.gemstone.gemfire.cache.util.GatewayQueueAttributes;
-import com.sun.net.httpserver.Headers;
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
+public class GatewayRequestHandler implements HttpHandler {
 
-public class GeneralRequestHandler implements HttpHandler {
-
-    private static final String GATEWAY_ADDED_MESSAGE       = "Added gateway:%s";
-    private static final String GATEWAY_REMOVED_MESSAGE     = "Removed gateway:%s";
-    private static final String GATEWAY_NOT_REMOVED_MESSAGE = "Gateway %s not removed";
-    
-    private static final String REGION_ADDED_MESSAGE       = "Added region:%s";
-    private static final String REGION_REMOVED_MESSAGE     = "Removed region:%s";
-    private static final String REGION_NOT_REMOVED_MESSAGE = "Region %s not removed";
+    private static final String ADDED_MESSAGE       = "Added gateway:%s";
+    private static final String REMOVED_MESSAGE     = "Removed gateway:%s";
+    private static final String NOT_REMOVED_MESSAGE = "Gateway %s not removed";
 
     private static final String ID_KEY="id";
     private static final String ENDPOINT_ID_KEY="endpointId";
     private static final String PORT_KEY="port";
     private static final String HOST_KEY="host";
-    
-    private static final String NAME_KEY="name";
 
     // For GatewayQueueAttributes - see com.gemstone.gemfire.cache.util.GatewayQueueAttributes
     private static final String DISK_STORE_NAME_KEY="diskStoreName"; //String
@@ -37,33 +31,24 @@ public class GeneralRequestHandler implements HttpHandler {
     private static final String ENABLE_PERSISTENCE_KEY="enablePersistence"; // boolean
     private static final String ALERT_THRESHOLD_KEY="alertThreshold"; //int
 
-    private final GatewayChangeListener gatewayListener;
-    private final RegionChangeListener regionListener;
-    
-    public GeneralRequestHandler(GatewayChangeListener gatewayListener, RegionChangeListener regionListener) {
-        this.gatewayListener = gatewayListener;
-        this.regionListener = regionListener;
+    private final GatewayChangeListener changeListener;
+
+    public GatewayRequestHandler(GatewayChangeListener changeListener) {
+        this.changeListener = changeListener;
     }
 
     private static final String USAGE = "Example usage:\n" +
-            "GET http://host:port/gateway/add?id=US&endpointId=US-1&host=localhost&port=33333 \n" +
-            "GET http://host:port/region/remove?name=trades";
+            "GET http://host:port/add?id=US&endpointId=US-1&host=localhost&port=44444 \n";
 
     public void handle(HttpExchange httpExchange) throws IOException {
         URI uri = httpExchange.getRequestURI();
         String path = uri.getPath();
         try {
-        	if(path.startsWith("/gateway")) {
-        		String subpath = path.substring(8);
-        		if(subpath.startsWith("/add")) handleAddGateway(httpExchange);
-        		else if( subpath.startsWith("/remove")) handleRemoveGateway(httpExchange);
-        		else handleUnknown(httpExchange);
-        	} else if(path.startsWith("/region")) {
-        		String subpath = path.substring(7);
-        		if(subpath.startsWith("/add")) handleAddRegion(httpExchange);
-        		else if( subpath.startsWith("/remove")) handleRemoveRegion(httpExchange);
-        		else handleUnknown(httpExchange);
-        	} else handleUnknown(httpExchange);
+            if (path.equals("/")) handleRoot(httpExchange);
+            else if (path.startsWith("/add")) handleAdd(httpExchange);
+            else if (path.startsWith("/remove")) handleRemove(httpExchange);
+            else if (path.startsWith("/status")) handleStatus(httpExchange);
+            else handleUnknown(httpExchange);
         } catch(Throwable t) {
             sendResponse(httpExchange,500,t.getMessage());
             t.printStackTrace();
@@ -71,7 +56,27 @@ public class GeneralRequestHandler implements HttpHandler {
         }
     }
 
-    private void handleAddGateway(HttpExchange httpExchange) throws IOException {
+    
+    private void handleRoot(HttpExchange httpExchange) throws IOException {
+        sendResponse(httpExchange, 200, "");
+    }
+    
+    private void handleStatus(HttpExchange httpExchange) throws IOException {
+        sendResponse(httpExchange, 200, "");
+    }
+
+    private void handleRemove(HttpExchange httpExchange) throws IOException {
+        String query = httpExchange.getRequestURI().getRawQuery();
+        Map<String,Object> parameters = new ParameterParser().parse(query);
+
+        String id = (String)parameters.get(ID_KEY);
+        boolean result = changeListener.gatewayRemoved(id);
+
+        String message = result ? REMOVED_MESSAGE : NOT_REMOVED_MESSAGE;
+        sendResponse(httpExchange,200,String.format(message,id));
+    }
+
+    private void handleAdd(HttpExchange httpExchange) throws IOException {
         String query = httpExchange.getRequestURI().getRawQuery();
         Map<String,Object> parameters = new ParameterParser().parse(query);
 
@@ -81,47 +86,14 @@ public class GeneralRequestHandler implements HttpHandler {
         int port = Integer.parseInt((String)parameters.get(PORT_KEY));
 
         GatewayQueueAttributes attributes = getQueueAttributes(parameters);
-        attributes.setDiskStoreName( computeDiskStoreName(endpointId) );
+        attributes.setOverflowDirectory( computeOverflowDirectory(endpointId) );
 
-        gatewayListener.gatewayAdded(id, endpointId, host,  port, attributes);
+        changeListener.gatewayAdded(id, endpointId, host,  port, attributes);
 
-        sendResponse(httpExchange,200,String.format(GATEWAY_ADDED_MESSAGE,id));
-    }
-    
-    private void handleRemoveGateway(HttpExchange httpExchange) throws IOException {
-        String query = httpExchange.getRequestURI().getRawQuery();
-        Map<String,Object> parameters = new ParameterParser().parse(query);
-
-        String id = (String)parameters.get(ID_KEY);
-        boolean result = gatewayListener.gatewayRemoved(id);
-
-        String message = result ? GATEWAY_REMOVED_MESSAGE : GATEWAY_NOT_REMOVED_MESSAGE;
-        sendResponse(httpExchange,200,String.format(message,id));
-    }
-    
-    private void handleAddRegion(HttpExchange httpExchange) throws IOException {
-        String query = httpExchange.getRequestURI().getRawQuery();
-        Map<String,Object> parameters = new ParameterParser().parse(query);
-
-        String name = (String)parameters.get(NAME_KEY);
-
-        regionListener.regionAdded(name);
-
-        sendResponse(httpExchange,200,String.format(REGION_ADDED_MESSAGE,name));
-    }
-    
-    private void handleRemoveRegion(HttpExchange httpExchange) throws IOException {
-        String query = httpExchange.getRequestURI().getRawQuery();
-        Map<String,Object> parameters = new ParameterParser().parse(query);
-
-        String name = (String)parameters.get(NAME_KEY);
-        boolean result = regionListener.regionRemoved(name);
-
-        String message = result ? REGION_REMOVED_MESSAGE : REGION_NOT_REMOVED_MESSAGE;
-        sendResponse(httpExchange,200,String.format(message,name));
+        sendResponse(httpExchange,200,String.format(ADDED_MESSAGE,id));
     }
 
-    private String computeDiskStoreName(String endpointId) {
+    private String computeOverflowDirectory(String endpointId) {
         return "overflow-"+endpointId+"-"+new Random().nextInt();
     }
 
