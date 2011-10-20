@@ -44,14 +44,25 @@ public class GatewayRequestHandler implements HttpHandler {
         URI uri = httpExchange.getRequestURI();
         String path = uri.getPath();
         try {
-            if(path.startsWith("/add")) handleAdd(httpExchange);
-            else if( path.startsWith("/remove")) handleRemove(httpExchange);
+            if (path.equals("/")) handleRoot(httpExchange);
+            else if (path.startsWith("/add")) handleAdd(httpExchange);
+            else if (path.startsWith("/remove")) handleRemove(httpExchange);
+            else if (path.startsWith("/status")) handleStatus(httpExchange);
             else handleUnknown(httpExchange);
         } catch(Throwable t) {
             sendResponse(httpExchange,500,t.getMessage());
             t.printStackTrace();
             throw new IOException("error on path:" +path, t);
         }
+    }
+
+    
+    private void handleRoot(HttpExchange httpExchange) throws IOException {
+        sendResponse(httpExchange, 200, "");
+    }
+    
+    private void handleStatus(HttpExchange httpExchange) throws IOException {
+        sendResponse(httpExchange, 200, "");
     }
 
     private void handleRemove(HttpExchange httpExchange) throws IOException {
