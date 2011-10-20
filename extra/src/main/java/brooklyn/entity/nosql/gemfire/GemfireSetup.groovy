@@ -100,16 +100,12 @@ public class GemfireSetup extends SshBasedAppSetup {
      * Starts gemfire process.
      */
     public List<String> getRunScript() {
-        String startArgs =
-                webPort+" "+
-                configFileServersidePath+" "+
-                jarFileServersidePath;
-        List<String> script = [
+        String startArgs = "$webPort $configFileServersidePath $jarFileServersidePath"
+        return [
             "cd ${runDir}",
             "nohup ${installDir}/start.sh ${startArgs} &",
             "echo \$! > pid.txt",
         ]
-        return script
     }
  
     /** @see SshBasedAppSetup#getRunEnvironment() */
@@ -124,7 +120,7 @@ public class GemfireSetup extends SshBasedAppSetup {
      */
     @Override
     public List<String> getShutdownScript() {
-        return makeShutdownScript("gemfire", "pid.txt")
+        return [ "ps aux | grep gemfire | grep -v grep | awk '{ print \$2 }' | xargs kill" ]
     }
     
     private static File checkFileExists(String path, Object errorMessage) {
