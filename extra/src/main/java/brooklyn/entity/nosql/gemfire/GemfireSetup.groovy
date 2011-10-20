@@ -7,7 +7,7 @@ import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedAppSetup
 
 /**
- * Start a {@link QpidNode} in a {@link Location} accessible over ssh.
+ * Install and run a {@link GemfireServer} in a {@link brooklyn.location.Location} accessible via ssh.
  */
 public class GemfireSetup extends SshBasedAppSetup {
     public static final String DEFAULT_VERSION = "6.5"
@@ -20,13 +20,13 @@ public class GemfireSetup extends SshBasedAppSetup {
     private String jarFileServersidePath
     
     public static GemfireSetup newInstance(GemfireServer entity, SshMachineLocation machine) {
-        Integer suggestedVersion = entity.getConfig(GemfireServer.SUGGESTED_VERSION)
+        String suggestedVersion = entity.getConfig(GemfireServer.SUGGESTED_VERSION)
         String suggestedLicenseFile = entity.getConfig(GemfireServer.LICENSE)
         String suggestedInstallDir = entity.getConfig(GemfireServer.SUGGESTED_INSTALL_DIR)
         String suggestedRunDir = entity.getConfig(GemfireServer.SUGGESTED_RUN_DIR)
         String suggestedConfigFile = entity.getConfig(GemfireServer.CONFIG_FILE)
         String suggestedJarFile = entity.getConfig(GemfireServer.JAR_FILE)
-        int suggestedWebPort = entity.getConfig(GemfireServer.WEB_CONTROLLER_PORT)
+        Integer suggestedWebPort = entity.getConfig(GemfireServer.WEB_CONTROLLER_PORT)
         
         // TODO Would like to auto-intall!
         if (!suggestedInstallDir) throw new IllegalArgumentException("Installation directory must be specified; cannot auto-install gemfire server")
