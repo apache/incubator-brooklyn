@@ -1,0 +1,40 @@
+<project xmlns="http://maven.apache.org/POM/0.0.1"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <!-- TODO: Version numbers, determining whether the system scope is correct. -->
+
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>monterey-gemfire</groupId>
+    <artifactId>monterey-gemfire</artifactId>
+    <version>0.0.1</version>
+
+    <parent>
+        <groupId>brooklyn</groupId>
+        <artifactId>brooklyn-parent-root</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+        <relativePath>../parent/root/pom.xml</relativePath>
+    </parent>
+  
+    <dependencies>
+        <dependency>
+            <groupId>com.gemstone</groupId>
+            <artifactId>gemfire</artifactId>
+            <version>0.0.1</version>
+            <!-- Maven really dislikes this -->
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/gemfire.jar</systemPath>
+        </dependency>
+
+        <dependency>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr</artifactId>
+            <version>0.0.1</version>
+            <!-- And this too -->
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/antlr.jar</systemPath>
+        </dependency>
+    </dependencies>
+
+</project>
+
