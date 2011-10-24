@@ -19,7 +19,7 @@ public class RedisSetup extends SshBasedAppSetup {
     private int redisPort
 
     public static RedisSetup newInstance(RedisStore entity, SshMachineLocation machine) {
-        Integer suggestedVersion = entity.getConfig(RedisStore.SUGGESTED_VERSION)
+        String suggestedVersion = entity.getConfig(RedisStore.SUGGESTED_VERSION)
         String suggestedInstallDir = entity.getConfig(RedisStore.SUGGESTED_INSTALL_DIR)
         String suggestedRunDir = entity.getConfig(RedisStore.SUGGESTED_RUN_DIR)
 

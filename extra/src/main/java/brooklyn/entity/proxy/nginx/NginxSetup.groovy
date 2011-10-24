@@ -17,7 +17,7 @@ public class NginxSetup extends SshBasedAppSetup {
     private int httpPort
 
     public static NginxSetup newInstance(NginxController entity, SshMachineLocation machine) {
-        Integer suggestedVersion = entity.getConfig(NginxController.SUGGESTED_VERSION)
+        String suggestedVersion = entity.getConfig(NginxController.SUGGESTED_VERSION)
         String suggestedInstallDir = entity.getConfig(NginxController.SUGGESTED_INSTALL_DIR)
         String suggestedRunDir = entity.getConfig(NginxController.SUGGESTED_RUN_DIR)
 
