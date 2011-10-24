@@ -21,7 +21,7 @@ public class ActiveMQSetup extends SshBasedJavaAppSetup {
     private int openWirePort
 
     public static ActiveMQSetup newInstance(ActiveMQBroker entity, SshMachineLocation machine) {
-        Integer suggestedVersion = entity.getConfig(ActiveMQBroker.SUGGESTED_VERSION)
+        String suggestedVersion = entity.getConfig(ActiveMQBroker.SUGGESTED_VERSION)
         String suggestedInstallDir = entity.getConfig(ActiveMQBroker.SUGGESTED_INSTALL_DIR)
         String suggestedRunDir = entity.getConfig(ActiveMQBroker.SUGGESTED_RUN_DIR)
         Integer suggestedJmxPort = entity.getConfig(ActiveMQBroker.JMX_PORT.configKey)
