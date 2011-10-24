@@ -1,0 +1,182 @@
+CLOUDSOFT CORPORATION LTD END USER LICENSE AGREEMENT
+
+BEFORE USING THE CLOUDSOFT CORPORATION ('CLOUDSOFT') SOFTWARE ('SOFTWARE'),
+ANY ASSOCIATED DOCUMENTATION ('DOCUMENTATION', TOGETHER WITH THE SOFTWARE,
+THE 'PRODUCT') OR ANY OTHER MATERIALS OR THIRD PARTY SOFTWARE PROVIDED WITH
+THE SOFTWARE, READ CAREFULLY THE FOLLOWING TERMS AND CONDITIONS OF THIS END
+USER LICENSE AGREEMENT ('AGREEMENT') BETWEEN CLOUDSOFT AND THE INDIVIDUAL
+PERSON OR ENTITY ('LICENSEE') RECEIVING THE SOFTWARE TO WHICH THIS
+AGREEMENT IS ATTACHED, OR INTO WHICH THIS AGREEMENT IS EMBEDDED.  BY USING
+THE PRODUCT OR ANY PART THEREOF, OR BY CLICKING 'I ACCEPT' BELOW, YOU
+ACKNOWLEDGE THAT YOU HAVE READ, UNDERSTOOD AND AGREE TO BE BOUND BY THE
+TERMS OF THIS AGREEMENT AND THAT YOU HAVE THE ABILITY TO BIND THE ENTITY
+RECEIVING THE PRODUCT.  IF YOU DO NOT AGREE WITH THE TERMS AND CONDITIONS
+OF THIS AGREEMENT, YOU MAY NOT INSTALL OR USE THE PRODUCT.  NOTWITHSTANDING
+THE FOREGOING, IF LICENSEE HAS ENTERED INTO ANOTHER VALID AGREEMENT WITH
+CLOUDSOFT THAT COVERS THE PRODUCT (WHETHER OR NOT SUCH VALID AGREEMENT WAS
+PHYSICALLY EXECUTED BY LICENSEE, INCLUDING, WITHOUT LIMITATION ANY
+'CLICK-THROUGH' AGREEMENT OR ANY APPLICABLE TERMS AND CONDITIONS POSTED ON
+ANY CLOUDSOFT WEBSITE), THEN THE FOLLOWING LICENSE AGREEMENT TERMS ARE
+SUPERSEDED BY SUCH OTHER VALID AGREEMENT, AND DO NOT APPLY TO LICENSEE'S
+USE OF THE PRODUCT.  IN ADDITION, THIS LICENSE AGREEMENT APPLIES ONLY TO
+THE PRODUCT AND DOES NOT APPLY TO ANY THIRD PARTY SOFTWARE, INCLUDING OPEN
+SOURCE COMPONENTS, AS MAY BE LISTED IN THE LICENSES DIRECTORY OR SPECIFIED
+IN THE DOCUMENTATION.  SUCH THIRD PARTY SOFTWARE IS LICENSED UNDER THE
+TERMS OF THE APPLICABLE THIRD PARTY LICENSE AGREEMENT LISTED IN THE
+LICENSES DIRECTORY OR SPECIFIED IN THE DOCUMENTATION.
+
+1.  License Grant.  Subject to the terms and conditions of this Agreement,
+    Cloudsoft agrees to grant, and does hereby grant to Licensee during the
+    term of this Agreement, a limited, non-exclusive, non-transferable
+    right and license, solely to the object code version of the Software,
+    and to the Documentation and any other materials provided to Licensee
+    by Cloudsoft hereunder ('Materials'), without the right to grant or
+    authorize sublicenses or to further distribute the Product or
+    Materials, to install the Software on computers owned or leased by
+    Licensee and to use the Product and Materials solely for Licensee's
+    internal business operations, development, evaluation, and educational
+    purposes ('Permitted Uses').  The Product and Materials may not be used
+    for any purpose other than for Permitted Uses, and may not be used by
+    any other person or entity other than Licensee.  Licensee may make up
+    to two copies of the Product for backup and/or archival purposes.
+
+2.  License Restrictions.  Licensee agrees not to: (a) copy or use the
+    Product in any manner except as expressly permitted in this Agreement;
+    (b) transfer, sell, rent, lease, distribute, or sublicense the Product
+    to any third party; (c) use the Product for providing time-sharing
+    services, service bureau services or as part of an application services
+    provider or as a service offering; (d) reverse engineer (except as
+    permitted by applicable law), disassemble, decompile the Products; (e)
+    alter modify, enhance or prepare any derivative work from, the Product;
+    (f) alter or remove any proprietary notices in the Product; or (g) make
+    available to any third party any analysis of the results of operation
+    of the Product, including benchmarking results, without the prior
+    written consent of Cloudsoft.
+
+3.  Ownership.  The Product and Materials are and shall remain the sole
+    property of Cloudsoft and its licensors, and, except as expressly
+    provided herein, Cloudsoft and its licensors retain all right, title
+    and interest in and to the Product or Materials, including all
+    intellectual property rights therein and thereto.
+
+4.  Requirements of Licensee.  Licensee may provide feedback regarding the
+    Product including without limitation any functionality issues, and
+    errors, flaws, failures, or faults in the Product (collectively,
+    'Feedback') via an online Cloudsoft forum or other method.  Licensee
+    hereby grants to Cloudsoft a perpetual, irrevocable, worldwide,
+    sublicensable, transferable, royalty-free, fully-paid, right and
+    license to use and exploit in any manner and for any purpose all
+    Feedback and related information.
+
+5.  Confidential Information.  The Product and Materials contain
+    Confidential Information and trade secrets of Cloudsoft and its licensors.
+    'Confidential Information' means all software code and information
+    furnished by Cloudsoft in oral, written or machine-readable form,
+    disclosed as a result of this Agreement, and that should reasonably
+    have been understood by Licensee, because of legends or other markings,
+    the circumstances of disclosure or the nature of the information
+    itself, to be proprietary and confidential to Cloudsoft, a Cloudsoft
+    affiliate or other third party.  Licensee will use the same standard of
+    care to prevent unauthorized access to or disclosure of the
+    Confidential Information that Licensee uses to prevent the disclosure
+    of its own similar confidential information, but in no event less than
+    a reasonable standard of care.  Licensee will disclose the Confidential
+    Information only to its employees with a need to know for the purposes
+    of this Agreement.  The restrictions of this Agreement on use and
+    disclosure of Confidential Information shall not apply to information
+    that becomes publicly known through no fault of the Licensee or its
+    personnel.  All obligations regarding Confidential Information received
+    prior to the expiration or termination of this Agreement shall survive
+    the expiration or termination of this Agreement.
+
+6.  Warranty Disclaimer.  THE PRODUCT AND THE MATERIALS ARE PROVIDED 'AS
+    IS' AND WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, INCLUDING THE IMPLIED
+    WARRANTIES OF MERCHANTABILITY, TITLE, NON-INFRINGEMENT, QUIET
+    ENJOYMENT, ACCURACY OF DATA, SYSTEM INTEGRATION, COURSE OF PERFORMANCE
+    AND FITNESS FOR A PARTICULAR PURPOSE.  CLOUDSOFT DOES NOT GUARANTEE OR
+    WARRANT THAT THE USE OF THE PRODUCT WILL BE UNINTERRUPTED OR ERROR
+    FREE.
+
+7.  Limitation of Liability.  IN NO EVENT WILL CLOUDSOFT BE LIABLE FOR ANY
+    CLAIM BASED UPON A THIRD PARTY CLAIM, OR ANY INCIDENTAL, CONSEQUENTIAL,
+    SPECIAL, INDIRECT, EXEMPLARY OR PUNITIVE DAMAGES, WHETHER ARISING IN
+    TORT, CONTRACT, OR OTHERWISE; OR FOR ANY DAMAGES ARISING OUT OF OR IN
+    CONNECTION WITH ANY MALFUNCTIONS, DELAYS, LOSS OF DATA, LOST PROFITS,
+    LOST SAVINGS, INTERRUPTION OF SERVICE, LOSS OF BUSINESS OR ANTICIPATORY
+    PROFITS, EVEN IF CLOUDSOFT HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH
+    DAMAGES.  CLOUDSOFT'S AGGREGATE AND CUMULATIVE LIABILITY ARISING OUT OF
+    OR RELATING TO THIS AGREEMENT, REGARDLESS OF THE FORM OF THE CAUSE OF
+    ACTION, WHETHER IN CONTRACT, TORT (INCLUDING WITHOUT LIMITATION
+    NEGLIGENCE), STATUTE OR OTHERWISE WILL BE LIMITED TO DIRECT DAMAGES AND
+    WILL NOT EXCEED ONE THOUSAND DOLLARS (US $1,000).  THE ALLOCATIONS OF
+    LIABILITY IN THIS SECTION 7 REPRESENT THE AGREED AND BARGAINED FOR
+    UNDERSTANDING OF THE PARTIES, AND THE COMPENSATION OF CLOUDSOFT FOR THE
+    SERVICES PROVIDED HEREUNDER REFLECTS SUCH ALLOCATIONS.  THE FOREGOING
+    LIMITATIONS, EXCLUSIONS AND DISCLAIMERS ARE AN ALLOCATION OF THE RISK
+    BETWEEN THE PARTIES AND WILL APPLY TO THE MAXIMUM EXTENT PERMITTED BY
+    APPLICABLE LAW, EVEN IF ANY REMEDY FAILS IN ITS ESSENTIAL PURPOSE.
+
+8.  Term and Termination.  The term of this Agreement will begin on the
+    earlier of the date this Agreement is accepted by Licensee or
+    Licensee's first use of the Product and end on the date this Agreement
+    is terminated by either party.  This Agreement may be terminated at any
+    time by either party upon written notice to the other party.  Upon
+    termination or expiration of this Agreement, Licensee will use
+    reasonable efforts to deinstall and destroy the Product or return the
+    Product and Materials to Cloudsoft.  Termination will not affect any
+    claim, liability or right arising prior to termination.  All rights and
+    obligations granted under Sections 2, 3, 5, 6, 7, 8, 9 and 10 of this
+    Agreement will survive the expiration or termination of this Agreement.
+
+9.  Government Rights.  The Products under this Agreement are 'commercial
+    computer Products' as that term is described in DFAR
+    252.227-7014(a)(1).  If acquired by or on behalf of a civilian agency,
+    the U.S.  Government acquires this commercial computer Products and/or
+    commercial computer Products documentation subject to the terms and
+    this Agreement as specified in 48C.F.R.  12.212 (Computer Products) and
+    12.11 (Technical Data) of the Federal Acquisition Regulations ('FAR')
+    and its successors.  If acquired by or on behalf of any agency within
+    the Department of Defense ('DOD'), the U.S.  Government acquires this
+    commercial computer Products and/or commercial computer Products
+    documentation subject to the terms of this Agreement as specified in 48
+    C.F.R.  227.7202 of the DOD FAR Supplement and its successors.
+    Licensee will not export the Products in violation of the export laws
+    of the United States or of any other country.
+
+10.  General.  This Agreement constitutes the entire agreement between the
+    parties concerning the subject matter hereof, notwithstanding any
+    different or additional terms that may be contained in the form of
+    purchase order or other document used by Licensee to place orders or
+    otherwise effect transactions hereunder, which such terms are hereby
+    rejected.  This Agreement supersedes all prior or contemporaneous
+    discussions, proposals and agreements between the parties relating to
+    the subject matter hereof, provided that if Licensee has entered into
+    or later enters into another valid agreement with Cloudsoft regarding
+    the Product (whether or not such other valid agreement was physically
+    executed by Licensee, including without limitation any 'click-through'
+    agreement or any applicable terms and conditions posted on any
+    Cloudsoft website), then such other agreement shall supersede this
+    Agreement.  No amendment, modification or waiver of any provision of
+    this Agreement will be effective unless in writing and signed by both
+    parties.  If any provision of this Agreement is held to be invalid or
+    unenforceable, the remaining portions will remain in full force and
+    effect and such provision will be enforced to the maximum extent
+    possible so as to effect the intent of the parties and will be reformed
+    to the extent necessary to make such provision valid and enforceable.
+    No waiver of rights by either party may be implied from any actions or
+    failures to enforce rights under this Agreement.  Neither party will be
+    liable to the other for any delay or failure to perform due to causes
+    beyond its reasonable control (excluding payment of monies due).
+    Unless otherwise specifically stated, the terms of this Agreement are
+    intended to be and are solely for the benefit of Cloudsoft and Licensee
+    and do not create any right in favor of any third party.  This
+    Agreement will be governed by and construed in accordance with the laws
+    of the United States and the State of California without reference to
+    its conflict of laws principles.  All disputes arising out of or
+    relating to this Agreement will be submitted to the non-exclusive
+    jurisdiction of a court of competent jurisdiction located in the
+    Northern District of California or a state court located in San
+    Francisco, California, and each party irrevocably consents to such
+    personal jurisdiction and waives all objections to this venue.  All
+    notices must be in writing and will be effective three (3) days after
+    the date sent.

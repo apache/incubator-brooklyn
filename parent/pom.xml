@@ -1,17 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>brooklyn</groupId>
-    <artifactId>brooklyn-parent-root</artifactId>
+    <artifactId>brooklyn-parent</artifactId>
     <packaging>pom</packaging>
-    <version>0.1.0-SNAPSHOT</version>
-    <name>Brooklyn Parent Root</name>
+    <name>Brooklyn Parent</name>
 
     <description>
         The parent for Brooklyn modules (defines dependencies and config used everywhere)
     </description>
 
-    <url>http://brooklyn</url>
+    <parent>
+        <groupId>brooklyn</groupId>
+        <artifactId>brooklyn</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
 
     <scm>
         <connection>scm:git:git://github.com/cloudsoft/brooklyn.git</connection>
@@ -19,37 +24,30 @@
         <url>http://github.com/cloudsoft/brooklyn</url>
     </scm>
 
-	<distributionManagement>
-		<snapshotRepository>
-			<id>ssh-repository</id>
-			<url>scpexe://jenkins@releng3.cloudsoftcorp.com/home/jenkins/maven/snapshots</url>
-		</snapshotRepository>
-		<repository>
-			<id>ssh-repository</id>
-			<url>scpexe://jenkins@releng3.cloudsoftcorp.com/home/jenkins/maven/releases</url>
-		</repository>
-	</distributionManagement>
-
     <licenses>
         <license>
-            <name>TBD</name>
+            <name>Monterey Developer Edition</name>
             <distribution>repo</distribution>
-            <url>http://TBD</url>
+            <url>https://ccweb.cloudsoftcorp.com/documentation/LICENSE.txt</url>
         </license>
     </licenses>
 
     <developers>
         <developer>
-            <name>Brooklyn committers</name>
+            <name>Brooklyn Committers</name>
         </developer>
     </developers>
 
     <properties>
-        <groovy.version>1.8.0</groovy.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
         <cobertura.version>1.9.4.1</cobertura.version>
         <surefire.version>2.9</surefire.version>
+        <plantuml.version>6121</plantuml.version>
+        <ant.version>1.8.2</ant.version>
+
+        <groovy.version>1.8.0</groovy.version>
         <testng.version>6.0.1</testng.version>
         <mockito.version>1.8.4</mockito.version>
         <mortbay.jetty.version>6.1.26</mortbay.jetty.version>
@@ -59,9 +57,7 @@
         <jansi.version>1.2.1</jansi.version>
         <guava.version>r09</guava.version>
         <ivy.version>2.2.0</ivy.version>
-        <ant.version>1.8.2</ant.version>
-        <jclouds.version>1.1.1</jclouds.version>
-        <plantuml.version>6121</plantuml.version>
+        <jclouds.version>1.2.1</jclouds.version>
 
         <includedTestGroups />
         <excludedTestGroups>Integration,Live,WIP</excludedTestGroups>
@@ -205,7 +201,34 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>2.7</version>
+                    <version>2.8</version>
+                    <inherited>true</inherited>
+                    <configuration>
+                        <links>
+                            <link>http://download.oracle.com/javaee/6/api</link>
+                        </links>
+                        <keywords>true</keywords>
+                        <author>false</author>
+                        <quiet>true</quiet>
+                        <aggregate>false</aggregate>
+                        <detectLinks/> 
+                        <tags>
+                            <tag>
+                                <name>todo</name>
+                                <placement>a</placement>
+                                <head>To-do:</head>
+                            </tag>
+                        </tags>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>attach-javadocs</id>
+                            <phase>process-classes</phase>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
                 </plugin>
                 <plugin>
                     <artifactId>maven-resources-plugin</artifactId>
@@ -256,6 +279,20 @@
                     <version>${surefire.version}</version>
                 </plugin>
                 <plugin>
+                    <artifactId>maven-site-plugin</artifactId>
+                    <version>3.0</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-eclipse-plugin</artifactId>
+                    <version>2.8</version>
+                    <configuration>
+                        <additionalProjectnatures>
+                            <projectnature>org.eclipse.jdt.groovy.core.groovyNature</projectnature>
+                            <projectnature>org.maven.ide.eclipse.maven2Nature</projectnature>
+                        </additionalProjectnatures>
+                    </configuration>
+                </plugin>
+                <plugin>
                     <groupId>org.apache.felix</groupId>
                     <artifactId>maven-bundle-plugin</artifactId>
                     <version>2.3.4</version>
@@ -269,16 +306,6 @@
                     <groupId>net.sourceforge.cobertura</groupId>
                     <artifactId>cobertura</artifactId>
                     <version>${cobertura.version}</version>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-eclipse-plugin</artifactId>
-                    <version>2.8</version>
-                    <configuration>
-                        <additionalProjectnatures>
-                            <projectnature>org.eclipse.jdt.groovy.core.groovyNature</projectnature>
-                            <projectnature>org.maven.ide.eclipse.maven2Nature</projectnature>
-                        </additionalProjectnatures>
-                    </configuration>
                 </plugin>
                 <plugin>
                     <!-- This configuration is used for Eclipse settings only. -->
@@ -361,38 +388,9 @@
                         </lifecycleMappingMetadata>
                     </configuration>
                 </plugin>
-				<plugin>
-					<artifactId>maven-javadoc-plugin</artifactId>
-					<configuration>
-						<links>
-							<link>http://download.oracle.com/javaee/6/api</link>
-						</links>
-						<keywords>true</keywords>
-						<author>false</author>
-						<quiet>true</quiet>
-					</configuration>
-					<executions>
-						<execution>
-							<id>attach-javadocs</id>
-							<phase>process-classes</phase>
-							<goals>
-								<goal>jar</goal>
-							</goals>
-						</execution>
-					</executions>
-				</plugin>
 			</plugins>
         </pluginManagement>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
-                <version>2.2.1</version>
-                <configuration>
-                    <tagNameFormat>@{project.version}</tagNameFormat>
-                    <arguments>-PExample,Launcher</arguments>
-                </configuration>
-            </plugin>
             <plugin>
                 <artifactId>maven-enforcer-plugin</artifactId>
                 <executions>
@@ -425,37 +423,32 @@
                     <encoding>${project.build.sourceEncoding}</encoding>
                 </configuration>
             </plugin>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <compilerId>groovy-eclipse-compiler</compilerId>
+                    <fork>true</fork>
+                    <verbose>false</verbose>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.codehaus.groovy</groupId>
+                        <artifactId>groovy-eclipse-compiler</artifactId>
+                        <version>2.5.1-M3</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.codehaus.groovy</groupId>
+                        <artifactId>groovy-eclipse-batch</artifactId>
+                        <version>1.8.0-03</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
         </plugins>
-
-        <extensions>
-            <extension>
-                <groupId>org.apache.maven.wagon</groupId>
-                <artifactId>wagon-ssh-external</artifactId>
-                <version>1.0</version>
-            </extension>
-        </extensions>
     </build>
 
-    <!-- TODO For selenium, look at https://github.com/seam/parent/blob/master/pom.xml -->
-
     <profiles>
-    	<profile>
-    		<id>External</id>
-			<distributionManagement>
-				<snapshotRepository>
-					<id>ssh-repository</id>
-					<url>scpexe://cruiser@releng1.cloudsoftcorp.com/var/www/downloads/maven2/snapshots</url>
-				</snapshotRepository>
-				<repository>
-					<id>ssh-repository</id>
-					<url>scpexe://cruiser@releng1.cloudsoftcorp.com/var/www/downloads/maven2/releases</url>
-				</repository>
-				<site>
-					<id>developers.cloudsoftcorp.com</id>
-					<url>scpexe://cruiser@releng1.cloudsoftcorp.com/var/www/downloads/autodocs/${project.version}</url>
-				</site>
-			</distributionManagement>
-    	</profile>
         <profile>
             <id>Bundle</id>
             <activation>
@@ -465,27 +458,6 @@
             </activation>
             <build>
                 <plugins>
-                    <plugin>
-                        <artifactId>maven-compiler-plugin</artifactId>
-                        <configuration>
-                            <compilerId>groovy-eclipse-compiler</compilerId>
-                            <verbose>false</verbose>
-                            <source>1.6</source>
-                            <target>1.6</target>
-                        </configuration>
-                        <dependencies>
-                            <dependency>
-                                <groupId>org.codehaus.groovy</groupId>
-                                <artifactId>groovy-eclipse-compiler</artifactId>
-                                <version>2.5.1-M3</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>org.codehaus.groovy</groupId>
-                                <artifactId>groovy-eclipse-batch</artifactId>
-                                <version>1.8.0-03</version>
-                            </dependency>
-                        </dependencies>
-                    </plugin>
                     <plugin>
                         <artifactId>maven-jar-plugin</artifactId>
                         <inherited>true</inherited>
@@ -508,6 +480,24 @@
                                 </goals>
                             </execution>
                         </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>Java</id>
+            <activation>
+                <file>
+                    <exists>${basedir}/src/main/java</exists>
+                </file>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-source-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-javadoc-plugin</artifactId>
                     </plugin>
                 </plugins>
             </build>
@@ -604,7 +594,6 @@
                                             <sysproperty key="java.util.logging.config.file" value="src/test/resources/logging.properties" />
                                             <sysproperty key="net.sourceforge.cobertura.datafile" value="${project.build.directory}/cobertura/cobertura.ser" />
                                             <sysproperty key="cobertura.user.java.nio" value="false" />
-
                                         </testng>
                                     </target>
                                 </configuration>
