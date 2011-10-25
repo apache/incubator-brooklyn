@@ -1,14 +1,16 @@
 package brooklyn.gemfire.demo;
 
+import java.io.IOException;
+
+import com.gemstone.gemfire.cache.Cache;
 import com.gemstone.gemfire.cache.GatewayException;
+import com.gemstone.gemfire.cache.Region;
+import com.gemstone.gemfire.cache.RegionShortcut;
 import com.gemstone.gemfire.cache.util.Gateway;
 import com.gemstone.gemfire.cache.util.GatewayHub;
 import com.gemstone.gemfire.cache.util.GatewayQueueAttributes;
-import com.gemstone.gemfire.cache.Cache;
 
-import java.io.IOException;
-
-public class HubManager implements GatewayChangeListener {
+public class HubManager implements GatewayChangeListener, RegionChangeListener {
 
     private Cache cache;
 
@@ -16,6 +18,7 @@ public class HubManager implements GatewayChangeListener {
         this.cache = cache;
     }
 
+    @Override
     public void gatewayAdded( String id, String endpointId, String host, int port, GatewayQueueAttributes attributes ) throws IOException {
         for(GatewayHub hub :  cache.getGatewayHubs()) {
             stopHub(hub);
@@ -24,20 +27,37 @@ public class HubManager implements GatewayChangeListener {
         }
     }
 
-     public boolean gatewayRemoved( String id ) throws IOException {
-        boolean removed = false;
-        for( GatewayHub hub :  cache.getGatewayHubs() ) {
-            for( Gateway gateway: hub.getGateways()) {
-                if (id.equals(gateway.getId())) {
-                    stopHub(hub);
-                    hub.removeGateway(id);
-                    startHub(hub);
-                    removed = true;
-                }
-            }
-            for ( Gateway gateway: hub.getGateways() ) gateway.start();
-        }
-        return removed;
+    @Override
+    public boolean gatewayRemoved( String id ) throws IOException {
+    	boolean removed = false;
+    	for( GatewayHub hub :  cache.getGatewayHubs() ) {
+    		for( Gateway gateway: hub.getGateways()) {
+    			if (id.equals(gateway.getId())) {
+    				stopHub(hub);
+    				hub.removeGateway(id);
+    				startHub(hub);
+    				removed = true;
+    			}
+    		}
+    		for ( Gateway gateway: hub.getGateways() ) gateway.start();
+    	}
+    	return removed;
+    }
+
+    @Override
+    public void regionAdded(String name) throws IOException {
+    	cache.createRegionFactory(RegionShortcut.REPLICATE).setEnableGateway(new Boolean(true)).create(name);
+    }
+
+    @Override
+    public boolean regionRemoved(String name) throws IOException {
+    	Region<?, ?> r = cache.getRegion(name);
+    	if(r != null) {
+    		r.localDestroyRegion();
+    		return true;
+    	}
+    	
+    	return false;
     }
 
     private Gateway addGateway( GatewayHub hub,

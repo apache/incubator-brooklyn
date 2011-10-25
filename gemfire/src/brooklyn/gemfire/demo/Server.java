@@ -50,7 +50,7 @@ public class Server {
         Cache cache = initializeCache(configFile,logFile, licenseFile);
 
         HubManager manager = new HubManager(cache);
-        HttpHandler handler = new GatewayRequestHandler(manager);
+        HttpHandler handler = new GeneralRequestHandler(manager, manager);
         Server server = new Server(port, handler);
         server.start();
     }
