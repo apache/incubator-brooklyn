@@ -26,7 +26,7 @@ public class EUHub {
         GatewayHub hub = cache.addGatewayHub("EU", 33333);
         
         CacheServer cacheServer = cache.addCacheServer();
-        cacheServer.setPort(12121);
+        cacheServer.setPort(44444);
         
         AttributesFactory<Object,Object> factory = new AttributesFactory<Object,Object>();
         factory.setDataPolicy(DataPolicy.REPLICATE);
