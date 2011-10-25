@@ -32,13 +32,15 @@ public class EUHub {
         factory.setDataPolicy(DataPolicy.REPLICATE);
         factory.setEnableGateway(new Boolean(true));
 
-        RegionFactory<Object, Object> regionFactory = cache.createRegionFactory(factory.create());
-        regionFactory.create("trades");
-
         cacheServer.start();
         System.out.println( "started cache server" );
 
         hub.start();
-        System.out.println("started hub");
+        System.out.println("started hub, waiting for input...");
+        
+        System.in.read();
+        System.out.println("creating region");
+        RegionFactory<Object, Object> regionFactory = cache.createRegionFactory(factory.create());
+        regionFactory.create("trades");
     }
 }
