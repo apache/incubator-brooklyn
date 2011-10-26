@@ -30,7 +30,7 @@ public class GemfireServerIntegrationTest {
     private String jarFile = "/Users/aled/eclipse-workspaces/bixby-demo/com.cloudsoftcorp.sample.booking.webapp/src/main/webapp/WEB-INF/lib/com.cloudsoftcorp.sample.booking.svc.api_3.2.0.v20110317-295-10281.jar"
 
     private static final String licenseFile = "gemfireLicense.zip"
-    private static final String configFile = "eu/cache.xml"
+    private static final String euCache = "eu/cache.xml"
 
     /** Returns the absolute path to requested resource that should live in brooklyn/entity/nosql/gemfire */
     private static String pathTo(String resource) {
@@ -39,31 +39,36 @@ public class GemfireServerIntegrationTest {
         return url.path;
     }
 
-    @BeforeMethod(groups = [ "Integration" ])
+    @BeforeMethod(groups=["Integration"])
     public void setUp() {
     }
 
     private final List<Entity> createdEntities = []
     @AfterMethod(alwaysRun=true)
-    public void callStopOnAllStartedEntities() {
-        createdEntities.each { it.stop() }
+    public void killStartedEntities() {
+        String killScript = "ps aux | grep gemfire | grep -v grep | awk '{ print \$2 }' | xargs kill"
+        createdEntities.each { AbstractService e -> e.setup.machine.run(killScript) }
         createdEntities.clear()
     }
 
     /** Creates server and returns it after adding it to the createdEntities list */
-    private GemfireServer createGemfireServer(Application owner, String installDir, String license, String config) {
+    private GemfireServer createGemfireServer(Application owner, String installDir, String license,
+            String config, String jarFile=null) {
         GemfireServer entity = new GemfireServer(owner: owner)
         entity.setConfig(GemfireServer.SUGGESTED_INSTALL_DIR, installDir)
         entity.setConfig(GemfireServer.LICENSE, license);
         entity.setConfig(GemfireServer.CONFIG_FILE, config)
+        if (jarFile != null) {
+            entity.setConfig(GemfireServer.JAR_FILE, jarFile)
+        }
         createdEntities.push(entity)
         return entity
     }
 
-    @Test(groups = [ "Integration" ])
+    @Test(groups=["Integration"])
     public void testGemfireStartsAndStops() {
         Application app = new TestApplication()
-        Entity entity = createGemfireServer(app, installDir, pathTo(licenseFile), pathTo(configFile))
+        Entity entity = createGemfireServer(app, installDir, pathTo(licenseFile), pathTo(euCache))
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         executeUntilSucceedsWithShutdown(entity) {
             assertTrue entity.getAttribute(Startable.SERVICE_UP)
