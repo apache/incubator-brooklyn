@@ -9,7 +9,7 @@
 
   <cache-server port="44444"/>
 
-  <region name="trades" refid="REPLICATE">
+  <region name="integrationTests" refid="REPLICATE">
     <region-attributes enable-gateway="true"/>
   </region>
 </cache>

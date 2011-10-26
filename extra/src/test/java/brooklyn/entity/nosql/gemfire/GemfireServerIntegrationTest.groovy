@@ -8,6 +8,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
+import org.testng.annotations.AfterMethod
 
 import brooklyn.entity.Application
 import brooklyn.entity.basic.JavaApp
@@ -15,8 +16,11 @@ import brooklyn.entity.trait.Startable
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.test.entity.TestApplication
 
-import org.testng.annotations.AfterMethod
 import brooklyn.entity.Entity
+import brooklyn.entity.basic.AbstractService
+
+import com.gemstone.gemfire.cache.Region
+import com.gemstone.gemfire.cache.Cache
 
 /**
  * This tests the operation of the {@link GemfireServer} entity.
@@ -29,6 +33,7 @@ public class GemfireServerIntegrationTest {
     private String installDir = "/Users/aled/eclipse-workspaces/cloudsoft/brooklyn/gemfire"
     private String jarFile = "/Users/aled/eclipse-workspaces/bixby-demo/com.cloudsoftcorp.sample.booking.webapp/src/main/webapp/WEB-INF/lib/com.cloudsoftcorp.sample.booking.svc.api_3.2.0.v20110317-295-10281.jar"
 
+    //  f installDir is set machine independently then these can be deleted from resources
     private static final String licenseFile = "gemfireLicense.zip"
     private static final String euCache = "eu/cache.xml"
 
@@ -77,8 +82,23 @@ public class GemfireServerIntegrationTest {
     }
 
     @Test(groups=["Integration"])
-    public void testJarDeploy() {
-//        entity.setConfig(GemfireServer.JAR_FILE, jarFile)
+    public void testRegionInsertRetrieve() {
 
+        Application app = new TestApplication()
+        Entity entity = createGemfireServer(app, installDir, pathTo(licenseFile), pathTo(euCache))
+        entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
+
+        executeUntilSucceeds(timeout: 15000) {
+            assertTrue entity.getAttribute(Startable.SERVICE_UP)
+        }
+
+        // This takes *ages*
+        Cache cache = new CacheFactory().set("cache-xml-file", pathTo(euCache)).create()
+        executeUntilSucceedsWithShutdown(timeout: 20000, entity) {
+            Region rs = cache.getRegion("integrationTests")
+            rs.put("key", "val")
+            Object aa = rs.get("key")
+            assertEquals "val", rs.get("key")
+        }
     }
 }
