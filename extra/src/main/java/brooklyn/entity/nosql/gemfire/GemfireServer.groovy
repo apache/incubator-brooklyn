@@ -30,13 +30,43 @@ class GemfireServer extends AbstractService {
 
     public static final Effector<Void> ADD_GATEWAYS =
         new EffectorWithExplicitImplementation<GemfireServer, Void>("addGateways", Void.TYPE,
-            Arrays.<ParameterType<?>>asList(new BasicParameterType<Collection>("gateways", Collection.class,"Gatways to be added", Collections.emptyList())),
+            Arrays.<ParameterType<?>>asList(new BasicParameterType<Collection>("gateways", Collection.class,"Gateways to be added", Collections.emptyList())),
             "Add gateways to this server, to replicate to/from other clusters") {
         public Void invokeEffector(GemfireServer entity, Map m) {
             entity.addGateways((Collection<GatewayConnectionDetails>) m.get("gateways"));
             return null;
         }
     };
+
+	public static final Effector<Void> REMOVE_GATEWAYS =
+		new EffectorWithExplicitImplementation<GemfireServer, Void>("removeGateways", Void.TYPE,
+			Arrays.<ParameterType<?>>asList(new BasicParameterType<Collection>("gateways", Collection.class,"Gateways to be removed", Collections.emptyList())),
+			"Remove decomissioned gateways from this server") {
+		public Void invokeEffector(GemfireServer entity, Map m) {
+			entity.removeGateways((Collection<GatewayConnectionDetails>) m.get("gateways"));
+			return null;
+		}
+	};
+
+	public static final Effector<Void> ADD_REGIONS =
+		new EffectorWithExplicitImplementation<GemfireServer, Void>("addRegions", Void.TYPE,
+			Arrays.<ParameterType<?>>asList(new BasicParameterType<Collection>("regions", Collection.class,"Regions to be added", Collections.emptyList())),
+			"Add regions to this server- will replicate and stay in sync if the region already exists elsewhere") {
+		public Void invokeEffector(GemfireServer entity, Map m) {
+			entity.addRegions((Collection<GatewayConnectionDetails>) m.get("regions"));
+			return null;
+		}
+	};
+
+	public static final Effector<Void> REMOVE_REGIONS =
+		new EffectorWithExplicitImplementation<GemfireServer, Void>("removeGateways", Void.TYPE,
+			Arrays.<ParameterType<?>>asList(new BasicParameterType<Collection>("regions", Collection.class,"Regions to be removed", Collections.emptyList())),
+			"Locally destroy a region on this server- will continue to exist elsewhere") {
+		public Void invokeEffector(GemfireServer entity, Map m) {
+			entity.removeRegions((Collection<GatewayConnectionDetails>) m.get("regions"));
+			return null;
+		}
+	};
 
     private static final int CONTROL_PORT_VAL = 8084    
     transient HttpSensorAdapter httpAdapter
@@ -71,7 +101,7 @@ class GemfireServer extends AbstractService {
     }
 
     public void addGateways(Collection<GatewayConnectionDetails> gateways) {
-        int counter = 0
+		int counter = 0
         gateways.each { GatewayConnectionDetails gateway ->
             String clusterId = gateway.clusterAbbreviatedName
             String endpointId = clusterId+"-"+(++counter)
@@ -79,7 +109,7 @@ class GemfireServer extends AbstractService {
             String hostname = gateway.host
             String controlUrl = getAttribute(CONTROL_URL)
             
-            String urlstr = controlUrl+"/add?id="+clusterId+"&endpointId="+endpointId+"&port="+port+"&host="+hostname
+            String urlstr = controlUrl+"/gateway/add?id="+clusterId+"&endpointId="+endpointId+"&port="+port+"&host="+hostname
             URL url = new URL(urlstr)
             HttpURLConnection connection = url.openConnection()
             connection.connect()
@@ -89,4 +119,50 @@ class GemfireServer extends AbstractService {
             }
         }
     }
+	
+	public void removeGateways(Collection<GatewayConnectionDetails> gateways) {
+		gateways.each { GatewayConnectionDetails gateway ->
+			String clusterId = gateway.clusterAbbreviatedName
+			String controlUrl = getAttribute(CONTROL_URL)
+			
+			String urlstr = controlUrl+"/gateway/remove?id="+clusterId
+			URL url = new URL(urlstr)
+			HttpURLConnection connection = url.openConnection()
+			connection.connect()
+			int responseCode = connection.getResponseCode()
+			if (responseCode < 200 || responseCode >= 300) {
+				throw new IllegalStateException("Failed to remove gateway from server, response code $responseCode for using $url")
+			}
+		}
+	}
+	
+	public void addRegions(Collection<String> regions) {
+		regions.each { String region ->
+			String controlUrl = getAttribute(CONTROL_URL)
+			
+			String urlstr = controlUrl+"/region/add?name="+region
+			URL url = new URL(urlstr)
+			HttpURLConnection connection = url.openConnection()
+			connection.connect()
+			int responseCode = connection.getResponseCode()
+			if (responseCode < 200 || responseCode >= 300) {
+				throw new IllegalStateException("Failed to add region to server, response code $responseCode for using $url")
+			}
+		}
+	}
+	
+	public void removeRegions(Collection<String> regions) {
+		regions.each { String region ->
+			String controlUrl = getAttribute(CONTROL_URL)
+			
+			String urlstr = controlUrl+"/region/remove?name="+region
+			URL url = new URL(urlstr)
+			HttpURLConnection connection = url.openConnection()
+			connection.connect()
+			int responseCode = connection.getResponseCode()
+			if (responseCode < 200 || responseCode >= 300) {
+				throw new IllegalStateException("Failed to remove region from server, response code $responseCode for using $url")
+			}
+		}
+	}
 }
