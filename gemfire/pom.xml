@@ -2,8 +2,6 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-    <!-- TODO: Version numbers, determining whether the system scope is correct. -->
-
     <modelVersion>4.0.0</modelVersion>
     <groupId>monterey-gemfire</groupId>
     <artifactId>monterey-gemfire</artifactId>
@@ -15,26 +13,26 @@
         <version>0.1.0-SNAPSHOT</version>
         <relativePath>../parent/root/pom.xml</relativePath>
     </parent>
+
+    <repositories>
+        <repository>
+            <id>ccweb.cloudsoftcorp.com</id>
+            <name>ccweb.cloudsoftcorp.com-releases</name>
+            <url>http://ccweb.cloudsoftcorp.com/maven/ext-release-local</url>
+        </repository>
+    </repositories>
   
     <dependencies>
         <dependency>
             <groupId>com.gemstone</groupId>
-            <artifactId>gemfire</artifactId>
-            <version>0.0.1</version>
-            <!-- Maven really dislikes this -->
-            <scope>system</scope>
-            <systemPath>${basedir}/lib/gemfire.jar</systemPath>
+            <artifactId>gemfire-server</artifactId>
+            <version>gemfire-6.5.1.4</version>
         </dependency>
-
         <dependency>
             <groupId>org.antlr</groupId>
             <artifactId>antlr</artifactId>
-            <version>0.0.1</version>
-            <!-- And this too -->
-            <scope>system</scope>
-            <systemPath>${basedir}/lib/antlr.jar</systemPath>
+            <version>3.4</version>
         </dependency>
     </dependencies>
-
 </project>
 
