@@ -25,7 +25,6 @@ public abstract class AbstractPolicy extends AbstractEntityAdjunct implements Po
     private static final Logger log = LoggerFactory.getLogger(AbstractPolicy.class);
 
     protected String policyStatus;
-    protected String name;
     protected Map leftoverProperties
     protected AtomicBoolean suspended = new AtomicBoolean(false)
 
