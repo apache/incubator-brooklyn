@@ -10,14 +10,14 @@ import brooklyn.entity.ParameterType
 import brooklyn.entity.basic.AbstractService
 import brooklyn.entity.basic.BasicParameterType
 import brooklyn.entity.basic.EffectorWithExplicitImplementation
-import brooklyn.event.Sensor;
 import brooklyn.event.adapter.HttpSensorAdapter
 import brooklyn.event.adapter.ValueProvider
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
-import brooklyn.location.MachineLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedAppSetup
+
+import com.google.common.base.Splitter
 
 class GemfireServer extends AbstractService {
 
@@ -82,7 +82,7 @@ class GemfireServer extends AbstractService {
     protected void initSensors() {
         int hubPort = getConfig(SUGGESTED_HUB_PORT)
         setAttribute(HUB_PORT, hubPort)
-        setAttribute(CONTROL_URL, "http://${setup.machine.address.hostName}:"+CONTROL_PORT_VAL+"/")
+        setAttribute(CONTROL_URL, "http://${setup.machine.address.hostName}:"+CONTROL_PORT_VAL)
         
         httpAdapter = new HttpSensorAdapter(this)
         attributePoller.addSensor(SERVICE_UP, { computeNodeUp() } as ValueProvider)
@@ -108,7 +108,12 @@ class GemfireServer extends AbstractService {
 		String url = getAttribute(CONTROL_URL)+"/region/list"
 		ValueProvider<String> provider = httpAdapter.newStringBodyProvider(url)
 		try {
-			return Arrays.asList(provider.compute().split(","))
+			return Splitter.on(",")
+				.trimResults()
+				.omitEmptyStrings()
+				.split(provider.compute())
+				.iterator().toList()
+			 
 		} catch (IOException ioe) {
 			return new String[0]
 		}
