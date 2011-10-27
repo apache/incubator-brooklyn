@@ -63,6 +63,7 @@ public class GeneralRequestHandler implements HttpHandler {
         		String subpath = path.substring(7);
         		if(subpath.startsWith("/add")) handleAddRegion(httpExchange);
         		else if( subpath.startsWith("/remove")) handleRemoveRegion(httpExchange);
+        		else if( subpath.startsWith("/list")) handleListRegions(httpExchange);
         		else handleUnknown(httpExchange);
         	} else if (path.startsWith("/status")) handleStatus(httpExchange);
             else handleUnknown(httpExchange);
@@ -116,7 +117,7 @@ public class GeneralRequestHandler implements HttpHandler {
 
         String name = (String)parameters.get(NAME_KEY);
 
-        regionListener.regionAdded(name);
+        regionListener.regionAdded(name, true);
 
         sendResponse(httpExchange,200,String.format(REGION_ADDED_MESSAGE,name));
     }
@@ -130,6 +131,15 @@ public class GeneralRequestHandler implements HttpHandler {
 
         String message = result ? REGION_REMOVED_MESSAGE : REGION_NOT_REMOVED_MESSAGE;
         sendResponse(httpExchange,200,String.format(message,name));
+    }
+    
+    private void handleListRegions(HttpExchange httpExchange) throws IOException {
+    	StringBuffer sb = new StringBuffer();
+    	for (String s : regionListener.regionList()) {
+    		sb.append(s).append(",");
+    	}
+    	String out = sb.length() > 0 ? sb.substring(0, sb.length()-1) : "";
+    	sendResponse(httpExchange,200,out);
     }
 
     private String computeDiskStoreName(String endpointId) {
