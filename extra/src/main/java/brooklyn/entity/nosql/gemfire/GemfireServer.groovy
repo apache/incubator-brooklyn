@@ -105,7 +105,7 @@ class GemfireServer extends AbstractService {
     }
 	
 	private Collection<String> listRegions() {
-		String url = getAttribute(CONTROL_URL)+"region/list"
+		String url = getAttribute(CONTROL_URL)+"/region/list"
 		ValueProvider<String> provider = httpAdapter.newStringBodyProvider(url)
 		try {
 			return Arrays.asList(provider.compute().split(","))

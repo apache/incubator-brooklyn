@@ -70,6 +70,34 @@ public class GemfireServerIntegrationTest {
         }
         assertFalse entity.getAttribute(JavaApp.SERVICE_UP)
     }
+	
+	@Test(groups = [ "Integration" ])
+	public void testRegionSensor() {
+		Application app = new TestApplication()
+		GemfireServer entity = createGemfireServer(app, installDir, pathTo(licenseFile), pathTo(configFile))
+		entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
+		
+		executeUntilSucceeds() {
+			Collection<String> regions = entity.getAttribute(GemfireServer.REGION_LIST)
+			assertEquals ( regions, Arrays.asList("trades") )
+			
+		}
+	}
+	
+	@Test(groups = [ "Integration" ])
+	public void testAddRegions() {
+		Application app = new TestApplication()
+		GemfireServer entity = createGemfireServer(app, installDir, pathTo(licenseFile), pathTo(configFile))
+		entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
+		Collection<String> regionsToAdd = Arrays.asList("Foo/bar", "Fizz")
+		Collection<String> expectedRegions = Arrays.asList("Foo", "Foo/bar", "Fizz")
+		entity.addRegions(regionsToAdd)
+		
+		executeUntilSucceeds() {
+			Collection<String> regions = entity.getAttribute(GemfireServer.REGION_LIST)
+			assertTrue( regions.containsAll(expectedRegions), "Expected = $expectedRegions, actual = $regions" )
+		}
+	}
 
     @Test(groups=["Integration"])
     public void testJarDeploy() {
