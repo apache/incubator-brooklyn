@@ -236,7 +236,7 @@ public abstract class SshBasedAppSetup {
 
             List<String> script = getConfigScript()
             if (script) {
-                log.info "Configuring entity {} on machine {}", entity, machine
+                log.info "configuring entity {} on machine {}", entity, machine
                 int result = machine.run(out:System.out, err:System.err, script)
                 if (result) throw new IllegalStateException("failed to configure $entity (exit code $result)")
             } else {
@@ -247,7 +247,7 @@ public abstract class SshBasedAppSetup {
 
     protected void exec(List<String> script, String summaryForLogging="execute for") {
         synchronized (entity) {
-            log.info(summaryForLogging+" entity {} on machine {}", entity, machine)
+            log.info(summaryForLogging+" entity {} on machine {}: {}", entity, machine, script)
             int result = machine.run(out:System.out, err:System.err, script)
             if (result) throw new IllegalStateException("failed to "+summaryForLogging+" $entity (exit code $result)")
         }
@@ -265,7 +265,7 @@ public abstract class SshBasedAppSetup {
      * @see #getRunEnvironment()
      */
     public void runApp() {
-        log.info "starting entity {} on {}", entity, machine
+        log.info "starting {} on {}", entity, machine
         Map environment = [:]
         environment << getRunEnvironment()
         Map configured = entity.getConfig(AbstractService.ENVIRONMENT)
@@ -297,10 +297,10 @@ public abstract class SshBasedAppSetup {
      * Shut down the application process.
      */
     public void shutdown() {
-        log.debug "invoking shutdown script"
+        log.debug "invoking shutdown script for {}: {}", entity, getShutdownScript()
         def result = machine.run(out:System.out, err:System.err, getShutdownScript())
-        if (result) log.info "non-zero result code terminating {}: {}", entity, result
-        log.debug "done invoking shutdown script"
+        if (result) log.warn "non-zero result code terminating {}: {}", entity, result
+        log.debug "done invoking shutdown script for {}", entity
     }
 
     /**
@@ -333,6 +333,7 @@ public abstract class SshBasedAppSetup {
     public void stop() {
         shutdown()
         postShutdown()
+        log.info "stopped {}", entity
     }
 
     /**
@@ -350,11 +351,10 @@ public abstract class SshBasedAppSetup {
 	        runApp()
 	        postStart()
         } else {
-	        log.debug "invoking restart script"
+	        log.debug "invoking restart script on {}: {}", entity, restartScript
 	        def result = machine.run(out:System.out, err:System.err, restartScript)
 	        if (result) log.info "non-zero result code terminating {}: {}", entity, result
-	        log.debug "done invoking restart script"
-        
+	        log.debug "done invoking restart script on {}", entity
         }
     }
 
@@ -458,7 +458,7 @@ public abstract class SshBasedAppSetup {
                 log.error "Failed to deploy {} on {}, result {}", local.name, machine, result
                 throw new IllegalStateException("Failed to deploy ${local.name} on ${machine}")
             } else {
-                log.debug "Deployed {} on {}", local.name, machine
+                log.debug "deployed {} on {}", local.name, machine
             }
         }
     }

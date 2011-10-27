@@ -50,10 +50,6 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
      * Default stop will stop all Startable children
      */
     public void stop() {
-        //TODO review mgmt destroy lifecycle; i (Alex) don't think we want to forget all about it on stop, 
-        //since we may still be interested in things recently stopped
-        getManagementContext().unmanage(this)
-        
         List<Entity> startable = ownedChildren.findAll { it in Startable }
         if (startable && !startable.isEmpty()) {
             Task task = invokeEffectorList(startable, Startable.STOP)
@@ -66,6 +62,14 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
 
         setAttribute(SERVICE_UP, false)
         deployed = false
+        
+        //TODO review mgmt destroy lifecycle
+        //  we don't necessarily want to forget all about the app on stop, 
+        //since operator may be interested in things recently stopped;
+        //but that could be handled by the impl at management
+        //(keeping recently unmanaged things)  
+        //  however unmanaging must be done last, _after_ we stop children and set attributes 
+        getManagementContext().unmanage(this)
     }
 
     public void restart() {

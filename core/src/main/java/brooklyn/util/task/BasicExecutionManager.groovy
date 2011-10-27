@@ -7,6 +7,9 @@ import java.util.concurrent.ConcurrentMap
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -35,7 +38,9 @@ public class BasicExecutionManager implements ExecutionManager {
 
     public static Task getCurrentTask() { return getPerThreadCurrentTask().get() }
     
-    private ExecutorService runner = Executors.newCachedThreadPool()
+    private ExecutorService runner = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 1L, TimeUnit.SECONDS, 
+        new SynchronousQueue<Runnable>());
+    //default runner is like  Executors.newCachedThreadPool()  but timeout of 1s rather than 60s for better shutdown!
     
     // TODO Could have a set of all knownTasks; but instead we're having a separate set per tag,
     // so the same task could be listed multiple times if it has multiple tags...
