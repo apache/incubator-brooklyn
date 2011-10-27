@@ -46,15 +46,10 @@ public class GemfireServerIntegrationTest {
         return url.path;
     }
 
-    @BeforeMethod(groups=["Integration"])
-    public void setUp() {
-    }
-
     private final List<Entity> createdEntities = []
     @AfterMethod(alwaysRun=true)
     public void killStartedEntities() {
-        String killScript = "ps aux | grep gemfire | grep -v grep | awk '{ print \$2 }' | xargs kill"
-        createdEntities.each { AbstractService e -> e.setup.machine.run(killScript) }
+        createdEntities.each { it.stop() }
         createdEntities.clear()
     }
 
