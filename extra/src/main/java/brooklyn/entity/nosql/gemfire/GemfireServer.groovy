@@ -10,6 +10,7 @@ import brooklyn.entity.ParameterType
 import brooklyn.entity.basic.AbstractService
 import brooklyn.entity.basic.BasicParameterType
 import brooklyn.entity.basic.EffectorWithExplicitImplementation
+import brooklyn.event.Sensor;
 import brooklyn.event.adapter.HttpSensorAdapter
 import brooklyn.event.adapter.ValueProvider
 import brooklyn.event.basic.BasicAttributeSensor
@@ -27,6 +28,8 @@ class GemfireServer extends AbstractService {
     public static final BasicConfigKey<Integer> WEB_CONTROLLER_PORT = [ Integer, "gemfire.server.controllerWebPort", "Gemfire controller web port", 8084 ]
     public static final BasicAttributeSensor<Integer> HUB_PORT = [ Integer, "gemfire.server.hubPort", "Gemfire gateway hub port" ]
     public static final BasicAttributeSensor<String> CONTROL_URL = [ String, "gemfire.server.controlUrl", "URL for perfoming management actions" ]
+	public static final BasicAttributeSensor<Collection> REGION_LIST = new BasicAttributeSensor<Collection>(Collection.class, "gemfire.server.regions.list", 
+		"List of fully-pathed regions on this gemfire server");
 
     public static final Effector<Void> ADD_GATEWAYS =
         new EffectorWithExplicitImplementation<GemfireServer, Void>("addGateways", Void.TYPE,
@@ -79,10 +82,11 @@ class GemfireServer extends AbstractService {
     protected void initSensors() {
         int hubPort = getConfig(SUGGESTED_HUB_PORT)
         setAttribute(HUB_PORT, hubPort)
-        setAttribute(CONTROL_URL, "http://${setup.machine.address.hostName}:"+CONTROL_PORT_VAL)
+        setAttribute(CONTROL_URL, "http://${setup.machine.address.hostName}:"+CONTROL_PORT_VAL+"/")
         
         httpAdapter = new HttpSensorAdapter(this)
         attributePoller.addSensor(SERVICE_UP, { computeNodeUp() } as ValueProvider)
+		attributePoller.addSensor(REGION_LIST, { listRegions() } as ValueProvider)
     }
     
     public SshBasedAppSetup getSshBasedSetup(SshMachineLocation loc) {
@@ -99,6 +103,16 @@ class GemfireServer extends AbstractService {
             return false
         }
     }
+	
+	private Collection<String> listRegions() {
+		String url = getAttribute(CONTROL_URL)+"region/list"
+		ValueProvider<String> provider = httpAdapter.newStringBodyProvider(url)
+		try {
+			return Arrays.asList(provider.compute().split(","))
+		} catch (IOException ioe) {
+			return new String[0]
+		}
+	}
 
     public void addGateways(Collection<GatewayConnectionDetails> gateways) {
 		int counter = 0
