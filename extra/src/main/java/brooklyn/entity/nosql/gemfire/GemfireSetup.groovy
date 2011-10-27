@@ -100,7 +100,7 @@ public class GemfireSetup extends SshBasedAppSetup {
      * Starts gemfire process.
      */
     public List<String> getRunScript() {
-        String startArgs = "$webPort $configFileServersidePath $jarFileServersidePath"
+        String startArgs = "$webPort $configFileServersidePath $jarFileServersidePath $licenseFile"
         return [
             "cd ${runDir}",
             "nohup ${installDir}/start.sh ${startArgs} &",
@@ -110,6 +110,7 @@ public class GemfireSetup extends SshBasedAppSetup {
  
     /** @see SshBasedAppSetup#getRunEnvironment() */
     public Map<String, String> getRunEnvironment() { [:] }
+
 
     public List<String> getCheckRunningScript() {
         return makeCheckRunningScript("gemfire", "server-pid.txt")

@@ -21,6 +21,7 @@ import brooklyn.entity.basic.AbstractService
 
 import com.gemstone.gemfire.cache.Region
 import com.gemstone.gemfire.cache.Cache
+import com.gemstone.gemfire.cache.CacheFactory
 
 /**
  * This tests the operation of the {@link GemfireServer} entity.
