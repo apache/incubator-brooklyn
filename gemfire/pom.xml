@@ -34,6 +34,11 @@
             <scope>system</scope>
             <systemPath>${basedir}/lib/antlr.jar</systemPath>
         </dependency>
+        
+        <dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+		</dependency>
     </dependencies>
 
 </project>
