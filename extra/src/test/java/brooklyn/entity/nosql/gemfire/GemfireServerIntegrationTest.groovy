@@ -28,22 +28,32 @@ import com.gemstone.gemfire.cache.client.ClientCache
  * TODO clarify test purpose
  */
 public class GemfireServerIntegrationTest {
-    private static final Logger LOG = LoggerFactory.getLogger(GemfireServerIntegrationTest.class)
-    
-    private String installDir = "/Users/aled/eclipse-workspaces/cloudsoft/brooklyn/gemfire"
-    private String jarFile = "/Users/aled/eclipse-workspaces/bixby-demo/com.cloudsoftcorp.sample.booking.webapp/src/main/webapp/WEB-INF/lib/com.cloudsoftcorp.sample.booking.svc.api_3.2.0.v20110317-295-10281.jar"
 
-    //  f installDir is set machine independently then these can be deleted from resources
+    private static final Logger LOG = LoggerFactory.getLogger(GemfireServerIntegrationTest.class)
+
+    // TODO: Make these machine independent
+    private String installDir = "/Users/sam/code/cloudsoft/brooklyn/gemfire"
+    private String jarFile = "/Users/sam/aksdb/trunk/sandbox/spring-booking-demo-bixby/" +
+            "com.cloudsoftcorp.demo.bixby.booking.webapp/src/main/webapp/WEB-INF/lib/" +
+            "com.cloudsoftcorp.demo.bixby.bookingsvc.api.jar"
+
     // if installDir is set machine independently then gemfireLicense.zip can be deleted from resources
     private static final String licenseFile = "gemfireLicense.zip"
     private static final String euCache = "eu/cache.xml"
     private static final String clientCache = "eu/client-cache.xml"
+
+    private Application app = new TestApplication()
 
     /** Returns the absolute path to requested resource that should live in brooklyn/entity/nosql/gemfire */
     private static String pathTo(String resource) {
         URL url = GemfireServerIntegrationTest.class.getResource(resource)
         assertNotNull(url, "Couldn't find $resource, aborting")
         return url.path;
+    }
+
+    @BeforeMethod
+    public void setup() {
+        app = new TestApplication()
     }
 
     private final List<Entity> createdEntities = []
@@ -69,7 +79,6 @@ public class GemfireServerIntegrationTest {
 
     @Test(groups=["Integration"])
     public void testGemfireStartsAndStops() {
-        Application app = new TestApplication()
         Entity entity = createGemfireServer(app, installDir, pathTo(licenseFile), pathTo(euCache))
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         executeUntilSucceedsWithShutdown(entity) {
@@ -81,7 +90,6 @@ public class GemfireServerIntegrationTest {
     @Test(groups=["Integration"])
     public void testRegionInsertRetrieve() {
 
-        Application app = new TestApplication()
         Entity entity = createGemfireServer(app, installDir, pathTo(licenseFile), pathTo(euCache))
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
 
@@ -96,8 +104,22 @@ public class GemfireServerIntegrationTest {
         // whoyougonnacall set in euCache, life etc. set above
         assertEquals region.get("whoyougonnacall"), "ghostbusters!"
         assertEquals region.get("life, etc."), 42
+
         cache.close()
         entity.stop()
 
+    }
+
+    @Test(groups=["Integration"], enabled=false)
+    public void testInOneRegionOutAnother() {
+        Entity server = createGemfireServer(app, installDir, pathTo(licenseFile), pathTo(euCache))
+        server.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
+
+        // Invoke create region
+        // Create client cache
+        // Insert keyval pair
+        // Create second client cache in same region
+        // Retrieve keyval pair
+        
     }
 }
