@@ -1,15 +1,16 @@
 package brooklyn.extras.openshift
 
-import groovy.json.JsonBuilder;
-import groovy.json.JsonSlurper;
+import groovy.json.JsonBuilder
+import groovy.json.JsonSlurper
 import groovyx.net.http.HTTPBuilder
-import java.util.concurrent.Future
 
-import brooklyn.util.internal.LanguageUtils;
-import brooklyn.util.internal.duplicates.ExecUtils;
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 class OpenshiftExpressAccess {
 
+    private static final Logger log = LoggerFactory.getLogger(OpenshiftExpressAccess.class)
+    
     String urlBase = "https://openshift.redhat.com/broker"
     String username;
     String password;
@@ -29,9 +30,9 @@ class OpenshiftExpressAccess {
 
         def http = new HTTPBuilder( urlBase + urlExtension )
         http.handler.failure = { resp ->
-            println "Unexpected failure: ${resp.statusLine} ${resp.status} ${resp.data} ${resp.responseData}"
-            resp.headers.each { println "  header ${it}" }
-            println "Details: "+resp
+            log.warn "Unexpected failure: ${resp.statusLine} ${resp.status} ${resp.data} ${resp.responseData}"
+            resp.headers.each { log.info "  header ${it}" }
+            log.warn "Details: "+resp
             throw new IllegalStateException("server could not process request ("+resp.statusLine+")")
         }
 
@@ -42,7 +43,7 @@ class OpenshiftExpressAccess {
         jsonBuilder allFields;
         String jsonData = jsonBuilder.toString()
 
-        println "posting to "+urlBase+urlExtension+" : "+jsonData
+        log.info "posting to "+urlBase+urlExtension+" : "+jsonData
 
         Object result;
         Object o = http.post( query: [json_data: jsonData, password:"${password}"]) { resp, json ->
@@ -156,9 +157,26 @@ class OpenshiftExpressAccess {
         public Object status() {
             doPost(newFields( [action: "status"] ))
         }
-        /** creates (and starts) an app */
-        public Object create() {
-            doPost(newFields( [action: "configure"] ))
+        /** creates (and starts) an app; accepts 'retries' flags which is useful because openshift sometimes returns 500 server error */
+        public Object create(Map flags=[:]) {
+            int retries = flags.get('retries') ?: 0
+
+            boolean retry=true;
+            while (retry) {
+                retry = false;
+                try {
+                    doPost(newFields( [action: "configure"] ))
+                } catch (IllegalStateException e) {
+                    if (e.toString().indexOf('HTTP/1.1 500 Internal Server Error')>=0 && retries>0) {
+                        retries-=1;
+                        retry=true;
+                    } else {
+                        if (e.toString().indexOf('HTTP/1.1 400'))
+                            log.warn("creation of application failed (exception will be thrown); note that this can be due to already having the maximum number of applications in Openshift (currently 4)")
+                        throw e;
+                    }
+                }
+            }
         }
         /** deletes (and stops) an app */
         public Object destroy() {
