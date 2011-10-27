@@ -1,15 +1,15 @@
 package brooklyn.gemfire.demo;
 
-import com.gemstone.gemfire.cache.util.GatewayQueueAttributes;
-import com.sun.net.httpserver.Headers;
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.util.Map;
 import java.util.Random;
+
+import com.gemstone.gemfire.cache.util.GatewayQueueAttributes;
+import com.sun.net.httpserver.Headers;
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
 
 public class GeneralRequestHandler implements HttpHandler {
 
@@ -91,9 +91,8 @@ public class GeneralRequestHandler implements HttpHandler {
         String endpointId = (String)parameters.get(ENDPOINT_ID_KEY);
         String host = (String)parameters.get(HOST_KEY);
         int port = Integer.parseInt((String)parameters.get(PORT_KEY));
-
+        
         GatewayQueueAttributes attributes = getQueueAttributes(parameters);
-        attributes.setDiskStoreName( computeDiskStoreName(endpointId) );
 
         gatewayListener.gatewayAdded(id, endpointId, host,  port, attributes);
 
@@ -141,11 +140,7 @@ public class GeneralRequestHandler implements HttpHandler {
     	String out = sb.length() > 0 ? sb.substring(0, sb.length()-1) : "";
     	sendResponse(httpExchange,200,out);
     }
-
-    private String computeDiskStoreName(String endpointId) {
-        return "overflow-"+endpointId+"-"+new Random().nextInt();
-    }
-
+    
     private void handleUnknown(HttpExchange httpExchange) throws IOException {
         sendResponse(httpExchange,404,USAGE);
     }

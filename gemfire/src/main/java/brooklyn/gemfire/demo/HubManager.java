@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.Random;
 
 import com.gemstone.gemfire.cache.Cache;
+import com.gemstone.gemfire.cache.DiskStore;
 import com.gemstone.gemfire.cache.GatewayException;
 import com.gemstone.gemfire.cache.Region;
 import com.gemstone.gemfire.cache.RegionFactory;
@@ -26,11 +28,18 @@ public class HubManager implements GatewayChangeListener, RegionChangeListener {
 
     @Override
     public void gatewayAdded( String id, String endpointId, String host, int port, GatewayQueueAttributes attributes ) throws IOException {
+    	DiskStore ds = cache.createDiskStoreFactory().create(computeDiskStoreName(endpointId));
+        attributes.setDiskStoreName( ds.getName() );
+        
         for(GatewayHub hub :  cache.getGatewayHubs()) {
             stopHub(hub);
             addGateway(hub,id,endpointId,host,port,attributes);
             startHub(hub);
         }
+    }
+    
+    private String computeDiskStoreName(String endpointId) {
+        return "overflow-"+endpointId+"-"+new Random().nextInt();
     }
 
     @Override
