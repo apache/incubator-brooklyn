@@ -16,15 +16,11 @@ import brooklyn.policy.basic.AbstractPolicy
 public class PolicySummary {
     final String displayName
     final String policyStatus
-    final String name
     final String id
-    final String description
 
     public PolicySummary(Policy policy) {
-        id = policy.getId()
-        description = policy.findPolicyProperty('description')
-        name = policy.getName()
-        displayName = policy.findPolicyProperty('displayName')
+        id = policy.id
+        displayName = policy.name
         if (policy.isDestroyed()) {
             policyStatus = "Destroyed"
         } else if (policy.isSuspended()) {
