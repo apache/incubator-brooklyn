@@ -79,7 +79,7 @@ public class GemfireServerIntegrationTest {
 		
 		executeUntilSucceeds() {
 			Collection<String> regions = entity.getAttribute(GemfireServer.REGION_LIST)
-			assertEquals ( regions, Arrays.asList("trades") )
+			assertEquals ( regions, Arrays.asList("/trades") )
 			
 		}
 	}
@@ -89,8 +89,8 @@ public class GemfireServerIntegrationTest {
 		Application app = new TestApplication()
 		GemfireServer entity = createGemfireServer(app, installDir, pathTo(licenseFile), pathTo(configFile))
 		entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
-		Collection<String> regionsToAdd = Arrays.asList("Foo/bar", "Fizz")
-		Collection<String> expectedRegions = Arrays.asList("Foo", "Foo/bar", "Fizz")
+		Collection<String> regionsToAdd = Arrays.asList("Foo%2Fbar", "%2FFizz")
+		Collection<String> expectedRegions = Arrays.asList("/Foo", "/Foo/bar", "/Fizz")
 		entity.addRegions(regionsToAdd)
 		
 		executeUntilSucceeds() {
