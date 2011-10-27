@@ -11,5 +11,9 @@
 
   <region name="integrationTests" refid="REPLICATE">
     <region-attributes enable-gateway="true"/>
+    <entry>
+      <key><string>whoyougonnacall</string></key>
+      <value><string>ghostbusters!</string></value>
+    </entry>
   </region>
 </cache>

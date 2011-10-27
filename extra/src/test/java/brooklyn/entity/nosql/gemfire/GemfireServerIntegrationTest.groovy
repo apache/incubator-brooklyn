@@ -1,7 +1,6 @@
 package brooklyn.entity.nosql.gemfire
 
 import static brooklyn.test.TestUtils.*
-
 import static org.testng.Assert.*
 
 import org.slf4j.Logger
@@ -20,8 +19,8 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractService
 
 import com.gemstone.gemfire.cache.Region
-import com.gemstone.gemfire.cache.Cache
-import com.gemstone.gemfire.cache.CacheFactory
+import com.gemstone.gemfire.cache.client.ClientCacheFactory
+import com.gemstone.gemfire.cache.client.ClientCache
 
 /**
  * This tests the operation of the {@link GemfireServer} entity.
@@ -35,8 +34,10 @@ public class GemfireServerIntegrationTest {
     private String jarFile = "/Users/aled/eclipse-workspaces/bixby-demo/com.cloudsoftcorp.sample.booking.webapp/src/main/webapp/WEB-INF/lib/com.cloudsoftcorp.sample.booking.svc.api_3.2.0.v20110317-295-10281.jar"
 
     //  f installDir is set machine independently then these can be deleted from resources
+    // if installDir is set machine independently then gemfireLicense.zip can be deleted from resources
     private static final String licenseFile = "gemfireLicense.zip"
     private static final String euCache = "eu/cache.xml"
+    private static final String clientCache = "eu/client-cache.xml"
 
     /** Returns the absolute path to requested resource that should live in brooklyn/entity/nosql/gemfire */
     private static String pathTo(String resource) {
@@ -93,13 +94,15 @@ public class GemfireServerIntegrationTest {
             assertTrue entity.getAttribute(Startable.SERVICE_UP)
         }
 
-        // This takes *ages*
-        Cache cache = new CacheFactory().set("cache-xml-file", pathTo(euCache)).create()
-        executeUntilSucceedsWithShutdown(timeout: 20000, entity) {
-            Region rs = cache.getRegion("integrationTests")
-            rs.put("key", "val")
-            Object aa = rs.get("key")
-            assertEquals "val", rs.get("key")
-        }
+        ClientCache cache = new ClientCacheFactory().set("cache-xml-file", pathTo(clientCache)).create()
+        Region region = cache.getRegion("integrationTests")
+        region.put("life, etc.", 42)
+
+        // whoyougonnacall set in euCache, life etc. set above
+        assertEquals region.get("whoyougonnacall"), "ghostbusters!"
+        assertEquals region.get("life, etc."), 42
+        cache.close()
+        entity.stop()
+
     }
 }
