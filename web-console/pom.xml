@@ -36,12 +36,6 @@
             <artifactId>brooklyn-test-support</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-jdk14</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>brooklyn</groupId>
@@ -249,15 +243,15 @@
             <version>1.8.0.10</version>
         </dependency>
 
-        <!-- Use Log4J for logging. This artifact also pulls in the Log4J JAR. -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
+            <version>${slf4j.version}</version>
+            <!-- TODO not sure whether this should be included here or by higher-level project (it is included by tests) -->
             <scope>runtime</scope>
         </dependency>
 
@@ -301,6 +295,7 @@
 
     </dependencies>
 
+<!--  seems to only supply version info, which is in vars elsewhere anyway
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -330,6 +325,7 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+-->
 
     <repositories>
         <!-- Required to get hold of javassist:javassist -->

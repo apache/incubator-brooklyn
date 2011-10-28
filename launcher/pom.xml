@@ -3,6 +3,10 @@
     <artifactId>brooklyn-launcher</artifactId>
     <packaging>bundle</packaging>
     <name>Brooklyn Launcher</name>
+    <description>
+        This project includes everything needed to launch Brooklyn 
+        with an embedded management web-console and OSGi support.
+    </description>
 
     <parent>
         <groupId>brooklyn</groupId>
@@ -25,12 +29,6 @@
             <groupId>brooklyn</groupId>
             <artifactId>brooklyn-test-support</artifactId>
             <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-jdk14</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
