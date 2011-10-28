@@ -3,25 +3,27 @@ package brooklyn.entity.nosql.gemfire
 import static brooklyn.test.TestUtils.*
 import static org.testng.Assert.*
 
+import java.util.LinkedList
+import java.util.List
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
-import org.testng.annotations.AfterMethod
 
 import brooklyn.entity.Application
+import brooklyn.entity.Entity
 import brooklyn.entity.basic.JavaApp
 import brooklyn.entity.trait.Startable
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.test.entity.TestApplication
 
-import org.testng.annotations.AfterMethod
-import brooklyn.entity.Entity
-import brooklyn.entity.basic.AbstractService
-
+import com.gemstone.gemfire.cache.Cache
 import com.gemstone.gemfire.cache.Region
-import com.gemstone.gemfire.cache.client.ClientCacheFactory
 import com.gemstone.gemfire.cache.client.ClientCache
+import com.gemstone.gemfire.cache.client.ClientCacheFactory
+import com.gemstone.gemfire.cache.client.ClientRegionShortcut
 
 /**
  * This tests the operation of the {@link GemfireServer} entity.
@@ -173,12 +175,16 @@ public class GemfireServerIntegrationTest {
         assertEquals region.get("whoyougonnacall"), "ghostbusters!" // whoyougonnacall set in euCache
 		
 		entity.addRegions(Arrays.asList("adams"))
-		executeUntilSucceeds() {
-			Collection<String> regions = entity.getAttribute(GemfireServer.REGION_LIST)
-			assertTrue (regions.contains("adams"))
-		}
+		cache.createClientRegionFactory(ClientRegionShortcut.CACHING_PROXY_OVERFLOW).create("adams")
 		
-        region = cache.getRegion("adams")
+		executeUntilSucceeds() {
+			Collection<String> serverRegions = entity.getAttribute(GemfireServer.REGION_LIST)
+			assertTrue (serverRegions.contains("/adams"), "Expected \"/adam\" in server regions: $serverRegions")
+			region = cache.getRegion("/adams")
+			Collection<String> clientRegions = regionList(cache)
+			assertNotNull(region, "Failed to get /adams from client cache regions: ${clientRegions}")
+        }
+		        
 		region.put("life, etc.", 42)
 		assertEquals region.get("life, etc."), 42
 
@@ -186,6 +192,17 @@ public class GemfireServerIntegrationTest {
         entity.stop()
 
     }
+	
+	public static List<String> regionList(Cache cache) {
+		List<String> regions = new LinkedList<String>();
+		for (Region<?, ?> rootRegion : cache.rootRegions()) {
+			regions.add(rootRegion.getFullPath());
+			for (Region<?, ?> region : rootRegion.subregions(true)) {
+				regions.add(region.getFullPath());
+			}
+		}
+		return regions;
+	}
 
     @Test(groups=["Integration"], enabled=false)
     public void testInOneRegionOutAnother() {
