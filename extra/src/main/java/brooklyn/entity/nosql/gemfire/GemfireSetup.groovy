@@ -100,19 +100,20 @@ public class GemfireSetup extends SshBasedAppSetup {
      * Starts gemfire process.
      */
     public List<String> getRunScript() {
-        String startArgs = "$webPort $configFileServersidePath $jarFileServersidePath"
+        String startArgs = "$webPort $configFileServersidePath $jarFileServersidePath $licenseFile"
         return [
             "cd ${runDir}",
             "nohup ${installDir}/start.sh ${startArgs} &",
-            "echo \$! > pid.txt",
+            "echo \$! > startup-pid.txt",
         ]
     }
  
     /** @see SshBasedAppSetup#getRunEnvironment() */
     public Map<String, String> getRunEnvironment() { [:] }
 
+
     public List<String> getCheckRunningScript() {
-        return makeCheckRunningScript("gemfire", "pid.txt")
+        return makeCheckRunningScript("gemfire", "server-pid.txt")
     }
     
     /**
@@ -120,9 +121,9 @@ public class GemfireSetup extends SshBasedAppSetup {
      */
     @Override
     public List<String> getShutdownScript() {
-        return [ "ps aux | grep gemfire | grep -v grep | awk '{ print \$2 }' | xargs kill" ]
+        return makeShutdownScript("gemfire", "server-pid.txt")
     }
-    
+
     private static File checkFileExists(String path, Object errorMessage) {
         if (!path) {
             throw new IllegalArgumentException(String.valueOf(errorMessage)+" empty path");
