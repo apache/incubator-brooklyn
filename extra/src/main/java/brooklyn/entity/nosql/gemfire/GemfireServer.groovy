@@ -17,6 +17,7 @@ import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedAppSetup
 
+import com.google.common.base.Charsets
 import com.google.common.base.Splitter
 
 class GemfireServer extends AbstractService {
@@ -51,22 +52,28 @@ class GemfireServer extends AbstractService {
 		}
 	};
 
+	/** 
+	 * Takes a collection of fully-qualified region paths (String), e.g. "/Seam-travel/Hotels/Ritz"
+	 */
 	public static final Effector<Void> ADD_REGIONS =
 		new EffectorWithExplicitImplementation<GemfireServer, Void>("addRegions", Void.TYPE,
 			Arrays.<ParameterType<?>>asList(new BasicParameterType<Collection>("regions", Collection.class,"Regions to be added", Collections.emptyList())),
 			"Add regions to this server- will replicate and stay in sync if the region already exists elsewhere") {
 		public Void invokeEffector(GemfireServer entity, Map m) {
-			entity.addRegions((Collection<GatewayConnectionDetails>) m.get("regions"));
+			entity.addRegions((Collection<String>) m.get("regions"));
 			return null;
 		}
 	};
 
+	/**
+	* Takes a collection of fully-qualified region paths (String), e.g. "/Seam-travel/Hotels/Ritz"
+	*/
 	public static final Effector<Void> REMOVE_REGIONS =
 		new EffectorWithExplicitImplementation<GemfireServer, Void>("removeGateways", Void.TYPE,
 			Arrays.<ParameterType<?>>asList(new BasicParameterType<Collection>("regions", Collection.class,"Regions to be removed", Collections.emptyList())),
 			"Locally destroy a region on this server- will continue to exist elsewhere") {
 		public Void invokeEffector(GemfireServer entity, Map m) {
-			entity.removeRegions((Collection<GatewayConnectionDetails>) m.get("regions"));
+			entity.removeRegions((Collection<String>) m.get("regions"));
 			return null;
 		}
 	};
@@ -159,7 +166,7 @@ class GemfireServer extends AbstractService {
 		regions.each { String region ->
 			String controlUrl = getAttribute(CONTROL_URL)
 			
-			String urlstr = controlUrl+"/region/add?name="+region
+			String urlstr = controlUrl+"/region/add?path="+URLEncoder.encode(region, Charsets.UTF_8.toString())
 			URL url = new URL(urlstr)
 			HttpURLConnection connection = url.openConnection()
 			connection.connect()
@@ -174,7 +181,7 @@ class GemfireServer extends AbstractService {
 		regions.each { String region ->
 			String controlUrl = getAttribute(CONTROL_URL)
 			
-			String urlstr = controlUrl+"/region/remove?name="+region
+			String urlstr = controlUrl+"/region/remove?path="+URLEncoder.encode(region, Charsets.UTF_8.toString())
 			URL url = new URL(urlstr)
 			HttpURLConnection connection = url.openConnection()
 			connection.connect()
