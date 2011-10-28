@@ -33,10 +33,9 @@ public class GemfireServerIntegrationTest {
     private static final Logger LOG = LoggerFactory.getLogger(GemfireServerIntegrationTest.class)
     
     // TODO: Make these machine independent
-    private String installDir = "/Users/aled/eclipse-workspaces/cloudsoft/brooklyn/gemfire"
-    private String jarFile = "/Users/aled/eclipse-workspaces/bixby-demo/com.cloudsoftcorp.sample.booking.webapp/src/main/webapp/WEB-INF/lib/com.cloudsoftcorp.sample.booking.svc.api_3.2.0.v20110317-295-10281.jar"
-
     // if installDir is set machine independently then gemfireLicense.zip can be deleted from resources
+    private String installDir = "/Users/danikov/Documents/workspaces/workspace-git/brooklyn/gemfire"
+    private String jarFile = "/Users/danikov/Documents/workspaces/workspace/com.cloudsoftcorp.demo.bixby.booking.webapp/src/main/webapp/WEB-INF/lib/com.cloudsoftcorp.demo.bixby.bookingsvc.api.jar"
     private static final String licenseFile = "gemfireLicense.zip"
     private static final String euCache = "eu/cache.xml"
     private static final String clientCache = "eu/client-cache.xml"
@@ -47,6 +46,7 @@ public class GemfireServerIntegrationTest {
     private static String pathTo(String resource) {
         URL url = GemfireServerIntegrationTest.class.getResource(resource)
         assertNotNull(url, "Couldn't find $resource, aborting")
+        System.out.println(url.path);
         return url.path;
     }
 
@@ -63,9 +63,9 @@ public class GemfireServerIntegrationTest {
     }
 	
 	private GemfireServer createGemfireServer(Application owner) {
-		GemfireServer server = createGemfireServer(owner, installDir, pathTo(licenseFile), pathTo(configFile))
+		GemfireServer server = createGemfireServer(owner, installDir, pathTo(licenseFile), pathTo(euCache))
 		server.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
-		executeUntilSucceeds() {
+		executeUntilSucceeds(timeout: 15000) {
 			assertTrue server.getAttribute(Startable.SERVICE_UP)
 		}
 		return server
@@ -87,7 +87,6 @@ public class GemfireServerIntegrationTest {
 
     @Test(groups = [ "Integration" ])
     public void testGemfireStartsAndStops() {
-        Application app = new TestApplication()
         Entity entity = createGemfireServer(app, installDir, pathTo(licenseFile), pathTo(euCache))
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         executeUntilSucceedsWithShutdown(entity) {
@@ -98,12 +97,11 @@ public class GemfireServerIntegrationTest {
 	
 	@Test(groups = [ "Integration" ])
 	public void testRegionSensor() {
-		Application app = new TestApplication()
 		GemfireServer entity = createGemfireServer(app)
 		
 		executeUntilSucceeds() {
 			Collection<String> regions = entity.getAttribute(GemfireServer.REGION_LIST)
-			assertEquals ( regions, Arrays.asList("/trades") )
+			assertEquals ( regions, Arrays.asList("/integrationTests") )
 			
 		}
 	}
@@ -111,7 +109,6 @@ public class GemfireServerIntegrationTest {
 	//TODO rewrite these with generic a/b/c/d or 1/2/3/4, then use indexing to test add/remove, ie. add(3) -> add 1/2/3, etc.
 	@Test(groups = [ "Integration" ])
 	public void testAddRegions() {
-		Application app = new TestApplication()
 		GemfireServer entity = createGemfireServer(app)
 		
 		Collection<String> regionsToAdd = Arrays.asList("Foo/Bar", 
@@ -132,7 +129,6 @@ public class GemfireServerIntegrationTest {
 	
 	@Test(groups = [ "Integration" ])
 	public void testRemoveRegions() {
-		Application app = new TestApplication()
 		GemfireServer entity = createGemfireServer(app)
 		
 		Collection<String> regionsToAdd = Arrays.asList("Foo/Bar", 
@@ -170,21 +166,21 @@ public class GemfireServerIntegrationTest {
 
     @Test(groups=["Integration"])
     public void testRegionInsertRetrieve() {
-
-        Entity entity = createGemfireServer(app, installDir, pathTo(licenseFile), pathTo(euCache))
-        entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
-
-        executeUntilSucceeds(timeout: 15000) {
-            assertTrue entity.getAttribute(Startable.SERVICE_UP)
-        }
+        GemfireServer entity = createGemfireServer(app)
 
         ClientCache cache = new ClientCacheFactory().set("cache-xml-file", pathTo(clientCache)).create()
         Region region = cache.getRegion("integrationTests")
-        region.put("life, etc.", 42)
-
-        // whoyougonnacall set in euCache, life etc. set above
-        assertEquals region.get("whoyougonnacall"), "ghostbusters!"
-        assertEquals region.get("life, etc."), 42
+        assertEquals region.get("whoyougonnacall"), "ghostbusters!" // whoyougonnacall set in euCache
+		
+		entity.addRegions(Arrays.asList("adams"))
+		executeUntilSucceeds() {
+			Collection<String> regions = entity.getAttribute(GemfireServer.REGION_LIST)
+			assertTrue (regions.contains("adams"))
+		}
+		
+        region = cache.getRegion("adams")
+		region.put("life, etc.", 42)
+		assertEquals region.get("life, etc."), 42
 
         cache.close()
         entity.stop()
