@@ -49,6 +49,15 @@ public class GemfireServerIntegrationTest {
         createdEntities.each { it.stop() }
         createdEntities.clear()
     }
+	
+	private GemfireServer createGemfireServer(Application owner) {
+		GemfireServer server = createGemfireServer(owner, installDir, pathTo(licenseFile), pathTo(configFile))
+		server.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
+		executeUntilSucceeds() {
+			assertTrue server.getAttribute(Startable.SERVICE_UP)
+		}
+		return server
+	}
 
     /** Creates server and returns it after adding it to the createdEntities list */
     private GemfireServer createGemfireServer(Application owner, String installDir, String license, String config) {
@@ -74,8 +83,7 @@ public class GemfireServerIntegrationTest {
 	@Test(groups = [ "Integration" ])
 	public void testRegionSensor() {
 		Application app = new TestApplication()
-		GemfireServer entity = createGemfireServer(app, installDir, pathTo(licenseFile), pathTo(configFile))
-		entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
+		GemfireServer entity = createGemfireServer(app)
 		
 		executeUntilSucceeds() {
 			Collection<String> regions = entity.getAttribute(GemfireServer.REGION_LIST)
@@ -84,18 +92,57 @@ public class GemfireServerIntegrationTest {
 		}
 	}
 	
+	//TODO rewrite these with generic a/b/c/d or 1/2/3/4, then use indexing to test add/remove, ie. add(3) -> add 1/2/3, etc.
 	@Test(groups = [ "Integration" ])
 	public void testAddRegions() {
 		Application app = new TestApplication()
-		GemfireServer entity = createGemfireServer(app, installDir, pathTo(licenseFile), pathTo(configFile))
-		entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
-		Collection<String> regionsToAdd = Arrays.asList("Foo%2Fbar", "%2FFizz")
-		Collection<String> expectedRegions = Arrays.asList("/Foo", "/Foo/bar", "/Fizz")
+		GemfireServer entity = createGemfireServer(app)
+		
+		Collection<String> regionsToAdd = Arrays.asList("Foo/Bar", 
+				"Fizz", "/Fizz/Buzz",
+				"/Buzz",
+				"/Tom/Dick/Harry"),
+			expectedRegions = Arrays.asList("/Foo", "/Foo/Bar", 
+				"/Fizz", "/Fizz/Buzz",
+				"/Buzz", 
+				"/Tom", "/Tom/Dick", "/Tom/Dick/Harry")
 		entity.addRegions(regionsToAdd)
 		
 		executeUntilSucceeds() {
 			Collection<String> regions = entity.getAttribute(GemfireServer.REGION_LIST)
 			assertTrue( regions.containsAll(expectedRegions), "Expected = $expectedRegions, actual = $regions" )
+		}
+	}
+	
+	@Test(groups = [ "Integration" ])
+	public void testRemoveRegions() {
+		Application app = new TestApplication()
+		GemfireServer entity = createGemfireServer(app)
+		
+		Collection<String> regionsToAdd = Arrays.asList("Foo/Bar", 
+				"Fizz", "/Fizz/Buzz",
+				"/Buzz",
+				"/Tom/Dick/Harry"),
+//			expectedRegions = Arrays.asList("/Foo", "/Foo/Bar", 
+//				"/Fizz", "/Fizz/Buzz",
+//				"/Buzz", 
+//				"/Tom", "/Tom/Dick", "/Tom/Dick/Harry"),
+			regionsToRemove = Arrays.asList("/Foo/Bar", 
+				"/Fizz", 
+				"Buzz",
+				"/Tom/Dick"), 
+			regionsActuallyRemoved = Arrays.asList("/Foo/Bar", 
+				"/Fizz", "/Fizz/Buzz",
+				"/Buzz", 
+				"/Tom/Dick", "/Tom/Dick/Harry")
+		
+		
+		entity.addRegions(regionsToAdd)
+		entity.removeRegions(regionsToRemove)
+		
+		executeUntilSucceeds() {
+			Collection<String> regions = entity.getAttribute(GemfireServer.REGION_LIST)
+			assertTrue (regions.disjoint(regionsActuallyRemoved), "Expected removed = $regionsActuallyRemoved, actual = $regions")
 		}
 	}
 
