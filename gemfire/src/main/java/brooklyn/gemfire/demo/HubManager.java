@@ -69,47 +69,48 @@ public class HubManager implements GatewayChangeListener, RegionChangeListener {
     	StringBuffer pathBuffer = new StringBuffer();
     	Region<?,?> region;
     	RegionFactory<Object, Object> regionFactory = cache.createRegionFactory(RegionShortcut.REPLICATE).setEnableGateway(new Boolean(true));
-    	boolean create = false;
+    	boolean encounteredNonexistentRegion = false;
     	
-    	if (Iterables.size(nameparts) == 0) {return false;} //throw?
+    	if (Iterables.size(nameparts) == 0) {return false;}
     	
     	String regionName = Iterables.get(nameparts, 0);
     	pathBuffer.append(Region.SEPARATOR).append(regionName);
     	region = cache.getRegion(pathBuffer.toString());
     	
-    	if (region == null) {
-    		if (Iterables.size(nameparts) > 1 && recurse) {
-    			create = recurse;
+    	// handle root regions
+    	if (region == null) { // indicates region doesn't exist on this cache
+    		encounteredNonexistentRegion = true;
+    		if (Iterables.size(nameparts) == 1 || recurse) {
+    			region = regionFactory.create(regionName); 
     		} else {
     			return false;
     		}
     	} 
     	
-    	region = regionFactory.create(regionName);
-    	
+    	// handle sub-regions
     	for(int i = 1; i < Iterables.size(nameparts); i++) {
     		regionName = Iterables.get(nameparts, i);
     		pathBuffer.append(Region.SEPARATOR).append(regionName);
         	
-        	if (create) { // short-circuit to avoid repeated getRegion checks
+        	if (encounteredNonexistentRegion) { // short-circuit to avoid repeated getRegion checks
     			region = region.createSubregion(regionName, region.getAttributes());
     			continue;
     		}
         	
         	if (cache.getRegion(pathBuffer.toString()) == null && (i == Iterables.size(nameparts)-1 || recurse)) {
-        		create = recurse;
+        		encounteredNonexistentRegion = true;
         		region = region.createSubregion(regionName, region.getAttributes());
         	} else {
         		return false;
         	}
     	}
     	
-    	return true;
+    	return encounteredNonexistentRegion;
     }
     	
     @Override
-    public boolean regionRemoved(String name) throws IOException {
-    	Region<?, ?> r = cache.getRegion(name);
+    public boolean regionRemoved(String path) throws IOException {
+    	Region<?, ?> r = cache.getRegion(path);
     	if(r != null) {
     		r.localDestroyRegion();
     		return true;
