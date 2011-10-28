@@ -8,18 +8,20 @@ import java.util.concurrent.ExecutionException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.enricher.basic.AbstractEnricher;
+import brooklyn.enricher.basic.AbstractEnricher
 import brooklyn.entity.Application
 import brooklyn.entity.ConfigKey
 import brooklyn.entity.Effector
 import brooklyn.entity.Entity
 import brooklyn.entity.EntityClass
 import brooklyn.entity.Group
+import brooklyn.entity.ConfigKey.HasConfigKey
 import brooklyn.event.AttributeSensor
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.event.basic.AttributeMap
+import brooklyn.event.basic.BasicNotificationSensor
 import brooklyn.event.basic.ConfiguredAttributeSensor
 import brooklyn.location.Location
 import brooklyn.management.ExecutionContext
@@ -30,10 +32,10 @@ import brooklyn.management.Task
 import brooklyn.policy.Enricher
 import brooklyn.policy.Policy
 import brooklyn.policy.basic.AbstractPolicy
+import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.task.BasicExecutionContext
 import brooklyn.util.task.ParallelTask
-import brooklyn.event.basic.BasicNotificationSensor
 
 /**
  * Default {@link Entity} implementation.
@@ -59,15 +61,13 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
             "entity.sensor.removed", "Sensor dynamically removed from entity")
 
     final String id = LanguageUtils.newUid()
-    String name
     String displayName
+    
     EntityReference owner
- 
-    protected Map properties = [:]
     protected volatile EntityReference<Application> application
- 
-    final EntityCollectionReference ownedChildren = new EntityCollectionReference<Entity>(this);
     final EntityCollectionReference<Group> groups = new EntityCollectionReference<Group>(this);
+    
+    final EntityCollectionReference ownedChildren = new EntityCollectionReference<Entity>(this);
 
     Map<String,Object> presentationAttributes = [:]
     Collection<AbstractPolicy> policies = [] as CopyOnWriteArrayList
@@ -134,14 +134,8 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
             if (flags.owner != null && owner != null && flags.owner != owner) {
                 throw new IllegalArgumentException("Multiple owners supplied, ${flags.owner} and $owner")
             }
-            Entity suppliedOwner = flags.remove('owner') ?: owner
-            Map<ConfigKey,Object> suppliedOwnConfig = flags.remove('config')
-
-            if (suppliedOwnConfig) ownConfig.putAll(suppliedOwnConfig)
-        
-            name = flags.remove('name') ?: (getClass().getSimpleName() + ":" + id)
-            displayName = flags.remove('displayName') ?: getClass().getSimpleName()
-
+            if (owner!=null) flags.owner = owner;
+            
             // initialize the effectors defined on the class
             // (dynamic effectors could still be added; see #getEffectors
             Map<String,Effector> effectorsT = [:]
@@ -152,7 +146,8 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
                     if (overwritten!=null) LOG.warn("multiple definitions for effector ${eff.name} on $this; preferring $eff to $overwritten")
                 }
             }
-            LOG.trace "Entity {} effectors: {}", id, effectorsT.keySet().join(", ")
+            if (LOG.isTraceEnabled())
+                LOG.trace "Entity {} effectors: {}", id, effectorsT.keySet().join(", ")
             effectors = effectorsT
     
             Map<String,Sensor> sensorsT = [:]
@@ -163,16 +158,50 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
                     if (overwritten!=null) LOG.warn("multiple definitions for sensor ${sens.name} on $this; preferring $sens to $overwritten")
                 }
             }
-            LOG.trace "Entity {} sensors: {}", id, sensorsT.keySet().join(", ")
+            if (LOG.isTraceEnabled())
+                LOG.trace "Entity {} sensors: {}", id, sensorsT.keySet().join(", ")
             sensors = sensorsT
 
-            properties = flags
+            configure(flags);
 
-            //set the owner if supplied; accept as argument or field
-            if (suppliedOwner) suppliedOwner.addOwnedChild(this)
         } finally { this.@skipInvokeMethodEffectorInterception.set(false) }
     }
 
+    public Entity configure(Map flags=[:]) {
+        Entity suppliedOwner = flags.remove('owner') ?: null
+        if (suppliedOwner) suppliedOwner.addOwnedChild(this)
+
+        Map<ConfigKey,Object> suppliedOwnConfig = flags.remove('config')
+        if (suppliedOwnConfig) ownConfig.putAll(suppliedOwnConfig)
+
+        displayName = flags.remove('displayName') ?: getClass().getSimpleName()+":"+id.substring(0, 4)
+        
+        for (Field f: getClass().getFields()) {
+            SetFromFlag cf = f.getAnnotation(SetFromFlag.class);
+            if (cf) {
+                ConfigKey key;
+                if (ConfigKey.class.isAssignableFrom(f.getType())) {
+                    key = f.get(this);
+                } else if (HasConfigKey.class.isAssignableFrom(f.getType())) {
+                    key = f.get(this).getConfigKey();
+                } else {
+                    LOG.warn "Unsupported {} on {} in {}; ignoring", SetFromFlag.class.getSimpleName(), f, this
+                }
+                if (key) {
+                    String flagName = cf.value() ?: key?.getName();
+                    if (flagName && flags.containsKey(flagName)) {
+                        setConfig(key, flags.remove(flagName))
+                    }
+                }
+            }
+        }
+        if (!flags.isEmpty()) {
+            LOG.warn "Unsupported flags when configuring {}; ignoring: {}", this, flags
+        }
+
+        return this;
+    }
+    
     /**
      * Adds this as a member of the given group, registers with application if necessary
      */

@@ -11,14 +11,13 @@ import brooklyn.entity.dns.AbstractGeoDnsService
 import brooklyn.entity.dns.HostGeoInfo
 import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.Domain
 import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.SmartSubdomain
-import brooklyn.entity.trait.Configurable
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.management.Task
 import brooklyn.util.IdGenerator
 
 
-class GeoscalingDnsService extends AbstractGeoDnsService implements Configurable {
+class GeoscalingDnsService extends AbstractGeoDnsService {
     public static final BasicConfigKey RANDOMIZE_SUBDOMAIN_NAME = [ Boolean, "randomize.subdomain.name" ];
     public static final BasicConfigKey GEOSCALING_USERNAME = [ String, "geoscaling.username" ];
     public static final BasicConfigKey GEOSCALING_PASSWORD = [ String, "geoscaling.password" ];
@@ -58,12 +57,10 @@ class GeoscalingDnsService extends AbstractGeoDnsService implements Configurable
     @Override
     public void onManagementBecomingMaster() {
         super.onManagementBecomingMaster();
-        configure();
+        applyConfig();
     }
 
-    public void configure() {
-        if (getAttribute(SERVICE_CONFIGURED)) return;
-        
+    public void applyConfig() {
         randomizeSmartSubdomainName = getConfig(RANDOMIZE_SUBDOMAIN_NAME);
         username = getConfig(GEOSCALING_USERNAME);
         password = getConfig(GEOSCALING_PASSWORD);
@@ -84,7 +81,6 @@ class GeoscalingDnsService extends AbstractGeoDnsService implements Configurable
         setAttribute(GEOSCALING_ACCOUNT, username);
         setAttribute(MANAGED_DOMAIN, fullDomain);
         
-        setAttribute(SERVICE_CONFIGURED, true);
         if (rememberedTargetHosts != null) {
             reconfigureService(rememberedTargetHosts);
             rememberedTargetHosts = null;

@@ -11,6 +11,7 @@ import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionHandle;
+import brooklyn.management.SubscriptionManager;
 import brooklyn.policy.basic.AbstractPolicy;
 
 public interface EntityLocal extends Entity {
@@ -45,12 +46,12 @@ public interface EntityLocal extends Entity {
      * 
      * @return a subscription id which can be used to unsubscribe
      *
-     * @see SubscriptionManger#subscribe(Map, Entity, Sensor, SensorEventListener)
+     * @see SubscriptionManager#subscribe(Map, Entity, Sensor, SensorEventListener)
      */
     // FIXME remove from interface?
     <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<T> listener);
  
-    /** @see SubscriptionManger#subscribeToChildren(Map, Entity, Sensor, SensorEventListener) */
+    /** @see SubscriptionManager#subscribeToChildren(Map, Entity, Sensor, SensorEventListener) */
     // FIXME remove from interface?
     <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, SensorEventListener<T> listener);
  

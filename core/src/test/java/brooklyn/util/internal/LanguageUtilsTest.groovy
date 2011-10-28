@@ -12,10 +12,9 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.util.internal.LanguageUtils.FieldVisitor
 
+
 /**
  * Test the operation of the {@link LanguageUtils} utilities.
- * 
- * TODO clarify test purpose
  */
 public class LanguageUtilsTest {
     private static final Logger log = LoggerFactory.getLogger(LanguageUtilsTest.class)

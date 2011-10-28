@@ -71,12 +71,6 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> {
     }
 
     @Override
-    protected void postConfig() {
-        setAttribute(Attributes.JMX_USER)
-        setAttribute(Attributes.JMX_PASSWORD)
-    }
-
-    @Override
     public Collection<String> toStringFieldsToInclude() {
         return super.toStringFieldsToInclude() + ['amqpPort']
     }

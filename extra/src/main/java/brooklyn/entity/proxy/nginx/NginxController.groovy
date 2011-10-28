@@ -49,8 +49,7 @@ public class NginxController extends AbstractController {
         return NginxSetup.newInstance(this, machine)
     }
 
-    @Override
-    public void configure() {
+    public void doExtraConfigurationDuringStart() {
         LOG.info("Reconfiguring $displayName, members are $addresses")
         
         MachineLocation machine = locations.first()
@@ -58,8 +57,6 @@ public class NginxController extends AbstractController {
         Files.write(getConfigFile(), file, Charsets.UTF_8)
 		setup.machine.copyTo file, "${setup.runDir}/conf/server.conf"
         file.delete()
-
-        super.configure()
     }
 
     public String getConfigFile() {

@@ -113,6 +113,14 @@ public class QpidSetup extends SshBasedJavaAppSetup {
     }
 
     @Override
+    public void config() {
+        super.config();
+        // FIXME can this happen sooner? as part of automated config-setting?
+        entity.setAttribute(Attributes.JMX_USER)
+        entity.setAttribute(Attributes.JMX_PASSWORD)
+    }
+    
+    @Override
     public List<String> getRestartScript() {
        return makeRestartScript("qpid", "qpid-server.pid")
     }

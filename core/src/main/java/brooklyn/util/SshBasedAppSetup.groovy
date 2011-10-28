@@ -1,6 +1,6 @@
 package brooklyn.util
 
-import java.io.File;
+import java.io.File
 import java.util.List
 import java.util.Map
 
@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.basic.AbstractService
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.EntityLocal
+import brooklyn.entity.basic.Lifecycle
 import brooklyn.location.PortRange
 import brooklyn.location.basic.BasicPortRange
 import brooklyn.location.basic.SshMachineLocation
@@ -24,6 +25,9 @@ import com.google.common.base.Strings
  * @see SshJschTool
  * @see SshMachineLocation
  */
+
+//FIXME ALEX move to brooklyn.entity.util or .basic or even .drivers package, as this is tied to entities (also its test)
+//FIXME ALEX rename SshBasedSoftwareSetup
 public abstract class SshBasedAppSetup {
     protected static final Logger log = LoggerFactory.getLogger(SshBasedAppSetup.class)
 
@@ -306,7 +310,7 @@ public abstract class SshBasedAppSetup {
     /**
      * Start the application.
      *
-     * this installs, configures and starts the application process. However,
+     * this installs, configures and launches the application process. However,
      * users can also call the {@link #install()}, {@link #config()} and
      * {@link #runApp()} steps independently. The {@link #postStart()} method
      * will be called after the application run script has been executed, but
@@ -318,8 +322,9 @@ public abstract class SshBasedAppSetup {
     public void start() {
         install()
         config()
+        entity.setAttribute(AbstractService.SERVICE_STATE, Lifecycle.CONFIGURED)
+        entity.setAttribute(AbstractService.SERVICE_CONFIGURED, true)
         runApp()
-        postStart()
     }
 
     /**
@@ -357,17 +362,6 @@ public abstract class SshBasedAppSetup {
 	        log.debug "done invoking restart script on {}", entity
         }
     }
-
-    /**
-     * Called when starting the application, after the run step has completed
-     * without an exception.
-     *
-     * To be overridden; default is a no-op.
-     *
-     * @see #start()
-     * @see #runApp()
-     */
-    protected void postStart() { }
 
     /**
      * Called when stopping the application, if the shutdown step completes

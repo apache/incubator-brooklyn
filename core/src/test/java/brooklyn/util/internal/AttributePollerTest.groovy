@@ -3,7 +3,10 @@ package brooklyn.util.internal
 import static brooklyn.test.TestUtils.*
 import static org.testng.Assert.*
 
+import groovy.time.TimeDuration;
+
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger
 
 import org.slf4j.Logger
@@ -15,6 +18,7 @@ import brooklyn.entity.basic.AbstractEntity
 import brooklyn.event.adapter.AttributePoller
 import brooklyn.event.adapter.ValueProvider
 import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.test.TestUtils;
 
 /**
  * Test the operation of the {@link AttributePoller} class.
@@ -77,14 +81,19 @@ public class AttributePollerTest {
         AttributePoller attributePoller = new AttributePoller(entity, [period:50])
         
         final AtomicInteger desiredVal = new AtomicInteger(1)
+        
         BasicAttributeSensor<Integer> FOO = [ Integer, "foo", "My foo" ]
         attributePoller.addSensor(FOO, { return desiredVal.get() } as ValueProvider)
 
+        TimeExtras.init();
+        TestUtils.executeUntilSucceeds(period:10*TimeUnit.MILLISECONDS, timeout:1*TimeUnit.SECONDS, { entity.getAttribute(FOO)!=null }); 
+        assertEquals(entity.getAttribute(FOO), 1)
+        
         attributePoller.removeSensor(FOO)
         
         // The poller could already be calling the value provider, so can't simply assert never called again.
         // And want to ensure that it is never called again (after any currently executing call), so need to wait.
-        // TODO Nicer way than a sleep?
+        // TODO Nicer way than a sleep?  (see comment in TestUtils about need for blockUntilTrue)
         
         Thread.sleep(200)
         desiredVal.set(2)
@@ -137,4 +146,5 @@ public class AttributePollerTest {
         int expectedSize = expectedDuration/expectedInterval
         assertTrue Math.abs(actual.size()-expectedSize) <= 1, "actualSize=${actual.size()}, series=$actual, duration=$expectedDuration, interval=$expectedInterval"
     }
+    
 }

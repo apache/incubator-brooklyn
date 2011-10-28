@@ -1,6 +1,6 @@
 package brooklyn.entity.basic
 
-import java.io.File;
+import java.io.File
 import java.util.Collection
 import java.util.Map
 
@@ -9,10 +9,8 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.ConfigKey
 import brooklyn.entity.Entity
-import brooklyn.entity.trait.Configurable
 import brooklyn.entity.trait.Startable
 import brooklyn.event.AttributeSensor
-import brooklyn.event.Sensor
 import brooklyn.event.adapter.AttributePoller
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
@@ -22,6 +20,7 @@ import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.NoMachinesAvailableException
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedAppSetup
+import brooklyn.util.flags.SetFromFlag
 
 import com.google.common.base.Preconditions
 import com.google.common.collect.Iterables
@@ -36,11 +35,14 @@ import com.google.common.collect.Iterables
  * FIXME not happy with term "service"; it is too general; should this be AbstractProcessEntity ?; 
  * and could we offer conveniences for the pid of what we start?
  */
-public abstract class AbstractService extends AbstractEntity implements Startable, Configurable {
+public abstract class AbstractService extends AbstractEntity implements Startable {
     public static final Logger log = LoggerFactory.getLogger(AbstractService.class)
 
+    @SetFromFlag("version")
     public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.SUGGESTED_VERSION
+    @SetFromFlag("installDir")
     public static final ConfigKey<String> SUGGESTED_INSTALL_DIR = ConfigKeys.SUGGESTED_INSTALL_DIR
+    @SetFromFlag("runDir")
     public static final ConfigKey<String> SUGGESTED_RUN_DIR = ConfigKeys.SUGGESTED_RUN_DIR
     public static final BasicConfigKey<Map> ENVIRONMENT = [ Map, "environment", "Map of environment variables to set at runtime", [:] ]
 
@@ -49,6 +51,7 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
     public static final AttributeSensor<String> LOG_FILE_LOCATION = Attributes.LOG_FILE_LOCATION
 
     public static final BasicAttributeSensor<Lifecycle> SERVICE_STATE = [ Lifecycle, "service.state", "Service lifecycle state" ]
+    public static final BasicAttributeSensor<Boolean> SERVICE_CONFIGURED = [ Boolean, "service.isConfigured", "Service configured" ]
     public static final BasicAttributeSensor<String> SERVICE_STATUS = [ String, "service.status", "Service status" ]
 
     private MachineProvisioningLocation provisioningLoc
@@ -57,10 +60,6 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
     
     AbstractService(Map properties=[:], Entity owner=null) {
         super(properties, owner)
-
-        setConfigIfValNonNull(SUGGESTED_VERSION, properties.version)
-        setConfigIfValNonNull(SUGGESTED_INSTALL_DIR, properties.installDir)
-        setConfigIfValNonNull(SUGGESTED_RUN_DIR, properties.runDir)
  
         setAttribute(SERVICE_UP, false)
         setAttribute(SERVICE_CONFIGURED, false)
@@ -70,9 +69,9 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
     public abstract SshBasedAppSetup getSshBasedSetup(SshMachineLocation loc)
 
     protected void preStart() { }
-    protected void postConfig() { }
     protected void initSensors() { }
     protected void postStart() { }
+    
     protected void preStop() { }
     protected void postStop() { }
 
@@ -119,13 +118,10 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
 
         setup = getSshBasedSetup(machine)
         if (setup) {
-            setup.install()
-            setup.config()
-	        configure()
-	        postConfig()
-            setup.runApp()
-            setup.postStart()
+            setup.start()
 	        waitForEntityStart()
+        } else {
+            throw new UnsupportedOperationException("cannot start ${this} on ${machine}: no setup class found");
         }
     }
 
@@ -179,18 +175,6 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
         if (setup) {
             setup.restart()
         }
-    }
-
-    /**
-     * Configure the service.
-     *
-     * This is a NO-OP but should be overridden in implementing classes. It will be called after the {@link #setup}
-     * field is available and any {@link MachineLocation} is is instantiated, but before the {@link SshBasedAppSetup#runApp()}
-     * method is called.
-     */
-    public void configure() {
-        setAttribute(SERVICE_STATE, Lifecycle.CONFIGURED)
-        setAttribute(SERVICE_CONFIGURED, true)
     }
 
     public File copy(String file) {

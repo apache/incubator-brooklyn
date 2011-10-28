@@ -1,5 +1,10 @@
 package brooklyn.entity.webapp
 
+import static java.util.concurrent.TimeUnit.SECONDS
+
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 import brooklyn.enricher.RollingTimeWindowMeanEnricher
 import brooklyn.enricher.TimeWeightedDeltaEnricher
 import brooklyn.entity.Entity
@@ -10,10 +15,8 @@ import brooklyn.event.adapter.HttpSensorAdapter
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.ConfiguredAttributeSensor
+import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.internal.Repeater
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import static java.util.concurrent.TimeUnit.SECONDS
 
 /**
 * An {@link Entity} representing a single java web application server instance.
@@ -21,9 +24,16 @@ import static java.util.concurrent.TimeUnit.SECONDS
 public abstract class JavaWebApp extends JavaApp {
     public static final Logger log = LoggerFactory.getLogger(JavaWebApp.class)
 
-    public static final BasicConfigKey<String> WAR = [ String, "war", "Path of WAR file to deploy" ]
+    @SetFromFlag("war")
+    public static final BasicConfigKey<String> ROOT_WAR = [ String, "wars.root", "WAR file to deploy as the ROOT, as URL (supporting file: and classpath: prefixes)" ]
+    @Deprecated
+    public static final BasicConfigKey<String> WAR = ROOT_WAR;
+    @SetFromFlag("wars")
+    public static final BasicConfigKey<String> NAMED_WARS = [ String, "wars.named", "WAR files to deploy with their given names, as URL (supporting file: and classpath: prefixes)" ]
+    
     public static final BasicConfigKey<List<String>> RESOURCES = [ List, "resources", "List of names of resources to copy to run directory" ]
 
+    @SetFromFlag("httpPort")
     public static final ConfiguredAttributeSensor<Integer> HTTP_PORT = Attributes.HTTP_PORT
 
     public static final BasicAttributeSensor<Integer> ERROR_COUNT = [ Integer, "webapp.reqs.errors", "Request errors" ]
@@ -53,10 +63,6 @@ public abstract class JavaWebApp extends JavaApp {
 
     public JavaWebApp(Map flags=[:], Entity owner=null) {
         super(flags, owner)
-
-        setConfigIfValNonNull(HTTP_PORT.configKey, flags.httpPort)
-        setConfigIfValNonNull(WAR, flags.war)
-        
         setAttribute(SERVICE_STATUS, "uninitialized")
     }
     

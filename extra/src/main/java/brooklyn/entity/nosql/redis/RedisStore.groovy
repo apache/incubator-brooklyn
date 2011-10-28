@@ -92,7 +92,7 @@ public class RedisStore extends AbstractService implements DataStore {
     }
 
     @Override
-    public void configure() {
+    public void doExtraConfigurationDuringStart() {
 	    int port = getAttribute(REDIS_PORT)
         boolean include = false
 

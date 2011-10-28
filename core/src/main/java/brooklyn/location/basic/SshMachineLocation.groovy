@@ -54,6 +54,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     /** convenience for running a script, returning the result code */
     public int run(Map props=[:], List<String> commands, Map env=[:]) {
         Preconditions.checkNotNull address, "host address must be specified for ssh"
+        if (!commands) return 0
 
         if (!user) user = System.getProperty "user.name"
         Map args = [ user:user, host:address.hostName ]

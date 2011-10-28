@@ -1,7 +1,7 @@
 package brooklyn.entity.basic
 
 import java.util.Collection
-import java.util.Map;
+import java.util.Map
 import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
@@ -14,6 +14,7 @@ import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.ConfiguredAttributeSensor
 import brooklyn.event.basic.MapConfigKey
+import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.internal.Repeater
 
 /**
@@ -24,9 +25,13 @@ public abstract class JavaApp extends AbstractService {
 
     public static final int DEFAULT_JMX_PORT = 1099
 
+    @SetFromFlag("jmxPort")
     public static final ConfiguredAttributeSensor<Integer> JMX_PORT = Attributes.JMX_PORT
+    @SetFromFlag("rmiPort")
     public static final ConfiguredAttributeSensor<Integer> RMI_PORT = Attributes.RMI_PORT
+    @SetFromFlag("jmxContext")
     public static final ConfiguredAttributeSensor<String> JMX_CONTEXT = Attributes.JMX_CONTEXT
+    
     public static final BasicConfigKey<Map<String, String>> JAVA_OPTIONS = [ Map, "java.options", "Java options", [:] ]
     public static final MapConfigKey<Map> PROPERTY_FILES = [ Map, "java.properties.environment", "Property files to be generated, referenced by an environment variable" ]
     public static final MapConfigKey<Map> NAMED_PROPERTY_FILES = [ Map, "java.properties.named", "Property files to be generated, referenced by name relative to runDir" ]
@@ -38,14 +43,6 @@ public abstract class JavaApp extends AbstractService {
     
     public JavaApp(Map properties=[:], Entity owner=null) {
         super(properties, owner)
-
-        setJmxConfig(properties)
-    }
-
-    public void setJmxConfig(Map properties=[:]) {
-        setConfigIfValNonNull(JMX_PORT.configKey, properties.jmxPort)
-        setConfigIfValNonNull(RMI_PORT.configKey, properties.rmiPort)
-        setConfigIfValNonNull(JMX_CONTEXT.configKey, properties.jmxContext)
     }
 
     @Override

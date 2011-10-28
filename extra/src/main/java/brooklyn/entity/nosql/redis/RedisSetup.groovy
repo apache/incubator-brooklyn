@@ -106,7 +106,7 @@ public class RedisSetup extends SshBasedAppSetup {
         ]
         return script
     }
-
+    
     @Override
     protected void postShutdown() {
         machine.releasePort(redisPort);
@@ -115,6 +115,6 @@ public class RedisSetup extends SshBasedAppSetup {
     @Override
     public void config() {
         super.config()
-        entity.configure()
+        ((RedisStore)entity).doExtraConfigurationDuringStart()
     }
 }

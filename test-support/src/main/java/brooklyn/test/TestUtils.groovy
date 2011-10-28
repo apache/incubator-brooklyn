@@ -57,6 +57,8 @@ public class TestUtils {
         return connection
     }
     
+    //FIXME rename these to assertEventually, refactor to have boolean blockUntil in some other util class
+    
     public static void executeUntilSucceeds(Map flags=[:], Closure c) {
         executeUntilSucceedsWithFinallyBlock(flags, c) { }
     }

@@ -124,6 +124,12 @@ public class NginxSetup extends SshBasedAppSetup {
         ]
         return script
     }
+    
+    @Override
+    public void config() {
+        super.config();
+        ((NginxController)entity).doExtraConfigurationDuringStart()
+    }
 
     @Override
     protected void postShutdown() {

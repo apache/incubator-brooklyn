@@ -3,11 +3,15 @@ package brooklyn.entity.group
 import static brooklyn.test.TestUtils.*
 import static org.testng.Assert.*
 
+import java.util.concurrent.atomic.AtomicInteger
+
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
+import brooklyn.entity.basic.EntityLocal
+import brooklyn.entity.driver.MockSshBasedSoftwareSetup
 import brooklyn.entity.trait.Startable
 import brooklyn.event.Sensor
 import brooklyn.event.basic.BasicAttributeSensor
@@ -16,8 +20,7 @@ import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.basic.FixedListMachineProvisioningLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.test.entity.TestEntity
-import brooklyn.util.SshBasedAppSetup;
-import brooklyn.test.TestUtils
+import brooklyn.util.SshBasedAppSetup
 
 class AbstractControllerTest {
 
@@ -27,7 +30,7 @@ class AbstractControllerTest {
     
     FixedListMachineProvisioningLocation loc
     List<Collection<String>> updates
-    
+
     @BeforeMethod
     public void setUp() {
         List<SshMachineLocation> machines = []
@@ -39,6 +42,8 @@ class AbstractControllerTest {
         
         app = new AbstractApplication() {}
         cluster = new DynamicCluster(owner:app, initialSize:0, newEntity:{new ClusteredEntity()})
+        
+        final AtomicInteger invokeCountForStart = new AtomicInteger(0);
         controller = new AbstractController(
                 owner:app, 
                 cluster:cluster, 
@@ -50,7 +55,7 @@ class AbstractControllerTest {
                 updates.add(addresses)
             }
             public SshBasedAppSetup getSshBasedSetup(SshMachineLocation machine) {
-                return null
+                return new MockSshBasedSoftwareSetup(this, machine);
             }
         }
         app.getManagementContext().manage(app)
@@ -61,7 +66,7 @@ class AbstractControllerTest {
     public void testUpdateCalledWithAddressesOfNewChildren() {
         // First child
         cluster.resize(1)
-        Entity child = cluster.ownedChildren.first()
+        EntityLocal child = cluster.ownedChildren.first()
         
         assertEquals(updates, [])
         
@@ -72,7 +77,7 @@ class AbstractControllerTest {
         // Second child
         cluster.resize(2)
         executeUntilSucceeds( { cluster.ownedChildren.size() == 2 }, useGroovyTruth:true)
-        Entity child2 = cluster.ownedChildren.asList().get(1)
+        EntityLocal child2 = cluster.ownedChildren.asList().get(1)
         
         child2.setAttribute(ClusteredEntity.MY_PORT, 1234)
         child2.setAttribute(Startable.SERVICE_UP, true)

@@ -40,4 +40,8 @@ public interface ConfigKey<T> {
      * Returns true if a default configuration value has been set.
      */
     boolean hasDefaultValue();
+    
+    public interface HasConfigKey<T> {
+        public ConfigKey<T> getConfigKey();
+    }
 }
