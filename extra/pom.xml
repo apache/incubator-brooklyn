@@ -67,6 +67,11 @@
             <version>gemfire-6.5.1.4</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>10.0.1</version>
+        </dependency>
 
         <!-- required for GeoScaling DNS (entity accesses management service via HTTP) -->
         <dependency>

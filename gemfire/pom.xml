@@ -23,6 +23,11 @@
     </repositories>
   
     <dependencies>
+    	<dependency>
+            <groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>10.0.1</version>
+        </dependency>
         <dependency>
             <groupId>com.gemstone</groupId>
             <artifactId>gemfire-server</artifactId>
@@ -33,6 +38,7 @@
             <artifactId>antlr</artifactId>
             <version>3.4</version>
         </dependency>
+        
     </dependencies>
 </project>
 
