@@ -18,6 +18,7 @@ public class GeneralRequestHandler implements HttpHandler {
     private static final String GATEWAY_NOT_REMOVED_MESSAGE = "Gateway %s not removed";
     
     private static final String REGION_ADDED_MESSAGE       = "Added region:%s";
+    private static final String REGION_NOT_ADDED_MESSAGE       = "Failed to add region:%s";
     private static final String REGION_REMOVED_MESSAGE     = "Removed region:%s";
     private static final String REGION_NOT_REMOVED_MESSAGE = "Region %s not removed";
 
@@ -26,7 +27,7 @@ public class GeneralRequestHandler implements HttpHandler {
     private static final String PORT_KEY="port";
     private static final String HOST_KEY="host";
     
-    private static final String NAME_KEY="name";
+    private static final String PATH_KEY="path";
 
     // For GatewayQueueAttributes - see com.gemstone.gemfire.cache.util.GatewayQueueAttributes
     private static final String DISK_STORE_NAME_KEY="diskStoreName"; //String
@@ -114,22 +115,23 @@ public class GeneralRequestHandler implements HttpHandler {
         String query = httpExchange.getRequestURI().getRawQuery();
         Map<String,Object> parameters = new ParameterParser().parse(query);
 
-        String name = (String)parameters.get(NAME_KEY);
+        String path = (String)parameters.get(PATH_KEY);
 
-        regionListener.regionAdded(name, true);
+        boolean result = regionListener.regionAdded(path, true);
 
-        sendResponse(httpExchange,200,String.format(REGION_ADDED_MESSAGE,name));
+        String message = result ? REGION_ADDED_MESSAGE : REGION_NOT_ADDED_MESSAGE;
+        sendResponse(httpExchange,200,String.format(message,path));
     }
     
     private void handleRemoveRegion(HttpExchange httpExchange) throws IOException {
         String query = httpExchange.getRequestURI().getRawQuery();
         Map<String,Object> parameters = new ParameterParser().parse(query);
 
-        String name = (String)parameters.get(NAME_KEY);
-        boolean result = regionListener.regionRemoved(name);
+        String path = (String)parameters.get(PATH_KEY);
+        boolean result = regionListener.regionRemoved(path);
 
         String message = result ? REGION_REMOVED_MESSAGE : REGION_NOT_REMOVED_MESSAGE;
-        sendResponse(httpExchange,200,String.format(message,name));
+        sendResponse(httpExchange,200,String.format(message,path));
     }
     
     private void handleListRegions(HttpExchange httpExchange) throws IOException {
