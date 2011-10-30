@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.event.AttributeSensor
-import brooklyn.event.adapter.JmxSensorAdapter
+import brooklyn.event.adapter.legacy.OldJmxSensorAdapter;
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.ConfiguredAttributeSensor
@@ -38,8 +38,7 @@ public abstract class JavaApp extends AbstractService {
 
     public static final BasicAttributeSensor<String> JMX_URL = [ String, "jmx.url", "JMX URL" ]
 
-    boolean jmxEnabled = true
-    transient JmxSensorAdapter jmxAdapter
+    transient OldJmxSensorAdapter jmxAdapter
     
     public JavaApp(Map properties=[:], Entity owner=null) {
         super(properties, owner)
@@ -50,19 +49,17 @@ public abstract class JavaApp extends AbstractService {
         initJmxSensors()
     }
 
-    protected void initJmxSensors() {
-        if (jmxEnabled) {
-            if (!(getAttribute(HOSTNAME) && getAttribute(JMX_PORT))) {
-                throw new IllegalStateException("JMX is not available")
-            }
+	protected void initJmxSensors() {
+		if (!(getAttribute(HOSTNAME) && getAttribute(JMX_PORT))) {
+			throw new IllegalStateException("JMX is not available")
+		}
 
-            log.debug "Connecting to JMX on ${getAttribute(HOSTNAME)}:${getAttribute(JMX_PORT)}"
-            jmxAdapter = new JmxSensorAdapter(this, 60*1000)
-            jmxAdapter.connect();
-            waitForJmx()
-            setAttribute(JMX_URL, jmxAdapter.url)
-            addJmxSensors()
-        }
+		log.debug "Connecting {} to JMX on {}:{}", this, getAttribute(HOSTNAME), getAttribute(JMX_PORT)
+		jmxAdapter = new OldJmxSensorAdapter(this, 60*1000)
+		jmxAdapter.connect();
+		waitForJmx()
+		setAttribute(JMX_URL, jmxAdapter.url)
+		addJmxSensors()
     }
 
     protected void addJmxSensors() { }

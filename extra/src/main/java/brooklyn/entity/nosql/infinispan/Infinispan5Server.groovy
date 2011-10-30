@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractService
 import brooklyn.entity.trait.Startable
-import brooklyn.event.adapter.ValueProvider
+import brooklyn.event.adapter.legacy.ValueProvider;
 import brooklyn.event.basic.ConfiguredAttributeSensor
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedAppSetup

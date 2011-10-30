@@ -32,4 +32,22 @@ public class FlagUtils {
         return remaining
     }
 
+	/** returns a map of all fields which are annotated 'SetFromFlag' with their current values;
+	 * useful if you want to clone settings from one object
+	 */
+	public static Map getFieldsWithValues(Object o) {
+		Map result=[:]
+		def fields = o.getClass().getFields()
+		for (Field f: fields) {
+			SetFromFlag cf = f.getAnnotation(SetFromFlag.class);
+			if (cf) {
+				String flagName = cf.value() ?: f.getName();
+				if (flagName) {
+					if (!f.isAccessible()) f.setAccessible(true)
+					result.put(flagName, f.get(o))
+				}
+			}
+		}
+		return result
+	}
 }

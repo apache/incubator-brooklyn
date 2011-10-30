@@ -13,8 +13,8 @@ import brooklyn.entity.basic.AbstractService
 import brooklyn.entity.nosql.DataStore
 import brooklyn.entity.nosql.Shard
 import brooklyn.event.adapter.AttributePoller
-import brooklyn.event.adapter.SshSensorAdapter
-import brooklyn.event.adapter.ValueProvider
+import brooklyn.event.adapter.legacy.OldSshSensorAdapter;
+import brooklyn.event.adapter.legacy.ValueProvider;
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.ConfiguredAttributeSensor
@@ -39,7 +39,7 @@ public class RedisStore extends AbstractService implements DataStore {
     public static final BasicConfigKey<String> REDIS_CONFIG_FILE = [ String, "redis.config.file", "Redis user configuration file" ]
     public static final BasicAttributeSensor<Integer> UPTIME = [ Integer, "redis.uptime", "Redis uptime in seconds" ]
 
-    transient SshSensorAdapter sshAdapter
+    transient OldSshSensorAdapter sshAdapter
     
     public RedisStore(Map properties=[:], Entity owner=null) {
         super(properties, owner)
@@ -65,7 +65,7 @@ public class RedisStore extends AbstractService implements DataStore {
     }
 
     protected void initSshSensors() {
-        sshAdapter = new SshSensorAdapter(this, setup.machine)
+        sshAdapter = new OldSshSensorAdapter(this, setup.machine)
  
         addSshSensors()
     }

@@ -9,7 +9,7 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.JavaApp
 import brooklyn.event.adapter.AttributePoller
-import brooklyn.event.adapter.JmxSensorAdapter
+import brooklyn.event.adapter.legacy.OldJmxSensorAdapter;
 import brooklyn.event.basic.BasicAttributeSensor
 
 import com.google.common.base.Preconditions
@@ -67,7 +67,7 @@ public abstract class JMSBroker<Q extends JMSDestination & Queue, T extends JMSD
 }
 
 public abstract class JMSDestination extends AbstractEntity {
-    transient JmxSensorAdapter jmxAdapter
+    transient OldJmxSensorAdapter jmxAdapter
     transient AttributePoller attributePoller
 
     public JMSDestination(Map properties=[:], Entity owner=null) {

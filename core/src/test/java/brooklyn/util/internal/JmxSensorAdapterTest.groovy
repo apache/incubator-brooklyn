@@ -31,18 +31,18 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.LocallyManagedEntity
 import brooklyn.entity.basic.Attributes
-import brooklyn.event.adapter.JmxSensorAdapter
-import brooklyn.event.adapter.ValueProvider
+import brooklyn.event.adapter.legacy.OldJmxSensorAdapter;
+import brooklyn.event.adapter.legacy.ValueProvider;
 import brooklyn.test.GeneralisedDynamicMBean
 import brooklyn.test.JmxService
 
 /**
- * Test the operation of the {@link JmxSensorAdapter} class.
+ * Test the operation of the {@link OldJmxSensorAdapter} class.
  * 
  * TODO clarify test purpose
  */
-public class JmxSensorAdapterTest {
-    private static final Logger log = LoggerFactory.getLogger(JmxSensorAdapterTest.class)
+public class OldJmxSensorAdapterTest {
+    private static final Logger log = LoggerFactory.getLogger(OldJmxSensorAdapterTest.class)
 
     JmxService jmxService;
     LocallyManagedEntity entity;
@@ -72,7 +72,7 @@ public class JmxSensorAdapterTest {
         // Create an entity and configure it with the above JMX service
 
         // Create a JMX adapter, and register a sensor for the JMX attribute
-        JmxSensorAdapter jmxAdapter = new JmxSensorAdapter(entity)
+        OldJmxSensorAdapter jmxAdapter = new OldJmxSensorAdapter(entity)
         jmxAdapter.connect()
         ValueProvider valueProvider = jmxAdapter.newAttributeProvider("Catalina:type=GlobalRequestProcessor,name=http-*", "errorCount")
 
@@ -112,7 +112,7 @@ public class JmxSensorAdapterTest {
                 'Catalina:type=GlobalRequestProcessor,name=tables')
 
         // Create a JMX adapter, and register a sensor for the JMX attribute
-        JmxSensorAdapter jmxAdapter = new JmxSensorAdapter(entity)
+        OldJmxSensorAdapter jmxAdapter = new OldJmxSensorAdapter(entity)
         jmxAdapter.connect()
         ValueProvider valueProvider = jmxAdapter.newTabularDataProvider(
                 "Catalina:type=GlobalRequestProcessor,name=tables",
@@ -132,7 +132,7 @@ public class JmxSensorAdapterTest {
         GeneralisedDynamicMBean mbean = jmxService.registerMBean([:], ["myop":{invocationCount.incrementAndGet()}], objectName)
 
         // Create a JMX adapter
-        JmxSensorAdapter jmxAdapter = new JmxSensorAdapter(entity)
+        OldJmxSensorAdapter jmxAdapter = new OldJmxSensorAdapter(entity)
         jmxAdapter.connect()
         
         // Invoke the operation
@@ -150,7 +150,7 @@ public class JmxSensorAdapterTest {
         int sequence = 0
 
         // Create a JMX adapter
-        JmxSensorAdapter adapter = new JmxSensorAdapter(entity)
+        OldJmxSensorAdapter adapter = new OldJmxSensorAdapter(entity)
         adapter.connect()
         
         // Create a listener
@@ -177,7 +177,7 @@ public class JmxSensorAdapterTest {
         GeneralisedDynamicMBean mbean = jmxService.registerMBean([:], [ (opInfo):{ Object[] args -> args[0]+'suffix' } ], objectName)
 
         // Create a JMX adapter
-        JmxSensorAdapter jmxAdapter = new JmxSensorAdapter(entity)
+        OldJmxSensorAdapter jmxAdapter = new OldJmxSensorAdapter(entity)
         jmxAdapter.connect()
         
         // Invoke the operation
@@ -208,7 +208,7 @@ public class JmxSensorAdapterTest {
             log.debug "object name {}", name
         }
         
-        JmxSensorAdapter adapter = new JmxSensorAdapter(urlS)
+        OldJmxSensorAdapter adapter = new OldJmxSensorAdapter(urlS)
         adapter.connect()
         
         def result = adapter.getAttribute "Catalina:type=GlobalRequestProcessor,name=http-bio-*", "requestCount"

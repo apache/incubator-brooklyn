@@ -1,4 +1,4 @@
-package brooklyn.event.adapter
+package brooklyn.event.adapter.legacy
 
 /**
  * TODO javadoc

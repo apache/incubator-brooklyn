@@ -1,8 +1,7 @@
-package brooklyn.event.adapter
+package brooklyn.event.adapter.legacy
 
 import groovy.json.JsonSlurper
 
-import java.io.BufferedReader
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -22,12 +21,12 @@ import com.google.common.io.CharStreams
  *  The adapter normally polls the HTTP server every second to update sensors, which could involve aggregation of data
  *  or simply reading values and setting them in the attribute map of the activity model.
  */
-public class HttpSensorAdapter {
-    static final Logger log = LoggerFactory.getLogger(HttpSensorAdapter.class);
+public class OldHttpSensorAdapter {
+    static final Logger log = LoggerFactory.getLogger(OldHttpSensorAdapter.class);
 
     final EntityLocal entity
 
-    public HttpSensorAdapter(EntityLocal entity, long timeout = -1) {
+    public OldHttpSensorAdapter(EntityLocal entity, long timeout = -1) {
         this.entity = entity
     }
 	
@@ -130,9 +129,9 @@ public class HttpSensorAdapter {
 public class HttpJsonLongValueProvider implements ValueProvider<Long> {
    private final URL url
    private final String jsonKey
-   private final HttpSensorAdapter adapter
+   private final OldHttpSensorAdapter adapter
 
-   public HttpJsonLongValueProvider(URL url, String jsonKey, HttpSensorAdapter adapter) {
+   public HttpJsonLongValueProvider(URL url, String jsonKey, OldHttpSensorAdapter adapter) {
        this.url = Preconditions.checkNotNull(url, "url")
        this.jsonKey = Preconditions.checkNotNull(jsonKey, "jsonKey")
        this.adapter = Preconditions.checkNotNull(adapter, "adapter")
@@ -169,9 +168,9 @@ public class HttpStringBodyProvider implements ValueProvider<String> {
 public class HttpDataValueProvider implements ValueProvider<Boolean> {
     private final URL url
     private final String regexp
-    private final HttpSensorAdapter adapter
+    private final OldHttpSensorAdapter adapter
 
-    public HttpDataValueProvider(URL url, String regexp, HttpSensorAdapter adapter) {
+    public HttpDataValueProvider(URL url, String regexp, OldHttpSensorAdapter adapter) {
         this.url = Preconditions.checkNotNull(url, "url")
         this.regexp = Preconditions.checkNotNull(regexp, "regexp")
         this.adapter = Preconditions.checkNotNull(adapter, "adapter")
@@ -187,9 +186,9 @@ public class HttpDataValueProvider implements ValueProvider<Boolean> {
  */
 public class HttpStatusValueProvider implements ValueProvider<Integer> {
     private final URL url
-    private final HttpSensorAdapter adapter
+    private final OldHttpSensorAdapter adapter
 
-    public HttpStatusValueProvider(URL url, HttpSensorAdapter adapter) {
+    public HttpStatusValueProvider(URL url, OldHttpSensorAdapter adapter) {
         this.url = Preconditions.checkNotNull(url, "url")
         this.adapter = Preconditions.checkNotNull(adapter, "adapter")
     }
@@ -205,9 +204,9 @@ public class HttpStatusValueProvider implements ValueProvider<Integer> {
 public class HttpHeaderValueProvider implements ValueProvider<String> {
     private final URL url
     private final String headerName
-    private final HttpSensorAdapter adapter
+    private final OldHttpSensorAdapter adapter
 
-    public HttpHeaderValueProvider(URL url, String headerName, HttpSensorAdapter adapter) {
+    public HttpHeaderValueProvider(URL url, String headerName, OldHttpSensorAdapter adapter) {
         this.url = Preconditions.checkNotNull(url, "url")
         this.headerName = Preconditions.checkNotNull(headerName, "header name")
         this.adapter = Preconditions.checkNotNull(adapter, "adapter")

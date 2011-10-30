@@ -1,4 +1,4 @@
-package brooklyn.event.adapter
+package brooklyn.event.adapter.legacy
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -13,13 +13,13 @@ import com.google.common.io.CharStreams
  * This class adapts the result of commands sent over SSH to {@link Sensor} data for a particular {@link Entity}, updating the
  * {@link Activity} as required.
  */
-public class SshSensorAdapter {
-    static final Logger log = LoggerFactory.getLogger(SshSensorAdapter.class);
+public class OldSshSensorAdapter {
+    static final Logger log = LoggerFactory.getLogger(OldSshSensorAdapter.class);
 
     final EntityLocal entity
     final SshMachineLocation machine
 
-    public SshSensorAdapter(EntityLocal entity, SshMachineLocation machine) {
+    public OldSshSensorAdapter(EntityLocal entity, SshMachineLocation machine) {
         this.entity = entity
         this.machine = machine
     }
@@ -69,9 +69,9 @@ public class SshSensorAdapter {
  */
 public class SshReturnValueProvider<Integer> implements ValueProvider<Integer> {
     private final String command
-    private final SshSensorAdapter adapter
+    private final OldSshSensorAdapter adapter
 
-    public SshReturnValueProvider(String command, SshSensorAdapter adapter) {
+    public SshReturnValueProvider(String command, OldSshSensorAdapter adapter) {
         this.command = Preconditions.checkNotNull(command, "command")
         this.adapter = Preconditions.checkNotNull(adapter, "adapter")
     }
@@ -86,9 +86,9 @@ public class SshReturnValueProvider<Integer> implements ValueProvider<Integer> {
  */
 public class SshOutputValueProvider<String> implements ValueProvider<String> {
     private final String command
-    private final SshSensorAdapter adapter
+    private final OldSshSensorAdapter adapter
 
-    public SshOutputValueProvider(String command, SshSensorAdapter adapter) {
+    public SshOutputValueProvider(String command, OldSshSensorAdapter adapter) {
         this.command = Preconditions.checkNotNull(command, "command")
         this.adapter = Preconditions.checkNotNull(adapter, "adapter")
     }
@@ -104,9 +104,9 @@ public class SshOutputValueProvider<String> implements ValueProvider<String> {
 public class SshMatchValueProvider<Boolean> implements ValueProvider<Boolean> {
     private final String command
     private final String regexp
-    private final SshSensorAdapter adapter
+    private final OldSshSensorAdapter adapter
 
-    public SshMatchValueProvider(String command, String regexp, SshSensorAdapter adapter) {
+    public SshMatchValueProvider(String command, String regexp, OldSshSensorAdapter adapter) {
         this.command = Preconditions.checkNotNull(command, "command")
         this.regexp = Preconditions.checkNotNull(regexp, "regexp")
         this.adapter = Preconditions.checkNotNull(adapter, "adapter")

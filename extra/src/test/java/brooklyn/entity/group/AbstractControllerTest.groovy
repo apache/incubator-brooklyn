@@ -5,6 +5,8 @@ import static org.testng.Assert.*
 
 import java.util.concurrent.atomic.AtomicInteger
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
@@ -24,6 +26,8 @@ import brooklyn.util.SshBasedAppSetup
 
 class AbstractControllerTest {
 
+    private static final Logger log = LoggerFactory.getLogger(AbstractControllerTest)
+    
     AbstractApplication app
     Cluster cluster
     AbstractController controller
@@ -51,7 +55,7 @@ class AbstractControllerTest {
                 domain:"mydomain") {
 
             public void update() {
-                println "update, with addresses $addresses"
+                log.info "update, with addresses $addresses"
                 updates.add(addresses)
             }
             public SshBasedAppSetup getSshBasedSetup(SshMachineLocation machine) {

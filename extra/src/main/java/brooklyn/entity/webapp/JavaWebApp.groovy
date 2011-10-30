@@ -11,7 +11,7 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.JavaApp
 import brooklyn.event.EntityStartException
-import brooklyn.event.adapter.HttpSensorAdapter
+import brooklyn.event.adapter.legacy.OldHttpSensorAdapter;
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.ConfiguredAttributeSensor
@@ -54,7 +54,7 @@ public abstract class JavaWebApp extends JavaApp {
     public static final BasicAttributeSensor<String> HTTP_SERVER = [ String, "webapp.http.server", "Server name" ]
     public static final BasicAttributeSensor<Integer> HTTP_STATUS = [ Integer, "webapp.http.status", "HTTP response code for the server" ]
 
-    transient HttpSensorAdapter httpAdapter
+    transient OldHttpSensorAdapter httpAdapter
 
     Map environment = [:]
     
@@ -90,7 +90,7 @@ public abstract class JavaWebApp extends JavaApp {
     }
 
     public void initHttpSensors() {
-        httpAdapter = new HttpSensorAdapter(this)
+        httpAdapter = new OldHttpSensorAdapter(this)
         if (pollForHttpStatus) {
             def host = getAttribute(HOSTNAME)
             def port = getAttribute(HTTP_PORT)

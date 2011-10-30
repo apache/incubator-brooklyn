@@ -1,4 +1,4 @@
-package brooklyn.event.adapter
+package brooklyn.event.adapter.legacy
 
 import javax.management.JMX
 import javax.management.MBeanServerConnection
@@ -29,8 +29,8 @@ import com.google.common.base.Preconditions
  * The adapter normally polls the JMX server every second to update sensors, which could involve aggregation of data
  * or simply reading values and setting them in the attribute map of the activity model.
  */
-public class JmxSensorAdapter {
-    private static final Logger log = LoggerFactory.getLogger(JmxSensorAdapter.class);
+public class OldJmxSensorAdapter {
+    private static final Logger log = LoggerFactory.getLogger(OldJmxSensorAdapter.class);
 
     public static final String JMX_URL_FORMAT = "service:jmx:rmi:///jndi/rmi://%s:%d/%s"
     public static final String RMI_JMX_URL_FORMAT = "service:jmx:rmi://%s:%d/jndi/rmi://%s:%d/%s"
@@ -62,7 +62,7 @@ public class JmxSensorAdapter {
     JMXConnector jmxc
     MBeanServerConnection mbsc
  
-    public JmxSensorAdapter(EntityLocal entity, long timeout = -1) {
+    public OldJmxSensorAdapter(EntityLocal entity, long timeout = -1) {
         this.entity = entity
  
         host = entity.getAttribute(Attributes.HOSTNAME);
@@ -223,11 +223,11 @@ public class JmxSensorAdapter {
  * Provides JMX attribute values to a sensor.
  */
 public class JmxAttributeProvider<T> implements ValueProvider<T> {
-    private final JmxSensorAdapter adapter
+    private final OldJmxSensorAdapter adapter
     private final ObjectName objectName
     private final String attribute
     
-    public JmxAttributeProvider(JmxSensorAdapter adapter, ObjectName objectName, String attribute) {
+    public JmxAttributeProvider(OldJmxSensorAdapter adapter, ObjectName objectName, String attribute) {
         this.adapter = Preconditions.checkNotNull(adapter, "adapter")
         this.objectName = Preconditions.checkNotNull(objectName, "object name")
         this.attribute = Preconditions.checkNotNull(attribute, "attribute")
@@ -242,12 +242,12 @@ public class JmxAttributeProvider<T> implements ValueProvider<T> {
  * Provides JMX operation results to a sensor.
  */
 public class JmxOperationProvider<T> implements ValueProvider<T> {
-    private final JmxSensorAdapter adapter
+    private final OldJmxSensorAdapter adapter
     private final ObjectName objectName
     private final String method
     private final Object[] arguments
     
-    public JmxOperationProvider(JmxSensorAdapter adapter, ObjectName objectName, String method, Object...arguments) {
+    public JmxOperationProvider(OldJmxSensorAdapter adapter, ObjectName objectName, String method, Object...arguments) {
         this.adapter = Preconditions.checkNotNull(adapter, "adapter")
         this.objectName = Preconditions.checkNotNull(objectName, "object name")
         this.method = Preconditions.checkNotNull(method, "method")
@@ -263,11 +263,11 @@ public class JmxTabularDataProvider implements ValueProvider<Map<String, Object>
 
     private static final Logger log = LoggerFactory.getLogger(JmxTabularDataProvider.class);
 
-    private final JmxSensorAdapter adapter
+    private final OldJmxSensorAdapter adapter
     private final ObjectName objectName
     private final String attribute
 
-    public JmxTabularDataProvider(JmxSensorAdapter adapter, ObjectName objectName, String attribute) {
+    public JmxTabularDataProvider(OldJmxSensorAdapter adapter, ObjectName objectName, String attribute) {
         this.adapter = Preconditions.checkNotNull(adapter, "adapter")
         this.objectName = Preconditions.checkNotNull(objectName, "object name")
         this.attribute = Preconditions.checkNotNull(attribute, "attribute")
@@ -302,12 +302,12 @@ public class JmxTabularDataProvider implements ValueProvider<Map<String, Object>
 public class JmxAttributeNotifier implements NotificationListener {
     private static final Logger log = LoggerFactory.getLogger(JmxAttributeNotifier.class);
 
-    private final JmxSensorAdapter adapter
+    private final OldJmxSensorAdapter adapter
     private final ObjectName objectName
     private final EntityLocal entity
     private final BasicNotificationSensor sensor
     
-    public JmxAttributeNotifier(JmxSensorAdapter adapter, ObjectName objectName, EntityLocal entity, BasicNotificationSensor sensor) {
+    public JmxAttributeNotifier(OldJmxSensorAdapter adapter, ObjectName objectName, EntityLocal entity, BasicNotificationSensor sensor) {
         this.adapter = Preconditions.checkNotNull(adapter, "adapter")
         this.objectName = Preconditions.checkNotNull(objectName, "object name")
         this.entity = Preconditions.checkNotNull(entity, "entity")

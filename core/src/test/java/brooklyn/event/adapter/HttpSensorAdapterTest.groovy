@@ -9,13 +9,14 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
+import brooklyn.event.adapter.legacy.OldHttpSensorAdapter;
 
 class HttpSensorAdapterTest {
 
     @Test
     public void testJsonLongProvider() {
         Entity entity = new AbstractEntity() {}
-        HttpSensorAdapter adapter = new HttpSensorAdapter(entity) {
+        OldHttpSensorAdapter adapter = new OldHttpSensorAdapter(entity) {
             public byte[] getContents(URL url) {
                 return '{"abc":"10"}'.getBytes()
             }
@@ -27,7 +28,7 @@ class HttpSensorAdapterTest {
     @Test
     public void testJsonLongProviderForValueGreaterThanIntegerMaxVal() {
         Entity entity = new AbstractEntity() {}
-        HttpSensorAdapter adapter = new HttpSensorAdapter(entity) {
+        OldHttpSensorAdapter adapter = new OldHttpSensorAdapter(entity) {
             public byte[] getContents(URL url) {
                 return '{"abc":"2845050317"}'.getBytes()
             }

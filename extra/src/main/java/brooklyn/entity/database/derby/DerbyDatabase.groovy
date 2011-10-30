@@ -17,8 +17,8 @@ import brooklyn.entity.basic.JavaApp
 import brooklyn.entity.database.Database
 import brooklyn.entity.database.Schema
 import brooklyn.event.adapter.AttributePoller
-import brooklyn.event.adapter.JmxSensorAdapter
-import brooklyn.event.adapter.ValueProvider
+import brooklyn.event.adapter.legacy.OldJmxSensorAdapter;
+import brooklyn.event.adapter.legacy.ValueProvider;
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.Location
@@ -120,7 +120,7 @@ public class DerbySchema extends AbstractEntity implements Schema {
     protected ObjectName virtualHostManager
     protected ObjectName exchange
 
-    transient JmxSensorAdapter jmxAdapter
+    transient OldJmxSensorAdapter jmxAdapter
     transient AttributePoller attributePoller
 
     public DerbySchema(Map properties=[:], Entity owner=null) {

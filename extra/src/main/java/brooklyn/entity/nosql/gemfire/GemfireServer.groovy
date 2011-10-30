@@ -6,8 +6,8 @@ import brooklyn.entity.ParameterType
 import brooklyn.entity.basic.AbstractService
 import brooklyn.entity.basic.BasicParameterType
 import brooklyn.entity.basic.EffectorWithExplicitImplementation
-import brooklyn.event.adapter.HttpSensorAdapter
-import brooklyn.event.adapter.ValueProvider
+import brooklyn.event.adapter.legacy.OldHttpSensorAdapter;
+import brooklyn.event.adapter.legacy.ValueProvider;
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.basic.SshMachineLocation
@@ -75,7 +75,7 @@ class GemfireServer extends AbstractService {
 	}
 
     private static final int CONTROL_PORT_VAL = 8084    
-    transient HttpSensorAdapter httpAdapter
+    transient OldHttpSensorAdapter httpAdapter
 
     public GemfireServer(Map properties=[:], Entity owner=null) {
         super(properties, owner)
@@ -87,7 +87,7 @@ class GemfireServer extends AbstractService {
         setAttribute(HUB_PORT, hubPort)
         setAttribute(CONTROL_URL, "http://${setup.machine.address.hostName}:"+CONTROL_PORT_VAL)
         
-        httpAdapter = new HttpSensorAdapter(this)
+        httpAdapter = new OldHttpSensorAdapter(this)
         attributePoller.addSensor(SERVICE_UP, { computeNodeUp() } as ValueProvider)
 		attributePoller.addSensor(REGION_LIST, { listRegions() } as ValueProvider)
     }

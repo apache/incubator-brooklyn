@@ -37,6 +37,7 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>mx4j</groupId>
             <artifactId>mx4j-tools</artifactId>

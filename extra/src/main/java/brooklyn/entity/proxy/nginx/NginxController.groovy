@@ -7,8 +7,8 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.group.AbstractController
 import brooklyn.event.adapter.AttributePoller
-import brooklyn.event.adapter.HttpSensorAdapter
-import brooklyn.event.adapter.ValueProvider
+import brooklyn.event.adapter.legacy.OldHttpSensorAdapter;
+import brooklyn.event.adapter.legacy.ValueProvider;
 import brooklyn.location.Location
 import brooklyn.location.MachineLocation
 import brooklyn.location.basic.SshMachineLocation
@@ -22,7 +22,7 @@ import com.google.common.io.Files
  * An entity that represents an Nginx proxy controlling a cluster.
  */
 public class NginxController extends AbstractController {
-    transient HttpSensorAdapter httpAdapter
+    transient OldHttpSensorAdapter httpAdapter
 
     public NginxController(Map properties=[:], Entity owner=null) {
         super(properties, owner)
@@ -30,7 +30,7 @@ public class NginxController extends AbstractController {
 
     @Override
     protected void initSensors() {
-        httpAdapter = new HttpSensorAdapter(this)
+        httpAdapter = new OldHttpSensorAdapter(this)
         attributePoller.addSensor(SERVICE_UP, { computeNodeUp() } as ValueProvider)
     }
     

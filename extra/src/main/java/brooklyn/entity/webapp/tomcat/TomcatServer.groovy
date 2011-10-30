@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.Entity
 import brooklyn.entity.webapp.JavaWebApp
 import brooklyn.event.EntityStartException
-import brooklyn.event.adapter.ValueProvider
+import brooklyn.event.adapter.legacy.ValueProvider;
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.basic.SshMachineLocation

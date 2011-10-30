@@ -19,8 +19,8 @@ import brooklyn.entity.messaging.Topic
 import brooklyn.entity.messaging.activemq.ActiveMQQueue;
 import brooklyn.entity.messaging.activemq.ActiveMQTopic;
 import brooklyn.event.adapter.AttributePoller
-import brooklyn.event.adapter.JmxSensorAdapter
-import brooklyn.event.adapter.ValueProvider
+import brooklyn.event.adapter.legacy.OldJmxSensorAdapter;
+import brooklyn.event.adapter.legacy.ValueProvider;
 import brooklyn.event.basic.ConfiguredAttributeSensor
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedAppSetup

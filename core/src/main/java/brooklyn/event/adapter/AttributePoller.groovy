@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.AttributeSensor
 import brooklyn.event.Sensor
+import brooklyn.event.adapter.legacy.ValueProvider;
 
 /**
  * This class manages the periodic polling of a set of sensors, to update the attribute values 
@@ -20,27 +21,41 @@ public class AttributePoller {
     static final Logger log = LoggerFactory.getLogger(AttributePoller.class);
  
     final EntityLocal entity
+	
+	@Deprecated
     final Map<?, ?> properties  = [
             period : 500,
             connectDelay : 1000
         ]   
  
+	@Deprecated
     ScheduledExecutorService exec = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors())
  
+	@Deprecated
     private final Map<AttributeSensor, ValueProvider> providers = [:]
+	@Deprecated
     private final Map<AttributeSensor, ScheduledFuture> scheduled = [:]
-    
+
+	
+	private final Set<AbstractSensorAdapter> adapters = []
+	    
     public AttributePoller(EntityLocal entity, Map properties = [:]) {
         this.entity = entity
         this.properties << properties
     }
 
+	public AbstractSensorAdapter register(AbstractSensorAdapter adapter) {
+		if (!adapters.add(adapter)) /* already known */ return;
+		adapter.register(this)
+		return adapter
+	}
+		
     public <T> void addSensor(AttributeSensor<T> sensor, ValueProvider<? extends T> provider) {
         addSensor(sensor, provider, properties.period)
     }
-    
+
     public <T> void addSensor(AttributeSensor<T> sensor, ValueProvider<? extends T> provider, long period) {
-        log.debug "adding calculated sensor {} with delay {}", sensor.name, period
+        log.debug "adding calculated sensor {} with delay {} to {}", sensor.name, period, entity
         providers.put(sensor, provider)
         
         Closure safeCalculate = {
@@ -48,7 +63,7 @@ public class AttributePoller {
                 T newValue = provider.compute()
                 entity.setAttribute(sensor, newValue)
             } catch (Exception e) {
-                log.error "Error calculating value for sensor $sensor on entity $entity", e
+                log.error "Error calculating value for sensor {} on entity {}", e, sensor, entity
             }
         }
         
@@ -56,7 +71,7 @@ public class AttributePoller {
     }
 
     public <T> void removeSensor(AttributeSensor<T> sensor) {
-        log.debug "removing sensor", sensor.name
+        log.debug "removing sensor {} from {}", sensor.name, entity
         providers.remove(sensor)
         scheduled.remove(sensor)?.cancel(true)
     }
@@ -67,7 +82,7 @@ public class AttributePoller {
     }
 
     private void updateAll() {
-        log.debug "updating all jmx sensors"
+        log.debug "updating all sensors for {}", entity
         providers.each {
                 AttributeSensor sensor, ValueProvider provider ->
                 def newValue = provider.compute()
@@ -80,7 +95,7 @@ public class AttributePoller {
         if (!providers.containsKey(sensor)) throw new IllegalStateException("Sensor ${sensor.name} not found");
         ValueProvider<?> provider = providers.get(sensor)
         def newValue = provider.compute()
-        log.debug "update for attribute {} to {}", sensor.name, newValue
+        log.debug "update for attribute {} on {}: new value {}", sensor.name, entity, newValue
         entity.setAttribute(sensor, newValue)
     }
 }

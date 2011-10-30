@@ -16,7 +16,7 @@ import org.testng.annotations.Test
 import brooklyn.entity.LocallyManagedEntity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.event.adapter.AttributePoller
-import brooklyn.event.adapter.ValueProvider
+import brooklyn.event.adapter.legacy.ValueProvider;
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.test.TestUtils;
 
