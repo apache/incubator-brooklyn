@@ -23,6 +23,7 @@ import brooklyn.management.Task
 import brooklyn.util.internal.LanguageUtils
 
 import com.google.common.base.CaseFormat
+import com.google.common.collect.Iterables;
 
 /**
  * TODO javadoc

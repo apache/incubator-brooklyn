@@ -1,12 +1,14 @@
 
-TODO (DAN)
-- sequential, parallel tasks
-- Set<Task> containedIn, field in Task
-
 TODO
+- expiry (removal) of completed tasks (currently everything is kept)
 - replace execution elsewhere in code with use of ExecutionContext (much done)
+- better task type hierarchy (interface, finals, etc)
+- Set<Task> containedIn, field in Task
+- task serialization, proxying (so remote can find out when source is finished)
+
+DONE
 - schedule (as in JBossNode, TomcatNode)
 
-- expiry (removal) of completed tasks (currently everything is kept)
-- better task type hierarchy (interface, finals, etc)
-- task serialization, proxying (so remote can find out when source is finished)
+DONE (DAN)
+- sequential, parallel tasks
+

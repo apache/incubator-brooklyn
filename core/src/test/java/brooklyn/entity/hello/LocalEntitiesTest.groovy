@@ -5,6 +5,8 @@ import static org.testng.Assert.*
 
 import java.util.concurrent.atomic.AtomicReference
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.testng.annotations.Test
 
 import brooklyn.entity.basic.AbstractApplication
@@ -16,6 +18,9 @@ import brooklyn.util.task.ParallelTask
 
 /** tests effector invocation and a variety of sensor accessors and subscribers */
 class LocalEntitiesTest {
+	
+	public static final Logger log = LoggerFactory.getLogger(LocalEntitiesTest.class);
+			
     @Test
     public void testEffectorUpdatesAttributeSensor() {
         AbstractApplication a = new AbstractApplication() {}
@@ -95,7 +100,7 @@ class LocalEntitiesTest {
             data << e.value
             Thread.sleep((int)(20*Math.random()))
             synchronized (data) { 
-                println "Thread "+Thread.currentThread()+" notify on subscription received for "+e.value+", data is "+data
+                log.info "Thread "+Thread.currentThread()+" notify on subscription received for "+e.value+", data is "+data
                 data.notifyAll()
                 data.wait(2000) 
             } 
@@ -105,7 +110,7 @@ class LocalEntitiesTest {
         long startTime = System.currentTimeMillis()
         synchronized (data) {
             (1..5).each { h.setAge(it) }
-            (1..5).each { println "Thread "+Thread.currentThread()+" waiting on $it"; data.wait(2000); data.notifyAll(); }
+            (1..5).each { log.info "Thread "+Thread.currentThread()+" waiting on $it"; data.wait(2000); data.notifyAll(); }
         }
         a.getSubscriptionContext().unsubscribeAll();
         h.setAge(6)
@@ -131,38 +136,74 @@ class LocalEntitiesTest {
         a.setAttribute(HelloEntity.FAVOURITE_NAME, "Carl")
         assertEquals("Carl", a.getAttribute(HelloEntity.FAVOURITE_NAME))
         assertEquals(null, dad.getAttribute(HelloEntity.FAVOURITE_NAME))
-        
+    }
+	@Test
+	public void testConfigSetFromAttributeWhenReady() {
+		AbstractApplication a = new AbstractApplication() {}
+		a.setConfig(HelloEntity.MY_NAME, "Bob")
+		
+        HelloEntity dad = new HelloEntity(owner:a)
+        HelloEntity son = new HelloEntity(owner:dad)
+		
         //config can be set from an attribute
         son.setConfig(HelloEntity.MY_NAME, attributeWhenReady(dad, HelloEntity.FAVOURITE_NAME
             /* third param is closure; defaults to groovy truth (see google), but could be e.g.
                , { it!=null && it.length()>0 && it!="Jebediah" }
              */ ));
+		a.start([new MockLocation()])
+		 
         Object[] sonsConfig = new Object[1]
         Thread t = new Thread( { 
-//            println "getting config "+sonsConfig[0]
-            sonsConfig[0] = son.getConfig(HelloEntity.MY_NAME);
-//            println "got config "+sonsConfig[0] 
-            synchronized (sonsConfig) { sonsConfig.notify() } 
+			log.info "started"
+        	synchronized (sonsConfig) {
+				log.info "notifying {}", System.identityHashCode(sonsConfig)
+				sonsConfig.notifyAll();
+			}
+        	log.info "getting config "+sonsConfig[0]
+        	sonsConfig[0] = son.getConfig(HelloEntity.MY_NAME);
+        	log.info "got config "+sonsConfig[0] 
+        	synchronized (sonsConfig) { 
+				sonsConfig.notifyAll() 
+				log.info "notified "+sonsConfig 
+			} 
         } );
-        t.start();
-        //thread should be blocking, not finishing after 10ms
-        Thread.sleep(50);
-        assertTrue(t.isAlive());
+		log.info "starting"
         long startTime = System.currentTimeMillis();
+		synchronized (sonsConfig) {
+			t.start();
+			log.info "waiting {}", System.identityHashCode(sonsConfig)
+			sonsConfig.wait(2000);
+		}
+        //thread should be blocking on call to getConfig
+        assertTrue(t.isAlive());
+		assertTrue(System.currentTimeMillis() - startTime < 1500)
         synchronized (sonsConfig) {
             assertEquals(null, sonsConfig[0]);
-            for (Task tt in dad.getExecutionContext().getTasks()) { println "task at dad:  $tt, "+tt.getStatusDetail(false) }
-            for (Task tt in son.getExecutionContext().getTasks()) { println "task at son:  $tt, "+tt.getStatusDetail(false) }
+            for (Task tt in dad.getExecutionContext().getTasks()) { log.info "task at dad:  $tt, "+tt.getStatusDetail(false) }
+            for (Task tt in son.getExecutionContext().getTasks()) { log.info "task at son:  $tt, "+tt.getStatusDetail(false) }
             dad.setAttribute(HelloEntity.FAVOURITE_NAME, "Dan");
-            sonsConfig.wait(1000)
+            sonsConfig.wait(2000)
         }
+		log.info "dad: "+dad.getAttribute(HelloEntity.FAVOURITE_NAME)
+		log.info "son: "+son.getConfig(HelloEntity.MY_NAME)
+		
         //shouldn't have blocked for very long at all
-        assertTrue(System.currentTimeMillis() - startTime < 800)
+        assertTrue(System.currentTimeMillis() - startTime < 1500)
         //and sons config should now pick up the dad's attribute
         assertEquals("Dan", sonsConfig[0])
-        
+	}
+	@Test
+	public void testConfigSetFromAttributeWhenReadyTransformations() {
+		AbstractApplication a = new AbstractApplication() {}
+		a.setConfig(HelloEntity.MY_NAME, "Bob")
+		
+        HelloEntity dad = new HelloEntity(owner:a)
+        HelloEntity son = new HelloEntity(owner:dad)
+		
         //and config can have transformations
         son.setConfig(HelloEntity.MY_NAME, transform(attributeWhenReady(dad, HelloEntity.FAVOURITE_NAME), { it+it[-1]+"y" }))
+		dad.setAttribute(HelloEntity.FAVOURITE_NAME, "Dan");
+		a.start([new MockLocation()])
         assertEquals("Danny", son.getConfig(HelloEntity.MY_NAME))
     }
 
