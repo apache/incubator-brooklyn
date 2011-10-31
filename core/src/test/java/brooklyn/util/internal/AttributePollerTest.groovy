@@ -86,7 +86,7 @@ public class AttributePollerTest {
         // And want to ensure that it is never called again (after any currently executing call), so need to wait.
         // TODO Nicer way than a sleep?
         
-        Thread.sleep(100)
+        Thread.sleep(200)
         desiredVal.set(2)
         Thread.sleep(100)
         assertEquals(entity.getAttribute(FOO), 1)

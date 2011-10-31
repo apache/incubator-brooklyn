@@ -7,17 +7,22 @@ import java.util.concurrent.ConcurrentMap
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.ScheduledThreadPoolExecutor
+import java.util.concurrent.SynchronousQueue
+import java.util.concurrent.ThreadFactory
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.management.ExecutionManager
+import brooklyn.management.ExpirationPolicy
 import brooklyn.management.Task
 import brooklyn.util.internal.LanguageUtils
 
 import com.google.common.base.CaseFormat
-import com.google.common.collect.ImmutableSet;
-import brooklyn.management.ExpirationPolicy;
 
 /**
  * TODO javadoc
@@ -35,8 +40,13 @@ public class BasicExecutionManager implements ExecutionManager {
 
     public static Task getCurrentTask() { return getPerThreadCurrentTask().get() }
     
-    private ExecutorService runner = Executors.newCachedThreadPool()
-    
+    private ThreadFactory threadFactory = newThreadFactory();
+    private ExecutorService runner = 
+		new ThreadPoolExecutor(0, Integer.MAX_VALUE, 1L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>());
+//      above is Executors.newCachedThreadPool()  but timeout of 1s rather than 60s for better shutdown!
+	private ScheduledExecutorService delayedRunner =
+    	new ScheduledThreadPoolExecutor(1, { runnable -> Thread t = threadFactory.newThread(runnable); t.setDaemon(true); t } as ThreadFactory);
+	
     // TODO Could have a set of all knownTasks; but instead we're having a separate set per tag,
     // so the same task could be listed multiple times if it has multiple tags...
 
@@ -50,6 +60,11 @@ public class BasicExecutionManager implements ExecutionManager {
 
     private ConcurrentMap<Object, TaskScheduler> schedulerByTag = new ConcurrentHashMap()
     
+	/** for use by overriders to use custom thread factory */
+	protected ThreadFactory newThreadFactory() {
+		Executors.defaultThreadFactory();
+	}
+	
     public void shutdownNow() {
         runner.shutdownNow()
     }
@@ -102,6 +117,41 @@ public class BasicExecutionManager implements ExecutionManager {
         }
     }
 
+	public <T> Task<T> scheduleWith(Map flags=[:], Task<T> task) {
+		synchronized (task) {
+			if (task.result!=null) return task
+			submitNewTask flags, task
+		}
+	}
+
+	protected Task submitNewTask(Map flags, ScheduledTask task) {
+		task.submitTimeUtc = System.currentTimeMillis()
+		if (!task.isDone()) {
+			task.result = delayedRunner.schedule({
+				if (task.startTimeUtc==-1) task.startTimeUtc = System.currentTimeMillis();
+				def taskScheduled = task.newTask()
+				taskScheduled.submittedByTask = task
+				def oldJob = taskScheduled.job
+				taskScheduled.job = {
+					task.recentRun = taskScheduled
+					Object result = oldJob.call();
+					task.runCount++;
+					if (task.period!=null) {
+						task.delay = task.period
+						submitNewTask flags, task
+					}
+					result;
+				}
+				task.nextRun = taskScheduled
+				submit taskScheduled
+			} as Callable,
+			task.delay.toMilliseconds(), TimeUnit.MILLISECONDS)
+		} else {
+			task.endTimeUtc = System.currentTimeMillis();
+		}
+		task
+	}
+
     protected <T> Task<T> submitNewTask(Map flags, Task<T> task) {
         beforeSubmit(flags, task)
         
@@ -130,14 +180,15 @@ public class BasicExecutionManager implements ExecutionManager {
         
         // If there's a scheduler then use that; otherwise execute it directly
         // 'as Callable' to prevent being treated as Runnable and returning a future that gives null
-        List<TaskScheduler> schedulers = []
+        Set<TaskScheduler> schedulers = []
         task.@tags.each {
             TaskScheduler scheduler = getTaskSchedulerForTag(it)
             if (scheduler) schedulers << scheduler
         }
         Future future
         if (schedulers) {
-            future = schedulers.get(0).submit(job as Callable)
+			if (schedulers.size()>1) log.warn "multiple schedulers detected, using only the first, for ${task}: "+schedulers
+            future = schedulers.iterator().next().submit(job as Callable)
         } else {
             future = runner.submit(job as Callable)
         }
@@ -147,7 +198,8 @@ public class BasicExecutionManager implements ExecutionManager {
     }
 
     protected void beforeSubmit(Map flags, Task<?> task) {
-        task.submittedByTask = getCurrentTask()
+		Task currentTask = getCurrentTask();
+        if (currentTask) task.submittedByTask = currentTask
         task.submitTimeUtc = System.currentTimeMillis()
         
         if (flags.tag) task.@tags.add flags.remove("tag")
@@ -304,4 +356,5 @@ public class BasicExecutionManager implements ExecutionManager {
             return (old!=null)
         }
     }
+	
 }
