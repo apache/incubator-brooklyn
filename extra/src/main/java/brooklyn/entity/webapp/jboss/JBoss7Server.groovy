@@ -3,14 +3,15 @@ package brooklyn.entity.webapp.jboss
 import groovy.lang.MetaClass
 
 import java.util.Collection
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.webapp.JavaWebApp
-import brooklyn.event.adapter.HttpUrlSensorAdapter
-import brooklyn.event.adapter.legacy.ValueProvider
+import brooklyn.event.adapter.ConfigSensorAdapter
+import brooklyn.event.adapter.HttpSensorAdapter
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.ConfiguredAttributeSensor
 import brooklyn.location.Location
@@ -18,7 +19,9 @@ import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedAppSetup
 import brooklyn.util.flags.SetFromFlag
 
-class JBoss7Server extends JavaWebApp {
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.with;
+
+public class JBoss7Server extends JavaWebApp {
 
 	public static final Logger log = LoggerFactory.getLogger(JBoss7Server.class)
 	
@@ -38,61 +41,40 @@ class JBoss7Server extends JavaWebApp {
     }
 	
 	public void start(Collection<Location> locations) {
-		super.start(locations)
-		connectSensors()
-		attributePoller.activate()
+		try {
+			super.start(locations)
+			connectSensors()
+			sensorRegistry.activateAdapters()
+		} catch (Throwable e) {
+			log.warn "errors starting ${this} (rethrowing): $e", e
+			throw e
+		}
 	}
 	
 	protected void connectSensors() {
-//		//TODO sensorRegistry
-		def http = attributePoller.register(
-			new HttpUrlSensorAdapter("http://$host:$port/management/subsystem/web/connector/http/read-resource?include-runtime", period: 100)
-			//TODO
-//			new HttpUrlSensorAdapter("http://$host:$port/management/subsystem/web/connector/http/read-resource", period: 100).
-//				vars("include-runtime":null)
-		)
+		//TODO should only be applied at initial deployment
+		def config = sensorRegistry.register(new ConfigSensorAdapter())
+
+		def host = getAttribute(HOSTNAME)
+		def port = getAttribute(MANAGEMENT_PORT)
+		def http = sensorRegistry.register(
+			new HttpSensorAdapter("http://$host:$port/management/subsystem/web/connector/http/read-resource", period: 200*TimeUnit.MILLISECONDS).
+				vars("include-runtime":null) )
 		with(http) {
-			poll(MANAGEMENT_STATUS, { statusCode })
+			poll(MANAGEMENT_STATUS, { responseCode })
+			poll(SERVICE_UP, { responseCode==200 })
+
+			poll(REQUEST_COUNT) { json.requestCount }
+			poll(ERROR_COUNT) { json.errorCount }
+			poll(TOTAL_PROCESSING_TIME) { json.processingTime }
+			poll(MAX_PROCESSING_TIME) { json.maxTime }
+			poll(BYTES_RECEIVED) { json.bytesReceived }
 			poll(BYTES_SENT, { json.bytesSent })
-			subUrl("extra/url", period:400).poll(XXX, { json "xxx" })
 		}
 		
-		//TODO start callback. events. jmx. missing.
+
+// 		checkAllSensorsRegistered()
 		
-//
-//		def jmx = attributePoller.register(new OldJmxSensorAdapter(this, 60*1000)).setBlockDuringPostStart(true).setStartIfNoSensors(false)
-//		with(attributePoller) {
-//			addSensor(XXX, jmx, { attribute "jboss.web:type=GlobalRequestProcessor,name=http-*", "processingTime" } )
-//			//addSensor(JMX_URL, jmx, { getUrl() } )
-//		}
-//		//or
-//		with(jmx) {
-//			//! with
-//			
-//			
-//			//x not this
-//			register(XXX, attribute("jboss.web:type=GlobalRequestProcessor,name=http-*", "processingTime"), { it /* optional post-processing */ })
-//			register(XXX, { attribute "jboss.web:type=GlobalRequestProcessor,name=http-*", "processingTime" } )
-//			//! yes to this:
-//			register(XXX, objectName("jboss.web:type=GlobalRequestProcessor,name=http-*").attribute("processingTime"), { it /* optional post-processing */ })  
-//			register(XXX, objectName("jboss.web:type=GlobalRequestProcessor,name=http-*").attribute("table"), { tabular "abc" })  
-//			register(XXX, objectName("jboss.web:type=GlobalRequestProcessor,name=http-*").attribute("table"), { tabular "123" })  
-//			register(XXX, objectName("jboss.web:type=GlobalRequestProcessor,name=http-*").attribute("table"), { tabular "xyz" })  
-//			register(XXX, objectName("jboss.web:type=GlobalRequestProcessor,name=http-*").notification("name"), { it /* optional post-processing */ })  
-//			poll(XXX, objectName("jboss.web:type=GlobalRequestProcessor,name=http-*").operation("processingTime", args), { it /* optional post-processing */ })
-//			
-//			//! and to this:
-//			objectName("jboss.web:type=GlobalRequestProcessor,name=http-*").attribute("processingTime").register(XXX)
-//			with (objectName("jboss.web:type=GlobalRequestProcessor,name=http-*").attribute("table")) {
-//			   register(XXX, { xxx })
-//			}
-//			objectName("jboss.web:type=GlobalRequestProcessor,name=http-*").attribute("processingTime").register(XXX)
-//			
-//			//event/notification sensors
-//			onPostStart(JMX_URL, { getUrl() })
-//			onJmxError(ERROR_CHANNEL, { "JMX had error: "+errorCode } )
-//		}
-//		
 //		//what about sensors where it doesn't necessarily make sense to register them here, e.g.:
 //		//  config -- easy to exclude (by type)
 //		//  lifecycle, member added -- ??
@@ -103,18 +85,17 @@ class JBoss7Server extends JavaWebApp {
 //		//     dev just has to list things which don't yet have a value (in post-start) but which will get one somehow
 //		//     but not using any of the adapters.  or things which might not be used.  that seems unlikely.
 //		//- or just don't try to check that everything is registered
-//		attributePoller.register(ManualSensorAdaptor).register(SOME_MANUAL_SENSOR)
-//		
-//
-// 		checkAllSensorsRegistered()
-//		
+//		sensorRegistry.register(ManualSensorAdaptor).register(SOME_MANUAL_SENSOR)
+
+		// process thinking...
+		
 //		//above called during preStart()
 //		
 //		//below called in postStart.  or use subscriptions???
-//		attributePoller.adapters.each { it.postStart() }
+//		sensorRegistry.adapters.each { it.postStart() }
 //		
 //		//or
-//		attributePoller.adapters.find({ it in OldJmxSensorAdapter })?.connect(block: true, publish: (getEntityClass().hasSensor(JMX_URL)))
+//		sensorRegistry.adapters.find({ it in OldJmxSensorAdapter })?.connect(block: true, publish: (getEntityClass().hasSensor(JMX_URL)))
 //		
 //		//and in the connection thread
 	}
@@ -125,19 +106,19 @@ class JBoss7Server extends JavaWebApp {
 	
     @Override
     public void addHttpSensors() {
-        def host = getAttribute(HOSTNAME)
-        def port = getAttribute(MANAGEMENT_PORT)
-        String queryUrl = "http://$host:$port/management/subsystem/web/connector/http/read-resource?include-runtime"
-
-        attributePoller.addSensor(MANAGEMENT_STATUS, httpAdapter.newStatusValueProvider(queryUrl))
-        attributePoller.addSensor(SERVICE_UP, { getAttribute(MANAGEMENT_STATUS) == 200 } as ValueProvider<Boolean>)
-
-        attributePoller.addSensor(REQUEST_COUNT, httpAdapter.newJsonLongProvider(queryUrl, "requestCount"))
-        attributePoller.addSensor(ERROR_COUNT, httpAdapter.newJsonLongProvider(queryUrl, "errorCount"))
-        attributePoller.addSensor(TOTAL_PROCESSING_TIME, httpAdapter.newJsonLongProvider(queryUrl, "processingTime"))
-        attributePoller.addSensor(MAX_PROCESSING_TIME, httpAdapter.newJsonLongProvider(queryUrl, "maxTime"))
-        attributePoller.addSensor(BYTES_RECEIVED, httpAdapter.newJsonLongProvider(queryUrl, "bytesReceived"))
-        attributePoller.addSensor(BYTES_SENT, httpAdapter.newJsonLongProvider(queryUrl, "bytesSent"))
+//        def host = getAttribute(HOSTNAME)
+//        def port = getAttribute(MANAGEMENT_PORT)
+//        String queryUrl = "http://$host:$port/management/subsystem/web/connector/http/read-resource?include-runtime"
+//
+//        sensorRegistry.addSensor(MANAGEMENT_STATUS, httpAdapter.newStatusValueProvider(queryUrl))
+//        sensorRegistry.addSensor(SERVICE_UP, { getAttribute(MANAGEMENT_STATUS) == 200 } as ValueProvider<Boolean>)
+//
+//        sensorRegistry.addSensor(REQUEST_COUNT, httpAdapter.newJsonLongProvider(queryUrl, "requestCount"))
+//        sensorRegistry.addSensor(ERROR_COUNT, httpAdapter.newJsonLongProvider(queryUrl, "errorCount"))
+//        sensorRegistry.addSensor(TOTAL_PROCESSING_TIME, httpAdapter.newJsonLongProvider(queryUrl, "processingTime"))
+//        sensorRegistry.addSensor(MAX_PROCESSING_TIME, httpAdapter.newJsonLongProvider(queryUrl, "maxTime"))
+//        sensorRegistry.addSensor(BYTES_RECEIVED, httpAdapter.newJsonLongProvider(queryUrl, "bytesReceived"))
+//        sensorRegistry.addSensor(BYTES_SENT, httpAdapter.newJsonLongProvider(queryUrl, "bytesSent"))
 
         //we could tidy to use this syntax
         //connectHttpSensor(MANAGEMENT_STATUS, { statusCode } )
@@ -151,10 +132,4 @@ class JBoss7Server extends JavaWebApp {
         return JBoss7SshSetup.newInstance(this, machine)
     }
     
-    //other things to look at:
-    // Sensors
-    // Policy
-    // Children / Groups
-    // JavaWebServer interface
-    // registering location support ?
 }

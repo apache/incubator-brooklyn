@@ -15,25 +15,25 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.LocallyManagedEntity
 import brooklyn.entity.basic.AbstractEntity
-import brooklyn.event.adapter.AttributePoller
+import brooklyn.event.adapter.SensorRegistry
 import brooklyn.event.adapter.legacy.ValueProvider;
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.test.TestUtils;
 
 /**
- * Test the operation of the {@link AttributePoller} class.
+ * Test the operation of the {@link SensorRegistry} class.
  */
-public class AttributePollerTest {
-    private static final Logger log = LoggerFactory.getLogger(AttributePollerTest.class)
+public class SensorRegistryTest {
+    private static final Logger log = LoggerFactory.getLogger(SensorRegistryTest.class)
 
     @Test
     public void sensorUpdatedPeriodically() {
         AbstractEntity entity = new LocallyManagedEntity()
-        AttributePoller attributePoller = new AttributePoller(entity, [period:50])
+        SensorRegistry sensorRegistry = new SensorRegistry(entity, [period:50])
         
         final AtomicInteger desiredVal = new AtomicInteger(1)
         BasicAttributeSensor<Integer> FOO = [ Integer, "foo", "My foo" ]
-        attributePoller.addSensor(FOO, { return desiredVal.get() } as ValueProvider)
+        sensorRegistry.addSensor(FOO, { return desiredVal.get() } as ValueProvider)
 
         executeUntilSucceeds {
             assertEquals(entity.getAttribute(FOO), 1)
@@ -48,12 +48,12 @@ public class AttributePollerTest {
     public void sensorUpdateDefaultPeriodIsUsed() {
         final int PERIOD = 250
         AbstractEntity entity = new LocallyManagedEntity()
-        AttributePoller attributePoller = new AttributePoller(entity, [period:PERIOD, connectDelay:0])
+        SensorRegistry sensorRegistry = new SensorRegistry(entity, [period:PERIOD, connectDelay:0])
         
         List<Long> callTimes = [] as CopyOnWriteArrayList
         
         BasicAttributeSensor<Integer> FOO = [ Integer, "foo", "My foo" ]
-        attributePoller.addSensor(FOO, { callTimes.add(System.currentTimeMillis()); return 1 } as ValueProvider)
+        sensorRegistry.addSensor(FOO, { callTimes.add(System.currentTimeMillis()); return 1 } as ValueProvider)
         
         Thread.sleep(500)
         assertApproxPeriod(callTimes, PERIOD, 500)
@@ -64,12 +64,12 @@ public class AttributePollerTest {
         final int PERIOD = 250
         // Create an entity and configure it with the above JMX service
         AbstractEntity entity = new LocallyManagedEntity()
-        AttributePoller attributePoller = new AttributePoller(entity, [period:1000, connectDelay:0])
+        SensorRegistry sensorRegistry = new SensorRegistry(entity, [period:1000, connectDelay:0])
         
         List<Long> callTimes = [] as CopyOnWriteArrayList
         
         BasicAttributeSensor<Integer> FOO = [ Integer, "foo", "My foo" ]
-        attributePoller.addSensor(FOO, { callTimes.add(System.currentTimeMillis()); return 1 } as ValueProvider, PERIOD)
+        sensorRegistry.addSensor(FOO, { callTimes.add(System.currentTimeMillis()); return 1 } as ValueProvider, PERIOD)
         
         Thread.sleep(500)
         assertApproxPeriod(callTimes, PERIOD, 500)
@@ -78,18 +78,18 @@ public class AttributePollerTest {
     @Test
     public void testRemoveSensorStopsItBeingUpdated() {
         AbstractEntity entity = new LocallyManagedEntity()
-        AttributePoller attributePoller = new AttributePoller(entity, [period:50])
+        SensorRegistry sensorRegistry = new SensorRegistry(entity, [period:50])
         
         final AtomicInteger desiredVal = new AtomicInteger(1)
         
         BasicAttributeSensor<Integer> FOO = [ Integer, "foo", "My foo" ]
-        attributePoller.addSensor(FOO, { return desiredVal.get() } as ValueProvider)
+        sensorRegistry.addSensor(FOO, { return desiredVal.get() } as ValueProvider)
 
         TimeExtras.init();
         TestUtils.executeUntilSucceeds(period:10*TimeUnit.MILLISECONDS, timeout:1*TimeUnit.SECONDS, { entity.getAttribute(FOO)!=null }); 
         assertEquals(entity.getAttribute(FOO), 1)
         
-        attributePoller.removeSensor(FOO)
+        sensorRegistry.removeSensor(FOO)
         
         // The poller could already be calling the value provider, so can't simply assert never called again.
         // And want to ensure that it is never called again (after any currently executing call), so need to wait.
@@ -100,11 +100,11 @@ public class AttributePollerTest {
         Thread.sleep(100)
         assertEquals(entity.getAttribute(FOO), 1)
         
-        attributePoller.updateAll()
+        sensorRegistry.updateAll()
         assertEquals(entity.getAttribute(FOO), 1)
         
         try {
-            attributePoller.update(FOO)
+            sensorRegistry.update(FOO)
             fail()
         } catch (IllegalStateException e) {
             // success
@@ -114,16 +114,16 @@ public class AttributePollerTest {
     @Test
     public void testClosePollerStopsItBeingUpdated() {
         AbstractEntity entity = new LocallyManagedEntity()
-        AttributePoller attributePoller = new AttributePoller(entity, [period:50])
+        SensorRegistry sensorRegistry = new SensorRegistry(entity, [period:50])
         
         final AtomicInteger desiredVal = new AtomicInteger(1)
         BasicAttributeSensor<Integer> FOO = [ Integer, "foo", "My foo" ]
-        attributePoller.addSensor(FOO, { return desiredVal.get() } as ValueProvider)
+        sensorRegistry.addSensor(FOO, { return desiredVal.get() } as ValueProvider)
 
         Thread.sleep(100)
         assertEquals(entity.getAttribute(FOO), 1)
         
-        attributePoller.close()
+        sensorRegistry.close()
         
         // The poller could already be calling the value provider, so can't simply assert never called again.
         // And want to ensure that it is never called again (after any currently executing call), so need to wait.

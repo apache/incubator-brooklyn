@@ -11,7 +11,7 @@ import brooklyn.entity.ConfigKey
 import brooklyn.entity.Entity
 import brooklyn.entity.trait.Startable
 import brooklyn.event.AttributeSensor
-import brooklyn.event.adapter.AttributePoller
+import brooklyn.event.adapter.SensorRegistry
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.Location
@@ -56,9 +56,9 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
 
     private MachineProvisioningLocation provisioningLoc
     protected SshBasedAppSetup setup
-    protected transient AttributePoller attributePoller
+    protected transient SensorRegistry sensorRegistry
     
-    AbstractService(Map properties=[:], Entity owner=null) {
+    public AbstractService(Map properties=[:], Entity owner=null) {
         super(properties, owner)
  
         setAttribute(SERVICE_UP, false)
@@ -77,7 +77,7 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
 
     public void start(Collection<Location> locations) {
         setAttribute(SERVICE_STATE, Lifecycle.STARTING)
-        attributePoller = new AttributePoller(this)
+        sensorRegistry = new SensorRegistry(this)
         
         preStart()
         startInLocation locations
@@ -144,6 +144,7 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
 
     public void stop() {
         setAttribute(SERVICE_STATE, Lifecycle.STOPPING)
+		if (sensorRegistry!=null) sensorRegistry.deactivateAdapters();
         MachineLocation machine = removeFirstMatchingLocation({ it in MachineLocation })
         if (machine) {
             shutdownInLocation(machine)
@@ -161,7 +162,7 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
     }
 
     public void shutdownInLocation(MachineLocation machine) {
-        if (attributePoller) attributePoller.close()
+        if (sensorRegistry) sensorRegistry.close()
         
         preStop()
         if (setup) setup.stop()

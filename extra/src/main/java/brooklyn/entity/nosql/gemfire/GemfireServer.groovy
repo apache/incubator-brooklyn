@@ -88,8 +88,9 @@ class GemfireServer extends AbstractService {
         setAttribute(CONTROL_URL, "http://${setup.machine.address.hostName}:"+CONTROL_PORT_VAL)
         
         httpAdapter = new OldHttpSensorAdapter(this)
-        attributePoller.addSensor(SERVICE_UP, { computeNodeUp() } as ValueProvider)
-		attributePoller.addSensor(REGION_LIST, { listRegions() } as ValueProvider)
+
+        sensorRegistry.addSensor(SERVICE_UP, { computeNodeUp() } as ValueProvider)
+        sensorRegistry.addSensor(REGION_LIST, { listRegions() } as ValueProvider)
     }
     
     public SshBasedAppSetup getSshBasedSetup(SshMachineLocation loc) {

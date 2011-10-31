@@ -8,7 +8,7 @@ import java.util.Map
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.JavaApp
-import brooklyn.event.adapter.AttributePoller
+import brooklyn.event.adapter.SensorRegistry
 import brooklyn.event.adapter.legacy.OldJmxSensorAdapter;
 import brooklyn.event.basic.BasicAttributeSensor
 
@@ -68,7 +68,7 @@ public abstract class JMSBroker<Q extends JMSDestination & Queue, T extends JMSD
 
 public abstract class JMSDestination extends AbstractEntity {
     transient OldJmxSensorAdapter jmxAdapter
-    transient AttributePoller attributePoller
+    transient SensorRegistry sensorRegistry
 
     public JMSDestination(Map properties=[:], Entity owner=null) {
         super(properties, owner)
@@ -78,7 +78,7 @@ public abstract class JMSDestination extends AbstractEntity {
         init()
 
         jmxAdapter = ((JMSBroker) getOwner()).jmxAdapter
-        attributePoller = new AttributePoller(this)
+        sensorRegistry = new SensorRegistry(this)
 
         create()
     }
@@ -95,7 +95,7 @@ public abstract class JMSDestination extends AbstractEntity {
 
     @Override
     public void destroy() {
-        attributePoller.close()
+        sensorRegistry.close()
         super.destroy()
     }
 

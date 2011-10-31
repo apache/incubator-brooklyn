@@ -444,7 +444,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         subscription = getManagementContext()?.getSubscriptionContext(this);
     }
 
-    protected synchronized ExecutionContext getExecutionContext() {
+    public synchronized ExecutionContext getExecutionContext() {
         if (execution) execution;
         execution = new BasicExecutionContext(tag:this, getManagementContext().executionManager)
     }

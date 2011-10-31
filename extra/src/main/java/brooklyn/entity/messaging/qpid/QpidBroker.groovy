@@ -18,7 +18,7 @@ import brooklyn.entity.messaging.Queue
 import brooklyn.entity.messaging.Topic
 import brooklyn.entity.messaging.activemq.ActiveMQQueue;
 import brooklyn.entity.messaging.activemq.ActiveMQTopic;
-import brooklyn.event.adapter.AttributePoller
+import brooklyn.event.adapter.SensorRegistry
 import brooklyn.event.adapter.legacy.OldJmxSensorAdapter;
 import brooklyn.event.adapter.legacy.ValueProvider;
 import brooklyn.event.basic.ConfiguredAttributeSensor
@@ -67,7 +67,7 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> {
 
     @Override
     public void addJmxSensors() {
-        attributePoller.addSensor(JavaApp.SERVICE_UP, { computeNodeUp() } as ValueProvider)
+        sensorRegistry.addSensor(JavaApp.SERVICE_UP, { computeNodeUp() } as ValueProvider)
     }
 
     @Override
@@ -121,7 +121,7 @@ public abstract class QpidDestination extends JMSDestination {
 
     @Override
     public void destroy() {
-		attributePoller.close()
+		sensorRegistry.close()
         super.destroy()
 	}
 
@@ -145,13 +145,13 @@ public class QpidQueue extends QpidDestination implements Queue {
 
     public void addJmxSensors() {
         String queue = "org.apache.qpid:type=VirtualHost.Queue,VirtualHost=\"${virtualHost}\",name=\"${name}\""
-        attributePoller.addSensor(QUEUE_DEPTH_BYTES, jmxAdapter.newAttributeProvider(queue, "QueueDepth"))
-        attributePoller.addSensor(QUEUE_DEPTH_MESSAGES, jmxAdapter.newAttributeProvider(queue, "MessageCount"))
+        sensorRegistry.addSensor(QUEUE_DEPTH_BYTES, jmxAdapter.newAttributeProvider(queue, "QueueDepth"))
+        sensorRegistry.addSensor(QUEUE_DEPTH_MESSAGES, jmxAdapter.newAttributeProvider(queue, "MessageCount"))
     }
 
     public void removeJmxSensors() {
-        attributePoller.removeSensor(QUEUE_DEPTH_BYTES)
-        attributePoller.removeSensor(QUEUE_DEPTH_MESSAGES)
+        sensorRegistry.removeSensor(QUEUE_DEPTH_BYTES)
+        sensorRegistry.removeSensor(QUEUE_DEPTH_MESSAGES)
     }
 }
 

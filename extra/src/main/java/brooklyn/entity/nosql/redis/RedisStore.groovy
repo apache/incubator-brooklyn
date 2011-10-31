@@ -12,7 +12,7 @@ import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.AbstractService
 import brooklyn.entity.nosql.DataStore
 import brooklyn.entity.nosql.Shard
-import brooklyn.event.adapter.AttributePoller
+import brooklyn.event.adapter.SensorRegistry
 import brooklyn.event.adapter.legacy.OldSshSensorAdapter;
 import brooklyn.event.adapter.legacy.ValueProvider;
 import brooklyn.event.basic.BasicAttributeSensor
@@ -71,8 +71,8 @@ public class RedisStore extends AbstractService implements DataStore {
     }
 
     protected void addSshSensors() {
-        attributePoller.addSensor(SERVICE_UP, sshAdapter.newMatchValueProvider("${setup.runDir}/bin/redis-cli ping", /PONG/))
-        attributePoller.addSensor(UPTIME, { computeUptime() } as ValueProvider)
+        sensorRegistry.addSensor(SERVICE_UP, sshAdapter.newMatchValueProvider("${setup.runDir}/bin/redis-cli ping", /PONG/))
+        sensorRegistry.addSensor(UPTIME, { computeUptime() } as ValueProvider)
     }
     
     private Integer computeUptime() {

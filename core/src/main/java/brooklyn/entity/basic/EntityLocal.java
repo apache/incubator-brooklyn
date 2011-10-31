@@ -9,6 +9,7 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
+import brooklyn.management.ExecutionContext;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionHandle;
 import brooklyn.management.SubscriptionManager;
@@ -78,4 +79,5 @@ public interface EntityLocal extends Entity {
     boolean removeEnricher(AbstractEnricher enricher);
     
     ManagementContext getManagementContext();
+    ExecutionContext getExecutionContext();
 }

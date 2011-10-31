@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicLong
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.group.AbstractController
-import brooklyn.event.adapter.AttributePoller
+import brooklyn.event.adapter.SensorRegistry
 import brooklyn.event.adapter.legacy.OldHttpSensorAdapter;
 import brooklyn.event.adapter.legacy.ValueProvider;
 import brooklyn.location.Location
@@ -31,7 +31,7 @@ public class NginxController extends AbstractController {
     @Override
     protected void initSensors() {
         httpAdapter = new OldHttpSensorAdapter(this)
-        attributePoller.addSensor(SERVICE_UP, { computeNodeUp() } as ValueProvider)
+        sensorRegistry.addSensor(SERVICE_UP, { computeNodeUp() } as ValueProvider)
     }
     
     private boolean computeNodeUp() {

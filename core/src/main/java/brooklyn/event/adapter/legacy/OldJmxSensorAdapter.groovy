@@ -116,7 +116,7 @@ public class OldJmxSensorAdapter {
  
     /** continuously attempts to connect (blocking), for at least the indicated amount of time; or indefinitely if -1 */
     public boolean connect(long timeout) {
-        log.info "Connecting to JMX URL: {} ({})", url, ((timeout == -1) ? "indefinitely" : "${timeout}ms timeout")
+        log.debug "Connecting to JMX URL: {} ({})", url, ((timeout == -1) ? "indefinitely" : "${timeout}ms timeout")
         long start = System.currentTimeMillis()
         long end = start + timeout
         if (timeout == -1) end = Long.MAX_VALUE
@@ -317,7 +317,7 @@ public class JmxAttributeNotifier implements NotificationListener {
     }
     
     public void handleNotification(Notification notification, Object handback) {
-        log.info "Got notification type {}: {} (sequence {})", notification.type, notification.message, notification.sequenceNumber
+        log.debug "Got notification type {}: {} (sequence {})", notification.type, notification.message, notification.sequenceNumber
         if (notification.type == sensor.name) {
             entity.emit(sensor, notification.userData)
         }

@@ -1,5 +1,8 @@
 package brooklyn.event.adapter
 
+import groovy.lang.Closure
+
+import java.util.List
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.ScheduledFuture
@@ -11,14 +14,15 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.AttributeSensor
 import brooklyn.event.Sensor
-import brooklyn.event.adapter.legacy.ValueProvider;
+import brooklyn.event.adapter.legacy.ValueProvider
+
 
 /**
  * This class manages the periodic polling of a set of sensors, to update the attribute values 
  * of a particular {@link Entity}.
  */
-public class AttributePoller {
-    static final Logger log = LoggerFactory.getLogger(AttributePoller.class);
+public class SensorRegistry {
+    static final Logger log = LoggerFactory.getLogger(SensorRegistry.class);
  
     final EntityLocal entity
 	
@@ -36,20 +40,36 @@ public class AttributePoller {
 	@Deprecated
     private final Map<AttributeSensor, ScheduledFuture> scheduled = [:]
 
-	
 	private final Set<AbstractSensorAdapter> adapters = []
-	    
-    public AttributePoller(EntityLocal entity, Map properties = [:]) {
+	
+    public SensorRegistry(EntityLocal entity, Map properties = [:]) {
         this.entity = entity
         this.properties << properties
     }
 
+	/** records an adapter that has been created for use with this registry;
+	 * implementations may return a compatible adapter if one is already registered */
 	public AbstractSensorAdapter register(AbstractSensorAdapter adapter) {
 		if (!adapters.add(adapter)) /* already known */ return;
 		adapter.register(this)
 		return adapter
 	}
-		
+
+	private List<Closure> activationListeners = []
+	private List<Closure> deactivationListeners = []
+	void addActivationLifecycleListeners(Closure onUp, Closure onDown) {
+		activationListeners << onUp
+		deactivationListeners << onDown
+	}
+	public void activateAdapters() {
+		log.debug "activating adapters at sensor registry for {}", this, entity
+		activationListeners.each { it.call() }
+	}
+	public void deactivateAdapters() {
+		log.debug "deactivating adapters at sensor registry for {}", this, entity
+		deactivationListeners.each { it.call() }
+	}
+
     public <T> void addSensor(AttributeSensor<T> sensor, ValueProvider<? extends T> provider) {
         addSensor(sensor, provider, properties.period)
     }
@@ -63,7 +83,7 @@ public class AttributePoller {
                 T newValue = provider.compute()
                 entity.setAttribute(sensor, newValue)
             } catch (Exception e) {
-                log.error "Error calculating value for sensor {} on entity {}", e, sensor, entity
+                log.error "Error calculating value for sensor ${sensor} on entity ${entity}", e
             }
         }
         

@@ -16,7 +16,7 @@ import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.JavaApp
 import brooklyn.entity.database.Database
 import brooklyn.entity.database.Schema
-import brooklyn.event.adapter.AttributePoller
+import brooklyn.event.adapter.SensorRegistry
 import brooklyn.event.adapter.legacy.OldJmxSensorAdapter;
 import brooklyn.event.adapter.legacy.ValueProvider;
 import brooklyn.event.basic.BasicAttributeSensor
@@ -62,7 +62,7 @@ public class DerbyDatabase extends JavaApp implements Database {
 
     public void initSensors() {
         super.initSensors()
-        attributePoller.addSensor(JavaApp.SERVICE_UP, { computeNodeUp() } as ValueProvider)
+        sensorRegistry.addSensor(JavaApp.SERVICE_UP, { computeNodeUp() } as ValueProvider)
     }
 
     @Override
@@ -121,7 +121,7 @@ public class DerbySchema extends AbstractEntity implements Schema {
     protected ObjectName exchange
 
     transient OldJmxSensorAdapter jmxAdapter
-    transient AttributePoller attributePoller
+    transient SensorRegistry sensorRegistry
 
     public DerbySchema(Map properties=[:], Entity owner=null) {
         super(properties, owner)
@@ -135,7 +135,7 @@ public class DerbySchema extends AbstractEntity implements Schema {
         init()
 
         jmxAdapter = ((DerbyDatabase) this.owner).jmxAdapter
-        attributePoller = new AttributePoller(this)
+        sensorRegistry = new SensorRegistry(this)
 
         create()
     }
@@ -147,14 +147,14 @@ public class DerbySchema extends AbstractEntity implements Schema {
 
     public void addJmxSensors() {
         String schema = "org.apache.derby:type=VirtualHost.Schema,VirtualHost=\"${virtualHost}\",name=\"${name}\""
-        attributePoller.addSensor(SCHEMA_DEPTH, jmxAdapter.newAttributeProvider(schema, "SchemaDepth"))
-        attributePoller.addSensor(MESSAGE_COUNT, jmxAdapter.newAttributeProvider(schema, "MessageCount"))
+        sensorRegistry.addSensor(SCHEMA_DEPTH, jmxAdapter.newAttributeProvider(schema, "SchemaDepth"))
+        sensorRegistry.addSensor(MESSAGE_COUNT, jmxAdapter.newAttributeProvider(schema, "MessageCount"))
     }
 
     public void removeJmxSensors() {
         String schema = "org.apache.derby:type=VirtualHost.Schema,VirtualHost=\"${virtualHost}\",name=\"${name}\""
-        attributePoller.removeSensor(SCHEMA_DEPTH)
-        attributePoller.removeSensor(MESSAGE_COUNT)
+        sensorRegistry.removeSensor(SCHEMA_DEPTH)
+        sensorRegistry.removeSensor(MESSAGE_COUNT)
     }
 
     public void create() {
@@ -176,7 +176,7 @@ public class DerbySchema extends AbstractEntity implements Schema {
 
     @Override
     public void destroy() {
-		attributePoller.close()
+		sensorRegistry.close()
         super.destroy()
 	}
 

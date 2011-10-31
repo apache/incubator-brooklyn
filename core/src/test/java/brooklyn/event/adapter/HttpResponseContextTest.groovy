@@ -21,7 +21,7 @@ public class HttpResponseContextTest {
 	}
 	@Test
 	public void testResult() {
-		assertEquals(SIMPLE_RESPONSE.evaluate({ resultCode == 400 }), true);
+		assertEquals(SIMPLE_RESPONSE.evaluate({ responseCode == 400 }), true);
 	}
 	@Test
 	public void testHeaderString() {
@@ -52,17 +52,17 @@ public class HttpResponseContextTest {
 
 	@Test
 	public void testNoHttpError() {
-		assertEquals SIMPLE_RESPONSE.evaluate(null, null, { error!=null }), false
+		assertEquals SIMPLE_RESPONSE.evaluate({ error!=null }), false
 	}
 
 	@Test
 	public void testHttpError() {
-		assertEquals ERROR_RESPONSE.evaluate(null, null, { error!=null }), true
+		assertEquals ERROR_RESPONSE.evaluate({ error!=null }), true
 	}
 
 	@Test
 	public void testHttpErrorPreventsSensorEvalError() {
-		assertEquals ERROR_RESPONSE.evaluate(null, null, { throw new IllegalStateException("mock") }), HttpResponseContext.UNSET
+		assertEquals ERROR_RESPONSE.evaluate({ throw new IllegalStateException("mock") }), HttpResponseContext.UNSET
 	}
 
 	@Test

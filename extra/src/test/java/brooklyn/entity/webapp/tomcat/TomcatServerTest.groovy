@@ -119,7 +119,7 @@ class TomcatServerTest {
             @Override
             public void addJmxSensors() {
                 super.addJmxSensors()
-                attributePoller.removeSensor(TomcatServer.REQUEST_COUNT)
+                sensorRegistry.removeSensor(TomcatServer.REQUEST_COUNT)
             }
         }
         

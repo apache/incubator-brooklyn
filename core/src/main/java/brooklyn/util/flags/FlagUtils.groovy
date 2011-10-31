@@ -13,10 +13,33 @@ public class FlagUtils {
     public static Map setPublicFieldsFromFlags(Map flags, Object o) {
         setFieldsFromFlags(flags, o, o.getClass().getFields() as Set)
     }
-    /** sets all locally declared fields (including private) and all public inherited fields on the given object from the given flags map, returning unknown elements */
+    /** sets all fields (including private and static) on the given object and all supertypes, 
+     * from the given flags map, returning just those flags which are not applicable */
     public static Map setFieldsFromFlags(Map flags, Object o) {
-        setFieldsFromFlags(flags, o, (o.getClass().getDeclaredFields() as Set) + (o.getClass().getFields() as Set))
+        setFieldsFromFlags(flags, o, getAllFields(o.getClass()))
     }
+	
+	/** returns all fields on the given class, superclasses, and interfaces thereof, in that order of preference,
+	 * (excluding fields on Object) */
+	public static List getAllFields(Class base, Closure filter={true}) {
+		getLocalFields(getAllAssignableTypes(base), filter);
+	}
+	/** returns all fields explicitly declared on the given classes */
+	public static List getLocalFields(List classes, Closure filter={true}) {
+		List fields = []
+		classes.each { Class c -> c.getDeclaredFields().each { Field f -> if (filter.call(f)) fields << f }}
+		fields
+	}
+	/** returns base, superclasses, then interfaces */
+	public static List getAllAssignableTypes(Class base, Closure filter={ (it!=Object) && (it!=GroovyObject) }) {
+		List classes = []
+		for (Class c = base; c!=null; c=c.getSuperclass()) { if (filter.call(c)) classes << c }
+		for (int i=0; i<classes.size(); i++) {
+			classes.get(i).getInterfaces().each { c -> if (filter.call(c) && !(classes.contains(c))) classes << c } 
+		}
+		classes
+	}
+	
     private static Map setFieldsFromFlags(Map flags, Object o, Collection<Field> fields) {
         Map remaining=[:]+flags
         for (Field f: fields) {
@@ -37,8 +60,7 @@ public class FlagUtils {
 	 */
 	public static Map getFieldsWithValues(Object o) {
 		Map result=[:]
-		def fields = o.getClass().getFields()
-		for (Field f: fields) {
+		for (Field f: getAllFields(o.getClass())) {
 			SetFromFlag cf = f.getAnnotation(SetFromFlag.class);
 			if (cf) {
 				String flagName = cf.value() ?: f.getName();

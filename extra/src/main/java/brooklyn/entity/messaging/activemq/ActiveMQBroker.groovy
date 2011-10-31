@@ -16,7 +16,7 @@ import brooklyn.entity.messaging.JMSBroker
 import brooklyn.entity.messaging.JMSDestination
 import brooklyn.entity.messaging.Queue
 import brooklyn.entity.messaging.Topic
-import brooklyn.event.adapter.AttributePoller
+import brooklyn.event.adapter.SensorRegistry
 import brooklyn.event.adapter.legacy.OldJmxSensorAdapter;
 import brooklyn.event.adapter.legacy.ValueProvider;
 import brooklyn.event.basic.ConfiguredAttributeSensor
@@ -66,7 +66,7 @@ public class ActiveMQBroker extends JMSBroker<ActiveMQQueue, ActiveMQTopic> {
 
     @Override
     public void addJmxSensors() {
-        attributePoller.addSensor(JavaApp.SERVICE_UP, { computeNodeUp() } as ValueProvider)
+        sensorRegistry.addSensor(JavaApp.SERVICE_UP, { computeNodeUp() } as ValueProvider)
     }
 
     @Override
@@ -121,11 +121,11 @@ public class ActiveMQQueue extends ActiveMQDestination implements Queue {
 
     public void addJmxSensors() {
         String queue = "org.apache.activemq:BrokerName=localhost,Type=Queue,Destination=${name}"
-        attributePoller.addSensor(QUEUE_DEPTH_MESSAGES, jmxAdapter.newAttributeProvider(queue, "QueueSize"))
+        sensorRegistry.addSensor(QUEUE_DEPTH_MESSAGES, jmxAdapter.newAttributeProvider(queue, "QueueSize"))
     }
 
     public void removeJmxSensors() {
-        attributePoller.removeSensor(QUEUE_DEPTH_MESSAGES)
+        sensorRegistry.removeSensor(QUEUE_DEPTH_MESSAGES)
     }
 }
 

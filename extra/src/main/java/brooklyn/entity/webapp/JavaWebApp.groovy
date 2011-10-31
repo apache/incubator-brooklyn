@@ -74,7 +74,7 @@ public abstract class JavaWebApp extends JavaApp {
                 Integer response = getAttribute(HTTP_STATUS)
                 return (response == 200 || response == 404)
              }
-            .limitIterationsTo(30)
+            .limitIterationsTo(120)
             .run()
 
         if (!status) {
@@ -94,9 +94,11 @@ public abstract class JavaWebApp extends JavaApp {
         if (pollForHttpStatus) {
             def host = getAttribute(HOSTNAME)
             def port = getAttribute(HTTP_PORT)
-            attributePoller.addSensor(HTTP_STATUS, httpAdapter.newStatusValueProvider("http://${host}:${port}/"))
-            attributePoller.addSensor(HTTP_SERVER, httpAdapter.newHeaderValueProvider("http://${host}:${port}/", "Server"))
+            sensorRegistry.addSensor(HTTP_STATUS, httpAdapter.newStatusValueProvider("http://${host}:${port}/"))
+            sensorRegistry.addSensor(HTTP_SERVER, httpAdapter.newHeaderValueProvider("http://${host}:${port}/", "Server"))
+			log.info "{} waiting for http://${host}:${port}/", this
             waitForHttpPort()
+			log.info "{} got http://${host}:${port}/", this
         }
         addHttpSensors()
     }
@@ -105,7 +107,7 @@ public abstract class JavaWebApp extends JavaApp {
 
     @Override
     public void postStart() {
-        log.debug "started $this: httpPort {}, host {} and jmxPort {}",
+        log.info "started {}: httpPort {}, host {} and jmxPort {}", this,
                 getAttribute(HTTP_PORT), getAttribute(HOSTNAME), getAttribute(JMX_PORT)
 
         // TODO Want to wire this up so doesn't go through SubscriptionManager;

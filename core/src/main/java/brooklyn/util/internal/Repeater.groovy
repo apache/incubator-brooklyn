@@ -42,6 +42,7 @@ public class Repeater {
     private int deadline = 0
     private TimeUnit deadlineUnit = null
     private boolean rethrowException = false
+	private boolean warnOnUnRethrownException = true
 
     /**
      * Construct a new instance of Repeater.
@@ -120,6 +121,11 @@ public class Repeater {
         this.rethrowException = true
         return this
     }
+
+	Repeater suppressWarnings() {
+		this.warnOnUnRethrownException = false
+		return this
+	}
 
     /**
      * Set the maximum number of iterations.
@@ -220,9 +226,11 @@ public class Repeater {
             if (iterationLimit > 0 && iterations == iterationLimit) {
                 log.debug "{}: condition not satisfied and exceeded iteration limit", description
                 if (rethrowException && lastError) {
-                    log.error("{}: error caught checking condition: {}", description, lastError.getMessage())
+                    log.warn("{}: error caught checking condition (rethrowing): {}", description, lastError.getMessage())
                     throw lastError
                 }
+				if (warnOnUnRethrownException && lastError)
+					log.warn("{}: error caught checking condition: {}", description, lastError.getMessage())
                 return false
             }
 

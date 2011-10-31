@@ -42,6 +42,6 @@ public class Infinispan5Server extends AbstractService {
     }
 
     public void initSensors() {
-        attributePoller.addSensor(SERVICE_UP, { return setup.isRunning() } as ValueProvider)
+        sensorRegistry.addSensor(SERVICE_UP, { return setup.isRunning() } as ValueProvider)
     }
 }

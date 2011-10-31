@@ -1,4 +1,4 @@
-package brooklyn.util.internal
+package brooklyn.event.adapter.legacy
 
 import static org.testng.Assert.*
 

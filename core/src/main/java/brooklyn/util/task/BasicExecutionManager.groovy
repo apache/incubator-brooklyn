@@ -172,7 +172,7 @@ public class BasicExecutionManager implements ExecutionManager {
                 afterEnd(flags, task)
             }
             if (result instanceof Exception) {
-                log.warn "Error while running task {}", result.message
+                log.warn "Error while running task {} (rethrowing): {}", task, result.message
                 throw result
             }
             result

@@ -106,7 +106,7 @@ public class ConfiguredAttributeSensor<T> extends BasicAttributeSensor<T> implem
         configKey = new BasicConfigKey<T>(type, name, description, defaultValue)
     }
 
-    public ConfigKey getConfigKey() { return configKey }
+    public ConfigKey<T> getConfigKey() { return configKey }
 }
 
 /**

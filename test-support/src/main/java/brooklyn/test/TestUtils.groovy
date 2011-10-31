@@ -1,10 +1,10 @@
 package brooklyn.test
 
 import static org.testng.AssertJUnit.*
-
-import java.io.File;
-
 import groovy.time.TimeDuration
+
+import java.io.File
+import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -101,13 +101,8 @@ public class TestUtils {
         boolean abortOnException = flags.abortOnException ?: false
         boolean abortOnError = flags.abortOnError ?: false
         boolean useGroovyTruth = flags.useGroovyTruth ?: false
-        TimeDuration duration
-        if (flags.timeout instanceof Number) {
-            duration = new TimeDuration(0, 0, 0, 0, flags.timeout)
-        } else {
-            duration = flags.timeout ?: new TimeDuration(0, 0, 0, 30, 0)
-        }
-        TimeDuration period = flags.period ?: new TimeDuration(0, 0, 0, 5, 0)
+        TimeDuration duration = flags.timeout ?: new TimeDuration(0,0,30,0)
+        TimeDuration period = flags.period ?: new TimeDuration(0,0,0,500)
         int maxAttempts = flags.maxAttempts ?: Integer.MAX_VALUE
         try {
             Throwable lastException = null;
