@@ -3,9 +3,6 @@ package brooklyn.entity.nosql.gemfire
 import static brooklyn.test.TestUtils.*
 import static org.testng.Assert.*
 
-import java.util.LinkedList
-import java.util.List
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.AfterMethod
@@ -63,15 +60,6 @@ public class GemfireServerIntegrationTest {
         createdEntities.each { it.stop() }
         createdEntities.clear()
     }
-	
-	private GemfireServer createGemfireServer(Application owner) {
-		GemfireServer server = createGemfireServer(owner, installDir, pathTo(licenseFile), pathTo(euCache))
-		server.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
-		executeUntilSucceeds(timeout: 15000) {
-			assertTrue server.getAttribute(Startable.SERVICE_UP)
-		}
-		return server
-	}
 
     /** Creates server and returns it after adding it to the createdEntities list */
     private GemfireServer createGemfireServer(Application owner, String installDir, String license,
@@ -87,7 +75,17 @@ public class GemfireServerIntegrationTest {
         return entity
     }
 
-    @Test(groups = [ "Integration" ])
+    /** Creates gemfire instance owned by given owner */
+    private GemfireServer createAndStartGemfireServer(Application owner) {
+        GemfireServer server = createGemfireServer(owner, installDir, pathTo(licenseFile), pathTo(euCache))
+        server.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
+        executeUntilSucceeds(timeout: 15000) {
+            assertTrue server.getAttribute(Startable.SERVICE_UP)
+        }
+        return server
+    }
+
+    @Test(groups=["Integration"])
     public void testGemfireStartsAndStops() {
         Entity entity = createGemfireServer(app, installDir, pathTo(licenseFile), pathTo(euCache))
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
@@ -97,9 +95,9 @@ public class GemfireServerIntegrationTest {
         assertFalse entity.getAttribute(JavaApp.SERVICE_UP)
     }
 	
-	@Test(groups = [ "Integration" ])
+	@Test(groups=["Integration"], dependsOnMethods=["testGemfireStartsAndStops"])
 	public void testRegionSensor() {
-		GemfireServer entity = createGemfireServer(app)
+		GemfireServer entity = createAndStartGemfireServer(app)
 		
 		executeUntilSucceeds() {
 			Collection<String> regions = entity.getAttribute(GemfireServer.REGION_LIST)
@@ -109,9 +107,9 @@ public class GemfireServerIntegrationTest {
 	}
 	
 	//TODO rewrite these with generic a/b/c/d or 1/2/3/4, then use indexing to test add/remove, ie. add(3) -> add 1/2/3, etc.
-	@Test(groups = [ "Integration" ])
+	@Test(groups=["Integration"], dependsOnMethods=["testGemfireStartsAndStops"])
 	public void testAddRegions() {
-		GemfireServer entity = createGemfireServer(app)
+		GemfireServer entity = createAndStartGemfireServer(app)
 		
 		Collection<String> regionsToAdd = Arrays.asList("Foo/Bar", 
 				"Fizz", "/Fizz/Buzz",
@@ -129,9 +127,9 @@ public class GemfireServerIntegrationTest {
 		}
 	}
 	
-	@Test(groups = [ "Integration" ])
+	@Test(groups=["Integration"], dependsOnMethods=["testGemfireStartsAndStops"])
 	public void testRemoveRegions() {
-		GemfireServer entity = createGemfireServer(app)
+		GemfireServer entity = createAndStartGemfireServer(app)
 		
 		Collection<String> regionsToAdd = Arrays.asList("Foo/Bar", 
 				"Fizz", "/Fizz/Buzz",
@@ -160,15 +158,9 @@ public class GemfireServerIntegrationTest {
 		}
 	}
 
-    @Test(groups=["Integration"])
-    public void testJarDeploy() {
-//        entity.setConfig(GemfireServer.JAR_FILE, jarFile)
-    }
-
-
-    @Test(groups=["Integration"])
+    @Test(groups=["Integration"], dependsOnMethods=["testGemfireStartsAndStops"])
     public void testRegionInsertRetrieve() {
-        GemfireServer entity = createGemfireServer(app)
+        GemfireServer entity = createAndStartGemfireServer(app)
 
         ClientCache cache = new ClientCacheFactory().set("cache-xml-file", pathTo(clientCache)).create()
         Region region = cache.getRegion("integrationTests")
