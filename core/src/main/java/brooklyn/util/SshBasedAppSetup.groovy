@@ -116,22 +116,19 @@ public abstract class SshBasedAppSetup {
     /**
      * The script to run to on a remote machine to run the application.
      *
-     * The {@link #getRunEnvironment()} should be used to set any environment
+     * The {@link #getShellEnvironment()} should be used to set any environment
      * variables required.
      *
      * @return a {@link List} of shell commands
      *
-     * @see #getRunEnvironment()
+     * @see #getShellEnvironment()
      */
     public abstract List<String> getRunScript();
 
     /**
-     * The environment variables to be set when executing the commands to run
-     * the application.
-     *
-     * @see #getRunScript()
+     * The environment variables to be set when executing the commands (for install, run, check running, etc).
      */
-    public abstract Map<String, String> getRunEnvironment();
+    public abstract Map<String, String> getShellEnvironment();
 
     /**
      * The script to run to on a remote machine to determine whether the
@@ -265,8 +262,8 @@ public abstract class SshBasedAppSetup {
     public void runApp() {
         log.info "starting {} on {}", entity, machine
         Map environment = [:]
-        environment << getRunEnvironment()
-        Map configured = entity.getConfig(SoftwareProcessEntity.ENVIRONMENT)
+        environment << getShellEnvironment()
+        Map configured = entity.getConfig(SoftwareProcessEntity.SHELL_ENVIRONMENT)
         configured.each { key, value ->
             if (value in Closure) {
                 environment.put(key, ((Closure) value).call())

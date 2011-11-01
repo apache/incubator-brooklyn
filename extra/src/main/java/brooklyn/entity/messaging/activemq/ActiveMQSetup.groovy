@@ -81,7 +81,7 @@ public class ActiveMQSetup extends SshBasedJavaAppSetup {
         return script
     }
 
-    public Map<String, String> getRunEnvironment() {
+    public Map<String, String> getShellEnvironment() {
         Map<String, String> env = [
 			"ACTIVEMQ_HOME" : "${runDir}",
             "JAVA_OPTS" : "",

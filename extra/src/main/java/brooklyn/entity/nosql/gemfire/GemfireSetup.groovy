@@ -109,7 +109,7 @@ public class GemfireSetup extends SshBasedAppSetup {
     }
  
     /** @see SshBasedAppSetup#getRunEnvironment() */
-    public Map<String, String> getRunEnvironment() { [:] }
+    public Map<String, String> getShellEnvironment() { [:] }
 
 
     public List<String> getCheckRunningScript() {

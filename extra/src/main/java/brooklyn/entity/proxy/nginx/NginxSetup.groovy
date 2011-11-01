@@ -83,7 +83,7 @@ public class NginxSetup extends SshBasedAppSetup {
     }
  
     /** @see SshBasedAppSetup#getRunEnvironment() */
-    public Map<String, String> getRunEnvironment() { [:] }
+    public Map<String, String> getShellEnvironment() { [:] }
 
     /**
      * Restarts nginx with the current configuration.

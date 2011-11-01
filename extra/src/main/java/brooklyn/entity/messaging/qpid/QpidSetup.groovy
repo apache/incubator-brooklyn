@@ -62,7 +62,7 @@ public class QpidSetup extends SshBasedJavaAppSetup {
 
     /** JMX is configured using command line switch. */
     @Override
-    protected Map getJmxConfigOptions() { [:] }
+    protected Map getJmxJavaSystemProperties() { [:] }
 
     @Override
     protected void setCustomAttributes() {
@@ -88,13 +88,13 @@ public class QpidSetup extends SshBasedJavaAppSetup {
         return script
     }
 
-    public Map<String, String> getRunEnvironment() {
-        Map<String, String> env = [
+    public Map<String, String> getShellEnvironment() {
+        Map result = super.getShellEnvironment();
+		result << [
 			"QPID_HOME" : "${runDir}",
 			"QPID_WORK" : "${runDir}",
-			"QPID_OPTS" : toJavaDefinesString(getJvmStartupProperties()),
+			"QPID_OPTS" : result.JAVA_OPTS
         ]
-        return env
     }
 
     /** @see SshBasedJavaAppSetup#getCheckRunningScript() */

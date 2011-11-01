@@ -74,7 +74,7 @@ public class RedisSetup extends SshBasedAppSetup {
     }
  
     /** @see SshBasedAppSetup#getRunEnvironment() */
-    public Map<String, String> getRunEnvironment() { [:] }
+    public Map<String, String> getShellEnvironment() { [:] }
 
     /** @see SshBasedAppSetup#getCheckRunningScript() */
     public List<String> getCheckRunningScript() {

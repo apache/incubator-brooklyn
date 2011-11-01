@@ -42,8 +42,8 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
     @SetFromFlag("runDir")
     public static final ConfigKey<String> SUGGESTED_RUN_DIR = ConfigKeys.SUGGESTED_RUN_DIR
 	
-    public static final BasicConfigKey<Map> ENVIRONMENT = [ Map, "environment", "Map of environment variables to set at runtime", [:] ]
-
+	@SetFromFlag("env")	
+    public static final BasicConfigKey<Map> SHELL_ENVIRONMENT = [ Map, "shell.env", "Map of environment variables to pass to the runtime shell", [:] ]
 	
     public static final AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME
     public static final AttributeSensor<String> ADDRESS = Attributes.ADDRESS

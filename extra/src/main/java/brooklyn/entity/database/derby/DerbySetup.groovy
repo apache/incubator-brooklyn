@@ -52,7 +52,7 @@ public class DerbySetup extends SshBasedJavaAppSetup {
 
     /** JMX is configured using command line switch. */
     @Override
-    protected Map getJmxConfigOptions() { [:] }
+    protected Map getJmxJavaSystemProperties() { [:] }
 
     @Override
     public List<String> getInstallScript() {
@@ -73,7 +73,7 @@ public class DerbySetup extends SshBasedJavaAppSetup {
         return script
     }
 
-    public Map<String, String> getRunEnvironment() {
+    public Map<String, String> getShellEnvironment() {
         Map<String, String> env = [
 			"DERBY_HOME" : "${runDir}",
 			"DERBY_WORK" : "${runDir}",

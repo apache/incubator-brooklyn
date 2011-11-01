@@ -32,7 +32,7 @@ public class MockSshBasedSoftwareSetup extends SshBasedAppSetup {
     }
 
     @Override
-    public Map<String, String> getRunEnvironment() {
+    public Map<String, String> getShellEnvironment() {
         return [:];
     }
 

@@ -8,6 +8,7 @@ import brooklyn.entity.webapp.JavaWebApp
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedJavaWebAppSetup
 
+
 class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
 
     public static final String DEFAULT_INSTALL_DIR = "$DEFAULT_INSTALL_BASEDIR/jboss"
@@ -96,11 +97,10 @@ class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
         return script
     }
     
-    @Override
-    public Map<String, String> getRunEnvironment() {
-        return super.getRunEnvironment() + 
-                ["JAVA_OPTS" : toJavaDefinesString(getJvmStartupProperties())+" -Xms200m -Xmx800m -XX:MaxPermSize=400m"]
-    }
+	@Override
+	protected List<String> getCustomJavaConfigOptions() {
+		return ["-Xms200m", "-Xmx800m", "-XX:MaxPermSize=400m"]
+	}
     
     /** @see SshBasedJavaAppSetup#getCheckRunningScript() */
     public List<String> getCheckRunningScript() {

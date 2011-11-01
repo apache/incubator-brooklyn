@@ -78,7 +78,7 @@ public class Infinispan5Setup extends SshBasedJavaAppSetup {
     }
     
     @Override
-    public Map<String, String> getRunEnvironment() {
+    public Map<String, String> getShellEnvironment() {
         Map<String, String> env = [:]
         return env
     }

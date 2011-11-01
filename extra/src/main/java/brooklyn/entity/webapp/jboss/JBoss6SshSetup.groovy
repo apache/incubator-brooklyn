@@ -26,6 +26,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         Integer portIncrement = entity.getConfig(JBoss6Server.PORT_INCREMENT.configKey)
         String serverProfile = entity.getConfig(JBoss6Server.SERVER_PROFILE.configKey)
         String clusterName = entity.getConfig(JBoss6Server.CLUSTER_NAME.configKey)
+		
         Map<String,Map<String,String>> propFilesToGenerate = entity.getConfig(JBoss7Server.PROPERTY_FILES) ?: [:]
         
         String version = suggestedJbossVersion ?: DEFAULT_VERSION
@@ -95,7 +96,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     }
     
     @Override
-    protected Map getJavaConfigOptions() {
+    protected Map getCustomJavaSystemProperties() {
         Map<String, String> options = [
             "jboss.platform.mbeanserver" : null,
             "javax.management.builder.initial" : "org.jboss.system.server.jmx.MBeanServerBuilderImpl",
@@ -106,16 +107,21 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         return options
     }
  
-    public Map<String, String> getRunEnvironment() {
+    public Map<String, String> getShellEnvironment() {
         // LAUNCH_JBOSS_IN_BACKGROUND relays OS signals sent to the run.sh process to the JBoss process.
-        Map<String, String> env = [
+        super.getShellEnvironment() +
+		[
 	        "LAUNCH_JBOSS_IN_BACKGROUND" : "1",
-	        "JAVA_OPTS" : toJavaDefinesString(getJvmStartupProperties())+" -Xms200m -Xmx800m -XX:MaxPermSize=400m",
 	        "JBOSS_CLASSPATH" : "${installDir}/lib/jboss-logmanager.jar",
 	        "RUN" : "${runDir}",
         ]
-        return env
     }
+	
+	@Override
+	protected List<String> getCustomJavaConfigOptions() {
+		return ["-Xms200m", "-Xmx800m", "-XX:MaxPermSize=400m"]
+	}
+
 
     /** @see SshBasedJavaAppSetup#getCheckRunningScript() */
     public List<String> getCheckRunningScript() { 

@@ -10,6 +10,7 @@ import brooklyn.entity.basic.EntityLocal
 import brooklyn.entity.basic.JavaApp
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.internal.LanguageUtils
+import brooklyn.util.internal.StringEscapeUtils;
 
 /**
  * Java application installation, configuration and startup using ssh.
@@ -102,57 +103,65 @@ public abstract class SshBasedJavaAppSetup extends SshBasedAppSetup {
         return result
     }
     
+	/** 
+	* Sets all JVM options (-X.. -D..) in an environment var JAVA_OPTS.
+	* <p>
+	* That variable is constructed from getJavaOpts(), then wrapped _unescaped_ in double quotes.
+	* An error is thrown if there is an unescaped double quote in the string.
+	* All other unescaped characters are permitted, but unless $var expansion or `command` execution is desired
+	* (although this is not confirmed as supported) the generally caller should escape any such characters,
+	* for example using {@link StringEscapeUtils#escapeLiteralForDoubleQuotedBash(String)}. 
+	*/
+	@Override
+	public Map<String, String> getShellEnvironment() {
+		[ "JAVA_OPTS" : getJavaOpts().collect({
+				if (!StringEscapeUtils.isValidForDoubleQuotingInBash(it))
+					throw new IllegalArgumentException("will not accept ${it} as valid BASH string (has unescaped double quote)")
+				"\""+it+"\""
+			}).join(" ") ]
+	}
+
+	/** arguments to pass to the JVM; this is the config options
+	 * (e.g. -Xmx1024; only the contents of {@link #getCustomJavaConfigOptions()} by default) 
+	 * and java system properties (-Dk=v; add custom properties in {@link #getCustomJavaSystemProperties()})
+     * <p>
+     * See {@link #getShellEnvironment()} for discussion of quoting/escaping strategy.
+	 **/
+	public List<String> getJavaOpts() {
+		getCustomJavaConfigOptions() + (getJavaSystemProperties().collect { k,v -> "-D"+k+(v!=null?"="+v:"") })
+	}
+	
     /**
-     * Convenience method to generate Java environment options string.
-     *
-     * Converts the properties {@link Map} entries with a value to {@code -Dkey=value}
-     * and entries where the value is null to {@code -Dkey}.
+     * Returns the complete set of Java system properties (-D defines) to set for the application.
+     * <p>
+     * This is exposed to the JVM as the contents of the {@code JAVA_OPTS} environment variable. 
+     * Default set contains config key, custom system properties, and JMX defines.
+     * <p>
+	 * Null value means to set -Dkey otherwise it is -Dkey=value.
+     * <p>
+     * See {@link #getShellEnvironment()} for discussion of quoting/escaping strategy.
      */
-    public static String toJavaDefinesString(Map properties) {
-        StringBuffer options = []
-        properties.each { key, value ->
-	            options.append("-D").append(key)
-	            if (value != null && value != "") {
-                    // Quote the value if it's a string containing a space.
-                    if (value instanceof String && value.indexOf(" ") >= 0)
-                        options.append("=\'").append(value).append("\'")
-                    else
-                        options.append("=").append(value)
-                }
-	            options.append(" ")
-	        }
-        return options.toString().trim()
-    }
-
-    @Override
-    public Map<String, String> getRunEnvironment() {
-        return envVariablesToSet + [
-            "JAVA_OPTS" : toJavaDefinesString(getJvmStartupProperties()),
-        ]
+    protected Map getJavaSystemProperties() {
+        entity.getConfig(JavaApp.JAVA_OPTIONS) + getCustomJavaSystemProperties() + (jmxEnabled ? getJmxJavaSystemProperties() : [:])
     }
 
     /**
-     * Returns the complete set of Java configuration options required by
-     * the application.
-     *
-     * These should be formatted and passed to the JVM as the contents of
-     * the {@code JAVA_OPTS} environment variable. The default set contains
-     * only the options required to enable JMX. To add application specific
-     * options, override the {@link #getJavaConfigOptions()} method.
-     *
-     * @see #toJavaDefinesString(Map)
-     */
-    protected Map getJvmStartupProperties() {
-        entity.getConfig(JavaApp.JAVA_OPTIONS) + getJavaConfigOptions() + (jmxEnabled ? getJmxConfigOptions() : [:])
-    }
-
-    /**
-     * Return extra Java configuration options required by the application.
+     * Return extra Java system properties (-D defines) used by the application.
      * 
-     * This should be overridden; default is an empty {@link Map}.
+     * Override as needed; default is an empty map.
      */
-    protected Map getJavaConfigOptions() { return [:] }
+    protected Map getCustomJavaSystemProperties() { return [:] }
 
+    /**
+     * Return extra Java config options, ie arguments starting with - which are
+     * passed to the JVM prior to the class name.
+     * <p>
+     * Note defines are handled separately, in {@link #getCustomJavaSystemProperties()}.
+     * <p>
+     * Override as needed; default is an empty list.
+     */
+	protected List<String> getCustomJavaConfigOptions() { return [] }
+	
     /**
      * Return the configuration properties required to enable JMX for a Java application.
      *
@@ -161,7 +170,7 @@ public abstract class SshBasedJavaAppSetup extends SshBasedAppSetup {
      *
      * TODO security!
      */
-    protected Map getJmxConfigOptions() {
+    protected Map getJmxJavaSystemProperties() {
         [
           "com.sun.management.jmxremote" : "",
           "com.sun.management.jmxremote.port" : jmxPort,

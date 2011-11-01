@@ -89,11 +89,12 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
         return script
     }
     
-    public Map<String, String> getRunEnvironment() {
-        return super.getRunEnvironment() + [
+    public Map<String, String> getShellEnvironment() {
+        Map result = super.getShellEnvironment();
+		result << [
     			"CATALINA_BASE" : "${runDir}",
-    			"CATALINA_OPTS" : toJavaDefinesString(getJvmStartupProperties()),
-    			"CATALINA_PID" : "pid.txt"]
+    			"CATALINA_OPTS" : result.JAVA_OPTS,
+    			"CATALINA_PID" : "pid.txt" ]
     }
 
     @Override
