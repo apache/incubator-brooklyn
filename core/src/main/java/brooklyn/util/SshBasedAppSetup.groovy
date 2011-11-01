@@ -41,7 +41,6 @@ public abstract class SshBasedAppSetup {
     protected String installDir
     protected String runDir
     protected String deployDir
-    protected String logFileLocation
 
     public SshBasedAppSetup(EntityLocal entity, SshMachineLocation machine) {
         this.entity = entity
@@ -64,13 +63,8 @@ public abstract class SshBasedAppSetup {
         version = val
     }
 
-    public void setLogFileLocation(String val) {
-        logFileLocation = val
-    }
-
     protected void setEntityAttributes() {
         entity.setAttribute(Attributes.VERSION, version)
-        entity.setAttribute(Attributes.LOG_FILE_LOCATION, logFileLocation)
     }
 
     protected void setCustomAttributes() { }

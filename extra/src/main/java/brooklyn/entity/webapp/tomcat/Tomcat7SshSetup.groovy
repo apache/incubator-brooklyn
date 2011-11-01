@@ -55,8 +55,9 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
         result.setDeployDir(deployDir)
         result.setRunDir(runDir)
         result.setEnvironmentPropertyFiles(propFilesToGenerate)
-        result.setLogFileLocation(logFileLocation)
-        return result
+		entity.setAttribute(Attributes.LOG_FILE_LOCATION, logFileLocation)
+		
+		return result
     }
     
     public Tomcat7SshSetup(TomcatServer entity, SshMachineLocation machine) {

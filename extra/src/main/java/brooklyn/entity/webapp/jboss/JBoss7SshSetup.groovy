@@ -59,7 +59,7 @@ class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
         result.setRunDir runDir
         result.setEnvironmentPropertyFiles propFilesToGenerate
         result.setJmxEnabled false
-        result.setLogFileLocation logFileLocation
+        entity.setAttribute(Attributes.LOG_FILE_LOCATION, logFileLocation)
 
         return result
     }

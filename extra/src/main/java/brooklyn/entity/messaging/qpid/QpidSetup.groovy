@@ -43,7 +43,7 @@ public class QpidSetup extends SshBasedJavaAppSetup {
         result.setVersion(version)
         result.setInstallDir(installDir)
         result.setRunDir(runDir)
-        result.setLogFileLocation(logFileLocation)
+        entity.setAttribute(Attributes.LOG_FILE_LOCATION, logFileLocation)
 
         return result
     }

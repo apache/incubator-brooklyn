@@ -47,7 +47,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         result.setHttpPort(DEFAULT_HTTP_PORT+portIncrement)
         result.setServerProfile(serverProfile)
         result.setClusterName(clusterName)
-        result.setLogFileLocation(logFileLocation)
+		entity.setAttribute(Attributes.LOG_FILE_LOCATION, logFileLocation)
 
         return result
     }
