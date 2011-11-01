@@ -322,8 +322,6 @@ public abstract class SshBasedAppSetup {
     public void start() {
         install()
         config()
-        entity.setAttribute(SoftwareProcessEntity.SERVICE_STATE, Lifecycle.CONFIGURED)
-        entity.setAttribute(SoftwareProcessEntity.SERVICE_CONFIGURED, true)
         runApp()
     }
 

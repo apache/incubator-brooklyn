@@ -48,11 +48,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
     public static final AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME
     public static final AttributeSensor<String> ADDRESS = Attributes.ADDRESS
 	
-    public static final AttributeSensor<String> LOG_FILE_LOCATION = Attributes.LOG_FILE_LOCATION
-
     public static final BasicAttributeSensor<Lifecycle> SERVICE_STATE = [ Lifecycle, "service.state", "Service lifecycle state" ]
-    public static final BasicAttributeSensor<Boolean> SERVICE_CONFIGURED = [ Boolean, "service.isConfigured", "Service configured" ]
-    public static final BasicAttributeSensor<String> SERVICE_STATUS = [ String, "service.status", "Service status" ]
 
     private MachineProvisioningLocation provisioningLoc
     protected SshBasedAppSetup setup
@@ -62,7 +58,6 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
         super(properties, owner)
  
         setAttribute(SERVICE_UP, false)
-        setAttribute(SERVICE_CONFIGURED, false)
         setAttribute(SERVICE_STATE, Lifecycle.CREATED)
     }
 
@@ -138,7 +133,6 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
         }
         if (!isRunningResult) {
             setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE)
-            throw new IllegalStateException("$this aborted soon after startup. Entity log file location: ${getAttribute(LOG_FILE_LOCATION)}")
         }
     }
 

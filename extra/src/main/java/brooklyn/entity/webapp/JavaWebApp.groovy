@@ -63,7 +63,6 @@ public abstract class JavaWebApp extends JavaApp {
 
     public JavaWebApp(Map flags=[:], Entity owner=null) {
         super(flags, owner)
-        setAttribute(SERVICE_STATUS, "uninitialized")
     }
     
     protected void waitForHttpPort() {
