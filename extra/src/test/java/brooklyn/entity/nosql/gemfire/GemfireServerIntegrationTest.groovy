@@ -11,7 +11,7 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
-import brooklyn.entity.basic.JavaApp
+import brooklyn.entity.basic.legacy.JavaApp
 import brooklyn.entity.trait.Startable
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.test.entity.TestApplication

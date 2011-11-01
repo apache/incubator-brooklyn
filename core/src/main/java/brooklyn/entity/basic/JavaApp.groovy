@@ -20,7 +20,7 @@ import brooklyn.util.internal.Repeater
 /**
  * An {@link brooklyn.entity.Entity} representing a single web application instance.
  */
-public abstract class JavaApp extends AbstractService {
+public abstract class JavaApp extends SoftwareProcessEntity {
     public static final Logger log = LoggerFactory.getLogger(JavaApp.class)
 
     public static final int DEFAULT_JMX_PORT = 1099

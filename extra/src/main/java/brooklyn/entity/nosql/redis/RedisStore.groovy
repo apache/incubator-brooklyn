@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
-import brooklyn.entity.basic.AbstractService
+import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.nosql.DataStore
 import brooklyn.entity.nosql.Shard
 import brooklyn.event.adapter.SensorRegistry
@@ -32,7 +32,7 @@ import com.google.common.io.Files
  *
  * TODO add sensors with Redis statistics using INFO command
  */
-public class RedisStore extends AbstractService implements DataStore {
+public class RedisStore extends SoftwareProcessEntity implements DataStore {
     protected static final Logger LOG = LoggerFactory.getLogger(RedisStore.class)
 
     public static final ConfiguredAttributeSensor<Integer> REDIS_PORT = [ Integer, "redis.port", "Redis port number", 6379 ]

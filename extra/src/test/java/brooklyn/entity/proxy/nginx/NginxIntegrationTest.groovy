@@ -11,7 +11,7 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.Application
-import brooklyn.entity.basic.AbstractService
+import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.group.DynamicCluster
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.tomcat.TomcatServer
@@ -73,9 +73,9 @@ public class NginxIntegrationTest {
         nginx.start([ new LocalhostMachineProvisioningLocation(count:1) ])
         executeUntilSucceedsWithShutdown(nginx) {
             // Services are running
-            assertTrue cluster.getAttribute(AbstractService.SERVICE_UP)
-            assertTrue nginx.getAttribute(AbstractService.SERVICE_UP)
-            cluster.members.each { assertTrue it.getAttribute(AbstractService.SERVICE_UP) }
+            assertTrue cluster.getAttribute(SoftwareProcessEntity.SERVICE_UP)
+            assertTrue nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP)
+            cluster.members.each { assertTrue it.getAttribute(SoftwareProcessEntity.SERVICE_UP) }
 
             // Nginx URL is available
 	        String url = nginx.getAttribute(NginxController.URL) + "hello-world"
@@ -89,8 +89,8 @@ public class NginxIntegrationTest {
         cluster.stop()
 
         // Services have stopped
-        assertFalse nginx.getAttribute(AbstractService.SERVICE_UP)
-        assertFalse cluster.getAttribute(AbstractService.SERVICE_UP)
-        cluster.members.each { assertFalse it.getAttribute(AbstractService.SERVICE_UP) }
+        assertFalse nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP)
+        assertFalse cluster.getAttribute(SoftwareProcessEntity.SERVICE_UP)
+        cluster.members.each { assertFalse it.getAttribute(SoftwareProcessEntity.SERVICE_UP) }
     }
 }

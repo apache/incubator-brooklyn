@@ -7,7 +7,7 @@ import java.util.Map
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.entity.basic.AbstractService
+import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.entity.basic.Lifecycle
@@ -272,7 +272,7 @@ public abstract class SshBasedAppSetup {
         log.info "starting {} on {}", entity, machine
         Map environment = [:]
         environment << getRunEnvironment()
-        Map configured = entity.getConfig(AbstractService.ENVIRONMENT)
+        Map configured = entity.getConfig(SoftwareProcessEntity.ENVIRONMENT)
         configured.each { key, value ->
             if (value in Closure) {
                 environment.put(key, ((Closure) value).call())
@@ -322,8 +322,8 @@ public abstract class SshBasedAppSetup {
     public void start() {
         install()
         config()
-        entity.setAttribute(AbstractService.SERVICE_STATE, Lifecycle.CONFIGURED)
-        entity.setAttribute(AbstractService.SERVICE_CONFIGURED, true)
+        entity.setAttribute(SoftwareProcessEntity.SERVICE_STATE, Lifecycle.CONFIGURED)
+        entity.setAttribute(SoftwareProcessEntity.SERVICE_CONFIGURED, true)
         runApp()
     }
 

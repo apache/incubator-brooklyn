@@ -3,7 +3,7 @@ package brooklyn.entity.nosql.gemfire
 import brooklyn.entity.Effector
 import brooklyn.entity.Entity
 import brooklyn.entity.ParameterType
-import brooklyn.entity.basic.AbstractService
+import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.basic.BasicParameterType
 import brooklyn.entity.basic.EffectorWithExplicitImplementation
 import brooklyn.event.adapter.legacy.OldHttpSensorAdapter;
@@ -16,8 +16,9 @@ import brooklyn.util.SshBasedAppSetup
 import com.google.common.base.Charsets
 import com.google.common.base.Splitter
 
-class GemfireServer extends AbstractService {
-
+class GemfireServer extends SoftwareProcessEntity {
+    public static final BasicConfigKey<String> INSTALL_DIR =
+        [ String, "gemfire.server.installDir", "Gemfire installation directory" ]
     public static final BasicConfigKey<File> CONFIG_FILE = [ File, "gemfire.server.configFile", "Gemfire configuration file" ]
     public static final BasicConfigKey<File> JAR_FILE = [ File, "gemfire.server.jarFile", "Gemfire jar file" ]
     public static final BasicConfigKey<Integer> SUGGESTED_HUB_PORT = [ Integer, "gemfire.server.suggestedHubPort", "Gemfire gateway hub port", 11111 ]

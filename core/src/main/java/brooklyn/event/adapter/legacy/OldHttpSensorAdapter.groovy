@@ -150,9 +150,9 @@ public class HttpJsonLongValueProvider implements ValueProvider<Long> {
 */
 public class HttpStringBodyProvider implements ValueProvider<String> {
 	private final URL url
-	private final HttpSensorAdapter adapter
+	private final OldHttpSensorAdapter adapter
 
-	public HttpStringBodyProvider(URL url, HttpSensorAdapter adapter) {
+	public HttpStringBodyProvider(URL url, OldHttpSensorAdapter adapter) {
 		this.url = Preconditions.checkNotNull(url, "url")
 		this.adapter = Preconditions.checkNotNull(adapter, "adapter")
 	}

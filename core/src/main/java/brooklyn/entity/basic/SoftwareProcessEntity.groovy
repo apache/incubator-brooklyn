@@ -26,17 +26,14 @@ import com.google.common.base.Preconditions
 import com.google.common.collect.Iterables
 
 /**
- * An {@link Entity} representing an abstract service process.
- *
- * A service can only run on a single {@link MachineLocation} at a time.
- * It typically takes config keys for suggested versions and filesystem locations, and for the environment variables to set.
+ * An {@link Entity} representing a piece of software which can be installed, run, and controlled.
+ * A single such entity can only run on a single {@link MachineLocation} at a time (you can have multiple on the machine). 
+ * It typically takes config keys for suggested versions, filesystem locations to use, and environment variables to set.
+ * <p>
  * It exposes sensors for service state (Lifecycle) and status (String), and for host info, log file location.
- * 
- * FIXME not happy with term "service"; it is too general; should this be AbstractProcessEntity ?; 
- * and could we offer conveniences for the pid of what we start?
  */
-public abstract class AbstractService extends AbstractEntity implements Startable {
-    public static final Logger log = LoggerFactory.getLogger(AbstractService.class)
+public abstract class SoftwareProcessEntity extends AbstractEntity implements Startable {
+    public static final Logger log = LoggerFactory.getLogger(SoftwareProcessEntity.class)
 
     @SetFromFlag("version")
     public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.SUGGESTED_VERSION
@@ -44,10 +41,13 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
     public static final ConfigKey<String> SUGGESTED_INSTALL_DIR = ConfigKeys.SUGGESTED_INSTALL_DIR
     @SetFromFlag("runDir")
     public static final ConfigKey<String> SUGGESTED_RUN_DIR = ConfigKeys.SUGGESTED_RUN_DIR
+	
     public static final BasicConfigKey<Map> ENVIRONMENT = [ Map, "environment", "Map of environment variables to set at runtime", [:] ]
 
+	
     public static final AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME
     public static final AttributeSensor<String> ADDRESS = Attributes.ADDRESS
+	
     public static final AttributeSensor<String> LOG_FILE_LOCATION = Attributes.LOG_FILE_LOCATION
 
     public static final BasicAttributeSensor<Lifecycle> SERVICE_STATE = [ Lifecycle, "service.state", "Service lifecycle state" ]
@@ -58,7 +58,7 @@ public abstract class AbstractService extends AbstractEntity implements Startabl
     protected SshBasedAppSetup setup
     protected transient SensorRegistry sensorRegistry
     
-    public AbstractService(Map properties=[:], Entity owner=null) {
+    public SoftwareProcessEntity(Map properties=[:], Entity owner=null) {
         super(properties, owner)
  
         setAttribute(SERVICE_UP, false)

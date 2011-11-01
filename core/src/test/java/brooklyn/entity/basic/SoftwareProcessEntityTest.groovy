@@ -15,7 +15,7 @@ import brooklyn.location.basic.SimulatedLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedAppSetup
 
-public class AbstractServiceTest {
+public class SoftwareProcessEntityTest {
 
     @Test
     public void testShutdownIsIdempotentInFixedListMachineProvisioningLocation() {
@@ -28,7 +28,7 @@ public class AbstractServiceTest {
         entity.stop();
     }
     
-    private static class MyService extends AbstractService {
+    private static class MyService extends SoftwareProcessEntity {
         @Override
         public SshBasedAppSetup getSshBasedSetup(SshMachineLocation loc) {
             return new SimulatedSshBasedAppSetup(this, loc)
