@@ -6,12 +6,12 @@ import brooklyn.entity.ParameterType
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.basic.BasicParameterType
 import brooklyn.entity.basic.EffectorWithExplicitImplementation
+import brooklyn.entity.basic.lifecycle.SshBasedAppSetup;
 import brooklyn.event.adapter.legacy.OldHttpSensorAdapter;
 import brooklyn.event.adapter.legacy.ValueProvider;
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.SshBasedAppSetup
 
 import com.google.common.base.Charsets
 import com.google.common.base.Splitter
@@ -83,7 +83,9 @@ class GemfireServer extends SoftwareProcessEntity {
     }
 
     @Override
-    protected void initSensors() {
+    protected void connectSensors() {
+		super.connectSensors()
+		
         int hubPort = getConfig(SUGGESTED_HUB_PORT)
         setAttribute(HUB_PORT, hubPort)
         setAttribute(CONTROL_URL, "http://${setup.machine.address.hostName}:"+CONTROL_PORT_VAL)

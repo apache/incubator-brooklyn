@@ -5,8 +5,8 @@ import java.util.Map
 
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.JavaApp;
+import brooklyn.entity.basic.lifecycle.SshBasedJavaAppSetup;
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.SshBasedJavaAppSetup;
 import brooklyn.util.SshBasedJavaWebAppSetup
 
 /**
@@ -58,7 +58,8 @@ public class ActiveMQSetup extends SshBasedJavaAppSetup {
     }
 
     @Override
-    protected void setCustomAttributes() {
+    protected void setEntityAttributes() {
+		super.setEntityAttributes()
         entity.setAttribute(ActiveMQBroker.OPEN_WIRE_PORT, openWirePort)
     }
 
@@ -82,13 +83,13 @@ public class ActiveMQSetup extends SshBasedJavaAppSetup {
     }
 
     public Map<String, String> getShellEnvironment() {
-        Map<String, String> env = [
+		def result = super.getShellEnvironment()
+        result << [
 			"ACTIVEMQ_HOME" : "${runDir}",
+            "ACTIVEMQ_OPTS" : result.JAVA_OPTS,
             "JAVA_OPTS" : "",
-            "ACTIVEMQ_OPTS" : toJavaDefinesString(getJvmStartupProperties()),
             "ACTIVEMQ_SUNJMX_CONTROL" : "--jmxurl service:jmx:rmi://${machine.address.hostName}:${rmiPort}/jndi/rmi://${machine.address.hostName}:${jmxPort}/jmxrmi"
         ]
-        return env
     }
 
     /** @see SshBasedJavaAppSetup#getCheckRunningScript() */

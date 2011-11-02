@@ -5,8 +5,8 @@ import java.util.Map
 
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.JavaApp;
+import brooklyn.entity.basic.lifecycle.SshBasedJavaAppSetup;
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.SshBasedJavaAppSetup;
 import brooklyn.util.SshBasedJavaWebAppSetup
 
 /**
@@ -74,12 +74,12 @@ public class DerbySetup extends SshBasedJavaAppSetup {
     }
 
     public Map<String, String> getShellEnvironment() {
-        Map<String, String> env = [
+		def result = super.getShellEnvironment()
+        result << [
 			"DERBY_HOME" : "${runDir}",
 			"DERBY_WORK" : "${runDir}",
-			"DERBY_OPTS" : toJavaDefinesString(getJvmStartupProperties()),
+			"DERBY_OPTS" : result.JAVA_OPTS,
         ]
-        return env
     }
 
     /** @see SshBasedJavaAppSetup#getCheckRunningScript() */

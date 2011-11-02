@@ -105,9 +105,10 @@ public abstract class AbstractController extends SoftwareProcessEntity {
     }
 
     @Override
-    public void preStart() {
+    protected void connectSensors() {
         addPolicy(policy)
         reset()
+		super.connectSensors()
     }
 
     @Override
@@ -157,8 +158,10 @@ public abstract class AbstractController extends SoftwareProcessEntity {
         policy.setGroup(cluster)
     }
 
-    @Override
-    public void preStop() {
-        reset()
+	
+	protected void preStop() {
+		super.preStop()
+        policy.reset()
+        addresses.clear()
     }
 }

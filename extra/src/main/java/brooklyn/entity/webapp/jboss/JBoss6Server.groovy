@@ -9,6 +9,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
+import brooklyn.entity.basic.lifecycle.SshBasedAppSetup;
 import brooklyn.entity.webapp.JavaWebApp
 import brooklyn.event.adapter.ConfigSensorAdapter;
 import brooklyn.event.adapter.JmxSensorAdapter
@@ -16,7 +17,6 @@ import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.ConfiguredAttributeSensor
 import brooklyn.location.Location
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.SshBasedAppSetup
 import brooklyn.util.flags.SetFromFlag
 
 /**
@@ -35,12 +35,6 @@ public class JBoss6Server extends JavaWebApp {
     public JBoss6Server(Map flags=[:], Entity owner=null) {
         super(flags, owner)
     }
-
-	public void start(Collection<Location> locations) {
-		super.start(locations)
-		connectSensors()
-		sensorRegistry.activateAdapters()
-	}
 
     public SshBasedAppSetup getSshBasedSetup(SshMachineLocation loc) {
         return JBoss6SshSetup.newInstance(this, loc);

@@ -13,6 +13,7 @@ import org.testng.annotations.Test
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.EntityLocal
+import brooklyn.entity.basic.lifecycle.SshBasedAppSetup;
 import brooklyn.entity.driver.MockSshBasedSoftwareSetup
 import brooklyn.entity.trait.Startable
 import brooklyn.event.Sensor
@@ -22,7 +23,6 @@ import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.basic.FixedListMachineProvisioningLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.test.entity.TestEntity
-import brooklyn.util.SshBasedAppSetup
 
 class AbstractControllerTest {
 

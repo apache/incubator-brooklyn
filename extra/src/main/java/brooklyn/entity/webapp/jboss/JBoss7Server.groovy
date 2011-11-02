@@ -1,9 +1,9 @@
 package brooklyn.entity.webapp.jboss
 
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.with
 import groovy.lang.MetaClass
 
-import java.util.Collection
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -14,12 +14,8 @@ import brooklyn.event.adapter.ConfigSensorAdapter
 import brooklyn.event.adapter.HttpSensorAdapter
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.ConfiguredAttributeSensor
-import brooklyn.location.Location
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.SshBasedAppSetup
 import brooklyn.util.flags.SetFromFlag
-
-import static org.codehaus.groovy.runtime.DefaultGroovyMethods.with;
 
 public class JBoss7Server extends JavaWebApp {
 
@@ -40,20 +36,9 @@ public class JBoss7Server extends JavaWebApp {
         super(flags, owner)
     }
 	
-	public void start(Collection<Location> locations) {
-		try {
-			super.start(locations)
-			connectSensors()
-			sensorRegistry.activateAdapters()
-		} catch (Throwable e) {
-			log.warn "errors starting ${this} (rethrowing): $e", e
-			throw e
-		}
-	}
-	
+	@Override	
 	protected void connectSensors() {
-		//TODO should only be applied at initial deployment
-		def config = sensorRegistry.register(new ConfigSensorAdapter())
+		super.connectSensors();
 
 		def host = getAttribute(HOSTNAME)
 		def port = getAttribute(MANAGEMENT_PORT)
@@ -101,34 +86,11 @@ public class JBoss7Server extends JavaWebApp {
 	}
 	
 	protected void initJmxSensors() {
-		// jmx not used here
+		// jmx not used here, prevent registration by parent
 	}
 	
-    @Override
-    public void addHttpSensors() {
-//        def host = getAttribute(HOSTNAME)
-//        def port = getAttribute(MANAGEMENT_PORT)
-//        String queryUrl = "http://$host:$port/management/subsystem/web/connector/http/read-resource?include-runtime"
-//
-//        sensorRegistry.addSensor(MANAGEMENT_STATUS, httpAdapter.newStatusValueProvider(queryUrl))
-//        sensorRegistry.addSensor(SERVICE_UP, { getAttribute(MANAGEMENT_STATUS) == 200 } as ValueProvider<Boolean>)
-//
-//        sensorRegistry.addSensor(REQUEST_COUNT, httpAdapter.newJsonLongProvider(queryUrl, "requestCount"))
-//        sensorRegistry.addSensor(ERROR_COUNT, httpAdapter.newJsonLongProvider(queryUrl, "errorCount"))
-//        sensorRegistry.addSensor(TOTAL_PROCESSING_TIME, httpAdapter.newJsonLongProvider(queryUrl, "processingTime"))
-//        sensorRegistry.addSensor(MAX_PROCESSING_TIME, httpAdapter.newJsonLongProvider(queryUrl, "maxTime"))
-//        sensorRegistry.addSensor(BYTES_RECEIVED, httpAdapter.newJsonLongProvider(queryUrl, "bytesReceived"))
-//        sensorRegistry.addSensor(BYTES_SENT, httpAdapter.newJsonLongProvider(queryUrl, "bytesSent"))
-
-        //we could tidy to use this syntax
-        //connectHttpSensor(MANAGEMENT_STATUS, { statusCode } )
-        //connectHttpSensor(BYTES_SENT, { json "bytesSent" } )
-        
-        //should confirm all sensors connected
-    }
-
     //could use @SetupContributor, and register all such methods during load?
-    public SshBasedAppSetup getSshBasedSetup(SshMachineLocation machine) {
+    public JBoss7SshSetup getSshBasedSetup(SshMachineLocation machine) {
         return JBoss7SshSetup.newInstance(this, machine)
     }
     

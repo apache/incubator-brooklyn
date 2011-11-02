@@ -3,9 +3,9 @@ package brooklyn.entity.webapp.jboss
 import java.util.List
 
 import brooklyn.entity.basic.Attributes
+import brooklyn.entity.basic.lifecycle.SshBasedJavaAppSetup;
 import brooklyn.entity.webapp.JavaWebApp
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.SshBasedJavaAppSetup
 import brooklyn.util.SshBasedJavaWebAppSetup
 
 public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {

@@ -5,6 +5,7 @@ import java.util.Map;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.ConfigKey;
 import brooklyn.entity.Entity;
+import brooklyn.entity.ConfigKey.HasConfigKey;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
@@ -32,10 +33,15 @@ public interface EntityLocal extends Entity {
     
     // ??? = policy which detects a group is too hot and want the entity to fire a TOO_HOT event
     
+    <T> T getConfig(ConfigKey<T> key, T defaultValue);
+    <T> T getConfig(HasConfigKey<T> key);
+    <T> T getConfig(HasConfigKey<T> key, T defaultValue);
+    
     /**
      * Must be called before the entity is started.
      */
     <T> T setConfig(ConfigKey<T> key, T val);
+    <T> T setConfig(HasConfigKey<T> key, T val);
     
     /**
      * Emits a {@link SensorEvent} event on behalf of this entity (as though produced by this entity).

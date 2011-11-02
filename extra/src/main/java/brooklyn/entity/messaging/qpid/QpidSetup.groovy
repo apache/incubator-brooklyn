@@ -5,8 +5,8 @@ import java.util.Map
 
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.JavaApp;
+import brooklyn.entity.basic.lifecycle.SshBasedJavaAppSetup;
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.SshBasedJavaAppSetup;
 import brooklyn.util.SshBasedJavaWebAppSetup
 
 /**
@@ -65,7 +65,8 @@ public class QpidSetup extends SshBasedJavaAppSetup {
     protected Map getJmxJavaSystemProperties() { [:] }
 
     @Override
-    protected void setCustomAttributes() {
+    protected void setEntityAttributes() {
+		super.setEntityAttributes()
         entity.setAttribute(Attributes.AMQP_PORT, amqpPort)
     }
 
@@ -110,14 +111,6 @@ public class QpidSetup extends SshBasedJavaAppSetup {
             "cp -R ${installDir}/{bin,etc,lib} .",
         ]
         return script
-    }
-
-    @Override
-    public void config() {
-        super.config();
-        // FIXME can this happen sooner? as part of automated config-setting?
-        entity.setAttribute(Attributes.JMX_USER)
-        entity.setAttribute(Attributes.JMX_PASSWORD)
     }
     
     @Override

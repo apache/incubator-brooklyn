@@ -21,6 +21,7 @@ import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.event.basic.AttributeMap
+import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.BasicNotificationSensor
 import brooklyn.event.basic.ConfiguredAttributeSensor
 import brooklyn.location.Location
@@ -33,6 +34,7 @@ import brooklyn.policy.Enricher
 import brooklyn.policy.Policy
 import brooklyn.policy.basic.AbstractPolicy
 import brooklyn.util.flags.SetFromFlag
+import brooklyn.util.internal.ConfigKeySelfExtracting;
 import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.task.BasicExecutionContext
 import brooklyn.util.task.ParallelTask
@@ -376,21 +378,23 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     }
 
     @Override
-    public <T> T getConfig(ConfigKey<T> key) {
-        return getConfig(key, null)
-    }
-
-    @Override
-    public <T> T getConfig(ConfigKey<T> key, T defaultValue) {
+    public <T> T getConfig(ConfigKey<T> key, T defaultValue=null) {
         // FIXME What about inherited task in config?!
+		//              alex says: think that should work, no?
         // FIXME What if someone calls getConfig on a task, before setting parent app?
-        ExecutionContext exec = (getApplication()) ? getExecutionContext() : null
-        return  key.extractValue(ownConfig, exec) ?:
-                key.extractValue(inheritedConfig, exec) ?:
+		//              alex says: not supported (throw exception, or return the task)
+        ExecutionContext exec = getExecutionContext();
+        return  (key in ConfigKeySelfExtracting ? 
+					( ((ConfigKeySelfExtracting)key).extractValue(ownConfig, exec) ?:
+                	  ((ConfigKeySelfExtracting)key).extractValue(inheritedConfig, exec)) : false) ?:
                 defaultValue ?:
                 key.getDefaultValue()
     }
-
+    @Override
+	public <T> T getConfig(HasConfigKey<T> key, T defaultValue=null) {
+		return getConfig(key.configKey, defaultValue)
+	}
+	
     @Override
     public <T> T setConfig(ConfigKey<T> key, T val) {
         // TODO Is this the best idea, for making life easier for brooklyn coders when supporting changing config?
@@ -403,6 +407,10 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 
         oldVal
     }
+	@Override
+	public <T> T setConfig(HasConfigKey<T> key, T val) {
+		setConfig(key.configKey, val)
+	}
 
     protected void setConfigIfValNonNull(ConfigKey key, Object val) {
         if (val != null) setConfig(key, val)
@@ -446,7 +454,9 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 
     public synchronized ExecutionContext getExecutionContext() {
         if (execution) execution;
-        execution = new BasicExecutionContext(tag:this, getManagementContext().executionManager)
+		def execMgr = getManagementContext()?.executionManager;
+		if (!execMgr) return null
+        execution = new BasicExecutionContext(tag:this, execMgr)
     }
 
     /** Default String representation is simplified name of class, together with selected fields. */

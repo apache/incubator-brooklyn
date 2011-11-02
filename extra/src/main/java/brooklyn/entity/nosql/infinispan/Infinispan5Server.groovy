@@ -7,11 +7,11 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.SoftwareProcessEntity
+import brooklyn.entity.basic.lifecycle.SshBasedAppSetup;
 import brooklyn.entity.trait.Startable
 import brooklyn.event.adapter.legacy.ValueProvider;
 import brooklyn.event.basic.ConfiguredAttributeSensor
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.SshBasedAppSetup
 
 /**
  * An {@link brooklyn.entity.Entity} that represents an Infinispan service
@@ -41,7 +41,9 @@ public class Infinispan5Server extends SoftwareProcessEntity {
         return Infinispan5Setup.newInstance(this, machine)
     }
 
-    public void initSensors() {
+    public void connectSensors() {
+		super.connectSensors()
+		
         sensorRegistry.addSensor(SERVICE_UP, { return setup.isRunning() } as ValueProvider)
     }
 }

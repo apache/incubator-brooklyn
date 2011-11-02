@@ -14,6 +14,7 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.JavaApp
+import brooklyn.entity.basic.lifecycle.SshBasedAppSetup;
 import brooklyn.entity.database.Database
 import brooklyn.entity.database.Schema
 import brooklyn.event.adapter.SensorRegistry
@@ -23,7 +24,6 @@ import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.Location
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.SshBasedAppSetup
 
 import com.google.common.base.Preconditions
 
@@ -60,23 +60,22 @@ public class DerbyDatabase extends JavaApp implements Database {
         return DerbySetup.newInstance(this, machine)
     }
 
-    public void initSensors() {
-        super.initSensors()
+    public void connectSensors() {
+        super.connectSensors()
+		
         sensorRegistry.addSensor(JavaApp.SERVICE_UP, { computeNodeUp() } as ValueProvider)
     }
 
     @Override
-    public void start(Collection<Location> locations) {
-        super.start(locations)
-
+    public void postStart() {
+        super.postStart()
         schemaNames.each { String name -> createSchema(name) }
     }
 
     @Override
-    public void stop() {
+    public void preStop() {
+    	super.preStop()
         schemas.each { String name, DerbySchema schema -> schema.destroy() }
-
-        super.stop()
     }
 
     public void createSchema(String name, Map properties=[:]) {

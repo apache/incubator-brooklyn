@@ -45,10 +45,12 @@ public abstract class JavaApp extends SoftwareProcessEntity {
     }
 
     @Override
-    protected void initSensors() {
+    protected void connectSensors() {
+		super.connectSensors()
         initJmxSensors()
     }
 
+	@Deprecated /* use new JmxAdapter */
 	protected void initJmxSensors() {
 		if (!(getAttribute(HOSTNAME) && getAttribute(JMX_PORT))) {
 			throw new IllegalStateException("JMX is not available")
@@ -62,6 +64,7 @@ public abstract class JavaApp extends SoftwareProcessEntity {
 		addJmxSensors()
     }
 
+	@Deprecated /* use new JmxAdapter */
     protected void addJmxSensors() { }
 
     @Override
@@ -81,10 +84,9 @@ public abstract class JavaApp extends SoftwareProcessEntity {
     }
 
     @Override
-    public void stop() {
+    public void preStop() {
+    	super.preStop()
         if (jmxAdapter) jmxAdapter.disconnect();
-
-        super.stop()
     }
 
     @Override

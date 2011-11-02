@@ -20,7 +20,7 @@ class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
     
     private final String brooklynConfig = "standalone-brooklyn.xml"
     
-    private int managementPort
+    int managementPort
     
     public JBoss7SshSetup(JBoss7Server entity, SshMachineLocation machine) {
         super(entity, machine)
@@ -65,12 +65,9 @@ class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
         return result
     }
     
-    public void setManagementPort(int val) {
-        this.managementPort = val
-    }
-    
     @Override
-    protected void setCustomAttributes() {
+    protected void setEntityAttributes() {
+		super.setEntityAttributes()
         entity.setAttribute(JBoss7Server.MANAGEMENT_PORT, managementPort)
     }
     

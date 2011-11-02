@@ -70,10 +70,19 @@ public class SensorRegistry {
 		deactivationListeners.each { it.call() }
 	}
 
+	public void close() {
+		deactivateAdapters();
+		exec.shutdownNow()
+		scheduled.each { key, ScheduledFuture future -> future.cancel(true) }
+	}
+
+
+	@Deprecated
     public <T> void addSensor(AttributeSensor<T> sensor, ValueProvider<? extends T> provider) {
         addSensor(sensor, provider, properties.period)
     }
 
+	@Deprecated
     public <T> void addSensor(AttributeSensor<T> sensor, ValueProvider<? extends T> provider, long period) {
         log.debug "adding calculated sensor {} with delay {} to {}", sensor.name, period, entity
         providers.put(sensor, provider)
@@ -90,17 +99,14 @@ public class SensorRegistry {
         scheduled[sensor] = exec.scheduleWithFixedDelay(safeCalculate, 0L, period, TimeUnit.MILLISECONDS)
     }
 
+	@Deprecated
     public <T> void removeSensor(AttributeSensor<T> sensor) {
         log.debug "removing sensor {} from {}", sensor.name, entity
         providers.remove(sensor)
         scheduled.remove(sensor)?.cancel(true)
     }
 
-    public void close() {
-        exec.shutdownNow()
-        scheduled.each { key, ScheduledFuture future -> future.cancel(true) }
-    }
-
+	@Deprecated
     private void updateAll() {
         log.debug "updating all sensors for {}", entity
         providers.each {
@@ -111,6 +117,7 @@ public class SensorRegistry {
             }
     }
     
+	@Deprecated
     private void update(Sensor sensor) {
         if (!providers.containsKey(sensor)) throw new IllegalStateException("Sensor ${sensor.name} not found");
         ValueProvider<?> provider = providers.get(sensor)

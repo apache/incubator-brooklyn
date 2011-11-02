@@ -1,21 +1,19 @@
 package brooklyn.entity.proxy.nginx
 
 import java.util.Map
-import java.util.concurrent.atomic.AtomicLong
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.Attributes
+import brooklyn.entity.basic.lifecycle.SshBasedAppSetup;
 import brooklyn.entity.group.AbstractController
 import brooklyn.event.adapter.SensorRegistry
-import brooklyn.event.adapter.legacy.OldHttpSensorAdapter;
-import brooklyn.event.adapter.legacy.ValueProvider;
+import brooklyn.event.adapter.legacy.OldHttpSensorAdapter
+import brooklyn.event.adapter.legacy.ValueProvider
 import brooklyn.location.Location
 import brooklyn.location.MachineLocation
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.SshBasedAppSetup
 
 import com.google.common.base.Charsets
-import com.google.common.collect.Iterables
 import com.google.common.io.Files
 
 /**
@@ -29,7 +27,8 @@ public class NginxController extends AbstractController {
     }
 
     @Override
-    protected void initSensors() {
+    protected void connectSensors() {
+		super.connectSensors();
         httpAdapter = new OldHttpSensorAdapter(this)
         sensorRegistry.addSensor(SERVICE_UP, { computeNodeUp() } as ValueProvider)
     }

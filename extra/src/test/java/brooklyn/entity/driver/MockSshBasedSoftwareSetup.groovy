@@ -4,8 +4,8 @@ import java.util.List
 import java.util.Map
 
 import brooklyn.entity.basic.EntityLocal
+import brooklyn.entity.basic.lifecycle.SshBasedAppSetup;
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.SshBasedAppSetup
 
 public class MockSshBasedSoftwareSetup extends SshBasedAppSetup {
 
@@ -29,11 +29,6 @@ public class MockSshBasedSoftwareSetup extends SshBasedAppSetup {
     @Override
     public List<String> getRunScript() {
         return [];
-    }
-
-    @Override
-    public Map<String, String> getShellEnvironment() {
-        return [:];
     }
 
     @Override

@@ -9,13 +9,13 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
+import brooklyn.entity.basic.lifecycle.SshBasedAppSetup;
 import brooklyn.entity.webapp.JavaWebApp
 import brooklyn.event.EntityStartException
 import brooklyn.event.adapter.legacy.ValueProvider;
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.SshBasedAppSetup
 import brooklyn.util.internal.Repeater
 
 /**

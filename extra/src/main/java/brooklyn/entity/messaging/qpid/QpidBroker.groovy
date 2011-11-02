@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.JavaApp
+import brooklyn.entity.basic.lifecycle.SshBasedAppSetup;
 import brooklyn.entity.messaging.JMSBroker
 import brooklyn.entity.messaging.JMSDestination
 import brooklyn.entity.messaging.Queue
@@ -23,7 +24,6 @@ import brooklyn.event.adapter.legacy.OldJmxSensorAdapter;
 import brooklyn.event.adapter.legacy.ValueProvider;
 import brooklyn.event.basic.ConfiguredAttributeSensor
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.SshBasedAppSetup
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Qpid broker instance.
@@ -68,6 +68,9 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> {
     @Override
     public void addJmxSensors() {
         sensorRegistry.addSensor(JavaApp.SERVICE_UP, { computeNodeUp() } as ValueProvider)
+
+		setAttribute(Attributes.JMX_USER)
+		setAttribute(Attributes.JMX_PASSWORD)
     }
 
     @Override

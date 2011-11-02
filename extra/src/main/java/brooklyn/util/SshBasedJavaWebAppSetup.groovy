@@ -5,19 +5,16 @@ import java.util.List
 
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.EntityLocal
+import brooklyn.entity.basic.lifecycle.SshBasedJavaAppSetup;
 import brooklyn.entity.webapp.JavaWebApp
 import brooklyn.location.basic.SshMachineLocation
 
 public abstract class SshBasedJavaWebAppSetup extends SshBasedJavaAppSetup {
 
-    protected int httpPort
+    int httpPort
     
     public SshBasedJavaWebAppSetup(EntityLocal entity, SshMachineLocation machine) {
         super(entity, machine);
-    }
-
-    public void setHttpPort(int val) {
-        httpPort = val
     }
 
     @Override

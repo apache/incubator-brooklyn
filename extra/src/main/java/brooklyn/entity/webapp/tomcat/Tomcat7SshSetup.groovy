@@ -69,7 +69,8 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
     }
     
     @Override
-    protected void setCustomAttributes() {
+    protected void setEntityAttributes() {
+		super.setEntityAttributes()
         entity.setAttribute(TomcatServer.TOMCAT_SHUTDOWN_PORT, tomcatShutdownPort)
     }
     
@@ -90,7 +91,7 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
     }
     
     public Map<String, String> getShellEnvironment() {
-        Map result = super.getShellEnvironment();
+        def result = super.getShellEnvironment();
 		result << [
     			"CATALINA_BASE" : "${runDir}",
     			"CATALINA_OPTS" : result.JAVA_OPTS,

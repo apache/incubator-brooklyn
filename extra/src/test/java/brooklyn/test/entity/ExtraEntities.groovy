@@ -6,11 +6,11 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
+import brooklyn.entity.basic.lifecycle.SshBasedAppSetup;
 import brooklyn.entity.group.DynamicCluster
 import brooklyn.entity.webapp.JavaWebApp
 import brooklyn.location.Location
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.SshBasedAppSetup
 
 /**
  * Mock web application server entity for testing.

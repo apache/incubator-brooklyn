@@ -1,4 +1,4 @@
-package brooklyn.util
+package brooklyn.entity.basic.lifecycle
 
 import java.util.Map
 
@@ -28,7 +28,6 @@ public abstract class SshBasedJavaAppSetup extends SshBasedAppSetup {
     protected int rmiPort
     protected Map<String,Map<String,String>> environmentPropertyFiles = [:]
     protected Map<String,Map<String,String>> namedPropertyFiles = [:]
-    protected Map<String,String> envVariablesToSet = [:]
 
     public SshBasedJavaAppSetup(EntityLocal entity, SshMachineLocation machine) {
         super(entity, machine)
@@ -67,7 +66,7 @@ public abstract class SshBasedJavaAppSetup extends SshBasedAppSetup {
     @Override
     public void config() {
         super.config()
-        envVariablesToSet = generateAndCopyPropertyFiles(environmentPropertyFiles)
+        generateAndCopyPropertyFiles(environmentPropertyFiles)
     }
 
     private Map<String,String> generateAndCopyPropertyFiles(Map<String,Map<String,String>> propertyFiles) {
@@ -114,6 +113,7 @@ public abstract class SshBasedJavaAppSetup extends SshBasedAppSetup {
 	*/
 	@Override
 	public Map<String, String> getShellEnvironment() {
+		super.getShellEnvironment() +
 		[ "JAVA_OPTS" : getJavaOpts().collect({
 				if (!StringEscapeUtils.isValidForDoubleQuotingInBash(it))
 					throw new IllegalArgumentException("will not accept ${it} as valid BASH string (has unescaped double quote)")

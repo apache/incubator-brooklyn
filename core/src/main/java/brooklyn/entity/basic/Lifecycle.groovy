@@ -18,7 +18,6 @@ import com.google.common.base.CaseFormat
  *     ->  [ @Error ]      "ON_FIRE"
  *     else
  *     --> [ @PreStart ]   "STARTING"
- *     --> [ @PostStart ]  "STARTED"
  *     -->                 "RUNNING"
  *     ->  [ @PreStop ]    "STOPPING"
  *     --> [ @PostStop ]   "STOPPED"
@@ -44,14 +43,6 @@ public enum Lifecycle {
      * as {@link PreStart} are run, and the entity will have its location set and and setup helper object created.
      */
     STARTING,
-
-    /**
-     * The entity has started.
-     *
-     * The configured entity is now ready. The entity service will be executed using the runtime configuration generated
-     * in the previous stage and any methods annotated as {@link PostStart} will be run.
-     */
-    STARTED,
 
     /**
      * The entity service is running.

@@ -4,8 +4,8 @@ import java.util.List
 import java.util.Map
 
 import brooklyn.entity.basic.Attributes
+import brooklyn.entity.basic.lifecycle.SshBasedAppSetup;
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.SshBasedAppSetup
 
 /**
  * Start a {@link QpidNode} in a {@link Location} accessible over ssh.
@@ -14,7 +14,7 @@ public class NginxSetup extends SshBasedAppSetup {
     public static final String DEFAULT_VERSION = "1.0.8"
     public static final String DEFAULT_INSTALL_DIR = DEFAULT_INSTALL_BASEDIR+"/"+"nginx"
 
-    private int httpPort
+    int httpPort
 
     public static NginxSetup newInstance(NginxController entity, SshMachineLocation machine) {
         String suggestedVersion = entity.getConfig(NginxController.SUGGESTED_VERSION)
@@ -46,12 +46,9 @@ public class NginxSetup extends SshBasedAppSetup {
         super(entity, machine)
     }
 
-    public void setHttpPort(int val) {
-        httpPort = val
-    }
-
     @Override
-    protected void setCustomAttributes() {
+    protected void setEntityAttributes() {
+		super.setEntityAttributes()
         entity.setAttribute(Attributes.HTTP_PORT, httpPort)
     }
 
@@ -82,9 +79,6 @@ public class NginxSetup extends SshBasedAppSetup {
         return script
     }
  
-    /** @see SshBasedAppSetup#getRunEnvironment() */
-    public Map<String, String> getShellEnvironment() { [:] }
-
     /**
      * Restarts nginx with the current configuration.
      */

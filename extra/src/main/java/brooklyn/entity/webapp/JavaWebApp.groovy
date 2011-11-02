@@ -83,39 +83,43 @@ public abstract class JavaWebApp extends JavaApp {
 
     @Override
     protected Collection<Integer> getRequiredOpenPorts() {
-        Collection<Integer> result = super.getRequiredOpenPorts()
-        if (getConfig(HTTP_PORT.configKey)) result.add(getConfig(HTTP_PORT.configKey))
-        return result
+		def http = getConfig(HTTP_PORT);
+        super.getRequiredOpenPorts() + (http?[http]:[])
     }
 
-    public void initHttpSensors() {
-        httpAdapter = new OldHttpSensorAdapter(this)
-        if (pollForHttpStatus) {
-            def host = getAttribute(HOSTNAME)
-            def port = getAttribute(HTTP_PORT)
-            sensorRegistry.addSensor(HTTP_STATUS, httpAdapter.newStatusValueProvider("http://${host}:${port}/"))
-            sensorRegistry.addSensor(HTTP_SERVER, httpAdapter.newHeaderValueProvider("http://${host}:${port}/", "Server"))
+	protected void connectSensors() {
+		super.connectSensors()
+		
+		// TODO Want to wire this up so doesn't go through SubscriptionManager;
+		// but that's an optimisation we'll do later.
+		addEnricher(TimeWeightedDeltaEnricher.<Integer>getPerSecondDeltaEnricher(this, REQUEST_COUNT, REQUESTS_PER_SECOND))
+		addEnricher(new RollingTimeWindowMeanEnricher<Double>(this, REQUESTS_PER_SECOND, AVG_REQUESTS_PER_SECOND,
+			AVG_REQUESTS_PER_SECOND_PERIOD))
+
+		initHttpSensors()
+	}
+
+	@Deprecated /* use new mechanism */
+	public void initHttpSensors() {
+		httpAdapter = new OldHttpSensorAdapter(this)
+		if (pollForHttpStatus) {
+			def host = getAttribute(HOSTNAME)
+			def port = getAttribute(HTTP_PORT)
+			sensorRegistry.addSensor(HTTP_STATUS, httpAdapter.newStatusValueProvider("http://${host}:${port}/"))
+			sensorRegistry.addSensor(HTTP_SERVER, httpAdapter.newHeaderValueProvider("http://${host}:${port}/", "Server"))
 			log.info "{} waiting for http://${host}:${port}/", this
-            waitForHttpPort()
+			waitForHttpPort()
 			log.info "{} got http://${host}:${port}/", this
-        }
-        addHttpSensors()
-    }
+		}
+	}
 
-    public void addHttpSensors() { }
-
+	
     @Override
-    public void postStart() {
+    public void start() {
+		super.start()
+		
         log.info "started {}: httpPort {}, host {} and jmxPort {}", this,
                 getAttribute(HTTP_PORT), getAttribute(HOSTNAME), getAttribute(JMX_PORT)
-
-        // TODO Want to wire this up so doesn't go through SubscriptionManager;
-        // but that's an optimisation we'll do later.
-        addEnricher(TimeWeightedDeltaEnricher.<Integer>getPerSecondDeltaEnricher(this, REQUEST_COUNT, REQUESTS_PER_SECOND))
-        addEnricher(new RollingTimeWindowMeanEnricher<Double>(this, REQUESTS_PER_SECOND, AVG_REQUESTS_PER_SECOND,
-            AVG_REQUESTS_PER_SECOND_PERIOD))
-
-        initHttpSensors()
 
         def warFile = getConfig(WAR)
         if (warFile) {
@@ -126,9 +130,12 @@ public abstract class JavaWebApp extends JavaApp {
     }
 
     @Override
-    public void preStop() {
+    public void stop() {
+    	super.stop()
         // zero our workrate derived workrates.
-        // TODO might not be enough, as policy is still executing and has a record of historic vals; should remove policies
+        // TODO might not be enough, as policy may still be executing and have a record of historic vals; should remove policies
+		// (also not sure we want this; implies more generally a responsibility for sensors to announce things when disconnected,
+		// vs them just showing the last known value...)
         setAttribute(REQUESTS_PER_SECOND, 0)
         setAttribute(AVG_REQUESTS_PER_SECOND, 0)
     }

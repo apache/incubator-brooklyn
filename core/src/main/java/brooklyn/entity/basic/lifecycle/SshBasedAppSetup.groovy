@@ -1,4 +1,4 @@
-package brooklyn.util
+package brooklyn.entity.basic.lifecycle
 
 import java.io.File
 import java.util.List
@@ -7,10 +7,9 @@ import java.util.Map
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.EntityLocal
-import brooklyn.entity.basic.Lifecycle
+import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.location.PortRange
 import brooklyn.location.basic.BasicPortRange
 import brooklyn.location.basic.SshMachineLocation
@@ -28,46 +27,26 @@ import com.google.common.base.Strings
 
 //FIXME ALEX move to brooklyn.entity.util or .basic or even .drivers package, as this is tied to entities (also its test)
 //FIXME ALEX rename SshBasedSoftwareSetup
-public abstract class SshBasedAppSetup {
+public abstract class SshBasedAppSetup extends AbstractStartStopHelper {
     protected static final Logger log = LoggerFactory.getLogger(SshBasedAppSetup.class)
 
     public static final String BROOKLYN_HOME_DIR = "/tmp/brooklyn"
     public static final String DEFAULT_INSTALL_BASEDIR = BROOKLYN_HOME_DIR+"/"+"installs"
 
-    EntityLocal entity
-    SshMachineLocation machine
-
-    protected String version
-    protected String installDir
-    protected String runDir
-    protected String deployDir
+    String version
+    String installDir
+    String runDir
+    String deployDir
 
     public SshBasedAppSetup(EntityLocal entity, SshMachineLocation machine) {
-        this.entity = entity
-        this.machine = machine
+		super(entity, machine)
     }
 
-	public void setInstallDir(String val) {
-        installDir = val
-    }
-
-    public void setRunDir(String val) {
-        runDir = val
-    }
-
-    public void setDeployDir(String val) {
-        deployDir = val
-    }
-
-    public void setVersion(String val) {
-        version = val
-    }
-
+	public SshMachineLocation getMachine() { location }
+	
     protected void setEntityAttributes() {
         entity.setAttribute(Attributes.VERSION, version)
     }
-
-    protected void setCustomAttributes() { }
 
     /**
      * Add generic commands to an application specific installation script.
@@ -89,8 +68,8 @@ public abstract class SshBasedAppSetup {
 			"mkdir -p \$INSTALL",
 			"cd \$INSTALL/..",
         ]
-        lines.each { line -> script += "${line}" }
-        script += "date > \$INSTALL/../BROOKLYN"
+        lines.each { script << it }
+        script << "date > \$INSTALL/../BROOKLYN"
         return script
     }
 
@@ -128,7 +107,7 @@ public abstract class SshBasedAppSetup {
     /**
      * The environment variables to be set when executing the commands (for install, run, check running, etc).
      */
-    public abstract Map<String, String> getShellEnvironment();
+    public Map<String, String> getShellEnvironment() { [:] }
 
     /**
      * The script to run to on a remote machine to determine whether the
@@ -227,7 +206,6 @@ public abstract class SshBasedAppSetup {
     public void config() {
         synchronized (entity) {
             setEntityAttributes()
-            setCustomAttributes()
 
             List<String> script = getConfigScript()
             if (script) {
@@ -298,23 +276,12 @@ public abstract class SshBasedAppSetup {
         log.debug "done invoking shutdown script for {}", entity
     }
 
-    /**
-     * Start the application.
-     *
-     * this installs, configures and launches the application process. However,
-     * users can also call the {@link #install()}, {@link #config()} and
-     * {@link #runApp()} steps independently. The {@link #postStart()} method
-     * will be called after the application run script has been executed, but
-     * the process may not be completely initialised at this stage, so care is
-     * required when implementing these stages.
-     *
-     * @see #stop()
-     */
-    public void start() {
-        install()
-        config()
-        runApp()
-    }
+	public void customize() {
+		config();
+	}
+	public void launch() {
+		runApp();
+	}
 
     /**
      * Stop the application.

@@ -9,8 +9,10 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.ConfigKey
 import brooklyn.entity.Entity
+import brooklyn.entity.basic.lifecycle.StartStopHelper
 import brooklyn.entity.trait.Startable
 import brooklyn.event.AttributeSensor
+import brooklyn.event.adapter.ConfigSensorAdapter
 import brooklyn.event.adapter.SensorRegistry
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
@@ -19,7 +21,6 @@ import brooklyn.location.MachineLocation
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.NoMachinesAvailableException
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.SshBasedAppSetup
 import brooklyn.util.flags.SetFromFlag
 
 import com.google.common.base.Preconditions
@@ -51,7 +52,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
     public static final BasicAttributeSensor<Lifecycle> SERVICE_STATE = [ Lifecycle, "service.state", "Service lifecycle state" ]
 
     private MachineProvisioningLocation provisioningLoc
-    protected SshBasedAppSetup setup
+    protected StartStopHelper setup
     protected transient SensorRegistry sensorRegistry
     
     public SoftwareProcessEntity(Map properties=[:], Entity owner=null) {
@@ -61,26 +62,28 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
         setAttribute(SERVICE_STATE, Lifecycle.CREATED)
     }
 
-    public abstract SshBasedAppSetup getSshBasedSetup(SshMachineLocation loc)
+    public abstract StartStopHelper getSshBasedSetup(SshMachineLocation loc)
 
-    protected void preStart() { }
-    protected void initSensors() { }
-    protected void postStart() { }
-    
+    protected void postStart() {
+		connectSensors() 
+	}
+    protected void connectSensors() {
+		
+		//publish attributes for all config attribute sensors
+		//TODO should only be applied at initial deployment
+		sensorRegistry.register(new ConfigSensorAdapter())
+		
+    }
+	
     protected void preStop() { }
-    protected void postStop() { }
-
+    
+	
     public void start(Collection<Location> locations) {
         setAttribute(SERVICE_STATE, Lifecycle.STARTING)
-        sensorRegistry = new SensorRegistry(this)
-        
-        preStart()
+        if (!sensorRegistry) sensorRegistry = new SensorRegistry(this)
         startInLocation locations
-        setAttribute(SERVICE_STATE, Lifecycle.STARTED)
-
-        initSensors()
         postStart()
-
+		sensorRegistry.activateAdapters()
         setAttribute(SERVICE_STATE, Lifecycle.RUNNING)
     }
 
@@ -139,9 +142,10 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
     public void stop() {
         setAttribute(SERVICE_STATE, Lifecycle.STOPPING)
 		if (sensorRegistry!=null) sensorRegistry.deactivateAdapters();
+		preStop()
         MachineLocation machine = removeFirstMatchingLocation({ it in MachineLocation })
         if (machine) {
-            shutdownInLocation(machine)
+            stopInLocation(machine)
         }
         setAttribute(SERVICE_STATE, Lifecycle.STOPPED)
         setAttribute(SERVICE_UP, false)
@@ -155,21 +159,19 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
         }
     }
 
-    public void shutdownInLocation(MachineLocation machine) {
+    public void stopInLocation(MachineLocation machine) {
         if (sensorRegistry) sensorRegistry.close()
-        
-        preStop()
         if (setup) setup.stop()
-        postStop()
         
-        // Only release this machine if we ourselves provisioned it (e.g. it might be running multiple services)
+        // Only release this machine if we ourselves provisioned it (e.g. it might be running other services)
         provisioningLoc?.release(machine)
+		
+		setup = null;
     }
 
     public void restart() {
-        if (setup) {
-            setup.restart()
-        }
+        if (setup) setup.restart()
+        else throw new IllegalStateException("entity "+this+" not set up for operations (restart)")
     }
 
     public File copy(String file) {

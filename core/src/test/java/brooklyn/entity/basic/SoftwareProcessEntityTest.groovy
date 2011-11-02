@@ -9,11 +9,11 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.Application
 import brooklyn.entity.ConfigKey
+import brooklyn.entity.basic.lifecycle.SshBasedAppSetup;
 import brooklyn.location.MachineLocation
 import brooklyn.location.basic.FixedListMachineProvisioningLocation
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.SshBasedAppSetup
 
 
 public class SoftwareProcessEntityTest {
@@ -47,9 +47,6 @@ public class SimulatedSshBasedAppSetup extends SshBasedAppSetup {
     }
     public List<String> getRunScript() {
         return []
-    }
-    public Map<String, String> getShellEnvironment() {
-        return [:]
     }
     public List<String> getCheckRunningScript() {
         return []
