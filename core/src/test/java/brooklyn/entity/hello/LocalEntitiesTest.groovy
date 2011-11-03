@@ -190,7 +190,7 @@ class LocalEntitiesTest {
         //shouldn't have blocked for very long at all
         assertTrue(System.currentTimeMillis() - startTime < 1500)
         //and sons config should now pick up the dad's attribute
-        assertEquals("Dan", sonsConfig[0])
+        assertEquals(sonsConfig[0], "Dan")
 	}
 	@Test
 	public void testConfigSetFromAttributeWhenReadyTransformations() {
@@ -204,7 +204,7 @@ class LocalEntitiesTest {
         son.setConfig(HelloEntity.MY_NAME, transform(attributeWhenReady(dad, HelloEntity.FAVOURITE_NAME), { it+it[-1]+"y" }))
 		dad.setAttribute(HelloEntity.FAVOURITE_NAME, "Dan");
 		a.start([new MockLocation()])
-        assertEquals("Danny", son.getConfig(HelloEntity.MY_NAME))
+        assertEquals(son.getConfig(HelloEntity.MY_NAME), "Danny")
     }
 
 

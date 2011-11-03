@@ -13,7 +13,7 @@ import org.testng.annotations.Test
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.EntityLocal
-import brooklyn.entity.basic.lifecycle.SshBasedAppSetup;
+import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup;
 import brooklyn.entity.driver.MockSshBasedSoftwareSetup
 import brooklyn.entity.trait.Startable
 import brooklyn.event.Sensor
@@ -58,7 +58,7 @@ class AbstractControllerTest {
                 log.info "update, with addresses $addresses"
                 updates.add(addresses)
             }
-            public SshBasedAppSetup getSshBasedSetup(SshMachineLocation machine) {
+            public SshBasedAppSetup newDriver(SshMachineLocation machine) {
                 return new MockSshBasedSoftwareSetup(this, machine);
             }
         }

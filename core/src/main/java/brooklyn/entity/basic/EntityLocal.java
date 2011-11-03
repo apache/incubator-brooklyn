@@ -86,4 +86,6 @@ public interface EntityLocal extends Entity {
     
     ManagementContext getManagementContext();
     ExecutionContext getExecutionContext();
+    
+    public Map<String,Sensor<?>> getSensors();
 }

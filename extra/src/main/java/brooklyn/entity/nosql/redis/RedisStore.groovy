@@ -1,7 +1,6 @@
 package brooklyn.entity.nosql.redis
 
 import java.util.Collection
-import java.util.List
 import java.util.Map
 
 import org.slf4j.Logger
@@ -10,17 +9,15 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.SoftwareProcessEntity
-import brooklyn.entity.basic.lifecycle.SshBasedAppSetup;
+import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup;
 import brooklyn.entity.nosql.DataStore
 import brooklyn.entity.nosql.Shard
 import brooklyn.event.adapter.SensorRegistry
-import brooklyn.event.adapter.legacy.OldSshSensorAdapter;
-import brooklyn.event.adapter.legacy.ValueProvider;
+import brooklyn.event.adapter.legacy.OldSshSensorAdapter
+import brooklyn.event.adapter.legacy.ValueProvider
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.ConfiguredAttributeSensor
-import brooklyn.location.Location
-import brooklyn.location.MachineLocation
 import brooklyn.location.basic.SshMachineLocation
 
 import com.google.common.base.Charsets
@@ -61,18 +58,18 @@ public class RedisStore extends SoftwareProcessEntity implements DataStore {
     }
 
     protected void initSshSensors() {
-        sshAdapter = new OldSshSensorAdapter(this, setup.machine)
+        sshAdapter = new OldSshSensorAdapter(this, driver.machine)
  
         addSshSensors()
     }
 
     protected void addSshSensors() {
-        sensorRegistry.addSensor(SERVICE_UP, sshAdapter.newMatchValueProvider("${setup.runDir}/bin/redis-cli ping", /PONG/))
+        sensorRegistry.addSensor(SERVICE_UP, sshAdapter.newMatchValueProvider("${driver.runDir}/bin/redis-cli ping", /PONG/))
         sensorRegistry.addSensor(UPTIME, { computeUptime() } as ValueProvider)
     }
     
     private Integer computeUptime() {
-        String output = sshAdapter.newOutputValueProvider("${setup.runDir}/bin/redis-cli info").compute()
+        String output = sshAdapter.newOutputValueProvider("${driver.runDir}/bin/redis-cli info").compute()
         for (String line : output.split("\n")) {
             if (line =~ /^uptime_in_seconds:/) {
                 String data = line.trim()
@@ -83,7 +80,7 @@ public class RedisStore extends SoftwareProcessEntity implements DataStore {
         return null
     }
 
-    public SshBasedAppSetup getSshBasedSetup(SshMachineLocation machine) {
+    public SshBasedAppSetup newDriver(SshMachineLocation machine) {
         return RedisSetup.newInstance(this, machine)
     }
 
@@ -100,9 +97,9 @@ public class RedisStore extends SoftwareProcessEntity implements DataStore {
 
         File config = new File("/tmp/${id}")
         Files.write(getConfigData(port, include), config, Charsets.UTF_8)
-		setup.machine.copyTo config, "${setup.runDir}/redis.conf"
+		driver.machine.copyTo config, "${driver.runDir}/redis.conf"
         config.delete()
-        if (include) setup.machine.copyTo configFile, "${setup.runDir}/include.conf"
+        if (include) driver.machine.copyTo configFile, "${driver.runDir}/include.conf"
         
         super.configure()
     }
@@ -110,11 +107,11 @@ public class RedisStore extends SoftwareProcessEntity implements DataStore {
     public String getConfigData(int port, boolean include) {
         String data = """
 daemonize yes
-pidfile ${setup.runDir}/pid.txt
+pidfile ${driver.runDir}/pid.txt
 port ${port}
 """
         if (include) data += """
-include ${setup.runDir}/include.conf
+include ${driver.runDir}/include.conf
 """
         data
     }
@@ -137,7 +134,7 @@ public class RedisSlave extends RedisStore {
 
     @Override
     public String getConfigData(int port, boolean include) {
-        String masterAddress = master.setup.machine.address.hostAddress
+        String masterAddress = master.driver.machine.address.hostAddress
         int masterPort = owner.getAttribute(REDIS_PORT)
 
         super.getConfigData(port, include) + """

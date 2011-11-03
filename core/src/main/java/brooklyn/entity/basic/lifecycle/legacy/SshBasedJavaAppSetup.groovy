@@ -1,4 +1,4 @@
-package brooklyn.entity.basic.lifecycle
+package brooklyn.entity.basic.lifecycle.legacy
 
 import java.util.Map
 
@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.EntityLocal
-import brooklyn.entity.basic.JavaApp
+import brooklyn.entity.basic.legacy.JavaApp;
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.internal.StringEscapeUtils;
@@ -23,7 +23,6 @@ import brooklyn.util.internal.StringEscapeUtils;
 public abstract class SshBasedJavaAppSetup extends SshBasedAppSetup {
     static final Logger log = LoggerFactory.getLogger(SshBasedJavaAppSetup.class)
 
-    protected boolean jmxEnabled = true
     protected int jmxPort
     protected int rmiPort
     protected Map<String,Map<String,String>> environmentPropertyFiles = [:]
@@ -33,10 +32,8 @@ public abstract class SshBasedJavaAppSetup extends SshBasedAppSetup {
         super(entity, machine)
     }
 
-    public void setJmxEnabled(boolean val) {
-        jmxEnabled = val
-    }
-
+	public boolean isJmxEnabled() { true }
+	
     public void setJmxPort(int val) {
         jmxPort = val
     }

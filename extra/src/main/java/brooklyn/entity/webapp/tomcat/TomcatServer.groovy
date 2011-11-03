@@ -9,8 +9,8 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
-import brooklyn.entity.basic.lifecycle.SshBasedAppSetup;
-import brooklyn.entity.webapp.JavaWebApp
+import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup;
+import brooklyn.entity.webapp.OldJavaWebApp
 import brooklyn.event.EntityStartException
 import brooklyn.event.adapter.legacy.ValueProvider;
 import brooklyn.event.basic.BasicAttributeSensor
@@ -21,7 +21,7 @@ import brooklyn.util.internal.Repeater
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Tomcat instance.
  */
-public class TomcatServer extends JavaWebApp {
+public class TomcatServer extends OldJavaWebApp {
     private static final Logger log = LoggerFactory.getLogger(TomcatServer.class)
     
     public static final BasicConfigKey<Integer> SUGGESTED_SHUTDOWN_PORT =
@@ -45,7 +45,7 @@ public class TomcatServer extends JavaWebApp {
         return result
     }
 
-    public SshBasedAppSetup getSshBasedSetup(SshMachineLocation machine) {
+    public SshBasedAppSetup newDriver(SshMachineLocation machine) {
         return Tomcat7SshSetup.newInstance(this, machine)
     }
     

@@ -111,7 +111,7 @@ public class WebAppLiveIntegrationTest {
     }
 
     @Test(groups = [ "Live" ], dataProvider="basicEntities")
-    public void testStartsWebAppInAws(final JavaWebApp entity) {
+    public void testStartsWebAppInAws(final OldJavaWebApp entity) {
         entity.start([ loc ])
         executeUntilSucceedsWithShutdown(entity, abortOnError:false, timeout:75*SECONDS, useGroovyTruth:true) {
             assertTrue(entity.getAttribute(Startable.SERVICE_UP))

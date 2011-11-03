@@ -1,4 +1,4 @@
-package brooklyn.entity.basic.lifecycle
+package brooklyn.entity.basic.lifecycle.legacy
 
 import java.io.File
 import java.util.List
@@ -10,6 +10,9 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.entity.basic.SoftwareProcessEntity
+import brooklyn.entity.basic.lifecycle.ScriptHelper;
+import brooklyn.entity.basic.lifecycle.ScriptRunner;
+import brooklyn.entity.basic.lifecycle.StartStopSshDriver;
 import brooklyn.location.PortRange
 import brooklyn.location.basic.BasicPortRange
 import brooklyn.location.basic.SshMachineLocation
@@ -25,29 +28,104 @@ import com.google.common.base.Strings
  * @see SshMachineLocation
  */
 
-//FIXME ALEX move to brooklyn.entity.util or .basic or even .drivers package, as this is tied to entities (also its test)
 //FIXME ALEX rename SshBasedSoftwareSetup
-public abstract class SshBasedAppSetup extends AbstractStartStopHelper {
+public abstract class SshBasedAppSetup extends StartStopSshDriver implements ScriptRunner {
     protected static final Logger log = LoggerFactory.getLogger(SshBasedAppSetup.class)
 
-    public static final String BROOKLYN_HOME_DIR = "/tmp/brooklyn"
-    public static final String DEFAULT_INSTALL_BASEDIR = BROOKLYN_HOME_DIR+"/"+"installs"
+	public void setVersion(String s) {
+		if (getVersion()!=s) log.warn("unsupported setting $s (is ${getVersion()})", new Throwable())
+	}
+//	public void setInstallDir(String s) {
+//		if (getInstallDir()!=s) log.warn("unsupported setting $s (is ${getInstallDir()})", new Throwable())
+//	}
+	public void setRunDir(String s) {
+		if (getRunDir()!=s) log.warn("unsupported setting $s (is ${getRunDir()}", new Throwable())
+	}
 
-    String version
-    String installDir
-    String runDir
+	//for compatibility with legacy entities
+	String manualInstallDir = null;
+	protected String setInstallDir(String val) {
+		manualInstallDir = val
+	}
+	@Override
+	protected String getInstallDir() {
+		manualInstallDir ?: super.getInstallDir()
+	}
+	
+	protected String getDefaultVersion() { 
+		def result = super.getDefaultVersion();
+		if (result==NO_VERSION_INFO && hasProperty("DEFAULT_VERSION"))
+			return getProperty("DEFAULT_VERSION");
+		return result; 
+	}
+
     String deployDir
 
     public SshBasedAppSetup(EntityLocal entity, SshMachineLocation machine) {
 		super(entity, machine)
     }
-
-	public SshMachineLocation getMachine() { location }
+		
+	protected void setEntityAttributes() {
+		entity.setAttribute(Attributes.VERSION, version)
+	}
 	
-    protected void setEntityAttributes() {
-        entity.setAttribute(Attributes.VERSION, version)
-    }
+	// old style script...
+	protected ScriptHelper newScript(Map flags=[:], String phase) {
+		def s = new ScriptHelper(this, phase+" "+this);
+		if (phase==INSTALLING) {
+			s.header.append(
+				'export INSTALL_DIR="'+installDir+'"',
+				'test -f $INSTALL_DIR/../BROOKLYN && exit 0',
+				'mkdir -p $INSTALL_DIR',
+				'cd $INSTALL_DIR/..'
+			).footer.append(
+				'date > $INSTALL_DIR/../BROOKLYN'
+			)
+		}
+		if (phase in [CUSTOMIZING, LAUNCHING, CHECK_RUNNING, STOPPING]) {
+			s.header.append(
+				"export RUN_DIR=\"${runDir}\"",
+				'mkdir -p $RUN_DIR',
+				'cd $RUN_DIR'
+			)
+		}
+		
+		if (phase in [CUSTOMIZING])
+			s.skipIfBodyEmpty()
+		if (phase in [CHECK_RUNNING, LAUNCHING, STOPPING])
+			s.failIfBodyEmpty()
 
+		if (flags.usePidFile) {
+			String pidFile = (flags.usePidFile in String ? flags.usePidFile : "${runDir}/pid.txt")
+			if (phase in [LAUNCHING])
+				s.footer.prepend("cat \$! > ${pidFile}")
+			else if (phase in [CHECK_RUNNING])
+				s.body.append(
+					"test -f ${pidFile} || exit 1", //no pid, not running
+					
+					//old method, for supplied service, or entity.id
+//					"ps aux | grep ${service} | grep \$(cat ${pidFile}) > /dev/null"
+					//new way, preferred?
+					"ps -p `cat ${pidFile}`",
+					
+				).requireResultCode { it==0 || it==1 }
+				// 1 is not running
+				
+			else if (phase in [STOPPING])
+				s.body.append(
+					"export PID=`cat ${pidFile}`",
+					'[[ -n "$PID" ]] || exit 0',
+					'kill $PID',
+					'kill -9 $PID',
+					"rm ${pidFile}"
+				)
+			else
+				log.warn("usePidFile script option not valid for "+s.summary)
+		}
+		
+		return s
+	}
+	
     /**
      * Add generic commands to an application specific installation script.
      *
@@ -61,16 +139,7 @@ public abstract class SshBasedAppSetup extends AbstractStartStopHelper {
      * @see #getInstallScript()
      */
     protected List<String> makeInstallScript(List<String> lines) {
-        if (lines.isEmpty()) return lines
-        List<String> script = [
-            "export INSTALL=\"${installDir}\"",
-            "test -f \$INSTALL/../BROOKLYN && exit 0",
-			"mkdir -p \$INSTALL",
-			"cd \$INSTALL/..",
-        ]
-        lines.each { script << it }
-        script << "date > \$INSTALL/../BROOKLYN"
-        return script
+		newScript(INSTALLING).body.append(lines).lines
     }
 
     /**
@@ -103,11 +172,6 @@ public abstract class SshBasedAppSetup extends AbstractStartStopHelper {
      * @see #getShellEnvironment()
      */
     public abstract List<String> getRunScript();
-
-    /**
-     * The environment variables to be set when executing the commands (for install, run, check running, etc).
-     */
-    public Map<String, String> getShellEnvironment() { [:] }
 
     /**
      * The script to run to on a remote machine to determine whether the
@@ -218,11 +282,12 @@ public abstract class SshBasedAppSetup extends AbstractStartStopHelper {
         }
     }
 
-    protected void exec(List<String> script, String summaryForLogging="execute for") {
+    protected int exec(List<String> script, String summaryForLogging="execute for", boolean terminateOnExit) {
         synchronized (entity) {
-            log.info(summaryForLogging+" entity {} on machine {}: {}", entity, machine, script)
-            int result = machine.run(out:System.out, err:System.err, script)
-            if (result) throw new IllegalStateException("failed to "+summaryForLogging+" $entity (exit code $result)")
+			int result = execute(script, summaryForLogging);
+            if (terminateOnExit && result) 
+				throw new IllegalStateException("failed to "+summaryForLogging+" $entity (exit code $result)")
+			result;
         }
     }
 
@@ -310,7 +375,6 @@ public abstract class SshBasedAppSetup extends AbstractStartStopHelper {
         if (restartScript.isEmpty()) {
 	        stop()
 	        runApp()
-	        postStart()
         } else {
 	        log.debug "invoking restart script on {}: {}", entity, restartScript
 	        def result = machine.run(out:System.out, err:System.err, restartScript)
@@ -385,11 +449,11 @@ public abstract class SshBasedAppSetup extends AbstractStartStopHelper {
      */
     public File copy(File file) {
         File target = new File(runDir, file.name)
-        log.info "Deploying file {} to {} on {}", file.name, target, machine
+        log.info "deploying file {} to {} on {}", file.name, target, machine
         try {
             machine.copyTo file, target
-        } catch (IOException ioe) {
-            log.error "Failed to copy {} to {}: {}", file.name, machine, ioe.message
+        } catch (Exception ioe) {
+            log.error "Failed to copy {} to {} (rethrowing): {}", file.name, machine, ioe.message
             throw new IllegalStateException("Failed to copy ${file.name} to ${machine}", ioe)
         }
         return target
@@ -421,13 +485,17 @@ public abstract class SshBasedAppSetup extends AbstractStartStopHelper {
      * the Jsch scp command is not reliable.
      */
     public List<String> getDeployScript(File server, File target=null) {
-        if (target == null) {
-            target = new File(deployDir, server.name)
-        }
+		String t1 = (target!=null? target : new File(deployDir, server.name))
         List<String> script = [
             "test -f ${server} || exit 1",
-            "cp ${server} ${target}",
+            "cp ${server} ${t1}",
         ]
+		if (target==null) {
+			// FIXME this is a hack, currently deploys as ROOT.war also, for anything which has no name specified
+			// root wars are handled correctly in the brooklyn JBoss7 class hierarchy
+			t1 = new File(deployDir, "ROOT.war")
+			script << "cp ${server} ${t1}"
+		}
         return script
     }
 }

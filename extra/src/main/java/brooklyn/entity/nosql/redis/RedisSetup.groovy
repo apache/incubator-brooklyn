@@ -6,7 +6,7 @@ import java.util.Map
 import com.google.common.base.Preconditions;
 
 import brooklyn.entity.basic.Attributes
-import brooklyn.entity.basic.lifecycle.SshBasedAppSetup;
+import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup;
 import brooklyn.location.basic.SshMachineLocation
 
 /**

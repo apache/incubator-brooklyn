@@ -3,12 +3,12 @@ package brooklyn.entity.nosql.gemfire
 import brooklyn.entity.Effector
 import brooklyn.entity.Entity
 import brooklyn.entity.ParameterType
-import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.basic.BasicParameterType
 import brooklyn.entity.basic.EffectorWithExplicitImplementation
-import brooklyn.entity.basic.lifecycle.SshBasedAppSetup;
-import brooklyn.event.adapter.legacy.OldHttpSensorAdapter;
-import brooklyn.event.adapter.legacy.ValueProvider;
+import brooklyn.entity.basic.SoftwareProcessEntity
+import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup
+import brooklyn.event.adapter.legacy.OldHttpSensorAdapter
+import brooklyn.event.adapter.legacy.ValueProvider
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.basic.SshMachineLocation
@@ -88,7 +88,7 @@ class GemfireServer extends SoftwareProcessEntity {
 		
         int hubPort = getConfig(SUGGESTED_HUB_PORT)
         setAttribute(HUB_PORT, hubPort)
-        setAttribute(CONTROL_URL, "http://${setup.machine.address.hostName}:"+CONTROL_PORT_VAL)
+        setAttribute(CONTROL_URL, "http://${driver.machine.address.hostName}:"+CONTROL_PORT_VAL)
         
         httpAdapter = new OldHttpSensorAdapter(this)
 
@@ -96,7 +96,7 @@ class GemfireServer extends SoftwareProcessEntity {
         sensorRegistry.addSensor(REGION_LIST, { listRegions() } as ValueProvider)
     }
     
-    public SshBasedAppSetup getSshBasedSetup(SshMachineLocation loc) {
+    public SshBasedAppSetup newDriver(SshMachineLocation loc) {
         return GemfireSetup.newInstance(this, loc)
     }
     

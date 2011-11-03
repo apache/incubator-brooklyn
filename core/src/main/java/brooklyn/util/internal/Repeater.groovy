@@ -142,11 +142,11 @@ public class Repeater {
     }
 
     /**
-     * Set the maximum execution time.
+     * Set the amount of time to wait for the condition.
+     * The repeater will wait at least this long for the condition to be true,
+     * and will exit soon after even if the condition is false.
      *
-     * The loop will exit if the condition has not been satisfied after this deadline has elapsed.
-     *
-     * @param deadline the maximum time that the loop should run.
+     * @param deadline the time that the loop should wait.
      * @param unit the unit of measurement of the period.
      * @return {@literal this} to aid coding in a fluent style.
      */

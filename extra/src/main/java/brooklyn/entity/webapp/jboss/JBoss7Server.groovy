@@ -9,15 +9,15 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
-import brooklyn.entity.webapp.JavaWebApp
-import brooklyn.event.adapter.ConfigSensorAdapter
+import brooklyn.entity.webapp.JavaWebAppService
+import brooklyn.entity.webapp.JavaWebAppSoftwareProcess
 import brooklyn.event.adapter.HttpSensorAdapter
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.ConfiguredAttributeSensor
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.flags.SetFromFlag
 
-public class JBoss7Server extends JavaWebApp {
+public class JBoss7Server extends JavaWebAppSoftwareProcess implements JavaWebAppService {
 
 	public static final Logger log = LoggerFactory.getLogger(JBoss7Server.class)
 	
@@ -27,15 +27,12 @@ public class JBoss7Server extends JavaWebApp {
 
     public static final BasicAttributeSensor<Integer> MANAGEMENT_STATUS =
             [ Integer, "webapp.http.managementStatus", "HTTP response code for the management server" ]
-    public static final BasicAttributeSensor<Long> BYTES_RECEIVED =
-            [ Long, "webapp.reqs.bytes.received", "Total bytes received by the webserver" ]
-    public static final BasicAttributeSensor<Long> BYTES_SENT =
-            [ Long, "webapp.reqs.bytes.sent", "Total bytes sent by the webserver" ]
     
+			
     public JBoss7Server(Map flags=[:], Entity owner=null) {
         super(flags, owner)
     }
-	
+		
 	@Override	
 	protected void connectSensors() {
 		super.connectSensors();
@@ -56,42 +53,8 @@ public class JBoss7Server extends JavaWebApp {
 			poll(BYTES_RECEIVED) { json.bytesReceived }
 			poll(BYTES_SENT, { json.bytesSent })
 		}
-		
-
-// 		checkAllSensorsRegistered()
-		
-//		//what about sensors where it doesn't necessarily make sense to register them here, e.g.:
-//		//  config -- easy to exclude (by type)
-//		//  lifecycle, member added -- ??
-//		//  enriched sensors -- could add the policies here
-//		//??
-//		//solutions
-//		//- could explicitly exclude here (and exclude things that already have a value, so really
-//		//     dev just has to list things which don't yet have a value (in post-start) but which will get one somehow
-//		//     but not using any of the adapters.  or things which might not be used.  that seems unlikely.
-//		//- or just don't try to check that everything is registered
-//		sensorRegistry.register(ManualSensorAdaptor).register(SOME_MANUAL_SENSOR)
-
-		// process thinking...
-		
-//		//above called during preStart()
-//		
-//		//below called in postStart.  or use subscriptions???
-//		sensorRegistry.adapters.each { it.postStart() }
-//		
-//		//or
-//		sensorRegistry.adapters.find({ it in OldJmxSensorAdapter })?.connect(block: true, publish: (getEntityClass().hasSensor(JMX_URL)))
-//		
-//		//and in the connection thread
 	}
-	
-	protected void initJmxSensors() {
-		// jmx not used here, prevent registration by parent
-	}
-	
-    //could use @SetupContributor, and register all such methods during load?
-    public JBoss7SshSetup getSshBasedSetup(SshMachineLocation machine) {
-        return JBoss7SshSetup.newInstance(this, machine)
-    }
-    
+
+    public JBoss7SshDriver newDriver(SshMachineLocation machine) { return new JBoss7SshDriver(this, machine) }
+
 }

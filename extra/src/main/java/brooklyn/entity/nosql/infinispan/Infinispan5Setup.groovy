@@ -5,7 +5,7 @@ import java.util.List
 import java.util.Map
 
 import brooklyn.entity.basic.Attributes
-import brooklyn.entity.basic.lifecycle.SshBasedJavaAppSetup;
+import brooklyn.entity.basic.lifecycle.legacy.SshBasedJavaAppSetup;
 import brooklyn.location.basic.SshMachineLocation
 
 /**

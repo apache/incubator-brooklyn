@@ -15,7 +15,7 @@ import brooklyn.entity.group.DynamicFabric
 import brooklyn.entity.proxy.nginx.NginxController
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster
 import brooklyn.entity.webapp.DynamicWebAppCluster
-import brooklyn.entity.webapp.JavaWebApp
+import brooklyn.entity.webapp.OldJavaWebApp
 import brooklyn.entity.webapp.jboss.JBoss7Server
 import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.launcher.BrooklynLauncher
@@ -46,7 +46,7 @@ public abstract class WebAppWideAreaExample extends AbstractApplication {
             NginxController nginxController = new NginxController(
                     domain:'brooklyn.geopaas.org',
                     port:8000,
-                    portNumberSensor:JavaWebApp.HTTP_PORT)
+                    portNumberSensor:OldJavaWebApp.HTTP_PORT)
 
             Map clusterFlags = new HashMap(flags) + [controller:nginxController, webServerFactory:webServerFactory]
             ControlledDynamicWebAppCluster webCluster = new ControlledDynamicWebAppCluster(clusterFlags, owner)
@@ -69,7 +69,7 @@ public abstract class WebAppWideAreaExample extends AbstractApplication {
                 displayNameSuffix : ' web cluster',
                 newEntity : webClusterFactory],
             this)
-        webFabric.setConfig(JavaWebApp.WAR, WAR_PATH)
+        webFabric.setConfig(OldJavaWebApp.WAR, WAR_PATH)
         webFabric.setConfig(Cluster.INITIAL_SIZE, 1)
         
         nginxEntities = new DynamicGroup([displayName: 'Web Fronts'], this, { Entity e -> (e instanceof NginxController) })
@@ -95,7 +95,7 @@ public class JBossWideAreaExample extends WebAppWideAreaExample {
     protected Closure getWebServerFactory() {
         return { Map properties, Entity cluster ->
             def server = new JBoss7Server(properties)
-            server.setConfig(JavaWebApp.HTTP_PORT.configKey, 8080)
+            server.setConfig(OldJavaWebApp.HTTP_PORT.configKey, 8080)
             return server;
         }
 
@@ -117,7 +117,7 @@ public class TomcatWideAreaExample extends WebAppWideAreaExample {
     protected Closure getWebServerFactory() {
         return { Map properties, Entity cluster ->
             def server = new TomcatServer(properties)
-            server.setConfig(JavaWebApp.HTTP_PORT.configKey, 8080)
+            server.setConfig(OldJavaWebApp.HTTP_PORT.configKey, 8080)
             return server;
         }
     }

@@ -137,7 +137,7 @@ public class TestUtils {
             log.trace "Exceeded max attempts or timeout - {} attempts lasting {} ms", attempt, System.currentTimeMillis()-startTime
             if (lastException != null)
                 throw lastException
-            fail "invalid result code $result"
+            fail "invalid result: $result"
         } finally {
             finallyBlock.call()
         }

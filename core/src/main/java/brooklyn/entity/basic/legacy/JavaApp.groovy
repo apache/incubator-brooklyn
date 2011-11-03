@@ -1,5 +1,6 @@
-package brooklyn.entity.basic
+package brooklyn.entity.basic.legacy
 
+import java.io.File;
 import java.util.Collection
 import java.util.Map
 import java.util.concurrent.TimeUnit
@@ -8,35 +9,24 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
+import brooklyn.entity.basic.SoftwareProcessEntity
+import brooklyn.entity.basic.UsesJmx
 import brooklyn.event.AttributeSensor
-import brooklyn.event.adapter.legacy.OldJmxSensorAdapter;
-import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.event.basic.BasicConfigKey
-import brooklyn.event.basic.ConfiguredAttributeSensor
+import brooklyn.event.adapter.legacy.OldJmxSensorAdapter
 import brooklyn.event.basic.MapConfigKey
-import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.internal.Repeater
 
 /**
  * An {@link brooklyn.entity.Entity} representing a single web application instance.
  */
-public abstract class JavaApp extends SoftwareProcessEntity {
+public abstract class JavaApp extends SoftwareProcessEntity implements UsesJmx {
     public static final Logger log = LoggerFactory.getLogger(JavaApp.class)
-
-    public static final int DEFAULT_JMX_PORT = 1099
-
-    @SetFromFlag("jmxPort")
-    public static final ConfiguredAttributeSensor<Integer> JMX_PORT = Attributes.JMX_PORT
-    @SetFromFlag("rmiPort")
-    public static final ConfiguredAttributeSensor<Integer> RMI_PORT = Attributes.RMI_PORT
-    @SetFromFlag("jmxContext")
-    public static final ConfiguredAttributeSensor<String> JMX_CONTEXT = Attributes.JMX_CONTEXT
-    
-    public static final BasicConfigKey<Map<String, String>> JAVA_OPTIONS = [ Map, "java.options", "Java options", [:] ]
+	
+	// too complicated, and not used
+	@Deprecated
     public static final MapConfigKey<Map> PROPERTY_FILES = [ Map, "java.properties.environment", "Property files to be generated, referenced by an environment variable" ]
-    public static final MapConfigKey<Map> NAMED_PROPERTY_FILES = [ Map, "java.properties.named", "Property files to be generated, referenced by name relative to runDir" ]
+//    public static final MapConfigKey<Map> NAMED_PROPERTY_FILES = [ Map, "java.properties.named", "Property files to be generated, referenced by name relative to runDir" ]
 
-    public static final BasicAttributeSensor<String> JMX_URL = [ String, "jmx.url", "JMX URL" ]
 
     transient OldJmxSensorAdapter jmxAdapter
     
@@ -89,8 +79,20 @@ public abstract class JavaApp extends SoftwareProcessEntity {
         if (jmxAdapter) jmxAdapter.disconnect();
     }
 
-    @Override
-    public Collection<String> toStringFieldsToInclude() {
-        return super.toStringFieldsToInclude() + ['jmxPort']
-    }
+	public File copy(String file) {
+		return copy(new File(file))
+	}
+
+	public File copy(File file) {
+		return driver.copy(file)
+	}
+
+	public void deploy(String file) {
+		deploy(new File(file))
+	}
+
+	public void deploy(File file, File target=null) {
+		driver.deploy(file, target)
+	}
+
 }

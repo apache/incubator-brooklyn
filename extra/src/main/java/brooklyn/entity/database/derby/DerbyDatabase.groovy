@@ -13,8 +13,8 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.Attributes
-import brooklyn.entity.basic.JavaApp
-import brooklyn.entity.basic.lifecycle.SshBasedAppSetup;
+import brooklyn.entity.basic.legacy.JavaApp;
+import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup;
 import brooklyn.entity.database.Database
 import brooklyn.entity.database.Schema
 import brooklyn.event.adapter.SensorRegistry
@@ -56,7 +56,7 @@ public class DerbyDatabase extends JavaApp implements Database {
         if (properties.schemas) schemaNames.addAll properties.schemas
     }
 
-    public SshBasedAppSetup getSshBasedSetup(SshMachineLocation machine) {
+    public SshBasedAppSetup newDriver(SshMachineLocation machine) {
         return DerbySetup.newInstance(this, machine)
     }
 

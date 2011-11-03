@@ -7,8 +7,8 @@ import java.util.Map
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
-import brooklyn.entity.basic.JavaApp
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.legacy.JavaApp;
 import brooklyn.event.adapter.SensorRegistry
 import brooklyn.event.adapter.legacy.OldJmxSensorAdapter;
 import brooklyn.event.basic.BasicAttributeSensor

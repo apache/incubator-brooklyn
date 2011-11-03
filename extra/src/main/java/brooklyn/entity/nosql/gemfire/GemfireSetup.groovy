@@ -3,7 +3,7 @@ package brooklyn.entity.nosql.gemfire
 import java.util.List
 import java.util.Map
 
-import brooklyn.entity.basic.lifecycle.SshBasedAppSetup;
+import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup;
 import brooklyn.location.basic.SshMachineLocation
 
 /**

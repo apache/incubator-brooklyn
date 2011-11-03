@@ -377,8 +377,14 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         setAttribute(configuredSensor, getConfig(configuredSensor.configKey))
     }
 
+	@Override
+	public <T> T getConfig(ConfigKey<T> key) { getConfig(key, null) }
+	@Override
+	public <T> T getConfig(HasConfigKey<T> key) { getConfig(key, null) }
+	
+	//don't use groovy defaults for defaultValue as that doesn't implement the contract; we need the above
     @Override
-    public <T> T getConfig(ConfigKey<T> key, T defaultValue=null) {
+    public <T> T getConfig(ConfigKey<T> key, T defaultValue) {
         // FIXME What about inherited task in config?!
 		//              alex says: think that should work, no?
         // FIXME What if someone calls getConfig on a task, before setting parent app?
@@ -391,7 +397,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
                 key.getDefaultValue()
     }
     @Override
-	public <T> T getConfig(HasConfigKey<T> key, T defaultValue=null) {
+	public <T> T getConfig(HasConfigKey<T> key, T defaultValue) {
 		return getConfig(key.configKey, defaultValue)
 	}
 	

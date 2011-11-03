@@ -9,13 +9,15 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.ConfigKey
 import brooklyn.entity.Entity
-import brooklyn.entity.basic.lifecycle.StartStopHelper
+import brooklyn.entity.basic.lifecycle.StartStopDriver
+import brooklyn.entity.basic.lifecycle.StartStopSshDriver;
 import brooklyn.entity.trait.Startable
 import brooklyn.event.AttributeSensor
 import brooklyn.event.adapter.ConfigSensorAdapter
 import brooklyn.event.adapter.SensorRegistry
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
+import brooklyn.event.basic.ConfiguredAttributeSensor;
 import brooklyn.location.Location
 import brooklyn.location.MachineLocation
 import brooklyn.location.MachineProvisioningLocation
@@ -34,159 +36,196 @@ import com.google.common.collect.Iterables
  * It exposes sensors for service state (Lifecycle) and status (String), and for host info, log file location.
  */
 public abstract class SoftwareProcessEntity extends AbstractEntity implements Startable {
-    public static final Logger log = LoggerFactory.getLogger(SoftwareProcessEntity.class)
+	public static final Logger log = LoggerFactory.getLogger(SoftwareProcessEntity.class)
 
-    @SetFromFlag("version")
-    public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.SUGGESTED_VERSION
-    @SetFromFlag("installDir")
-    public static final ConfigKey<String> SUGGESTED_INSTALL_DIR = ConfigKeys.SUGGESTED_INSTALL_DIR
-    @SetFromFlag("runDir")
-    public static final ConfigKey<String> SUGGESTED_RUN_DIR = ConfigKeys.SUGGESTED_RUN_DIR
+	@SetFromFlag("version")
+	public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.SUGGESTED_VERSION
+	@SetFromFlag("installDir")
+	public static final ConfigKey<String> SUGGESTED_INSTALL_DIR = ConfigKeys.SUGGESTED_INSTALL_DIR
+	@SetFromFlag("runDir")
+	public static final ConfigKey<String> SUGGESTED_RUN_DIR = ConfigKeys.SUGGESTED_RUN_DIR
+
+	@SetFromFlag("env")
+	public static final BasicConfigKey<Map> SHELL_ENVIRONMENT = [ Map, "shell.env", "Map of environment variables to pass to the runtime shell", [:] ]
+
+	public static final AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME
+	public static final AttributeSensor<String> ADDRESS = Attributes.ADDRESS
+
+	public static final BasicAttributeSensor<Lifecycle> SERVICE_STATE = [ Lifecycle, "service.state", "Service lifecycle state" ]
 	
-	@SetFromFlag("env")	
-    public static final BasicConfigKey<Map> SHELL_ENVIRONMENT = [ Map, "shell.env", "Map of environment variables to pass to the runtime shell", [:] ]
-	
-    public static final AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME
-    public static final AttributeSensor<String> ADDRESS = Attributes.ADDRESS
-	
-    public static final BasicAttributeSensor<Lifecycle> SERVICE_STATE = [ Lifecycle, "service.state", "Service lifecycle state" ]
+	private MachineProvisioningLocation provisioningLoc
+	private StartStopDriver driverLocal
+	protected transient SensorRegistry sensorRegistry
 
-    private MachineProvisioningLocation provisioningLoc
-    protected StartStopHelper setup
-    protected transient SensorRegistry sensorRegistry
-    
-    public SoftwareProcessEntity(Map properties=[:], Entity owner=null) {
-        super(properties, owner)
- 
-        setAttribute(SERVICE_UP, false)
-        setAttribute(SERVICE_STATE, Lifecycle.CREATED)
-    }
+	public SoftwareProcessEntity(Map properties=[:], Entity owner=null) {
+		super(properties, owner)
 
-    public abstract StartStopHelper getSshBasedSetup(SshMachineLocation loc)
-
-    protected void postStart() {
-		connectSensors() 
+		setAttribute(SERVICE_UP, false)
+		setAttribute(SERVICE_STATE, Lifecycle.CREATED)
 	}
-    protected void connectSensors() {
-		
-		//publish attributes for all config attribute sensors
-		//TODO should only be applied at initial deployment
-		sensorRegistry.register(new ConfigSensorAdapter())
-		
-    }
+
+	public StartStopDriver getDriver() { driverLocal }
+	@Deprecated /** refer to driver instead */
+	public StartStopDriver getSetup() { driver }
 	
-    protected void preStop() { }
-    
+	protected abstract StartStopDriver newDriver(SshMachineLocation loc);
+
+	protected void postStart() {
+		connectSensors()
+		checkAllSensorsConnected()
+	}
 	
-    public void start(Collection<Location> locations) {
-        setAttribute(SERVICE_STATE, Lifecycle.STARTING)
-        if (!sensorRegistry) sensorRegistry = new SensorRegistry(this)
-        startInLocation locations
-        postStart()
+	/** lifecycle message for connecting sensors to registry;
+	 * typically overridden by subclasses */
+	protected void connectSensors() {
+	}
+
+	protected void checkAllSensorsConnected() {
+		//TODO
+
+		/*
+				what about sensors where it doesn't necessarily make sense to register them here, e.g.:
+				  config -- easy to exclude (by type)
+				  lifecycle, member added -- ??
+				  enriched sensors -- could add the policies here
+		
+				proposed solution:
+				  - ignore if registered
+				  - ignore is has a value
+				  - ignore if manually excluded (registered with "manual provider"), e.g.
+   						sensorRegistry.register(ManualSensorAdaptor).register(SOME_MANUAL_SENSOR)
+				  
+				those which are updated by a policy need to get recorded somehow
+		*/
+	}
+
+	protected void preStop() { }
+
+
+	public void start(Collection<Location> locations) {
+		setAttribute(SERVICE_STATE, Lifecycle.STARTING)
+		if (!sensorRegistry) sensorRegistry = new SensorRegistry(this)
+		// TODO really should happen on deploy...
+		ConfigSensorAdapter.apply(this);
+
+		startInLocation locations
+		postStart()
 		sensorRegistry.activateAdapters()
-        setAttribute(SERVICE_STATE, Lifecycle.RUNNING)
-    }
+		setAttribute(SERVICE_STATE, Lifecycle.RUNNING)
+	}
 
-    public void startInLocation(Collection<Location> locations) {
-        Preconditions.checkArgument locations.size() == 1
-        Location location = Iterables.getOnlyElement(locations)
-        startInLocation(location)
-    }
+	public void startInLocation(Collection<Location> locations) {
+		Preconditions.checkArgument locations.size() == 1
+		Location location = Iterables.getOnlyElement(locations)
+		startInLocation(location)
+	}
 
-    public void startInLocation(MachineProvisioningLocation location) {
-        Map<String,Object> flags = location.getProvisioningFlags([ getClass().getName() ])
-        // XXX port setup is fundamentally broken, I believe...
-        // flags.inboundPorts = getRequiredOpenPorts()
-        
-        provisioningLoc = location
-        SshMachineLocation machine = location.obtain(flags)
-        if (machine == null) throw new NoMachinesAvailableException(location)
-        startInLocation(machine)
-    }
-    
-    protected Collection<Integer> getRequiredOpenPorts() {
-        return [22]
-    }
-    
-    public void startInLocation(SshMachineLocation machine) {
-        locations.add(machine)
+	public void startInLocation(MachineProvisioningLocation location) {
+		Map<String,Object> flags = location.getProvisioningFlags([ getClass().getName() ])
+		// XXX port setup was never quite completed to be working:
+		// flags.inboundPorts = getRequiredOpenPorts()
+		// preferred now is to interrogate the helper to expose getUsedPorts
 
-        setAttribute(HOSTNAME, machine.address.hostName)
-        setAttribute(ADDRESS, machine.address.hostAddress)
+		provisioningLoc = location
+		SshMachineLocation machine = location.obtain(flags)
+		if (machine == null) throw new NoMachinesAvailableException(location)
+		startInLocation(machine)
+	}
 
-        setup = getSshBasedSetup(machine)
-        if (setup) {
-            setup.start()
-	        waitForEntityStart()
-        } else {
-            throw new UnsupportedOperationException("cannot start ${this} on ${machine}: no setup class found");
-        }
-    }
+	@Deprecated
+	protected Collection<Integer> getRequiredOpenPorts() {
+		return ([22] + (!driver? [] : driver.getPortsUsed())) as Set
+	}
 
-    // TODO Find a better way to detect early death of process.
-    public void waitForEntityStart() throws IllegalStateException {
-        log.debug "waiting to ensure $this doesn't abort prematurely"
-        long startTime = System.currentTimeMillis()
-        long waitTime = startTime + 75000 // FIXME magic number; should be config key with default value?
-        boolean isRunningResult = false;
-        while (!isRunningResult && System.currentTimeMillis() < waitTime) {
-            Thread.sleep 3000 // FIXME magic number; should be config key with default value?
-            isRunningResult = setup.isRunning()
-            log.debug "checked $this, running result $isRunningResult"
-        }
-        if (!isRunningResult) {
-            setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE)
-        }
-    }
+	public void startInLocation(SshMachineLocation machine) {
+		locations.add(machine)
 
-    public void stop() {
-        setAttribute(SERVICE_STATE, Lifecycle.STOPPING)
+		setAttribute(HOSTNAME, machine.address.hostName)
+		setAttribute(ADDRESS, machine.address.hostAddress)
+
+		if (driver!=null) {
+			if ((driver in StartStopSshDriver) && ( ((StartStopSshDriver)driver).location==machine)) {
+				//just reuse
+			} else {
+				log.warn("driver/location change for {} is untested: cannot start ${this} on ${machine}: driver already created");
+				driverLocal = newDriver(machine)
+			}
+		} else {
+			driverLocal = newDriver(machine)
+		}
+		if (driver) {
+			driver.start()
+			waitForEntityStart()
+		} else {
+			throw new UnsupportedOperationException("cannot start ${this} on ${machine}: no setup class found");
+		}
+	}
+
+	// TODO Find a better way to detect early death of process.
+	public void waitForEntityStart() throws IllegalStateException {
+		log.debug "waiting to ensure $this doesn't abort prematurely"
+		long startTime = System.currentTimeMillis()
+		long waitTime = startTime + 75000 // FIXME magic number; should be config key with default value?
+		boolean isRunningResult = false;
+		while (!isRunningResult && System.currentTimeMillis() < waitTime) {
+			isRunningResult = driver.isRunning()
+			log.debug "checked {}, is running returned: {}", this, isRunningResult
+			Thread.sleep 1000 // FIXME magic number; should be config key with default value?
+		}
+		if (!isRunningResult) {
+			setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE)
+		}
+	}
+
+	public void stop() {
+		setAttribute(SERVICE_STATE, Lifecycle.STOPPING)
 		if (sensorRegistry!=null) sensorRegistry.deactivateAdapters();
 		preStop()
-        MachineLocation machine = removeFirstMatchingLocation({ it in MachineLocation })
-        if (machine) {
-            stopInLocation(machine)
-        }
-        setAttribute(SERVICE_STATE, Lifecycle.STOPPED)
-        setAttribute(SERVICE_UP, false)
-    }
-    
-    Location removeFirstMatchingLocation(Closure matcher) {
-        synchronized (locations) {
-            Location loc = locations.find(matcher)
-            if (loc) locations.remove(loc)
-            return loc
-        }
-    }
+		MachineLocation machine = removeFirstMatchingLocation({ it in MachineLocation })
+		if (machine) {
+			stopInLocation(machine)
+		}
+		setAttribute(SERVICE_STATE, Lifecycle.STOPPED)
+		setAttribute(SERVICE_UP, false)
+	}
 
-    public void stopInLocation(MachineLocation machine) {
-        if (sensorRegistry) sensorRegistry.close()
-        if (setup) setup.stop()
-        
-        // Only release this machine if we ourselves provisioned it (e.g. it might be running other services)
-        provisioningLoc?.release(machine)
-		
-		setup = null;
-    }
+	Location removeFirstMatchingLocation(Closure matcher) {
+		synchronized (locations) {
+			Location loc = locations.find(matcher)
+			if (loc) locations.remove(loc)
+			return loc
+		}
+	}
 
-    public void restart() {
-        if (setup) setup.restart()
-        else throw new IllegalStateException("entity "+this+" not set up for operations (restart)")
-    }
+	public void stopInLocation(MachineLocation machine) {
+		if (sensorRegistry) sensorRegistry.close()
+		if (driver) driver.stop()
 
-    public File copy(String file) {
-        return copy(new File(file))
-    }
+		// Only release this machine if we ourselves provisioned it (e.g. it might be running other services)
+		provisioningLoc?.release(machine)
 
-    public File copy(File file) {
-        return setup.copy(file)
-    }
-    
-    public void deploy(String file) {
-        deploy(new File(file))
-    }
-    
-    public void deploy(File file, File target=null) {
-        setup.deploy(file, target)
-    }
+		driverLocal = null;
+	}
+
+	public void restart() {
+		if (driver) driver.restart()
+		else throw new IllegalStateException("entity "+this+" not set up for operations (restart)")
+	}
+
+}
+
+public interface UsesJava {
+	public static final BasicConfigKey<Map<String, String>> JAVA_OPTIONS = [ Map, "java.options", "Java options", [:] ]
+}
+
+public interface UsesJmx extends UsesJava {
+	public static final int DEFAULT_JMX_PORT = 1099
+	@SetFromFlag("jmxPort")
+	public static final ConfiguredAttributeSensor<Integer> JMX_PORT = Attributes.JMX_PORT
+	@SetFromFlag("rmiPort")
+	public static final ConfiguredAttributeSensor<Integer> RMI_PORT = Attributes.RMI_PORT
+	@SetFromFlag("jmxContext")
+	public static final ConfiguredAttributeSensor<String> JMX_CONTEXT = Attributes.JMX_CONTEXT
+	
+	public static final BasicAttributeSensor<String> JMX_URL = [ String, "jmx.url", "JMX URL" ]
 }

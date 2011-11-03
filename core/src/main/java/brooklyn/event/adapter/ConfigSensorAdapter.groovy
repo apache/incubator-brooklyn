@@ -1,6 +1,7 @@
 package brooklyn.event.adapter;
 
 import groovy.transform.InheritConstructors
+import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.basic.ConfiguredAttributeSensor
 
 
@@ -14,8 +15,14 @@ public class ConfigSensorAdapter extends AbstractSensorAdapter {
 	}
 	
 	public void apply() {
+		apply(entity)
+	}
+	
+	//normally just applied once, statically, not registered...
+	//TODO don't make it an adapter?
+	public static void apply(EntityLocal entity) {
 		entity.sensors.values().each { 
-			if (it in ConfiguredAttributeSensor) entity.setAttribute(it) }
+			if (it in ConfiguredAttributeSensor && entity.getAttribute(it)==null) entity.setAttribute(it) }
 	}
 	
 }

@@ -1,19 +1,17 @@
 package brooklyn.entity.webapp.tomcat
 
-import java.io.File
 import java.util.List
 import java.util.Map
 
 import brooklyn.entity.basic.Attributes
-import brooklyn.entity.webapp.JavaWebApp
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedJavaWebAppSetup
-import brooklyn.util.internal.LanguageUtils
 
 /**
  * Start a {@link TomcatServer} in a {@link Location} accessible over ssh.
  */
 public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
+	
     public static final String DEFAULT_VERSION = "7.0.21"
     public static final String DEFAULT_INSTALL_DIR = DEFAULT_INSTALL_BASEDIR+"/"+"tomcat"
     public static final String DEFAULT_DEPLOY_SUBDIR = "webapps"
@@ -38,9 +36,9 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
         
         String version = suggestedTomcatVersion ?: DEFAULT_VERSION
         String installDir = suggestedInstallDir ?: "$DEFAULT_INSTALL_DIR/${version}/apache-tomcat-${version}"
-        String runDir = suggestedRunDir ?: "$BROOKLYN_HOME_DIR/${entity.application.id}/tomcat-${entity.id}"
-        String deployDir = "$runDir/$DEFAULT_DEPLOY_SUBDIR"
-        String logFileLocation = "$runDir/logs/catalina.out"
+//        String runDir = suggestedRunDir ?: "$BROOKLYN_HOME_DIR/${entity.application.id}/tomcat-${entity.id}"
+//        String deployDir = "${runDir}/$DEFAULT_DEPLOY_SUBDIR"
+//        String logFileLocation = "$runDir/logs/catalina.out"
 
         int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort))
         int httpPort = machine.obtainPort(toDesiredPortRange(suggestedHttpPort, DEFAULT_FIRST_HTTP_PORT))
@@ -52,10 +50,10 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
         result.setShutdownPort(shutdownPort)
         result.setVersion(version)
         result.setInstallDir(installDir)
-        result.setDeployDir(deployDir)
-        result.setRunDir(runDir)
+        result.setDeployDir("${result.runDir}/$DEFAULT_DEPLOY_SUBDIR")
+//        result.setRunDir(runDir)
         result.setEnvironmentPropertyFiles(propFilesToGenerate)
-		entity.setAttribute(Attributes.LOG_FILE_LOCATION, logFileLocation)
+		entity.setAttribute(Attributes.LOG_FILE_LOCATION, "${result.runDir}/logs/catalina.out")
 		
 		return result
     }

@@ -3,8 +3,6 @@ package brooklyn.entity.webapp.jboss
 import java.util.List
 
 import brooklyn.entity.basic.Attributes
-import brooklyn.entity.basic.lifecycle.SshBasedJavaAppSetup;
-import brooklyn.entity.webapp.JavaWebApp
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedJavaWebAppSetup
 
@@ -17,38 +15,41 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     private int portIncrement
     private String serverProfile
     private String clusterName
-    
+
     public static JBoss6SshSetup newInstance(JBoss6Server entity, SshMachineLocation machine) {
         Integer suggestedJbossVersion = entity.getConfig(JBoss6Server.SUGGESTED_VERSION)
         String suggestedInstallDir = entity.getConfig(JBoss6Server.SUGGESTED_INSTALL_DIR)
         String suggestedRunDir = entity.getConfig(JBoss6Server.SUGGESTED_RUN_DIR)
-        Integer suggestedJmxPort = entity.getConfig(JBoss6Server.JMX_PORT.configKey)
-        Integer portIncrement = entity.getConfig(JBoss6Server.PORT_INCREMENT.configKey)
-        String serverProfile = entity.getConfig(JBoss6Server.SERVER_PROFILE.configKey)
-        String clusterName = entity.getConfig(JBoss6Server.CLUSTER_NAME.configKey)
+        Integer suggestedJmxPort = entity.getConfig(JBoss6Server.JMX_PORT)
+        Integer portIncrement = entity.getConfig(JBoss6Server.PORT_INCREMENT)
+        String serverProfile = entity.getConfig(JBoss6Server.SERVER_PROFILE)
+        String clusterName = entity.getConfig(JBoss6Server.CLUSTER_NAME)
 		
-        Map<String,Map<String,String>> propFilesToGenerate = entity.getConfig(JBoss7Server.PROPERTY_FILES) ?: [:]
+        Map<String,Map<String,String>> propFilesToGenerate = entity.getConfig(JBoss6Server.PROPERTY_FILES) ?: [:]
         
         String version = suggestedJbossVersion ?: DEFAULT_VERSION
         String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/${version}/jboss-${version}")
-        String runDir = suggestedRunDir ?: (BROOKLYN_HOME_DIR+"/${entity.application.id}/jboss6-${entity.id}")
-        String deployDir = "${runDir}/server/${serverProfile}/deploy"
-        String logFileLocation = "$runDir/server/standard/log/server.log"
+//        String runDir = suggestedRunDir ?: (BROOKLYN_HOME_DIR+"/${entity.application.id}/jboss6-${entity.id}")
+//        String deployDir = "${runDir}/server/${serverProfile}/deploy"
+//        String logFileLocation = "$runDir/server/standard/log/server.log"
 
         int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort))
         
         JBoss6SshSetup result = new JBoss6SshSetup(entity, machine)
-        result.setJmxPort(jmxPort)
-        result.setVersion(version)
-        result.setInstallDir(installDir)
-        result.setDeployDir(deployDir)
-        result.setRunDir(runDir)
-        result.setEnvironmentPropertyFiles(propFilesToGenerate)
+		
         result.setPortIncrement(portIncrement)
-        result.setHttpPort(DEFAULT_HTTP_PORT+portIncrement)
         result.setServerProfile(serverProfile)
         result.setClusterName(clusterName)
-		entity.setAttribute(Attributes.LOG_FILE_LOCATION, logFileLocation)
+		
+        result.setJmxPort(jmxPort)
+        result.setHttpPort(DEFAULT_HTTP_PORT+portIncrement)
+        result.setVersion(version)
+        result.setInstallDir(installDir)
+        result.setDeployDir("${result.runDir}/server/${result.serverProfile}/deploy")
+//        result.setRunDir(runDir)
+        result.setEnvironmentPropertyFiles(propFilesToGenerate)
+		
+		entity.setAttribute(Attributes.LOG_FILE_LOCATION, "${result.runDir}/server/standard/log/server.log")
 
         return result
     }
@@ -72,7 +73,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     @Override
     public List<String> getInstallScript() {
         String url = "http://downloads.sourceforge.net/project/jboss/JBoss/JBoss-${version}/jboss-as-distribution-${version}.zip?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fjboss%2Ffiles%2FJBoss%2F${version}%2F&ts=1307104229&use_mirror=kent"
-        String saveAs  = "jboss-as-distribution-${version}"
+        String saveAs  = "jboss-as-distribution-${version}.tgz"
         
         // Note the -o option to unzip, to overwrite existing files without warning.
         // The JBoss zip file contains lgpl.txt (at least) twice and the prompt to

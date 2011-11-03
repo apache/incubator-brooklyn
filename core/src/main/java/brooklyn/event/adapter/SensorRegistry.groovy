@@ -30,7 +30,7 @@ public class SensorRegistry {
     final Map<?, ?> properties  = [
             period : 500,
             connectDelay : 1000
-        ]   
+        ]
  
 	@Deprecated
     ScheduledExecutorService exec = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors())
@@ -49,12 +49,15 @@ public class SensorRegistry {
 
 	/** records an adapter that has been created for use with this registry;
 	 * implementations may return a compatible adapter if one is already registered */
-	public AbstractSensorAdapter register(AbstractSensorAdapter adapter) {
+	public <T extends AbstractSensorAdapter> T register(T adapter) {
 		if (!adapters.add(adapter)) /* already known */ return;
 		adapter.register(this)
 		return adapter
 	}
 
+	// TODO might be useful to have a lookup mechanism, or register ignore duplicates
+	//	sensorRegistry.adapters.find({ it in OldJmxSensorAdapter })?.connect(block: true, publish: (getEntityClass().hasSensor(JMX_URL)))
+	
 	private List<Closure> activationListeners = []
 	private List<Closure> deactivationListeners = []
 	void addActivationLifecycleListeners(Closure onUp, Closure onDown) {
@@ -75,7 +78,6 @@ public class SensorRegistry {
 		exec.shutdownNow()
 		scheduled.each { key, ScheduledFuture future -> future.cancel(true) }
 	}
-
 
 	@Deprecated
     public <T> void addSensor(AttributeSensor<T> sensor, ValueProvider<? extends T> provider) {

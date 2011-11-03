@@ -4,7 +4,7 @@ import java.util.Map
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.Attributes
-import brooklyn.entity.basic.lifecycle.SshBasedAppSetup;
+import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup;
 import brooklyn.entity.group.AbstractController
 import brooklyn.event.adapter.SensorRegistry
 import brooklyn.event.adapter.legacy.OldHttpSensorAdapter
@@ -44,7 +44,7 @@ public class NginxController extends AbstractController {
         }
     }
 
-    public SshBasedAppSetup getSshBasedSetup(SshMachineLocation machine) {
+    public SshBasedAppSetup newDriver(SshMachineLocation machine) {
         return NginxSetup.newInstance(this, machine)
     }
 
@@ -54,14 +54,14 @@ public class NginxController extends AbstractController {
         MachineLocation machine = locations.first()
         File file = new File("/tmp/${id}")
         Files.write(getConfigFile(), file, Charsets.UTF_8)
-		setup.machine.copyTo file, "${setup.runDir}/conf/server.conf"
+		driver.machine.copyTo file, "${driver.runDir}/conf/server.conf"
         file.delete()
     }
 
     public String getConfigFile() {
         StringBuffer config = []
         config.append """
-pid ${setup.runDir}/logs/nginx.pid;
+pid ${driver.runDir}/logs/nginx.pid;
 events {
   worker_connections 8196;
 }

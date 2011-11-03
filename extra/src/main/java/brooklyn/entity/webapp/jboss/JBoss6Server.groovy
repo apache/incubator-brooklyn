@@ -1,28 +1,25 @@
 package brooklyn.entity.webapp.jboss
 
-import groovy.lang.Closure;
-
 import java.util.Collection
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
-import brooklyn.entity.basic.lifecycle.SshBasedAppSetup;
-import brooklyn.entity.webapp.JavaWebApp
-import brooklyn.event.adapter.ConfigSensorAdapter;
+import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup
+import brooklyn.entity.webapp.OldJavaWebApp
+import brooklyn.event.adapter.ConfigSensorAdapter
 import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.ConfiguredAttributeSensor
-import brooklyn.location.Location
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.flags.SetFromFlag
 
 /**
  * JBoss web application server.
  */
-public class JBoss6Server extends JavaWebApp {
+public class JBoss6Server extends OldJavaWebApp {
     private static final Logger log = LoggerFactory.getLogger(JBoss6Server.class)
 
 	@SetFromFlag("serverProfile")
@@ -36,11 +33,13 @@ public class JBoss6Server extends JavaWebApp {
         super(flags, owner)
     }
 
-    public SshBasedAppSetup getSshBasedSetup(SshMachineLocation loc) {
+    public SshBasedAppSetup newDriver(SshMachineLocation loc) {
         return JBoss6SshSetup.newInstance(this, loc);
     }
     
     public void connectSensors() {
+		super.connectSensors();
+		
 		sensorRegistry.register(new ConfigSensorAdapter());
 		
 		JmxSensorAdapter jmx = sensorRegistry.register(new JmxSensorAdapter(period: 500*TimeUnit.MILLISECONDS));

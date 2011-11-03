@@ -7,9 +7,8 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.SoftwareProcessEntity
-import brooklyn.entity.basic.lifecycle.SshBasedAppSetup;
-import brooklyn.entity.trait.Startable
-import brooklyn.event.adapter.legacy.ValueProvider;
+import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup
+import brooklyn.event.adapter.legacy.ValueProvider
 import brooklyn.event.basic.ConfiguredAttributeSensor
 import brooklyn.location.basic.SshMachineLocation
 
@@ -37,7 +36,7 @@ public class Infinispan5Server extends SoftwareProcessEntity {
         return result
     }
 
-    public SshBasedAppSetup getSshBasedSetup(SshMachineLocation machine) {
+    public SshBasedAppSetup newDriver(SshMachineLocation machine) {
         return Infinispan5Setup.newInstance(this, machine)
     }
 

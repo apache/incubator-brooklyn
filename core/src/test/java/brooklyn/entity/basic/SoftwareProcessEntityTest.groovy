@@ -9,10 +9,9 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.Application
 import brooklyn.entity.ConfigKey
-import brooklyn.entity.basic.lifecycle.SshBasedAppSetup;
+import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup
 import brooklyn.location.MachineLocation
 import brooklyn.location.basic.FixedListMachineProvisioningLocation
-import brooklyn.location.basic.SimulatedLocation
 import brooklyn.location.basic.SshMachineLocation
 
 
@@ -31,7 +30,7 @@ public class SoftwareProcessEntityTest {
     
     private static class MyService extends SoftwareProcessEntity {
         @Override
-        public SshBasedAppSetup getSshBasedSetup(SshMachineLocation loc) {
+        public SshBasedAppSetup newDriver(SshMachineLocation loc) {
             return new SimulatedSshBasedAppSetup(this, loc)
         }
         @Override
