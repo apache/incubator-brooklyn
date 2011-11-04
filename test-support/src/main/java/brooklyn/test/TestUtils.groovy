@@ -1,6 +1,9 @@
 package brooklyn.test
 
 import static org.testng.AssertJUnit.*
+
+import java.io.File;
+
 import groovy.time.TimeDuration
 
 import org.slf4j.Logger
@@ -155,4 +158,13 @@ public class TestUtils {
             return message
         }
     }
+    
+    public static File getResource(String path, ClassLoader loader) {
+        URL resource = loader.getResource(path)
+        if (resource==null)
+            throw new IllegalArgumentException("cannot find required entity '"+path+"'");
+            
+        return new File(resource.path)
+    }
+
 }
