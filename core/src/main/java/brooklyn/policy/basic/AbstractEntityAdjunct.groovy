@@ -20,7 +20,7 @@ import brooklyn.util.internal.LanguageUtils
  */
 abstract class AbstractEntityAdjunct implements EntityAdjunct {
     String id = LanguageUtils.newUid();
-    String displayName;
+    String name;
     
     protected transient EntityLocal entity
     protected transient SubscriptionContext subscription

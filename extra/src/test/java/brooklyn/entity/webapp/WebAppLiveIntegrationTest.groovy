@@ -71,8 +71,7 @@ public class WebAppLiveIntegrationTest {
     }
 
     private File getResource(String path) {
-        URL resource = getClass().getClassLoader().getResource(path)
-        return new File(resource.path)
+        return TestUtils.getResource(path, getClass().getClassLoader());
     }
 
     @BeforeMethod(groups = "Live")
