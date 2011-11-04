@@ -140,6 +140,7 @@ public class LocalSubscriptionManager implements SubscriptionManager {
                 ((BasicExecutionManager)em).clearTaskPreprocessorForTag(s.subscriberExecutionManagerTag)
         }
 
+		//FIXME ALEX - this seems wrong
         ((BasicExecutionManager) em).setTaskSchedulerForTag(s.subscriberExecutionManagerTag, SingleThreadedScheduler.class);
         return b1
     }

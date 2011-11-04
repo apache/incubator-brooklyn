@@ -136,7 +136,7 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
 
     protected volatile Thread thread = null
     private volatile boolean cancelled = false
-    private Future<T> result = null
+    protected Future<T> result = null
 
     protected ExecutionManager em = null
 
@@ -173,7 +173,7 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
         return startTimeUtc >= 0
     }
 
-    public synchronized boolean cancel(boolean mayInterruptIfRunning) {
+    public synchronized boolean cancel(boolean mayInterruptIfRunning=true) {
         if (isDone()) return false
         boolean cancel = true
         if (result) { cancel = result.cancel(mayInterruptIfRunning) }
@@ -224,8 +224,8 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
     }
 
     public void blockUntilEnded() {
-        blockUntilStarted()
-        try { result.get() } catch (Throwable t) { /* swallow errors when using this method */ }
+        try { blockUntilStarted() } catch (Throwable t) { /* swallow errors when using this method */ return; }
+        try { result.get() } catch (Throwable t) { /* swallow errors when using this method */ return; }
     }
 
     public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
@@ -326,68 +326,71 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
                 }
             }
         } else {
-            //active
-            if (t==null) t = getThread()
-        
-            // Normally, it's not possible for thread==null as we were started and not ended
-            
-            // However, there is a race where the task starts sand completes between the calls to getThread()
-            // at the start of the method and this call to getThread(), so both return null even though
-            // the intermediate checks returned started==true isDone()==false.
-            
-            
-            if (t == null) {
-                if (isDone()) {
-                    return getStatusString(verbosity)
-                } else {
-                    throw new IllegalStateException("Task $this has no thread set but is started and not done!")
-                }
-            }
-
-            ThreadInfo ti = ManagementFactory.threadMXBean.getThreadInfo t.getId(), (verbosity<=0 ? 0 : verbosity==1 ? 1 : Integer.MAX_VALUE)
-            if (getThread()==null)
-                //thread might have moved on to a new task; if so, recompute (it should now say "done")
-                return getStatusString(verbosity)
-            LockInfo lock = ti.getLockInfo()
-            if (!lock && ti.getThreadState()==Thread.State.RUNNABLE) {
-                //not blocked
-                if (ti.isSuspended()) {
-                    // when does this happen?
-                    rv = "Waiting"
-                    if (verbosity >= 1) rv += ", thread suspended"
-                } else {
-                    rv = "Running"
-                    if (verbosity >= 1) rv += " ("+ti.getThreadState()+")"
-                }
-            } else {
-                rv = "Waiting"
-                if (verbosity>=1) {
-                    if (ti.getThreadState() == Thread.State.BLOCKED) {
-                        rv += " (mutex) on "+lookup(lock)
-                        //TODO could say who holds it
-                    } else if (ti.getThreadState() == Thread.State.WAITING) {
-                        rv += " (notify) on "+lookup(lock)
-                    } else if (ti.getThreadState() == Thread.State.TIMED_WAITING) {
-                        rv += " (timed) on "+lookup(lock)
-                    } else {
-                        rv = " ("+ti.getThreadState()+") on "+lookup(lock)
-                    }
-                    if (blockingDetails) rv += " - "+blockingDetails;
-                }
-            }
-            if (verbosity>=2) {
-                List<StackTraceElement> st = ti.getStackTrace()
-                st = StackTraceSimplifier.cleanStackTrace(st)
-                if (st!=null && st.size()>0)
-                    rv += "\n" +"At: "+st[0]
-                for (int ii=1; ii<st.size(); ii++) {
-                    rv += "\n" +"    "+st[ii]
-                }
-            }
+			rv = getActiveTaskStatusString(verbosity);
         }
         return rv
     }
 
+	protected String getActiveTaskStatusString(int verbosity) {
+		String rv = "";
+		Thread t = getThread()
+	
+		// Normally, it's not possible for thread==null as we were started and not ended
+		
+		// However, there is a race where the task starts sand completes between the calls to getThread()
+		// at the start of the method and this call to getThread(), so both return null even though
+		// the intermediate checks returned started==true isDone()==false.
+		if (t == null) {
+			if (isDone()) {
+				return getStatusString(verbosity)
+			} else {
+				throw new IllegalStateException("Task $this has no thread set but is started and not done!")
+			}
+		}
+
+		ThreadInfo ti = ManagementFactory.threadMXBean.getThreadInfo t.getId(), (verbosity<=0 ? 0 : verbosity==1 ? 1 : Integer.MAX_VALUE)
+		if (getThread()==null)
+			//thread might have moved on to a new task; if so, recompute (it should now say "done")
+			return getStatusString(verbosity)
+		LockInfo lock = ti.getLockInfo()
+		if (!lock && ti.getThreadState()==Thread.State.RUNNABLE) {
+			//not blocked
+			if (ti.isSuspended()) {
+				// when does this happen?
+				rv = "Waiting"
+				if (verbosity >= 1) rv += ", thread suspended"
+			} else {
+				rv = "Running"
+				if (verbosity >= 1) rv += " ("+ti.getThreadState()+")"
+			}
+		} else {
+			rv = "Waiting"
+			if (verbosity>=1) {
+				if (ti.getThreadState() == Thread.State.BLOCKED) {
+					rv += " (mutex) on "+lookup(lock)
+					//TODO could say who holds it
+				} else if (ti.getThreadState() == Thread.State.WAITING) {
+					rv += " (notify) on "+lookup(lock)
+				} else if (ti.getThreadState() == Thread.State.TIMED_WAITING) {
+					rv += " (timed) on "+lookup(lock)
+				} else {
+					rv = " ("+ti.getThreadState()+") on "+lookup(lock)
+				}
+				if (blockingDetails) rv += " - "+blockingDetails;
+			}
+		}
+		if (verbosity>=2) {
+			List<StackTraceElement> st = ti.getStackTrace()
+			st = StackTraceSimplifier.cleanStackTrace(st)
+			if (st!=null && st.size()>0)
+				rv += "\n" +"At: "+st[0]
+			for (int ii=1; ii<st.size(); ii++) {
+				rv += "\n" +"    "+st[ii]
+			}
+		}
+		rv
+	}
+	
     protected String lookup(LockInfo info) {
         return info ?: "unknown (sleep)"
     }
