@@ -27,7 +27,7 @@ public class HubManager implements GatewayChangeListener, RegionChangeListener {
     }
 
     @Override
-    public void gatewayAdded( String id, String endpointId, String host, int port, GatewayQueueAttributes attributes ) throws IOException {
+    public void gatewayAdded(String id, String endpointId, String host, int port, GatewayQueueAttributes attributes) throws IOException {
     	DiskStore ds = cache.createDiskStoreFactory().create(computeDiskStoreName(endpointId));
         attributes.setDiskStoreName( ds.getName() );
         
@@ -43,20 +43,20 @@ public class HubManager implements GatewayChangeListener, RegionChangeListener {
     }
 
     @Override
-    public boolean gatewayRemoved( String id ) throws IOException {
+    public boolean gatewayRemoved(String id) throws IOException {
     	boolean removed = false;
-    	for( GatewayHub hub :  cache.getGatewayHubs() ) {
-    		for( Gateway gateway: hub.getGateways()) {
-    			if (id.equals(gateway.getId())) {
-    				stopHub(hub);
-    				hub.removeGateway(id);
-    				startHub(hub);
-    				removed = true;
-    			}
-    		}
-    		for ( Gateway gateway: hub.getGateways() ) gateway.start();
-    	}
-    	return removed;
+        for (GatewayHub hub : cache.getGatewayHubs()) {
+            for (Gateway gateway : hub.getGateways()) {
+                if (id.equals(gateway.getId())) {
+                    stopHub(hub);
+                    hub.removeGateway(id);
+                    startHub(hub);
+                    removed = true;
+                }
+            }
+            for (Gateway gateway : hub.getGateways()) gateway.start();
+        }
+        return removed;
     }
 
     @Override
@@ -65,17 +65,18 @@ public class HubManager implements GatewayChangeListener, RegionChangeListener {
         	.trimResults()
         	.omitEmptyStrings()
         	.split(path);
-    	
-    	StringBuffer pathBuffer = new StringBuffer();
-    	Region<?,?> region;
-    	RegionFactory<Object, Object> regionFactory = cache.createRegionFactory(RegionShortcut.REPLICATE).setEnableGateway(new Boolean(true));
+
+        if (Iterables.size(nameparts) == 0) {
+            return false;
+        }
+
+    	StringBuilder pathBuilder = new StringBuilder();
+    	RegionFactory<Object, Object> regionFactory = cache.createRegionFactory(RegionShortcut.REPLICATE).setEnableGateway(true);
     	boolean encounteredNonexistentRegion = false;
-    	
-    	if (Iterables.size(nameparts) == 0) {return false;}
-    	
     	String regionName = Iterables.get(nameparts, 0);
-    	pathBuffer.append(Region.SEPARATOR).append(regionName);
-    	region = cache.getRegion(pathBuffer.toString());
+
+    	pathBuilder.append(Region.SEPARATOR).append(regionName);
+    	Region<?,?> region = cache.getRegion(pathBuilder.toString());
     	
     	// handle root regions
     	if (region == null) { // indicates region doesn't exist on this cache
@@ -90,19 +91,15 @@ public class HubManager implements GatewayChangeListener, RegionChangeListener {
     	// handle sub-regions
     	for(int i = 1; i < Iterables.size(nameparts); i++) {
     		regionName = Iterables.get(nameparts, i);
-    		pathBuffer.append(Region.SEPARATOR).append(regionName);
-        	
-        	if (encounteredNonexistentRegion) { // short-circuit to avoid repeated getRegion checks
-    			region = region.createSubregion(regionName, region.getAttributes());
-    			continue;
-    		}
-        	
-        	if (cache.getRegion(pathBuffer.toString()) == null && (i == Iterables.size(nameparts)-1 || recurse)) {
-        		encounteredNonexistentRegion = true;
-        		region = region.createSubregion(regionName, region.getAttributes());
-        	} else {
-        		return false;
-        	}
+    		pathBuilder.append(Region.SEPARATOR).append(regionName);
+
+            if (encounteredNonexistentRegion ||
+                    (cache.getRegion(pathBuilder.toString()) == null && (i == Iterables.size(nameparts)-1 || recurse))) {
+                encounteredNonexistentRegion = true;
+                region = region.createSubregion(regionName, region.getAttributes());
+            } else {
+                throw new IllegalArgumentException("Error creating subregion");
+            }
     	}
     	
     	return encounteredNonexistentRegion;
@@ -111,12 +108,12 @@ public class HubManager implements GatewayChangeListener, RegionChangeListener {
     @Override
     public boolean regionRemoved(String path) throws IOException {
     	Region<?, ?> r = cache.getRegion(path);
-    	if(r != null) {
+    	if (r != null) {
     		r.localDestroyRegion();
     		return true;
-    	}
-    	
-    	return false;
+    	} else {
+            return false;
+        }
     }
     
     public static class RegionNode {
@@ -173,8 +170,8 @@ public class HubManager implements GatewayChangeListener, RegionChangeListener {
     	return regions;
     }
 
-    private Gateway addGateway( GatewayHub hub,
-                                String id,String endpointId, String host, int port, GatewayQueueAttributes attributes ) {
+    private Gateway addGateway(GatewayHub hub,
+                               String id, String endpointId, String host, int port, GatewayQueueAttributes attributes) {
         Gateway gateway = hub.addGateway(id);
         try {
             gateway.addEndpoint(endpointId,host,port);
@@ -201,9 +198,9 @@ public class HubManager implements GatewayChangeListener, RegionChangeListener {
      * @param hub the hub to start
      * @throws IOException if there is a problem starting the hub
      */
-    private void startHub( GatewayHub hub ) throws IOException {
-       hub.start();
-       for ( Gateway gateway : hub.getGateways() ) gateway.start();
+    private void startHub(GatewayHub hub) throws IOException {
+        hub.start();
+        for (Gateway gateway : hub.getGateways()) gateway.start();
     }
 
 }
