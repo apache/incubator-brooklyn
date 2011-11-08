@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.util.Map;
-import java.util.Random;
 
 import com.gemstone.gemfire.cache.util.GatewayQueueAttributes;
 import com.sun.net.httpserver.Headers;
@@ -18,25 +17,25 @@ public class GeneralRequestHandler implements HttpHandler {
     private static final String GATEWAY_NOT_REMOVED_MESSAGE = "Gateway %s not removed";
     
     private static final String REGION_ADDED_MESSAGE       = "Added region:%s";
-    private static final String REGION_NOT_ADDED_MESSAGE       = "Failed to add region:%s";
+    private static final String REGION_NOT_ADDED_MESSAGE   = "Failed to add region:%s";
     private static final String REGION_REMOVED_MESSAGE     = "Removed region:%s";
     private static final String REGION_NOT_REMOVED_MESSAGE = "Region %s not removed";
 
-    private static final String ID_KEY="id";
-    private static final String ENDPOINT_ID_KEY="endpointId";
-    private static final String PORT_KEY="port";
-    private static final String HOST_KEY="host";
+    private static final String ID_KEY = "id";
+    private static final String ENDPOINT_ID_KEY = "endpointId";
+    private static final String PORT_KEY = "port";
+    private static final String HOST_KEY = "host";
     
-    private static final String PATH_KEY="path";
+    private static final String PATH_KEY = "path";
 
     // For GatewayQueueAttributes - see com.gemstone.gemfire.cache.util.GatewayQueueAttributes
-    private static final String DISK_STORE_NAME_KEY="diskStoreName"; //String
-    private static final String MAX_QUEUE_MEMORY_KEY="maximumQueueMemory"; //int
-    private static final String BATCH_SIZE_KEY="batchSize"; //int
-    private static final String BATCH_TIME_INTERVAL_KEY="batchTimeInterval"; //int
-    private static final String BATCH_CONFLATION_KEY="batchConflation"; //boolean
-    private static final String ENABLE_PERSISTENCE_KEY="enablePersistence"; // boolean
-    private static final String ALERT_THRESHOLD_KEY="alertThreshold"; //int
+    private static final String DISK_STORE_NAME_KEY = "diskStoreName"; //String
+    private static final String MAX_QUEUE_MEMORY_KEY = "maximumQueueMemory"; //int
+    private static final String BATCH_SIZE_KEY = "batchSize"; //int
+    private static final String BATCH_TIME_INTERVAL_KEY = "batchTimeInterval"; //int
+    private static final String BATCH_CONFLATION_KEY = "batchConflation"; //boolean
+    private static final String ENABLE_PERSISTENCE_KEY = "enablePersistence"; // boolean
+    private static final String ALERT_THRESHOLD_KEY = "alertThreshold"; //int
 
     private final GatewayChangeListener gatewayListener;
     private final RegionChangeListener regionListener;
@@ -73,9 +72,8 @@ public class GeneralRequestHandler implements HttpHandler {
         }
     }
 
-    
     private void handleRoot(HttpExchange httpExchange) throws IOException {
-        sendResponse(httpExchange, 200, "");
+        sendResponse(httpExchange, 200, USAGE);
     }
 
     private void handleRegion(HttpExchange httpExchange) throws IOException {
@@ -106,16 +104,16 @@ public class GeneralRequestHandler implements HttpHandler {
         String query = httpExchange.getRequestURI().getRawQuery();
         Map<String,Object> parameters = new ParameterParser().parse(query);
 
-        String id = (String)parameters.get(ID_KEY);
-        String endpointId = (String)parameters.get(ENDPOINT_ID_KEY);
-        String host = (String)parameters.get(HOST_KEY);
-        int port = Integer.parseInt((String)parameters.get(PORT_KEY));
+        String id = (String) parameters.get(ID_KEY);
+        String endpointId = (String) parameters.get(ENDPOINT_ID_KEY);
+        String host = (String) parameters.get(HOST_KEY);
+        int port = Integer.parseInt((String) parameters.get(PORT_KEY));
         
         GatewayQueueAttributes attributes = getQueueAttributes(parameters);
 
-        gatewayListener.gatewayAdded(id, endpointId, host,  port, attributes);
+        gatewayListener.gatewayAdded(id, endpointId, host, port, attributes);
 
-        sendResponse(httpExchange,200,String.format(GATEWAY_ADDED_MESSAGE,id));
+        sendResponse(httpExchange, 200, String.format(GATEWAY_ADDED_MESSAGE, id));
     }
     
     private void handleRemoveGateway(HttpExchange httpExchange) throws IOException {
@@ -126,7 +124,7 @@ public class GeneralRequestHandler implements HttpHandler {
         boolean result = gatewayListener.gatewayRemoved(id);
 
         String message = result ? GATEWAY_REMOVED_MESSAGE : GATEWAY_NOT_REMOVED_MESSAGE;
-        sendResponse(httpExchange,200,String.format(message,id));
+        sendResponse(httpExchange, 200, String.format(message, id));
     }
 
     private void handleAddRegion(HttpExchange httpExchange) throws IOException {
@@ -138,7 +136,7 @@ public class GeneralRequestHandler implements HttpHandler {
         boolean result = regionListener.regionAdded(path, true);
 
         String message = result ? REGION_ADDED_MESSAGE : REGION_NOT_ADDED_MESSAGE;
-        sendResponse(httpExchange,200,String.format(message,path));
+        sendResponse(httpExchange, 200, String.format(message, path));
     }
     
     private void handleRemoveRegion(HttpExchange httpExchange) throws IOException {
@@ -149,20 +147,20 @@ public class GeneralRequestHandler implements HttpHandler {
         boolean result = regionListener.regionRemoved(path);
 
         String message = result ? REGION_REMOVED_MESSAGE : REGION_NOT_REMOVED_MESSAGE;
-        sendResponse(httpExchange,200,String.format(message,path));
+        sendResponse(httpExchange, 200, String.format(message, path));
     }
     
     private void handleListRegions(HttpExchange httpExchange) throws IOException {
-    	StringBuffer sb = new StringBuffer();
+    	StringBuilder sb = new StringBuilder();
     	for (String s : regionListener.regionList()) {
     		sb.append(s).append(",");
     	}
     	String out = sb.length() > 0 ? sb.substring(0, sb.length()-1) : "";
-    	sendResponse(httpExchange,200,out);
+    	sendResponse(httpExchange, 200, out);
     }
     
     private void handleUnknown(HttpExchange httpExchange) throws IOException {
-        sendResponse(httpExchange,404,USAGE);
+        sendResponse(httpExchange, 404, USAGE);
     }
 
     private void sendResponse(HttpExchange httpExchange, int code, String message) throws IOException {
@@ -203,13 +201,11 @@ public class GeneralRequestHandler implements HttpHandler {
 
     private Integer getAsInteger(String key, Map<String, Object> params) {
         String asString = (String)params.get(key);
-        if (asString == null) return null;
-        return Integer.parseInt(asString);
+        return (asString == null) ? null : Integer.parseInt(asString);
     }
 
     private Boolean getAsBoolean(String key, Map<String,Object> params) {
         String asString = (String)params.get(key);
-        if (asString == null) return null;
-        return Boolean.parseBoolean(asString);
+        return (asString == null) ? null : Boolean.parseBoolean(asString);
     }
 }
