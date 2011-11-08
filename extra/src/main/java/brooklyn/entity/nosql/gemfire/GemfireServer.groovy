@@ -107,6 +107,7 @@ class GemfireServer extends AbstractService {
             Integer statusCode = provider.compute()
             return (statusCode >= 200 && statusCode <= 299)
         } catch (IOException ioe) {
+            log.debug "Attempt to connect to control URL threw IOEXception: ${ioe.message}"
             return false
         }
     }
@@ -116,12 +117,12 @@ class GemfireServer extends AbstractService {
 		ValueProvider<String> provider = httpAdapter.newStringBodyProvider(url)
 		try {
 			return Splitter.on(",")
-				.trimResults()
-				.omitEmptyStrings()
-				.split(provider.compute())
-				.iterator().toList()
-			 
+                    .trimResults()
+                    .omitEmptyStrings()
+                    .split(provider.compute())
+                    .iterator().toList()
 		} catch (IOException ioe) {
+            log.debug "Attempt to list regions threw IOException: ${ioe.message}"
 			return new String[0]
 		}
 	}
