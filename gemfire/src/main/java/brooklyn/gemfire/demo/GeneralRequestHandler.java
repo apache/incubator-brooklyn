@@ -50,28 +50,26 @@ public class GeneralRequestHandler implements HttpHandler {
             "GET http://host:port/gateway/add?id=US&endpointId=US-1&host=localhost&port=33333 \n" +
             "GET http://host:port/region/remove?name=trades";
 
+    private static final String URL_GATEWAY = "/gateway/";
+    private static final String URL_REGION = "/region/";
+
     public void handle(HttpExchange httpExchange) throws IOException {
         URI uri = httpExchange.getRequestURI();
         String path = uri.getPath();
         try {
-            if (path.equals("/")) handleRoot(httpExchange);
-            else if(path.startsWith("/gateway")) {
-        		String subpath = path.substring(8);
-        		if(subpath.startsWith("/add")) handleAddGateway(httpExchange);
-        		else if( subpath.startsWith("/remove")) handleRemoveGateway(httpExchange);
-        		else handleUnknown(httpExchange);
-        	} else if(path.startsWith("/region")) {
-        		String subpath = path.substring(7);
-        		if(subpath.startsWith("/add")) handleAddRegion(httpExchange);
-        		else if( subpath.startsWith("/remove")) handleRemoveRegion(httpExchange);
-        		else if( subpath.startsWith("/list")) handleListRegions(httpExchange);
-        		else handleUnknown(httpExchange);
-        	} else if (path.startsWith("/status")) handleStatus(httpExchange);
-            else handleUnknown(httpExchange);
-        } catch(Throwable t) {
-            sendResponse(httpExchange,500,t.getMessage());
+            if (path.equals("/")) {
+                handleRoot(httpExchange);
+            } else if (path.startsWith(URL_GATEWAY)) {
+                handleGateway(httpExchange);
+            } else if (path.startsWith(URL_REGION)) {
+                handleRegion(httpExchange);
+            } else {
+                handleUnknown(httpExchange);
+            }
+        } catch (Throwable t) {
+            sendResponse(httpExchange, 500, t.getMessage());
             t.printStackTrace();
-            throw new IOException("error on path:" +path, t);
+            throw new IOException("error on path: " + path, t);
         }
     }
 
@@ -79,11 +77,31 @@ public class GeneralRequestHandler implements HttpHandler {
     private void handleRoot(HttpExchange httpExchange) throws IOException {
         sendResponse(httpExchange, 200, "");
     }
-    
-    private void handleStatus(HttpExchange httpExchange) throws IOException {
-        sendResponse(httpExchange, 200, "");
+
+    private void handleRegion(HttpExchange httpExchange) throws IOException {
+        String subpath = httpExchange.getRequestURI().getPath().substring(URL_REGION.length());
+        if (subpath.equals("add")) {
+            handleAddRegion(httpExchange);
+        } else if (subpath.equals("remove")) {
+            handleRemoveRegion(httpExchange);
+        } else if (subpath.equals("list")) {
+            handleListRegions(httpExchange);
+        } else {
+            handleUnknown(httpExchange);
+        }
     }
 
+    private void handleGateway(HttpExchange httpExchange) throws IOException {
+        String subpath = httpExchange.getRequestURI().getPath().substring(URL_GATEWAY.length());
+        if (subpath.equals("add")) {
+            handleAddGateway(httpExchange);
+        } else if (subpath.equals("remove")) {
+            handleRemoveGateway(httpExchange);
+        } else {
+            handleUnknown(httpExchange);
+        }
+    }
+    
     private void handleAddGateway(HttpExchange httpExchange) throws IOException {
         String query = httpExchange.getRequestURI().getRawQuery();
         Map<String,Object> parameters = new ParameterParser().parse(query);
