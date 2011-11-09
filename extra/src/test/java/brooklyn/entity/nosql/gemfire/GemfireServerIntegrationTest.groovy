@@ -47,6 +47,15 @@ public class GemfireServerIntegrationTest {
         app = new TestApplication()
     }
 
+    @BeforeMethod(groups=["Integration"])
+    public void ensureGemfireInstallDirExists() {
+        File installDir = new File(installDir)
+        File license = new File(licenseFile)
+        if (!installDir.exists() || !license.exists()) {
+            fail("Expected to find gemfire directory at $installDir and license file at $license")
+        }
+    }
+
     private final List<Entity> createdEntities = []
 
     @AfterMethod(alwaysRun=true)
