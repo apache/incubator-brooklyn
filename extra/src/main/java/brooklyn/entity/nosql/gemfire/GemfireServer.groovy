@@ -69,7 +69,7 @@ class GemfireServer extends AbstractService {
 	* Takes a collection of fully-qualified region paths (String), e.g. "/Seam-travel/Hotels/Ritz"
 	*/
 	public static final Effector<Void> REMOVE_REGIONS =
-		new EffectorWithExplicitImplementation<GemfireServer, Void>("removeGateways", Void.TYPE,
+		new EffectorWithExplicitImplementation<GemfireServer, Void>("removeRegions", Void.TYPE,
 			Arrays.<ParameterType<?>>asList(new BasicParameterType<Collection>("regions", Collection.class,"Regions to be removed", Collections.emptyList())),
 			"Locally destroy a region on this server- will continue to exist elsewhere") {
 		public Void invokeEffector(GemfireServer entity, Map m) {
