@@ -9,6 +9,8 @@ target/
 .settings/
 .metadata/
 stacktrace.log
+*.swo
+*.swp
 
 .idea/
 *.iml
@@ -20,3 +22,7 @@ prodDb.*
 instances.txt.*
 
 ignored
+
+*.log
+overflow*
+gemfire/log

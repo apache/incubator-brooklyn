@@ -10,6 +10,14 @@
         <version>0.1.0-SNAPSHOT</version>
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
+
+    <repositories>
+        <repository>
+            <id>ccweb.cloudsoftcorp.com</id>
+            <name>ccweb.cloudsoftcorp.com-releases</name>
+            <url>http://ccweb.cloudsoftcorp.com/maven/ext-release-local</url>
+        </repository>
+    </repositories>
     
     <dependencies>
         <dependency>
@@ -53,6 +61,17 @@
 			<version>1.5.2</version>
             <scope>test</scope>
 		</dependency>
+        <dependency>
+            <groupId>com.gemstone</groupId>
+            <artifactId>gemfire-server</artifactId>
+            <version>gemfire-6.5.1.4</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>10.0.1</version>
+        </dependency>
 
         <!-- required for GeoScaling DNS (entity accesses management service via HTTP) -->
         <dependency>

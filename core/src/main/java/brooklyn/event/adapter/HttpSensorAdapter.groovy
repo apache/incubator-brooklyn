@@ -30,6 +30,10 @@ public class HttpSensorAdapter {
     public HttpSensorAdapter(EntityLocal entity, long timeout = -1) {
         this.entity = entity
     }
+	
+	public ValueProvider<String> newStringBodyProvider(String url) {
+		return new HttpStringBodyProvider(new URL(url), this)
+	}
 
     public ValueProvider<Boolean> newDataValueProvider(String url, String regexp) {
         return new HttpDataValueProvider(new URL(url), regexp, this)
@@ -139,6 +143,24 @@ public class HttpJsonLongValueProvider implements ValueProvider<Long> {
        String out = adapter.getJson(url, jsonKey)
        return out ? Long.valueOf(out) : -1L
    }
+}
+
+
+/**
+* Provides the body as a String to a sensor via HTTP.
+*/
+public class HttpStringBodyProvider implements ValueProvider<String> {
+	private final URL url
+	private final HttpSensorAdapter adapter
+
+	public HttpStringBodyProvider(URL url, HttpSensorAdapter adapter) {
+		this.url = Preconditions.checkNotNull(url, "url")
+		this.adapter = Preconditions.checkNotNull(adapter, "adapter")
+	}
+
+	public String compute() {
+		return new String(adapter.getContents(url))
+	}
 }
 
 /**
