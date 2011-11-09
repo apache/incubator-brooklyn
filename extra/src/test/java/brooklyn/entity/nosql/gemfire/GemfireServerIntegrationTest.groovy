@@ -16,26 +16,20 @@ import brooklyn.entity.trait.Startable
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.test.entity.TestApplication
 
-import com.gemstone.gemfire.cache.Cache
 import com.gemstone.gemfire.cache.Region
 import com.gemstone.gemfire.cache.client.ClientCache
 import com.gemstone.gemfire.cache.client.ClientCacheFactory
 import com.gemstone.gemfire.cache.client.ClientRegionShortcut
+import com.gemstone.gemfire.cache.GemFireCache
 
-/**
- * This tests the operation of the {@link GemfireServer} entity.
- *
- * TODO clarify test purpose
- */
 public class GemfireServerIntegrationTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(GemfireServerIntegrationTest.class)
 
     // TODO: Make these machine independent
-    // if installDir is set machine independently then gemfireLicense.zip can be deleted from resources
-    private String installDir = "/Users/danikov/Documents/workspaces/workspace-git/brooklyn/gemfire"
-    private String jarFile = "/Users/danikov/Documents/workspaces/workspace/com.cloudsoftcorp.demo.bixby.booking.webapp/src/main/webapp/WEB-INF/lib/com.cloudsoftcorp.demo.bixby.bookingsvc.api.jar"
-    private static final String licenseFile = "gemfireLicense.zip"
+    // Suggest setting up a symlink from ../brooklyn/gemfire to /tmp/brooklyn/installs/gemfire.
+    private static final String installDir = "/tmp/brooklyn/installs/gemfire"
+    private static final String licenseFile = "$installDir/lib/gemfireLicense.zip"
     private static final String euCache = "eu/cache.xml"
     private static final String clientCache = "eu/client-cache.xml"
 
@@ -77,7 +71,7 @@ public class GemfireServerIntegrationTest {
 
     /** Creates gemfire instance owned by given owner, defaults to app  */
     private GemfireServer createAndStartGemfireServer(Application owner=app) {
-        GemfireServer server = createGemfireServer(owner, installDir, pathTo(licenseFile), pathTo(euCache))
+        GemfireServer server = createGemfireServer(owner, installDir, licenseFile, pathTo(euCache))
         server.start([new LocalhostMachineProvisioningLocation(name: 'london')])
         executeUntilSucceeds(timeout: 15000) {
             assertTrue server.getAttribute(Startable.SERVICE_UP)
@@ -104,7 +98,7 @@ public class GemfireServerIntegrationTest {
     }
 
     //TODO rewrite these with generic a/b/c/d or 1/2/3/4, then use indexing to test add/remove, ie. add(3) -> add 1/2/3, etc.
-    @Test(groups=["Integration"])//, dependsOnMethods=["testGemfireStartsAndStops"])
+    @Test(groups=["Integration"], dependsOnMethods=["testGemfireStartsAndStops"])
     public void testAddRegions() {
         GemfireServer entity = createAndStartGemfireServer()
 
@@ -178,7 +172,10 @@ public class GemfireServerIntegrationTest {
 
     }
 
-    public static List<String> regionList(Cache cache) {
+    /**
+     * Returns a list containing all the regions in the given cache
+     */
+    public static List<String> regionList(GemFireCache cache) {
         List<String> regions = new LinkedList<String>();
         for (Region<?, ?> rootRegion: cache.rootRegions()) {
             regions.add(rootRegion.getFullPath());
@@ -190,15 +187,12 @@ public class GemfireServerIntegrationTest {
     }
 
     @Test(groups=["Integration"], enabled = false)
-    public void testInOneRegionOutAnother() {
-        Entity server = createGemfireServer(app, installDir, pathTo(licenseFile), pathTo(euCache))
-        server.start([new LocalhostMachineProvisioningLocation(name: 'london')])
-
+    public void testInOneCacheOutAnother() {
         // Invoke create region
         // Create client cache
         // Insert keyval pair
         // Create second client cache in same region
         // Retrieve keyval pair
-
     }
+
 }
