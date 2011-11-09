@@ -71,14 +71,22 @@ public class HubManager implements GatewayManager, RegionManager {
         return removed;
     }
 
-    @Override
-    public boolean regionAdded(String path, boolean recurse) throws IOException {
+    /**
+     * @param path slash-separated name of region
+     * @param createIntermediate using example /foo/bar/baz:
+     *          when true create /foo/bar/baz if /foo/bar already exists, otherwise do not create anything
+     * @return added true if a new region was added to the cache
+     * @throws IOException
+     */
+    public boolean addRegion(String path, boolean createIntermediate) throws IOException {
+
+        // Split path by Region.SEPARATOR (/)
     	Iterable<String> nameparts = Splitter.on(Region.SEPARATOR)
         	.trimResults()
         	.omitEmptyStrings()
         	.split(path);
 
-        if (Iterables.size(nameparts) == 0) {
+        if (Iterables.isEmpty(nameparts)) {
             return false;
         }
 
@@ -87,26 +95,30 @@ public class HubManager implements GatewayManager, RegionManager {
     	boolean encounteredNonexistentRegion = false;
     	String regionName = Iterables.get(nameparts, 0);
 
+        // Get first section of region path from cache
     	pathBuilder.append(Region.SEPARATOR).append(regionName);
     	Region<?,?> region = cache.getRegion(pathBuilder.toString());
     	
-    	// handle root regions
-    	if (region == null) { // indicates region doesn't exist on this cache
+    	// handle root regions that don't already exist in this cache
+    	if (region == null) {
     		encounteredNonexistentRegion = true;
-    		if (Iterables.size(nameparts) == 1 || recurse) {
-    			region = regionFactory.create(regionName); 
+    		if (Iterables.size(nameparts) == 1 || createIntermediate) {
+    			region = regionFactory.create(regionName);
     		} else {
     			return false;
     		}
-    	} 
+    	}
     	
     	// handle sub-regions
-    	for(int i = 1; i < Iterables.size(nameparts); i++) {
+    	for (int i = 1; i < Iterables.size(nameparts); i++) {
     		regionName = Iterables.get(nameparts, i);
     		pathBuilder.append(Region.SEPARATOR).append(regionName);
 
+            // create this region if it doesn't exist because we've already had to create a parent region
+            // (encounteredNonexistentRegion) or the region doesn't exist and either we're in the final iteration
+            // of the loop or we should create intermediate regions.
             if (encounteredNonexistentRegion ||
-                    (cache.getRegion(pathBuilder.toString()) == null && (i == Iterables.size(nameparts)-1 || recurse))) {
+                    (!regionExists(pathBuilder.toString()) && (i == Iterables.size(nameparts)-1 || createIntermediate))) {
                 encounteredNonexistentRegion = true;
                 region = region.createSubregion(regionName, region.getAttributes());
             } else {
@@ -115,6 +127,10 @@ public class HubManager implements GatewayManager, RegionManager {
     	}
     	
     	return encounteredNonexistentRegion;
+    }
+
+    private boolean regionExists(String path) {
+        return cache.getRegion(path) != null;
     }
 
     /**
