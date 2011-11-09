@@ -132,11 +132,16 @@ public class GeneralRequestHandler implements HttpHandler {
         Map<String,Object> parameters = new ParameterParser().parse(query);
         String path = (String) parameters.get(PATH_KEY);
 
-        if (regionListener.regionAdded(path, true)) {
-            sendResponse(httpExchange, 200, String.format(REGION_ADDED_MESSAGE, path));
-        } else {
-            sendResponse(httpExchange, 500, String.format(REGION_NOT_ADDED_MESSAGE, path));
+        boolean errored = false, result = false;
+        try {
+            result = regionListener.regionAdded(path, true);
+        } catch (Exception e) {
+            errored = true;
         }
+        String message = result ? REGION_ADDED_MESSAGE : REGION_NOT_ADDED_MESSAGE;
+        int responseCode = errored ? 500 : 200;
+        sendResponse(httpExchange, responseCode, String.format(message, path));
+
     }
     
     private void handleRemoveRegion(HttpExchange httpExchange) throws IOException {
@@ -144,11 +149,15 @@ public class GeneralRequestHandler implements HttpHandler {
         Map<String,Object> parameters = new ParameterParser().parse(query);
         String path = (String) parameters.get(PATH_KEY);
 
-        if (regionListener.regionRemoved(path)) {
-            sendResponse(httpExchange, 200, String.format(REGION_REMOVED_MESSAGE, path));
-        } else {
-            sendResponse(httpExchange, 500, String.format(REGION_NOT_REMOVED_MESSAGE, path));
+        boolean errored = false, result = false;
+        try {
+            result = regionListener.regionRemoved(path);
+        } catch (Exception e) {
+            errored = true;
         }
+        String message = result ? REGION_REMOVED_MESSAGE : REGION_NOT_REMOVED_MESSAGE;
+        int responseCode = errored ? 500 : 200;
+        sendResponse(httpExchange, responseCode, String.format(message, path));
     }
     
     private void handleListRegions(HttpExchange httpExchange) throws IOException {
