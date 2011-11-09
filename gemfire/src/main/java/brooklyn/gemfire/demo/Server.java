@@ -40,14 +40,14 @@ public class Server {
         return cache;
     }
 
-    public static void main( String args[] ) throws Exception {
+    public static void main(String args[]) throws Exception {
 
         int port = Integer.parseInt(args[0]);
         String configFile = args[1];
         String logFile = args[2];
         String licenseFile = args[3];
 
-        Cache cache = initializeCache(configFile,logFile, licenseFile);
+        Cache cache = initializeCache(configFile, logFile, licenseFile);
 
         HubManager manager = new HubManager(cache);
         HttpHandler handler = new GeneralRequestHandler(manager, manager);
