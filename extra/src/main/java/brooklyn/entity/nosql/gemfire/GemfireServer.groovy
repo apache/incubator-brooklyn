@@ -34,7 +34,7 @@ class GemfireServer extends AbstractService {
 
     public static final Effector<Void> ADD_GATEWAYS =
         new EffectorWithExplicitImplementation<GemfireServer, Void>("addGateways", Void.TYPE,
-            Arrays.<ParameterType<?>>asList(new BasicParameterType<Collection>("gateways", Collection.class,"Gateways to be added", Collections.emptyList())),
+            Arrays.<ParameterType<?>>asList(new BasicParameterType<Collection>("gateways", Collection.class, "Gateways to add")),
             "Add gateways to this server, to replicate to/from other clusters") {
         public Void invokeEffector(GemfireServer entity, Map m) {
             entity.addGateways((Collection<GatewayConnectionDetails>) m.get("gateways"));
@@ -44,7 +44,7 @@ class GemfireServer extends AbstractService {
 
 	public static final Effector<Void> REMOVE_GATEWAYS =
 		new EffectorWithExplicitImplementation<GemfireServer, Void>("removeGateways", Void.TYPE,
-			Arrays.<ParameterType<?>>asList(new BasicParameterType<Collection>("gateways", Collection.class,"Gateways to be removed", Collections.emptyList())),
+			Arrays.<ParameterType<?>>asList(new BasicParameterType<Collection>("gateways", Collection.class, "Gateways to remove")),
 			"Remove decomissioned gateways from this server") {
 		public Void invokeEffector(GemfireServer entity, Map m) {
 			entity.removeGateways((Collection<GatewayConnectionDetails>) m.get("gateways"));
@@ -57,8 +57,8 @@ class GemfireServer extends AbstractService {
 	 */
 	public static final Effector<Void> ADD_REGIONS =
 		new EffectorWithExplicitImplementation<GemfireServer, Void>("addRegions", Void.TYPE,
-			Arrays.<ParameterType<?>>asList(new BasicParameterType<Collection>("regions", Collection.class,"Regions to be added", Collections.emptyList())),
-			"Add regions to this server- will replicate and stay in sync if the region already exists elsewhere") {
+			Arrays.<ParameterType<?>>asList(new BasicParameterType<Collection>("regions", Collection.class, "Regions to add")),
+            "Add regions to this server- will replicate and stay in sync if the region already exists elsewhere") {
 		public Void invokeEffector(GemfireServer entity, Map m) {
 			entity.addRegions((Collection<String>) m.get("regions"));
 			return null;
@@ -70,8 +70,8 @@ class GemfireServer extends AbstractService {
 	*/
 	public static final Effector<Void> REMOVE_REGIONS =
 		new EffectorWithExplicitImplementation<GemfireServer, Void>("removeRegions", Void.TYPE,
-			Arrays.<ParameterType<?>>asList(new BasicParameterType<Collection>("regions", Collection.class,"Regions to be removed", Collections.emptyList())),
-			"Locally destroy a region on this server- will continue to exist elsewhere") {
+            Arrays.<ParameterType<?>> asList(new BasicParameterType<Collection>("regions", Collection.class, "Regions to remove")),
+            "Destroy regions on this server. They will continue to exist elsewhere.") {
 		public Void invokeEffector(GemfireServer entity, Map m) {
 			entity.removeRegions((Collection<String>) m.get("regions"));
 			return null;
