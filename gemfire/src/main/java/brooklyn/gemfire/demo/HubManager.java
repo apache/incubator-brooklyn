@@ -18,32 +18,44 @@ import com.gemstone.gemfire.cache.util.GatewayQueueAttributes;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 
-public class HubManager implements GatewayChangeListener, RegionChangeListener {
+public class HubManager implements GatewayManager, RegionManager {
 
     private Cache cache;
 
-    public HubManager( Cache cache ) {
+    public HubManager(Cache cache) {
         this.cache = cache;
     }
 
-    @Override
-    public void gatewayAdded(String id, String endpointId, String host, int port, GatewayQueueAttributes attributes) throws IOException {
+    public void addGateway(String id, String endpointId, String host, int port, GatewayQueueAttributes attributes) throws IOException {
     	DiskStore ds = cache.createDiskStoreFactory().create(computeDiskStoreName(endpointId));
         attributes.setDiskStoreName( ds.getName() );
-        
-        for(GatewayHub hub :  cache.getGatewayHubs()) {
+
+        for (GatewayHub hub : cache.getGatewayHubs()) {
             stopHub(hub);
-            addGateway(hub,id,endpointId,host,port,attributes);
+            createGatewayAtHub(hub, id, endpointId, host, port, attributes);
             startHub(hub);
         }
     }
+
+    private Gateway createGatewayAtHub(GatewayHub hub, String id, String endpointId,
+                                       String host, int port, GatewayQueueAttributes attributes) {
+        Gateway gateway = hub.addGateway(id);
+        try {
+            gateway.addEndpoint(endpointId, host, port);
+            gateway.setQueueAttributes(attributes);
+        } catch(GatewayException ge) {
+            hub.removeGateway(id);
+            throw ge;
+        }
+
+        return gateway;
+    }
     
     private String computeDiskStoreName(String endpointId) {
-        return "overflow-"+endpointId+"-"+new Random().nextInt();
+        return "overflow-" + endpointId + "-" + new Random().nextInt();
     }
 
-    @Override
-    public boolean gatewayRemoved(String id) throws IOException {
+    public boolean removeGateway(String id) throws IOException {
     	boolean removed = false;
         for (GatewayHub hub : cache.getGatewayHubs()) {
             for (Gateway gateway : hub.getGateways()) {
@@ -104,9 +116,11 @@ public class HubManager implements GatewayChangeListener, RegionChangeListener {
     	
     	return encounteredNonexistentRegion;
     }
-    	
-    @Override
-    public boolean regionRemoved(String path) throws IOException {
+
+    /**
+     * Removes the given region from this hub's cache
+     */
+    public boolean removeRegion(String path) throws IOException {
     	Region<?, ?> r = cache.getRegion(path);
     	if (r != null) {
     		r.localDestroyRegion();
@@ -129,12 +143,10 @@ public class HubManager implements GatewayChangeListener, RegionChangeListener {
     	}
     	
     	public String path() {
-    		if (parent == null) return "";
-    		else return parent.path()+Region.SEPARATOR+name;
+    		return (parent == null) ? "" : parent.path() + Region.SEPARATOR + name;
     	}
     }
     
-    @Override
     public RegionNode regionTree() {
     	RegionNode root = new RegionNode("root", null);
     	RegionNode currentNode = root;
@@ -157,8 +169,10 @@ public class HubManager implements GatewayChangeListener, RegionChangeListener {
     	}
     	return root;
     }
-    
-    @Override
+
+    /**
+     * @return regions all regions held in this Hub's cache
+     */
     public List<String> regionList() {
     	List<String> regions = new LinkedList<String>();
     	for (Region<?, ?> rootRegion : cache.rootRegions()) {
@@ -170,26 +184,12 @@ public class HubManager implements GatewayChangeListener, RegionChangeListener {
     	return regions;
     }
 
-    private Gateway addGateway(GatewayHub hub,
-                               String id, String endpointId, String host, int port, GatewayQueueAttributes attributes) {
-        Gateway gateway = hub.addGateway(id);
-        try {
-            gateway.addEndpoint(endpointId,host,port);
-            gateway.setQueueAttributes(attributes);
-        } catch(GatewayException ge) {
-            hub.removeGateway(id);
-            throw ge;
-        }
-
-        return gateway;
-    }
-
     /**
      * Stops the gateways attached to a hub, then stops the hub
      * @param hub the hub to stop
      */
-    private void stopHub( GatewayHub hub ) {
-        for ( Gateway gateway : hub.getGateways() ) gateway.stop();
+    private void stopHub(GatewayHub hub) {
+        for (Gateway gateway : hub.getGateways()) gateway.stop();
         hub.stop();
     }
 

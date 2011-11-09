@@ -25,7 +25,6 @@ public class GeneralRequestHandler implements HttpHandler {
     private static final String ENDPOINT_ID_KEY = "endpointId";
     private static final String PORT_KEY = "port";
     private static final String HOST_KEY = "host";
-    
     private static final String PATH_KEY = "path";
 
     // For GatewayQueueAttributes - see com.gemstone.gemfire.cache.util.GatewayQueueAttributes
@@ -37,12 +36,12 @@ public class GeneralRequestHandler implements HttpHandler {
     private static final String ENABLE_PERSISTENCE_KEY = "enablePersistence"; // boolean
     private static final String ALERT_THRESHOLD_KEY = "alertThreshold"; //int
 
-    private final GatewayChangeListener gatewayListener;
-    private final RegionChangeListener regionListener;
+    private final GatewayManager gatewayManager;
+    private final RegionManager regionManager;
     
-    public GeneralRequestHandler(GatewayChangeListener gatewayListener, RegionChangeListener regionListener) {
-        this.gatewayListener = gatewayListener;
-        this.regionListener = regionListener;
+    public GeneralRequestHandler(GatewayManager gatewayManager, RegionManager regionManager) {
+        this.gatewayManager = gatewayManager;
+        this.regionManager = regionManager;
     }
 
     private static final String USAGE = "Example usage:\n" +
@@ -111,7 +110,7 @@ public class GeneralRequestHandler implements HttpHandler {
         
         GatewayQueueAttributes attributes = getQueueAttributes(parameters);
 
-        gatewayListener.gatewayAdded(id, endpointId, host, port, attributes);
+        gatewayManager.addGateway(id, endpointId, host, port, attributes);
 
         sendResponse(httpExchange, 200, String.format(GATEWAY_ADDED_MESSAGE, id));
     }
@@ -121,7 +120,7 @@ public class GeneralRequestHandler implements HttpHandler {
         Map<String,Object> parameters = new ParameterParser().parse(query);
 
         String id = (String)parameters.get(ID_KEY);
-        boolean result = gatewayListener.gatewayRemoved(id);
+        boolean result = gatewayManager.removeGateway(id);
 
         String message = result ? GATEWAY_REMOVED_MESSAGE : GATEWAY_NOT_REMOVED_MESSAGE;
         sendResponse(httpExchange, 200, String.format(message, id));
@@ -132,14 +131,14 @@ public class GeneralRequestHandler implements HttpHandler {
         Map<String,Object> parameters = new ParameterParser().parse(query);
         String path = (String) parameters.get(PATH_KEY);
 
-        boolean errored = false, result = false;
+        boolean result = false;
+        int responseCode = 200;
         try {
-            result = regionListener.regionAdded(path, true);
+            result = regionManager.addRegion(path, true);
         } catch (Exception e) {
-            errored = true;
+            responseCode = 500;
         }
         String message = result ? REGION_ADDED_MESSAGE : REGION_NOT_ADDED_MESSAGE;
-        int responseCode = errored ? 500 : 200;
         sendResponse(httpExchange, responseCode, String.format(message, path));
 
     }
@@ -149,20 +148,20 @@ public class GeneralRequestHandler implements HttpHandler {
         Map<String,Object> parameters = new ParameterParser().parse(query);
         String path = (String) parameters.get(PATH_KEY);
 
-        boolean errored = false, result = false;
+        boolean result = false;
+        int responseCode = 200;
         try {
-            result = regionListener.regionRemoved(path);
+            result = regionManager.removeRegion(path);
         } catch (Exception e) {
-            errored = true;
+            responseCode = 500;
         }
         String message = result ? REGION_REMOVED_MESSAGE : REGION_NOT_REMOVED_MESSAGE;
-        int responseCode = errored ? 500 : 200;
         sendResponse(httpExchange, responseCode, String.format(message, path));
     }
     
     private void handleListRegions(HttpExchange httpExchange) throws IOException {
     	StringBuilder sb = new StringBuilder();
-    	for (String s : regionListener.regionList()) {
+    	for (String s : regionManager.regionList()) {
     		sb.append(s).append(",");
     	}
     	String out = sb.length() > 0 ? sb.substring(0, sb.length()-1) : "";
