@@ -8,20 +8,20 @@ import brooklyn.management.Task;
 import java.util.Map
 
 import org.slf4j.Logger
-import org.slf4j.LoggerFactory;
+import org.slf4j.LoggerFactory
 
-import brooklyn.entity.Application;
 import brooklyn.entity.Effector
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEffector
 import brooklyn.entity.basic.AbstractEntity
+import brooklyn.entity.trait.Startable
 import brooklyn.management.ExecutionContext
+import brooklyn.management.ExpirationPolicy
 import brooklyn.management.ManagementContext
 import brooklyn.management.SubscriptionContext
 import brooklyn.management.Task
 import brooklyn.util.task.BasicExecutionContext
 import brooklyn.util.task.BasicExecutionManager
-import brooklyn.management.ExpirationPolicy
 
 public abstract class AbstractManagementContext implements ManagementContext  {
     private static final Logger log = LoggerFactory.getLogger(AbstractManagementContext.class)
@@ -101,6 +101,25 @@ public abstract class AbstractManagementContext implements ManagementContext  {
         entity.metaClass.invokeMethod(entity, eff.name, args)
     }
 
+	/** activates management when effector invoked, warning unless context is acceptable
+	 * (currently only acceptable context is "start") */
+	protected void manageIfNecessary(Entity entity, Object context) {
+		if (!isManaged(entity)) {
+			Entity rootUnmanaged = entity;
+			while (true) {
+				Entity candidateUnmanagedOwner = rootUnmanaged.getOwner();
+				if (candidateUnmanagedOwner==null || getEntity(candidateUnmanagedOwner.id)!=null)
+					break;
+				rootUnmanaged = candidateUnmanagedOwner;
+			}
+			if (context==Startable.START.name)
+				log.info("activating local management for $rootUnmanaged on start")
+			else
+				log.warn("activating local management for $rootUnmanaged due to running code on $entity: "+context)
+			manage(rootUnmanaged)
+		}
+	}
+
     /**
      * Method for entity to make effector happen with correct semantics (right place, right task context),
      * when a method is called on that entity.
@@ -108,12 +127,8 @@ public abstract class AbstractManagementContext implements ManagementContext  {
     protected <T> T invokeEffectorMethodSync(Entity entity, Effector<T> eff, Object args) {
         Task current = BasicExecutionManager.currentTask
         if (!current || !current.tags.contains(entity) || !isManagedLocally(entity)) {
+			manageIfNecessary(entity, eff.name);
             // Wrap in a task if we aren't already in a task that is tagged with this entity
-            if ((entity in Application) && !isManaged(entity) && eff.name=="start") {
-                // Auto-magically begin application management without warnings
-                log.info("Activating local management on start of application $entity")
-                manage(entity)
-            }
             runAtEntity(expirationPolicy: ExpirationPolicy.NEVER, entity, { invokeEffectorMethodLocal(entity, eff, args); },
                 description:"invoking ${eff.name} on ${entity.displayName}", displayName:eff.name, tags:[EFFECTOR_TAG]).get()
         } else {

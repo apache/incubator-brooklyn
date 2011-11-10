@@ -37,11 +37,16 @@ public abstract class JMSBroker<Q extends JMSDestination & Queue, T extends JMSD
     public void postStart() {
 		super.postStart()
 		
+		//need to wait for JMX operations to be available
+		waitForServiceUp()
+		
         queueNames.each { String name -> addQueue(name) }
         topicNames.each { String name -> addTopic(name) }
         setBrokerUrl();
     }
 
+	public void waitForServiceUp() {}
+	
     public abstract void setBrokerUrl();
 
     @Override
@@ -97,6 +102,8 @@ public abstract class JMSDestination extends AbstractEntity {
         create()
     }
 
+	public String getName() { getDisplayName() }
+	
     public abstract void init();
 
     public abstract void addJmxSensors()

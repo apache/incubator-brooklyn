@@ -180,7 +180,10 @@ public class SshJschTool {
                 Thread.sleep pause
             }
         } catch (IOException ioe) {
-            log.info "Caught an IOException ({}) - the script has probably exited early", ioe.message
+			if (channel.getExitStatus()==0)
+            	log.debug "Caught an IOException ({}) - the script has probably exited early", ioe.message
+			else
+				log.warn "Caught an IOException ({}) - the script may have exited early", ioe.message
         }
 
         if (properties.block==null || properties.block) {

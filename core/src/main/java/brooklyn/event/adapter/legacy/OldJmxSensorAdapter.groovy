@@ -80,7 +80,12 @@ public class OldJmxSensorAdapter {
     }
 
     public <T> ValueProvider<T> newAttributeProvider(String objectName, String attribute) {
-        return new JmxAttributeProvider(this, new ObjectName(objectName), attribute)
+		try {
+			return new JmxAttributeProvider(this, new ObjectName(objectName), attribute)
+		} catch (Exception e) {
+			log.warn "error creating JMX object '"+objectName+"', $attribute."
+			throw e;
+		}
     }
 
     public <T> ValueProvider<T> newOperationProvider(String objectName, String method, Object...arguments) {

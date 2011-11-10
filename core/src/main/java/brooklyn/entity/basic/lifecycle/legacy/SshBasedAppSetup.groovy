@@ -33,13 +33,13 @@ public abstract class SshBasedAppSetup extends StartStopSshDriver implements Scr
     protected static final Logger log = LoggerFactory.getLogger(SshBasedAppSetup.class)
 
 	public void setVersion(String s) {
-		if (getVersion()!=s) log.warn("unsupported setting $s (is ${getVersion()})", new Throwable())
+		if (getVersion()!=s) log.warn("legacy api, unsupported setting for $entity: version $s (is ${getVersion()})")
 	}
 //	public void setInstallDir(String s) {
 //		if (getInstallDir()!=s) log.warn("unsupported setting $s (is ${getInstallDir()})", new Throwable())
 //	}
 	public void setRunDir(String s) {
-		if (getRunDir()!=s) log.warn("unsupported setting $s (is ${getRunDir()}", new Throwable())
+		if (getRunDir()!=s) log.warn("legacy api, unsupported setting for $entity: run dir $s (is ${getRunDir()}")
 	}
 
 	//for compatibility with legacy entities
@@ -205,6 +205,8 @@ public abstract class SshBasedAppSetup extends StartStopSshDriver implements Scr
             "cd ${runDir}",
             "test -f ${pidFile}",
             "ps aux | grep ${service} | grep \$(cat ${pidFile}) > /dev/null"
+			//FIXME
+			// ps -p instead?
         ]
         return script
     }

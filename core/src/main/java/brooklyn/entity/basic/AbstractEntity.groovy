@@ -222,9 +222,9 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
                 }
             }
         }
-		
+
 		if (displayName==null)
-			displayName = getClass().getSimpleName()+":"+id.substring(0, 4)
+			displayName = flags.name ?: getClass().getSimpleName()+":"+id.substring(0, 4)
 		
         if (!flags.isEmpty()) {
             LOG.warn "Unsupported flags when configuring {}; ignoring: {}", this, flags

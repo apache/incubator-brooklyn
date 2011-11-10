@@ -58,6 +58,8 @@ public class SensorRegistry {
 	// TODO might be useful to have a lookup mechanism, or register ignore duplicates
 	//	sensorRegistry.adapters.find({ it in OldJmxSensorAdapter })?.connect(block: true, publish: (getEntityClass().hasSensor(JMX_URL)))
 	
+	boolean activated = false;
+	
 	private List<Closure> activationListeners = []
 	private List<Closure> deactivationListeners = []
 	void addActivationLifecycleListeners(Closure onUp, Closure onDown) {
@@ -66,6 +68,7 @@ public class SensorRegistry {
 	}
 	public void activateAdapters() {
 		log.debug "activating adapters at sensor registry for {}", this, entity
+		activated = true;
 		activationListeners.each { it.call() }
 	}
 	public void deactivateAdapters() {
@@ -74,6 +77,7 @@ public class SensorRegistry {
 	}
 
 	public void close() {
+		activated = false;
 		deactivateAdapters();
 		exec.shutdownNow()
 		scheduled.each { key, ScheduledFuture future -> future.cancel(true) }
@@ -94,7 +98,9 @@ public class SensorRegistry {
                 T newValue = provider.compute()
                 entity.setAttribute(sensor, newValue)
             } catch (Exception e) {
-                log.error "Error calculating value for sensor ${sensor} on entity ${entity}", e
+				if (activated)
+                	log.error "Error calculating value for sensor ${sensor} on entity ${entity}", e
+				else log.debug "Error (post deactivation) calculating value for sensor ${sensor} on entity ${entity}", e
             }
         }
         

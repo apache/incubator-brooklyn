@@ -42,6 +42,7 @@ public class JBoss7Server extends JavaWebAppSoftwareProcess implements JavaWebAp
 		def http = sensorRegistry.register(
 			new HttpSensorAdapter("http://$host:$port/management/subsystem/web/connector/http/read-resource", period: 200*TimeUnit.MILLISECONDS).
 				vars("include-runtime":null) )
+		
 		with(http) {
 			poll(MANAGEMENT_STATUS, { responseCode })
 			poll(SERVICE_UP, { responseCode==200 })

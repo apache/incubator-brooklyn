@@ -4,6 +4,8 @@ import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
+import java.util.concurrent.TimeUnit;
+
 import javax.jms.Connection
 import javax.jms.MessageConsumer
 import javax.jms.MessageProducer
@@ -61,7 +63,7 @@ public class ActiveMQIntegrationTest {
     public void canStartupAndShutdown() {
         activeMQ = new ActiveMQBroker(owner:app);
         activeMQ.start([ testLocation ])
-        executeUntilSucceedsWithShutdown(activeMQ) {
+        executeUntilSucceedsWithShutdown(activeMQ, timeout:600*TimeUnit.SECONDS) {
             assertTrue activeMQ.getAttribute(JavaApp.SERVICE_UP)
         }
         assertFalse activeMQ.getAttribute(JavaApp.SERVICE_UP)
@@ -100,12 +102,12 @@ public class ActiveMQIntegrationTest {
             // Connect to broker using JMS and send messages
             Connection connection = getActiveMQConnection(activeMQ)
             clearQueue(connection, queueName)
-			Thread.sleep 1000
+			Thread.sleep 2000
             assertEquals queue.getAttribute(ActiveMQQueue.QUEUE_DEPTH_MESSAGES), 0
             sendMessages(connection, number, queueName, content)
 
             // Check messages arrived
-			Thread.sleep 1000
+			Thread.sleep 2000
             assertEquals queue.getAttribute(ActiveMQQueue.QUEUE_DEPTH_MESSAGES), number
 
             // Clear the messages
