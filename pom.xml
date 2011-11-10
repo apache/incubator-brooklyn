@@ -15,18 +15,12 @@
 			<id>local-release</id>
 			<name>libs-release-local</name>
 			<url>http://ccweb.cloudsoftcorp.com/maven/libs-release-local/</url>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
 		</repository>
 		<snapshotRepository>
 			<id>local-snapshot</id>
 			<name>libs-snapshot-local</name>
 			<url>http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/</url>
 			<uniqueVersion>true</uniqueVersion>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
 		</snapshotRepository>
 		<site>
 			<id>local-documentation</id>
