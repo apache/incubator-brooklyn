@@ -92,6 +92,9 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     /** Map of sensors on this entity by name, populated at constructor time. */
     private Map<String,Sensor> sensors = null
 
+    /** Map of config keys on this entity by name, populated at constructor time. */
+	private Map<String,Sensor> configKeys = null
+
     private transient EntityClass entityClass = null
     protected transient ExecutionContext execution
     protected transient SubscriptionContext subscription
@@ -163,6 +166,23 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
             if (LOG.isTraceEnabled())
                 LOG.trace "Entity {} sensors: {}", id, sensorsT.keySet().join(", ")
             sensors = sensorsT
+
+            Map<String,ConfigKey> configT = [:]
+            for (Field f in getClass().getFields()) {
+            	ConfigKey k = null;
+                if (ConfigKey.class.isAssignableFrom(f.getType())) {
+                	k = f.get(this)
+                } else if (HasConfigKey.class.isAssignableFrom(f.getType())) {
+					k = ((HasConfigKey)f.get(this)).getConfigKey();
+				}
+				if (k) {
+                    def overwritten = configT.put(k.name, k)
+                    if (overwritten!=null) LOG.warn("multiple definitions for config key ${k.name} on $this; preferring $k to $overwritten")
+                }
+            }
+            if (LOG.isTraceEnabled())
+                LOG.trace "Entity {} config keys: {}", id, configT.keySet().join(", ")
+            configKeys = configT
 
             configure(flags);
 
@@ -347,7 +367,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     @Override
     public synchronized EntityClass getEntityClass() {
         if (entityClass) entityClass
-        entityClass = new BasicEntityClass(this.class.canonicalName, sensors.values(), effectors.values()) 
+        entityClass = new BasicEntityClass(this.class.canonicalName, configKeys.values(), sensors.values(), effectors.values()) 
     }
 
     @Override
@@ -376,6 +396,11 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     public <T> T setAttribute(ConfiguredAttributeSensor<T> configuredSensor) {
         setAttribute(configuredSensor, getConfig(configuredSensor.configKey))
     }
+
+	/**
+	 * ConfigKeys available on this entity.
+	 */
+	public Map<String,ConfigKey<?>> getConfigKeys() { configKeys }
 
 	@Override
 	public <T> T getConfig(ConfigKey<T> key) { getConfig(key, null) }
@@ -538,10 +563,10 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     }
 
     
-    /**
-     * Sensors available on this entity.
-     */
-    public Map<String,Sensor<?>> getSensors() { sensors }
+	/**
+	 * Sensors available on this entity.
+	 */
+	public Map<String,Sensor<?>> getSensors() { sensors }
 
     /** Convenience for finding named sensor in {@link #getSensor()} {@link Map}. */
     public <T> Sensor<T> getSensor(String sensorName) { getSensors()[sensorName] }
@@ -604,7 +629,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
      * NB no work has been done supporting changing this after initialization,
      * but the idea of these so-called "dynamic effectors" has been discussed and it might be supported in future...
      */
-    public Map<String,Effector> getEffectors() { effectors }
+    public Map<String,Effector<?>> getEffectors() { effectors }
 
     /** Convenience for finding named effector in {@link #getEffectors()} {@link Map}. */
     public <T> Effector<T> getEffector(String effectorName) { effectors[effectorName] }

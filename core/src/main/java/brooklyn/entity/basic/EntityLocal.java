@@ -4,6 +4,7 @@ import java.util.Map;
 
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.ConfigKey;
+import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.ConfigKey.HasConfigKey;
 import brooklyn.event.AttributeSensor;
@@ -87,5 +88,19 @@ public interface EntityLocal extends Entity {
     ManagementContext getManagementContext();
     ExecutionContext getExecutionContext();
     
+	/**
+	 * ConfigKeys available on this entity.
+	 */
+	public Map<String,ConfigKey<?>> getConfigKeys();
+
+	/**
+	 * Sensors available on this entity.
+	 */
     public Map<String,Sensor<?>> getSensors();
+
+	/**
+	 * Effectors available on this entity.
+	 */
+    public Map<String,Effector<?>> getEffectors();
+    
 }

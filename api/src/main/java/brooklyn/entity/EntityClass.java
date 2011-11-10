@@ -15,6 +15,7 @@ import brooklyn.event.Sensor;
 public interface EntityClass extends Serializable {
     
     //TODO call EntityType ?  instead of Class?  same for refs to SensorClass ?
+	//(or is this even necessary; info is on the EntityLocal, and that may be more up to date than this?) 
     
     // TODO maybe these? discuss/delete
     //Collection<EntityType> getSuperTypes();
@@ -24,7 +25,9 @@ public interface EntityClass extends Serializable {
 
     String getName();
     
+    Collection<ConfigKey<?>> getConfigKeys();
     Collection<Sensor<?>> getSensors();
-    
     Collection<Effector<?>> getEffectors();
+    
+
 }
