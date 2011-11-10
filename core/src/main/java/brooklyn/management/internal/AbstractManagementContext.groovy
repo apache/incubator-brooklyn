@@ -111,7 +111,7 @@ public abstract class AbstractManagementContext implements ManagementContext  {
             // Wrap in a task if we aren't already in a task that is tagged with this entity
             if ((entity in Application) && !isManaged(entity) && eff.name=="start") {
                 // Auto-magically begin application management without warnings
-                log.info("Activating management on start of application $entity")
+                log.info("Activating local management on start of application $entity")
                 manage(entity)
             }
             runAtEntity(expirationPolicy: ExpirationPolicy.NEVER, entity, { invokeEffectorMethodLocal(entity, eff, args); },

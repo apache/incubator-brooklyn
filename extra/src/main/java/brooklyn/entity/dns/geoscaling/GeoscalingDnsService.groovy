@@ -60,7 +60,9 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
         applyConfig();
     }
 
-    public void applyConfig() {
+	boolean isConfigured = false;
+	
+    public synchronized void applyConfig() {		
         randomizeSmartSubdomainName = getConfig(RANDOMIZE_SUBDOMAIN_NAME);
         username = getConfig(GEOSCALING_USERNAME);
         password = getConfig(GEOSCALING_PASSWORD);
@@ -85,11 +87,13 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
             reconfigureService(rememberedTargetHosts);
             rememberedTargetHosts = null;
         }
+		
+		isConfigured = true;
     }
     
     @Override
     public void destroy() {
-        if (!getAttribute(SERVICE_CONFIGURED)) return;
+        if (!isConfigured) return;
         
         // Don't leave randomized subdomains configured on our GeoScaling account.
         if (randomizeSmartSubdomainName) {
@@ -104,10 +108,12 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
         }
         
         super.destroy();
+		
+		isConfigured = false;
     }
     
     protected void reconfigureService(Set<HostGeoInfo> targetHosts) {
-        if (!getAttribute(SERVICE_CONFIGURED)) {
+        if (!isConfigured) {
             this.rememberedTargetHosts = targetHosts;
             return;
         }

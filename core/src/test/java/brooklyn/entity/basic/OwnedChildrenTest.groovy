@@ -133,9 +133,9 @@ public class OwnedChildrenTest {
             e.setOwner(e2)
             fail()
         } catch (IllegalStateException ex) {
+			ex.printStackTrace();
             // success
         }
-        
         assertEquals(e.getOwnedChildren(), [e2])
         assertEquals(e2.getOwnedChildren(), [])
         assertEquals(e.getOwner(), null)
@@ -154,18 +154,22 @@ public class OwnedChildrenTest {
         AbstractEntity e = new AbstractEntity(owner:app) {}
         AbstractEntity e2 = new AbstractEntity(owner:e) {}
         
-        assertTrue(e2.isAncestor(app))
-        assertTrue(e2.isAncestor(e))
-        assertFalse(e.isAncestor(e2))
+		use (Entities) {
+			assertTrue(e2.isAncestor(app))
+			assertTrue(e2.isAncestor(e))
+			assertFalse(e.isAncestor(e2))
+		}
     }
     
     @Test
     public void testIsDescendant() {
         AbstractEntity e = new AbstractEntity(owner:app) {}
         AbstractEntity e2 = new AbstractEntity(owner:e) {}
-        
-        assertTrue(app.isDescendant(e))
-        assertTrue(app.isDescendant(e2))
-        assertFalse(e2.isDescendant(e))
+
+		use (Entities) {
+			assertTrue(app.isDescendant(e))
+			assertTrue(app.isDescendant(e2))
+			assertFalse(e2.isDescendant(e))
+		}
     }
 }

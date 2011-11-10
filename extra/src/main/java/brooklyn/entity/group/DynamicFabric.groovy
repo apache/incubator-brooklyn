@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
 import brooklyn.management.Task
@@ -82,7 +83,7 @@ public class DynamicFabric extends AbstractEntity implements Startable {
     }
 
     public void stop() {
-        Task invoke = invokeEffectorList(ownedChildren, Startable.STOP)
+        Task invoke = Entities.invokeEffectorList(this, ownedChildren, Startable.STOP)
         try {
 	        invoke?.get()
         } catch (ExecutionException ee) {

@@ -143,6 +143,8 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
             
             // initialize the effectors defined on the class
             // (dynamic effectors could still be added; see #getEffectors
+			// TODO we could/should maintain a registry of EntityClass instances and re-use that,
+			//      except where dynamic sensors/effectors are desired (nowhere currently I think)
             Map<String,Effector> effectorsT = [:]
             for (Field f in getClass().getFields()) {
                 if (Effector.class.isAssignableFrom(f.getType())) {
@@ -196,7 +198,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         Map<ConfigKey,Object> suppliedOwnConfig = flags.remove('config')
         if (suppliedOwnConfig) ownConfig.putAll(suppliedOwnConfig)
 
-        displayName = flags.remove('displayName') ?: getClass().getSimpleName()+":"+id.substring(0, 4)
+        displayName = flags.remove('displayName') ?: displayName;
         
         for (Field f: getClass().getFields()) {
             SetFromFlag cf = f.getAnnotation(SetFromFlag.class);
@@ -205,18 +207,25 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
                 if (ConfigKey.class.isAssignableFrom(f.getType())) {
                     key = f.get(this);
                 } else if (HasConfigKey.class.isAssignableFrom(f.getType())) {
-                    key = f.get(this).getConfigKey();
+                    key = ((HasConfigKey)f.get(this)).getConfigKey();
                 } else {
                     LOG.warn "Unsupported {} on {} in {}; ignoring", SetFromFlag.class.getSimpleName(), f, this
                 }
                 if (key) {
                     String flagName = cf.value() ?: key?.getName();
                     if (flagName && flags.containsKey(flagName)) {
-                        setConfig(key, flags.remove(flagName))
+						Object value = flags.remove(flagName)
+                        setConfig(key, value)
+						if (flagName=="name" && displayName==null)
+							displayName = value
                     }
                 }
             }
         }
+		
+		if (displayName==null)
+			displayName = getClass().getSimpleName()+":"+id.substring(0, 4)
+		
         if (!flags.isEmpty()) {
             LOG.warn "Unsupported flags when configuring {}; ignoring: {}", this, flags
         }
@@ -244,7 +253,9 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 
         //make sure there is no loop
         if (this.equals(entity)) throw new IllegalStateException("entity $this cannot own itself")
-        if (isDescendant(entity)) throw new IllegalStateException("loop detected trying to set owner of $this as $entity, which is already a descendent")
+		//this may be expensive, but preferable to throw before setting the owner!
+        if (Entities.isDescendant(this, entity))
+			throw new IllegalStateException("loop detected trying to set owner of $this as $entity, which is already a descendent")
         
         owner = new EntityReference(this, entity)
         //used to test entity!=null but that should be guaranteed?
@@ -262,32 +273,6 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         oldOwner?.removeOwnedChild(this)
     }
 
-    public boolean isAncestor(Entity oldee) {
-        AbstractEntity ancestor = getOwner()
-        while (ancestor) {
-            if (ancestor.equals(oldee)) return true
-            ancestor = ancestor.getOwner()
-        }
-        return false
-    }
-
-    public boolean isDescendant(Entity youngster) {
-        Set<Entity> inspected = [] as HashSet
-        List<Entity> toinspect = [this]
-        
-        while (!toinspect.isEmpty()) {
-            Entity e = toinspect.pop()
-            if (e.getOwnedChildren().contains(youngster)) {
-                return true
-            }
-            inspected.add(e)
-            toinspect.addAll(e.getOwnedChildren())
-            toinspect.removeAll(inspected)
-        }
-        
-        return false
-    }
-
     /**
      * Adds the given entity as a member of this group <em>and</em> this group as one of the groups of the child;
      * returns argument passed in, for convenience.
@@ -295,7 +280,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     @Override
     public Entity addOwnedChild(Entity child) {
         synchronized (ownedChildren) {
-	        if (isAncestor(child)) throw new IllegalStateException("loop detected trying to add child $child to $this; it is already an ancestor")
+	        if (Entities.isAncestor(this, child)) throw new IllegalStateException("loop detected trying to add child $child to $this; it is already an ancestor")
 	        child.setOwner(this)
 	        ownedChildren.add(child)
         }
@@ -646,14 +631,6 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
      */
     public <T> Task<T> invoke(Effector<T> eff, Map<String,?> parameters) {
         getManagementContext().invokeEffector(this, eff, parameters);
-    }
-
-    public <T> Task<List<T>> invokeEffectorList(Collection<Entity> entities, Effector<T> effector, Map<String,?> parameters=[:]) {
-        if (!entities || entities.isEmpty()) return null
-        List<Task> tasks = entities.collect { it.invoke(effector, parameters) }
-        ParallelTask invoke = new ParallelTask(tasks)
-        executionContext.submit(invoke)
-        invoke
     }
 
     /**
