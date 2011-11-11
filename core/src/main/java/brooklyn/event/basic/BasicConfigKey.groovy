@@ -88,7 +88,7 @@ class BasicConfigKey<T> implements ConfigKey<T>, ConfigKeySelfExtracting<T>, Ser
             v = ((Closure) v).call()
         } else if (v in Map) {
             Map result = [:]
-			v.each { k,val -> result << [k: resolveValue(val, exec)] }
+			v.each { k,val -> result << [(k): resolveValue(val, exec)] }
             return result
         } else if (v in List) {
             List result = []

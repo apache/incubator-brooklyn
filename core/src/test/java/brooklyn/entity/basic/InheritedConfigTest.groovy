@@ -242,6 +242,16 @@ public class InheritedConfigTest {
         assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING), [akey:"aval",bkey:"bval"])
     }
 
+	@Test
+	public void testConfigKeyCanStoreAndRetrieveMaps() throws Exception {
+		TestApplication app = new TestApplication();
+		TestEntity entity = new TestEntity([owner:app])
+		Map v1 = [a:1, b:"bb"]
+		entity.setConfig(TestEntity.CONF_MAP_THING.subKey("akey"), v1)
+		app.start([new MockLocation()])
+		assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING), [akey:v1])
+	}
+
     @Test    
     public void testListConfigKeyCanStoreAndRetrieveVals() throws Exception {
         TestApplication app = new TestApplication();
