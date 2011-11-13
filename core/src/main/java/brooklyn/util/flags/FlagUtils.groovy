@@ -41,7 +41,8 @@ public class FlagUtils {
 	}
 	
     private static Map setFieldsFromFlags(Map flags, Object o, Collection<Field> fields) {
-        Map remaining=[:]+flags
+        Map remaining=[:]
+		if (flags) remaining += flags
         for (Field f: fields) {
             SetFromFlag cf = f.getAnnotation(SetFromFlag.class);
             if (cf) {

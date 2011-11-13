@@ -222,4 +222,12 @@ public class RepeaterTest {
             fail "Exception should not have been thrown: " + re.getMessage()
         }
     }
+	
+	public void testFlags() {
+		int count=0;
+		new Repeater(period: 5*MILLISECONDS, timeout: 100*MILLISECONDS).repeat({ count++ }).until({ count>100}).run();
+		assertTrue count>10
+		assertTrue count<30
+	}
+	
 }

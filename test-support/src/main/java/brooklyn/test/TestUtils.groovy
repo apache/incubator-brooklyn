@@ -58,7 +58,7 @@ public class TestUtils {
     }
     
     //FIXME rename these to assertEventually, refactor to have boolean blockUntil in some other util class
-    
+    //FIXME remove dupilcation with LanguageUtils.repeatUntilSuccess
     public static void executeUntilSucceeds(Map flags=[:], Closure c) {
         executeUntilSucceedsWithFinallyBlock(flags, c) { }
     }
