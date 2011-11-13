@@ -4,11 +4,11 @@ import java.util.List
 import java.util.Map
 
 import brooklyn.entity.basic.Attributes
-import brooklyn.entity.webapp.JavaWebApp
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedJavaWebAppSetup
 
-class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
+
+class OldJBoss7SshSetup extends SshBasedJavaWebAppSetup {
 
     public static final String DEFAULT_INSTALL_DIR = "$DEFAULT_INSTALL_BASEDIR/jboss"
     public static final String DEFAULT_VERSION = "7.0.0.Final"
@@ -19,13 +19,13 @@ class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
     
     private final String brooklynConfig = "standalone-brooklyn.xml"
     
-    private int managementPort
+    int managementPort
     
-    public JBoss7SshSetup(JBoss7Server entity, SshMachineLocation machine) {
+    public OldJBoss7SshSetup(JBoss7Server entity, SshMachineLocation machine) {
         super(entity, machine)
     }
     
-    public static JBoss7SshSetup newInstance(JBoss7Server entity, SshMachineLocation machine) {
+    public static OldJBoss7SshSetup newInstance(JBoss7Server entity, SshMachineLocation machine) {
         
         // FIXME Don't call entity.getConfig(JBoss7Server.PROPERTY_FILES) until absolutely necessary.
         // Calling it here blocks until the val is available, which prevents us from downoading and installing
@@ -50,7 +50,7 @@ class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
         int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort))
         
         // Setup instance
-        JBoss7SshSetup result = new JBoss7SshSetup(entity, machine)
+        OldJBoss7SshSetup result = new OldJBoss7SshSetup(entity, machine)
         result.setVersion DEFAULT_VERSION
         result.setHttpPort httpPort
         result.setManagementPort managementPort
@@ -59,31 +59,42 @@ class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
         result.setRunDir runDir
         result.setEnvironmentPropertyFiles propFilesToGenerate
         result.setJmxEnabled false
-        result.setLogFileLocation logFileLocation
+        entity.setAttribute(Attributes.LOG_FILE_LOCATION, logFileLocation)
 
         return result
     }
     
-    public void setManagementPort(int val) {
-        this.managementPort = val
-    }
-    
     @Override
-    protected void setCustomAttributes() {
+    protected void setEntityAttributes() {
+		super.setEntityAttributes()
         entity.setAttribute(JBoss7Server.MANAGEMENT_PORT, managementPort)
     }
-    
-    @Override
-    public List<String> getInstallScript() {
+    		
+	@Override
+	public void install() {
         String url = "http://download.jboss.org/jbossas/7.0/jboss-as-${version}/jboss-as-${version}.tar.gz"
         String saveAs  = "jboss-as-distribution-${version}"
-        makeInstallScript([
-            "curl -L \"${url}\" -o ${saveAs}",
-            "tar xzfv ${saveAs}",
-            "mv jboss-as-$version/* $installDir",
-            "rm -r jboss-as-$version"
-        ])
-    }
+		newScript(INSTALLING).
+			failOnNonZeroResultCode().
+			body(
+				"curl -L \"${url}\" -o ${saveAs}",
+				"tar xzfv ${saveAs}",
+				"mv jboss-as-$version/* $installDir",
+				"rm -r jboss-as-$version"
+			).execute();
+	}
+	
+//    @Override
+//    public List<String> getInstallScript() {
+//        String url = "http://download.jboss.org/jbossas/7.0/jboss-as-${version}/jboss-as-${version}.tar.gz"
+//        String saveAs  = "jboss-as-distribution-${version}"
+//        makeInstallScript([
+//            "curl -L \"${url}\" -o ${saveAs}",
+//            "tar xzfv ${saveAs}",
+//            "mv jboss-as-$version/* $installDir",
+//            "rm -r jboss-as-$version"
+//        ])
+//    }
 
     public List<String> getRunScript() {
         // script must be backgrounded otherwise it will never return.
@@ -96,11 +107,10 @@ class JBoss7SshSetup extends SshBasedJavaWebAppSetup {
         return script
     }
     
-    @Override
-    public Map<String, String> getRunEnvironment() {
-        return super.getRunEnvironment() + 
-                ["JAVA_OPTS" : toJavaDefinesString(getJvmStartupProperties())+" -Xms200m -Xmx800m -XX:MaxPermSize=400m"]
-    }
+	@Override
+	protected List<String> getCustomJavaConfigOptions() {
+		return ["-Xms200m", "-Xmx800m", "-XX:MaxPermSize=400m"]
+	}
     
     /** @see SshBasedJavaAppSetup#getCheckRunningScript() */
     public List<String> getCheckRunningScript() {

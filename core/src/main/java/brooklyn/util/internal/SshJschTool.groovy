@@ -143,8 +143,12 @@ public class SshJschTool {
     /**
      * Executes the set of commands in a shell; optional property 'out'
      * should be an output stream. Blocks until completion (unless property
-     * 'block' set as false), so you must send an exit command.
-     *  returns exit status.
+     * 'block' set as false).
+     * <p>
+     * values in environment parameters are wrapped in double quotes, with double quotes escaped 
+     * 
+     * @return exit status of script
+     *  
      */
     public int execShell(Map properties=[:], List<String> commands, Map env=[:]) {
         assertConnected()
@@ -157,9 +161,12 @@ public class SshJschTool {
 
         def allCmds = []
         allCmds.add "exec bash -e"
-        allCmds.addAll env.collect { key, value -> "export $key=\"$value\"" }
+        allCmds.addAll env.collect { String key, String value ->
+			def ve = value.replaceAll("\\\"", "\\\\\\\"");
+			"export $key=\"${ve}\"" }
         allCmds.addAll commands
-        allCmds.add "exit 0"
+		//explicit exit, in case it wasn't in the script above, because we run in blocking interactive mode
+        allCmds.add 'exit $?'
 
         PipedOutputStream out = new PipedOutputStream()
         channel.setInputStream new PipedInputStream(out)
@@ -173,7 +180,10 @@ public class SshJschTool {
                 Thread.sleep pause
             }
         } catch (IOException ioe) {
-            log.info "Caught an IOException ({}) - the script has probably exited early", ioe.message
+			if (channel.getExitStatus()==0)
+            	log.debug "Caught an IOException ({}) - the script has probably exited early", ioe.message
+			else
+				log.warn "Caught an IOException ({}) - the script may have exited early", ioe.message
         }
 
         if (properties.block==null || properties.block) {
@@ -361,7 +371,7 @@ public class SshJschTool {
      * '..', or ends with '/' then file name is used.
      * <p>
      * To set permissions (or override mod date) use 'permissions:"0644"',
-     * as described at {@link #copyTo(Map, InputStream, int, String)}
+     * as described at {@link #createFile(Map, InputStream, int, String)}
      *
      * @param file
      * @param pathAndFileOnRemoteServer

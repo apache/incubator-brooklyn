@@ -1,55 +1,61 @@
 package brooklyn.entity.webapp.jboss
 
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.with
 import groovy.lang.MetaClass
 
 import java.util.concurrent.TimeUnit
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 import brooklyn.entity.Entity
-import brooklyn.entity.webapp.JavaWebApp
-import brooklyn.event.EntityStartException
-import brooklyn.event.adapter.ValueProvider
+import brooklyn.entity.webapp.JavaWebAppService
+import brooklyn.entity.webapp.JavaWebAppSoftwareProcess
+import brooklyn.event.adapter.HttpSensorAdapter
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.ConfiguredAttributeSensor
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.SshBasedAppSetup
-import brooklyn.util.internal.Repeater
+import brooklyn.util.flags.SetFromFlag
 
-class JBoss7Server extends JavaWebApp {
+public class JBoss7Server extends JavaWebAppSoftwareProcess implements JavaWebAppService {
+
+	public static final Logger log = LoggerFactory.getLogger(JBoss7Server.class)
+	
+    @SetFromFlag("managementPort")
     public static final ConfiguredAttributeSensor<Integer> MANAGEMENT_PORT = 
             [ Integer, "http.managementPort", "Management port", 9990 ]
 
     public static final BasicAttributeSensor<Integer> MANAGEMENT_STATUS =
             [ Integer, "webapp.http.managementStatus", "HTTP response code for the management server" ]
-    public static final BasicAttributeSensor<Long> BYTES_RECEIVED =
-            [ Long, "webapp.reqs.bytes.received", "Total bytes received by the webserver" ]
-    public static final BasicAttributeSensor<Long> BYTES_SENT =
-            [ Long, "webapp.reqs.bytes.sent", "Total bytes sent by the webserver" ]
     
+			
     public JBoss7Server(Map flags=[:], Entity owner=null) {
         super(flags, owner)
-        
-        setConfigIfValNonNull(MANAGEMENT_PORT.configKey, flags.managementPort)
-        jmxEnabled = false
     }
+		
+	@Override	
+	protected void connectSensors() {
+		super.connectSensors();
 
-    @Override
-    public void addHttpSensors() {
-        def host = getAttribute(HOSTNAME)
-        def port = getAttribute(MANAGEMENT_PORT)
-        String queryUrl = "http://$host:$port/management/subsystem/web/connector/http/read-resource?include-runtime"
+		def host = getAttribute(HOSTNAME)
+		def port = getAttribute(MANAGEMENT_PORT)
+		def http = sensorRegistry.register(
+			new HttpSensorAdapter("http://$host:$port/management/subsystem/web/connector/http/read-resource", period: 200*TimeUnit.MILLISECONDS).
+				vars("include-runtime":null) )
+		
+		with(http) {
+			poll(MANAGEMENT_STATUS, { responseCode })
+			poll(SERVICE_UP, { responseCode==200 })
 
-        attributePoller.addSensor(MANAGEMENT_STATUS, httpAdapter.newStatusValueProvider(queryUrl))
-        attributePoller.addSensor(SERVICE_UP, { getAttribute(MANAGEMENT_STATUS) == 200 } as ValueProvider<Boolean>)
+			poll(REQUEST_COUNT) { json.requestCount }
+			poll(ERROR_COUNT) { json.errorCount }
+			poll(TOTAL_PROCESSING_TIME) { json.processingTime }
+			poll(MAX_PROCESSING_TIME) { json.maxTime }
+			poll(BYTES_RECEIVED) { json.bytesReceived }
+			poll(BYTES_SENT, { json.bytesSent })
+		}
+	}
 
-        attributePoller.addSensor(REQUEST_COUNT, httpAdapter.newJsonLongProvider(queryUrl, "requestCount"))
-        attributePoller.addSensor(ERROR_COUNT, httpAdapter.newJsonLongProvider(queryUrl, "errorCount"))
-        attributePoller.addSensor(TOTAL_PROCESSING_TIME, httpAdapter.newJsonLongProvider(queryUrl, "processingTime"))
-        attributePoller.addSensor(MAX_PROCESSING_TIME, httpAdapter.newJsonLongProvider(queryUrl, "maxTime"))
-        attributePoller.addSensor(BYTES_RECEIVED, httpAdapter.newJsonLongProvider(queryUrl, "bytesReceived"))
-        attributePoller.addSensor(BYTES_SENT, httpAdapter.newJsonLongProvider(queryUrl, "bytesSent"))
-    }
+    public JBoss7SshDriver newDriver(SshMachineLocation machine) { return new JBoss7SshDriver(this, machine) }
 
-    public SshBasedAppSetup getSshBasedSetup(SshMachineLocation machine) {
-        return JBoss7SshSetup.newInstance(this, machine)
-    }
 }

@@ -12,7 +12,7 @@ import org.testng.annotations.Test
 
 import redis.clients.jedis.Connection
 import brooklyn.entity.Application
-import brooklyn.entity.basic.JavaApp
+import brooklyn.entity.basic.legacy.JavaApp;
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation

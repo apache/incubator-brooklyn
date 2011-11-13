@@ -23,6 +23,8 @@ public class StatusListener implements ITestListener {
     private AtomicInteger succeded = new AtomicInteger(0);
     private AtomicInteger skipped = new AtomicInteger(0);
 
+    //TODO instead of system.out.println we should log -- *and* perhaps write to sysout if logger doesn't?
+    
     public void onTestStart(ITestResult res) {
         System.out.println("Starting test " + getTestDesc(res));
         threadTestClass.set(res.getTestClass());

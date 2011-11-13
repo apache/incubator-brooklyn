@@ -26,7 +26,7 @@ public class FutureValue<T> implements QualifiableFuture<T> {
     private T result;
     private Exception error;
 
-    public FutureValue(Closure expression, Closure validity = { it }) {
+    public FutureValue(Closure expression, Closure<Boolean> validity = { it }) {
         this.expression = expression;
         this.validity = validity;
     }    

@@ -140,7 +140,7 @@ public class TomcatServerIntegrationTest {
     
     private String getEnvironmentVariable(TomcatServer tomcat, String var) {
         ByteArrayOutputStream outstream = new ByteArrayOutputStream()
-        int result = tomcat.setup.machine.run(out:outstream, ["env"], tomcat.setup.runEnvironment)
+        int result = tomcat.driver.machine.run(out:outstream, ["env"], tomcat.driver.runEnvironment)
         String outstr = new String(outstream.toByteArray())
         String[] outLines = outstr.split("\n")
         for (String line in outLines) {

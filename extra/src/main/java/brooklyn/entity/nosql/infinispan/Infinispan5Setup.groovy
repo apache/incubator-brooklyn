@@ -5,8 +5,8 @@ import java.util.List
 import java.util.Map
 
 import brooklyn.entity.basic.Attributes
+import brooklyn.entity.basic.lifecycle.legacy.SshBasedJavaAppSetup;
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.SshBasedJavaAppSetup
 
 /**
  * Start a {@link TomcatServer} in a {@link Location} accessible over ssh.
@@ -15,8 +15,8 @@ public class Infinispan5Setup extends SshBasedJavaAppSetup {
     public static final String DEFAULT_VERSION = "5.0.0.CR8"
     public static final String DEFAULT_INSTALL_DIR = DEFAULT_INSTALL_BASEDIR+"/"+"infinispan"
     
-    private String protocol
-    private Integer port
+    String protocol
+    Integer port
     
     public static Infinispan5Setup newInstance(Infinispan5Server entity, SshMachineLocation machine) {
         String suggestedProtocol = entity.getConfig(Infinispan5Server.PROTOCOL.getConfigKey())
@@ -44,17 +44,10 @@ public class Infinispan5Setup extends SshBasedJavaAppSetup {
     public Infinispan5Setup(Infinispan5Server entity, SshMachineLocation machine) {
         super(entity, machine)
     }
-
-    public void setProtocol(String val) {
-        this.protocol = val
-    }
-    
-    public void setPort(Integer val) {
-        this.port = val
-    }
     
     @Override
-    protected void setCustomAttributes() {
+    protected void setEntityAttributes() {
+		super.setEntityAttributes()
         entity.setAttribute(Infinispan5Server.PROTOCOL, protocol)
         entity.setAttribute(Infinispan5Server.PORT, port)
     }
@@ -77,12 +70,6 @@ public class Infinispan5Setup extends SshBasedJavaAppSetup {
         return script
     }
     
-    @Override
-    public Map<String, String> getRunEnvironment() {
-        Map<String, String> env = [:]
-        return env
-    }
-
     @Override
     public List<String> getConfigScript() {
         // TODO create and reference a conf.xml? And start with --cache_config <path>

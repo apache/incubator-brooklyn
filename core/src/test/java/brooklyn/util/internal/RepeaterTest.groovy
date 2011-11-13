@@ -164,8 +164,9 @@ public class RepeaterTest {
         assertFalse result;
 
         long difference = end.timeInMillis - start.timeInMillis
-        assertTrue difference > DEADLINE*0.8
-        assertTrue difference < DEADLINE*1.2
+        assertTrue difference >= DEADLINE
+        assertTrue difference < DEADLINE*3
+		// old bounds of 0.8 and 1.2 were too narrow
     }
 
     @Test(expectedExceptions = [ IllegalStateException.class ])
@@ -221,4 +222,12 @@ public class RepeaterTest {
             fail "Exception should not have been thrown: " + re.getMessage()
         }
     }
+	
+	public void testFlags() {
+		int count=0;
+		new Repeater(period: 5*MILLISECONDS, timeout: 100*MILLISECONDS).repeat({ count++ }).until({ count>100}).run();
+		assertTrue count>10
+		assertTrue count<30
+	}
+	
 }

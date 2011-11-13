@@ -49,10 +49,10 @@ class DynamicWebAppCluster extends DynamicCluster {
         // Enricher attribute setup.  A way of automatically discovering these (but avoiding 
         // averaging things like HTTP port and response codes) would be neat.
         List<BasicAttributeSensor> enricherSetup = [
-            [JavaWebApp.REQUEST_COUNT, TOTAL_REQUEST_COUNT, AVERAGE_REQUEST_COUNT],
-            [JavaWebApp.ERROR_COUNT, TOTAL_ERROR_COUNT, AVERAGE_ERROR_COUNT],
-            [JavaWebApp.AVG_REQUESTS_PER_SECOND, TOTAL_REQUESTS_PER_SECOND, AVERAGE_REQUESTS_PER_SECOND],
-            [JavaWebApp.TOTAL_PROCESSING_TIME, TOTAL_PROCESSING_TIME, AVERAGE_PROCESSING_TIME]
+            [OldJavaWebApp.REQUEST_COUNT, TOTAL_REQUEST_COUNT, AVERAGE_REQUEST_COUNT],
+            [OldJavaWebApp.ERROR_COUNT, TOTAL_ERROR_COUNT, AVERAGE_ERROR_COUNT],
+            [OldJavaWebApp.AVG_REQUESTS_PER_SECOND, TOTAL_REQUESTS_PER_SECOND, AVERAGE_REQUESTS_PER_SECOND],
+            [OldJavaWebApp.TOTAL_PROCESSING_TIME, TOTAL_PROCESSING_TIME, AVERAGE_PROCESSING_TIME]
         ]
         
         for (List es : enricherSetup) {

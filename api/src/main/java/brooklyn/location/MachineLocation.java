@@ -15,6 +15,8 @@ public interface MachineLocation extends Location {
      */
     InetAddress getAddress();
     
+    // TODO not convinced by port reservation scheme -- better just to check on deploy, then report what ports we need, in the SshStartStopHelper
+    
     /**
      * Reserve a specific port for an application. If your application requires a specific port - for example, port 80 for a web
      * server - you should reserve this port before starting your application. Using this method, you will be able to detect if

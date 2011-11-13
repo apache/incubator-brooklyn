@@ -18,12 +18,12 @@ public class Futures {
     
     /** runs the given closures simultaneously; can optionally be give a timeout (in TimeDuration, after which jobs are cancelled) and/or an ExecutorService executor */
     //TODO rather than cancel after timeout (the default), we could simply apply the timeout to waitFor
-    static List<Future<?>> run(Map m=[:], Closure ...c) {
+    static List<Future<?>> run(Map m=[:], Closure<?> ...c) {
         List<Future> result = start(m, c)
         waitFor(result);
         result
     }
-    static List<Future<?>> start(Map m=[:], Closure ...c) {
+    static List<Future<?>> start(Map m=[:], Closure<?> ...c) {
         Map m2 = new LinkedHashMap(m);
         DelegatingExecutor ex = new DelegatingExecutor(m2);
         List<Future> result = ex.executeAll(c)
@@ -44,21 +44,21 @@ public class Futures {
     /**
      * Returns a {@link Future} containing the value when it is truthy (ie non-null, non-zero, non-empty).
      */
-    static <T> QualifiableFuture<T> futureValue(Closure value) {
+    static <T> QualifiableFuture<T> futureValue(Closure<?> value) {
         futureValueWhen value
     }
     
     /**
      * Returns a {@link Future} containing the value when isValueReady evaluates to true.
      */
-    static <T> Future<T> futureValueWhen(Closure<T> value, Closure isValueReady = { it }) {
+    static <T> Future<T> futureValueWhen(Closure<T> value, Closure<Boolean> isValueReady = { it }) {
         new FutureValue<T>(value, isValueReady);
     }
     
     /**
      * Returns the value when isValueReady evaluates to true.
      */
-    static <T> T when(Closure<T> value, Closure isValueReady = { it }) {
+    static <T> T when(Closure<T> value, Closure<Boolean> isValueReady = { it }) {
         Future<T> future = futureValueWhen value, isValueReady
         try {
             return future.get()

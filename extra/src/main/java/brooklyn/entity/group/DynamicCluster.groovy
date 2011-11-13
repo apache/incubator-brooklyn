@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractGroup
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.trait.Changeable
 import brooklyn.entity.trait.Startable
 import brooklyn.event.EntityStartException
@@ -123,7 +124,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
             } else if (delta < 0) {
                 (-delta).times { removedEntities += removeNode() }
 
-                Task invoke = invokeEffectorList(removedEntities, Startable.STOP, [:])
+                Task invoke = Entities.invokeEffectorList(this, removedEntities, Startable.STOP, [:])
                 invoke.get()
             } else {
                 setAttribute(Changeable.GROUP_SIZE, currentSize)

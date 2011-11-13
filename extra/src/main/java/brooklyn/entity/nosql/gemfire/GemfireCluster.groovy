@@ -11,6 +11,7 @@ import brooklyn.entity.Entity
 import brooklyn.entity.ParameterType
 import brooklyn.entity.basic.BasicParameterType
 import brooklyn.entity.basic.EffectorWithExplicitImplementation
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.group.DynamicCluster
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.management.Task
@@ -101,7 +102,7 @@ public class GemfireCluster extends DynamicCluster {
     }
     
     public void addGateways(Collection<GatewayConnectionDetails> gateways) {
-        Task<List<?>> task = invokeEffectorList(ownedChildren, GemfireServer.ADD_GATEWAYS, [gateways:gateways])
+        Task<List<?>> task = Entities.invokeEffectorList(this, ownedChildren, GemfireServer.ADD_GATEWAYS, [gateways:gateways])
         
         try {
             task.get()
@@ -111,7 +112,7 @@ public class GemfireCluster extends DynamicCluster {
     }
 	
 	public void removeGateways(Collection<GatewayConnectionDetails> gateways) {
-		Task<List<?>> task = invokeEffectorList(ownedChildren, GemfireServer.REMOVE_GATEWAYS, [gateways:gateways])
+		Task<List<?>> task = Entities.invokeEffectorList(this, ownedChildren, GemfireServer.REMOVE_GATEWAYS, [gateways:gateways])
 		
 		try {
 			task.get()
@@ -121,7 +122,7 @@ public class GemfireCluster extends DynamicCluster {
 	}
 	
 	public void addRegions(Collection<GemfireServer> servers, Collection<String> regions) {
-		Task<List<?>> task = invokeEffectorList(servers.intersect(ownedChildren), GemfireServer.ADD_REGIONS, [regions:regions])
+		Task<List<?>> task = Entities.invokeEffectorList(this, servers.intersect(ownedChildren), GemfireServer.ADD_REGIONS, [regions:regions])
 		
 		try {
 			task.get()
@@ -131,7 +132,7 @@ public class GemfireCluster extends DynamicCluster {
 	}
 	
 	public void removeRegions(Collection<GemfireServer> servers, Collection<String> regions) {
-		Task<List<?>> task = invokeEffectorList(servers.intersect(ownedChildren), GemfireServer.REMOVE_REGIONS, [regions:regions])
+		Task<List<?>> task = Entities.invokeEffectorList(this, servers.intersect(ownedChildren), GemfireServer.REMOVE_REGIONS, [regions:regions])
 		
 		try {
 			task.get()

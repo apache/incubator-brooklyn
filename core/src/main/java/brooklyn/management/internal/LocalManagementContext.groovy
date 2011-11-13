@@ -81,19 +81,9 @@ public class LocalManagementContext extends AbstractManagementContext {
         if (execution) return execution
         execution = new BasicExecutionManager()
     }
-    
+    	
     public <T> Task<T> runAtEntity(Map flags, Entity entity, Runnable c) {
-        if (!isManaged(entity)) {
-            Entity rootUnmanaged = entity;
-            while (true) {
-                Entity candidateUnmanagedOwner = rootUnmanaged.getOwner();
-                if (candidateUnmanagedOwner==null || getEntity(candidateUnmanagedOwner.id)!=null)
-                    break;
-                rootUnmanaged = candidateUnmanagedOwner;
-            }
-            log.warn("Activating management for $rootUnmanaged due to running code on $entity: "+flags+" - "+c.toString())
-            manage(rootUnmanaged)
-        }
+		manageIfNecessary(entity, (flags.displayName?:flags.description?:flags?:c))
         entity.executionContext.submit(flags, c);
     }
 

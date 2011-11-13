@@ -6,6 +6,7 @@ import brooklyn.entity.Application
 import brooklyn.entity.Entity
 import brooklyn.entity.trait.Changeable
 import brooklyn.entity.trait.Startable
+import brooklyn.entity.trait.StartableMethods;
 import brooklyn.location.Location
 import brooklyn.management.Task
 import brooklyn.management.internal.AbstractManagementContext
@@ -32,16 +33,8 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
     public void start(Collection<Location> locations) {
         this.locations.addAll(locations)
         
-        List<Entity> startable = ownedChildren.findAll { it in Startable }
-        if (startable && !startable.isEmpty() && locations && !locations.isEmpty()) {
-	        Task start = invokeEffectorList(startable, Startable.START, [ locations:locations ])
-	        try {
-	            start.get()
-	        } catch (ExecutionException ee) {
-	            throw ee.cause
-	        }
-        }
-
+		StartableMethods.start(this, locations);
+		
         setAttribute(SERVICE_UP, true)
         deployed = true
     }
@@ -50,17 +43,9 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
      * Default stop will stop all Startable children
      */
     public void stop() {
-        List<Entity> startable = ownedChildren.findAll { it in Startable }
-        if (startable && !startable.isEmpty()) {
-            Task task = invokeEffectorList(startable, Startable.STOP)
-            try {
-                task.get()
-            } catch (ExecutionException ee) {
-                throw ee.cause
-            }
-        }
-
-        setAttribute(SERVICE_UP, false)
+    	setAttribute(SERVICE_UP, false)
+		StartableMethods.stop(this);
+		
         deployed = false
         
         //TODO review mgmt destroy lifecycle

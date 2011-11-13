@@ -6,8 +6,8 @@ import java.util.Map
 import com.google.common.base.Preconditions;
 
 import brooklyn.entity.basic.Attributes
+import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup;
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.SshBasedAppSetup
 
 /**
  * Start a {@link RedisStore} in a {@link Location} accessible over ssh.
@@ -16,7 +16,7 @@ public class RedisSetup extends SshBasedAppSetup {
     public static final String DEFAULT_VERSION = "2.2.12"
     public static final String DEFAULT_INSTALL_DIR = DEFAULT_INSTALL_BASEDIR+"/"+"redis"
 
-    private int redisPort
+    int redisPort
 
     public static RedisSetup newInstance(RedisStore entity, SshMachineLocation machine) {
         String suggestedVersion = entity.getConfig(RedisStore.SUGGESTED_VERSION)
@@ -43,12 +43,9 @@ public class RedisSetup extends SshBasedAppSetup {
         super(entity, machine)
     }
 
-    public void setRedisPort(int val) {
-        redisPort = val
-    }
-
     @Override
-    protected void setCustomAttributes() {
+    protected void setEntityAttributes() {
+		super.setEntityAttributes()
         entity.setAttribute(RedisStore.REDIS_PORT, redisPort)
     }
 
@@ -73,8 +70,6 @@ public class RedisSetup extends SshBasedAppSetup {
         return script
     }
  
-    /** @see SshBasedAppSetup#getRunEnvironment() */
-    public Map<String, String> getRunEnvironment() { [:] }
 
     /** @see SshBasedAppSetup#getCheckRunningScript() */
     public List<String> getCheckRunningScript() {
@@ -106,7 +101,7 @@ public class RedisSetup extends SshBasedAppSetup {
         ]
         return script
     }
-
+    
     @Override
     protected void postShutdown() {
         machine.releasePort(redisPort);
@@ -115,6 +110,6 @@ public class RedisSetup extends SshBasedAppSetup {
     @Override
     public void config() {
         super.config()
-        entity.configure()
+        ((RedisStore)entity).doExtraConfigurationDuringStart()
     }
 }

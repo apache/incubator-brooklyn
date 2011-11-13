@@ -6,16 +6,16 @@ import org.testng.annotations.Test
 
 import java.util.Date
 import java.util.Set
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.util.internal.LanguageUtils.FieldVisitor
 
+
 /**
  * Test the operation of the {@link LanguageUtils} utilities.
- * 
- * TODO clarify test purpose
  */
 public class LanguageUtilsTest {
     private static final Logger log = LoggerFactory.getLogger(LanguageUtilsTest.class)
@@ -131,4 +131,23 @@ public class LanguageUtilsTest {
         assertTrue LanguageUtils.hashCode(t1, ["a", "@b"]) == LanguageUtils.hashCode(t2, ["a", "@b"])
         assertEquals 0, LanguageUtils.hashCode(null, ["a", "@b"])
     }
+	
+	@Test
+	public void testRepeatUntilSuccessFlags() {
+		long start = System.currentTimeMillis();
+		LanguageUtils.repeatUntilSuccess(period: 5*TimeUnit.MILLISECONDS, timeout: 500*TimeUnit.MILLISECONDS) { 
+			System.currentTimeMillis() > start+50 
+		}
+		assertTrue System.currentTimeMillis() > start+50
+		assertTrue System.currentTimeMillis() < start+500
+	}
+	@Test
+	public void testRepeatUntilSuccessDefaults() {
+		long start = System.currentTimeMillis();
+		LanguageUtils.repeatUntilSuccess("sample") {
+			System.currentTimeMillis() >= start
+		}
+		assertTrue System.currentTimeMillis() < start+500
+	}
+
 }

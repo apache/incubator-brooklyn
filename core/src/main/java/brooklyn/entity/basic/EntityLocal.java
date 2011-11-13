@@ -4,13 +4,17 @@ import java.util.Map;
 
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.ConfigKey;
+import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
+import brooklyn.entity.ConfigKey.HasConfigKey;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
+import brooklyn.management.ExecutionContext;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionHandle;
+import brooklyn.management.SubscriptionManager;
 import brooklyn.policy.basic.AbstractPolicy;
 
 public interface EntityLocal extends Entity {
@@ -30,10 +34,15 @@ public interface EntityLocal extends Entity {
     
     // ??? = policy which detects a group is too hot and want the entity to fire a TOO_HOT event
     
+    <T> T getConfig(ConfigKey<T> key, T defaultValue);
+    <T> T getConfig(HasConfigKey<T> key);
+    <T> T getConfig(HasConfigKey<T> key, T defaultValue);
+    
     /**
      * Must be called before the entity is started.
      */
     <T> T setConfig(ConfigKey<T> key, T val);
+    <T> T setConfig(HasConfigKey<T> key, T val);
     
     /**
      * Emits a {@link SensorEvent} event on behalf of this entity (as though produced by this entity).
@@ -45,12 +54,12 @@ public interface EntityLocal extends Entity {
      * 
      * @return a subscription id which can be used to unsubscribe
      *
-     * @see SubscriptionManger#subscribe(Map, Entity, Sensor, SensorEventListener)
+     * @see SubscriptionManager#subscribe(Map, Entity, Sensor, SensorEventListener)
      */
     // FIXME remove from interface?
     <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<T> listener);
  
-    /** @see SubscriptionManger#subscribeToChildren(Map, Entity, Sensor, SensorEventListener) */
+    /** @see SubscriptionManager#subscribeToChildren(Map, Entity, Sensor, SensorEventListener) */
     // FIXME remove from interface?
     <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, SensorEventListener<T> listener);
  
@@ -77,4 +86,21 @@ public interface EntityLocal extends Entity {
     boolean removeEnricher(AbstractEnricher enricher);
     
     ManagementContext getManagementContext();
+    ExecutionContext getExecutionContext();
+    
+	/**
+	 * ConfigKeys available on this entity.
+	 */
+	public Map<String,ConfigKey<?>> getConfigKeys();
+
+	/**
+	 * Sensors available on this entity.
+	 */
+    public Map<String,Sensor<?>> getSensors();
+
+	/**
+	 * Effectors available on this entity.
+	 */
+    public Map<String,Effector<?>> getEffectors();
+    
 }

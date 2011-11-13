@@ -23,6 +23,7 @@ import brooklyn.management.Task
 import brooklyn.util.internal.LanguageUtils
 
 import com.google.common.base.CaseFormat
+import com.google.common.collect.Iterables;
 
 /**
  * TODO javadoc
@@ -171,7 +172,7 @@ public class BasicExecutionManager implements ExecutionManager {
                 afterEnd(flags, task)
             }
             if (result instanceof Exception) {
-                log.warn "Error while running task {}", result.message
+                log.warn "Error while running task {} (rethrowing): {}", task, result.message
                 throw result
             }
             result

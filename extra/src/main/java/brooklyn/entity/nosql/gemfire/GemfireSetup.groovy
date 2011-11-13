@@ -3,8 +3,8 @@ package brooklyn.entity.nosql.gemfire
 import java.util.List
 import java.util.Map
 
+import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup;
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.SshBasedAppSetup
 
 /**
  * Install and run a {@link GemfireServer} in a {@link brooklyn.location.Location} accessible via ssh.
@@ -107,9 +107,6 @@ public class GemfireSetup extends SshBasedAppSetup {
             "echo \$! > startup-pid.txt",
         ]
     }
- 
-    /** @see SshBasedAppSetup#getRunEnvironment() */
-    public Map<String, String> getRunEnvironment() { [:] }
 
 
     public List<String> getCheckRunningScript() {

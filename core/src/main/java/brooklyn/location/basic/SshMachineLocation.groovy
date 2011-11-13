@@ -1,5 +1,7 @@
 package brooklyn.location.basic
 
+import org.codehaus.groovy.runtime.DefaultGroovyMethods
+
 import brooklyn.location.MachineLocation
 import brooklyn.location.PortRange
 import brooklyn.util.internal.SshJschTool
@@ -51,9 +53,21 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         run(props, [ command ], env)
     }
 
-    /** convenience for running a script, returning the result code */
+    /** convenience for running a script, returning the result code.
+     * <p>
+     * currently runs it in an interactive/login shell,
+     * by passing each as a line to bash. to terminate early use:
+     * <code>foo || exit 1</code>
+     * <p>
+     * it may be desirable instead, in some situations, to wrap as
+     * { line1 ; } && { line2 ; } ... 
+     * and run as a single command (possibly not as an interacitve/login shell),
+     * to make it exit on any command which returns non-zero
+     */
+	//TODO perhaps a flag exitIfAnyNonZero to toggle between the above modes ?
     public int run(Map props=[:], List<String> commands, Map env=[:]) {
         Preconditions.checkNotNull address, "host address must be specified for ssh"
+        if (!commands) return 0
 
         if (!user) user = System.getProperty "user.name"
         Map args = [ user:user, host:address.hostName ]
@@ -65,21 +79,32 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         result
     }
 
-    public int copyTo(Map props=[:], File src, String destination) {
-        return copyTo(props, src, new File(destination))
+    public int copyTo(Map props=[:], File src, File destination) {
+        return copyTo(props, src, destination.path)
     }
 
     // FIXME the return code is not a reliable indicator of success or failure
-    public int copyTo(Map props=[:], File src, File destination) {
+    public int copyTo(Map props=[:], File src, String destination) {
         Preconditions.checkNotNull address, "host address must be specified for scp"
         Preconditions.checkArgument src.exists(), "File %s must exist for scp", src.name
-
+		copyTo new FileInputStream(src), src.length(), destination 
+    }
+	public int copyTo(Map props=[:], InputStream src, String destination) {
+		copyTo(props, src, -1, destination);
+	}
+	public int copyTo(Map props=[:], InputStream src, long filesize, String destination) {
+		if (filesize==-1) {
+			def bytes = src.getBytes() //DefaultGroovyMethods.getBytes(src)   //src.getBytes() doesn't work as advertised?
+			filesize = bytes.size()
+			src = new ByteArrayInputStream(bytes)
+		}
+		
         if (!user) user=System.getProperty "user.name"
         Map args = [user:user, host:address.hostName]
         args << config
         SshJschTool ssh = new SshJschTool(args)
         ssh.connect()
-        int result = ssh.copyToServer props, src, destination.path
+        int result = ssh.createFile props, destination, src, filesize
         ssh.disconnect()
         result
     }

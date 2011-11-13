@@ -11,19 +11,19 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.Attributes
-import brooklyn.entity.basic.JavaApp
+import brooklyn.entity.basic.legacy.JavaApp;
+import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup;
 import brooklyn.entity.messaging.JMSBroker
 import brooklyn.entity.messaging.JMSDestination
 import brooklyn.entity.messaging.Queue
 import brooklyn.entity.messaging.Topic
 import brooklyn.entity.messaging.activemq.ActiveMQQueue;
 import brooklyn.entity.messaging.activemq.ActiveMQTopic;
-import brooklyn.event.adapter.AttributePoller
-import brooklyn.event.adapter.JmxSensorAdapter
-import brooklyn.event.adapter.ValueProvider
+import brooklyn.event.adapter.SensorRegistry
+import brooklyn.event.adapter.legacy.OldJmxSensorAdapter;
+import brooklyn.event.adapter.legacy.ValueProvider;
 import brooklyn.event.basic.ConfiguredAttributeSensor
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.SshBasedAppSetup
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Qpid broker instance.
@@ -61,19 +61,16 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> {
         return new QpidTopic(properties);
     }
 
-    public SshBasedAppSetup getSshBasedSetup(SshMachineLocation machine) {
+    public SshBasedAppSetup newDriver(SshMachineLocation machine) {
         return QpidSetup.newInstance(this, machine)
     }
 
     @Override
     public void addJmxSensors() {
-        attributePoller.addSensor(JavaApp.SERVICE_UP, { computeNodeUp() } as ValueProvider)
-    }
+        sensorRegistry.addSensor(JavaApp.SERVICE_UP, { computeNodeUp() } as ValueProvider)
 
-    @Override
-    protected void postConfig() {
-        setAttribute(Attributes.JMX_USER)
-        setAttribute(Attributes.JMX_PASSWORD)
+		setAttribute(Attributes.JMX_USER)
+		setAttribute(Attributes.JMX_PASSWORD)
     }
 
     @Override
@@ -127,7 +124,7 @@ public abstract class QpidDestination extends JMSDestination {
 
     @Override
     public void destroy() {
-		attributePoller.close()
+		sensorRegistry.close()
         super.destroy()
 	}
 
@@ -151,13 +148,13 @@ public class QpidQueue extends QpidDestination implements Queue {
 
     public void addJmxSensors() {
         String queue = "org.apache.qpid:type=VirtualHost.Queue,VirtualHost=\"${virtualHost}\",name=\"${name}\""
-        attributePoller.addSensor(QUEUE_DEPTH_BYTES, jmxAdapter.newAttributeProvider(queue, "QueueDepth"))
-        attributePoller.addSensor(QUEUE_DEPTH_MESSAGES, jmxAdapter.newAttributeProvider(queue, "MessageCount"))
+        sensorRegistry.addSensor(QUEUE_DEPTH_BYTES, jmxAdapter.newAttributeProvider(queue, "QueueDepth"))
+        sensorRegistry.addSensor(QUEUE_DEPTH_MESSAGES, jmxAdapter.newAttributeProvider(queue, "MessageCount"))
     }
 
     public void removeJmxSensors() {
-        attributePoller.removeSensor(QUEUE_DEPTH_BYTES)
-        attributePoller.removeSensor(QUEUE_DEPTH_MESSAGES)
+        sensorRegistry.removeSensor(QUEUE_DEPTH_BYTES)
+        sensorRegistry.removeSensor(QUEUE_DEPTH_MESSAGES)
     }
 }
 

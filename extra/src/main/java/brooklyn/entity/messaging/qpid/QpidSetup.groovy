@@ -4,9 +4,9 @@ import java.util.List
 import java.util.Map
 
 import brooklyn.entity.basic.Attributes
-import brooklyn.entity.basic.JavaApp;
+import brooklyn.entity.basic.legacy.JavaApp;
+import brooklyn.entity.basic.lifecycle.legacy.SshBasedJavaAppSetup;
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.SshBasedJavaAppSetup;
 import brooklyn.util.SshBasedJavaWebAppSetup
 
 /**
@@ -43,7 +43,7 @@ public class QpidSetup extends SshBasedJavaAppSetup {
         result.setVersion(version)
         result.setInstallDir(installDir)
         result.setRunDir(runDir)
-        result.setLogFileLocation(logFileLocation)
+        entity.setAttribute(Attributes.LOG_FILE_LOCATION, logFileLocation)
 
         return result
     }
@@ -62,10 +62,11 @@ public class QpidSetup extends SshBasedJavaAppSetup {
 
     /** JMX is configured using command line switch. */
     @Override
-    protected Map getJmxConfigOptions() { [:] }
+    protected Map getJmxJavaSystemProperties() { [:] }
 
     @Override
-    protected void setCustomAttributes() {
+    protected void setEntityAttributes() {
+		super.setEntityAttributes()
         entity.setAttribute(Attributes.AMQP_PORT, amqpPort)
     }
 
@@ -88,13 +89,13 @@ public class QpidSetup extends SshBasedJavaAppSetup {
         return script
     }
 
-    public Map<String, String> getRunEnvironment() {
-        Map<String, String> env = [
+    public Map<String, String> getShellEnvironment() {
+        Map result = super.getShellEnvironment();
+		result << [
 			"QPID_HOME" : "${runDir}",
 			"QPID_WORK" : "${runDir}",
-			"QPID_OPTS" : toJavaDefinesString(getJvmStartupProperties()),
+			"QPID_OPTS" : result.JAVA_OPTS
         ]
-        return env
     }
 
     /** @see SshBasedJavaAppSetup#getCheckRunningScript() */
@@ -111,7 +112,7 @@ public class QpidSetup extends SshBasedJavaAppSetup {
         ]
         return script
     }
-
+    
     @Override
     public List<String> getRestartScript() {
        return makeRestartScript("qpid", "qpid-server.pid")

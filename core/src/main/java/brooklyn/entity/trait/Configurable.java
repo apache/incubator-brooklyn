@@ -13,7 +13,11 @@ import brooklyn.event.basic.BasicAttributeSensor;
  * The {@link Effector} available is {@link #CONFIGURE}, and the {@link Sensor} is {@link #SERVICE_CONFIGURED}. An entity
  * should implement the {@link #configure()} method to inspect its {@link Sensor}s and {@link ConfigKey}s and then
  * perform any actions such as generating configuration files that are required before starting.
+ * 
+ * @deprecated externally-driven configuration should be done in entity-specific ways; a generic pattern is not well-enough understood
+ * (and there was ambiguity in how it was being done)
  */
+@Deprecated
 public interface Configurable {
     Sensor<Boolean> SERVICE_CONFIGURED = new BasicAttributeSensor<Boolean>(Boolean.class, "service.isConfigured", "Service configured");
 

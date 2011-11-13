@@ -4,7 +4,7 @@ import static org.testng.Assert.*
 import static brooklyn.test.TestUtils.executeUntilSucceeds
 import static brooklyn.test.TestUtils.executeUntilSucceedsWithShutdown
 
-import brooklyn.entity.basic.JavaApp
+import brooklyn.entity.basic.legacy.JavaApp;
 import brooklyn.entity.trait.Startable
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.jclouds.CredentialsFromEnv

@@ -5,19 +5,16 @@ import java.util.List
 
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.EntityLocal
-import brooklyn.entity.webapp.JavaWebApp
+import brooklyn.entity.basic.lifecycle.legacy.SshBasedJavaAppSetup;
+import brooklyn.entity.webapp.OldJavaWebApp
 import brooklyn.location.basic.SshMachineLocation
 
 public abstract class SshBasedJavaWebAppSetup extends SshBasedJavaAppSetup {
 
-    protected int httpPort
+    int httpPort
     
     public SshBasedJavaWebAppSetup(EntityLocal entity, SshMachineLocation machine) {
         super(entity, machine);
-    }
-
-    public void setHttpPort(int val) {
-        httpPort = val
     }
 
     @Override
@@ -25,7 +22,7 @@ public abstract class SshBasedJavaWebAppSetup extends SshBasedJavaAppSetup {
         super.setEntityAttributes()
         def host = entity.getAttribute(Attributes.HOSTNAME)
         entity.setAttribute(Attributes.HTTP_PORT, httpPort)
-        entity.setAttribute(JavaWebApp.ROOT_URL, "http://${host}:${httpPort}/")
+        entity.setAttribute(OldJavaWebApp.ROOT_URL, "http://${host}:${httpPort}/")
     }
 
 }

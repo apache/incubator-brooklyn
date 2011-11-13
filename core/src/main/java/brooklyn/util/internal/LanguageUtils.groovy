@@ -1,5 +1,7 @@
 package brooklyn.util.internal
 
+import groovy.time.TimeDuration;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier
 import java.util.ArrayList
@@ -30,15 +32,17 @@ public class LanguageUtils {
     public static <T> T getPropertySafe(Object target, String name, T defaultValue=null) {
         target.hasProperty(name)?.getProperty(target) ?: defaultValue
     }
-
-    public static boolean repeatUntilSuccess(String description=null, Closure action) throws Exception {
-        boolean result = new Repeater(description)
-            .repeat()
-            .every(500, TimeUnit.MILLISECONDS)
-            .until(action)
-            .rethrowException()
-            .limitIterationsTo(40)
-            .run()
+	public static boolean repeatUntilSuccess(String description, Closure action) throws Exception {
+		repeatUntilSuccess([:], description, action)
+	}
+    public static boolean repeatUntilSuccess(Map flags=[:], String description=null, Closure action) throws Exception {
+		Repeater r = new Repeater(description).repeat()
+			.every(500, TimeUnit.MILLISECONDS)
+			.until(action)
+			.rethrowException();
+		if (!flags.timeout) r.limitIterationsTo(40);
+		r.setFromFlags(flags);
+        boolean result = r.run()
     }
 
     //TODO find with annotation

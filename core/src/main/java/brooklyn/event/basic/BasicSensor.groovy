@@ -2,11 +2,12 @@ package brooklyn.event.basic
 
 import java.util.List
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 import brooklyn.entity.ConfigKey
 import brooklyn.entity.Entity
+import brooklyn.entity.ConfigKey.HasConfigKey
 import brooklyn.event.AttributeSensor
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
@@ -94,7 +95,7 @@ public class BasicAttributeSensor<T> extends BasicSensor<T> implements Attribute
  *
  * The {@link ConfigKey} has the same type, name and description as the sensor.
  */
-public class ConfiguredAttributeSensor<T> extends BasicAttributeSensor<T> {
+public class ConfiguredAttributeSensor<T> extends BasicAttributeSensor<T> implements HasConfigKey<T> {
     private static final long serialVersionUID = -7670909215973264600L;
 
     private ConfigKey<T> configKey
@@ -105,7 +106,7 @@ public class ConfiguredAttributeSensor<T> extends BasicAttributeSensor<T> {
         configKey = new BasicConfigKey<T>(type, name, description, defaultValue)
     }
 
-    public ConfigKey getConfigKey() { return configKey }
+    public ConfigKey<T> getConfigKey() { return configKey }
 }
 
 /**

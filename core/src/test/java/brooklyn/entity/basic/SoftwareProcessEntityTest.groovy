@@ -9,13 +9,13 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.Application
 import brooklyn.entity.ConfigKey
+import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup
 import brooklyn.location.MachineLocation
 import brooklyn.location.basic.FixedListMachineProvisioningLocation
-import brooklyn.location.basic.SimulatedLocation
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.SshBasedAppSetup
 
-public class AbstractServiceTest {
+
+public class SoftwareProcessEntityTest {
 
     @Test
     public void testShutdownIsIdempotentInFixedListMachineProvisioningLocation() {
@@ -28,9 +28,9 @@ public class AbstractServiceTest {
         entity.stop();
     }
     
-    private static class MyService extends AbstractService {
+    private static class MyService extends SoftwareProcessEntity {
         @Override
-        public SshBasedAppSetup getSshBasedSetup(SshMachineLocation loc) {
+        public SshBasedAppSetup newDriver(SshMachineLocation loc) {
             return new SimulatedSshBasedAppSetup(this, loc)
         }
         @Override
@@ -46,9 +46,6 @@ public class SimulatedSshBasedAppSetup extends SshBasedAppSetup {
     }
     public List<String> getRunScript() {
         return []
-    }
-    public Map<String, String> getRunEnvironment() {
-        return [:]
     }
     public List<String> getCheckRunningScript() {
         return []

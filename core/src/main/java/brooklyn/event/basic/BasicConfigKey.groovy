@@ -8,13 +8,14 @@ import java.util.concurrent.Future
 import brooklyn.entity.ConfigKey
 import brooklyn.management.ExecutionContext
 import brooklyn.management.Task
+import brooklyn.util.internal.ConfigKeySelfExtracting;
 import brooklyn.util.internal.LanguageUtils
 
 import com.google.common.base.Splitter
 import com.google.common.collect.Lists
 
 @EqualsAndHashCode(includeFields=true)
-class BasicConfigKey<T> implements ConfigKey, Serializable {
+class BasicConfigKey<T> implements ConfigKey<T>, ConfigKeySelfExtracting<T>, Serializable {
     private static final long serialVersionUID = -1762014059150215376L
     
     private static final Splitter dots = Splitter.on('.')
@@ -67,15 +68,14 @@ class BasicConfigKey<T> implements ConfigKey, Serializable {
 
     /**
      * Retrieves the value corresponding to this config key from the given map.
-     * To be overridden by more sophisticated config keys, such as MapConfigKey etc.
+     * Could be overridden by more sophisticated config keys, such as MapConfigKey etc.
      */
-    // TODO Put on an interface, so AbstractEntity can handle ConfigKeys that don't extend BasicConfigKey?
     public T extractValue(Map vals, ExecutionContext exec) {
         Object v = vals.get(this)
         return resolveValue(v, exec)
     }
     
-    private Object resolveValue(Object v, ExecutionContext exec) {
+    protected Object resolveValue(Object v, ExecutionContext exec) {
         //if it's a task, we wait for the task to complete
         if (v in Task) {
             if (!((Task) v).isSubmitted() ) {
@@ -88,15 +88,11 @@ class BasicConfigKey<T> implements ConfigKey, Serializable {
             v = ((Closure) v).call()
         } else if (v in Map) {
             Map result = [:]
-            for (Map.Entry entry : ((Map) v).entrySet()) {
-                result.put(entry.key, resolveValue(entry.value, exec))
-            }
+			v.each { k,val -> result << [(k): resolveValue(val, exec)] }
             return result
         } else if (v in List) {
             List result = []
-            for (Object entry : ((List) v)) {
-                result.add(resolveValue(entry, exec))
-            }
+			v.each { result << resolveValue(it, exec) }
             return result
         } else return v
         return resolveValue(v, exec)
@@ -168,12 +164,16 @@ class ListConfigKey<V> extends BasicConfigKey<List<V>> {
     
     public List<V> extractValue(Map vals, ExecutionContext exec) {
         List<V> result = []
-        for (Map.Entry<ConfigKey,Object> entry in vals.entrySet()) {
-            if (isSubKey(entry.key)) {
-                SubElementConfigKey subKey = entry.key
-                result.add(subKey.extractValue(vals, exec))
-            }
+		vals.each { k,v -> 
+			if (isSubKey(k))
+				result << ((SubElementConfigKey)k).extractValue(vals, exec)
         }
+//        for (Map.Entry<ConfigKey,Object> entry in vals.entrySet()) {
+//            if (isSubKey(entry.key)) {
+//                SubElementConfigKey subKey = entry.key
+//                result.add(subKey.extractValue(vals, exec))
+//            }
+//        }
         return result
     }
 }

@@ -13,7 +13,9 @@ import java.util.concurrent.TimeUnit
 
 import brooklyn.management.ExecutionManager
 
+
 class DelegatingExecutor implements Executor {
+	
     ExecutorService executor = Executors.newCachedThreadPool()
     TimeDuration timeout = null;
     Closure<?> preTask=null, postTask=null;
@@ -40,7 +42,7 @@ class DelegatingExecutor implements Executor {
     public void preTask() {}
     public void postTask() {}
         
-    public Callable asWrappedCallable(final Closure c) {
+    public Callable asWrappedCallable(final Closure<?> c) {
         return new Callable() {
             public Object call() throws Exception {
                 try {
@@ -51,7 +53,7 @@ class DelegatingExecutor implements Executor {
         };
     }
     
-    public List<Future<?>> executeAll(final Closure...c) {
+    public List<Future<?>> executeAll(final Closure<?>...c) {
         if (timeout)
             executor.invokeAll(c.collect { asWrappedCallable(it) }, timeout.toMilliseconds(), TimeUnit.MILLISECONDS)
         else

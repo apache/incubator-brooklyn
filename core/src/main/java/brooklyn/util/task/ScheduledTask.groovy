@@ -56,7 +56,7 @@ class ScheduledTask extends BasicTask {
 	
 	@Override
 	public boolean isDone() {
-		cancelled || (maxIterations!=null && maxIterations <= runCount) || (period==null && nextRun.isDone())
+		cancelled || (maxIterations!=null && maxIterations <= runCount) || (period==null && nextRun!=null && nextRun.isDone())
 	}
 	
 	public void blockUntilEnded() {

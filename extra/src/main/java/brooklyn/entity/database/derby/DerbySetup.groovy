@@ -4,9 +4,9 @@ import java.util.List
 import java.util.Map
 
 import brooklyn.entity.basic.Attributes
-import brooklyn.entity.basic.JavaApp;
+import brooklyn.entity.basic.legacy.JavaApp;
+import brooklyn.entity.basic.lifecycle.legacy.SshBasedJavaAppSetup;
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.SshBasedJavaAppSetup;
 import brooklyn.util.SshBasedJavaWebAppSetup
 
 /**
@@ -52,7 +52,7 @@ public class DerbySetup extends SshBasedJavaAppSetup {
 
     /** JMX is configured using command line switch. */
     @Override
-    protected Map getJmxConfigOptions() { [:] }
+    protected Map getJmxJavaSystemProperties() { [:] }
 
     @Override
     public List<String> getInstallScript() {
@@ -73,13 +73,13 @@ public class DerbySetup extends SshBasedJavaAppSetup {
         return script
     }
 
-    public Map<String, String> getRunEnvironment() {
-        Map<String, String> env = [
+    public Map<String, String> getShellEnvironment() {
+		def result = super.getShellEnvironment()
+        result << [
 			"DERBY_HOME" : "${runDir}",
 			"DERBY_WORK" : "${runDir}",
-			"DERBY_OPTS" : toJavaDefinesString(getJvmStartupProperties()),
+			"DERBY_OPTS" : result.JAVA_OPTS,
         ]
-        return env
     }
 
     /** @see SshBasedJavaAppSetup#getCheckRunningScript() */

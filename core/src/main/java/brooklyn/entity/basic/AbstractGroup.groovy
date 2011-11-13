@@ -1,13 +1,17 @@
 package brooklyn.entity.basic
 
+import groovy.transform.InheritConstructors
+
 import java.util.Collection
 import java.util.Map
 
-import brooklyn.enricher.basic.AbstractAggregatingEnricher;
+import brooklyn.enricher.basic.AbstractAggregatingEnricher
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
 import brooklyn.entity.trait.Changeable
 
+
+@InheritConstructors
 public abstract class AbstractGroup extends AbstractEntity implements Group, Changeable {
     final EntityCollectionReference<Entity> members = new EntityCollectionReference<Entity>(this);
 

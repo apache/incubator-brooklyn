@@ -10,7 +10,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
-import brooklyn.entity.basic.AbstractService
+import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.basic.Attributes
 import brooklyn.event.Sensor
 import brooklyn.event.basic.BasicConfigKey
@@ -25,7 +25,7 @@ import com.google.common.base.Preconditions
 /**
  * Represents a controller mechanism for a {@link Cluster}.
  */
-public abstract class AbstractController extends AbstractService {
+public abstract class AbstractController extends SoftwareProcessEntity {
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractController.class)
 
     public static final BasicConfigKey<Sensor> PORT_NUMBER_SENSOR = [ String, "member.sensor.portNumber", "Port number sensor on members" ]
@@ -105,9 +105,10 @@ public abstract class AbstractController extends AbstractService {
     }
 
     @Override
-    public void preStart() {
+    protected void connectSensors() {
         addPolicy(policy)
         reset()
+		super.connectSensors()
     }
 
     @Override
@@ -120,7 +121,7 @@ public abstract class AbstractController extends AbstractService {
     //FIXME members locations might be remote?
     public void addEntity(Entity member) {
         LOG.trace("About to add to $displayName, new member ${member.displayName} in locations ${member.locations} - waiting for service to be up")
-        Task started = DependentConfiguration.attributeWhenReady(member, AbstractService.SERVICE_UP)
+        Task started = DependentConfiguration.attributeWhenReady(member, SoftwareProcessEntity.SERVICE_UP)
         executionContext.submit(started)
         started.get()
         
@@ -145,7 +146,7 @@ public abstract class AbstractController extends AbstractService {
     }
     
     public void update() {
-        if (getAttribute(AbstractService.SERVICE_UP)) {
+        if (getAttribute(SoftwareProcessEntity.SERVICE_UP)) {
             configure()
             restart()
         }
@@ -157,8 +158,10 @@ public abstract class AbstractController extends AbstractService {
         policy.setGroup(cluster)
     }
 
-    @Override
-    public void preStop() {
-        reset()
+	
+	protected void preStop() {
+		super.preStop()
+        policy.reset()
+        addresses.clear()
     }
 }

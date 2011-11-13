@@ -40,4 +40,11 @@ public interface ConfigKey<T> {
      * Returns true if a default configuration value has been set.
      */
     boolean hasDefaultValue();
+    
+    /** Interface for elements which want to be treated as a config key without actually being one
+     * (e.g. config attribute sensors).
+     */
+    public interface HasConfigKey<T> {
+        public ConfigKey<T> getConfigKey();
+    }
 }
