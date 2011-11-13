@@ -102,11 +102,13 @@ public abstract class SshBasedJavaAppSetup extends SshBasedAppSetup {
 	/** 
 	* Sets all JVM options (-X.. -D..) in an environment var JAVA_OPTS.
 	* <p>
-	* That variable is constructed from getJavaOpts(), then wrapped _unescaped_ in double quotes.
-	* An error is thrown if there is an unescaped double quote in the string.
-	* All other unescaped characters are permitted, but unless $var expansion or `command` execution is desired
-	* (although this is not confirmed as supported) the generally caller should escape any such characters,
-	* for example using {@link StringEscapeUtils#escapeLiteralForDoubleQuotedBash(String)}. 
+	* All env vars are wrapped in double quotes when defined in the shell, so values in the resulting map can contain spaces,
+	* and must be valid bash expressions.
+	* <p>
+	* However variables such as JAVA_OPTS used by many scripts get passed as a string, not an array,
+	* so spaces in a single argument in the variable, say, a java system define, cannot be passed via this mechanism.
+	* We have tried a number of ways around this and conclusion is that the delegated scripts would have to be
+	* changed to allow this (treating JAVA_OPTS as an array, eg). If spaces are needed, raise a jira.
 	*/
 	@Override
 	public Map<String, String> getShellEnvironment() {
@@ -114,7 +116,7 @@ public abstract class SshBasedJavaAppSetup extends SshBasedAppSetup {
 		[ "JAVA_OPTS" : getJavaOpts().collect({
 				if (!StringEscapeUtils.isValidForDoubleQuotingInBash(it))
 					throw new IllegalArgumentException("will not accept ${it} as valid BASH string (has unescaped double quote)")
-				"\""+it+"\""
+				/*"\""+*/ it /*+"\""*/
 			}).join(" ") ]
 	}
 
@@ -169,7 +171,7 @@ public abstract class SshBasedJavaAppSetup extends SshBasedAppSetup {
      */
     protected Map getJmxJavaSystemProperties() {
         [
-          "com.sun.management.jmxremote" : "",
+          "com.sun.management.jmxremote" : null,
           "com.sun.management.jmxremote.port" : jmxPort,
           "com.sun.management.jmxremote.ssl" : false,
           "com.sun.management.jmxremote.authenticate" : false,

@@ -2,9 +2,11 @@ package brooklyn.entity.messaging.activemq
 
 import java.util.Collection
 import java.util.Map
+import java.util.concurrent.TimeUnit;
 
 import javax.management.InstanceNotFoundException
 import javax.management.ObjectName
+import javax.management.RuntimeMBeanException;
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -22,6 +24,7 @@ import brooklyn.event.adapter.legacy.OldJmxSensorAdapter;
 import brooklyn.event.adapter.legacy.ValueProvider;
 import brooklyn.event.basic.ConfiguredAttributeSensor
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.util.internal.Repeater;
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single ActiveMQ broker instance.
@@ -81,12 +84,21 @@ public class ActiveMQBroker extends JMSBroker<ActiveMQQueue, ActiveMQTopic> {
 	}
 
 	public void waitForServiceUp() {
-		long expiry = System.currentTimeMillis() + 60*1000;
-		while (!computeNodeUp()) {
-			if (System.currentTimeMillis()>expiry)
-				throw new IllegalStateException("failed to start") 
-			Thread.sleep(200);
-		}
+		Repeater.create(timeout: 60*TimeUnit.SECONDS)
+			.rethrowException().repeat().until { computeNodeUp() }
+//		long expiry = System.currentTimeMillis() + 60*1000;
+//		Exception lastError = null;
+//		while (false) {
+//			try {
+//				if (computeNodeUp()) break;
+//			} catch (RuntimeMBeanException e) {
+//				//ignore while starting, report if we can't start
+//				lastError = e;
+//			} 
+//			if (System.currentTimeMillis()>expiry)
+//				throw new IllegalStateException("failed to start", lastError) 
+//			Thread.sleep(200);
+//		}
 		log.info("started JMS $this")
 	}
 
@@ -100,13 +112,16 @@ public class ActiveMQBroker extends JMSBroker<ActiveMQQueue, ActiveMQTopic> {
 		//of the object name lookups, in favour of = *
 		//(we can be pretty sure there is only one being hosted by this process, right?)
 
-		try {
+		//caller catches erros
+//		try {
 			ValueProvider<String> provider = jmxAdapter.newAttributeProvider("org.apache.activemq:BrokerName=localhost,Type=Broker", "BrokerId")
 			String state = provider.compute()
 			return (state)  //was =="Started" for camel
-		} catch (InstanceNotFoundException infe) {
-			return false
-		}
+//		} catch (Exception e) {
+//			//get InstanceNotFound and even NPE (from looking up broker id on other side)
+//			//if connect too early
+//			return false
+//		}
 	}
 }
 
@@ -145,7 +160,7 @@ public class ActiveMQQueue extends ActiveMQDestination implements Queue {
 	}
 
 	public void addJmxSensors() {
-		String queue = "org.apache.activemq:BrokerName=localhost,Type=Queue,Destination=\"${name}\""
+		String queue = "org.apache.activemq:BrokerName=localhost,Type=Queue,Destination=${name}"
 		sensorRegistry.addSensor(QUEUE_DEPTH_MESSAGES, jmxAdapter.newAttributeProvider(queue, "QueueSize"))
 	}
 

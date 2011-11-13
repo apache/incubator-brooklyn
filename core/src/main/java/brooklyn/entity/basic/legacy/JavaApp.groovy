@@ -12,6 +12,7 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.basic.UsesJmx
 import brooklyn.event.AttributeSensor
+import brooklyn.event.adapter.SensorRegistry;
 import brooklyn.event.adapter.legacy.OldJmxSensorAdapter
 import brooklyn.event.basic.MapConfigKey
 import brooklyn.util.internal.Repeater
@@ -34,12 +35,18 @@ public abstract class JavaApp extends SoftwareProcessEntity implements UsesJmx {
         super(properties, owner)
     }
 
+	public SensorRegistry getAttributePoller() { sensorRegistry }
+	
     @Override
     protected void connectSensors() {
 		super.connectSensors()
         initJmxSensors()
     }
 
+	protected final void setJmxConfig() {
+		throw new UnsupportedOperationException("not used anymore!")
+	}
+	
 	@Deprecated /* use new JmxAdapter */
 	protected void initJmxSensors() {
 		if (!(getAttribute(HOSTNAME) && getAttribute(JMX_PORT))) {

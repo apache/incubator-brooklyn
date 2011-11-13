@@ -133,9 +133,18 @@ public class OldJmxSensorAdapter {
                 connect()
                 return true
             } catch (IOException e) {
-                log.debug "failed connection to {}:{} ({})", host, rmiRegistryPort, e.message
+                log.debug "failed connection (io) to {}:{} ({})", host, rmiRegistryPort, e.message
                 lastError = e;
-            }
+            } catch (SecurityException e) {
+				if (lastError==null) {
+					log.warn "failed connection (security) to {}:{}, will retry ({})", host, rmiRegistryPort, e.message
+					//maybe just throw? a security exception is likely definitive, retry probably won't help
+					//(but maybe it will?)
+				} else {
+                	log.debug "failed connection (security) to {}:{} ({})", host, rmiRegistryPort, e.message
+				}
+                lastError = e;
+			}
         }
         log.warn("unable to connect to JMX url: ${url}", lastError);
         false
@@ -176,9 +185,14 @@ public class OldJmxSensorAdapter {
         
         ObjectInstance bean = findMBean objectName
         if (bean != null) {
-            def result = mbsc.getAttribute(bean.objectName, attribute)
-            log.trace "got value {} for jmx attribute {}.{}", result, objectName.canonicalName, attribute
-            return result
+			try {
+				def result = mbsc.getAttribute(bean.objectName, attribute)
+				log.trace "got value {} for jmx attribute {}.{}", result, objectName.canonicalName, attribute
+				return result
+			} catch (Exception e) {
+				log.warn "error getting $attribute from ${bean.objectName} with $mbsc", e
+				throw e
+			}
         } else {
             return null
         }
