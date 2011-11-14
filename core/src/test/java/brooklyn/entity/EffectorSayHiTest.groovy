@@ -1,25 +1,22 @@
 package brooklyn.entity
 
 import static org.testng.Assert.*
-
-import org.testng.annotations.Test
+import groovy.transform.InheritConstructors;
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.testng.annotations.Test
 
-import brooklyn.entity.basic.AbstractEffector
-import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.BasicParameterType
 import brooklyn.entity.basic.DefaultValue
 import brooklyn.entity.basic.Description
 import brooklyn.entity.basic.EffectorInferredFromAnnotatedMethod
-import brooklyn.entity.basic.EffectorWithExplicitImplementation;
+import brooklyn.entity.basic.EffectorWithExplicitImplementation
 import brooklyn.entity.basic.NamedParameter
-import brooklyn.entity.trait.Startable;
-import brooklyn.management.ManagementContext
-import brooklyn.management.internal.LocalManagementContext
-import brooklyn.management.Task
+import brooklyn.entity.trait.Startable
 import brooklyn.management.ExecutionContext
+import brooklyn.management.ManagementContext
+import brooklyn.management.Task
 
 /**
  * Test the operation of the {@link Effector} implementations.
@@ -36,28 +33,6 @@ public class EffectorSayHiTest {
 //            info = { String a -> println "INFO "+a }
 //        }
 //    }
-
-    public static interface CanSayHi {
-        static Effector<String> SAY_HI_1 = new EffectorWithExplicitImplementation<CanSayHi,String>("sayHi1", String.class, [
-                    [ "name", String.class, "person to say hi to" ] as BasicParameterType<String>,
-                    [ "greeting", String.class, "what to say as greeting", "hello" ] as BasicParameterType<String>
-                ], "says hello to a person") {
-            public String invokeEffector(CanSayHi e, Map m) {
-                e.sayHi1(m)
-            }
-        };
-        public String sayHi1(String name, String greeting);
-
-        static Effector<String> SAY_HI_2 = new EffectorInferredFromAnnotatedMethod<String>(CanSayHi.class, "sayHi2", "says hello");
-        public String sayHi2(
-            @NamedParameter("name") String name,
-            @NamedParameter("greeting") @DefaultValue("hello") @Description("what to say") String greeting);
-    }
-
-    public static class MyEntity extends LocallyManagedEntity implements CanSayHi {
-        public String sayHi1(String name, String greeting) { "$greeting $name" }
-        public String sayHi2(String name, String greeting) { "$greeting $name" }
-    }
 
     @Test
     public void testFindEffectors() {
@@ -156,5 +131,46 @@ public class EffectorSayHiTest {
 
     //TODO test edge/error conditions
     //(missing parameters, wrong number of params, etc)
+}
+
+private class SayHi1 extends EffectorWithExplicitImplementation<CanSayHi,String> {
+
+	public SayHi1() {
+		super("sayHi1", String.class, [
+					[ "name", String.class, "person to say hi to" ] as BasicParameterType<String>,
+					[ "greeting", String.class, "what to say as greeting", "hello" ] as BasicParameterType<String>
+				],
+			"says hello to a person");
+	}	
+	public String invokeEffector(CanSayHi e, Map m) {
+		e.sayHi1(m)
+	}
+}
+
+interface CanSayHi {
+	static Effector<String> SAY_HI_1 =
+		//FIXME how naff... groovy 1.8.2 balks at runtime during getCallSiteArray is this is an anonymous inner class 
+		new SayHi1();
+//	  new EffectorWithExplicitImplementation<CanSayHi,String>(
+//			"sayHi1", String.class, [
+//					[ "name", String.class, "person to say hi to" ] as BasicParameterType<String>,
+//					[ "greeting", String.class, "what to say as greeting", "hello" ] as BasicParameterType<String>
+//				],
+//			"says hello to a person") {
+//		public String invokeEffector(CanSayHi e, Map m) {
+//			e.sayHi1(m)
+//		}
+//	};
+	public String sayHi1(String name, String greeting);
+
+	static Effector<String> SAY_HI_2 = new EffectorInferredFromAnnotatedMethod<String>(CanSayHi.class, "sayHi2", "says hello");
+	public String sayHi2(
+		@NamedParameter("name") String name,
+		@NamedParameter("greeting") @DefaultValue("hello") @Description("what to say") String greeting);
+}
+
+public class MyEntity extends LocallyManagedEntity implements CanSayHi {
+	public String sayHi1(String name, String greeting) { "$greeting $name" }
+	public String sayHi2(String name, String greeting) { "$greeting $name" }
 }
 
