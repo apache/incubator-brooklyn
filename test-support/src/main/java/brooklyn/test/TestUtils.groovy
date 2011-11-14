@@ -1,5 +1,7 @@
 package brooklyn.test
 
+import java.util.Formatter.Flags;
+
 import static org.testng.AssertJUnit.*
 import groovy.time.TimeDuration
 
@@ -16,7 +18,7 @@ import brooklyn.entity.Entity
  */
 public class TestUtils {
     private static final Logger log = LoggerFactory.getLogger(TestUtils.class)
-    
+
     private TestUtils() { }
 
     /** True if two attempts to connect to the port succeed. */
@@ -85,10 +87,11 @@ public class TestUtils {
      * <p>
      * The following flags are supported:
      * <ul>
-     * <li>boolean - abortOnError (default true)
-     * <li>abortOnException - (default false),
+     * <li>abortOnError (boolean, default true)
+     * <li>abortOnException - (boolean, default false),
      * <li>useGroovyTruth - (defaults to false; any result code apart from 'false' will be treated as success including null; ignored for Runnables which aren't Callables),
-     * <li>timeout - (a TimeDuration, defaults to 30*SECONDS), period (a TimeDuration, defaults to 500*MILLISECONDS),
+     * <li>timeout - (a TimeDuration or an integer, defaults to 30*SECONDS)
+     * <li>period - (a TimeDuration or an integer, defaults to 500*MILLISECONDS),
      * <li>maxAttempts - (integer, Integer.MAX_VALUE)
      * </ul>
      *
@@ -101,8 +104,9 @@ public class TestUtils {
         boolean abortOnException = flags.abortOnException ?: false
         boolean abortOnError = flags.abortOnError ?: false
         boolean useGroovyTruth = flags.useGroovyTruth ?: false
-        TimeDuration duration = flags.timeout ?: new TimeDuration(0,0,30,0)
-        TimeDuration period = flags.period ?: new TimeDuration(0,0,0,500)
+
+        TimeDuration duration = toTimeDuration(flags.timeout) ?: new TimeDuration(0,0,30,0)
+        TimeDuration period = toTimeDuration(flags.period) ?: new TimeDuration(0,0,0,500)
         int maxAttempts = flags.maxAttempts ?: Integer.MAX_VALUE
         try {
             Throwable lastException = null;
@@ -164,4 +168,15 @@ public class TestUtils {
         return new File(resource.path)
     }
 
+    public static TimeDuration toTimeDuration(Object duration) {
+        if (duration == null) {
+            return null
+        } else if (duration instanceof TimeDuration) {
+            return (TimeDuration) duration
+        } else if (duration instanceof Number) {
+            return new TimeDuration(0,0,0,(int)duration)
+        } else {
+            throw new IllegalArgumentException("Cannot convert $duration of type ${duration.class.name} to a TimeDuration")
+        }
+    }
 }
