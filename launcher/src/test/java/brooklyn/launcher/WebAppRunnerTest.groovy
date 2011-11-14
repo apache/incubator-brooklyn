@@ -8,11 +8,13 @@ import org.testng.annotations.Test
 
 import brooklyn.management.internal.LocalManagementContext
 import brooklyn.util.internal.TimeExtras
+import groovy.time.TimeDuration
 
 public class WebAppRunnerTest {
     static { TimeExtras.init() }
 
-    private static final int TIMEOUT_MS = 5000;
+    private static TimeDuration TIMEOUT_MS;
+	static { TIMEOUT_MS = 5*SECONDS }
     
     /**
      * This test requires the web-console.war to work.
