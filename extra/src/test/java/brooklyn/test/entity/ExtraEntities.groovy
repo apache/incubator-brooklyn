@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup;
 import brooklyn.entity.group.DynamicCluster
+import brooklyn.entity.trait.Startable;
 import brooklyn.entity.webapp.OldJavaWebApp
 import brooklyn.location.Location
 import brooklyn.location.basic.SshMachineLocation
@@ -67,4 +68,10 @@ public class TestCluster extends DynamicCluster {
 	public Integer getCurrentSize() {
 	    return size
 	}
+}
+
+public class NoopStartable implements Startable {
+	public void start(Collection loc) {}
+	public void stop() {}
+	public void restart() {}
 }

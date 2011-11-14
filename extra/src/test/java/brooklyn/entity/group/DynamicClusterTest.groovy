@@ -12,10 +12,10 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.trait.Changeable
-import brooklyn.entity.trait.Startable
 import brooklyn.event.EntityStartException
 import brooklyn.location.Location
 import brooklyn.location.basic.GeneralPurposeLocation
+import brooklyn.test.entity.NoopStartable
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 
@@ -28,12 +28,7 @@ class DynamicClusterTest {
 
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void constructorRequiresThatNewEntityArgumentIsAnEntity() {
-        new DynamicCluster([ initialSize:1,
-            newEntity:new Startable() {
-                void start(Collection<? extends Location> loc) { };
-                void stop() { }
-                void restart() { }
-            } ],
+        new DynamicCluster([ initialSize:1, newEntity:new NoopStartable() ],
             new TestApplication()
         )
         fail "Did not throw expected exception"
