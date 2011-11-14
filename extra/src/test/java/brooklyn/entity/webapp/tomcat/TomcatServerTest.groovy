@@ -32,6 +32,14 @@ class TomcatServerTest {
             delegate.metaClass.simulator = sim
             sim.start()
         }
+		def oldInitJmxSensors = TomcatServer.metaClass.getMetaMethod("initJmxSensors", [] as Class[]);
+		TomcatServer.metaClass.initJmxSensors = {
+			if (delegate.locations && delegate.locations.iterator().next() in SimulatedLocation) {
+				logger.info "skipping JMX for simulated $this"
+			} else {
+				oldInitJmxSensors.call()
+			}
+        }
         TomcatServer.metaClass.stopInLocation = { SimulatedLocation loc ->
             TomcatSimulator sim = delegate.simulator
             assertEquals loc, sim.location

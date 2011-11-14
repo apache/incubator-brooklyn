@@ -30,7 +30,7 @@ import brooklyn.util.internal.TimeExtras
 /**
  * This tests the operation of the {@link TomcatServer} entity.
  * 
- * TODO clarify test purpose
+ * FIXME this test is largely superseded by WebApp*IntegrationTest which tests inter alia Tomcat
  */
 public class TomcatServerIntegrationTest {
     private static final Logger LOG = LoggerFactory.getLogger(TomcatServerIntegrationTest.class)
@@ -105,50 +105,51 @@ public class TomcatServerIntegrationTest {
             t.join();
         }
     }
+
+	//TODO should define a generic mechanism for doing this    
+////    @Test(groups = [ "Integration" ])
+//    public void createsPropertiesFilesWithEnvironmentVariables() {
+//        Application app = new TestApplication();
+//        TomcatServer tc = new TomcatServer(owner:app, httpPort:DEFAULT_HTTP_PORT);
+//        tc.setConfig(TomcatServer.PROPERTY_FILES.subKey("MYVAR1"),[akey:"aval",bkey:"bval"])
+//        tc.setConfig(TomcatServer.PROPERTY_FILES.subKey("MYVAR2"),[ckey:"cval",dkey:"dval"])
+//        tc.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
+//        
+//        try {
+//            SshMachineLocation machine = tc.locations.first()
+//            String var1file = getEnvironmentVariable(tc, "MYVAR1")
+//            String var2file = getEnvironmentVariable(tc, "MYVAR2")
+//            File tmpFile1 = File.createTempFile("one", "tmp", new File("/tmp"))
+//            File tmpFile2 = File.createTempFile("two", "tmp", new File("/tmp"))
+//            tmpFile1.deleteOnExit()
+//            tmpFile2.deleteOnExit()
+//            machine.copyFrom var1file, tmpFile1.absolutePath
+//            machine.copyFrom var2file, tmpFile2.absolutePath
+//            
+//            Properties var1props = new Properties()
+//            var1props.load(new FileInputStream(tmpFile1))
+//            
+//            Properties var2props = new Properties()
+//            var2props.load(new FileInputStream(tmpFile2))
+//            
+//            assertPropertiesEquals(var1props, [akey:"aval",bkey:"bval"])
+//            assertPropertiesEquals(var2props, [ckey:"cval",dkey:"dval"])
+//        } finally {
+//            tc.stop()
+//        }
+//    }
     
-    @Test(groups = [ "Integration" ])
-    public void createsPropertiesFilesWithEnvironmentVariables() {
-        Application app = new TestApplication();
-        TomcatServer tc = new TomcatServer(owner:app, httpPort:DEFAULT_HTTP_PORT);
-        tc.setConfig(TomcatServer.PROPERTY_FILES.subKey("MYVAR1"),[akey:"aval",bkey:"bval"])
-        tc.setConfig(TomcatServer.PROPERTY_FILES.subKey("MYVAR2"),[ckey:"cval",dkey:"dval"])
-        tc.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
-        
-        try {
-            SshMachineLocation machine = tc.locations.first()
-            String var1file = getEnvironmentVariable(tc, "MYVAR1")
-            String var2file = getEnvironmentVariable(tc, "MYVAR2")
-            File tmpFile1 = File.createTempFile("one", "tmp", new File("/tmp"))
-            File tmpFile2 = File.createTempFile("two", "tmp", new File("/tmp"))
-            tmpFile1.deleteOnExit()
-            tmpFile2.deleteOnExit()
-            machine.copyFrom var1file, tmpFile1.absolutePath
-            machine.copyFrom var2file, tmpFile2.absolutePath
-            
-            Properties var1props = new Properties()
-            var1props.load(new FileInputStream(tmpFile1))
-            
-            Properties var2props = new Properties()
-            var2props.load(new FileInputStream(tmpFile2))
-            
-            assertPropertiesEquals(var1props, [akey:"aval",bkey:"bval"])
-            assertPropertiesEquals(var2props, [ckey:"cval",dkey:"dval"])
-        } finally {
-            tc.stop()
-        }
-    }
-    
-    private String getEnvironmentVariable(TomcatServer tomcat, String var) {
-        ByteArrayOutputStream outstream = new ByteArrayOutputStream()
-        int result = tomcat.driver.machine.run(out:outstream, ["env"], tomcat.driver.runEnvironment)
-        String outstr = new String(outstream.toByteArray())
-        String[] outLines = outstr.split("\n")
-        for (String line in outLines) {
-            String[] envVariable = line.trim().split("=")
-            if (envVariable && envVariable[0] == var) return envVariable[1]
-        }
-        throw new IllegalStateException("environment variable '$var' not found in $outstr")
-    }
+//    private String getEnvironmentVariable(TomcatServer tomcat, String var) {
+//        ByteArrayOutputStream outstream = new ByteArrayOutputStream()
+//        int result = tomcat.driver.run(out:outstream, ["env"], tomcat.driver.runEnvironment)
+//        String outstr = new String(outstream.toByteArray())
+//        String[] outLines = outstr.split("\n")
+//        for (String line in outLines) {
+//            String[] envVariable = line.trim().split("=")
+//            if (envVariable && envVariable[0] == var) return envVariable[1]
+//        }
+//        throw new IllegalStateException("environment variable '$var' not found in $outstr")
+//    }
     
     private void assertPropertiesEquals(Properties props, Map expected) {
         assertEquals(props.stringPropertyNames(), expected.keySet())
