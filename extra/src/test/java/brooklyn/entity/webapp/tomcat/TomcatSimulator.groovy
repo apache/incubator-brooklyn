@@ -39,6 +39,7 @@ public class TomcatSimulator {
 
         jmxService = new JmxService();
 
+		//FIXME use of random here could cause collisions; should at least check if port available ?
         int httpPort = new Random().nextInt(1000) + 7000
         jmxService.registerMBean "Catalina:type=Connector,port="+httpPort, stateName: "STARTED"
         jmxService.registerMBean "Catalina:type=GlobalRequestProcessor,name=http-"+httpPort,
@@ -56,7 +57,7 @@ public class TomcatSimulator {
             server = new ServerSocket(httpPort)
         } catch (Exception e) {
             LOG.warn "Unable to start HTTP server on ${httpPort}", e
-            server = null
+			throw new IllegalStateException("Unable to start HTTP server on ${httpPort}", e)
         }
 
         httpServerThread = new Thread(){

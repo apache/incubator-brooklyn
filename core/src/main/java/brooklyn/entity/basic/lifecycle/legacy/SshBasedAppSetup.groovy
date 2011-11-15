@@ -297,13 +297,12 @@ public abstract class SshBasedAppSetup extends StartStopSshDriver implements Scr
     /**
      * Run the application on this machine.
      *
-     * The {@link #getRunEnvironment()} method should return a {@link Map} of
+     * The SHELL_ENVIRONMENT env property a {@link Map} of
      * environment variables and their values which will be set before executing
      * the commands in {@link #getRunScript()}.
      *
      * @see #start()
      * @see #getRunScript()
-     * @see #getRunEnvironment()
      */
     public void runApp() {
         log.info "starting {} on {}", entity, machine

@@ -1,22 +1,26 @@
 package brooklyn.entity
 
 import static org.testng.Assert.*
-import groovy.transform.InheritConstructors;
+
+import org.testng.annotations.Test
+import java.beans.ReflectionUtils;
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.testng.annotations.Test
 
+import brooklyn.entity.basic.AbstractEffector
+import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.BasicParameterType
 import brooklyn.entity.basic.DefaultValue
 import brooklyn.entity.basic.Description
-import brooklyn.entity.basic.EffectorInferredFromAnnotatedMethod
-import brooklyn.entity.basic.EffectorWithExplicitImplementation
+import brooklyn.entity.basic.ExplicitEffector
+import brooklyn.entity.basic.MethodEffector
 import brooklyn.entity.basic.NamedParameter
-import brooklyn.entity.trait.Startable
-import brooklyn.management.ExecutionContext
+import brooklyn.entity.trait.Startable;
 import brooklyn.management.ManagementContext
+import brooklyn.management.internal.LocalManagementContext
 import brooklyn.management.Task
+import brooklyn.management.ExecutionContext
 
 /**
  * Test the operation of the {@link Effector} implementations.
@@ -25,14 +29,6 @@ import brooklyn.management.Task
  */
 public class EffectorSayHiTest {
     private static final Logger log = LoggerFactory.getLogger(EffectorSayHiTest.class);
-    // FIXME remove this when we have a process for setting logging...
-//    static {
-//        log.metaClass {
-//            warn = { String a -> println "WARN "+a }
-//            warn = { String a, Throwable t -> println "WARN "+a; t.printStackTrace(); }
-//            info = { String a -> println "INFO "+a }
-//        }
-//    }
 
     @Test
     public void testFindEffectors() {
@@ -40,9 +36,15 @@ public class EffectorSayHiTest {
 
         assertEquals("sayHi1", e.SAY_HI_1.getName());
         assertEquals(["name", "greeting"], e.SAY_HI_1.getParameters()[0..1]*.getName());
-
-        assertEquals("sayHi2", e.SAY_HI_2.getName());
-        assertEquals(["name", "greeting"], e.SAY_HI_2.getParameters()[0..1]*.getName());
+        assertEquals("says hello", e.SAY_HI_1.getDescription());
+		
+		assertEquals("sayHi1", e.SAY_HI_1_ALT.getName());
+		assertEquals(["name", "greeting"], e.SAY_HI_1_ALT.getParameters()[0..1]*.getName());
+		assertEquals("says hello", e.SAY_HI_1_ALT.getDescription());
+		
+		assertEquals("sayHi2", e.SAY_HI_2.getName());
+		assertEquals(["name", "greeting"], e.SAY_HI_2.getParameters()[0..1]*.getName());
+		assertEquals("says hello", e.SAY_HI_2.getDescription());
     }
 
     // XXX parameter type annotations do NOT work on external Java interface effector definitions
@@ -61,7 +63,12 @@ public class EffectorSayHiTest {
 
         String name = "sayHi1"
         def args = ["Bob", "hello"] as Object[]
-        assertEquals("hello Bob", e.metaClass.invokeMethod(e, name, args))
+
+        //try the alt syntax recommended from web
+        def metaMethod = e.metaClass.getMetaMethod(name, args)
+        if (metaMethod==null)
+            throw new IllegalArgumentException("Invalid arguments (no method found) for method $name: "+args);
+        assertEquals("hello Bob", metaMethod.invoke(e, args))
     }
 
     @Test
@@ -70,12 +77,7 @@ public class EffectorSayHiTest {
 
         String name = "sayHi2"
         def args = ["Bob", "hello"] as Object[]
-
-        //try the alt syntax recommended from web
-        def metaMethod = e.metaClass.getMetaMethod(name, args)
-        if (metaMethod==null)
-            throw new IllegalArgumentException("Invalid arguments (no method found) for method $name: "+args);
-        assertEquals("hello Bob", metaMethod.invoke(e, args))
+        assertEquals("hello Bob", e.metaClass.invokeMethod(e, name, args))
     }
 
     @Test
@@ -90,6 +92,8 @@ public class EffectorSayHiTest {
 
         assertEquals("hello Bob", e.SAY_HI_1.call(e, [name:"Bob"]) )
         assertEquals("hello Bob", e.invoke(e.SAY_HI_1, [name:"Bob"]).get() );
+		
+		assertEquals("hello Bob", e.SAY_HI_1_ALT.call(e, [name:"Bob"]) )
     }
 
     @Test
@@ -109,13 +113,13 @@ public class EffectorSayHiTest {
     @Test
     public void testCanRetrieveTaskForEffector() {
         MyEntity e = new MyEntity();
-        e.sayHi1("Bob", "hi")
+        e.sayHi2("Bob", "hi")
 
         ManagementContext managementContext = e.getManagementContext()
 
         Set<Task> tasks = managementContext.getExecutionManager().getTasksWithAllTags([e,"EFFECTOR"])
         assertEquals(tasks.size(), 1)
-        assertTrue(tasks.iterator().next().getDescription().contains("sayHi1"))
+        assertTrue(tasks.iterator().next().getDescription().contains("sayHi2"))
     }
 
     @Test
@@ -133,40 +137,40 @@ public class EffectorSayHiTest {
     //(missing parameters, wrong number of params, etc)
 }
 
-private class SayHi1 extends EffectorWithExplicitImplementation<CanSayHi,String> {
-
-	public SayHi1() {
-		super("sayHi1", String.class, [
-					[ "name", String.class, "person to say hi to" ] as BasicParameterType<String>,
-					[ "greeting", String.class, "what to say as greeting", "hello" ] as BasicParameterType<String>
-				],
-			"says hello to a person");
-	}	
-	public String invokeEffector(CanSayHi e, Map m) {
-		e.sayHi1(m)
-	}
-}
-
 interface CanSayHi {
-	static Effector<String> SAY_HI_1 =
-		//FIXME how naff... groovy 1.8.2 balks at runtime during getCallSiteArray is this is an anonymous inner class 
-		new SayHi1();
-//	  new EffectorWithExplicitImplementation<CanSayHi,String>(
-//			"sayHi1", String.class, [
+	//prefer following simple groovy syntax
+	static Effector<String> SAY_HI_1 = new MethodEffector<String>(CanSayHi.&sayHi1);
+	//slightly longer-winded pojo also supported
+	static Effector<String> SAY_HI_1_ALT = new MethodEffector<String>(CanSayHi.class, "sayHi1");
+	
+	@Description("says hello")
+	public String sayHi1(
+		@NamedParameter("name") String name,
+		@NamedParameter("greeting") @DefaultValue("hello") @Description("what to say") String greeting);
+
+	//finally there is a way to provide a class/closure if needed or preferred for some odd reason
+	static Effector<String> SAY_HI_2 =
+	
+		//groovy 1.8.2 balks at runtime during getCallSiteArray (bug 5122) if we use anonymous inner class 
+//	  new ExplicitEffector<CanSayHi,String>(
+//			"sayHi2", String.class, [
 //					[ "name", String.class, "person to say hi to" ] as BasicParameterType<String>,
 //					[ "greeting", String.class, "what to say as greeting", "hello" ] as BasicParameterType<String>
 //				],
 //			"says hello to a person") {
 //		public String invokeEffector(CanSayHi e, Map m) {
-//			e.sayHi1(m)
+//			e.sayHi2(m)
 //		}
 //	};
-	public String sayHi1(String name, String greeting);
+	//following is a workaround, not greatly enamoured of it... but MethodEffector is generally preferred anyway
+		ExplicitEffector.create("sayHi2", String.class, [
+					[ "name", String.class, "person to say hi to" ] as BasicParameterType<String>,
+					[ "greeting", String.class, "what to say as greeting", "hello" ] as BasicParameterType<String>
+				],
+			"says hello", { e, m -> e.sayHi2(m) })
+	
+	public String sayHi2(String name, String greeting);
 
-	static Effector<String> SAY_HI_2 = new EffectorInferredFromAnnotatedMethod<String>(CanSayHi.class, "sayHi2", "says hello");
-	public String sayHi2(
-		@NamedParameter("name") String name,
-		@NamedParameter("greeting") @DefaultValue("hello") @Description("what to say") String greeting);
 }
 
 public class MyEntity extends LocallyManagedEntity implements CanSayHi {

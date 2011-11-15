@@ -1,5 +1,7 @@
 package brooklyn.entity.basic;
 
+import groovy.transform.InheritConstructors;
+
 import java.lang.annotation.Annotation
 import java.lang.annotation.ElementType
 import java.lang.annotation.Retention
@@ -10,6 +12,7 @@ import java.util.Collections
 import java.util.List
 
 import org.codehaus.groovy.runtime.DefaultGroovyMethods
+import org.codehaus.groovy.runtime.MethodClosure;
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -151,19 +154,20 @@ public @interface DefaultValue {
     String value();
 }
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.PARAMETER)
-/** provides runtime access to the description of a paramter, esp for effectors */
+@Target([ElementType.PARAMETER, ElementType.METHOD])
+/** provides runtime access to the description of an effector or paramter, esp for effectors */
 public @interface Description {
     String value();
 }
 
 /** concrete class for providing an Effector implementation that gets its information from annotations on a method;
- * see EffectorTest for usage example
+ * see Effector*Test for usage example
  */
-public class EffectorInferredFromAnnotatedMethod<T> extends AbstractEffector<T> {
+public class MethodEffector<T> extends AbstractEffector<T> {
     protected static class AnnotationsOnMethod {
         Class<?> clazz;
         String name;
+		String description;
         Class<?> returnType;
         List parameters;
         AnnotationsOnMethod(Class<?> clazz, String methodName) {
@@ -173,6 +177,7 @@ public class EffectorInferredFromAnnotatedMethod<T> extends AbstractEffector<T> 
                 if (best==null || best.getParameterTypes().length < it.getParameterTypes().length) best=it;
             } }
             if (best==null) throw new IllegalStateException("Cannot find method $methodName on "+clazz.getCanonicalName());
+            description = best.getAnnotation(Description)?.value()
             returnType = best.getReturnType()
             parameters = []
             LanguageUtils.forBothWithIndex(best.getParameterAnnotations(), best.getParameterTypes()) {
@@ -181,7 +186,7 @@ public class EffectorInferredFromAnnotatedMethod<T> extends AbstractEffector<T> 
                     type:type,
                     description:findAnnotation(anns, Description)?.value() ]
                 def dv = findAnnotation(anns, DefaultValue);
-                if (dv) m.defaultValue = dv.value()
+                if (dv) m.defaultValue = dv.value().asType(type)
                 parameters.add(new BasicParameterType(m))
             }
         }
@@ -191,11 +196,19 @@ public class EffectorInferredFromAnnotatedMethod<T> extends AbstractEffector<T> 
         }
     }
 
-    public EffectorInferredFromAnnotatedMethod(Class<?> whereEffectorDefined, String methodName, String description=null) {
+	/** Defines a new effector whose details are supplied as annotations on the given type and method name */
+	public MethodEffector(Class<?> whereEffectorDefined, String methodName) {
+		this(new AnnotationsOnMethod(whereEffectorDefined, methodName), null);
+	}
+	public MethodEffector(MethodClosure mc) {
+		this(new AnnotationsOnMethod(mc.delegate, mc.method), null);
+	}
+	@Deprecated /** use Description annotation */
+    public MethodEffector(Class<?> whereEffectorDefined, String methodName, String description) {
         this(new AnnotationsOnMethod(whereEffectorDefined, methodName), description);
     }
-    protected EffectorInferredFromAnnotatedMethod(AnnotationsOnMethod anns, String description) {
-        super(anns.name, anns.returnType, anns.parameters, description);
+    protected MethodEffector(AnnotationsOnMethod anns, String description) {
+        super(anns.name, anns.returnType, anns.parameters, description?:anns.description);
     }
 
     public T call(Entity entity, Map parameters) {
@@ -204,14 +217,48 @@ public class EffectorInferredFromAnnotatedMethod<T> extends AbstractEffector<T> 
 
 }
 
-public abstract class EffectorWithExplicitImplementation<I,T> extends AbstractEffector<T> {
-    public EffectorWithExplicitImplementation(String name, Class<T> type, List<ParameterType<?>> parameters, String description) {
+public abstract class ExplicitEffector<I,T> extends AbstractEffector<T> {
+    public ExplicitEffector(String name, Class<T> type, List<ParameterType<?>> parameters=[], String description) {
         super(name, type, parameters, description)
     }
 
-    public T call(Entity entity, Map parameters) {
+	public T call(Entity entity, Map parameters) {
         invokeEffector((I) entity, parameters );
     }
 
     public abstract T invokeEffector(I trait, Map parameters);
+	
+	/** convenience to create an effector supplying a closure; annotations are preferred,
+	 * and subclass here would be failback, but this is offered as 
+	 * workaround for bug GROOVY-5122, as discussed in test class CanSayHi 
+	 */
+	public static ExplicitEffector<I,T> create(String name, Class<T> type, List<ParameterType<?>> parameters, String description, Closure body) {
+		return new ExplicitEffectorFromClosure(name, type, parameters, description, body);
+	}
+}
+
+private class ExplicitEffectorFromClosure<I,T> extends ExplicitEffector<I,T> {
+	final Closure body
+	public ExplicitEffectorFromClosure(String name, Class<T> type, List<ParameterType<?>> parameters, String description, Closure body) {
+		super(name, type, parameters, description)
+		this.body = body
+	}
+	public T invokeEffector(I trait, Map parameters) { body.call(trait, parameters) }
+}
+
+@Deprecated /** now called MethodEffector */
+public class EffectorInferredFromAnnotatedMethod<T> extends MethodEffector<T> {
+	public EffectorInferredFromAnnotatedMethod(Class<?> whereEffectorDefined, String methodName) {
+		super(whereEffectorDefined, methodName);
+	}
+	public EffectorInferredFromAnnotatedMethod(Class<?> whereEffectorDefined, String methodName, String description) {
+		super(whereEffectorDefined, methodName, description);
+	}
+}
+
+@Deprecated /** now called ExplicitEffector */
+public abstract class EffectorWithExplicitImplementation<I,T> extends ExplicitEffector<I,T> {
+	public EffectorWithExplicitImplementation(String name, Class<T> type, List<ParameterType<?>> parameters=[], String description) {
+        super(name, type, parameters, description)
+    }
 }

@@ -51,6 +51,7 @@ public class TomcatServer extends OldJavaWebApp {
     
     @Override
     public void addJmxSensors() {
+		super.addJmxSensors()
         sensorRegistry.addSensor(ERROR_COUNT, 
 				jmxAdapter.newAttributeProvider("Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "errorCount"))
         sensorRegistry.addSensor(REQUEST_COUNT, 

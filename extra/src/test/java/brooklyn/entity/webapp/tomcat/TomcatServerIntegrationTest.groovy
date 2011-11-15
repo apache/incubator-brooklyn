@@ -30,7 +30,7 @@ import brooklyn.util.internal.TimeExtras
 /**
  * This tests the operation of the {@link TomcatServer} entity.
  * 
- * TODO clarify test purpose
+ * FIXME this test is largely superseded by WebApp*IntegrationTest which tests inter alia Tomcat
  */
 public class TomcatServerIntegrationTest {
     private static final Logger LOG = LoggerFactory.getLogger(TomcatServerIntegrationTest.class)
@@ -106,8 +106,8 @@ public class TomcatServerIntegrationTest {
         }
     }
 
-	//FIXME if we need this, have to sort out runEnvironment
-//    @Test(groups = [ "Integration" ])
+	//TODO should define a generic mechanism for doing this    
+////    @Test(groups = [ "Integration" ])
 //    public void createsPropertiesFilesWithEnvironmentVariables() {
 //        Application app = new TestApplication();
 //        TomcatServer tc = new TomcatServer(owner:app, httpPort:DEFAULT_HTTP_PORT);
