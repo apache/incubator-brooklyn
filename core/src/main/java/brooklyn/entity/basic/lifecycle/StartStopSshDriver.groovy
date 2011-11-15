@@ -49,8 +49,9 @@ public abstract class StartStopSshDriver extends AbstractStartStopDriver impleme
 	public SshMachineLocation getMachine() { location }
 	public String getHostname() { entity.getAttribute(Attributes.HOSTNAME) }
 
-	public int execute(List<String> script, String summaryForLogging) {
+	public int execute(List<String> script, String summaryForLogging, Map environmentOverride=null) {
 		log.info("{} on machine {}: {}", summaryForLogging, machine, script)
+		def environment = environmentOverride==null ? environmentOverride : getShellEnvironment() 
 		
 		InputStream insO = new PipedInputStream();
         OutputStream outO = new PipedOutputStream(insO)
@@ -63,7 +64,7 @@ public abstract class StartStopSshDriver extends AbstractStartStopDriver impleme
 		//don't need echo here because we run bash with echo on
 //		new StreamGobbler(insEcho, null, log).setPrefix("["+machine.getName()+":stdin]% ").start()
 		
-		int result = machine.run(out:outO, err:outE, /*echo:outEcho,*/ script, getShellEnvironment());
+		int result = machine.run(out:outO, err:outE, /*echo:outEcho,*/ script, environment);
 	}
 	
 	/**

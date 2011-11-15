@@ -127,6 +127,24 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
 		return ["-Xms200m", "-Xmx800m", "-XX:MaxPermSize=400m"]
 	}
 
+	@Override
+	public boolean isRunning() {
+		//have to override the CLI/JMX options
+        int result = execute(getCheckRunningScript(), "checkRunning "+entity+" on "+machine, [])
+        if (result==0) return true
+        if (result==1) return false
+        throw new IllegalStateException("$entity running check gave result code $result")
+	}
+	/**
+	* Shut down the application process.
+	*/
+   public void shutdown() {
+	   //again, messy copy of parent; but new driver scheme could allow script-helper to customise parameters
+	   log.debug "invoking shutdown script for {}: {}", entity, getShutdownScript()
+	   def result = execute(getShutdownScript(), "shutdown "+entity+" on "+machine, [])
+	   if (result) log.warn "non-zero result code terminating {}: {}", entity, result
+	   log.debug "done invoking shutdown script for {}", entity
+   }
 
     /** @see SshBasedJavaAppSetup#getCheckRunningScript() */
     public List<String> getCheckRunningScript() { 
