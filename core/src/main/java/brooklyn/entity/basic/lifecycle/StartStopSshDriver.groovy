@@ -51,7 +51,7 @@ public abstract class StartStopSshDriver extends AbstractStartStopDriver impleme
 
 	public int execute(List<String> script, String summaryForLogging, Map environmentOverride=null) {
 		log.info("{} on machine {}: {}", summaryForLogging, machine, script)
-		def environment = environmentOverride==null ? environmentOverride : getShellEnvironment() 
+		def environment = environmentOverride!=null ? environmentOverride : getShellEnvironment() 
 		
 		InputStream insO = new PipedInputStream();
         OutputStream outO = new PipedOutputStream(insO)
