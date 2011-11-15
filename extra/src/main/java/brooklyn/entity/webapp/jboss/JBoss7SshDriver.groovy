@@ -77,7 +77,7 @@ class JBoss7SshDriver extends JavaWebAppSshDriver {
 		PortPreconditions.checkPortsValid(httpPort:httpPort, managementPort:managementPort);
 		newScript(CUSTOMIZING).
 			body.append(
-				"cp -r ${installDir}/jboss-${version}/${SERVER_TYPE} . || exit \$!",
+				"cp -r ${installDir}/jboss-as-${version}/${SERVER_TYPE} . || exit \$!",
 				"cd ${runDir}/${SERVER_TYPE}/configuration/",
 				"cp standalone.xml $BROOKLYN_JBOSS_CONFIG_FILENAME",
 				"sed -i.bk 's/8080/${httpPort}/' $BROOKLYN_JBOSS_CONFIG_FILENAME",
@@ -100,7 +100,7 @@ class JBoss7SshDriver extends JavaWebAppSshDriver {
 	public void launch() {
 		newScript(LAUNCHING, usePidFile:true).
 			body.append(
-				"$installDir/jboss-${version}/bin/${SERVER_TYPE}.sh "+
+				"$installDir/jboss-as-${version}/bin/${SERVER_TYPE}.sh "+
 					"--server-config $BROOKLYN_JBOSS_CONFIG_FILENAME "+
 					"-Djboss.server.base.dir=$runDir/$SERVER_TYPE " + 
                 	"\"-Djboss.server.base.url=file://$runDir/$SERVER_TYPE\" " +

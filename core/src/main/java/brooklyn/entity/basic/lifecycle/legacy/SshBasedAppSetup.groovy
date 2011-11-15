@@ -4,6 +4,7 @@ import java.io.File
 import java.util.List
 import java.util.Map
 
+import org.jclouds.gogrid.functions.GenericResponseContainer.Summary;
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -256,7 +257,7 @@ public abstract class SshBasedAppSetup extends StartStopSshDriver implements Scr
             List<String> script = getInstallScript()
             if (script) {
                 log.info "installing entity {} on machine {}", entity, machine
-                int result = machine.run(out:System.out, err:System.err, script)
+                int result = execute(script, "install "+entity+" on "+machine)
                 if (result) throw new IllegalStateException("failed to install $entity (exit code $result)")
             } else {
                 log.debug "not installing entity {} on machine {}, as no install-script defined", entity, machine
@@ -276,7 +277,7 @@ public abstract class SshBasedAppSetup extends StartStopSshDriver implements Scr
             List<String> script = getConfigScript()
             if (script) {
                 log.info "configuring entity {} on machine {}", entity, machine
-                int result = machine.run(out:System.out, err:System.err, script)
+                int result = execute(script, "config "+entity+" on "+machine)
                 if (result) throw new IllegalStateException("failed to configure $entity (exit code $result)")
             } else {
                 log.debug "not configuring entity {} on machine {}, as no config-script defined", entity, machine
@@ -315,7 +316,7 @@ public abstract class SshBasedAppSetup extends StartStopSshDriver implements Scr
                 environment.put(key, value)
             }
         }
-        def result = machine.run(out:System.out, err:System.err, getRunScript(), environment)
+        def result = execute(getRunScript(), "runApp "+entity+" on "+machine)
 
         if (result) throw new IllegalStateException("failed to start $entity (exit code $result)")
     }
@@ -326,7 +327,7 @@ public abstract class SshBasedAppSetup extends StartStopSshDriver implements Scr
      * @see #getCheckRunningScript()
      */
     public boolean isRunning() {
-        int result = machine.run(out:System.out, err:System.err, getCheckRunningScript())
+        int result = execute(getCheckRunningScript(), "checkRunning "+entity+" on "+machine)
         if (result==0) return true
         if (result==1) return false
         throw new IllegalStateException("$entity running check gave result code $result")
@@ -337,7 +338,7 @@ public abstract class SshBasedAppSetup extends StartStopSshDriver implements Scr
      */
     public void shutdown() {
         log.debug "invoking shutdown script for {}: {}", entity, getShutdownScript()
-        def result = machine.run(out:System.out, err:System.err, getShutdownScript())
+        def result = execute(getShutdownScript(), "shutdown "+entity+" on "+machine)
         if (result) log.warn "non-zero result code terminating {}: {}", entity, result
         log.debug "done invoking shutdown script for {}", entity
     }
@@ -378,7 +379,7 @@ public abstract class SshBasedAppSetup extends StartStopSshDriver implements Scr
 	        runApp()
         } else {
 	        log.debug "invoking restart script on {}: {}", entity, restartScript
-	        def result = machine.run(out:System.out, err:System.err, restartScript)
+	        def result = execute(getRestartScript(), "restart "+entity+" on "+machine)
 	        if (result) log.info "non-zero result code terminating {}: {}", entity, result
 	        log.debug "done invoking restart script on {}", entity
         }

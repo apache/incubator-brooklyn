@@ -23,10 +23,12 @@ import brooklyn.util.internal.Repeater
 public abstract class JavaApp extends SoftwareProcessEntity implements UsesJmx {
     public static final Logger log = LoggerFactory.getLogger(JavaApp.class)
 	
-	// too complicated, and not used
-	@Deprecated
+	// TODO too complicated? Used to inject monterey credentials into a web-app, where the code in the 
+    // war expects a particular environment variable name
     public static final MapConfigKey<Map> PROPERTY_FILES = [ Map, "java.properties.environment", "Property files to be generated, referenced by an environment variable" ]
-//    public static final MapConfigKey<Map> NAMED_PROPERTY_FILES = [ Map, "java.properties.named", "Property files to be generated, referenced by name relative to runDir" ]
+    
+    // TODO too complicated? Used by KarafContainer
+    public static final MapConfigKey<Map> NAMED_PROPERTY_FILES = [ Map, "java.properties.named", "Property files to be generated, referenced by name relative to runDir" ]
 
 
     transient OldJmxSensorAdapter jmxAdapter

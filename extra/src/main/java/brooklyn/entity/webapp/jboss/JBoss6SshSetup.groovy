@@ -88,6 +88,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         def clusterArg = (clusterName == "") ? "" : "-g $clusterName"
         // run.sh must be backgrounded otherwise the script will never return.
         List<String> script = [
+			"export JBOSS_CLASSPATH=${installDir}/lib/jboss-logmanager.jar",
             "${installDir}/bin/run.sh -Djboss.service.binding.set=${portGroupName} -Djboss.server.base.dir=\$RUN/server " +
                     "-Djboss.server.base.url=file://\$RUN/server -Djboss.messaging.ServerPeerID=${entity.id} " +
                     "-b 0.0.0.0 ${clusterArg} -c ${serverProfile} " +
@@ -113,7 +114,10 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         super.getShellEnvironment() +
 		[
 	        "LAUNCH_JBOSS_IN_BACKGROUND" : "1",
-	        "JBOSS_CLASSPATH" : "${installDir}/lib/jboss-logmanager.jar",
+			//this classpath is insufficient for checkRunningScript -- throws javax.management.JMRuntimeException: Failed to load MBeanServerBuilder class org.jboss.system.server.jmx.MBeanServerBuilderImpl: java.lang.ClassNotFoundException: org.jboss.system.server.jmx.MBeanServerBuilderImpl
+			//but needed to launch to workaround a loading bug: http://orlygoingthirty.blogspot.com/2011/04/enabling-jmx-in-jboss-as-6-and-jdk-6.html
+			//(we do it in getRunScript now)
+//	        "JBOSS_CLASSPATH" : "${installDir}/lib/jboss-logmanager.jar",
 	        "RUN" : "${runDir}",
         ]
     }

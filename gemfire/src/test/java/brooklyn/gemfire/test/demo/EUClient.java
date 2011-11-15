@@ -4,7 +4,6 @@ import com.gemstone.gemfire.cache.Region;
 import com.gemstone.gemfire.cache.client.ClientCache;
 import com.gemstone.gemfire.cache.client.ClientCacheFactory;
 import com.gemstone.gemfire.cache.client.NoAvailableServersException;
-import com.sun.tools.corba.se.idl.toJavaPortable.StructGen;
 
 public class EUClient {
     public static void main(String[] args) throws Exception {

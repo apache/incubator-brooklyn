@@ -1,6 +1,5 @@
 package brooklyn.gemfire.test.demo;
 
-import java.util.List;
 import java.util.Properties;
 
 import com.gemstone.gemfire.cache.AttributesFactory;

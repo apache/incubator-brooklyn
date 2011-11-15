@@ -162,7 +162,7 @@ interface CanSayHi {
 //			e.sayHi2(m)
 //		}
 //	};
-		//following is a workaround, not greatly enamoured of it... but MethodEffector is generally preferred anyway
+	//following is a workaround, not greatly enamoured of it... but MethodEffector is generally preferred anyway
 		ExplicitEffector.create("sayHi2", String.class, [
 					[ "name", String.class, "person to say hi to" ] as BasicParameterType<String>,
 					[ "greeting", String.class, "what to say as greeting", "hello" ] as BasicParameterType<String>
@@ -170,10 +170,11 @@ interface CanSayHi {
 			"says hello", { e, m -> e.sayHi2(m) })
 	
 	public String sayHi2(String name, String greeting);
-	
+
 }
 
 public class MyEntity extends LocallyManagedEntity implements CanSayHi {
 	public String sayHi1(String name, String greeting) { "$greeting $name" }
 	public String sayHi2(String name, String greeting) { "$greeting $name" }
 }
+

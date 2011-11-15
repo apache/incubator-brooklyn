@@ -154,9 +154,19 @@ public class SshJschTool {
         assertConnected()
         ChannelShell channel=session.openChannel("shell");
         lastChannel = channel
+        if (properties.err) {
+        	channel.setExtOutputStream(properties.err, true)
+        }
+		OutputStream echo = null;
+        if (properties.echo) {
+        	echo = properties.echo
+        }
         if (properties.out) {
             channel.setOutputStream(properties.out, true)
+			if (!properties.err) 
+        		channel.setExtOutputStream(properties.out, true)
         }
+		//TODO seems oddly high...
         long pause = properties.pause ?: 250
 
         def allCmds = []
@@ -174,13 +184,13 @@ public class SshJschTool {
 
         try {
             allCmds.each {
-                log.info "[{}] {}", host, it
                 byte[] data = (it+"\n").getBytes("UTF-8")
+                if (echo) echo.write(data);
                 out.write(data)
                 Thread.sleep pause
             }
         } catch (IOException ioe) {
-			if (channel.getExitStatus()==0)
+			if (channel.getExitStatus()!=-1)
             	log.debug "Caught an IOException ({}) - the script has probably exited early", ioe.message
 			else
 				log.warn "Caught an IOException ({}) - the script may have exited early", ioe.message

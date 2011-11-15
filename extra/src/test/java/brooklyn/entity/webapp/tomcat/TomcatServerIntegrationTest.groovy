@@ -139,17 +139,17 @@ public class TomcatServerIntegrationTest {
 //        }
 //    }
     
-//    private String getEnvironmentVariable(TomcatServer tomcat, String var) {
-//        ByteArrayOutputStream outstream = new ByteArrayOutputStream()
-//        int result = tomcat.driver.run(out:outstream, ["env"], tomcat.driver.runEnvironment)
-//        String outstr = new String(outstream.toByteArray())
-//        String[] outLines = outstr.split("\n")
-//        for (String line in outLines) {
-//            String[] envVariable = line.trim().split("=")
-//            if (envVariable && envVariable[0] == var) return envVariable[1]
-//        }
-//        throw new IllegalStateException("environment variable '$var' not found in $outstr")
-//    }
+    private String getEnvironmentVariable(TomcatServer tomcat, String var) {
+        ByteArrayOutputStream outstream = new ByteArrayOutputStream()
+        int result = tomcat.driver.machine.run(out:outstream, ["env"], tomcat.driver.runEnvironment)
+        String outstr = new String(outstream.toByteArray())
+        String[] outLines = outstr.split("\n")
+        for (String line in outLines) {
+            String[] envVariable = line.trim().split("=")
+            if (envVariable && envVariable[0] == var) return envVariable[1]
+        }
+        throw new IllegalStateException("environment variable '$var' not found in $outstr")
+    }
     
     private void assertPropertiesEquals(Properties props, Map expected) {
         assertEquals(props.stringPropertyNames(), expected.keySet())
