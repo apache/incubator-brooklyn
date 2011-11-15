@@ -55,15 +55,16 @@ public class NginxSetup extends SshBasedAppSetup {
     @Override
     public List<String> getInstallScript() {
         makeInstallScript([
+				"export INSTALL_DIR=${installDir}",
                 "wget http://nginx.org/download/nginx-${version}.tar.gz",
                 "tar xvzf nginx-${version}.tar.gz",
-	            "cd \$INSTALL/src",
+	            "cd \$INSTALL_DIR/src",
                 "wget http://nginx-sticky-module.googlecode.com/files/nginx-sticky-module-1.0-rc2.tar.gz",
                 "tar xvzf nginx-sticky-module-1.0-rc2.tar.gz",
                 "which yum && yum -y install openssl-devel",
                 "cd ..",
 	            "mkdir -p dist",
-	            "./configure --prefix=\$INSTALL/dist --add-module=\$INSTALL/src/nginx-sticky-module-1.0-rc2 --without-http_rewrite_module",
+	            "./configure --prefix=\$INSTALL_DIR/dist --add-module=\$INSTALL_DIR/src/nginx-sticky-module-1.0-rc2 --without-http_rewrite_module",
 	            "make install"
             ])
     }

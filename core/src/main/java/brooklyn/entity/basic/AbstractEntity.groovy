@@ -224,7 +224,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         }
 
 		if (displayName==null)
-			displayName = flags.name ?: getClass().getSimpleName()+":"+id.substring(0, 4)
+			displayName = flags.name ? flags.remove('name') : getClass().getSimpleName()+":"+id.substring(0, 4)
 		
         if (!flags.isEmpty()) {
             LOG.warn "Unsupported flags when configuring {}; ignoring: {}", this, flags
@@ -481,14 +481,19 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         StringBuffer result = []
         result << getClass().getSimpleName()
         if (!result) result << getClass().getName()
-        result << "[" << toStringFieldsToInclude().collect({
+		def fields = toStringFieldsToInclude()
+        result << "[" << fields.collect({
             def v = this.hasProperty(it) ? this[it] : null  /* TODO would like to use attributes, config: this.properties[it] */
             v ? "$it=$v" : null
         }).findAll({it!=null}).join(",") << "]"
     }
 
     /** override this, adding to the collection, to supply fields whose value, if not null, should be included in the toString */
-    public Collection<String> toStringFieldsToInclude() { ['id', 'name', 'displayName'] }
+    public Collection<String> toStringFieldsToInclude() { 
+		Set fields = ['id']
+		if (!this.hasProperty('name')) fields << 'displayName'
+		else fields << 'name'
+	}
 
     
     // -------- POLICIES --------------------

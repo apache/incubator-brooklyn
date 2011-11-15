@@ -49,6 +49,12 @@ public class StreamGobbler extends Thread {
     }
     
     public void onLine(String line) {
+    	//right trim, in case there is \r or other funnies
+    	while (line.length()>0 && Character.isWhitespace(line.charAt(line.length()-1)))
+    		line = line.substring(0, line.length()-1);
+    	//right trim, in case there is \r or other funnies
+    	while (line.length()>0 && (line.charAt(0)=='\n' || line.charAt(0)=='\r'))
+    		line = line.substring(1);
     	if (out!=null) out.println(prefix+line);
     	if (log!=null) log.info(prefix+line);
     }

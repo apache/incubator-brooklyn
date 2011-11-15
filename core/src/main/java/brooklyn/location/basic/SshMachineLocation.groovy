@@ -156,14 +156,14 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             if (result == 0) {
                 return true;
             } else {
-                LOG.info("Not reachable: $this, executing `$cmd`, exit code $result");
+                LOG.debug("Not reachable: $this, executing `$cmd`, exit code $result");
                 return false;
             }
         } catch (IllegalStateException e) {
-            LOG.info("Exception checking if $this is reachable; assuming not", e);
+            LOG.debug("Exception checking if $this is reachable; assuming not", e);
             return false;
         } catch (IOException e) {
-            LOG.info("Exception checking if $this is reachable; assuming not", e);
+            LOG.debug("Exception checking if $this is reachable; assuming not", e);
             return false;
         }
     }
