@@ -316,7 +316,7 @@ public abstract class SshBasedAppSetup extends StartStopSshDriver implements Scr
                 environment.put(key, value)
             }
         }
-        def result = execute(getRunScript(), "runApp "+entity+" on "+machine)
+        def result = execute(getRunScript(), "runApp "+entity+" on "+machine, environment)
 
         if (result) throw new IllegalStateException("failed to start $entity (exit code $result)")
     }
