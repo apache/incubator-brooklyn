@@ -104,6 +104,7 @@ public class TestUtils {
         boolean abortOnException = flags.abortOnException ?: false
         boolean abortOnError = flags.abortOnError ?: false
         boolean useGroovyTruth = flags.useGroovyTruth ?: false
+        boolean logException = flags.logException ?: true
 
         TimeDuration duration = toTimeDuration(flags.timeout) ?: new TimeDuration(0,0,30,0)
         TimeDuration period = toTimeDuration(flags.period) ?: new TimeDuration(0,0,0,500)
@@ -142,6 +143,9 @@ public class TestUtils {
             if (lastException != null)
                 throw lastException
             fail "invalid result: $result"
+        } catch (Throwable t) {
+			if (logException) log.info("failed execute-until-succeeds (rethrowing): "+t)
+			throw t
         } finally {
             finallyBlock.call()
         }

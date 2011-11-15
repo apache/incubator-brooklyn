@@ -12,6 +12,7 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.entity.basic.SoftwareProcessEntity;
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.util.internal.StreamGobbler;
 
 public abstract class StartStopSshDriver extends AbstractStartStopDriver implements ScriptRunner {
 
@@ -50,8 +51,19 @@ public abstract class StartStopSshDriver extends AbstractStartStopDriver impleme
 
 	public int execute(List<String> script, String summaryForLogging) {
 		log.info("{} on machine {}: {}", summaryForLogging, machine, script)
-		// TODO log in a better place/way
-		machine.run(out:System.out, err:System.err, script, getShellEnvironment());
+		
+		InputStream insO = new PipedInputStream();
+        OutputStream outO = new PipedOutputStream(insO)
+		InputStream insE = new PipedInputStream();
+        OutputStream outE = new PipedOutputStream(insE)
+		InputStream insEcho = new PipedInputStream();
+        OutputStream outEcho = new PipedOutputStream(insEcho)
+		new StreamGobbler(insO, null, log).setPrefix("["+machine.getName()+":stdout] ").start()
+		new StreamGobbler(insE, null, log).setPrefix("["+machine.getName()+":stderr] ").start()
+		//don't need echo here because we run bash with echo on
+//		new StreamGobbler(insEcho, null, log).setPrefix("["+machine.getName()+":stdin]% ").start()
+		
+		int result = machine.run(out:outO, err:outE, /*echo:outEcho,*/ script, getShellEnvironment());
 	}
 	
 	/**
@@ -76,7 +88,7 @@ public abstract class StartStopSshDriver extends AbstractStartStopDriver impleme
 	 * @return
 	 */
 	protected ScriptHelper newScript(Map flags=[:], String phase) {
-		def s = new ScriptHelper(this, phase+" "+this);
+		def s = new ScriptHelper(this, phase+" "+(entity?:this));
 		if (phase==INSTALLING) {
 			s.header.append(
 				'export INSTALL_DIR="'+installDir+'"',
