@@ -30,7 +30,7 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
     /**
      * Default start will start all Startable children
      */
-    public void start(Collection<Location> locations) {
+    public void start(Collection<? extends Location> locations) {
         this.locations.addAll(locations)
         
 		StartableMethods.start(this, locations);
