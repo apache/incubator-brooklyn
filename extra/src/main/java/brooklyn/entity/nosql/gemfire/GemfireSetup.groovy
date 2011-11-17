@@ -48,7 +48,6 @@ public class GemfireSetup extends SshBasedAppSetup {
         result.setJarFile(jarFile)
         result.setLicenseFile(licenseFile)
         result.setWebPort(webPort)
-        result.setLogFileLocation(logFileLocation)
         return result
     }
 
