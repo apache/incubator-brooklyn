@@ -8,7 +8,7 @@ import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup;
 import brooklyn.location.basic.SshMachineLocation
 
 /**
- * Start a {@link QpidNode} in a {@link Location} accessible over ssh.
+ * Start a {@link NginxController} in a {@link Location} accessible over ssh.
  */
 public class NginxSetup extends SshBasedAppSetup {
     public static final String DEFAULT_VERSION = "1.0.8"
