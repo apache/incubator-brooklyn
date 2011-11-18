@@ -1,9 +1,9 @@
-package brooklyn.gemfire.demo;
+package brooklyn.gemfire.api;
 
 import java.io.IOException;
 import java.util.List;
 
-import brooklyn.gemfire.demo.HubManager.RegionNode;
+import brooklyn.gemfire.api.HubManager.RegionNode;
 
 public interface RegionManager {
 

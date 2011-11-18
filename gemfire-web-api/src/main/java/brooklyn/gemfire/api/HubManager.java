@@ -1,4 +1,4 @@
-package brooklyn.gemfire.demo;
+package brooklyn.gemfire.api;
 
 import java.io.IOException;
 import java.util.LinkedList;

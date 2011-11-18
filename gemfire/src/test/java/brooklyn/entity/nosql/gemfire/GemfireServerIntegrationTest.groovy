@@ -26,12 +26,10 @@ public class GemfireServerIntegrationTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(GemfireServerIntegrationTest.class)
 
-    // TODO: Make these machine independent
-    // Suggest setting up a symlink from ../brooklyn/gemfire to /tmp/brooklyn/installs/gemfire.
-    private static final String installDir = "/tmp/brooklyn/installs/gemfire"
-    private static final String licenseFile = "$installDir/lib/gemfireLicense.zip"
-    private static final String euCache = "eu/cache.xml"
-    private static final String clientCache = "eu/client-cache.xml"
+    private static final String API_JAR = "target/dependencies/gemfire-api.jar"
+    private static final String LICENSE_FILE = pathTo("gemfireLicense.zip")
+    private static final String EU_CACHE = pathTo("eu/cache.xml")
+    private static final String CLIENT_CACHE = pathTo("eu/client-cache.xml")
 
     private Application app
 
@@ -47,12 +45,12 @@ public class GemfireServerIntegrationTest {
         app = new TestApplication()
     }
 
-    @BeforeMethod(groups=["Integration"])
+    @BeforeMethod(alwaysRun=true, groups=["Integration"])
     public void ensureGemfireInstallDirExists() {
-        File installDir = new File(installDir)
-        File license = new File(licenseFile)
-        if (!installDir.exists() || !license.exists()) {
-            fail("Expected to find gemfire directory at $installDir and license file at $license")
+        File api = new File(API_JAR)
+        File license = new File(LICENSE_FILE)
+        if (!api.exists() || !license.exists()) {
+            fail("Expected to find gemfire API jar at $api and license file at $license")
         }
     }
 
@@ -65,10 +63,10 @@ public class GemfireServerIntegrationTest {
     }
 
     /** Creates server and returns it after adding it to the createdEntities list  */
-    private GemfireServer createGemfireServer(Application owner, String installDir, String license,
-                                              String config, String jarFile = null) {
+    private GemfireServer createGemfireServer(
+            Application owner, String apiJar, String license, String config, String jarFile = null) {
         GemfireServer entity = new GemfireServer(owner: owner)
-        entity.setConfig(GemfireServer.SUGGESTED_INSTALL_DIR, installDir)
+        entity.setConfig(GemfireServer.SUGGESTED_API_JAR, apiJar)
         entity.setConfig(GemfireServer.LICENSE, license);
         entity.setConfig(GemfireServer.CONFIG_FILE, config)
         if (jarFile != null) {
@@ -80,7 +78,7 @@ public class GemfireServerIntegrationTest {
 
     /** Creates gemfire instance owned by given owner, defaults to app  */
     private GemfireServer createAndStartGemfireServer(Application owner=app) {
-        GemfireServer server = createGemfireServer(owner, installDir, licenseFile, pathTo(euCache))
+        GemfireServer server = createGemfireServer(owner, API_JAR, LICENSE_FILE, EU_CACHE)
         server.start([new LocalhostMachineProvisioningLocation(name: 'london')])
         executeUntilSucceeds(timeout: 15000) {
             assertTrue server.getAttribute(Startable.SERVICE_UP)
@@ -158,9 +156,9 @@ public class GemfireServerIntegrationTest {
     public void testRegionInsertRetrieve() {
         GemfireServer entity = createAndStartGemfireServer()
 
-        ClientCache cache = new ClientCacheFactory().set("cache-xml-file", pathTo(clientCache)).create()
+        ClientCache cache = new ClientCacheFactory().set("cache-xml-file", CLIENT_CACHE).create()
         Region region = cache.getRegion("integrationTests")
-        assertEquals region.get("whoyougonnacall"), "ghostbusters!" // whoyougonnacall set in euCache
+        assertEquals region.get("whoyougonnacall"), "ghostbusters!" // whoyougonnacall set in EU_CACHE
 
         entity.addRegions(Arrays.asList("adams"))
         cache.createClientRegionFactory(ClientRegionShortcut.CACHING_PROXY_OVERFLOW).create("adams")

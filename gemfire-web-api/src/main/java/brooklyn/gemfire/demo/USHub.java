@@ -1,4 +1,4 @@
-package brooklyn.gemfire.test.demo;
+package brooklyn.gemfire.demo;
 
 import java.util.Properties;
 

@@ -17,8 +17,9 @@ import com.google.common.base.Charsets
 import com.google.common.base.Splitter
 
 class GemfireServer extends SoftwareProcessEntity {
-    public static final BasicConfigKey<String> INSTALL_DIR =
-        [ String, "gemfire.server.installDir", "Gemfire installation directory" ]
+
+    public static final BasicConfigKey<String> INSTALL_DIR = [ String, "gemfire.server.installDir", "Gemfire installation directory" ]
+    public static final BasicConfigKey<String> SUGGESTED_API_JAR = [ String, "gemfire.server.apiJar", "Jar containing Gemfire installation" ]
     public static final BasicConfigKey<File> CONFIG_FILE = [ File, "gemfire.server.configFile", "Gemfire configuration file" ]
     public static final BasicConfigKey<File> JAR_FILE = [ File, "gemfire.server.jarFile", "Gemfire jar file" ]
     public static final BasicConfigKey<Integer> SUGGESTED_HUB_PORT = [ Integer, "gemfire.server.suggestedHubPort", "Gemfire gateway hub port", 11111 ]

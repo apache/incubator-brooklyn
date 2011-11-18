@@ -85,6 +85,13 @@
                 <artifactId>brooklyn-extra</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>brooklyn-core</artifactId>
+                <version>${project.version}</version>
+                <classifier>test</classifier>
+            </dependency>
 
             <dependency>
                 <groupId>org.apache.ivy</groupId>

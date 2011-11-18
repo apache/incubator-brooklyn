@@ -1,4 +1,4 @@
-package brooklyn.gemfire.demo;
+package brooklyn.gemfire.api;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;

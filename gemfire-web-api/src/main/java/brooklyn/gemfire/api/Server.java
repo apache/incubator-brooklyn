@@ -1,4 +1,4 @@
-package brooklyn.gemfire.demo;
+package brooklyn.gemfire.api;
 
 import com.gemstone.gemfire.cache.*;
 import com.sun.net.httpserver.HttpHandler;
