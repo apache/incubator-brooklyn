@@ -215,7 +215,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
                     String flagName = cf.value() ?: key?.getName();
                     if (flagName && flags.containsKey(flagName)) {
 						Object value = flags.remove(flagName)
-                        setConfig(key, value)
+                        setConfigInternal(key, value)
 						if (flagName=="name" && displayName==null)
 							displayName = value
                     }
@@ -416,6 +416,11 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         // TODO Is this the best idea, for making life easier for brooklyn coders when supporting changing config?
         if (getApplication()?.isDeployed()) throw new IllegalStateException("Cannot set configuration $key on active entity $this")
 
+        setConfigInternal(key, val)
+    }
+    
+    protected <T> T setConfigInternal(ConfigKey<T> key, T val) {
+    
         T oldVal = ownConfig.put(key, val);        
         ownedChildren.get().each {
             it.refreshInheritedConfig()
@@ -423,6 +428,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 
         oldVal
     }
+    
 	@Override
 	public <T> T setConfig(HasConfigKey<T> key, T val) {
 		setConfig(key.configKey, val)
