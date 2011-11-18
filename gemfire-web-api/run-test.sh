@@ -1,8 +1,8 @@
 #!/bin/bash
 
-nohup java -cp ./target/classes/:./lib/guava-10.0.1.jar:./lib/antlr.jar:./lib/gemfire.jar brooklyn.gemfire.demo.Server 8081 ./src/test/resources/us/cache.xml ./log/us-hub.log ./lib/gemfireLicense.zip > ./log/us-hub.out 2> ./log/us-hub.err < /dev/null &
+nohup java -cp ./target/brooklyn-gemfire-web-api-0.2.0-SNAPSHOT-with-dependencies.jar brooklyn.gemfire.demo.Server 8081 ./src/test/resources/us/cache.xml ./log/us-hub.log ./gemfireLicense.zip > ./log/us-hub.out 2> ./log/us-hub.err < /dev/null &
 echo $!
-nohup java -cp ./target/classes/://lib/guava-10.0.1.jar:./lib/antlr.jar:./lib/gemfire.jar brooklyn.gemfire.demo.Server 8082 ./src/test/resources/eu/cache.xml ./log/eu-hub.log ./lib/gemfireLicense.zip > ./log/eu-hub.out 2> ./log/eu-hub.err < /dev/null &
+nohup java -cp ./target/brooklyn-gemfire-web-api-0.2.0-SNAPSHOT-with-dependencies.jar brooklyn.gemfire.demo.Server 8082 ./src/test/resources/eu/cache.xml ./log/eu-hub.log ./gemfireLicense.zip > ./log/eu-hub.out 2> ./log/eu-hub.err < /dev/null &
 echo $!
 
 sleep 5
