@@ -22,8 +22,9 @@ public class GemfireSetup extends SshBasedAppSetup {
     private File licenseFile
 
     private String apiJarServerSidePath
-    private String configFileServersidePath
-    private String jarFileServersidePath
+    private String configFileServerSidePath
+    private String jarFileServerSidePath
+    private static final String SERVER_LICENSE = "gemfireLicense.zip"
     
     public static GemfireSetup newInstance(GemfireServer entity, SshMachineLocation machine) {
         String suggestedVersion = entity.getConfig(GemfireServer.SUGGESTED_VERSION)
@@ -93,17 +94,19 @@ public class GemfireSetup extends SshBasedAppSetup {
     public void config() {
         super.config();
         if (configFile) {
-            configFileServersidePath = "${runDir}/${configFile.name}"
-            machine.copyTo(configFile, configFileServersidePath)
+            configFileServerSidePath = "${runDir}/${configFile.name}"
+            machine.copyTo(configFile, configFileServerSidePath)
         }
         if (jarFileToDeploy) {
-            jarFileServersidePath = "$runDir/${jarFileToDeploy.name}"
-            machine.copyTo(jarFileToDeploy, jarFileServersidePath)
+            jarFileServerSidePath = "$runDir/${jarFileToDeploy.name}"
+            machine.copyTo(jarFileToDeploy, jarFileServerSidePath)
         }
         if (apiJar) {
             apiJarServerSidePath = "$runDir/gemfireApi.jar"
             machine.copyTo(apiJar, apiJarServerSidePath)
         }
+        // And finally, the license
+        machine.copyTo(licenseFile, "$runDir/$SERVER_LICENSE")
     }
 
     @Override
@@ -115,10 +118,10 @@ public class GemfireSetup extends SshBasedAppSetup {
      * Starts a Gemfire process.
      */
     public List<String> getRunScript() {
-        String jarDeploy = jarFileServersidePath ?: ""
+        String jarDeploy = jarFileServerSidePath ?: ""
         return [
             "cd $runDir",
-            "nohup java -cp gemfireAPI.jar:$jarDeploy brooklyn.gemfire.api.Server $webPort $configFileServersidePath $runDir/gemfire.log $licenseFile &",
+            "nohup java -cp gemfireAPI.jar:$jarDeploy brooklyn.gemfire.api.Server $webPort $configFileServerSidePath $runDir/gemfire.log $SERVER_LICENSE &",
             "echo \$! > $PID_FILE",
         ]
     }
