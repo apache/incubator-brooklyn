@@ -1,4 +1,3 @@
-
 package brooklyn.earlythoughts;
 
 import java.util.Map
