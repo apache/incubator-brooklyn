@@ -37,7 +37,7 @@ private class TestWebApplication extends AbstractApplication {
                                         latitude:0,longitude:0])
         ];
 
-        private List<Policy> testPolicies = [
+        List<Policy> testPolicies = [
             new GeneralPurposePolicy([id: 'CTS1', name: 'chase-the-sun', displayName: 'Chase the Sun', policyStatus: 'Suspended']),
             new GeneralPurposePolicy([id: 'CTM1', name: 'chase-the-moon', displayName: 'Chase the Moon', policyStatus: 'Active']),
             new GeneralPurposePolicy([id: 'FTM1', name: 'follow-the-money', displayName: 'Follow the Money', policyStatus: 'Suspended']),
