@@ -37,7 +37,7 @@ public abstract class JavaStartStopSshDriver extends StartStopSshDriver {
 		def sJavaOpts = getJavaOpts().collect({
 			if (!StringEscapeUtils.isValidForDoubleQuotingInBash(it))
 				throw new IllegalArgumentException("will not accept ${it} as valid BASH string (has unescaped double quote)")
-			"\""+it+"\""
+			it
 		}).join(" ");
 //		println "using java opts: $sJavaOpts"
 		super.getShellEnvironment() + [ "JAVA_OPTS" : sJavaOpts ]
