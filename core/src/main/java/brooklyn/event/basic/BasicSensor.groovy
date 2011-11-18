@@ -102,8 +102,12 @@ public class ConfiguredAttributeSensor<T> extends BasicAttributeSensor<T> implem
 
     public ConfiguredAttributeSensor(Class<T> type, String name, String description=name, T defaultValue=null) {
         super(type, name, description)
-
         configKey = new BasicConfigKey<T>(type, name, description, defaultValue)
+    }
+
+    public ConfiguredAttributeSensor(ConfiguredAttributeSensor orig, T defaultValue) {
+        super(orig.type, orig.name, orig.description)
+        configKey = new BasicConfigKey<T>(orig.configKey, defaultValue)
     }
 
     public ConfigKey<T> getConfigKey() { return configKey }

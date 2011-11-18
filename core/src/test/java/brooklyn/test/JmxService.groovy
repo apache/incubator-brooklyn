@@ -57,6 +57,10 @@ class JmxService {
         namingServiceMBean.stop()
     }
 
+    public GeneralisedDynamicMBean registerMBean(String name) {
+        return registerMBean([:], [:], name)
+    }
+
     /**
      * Construct a {@link GeneralisedDynamicMBean} and register it with this MBean server.
      *

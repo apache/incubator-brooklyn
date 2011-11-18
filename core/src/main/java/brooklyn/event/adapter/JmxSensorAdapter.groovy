@@ -25,8 +25,18 @@ import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.Sensor
 
 
-/** entry point for jmx sensor adapters; this doesn't evaluate any sensors directly,
- * but provides support for specific object-name/attribute combos etc
+/**
+ * Entry point for wiring up brooklyn attributes to jmx; this doesn't evaluate any sensors directly,
+ * but provides support for specific object-name/attribute combos etc.
+ * <p>
+ * Example usage:
+ * <code>
+ *   jmx.objectName('Brooklyn:type=MyExample,name=myName').with {
+ *       attribute("myJmxAttribute").subscribe(MY_BROOKLYN_ATTRIBUTE)
+ *       operation("myJmxOperation", "arg1").poll(MY_BROOKLYN_ATTRIBUTE_2)
+ *       notification("myJmxNotification").subscribe(MY_BROOKLYN_ATTRIBUTE_3)
+ *   }
+ * </code>
  */
 public class JmxSensorAdapter extends AbstractSensorAdapter {
 
@@ -40,6 +50,8 @@ public class JmxSensorAdapter extends AbstractSensorAdapter {
 	Integer rmiServerPort
 	String context
 	String url
+    String user
+    String password
 	
 	JmxHelper helper
  
@@ -59,7 +71,9 @@ public class JmxSensorAdapter extends AbstractSensorAdapter {
 		rmiRegistryPort = entity.getAttribute(Attributes.JMX_PORT);
 		rmiServerPort = entity.getAttribute(Attributes.RMI_PORT);
 		context = entity.getAttribute(Attributes.JMX_CONTEXT);
- 
+        user = entity.getAttribute(Attributes.JMX_USER);
+        password = entity.getAttribute(Attributes.JMX_PASSWORD);
+
 		if (rmiServerPort) {
 			url = String.format(RMI_JMX_URL_FORMAT, host, rmiServerPort, host, rmiRegistryPort, context)
 		} else {

@@ -27,7 +27,7 @@ class BasicConfigKey<T> implements ConfigKey<T>, ConfigKeySelfExtracting<T>, Ser
     public final T defaultValue
     
     public BasicConfigKey() { /* for gson */ }
-    
+
     public BasicConfigKey(Class<T> type, String name, String description=name, T defaultValue=null) {
         this.description = description
         this.name = name
@@ -36,6 +36,14 @@ class BasicConfigKey<T> implements ConfigKey<T>, ConfigKeySelfExtracting<T>, Ser
         this.defaultValue = defaultValue
     }
 
+    public BasicConfigKey(ConfigKey key, T defaultValue) {
+        this.description = key.description
+        this.name = key.name
+        this.type = key.type
+        this.typeName = key.typeName
+        this.defaultValue = defaultValue
+    }
+    
     /** @see ConfigKey#getName() */
     public String getName() { name }
 

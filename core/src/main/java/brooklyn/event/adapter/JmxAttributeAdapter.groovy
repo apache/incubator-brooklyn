@@ -7,7 +7,12 @@ import javax.management.ObjectName
 import brooklyn.event.Sensor
 
 
-/** adapter which polls for a JMX attribute */
+/** 
+ * Adapter that polls for a JMX attribute.
+ * "Attribute" here refers to the JMX concept, rather than the brooklyn concept.
+ * 
+ * @see {@link JmxSensorAdapter} for recommended way of using this
+ */
 @InheritConstructors
 public class JmxAttributeAdapter extends AbstractSensorAdapter {
 	final JmxSensorAdapter adapter;

@@ -22,7 +22,7 @@ public interface Attributes {
 
     ConfiguredAttributeSensor<Integer> JMX_PORT = [ Integer, "jmx.port", "JMX port", 32199 ]
     ConfiguredAttributeSensor<Integer> RMI_PORT = [ Integer, "rmi.port", "RMI port" ]
-    ConfiguredAttributeSensor<Integer> JMX_USER = [ Integer, "jmx.user", "JMX username" ]
+    ConfiguredAttributeSensor<String> JMX_USER = [ String, "jmx.user", "JMX username" ]
     ConfiguredAttributeSensor<String> JMX_PASSWORD = [ String, "jmx.password", "JMX password" ]
     ConfiguredAttributeSensor<String> JMX_CONTEXT = [ String, "jmx.context", "JMX context path", "jmxrmi" ]
 

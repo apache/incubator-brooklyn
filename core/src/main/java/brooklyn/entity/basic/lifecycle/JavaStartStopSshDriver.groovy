@@ -3,6 +3,7 @@ package brooklyn.entity.basic.lifecycle;
 import java.util.List
 import java.util.Map
 
+import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.entity.basic.UsesJmx
 import brooklyn.entity.basic.legacy.JavaApp
@@ -13,8 +14,13 @@ public abstract class JavaStartStopSshDriver extends StartStopSshDriver {
 
 	public JavaStartStopSshDriver(EntityLocal entity, SshMachineLocation machine) {
 		super(entity, machine);
+        
+        entity.setAttribute(Attributes.LOG_FILE_LOCATION, logFileLocation)
 	}
 
+    protected abstract String getLogFileLocation();
+    
+    
 	public boolean isJmxEnabled() { entity in UsesJmx }
 	
 	/** 

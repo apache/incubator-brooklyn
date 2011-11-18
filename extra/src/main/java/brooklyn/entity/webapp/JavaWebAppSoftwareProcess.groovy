@@ -71,7 +71,6 @@ public abstract class JavaWebAppSshDriver extends JavaStartStopSshDriver {
 	public JavaWebAppSshDriver(JavaWebAppSoftwareProcess entity, SshMachineLocation machine) {
 		super(entity, machine)
 
-		entity.setAttribute(Attributes.LOG_FILE_LOCATION, logFileLocation)
 		entity.setAttribute(Attributes.HTTP_PORT, httpPort)
 		entity.setAttribute(WebAppService.ROOT_URL, "http://${hostname}:${httpPort}/")
 	}
@@ -79,7 +78,6 @@ public abstract class JavaWebAppSshDriver extends JavaStartStopSshDriver {
 	public JavaWebAppSoftwareProcess getEntity() { super.getEntity() }
 	protected int getHttpPort() { entity.getConfig(JavaWebAppSoftwareProcess.HTTP_PORT, DEFAULT_FIRST_HTTP_PORT) }
 	
-	protected abstract String getLogFileLocation();
 	protected abstract String getDefaultVersion();
 	protected abstract String getDeploySubdir();
 	

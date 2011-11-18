@@ -7,7 +7,11 @@ import javax.management.ObjectName
 import brooklyn.event.Sensor
 
 
-/** adapter which polls for a JMX attribute */
+/** 
+ * Adapter that periodically calls a JMX operation.
+ * 
+ * @see {@link JmxSensorAdapter} for recommended way of using this
+ */
 @InheritConstructors
 public class JmxOperationAdapter extends AbstractSensorAdapter {
 	final JmxSensorAdapter adapter;
@@ -31,7 +35,7 @@ public class JmxOperationAdapter extends AbstractSensorAdapter {
 		final ObjectName objectName;
 		final String methodName;
 		Object[] args = [];
-		OperationPollHelper(JmxSensorAdapter adapter) {
+		OperationPollHelper(JmxSensorAdapter adapter, ObjectName objectName, String methodName, Object[] args) {
 			super(adapter)
 			this.adapter = adapter;
 			this.objectName = objectName;

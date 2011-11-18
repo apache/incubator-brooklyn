@@ -1,7 +1,6 @@
 package brooklyn.event.adapter;
 
 import java.io.IOException
-import java.util.Hashtable
 import java.util.Map
 import java.util.Set
 
@@ -19,7 +18,6 @@ import javax.management.remote.JMXServiceURL
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.EntityLocal
 
 public class JmxHelper {
@@ -61,11 +59,9 @@ public class JmxHelper {
 	public synchronized void connect() throws IOException {
 		if (jmxc) jmxc.close()
 		JMXServiceURL url = new JMXServiceURL(adapter.url)
-		Hashtable env = new Hashtable();
-		String user = entity.getAttribute(Attributes.JMX_USER);
-		String password = entity.getAttribute(Attributes.JMX_PASSWORD);
-		if (user && password) {
-			String[] creds = [ user, password ]
+		Map env = [:]
+		if (adapter.user && adapter.password) {
+			String[] creds = [ adapter.user, adapter.password ]
 			env.put(JMXConnector.CREDENTIALS, creds);
 		}
 		jmxc = JMXConnectorFactory.connect(url, env);
@@ -171,6 +167,15 @@ public class JmxHelper {
 		ObjectInstance bean = findMBean objectName
 		mbsc.addNotificationListener(objectName, listener, null, null)
 	}
+
+    public void removeNotificationListener(String objectName, NotificationListener listener) {
+        removeNotificationListener(new ObjectName(objectName), listener)
+    }
+
+    public void removeNotificationListener(ObjectName objectName, NotificationListener listener) {
+        ObjectInstance bean = findMBean objectName
+        mbsc.removeNotificationListener(objectName, listener, null, null)
+    }
 
 	public <M> M getProxyObject(String objectName, Class<M> mbeanInterface) {
 		return getProxyObject(new ObjectName(objectName), mbeanInterface)

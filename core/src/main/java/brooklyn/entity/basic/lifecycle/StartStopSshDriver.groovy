@@ -68,12 +68,20 @@ public abstract class StartStopSshDriver extends AbstractStartStopDriver impleme
 	}
 	
 	/**
-	* The environment variables to be set when executing the commands (for install, run, check running, etc).
-	*/
-   public Map<String, String> getShellEnvironment() {
-	   [:] << entity.getConfig(SoftwareProcessEntity.SHELL_ENVIRONMENT, [:])
-   }
+	 * The environment variables to be set when executing the commands (for install, run, check running, etc).
+	 */
+    public Map<String, String> getShellEnvironment() {
+	    [:] << entity.getConfig(SoftwareProcessEntity.SHELL_ENVIRONMENT, [:])
+    }
 	
+    public void copyFile(File src, String destination) {
+        machine.copyTo(src, destination)
+    }
+
+    public void copyFile(File src, File destination) {
+        machine.copyTo(src, destination)
+    }
+
 	protected final static String INSTALLING = "installing";
 	protected final static String CUSTOMIZING = "customizing";
 	protected final static String LAUNCHING = "launching";
