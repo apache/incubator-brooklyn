@@ -2,16 +2,12 @@ package brooklyn.event.adapter
 
 import static org.testng.Assert.*
 
-import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
 import javax.management.MBeanOperationInfo
 import javax.management.MBeanParameterInfo
-import javax.management.MBeanServerConnection
 import javax.management.Notification
-import javax.management.NotificationListener
-import javax.management.ObjectName
 import javax.management.StandardEmitterMBean
 import javax.management.openmbean.CompositeDataSupport
 import javax.management.openmbean.CompositeType
@@ -19,9 +15,6 @@ import javax.management.openmbean.OpenType
 import javax.management.openmbean.SimpleType
 import javax.management.openmbean.TabularDataSupport
 import javax.management.openmbean.TabularType
-import javax.management.remote.JMXConnector
-import javax.management.remote.JMXConnectorFactory
-import javax.management.remote.JMXServiceURL
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -31,8 +24,6 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.Attributes
-import brooklyn.event.adapter.legacy.OldJmxSensorAdapter
-import brooklyn.event.adapter.legacy.ValueProvider
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.test.GeneralisedDynamicMBean
 import brooklyn.test.JmxService
@@ -103,6 +94,25 @@ public class JmxSensorAdapterTest {
         mbean.updateAttributeValue(attributeName, 64)
         TestUtils.executeUntilSucceeds(timeout:TIMEOUT) {
             assertEquals entity.getAttribute(intAttribute), 64
+        }
+    }
+
+    @Test(expectedExceptions=[IllegalStateException.class])
+    public void jmxObjectCheckExistsEventuallyThrowsIfNotFound() {
+        registry.activateAdapters()
+        
+        jmx.objectName('Brooklyn:type=DoesNotExist,name=doesNotExist').with {
+            checkExistsEventually(1*TimeUnit.MILLISECONDS)
+        }
+    }
+
+    @Test
+    public void jmxObjectCheckExistsEventuallyReturnsIfFoundImmediately() {
+        GeneralisedDynamicMBean mbean = jmxService.registerMBean(objectName)
+        registry.activateAdapters()
+        
+        jmx.objectName(objectName).with {
+            checkExistsEventually(1*TimeUnit.MILLISECONDS)
         }
     }
 
