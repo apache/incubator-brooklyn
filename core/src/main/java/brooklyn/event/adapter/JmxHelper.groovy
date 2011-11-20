@@ -6,6 +6,7 @@ import java.util.Set
 
 import javax.management.JMX
 import javax.management.MBeanServerConnection
+import javax.management.NotificationFilter
 import javax.management.NotificationListener
 import javax.management.ObjectInstance
 import javax.management.ObjectName
@@ -159,13 +160,13 @@ public class JmxHelper {
 		return result
 	}
 
-	public void addNotification(String objectName, NotificationListener listener) {
-		addNotification(new ObjectName(objectName), listener)
+	public void addNotificationListener(String objectName, NotificationListener listener, NotificationFilter filter=null) {
+		addNotificationListener(new ObjectName(objectName), listener, filter)
 	}
 
-	public void addNotification(ObjectName objectName, NotificationListener listener) {
+	public void addNotificationListener(ObjectName objectName, NotificationListener listener, NotificationFilter filter=null) {
 		ObjectInstance bean = findMBean objectName
-		mbsc.addNotificationListener(objectName, listener, null, null)
+		mbsc.addNotificationListener(objectName, listener, filter, null)
 	}
 
     public void removeNotificationListener(String objectName, NotificationListener listener) {

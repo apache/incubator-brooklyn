@@ -1,5 +1,7 @@
 package brooklyn.event.adapter;
 
+import javax.management.NotificationListener
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 

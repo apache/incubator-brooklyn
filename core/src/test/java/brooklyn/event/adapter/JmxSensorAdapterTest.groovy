@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import javax.management.MBeanOperationInfo
 import javax.management.MBeanParameterInfo
 import javax.management.Notification
+import javax.management.NotificationListener
 import javax.management.StandardEmitterMBean
 import javax.management.openmbean.CompositeDataSupport
 import javax.management.openmbean.CompositeType
@@ -196,7 +197,6 @@ public class JmxSensorAdapterTest {
 
     @Test
     public void jmxNotificationSubscriptionForSensor() {
-        // Setup
         String one = 'notification.one', two = 'notification.two'
         StandardEmitterMBean mbean = jmxService.registerMBean([ one, two ], objectName)
         int sequence = 0
@@ -213,5 +213,36 @@ public class JmxSensorAdapterTest {
         TestUtils.executeUntilSucceeds(timeout:TIMEOUT) {
             assertEquals entity.getAttribute(intAttribute), 123
         }
+    }
+    
+    @Test
+    public void jmxNotificationSubscriptionUsingListener() {
+        String one = 'notification.one', two = 'notification.two'
+        StandardEmitterMBean mbean = jmxService.registerMBean([ one, two ], objectName)
+        int sequence = 0
+        List<Notification> received = []
+        
+        jmx.objectName(objectName).with {
+            notification(one).subscribe({Notification notif, Object callback -> 
+                    received.add(notif) } as NotificationListener)
+        }
+        registry.activateAdapters()
+        
+        Notification notif = new Notification(one, mbean, sequence++)
+        notif.setUserData(123)
+        mbean.sendNotification(notif);
+        
+        TestUtils.executeUntilSucceeds(timeout:TIMEOUT) {
+            assertEquals received.size(), 1
+            assertNotificationsEqual received.get(0), notif
+        }
+    }
+
+    private void assertNotificationsEqual(Notification n1, Notification n2) {
+        assertEquals(n1.type, n2.type)
+        assertEquals(n1.sequenceNumber, n2.sequenceNumber)
+        assertEquals(n1.userData, n2.userData)
+        assertEquals(n1.timeStamp, n2.timeStamp)
+        assertEquals(n1.message, n2.message)
     }
 }

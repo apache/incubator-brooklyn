@@ -35,7 +35,11 @@ public class JmxObjectNameAdapter {
 	JmxOperationAdapter operation(String method, Object ...args) {
 		adapter.registry.register(new JmxOperationAdapter(adapter, objectName, method, args));
 	}
-    JmxNotificationAdapter notification(String notificationName) {
-        adapter.registry.register(new JmxNotificationAdapter(adapter, objectName, notificationName));
+    
+    /**
+     * @param notificationType A regex for the notification type
+     */
+    JmxNotificationAdapter notification(String notificationType) {
+        adapter.registry.register(new JmxNotificationAdapter(adapter, objectName, notificationType));
     }
 }

@@ -40,7 +40,7 @@ public abstract class AbstractPollHelper {
 	}
 	protected deactivatePoll() {
 		log.debug "deactivating poll for {} sensors {} (using {})", adapter.entity, polledSensors.keySet(), this
-		schedule.cancel();
+		if (schedule) schedule.cancel();
 	}
 	
 	/** implementation-specific generation of AbstractSensorEvaluationContext which is then typically passed to evaluateSensorsOnPollResponse */
