@@ -3,6 +3,7 @@ package brooklyn.entity.group
 import static org.testng.AssertJUnit.*
 
 import java.util.Collection
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
 import org.testng.annotations.Test
@@ -15,11 +16,16 @@ import brooklyn.entity.trait.Changeable
 import brooklyn.event.EntityStartException
 import brooklyn.location.Location
 import brooklyn.location.basic.GeneralPurposeLocation
+import brooklyn.test.TestUtils
 import brooklyn.test.entity.NoopStartable
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
+import brooklyn.util.internal.TimeExtras
 
 class DynamicClusterTest {
+    
+    static { TimeExtras.init() }
+    
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void constructorRequiresThatNewEntityArgumentIsGiven() {
         new DynamicCluster(initialSize:1, new TestApplication())
@@ -37,6 +43,13 @@ class DynamicClusterTest {
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void constructorRequiresThatNewEntityArgumentIsStartable() {
         new DynamicCluster([ initialSize:1, newEntity:new AbstractEntity() { } ], new TestApplication())
+        fail "Did not throw expected exception"
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void constructorRequiresThatPostStartEntityIsClosure() {
+        new DynamicCluster([ initialSize:1, newEntity:{ new TestEntity() }, postStartEntity:"notaclosure" ], new TestApplication()
+        )
         fail "Did not throw expected exception"
     }
 
@@ -203,6 +216,24 @@ class DynamicClusterTest {
         cluster.resize(1)
         assertEquals(cluster.currentSize, 1)
         assertEquals(cluster.ownedChildren, creationOrder.subList(0, 1))
+    }
+    
+    @Test
+    public void postStartEntityCalledForEachEntity() {
+        final Set<Entity> created = [] as Set
+        final Set<Entity> called = [] as Set
+        DynamicCluster cluster = new DynamicCluster([ 
+                        newEntity:{ def result = new TestEntity(); created.add(result); return result },
+                        postStartEntity:{ entity -> called.add(entity) },
+                        initialSize:2
+                ], new TestApplication())
+        
+        cluster.start([new GeneralPurposeLocation()])
+        
+        TestUtils.executeUntilSucceeds(timeout:2*TimeUnit.SECONDS) {
+            assertEquals(called.size(), 2)
+            assertEquals(called, created)
+        }
     }
 }
 
