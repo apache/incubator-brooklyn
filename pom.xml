@@ -73,6 +73,8 @@
 				<module>test-support</module>
 				<module>core</module>
 				<module>extra</module>
+				<module>gemfire-web-api</module>
+                <module>gemfire</module>
 			</modules>
 		</profile>
 		<profile>
