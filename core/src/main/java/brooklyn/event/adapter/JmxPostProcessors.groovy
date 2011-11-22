@@ -14,18 +14,20 @@ public class JmxPostProcessors {
      * @return a closure that converts a TabularDataSupport to a map.
      */
     public static Closure tabularDataToMap() {
-        return { TabularDataSupport table ->
-            HashMap<String, Object> out = []
-            for (Object entry : table.values()) {
-                CompositeData data = (CompositeData) entry //.getValue()
-                data.getCompositeType().keySet().each { String key ->
-                    def old = out.put(key, data.get(key))
-                    if (old) {
-                        log.warn "tablularDataToMap has overwritten key {}", key
-                    }
+        return { return tabularDataToMap(it) }
+    }
+    
+    public static Map tabularDataToMap(TabularDataSupport table) {
+        HashMap<String, Object> out = []
+        for (Object entry : table.values()) {
+            CompositeData data = (CompositeData) entry //.getValue()
+            data.getCompositeType().keySet().each { String key ->
+                def old = out.put(key, data.get(key))
+                if (old) {
+                    log.warn "tablularDataToMap has overwritten key {}", key
                 }
             }
-            return out
         }
+        return out
     }
 }

@@ -1,5 +1,7 @@
 package brooklyn.event.adapter;
 
+import static com.google.common.base.Preconditions.checkNotNull
+
 import groovy.time.TimeDuration
 
 import java.io.IOException
@@ -44,8 +46,6 @@ public class JmxHelper {
     final String user
     final String password
 
-	final JmxSensorAdapter adapter;
-	final EntityLocal entity;
 	JMXConnector jmxc
 	MBeanServerConnection mbsc
     boolean triedConnecting
@@ -68,9 +68,7 @@ public class JmxHelper {
 	]
 
     public JmxHelper(EntityLocal entity) {
-        this.entity = entity
-        
-        host = entity.getAttribute(Attributes.HOSTNAME);
+        host = checkNotNull(entity.getAttribute(Attributes.HOSTNAME));
         rmiRegistryPort = entity.getAttribute(Attributes.JMX_PORT);
         rmiServerPort = entity.getAttribute(Attributes.RMI_PORT);
         context = entity.getAttribute(Attributes.JMX_CONTEXT);
@@ -84,19 +82,6 @@ public class JmxHelper {
         }
     }
     
-    public JmxHelper(JmxSensorAdapter adapter) {
-        this.adapter = adapter;
-        this.entity = adapter.entity;
-        
-        host = adapter.host
-        rmiRegistryPort = adapter.rmiRegistryPort
-        rmiServerPort = adapter.rmiServerPort
-        context = adapter.context
-        user = adapter.user
-        password = adapter.password
-        url = adapter.url
-    }
-
 	public boolean isConnected() {
 		return (jmxc && mbsc);
 	}
@@ -125,19 +110,20 @@ public class JmxHelper {
 		int attempt=0;
 		while (start <= end) {
 			start = System.currentTimeMillis()
-			if (attempt!=0) Thread.sleep(100);
-			LOG.debug "trying connection to {}:{} at {}", host, rmiRegistryPort, start
+			if (attempt!=0) Thread.sleep(100); //sleep 100 to prevent trashing and facilitate interruption
+			LOG.debug "trying connection to {} at time {}", url, start
 			try {
 				connect()
 				return true
             } catch (SecurityException e) {
-                LOG.debug "failed connection to {}:{} ({})", host, rmiRegistryPort, e.message
+                LOG.debug "failed connection to {} ({})", url, e.message
                 lastError = e;
-                //sleep 100 to prevent trashing and facilitate interruption
 			} catch (IOException e) {
-				LOG.debug "failed connection to {}:{} ({})", host, rmiRegistryPort, e.message
+				LOG.debug "failed connection to {} ({})", url, e.message
 				lastError = e;
-				//sleep 100 to prevent trashing and facilitate interruption
+            } catch (NumberFormatException e) {
+                LOG.warn "failed connection to {} ({}); rethrowing...", url, e.message
+                throw e
 			}
 			attempt++
 		}
@@ -151,7 +137,7 @@ public class JmxHelper {
 			try {
 				jmxc.close()
 			} catch (Exception e) {
-				LOG.warn("Caught exception disconnecting from JMX for at {}:{}, {}", entity, host, rmiRegistryPort, e.message)
+				LOG.warn("Caught exception disconnecting from JMX at {} ({})", url, e.message)
 			} finally {
 				jmxc = null
 				mbsc = null
@@ -162,9 +148,9 @@ public class JmxHelper {
 	public void checkConnected() {
 		if (!isConnected()) {
             if (triedConnecting) {
-                throw new IllegalStateException("Fail to connect to JMX at $url for entity $entity")
+                throw new IllegalStateException("Fail to connect to JMX at $url")
             } else {
-                throw new IllegalStateException("Not connected (and not attempted to connect) to JMX for entity $entity")
+                throw new IllegalStateException("Not connected (and not attempted to connect) to JMX at $url")
             }
 		} 
 	}
@@ -201,7 +187,7 @@ public class JmxHelper {
 		ObjectInstance bean = findMBean objectName
 		if (bean != null) {
 			def result = mbsc.getAttribute(bean.objectName, attribute)
-			LOG.debug "entity {} got value {} for jmx attribute {}.{}", entity, result, objectName.canonicalName, attribute
+			LOG.debug "From {} got value {} for jmx attribute {}.{}", url, result, objectName.canonicalName, attribute
 			return result
 		} else {
 			return null
@@ -226,7 +212,7 @@ public class JmxHelper {
 			signature[index] = (CLASSES.containsKey(clazz.simpleName) ? CLASSES.get(clazz.simpleName) : clazz.name);
 		}
 		def result = mbsc.invoke(objectName, method, arguments, signature)
-		LOG.trace "got result {} for jmx operation {}.{}", result, objectName.canonicalName, method
+		LOG.trace "From {} got result {} for jmx operation {}.{}", url, result, objectName.canonicalName, method
 		return result
 	}
 
@@ -235,7 +221,6 @@ public class JmxHelper {
 	}
 
 	public void addNotificationListener(ObjectName objectName, NotificationListener listener, NotificationFilter filter=null) {
-		ObjectInstance bean = findMBean objectName
 		mbsc.addNotificationListener(objectName, listener, filter, null)
 	}
 
@@ -244,7 +229,6 @@ public class JmxHelper {
     }
 
     public void removeNotificationListener(ObjectName objectName, NotificationListener listener) {
-//        ObjectInstance bean = findMBean objectName
         if (mbsc) mbsc.removeNotificationListener(objectName, listener, null, null)
     }
 

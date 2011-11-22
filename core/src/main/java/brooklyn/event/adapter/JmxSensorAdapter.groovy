@@ -49,14 +49,19 @@ public class JmxSensorAdapter extends AbstractSensorAdapter {
 		java.util.logging.Logger.getLogger("javax.management.remote.misc").setLevel(java.util.logging.Level.OFF); 
 	}
 	
-	public JmxSensorAdapter(Map flags=[:]) {
+	public JmxSensorAdapter(Map flags=[:], JmxHelper helper) {
 		super(flags)
+        this.helper = helper
 	}
+
+    public JmxSensorAdapter(Map flags=[:]) {
+        super(flags)
+    }
 
 	void register(SensorRegistry registry) {
 		super.register(registry)
  
-		helper = new JmxHelper(entity)
+		if (!helper) helper = new JmxHelper(entity)
 		addActivationLifecycleListeners({ helper.connect(JMX_CONNECTION_TIMEOUT_MS) }, { helper.disconnect() })
 	}
 
