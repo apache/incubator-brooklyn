@@ -14,9 +14,11 @@ import org.testng.annotations.Test
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.event.adapter.legacy.ValueProvider
+import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.util.flags.SetFromFlag
 
 public class JavaStartStopSshDriverIntegrationTest {
 
@@ -62,13 +64,13 @@ class MyEntity extends SoftwareProcessEntity {
 
 class MyEntityDriver extends JavaStartStopSshDriver {
 
+    @SetFromFlag("version")
+    public static final BasicConfigKey<String> SUGGESTED_VERSION = [SoftwareProcessEntity.SUGGESTED_VERSION, "0.1"]
+
     public MyEntityDriver(MyEntity entity, SshMachineLocation machine) {
         super(entity, machine)
     }
 
-    @Override
-    protected String getDefaultVersion() { "0.1" }
-    
     @Override
     protected String getLogFileLocation() { "${runDir}/nohup.out" }
     

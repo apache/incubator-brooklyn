@@ -26,10 +26,11 @@ public abstract class StartStopSshDriver extends AbstractStartStopDriver impleme
 		super(entity, machine);
 	}
 
+    @Deprecated // Set default on ConfigKey in entity? Rather than overriding it here and not telling the entity what value was chosen!
 	protected String getDefaultVersion() { NO_VERSION_INFO }
 	
     protected String getVersion() {
-		entity.getConfig(SoftwareProcessEntity.SUGGESTED_VERSION, getDefaultVersion())
+		entity.getConfig(SoftwareProcessEntity.SUGGESTED_VERSION) ?: getDefaultVersion()
 	}
 	
 	protected String getEntityVersionLabel(String separator="_") {
