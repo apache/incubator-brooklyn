@@ -41,6 +41,7 @@ public class JmxSensorAdapterTest {
     private static final Logger log = LoggerFactory.getLogger(JmxSensorAdapterTest.class)
 
     private static final int TIMEOUT = 1000
+    private static final int SHORT_WAIT = 250
     
     private JmxService jmxService
     private AbstractApplication app
@@ -115,6 +116,38 @@ public class JmxSensorAdapterTest {
         jmx.objectName(objectName).with {
             checkExistsEventually(1*TimeUnit.MILLISECONDS)
         }
+    }
+
+    @Test
+    public void jmxObjectCheckExistsEventuallyTakingLongReturnsIfFoundImmediately() {
+        GeneralisedDynamicMBean mbean = jmxService.registerMBean(objectName)
+        registry.activateAdapters()
+        
+        jmx.objectName(objectName).with {
+            checkExistsEventually(1L)
+        }
+    }
+
+    @Test
+    public void jmxObjectCheckExistsEventuallyReturnsIfCreatedDuringPolling() {
+        registry.activateAdapters()
+        
+        Thread t = new Thread(new Runnable() {
+                public void run() {
+                    Thread.sleep(SHORT_WAIT)
+                    GeneralisedDynamicMBean mbean = jmxService.registerMBean(objectName)
+                }})
+        try {
+            t.start()
+            
+            jmx.objectName(objectName).with {
+                checkExistsEventually(TIMEOUT)
+            }
+        } finally {
+            t.interrupt()
+            t.join(TIMEOUT)
+            assertFalse(t.isAlive())
+        }        
     }
 
     @Test
