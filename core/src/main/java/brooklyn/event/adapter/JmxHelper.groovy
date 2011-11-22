@@ -1,8 +1,11 @@
 package brooklyn.event.adapter;
 
+import groovy.time.TimeDuration
+
 import java.io.IOException
 import java.util.Map
 import java.util.Set
+import java.util.concurrent.TimeUnit
 
 import javax.management.JMX
 import javax.management.MBeanServerConnection
@@ -19,17 +22,34 @@ import javax.management.remote.JMXServiceURL
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.EntityLocal
+import brooklyn.util.internal.LanguageUtils
+import brooklyn.util.internal.TimeExtras
 
 public class JmxHelper {
 	
-	public static final Logger log = LoggerFactory.getLogger(JmxHelper.class);
-	
+	protected static final Logger LOG = LoggerFactory.getLogger(JmxHelper.class);
+
+    static { TimeExtras.init() }
+    
+    public static final String JMX_URL_FORMAT = "service:jmx:rmi:///jndi/rmi://%s:%d/%s"
+    public static final String RMI_JMX_URL_FORMAT = "service:jmx:rmi://%s:%d/jndi/rmi://%s:%d/%s"
+
+    final String host
+    final Integer rmiRegistryPort
+    final Integer rmiServerPort
+    final String context
+    final String url
+    final String user
+    final String password
+
 	final JmxSensorAdapter adapter;
 	final EntityLocal entity;
 	JMXConnector jmxc
 	MBeanServerConnection mbsc
-
+    boolean triedConnecting
+    
 	public static final Map<String,String> CLASSES = [
 		"Integer" : Integer.TYPE.name,
 		"Long" : Long.TYPE.name,
@@ -46,23 +66,49 @@ public class JmxHelper {
 		"TabularDataSupport" : TabularData.class.getName(),
 		"CompositeDataSupport" : CompositeData.class.getName(),
 	]
-	
-	public JmxHelper(JmxSensorAdapter adapter) {
-		this.adapter = adapter;
-		this.entity = adapter.entity;
-	}
-	
+
+    public JmxHelper(EntityLocal entity) {
+        this.entity = entity
+        
+        host = entity.getAttribute(Attributes.HOSTNAME);
+        rmiRegistryPort = entity.getAttribute(Attributes.JMX_PORT);
+        rmiServerPort = entity.getAttribute(Attributes.RMI_PORT);
+        context = entity.getAttribute(Attributes.JMX_CONTEXT);
+        user = entity.getAttribute(Attributes.JMX_USER);
+        password = entity.getAttribute(Attributes.JMX_PASSWORD);
+
+        if (rmiServerPort) {
+            url = String.format(RMI_JMX_URL_FORMAT, host, rmiServerPort, host, rmiRegistryPort, context)
+        } else {
+            url = String.format(JMX_URL_FORMAT, host, rmiRegistryPort, context)
+        }
+    }
+    
+    public JmxHelper(JmxSensorAdapter adapter) {
+        this.adapter = adapter;
+        this.entity = adapter.entity;
+        
+        host = adapter.host
+        rmiRegistryPort = adapter.rmiRegistryPort
+        rmiServerPort = adapter.rmiServerPort
+        context = adapter.context
+        user = adapter.user
+        password = adapter.password
+        url = adapter.url
+    }
+
 	public boolean isConnected() {
 		return (jmxc && mbsc);
 	}
 
 	/** attempts to connect immediately */
 	public synchronized void connect() throws IOException {
+        triedConnecting = true
 		if (jmxc) jmxc.close()
-		JMXServiceURL url = new JMXServiceURL(adapter.url)
+		JMXServiceURL url = new JMXServiceURL(url)
 		Map env = [:]
-		if (adapter.user && adapter.password) {
-			String[] creds = [ adapter.user, adapter.password ]
+		if (user && password) {
+			String[] creds = [ user, password ]
 			env.put(JMXConnector.CREDENTIALS, creds);
 		}
 		jmxc = JMXConnectorFactory.connect(url, env);
@@ -71,7 +117,7 @@ public class JmxHelper {
 	
 	/** continuously attempts to connect (blocking), for at least the indicated amount of time; or indefinitely if -1 */
 	public boolean connect(long timeout) {
-		log.debug "Connecting to JMX URL: {} ({})", adapter.url, ((timeout == -1) ? "indefinitely" : "${timeout}ms timeout")
+		LOG.debug "Connecting to JMX URL: {} ({})", url, ((timeout == -1) ? "indefinitely" : "${timeout}ms timeout")
 		long start = System.currentTimeMillis()
 		long end = start + timeout
 		if (timeout == -1) end = Long.MAX_VALUE
@@ -79,28 +125,33 @@ public class JmxHelper {
 		int attempt=0;
 		while (start <= end) {
 			start = System.currentTimeMillis()
-			if (attempt==0) Thread.sleep(100);
-			log.debug "trying connection to {}:{} at {}", adapter.host, adapter.rmiRegistryPort, start
+			if (attempt!=0) Thread.sleep(100);
+			LOG.debug "trying connection to {}:{} at {}", host, rmiRegistryPort, start
 			try {
 				connect()
 				return true
+            } catch (SecurityException e) {
+                LOG.debug "failed connection to {}:{} ({})", host, rmiRegistryPort, e.message
+                lastError = e;
+                //sleep 100 to prevent trashing and facilitate interruption
 			} catch (IOException e) {
-				log.debug "failed connection to {}:{} ({})", adapter.host, adapter.rmiRegistryPort, e.message
+				LOG.debug "failed connection to {}:{} ({})", host, rmiRegistryPort, e.message
 				lastError = e;
 				//sleep 100 to prevent trashing and facilitate interruption
 			}
 			attempt++
 		}
-		log.warn("unable to connect to JMX url: ${adapter.url}", lastError);
+		LOG.warn("unable to connect to JMX url: ${url}", lastError);
 		false
 	}
 
 	public synchronized void disconnect() {
+        triedConnecting = false
 		if (jmxc) {
 			try {
 				jmxc.close()
 			} catch (Exception e) {
-				log.warn("Caught exception disconnecting from JMX for at {}:{}, {}", entity, adapter.host, adapter.rmiRegistryPort, e.message)
+				LOG.warn("Caught exception disconnecting from JMX for at {}:{}, {}", entity, host, rmiRegistryPort, e.message)
 			} finally {
 				jmxc = null
 				mbsc = null
@@ -109,19 +160,38 @@ public class JmxHelper {
 	}
 
 	public void checkConnected() {
-		if (!isConnected()) throw new IllegalStateException("Not connected to JMX for entity $entity")
+		if (!isConnected()) {
+            if (triedConnecting) {
+                throw new IllegalStateException("Fail to connect to JMX at $url for entity $entity")
+            } else {
+                throw new IllegalStateException("Not connected (and not attempted to connect) to JMX for entity $entity")
+            }
+		} 
 	}
 
 	public ObjectInstance findMBean(ObjectName objectName) {
 		Set<ObjectInstance> beans = mbsc.queryMBeans(objectName, null)
 		if (beans.isEmpty() || beans.size() > 1) {
-			log.warn "JMX object name query returned {} values for {}", beans.size(), objectName.canonicalName
+			LOG.warn "JMX object name query returned {} values for {}", beans.size(), objectName.canonicalName
 			return null
 		}
 		ObjectInstance bean = beans.find { true }
 		return bean
 	}
 
+    public void checkMBeanExistsEventually(ObjectName objectName, long timeoutMillis) {
+        checkMBeanExistsEventually(objectName, timeoutMillis*TimeUnit.MILLISECONDS)
+    }
+    
+    public void checkMBeanExistsEventually(ObjectName objectName, TimeDuration timeout) {
+        boolean success = LanguageUtils.repeatUntilSuccess(timeout:timeout, "Wait for $objectName") {
+            return findMBean(objectName) != null
+        }
+        if (!success) {
+            throw new IllegalStateException("MBean $objectName not found within $timeout")
+        }
+    }
+    
 	/**
 	 * Returns a specific attribute for a JMX {@link ObjectName}.
 	 */
@@ -131,7 +201,7 @@ public class JmxHelper {
 		ObjectInstance bean = findMBean objectName
 		if (bean != null) {
 			def result = mbsc.getAttribute(bean.objectName, attribute)
-			log.debug "entity {} got value {} for jmx attribute {}.{}", entity, result, objectName.canonicalName, attribute
+			LOG.debug "entity {} got value {} for jmx attribute {}.{}", entity, result, objectName.canonicalName, attribute
 			return result
 		} else {
 			return null
@@ -156,7 +226,7 @@ public class JmxHelper {
 			signature[index] = (CLASSES.containsKey(clazz.simpleName) ? CLASSES.get(clazz.simpleName) : clazz.name);
 		}
 		def result = mbsc.invoke(objectName, method, arguments, signature)
-		log.trace "got result {} for jmx operation {}.{}", result, objectName.canonicalName, method
+		LOG.trace "got result {} for jmx operation {}.{}", result, objectName.canonicalName, method
 		return result
 	}
 
@@ -174,8 +244,8 @@ public class JmxHelper {
     }
 
     public void removeNotificationListener(ObjectName objectName, NotificationListener listener) {
-        ObjectInstance bean = findMBean objectName
-        mbsc.removeNotificationListener(objectName, listener, null, null)
+//        ObjectInstance bean = findMBean objectName
+        if (mbsc) mbsc.removeNotificationListener(objectName, listener, null, null)
     }
 
 	public <M> M getProxyObject(String objectName, Class<M> mbeanInterface) {

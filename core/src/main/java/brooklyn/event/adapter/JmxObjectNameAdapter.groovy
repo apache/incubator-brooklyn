@@ -1,13 +1,6 @@
 package brooklyn.event.adapter;
 
-import groovy.time.TimeDuration
-
-import java.util.concurrent.TimeUnit
-
 import javax.management.ObjectName
-
-import brooklyn.util.internal.LanguageUtils
-import brooklyn.util.internal.TimeExtras
 
 
 /** 
@@ -18,8 +11,6 @@ import brooklyn.util.internal.TimeExtras
  */
 public class JmxObjectNameAdapter {
     
-    static { TimeExtras.init() }
-    
 	final JmxSensorAdapter adapter;
 	final ObjectName objectName;
     
@@ -27,17 +18,6 @@ public class JmxObjectNameAdapter {
 		this.adapter = adapter;
 		this.objectName = objectName;
 	}
-    void checkExistsEventually(long timeoutMillis) {
-        checkExistsEventually(timeoutMillis*TimeUnit.MILLISECONDS)
-    }
-    void checkExistsEventually(TimeDuration timeout) {
-        boolean success = LanguageUtils.repeatUntilSuccess(timeout:timeout, "Wait for $objectName") {
-            return adapter.helper.findMBean(objectName) != null
-        }
-        if (!success) {
-            throw new IllegalStateException("MBean $objectName not found")
-        }
-    }
 	JmxAttributeAdapter attribute(String attributeName) {
 		adapter.registry.register(new JmxAttributeAdapter(adapter, objectName, attributeName));
 	}

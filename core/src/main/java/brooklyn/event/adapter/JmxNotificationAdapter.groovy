@@ -3,13 +3,15 @@ package brooklyn.event.adapter
 import groovy.lang.Closure
 
 import java.util.Map
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArrayList
 
 import javax.management.Notification
 import javax.management.NotificationFilter
 import javax.management.NotificationListener
 import javax.management.ObjectName
+
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 import brooklyn.event.Sensor
 
@@ -19,6 +21,9 @@ import brooklyn.event.Sensor
  * @see {@link JmxSensorAdapter} for recommended way of using this
  */
 class JmxNotificationAdapter extends AbstractSensorAdapter {
+    
+    private static final Logger LOG = LoggerFactory.getLogger(JmxNotificationAdapter.class)
+    
     final JmxSensorAdapter adapter
     final ObjectName objectName
     final String notificationType
@@ -45,34 +50,35 @@ class JmxNotificationAdapter extends AbstractSensorAdapter {
             this.adapter = adapter
             this.objectName = objectName
             this.notificationType = notificationType
-            this.notificationListener = {Notification notif, Object callback ->
-                    def wrappedVal = new SingleValueResponseContext(value:notif.getUserData())
-                    onPush(wrappedVal)
-                    notifyListeners(notif) } as NotificationListener
-            this.notificationFilter = JmxNotificationFilters.matchesTypeRegex(notificationType)
+            this.notificationFilter = notificationType ? JmxNotificationFilters.matchesTypeRegex(notificationType) : null
+            this.notificationListener = { Notification notif, Object callback ->
+                    if (notificationFilter == null || notificationFilter.isNotificationEnabled(notif)) {
+                        def wrappedVal = new SingleValueResponseContext(value:notif.getUserData())
+                        onPush(wrappedVal)
+                        notifyListeners(notif) 
+                    } } as NotificationListener
         }
         @Override
         protected void activatePushing() {
-            adapter.helper.addNotificationListener(objectName, notificationListener, notificationFilter)
+            LOG.trace("Activating notification listener on $objectName with filter '$notificationFilter', listeners $pushedListeners")
+            adapter.helper.addNotificationListener(objectName, notificationListener)
         }
         @Override
         protected void deactivatePushing() {
+            LOG.trace("Deactivating notification listener on $objectName with filter '$notificationFilter'")
             adapter.helper.removeNotificationListener(objectName, notificationListener)
         }
         protected void addListener(NotificationListener listener) {
             pushedListeners.add(listener)
         }
         private void notifyListeners(Notification notif) {
+            LOG.trace("Received notification {}; notifiying listeners {}", notif, pushedListeners)
             pushedListeners.each { NotificationListener listener ->
-                println "about to call handleNotif"
-                println "listener is "+listener
                 try {
                     listener.handleNotification(notif, null)
-                } catch (Throwable t) {
-                t.printStackTrace();
-                throw t
+                } catch (Exception t) {
+                    LOG.error("Error in listener $listener handling notification $notif", t)
                 }
-                println "called handleNotif"
             }
         }
     }
