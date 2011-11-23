@@ -591,8 +591,12 @@
                                 <configuration>
                                     <target unless="${skipTests}">
                                         <taskdef resource="testngtasks" classpathref="maven.plugin.classpath" />
-                                        <testng listeners="brooklyn.test.StatusListener" groups="${includedTestGroups}" excludedGroups="${excludedTestGroups}" haltonfailure="true" enableAssert="true" testNames="${test}" classpathref="maven.test.classpath" outputDir="target/testng">
-                                            <classfileset dir="target/test-classes" includes="**/*Test.class" />
+                                        <!-- Replace with 'testnames' when testng task is fixed (or we use surefire) -->
+                                        <condition property="test" value="*Test" else="${test}">
+                                            <length string="${test}" trim="true" when="greater" length="0" />
+                                        </condition>
+                                        <testng listeners="brooklyn.test.StatusListener" groups="${includedTestGroups}" excludedGroups="${excludedTestGroups}" haltonfailure="true" enableAssert="true" classpathref="maven.test.classpath" outputDir="target/testng">
+                                            <classfileset dir="target/test-classes" includes="**/${test}.class" />
                                             <sysproperty key="java.util.logging.config.file" value="src/test/resources/logging.properties" />
                                             <sysproperty key="net.sourceforge.cobertura.datafile" value="${project.build.directory}/cobertura/cobertura.ser" />
                                             <sysproperty key="cobertura.user.java.nio" value="false" />
