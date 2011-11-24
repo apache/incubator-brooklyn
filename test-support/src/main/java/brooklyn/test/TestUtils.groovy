@@ -1,12 +1,9 @@
 package brooklyn.test
 
-import java.util.Formatter.Flags;
-
 import static org.testng.AssertJUnit.*
 import groovy.time.TimeDuration
 
 import java.io.File
-import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

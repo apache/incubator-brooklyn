@@ -28,6 +28,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     private static final Logger logger = LoggerFactory.getLogger(DynamicCluster)
 
     Closure<Entity> newEntity
+    Closure postStartEntity
 
     Location location
     private Map createFlags
@@ -39,6 +40,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
      * <ul>
      * <li>newEntity - a {@link Closure} that creates an {@link Entity} that implements {@link Startable}, taking the {@link Map}
      * of properties from this cluster as an argument. This property is mandatory.
+     * <li>postStartEntity - a {@link Closure} that is called after newEntity, taking the {@link Entity} as an argument. This property is optional, with a default of no-op.
      * <li>initialSize - an {@link Integer} that is the number of nodes to start when the cluster's {@link #start(List)} method is
      * called. This property is optional, with a default of 0.
      * </ul>
@@ -52,7 +54,10 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         Preconditions.checkArgument properties.containsKey('newEntity'), "'newEntity' property is mandatory"
         Preconditions.checkArgument properties.get('newEntity') instanceof Closure, "'newEntity' must be a closure"
         newEntity = properties.remove('newEntity')
-        
+
+        Preconditions.checkArgument properties.containsKey('postStartEntity') ? properties.get('postStartEntity') instanceof Closure : true, "'postStartEntity' must be a closure"
+        postStartEntity = properties.remove('postStartEntity')
+
         setConfigIfValNonNull(INITIAL_SIZE, properties.initialSize)
 
         // Save flags for use when creating members
@@ -107,6 +112,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
                     try {
                         try {
                             task.get()
+                            if (postStartEntity) postStartEntity.call(entity)
                         } catch (Throwable t) {
                             throw unwrapException(t)
                         }

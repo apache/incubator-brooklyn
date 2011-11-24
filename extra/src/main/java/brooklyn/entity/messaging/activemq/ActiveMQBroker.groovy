@@ -57,7 +57,7 @@ public class ActiveMQBroker extends JMSBroker<ActiveMQQueue, ActiveMQTopic> {
 	}
 
 	public void setBrokerUrl() {
-		setAttribute(BROKER_URL, String.format("tcp://%s:%d/", getAttribute(HOSTNAME), getAttribute(OPEN_WIRE_PORT)))
+		setAttribute(BROKER_URL, String.format("tcp://%s:%d", getAttribute(HOSTNAME), getAttribute(OPEN_WIRE_PORT)))
 	}
 	
 	public ActiveMQQueue createQueue(Map properties) {

@@ -28,18 +28,19 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
         this([name: name, count: count]);
     }
 
-    private static Map augmentProperties(Map properties) {
+    private static Map augmentProperties(Map props) {
+        String address = props.address
         int numberOfMachines = 1
-
-        if (properties.count) {
-            Preconditions.checkArgument properties.get('count') instanceof Integer, "count value must be an integer"
-            numberOfMachines = properties.count
+        
+        if (props.count) {
+            Preconditions.checkArgument props.count instanceof Integer, "count value must be an integer"
+            numberOfMachines = props.count
         }
 
         Collection<SshMachineLocation> machines = []
-        numberOfMachines.times { machines += new SshMachineLocation(address:InetAddress.localHost) }
-        properties.machines = machines
+        numberOfMachines.times { machines += new SshMachineLocation(address:(address ?: InetAddress.localHost)) }
+        props.machines = machines
 
-        return properties
+        return props
     }
 }

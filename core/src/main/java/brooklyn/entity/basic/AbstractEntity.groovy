@@ -170,6 +170,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
             sensors = sensorsT
 
             Map<String,ConfigKey> configT = [:]
+            Map<String,Field> configFields = [:]
             for (Field f in getClass().getFields()) {
             	ConfigKey k = null;
                 if (ConfigKey.class.isAssignableFrom(f.getType())) {
@@ -178,8 +179,17 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 					k = ((HasConfigKey)f.get(this)).getConfigKey();
 				}
 				if (k) {
-                    def overwritten = configT.put(k.name, k)
-                    if (overwritten!=null) LOG.warn("multiple definitions for config key ${k.name} on $this; preferring $k to $overwritten")
+                    // Allow overriding config keys (e.g. to set default values)
+                    Field alternativeField = configFields.get(k.name)
+                    Field definitiveField = alternativeField ? inferSubbestField(alternativeField, f) : f
+                    if (definitiveField == f) {
+                        def overwritten = configT.put(k.name, k)
+                        configFields.put(k.name, f)
+                    } else if (definitiveField != null) {
+                        LOG.debug("multiple definitions for config key ${k.name} on $this; preferring that in sub-class: $alternativeField to $f")
+                    } else if (definitiveField == null) {
+                        LOG.warn("multiple definitions for config key ${k.name} on $this; preferring $alternativeField to $f")
+                    }
                 }
             }
             if (LOG.isTraceEnabled())
@@ -191,6 +201,17 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         } finally { this.@skipInvokeMethodEffectorInterception.set(false) }
     }
 
+    /**
+     * Gets the field that is in the sub-class; or null if one field does not come from a sub-class of the other field's class
+     */
+    protected Field inferSubbestField(Field f1, Field f2) {
+        Class<?> c1 = f1.getDeclaringClass()
+        Class<?> c2 = f2.getDeclaringClass()
+        boolean isSuper1 = c1.isAssignableFrom(c2)
+        boolean isSuper2 = c2.isAssignableFrom(c1)
+        return (isSuper1) ? (isSuper2 ? null : f2) : (isSuper2 ? f1 : null)
+    }
+    
     public Entity configure(Map flags=[:]) {
         Entity suppliedOwner = flags.remove('owner') ?: null
         if (suppliedOwner) suppliedOwner.addOwnedChild(this)
@@ -399,12 +420,19 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 		//              alex says: think that should work, no?
         // FIXME What if someone calls getConfig on a task, before setting parent app?
 		//              alex says: not supported (throw exception, or return the task)
+        
+        // In case this entity class has overridden the given key (e.g. to set default), then retrieve this entity's key
+        // TODO If ask for a config value that's not in our configKeys, should we really continue with rest of method and return key.getDefaultValue?
+        //      e.g. SshBasedJavaAppSetup calls setAttribute(JMX_USER), which calls getConfig(JMX_USER)
+        //           but that example doesn't have a default...
+        ConfigKey<T> ownKey = getConfigKeys().get(key.getName()) ?: key
+        
         ExecutionContext exec = getExecutionContext();
-        return  (key in ConfigKeySelfExtracting ? 
-					( ((ConfigKeySelfExtracting)key).extractValue(ownConfig, exec) ?:
-                	  ((ConfigKeySelfExtracting)key).extractValue(inheritedConfig, exec)) : false) ?:
+        return  (ownKey in ConfigKeySelfExtracting ? 
+					( ((ConfigKeySelfExtracting)ownKey).extractValue(ownConfig, exec) ?:
+                	  ((ConfigKeySelfExtracting)ownKey).extractValue(inheritedConfig, exec)) : false) ?:
                 defaultValue ?:
-                key.getDefaultValue()
+                ownKey.getDefaultValue()
     }
     @Override
 	public <T> T getConfig(HasConfigKey<T> key, T defaultValue) {
@@ -470,12 +498,12 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     }
 
     protected synchronized SubscriptionContext getSubscriptionContext() {
-        if (subscription) subscription
+        if (subscription) return subscription
         subscription = getManagementContext()?.getSubscriptionContext(this);
     }
 
     public synchronized ExecutionContext getExecutionContext() {
-        if (execution) execution;
+        if (execution) return execution;
 		def execMgr = getManagementContext()?.executionManager;
 		if (!execMgr) return null
         execution = new BasicExecutionContext(tag:this, execMgr)

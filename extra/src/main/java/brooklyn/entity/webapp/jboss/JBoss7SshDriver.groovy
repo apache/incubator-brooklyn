@@ -52,8 +52,9 @@ class JBoss7SshDriver extends JavaWebAppSshDriver {
 
     }
 
-	@Override
+    @Override @Deprecated
 	protected String getDefaultVersion() { return "7.0.0.Final" }
+    
 	protected String getLogFileLocation() { "${runDir}/${SERVER_TYPE}/log/server.log" }
 	protected String getDeploySubdir() { "${SERVER_TYPE}/deployments" }
 	

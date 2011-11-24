@@ -1,7 +1,9 @@
 package brooklyn.event.adapter
 
 import static org.testng.Assert.*
+import groovy.transform.InheritConstructors
 
+import java.util.Map
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -9,6 +11,7 @@ import javax.management.MBeanOperationInfo
 import javax.management.MBeanParameterInfo
 import javax.management.Notification
 import javax.management.NotificationListener
+import javax.management.ObjectName
 import javax.management.StandardEmitterMBean
 import javax.management.openmbean.CompositeDataSupport
 import javax.management.openmbean.CompositeType
@@ -24,11 +27,16 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.basic.AbstractApplication
+import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.Attributes
+import brooklyn.event.SensorEvent
+import brooklyn.event.SensorEventListener
 import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.event.basic.BasicNotificationSensor
 import brooklyn.test.GeneralisedDynamicMBean
 import brooklyn.test.JmxService
 import brooklyn.test.TestUtils
+import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 import brooklyn.test.location.MockLocation
 
@@ -40,18 +48,21 @@ import brooklyn.test.location.MockLocation
 public class JmxSensorAdapterTest {
     private static final Logger log = LoggerFactory.getLogger(JmxSensorAdapterTest.class)
 
-    private static final int TIMEOUT = 1000
+    private static final int TIMEOUT = 5000
+    private static final int SHORT_WAIT = 250
     
     private JmxService jmxService
     private AbstractApplication app
     private TestEntity entity
     SensorRegistry registry
-    private JmxSensorAdapter jmx
+    private JmxSensorAdapter jmxAdapter
+    private JmxHelper jmxHelper
     
     private BasicAttributeSensor<Integer> intAttribute = [ Integer, "brooklyn.test.intAttribute", "Brooklyn testing int attribute" ]
     private BasicAttributeSensor<String> stringAttribute = [ String, "brooklyn.test.intAttribute", "Brooklyn testing int attribute" ]
     private BasicAttributeSensor<Map> mapAttribute = [ Map, "brooklyn.test.mapAttribute", "Brooklyn testing map attribute" ]
     private String objectName = 'Brooklyn:type=MyTestMBean,name=myname'
+    private ObjectName jmxObjectName = new ObjectName('Brooklyn:type=MyTestMBean,name=myname')
     private String attributeName = 'myattrib'
     private String opName = 'myop'
     
@@ -69,11 +80,14 @@ public class JmxSensorAdapterTest {
         app.start([new MockLocation()])
         
         registry = new SensorRegistry(entity);
-        jmx = registry.register(new JmxSensorAdapter(period: 50*TimeUnit.MILLISECONDS));
+        jmxAdapter = registry.register(new JmxSensorAdapter(period: 50*TimeUnit.MILLISECONDS));
+        jmxHelper = new JmxHelper(entity)
     }
     
     @AfterMethod(alwaysRun=true)
     public void tearDown() {
+        if (jmxHelper != null) jmxHelper.disconnect();
+        if (jmxAdapter != null) registry.deactivateAdapters();
         if (jmxService != null) jmxService.shutdown();
     }
 
@@ -81,7 +95,7 @@ public class JmxSensorAdapterTest {
     public void jmxAttributePollerReturnsMBeanAttribute() {
         GeneralisedDynamicMBean mbean = jmxService.registerMBean(objectName, (attributeName): 42)
 
-        jmx.objectName(objectName).with {
+        jmxAdapter.objectName(objectName).with {
             attribute(attributeName).subscribe(intAttribute)
         }
         registry.activateAdapters()
@@ -99,22 +113,46 @@ public class JmxSensorAdapterTest {
     }
 
     @Test(expectedExceptions=[IllegalStateException.class])
-    public void jmxObjectCheckExistsEventuallyThrowsIfNotFound() {
-        registry.activateAdapters()
+    public void jmxCheckInstanceExistsEventuallyThrowsIfNotFound() {
+        jmxHelper.connect(TIMEOUT)
         
-        jmx.objectName('Brooklyn:type=DoesNotExist,name=doesNotExist').with {
-            checkExistsEventually(1*TimeUnit.MILLISECONDS)
-        }
+        jmxHelper.checkMBeanExistsEventually(new ObjectName('Brooklyn:type=DoesNotExist,name=doesNotExist'), 1*TimeUnit.MILLISECONDS)
     }
 
     @Test
     public void jmxObjectCheckExistsEventuallyReturnsIfFoundImmediately() {
         GeneralisedDynamicMBean mbean = jmxService.registerMBean(objectName)
-        registry.activateAdapters()
+        jmxHelper.connect(TIMEOUT)
         
-        jmx.objectName(objectName).with {
-            checkExistsEventually(1*TimeUnit.MILLISECONDS)
-        }
+        jmxHelper.checkMBeanExistsEventually(jmxObjectName, 1*TimeUnit.MILLISECONDS)
+    }
+
+    @Test
+    public void jmxObjectCheckExistsEventuallyTakingLongReturnsIfFoundImmediately() {
+        GeneralisedDynamicMBean mbean = jmxService.registerMBean(objectName)
+        jmxHelper.connect(TIMEOUT)
+        
+        jmxHelper.checkMBeanExistsEventually(jmxObjectName, 1L)
+    }
+
+    @Test
+    public void jmxObjectCheckExistsEventuallyReturnsIfCreatedDuringPolling() {
+        jmxHelper.connect(TIMEOUT)
+        
+        Thread t = new Thread(new Runnable() {
+                public void run() {
+                    Thread.sleep(SHORT_WAIT)
+                    GeneralisedDynamicMBean mbean = jmxService.registerMBean(objectName)
+                }})
+        try {
+            t.start()
+            
+            jmxHelper.checkMBeanExistsEventually(jmxObjectName, TIMEOUT)
+        } finally {
+            t.interrupt()
+            t.join(TIMEOUT)
+            assertFalse(t.isAlive())
+        }        
     }
 
     @Test
@@ -143,7 +181,7 @@ public class JmxSensorAdapterTest {
         // Create MBean
         GeneralisedDynamicMBean mbean = jmxService.registerMBean(objectName, (attributeName): tds)
 
-        jmx.objectName(objectName).with {
+        jmxAdapter.objectName(objectName).with {
             attribute(attributeName).subscribe(mapAttribute, JmxPostProcessors.tabularDataToMap())
         }
         registry.activateAdapters()
@@ -166,7 +204,7 @@ public class JmxSensorAdapterTest {
         MBeanOperationInfo opInfo = new MBeanOperationInfo(opName, "my descr", new MBeanParameterInfo[0], String.class.name, MBeanOperationInfo.ACTION)
         GeneralisedDynamicMBean mbean = jmxService.registerMBean([:], [ (opInfo):{ Object[] args -> invocationCount.incrementAndGet(); opReturnVal } ], objectName)
         
-        jmx.objectName(objectName).with {
+        jmxAdapter.objectName(objectName).with {
             operation(opName).poll(intAttribute)
         }
         registry.activateAdapters()
@@ -185,7 +223,7 @@ public class JmxSensorAdapterTest {
         MBeanOperationInfo opInfo = new MBeanOperationInfo(opName, "my descr", paramInfos, String.class.name, MBeanOperationInfo.ACTION)
         GeneralisedDynamicMBean mbean = jmxService.registerMBean([:], [ (opInfo):{ Object[] args -> args[0]+'suffix' } ], objectName)
         
-        jmx.objectName(objectName).with {
+        jmxAdapter.objectName(objectName).with {
             operation(opName, "myprefix").poll(stringAttribute)
         }
         registry.activateAdapters()
@@ -201,18 +239,23 @@ public class JmxSensorAdapterTest {
         StandardEmitterMBean mbean = jmxService.registerMBean([ one, two ], objectName)
         int sequence = 0
 
-        jmx.objectName(objectName).with {
+        jmxAdapter.objectName(objectName).with {
             notification(one).subscribe(intAttribute)
         }
         registry.activateAdapters()
         
-        Notification notif = new Notification(one, mbean, sequence++)
-        notif.setUserData(123)
-        mbean.sendNotification(notif);
-        
+        // Notification updates the sensor
+        sendNotification(mbean, one, sequence++, 123)
+
         TestUtils.executeUntilSucceeds(timeout:TIMEOUT) {
             assertEquals entity.getAttribute(intAttribute), 123
         }
+        
+        // But other notification types are ignored
+        sendNotification(mbean, two, sequence++, -1)
+            
+        Thread.sleep(SHORT_WAIT)
+        assertEquals entity.getAttribute(intAttribute), 123
     }
     
     @Test
@@ -222,15 +265,13 @@ public class JmxSensorAdapterTest {
         int sequence = 0
         List<Notification> received = []
         
-        jmx.objectName(objectName).with {
+        jmxAdapter.objectName(objectName).with {
             notification(one).subscribe({Notification notif, Object callback -> 
                     received.add(notif) } as NotificationListener)
         }
         registry.activateAdapters()
         
-        Notification notif = new Notification(one, mbean, sequence++)
-        notif.setUserData(123)
-        mbean.sendNotification(notif);
+        Notification notif = sendNotification(mbean, one, sequence++, 123)
         
         TestUtils.executeUntilSucceeds(timeout:TIMEOUT) {
             assertEquals received.size(), 1
@@ -238,6 +279,109 @@ public class JmxSensorAdapterTest {
         }
     }
 
+    @Test
+    public void jmxNotificationWildcardSubscriptionUsingListener() {
+        String one = 'notification.one', two = 'notification.two'
+        StandardEmitterMBean mbean = jmxService.registerMBean([ one, two ], objectName)
+        int sequence = 0
+        List<Notification> received = []
+        
+        jmxAdapter.objectName(objectName).with {
+            notification(".*").subscribe({Notification notif, Object callback -> 
+                    received.add(notif) } as NotificationListener)
+        }
+        registry.activateAdapters()
+        
+        Notification notif = sendNotification(mbean, one, sequence++, 123)
+        Notification notif2 = sendNotification(mbean, two, sequence++, 456)
+        
+        TestUtils.executeUntilSucceeds(timeout:TIMEOUT) {
+            assertEquals received.size(), 2
+            assertNotificationsEqual received.get(0), notif
+            assertNotificationsEqual received.get(1), notif2
+        }
+    }
+
+    @Test
+    public void jmxNotificationSubscriptionUsingNoFilterForListener() {
+        String one = 'notification.one', two = 'notification.two'
+        StandardEmitterMBean mbean = jmxService.registerMBean([ one, two ], objectName)
+        int sequence = 0
+        List<Notification> received = []
+        
+        jmxAdapter.objectName(objectName).with {
+            notification(".*").subscribe({Notification notif, Object callback ->
+                    received.add(notif) } as NotificationListener)
+        }
+        registry.activateAdapters()
+        
+        Notification notif = sendNotification(mbean, one, sequence++, 123)
+        Notification notif2 = sendNotification(mbean, one, sequence++, 456)
+        
+        TestUtils.executeUntilSucceeds(timeout:TIMEOUT) {
+            assertEquals received.size(), 2
+            assertNotificationsEqual received.get(0), notif
+            assertNotificationsEqual received.get(1), notif2
+        }
+    }
+
+    @Test
+    public void testSubscribeToJmxNotificationsDirectlyWithJmxHelper() {
+        StandardEmitterMBean mbean = jmxService.registerMBean(["one"], objectName)
+        int sequence = 0
+        List<Notification> received = []
+
+        jmxHelper.connect(TIMEOUT)
+        jmxHelper.addNotificationListener(jmxObjectName, {Notification notif, Object callback ->
+                    received.add(notif) } as NotificationListener)
+
+        Notification notif = sendNotification(mbean, "one", sequence++, "abc")
+
+        TestUtils.executeUntilSucceeds(timeout:TIMEOUT) {
+            assertEquals received.size(), 1
+            assertNotificationsEqual(received.getAt(0), notif)
+        }
+    }
+
+    // Test reproduces functionality used in Monterey, for Venue entity being told of requestActor
+    @Test
+    public void testSubscribeToJmxNotificationAndEmitCorrespondingNotificationSensor() {
+        TestApplication app = new TestApplication();
+        EntityWithEmitter entity = new EntityWithEmitter(owner:app);
+        app.start([new MockLocation()])
+        
+        List<SensorEvent> received = []
+        app.subscribe(null, EntityWithEmitter.MY_NOTIF, { received.add(it) } as SensorEventListener)
+
+        StandardEmitterMBean mbean = jmxService.registerMBean(["one"], objectName)
+        int sequence = 0
+        
+        jmxHelper.connect(TIMEOUT)
+        jmxHelper.addNotificationListener(jmxObjectName, {Notification notif, Object callback ->
+                if (notif.type.equals("one")) {
+                    entity.emit(EntityWithEmitter.MY_NOTIF, notif.userData)
+                } } as NotificationListener)
+        
+        Notification notif = sendNotification(mbean, "one", sequence++, "abc")
+
+        TestUtils.executeUntilSucceeds(timeout:TIMEOUT) {
+            assertEquals received.size(), 1
+            assertEquals received.getAt(0).value, "abc"
+        }
+    }
+    
+    @InheritConstructors
+    static class EntityWithEmitter extends AbstractEntity {
+        public static final BasicNotificationSensor<String> MY_NOTIF = [ String, "test.myNotif", "My notif" ]
+        
+    }
+    private Notification sendNotification(StandardEmitterMBean mbean, String type, long seq, Object userData) {
+        Notification notif = new Notification(type, mbean, seq)
+        notif.setUserData(userData)
+        mbean.sendNotification(notif);
+        return notif
+    }
+    
     private void assertNotificationsEqual(Notification n1, Notification n2) {
         assertEquals(n1.type, n2.type)
         assertEquals(n1.sequenceNumber, n2.sequenceNumber)

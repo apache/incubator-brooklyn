@@ -84,8 +84,8 @@ public abstract class JavaStartStopSshDriver extends StartStopSshDriver {
 	 */
 	protected List<String> getCustomJavaConfigOptions() { return [] }
 
-	public int getJmxPort() { !jmxEnabled ? -1 : entity.getConfig(UsesJmx.JMX_PORT, UsesJmx.DEFAULT_JMX_PORT) }
-	public int getRmiPort() { !jmxEnabled ? -1 : entity.getConfig(UsesJmx.RMI_PORT) }
+	public Integer getJmxPort() { !jmxEnabled ? -1 : entity.getConfig(UsesJmx.JMX_PORT) }
+	public Integer getRmiPort() { !jmxEnabled ? -1 : entity.getConfig(UsesJmx.RMI_PORT) }
 	public String getJmxContext() { !jmxEnabled ? null : entity.getConfig(UsesJmx.JMX_CONTEXT) }
 
 	/**

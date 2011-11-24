@@ -127,11 +127,11 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                 node = Iterables.get(e.getNodeErrors().keySet(), 0);
             }
             LOG.error "Failed to start VM: {}", e.message
-            throw Throwables.propagateIfPossible(e)
+            throw Throwables.propagate(e)
         } catch (Exception e) {
             LOG.error "Failed to start VM: {}", e.message
             LOG.info Throwables.getStackTraceAsString(e)
-            throw Throwables.propagateIfPossible(e)
+            throw Throwables.propagate(e)
         } finally {
             computeService.getContext().close();
         }
