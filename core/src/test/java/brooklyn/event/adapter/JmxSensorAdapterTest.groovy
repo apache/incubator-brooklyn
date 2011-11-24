@@ -1,6 +1,7 @@
 package brooklyn.event.adapter
 
 import static org.testng.Assert.*
+import groovy.transform.InheritConstructors
 
 import java.util.Map
 import java.util.concurrent.TimeUnit
@@ -26,11 +27,16 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.basic.AbstractApplication
+import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.Attributes
+import brooklyn.event.SensorEvent
+import brooklyn.event.SensorEventListener
 import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.event.basic.BasicNotificationSensor
 import brooklyn.test.GeneralisedDynamicMBean
 import brooklyn.test.JmxService
 import brooklyn.test.TestUtils
+import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 import brooklyn.test.location.MockLocation
 
@@ -42,7 +48,7 @@ import brooklyn.test.location.MockLocation
 public class JmxSensorAdapterTest {
     private static final Logger log = LoggerFactory.getLogger(JmxSensorAdapterTest.class)
 
-    private static final int TIMEOUT = 1000
+    private static final int TIMEOUT = 5000
     private static final int SHORT_WAIT = 250
     
     private JmxService jmxService
@@ -319,6 +325,56 @@ public class JmxSensorAdapterTest {
         }
     }
 
+    @Test
+    public void testSubscribeToJmxNotificationsDirectlyWithJmxHelper() {
+        StandardEmitterMBean mbean = jmxService.registerMBean(["one"], objectName)
+        int sequence = 0
+        List<Notification> received = []
+
+        jmxHelper.connect(TIMEOUT)
+        jmxHelper.addNotificationListener(jmxObjectName, {Notification notif, Object callback ->
+                    received.add(notif) } as NotificationListener)
+
+        Notification notif = sendNotification(mbean, "one", sequence++, "abc")
+
+        TestUtils.executeUntilSucceeds(timeout:TIMEOUT) {
+            assertEquals received.size(), 1
+            assertNotificationsEqual(received.getAt(0), notif)
+        }
+    }
+
+    // Test reproduces functionality used in Monterey, for Venue entity being told of requestActor
+    @Test
+    public void testSubscribeToJmxNotificationAndEmitCorrespondingNotificationSensor() {
+        TestApplication app = new TestApplication();
+        EntityWithEmitter entity = new EntityWithEmitter(owner:app);
+        app.start([new MockLocation()])
+        
+        List<SensorEvent> received = []
+        app.subscribe(null, EntityWithEmitter.MY_NOTIF, { received.add(it) } as SensorEventListener)
+
+        StandardEmitterMBean mbean = jmxService.registerMBean(["one"], objectName)
+        int sequence = 0
+        
+        jmxHelper.connect(TIMEOUT)
+        jmxHelper.addNotificationListener(jmxObjectName, {Notification notif, Object callback ->
+                if (notif.type.equals("one")) {
+                    entity.emit(EntityWithEmitter.MY_NOTIF, notif.userData)
+                } } as NotificationListener)
+        
+        Notification notif = sendNotification(mbean, "one", sequence++, "abc")
+
+        TestUtils.executeUntilSucceeds(timeout:TIMEOUT) {
+            assertEquals received.size(), 1
+            assertEquals received.getAt(0).value, "abc"
+        }
+    }
+    
+    @InheritConstructors
+    static class EntityWithEmitter extends AbstractEntity {
+        public static final BasicNotificationSensor<String> MY_NOTIF = [ String, "test.myNotif", "My notif" ]
+        
+    }
     private Notification sendNotification(StandardEmitterMBean mbean, String type, long seq, Object userData) {
         Notification notif = new Notification(type, mbean, seq)
         notif.setUserData(userData)
