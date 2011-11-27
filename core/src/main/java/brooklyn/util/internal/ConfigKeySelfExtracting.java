@@ -9,5 +9,13 @@ import brooklyn.management.ExecutionContext;
  * but discouraged for external usage.
  */
 public interface ConfigKeySelfExtracting<T> extends ConfigKey<T> {
+    /**
+     * Extracts the value for this config key from the given map.
+     */
     public T extractValue(Map<?,?> configMap, ExecutionContext exec);
+    
+    /**
+     * @return True if there is an entry in the configMap that could be extracted
+     */
+    public boolean isSet(Map<?,?> configMap);
 }
