@@ -15,7 +15,7 @@ import brooklyn.event.basic.BasicAttributeSensor
 
 import com.google.common.base.Preconditions
 
-public abstract class JMSBroker<Q extends JMSDestination & Queue, T extends JMSDestination & Topic> extends JavaApp {
+public abstract class JMSBroker<Q extends JMSDestination & Queue, T extends JMSDestination & Topic> extends JavaApp implements MessageBroker {
     public static final BasicAttributeSensor<String> BROKER_URL = [ String, "broker.url", "Broker Connection URL" ]
 
     Collection<String> queueNames = []

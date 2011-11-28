@@ -410,9 +410,15 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 
 	@Override
 	public <T> T getConfig(ConfigKey<T> key) { getConfig(key, null) }
+    
 	@Override
 	public <T> T getConfig(HasConfigKey<T> key) { getConfig(key, null) }
 	
+    @Override
+    public <T> T getConfig(HasConfigKey<T> key, T defaultValue) {
+        return getConfig(key.configKey, defaultValue)
+    }
+    
 	//don't use groovy defaults for defaultValue as that doesn't implement the contract; we need the above
     @Override
     public <T> T getConfig(ConfigKey<T> key, T defaultValue) {
@@ -428,17 +434,20 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         ConfigKey<T> ownKey = getConfigKeys().get(key.getName()) ?: key
         
         ExecutionContext exec = getExecutionContext();
-        return  (ownKey in ConfigKeySelfExtracting ? 
-					( ((ConfigKeySelfExtracting)ownKey).extractValue(ownConfig, exec) ?:
-                	  ((ConfigKeySelfExtracting)ownKey).extractValue(inheritedConfig, exec)) : false) ?:
-                defaultValue ?:
-                ownKey.getDefaultValue()
+        
+        // Don't use groovy truth: if the set value is e.g. 0, then would ignore set value and return default!
+        if (ownKey in ConfigKeySelfExtracting) {
+            if (((ConfigKeySelfExtracting)ownKey).isSet(ownConfig)) {
+                return ((ConfigKeySelfExtracting)ownKey).extractValue(ownConfig, exec);
+            } else if (((ConfigKeySelfExtracting)ownKey).isSet(inheritedConfig)) {
+                return ((ConfigKeySelfExtracting)ownKey).extractValue(inheritedConfig, exec);
+            }
+        } else {
+            LOG.warn("Config key $ownKey of $this is not a ConfigKeySelfExtracting; cannot retrieve value; returning default")
+        }
+        return (defaultValue != null) ? defaultValue : ownKey.getDefaultValue();
     }
-    @Override
-	public <T> T getConfig(HasConfigKey<T> key, T defaultValue) {
-		return getConfig(key.configKey, defaultValue)
-	}
-	
+    
     @Override
     public <T> T setConfig(ConfigKey<T> key, T val) {
         // TODO Is this the best idea, for making life easier for brooklyn coders when supporting changing config?

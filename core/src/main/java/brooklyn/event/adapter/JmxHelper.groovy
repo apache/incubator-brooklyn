@@ -1,7 +1,6 @@
 package brooklyn.event.adapter;
 
 import static com.google.common.base.Preconditions.checkNotNull
-
 import groovy.time.TimeDuration
 
 import java.io.IOException
@@ -38,10 +37,6 @@ public class JmxHelper {
     public static final String JMX_URL_FORMAT = "service:jmx:rmi:///jndi/rmi://%s:%d/%s"
     public static final String RMI_JMX_URL_FORMAT = "service:jmx:rmi://%s:%d/jndi/rmi://%s:%d/%s"
 
-    final String host
-    final Integer rmiRegistryPort
-    final Integer rmiServerPort
-    final String context
     final String url
     final String user
     final String password
@@ -67,19 +62,42 @@ public class JmxHelper {
 		"CompositeDataSupport" : CompositeData.class.getName(),
 	]
 
+    public static String toConnectorUrl(String host, Integer rmiRegistryPort, Integer rmiServerPort, String context) {
+        if (rmiServerPort) {
+            return String.format(RMI_JMX_URL_FORMAT, host, rmiServerPort, host, rmiRegistryPort, context)
+        } else {
+            return String.format(JMX_URL_FORMAT, host, rmiRegistryPort, context)
+        }
+    }
+    
+    public static String toConnectorUrl(EntityLocal entity) {
+        String url = entity.getAttribute(Attributes.JMX_SERVICE_URL)
+        if (url != null) {
+            return url
+        } else {
+            String host = checkNotNull(entity.getAttribute(Attributes.HOSTNAME))
+            Integer rmiRegistryPort = entity.getAttribute(Attributes.JMX_PORT)
+            Integer rmiServerPort = entity.getAttribute(Attributes.RMI_PORT)
+            String context = entity.getAttribute(Attributes.JMX_CONTEXT)
+            
+            return toConnectorUrl(host, rmiRegistryPort, rmiServerPort, context)
+        }
+    }
+    
+    public JmxHelper(String url) {
+        this(url, null, null)
+    }
+    
+    public JmxHelper(String url, String user, String password) {
+        this.url = url
+        this.user = user
+        this.password = password
+    }
+    
     public JmxHelper(EntityLocal entity) {
-        host = checkNotNull(entity.getAttribute(Attributes.HOSTNAME));
-        rmiRegistryPort = entity.getAttribute(Attributes.JMX_PORT);
-        rmiServerPort = entity.getAttribute(Attributes.RMI_PORT);
-        context = entity.getAttribute(Attributes.JMX_CONTEXT);
+        url = toConnectorUrl(entity)
         user = entity.getAttribute(Attributes.JMX_USER);
         password = entity.getAttribute(Attributes.JMX_PASSWORD);
-
-        if (rmiServerPort) {
-            url = String.format(RMI_JMX_URL_FORMAT, host, rmiServerPort, host, rmiRegistryPort, context)
-        } else {
-            url = String.format(JMX_URL_FORMAT, host, rmiRegistryPort, context)
-        }
     }
     
 	public boolean isConnected() {

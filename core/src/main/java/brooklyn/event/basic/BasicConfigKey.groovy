@@ -3,12 +3,13 @@ package brooklyn.event.basic
 import groovy.transform.EqualsAndHashCode
 
 import java.util.Collection
+import java.util.Map
 import java.util.concurrent.Future
 
 import brooklyn.entity.ConfigKey
 import brooklyn.management.ExecutionContext
 import brooklyn.management.Task
-import brooklyn.util.internal.ConfigKeySelfExtracting;
+import brooklyn.util.internal.ConfigKeySelfExtracting
 import brooklyn.util.internal.LanguageUtils
 
 import com.google.common.base.Splitter
@@ -78,9 +79,15 @@ class BasicConfigKey<T> implements ConfigKey<T>, ConfigKeySelfExtracting<T>, Ser
      * Retrieves the value corresponding to this config key from the given map.
      * Could be overridden by more sophisticated config keys, such as MapConfigKey etc.
      */
+    @Override
     public T extractValue(Map vals, ExecutionContext exec) {
         Object v = vals.get(this)
         return resolveValue(v, exec)
+    }
+    
+    @Override
+    public boolean isSet(Map<?,?> vals) {
+        return vals.containsKey(this)
     }
     
     protected Object resolveValue(Object v, ExecutionContext exec) {
@@ -115,8 +122,14 @@ class SubElementConfigKey<T> extends BasicConfigKey<T> {
         this.parent = parent
     }
     
+    @Override
     public T extractValue(Map vals, ExecutionContext exec) {
         return super.extractValue(vals, exec)
+    }
+    
+    @Override
+    public boolean isSet(Map<?,?> vals) {
+        return super.isSet(vals)
     }
 }
 
@@ -141,14 +154,26 @@ class MapConfigKey<V> extends BasicConfigKey<Map<String,V>> {
         return subKey.name.substring(name.length()+1)
     }
     
+    @Override
     public Map<String,V> extractValue(Map vals, ExecutionContext exec) {
         Map<String,V> result = [:]
-        for (Map.Entry<ConfigKey,Object> entry in vals.entrySet()) {
-            if (isSubKey(entry.key)) {
-                result.put(extractSubKeyName(entry.key), entry.key.extractValue(vals, exec))
+        vals.each { k,v -> 
+            if (isSubKey(k)) {
+                result.put(extractSubKeyName(k), k.extractValue(vals, exec))
             }
         }
         return result
+    }
+    
+    @Override
+    public boolean isSet(Map<?,?> vals) {
+        if (vals.containsKey(this)) return true
+        for (ConfigKey contender in vals.keySet()) {
+            if (isSubKey(contender)) {
+                return true
+            }
+        }
+        return false
     }
 }
 
@@ -176,12 +201,17 @@ class ListConfigKey<V> extends BasicConfigKey<List<V>> {
 			if (isSubKey(k))
 				result << ((SubElementConfigKey)k).extractValue(vals, exec)
         }
-//        for (Map.Entry<ConfigKey,Object> entry in vals.entrySet()) {
-//            if (isSubKey(entry.key)) {
-//                SubElementConfigKey subKey = entry.key
-//                result.add(subKey.extractValue(vals, exec))
-//            }
-//        }
         return result
+    }
+    
+    @Override
+    public boolean isSet(Map<?,?> vals) {
+        if (vals.containsKey(this)) return true
+        for (ConfigKey contender in vals.keySet()) {
+            if (isSubKey(contender)) {
+                return true
+            }
+        }
+        return false
     }
 }
