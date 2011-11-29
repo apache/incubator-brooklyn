@@ -1,15 +1,10 @@
 package brooklyn.location.basic.jclouds
 
-import brooklyn.location.MachineProvisioningLocation
-import brooklyn.location.NoMachinesAvailableException
-import brooklyn.location.basic.AbstractLocation
-import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.IdGenerator
-import brooklyn.util.internal.Repeater
-import com.google.common.base.Charsets
-import com.google.common.base.Throwables
-import com.google.common.collect.Iterables
-import com.google.common.io.Files
+import static java.util.concurrent.TimeUnit.MILLISECONDS
+import static java.util.concurrent.TimeUnit.SECONDS
+import static org.jclouds.compute.options.RunScriptOptions.Builder.overrideCredentialsWith
+import static org.jclouds.scriptbuilder.domain.Statements.exec
+
 import org.jclouds.compute.ComputeService
 import org.jclouds.compute.RunNodesException
 import org.jclouds.compute.domain.ExecResponse
@@ -17,13 +12,23 @@ import org.jclouds.compute.domain.NodeMetadata
 import org.jclouds.compute.domain.Template
 import org.jclouds.compute.domain.TemplateBuilder
 import org.jclouds.compute.options.TemplateOptions
+import org.jclouds.domain.Credentials
 import org.jclouds.ec2.compute.options.EC2TemplateOptions
 import org.jclouds.scriptbuilder.domain.Statement
 import org.jclouds.scriptbuilder.domain.Statements
 import org.jclouds.scriptbuilder.statements.login.UserAdd
-import static java.util.concurrent.TimeUnit.MILLISECONDS
-import static java.util.concurrent.TimeUnit.SECONDS
-import static org.jclouds.scriptbuilder.domain.Statements.exec
+
+import brooklyn.location.MachineProvisioningLocation
+import brooklyn.location.NoMachinesAvailableException
+import brooklyn.location.basic.AbstractLocation
+import brooklyn.location.basic.SshMachineLocation
+import brooklyn.util.IdGenerator
+import brooklyn.util.internal.Repeater
+
+import com.google.common.base.Charsets
+import com.google.common.base.Throwables
+import com.google.common.collect.Iterables
+import com.google.common.io.Files
 
 public class JcloudsLocation extends AbstractLocation implements MachineProvisioningLocation<SshMachineLocation> {
 
@@ -76,6 +81,10 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     public SshMachineLocation obtain(Map flags=[:]) throws NoMachinesAvailableException {
         Map allconf = flags + conf
         if (!allconf.userName) allconf.userName = ROOT_USERNAME
+        if (allconf.sshPublicKey) allconf.sshPublicKeyData = Files.toString(allconf.sshPublicKey, Charsets.UTF_8)
+        if (allconf.sshPrivateKey) allconf.sshPrivateKeyData = Files.toString(allconf.sshPrivateKey, Charsets.UTF_8)
+        if (allconf.rootSshPrivateKey) allconf.rootSshPrivateKeyData = Files.toString(allconf.rootSshPrivateKey, Charsets.UTF_8)
+        if (allconf.rootSshPublicKey) allconf.rootSshPublicKeyData = Files.toString(allconf.rootSshPublicKey, Charsets.UTF_8)
         String groupId = (allconf.groupId ?: IdGenerator.makeRandomId(8))
  
         ComputeService computeService = JcloudsUtil.buildComputeService(allconf);
@@ -92,6 +101,8 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             }
 
             String vmIp = JcloudsUtil.getFirstReachableAddress(node);
+            Credentials nodeCredentials = node.getCredentials()
+            Credentials expectedCredentials = allconf.sshPrivateKeyData ? new Credentials(allconf.userName, allconf.sshPrivateKeyData) : nodeCredentials
             
             // Wait for the VM to be reachable over SSH
             LOG.info("Started VM in ${allconf.providerLocationId}; waiting for it to be sshable by "+allconf.userName+"@"+vmIp);
@@ -100,8 +111,9 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                     .every(1,SECONDS)
                     .until {
                         Statement statement = Statements.newStatementList(exec('date'))
-                        ExecResponse response = computeService.runScriptOnNode(node.getId(), statement)
-                        response.exitCode }
+                        ExecResponse response = computeService.runScriptOnNode(node.getId(), statement,
+                                overrideCredentialsWith(expectedCredentials))
+                        return response.exitCode == 0 }
                     .limitTimeTo(START_SSHABLE_TIMEOUT,MILLISECONDS)
                     .run()
         
@@ -209,22 +221,22 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             Object[] inboundPorts = (properties.inboundPorts instanceof Collection) ? properties.inboundPorts.toArray(new Integer[0]): properties.inboundPorts
             options.inboundPorts(inboundPorts);
         }
-        if ((properties.userName == ROOT_USERNAME && properties.sshPublicKey) || properties.rootSshPublicKey) {
-            File publicKeyFile = properties.rootSshPublicKey ?: properties.sshPublicKey
-            String keyData = Files.toString(publicKeyFile, Charsets.UTF_8)
+        if ((properties.userName == ROOT_USERNAME && properties.sshPublicKeyData) || properties.rootSshPublicKeyData) {
+            String keyData = properties.rootSshPublicKeyData ?: properties.sshPublicKeyData
             options.authorizePublicKey(keyData)
+            options.overrideLoginUserWith(properties.userName)
         }
         if ((properties.userName == ROOT_USERNAME && properties.sshPrivateKey) || properties.rootSshPrivateKey) {
-            File privateKeyFile = properties.rootSshPrivateKey ?: properties.sshPrivateKey
-            String keyData = Files.toString(privateKeyFile, Charsets.UTF_8)
+            String keyData = properties.rootSshPrivateKeyData ?: properties.sshPrivateKeyData
             options.overrideLoginCredentialWith(keyData)
+            options.overrideLoginUserWith(properties.userName)
         }
         
         // Setup the user
         if (properties.userName && properties.userName != ROOT_USERNAME) {
             UserAdd.Builder userBuilder = UserAdd.builder();
             userBuilder.login(properties.userName);
-            String publicKeyData = Files.toString(properties.sshPublicKey, Charsets.UTF_8)
+            String publicKeyData = properties.sshPublicKeyData
             userBuilder.authorizeRSAPublicKey(publicKeyData);
             Statement userBuilderStatement = userBuilder.build();
             options.runScript(userBuilderStatement);
