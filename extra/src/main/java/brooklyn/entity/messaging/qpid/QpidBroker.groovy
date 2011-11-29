@@ -11,18 +11,18 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.Attributes
-import brooklyn.entity.basic.legacy.JavaApp;
-import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup;
+import brooklyn.entity.basic.legacy.JavaApp
+import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup
 import brooklyn.entity.messaging.JMSBroker
 import brooklyn.entity.messaging.JMSDestination
 import brooklyn.entity.messaging.Queue
 import brooklyn.entity.messaging.Topic
-import brooklyn.entity.messaging.activemq.ActiveMQQueue;
-import brooklyn.entity.messaging.activemq.ActiveMQTopic;
 import brooklyn.event.adapter.SensorRegistry
-import brooklyn.event.adapter.legacy.OldJmxSensorAdapter;
-import brooklyn.event.adapter.legacy.ValueProvider;
+import brooklyn.event.adapter.legacy.OldJmxSensorAdapter
+import brooklyn.event.adapter.legacy.ValueProvider
+import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.ConfiguredAttributeSensor
+import brooklyn.location.MachineLocation
 import brooklyn.location.basic.SshMachineLocation
 
 /**
@@ -33,6 +33,7 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> {
 
     public static final ConfiguredAttributeSensor<Integer> AMQP_PORT = Attributes.AMQP_PORT
     public static final ConfiguredAttributeSensor<String> VIRTUAL_HOST_NAME = [String, "qpid.virtualHost", "Qpid virtual host name", "localhost" ]
+    public static final BasicConfigKey<Map> RUNTIME_FILES = [ Map, "qpid.files", "Files to be copied, keyed by destination name relative to runDir" ]
 
     String virtualHost
 
@@ -44,21 +45,23 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> {
 
         setConfigIfValNonNull(Attributes.AMQP_PORT.configKey, properties.amqpPort)
 
+        setConfigIfValNonNull(RUNTIME_FILES, properties.runtimeFiles)
+
         setConfigIfValNonNull(Attributes.JMX_USER.configKey, properties.user ?: "admin")
         setConfigIfValNonNull(Attributes.JMX_PASSWORD.configKey, properties.password ?: "admin")
     }
 
     public void setBrokerUrl() {
-        String urlFormat = "amqp://guest:guest@monterey/%s?brokerlist='tcp://%s:%d'"
+        String urlFormat = "amqp://guest:guest@/%s?brokerlist='tcp://%s:%d?tcp_nodelay='true''&maxprefetch='1'"
         setAttribute(BROKER_URL, String.format(urlFormat, getAttribute(VIRTUAL_HOST_NAME), getAttribute(HOSTNAME), getAttribute(AMQP_PORT)))
     }
 
     public QpidQueue createQueue(Map properties) {
-        return new QpidQueue(properties);
+        return new QpidQueue(properties)
     }
 
     public QpidTopic createTopic(Map properties) {
-        return new QpidTopic(properties);
+        return new QpidTopic(properties)
     }
 
     public SshBasedAppSetup newDriver(SshMachineLocation machine) {
@@ -118,9 +121,9 @@ public abstract class QpidDestination extends JMSDestination {
     }
 
     /**
-     * Return the Qpid BURL name for the queue.
+     * Return the Qpid name for the queue.
      */
-    public String getBindingUrl() { return String.format("BURL:%s", name) }
+    public String getQueueName() { return String.format("ADDR:%s", name) }
 
     @Override
     public void destroy() {
