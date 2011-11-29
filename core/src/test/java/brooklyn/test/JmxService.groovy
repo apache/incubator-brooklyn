@@ -19,6 +19,8 @@ import mx4j.tools.naming.NamingServiceMBean
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.event.adapter.JmxHelper
+
 /**
  * Set up a JMX service ready for clients to connect. This consists of an MBean server, a connector server and a naming
  * service.
@@ -27,14 +29,16 @@ class JmxService {
     private static final Logger logger = LoggerFactory.getLogger(JmxService.class)
 
     private MBeanServer server
-    private mx4j.tools.naming.NamingServiceMBean namingServiceMBean
+    private NamingServiceMBean namingServiceMBean
     private JMXConnectorServer connectorServer
     private String jmxHost;
     private int jmxPort;
-
+    private String url;
+    
     public JmxService() {
         jmxHost = "localhost";
         jmxPort = 28000 + Math.floor(new Random().nextDouble() * 1000);
+        url = JmxHelper.toConnectorUrl(jmxHost, jmxPort, null, "jmxrmi")
 
         JMXServiceURL address = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://localhost:" + jmxPort + "/jmxrmi");
         connectorServer = JMXConnectorServerFactory.newJMXConnectorServer(address, null, null)
