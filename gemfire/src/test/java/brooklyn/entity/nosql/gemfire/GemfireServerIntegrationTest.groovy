@@ -49,8 +49,10 @@ public class GemfireServerIntegrationTest {
     public void ensureGemfireInstallDirExists() {
         File api = new File(API_JAR)
         File license = new File(LICENSE_FILE)
-        if (!api.exists() || !license.exists()) {
-            fail("Expected to find gemfire API jar at $api and license file at $license")
+        if (!api.exists()) {
+            fail("Expected to find Gemfire API jar at $api")
+        } else if (!license.exists()) {
+            fail("Expected to find Gemfire license file at $license")
         }
     }
 

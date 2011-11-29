@@ -121,7 +121,7 @@ public class GemfireSetup extends SshBasedAppSetup {
         String jarDeploy = jarFileServerSidePath ?: ""
         return [
             "cd $runDir",
-            "nohup java -cp gemfireAPI.jar:$jarDeploy brooklyn.gemfire.api.Server $webPort $configFileServerSidePath $runDir/gemfire.log $SERVER_LICENSE &",
+            "nohup java -cp gemfireApi.jar:$jarDeploy brooklyn.gemfire.api.Server $webPort $configFileServerSidePath $runDir/gemfire.log $SERVER_LICENSE &",
             "echo \$! > $PID_FILE",
         ]
     }
