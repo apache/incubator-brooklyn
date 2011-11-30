@@ -4,7 +4,7 @@
 #
 #set -x # debug
 
-VERSION=0.0.21-SNAPSHOT
+VERSION=0.2.0-SNAPSHOT
 ROOT=$(cd $(dirname $0) && pwd)
 JAVA_OPTS="-Xmx256m -Xmx1g -XX:MaxPermSize=256m"
 export CLASSPATH=./target/brooklyn-example-${VERSION}-with-dependencies.jar
