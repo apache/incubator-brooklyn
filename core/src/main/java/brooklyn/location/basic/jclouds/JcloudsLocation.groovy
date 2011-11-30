@@ -224,12 +224,11 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         if ((properties.userName == ROOT_USERNAME && properties.sshPublicKeyData) || properties.rootSshPublicKeyData) {
             String keyData = properties.rootSshPublicKeyData ?: properties.sshPublicKeyData
             options.authorizePublicKey(keyData)
-            options.overrideLoginUserWith(properties.userName)
         }
         if ((properties.userName == ROOT_USERNAME && properties.sshPrivateKey) || properties.rootSshPrivateKey) {
             String keyData = properties.rootSshPrivateKeyData ?: properties.sshPrivateKeyData
             options.overrideLoginCredentialWith(keyData)
-            options.overrideLoginUserWith(properties.userName)
+            options.overrideLoginUserWith(ROOT_USERNAME)
         }
         
         // Setup the user
