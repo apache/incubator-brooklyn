@@ -48,7 +48,7 @@
         <ant.version>1.8.2</ant.version>
 
         <groovy.version>1.8.2</groovy.version>
-        <testng.version>6.0.1</testng.version>
+        <testng.version>6.3.1</testng.version>
         <mockito.version>1.8.4</mockito.version>
         <mortbay.jetty.version>6.1.26</mortbay.jetty.version>
         <slf4j.version>1.5.11</slf4j.version>
