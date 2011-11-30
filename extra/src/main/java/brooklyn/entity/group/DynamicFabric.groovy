@@ -54,7 +54,8 @@ public class DynamicFabric extends AbstractEntity implements Startable {
         setAttribute(SERVICE_UP, false)
     }
 
-    public void start(Collection<Location> locations) {
+    @Override
+    public void start(Collection<? extends Location> locations) {
         Preconditions.checkNotNull locations, "locations must be supplied"
         Preconditions.checkArgument locations.size() >= 1, "One or more location must be supplied"
         this.locations.addAll(locations)

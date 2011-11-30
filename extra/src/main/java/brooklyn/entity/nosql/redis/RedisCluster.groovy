@@ -29,7 +29,8 @@ public class RedisCluster extends AbstractEntity implements Startable {
         redisProperties.newEntity = { Map props -> new RedisSlave(props) }
     }
 
-    public void start(Collection<Location> locations) {
+    @Override
+    public void start(Collection<? extends Location> locations) {
         master = new RedisCluster(redisProperties, this)
         master.start(locations)
         redisProperties.master = master
@@ -40,6 +41,7 @@ public class RedisCluster extends AbstractEntity implements Startable {
         setAttribute(Startable.SERVICE_UP, true)
     }
 
+    @Override
     public void stop() {
         slaves.stop()
         master.stop()
@@ -47,6 +49,7 @@ public class RedisCluster extends AbstractEntity implements Startable {
         setAttribute(Startable.SERVICE_UP, false)
     }
 
+    @Override
     public void restart() {
         throw new UnsupportedOperationException()
     }

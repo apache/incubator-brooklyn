@@ -28,7 +28,7 @@ public class TestJavaWebAppEntity extends OldJavaWebApp {
 	public SshBasedAppSetup newDriver(SshMachineLocation loc) { null }
 
     @Override
-	public void start(Collection<Location> loc) {
+	public void start(Collection<? extends Location> loc) {
         LOG.trace "Starting {}", this
     }
 

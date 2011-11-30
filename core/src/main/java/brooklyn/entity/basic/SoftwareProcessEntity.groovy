@@ -101,8 +101,8 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 
 	protected void preStop() { }
 
-
-	public void start(Collection<Location> locations) {
+    @Override
+	public void start(Collection<? extends Location> locations) {
 		setAttribute(SERVICE_STATE, Lifecycle.STARTING)
 		if (!sensorRegistry) sensorRegistry = new SensorRegistry(this)
 		// TODO really should happen on deploy...

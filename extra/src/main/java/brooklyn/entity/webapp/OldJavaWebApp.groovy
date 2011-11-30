@@ -85,7 +85,7 @@ public abstract class OldJavaWebApp extends JavaApp implements JavaWebAppService
 
 	
     @Override
-    public void start(Collection<Location> locations) {
+    public void start(Collection<? extends Location> locations) {
 		super.start(locations)
 		
 		log.info "started {}: httpPort {}, host {} and jmxPort {}", this,

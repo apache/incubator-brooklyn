@@ -27,7 +27,8 @@ class GemfireFabric extends DynamicFabric {
         return result
     }
     
-    public void start(Collection<Location> locations) {
+    @Override
+    public void start(Collection<? extends Location> locations) {
         super.start(locations)
         
         Map<GemfireCluster,GatewayConnectionDetails> gateways = [:]

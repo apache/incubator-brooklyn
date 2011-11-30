@@ -16,9 +16,9 @@ import com.google.common.base.Preconditions
  *
  * These are:
  * <ul>
- * <li>a {@link DynamicCluster} of {@link JavaWebApp}s
+ * <li>a {@link brooklyn.entity.group.DynamicCluster} of {@link JavaWebAppService}s
  * <li>a cluster controller
- * <li>a {@link Policy} to resize the DynamicCluster
+ * <li>a {@link brooklyn.policy.Policy} to resize the DynamicCluster
  * </ul>
  */
 public class ControlledDynamicWebAppCluster extends AbstractEntity implements Startable {
@@ -38,7 +38,7 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
         setAttribute(SERVICE_UP, false)
     }
 
-    void start(Collection<Location> locations) {
+    void start(Collection<? extends Location> locations) {
         cluster.start(locations)
 
         controller.bind(cluster:cluster)

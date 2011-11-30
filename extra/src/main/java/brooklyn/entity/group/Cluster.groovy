@@ -50,7 +50,7 @@ public abstract class ClusterFromTemplate extends  AbstractGroup implements Clus
         throw new UnsupportedOperationException()
     }
 
-    public synchronized void start(Collection<Location> locs) {
+    public synchronized void start(Collection<? extends Location> locs) {
         this.locations = locs
 
         if (!(initialSize in Integer))
