@@ -83,7 +83,7 @@ public class BasicSensor<T> implements Sensor<T> {
  * A {@link Sensor} describing an attribute change.
  */
 public class BasicAttributeSensor<T> extends BasicSensor<T> implements AttributeSensor<T> {
-    private static final long serialVersionUID = -7670909215973264600L;
+    private static final long serialVersionUID = -2493209215974820300L;
 
     public BasicAttributeSensor(Class<T> type, String name, String description=name) {
         super(type, name, description)
@@ -96,7 +96,7 @@ public class BasicAttributeSensor<T> extends BasicSensor<T> implements Attribute
  * The {@link ConfigKey} has the same type, name and description as the sensor.
  */
 public class ConfiguredAttributeSensor<T> extends BasicAttributeSensor<T> implements HasConfigKey<T> {
-    private static final long serialVersionUID = -7670909215973264600L;
+    private static final long serialVersionUID = -3103809215973264600L;
 
     private ConfigKey<T> configKey
 
