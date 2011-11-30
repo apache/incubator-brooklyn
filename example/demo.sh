@@ -18,4 +18,4 @@ else
 fi
 
 cd $ROOT
-java brooklyn.demo.TomcatWideAreaExample ${LOCATIONS}
+java $JAVA_OPTS brooklyn.demo.TomcatWideAreaExample ${LOCATIONS}
