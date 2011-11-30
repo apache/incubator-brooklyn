@@ -63,8 +63,7 @@ public abstract class WebAppWideAreaExample extends AbstractApplication {
         
         webFabric = new DynamicFabric(
             [
-                name : 'web-cluster-fabric',
-                displayName : 'Fabric',
+                displayName : 'web-cluster-fabric',
                 displayNamePrefix : '',
                 displayNameSuffix : ' web cluster',
                 newEntity : webClusterFactory],
@@ -84,8 +83,7 @@ public class JBossWideAreaExample extends WebAppWideAreaExample {
     public static void main(String[] argv) {
         List<Location> locations = Locations.getLocationsById(Arrays.asList(argv) ?: DEFAULT_LOCATIONS)
 
-        JBossWideAreaExample app = new JBossWideAreaExample(name:'brooklyn-jboss-wide-area-example',
-                displayName:'Brooklyn Wide-Area Seam Booking Example Application')
+        JBossWideAreaExample app = new JBossWideAreaExample(displayName:'Brooklyn Wide-Area Seam Booking Example Application')
         app.init()
         
         BrooklynLauncher.manage(app)
@@ -106,8 +104,7 @@ public class TomcatWideAreaExample extends WebAppWideAreaExample {
     public static void main(String[] argv) {
         List<Location> locations = Locations.getLocationsById(Arrays.asList(argv) ?: DEFAULT_LOCATIONS)
 
-        TomcatWideAreaExample app = new TomcatWideAreaExample(name:'tomcat-wide-area-example',
-                displayName:'Tomcat Wide-Area Example Application')
+        TomcatWideAreaExample app = new TomcatWideAreaExample(displayName:'Tomcat Wide-Area Example Application')
         app.init()
         
         BrooklynLauncher.manage(app)
