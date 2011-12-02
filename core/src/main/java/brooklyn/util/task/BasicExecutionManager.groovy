@@ -42,11 +42,13 @@ public class BasicExecutionManager implements ExecutionManager {
     public static Task getCurrentTask() { return getPerThreadCurrentTask().get() }
     
     private ThreadFactory threadFactory = newThreadFactory();
+    private ThreadFactory daemonThreadFactory = { runnable -> Thread t = threadFactory.newThread(runnable); t.setDaemon(true); t } as ThreadFactory
+    
     private ExecutorService runner = 
-		new ThreadPoolExecutor(0, Integer.MAX_VALUE, 1L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>());
-//      above is Executors.newCachedThreadPool()  but timeout of 1s rather than 60s for better shutdown!
-	private ScheduledExecutorService delayedRunner =
-    	new ScheduledThreadPoolExecutor(1, { runnable -> Thread t = threadFactory.newThread(runnable); t.setDaemon(true); t } as ThreadFactory);
+		new ThreadPoolExecutor(0, Integer.MAX_VALUE, 1L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), daemonThreadFactory);
+//      above is Executors.newCachedThreadPool(daemonThreadFactory)  but timeout of 1s rather than 60s for better shutdown!
+        
+	private ScheduledExecutorService delayedRunner = new ScheduledThreadPoolExecutor(1, daemonThreadFactory);
 	
     // TODO Could have a set of all knownTasks; but instead we're having a separate set per tag,
     // so the same task could be listed multiple times if it has multiple tags...
