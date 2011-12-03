@@ -395,7 +395,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 
     @Override
     public <T> T setAttribute(AttributeSensor<T> attribute, T val) {
-        LOG.trace "setting attribute {} to {} on {}", attribute.name, val, this
+        LOG.debug "setting attribute {} to {} on {}", attribute.name, val, this
         attributesInternal.update(attribute, val);
     }
 
@@ -587,6 +587,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
             LOG.warn("Strongly discouraged use of emit with sensor event as value $sensor $val; value should be unpacked!",
                 new Throwable("location of discouraged event $sensor emit"))
         }
+        LOG.debug "Emitting sensor notification {} value {} on {}", sensor.name, val, this
         emitInternal(sensor, val);
     }
     
@@ -642,6 +643,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
             try {
                 Effector eff = effectors.get(name)
                 if (eff) {
+                    LOG.debug("Invoking effector {} on {} with args {}", name, this, args)
                     return getManagementContext().invokeEffectorMethodSync(this, eff, args);
                 }
             } catch (CancellationException ce) {

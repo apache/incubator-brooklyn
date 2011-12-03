@@ -129,18 +129,18 @@ public class JmxHelper {
 		while (start <= end) {
 			start = System.currentTimeMillis()
 			if (attempt!=0) Thread.sleep(100); //sleep 100 to prevent trashing and facilitate interruption
-			LOG.debug "trying connection to {} at time {}", url, start
+			LOG.trace "trying connection to {} at time {}", url, start
 			try {
 				connect()
 				return true
             } catch (SecurityException e) {
-                LOG.debug "failed connection to {} ({})", url, e.message
+                LOG.debug "Attempt {} failed connecting to {} ({})", attempt+1, url, e.message
                 lastError = e;
 			} catch (IOException e) {
-				LOG.debug "failed connection to {} ({})", url, e.message
+				LOG.debug "Attempt {} failed connecting to {} ({})", attempt+1, url, e.message
 				lastError = e;
             } catch (NumberFormatException e) {
-                LOG.warn "failed connection to {} ({}); rethrowing...", url, e.message
+                LOG.warn "Failed connection to {} ({}); rethrowing...", url, e.message
                 throw e
 			}
 			attempt++
@@ -152,6 +152,7 @@ public class JmxHelper {
 	public synchronized void disconnect() {
         triedConnecting = false
 		if (jmxc) {
+            LOG.debug "Disconnecting from JMX URL {}", url
 			try {
 				jmxc.close()
 			} catch (Exception e) {
@@ -166,7 +167,7 @@ public class JmxHelper {
 	public void checkConnected() {
 		if (!isConnected()) {
             if (triedConnecting) {
-                throw new IllegalStateException("Fail to connect to JMX at $url")
+                throw new IllegalStateException("Failed to connect to JMX at $url")
             } else {
                 throw new IllegalStateException("Not connected (and not attempted to connect) to JMX at $url")
             }
@@ -205,7 +206,7 @@ public class JmxHelper {
 		ObjectInstance bean = findMBean objectName
 		if (bean != null) {
 			def result = mbsc.getAttribute(bean.objectName, attribute)
-			LOG.debug "From {} got value {} for jmx attribute {}.{}", url, result, objectName.canonicalName, attribute
+			LOG.trace "From {}, for jmx attribute {}.{}, got value {}", url, objectName.canonicalName, attribute, result
 			return result
 		} else {
 			return null
@@ -230,7 +231,7 @@ public class JmxHelper {
 			signature[index] = (CLASSES.containsKey(clazz.simpleName) ? CLASSES.get(clazz.simpleName) : clazz.name);
 		}
 		def result = mbsc.invoke(objectName, method, arguments, signature)
-		LOG.trace "From {} got result {} for jmx operation {}.{}", url, result, objectName.canonicalName, method
+		LOG.trace "From {}, for jmx operation {}.{}, got value {}", url, objectName.canonicalName, method, result
 		return result
 	}
 

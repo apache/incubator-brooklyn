@@ -7,4 +7,8 @@ public class SingleValueResponseContext extends AbstractSensorEvaluationContext 
 	@Override
 	protected Object getDefaultValue() { value }
 	
+    @Override
+    public String toString() {
+        return "value=$value"
+    }
 }
