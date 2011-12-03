@@ -1,5 +1,7 @@
 package brooklyn.entity.basic
 
+import com.google.common.collect.ImmutableList;
+
 import java.lang.reflect.Field
 import java.util.concurrent.CancellationException
 import java.util.concurrent.CopyOnWriteArrayList
@@ -805,7 +807,11 @@ private class EntityCollectionReference<T extends Entity> implements Serializabl
         if (result==null) {
             result = find();
         }
-        return new ArrayList<T>(result)
+        return ImmutableList.copyOf(result)
+    }
+
+    public synchronized boolean contains(Entity e) {
+        return entityRefs.contains(e.id)
     }
 
     protected synchronized Collection<T> find() {

@@ -8,8 +8,13 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
-import brooklyn.management.internal.AbstractManagementContext;
+import brooklyn.event.Sensor
+import brooklyn.event.SensorEvent
+import brooklyn.event.SensorEventListener
+import brooklyn.management.internal.AbstractManagementContext
 import brooklyn.management.internal.CollectionChangeListener
+
+import com.google.common.base.Predicate
 
 public class DynamicGroup extends AbstractGroup {
     public static final Logger log = LoggerFactory.getLogger(DynamicGroup.class)
@@ -27,6 +32,10 @@ public class DynamicGroup extends AbstractGroup {
         rescanEntities()
     }
     
+    void addSubscription(Entity producer, Sensor sensor, Predicate<SensorEvent> filter={true} as Predicate) {
+        subscribe(producer, sensor, { SensorEvent event -> if (filter.apply(event)) onEntityChanged(event.getSource()) } as SensorEventListener)
+    }
+    
     protected boolean acceptsEntity(Entity e) {
         return (entityFilter != null && entityFilter.call(e))
     }
@@ -41,6 +50,18 @@ public class DynamicGroup extends AbstractGroup {
     protected void onEntityRemoved(Entity item) {
         if (removeMember(item))
             log.info("$this detected item removal $item")
+    }
+    
+    protected void onEntityChanged(Entity item) {
+        boolean accepts = acceptsEntity(item);
+        boolean has = hasMember(item);
+        if (has && !accepts) {
+            removeMember(item)
+            log.info("{} detected item removal on change of {}", this, item)
+        } else if (!has && accepts) {
+            log.info("{} detected item add on change of {}", this, item)
+            addMember(item)
+        }
     }
     
     class MyEntitySetChangeListener implements CollectionChangeListener<Entity> {

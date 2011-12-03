@@ -55,7 +55,11 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
     public Collection<Entity> getMembers() {
         return members.get()
     }
- 
+
+    public boolean hasMember(Entity e) {
+        return members.contains(e)
+    }
+
     public Integer getCurrentSize() {
         return getMembers().size()
     }

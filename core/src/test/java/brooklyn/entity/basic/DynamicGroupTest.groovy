@@ -1,11 +1,17 @@
 package brooklyn.entity.basic
 
+import static brooklyn.test.TestUtils.*
 import static org.testng.Assert.*
 
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.Entity
+import brooklyn.event.SensorEvent
+import brooklyn.event.basic.BasicAttributeSensor
+
+import com.google.common.base.Predicate
+
 
 public class DynamicGroupTest {
     private AbstractApplication app
@@ -56,4 +62,45 @@ public class DynamicGroupTest {
         assertEquals(group.getMembers(), [e3])
     }
     
+    @Test
+    public void testGroupDetectsChangedEntities() {
+        final BasicAttributeSensor<String> MY_ATTRIBUTE = [ String, "test.myAttribute", "My test attribute" ]
+    
+        group.setEntityFilter( { it.getAttribute(MY_ATTRIBUTE) == "yes" } )
+        group.addSubscription(null, MY_ATTRIBUTE)
+        
+        assertEquals(group.getMembers(), [])
+        
+        // When changed (such that subscription spots it), then entity added
+        e1.setAttribute(MY_ATTRIBUTE, "yes")
+        
+        executeUntilSucceeds(timeout:5000) {
+            assertEquals(group.getMembers(), [e1])
+        }
+
+        // When it stops matching, entity is removed        
+        e1.setAttribute(MY_ATTRIBUTE, "no")
+        
+        executeUntilSucceeds(timeout:5000) {
+            assertEquals(group.getMembers(), [])
+        }
+    }
+    
+    @Test
+    public void testGroupDetectsChangedEntitiesMatchingFilter() {
+        final BasicAttributeSensor<String> MY_ATTRIBUTE = [ String, "test.myAttribute", "My test attribute" ]
+        
+        group.setEntityFilter( { it.getAttribute(MY_ATTRIBUTE) == "yes" } )
+        group.addSubscription(null, MY_ATTRIBUTE, { SensorEvent event -> e1 != event.source } as Predicate)
+        
+        assertEquals(group.getMembers(), [])
+        
+        // Ignores anything that does not match predicate filter; so event from e1 will be ignored
+        e1.setAttribute(MY_ATTRIBUTE, "yes")
+        e2.setAttribute(MY_ATTRIBUTE, "yes")
+        
+        executeUntilSucceeds(timeout:5000) {
+            assertEquals(group.getMembers(), [e2])
+        }
+    }
 }
