@@ -11,6 +11,9 @@ import static org.jclouds.scriptbuilder.domain.Statements.exec
 import static org.jclouds.scriptbuilder.domain.Statements.interpret
 import static org.jclouds.scriptbuilder.domain.Statements.newStatementList
 
+import static org.jclouds.aws.ec2.reference.AWSEC2Constants.PROPERTY_EC2_AMI_QUERY;
+import static org.jclouds.aws.ec2.reference.AWSEC2Constants.PROPERTY_EC2_CC_AMI_QUERY;
+
 import java.io.File
 import java.io.IOException
 import java.net.URI
@@ -151,12 +154,15 @@ public class JcloudsUtil {
         properties.setProperty(Constants.PROPERTY_TRUST_ALL_CERTS, Boolean.toString(true))
         properties.setProperty(Constants.PROPERTY_RELAX_HOSTNAME, Boolean.toString(true))
         
-        if (conf.imageOwner) {
-            properties.setProperty("jclouds.ec2.ami-query", "owner-id="+conf.imageOwner+";state=available;image-type=machine")
-        } else if (conf.imageId) {
-            properties.setProperty("jclouds.ec2.ami-query", "")
+        // Enable aws-ec2 lazy image fetching, if givena specific imageId; otherwise customize for specific owners; or all as a last resort
+        // See https://issues.apache.org/jira/browse/WHIRR-416
+        if (conf.imageId) {
+            properties.setProperty(PROPERTY_EC2_AMI_QUERY, "")
+            properties.setProperty(PROPERTY_EC2_CC_AMI_QUERY, "")
+        } else if (conf.imageOwner) {
+            properties.setProperty(PROPERTY_EC2_AMI_QUERY, "owner-id="+conf.imageOwner+";state=available;image-type=machine")
         } else {
-            properties.setProperty("jclouds.ec2.ami-query", "state=available;image-type=machine")
+            properties.setProperty(PROPERTY_EC2_AMI_QUERY, "state=available;image-type=machine")
         }
 
         // ImmutableSet.<Module>of(new Log4JLoggingModule()); to add log4j integration
