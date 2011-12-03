@@ -49,7 +49,7 @@ public abstract class AbstractPollHelper {
 		if (!adapter.isActivated()) return;
 		AbstractSensorEvaluationContext response;
 		try {
-			log.debug "executing poll for {} sensors {} (using {})", adapter.entity, polledSensors.keySet(), this
+			log.trace "executing poll for {} sensors {} (using {})", adapter.entity, polledSensors.keySet(), this
 			response = executePollOnSuccess();
 			lastWasSuccessful = true;
 		} catch (Exception e) {
@@ -60,7 +60,7 @@ public abstract class AbstractPollHelper {
 			lastWasSuccessful = false;
 			response = executePollOnError(e);
 		}
-		log.debug "poll for {} got: {}", adapter.entity, response
+		log.trace "poll for {} got: {}", adapter.entity, response
 		if (response!=null) evaluateSensorsOnResponse(response)
 	}
 	
