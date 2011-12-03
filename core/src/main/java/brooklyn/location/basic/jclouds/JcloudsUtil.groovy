@@ -153,6 +153,8 @@ public class JcloudsUtil {
         
         if (conf.imageOwner) {
             properties.setProperty("jclouds.ec2.ami-query", "owner-id="+conf.imageOwner+";state=available;image-type=machine")
+        } else if (conf.imageId) {
+            properties.setProperty("jclouds.ec2.ami-query", "")
         } else {
             properties.setProperty("jclouds.ec2.ami-query", "state=available;image-type=machine")
         }
