@@ -244,7 +244,7 @@ class ResizerPolicyTest {
             assertEquals 2.0d/cluster.currentSize, cluster.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)
         }
 
-        executeUntilSucceedsWithShutdown(cluster, timeout: 10*SECONDS) {
+        executeUntilSucceedsWithShutdown(cluster, timeout: 60*SECONDS) {
             assertTrue policy.isRunning()
             assertFalse policy.resizing.get()
             assertEquals 2, policy.calculateDesiredSize(cluster.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT))
