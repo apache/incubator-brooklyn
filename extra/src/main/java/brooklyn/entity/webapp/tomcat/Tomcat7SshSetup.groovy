@@ -12,7 +12,7 @@ import brooklyn.util.SshBasedJavaWebAppSetup
  */
 public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
 	
-    public static final String DEFAULT_VERSION = "7.0.21"
+    public static final String DEFAULT_VERSION = "7.0.23"
     public static final String DEFAULT_INSTALL_DIR = DEFAULT_INSTALL_BASEDIR+"/"+"tomcat"
     public static final String DEFAULT_DEPLOY_SUBDIR = "webapps"
     public static final int DEFAULT_FIRST_HTTP_PORT = 8080
