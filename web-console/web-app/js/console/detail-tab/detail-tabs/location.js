@@ -73,7 +73,7 @@ Brooklyn.location = (function() {
             // use ISO code TBI
             alert("use of ISO Code TBI");
         } else {
-            alert("need latitude and longditude (note ISO code TBI)");
+            // TODO nothing to see here?
         }
     }
 
