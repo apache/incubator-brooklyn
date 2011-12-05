@@ -81,7 +81,7 @@ public class QpidSetup extends SshBasedJavaAppSetup {
         entity.getConfig(QpidBroker.RUNTIME_FILES).each {
             String dest, File source ->
             int result = machine.copyTo source, "${runDir}/${dest}"
-            log.info("copied ${source.path} to ${dest} - ${result}")
+            log.info("copied ${source.path} to ${runDir}/${dest} - ${result}")
         }
     }
 
