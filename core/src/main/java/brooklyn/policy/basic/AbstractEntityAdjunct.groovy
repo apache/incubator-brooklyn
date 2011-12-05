@@ -40,6 +40,7 @@ abstract class AbstractEntityAdjunct implements EntityAdjunct {
     /** @see SubscriptionContext#subscribe(Entity, Sensor, EventListener) */
     protected <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<T> listener) {
         if (destroyed.get()) return null
+        if (entity==null) throw new IllegalStateException("$this cannot subscribe to $producer because it is not associated to an entity")
         def handle = subscription.subscribe producer, sensor, listener
         subscriptions.put(producer, handle)
         return handle

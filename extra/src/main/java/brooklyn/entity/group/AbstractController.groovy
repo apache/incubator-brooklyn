@@ -106,7 +106,6 @@ public abstract class AbstractController extends SoftwareProcessEntity {
 
     @Override
     protected void connectSensors() {
-        addPolicy(policy)
         reset()
 		super.connectSensors()
     }
@@ -145,6 +144,12 @@ public abstract class AbstractController extends SoftwareProcessEntity {
         update()
     }
     
+    public void start(Collection<? extends Location> locations) {
+        addPolicy(policy)
+        policy.setGroup(cluster)
+        super.start(locations)
+    }
+
     public void update() {
         if (getAttribute(SoftwareProcessEntity.SERVICE_UP)) {
             configure()
