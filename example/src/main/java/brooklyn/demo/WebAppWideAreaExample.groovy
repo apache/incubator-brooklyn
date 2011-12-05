@@ -15,7 +15,8 @@ import brooklyn.entity.group.DynamicFabric
 import brooklyn.entity.proxy.nginx.NginxController
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster
 import brooklyn.entity.webapp.DynamicWebAppCluster
-import brooklyn.entity.webapp.OldJavaWebApp
+import brooklyn.entity.webapp.JavaWebAppService
+import brooklyn.entity.webapp.jboss.JBoss6Server
 import brooklyn.entity.webapp.jboss.JBoss7Server
 import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.launcher.BrooklynLauncher
@@ -46,7 +47,7 @@ public abstract class WebAppWideAreaExample extends AbstractApplication {
             NginxController nginxController = new NginxController(
                     domain:'brooklyn.geopaas.org',
                     port:8000,
-                    portNumberSensor:OldJavaWebApp.HTTP_PORT)
+                    portNumberSensor:JavaWebAppService.HTTP_PORT)
 
             Map clusterFlags = new HashMap(flags) + [controller:nginxController, webServerFactory:webServerFactory]
             ControlledDynamicWebAppCluster webCluster = new ControlledDynamicWebAppCluster(clusterFlags, owner)
@@ -68,7 +69,7 @@ public abstract class WebAppWideAreaExample extends AbstractApplication {
                 displayNameSuffix : ' web cluster',
                 newEntity : webClusterFactory],
             this)
-        webFabric.setConfig(OldJavaWebApp.WAR, WAR_PATH)
+        webFabric.setConfig(JavaWebAppService.WAR, WAR_PATH)
         webFabric.setConfig(Cluster.INITIAL_SIZE, 1)
         
         nginxEntities = new DynamicGroup([displayName: 'Web Fronts'], this, { Entity e -> (e instanceof NginxController) })
@@ -93,10 +94,30 @@ public class JBossWideAreaExample extends WebAppWideAreaExample {
     protected Closure getWebServerFactory() {
         return { Map properties, Entity cluster ->
             def server = new JBoss7Server(properties)
-            server.setConfig(OldJavaWebApp.HTTP_PORT.configKey, 8080)
+            server.setConfig(JavaWebAppService.HTTP_PORT.configKey, 8080)
             return server;
         }
 
+    }
+}
+
+public class JBoss6WideAreaExample extends WebAppWideAreaExample {
+    public static void main(String[] argv) {
+        List<Location> locations = Locations.getLocationsById(Arrays.asList(argv) ?: DEFAULT_LOCATIONS)
+
+        JBoss6WideAreaExample app = new JBoss6WideAreaExample(displayName:'Brooklyn Wide-Area Seam Booking Example Application')
+        app.init()
+        
+        BrooklynLauncher.manage(app)
+        app.start(locations)
+    }
+
+    protected Closure getWebServerFactory() {
+        return { Map properties, Entity cluster ->
+            def server = new JBoss6Server(properties)
+            server.setConfig(JavaWebAppService.HTTP_PORT.configKey, 8080)
+            return server;
+        }
     }
 }
 
@@ -114,7 +135,7 @@ public class TomcatWideAreaExample extends WebAppWideAreaExample {
     protected Closure getWebServerFactory() {
         return { Map properties, Entity cluster ->
             def server = new TomcatServer(properties)
-            server.setConfig(OldJavaWebApp.HTTP_PORT.configKey, 8080)
+            server.setConfig(JavaWebAppService.HTTP_PORT.configKey, 8080)
             return server;
         }
     }
