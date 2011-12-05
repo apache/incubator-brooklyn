@@ -86,7 +86,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     // FIXME the return code is not a reliable indicator of success or failure
     public int copyTo(Map props=[:], File src, String destination) {
         Preconditions.checkNotNull address, "host address must be specified for scp"
-        Preconditions.checkArgument src.exists(), "File %s must exist for scp", src.name
+        Preconditions.checkArgument src.exists(), "File %s must exist for scp", src.path
 		copyTo new FileInputStream(src), src.length(), destination 
     }
 	public int copyTo(Map props=[:], InputStream src, String destination) {

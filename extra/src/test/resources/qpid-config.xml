@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<broker>
+    <plugin-directory>${QPID_HOME}/lib</plugin-directory>
+    <cache-directory>${QPID_HOME}/cache</cache-directory>
+	<connector>
+		<ssl>
+			<enabled>false</enabled>
+		</ssl>
+	</connector>
+	<management>
+		<enabled>true</enabled>
+		<ssl>
+			<enabled>false</enabled>
+		</ssl>
+	</management>
+	<security>
+		<pd-auth-manager>
+			<principal-database>
+				<class>org.apache.qpid.server.security.auth.database.PlainPasswordFilePrincipalDatabase
+				</class>
+				<attributes>
+					<attribute>
+						<name>passwordFile</name>
+						<value>${QPID_HOME}/etc/passwd</value>
+					</attribute>
+				</attributes>
+			</principal-database>
+		</pd-auth-manager>
+		<allow-all />
+		<msg-auth>false</msg-auth>
+	</security>
+	<virtualhosts>
+		<default>localhost</default>
+		<virtualhost>
+			<name>localhost</name>
+			<localhost>
+                <custom-exchanges>
+                    <class-name>monterey.qpid.plugin.exchanges.switcher.SwitcherExchangeType</class-name>
+                </custom-exchanges>
+				<store>
+					<class>org.apache.qpid.server.store.MemoryMessageStore</class>
+				</store>
+			</localhost>
+		</virtualhost>
+	</virtualhosts>
+	<queue>
+		<auto_register>true</auto_register>
+	</queue>
+	<status-updates>ON</status-updates>
+</broker>
+
+

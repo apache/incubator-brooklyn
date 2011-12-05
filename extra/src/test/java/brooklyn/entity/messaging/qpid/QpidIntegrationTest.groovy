@@ -69,6 +69,21 @@ public class QpidIntegrationTest {
     }
 
     /**
+     * Test that the broker starts up and sets SERVICE_UP correctly.
+     */
+    @Test(groups = "Integration")
+    public void canStartupAndShutdownWithPlugin() {
+        Map qpidRuntimeFiles = [ ('lib/monterey-plugin.jar'):new File('src/test/resources/qpid-plugin.jar'),
+                                 ('etc/config.xml'):new File('src/test/resources/qpid-config.xml') ]
+        qpid = new QpidBroker(owner:app, runtimeFiles:qpidRuntimeFiles);
+        qpid.start([ testLocation ])
+        executeUntilSucceedsWithShutdown(qpid) {
+            assertTrue qpid.getAttribute(JavaApp.SERVICE_UP)
+        }
+        assertFalse qpid.getAttribute(JavaApp.SERVICE_UP)
+    }
+
+    /**
      * Test that setting the 'queue' property causes a named queue to be created.
      */
     @Test(groups = "Integration")
@@ -99,10 +114,10 @@ public class QpidIntegrationTest {
 
             // Connect to broker using JMS and send messages
             Connection connection = getQpidConnection(qpid)
-            clearQueue(connection, queue.bindingUrl)
+            clearQueue(connection, queue.queueName)
 			Thread.sleep 1000
             assertEquals queue.getAttribute(QpidQueue.QUEUE_DEPTH_MESSAGES), 0
-            sendMessages(connection, number, queue.bindingUrl, content)
+            sendMessages(connection, number, queue.queueName, content)
 
             // Check messages arrived
 			Thread.sleep 1000
@@ -110,7 +125,7 @@ public class QpidIntegrationTest {
             assertEquals queue.getAttribute(QpidQueue.QUEUE_DEPTH_BYTES), number * content.length()
 
             // Clear the messages
-            assertEquals clearQueue(connection, queue.bindingUrl), number
+            assertEquals clearQueue(connection, queue.queueName), number
 
             // Check messages cleared
 			Thread.sleep 1000

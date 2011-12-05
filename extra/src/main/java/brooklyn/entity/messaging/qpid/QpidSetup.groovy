@@ -4,16 +4,14 @@ import java.util.List
 import java.util.Map
 
 import brooklyn.entity.basic.Attributes
-import brooklyn.entity.basic.legacy.JavaApp;
-import brooklyn.entity.basic.lifecycle.legacy.SshBasedJavaAppSetup;
+import brooklyn.entity.basic.lifecycle.legacy.SshBasedJavaAppSetup
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.SshBasedJavaWebAppSetup
 
 /**
  * Start a {@link QpidBroker} in a {@link brooklyn.location.Location} accessible over ssh.
  */
 public class QpidSetup extends SshBasedJavaAppSetup {
-    public static final String DEFAULT_VERSION = "0.12"
+    public static final String DEFAULT_VERSION = "0.14"
     public static final String DEFAULT_INSTALL_DIR = DEFAULT_INSTALL_BASEDIR+"/"+"qpid"
     public static final int DEFAULT_FIRST_AMQP_PORT = 5672
 
@@ -70,11 +68,31 @@ public class QpidSetup extends SshBasedJavaAppSetup {
         entity.setAttribute(Attributes.AMQP_PORT, amqpPort)
     }
 
+    /**
+     * Configure the broker.
+     */
+    @Override
+    public void config() {
+        super.config()
+        copyFilesForRuntime()
+    }
+
+    public void copyFilesForRuntime() {
+        entity.getConfig(QpidBroker.RUNTIME_FILES).each {
+            String dest, File source ->
+            int result = machine.copyTo source, "${runDir}/${dest}"
+            log.info("copied ${source.path} to ${dest} - ${result}")
+        }
+    }
+
     @Override
     public List<String> getInstallScript() {
         makeInstallScript([
-                "wget http://download.nextag.com/apache/qpid/${version}/qpid-java-broker-${version}.tar.gz",
-                "tar xvzf qpid-java-broker-${version}.tar.gz",
+                // TODO change back after ASF 0.14 release
+                // "wget http://download.nextag.com/apache/qpid/${version}/qpid-java-broker-${version}.tar.gz",
+                // "tar xvzf qpid-java-broker-${version}.tar.gz",
+                "wget http://developers.cloudsoftcorp.com/download/qpid/qpid-broker-${version}.tgz",
+                "tar xzvf qpid-broker-${version}.tgz"
             ])
     }
 
@@ -84,13 +102,13 @@ public class QpidSetup extends SshBasedJavaAppSetup {
     public List<String> getRunScript() {
         List<String> script = [
             "cd ${runDir}",
-			"nohup ./bin/qpid-server -m ${jmxPort} -p ${amqpPort} --exclude-0-10 ${amqpPort} &",
+			"nohup ./bin/qpid-server -m ${jmxPort} -p ${amqpPort} --exclude-0-8 ${amqpPort} --exclude-0-9 ${amqpPort} --exclude-0-9-1 ${amqpPort} &",
         ]
         return script
     }
 
     public Map<String, String> getShellEnvironment() {
-        Map result = super.getShellEnvironment();
+        Map result = super.getShellEnvironment()
 		result << [
 			"QPID_HOME" : "${runDir}",
 			"QPID_WORK" : "${runDir}",
@@ -109,10 +127,11 @@ public class QpidSetup extends SshBasedJavaAppSetup {
             "mkdir -p ${runDir}",
             "cd ${runDir}",
             "cp -R ${installDir}/{bin,etc,lib} .",
+                // JE and BDBstore
         ]
         return script
     }
-    
+
     @Override
     public List<String> getRestartScript() {
        return makeRestartScript("qpid", "qpid-server.pid")
@@ -127,6 +146,6 @@ public class QpidSetup extends SshBasedJavaAppSetup {
     protected void postShutdown() {
         machine.releasePort(rmiPort)
         machine.releasePort(jmxPort)
-        machine.releasePort(amqpPort);
+        machine.releasePort(amqpPort)
     }
 }
