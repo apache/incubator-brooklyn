@@ -1,11 +1,17 @@
 package brooklyn.location.basic
 
+import org.testng.annotations.BeforeMethod
+import org.testng.annotations.Test
+
 import static org.testng.Assert.*
 
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.location.PortRange
+
+import com.google.common.base.Charsets
+import com.google.common.io.Files
 
 /**
  * Test the {@link SshMachineLocation} implementation of the {@link brooklyn.location.Location} interface.
@@ -31,6 +37,21 @@ public class SshMachineLocationTest {
         def outString = new String(outStream.toByteArray())
         
         assertTrue outString.contains(expectedName), outString
+    }
+    
+    // Note: requires `ssh localhost` to be setup such that no password is required    
+    @Test(groups = "Integration")
+    public void testCopyTo() throws Exception {
+        File dest = new File(System.getProperty("java.io.tmpdir"), "sssMachineLocationTest_dest.tmp")
+        File src = File.createTempFile("sssMachineLocationTest_src", "tmp")
+        try {
+            Files.write("abc", src, Charsets.UTF_8)
+            host.copyTo(src, dest)
+            assertEquals("abc", Files.readFirstLine(dest, Charsets.UTF_8))
+        } finally {
+            src.delete()
+            dest.delete()
+        }
     }
     
     // Note: requires `ssh localhost` to be setup such that no password is required    
