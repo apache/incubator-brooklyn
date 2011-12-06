@@ -38,12 +38,11 @@ class ActiveMQEc2LiveTest {
     static { TimeExtras.init() }
 
     private final String provider
+    protected JcloudsLocation loc;
     protected JcloudsLocationFactory locFactory;
-    protected JcloudsLocation loc; // if private, can't be accessed from within closure in teardown! See http://jira.codehaus.org/browse/GROOVY-4692
     private Collection<SshMachineLocation> machines = []
     private File sshPrivateKey
     private File sshPublicKey
-    SshMachineLocation testLocation
     TestApplication app
     ActiveMQBroker activeMQ
 
@@ -69,39 +68,34 @@ class ActiveMQEc2LiveTest {
         String imageOwner = "411009282317"
 
         loc = locFactory.newLocation(regionName)
-        loc.setTagMapping([MyEntityType:[
+        loc.setTagMapping([(ActiveMQBroker.class.getName()):[
             imageId:imageId,
             imageOwner:imageOwner,
             securityGroups:["brooklyn-all"]
         ]])
-
-        Map flags = loc.getProvisioningFlags(["MyEntityType"])
-        testLocation = obtainMachine(flags)
-        LOG.info("Provisioned vm $testLocation ; checking if ssh'able")
-        assertTrue testLocation.isSshable()
 
         app = new TestApplication()
     }
 
     @AfterMethod(groups = "Live")
     public void tearDown() {
-        if (activeMQ != null && activeMQ.getAttribute(Startable.SERVICE_UP)) {
-	        EntityStartUtils.stopEntity(activeMQ)
-        }
-
-        List<Exception> exceptions = []
-        machines.each {
-            try {
-                loc?.release(it)
-            } catch (Exception e) {
-                LOG.warn("Error releasing machine $it; continuing...", e)
-                exceptions.add(e)
+        try {
+            if (app) app.stop()
+        } finally {
+            List<Exception> exceptions = []
+            machines.each {
+                try {
+                    loc?.release(it)
+                } catch (Exception e) {
+                    LOG.warn("Error releasing machine $it; continuing...", e)
+                    exceptions.add(e)
+                }
             }
+            if (exceptions) {
+                throw exceptions.get(0)
+            }
+            machines.clear()
         }
-        if (exceptions) {
-            throw exceptions.get(0)
-        }
-        machines.clear()
     }
 
     /**
@@ -110,7 +104,7 @@ class ActiveMQEc2LiveTest {
     @Test(groups = [ "Live" ])
     public void canStartupAndShutdown() {
         activeMQ = new ActiveMQBroker(owner:app);
-        activeMQ.start([ testLocation ])
+        app.start([ loc ])
         executeUntilSucceedsWithShutdown(activeMQ) {
             assertTrue activeMQ.getAttribute(JavaApp.SERVICE_UP)
         }
@@ -139,7 +133,7 @@ class ActiveMQEc2LiveTest {
 
         // Start broker with a configured queue
         activeMQ = new ActiveMQBroker(owner:app, queue:queueName);
-        activeMQ.start([ testLocation ])
+        app.start([ loc ])
         executeUntilSucceeds {
             assertTrue activeMQ.getAttribute(JavaApp.SERVICE_UP)
         }
