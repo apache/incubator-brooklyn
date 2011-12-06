@@ -105,13 +105,6 @@ public abstract class AbstractController extends SoftwareProcessEntity {
     }
 
     @Override
-    protected void connectSensors() {
-        // TODO is this needed?
-        reset()
-		super.connectSensors()
-    }
-
-    @Override
     protected Collection<Integer> getRequiredOpenPorts() {
         Collection<Integer> result = super.getRequiredOpenPorts()
         if (getAttribute(HTTP_PORT)) result.add(getAttribute(HTTP_PORT))
