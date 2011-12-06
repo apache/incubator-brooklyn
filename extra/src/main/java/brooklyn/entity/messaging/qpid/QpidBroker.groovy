@@ -134,7 +134,8 @@ public abstract class QpidDestination extends JMSDestination {
     /**
      * Return the Qpid name for the queue.
      */
-    public String getQueueName() { return String.format("'%s'/%s; { create: always, assert: never }", exchangeName, name) }
+    public String getQueueName() { return String.format("ADDR:%s", name) }
+    // TODO 'exchangeName'/'name'; { create: always, assert: never }
 
     @Override
     public void destroy() {
