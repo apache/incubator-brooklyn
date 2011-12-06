@@ -26,22 +26,28 @@ import brooklyn.location.MachineLocation
 import brooklyn.location.basic.SshMachineLocation
 
 /**
- * An {@link brooklyn.entity.Entity} that represents a single Qpid broker instance.
+ * An {@link brooklyn.entity.Entity} that represents a single Qpid broker instance, using AMQP 0-10.
  */
 public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> {
     private static final Logger log = LoggerFactory.getLogger(QpidBroker.class)
 
     public static final ConfiguredAttributeSensor<Integer> AMQP_PORT = Attributes.AMQP_PORT
     public static final ConfiguredAttributeSensor<String> VIRTUAL_HOST_NAME = [String, "qpid.virtualHost", "Qpid virtual host name", "localhost" ]
-    public static final BasicConfigKey<Map> RUNTIME_FILES = [ Map, "qpid.files", "Files to be copied, keyed by destination name relative to runDir" ]
+    public static final ConfiguredAttributeSensor<String> AMQP_VERSION = [ String, "amqp.version", "AMQP protocol version", "0-10" ]
+    public static final BasicConfigKey<Map> RUNTIME_FILES = [ Map, "qpid.files.runtime", "Map of files to be copied, keyed by destination name relative to runDir" ]
 
     String virtualHost
+    String amqpVersion
 
     public QpidBroker(Map properties=[:], Entity owner=null) {
         super(properties, owner)
 
         virtualHost = properties.virtualHost ?: getConfig(VIRTUAL_HOST_NAME.configKey)
         setAttribute(VIRTUAL_HOST_NAME, virtualHost)
+
+        // TODO use this to configure the broker
+        amqpVersion = properties.amqpVersion ?: getConfig(AMQP_VERSION.configKey)
+        setAttribute(AMQP_VERSION, amqpVersion)
 
         setConfigIfValNonNull(Attributes.AMQP_PORT.configKey, properties.amqpPort)
 
@@ -121,9 +127,14 @@ public abstract class QpidDestination extends JMSDestination {
     }
 
     /**
+     * Return the AMQP exchange name.
+     */
+    public abstract String getExchangeName();
+
+    /**
      * Return the Qpid name for the queue.
      */
-    public String getQueueName() { return String.format("ADDR:%s", name) }
+    public String getQueueName() { return String.format("'%s'/'%s'; { assert: never }", exchangeName, name) }
 
     @Override
     public void destroy() {
@@ -146,7 +157,7 @@ public class QpidQueue extends QpidDestination implements Queue {
     public void init() {
         setAttribute QUEUE_NAME, name
         super.init()
-        exchange = new ObjectName("org.apache.qpid:type=VirtualHost.Exchange,VirtualHost=\"${virtualHost}\",name=\"amq.direct\",ExchangeType=direct")
+        exchange = new ObjectName("org.apache.qpid:type=VirtualHost.Exchange,VirtualHost=\"${virtualHost}\",name=\"${exchangeName}\",ExchangeType=direct")
     }
 
     public void addJmxSensors() {
@@ -159,6 +170,9 @@ public class QpidQueue extends QpidDestination implements Queue {
         sensorRegistry.removeSensor(QUEUE_DEPTH_BYTES)
         sensorRegistry.removeSensor(QUEUE_DEPTH_MESSAGES)
     }
+
+    /** {@inheritDoc} */
+    public String getExchangeName() { return "amq.direct"; }
 }
 
 public class QpidTopic extends QpidDestination implements Topic {
@@ -170,13 +184,17 @@ public class QpidTopic extends QpidDestination implements Topic {
     public void init() {
         setAttribute TOPIC_NAME, name
         super.init()
-        exchange = new ObjectName("org.apache.qpid:type=VirtualHost.Exchange,VirtualHost=\"${virtualHost}\",name=\"amq.topic\",ExchangeType=topic")
+        exchange = new ObjectName("org.apache.qpid:type=VirtualHost.Exchange,VirtualHost=\"${virtualHost}\",name=\"${exchangeName}\",ExchangeType=topic")
     }
 
     public void addJmxSensors() {
-        //TODO add sensors for topic
+        // TODO add sensors for topic
     }
 
     public void removeJmxSensors() {
+        // TODO add sensors for topic
     }
+
+    /** {@inheritDoc} */
+    public String getExchangeName() { return "amq.topic"; }
 }

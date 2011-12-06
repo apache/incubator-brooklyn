@@ -8,10 +8,10 @@ import brooklyn.entity.basic.lifecycle.legacy.SshBasedJavaAppSetup
 import brooklyn.location.basic.SshMachineLocation
 
 /**
- * Start a {@link QpidBroker} in a {@link brooklyn.location.Location} accessible over ssh.
+ * Start an AMQP 0-10 {@link QpidBroker} in a {@link brooklyn.location.Location} accessible over ssh.
  */
 public class QpidSetup extends SshBasedJavaAppSetup {
-    public static final String DEFAULT_VERSION = "0.14"
+    public static final String DEFAULT_VERSION = "0.12" // TODO change to 0.14 when ASF release
     public static final String DEFAULT_INSTALL_DIR = DEFAULT_INSTALL_BASEDIR+"/"+"qpid"
     public static final int DEFAULT_FIRST_AMQP_PORT = 5672
 
@@ -81,18 +81,15 @@ public class QpidSetup extends SshBasedJavaAppSetup {
         entity.getConfig(QpidBroker.RUNTIME_FILES).each {
             String dest, File source ->
             int result = machine.copyTo source, "${runDir}/${dest}"
-            log.info("copied ${source.path} to ${dest} - ${result}")
+            log.info("copied ${source.path} to ${runDir}/${dest} - ${result}")
         }
     }
 
     @Override
     public List<String> getInstallScript() {
         makeInstallScript([
-                // TODO change back after ASF 0.14 release
-                // "wget http://download.nextag.com/apache/qpid/${version}/qpid-java-broker-${version}.tar.gz",
-                // "tar xvzf qpid-java-broker-${version}.tar.gz",
-                "wget http://developers.cloudsoftcorp.com/download/qpid/qpid-broker-${version}.tgz",
-                "tar xzvf qpid-broker-${version}.tgz"
+                "wget http://download.nextag.com/apache/qpid/${version}/qpid-java-broker-${version}.tar.gz",
+                "tar xvzf qpid-java-broker-${version}.tar.gz",
             ])
     }
 
@@ -127,7 +124,6 @@ public class QpidSetup extends SshBasedJavaAppSetup {
             "mkdir -p ${runDir}",
             "cd ${runDir}",
             "cp -R ${installDir}/{bin,etc,lib} .",
-                // JE and BDBstore
         ]
         return script
     }
