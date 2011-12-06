@@ -57,9 +57,9 @@ fi
 	[ -z "${master_ver}" ] && { echo >&2 Could not determine the version of the master branch. Please use the --master parameter. ; exit 1 ; }
 }
 
-branch_name=${release_ver}
 version_on_branch=${release_ver}${release_ver_suffix}
 version_on_master=${master_ver}${master_ver_suffix}
+branch_name=${version_on_branch}
 
 # Show the details and get confirmation
 echo "The current version is:                                  ${current_version}"
