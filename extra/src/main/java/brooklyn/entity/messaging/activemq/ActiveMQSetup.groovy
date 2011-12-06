@@ -82,13 +82,6 @@ public class ActiveMQSetup extends SshBasedJavaAppSetup {
         return script
     }
 
-	@Override
-	protected Map getJmxJavaSystemProperties() {
-		//don't set via JAVA_OPTS; set ourselves manually
-		//(karaf reads from props files)
-		[:]
-	}
-
     public Map<String, String> getShellEnvironment() {
 		def result = super.getShellEnvironment()
         result << [
