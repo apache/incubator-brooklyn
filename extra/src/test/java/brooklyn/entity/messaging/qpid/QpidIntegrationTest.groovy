@@ -38,7 +38,7 @@ public class QpidIntegrationTest {
 
     static { TimeExtras.init() }
 
-    private Application app
+    private TestApplication app
     private Location testLocation
     private QpidBroker qpid
 
@@ -48,11 +48,9 @@ public class QpidIntegrationTest {
         testLocation = new LocalhostMachineProvisioningLocation(name:'london', count:2)
     }
 
-    @AfterMethod(groups = "Integration")
+    @AfterMethod(alwaysRun=true)
     public void shutdown() {
-        if (qpid != null && qpid.getAttribute(Startable.SERVICE_UP)) {
-	        EntityStartUtils.stopEntity(qpid)
-        }
+        if (app) app.stop()
     }
 
     /**
