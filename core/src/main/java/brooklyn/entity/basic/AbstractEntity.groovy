@@ -35,6 +35,7 @@ import brooklyn.management.Task
 import brooklyn.policy.Enricher
 import brooklyn.policy.Policy
 import brooklyn.policy.basic.AbstractPolicy
+import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.internal.ConfigKeySelfExtracting;
 import brooklyn.util.internal.LanguageUtils
@@ -214,6 +215,10 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         return (isSuper1) ? (isSuper2 ? null : f2) : (isSuper2 ? f1 : null)
     }
     
+    /** sets fields from flags; can be overridden if needed, subclasses should
+     * do their business before _invoking_ this super (and should nearly always invoke the super);
+     * NB it is recommended instead to use the SetFromFlag annotation on relevant fields
+     */
     public Entity configure(Map flags=[:]) {
         Entity suppliedOwner = flags.remove('owner') ?: null
         if (suppliedOwner) suppliedOwner.addOwnedChild(this)
@@ -223,7 +228,8 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 
         displayName = flags.remove('displayName') ?: displayName;
         
-        for (Field f: getClass().getFields()) {
+        // allow config keys, and fields, to be set from these flags if they have a SetFromFlag annotation
+        for (Field f: FlagUtils.getAllFields(getClass())) {
             SetFromFlag cf = f.getAnnotation(SetFromFlag.class);
             if (cf) {
                 ConfigKey key;
@@ -232,7 +238,14 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
                 } else if (HasConfigKey.class.isAssignableFrom(f.getType())) {
                     key = ((HasConfigKey)f.get(this)).getConfigKey();
                 } else {
-                    LOG.warn "Unsupported {} on {} in {}; ignoring", SetFromFlag.class.getSimpleName(), f, this
+                    //normal field, not a config key
+                    String flagName = cf.value() ?: f.getName();
+                    if (flagName && flags.containsKey(flagName)) {
+                        if (!f.isAccessible()) f.setAccessible(true)
+                        f.set(this, flags.remove(flagName))
+                    } else if (!flagName) {
+                        LOG.warn "Unsupported {} on {} in {}; ignoring", SetFromFlag.class.getSimpleName(), f, this
+                    }
                 }
                 if (key) {
                     String flagName = cf.value() ?: key?.getName();

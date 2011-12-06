@@ -1,17 +1,14 @@
 package brooklyn.entity.group
 
 import java.util.Collection
-import java.util.List
 import java.util.Map
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ConcurrentMap
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
-import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.basic.Attributes
+import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.event.Sensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.ConfiguredAttributeSensor
@@ -19,6 +16,7 @@ import brooklyn.event.basic.DependentConfiguration
 import brooklyn.location.Location
 import brooklyn.location.MachineLocation
 import brooklyn.management.Task
+import brooklyn.util.flags.SetFromFlag
 
 import com.google.common.base.Preconditions
 
@@ -28,13 +26,19 @@ import com.google.common.base.Preconditions
 public abstract class AbstractController extends SoftwareProcessEntity {
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractController.class)
 
+    @SetFromFlag("portNumberSensor")  //TODO this is a curious name; confirm, or change
     public static final BasicConfigKey<Sensor> PORT_NUMBER_SENSOR = [ String, "member.sensor.portNumber", "Port number sensor on members" ]
 
+    @SetFromFlag("port")  //TODO get standard name; ideally inherit the standard field
     public static final ConfiguredAttributeSensor<Integer> HTTP_PORT = Attributes.HTTP_PORT
+    @SetFromFlag("protocol")
     public static final ConfiguredAttributeSensor<String> PROTOCOL = [ String, "proxy.protocol", "Protocol", "http" ]
+    @SetFromFlag("domain")
     public static final ConfiguredAttributeSensor<String> DOMAIN_NAME = [ String, "proxy.domainName", "Domain name" ]
+    @SetFromFlag("url")
     public static final ConfiguredAttributeSensor<String> URL = [ String, "proxy.url", "URL" ]
 
+    @SetFromFlag
     Cluster cluster
     String domain
     int port
@@ -43,57 +47,48 @@ public abstract class AbstractController extends SoftwareProcessEntity {
     Sensor portNumber
 
     AbstractMembershipTrackingPolicy policy
-    protected List<String> addresses = new LinkedList<String>()
+    protected Set<String> addresses = new LinkedHashSet<String>()
     
 
     public AbstractController(Map properties=[:], Entity owner=null, Cluster cluster=null) {
         super(properties, owner)
 
-        setConfigIfValNonNull(PORT_NUMBER_SENSOR, properties.portNumberSensor)
-        setConfigIfValNonNull(URL.configKey, properties.url)
-        setConfigIfValNonNull(HTTP_PORT.configKey, properties.port)
-        setConfigIfValNonNull(PROTOCOL.configKey, properties.protocol)
-        setConfigIfValNonNull(DOMAIN_NAME.configKey, properties.domain)
-        
         // TODO Are these checks too early? What if someone subsequently calls setConfig;
         // why must they have already set the URL etc?
 
         portNumber = getConfig(PORT_NUMBER_SENSOR)
         Preconditions.checkNotNull(portNumber, "The port number sensor must be supplied")
 
-        if (getConfig(URL.configKey) || properties.containsKey("url")) {
-	        url = properties.url ?: getConfig(URL.configKey)
+        // FIXME shouldn't have these as vars and config keys; just use a getter method
+        port = getConfig(HTTP_PORT.configKey)
+        protocol = getConfig(PROTOCOL.configKey)
+        domain = getConfig(DOMAIN_NAME.configKey)
+
+        if (getConfig(URL)) {
+	        url = getConfig(URL.configKey)
 	        setAttribute(URL, url)
 
             // Set attributes from URL
             URI uri = new URI(url)
-            port = uri.port
-            setAttribute(HTTP_PORT, port)
-            protocol = uri.scheme
-            setAttribute(PROTOCOL, protocol)
-            domain = uri.host
-            setAttribute(DOMAIN_NAME, domain)
+            if (port==null) port = uri.port; else assert port==uri.port : "mismatch between port and uri $url for $this"
+            if (protocol==null) protocol = uri.scheme; else assert protocol==uri.scheme : "mismatch between port and uri $url for $this"
+            if (domain==null) domain = uri.host; else assert domain==uri.host : "mismatch between domain and uri $url for $this"
         } else {
             // Set attributes from properties or config with defaults
-	        port = properties.port ?: getConfig(HTTP_PORT.configKey)
-	        setAttribute(HTTP_PORT, port)
-
-	        protocol = properties.protocol ?: getConfig(PROTOCOL.configKey)
-	        setAttribute(PROTOCOL, protocol)
-
-            domain = properties.domain ?: getConfig(DOMAIN_NAME.configKey)
-            Preconditions.checkNotNull(domain, "Domain must be set for controller")
-            setAttribute(DOMAIN_NAME, domain)
-
-	        setAttribute(URL, "${protocol}://${domain}:${port}/")
+            url = "${protocol}://${domain}:${port}/";
+	        setAttribute(URL, url)
         }
+        setAttribute(HTTP_PORT, port)
+        setAttribute(PROTOCOL, protocol)
+        setAttribute(DOMAIN_NAME, domain)
+        
+        Preconditions.checkNotNull(domain, "Domain must be set for controller")
 
         policy = new AbstractMembershipTrackingPolicy() {
+            //FIXME seems to be getting invoked twice
             protected void onEntityAdded(Entity member) { addEntity(member); }
             protected void onEntityRemoved(Entity member) { removeEntity(member); }
         }
-
-        this.cluster = cluster ?: properties.cluster
     }
 
     /**
@@ -114,27 +109,38 @@ public abstract class AbstractController extends SoftwareProcessEntity {
     //FIXME members locations might be remote?
     public void addEntity(Entity member) {
         LOG.trace("About to add to $displayName, new member ${member.displayName} in locations ${member.locations} - waiting for service to be up")
+
+        //FIXME messy way to prevent subscriptions from applying until service is up
+        //anyway, this is the wrong place for that logic; should be in update        
         Task started = DependentConfiguration.attributeWhenReady(member, SoftwareProcessEntity.SERVICE_UP)
         executionContext.submit(started)
         started.get()
         
         LOG.info("Adding to $displayName, new member ${member.displayName} in locations ${member.locations}")
+        Set oldAddresses = new LinkedHashSet(addresses)
         member.locations.each { MachineLocation machine ->
             String ip = machine.address.hostAddress
             int port = member.getAttribute(portNumber)
             addresses.add("${ip}:${port}")
         }
+        if (addresses==oldAddresses)
+            //FIXME no change; shouldn't happen but it does
+            return;
         update()
     }
     
     public void removeEntity(Entity member) {
         LOG.info("Removing from $displayName, member ${member.displayName} previously in locations ${member.locations}")
         
+        Set oldAddresses = new LinkedHashSet(addresses)
         member.locations.each { MachineLocation machine ->
             String ip = machine.address.hostAddress
             int port = member.getAttribute(portNumber)
             addresses.remove("${ip}:${port}")
         }
+        if (addresses==oldAddresses)
+            //FIXME no change; shouldn't happen but it does
+            return;
         update()
     }
     

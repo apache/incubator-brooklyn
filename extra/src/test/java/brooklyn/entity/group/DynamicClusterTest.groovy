@@ -26,7 +26,7 @@ class DynamicClusterTest {
     
     static { TimeExtras.init() }
     
-    @Test(expectedExceptions = IllegalArgumentException.class)
+    @Test(expectedExceptions = [IllegalArgumentException, NullPointerException])
     public void constructorRequiresThatNewEntityArgumentIsGiven() {
         new DynamicCluster(initialSize:1, new TestApplication())
         fail "Did not throw expected exception"

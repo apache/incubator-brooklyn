@@ -16,12 +16,14 @@ import brooklyn.entity.trait.Startable
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.Location
+import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.internal.EntityStartUtils
 
 /**
  * Intended to represent a group of homogeneous entities in a single location.
  */
 public interface Cluster extends Group, Startable, Resizable {
+    @SetFromFlag('initialSize')
     BasicConfigKey<Integer> INITIAL_SIZE = [ Integer, "cluster.initial.size", "Initial cluster size", 0 ]
 
     BasicAttributeSensor<String> CLUSTER_SIZE = [ Integer, "cluster.size", "Cluster size" ]

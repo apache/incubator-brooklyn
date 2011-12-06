@@ -80,7 +80,7 @@ class AbstractControllerTest {
 
         // Second child
         cluster.resize(2)
-        executeUntilSucceeds( { cluster.ownedChildren.size() == 2 }, useGroovyTruth:true)
+        executeUntilSucceeds { cluster.ownedChildren.size() == 2 }
         EntityLocal child2 = cluster.ownedChildren.asList().get(1)
         
         child2.setAttribute(ClusteredEntity.MY_PORT, 1234)
@@ -105,7 +105,7 @@ class AbstractControllerTest {
     }
 
     private void assertEventuallyAddressesMatchCluster() {
-        executeUntilSucceeds(useGroovyTruth:true) {
+        executeUntilSucceeds(timeout:5000) {
             updates.size() > 0 && locationsToAddresses(1234, cluster.ownedChildren) == updates.last()
         }
     }
@@ -115,7 +115,7 @@ class AbstractControllerTest {
     }
         
     private Collection<String> locationsToAddresses(int port, Collection<Entity> entities) {
-        List<String> result = []
+        Set<String> result = [] as Set
         entities.each {
             result << it.locations.first().address.hostAddress+":"+port
         }

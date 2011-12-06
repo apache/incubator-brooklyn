@@ -17,6 +17,7 @@ import brooklyn.entity.trait.Startable
 import brooklyn.event.EntityStartException
 import brooklyn.location.Location
 import brooklyn.management.Task
+import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.base.Preconditions
 import com.google.common.collect.Iterables
@@ -27,7 +28,9 @@ import com.google.common.collect.Iterables
 public class DynamicCluster extends AbstractGroup implements Cluster {
     private static final Logger logger = LoggerFactory.getLogger(DynamicCluster)
 
+    @SetFromFlag
     Closure<Entity> newEntity
+    @SetFromFlag
     Closure postStartEntity
 
     Location location
@@ -51,18 +54,13 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     public DynamicCluster(Map properties = [:], Entity owner = null) {
         super(properties, owner)
 
-        Preconditions.checkArgument properties.containsKey('newEntity'), "'newEntity' property is mandatory"
-        Preconditions.checkArgument properties.get('newEntity') instanceof Closure, "'newEntity' must be a closure"
-        newEntity = properties.remove('newEntity')
-
-        Preconditions.checkArgument properties.containsKey('postStartEntity') ? properties.get('postStartEntity') instanceof Closure : true, "'postStartEntity' must be a closure"
-        postStartEntity = properties.remove('postStartEntity')
-
-        setConfigIfValNonNull(INITIAL_SIZE, properties.initialSize)
+        Preconditions.checkNotNull newEntity, "'newEntity' property is mandatory"
 
         // Save flags for use when creating members
         // TODO But we aren't calling remove anymore; passing them to the child isn't good because the 
         // string in the properties isn't as unique as the ConfigKey constant!
+        // Alex agrees: use a config key instead. remove createFlags.
+        // (you'll be getting a warning anyway from configure(Map) that some flags haven't been applied!
         createFlags = properties
 
         setAttribute(SERVICE_UP, false)
