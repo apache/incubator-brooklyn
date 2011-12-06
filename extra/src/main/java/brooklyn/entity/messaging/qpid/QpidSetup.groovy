@@ -8,10 +8,10 @@ import brooklyn.entity.basic.lifecycle.legacy.SshBasedJavaAppSetup
 import brooklyn.location.basic.SshMachineLocation
 
 /**
- * Start a {@link QpidBroker} in a {@link brooklyn.location.Location} accessible over ssh.
+ * Start an AMQP 0-10 {@link QpidBroker} in a {@link brooklyn.location.Location} accessible over ssh.
  */
 public class QpidSetup extends SshBasedJavaAppSetup {
-    public static final String DEFAULT_VERSION = "0.14"
+    public static final String DEFAULT_VERSION = "0.12" // TODO change to 0.14 when ASF release
     public static final String DEFAULT_INSTALL_DIR = DEFAULT_INSTALL_BASEDIR+"/"+"qpid"
     public static final int DEFAULT_FIRST_AMQP_PORT = 5672
 
@@ -88,11 +88,8 @@ public class QpidSetup extends SshBasedJavaAppSetup {
     @Override
     public List<String> getInstallScript() {
         makeInstallScript([
-                // TODO change back after ASF 0.14 release
-                // "wget http://download.nextag.com/apache/qpid/${version}/qpid-java-broker-${version}.tar.gz",
-                // "tar xvzf qpid-java-broker-${version}.tar.gz",
-                "wget http://developers.cloudsoftcorp.com/download/qpid/qpid-broker-${version}.tgz",
-                "tar xzvf qpid-broker-${version}.tgz"
+                "wget http://download.nextag.com/apache/qpid/${version}/qpid-java-broker-${version}.tar.gz",
+                "tar xvzf qpid-java-broker-${version}.tar.gz",
             ])
     }
 
