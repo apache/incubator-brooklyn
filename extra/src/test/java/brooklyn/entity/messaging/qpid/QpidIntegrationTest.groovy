@@ -73,7 +73,7 @@ public class QpidIntegrationTest {
      */
     @Test(groups = "Integration")
     public void canStartupAndShutdownWithPlugin() {
-        Map qpidRuntimeFiles = [ ('lib/monterey-plugin.jar'):new File('src/test/resources/qpid-plugin.jar'),
+        Map qpidRuntimeFiles = [ ('lib/plugins/monterey-plugin.jar'):new File('src/test/resources/qpid-plugin.jar'),
                                  ('etc/config.xml'):new File('src/test/resources/qpid-config.xml') ]
         qpid = new QpidBroker(owner:app, runtimeFiles:qpidRuntimeFiles);
         qpid.start([ testLocation ])

@@ -124,7 +124,6 @@ public class QpidSetup extends SshBasedJavaAppSetup {
             "mkdir -p ${runDir}",
             "cd ${runDir}",
             "cp -R ${installDir}/{bin,etc,lib} .",
-                // JE and BDBstore
         ]
         return script
     }

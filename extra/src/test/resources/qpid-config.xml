@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <broker>
-    <plugin-directory>${QPID_HOME}/lib</plugin-directory>
+    <plugin-directory>${QPID_HOME}/lib/plugins</plugin-directory>
     <cache-directory>${QPID_HOME}/cache</cache-directory>
 	<connector>
 		<ssl>
