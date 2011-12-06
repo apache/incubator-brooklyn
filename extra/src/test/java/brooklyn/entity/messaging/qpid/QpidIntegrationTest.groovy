@@ -67,9 +67,11 @@ public class QpidIntegrationTest {
     }
 
     /**
-     * Test that the broker starts up and sets SERVICE_UP correctly.
+     * Test that the broker starts up and sets SERVICE_UP correctly when plugins are configured.
+     *
+     * This test is disabled until ASF release Qpid 0.14 with fixes for plugin bundles.
      */
-    @Test(groups = "Integration")
+    @Test(enabled = false, groups = "Integration")
     public void canStartupAndShutdownWithPlugin() {
         Map qpidRuntimeFiles = [ ('lib/plugins/monterey-plugin.jar'):new File('src/test/resources/qpid-plugin.jar'),
                                  ('etc/config.xml'):new File('src/test/resources/qpid-config.xml') ]
