@@ -146,6 +146,7 @@ public abstract class AbstractController extends SoftwareProcessEntity {
     
     public void start(Collection<? extends Location> locations) {
         addPolicy(policy)
+        policy.reset()
         policy.setGroup(cluster)
         super.start(locations)
     }
