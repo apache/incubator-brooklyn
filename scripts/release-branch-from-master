@@ -88,7 +88,7 @@ current_branch=$( git name-rev --name-only HEAD )
 
 # Get Maven to make the branch
 set -x
-mvn release:clean release:branch -PExample,Launcher,Four,Three --batch-mode -DautoVersionSubmodules=true -DbranchName=${branch_name} -DupdateBranchVersions=true -DreleaseVersion=${version_on_branch} -DdevelopmentVersion=${version_on_master}
+mvn release:clean release:branch -P Brooklyn,Console,Example,Launcher,Acceptance,Documentation --batch-mode -DautoVersionSubmodules=true -DbranchName=${branch_name} -DupdateBranchVersions=true -DreleaseVersion=${version_on_branch} -DdevelopmentVersion=${version_on_master}
 set +x
 
 # Done!
