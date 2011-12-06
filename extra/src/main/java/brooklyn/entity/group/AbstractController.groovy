@@ -106,6 +106,7 @@ public abstract class AbstractController extends SoftwareProcessEntity {
 
     @Override
     protected void connectSensors() {
+        // TODO is this needed?
         reset()
 		super.connectSensors()
     }
@@ -146,8 +147,7 @@ public abstract class AbstractController extends SoftwareProcessEntity {
     
     public void start(Collection<? extends Location> locations) {
         addPolicy(policy)
-        policy.reset()
-        policy.setGroup(cluster)
+        reset()
         super.start(locations)
     }
 
