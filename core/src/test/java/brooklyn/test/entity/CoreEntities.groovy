@@ -58,9 +58,11 @@ public class TestEntity extends AbstractEntity implements Startable {
     
     int sequenceValue = 0
     AtomicInteger counter = new AtomicInteger(0)
-
+    Map constructorProperties
+    
     public TestEntity(Map properties=[:], Entity owner=null) {
         super(properties, owner)
+        this.constructorProperties = properties
     }
     
     public synchronized int getSequenceValue() {
