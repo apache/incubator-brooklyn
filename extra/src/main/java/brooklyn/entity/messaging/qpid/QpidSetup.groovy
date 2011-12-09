@@ -99,7 +99,7 @@ public class QpidSetup extends SshBasedJavaAppSetup {
     public List<String> getRunScript() {
         List<String> script = [
             "cd ${runDir}",
-			"nohup ./bin/qpid-server -m ${jmxPort} -p ${amqpPort} --exclude-0-8 ${amqpPort} --exclude-0-9 ${amqpPort} --exclude-0-9-1 ${amqpPort} &",
+			"nohup ./bin/qpid-server -b '*' -m ${jmxPort} -p ${amqpPort} --exclude-0-8 ${amqpPort} --exclude-0-9 ${amqpPort} --exclude-0-9-1 ${amqpPort} &",
         ]
         return script
     }
