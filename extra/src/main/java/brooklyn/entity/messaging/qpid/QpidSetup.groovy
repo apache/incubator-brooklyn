@@ -16,7 +16,6 @@ public class QpidSetup extends SshBasedJavaAppSetup {
     public static final int DEFAULT_FIRST_AMQP_PORT = 5672
 
     private int amqpPort
-    private int rmiPort
 
     public static QpidSetup newInstance(QpidBroker entity, SshMachineLocation machine) {
         String suggestedVersion = entity.getConfig(QpidBroker.SUGGESTED_VERSION)
@@ -31,7 +30,7 @@ public class QpidSetup extends SshBasedJavaAppSetup {
         String logFileLocation = "$runDir/log/qpid.log"
 
         int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort))
-        int rmiPort = machine.obtainPort(toDesiredPortRange(jmxPort - 100))
+        int rmiPort = machine.obtainPort(toDesiredPortRange(jmxPort + 100))
         int amqpPort = machine.obtainPort(toDesiredPortRange(suggestedAmqpPort))
 
         QpidSetup result = new QpidSetup(entity, machine)
@@ -54,13 +53,20 @@ public class QpidSetup extends SshBasedJavaAppSetup {
         amqpPort = val
     }
 
-    public void setRmiPort(int val) {
-        rmiPort = val
-    }
-
-    /** JMX is configured using command line switch. */
+    /**
+     * JMX is enabled using a command line switch and XML configuration.
+     *
+     * The RMI port for Qpid is automatically set using the JMX port from the command line {@code -m} plus 100.
+     * <p>
+     * We still need to set the RMI hostname to the (remotely resolved) IP address of our system. Required for environments
+     * like AWS EC2 where DNS names resolve differently inside NAT, since RMI passes this address back to the client.
+     */
     @Override
-    protected Map getJmxJavaSystemProperties() { [:] }
+    protected Map getJmxJavaSystemProperties() {
+        [
+          "java.rmi.server.hostname" : machine.address.hostAddress,
+        ]
+    }
 
     @Override
     protected void setEntityAttributes() {
@@ -94,7 +100,11 @@ public class QpidSetup extends SshBasedJavaAppSetup {
     }
 
     /**
-     * Creates the directories Qpid needs to run in a different location from where it is installed.
+     * Starts the Qpid Java broker.
+     *
+     * The {@code --exclude-0-8} and similar switches are used to force the broker to present using only AMQP 0-10 on the
+     * configured AMQP port number. In future we may wish to parse the {@link QpidBroker#AMQP_VERSION} value to set up
+     * brokers that accept arbitrary AMQP versions.
      */
     public List<String> getRunScript() {
         List<String> script = [
@@ -118,6 +128,9 @@ public class QpidSetup extends SshBasedJavaAppSetup {
        return makeCheckRunningScript("qpid", "qpid-server.pid")
     }
 
+    /**
+     * Creates the directories Qpid needs to run in a different location from where it is installed.
+     */
     @Override
     public List<String> getConfigScript() {
         List<String> script = [
