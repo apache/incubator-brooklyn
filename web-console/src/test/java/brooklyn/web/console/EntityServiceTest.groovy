@@ -12,7 +12,7 @@ import brooklyn.entity.Group
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.AbstractGroup
-import brooklyn.entity.basic.EffectorInferredFromAnnotatedMethod
+import brooklyn.entity.basic.MethodEffector
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
 import brooklyn.test.location.MockLocation
@@ -179,7 +179,7 @@ class EntityServiceTest {
 
 class TestApplication extends AbstractApplication {
     public static final Effector<Void> MY_APP_EFFECTOR =
-        new EffectorInferredFromAnnotatedMethod<Void>(TestApplication.class, "myAppEffector", "Do something");
+        new MethodEffector<Void>(TestApplication.class, "myAppEffector", "Do something");
     
     TestApplication(Map props=[:]) {
         super(props)
@@ -211,7 +211,7 @@ class TestApplication extends AbstractApplication {
 
 class TestGroupEntity extends AbstractGroup {
     public static final Effector<Void> MY_GROUP_EFFECTOR =
-        new EffectorInferredFromAnnotatedMethod<Void>(TestGroupEntity.class, "myGroupEffector", "Do something");
+        new MethodEffector<Void>(TestGroupEntity.class, "myGroupEffector", "Do something");
     
     TestGroupEntity(String displayName) {
         this.displayName = displayName
