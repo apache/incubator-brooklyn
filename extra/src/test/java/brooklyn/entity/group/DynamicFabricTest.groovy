@@ -1,7 +1,7 @@
 package brooklyn.entity.group
 
-import static org.testng.Assert.*
 import static java.util.concurrent.TimeUnit.*
+import static org.testng.Assert.*
 
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
@@ -9,8 +9,6 @@ import java.util.concurrent.CountDownLatch
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.Test
-
-import com.google.common.base.Joiner;
 
 import brooklyn.entity.Application
 import brooklyn.entity.basic.AbstractApplication
@@ -22,6 +20,8 @@ import brooklyn.test.entity.BlockingEntity
 import brooklyn.test.entity.TestEntity
 import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
+
+import com.google.common.base.Joiner
 
 class DynamicFabricTest {
     private static final Logger logger = LoggerFactory.getLogger(DynamicFabricTest)
@@ -95,4 +95,24 @@ class DynamicFabricTest {
             assertEquals(it.counter.get(), 1)
         }
     }
+	
+	@Test
+    public void testDynamicFabricPropagatesProperties() {
+		Application app = new AbstractApplication() {}
+		Closure entityFactory = { properties -> return new TestEntity(properties) }
+        Closure clusterFactory = { properties -> 
+            def clusterProperties = properties + [initialSize:1, newEntity:entityFactory]
+            new DynamicCluster(clusterProperties)
+        }
+		DynamicFabric fabric = new DynamicFabric(initialSize:1, httpPort: 8080, newEntity:clusterFactory, app)
+		
+		fabric.start([ new GeneralPurposeLocation() ])
+        
+		assertEquals(fabric.ownedChildren.size(), 1)
+		assertEquals(fabric.ownedChildren[0].ownedChildren.size(), 1)
+		assertEquals(fabric.ownedChildren[0].ownedChildren[0].constructorProperties.httpPort, 8080)
+        
+        fabric.ownedChildren[0].resize(2)
+        assertEquals(fabric.ownedChildren[0].ownedChildren[1].constructorProperties.httpPort, 8080)
+	}
 }
