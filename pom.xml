@@ -5,7 +5,7 @@
 	<groupId>brooklyn</groupId>
 	<artifactId>brooklyn</artifactId>
 	<packaging>pom</packaging>
-	<version>0.2.0-RC2</version>
+	<version>0.2.0</version>
 	<name>Brooklyn</name>
 
     <url>http://developers.cloudsoftcorp.com/</url>
