@@ -75,6 +75,11 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
         subscribe(entity, source, this)
     }
 
+    public ResizerPolicy setMetricRange(T min, T max) {
+        setMetricLowerBound(min)
+        setMetricUpperBound(max)
+    }
+
     public ResizerPolicy setMetricLowerBound(T val) {
         this.metricLowerBound = val
         this
@@ -85,6 +90,11 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
         this
     }
 
+    public ResizerPolicy setSizeRange(int min, int max) {
+        setMinSize(min)
+        setMaxSize(max)
+    }
+    
     public ResizerPolicy setMinSize(int val) {
         this.minSize = val
         this
