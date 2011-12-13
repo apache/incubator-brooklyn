@@ -26,7 +26,7 @@ import com.google.common.base.Preconditions
 public abstract class AbstractController extends SoftwareProcessEntity {
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractController.class)
 
-    @SetFromFlag("portNumberSensor")  //TODO this is a curious name; confirm, or change
+    @SetFromFlag("portNumberSensor")  //TODO javadoc; and make default be HTTP_PORT
     public static final BasicConfigKey<Sensor> PORT_NUMBER_SENSOR = [ String, "member.sensor.portNumber", "Port number sensor on members" ]
 
     @SetFromFlag("port")  //TODO get standard name; ideally inherit the standard field
@@ -56,8 +56,9 @@ public abstract class AbstractController extends SoftwareProcessEntity {
         // TODO Are these checks too early? What if someone subsequently calls setConfig;
         // why must they have already set the URL etc?
 
+        // use http port by default
         portNumber = getConfig(PORT_NUMBER_SENSOR)
-        Preconditions.checkNotNull(portNumber, "The port number sensor must be supplied")
+        if (portNumber==null) portNumber = HTTP_PORT;
 
         // FIXME shouldn't have these as vars and config keys; just use a getter method
         port = getConfig(HTTP_PORT.configKey)
