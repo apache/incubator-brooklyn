@@ -20,7 +20,8 @@ public class Main {
 
         // TODO allow wiring in of other, non-local, ManagementContext
         ManagementContext context = new LocalManagementContext();
-        WebAppRunner launcher =  new WebAppRunner(context, port, "/web-console.war");
+        WebAppRunner launcher =  new WebAppRunner(context, port, "/brooklyn.war");
         launcher.start();
     }
+    
 }

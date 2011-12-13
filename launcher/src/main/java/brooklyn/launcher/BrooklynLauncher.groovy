@@ -21,7 +21,7 @@ class BrooklynLauncher {
             web = new WebAppRunner(context, port)
             web.start()
         } catch (Exception e) {
-            LOG.warn("Failed to start web-console", e)
+            LOG.warn("Failed to start Brooklyn web-console", e)
         }
 
         addShutdownHook {

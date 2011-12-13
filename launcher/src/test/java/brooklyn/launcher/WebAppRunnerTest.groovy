@@ -17,11 +17,11 @@ public class WebAppRunnerTest {
 	static { TIMEOUT_MS = 5*SECONDS }
     
     /**
-     * This test requires the web-console.war to work.
+     * This test requires the brooklyn.war to work.
      */
     @Test
     public void ping() {
-        WebAppRunner launcher = new WebAppRunner(new LocalManagementContext(), 8090, "/web-console.war");
+        WebAppRunner launcher = new WebAppRunner(new LocalManagementContext(), 8090, "/brooklyn.war");
         assertNotNull(launcher);
         
         launcher.start();

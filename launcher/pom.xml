@@ -107,7 +107,7 @@
                                     <type>war</type>
                                     <overWrite>true</overWrite>
                                     <outputDirectory>target/classes</outputDirectory>
-                                    <destFileName>web-console.war</destFileName>
+                                    <destFileName>brooklyn.war</destFileName>
                                 </artifactItem>
                             </artifactItems>
                         </configuration>
@@ -119,7 +119,7 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <configuration>
                     <instructions>
-                        <Include-Resource>{maven-resources}, target/classes/web-console.war</Include-Resource>
+                        <Include-Resource>{maven-resources}, target/classes/brooklyn.war</Include-Resource>
                         <Bundle-Activator>brooklyn.launcher.Activator</Bundle-Activator>
                         <Main-class>brooklyn.launcher.Main</Main-class>
                     </instructions>

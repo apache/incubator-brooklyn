@@ -15,7 +15,7 @@ public class WebAppRunner {
     private String warClasspathPath;
     private ManagementContext managementContext;
 
-    public WebAppRunner(ManagementContext managementContext,  int port=8081, String embeddedWarCP="/web-console.war") throws Exception {
+    public WebAppRunner(ManagementContext managementContext,  int port=8081, String embeddedWarCP="/brooklyn.war") throws Exception {
         this.warClasspathPath = embeddedWarCP
         this.port = port
         this.managementContext = managementContext
