@@ -11,6 +11,8 @@ import java.util.logging.LogRecord;
 
 import com.google.common.base.Throwables;
 
+//useful for java.util.logger, which by default puts every message on two lines (horrid)
+//however we don't typically use java.util.logger...
 public class SimpleOneLineLogFormatter extends Formatter {
 
 	public SimpleOneLineLogFormatter() {
