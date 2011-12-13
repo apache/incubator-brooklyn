@@ -9,7 +9,7 @@
     <parent>
         <groupId>brooklyn</groupId>
         <artifactId>brooklyn-parent-root</artifactId>
-        <version>0.2.0-SNAPSHOT</version>
+        <version>0.2.0</version>
         <relativePath>../../parent/root/pom.xml</relativePath>
     </parent>
     
