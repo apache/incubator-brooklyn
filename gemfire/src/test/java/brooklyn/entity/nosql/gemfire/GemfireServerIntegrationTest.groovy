@@ -26,16 +26,16 @@ public class GemfireServerIntegrationTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(GemfireServerIntegrationTest.class)
 
-    private static final String API_JAR = "target/dependencies/gemfire-api.jar"
+    private static final String API_JAR = pathTo("gemfire-api.jar")
     private static final String LICENSE_FILE = pathTo("gemfireLicense.zip")
     private static final String EU_CACHE = pathTo("eu/cache.xml")
     private static final String CLIENT_CACHE = pathTo("eu/client-cache.xml")
 
     private Application app
 
-    /** Returns the absolute path to requested resource that should live in brooklyn/entity/nosql/gemfire  */
+    /** Returns the absolute path to requested resource in the classpath  */
     private static String pathTo(String resource) {
-        URL url = GemfireServerIntegrationTest.class.getResource(resource)
+        URL url = GemfireServerIntegrationTest.class.getResource("/" + resource)
         assertNotNull(url, "Couldn't find $resource, aborting")
         return url.path;
     }
