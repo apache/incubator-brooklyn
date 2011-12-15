@@ -48,12 +48,48 @@ public class FlagUtils {
             if (cf) {
                 String flagName = cf.value() ?: f.getName();
                 if (flagName && remaining.containsKey(flagName)) {
-                    if (!f.isAccessible()) f.setAccessible(true)
-                    f.set(o, remaining.remove(flagName))
+                    setField(o, f, remaining.remove(flagName), cf);
                 }
             }
         }
         return remaining
+    }
+
+    /** sets the field to the value, after checking whether the given value can be set 
+     * respecting the constraints of the annotation */
+    public static Object setField(Object objectOfField, Field f, Object value, SetFromFlag annotation) {
+        if (!f.isAccessible()) f.setAccessible(true)
+        if (annotation.immutable()) {
+            def oldValue = f.get(objectOfField)
+            if (oldValue!=getDefaultValueForType(f.getType()) && oldValue!=value) {
+                throw new IllegalStateException("Forbidden modification to immutable field "+
+                    "$f in $objectOfField: attempting to change to $value when was already $oldValue");
+            }
+        }
+        if (!annotation.nullable() && value==null) {
+            throw new IllegalStateException("Forbidden null assignment to non-nullable field "+
+                    "$f in $objectOfField");
+        }
+        f.set(objectOfField, value)
+    }
+    
+    /** returns the default/inital value that is assigned to fields of the givien type;
+     * if the type is not primitive this value is null;
+     * for primitive types it is obvious but not AFAIK programmatically visible
+     * (e.g. 0 for int, false for boolean)  
+     */
+    public static Object getDefaultValueForType(Class t) {
+        if (!t.isPrimitive()) return null;
+        if (t==Integer.TYPE) return (int)0;
+        if (t==Long.TYPE) return (long)0;
+        if (t==Double.TYPE) return (double)0;
+        if (t==Float.TYPE) return (float)0;
+        if (t==Byte.TYPE) return (byte)0;
+        if (t==Short.TYPE) return (short)0;
+        if (t==Character.TYPE) return (char)0;
+        if (t==Boolean.TYPE) return false;
+        //should never happen
+        throw new IllegalStateException("Class $t is an unknown primitive.");
     }
 
 	/** returns a map of all fields which are annotated 'SetFromFlag' with their current values;

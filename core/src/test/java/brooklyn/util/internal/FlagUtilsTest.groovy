@@ -40,6 +40,71 @@ public class FlagUtilsTest {
 		m -= unused
 		assertEquals m2, m
     }
+    
+    @Test
+    public void testNonImmutableField() {
+        Foo f = []
+        FlagUtils.setFieldsFromFlags(f, w:8);
+        assertEquals f.w, 8
+        FlagUtils.setFieldsFromFlags(f, w:9);
+        assertEquals f.w, 9
+    }
+
+    @Test
+    public void testImmutableIntField() {
+        Foo f = []
+        FlagUtils.setFieldsFromFlags(f, x:8);
+        assertEquals f.x, 8
+        boolean succeededWhenShouldntHave = false 
+        try {
+            FlagUtils.setFieldsFromFlags(f, x:9);
+            succeededWhenShouldntHave = true
+        } catch (IllegalStateException e) {
+            //expected
+        }
+        assertFalse succeededWhenShouldntHave
+        assertEquals f.x, 8
+    }
+
+    @Test
+    public void testImmutableObjectField() {
+        WithImmutableNonNullableObject o = []
+        FlagUtils.setFieldsFromFlags(o, a:"a", b:"b");
+        assertEquals o.a, "a"
+        assertEquals o.b, "b"
+        
+        FlagUtils.setFieldsFromFlags(o, a:"a2");
+        assertEquals o.a, "a2"
+        
+        boolean succeededWhenShouldntHave = false
+        try {
+            FlagUtils.setFieldsFromFlags(o, b:"b2");
+            succeededWhenShouldntHave = true
+        } catch (IllegalStateException e) {
+            //expected
+        }
+        assertFalse succeededWhenShouldntHave
+        assertEquals o.b, "b"
+    }
+
+    @Test
+    public void testNonNullable() {
+        WithImmutableNonNullableObject o = []
+        //allowed
+        FlagUtils.setFieldsFromFlags(o, a:null);
+        assertEquals o.a, null
+        assertEquals o.b, null
+        //not allowed
+        boolean succeededWhenShouldntHave = false
+        try {
+            FlagUtils.setFieldsFromFlags(o, b:null);
+            succeededWhenShouldntHave = true
+        } catch (IllegalStateException e) {
+            //expected
+        }
+        assertFalse succeededWhenShouldntHave
+        assertEquals o.b, null
+    }
 
 }
 
@@ -47,7 +112,7 @@ class Foo {
 	@SetFromFlag
 	int w;
 	
-	@SetFromFlag
+	@SetFromFlag(immutable=true)
 	private int x;
 	
 	@SetFromFlag("y")
@@ -60,4 +125,11 @@ interface Bar {
 
 class Baz extends Foo implements Bar {
 	private static int A;
+}
+
+class WithImmutableNonNullableObject {
+    @SetFromFlag
+    Object a;
+    @SetFromFlag(immutable=true, nullable=false)
+    Object b;
 }
