@@ -6,6 +6,7 @@ import java.util.Map
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.DynamicGroup
@@ -28,115 +29,74 @@ public abstract class WebAppWideAreaExample extends AbstractApplication {
 
     public static final List<String> DEFAULT_LOCATIONS = [ Locations.LOCALHOST ]
 
-    private static final String WAR_PATH = "src/main/resources/swf-booking-mvc.war"
-
-    private DynamicFabric webFabric
-    private DynamicGroup nginxEntities
-    private GeoscalingDnsService geoDns
+    public static final String WAR_PATH = 
+    //FIXME some dependency problem on jboss
+//        "classpath://swf-booking-mvc.war"
+    //FIXME not the tomcat branded hello world :)
+        "classpath://hello-world.war"
     
-    protected abstract Closure getWebServerFactory();
-    
-    WebAppWideAreaExample(Map props=[:]) {
+    public WebAppWideAreaExample(Map props=[:]) {
         super(props)
     }
     
-    void init() {
-        Closure webServerFactory = getWebServerFactory()
-        
-        Closure webClusterFactory = { Map flags, Entity owner ->
-            NginxController nginxController = new NginxController(
-                    domain:'brooklyn.geopaas.org',
-                    port:8000,
-                    portNumberSensor:JavaWebAppService.HTTP_PORT)
+    protected ControlledDynamicWebAppCluster newWebCluster(Map flags, Entity owner) {
+        NginxController nginxController = new NginxController(
+            domain:'brooklyn.geopaas.org',
+            port:8000 )
 
-            Map clusterFlags = new HashMap(flags) + [controller:nginxController, webServerFactory:webServerFactory]
-            ControlledDynamicWebAppCluster webCluster = new ControlledDynamicWebAppCluster(clusterFlags, owner)
-            
-            ResizerPolicy policy = new ResizerPolicy(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND)
-            policy.setMinSize(1)
-            policy.setMaxSize(5)
-            policy.setMetricLowerBound(10)
-            policy.setMetricUpperBound(100)
-            webCluster.cluster.addPolicy(policy)
+        ControlledDynamicWebAppCluster webCluster = new ControlledDynamicWebAppCluster(flags, owner).configure(
+            controller:nginxController,
+            initialSize: 1, 
+            webServerFactory: this.&newWebServer )
 
-            return webCluster
-        }
-        
-        webFabric = new DynamicFabric(
-            [
+        ResizerPolicy policy = new ResizerPolicy(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND).
+            setSizeRange(1, 5).
+            setMetricRange(10, 100)
+        webCluster.cluster.addPolicy(policy)
+
+        return webCluster
+    }
+    
+    //TODO WebAppFabric ?  so that we can set a WAR on it (instead of needing to do it at the cluster
+    //TODO is a "template" field in the cluster/fabric better than a factory?
+    private DynamicFabric webFabric = new DynamicFabric(this,
                 displayName : 'web-cluster-fabric',
                 displayNamePrefix : '',
                 displayNameSuffix : ' web cluster',
-                newEntity : webClusterFactory],
-            this)
-        webFabric.setConfig(JavaWebAppService.WAR, WAR_PATH)
-        webFabric.setConfig(Cluster.INITIAL_SIZE, 1)
+                newEntity : this.&newWebCluster);
+
+    private DynamicGroup nginxEntities = new DynamicGroup([displayName: 'Web Fronts'], this, { Entity e -> (e instanceof NginxController) })
+    private GeoscalingDnsService geoDns = new GeoscalingDnsService(this,
+            displayName: 'Geo-DNS',
+            username: BrooklynProperties.Factory.newWithSystemAndEnvironment().getFirst("brooklyn.geoscaling.username", defaultIfNone:'cloudsoft'), 
+            password: BrooklynProperties.Factory.newWithSystemAndEnvironment().getFirst("brooklyn.geoscaling.password", failIfNone:true), 
+            primaryDomainName: 'geopaas.org', smartSubdomainName: 'brooklyn').
+        setTargetEntityProvider(nginxEntities)
         
-        nginxEntities = new DynamicGroup([displayName: 'Web Fronts'], this, { Entity e -> (e instanceof NginxController) })
-        geoDns = new GeoscalingDnsService(displayName: 'Geo-DNS',
-            username: 'cloudsoft', password: 'cl0uds0ft', primaryDomainName: 'geopaas.org', smartSubdomainName: 'brooklyn',
-            this)
-        geoDns.setTargetEntityProvider(nginxEntities)
+    public static void main(String[] argv) {
+        List<Location> locations = Locations.getLocationsById(Arrays.asList(argv) ?: DEFAULT_LOCATIONS)
+    
+        JBoss7WideAreaExample app = new JBoss7WideAreaExample(displayName:'Brooklyn Wide-Area Seam Booking Example Application')
+            
+        BrooklynLauncher.manage(app)
+        app.start(locations)
     }
+    
 }
 
-public class JBossWideAreaExample extends WebAppWideAreaExample {
+/** JBoss is already the default but this makes it explicit */
+public class JBoss7WideAreaExample extends WebAppWideAreaExample {
     public static void main(String[] argv) {
         List<Location> locations = Locations.getLocationsById(Arrays.asList(argv) ?: DEFAULT_LOCATIONS)
 
-        JBossWideAreaExample app = new JBossWideAreaExample(displayName:'Brooklyn Wide-Area Seam Booking Example Application')
-        app.init()
+        JBoss7WideAreaExample app = new JBoss7WideAreaExample(displayName:'Brooklyn Wide-Area Seam Booking Example Application')
         
         BrooklynLauncher.manage(app)
         app.start(locations)
     }
 
-    protected Closure getWebServerFactory() {
-        return { Map properties, Entity cluster ->
-            def server = new JBoss7Server(properties)
-            server.setConfig(JavaWebAppService.HTTP_PORT.configKey, 8080)
-            return server;
-        }
-
+    protected JavaWebAppService newWebServer(Map flags, Entity cluster) {
+        return new JBoss7Server(flags, cluster).configure(httpPort: 8080, war: WAR_PATH)
     }
-}
-
-public class JBoss6WideAreaExample extends WebAppWideAreaExample {
-    public static void main(String[] argv) {
-        List<Location> locations = Locations.getLocationsById(Arrays.asList(argv) ?: DEFAULT_LOCATIONS)
-
-        JBoss6WideAreaExample app = new JBoss6WideAreaExample(displayName:'Brooklyn Wide-Area Seam Booking Example Application')
-        app.init()
-        
-        BrooklynLauncher.manage(app)
-        app.start(locations)
-    }
-
-    protected Closure getWebServerFactory() {
-        return { Map properties, Entity cluster ->
-            def server = new JBoss6Server(properties)
-            server.setConfig(JavaWebAppService.HTTP_PORT.configKey, 8080)
-            return server;
-        }
-    }
-}
-
-public class TomcatWideAreaExample extends WebAppWideAreaExample {
-    public static void main(String[] argv) {
-        List<Location> locations = Locations.getLocationsById(Arrays.asList(argv) ?: DEFAULT_LOCATIONS)
-
-        TomcatWideAreaExample app = new TomcatWideAreaExample(displayName:'Tomcat Wide-Area Example Application')
-        app.init()
-        
-        BrooklynLauncher.manage(app)
-        app.start(locations)
-    }
-
-    protected Closure getWebServerFactory() {
-        return { Map properties, Entity cluster ->
-            def server = new TomcatServer(properties)
-            server.setConfig(JavaWebAppService.HTTP_PORT.configKey, 8080)
-            return server;
-        }
-    }
+    
 }
