@@ -23,7 +23,8 @@ abstract class AbstractEntityAdjunct implements EntityAdjunct {
     String name;
     
     protected transient EntityLocal entity
-    protected transient SubscriptionContext subscription
+    /** not for direct access; refer to as 'subscription' via getter so that it is initialized */
+    protected transient SubscriptionContext _subscription
     private AtomicBoolean destroyed = new AtomicBoolean(false)
     
     private Map<Entity, SubscriptionHandle> subscriptions = new LinkedHashMap<Entity, SubscriptionHandle>()
@@ -34,13 +35,20 @@ abstract class AbstractEntityAdjunct implements EntityAdjunct {
     public void setEntity(EntityLocal entity) {
         if (destroyed.get()) throw new IllegalStateException("Cannot set entity on a destroyed entity adjunct")
         this.entity = entity;
-        this.subscription = new BasicSubscriptionContext(entity.getManagementContext().getSubscriptionManager(), this)
+    }
+    
+    protected synchronized SubscriptionContext getSubscription() {
+        if (_subscription!=null) return _subscription;
+        if (entity==null) return null;
+        if (entity.getManagementContext()==null) return null;
+        _subscription = new BasicSubscriptionContext(entity.getManagementContext().getSubscriptionManager(), this)
     }
     
     /** @see SubscriptionContext#subscribe(Entity, Sensor, EventListener) */
     protected <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<T> listener) {
         if (destroyed.get()) return null
         if (entity==null) throw new IllegalStateException("$this cannot subscribe to $producer because it is not associated to an entity")
+        if (entity.getManagementContext()==null) throw new IllegalStateException("$this cannot subscribe to $producer because the associated entity $entity is not yet managed")
         def handle = subscription.subscribe producer, sensor, listener
         subscriptions.put(producer, handle)
         return handle
