@@ -40,8 +40,11 @@ public class StreamGobbler extends Thread {
     
     StringBuffer lineSoFar = new StringBuffer("");
     public void onChar(int c) {
-    	if (c=='\n') {
-    		onLine(lineSoFar.toString());
+    	if (c=='\n' || c=='\r') {
+    		if (lineSoFar.length()>0)
+    		    //suppress blank lines, so that we can treat either newline char as a line separator
+    		    //(eg to show curl updates frequently)
+    		    onLine(lineSoFar.toString());
     		lineSoFar.setLength(0);
     	} else {
     		lineSoFar.append((char)c);
