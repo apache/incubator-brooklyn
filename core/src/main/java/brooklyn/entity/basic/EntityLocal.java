@@ -85,7 +85,14 @@ public interface EntityLocal extends Entity {
      */
     boolean removeEnricher(AbstractEnricher enricher);
     
+    /** 
+     * @return The management context for the entity, or null if it is not yet managed.
+     */
     ManagementContext getManagementContext();
+    
+    /** 
+     * @return The task execution context for the entity, or null if it is not yet managed.
+     */    
     ExecutionContext getExecutionContext();
     
 	/**
