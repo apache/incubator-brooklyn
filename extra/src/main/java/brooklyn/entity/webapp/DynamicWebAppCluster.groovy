@@ -18,8 +18,14 @@ import brooklyn.event.basic.BasicAttributeSensor
  *   <li>Entity processing time</li>
  * </ul>
  */
-class DynamicWebAppCluster extends DynamicCluster {
+class DynamicWebAppCluster extends DynamicCluster implements WebAppService {
 
+    //FIXME align with WebAppService data points
+    //e.g. TOTAL_REQUEST_COUNT isn't needed; just use REQUEST_COUNT (and update that description)
+    //for AVERAGE_REQUEST_COUNT (and others) rename to REQUEST_COUNT_PER_NODE 
+    //and instead of cluster.reqs...
+    //use (following WebAbbService) webapp.reqs.total.perNode
+    
     public static final BasicAttributeSensor TOTAL_REQUEST_COUNT =
             [ Integer, "cluster.reqs.count.total", "Cluster-wide entity request count" ]
     public static final BasicAttributeSensor AVERAGE_REQUEST_COUNT =
@@ -48,7 +54,7 @@ class DynamicWebAppCluster extends DynamicCluster {
         
         // Enricher attribute setup.  A way of automatically discovering these (but avoiding 
         // averaging things like HTTP port and response codes) would be neat.
-        List<BasicAttributeSensor> enricherSetup = [
+        List<List<BasicAttributeSensor>> enricherSetup = [
             [OldJavaWebApp.REQUEST_COUNT, TOTAL_REQUEST_COUNT, AVERAGE_REQUEST_COUNT],
             [OldJavaWebApp.ERROR_COUNT, TOTAL_ERROR_COUNT, AVERAGE_ERROR_COUNT],
             [OldJavaWebApp.AVG_REQUESTS_PER_SECOND, TOTAL_REQUESTS_PER_SECOND, AVERAGE_REQUESTS_PER_SECOND],

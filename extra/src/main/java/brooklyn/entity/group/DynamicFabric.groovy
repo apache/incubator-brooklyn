@@ -27,6 +27,7 @@ public class DynamicFabric extends AbstractEntity implements Startable {
     private static final Logger logger = LoggerFactory.getLogger(DynamicFabric)
 
     Closure<Entity> newEntity
+    //FIXME delete?  seems like never used?
     int initialSize
     Map createFlags
 

@@ -120,6 +120,8 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
         
         webClient.login(username, password);
         Domain primaryDomain = webClient.getPrimaryDomain(primaryDomainName);
+        if (primaryDomain==null) 
+            throw new NullPointerException("$this got null from web client for primary domain $primaryDomainName")
         SmartSubdomain smartSubdomain = primaryDomain.getSmartSubdomain(smartSubdomainName);
         
         if (!smartSubdomain) {

@@ -6,8 +6,11 @@ import java.util.Map
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.group.AbstractController
+import brooklyn.entity.group.Cluster;
 import brooklyn.entity.trait.Startable
+import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.Location
+import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.base.Preconditions
 
@@ -23,22 +26,39 @@ import com.google.common.base.Preconditions
  */
 public class ControlledDynamicWebAppCluster extends AbstractEntity implements Startable {
     DynamicWebAppCluster cluster
+
+    @SetFromFlag(immutable=true)
     AbstractController controller
-    Closure webServerFactory
     
+    @SetFromFlag(immutable=true)
+    Closure webServerFactory
+
+    @SetFromFlag('initialSize')
+    public static BasicConfigKey<Integer> INITIAL_SIZE = Cluster.INITIAL_SIZE
+        
     ControlledDynamicWebAppCluster(Map flags, Entity owner = null) {
         super(flags, owner)
-        
-        controller = Preconditions.checkNotNull flags.get('controller'), "'controller' property is mandatory"
-        webServerFactory = Preconditions.checkNotNull flags.get('webServerFactory'), "'webServerFactory' property is mandatory"
-        
-        addOwnedChild(controller)
-        cluster = new DynamicWebAppCluster(newEntity:webServerFactory, this)
-        
         setAttribute(SERVICE_UP, false)
     }
+    
+    Entity configure(Map flags=[:]) {
+        boolean alreadyHadController = (controller!=null);
+        
+        super.configure(flags)
+        
+        if (controller && !alreadyHadController) 
+            addOwnedChild(controller)
+        if (webServerFactory && !cluster)
+            cluster = new DynamicWebAppCluster(this,
+                newEntity:webServerFactory, initialSize:getConfig(INITIAL_SIZE))
+            
+        return this
+	}
 
     void start(Collection<? extends Location> locations) {
+        Preconditions.checkNotNull controller, "'controller' property is mandatory"
+        Preconditions.checkNotNull webServerFactory, "'webServerFactory' property is mandatory"
+        
         cluster.start(locations)
 
         controller.bind(cluster:cluster)
