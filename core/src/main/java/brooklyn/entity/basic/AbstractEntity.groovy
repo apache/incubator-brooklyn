@@ -199,7 +199,8 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
                 LOG.trace "Entity {} config keys: {}", id, configT.keySet().join(", ")
             configKeys = configT
 
-            configure(flags);
+            def checkWeGetThis = configure(flags);
+            assert this == checkWeGetThis : "$this configure method does not return itself; returns $checkWeGetThis instead"
 
         } finally { this.@skipInvokeMethodEffectorInterception.set(false) }
     }
@@ -216,8 +217,13 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     }
     
     /** sets fields from flags; can be overridden if needed, subclasses should
-     * do their business before _invoking_ this super (and should nearly always invoke the super);
-     * NB it is recommended instead to use the SetFromFlag annotation on relevant fields
+     * set custom fields before _invoking_ this super 
+     * (and they nearly always should invoke the super)
+     * <p>
+     * note that it is usually preferred to use the SetFromFlag annotation on relevant fields
+     * so they get set automatically by this method and overriding it is unnecessary
+     * 
+     * @return this entity, for fluent style initialization
      */
     public Entity configure(Map flags=[:]) {
         Entity suppliedOwner = flags.remove('owner') ?: null
@@ -241,8 +247,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
                     //normal field, not a config key
                     String flagName = cf.value() ?: f.getName();
                     if (flagName && flags.containsKey(flagName)) {
-                        if (!f.isAccessible()) f.setAccessible(true)
-                        f.set(this, flags.remove(flagName))
+                        FlagUtils.setField(this, f, flags.remove(flagName), cf)
                     } else if (!flagName) {
                         LOG.warn "Unsupported {} on {} in {}; ignoring", SetFromFlag.class.getSimpleName(), f, this
                     }
