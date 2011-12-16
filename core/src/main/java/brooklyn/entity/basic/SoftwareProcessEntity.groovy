@@ -36,7 +36,7 @@ import com.google.common.collect.Iterables
  * It exposes sensors for service state (Lifecycle) and status (String), and for host info, log file location.
  */
 public abstract class SoftwareProcessEntity extends AbstractEntity implements Startable {
-	public static final Logger log = LoggerFactory.getLogger(SoftwareProcessEntity.class)
+	private static final Logger log = LoggerFactory.getLogger(SoftwareProcessEntity.class)
 
 	@SetFromFlag("version")
 	public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.SUGGESTED_VERSION

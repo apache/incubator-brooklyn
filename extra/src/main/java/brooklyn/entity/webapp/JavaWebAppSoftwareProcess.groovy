@@ -1,15 +1,19 @@
 package brooklyn.entity.webapp
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.SoftwareProcessEntity
-import brooklyn.entity.basic.lifecycle.JavaStartStopSshDriver;
-import brooklyn.entity.basic.lifecycle.StartStopSshDriver
+import brooklyn.entity.basic.lifecycle.JavaStartStopSshDriver
 import brooklyn.location.basic.SshMachineLocation
 
 
 public abstract class JavaWebAppSoftwareProcess extends SoftwareProcessEntity implements JavaWebAppService {
 
+    private static final Logger log = LoggerFactory.getLogger(JavaWebAppSoftwareProcess.class)
+    
 	//useful for integration tests which assert 0 requests
 	boolean pollForHttpStatus = true;
 
