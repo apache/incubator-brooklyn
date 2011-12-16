@@ -1,6 +1,10 @@
 package brooklyn.launcher
 
 import brooklyn.management.ManagementContext
+import brooklyn.util.ResourceUtils;
+import brooklyn.util.flags.FlagUtils;
+import brooklyn.util.flags.SetFromFlag;
+
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.webapp.WebAppContext
 import org.slf4j.Logger
@@ -11,14 +15,22 @@ import com.google.common.io.Closeables
 public class WebAppRunner {
     static final Logger log = LoggerFactory.getLogger(WebAppRunner.class);
     private Server server;
-    private int port;
-    private String warClasspathPath;
+    @SetFromFlag
+    private int port=8081;
+    @SetFromFlag
+    private String war="classpath://brooklyn.war";
+    @SetFromFlag
+    /** map of context-prefix to file */
+    private Map<String,String> wars=[:];
     private ManagementContext managementContext;
 
-    public WebAppRunner(ManagementContext managementContext,  int port=8081, String embeddedWarCP="/brooklyn.war") throws Exception {
-        this.warClasspathPath = embeddedWarCP
-        this.port = port
+    /** accepts flags:  port, war (url of war file which is the root), and wars (map of context-prefix to url) */
+    public WebAppRunner(Map flags=[:], ManagementContext managementContext) {
         this.managementContext = managementContext
+        FlagUtils.setFieldsFromFlags(flags, this);
+    }        
+    public WebAppRunner(ManagementContext managementContext,  int port=8081, String warUrl="brooklyn.war") {
+        this(managementContext, port:port, war:warUrl);
     }
 
     /** Starts the embedded web application server. */
@@ -31,12 +43,12 @@ public class WebAppRunner {
         OutputStream out = null
 
         try {
-            is = WebAppRunner.class.getResourceAsStream(warClasspathPath)
-            if (!is) {
-                throw new IllegalArgumentException("WAR not found on classpath at $warClasspathPath")
-            }
+            is = new ResourceUtils(this).getResourceFromUrl(war)
+            if (!is) throw new NullPointerException()
             out = new FileOutputStream(war)
             ByteStreams.copy(is, out)
+        } catch (Exception e) {
+            throw new IllegalArgumentException("WAR not found at $war (tried as URL, on classpath, or as file)", e)
         } finally {
             Closeables.closeQuietly(is)
             Closeables.closeQuietly(out)
