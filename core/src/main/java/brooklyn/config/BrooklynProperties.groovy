@@ -3,6 +3,8 @@ package brooklyn.config;
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.util.ResourceUtils;
+
 class BrooklynProperties extends LinkedHashMap {
 
     protected static final Logger LOG = LoggerFactory.getLogger(BrooklynProperties.class)
@@ -51,42 +53,18 @@ class BrooklynProperties extends LinkedHashMap {
         }
     }
     /**
-     * aof form file:///home/... or http:// or classpath://xx ;
+     * @see ResourceUtils#getResourceFromUrl(String)
+     * 
+     * of the form form file:///home/... or http:// or classpath://xx ;
      * for convenience if not starting with xxx: it is treated as a classpath reference or a file;
      * throws if not found
      */
     public BrooklynProperties addFromUrl(String url) {
-        if (url==null) throw new NullPointerException("Cannot read properties from null");
-        if (url=="") throw new NullPointerException("Cannot read properties from empty string");
-        String orig = url;
-        if (url.startsWith("classpath:")) {
-            url = url.substring(10);
-            while (url.startsWith("/")) url = url.substring(1);
-            URL u = getClass().getClassLoader().getResource(url);
-            try {
-                if (u) return addFrom(u);
-                else throw new IOException("${url} not found on classpath");
-            } catch (IOException e) {
-                //catch the above because both u and modified url will be interesting
-                throw new IOException("Error reading properties from ${orig}: "+e, e);
-            }
-        }
-        if (url.matches("[A-Za-z]+:.*")) {
-            //looks like a URL
-            return addFrom(new URL(url));
-        }
-        
         try {
-            //try as classpath reference, then as file
-            URL u = getClass().getClassLoader().getResource(url);
-            if (u) return addFrom(u);
-            File f = new File(url);
-            if (f.exists()) return addFrom(new File(url));
-        } catch (IOException e) {
-            //catch the above because both u and modified url will be interesting
-            throw new IOException("Error reading properties from ${orig}: "+e, e);
+            addFrom(new ResourceUtils(this).getResourceFromUrl(url));
+        } catch (Exception e) {
+            throw new IOException("Error reading properties from ${url}: "+e, e);
         }
-        throw new IOException("Error reading properties from ${orig}: not found on classpath or filesystem");
     }
     
     /** expects a property already set in scope, whose value is acceptable to {@link #addFromUrl(String)};

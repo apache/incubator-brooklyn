@@ -27,7 +27,11 @@ class GeoscalingScriptGeneratorTest {
     public void testScriptGeneration() {
         Date generationTime = new Date(0);
         String generatedScript = GeoscalingScriptGenerator.generateScriptString(generationTime, HOSTS);
-        String expectedScript = ResourceUtils.loadResource(GeoscalingScriptGeneratorTest.class, "/brooklyn/entity/dns/geoscaling/expectedScript.php");
+        assertTrue(generatedScript.contains("1.2.3"));
+        String expectedScript = new ResourceUtils(this).getResourceAsString("brooklyn/entity/dns/geoscaling/expectedScript.php");
+        assertEquals(expectedScript, generatedScript);
+        //also make sure leading slash is allowed
+        String expectedScript2 = new ResourceUtils(this).getResourceAsString("/brooklyn/entity/dns/geoscaling/expectedScript.php");
         assertEquals(expectedScript, generatedScript);
     }
     

@@ -1,17 +1,105 @@
 package brooklyn.util;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URL;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Throwables;
 import com.google.common.io.Closeables;
 
 public class ResourceUtils {
+    
+    private static final Logger log = LoggerFactory.getLogger(ResourceUtils.class);
 
-    public static String loadResource(Class<?> clazz, String resourceName) {
+    ClassLoader loader = null;
+    String context = null;
+    
+    /** context string used for errors */
+    public ResourceUtils(ClassLoader loader, String context) {
+        this.loader = loader;
+        this.context = context;
+    }
+    /** uses the classloader of the given object, and the phrase object's toString (preceded by the word 'for') as the context string used in errors */
+    public ResourceUtils(Object context) {
+        this(context==null ? null : context instanceof Class ? ((Class)context).getClassLoader() : context.getClass().getClassLoader(), context==null ? null : ""+context);
+    }
+    
+    public ClassLoader getLoader() {
+        return (loader!=null ? loader : getClass().getClassLoader());
+    }
+    
+    /**
+     * Takes a string which is treated as a URL (with some extended "schemes" also expected),
+     * or as a path to something either on the classpath (absolute only) or the local filesystem (relative or absolute, depending on leading slash)
+     * <p>
+     * URLs can be of the form <b>classpath://com/acme/Foo.properties</b>
+     * as well as <b>file:///home/...</b> and <b>http://acme.com/...</b>.
+     * <p>
+     * Throws exception if not found, using the context parameter passed into the constructor.
+     * <p>
+     * TODO may want OSGi, or typed object; should consider pax url
+     * 
+     * @return a stream, or throws exception (never returns null)
+     */
+    public InputStream getResourceFromUrl(String url) {
+        try {
+            if (url==null) throw new NullPointerException("Cannot read from null");
+            if (url=="") throw new NullPointerException("Cannot read from empty string");
+            String orig = url;
+            if (url.startsWith("classpath:")) {
+                url = url.substring(10);
+                while (url.startsWith("/")) url = url.substring(1);
+                URL u = getLoader().getResource(url);
+                try {
+                    if (u!=null) return u.openStream();
+                    else throw new IOException(url+" not found on classpath");
+                } catch (IOException e) {
+                    //catch the above because both orig and modified url may be interesting
+                    throw new IOException("Error accessing "+orig+": "+e, e);
+                }
+            }
+            if (url.matches("[A-Za-z]+:.*")) {
+                //looks like a URL
+                return new URL(url).openStream();
+            }
+
+            try {
+                //try as classpath reference, then as file
+                URL u = getLoader().getResource(url);
+                if (u!=null) return u.openStream();
+                if (url.startsWith("/")) {
+                    //some getResource calls break if argument starts with /
+                    String urlNoSlash = url;
+                    while (urlNoSlash.startsWith("/")) urlNoSlash = urlNoSlash.substring(1);
+                    u = getLoader().getResource(urlNoSlash);
+                    if (u!=null) return u.openStream();
+                }
+                File f = new File(url);
+                if (f.exists()) return new FileInputStream(f);
+            } catch (IOException e) {
+                //catch the above because both u and modified url will be interesting
+                throw new IOException("Error accessing "+orig+": "+e, e);
+            }
+            throw new IOException("'"+orig+"' not found on classpath or filesystem");
+        } catch (Exception e) {
+            if (context!=null)
+                throw new RuntimeException("Error getting resource for "+context+": "+e, e);
+            else throw new RuntimeException(e);
+        }
+    }
+
+    /** takes {@link #getResourceFromUrl(String)} and reads fully, into a string */
+    public String getResourceAsString(String url) {
         BufferedReader reader = null;
         try {
-            InputStream is = clazz.getResourceAsStream(resourceName);
+            InputStream is = getResourceFromUrl(url);
             reader = new BufferedReader(new InputStreamReader(is));
             StringBuffer sb = new StringBuffer();
             String line;
@@ -20,8 +108,8 @@ public class ResourceUtils {
             return sb.toString();
             
         } catch (Exception e) {
-            throw new RuntimeException("Problem reading resource '"+resourceName+"': "+e, e);
-            
+            log.warn("error reading "+url+(context==null?"":" "+context)+" (rethrowing): "+e);
+            throw Throwables.propagate(e);
         } finally {
             Closeables.closeQuietly(reader);
         }

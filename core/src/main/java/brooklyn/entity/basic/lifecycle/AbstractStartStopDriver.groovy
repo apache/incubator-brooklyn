@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.location.Location
+import brooklyn.util.ResourceUtils;
 
 public abstract class AbstractStartStopDriver implements StartStopDriver {
 
@@ -54,22 +55,8 @@ public abstract class AbstractStartStopDriver implements StartStopDriver {
 	
 	public Set<Integer> getPortsUsed() { [] }
 
-	public InputStream getResource(String url) {
-		try {
-			if (url.matches("[A-Za-z]+:.*")) {
-				//treat as URL
-				if (url.startsWith("classpath:")) {
-					url = url.substring(10);
-					while (url.startsWith("/")) url=url.substring(1);
-					return getClass().getClassLoader().getResourceAsStream(url);
-				}
-				return new URL(url).openStream()
-			}
-			//treat as file
-			return new FileInputStream(url);
-		} catch (Exception e) {
-			log.warn "error opening ${url} for ${entity} (rethrowing): ${e}"
-		}
-	}
+    public InputStream getResource(String url) {
+        new ResourceUtils(entityLocal).getResourceFromUrl(url);
+    }
 		
 }
