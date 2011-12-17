@@ -56,8 +56,6 @@ import brooklyn.util.task.ParallelTask
  */
 public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
     
-    // FIXME Remove name? Why have name and displayName? Same for Location...
-
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractEntity.class)
 
     public static BasicNotificationSensor<Sensor> SENSOR_ADDED = new BasicNotificationSensor<Sensor>(Sensor.class,
