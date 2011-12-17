@@ -5,8 +5,11 @@ grails.project.test.reports.dir = "target/test-reports"
 grails.project.dependency.resolution = {
     // inherit Grails' default dependencies
     inherits("global") {
-        // uncomment to disable ehcache
-        // excludes 'ehcache'
+        // disable ehcache (we don't use it)
+        excludes 'ehcache'
+        // following exclusions also recommended to resolve some sax / xml nasties
+        // (which you'll see if you add brooklyn-extra below and try grails run-app) ... but don't work 
+        // "xml-apis", "xmlParserAPIs", "xalan"
     }
     log "warn" // log level of Ivy resolver, either 'error', 'warn', 'info', 'debug' or 'verbose'
     repositories {
@@ -14,10 +17,8 @@ grails.project.dependency.resolution = {
         grailsHome()
         grailsCentral()
 
-        // uncomment the below to enable remote dependency resolution
-        // from public Maven repositories
         mavenLocal()
-        mavenCentral()
+        mavenCentral()   //needed for ivy, etc
         mavenRepo "http://snapshots.repository.codehaus.org"
         mavenRepo "http://repository.codehaus.org"
         mavenRepo "http://download.java.net/maven/2/"
@@ -25,7 +26,13 @@ grails.project.dependency.resolution = {
     }
     dependencies {
         // specify dependencies here under either 'build', 'compile', 'runtime', 'test' or 'provided' scopes eg.
-
-        // runtime 'mysql:mysql-connector-java:5.1.13'
+        compile 'brooklyn:brooklyn-api:0.2.0-SNAPSHOT', transitive:false 
+        compile 'brooklyn:brooklyn-core:0.2.0-SNAPSHOT', transitive:false
+        compile 'brooklyn:brooklyn-extra:0.2.0-SNAPSHOT', transitive:false
+        
+        //instead of transitive:false the following might work better:
+//        excludes "org.codehaus.groovy","org.jclouds"
+        
+        
     }
 }

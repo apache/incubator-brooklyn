@@ -81,10 +81,17 @@
             <version>4.1.1</version>
         </dependency>
         <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>jtidy</artifactId>
+            <version>r8-20060801</version>
+        </dependency>
+        <!--  this older one includes sax which breaks all kinds of things when combined with eg grails
+        <dependency>
             <groupId>jtidy</groupId>
             <artifactId>jtidy</artifactId>
             <version>4aug2000r7-dev</version>
         </dependency>
+         -->
 
     	<dependency>
             <groupId>org.apache.geronimo.specs</groupId>
