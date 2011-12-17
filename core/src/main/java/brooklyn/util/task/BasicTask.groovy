@@ -344,7 +344,8 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
 			if (isDone()) {
 				return getStatusString(verbosity)
 			} else {
-				throw new IllegalStateException("Task $this has no thread set but is started and not done!")
+			    //should only happen for repeating task which is not active
+                return "Sleeping";
 			}
 		}
 
