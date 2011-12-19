@@ -51,7 +51,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 	public static final AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME
 	public static final AttributeSensor<String> ADDRESS = Attributes.ADDRESS
 
-	public static final BasicAttributeSensor<Lifecycle> SERVICE_STATE = [ Lifecycle, "service.state", "Service lifecycle state" ]
+	public static final BasicAttributeSensor<Lifecycle> SERVICE_STATE = Attributes.SERVICE_STATE
 	
 	private MachineProvisioningLocation provisioningLoc
 	private StartStopDriver driverLocal
