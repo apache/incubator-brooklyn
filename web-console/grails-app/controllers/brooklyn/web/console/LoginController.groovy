@@ -2,15 +2,17 @@ package brooklyn.web.console
 
 import grails.converters.JSON
 
+import javax.security.auth.login.AccountExpiredException
 import javax.servlet.http.HttpServletResponse
 
 import org.codehaus.groovy.grails.plugins.springsecurity.SpringSecurityUtils
-
-import org.springframework.security.authentication.AccountExpiredException
+import org.codehaus.groovy.grails.web.context.ServletContextHolder
 import org.springframework.security.authentication.CredentialsExpiredException
 import org.springframework.security.authentication.DisabledException
 import org.springframework.security.authentication.LockedException
-import org.springframework.security.core.context.SecurityContextHolder as SCH
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.authority.GrantedAuthorityImpl
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.web.WebAttributes
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 
@@ -38,12 +40,38 @@ class LoginController {
         }
     }
 
+    //logs the given user in
+    private void autoLogin(username) {
+        def user = SecurityUser.findByUsername(username)
+        List auths = user.authorities.collect {
+            new GrantedAuthorityImpl(it.authority)
+        }
+        def grailsUser = new org.springframework.security.core.userdetails.User(
+            user.username, // String username, String password, 
+            "",
+            true, true, // boolean enabled, boolean accountNonExpired,
+            true, true, // boolean credentialsNonExpired, boolean accountNonLocked, 
+            auths //Collection<? extends GrantedAuthority> authorities);
+            );
+        def authToken =  new UsernamePasswordAuthenticationToken(grailsUser, '', auths)
+        SecurityContextHolder.context.authentication = authToken
+    }
+    
     /**
      * Show the login page.
      */
     def auth = {
-
         def config = SpringSecurityUtils.securityConfig
+        //ideally we'd do this on start of any new session, but not clear how to do it
+        //(this probably isn't the best workaround to allow tests to access in any case!) 
+        if (!springSecurityService.isLoggedIn()) {
+            //for unit tests
+            def autologinUser = ServletContextHolder.servletContext?.getAttribute("brooklynWebAutologinUser");
+            autologinUser = "admin"
+            if (autologinUser) {
+                autoLogin(autologinUser)
+            }
+        }
 
         if (springSecurityService.isLoggedIn()) {
             redirect uri: config.successHandler.defaultTargetUrl

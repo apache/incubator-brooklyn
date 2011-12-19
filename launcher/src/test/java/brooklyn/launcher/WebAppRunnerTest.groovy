@@ -17,19 +17,53 @@ public class WebAppRunnerTest {
 	static { TIMEOUT_MS = 5*SECONDS }
     
     /**
-     * This test requires the brooklyn.war to work.
+     * This test requires the brooklyn.war to work. (Should be placed by maven build.)
      */
     @Test
-    public void ping() {
-        WebAppRunner launcher = new WebAppRunner(new LocalManagementContext(), 8090, "/brooklyn.war");
+    public void testStartWar1() {
+        WebAppRunner launcher = new WebAppRunner(new LocalManagementContext(), port:8090,
+            attributes:[brooklynWebAutologinUser:'admin']);
         assertNotNull(launcher);
         
         launcher.start();
-        
-        executeUntilSucceeds(timeout:TIMEOUT_MS, maxAttempts:50) {
-            assertNotNull(new URL("http://localhost:8090/").getContent())
+        try {
+            assertBrooklynAt("http://admin:password@localhost:8090/")        
+        } finally {
+            launcher.stop();
         }
-
-        launcher.stop();
     }
+
+    private void assertBrooklynAt(String u) {
+        executeUntilSucceeds(timeout:TIMEOUT_MS, maxAttempts:50) {
+            String contents = new URL(u).openStream().getText();
+//            println "contents: "+contents
+            assertNotNull( contents )
+            assertTrue( contents.contains("Brooklyn Webconsole - Dashboard") )
+        }
+    }
+        
+    @Test
+    public void testStartSecondaryWar() {
+        WebAppRunner launcher = new WebAppRunner(new LocalManagementContext(), 
+            port: 8090, war:"brooklyn.war", wars:["hello":"hello-world.war"],
+            attributes:[brooklynWebAutologinUser:'admin']);
+        assertNotNull(launcher);
+        
+        launcher.start();
+        try {
+
+            assertBrooklynAt("http://admin:password@localhost:8090/");
+
+            executeUntilSucceeds(timeout:TIMEOUT_MS, maxAttempts:50) {
+                String contents = new URL("http://localhost:8090/hello").openStream().getText();
+//                println "contents: "+contents
+                assertNotNull( contents )
+                assertTrue( contents.contains("This is the home page for a sample application") )
+            }
+
+        } finally {
+            launcher.stop();
+        }
+    }
+
 }

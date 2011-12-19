@@ -6,6 +6,7 @@ import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag;
 
 import org.eclipse.jetty.server.Server
+import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.webapp.WebAppContext
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -22,50 +23,76 @@ public class WebAppRunner {
     @SetFromFlag
     /** map of context-prefix to file */
     private Map<String,String> wars=[:];
+    @SetFromFlag
+    private Map<String,Object> attributes=[:];
     private ManagementContext managementContext;
 
-    /** accepts flags:  port, war (url of war file which is the root), and wars (map of context-prefix to url) */
+    /** accepts flags:  port, 
+     * war (url of war file which is the root), 
+     * wars (map of context-prefix to url),
+     * attrs (map of attribute-name : object pairs passed to the servlet) */
     public WebAppRunner(Map flags=[:], ManagementContext managementContext) {
         this.managementContext = managementContext
         FlagUtils.setFieldsFromFlags(flags, this);
     }        
-    public WebAppRunner(ManagementContext managementContext,  int port=8081, String warUrl="brooklyn.war") {
+    public WebAppRunner(ManagementContext managementContext,  int port, String warUrl="brooklyn.war") {
         this(managementContext, port:port, war:warUrl);
     }
 
-    /** Starts the embedded web application server. */
-    public void start() throws Exception {
-        log.debug("Starting Brooklyn console on port " + port)
-
-        File war = File.createTempFile("embedded", "war")
-        war.deleteOnExit()
-        InputStream is = null
+    public static File writeToTempFile(InputStream is, String prefix, String suffix) {
+        File tmpWarFile = File.createTempFile("embedded", "war")
+        tmpWarFile.deleteOnExit()
+        
         OutputStream out = null
-
         try {
-            is = new ResourceUtils(this).getResourceFromUrl(war)
             if (!is) throw new NullPointerException()
-            out = new FileOutputStream(war)
+            out = new FileOutputStream(tmpWarFile)
             ByteStreams.copy(is, out)
-        } catch (Exception e) {
-            throw new IllegalArgumentException("WAR not found at $war (tried as URL, on classpath, or as file)", e)
         } finally {
             Closeables.closeQuietly(is)
             Closeables.closeQuietly(out)
         }
+        tmpWarFile
+    }
+    /** Starts the embedded web application server. */
+    public void start() throws Exception {
+        log.debug("Starting Brooklyn console on port " + port)
 
         server = new Server(port)
 
-        WebAppContext context = new WebAppContext()
+        
+        def handlers = []
+                
+        wars.each { pathSpec, warUrl ->
+            String cleanPathSpec = pathSpec;
+            while (cleanPathSpec.startsWith("/")) cleanPathSpec = cleanPathSpec.substring(1)
+            File tmpWarFile = writeToTempFile(new ResourceUtils(this).getResourceFromUrl(warUrl), "embedded-"+cleanPathSpec, "war");
+
+            WebAppContext context = new WebAppContext()
+            context.setAttribute("brooklynManagementContext", managementContext)
+            context.war = tmpWarFile.getAbsolutePath()
+            context.contextPath = "/"+cleanPathSpec
+            context.parentLoaderPriority = true
+            handlers << context
+        }
+
+        File tmpWarFile = writeToTempFile(new ResourceUtils(this).getResourceFromUrl(war), "embedded", "war");
+        WebAppContext context;
+        context = new WebAppContext()
         context.setAttribute("brooklynManagementContext", managementContext)
-        context.war = war.getAbsolutePath()
+        context.war = tmpWarFile.getAbsolutePath()
         context.contextPath = "/"
         context.parentLoaderPriority = true
+        handlers << context
+        
+        HandlerList hl = new HandlerList()
+        hl.setHandlers(handlers.toArray(new WebAppContext[0]))
 
-        server.handler = context
+        server.handler = hl
+        
         server.start()
 
-        log.info("Started Brooklyn console at http://localhost:" + port  + context.contextPath)
+        log.info("Started Brooklyn console at http://localhost:" + port+", running "+war+(wars? " and "+wars.values() : ""))
     }
 
     /** Asks the app server to stop and waits for it to finish up. */

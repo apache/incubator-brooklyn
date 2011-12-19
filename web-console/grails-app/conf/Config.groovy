@@ -97,6 +97,8 @@ grails.plugins.springsecurity.authority.className = 'brooklyn.web.console.Securi
 grails.plugins.springsecurity.useBasicAuth = true
 grails.plugins.springsecurity.basic.realmName = "Brooklyn Webconsole"
 
+grails.plugins.springsecurity.successHandler.defaultTargetUrl = "/dashboard"
+
 grails.plugins.springsecurity.controllerAnnotations.staticRules = [
    '/dashboard/**': ['ROLE_ADMIN'],
    '/detail/**': ['ROLE_ADMIN'],

@@ -101,6 +101,8 @@
                         <configuration>
                             <artifactItems>
                                 <artifactItem>
+                                    <!-- this can fail in eclipse trying to copy _from_ target/classes.
+                                         see http://jira.codehaus.org/browse/MDEP-259 -->
                                     <groupId>${project.groupId}</groupId>
                                     <artifactId>brooklyn-web-console</artifactId>
                                     <version>${project.version}</version>
