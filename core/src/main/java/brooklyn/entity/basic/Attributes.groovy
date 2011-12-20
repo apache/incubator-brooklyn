@@ -42,12 +42,19 @@ public interface Attributes {
     ConfiguredAttributeSensor<Integer> AMQP_PORT = [ Integer, "amqp.port", "AMQP port", 5672 ]
 
     /*
-     * Other attributes.
+     * Location/connection attributes.
      */
 
     BasicAttributeSensor<String> HOSTNAME = [ String, "host.name", "Host name" ]
     BasicAttributeSensor<String> ADDRESS = [ String, "host.address", "Host IP address" ]
 	
+    /*
+     * Lifecycle attributes
+     */
+    
+    BasicAttributeSensor<Lifecycle> SERVICE_STATE = [ Lifecycle, "service.state", "Service lifecycle state" ]
+
+     
 	/** optional */
     BasicAttributeSensor<String> LOG_FILE_LOCATION = [ String, "log.location", "log file location" ]
 }
