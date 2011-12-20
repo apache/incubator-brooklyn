@@ -1,5 +1,6 @@
 package brooklyn.web.console
 
+import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
 import brooklyn.management.ExecutionManager
@@ -23,7 +24,8 @@ class ManagementContextService {
 
     public synchronized ManagementContext getContext() {
         if (!managementContext) {
-            managementContext = (ManagementContext) ServletContextHolder.servletContext?.getAttribute("brooklynManagementContext")
+            managementContext = (ManagementContext) ServletContextHolder.servletContext?.
+                getAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT)
         }
         // TODO remove this test code as soon as the group agrees it's unnecessary!
         if (!managementContext) {

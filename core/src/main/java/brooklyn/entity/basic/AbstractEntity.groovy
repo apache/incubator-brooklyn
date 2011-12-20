@@ -151,7 +151,8 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
                 if (Effector.class.isAssignableFrom(f.getType())) {
                     Effector eff = f.get(this)
                     def overwritten = effectorsT.put(eff.name, eff)
-                    if (overwritten!=null) LOG.warn("multiple definitions for effector ${eff.name} on $this; preferring $eff to $overwritten")
+                    if (overwritten!=null && !overwritten.is(eff)) 
+                        LOG.warn("multiple definitions for effector ${eff.name} on $this; preferring $eff to $overwritten")
                 }
             }
             if (LOG.isTraceEnabled())

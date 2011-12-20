@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.util.ResourceUtils;
 
+/** utils for accessing command-line and system-env properties */
 class BrooklynProperties extends LinkedHashMap {
 
     protected static final Logger LOG = LoggerFactory.getLogger(BrooklynProperties.class)

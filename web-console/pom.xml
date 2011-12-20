@@ -24,12 +24,6 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>brooklyn-extra</artifactId>
             <version>${project.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>jtidy</groupId>
-                    <artifactId>jtidy</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -55,12 +49,12 @@
                     <artifactId>gpars</artifactId>
                 </exclusion>
                 <exclusion>
-                    <groupId>org.codehaus.gant</groupId>
-                    <artifactId>gant_groovy1.7</artifactId>
-                </exclusion>
-                <exclusion>
                     <groupId>org.gparallelizer</groupId>
                     <artifactId>GParallelizer</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.codehaus.gant</groupId>
+                    <artifactId>gant_groovy1.7</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.codehaus.gant</groupId>
@@ -253,6 +247,7 @@
             <version>${slf4j.version}</version>
             <!-- TODO not sure whether this should be included here or by higher-level project (it is included by tests) -->
             <scope>runtime</scope>
+            <optional>true</optional>
         </dependency>
 
         <!-- Needed in the case of AOP usage -->
@@ -261,7 +256,6 @@
             <artifactId>aspectjweaver</artifactId>
             <version>1.6.8</version>
         </dependency>
-
         <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjrt</artifactId>
@@ -294,38 +288,6 @@
         </dependency>
 
     </dependencies>
-
-<!--  seems to only supply version info, which is in vars elsewhere anyway
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-api</artifactId>
-                <version>1.5.8</version>
-            </dependency>
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-log4j12</artifactId>
-                <version>1.5.8</version>
-            </dependency>
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-jdk14</artifactId>
-                <version>1.5.8</version>
-            </dependency>
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>jcl-over-slf4j</artifactId>
-                <version>1.5.8</version>
-            </dependency>
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>jul-to-slf4j</artifactId>
-                <version>1.5.8</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
--->
 
     <repositories>
         <!-- Required to get hold of javassist:javassist -->
