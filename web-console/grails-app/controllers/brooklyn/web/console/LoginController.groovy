@@ -16,6 +16,8 @@ import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.web.WebAttributes
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 
+import brooklyn.config.BrooklynServiceAttributes;
+
 class LoginController {
 
     /**
@@ -66,8 +68,7 @@ class LoginController {
         //(this probably isn't the best workaround to allow tests to access in any case!) 
         if (!springSecurityService.isLoggedIn()) {
             //for unit tests
-            def autologinUser = ServletContextHolder.servletContext?.getAttribute("brooklynWebAutologinUser");
-            autologinUser = "admin"
+            def autologinUser = ServletContextHolder.servletContext?.getAttribute(BrooklynServiceAttributes.BROOKLYN_AUTOLOGIN_USERNAME);
             if (autologinUser) {
                 autoLogin(autologinUser)
             }

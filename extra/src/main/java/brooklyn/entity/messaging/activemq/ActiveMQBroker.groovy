@@ -11,6 +11,8 @@ import javax.management.RuntimeMBeanException;
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import com.google.common.base.Throwables;
+
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.legacy.JavaApp;
@@ -112,11 +114,18 @@ public class ActiveMQBroker extends JMSBroker<ActiveMQQueue, ActiveMQTopic> {
 		//of the object name lookups, in favour of = *
 		//(we can be pretty sure there is only one being hosted by this process, right?)
 
-		//caller catches erros
-//		try {
+		//caller catches most errors, but logs them; this particular error
+		try {
 			ValueProvider<String> provider = jmxAdapter.newAttributeProvider("org.apache.activemq:BrokerName=localhost,Type=Broker", "BrokerId")
 			String state = provider.compute()
 			return (state)  //was =="Started" for camel
+		} catch (RuntimeMBeanException e) {
+            if (e.cause in NullPointerException) {
+                log.warn("ActiveMQ gave NullPointerException when reading JMX computeNodeUp; known issue with ActiveMQ and should resovle itself soon after start-up")
+            } else {
+                Throwables.propagate(e);
+            }
+        }
 //		} catch (Exception e) {
 //			//get InstanceNotFound and even NPE (from looking up broker id on other side)
 //			//if connect too early

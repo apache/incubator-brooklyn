@@ -22,6 +22,12 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>${slf4j.version}</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
             <groupId>brooklyn</groupId>
             <artifactId>brooklyn-extra</artifactId>
         </dependency>
@@ -34,11 +40,6 @@
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
             <version>4.3.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>${slf4j.version}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
@@ -91,6 +92,7 @@
         <plugins>
             <plugin>
                 <artifactId>maven-dependency-plugin</artifactId>
+                <!-- copy the WAR so it is available on the classpath for programmatic deployment -->
                 <executions>
                     <execution>
                         <id>copy</id>
@@ -129,13 +131,19 @@
             </plugin>
             <plugin>
                 <artifactId>maven-shade-plugin</artifactId>
+                <!--  the 'with-deps' plugin to be twice as large as is strictly necessary
+                        but it's worth it to have it so handy to have a standalone deployable 
+                        war embedded in a standalone executable jar; 
+                        maybe there is a more efficient way but seems not worth the effort 
+                        (esp inevitable maintenance/debug burden);
+                        NB: configuration of shade is in parent pom -->
             </plugin>
             <plugin> 
                 <artifactId>maven-site-plugin</artifactId> 
                 <configuration> 
                     <generateReports>false</generateReports> 
                 </configuration> 
-            </plugin> 
+            </plugin>
 		</plugins>
 	</build>
 </project>

@@ -1,31 +1,40 @@
 package brooklyn.launcher
 
-import brooklyn.management.ManagementContext
-import brooklyn.util.ResourceUtils;
-import brooklyn.util.flags.FlagUtils;
-import brooklyn.util.flags.SetFromFlag;
-
 import org.eclipse.jetty.server.Server
-import org.eclipse.jetty.server.handler.HandlerList;
+import org.eclipse.jetty.server.handler.HandlerList
 import org.eclipse.jetty.webapp.WebAppContext
+import org.jclouds.gogrid.options.GetServerListOptions;
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+
+import brooklyn.config.BrooklynServiceAttributes
+import brooklyn.management.ManagementContext
+import brooklyn.util.ResourceUtils
+import brooklyn.util.flags.FlagUtils
+import brooklyn.util.flags.SetFromFlag
+
+import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams
 import com.google.common.io.Closeables
 
+/** Starts the web-app running, connected to the given management context */
 public class WebAppRunner {
-    static final Logger log = LoggerFactory.getLogger(WebAppRunner.class);
+    private static final Logger log = LoggerFactory.getLogger(WebAppRunner.class);
+    
+    public static final String BROOKLYN_WAR_URL = "classpath://brooklyn.war";
+     
     private Server server;
+    
     @SetFromFlag
-    private int port=8081;
+    int port=8081;
     @SetFromFlag
-    private String war="classpath://brooklyn.war";
+    private String war=BROOKLYN_WAR_URL;
     @SetFromFlag
     /** map of context-prefix to file */
-    private Map<String,String> wars=[:];
+    Map<String,String> wars=[:];
     @SetFromFlag
-    private Map<String,Object> attributes=[:];
-    private ManagementContext managementContext;
+    Map<String,Object> attributes=[:];
+    ManagementContext managementContext;
 
     /** accepts flags:  port, 
      * war (url of war file which is the root), 
@@ -34,9 +43,26 @@ public class WebAppRunner {
     public WebAppRunner(Map flags=[:], ManagementContext managementContext) {
         this.managementContext = managementContext
         FlagUtils.setFieldsFromFlags(flags, this);
-    }        
+    }
     public WebAppRunner(ManagementContext managementContext,  int port, String warUrl="brooklyn.war") {
         this(managementContext, port:port, war:warUrl);
+    }
+
+    public WebAppRunner setPort(int port) {
+        this.port = port;
+        this
+    }
+    public WebAppRunner setWar(String url) {
+        this.war = url;
+        this
+    }
+    public WebAppRunner addWar(String path, String warUrl) {
+        wars.put(path, warUrl);
+        this
+    }
+    public WebAppRunner addAttribute(String field, Object value) {
+        attributes.put(field, value);
+        this
     }
 
     public static File writeToTempFile(InputStream is, String prefix, String suffix) {
@@ -56,11 +82,9 @@ public class WebAppRunner {
     }
     /** Starts the embedded web application server. */
     public void start() throws Exception {
-        log.debug("Starting Brooklyn console on port " + port)
+        log.info("Starting Brooklyn console at http://localhost:" + port+", running "+war+(wars? " and "+wars.values() : ""))
 
         server = new Server(port)
-
-        
         def handlers = []
                 
         wars.each { pathSpec, warUrl ->
@@ -69,7 +93,8 @@ public class WebAppRunner {
             File tmpWarFile = writeToTempFile(new ResourceUtils(this).getResourceFromUrl(warUrl), "embedded-"+cleanPathSpec, "war");
 
             WebAppContext context = new WebAppContext()
-            context.setAttribute("brooklynManagementContext", managementContext)
+            context.setAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT, managementContext)
+            attributes.each { k,v -> context.setAttribute(k, v) }
             context.war = tmpWarFile.getAbsolutePath()
             context.contextPath = "/"+cleanPathSpec
             context.parentLoaderPriority = true
@@ -79,7 +104,8 @@ public class WebAppRunner {
         File tmpWarFile = writeToTempFile(new ResourceUtils(this).getResourceFromUrl(war), "embedded", "war");
         WebAppContext context;
         context = new WebAppContext()
-        context.setAttribute("brooklynManagementContext", managementContext)
+        context.setAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT, managementContext)
+        attributes.each { k,v -> context.setAttribute(k, v) }
         context.war = tmpWarFile.getAbsolutePath()
         context.contextPath = "/"
         context.parentLoaderPriority = true
@@ -99,5 +125,9 @@ public class WebAppRunner {
     public void stop() throws Exception {
         server.stop()
         server.join()
+    }
+    
+    public Server getServer() {
+        server
     }
 }

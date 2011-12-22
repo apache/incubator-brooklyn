@@ -6,6 +6,7 @@ import static org.testng.Assert.*
 
 import org.testng.annotations.Test
 
+import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.management.internal.LocalManagementContext
 import brooklyn.util.internal.TimeExtras
 import groovy.time.TimeDuration
@@ -22,23 +23,33 @@ public class WebAppRunnerTest {
     @Test
     public void testStartWar1() {
         WebAppRunner launcher = new WebAppRunner(new LocalManagementContext(), port:8090,
-            attributes:[brooklynWebAutologinUser:'admin']);
+            attributes:[(BrooklynServiceAttributes.BROOKLYN_AUTOLOGIN_USERNAME):'admin']);
         assertNotNull(launcher);
         
         launcher.start();
         try {
-            assertBrooklynAt("http://admin:password@localhost:8090/")        
+            assertBrooklynAt("http://localhost:8090/");
         } finally {
             launcher.stop();
         }
     }
 
-    private void assertBrooklynAt(String u) {
+    public static void assertBrooklynAt(String url) {
+        assertUrlHasText(url, "Brooklyn Web Console", "Dashboard");
+    }
+    
+    public static void assertUrlHasText(String url, String ...phrases) {
+        String contents;
         executeUntilSucceeds(timeout:TIMEOUT_MS, maxAttempts:50) {
-            String contents = new URL(u).openStream().getText();
+            contents = new URL(url).openStream().getText();
 //            println "contents: "+contents
-            assertNotNull( contents )
-            assertTrue( contents.contains("Brooklyn Webconsole - Dashboard") )
+            assertTrue(contents!=null && contents.length()>0)
+        }
+        for (String text: phrases) {
+            if (!contents.contains(text)) {
+                println "CONTENTS OF URL MISSING TEXT: $text\n"+contents
+                fail("URL $url does not contain text: $text")
+            }
         }
     }
         
@@ -46,20 +57,15 @@ public class WebAppRunnerTest {
     public void testStartSecondaryWar() {
         WebAppRunner launcher = new WebAppRunner(new LocalManagementContext(), 
             port: 8090, war:"brooklyn.war", wars:["hello":"hello-world.war"],
-            attributes:[brooklynWebAutologinUser:'admin']);
+            attributes:[(BrooklynServiceAttributes.BROOKLYN_AUTOLOGIN_USERNAME):'admin']);
         assertNotNull(launcher);
         
         launcher.start();
         try {
 
-            assertBrooklynAt("http://admin:password@localhost:8090/");
-
-            executeUntilSucceeds(timeout:TIMEOUT_MS, maxAttempts:50) {
-                String contents = new URL("http://localhost:8090/hello").openStream().getText();
-//                println "contents: "+contents
-                assertNotNull( contents )
-                assertTrue( contents.contains("This is the home page for a sample application") )
-            }
+            assertBrooklynAt("http://localhost:8090/");
+            assertUrlHasText("http://localhost:8090/hello",
+                "This is the home page for a sample application");
 
         } finally {
             launcher.stop();
