@@ -58,6 +58,7 @@
         <guava.version>10.0.1</guava.version>
         <ivy.version>2.2.0</ivy.version>
         <jclouds.version>1.2.1</jclouds.version>
+        <spring.version>3.0.5.RELEASE</spring.version>
 
         <includedTestGroups />
         <excludedTestGroups>Integration,Live,WIP</excludedTestGroups>
@@ -91,6 +92,27 @@
                 <artifactId>brooklyn-core</artifactId>
                 <version>${project.version}</version>
                 <classifier>test</classifier>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-context</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-beans</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-core</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-aop</artifactId>
+                <version>${spring.version}</version>
             </dependency>
 
             <dependency>
