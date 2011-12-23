@@ -15,6 +15,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
 import brooklyn.management.Task
+import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.task.ParallelTask
 
 import com.google.common.base.Preconditions
@@ -26,9 +27,17 @@ import com.google.common.base.Preconditions
 public class DynamicFabric extends AbstractEntity implements Startable {
     private static final Logger logger = LoggerFactory.getLogger(DynamicFabric)
 
+    @SetFromFlag
     Closure<Entity> newEntity
+
+    @SetFromFlag
+    String displayNamePrefix
+    @SetFromFlag
+    String displayNameSuffix
+
     //FIXME delete?  seems like never used?
     int initialSize
+    //FIXME deprecate, ensure isn't used anywhere
     Map createFlags
 
     /**
@@ -46,12 +55,11 @@ public class DynamicFabric extends AbstractEntity implements Startable {
     public DynamicFabric(Map properties = [:], Entity owner = null) {
         super(properties, owner)
 
-        Preconditions.checkArgument properties.containsKey('newEntity'), "'newEntity' property is mandatory"
-        Preconditions.checkArgument properties.get('newEntity') instanceof Closure, "'newEntity' must be a closure"
-        newEntity = properties.remove('newEntity')
+        Preconditions.checkNotNull newEntity, "'newEntity' property is mandatory"
+        Preconditions.checkArgument newEntity in Closure, "'newEntity' must be a closure"
         
-        this.createFlags = properties
-
+        createFlags = properties
+        
         setAttribute(SERVICE_UP, false)
     }
 
@@ -102,7 +110,7 @@ public class DynamicFabric extends AbstractEntity implements Startable {
     protected Entity addCluster(Location location) {
         Map creation = [:]
         creation << createFlags
-        creation.displayName = (createFlags.displayNamePrefix?:"") + (location.getLocationProperty("displayName")?:location.name?:"unnamed") + (createFlags.displayNameSuffix?:"")
+        creation.displayName = (displayNamePrefix?:"") + (location.getLocationProperty("displayName")?:location.name?:"unnamed") + (displayNameSuffix?:"")
         logger.info "Adding a cluster to {} with properties {}", id, creation
 
         
