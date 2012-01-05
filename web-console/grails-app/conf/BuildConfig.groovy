@@ -5,8 +5,8 @@ grails.project.test.reports.dir = "target/test-reports"
 grails.project.dependency.resolution = {
     // inherit Grails' default dependencies
     inherits("global") {
-        // disable ehcache (we don't use it)
-        excludes 'ehcache'
+        // disable ehcache (we don't use it); and log4j (we are embedded so have our own logger, usually)
+        excludes 'ehcache', "grails-plugin-logging", "log4j"
         // following exclusions also recommended to resolve some sax / xml nasties
         // (which you'll see if you add brooklyn-extra below and try grails run-app) ... but don't work 
         // "xml-apis", "xmlParserAPIs", "xalan"
