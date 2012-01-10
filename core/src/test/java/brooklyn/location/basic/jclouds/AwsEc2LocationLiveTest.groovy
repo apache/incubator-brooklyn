@@ -36,4 +36,8 @@ class AwsEc2LocationLiveTest extends AbstractJcloudsLocationTest {
     public Object[][] cloudAndImageNamePatterns() {
         return []
     }
+    
+    @Test
+    public void noop() { /* just exists to let testNG IDE run the test */ }
+
 }

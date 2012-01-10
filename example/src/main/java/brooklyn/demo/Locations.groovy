@@ -89,7 +89,7 @@ public class Locations {
             ])
     }
 
-    public static LocalhostMachineProvisioningLocation newLocalhostLocation(int numberOfInstances) {
+    public static LocalhostMachineProvisioningLocation newLocalhostLocation(int numberOfInstances=0) {
         return new LocalhostMachineProvisioningLocation(
             count: numberOfInstances,
             latitude : LOCALHOST_COORDS['latitude'],
@@ -177,7 +177,7 @@ public class Locations {
             if (Locations.AWS_REGIONS.contains(location)) {
                 Locations.lookupAwsRegion(location)
             } else if (Locations.LOCALHOST == location) {
-                Locations.newLocalhostLocation(20)
+                Locations.newLocalhostLocation()
             } else if (Locations.MONTEREY_EAST == location) {
                 Locations.newMontereyEastLocation()
             } else if (Locations.EDINBURGH == location) {

@@ -32,6 +32,7 @@ public class ResourceUtils {
     }
     
     public ClassLoader getLoader() {
+        //TODO allow a sequence of loaders?
         return (loader!=null ? loader : getClass().getClassLoader());
     }
     
@@ -75,11 +76,14 @@ public class ResourceUtils {
                 URL u = getLoader().getResource(url);
                 if (u!=null) return u.openStream();
                 if (url.startsWith("/")) {
-                    //some getResource calls break if argument starts with /
+                    //some getResource calls fail if argument starts with /
                     String urlNoSlash = url;
                     while (urlNoSlash.startsWith("/")) urlNoSlash = urlNoSlash.substring(1);
                     u = getLoader().getResource(urlNoSlash);
                     if (u!=null) return u.openStream();
+//                    //Class.getResource can require a /  (else it attempts to be relative) but Class.getClassLoader doesn't
+//                    u = getLoader().getResource("/"+urlNoSlash);
+//                    if (u!=null) return u.openStream();
                 }
                 File f = new File(url);
                 if (f.exists()) return new FileInputStream(f);

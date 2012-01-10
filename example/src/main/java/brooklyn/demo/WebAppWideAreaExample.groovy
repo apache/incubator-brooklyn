@@ -22,10 +22,13 @@ import brooklyn.entity.webapp.jboss.JBoss7Server
 import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.launcher.BrooklynLauncher
 import brooklyn.location.Location
+import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import brooklyn.location.basic.jclouds.JcloudsLocationFactory;
 import brooklyn.policy.ResizerPolicy
 
 public abstract class WebAppWideAreaExample extends AbstractApplication {
     public static final Logger LOG = LoggerFactory.getLogger(WebAppWideAreaExample)
+    static BrooklynProperties config = BrooklynProperties.Factory.newWithSystemAndEnvironment().addFromUrl("file:///tmp/brooklyn.properties");
 
     public static final List<String> DEFAULT_LOCATIONS = [ Locations.LOCALHOST ]
 
@@ -68,14 +71,16 @@ public abstract class WebAppWideAreaExample extends AbstractApplication {
     private DynamicGroup nginxEntities = new DynamicGroup([displayName: 'Web Fronts'], this, { Entity e -> (e instanceof NginxController) })
     private GeoscalingDnsService geoDns = new GeoscalingDnsService(this,
             displayName: 'Geo-DNS',
-            username: BrooklynProperties.Factory.newWithSystemAndEnvironment().getFirst("brooklyn.geoscaling.username", defaultIfNone:'cloudsoft'), 
-            password: BrooklynProperties.Factory.newWithSystemAndEnvironment().getFirst("brooklyn.geoscaling.password", failIfNone:true), 
+            username: config.getFirst("brooklyn.geoscaling.username", defaultIfNone:'cloudsoft'), 
+            password: config.getFirst("brooklyn.geoscaling.password", failIfNone:true), 
             primaryDomainName: 'geopaas.org', smartSubdomainName: 'brooklyn').
         setTargetEntityProvider(nginxEntities)
         
+        
     public static void main(String[] argv) {
-        List<Location> locations = Locations.getLocationsById(Arrays.asList(argv) ?: DEFAULT_LOCATIONS)
-    
+        List<Location> locations = 
+            Locations.getLocationsById(Arrays.asList(argv) ?: DEFAULT_LOCATIONS)
+
         JBoss7WideAreaExample app = new JBoss7WideAreaExample(displayName:'Brooklyn Wide-Area Seam Booking Example Application')
             
         BrooklynLauncher.manage(app)
@@ -87,7 +92,12 @@ public abstract class WebAppWideAreaExample extends AbstractApplication {
 /** JBoss is already the default but this makes it explicit */
 public class JBoss7WideAreaExample extends WebAppWideAreaExample {
     public static void main(String[] argv) {
-        List<Location> locations = Locations.getLocationsById(Arrays.asList(argv) ?: DEFAULT_LOCATIONS)
+        List<Location> locations = [] 
+            //Locations.getLocationsById(Arrays.asList(argv) ?: DEFAULT_LOCATIONS)
+        locations += new LocalhostMachineProvisioningLocation()
+        
+        def f = JcloudsLocationFactory.newAmazonWebServicesInstance(config)
+        ["eu-west-1", "us-west-1", "ap-southeast-1"].each { locations += f.newLocation(it) }
 
         JBoss7WideAreaExample app = new JBoss7WideAreaExample(displayName:'Brooklyn Wide-Area Seam Booking Example Application')
         

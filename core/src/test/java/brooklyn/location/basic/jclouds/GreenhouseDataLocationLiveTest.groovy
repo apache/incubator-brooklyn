@@ -3,7 +3,13 @@ package brooklyn.location.basic.jclouds
 import static org.testng.Assert.*
 
 import org.testng.annotations.DataProvider
+import org.testng.annotations.Test;
 
+import brooklyn.test.entity.TestApplication;
+
+//FIXME get Greenhouse working
+
+@Test(enabled=false /* work in progress */)
 class GreenhouseDataLocationLiveTest extends AbstractJcloudsLocationTest {
     
     private static final String PROVIDER = "greenhousedata-element-vcloud"
@@ -17,14 +23,7 @@ class GreenhouseDataLocationLiveTest extends AbstractJcloudsLocationTest {
     }
     
     protected CredentialsFromEnv getCredentials() {
-        return new CredentialsFromEnv(PROVIDER) {
-            public String getIdentity() {
-                return "thejuggler"
-            }
-            public String getCredential() {
-                return "alistair"
-            }
-        }
+        return CredentialsFromEnv.newInstance(PROVIDER, identity:"thejuggler", credential:"alistair");
     }
     
     @Override
@@ -44,4 +43,8 @@ class GreenhouseDataLocationLiveTest extends AbstractJcloudsLocationTest {
     public Object[][] cloudAndImageNamePatterns() {
         return []
     }
+    
+    @Test
+    public void noop() { /* just exists to let testNG IDE run the test */ }
+    
 }

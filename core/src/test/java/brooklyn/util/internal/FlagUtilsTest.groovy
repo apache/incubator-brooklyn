@@ -42,6 +42,14 @@ public class FlagUtilsTest {
     }
     
     @Test
+    public void testCollectionCoercionOnSetFromFlags() {
+        WithSetField s = []
+        Map m = [set:[1]]
+        def unused = FlagUtils.setFieldsFromFlags(m, s);
+        assertEquals(s.set, [1])
+    }
+
+    @Test
     public void testNonImmutableField() {
         Foo f = []
         FlagUtils.setFieldsFromFlags(f, w:8);
@@ -99,11 +107,33 @@ public class FlagUtilsTest {
         try {
             FlagUtils.setFieldsFromFlags(o, b:null);
             succeededWhenShouldntHave = true
-        } catch (IllegalStateException e) {
+        } catch (IllegalArgumentException e) {
             //expected
         }
         assertFalse succeededWhenShouldntHave
         assertEquals o.b, null
+    }
+    
+    @Test
+    public void testGetAnnotatedFields() {
+        def fm = FlagUtils.getAnnotatedFields(WithImmutableNonNullableObject)
+        assertEquals fm.keySet().size(), 2
+        assertTrue fm.get(WithImmutableNonNullableObject.class.getDeclaredField("b")).immutable()
+    }
+
+    @Test
+    public void testCheckRequired() {
+        WithImmutableNonNullableObject f = []
+        def unused = FlagUtils.setFieldsFromFlags(f, a:"a is a");
+        assertEquals(f.a, "a is a")
+        assertEquals(f.b, null)
+        int exceptions = 0;
+        try {
+            FlagUtils.checkRequiredFields(f)
+        } catch (IllegalStateException e) {
+            exceptions++;
+        }
+        assertEquals exceptions, 1
     }
 
 }
@@ -131,5 +161,10 @@ class WithImmutableNonNullableObject {
     @SetFromFlag
     Object a;
     @SetFromFlag(immutable=true, nullable=false)
-    Object b;
+    public Object b;
+}
+
+class WithSetField {
+    @SetFromFlag
+    Set set;
 }

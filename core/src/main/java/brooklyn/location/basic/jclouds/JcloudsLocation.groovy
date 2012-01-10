@@ -35,21 +35,23 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     public static final String ROOT_USERNAME = "root";
     public static final int START_SSHABLE_TIMEOUT = 5*60*1000;
 
-    private final Map conf = [:];
-    
     private final Map<String,Map<String, ? extends Object>> tagMapping = [:]
     private final Map<SshMachineLocation,String> vmInstanceIds = [:]
 
     JcloudsLocation(Map conf) {
         super(conf)
-        this.conf.putAll(conf)
-
-        name = conf.providerLocationId
     }
     
     JcloudsLocation(String identity, String credential, String providerLocationId) {
         this([identity:identity, credential:credential, providerLocationId:providerLocationId])
     }
+    
+    protected void configure(Map properties) {
+        super.configure(properties)
+        if (!name) name = conf.providerLocationId
+	}
+    
+    public Map getConf() { return leftoverProperties; }
     
     public void setTagMapping(Map<String,Map<String, ? extends Object>> val) {
         tagMapping.clear()

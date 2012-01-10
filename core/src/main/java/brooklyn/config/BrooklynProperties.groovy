@@ -76,7 +76,14 @@ class BrooklynProperties extends LinkedHashMap {
         this
     }
 
-    
+    /**
+    * adds the indicated properties
+    */
+   public BrooklynProperties addFromMap(Map properties) {
+       putAll(properties)
+       this
+   }
+
     /** returns the value of the first key which is defined
      * <p>
      * takes the following flags:
@@ -97,7 +104,8 @@ class BrooklynProperties extends LinkedHashMap {
             if (f in Closure)
                 f.call(keys)
             if (f==true)
-                throw new NoSuchElementException("Unable to find Brooklyn property "+keys);
+                throw new NoSuchElementException("Brooklyn unable to find mandatory property "+keys[0]+
+                    (keys.length>1 ? " (or "+(keys.length-1)+" other possible names, full list is "+keys+")" : "") );
             else
                 throw new NoSuchElementException(""+f);
         }

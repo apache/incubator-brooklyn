@@ -1,5 +1,7 @@
 package brooklyn.location.basic
 
+import brooklyn.util.flags.SetFromFlag
+
 import com.google.common.base.Preconditions
 
 /**
@@ -10,6 +12,16 @@ import com.google.common.base.Preconditions
  * and choose to allow localhost to be provisioned multiple times, which may be useful in some testing scenarios.
  */
 public class LocalhostMachineProvisioningLocation extends FixedListMachineProvisioningLocation<SshMachineLocation> {
+    
+    @SetFromFlag('count')
+    int initialCount;
+
+    @SetFromFlag
+    Boolean canProvisionMore;
+    
+    @SetFromFlag
+    InetAddress address;
+
     /**
      * Construct a new instance.
      *
@@ -21,26 +33,36 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
      * @param properties the properties of the new instance.
      */
     public LocalhostMachineProvisioningLocation(Map properties = [:]) {
-        super(augmentProperties(properties))
+        super(properties)
     }
-
-    public LocalhostMachineProvisioningLocation(String name, int count) {
+        
+    public LocalhostMachineProvisioningLocation(String name, int count=0) {
         this([name: name, count: count]);
     }
 
-    private static Map augmentProperties(Map props) {
-        String address = props.address
-        int numberOfMachines = 1
+    protected void configure(Map flags) {
+        super.configure(flags)
         
-        if (props.count) {
-            Preconditions.checkArgument props.count instanceof Integer, "count value must be an integer"
-            numberOfMachines = props.count
+        if (!name) { name="localhost" }
+        if (!address) address = Inet4Address.localHost;
+        
+        if (canProvisionMore==null) {
+            if (initialCount>0) canProvisionMore = false;
+            else canProvisionMore = true;
         }
-
-        Collection<SshMachineLocation> machines = []
-        numberOfMachines.times { machines += new SshMachineLocation(address:(address ?: InetAddress.localHost)) }
-        props.machines = machines
-
-        return props
+        if (initialCount > machines.size()) {
+            provisionMore(initialCount - machines.size());
+        }
     }
+    
+    public boolean canProvisionMore() { return canProvisionMore; }
+    public void provisionMore(int size) {
+        for (int i=0; i<size; i++) { 
+            SshMachineLocation child = new SshMachineLocation(address:(address ?: InetAddress.localHost)) 
+            addChildLocation(child)
+            child.setParentLocation(this)
+       }
+    }
+        
+    
 }

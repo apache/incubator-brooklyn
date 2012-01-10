@@ -4,6 +4,7 @@ import org.codehaus.groovy.runtime.DefaultGroovyMethods
 
 import brooklyn.location.MachineLocation
 import brooklyn.location.PortRange
+import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.internal.SshJschTool
 
 import com.google.common.base.Preconditions
@@ -12,38 +13,31 @@ import com.google.common.base.Preconditions
  * Operations on a machine that is accessible via ssh.
  */
 public class SshMachineLocation extends AbstractLocation implements MachineLocation {
+    @SetFromFlag('username')
     private String user = null
     private InetAddress address
+    @SetFromFlag
     private Map config = [:]
 
     private final Set<Integer> ports = [] as HashSet
 
     public SshMachineLocation(Map properties = [:]) {
         super(properties)
-
-        Preconditions.checkArgument properties.containsKey('address'), "properties must contain an entry with key 'address'"
+    }
+    
+    public void configure(Map properties) {
+        super.configure(properties)
+        
         if (properties.address instanceof InetAddress) {
             this.address = properties.remove("address")
         } else {
             this.address = Inet4Address.getByName(properties.remove("address"))
         }
 
-        if (properties.userName) {
-            Preconditions.checkArgument properties.userName instanceof String, "'userName' value must be a string"
-            this.user = properties.userName
-        }
-
-        if (properties.config) {
-            Preconditions.checkArgument properties.config instanceof Map, "'config' value must be a Map"
-            this.config = properties.config
-        }
-
         String host = (user ? "${user}@" : "") + address.hostName
+        
         if (name == null) {
             name = host
-        }
-        if (leftoverProperties.displayName) {
-            leftoverProperties.displayName = host
         }
     }
 

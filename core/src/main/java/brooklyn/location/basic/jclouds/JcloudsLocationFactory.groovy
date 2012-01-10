@@ -4,6 +4,8 @@ import java.util.Map
 
 import org.jclouds.Constants
 
+import brooklyn.config.BrooklynProperties;
+
 class JcloudsLocationFactory {
 
     // TODO streetAddress is temporary, until we get lat-lon working in google maps properly
@@ -70,7 +72,7 @@ class JcloudsLocationFactory {
         this.conf = [:]
         this.conf << conf
     }
-    
+
     public JcloudsLocationFactory(String provider, String identity, String credential) {
         this([provider:provider, identity:identity, credential:credential])
     }
@@ -83,4 +85,17 @@ class JcloudsLocationFactory {
         allconf << (locSpecifics ?: [:])
         return new JcloudsLocation(allconf);
     }
+    
+    /** Creates a jclouds-backed LocationFactory for use with Amazon and using credentials etc looked up in the given properties set */
+    public static JcloudsLocationFactory newAmazonWebServicesInstance(BrooklynProperties sysProps) {
+        return new JcloudsLocationFactory([
+            provider : "aws-ec2",
+            identity : sysProps.getFirst(failIfNone:true, "brooklyn.aws.id", "aws.id", "AWS_ACCESS_KEY_ID"),
+            credential : sysProps.getFirst(failIfNone:true, "brooklyn.aws.key", "aws.key", "AWS_SECRET_ACCESS_KEY"),
+            sshPrivateKey : new File(sysProps.getFirst(failIfNone:true, "brooklyn.private-key-file")),
+            sshPublicKey : new File(sysProps.getFirst(failIfNone:true, "brooklyn.public-key-file")),
+            securityGroups:[sysProps.getFirst("brooklyn.security-group", defaultIfNone:"all")]
+        ])
+    }
+
 }
