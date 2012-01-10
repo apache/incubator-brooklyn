@@ -15,9 +15,10 @@ import com.google.common.base.Preconditions
 public class SshMachineLocation extends AbstractLocation implements MachineLocation {
     @SetFromFlag('username')
     private String user = null
+    @SetFromFlag(nullable=false)
     private InetAddress address
-    @SetFromFlag
-    private Map config = [:]
+    @SetFromFlag(nullable=false)
+    private Map config
 
     private final Set<Integer> ports = [] as HashSet
 
@@ -26,14 +27,11 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     }
     
     public void configure(Map properties) {
-        super.configure(properties)
+        if (config==null) config = [:]
         
-        if (properties.address instanceof InetAddress) {
-            this.address = properties.remove("address")
-        } else {
-            this.address = Inet4Address.getByName(properties.remove("address"))
-        }
+        super.configure(properties)
 
+        Preconditions.checkNotNull(address, "address is required for SshMachineLocation");
         String host = (user ? "${user}@" : "") + address.hostName
         
         if (name == null) {

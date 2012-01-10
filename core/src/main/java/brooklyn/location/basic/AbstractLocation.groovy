@@ -27,7 +27,7 @@ public abstract class AbstractLocation implements Location {
     private Location parentLocation
     private final Collection<Location> childLocations = []
     private final Collection<Location> childLocationsReadOnly = Collections.unmodifiableCollection(childLocations)
-    protected Map leftoverProperties;
+    protected Map leftoverProperties = [:];
     @SetFromFlag
     protected String name
 
@@ -58,8 +58,16 @@ public abstract class AbstractLocation implements Location {
         FlagUtils.checkRequiredFields(this)
     }
 
+    /** will set fields from flags, and put the remaining ones into the 'leftovers' map.
+     * can be subclassed for custom initialization but note the following. 
+     * <p>
+     * if you require fields to be initialized you must do that in this method,
+     * with a guard (as in FixedListMachineProvisioningLocation).  you must *not*
+     * rely on field initializers because they may not run until *after* this method
+     * (this method is invoked by the constructor in this class, so initializers
+     * in subclasses will not have run when this overridden method is invoked.) */ 
     protected void configure(Map properties) {
-        leftoverProperties = FlagUtils.setFieldsFromFlags(properties, this)
+        leftoverProperties << FlagUtils.setFieldsFromFlags(properties, this)
         //replace properties _contents_ with leftovers so subclasses see leftovers only
         properties.clear();
         properties.putAll(leftoverProperties)

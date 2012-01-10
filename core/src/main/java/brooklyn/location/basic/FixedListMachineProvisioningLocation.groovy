@@ -39,18 +39,15 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
         }
     }
 
-    void init() {
+    protected void configure(Map properties) {
         if (!lock) {
             lock = new Object();
             machines = []
             inUse = []
         }
-    }
-    
-    protected void configure(Map properties) {
-        init();
         super.configure(properties);
     }
+    
     public double getLatitude() {
         return leftoverProperties.latitude;
     }
