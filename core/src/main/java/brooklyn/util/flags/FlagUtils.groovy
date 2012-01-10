@@ -97,6 +97,8 @@ public class FlagUtils {
                     throw new IllegalArgumentException("Cannot set "+f+" ("+targetType+") from "+value+" ("+value.getClass()+"); explicit constructor conversion required");
                 }
                 newValue = targetC.newInstance( value );
+            } else if ((targetType==Inet4Address || targetType==InetAddress) && value in String) {
+                newValue = Inet4Address.getByName(value);
             } else {
                 throw new IllegalArgumentException("Cannot set "+f+" ("+targetType+") from "+value+" ("+value.getClass()+"); no conversion known");
             }

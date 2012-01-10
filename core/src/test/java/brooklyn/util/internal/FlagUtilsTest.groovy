@@ -43,10 +43,18 @@ public class FlagUtilsTest {
     
     @Test
     public void testCollectionCoercionOnSetFromFlags() {
-        WithSetField s = []
+        WithSpecialFieldTypes s = []
         Map m = [set:[1]]
         def unused = FlagUtils.setFieldsFromFlags(m, s);
         assertEquals(s.set, [1])
+    }
+
+    @Test
+    public void testInetAddressCoercionOnSetFromFlags() {
+        WithSpecialFieldTypes s = []
+        Map m = [inet:"127.0.0.1"]
+        def unused = FlagUtils.setFieldsFromFlags(m, s);
+        assertEquals(s.inet?.address, [127, 0, 0, 1] as byte[])
     }
 
     @Test
@@ -164,7 +172,7 @@ class WithImmutableNonNullableObject {
     public Object b;
 }
 
-class WithSetField {
-    @SetFromFlag
-    Set set;
+class WithSpecialFieldTypes {
+    @SetFromFlag Set set;
+    @SetFromFlag InetAddress inet;
 }
