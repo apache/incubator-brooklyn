@@ -5,10 +5,17 @@ grails.project.test.reports.dir = "target/test-reports"
 grails.project.dependency.resolution = {
     // inherit Grails' default dependencies
     inherits("global") {
-        // disable ehcache (we don't use it); and log4j (we are embedded so have our own logger, usually)
-        excludes 'ehcache', "grails-plugin-logging", "log4j"
+        // disable ehcache (we don't use it); and log4j (we are embedded so have our own logger, usually;
+        // with this as is it seems to delegate to our preferred logger (of container), so hurrah)
+        excludes 'ehcache', 
+                     'grails-plugin-logging', 'log4j', 
+                     'junit',
+                     'slf4j-api',
+                     'slf4j-log4j12'
+//                     'jcl-over-slf4j', 'jul-to-slf4j'
+                     
         // following exclusions also recommended to resolve some sax / xml nasties
-        // (which you'll see if you add brooklyn-extra below and try grails run-app) ... but don't work 
+        // (which you may see if you add brooklyn-extra below and try grails run-app) ... but don't work 
         // "xml-apis", "xmlParserAPIs", "xalan"
     }
     log "warn" // log level of Ivy resolver, either 'error', 'warn', 'info', 'debug' or 'verbose'
