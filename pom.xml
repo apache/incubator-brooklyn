@@ -63,7 +63,7 @@
 		</profile>
 
 		<profile>
-			<id>Brooklyn</id>
+			<id>Default</id>
 			<activation>
 			    <activeByDefault>true</activeByDefault>
 			</activation>
@@ -77,18 +77,57 @@
                 <module>gemfire</module>
 			</modules>
 		</profile>
+        <profile>
+            <id>Essentials</id>
+            <modules>
+                <module>parent</module>
+                <module>api</module>
+                <module>test-support</module>
+                <module>core</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>Web</id>
+            <modules>
+                <module>web-console</module>
+                <module>launcher</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>Extras</id>
+            <modules>
+                <module>extra</module>
+                <module>gemfire-web-api</module>
+                <module>gemfire</module>
+            </modules>
+        </profile>
+        
+        <!-- for legacy compatibility, TODO delete when people aware of it -->
+        <profile>
+            <id>Brooklyn</id>
+            <modules>
+                <module>parent</module>
+                <module>api</module>
+                <module>test-support</module>
+                <module>core</module>
+                <module>extra</module>
+                <module>gemfire-web-api</module>
+                <module>gemfire</module>
+            </modules>
+        </profile>
 		<profile>
 			<id>Console</id>
 			<modules>
-				<module>web-console</module>
 			</modules>
 		</profile>
-		<profile>
-			<id>Launcher</id>
-			<modules>
-				<module>launcher</module>
-			</modules>
-		</profile>
+        <profile>
+            <id>Launcher</id>
+            <modules>
+            </modules>
+        </profile>
+        <!-- END legacy compatibility -->
+        
+        <!-- TODO organise below -->
 		<profile>
 			<id>Acceptance</id>
 			<modules>
