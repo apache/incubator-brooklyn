@@ -118,11 +118,13 @@
 		<profile>
 			<id>Console</id>
 			<modules>
+                		<module>web-console</module>
 			</modules>
 		</profile>
         <profile>
             <id>Launcher</id>
             <modules>
+                <module>launcher</module>
             </modules>
         </profile>
         <!-- END legacy compatibility -->
