@@ -14,8 +14,14 @@ class BrooklynProperties extends LinkedHashMap {
         public static BrooklynProperties newEmpty() {
             return new BrooklynProperties();
         }
+        // FIXME remove
         public static BrooklynProperties newWithSystemAndEnvironment() {
+            return newDefault();
+        }
+        public static BrooklynProperties newDefault() {
             BrooklynProperties p = new BrooklynProperties().addEnvironmentVars().addSystemProperties();
+            File f = new File(p.getFirst("user.home", "HOME", defaultIfNone:"/")+File.separatorChar+".brooklyn"+File.separatorChar+"brooklyn.properties");
+            if (f.exists()) p.addFrom(f);
             return p
         }
     }
@@ -113,5 +119,10 @@ class BrooklynProperties extends LinkedHashMap {
             return flags.defaultIfNone;
         }
         return null;
+    }
+    
+    @Override
+    public String toString() {
+        return "BrooklynProperties["+size()+"]";
     }
 }

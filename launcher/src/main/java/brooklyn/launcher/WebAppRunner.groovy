@@ -124,7 +124,7 @@ public class WebAppRunner {
     /** Asks the app server to stop and waits for it to finish up. */
     public void stop() throws Exception {
         server.stop()
-        server.join()
+        try { server.join() } catch (Exception e) { /* NPE may be thrown e.g. if threadpool not started */ }
     }
     
     public Server getServer() {

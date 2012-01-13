@@ -6,6 +6,7 @@ import java.util.Map
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.legacy.JavaApp;
 import brooklyn.entity.basic.lifecycle.legacy.SshBasedJavaAppSetup;
+import brooklyn.location.PortRange;
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedJavaWebAppSetup
 
@@ -24,13 +25,14 @@ public class DerbySetup extends SshBasedJavaAppSetup {
         String suggestedVersion = entity.getConfig(DerbyDatabase.SUGGESTED_VERSION)
         String suggestedInstallDir = entity.getConfig(DerbyDatabase.SUGGESTED_INSTALL_DIR)
         String suggestedRunDir = entity.getConfig(DerbyDatabase.SUGGESTED_RUN_DIR)
-        Integer suggestedJmxPort = entity.getConfig(DerbyDatabase.JMX_PORT.configKey)
+        PortRange suggestedJmxPort = entity.getConfig(DerbyDatabase.JMX_PORT)
+        PortRange suggestedRmiPort = entity.getConfig(DerbyDatabase.RMI_PORT)
 
         String version = suggestedVersion ?: DEFAULT_VERSION
         String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"${version}"+"/"+"derby-broker-${version}")
         String runDir = suggestedRunDir ?: (BROOKLYN_HOME_DIR+"/"+"${entity.application.id}"+"/"+"derby-${entity.id}")
-        int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort))
-        int rmiPort = machine.obtainPort(toDesiredPortRange(jmxPort - 100))
+        int jmxPort = machine.obtainPort(suggestedJmxPort)
+        int rmiPort = machine.obtainPort(suggestedRmiPort)
 
         DerbySetup result = new DerbySetup(entity, machine)
         result.setRmiPort(rmiPort)

@@ -6,6 +6,7 @@ import java.util.Map
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.legacy.JavaApp;
 import brooklyn.entity.basic.lifecycle.legacy.SshBasedJavaAppSetup;
+import brooklyn.location.PortRange;
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedJavaWebAppSetup
 
@@ -24,18 +25,18 @@ public class ActiveMQSetup extends SshBasedJavaAppSetup {
         String suggestedVersion = entity.getConfig(ActiveMQBroker.SUGGESTED_VERSION)
         String suggestedInstallDir = entity.getConfig(ActiveMQBroker.SUGGESTED_INSTALL_DIR)
         String suggestedRunDir = entity.getConfig(ActiveMQBroker.SUGGESTED_RUN_DIR)
-        Integer suggestedJmxPort = entity.getConfig(ActiveMQBroker.JMX_PORT.configKey)
-        Integer suggestedRmiPort = entity.getConfig(ActiveMQBroker.RMI_PORT.configKey, DEFAULT_FIRST_RMI_PORT)
-        Integer suggestedOpenWirePort = entity.getConfig(ActiveMQBroker.OPEN_WIRE_PORT.configKey)
+        PortRange suggestedJmxPort = entity.getConfig(ActiveMQBroker.JMX_PORT)
+        PortRange suggestedRmiPort = entity.getConfig(ActiveMQBroker.RMI_PORT, ""+DEFAULT_FIRST_RMI_PORT+"+")
+        PortRange suggestedOpenWirePort = entity.getConfig(ActiveMQBroker.OPEN_WIRE_PORT)
 
         String version = suggestedVersion ?: DEFAULT_VERSION
         String installDir = suggestedInstallDir ?: "$DEFAULT_INSTALL_DIR/${version}/apache-activemq-${version}"
         String runDir = suggestedRunDir ?: "$BROOKLYN_HOME_DIR/${entity.application.id}/activemq-${entity.id}"
         String logFileLocation = "$runDir/data/activemq.log"
 
-        int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort))
-        int rmiPort = machine.obtainPort(toDesiredPortRange(suggestedRmiPort))
-        int openWirePort = machine.obtainPort(toDesiredPortRange(suggestedOpenWirePort))
+        int jmxPort = machine.obtainPort(suggestedJmxPort)
+        int rmiPort = machine.obtainPort(suggestedRmiPort)
+        int openWirePort = machine.obtainPort(suggestedOpenWirePort)
 
         ActiveMQSetup result = new ActiveMQSetup(entity, machine)
         result.setJmxPort(jmxPort)

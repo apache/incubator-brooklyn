@@ -1,7 +1,6 @@
 package brooklyn.entity.webapp.tomcat
 
 import java.util.Collection
-import java.util.concurrent.TimeUnit
 
 import javax.management.InstanceNotFoundException
 
@@ -9,14 +8,13 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
-import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup;
+import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup
 import brooklyn.entity.webapp.OldJavaWebApp
-import brooklyn.event.EntityStartException
-import brooklyn.event.adapter.legacy.ValueProvider;
+import brooklyn.event.adapter.legacy.ValueProvider
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
+import brooklyn.location.PortRange
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.internal.Repeater
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Tomcat instance.
@@ -24,8 +22,8 @@ import brooklyn.util.internal.Repeater
 public class TomcatServer extends OldJavaWebApp {
     private static final Logger log = LoggerFactory.getLogger(TomcatServer.class)
     
-    public static final BasicConfigKey<Integer> SUGGESTED_SHUTDOWN_PORT =
-            [ Integer, "tomcat.shutdownport", "Suggested shutdown port", 31880 ]
+    public static final BasicConfigKey<PortRange> SUGGESTED_SHUTDOWN_PORT =
+            [ Integer, "tomcat.shutdownport", "Suggested shutdown port", "31880+" ]
     
     public static final BasicAttributeSensor<Integer> TOMCAT_SHUTDOWN_PORT =
         [ Integer, "webapp.tomcat.shutdownPort", "Port to use for shutting down" ]

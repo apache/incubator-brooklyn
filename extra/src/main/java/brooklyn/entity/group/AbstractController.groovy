@@ -12,6 +12,7 @@ import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.event.Sensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.ConfiguredAttributeSensor
+import brooklyn.event.basic.ConfiguredPortSensor
 import brooklyn.event.basic.DependentConfiguration
 import brooklyn.location.Location
 import brooklyn.location.MachineLocation
@@ -30,7 +31,7 @@ public abstract class AbstractController extends SoftwareProcessEntity {
     public static final BasicConfigKey<Sensor> PORT_NUMBER_SENSOR = [ String, "member.sensor.portNumber", "Port number sensor on members" ]
 
     @SetFromFlag("port")  //TODO get standard name; ideally inherit the standard field
-    public static final ConfiguredAttributeSensor<Integer> HTTP_PORT = Attributes.HTTP_PORT
+    public static final ConfiguredPortSensor HTTP_PORT = Attributes.HTTP_PORT
     @SetFromFlag("protocol")
     public static final ConfiguredAttributeSensor<String> PROTOCOL = [ String, "proxy.protocol", "Protocol", "http" ]
     @SetFromFlag("domain")
@@ -61,9 +62,10 @@ public abstract class AbstractController extends SoftwareProcessEntity {
         if (portNumber==null) portNumber = HTTP_PORT;
 
         // FIXME shouldn't have these as vars and config keys; just use a getter method
-        port = getConfig(HTTP_PORT.configKey)
-        protocol = getConfig(PROTOCOL.configKey)
-        domain = getConfig(DOMAIN_NAME.configKey)
+        // TODO needs to be discovered/obtained
+        port = getConfig(HTTP_PORT)?.iterator()?.next() ?: 8000
+        protocol = getConfig(PROTOCOL)
+        domain = getConfig(DOMAIN_NAME)
 
         if (getConfig(URL)) {
 	        url = getConfig(URL.configKey)

@@ -25,7 +25,13 @@ import brooklyn.util.flags.SetFromFlag
  *   brooklyn.jclouds.aws-ec2.public-key-file
  *   brooklyn.jclouds.aws-ec2.private-key-file
  * 
- * @author aled
+ * It will also support (in decreasing order of preference):
+ * 
+ *   JCLOUDS_AWS_EC2_IDENTITY  (and the others, using bash shell format)
+ *   brooklyn.jclouds.identity  (and the others, just without the provider)
+ *   JCLOUDS_IDENTITY  (and the others, using bash shell format without the provider)
+ *   
+ * @author aled, alex
  **/
 public class CredentialsFromEnv {
 

@@ -7,6 +7,7 @@ import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.basic.BasicParameterType
+import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.Location
@@ -22,7 +23,7 @@ import brooklyn.event.AttributeSensor
 
 // TODO remove these test classes as soon as the group agrees they're unnecessary!
 private class TestWebApplication extends AbstractApplication {
-    TestWebApplication(Map props) {
+    TestWebApplication(Map props=[:]) {
         super(props)
         displayName = "Application";
 
@@ -186,6 +187,7 @@ private class TestWebApplication extends AbstractApplication {
     }
 
     private class TestTomcatEntity extends AbstractEntity {
+        //FIXME should use typed keys not strings
         private Map hackMeIn = [
                 "http.port": 8080,
                 "webapp.tomcat.shutdownPort": 666,
@@ -251,16 +253,18 @@ private class TestWebApplication extends AbstractApplication {
         }
 
         protected class MyRunnable implements Runnable {
-            Entity entity
+            EntityLocal entity
             protected MyRunnable(Entity e) {
                 this.entity = e
             }
             void run() {
                 while (true) {
+                    Map ss = entity.getSensors()
                     for (String key: hackMeIn.keySet()) {
-                        if(entity.getSensor(key) != null){
-                            entity.setAttribute(entity.getSensor(key),
-                            hackMeIn[key] + ManagementContextService.ID_GENERATOR +
+                        def s = ss[key]
+                        if (s != null){
+                            entity.setAttribute(s,
+                                hackMeIn[key] + ManagementContextService.ID_GENERATOR +
                                     ((int) 1000 * Math.random()))
                         }
                     }

@@ -49,7 +49,11 @@ public class Entities {
 		
 		getConfigKeys(e).each {
 			out << currentIndentation+tab+tab+it.name;
-			out << ": "+e.getConfig(it)+"\n"
+            def v = e.getConfig(it)
+			if (v && (it.getName().contains("password") || it.getName().contains("credential")))
+                out << ": "+"xxxxxxxx"+"\n"
+            else
+                out << ": "+v+"\n"
 		}
 		getSensors(e).each {
 			out << currentIndentation+tab+tab+it.name;

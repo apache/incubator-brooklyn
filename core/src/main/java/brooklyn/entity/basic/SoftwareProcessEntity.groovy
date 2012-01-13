@@ -1,6 +1,5 @@
 package brooklyn.entity.basic
 
-import java.io.File
 import java.util.Collection
 import java.util.Map
 
@@ -10,14 +9,15 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.ConfigKey
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.lifecycle.StartStopDriver
-import brooklyn.entity.basic.lifecycle.StartStopSshDriver;
+import brooklyn.entity.basic.lifecycle.StartStopSshDriver
 import brooklyn.entity.trait.Startable
 import brooklyn.event.AttributeSensor
 import brooklyn.event.adapter.ConfigSensorAdapter
 import brooklyn.event.adapter.SensorRegistry
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
-import brooklyn.event.basic.ConfiguredAttributeSensor;
+import brooklyn.event.basic.ConfiguredAttributeSensor
+import brooklyn.event.basic.ConfiguredPortSensor
 import brooklyn.location.Location
 import brooklyn.location.MachineLocation
 import brooklyn.location.MachineProvisioningLocation
@@ -221,7 +221,7 @@ public interface UsesJava {
 public interface UsesJmx extends UsesJava {
 	public static final int DEFAULT_JMX_PORT = 1099
 	@SetFromFlag("jmxPort")
-	public static final ConfiguredAttributeSensor<Integer> JMX_PORT = Attributes.JMX_PORT
+	public static final ConfiguredPortSensor JMX_PORT = Attributes.JMX_PORT
 	@SetFromFlag("rmiPort")
 	public static final ConfiguredAttributeSensor<Integer> RMI_PORT = Attributes.RMI_PORT
 	@SetFromFlag("jmxContext")

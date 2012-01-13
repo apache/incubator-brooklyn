@@ -6,7 +6,6 @@ import java.util.Map
 import brooklyn.location.MachineLocation
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.PortRange
-import brooklyn.location.basic.AbstractLocation
 
 /**
  */

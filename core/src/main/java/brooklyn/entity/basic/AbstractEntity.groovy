@@ -35,8 +35,10 @@ import brooklyn.management.Task
 import brooklyn.policy.Enricher
 import brooklyn.policy.Policy
 import brooklyn.policy.basic.AbstractPolicy
+import brooklyn.util.BrooklynLanguageExtensions;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag
+import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.ConfigKeySelfExtracting;
 import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.task.BasicExecutionContext
@@ -57,7 +59,8 @@ import brooklyn.util.task.ParallelTask
 public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
     
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractEntity.class)
-
+    static { BrooklynLanguageExtensions.init(); }
+    
     public static BasicNotificationSensor<Sensor> SENSOR_ADDED = new BasicNotificationSensor<Sensor>(Sensor.class,
             "entity.sensor.added", "Sensor dynamically added to entity")
     public static BasicNotificationSensor<Sensor> SENSOR_REMOVED = new BasicNotificationSensor<Sensor>(Sensor.class,
@@ -137,6 +140,9 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     public AbstractEntity(Map flags=[:], Entity owner=null) {
         this.@skipInvokeMethodEffectorInterception.set(true)
         try {
+            if (flags==null) {
+                throw new IllegalArgumentException("Flags passed to entity $this must not be null (try no-arguments or empty map)")
+            }
             if (flags.owner != null && owner != null && flags.owner != owner) {
                 throw new IllegalArgumentException("Multiple owners supplied, ${flags.owner} and $owner")
             }
@@ -164,7 +170,8 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
                 if (Sensor.class.isAssignableFrom(f.getType())) {
                     Sensor sens = f.get(this)
                     def overwritten = sensorsT.put(sens.name, sens)
-                    if (overwritten!=null) LOG.warn("multiple definitions for sensor ${sens.name} on $this; preferring $sens to $overwritten")
+                    if (overwritten!=null && !overwritten.is(sens)) 
+                        LOG.warn("multiple definitions for sensor ${sens.name} on $this; preferring $sens to $overwritten")
                 }
             }
             if (LOG.isTraceEnabled())
@@ -181,10 +188,17 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 					k = ((HasConfigKey)f.get(this)).getConfigKey();
 				}
 				if (k) {
-                    // Allow overriding config keys (e.g. to set default values)
-                    Field alternativeField = configFields.get(k.name)
+				    Field alternativeField = configFields.get(k.name)
+                    // Allow overriding config keys (e.g. to set default values) when there is an assignable-from relationship between classes
                     Field definitiveField = alternativeField ? inferSubbestField(alternativeField, f) : f
-                    if (definitiveField == f) {
+                    boolean skip = false;
+                    if (definitiveField != f) {
+                        // If they refer to the _same_ instance, just keep the one we already have
+                        if (alternativeField.get(this).is(f.get(this))) skip = true;
+                    }
+                    if (skip) {
+                        //nothing
+                    } else if (definitiveField == f) {
                         def overwritten = configT.put(k.name, k)
                         configFields.put(k.name, f)
                     } else if (definitiveField != null) {
@@ -464,7 +478,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         } else {
             LOG.warn("Config key $ownKey of $this is not a ConfigKeySelfExtracting; cannot retrieve value; returning default")
         }
-        return (defaultValue != null) ? defaultValue : ownKey.getDefaultValue();
+        return TypeCoercions.coerce((defaultValue != null) ? defaultValue : ownKey.getDefaultValue(), key.type);
     }
     
     @Override

@@ -44,10 +44,6 @@ class JBoss7SshDriver extends JavaWebAppSshDriver {
     
     public JBoss7SshDriver(JBoss7Server entity, SshMachineLocation machine) {
         super(entity, machine)
-		
-//        int httpPort = machine.obtainPort(toDesiredPortRange(suggestedHttpPort, DEFAULT_FIRST_HTTP_PORT))
-//        int managementPort = machine.obtainPort(toDesiredPortRange(suggestedManagementPort, DEFAULT_FIRST_MANAGEMENT_PORT))
-		
 		entity.setAttribute(JBoss7Server.MANAGEMENT_PORT, managementPort)
 
     }

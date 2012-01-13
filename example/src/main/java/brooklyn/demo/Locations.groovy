@@ -75,18 +75,28 @@ public class Locations {
 
     private Locations() { }
 
-    private static final JcloudsLocationFactory newAwsLocationFactory() {
-        File sshPrivateKey = new File("src/main/resources/jclouds/id_rsa.private")
-        File sshPublicKey = new File("src/main/resources/jclouds/id_rsa.pub")
-
-        CredentialsFromEnv creds = new CredentialsFromEnv("aws-ec2");
+    public static final JcloudsLocationFactory newJcloudsLocationFactory(String provider) {
+        CredentialsFromEnv creds = new CredentialsFromEnv(provider);
         return new JcloudsLocationFactory([
-                provider : "aws-ec2",
+                provider : provider,
                 identity : creds.getIdentity(),
                 credential : creds.getCredential(),
-                sshPrivateKey : sshPrivateKey,
-                sshPublicKey : sshPublicKey
+                sshPrivateKey : creds.getPrivateKeyFile(),
+                sshPublicKey : creds.getPublicKeyFile()
             ])
+    }
+    public static final JcloudsLocation newJcloudsLocation(String provider, String region) {
+        return newJcloudsLocationFactory(provider).newLocation(region)
+    }
+    
+    public static final JcloudsLocationFactory newAwsLocationFactory() {
+        return newJcloudsLocationFactory("aws-ec2");
+    }
+    public static final JcloudsLocation newAwsEuropeLocation() {
+        return newAwsLocationFactory("aws-ec2").newLocation("eu-west-1")
+    }
+    public static final JcloudsLocation newAwsAmericaLocation() {
+        return newAwsLocationFactory("aws-ec2").newLocation("us-west-1")
     }
 
     public static LocalhostMachineProvisioningLocation newLocalhostLocation(int numberOfInstances=0) {

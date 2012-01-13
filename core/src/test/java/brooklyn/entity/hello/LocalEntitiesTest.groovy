@@ -3,6 +3,8 @@ package brooklyn.entity.hello;
 import static brooklyn.event.basic.DependentConfiguration.*
 import static org.testng.Assert.*
 
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference
 
 import org.slf4j.Logger
@@ -152,28 +154,22 @@ class LocalEntitiesTest {
              */ ));
 		a.start([new MockLocation()])
 		 
+        final Semaphore s1 = new Semaphore(0)
         Object[] sonsConfig = new Object[1]
         Thread t = new Thread( { 
 			log.info "started"
-        	synchronized (sonsConfig) {
-				log.info "notifying {}", System.identityHashCode(sonsConfig)
-				sonsConfig.notifyAll();
-			}
+			s1.release()
         	log.info "getting config "+sonsConfig[0]
         	sonsConfig[0] = son.getConfig(HelloEntity.MY_NAME);
-        	log.info "got config "+sonsConfig[0] 
-        	synchronized (sonsConfig) { 
-				sonsConfig.notifyAll() 
-				log.info "notified "+sonsConfig 
-			} 
+        	log.info "got config "+sonsConfig[0]
+            s1.release()
         } );
 		log.info "starting"
         long startTime = System.currentTimeMillis();
-		synchronized (sonsConfig) {
-			t.start();
-			log.info "waiting {}", System.identityHashCode(sonsConfig)
-			sonsConfig.wait(2000);
-		}
+		t.start();
+		log.info "waiting {}", System.identityHashCode(sonsConfig)
+        if (!s1.tryAcquire(2, TimeUnit.SECONDS)) fail("race mismatch, missing permits");
+        
         //thread should be blocking on call to getConfig
         assertTrue(t.isAlive());
 		assertTrue(System.currentTimeMillis() - startTime < 1500)
@@ -182,7 +178,7 @@ class LocalEntitiesTest {
             for (Task tt in dad.getExecutionContext().getTasks()) { log.info "task at dad:  $tt, "+tt.getStatusDetail(false) }
             for (Task tt in son.getExecutionContext().getTasks()) { log.info "task at son:  $tt, "+tt.getStatusDetail(false) }
             dad.setAttribute(HelloEntity.FAVOURITE_NAME, "Dan");
-            sonsConfig.wait(2000)
+            if (!s1.tryAcquire(2, TimeUnit.SECONDS)) fail("race mismatch, missing permits");
         }
 		log.info "dad: "+dad.getAttribute(HelloEntity.FAVOURITE_NAME)
 		log.info "son: "+son.getConfig(HelloEntity.MY_NAME)

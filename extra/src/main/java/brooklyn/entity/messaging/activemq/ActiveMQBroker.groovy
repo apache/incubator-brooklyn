@@ -2,31 +2,31 @@ package brooklyn.entity.messaging.activemq
 
 import java.util.Collection
 import java.util.Map
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeUnit
 
-import javax.management.InstanceNotFoundException
 import javax.management.ObjectName
-import javax.management.RuntimeMBeanException;
+import javax.management.RuntimeMBeanException
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import com.google.common.base.Throwables;
-
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.Attributes
-import brooklyn.entity.basic.legacy.JavaApp;
-import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup;
+import brooklyn.entity.basic.legacy.JavaApp
+import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup
 import brooklyn.entity.messaging.JMSBroker
 import brooklyn.entity.messaging.JMSDestination
 import brooklyn.entity.messaging.Queue
 import brooklyn.entity.messaging.Topic
 import brooklyn.event.adapter.SensorRegistry
-import brooklyn.event.adapter.legacy.OldJmxSensorAdapter;
-import brooklyn.event.adapter.legacy.ValueProvider;
-import brooklyn.event.basic.ConfiguredAttributeSensor
+import brooklyn.event.adapter.legacy.OldJmxSensorAdapter
+import brooklyn.event.adapter.legacy.ValueProvider
+import brooklyn.event.basic.ConfigurableAttributeSensor
+import brooklyn.location.PortRange
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.internal.Repeater;
+import brooklyn.util.internal.Repeater
+
+import com.google.common.base.Throwables
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single ActiveMQ broker instance.
@@ -34,7 +34,7 @@ import brooklyn.util.internal.Repeater;
 public class ActiveMQBroker extends JMSBroker<ActiveMQQueue, ActiveMQTopic> {
 	private static final Logger log = LoggerFactory.getLogger(ActiveMQBroker.class)
 
-	public static final ConfiguredAttributeSensor<Integer> OPEN_WIRE_PORT = [
+	public static final ConfigurableAttributeSensor<PortRange,Integer> OPEN_WIRE_PORT = [
 		Integer,
 		"openwire.port",
 		"OpenWire port",

@@ -11,6 +11,6 @@ interface JavaWebAppService extends WebAppService, UsesJava {
 	@Deprecated
 	public static final BasicConfigKey<String> WAR = ROOT_WAR;
 	@SetFromFlag("wars")
-	public static final BasicConfigKey<String> NAMED_WARS = [ String, "wars.named", "WAR files to deploy with their given names, as URL (supporting file: and classpath: prefixes)" ]
+	public static final BasicConfigKey<List> NAMED_WARS = [ List, "wars.named", "WAR files to deploy preserving their names for access as the path, as URL (supporting file: and classpath: prefixes)" ]
 	
 }

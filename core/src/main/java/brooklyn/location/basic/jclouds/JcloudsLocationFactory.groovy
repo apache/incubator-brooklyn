@@ -66,7 +66,7 @@ class JcloudsLocationFactory {
 					]
 		]
 
-    private final Map conf = [:]
+    private final Map conf
     
     public JcloudsLocationFactory(Map conf) {
         this.conf = [:]

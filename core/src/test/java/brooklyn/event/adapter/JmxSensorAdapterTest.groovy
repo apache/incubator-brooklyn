@@ -189,6 +189,7 @@ public class JmxSensorAdapterTest {
         // Starts with value defined when registering...
         TestUtils.executeUntilSucceeds {
             Map<String, Object> map = entity.getAttribute(mapAttribute)
+            assertNotNull map
             assertEquals 3, map.size()
             assertEquals 1234, map.get("myint")
             assertEquals "on", map.get("mystring")

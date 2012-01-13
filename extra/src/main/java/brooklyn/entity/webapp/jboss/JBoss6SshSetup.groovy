@@ -3,6 +3,7 @@ package brooklyn.entity.webapp.jboss
 import java.util.List
 
 import brooklyn.entity.basic.Attributes
+import brooklyn.location.PortRange;
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedJavaWebAppSetup
 
@@ -20,7 +21,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         Integer suggestedJbossVersion = entity.getConfig(JBoss6Server.SUGGESTED_VERSION)
         String suggestedInstallDir = entity.getConfig(JBoss6Server.SUGGESTED_INSTALL_DIR)
         String suggestedRunDir = entity.getConfig(JBoss6Server.SUGGESTED_RUN_DIR)
-        Integer suggestedJmxPort = entity.getConfig(JBoss6Server.JMX_PORT)
+        PortRange suggestedJmxPort = entity.getConfig(JBoss6Server.JMX_PORT)
         Integer portIncrement = entity.getConfig(JBoss6Server.PORT_INCREMENT)
         String serverProfile = entity.getConfig(JBoss6Server.SERVER_PROFILE)
         String clusterName = entity.getConfig(JBoss6Server.CLUSTER_NAME)
@@ -33,7 +34,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
 //        String deployDir = "${runDir}/server/${serverProfile}/deploy"
 //        String logFileLocation = "$runDir/server/standard/log/server.log"
 
-        int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort))
+        int jmxPort = machine.obtainPort(suggestedJmxPort)
         
         JBoss6SshSetup result = new JBoss6SshSetup(entity, machine)
 		

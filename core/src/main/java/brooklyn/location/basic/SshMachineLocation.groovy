@@ -3,7 +3,7 @@ package brooklyn.location.basic
 import org.codehaus.groovy.runtime.DefaultGroovyMethods
 
 import brooklyn.location.MachineLocation
-import brooklyn.location.PortRange
+import brooklyn.location.PortRange;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.internal.SshJschTool
 
@@ -134,7 +134,9 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     }
 
     public int obtainPort(PortRange range) {
-        return (range.min..range.max).find { int p -> obtainSpecificPort(p) } ?: -1
+        for (int p: range)
+            if (obtainSpecificPort(p)) return p;
+        return -1;
     }
 
     public void releasePort(int portNumber) {

@@ -1,5 +1,7 @@
 package brooklyn.event.basic
 
+import groovy.transform.InheritConstructors;
+
 import java.util.List
 
 import org.slf4j.Logger
@@ -11,6 +13,8 @@ import brooklyn.entity.ConfigKey.HasConfigKey
 import brooklyn.event.AttributeSensor
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
+import brooklyn.location.PortRange;
+import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.LanguageUtils
 
 import com.google.common.base.Objects
@@ -95,22 +99,46 @@ public class BasicAttributeSensor<T> extends BasicSensor<T> implements Attribute
  *
  * The {@link ConfigKey} has the same type, name and description as the sensor.
  */
-public class ConfiguredAttributeSensor<T> extends BasicAttributeSensor<T> implements HasConfigKey<T> {
+public class ConfiguredAttributeSensor<T> extends ConfigurableAttributeSensor<T,T> {
+    public ConfiguredAttributeSensor(Class<T> type, String name, String description=name, T defaultValue=null) {
+        super(type, type, name, description, defaultValue)
+    }
+
+    public ConfiguredAttributeSensor(ConfiguredAttributeSensor<T> orig, T defaultValue) {
+        super(orig, defaultValue)
+    }
+}
+/**
+* A {@link Sensor} describing an attribute that can be configured with inputs that are used to derive the final value.
+*
+* The {@link ConfigKey} will have the same name and description as the sensor but not necessarily the same type.
+*/
+public class ConfigurableAttributeSensor<ConfigType,SensorType> extends BasicAttributeSensor<SensorType> 
+        implements HasConfigKey<ConfigType> {
     private static final long serialVersionUID = -3103809215973264600L;
 
-    private ConfigKey<T> configKey
+    private ConfigKey<ConfigType> configKey
 
-    public ConfiguredAttributeSensor(Class<T> type, String name, String description=name, T defaultValue=null) {
-        super(type, name, description)
-        configKey = new BasicConfigKey<T>(type, name, description, defaultValue)
+    public ConfigurableAttributeSensor(Class<ConfigType> configType, Class<SensorType> sensorType, String name, String description=name, Object defaultValue=null) {
+        super(sensorType, name, description)
+        configKey = new BasicConfigKey<ConfigType>(configType, name, description, TypeCoercions.coerce(defaultValue, configType))
     }
 
-    public ConfiguredAttributeSensor(ConfiguredAttributeSensor orig, T defaultValue) {
+    public ConfigurableAttributeSensor(ConfigurableAttributeSensor<ConfigType,SensorType> orig, ConfigType defaultValue) {
         super(orig.type, orig.name, orig.description)
-        configKey = new BasicConfigKey<T>(orig.configKey, defaultValue)
+        configKey = new BasicConfigKey<ConfigType>(orig.configKey.type, TypeCoercions.coerce(defaultValue, orig.configKey.type))
     }
 
-    public ConfigKey<T> getConfigKey() { return configKey }
+    public ConfigKey<ConfigType> getConfigKey() { return configKey }
+}
+        
+public class ConfiguredPortSensor extends ConfigurableAttributeSensor<PortRange,Integer> {
+    public ConfiguredPortSensor(String name, String description=name, Object defaultValue=null) {
+        super(PortRange, Integer, name, description, defaultValue)
+    }
+    public ConfiguredPortSensor(ConfiguredPortSensor orig, Object defaultValue) {
+        super(orig, defaultValue)
+    }
 }
 
 /**
