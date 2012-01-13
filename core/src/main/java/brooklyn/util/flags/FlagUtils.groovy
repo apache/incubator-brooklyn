@@ -76,32 +76,11 @@ public class FlagUtils {
             throw new IllegalArgumentException("Forbidden null assignment to non-nullable field "+
                     "$f in $objectOfField");
         }
-        Object newValue = value;
-        Class targetType = f.getType();
-        if (value==null || targetType.isAssignableFrom(value.getClass()) || targetType.isPrimitive() || value.getClass().isPrimitive()) {
-            //nothing needs doing
-            //(the primitive check is not 100% but workaround to avoid the complex boxing+conversion logic java has)
-        } else {
-            //coercion required
-            if (targetType.isInterface()) {
-                targetType = getDefaultConcreteTypeForInterface(targetType);
-                if (targetType==null) {
-                    throw new IllegalArgumentException("Cannot set "+f+" ("+f.getType()+") from "+value+" ("+value.getClass()+"); no default type available for interface");
-                }                
-            }
-            Constructor targetC = getMatchingConstructor(targetType, value);
-            if (targetC!=null) {
-                if (Collection.class.isAssignableFrom(f.getType()) && value in Collection) {}
-                else if (Map.class.isAssignableFrom(f.getType()) && value in Map) {}
-                else {
-                    throw new IllegalArgumentException("Cannot set "+f+" ("+targetType+") from "+value+" ("+value.getClass()+"); explicit constructor conversion required");
-                }
-                newValue = targetC.newInstance( value );
-            } else if ((targetType==Inet4Address || targetType==InetAddress) && value in String) {
-                newValue = Inet4Address.getByName(value);
-            } else {
-                throw new IllegalArgumentException("Cannot set "+f+" ("+targetType+") from "+value+" ("+value.getClass()+"); no conversion known");
-            }
+        Object newValue;
+        try {
+            newValue = TypeCoercions.coerce(value, f.getType());
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Cannot set $f in $objectOfField from type "+value.getClass()+" ("+value+"): "+e, e);
         }
         f.set(objectOfField, newValue)
     }
@@ -123,34 +102,6 @@ public class FlagUtils {
         if (t==Boolean.TYPE) return false;
         //should never happen
         throw new IllegalStateException("Class $t is an unknown primitive.");
-    }
-    
-    /** for automatic conversion */
-    public static Object getDefaultConcreteTypeForInterface(Class t) {
-        if (t==Set) return LinkedHashSet;
-        if (t==List) return ArrayList;
-        if (t==Map) return LinkedHashMap;
-        return null;
-    }
-
-    /** for automatic conversion */
-    public static Object getMatchingConstructor(Class target, Object ...arguments) {
-        Constructor[] cc = target.getConstructors();
-        for (Constructor c: cc) {
-            if (c.getParameterTypes().length != arguments.length)
-                continue;
-            boolean matches = true;
-            Class[] tt = c.getParameterTypes();
-            for (int i=0; i<tt.length; i++) {
-                if (arguments[i]!=null && !tt[i].isInstance(arguments[i])) {
-                    matches=false;
-                    break;
-                }
-            }
-            if (matches) 
-                return c;
-        }
-        return null;
     }
 
     /** returns a map of all fields which are annotated 'SetFromFlag', along with the annotation */
