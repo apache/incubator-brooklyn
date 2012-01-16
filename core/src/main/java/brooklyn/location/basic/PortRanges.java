@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import brooklyn.location.PortRange;
 import brooklyn.util.flags.TypeCoercions;
@@ -19,9 +18,9 @@ public class PortRanges {
     public static final int MAX_PORT = 65535;
     public static final PortRange ANY_HIGH_PORT = new LinearPortRange(1024, MAX_PORT);
     
-    private static class SinglePort implements PortRange {
+    public static class SinglePort implements PortRange {
         int port;
-        public SinglePort(int port) { this.port = port; }
+        private SinglePort(int port) { this.port = port; }
         
         @Override
         public Iterator<Integer> iterator() {
@@ -52,9 +51,9 @@ public class PortRanges {
         }
     }
     
-    private static class LinearPortRange implements PortRange {
+    public static class LinearPortRange implements PortRange {
         int start, end, delta;
-        public LinearPortRange(int start, int end, int delta) {
+        private LinearPortRange(int start, int end, int delta) {
             this.start = start;
             this.end = end;
             this.delta = delta;
@@ -103,9 +102,9 @@ public class PortRanges {
 
     }
     
-    private static class AggregatePortRange implements PortRange {
+    public static class AggregatePortRange implements PortRange {
         List<PortRange> ranges;
-        public AggregatePortRange(List<PortRange> ranges) {
+        private AggregatePortRange(List<PortRange> ranges) {
             this.ranges = Collections.unmodifiableList(new ArrayList(ranges));
         }
         @Override
@@ -166,13 +165,8 @@ public class PortRanges {
         return new AggregatePortRange(l);
     }
 
-    //TODO string
-    
-    private static AtomicBoolean done = new AtomicBoolean(false);
-    
     /** performs the language extensions required for this project */
     public static void init() {
-        if (done.getAndSet(true)) return;
         TypeCoercions.registerAdapter(Integer.class, PortRange.class, new Function<Integer,PortRange>() {
             public PortRange apply(Integer x) { return fromInteger(x); }
         });

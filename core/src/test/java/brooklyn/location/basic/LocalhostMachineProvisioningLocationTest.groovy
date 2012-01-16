@@ -8,6 +8,7 @@ import org.testng.annotations.Test
 import brooklyn.location.Location;
 import brooklyn.location.NoMachinesAvailableException
 import brooklyn.location.PortRange;
+import brooklyn.util.NetworkUtils;
 
 public class LocalhostMachineProvisioningLocationTest {
     @Test
@@ -77,5 +78,23 @@ public class LocalhostMachineProvisioningLocationTest {
         }
 
     }
-    
+
+    @Test
+    public void obtainPortFailsIfInUse() {
+        LocalhostMachineProvisioningLocation p = new LocalhostMachineProvisioningLocation();
+        Location m = p.obtain([:]);
+        int start = 48311;
+        PortRange r = PortRanges.fromString(""+start+"-"+(start+1));
+        ServerSocket ss = null;
+        try {
+            ss = new ServerSocket(start);
+            int i1 = m.obtainPort(r);
+            Assert.assertEquals(i1, start+1);
+        } finally {
+            if (ss) { ss.close() }
+            m.releasePort(start)
+            m.releasePort(start+1)
+        }
+    }
+
 }

@@ -132,7 +132,11 @@ public abstract class AttributeSensorAndConfigKey<ConfigType,SensorType> extends
         if (v!=null) return v;
         v = e.getConfig(this);
         if (v==null) v = configKey.defaultValue;
-        return convertConfigToSensor(v, e)
+        try {
+            return convertConfigToSensor(v, e)
+        } catch (Throwable t) {
+            throw new IllegalArgumentException("Cannot convert config value $v for sensor "+this+": "+t, t);
+        }
     }
     
     /** converts the given ConfigType value to the corresponding SensorType value, 

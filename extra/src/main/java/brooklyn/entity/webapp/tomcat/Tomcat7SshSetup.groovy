@@ -16,8 +16,6 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
     public static final String DEFAULT_VERSION = "7.0.23"
     public static final String DEFAULT_INSTALL_DIR = DEFAULT_INSTALL_BASEDIR+"/"+"tomcat"
     public static final String DEFAULT_DEPLOY_SUBDIR = "webapps"
-    public static final int DEFAULT_FIRST_HTTP_PORT = 8080
-    public static final int DEFAULT_FIRST_SHUTDOWN_PORT = 31880
     
     /**
      * Tomcat insists on having a port you can connect to for the sole purpose of shutting it down;
@@ -42,8 +40,8 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
 //        String logFileLocation = "$runDir/logs/catalina.out"
 
         int jmxPort = machine.obtainPort(suggestedJmxPort)
-        int httpPort = machine.obtainPort(suggestedHttpPort, DEFAULT_FIRST_HTTP_PORT)
-        int shutdownPort = machine.obtainPort(suggestedShutdownPort, DEFAULT_FIRST_SHUTDOWN_PORT)
+        int httpPort = machine.obtainPort(suggestedHttpPort)
+        int shutdownPort = machine.obtainPort(suggestedShutdownPort)
         
         Tomcat7SshSetup result = new Tomcat7SshSetup(entity, machine)
         result.setJmxPort(jmxPort)

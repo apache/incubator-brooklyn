@@ -9,6 +9,7 @@ import java.util.concurrent.Future
 import brooklyn.entity.ConfigKey
 import brooklyn.management.ExecutionContext
 import brooklyn.management.Task
+import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.ConfigKeySelfExtracting
 import brooklyn.util.internal.LanguageUtils
 
@@ -91,25 +92,35 @@ class BasicConfigKey<T> implements ConfigKey<T>, ConfigKeySelfExtracting<T>, Ser
     }
     
     protected Object resolveValue(Object v, ExecutionContext exec) {
-        //if it's a task, we wait for the task to complete
-        if (v in Task) {
-            if (!((Task) v).isSubmitted() ) {
-                exec.submit((Task) v)
+        //if the expected type is a closure or map and that's what we have, we're done (or if it's null)
+        if (v==null || type.isInstance(v))
+            return v;
+        try {
+            //if it's a task, we wait for the task to complete
+            if (v in Task) {
+                if (!((Task) v).isSubmitted() ) {
+                    exec.submit((Task) v)
+                }
+                v = ((Task) v).get()
+            } else if (v in Future) {
+                v = ((Future) v).get()
+            } else if (v in Closure) {
+                v = ((Closure) v).call()
+            } else if (v in Map) {
+                //and if a map or list we look inside
+                Map result = [:]
+                v.each { k,val -> result << [(k): resolveValue(val, exec)] }
+                return result
+            } else if (v in List) {
+                List result = []
+                v.each { result << resolveValue(it, exec) }
+                return result
+            } else {
+                return TypeCoercions.coerce(v, type);
             }
-            v = ((Task) v).get()
-        } else if (v in Future) {
-            v = ((Future) v).get()
-        } else if (v in Closure) {
-            v = ((Closure) v).call()
-        } else if (v in Map) {
-            Map result = [:]
-			v.each { k,val -> result << [(k): resolveValue(val, exec)] }
-            return result
-        } else if (v in List) {
-            List result = []
-			v.each { result << resolveValue(it, exec) }
-            return result
-        } else return v
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Error resolving "+v+" for "+this+" in "+exec+": "+e, e);
+        }
         return resolveValue(v, exec)
     }
 }

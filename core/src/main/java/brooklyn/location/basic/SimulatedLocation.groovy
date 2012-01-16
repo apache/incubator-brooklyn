@@ -21,7 +21,7 @@ class SimulatedLocation extends AbstractLocation implements MachineProvisioningL
     
     private static final address = InetAddress.getLocalHost()
 
-    Set permittedPorts = CollectionUtils.asList(PortRanges.fromString("1+"));
+    Iterable permittedPorts = PortRanges.fromString("1+");
     Set usedPorts = []
 
     public SimulatedLocation(Map<String,? extends Object> flags = [:]) {
@@ -44,7 +44,7 @@ class SimulatedLocation extends AbstractLocation implements MachineProvisioningL
     }
 
     public synchronized boolean obtainSpecificPort(int portNumber) {
-        if (!permittedPorts.contains(portNumber)) return false;
+        if (!Iterables.contains(permittedPorts, portNumber)) return false;
         if (usedPorts.contains(portNumber)) return false;
         usedPorts.add(portNumber);
         return true;
@@ -61,8 +61,7 @@ class SimulatedLocation extends AbstractLocation implements MachineProvisioningL
     }
     
     public synchronized void setPermittedPorts(Iterable<Integer> ports) {
-        permittedPorts.clear();
-        for (int i: ports) permittedPorts.add(i);
+        permittedPorts  = ports;
     }
         
 }

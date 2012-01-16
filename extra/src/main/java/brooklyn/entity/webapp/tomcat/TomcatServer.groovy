@@ -23,7 +23,7 @@ public class TomcatServer extends OldJavaWebApp {
     private static final Logger log = LoggerFactory.getLogger(TomcatServer.class)
     
     public static final BasicConfigKey<PortRange> SUGGESTED_SHUTDOWN_PORT =
-            [ Integer, "tomcat.shutdownport", "Suggested shutdown port", "31880+" ]
+            [ PortRange, "tomcat.shutdownport", "Suggested shutdown port", "31880+" ]
     
     public static final BasicAttributeSensor<Integer> TOMCAT_SHUTDOWN_PORT =
         [ Integer, "webapp.tomcat.shutdownPort", "Port to use for shutting down" ]

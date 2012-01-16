@@ -7,6 +7,7 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.basic.lifecycle.JavaStartStopSshDriver
+import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.location.basic.SshMachineLocation
 
 
@@ -32,15 +33,6 @@ public abstract class JavaWebAppSoftwareProcess extends SoftwareProcessEntity im
 	
 	//just provide better typing
 	public JavaWebAppSshDriver getDriver() { super.getDriver() }
-	
-	@Override
-	public void start() {
-		super.start()
-		
-		log.info "started {}: http://{}:{}/  running WARs {} {}", this,
-				getAttribute(HOSTNAME), getAttribute(HTTP_PORT),
-				getConfig(ROOT_WAR), getAttribute(NAMED_WARS)
-	}
 	
 	public void deployInitialWars() {
 		def rootWar = getConfig(ROOT_WAR);
@@ -70,18 +62,20 @@ public abstract class JavaWebAppSoftwareProcess extends SoftwareProcessEntity im
 
 public abstract class JavaWebAppSshDriver extends JavaStartStopSshDriver {
 
-	public static final int DEFAULT_FIRST_HTTP_PORT  = 8080
-	
 	public JavaWebAppSshDriver(JavaWebAppSoftwareProcess entity, SshMachineLocation machine) {
 		super(entity, machine)
-
-		entity.setAttribute(Attributes.HTTP_PORT, httpPort)
-		entity.setAttribute(WebAppService.ROOT_URL, "http://${hostname}:${httpPort}/")
 	}
-	
+
 	public JavaWebAppSoftwareProcess getEntity() { super.getEntity() }
-	protected int getHttpPort() { entity.getConfig(JavaWebAppSoftwareProcess.HTTP_PORT, DEFAULT_FIRST_HTTP_PORT) }
-	
+    public Integer getHttpPort() { return entity.getAttribute(Attributes.HTTP_PORT) }	
+
+    @Override
+    public void start() {
+        assert httpPort!=null : "HTTP_PORT sensor not set; is an acceptable port available?"
+        entity.setAttribute(WebAppService.ROOT_URL, "http://${hostname}:${httpPort}/")
+        super.start();
+    }
+        
 	protected abstract String getDefaultVersion();
 	protected abstract String getDeploySubdir();
 	

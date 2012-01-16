@@ -42,25 +42,25 @@ class DynamicClusterTest {
         loc2 = new SimulatedLocation()
     }
     
-    @Test(expectedExceptions = [IllegalArgumentException, NullPointerException])
+    @Test(expectedExceptions = [IllegalArgumentException, NullPointerException, ClassCastException.class])
     public void constructorRequiresThatNewEntityArgumentIsGiven() {
         new DynamicCluster(initialSize:1, app)
         fail "Did not throw expected exception"
     }
 
-    @Test(expectedExceptions = IllegalArgumentException.class)
+    @Test(expectedExceptions = [IllegalArgumentException.class, ClassCastException.class])
     public void constructorRequiresThatNewEntityArgumentIsAnEntity() {
         new DynamicCluster([ initialSize:1, newEntity:new NoopStartable() ], app)
         fail "Did not throw expected exception"
     }
 
-    @Test(expectedExceptions = IllegalArgumentException.class)
+    @Test(expectedExceptions = [IllegalArgumentException.class, ClassCastException.class])
     public void constructorRequiresThatNewEntityArgumentIsStartable() {
         new DynamicCluster([ initialSize:1, newEntity:new AbstractEntity() { } ], app)
         fail "Did not throw expected exception"
     }
 
-    @Test(expectedExceptions = IllegalArgumentException.class)
+    @Test(expectedExceptions = [IllegalArgumentException.class, ClassCastException.class])
     public void constructorRequiresThatPostStartEntityIsClosure() {
         new DynamicCluster([ initialSize:1, newEntity:{ new TestEntity() }, postStartEntity:"notaclosure" ], app)
         fail "Did not throw expected exception"

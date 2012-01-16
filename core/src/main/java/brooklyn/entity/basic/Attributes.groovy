@@ -39,7 +39,7 @@ public interface Attributes {
     BasicAttributeSensor<List<Integer>> PORT_NUMBERS = [ List, "port.list", "List of port numbers" ]
     BasicAttributeSensor<List<Sensor<Integer>>> PORT_SENSORS = [ List, "port.list.sensors", "List of port number attributes" ]
 
-    PortAttributeSensorAndConfigKey HTTP_PORT = [ "http.port", "HTTP port", [80,8080,"18000+"] ]
+    PortAttributeSensorAndConfigKey HTTP_PORT = [ "http.port", "HTTP port", [8080,"18000+"] ]
     PortAttributeSensorAndConfigKey HTTPS_PORT = [ "https.port", "HTTP port (with SSL/TLS)", [443,8443,"18443+"] ]
                     
     PortAttributeSensorAndConfigKey SSH_PORT = [ "ssh.port", "SSH port", 22 ]

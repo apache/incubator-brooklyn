@@ -17,7 +17,9 @@ import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.util.BrooklynLanguageExtensions;
 import brooklyn.util.flags.SetFromFlag
+import brooklyn.util.internal.TimeExtras;
 
 public class JBoss7Server extends JavaWebAppSoftwareProcess implements JavaWebAppService {
 
@@ -37,7 +39,7 @@ public class JBoss7Server extends JavaWebAppSoftwareProcess implements JavaWebAp
     public JBoss7Server(Map flags=[:], Entity owner=null) {
         super(flags, owner)
     }
-		
+
 	@Override	
 	protected void connectSensors() {
 		super.connectSensors();
@@ -45,7 +47,8 @@ public class JBoss7Server extends JavaWebAppSoftwareProcess implements JavaWebAp
 		def host = getAttribute(HOSTNAME)
 		def port = getAttribute(MANAGEMENT_PORT)
 		def http = sensorRegistry.register(
-			new HttpSensorAdapter("http://$host:$port/management/subsystem/web/connector/http/read-resource", period: 200*TimeUnit.MILLISECONDS).
+			new HttpSensorAdapter("http://$host:$port/management/subsystem/web/connector/http/read-resource", 
+                period: 200*TimeUnit.MILLISECONDS).
 				vars("include-runtime":null) )
 		
 		with(http) {

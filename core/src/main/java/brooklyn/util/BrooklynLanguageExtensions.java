@@ -11,8 +11,13 @@ public class BrooklynLanguageExtensions {
     
     private static AtomicBoolean done = new AtomicBoolean(false);
     
+    public synchronized static void reinit() {
+        done.set(false);
+        init();
+    }
+    
     /** performs the language extensions required for this project */
-    public static void init() {
+    public synchronized static void init() {
         if (done.getAndSet(true)) return;
         TimeExtras.init();
         PortRanges.init();

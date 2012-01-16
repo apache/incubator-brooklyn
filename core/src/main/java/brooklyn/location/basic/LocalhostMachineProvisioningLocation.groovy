@@ -4,6 +4,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.location.PortRange
+import brooklyn.util.NetworkUtils;
 import brooklyn.util.flags.SetFromFlag
 
 /**
@@ -85,27 +86,12 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
         }
     }
     /** checks the actual availability of the port on localhost, ie by binding to it */
-    public static boolean checkPortAvailable(localAddress, portNumber) {
+    public static boolean checkPortAvailable(InetAddress localAddress, int portNumber) {
         if (portNumber<1024) {
             LOG.debug("Skipping system availability check for privileged localhost port "+portNumber);
             return true;
         }
-        def ss = null;
-        try {
-            ss = new ServerSocket(portNumber, 50, localAddress);
-            return true;
-        } catch (Exception e) {
-            if (LOG.isDebugEnabled())
-                LOG.debug("Port "+portNumber+" not available: "+e, e);
-            return false;
-        } finally {
-            try {
-                if (ss!=null) ss.close();
-            } catch (Exception e) {
-                LOG.warn("Error tearing down "+ss+" when checking availability of port "+portNumber, e);
-                return false;
-            }
-        }
+        return NetworkUtils.isPortAvailable(portNumber);
     }
     public static int obtainPort(InetAddress localAddress, PortRange range) {
         for (int p: range)
@@ -153,5 +139,4 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
             LocalhostMachineProvisioningLocation.releasePort(address, portNumber)
         }
     }
-
 }

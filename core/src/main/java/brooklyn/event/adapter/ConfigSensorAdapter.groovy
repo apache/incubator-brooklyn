@@ -20,7 +20,6 @@ public class ConfigSensorAdapter extends AbstractSensorAdapter {
 	}
 	
 	//normally just applied once, statically, not registered...
-	//TODO don't make it an adapter?
 	public static void apply(EntityLocal entity) {
 		entity.sensors.values().each { 
 			if (it in AttributeSensorAndConfigKey && entity.getAttribute(it)==null) entity.setAttribute(it) }

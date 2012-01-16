@@ -3,19 +3,24 @@ package brooklyn.launcher
 import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
+import groovy.time.TimeDuration
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.testng.annotations.Test
 
-import brooklyn.config.BrooklynServiceAttributes;
+import brooklyn.config.BrooklynServiceAttributes
 import brooklyn.management.internal.LocalManagementContext
+import brooklyn.util.BrooklynLanguageExtensions
 import brooklyn.util.internal.TimeExtras
-import groovy.time.TimeDuration
 
 public class WebAppRunnerTest {
     static { TimeExtras.init() }
 
+    public static final Logger log = LoggerFactory.getLogger(WebAppRunnerTest.class);
+            
     private static TimeDuration TIMEOUT_MS;
-	static { TIMEOUT_MS = TimeExtras.duration(5, SECONDS) }
+	static { TIMEOUT_MS = 5*SECONDS }
     
     /**
      * This test requires the brooklyn.war to work. (Should be placed by maven build.)

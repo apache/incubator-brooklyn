@@ -28,7 +28,7 @@ public abstract class AbstractController extends SoftwareProcessEntity {
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractController.class)
 
     @SetFromFlag("portNumberSensor")  //TODO javadoc; and make default be HTTP_PORT
-    public static final BasicConfigKey<Sensor> PORT_NUMBER_SENSOR = [ String, "member.sensor.portNumber", "Port number sensor on members" ]
+    public static final BasicConfigKey<Sensor> PORT_NUMBER_SENSOR = [ Sensor, "member.sensor.portNumber", "Port number sensor on members" ]
 
     @SetFromFlag("port")  //TODO get standard name; ideally inherit the standard field
     public static final PortAttributeSensorAndConfigKey HTTP_PORT = Attributes.HTTP_PORT
