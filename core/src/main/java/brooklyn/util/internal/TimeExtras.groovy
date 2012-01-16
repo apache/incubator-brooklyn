@@ -3,6 +3,7 @@ package brooklyn.util.internal
 import groovy.time.TimeDuration
 
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 /**
@@ -15,9 +16,10 @@ import java.util.concurrent.TimeUnit
  * @author alex
  */
 class TimeExtras {
-    static void init() { }
-
-    static {
+    private static AtomicBoolean done = new AtomicBoolean(false);
+    
+    static void init() {
+        if (done.getAndSet(true)) return;   //only run once
         Number.metaClass.multiply << { TimeUnit t -> new TimeDuration(t.toMillis(intValue())) }
         Number.metaClass.multiply << { TimeDuration t -> t.multiply(doubleValue()) }
         
@@ -28,5 +30,17 @@ class TimeExtras {
             Collections.reverse(l)
             l as TimeDuration
         }
+    }
+    
+    static { init(); }
+    
+    /** creates a duration object
+     * <p>
+     * fix for irritating classloading/metaclass order 
+     * where an int may get constructed too early and not have the multiply syntax available
+     * (or possibly due to invocation from a java class rather than a groovy class?);
+     * if e.g. 5*SECONDS throws an error, try duration(5, SECONDS)  */ 
+    public static TimeDuration duration(int value, TimeUnit unit) {
+        return new TimeDuration(unit.toMillis(value));
     }
 }

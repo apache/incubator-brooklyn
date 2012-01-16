@@ -15,7 +15,7 @@ public class WebAppRunnerTest {
     static { TimeExtras.init() }
 
     private static TimeDuration TIMEOUT_MS;
-	static { TIMEOUT_MS = 5*SECONDS }
+	static { TIMEOUT_MS = TimeExtras.duration(5, SECONDS) }
     
     /**
      * This test requires the brooklyn.war to work. (Should be placed by maven build.)
