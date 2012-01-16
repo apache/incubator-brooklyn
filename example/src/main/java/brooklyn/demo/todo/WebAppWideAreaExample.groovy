@@ -1,4 +1,4 @@
-package brooklyn.demo
+package brooklyn.demo.todo
 
 import java.util.List
 import java.util.Map
@@ -7,6 +7,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.config.BrooklynProperties;
+import brooklyn.demo.Locations;
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.DynamicGroup
