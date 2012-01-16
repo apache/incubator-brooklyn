@@ -27,6 +27,14 @@ public class PortRanges {
         public Iterator<Integer> iterator() {
             return Collections.singletonList(port).iterator();
         }
+        @Override
+        public boolean isEmpty() {
+            return false;
+        }
+        @Override
+        public boolean asBoolean() {
+            return true;
+        }
     }
 
     @Deprecated
@@ -34,6 +42,14 @@ public class PortRanges {
         public static final int MAX_PORT = PortRanges.MAX_PORT;
         public static final PortRange ANY_HIGH_PORT = PortRanges.ANY_HIGH_PORT;
         public BasicPortRange(int start, int end) { super(start, end); }
+        @Override
+        public boolean isEmpty() {
+            return false;
+        }
+        @Override
+        public boolean asBoolean() {
+            return true;
+        }
     }
     
     private static class LinearPortRange implements PortRange {
@@ -75,6 +91,16 @@ public class PortRanges {
                 }
             };
         }
+        
+        @Override
+        public boolean isEmpty() {
+            return false;
+        }
+        @Override
+        public boolean asBoolean() {
+            return true;
+        }
+
     }
     
     private static class AggregatePortRange implements PortRange {
@@ -85,6 +111,16 @@ public class PortRanges {
         @Override
         public Iterator<Integer> iterator() {
             return Iterables.concat(ranges).iterator();
+        }
+        @Override
+        public boolean isEmpty() {
+            for (PortRange r: ranges)
+                if (!r.isEmpty()) return false;
+            return true;
+        }
+        @Override
+        public boolean asBoolean() {
+            return !isEmpty();
         }
     }
 
@@ -117,8 +153,11 @@ public class PortRanges {
                 int v = si.indexOf('-');
                 start = Integer.parseInt(si.substring(0, v).trim());
                 end = Integer.parseInt(si.substring(v+1).trim());
+            } else if (si.length()==0) {
+                //nothing, ie empty range, just continue
+                continue;
             } else {
-                //number on its own
+                //should be number on its own
                 l.add(new SinglePort(Integer.parseInt(si)));
                 continue;
             }

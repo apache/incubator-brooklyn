@@ -15,7 +15,7 @@ import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.basic.MethodEffector
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
-import brooklyn.test.location.MockLocation
+import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.web.console.entity.TaskSummary
 
 import com.google.common.collect.Iterables
@@ -26,7 +26,7 @@ class EntityServiceTest {
     Entity testEntity
     List<Entity> testEntities
     List<Application> testCollection
-    Location testLocation = new MockLocation([latitude: 56, longitude: -2.5]);
+    Location testLocation = new SimulatedLocation([latitude: 56, longitude: -2.5]);
 
     @BeforeMethod
     protected void setUp() {
@@ -84,21 +84,21 @@ class EntityServiceTest {
 
     @Test
     public void testGetNearestAncestorWithCoordinates() {
-        assertEquals(testService.getNearestAncestorWithCoordinates(new MockLocation()), null);
+        assertEquals(testService.getNearestAncestorWithCoordinates(new SimulatedLocation()), null);
         assertEquals(testLocation, testService.getNearestAncestorWithCoordinates(testLocation));
 
-        Location p = new MockLocation(latitude: 23, longitude: 34);
-        Location c = new MockLocation(parentLocation: p);
+        Location p = new SimulatedLocation(latitude: 23, longitude: 34);
+        Location c = new SimulatedLocation(parentLocation: p);
         assertEquals(p, testService.getNearestAncestorWithCoordinates(c));
 
         // Parent has only latitude set, should not use this.
-        Location p2 = new MockLocation(latitude: 17);
-        Location c2 = new MockLocation(parentLocation: p2);
+        Location p2 = new SimulatedLocation(latitude: 17);
+        Location c2 = new SimulatedLocation(parentLocation: p2);
         assertEquals(null, testService.getNearestAncestorWithCoordinates(c2));
 
         // Parent has only latitude set, should not use this, should next ancestor.
-        Location p3 = new MockLocation(latitude: 17, parentLocation: p);
-        Location c3 = new MockLocation(parentLocation: p3);
+        Location p3 = new SimulatedLocation(latitude: 17, parentLocation: p);
+        Location c3 = new SimulatedLocation(parentLocation: p3);
         assertEquals(testService.getNearestAncestorWithCoordinates(c3), p);
     }
     

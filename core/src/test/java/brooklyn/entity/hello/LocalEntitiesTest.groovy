@@ -14,8 +14,8 @@ import org.testng.annotations.Test
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
+import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.management.Task
-import brooklyn.test.location.MockLocation
 import brooklyn.util.task.ParallelTask
 
 /** tests effector invocation and a variety of sensor accessors and subscribers */
@@ -27,7 +27,7 @@ class LocalEntitiesTest {
     public void testEffectorUpdatesAttributeSensor() {
         AbstractApplication a = new AbstractApplication() {}
         HelloEntity h = new HelloEntity(owner:a)
-        a.start([new MockLocation()])
+        a.start([new SimulatedLocation()])
         
         h.setAge(5)
         assertEquals(5, h.getAttribute(HelloEntity.AGE))
@@ -39,7 +39,7 @@ class LocalEntitiesTest {
     public void testEffectorEmitsAttributeSensor() {
         AbstractApplication a = new AbstractApplication() {}
         HelloEntity h = new HelloEntity(owner:a)
-        a.start([new MockLocation()])
+        a.start([new SimulatedLocation()])
         
         AtomicReference<SensorEvent> evt = new AtomicReference()
         a.getSubscriptionContext().subscribe(h, HelloEntity.AGE, { 
@@ -69,7 +69,7 @@ class LocalEntitiesTest {
     public void testEffectorEmitsTransientSensor() {
         AbstractApplication a = new AbstractApplication() {}
         HelloEntity h = new HelloEntity(owner:a)
-        a.start([new MockLocation()])
+        a.start([new SimulatedLocation()])
         
         AtomicReference<SensorEvent> evt = new AtomicReference()
         a.getSubscriptionContext().subscribe(h, HelloEntity.ITS_MY_BIRTHDAY, {
@@ -95,7 +95,7 @@ class LocalEntitiesTest {
     public void testSendMultipleInOrderThenUnsubscribe() {
         AbstractApplication a = new AbstractApplication() {}
         HelloEntity h = new HelloEntity(owner:a)
-        a.start([new MockLocation()])
+        a.start([new SimulatedLocation()])
 
         List data = []       
         a.getSubscriptionContext().subscribe(h, HelloEntity.AGE, { SensorEvent e -> 
@@ -152,7 +152,7 @@ class LocalEntitiesTest {
             /* third param is closure; defaults to groovy truth (see google), but could be e.g.
                , { it!=null && it.length()>0 && it!="Jebediah" }
              */ ));
-		a.start([new MockLocation()])
+		a.start([new SimulatedLocation()])
 		 
         final Semaphore s1 = new Semaphore(0)
         Object[] sonsConfig = new Object[1]
@@ -199,7 +199,7 @@ class LocalEntitiesTest {
         //and config can have transformations
         son.setConfig(HelloEntity.MY_NAME, transform(attributeWhenReady(dad, HelloEntity.FAVOURITE_NAME), { it+it[-1]+"y" }))
 		dad.setAttribute(HelloEntity.FAVOURITE_NAME, "Dan");
-		a.start([new MockLocation()])
+		a.start([new SimulatedLocation()])
         assertEquals(son.getConfig(HelloEntity.MY_NAME), "Danny")
     }
 

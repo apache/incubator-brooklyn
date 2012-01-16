@@ -11,7 +11,7 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.Location
-import brooklyn.location.basic.GeneralPurposeLocation
+import brooklyn.location.basic.SimulatedLocation
 import brooklyn.policy.Policy
 import brooklyn.policy.basic.GeneralPurposePolicy
 import brooklyn.management.Task
@@ -28,13 +28,13 @@ private class TestWebApplication extends AbstractApplication {
         displayName = "Application";
 
         locations = [
-            new GeneralPurposeLocation([id: "us-east-1", name:"US-East-1", iso3166: "US-CA", displayName:"US-East-1", streetAddress:"Northern Virginia, USA", description:"Northern Virginia (approx)",
+            new SimulatedLocation([id: "us-east-1", name:"US-East-1", iso3166: "US-CA", displayName:"US-East-1", streetAddress:"Northern Virginia, USA", description:"Northern Virginia (approx)",
                                         latitude:38.0,longitude:-76.0]),
-            new GeneralPurposeLocation([id: "us-west-1", name:"US-West-1", iso3166: "US-VA", displayName:"US-West-1", streetAddress:"Northern California, USA", description:"Northern California",
+            new SimulatedLocation([id: "us-west-1", name:"US-West-1", iso3166: "US-VA", displayName:"US-West-1", streetAddress:"Northern California, USA", description:"Northern California",
                                         latitude:40.0,longitude:-120.0]),
-            new GeneralPurposeLocation([id: "eu-west-1", name:"EU-West-1", iso3166: "IE", displayName:"EU-West-1", streetAddress:"Dublin, Ireland", description:"Dublin, Ireland",
+            new SimulatedLocation([id: "eu-west-1", name:"EU-West-1", iso3166: "IE", displayName:"EU-West-1", streetAddress:"Dublin, Ireland", description:"Dublin, Ireland",
                                         latitude:53.34778,longitude:-6.25972]),
-            new GeneralPurposeLocation([id: "fruitcake", name:"Unused location in cakeland", iso3166: "IE", displayName:"Unused location in cakeland", streetAddress:"Nowhere, cakeland", description:"Nowhere",
+            new SimulatedLocation([id: "fruitcake", name:"Unused location in cakeland", iso3166: "IE", displayName:"Unused location in cakeland", streetAddress:"Nowhere, cakeland", description:"Nowhere",
                                         latitude:0,longitude:0])
         ];
 
@@ -144,11 +144,11 @@ private class TestWebApplication extends AbstractApplication {
 
     private class TestDataEntity extends AbstractEntity {
         private List<Location> testLocations = [
-            new GeneralPurposeLocation([id: "us-east-1", name:"US-East-1", iso3166: "US-CA", displayName:"US-East-1", streetAddress:"Northern Virginia, USA", description:"Northern Virginia (approx)",
+            new SimulatedLocation([id: "us-east-1", name:"US-East-1", iso3166: "US-CA", displayName:"US-East-1", streetAddress:"Northern Virginia, USA", description:"Northern Virginia (approx)",
                                         latitude:38.0,longitude:-76.0]),
-            new GeneralPurposeLocation([id: "us-west-1", name:"US-West-1", iso3166: "US-VA", displayName:"US-West-1", streetAddress:"Northern California, USA", description:"Northern California",
+            new SimulatedLocation([id: "us-west-1", name:"US-West-1", iso3166: "US-VA", displayName:"US-West-1", streetAddress:"Northern California, USA", description:"Northern California",
                                         latitude:40.0,longitude:-120.0]),
-            new GeneralPurposeLocation([id: "eu-west-1", name:"EU-West-1", iso3166: "IE", displayName:"EU-West-1", streetAddress:"Dublin, Ireland", description:"Dublin, Ireland",
+            new SimulatedLocation([id: "eu-west-1", name:"EU-West-1", iso3166: "IE", displayName:"EU-West-1", streetAddress:"Dublin, Ireland", description:"Dublin, Ireland",
                                         latitude:53.34778,longitude:-6.25972])
         ];
         private List<Policy> testPolicies = [
@@ -197,7 +197,7 @@ private class TestWebApplication extends AbstractApplication {
         ]
 
         private List<Location> testLocations = [
-                new GeneralPurposeLocation([id: "us-east-1", name:"US-East-1", iso3166: "US-VA", displayName:"US-East-1", streetAddress:"Northern Virginia, USA", description:"Northern Virginia (approx)",
+                new SimulatedLocation([id: "us-east-1", name:"US-East-1", iso3166: "US-VA", displayName:"US-East-1", streetAddress:"Northern Virginia, USA", description:"Northern Virginia (approx)",
                                             latitude:38.0,longitude:-76.0])
         ];
         private List<Policy> testPolicies = [

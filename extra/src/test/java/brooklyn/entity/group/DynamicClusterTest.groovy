@@ -17,7 +17,7 @@ import brooklyn.entity.trait.Changeable
 import brooklyn.entity.trait.Resizable
 import brooklyn.event.EntityStartException
 import brooklyn.location.Location
-import brooklyn.location.basic.GeneralPurposeLocation
+import brooklyn.location.basic.SimulatedLocation
 import brooklyn.management.Task
 import brooklyn.test.TestUtils
 import brooklyn.test.entity.NoopStartable
@@ -32,14 +32,14 @@ class DynamicClusterTest {
     static { TimeExtras.init() }
     
     TestApplication app
-    GeneralPurposeLocation loc
-    GeneralPurposeLocation loc2
+    SimulatedLocation loc
+    SimulatedLocation loc2
     
     @BeforeMethod
     public void setUp() {
         app = new TestApplication()
-        loc = new GeneralPurposeLocation()
-        loc2 = new GeneralPurposeLocation()
+        loc = new SimulatedLocation()
+        loc2 = new SimulatedLocation()
     }
     
     @Test(expectedExceptions = [IllegalArgumentException, NullPointerException])

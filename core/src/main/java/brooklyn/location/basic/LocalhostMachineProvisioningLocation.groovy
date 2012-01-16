@@ -1,8 +1,10 @@
 package brooklyn.location.basic
 
-import brooklyn.util.flags.SetFromFlag
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
-import com.google.common.base.Preconditions
+import brooklyn.location.PortRange
+import brooklyn.util.flags.SetFromFlag
 
 /**
  * An implementation of {@link brooklyn.location.MachineProvisioningLocation} that can provision a {@link SshMachineLocation} for the
@@ -12,7 +14,9 @@ import com.google.common.base.Preconditions
  * and choose to allow localhost to be provisioned multiple times, which may be useful in some testing scenarios.
  */
 public class LocalhostMachineProvisioningLocation extends FixedListMachineProvisioningLocation<SshMachineLocation> {
-    
+
+    public static final Logger LOG = LoggerFactory.getLogger(LocalhostMachineProvisioningLocation.class);
+                
     @SetFromFlag('count')
     int initialCount;
 
@@ -22,6 +26,8 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
     @SetFromFlag
     InetAddress address;
 
+    private static Set<Integer> portsInUse = []
+    
     /**
      * Construct a new instance.
      *
@@ -45,6 +51,8 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
         
         if (!name) { name="localhost" }
         if (!address) address = Inet4Address.localHost;
+        // could try to confirm this machine is accessible on the given address ... but there's no 
+        // immediate convenience in java so early-trapping of that particular error is deferred
         
         if (canProvisionMore==null) {
             if (initialCount>0) canProvisionMore = false;
@@ -58,11 +66,92 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
     public boolean canProvisionMore() { return canProvisionMore; }
     public void provisionMore(int size) {
         for (int i=0; i<size; i++) { 
-            SshMachineLocation child = new SshMachineLocation(address:(address ?: InetAddress.localHost)) 
+            SshMachineLocation child = new LocalhostMachine(address:(address ?: InetAddress.localHost)) 
             addChildLocation(child)
             child.setParentLocation(this)
        }
     }
+
+    public static synchronized boolean obtainSpecificPort(InetAddress localAddress, int portNumber) {
+        if (portsInUse.contains(portNumber)) {
+            return false
+        } else {
+            //see if it is available?
+            if (!checkPortAvailable(localAddress, portNumber)) {
+                return false;
+            }
+            portsInUse.add(portNumber)
+            return true
+        }
+    }
+    /** checks the actual availability of the port on localhost, ie by binding to it */
+    public static boolean checkPortAvailable(localAddress, portNumber) {
+        if (portNumber<1024) {
+            LOG.debug("Skipping system availability check for privileged localhost port "+portNumber);
+            return true;
+        }
+        def ss = null;
+        try {
+            ss = new ServerSocket(portNumber, 50, localAddress);
+            return true;
+        } catch (Exception e) {
+            if (LOG.isDebugEnabled())
+                LOG.debug("Port "+portNumber+" not available: "+e, e);
+            return false;
+        } finally {
+            try {
+                if (ss!=null) ss.close();
+            } catch (Exception e) {
+                LOG.warn("Error tearing down "+ss+" when checking availability of port "+portNumber, e);
+                return false;
+            }
+        }
+    }
+    public static int obtainPort(InetAddress localAddress, PortRange range) {
+        for (int p: range)
+            if (obtainSpecificPort(localAddress, p)) return p;
+        LOG.debug("unable to find port in {} on {}; returning -1", range, this)
+        return -1;
+    }
+
+    public static synchronized void releasePort(InetAddress localAddress, int portNumber) {
+        portsInUse.remove((Object) portNumber);
+    }
+
+    public void release(SshMachineLocation machine) {
+        Set portsObtained = []
+        synchronized (machine.portsObtained) {
+            portsObtained.addAll(machine.portsObtained)
+        }
         
+        super.release(machine);
+        
+        for (int p: portsObtained)
+            releasePort(null, p)
+    }
     
+    private static class LocalhostMachine extends SshMachineLocation {
+        Set portsObtained = []
+        
+        private LocalhostMachine(Map properties) {
+            super(properties)
+        }
+        public boolean obtainSpecificPort(int portNumber) {
+            return LocalhostMachineProvisioningLocation.obtainSpecificPort(address, portNumber)
+        }
+        public int obtainPort(PortRange range) {
+            int r = LocalhostMachineProvisioningLocation.obtainPort(address, range)
+            synchronized (portsObtained) {
+                if (r>0) portsObtained += r;
+            }
+            return r;
+        }
+        public void releasePort(int portNumber) {
+            synchronized (portsObtained) {
+                portsObtained -= portNumber;
+            }
+            LocalhostMachineProvisioningLocation.releasePort(address, portNumber)
+        }
+    }
+
 }

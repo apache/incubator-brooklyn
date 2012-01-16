@@ -434,7 +434,9 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     }
 
     /** sets the value of the given attribute sensor from the config key value herein,
-     * if the config key resolves to a non-null value as a sensor */
+     * if the config key resolves to a non-null value as a sensor
+     * <p>
+     * returns old value */
     public <T> T setAttribute(AttributeSensorAndConfigKey<?,T> configuredSensor) {
         T v = getAttribute(configuredSensor);
         if (v!=null) return v;

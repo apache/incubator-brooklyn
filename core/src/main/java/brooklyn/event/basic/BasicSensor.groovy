@@ -1,7 +1,5 @@
 package brooklyn.event.basic
 
-import groovy.transform.InheritConstructors;
-
 import java.util.List
 
 import org.slf4j.Logger
@@ -13,8 +11,9 @@ import brooklyn.entity.ConfigKey.HasConfigKey
 import brooklyn.event.AttributeSensor
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
-import brooklyn.location.PortRange;
-import brooklyn.util.flags.TypeCoercions;
+import brooklyn.location.PortRange
+import brooklyn.location.PortSupplier
+import brooklyn.util.flags.TypeCoercions
 import brooklyn.util.internal.LanguageUtils
 
 import com.google.common.base.Objects
@@ -121,6 +120,12 @@ public abstract class AttributeSensorAndConfigKey<ConfigType,SensorType> extends
     
     /** returns the sensor value for this attribute on the given entity, if present,
      * otherwise works out what the sensor value should be based on the config key's value
+     * <p>
+     * calls to this may allocate resources (e.g. ports) so should be called only once and 
+     * then (if non-null) assigned as the sensor's value
+     * <p>
+     * <b>(for this reason this method should generally not be invoked except in tests (and in AbstractEntity),
+     * and similarly should not be overridden; implement convertConfigToSensor instead)</b> 
      */
     public SensorType getAsSensorValue(Entity e) {
         def v = e.getAttribute(this);
@@ -175,14 +180,30 @@ public class PortAttributeSensorAndConfigKey extends AttributeSensorAndConfigKey
         super(orig, defaultValue)
     }
     protected Integer convertConfigToSensor(PortRange value, Entity entity) {
-        // FIXME discover, if we can
         if (value==null) return null;
-        def v = value.iterator().next()
-        if (v!=null) {
-            LOG.info(""+entity+" choosing port "+v+" for "+getName())
+        if (entity.locations) {
+            if (entity.locations.size()==1) {
+                def l = entity.locations.iterator().next();
+                if (l in PortSupplier) {
+                    def p = ((PortSupplier)l).obtainPort(value);
+                    if (p!=-1) {
+                        LOG.info(""+entity+" choosing port "+p+" for "+getName())
+                        return p;
+                    }
+                    LOG.warn(""+entity+" no port available for "+getName())
+                    // definitively, no ports available
+                    return null;
+                }
+                // ports may be available, we just can't tell from the location
+                def v = (value.isEmpty() ? null : value.iterator().next())
+                LOG.info(""+entity+" choosing port "+v+" (unconfirmed) for "+getName());
+                return v;
+            }
         }
-        return v
+        LOG.info(""+entity+" ports not applicable to non-server location, ignoring "+getName());
+        return null
     }
+    
 }
 
 /**

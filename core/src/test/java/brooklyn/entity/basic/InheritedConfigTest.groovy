@@ -12,9 +12,9 @@ import org.testng.annotations.Test
 import brooklyn.entity.ConfigKey
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.DependentConfiguration
+import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
-import brooklyn.test.location.MockLocation
 
 /**
  * Test that configuration properties are usable and inherited correctly.
@@ -144,7 +144,7 @@ public class InheritedConfigTest {
     @Test
     public void testConfigCannotBeSetAfterApplicationIsStarted() throws Exception {
         TestEntity entity = new TestEntity([owner:app])
-        app.start([new MockLocation()])
+        app.start([new SimulatedLocation()])
         
         try {
             app.setConfig(strKey,"aval")
@@ -166,7 +166,7 @@ public class InheritedConfigTest {
     public void testGetFutureConfigWhenReady() throws Exception {
         TestEntity entity = new TestEntity([owner:app])
         entity.setConfig(TestEntity.CONF_NAME, DependentConfiguration.whenDone( {return "aval"} as Callable))
-        app.start([new MockLocation()])
+        app.start([new SimulatedLocation()])
         
         assertEquals(entity.getConfig(TestEntity.CONF_NAME), "aval")
     }
@@ -176,7 +176,7 @@ public class InheritedConfigTest {
         TestEntity entity = new TestEntity([owner:app])
         final CountDownLatch latch = new CountDownLatch(1)
         entity.setConfig(TestEntity.CONF_NAME, DependentConfiguration.whenDone( {latch.await(); return "aval"} as Callable))
-        app.start([new MockLocation()])
+        app.start([new SimulatedLocation()])
         
         Thread t = new Thread( { Thread.sleep(10); latch.countDown() } )
         try {
@@ -197,7 +197,7 @@ public class InheritedConfigTest {
         TestEntity entity = new TestEntity([owner:app])
         TestEntity entity2 = new TestEntity([owner:app])
         entity.setConfig(TestEntity.CONF_NAME, DependentConfiguration.attributeWhenReady(entity2, TestEntity.NAME))
-        app.start([new MockLocation()])
+        app.start([new SimulatedLocation()])
         
         entity2.setAttribute(TestEntity.NAME, "aval")
         assertEquals(entity.getConfig(TestEntity.CONF_NAME), "aval")
@@ -208,7 +208,7 @@ public class InheritedConfigTest {
         TestEntity entity = new TestEntity([owner:app])
         TestEntity entity2 = new TestEntity([owner:app])
         entity.setConfig(TestEntity.CONF_NAME, DependentConfiguration.attributePostProcessedWhenReady(entity2, TestEntity.NAME, {it}, { it+"mysuffix"}))
-        app.start([new MockLocation()])
+        app.start([new SimulatedLocation()])
         
         entity2.setAttribute(TestEntity.NAME, "aval")
         assertEquals(entity.getConfig(TestEntity.CONF_NAME), "avalmysuffix")
@@ -219,7 +219,7 @@ public class InheritedConfigTest {
         TestEntity entity = new TestEntity([owner:app])
         TestEntity entity2 = new TestEntity([owner:app])
         entity.setConfig(TestEntity.CONF_NAME, DependentConfiguration.attributeWhenReady(entity2, TestEntity.NAME))
-        app.start([new MockLocation()])
+        app.start([new SimulatedLocation()])
         
         Thread t = new Thread( { Thread.sleep(10); entity2.setAttribute(TestEntity.NAME, "aval") } )
         try {
@@ -240,7 +240,7 @@ public class InheritedConfigTest {
         TestEntity entity = new TestEntity([owner:app])
         entity.setConfig(TestEntity.CONF_MAP_THING.subKey("akey"), "aval")
         entity.setConfig(TestEntity.CONF_MAP_THING.subKey("bkey"), "bval")
-        app.start([new MockLocation()])
+        app.start([new SimulatedLocation()])
         
         assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING), [akey:"aval",bkey:"bval"])
     }
@@ -250,7 +250,7 @@ public class InheritedConfigTest {
         TestEntity entity = new TestEntity([owner:app])
         entity.setConfig(TestEntity.CONF_MAP_THING.subKey("akey"), DependentConfiguration.whenDone( {return "aval"} as Callable))
         entity.setConfig(TestEntity.CONF_MAP_THING.subKey("bkey"), DependentConfiguration.whenDone( {return "bval"} as Callable))
-        app.start([new MockLocation()])
+        app.start([new SimulatedLocation()])
         
         assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING), [akey:"aval",bkey:"bval"])
     }
@@ -260,7 +260,7 @@ public class InheritedConfigTest {
 		TestEntity entity = new TestEntity([owner:app])
 		Map v1 = [a:1, b:"bb"]
 		entity.setConfig(TestEntity.CONF_MAP_THING.subKey("akey"), v1)
-		app.start([new MockLocation()])
+		app.start([new SimulatedLocation()])
 		assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING), [akey:v1])
 	}
 
@@ -269,7 +269,7 @@ public class InheritedConfigTest {
         TestEntity entity = new TestEntity([owner:app])
         entity.setConfig(TestEntity.CONF_LIST_THING.subKey(), "aval")
         entity.setConfig(TestEntity.CONF_LIST_THING.subKey(), "bval")
-        app.start([new MockLocation()])
+        app.start([new SimulatedLocation()])
         
         assertEquals(entity.getConfig(TestEntity.CONF_LIST_THING), ["aval","bval"])
     }
@@ -279,7 +279,7 @@ public class InheritedConfigTest {
         TestEntity entity = new TestEntity([owner:app])
         entity.setConfig(TestEntity.CONF_LIST_THING.subKey(), DependentConfiguration.whenDone( {return "aval"} as Callable))
         entity.setConfig(TestEntity.CONF_LIST_THING.subKey(), DependentConfiguration.whenDone( {return "bval"} as Callable))
-        app.start([new MockLocation()])
+        app.start([new SimulatedLocation()])
         
         assertEquals(entity.getConfig(TestEntity.CONF_LIST_THING), ["aval","bval"])
     }

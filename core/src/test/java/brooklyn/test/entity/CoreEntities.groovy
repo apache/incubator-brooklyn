@@ -64,6 +64,9 @@ public class TestEntity extends AbstractEntity implements Startable {
         super(properties, owner)
         this.constructorProperties = properties
     }
+    public TestEntity(Entity owner) {
+        this([:], owner)
+    }
     
     public synchronized int getSequenceValue() {
         sequenceValue

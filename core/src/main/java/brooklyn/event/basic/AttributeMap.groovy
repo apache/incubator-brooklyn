@@ -31,6 +31,7 @@ public class AttributeMap implements Serializable {
     
     public Map asMap() { values }
         
+    /** returns oldValue */
     public <T> T update(Collection<String> path, T newValue) {
         Map map
         String key
