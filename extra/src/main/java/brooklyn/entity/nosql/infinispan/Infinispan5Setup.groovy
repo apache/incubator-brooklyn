@@ -18,8 +18,8 @@ public class Infinispan5Setup extends SshBasedJavaAppSetup {
     Integer port
     
     public static Infinispan5Setup newInstance(Infinispan5Server entity, SshMachineLocation machine) {
-        String suggestedProtocol = entity.getConfig(Infinispan5Server.PROTOCOL.getConfigKey())
-        Integer suggestedPort = entity.getConfig(Infinispan5Server.PORT.getConfigKey())
+        String suggestedProtocol = entity.getConfig(Infinispan5Server.PROTOCOL)
+        PortRange suggestedPort = entity.getConfig(Infinispan5Server.PORT)
         Integer suggestedInfinispanVersion = entity.getConfig(Infinispan5Server.SUGGESTED_VERSION)
         String suggestedInstallDir = entity.getConfig(Infinispan5Server.SUGGESTED_INSTALL_DIR)
         String suggestedRunDir = entity.getConfig(Infinispan5Server.SUGGESTED_RUN_DIR)
@@ -33,7 +33,7 @@ public class Infinispan5Setup extends SshBasedJavaAppSetup {
         Infinispan5Setup result = new Infinispan5Setup(entity, machine)
         result.setJmxPort(jmxPort)
         result.setProtocol(suggestedProtocol)
-        result.setPort(suggestedPort)
+        result.setPort(suggestedPort.iterator().next())
         result.setVersion(version)
         result.setInstallDir(installDir)
         result.setRunDir(runDir)

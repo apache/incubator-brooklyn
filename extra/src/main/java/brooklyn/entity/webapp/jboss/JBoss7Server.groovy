@@ -15,8 +15,7 @@ import brooklyn.entity.webapp.JavaWebAppSoftwareProcess
 import brooklyn.event.adapter.HttpSensorAdapter
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
-import brooklyn.event.basic.ConfigurableAttributeSensor
-import brooklyn.location.PortRange
+import brooklyn.event.basic.PortAttributeSensorAndConfigKey
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.flags.SetFromFlag
 
@@ -28,8 +27,8 @@ public class JBoss7Server extends JavaWebAppSoftwareProcess implements JavaWebAp
     public static final BasicConfigKey<String> SUGGESTED_VERSION = [SoftwareProcessEntity.SUGGESTED_VERSION, "7.0.0.Final"]
 
     @SetFromFlag("managementPort")
-    public static final ConfigurableAttributeSensor<PortRange,Integer> MANAGEMENT_PORT = 
-            [ Integer, "http.managementPort", "Management port", "9990+" ]
+    public static final PortAttributeSensorAndConfigKey MANAGEMENT_PORT = 
+            [ "http.managementPort", "Management port", "9990+" ]
 
     public static final BasicAttributeSensor<Integer> MANAGEMENT_STATUS =
             [ Integer, "webapp.http.managementStatus", "HTTP response code for the management server" ]

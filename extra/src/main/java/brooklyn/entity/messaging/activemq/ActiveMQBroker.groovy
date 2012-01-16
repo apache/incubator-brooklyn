@@ -21,7 +21,7 @@ import brooklyn.entity.messaging.Topic
 import brooklyn.event.adapter.SensorRegistry
 import brooklyn.event.adapter.legacy.OldJmxSensorAdapter
 import brooklyn.event.adapter.legacy.ValueProvider
-import brooklyn.event.basic.ConfigurableAttributeSensor
+import brooklyn.event.basic.PortAttributeSensorAndConfigKey
 import brooklyn.location.PortRange
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.internal.Repeater
@@ -34,27 +34,22 @@ import com.google.common.base.Throwables
 public class ActiveMQBroker extends JMSBroker<ActiveMQQueue, ActiveMQTopic> {
 	private static final Logger log = LoggerFactory.getLogger(ActiveMQBroker.class)
 
-	public static final ConfigurableAttributeSensor<PortRange,Integer> OPEN_WIRE_PORT = [
-		Integer,
-		"openwire.port",
-		"OpenWire port",
-		61616
-	]
+	public static final PortAttributeSensorAndConfigKey OPEN_WIRE_PORT = [ "openwire.port", "OpenWire port", "61616+" ]
 
 	public ActiveMQBroker(Map properties=[:], Entity owner=null) {
 		super(properties, owner)
 
-		setConfigIfValNonNull(OPEN_WIRE_PORT.configKey, properties.openWirePort)
+		setConfigIfValNonNull(OPEN_WIRE_PORT, properties.openWirePort)
 
-		setConfigIfValNonNull(Attributes.JMX_USER.configKey, properties.user ?: "admin")
-		setConfigIfValNonNull(Attributes.JMX_PASSWORD.configKey, properties.password ?: "activemq")
+		setConfigIfValNonNull(Attributes.JMX_USER, properties.user ?: "admin")
+		setConfigIfValNonNull(Attributes.JMX_PASSWORD, properties.password ?: "activemq")
 	}
 
 	@Override
 	protected Collection<Integer> getRequiredOpenPorts() {
 		Collection<Integer> result = super.getRequiredOpenPorts()
-		result.add(getConfig(OPEN_WIRE_PORT.configKey))
-		result.add(getConfig(RMI_PORT.configKey))
+		result.add(getConfig(OPEN_WIRE_PORT))
+		result.add(getConfig(RMI_PORT))
 		return result
 	}
 

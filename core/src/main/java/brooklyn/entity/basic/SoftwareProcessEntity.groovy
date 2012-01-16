@@ -16,8 +16,8 @@ import brooklyn.event.adapter.ConfigSensorAdapter
 import brooklyn.event.adapter.SensorRegistry
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
-import brooklyn.event.basic.ConfiguredAttributeSensor
-import brooklyn.event.basic.ConfiguredPortSensor
+import brooklyn.event.basic.BasicAttributeSensorAndConfigKey
+import brooklyn.event.basic.PortAttributeSensorAndConfigKey
 import brooklyn.location.Location
 import brooklyn.location.MachineLocation
 import brooklyn.location.MachineProvisioningLocation
@@ -221,11 +221,11 @@ public interface UsesJava {
 public interface UsesJmx extends UsesJava {
 	public static final int DEFAULT_JMX_PORT = 1099
 	@SetFromFlag("jmxPort")
-	public static final ConfiguredPortSensor JMX_PORT = Attributes.JMX_PORT
+	public static final PortAttributeSensorAndConfigKey JMX_PORT = Attributes.JMX_PORT
 	@SetFromFlag("rmiPort")
-	public static final ConfiguredAttributeSensor<Integer> RMI_PORT = Attributes.RMI_PORT
+	public static final PortAttributeSensorAndConfigKey RMI_PORT = Attributes.RMI_PORT
 	@SetFromFlag("jmxContext")
-	public static final ConfiguredAttributeSensor<String> JMX_CONTEXT = Attributes.JMX_CONTEXT
+	public static final BasicAttributeSensorAndConfigKey<String> JMX_CONTEXT = Attributes.JMX_CONTEXT
 	
 	public static final BasicAttributeSensor<String> JMX_URL = [ String, "jmx.url", "JMX URL" ]
 }

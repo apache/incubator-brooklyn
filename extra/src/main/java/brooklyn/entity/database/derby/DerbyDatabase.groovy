@@ -1,7 +1,6 @@
 package brooklyn.entity.database.derby
 
 import java.util.Collection
-import java.util.List
 import java.util.Map
 
 import javax.management.InstanceNotFoundException
@@ -13,16 +12,16 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.Attributes
-import brooklyn.entity.basic.legacy.JavaApp;
-import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup;
+import brooklyn.entity.basic.legacy.JavaApp
+import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup
 import brooklyn.entity.database.Database
 import brooklyn.entity.database.Schema
 import brooklyn.event.adapter.SensorRegistry
-import brooklyn.event.adapter.legacy.OldJmxSensorAdapter;
-import brooklyn.event.adapter.legacy.ValueProvider;
+import brooklyn.event.adapter.legacy.OldJmxSensorAdapter
+import brooklyn.event.adapter.legacy.ValueProvider
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
-import brooklyn.location.Location
+import brooklyn.location.PortRange
 import brooklyn.location.basic.SshMachineLocation
 
 import com.google.common.base.Preconditions
@@ -35,7 +34,7 @@ import com.google.common.base.Preconditions
 public class DerbyDatabase extends JavaApp implements Database {
     private static final Logger log = LoggerFactory.getLogger(DerbyDatabase.class)
 
-    public static final BasicConfigKey<Integer> SUGGESTED_JDBC_PORT = [Integer, "derby.jdbcPort", "Suggested JDBC port" ]
+    public static final BasicConfigKey<PortRange> SUGGESTED_JDBC_PORT = [PortRange, "derby.jdbcPort", "Suggested JDBC port" ]
     public static final BasicConfigKey<String> VIRTUAL_HOST_NAME = [String, "derby.virtualHost", "Derby virtual host name" ]
 
     public static final BasicAttributeSensor<Integer> JDBC_PORT = [ Integer, "jdbc.port", "JDBC port" ]

@@ -68,13 +68,11 @@ public class JmxSensorAdapterTest {
     
     @BeforeMethod
     public void setUp() {
-        jmxService = new JmxService()
-        
         // Create an entity and configure it with the above JMX service
         app = new AbstractApplication() {}
         entity = new TestEntity(owner:app)
-        entity.setAttribute(Attributes.HOSTNAME, jmxService.jmxHost)
-        entity.setAttribute(Attributes.JMX_PORT, jmxService.jmxPort)
+        entity.setAttribute(Attributes.HOSTNAME, "localhost");
+        entity.setAttribute(Attributes.JMX_PORT)
         entity.setAttribute(Attributes.RMI_PORT)
         entity.setAttribute(Attributes.JMX_CONTEXT)
         app.start([new MockLocation()])
@@ -82,6 +80,8 @@ public class JmxSensorAdapterTest {
         registry = new SensorRegistry(entity);
         jmxAdapter = registry.register(new JmxSensorAdapter(period: 50*TimeUnit.MILLISECONDS));
         jmxHelper = new JmxHelper(entity)
+        
+        jmxService = new JmxService(entity)
     }
     
     @AfterMethod(alwaysRun=true)

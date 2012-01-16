@@ -11,8 +11,8 @@ import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.event.Sensor
 import brooklyn.event.basic.BasicConfigKey
-import brooklyn.event.basic.ConfiguredAttributeSensor
-import brooklyn.event.basic.ConfiguredPortSensor
+import brooklyn.event.basic.BasicAttributeSensorAndConfigKey
+import brooklyn.event.basic.PortAttributeSensorAndConfigKey
 import brooklyn.event.basic.DependentConfiguration
 import brooklyn.location.Location
 import brooklyn.location.MachineLocation
@@ -31,13 +31,13 @@ public abstract class AbstractController extends SoftwareProcessEntity {
     public static final BasicConfigKey<Sensor> PORT_NUMBER_SENSOR = [ String, "member.sensor.portNumber", "Port number sensor on members" ]
 
     @SetFromFlag("port")  //TODO get standard name; ideally inherit the standard field
-    public static final ConfiguredPortSensor HTTP_PORT = Attributes.HTTP_PORT
+    public static final PortAttributeSensorAndConfigKey HTTP_PORT = Attributes.HTTP_PORT
     @SetFromFlag("protocol")
-    public static final ConfiguredAttributeSensor<String> PROTOCOL = [ String, "proxy.protocol", "Protocol", "http" ]
+    public static final BasicAttributeSensorAndConfigKey<String> PROTOCOL = [ String, "proxy.protocol", "Protocol", "http" ]
     @SetFromFlag("domain")
-    public static final ConfiguredAttributeSensor<String> DOMAIN_NAME = [ String, "proxy.domainName", "Domain name" ]
+    public static final BasicAttributeSensorAndConfigKey<String> DOMAIN_NAME = [ String, "proxy.domainName", "Domain name" ]
     @SetFromFlag("url")
-    public static final ConfiguredAttributeSensor<String> URL = [ String, "proxy.url", "URL" ]
+    public static final BasicAttributeSensorAndConfigKey<String> URL = [ String, "proxy.url", "URL" ]
 
     @SetFromFlag
     Cluster cluster

@@ -13,7 +13,7 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.legacy.JavaApp
 import brooklyn.event.EntityStartException
 import brooklyn.event.adapter.legacy.OldHttpSensorAdapter
-import brooklyn.event.basic.ConfiguredAttributeSensor
+import brooklyn.event.basic.BasicAttributeSensorAndConfigKey
 import brooklyn.location.Location;
 import brooklyn.util.internal.Repeater
 
@@ -54,7 +54,7 @@ public abstract class OldJavaWebApp extends JavaApp implements JavaWebAppService
     @Override
     protected Collection<Integer> getRequiredOpenPorts() {
 		def http = getConfig(HTTP_PORT);
-        super.getRequiredOpenPorts() + (http?[http]:[])
+        super.getRequiredOpenPorts() + (http?[http.iterator().next()]:[])
     }
 
 	protected void connectSensors() {

@@ -95,49 +95,93 @@ public class BasicAttributeSensor<T> extends BasicSensor<T> implements Attribute
 }
 
 /**
- * A {@link Sensor} describing an attribute that can be configured with a default value.
- *
- * The {@link ConfigKey} has the same type, name and description as the sensor.
- */
-public class ConfiguredAttributeSensor<T> extends ConfigurableAttributeSensor<T,T> {
-    public ConfiguredAttributeSensor(Class<T> type, String name, String description=name, T defaultValue=null) {
-        super(type, type, name, description, defaultValue)
-    }
-
-    public ConfiguredAttributeSensor(ConfiguredAttributeSensor<T> orig, T defaultValue) {
-        super(orig, defaultValue)
-    }
-}
-/**
 * A {@link Sensor} describing an attribute that can be configured with inputs that are used to derive the final value.
 *
 * The {@link ConfigKey} will have the same name and description as the sensor but not necessarily the same type.
+* Conversion to set the sensor value from the config key must be supplied in a subclass.
 */
-public class ConfigurableAttributeSensor<ConfigType,SensorType> extends BasicAttributeSensor<SensorType> 
+public abstract class AttributeSensorAndConfigKey<ConfigType,SensorType> extends BasicAttributeSensor<SensorType> 
         implements HasConfigKey<ConfigType> {
     private static final long serialVersionUID = -3103809215973264600L;
 
     private ConfigKey<ConfigType> configKey
 
-    public ConfigurableAttributeSensor(Class<ConfigType> configType, Class<SensorType> sensorType, String name, String description=name, Object defaultValue=null) {
+    public AttributeSensorAndConfigKey(Class<ConfigType> configType, Class<SensorType> sensorType, String name, String description=name, Object defaultValue=null) {
         super(sensorType, name, description)
         configKey = new BasicConfigKey<ConfigType>(configType, name, description, TypeCoercions.coerce(defaultValue, configType))
     }
 
-    public ConfigurableAttributeSensor(ConfigurableAttributeSensor<ConfigType,SensorType> orig, ConfigType defaultValue) {
+    public AttributeSensorAndConfigKey(AttributeSensorAndConfigKey<ConfigType,SensorType> orig, ConfigType defaultValue) {
         super(orig.type, orig.name, orig.description)
-        configKey = new BasicConfigKey<ConfigType>(orig.configKey.type, TypeCoercions.coerce(defaultValue, orig.configKey.type))
+        configKey = new BasicConfigKey<ConfigType>(orig.configKey.type, orig.name, orig.description, 
+            TypeCoercions.coerce(defaultValue, orig.configKey.type))
     }
 
     public ConfigKey<ConfigType> getConfigKey() { return configKey }
+    
+    /** returns the sensor value for this attribute on the given entity, if present,
+     * otherwise works out what the sensor value should be based on the config key's value
+     */
+    public SensorType getAsSensorValue(Entity e) {
+        def v = e.getAttribute(this);
+        if (v!=null) return v;
+        v = e.getConfig(this);
+        if (v==null) v = configKey.defaultValue;
+        return convertConfigToSensor(v, e)
+    }
+    
+    /** converts the given ConfigType value to the corresponding SensorType value, 
+     * with respect to the given entity
+     * <p>
+     * this is invoked after checks whether the entity already has a value for the sensor,
+     * and the entity-specific config value is passed for convenience if set, 
+     * otherwise the config key default value is passed for convenience
+     * <p>
+     * this message should be allowed to return null if the conversion cannot be completed at this time */
+    protected abstract SensorType convertConfigToSensor(ConfigType value, Entity entity);
 }
-        
-public class ConfiguredPortSensor extends ConfigurableAttributeSensor<PortRange,Integer> {
-    public ConfiguredPortSensor(String name, String description=name, Object defaultValue=null) {
+  
+/**
+ * A {@link Sensor} describing an attribute that can be configured with a default value.
+ *
+ * The {@link ConfigKey} has the same type, name and description as the sensor,
+ * and is typically used to populate the sensor's value at runtime.
+ */
+public class BasicAttributeSensorAndConfigKey<T> extends AttributeSensorAndConfigKey<T,T> {
+    public BasicAttributeSensorAndConfigKey(Class<T> type, String name, String description=name, T defaultValue=null) {
+        super(type, type, name, description, defaultValue)
+    }
+
+    public BasicAttributeSensorAndConfigKey(BasicAttributeSensorAndConfigKey<T> orig, T defaultValue) {
+        super(orig, defaultValue)
+    }
+    protected T convertConfigToSensor(T value, Entity entity) { value }
+}
+       
+/**
+ * A {@link Sensor} describing a port on a system,
+ * with a {@link ConfigKey} which can be configured with a port range
+ * (either a number e.g. 80, or a string e.g. "80" or "8080-8089" or even "80, 8080-8089, 8800+", or a list of these).
+ * <p>
+ * To convert at runtime a single port is chosen, respecting the entity.
+ */
+public class PortAttributeSensorAndConfigKey extends AttributeSensorAndConfigKey<PortRange,Integer> {
+    public static final Logger LOG = LoggerFactory.getLogger(PortAttributeSensorAndConfigKey.class);
+    
+    public PortAttributeSensorAndConfigKey(String name, String description=name, Object defaultValue=null) {
         super(PortRange, Integer, name, description, defaultValue)
     }
-    public ConfiguredPortSensor(ConfiguredPortSensor orig, Object defaultValue) {
+    public PortAttributeSensorAndConfigKey(PortAttributeSensorAndConfigKey orig, Object defaultValue) {
         super(orig, defaultValue)
+    }
+    protected Integer convertConfigToSensor(PortRange value, Entity entity) {
+        // FIXME discover, if we can
+        if (value==null) return null;
+        def v = value.iterator().next()
+        if (v!=null) {
+            LOG.info(""+entity+" choosing port "+v+" for "+getName())
+        }
+        return v
     }
 }
 

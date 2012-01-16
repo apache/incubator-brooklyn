@@ -5,6 +5,7 @@ import java.util.Map
 
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup
+import brooklyn.location.PortRange
 import brooklyn.location.basic.SshMachineLocation
 
 /**
@@ -33,7 +34,8 @@ public class GemfireSetup extends SshBasedAppSetup {
         String suggestedRunDir = entity.getConfig(GemfireServer.SUGGESTED_RUN_DIR)
         String suggestedConfigFile = entity.getConfig(GemfireServer.CONFIG_FILE)
         String suggestedJarFile = entity.getConfig(GemfireServer.JAR_FILE)
-        Integer suggestedWebPort = entity.getConfig(GemfireServer.WEB_CONTROLLER_PORT)
+        PortRange suggestedWebPort = entity.getConfig(GemfireServer.WEB_CONTROLLER_PORT)
+        //TODO web port can be auto-found by using PortAttributeSensorAndConfigKey, see e.g. JBoss7
         
         // TODO Would like to auto-install!
         if (!suggestedApiJar) {
@@ -47,7 +49,7 @@ public class GemfireSetup extends SshBasedAppSetup {
         File jarFileToDeploy = (suggestedJarFile) ? checkFileExists(suggestedJarFile, "jar") : null
         File licenseFile = checkFileExists(suggestedLicenseFile, "license")
         String logFileLocation = "$runDir/nohup.out"
-        int webPort = suggestedWebPort ?: 8089
+        int webPort = suggestedWebPort?.iterator()?.next() ?: 8089
         
         GemfireSetup result = new GemfireSetup(entity, machine)
         result.setApiJar(apiJar)

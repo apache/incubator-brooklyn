@@ -4,9 +4,9 @@ import java.util.List
 
 import brooklyn.event.Sensor
 import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.event.basic.ConfigurableAttributeSensor
-import brooklyn.event.basic.ConfiguredAttributeSensor
-import brooklyn.event.basic.ConfiguredPortSensor
+import brooklyn.event.basic.AttributeSensorAndConfigKey
+import brooklyn.event.basic.BasicAttributeSensorAndConfigKey
+import brooklyn.event.basic.PortAttributeSensorAndConfigKey
 import brooklyn.location.PortRange
 import brooklyn.location.basic.PortRanges
 
@@ -24,12 +24,13 @@ public interface Attributes {
      * JMX attributes.
      */
 
-    ConfiguredPortSensor JMX_PORT = [ "jmx.port", "JMX port", PortRanges.fromString("32199+") ]
-    ConfiguredAttributeSensor<Integer> RMI_PORT = [ Integer, "rmi.port", "RMI port" ]
-    ConfiguredAttributeSensor<String> JMX_USER = [ String, "jmx.user", "JMX username" ]
-    ConfiguredAttributeSensor<String> JMX_PASSWORD = [ String, "jmx.password", "JMX password" ]
-    ConfiguredAttributeSensor<String> JMX_CONTEXT = [ String, "jmx.context", "JMX context path", "jmxrmi" ]
-    ConfiguredAttributeSensor<String> JMX_SERVICE_URL = [ String, "jmx.serviceurl", "The URL for connecting to the MBean Server" ]
+    //1099 is standard, others are made up to provide something of a standard
+    PortAttributeSensorAndConfigKey JMX_PORT = [ "jmx.port", "JMX port", PortRanges.fromString("9001, 32099-32000") ]
+    PortAttributeSensorAndConfigKey RMI_PORT = [ "rmi.port", "RMI port", PortRanges.fromString("1099, 31099-31000") ]
+    BasicAttributeSensorAndConfigKey<String> JMX_USER = [ String, "jmx.user", "JMX username" ]
+    BasicAttributeSensorAndConfigKey<String> JMX_PASSWORD = [ String, "jmx.password", "JMX password" ]
+    BasicAttributeSensorAndConfigKey<String> JMX_CONTEXT = [ String, "jmx.context", "JMX context path", "jmxrmi" ]
+    BasicAttributeSensorAndConfigKey<String> JMX_SERVICE_URL = [ String, "jmx.serviceurl", "The URL for connecting to the MBean Server" ]
     
     /*
      * Port number attributes.
@@ -38,13 +39,13 @@ public interface Attributes {
     BasicAttributeSensor<List<Integer>> PORT_NUMBERS = [ List, "port.list", "List of port numbers" ]
     BasicAttributeSensor<List<Sensor<Integer>>> PORT_SENSORS = [ List, "port.list.sensors", "List of port number attributes" ]
 
-    ConfiguredPortSensor HTTP_PORT = [ "http.port", "HTTP port", [80,8080,"18000+"] ]
-    ConfiguredPortSensor HTTPS_PORT = [ "https.port", "HTTP port (with SSL/TLS)", [443,8443,"18443+"] ]
+    PortAttributeSensorAndConfigKey HTTP_PORT = [ "http.port", "HTTP port", [80,8080,"18000+"] ]
+    PortAttributeSensorAndConfigKey HTTPS_PORT = [ "https.port", "HTTP port (with SSL/TLS)", [443,8443,"18443+"] ]
                     
-    ConfiguredAttributeSensor<Integer> SSH_PORT = [ Integer, "ssh.port", "SSH port", 22 ]
-    ConfiguredAttributeSensor<Integer> SMTP_PORT = [ Integer, "smtp.port", "SMTP port", 25 ]
-    ConfiguredAttributeSensor<Integer> DNS_PORT = [ Integer, "dns.port", "DNS port", 53 ]
-    ConfiguredPortSensor AMQP_PORT = [ "amqp.port", "AMQP port", "5672+" ]
+    PortAttributeSensorAndConfigKey SSH_PORT = [ "ssh.port", "SSH port", 22 ]
+    PortAttributeSensorAndConfigKey SMTP_PORT = [ "smtp.port", "SMTP port", 25 ]
+    PortAttributeSensorAndConfigKey DNS_PORT = [ "dns.port", "DNS port", 53 ]
+    PortAttributeSensorAndConfigKey AMQP_PORT = [ "amqp.port", "AMQP port", "5672+" ]
 
     /*
      * Location/connection attributes.

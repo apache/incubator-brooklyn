@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.SoftwareProcessEntity
-import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup;
+import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup
 import brooklyn.entity.nosql.DataStore
 import brooklyn.entity.nosql.Shard
 import brooklyn.event.adapter.SensorRegistry
@@ -17,7 +17,7 @@ import brooklyn.event.adapter.legacy.OldSshSensorAdapter
 import brooklyn.event.adapter.legacy.ValueProvider
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
-import brooklyn.event.basic.ConfiguredAttributeSensor
+import brooklyn.event.basic.PortAttributeSensorAndConfigKey
 import brooklyn.location.basic.SshMachineLocation
 
 import com.google.common.base.Charsets
@@ -32,7 +32,7 @@ import com.google.common.io.Files
 public class RedisStore extends SoftwareProcessEntity implements DataStore {
     protected static final Logger LOG = LoggerFactory.getLogger(RedisStore.class)
 
-    public static final ConfiguredAttributeSensor<Integer> REDIS_PORT = [ Integer, "redis.port", "Redis port number", 6379 ]
+    public static final PortAttributeSensorAndConfigKey REDIS_PORT = [ "redis.port", "Redis port number", 6379 ]
     public static final BasicConfigKey<String> REDIS_CONFIG_FILE = [ String, "redis.config.file", "Redis user configuration file" ]
     public static final BasicAttributeSensor<Integer> UPTIME = [ Integer, "redis.uptime", "Redis uptime in seconds" ]
 
@@ -41,7 +41,7 @@ public class RedisStore extends SoftwareProcessEntity implements DataStore {
     public RedisStore(Map properties=[:], Entity owner=null) {
         super(properties, owner)
 
-        setConfigIfValNonNull(REDIS_PORT.configKey, properties.redisPort)
+        setConfigIfValNonNull(REDIS_PORT, properties.redisPort)
         setConfigIfValNonNull(REDIS_CONFIG_FILE, properties.configFile)
     }
 

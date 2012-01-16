@@ -1,13 +1,12 @@
 package brooklyn.entity.nosql.redis
 
 import java.util.List
-import java.util.Map
 
-import com.google.common.base.Preconditions;
-
-import brooklyn.entity.basic.Attributes
-import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup;
+import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup
+import brooklyn.location.PortRange
 import brooklyn.location.basic.SshMachineLocation
+
+import com.google.common.base.Preconditions
 
 /**
  * Start a {@link RedisStore} in a {@link Location} accessible over ssh.
@@ -27,11 +26,11 @@ public class RedisSetup extends SshBasedAppSetup {
         String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"${version}"+"/"+"redis-${version}")
         String runDir = suggestedRunDir ?: (BROOKLYN_HOME_DIR+"/"+"${entity.application.id}"+"/"+"redis-${entity.id}")
 
-        int redisPort = entity.getConfig(RedisStore.REDIS_PORT.configKey)
+        PortRange redisPort = entity.getConfig(RedisStore.REDIS_PORT)
         Preconditions.checkState machine.obtainSpecificPort(redisPort), "The port ${redisPort} must be available"
 
         RedisSetup result = new RedisSetup(entity, machine)
-        result.setRedisPort(redisPort)
+        result.setRedisPort(redisPort.iterator().next())
         result.setVersion(version)
         result.setInstallDir(installDir)
         result.setRunDir(runDir)

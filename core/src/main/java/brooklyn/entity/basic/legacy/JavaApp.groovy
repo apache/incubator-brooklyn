@@ -69,7 +69,7 @@ public abstract class JavaApp extends SoftwareProcessEntity implements UsesJmx {
     @Override
     protected Collection<Integer> getRequiredOpenPorts() {
         Collection<Integer> result = super.getRequiredOpenPorts()
-        result.add(getConfig(JMX_PORT.configKey))
+        result.add(getConfig(JMX_PORT))
         return result
     }
 

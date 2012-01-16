@@ -8,6 +8,7 @@ import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import brooklyn.entity.webapp.JavaWebAppSshDriver
 import brooklyn.entity.webapp.PortPreconditions
 import brooklyn.entity.webapp.WebAppService
+import brooklyn.location.PortRange;
 import brooklyn.location.basic.SshMachineLocation
 
 
@@ -54,7 +55,11 @@ class JBoss7SshDriver extends JavaWebAppSshDriver {
 	protected String getLogFileLocation() { "${runDir}/${SERVER_TYPE}/log/server.log" }
 	protected String getDeploySubdir() { "${SERVER_TYPE}/deployments" }
 	
-	protected int getManagementPort() { entity.getConfig(JBoss7Server.MANAGEMENT_PORT, DEFAULT_FIRST_MANAGEMENT_PORT) }
+	protected int getManagementPort() { 
+        def v = entity.getConfig(JBoss7Server.MANAGEMENT_PORT, DEFAULT_FIRST_MANAGEMENT_PORT)
+        if (v in PortRange) v = v.iterator().next()
+        v 
+    }
 	
 	@Override
 	public void install() {
