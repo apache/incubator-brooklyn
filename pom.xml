@@ -74,7 +74,10 @@
 				<module>core</module>
 				<module>extra</module>
 				<module>gemfire-web-api</module>
-                <module>gemfire</module>
+                		<module>gemfire</module>
+				<module>web-console</module>
+				<module>launcher</module>
+				<module>example</module>
 			</modules>
 		</profile>
         <profile>
@@ -101,6 +104,12 @@
                 <module>gemfire</module>
             </modules>
         </profile>
+	<profile>
+		<id>Example</id>
+		<modules>
+			<module>example</module>
+		</modules>
+	</profile>
         
         <!-- for legacy compatibility, TODO delete when people aware of it -->
         <profile>
@@ -134,12 +143,6 @@
 			<id>Acceptance</id>
 			<modules>
 				<module>acceptance</module>
-			</modules>
-		</profile>
-		<profile>
-			<id>Example</id>
-			<modules>
-				<module>example</module>
 			</modules>
 		</profile>
         <profile>
