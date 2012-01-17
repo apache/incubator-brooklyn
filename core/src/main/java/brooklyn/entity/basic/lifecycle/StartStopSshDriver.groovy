@@ -58,12 +58,12 @@ public abstract class StartStopSshDriver extends AbstractStartStopDriver impleme
         OutputStream outO = new PipedOutputStream(insO)
 		InputStream insE = new PipedInputStream();
         OutputStream outE = new PipedOutputStream(insE)
-		InputStream insEcho = new PipedInputStream();
-        OutputStream outEcho = new PipedOutputStream(insEcho)
-		new StreamGobbler(insO, null, log).setPrefix("["+machine.getName()+":stdout] ").start()
-		new StreamGobbler(insE, null, log).setPrefix("["+machine.getName()+":stderr] ").start()
+//        InputStream insEcho = new PipedInputStream();
+//        OutputStream outEcho = new PipedOutputStream(insEcho)
+		new StreamGobbler(insO, null, log).setPrefix("["+entity.id+"@"+machine.getName()+":stdout] ").start()
+		new StreamGobbler(insE, null, log).setPrefix("["+entity.id+"@"+machine.getName()+":stderr] ").start()
 		//don't need echo here because we run bash with echo on
-//		new StreamGobbler(insEcho, null, log).setPrefix("["+machine.getName()+":stdin]% ").start()
+//		new StreamGobbler(insEcho, null, log).setPrefix("["+entity.id+"@"+machine.getName()+":stdin]% ").start()
 		
 		int result = machine.run(out:outO, err:outE, /*echo:outEcho,*/ script, environment);
 	}
