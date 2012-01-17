@@ -37,6 +37,10 @@ public class PortRanges {
             return true;
         }
         @Override
+        public String toString() {
+            return //getClass().getName()+"["+
+                    ""+port; //+"]";
+        }
         public int hashCode() {
             return Objects.hashCode(port);
         }
@@ -58,6 +62,19 @@ public class PortRanges {
         @Override
         public boolean asBoolean() {
             return true;
+        }
+        @Override
+        public String toString() {
+            return //getClass().getName()+"["+
+                    start+"-"+end; //+"]";
+        }
+        @Override
+        public boolean equals(Object obj) {
+            return obj!=null && toString().equals(obj.toString());
+        }
+        @Override
+        public int hashCode() {
+            return toString().hashCode();
         }
     }
     
@@ -110,6 +127,11 @@ public class PortRanges {
             return true;
         }
         @Override
+        public String toString() {
+            return //getClass().getName()+"["+
+                    start+"-"+end; //+"]";
+        }
+        @Override
         public int hashCode() {
             return Objects.hashCode(start, end, delta);
         }
@@ -141,6 +163,15 @@ public class PortRanges {
             return !isEmpty();
         }
         @Override
+        public String toString() {
+            String s = "";
+            for (PortRange r: ranges) {
+                if (s.length()>0) s+=",";
+                s += r;
+            }
+            return //getClass().getName()+"["+
+                s; //+"]";
+        }
         public int hashCode() {
             return Objects.hashCode(ranges);
         }
