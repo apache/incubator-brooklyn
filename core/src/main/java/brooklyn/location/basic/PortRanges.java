@@ -11,6 +11,8 @@ import brooklyn.location.PortRange;
 import brooklyn.util.flags.TypeCoercions;
 
 import com.google.common.base.Function;
+import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 public class PortRanges {
@@ -19,7 +21,7 @@ public class PortRanges {
     public static final PortRange ANY_HIGH_PORT = new LinearPortRange(1024, MAX_PORT);
     
     public static class SinglePort implements PortRange {
-        int port;
+        final int port;
         private SinglePort(int port) { this.port = port; }
         
         @Override
@@ -39,13 +41,12 @@ public class PortRanges {
             return //getClass().getName()+"["+
                     ""+port; //+"]";
         }
-        @Override
-        public boolean equals(Object obj) {
-            return obj!=null && toString().equals(obj.toString());
+        public int hashCode() {
+            return Objects.hashCode(port);
         }
         @Override
-        public int hashCode() {
-            return toString().hashCode();
+        public boolean equals(Object obj) {
+            return (obj instanceof SinglePort) && port == ((SinglePort)obj).port;
         }
     }
 
@@ -78,7 +79,7 @@ public class PortRanges {
     }
     
     public static class LinearPortRange implements PortRange {
-        int start, end, delta;
+        final int start, end, delta;
         private LinearPortRange(int start, int end, int delta) {
             this.start = start;
             this.end = end;
@@ -125,26 +126,27 @@ public class PortRanges {
         public boolean asBoolean() {
             return true;
         }
-
         @Override
         public String toString() {
             return //getClass().getName()+"["+
                     start+"-"+end; //+"]";
         }
         @Override
-        public boolean equals(Object obj) {
-            return obj!=null && toString().equals(obj.toString());
+        public int hashCode() {
+            return Objects.hashCode(start, end, delta);
         }
         @Override
-        public int hashCode() {
-            return toString().hashCode();
+        public boolean equals(Object obj) {
+            if (!(obj instanceof SinglePort)) return false;
+            LinearPortRange o = (LinearPortRange) obj;
+            return start == o.start && end == o.end && delta == o.delta;
         }
     }
     
     public static class AggregatePortRange implements PortRange {
-        List<PortRange> ranges;
+        final List<PortRange> ranges;
         private AggregatePortRange(List<PortRange> ranges) {
-            this.ranges = Collections.unmodifiableList(new ArrayList(ranges));
+            this.ranges = ImmutableList.copyOf(ranges);
         }
         @Override
         public Iterator<Integer> iterator() {
@@ -170,13 +172,12 @@ public class PortRanges {
             return //getClass().getName()+"["+
                 s; //+"]";
         }
-        @Override
-        public boolean equals(Object obj) {
-            return obj!=null && toString().equals(obj.toString());
+        public int hashCode() {
+            return Objects.hashCode(ranges);
         }
         @Override
-        public int hashCode() {
-            return toString().hashCode();
+        public boolean equals(Object obj) {
+            return (obj instanceof AggregatePortRange) && ranges.equals(((AggregatePortRange)obj).ranges);
         }
     }
 
@@ -184,12 +185,12 @@ public class PortRanges {
         return new SinglePort(x);
     }
     
-    public static PortRange fromCollection(Collection c) {
+    public static PortRange fromCollection(Collection<?> c) {
         List<PortRange> l = new ArrayList<PortRange>();
         for (Object o: c) {
             if (o instanceof Integer) l.add(fromInteger((Integer)o));
             else if (o instanceof String) l.add(fromString((String)o));
-            else if (o instanceof Collection) l.add(fromCollection((Collection)o));
+            else if (o instanceof Collection) l.add(fromCollection((Collection<?>)o));
             else l.add(TypeCoercions.coerce(o, PortRange.class));
         }
         return new AggregatePortRange(l);
