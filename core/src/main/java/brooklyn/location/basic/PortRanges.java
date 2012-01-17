@@ -34,6 +34,19 @@ public class PortRanges {
         public boolean asBoolean() {
             return true;
         }
+        @Override
+        public String toString() {
+            return //getClass().getName()+"["+
+                    ""+port; //+"]";
+        }
+        @Override
+        public boolean equals(Object obj) {
+            return obj!=null && toString().equals(obj.toString());
+        }
+        @Override
+        public int hashCode() {
+            return toString().hashCode();
+        }
     }
 
     @Deprecated
@@ -48,6 +61,19 @@ public class PortRanges {
         @Override
         public boolean asBoolean() {
             return true;
+        }
+        @Override
+        public String toString() {
+            return //getClass().getName()+"["+
+                    start+"-"+end; //+"]";
+        }
+        @Override
+        public boolean equals(Object obj) {
+            return obj!=null && toString().equals(obj.toString());
+        }
+        @Override
+        public int hashCode() {
+            return toString().hashCode();
         }
     }
     
@@ -100,6 +126,19 @@ public class PortRanges {
             return true;
         }
 
+        @Override
+        public String toString() {
+            return //getClass().getName()+"["+
+                    start+"-"+end; //+"]";
+        }
+        @Override
+        public boolean equals(Object obj) {
+            return obj!=null && toString().equals(obj.toString());
+        }
+        @Override
+        public int hashCode() {
+            return toString().hashCode();
+        }
     }
     
     public static class AggregatePortRange implements PortRange {
@@ -120,6 +159,24 @@ public class PortRanges {
         @Override
         public boolean asBoolean() {
             return !isEmpty();
+        }
+        @Override
+        public String toString() {
+            String s = "";
+            for (PortRange r: ranges) {
+                if (s.length()>0) s+=",";
+                s += r;
+            }
+            return //getClass().getName()+"["+
+                s; //+"]";
+        }
+        @Override
+        public boolean equals(Object obj) {
+            return obj!=null && toString().equals(obj.toString());
+        }
+        @Override
+        public int hashCode() {
+            return toString().hashCode();
         }
     }
 

@@ -41,6 +41,12 @@ public class PortRangesTest {
     }
 
     @Test
+    public void testFromStringWithSpacesToString() {
+        PortRange r = PortRanges.fromString(" 80 , 8080  , 8000 , 8080  - 8099 ");
+        Assert.assertEquals(r.toString(), "80,8080,8000,8080-8099");
+    }
+    
+    @Test
     public void testCoercion() {
         PortRanges.init();
         PortRange r = TypeCoercions.coerce("80", PortRange.class);
