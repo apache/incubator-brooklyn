@@ -11,6 +11,7 @@ import brooklyn.event.adapter.legacy.OldHttpSensorAdapter
 import brooklyn.event.adapter.legacy.ValueProvider
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
+import brooklyn.location.PortRange
 import brooklyn.location.basic.SshMachineLocation
 
 import com.google.common.base.Charsets
@@ -22,9 +23,9 @@ class GemfireServer extends SoftwareProcessEntity {
     public static final BasicConfigKey<String> SUGGESTED_API_JAR = [ String, "gemfire.server.apiJar", "Jar containing Gemfire installation" ]
     public static final BasicConfigKey<File> CONFIG_FILE = [ File, "gemfire.server.configFile", "Gemfire configuration file" ]
     public static final BasicConfigKey<File> JAR_FILE = [ File, "gemfire.server.jarFile", "Gemfire jar file" ]
-    public static final BasicConfigKey<Integer> SUGGESTED_HUB_PORT = [ Integer, "gemfire.server.suggestedHubPort", "Gemfire gateway hub port", 11111 ]
+    public static final BasicConfigKey<PortRange> SUGGESTED_HUB_PORT = [ PortRange, "gemfire.server.suggestedHubPort", "Gemfire gateway hub port", 11111 ]
     public static final BasicConfigKey<File> LICENSE = [ File, "gemfire.server.license", "Gemfire license file" ]
-    public static final BasicConfigKey<Integer> WEB_CONTROLLER_PORT = [ Integer, "gemfire.server.controllerWebPort", "Gemfire controller web port", 8084 ]
+    public static final BasicConfigKey<PortRange> WEB_CONTROLLER_PORT = [ PortRange, "gemfire.server.controllerWebPort", "Gemfire controller web port", 8084 ]
     public static final BasicAttributeSensor<Integer> HUB_PORT = [ Integer, "gemfire.server.hubPort", "Gemfire gateway hub port" ]
     public static final BasicAttributeSensor<String> CONTROL_URL = [ String, "gemfire.server.controlUrl", "URL for perfoming management actions" ]
 	public static final BasicAttributeSensor<Collection> REGION_LIST = new BasicAttributeSensor<Collection>(Collection.class, "gemfire.server.regions.list", 
@@ -87,8 +88,9 @@ class GemfireServer extends SoftwareProcessEntity {
     protected void connectSensors() {
 		super.connectSensors()
 		
-        int hubPort = getConfig(SUGGESTED_HUB_PORT)
-        setAttribute(HUB_PORT, hubPort)
+        // TODO hub port can be auto-found by using PortAttributeSensorAndConfigKey, see e.g. JBoss7
+        PortRange hubPort = getConfig(SUGGESTED_HUB_PORT)
+        setAttribute(HUB_PORT, hubPort.iterator().next())
         setAttribute(CONTROL_URL, "http://${driver.machine.address.hostName}:"+CONTROL_PORT_VAL)
         
         httpAdapter = new OldHttpSensorAdapter(this)

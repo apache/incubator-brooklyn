@@ -45,7 +45,10 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
             if (changed) {
 	            emit(MEMBER_REMOVED, member)
 	            setAttribute(Changeable.GROUP_SIZE, currentSize)
-                enrichers.each { if (it instanceof AbstractAggregatingEnricher) ((AbstractAggregatingEnricher)it).removeProducer(member); }
+                enrichers.each { 
+                    if (it instanceof AbstractAggregatingEnricher) 
+                        ((AbstractAggregatingEnricher)it).removeProducer(member); 
+                }
 	        }
 	        changed
         }

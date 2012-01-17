@@ -8,6 +8,7 @@ import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import brooklyn.entity.webapp.JavaWebAppSshDriver
 import brooklyn.entity.webapp.PortPreconditions
 import brooklyn.entity.webapp.WebAppService
+import brooklyn.location.PortRange;
 import brooklyn.location.basic.SshMachineLocation
 
 
@@ -37,19 +38,11 @@ class JBoss7SshDriver extends JavaWebAppSshDriver {
 	 * - big example, geo dns web+msg+data1+data2 , AWS, CloudSigma, Rackspace
 	 */
 	
-    public static final int DEFAULT_FIRST_MANAGEMENT_PORT  = 9990
-	    
     public static final String SERVER_TYPE = "standalone"
     private static final String BROOKLYN_JBOSS_CONFIG_FILENAME = "standalone-brooklyn.xml"
     
     public JBoss7SshDriver(JBoss7Server entity, SshMachineLocation machine) {
         super(entity, machine)
-		
-//        int httpPort = machine.obtainPort(toDesiredPortRange(suggestedHttpPort, DEFAULT_FIRST_HTTP_PORT))
-//        int managementPort = machine.obtainPort(toDesiredPortRange(suggestedManagementPort, DEFAULT_FIRST_MANAGEMENT_PORT))
-		
-		entity.setAttribute(JBoss7Server.MANAGEMENT_PORT, managementPort)
-
     }
 
     @Override @Deprecated
@@ -57,8 +50,7 @@ class JBoss7SshDriver extends JavaWebAppSshDriver {
     
 	protected String getLogFileLocation() { "${runDir}/${SERVER_TYPE}/log/server.log" }
 	protected String getDeploySubdir() { "${SERVER_TYPE}/deployments" }
-	
-	protected int getManagementPort() { entity.getConfig(JBoss7Server.MANAGEMENT_PORT, DEFAULT_FIRST_MANAGEMENT_PORT) }
+	protected Integer getManagementPort() { entity.getAttribute(JBoss7Server.MANAGEMENT_PORT) }
 	
 	@Override
 	public void install() {

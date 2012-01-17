@@ -26,6 +26,7 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.Attributes
@@ -33,12 +34,12 @@ import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicNotificationSensor
+import brooklyn.location.basic.SimulatedLocation
 import brooklyn.test.GeneralisedDynamicMBean
 import brooklyn.test.JmxService
 import brooklyn.test.TestUtils
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
-import brooklyn.test.location.MockLocation
 
 /**
  * Test the operation of the {@link OldJmxSensorAdapter} class.
@@ -68,20 +69,24 @@ public class JmxSensorAdapterTest {
     
     @BeforeMethod
     public void setUp() {
-        jmxService = new JmxService()
-        
         // Create an entity and configure it with the above JMX service
         app = new AbstractApplication() {}
-        entity = new TestEntity(owner:app)
-        entity.setAttribute(Attributes.HOSTNAME, jmxService.jmxHost)
-        entity.setAttribute(Attributes.JMX_PORT, jmxService.jmxPort)
-        entity.setAttribute(Attributes.RMI_PORT)
-        entity.setAttribute(Attributes.JMX_CONTEXT)
-        app.start([new MockLocation()])
+        entity = new TestEntity(owner:app) {
+            void start(Collection locs) {
+                        super.start(locs);
+                        entity.setAttribute(Attributes.HOSTNAME, "localhost");
+                        entity.setAttribute(Attributes.JMX_PORT)
+                        entity.setAttribute(Attributes.RMI_PORT)
+                        entity.setAttribute(Attributes.JMX_CONTEXT)
+                    }
+        };
+        app.start([new SimulatedLocation()])
         
         registry = new SensorRegistry(entity);
         jmxAdapter = registry.register(new JmxSensorAdapter(period: 50*TimeUnit.MILLISECONDS));
         jmxHelper = new JmxHelper(entity)
+        
+        jmxService = new JmxService(entity)
     }
     
     @AfterMethod(alwaysRun=true)
@@ -189,6 +194,7 @@ public class JmxSensorAdapterTest {
         // Starts with value defined when registering...
         TestUtils.executeUntilSucceeds {
             Map<String, Object> map = entity.getAttribute(mapAttribute)
+            assertNotNull map
             assertEquals 3, map.size()
             assertEquals 1234, map.get("myint")
             assertEquals "on", map.get("mystring")
@@ -348,7 +354,7 @@ public class JmxSensorAdapterTest {
     public void testSubscribeToJmxNotificationAndEmitCorrespondingNotificationSensor() {
         TestApplication app = new TestApplication();
         EntityWithEmitter entity = new EntityWithEmitter(owner:app);
-        app.start([new MockLocation()])
+        app.start([new SimulatedLocation()])
         
         List<SensorEvent> received = []
         app.subscribe(null, EntityWithEmitter.MY_NOTIF, { received.add(it) } as SensorEventListener)
@@ -370,11 +376,13 @@ public class JmxSensorAdapterTest {
         }
     }
     
-    @InheritConstructors
     static class EntityWithEmitter extends AbstractEntity {
+        public EntityWithEmitter(Map flags=[:], Entity owner=null) {
+            super(flags, owner)
+        }
         public static final BasicNotificationSensor<String> MY_NOTIF = [ String, "test.myNotif", "My notif" ]
-        
     }
+    
     private Notification sendNotification(StandardEmitterMBean mbean, String type, long seq, Object userData) {
         Notification notif = new Notification(type, mbean, seq)
         notif.setUserData(userData)

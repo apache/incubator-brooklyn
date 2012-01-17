@@ -8,39 +8,46 @@ import brooklyn.location.Location
 import brooklyn.location.MachineLocation
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.NoMachinesAvailableException
+import brooklyn.util.flags.SetFromFlag
 
 import com.google.common.base.Preconditions
 
 /**
- * A provisioner of {@link MachineLocation}s.
+ * A provisioner of {@link MachineLocation}s which takes a list of machines it can connect to.
+ * The collection of initial machines should be supplied in the 'machines' flag in the constructor,
+ * for example a list of machines which can be SSH'd to. 
+ * 
+ * This can be extended to have a mechanism to make more machines to be available
+ * (override provisionMore and canProvisionMore).
  */
+//TODO combine with jclouds BYON
 public class FixedListMachineProvisioningLocation<T extends MachineLocation> extends AbstractLocation implements MachineProvisioningLocation<T>, CoordinatesProvider {
 
-    private final Object lock = new Object();
-    private final List<T> available;
-    private final List<T> inUse;
+    private Object lock;
+    @SetFromFlag('machines')
+    protected Set<T> machines;
+    protected Set<T> inUse;
 
     public FixedListMachineProvisioningLocation(Map properties = [:]) {
         super(properties)
 
-        Preconditions.checkArgument properties.containsKey('machines'), "properties must include a 'machines' key"
-        Preconditions.checkArgument properties.machines instanceof Collection<T>, "'machines' value must be a collection"
-        Collection<T> machines = properties.remove('machines')
-
-        available = []
-        inUse = []
-
-        machines.each {
-            Preconditions.checkArgument it.parentLocation == null,
-                "Machines must not have a parent location, but machine '%s' has its parent location set", it.name;
-	        addChildLocation(it)
+        for (SshMachineLocation location: machines) {
+            if (location.parentLocation != null && !location.parentLocation.equals(this))
+                throw new IllegalStateException("Machines must not have a parent location, but machine '"+location.name+"' has its parent location set");
+	        addChildLocation(location)
+	        location.setParentLocation(this)
         }
-
-        available = new ArrayList();
-        inUse = new ArrayList();
-        machines.each { it.setParentLocation(this) } // As a side effect, this will add it to the available list
     }
 
+    protected void configure(Map properties) {
+        if (!lock) {
+            lock = new Object();
+            machines = []
+            inUse = []
+        }
+        super.configure(properties);
+    }
+    
     public double getLatitude() {
         return leftoverProperties.latitude;
     }
@@ -48,29 +55,45 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
     public double getLongitude() {
         return leftoverProperties.longitude;
     }
-    
+
+    public Set getAvailable() {
+        Set a = []
+        a.addAll(machines)
+        a.removeAll(inUse)
+        a
+    }   
+     
     @Override
     protected void addChildLocation(Location child) {
         super.addChildLocation(child);
-        available.add(child);
+        machines.add(child);
     }
 
     @Override
     protected boolean removeChildLocation(Location child) {
-        if (!available.remove(child)) {
-            if (inUse.contains(child)) {
-                throw new IllegalStateException("Child location $child is in use; cannot remove from $this");
-            }
+        if (inUse.contains(child)) {
+            throw new IllegalStateException("Child location $child is in use; cannot remove from $this");
         }
+        machines.remove(child);
         return super.removeChildLocation(child);
     }
 
+    public boolean canProvisionMore() { return false; }
+    public void provisionMore(int size) { throw new IllegalStateException("more not permitted"); }
+    
     public T obtain(Map<String,? extends Object> flags) {
         T machine;
         synchronized (lock) {
-            if (available.empty)
-                throw new NoMachinesAvailableException(this);
-            machine = available.remove(0);
+            Set a = getAvailable()
+            if (!a) {
+                if (canProvisionMore()) {
+                    provisionMore(1);
+                    a = getAvailable();
+                }
+                if (!a)
+                    throw new NoMachinesAvailableException(this);
+            }
+            machine = a.iterator().next();
             inUse.add(machine);
         }
         return machine;
@@ -81,7 +104,6 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
             if (inUse.contains(machine) == false)
                 throw new IllegalStateException("Request to release machine $machine, but this machine is not currently allocated")
             inUse.remove(machine);
-            available.add(machine);
         }
     }
     

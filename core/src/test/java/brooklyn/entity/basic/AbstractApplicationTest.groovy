@@ -4,8 +4,8 @@ import static org.testng.Assert.*
 
 import org.testng.annotations.Test
 
+import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.entity.TestEntity
-import brooklyn.test.location.MockLocation
 
 class AbstractApplicationTest {
 
@@ -14,7 +14,7 @@ class AbstractApplicationTest {
         AbstractApplication app = new AbstractApplication() {};
         TestEntity child = new TestEntity(owner:app);
         
-        app.start([new MockLocation()])
+        app.start([new SimulatedLocation()])
         assertEquals(child.counter.get(), 1)
         
         app.stop()

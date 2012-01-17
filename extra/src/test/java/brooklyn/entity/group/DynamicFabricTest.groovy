@@ -14,7 +14,7 @@ import brooklyn.entity.Application
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
-import brooklyn.location.basic.GeneralPurposeLocation
+import brooklyn.location.basic.SimulatedLocation
 import brooklyn.management.Task
 import brooklyn.test.entity.BlockingEntity
 import brooklyn.test.entity.TestEntity
@@ -30,13 +30,13 @@ class DynamicFabricTest {
     
     @Test
     public void testDynamicFabricCreatesAndStartsEntityWhenGivenSingleLocation() {
-        Collection<Location> locs = [ new GeneralPurposeLocation() ]
+        Collection<Location> locs = [ new SimulatedLocation() ]
         runWithLocations(locs)
     }
 
     @Test
     public void testDynamicFabricCreatesAndStartsEntityWhenGivenManyLocations() {
-        Collection<Location> locs = [ new GeneralPurposeLocation(), new GeneralPurposeLocation(), new GeneralPurposeLocation() ]
+        Collection<Location> locs = [ new SimulatedLocation(), new SimulatedLocation(), new SimulatedLocation() ]
         runWithLocations(locs)
     }
     
@@ -67,7 +67,7 @@ class DynamicFabricTest {
                         return new BlockingEntity(properties, latch) 
                 }, 
                 app)
-        Collection<Location> locs = [ new GeneralPurposeLocation(), new GeneralPurposeLocation() ]
+        Collection<Location> locs = [ new SimulatedLocation(), new SimulatedLocation() ]
         
         Task task = fabric.invoke(Startable.START, [ locations:locs ])
 
@@ -106,7 +106,7 @@ class DynamicFabricTest {
         }
 		DynamicFabric fabric = new DynamicFabric(initialSize:1, httpPort: 8080, newEntity:clusterFactory, app)
 		
-		fabric.start([ new GeneralPurposeLocation() ])
+		fabric.start([ new SimulatedLocation() ])
         
 		assertEquals(fabric.ownedChildren.size(), 1)
 		assertEquals(fabric.ownedChildren[0].ownedChildren.size(), 1)

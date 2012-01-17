@@ -21,8 +21,8 @@ import brooklyn.event.adapter.SensorRegistry
 import brooklyn.event.adapter.legacy.OldJmxSensorAdapter
 import brooklyn.event.adapter.legacy.ValueProvider
 import brooklyn.event.basic.BasicConfigKey
-import brooklyn.event.basic.ConfiguredAttributeSensor
-import brooklyn.location.MachineLocation
+import brooklyn.event.basic.BasicAttributeSensorAndConfigKey
+import brooklyn.event.basic.PortAttributeSensorAndConfigKey
 import brooklyn.location.basic.SshMachineLocation
 
 /**
@@ -31,9 +31,9 @@ import brooklyn.location.basic.SshMachineLocation
 public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> {
     private static final Logger log = LoggerFactory.getLogger(QpidBroker.class)
 
-    public static final ConfiguredAttributeSensor<Integer> AMQP_PORT = Attributes.AMQP_PORT
-    public static final ConfiguredAttributeSensor<String> VIRTUAL_HOST_NAME = [String, "qpid.virtualHost", "Qpid virtual host name", "localhost" ]
-    public static final ConfiguredAttributeSensor<String> AMQP_VERSION = [ String, "amqp.version", "AMQP protocol version", "0-10" ]
+    public static final PortAttributeSensorAndConfigKey AMQP_PORT = Attributes.AMQP_PORT
+    public static final BasicAttributeSensorAndConfigKey<String> VIRTUAL_HOST_NAME = [String, "qpid.virtualHost", "Qpid virtual host name", "localhost" ]
+    public static final BasicAttributeSensorAndConfigKey<String> AMQP_VERSION = [ String, "amqp.version", "AMQP protocol version", "0-10" ]
     public static final BasicConfigKey<Map> RUNTIME_FILES = [ Map, "qpid.files.runtime", "Map of files to be copied, keyed by destination name relative to runDir" ]
 
     String virtualHost
@@ -49,12 +49,12 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> {
         amqpVersion = properties.amqpVersion ?: getConfig(AMQP_VERSION.configKey)
         setAttribute(AMQP_VERSION, amqpVersion)
 
-        setConfigIfValNonNull(Attributes.AMQP_PORT.configKey, properties.amqpPort)
+        setConfigIfValNonNull(Attributes.AMQP_PORT, properties.amqpPort)
 
         setConfigIfValNonNull(RUNTIME_FILES, properties.runtimeFiles)
 
-        setConfigIfValNonNull(Attributes.JMX_USER.configKey, properties.user ?: "admin")
-        setConfigIfValNonNull(Attributes.JMX_PASSWORD.configKey, properties.password ?: "admin")
+        setConfigIfValNonNull(Attributes.JMX_USER, properties.user ?: "admin")
+        setConfigIfValNonNull(Attributes.JMX_PASSWORD, properties.password ?: "admin")
     }
 
     public void setBrokerUrl() {

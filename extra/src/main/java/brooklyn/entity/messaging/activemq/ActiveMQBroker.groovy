@@ -2,31 +2,31 @@ package brooklyn.entity.messaging.activemq
 
 import java.util.Collection
 import java.util.Map
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeUnit
 
-import javax.management.InstanceNotFoundException
 import javax.management.ObjectName
-import javax.management.RuntimeMBeanException;
+import javax.management.RuntimeMBeanException
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import com.google.common.base.Throwables;
-
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.Attributes
-import brooklyn.entity.basic.legacy.JavaApp;
-import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup;
+import brooklyn.entity.basic.legacy.JavaApp
+import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup
 import brooklyn.entity.messaging.JMSBroker
 import brooklyn.entity.messaging.JMSDestination
 import brooklyn.entity.messaging.Queue
 import brooklyn.entity.messaging.Topic
 import brooklyn.event.adapter.SensorRegistry
-import brooklyn.event.adapter.legacy.OldJmxSensorAdapter;
-import brooklyn.event.adapter.legacy.ValueProvider;
-import brooklyn.event.basic.ConfiguredAttributeSensor
+import brooklyn.event.adapter.legacy.OldJmxSensorAdapter
+import brooklyn.event.adapter.legacy.ValueProvider
+import brooklyn.event.basic.PortAttributeSensorAndConfigKey
+import brooklyn.location.PortRange
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.internal.Repeater;
+import brooklyn.util.internal.Repeater
+
+import com.google.common.base.Throwables
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single ActiveMQ broker instance.
@@ -34,27 +34,22 @@ import brooklyn.util.internal.Repeater;
 public class ActiveMQBroker extends JMSBroker<ActiveMQQueue, ActiveMQTopic> {
 	private static final Logger log = LoggerFactory.getLogger(ActiveMQBroker.class)
 
-	public static final ConfiguredAttributeSensor<Integer> OPEN_WIRE_PORT = [
-		Integer,
-		"openwire.port",
-		"OpenWire port",
-		61616
-	]
+	public static final PortAttributeSensorAndConfigKey OPEN_WIRE_PORT = [ "openwire.port", "OpenWire port", "61616+" ]
 
 	public ActiveMQBroker(Map properties=[:], Entity owner=null) {
 		super(properties, owner)
 
-		setConfigIfValNonNull(OPEN_WIRE_PORT.configKey, properties.openWirePort)
+		setConfigIfValNonNull(OPEN_WIRE_PORT, properties.openWirePort)
 
-		setConfigIfValNonNull(Attributes.JMX_USER.configKey, properties.user ?: "admin")
-		setConfigIfValNonNull(Attributes.JMX_PASSWORD.configKey, properties.password ?: "activemq")
+		setConfigIfValNonNull(Attributes.JMX_USER, properties.user ?: "admin")
+		setConfigIfValNonNull(Attributes.JMX_PASSWORD, properties.password ?: "activemq")
 	}
 
 	@Override
 	protected Collection<Integer> getRequiredOpenPorts() {
 		Collection<Integer> result = super.getRequiredOpenPorts()
-		result.add(getConfig(OPEN_WIRE_PORT.configKey))
-		result.add(getConfig(RMI_PORT.configKey))
+		result.add(getConfig(OPEN_WIRE_PORT))
+		result.add(getConfig(RMI_PORT))
 		return result
 	}
 

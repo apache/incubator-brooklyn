@@ -72,6 +72,11 @@
                     <groupId>org.apache.ivy</groupId>
                     <artifactId>ivy</artifactId>
                 </exclusion>
+                <exclusion>
+                    <!-- don't want the version grails pulls in; we supply a better 1.5.11 -->
+                    <artifactId>slf4j-api</artifactId>
+                    <groupId>org.slf4j</groupId>
+                </exclusion>
             </exclusions>
         </dependency>
 

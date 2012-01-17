@@ -35,21 +35,23 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     public static final String ROOT_USERNAME = "root";
     public static final int START_SSHABLE_TIMEOUT = 5*60*1000;
 
-    private final Map conf = [:];
-    
     private final Map<String,Map<String, ? extends Object>> tagMapping = [:]
     private final Map<SshMachineLocation,String> vmInstanceIds = [:]
 
     JcloudsLocation(Map conf) {
         super(conf)
-        this.conf.putAll(conf)
-
-        name = conf.providerLocationId
     }
     
     JcloudsLocation(String identity, String credential, String providerLocationId) {
         this([identity:identity, credential:credential, providerLocationId:providerLocationId])
     }
+    
+    protected void configure(Map properties) {
+        super.configure(properties)
+        if (!name) name = conf.providerLocationId
+	}
+    
+    public Map getConf() { return leftoverProperties; }
     
     public void setTagMapping(Map<String,Map<String, ? extends Object>> val) {
         tagMapping.clear()
@@ -81,10 +83,10 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     public SshMachineLocation obtain(Map flags=[:]) throws NoMachinesAvailableException {
         Map allconf = flags + conf
         if (!allconf.userName) allconf.userName = ROOT_USERNAME
-        if (allconf.sshPublicKey) allconf.sshPublicKeyData = Files.toString(allconf.sshPublicKey, Charsets.UTF_8)
-        if (allconf.sshPrivateKey) allconf.sshPrivateKeyData = Files.toString(allconf.sshPrivateKey, Charsets.UTF_8)
-        if (allconf.rootSshPrivateKey) allconf.rootSshPrivateKeyData = Files.toString(allconf.rootSshPrivateKey, Charsets.UTF_8)
-        if (allconf.rootSshPublicKey) allconf.rootSshPublicKeyData = Files.toString(allconf.rootSshPublicKey, Charsets.UTF_8)
+        if (allconf.sshPublicKey) allconf.sshPublicKeyData = Files.toString(asFile(allconf.sshPublicKey), Charsets.UTF_8)
+        if (allconf.sshPrivateKey) allconf.sshPrivateKeyData = Files.toString(asFile(allconf.sshPrivateKey), Charsets.UTF_8)
+        if (allconf.rootSshPrivateKey) allconf.rootSshPrivateKeyData = Files.toString(asFile(allconf.rootSshPrivateKey), Charsets.UTF_8)
+        if (allconf.rootSshPublicKey) allconf.rootSshPublicKeyData = Files.toString(asFile(allconf.rootSshPublicKey), Charsets.UTF_8)
         String groupId = (allconf.groupId ?: IdGenerator.makeRandomId(8))
  
         ComputeService computeService = JcloudsUtil.buildComputeService(allconf);
@@ -148,6 +150,12 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             computeService.getContext().close();
         }
 
+    }
+    
+    private static File asFile(Object o) {
+        if (o in File) return o;
+        if (o==null) return o;
+        return new File(o.toString());
     }
 
     void release(SshMachineLocation machine) {

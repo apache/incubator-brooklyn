@@ -5,6 +5,8 @@ import java.util.Map
 
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.lifecycle.legacy.SshBasedJavaAppSetup
+import brooklyn.location.PortRange
+import brooklyn.location.basic.PortRanges
 import brooklyn.location.basic.SshMachineLocation
 
 /**
@@ -21,17 +23,17 @@ public class QpidSetup extends SshBasedJavaAppSetup {
         String suggestedVersion = entity.getConfig(QpidBroker.SUGGESTED_VERSION)
         String suggestedInstallDir = entity.getConfig(QpidBroker.SUGGESTED_INSTALL_DIR)
         String suggestedRunDir = entity.getConfig(QpidBroker.SUGGESTED_RUN_DIR)
-        Integer suggestedJmxPort = entity.getConfig(QpidBroker.JMX_PORT.configKey)
-        Integer suggestedAmqpPort = entity.getConfig(QpidBroker.AMQP_PORT.configKey)
+        PortRange suggestedJmxPort = entity.getConfig(QpidBroker.JMX_PORT)
+        PortRange suggestedAmqpPort = entity.getConfig(QpidBroker.AMQP_PORT)
 
         String version = suggestedVersion ?: DEFAULT_VERSION
         String installDir = suggestedInstallDir ?: "$DEFAULT_INSTALL_DIR/${version}/qpid-broker-${version}"
         String runDir = suggestedRunDir ?: "$BROOKLYN_HOME_DIR/${entity.application.id}/qpid-${entity.id}"
         String logFileLocation = "$runDir/log/qpid.log"
 
-        int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort))
-        int rmiPort = machine.obtainPort(toDesiredPortRange(jmxPort + 100))
-        int amqpPort = machine.obtainPort(toDesiredPortRange(suggestedAmqpPort))
+        int jmxPort = machine.obtainPort(suggestedJmxPort)
+        int rmiPort = machine.obtainPort(PortRanges.fromString(""+(jmxPort+100) + "+"))
+        int amqpPort = machine.obtainPort(suggestedAmqpPort)
 
         QpidSetup result = new QpidSetup(entity, machine)
         result.setRmiPort(rmiPort)

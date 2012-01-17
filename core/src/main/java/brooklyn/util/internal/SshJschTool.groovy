@@ -166,8 +166,10 @@ public class SshJschTool {
 			if (!properties.err) 
         		channel.setExtOutputStream(properties.out, true)
         }
-		//TODO seems oddly high...
-        long pause = properties.pause ?: 250
+		//TODO would rather not have this, but funny things might happen
+        //(especially if running multiple scripts simulatenously?) if it's too low
+        //(although for the most part this doesn't apply because we run a single command with commas
+        long pause = properties.pause ?: 500
 
         def allCmds = []
         allCmds.add "exec bash -e"

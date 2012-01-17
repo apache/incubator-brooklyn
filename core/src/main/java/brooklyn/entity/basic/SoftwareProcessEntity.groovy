@@ -1,6 +1,5 @@
 package brooklyn.entity.basic
 
-import java.io.File
 import java.util.Collection
 import java.util.Map
 
@@ -10,14 +9,17 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.ConfigKey
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.lifecycle.StartStopDriver
-import brooklyn.entity.basic.lifecycle.StartStopSshDriver;
+import brooklyn.entity.basic.lifecycle.StartStopSshDriver
 import brooklyn.entity.trait.Startable
 import brooklyn.event.AttributeSensor
+import brooklyn.event.Sensor;
 import brooklyn.event.adapter.ConfigSensorAdapter
 import brooklyn.event.adapter.SensorRegistry
+import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
-import brooklyn.event.basic.ConfiguredAttributeSensor;
+import brooklyn.event.basic.BasicAttributeSensorAndConfigKey
+import brooklyn.event.basic.PortAttributeSensorAndConfigKey
 import brooklyn.location.Location
 import brooklyn.location.MachineLocation
 import brooklyn.location.MachineProvisioningLocation
@@ -70,6 +72,11 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 	
 	protected abstract StartStopDriver newDriver(SshMachineLocation loc);
 
+    protected void preStart() {
+        if (!sensorRegistry) sensorRegistry = new SensorRegistry(this)
+        ConfigSensorAdapter.apply(this);
+    }
+    
 	protected void postStart() {
 		connectSensors()
 		checkAllSensorsConnected()
@@ -81,8 +88,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 	}
 
 	protected void checkAllSensorsConnected() {
-		//TODO
-
+		//TODO warn if we don't have sensors wired up to something
 		/*
 				what about sensors where it doesn't necessarily make sense to register them here, e.g.:
 				  config -- easy to exclude (by type)
@@ -105,7 +111,6 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 	public void start(Collection<? extends Location> locations) {
 		setAttribute(SERVICE_STATE, Lifecycle.STARTING)
 		if (!sensorRegistry) sensorRegistry = new SensorRegistry(this)
-		// TODO really should happen on deploy...
 		ConfigSensorAdapter.apply(this);
 
 		startInLocation locations
@@ -154,6 +159,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 			driverLocal = newDriver(machine)
 		}
 		if (driver) {
+            preStart();
 			driver.start()
 			waitForEntityStart()
 		} else {
@@ -221,11 +227,11 @@ public interface UsesJava {
 public interface UsesJmx extends UsesJava {
 	public static final int DEFAULT_JMX_PORT = 1099
 	@SetFromFlag("jmxPort")
-	public static final ConfiguredAttributeSensor<Integer> JMX_PORT = Attributes.JMX_PORT
+	public static final PortAttributeSensorAndConfigKey JMX_PORT = Attributes.JMX_PORT
 	@SetFromFlag("rmiPort")
-	public static final ConfiguredAttributeSensor<Integer> RMI_PORT = Attributes.RMI_PORT
+	public static final PortAttributeSensorAndConfigKey RMI_PORT = Attributes.RMI_PORT
 	@SetFromFlag("jmxContext")
-	public static final ConfiguredAttributeSensor<String> JMX_CONTEXT = Attributes.JMX_CONTEXT
+	public static final BasicAttributeSensorAndConfigKey<String> JMX_CONTEXT = Attributes.JMX_CONTEXT
 	
 	public static final BasicAttributeSensor<String> JMX_URL = [ String, "jmx.url", "JMX URL" ]
 }

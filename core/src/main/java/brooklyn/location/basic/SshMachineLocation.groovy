@@ -1,9 +1,12 @@
 package brooklyn.location.basic
 
-import org.codehaus.groovy.runtime.DefaultGroovyMethods
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 import brooklyn.location.MachineLocation
 import brooklyn.location.PortRange
+import brooklyn.location.PortSupplier
+import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.internal.SshJschTool
 
 import com.google.common.base.Preconditions
@@ -11,39 +14,33 @@ import com.google.common.base.Preconditions
 /**
  * Operations on a machine that is accessible via ssh.
  */
-public class SshMachineLocation extends AbstractLocation implements MachineLocation {
+public class SshMachineLocation extends AbstractLocation implements MachineLocation, PortSupplier {
+    
+    public static final Logger LOG = LoggerFactory.getLogger(SshMachineLocation.class);
+            
+    @SetFromFlag('username')
     private String user = null
+    @SetFromFlag(nullable=false)
     private InetAddress address
-    private Map config = [:]
+    @SetFromFlag(nullable=false)
+    private Map config
 
     private final Set<Integer> ports = [] as HashSet
 
     public SshMachineLocation(Map properties = [:]) {
         super(properties)
+    }
+    
+    public void configure(Map properties) {
+        if (config==null) config = [:]
+        
+        super.configure(properties)
 
-        Preconditions.checkArgument properties.containsKey('address'), "properties must contain an entry with key 'address'"
-        if (properties.address instanceof InetAddress) {
-            this.address = properties.remove("address")
-        } else {
-            this.address = Inet4Address.getByName(properties.remove("address"))
-        }
-
-        if (properties.userName) {
-            Preconditions.checkArgument properties.userName instanceof String, "'userName' value must be a string"
-            this.user = properties.userName
-        }
-
-        if (properties.config) {
-            Preconditions.checkArgument properties.config instanceof Map, "'config' value must be a Map"
-            this.config = properties.config
-        }
-
+        Preconditions.checkNotNull(address, "address is required for SshMachineLocation");
         String host = (user ? "${user}@" : "") + address.hostName
+        
         if (name == null) {
             name = host
-        }
-        if (leftoverProperties.displayName) {
-            leftoverProperties.displayName = host
         }
     }
 
@@ -133,7 +130,6 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     // TODO Does not yet check if the port really is free on this machine
     public boolean obtainSpecificPort(int portNumber) {
         if (ports.contains(portNumber)) {
-            System.err.println ports.join(", ")
             return false
         } else {
             ports.add(portNumber)
@@ -142,7 +138,10 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     }
 
     public int obtainPort(PortRange range) {
-        return (range.min..range.max).find { int p -> obtainSpecificPort(p) } ?: -1
+        for (int p: range)
+            if (obtainSpecificPort(p)) return p;
+         LOG.debug("unable to find port in {} on {}; returning -1", range, this)
+         return -1;
     }
 
     public void releasePort(int portNumber) {

@@ -8,7 +8,7 @@ import brooklyn.event.basic.BasicConfigKey
  */
 class ConfigKeys {
     
-    // FIXME Rename to VERSION, instead of SUGGESTED_VERSION? And declare as ConfiguredAttributeSensor?
+    // FIXME Rename to VERSION, instead of SUGGESTED_VERSION? And declare as BasicAttributeSensorAndConfigKey?
     
     public static final BasicConfigKey<String> SUGGESTED_VERSION = [ String, "install.version", "Suggested version" ]
     public static final BasicConfigKey<String> SUGGESTED_INSTALL_DIR = [ String, "install.dir", "Suggested installation directory" ]

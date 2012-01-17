@@ -50,6 +50,7 @@ public class TestEntity extends AbstractEntity implements Startable {
 	protected static final Logger LOG = LoggerFactory.getLogger(TestEntity)
 
     public static final BasicConfigKey<String> CONF_NAME = [ String, "test.confName", "Configuration key, my name", "defaultval" ]
+    public static final BasicConfigKey<Map> CONF_MAP_PLAIN = [ Map, "test.confMapPlain", "Configuration key that's a plain map", [:] ]
     public static final MapConfigKey<String> CONF_MAP_THING = [ String, "test.confMapThing", "Configuration key that's a map thing" ]
     public static final ListConfigKey<String> CONF_LIST_THING = [ String, "test.confListThing", "Configuration key that's a list thing" ]
     
@@ -63,6 +64,9 @@ public class TestEntity extends AbstractEntity implements Startable {
     public TestEntity(Map properties=[:], Entity owner=null) {
         super(properties, owner)
         this.constructorProperties = properties
+    }
+    public TestEntity(Entity owner) {
+        this([:], owner)
     }
     
     public synchronized int getSequenceValue() {

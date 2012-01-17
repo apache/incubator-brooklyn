@@ -20,16 +20,15 @@ public @interface SetFromFlag {
     /** whether the object should not be changed once set; defaults to false
      * <p>
      * this is partially tested for in many routines, but not all;
-     * and even that testing is not (cannot) be perfect because fields have default values:
-     * if an object is explicitly set to its default/initial value
-     * (i.e. null for an Object, 0 for an int, false for a boolean) 
-     * then set to something different, this is not flagged as a violation.
-     * (when used with Objects in conjunction with nullable=false,
-     * via the FlagUtils routines, it is reliable.)
+     * when nullable=false the testing (when done) is guaranteed.
+     * however if nullable is allowed we do not distinguish between null and unset
+     * so explicitly setting null then setting to a value is not detected as an illegal mutating.
      */
     boolean immutable() default false;
     
-    /** whether the object should not be set to null; defaults to true
+    /** whether the object is required & should not be set to null; defaults to true.
+     * (there is no 'required' parameter, but setting nullable false then invoking 
+     * e.g. {@link FlagUtils#checkRequiredFields(Object)} has the effect of requiring a value.) 
      * <p>
      * this is partially tested for in many routines, but not all
      */

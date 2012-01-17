@@ -4,19 +4,19 @@ import java.io.File
 import java.util.List
 import java.util.Map
 
-import org.jclouds.gogrid.functions.GenericResponseContainer.Summary;
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.entity.basic.SoftwareProcessEntity
-import brooklyn.entity.basic.lifecycle.ScriptHelper;
-import brooklyn.entity.basic.lifecycle.ScriptRunner;
-import brooklyn.entity.basic.lifecycle.StartStopSshDriver;
-import brooklyn.location.PortRange
-import brooklyn.location.basic.BasicPortRange
+import brooklyn.entity.basic.lifecycle.ScriptHelper
+import brooklyn.entity.basic.lifecycle.ScriptRunner
+import brooklyn.entity.basic.lifecycle.StartStopSshDriver
+import brooklyn.location.PortRange;
+import brooklyn.location.basic.PortRanges
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.location.basic.PortRanges.BasicPortRange
 
 import com.google.common.base.Strings
 
@@ -402,13 +402,14 @@ public abstract class SshBasedAppSetup extends StartStopSshDriver implements Scr
      * If desired is specified, then try to use exactly that. Otherwise, use the
      * range from defaultFirst to 65535.
      */
+    @Deprecated
     public static PortRange toDesiredPortRange(Integer desired, Integer defaultFirst=desired) {
         if (desired == null || desired < 0) {
-            return new BasicPortRange(defaultFirst, 65535)
+            return PortRanges.fromString(defaultFirst+"+");
         } else if (desired > 0) {
-            return new BasicPortRange(desired, desired)
+            return PortRanges.fromInteger(desired);
         } else if (desired == 0) {
-            return BasicPortRange.ANY_HIGH_PORT
+            return PortRanges.ANY_HIGH_PORT
         }
     }
 
@@ -426,6 +427,7 @@ public abstract class SshBasedAppSetup extends StartStopSshDriver implements Scr
      * @see #obtainPort(int, boolean)
      * @see SshMachineLocation#obtainPort(PortRange)
      */
+    @Deprecated
     protected int obtainPort(int suggested, int defaultPort, boolean canIncrement) {
         PortRange range;
         if (suggested > 0) {
@@ -439,6 +441,7 @@ public abstract class SshBasedAppSetup extends StartStopSshDriver implements Scr
     }
 
     /** @see #obtainPort(int, int, boolean) */
+    @Deprecated
     protected int obtainPort(int suggested, boolean canIncrement) {
         if (suggested < 0) throw new IllegalArgumentException("Port $suggested must be >= 0")
         obtainPort(suggested, suggested, canIncrement)

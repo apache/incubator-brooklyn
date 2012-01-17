@@ -9,6 +9,7 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.location.PortRange
+import brooklyn.location.basic.PortRanges.BasicPortRange
 
 import com.google.common.base.Charsets
 import com.google.common.io.Files

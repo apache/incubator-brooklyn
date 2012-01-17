@@ -13,7 +13,7 @@ import brooklyn.entity.Application
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.Location
-import brooklyn.test.location.MockLocation
+import brooklyn.location.basic.SimulatedLocation;
 
 public class EntityControllerTest extends grails.test.ControllerUnitTestCase {
     
@@ -29,7 +29,7 @@ public class EntityControllerTest extends grails.test.ControllerUnitTestCase {
         super.setUp()
         
         entityService = new EntityService()
-        loc = new MockLocation([latitude: 56, longitude: -2.5]);
+        loc = new SimulatedLocation([latitude: 56, longitude: -2.5]);
         app = new MyApp()
         app.start([loc])
         entityService.managementContextService = app.managementContext

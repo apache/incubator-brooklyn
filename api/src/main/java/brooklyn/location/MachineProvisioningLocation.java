@@ -12,7 +12,7 @@ public interface MachineProvisioningLocation<T extends MachineLocation> extends 
     /**
      * Obtain a machine in this location.
      * 
-     * @param flags Details of the desired machine (e.g. image, size, open ports, etc)
+     * @param flags Details of the desired machine (e.g. image, size, open ports, etc; flag support is limited to selected providers)
      * @return a machine that is a child of this location.
      * @throws NoMachinesAvailableException if there are no machines available in this location.
      */

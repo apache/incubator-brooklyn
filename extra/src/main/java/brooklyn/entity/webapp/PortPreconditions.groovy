@@ -1,9 +1,13 @@
 package brooklyn.entity.webapp
 
+import brooklyn.util.NetworkUtils;
+
 class PortPreconditions {
 
-	public static void checkPortValid(String name, int port) {
-		if (port>0 && port<65536) return;
+    //TODO move to NetworkUtils
+    
+	public static void checkPortValid(String name, Integer port) {
+		if (port!=null && port>=NetworkUtils.MIN_PORT_NUMBER && port<=NetworkUtils.MAX_PORT_NUMBER) return;
 		throw new IllegalArgumentException("Invalid value $port for $name");
 	}
 	public static void checkPortsValid(Map ports) {

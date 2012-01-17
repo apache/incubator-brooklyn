@@ -17,7 +17,7 @@ import brooklyn.entity.trait.Changeable
 import brooklyn.entity.trait.Resizable
 import brooklyn.event.EntityStartException
 import brooklyn.location.Location
-import brooklyn.location.basic.GeneralPurposeLocation
+import brooklyn.location.basic.SimulatedLocation
 import brooklyn.management.Task
 import brooklyn.test.TestUtils
 import brooklyn.test.entity.NoopStartable
@@ -32,35 +32,35 @@ class DynamicClusterTest {
     static { TimeExtras.init() }
     
     TestApplication app
-    GeneralPurposeLocation loc
-    GeneralPurposeLocation loc2
+    SimulatedLocation loc
+    SimulatedLocation loc2
     
     @BeforeMethod
     public void setUp() {
         app = new TestApplication()
-        loc = new GeneralPurposeLocation()
-        loc2 = new GeneralPurposeLocation()
+        loc = new SimulatedLocation()
+        loc2 = new SimulatedLocation()
     }
     
-    @Test(expectedExceptions = [IllegalArgumentException, NullPointerException])
+    @Test(expectedExceptions = [IllegalArgumentException, NullPointerException, ClassCastException.class])
     public void constructorRequiresThatNewEntityArgumentIsGiven() {
         new DynamicCluster(initialSize:1, app)
         fail "Did not throw expected exception"
     }
 
-    @Test(expectedExceptions = IllegalArgumentException.class)
+    @Test(expectedExceptions = [IllegalArgumentException.class, ClassCastException.class])
     public void constructorRequiresThatNewEntityArgumentIsAnEntity() {
         new DynamicCluster([ initialSize:1, newEntity:new NoopStartable() ], app)
         fail "Did not throw expected exception"
     }
 
-    @Test(expectedExceptions = IllegalArgumentException.class)
+    @Test(expectedExceptions = [IllegalArgumentException.class, ClassCastException.class])
     public void constructorRequiresThatNewEntityArgumentIsStartable() {
         new DynamicCluster([ initialSize:1, newEntity:new AbstractEntity() { } ], app)
         fail "Did not throw expected exception"
     }
 
-    @Test(expectedExceptions = IllegalArgumentException.class)
+    @Test(expectedExceptions = [IllegalArgumentException.class, ClassCastException.class])
     public void constructorRequiresThatPostStartEntityIsClosure() {
         new DynamicCluster([ initialSize:1, newEntity:{ new TestEntity() }, postStartEntity:"notaclosure" ], app)
         fail "Did not throw expected exception"

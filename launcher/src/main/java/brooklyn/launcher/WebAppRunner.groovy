@@ -9,9 +9,11 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.config.BrooklynServiceAttributes
 import brooklyn.management.ManagementContext
+import brooklyn.util.BrooklynLanguageExtensions;
 import brooklyn.util.ResourceUtils
 import brooklyn.util.flags.FlagUtils
 import brooklyn.util.flags.SetFromFlag
+import brooklyn.util.internal.TimeExtras;
 
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams
@@ -117,6 +119,8 @@ public class WebAppRunner {
         server.handler = hl
         
         server.start()
+        //reinit required because grails wipes our language extension bindings
+        BrooklynLanguageExtensions.reinit();
 
         log.info("Started Brooklyn console at http://localhost:" + port+", running "+war+(wars? " and "+wars.values() : ""))
     }
@@ -124,7 +128,7 @@ public class WebAppRunner {
     /** Asks the app server to stop and waits for it to finish up. */
     public void stop() throws Exception {
         server.stop()
-        server.join()
+        try { server.join() } catch (Exception e) { /* NPE may be thrown e.g. if threadpool not started */ }
     }
     
     public Server getServer() {

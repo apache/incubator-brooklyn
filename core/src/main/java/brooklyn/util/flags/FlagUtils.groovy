@@ -1,12 +1,18 @@
 package brooklyn.util.flags;
 
+import java.lang.reflect.Constructor
 import java.lang.reflect.Field
+
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 
 /** class to help transfer values passed as named arguments to other well-known variables/fields/objects;
  * see the test case for example usage */
 public class FlagUtils {
 
+    public static final Logger log = LoggerFactory.getLogger(FlagUtils.class);
+    
     private FlagUtils() {}
     
     /** sets all public fields (local and inherited) on the given object from the given flags map, returning unknown elements */
@@ -14,7 +20,7 @@ public class FlagUtils {
         setFieldsFromFlags(flags, o, o.getClass().getFields() as Set)
     }
     /** sets all fields (including private and static) on the given object and all supertypes, 
-     * from the given flags map, returning just those flags which are not applicable */
+     * from the given flags map, returning just those flag-value pairs passed in which do not correspond to SetFromFlags fields */
     public static Map setFieldsFromFlags(Map flags, Object o) {
         setFieldsFromFlags(flags, o, getAllFields(o.getClass()))
     }
@@ -67,10 +73,16 @@ public class FlagUtils {
             }
         }
         if (!annotation.nullable() && value==null) {
-            throw new IllegalStateException("Forbidden null assignment to non-nullable field "+
+            throw new IllegalArgumentException("Forbidden null assignment to non-nullable field "+
                     "$f in $objectOfField");
         }
-        f.set(objectOfField, value)
+        Object newValue;
+        try {
+            newValue = TypeCoercions.coerce(value, f.getType());
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Cannot set $f in $objectOfField from type "+value.getClass()+" ("+value+"): "+e, e);
+        }
+        f.set(objectOfField, newValue)
     }
     
     /** returns the default/inital value that is assigned to fields of the givien type;
@@ -92,21 +104,45 @@ public class FlagUtils {
         throw new IllegalStateException("Class $t is an unknown primitive.");
     }
 
+    /** returns a map of all fields which are annotated 'SetFromFlag', along with the annotation */
+    public static Map<Field,SetFromFlag> getAnnotatedFields(Class type) {
+        Map result=[:]
+        for (Field f: getAllFields(type)) {
+            SetFromFlag cf = f.getAnnotation(SetFromFlag.class);
+            if (cf) result.put(f, cf);
+        }
+        return result
+    }
+
 	/** returns a map of all fields which are annotated 'SetFromFlag' with their current values;
 	 * useful if you want to clone settings from one object
 	 */
-	public static Map getFieldsWithValues(Object o) {
-		Map result=[:]
-		for (Field f: getAllFields(o.getClass())) {
-			SetFromFlag cf = f.getAnnotation(SetFromFlag.class);
-			if (cf) {
-				String flagName = cf.value() ?: f.getName();
-				if (flagName) {
-					if (!f.isAccessible()) f.setAccessible(true)
-					result.put(flagName, f.get(o))
-				}
-			}
+	public static Map<String,Object> getFieldsWithValues(Object o) {
+        Map result=[:]
+        getAnnotatedFields(o.getClass()).each { Field f, SetFromFlag cf ->
+            String flagName = cf.value() ?: f.getName();
+            if (flagName) {
+                if (!f.isAccessible()) f.setAccessible(true)
+                result.put(flagName, f.get(o))
+            }
 		}
 		return result
 	}
+        
+    /** throws an IllegalStateException if there are fields required (nullable=false) which are unset */
+    public static void checkRequiredFields(Object o) {
+        Set result=[]
+        getAnnotatedFields(o.getClass()).each { Field f, SetFromFlag cf ->
+            if (!cf.nullable()) {
+                String flagName = cf.value() ?: f.getName();
+                if (!f.isAccessible()) f.setAccessible(true)
+                Object v = f.get(o)
+                if (v==null) result += flagName
+            }
+        }
+        if (result) {
+            throw new IllegalStateException("Missing required "+(result.size()>1 ? "fields" : "field")+": "+result);
+        }
+    }
+
 }

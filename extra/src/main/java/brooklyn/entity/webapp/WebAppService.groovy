@@ -8,7 +8,7 @@ import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
-import brooklyn.event.basic.ConfiguredAttributeSensor
+import brooklyn.event.basic.PortAttributeSensorAndConfigKey
 import brooklyn.util.flags.SetFromFlag
 
 public interface WebAppService {
@@ -17,7 +17,7 @@ public interface WebAppService {
     public static final BasicConfigKey<List<String>> RESOURCES = [ List, "resources", "List of names of resources to copy to run directory" ]
 
     @SetFromFlag("httpPort")
-    public static final ConfiguredAttributeSensor<Integer> HTTP_PORT = Attributes.HTTP_PORT
+    public static final PortAttributeSensorAndConfigKey HTTP_PORT = Attributes.HTTP_PORT
 
     public static final BasicAttributeSensor<Integer> ERROR_COUNT = [ Integer, "webapp.reqs.errors", "Request errors" ]
     public static final BasicAttributeSensor<Integer> MAX_PROCESSING_TIME = [ Integer, "webpp.reqs.processing.max", "Max processing time" ]

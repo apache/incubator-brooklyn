@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>brooklyn-example</artifactId>
     <packaging>bundle</packaging>
-    <name>Brooklyn Examples</name>
+    <name>Brooklyn Example Set</name>
 
     <parent>
         <groupId>brooklyn</groupId>

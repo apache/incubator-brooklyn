@@ -2,10 +2,9 @@ package brooklyn.entity.nosql.infinispan
 
 
 import java.util.List
-import java.util.Map
 
-import brooklyn.entity.basic.Attributes
-import brooklyn.entity.basic.lifecycle.legacy.SshBasedJavaAppSetup;
+import brooklyn.entity.basic.lifecycle.legacy.SshBasedJavaAppSetup
+import brooklyn.location.PortRange
 import brooklyn.location.basic.SshMachineLocation
 
 /**
@@ -19,22 +18,22 @@ public class Infinispan5Setup extends SshBasedJavaAppSetup {
     Integer port
     
     public static Infinispan5Setup newInstance(Infinispan5Server entity, SshMachineLocation machine) {
-        String suggestedProtocol = entity.getConfig(Infinispan5Server.PROTOCOL.getConfigKey())
-        Integer suggestedPort = entity.getConfig(Infinispan5Server.PORT.getConfigKey())
+        String suggestedProtocol = entity.getConfig(Infinispan5Server.PROTOCOL)
+        PortRange suggestedPort = entity.getConfig(Infinispan5Server.PORT)
         Integer suggestedInfinispanVersion = entity.getConfig(Infinispan5Server.SUGGESTED_VERSION)
         String suggestedInstallDir = entity.getConfig(Infinispan5Server.SUGGESTED_INSTALL_DIR)
         String suggestedRunDir = entity.getConfig(Infinispan5Server.SUGGESTED_RUN_DIR)
-        Integer suggestedJmxPort = entity.getConfig(Infinispan5Server.JMX_PORT.configKey)
+        PortRange suggestedJmxPort = entity.getConfig(Infinispan5Server.JMX_PORT)
         
         String version = suggestedInfinispanVersion ?: DEFAULT_VERSION
         String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"${version}"+"/"+"infinispan-${version}")
         String runDir = suggestedRunDir ?: (BROOKLYN_HOME_DIR+"/"+"${entity.application.id}"+"/"+"infinispan-${entity.id}")
-        int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort))
+        int jmxPort = machine.obtainPort(suggestedJmxPort)
         
         Infinispan5Setup result = new Infinispan5Setup(entity, machine)
         result.setJmxPort(jmxPort)
         result.setProtocol(suggestedProtocol)
-        result.setPort(suggestedPort)
+        result.setPort(suggestedPort.iterator().next())
         result.setVersion(version)
         result.setInstallDir(installDir)
         result.setRunDir(runDir)

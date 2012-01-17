@@ -4,6 +4,7 @@ import java.util.List
 import java.util.Map
 
 import brooklyn.entity.basic.Attributes
+import brooklyn.location.PortRange;
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedJavaWebAppSetup
 
@@ -32,11 +33,11 @@ class OldJBoss7SshSetup extends SshBasedJavaWebAppSetup {
         // as7 asap...
         
         // Suggestions
-        Integer suggestedHttpPort = entity.getConfig(JBoss7Server.HTTP_PORT.configKey)
-        Integer suggestedManagementPort = entity.getConfig(JBoss7Server.MANAGEMENT_PORT.configKey)
+        PortRange suggestedHttpPort = entity.getConfig(JBoss7Server.HTTP_PORT.configKey)
+        PortRange suggestedManagementPort = entity.getConfig(JBoss7Server.MANAGEMENT_PORT.configKey)
         String suggestedInstallDir = entity.getConfig(JBoss7Server.SUGGESTED_INSTALL_DIR)
         String suggestedRunDir = entity.getConfig(JBoss7Server.SUGGESTED_RUN_DIR)
-        Integer suggestedJmxPort = entity.getConfig(JBoss7Server.JMX_PORT.configKey)
+        PortRange suggestedJmxPort = entity.getConfig(JBoss7Server.JMX_PORT)
         Map<String,Map<String,String>> propFilesToGenerate = entity.getConfig(JBoss7Server.PROPERTY_FILES) ?: [:]
         
         // Defaults if suggestions not given
@@ -45,9 +46,9 @@ class OldJBoss7SshSetup extends SshBasedJavaWebAppSetup {
         String deployDir = "$runDir/$DEPLOY_SUBDIR"
         String logFileLocation = "$runDir/standalone/log/server.log"
 
-        int httpPort = machine.obtainPort(toDesiredPortRange(suggestedHttpPort, DEFAULT_FIRST_HTTP_PORT))
-        int managementPort = machine.obtainPort(toDesiredPortRange(suggestedManagementPort, DEFAULT_FIRST_MANAGEMENT_PORT))
-        int jmxPort = machine.obtainPort(toDesiredPortRange(suggestedJmxPort))
+        int httpPort = machine.obtainPort(suggestedHttpPort, ""+DEFAULT_FIRST_HTTP_PORT+"+")
+        int managementPort = machine.obtainPort(suggestedManagementPort, DEFAULT_FIRST_MANAGEMENT_PORT)
+        int jmxPort = machine.obtainPort(suggestedJmxPort)
         
         // Setup instance
         OldJBoss7SshSetup result = new OldJBoss7SshSetup(entity, machine)

@@ -1,5 +1,7 @@
 package brooklyn.test
 
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Attributes;
 import javax.management.MBeanNotificationInfo
 import javax.management.MBeanServer
 import javax.management.MBeanServerFactory
@@ -19,6 +21,8 @@ import mx4j.tools.naming.NamingServiceMBean
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import com.google.common.base.Preconditions;
+
 import brooklyn.event.adapter.JmxHelper
 
 /**
@@ -36,8 +40,16 @@ class JmxService {
     private String url;
     
     public JmxService() {
-        jmxHost = "localhost";
-        jmxPort = 28000 + Math.floor(new Random().nextDouble() * 1000);
+        this("localhost", 28000 + Math.floor(new Random().nextDouble() * 1000));
+        logger.warn("use of deprecated default host and port in JmxService");
+    }
+    public JmxService(Entity e) {
+        this(e.getAttribute(Attributes.HOSTNAME)?:"localhost", e.getAttribute(Attributes.JMX_PORT)?:null);
+    }
+    public JmxService(String jmxHost, Integer jmxPort) {
+        this.jmxHost = jmxHost;
+        Preconditions.checkNotNull(jmxPort, "JMX_PORT must be set when starting JmxService"); 
+        this.jmxPort = jmxPort;
         url = JmxHelper.toConnectorUrl(jmxHost, jmxPort, null, "jmxrmi")
 
         JMXServiceURL address = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://localhost:" + jmxPort + "/jmxrmi");

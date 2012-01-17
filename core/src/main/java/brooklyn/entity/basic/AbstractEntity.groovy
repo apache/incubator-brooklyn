@@ -1,11 +1,11 @@
 package brooklyn.entity.basic
 
-import com.google.common.collect.ImmutableList;
-
 import java.lang.reflect.Field
+import java.lang.reflect.Modifier
 import java.util.concurrent.CancellationException
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.ExecutionException
+import java.util.concurrent.Future
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -23,9 +23,11 @@ import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.event.basic.AttributeMap
-import brooklyn.event.basic.BasicConfigKey
+import brooklyn.event.basic.AttributeSensorAndConfigKey
 import brooklyn.event.basic.BasicNotificationSensor
-import brooklyn.event.basic.ConfiguredAttributeSensor
+import brooklyn.event.basic.ListConfigKey
+import brooklyn.event.basic.MapConfigKey
+import brooklyn.event.basic.SubElementConfigKey
 import brooklyn.location.Location
 import brooklyn.management.ExecutionContext
 import brooklyn.management.ManagementContext
@@ -35,12 +37,15 @@ import brooklyn.management.Task
 import brooklyn.policy.Enricher
 import brooklyn.policy.Policy
 import brooklyn.policy.basic.AbstractPolicy
-import brooklyn.util.flags.FlagUtils;
+import brooklyn.util.BrooklynLanguageExtensions
+import brooklyn.util.flags.FlagUtils
 import brooklyn.util.flags.SetFromFlag
-import brooklyn.util.internal.ConfigKeySelfExtracting;
+import brooklyn.util.flags.TypeCoercions
+import brooklyn.util.internal.ConfigKeySelfExtracting
 import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.task.BasicExecutionContext
-import brooklyn.util.task.ParallelTask
+
+import com.google.common.collect.ImmutableList
 
 /**
  * Default {@link Entity} implementation.
@@ -57,7 +62,8 @@ import brooklyn.util.task.ParallelTask
 public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
     
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractEntity.class)
-
+    static { BrooklynLanguageExtensions.init(); }
+    
     public static BasicNotificationSensor<Sensor> SENSOR_ADDED = new BasicNotificationSensor<Sensor>(Sensor.class,
             "entity.sensor.added", "Sensor dynamically added to entity")
     public static BasicNotificationSensor<Sensor> SENSOR_REMOVED = new BasicNotificationSensor<Sensor>(Sensor.class,
@@ -137,6 +143,9 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     public AbstractEntity(Map flags=[:], Entity owner=null) {
         this.@skipInvokeMethodEffectorInterception.set(true)
         try {
+            if (flags==null) {
+                throw new IllegalArgumentException("Flags passed to entity $this must not be null (try no-arguments or empty map)")
+            }
             if (flags.owner != null && owner != null && flags.owner != owner) {
                 throw new IllegalArgumentException("Multiple owners supplied, ${flags.owner} and $owner")
             }
@@ -164,7 +173,8 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
                 if (Sensor.class.isAssignableFrom(f.getType())) {
                     Sensor sens = f.get(this)
                     def overwritten = sensorsT.put(sens.name, sens)
-                    if (overwritten!=null) LOG.warn("multiple definitions for sensor ${sens.name} on $this; preferring $sens to $overwritten")
+                    if (overwritten!=null && !overwritten.is(sens)) 
+                        LOG.warn("multiple definitions for sensor ${sens.name} on $this; preferring $sens to $overwritten")
                 }
             }
             if (LOG.isTraceEnabled())
@@ -181,10 +191,17 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 					k = ((HasConfigKey)f.get(this)).getConfigKey();
 				}
 				if (k) {
-                    // Allow overriding config keys (e.g. to set default values)
-                    Field alternativeField = configFields.get(k.name)
+				    Field alternativeField = configFields.get(k.name)
+                    // Allow overriding config keys (e.g. to set default values) when there is an assignable-from relationship between classes
                     Field definitiveField = alternativeField ? inferSubbestField(alternativeField, f) : f
-                    if (definitiveField == f) {
+                    boolean skip = false;
+                    if (definitiveField != f) {
+                        // If they refer to the _same_ instance, just keep the one we already have
+                        if (alternativeField.get(this).is(f.get(this))) skip = true;
+                    }
+                    if (skip) {
+                        //nothing
+                    } else if (definitiveField == f) {
                         def overwritten = configT.put(k.name, k)
                         configFields.put(k.name, f)
                     } else if (definitiveField != null) {
@@ -243,21 +260,32 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
                 } else if (HasConfigKey.class.isAssignableFrom(f.getType())) {
                     key = ((HasConfigKey)f.get(this)).getConfigKey();
                 } else {
-                    //normal field, not a config key
-                    String flagName = cf.value() ?: f.getName();
-                    if (flagName && flags.containsKey(flagName)) {
-                        FlagUtils.setField(this, f, flags.remove(flagName), cf)
-                    } else if (!flagName) {
-                        LOG.warn "Unsupported {} on {} in {}; ignoring", SetFromFlag.class.getSimpleName(), f, this
+                    if ((f.getModifiers() & (Modifier.STATIC))!=0) {
+                        LOG.warn "Unsupported {} on static on {} in {}; ignoring", SetFromFlag.class.getSimpleName(), f, this
+                    } else {
+                        //normal field, not a config key
+                        String flagName = cf.value() ?: f.getName();
+                        if (flagName && flags.containsKey(flagName)) {
+                            Object v, value;
+                            try {
+                                v = flags.remove(flagName);
+                                value = TypeCoercions.coerce(v, f.getType());
+                                FlagUtils.setField(this, f, value, cf)
+                            } catch (Exception e) {
+                                throw new IllegalArgumentException("Cannot coerce or set "+v+" / "+value+" to "+f, e)
+                            }
+                        } else if (!flagName) {
+                            LOG.warn "Unsupported {} on {} in {}; ignoring", SetFromFlag.class.getSimpleName(), f, this
+                        }
                     }
                 }
                 if (key) {
                     String flagName = cf.value() ?: key?.getName();
                     if (flagName && flags.containsKey(flagName)) {
-						Object value = flags.remove(flagName)
-                        setConfigInternal(key, value)
-						if (flagName=="name" && displayName==null)
-							displayName = value
+                        Object v = flags.remove(flagName);
+                        setConfigInternal(key, v)
+                        if (flagName=="name" && displayName==null)
+                            displayName = v
                     }
                 }
             }
@@ -418,8 +446,16 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         attributesInternal.update(attribute, val);
     }
 
-    public <T> T setAttribute(ConfiguredAttributeSensor<T> configuredSensor) {
-        setAttribute(configuredSensor, getConfig(configuredSensor.configKey))
+    /** sets the value of the given attribute sensor from the config key value herein,
+     * if the config key resolves to a non-null value as a sensor
+     * <p>
+     * returns old value */
+    public <T> T setAttribute(AttributeSensorAndConfigKey<?,T> configuredSensor) {
+        T v = getAttribute(configuredSensor);
+        if (v!=null) return v;
+        v = configuredSensor.getAsSensorValue(this);
+        if (v!=null) return setAttribute(configuredSensor, v)
+        return null;
     }
 
 	/**
@@ -464,7 +500,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         } else {
             LOG.warn("Config key $ownKey of $this is not a ConfigKeySelfExtracting; cannot retrieve value; returning default")
         }
-        return (defaultValue != null) ? defaultValue : ownKey.getDefaultValue();
+        return TypeCoercions.coerce((defaultValue != null) ? defaultValue : ownKey.getDefaultValue(), key.type);
     }
     
     @Override
@@ -475,8 +511,18 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         setConfigInternal(key, val)
     }
     
-    protected <T> T setConfigInternal(ConfigKey<T> key, T val) {
-    
+    protected <T> T setConfigInternal(ConfigKey<T> key, T v) {
+        Object val
+        if ((v in Future) || (v in Closure)) {
+            //no coercion for these (yet)
+            val = v;
+        } else {
+            try {
+                val = TypeCoercions.coerce(v, key.getType())
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Cannot coerce or set "+v+" / "+val+" to "+key, e)
+            }
+        }
         T oldVal = ownConfig.put(key, val);        
         ownedChildren.get().each {
             it.refreshInheritedConfig()
@@ -491,6 +537,9 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 	}
 
     protected void setConfigIfValNonNull(ConfigKey key, Object val) {
+        if (val != null) setConfig(key, val)
+    }
+    protected void setConfigIfValNonNull(HasConfigKey key, Object val) {
         if (val != null) setConfig(key, val)
     }
 

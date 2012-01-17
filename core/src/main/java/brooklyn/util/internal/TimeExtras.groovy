@@ -3,6 +3,11 @@ package brooklyn.util.internal
 import groovy.time.TimeDuration
 
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
+
+import org.codehaus.groovy.reflection.ClassInfo;
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 
 /**
@@ -15,11 +20,12 @@ import java.util.concurrent.TimeUnit
  * @author alex
  */
 class TimeExtras {
-    static void init() { }
-
-    static {
+    public static final Logger log = LoggerFactory.getLogger(TimeExtras.class);
+    
+    public static void init() {
         Number.metaClass.multiply << { TimeUnit t -> new TimeDuration(t.toMillis(intValue())) }
         Number.metaClass.multiply << { TimeDuration t -> t.multiply(doubleValue()) }
+        Integer.metaClass.multiply << { TimeUnit t -> new TimeDuration(t.toMillis(intValue())) }
         
         TimeDuration.metaClass.multiply << { Number n -> new TimeDuration( (int)(toMilliseconds()*n) ) }
         TimeDuration.metaClass.constructor << { long millis ->
@@ -28,5 +34,16 @@ class TimeExtras {
             Collections.reverse(l)
             l as TimeDuration
         }
+    }
+    
+    static { init(); }
+    
+    /** creates a duration object
+     * <p>
+     * fix for irritating classloading/metaclass order 
+     * where an int may get constructed too early and not have the multiply syntax available
+     * (because grail is invoked?; if e.g. 5*SECONDS throws an error, try duration(5, SECONDS)  */ 
+    public static TimeDuration duration(int value, TimeUnit unit) {
+        return new TimeDuration(unit.toMillis(value));
     }
 }

@@ -19,7 +19,7 @@ import brooklyn.entity.basic.DynamicGroup
 import brooklyn.entity.group.DynamicFabric
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
-import brooklyn.location.basic.GeneralPurposeLocation
+import brooklyn.location.basic.SimulatedLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.test.entity.TestEntity
 import brooklyn.util.internal.EntityStartUtils
@@ -34,7 +34,7 @@ public class AbstractGeoDnsServiceTest {
     private static final double WEST_LATITUDE = 37.43472, WEST_LONGITUDE = -121.89500;
     private static final double EAST_LATITUDE = 41.10361, EAST_LONGITUDE = -73.79583;
     
-    private static final Location WEST_PARENT = new GeneralPurposeLocation(
+    private static final Location WEST_PARENT = new SimulatedLocation(
         name: "West parent", latitude: WEST_LATITUDE, longitude: WEST_LONGITUDE);
     private static final Location WEST_CHILD = new SshMachineLocation(
         name: "West child", address: WEST_IP, parentLocation: WEST_PARENT); 
@@ -42,7 +42,7 @@ public class AbstractGeoDnsServiceTest {
         name: "West child with location", address: WEST_IP, parentLocation: WEST_PARENT,
         latitude: WEST_LATITUDE, longitude: WEST_LONGITUDE); 
     
-    private static final Location EAST_PARENT = new GeneralPurposeLocation(
+    private static final Location EAST_PARENT = new SimulatedLocation(
         name: "East parent", latitude: EAST_LATITUDE, longitude: EAST_LONGITUDE);
     private static final Location EAST_CHILD = new SshMachineLocation(
         name: "East child", address: EAST_IP, parentLocation: EAST_PARENT); 

@@ -12,7 +12,7 @@ import brooklyn.entity.webapp.OldJavaWebApp
 import brooklyn.event.adapter.ConfigSensorAdapter
 import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.event.basic.ConfiguredAttributeSensor
+import brooklyn.event.basic.BasicAttributeSensorAndConfigKey
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.flags.SetFromFlag
 
@@ -23,11 +23,11 @@ public class JBoss6Server extends OldJavaWebApp {
     private static final Logger log = LoggerFactory.getLogger(JBoss6Server.class)
 
 	@SetFromFlag("serverProfile")
-    public static final ConfiguredAttributeSensor<String>  SERVER_PROFILE = [ String, "jboss.serverProfile", "Profile used when running server", "standard" ] 
+    public static final BasicAttributeSensorAndConfigKey<String>  SERVER_PROFILE = [ String, "jboss.serverProfile", "Profile used when running server", "standard" ] 
     @SetFromFlag("portIncrement")
-    public static final ConfiguredAttributeSensor<Integer> PORT_INCREMENT = [ Integer, "jboss.portincrement", "Increment to be used for all jboss ports", 0 ]
+    public static final BasicAttributeSensorAndConfigKey<Integer> PORT_INCREMENT = [ Integer, "jboss.portincrement", "Increment to be used for all jboss ports", 0 ]
 	@SetFromFlag("clusterName")
-    public static final ConfiguredAttributeSensor<String> CLUSTER_NAME = [ String, "jboss.clusterName", "Identifier used to group JBoss instances", "" ]
+    public static final BasicAttributeSensorAndConfigKey<String> CLUSTER_NAME = [ String, "jboss.clusterName", "Identifier used to group JBoss instances", "" ]
   
     public JBoss6Server(Map flags=[:], Entity owner=null) {
         super(flags, owner)
