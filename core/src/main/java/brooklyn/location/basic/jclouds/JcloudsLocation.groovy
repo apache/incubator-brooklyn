@@ -129,7 +129,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             SshMachineLocation sshLocByHostname = new SshMachineLocation(
                     address:vmHostname, 
                     displayName:vmHostname,
-                    userName:allconf.userName, 
+                    username:allconf.userName, 
                     config:sshConfig);
 
             sshLocByHostname.setParentLocation(this)
@@ -277,7 +277,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         
         Map sshConfig = [:]
         if (allconf.sshPrivateKey) sshConfig.keyFiles = [ allconf.sshPrivateKey.absolutePath ]
-        SshMachineLocation sshLocByIp = new SshMachineLocation(address:vmIp, userName:allconf.userName, config:sshConfig);
+        SshMachineLocation sshLocByIp = new SshMachineLocation(address:vmIp, username:allconf.userName, config:sshConfig);
         ByteArrayOutputStream outStream = new ByteArrayOutputStream()
         ByteArrayOutputStream errStream = new ByteArrayOutputStream()
         int exitcode = sshLocByIp.run([out:outStream,err:errStream], "echo `curl --silent --retry 20 http://169.254.169.254/latest/meta-data/public-hostname`; exit")
