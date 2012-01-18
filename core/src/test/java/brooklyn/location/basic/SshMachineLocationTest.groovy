@@ -20,12 +20,8 @@ import com.google.common.io.Files
 public class SshMachineLocationTest {
     private SshMachineLocation host;
     
-    @BeforeMethod
-    public void setUpUnit() throws Exception {
-        host = new SshMachineLocation(address: InetAddress.getLocalHost());
-    }
-    @BeforeMethod(groups = "Integration")
-    public void setUpIntegration() throws Exception {
+    @BeforeMethod(alwaysRun=true)
+    public void setUp() throws Exception {
         host = new SshMachineLocation(address: InetAddress.getLocalHost());
     }
 
@@ -38,6 +34,12 @@ public class SshMachineLocationTest {
         def outString = new String(outStream.toByteArray())
         
         assertTrue outString.contains(expectedName), outString
+    }
+    
+    @Test(groups = "Integration", expectedExceptions=[IllegalStateException.class])
+    public void testSshRunWithInvalidUserFails() throws Exception {
+        SshMachineLocation badHost = new SshMachineLocation(username:"doesnotexist", address: InetAddress.getLocalHost());
+        badHost.run("whoami; exit");
     }
     
     // Note: requires `ssh localhost` to be setup such that no password is required    

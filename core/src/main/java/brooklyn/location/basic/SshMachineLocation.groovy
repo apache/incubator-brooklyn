@@ -19,7 +19,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public static final Logger LOG = LoggerFactory.getLogger(SshMachineLocation.class);
             
     @SetFromFlag('username')
-    private String user = null
+    private String user
     @SetFromFlag(nullable=false)
     private InetAddress address
     @SetFromFlag(nullable=false)
