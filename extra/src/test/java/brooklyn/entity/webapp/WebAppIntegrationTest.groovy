@@ -14,12 +14,10 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
-import brooklyn.entity.Application
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.basic.legacy.JavaApp
 import brooklyn.entity.webapp.jboss.JBoss6Server
 import brooklyn.entity.webapp.jboss.JBoss7Server
-import brooklyn.entity.webapp.tomcat.Tomcat7SshSetup
 import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
@@ -49,7 +47,8 @@ public class WebAppIntegrationTest {
     public static final int PORT_INCREMENT = 400
 
     // The owner application entity for these tests
-    Application application = new TestApplication()
+    TestApplication application = new TestApplication()
+    SoftwareProcessEntity entity
     
 	static { TimeExtras.init() }
 	
@@ -69,27 +68,33 @@ public class WebAppIntegrationTest {
     public void ensureTomcatIsShutDown() {
         Socket shutdownSocket = null;
         SocketException gotException = null;
-
-        boolean socketClosed = new Repeater("Checking Tomcat has shut down")
-            .repeat {
-                if (shutdownSocket) shutdownSocket.close();
-                try { shutdownSocket = new Socket(InetAddress.localHost, Tomcat7SshSetup.DEFAULT_FIRST_SHUTDOWN_PORT); }
-                catch (SocketException e) { gotException = e; return; }
-                gotException = null
+        Integer shutdownPort = entity?.getAttribute(TomcatServer.TOMCAT_SHUTDOWN_PORT)
+        
+        if (shutdownPort != null) {
+            boolean socketClosed = new Repeater("Checking Tomcat has shut down")
+                .repeat {
+                        if (shutdownSocket) shutdownSocket.close();
+                        try { shutdownSocket = new Socket(InetAddress.localHost, shutdownPort); }
+                        catch (SocketException e) { gotException = e; return; }
+                        gotException = null
+                    }
+                .every(100 * MILLISECONDS)
+                .until { gotException }
+                .limitIterationsTo(25)
+                .run();
+    
+            if (socketClosed == false) {
+                log.error "Tomcat did not shut down - this is a failure of the last test run";
+                log.warn "I'm sending a message to the Tomcat shutdown port";
+                OutputStreamWriter writer = new OutputStreamWriter(shutdownSocket.getOutputStream());
+                writer.write("SHUTDOWN\r\n");
+                writer.flush();
+                writer.close();
+                shutdownSocket.close();
+                throw new Exception("Last test run did not shut down Tomcat")
             }
-            .every(100 * MILLISECONDS)
-            .until { gotException }
-            .limitIterationsTo(25)
-            .run();
-
-        if (socketClosed == false) {
-            log.error "Tomcat did not shut down - this is a failure of the last test run";
-            OutputStreamWriter writer = new OutputStreamWriter(shutdownSocket.getOutputStream());
-            writer.write("SHUTDOWN\r\n");
-            writer.flush();
-            writer.close();
-            shutdownSocket.close();
-            throw new Exception("Last test run did not shut down Tomcat")
+        } else {
+            log.info "Cannot shutdown, because shutdown-port not set for $entity";
         }
     }
     
@@ -118,6 +123,7 @@ public class WebAppIntegrationTest {
      */
     @Test(groups = "Integration", dataProvider = "basicEntities")
     public void canStartAndStop(SoftwareProcessEntity entity) {
+        this.entity = entity
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         executeUntilSucceedsWithShutdown(timeout: 120*SECONDS, entity) {
             assertTrue entity.getAttribute(JavaApp.SERVICE_UP)
@@ -131,6 +137,7 @@ public class WebAppIntegrationTest {
      */
     @Test(groups = "Integration", dataProvider = "basicEntities")
     public void publishesRequestAndErrorCountMetrics(SoftwareProcessEntity entity) {
+        this.entity = entity
         entity.pollForHttpStatus = false
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         
@@ -170,6 +177,7 @@ public class WebAppIntegrationTest {
      */
     @Test(groups = "Integration", dataProvider = "basicEntities")
     public void publishesRequestsPerSecondMetric(SoftwareProcessEntity entity) {
+        this.entity = entity
         entity.pollForHttpStatus = false
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         
@@ -226,6 +234,7 @@ public class WebAppIntegrationTest {
      */
     @Test(groups = "Integration", dataProvider = "basicEntities")
     public void publishesZeroRequestsPerSecondMetricRepeatedly(SoftwareProcessEntity entity) {
+        this.entity = entity
         final int MAX_INTERVAL_BETWEEN_EVENTS = 1000 // events should publish every 500ms so this should be enough overhead
         final int NUM_CONSECUTIVE_EVENTS = 3
 
@@ -302,6 +311,7 @@ public class WebAppIntegrationTest {
     @Test(groups = "Integration", dataProvider = "entitiesWithWARAndURL")
     public void warDeployments(SoftwareProcessEntity entity, String war, 
 			String urlSubPathToWebApp, String urlSubPathToPageToQuery) {
+        this.entity = entity
         URL resource = getClass().getClassLoader().getResource(war)
         assertNotNull resource
         
@@ -318,6 +328,7 @@ public class WebAppIntegrationTest {
     @Test(groups = "Integration", dataProvider = "entitiesWithWARAndURL")
     public void warDeploymentsNamed(SoftwareProcessEntity entity, String war, 
 			String urlSubPathToWebApp, String urlSubPathToPageToQuery) {
+        this.entity = entity
         URL resource = getClass().getClassLoader().getResource(war)
         assertNotNull resource
         
