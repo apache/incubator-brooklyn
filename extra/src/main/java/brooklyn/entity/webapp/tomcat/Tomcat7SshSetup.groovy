@@ -1,9 +1,12 @@
 package brooklyn.entity.webapp.tomcat
 
+import static brooklyn.entity.webapp.PortPreconditions.checkPortValid
+
 import java.util.List
 import java.util.Map
 
 import brooklyn.entity.basic.Attributes
+import brooklyn.entity.webapp.PortPreconditions;
 import brooklyn.location.PortRange
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedJavaWebAppSetup
@@ -39,10 +42,10 @@ public class Tomcat7SshSetup extends SshBasedJavaWebAppSetup {
 //        String deployDir = "${runDir}/$DEFAULT_DEPLOY_SUBDIR"
 //        String logFileLocation = "$runDir/logs/catalina.out"
 
-        int jmxPort = machine.obtainPort(suggestedJmxPort)
-        int httpPort = machine.obtainPort(suggestedHttpPort)
-        int shutdownPort = machine.obtainPort(suggestedShutdownPort)
-        
+        int jmxPort = checkPortValid(machine.obtainPort(suggestedJmxPort), "jmxPort (suggested $suggestedJmxPort)")
+        int httpPort = checkPortValid(machine.obtainPort(suggestedHttpPort), "httpPort (suggested $suggestedHttpPort)")
+        int shutdownPort = checkPortValid(machine.obtainPort(suggestedShutdownPort), "shutdownPort (suggested $suggestedShutdownPort)")
+
         Tomcat7SshSetup result = new Tomcat7SshSetup(entity, machine)
         result.setJmxPort(jmxPort)
         result.setHttpPort(httpPort)

@@ -42,7 +42,10 @@ public class TomcatServerIntegrationTest {
 
     static boolean httpPortLeftOpen = false;
     private int oldHttpPort = -1;
-
+    
+    Application app
+    TomcatServer tc
+    
     @BeforeMethod(groups = [ "Integration" ])
     public void failIfHttpPortInUse() {
         if (isPortInUse(DEFAULT_HTTP_PORT, 5000L)) {
@@ -55,28 +58,33 @@ public class TomcatServerIntegrationTest {
     public void ensureTomcatIsShutDown() {
         Socket shutdownSocket = null;
         SocketException gotException = null;
-
-        boolean socketClosed = new Repeater("Checking Tomcat has shut down")
-            .repeat {
-		            if (shutdownSocket) shutdownSocket.close();
-		            try { shutdownSocket = new Socket(InetAddress.localHost, Tomcat7SshSetup.DEFAULT_FIRST_SHUTDOWN_PORT); }
-		            catch (SocketException e) { gotException = e; return; }
-		            gotException = null
-		        }
-            .every(100 * MILLISECONDS)
-            .until { gotException }
-            .limitIterationsTo(25)
-	        .run();
-
-        if (socketClosed == false) {
-            LOG.error "Tomcat did not shut down - this is a failure of the last test run";
-            LOG.warn "I'm sending a message to the Tomcat shutdown port";
-            OutputStreamWriter writer = new OutputStreamWriter(shutdownSocket.getOutputStream());
-            writer.write("SHUTDOWN\r\n");
-            writer.flush();
-            writer.close();
-            shutdownSocket.close();
-            throw new Exception("Last test run did not shut down Tomcat")
+        Integer shutdownPort = tc?.getAttribute(TomcatServer.TOMCAT_SHUTDOWN_PORT)
+        
+        if (shutdownPort != null) {
+            boolean socketClosed = new Repeater("Checking Tomcat has shut down")
+                .repeat {
+    		            if (shutdownSocket) shutdownSocket.close();
+    		            try { shutdownSocket = new Socket(InetAddress.localHost, shutdownPort); }
+    		            catch (SocketException e) { gotException = e; return; }
+    		            gotException = null
+    		        }
+                .every(100 * MILLISECONDS)
+                .until { gotException }
+                .limitIterationsTo(25)
+    	        .run();
+    
+            if (socketClosed == false) {
+                LOG.error "Tomcat did not shut down - this is a failure of the last test run";
+                LOG.warn "I'm sending a message to the Tomcat shutdown port";
+                OutputStreamWriter writer = new OutputStreamWriter(shutdownSocket.getOutputStream());
+                writer.write("SHUTDOWN\r\n");
+                writer.flush();
+                writer.close();
+                shutdownSocket.close();
+                throw new Exception("Last test run did not shut down Tomcat")
+            }
+        } else {
+            LOG.info "Cannot shutdown, because shutdown-port not set for $tc";
         }
     }
 
@@ -86,12 +94,16 @@ public class TomcatServerIntegrationTest {
         Thread t = new Thread({ try { for(;;) { Socket socket = listener.accept(); socket.close(); } } catch(Exception e) {} })
         t.start()
         try {
-            Application app = new TestApplication()
-            TomcatServer tc = new TomcatServer(owner:app, httpPort:DEFAULT_HTTP_PORT)
+            app = new TestApplication()
+            tc = new TomcatServer(owner:app, httpPort:DEFAULT_HTTP_PORT)
             Exception caught = null
             try {
                 tc.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
                 fail("Should have thrown start-exception")
+            } catch (IllegalArgumentException e) {
+                // LocalhostMachineProvisioningLocation does NetworkUtils.isPortAvailable, so get -1
+                caught = e
+                assertEquals e.message, "Invalid port value -1: httpPort (suggested $DEFAULT_HTTP_PORT)"
             } catch (EntityStartException e) {
                 caught = e
                 assertEquals e.message, "HTTP service on port ${DEFAULT_HTTP_PORT} failed"
@@ -108,8 +120,8 @@ public class TomcatServerIntegrationTest {
 	//TODO should define a generic mechanism for doing this    
 ////    @Test(groups = [ "Integration" ])
 //    public void createsPropertiesFilesWithEnvironmentVariables() {
-//        Application app = new TestApplication();
-//        TomcatServer tc = new TomcatServer(owner:app, httpPort:DEFAULT_HTTP_PORT);
+//        app = new TestApplication();
+//        tc = new TomcatServer(owner:app, httpPort:DEFAULT_HTTP_PORT);
 //        tc.setConfig(TomcatServer.PROPERTY_FILES.subKey("MYVAR1"),[akey:"aval",bkey:"bval"])
 //        tc.setConfig(TomcatServer.PROPERTY_FILES.subKey("MYVAR2"),[ckey:"cval",dkey:"dval"])
 //        tc.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
