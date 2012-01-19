@@ -1,85 +1,89 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>brooklyn</groupId>
-	<artifactId>brooklyn</artifactId>
-	<packaging>pom</packaging>
-	<version>0.3.0-SNAPSHOT</version>
-	<name>Brooklyn</name>
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>brooklyn</groupId>
+    <artifactId>brooklyn</artifactId>
+    <packaging>pom</packaging>
+    <version>0.3.0-SNAPSHOT</version>
+    <name>Brooklyn</name>
 
     <url>http://developers.cloudsoftcorp.com/</url>
 
-	<distributionManagement>
-		<repository>
-			<id>local-release</id>
-			<name>libs-release-local</name>
-			<url>http://ccweb.cloudsoftcorp.com/maven/libs-release-local/</url>
-		</repository>
-		<snapshotRepository>
-			<id>local-snapshot</id>
-			<name>libs-snapshot-local</name>
-			<url>http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/</url>
-			<uniqueVersion>true</uniqueVersion>
-		</snapshotRepository>
-		<site>
-			<id>local-documentation</id>
-			<url>scpexe://jenkins@releng3.cloudsoftcorp.com/home/jenkins/documentation/${project.groupId}-${project.version}/</url>
-		</site>
-	</distributionManagement>
+    <distributionManagement>
+        <repository>
+            <id>local-release</id>
+            <name>libs-release-local</name>
+            <url>http://ccweb.cloudsoftcorp.com/maven/libs-release-local/</url>
+        </repository>
+        <snapshotRepository>
+            <id>local-snapshot</id>
+            <name>libs-snapshot-local</name>
+            <url>http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/</url>
+            <uniqueVersion>true</uniqueVersion>
+        </snapshotRepository>
+        <site>
+            <id>local-documentation</id>
+            <url>
+                scpexe://jenkins@releng3.cloudsoftcorp.com/home/jenkins/documentation/${project.groupId}-${project.version}/
+            </url>
+        </site>
+    </distributionManagement>
 
-	<build>
-		<plugins>
-			<plugin>
-				<artifactId>maven-release-plugin</artifactId>
-				<configuration>
-					<tagNameFormat>release-@{project.version}</tagNameFormat>
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-release-plugin</artifactId>
+                <configuration>
+                    <tagNameFormat>release-@{project.version}</tagNameFormat>
                     <arguments>-DskipTests=true -PBrooklyn,Console,Launcher</arguments>
-				</configuration>
-			</plugin>
-		</plugins>
-		<extensions>
-			<extension>
-				<groupId>org.apache.maven.wagon</groupId>
-				<artifactId>wagon-ssh-external</artifactId>
-				<version>1.0</version>
-			</extension>
-		</extensions>
-	</build>
+                </configuration>
+            </plugin>
+        </plugins>
+        <extensions>
+            <extension>
+                <groupId>org.apache.maven.wagon</groupId>
+                <artifactId>wagon-ssh-external</artifactId>
+                <version>1.0</version>
+            </extension>
+        </extensions>
+    </build>
 
-	<profiles>
-		<profile>
-			<id>External</id>
-			<distributionManagement>
-				<repository>
-					<id>ssh-repository</id>
-					<url>scpexe://cruiser@releng1.cloudsoftcorp.com/var/www/downloads/maven2/releases</url>
-				</repository>
-				<site>
-					<id>developers.cloudsoftcorp.com</id>
-					<url>scpexe://cruiser@releng1.cloudsoftcorp.com/var/www/downloads/autodocs/${project.groupId}-${project.version}</url>
-				</site>
-			</distributionManagement>
-		</profile>
+    <profiles>
+        <profile>
+            <id>External</id>
+            <distributionManagement>
+                <repository>
+                    <id>ssh-repository</id>
+                    <url>scpexe://cruiser@releng1.cloudsoftcorp.com/var/www/downloads/maven2/releases</url>
+                </repository>
+                <site>
+                    <id>developers.cloudsoftcorp.com</id>
+                    <url>
+                        scpexe://cruiser@releng1.cloudsoftcorp.com/var/www/downloads/autodocs/${project.groupId}-${project.version}
+                    </url>
+                </site>
+            </distributionManagement>
+        </profile>
 
-		<profile>
-			<id>Default</id>
-			<activation>
-			    <activeByDefault>true</activeByDefault>
-			</activation>
-			<modules>
-				<module>parent</module>
-				<module>api</module>
-				<module>test-support</module>
-				<module>core</module>
-				<module>extra</module>
-				<module>gemfire-web-api</module>
-                		<module>gemfire</module>
-				<module>web-console</module>
-				<module>launcher</module>
-				<module>example</module>
-			</modules>
-		</profile>
+        <profile>
+            <id>Default</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <modules>
+                <module>parent</module>
+                <module>api</module>
+                <module>test-support</module>
+                <module>core</module>
+                <module>extra</module>
+                <module>gemfire-web-api</module>
+                <module>gemfire</module>
+                <module>web-console</module>
+                <module>launcher</module>
+                <module>example</module>
+            </modules>
+        </profile>
         <profile>
             <id>Essentials</id>
             <modules>
@@ -104,13 +108,13 @@
                 <module>gemfire</module>
             </modules>
         </profile>
-	<profile>
-		<id>Example</id>
-		<modules>
-			<module>example</module>
-		</modules>
-	</profile>
-        
+        <profile>
+            <id>Example</id>
+            <modules>
+                <module>example</module>
+            </modules>
+        </profile>
+
         <!-- for legacy compatibility, TODO delete when people aware of it -->
         <profile>
             <id>Brooklyn</id>
@@ -124,27 +128,15 @@
                 <module>gemfire</module>
             </modules>
         </profile>
-		<profile>
-			<id>Console</id>
-			<modules>
-                		<module>web-console</module>
-			</modules>
-		</profile>
+        <!-- END legacy compatibility -->
+
+        <!-- TODO organise below -->
         <profile>
-            <id>Launcher</id>
+            <id>Acceptance</id>
             <modules>
-                <module>launcher</module>
+                <module>acceptance</module>
             </modules>
         </profile>
-        <!-- END legacy compatibility -->
-        
-        <!-- TODO organise below -->
-		<profile>
-			<id>Acceptance</id>
-			<modules>
-				<module>acceptance</module>
-			</modules>
-		</profile>
         <profile>
             <id>Documentation</id>
             <reporting>
@@ -155,7 +147,7 @@
                         <version>2.4</version>
                         <reportSets>
                             <reportSet>
-                                <reports>           
+                                <reports>
                                     <report>index</report>
                                     <report>modules</report>
                                 </reports>
@@ -173,7 +165,7 @@
                             <author>false</author>
                             <quiet>true</quiet>
                             <aggregate>false</aggregate>
-                            <detectLinks/> 
+                            <detectLinks/>
                             <tags>
                                 <tag>
                                     <name>todo</name>
@@ -194,5 +186,5 @@
                 </plugins>
             </reporting>
         </profile>
-	</profiles>
+    </profiles>
 </project>
