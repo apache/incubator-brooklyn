@@ -341,6 +341,38 @@
         </pluginRepository>
     </pluginRepositories>
 
+    <profiles>
+      <profile>
+        <activation><property><name>skipShade</name></property></activation>
+        <id>shade</id>
+        <build>
+         <plugins>
+            <!-- with grails, for "skipShade", we set "development" env 
+                 when invoking grails, which is read in BuildConfig to make skinny war -->
+            <plugin>
+                <groupId>org.grails</groupId>
+                <artifactId>grails-maven-plugin</artifactId>
+                <version>${grails.version}</version>
+                <extensions>true</extensions>
+                <executions>
+                    <execution>
+                        <id>main</id>
+                        <goals>
+                            <!-- note: plugins are installed and classpath correctly tweaked by maven-compile! -->
+                            <goal>maven-compile</goal>
+                            <goal>maven-war</goal>
+                        </goals>
+                        <configuration>
+                            <env>development</env>
+                        </configuration>
+                    </execution>
+                </executions>
+          </plugin>
+         </plugins>
+        </build>
+      </profile>
+    </profiles>
+
     <build>
         <plugins>
             <plugin>
@@ -364,6 +396,9 @@
                             <goal>maven-compile</goal>
                             <goal>maven-war</goal>
                         </goals>
+                        <configuration>
+                            <env>production</env>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>maven-test</id>
