@@ -88,6 +88,20 @@
         </dependency>
     </dependencies>
 
+    <profiles>
+      <profile>
+        <activation><property><name>!skipShade</name></property></activation>
+        <id>shade</id>
+        <build>
+         <plugins>
+          <plugin>
+            <artifactId>maven-shade-plugin</artifactId>
+          </plugin>
+         </plugins>
+        </build>
+      </profile>
+    </profiles>
+
     <build>
         <plugins>
             <plugin>
@@ -128,15 +142,6 @@
                         <Main-class>brooklyn.launcher.Main</Main-class>
                     </instructions>
                 </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>maven-shade-plugin</artifactId>
-                <!--  the 'with-deps' plugin to be twice as large as is strictly necessary
-                        but it's worth it to have it so handy to have a standalone deployable 
-                        war embedded in a standalone executable jar; 
-                        maybe there is a more efficient way but seems not worth the effort 
-                        (esp inevitable maintenance/debug burden);
-                        NB: configuration of shade is in parent pom -->
             </plugin>
             <plugin> 
                 <artifactId>maven-site-plugin</artifactId> 
