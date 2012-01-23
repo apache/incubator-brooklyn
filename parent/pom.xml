@@ -915,6 +915,7 @@
                                     <outputDirectory>
                                         ${project.build.directory}/cobertura/dependency-sources
                                     </outputDirectory>
+                                    <failOnMissingClassifierArtifact>false</failOnMissingClassifierArtifact>
                                 </configuration>
                             </execution>
                             <execution>
