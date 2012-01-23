@@ -1,3 +1,5 @@
+import grails.util.Environment;
+
 grails.project.class.dir = "target/classes"
 grails.project.test.class.dir = "target/test-classes"
 grails.project.test.reports.dir = "target/test-reports"
@@ -16,7 +18,7 @@ grails.project.dependency.resolution = {
         // (which you may see if you add brooklyn-extra below and try grails run-app) ... but don't work 
         // "xml-apis", "xmlParserAPIs", "xalan"
     }
-    log "info" // log level of Ivy resolver, either 'error', 'warn', 'info', 'debug' or 'verbose'
+    log "warn" // log level of Ivy resolver, either 'error', 'warn', 'info', 'debug' or 'verbose'
     repositories {
         grailsPlugins()
         grailsHome()
@@ -31,13 +33,20 @@ grails.project.dependency.resolution = {
     }
     dependencies {
         // specify dependencies here under either 'build', 'compile', 'runtime', 'test' or 'provided' scopes eg.
-        compile 'brooklyn:brooklyn-api:${appVersion}', transitive:false 
-        compile 'brooklyn:brooklyn-core:${appVersion}', transitive:false
-        compile 'brooklyn:brooklyn-extra:${appVersion}', transitive:false
+        compile 'brooklyn:brooklyn-api:'+appVersion, transitive:false 
+        compile 'brooklyn:brooklyn-core:'+appVersion, transitive:false
+        compile 'brooklyn:brooklyn-extra:'+appVersion, transitive:false
         
         //instead of transitive:false the following might work better:
 //        excludes "org.codehaus.groovy","org.jclouds"
         
         
+    }
+}
+
+if (Environment.current==Environment.DEVELOPMENT) {
+    // in "dev" environment build a small WAR (set by maven if skipShade is true)
+    grails.war.dependencies = {
+        fileset(dir: "${grailsSettings.baseDir}/lib") { }
     }
 }
