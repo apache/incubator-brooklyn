@@ -20,7 +20,7 @@ public class WebAppRunnerTest {
     public static final Logger log = LoggerFactory.getLogger(WebAppRunnerTest.class);
             
     private static TimeDuration TIMEOUT_MS;
-	static { TIMEOUT_MS = 5*SECONDS }
+    static { TIMEOUT_MS = 30*SECONDS }
     
     /**
      * This test requires the brooklyn.war to work. (Should be placed by maven build.)

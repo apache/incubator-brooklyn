@@ -47,17 +47,19 @@
         <plantuml.version>6121</plantuml.version>
         <ant.version>1.8.2</ant.version>
 
-        <groovy.version>1.8.2</groovy.version>
+        <groovy.version>1.8.4</groovy.version>
         <testng.version>6.3.1</testng.version>
         <mockito.version>1.8.4</mockito.version>
         <mortbay.jetty.version>6.1.26</mortbay.jetty.version>
-        <slf4j.version>1.5.11</slf4j.version>
+        <slf4j.version>1.5.11</slf4j.version>  
+        <!-- NB: slf4j 1.6.x seems to change some signatures which breaks e.g. grails 1.3; 
+             grails may ask for 1.5.8 but that's okay -->
         <jsch.version>0.1.44-1</jsch.version>
         <xstream.version>1.3.1</xstream.version>
         <jansi.version>1.2.1</jansi.version>
         <guava.version>11.0.1</guava.version>
         <ivy.version>2.2.0</ivy.version>
-        <jclouds.version>1.3.0</jclouds.version>
+        <jclouds.version>1.3.1</jclouds.version>
         <spring.version>3.0.5.RELEASE</spring.version>
 
         <includedTestGroups />
