@@ -125,7 +125,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
 
             String vmHostname = getPublicHostname(node, allconf)
             Map sshConfig = [:]
-            if (allconf.sshPrivateKey) sshConfig.keyFiles = [ allconf.sshPrivateKey.absolutePath ]
+            if (allconf.sshPrivateKey) sshConfig.keyFiles = [ fileAsString(allconf.sshPrivateKey) ]
             SshMachineLocation sshLocByHostname = new SshMachineLocation(
                     address:vmHostname, 
                     displayName:vmHostname,
@@ -156,6 +156,13 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         if (o in File) return o;
         if (o==null) return o;
         return new File(o.toString());
+    }
+
+    private static String fileAsString(Object o) {
+        if (o in String) return o;
+        if (o in File) return ((File)o).absolutePath;
+        if (o==null) return o;
+        return o.toString()
     }
 
     void release(SshMachineLocation machine) {
@@ -276,7 +283,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         String vmIp = JcloudsUtil.getFirstReachableAddress(node);
         
         Map sshConfig = [:]
-        if (allconf.sshPrivateKey) sshConfig.keyFiles = [ allconf.sshPrivateKey.absolutePath ]
+        if (allconf.sshPrivateKey) sshConfig.keyFiles = [ fileAsString(allconf.sshPrivateKey) ]
         SshMachineLocation sshLocByIp = new SshMachineLocation(address:vmIp, username:allconf.userName, config:sshConfig);
         ByteArrayOutputStream outStream = new ByteArrayOutputStream()
         ByteArrayOutputStream errStream = new ByteArrayOutputStream()
