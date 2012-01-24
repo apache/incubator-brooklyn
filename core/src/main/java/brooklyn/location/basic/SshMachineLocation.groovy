@@ -15,15 +15,16 @@ import com.google.common.base.Preconditions
  * Operations on a machine that is accessible via ssh.
  */
 public class SshMachineLocation extends AbstractLocation implements MachineLocation, PortSupplier {
-    
-    public static final Logger LOG = LoggerFactory.getLogger(SshMachineLocation.class);
+    public static final Logger LOG = LoggerFactory.getLogger(SshMachineLocation.class)
             
     @SetFromFlag('username')
-    private String user
-    @SetFromFlag(nullable=false)
-    private InetAddress address
-    @SetFromFlag(nullable=false)
-    private Map config
+    String user
+
+    @SetFromFlag(nullable = false)
+    InetAddress address
+
+    @SetFromFlag
+    Map config
 
     private final Set<Integer> ports = [] as HashSet
 
@@ -36,7 +37,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         
         super.configure(properties)
 
-        Preconditions.checkNotNull(address, "address is required for SshMachineLocation");
+        Preconditions.checkNotNull(address, "address is required for SshMachineLocation")
         String host = (user ? "${user}@" : "") + address.hostName
         
         if (name == null) {
@@ -50,18 +51,24 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         run(props, [ command ], env)
     }
 
-    /** convenience for running a script, returning the result code.
-     * <p>
-     * currently runs it in an interactive/login shell,
-     * by passing each as a line to bash. to terminate early use:
-     * <code>foo || exit 1</code>
-     * <p>
-     * it may be desirable instead, in some situations, to wrap as
+    /**
+     * Convenience for running a script, returning the result code.
+     *
+     * Currently runs the commands in an interactive/login shell
+     * by passing each as a line to bash. To terminate early, use:
+     * <pre>
+     * foo || exit 1
+     * </pre>
+     * It may be desirable instead, in some situations, to wrap as:
+     * <pre>
      * { line1 ; } && { line2 ; } ... 
-     * and run as a single command (possibly not as an interacitve/login shell),
-     * to make it exit on any command which returns non-zero
+     * </pre>
+     * and run as a single command (possibly not as an interacitve/login
+     * shell) causing the script to exit on the first command which fails.
+     *
+     * @todo Perhaps add a flag {@code exitIfAnyNonZero} to toggle between
+     *       the above modes ?
      */
-	//TODO perhaps a flag exitIfAnyNonZero to toggle between the above modes ?
     public int run(Map props=[:], List<String> commands, Map env=[:]) {
         Preconditions.checkNotNull address, "host address must be specified for ssh"
         if (!commands) return 0
@@ -69,7 +76,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         if (!user) user = System.getProperty "user.name"
         Map args = [ user:user, host:address.hostName ]
         args << config
-        SshJschTool ssh = new SshJschTool(args);
+        SshJschTool ssh = new SshJschTool(args)
         ssh.connect()
         int result = ssh.execShell props, commands, env
         ssh.disconnect()
@@ -87,7 +94,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 		copyTo new FileInputStream(src), src.length(), destination 
     }
 	public int copyTo(Map props=[:], InputStream src, String destination) {
-		copyTo(props, src, -1, destination);
+		copyTo(props, src, -1, destination)
 	}
 	public int copyTo(Map props=[:], InputStream src, long filesize, String destination) {
 		if (filesize==-1) {
@@ -96,7 +103,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 			src = new ByteArrayInputStream(bytes)
 		}
 		
-        if (!user) user=System.getProperty "user.name"
+        if (!user) user = System.getProperty "user.name"
         Map args = [user:user, host:address.hostName]
         args << config
         SshJschTool ssh = new SshJschTool(args)
@@ -110,7 +117,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public int copyFrom(Map props=[:], String remote, String local) {
         Preconditions.checkNotNull address, "host address must be specified for scp"
 
-        if (!user) user=System.getProperty "user.name"
+        if (!user) user = System.getProperty "user.name"
         Map args = [user:user, host:address.hostName]
         args << config
         SshJschTool ssh = new SshJschTool(args)
@@ -122,13 +129,15 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
     @Override
     public String toString() {
-        return address;
+        return address
     }
 
-    // @see #obtainPort(PortRange)
-    // @see BasicPortRange#ANY_HIGH_PORT
-    // TODO Does not yet check if the port really is free on this machine
+    /**
+     * @see #obtainPort(PortRange)
+     * @see BasicPortRange#ANY_HIGH_PORT
+     */
     public boolean obtainSpecificPort(int portNumber) {
+	    // TODO Does not yet check if the port really is free on this machine
         if (ports.contains(portNumber)) {
             return false
         } else {
@@ -139,31 +148,31 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
     public int obtainPort(PortRange range) {
         for (int p: range)
-            if (obtainSpecificPort(p)) return p;
+            if (obtainSpecificPort(p)) return p
          LOG.debug("unable to find port in {} on {}; returning -1", range, this)
-         return -1;
+         return -1
     }
 
     public void releasePort(int portNumber) {
-        ports.remove((Object) portNumber);
+        ports.remove((Object) portNumber)
     }
 
     public boolean isSshable() {
-        String cmd = "date";
+        String cmd = "date"
         try {
             int result = run(cmd)
             if (result == 0) {
-                return true;
+                return true
             } else {
-                LOG.debug("Not reachable: $this, executing `$cmd`, exit code $result");
-                return false;
+                LOG.debug("Not reachable: $this, executing `$cmd`, exit code $result")
+                return false
             }
         } catch (IllegalStateException e) {
-            LOG.debug("Exception checking if $this is reachable; assuming not", e);
-            return false;
+            LOG.debug("Exception checking if $this is reachable; assuming not", e)
+            return false
         } catch (IOException e) {
-            LOG.debug("Exception checking if $this is reachable; assuming not", e);
-            return false;
+            LOG.debug("Exception checking if $this is reachable; assuming not", e)
+            return false
         }
     }
 }

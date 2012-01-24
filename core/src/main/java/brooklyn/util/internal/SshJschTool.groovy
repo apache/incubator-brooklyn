@@ -108,7 +108,7 @@ public class SshJschTool {
         if (publicKey && privateKey) {
             jsch.addIdentity(privateKey, publicKey, null)
         }
-        keyFiles.each { if (new File(it).exists()) { jsch.addIdentity(it) } }
+        keyFiles.each { String file -> if (new File(file).exists()) jsch.addIdentity(file) }
         session = jsch.getSession(user, host, port)
         session.setConfig((Hashtable) config)
 
