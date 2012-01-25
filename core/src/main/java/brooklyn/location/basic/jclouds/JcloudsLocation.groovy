@@ -48,7 +48,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     
     protected void configure(Map properties) {
         super.configure(properties)
-        if (!name) name = conf.providerLocationId
+        if (!name) name = conf.providerLocationId ?: "default";
 	}
     
     public Map getConf() { return leftoverProperties; }
@@ -223,7 +223,9 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             templateBuilder.imageId(properties.defaultImageId);
         }
 
-        templateBuilder.locationId(providerLocationId);
+        if (providerLocationId!=null) {
+            templateBuilder.locationId(providerLocationId);
+        }
         
         Template template = templateBuilder.build();
         TemplateOptions options = template.getOptions();

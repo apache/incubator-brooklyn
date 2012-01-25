@@ -7,13 +7,13 @@ import java.util.Map
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.demo.Locations;
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.group.Cluster
 import brooklyn.entity.nosql.gemfire.GemfireFabric
 import brooklyn.entity.nosql.gemfire.GemfireServer
 import brooklyn.launcher.BrooklynLauncher
 import brooklyn.location.Location
+import brooklyn.location.basic.CommandLineLocations;
 
 class GemfireExample extends AbstractApplication {
     
@@ -29,7 +29,7 @@ class GemfireExample extends AbstractApplication {
     private static final File GEMFIRE_JAR_FILE = new File("src/main/resources/gemfire/springtravel-datamodel.jar")
     private static final String GEMFIRE_INSTALL_DIR = "/Users/aled/temp/gemfire"//"/gemfire"
     
-    public static final List<String> DEFAULT_LOCATIONS = [ Locations.LOCALHOST, Locations.LOCALHOST ]
+    public static final List<String> DEFAULT_LOCATIONS = [ CommandLineLocations.LOCALHOST, CommandLineLocations.LOCALHOST ]
 
     final GemfireFabric fabric
     
@@ -47,7 +47,7 @@ class GemfireExample extends AbstractApplication {
     
     public static void main(String[] argv) {
         // Parse arguments for location ids and resolve each into a location
-        List<Location> locations = Locations.getLocationsById(Arrays.asList(argv) ?: DEFAULT_LOCATIONS)
+        List<Location> locations = CommandLineLocations.getLocationsById(Arrays.asList(argv) ?: DEFAULT_LOCATIONS)
 
         // Initialize the Spring Travel application entity
         GemfireExample app = new GemfireExample(name:'gemfire-wide-area-example',

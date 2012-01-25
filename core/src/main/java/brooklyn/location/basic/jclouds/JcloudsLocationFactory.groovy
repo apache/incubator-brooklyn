@@ -78,10 +78,11 @@ class JcloudsLocationFactory {
     }
 
     public JcloudsLocation newLocation(String locationId) {
-        Map locSpecifics = locationSpecificConf.get(conf.provider)?.get(locationId)
+        Map locSpecifics = locationId!=null ? locationSpecificConf.get(conf.provider)?.get(locationId) : [:]
         Map allconf = [:]
         allconf << conf
-        allconf.providerLocationId = locationId
+        if (locationId!=null)
+            allconf.providerLocationId = locationId
         allconf << (locSpecifics ?: [:])
         return new JcloudsLocation(allconf);
     }

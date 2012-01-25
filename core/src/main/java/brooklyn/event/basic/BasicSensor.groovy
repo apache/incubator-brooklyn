@@ -207,7 +207,7 @@ public class PortAttributeSensorAndConfigKey extends AttributeSensorAndConfigKey
                 return v;
             }
         }
-        LOG.info(""+entity+" ports not applicable to non-server location, ignoring "+getName());
+        LOG.info(""+entity+" ports not applicable, or not yet applicable, in location "+entity.locations+", ignoring "+getName());
         return null
     }
     
