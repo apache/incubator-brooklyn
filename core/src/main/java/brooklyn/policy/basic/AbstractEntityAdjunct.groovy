@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.Sensor
+import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener
 import brooklyn.management.ManagementContext
 import brooklyn.management.SubscriptionContext
