@@ -9,13 +9,16 @@ import java.util.concurrent.ExecutionException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.enricher.CustomAggregatingEnricher
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
-import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.Entities
+import brooklyn.entity.trait.Changeable
 import brooklyn.entity.trait.Startable
+import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.Location
 import brooklyn.management.Task
-import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.task.ParallelTask
 
 import com.google.common.base.Preconditions
@@ -27,6 +30,8 @@ import com.google.common.base.Preconditions
 public class DynamicFabric extends AbstractEntity implements Startable {
     private static final Logger logger = LoggerFactory.getLogger(DynamicFabric)
 
+    public static final BasicAttributeSensor<Integer> FABRIC_SIZE = [ Integer, "fabric.size", "Fabric size" ]
+    
     @SetFromFlag
     Closure<Entity> newEntity
 
@@ -39,6 +44,8 @@ public class DynamicFabric extends AbstractEntity implements Startable {
     int initialSize
     //FIXME deprecate, ensure isn't used anywhere
     Map createFlags
+    
+    private CustomAggregatingEnricher fabricSizeEnricher
 
     /**
      * Instantiate a new DynamicFabric.
@@ -46,11 +53,12 @@ public class DynamicFabric extends AbstractEntity implements Startable {
      * Valid properties are:
      * <ul>
      * <li>newEntity - a {@link Closure} that creates an {@link Entity} that implements {@link Startable}, taking the {@link Map}
-     * of properties from this cluster as an argument. This property is mandatory.
+     * of properties from this fabric as an argument, or the {@link Map} of properties and the owning {link Entity} 
+     * (useful for chaining/nested Closures).  This property is mandatory.
      * </ul>
      *
-     * @param properties the properties of the cluster and any new entity.
-     * @param owner the entity that owns this cluster (optional)
+     * @param properties the properties of the fabric and any new entity.
+     * @param owner the entity that owns this fabric (optional)
      */
     public DynamicFabric(Map properties = [:], Entity owner = null) {
         super(properties, owner)
@@ -59,6 +67,9 @@ public class DynamicFabric extends AbstractEntity implements Startable {
         Preconditions.checkArgument newEntity in Closure, "'newEntity' must be a closure"
         
         createFlags = properties
+        
+        fabricSizeEnricher = CustomAggregatingEnricher.getSummingEnricher(Collections.emptyList(), Changeable.GROUP_SIZE, FABRIC_SIZE)
+        addEnricher(fabricSizeEnricher)
         
         setAttribute(SERVICE_UP, false)
     }
@@ -124,6 +135,8 @@ public class DynamicFabric extends AbstractEntity implements Startable {
         Preconditions.checkNotNull entity, "newEntity call returned null"
         Preconditions.checkState entity instanceof Entity, "newEntity call returned an object that is not an Entity"
         Preconditions.checkState entity instanceof Startable, "newEntity call returned an object that is not Startable"
+        
+        fabricSizeEnricher.addProducer(entity)
 
         return entity
     }

@@ -57,6 +57,27 @@ class DynamicFabricTest {
     }
     
     @Test
+    public void testSizeEnricher() {
+        Collection<Location> locs = [ new SimulatedLocation(), new SimulatedLocation(), new SimulatedLocation() ]
+        Application app = new AbstractApplication() {}
+        DynamicFabric fabric = new DynamicFabric(newEntity:{ fabricProperties, owner ->
+            return new DynamicCluster(owner:owner, initialSize:0,
+                newEntity:{ clusterProperties -> return new TestEntity(clusterProperties) })
+            }, app)
+        
+        fabric.start(locs)
+        
+        int i = 0, total = 0
+        
+        assertEquals(fabric.ownedChildren.size(), locs.size(), Joiner.on(",").join(fabric.ownedChildren))
+        fabric.ownedChildren.each { Cluster child ->
+            total += ++i
+            child.resize(i)
+        }
+        assertEquals(fabric.getAttribute(DynamicFabric.FABRIC_SIZE), total)
+    }
+    
+    @Test
     public void testDynamicFabricStartsEntitiesInParallel() {
         List<CountDownLatch> startupLatches = [] as CopyOnWriteArrayList<CountDownLatch>
         Application app = new AbstractApplication() {}
