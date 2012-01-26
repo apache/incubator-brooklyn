@@ -25,8 +25,6 @@ import brooklyn.util.internal.EntityStartUtils
 public interface Cluster extends Group, Startable, Resizable {
     @SetFromFlag('initialSize')
     BasicConfigKey<Integer> INITIAL_SIZE = [ Integer, "cluster.initial.size", "Initial cluster size", 0 ]
-
-    BasicAttributeSensor<String> CLUSTER_SIZE = [ Integer, "cluster.size", "Cluster size" ]
 }
 
 public abstract class ClusterFromTemplate extends  AbstractGroup implements Cluster {
@@ -60,8 +58,7 @@ public abstract class ClusterFromTemplate extends  AbstractGroup implements Clus
 
         log.debug "starting $this cluster with properties {} and size $initialSize in $locs"
 
-        int newNodes = initialSize - members.size()
-        if (newNodes>0) grow(newNodes)
+        if (initialSize>members.size()) resize(initialSize)
         else {
             log.info "start of $this cluster skipping call to start with size $initialSize because size is currently {}", children.size()
         }
@@ -80,6 +77,7 @@ public abstract class ClusterFromTemplate extends  AbstractGroup implements Clus
         int newNodes = newSize - members.size()
         if (newNodes>0) grow(newNodes)
         else if (newNodes<0) shrink(-newNodes);
+        setAttribute(CLUSTER_SIZE, members.size())
         return members.size()
     }
 }
