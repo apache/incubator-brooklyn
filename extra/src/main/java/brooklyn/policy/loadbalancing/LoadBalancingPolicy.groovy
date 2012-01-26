@@ -81,6 +81,8 @@ public class LoadBalancingPolicy extends AbstractPolicy implements SensorEventLi
     }
     
     private void onContainerAdded(Entity newContainer, boolean rebalance) {
+        Preconditions.checkArgument(newContainer instanceof Balanceable, "Added container must implement Balanceable")
+        
         // Low and high thresholds for the metric we're interested in are assumed to be present
         // in the container's configuration.
         Map<String, ConfigKey> configKeys = ((AbstractEntity) newContainer).getConfigKeys()
@@ -98,8 +100,8 @@ public class LoadBalancingPolicy extends AbstractPolicy implements SensorEventLi
         model.addContainer(newContainer, lowThreshold, highThreshold)
         
         // Take heed of any extant items.
-        for (Entity item : ((Group) newContainer).getMembers())
-            onItemAdded(item, false)
+        for (Movable item : ((Balanceable) newContainer).getBalanceableItems()) 
+            onItemAdded((Entity) item, false)
         
         if (rebalance) strategy.rebalance()
     }
@@ -110,6 +112,8 @@ public class LoadBalancingPolicy extends AbstractPolicy implements SensorEventLi
     }
     
     private void onItemAdded(Entity item, Entity parentContainer, boolean rebalance) {
+        Preconditions.checkArgument(item instanceof Movable, "Added item must implement Movable")
+        
         subscribe(item, metric, this)
         
         // Update the model, including the current metric value (if any).
