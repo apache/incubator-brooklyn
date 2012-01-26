@@ -9,6 +9,6 @@ import java.util.Set;
  */
 public interface Balanceable<ItemType extends Movable> {
     
-    public Set<ItemType> getItems();
+    public Set<ItemType> getBalanceableItems();
     
 }
