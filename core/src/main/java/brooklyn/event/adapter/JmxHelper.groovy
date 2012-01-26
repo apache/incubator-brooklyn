@@ -192,13 +192,13 @@ public class JmxHelper {
             if (changed) {
                 LOG.warn "JMX object {} not found at {}", objectName.canonicalName, url
             }
-			return null
-		} else {
+            return null
+        } else {
             notFoundMBeans.remove(objectName)
-    		ObjectInstance bean = beans.find { true }
-    		return bean
-		}
-	}
+            ObjectInstance bean = beans.find { true }
+            return bean
+        }
+    }
 
     public void checkMBeanExistsEventually(ObjectName objectName, long timeoutMillis) {
         checkMBeanExistsEventually(objectName, timeoutMillis*TimeUnit.MILLISECONDS)
