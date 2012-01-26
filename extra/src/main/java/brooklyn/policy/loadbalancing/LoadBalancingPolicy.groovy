@@ -27,14 +27,10 @@ public class LoadBalancingPolicy extends AbstractPolicy {
     private final String highThresholdConfigKeyName
     private final BalanceablePoolModel<Entity, Entity> model
     private final BalancingStrategy<Entity, ?> strategy
-    private Group containerPool
+    private BalanceableWorkerPool poolEntity
     
     private final SensorEventListener<?> eventHandler = new SensorEventListener<Object>() {
         public void onEvent(SensorEvent<?> event) {
-            // Silently swallow events received after this policy has been destroyed.
-            if (LoadBalancingPolicy.this.isDestroyed())
-                return
-            
             Entity source = event.getSource()
             Object value = event.getValue()
             
@@ -42,13 +38,18 @@ public class LoadBalancingPolicy extends AbstractPolicy {
                 case metric:
                     onItemMetricUpdate(source, ((Number) value).doubleValue(), true)
                     break
-                case AbstractGroup.MEMBER_ADDED:
-                    if (source == containerPool) onContainerAdded((Entity) value, true)
-                    else onItemAdded((Entity) value, true)
+                case BalanceableWorkerPool.CONTAINER_ADDED:
+                    onContainerAdded((Entity) value, true)
                     break
-                case AbstractGroup.MEMBER_REMOVED:
-                    if (source == containerPool) onContainerRemoved((Entity) value, true)
-                    else onItemRemoved((Entity) value, true)
+                case BalanceableWorkerPool.CONTAINER_REMOVED:
+                    onContainerRemoved((Entity) value, true)
+                    break
+                case BalanceableWorkerPool.ITEM_ADDED:
+                    Entity parentContainer = null // TODO
+                    onItemAdded((Entity) value, parentContainer, true)
+                    break
+                case BalanceableWorkerPool.ITEM_REMOVED:
+                    onItemRemoved((Entity) value, true)
                     break
             }
         }
@@ -67,22 +68,27 @@ public class LoadBalancingPolicy extends AbstractPolicy {
     
     @Override
     public void setEntity(EntityLocal entity) {
-        Preconditions.checkArgument(entity instanceof Group, "Provided entity must be a Group of balanceable containers")
+        Preconditions.checkArgument(entity instanceof BalanceableWorkerPool, "Provided entity must be a BalanceableWorkerPool")
         super.setEntity(entity)
-        this.containerPool = (Group) entity
+        this.poolEntity = (BalanceableWorkerPool) entity
         
         // Detect when containers are added to or removed from the pool.
-        subscribe(containerPool, AbstractGroup.MEMBER_ADDED, eventHandler)
-        subscribe(containerPool, AbstractGroup.MEMBER_REMOVED, eventHandler)
+        subscribe(poolEntity, BalanceableWorkerPool.CONTAINER_ADDED, eventHandler)
+        subscribe(poolEntity, BalanceableWorkerPool.CONTAINER_REMOVED, eventHandler)
+        subscribe(poolEntity, BalanceableWorkerPool.ITEM_ADDED, eventHandler)
+        subscribe(poolEntity, BalanceableWorkerPool.ITEM_REMOVED, eventHandler)
         
         // Take heed of any extant containers.
-        for (Entity container : containerPool.getMembers())
+        for (Entity container : getContainerGroup().getMembers())
             onContainerAdded(container, false)
         
         strategy.rebalance()
     }
     
-    private void onContainerAdded(Entity newContainer, boolean rebalance) {
+    protected Group getContainerGroup() { return poolEntity.getContainerGroup() }
+    protected Group getItemGroup() { return poolEntity.getItemGroup() }
+    
+    private void onContainerAdded(Entity newContainer, boolean rebalanceNow) {
         Preconditions.checkArgument(newContainer instanceof Balanceable, "Added container must implement Balanceable")
         
         // Low and high thresholds for the metric we're interested in are assumed to be present
@@ -105,15 +111,15 @@ public class LoadBalancingPolicy extends AbstractPolicy {
         for (Movable item : ((Balanceable) newContainer).getBalanceableItems()) 
             onItemAdded((Entity) item, false)
         
-        if (rebalance) strategy.rebalance()
+        if (rebalanceNow) strategy.rebalance()
     }
     
-    private void onContainerRemoved(Entity oldContainer, boolean rebalance) {
+    private void onContainerRemoved(Entity oldContainer, boolean rebalanceNow) {
         model.removeContainer(oldContainer)
-        if (rebalance) strategy.rebalance()
+        if (rebalanceNow) strategy.rebalance()
     }
     
-    private void onItemAdded(Entity item, Entity parentContainer, boolean rebalance) {
+    private void onItemAdded(Entity item, Entity parentContainer, boolean rebalanceNow) {
         Preconditions.checkArgument(item instanceof Movable, "Added item must implement Movable")
         
         subscribe(item, metric, eventHandler)
@@ -125,18 +131,18 @@ public class LoadBalancingPolicy extends AbstractPolicy {
         else
             model.addItem(item, parentContainer, currentValue.doubleValue())
         
-        if (rebalance) strategy.rebalance()
+        if (rebalanceNow) strategy.rebalance()
     }
     
-    private void onItemRemoved(Entity item, boolean rebalance) {
+    private void onItemRemoved(Entity item, boolean rebalanceNow) {
         unsubscribe(item)
         model.removeItem(item)
-        if (rebalance) strategy.rebalance()
+        if (rebalanceNow) strategy.rebalance()
     }
     
-    private void onItemMetricUpdate(Entity item, double newValue, boolean rebalance) {
+    private void onItemMetricUpdate(Entity item, double newValue, boolean rebalanceNow) {
         model.updateItemWorkrate(item, newValue)
-        if (rebalance) strategy.rebalance()
+        if (rebalanceNow) strategy.rebalance()
     }
     
 }
