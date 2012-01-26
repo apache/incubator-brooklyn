@@ -18,7 +18,7 @@ import brooklyn.policy.basic.AbstractPolicy
 
 import com.google.common.base.Preconditions
 
-public class LoadBalancingPolicy extends AbstractPolicy implements SensorEventListener<Object> {
+public class LoadBalancingPolicy extends AbstractPolicy {
     
     private static final Logger LOG = LoggerFactory.getLogger(LoadBalancingPolicy.class)
     
@@ -29,6 +29,30 @@ public class LoadBalancingPolicy extends AbstractPolicy implements SensorEventLi
     private final BalancingStrategy<Entity, ?> strategy
     private Group containerPool
     
+    private final SensorEventListener<?> eventHandler = new SensorEventListener<Object>() {
+        public void onEvent(SensorEvent<?> event) {
+            // Silently swallow events received after this policy has been destroyed.
+            if (LoadBalancingPolicy.this.isDestroyed())
+                return
+            
+            Entity source = event.getSource()
+            Object value = event.getValue()
+            
+            switch (event.getSensor()) {
+                case metric:
+                    onItemMetricUpdate(source, ((Number) value).doubleValue(), true)
+                    break
+                case AbstractGroup.MEMBER_ADDED:
+                    if (source == containerPool) onContainerAdded((Entity) value, true)
+                    else onItemAdded((Entity) value, true)
+                    break
+                case AbstractGroup.MEMBER_REMOVED:
+                    if (source == containerPool) onContainerRemoved((Entity) value, true)
+                    else onItemRemoved((Entity) value, true)
+                    break
+            }
+        }
+    }
     
     public LoadBalancingPolicy(Map properties = [:],
         AttributeSensor<? extends Number> metric, BalanceablePoolModel<Entity, Entity> model) {
@@ -48,37 +72,14 @@ public class LoadBalancingPolicy extends AbstractPolicy implements SensorEventLi
         this.containerPool = (Group) entity
         
         // Detect when containers are added to or removed from the pool.
-        subscribe(containerPool, AbstractGroup.MEMBER_ADDED, this)
-        subscribe(containerPool, AbstractGroup.MEMBER_REMOVED, this)
+        subscribe(containerPool, AbstractGroup.MEMBER_ADDED, eventHandler)
+        subscribe(containerPool, AbstractGroup.MEMBER_REMOVED, eventHandler)
         
         // Take heed of any extant containers.
         for (Entity container : containerPool.getMembers())
             onContainerAdded(container, false)
         
         strategy.rebalance()
-    }
-    
-    public void onEvent(SensorEvent<?> event) {
-        // Silently swallow events received after this policy has been destroyed.
-        if (isDestroyed())
-            return
-        
-        Entity source = event.getSource()
-        Object value = event.getValue()
-        
-        switch (event.getSensor()) {
-            case metric:
-                onItemMetricUpdate(source, ((Number) value).doubleValue(), true)
-                break
-            case AbstractGroup.MEMBER_ADDED:
-                if (source == containerPool) onContainerAdded((Entity) value, true)
-                else onItemAdded((Entity) value, true)
-                break
-            case AbstractGroup.MEMBER_REMOVED:
-                if (source == containerPool) onContainerRemoved((Entity) value, true)
-                else onItemRemoved((Entity) value, true)
-                break
-        }
     }
     
     private void onContainerAdded(Entity newContainer, boolean rebalance) {
@@ -115,7 +116,7 @@ public class LoadBalancingPolicy extends AbstractPolicy implements SensorEventLi
     private void onItemAdded(Entity item, Entity parentContainer, boolean rebalance) {
         Preconditions.checkArgument(item instanceof Movable, "Added item must implement Movable")
         
-        subscribe(item, metric, this)
+        subscribe(item, metric, eventHandler)
         
         // Update the model, including the current metric value (if any).
         Number currentValue = item.getAttribute(metric)
