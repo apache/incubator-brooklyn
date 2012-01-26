@@ -10,6 +10,7 @@ import brooklyn.location.Location;
 
 public class AbstractBalanceableClusterModel<ContainerType, ItemType> implements BalanceableClusterModel<ContainerType, ItemType> {
     
+    private final String name;
     private Set<ContainerType> containers = new LinkedHashSet<ContainerType>();
     private Map<ContainerType, Double> containerToLowThreshold = new LinkedHashMap<ContainerType, Double>();
     private Map<ContainerType, Double> containerToHighThreshold = new LinkedHashMap<ContainerType, Double>();
@@ -17,7 +18,9 @@ public class AbstractBalanceableClusterModel<ContainerType, ItemType> implements
     private Map<ItemType, Double> itemToWorkrate = new LinkedHashMap<ItemType, Double>();
     
     
-    // Additional methods for tests.
+    public AbstractBalanceableClusterModel(String name) {
+        this.name = name;
+    }
     
     public ContainerType getParentContainer(ItemType item) {
         return itemToContainer.get(item);
@@ -49,7 +52,7 @@ public class AbstractBalanceableClusterModel<ContainerType, ItemType> implements
     
     // Provider methods.
     
-    @Override public String getPoolName() { return "MockWorkrateProvider"; }
+    @Override public String getName() { return name; }
     @Override public int getPoolSize() { return containers.size(); }
     @Override public Set<ContainerType> getPoolContents() { return containers; }
     @Override public String getName(ContainerType container) { return container.toString(); } // TODO: delete?

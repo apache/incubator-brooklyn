@@ -130,7 +130,7 @@ public class BalancingStrategy<NodeType, ItemType> {
         
         if (LOG.isDebugEnabled()) {
             LOG.debug( MessageFormat.format(
-                    "policy "+getDataProvider().getPoolName()+" not balancing "+questionedNode+"; " +
+                    "policy "+getDataProvider().getName()+" not balancing "+questionedNode+"; " +
                     "its workrate {0,number,#.##} is acceptable (or cannot be balanced)", questionedNodeTotalWorkrate) );
         }
         return false;
@@ -163,7 +163,7 @@ public class BalancingStrategy<NodeType, ItemType> {
             
             if (LOG.isDebugEnabled()) {
                 LOG.debug(MessageFormat.format(
-                        "policy "+getDataProvider().getPoolName()+" considering balancing hot node "+node+" " +
+                        "policy "+getDataProvider().getName()+" considering balancing hot node "+node+" " +
                         "(workrate {0,number,#.##}); iteration "+iterationCount, nodeWorkrate) );
             }
             
@@ -174,7 +174,7 @@ public class BalancingStrategy<NodeType, ItemType> {
             if (coldNode == null) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug( MessageFormat.format(
-                            "policy "+getDataProvider().getPoolName()+" not balancing hot node "+node+" " +
+                            "policy "+getDataProvider().getName()+" not balancing hot node "+node+" " +
                             "(workrate {0,number,#.##}); no coldest node available", nodeWorkrate) );
                 }
                 break;
@@ -183,7 +183,7 @@ public class BalancingStrategy<NodeType, ItemType> {
             if (coldNode.equals(node)) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug( MessageFormat.format(
-                            "policy "+getDataProvider().getPoolName()+" not balancing hot node "+node+" " +
+                            "policy "+getDataProvider().getName()+" not balancing hot node "+node+" " +
                             "(workrate {0,number,#.##}); it is also the coldest modifiable node", nodeWorkrate) );
                 }
                 break;
@@ -226,7 +226,7 @@ public class BalancingStrategy<NodeType, ItemType> {
             
             if (LOG.isDebugEnabled()) {
                 LOG.debug( MessageFormat.format(
-                        "policy "+getDataProvider().getPoolName()+" balancing hot node "+questionedNodeName+" " +
+                        "policy "+getDataProvider().getName()+" balancing hot node "+questionedNodeName+" " +
                         "("+node+", workrate {0,number,#.##}), " +
                         "considering target "+coldNodeName+" ("+coldNode+", workrate {1,number,#.##})",
                         nodeWorkrate, coldNodeWorkrate) );
@@ -251,7 +251,7 @@ public class BalancingStrategy<NodeType, ItemType> {
             if (questionedNodeItems == null) {
                 if (LOG.isDebugEnabled())
                     LOG.debug(MessageFormat.format(
-                            "policy "+getDataProvider().getPoolName()+" balancing hot node "+questionedNodeName+" " +
+                            "policy "+getDataProvider().getName()+" balancing hot node "+questionedNodeName+" " +
                             "("+node+", workrate {0,number,#.##}), abandoned; " +
                             "item report for " + questionedNodeName + " unavailable",
                             nodeWorkrate));
@@ -263,7 +263,7 @@ public class BalancingStrategy<NodeType, ItemType> {
             if (itemToMove == null) {
                 if (LOG.isDebugEnabled())
                     LOG.debug(MessageFormat.format(
-                            "policy "+getDataProvider().getPoolName()+" balancing hot node "+questionedNodeName+" " +
+                            "policy "+getDataProvider().getName()+" balancing hot node "+questionedNodeName+" " +
                             "("+node+", workrate {0,number,#.##}), ending; " +
                             "no suitable segment found " +
                             "(ideal transition item size {1,number,#.##}, max {2,number,#.##}, " +
@@ -293,19 +293,19 @@ public class BalancingStrategy<NodeType, ItemType> {
             if (iterationCount == 0) {
                 if (LOG.isTraceEnabled())
                     LOG.trace( MessageFormat.format(
-                            "policy "+getDataProvider().getPoolName()+" balancing if hot finished at node "+node+"; " +
+                            "policy "+getDataProvider().getName()+" balancing if hot finished at node "+node+"; " +
                             "workrate {0,number,#.##} not hot",
                             originalNodeWorkrate) );
             }
             else if (itemsMoved.isEmpty()) {
                 if (LOG.isTraceEnabled())
                     LOG.trace( MessageFormat.format(
-                            "policy "+getDataProvider().getPoolName()+" balancing finished at hot node "+node+" " +
+                            "policy "+getDataProvider().getName()+" balancing finished at hot node "+node+" " +
                             "(workrate {0,number,#.##}); no way to improve it",
                             originalNodeWorkrate) );
             } else {
                 LOG.debug( MessageFormat.format(
-                        "policy "+getDataProvider().getPoolName()+" balancing finished at hot node "+node+"; " +
+                        "policy "+getDataProvider().getName()+" balancing finished at hot node "+node+"; " +
                         "workrate from {0,number,#.##} to {1,number,#.##} (report now says {2,number,#.##}) " +
                         "by moving off {3}",
                         originalNodeWorkrate,
@@ -324,7 +324,7 @@ public class BalancingStrategy<NodeType, ItemType> {
         if (items == null) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug( MessageFormat.format(
-                        "policy "+getDataProvider().getPoolName()+" not balancing cold node "+questionedNode+" " +
+                        "policy "+getDataProvider().getName()+" not balancing cold node "+questionedNode+" " +
                         "(workrate {0,number,#.##}); workrate breakdown unavailable (probably reverting)",
                         questionedNodeTotalWorkrate) );
             }
@@ -334,7 +334,7 @@ public class BalancingStrategy<NodeType, ItemType> {
             if (!model.isItemMoveable(item)) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug( MessageFormat.format(
-                            "policy "+getDataProvider().getPoolName()+" not balancing cold node "+questionedNode+" " +
+                            "policy "+getDataProvider().getName()+" not balancing cold node "+questionedNode+" " +
                             "(workrate {0,number,#.##}); at least one item ("+item+") is in flux",
                             questionedNodeTotalWorkrate) );
                 }
@@ -357,7 +357,7 @@ public class BalancingStrategy<NodeType, ItemType> {
             
             if (LOG.isDebugEnabled()) {
                 LOG.debug( MessageFormat.format(
-                        "policy "+getDataProvider().getPoolName()+" considering balancing cold node "+questionedNode+" " +
+                        "policy "+getDataProvider().getName()+" considering balancing cold node "+questionedNode+" " +
                         "(workrate {0,number,#.##}); iteration "+iters, questionedNodeTotalWorkrate));
             }
             
@@ -368,7 +368,7 @@ public class BalancingStrategy<NodeType, ItemType> {
             if (hotNode == null) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug( MessageFormat.format(
-                            "policy "+getDataProvider().getPoolName()+" not balancing cold node "+questionedNode+" " +
+                            "policy "+getDataProvider().getName()+" not balancing cold node "+questionedNode+" " +
                             "(workrate {0,number,#.##}); no hottest node available", questionedNodeTotalWorkrate) );
                 }
                 
@@ -377,7 +377,7 @@ public class BalancingStrategy<NodeType, ItemType> {
             if (hotNode.equals(questionedNode)) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug( MessageFormat.format(
-                            "policy "+getDataProvider().getPoolName()+" not balancing cold node "+questionedNode+" " +
+                            "policy "+getDataProvider().getName()+" not balancing cold node "+questionedNode+" " +
                             "(workrate {0,number,#.##}); it is also the hottest modfiable node", questionedNodeTotalWorkrate) );
                 }
                 break;
@@ -420,7 +420,7 @@ public class BalancingStrategy<NodeType, ItemType> {
             
             if (LOG.isDebugEnabled()) {
                 LOG.debug( MessageFormat.format(
-                        "policy "+getDataProvider().getPoolName()+" balancing cold node "+questionedNodeName+" " +
+                        "policy "+getDataProvider().getName()+" balancing cold node "+questionedNodeName+" " +
                         "("+questionedNode+", workrate {0,number,#.##}), " +
                         "considering source "+hotNodeName+" ("+hotNode+", workrate {1,number,#.##})",
                         questionedNodeTotalWorkrate, hotNodeWorkrate) );
@@ -441,7 +441,7 @@ public class BalancingStrategy<NodeType, ItemType> {
             if (hotNodeItems == null) {
                 if (LOG.isDebugEnabled())
                     LOG.debug(MessageFormat.format(
-                            "policy "+getDataProvider().getPoolName()+" balancing cold node "+questionedNodeName+" " +
+                            "policy "+getDataProvider().getName()+" balancing cold node "+questionedNodeName+" " +
                             "("+questionedNode+", workrate {0,number,#.##}), " +
                             "excluding hot node "+hotNodeName+" because its item report unavailable",
                             questionedNodeTotalWorkrate));
@@ -454,7 +454,7 @@ public class BalancingStrategy<NodeType, ItemType> {
             if (itemToMove == null) {
                 if (LOG.isDebugEnabled())
                     LOG.debug(MessageFormat.format(
-                            "policy "+getDataProvider().getPoolName()+" balancing cold node "+questionedNodeName+" " +
+                            "policy "+getDataProvider().getName()+" balancing cold node "+questionedNodeName+" " +
                             "("+questionedNode+", workrate {0,number,#.##}), " +
                             "excluding hot node "+hotNodeName+" because it has no appilcable items " +
                             "(ideal transition item size {1,number,#.##}, max {2,number,#.##}, " +
@@ -489,19 +489,19 @@ public class BalancingStrategy<NodeType, ItemType> {
             if (iters == 0) {
                 if (LOG.isTraceEnabled())
                     LOG.trace( MessageFormat.format(
-                            "policy "+getDataProvider().getPoolName()+" balancing if cold finished at node "+questionedNode+"; " +
+                            "policy "+getDataProvider().getName()+" balancing if cold finished at node "+questionedNode+"; " +
                             "workrate {0,number,#.##} not cold",
                             originalQuestionedNodeTotalWorkrate) );
             }
             else if (itemsMoved.isEmpty()) {
                 if (LOG.isTraceEnabled())
                     LOG.trace( MessageFormat.format(
-                            "policy "+getDataProvider().getPoolName()+" balancing finished at cold node "+questionedNode+" " +
+                            "policy "+getDataProvider().getName()+" balancing finished at cold node "+questionedNode+" " +
                             "(workrate {0,number,#.##}); no way to improve it",
                             originalQuestionedNodeTotalWorkrate) );
             } else {
                 LOG.debug( MessageFormat.format(
-                        "policy "+getDataProvider().getPoolName()+" balancing finished at cold node "+questionedNode+"; " +
+                        "policy "+getDataProvider().getName()+" balancing finished at cold node "+questionedNode+"; " +
                         "workrate from {0,number,#.##} to {1,number,#.##} (report now says {2,number,#.##}) " +
                         "by moving in {3}",
                         originalQuestionedNodeTotalWorkrate,

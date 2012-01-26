@@ -14,7 +14,7 @@ import brooklyn.location.Location;
 public interface BalanceableClusterModel<ContainerType, ItemType> {
     
     // Attributes of the pool.
-    public String getPoolName();
+    public String getName();
     public int getPoolSize();
     public Set<ContainerType> getPoolContents();
     

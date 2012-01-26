@@ -1,13 +1,15 @@
 package brooklyn.policy.loadbalancing;
 
+import brooklyn.entity.Entity;
+
 
 /**
- * TODO: javadoc
+ * Represents an item that can be migrated between entities.
  * 
  * @author splodge
  */
 public interface Movable {
     
-    // TODO: move method?
+    public void move(Entity destination);
     
 }

@@ -49,6 +49,7 @@ public class MockWorkerPool extends AbstractBalanceableClusterModel<String, Stri
     
     
     public MockWorkerPool(List<ContainerSpec> containers, List<ItemSpec> items) {
+        super("Mock pool");
         for (ContainerSpec container : containers)
             addContainer(container.name, container.lowThreshold, container.highThreshold);
         for (ItemSpec item : items)
