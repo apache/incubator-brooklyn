@@ -6,7 +6,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
-public class MockWorkerPool extends AbstractBalanceablePoolModel<String, String> {
+public class MockWorkerPool extends DefaultBalanceablePoolModel<String, String> {
     
     public static class ContainerSpec {
         public final String name;

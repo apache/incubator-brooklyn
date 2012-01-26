@@ -8,7 +8,7 @@ import java.util.Set;
 
 import brooklyn.location.Location;
 
-public class AbstractBalanceablePoolModel<ContainerType, ItemType> implements BalanceablePoolModel<ContainerType, ItemType> {
+public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements BalanceablePoolModel<ContainerType, ItemType> {
     
     private final String name;
     private Set<ContainerType> containers = new LinkedHashSet<ContainerType>();
@@ -18,7 +18,7 @@ public class AbstractBalanceablePoolModel<ContainerType, ItemType> implements Ba
     private Map<ItemType, Double> itemToWorkrate = new LinkedHashMap<ItemType, Double>();
     
     
-    public AbstractBalanceablePoolModel(String name) {
+    public DefaultBalanceablePoolModel(String name) {
         this.name = name;
     }
     
@@ -37,16 +37,6 @@ public class AbstractBalanceablePoolModel<ContainerType, ItemType> implements Ba
     
     public Double getItemWorkrate(ItemType item) {
         return itemToWorkrate.get(item);
-    }
-    
-    public void dumpItemDistribution() {
-        for (ContainerType container : getPoolContents()) {
-            System.out.println("Container '"+container+"'");
-            for (ItemType item : getItemsForContainer(container)) {
-                Double workrate = getItemWorkrate(item);
-                System.out.println("    Item '"+item+"'   ("+workrate+")");
-            }
-        }
     }
     
     
