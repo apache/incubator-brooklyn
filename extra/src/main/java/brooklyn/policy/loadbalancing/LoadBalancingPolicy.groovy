@@ -25,13 +25,13 @@ public class LoadBalancingPolicy extends AbstractPolicy implements SensorEventLi
     private final AttributeSensor<? extends Number> metric
     private final String lowThresholdConfigKeyName
     private final String highThresholdConfigKeyName
-    private final BalanceableClusterModel<Entity, Entity> model
+    private final BalanceablePoolModel<Entity, Entity> model
     private final BalancingStrategy<Entity, ?> strategy
     private Group containerPool
     
     
     public LoadBalancingPolicy(Map properties = [:],
-        AttributeSensor<? extends Number> metric, BalanceableClusterModel<Entity, Entity> model) {
+        AttributeSensor<? extends Number> metric, BalanceablePoolModel<Entity, Entity> model) {
         
         super(properties)
         this.metric = metric

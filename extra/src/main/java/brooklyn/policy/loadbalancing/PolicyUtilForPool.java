@@ -9,10 +9,10 @@ import java.util.Set;
  */
 public class PolicyUtilForPool<ContainerType, ItemType> {
     
-    private final BalanceableClusterModel<ContainerType, ItemType> model;
+    private final BalanceablePoolModel<ContainerType, ItemType> model;
     
     
-    public PolicyUtilForPool (BalanceableClusterModel<ContainerType, ItemType> model) {
+    public PolicyUtilForPool (BalanceablePoolModel<ContainerType, ItemType> model) {
         this.model = model;
     }
     

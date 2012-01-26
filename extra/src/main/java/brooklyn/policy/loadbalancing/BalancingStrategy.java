@@ -23,13 +23,13 @@ public class BalancingStrategy<NodeType, ItemType> {
     private static final boolean BALANCE_COLD_PULLS_IN_SAME_RUN_AS_HOT_PUSHES = false;
     
     private final String name;
-    private final BalanceableClusterModel<NodeType, ItemType> model;
+    private final BalanceablePoolModel<NodeType, ItemType> model;
     private final PolicyUtilForPool<NodeType, ItemType> helper;
 //    private boolean loggedColdestTooHigh = false;
 //    private boolean loggedHottestTooLow = false;
     
     
-    public BalancingStrategy(String name, BalanceableClusterModel<NodeType, ItemType> model) {
+    public BalancingStrategy(String name, BalanceablePoolModel<NodeType, ItemType> model) {
         this.name = name;
         this.model = model;
         this.helper = new PolicyUtilForPool<NodeType, ItemType>(model);
@@ -47,7 +47,7 @@ public class BalancingStrategy<NodeType, ItemType> {
         return MAX_MIGRATIONS_PER_BALANCING_NODE;
     }
     
-    public BalanceableClusterModel<NodeType, ItemType> getDataProvider() {
+    public BalanceablePoolModel<NodeType, ItemType> getDataProvider() {
         return model;
     }
     
