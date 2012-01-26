@@ -15,11 +15,7 @@ import brooklyn.location.Location;
 // TODO: extract interface
 public class BalancingStrategy<NodeType, ItemType> {
     
-    /* This is a modified version of the watermark elasticity policy from Monterey v3.
-     * Changes include: 
-     * . remove backlog logic, as the JSM transport does not expose this
-     * . support heterogeneous container thresholds
-     */
+    // This is a modified version of the watermark elasticity policy from Monterey v3.
     
     private static final Logger LOG = LoggerFactory.getLogger(BalancingStrategy.class);
     
@@ -44,7 +40,7 @@ public class BalancingStrategy<NodeType, ItemType> {
     }
     
     public void rebalance() {
-        // TODO
+        checkAndApplyOn(model.getPoolContents());
     }
     
     public int getMaxMigrationsPerBalancingNode() {
@@ -55,13 +51,8 @@ public class BalancingStrategy<NodeType, ItemType> {
         return model;
     }
     
-    // This is the entry point for the legacy policy.
-    public void checkAndApplyOn(final Collection<NodeType> dirtyNodesSupplied) {
-        final long startTime = System.currentTimeMillis();
-        runIteration(dirtyNodesSupplied, startTime);
-    }
-    
-    private void runIteration(Collection<NodeType> dirtyNodesSupplied, long startTime) {
+    // This was the entry point for the legacy policy.
+    private void checkAndApplyOn(final Collection<NodeType> dirtyNodesSupplied) {
         Collection<NodeType> dirtyNodes = dirtyNodesSupplied;
         
 //        if (startTime + FORCE_ALL_NODES_IF_DELAYED_FOR_MILLIS < System.currentTimeMillis()) {

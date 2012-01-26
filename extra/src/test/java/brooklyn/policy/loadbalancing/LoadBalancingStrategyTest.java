@@ -26,7 +26,7 @@ public class LoadBalancingStrategyTest {
         BalancingStrategy<String, String> policy = new BalancingStrategy<String, String>("Test", pool);
         System.out.println("\nStarting configuraton:");
         pool.dumpItemDistribution();
-        policy.checkAndApplyOn(pool.getPoolContents());
+        policy.rebalance();
         System.out.println("\nResulting configuraton:");
         pool.dumpItemDistribution();
         
@@ -50,7 +50,7 @@ public class LoadBalancingStrategyTest {
         BalancingStrategy<String, String> policy = new BalancingStrategy<String, String>("Test", pool);
         System.out.println("\nStarting configuraton:");
         pool.dumpItemDistribution();
-        policy.checkAndApplyOn(pool.getPoolContents());
+        policy.rebalance();
         System.out.println("\nResulting configuraton:");
         pool.dumpItemDistribution();
         
@@ -74,7 +74,7 @@ public class LoadBalancingStrategyTest {
         BalancingStrategy<String, String> policy = new BalancingStrategy<String, String>("Test", pool);
         System.out.println("\nStarting configuraton:");
         pool.dumpItemDistribution();
-        policy.checkAndApplyOn(pool.getPoolContents());
+        policy.rebalance();
         System.out.println("\nResulting configuraton:");
         pool.dumpItemDistribution();
         
@@ -104,7 +104,7 @@ public class LoadBalancingStrategyTest {
         BalancingStrategy<String, String> policy = new BalancingStrategy<String, String>("Test", pool);
         System.out.println("\nStarting configuraton:");
         pool.dumpItemDistribution();
-        policy.checkAndApplyOn(pool.getPoolContents());
+        policy.rebalance();
         System.out.println("\nResulting configuraton:");
         pool.dumpItemDistribution();
         
