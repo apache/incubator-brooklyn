@@ -112,8 +112,8 @@ public class LoadBalancingStrategyTest {
         assertEquals(pool.getItemsForContainer("nodeB"), ImmutableSet.of("item6", "item7", "item8", "item9", "item10"));
     }
     
-    // TODO: testMixedContainerThresholds()
-    // TODO: testNoBalancingBelowNodeWatermark()
-    // TODO: testLocationConstraint()
+    // TODO: test heterogeneous thresholds
+    // TODO: test >2 containers
+    // TODO: test location constraint
     
 }
