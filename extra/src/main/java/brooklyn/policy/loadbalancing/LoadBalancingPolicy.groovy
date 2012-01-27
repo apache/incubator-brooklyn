@@ -89,7 +89,7 @@ public class LoadBalancingPolicy extends AbstractPolicy {
     protected Group getItemGroup() { return poolEntity.getItemGroup() }
     
     private void onContainerAdded(Entity newContainer, boolean rebalanceNow) {
-        Preconditions.checkArgument(newContainer instanceof Balanceable, "Added container must implement Balanceable")
+        Preconditions.checkArgument(newContainer instanceof BalanceableContainer, "Added container must be a BalanceableContainer")
         
         // Low and high thresholds for the metric we're interested in are assumed to be present
         // in the container's configuration.
@@ -108,7 +108,7 @@ public class LoadBalancingPolicy extends AbstractPolicy {
         model.addContainer(newContainer, lowThreshold, highThreshold)
         
         // Take heed of any extant items.
-        for (Movable item : ((Balanceable) newContainer).getBalanceableItems()) 
+        for (Movable item : ((BalanceableContainer) newContainer).getBalanceableItems()) 
             onItemAdded((Entity) item, false)
         
         if (rebalanceNow) strategy.rebalance()

@@ -9,7 +9,7 @@ import java.util.Set;
  * 
  * @author splodge
  */
-public interface Balanceable<ItemType extends Movable> {
+public interface BalanceableContainer<ItemType extends Movable> {
     
     public Set<ItemType> getBalanceableItems();
     
