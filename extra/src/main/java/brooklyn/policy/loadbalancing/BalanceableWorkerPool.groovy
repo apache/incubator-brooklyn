@@ -17,14 +17,24 @@ import brooklyn.event.basic.BasicNotificationSensor;
 
 public class BalanceableWorkerPool extends AbstractEntity {
     
+    public static class ContainerItemPair {
+        public final Entity container;
+        public final Entity item;
+        
+        public ContainerItemPair(Entity container, Entity item) {
+            this.container = container;
+            this.item = item;
+        }
+    }
+    
     public static BasicNotificationSensor<Entity> CONTAINER_ADDED = new BasicNotificationSensor<Entity>(
         Entity.class, "balanceablepool.container.added", "Container added to balanceable pool");
     public static BasicNotificationSensor<Entity> CONTAINER_REMOVED = new BasicNotificationSensor<Entity>(
         Entity.class, "balanceablepool.container.removed", "Container removed from balanceable pool");
-    public static BasicNotificationSensor<Entity> ITEM_ADDED = new BasicNotificationSensor<Entity>(
-        Entity.class, "balanceablepool.item.added", "Item added to balanceable pool");
-    public static BasicNotificationSensor<Entity> ITEM_REMOVED = new BasicNotificationSensor<Entity>(
-        Entity.class, "balanceablepool.item.removed", "Item removed from balanceable pool");
+    public static BasicNotificationSensor<ContainerItemPair> ITEM_ADDED = new BasicNotificationSensor<ContainerItemPair>(
+        ContainerItemPair.class, "balanceablepool.item.added", "Item added to balanceable pool");
+    public static BasicNotificationSensor<ContainerItemPair> ITEM_REMOVED = new BasicNotificationSensor<ContainerItemPair>(
+        ContainerItemPair.class, "balanceablepool.item.removed", "Item removed from balanceable pool");
     
     // TODO: too-hot / too-cold sensors?
     //       "surplus" and "shortfall"?
@@ -33,18 +43,22 @@ public class BalanceableWorkerPool extends AbstractEntity {
     private Group containerGroup
     private Group itemGroup
     
-    private final SensorEventListener<Entity> eventHandler = new SensorEventListener<Entity>() {
-        public void onEvent(SensorEvent<Entity> event) {
+    private final SensorEventListener<?> eventHandler = new SensorEventListener<Object>() {
+        public void onEvent(SensorEvent<?> event) {
             Entity source = event.getSource()
-            Entity value = event.getValue()
+            Object value = event.getValue()
             switch (event.getSensor()) {
                 case AbstractGroup.MEMBER_ADDED:
-                    if (source == containerGroup) emit(CONTAINER_ADDED, value)
-                    else if (source == itemGroup) emit(ITEM_ADDED, value)
+                    onContainerAdded((Entity) value)
                     break
                 case AbstractGroup.MEMBER_REMOVED:
-                    if (source == containerGroup) emit(CONTAINER_REMOVED, value)
-                    else if (source == itemGroup) emit(ITEM_REMOVED, value)
+                    onContainerRemoved((Entity) value)
+                    break
+                case BalanceableContainer.ITEM_ADDED:
+                    onItemAdded(source, (Entity) value)
+                    break
+                case BalanceableContainer.ITEM_REMOVED:
+                    onItemRemoved(source, (Entity) value)
                     break
             }
         }
@@ -60,8 +74,28 @@ public class BalanceableWorkerPool extends AbstractEntity {
         
         subscribe(containerGroup, AbstractGroup.MEMBER_ADDED, eventHandler)
         subscribe(containerGroup, AbstractGroup.MEMBER_REMOVED, eventHandler)
-        subscribe(itemGroup, AbstractGroup.MEMBER_ADDED, eventHandler)
-        subscribe(itemGroup, AbstractGroup.MEMBER_REMOVED, eventHandler)
+        
+        // Process extant containers.
+        for (Entity existingContainer : containerGroup.getMembers())
+            onContainerAdded(existingContainer)
+    }
+    
+    private void onContainerAdded(Entity newContainer) {
+        subscribe(newContainer, BalanceableContainer.ITEM_ADDED, eventHandler)
+        emit(CONTAINER_ADDED, newContainer)
+    }
+    
+    private void onContainerRemoved(Entity oldContainer) {
+        // TODO: unsubscribe(oldContainer)
+        emit(CONTAINER_REMOVED, oldContainer)
+    }
+    
+    private void onItemAdded(Entity container, Entity item) {
+        emit(ITEM_ADDED, new ContainerItemPair(container, item))
+    }
+    
+    private void onItemRemoved(Entity container, Entity item) {
+        emit(ITEM_REMOVED, new ContainerItemPair(container, item))
     }
     
     public Group getContainerGroup() { return containerGroup }
