@@ -1,6 +1,7 @@
 package brooklyn.policy.loadbalancing
 
 import java.util.Map
+import java.util.Map.Entry;
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -10,6 +11,7 @@ import brooklyn.entity.Entity
 import brooklyn.entity.Group
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.EntityLocal
+import brooklyn.event.AttributeSensor
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
@@ -21,7 +23,7 @@ public class LoadBalancingPolicy extends AbstractPolicy {
     
     private static final Logger LOG = LoggerFactory.getLogger(LoadBalancingPolicy.class)
     
-    private final Sensor<? extends Number> metric
+    private final AttributeSensor<? extends Number> metric
     private final String lowThresholdConfigKeyName
     private final String highThresholdConfigKeyName
     private final BalanceablePoolModel<Entity, Entity> model
@@ -54,8 +56,8 @@ public class LoadBalancingPolicy extends AbstractPolicy {
         }
     }
     
-    public LoadBalancingPolicy(Map properties = [:],
-        Sensor<? extends Number> metric, BalanceablePoolModel<? extends Entity, ? extends Entity> model) {
+    public LoadBalancingPolicy(Map properties = [:], AttributeSensor<? extends Number> metric,
+        BalanceablePoolModel<? extends Entity, ? extends Entity> model) {
         
         super(properties)
         this.metric = metric
@@ -92,25 +94,31 @@ public class LoadBalancingPolicy extends AbstractPolicy {
         
         // Low and high thresholds for the metric we're interested in are assumed to be present
         // in the container's configuration.
-        Map<String, ConfigKey> configKeys = ((AbstractEntity) newContainer).getConfigKeys()
-        ConfigKey<? extends Number> lowThresholdConfigKey = configKeys.get(lowThresholdConfigKeyName)
-        ConfigKey<? extends Number> highThresholdConfigKey = configKeys.get(highThresholdConfigKeyName)
-        if (lowThresholdConfigKey == null || highThresholdConfigKey == null) {
+        Number lowThreshold = (Number) findConfigValue((AbstractEntity) newContainer, lowThresholdConfigKeyName)
+        Number highThreshold = (Number) findConfigValue((AbstractEntity) newContainer, highThresholdConfigKeyName)
+        if (lowThreshold == null || highThreshold == null) {
             LOG.warn(
                 "Balanceable container '"+newContainer+"' does not define low- and high- threshold configuration keys: '"+
                 lowThresholdConfigKeyName+"' and '"+highThresholdConfigKeyName+"', skipping")
             return
         }
         
-        double lowThreshold = ((Number) newContainer.getConfig(lowThresholdConfigKey)).doubleValue()
-        double highThreshold = ((Number) newContainer.getConfig(highThresholdConfigKey)).doubleValue()
-        model.addContainer(newContainer, lowThreshold, highThreshold)
+        model.addContainer(newContainer, lowThreshold.doubleValue(), highThreshold.doubleValue())
         
         // Take heed of any extant items.
         for (Movable item : ((BalanceableContainer) newContainer).getBalanceableItems()) 
             onItemAdded((Entity) item, false)
         
         if (rebalanceNow) strategy.rebalance()
+    }
+    
+    private static Object findConfigValue(AbstractEntity entity, String configKeyName) {
+        Map<ConfigKey, Object> config = entity.getAllConfig()
+        for (Entry<ConfigKey, Object> entry : config.entrySet()) {
+            if (configKeyName.equals(entry.getKey().getName()))
+                return entry.getValue()
+        }
+        return null
     }
     
     private void onContainerRemoved(Entity oldContainer, boolean rebalanceNow) {
