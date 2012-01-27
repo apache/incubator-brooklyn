@@ -520,7 +520,12 @@ public class BalancingStrategy<NodeType, ItemType> {
         
         for (Entry<ItemType, Double> entry : costsPerItem.entrySet()) {
             ItemType item = entry.getKey();
-            double cost = entry.getValue();
+            Double cost = entry.getValue();
+            
+            if (cost == null) {
+                LOG.debug(MessageFormat.format("Item ''{0}'' has null workrate: skipping", item));
+                continue;
+            }
             
             if (!model.isItemMoveable(item)) {
                 LOG.debug(MessageFormat.format("Item ''{0}'' cannot be moved: skipping", item));
