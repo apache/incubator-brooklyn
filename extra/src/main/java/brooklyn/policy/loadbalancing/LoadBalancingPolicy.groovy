@@ -9,9 +9,8 @@ import brooklyn.entity.ConfigKey
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
 import brooklyn.entity.basic.AbstractEntity
-import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.basic.EntityLocal
-import brooklyn.event.AttributeSensor
+import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.policy.basic.AbstractPolicy
@@ -22,7 +21,7 @@ public class LoadBalancingPolicy extends AbstractPolicy {
     
     private static final Logger LOG = LoggerFactory.getLogger(LoadBalancingPolicy.class)
     
-    private final AttributeSensor<? extends Number> metric
+    private final Sensor<? extends Number> metric
     private final String lowThresholdConfigKeyName
     private final String highThresholdConfigKeyName
     private final BalanceablePoolModel<Entity, Entity> model
@@ -56,7 +55,7 @@ public class LoadBalancingPolicy extends AbstractPolicy {
     }
     
     public LoadBalancingPolicy(Map properties = [:],
-        AttributeSensor<? extends Number> metric, BalanceablePoolModel<Entity, Entity> model) {
+        Sensor<? extends Number> metric, BalanceablePoolModel<? extends Entity, ? extends Entity> model) {
         
         super(properties)
         this.metric = metric
