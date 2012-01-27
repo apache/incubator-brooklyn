@@ -1,7 +1,7 @@
 package brooklyn.policy.loadbalancing
 
 import java.util.Map
-import java.util.Map.Entry;
+import java.util.Map.Entry
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -12,10 +12,10 @@ import brooklyn.entity.Group
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.AttributeSensor
-import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.policy.basic.AbstractPolicy
+import brooklyn.policy.loadbalancing.BalanceableWorkerPool.ContainerItemPair
 
 import com.google.common.base.Preconditions
 
@@ -46,11 +46,12 @@ public class LoadBalancingPolicy extends AbstractPolicy {
                     onContainerRemoved((Entity) value, true)
                     break
                 case BalanceableWorkerPool.ITEM_ADDED:
-                    Entity parentContainer = null // TODO
-                    onItemAdded((Entity) value, parentContainer, true)
+                    ContainerItemPair pair = value
+                    onItemAdded(pair.item, pair.container, true)
                     break
                 case BalanceableWorkerPool.ITEM_REMOVED:
-                    onItemRemoved((Entity) value, true)
+                    ContainerItemPair pair = value
+                    onItemRemoved(pair.item, pair.container, true)
                     break
             }
         }
@@ -141,7 +142,7 @@ public class LoadBalancingPolicy extends AbstractPolicy {
         if (rebalanceNow) strategy.rebalance()
     }
     
-    private void onItemRemoved(Entity item, boolean rebalanceNow) {
+    private void onItemRemoved(Entity item, Entity parentContainer, boolean rebalanceNow) {
         unsubscribe(item)
         model.removeItem(item)
         if (rebalanceNow) strategy.rebalance()
