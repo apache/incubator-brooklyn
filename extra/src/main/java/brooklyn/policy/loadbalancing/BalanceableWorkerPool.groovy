@@ -16,16 +16,18 @@ import brooklyn.event.basic.BasicNotificationSensor;
 
 
 public class BalanceableWorkerPool extends AbstractEntity {
-    public static BasicNotificationSensor<Entity> CONTAINER_ADDED =
-        new BasicNotificationSensor<Entity>(Entity.class, "balanceablepool.container.added", "Container added to balanceable pool");
-    public static BasicNotificationSensor<Entity> CONTAINER_REMOVED =
-        new BasicNotificationSensor<Entity>(Entity.class, "balanceablepool.container.removed", "Container removed from balanceable pool");
-    public static BasicNotificationSensor<Entity> ITEM_ADDED =
-        new BasicNotificationSensor<Entity>(Entity.class, "balanceablepool.item.added", "Item added to balanceable pool");
-    public static BasicNotificationSensor<Entity> ITEM_REMOVED =
-        new BasicNotificationSensor<Entity>(Entity.class, "balanceablepool.item.removed", "Item removed from balanceable pool");
+    
+    public static BasicNotificationSensor<Entity> CONTAINER_ADDED = new BasicNotificationSensor<Entity>(
+        Entity.class, "balanceablepool.container.added", "Container added to balanceable pool");
+    public static BasicNotificationSensor<Entity> CONTAINER_REMOVED = new BasicNotificationSensor<Entity>(
+        Entity.class, "balanceablepool.container.removed", "Container removed from balanceable pool");
+    public static BasicNotificationSensor<Entity> ITEM_ADDED = new BasicNotificationSensor<Entity>(
+        Entity.class, "balanceablepool.item.added", "Item added to balanceable pool");
+    public static BasicNotificationSensor<Entity> ITEM_REMOVED = new BasicNotificationSensor<Entity>(
+        Entity.class, "balanceablepool.item.removed", "Item removed from balanceable pool");
     
     // TODO: too-hot / too-cold sensors?
+    //       "surplus" and "shortfall"?
     
     private static final Logger logger = LoggerFactory.getLogger(BalanceableWorkerPool)
     private Group containerGroup

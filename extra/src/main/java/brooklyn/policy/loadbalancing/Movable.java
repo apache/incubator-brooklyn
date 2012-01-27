@@ -10,6 +10,9 @@ import brooklyn.entity.Entity;
  */
 public interface Movable {
     
+    // TDOO?
+    // public Entity getCurrentContainer();
+    
     public void move(Entity destination);
     
 }
