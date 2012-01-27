@@ -1,8 +1,8 @@
 package brooklyn.policy.loadbalancing;
 
-import brooklyn.entity.Effector;
-import brooklyn.entity.Entity;
-import brooklyn.entity.basic.MethodEffector;
+import brooklyn.entity.Effector
+import brooklyn.entity.Entity
+import brooklyn.entity.basic.MethodEffector
 
 
 /**
@@ -14,9 +14,7 @@ public interface Movable {
     
     public static final Effector MOVE = new MethodEffector(Movable.&move);
     
-    // TODO?
-    // public Entity getCurrentContainer();
-    
+    public String getContainerId();
     public void move(Entity destination);
     
 }
