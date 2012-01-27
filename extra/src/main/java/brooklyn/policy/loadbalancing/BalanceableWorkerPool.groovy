@@ -41,7 +41,6 @@ public class BalanceableWorkerPool extends AbstractEntity {
     
     private static final Logger logger = LoggerFactory.getLogger(BalanceableWorkerPool)
     private Group containerGroup
-    private Group itemGroup
     
     private final SensorEventListener<?> eventHandler = new SensorEventListener<Object>() {
         public void onEvent(SensorEvent<?> event) {
@@ -68,10 +67,8 @@ public class BalanceableWorkerPool extends AbstractEntity {
         super(properties, owner)
     }
     
-    public void setContents(Group containerGroup, Group itemGroup) {
+    public void setContents(Group containerGroup) {
         this.containerGroup = containerGroup
-        this.itemGroup = itemGroup
-        
         subscribe(containerGroup, AbstractGroup.MEMBER_ADDED, eventHandler)
         subscribe(containerGroup, AbstractGroup.MEMBER_REMOVED, eventHandler)
         
@@ -97,8 +94,5 @@ public class BalanceableWorkerPool extends AbstractEntity {
     private void onItemRemoved(Entity container, Entity item) {
         emit(ITEM_REMOVED, new ContainerItemPair(container, item))
     }
-    
-    public Group getContainerGroup() { return containerGroup }
-    public Group getItemGroup() { return itemGroup }
     
 }
