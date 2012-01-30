@@ -10,6 +10,7 @@ import java.util.Set
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.entity.Application;
 import brooklyn.entity.ConfigKey
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
@@ -32,10 +33,12 @@ public class LoadBalancingPolicyTest {
             super(props, owner)
         }
         public addItem(Entity item) {
+            LOG.info("Adding item "+item+" to container "+this)
             addMember(item)
             emit(BalanceableContainer.ITEM_ADDED, item)
         }
         public removeItem(Entity item) {
+            LOG.info("Removing item "+item+" from container "+this)
             removeMember(item)
             emit(BalanceableContainer.ITEM_REMOVED, item)
         }
@@ -44,6 +47,7 @@ public class LoadBalancingPolicyTest {
             result.addAll(getMembers())
             return result
         }
+        public String toString() { return "MockContainer["+getDisplayName()+"]" }
     }
     
     // mock item entity
@@ -54,8 +58,9 @@ public class LoadBalancingPolicyTest {
         public void move(Entity destination) {
             ((MockContainerEntity) currentContainer)?.removeItem(this)
             currentContainer = destination
-            ((MockContainerEntity) destination)?.addItem(this)
+            ((MockContainerEntity) currentContainer)?.addItem(this)
         }
+        public String toString() { return "MockItem["+getDisplayName()+"]" }
     }
     
     
@@ -79,7 +84,12 @@ public class LoadBalancingPolicyTest {
         containerGroup = new DynamicGroup([name:"containerGroup"], app, { e -> (e instanceof MockContainerEntity) })
         pool.setContents(containerGroup)
         
-        policy = new LoadBalancingPolicy([:], TEST_METRIC, new DefaultBalanceablePoolModel("foo"))
+        policy = new LoadBalancingPolicy([:], TEST_METRIC, new DefaultBalanceablePoolModel<Entity, Entity>("foo") {
+            @Override public void moveItem(Entity item, Entity oldNode, Entity newNode) {
+                super.moveItem(item, oldNode, newNode)
+                ((MockItemEntity) item).move(newNode)
+            }
+        })
         policy.setEntity(pool)
         
         app.start([loc])
@@ -87,47 +97,55 @@ public class LoadBalancingPolicyTest {
     
     @Test
     public void testSimpleBalancing() {
-        // Create containers. Annoyingly, can't set owner until after the threshold config has been defined.
-        MockContainerEntity containerA = new MockContainerEntity([:])
-        MockContainerEntity containerB = new MockContainerEntity([:])
-        containerA.setConfig(LOW_THRESHOLD_CONFIG_KEY, new Double(20.0))
-        containerA.setConfig(HIGH_THRESHOLD_CONFIG_KEY, new Double(60.0))
-        containerB.setConfig(LOW_THRESHOLD_CONFIG_KEY, new Double(20.0))
-        containerB.setConfig(HIGH_THRESHOLD_CONFIG_KEY, new Double(60.0))
-        containerA.setOwner(app)
-        containerB.setOwner(app)
-        app.getManagementContext().manage(containerA)
-        app.getManagementContext().manage(containerB)
-        
-        // Create items.
-        MockItemEntity item1 = new MockItemEntity([:], app)
-        MockItemEntity item2 = new MockItemEntity([:], app)
-        MockItemEntity item3 = new MockItemEntity([:], app)
-        MockItemEntity item4 = new MockItemEntity([:], app)
-        app.getManagementContext().manage(item1)
-        app.getManagementContext().manage(item2)
-        app.getManagementContext().manage(item3)
-        app.getManagementContext().manage(item4)
-        
-        // Assign item workrates.
-        item1.setAttribute(TEST_METRIC, 10)
-        item2.setAttribute(TEST_METRIC, 10)
-        item3.setAttribute(TEST_METRIC, 10)
-        item4.setAttribute(TEST_METRIC, 10)
-        
-        // Assign to containers
-        [ item1, item2, item3, item4 ].each { i -> i.move(containerA) }
-        
-        item4.setAttribute(TEST_METRIC, 60)
+        // Set-up containers and items.
+        MockContainerEntity containerA = newContainer(app, "A", 10, 25)
+        MockContainerEntity containerB = newContainer(app, "B", 20, 60)
+        MockItemEntity item1 = newItem(app, containerA, "1", 10)
+        MockItemEntity item2 = newItem(app, containerA, "2", 10)
+        MockItemEntity item3 = newItem(app, containerA, "3", 10)
+        MockItemEntity item4 = newItem(app, containerA, "4", 10)
         
         executeUntilSucceeds(timeout:5000) {
-            assertEquals(item1.getContainerId(), containerA.getId())
-            assertEquals(item2.getContainerId(), containerA.getId())
-            assertEquals(item3.getContainerId(), containerA.getId())
-            assertEquals(item4.getContainerId(), containerB.getId())
+            assertEquals(getContainerWorkrate(containerA), 20d)
+            assertEquals(getContainerWorkrate(containerB), 20d)
         }
     }
     
     // TODO: other tests
+    
+    
+    // Testing conveniences.
+     
+    private static MockContainerEntity newContainer(Application app, String name, double lowThreshold, double highThreshold) {
+        // Annoyingly, can't set owner until after the threshold config has been defined.
+        MockContainerEntity container = new MockContainerEntity([displayName:name])
+        container.setConfig(LOW_THRESHOLD_CONFIG_KEY, lowThreshold)
+        container.setConfig(HIGH_THRESHOLD_CONFIG_KEY, highThreshold)
+        container.setOwner(app)
+        app.getManagementContext().manage(container)
+        return container
+    }
+    
+    private static MockItemEntity newItem(Application app, MockContainerEntity container, String name, double workrate) {
+        MockItemEntity item = new MockItemEntity([displayName:name], app)
+        app.getManagementContext().manage(item)
+        item.move(container)
+        item.setAttribute(TEST_METRIC, workrate)
+        return item
+    }
+    
+    private static double getItemWorkrate(MockItemEntity item) {
+        Object result = item.getAttribute(TEST_METRIC)
+        return (result == null ? 0 : ((Number) result).doubleValue())
+    }
+    
+    private static double getContainerWorkrate(MockContainerEntity container) {
+        double result = 0.0
+        container.getBalanceableItems().each { MockItemEntity item ->
+            assertEquals(item.getContainerId(), container.getId())
+            result += getItemWorkrate(item)
+        }
+        return result
+    }
     
 }
