@@ -7,7 +7,7 @@ public class CommandLineUtil {
      */
     public static String getCommandLineOption(List<String> args, String param, String defaultValue=null) {
         int i = args.indexOf(param);
-        if (i>0) {
+        if (i>=0) {
             String result = args.get(i+1);
             args.remove(param);
             args.remove(result);

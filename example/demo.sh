@@ -5,7 +5,7 @@
 # Run this, then you should see the brooklyn mgmt console at localhost:8081, and a webapp at 8080, or 8000 (nginx).
 # Refresh the webapp at 8080 a few times, and you'll see activity in the details pane at 8081.
 # Then start a load-generator (e.g. jmeter, using the test plan in this directory). You'll see it scale out!
-#
+# Use --port 8084 to start the webapp on a different port.
 #set -x # debug
 
 CLASS=brooklyn.demo.WebClusterExample
