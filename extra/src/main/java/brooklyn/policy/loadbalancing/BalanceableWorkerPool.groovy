@@ -77,6 +77,10 @@ public class BalanceableWorkerPool extends AbstractEntity {
             onContainerAdded(existingContainer)
     }
     
+    public Group getContainerGroup() {
+        return containerGroup;
+    }
+    
     private void onContainerAdded(Entity newContainer) {
         subscribe(newContainer, BalanceableContainer.ITEM_ADDED, eventHandler)
         emit(CONTAINER_ADDED, newContainer)
