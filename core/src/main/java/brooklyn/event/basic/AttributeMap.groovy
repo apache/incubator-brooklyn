@@ -74,7 +74,7 @@ public class AttributeMap implements Serializable {
         }
     }
 
-    private static Object getValueRecurse(Map node, Collection<String> path) {
+    private static Object getValueRecurse(Map node, Collection path) {
         if (node==null) return null
         Preconditions.checkArgument(!path.isEmpty(), "field name is empty")
         
