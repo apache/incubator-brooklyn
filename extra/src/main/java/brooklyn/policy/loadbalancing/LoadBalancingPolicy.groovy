@@ -81,14 +81,11 @@ public class LoadBalancingPolicy extends AbstractPolicy {
         subscribe(poolEntity, BalanceableWorkerPool.ITEM_REMOVED, eventHandler)
         
         // Take heed of any extant containers.
-        for (Entity container : getContainerGroup().getMembers())
+        for (Entity container : poolEntity.getContainerGroup().getMembers())
             onContainerAdded(container, false)
         
         strategy.rebalance()
     }
-    
-    protected Group getContainerGroup() { return poolEntity.getContainerGroup() }
-    protected Group getItemGroup() { return poolEntity.getItemGroup() }
     
     private void onContainerAdded(Entity newContainer, boolean rebalanceNow) {
         Preconditions.checkArgument(newContainer instanceof BalanceableContainer, "Added container must be a BalanceableContainer")
