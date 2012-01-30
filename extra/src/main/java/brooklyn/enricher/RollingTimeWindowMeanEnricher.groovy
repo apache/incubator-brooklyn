@@ -1,9 +1,9 @@
 package brooklyn.enricher
 
-import brooklyn.enricher.basic.AbstractTransformingEnricher;
+import brooklyn.enricher.basic.AbstractTransformingEnricher
 import brooklyn.entity.Entity
-import brooklyn.event.SensorEvent
 import brooklyn.event.AttributeSensor
+import brooklyn.event.SensorEvent
 
 /**
  * Transforms {@link Sensor} data into a rolling average based on a time window.
@@ -46,7 +46,7 @@ class RollingTimeWindowMeanEnricher<T extends Number> extends AbstractTransformi
     long timePeriod
     
     public RollingTimeWindowMeanEnricher(Entity producer, AttributeSensor<T> source, 
-        AttributeSensor<ConfidenceQualifiedNumber> target, long timePeriod) {
+        AttributeSensor<Double> target, long timePeriod) {
         super(producer, source, target)
         this.timePeriod = timePeriod
     }
