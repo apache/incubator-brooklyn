@@ -129,7 +129,88 @@ public class LoadBalancingPolicyTest {
         }
     }
     
-    // TODO: other tests?
+    // Expect no balancing to occur in hot pool (2 containers over-threshold at 40).
+    // On addition of new container, expect hot containers to offload 10 each.
+    @Test
+    public void testAddContainerWhenHot() {
+        // Set-up containers and items.
+        MockContainerEntity containerA = newContainer(app, "A", 10, 30)
+        MockContainerEntity containerB = newContainer(app, "B", 10, 30)
+        MockItemEntity item1 = newItem(app, containerA, "1", 10)
+        MockItemEntity item2 = newItem(app, containerA, "2", 10)
+        MockItemEntity item3 = newItem(app, containerA, "3", 10)
+        MockItemEntity item4 = newItem(app, containerA, "4", 10)
+        MockItemEntity item5 = newItem(app, containerB, "5", 10)
+        MockItemEntity item6 = newItem(app, containerB, "6", 10)
+        MockItemEntity item7 = newItem(app, containerB, "7", 10)
+        MockItemEntity item8 = newItem(app, containerB, "8", 10)
+        // Both containers are over-threshold at this point; should not rebalance.
+        
+        MockContainerEntity containerC = newContainer(app, "C", 10, 30)
+        // New container allows hot ones to offload work.
+        
+        executeUntilSucceeds(timeout:5000) {
+            assertEquals(getContainerWorkrate(containerA), 30d)
+            assertEquals(getContainerWorkrate(containerB), 30d)
+            assertEquals(getContainerWorkrate(containerC), 20d)
+        }
+    }
+    
+    // On addition of new container, expect no rebalancing to occur as no existing container is hot.
+    @Test
+    public void testAddContainerWhenCold() {
+        // Set-up containers and items.
+        MockContainerEntity containerA = newContainer(app, "A", 10, 50)
+        MockContainerEntity containerB = newContainer(app, "B", 10, 50)
+        MockItemEntity item1 = newItem(app, containerA, "1", 10)
+        MockItemEntity item2 = newItem(app, containerA, "2", 10)
+        MockItemEntity item3 = newItem(app, containerA, "3", 10)
+        MockItemEntity item4 = newItem(app, containerA, "4", 10)
+        MockItemEntity item5 = newItem(app, containerB, "5", 10)
+        MockItemEntity item6 = newItem(app, containerB, "6", 10)
+        MockItemEntity item7 = newItem(app, containerB, "7", 10)
+        MockItemEntity item8 = newItem(app, containerB, "8", 10)
+        
+        executeUntilSucceeds(timeout:5000) {
+            assertEquals(getContainerWorkrate(containerA), 40d)
+            assertEquals(getContainerWorkrate(containerB), 40d)
+        }
+        
+        MockContainerEntity containerC = newContainer(app, "C", 10, 50)
+        
+        executeUntilSucceeds(timeout:5000) {
+            assertEquals(getContainerWorkrate(containerA), 40d)
+            assertEquals(getContainerWorkrate(containerB), 40d)
+            assertEquals(getContainerWorkrate(containerC), 0d)
+        }
+    }
+    
+    // Expect no balancing to occur in cool pool (2 containers under-threshold at 30).
+    // On addition of new item, expect over-threshold container (A) to offload 20 to B.
+    @Test
+    public void testAddItem() {
+        // Set-up containers and items.
+        MockContainerEntity containerA = newContainer(app, "A", 10, 50)
+        MockContainerEntity containerB = newContainer(app, "B", 10, 50)
+        MockItemEntity item1 = newItem(app, containerA, "1", 10)
+        MockItemEntity item2 = newItem(app, containerA, "2", 10)
+        MockItemEntity item3 = newItem(app, containerA, "3", 10)
+        MockItemEntity item4 = newItem(app, containerB, "4", 10)
+        MockItemEntity item5 = newItem(app, containerB, "5", 10)
+        MockItemEntity item6 = newItem(app, containerB, "6", 10)
+        
+        executeUntilSucceeds(timeout:5000) {
+            assertEquals(getContainerWorkrate(containerA), 30d)
+            assertEquals(getContainerWorkrate(containerB), 30d)
+        }
+        
+        MockItemEntity item7 = newItem(app, containerA, "7", 40)
+        
+        executeUntilSucceeds(timeout:5000) {
+            assertEquals(getContainerWorkrate(containerA), 50d)
+            assertEquals(getContainerWorkrate(containerB), 50d)
+        }
+    }
     
     
     // Testing conveniences.
