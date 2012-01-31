@@ -27,43 +27,6 @@ import brooklyn.test.entity.TestApplication
 
 public class LoadBalancingPolicyTest {
     
-    // mock container entity
-    public static class MockContainerEntity extends AbstractGroup implements BalanceableContainer<Entity> {
-        public MockContainerEntity (Map props=[:], Entity owner=null) {
-            super(props, owner)
-        }
-        public addItem(Entity item) {
-            LOG.info("Adding item "+item+" to container "+this)
-            addMember(item)
-            emit(BalanceableContainer.ITEM_ADDED, item)
-        }
-        public removeItem(Entity item) {
-            LOG.info("Removing item "+item+" from container "+this)
-            removeMember(item)
-            emit(BalanceableContainer.ITEM_REMOVED, item)
-        }
-        public Set<Entity> getBalanceableItems() {
-            Set<Entity> result = new HashSet<Entity>()
-            result.addAll(getMembers())
-            return result
-        }
-        public String toString() { return "MockContainer["+getDisplayName()+"]" }
-    }
-    
-    // mock item entity
-    public static class MockItemEntity extends AbstractEntity implements Movable {
-        private Entity currentContainer;
-        public MockItemEntity (Map props=[:], Entity owner=null) { super(props, owner) }
-        public String getContainerId() { return currentContainer?.getId() }
-        public void move(Entity destination) {
-            ((MockContainerEntity) currentContainer)?.removeItem(this)
-            currentContainer = destination
-            ((MockContainerEntity) currentContainer)?.addItem(this)
-        }
-        public String toString() { return "MockItem["+getDisplayName()+"]" }
-    }
-    
-    
     public static final AttributeSensor<Integer> TEST_METRIC =
         new BasicAttributeSensor<Integer>(Integer.class, "test.metric", "Dummy workrate for test entities")
     
@@ -84,7 +47,7 @@ public class LoadBalancingPolicyTest {
         containerGroup = new DynamicGroup([name:"containerGroup"], app, { e -> (e instanceof MockContainerEntity) })
         pool.setContents(containerGroup)
         
-        policy = new LoadBalancingPolicy([:], TEST_METRIC, new DefaultBalanceablePoolModel<Entity, Entity>("foo") {
+        policy = new LoadBalancingPolicy([:], TEST_METRIC, new DefaultBalanceablePoolModel<Entity, Entity>("pool-model") {
             @Override public void moveItem(Entity item, Entity oldNode, Entity newNode) {
                 super.moveItem(item, oldNode, newNode)
                 ((MockItemEntity) item).move(newNode)
