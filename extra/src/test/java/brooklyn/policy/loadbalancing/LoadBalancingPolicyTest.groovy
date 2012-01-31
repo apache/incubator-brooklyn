@@ -42,19 +42,20 @@ public class LoadBalancingPolicyTest {
     
     @BeforeMethod()
     public void before() {
-        app = new TestApplication()
-        pool = new BalanceableWorkerPool([:], app)
-        containerGroup = new DynamicGroup([name:"containerGroup"], app, { e -> (e instanceof MockContainerEntity) })
-        pool.setContents(containerGroup)
-        
-        policy = new LoadBalancingPolicy([:], TEST_METRIC, new DefaultBalanceablePoolModel<Entity, Entity>("pool-model") {
-            @Override public void moveItem(Entity item, Entity oldNode, Entity newNode) {
-                super.moveItem(item, oldNode, newNode)
-                ((MockItemEntity) item).move(newNode)
+        // TODO: improve the default impl to avoid the need for this anonymous overrider of 'moveItem'
+        DefaultBalanceablePoolModel<Entity, Entity> model = new DefaultBalanceablePoolModel<Entity, Entity>("pool-model") {
+            @Override public void moveItem(Entity item, Entity oldContainer, Entity newContainer) {
+                super.moveItem(item, oldContainer, newContainer)
+                ((Movable) item).move(newContainer)
             }
-        })
-        policy.setEntity(pool)
+        }
         
+        app = new TestApplication()
+        containerGroup = new DynamicGroup([name:"containerGroup"], app, { e -> (e instanceof MockContainerEntity) })
+        pool = new BalanceableWorkerPool([:], app)
+        pool.setContents(containerGroup)
+        policy = new LoadBalancingPolicy([:], TEST_METRIC, model)
+        policy.setEntity(pool)
         app.start([loc])
     }
     
