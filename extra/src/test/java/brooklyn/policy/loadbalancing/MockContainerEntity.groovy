@@ -33,9 +33,7 @@ public class MockContainerEntity extends AbstractGroup implements BalanceableCon
     }
     
     public Set<Entity> getBalanceableItems() {
-        Set<Entity> result = new HashSet<Entity>()
-        result.addAll(getMembers())
-        return result
+        return new LinkedHashSet<Entity>(getMembers())
     }
     
     public String toString() {

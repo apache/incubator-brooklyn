@@ -27,6 +27,8 @@ import brooklyn.test.entity.TestApplication
 
 public class LoadBalancingPolicyTest {
     
+    private static final long TIMEOUT_MS = 5000;
+    
     public static final AttributeSensor<Integer> TEST_METRIC =
         new BasicAttributeSensor<Integer>(Integer.class, "test.metric", "Dummy workrate for test entities")
     
@@ -70,7 +72,7 @@ public class LoadBalancingPolicyTest {
         MockItemEntity item3 = newItem(app, containerA, "3", 10)
         MockItemEntity item4 = newItem(app, containerA, "4", 10)
         
-        executeUntilSucceeds(timeout:5000) {
+        executeUntilSucceeds(timeout:TIMEOUT_MS) {
             assertEquals(getContainerWorkrate(containerA), 40d)
             assertEquals(getContainerWorkrate(containerB), 0d)
         }
@@ -87,7 +89,7 @@ public class LoadBalancingPolicyTest {
         MockItemEntity item3 = newItem(app, containerA, "3", 10)
         MockItemEntity item4 = newItem(app, containerA, "4", 10)
         
-        executeUntilSucceeds(timeout:5000) {
+        executeUntilSucceeds(timeout:TIMEOUT_MS) {
             assertEquals(getContainerWorkrate(containerA), 20d)
             assertEquals(getContainerWorkrate(containerB), 20d)
         }
@@ -113,7 +115,7 @@ public class LoadBalancingPolicyTest {
         MockContainerEntity containerC = newContainer(app, "C", 10, 30)
         // New container allows hot ones to offload work.
         
-        executeUntilSucceeds(timeout:5000) {
+        executeUntilSucceeds(timeout:TIMEOUT_MS) {
             assertEquals(getContainerWorkrate(containerA), 30d)
             assertEquals(getContainerWorkrate(containerB), 30d)
             assertEquals(getContainerWorkrate(containerC), 20d)
@@ -135,14 +137,14 @@ public class LoadBalancingPolicyTest {
         MockItemEntity item7 = newItem(app, containerB, "7", 10)
         MockItemEntity item8 = newItem(app, containerB, "8", 10)
         
-        executeUntilSucceeds(timeout:5000) {
+        executeUntilSucceeds(timeout:TIMEOUT_MS) {
             assertEquals(getContainerWorkrate(containerA), 40d)
             assertEquals(getContainerWorkrate(containerB), 40d)
         }
         
         MockContainerEntity containerC = newContainer(app, "C", 10, 50)
         
-        executeUntilSucceeds(timeout:5000) {
+        executeUntilSucceeds(timeout:TIMEOUT_MS) {
             assertEquals(getContainerWorkrate(containerA), 40d)
             assertEquals(getContainerWorkrate(containerB), 40d)
             assertEquals(getContainerWorkrate(containerC), 0d)
@@ -163,14 +165,14 @@ public class LoadBalancingPolicyTest {
         MockItemEntity item5 = newItem(app, containerB, "5", 10)
         MockItemEntity item6 = newItem(app, containerB, "6", 10)
         
-        executeUntilSucceeds(timeout:5000) {
+        executeUntilSucceeds(timeout:TIMEOUT_MS) {
             assertEquals(getContainerWorkrate(containerA), 30d)
             assertEquals(getContainerWorkrate(containerB), 30d)
         }
         
         MockItemEntity item7 = newItem(app, containerA, "7", 40)
         
-        executeUntilSucceeds(timeout:5000) {
+        executeUntilSucceeds(timeout:TIMEOUT_MS) {
             assertEquals(getContainerWorkrate(containerA), 50d)
             assertEquals(getContainerWorkrate(containerB), 50d)
         }
