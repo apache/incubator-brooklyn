@@ -39,7 +39,6 @@ public class BalanceableWorkerPool extends AbstractEntity {
     // TODO: too-hot / too-cold sensors?
     //       "surplus" and "shortfall"?
     
-    private static final Logger logger = LoggerFactory.getLogger(BalanceableWorkerPool)
     private Group containerGroup
     
     private final SensorEventListener<?> eventHandler = new SensorEventListener<Object>() {
