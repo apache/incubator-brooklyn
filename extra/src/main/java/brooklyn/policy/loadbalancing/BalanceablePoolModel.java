@@ -33,13 +33,15 @@ public interface BalanceablePoolModel<ContainerType, ItemType> {
     public boolean isItemAllowedIn(ItemType item, Location location);
     
     
-    // Mutators
-    public void addContainer(ContainerType newContainer, double lowThreshold, double highThreshold);
-    public void removeContainer(ContainerType oldContainer);
-    public void addItem(ItemType item, ContainerType parentContainer);
-    public void addItem(ItemType item, ContainerType parentContainer, Number currentWorkrate);
-    public void removeItem(ItemType item);
-    public void updateItemWorkrate(ItemType item, double newValue);
-    public void moveItem(ItemType item, ContainerType originContainer, ContainerType targetContainer);
+    // Mutators for keeping the model in-sync with the observed world
+    public void onContainerAdded(ContainerType newContainer, double lowThreshold, double highThreshold);
+    public void onContainerRemoved(ContainerType oldContainer);
+    public void onItemAdded(ItemType item, ContainerType parentContainer);
+    public void onItemAdded(ItemType item, ContainerType parentContainer, Number currentWorkrate);
+    public void onItemRemoved(ItemType item);
+    public void onItemWorkrateUpdated(ItemType item, double newValue);
+    public void onItemMoved(ItemType item, ContainerType originContainer, ContainerType targetContainer);
     
+    // Mutator for effecting the real world
+    public void moveItem(ItemType item, ContainerType originContainer, ContainerType targetContainer);
 }

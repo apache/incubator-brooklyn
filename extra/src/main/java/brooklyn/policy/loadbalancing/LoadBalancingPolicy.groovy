@@ -65,7 +65,7 @@ public class LoadBalancingPolicy extends AbstractPolicy {
         this.lowThresholdConfigKeyName = metric.getNameParts().last()+".threshold.low"
         this.highThresholdConfigKeyName = metric.getNameParts().last()+".threshold.high"
         this.model = model
-        this.strategy = new BalancingStrategy<Entity, Object>(properties.name, model) // TODO: extract interface, inject impl
+        this.strategy = new BalancingStrategy<Entity, Object>(getName(), model) // TODO: extract interface, inject impl
     }
     
     @Override
@@ -101,7 +101,7 @@ public class LoadBalancingPolicy extends AbstractPolicy {
             return
         }
         
-        model.addContainer(newContainer, lowThreshold.doubleValue(), highThreshold.doubleValue())
+        model.onContainerAdded(newContainer, lowThreshold.doubleValue(), highThreshold.doubleValue())
         
         // Take heed of any extant items.
         for (Movable item : ((BalanceableContainer) newContainer).getBalanceableItems()) 
@@ -120,7 +120,7 @@ public class LoadBalancingPolicy extends AbstractPolicy {
     }
     
     private void onContainerRemoved(Entity oldContainer, boolean rebalanceNow) {
-        model.removeContainer(oldContainer)
+        model.onContainerRemoved(oldContainer)
         if (rebalanceNow) strategy.rebalance()
     }
     
@@ -132,21 +132,21 @@ public class LoadBalancingPolicy extends AbstractPolicy {
         // Update the model, including the current metric value (if any).
         Number currentValue = item.getAttribute(metric)
         if (currentValue == null)
-            model.addItem(item, parentContainer)
+            model.onItemAdded(item, parentContainer)
         else
-            model.addItem(item, parentContainer, currentValue.doubleValue())
+            model.onItemAdded(item, parentContainer, currentValue.doubleValue())
         
         if (rebalanceNow) strategy.rebalance()
     }
     
     private void onItemRemoved(Entity item, Entity parentContainer, boolean rebalanceNow) {
         unsubscribe(item)
-        model.removeItem(item)
+        model.onItemRemoved(item)
         if (rebalanceNow) strategy.rebalance()
     }
     
     private void onItemMetricUpdate(Entity item, double newValue, boolean rebalanceNow) {
-        model.updateItemWorkrate(item, newValue)
+        model.onItemWorkrateUpdated(item, newValue)
         if (rebalanceNow) strategy.rebalance()
     }
     

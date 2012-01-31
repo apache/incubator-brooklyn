@@ -51,9 +51,9 @@ public class MockWorkerPool extends DefaultBalanceablePoolModel<String, String> 
     public MockWorkerPool(List<ContainerSpec> containers, List<ItemSpec> items) {
         super("Mock pool");
         for (ContainerSpec container : containers)
-            addContainer(container.name, container.lowThreshold, container.highThreshold);
+            onContainerAdded(container.name, container.lowThreshold, container.highThreshold);
         for (ItemSpec item : items)
-            addItem(item.name, item.parentContainer, item.currentWorkrate);
+            onItemAdded(item.name, item.parentContainer, item.currentWorkrate);
     }
     
     

@@ -1,5 +1,7 @@
 package brooklyn.policy.loadbalancing;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -11,11 +13,11 @@ import brooklyn.location.Location;
 public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements BalanceablePoolModel<ContainerType, ItemType> {
     
     private final String name;
-    private Set<ContainerType> containers = new LinkedHashSet<ContainerType>();
-    private Map<ContainerType, Double> containerToLowThreshold = new LinkedHashMap<ContainerType, Double>();
-    private Map<ContainerType, Double> containerToHighThreshold = new LinkedHashMap<ContainerType, Double>();
-    private Map<ItemType, ContainerType> itemToContainer = new LinkedHashMap<ItemType, ContainerType>();
-    private Map<ItemType, Double> itemToWorkrate = new LinkedHashMap<ItemType, Double>();
+    private final Set<ContainerType> containers = new LinkedHashSet<ContainerType>();
+    private final Map<ContainerType, Double> containerToLowThreshold = new LinkedHashMap<ContainerType, Double>();
+    private final Map<ContainerType, Double> containerToHighThreshold = new LinkedHashMap<ContainerType, Double>();
+    private final Map<ItemType, ContainerType> itemToContainer = new LinkedHashMap<ItemType, ContainerType>();
+    private final Map<ItemType, Double> itemToWorkrate = new LinkedHashMap<ItemType, Double>();
     
     
     public DefaultBalanceablePoolModel(String name) {
@@ -80,24 +82,26 @@ public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements Bal
     @Override public boolean isItemAllowedIn(ItemType item, Location location) {
         return true; // TODO?
     }
-    
-    @Override public void moveItem(ItemType item, ContainerType oldNode, ContainerType newNode) {
-        assert(itemToContainer.get(item).equals(oldNode));
-        itemToContainer.put(item, newNode);
-    }
-    
+
     
     // Mutators.
-    
+
     @Override
-    public void addContainer(ContainerType newContainer, double lowThreshold, double highThreshold) {
+    public void onItemMoved(ItemType item, ContainerType oldNode, ContainerType newNode) {
+        checkState(itemToContainer.containsKey(item), "Unknown item "+item);
+        checkState(itemToContainer.get(item).equals(oldNode), "Item expected in "+oldNode+" but is in "+itemToContainer.get(item));
+        itemToContainer.put(item, newNode);
+    }
+
+    @Override
+    public void onContainerAdded(ContainerType newContainer, double lowThreshold, double highThreshold) {
         containers.add(newContainer);
         containerToLowThreshold.put(newContainer, lowThreshold);
         containerToHighThreshold.put(newContainer, highThreshold);
     }
     
     @Override
-    public void removeContainer(ContainerType oldContainer) {
+    public void onContainerRemoved(ContainerType oldContainer) {
         containers.remove(oldContainer);
         containerToLowThreshold.remove(oldContainer);
         containerToHighThreshold.remove(oldContainer);
@@ -105,26 +109,33 @@ public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements Bal
     }
     
     @Override
-    public void addItem(ItemType item, ContainerType parentContainer) {
-        addItem(item, parentContainer, null);
+    public void onItemAdded(ItemType item, ContainerType parentContainer) {
+        onItemAdded(item, parentContainer, null);
     }
     
     @Override
-    public void addItem(ItemType item, ContainerType parentContainer, Number currentWorkrate) {
+    public void onItemAdded(ItemType item, ContainerType parentContainer, Number currentWorkrate) {
         itemToContainer.put(item, parentContainer);
         if (currentWorkrate != null)
             itemToWorkrate.put(item, currentWorkrate.doubleValue());
     }
     
     @Override
-    public void removeItem(ItemType item) {
+    public void onItemRemoved(ItemType item) {
         itemToContainer.remove(item);
         itemToWorkrate.remove(item);
     }
     
     @Override
-    public void updateItemWorkrate(ItemType item, double newValue) {
+    public void onItemWorkrateUpdated(ItemType item, double newValue) {
         itemToWorkrate.put(item, newValue);
     }
     
+
+    // Mutators that change the real world
+    
+    @Override public void moveItem(ItemType item, ContainerType oldNode, ContainerType newNode) {
+        // TODO no-op; should this be abstract?
+        onItemMoved(item, oldNode, newNode);
+    }
 }
