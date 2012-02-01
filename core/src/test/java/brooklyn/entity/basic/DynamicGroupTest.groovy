@@ -103,4 +103,16 @@ public class DynamicGroupTest {
             assertEquals(group.getMembers(), [e2])
         }
     }
+    
+    @Test
+    public void testGroupRemovesUnmanagedEntity() {
+        group.setEntityFilter( { it.getId().equals(e1.getId()) } )
+        assertEquals(group.getMembers(), [e1])
+        
+        app.getManagementContext().unmanage(e1)
+        
+        executeUntilSucceeds(timeout:5000) {
+            assertEquals(group.getMembers(), [])
+        }
+    }
 }

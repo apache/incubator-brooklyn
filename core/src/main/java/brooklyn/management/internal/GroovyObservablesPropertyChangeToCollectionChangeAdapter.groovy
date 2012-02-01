@@ -15,7 +15,7 @@ public class GroovyObservablesPropertyChangeToCollectionChangeAdapter implements
             case ObservableList.ElementAddedEvent: 
                 delegate.onItemAdded(evt.newValue); break;
             case ObservableList.ElementRemovedEvent: 
-                delegate.onItemRemoved(evt.newValue); break;
+                delegate.onItemRemoved(evt.oldValue); break;
             case ObservableList.ElementUpdatedEvent:
                 delegate.onItemRemoved(evt.oldValue); delegate.onItemAdded(evt.newValue); break;
             case ObservableList.ElementClearedEvent:
