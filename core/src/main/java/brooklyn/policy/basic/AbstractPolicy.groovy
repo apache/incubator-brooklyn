@@ -22,9 +22,9 @@ import com.google.common.base.Preconditions
  * Base {@link Policy} implementation; all policies should extend this or its children
  */
 public abstract class AbstractPolicy extends AbstractEntityAdjunct implements Policy {
-    private static final Logger log = LoggerFactory.getLogger(AbstractPolicy.class);
+    private static final Logger log = LoggerFactory.getLogger(AbstractPolicy.class)
 
-    protected String policyStatus;
+    protected String policyStatus
     protected Map leftoverProperties
     protected AtomicBoolean suspended = new AtomicBoolean(false)
 
@@ -32,15 +32,12 @@ public abstract class AbstractPolicy extends AbstractEntityAdjunct implements Po
 
     public AbstractPolicy(Map properties = [:]) {
         if (properties.name) {
-            Preconditions.checkArgument properties.name instanceof String, "'name' property should be a string"
-            name = properties.name
+            name = properties.remove "name"
         } else if (properties.displayName) {
-            Preconditions.checkArgument properties.displayName instanceof String, "'displayName' property should be a string"
-            name = properties.displayName
+            name = properties.remove "displayName"
         }
         if (properties.id) {
-            Preconditions.checkArgument properties.id == null || properties.id instanceof String, "'id' property should be a string"
-            id = properties.remove("id")
+            id = properties.remove "id"
         }
         leftoverProperties = properties
     }
@@ -57,6 +54,7 @@ public abstract class AbstractPolicy extends AbstractEntityAdjunct implements Po
         return suspended.get().booleanValue()
     }
 
+    @Override
     public void destroy(){
         suspend()
         super.destroy()

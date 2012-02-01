@@ -5,6 +5,7 @@ import static org.testng.Assert.*
 
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -16,6 +17,7 @@ import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.management.Task
+import brooklyn.test.TestUtils
 import brooklyn.test.entity.BlockingEntity
 import brooklyn.test.entity.TestEntity
 import brooklyn.util.internal.Repeater
@@ -26,6 +28,8 @@ import com.google.common.base.Joiner
 class DynamicFabricTest {
     private static final Logger logger = LoggerFactory.getLogger(DynamicFabricTest)
 
+    private static final int TIMEOUT_MS = 5*1000
+    
     static { TimeExtras.init() }
     
     @Test
@@ -54,6 +58,30 @@ class DynamicFabricTest {
             assertTrue(locs.removeAll(child.locations))
         }
         assertTrue(locs.isEmpty(), Joiner.on(",").join(locs))
+    }
+    
+    @Test
+    public void testSizeEnricher() {
+        Collection<Location> locs = [ new SimulatedLocation(), new SimulatedLocation(), new SimulatedLocation() ]
+        Application app = new AbstractApplication() {}
+        DynamicFabric fabric = new DynamicFabric(newEntity:{ fabricProperties, owner ->
+            return new DynamicCluster(owner:owner, initialSize:0,
+                newEntity:{ clusterProperties -> return new TestEntity(clusterProperties) })
+            }, app)
+        
+        fabric.start(locs)
+        
+        int i = 0, total = 0
+        
+        assertEquals(fabric.ownedChildren.size(), locs.size(), Joiner.on(",").join(fabric.ownedChildren))
+        fabric.ownedChildren.each { Cluster child ->
+            total += ++i
+            child.resize(i)
+        }
+        
+        TestUtils.executeUntilSucceeds(timeout:TIMEOUT_MS) {
+            assertEquals(fabric.getAttribute(DynamicFabric.FABRIC_SIZE), total)
+        }
     }
     
     @Test
