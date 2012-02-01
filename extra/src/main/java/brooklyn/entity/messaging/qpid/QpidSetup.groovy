@@ -13,12 +13,15 @@ import brooklyn.location.basic.SshMachineLocation
  * Start an AMQP 0-10 {@link QpidBroker} in a {@link brooklyn.location.Location} accessible over ssh.
  */
 public class QpidSetup extends SshBasedJavaAppSetup {
-    public static final String DEFAULT_VERSION = "0.12" // TODO change to 0.14 when ASF release
+    public static final String DEFAULT_VERSION = "0.14"
     public static final String DEFAULT_INSTALL_DIR = DEFAULT_INSTALL_BASEDIR+"/"+"qpid"
     public static final int DEFAULT_FIRST_AMQP_PORT = 5672
 
     private int amqpPort
 
+    // FIXME for ports, entity.setAttribute(portSensorAndConfig) will work,
+    // and if entity has location set, it will look it up in the appropriate location
+    // (doing that via SensorRegistry.apply, as in JBoss7Server, is preferred to the way setup is being done here)
     public static QpidSetup newInstance(QpidBroker entity, SshMachineLocation machine) {
         String suggestedVersion = entity.getConfig(QpidBroker.SUGGESTED_VERSION)
         String suggestedInstallDir = entity.getConfig(QpidBroker.SUGGESTED_INSTALL_DIR)
@@ -32,7 +35,7 @@ public class QpidSetup extends SshBasedJavaAppSetup {
         String logFileLocation = "$runDir/log/qpid.log"
 
         int jmxPort = machine.obtainPort(suggestedJmxPort)
-        int rmiPort = machine.obtainPort(PortRanges.fromString(""+(jmxPort+100) + "+"))
+        int rmiPort = machine.obtainPort(PortRanges.fromString(String.format("%d+", jmxPort+100)))
         int amqpPort = machine.obtainPort(suggestedAmqpPort)
 
         QpidSetup result = new QpidSetup(entity, machine)
