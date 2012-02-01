@@ -105,7 +105,7 @@ public class LoadBalancingPolicy extends AbstractPolicy {
         
         // Take heed of any extant items.
         for (Movable item : ((BalanceableContainer) newContainer).getBalanceableItems()) 
-            onItemAdded((Entity) item, false)
+            onItemAdded((Entity) item, newContainer, false)
         
         if (rebalanceNow) strategy.rebalance()
     }
