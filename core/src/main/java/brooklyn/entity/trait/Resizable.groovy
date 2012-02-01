@@ -13,12 +13,8 @@ import brooklyn.entity.basic.NamedParameter
  */
 public interface Resizable {
 
-    /* Tell Brooklyn about the effectors of this entity. */
     Effector<Integer> RESIZE = new MethodEffector<Integer>(Resizable.&resize)
-//		ExplicitEffector.<Resizable,Integer> create("resize", Integer.class, 
-//            [ ["desiredSize", Integer, "The new size of the cluster", Integer.valueOf(0) ] as BasicParameterType ],
-//            "Changes the size of the entity (e.g. the number of nodes in a cluster)", {
-//        e, m -> e.resize((Integer) m.get("desiredSize")) })
+
 
     /**
      * Grow or shrink this entity to the desired size.
@@ -28,15 +24,13 @@ public interface Resizable {
      */
 	@Description("Changes the size of the entity (e.g. the number of nodes in a cluster)")
     Integer resize(
-		@NamedParameter("desiredSize") @Description("The new size of the cluster")
-		//FIXME seems dangerous to offer a default value, esp of zero? 
-		@DefaultValue("0")
-		Integer desiredSize);
-	
-	
+        @NamedParameter("desiredSize") @Description("The new size of the cluster")
+        Integer desiredSize);
+
     /**
      * @return the current size of the group.
      */
     Integer getCurrentSize();
+
 }
 
