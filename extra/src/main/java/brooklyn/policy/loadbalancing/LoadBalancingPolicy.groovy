@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.ConfigKey
 import brooklyn.entity.Entity
-import brooklyn.entity.Group
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.AttributeSensor
@@ -52,6 +51,10 @@ public class LoadBalancingPolicy extends AbstractPolicy {
                 case BalanceableWorkerPool.ITEM_REMOVED:
                     ContainerItemPair pair = value
                     onItemRemoved(pair.item, pair.container, true)
+                    break
+                case BalanceableWorkerPool.ITEM_MOVED:
+                    ContainerItemPair pair = value
+                    onItemMoved(pair.item, pair.container, true)
                     break
             }
         }
@@ -142,6 +145,12 @@ public class LoadBalancingPolicy extends AbstractPolicy {
     private void onItemRemoved(Entity item, Entity parentContainer, boolean rebalanceNow) {
         unsubscribe(item)
         model.onItemRemoved(item)
+        if (rebalanceNow) strategy.rebalance()
+    }
+    
+    private void onItemMoved(Entity item, Entity parentContainer, boolean rebalanceNow) {
+        unsubscribe(item)
+        model.onItemMoved(item)
         if (rebalanceNow) strategy.rebalance()
     }
     

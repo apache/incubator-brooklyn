@@ -23,6 +23,11 @@ public class MockItemEntity extends AbstractEntity implements Movable {
         ((MockContainerEntity) currentContainer)?.addItem(this)
     }
     
+    public void stop() {
+        // FIXME How best to indicate this has been entirely stopped, rather than just in-transit?
+        ((MockContainerEntity) currentContainer)?.removeItem(this)
+    }
+    
     public String toString() {
         return "MockItem["+getDisplayName()+"]"
     }

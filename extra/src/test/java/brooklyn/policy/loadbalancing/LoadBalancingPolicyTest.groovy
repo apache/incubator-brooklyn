@@ -178,6 +178,47 @@ public class LoadBalancingPolicyTest {
         }
     }
     
+    @Test
+    public void testRemoveContainerCausesRebalancing() {
+        // Set-up containers and items.
+        MockContainerEntity containerA = newContainer(app, "A", 10, 30)
+        MockContainerEntity containerB = newContainer(app, "B", 10, 30)
+        MockContainerEntity containerC = newContainer(app, "C", 10, 30)
+        MockItemEntity item1 = newItem(app, containerA, "1", 10)
+        MockItemEntity item2 = newItem(app, containerA, "2", 10)
+        MockItemEntity item3 = newItem(app, containerB, "3", 10)
+        MockItemEntity item4 = newItem(app, containerB, "4", 10)
+        MockItemEntity item5 = newItem(app, containerC, "5", 10)
+        MockItemEntity item6 = newItem(app, containerC, "6", 10)
+
+        app.getManagementContext().unmanage(containerC)
+        item5.move(containerA)
+        item6.move(containerA)
+        
+        executeUntilSucceeds(timeout:TIMEOUT_MS) {
+            assertEquals(getContainerWorkrate(containerA), 30d)
+            assertEquals(getContainerWorkrate(containerB), 30d)
+        }
+    }
+
+    @Test
+    public void testRemoveItemCausesRebalancing() {
+        // Set-up containers and items.
+        MockContainerEntity containerA = newContainer(app, "A", 10, 30)
+        MockContainerEntity containerB = newContainer(app, "B", 10, 30)
+        MockItemEntity item1 = newItem(app, containerA, "1", 30)
+        MockItemEntity item2 = newItem(app, containerB, "2", 20)
+        MockItemEntity item3 = newItem(app, containerB, "3", 20)
+        
+        item1.stop()
+        app.getManagementContext().unmanage(item1)
+        
+        executeUntilSucceeds(timeout:TIMEOUT_MS) {
+            assertEquals(getContainerWorkrate(containerA), 20d)
+            assertEquals(getContainerWorkrate(containerB), 20d)
+        }
+    }
+
     
     // Testing conveniences.
      

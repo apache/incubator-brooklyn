@@ -35,7 +35,9 @@ public class BalanceableWorkerPool extends AbstractEntity {
         ContainerItemPair.class, "balanceablepool.item.added", "Item added to balanceable pool");
     public static BasicNotificationSensor<ContainerItemPair> ITEM_REMOVED = new BasicNotificationSensor<ContainerItemPair>(
         ContainerItemPair.class, "balanceablepool.item.removed", "Item removed from balanceable pool");
-    
+    public static BasicNotificationSensor<ContainerItemPair> ITEM_MOVED = new BasicNotificationSensor<ContainerItemPair>(
+        ContainerItemPair.class, "balanceablepool.item.removed", "Item moved in balanceable pool to the given container");
+
     // TODO: too-hot / too-cold sensors?
     //       "surplus" and "shortfall"?
     
@@ -82,6 +84,7 @@ public class BalanceableWorkerPool extends AbstractEntity {
     
     private void onContainerAdded(Entity newContainer) {
         subscribe(newContainer, BalanceableContainer.ITEM_ADDED, eventHandler)
+        subscribe(newContainer, BalanceableContainer.ITEM_REMOVED, eventHandler)
         emit(CONTAINER_ADDED, newContainer)
     }
     
