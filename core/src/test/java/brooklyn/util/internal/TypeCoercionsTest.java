@@ -1,5 +1,7 @@
 package brooklyn.util.internal;
 
+import static org.testng.Assert.assertEquals;
+
 import java.util.List;
 import java.util.Set;
 
@@ -14,17 +16,35 @@ import com.google.common.collect.ImmutableSet;
 public class TypeCoercionsTest {
 
     @Test
+    public void testCoercePrimitivesToSameType() {
+        assertEquals(TypeCoercions.coerce('1', Character.class), (Character)'1');
+        assertEquals(TypeCoercions.coerce((short)1, Short.class), (Short)((short)1));
+        assertEquals(TypeCoercions.coerce(1, Integer.class), (Integer)1);
+        assertEquals(TypeCoercions.coerce(1l, Long.class), (Long)1l);
+        assertEquals(TypeCoercions.coerce(1f, Float.class), (Float)1f);
+        assertEquals(TypeCoercions.coerce(1d, Double.class), (Double)1d);
+        assertEquals(TypeCoercions.coerce(true, Boolean.class), (Boolean)true);
+    }
+    
+    @Test(enabled=false) // FIXME would be nice if this worked!
+    public void testCoercePrimitiveToOtherCastablePrimitive() {
+        assertEquals(TypeCoercions.coerce('1', Double.class), (Double)1d);
+        assertEquals(TypeCoercions.coerce((short)1, Double.class), (Double)1d);
+        assertEquals(TypeCoercions.coerce(1, Double.class), (Double)1d);
+        assertEquals(TypeCoercions.coerce(1l, Double.class), (Double)1d);
+        assertEquals(TypeCoercions.coerce(1f, Double.class), (Double)1d);
+    }
+    
+    @Test
     public void testListToSetCoercion() {
-        Set s = TypeCoercions.coerce(ImmutableList.of(1), Set.class);
-        Assert.assertEquals(s.size(), 1);
-        Assert.assertEquals(s.iterator().next(), 1);
+        Set<?> s = TypeCoercions.coerce(ImmutableList.of(1), Set.class);
+        Assert.assertEquals(s, ImmutableSet.of(1));
     }
     
     @Test
     public void testSetToListCoercion() {
-        List s = TypeCoercions.coerce(ImmutableSet.of(1), List.class);
-        Assert.assertEquals(s.size(), 1);
-        Assert.assertEquals(s.iterator().next(), 1);
+        List<?> s = TypeCoercions.coerce(ImmutableSet.of(1), List.class);
+        Assert.assertEquals(s, ImmutableList.of(1));
     }
 
     @Test
