@@ -55,6 +55,8 @@ public class BalanceableWorkerPool extends AbstractEntity {
                     // TODO What if start has failed? Is there a sensor to indicate that?
                     if ((Boolean)value) {
                         onContainerUp((Entity) source)
+                    } else {
+                        onContainerDown((Entity) source)
                     }
                     break
                 case BalanceableContainer.ITEM_ADDED:
@@ -96,6 +98,10 @@ public class BalanceableWorkerPool extends AbstractEntity {
     
     private void onContainerUp(Entity newContainer) {
         emit(CONTAINER_ADDED, newContainer)
+    }
+    
+    private void onContainerDown(Entity oldContainer) {
+        emit(CONTAINER_REMOVED, oldContainer)
     }
     
     private void onContainerRemoved(Entity oldContainer) {
