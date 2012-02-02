@@ -15,22 +15,22 @@ public interface SubscriptionContext {
     /**
      * As {@link SubscriptionManager#subscribe(Map, Entity, Sensor, SensorEventListener)} with default subscription parameters for this context
      */
-    <T> SubscriptionHandle subscribe(Map<String, Object> flags, Entity producer, Sensor<T> sensor, SensorEventListener<T> listener);
+    <T> SubscriptionHandle subscribe(Map<String, Object> flags, Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener);
  
     /** @see #subscribe(Map, Entity, Sensor, SensorEventListener) */
-    <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<T> listener);
+    <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener);
     
     /** @see #subscribe(Map, Entity, Sensor, SensorEventListener) */
-    <T> SubscriptionHandle subscribeToChildren(Map<String, Object> flags, Entity parent, Sensor<T> sensor, SensorEventListener<T> listener);
+    <T> SubscriptionHandle subscribeToChildren(Map<String, Object> flags, Entity parent, Sensor<T> sensor, SensorEventListener<? super T> listener);
  
     /** @see #subscribe(Map, Entity, Sensor, SensorEventListener) */
-    <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, SensorEventListener<T> listener);
+    <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, SensorEventListener<? super T> listener);
     
     /** @see #subscribe(Map, Entity, Sensor, SensorEventListener) */
-    <T> SubscriptionHandle subscribeToMembers(Map<String, Object> flags, Entity parent, Sensor<T> sensor, SensorEventListener<T> listener);
+    <T> SubscriptionHandle subscribeToMembers(Map<String, Object> flags, Entity parent, Sensor<T> sensor, SensorEventListener<? super T> listener);
  
     /** @see #subscribe(Map, Entity, Sensor, SensorEventListener) */
-    <T> SubscriptionHandle subscribeToMembers(Entity parent, Sensor<T> sensor, SensorEventListener<T> listener);
+    <T> SubscriptionHandle subscribeToMembers(Entity parent, Sensor<T> sensor, SensorEventListener<? super T> listener);
     
     /** @see SubscriptionManager#unsubscribe(SubscriptionHandle) */
     boolean unsubscribe(SubscriptionHandle subscriptionId);
