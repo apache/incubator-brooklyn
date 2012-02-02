@@ -147,6 +147,14 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         }
     }
     
+    @Override
+    public boolean removeOwnedChild(Entity child) {
+        boolean changed = super.removeOwnedChild(child)
+        if (changed) {
+            removeMember(child)
+        }
+    }
+    
     protected Entity addNode() {
         Map creation = [:]
         creation << createFlags

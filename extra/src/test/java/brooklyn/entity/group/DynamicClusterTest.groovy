@@ -28,7 +28,9 @@ import brooklyn.util.internal.TimeExtras
 import com.google.common.collect.Iterables
 
 class DynamicClusterTest {
-    
+
+    private static final int TIMEOUT_MS = 2000
+        
     static { TimeExtras.init() }
     
     TestApplication app
@@ -232,7 +234,7 @@ class DynamicClusterTest {
         
         cluster.start([loc])
         
-        TestUtils.executeUntilSucceeds(timeout:2*TimeUnit.SECONDS) {
+        TestUtils.executeUntilSucceeds(timeout:TIMEOUT_MS) {
             assertEquals(called.size(), 2)
             assertEquals(called, created)
         }
@@ -248,7 +250,29 @@ class DynamicClusterTest {
         assertEquals(tasks.size(), 2)
         assertTrue(Iterables.get(tasks, 0).getDescription().contains("start"))
         assertTrue(Iterables.get(tasks, 1).getDescription().contains("resize"))
+    }
+    
+    @Test
+    public void testStoppedChildIsRemoveFromGroup() {
+        TestEntity entity
+        final int failNum = 2
+        final AtomicInteger counter = new AtomicInteger(0)
+        DynamicCluster cluster = new DynamicCluster([
+                newEntity:{ properties -> return new TestEntity(properties) },
+                initialSize:1 
+            ], app)
         
+        cluster.start([loc])
+        
+        TestEntity child = cluster.ownedChildren.get(0)
+        child.stop()
+        app.managementContext.unmanage(child)
+        
+        TestUtils.executeUntilSucceeds(timeout:TIMEOUT_MS) {
+            assertEquals(0, cluster.ownedChildren.size())
+            assertEquals(0, cluster.currentSize)
+            assertEquals(0, cluster.members.size())
+        }
     }
 }
 
