@@ -104,7 +104,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     private Map<String,Sensor> sensors = null
 
     /** Map of config keys on this entity by name, populated at constructor time. */
-	private Map<String,Sensor> configKeys = null
+	private Map<String,ConfigKey> configKeys = null
 
     private transient EntityClass entityClass = null
     protected transient ExecutionContext execution
@@ -362,10 +362,11 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     }
 
     @Override
-    public void removeOwnedChild(Entity child) {
+    public boolean removeOwnedChild(Entity child) {
         synchronized (ownedChildren) {
-	        ownedChildren.remove child
+	        boolean changed = ownedChildren.remove child
 	        child.clearOwner()
+            return changed
         }
     }
 
