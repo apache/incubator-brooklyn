@@ -2,10 +2,12 @@ package brooklyn.entity.basic
 
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
+import java.util.Collection;
 import java.util.concurrent.CancellationException
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Future
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -34,6 +36,7 @@ import brooklyn.management.ManagementContext
 import brooklyn.management.SubscriptionContext
 import brooklyn.management.SubscriptionHandle
 import brooklyn.management.Task
+import brooklyn.management.internal.SubscriptionTracker;
 import brooklyn.policy.Enricher
 import brooklyn.policy.Policy
 import brooklyn.policy.basic.AbstractPolicy
@@ -46,6 +49,7 @@ import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.task.BasicExecutionContext
 
 import com.google.common.collect.ImmutableList
+import com.google.common.collect.SetMultimap;
 
 /**
  * Default {@link Entity} implementation.
@@ -135,6 +139,8 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
      */
     protected final Map<ConfigKey,Object> ownConfig = [:]
     protected final Map<ConfigKey,Object> inheritedConfig = [:]
+
+    protected transient SubscriptionTracker _subscriptionTracker;
 
     public AbstractEntity(Entity owner) {
         this([:], owner)
@@ -565,20 +571,43 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     }
 
     /** @see Entity#subscribe(Entity, Sensor, EventListener) */
-    public <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<T> listener) {
-        subscriptionContext.subscribe(producer, sensor, listener)
+    public <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener) {
+        return subscriptionTracker.subscribe(producer, sensor, listener)
     }
 
     /** @see Entity#subscribeToChildren(Entity, Sensor, EventListener) */
-    public <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, SensorEventListener<T> listener) {
-        subscriptionContext.subscribeToChildren(parent, sensor, listener)
+    public <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, SensorEventListener<? super T> listener) {
+        return subscriptionTracker.subscribeToChildren(parent, sensor, listener)
     }
+
+    /**
+     * Unsubscribes the given producer.
+     *
+     * @see SubscriptionContext#unsubscribe(SubscriptionHandle)
+     */
+    protected boolean unsubscribe(Entity producer) {
+        return subscriptionTracker.unsubscribe(producer)
+    }
+
+    /**
+    * Unsubscribes the given handle.
+    *
+    * @see SubscriptionContext#unsubscribe(SubscriptionHandle)
+    */
+   protected boolean unsubscribe(Entity producer, SubscriptionHandle handle) {
+       return subscriptionTracker.unsubscribe(producer, handle)
+   }
 
     protected synchronized SubscriptionContext getSubscriptionContext() {
         if (subscription) return subscription
         subscription = getManagementContext()?.getSubscriptionContext(this);
     }
 
+    protected synchronized SubscriptionTracker getSubscriptionTracker() {
+        if (_subscriptionTracker!=null) return _subscriptionTracker;
+        _subscriptionTracker = new SubscriptionTracker(getSubscriptionContext());
+    }
+    
     public synchronized ExecutionContext getExecutionContext() {
         if (execution) return execution;
 		def execMgr = getManagementContext()?.executionManager;

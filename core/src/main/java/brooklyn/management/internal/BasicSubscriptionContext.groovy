@@ -30,7 +30,7 @@ public class BasicSubscriptionContext implements SubscriptionContext {
         subscribe(newFlags, producer, sensor, c as SensorEventListener)        
     }
 
-    public <T> SubscriptionHandle subscribe(Map<String, Object> newFlags=[:], Entity producer, Sensor<T> sensor, SensorEventListener<T> listener) {
+    public <T> SubscriptionHandle subscribe(Map<String, Object> newFlags=[:], Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener) {
         Map subscriptionFlags = [:]
         subscriptionFlags << flags
         if (newFlags) subscriptionFlags << newFlags
@@ -41,7 +41,7 @@ public class BasicSubscriptionContext implements SubscriptionContext {
         subscribeToChildren(newFlags, parent, sensor, c as SensorEventListener)        
     }
 
-    public <T> SubscriptionHandle subscribeToChildren(Map<String, Object> newFlags=[:], Entity parent, Sensor<T> sensor, SensorEventListener<T> listener) {
+    public <T> SubscriptionHandle subscribeToChildren(Map<String, Object> newFlags=[:], Entity parent, Sensor<T> sensor, SensorEventListener<? super T> listener) {
         Map subscriptionFlags = [:]
         subscriptionFlags << flags
         if (newFlags) subscriptionFlags << newFlags
@@ -52,7 +52,7 @@ public class BasicSubscriptionContext implements SubscriptionContext {
         subscribeToMembers(newFlags, parent, sensor, c as SensorEventListener)
     }
 
-    public <T> SubscriptionHandle subscribeToMembers(Map<String, Object> newFlags=[:], Entity parent, Sensor<T> sensor, SensorEventListener<T> listener) {
+    public <T> SubscriptionHandle subscribeToMembers(Map<String, Object> newFlags=[:], Entity parent, Sensor<T> sensor, SensorEventListener<? super T> listener) {
         Map subscriptionFlags = [:]
         subscriptionFlags << flags
         if (newFlags) subscriptionFlags << newFlags
