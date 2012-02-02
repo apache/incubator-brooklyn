@@ -125,14 +125,18 @@ public abstract class AbstractManagementContext implements ManagementContext  {
      * when a method is called on that entity.
      */
     protected <T> T invokeEffectorMethodSync(Entity entity, Effector<T> eff, Object args) {
-        Task current = BasicExecutionManager.currentTask
-        if (!current || !current.tags.contains(entity) || !isManagedLocally(entity)) {
-			manageIfNecessary(entity, eff.name);
-            // Wrap in a task if we aren't already in a task that is tagged with this entity
-            runAtEntity(expirationPolicy: ExpirationPolicy.NEVER, entity, { invokeEffectorMethodLocal(entity, eff, args); },
-                description:"invoking ${eff.name} on ${entity.displayName}", displayName:eff.name, tags:[EFFECTOR_TAG]).get()
-        } else {
-            return invokeEffectorMethodLocal(entity, eff, args)
+        try {
+            Task current = BasicExecutionManager.currentTask
+            if (!current || !current.tags.contains(entity) || !isManagedLocally(entity)) {
+    			manageIfNecessary(entity, eff.name);
+                // Wrap in a task if we aren't already in a task that is tagged with this entity
+                runAtEntity(expirationPolicy: ExpirationPolicy.NEVER, entity, { invokeEffectorMethodLocal(entity, eff, args); },
+                    description:"invoking ${eff.name} on ${entity.displayName}", displayName:eff.name, tags:[EFFECTOR_TAG]).get()
+            } else {
+                return invokeEffectorMethodLocal(entity, eff, args)
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Error invoking $eff on entity $entity", e);
         }
     }
 
