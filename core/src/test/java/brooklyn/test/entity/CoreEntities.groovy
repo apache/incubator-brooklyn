@@ -16,6 +16,7 @@ import brooklyn.event.Sensor
 import brooklyn.event.SensorEventListener
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
+import brooklyn.event.basic.BasicNotificationSensor
 import brooklyn.event.basic.ListConfigKey
 import brooklyn.event.basic.MapConfigKey
 import brooklyn.location.Location
@@ -56,6 +57,7 @@ public class TestEntity extends AbstractEntity implements Startable {
     
     public static final BasicAttributeSensor<Integer> SEQUENCE = [ Integer, "test.sequence", "Test Sequence" ]
     public static final BasicAttributeSensor<String> NAME = [ String, "test.name", "Test name" ]
+    public static final BasicNotificationSensor<String> MY_NOTIF = [ String, "test.myNotif", "Test notification" ]
     
     int sequenceValue = 0
     AtomicInteger counter = new AtomicInteger(0)
