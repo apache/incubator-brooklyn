@@ -2,17 +2,14 @@ package brooklyn.policy.loadbalancing
 
 import java.util.Map
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
 import brooklyn.entity.basic.AbstractEntity
-import brooklyn.entity.basic.AbstractGroup;
-import brooklyn.entity.trait.Changeable;
-import brooklyn.event.SensorEvent;
+import brooklyn.entity.basic.AbstractGroup
+import brooklyn.entity.trait.Startable
+import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
-import brooklyn.event.basic.BasicNotificationSensor;
+import brooklyn.event.basic.BasicNotificationSensor
 
 
 public class BalanceableWorkerPool extends AbstractEntity {
@@ -54,6 +51,12 @@ public class BalanceableWorkerPool extends AbstractEntity {
                 case AbstractGroup.MEMBER_REMOVED:
                     onContainerRemoved((Entity) value)
                     break
+                case Startable.SERVICE_UP:
+                    // TODO What if start has failed? Is there a sensor to indicate that?
+                    if ((Boolean)value) {
+                        onContainerUp((Entity) source)
+                    }
+                    break
                 case BalanceableContainer.ITEM_ADDED:
                     onItemAdded(source, (Entity) value)
                     break
@@ -83,8 +86,15 @@ public class BalanceableWorkerPool extends AbstractEntity {
     }
     
     private void onContainerAdded(Entity newContainer) {
+        subscribe(newContainer, Startable.SERVICE_UP, eventHandler)
         subscribe(newContainer, BalanceableContainer.ITEM_ADDED, eventHandler)
         subscribe(newContainer, BalanceableContainer.ITEM_REMOVED, eventHandler)
+        if (!(newContainer instanceof Startable) || newContainer.getAttribute(Startable.SERVICE_UP)) {
+            emit(CONTAINER_ADDED, newContainer)
+        }
+    }
+    
+    private void onContainerUp(Entity newContainer) {
         emit(CONTAINER_ADDED, newContainer)
     }
     

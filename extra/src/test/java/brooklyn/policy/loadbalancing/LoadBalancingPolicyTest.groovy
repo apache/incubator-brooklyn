@@ -29,6 +29,8 @@ public class LoadBalancingPolicyTest {
     
     private static final long TIMEOUT_MS = 5000;
     
+    private static final long CONTAINER_STARTUP_DELAY_MS = 100
+    
     public static final AttributeSensor<Integer> TEST_METRIC =
         new BasicAttributeSensor<Integer>(Integer.class, "test.metric", "Dummy workrate for test entities")
     
@@ -112,7 +114,7 @@ public class LoadBalancingPolicyTest {
         MockItemEntity item8 = newItem(app, containerB, "8", 10)
         // Both containers are over-threshold at this point; should not rebalance.
         
-        MockContainerEntity containerC = newContainer(app, "C", 10, 30)
+        MockContainerEntity containerC = newAsyncContainer(app, "C", 10, 30, CONTAINER_STARTUP_DELAY_MS)
         // New container allows hot ones to offload work.
         
         executeUntilSucceeds(timeout:TIMEOUT_MS) {
@@ -142,7 +144,7 @@ public class LoadBalancingPolicyTest {
             assertEquals(getContainerWorkrate(containerB), 40d)
         }
         
-        MockContainerEntity containerC = newContainer(app, "C", 10, 50)
+        MockContainerEntity containerC = newAsyncContainer(app, "C", 10, 50, CONTAINER_STARTUP_DELAY_MS)
         
         executeUntilSucceeds(timeout:TIMEOUT_MS) {
             assertEquals(getContainerWorkrate(containerA), 40d)
@@ -222,13 +224,18 @@ public class LoadBalancingPolicyTest {
     
     // Testing conveniences.
      
-    private static MockContainerEntity newContainer(Application app, String name, double lowThreshold, double highThreshold) {
+    private MockContainerEntity newContainer(Application app, String name, double lowThreshold, double highThreshold) {
+        return newAsyncContainer(app, name, lowThreshold, highThreshold, 0)
+    }
+    
+    private MockContainerEntity newAsyncContainer(Application app, String name, double lowThreshold, double highThreshold, long delay) {
         // Annoyingly, can't set owner until after the threshold config has been defined.
-        MockContainerEntity container = new MockContainerEntity([displayName:name])
+        MockContainerEntity container = new MockContainerEntity([displayName:name], delay)
         container.setConfig(LOW_THRESHOLD_CONFIG_KEY, lowThreshold)
         container.setConfig(HIGH_THRESHOLD_CONFIG_KEY, highThreshold)
         container.setOwner(app)
         app.getManagementContext().manage(container)
+        container.start([loc])
         return container
     }
     
