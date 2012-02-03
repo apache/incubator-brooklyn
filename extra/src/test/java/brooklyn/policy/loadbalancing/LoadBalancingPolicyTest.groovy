@@ -49,8 +49,8 @@ public class LoadBalancingPolicyTest {
         // TODO: improve the default impl to avoid the need for this anonymous overrider of 'moveItem'
         DefaultBalanceablePoolModel<Entity, Entity> model = new DefaultBalanceablePoolModel<Entity, Entity>("pool-model") {
             @Override public void moveItem(Entity item, Entity oldContainer, Entity newContainer) {
-                super.moveItem(item, oldContainer, newContainer)
                 ((Movable) item).move(newContainer)
+                super.moveItem(item, oldContainer, newContainer)
             }
         }
         

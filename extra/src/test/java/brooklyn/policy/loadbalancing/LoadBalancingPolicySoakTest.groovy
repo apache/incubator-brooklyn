@@ -4,6 +4,8 @@ import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
@@ -17,6 +19,8 @@ import brooklyn.location.basic.SimulatedLocation
 import brooklyn.test.entity.TestApplication
 
 public class LoadBalancingPolicySoakTest {
+
+    protected static final Logger LOG = LoggerFactory.getLogger(LoadBalancingPolicySoakTest.class)
     
     private static final long TIMEOUT_MS = 5000;
     
@@ -37,8 +41,8 @@ public class LoadBalancingPolicySoakTest {
         // TODO: improve the default impl to avoid the need for this anonymous overrider of 'moveItem'
         DefaultBalanceablePoolModel<Entity, Entity> model = new DefaultBalanceablePoolModel<Entity, Entity>("pool-model") {
             @Override public void moveItem(Entity item, Entity oldContainer, Entity newContainer) {
-                super.moveItem(item, oldContainer, newContainer)
                 ((Movable) item).move(newContainer)
+                super.moveItem(item, oldContainer, newContainer)
             }
         }
         
@@ -50,12 +54,22 @@ public class LoadBalancingPolicySoakTest {
         policy.setEntity(pool)
         app.start([loc])
     }
-    
-    @Test
-    public void testFoo() {
+
+    @Test(enabled=false)
+    public void testLoadBalancingQuickTest() {
         int numCycles = 1
+        runLoadBalancingSoakTest(numCycles)
+    }
+    
+    @Test(enabled=false, groups="Integration") // integration group, because it's slow to run 100 cycles
+    public void testLoadBalancingSoakTest() {
+        int numCycles = 100
+        runLoadBalancingSoakTest(numCycles)
+    }
+            
+    private void runLoadBalancingSoakTest(int numCycles) {
         int numContainers = 5
-        int numItems = 20
+        int numItems = 5
         double lowThreshold = 20
         double highThreshold = 30
         int totalRate = 5*(0.95*highThreshold)
@@ -73,7 +87,7 @@ public class LoadBalancingPolicySoakTest {
         }
         
         for (int i = 0; i < numCycles; i++) {
-            
+            LOG.debug(LoadBalancingPolicySoakTest.class.getSimpleName()+": cycle $i")
             // Stop an item, and start another
             int itemIndex = random.nextInt(numItems)
             MockItemEntity itemToStop = items.get(itemIndex)
@@ -82,8 +96,8 @@ public class LoadBalancingPolicySoakTest {
             items.set(itemIndex, newItem(app, containers.get(0), "item-$itemIndex", 5))
             
             // Repartition the load across the items
-            List<Integer> itemRates = randomlyDivideLoad(numItems, totalRate)
-       
+            List<Integer> itemRates = randomlyDivideLoad(numItems, totalRate, 0, (int)highThreshold)
+            
             for (int j = 0; j < numItems; j++) {
                 MockItemEntity item = items.get(j)
                 item.setAttribute(MockItemEntity.TEST_METRIC, itemRates.get(j))
@@ -94,15 +108,19 @@ public class LoadBalancingPolicySoakTest {
             MockContainerEntity containerToStop = containers.get(containerIndex)
             containerToStop.offloadAndStop(containers.get((containerIndex+1)%numContainers))
             app.managementContext.unmanage(containerToStop)
-            containers.set(containerIndex, newContainer(app, "item-$itemIndex", lowThreshold, highThreshold))
+            
+            MockContainerEntity containerToAdd = newContainer(app, "item-$itemIndex", lowThreshold, highThreshold)
+            app.managementContext.unmanage(containerToStop)
+            containers.set(containerIndex, containerToAdd)
             
             // Assert that the items become balanced again
             executeUntilSucceeds(timeout:TIMEOUT_MS) {
                 List<Double> containerRates = containers.collect { it.getWorkrate() }
+                assertEquals(sum(containerRates), sum(itemRates), "containerRates=$containerRates; itemRates=$itemRates")
                 
                 for (double containerRate : containerRates) {
-                    assertTrue(containerRate > lowThreshold, "containerRates=$containerRates; itemRates=$itemRates")
-                    assertTrue(containerRate < highThreshold, "containerRates=$containerRates; itemRates=$itemRates")
+                    assertTrue(containerRate >= lowThreshold, "containerRates=$containerRates; itemRates=$itemRates")
+                    assertTrue(containerRate <= highThreshold, "containerRates=$containerRates; itemRates=$itemRates")
                 }
             }
         }
@@ -111,6 +129,12 @@ public class LoadBalancingPolicySoakTest {
     
     // Testing conveniences.
      
+    private double sum(Iterable<Double> vals) {
+        double total = 0;
+        vals.each { total += it }
+        return total;
+    }
+    
     private MockContainerEntity newContainer(Application app, String name, double lowThreshold, double highThreshold) {
         return newAsyncContainer(app, name, lowThreshold, highThreshold, 0)
     }
@@ -157,7 +181,7 @@ public class LoadBalancingPolicySoakTest {
      * 
      * TODO This is not particularly good at distributing load, but it's random and skewed enough to force rebalancing.
      */
-    private List<Integer> randomlyDivideLoad(int numItems, int totalLoad) {
+    private List<Integer> randomlyDivideLoad(int numItems, int totalLoad, int min, int max) {
         List<Integer> result = new ArrayList<Integer>(numItems);
         int totalRemaining = totalLoad;
         int variance = 3
@@ -169,19 +193,13 @@ public class LoadBalancingPolicySoakTest {
             double skewFactor = ((double)i/numItems)*2 - 1; // a number between -1 and 1, depending how far through the item set we are
             int itemSkew = (int) (random.nextInt(skew)*skewFactor)
             int itemLoad = itemFairShare + (random.nextInt(variance*2)-variance) + itemSkew;
-            itemLoad = Math.max(0, itemLoad)
-            itemLoad = Math.min(itemLoad, totalRemaining)
+            itemLoad = Math.max(min, itemLoad)
+            itemLoad = Math.min(totalRemaining, itemLoad)
+            itemLoad = Math.min(max, itemLoad)
             result.add(itemLoad);
             totalRemaining -= itemLoad;
         }
 
-        if (totalRemaining > 0) {
-            for (int i = 0; i < totalRemaining; i++) {
-                int index = random.nextInt(numItems);
-                result.set(result.get(index)+1, index)
-            }
-        }
-        
         if (random.nextBoolean()) Collections.reverse(result)
         
         return result
