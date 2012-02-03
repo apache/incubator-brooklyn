@@ -27,14 +27,14 @@ public class SubscriptionTracker {
     }
     
     /** @see SubscriptionContext#subscribe(Entity, Sensor, SensorEventListener) */
-    protected <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener) {
+    public <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener) {
         SubscriptionHandle handle = subscription.subscribe(producer, sensor, listener);
         subscriptions.put(producer, handle);
         return handle;
     }
     
     /** @see SubscriptionContext#subscribeToChildren(Entity, Sensor, SensorEventListener) */
-    protected <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, SensorEventListener<? super T> listener) {
+    public <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, SensorEventListener<? super T> listener) {
         SubscriptionHandle handle = subscription.subscribeToChildren(parent, sensor, listener);
         subscriptions.put(parent, handle);
         return handle;
@@ -45,7 +45,7 @@ public class SubscriptionTracker {
      *
      * @see SubscriptionContext#unsubscribe(SubscriptionHandle)
      */
-    protected boolean unsubscribe(Entity producer) {
+    public boolean unsubscribe(Entity producer) {
         Collection<SubscriptionHandle> handles = subscriptions.removeAll(producer);
         if (handles != null) {
             for (SubscriptionHandle handle : handles) {
@@ -61,7 +61,7 @@ public class SubscriptionTracker {
     *
     * @see SubscriptionContext#unsubscribe(SubscriptionHandle)
     */
-   protected boolean unsubscribe(Entity producer, SubscriptionHandle handle) {
+   public boolean unsubscribe(Entity producer, SubscriptionHandle handle) {
        subscriptions.remove(producer, handle);
        return subscription.unsubscribe(handle);
    }
@@ -69,7 +69,13 @@ public class SubscriptionTracker {
     /**
     * @return an ordered list of all subscription handles
     */
-   protected Collection<SubscriptionHandle> getAllSubscriptions() {
+   public Collection<SubscriptionHandle> getAllSubscriptions() {
        return Collections.unmodifiableCollection(subscriptions.values());
+   }
+   
+   public void unsubscribeAll() {
+       for (SubscriptionHandle s: subscriptions.values())
+           subscription.unsubscribe(s);
+       subscriptions.clear();
    }
 }

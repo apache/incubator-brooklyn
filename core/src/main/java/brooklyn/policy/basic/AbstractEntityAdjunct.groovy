@@ -77,7 +77,7 @@ abstract class AbstractEntityAdjunct implements EntityAdjunct {
     * @return a list of all subscription handles
     */
     protected Collection<SubscriptionHandle> getAllSubscriptions() {
-        return subscriptionTracker.getAllSubscriptions()
+        return subscriptionTracker?.getAllSubscriptions() ?: []
     }
     
     protected ManagementContext getManagementContext() {
@@ -90,8 +90,7 @@ abstract class AbstractEntityAdjunct implements EntityAdjunct {
      */
     public void destroy() {
         destroyed.set(true)
-        subscriptions.values().each { subscription.unsubscribe(it) }
-        subscriptions.clear()
+        subscriptionTracker?.unsubscribeAll();
     }
     
     @Override
