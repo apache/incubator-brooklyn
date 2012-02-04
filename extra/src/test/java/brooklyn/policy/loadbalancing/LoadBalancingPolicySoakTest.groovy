@@ -34,6 +34,7 @@ public class LoadBalancingPolicySoakTest {
     private BalanceableWorkerPool pool
     private LoadBalancingPolicy policy
     private Group containerGroup
+    private Group itemGroup
     private Random random = new Random()
     
     @BeforeMethod()
@@ -42,26 +43,27 @@ public class LoadBalancingPolicySoakTest {
         DefaultBalanceablePoolModel<Entity, Entity> model = new DefaultBalanceablePoolModel<Entity, Entity>("pool-model") {
             @Override public void moveItem(Entity item, Entity oldContainer, Entity newContainer) {
                 ((Movable) item).move(newContainer)
-                super.moveItem(item, oldContainer, newContainer)
+                onItemMoved(item, newContainer)
             }
         }
         
         app = new TestApplication()
         containerGroup = new DynamicGroup([name:"containerGroup"], app, { e -> (e instanceof MockContainerEntity) })
+        itemGroup = new DynamicGroup([name:"containerGroup"], app, { e -> (e instanceof MockItemEntity) })
         pool = new BalanceableWorkerPool([:], app)
-        pool.setContents(containerGroup)
+        pool.setContents(containerGroup, itemGroup)
         policy = new LoadBalancingPolicy([:], MockItemEntity.TEST_METRIC, model)
         policy.setEntity(pool)
         app.start([loc])
     }
 
-    @Test(enabled=false)
+    @Test(enabled=true, groups="WIP")
     public void testLoadBalancingQuickTest() {
         int numCycles = 1
         runLoadBalancingSoakTest(numCycles)
     }
     
-    @Test(enabled=false, groups="Integration") // integration group, because it's slow to run 100 cycles
+    @Test(enabled=true, groups="Integration") // integration group, because it's slow to run 100 cycles
     public void testLoadBalancingSoakTest() {
         int numCycles = 100
         runLoadBalancingSoakTest(numCycles)
@@ -109,10 +111,9 @@ public class LoadBalancingPolicySoakTest {
             containerToStop.offloadAndStop(containers.get((containerIndex+1)%numContainers))
             app.managementContext.unmanage(containerToStop)
             
-            MockContainerEntity containerToAdd = newContainer(app, "item-$itemIndex", lowThreshold, highThreshold)
-            app.managementContext.unmanage(containerToStop)
+            MockContainerEntity containerToAdd = newContainer(app, "container-$containerIndex", lowThreshold, highThreshold)
             containers.set(containerIndex, containerToAdd)
-            
+
             // Assert that the items become balanced again
             executeUntilSucceeds(timeout:TIMEOUT_MS) {
                 List<Double> containerRates = containers.collect { it.getWorkrate() }

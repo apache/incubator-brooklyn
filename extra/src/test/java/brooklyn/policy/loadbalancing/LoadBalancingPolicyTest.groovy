@@ -42,22 +42,24 @@ public class LoadBalancingPolicyTest {
     private BalanceableWorkerPool pool
     private LoadBalancingPolicy policy
     private Group containerGroup
+    private Group itemGroup
     
     
-    @BeforeMethod()
+    @BeforeMethod(alwaysRun=true)
     public void before() {
         // TODO: improve the default impl to avoid the need for this anonymous overrider of 'moveItem'
         DefaultBalanceablePoolModel<Entity, Entity> model = new DefaultBalanceablePoolModel<Entity, Entity>("pool-model") {
             @Override public void moveItem(Entity item, Entity oldContainer, Entity newContainer) {
                 ((Movable) item).move(newContainer)
-                super.moveItem(item, oldContainer, newContainer)
+                onItemMoved(item, newContainer)
             }
         }
         
         app = new TestApplication()
         containerGroup = new DynamicGroup([name:"containerGroup"], app, { e -> (e instanceof MockContainerEntity) })
+        itemGroup = new DynamicGroup([name:"itemGroup"], app, { e -> (e instanceof MockItemEntity) })
         pool = new BalanceableWorkerPool([:], app)
-        pool.setContents(containerGroup)
+        pool.setContents(containerGroup, itemGroup)
         policy = new LoadBalancingPolicy([:], TEST_METRIC, model)
         policy.setEntity(pool)
         app.start([loc])
@@ -73,11 +75,8 @@ public class LoadBalancingPolicyTest {
         MockItemEntity item2 = newItem(app, containerA, "2", 10)
         MockItemEntity item3 = newItem(app, containerA, "3", 10)
         MockItemEntity item4 = newItem(app, containerA, "4", 10)
-        
-        executeUntilSucceeds(timeout:TIMEOUT_MS) {
-            assertEquals(getContainerWorkrate(containerA), 40d)
-            assertEquals(getContainerWorkrate(containerB), 0d)
-        }
+
+        assertWorkratesEventually([containerA, containerB], [40d, 0d])
     }
     
     // Expect 20 units of workload to be migrated from hot container (A) to cold (B).
@@ -90,11 +89,22 @@ public class LoadBalancingPolicyTest {
         MockItemEntity item2 = newItem(app, containerA, "2", 10)
         MockItemEntity item3 = newItem(app, containerA, "3", 10)
         MockItemEntity item4 = newItem(app, containerA, "4", 10)
+
+        assertWorkratesEventually([containerA, containerB], [20d, 20d])
+    }
+    
+    @Test
+    public void testRebalanceWhenWorkratesChange() {
+        // Set-up containers and items.
+        MockContainerEntity containerA = newContainer(app, "A", 10, 50)
+        MockContainerEntity containerB = newContainer(app, "B", 10, 50)
+        MockItemEntity item1 = newItem(app, containerA, "1", 0)
+        MockItemEntity item2 = newItem(app, containerA, "2", 0)
+
+        item1.setAttribute(MockItemEntity.TEST_METRIC, 40)
+        item2.setAttribute(MockItemEntity.TEST_METRIC, 40)
         
-        executeUntilSucceeds(timeout:TIMEOUT_MS) {
-            assertEquals(getContainerWorkrate(containerA), 20d)
-            assertEquals(getContainerWorkrate(containerB), 20d)
-        }
+        assertWorkratesEventually([containerA, containerB], [40d, 40d])
     }
     
     // Expect no balancing to occur in hot pool (2 containers over-threshold at 40).
@@ -117,13 +127,16 @@ public class LoadBalancingPolicyTest {
         MockContainerEntity containerC = newAsyncContainer(app, "C", 10, 30, CONTAINER_STARTUP_DELAY_MS)
         // New container allows hot ones to offload work.
         
+        assertWorkratesEventually([containerA, containerB, containerC], [30d, 30d, 20d])
+    }
+
+    // Using this utility, as it gives more info about the workrates of all containers rather than just the one that differs    
+    private void assertWorkratesEventually(List<MockContainerEntity> containers, List<Double> expected) {
         executeUntilSucceeds(timeout:TIMEOUT_MS) {
-            assertEquals(getContainerWorkrate(containerA), 30d)
-            assertEquals(getContainerWorkrate(containerB), 30d)
-            assertEquals(getContainerWorkrate(containerC), 20d)
+            List<Double> actual = containers.collect { getContainerWorkrate(it) }
+            assertEquals(actual, expected, "actual=$actual; expected=$expected; containers=$containers")
         }
     }
-    
     // On addition of new container, expect no rebalancing to occur as no existing container is hot.
     @Test
     public void testAddContainerWhenCold() {
@@ -139,18 +152,11 @@ public class LoadBalancingPolicyTest {
         MockItemEntity item7 = newItem(app, containerB, "7", 10)
         MockItemEntity item8 = newItem(app, containerB, "8", 10)
         
-        executeUntilSucceeds(timeout:TIMEOUT_MS) {
-            assertEquals(getContainerWorkrate(containerA), 40d)
-            assertEquals(getContainerWorkrate(containerB), 40d)
-        }
+        assertWorkratesEventually([containerA, containerB], [40d, 40d])
         
         MockContainerEntity containerC = newAsyncContainer(app, "C", 10, 50, CONTAINER_STARTUP_DELAY_MS)
-        
-        executeUntilSucceeds(timeout:TIMEOUT_MS) {
-            assertEquals(getContainerWorkrate(containerA), 40d)
-            assertEquals(getContainerWorkrate(containerB), 40d)
-            assertEquals(getContainerWorkrate(containerC), 0d)
-        }
+
+        assertWorkratesEventually([containerA, containerB, containerC], [40d, 40d, 0d])
     }
     
     // Expect no balancing to occur in cool pool (2 containers under-threshold at 30).
@@ -167,17 +173,11 @@ public class LoadBalancingPolicyTest {
         MockItemEntity item5 = newItem(app, containerB, "5", 10)
         MockItemEntity item6 = newItem(app, containerB, "6", 10)
         
-        executeUntilSucceeds(timeout:TIMEOUT_MS) {
-            assertEquals(getContainerWorkrate(containerA), 30d)
-            assertEquals(getContainerWorkrate(containerB), 30d)
-        }
+        assertWorkratesEventually([containerA, containerB], [30d, 30d])
         
         MockItemEntity item7 = newItem(app, containerA, "7", 40)
         
-        executeUntilSucceeds(timeout:TIMEOUT_MS) {
-            assertEquals(getContainerWorkrate(containerA), 50d)
-            assertEquals(getContainerWorkrate(containerB), 50d)
-        }
+        assertWorkratesEventually([containerA, containerB], [50d, 50d])
     }
     
     @Test
@@ -197,10 +197,7 @@ public class LoadBalancingPolicyTest {
         item5.move(containerA)
         item6.move(containerA)
         
-        executeUntilSucceeds(timeout:TIMEOUT_MS) {
-            assertEquals(getContainerWorkrate(containerA), 30d)
-            assertEquals(getContainerWorkrate(containerB), 30d)
-        }
+        assertWorkratesEventually([containerA, containerB], [30d, 30d])
     }
 
     @Test
@@ -215,10 +212,7 @@ public class LoadBalancingPolicyTest {
         item1.stop()
         app.getManagementContext().unmanage(item1)
         
-        executeUntilSucceeds(timeout:TIMEOUT_MS) {
-            assertEquals(getContainerWorkrate(containerA), 20d)
-            assertEquals(getContainerWorkrate(containerB), 20d)
-        }
+        assertWorkratesEventually([containerA, containerB], [20d, 20d])
     }
 
     

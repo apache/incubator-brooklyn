@@ -10,16 +10,24 @@ import java.util.concurrent.locks.ReentrantLock
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.entity.ConfigKey
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.trait.Startable
+import brooklyn.event.AttributeSensor
+import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.Location
+import brooklyn.util.flags.SetFromFlag
 
 
 public class MockContainerEntity extends AbstractGroup implements BalanceableContainer<Entity>, Startable {
     
     private static final Logger LOG = LoggerFactory.getLogger(MockContainerEntity)
     
+    @SetFromFlag("membership")
+    public static final ConfigKey<String> MOCK_MEMBERSHIP =
+            new BasicConfigKey<String>(String.class, "mock.container.membership", "For testing ItemsInContainersGroup")
+
     final long delay;
     volatile boolean offloading;
     volatile boolean running;
@@ -36,6 +44,12 @@ public class MockContainerEntity extends AbstractGroup implements BalanceableCon
         this.delay = delay
     }
     
+    @Override
+    public <T> T setAttribute(AttributeSensor<T> attribute, T val) {
+        LOG.debug("Mocks: container $this setting $attribute to $val")
+        return super.setAttribute(attribute, val)
+    }
+
     public void lock() {
         _lock.lock();
         if (!running) {

@@ -4,6 +4,9 @@ import static com.google.common.base.Preconditions.checkNotNull
 
 import java.util.Map
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.event.AttributeSensor
@@ -11,6 +14,8 @@ import brooklyn.event.basic.BasicAttributeSensor
 
 
 public class MockItemEntity extends AbstractEntity implements Movable {
+
+    private static final Logger LOG = LoggerFactory.getLogger(MockItemEntity)
     
     public static final AttributeSensor<Integer> TEST_METRIC =
         new BasicAttributeSensor<Integer>(Integer.class, "test.metric", "Dummy workrate for test entities")
@@ -27,7 +32,7 @@ public class MockItemEntity extends AbstractEntity implements Movable {
 
     @Override
     public <T> T setAttribute(AttributeSensor<T> attribute, T val) {
-        LOG.debug("Mocks: item setting $attribute to val")
+        LOG.debug("Mocks: item $this setting $attribute to $val")
         return super.setAttribute(attribute, val)
     }
 

@@ -87,9 +87,8 @@ public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements Bal
     // Mutators.
 
     @Override
-    public void onItemMoved(ItemType item, ContainerType oldNode, ContainerType newNode) {
+    public void onItemMoved(ItemType item, ContainerType newNode) {
         checkState(itemToContainer.containsKey(item), "Unknown item "+item);
-        checkState(itemToContainer.get(item).equals(oldNode), "Item expected in "+oldNode+" but is in "+itemToContainer.get(item));
         itemToContainer.put(item, newNode);
     }
 
@@ -136,6 +135,5 @@ public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements Bal
     
     @Override public void moveItem(ItemType item, ContainerType oldNode, ContainerType newNode) {
         // TODO no-op; should this be abstract?
-        onItemMoved(item, oldNode, newNode);
     }
 }

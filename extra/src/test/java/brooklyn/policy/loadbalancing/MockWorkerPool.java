@@ -56,6 +56,11 @@ public class MockWorkerPool extends DefaultBalanceablePoolModel<String, String> 
             onItemAdded(item.name, item.parentContainer, item.currentWorkrate);
     }
     
+    @Override
+    public void moveItem(String item, String oldNode, String newNode) {
+        super.moveItem(item, oldNode, newNode);
+        onItemMoved(item, newNode);
+    }
     
     // Additional methods for tests.
     

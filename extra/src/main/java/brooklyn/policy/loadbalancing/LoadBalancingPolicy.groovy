@@ -11,6 +11,7 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.AttributeSensor
+import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.policy.basic.AbstractPolicy
@@ -33,8 +34,9 @@ public class LoadBalancingPolicy extends AbstractPolicy {
         public void onEvent(SensorEvent<?> event) {
             Entity source = event.getSource()
             Object value = event.getValue()
+            Sensor sensor = event.getSensor()
             
-            switch (event.getSensor()) {
+            switch (sensor) {
                 case metric:
                     onItemMetricUpdate(source, ((Number) value).doubleValue(), true)
                     break
@@ -82,6 +84,7 @@ public class LoadBalancingPolicy extends AbstractPolicy {
         subscribe(poolEntity, BalanceableWorkerPool.CONTAINER_REMOVED, eventHandler)
         subscribe(poolEntity, BalanceableWorkerPool.ITEM_ADDED, eventHandler)
         subscribe(poolEntity, BalanceableWorkerPool.ITEM_REMOVED, eventHandler)
+        subscribe(poolEntity, BalanceableWorkerPool.ITEM_MOVED, eventHandler)
         
         // Take heed of any extant containers.
         for (Entity container : poolEntity.getContainerGroup().getMembers())
@@ -92,6 +95,7 @@ public class LoadBalancingPolicy extends AbstractPolicy {
     
     private void onContainerAdded(Entity newContainer, boolean rebalanceNow) {
         Preconditions.checkArgument(newContainer instanceof BalanceableContainer, "Added container must be a BalanceableContainer")
+        LOG.trace("{} recording addition of container {}", this, newContainer)
         
         // Low and high thresholds for the metric we're interested in are assumed to be present
         // in the container's configuration.
@@ -123,12 +127,14 @@ public class LoadBalancingPolicy extends AbstractPolicy {
     }
     
     private void onContainerRemoved(Entity oldContainer, boolean rebalanceNow) {
+        LOG.trace("{} recording removal of container {}", this, oldContainer)
         model.onContainerRemoved(oldContainer)
         if (rebalanceNow) strategy.rebalance()
     }
     
     private void onItemAdded(Entity item, Entity parentContainer, boolean rebalanceNow) {
-        Preconditions.checkArgument(item instanceof Movable, "Added item must implement Movable")
+        Preconditions.checkArgument(item instanceof Movable, "Added item $item must implement Movable")
+        LOG.trace("{} recording addition of item {} in container {}", this, item, parentContainer)
         
         subscribe(item, metric, eventHandler)
         
@@ -143,18 +149,20 @@ public class LoadBalancingPolicy extends AbstractPolicy {
     }
     
     private void onItemRemoved(Entity item, Entity parentContainer, boolean rebalanceNow) {
+        LOG.trace("{} recording removal of item {}", this, item)
         unsubscribe(item)
         model.onItemRemoved(item)
         if (rebalanceNow) strategy.rebalance()
     }
     
     private void onItemMoved(Entity item, Entity parentContainer, boolean rebalanceNow) {
-        unsubscribe(item)
-        model.onItemMoved(item)
+        LOG.trace("{} recording moving of item {} to {}", this, item, parentContainer)
+        model.onItemMoved(item, parentContainer)
         if (rebalanceNow) strategy.rebalance()
     }
     
     private void onItemMetricUpdate(Entity item, double newValue, boolean rebalanceNow) {
+        LOG.trace("{} recording metric update for item {}, new value {}", this, item, newValue)
         model.onItemWorkrateUpdated(item, newValue)
         if (rebalanceNow) strategy.rebalance()
     }
