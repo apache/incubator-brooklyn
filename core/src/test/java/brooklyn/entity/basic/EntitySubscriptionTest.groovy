@@ -65,6 +65,21 @@ public class EntitySubscriptionTest {
     }
     
     @Test
+    public void testSubscriptionToAllReceivesEvents() {
+        entity.subscribe(null, TestEntity.SEQUENCE, listener);
+        
+        observedEntity.setAttribute(TestEntity.SEQUENCE, 123);
+        otherEntity.setAttribute(TestEntity.SEQUENCE, 456);
+        
+        executeUntilSucceeds(timeout:TIMEOUT_MS) {
+            assertEquals(listener.events, [
+                new BasicSensorEvent(TestEntity.SEQUENCE, observedEntity, 123),
+                new BasicSensorEvent(TestEntity.SEQUENCE, otherEntity, 456),
+            ])
+        }
+    }
+    
+    @Test
     public void testSubscribeToChildrenReceivesEvents() {
         entity.subscribeToChildren(observedEntity, TestEntity.SEQUENCE, listener);
         
