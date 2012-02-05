@@ -2,6 +2,7 @@ package brooklyn.policy.loadbalancing;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import java.io.PrintStream;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -9,6 +10,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import brooklyn.location.Location;
+
+import com.google.common.annotations.VisibleForTesting;
 
 public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements BalanceablePoolModel<ContainerType, ItemType> {
     
@@ -135,5 +138,25 @@ public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements Bal
     
     @Override public void moveItem(ItemType item, ContainerType oldNode, ContainerType newNode) {
         // TODO no-op; should this be abstract?
+    }
+    
+    
+    // Additional methods for tests.
+    
+    @VisibleForTesting
+    public void dumpItemDistribution() {
+        dumpItemDistribution(System.out);
+    }
+    
+    @VisibleForTesting
+    public void dumpItemDistribution(PrintStream out) {
+        for (ContainerType container : getPoolContents()) {
+            out.println("Container '"+container+"': ");
+            for (ItemType item : getItemsForContainer(container)) {
+                Double workrate = getItemWorkrate(item);
+                out.println("\t"+"Item '"+item+"' ("+workrate+")");
+            }
+        }
+        out.flush();
     }
 }

@@ -36,25 +36,24 @@ public class MockItemEntity extends AbstractEntity implements Movable {
         return super.setAttribute(attribute, val)
     }
 
+    @Override
+    public void move(Entity destination) {
+        moveNonEffector(destination);
+    }
+    
     // only moves if the containers will accept us (otherwise we'd lose the item!)
-    public void move(Entity rawDestination) {
+    public void moveNonEffector(Entity rawDestination) {
+        // FIXME deadlock risk; obtain locks in deterministic order
         LOG.debug("Mocks: moving item $this from $currentContainer to $rawDestination")
         checkNotNull(rawDestination)
-        MockContainerEntity destination = (MockContainerEntity) rawDestination;
         MockContainerEntity previousContainer = currentContainer
-        previousContainer?.lock()
-        try {
-            destination.lock()
-            try {
-                currentContainer?.removeItem(this)
-                currentContainer = destination
-                destination.addItem(this)
-                setAttribute(CONTAINER, currentContainer)
-            } finally {
-                destination.unlock()
-            }
-        } finally {
-            previousContainer?.unlock()
+        MockContainerEntity destination = (MockContainerEntity) rawDestination;
+        
+        MockContainerEntity.runWithLock([previousContainer, destination]) {
+            currentContainer?.removeItem(this)
+            currentContainer = destination
+            destination.addItem(this)
+            setAttribute(CONTAINER, currentContainer)
         }
     }
     

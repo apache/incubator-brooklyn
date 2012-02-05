@@ -215,7 +215,24 @@ public class LoadBalancingPolicyTest {
         assertWorkratesEventually([containerA, containerB], [20d, 20d])
     }
 
+    @Test
+    public void testRebalancesAfterManualMove() {
+        // Set-up containers and items.
+        MockContainerEntity containerA = newContainer(app, "A", 10, 50)
+        MockContainerEntity containerB = newContainer(app, "B", 10, 50)
+        MockItemEntity item1 = newItem(app, containerA, "1", 20)
+        MockItemEntity item2 = newItem(app, containerA, "2", 20)
+        MockItemEntity item3 = newItem(app, containerB, "3", 20)
+        MockItemEntity item4 = newItem(app, containerB, "4", 20)
+
+        // Move everything onto containerA, and expect it to be automatically re-balanced
+        item3.move(containerA)
+        item4.move(containerA)
+
+        assertWorkratesEventually([containerA, containerB], [40d, 40d])
+    }
     
+
     // Testing conveniences.
      
     private MockContainerEntity newContainer(Application app, String name, double lowThreshold, double highThreshold) {

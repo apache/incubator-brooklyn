@@ -1,5 +1,6 @@
 package brooklyn.policy.loadbalancing;
 
+import java.io.PrintStream;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -61,17 +62,4 @@ public class MockWorkerPool extends DefaultBalanceablePoolModel<String, String> 
         super.moveItem(item, oldNode, newNode);
         onItemMoved(item, newNode);
     }
-    
-    // Additional methods for tests.
-    
-    public void dumpItemDistribution() {
-        for (String container : getPoolContents()) {
-            System.out.println("Container '"+container+"'");
-            for (String item : getItemsForContainer(container)) {
-                Double workrate = getItemWorkrate(item);
-                System.out.println("    Item '"+item+"'   ("+workrate+")");
-            }
-        }
-    }
-    
 }

@@ -11,8 +11,10 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.ConfigKey
+import brooklyn.entity.Effector
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractGroup
+import brooklyn.entity.basic.MethodEffector
 import brooklyn.entity.trait.Startable
 import brooklyn.event.AttributeSensor
 import brooklyn.event.basic.BasicConfigKey
@@ -28,6 +30,8 @@ public class MockContainerEntity extends AbstractGroup implements BalanceableCon
     public static final ConfigKey<String> MOCK_MEMBERSHIP =
             new BasicConfigKey<String>(String.class, "mock.container.membership", "For testing ItemsInContainersGroup")
 
+    public static final Effector OFFLOAD_AND_STOP = new MethodEffector(MockContainerEntity.&offloadAndStop);
+            
     final long delay;
     volatile boolean offloading;
     volatile boolean running;
@@ -120,18 +124,54 @@ public class MockContainerEntity extends AbstractGroup implements BalanceableCon
         }
     }
 
+    @Override
+    private void stopWithoutLock() {
+        running = false;
+        if (delay > 0) Thread.sleep(delay)
+        setAttribute(SERVICE_UP, false);
+    }
+
     public void offloadAndStop(MockContainerEntity otherContainer) {
         LOG.debug("Mocks: offloading container $this to $otherContainer (items $balanceableItems)")
-        offloading = false;
-        for (MockItemEntity item : balanceableItems) {
-            item.move(otherContainer)
+        _lock.lock();
+        try {
+            offloading = false;
+            for (MockItemEntity item : balanceableItems) {
+                item.moveNonEffector(otherContainer)
+            }
+            LOG.debug("Mocks: stopping offloaded container $this")
+            stopWithoutLock();
+        } finally {
+            _lock.unlock()
         }
-        stop();
     }
     
     @Override
     public void restart() {
         LOG.debug("Mocks: restarting $this")
         throw new UnsupportedOperationException();
+    }
+    
+    public static void runWithLock(List<MockContainerEntity> entitiesToLock, Closure c) {
+        List<MockContainerEntity> entitiesToLockCopy = entitiesToLock.findAll {it != null}
+        List<MockContainerEntity> entitiesLocked = []
+        Collections.sort(entitiesToLockCopy, new Comparator<MockContainerEntity>() {
+            public int compare(MockContainerEntity o1, MockContainerEntity o2) {
+                return o1.getId().compareTo(o2.getId())
+            }})
+        
+        try {
+            entitiesToLockCopy.each {
+                it.lock()
+                entitiesLocked.add(it)
+            }
+            
+            c.call()
+            
+        } finally {
+            entitiesLocked.each {
+                it.unlock()
+            }
+        }
     }
 }

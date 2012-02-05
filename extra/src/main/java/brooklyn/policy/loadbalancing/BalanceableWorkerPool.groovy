@@ -4,6 +4,9 @@ import static com.google.common.base.Preconditions.checkNotNull
 
 import java.util.Map
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
 import brooklyn.entity.basic.AbstractEntity
@@ -16,6 +19,8 @@ import brooklyn.event.basic.BasicNotificationSensor
 
 
 public class BalanceableWorkerPool extends AbstractEntity {
+
+    private static final Logger LOG = LoggerFactory.getLogger(BalanceableWorkerPool.class)
     
     /** Encapsulates an item and a container; emitted for <code>ITEM_ADDED</code>, <code>ITEM_REMOVED</code> and
      * <code>ITEM_MOVED</code> sensors.
@@ -55,6 +60,7 @@ public class BalanceableWorkerPool extends AbstractEntity {
     
     private final SensorEventListener<?> eventHandler = new SensorEventListener<Object>() {
         public void onEvent(SensorEvent<?> event) {
+            LOG.trace("{} received event {}", BalanceableWorkerPool.this, event)
             Entity source = event.getSource()
             Object value = event.getValue()
             Sensor sensor = event.getSensor()
@@ -64,7 +70,7 @@ public class BalanceableWorkerPool extends AbstractEntity {
                     if (source.equals(containerGroup)) {
                         onContainerAdded((Entity) value)
                     } else if (source.equals(itemGroup)) {
-                        onItemAdded((Entity)value, ((Entity)value).getAttribute(Movable.CONTAINER))
+                        onItemAdded((Entity)value)
                     } else {
                         throw new IllegalStateException()
                     }
@@ -112,7 +118,7 @@ public class BalanceableWorkerPool extends AbstractEntity {
             onContainerAdded(existingContainer)
         }
         for (Entity existingItem : itemGroup.getMembers()) {
-            onItemAdded((Entity)existingItem, ((Entity)existingItem).getAttribute(Movable.CONTAINER))
+            onItemAdded((Entity)existingItem)
         }
     }
     
@@ -140,9 +146,9 @@ public class BalanceableWorkerPool extends AbstractEntity {
         emit(CONTAINER_REMOVED, oldContainer)
     }
     
-    private void onItemAdded(Entity item, Entity container) {
+    private void onItemAdded(Entity item) {
         subscribe(item, Movable.CONTAINER, eventHandler)
-        emit(ITEM_ADDED, new ContainerItemPair(container, item))
+        emit(ITEM_ADDED, new ContainerItemPair(item.getAttribute(Movable.CONTAINER), item))
     }
     
     private void onItemRemoved(Entity item) {
