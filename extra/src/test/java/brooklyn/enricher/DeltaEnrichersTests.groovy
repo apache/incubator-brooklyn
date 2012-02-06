@@ -28,8 +28,6 @@ class DeltaEnrichersTests {
     Sensor<Double> avgSensor
     SubscriptionContext subscription
     
-    RollingTimeWindowMeanEnricher<Integer> averager
-
     @BeforeMethod
     public void before() {
         app = new AbstractApplication() {}
@@ -96,4 +94,15 @@ class DeltaEnrichersTests {
         assertEquals(producer.getAttribute(deltaSensor), 1.5d)
     }
 
+    @Test
+    public void testPostProcessorCalledForDeltaEnricher() {
+        TimeWeightedDeltaEnricher delta = new TimeWeightedDeltaEnricher(producer, intSensor, deltaSensor, 1000, {it+123})
+        producer.addEnricher(delta)
+        
+        delta.onEvent(intSensor.newEvent(producer, 0), 0)
+        delta.onEvent(intSensor.newEvent(producer, 0), 1000)
+        assertEquals(producer.getAttribute(deltaSensor), 123+0d)
+        delta.onEvent(intSensor.newEvent(producer, 1), 2000)
+        assertEquals(producer.getAttribute(deltaSensor), 123+1d)
+    }
 }
