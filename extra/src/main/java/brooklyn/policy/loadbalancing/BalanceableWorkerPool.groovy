@@ -16,8 +16,12 @@ import brooklyn.event.basic.BasicNotificationSensor
 
 
 public class BalanceableWorkerPool extends AbstractEntity {
-    // FIXME: Serializable
-    public static class ContainerItemPair {
+    
+    /** Encapsulates an item and a container; emitted for <code>ITEM_ADDED</code>, <code>ITEM_REMOVED</code> and
+     * <code>ITEM_MOVED</code> sensors.
+     */
+    public static class ContainerItemPair implements Serializable {
+        private static final long serialVersionUID = 1L;
         public final Entity container
         public final Entity item
         
