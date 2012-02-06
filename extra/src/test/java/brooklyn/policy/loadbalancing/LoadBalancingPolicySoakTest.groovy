@@ -303,8 +303,4 @@ public class LoadBalancingPolicySoakTest {
         
         return result
     }
-    
-    public static void main(String[] args) {
-        println(43 + 49 + 50 + 46 + 50 + 46 + 47 + 49 + 50 + 50 + 50 + 50 + 45 + 50 + 49 + 48 + 46 + 49 + 45 + 50 + 45 + 45 + 47 + 50 + 45 + 45 + 45 + 46 + 48 + 44);
-    }
 }
