@@ -51,8 +51,10 @@ public abstract class AbstractManagementContext implements ManagementContext  {
             new Throwable("source of duplicate management").printStackTrace()
             return
         }
-        if (manageNonRecursive(e))
+        if (manageNonRecursive(e)) {
             ((AbstractEntity)e).onManagementBecomingMaster()
+            ((AbstractEntity)e).setBeingManaged()
+        }
         for (Entity ei : e.getOwnedChildren()) {
             manage(ei);
         }
@@ -104,7 +106,9 @@ public abstract class AbstractManagementContext implements ManagementContext  {
 	/** activates management when effector invoked, warning unless context is acceptable
 	 * (currently only acceptable context is "start") */
 	protected void manageIfNecessary(Entity entity, Object context) {
-		if (!isManaged(entity)) {
+        if (((AbstractEntity)entity).hasEverBeenManaged()) {
+            return
+        } else if (!isManaged(entity)) {
 			Entity rootUnmanaged = entity;
 			while (true) {
 				Entity candidateUnmanagedOwner = rootUnmanaged.getOwner();

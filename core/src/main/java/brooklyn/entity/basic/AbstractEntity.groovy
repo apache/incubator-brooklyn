@@ -142,6 +142,16 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 
     protected transient SubscriptionTracker _subscriptionTracker;
 
+    /**
+     * FIXME Temporary workaround for use-case:
+     *  - the load balancing policy test calls app.managementContext.unmanage(itemToStop)
+     *  - concurrently, the policy calls an effector on that item: item.move()
+     *  - The code in AbstractManagementContext.invokeEffectorMethodSync calls manageIfNecessary. 
+     *    This detects that the item is not managed, and sets it as managed again. The item is automatically  
+     *    added back into the dynamic group, and the policy receives an erroneous MEMBER_ADDED event.
+     */
+    private volatile boolean hasEverBeenManaged
+    
     public AbstractEntity(Entity owner) {
         this([:], owner)
     }
@@ -227,6 +237,13 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         } finally { this.@skipInvokeMethodEffectorInterception.set(false) }
     }
 
+    public void setBeingManaged() {
+        hasEverBeenManaged = true;
+    }
+    
+    public boolean hasEverBeenManaged() {
+        return hasEverBeenManaged;
+    }
     /**
      * Gets the field that is in the sub-class; or null if one field does not come from a sub-class of the other field's class
      */
