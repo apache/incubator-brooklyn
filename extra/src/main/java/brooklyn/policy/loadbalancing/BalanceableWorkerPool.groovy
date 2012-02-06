@@ -16,30 +16,35 @@ import brooklyn.event.basic.BasicNotificationSensor
 
 
 public class BalanceableWorkerPool extends AbstractEntity {
-    
+    // FIXME: Serializable
     public static class ContainerItemPair {
-        public final Entity container;
-        public final Entity item;
+        public final Entity container
+        public final Entity item
         
         public ContainerItemPair(Entity container, Entity item) {
-            this.container = container;
-            this.item = checkNotNull(item);
+            this.container = container
+            this.item = checkNotNull(item)
         }
     }
     
+    // Pool constituent notifications.
     public static BasicNotificationSensor<Entity> CONTAINER_ADDED = new BasicNotificationSensor<Entity>(
-        Entity.class, "balanceablepool.container.added", "Container added to balanceable pool");
+        Entity.class, "balanceablepool.container.added", "Container added to balanceable pool")
     public static BasicNotificationSensor<Entity> CONTAINER_REMOVED = new BasicNotificationSensor<Entity>(
-        Entity.class, "balanceablepool.container.removed", "Container removed from balanceable pool");
+        Entity.class, "balanceablepool.container.removed", "Container removed from balanceable pool")
     public static BasicNotificationSensor<ContainerItemPair> ITEM_ADDED = new BasicNotificationSensor<ContainerItemPair>(
-        ContainerItemPair.class, "balanceablepool.item.added", "Item added to balanceable pool");
+        ContainerItemPair.class, "balanceablepool.item.added", "Item added to balanceable pool")
     public static BasicNotificationSensor<ContainerItemPair> ITEM_REMOVED = new BasicNotificationSensor<ContainerItemPair>(
-        ContainerItemPair.class, "balanceablepool.item.removed", "Item removed from balanceable pool");
+        ContainerItemPair.class, "balanceablepool.item.removed", "Item removed from balanceable pool")
     public static BasicNotificationSensor<ContainerItemPair> ITEM_MOVED = new BasicNotificationSensor<ContainerItemPair>(
-        ContainerItemPair.class, "balanceablepool.item.removed", "Item moved in balanceable pool to the given container");
-
-    // TODO: too-hot / too-cold sensors?
-    //       "surplus" and "shortfall"?
+        ContainerItemPair.class, "balanceablepool.item.removed", "Item moved in balanceable pool to the given container")
+    
+    // Pool workrate notifications.
+    public static BasicNotificationSensor<Map> POOL_HOT = new BasicNotificationSensor<Map>(
+        Map.class, "balanceablepool.hot", "Pool has insufficient container resource for current workload")
+    public static BasicNotificationSensor<Map> POOL_COLD = new BasicNotificationSensor<Map>(
+        Map.class, "balanceablepool.cold", "Pool has too much container resource for current workload")
+    
     
     private Group containerGroup
     private Group itemGroup
@@ -97,7 +102,7 @@ public class BalanceableWorkerPool extends AbstractEntity {
         subscribe(containerGroup, AbstractGroup.MEMBER_REMOVED, eventHandler)
         subscribe(itemGroup, AbstractGroup.MEMBER_ADDED, eventHandler)
         subscribe(itemGroup, AbstractGroup.MEMBER_REMOVED, eventHandler)
-
+        
         // Process extant containers and items
         for (Entity existingContainer : containerGroup.getMembers()) {
             onContainerAdded(existingContainer)
@@ -108,7 +113,7 @@ public class BalanceableWorkerPool extends AbstractEntity {
     }
     
     public Group getContainerGroup() {
-        return containerGroup;
+        return containerGroup
     }
     
     private void onContainerAdded(Entity newContainer) {
