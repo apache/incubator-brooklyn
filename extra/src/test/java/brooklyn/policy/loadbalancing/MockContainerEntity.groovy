@@ -133,16 +133,13 @@ public class MockContainerEntity extends AbstractGroup implements BalanceableCon
 
     public void offloadAndStop(MockContainerEntity otherContainer) {
         if (LOG.isDebugEnabled()) LOG.debug("Mocks: offloading container $this to $otherContainer (items $balanceableItems)")
-        _lock.lock();
-        try {
+        runWithLock([this, otherContainer]) {
             offloading = false;
             for (MockItemEntity item : balanceableItems) {
                 item.moveNonEffector(otherContainer)
             }
             if (LOG.isDebugEnabled()) LOG.debug("Mocks: stopping offloaded container $this")
             stopWithoutLock();
-        } finally {
-            _lock.unlock()
         }
     }
     
