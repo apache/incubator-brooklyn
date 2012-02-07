@@ -174,10 +174,15 @@ public class JmxHelper {
 		} 
 	}
 
+    static Set<String> warned = []
+    
 	public ObjectInstance findMBean(ObjectName objectName) {
 		Set<ObjectInstance> beans = mbsc.queryMBeans(objectName, null)
 		if (beans.isEmpty() || beans.size() > 1) {
-			LOG.warn "JMX object name query returned {} values for {}", beans.size(), objectName.canonicalName
+            if (warned.add(objectName.canonicalName))
+			    LOG.warn "JMX object name query returned {} values for {} (future messages logged at debug)", beans.size(), objectName.canonicalName
+            else
+                LOG.debug "JMX object name query returned {} values for {} (repeat)", beans.size(), objectName.canonicalName
 			return null
 		}
 		ObjectInstance bean = beans.find { true }

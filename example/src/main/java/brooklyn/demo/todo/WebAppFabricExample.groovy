@@ -8,7 +8,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.config.BrooklynProperties;
-import brooklyn.demo.Locations;
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.DynamicGroup
@@ -25,6 +24,7 @@ import brooklyn.entity.webapp.jboss.JBoss7Server
 import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.launcher.BrooklynLauncher
 import brooklyn.location.Location
+import brooklyn.location.basic.CommandLineLocations;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.jclouds.JcloudsLocationFactory;
 import brooklyn.policy.ResizerPolicy
@@ -37,7 +37,7 @@ public class WebAppFabricExample extends AbstractApplication {
     public static final Logger LOG = LoggerFactory.getLogger(WebAppFabricExample)
     static BrooklynProperties config = BrooklynProperties.Factory.newDefault()
 
-    public static final List<String> DEFAULT_LOCATIONS = [ Locations.LOCALHOST ]
+    public static final List<String> DEFAULT_LOCATIONS = [ CommandLineLocations.LOCALHOST ]
 
     public static final String WAR_PATH = "classpath://hello-world.war"
     
@@ -83,9 +83,9 @@ public class WebAppFabricExample extends AbstractApplication {
 
     public static void main(String[] argv) {
         List<Location> locations = [
-                Locations.newLocalhostLocation(),
-                Locations.newJcloudsLocation("aws-ec2", "us-west"),
-                Locations.newJcloudsLocation("aws-ec2", "ap-southeast-1")
+                CommandLineLocations.newLocalhostLocation(),
+                CommandLineLocations.newJcloudsLocation("aws-ec2", "us-west"),
+                CommandLineLocations.newJcloudsLocation("aws-ec2", "ap-southeast-1")
             ]
 
         WebAppFabricExample app = new WebAppFabricExample(name:'Brooklyn WebApp Fabric example')
