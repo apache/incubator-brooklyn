@@ -3,23 +3,34 @@ package brooklyn.policy.loadbalancing;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.io.PrintStream;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import brooklyn.location.Location;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.SetMultimap;
 
 public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements BalanceablePoolModel<ContainerType, ItemType> {
+    
+    /*
+     * Performance comments.
+     *  - Used hprof with LoadBalancingPolicySoakTest.testLoadBalancingManyManyItemsTest (1000 items)
+     *  - Prior to adding containerToItems, it created a new set by iterating over all items.
+     *    This was the biggest percentage of any brooklyn code.
+     *    Hence it's worth duplicating the values, keyed by item and keyed by container.
+     */
     
     private final String name;
     private final Set<ContainerType> containers = new LinkedHashSet<ContainerType>();
     private final Map<ContainerType, Double> containerToLowThreshold = new LinkedHashMap<ContainerType, Double>();
     private final Map<ContainerType, Double> containerToHighThreshold = new LinkedHashMap<ContainerType, Double>();
     private final Map<ItemType, ContainerType> itemToContainer = new LinkedHashMap<ItemType, ContainerType>();
+    private final SetMultimap<ContainerType, ItemType> containerToItems = HashMultimap.create();
     private final Map<ItemType, Double> itemToWorkrate = new LinkedHashMap<ItemType, Double>();
     
     
@@ -32,12 +43,8 @@ public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements Bal
     }
     
     public Set<ItemType> getItemsForContainer(ContainerType node) {
-        Set<ItemType> result = new LinkedHashSet<ItemType>();
-        for (Entry<ItemType, ContainerType> entry : itemToContainer.entrySet()) {
-            if (node.equals(entry.getValue()))
-                result.add(entry.getKey());
-        }
-        return result;
+        Set<ItemType> result = containerToItems.get(node);
+        return (result != null) ? result : Collections.<ItemType>emptySet();
     }
     
     public Double getItemWorkrate(ItemType item) {
@@ -92,7 +99,9 @@ public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements Bal
     @Override
     public void onItemMoved(ItemType item, ContainerType newNode) {
         checkState(itemToContainer.containsKey(item), "Unknown item "+item);
-        itemToContainer.put(item, newNode);
+        ContainerType oldNode = itemToContainer.put(item, newNode);
+        if (oldNode != null) containerToItems.remove(oldNode, item);
+        containerToItems.put(newNode, item);
     }
 
     @Override
@@ -118,13 +127,15 @@ public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements Bal
     @Override
     public void onItemAdded(ItemType item, ContainerType parentContainer, Number currentWorkrate) {
         itemToContainer.put(item, parentContainer);
+        containerToItems.put(parentContainer, item);
         if (currentWorkrate != null)
             itemToWorkrate.put(item, currentWorkrate.doubleValue());
     }
     
     @Override
     public void onItemRemoved(ItemType item) {
-        itemToContainer.remove(item);
+        ContainerType oldNode = itemToContainer.remove(item);
+        if (oldNode != null) containerToItems.remove(oldNode, item);
         itemToWorkrate.remove(item);
     }
     
