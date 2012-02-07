@@ -148,7 +148,12 @@ public class BalancingStrategy<NodeType, ItemType> {
 //            }
 //        }
         
-        double highThreshold = model.getHighThreshold(node);
+        Double highThreshold = model.getHighThreshold(node);
+        if (highThreshold == -1) {
+            // node presumably has been removed; TODO log
+            return false;
+        }
+        
         while (nodeWorkrate > highThreshold && migrationCount < getMaxMigrationsPerBalancingNode()) {
             iterationCount++;
             
@@ -379,6 +384,10 @@ public class BalancingStrategy<NodeType, ItemType> {
             double hotNodeLowThreshold = model.getLowThreshold(hotNode);
             double hotNodeHighThreshold = model.getHighThreshold(hotNode);
             boolean emergencyLoadBalancing = false;  //doesn't apply to cold
+            if (hotNodeWorkrate == -1 || hotNodeLowThreshold == -1 || hotNodeHighThreshold == -1) {
+                // hotNode presumably has been removed; TODO log
+                break;
+            }
             if (hotNodeWorkrate <= hotNodeLowThreshold && !emergencyLoadBalancing) {
                 //don't balance if all nodes are too low
                 

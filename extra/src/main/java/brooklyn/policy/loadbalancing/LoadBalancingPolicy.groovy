@@ -2,6 +2,9 @@ package brooklyn.policy.loadbalancing
 
 import java.util.Map
 import java.util.Map.Entry
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicInteger
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -29,13 +32,15 @@ public class LoadBalancingPolicy extends AbstractPolicy {
     private final BalanceablePoolModel<Entity, Entity> model
     private final BalancingStrategy<Entity, ?> strategy
     private BalanceableWorkerPool poolEntity
+    private ExecutorService executor = Executors.newSingleThreadExecutor()
+    private AtomicInteger executorQueueCount = new AtomicInteger(0)
     
     private final SensorEventListener<?> eventHandler = new SensorEventListener<Object>() {
         public void onEvent(SensorEvent<?> event) {
+            LOG.info("LoadBalancingPolicy.onEvent: {}", event)
             Entity source = event.getSource()
             Object value = event.getValue()
             Sensor sensor = event.getSensor()
-            
             switch (sensor) {
                 case metric:
                     onItemMetricUpdate(source, ((Number) value).doubleValue(), true)
@@ -90,9 +95,44 @@ public class LoadBalancingPolicy extends AbstractPolicy {
         for (Entity container : poolEntity.getContainerGroup().getMembers())
             onContainerAdded(container, false)
         
-        strategy.rebalance()
+        scheduleRebalance()
     }
     
+    @Override
+    public void suspend() {
+        // TODO unsubscribe from everything? And resubscribe on resume?
+        super.suspend();
+        if (executor != null) executor.shutdownNow();
+        executorQueueCount.set(0)
+    }
+    
+    @Override
+    public void resume() {
+        super.resume();
+        executor = Executors.newSingleThreadExecutor()
+        executorQueueCount.set(0)
+    }
+    
+    private scheduleRebalance() {
+        if (executorQueueCount.get() == 0) {
+            executorQueueCount.incrementAndGet()
+            
+            executor.submit( {
+                try {
+                    executorQueueCount.decrementAndGet()
+                    strategy.rebalance()
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt() // gracefully stop
+                } catch (Exception e) {
+                    if (isRunning()) {
+                        LOG.error("Error rebalancing", e)
+                    } else {
+                        LOG.debug("Error rebalancing, but no longer running", e)
+                    }
+                }
+            } )
+        }
+    }
     private void onContainerAdded(Entity newContainer, boolean rebalanceNow) {
         Preconditions.checkArgument(newContainer instanceof BalanceableContainer, "Added container must be a BalanceableContainer")
         if (LOG.isTraceEnabled()) LOG.trace("{} recording addition of container {}", this, newContainer)
@@ -114,7 +154,7 @@ public class LoadBalancingPolicy extends AbstractPolicy {
         for (Movable item : ((BalanceableContainer) newContainer).getBalanceableItems()) 
             onItemAdded((Entity) item, newContainer, false)
         
-        if (rebalanceNow) strategy.rebalance()
+        if (rebalanceNow) scheduleRebalance()
     }
     
     private static Object findConfigValue(AbstractEntity entity, String configKeyName) {
@@ -129,7 +169,7 @@ public class LoadBalancingPolicy extends AbstractPolicy {
     private void onContainerRemoved(Entity oldContainer, boolean rebalanceNow) {
         if (LOG.isTraceEnabled()) LOG.trace("{} recording removal of container {}", this, oldContainer)
         model.onContainerRemoved(oldContainer)
-        if (rebalanceNow) strategy.rebalance()
+        if (rebalanceNow) scheduleRebalance()
     }
     
     private void onItemAdded(Entity item, Entity parentContainer, boolean rebalanceNow) {
@@ -145,26 +185,26 @@ public class LoadBalancingPolicy extends AbstractPolicy {
         else
             model.onItemAdded(item, parentContainer, currentValue.doubleValue())
         
-        if (rebalanceNow) strategy.rebalance()
+        if (rebalanceNow) scheduleRebalance()
     }
     
     private void onItemRemoved(Entity item, Entity parentContainer, boolean rebalanceNow) {
         if (LOG.isTraceEnabled()) LOG.trace("{} recording removal of item {}", this, item)
         unsubscribe(item)
         model.onItemRemoved(item)
-        if (rebalanceNow) strategy.rebalance()
+        if (rebalanceNow) scheduleRebalance()
     }
     
     private void onItemMoved(Entity item, Entity parentContainer, boolean rebalanceNow) {
         if (LOG.isTraceEnabled()) LOG.trace("{} recording moving of item {} to {}", this, item, parentContainer)
         model.onItemMoved(item, parentContainer)
-        if (rebalanceNow) strategy.rebalance()
+        if (rebalanceNow) scheduleRebalance()
     }
     
     private void onItemMetricUpdate(Entity item, double newValue, boolean rebalanceNow) {
         if (LOG.isTraceEnabled()) LOG.trace("{} recording metric update for item {}, new value {}", this, item, newValue)
         model.onItemWorkrateUpdated(item, newValue)
-        if (rebalanceNow) strategy.rebalance()
+        if (rebalanceNow) scheduleRebalance()
     }
     
 }

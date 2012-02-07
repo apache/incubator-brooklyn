@@ -95,16 +95,35 @@ public class AbstractLoadBalancingPolicyTest {
      * Accepts an accuracy of "precision" for each container's workrate.
      */
     protected void assertWorkratesEventually(List<MockContainerEntity> containers, List<Double> expected, double precision) {
-        executeUntilSucceeds(timeout:TIMEOUT_MS) {
-            List<Double> actual = containers.collect { getContainerWorkrate(it) }
-            String errMsg = "actual=$actual; expected=$expected; containers=$containers"
-            assertEquals(containers.size(), expected.size(), errMsg)
-            for (int i = 0; i < containers.size(); i++) {
-                assertEquals(actual.get(i), expected.get(i), precision, errMsg)
+        try {
+            executeUntilSucceeds(timeout:TIMEOUT_MS) {
+                List<Double> actual = containers.collect { getContainerWorkrate(it) }
+                String errMsg = "actual=$actual; expected=$expected"
+                assertEquals(containers.size(), expected.size(), errMsg)
+                for (int i = 0; i < containers.size(); i++) {
+                    assertEquals(actual.get(i), expected.get(i), precision, errMsg)
+                }
             }
+        } catch (AssertionError e) {
+            String errMsg = e.getMessage()+"; "+verboseDumpToString(containers)
+            throw new RuntimeException(errMsg, e);
         }
     }
+
+    protected String verboseDumpToString(List<MockContainerEntity> containers) {
+        List<Double> containerRates = containers.collect { it.getWorkrate() }
+        List<Set<Entity>> itemDistribution = containers.collect { it.getBalanceableItems() }
+        String modelItemDistribution = modelItemDistributionToString()
+        return "containers=$containers; containerRates=$containerRates; itemDistribution=$itemDistribution; model=$modelItemDistribution; "+
+                "totalMoves=${MockItemEntity.totalMoveCount}"
+    }
     
+    protected String modelItemDistributionToString() {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        model.dumpItemDistribution(new PrintStream(baos));
+        return new String(baos.toByteArray());
+    }
+
     protected MockContainerEntity newContainer(Application app, String name, double lowThreshold, double highThreshold) {
         return newAsyncContainer(app, name, lowThreshold, highThreshold, 0)
     }

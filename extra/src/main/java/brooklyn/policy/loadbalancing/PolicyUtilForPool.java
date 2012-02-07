@@ -53,7 +53,13 @@ public class PolicyUtilForPool<ContainerType, ItemType> {
             if (locationConstraint != null && !locationConstraint.isPermitted(model.getLocation(c)))
                 continue;
             
-            double spareCapacity = model.getHighThreshold(c) - model.getTotalWorkrate(c);
+            double highThreshold = model.getHighThreshold(c);
+            double totalWorkrate = model.getTotalWorkrate(c);
+            double spareCapacity = highThreshold - totalWorkrate;
+            
+            if (highThreshold == -1 || totalWorkrate == -1) {
+                continue; // container presumably has been removed
+            }
             if (spareCapacity > maxSpareCapacity) {
                 maxSpareCapacity = spareCapacity;
                 coldest = c;
@@ -91,7 +97,13 @@ public class PolicyUtilForPool<ContainerType, ItemType> {
             if (excludedContainers.contains(c))
                 continue;
             
-            double overshoot = model.getTotalWorkrate(c) - model.getHighThreshold(c);
+            double totalWorkrate = model.getTotalWorkrate(c);
+            double highThreshold = model.getHighThreshold(c);
+            double overshoot = totalWorkrate - highThreshold;
+            
+            if (highThreshold == -1 || totalWorkrate == -1) {
+                continue; // container presumably has been removed
+            }
             if (overshoot > maxOvershoot) {
                 maxOvershoot = overshoot;
                 hottest = c;

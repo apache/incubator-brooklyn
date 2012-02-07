@@ -1,50 +1,63 @@
 package brooklyn.policy.loadbalancing;
 
-import static com.google.common.base.Preconditions.checkState;
-
 import java.io.PrintStream;
 import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import brooklyn.location.Location;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 
 public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements BalanceablePoolModel<ContainerType, ItemType> {
-    
+
+    private static final Logger LOG = LoggerFactory.getLogger(DefaultBalanceablePoolModel.class);
+
     /*
      * Performance comments.
      *  - Used hprof with LoadBalancingPolicySoakTest.testLoadBalancingManyManyItemsTest (1000 items)
      *  - Prior to adding containerToItems, it created a new set by iterating over all items.
      *    This was the biggest percentage of any brooklyn code.
      *    Hence it's worth duplicating the values, keyed by item and keyed by container.
+     *  - Unfortunately changing threading model (so have a "rebalancer" thread, and a thread that 
+     *    processes events to update the model), get ConcurrentModificationException if don't take
+     *    copy of containerToItems.get(node)...
      */
+
+    // Concurrent maps cannot have null value; use this to represent when no container is supplied for an item 
+    private static final String NULL_CONTAINER = "null-container";
     
     private final String name;
-    private final Set<ContainerType> containers = new LinkedHashSet<ContainerType>();
-    private final Map<ContainerType, Double> containerToLowThreshold = new LinkedHashMap<ContainerType, Double>();
-    private final Map<ContainerType, Double> containerToHighThreshold = new LinkedHashMap<ContainerType, Double>();
-    private final Map<ItemType, ContainerType> itemToContainer = new LinkedHashMap<ItemType, ContainerType>();
-    private final SetMultimap<ContainerType, ItemType> containerToItems = HashMultimap.create();
-    private final Map<ItemType, Double> itemToWorkrate = new LinkedHashMap<ItemType, Double>();
-    
+    private final Set<ContainerType> containers = Collections.newSetFromMap(new ConcurrentHashMap<ContainerType,Boolean>());
+    private final Map<ContainerType, Double> containerToLowThreshold = new ConcurrentHashMap<ContainerType, Double>();
+    private final Map<ContainerType, Double> containerToHighThreshold = new ConcurrentHashMap<ContainerType, Double>();
+    private final Map<ItemType, ContainerType> itemToContainer = new ConcurrentHashMap<ItemType, ContainerType>();
+    private final SetMultimap<ContainerType, ItemType> containerToItems =  Multimaps.synchronizedSetMultimap(HashMultimap.<ContainerType, ItemType>create());
+    private final Map<ItemType, Double> itemToWorkrate = new ConcurrentHashMap<ItemType, Double>();
     
     public DefaultBalanceablePoolModel(String name) {
         this.name = name;
     }
     
     public ContainerType getParentContainer(ItemType item) {
-        return itemToContainer.get(item);
+        ContainerType result = itemToContainer.get(item);
+        return (result != NULL_CONTAINER) ? result : null;
     }
     
     public Set<ItemType> getItemsForContainer(ContainerType node) {
         Set<ItemType> result = containerToItems.get(node);
-        return (result != null) ? result : Collections.<ItemType>emptySet();
+        synchronized (containerToItems) {
+            return (result != null) ? ImmutableSet.copyOf(result) : Collections.<ItemType>emptySet();
+        }
     }
     
     public Double getItemWorkrate(ItemType item) {
@@ -59,8 +72,17 @@ public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements Bal
     @Override public Set<ContainerType> getPoolContents() { return containers; }
     @Override public String getName(ContainerType container) { return container.toString(); } // TODO: delete?
     @Override public Location getLocation(ContainerType container) { return null; } // TODO?
-    @Override public double getLowThreshold(ContainerType container) { return containerToLowThreshold.get(container); }
-    @Override public double getHighThreshold(ContainerType container) { return containerToHighThreshold.get(container); }
+    
+    @Override public double getLowThreshold(ContainerType container) {
+        Double result = containerToLowThreshold.get(container);
+        return (result != null) ? result : -1;
+    }
+    
+    @Override public double getHighThreshold(ContainerType container) {
+        Double result = containerToHighThreshold.get(container);
+        return (result != null) ? result : -1;
+    }
+    
     @Override public double getTotalWorkrate(ContainerType container) {
         double totalWorkrate = 0;
         for (ItemType item : getItemsForContainer(container)) {
@@ -98,12 +120,19 @@ public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements Bal
 
     @Override
     public void onItemMoved(ItemType item, ContainerType newNode) {
-        checkState(itemToContainer.containsKey(item), "Unknown item "+item);
-        ContainerType oldNode = itemToContainer.put(item, newNode);
-        if (oldNode != null) containerToItems.remove(oldNode, item);
-        containerToItems.put(newNode, item);
+        if (!itemToContainer.containsKey(item)) {
+            // Item may have been deleted; order of events received from different sources 
+            // (i.e. item itself and for itemGroup membership) is non-deterministic.
+            LOG.info("Balanceable pool model ignoring onItemMoved for unknown item {} to container {}; " +
+            		"if onItemAdded subsequently received will get new container then", item, newNode);
+            return;
+        }
+        ContainerType newNodeNonNull = toNonNullContainer(newNode);
+        ContainerType oldNode = itemToContainer.put(item, newNodeNonNull);
+        if (oldNode != null && oldNode != NULL_CONTAINER) containerToItems.remove(oldNode, item);
+        if (newNode != null) containerToItems.put(newNode, item);
     }
-
+    
     @Override
     public void onContainerAdded(ContainerType newContainer, double lowThreshold, double highThreshold) {
         containers.add(newContainer);
@@ -126,8 +155,10 @@ public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements Bal
     
     @Override
     public void onItemAdded(ItemType item, ContainerType parentContainer, Number currentWorkrate) {
-        itemToContainer.put(item, parentContainer);
-        containerToItems.put(parentContainer, item);
+        ContainerType parentContainerNonNull = toNonNullContainer(parentContainer);
+        ContainerType oldNode = itemToContainer.put(item, parentContainerNonNull);
+        if (oldNode != null && oldNode != NULL_CONTAINER) containerToItems.remove(oldNode, item);
+        if (parentContainer != null) containerToItems.put(parentContainer, item);
         if (currentWorkrate != null)
             itemToWorkrate.put(item, currentWorkrate.doubleValue());
     }
@@ -135,7 +166,7 @@ public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements Bal
     @Override
     public void onItemRemoved(ItemType item) {
         ContainerType oldNode = itemToContainer.remove(item);
-        if (oldNode != null) containerToItems.remove(oldNode, item);
+        if (oldNode != null && oldNode != NULL_CONTAINER) containerToItems.remove(oldNode, item);
         itemToWorkrate.remove(item);
     }
     
@@ -169,5 +200,14 @@ public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements Bal
             }
         }
         out.flush();
+    }
+    
+    @SuppressWarnings("unchecked")
+    private ContainerType nullContainer() {
+        return (ContainerType) NULL_CONTAINER; // relies on erasure
+    }
+
+    private ContainerType toNonNullContainer(ContainerType container) {
+        return (container != null) ? container : nullContainer();
     }
 }

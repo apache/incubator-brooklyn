@@ -19,7 +19,7 @@ import brooklyn.entity.Application
 public class LoadBalancingPolicyConcurrencyTest extends AbstractLoadBalancingPolicyTest {
     
     private static final double WORKRATE_JITTER = 2d
-    private static final int NUM_CONTAINERS = 4
+    private static final int NUM_CONTAINERS = 20
     private static final int WORKRATE_UPDATE_PERIOD_MS = 1000
     
     private ScheduledExecutorService scheduledExecutor;
@@ -118,7 +118,7 @@ public class LoadBalancingPolicyConcurrencyTest extends AbstractLoadBalancingPol
             containers.add(newContainer(app, "container"+i, 10, 20))
         }
         for (int i = 0; i < NUM_CONTAINERS*2; i++) {
-            items.add(newItemWithPeriodicWorkrates(app, containers.get(i%2), "item"+i, 10))
+            items.add(newItemWithPeriodicWorkrates(app, containers.get(i%NUM_CONTAINERS), "item"+i, 10))
         }
         // should now have item0 and item{0+NUM_CONTAINERS} on container0, etc
         

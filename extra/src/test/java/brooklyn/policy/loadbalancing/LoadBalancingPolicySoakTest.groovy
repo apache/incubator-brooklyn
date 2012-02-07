@@ -79,7 +79,7 @@ public class LoadBalancingPolicySoakTest extends AbstractLoadBalancingPolicyTest
 
     // FIXME code is too inefficient; doesn't balance 1000 items within the timeout period.
     // And that's with only one workrate report per item per cycle, rather than every 500ms!
-    @Test(enabled=false, groups="WIP")
+    @Test(groups="Acceptance")
     public void testLoadBalancingManyManyItemsTest() {
         RunConfig config = new RunConfig()
         config.numCycles = 1
@@ -121,7 +121,7 @@ public class LoadBalancingPolicySoakTest extends AbstractLoadBalancingPolicyTest
         }
         
         for (int i in 1..numCycles) {
-            LOG.debug(LoadBalancingPolicySoakTest.class.getSimpleName()+": cycle $i")
+            LOG.info(LoadBalancingPolicySoakTest.class.getSimpleName()+": cycle $i")
             
             // Stop items, and start others
             for (j in 1..numItemStopsPerCycle) {
@@ -158,10 +158,7 @@ public class LoadBalancingPolicySoakTest extends AbstractLoadBalancingPolicyTest
                 List<Double> containerRates = containers.collect { it.getWorkrate() }
                 String errMsg
                 if (verbose) {
-                    List<Set<Entity>> itemDistribution = containers.collect { it.getBalanceableItems() }
-                    String modelItemDistribution = modelItemDistributionToString()
-                    errMsg = "containerRates=$containerRates; itemRates=$itemRates; itemDistribution=$itemDistribution; model=$modelItemDistribution; "+
-                            "totalMoves=${MockItemEntity.totalMoveCount}"
+                    errMsg = verboseDumpToString(containers)+"; itemRates=$itemRates"
                 } else {
                     errMsg = "$containerRates; totalMoves=${MockItemEntity.totalMoveCount}"
                 }
@@ -188,12 +185,6 @@ public class LoadBalancingPolicySoakTest extends AbstractLoadBalancingPolicyTest
     }
 
     // Testing conveniences.
-    
-    private String modelItemDistributionToString() {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        model.dumpItemDistribution(new PrintStream(baos));
-        return new String(baos.toByteArray());
-    }
     
     private double sum(Iterable<Double> vals) {
         double total = 0;

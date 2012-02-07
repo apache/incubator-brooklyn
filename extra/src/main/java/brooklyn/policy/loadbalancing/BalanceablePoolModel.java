@@ -22,8 +22,8 @@ public interface BalanceablePoolModel<ContainerType, ItemType> {
     // Attributes of containers and items.
     public String getName(ContainerType container);
     public Location getLocation(ContainerType container);
-    public double getLowThreshold(ContainerType container);
-    public double getHighThreshold(ContainerType container);
+    public double getLowThreshold(ContainerType container); // -1 for not known / invalid
+    public double getHighThreshold(ContainerType container); // -1 for not known / invalid
     public double getTotalWorkrate(ContainerType container); // -1 for not known / invalid
     public Map<ContainerType, Double> getContainerWorkrates(); // contains -1 for items which are unknown
     /** contains -1 instead of actual item workrate, for items which cannot be moved */
@@ -31,7 +31,6 @@ public interface BalanceablePoolModel<ContainerType, ItemType> {
     public Map<ItemType, Double> getItemWorkrates(ContainerType container);
     public boolean isItemMoveable(ItemType item);
     public boolean isItemAllowedIn(ItemType item, Location location);
-    
     
     // Mutators for keeping the model in-sync with the observed world
     public void onContainerAdded(ContainerType newContainer, double lowThreshold, double highThreshold);
