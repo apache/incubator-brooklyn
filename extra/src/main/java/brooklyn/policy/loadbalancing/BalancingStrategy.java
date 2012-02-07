@@ -523,16 +523,16 @@ public class BalancingStrategy<NodeType, ItemType> {
             Double cost = entry.getValue();
             
             if (cost == null) {
-                LOG.debug(MessageFormat.format("Item ''{0}'' has null workrate: skipping", item));
+                if (LOG.isDebugEnabled()) LOG.debug(MessageFormat.format("Item ''{0}'' has null workrate: skipping", item));
                 continue;
             }
             
             if (!model.isItemMoveable(item)) {
-                LOG.debug(MessageFormat.format("Item ''{0}'' cannot be moved: skipping", item));
+                if (LOG.isDebugEnabled()) LOG.debug(MessageFormat.format("Item ''{0}'' cannot be moved: skipping", item));
                 continue;
             }
             if (cost < 0) {
-                LOG.debug(MessageFormat.format("Item ''{0}'' subject to recent adjustment: skipping", item));
+                if (LOG.isDebugEnabled()) LOG.debug(MessageFormat.format("Item ''{0}'' subject to recent adjustment: skipping", item));
                 continue;
             }
             if (excludedItems.contains(item)) {

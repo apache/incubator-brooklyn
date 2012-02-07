@@ -50,7 +50,7 @@ public class MockContainerEntity extends AbstractGroup implements BalanceableCon
     
     @Override
     public <T> T setAttribute(AttributeSensor<T> attribute, T val) {
-        LOG.debug("Mocks: container $this setting $attribute to $val")
+        if (LOG.isDebugEnabled()) LOG.debug("Mocks: container $this setting $attribute to $val")
         return super.setAttribute(attribute, val)
     }
 
@@ -77,14 +77,14 @@ public class MockContainerEntity extends AbstractGroup implements BalanceableCon
     }
     
     public void addItem(Entity item) {
-        LOG.debug("Mocks: adding item $item to container $this")
+        if (LOG.isDebugEnabled()) LOG.debug("Mocks: adding item $item to container $this")
         if (!running || offloading) throw new IllegalStateException("Container $displayName is not running; cannot add item $item")
         addMember(item)
         emit(BalanceableContainer.ITEM_ADDED, item)
     }
     
     public void removeItem(Entity item) {
-        LOG.debug("Mocks: removing item $item from container $this")
+        if (LOG.isDebugEnabled()) LOG.debug("Mocks: removing item $item from container $this")
         if (!running) throw new IllegalStateException("Container $displayName is not running; cannot remove item $item")
         removeMember(item)
         emit(BalanceableContainer.ITEM_REMOVED, item)
@@ -100,7 +100,7 @@ public class MockContainerEntity extends AbstractGroup implements BalanceableCon
 
     @Override
     public void start(Collection<? extends Location> locations) {
-        LOG.debug("Mocks: starting container $this")
+        if (LOG.isDebugEnabled()) LOG.debug("Mocks: starting container $this")
         _lock.lock();
         try {
             if (delay > 0) Thread.sleep(delay)
@@ -113,7 +113,7 @@ public class MockContainerEntity extends AbstractGroup implements BalanceableCon
 
     @Override
     public void stop() {
-        LOG.debug("Mocks: stopping container $this")
+        if (LOG.isDebugEnabled()) LOG.debug("Mocks: stopping container $this")
         _lock.lock();
         try {
             running = false;
@@ -132,14 +132,14 @@ public class MockContainerEntity extends AbstractGroup implements BalanceableCon
     }
 
     public void offloadAndStop(MockContainerEntity otherContainer) {
-        LOG.debug("Mocks: offloading container $this to $otherContainer (items $balanceableItems)")
+        if (LOG.isDebugEnabled()) LOG.debug("Mocks: offloading container $this to $otherContainer (items $balanceableItems)")
         _lock.lock();
         try {
             offloading = false;
             for (MockItemEntity item : balanceableItems) {
                 item.moveNonEffector(otherContainer)
             }
-            LOG.debug("Mocks: stopping offloaded container $this")
+            if (LOG.isDebugEnabled()) LOG.debug("Mocks: stopping offloaded container $this")
             stopWithoutLock();
         } finally {
             _lock.unlock()
@@ -148,7 +148,7 @@ public class MockContainerEntity extends AbstractGroup implements BalanceableCon
     
     @Override
     public void restart() {
-        LOG.debug("Mocks: restarting $this")
+        if (LOG.isDebugEnabled()) LOG.debug("Mocks: restarting $this")
         throw new UnsupportedOperationException();
     }
     

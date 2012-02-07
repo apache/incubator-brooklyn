@@ -3,6 +3,7 @@ package brooklyn.policy.loadbalancing;
 import static com.google.common.base.Preconditions.checkNotNull
 
 import java.util.Map
+import java.util.concurrent.atomic.AtomicInteger
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -20,6 +21,8 @@ public class MockItemEntity extends AbstractEntity implements Movable {
     public static final AttributeSensor<Integer> TEST_METRIC =
         new BasicAttributeSensor<Integer>(Integer.class, "test.metric", "Dummy workrate for test entities")
     
+    static AtomicInteger totalMoveCount = new AtomicInteger(0)
+    
     private MockContainerEntity currentContainer;
     
     public MockItemEntity (Map props=[:], Entity owner=null) {
@@ -32,19 +35,20 @@ public class MockItemEntity extends AbstractEntity implements Movable {
 
     @Override
     public <T> T setAttribute(AttributeSensor<T> attribute, T val) {
-        LOG.debug("Mocks: item $this setting $attribute to $val")
+        if (LOG.isDebugEnabled()) LOG.debug("Mocks: item $this setting $attribute to $val")
         return super.setAttribute(attribute, val)
     }
 
     @Override
     public void move(Entity destination) {
-        moveNonEffector(destination);
+        totalMoveCount.incrementAndGet()
+        moveNonEffector(destination)
     }
     
     // only moves if the containers will accept us (otherwise we'd lose the item!)
     public void moveNonEffector(Entity rawDestination) {
         // FIXME deadlock risk; obtain locks in deterministic order
-        LOG.debug("Mocks: moving item $this from $currentContainer to $rawDestination")
+        if (LOG.isDebugEnabled()) LOG.debug("Mocks: moving item $this from $currentContainer to $rawDestination")
         checkNotNull(rawDestination)
         MockContainerEntity previousContainer = currentContainer
         MockContainerEntity destination = (MockContainerEntity) rawDestination;
@@ -59,7 +63,7 @@ public class MockItemEntity extends AbstractEntity implements Movable {
     
     public void stop() {
         // FIXME How best to indicate this has been entirely stopped, rather than just in-transit?
-        LOG.debug("Mocks: stopping item $this (was in container $currentContainer)")
+        if (LOG.isDebugEnabled()) LOG.debug("Mocks: stopping item $this (was in container $currentContainer)")
         currentContainer?.removeItem(this)
         currentContainer = null
     }
