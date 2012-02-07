@@ -28,14 +28,14 @@ class ResizingPolicyTest {
     public static class LocallyResizableEntity extends LocallyManagedEntity implements Resizable {
         TestCluster cluster
         public LocallyResizableEntity (TestCluster tc) { this.cluster = tc }
-        Integer resize(Integer newSize) { cluster.size = newSize }
+        Integer resize(Integer newSize) { Thread.sleep(250); cluster.size = newSize }
         Integer getCurrentSize() { return cluster.size }
         String toString() { return getDisplayName() }
     }
     
     
     private static long TIMEOUT_MS = 5000
-            
+    
     ResizingPolicy policy
     TestCluster cluster
     LocallyResizableEntity resizable
@@ -54,23 +54,32 @@ class ResizingPolicyTest {
     @Test
     public void testShrinkColdPool() {
         resizable.resize(4)
-        resizable.emit(BalanceableWorkerPool.POOL_COLD, message(20l, 40l, 80l))
+        resizable.emit(BalanceableWorkerPool.POOL_COLD, message(4, 30l, 40l, 80l))
         
-        // expect pool to shrink to 2
-        executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 2) }
+        // expect pool to shrink to 3
+        executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 3) }
     }
     
     @Test
     public void testGrowHotPool() {
         resizable.resize(2)
-        resizable.emit(BalanceableWorkerPool.POOL_HOT, message(90l, 40l, 80l))
+        resizable.emit(BalanceableWorkerPool.POOL_HOT, message(2, 90l, 40l, 80l))
         
         // expect pool to grow to 3
         executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 3) }
     }
     
     @Test
-    public void testConcurrentShrinkShrink() { /* TODO */ }
+    public void testConcurrentShrinkShrink() {
+        resizable.resize(4)
+        resizable.emit(BalanceableWorkerPool.POOL_HOT, message(4, 30l, 40l, 80l))
+        // expect pool to shrink to 3
+        
+        resizable.emit(BalanceableWorkerPool.POOL_HOT, message(4, 15l, 40l, 80l))
+        // now expect pool to shrink to 1
+        
+        executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 1) }
+    }
     
     @Test
     public void testConcurrentGrowGrow() { /* TODO */ }
@@ -82,8 +91,9 @@ class ResizingPolicyTest {
     public void testConcurrentShrinkGrow() { /* TODO */ }
     
     
-    static Map<String, Object> message(double currentWorkrate, double lowThreshold, double highThreshold) {
+    static Map<String, Object> message(int currentSize, double currentWorkrate, double lowThreshold, double highThreshold) {
         return ImmutableMap.of(
+            ResizingPolicy.POOL_CURRENT_SIZE_KEY, currentSize,
             ResizingPolicy.POOL_CURRENT_WORKRATE_KEY, currentWorkrate,
             ResizingPolicy.POOL_LOW_THRESHOLD_KEY, lowThreshold,
             ResizingPolicy.POOL_HIGH_THRESHOLD_KEY, highThreshold)
