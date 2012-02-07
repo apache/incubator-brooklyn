@@ -19,15 +19,17 @@ public class TimeWeightedDeltaEnricher<T extends Number> extends AbstractTransfo
     Number lastValue
     long lastTime
     int unitMillis
+    Closure postProcessor
     
     // default 1 second
     public static <T extends Number> TimeWeightedDeltaEnricher getPerSecondDeltaEnricher(Entity producer, Sensor<T> source, Sensor<Double> target) {
         return new TimeWeightedDeltaEnricher<T>(producer, source, target, 1000)
     }
-    
-    public TimeWeightedDeltaEnricher(Entity producer, Sensor<T> source, Sensor<Double> target, int unitMillis) {
+
+    public TimeWeightedDeltaEnricher(Entity producer, Sensor<T> source, Sensor<Double> target, int unitMillis, Closure postProcessor={it}) {
         super(producer, source, target)
         this.unitMillis = unitMillis
+        this.postProcessor = postProcessor
     }
     
     @Override
@@ -46,8 +48,9 @@ public class TimeWeightedDeltaEnricher<T extends Number> extends AbstractTransfo
                 double duration = lastTime == null ? unitMillis : eventTime - lastTime
                 delta = (current - lastValue) / (duration / unitMillis)
             }
-            entity.setAttribute(target, delta)
-            LOG.trace "set $this to ${delta}, $lastValue -> $current at $eventTime" 
+            double deltaPostProcessed = postProcessor.call(delta)
+            entity.setAttribute(target, deltaPostProcessed)
+            LOG.trace "set $this to ${deltaPostProcessed}, $lastValue -> $current at $eventTime" 
             lastValue = current
             lastTime = eventTime
         }

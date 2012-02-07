@@ -23,9 +23,10 @@ public class BasicSensorEvent<T> implements SensorEvent<T> {
 
     public long getTimestamp() { return timestamp; }
 
+    /** arguments should not be null (except in certain limited testing situations) */
     public BasicSensorEvent(Sensor<T> sensor, Entity source, T value, long timestamp=0) {
-        this.sensor = checkNotNull(sensor, "sensor");
-        this.source = checkNotNull(source, "source");
+        this.sensor = sensor;
+        this.source = source;
         this.value = value;
 
         if (timestamp > 0) {
