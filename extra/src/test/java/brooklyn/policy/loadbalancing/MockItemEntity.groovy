@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull
 
 import java.util.Map
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.locks.ReentrantLock
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -25,6 +26,8 @@ public class MockItemEntity extends AbstractEntity implements Movable {
     
     private volatile boolean stopped;
     private volatile MockContainerEntity currentContainer;
+    
+    private final ReentrantLock _lock = new ReentrantLock();
     
     public MockItemEntity (Map props=[:], Entity owner=null) {
         super(props, owner)
@@ -59,19 +62,30 @@ public class MockItemEntity extends AbstractEntity implements Movable {
         MockContainerEntity destination = (MockContainerEntity) rawDestination;
         
         MockContainerEntity.runWithLock([previousContainer, destination]) {
-            currentContainer?.removeItem(this)
-            currentContainer = destination
-            destination.addItem(this)
-            setAttribute(CONTAINER, currentContainer)
+            _lock.lock()
+            try {
+                if (stopped) throw new IllegalStateException("Item $this is stopped; cannot move to $destination")
+                currentContainer?.removeItem(this)
+                currentContainer = destination
+                destination.addItem(this)
+                setAttribute(CONTAINER, currentContainer)
+            } finally {
+                _lock.unlock()
+            }
         }
     }
     
     public void stop() {
         // FIXME How best to indicate this has been entirely stopped, rather than just in-transit?
         if (LOG.isDebugEnabled()) LOG.debug("Mocks: stopping item $this (was in container $currentContainer)")
-        currentContainer?.removeItem(this)
-        currentContainer = null
-        stopped = true
+        _lock.lock()
+        try {
+            currentContainer?.removeItem(this)
+            currentContainer = null
+            stopped = true
+        } finally {
+            _lock.unlock()
+        }
     }
     
     public String toString() {
