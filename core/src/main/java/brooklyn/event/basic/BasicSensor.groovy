@@ -18,6 +18,7 @@ import brooklyn.util.internal.LanguageUtils
 
 import com.google.common.base.Objects
 import com.google.common.base.Splitter
+import com.google.common.collect.ImmutableList
 import com.google.common.collect.Lists
 
 /**
@@ -33,7 +34,8 @@ public class BasicSensor<T> implements Sensor<T> {
     public final String typeName;
     public final String name;
     public final String description;
-
+    private final List<String> _nameParts;
+    
     public BasicSensor() { /* for gson */ }
 
     /** name is typically a dot-separated identifier; description is optional */
@@ -42,6 +44,7 @@ public class BasicSensor<T> implements Sensor<T> {
         this.typeName = type.getName();
         this.name = name;
         this.description = description;
+        this._nameParts = ImmutableList.copyOf(dots.split(name))
     }
 
     /** @see Sensor#getType() */
@@ -55,7 +58,7 @@ public class BasicSensor<T> implements Sensor<T> {
  
     /** @see Sensor#getNameParts() */
     public List<String> getNameParts() {
-        return Lists.newArrayList(dots.split(name));
+        return _nameParts;
     }
  
     /** @see Sensor#getDescription() */
