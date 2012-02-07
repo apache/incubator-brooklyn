@@ -130,7 +130,8 @@ public class LoadBalancingPolicySoakTest {
         config.numContainerStopsPerCycle = 0
         config.numItemStopsPerCycle = 0
         config.totalRate = config.numContainers*(0.95*config.highThreshold)
-    
+        config.verbose = false
+        
         runLoadBalancingSoakTest(config)
     }
     
@@ -143,6 +144,9 @@ public class LoadBalancingPolicySoakTest {
         int totalRate = config.totalRate
         int numContainerStopsPerCycle = config.numContainerStopsPerCycle
         int numItemStopsPerCycle = config.numItemStopsPerCycle
+        boolean verbose = config.verbose
+        
+        MockItemEntity.totalMoveCount.set(0)
         
         List<MockContainerEntity> containers = new ArrayList<MockContainerEntity>()
         List<MockItemEntity> items = new ArrayList<MockItemEntity>()
@@ -192,10 +196,16 @@ public class LoadBalancingPolicySoakTest {
             // Assert that the items become balanced again
             executeUntilSucceeds(timeout:TIMEOUT_MS) {
                 List<Double> containerRates = containers.collect { it.getWorkrate() }
-                List<Set<Entity>> itemDistribution = containers.collect { it.getBalanceableItems() }
-                String modelItemDistribution = modelItemDistributionToString()
-                String errMsg = "containerRates=$containerRates; itemRates=$itemRates; itemDistribution=$itemDistribution; model=$modelItemDistribution"
-                
+                String errMsg
+                if (verbose) {
+                    List<Set<Entity>> itemDistribution = containers.collect { it.getBalanceableItems() }
+                    String modelItemDistribution = modelItemDistributionToString()
+                    errMsg = "containerRates=$containerRates; itemRates=$itemRates; itemDistribution=$itemDistribution; model=$modelItemDistribution; "+
+                            "totalMoves=${MockItemEntity.totalMoveCount}"
+                } else {
+                    errMsg = "$containerRates; totalMoves=${MockItemEntity.totalMoveCount}"
+                }
+                                
                 assertEquals(sum(containerRates), sum(itemRates), errMsg)
                 for (double containerRate : containerRates) {
                     assertTrue(containerRate >= lowThreshold, errMsg)
@@ -213,7 +223,8 @@ public class LoadBalancingPolicySoakTest {
         double highThreshold = 300
         int totalRate = 5*(0.95*highThreshold)
         int numContainerStopsPerCycle = 1
-        int numItemStopsPerCycle =1
+        int numItemStopsPerCycle = 1
+        boolean verbose = true
     }
 
     // Testing conveniences.
