@@ -23,7 +23,8 @@ public class MockItemEntity extends AbstractEntity implements Movable {
     
     static AtomicInteger totalMoveCount = new AtomicInteger(0)
     
-    private MockContainerEntity currentContainer;
+    private volatile boolean stopped;
+    private volatile MockContainerEntity currentContainer;
     
     public MockItemEntity (Map props=[:], Entity owner=null) {
         super(props, owner)
@@ -31,6 +32,10 @@ public class MockItemEntity extends AbstractEntity implements Movable {
     
     public String getContainerId() {
         return currentContainer?.getId()
+    }
+
+    public boolean isStopped() {
+        return stopped
     }
 
     @Override
@@ -66,6 +71,7 @@ public class MockItemEntity extends AbstractEntity implements Movable {
         if (LOG.isDebugEnabled()) LOG.debug("Mocks: stopping item $this (was in container $currentContainer)")
         currentContainer?.removeItem(this)
         currentContainer = null
+        stopped = true
     }
     
     public String toString() {

@@ -9,58 +9,18 @@ import java.io.PrintStream
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.Application
-import brooklyn.entity.ConfigKey
 import brooklyn.entity.Entity
-import brooklyn.entity.Group
-import brooklyn.entity.basic.DynamicGroup
-import brooklyn.event.basic.BasicConfigKey
-import brooklyn.location.basic.SimulatedLocation
 import brooklyn.test.entity.TestApplication
 
-public class LoadBalancingPolicySoakTest {
+public class LoadBalancingPolicySoakTest extends AbstractLoadBalancingPolicyTest {
 
     protected static final Logger LOG = LoggerFactory.getLogger(LoadBalancingPolicySoakTest.class)
     
-    private static final long TIMEOUT_MS = 20*1000;
+    private static final long TIMEOUT_MS = 40*1000;
     
-    private static final long CONTAINER_STARTUP_DELAY_MS = 100
-    
-    public static final ConfigKey<Double> LOW_THRESHOLD_CONFIG_KEY = new BasicConfigKey<Double>(Double.class, "metric.threshold.low", "desc", 0.0)
-    public static final ConfigKey<Double> HIGH_THRESHOLD_CONFIG_KEY = new BasicConfigKey<Double>(Double.class, "metric.threshold.high", "desc", 0.0)
-    
-    private TestApplication app
-    private SimulatedLocation loc
-    private DefaultBalanceablePoolModel<Entity, Entity> model;
-    private BalanceableWorkerPool pool
-    private LoadBalancingPolicy policy
-    private Group containerGroup
-    private Group itemGroup
-    private Random random = new Random()
-    
-    @BeforeMethod()
-    public void before() {
-        // TODO: improve the default impl to avoid the need for this anonymous overrider of 'moveItem'
-        model = new DefaultBalanceablePoolModel<Entity, Entity>("pool-model") {
-            @Override public void moveItem(Entity item, Entity oldContainer, Entity newContainer) {
-                ((Movable) item).move(newContainer)
-                onItemMoved(item, newContainer)
-            }
-        }
-        
-        app = new TestApplication()
-        containerGroup = new DynamicGroup([name:"containerGroup"], app, { e -> (e instanceof MockContainerEntity) })
-        itemGroup = new DynamicGroup([name:"containerGroup"], app, { e -> (e instanceof MockItemEntity) })
-        pool = new BalanceableWorkerPool([:], app)
-        pool.setContents(containerGroup, itemGroup)
-        policy = new LoadBalancingPolicy([:], MockItemEntity.TEST_METRIC, model)
-        policy.setEntity(pool)
-        app.start([loc])
-    }
-
     @Test
     public void testLoadBalancingQuickTest() {
         RunConfig config = new RunConfig()
@@ -239,45 +199,6 @@ public class LoadBalancingPolicySoakTest {
         double total = 0;
         vals.each { total += it }
         return total;
-    }
-    
-    private MockContainerEntity newContainer(Application app, String name, double lowThreshold, double highThreshold) {
-        return newAsyncContainer(app, name, lowThreshold, highThreshold, 0)
-    }
-    
-    private MockContainerEntity newAsyncContainer(Application app, String name, double lowThreshold, double highThreshold, long delay) {
-        // Annoyingly, can't set owner until after the threshold config has been defined.
-        MockContainerEntity container = new MockContainerEntity([displayName:name], delay)
-        container.setConfig(LOW_THRESHOLD_CONFIG_KEY, lowThreshold)
-        container.setConfig(HIGH_THRESHOLD_CONFIG_KEY, highThreshold)
-        container.setOwner(app)
-        LOG.debug("Managing container {}", container)
-        app.getManagementContext().manage(container)
-        container.start([loc])
-        return container
-    }
-    
-    private static MockItemEntity newItem(Application app, MockContainerEntity container, String name, double workrate) {
-        MockItemEntity item = new MockItemEntity([displayName:name], app)
-        LOG.debug("Managing item {}", item)
-        app.getManagementContext().manage(item)
-        item.move(container)
-        item.setAttribute(MockItemEntity.TEST_METRIC, workrate)
-        return item
-    }
-    
-    private static double getItemWorkrate(MockItemEntity item) {
-        Object result = item.getAttribute(MockItemEntity.TEST_METRIC)
-        return (result == null ? 0 : ((Number) result).doubleValue())
-    }
-    
-    private static double getContainerWorkrate(MockContainerEntity container) {
-        double result = 0.0
-        container.getBalanceableItems().each { MockItemEntity item ->
-            assertEquals(item.getContainerId(), container.getId())
-            result += getItemWorkrate(item)
-        }
-        return result
     }
     
     /**

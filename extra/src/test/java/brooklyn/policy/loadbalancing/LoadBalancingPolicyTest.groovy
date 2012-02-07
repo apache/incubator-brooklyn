@@ -25,45 +25,7 @@ import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.test.entity.TestApplication
 
-public class LoadBalancingPolicyTest {
-    
-    private static final long TIMEOUT_MS = 5000;
-    
-    private static final long CONTAINER_STARTUP_DELAY_MS = 100
-    
-    public static final AttributeSensor<Integer> TEST_METRIC =
-        new BasicAttributeSensor<Integer>(Integer.class, "test.metric", "Dummy workrate for test entities")
-    
-    public static final ConfigKey<Double> LOW_THRESHOLD_CONFIG_KEY = new BasicConfigKey<Double>(Double.class, "metric.threshold.low", "desc", 0.0)
-    public static final ConfigKey<Double> HIGH_THRESHOLD_CONFIG_KEY = new BasicConfigKey<Double>(Double.class, "metric.threshold.high", "desc", 0.0)
-    
-    private TestApplication app
-    private SimulatedLocation loc
-    private BalanceableWorkerPool pool
-    private LoadBalancingPolicy policy
-    private Group containerGroup
-    private Group itemGroup
-    
-    
-    @BeforeMethod(alwaysRun=true)
-    public void before() {
-        // TODO: improve the default impl to avoid the need for this anonymous overrider of 'moveItem'
-        DefaultBalanceablePoolModel<Entity, Entity> model = new DefaultBalanceablePoolModel<Entity, Entity>("pool-model") {
-            @Override public void moveItem(Entity item, Entity oldContainer, Entity newContainer) {
-                ((Movable) item).move(newContainer)
-                onItemMoved(item, newContainer)
-            }
-        }
-        
-        app = new TestApplication()
-        containerGroup = new DynamicGroup([name:"containerGroup"], app, { e -> (e instanceof MockContainerEntity) })
-        itemGroup = new DynamicGroup([name:"itemGroup"], app, { e -> (e instanceof MockItemEntity) })
-        pool = new BalanceableWorkerPool([:], app)
-        pool.setContents(containerGroup, itemGroup)
-        policy = new LoadBalancingPolicy([:], TEST_METRIC, model)
-        policy.setEntity(pool)
-        app.start([loc])
-    }
+public class LoadBalancingPolicyTest extends AbstractLoadBalancingPolicyTest {
     
     // Expect no balancing to occur as container A isn't above the high threshold.
     @Test
@@ -130,13 +92,6 @@ public class LoadBalancingPolicyTest {
         assertWorkratesEventually([containerA, containerB, containerC], [30d, 30d, 20d])
     }
 
-    // Using this utility, as it gives more info about the workrates of all containers rather than just the one that differs    
-    private void assertWorkratesEventually(List<MockContainerEntity> containers, List<Double> expected) {
-        executeUntilSucceeds(timeout:TIMEOUT_MS) {
-            List<Double> actual = containers.collect { getContainerWorkrate(it) }
-            assertEquals(actual, expected, "actual=$actual; expected=$expected; containers=$containers")
-        }
-    }
     // On addition of new container, expect no rebalancing to occur as no existing container is hot.
     @Test
     public void testAddContainerWhenCold() {
@@ -231,45 +186,4 @@ public class LoadBalancingPolicyTest {
 
         assertWorkratesEventually([containerA, containerB], [40d, 40d])
     }
-    
-
-    // Testing conveniences.
-     
-    private MockContainerEntity newContainer(Application app, String name, double lowThreshold, double highThreshold) {
-        return newAsyncContainer(app, name, lowThreshold, highThreshold, 0)
-    }
-    
-    private MockContainerEntity newAsyncContainer(Application app, String name, double lowThreshold, double highThreshold, long delay) {
-        // Annoyingly, can't set owner until after the threshold config has been defined.
-        MockContainerEntity container = new MockContainerEntity([displayName:name], delay)
-        container.setConfig(LOW_THRESHOLD_CONFIG_KEY, lowThreshold)
-        container.setConfig(HIGH_THRESHOLD_CONFIG_KEY, highThreshold)
-        container.setOwner(app)
-        app.getManagementContext().manage(container)
-        container.start([loc])
-        return container
-    }
-    
-    private static MockItemEntity newItem(Application app, MockContainerEntity container, String name, double workrate) {
-        MockItemEntity item = new MockItemEntity([displayName:name], app)
-        app.getManagementContext().manage(item)
-        item.move(container)
-        item.setAttribute(TEST_METRIC, workrate)
-        return item
-    }
-    
-    private static double getItemWorkrate(MockItemEntity item) {
-        Object result = item.getAttribute(TEST_METRIC)
-        return (result == null ? 0 : ((Number) result).doubleValue())
-    }
-    
-    private static double getContainerWorkrate(MockContainerEntity container) {
-        double result = 0.0
-        container.getBalanceableItems().each { MockItemEntity item ->
-            assertEquals(item.getContainerId(), container.getId())
-            result += getItemWorkrate(item)
-        }
-        return result
-    }
-    
 }
