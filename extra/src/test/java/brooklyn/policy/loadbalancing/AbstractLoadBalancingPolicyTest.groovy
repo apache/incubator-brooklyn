@@ -27,7 +27,7 @@ public class AbstractLoadBalancingPolicyTest {
     
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractLoadBalancingPolicyTest.class)
     
-    protected static final long TIMEOUT_MS = 5000;
+    protected static final long TIMEOUT_MS = 10*1000;
     
     protected static final long CONTAINER_STARTUP_DELAY_MS = 100
     
