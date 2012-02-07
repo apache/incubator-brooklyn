@@ -34,6 +34,11 @@ public class BalanceableWorkerPool extends AbstractEntity {
             this.container = container
             this.item = checkNotNull(item)
         }
+        
+        @Override
+        public String toString() {
+            return "$item @ $container"
+        }
     }
     
     // Pool constituent notifications.
@@ -46,7 +51,7 @@ public class BalanceableWorkerPool extends AbstractEntity {
     public static BasicNotificationSensor<ContainerItemPair> ITEM_REMOVED = new BasicNotificationSensor<ContainerItemPair>(
         ContainerItemPair.class, "balanceablepool.item.removed", "Item removed from balanceable pool")
     public static BasicNotificationSensor<ContainerItemPair> ITEM_MOVED = new BasicNotificationSensor<ContainerItemPair>(
-        ContainerItemPair.class, "balanceablepool.item.removed", "Item moved in balanceable pool to the given container")
+        ContainerItemPair.class, "balanceablepool.item.moved", "Item moved in balanceable pool to the given container")
     
     // Pool workrate notifications.
     public static BasicNotificationSensor<Map> POOL_HOT = new BasicNotificationSensor<Map>(
@@ -60,6 +65,7 @@ public class BalanceableWorkerPool extends AbstractEntity {
     
     private final SensorEventListener<?> eventHandler = new SensorEventListener<Object>() {
         public void onEvent(SensorEvent<?> event) {
+            LOG.info("BalanceableWorkerPool.onEvent: {}", event)
             if (LOG.isTraceEnabled()) LOG.trace("{} received event {}", BalanceableWorkerPool.this, event)
             Entity source = event.getSource()
             Object value = event.getValue()
