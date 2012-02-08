@@ -1,6 +1,9 @@
 package brooklyn.policy.resizing
 
 import java.util.Map
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -25,6 +28,7 @@ public class ResizingPolicy extends AbstractPolicy {
     
     
     private Resizable poolEntity
+    private ExecutorService executor = Executors.newSingleThreadExecutor()
     private final SensorEventListener<?> eventHandler = new SensorEventListener<Object>() {
         public void onEvent(SensorEvent<?> event) {
             Map<String, ?> properties = (Map<String, ?>) event.getValue()
@@ -38,6 +42,19 @@ public class ResizingPolicy extends AbstractPolicy {
     
     public ResizingPolicy(Map properties = [:]) {
         super(properties)
+    }
+    
+    @Override
+    public void suspend() {
+        super.suspend();
+        // TODO unsubscribe from everything? And resubscribe on resume?
+        if (executor != null) executor.shutdownNow()
+    }
+    
+    @Override
+    public void resume() {
+        super.resume();
+        executor = Executors.newSingleThreadExecutor()
     }
     
     @Override
@@ -61,7 +78,7 @@ public class ResizingPolicy extends AbstractPolicy {
         // NOTE: assumes the pool is homogeneous for now.
         final int desiredPoolSize = Math.floor((poolCurrentSize * poolCurrentWorkrate) / poolLowThreshold)
         LOG.trace("{} resizing cold pool {} from {} to {}", this, poolEntity, poolCurrentSize, desiredPoolSize)
-        new Thread() { void run() { poolEntity.resize(desiredPoolSize) } }.start()
+        scheduleResize(desiredPoolSize)
     }
     
     private void onPoolHot(Map<String, ?> properties) {
@@ -76,6 +93,24 @@ public class ResizingPolicy extends AbstractPolicy {
         final int desiredPoolSize = Math.ceil((poolCurrentSize * poolCurrentWorkrate) / poolHighThreshold)
         LOG.trace("{} resizing hot pool {} from {} to {}", this, poolEntity, poolCurrentSize, desiredPoolSize)
         new Thread() { void run() { poolEntity.resize(desiredPoolSize) } }.start()
+        scheduleResize(desiredPoolSize)
+    }
+    
+    private void scheduleResize(final int desiredPoolSize) {
+        executor.submit( {
+            try {
+                poolEntity.resize(desiredPoolSize)
+                
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt() // gracefully stop
+            } catch (Exception e) {
+                if (isRunning()) {
+                    LOG.error("Error resizing: "+e, e)
+                } else {
+                    LOG.debug("Error resizing, but no longer running: "+e, e)
+                }
+            }
+        } )
     }
     
 }
