@@ -4,17 +4,17 @@ import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
-import java.util.List;
+import java.util.List
 
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap
 
 import brooklyn.entity.LocallyManagedEntity
 import brooklyn.entity.trait.Resizable
-import brooklyn.policy.loadbalancing.BalanceableWorkerPool;
-import brooklyn.policy.loadbalancing.MockContainerEntity;
+import brooklyn.policy.loadbalancing.BalanceableWorkerPool
+import brooklyn.policy.loadbalancing.MockContainerEntity
 import brooklyn.test.entity.TestCluster
 import brooklyn.util.internal.TimeExtras
 
@@ -73,7 +73,7 @@ class ResizingPolicyTest {
     public void testConcurrentShrinkShrink() {
         resizable.resize(4)
         resizable.emit(BalanceableWorkerPool.POOL_HOT, message(4, 30l, 40l, 80l))
-        // expect pool to shrink to 3
+        // would cause pool to shrink to 3
         
         resizable.emit(BalanceableWorkerPool.POOL_HOT, message(4, 15l, 40l, 80l))
         // now expect pool to shrink to 1
@@ -82,13 +82,40 @@ class ResizingPolicyTest {
     }
     
     @Test
-    public void testConcurrentGrowGrow() { /* TODO */ }
+    public void testConcurrentGrowGrow() {
+        resizable.resize(2)
+        resizable.emit(BalanceableWorkerPool.POOL_HOT, message(2, 90l, 40l, 80l))
+        // would cause pool to grow to 3
+        
+        resizable.emit(BalanceableWorkerPool.POOL_HOT, message(2, 190l, 40l, 80l))
+        // now expect pool to grow to 5
+        
+        executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 5) }
+    }
     
     @Test
-    public void testConcurrentGrowShrink() { /* TODO */ }
+    public void testConcurrentGrowShrink() {
+        resizable.resize(2)
+        resizable.emit(BalanceableWorkerPool.POOL_HOT, message(2, 110l, 40l, 80l))
+        // would cause pool to grow to 5
+        
+        resizable.emit(BalanceableWorkerPool.POOL_HOT, message(2, 15l, 40l, 80l))
+        // now expect pool to shrink to 1
+        
+        executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 1) }
+    }
     
     @Test
-    public void testConcurrentShrinkGrow() { /* TODO */ }
+    public void testConcurrentShrinkGrow() {
+        resizable.resize(4)
+        resizable.emit(BalanceableWorkerPool.POOL_HOT, message(4, 15l, 40l, 80l))
+        // would cause pool to shrink to 1
+        
+        resizable.emit(BalanceableWorkerPool.POOL_HOT, message(4, 90l, 40l, 80l))
+        // now expect pool to grow to 5
+        
+        executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 5) }
+    }
     
     
     static Map<String, Object> message(int currentSize, double currentWorkrate, double lowThreshold, double highThreshold) {
