@@ -11,14 +11,16 @@ import brooklyn.entity.Entity
 import brooklyn.entity.Group
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.AbstractGroup
+import brooklyn.entity.group.Cluster;
 import brooklyn.entity.trait.Startable
+import brooklyn.entity.trait.Resizable
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.event.basic.BasicNotificationSensor
 
 
-public class BalanceableWorkerPool extends AbstractEntity {
+public class BalanceableWorkerPool extends AbstractEntity implements Resizable {
 
     private static final Logger LOG = LoggerFactory.getLogger(BalanceableWorkerPool.class)
     
@@ -62,6 +64,7 @@ public class BalanceableWorkerPool extends AbstractEntity {
     
     private Group containerGroup
     private Group itemGroup
+    private Closure<? extends Entity> newContainer
     
     private final SensorEventListener<?> eventHandler = new SensorEventListener<Object>() {
         public void onEvent(SensorEvent<?> event) {
@@ -109,6 +112,7 @@ public class BalanceableWorkerPool extends AbstractEntity {
     
     public BalanceableWorkerPool(Map properties = [:], Entity owner = null) {
         super(properties, owner)
+        this.newContainer = properties.newContainer
     }
     
     public void setContents(Group containerGroup, Group itemGroup) {
@@ -131,6 +135,17 @@ public class BalanceableWorkerPool extends AbstractEntity {
     public Group getContainerGroup() {
         return containerGroup
     }
+    
+    
+    // methods inherited from Resizable
+    public Integer getCurrentSize() { return containerGroup.getCurrentSize() }
+    
+    public Integer resize(Integer desiredSize) {
+        if (containerGroup instanceof Resizable) return ((Resizable) containerGroup).resize(desiredSize)
+        
+        throw new UnsupportedOperationException("Container group is not resizable")
+    }
+    
     
     private void onContainerAdded(Entity newContainer) {
         subscribe(newContainer, Startable.SERVICE_UP, eventHandler)

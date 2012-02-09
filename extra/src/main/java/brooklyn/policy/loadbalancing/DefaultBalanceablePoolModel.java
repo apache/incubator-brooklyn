@@ -19,9 +19,9 @@ import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 
 public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements BalanceablePoolModel<ContainerType, ItemType> {
-
+    
     private static final Logger LOG = LoggerFactory.getLogger(DefaultBalanceablePoolModel.class);
-
+    
     /*
      * Performance comments.
      *  - Used hprof with LoadBalancingPolicySoakTest.testLoadBalancingManyManyItemsTest (1000 items)
@@ -32,7 +32,7 @@ public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements Bal
      *    processes events to update the model), get ConcurrentModificationException if don't take
      *    copy of containerToItems.get(node)...
      */
-
+    
     // Concurrent maps cannot have null value; use this to represent when no container is supplied for an item 
     private static final String NULL_CONTAINER = "null-container";
     
@@ -43,6 +43,11 @@ public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements Bal
     private final Map<ItemType, ContainerType> itemToContainer = new ConcurrentHashMap<ItemType, ContainerType>();
     private final SetMultimap<ContainerType, ItemType> containerToItems =  Multimaps.synchronizedSetMultimap(HashMultimap.<ContainerType, ItemType>create());
     private final Map<ItemType, Double> itemToWorkrate = new ConcurrentHashMap<ItemType, Double>();
+    
+    private double poolLowThreshold = 0;
+    private double poolHighThreshold = 0;
+    private double currentPoolWorkrate = 0;
+    
     
     public DefaultBalanceablePoolModel(String name) {
         this.name = name;
@@ -63,6 +68,12 @@ public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements Bal
     public Double getItemWorkrate(ItemType item) {
         return itemToWorkrate.get(item);
     }
+    
+    @Override public double getPoolLowThreshold() { return poolLowThreshold; }
+    @Override public double getPoolHighThreshold() { return poolHighThreshold; }
+    @Override public double getCurrentPoolWorkrate() { return currentPoolWorkrate; }
+    @Override public boolean isHot() { return !containers.isEmpty() && currentPoolWorkrate > poolHighThreshold; }
+    @Override public boolean isCold() { return !containers.isEmpty() && currentPoolWorkrate < poolLowThreshold; }
     
     
     // Provider methods.
@@ -114,10 +125,10 @@ public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements Bal
     @Override public boolean isItemAllowedIn(ItemType item, Location location) {
         return true; // TODO?
     }
-
+    
     
     // Mutators.
-
+    
     @Override
     public void onItemMoved(ItemType item, ContainerType newNode) {
         if (!itemToContainer.containsKey(item)) {
@@ -138,13 +149,16 @@ public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements Bal
         containers.add(newContainer);
         containerToLowThreshold.put(newContainer, lowThreshold);
         containerToHighThreshold.put(newContainer, highThreshold);
+        poolLowThreshold += lowThreshold;
+        poolHighThreshold += highThreshold;
     }
     
     @Override
     public void onContainerRemoved(ContainerType oldContainer) {
         containers.remove(oldContainer);
-        containerToLowThreshold.remove(oldContainer);
-        containerToHighThreshold.remove(oldContainer);
+        poolLowThreshold -= containerToLowThreshold.remove(oldContainer);
+        poolHighThreshold -= containerToHighThreshold.remove(oldContainer);
+        
         // TODO: assert no orphaned items
     }
     
@@ -160,22 +174,27 @@ public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements Bal
         if (oldNode != null && oldNode != NULL_CONTAINER) containerToItems.remove(oldNode, item);
         if (parentContainer != null) containerToItems.put(parentContainer, item);
         if (currentWorkrate != null)
-            itemToWorkrate.put(item, currentWorkrate.doubleValue());
+            onItemWorkrateUpdated(item, currentWorkrate.doubleValue());
     }
     
     @Override
     public void onItemRemoved(ItemType item) {
         ContainerType oldNode = itemToContainer.remove(item);
         if (oldNode != null && oldNode != NULL_CONTAINER) containerToItems.remove(oldNode, item);
-        itemToWorkrate.remove(item);
+        Double workrate = itemToWorkrate.remove(item);
+        if (workrate != null)
+            currentPoolWorkrate -= workrate;
     }
     
     @Override
     public void onItemWorkrateUpdated(ItemType item, double newValue) {
-        itemToWorkrate.put(item, newValue);
+        Double oldValue = itemToWorkrate.put(item, newValue);
+        if (oldValue != null)
+            currentPoolWorkrate -= oldValue;
+        currentPoolWorkrate += newValue;
     }
     
-
+    
     // Mutators that change the real world
     
     @Override public void moveItem(ItemType item, ContainerType oldNode, ContainerType newNode) {
@@ -206,8 +225,9 @@ public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements Bal
     private ContainerType nullContainer() {
         return (ContainerType) NULL_CONTAINER; // relies on erasure
     }
-
+    
     private ContainerType toNonNullContainer(ContainerType container) {
         return (container != null) ? container : nullContainer();
     }
+    
 }

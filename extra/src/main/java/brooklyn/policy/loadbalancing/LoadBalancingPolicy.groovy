@@ -19,8 +19,10 @@ import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.policy.basic.AbstractPolicy
 import brooklyn.policy.loadbalancing.BalanceableWorkerPool.ContainerItemPair
+import brooklyn.policy.resizing.ResizingPolicy;
 
 import com.google.common.base.Preconditions
+import com.google.common.collect.ImmutableMap;
 
 public class LoadBalancingPolicy extends AbstractPolicy {
     
@@ -121,6 +123,19 @@ public class LoadBalancingPolicy extends AbstractPolicy {
                 try {
                     executorQueueCount.decrementAndGet()
                     strategy.rebalance()
+                    
+                    if (model.isCold()) poolEntity.emit(BalanceableWorkerPool.POOL_COLD, ImmutableMap.of(
+                        ResizingPolicy.POOL_CURRENT_SIZE_KEY, model.poolSize,
+                        ResizingPolicy.POOL_CURRENT_WORKRATE_KEY, model.getCurrentPoolWorkrate(),
+                        ResizingPolicy.POOL_LOW_THRESHOLD_KEY, model.getPoolLowThreshold(),
+                        ResizingPolicy.POOL_HIGH_THRESHOLD_KEY, model.getPoolHighThreshold()));
+                    
+                    if (model.isHot()) poolEntity.emit(BalanceableWorkerPool.POOL_HOT, ImmutableMap.of(
+                        ResizingPolicy.POOL_CURRENT_SIZE_KEY, model.poolSize,
+                        ResizingPolicy.POOL_CURRENT_WORKRATE_KEY, model.getCurrentPoolWorkrate(),
+                        ResizingPolicy.POOL_LOW_THRESHOLD_KEY, model.getPoolLowThreshold(),
+                        ResizingPolicy.POOL_HIGH_THRESHOLD_KEY, model.getPoolHighThreshold()));
+                    
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt() // gracefully stop
                 } catch (Exception e) {

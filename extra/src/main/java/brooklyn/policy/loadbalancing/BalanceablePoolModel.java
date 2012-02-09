@@ -17,6 +17,11 @@ public interface BalanceablePoolModel<ContainerType, ItemType> {
     public String getName();
     public int getPoolSize();
     public Set<ContainerType> getPoolContents();
+    public double getPoolLowThreshold();
+    public double getPoolHighThreshold();
+    public double getCurrentPoolWorkrate();
+    public boolean isHot();
+    public boolean isCold();
     
     
     // Attributes of containers and items.

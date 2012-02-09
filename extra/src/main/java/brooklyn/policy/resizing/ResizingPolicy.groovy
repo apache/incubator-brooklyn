@@ -76,7 +76,7 @@ public class ResizingPolicy extends AbstractPolicy {
         
         // Shrink the pool to force its low threshold to fall below the current workrate.
         // NOTE: assumes the pool is homogeneous for now.
-        final int desiredPoolSize = Math.floor((poolCurrentSize * poolCurrentWorkrate) / poolLowThreshold)
+        final int desiredPoolSize = Math.floor((poolCurrentSize * poolCurrentWorkrate) / poolLowThreshold).intValue()
         LOG.trace("{} resizing cold pool {} from {} to {}", this, poolEntity, poolCurrentSize, desiredPoolSize)
         scheduleResize(desiredPoolSize)
     }
@@ -90,7 +90,7 @@ public class ResizingPolicy extends AbstractPolicy {
         
         // Grow the pool to force its high threshold to rise above the current workrate.
         // FIXME: assumes the pool is homogeneous for now.
-        final int desiredPoolSize = Math.ceil((poolCurrentSize * poolCurrentWorkrate) / poolHighThreshold)
+        final int desiredPoolSize = Math.ceil((poolCurrentSize * poolCurrentWorkrate) / poolHighThreshold).intValue()
         LOG.trace("{} resizing hot pool {} from {} to {}", this, poolEntity, poolCurrentSize, desiredPoolSize)
         new Thread() { void run() { poolEntity.resize(desiredPoolSize) } }.start()
         scheduleResize(desiredPoolSize)
