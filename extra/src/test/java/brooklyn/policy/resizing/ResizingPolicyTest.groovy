@@ -73,10 +73,10 @@ class ResizingPolicyTest {
     @Test
     public void testConcurrentShrinkShrink() {
         resizable.resize(4)
-        resizable.emit(BalanceableWorkerPool.POOL_HOT, message(4, 30l, 40l, 80l))
+        resizable.emit(BalanceableWorkerPool.POOL_COLD, message(4, 30l, 40l, 80l))
         // would cause pool to shrink to 3
         
-        resizable.emit(BalanceableWorkerPool.POOL_HOT, message(4, 15l, 40l, 80l))
+        resizable.emit(BalanceableWorkerPool.POOL_COLD, message(4, 15l, 40l, 80l))
         // now expect pool to shrink to 1
         
         executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 1) }
@@ -100,7 +100,7 @@ class ResizingPolicyTest {
         resizable.emit(BalanceableWorkerPool.POOL_HOT, message(2, 110l, 40l, 80l))
         // would cause pool to grow to 5
         
-        resizable.emit(BalanceableWorkerPool.POOL_HOT, message(2, 15l, 40l, 80l))
+        resizable.emit(BalanceableWorkerPool.POOL_COLD, message(2, 15l, 40l, 80l))
         // now expect pool to shrink to 1
         
         executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 1) }
@@ -109,7 +109,7 @@ class ResizingPolicyTest {
     @Test
     public void testConcurrentShrinkGrow() {
         resizable.resize(4)
-        resizable.emit(BalanceableWorkerPool.POOL_HOT, message(4, 15l, 40l, 80l))
+        resizable.emit(BalanceableWorkerPool.POOL_COLD, message(4, 15l, 40l, 80l))
         // would cause pool to shrink to 1
         
         resizable.emit(BalanceableWorkerPool.POOL_HOT, message(4, 90l, 40l, 80l))
