@@ -181,6 +181,7 @@ public class LoadBalancingPolicy extends AbstractPolicy {
         return null
     }
     
+    // TODO Receiving duplicates of onContainerRemoved (e.g. when running LoadBalancingInmemorySoakTest)
     private void onContainerRemoved(Entity oldContainer, boolean rebalanceNow) {
         if (LOG.isTraceEnabled()) LOG.trace("{} recording removal of container {}", this, oldContainer)
         model.onContainerRemoved(oldContainer)

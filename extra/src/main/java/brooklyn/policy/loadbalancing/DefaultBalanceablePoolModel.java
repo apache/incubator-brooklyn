@@ -156,8 +156,10 @@ public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements Bal
     @Override
     public void onContainerRemoved(ContainerType oldContainer) {
         containers.remove(oldContainer);
-        poolLowThreshold -= containerToLowThreshold.remove(oldContainer);
-        poolHighThreshold -= containerToHighThreshold.remove(oldContainer);
+        Double containerLowThreshold = containerToLowThreshold.remove(oldContainer);
+        Double containerHighThresold = containerToHighThreshold.remove(oldContainer);
+        poolLowThreshold -= (containerLowThreshold != null ? containerLowThreshold : 0);
+        poolHighThreshold -= (containerHighThresold != null ? containerHighThresold : 0);
         
         // TODO: assert no orphaned items
     }
