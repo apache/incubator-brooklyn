@@ -1,9 +1,9 @@
 package brooklyn.policy.resizing
 
 import java.util.Map
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -13,7 +13,7 @@ import brooklyn.entity.trait.Resizable
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.policy.basic.AbstractPolicy
-import brooklyn.policy.loadbalancing.BalanceableWorkerPool;
+import brooklyn.policy.loadbalancing.BalanceableWorkerPool
 
 import com.google.common.base.Preconditions
 
@@ -39,9 +39,15 @@ public class ResizingPolicy extends AbstractPolicy {
         }
     }
     
+    private int minPoolSize = 0
+    private int maxPoolSize = Integer.MAX_VALUE
+    private volatile int desiredPoolSize;
+    private AtomicBoolean executorQueued = new AtomicBoolean();
     
     public ResizingPolicy(Map properties = [:]) {
         super(properties)
+        if (properties.containsKey("minPoolSize")) minPoolSize = properties.minPoolSize
+        if (properties.containsKey("maxPoolSize")) maxPoolSize = properties.maxPoolSize
     }
     
     @Override
@@ -76,7 +82,8 @@ public class ResizingPolicy extends AbstractPolicy {
         
         // Shrink the pool to force its low threshold to fall below the current workrate.
         // NOTE: assumes the pool is homogeneous for now.
-        final int desiredPoolSize = Math.floor((poolCurrentSize * poolCurrentWorkrate) / poolLowThreshold).intValue()
+        int desiredPoolSize = Math.floor((poolCurrentSize * poolCurrentWorkrate) / poolLowThreshold).intValue()
+        desiredPoolSize = toBoundedDesiredPoolSize(desiredPoolSize)
         LOG.trace("{} resizing cold pool {} from {} to {}", this, poolEntity, poolCurrentSize, desiredPoolSize)
         scheduleResize(desiredPoolSize)
     }
@@ -90,27 +97,47 @@ public class ResizingPolicy extends AbstractPolicy {
         
         // Grow the pool to force its high threshold to rise above the current workrate.
         // FIXME: assumes the pool is homogeneous for now.
-        final int desiredPoolSize = Math.ceil((poolCurrentSize * poolCurrentWorkrate) / poolHighThreshold).intValue()
+        int desiredPoolSize = Math.ceil((poolCurrentSize * poolCurrentWorkrate) / poolHighThreshold).intValue()
+        desiredPoolSize = toBoundedDesiredPoolSize(desiredPoolSize)
         LOG.trace("{} resizing hot pool {} from {} to {}", this, poolEntity, poolCurrentSize, desiredPoolSize)
         new Thread() { void run() { poolEntity.resize(desiredPoolSize) } }.start()
         scheduleResize(desiredPoolSize)
     }
     
-    private void scheduleResize(final int desiredPoolSize) {
-        executor.submit( {
-            try {
-                poolEntity.resize(desiredPoolSize)
-                
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt() // gracefully stop
-            } catch (Exception e) {
-                if (isRunning()) {
-                    LOG.error("Error resizing: "+e, e)
-                } else {
-                    LOG.debug("Error resizing, but no longer running: "+e, e)
-                }
-            }
-        } )
+    private int toBoundedDesiredPoolSize(int size) {
+        int result = Math.max(minPoolSize, size)
+        result = Math.min(maxPoolSize, result)
+        return result
     }
-    
+
+    /**
+     * Schedules a resize, if there is not already a resize operation queued up. When that resize
+     * executes, it will resize to whatever the latest value is to be (rather than what it was told
+     * to do at the point the job was queued).
+     */
+    private void scheduleResize(final int newSize) {
+        // TODO perhaps make concurrent calls, rather than waiting for first resize to entirely 
+        // finish? On ec2 for example, this can cause us to grow very slowly if first request is for
+        // just one new VM to be provisioned.
+        
+        this.desiredPoolSize = newSize
+        
+        if (executorQueued.compareAndSet(false, true)) {
+            executor.submit( {
+                executorQueued.set(false)
+                try {
+                    poolEntity.resize(desiredPoolSize)
+                    
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt() // gracefully stop
+                } catch (Exception e) {
+                    if (isRunning()) {
+                        LOG.error("Error resizing: "+e, e)
+                    } else {
+                        LOG.debug("Error resizing, but no longer running: "+e, e)
+                    }
+                }
+            } )
+        }
+    }
 }

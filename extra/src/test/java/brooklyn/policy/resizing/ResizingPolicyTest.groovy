@@ -26,9 +26,10 @@ class ResizingPolicyTest {
      * It is hooked up to a TestCluster that can be used to make assertions against
      */
     public static class LocallyResizableEntity extends LocallyManagedEntity implements Resizable {
+        List<Integer> sizes = []
         TestCluster cluster
         public LocallyResizableEntity (TestCluster tc) { this.cluster = tc }
-        Integer resize(Integer newSize) { Thread.sleep(250); cluster.size = newSize }
+        Integer resize(Integer newSize) { Thread.sleep(250); sizes.add(newSize); cluster.size = newSize }
         Integer getCurrentSize() { return cluster.size }
         String toString() { return getDisplayName() }
     }
@@ -117,7 +118,19 @@ class ResizingPolicyTest {
         executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 5) }
     }
     
+    @Test
+    public void testRepeatedQueuedResizeTakesLatestValueRatherThanIntermediateValues() {
+        // TODO is this too time sensitive? the resize takes only 250ms so if it finishes before the next emit we'd also see size=2
+        resizable.resize(4)
+        resizable.emit(BalanceableWorkerPool.POOL_COLD, message(4, 30l, 40l, 80l)) // shrink to 3
+        resizable.emit(BalanceableWorkerPool.POOL_COLD, message(4, 20l, 40l, 80l)) // shrink to 2
+        resizable.emit(BalanceableWorkerPool.POOL_COLD, message(4, 10l, 40l, 80l)) // shrink to 1
+        
+        executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 1) }
+        assertEquals(resizable.sizes, [4, 3, 1])
+    }
     
+
     static Map<String, Object> message(int currentSize, double currentWorkrate, double lowThreshold, double highThreshold) {
         return ImmutableMap.of(
             ResizingPolicy.POOL_CURRENT_SIZE_KEY, currentSize,
