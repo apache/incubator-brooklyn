@@ -124,18 +124,21 @@ public class LoadBalancingPolicy extends AbstractPolicy {
                     executorQueueCount.decrementAndGet()
                     strategy.rebalance()
                     
-                    if (model.isCold()) poolEntity.emit(BalanceableWorkerPool.POOL_COLD, ImmutableMap.of(
-                        ResizingPolicy.POOL_CURRENT_SIZE_KEY, model.poolSize,
-                        ResizingPolicy.POOL_CURRENT_WORKRATE_KEY, model.getCurrentPoolWorkrate(),
-                        ResizingPolicy.POOL_LOW_THRESHOLD_KEY, model.getPoolLowThreshold(),
-                        ResizingPolicy.POOL_HIGH_THRESHOLD_KEY, model.getPoolHighThreshold()));
+                    if (model.isCold()) {
+                        poolEntity.emit(BalanceableWorkerPool.POOL_COLD, ImmutableMap.of(
+                                ResizingPolicy.POOL_CURRENT_SIZE_KEY, model.poolSize,
+                                ResizingPolicy.POOL_CURRENT_WORKRATE_KEY, model.getCurrentPoolWorkrate(),
+                                ResizingPolicy.POOL_LOW_THRESHOLD_KEY, model.getPoolLowThreshold(),
+                                ResizingPolicy.POOL_HIGH_THRESHOLD_KEY, model.getPoolHighThreshold()));
                     
-                    if (model.isHot()) poolEntity.emit(BalanceableWorkerPool.POOL_HOT, ImmutableMap.of(
-                        ResizingPolicy.POOL_CURRENT_SIZE_KEY, model.poolSize,
-                        ResizingPolicy.POOL_CURRENT_WORKRATE_KEY, model.getCurrentPoolWorkrate(),
-                        ResizingPolicy.POOL_LOW_THRESHOLD_KEY, model.getPoolLowThreshold(),
-                        ResizingPolicy.POOL_HIGH_THRESHOLD_KEY, model.getPoolHighThreshold()));
-                    
+                    } else if (model.isHot()) {
+                        poolEntity.emit(BalanceableWorkerPool.POOL_HOT, ImmutableMap.of(
+                                ResizingPolicy.POOL_CURRENT_SIZE_KEY, model.poolSize,
+                                ResizingPolicy.POOL_CURRENT_WORKRATE_KEY, model.getCurrentPoolWorkrate(),
+                                ResizingPolicy.POOL_LOW_THRESHOLD_KEY, model.getPoolLowThreshold(),
+                                ResizingPolicy.POOL_HIGH_THRESHOLD_KEY, model.getPoolHighThreshold()));
+                    }
+                                                            
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt() // gracefully stop
                 } catch (Exception e) {
