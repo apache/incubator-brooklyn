@@ -189,9 +189,8 @@ public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements Bal
     @Override
     public void onItemWorkrateUpdated(ItemType item, double newValue) {
         Double oldValue = itemToWorkrate.put(item, newValue);
-        if (oldValue != null)
-            currentPoolWorkrate -= oldValue;
-        currentPoolWorkrate += newValue;
+        double delta = ( newValue - (oldValue != null ? oldValue : 0) );
+        currentPoolWorkrate += delta;
     }
     
     
