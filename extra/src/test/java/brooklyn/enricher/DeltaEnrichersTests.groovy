@@ -65,6 +65,7 @@ class DeltaEnrichersTests {
         producer.addEnricher(delta)
         
         delta.onEvent(intSensor.newEvent(producer, 0), 0)
+        assertEquals(producer.getAttribute(deltaSensor), null)
         delta.onEvent(intSensor.newEvent(producer, 0), 1000)
         assertEquals(producer.getAttribute(deltaSensor), 0d)
         delta.onEvent(intSensor.newEvent(producer, 1), 2000)
