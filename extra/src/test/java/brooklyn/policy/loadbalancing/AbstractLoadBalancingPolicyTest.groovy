@@ -62,24 +62,10 @@ public class AbstractLoadBalancingPolicyTest {
         pool = new BalanceableWorkerPool([:], app)
         pool.setContents(containerGroup, itemGroup)
         policy = new LoadBalancingPolicy([:], TEST_METRIC, model)
-        policy.setEntity(pool)
+        pool.addPolicy(policy)
         app.start([loc])
     }
     
-    // Expect no balancing to occur as container A isn't above the high threshold.
-    @Test
-    public void testNoopBalancing() {
-        // Set-up containers and items.
-        MockContainerEntity containerA = newContainer(app, "A", 10, 100)
-        MockContainerEntity containerB = newContainer(app, "B", 20, 60)
-        MockItemEntity item1 = newItem(app, containerA, "1", 10)
-        MockItemEntity item2 = newItem(app, containerA, "2", 10)
-        MockItemEntity item3 = newItem(app, containerA, "3", 10)
-        MockItemEntity item4 = newItem(app, containerA, "4", 10)
-
-        assertWorkratesEventually([containerA, containerB], [40d, 0d])
-    }
-
     @AfterMethod(alwaysRun=true)
     public void after() {
         if (app != null) app.stop()
