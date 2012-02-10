@@ -82,10 +82,14 @@ public class ResizingPolicy extends AbstractPolicy {
         
         // Shrink the pool to force its low threshold to fall below the current workrate.
         // NOTE: assumes the pool is homogeneous for now.
-        int desiredPoolSize = Math.floor((poolCurrentSize * poolCurrentWorkrate) / poolLowThreshold).intValue()
+        int desiredPoolSize = Math.ceil(poolCurrentWorkrate / (poolLowThreshold/poolCurrentSize)).intValue()
         desiredPoolSize = toBoundedDesiredPoolSize(desiredPoolSize)
-        LOG.trace("{} resizing cold pool {} from {} to {}", this, poolEntity, poolCurrentSize, desiredPoolSize)
-        scheduleResize(desiredPoolSize)
+        if (desiredPoolSize < poolCurrentSize) {
+            LOG.trace("{} resizing cold pool {} from {} to {}", this, poolEntity, poolCurrentSize, desiredPoolSize)
+            scheduleResize(desiredPoolSize)
+        } else {
+            LOG.trace("{} not resizing cold pool {} from {} to {}", this, poolEntity, poolCurrentSize, desiredPoolSize)
+        }
     }
     
     private void onPoolHot(Map<String, ?> properties) {
@@ -97,11 +101,14 @@ public class ResizingPolicy extends AbstractPolicy {
         
         // Grow the pool to force its high threshold to rise above the current workrate.
         // FIXME: assumes the pool is homogeneous for now.
-        int desiredPoolSize = Math.ceil((poolCurrentSize * poolCurrentWorkrate) / poolHighThreshold).intValue()
+        int desiredPoolSize = Math.ceil(poolCurrentWorkrate / (poolHighThreshold/poolCurrentSize)).intValue()
         desiredPoolSize = toBoundedDesiredPoolSize(desiredPoolSize)
-        LOG.trace("{} resizing hot pool {} from {} to {}", this, poolEntity, poolCurrentSize, desiredPoolSize)
-        new Thread() { void run() { poolEntity.resize(desiredPoolSize) } }.start()
-        scheduleResize(desiredPoolSize)
+        if (desiredPoolSize > poolCurrentSize) {
+            LOG.trace("{} resizing hot pool {} from {} to {}", this, poolEntity, poolCurrentSize, desiredPoolSize)
+            scheduleResize(desiredPoolSize)
+        } else {
+            LOG.trace("{} not resizing hot pool {} from {} to {}", this, poolEntity, poolCurrentSize, desiredPoolSize)
+        }
     }
     
     private int toBoundedDesiredPoolSize(int size) {
@@ -121,7 +128,7 @@ public class ResizingPolicy extends AbstractPolicy {
         // just one new VM to be provisioned.
         
         this.desiredPoolSize = newSize
-        
+
         if (executorQueued.compareAndSet(false, true)) {
             executor.submit( {
                 executorQueued.set(false)
