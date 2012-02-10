@@ -49,7 +49,7 @@ public class LoadBalancingPolicySoakTest extends AbstractLoadBalancingPolicyTest
         runLoadBalancingSoakTest(config)
     }
     
-    @Test(groups="Acceptance") // acceptance group, because it's slow to run many cycles
+    @Test(groups="Integration") // acceptance group, because it's slow to run many cycles
     public void testLoadBalancingSoakTest() {
         RunConfig config = new RunConfig()
         config.numCycles = 100
@@ -62,7 +62,7 @@ public class LoadBalancingPolicySoakTest extends AbstractLoadBalancingPolicyTest
         runLoadBalancingSoakTest(config)
     }
 
-    @Test(groups="Acceptance") // acceptance group, because it's slow to run many cycles
+    @Test(groups="Integration") // acceptance group, because it's slow to run many cycles
     public void testLoadBalancingManyItemsSoakTest() {
         RunConfig config = new RunConfig()
         config.numCycles = 100
@@ -79,7 +79,7 @@ public class LoadBalancingPolicySoakTest extends AbstractLoadBalancingPolicyTest
 
     // FIXME code is too inefficient; doesn't balance 1000 items within the timeout period.
     // And that's with only one workrate report per item per cycle, rather than every 500ms!
-    @Test(groups="Acceptance")
+    @Test(groups="Integration")
     public void testLoadBalancingManyManyItemsTest() {
         RunConfig config = new RunConfig()
         config.numCycles = 1
