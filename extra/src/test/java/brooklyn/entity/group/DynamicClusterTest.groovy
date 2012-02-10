@@ -3,6 +3,9 @@ package brooklyn.entity.group
 import static org.testng.AssertJUnit.*
 
 import java.util.Collection
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -165,6 +168,45 @@ class DynamicClusterTest {
         cluster.resize(0)
         assertEquals 0, cluster.currentSize
         assertEquals 0, entity.counter.get()
+    }
+
+    @Test
+    public void concurrentResizesToSameNumberCreatesCorrectNumberOfNodes() {
+        final int OVERHEAD_MS = 500
+        final int STARTUP_TIME_MS = 50
+        final AtomicInteger numStarted = new AtomicInteger(0)
+        Application app = new AbstractApplication() { }
+        DynamicCluster cluster = new DynamicCluster(newEntity:
+                { Map flags, Entity cluster -> 
+                    Thread.sleep(STARTUP_TIME_MS); numStarted.incrementAndGet(); new TestEntity(flags, cluster)
+                }, 
+                app)
+        assertEquals 0, cluster.currentSize
+        cluster.start([loc])
+
+        ExecutorService executor = Executors.newCachedThreadPool()
+        List<Throwable> throwables = new CopyOnWriteArrayList<Throwable>()
+        
+        try {
+            for (int i in 1..10) {
+                executor.submit( {
+                    try {
+                        cluster.resize(2)
+                    } catch (Throwable e) {
+                        throwables.add(e)
+                    }
+                })
+            }
+            
+            executor.shutdown()
+            assertTrue(executor.awaitTermination(10*STARTUP_TIME_MS+OVERHEAD_MS, TimeUnit.MILLISECONDS))
+            if (throwables.size() > 0) throw throwables.get(0)
+            assertEquals(2, cluster.currentSize)
+            assertEquals(2, cluster.getAttribute(Changeable.GROUP_SIZE))
+            assertEquals(2, numStarted.get())
+        } finally {
+            executor.shutdownNow();
+        }
     }
 
     @Test(enabled = false)

@@ -399,6 +399,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     @Override
     public Entity getOwner() { owner?.get() }
 
+    // TODO synchronization: need to synchronize on ownedChildren, or have ownedChildren be a synchronized collection
     @Override
     public Collection<Entity> getOwnedChildren() { ownedChildren.get() }
     
@@ -923,6 +924,10 @@ private class EntityCollectionReference<T extends Entity> implements Serializabl
         return ImmutableList.copyOf(result)
     }
 
+    public synchronized int size() {
+        return entityRefs.size()
+    }
+
     public synchronized boolean contains(Entity e) {
         return entityRefs.contains(e.id)
     }
@@ -930,7 +935,7 @@ private class EntityCollectionReference<T extends Entity> implements Serializabl
     protected synchronized Collection<T> find() {
         if (entities!=null) return entities;
         if (!referrer)
-            throw new IllegalStateException("EntityReference $id should have been initialised with a reference owner")
+            throw new IllegalStateException("EntityReference should have been initialised with a reference owner")
         Collection<T> result = new CopyOnWriteArrayList<T>();
         entityRefs.each { 
             def e = ((AbstractEntity)referrer).getManagementContext().getEntity(it); 

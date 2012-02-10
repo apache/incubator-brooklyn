@@ -87,7 +87,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     }
 
     public Integer resize(Integer desiredSize) {
-        synchronized (members) {
+        synchronized (_members) {
             int delta = desiredSize - currentSize
             // Make a local copy of this - otherwise the closure later on tries to bind to a variable called logger in
             // the context of the class that is invoking the closure (maybe related to it being a static class member?)
@@ -178,12 +178,12 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     protected Entity removeNode() {
         // TODO use pluggable strategy; default is to remove newest
         // TODO inefficient impl
-        logger.info "Removing a node"
+        logger.info "Removing a node from {}", id
         Entity entity
         members.each {
             if (it instanceof Startable) entity = it
         }
-        Preconditions.checkNotNull entity, "No Startable member entity found to remove"
+        Preconditions.checkNotNull entity, "No Startable member entity found to remove from $id"
         removeNode(entity)
     }
     
