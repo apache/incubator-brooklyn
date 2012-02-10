@@ -37,6 +37,9 @@ public class JmxHelper {
     public static final String JMX_URL_FORMAT = "service:jmx:rmi:///jndi/rmi://%s:%d/%s"
     public static final String RMI_JMX_URL_FORMAT = "service:jmx:rmi://%s:%d/jndi/rmi://%s:%d/%s"
 
+    // Tracks the MBeans we have failed to find, with a set keyed off the url
+    private static final Map<String,ObjectName> notFoundMBeansByUrl = Collections.synchronizedMap(new WeakHashMap<ObjectName,Set<ObjectName>>())
+
     final String url
     final String user
     final String password
@@ -45,9 +48,8 @@ public class JmxHelper {
 	MBeanServerConnection mbsc
     boolean triedConnecting
     
-    // Tracks the MBeans we have failed to find, so can log just once for each
-    private final Set<ObjectName> notFoundMBeans = Collections.synchronizedSet(
-            Collections.newSetFromMap(new WeakHashMap<ObjectName,Boolean>()))
+    // Tracks the MBeans we have failed to find for this JmsHelper's connection URL (so can log just once for each)
+    private final Set<ObjectName> notFoundMBeans
     
 	public static final Map<String,String> CLASSES = [
 		"Integer" : Integer.TYPE.name,
@@ -92,16 +94,23 @@ public class JmxHelper {
         this(url, null, null)
     }
     
+    public JmxHelper(EntityLocal entity) {
+        this(toConnectorUrl(entity), entity.getAttribute(Attributes.JMX_USER), entity.getAttribute(Attributes.JMX_PASSWORD))
+    }
+    
     public JmxHelper(String url, String user, String password) {
         this.url = url
         this.user = user
         this.password = password
-    }
-    
-    public JmxHelper(EntityLocal entity) {
-        url = toConnectorUrl(entity)
-        user = entity.getAttribute(Attributes.JMX_USER);
-        password = entity.getAttribute(Attributes.JMX_PASSWORD);
+        
+        synchronized (notFoundMBeansByUrl) {
+            Set<ObjectName> set = notFoundMBeansByUrl.get(url)
+            if (set == null) {
+                set = Collections.synchronizedSet(Collections.newSetFromMap(new WeakHashMap<ObjectName,Boolean>()))
+                notFoundMBeansByUrl.put(url, set)
+            }
+            notFoundMBeans = set;
+        }
     }
     
 	public boolean isConnected() {
@@ -191,6 +200,8 @@ public class JmxHelper {
             boolean changed = notFoundMBeans.add(objectName)
             if (changed) {
                 LOG.warn "JMX object {} not found at {}", objectName.canonicalName, url
+            } else {
+                LOG.debug "JMX object {} not found at {} (repeating)", objectName.canonicalName, url
             }
             return null
         } else {
