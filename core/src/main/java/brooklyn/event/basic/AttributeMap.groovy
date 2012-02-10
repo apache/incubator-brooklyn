@@ -75,6 +75,7 @@ public class AttributeMap implements Serializable {
     }
 
     private static Object getValueRecurse(Map node, Collection path) {
+        //TODO would be handy to have original path as an argument for logging here
         if (node==null) return null
         Preconditions.checkArgument(!path.isEmpty(), "field name is empty")
         
@@ -85,9 +86,13 @@ public class AttributeMap implements Serializable {
         def child = node.get(key)
         Preconditions.checkState(child != null || path.size() > 0, "node $key is not present")
         
-        if (path.size() > 1)
+        if (path.size() > 1) {
+            if (!(child in Map)) {
+                log.warn "too many path segments {} when looking up AttributeMap, returning leaf value {}", path, child
+                return child;
+            }
             return getValueRecurse(child, path[1..-1])
-        else
+        } else
             return child
     }
     
