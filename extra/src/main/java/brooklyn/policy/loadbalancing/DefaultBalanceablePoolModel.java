@@ -1,5 +1,6 @@
 package brooklyn.policy.loadbalancing;
 
+import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -204,7 +205,17 @@ public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements Bal
     
     
     // Additional methods for tests.
-    
+
+    /**
+     * Warning: this can be an expensive (time and memory) operation if there are a lot of items/containers. 
+     */
+    @VisibleForTesting
+    public String itemDistributionToString() {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        dumpItemDistribution(new PrintStream(baos));
+        return new String(baos.toByteArray());
+    }
+
     @VisibleForTesting
     public void dumpItemDistribution() {
         dumpItemDistribution(System.out);

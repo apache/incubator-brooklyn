@@ -24,14 +24,10 @@ public class LoadBalancingStrategyTest {
         );
         
         BalancingStrategy<String, String> policy = new BalancingStrategy<String, String>("Test", pool);
-        System.out.println("\nStarting configuraton:");
-        pool.dumpItemDistribution();
         policy.rebalance();
-        System.out.println("\nResulting configuraton:");
-        pool.dumpItemDistribution();
         
-        assertEquals(pool.getItemsForContainer("nodeA"), ImmutableSet.of("item1", "item2"));
-        assertEquals(pool.getItemsForContainer("nodeB"), ImmutableSet.of("item3", "item4"));
+        assertEquals((Object)pool.getItemsForContainer("nodeA"), ImmutableSet.of("item1", "item2"), pool.itemDistributionToString());
+        assertEquals((Object)pool.getItemsForContainer("nodeB"), ImmutableSet.of("item3", "item4"), pool.itemDistributionToString());
     }
     
     @Test
@@ -48,14 +44,10 @@ public class LoadBalancingStrategyTest {
         );
         
         BalancingStrategy<String, String> policy = new BalancingStrategy<String, String>("Test", pool);
-        System.out.println("\nStarting configuraton:");
-        pool.dumpItemDistribution();
         policy.rebalance();
-        System.out.println("\nResulting configuraton:");
-        pool.dumpItemDistribution();
         
-        assertEquals(pool.getItemsForContainer("nodeA"), ImmutableSet.of("item1", "item2"));
-        assertEquals(pool.getItemsForContainer("nodeB"), ImmutableSet.of("item3", "item4"));
+        assertEquals((Object)pool.getItemsForContainer("nodeA"), ImmutableSet.of("item1", "item2"), pool.itemDistributionToString());
+        assertEquals((Object)pool.getItemsForContainer("nodeB"), ImmutableSet.of("item3", "item4"), pool.itemDistributionToString());
     }
     
     @Test
@@ -72,16 +64,12 @@ public class LoadBalancingStrategyTest {
         );
         
         BalancingStrategy<String, String> policy = new BalancingStrategy<String, String>("Test", pool);
-        System.out.println("\nStarting configuraton:");
-        pool.dumpItemDistribution();
         policy.rebalance();
-        System.out.println("\nResulting configuraton:");
-        pool.dumpItemDistribution();
         
-        assertEquals(pool.getItemsForContainer("nodeA"), ImmutableSet.of("item1", "item3", "item4"));
-        assertEquals(pool.getItemsForContainer("nodeB"), ImmutableSet.of("item2"));
+        assertEquals((Object)pool.getItemsForContainer("nodeA"), ImmutableSet.of("item1", "item3", "item4"), pool.itemDistributionToString());
+        assertEquals((Object)pool.getItemsForContainer("nodeB"), ImmutableSet.of("item2"), pool.itemDistributionToString());
     }
-    
+
     @Test
     public void testMultiMoveBalancing() {
         MockWorkerPool pool = new MockWorkerPool(
@@ -102,14 +90,11 @@ public class LoadBalancingStrategyTest {
         );
         
         BalancingStrategy<String, String> policy = new BalancingStrategy<String, String>("Test", pool);
-        System.out.println("\nStarting configuraton:");
-        pool.dumpItemDistribution();
         policy.rebalance();
-        System.out.println("\nResulting configuraton:");
-        pool.dumpItemDistribution();
         
-        assertEquals(pool.getItemsForContainer("nodeA"), ImmutableSet.of("item1", "item2", "item3", "item4", "item5"));
-        assertEquals(pool.getItemsForContainer("nodeB"), ImmutableSet.of("item6", "item7", "item8", "item9", "item10"));
+        // non-deterministic which items will be moved; but can assert how many (given they all have same workrate)
+        assertEquals(pool.getItemsForContainer("nodeA").size(), 5, pool.itemDistributionToString());
+        assertEquals(pool.getItemsForContainer("nodeB").size(), 5, pool.itemDistributionToString());
     }
     
     // TODO: test heterogeneous thresholds

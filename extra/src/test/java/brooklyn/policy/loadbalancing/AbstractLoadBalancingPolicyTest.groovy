@@ -10,7 +10,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
-import org.testng.annotations.Test
 
 import brooklyn.entity.Application
 import brooklyn.entity.ConfigKey
@@ -99,17 +98,11 @@ public class AbstractLoadBalancingPolicyTest {
     protected String verboseDumpToString(List<MockContainerEntity> containers) {
         List<Double> containerRates = containers.collect { it.getWorkrate() }
         List<Set<Entity>> itemDistribution = containers.collect { it.getBalanceableItems() }
-        String modelItemDistribution = modelItemDistributionToString()
+        String modelItemDistribution = model.itemDistributionToString()
         return "containers=$containers; containerRates=$containerRates; itemDistribution=$itemDistribution; model=$modelItemDistribution; "+
                 "totalMoves=${MockItemEntity.totalMoveCount}"
     }
     
-    protected String modelItemDistributionToString() {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        model.dumpItemDistribution(new PrintStream(baos));
-        return new String(baos.toByteArray());
-    }
-
     protected MockContainerEntity newContainer(Application app, String name, double lowThreshold, double highThreshold) {
         return newAsyncContainer(app, name, lowThreshold, highThreshold, 0)
     }
