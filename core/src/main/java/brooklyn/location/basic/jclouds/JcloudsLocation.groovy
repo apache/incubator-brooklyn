@@ -51,6 +51,11 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         if (!name) name = conf.providerLocationId ?: "default";
 	}
     
+    @Override
+    public String toString() {
+        return getClass().getSimpleName()+"["+conf?.identity+":"+name+"]";
+    }
+    
     public Map getConf() { return leftoverProperties; }
     
     public void setTagMapping(Map<String,Map<String, ? extends Object>> val) {
