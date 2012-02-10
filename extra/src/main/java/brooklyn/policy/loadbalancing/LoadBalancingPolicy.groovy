@@ -159,10 +159,14 @@ public class LoadBalancingPolicy extends AbstractPolicy {
             } )
         }
     }
+    
+    // TODO Can get duplicate onContainerAdded events.
+    //      I presume it's because we subscribe and then iterate over the extant containers.
+    //      Solution would be for subscription to give you events for existing / current value(s).
+    //      Also current impl messes up single-threaded updates model: the setEntity is a different thread than for subscription events.
     private void onContainerAdded(Entity newContainer, boolean rebalanceNow) {
         Preconditions.checkArgument(newContainer instanceof BalanceableContainer, "Added container must be a BalanceableContainer")
         if (LOG.isTraceEnabled()) LOG.trace("{} recording addition of container {}", this, newContainer)
-        
         // Low and high thresholds for the metric we're interested in are assumed to be present
         // in the container's configuration.
         Number lowThreshold = (Number) findConfigValue((AbstractEntity) newContainer, lowThresholdConfigKeyName)

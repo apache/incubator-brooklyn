@@ -147,7 +147,12 @@ public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements Bal
     
     @Override
     public void onContainerAdded(ContainerType newContainer, double lowThreshold, double highThreshold) {
-        containers.add(newContainer);
+        boolean added = containers.add(newContainer);
+        if (!added) {
+            // See LoadBalancingPolicy.onContainerAdded for possible explanation of why can get duplicate calls
+            LOG.debug("Duplicate container-added event for {}; ignoring", newContainer);
+            return;
+        }
         containerToLowThreshold.put(newContainer, lowThreshold);
         containerToHighThreshold.put(newContainer, highThreshold);
         poolLowThreshold += lowThreshold;
@@ -172,6 +177,9 @@ public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements Bal
     
     @Override
     public void onItemAdded(ItemType item, ContainerType parentContainer, Number currentWorkrate) {
+        // Duplicate calls to onItemAdded do no harm, as long as most recent is most accurate!
+        // Important that it stays that way for now - See LoadBalancingPolicy.onContainerAdded for explanation.
+
         ContainerType parentContainerNonNull = toNonNullContainer(parentContainer);
         ContainerType oldNode = itemToContainer.put(item, parentContainerNonNull);
         if (oldNode != null && oldNode != NULL_CONTAINER) containerToItems.remove(oldNode, item);
