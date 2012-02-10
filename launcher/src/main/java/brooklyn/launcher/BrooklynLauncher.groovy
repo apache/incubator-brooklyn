@@ -25,6 +25,7 @@ class BrooklynLauncher {
         }
 
         addShutdownHook {
+            LOG.info("Brooklyn launcher's shutdown-hook invoked: shutting down application and web-console")
             app?.stop()
             web?.stop()
         }

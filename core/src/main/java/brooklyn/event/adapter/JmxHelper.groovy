@@ -45,6 +45,10 @@ public class JmxHelper {
 	MBeanServerConnection mbsc
     boolean triedConnecting
     
+    // Tracks the MBeans we have failed to find, so can log just once for each
+    private final Set<ObjectName> notFoundMBeans = Collections.synchronizedSet(
+            Collections.newSetFromMap(new WeakHashMap<ObjectName,Boolean>()))
+    
 	public static final Map<String,String> CLASSES = [
 		"Integer" : Integer.TYPE.name,
 		"Long" : Long.TYPE.name,
@@ -174,14 +178,26 @@ public class JmxHelper {
 		} 
 	}
 
+    public Set<ObjectInstance> findMBeans(ObjectName objectName) {
+        return mbsc.queryMBeans(objectName, null)
+    }
+    
 	public ObjectInstance findMBean(ObjectName objectName) {
-		Set<ObjectInstance> beans = mbsc.queryMBeans(objectName, null)
-		if (beans.isEmpty() || beans.size() > 1) {
-			LOG.warn "JMX object name query returned {} values for {}", beans.size(), objectName.canonicalName
+		Set<ObjectInstance> beans = findMBeans(objectName)
+        if (beans.size() > 1) {
+            LOG.warn "JMX object name query returned {} values for {}; ignoring all", beans.size(), objectName.canonicalName
+            return null
+        } else if (beans.isEmpty()) {
+            boolean changed = notFoundMBeans.add(objectName)
+            if (changed) {
+                LOG.warn "JMX object {} not found at {}", objectName.canonicalName, url
+            }
 			return null
+		} else {
+            notFoundMBeans.remove(objectName)
+    		ObjectInstance bean = beans.find { true }
+    		return bean
 		}
-		ObjectInstance bean = beans.find { true }
-		return bean
 	}
 
     public void checkMBeanExistsEventually(ObjectName objectName, long timeoutMillis) {
@@ -189,11 +205,14 @@ public class JmxHelper {
     }
     
     public void checkMBeanExistsEventually(ObjectName objectName, TimeDuration timeout) {
+        Set<ObjectInstance> beans = [] as Set
         boolean success = LanguageUtils.repeatUntilSuccess(timeout:timeout, "Wait for $objectName") {
-            return findMBean(objectName) != null
+            beans = findMBeans(objectName)
+            return beans.size() == 1
         }
         if (!success) {
-            throw new IllegalStateException("MBean $objectName not found within $timeout")
+            throw new IllegalStateException("MBean $objectName not found within $timeout" +
+                    (beans.size() > 1 ? "; found multiple matches: $beans" : ""))
         }
     }
     
