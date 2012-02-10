@@ -39,7 +39,7 @@ public class LoadBalancingPolicy extends AbstractPolicy {
     
     private final SensorEventListener<?> eventHandler = new SensorEventListener<Object>() {
         public void onEvent(SensorEvent<?> event) {
-            LOG.info("LoadBalancingPolicy.onEvent: {}", event)
+            if (LOG.isTraceEnabled()) LOG.trace("{} received event {}", LoadBalancingPolicy.this, event)
             Entity source = event.getSource()
             Object value = event.getValue()
             Sensor sensor = event.getSensor()
@@ -127,6 +127,10 @@ public class LoadBalancingPolicy extends AbstractPolicy {
                 try {
                     executorQueueCount.decrementAndGet()
                     strategy.rebalance()
+                    
+                    if (LOG.isTraceEnabled()) LOG.trace("{} post-rebalance: poolSize={}; workrate={}; lowThreshold={}; " + 
+                            "highThreshold={}", this, model.getPoolSize(), model.getCurrentPoolWorkrate(), 
+                            model.getPoolLowThreshold(), model.getPoolHighThreshold())
                     
                     if (model.isCold()) {
                         poolEntity.emit(BalanceableWorkerPool.POOL_COLD, ImmutableMap.of(
