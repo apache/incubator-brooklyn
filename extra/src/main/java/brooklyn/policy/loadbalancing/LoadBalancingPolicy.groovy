@@ -94,9 +94,13 @@ public class LoadBalancingPolicy extends AbstractPolicy {
         subscribe(poolEntity, BalanceableWorkerPool.ITEM_MOVED, eventHandler)
         
         // Take heed of any extant containers.
-        for (Entity container : poolEntity.getContainerGroup().getMembers())
+        for (Entity container : poolEntity.getContainerGroup().getMembers()) {
             onContainerAdded(container, false)
-        
+        }
+        for (Entity item : poolEntity.getItemGroup().getMembers()) {
+            onItemAdded(item, item.getAttribute(Movable.CONTAINER), false)
+        }
+
         scheduleRebalance()
     }
     

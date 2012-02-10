@@ -4,26 +4,14 @@ import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
-import java.util.Map
-import java.util.Set
-
-import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import brooklyn.entity.Application;
-import brooklyn.entity.ConfigKey
+import brooklyn.entity.Application
 import brooklyn.entity.Entity
-import brooklyn.entity.Group
-import brooklyn.entity.basic.AbstractEntity
-import brooklyn.entity.basic.AbstractGroup
-import brooklyn.entity.basic.DynamicGroup
 import brooklyn.event.AttributeSensor
-import brooklyn.event.SensorEvent
-import brooklyn.event.SensorEventListener
-import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.event.basic.BasicConfigKey
-import brooklyn.location.basic.SimulatedLocation
 import brooklyn.test.entity.TestApplication
+
+import com.google.common.collect.ImmutableMap
 
 public class LoadBalancingPolicyTest extends AbstractLoadBalancingPolicyTest {
     
@@ -185,5 +173,47 @@ public class LoadBalancingPolicyTest extends AbstractLoadBalancingPolicyTest {
         item4.move(containerA)
 
         assertWorkratesEventually([containerA, containerB], [40d, 40d])
+    }
+    
+    @Test
+    public void testModelIncludesItemsAndContainersStartedBeforePolicyCreated() {
+        pool.removePolicy(policy)
+        policy.destroy()
+        
+        // Set-up containers and items.
+        MockContainerEntity containerA = newContainer(app, "A", 10, 100)
+        MockItemEntity item1 = newItem(app, containerA, "1", 10)
+
+        policy = new LoadBalancingPolicy([:], TEST_METRIC, model)
+        pool.addPolicy(policy)
+        
+        executeUntilSucceeds(timeout:TIMEOUT_MS) {
+            assertEquals(model.getContainerWorkrates(), ImmutableMap.of(containerA, 10d))
+        }
+    }
+    
+    @Test
+    public void testPolicyUpdatesModel() {
+        MockContainerEntity containerA = newContainer(app, "A", 10, 20)
+        MockContainerEntity containerB = newContainer(app, "B", 11, 21)
+        MockItemEntity item1 = newItem(app, containerA, "1", 12)
+        MockItemEntity item2 = newItem(app, containerB, "2", 13)
+        
+        executeUntilSucceeds(timeout:TIMEOUT_MS) {
+            assertEquals(model.getPoolSize(), 2)
+            assertEquals(model.getPoolContents(), [containerA,containerB] as Set)
+            assertEquals(model.getItemWorkrate(item1), 12d)
+            assertEquals(model.getItemWorkrate(item2), 13d)
+            
+            assertEquals(model.getParentContainer(item1), containerA)
+            assertEquals(model.getParentContainer(item2), containerB)
+            assertEquals(model.getContainerWorkrates(), [(containerA):12d, (containerB):13d])
+            
+            assertEquals(model.getPoolLowThreshold(), 10+11d)
+            assertEquals(model.getPoolHighThreshold(), 20+21d)
+            assertEquals(model.getCurrentPoolWorkrate(), 12+13d)
+            assertFalse(model.isHot())
+            assertFalse(model.isCold())
+        }
     }
 }

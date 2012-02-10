@@ -136,7 +136,10 @@ public class BalanceableWorkerPool extends AbstractEntity implements Resizable {
         return containerGroup
     }
     
-    
+    public Group getItemGroup() {
+        return itemGroup
+    }
+
     // methods inherited from Resizable
     public Integer getCurrentSize() { return containerGroup.getCurrentSize() }
     
