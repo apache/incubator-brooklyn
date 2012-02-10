@@ -4,6 +4,7 @@ import static org.testng.AssertJUnit.*
 
 import java.util.Collection
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.ExecutionException
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -74,21 +75,33 @@ class DynamicClusterTest {
     @Test(expectedExceptions = NullPointerException.class)
     public void startMethodFailsIfLocationsParameterIsMissing() {
         DynamicCluster cluster = new DynamicCluster(newEntity:{ new TestEntity() }, app)
-        cluster.start(null)
+        try {
+            cluster.start(null)
+        } catch (Exception e) {
+            throw unwrapException(e)
+        }
         fail "Did not throw expected exception"
     }
 
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void startMethodFailsIfLocationsParameterIsEmpty() {
         DynamicCluster cluster = new DynamicCluster(newEntity:{ new TestEntity() }, app)
-        cluster.start([])
+        try {
+            cluster.start([])
+        } catch (Exception e) {
+            throw unwrapException(e)
+        }
         fail "Did not throw expected exception"
     }
 
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void startMethodFailsIfLocationsParameterHasMoreThanOneElement() {
         DynamicCluster cluster = new DynamicCluster(newEntity:{ new TestEntity() }, app)
-        cluster.start([ loc, loc2 ])
+        try {
+            cluster.start([ loc, loc2 ])
+        } catch (Exception e) {
+            throw unwrapException(e)
+        }
         fail "Did not throw expected exception"
     }
 
@@ -233,7 +246,11 @@ class DynamicClusterTest {
                 }, initialSize:0 ], app)
         
         cluster.start([loc])
-        cluster.resize(3)
+        try {
+            cluster.resize(3)
+        } catch (Exception e) {
+        System.out.println(e);
+        }
         assertEquals(cluster.currentSize, 2)
         assertEquals(cluster.ownedChildren.size(), 2)
         cluster.ownedChildren.each {
@@ -314,6 +331,16 @@ class DynamicClusterTest {
             assertEquals(0, cluster.ownedChildren.size())
             assertEquals(0, cluster.currentSize)
             assertEquals(0, cluster.members.size())
+        }
+    }
+    
+    private Throwable unwrapException(Throwable e) {
+        if (e instanceof ExecutionException) {
+            return unwrapException(e.cause)
+        } else if (e instanceof org.codehaus.groovy.runtime.InvokerInvocationException) {
+            return unwrapException(e.cause)
+        } else {
+            return e
         }
     }
 }

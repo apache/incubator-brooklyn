@@ -6,6 +6,7 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.management.Task;
 import java.util.Map
+import java.util.concurrent.ExecutionException
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -140,7 +141,7 @@ public abstract class AbstractManagementContext implements ManagementContext  {
                 return invokeEffectorMethodLocal(entity, eff, args)
             }
         } catch (Exception e) {
-            throw new RuntimeException("Error invoking $eff on entity $entity", e);
+            throw new ExecutionException("Error invoking $eff on entity $entity", e);
         }
     }
 
