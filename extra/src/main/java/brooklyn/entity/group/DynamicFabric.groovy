@@ -36,6 +36,9 @@ public class DynamicFabric extends AbstractEntity implements Startable {
     Closure<Entity> newEntity
 
     @SetFromFlag
+    Closure postStartEntity
+
+    @SetFromFlag
     String displayNamePrefix
     @SetFromFlag
     String displayNameSuffix
@@ -55,6 +58,7 @@ public class DynamicFabric extends AbstractEntity implements Startable {
      * <li>newEntity - a {@link Closure} that creates an {@link Entity} that implements {@link Startable}, taking the {@link Map}
      * of properties from this fabric as an argument, or the {@link Map} of properties and the owning {link Entity} 
      * (useful for chaining/nested Closures).  This property is mandatory.
+     * <li>postStartEntity - a {@link Closure} that is called after newEntity, taking the {@link Entity} as an argument. This property is optional, with a default of no-op.
      * </ul>
      *
      * @param properties the properties of the fabric and any new entity.
@@ -80,23 +84,24 @@ public class DynamicFabric extends AbstractEntity implements Startable {
         Preconditions.checkArgument locations.size() >= 1, "One or more location must be supplied"
         this.locations.addAll(locations)
         
-        Collection<Task> tasks = locations.collect {
+        Map<Entity, Task> tasks = [:]
+        locations.each {
             Entity e = addCluster(it)
             // FIXME: this is a quick workaround to ensure that the location is available to any membership change
             //        listeners (notably AbstractDeoDnsService). A more robust mechanism is required; see ENGR-????
             //        for ideas and discussion.
             e.setLocations([it])
             Task task = e.invoke(Startable.START, [locations:[it]])
-            return task
+            tasks.put(e, task)
         }
 
-        Task invoke = new ParallelTask(tasks)
-        if (invoke) {
+        // TODO Could do best-effort for waiting for remaining tasks, rather than failing on first?
+        tasks.each { Entity entity, Task task ->
             try {
-		        executionContext.submit(invoke)
-                invoke.get()
-            } catch (ExecutionException ee) {
-                throw ee.cause
+                task.get()
+                if (postStartEntity) postStartEntity.call(entity)
+            } catch (ExecutionException e) {
+                throw e.cause
             }
         }
 
@@ -132,6 +137,7 @@ public class DynamicFabric extends AbstractEntity implements Startable {
             entity = newEntity.call(creation)
         } 
         if (entity.owner == null) addOwnedChild(entity)
+        
         Preconditions.checkNotNull entity, "newEntity call returned null"
         Preconditions.checkState entity instanceof Entity, "newEntity call returned an object that is not an Entity"
         Preconditions.checkState entity instanceof Startable, "newEntity call returned an object that is not Startable"

@@ -10,15 +10,16 @@ import java.util.concurrent.TimeUnit
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.Test
+import org.testng.annotations.BeforeMethod
 
-import brooklyn.entity.Application
-import brooklyn.entity.basic.AbstractApplication
+import brooklyn.entity.Entity
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.management.Task
 import brooklyn.test.TestUtils
 import brooklyn.test.entity.BlockingEntity
+import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
@@ -32,23 +33,32 @@ class DynamicFabricTest {
     
     static { TimeExtras.init() }
     
+    TestApplication app
+    Location loc1
+    Location loc2
+    Location loc3
+    
+    @BeforeMethod(alwaysRun=true)
+    public void setUp() throws Exception {
+        app = new TestApplication()
+        loc1 = new SimulatedLocation()
+        loc2 = new SimulatedLocation()
+        loc3 = new SimulatedLocation()
+    }
+    
     @Test
     public void testDynamicFabricCreatesAndStartsEntityWhenGivenSingleLocation() {
-        Collection<Location> locs = [ new SimulatedLocation() ]
-        runWithLocations(locs)
+        runWithLocations([loc1])
     }
 
     @Test
     public void testDynamicFabricCreatesAndStartsEntityWhenGivenManyLocations() {
-        Collection<Location> locs = [ new SimulatedLocation(), new SimulatedLocation(), new SimulatedLocation() ]
-        runWithLocations(locs)
+        runWithLocations([loc1,loc2,loc3])
     }
     
     private void runWithLocations(Collection<Location> locs) {
-        Application app = new AbstractApplication() {}
         DynamicFabric fabric = new DynamicFabric(newEntity:{ properties -> return new TestEntity(properties) }, app)
-        
-        fabric.start(locs)
+        app.start(locs)
         
         assertEquals(fabric.ownedChildren.size(), locs.size(), Joiner.on(",").join(fabric.ownedChildren))
         fabric.ownedChildren.each {
@@ -61,15 +71,29 @@ class DynamicFabricTest {
     }
     
     @Test
+    public void testNotifiesPostStartListener() {
+        List<Entity> entitiesAdded = new CopyOnWriteArrayList<Entity>()
+        
+        DynamicFabric fabric = new DynamicFabric(
+                newEntity:{ properties -> return new TestEntity(properties) },
+                postStartEntity:{ Entity e -> entitiesAdded.add(e) },
+                app)
+        
+        app.start([loc1,loc2])
+        
+        assertEquals(entitiesAdded.size(), 2)
+        assertEquals(entitiesAdded as Set, fabric.ownedChildren as Set)
+    }
+    
+    @Test
     public void testSizeEnricher() {
         Collection<Location> locs = [ new SimulatedLocation(), new SimulatedLocation(), new SimulatedLocation() ]
-        Application app = new AbstractApplication() {}
         DynamicFabric fabric = new DynamicFabric(newEntity:{ fabricProperties, owner ->
             return new DynamicCluster(owner:owner, initialSize:0,
                 newEntity:{ clusterProperties -> return new TestEntity(clusterProperties) })
             }, app)
         
-        fabric.start(locs)
+        app.start(locs)
         
         int i = 0, total = 0
         
@@ -87,7 +111,6 @@ class DynamicFabricTest {
     @Test
     public void testDynamicFabricStartsEntitiesInParallel() {
         List<CountDownLatch> startupLatches = [] as CopyOnWriteArrayList<CountDownLatch>
-        Application app = new AbstractApplication() {}
         DynamicFabric fabric = new DynamicFabric(
                 newEntity:{ properties -> 
                         CountDownLatch latch = new CountDownLatch(1); 
@@ -95,7 +118,7 @@ class DynamicFabricTest {
                         return new BlockingEntity(properties, latch) 
                 }, 
                 app)
-        Collection<Location> locs = [ new SimulatedLocation(), new SimulatedLocation() ]
+        Collection<Location> locs = [ loc1, loc2 ]
         
         Task task = fabric.invoke(Startable.START, [ locations:locs ])
 
@@ -126,7 +149,6 @@ class DynamicFabricTest {
 	
 	@Test
     public void testDynamicFabricPropagatesProperties() {
-		Application app = new AbstractApplication() {}
 		Closure entityFactory = { properties -> return new TestEntity(properties) }
         Closure clusterFactory = { properties -> 
             def clusterProperties = properties + [initialSize:1, newEntity:entityFactory]
@@ -134,7 +156,7 @@ class DynamicFabricTest {
         }
 		DynamicFabric fabric = new DynamicFabric(initialSize:1, httpPort: 8080, newEntity:clusterFactory, app)
 		
-		fabric.start([ new SimulatedLocation() ])
+		app.start([ new SimulatedLocation() ])
         
 		assertEquals(fabric.ownedChildren.size(), 1)
 		assertEquals(fabric.ownedChildren[0].ownedChildren.size(), 1)

@@ -30,6 +30,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
 
     @SetFromFlag
     Closure<Entity> newEntity
+    
     @SetFromFlag
     Closure postStartEntity
 
