@@ -99,7 +99,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         
         NodeMetadata node = null;
         try {
-            LOG.info("Creating VM in "+(conf.providerLocationId?:conf.provider));
+            LOG.info("Creating VM in "+(allconf.providerLocationId?:allconf.provider));
 
             Template template = buildTemplate(computeService, allconf.providerLocationId, allconf);
             Set<? extends NodeMetadata> nodes = computeService.createNodesInGroup(groupId, 1, template);
