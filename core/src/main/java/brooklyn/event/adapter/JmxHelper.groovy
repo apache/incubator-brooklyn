@@ -191,8 +191,8 @@ public class JmxHelper {
         return mbsc.queryMBeans(objectName, null)
     }
     
-	public ObjectInstance findMBean(ObjectName objectName) {
-		Set<ObjectInstance> beans = findMBeans(objectName)
+    public ObjectInstance findMBean(ObjectName objectName) {
+	Set<ObjectInstance> beans = findMBeans(objectName)
         if (beans.size() > 1) {
             LOG.warn "JMX object name query returned {} values for {}; ignoring all", beans.size(), objectName.canonicalName
             return null

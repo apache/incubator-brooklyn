@@ -5,14 +5,13 @@
  */
 package brooklyn.location.basic.jclouds;
 
+import static org.jclouds.aws.ec2.reference.AWSEC2Constants.PROPERTY_EC2_AMI_QUERY
+import static org.jclouds.aws.ec2.reference.AWSEC2Constants.PROPERTY_EC2_CC_AMI_QUERY
 import static org.jclouds.compute.util.ComputeServiceUtils.execHttpResponse
 import static org.jclouds.scriptbuilder.domain.Statements.appendFile
 import static org.jclouds.scriptbuilder.domain.Statements.exec
 import static org.jclouds.scriptbuilder.domain.Statements.interpret
 import static org.jclouds.scriptbuilder.domain.Statements.newStatementList
-
-import static org.jclouds.aws.ec2.reference.AWSEC2Constants.PROPERTY_EC2_AMI_QUERY;
-import static org.jclouds.aws.ec2.reference.AWSEC2Constants.PROPERTY_EC2_CC_AMI_QUERY;
 
 import java.io.File
 import java.io.IOException
@@ -33,6 +32,7 @@ import org.jclouds.compute.predicates.RetryIfSocketNotYetOpen
 import org.jclouds.compute.reference.ComputeServiceConstants
 import org.jclouds.compute.reference.ComputeServiceConstants.Timeouts
 import org.jclouds.compute.util.ComputeServiceUtils
+import org.jclouds.logging.slf4j.config.SLF4JLoggingModule
 import org.jclouds.net.IPSocket
 import org.jclouds.predicates.InetSocketAddressConnect
 import org.jclouds.scriptbuilder.domain.Statement
@@ -165,8 +165,7 @@ public class JcloudsUtil {
             properties.setProperty(PROPERTY_EC2_AMI_QUERY, "state=available;image-type=machine")
         }
 
-        // ImmutableSet.<Module>of(new Log4JLoggingModule()); to add log4j integration
-        Iterable<Module> modules = ImmutableSet.<Module> of(new SshjSshClientModule());
+        Iterable<Module> modules = ImmutableSet.<Module> of(new SshjSshClientModule(), new SLF4JLoggingModule());
         
         ComputeServiceContextFactory computeServiceFactory = new ComputeServiceContextFactory();
         

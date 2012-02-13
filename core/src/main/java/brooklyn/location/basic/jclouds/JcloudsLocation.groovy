@@ -2,7 +2,7 @@ package brooklyn.location.basic.jclouds
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS
 import static java.util.concurrent.TimeUnit.SECONDS
-import static org.jclouds.compute.options.RunScriptOptions.Builder.overrideCredentialsWith
+import static org.jclouds.compute.options.RunScriptOptions.Builder.overrideLoginCredentials
 import static org.jclouds.scriptbuilder.domain.Statements.exec
 
 import org.jclouds.compute.ComputeService
@@ -13,6 +13,7 @@ import org.jclouds.compute.domain.Template
 import org.jclouds.compute.domain.TemplateBuilder
 import org.jclouds.compute.options.TemplateOptions
 import org.jclouds.domain.Credentials
+import org.jclouds.domain.LoginCredentials;
 import org.jclouds.ec2.compute.options.EC2TemplateOptions
 import org.jclouds.scriptbuilder.domain.Statement
 import org.jclouds.scriptbuilder.domain.Statements
@@ -98,7 +99,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         
         NodeMetadata node = null;
         try {
-            LOG.info("Creating VM in "+allconf.providerLocationId);
+            LOG.info("Creating VM in "+(allconf.providerLocationId?:allconf.provider));
 
             Template template = buildTemplate(computeService, allconf.providerLocationId, allconf);
             Set<? extends NodeMetadata> nodes = computeService.createNodesInGroup(groupId, 1, template);
@@ -109,7 +110,8 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
 
             String vmIp = JcloudsUtil.getFirstReachableAddress(node);
             Credentials nodeCredentials = node.getCredentials()
-            Credentials expectedCredentials = allconf.sshPrivateKeyData ? new Credentials(allconf.userName, allconf.sshPrivateKeyData) : nodeCredentials
+            Credentials expectedCredentials = LoginCredentials.fromCredentials(
+                allconf.sshPrivateKeyData ? new Credentials(allconf.userName, allconf.sshPrivateKeyData) : nodeCredentials)
             
             // Wait for the VM to be reachable over SSH
             LOG.info("Started VM in ${allconf.providerLocationId}; waiting for it to be sshable by "+allconf.userName+"@"+vmIp);
@@ -119,7 +121,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                     .until {
                         Statement statement = Statements.newStatementList(exec('date'))
                         ExecResponse response = computeService.runScriptOnNode(node.getId(), statement,
-                                overrideCredentialsWith(expectedCredentials))
+                                overrideLoginCredentials(expectedCredentials))
                         return response.exitCode == 0 }
                     .limitTimeTo(START_SSHABLE_TIMEOUT,MILLISECONDS)
                     .run()
@@ -247,11 +249,9 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             String keyData = properties.rootSshPublicKeyData ?: properties.sshPublicKeyData
             options.authorizePublicKey(keyData)
         }
-        if ((properties.userName == ROOT_USERNAME && properties.sshPrivateKey) || properties.rootSshPrivateKey) {
-            String keyData = properties.rootSshPrivateKeyData ?: properties.sshPrivateKeyData
-            options.overrideLoginCredentialWith(keyData)
-            options.overrideLoginUserWith(ROOT_USERNAME)
-        }
+        //NB: we ignore private key here because, by default we probably should not be installing it remotely;
+        //also, it may not be valid for first login (it is created before login e.g. on amazon, so valid there;
+        //but not elsewhere, e.g. on rackspace)
         
         // Setup the user
         if (properties.userName && properties.userName != ROOT_USERNAME) {
@@ -275,10 +275,12 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     }
     
     private String getPublicHostnameGeneric(NodeMetadata node, Map allconf) {
-        if (node.getHostname()) {
-            return node.getHostname()
-        } else if (node.getPublicAddresses()) {
+        //prefer the public address to the hostname because hostname is sometimes wrong/abbreviated
+        //(see that javadoc; also e.g. on rackspace, the hostname lacks the domain)
+        if (node.getPublicAddresses()) {
             return node.getPublicAddresses().iterator().next()
+        } else if (node.getHostname()) {
+            return node.getHostname()
         } else if (node.getPrivateAddresses()) {
             return node.getPrivateAddresses().iterator().next()
         } else {
