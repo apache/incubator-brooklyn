@@ -26,7 +26,7 @@ public class LoadBalancingPolicyConcurrencyTest extends AbstractLoadBalancingPol
 
     @BeforeMethod(alwaysRun=true)
     public void before() {
-        scheduledExecutor = Executors.newSingleThreadScheduledExecutor()
+        scheduledExecutor = Executors.newScheduledThreadPool(10)
         super.before();
     }
     
@@ -82,16 +82,16 @@ public class LoadBalancingPolicyConcurrencyTest extends AbstractLoadBalancingPol
         assertWorkratesEventually(containers, Collections.nCopies(NUM_CONTAINERS, 20d), WORKRATE_JITTER)
     }
     
-    @Test
+    @Test(invocationCount=100)
     public void testConcurrentlyRemoveContainers() {
         List<MockItemEntity> items = []
         List<MockContainerEntity> containers = []
         
         for (int i = 0; i < NUM_CONTAINERS; i++) {
-            containers.add(newContainer(app, "container"+i, 10, 20))
+            containers.add(newContainer(app, "container"+i, 15, 45))
         }
         for (int i = 0; i < NUM_CONTAINERS; i++) {
-            items.add(newItemWithPeriodicWorkrates(app, containers.get(i), "item"+i, 10))
+            items.add(newItemWithPeriodicWorkrates(app, containers.get(i), "item"+i, 20))
         }
         
         for (int i = 0; i < NUM_CONTAINERS/2; i++) {
@@ -106,7 +106,7 @@ public class LoadBalancingPolicyConcurrencyTest extends AbstractLoadBalancingPol
                 } )
         }
         
-        assertWorkratesEventually(containers, Collections.nCopies((int)(NUM_CONTAINERS/2), 20d), WORKRATE_JITTER)
+        assertWorkratesEventually(containers, Collections.nCopies((int)(NUM_CONTAINERS/2), 40d), WORKRATE_JITTER*2)
     }
     
     @Test
@@ -115,10 +115,10 @@ public class LoadBalancingPolicyConcurrencyTest extends AbstractLoadBalancingPol
         List<MockContainerEntity> containers = []
         
         for (int i = 0; i < NUM_CONTAINERS; i++) {
-            containers.add(newContainer(app, "container"+i, 10, 20))
+            containers.add(newContainer(app, "container"+i, 15, 45))
         }
         for (int i = 0; i < NUM_CONTAINERS*2; i++) {
-            items.add(newItemWithPeriodicWorkrates(app, containers.get(i%NUM_CONTAINERS), "item"+i, 10))
+            items.add(newItemWithPeriodicWorkrates(app, containers.get(i%NUM_CONTAINERS), "item"+i, 20))
         }
         // should now have item0 and item{0+NUM_CONTAINERS} on container0, etc
         
@@ -136,7 +136,7 @@ public class LoadBalancingPolicyConcurrencyTest extends AbstractLoadBalancingPol
                 } )
         }
         
-        assertWorkratesEventually(containers, Collections.nCopies(NUM_CONTAINERS, 10d), WORKRATE_JITTER)
+        assertWorkratesEventually(containers, Collections.nCopies(NUM_CONTAINERS, 20d), WORKRATE_JITTER)
     }
     
     protected MockItemEntity newItemWithPeriodicWorkrates(Application app, MockContainerEntity container, String name, double workrate) {

@@ -47,6 +47,8 @@ public class AbstractLoadBalancingPolicyTest {
     
     @BeforeMethod(alwaysRun=true)
     public void before() {
+        LOG.debug("In AbstractLoadBalancingPolicyTest.before()");
+        
         // TODO: improve the default impl to avoid the need for this anonymous overrider of 'moveItem'
         model = new DefaultBalanceablePoolModel<Entity, Entity>("pool-model") {
             @Override public void moveItem(Entity item, Entity oldContainer, Entity newContainer) {
