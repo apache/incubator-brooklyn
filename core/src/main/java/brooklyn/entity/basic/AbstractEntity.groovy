@@ -656,6 +656,13 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     }
     
     @Override
+    boolean removeAllPolicies() {
+        for (Policy policy : policies) {
+            removePolicy(policy);
+        }
+    }
+    
+    @Override
     public Collection<Enricher> getEnrichers() {
         return enrichers.asImmutable()
     }
@@ -672,6 +679,13 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         return enrichers.remove(enricher)
     }
 
+    @Override
+    boolean removeAllEnrichers() {
+        for (AbstractEnricher enricher : enrichers) {
+            removeEnricher(enricher);
+        }
+    }
+    
     // -------- SENSORS --------------------
 
     @Override
