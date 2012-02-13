@@ -34,7 +34,7 @@ public class BasicSensor<T> implements Sensor<T> {
     public final String typeName;
     public final String name;
     public final String description;
-    private final List<String> _nameParts;
+    public final List<String> nameParts;
     
     public BasicSensor() { /* for gson */ }
 
@@ -44,7 +44,7 @@ public class BasicSensor<T> implements Sensor<T> {
         this.typeName = type.getName();
         this.name = name;
         this.description = description;
-        this._nameParts = ImmutableList.copyOf(dots.split(name))
+        this.nameParts = ImmutableList.copyOf(dots.split(name))
     }
 
     /** @see Sensor#getType() */
@@ -57,9 +57,7 @@ public class BasicSensor<T> implements Sensor<T> {
     public String getName() { name }
  
     /** @see Sensor#getNameParts() */
-    public List<String> getNameParts() {
-        return _nameParts;
-    }
+    public List<String> getNameParts() { nameParts }
  
     /** @see Sensor#getDescription() */
     public String getDescription() { description }

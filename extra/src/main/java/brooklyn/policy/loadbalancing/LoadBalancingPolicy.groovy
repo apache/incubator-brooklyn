@@ -4,7 +4,7 @@ import java.util.Map
 import java.util.Map.Entry
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicBoolean
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -19,10 +19,10 @@ import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.policy.basic.AbstractPolicy
 import brooklyn.policy.loadbalancing.BalanceableWorkerPool.ContainerItemPair
-import brooklyn.policy.resizing.ResizingPolicy;
+import brooklyn.policy.resizing.ResizingPolicy
 
 import com.google.common.base.Preconditions
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap
 
 public class LoadBalancingPolicy extends AbstractPolicy {
     
@@ -35,7 +35,7 @@ public class LoadBalancingPolicy extends AbstractPolicy {
     private final BalancingStrategy<Entity, ?> strategy
     private BalanceableWorkerPool poolEntity
     private ExecutorService executor = Executors.newSingleThreadExecutor()
-    private AtomicInteger executorQueueCount = new AtomicInteger(0)
+    private AtomicBoolean executorQueued = new AtomicBoolean(false)
     
     private final SensorEventListener<?> eventHandler = new SensorEventListener<Object>() {
         public void onEvent(SensorEvent<?> event) {
@@ -74,8 +74,8 @@ public class LoadBalancingPolicy extends AbstractPolicy {
         
         super(properties)
         this.metric = metric
-        this.lowThresholdConfigKeyName = metric.getNameParts().last()+".threshold.low"
-        this.highThresholdConfigKeyName = metric.getNameParts().last()+".threshold.high"
+        this.lowThresholdConfigKeyName = metric.getName()+".threshold.low"
+        this.highThresholdConfigKeyName = metric.getName()+".threshold.high"
         this.model = model
         this.strategy = new BalancingStrategy<Entity, Object>(getName(), model) // TODO: extract interface, inject impl
     }
@@ -109,23 +109,22 @@ public class LoadBalancingPolicy extends AbstractPolicy {
         // TODO unsubscribe from everything? And resubscribe on resume?
         super.suspend();
         if (executor != null) executor.shutdownNow();
-        executorQueueCount.set(0)
+        executorQueued.set(false)
     }
     
     @Override
     public void resume() {
         super.resume();
         executor = Executors.newSingleThreadExecutor()
-        executorQueueCount.set(0)
+        executorQueued.set(false)
     }
     
     private scheduleRebalance() {
-        if (executorQueueCount.get() == 0) {
-            executorQueueCount.incrementAndGet()
+        if (executorQueued.compareAndSet(false, true)) {
             
             executor.submit( {
                 try {
-                    executorQueueCount.decrementAndGet()
+                    executorQueued.set(false)
                     strategy.rebalance()
                     
                     if (LOG.isTraceEnabled()) LOG.trace("{} post-rebalance: poolSize={}; workrate={}; lowThreshold={}; " + 

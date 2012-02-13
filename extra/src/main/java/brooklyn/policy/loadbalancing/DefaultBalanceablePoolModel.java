@@ -45,10 +45,9 @@ public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements Bal
     private final SetMultimap<ContainerType, ItemType> containerToItems =  Multimaps.synchronizedSetMultimap(HashMultimap.<ContainerType, ItemType>create());
     private final Map<ItemType, Double> itemToWorkrate = new ConcurrentHashMap<ItemType, Double>();
     
-    private double poolLowThreshold = 0;
-    private double poolHighThreshold = 0;
-    private double currentPoolWorkrate = 0;
-    
+    private volatile double poolLowThreshold = 0;
+    private volatile double poolHighThreshold = 0;
+    private volatile double currentPoolWorkrate = 0;
     
     public DefaultBalanceablePoolModel(String name) {
         this.name = name;

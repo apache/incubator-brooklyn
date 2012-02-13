@@ -376,6 +376,32 @@ public class JmxSensorAdapterTest {
         }
     }
     
+    // Visual-inspection test that LOG.warn happens only once; TODO setup a listener to the logging output
+    @Test
+    public void testMBeanNotFoundLoggedOnlyOncePerUrl() {
+        ObjectName wrongObjectName = new ObjectName('DoesNotExist:type=DoesNotExist')
+        jmxHelper.connect();
+
+        // Expect just one log message about:
+        //     JMX object DoesNotExist:type=DoesNotExist not found at service:jmx:rmi://localhost:1099/jndi/rmi://localhost:9001/jmxrmi"
+        for (int i = 0; i < 10; i++) {
+            jmxHelper.findMBean(wrongObjectName)
+        }
+
+        jmxService.shutdown();
+        jmxHelper.disconnect()
+        
+        jmxService = new JmxService("127.0.0.1", 9001)
+        jmxHelper = new JmxHelper(jmxService.getUrl())
+        jmxHelper.connect()
+        
+        // Expect just one log message about:
+        //     JMX object DoesNotExist:type=DoesNotExist not found at service:jmx:rmi://127.0.0.1:1099/jndi/rmi://localhost:9001/jmxrmi"
+        for (int i = 0; i < 10; i++) {
+            jmxHelper.findMBean(wrongObjectName)
+        }
+    }
+
     static class EntityWithEmitter extends AbstractEntity {
         public EntityWithEmitter(Map flags=[:], Entity owner=null) {
             super(flags, owner)

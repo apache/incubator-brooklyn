@@ -13,6 +13,17 @@ import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 
+/**
+ * A group of items that are contained within a given (dynamically changing) set of containers.
+ * 
+ * The {@link setContainers(Group)} sets the group of containers. The membership of that group
+ * is dynamically tracked.
+ * 
+ * When containers are added/removed, or when an items is added/removed, or when an {@link Moveable} item 
+ * is moved then the membership of this group of items is automatically updated accordingly.
+ * 
+ * For example: in Monterey, this could be used to track the actors that are within a given cluster of venues.
+ */
 public class ItemsInContainersGroup extends DynamicGroup {
 
     // TODO Inefficient: will not scale to many 1000s of items

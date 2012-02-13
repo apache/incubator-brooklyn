@@ -70,7 +70,6 @@ public class MockContainerEntity extends AbstractGroup implements BalanceableCon
         int result = 0
         for (Entity member : getMembers()) {
             Integer memberMetric = member.getAttribute(MockItemEntity.TEST_METRIC)
-//            int memberMetricPrimitive = ((memberMetric != null) ? memberMetric : 0);
             result += ((memberMetric != null) ? memberMetric : 0);
         }
         return result

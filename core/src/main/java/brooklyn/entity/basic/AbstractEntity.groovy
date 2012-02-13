@@ -381,7 +381,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     @Override
     public boolean removeOwnedChild(Entity child) {
         synchronized (ownedChildren) {
-	        boolean changed = ownedChildren.remove child
+            boolean changed = ownedChildren.remove child
 	        child.clearOwner()
             return changed
         }

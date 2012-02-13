@@ -246,11 +246,7 @@ class DynamicClusterTest {
                 }, initialSize:0 ], app)
         
         cluster.start([loc])
-        try {
-            cluster.resize(3)
-        } catch (Exception e) {
-        System.out.println(e);
-        }
+        cluster.resize(3)
         assertEquals(cluster.currentSize, 2)
         assertEquals(cluster.ownedChildren.size(), 2)
         cluster.ownedChildren.each {

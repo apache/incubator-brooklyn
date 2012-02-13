@@ -55,7 +55,6 @@ public class MockItemEntity extends AbstractEntity implements Movable {
     
     // only moves if the containers will accept us (otherwise we'd lose the item!)
     public void moveNonEffector(Entity rawDestination) {
-        // FIXME deadlock risk; obtain locks in deterministic order
         if (LOG.isDebugEnabled()) LOG.debug("Mocks: moving item $this from $currentContainer to $rawDestination")
         checkNotNull(rawDestination)
         MockContainerEntity previousContainer = currentContainer

@@ -38,7 +38,7 @@ public class JmxHelper {
     public static final String RMI_JMX_URL_FORMAT = "service:jmx:rmi://%s:%d/jndi/rmi://%s:%d/%s"
 
     // Tracks the MBeans we have failed to find, with a set keyed off the url
-    private static final Map<String,ObjectName> notFoundMBeansByUrl = Collections.synchronizedMap(new WeakHashMap<ObjectName,Set<ObjectName>>())
+    private static final Map<String,Set<ObjectName>> notFoundMBeansByUrl = Collections.synchronizedMap(new WeakHashMap<String,Set<ObjectName>>())
 
     final String url
     final String user
@@ -190,18 +190,26 @@ public class JmxHelper {
     public Set<ObjectInstance> findMBeans(ObjectName objectName) {
         return mbsc.queryMBeans(objectName, null)
     }
-    
+
     public ObjectInstance findMBean(ObjectName objectName) {
-	Set<ObjectInstance> beans = findMBeans(objectName)
-        if (beans.size() > 1) {
-            LOG.warn "JMX object name query returned {} values for {}; ignoring all", beans.size(), objectName.canonicalName
-            return null
-        } else if (beans.isEmpty()) {
+        Set<ObjectInstance> beans = findMBeans(objectName)
+        if (beans.size() != 1) {
             boolean changed = notFoundMBeans.add(objectName)
-            if (changed) {
-                LOG.warn "JMX object {} not found at {}", objectName.canonicalName, url
+            
+            if (beans.size() > 1) {
+                if (changed) {
+                    LOG.warn "JMX object name query returned {} values for {} at {}; ignoring all", 
+                            beans.size(), objectName.canonicalName, url
+                } else {
+                    if (LOG.isDebugEnabled()) LOG.debug "JMX object name query returned {} values for {} at {} (repeating); "+
+                            "ignoring all", beans.size(), objectName.canonicalName, url
+                }
             } else {
-                LOG.debug "JMX object {} not found at {} (repeating)", objectName.canonicalName, url
+                if (changed) {
+                    LOG.warn "JMX object {} not found at {}", objectName.canonicalName, url
+                } else {
+                    LOG.debug "JMX object {} not found at {} (repeating)", objectName.canonicalName, url
+                }
             }
             return null
         } else {
@@ -210,7 +218,7 @@ public class JmxHelper {
             return bean
         }
     }
-
+    
     public void checkMBeanExistsEventually(ObjectName objectName, long timeoutMillis) {
         checkMBeanExistsEventually(objectName, timeoutMillis*TimeUnit.MILLISECONDS)
     }
