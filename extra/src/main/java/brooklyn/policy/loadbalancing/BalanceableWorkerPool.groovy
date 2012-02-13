@@ -11,9 +11,8 @@ import brooklyn.entity.Entity
 import brooklyn.entity.Group
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.AbstractGroup
-import brooklyn.entity.group.Cluster;
-import brooklyn.entity.trait.Startable
 import brooklyn.entity.trait.Resizable
+import brooklyn.entity.trait.Startable
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
@@ -65,6 +64,9 @@ public class BalanceableWorkerPool extends AbstractEntity implements Resizable {
     private Group containerGroup
     private Group itemGroup
     private Closure<? extends Entity> newContainer
+    
+    private final Set<Entity> containers = Collections.synchronizedSet(new HashSet<Entity>())
+    private final Set<Entity> items = Collections.synchronizedSet(new HashSet<Entity>())
     
     private final SensorEventListener<?> eventHandler = new SensorEventListener<Object>() {
         public void onEvent(SensorEvent<?> event) {
@@ -157,26 +159,34 @@ public class BalanceableWorkerPool extends AbstractEntity implements Resizable {
     }
     
     private void onContainerUp(Entity newContainer) {
-        emit(CONTAINER_ADDED, newContainer)
+        if (containers.add(newContainer)) {
+            emit(CONTAINER_ADDED, newContainer)
+        }
     }
     
     private void onContainerDown(Entity oldContainer) {
-        emit(CONTAINER_REMOVED, oldContainer)
+        if (containers.remove(oldContainer)) {
+            emit(CONTAINER_REMOVED, oldContainer)
+        }
     }
     
     private void onContainerRemoved(Entity oldContainer) {
         unsubscribe(oldContainer)
-        emit(CONTAINER_REMOVED, oldContainer)
+        onContainerDown(oldContainer)
     }
     
     private void onItemAdded(Entity item) {
-        subscribe(item, Movable.CONTAINER, eventHandler)
-        emit(ITEM_ADDED, new ContainerItemPair(item.getAttribute(Movable.CONTAINER), item))
+        if (items.add(item)) {
+            subscribe(item, Movable.CONTAINER, eventHandler)
+            emit(ITEM_ADDED, new ContainerItemPair(item.getAttribute(Movable.CONTAINER), item))
+        }
     }
     
     private void onItemRemoved(Entity item) {
-        unsubscribe(item)
-        emit(ITEM_REMOVED, new ContainerItemPair(null, item))
+        if (items.remove(item)) {
+            unsubscribe(item)
+            emit(ITEM_REMOVED, new ContainerItemPair(null, item))
+        }
     }
     
     private void onItemMoved(Entity item, Entity container) {
