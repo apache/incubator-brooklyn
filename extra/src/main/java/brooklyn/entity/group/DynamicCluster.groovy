@@ -28,6 +28,9 @@ import com.google.common.collect.Iterables
 public class DynamicCluster extends AbstractGroup implements Cluster {
     private static final Logger logger = LoggerFactory.getLogger(DynamicCluster)
 
+    // Mutex for synchronizing during re-size operations
+    private final Object mutex = new Object[0];
+    
     @SetFromFlag
     Closure<Entity> newEntity
     
@@ -88,7 +91,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     }
 
     public Integer resize(Integer desiredSize) {
-        synchronized (_members) {
+        synchronized (mutex) {
             int delta = desiredSize - currentSize
             // Make a local copy of this - otherwise the closure later on tries to bind to a variable called logger in
             // the context of the class that is invoking the closure (maybe related to it being a static class member?)

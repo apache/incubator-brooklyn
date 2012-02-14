@@ -4,6 +4,7 @@ import static org.testng.AssertJUnit.*
 
 import java.util.Collection
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -327,6 +328,45 @@ class DynamicClusterTest {
             assertEquals(0, cluster.ownedChildren.size())
             assertEquals(0, cluster.currentSize)
             assertEquals(0, cluster.members.size())
+        }
+    }
+    
+    @Test
+    public void testResizeDoesNotBlockCallsToQueryGroupMembership() {
+        CountDownLatch executingLatch = new CountDownLatch(1)
+        CountDownLatch continuationLatch = new CountDownLatch(1)
+        
+        DynamicCluster cluster = new DynamicCluster(
+            [
+                newEntity: { properties -> 
+                        executingLatch.countDown()
+                        continuationLatch.await()
+                        return new TestEntity(properties)
+                    },
+                initialSize:0 
+            ], app)
+        
+        cluster.start([loc])
+
+        Thread thread = new Thread( { cluster.resize(1) })
+        try {
+            // wait for resize to be executing
+            thread.start()
+            executingLatch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS)
+            
+            // ensure can still call methods on group, to query/update membership
+            assertEquals(cluster.getMembers(), [])
+            assertEquals(cluster.getCurrentSize(), 0)
+            assertFalse(cluster.hasMember(cluster))
+            assertEquals(cluster.addMember(cluster), cluster)
+            assertTrue(cluster.removeMember(cluster))
+
+            // allow the resize to complete            
+            continuationLatch.countDown()
+            thread.join(TIMEOUT_MS)
+            assertFalse(thread.isAlive())
+        } finally {
+            thread.interrupt()
         }
     }
     

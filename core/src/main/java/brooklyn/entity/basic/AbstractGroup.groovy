@@ -11,9 +11,19 @@ import brooklyn.entity.Group
 import brooklyn.entity.trait.Changeable
 
 
+/**
+ * Represents a group of entities - sub-classes can support dynamically changing membership, 
+ * ad hoc groupings, etc.
+ * <p> 
+ * Synchronization model. When changing and reading the group membership, this class uses internal 
+ * synchronization to ensure atomic operations and the "happens-before" relationship for reads/updates
+ * from different threads. Sub-classes should not use this same synchronization mutex when doing 
+ * expensive operations - e.g. if resizing a cluster, don't block everyone else from asking for the
+ * current number of members.
+ */
 @InheritConstructors
 public abstract class AbstractGroup extends AbstractEntity implements Group, Changeable {
-    final EntityCollectionReference<Entity> _members = new EntityCollectionReference<Entity>(this);
+    private final EntityCollectionReference<Entity> _members = new EntityCollectionReference<Entity>(this);
 
     public AbstractGroup(Map props=[:], Entity owner=null) {
         super(props, owner)
