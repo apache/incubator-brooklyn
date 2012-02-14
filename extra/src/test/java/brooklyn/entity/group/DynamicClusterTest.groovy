@@ -3,6 +3,10 @@ package brooklyn.entity.group
 import static org.testng.AssertJUnit.*
 
 import java.util.Collection
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -28,7 +32,9 @@ import brooklyn.util.internal.TimeExtras
 import com.google.common.collect.Iterables
 
 class DynamicClusterTest {
-    
+
+    private static final int TIMEOUT_MS = 2000
+        
     static { TimeExtras.init() }
     
     TestApplication app
@@ -69,21 +75,33 @@ class DynamicClusterTest {
     @Test(expectedExceptions = NullPointerException.class)
     public void startMethodFailsIfLocationsParameterIsMissing() {
         DynamicCluster cluster = new DynamicCluster(newEntity:{ new TestEntity() }, app)
-        cluster.start(null)
+        try {
+            cluster.start(null)
+        } catch (Exception e) {
+            throw unwrapException(e)
+        }
         fail "Did not throw expected exception"
     }
 
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void startMethodFailsIfLocationsParameterIsEmpty() {
         DynamicCluster cluster = new DynamicCluster(newEntity:{ new TestEntity() }, app)
-        cluster.start([])
+        try {
+            cluster.start([])
+        } catch (Exception e) {
+            throw unwrapException(e)
+        }
         fail "Did not throw expected exception"
     }
 
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void startMethodFailsIfLocationsParameterHasMoreThanOneElement() {
         DynamicCluster cluster = new DynamicCluster(newEntity:{ new TestEntity() }, app)
-        cluster.start([ loc, loc2 ])
+        try {
+            cluster.start([ loc, loc2 ])
+        } catch (Exception e) {
+            throw unwrapException(e)
+        }
         fail "Did not throw expected exception"
     }
 
@@ -165,6 +183,45 @@ class DynamicClusterTest {
         assertEquals 0, entity.counter.get()
     }
 
+    @Test
+    public void concurrentResizesToSameNumberCreatesCorrectNumberOfNodes() {
+        final int OVERHEAD_MS = 500
+        final int STARTUP_TIME_MS = 50
+        final AtomicInteger numStarted = new AtomicInteger(0)
+        Application app = new AbstractApplication() { }
+        DynamicCluster cluster = new DynamicCluster(newEntity:
+                { Map flags, Entity cluster -> 
+                    Thread.sleep(STARTUP_TIME_MS); numStarted.incrementAndGet(); new TestEntity(flags, cluster)
+                }, 
+                app)
+        assertEquals 0, cluster.currentSize
+        cluster.start([loc])
+
+        ExecutorService executor = Executors.newCachedThreadPool()
+        List<Throwable> throwables = new CopyOnWriteArrayList<Throwable>()
+        
+        try {
+            for (int i in 1..10) {
+                executor.submit( {
+                    try {
+                        cluster.resize(2)
+                    } catch (Throwable e) {
+                        throwables.add(e)
+                    }
+                })
+            }
+            
+            executor.shutdown()
+            assertTrue(executor.awaitTermination(10*STARTUP_TIME_MS+OVERHEAD_MS, TimeUnit.MILLISECONDS))
+            if (throwables.size() > 0) throw throwables.get(0)
+            assertEquals(2, cluster.currentSize)
+            assertEquals(2, cluster.getAttribute(Changeable.GROUP_SIZE))
+            assertEquals(2, numStarted.get())
+        } finally {
+            executor.shutdownNow();
+        }
+    }
+
     @Test(enabled = false)
     public void stoppingTheClusterStopsTheEntity() {
         TestEntity entity
@@ -232,7 +289,7 @@ class DynamicClusterTest {
         
         cluster.start([loc])
         
-        TestUtils.executeUntilSucceeds(timeout:2*TimeUnit.SECONDS) {
+        TestUtils.executeUntilSucceeds(timeout:TIMEOUT_MS) {
             assertEquals(called.size(), 2)
             assertEquals(called, created)
         }
@@ -248,7 +305,39 @@ class DynamicClusterTest {
         assertEquals(tasks.size(), 2)
         assertTrue(Iterables.get(tasks, 0).getDescription().contains("start"))
         assertTrue(Iterables.get(tasks, 1).getDescription().contains("resize"))
+    }
+    
+    @Test
+    public void testStoppedChildIsRemoveFromGroup() {
+        TestEntity entity
+        final int failNum = 2
+        final AtomicInteger counter = new AtomicInteger(0)
+        DynamicCluster cluster = new DynamicCluster([
+                newEntity:{ properties -> return new TestEntity(properties) },
+                initialSize:1 
+            ], app)
         
+        cluster.start([loc])
+        
+        TestEntity child = cluster.ownedChildren.get(0)
+        child.stop()
+        app.managementContext.unmanage(child)
+        
+        TestUtils.executeUntilSucceeds(timeout:TIMEOUT_MS) {
+            assertEquals(0, cluster.ownedChildren.size())
+            assertEquals(0, cluster.currentSize)
+            assertEquals(0, cluster.members.size())
+        }
+    }
+    
+    private Throwable unwrapException(Throwable e) {
+        if (e instanceof ExecutionException) {
+            return unwrapException(e.cause)
+        } else if (e instanceof org.codehaus.groovy.runtime.InvokerInvocationException) {
+            return unwrapException(e.cause)
+        } else {
+            return e
+        }
     }
 }
 

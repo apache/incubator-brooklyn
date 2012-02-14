@@ -73,6 +73,10 @@ class JmxService {
         namingServiceMBean.stop()
     }
 
+    public String getUrl() {
+        return url
+    }
+    
     public GeneralisedDynamicMBean registerMBean(String name) {
         return registerMBean([:], [:], name)
     }

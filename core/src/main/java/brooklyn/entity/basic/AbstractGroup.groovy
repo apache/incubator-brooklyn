@@ -13,7 +13,7 @@ import brooklyn.entity.trait.Changeable
 
 @InheritConstructors
 public abstract class AbstractGroup extends AbstractEntity implements Group, Changeable {
-    final EntityCollectionReference<Entity> members = new EntityCollectionReference<Entity>(this);
+    final EntityCollectionReference<Entity> _members = new EntityCollectionReference<Entity>(this);
 
     public AbstractGroup(Map props=[:], Entity owner=null) {
         super(props, owner)
@@ -25,9 +25,9 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
      * returns argument passed in, for convenience.
      */
     public Entity addMember(Entity member) {
-        synchronized (members) {
+        synchronized (_members) {
 	        member.addGroup(this)
-	        if (members.add(member)) {
+	        if (_members.add(member)) {
 	            emit(MEMBER_ADDED, member)
 	            setAttribute(Changeable.GROUP_SIZE, currentSize)
                 enrichers.each { if (it instanceof AbstractAggregatingEnricher) ((AbstractAggregatingEnricher)it).addProducer(member); }
@@ -40,8 +40,8 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
      * Returns <code>true</code> if the group was changed as a result of the call.
      */
     public boolean removeMember(Entity member) {
-        synchronized (members) {
-            boolean changed = (member != null && members.remove(member))
+        synchronized (_members) {
+            boolean changed = (member != null && _members.remove(member))
             if (changed) {
 	            emit(MEMBER_REMOVED, member)
 	            setAttribute(Changeable.GROUP_SIZE, currentSize)
@@ -56,14 +56,20 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
  
     // Declared so can be overridden (the default auto-generated getter is final!)
     public Collection<Entity> getMembers() {
-        return members.get()
+        synchronized (_members) {
+            return _members.get()
+        }
     }
 
     public boolean hasMember(Entity e) {
-        return members.contains(e)
+        synchronized (_members) {
+            return _members.contains(e)
+        }
     }
 
     public Integer getCurrentSize() {
-        return getMembers().size()
+        synchronized (_members) {
+            return _members.size()
+        }
     }
 }

@@ -17,7 +17,7 @@ public class TimeWeightedDeltaEnricher<T extends Number> extends AbstractTransfo
     private static final Logger LOG = LoggerFactory.getLogger(TimeWeightedDeltaEnricher.class)
     
     Number lastValue
-    long lastTime
+    long lastTime = -1
     int unitMillis
     Closure postProcessor
     
@@ -41,16 +41,16 @@ public class TimeWeightedDeltaEnricher<T extends Number> extends AbstractTransfo
         Number current = event.getValue() ?: 0
         
         if (eventTime > lastTime) {
-            double delta
             if (lastValue == null) {
-                delta = current
+                // cannot calculate time-based delta with a single value
+                if (LOG.isTraceEnabled()) LOG.trace "$this received event but no last value so will not emit, null -> $current at $eventTime" 
             } else {
                 double duration = lastTime == null ? unitMillis : eventTime - lastTime
-                delta = (current - lastValue) / (duration / unitMillis)
+                double delta = (current - lastValue) / (duration / unitMillis)
+                double deltaPostProcessed = postProcessor.call(delta)
+                entity.setAttribute(target, deltaPostProcessed)
+                if (LOG.isTraceEnabled()) LOG.trace "set $this to ${deltaPostProcessed}, $lastValue -> $current at $eventTime" 
             }
-            double deltaPostProcessed = postProcessor.call(delta)
-            entity.setAttribute(target, deltaPostProcessed)
-            LOG.trace "set $this to ${deltaPostProcessed}, $lastValue -> $current at $eventTime" 
             lastValue = current
             lastTime = eventTime
         }

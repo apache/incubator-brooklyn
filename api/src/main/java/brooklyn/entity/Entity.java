@@ -79,8 +79,10 @@ public interface Entity extends Serializable {
     
     /** 
      * Removes the specified child {@link Entity}; its owner will be set to null.
+     * 
+     * @return True if the given entity was contained in the set of children
      */
-    void removeOwnedChild(Entity child);
+    boolean removeOwnedChild(Entity child);
     
     /**
      * @return an immutable thread-safe view of the policies.

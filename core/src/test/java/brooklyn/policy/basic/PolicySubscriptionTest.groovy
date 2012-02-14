@@ -52,13 +52,13 @@ public class PolicySubscriptionTest {
         entity2.setAttribute(TestEntity.SEQUENCE, 456);
         entity.setAttribute(TestEntity.SEQUENCE, 123);
         entity.setAttribute(TestEntity.NAME, "myname");
-        entity.emit(TestEntity.MY_NOTIF, "mynotif");
+        entity.emit(TestEntity.MY_NOTIF, 789);
         
         executeUntilSucceeds(timeout:TIMEOUT_MS) {
             assertEquals(listener.events, [
                 new BasicSensorEvent(TestEntity.SEQUENCE, entity, 123),
                 new BasicSensorEvent(TestEntity.NAME, entity, "myname"),
-                new BasicSensorEvent(TestEntity.MY_NOTIF, entity, "mynotif")
+                new BasicSensorEvent(TestEntity.MY_NOTIF, entity, 789)
             ])
         }
     }
@@ -73,12 +73,12 @@ public class PolicySubscriptionTest {
         
         entity.setAttribute(TestEntity.SEQUENCE, 123);
         entity.setAttribute(TestEntity.NAME, "myname");
-        entity.emit(TestEntity.MY_NOTIF, "mynotif");
-        entity2.setAttribute(TestEntity.SEQUENCE, 456);
+        entity.emit(TestEntity.MY_NOTIF, 456);
+        entity2.setAttribute(TestEntity.SEQUENCE, 789);
         
         Thread.sleep(SHORT_WAIT_MS)
         assertEquals(listener.events, [
-            new BasicSensorEvent(TestEntity.SEQUENCE, entity2, 456)
+            new BasicSensorEvent(TestEntity.SEQUENCE, entity2, 789)
         ]);
     }
     

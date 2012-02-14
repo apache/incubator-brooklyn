@@ -6,6 +6,7 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.management.Task;
 import java.util.Map
+import java.util.concurrent.ExecutionException
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -51,8 +52,10 @@ public abstract class AbstractManagementContext implements ManagementContext  {
             new Throwable("source of duplicate management").printStackTrace()
             return
         }
-        if (manageNonRecursive(e))
+        if (manageNonRecursive(e)) {
             ((AbstractEntity)e).onManagementBecomingMaster()
+            ((AbstractEntity)e).setBeingManaged()
+        }
         for (Entity ei : e.getOwnedChildren()) {
             manage(ei);
         }
@@ -104,7 +107,9 @@ public abstract class AbstractManagementContext implements ManagementContext  {
 	/** activates management when effector invoked, warning unless context is acceptable
 	 * (currently only acceptable context is "start") */
 	protected void manageIfNecessary(Entity entity, Object context) {
-		if (!isManaged(entity)) {
+        if (((AbstractEntity)entity).hasEverBeenManaged()) {
+            return
+        } else if (!isManaged(entity)) {
 			Entity rootUnmanaged = entity;
 			while (true) {
 				Entity candidateUnmanagedOwner = rootUnmanaged.getOwner();
@@ -125,14 +130,18 @@ public abstract class AbstractManagementContext implements ManagementContext  {
      * when a method is called on that entity.
      */
     protected <T> T invokeEffectorMethodSync(Entity entity, Effector<T> eff, Object args) {
-        Task current = BasicExecutionManager.currentTask
-        if (!current || !current.tags.contains(entity) || !isManagedLocally(entity)) {
-			manageIfNecessary(entity, eff.name);
-            // Wrap in a task if we aren't already in a task that is tagged with this entity
-            runAtEntity(expirationPolicy: ExpirationPolicy.NEVER, entity, { invokeEffectorMethodLocal(entity, eff, args); },
-                description:"invoking ${eff.name} on ${entity.displayName}", displayName:eff.name, tags:[EFFECTOR_TAG]).get()
-        } else {
-            return invokeEffectorMethodLocal(entity, eff, args)
+        try {
+            Task current = BasicExecutionManager.currentTask
+            if (!current || !current.tags.contains(entity) || !isManagedLocally(entity)) {
+    			manageIfNecessary(entity, eff.name);
+                // Wrap in a task if we aren't already in a task that is tagged with this entity
+                runAtEntity(expirationPolicy: ExpirationPolicy.NEVER, entity, { invokeEffectorMethodLocal(entity, eff, args); },
+                    description:"invoking ${eff.name} on ${entity.displayName}", displayName:eff.name, tags:[EFFECTOR_TAG]).get()
+            } else {
+                return invokeEffectorMethodLocal(entity, eff, args)
+            }
+        } catch (Exception e) {
+            throw new ExecutionException("Error invoking $eff on entity $entity", e);
         }
     }
 

@@ -30,6 +30,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
 
     @SetFromFlag
     Closure<Entity> newEntity
+    
     @SetFromFlag
     Closure postStartEntity
 
@@ -87,12 +88,16 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     }
 
     public Integer resize(Integer desiredSize) {
-        synchronized (members) {
+        synchronized (_members) {
             int delta = desiredSize - currentSize
             // Make a local copy of this - otherwise the closure later on tries to bind to a variable called logger in
             // the context of the class that is invoking the closure (maybe related to it being a static class member?)
             final Logger logger = DynamicCluster.logger
-            logger.info "Resize from {} to {}; delta = {}", currentSize, desiredSize, delta
+            if (delta != 0) {
+                logger.info "Resize from {} to {}; delta = {}", currentSize, desiredSize, delta
+            } else {
+                if (logger.isDebugEnabled()) logger.debug "Resize no-op from {} to {}", currentSize, desiredSize
+            }
     
             Collection<Entity> addedEntities = []
             Collection<Entity> removedEntities = []
@@ -147,10 +152,18 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         }
     }
     
+    @Override
+    public boolean removeOwnedChild(Entity child) {
+        boolean changed = super.removeOwnedChild(child)
+        if (changed) {
+            removeMember(child)
+        }
+    }
+    
     protected Entity addNode() {
         Map creation = [:]
         creation << createFlags
-        logger.trace "Adding a node to {} with properties {}", id, creation
+        if (logger.isDebugEnabled()) logger.debug "Adding a node to {} with properties {}", id, creation
 
         Entity entity
         if (newEntity.maximumNumberOfParameters > 1) {
@@ -170,12 +183,12 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     protected Entity removeNode() {
         // TODO use pluggable strategy; default is to remove newest
         // TODO inefficient impl
-        logger.info "Removing a node"
+        if (logger.isDebugEnabled()) logger.debug "Removing a node from {}", id
         Entity entity
         members.each {
             if (it instanceof Startable) entity = it
         }
-        Preconditions.checkNotNull entity, "No Startable member entity found to remove"
+        Preconditions.checkNotNull entity, "No Startable member entity found to remove from $id"
         removeNode(entity)
     }
     

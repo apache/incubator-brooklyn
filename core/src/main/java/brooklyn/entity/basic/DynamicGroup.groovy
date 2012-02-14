@@ -42,14 +42,14 @@ public class DynamicGroup extends AbstractGroup {
     
     protected void onEntityAdded(Entity item) {
         if (acceptsEntity(item)) {
-            log.info("$this detected item add $item")
+            if (log.isDebugEnabled()) log.debug("$this detected item add $item")
             addMember(item)
         }
     }
     
     protected void onEntityRemoved(Entity item) {
         if (removeMember(item))
-            log.info("$this detected item removal $item")
+            if (log.isDebugEnabled()) log.debug("$this detected item removal $item")
     }
     
     protected void onEntityChanged(Entity item) {
@@ -57,9 +57,9 @@ public class DynamicGroup extends AbstractGroup {
         boolean has = hasMember(item);
         if (has && !accepts) {
             removeMember(item)
-            log.info("{} detected item removal on change of {}", this, item)
+            if (log.isDebugEnabled()) log.debug("{} detected item removal on change of {}", this, item)
         } else if (!has && accepts) {
-            log.info("{} detected item add on change of {}", this, item)
+            if (log.isDebugEnabled()) log.debug("{} detected item add on change of {}", this, item)
             addMember(item)
         }
     }
@@ -107,19 +107,18 @@ public class DynamicGroup extends AbstractGroup {
             if (acceptsEntity(it)) {
                 toRemove.remove(it)
                 if (!currentMembers.contains(it)) {
-                    log.info("$this rescan detected new item $it")
+                    if (log.isDebugEnabled()) log.debug("$this rescan detected new item $it")
                     addMember(it)
                     changed = true
                 }
             }
         }
         toRemove.each { 
-            log.info("$this rescan detected vanished item $it")
+            if (log.isDebugEnabled()) log.debug("$this rescan detected vanished item $it")
             removeMember(it)
             changed = true
         }
         if (changed)
-            log.info("$this rescan complete, members now ${getMembers()}")
+            if (log.isDebugEnabled()) log.debug("$this rescan complete, members now ${getMembers()}")
     }
-    
 }
