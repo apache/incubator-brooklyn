@@ -23,31 +23,31 @@ import brooklyn.util.flags.SetFromFlag
 
 
 public class MockContainerEntity extends AbstractGroup implements BalanceableContainer<Entity>, Startable {
-    
+
     private static final Logger LOG = LoggerFactory.getLogger(MockContainerEntity)
-    
+
     @SetFromFlag("membership")
     public static final ConfigKey<String> MOCK_MEMBERSHIP =
             new BasicConfigKey<String>(String.class, "mock.container.membership", "For testing ItemsInContainersGroup")
 
     public static final Effector OFFLOAD_AND_STOP = new MethodEffector(MockContainerEntity.&offloadAndStop);
-            
+
     final long delay;
     volatile boolean offloading;
     volatile boolean running;
-    
+
     ReentrantLock _lock = new ReentrantLock();
-    
+
     public MockContainerEntity (Map props=[:], Entity owner, long delay=0) {
         super(props, owner)
         this.delay = delay
     }
-    
+
     public MockContainerEntity (Map props=[:], long delay=0) {
         super(props, null)
         this.delay = delay
     }
-    
+
     @Override
     public <T> T setAttribute(AttributeSensor<T> attribute, T val) {
         if (LOG.isDebugEnabled()) LOG.debug("Mocks: container $this setting $attribute to $val")
@@ -74,36 +74,37 @@ public class MockContainerEntity extends AbstractGroup implements BalanceableCon
         }
         return result
     }
-    
+
     public void addItem(Entity item) {
         if (LOG.isDebugEnabled()) LOG.debug("Mocks: adding item $item to container $this")
         if (!running || offloading) throw new IllegalStateException("Container $displayName is not running; cannot add item $item")
         addMember(item)
         emit(BalanceableContainer.ITEM_ADDED, item)
     }
-    
+
     public void removeItem(Entity item) {
         if (LOG.isDebugEnabled()) LOG.debug("Mocks: removing item $item from container $this")
         if (!running) throw new IllegalStateException("Container $displayName is not running; cannot remove item $item")
         removeMember(item)
         emit(BalanceableContainer.ITEM_REMOVED, item)
     }
-    
+
     public Set<Entity> getBalanceableItems() {
         return new LinkedHashSet<Entity>(getMembers())
     }
-    
+
     public String toString() {
         return "MockContainer["+getDisplayName()+"]"
     }
 
     @Override
-    public void start(Collection<? extends Location> locations) {
+    public void start(Collection<? extends Location> locs) {
         if (LOG.isDebugEnabled()) LOG.debug("Mocks: starting container $this")
         _lock.lock();
         try {
             if (delay > 0) Thread.sleep(delay)
             running = true;
+            locations.addAll(locs)
             setAttribute(SERVICE_UP, true);
         } finally {
             _lock.unlock();
@@ -141,13 +142,13 @@ public class MockContainerEntity extends AbstractGroup implements BalanceableCon
             stopWithoutLock();
         }
     }
-    
+
     @Override
     public void restart() {
         if (LOG.isDebugEnabled()) LOG.debug("Mocks: restarting $this")
         throw new UnsupportedOperationException();
     }
-    
+
     public static void runWithLock(List<MockContainerEntity> entitiesToLock, Closure c) {
         List<MockContainerEntity> entitiesToLockCopy = entitiesToLock.findAll {it != null}
         List<MockContainerEntity> entitiesLocked = []
@@ -155,15 +156,15 @@ public class MockContainerEntity extends AbstractGroup implements BalanceableCon
             public int compare(MockContainerEntity o1, MockContainerEntity o2) {
                 return o1.getId().compareTo(o2.getId())
             }})
-        
+
         try {
             entitiesToLockCopy.each {
                 it.lock()
                 entitiesLocked.add(it)
             }
-            
+
             c.call()
-            
+
         } finally {
             entitiesLocked.each {
                 it.unlock()
