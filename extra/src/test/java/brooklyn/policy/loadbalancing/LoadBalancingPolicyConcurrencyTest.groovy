@@ -82,7 +82,7 @@ public class LoadBalancingPolicyConcurrencyTest extends AbstractLoadBalancingPol
         assertWorkratesEventually(containers, Collections.nCopies(NUM_CONTAINERS, 20d), WORKRATE_JITTER)
     }
     
-    @Test(invocationCount=100)
+    @Test(groups="WIP", invocationCount=100)
     public void testConcurrentlyRemoveContainers() {
         List<MockItemEntity> items = []
         List<MockContainerEntity> containers = []
@@ -109,7 +109,7 @@ public class LoadBalancingPolicyConcurrencyTest extends AbstractLoadBalancingPol
         assertWorkratesEventually(containers, Collections.nCopies((int)(NUM_CONTAINERS/2), 40d), WORKRATE_JITTER*2)
     }
     
-    @Test
+    @Test(groups="WIP")
     public void testConcurrentlyRemoveItems() {
         List<MockItemEntity> items = []
         List<MockContainerEntity> containers = []
