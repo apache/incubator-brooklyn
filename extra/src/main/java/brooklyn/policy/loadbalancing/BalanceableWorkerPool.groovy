@@ -63,7 +63,6 @@ public class BalanceableWorkerPool extends AbstractEntity implements Resizable {
     
     private Group containerGroup
     private Group itemGroup
-    private Closure<? extends Entity> newContainer
     
     private final Set<Entity> containers = Collections.synchronizedSet(new HashSet<Entity>())
     private final Set<Entity> items = Collections.synchronizedSet(new HashSet<Entity>())
@@ -113,7 +112,6 @@ public class BalanceableWorkerPool extends AbstractEntity implements Resizable {
     
     public BalanceableWorkerPool(Map properties = [:], Entity owner = null) {
         super(properties, owner)
-        this.newContainer = properties.newContainer
     }
     
     public void setContents(Group containerGroup, Group itemGroup) {
