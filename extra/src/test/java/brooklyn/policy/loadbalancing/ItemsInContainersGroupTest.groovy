@@ -73,6 +73,16 @@ public class ItemsInContainersGroupTest {
         assertItemsEventually()
     }
 
+    @Test
+    public void testItemUnmanagedIsRemoved() throws Exception {
+        MockContainerEntity containerIn = newContainer(app, "A", "ingroup")
+        MockItemEntity item1 = newItem(app, containerIn, "1")
+        assertItemsEventually(item1)
+        
+        app.getManagementContext().unmanage(item1)
+        assertItemsEventually()
+    }
+
     // TODO How to test this? Will it be used?
     // Adding a new container then adding items to it is tested in many other methods.
     @Test(enabled=false)

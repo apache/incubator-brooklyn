@@ -129,7 +129,7 @@ public class ResizingPolicy extends AbstractPolicy {
         
         this.desiredPoolSize = newSize
 
-        if (executorQueued.compareAndSet(false, true)) {
+        if (isRunning() && executorQueued.compareAndSet(false, true)) {
             executor.submit( {
                 executorQueued.set(false)
                 try {
