@@ -120,7 +120,7 @@ public class LoadBalancingPolicy extends AbstractPolicy {
     }
     
     private scheduleRebalance() {
-        if (executorQueued.compareAndSet(false, true)) {
+        if (isRunning() && executorQueued.compareAndSet(false, true)) {
             
             executor.submit( {
                 try {
