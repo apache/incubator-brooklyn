@@ -147,10 +147,13 @@ public class JcloudsUtil {
     }
 
     public static ComputeService buildComputeService(Map<String,? extends Object> conf) {
+        buildComputeService(conf, [:])
+    }
+    public static ComputeService buildComputeService(Map<String,? extends Object> conf, Map unusedConf) {
         Properties properties = new Properties();
-        properties.setProperty(Constants.PROPERTY_PROVIDER, conf.provider)
-        properties.setProperty(Constants.PROPERTY_IDENTITY, conf.identity)
-        properties.setProperty(Constants.PROPERTY_CREDENTIAL, conf.credential)
+        properties.setProperty(Constants.PROPERTY_PROVIDER, conf.provider); unusedConf.remove("provider");
+        properties.setProperty(Constants.PROPERTY_IDENTITY, conf.identity); unusedConf.remove("identity");
+        properties.setProperty(Constants.PROPERTY_CREDENTIAL, conf.credential); unusedConf.remove("credential");
         properties.setProperty(Constants.PROPERTY_TRUST_ALL_CERTS, Boolean.toString(true))
         properties.setProperty(Constants.PROPERTY_RELAX_HOSTNAME, Boolean.toString(true))
         

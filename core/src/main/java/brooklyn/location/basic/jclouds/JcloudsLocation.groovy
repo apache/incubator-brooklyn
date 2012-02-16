@@ -13,11 +13,13 @@ import org.jclouds.compute.domain.Template
 import org.jclouds.compute.domain.TemplateBuilder
 import org.jclouds.compute.options.TemplateOptions
 import org.jclouds.domain.Credentials
-import org.jclouds.domain.LoginCredentials;
+import org.jclouds.domain.LoginCredentials
 import org.jclouds.ec2.compute.options.EC2TemplateOptions
 import org.jclouds.scriptbuilder.domain.Statement
 import org.jclouds.scriptbuilder.domain.Statements
 import org.jclouds.scriptbuilder.statements.login.UserAdd
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.NoMachinesAvailableException
@@ -33,6 +35,8 @@ import com.google.common.io.Files
 
 public class JcloudsLocation extends AbstractLocation implements MachineProvisioningLocation<SshMachineLocation> {
 
+    public static final Logger LOG = LoggerFactory.getLogger(JcloudsLocation.class)
+    
     public static final String ROOT_USERNAME = "root";
     public static final int START_SSHABLE_TIMEOUT = 5*60*1000;
 
@@ -49,7 +53,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     
     protected void configure(Map properties) {
         super.configure(properties)
-        if (!name) name = conf.providerLocationId ?: "default";
+        if (!name) name = conf.providerLocationId ?: conf.provider ?: "default";
 	}
     
     @Override
@@ -86,22 +90,48 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         return result
     }
     
+    public static final Set getAllSupportedProperties() {
+        return SUPPORTED_BASIC_PROPERTIES.keySet() + SUPPORTED_TEMPLATE_BUILDER_PROPERTIES.keySet() + SUPPORTED_TEMPLATE_OPTIONS_PROPERTIES.keySet();    
+    }
+
+    //FIXME use of this map and the unusedConf list, with the CredentialsFromEnv and JCloudsLocationFactory, seems overly complicated!
+    //also, we need a way to define imageId (and others?) with a specific location
+        
+    public static final Map SUPPORTED_BASIC_PROPERTIES = [
+        provider:{}, identity:{}, credential:{},
+        userName:{}, 
+        publicKeyFile:{}, privateKeyFile:{}, 
+        sshPublicKey:{}, sshPrivateKey:{}, 
+        rootSshPrivateKey:{}, rootSshPublicKey:{}, 
+        groupId:{},
+        providerLocationId:{}, provider:{} ];
+     
     public SshMachineLocation obtain(Map flags=[:]) throws NoMachinesAvailableException {
-        Map allconf = flags + conf
-        if (!allconf.userName) allconf.userName = ROOT_USERNAME
-        if (allconf.sshPublicKey) allconf.sshPublicKeyData = Files.toString(asFile(allconf.sshPublicKey), Charsets.UTF_8)
-        if (allconf.sshPrivateKey) allconf.sshPrivateKeyData = Files.toString(asFile(allconf.sshPrivateKey), Charsets.UTF_8)
-        if (allconf.rootSshPrivateKey) allconf.rootSshPrivateKeyData = Files.toString(asFile(allconf.rootSshPrivateKey), Charsets.UTF_8)
-        if (allconf.rootSshPublicKey) allconf.rootSshPublicKeyData = Files.toString(asFile(allconf.rootSshPublicKey), Charsets.UTF_8)
-        String groupId = (allconf.groupId ?: IdGenerator.makeRandomId(8))
+        Map allconf = flags + conf;
+        Map unusedConf = [:] + allconf
+        if (!unusedConf.remove("userName")) allconf.userName = ROOT_USERNAME
+        if (unusedConf.remove("publicKeyFile")) allconf.sshPublicKeyData = Files.toString(asFile(allconf.publicKeyFile), Charsets.UTF_8)
+        if (unusedConf.remove("privateKeyFile")) allconf.sshPrivateKeyData = Files.toString(asFile(allconf.privateKeyFile), Charsets.UTF_8)
+        if (unusedConf.remove("sshPublicKey")) allconf.sshPublicKeyData = Files.toString(asFile(allconf.sshPublicKey), Charsets.UTF_8)
+        if (unusedConf.remove("sshPrivateKey")) allconf.sshPrivateKeyData = Files.toString(asFile(allconf.sshPrivateKey), Charsets.UTF_8)
+        if (unusedConf.remove("rootSshPrivateKey")) allconf.rootSshPrivateKeyData = Files.toString(asFile(allconf.rootSshPrivateKey), Charsets.UTF_8)
+        if (unusedConf.remove("rootSshPublicKey")) allconf.rootSshPublicKeyData = Files.toString(asFile(allconf.rootSshPublicKey), Charsets.UTF_8)
+        String groupId = (unusedConf.remove("groupId") ?: "brooklyn-"+System.getProperty("user.name")+"-"+IdGenerator.makeRandomId(8))
  
-        ComputeService computeService = JcloudsUtil.buildComputeService(allconf);
+        unusedConf.remove("provider");
+        unusedConf.remove("providerLocationId");
+        
+        ComputeService computeService = JcloudsUtil.buildComputeService(allconf, unusedConf);
         
         NodeMetadata node = null;
         try {
             LOG.info("Creating VM in "+(allconf.providerLocationId?:allconf.provider));
 
-            Template template = buildTemplate(computeService, allconf.providerLocationId, allconf);
+            Template template = buildTemplate(computeService, allconf.providerLocationId, allconf, unusedConf);
+            
+            if (!unusedConf.isEmpty())
+                LOG.warn("Unused flags passed to JcloudsLocation.buildTemplate in "+(allconf.providerLocationId?:allconf.provider)+": "+unusedConf);
+    
             Set<? extends NodeMetadata> nodes = computeService.createNodesInGroup(groupId, 1, template);
             node = Iterables.getOnlyElement(nodes, null);
             if (node == null) {
@@ -114,7 +144,8 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                 allconf.sshPrivateKeyData ? new Credentials(allconf.userName, allconf.sshPrivateKeyData) : nodeCredentials)
             
             // Wait for the VM to be reachable over SSH
-            LOG.info("Started VM in ${allconf.providerLocationId}; waiting for it to be sshable by "+allconf.userName+"@"+vmIp);
+            LOG.info("Started VM in ${allconf.providerLocationId ?: allconf.provider}; "+
+                "waiting for it to be sshable by ${allconf.userName}@${vmIp}");
             boolean reachable = new Repeater()
                     .repeat()
                     .every(1,SECONDS)
@@ -127,7 +158,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                     .run()
         
             if (!reachable) {
-                throw new IllegalStateException("SSH failed for "+allconf.userName+"@"+vmIp+" after waiting "+START_SSHABLE_TIMEOUT+"ms");
+                throw new IllegalStateException("SSH failed for ${allconf.userName}@${vmIp} after waiting ${START_SSHABLE_TIMEOUT}ms");
             }
 
             String vmHostname = getPublicHostname(node, allconf)
@@ -199,54 +230,62 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         }
     }
     
-    private Template buildTemplate(ComputeService computeService, String providerLocationId, Map<String,? extends Object> properties) {
+    /** note, it is important these be written in correct camel case, so the routines
+     *  which convert it to "min-ram" syntax and MIN_RAM syntax are correct */
+    
+    public static final Map SUPPORTED_TEMPLATE_BUILDER_PROPERTIES = [
+            minRam:         { TemplateBuilder tb, Map props, Object v -> tb.minRam(v) },
+            hardwareId:     { TemplateBuilder tb, Map props, Object v -> tb.hardwareId(v) },
+//            imageSize:      { TemplateBuilder tb, Map props, Object v -> tb.imageSize(v) },  //doesn't exist?
+            imageId:        { TemplateBuilder tb, Map props, Object v -> tb.imageId(v) },
+            imageDescriptionRegex:        { TemplateBuilder tb, Map props, Object v -> tb.imageDescriptionMatches(v) },
+            imageNameRegex:               { TemplateBuilder tb, Map props, Object v -> tb.imageNameMatches(v) },
+            defaultImageId:               { TemplateBuilder tb, Map props, Object v ->
+                if (!(props.imageId || props.imageDescriptionRegex || props.imageNameRegex
+                        || props.imageDescriptionPattern || props.imageNamePattern))
+                    tb.imageId(v) 
+            },
+//deprecated, kept for backwards compatibility:
+            imageDescriptionPattern:      { TemplateBuilder tb, Map props, Object v -> tb.imageDescriptionMatches(v) },
+            imageNamePattern:             { TemplateBuilder tb, Map props, Object v -> tb.imageNameMatches(v) },
+        ];
+
+    public static final Map SUPPORTED_TEMPLATE_OPTIONS_PROPERTIES = [
+            securityGroups:    { TemplateOptions t, Map props, Object v -> 
+                String[] securityGroups = (v instanceof Collection) ? v.toArray(new String[0]) : v;
+                t.as(EC2TemplateOptions.class).securityGroups(securityGroups); 
+            },
+            inboundPorts:      { TemplateOptions t, Map props, Object v ->
+                Object[] inboundPorts = (v instanceof Collection) ? v.toArray(new Integer[0]) : v;
+                options.inboundPorts(inboundPorts);
+            },
+            rootSshPublicKeyData:  { TemplateOptions t, Map props, Object v -> t.authorizePublicKey(v) },
+            sshPublicKey:  { TemplateOptions t, Map props, Object v -> /* special; not included here */  },
+            userName:  { TemplateOptions t, Map props, Object v -> /* special; not included here */ },
+        ];
+
+    private Template buildTemplate(ComputeService computeService, String providerLocationId, Map<String,? extends Object> properties, Map unusedConf) {
         TemplateBuilder templateBuilder = computeService.templateBuilder();
  
-        if (properties.minRam) {
-            templateBuilder.minRam(properties.minRam);
-        }
-        
-        if (properties.hardwareId) {
-            templateBuilder.hardwareId(properties.hardwareId);
-        }
-        
-        if (properties.imageSize) {
-            templateBuilder.imageSize(properties.imageSize);
-        }
-        
-        if (properties.imageId) {
-            templateBuilder.imageId(properties.imageId);
-        }
-
-        if (properties.imageDescriptionPattern) {
-            templateBuilder.imageDescriptionMatches(properties.imageDescriptionPattern);
-        }
-
-        if (properties.imageNamePattern) {
-            templateBuilder.imageNameMatches(properties.imageNamePattern);
-        }
-
-        if (!(properties.imageId || properties.imageDescriptionPattern || properties.imageNamePattern) && properties.defaultImageId) {
-            templateBuilder.imageId(properties.defaultImageId);
-        }
-
         if (providerLocationId!=null) {
             templateBuilder.locationId(providerLocationId);
+        }
+        
+        SUPPORTED_TEMPLATE_BUILDER_PROPERTIES.each { name, code ->
+            if (unusedConf.remove(name)!=null)
+                code.call(templateBuilder, properties, properties.get(name));
         }
         
         Template template = templateBuilder.build();
         TemplateOptions options = template.getOptions();
         
-        if (properties.securityGroups) {
-            String[] securityGroups = (properties.securityGroups instanceof Collection) ? properties.securityGroups.toArray(new String[0]): properties.securityGroups
-            template.getOptions().as(EC2TemplateOptions.class).securityGroups(securityGroups);
+        SUPPORTED_TEMPLATE_OPTIONS_PROPERTIES.each { name, code ->
+            if (unusedConf.remove(name))
+                code.call(options, properties, properties.get(name));
         }
-        if (properties.inboundPorts) {
-            Object[] inboundPorts = (properties.inboundPorts instanceof Collection) ? properties.inboundPorts.toArray(new Integer[0]): properties.inboundPorts
-            options.inboundPorts(inboundPorts);
-        }
-        if ((properties.userName == ROOT_USERNAME && properties.sshPublicKeyData) || properties.rootSshPublicKeyData) {
-            String keyData = properties.rootSshPublicKeyData ?: properties.sshPublicKeyData
+        
+        if (properties.userName == ROOT_USERNAME && properties.sshPublicKeyData) {
+            String keyData = properties.sshPublicKeyData
             options.authorizePublicKey(keyData)
         }
         //NB: we ignore private key here because, by default we probably should not be installing it remotely;
@@ -262,7 +301,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             Statement userBuilderStatement = userBuilder.build();
             options.runScript(userBuilderStatement);
         }
-                
+                      
         return template;
     }
     

@@ -19,7 +19,7 @@ import com.google.common.base.Preconditions
  * Override {@link #configure(Map)} to add special initialization logic.
  */
 public abstract class AbstractLocation implements Location {
-    public static final Logger LOG = LoggerFactory.getLogger(Location.class)
+    public static final Logger LOG = LoggerFactory.getLogger(AbstractLocation.class)
 
     @SetFromFlag
     String id
