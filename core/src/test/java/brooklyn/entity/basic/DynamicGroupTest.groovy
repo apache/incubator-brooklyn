@@ -3,17 +3,24 @@ package brooklyn.entity.basic
 import static brooklyn.test.TestUtils.*
 import static org.testng.Assert.*
 
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.atomic.AtomicInteger
+
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.Entity
 import brooklyn.event.SensorEvent
+import brooklyn.event.SensorEventListener
 import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.test.entity.TestEntity
+import brooklyn.util.internal.LanguageUtils
 
 import com.google.common.base.Predicate
 
 
 public class DynamicGroupTest {
+    
     private AbstractApplication app
     private DynamicGroup group
     private AbstractEntity e1
@@ -114,5 +121,55 @@ public class DynamicGroupTest {
         executeUntilSucceeds(timeout:5000) {
             assertEquals(group.getMembers(), [])
         }
+    }
+    
+    // Motivated by strange behavior observed testing load-balancing policy, but this passed...
+    @Test
+    public void testGroupAddsAndRemovesManagedAndUnmanagedEntitiesExactlyOnce() {
+        int NUM_CYCLES = 100
+        group.setEntityFilter( { it instanceof TestEntity } )
+        Set<TestEntity> entitiesNotified = [] as Set
+        AtomicInteger notificationCount = new AtomicInteger(0);
+        List<Exception> exceptions = new CopyOnWriteArrayList<Exception>()
+        
+        app.subscribe(group, DynamicGroup.MEMBER_ADDED, { SensorEvent<Entity> event ->
+                try {
+                    Entity source = event.getSource()
+                    Object val = event.getValue()
+                    assertEquals(group, event.getSource())
+                    assertTrue(entitiesNotified.add(val))
+                    notificationCount.incrementAndGet()
+                } catch (Throwable t) {
+                    exceptions.add(new Exception("Error on event $event", t))
+                }
+            } as SensorEventListener);
+
+        app.subscribe(group, DynamicGroup.MEMBER_REMOVED, { SensorEvent<Entity> event ->
+                try {
+                    Entity source = event.getSource()
+                    Object val = event.getValue()
+                    assertEquals(group, event.getSource())
+                    assertTrue(entitiesNotified.remove(val))
+                    notificationCount.incrementAndGet()
+                } catch (Throwable t) {
+                    exceptions.add(new Exception("Error on event $event", t))
+                }
+            } as SensorEventListener);
+
+        for (i in 1..NUM_CYCLES) {
+            TestEntity entity = new TestEntity(owner:app)
+            app.getManagementContext().manage(entity);
+            app.getManagementContext().unmanage(entity);
+        }
+
+        LanguageUtils.repeatUntilSuccess(timeout:new groovy.time.TimeDuration(0, 0, 10, 0)) {
+            return notificationCount.get() == (NUM_CYCLES*2) || exceptions.size() > 0
+        }
+
+        if (exceptions.size() > 0) {
+            throw exceptions.get(0)
+        }
+        
+        assertEquals(notificationCount.get(), NUM_CYCLES*2)
     }
 }

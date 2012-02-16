@@ -75,6 +75,12 @@ public interface EntityLocal extends Entity {
     boolean removePolicy(AbstractPolicy policy);
     
     /**
+     * Removes all policy from this entity. 
+     * @return True if any policies existed at this entity; false otherwise
+     */
+    boolean removeAllPolicies();
+    
+    /**
      * Adds the given enricher to this entity. Also calls enricher.setEntity if available.
      */
     void addEnricher(AbstractEnricher enricher);
@@ -84,6 +90,13 @@ public interface EntityLocal extends Entity {
      * @return True if the policy enricher at this entity; false otherwise
      */
     boolean removeEnricher(AbstractEnricher enricher);
+    
+    /**
+     * Removes all enricher from this entity.
+     * Use with caution as some entities automatically register enrichers; this will remove those enrichers as well.
+     * @return True if any enrichers existed at this entity; false otherwise
+     */
+    boolean removeAllEnrichers();
     
     /** 
      * @return The management context for the entity, or null if it is not yet managed.

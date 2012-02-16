@@ -185,6 +185,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 
 	public void stop() {
 		setAttribute(SERVICE_STATE, Lifecycle.STOPPING)
+        setAttribute(SERVICE_UP, false)
 		if (sensorRegistry!=null) sensorRegistry.deactivateAdapters();
 		preStop()
 		MachineLocation machine = removeFirstMatchingLocation({ it in MachineLocation })
@@ -192,7 +193,6 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 			stopInLocation(machine)
 		}
 		setAttribute(SERVICE_STATE, Lifecycle.STOPPED)
-		setAttribute(SERVICE_UP, false)
 	}
 
 	Location removeFirstMatchingLocation(Closure matcher) {

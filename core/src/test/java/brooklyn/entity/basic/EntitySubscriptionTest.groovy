@@ -53,13 +53,28 @@ public class EntitySubscriptionTest {
         otherEntity.setAttribute(TestEntity.SEQUENCE, 123);
         observedEntity.setAttribute(TestEntity.SEQUENCE, 123);
         observedEntity.setAttribute(TestEntity.NAME, "myname");
-        observedEntity.emit(TestEntity.MY_NOTIF, "mynotif");
+        observedEntity.emit(TestEntity.MY_NOTIF, 456);
         
         executeUntilSucceeds(timeout:TIMEOUT_MS) {
             assertEquals(listener.events, [
                 new BasicSensorEvent(TestEntity.SEQUENCE, observedEntity, 123),
                 new BasicSensorEvent(TestEntity.NAME, observedEntity, "myname"),
-                new BasicSensorEvent(TestEntity.MY_NOTIF, observedEntity, "mynotif")
+                new BasicSensorEvent(TestEntity.MY_NOTIF, observedEntity, 456)
+            ])
+        }
+    }
+    
+    @Test
+    public void testSubscriptionToAllReceivesEvents() {
+        entity.subscribe(null, TestEntity.SEQUENCE, listener);
+        
+        observedEntity.setAttribute(TestEntity.SEQUENCE, 123);
+        otherEntity.setAttribute(TestEntity.SEQUENCE, 456);
+        
+        executeUntilSucceeds(timeout:TIMEOUT_MS) {
+            assertEquals(listener.events, [
+                new BasicSensorEvent(TestEntity.SEQUENCE, observedEntity, 123),
+                new BasicSensorEvent(TestEntity.SEQUENCE, otherEntity, 456),
             ])
         }
     }
@@ -88,7 +103,7 @@ public class EntitySubscriptionTest {
         
         observedEntity.setAttribute(TestEntity.SEQUENCE, 123);
         observedEntity.setAttribute(TestEntity.NAME, "myname");
-        observedEntity.emit(TestEntity.MY_NOTIF, "mynotif");
+        observedEntity.emit(TestEntity.MY_NOTIF, 123);
         otherEntity.setAttribute(TestEntity.SEQUENCE, 456);
         
         Thread.sleep(SHORT_WAIT_MS)
@@ -117,6 +132,23 @@ public class EntitySubscriptionTest {
         }
     }
     
+    @Test
+    public void testSubscriptionReceivesEventsInOrder() {
+        final int NUM_EVENTS = 100
+        entity.subscribe(observedEntity, TestEntity.MY_NOTIF, listener);
+
+        for (int i = 0; i < NUM_EVENTS; i++) {
+            observedEntity.emit(TestEntity.MY_NOTIF, i);
+        }
+        
+        executeUntilSucceeds(timeout:TIMEOUT_MS) {
+            assertEquals(listener.events.size(), NUM_EVENTS)
+            for (int i = 0; i < NUM_EVENTS; i++) {
+                assertEquals(listener.events.get(i).getValue(), i)
+            }
+        }
+    }
+
     private static class RecordingSensorEventListener implements SensorEventListener<Object> {
         final List<SensorEvent<?>> events = new CopyOnWriteArrayList<SensorEvent<?>>();
         

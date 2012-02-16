@@ -104,7 +104,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     private Map<String,Sensor> sensors = null
 
     /** Map of config keys on this entity by name, populated at constructor time. */
-	private Map<String,Sensor> configKeys = null
+	private Map<String,ConfigKey> configKeys = null
 
     private transient EntityClass entityClass = null
     protected transient ExecutionContext execution
@@ -142,6 +142,16 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 
     protected transient SubscriptionTracker _subscriptionTracker;
 
+    /**
+     * FIXME Temporary workaround for use-case:
+     *  - the load balancing policy test calls app.managementContext.unmanage(itemToStop)
+     *  - concurrently, the policy calls an effector on that item: item.move()
+     *  - The code in AbstractManagementContext.invokeEffectorMethodSync calls manageIfNecessary. 
+     *    This detects that the item is not managed, and sets it as managed again. The item is automatically  
+     *    added back into the dynamic group, and the policy receives an erroneous MEMBER_ADDED event.
+     */
+    private volatile boolean hasEverBeenManaged
+    
     public AbstractEntity(Entity owner) {
         this([:], owner)
     }
@@ -227,6 +237,13 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         } finally { this.@skipInvokeMethodEffectorInterception.set(false) }
     }
 
+    public void setBeingManaged() {
+        hasEverBeenManaged = true;
+    }
+    
+    public boolean hasEverBeenManaged() {
+        return hasEverBeenManaged;
+    }
     /**
      * Gets the field that is in the sub-class; or null if one field does not come from a sub-class of the other field's class
      */
@@ -362,10 +379,11 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     }
 
     @Override
-    public void removeOwnedChild(Entity child) {
+    public boolean removeOwnedChild(Entity child) {
         synchronized (ownedChildren) {
-	        ownedChildren.remove child
+            boolean changed = ownedChildren.remove child
 	        child.clearOwner()
+            return changed
         }
     }
 
@@ -381,6 +399,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     @Override
     public Entity getOwner() { owner?.get() }
 
+    // TODO synchronization: need to synchronize on ownedChildren, or have ownedChildren be a synchronized collection
     @Override
     public Collection<Entity> getOwnedChildren() { ownedChildren.get() }
     
@@ -656,6 +675,13 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     }
     
     @Override
+    boolean removeAllPolicies() {
+        for (Policy policy : policies) {
+            removePolicy(policy);
+        }
+    }
+    
+    @Override
     public Collection<Enricher> getEnrichers() {
         return enrichers.asImmutable()
     }
@@ -672,6 +698,13 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         return enrichers.remove(enricher)
     }
 
+    @Override
+    boolean removeAllEnrichers() {
+        for (AbstractEnricher enricher : enrichers) {
+            removeEnricher(enricher);
+        }
+    }
+    
     // -------- SENSORS --------------------
 
     @Override
@@ -905,6 +938,10 @@ private class EntityCollectionReference<T extends Entity> implements Serializabl
         return ImmutableList.copyOf(result)
     }
 
+    public synchronized int size() {
+        return entityRefs.size()
+    }
+
     public synchronized boolean contains(Entity e) {
         return entityRefs.contains(e.id)
     }
@@ -912,7 +949,7 @@ private class EntityCollectionReference<T extends Entity> implements Serializabl
     protected synchronized Collection<T> find() {
         if (entities!=null) return entities;
         if (!referrer)
-            throw new IllegalStateException("EntityReference $id should have been initialised with a reference owner")
+            throw new IllegalStateException("EntityReference should have been initialised with a reference owner")
         Collection<T> result = new CopyOnWriteArrayList<T>();
         entityRefs.each { 
             def e = ((AbstractEntity)referrer).getManagementContext().getEntity(it); 

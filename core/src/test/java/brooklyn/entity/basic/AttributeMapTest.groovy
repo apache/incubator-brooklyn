@@ -1,5 +1,7 @@
 package brooklyn.entity.basic;
 
+import static org.testng.Assert.assertEquals
+
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
@@ -65,5 +67,59 @@ public class AttributeMapTest {
         } finally {
             executor.shutdownNow()
         }
+    }
+    
+    @Test
+    public void testStoredSensorsCanBeRetrieved() {
+        BasicAttributeSensor<String> sensor1 = [ Integer, "a", "" ]
+        BasicAttributeSensor<String> sensor2 = [ Integer, "b.c", "" ]
+        
+        map.update(sensor1, "1val")
+        map.update(sensor2, "2val")
+        
+        assertEquals(map.getValue(sensor1), "1val")
+        assertEquals(map.getValue(sensor2), "2val")
+        
+        assertEquals(map.getValue(["a"]), "1val")
+        assertEquals(map.getValue(["b","c"]), "2val")
+    }
+        
+    @Test
+    public void testStoredByPathCanBeRetrieved() {
+        BasicAttributeSensor<String> sensor1 = [ Integer, "a", "" ]
+        BasicAttributeSensor<String> sensor2 = [ Integer, "b.c", "" ]
+        
+        map.update(["a"], "1val")
+        map.update(["b", "c"], "2val")
+        
+        assertEquals(map.getValue(sensor1), "1val")
+        assertEquals(map.getValue(sensor2), "2val")
+        
+        assertEquals(map.getValue(["a"]), "1val")
+        assertEquals(map.getValue(["b","c"]), "2val")
+    }
+        
+    @Test
+    public void testCanStoreSensorThenChildSensor() {
+        BasicAttributeSensor<String> sensor = [ Integer, "a", "" ]
+        BasicAttributeSensor<String> childSensor = [ Integer, "a.b", "" ]
+        
+        map.update(sensor, "parentValue")
+        map.update(childSensor, "childValue")
+        
+        assertEquals(map.getValue(childSensor), "childValue")
+        assertEquals(map.getValue(sensor), "parentValue")
+    }
+        
+    @Test
+    public void testCanStoreChildThenParentSensor() {
+        BasicAttributeSensor<String> sensor = [ Integer, "a", "" ]
+        BasicAttributeSensor<String> childSensor = [ Integer, "a.b", "" ]
+        
+        map.update(childSensor, "childValue")
+        map.update(sensor, "parentValue")
+        
+        assertEquals(map.getValue(childSensor), "childValue")
+        assertEquals(map.getValue(sensor), "parentValue")
     }
 }

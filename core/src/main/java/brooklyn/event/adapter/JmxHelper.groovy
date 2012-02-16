@@ -37,6 +37,9 @@ public class JmxHelper {
     public static final String JMX_URL_FORMAT = "service:jmx:rmi:///jndi/rmi://%s:%d/%s"
     public static final String RMI_JMX_URL_FORMAT = "service:jmx:rmi://%s:%d/jndi/rmi://%s:%d/%s"
 
+    // Tracks the MBeans we have failed to find, with a set keyed off the url
+    private static final Map<String,Set<ObjectName>> notFoundMBeansByUrl = Collections.synchronizedMap(new WeakHashMap<String,Set<ObjectName>>())
+
     final String url
     final String user
     final String password
@@ -44,6 +47,9 @@ public class JmxHelper {
 	JMXConnector jmxc
 	MBeanServerConnection mbsc
     boolean triedConnecting
+    
+    // Tracks the MBeans we have failed to find for this JmsHelper's connection URL (so can log just once for each)
+    private final Set<ObjectName> notFoundMBeans
     
 	public static final Map<String,String> CLASSES = [
 		"Integer" : Integer.TYPE.name,
@@ -88,16 +94,23 @@ public class JmxHelper {
         this(url, null, null)
     }
     
+    public JmxHelper(EntityLocal entity) {
+        this(toConnectorUrl(entity), entity.getAttribute(Attributes.JMX_USER), entity.getAttribute(Attributes.JMX_PASSWORD))
+    }
+    
     public JmxHelper(String url, String user, String password) {
         this.url = url
         this.user = user
         this.password = password
-    }
-    
-    public JmxHelper(EntityLocal entity) {
-        url = toConnectorUrl(entity)
-        user = entity.getAttribute(Attributes.JMX_USER);
-        password = entity.getAttribute(Attributes.JMX_PASSWORD);
+        
+        synchronized (notFoundMBeansByUrl) {
+            Set<ObjectName> set = notFoundMBeansByUrl.get(url)
+            if (set == null) {
+                set = Collections.synchronizedSet(Collections.newSetFromMap(new WeakHashMap<ObjectName,Boolean>()))
+                notFoundMBeansByUrl.put(url, set)
+            }
+            notFoundMBeans = set;
+        }
     }
     
 	public boolean isConnected() {
@@ -174,31 +187,51 @@ public class JmxHelper {
 		} 
 	}
 
-    static Set<String> warned = []
-    
-	public ObjectInstance findMBean(ObjectName objectName) {
-		Set<ObjectInstance> beans = mbsc.queryMBeans(objectName, null)
-		if (beans.isEmpty() || beans.size() > 1) {
-            if (warned.add(objectName.canonicalName))
-			    LOG.warn "JMX object name query returned {} values for {} (future messages logged at debug)", beans.size(), objectName.canonicalName
-            else
-                LOG.debug "JMX object name query returned {} values for {} (repeat)", beans.size(), objectName.canonicalName
-			return null
-		}
-		ObjectInstance bean = beans.find { true }
-		return bean
-	}
+    public Set<ObjectInstance> findMBeans(ObjectName objectName) {
+        return mbsc.queryMBeans(objectName, null)
+    }
 
+    public ObjectInstance findMBean(ObjectName objectName) {
+        Set<ObjectInstance> beans = findMBeans(objectName)
+        if (beans.size() != 1) {
+            boolean changed = notFoundMBeans.add(objectName)
+            
+            if (beans.size() > 1) {
+                if (changed) {
+                    LOG.warn "JMX object name query returned {} values for {} at {}; ignoring all", 
+                            beans.size(), objectName.canonicalName, url
+                } else {
+                    if (LOG.isDebugEnabled()) LOG.debug "JMX object name query returned {} values for {} at {} (repeating); "+
+                            "ignoring all", beans.size(), objectName.canonicalName, url
+                }
+            } else {
+                if (changed) {
+                    LOG.warn "JMX object {} not found at {}", objectName.canonicalName, url
+                } else {
+                    LOG.debug "JMX object {} not found at {} (repeating)", objectName.canonicalName, url
+                }
+            }
+            return null
+        } else {
+            notFoundMBeans.remove(objectName)
+            ObjectInstance bean = beans.find { true }
+            return bean
+        }
+    }
+    
     public void checkMBeanExistsEventually(ObjectName objectName, long timeoutMillis) {
         checkMBeanExistsEventually(objectName, timeoutMillis*TimeUnit.MILLISECONDS)
     }
     
     public void checkMBeanExistsEventually(ObjectName objectName, TimeDuration timeout) {
+        Set<ObjectInstance> beans = [] as Set
         boolean success = LanguageUtils.repeatUntilSuccess(timeout:timeout, "Wait for $objectName") {
-            return findMBean(objectName) != null
+            beans = findMBeans(objectName)
+            return beans.size() == 1
         }
         if (!success) {
-            throw new IllegalStateException("MBean $objectName not found within $timeout")
+            throw new IllegalStateException("MBean $objectName not found within $timeout" +
+                    (beans.size() > 1 ? "; found multiple matches: $beans" : ""))
         }
     }
     
