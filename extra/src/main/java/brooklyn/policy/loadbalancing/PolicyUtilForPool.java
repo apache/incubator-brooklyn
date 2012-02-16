@@ -3,9 +3,8 @@ package brooklyn.policy.loadbalancing;
 import java.util.Set;
 
 /**
- * Ported from Monterey v3; irrelevant bits removed.
- * 
- * @author splodge
+ * Provides conveniences for searching for hot/cold containers in a provided pool model.
+ * Ported from Monterey v3, with irrelevant bits removed.
  */
 public class PolicyUtilForPool<ContainerType, ItemType> {
     

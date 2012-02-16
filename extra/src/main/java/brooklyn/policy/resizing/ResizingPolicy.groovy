@@ -14,9 +14,17 @@ import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.policy.basic.AbstractPolicy
 import brooklyn.policy.loadbalancing.BalanceableWorkerPool
+import brooklyn.policy.loadbalancing.LoadBalancingPolicy;
 
 import com.google.common.base.Preconditions
 
+
+/**
+ * Policy that is attached to a <code>Resizable</code> entity and dynamically adjusts its size in response to
+ * emitted <code>POOL_COLD</code> and <code>POOL_HOT</code> events. (This policy does not itself determine whether
+ * the pool is hot or cold, but instead relies on these events being emitted by the monitored entity itself, or
+ * by another policy that is attached to it; see, for example, {@link LoadBalancingPolicy}.)
+ */
 public class ResizingPolicy extends AbstractPolicy {
     
     private static final Logger LOG = LoggerFactory.getLogger(ResizingPolicy.class)

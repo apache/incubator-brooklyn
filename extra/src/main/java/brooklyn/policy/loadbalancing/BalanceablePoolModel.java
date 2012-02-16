@@ -7,9 +7,7 @@ import brooklyn.location.Location;
 
 /**
  * Captures the state of a balanceable cluster of containers and all their constituent items, including workrates,
- * for consumption by a BalancingStrategy.
- * 
- * @author splodge
+ * for consumption by a {@link BalancingStrategy}.
  */
 public interface BalanceablePoolModel<ContainerType, ItemType> {
     
