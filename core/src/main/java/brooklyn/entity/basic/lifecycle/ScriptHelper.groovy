@@ -123,4 +123,24 @@ public class ScriptPart {
 	}
 	public boolean isEmpty() { lines.isEmpty() }
 
+    public static class CommonCommands {
+        /** returns a string for checking whether the given executable is available,
+         * and installing it if necessary;
+         * flags can contain common overrides e.g. for apt, yum, rpm  */
+        public static String installExecutable(Map flags, String executable) {
+            "which ${executable} || "+installPackage(flags, executable)
+        }
+        /** returns a string for installing the given package;
+         * flags can contain common overrides e.g. for apt, yum, rpm
+         * (as the package names can be different for each of those) */
+        public static String installPackage(Map flags, String packageDefaultName) {
+            "(which apt-get && apt-get install ${flags.apt?:packageDefaultName}) || "+
+                    "(which rpm && rpm -i ${flags.rpm?:packageDefaultName}) || "+
+                    "(which yum && yum install ${flags.yum?:packageDefaultName}) || "+
+                    "(echo \"No known package manager to install ${packageDefaultName}, failing\" && exit 44)"
+        }
+        public static final String INSTALL_TAR = installPackage("tar");
+        public static final String INSTALL_CURL = installPackage("curl");
+        public static final String INSTALL_WGET = installPackage("wget");
+    }
 }
