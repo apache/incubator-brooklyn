@@ -123,4 +123,26 @@ public class ScriptPart {
 	}
 	public boolean isEmpty() { lines.isEmpty() }
 
+    public static class CommonCommands {
+        /** returns a string for checking whether the given executable is available,
+         * and installing it if necessary, using {@link #installPackage} 
+         * and accepting the same flags e.g. for apt, yum, rpm */
+        public static String installExecutable(Map flags, String executable) {
+            "which ${executable} || "+installPackage(flags, executable)
+        }
+        /** returns a string for installing the given package;
+         * flags can contain common overrides e.g. for apt, yum, rpm
+         * (as the package names can be different for each of those), e.g.:
+         * installPackage("libssl-devel", yum: "openssl-devel", apt:"openssl libssl-dev zlib1g-dev");
+         * exit code 44 used to indicate failure */
+        public static String installPackage(Map flags, String packageDefaultName) {
+            "(which apt-get && apt-get install ${flags.apt?:packageDefaultName}) || "+
+                    "(which rpm && rpm -i ${flags.rpm?:packageDefaultName}) || "+
+                    "(which yum && yum install ${flags.yum?:packageDefaultName}) || "+
+                    "(echo \"No known package manager to install ${packageDefaultName}, failing\" && exit 44)"
+        }
+        public static final String INSTALL_TAR = installExecutable("tar");
+        public static final String INSTALL_CURL = installExecutable("curl");
+        public static final String INSTALL_WGET = installExecutable("wget");
+    }
 }

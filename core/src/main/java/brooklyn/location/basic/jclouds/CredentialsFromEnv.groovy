@@ -25,12 +25,17 @@ import brooklyn.util.flags.SetFromFlag
  *   brooklyn.jclouds.aws-ec2.public-key-file
  *   brooklyn.jclouds.aws-ec2.private-key-file
  * 
- * It will also support (in decreasing order of preference):
+ * It will also support the following syntax (in decreasing order of preference):
  * 
  *   JCLOUDS_AWS_EC2_IDENTITY  (and the others, using bash shell format)
  *   brooklyn.jclouds.identity  (and the others, just without the provider)
  *   JCLOUDS_IDENTITY  (and the others, using bash shell format without the provider)
- *   
+ *
+ * A number of other properties are also supported, listed in the SUPPORTED_* maps in JcloudsLocation.
+ * These include imageId, imageNameRegex, minRam, etc.  Note that the camel case referenced there
+ * should be converted to the hyphenated syntax above (brooklyn.jclouds.provider.image-id)
+ * or underscores in the case of environment variables (e.g. JCLOUDS_CLOUDSERVERS_UK_IMAGE_ID).
+ *  
  * @author aled, alex
  **/
 public class CredentialsFromEnv {
@@ -40,17 +45,9 @@ public class CredentialsFromEnv {
     // don't need to serialize as lookup is only done initially
     private transient final BrooklynProperties sysProps
 
-    @SetFromFlag    
-    final String provider
-    @SetFromFlag
-    final String identity
-    @SetFromFlag
-    final String credential
-    @SetFromFlag
-    final String publicKeyFile
-    @SetFromFlag
-    final String privateKeyFile
-    
+    /** map containing the extracted properties, e.g. "provider", "publicKeyFile", etc; use asMap() to access */
+    protected Map props = [:];
+        
     // TODO do we want the provider-specific JcloudsLocationTests which use this?
     // normal use case i think is for live tests to run through the different entities,
     // against a single given provider (with enhancement perhaps in future for multiple providers);
@@ -62,17 +59,30 @@ public class CredentialsFromEnv {
     }
     public CredentialsFromEnv(BrooklynProperties sysProps, String provider) {
         this.sysProps = sysProps;
-        this.provider = provider;
+        props.provider = provider;
+
+        JcloudsLocation.getAllSupportedProperties().each {
+            String v = getProviderSpecificValue(convertFromCamelToProperty(it));
+            if (v!=null) props[it] = v;
+        }
         
-        identity = getRequiredProviderSpecificValue("identity");
-        credential = getRequiredProviderSpecificValue("credential")
-        privateKeyFile = findProviderSpecificValueFile("private-key-file",
+        //these override the above
+        props.identity = getRequiredProviderSpecificValue("identity");
+        props.credential = getRequiredProviderSpecificValue("credential")
+        
+        // TODO do these need to be required?:
+        props.privateKeyFile = findProviderSpecificValueFile("private-key-file",
             ["~/.ssh/id_rsa", "~/.ssh/id_dsa"]);
-        
-        publicKeyFile = findProviderSpecificValueFile("public-key-file",
-            privateKeyFile?[privateKeyFile+".pub"]:[])
+        props.publicKeyFile = findProviderSpecificValueFile("public-key-file",
+            props.privateKeyFile?[props.privateKeyFile+".pub"]:[])
     }
 
+    public String getProvider() { props.provider }
+    public String getIdentity() { props.identity }
+    public String getCredential() { props.credential }
+    public String getPublicKeyFile() { props.publicKeyFile }
+    public String getPrivateKeyFile() { props.privateKeyFile }
+    
     protected String getRequiredProviderSpecificValue(String type) {
         return getProviderSpecificValue(failIfNone: true, type);
     }
@@ -101,7 +111,8 @@ public class CredentialsFromEnv {
             if (ff.exists()) return f;
         }
         throw new IllegalStateException("Unable to locate "+
-            (candidates.size()>1 ? "any of the candidate SSH key files "+candidates : "SSH key file "+candidates.get(0) ) );
+            (candidates.size()>1 ? "any of the candidate SSH key files "+candidates : "SSH key file "+candidates.get(0) ) +
+            "; set brooklyn.jclouds.${provider}.public-key-file" );
     }
     
     static Set WARNED_MISSING_KEY_FILES = []
@@ -128,15 +139,18 @@ public class CredentialsFromEnv {
         f2.putAll(flags);
         
         //for all annotated fields, map to brooklyn.jclouds.$provider namespace
-        def fields = FlagUtils.getAnnotatedFields(CredentialsFromEnv.class)
-        fields.each { Field f, SetFromFlag cf ->
-            String fv = f2.remove(f.getName())
+        JcloudsLocation.allSupportedProperties.each { String n ->
+            String fv = f2.remove(n)
             if (fv!=null) {
-                f2.put("brooklyn.jclouds."+provider+"."+convertFromCamelToProperty(f.getName()), fv)
+                f2.put("brooklyn.jclouds."+provider+"."+convertFromCamelToProperty(n), fv)
             }
         }
          
         new CredentialsFromEnv(f2, provider)        
+    }
+    
+    public Map asMap() {
+        return props;
     }
     
 }
