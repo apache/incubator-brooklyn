@@ -252,8 +252,12 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
 
     public static final Map SUPPORTED_TEMPLATE_OPTIONS_PROPERTIES = [
             securityGroups:    { TemplateOptions t, Map props, Object v -> 
-                String[] securityGroups = (v instanceof Collection) ? v.toArray(new String[0]) : v;
-                t.as(EC2TemplateOptions.class).securityGroups(securityGroups); 
+                if (t instanceof EC2TemplateOptions) {
+                    String[] securityGroups = (v instanceof Collection) ? v.toArray(new String[0]) : v;
+                    t.as(EC2TemplateOptions.class).securityGroups(securityGroups);
+                } else {
+                    LOG.info("ignoring securityGroups({$v}) in VM creation because not EC2 (${t})");
+                }
             },
             inboundPorts:      { TemplateOptions t, Map props, Object v ->
                 Object[] inboundPorts = (v instanceof Collection) ? v.toArray(new Integer[0]) : v;
