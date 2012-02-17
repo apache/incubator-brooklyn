@@ -185,7 +185,7 @@ public class InheritedConfigTest {
             assertEquals(entity.getConfig(TestEntity.CONF_NAME), "aval")
             long endtime = System.currentTimeMillis()
             
-            assertTrue((endtime - starttime) > 10, "starttime=$starttime; endtime=$endtime")
+            assertTrue((endtime - starttime) >= 10, "starttime=$starttime; endtime=$endtime")
             
         } finally {
             t.interrupt()

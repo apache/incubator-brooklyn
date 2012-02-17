@@ -48,8 +48,6 @@ public class CredentialsFromEnv {
     /** map containing the extracted properties, e.g. "provider", "publicKeyFile", etc; use asMap() to access */
     protected Map props = [:];
         
-    public String getProvider() { props.provider }
-    
     // TODO do we want the provider-specific JcloudsLocationTests which use this?
     // normal use case i think is for live tests to run through the different entities,
     // against a single given provider (with enhancement perhaps in future for multiple providers);
@@ -79,6 +77,12 @@ public class CredentialsFromEnv {
             props.privateKeyFile?[props.privateKeyFile+".pub"]:[])
     }
 
+    public String getProvider() { props.provider }
+    public String getIdentity() { props.identity }
+    public String getCredential() { props.credential }
+    public String getPublicKeyFile() { props.publicKeyFile }
+    public String getPrivateKeyFile() { props.privateKeyFile }
+    
     protected String getRequiredProviderSpecificValue(String type) {
         return getProviderSpecificValue(failIfNone: true, type);
     }

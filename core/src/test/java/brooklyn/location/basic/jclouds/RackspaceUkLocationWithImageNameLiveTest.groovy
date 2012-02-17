@@ -13,7 +13,7 @@ public class RackspaceUkLocationWithImageNameLiveTest {
     
     private static final String PROVIDER = "cloudservers-uk"
     
-    @Test
+    @Test(groups = "Live")
     public void withImageNamePattern() {
         BrooklynProperties props = BrooklynProperties.Factory.newDefault();
         props["brooklyn.jclouds.cloudservers-uk.image-name-regex"] = "linux-no-firewall";
