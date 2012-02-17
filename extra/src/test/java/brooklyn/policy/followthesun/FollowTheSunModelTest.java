@@ -22,11 +22,11 @@ public class FollowTheSunModelTest {
     private MockItemEntity item1 = new MockItemEntity();
     private MockItemEntity item2 = new MockItemEntity();
     
-    private DefaultFollowTheSunModel<MockContainerEntity, MockItemEntity> model;
+    private DefaultFollowTheSunModel<Location, MockContainerEntity, MockItemEntity> model;
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        model = new DefaultFollowTheSunModel<MockContainerEntity, MockItemEntity>("myname");
+        model = new DefaultFollowTheSunModel<Location, MockContainerEntity, MockItemEntity>("myname");
     }
     
     @Test

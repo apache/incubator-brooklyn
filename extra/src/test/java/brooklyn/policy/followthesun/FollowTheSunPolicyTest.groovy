@@ -4,11 +4,11 @@ import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
+import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.Entity
 import brooklyn.event.AttributeSensor
-import brooklyn.policy.loadbalancing.LoadBalancingPolicy
 import brooklyn.policy.loadbalancing.MockContainerEntity
 import brooklyn.policy.loadbalancing.MockItemEntity
 import brooklyn.test.entity.TestApplication
@@ -17,6 +17,15 @@ import com.google.common.collect.ImmutableMap
 
 public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
     
+    private String loc1Name
+    private String loc2Name
+    
+    @BeforeMethod(alwaysRun=true) 
+    public void before() {
+        super.before()
+        loc1Name = loc1.getName()
+        loc2Name = loc2.getName()
+    }
     @Test
     public void testPolicyUpdatesModel() {
         MockContainerEntity containerA = newContainer(app, loc1, "A")
@@ -27,9 +36,9 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
         executeUntilSucceeds(timeout:TIMEOUT_MS) {
             assertEquals(model.getItems(), [item1, item2] as Set)
             assertEquals(model.getItemContainer(item1), containerA)
-            assertEquals(model.getItemLocation(item1), loc1)
-            assertEquals(model.getContainerLocation(containerA), loc1)
-            assertEquals(model.getDirectSendsToItemByLocation(), [(item2):[(loc1):11d]])
+            assertEquals(model.getItemLocation(item1), loc1Name)
+            assertEquals(model.getContainerLocation(containerA), loc1Name)
+            assertEquals(model.getDirectSendsToItemByLocation(), [(item2):[(loc1Name):11d]])
         }
     }
     

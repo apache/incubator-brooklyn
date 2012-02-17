@@ -20,17 +20,19 @@ import brooklyn.policy.followthesun.FollowTheSunPool.ContainerItemPair
 import brooklyn.policy.loadbalancing.Movable
 
 import com.google.common.base.Preconditions
-import com.google.common.collect.Iterables
 
 public class FollowTheSunPolicy extends AbstractPolicy {
 
+    // FIXME Use Location rather than String type for the location
+    
     private static final Logger LOG = LoggerFactory.getLogger(FollowTheSunPolicy.class)
 
     public static final String NAME = "Follow the Sun (Inter-Geography Latency Optimization)";
 
+    private final AttributeSensor<String> locationSensor
     private final AttributeSensor<? extends Number> itemUsageMetric
-    private final FollowTheSunModel<Entity, Entity> model
-    private final FollowTheSunStrategy<Entity, ?> strategy
+    private final FollowTheSunModel<String, Entity, Entity> model
+    private final FollowTheSunStrategy<String, Entity, ?> strategy
     
     private FollowTheSunPool poolEntity
     private ExecutorService executor = Executors.newSingleThreadExecutor()
@@ -41,8 +43,7 @@ public class FollowTheSunPolicy extends AbstractPolicy {
     private boolean loggedConstraintsIgnored = false;
     
     Closure locationFinder = { Entity e ->
-        Collection<Location> locs = e.getLocations()
-        return (locs.isEmpty()) ? null : Iterables.get(locs, 0)
+        return e.getAttribute(locationSensor)
     }
     
     private final SensorEventListener<?> eventHandler = new SensorEventListener<Object>() {
@@ -55,8 +56,11 @@ public class FollowTheSunPolicy extends AbstractPolicy {
                 case itemUsageMetric:
                     onItemMetricUpdate(source, (Map<? extends Entity, Double>) value, true)
                     break
+                case locationSensor:
+                    onContainerLocationUpdate(source, (String) value, true)
+                    break
                 case FollowTheSunPool.CONTAINER_ADDED:
-                    onContainerAdded((Entity) value, locationFinder.call(value), true)
+                    onContainerAdded((Entity) value, true)
                     break
                 case FollowTheSunPool.CONTAINER_REMOVED:
                     onContainerRemoved((Entity) value, true)
@@ -76,12 +80,14 @@ public class FollowTheSunPolicy extends AbstractPolicy {
     }
     
     // FIXME parameters: use a more groovy way of doing it, that's consistent with other policies/entities?
-    public FollowTheSunPolicy(Map flags = [:], AttributeSensor itemUsageMetric, FollowTheSunModel<? extends Entity, ? extends Entity> model, FollowTheSunParameters parameters) {
+    public FollowTheSunPolicy(Map flags = [:], AttributeSensor itemUsageMetric, AttributeSensor locationSensor, 
+            FollowTheSunModel<String, ? extends Entity, ? extends Entity> model, FollowTheSunParameters parameters) {
         super(flags)
         this.itemUsageMetric = itemUsageMetric
+        this.locationSensor = locationSensor
         this.model = model
         this.parameters = parameters
-        this.strategy = new FollowTheSunStrategy<Entity, Object>(model, parameters) // TODO: extract interface, inject impl
+        this.strategy = new FollowTheSunStrategy<String, Entity, Object>(model, parameters) // TODO: extract interface, inject impl
     }
     
     @Override
@@ -99,7 +105,7 @@ public class FollowTheSunPolicy extends AbstractPolicy {
         
         // Take heed of any extant containers.
         for (Entity container : poolEntity.getContainerGroup().getMembers()) {
-            onContainerAdded(container, locationFinder.call(container), false)
+            onContainerAdded(container, false)
         }
         for (Entity item : poolEntity.getItemGroup().getMembers()) {
             onItemAdded(item, item.getAttribute(Movable.CONTAINER), false)
@@ -144,9 +150,13 @@ public class FollowTheSunPolicy extends AbstractPolicy {
         }
     }
     
-    private void onContainerAdded(Entity container, Location location, boolean rebalanceNow) {
+    private void onContainerAdded(Entity container, boolean rebalanceNow) {
+        subscribe(container, locationSensor, eventHandler)
+        String location = locationFinder.call(container)
+        
         if (LOG.isTraceEnabled()) LOG.trace("{} recording addition of container {} in location {}", this, container, location)
         model.onContainerAdded(container, location)
+        
         if (rebalanceNow) scheduleLatencyReductionJig()
     }
     
@@ -183,6 +193,12 @@ public class FollowTheSunPolicy extends AbstractPolicy {
     private void onItemMoved(Entity item, Entity parentContainer, boolean rebalanceNow) {
         if (LOG.isTraceEnabled()) LOG.trace("{} recording moving of item {} to {}", this, item, parentContainer)
         model.onItemMoved(item, parentContainer)
+        if (rebalanceNow) scheduleLatencyReductionJig()
+    }
+    
+    private void onContainerLocationUpdate(Entity container, String location, boolean rebalanceNow) {
+        if (LOG.isTraceEnabled()) LOG.trace("{} recording location for container {}, new value {}", this, container, location)
+        model.onContainerLocationUpdated(container, location)
         if (rebalanceNow) scheduleLatencyReductionJig()
     }
     

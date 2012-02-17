@@ -35,12 +35,14 @@ public class AbstractFollowTheSunPolicyTest {
     
     public static final AttributeSensor<Integer> TEST_METRIC =
         new BasicAttributeSensor<Map<Entity,Double>>(Map.class, "test.metric", "Dummy workrate for test entities")
-    
+
+    public static final AttributeSensor<Integer> LOCATION_SENSOR = MockContainerEntity.LOCATION
+
     protected TestApplication app
     protected SimulatedLocation loc1
     protected SimulatedLocation loc2
     protected FollowTheSunPool pool
-    protected DefaultFollowTheSunModel<Entity, Entity> model
+    protected DefaultFollowTheSunModel<Location, Entity, Entity> model
     protected FollowTheSunPolicy policy
     protected Group containerGroup
     protected Group itemGroup
@@ -52,8 +54,12 @@ public class AbstractFollowTheSunPolicyTest {
 
         MockItemEntity.totalMoveCount.set(0)
         
+        loc1 = new SimulatedLocation(name:"loc1")
+        loc2 = new SimulatedLocation(name:"loc2")
+        
         // TODO: improve the default impl to avoid the need for this anonymous overrider of 'moveItem'
-        model = new DefaultFollowTheSunModel<Entity, Entity>("pool-model") {
+        // FIXME: Location type currently is string here!
+        model = new DefaultFollowTheSunModel<Location, Entity, Entity>("pool-model") {
             @Override public void moveItem(Entity item, Entity newContainer) {
                 ((Movable) item).move(newContainer)
                 onItemMoved(item, newContainer)
@@ -65,7 +71,7 @@ public class AbstractFollowTheSunPolicyTest {
         itemGroup = new DynamicGroup([name:"itemGroup"], app, { e -> (e instanceof MockItemEntity) })
         pool = new FollowTheSunPool([:], app)
         pool.setContents(containerGroup, itemGroup)
-        policy = new FollowTheSunPolicy([:], TEST_METRIC, model, FollowTheSunParameters.newDefault())
+        policy = new FollowTheSunPolicy([:], TEST_METRIC, LOCATION_SENSOR, model, FollowTheSunParameters.newDefault())
         pool.addPolicy(policy)
         app.start([loc1, loc2])
     }
