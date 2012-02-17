@@ -134,6 +134,18 @@ public class AbstractFollowTheSunPolicyTest {
         return container
     }
 
+    // FIXME Lock this item in place, so it is not migrated
+    protected static MockItemEntity newLockedItem(Application app, MockContainerEntity container, String name) {
+        MockItemEntity item = new MockItemEntity([displayName:name], app)
+        //item.setConfig(Movable.IMMOVABLE, true)
+        LOG.debug("Managing new locked item {}", container)
+        app.getManagementContext().manage(item)
+        if (container != null) {
+            item.move(container)
+        }
+        return item
+    }
+    
     protected static MockItemEntity newItem(Application app, MockContainerEntity container, String name) {
         MockItemEntity item = new MockItemEntity([displayName:name], app)
         LOG.debug("Managing new item {}", container)
