@@ -90,20 +90,19 @@ public class DefaultFollowTheSunModel<LocationType, ContainerType, ItemType> imp
         Map<ItemType, Map<LocationType, Double>> result = new LinkedHashMap<ItemType, Map<LocationType,Double>>(getNumItems());
         
         for (Map.Entry<ItemType, Map<? extends ItemType, Double>> entry : itemUsage.entrySet()) {
-            ItemType sourceItem = entry.getKey();
-            LocationType sourceLocation = getItemLocation(sourceItem);
-            Map<? extends ItemType, Double> targets = entry.getValue();
+            ItemType targetItem = entry.getKey();
+            Map<? extends ItemType, Double> sources = entry.getValue();
+            if (sources.isEmpty()) continue; // no-one talking to us
             
-            for (Map.Entry<? extends ItemType, Double> entry2 : targets.entrySet()) {
-                ItemType targetItem = entry2.getKey();
+            Map<LocationType, Double> targetUsageByLocation = new LinkedHashMap<LocationType, Double>();
+            result.put(targetItem, targetUsageByLocation);
+
+            for (Map.Entry<? extends ItemType, Double> entry2 : sources.entrySet()) {
+                ItemType sourceItem = entry2.getKey();
+                LocationType sourceLocation = getItemLocation(sourceItem);
                 double usageVal = (entry.getValue() != null) ? entry2.getValue() : 0d;
                 if (sourceItem.equals(targetItem)) continue; // ignore msgs to self
                 
-                Map<LocationType, Double> targetUsageByLocation = result.get(targetItem);
-                if (targetUsageByLocation == null) {
-                    targetUsageByLocation = new LinkedHashMap<LocationType, Double>();
-                    result.put(targetItem, targetUsageByLocation);
-                }
                 Double usageValTotal = targetUsageByLocation.get(sourceLocation);
                 double newUsageValTotal = (usageValTotal != null ? usageValTotal : 0d) + usageVal;
                 targetUsageByLocation.put(sourceLocation, newUsageValTotal);
@@ -148,7 +147,7 @@ public class DefaultFollowTheSunModel<LocationType, ContainerType, ItemType> imp
     }
     
     public void onContainerLocationUpdated(ContainerType container, LocationType location) {
-        if (containers.contains(container)) {
+        if (!containers.contains(container)) {
             // unknown container; probably just stopped? 
             // If this overtook onContainerAdded, then assume we'll lookup the location and get it right in onContainerAdded
             LOG.debug("Ignoring setting of location for unknown container {}, to {}", container, location);
@@ -279,7 +278,8 @@ public class DefaultFollowTheSunModel<LocationType, ContainerType, ItemType> imp
         return val == NULL || val == NULL_LOCATION;
     }
     
-    private static <K,V> Map<K,V> newHashMap(K k, V v) {
+    // TODO Move to utils; or stop AbstractLocation from removing things from the map!
+    public static <K,V> Map<K,V> newHashMap(K k, V v) {
         Map<K,V> result = Maps.newLinkedHashMap();
         result.put(k, v);
         return result;

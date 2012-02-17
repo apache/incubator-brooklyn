@@ -31,7 +31,7 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
         MockContainerEntity containerA = newContainer(app, loc1, "A")
         MockItemEntity item1 = newItem(app, containerA, "1")
         MockItemEntity item2 = newItem(app, containerA, "2")
-        item1.setAttribute(TEST_METRIC, ImmutableMap.of(item2, 11d))
+        item2.setAttribute(TEST_METRIC, ImmutableMap.of(item1, 11d))
         
         executeUntilSucceeds(timeout:TIMEOUT_MS) {
             assertEquals(model.getItems(), [item1, item2] as Set)
@@ -62,7 +62,7 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
         MockItemEntity item1 = newItem(app, containerA, "1")
         MockItemEntity item2 = newItem(app, containerB, "2")
 
-        item2.setAttribute(TEST_METRIC, ImmutableMap.of(item1, 100d))
+        item1.setAttribute(TEST_METRIC, ImmutableMap.of(item2, 100d))
         
         assertItemDistributionEventually([(containerA):[], (containerB):[item1,item2]])
     }
@@ -75,7 +75,7 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
         MockItemEntity item1 = newItem(app, containerA, "1")
         MockItemEntity item2 = newItem(app, containerB, "2")
 
-        item2.setAttribute(TEST_METRIC, ImmutableMap.of(item1, 0.1d))
+        item1.setAttribute(TEST_METRIC, ImmutableMap.of(item2, 0.1d))
         
         Thread.sleep(SHORT_WAIT_MS)
         assertItemDistributionEventually([(containerA):[item1], (containerB):[item2]])
@@ -90,8 +90,7 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
         MockItemEntity item2 = newItem(app, containerA, "2")
         MockItemEntity item3 = newItem(app, containerB, "3")
         
-        item2.setAttribute(TEST_METRIC, ImmutableMap.of(item1, 100d))
-        item3.setAttribute(TEST_METRIC, ImmutableMap.of(item1, 100.1d))
+        item1.setAttribute(TEST_METRIC, ImmutableMap.of(item2, 100d, item3, 100.1d))
         
         Thread.sleep(SHORT_WAIT_MS)
         assertItemDistributionEventually([(containerA):[item1,item2], (containerB):[item3]])
@@ -106,9 +105,9 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
         MockItemEntity item2 = newItem(app, containerB, "2")
         
         item1.setAttribute(TEST_METRIC, ImmutableMap.of(item1, 100d))
-        item2.setAttribute(TEST_METRIC, ImmutableMap.of(item1, 100d))
+        item2.setAttribute(TEST_METRIC, ImmutableMap.of(item2, 100d))
         
         Thread.sleep(SHORT_WAIT_MS)
-        assertItemDistributionEventually([(containerA):[], (containerB):[item1,item2]])
+        assertItemDistributionEventually([(containerA):[item1], (containerB):[item2]])
     }
 }
