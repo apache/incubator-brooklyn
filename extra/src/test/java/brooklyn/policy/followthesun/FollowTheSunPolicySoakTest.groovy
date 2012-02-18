@@ -55,7 +55,7 @@ public class FollowTheSunPolicySoakTest extends AbstractFollowTheSunPolicyTest {
         runFollowTheSunSoakTest(config)
     }
     
-    @Test(groups=["WIP","Integration","Acceptance"]) // acceptance group, because it's slow to run many cycles
+    @Test(groups=["Integration","Acceptance"]) // integration group, because it's slow to run many cycles
     public void testLoadBalancingSoakTest() {
         RunConfig config = new RunConfig()
         config.numCycles = 100
@@ -67,7 +67,7 @@ public class FollowTheSunPolicySoakTest extends AbstractFollowTheSunPolicyTest {
         runFollowTheSunSoakTest(config)
     }
 
-    @Test(groups=["WIP","Integration","Acceptance"]) // acceptance group, because it's slow to run many cycles
+    @Test(groups=["Integration","Acceptance"]) // integration group, because it's slow to run many cycles
     public void testLoadBalancingManyItemsSoakTest() {
         RunConfig config = new RunConfig()
         config.numCycles = 100
@@ -81,7 +81,7 @@ public class FollowTheSunPolicySoakTest extends AbstractFollowTheSunPolicyTest {
         runFollowTheSunSoakTest(config)
     }
 
-    @Test(groups=["WIP","Integration","Acceptance"])
+    @Test(groups=["Integration","Acceptance"]) // integration group, because it's slow to run many cycles
     public void testLoadBalancingManyManyItemsTest() {
         RunConfig config = new RunConfig()
         config.numCycles = 1
@@ -91,6 +91,7 @@ public class FollowTheSunPolicySoakTest extends AbstractFollowTheSunPolicyTest {
         config.numMovableItems = 1000
         config.numContainerStopsPerCycle = 0
         config.numItemStopsPerCycle = 0
+        config.timeout_ms = 30*1000
         config.verbose = false
         
         runFollowTheSunSoakTest(config)
@@ -105,6 +106,7 @@ public class FollowTheSunPolicySoakTest extends AbstractFollowTheSunPolicyTest {
         
         int numContainerStopsPerCycle = config.numContainerStopsPerCycle
         int numItemStopsPerCycle = config.numItemStopsPerCycle
+        int timeout_ms = config.timeout_ms
         boolean verbose = config.verbose
         
         MockItemEntity.totalMoveCount.set(0)
@@ -129,7 +131,7 @@ public class FollowTheSunPolicySoakTest extends AbstractFollowTheSunPolicyTest {
                 lockedItems.put(loc, item)
             }
         }
-
+        
         for (int i in 1..numMovableItems) {
             MockContainerEntity container = Iterables.get(containers.values(), i%containers.size());
             MockItemEntity item = newItem(app, container, "item-movable$i")
@@ -186,20 +188,21 @@ public class FollowTheSunPolicySoakTest extends AbstractFollowTheSunPolicyTest {
             }
 
             // Assert that the items all end up in the location with maximum load-generation
-            executeUntilSucceeds(timeout:TIMEOUT_MS) {
+            executeUntilSucceeds(timeout:timeout_ms) {
                 List<Location> itemLocs = movableItems.collect { 
                     Collection<Location> locs = it.getAttribute(Movable.CONTAINER)?.getLocations()
                     return (locs != null && locs.size() > 0) ? Iterables.get(locs, 0) : null
                 }
+                List<String> itemLocNames = itemLocs.collect { it?.getName() }
                 String errMsg
                 if (verbose) {
-                    errMsg = verboseDumpToString()+"; itemLocs=$itemLocs"
+                    errMsg = verboseDumpToString()+"; itemLocs=$itemLocNames"
                 } else {
-                    Collection<Location> locsInUse = new LinkedHashSet<Location>(itemLocs)
-                    errMsg = "locsInUse=$locsInUse; totalMoves=${MockItemEntity.totalMoveCount}"
+                    Collection<String> locNamesInUse = new LinkedHashSet<String>(itemLocNames)
+                    errMsg = "locsInUse=$locNamesInUse; totalMoves=${MockItemEntity.totalMoveCount}"
                 }
                 
-                assertEquals(itemLocs.collect {it.getName()}, Collections.nCopies(movableItems.size(), busiestLocation.getName()), errMsg)
+                assertEquals(itemLocNames, Collections.nCopies(movableItems.size(), busiestLocation.getName()), errMsg)
             }
         }
     }
@@ -212,6 +215,7 @@ public class FollowTheSunPolicySoakTest extends AbstractFollowTheSunPolicyTest {
         int numMovableItems = 5
         int numContainerStopsPerCycle = 0
         int numItemStopsPerCycle = 0
+        int timeout_ms = TIMEOUT_MS
         boolean verbose = true
     }
 

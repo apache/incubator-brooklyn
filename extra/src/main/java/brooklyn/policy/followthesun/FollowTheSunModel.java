@@ -31,7 +31,7 @@ public interface FollowTheSunModel<LocationType, ContainerType, ItemType> {
     public void onContainerRemoved(ContainerType container);
     public void onContainerLocationUpdated(ContainerType container, LocationType location);
 
-    public void onItemAdded(ItemType item, ContainerType parentContainer);
+    public void onItemAdded(ItemType item, ContainerType parentContainer, boolean immovable);
     public void onItemRemoved(ItemType item);
     public void onItemUsageUpdated(ItemType item, Map<? extends ItemType, Double> newValues);
     public void onItemMoved(ItemType item, ContainerType newContainer);

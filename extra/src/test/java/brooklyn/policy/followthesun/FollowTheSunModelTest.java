@@ -1,6 +1,8 @@
 package brooklyn.policy.followthesun;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.assertFalse;
 
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -34,8 +36,8 @@ public class FollowTheSunModelTest {
     public void testSimpleAddAndRemove() throws Exception {
         model.onContainerAdded(container1, loc1);
         model.onContainerAdded(container2, loc2);
-        model.onItemAdded(item1, container1);
-        model.onItemAdded(item2, container2);
+        model.onItemAdded(item1, container1, true);
+        model.onItemAdded(item2, container2, true);
         
         assertEquals(model.getContainerLocation(container1), loc1);
         assertEquals(model.getContainerLocation(container2), loc2);
@@ -61,8 +63,8 @@ public class FollowTheSunModelTest {
     public void testItemUsageMetrics() throws Exception {
         model.onContainerAdded(container1, loc1);
         model.onContainerAdded(container2, loc2);
-        model.onItemAdded(item1, container1);
-        model.onItemAdded(item2, container2);
+        model.onItemAdded(item1, container1, true);
+        model.onItemAdded(item2, container2, true);
 
         model.onItemUsageUpdated(item1, ImmutableMap.of(item2, 12d));
         model.onItemUsageUpdated(item2, ImmutableMap.of(item1, 11d));
@@ -75,8 +77,8 @@ public class FollowTheSunModelTest {
     public void testItemUsageReportedIfLocationSetAfterUsageUpdate() throws Exception {
         model.onContainerAdded(container1, null);
         model.onContainerAdded(container2, null);
-        model.onItemAdded(item1, container1);
-        model.onItemAdded(item2, container2);
+        model.onItemAdded(item1, container1, true);
+        model.onItemAdded(item2, container2, true);
         model.onItemUsageUpdated(item1, ImmutableMap.of(item2, 12d));
         model.onContainerLocationUpdated(container1, loc1);
         model.onContainerLocationUpdated(container2, loc2);
@@ -89,9 +91,9 @@ public class FollowTheSunModelTest {
     public void testItemUsageMetricsSummedForActorsInSameLocation() throws Exception {
         model.onContainerAdded(container1, loc1);
         model.onContainerAdded(container2, loc2);
-        model.onItemAdded(item1, container1);
-        model.onItemAdded(item2, container2);
-        model.onItemAdded(item3, container2);
+        model.onItemAdded(item1, container1, true);
+        model.onItemAdded(item2, container2, true);
+        model.onItemAdded(item3, container2, true);
 
         model.onItemUsageUpdated(item1, ImmutableMap.of(item2, 12d, item3, 13d));
         
@@ -101,7 +103,7 @@ public class FollowTheSunModelTest {
     
     @Test
     public void testItemAddedWithNoContainer() throws Exception {
-        model.onItemAdded(item1, null);
+        model.onItemAdded(item1, null, true);
 
         assertEquals(model.getItems(), ImmutableSet.of(item1));
         assertEquals(model.getItemContainer(item1), null);
@@ -110,7 +112,7 @@ public class FollowTheSunModelTest {
     
     @Test
     public void testItemAddedBeforeContainer() throws Exception {
-        model.onItemAdded(item1, container1);
+        model.onItemAdded(item1, container1, true);
         model.onContainerAdded(container1, loc1);
 
         assertEquals(model.getItems(), ImmutableSet.of(item1));
@@ -121,12 +123,20 @@ public class FollowTheSunModelTest {
     @Test
     public void testItemMovedBeforeContainerAdded() throws Exception {
         model.onContainerAdded(container1, loc1);
-        model.onItemAdded(item1, container1);
+        model.onItemAdded(item1, container1, true);
         model.onItemMoved(item1, container2);
         model.onContainerAdded(container2, loc2);
 
         assertEquals(model.getItems(), ImmutableSet.of(item1));
         assertEquals(model.getItemContainer(item1), container2);
         assertEquals(model.getItemLocation(item1), loc2);
+    }
+    
+    @Test
+    public void testItemAddedAnswersMovability() throws Exception {
+        model.onItemAdded(item1, container1, true);
+        model.onItemAdded(item2, container1, false);
+        assertTrue(model.isItemMoveable(item1));
+        assertFalse(model.isItemMoveable(item2));
     }
 }

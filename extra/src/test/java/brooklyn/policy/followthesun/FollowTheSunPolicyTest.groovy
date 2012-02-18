@@ -147,4 +147,28 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
         
         assertItemDistributionEventually([(containerA):[item1, item2, item3], (containerB):[]])
     }
+    
+    @Test
+    public void testImmovableItemIsNotMoved() {
+        MockContainerEntity containerA = newContainer(app, loc1, "A")
+        MockContainerEntity containerB = newContainer(app, loc2, "B")
+        MockItemEntity item1 = newLockedItem(app, containerA, "1")
+        MockItemEntity item2 = newItem(app, containerB, "2")
+        
+        item1.setAttribute(TEST_METRIC, ImmutableMap.of(item2, 100d))
+        
+        assertItemDistributionContinually([(containerA):[item1], (containerB):[item2]])
+    }
+    
+    @Test
+    public void testImmovableItemContributesTowardsLoad() {
+        MockContainerEntity containerA = newContainer(app, loc1, "A")
+        MockContainerEntity containerB = newContainer(app, loc2, "B")
+        MockItemEntity item1 = newLockedItem(app, containerA, "1")
+        MockItemEntity item2 = newItem(app, containerA, "2")
+        
+        item2.setAttribute(TEST_METRIC, ImmutableMap.of(item1, 100d))
+        
+        assertItemDistributionContinually([(containerA):[item1, item2], (containerB):[]])
+    }
 }

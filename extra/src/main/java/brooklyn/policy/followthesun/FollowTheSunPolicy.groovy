@@ -173,9 +173,10 @@ public class FollowTheSunPolicy extends AbstractPolicy {
         subscribe(item, itemUsageMetric, eventHandler)
         
         // Update the model, including the current metric value (if any).
-        model.onItemAdded(item, parentContainer)
-
         Map<? extends Entity, Double> currentValue = item.getAttribute(itemUsageMetric)
+        boolean immovable = item.getConfig(Movable.IMMOVABLE)?:false
+        model.onItemAdded(item, parentContainer, immovable)
+
         if (currentValue != null) {
             model.onItemUsageUpdated(item, currentValue)
         }

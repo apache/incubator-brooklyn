@@ -4,6 +4,7 @@ import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
+import java.util.List
 import java.util.Random
 
 import org.slf4j.Logger
@@ -23,13 +24,14 @@ import brooklyn.policy.loadbalancing.MockContainerEntity
 import brooklyn.policy.loadbalancing.MockItemEntity
 import brooklyn.policy.loadbalancing.Movable
 import brooklyn.test.entity.TestApplication
+import brooklyn.util.internal.Repeater
 
 public class AbstractFollowTheSunPolicyTest {
     
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractFollowTheSunPolicyTest.class)
     
     protected static final long TIMEOUT_MS = 10*1000;
-    protected static final long SHORT_WAIT_MS = 100;
+    protected static final long SHORT_WAIT_MS = 250;
     
     protected static final long CONTAINER_STARTUP_DELAY_MS = 100
     
@@ -95,17 +97,36 @@ public class AbstractFollowTheSunPolicyTest {
     protected void assertItemDistributionEventually(Map<MockContainerEntity, Collection<MockItemEntity>> expected) {
         try {
             executeUntilSucceeds(timeout:TIMEOUT_MS) {
-                String errMsg = verboseDumpToString()
-                for (Map.Entry<MockContainerEntity, Collection<MockItemEntity>> entry : expected.entrySet()) {
-                    MockContainerEntity container = entry.getKey()
-                    Collection<MockItemEntity> expectedItems = entry.getValue()
-                    
-                    assertEquals(container.getBalanceableItems() as Set, expectedItems as Set)
-                }
+                assertItemDistribution(expected)
             }
         } catch (AssertionError e) {
             String errMsg = e.getMessage()+"; "+verboseDumpToString()
             throw new RuntimeException(errMsg, e);
+        }
+    }
+
+    protected void assertItemDistributionContinually(Map<MockContainerEntity, Collection<MockItemEntity>> expected) {
+        try {
+            new Repeater()
+                .every((long)(SHORT_WAIT_MS/10))
+                .limitIterationsTo(10)
+                .rethrowExceptionImmediately()
+                .until({false})
+                .repeat( { assertItemDistribution(expected) } )
+                .run()
+        } catch (AssertionError e) {
+            String errMsg = e.getMessage()+"; "+verboseDumpToString()
+            throw new RuntimeException(errMsg, e);
+        }
+    }
+
+    protected void assertItemDistribution(Map<MockContainerEntity, Collection<MockItemEntity>> expected) {
+        String errMsg = verboseDumpToString()
+        for (Map.Entry<MockContainerEntity, Collection<MockItemEntity>> entry : expected.entrySet()) {
+            MockContainerEntity container = entry.getKey()
+            Collection<MockItemEntity> expectedItems = entry.getValue()
+            
+            assertEquals(container.getBalanceableItems() as Set, expectedItems as Set)
         }
     }
 

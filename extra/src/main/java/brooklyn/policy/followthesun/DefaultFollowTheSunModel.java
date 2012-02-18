@@ -34,7 +34,8 @@ public class DefaultFollowTheSunModel<LocationType, ContainerType, ItemType> imp
     private final Map<ItemType, ContainerType> itemToContainer = new ConcurrentHashMap<ItemType, ContainerType>();
     private final Map<ContainerType, LocationType> containerToLocation = new ConcurrentHashMap<ContainerType, LocationType>();
     private final Map<ItemType, LocationType> itemToLocation = new ConcurrentHashMap<ItemType, LocationType>();
-    public Map<ItemType, Map<? extends ItemType, Double>> itemUsage = new ConcurrentHashMap<ItemType, Map<? extends ItemType,Double>>();
+    private final Map<ItemType, Map<? extends ItemType, Double>> itemUsage = new ConcurrentHashMap<ItemType, Map<? extends ItemType,Double>>();
+    private final Set<ItemType> immovableItems = Collections.newSetFromMap(new ConcurrentHashMap<ItemType, Boolean>());
 
     public DefaultFollowTheSunModel(String name) {
         this.name = name;
@@ -75,7 +76,8 @@ public class DefaultFollowTheSunModel<LocationType, ContainerType, ItemType> imp
     }
     
     @Override public boolean isItemMoveable(ItemType item) {
-        return true; // TODO?
+        // If don't know about item, then assume not movable; otherwise has this item been explicitly flagged as immovable?
+        return hasItem(item) && !immovableItems.contains(item);
     }
     
     @Override public boolean isItemAllowedIn(ItemType item, LocationType location) {
@@ -165,8 +167,12 @@ public class DefaultFollowTheSunModel<LocationType, ContainerType, ItemType> imp
     }
 
     @Override
-    public void onItemAdded(ItemType item, ContainerType container) {
+    public void onItemAdded(ItemType item, ContainerType container, boolean immovable) {
         // idempotent, as may be called multiple times
+        
+        if (immovable) {
+            immovableItems.add(item);
+        }
         LocationType location = (container != null) ? containerToLocation.get(container) : null;
         ContainerType containerNonNull = toNonNullContainer(container);
         LocationType locationNonNull = toNonNullLocation(location);
@@ -179,6 +185,7 @@ public class DefaultFollowTheSunModel<LocationType, ContainerType, ItemType> imp
         itemToContainer.remove(item);
         itemToLocation.remove(item);
         itemUsage.remove(item);
+        immovableItems.remove(item);
     }
     
     @Override
