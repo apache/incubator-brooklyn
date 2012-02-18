@@ -194,6 +194,42 @@ public class LoadBalancingPolicyTest extends AbstractLoadBalancingPolicyTest {
     }
     
     @Test
+    public void testLockedItemsNotMoved() {
+        // Set-up containers and items.
+        MockContainerEntity containerA = newContainer(app, "A", 10, 50)
+        MockContainerEntity containerB = newContainer(app, "B", 10, 50)
+        MockItemEntity item1 = newLockedItem(app, containerA, "1", 40)
+        MockItemEntity item2 = newLockedItem(app, containerA, "2", 40)
+
+        assertWorkratesContinually([containerA, containerB], [80d, 0d])
+    }
+    
+    @Test
+    public void testLockedItemsContributeToOverloadedMeasurements() {
+        // Set-up containers and items.
+        MockContainerEntity containerA = newContainer(app, "A", 10, 50)
+        MockContainerEntity containerB = newContainer(app, "B", 10, 50)
+        MockItemEntity item1 = newLockedItem(app, containerA, "1", 40)
+        MockItemEntity item2 = newItem(app, containerA, "2", 25)
+        MockItemEntity item3 = newItem(app, containerA, "3", 25)
+        
+        assertWorkratesEventually([containerA, containerB], [40d, 50d])
+    }
+    
+    @Test
+    public void testOverloadedLockedItemsPreventMoreWorkEnteringContainer() {
+        // Set-up containers and items.
+        MockContainerEntity containerA = newContainer(app, "A", 10, 50)
+        MockContainerEntity containerB = newContainer(app, "B", 10, 50)
+        MockItemEntity item1 = newLockedItem(app, containerA, "1", 50)
+        Thread.sleep(1); // increase chances of item1's workrate having been received first
+        MockItemEntity item2 = newItem(app, containerB, "2", 30)
+        MockItemEntity item3 = newItem(app, containerB, "3", 30)
+        
+        assertWorkratesContinually([containerA, containerB], [50d, 60d])
+    }
+    
+    @Test
     public void testPolicyUpdatesModel() {
         MockContainerEntity containerA = newContainer(app, "A", 10, 20)
         MockContainerEntity containerB = newContainer(app, "B", 11, 21)
