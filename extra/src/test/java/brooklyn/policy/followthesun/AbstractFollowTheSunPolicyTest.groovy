@@ -59,7 +59,7 @@ public class AbstractFollowTheSunPolicyTest {
         
         // TODO: improve the default impl to avoid the need for this anonymous overrider of 'moveItem'
         // FIXME: Location type currently is string here!
-        model = new DefaultFollowTheSunModel<Location, Entity, Entity>("pool-model") {
+        model = new DefaultFollowTheSunModel<String, Entity, Entity>("pool-model") {
             @Override public void moveItem(Entity item, Entity newContainer) {
                 ((Movable) item).move(newContainer)
                 onItemMoved(item, newContainer)
@@ -134,10 +134,8 @@ public class AbstractFollowTheSunPolicyTest {
         return container
     }
 
-    // FIXME Lock this item in place, so it is not migrated
     protected static MockItemEntity newLockedItem(Application app, MockContainerEntity container, String name) {
-        MockItemEntity item = new MockItemEntity([displayName:name], app)
-        //item.setConfig(Movable.IMMOVABLE, true)
+        MockItemEntity item = new MockItemEntity([displayName:name, immovable:true], app)
         LOG.debug("Managing new locked item {}", container)
         app.getManagementContext().manage(item)
         if (container != null) {

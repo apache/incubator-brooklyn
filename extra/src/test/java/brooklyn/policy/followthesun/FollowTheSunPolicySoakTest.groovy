@@ -166,7 +166,7 @@ public class FollowTheSunPolicySoakTest extends AbstractFollowTheSunPolicyTest {
                     double jitteredWorkrate = Math.max(0, baseWorkrate + (random.nextDouble()*jitter*2 - jitter))
                     workrates.put(source, jitteredWorkrate)
                 }
-                item.setAttribute(MockItemEntity.TEST_METRIC, workrates)
+                item.setAttribute(TEST_METRIC, workrates)
             }
 
 //            // Stop containers, and start others
@@ -195,7 +195,7 @@ public class FollowTheSunPolicySoakTest extends AbstractFollowTheSunPolicyTest {
                     errMsg = "locsInUse=$locsInUse; totalMoves=${MockItemEntity.totalMoveCount}"
                 }
                 
-                assertEquals(itemLocs, Collections.nCopies(movableItems.size(), busiestLocation), errMsg)
+                assertEquals(itemLocs.collect {it.getName()}, Collections.nCopies(movableItems.size(), busiestLocation.getName()), errMsg)
             }
         }
     }
@@ -217,40 +217,5 @@ public class FollowTheSunPolicySoakTest extends AbstractFollowTheSunPolicyTest {
         double total = 0;
         vals.each { total += it }
         return total;
-    }
-    
-    /**
-     * Distributes a given load across a number of items randomly. The variability in load for an item is dictated by the variance,
-     * but the total will always equal totalLoad.
-     * 
-     * The distribution of load is skewed: one side of the list will have bigger values than the other.
-     * Which side is skewed will vary, so when balancing a policy will find that things have entirely changed.
-     * 
-     * TODO This is not particularly good at distributing load, but it's random and skewed enough to force rebalancing.
-     */
-    private List<Integer> randomlyDivideLoad(int numItems, int totalLoad, int min, int max) {
-        List<Integer> result = new ArrayList<Integer>(numItems);
-        int totalRemaining = totalLoad;
-        int variance = 3
-        int skew = 3
-        
-        for (int i = 0; i < numItems; i++) {
-            int itemsRemaining = numItems-i;
-            int itemFairShare = (totalRemaining/itemsRemaining)
-            double skewFactor = ((double)i/numItems)*2 - 1; // a number between -1 and 1, depending how far through the item set we are
-            int itemSkew = (int) (random.nextInt(skew)*skewFactor)
-            int itemLoad = itemFairShare + (random.nextInt(variance*2)-variance) + itemSkew;
-            itemLoad = Math.max(min, itemLoad)
-            itemLoad = Math.min(totalRemaining, itemLoad)
-            itemLoad = Math.min(max, itemLoad)
-            result.add(itemLoad);
-            totalRemaining -= itemLoad;
-        }
-
-        if (random.nextBoolean()) Collections.reverse(result)
-        
-        assertTrue(sum(result) <= totalLoad, "totalLoad=$totalLoad; result=$result")
-        
-        return result
     }
 }

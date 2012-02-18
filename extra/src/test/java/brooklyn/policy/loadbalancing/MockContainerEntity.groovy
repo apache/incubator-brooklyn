@@ -112,17 +112,9 @@ public class MockContainerEntity extends AbstractGroup implements BalanceableCon
             if (delay > 0) Thread.sleep(delay)
             running = true;
             locations.addAll(locs)
-            if (locs.size() > 0) {
-                Location loc = Iterables.get(locs, 0)
-                if (loc != null) {
-                    String locName = (loc.getName() != null) ? loc.getName() : loc.toString()
-                    setAttribute(LOCATION, locName)
-                } else {
-                    println("got null");
-                }
-            } else {
-                println("got null");
-            }
+            Location loc = Iterables.get(locs, 0)
+            String locName = (loc.getName() != null) ? loc.getName() : loc.toString()
+            setAttribute(LOCATION, locName)
             setAttribute(SERVICE_UP, true);
         } finally {
             _lock.unlock();
