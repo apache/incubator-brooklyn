@@ -251,6 +251,22 @@ public class JmxHelper {
 		}
 	}
 
+    public void setAttribute(String objectName, String attribute, Object val) {
+        setAttribute(new ObjectName(objectName), attribute, val)
+    }
+    
+    public void setAttribute(ObjectName objectName, String attribute, Object val) {
+        checkConnected()
+
+        ObjectInstance bean = findMBean objectName
+        if (bean != null) {
+            mbsc.setAttribute(bean.objectName, new javax.management.Attribute(attribute, val))
+            LOG.trace "From {}, for jmx attribute {}.{}, set value {}", url, objectName.canonicalName, attribute, val
+        } else {
+            LOG.debug "From {}, cannot set attribute {}.{}, because mbean not found", url, objectName.canonicalName, attribute
+        }
+    }
+
 	/** @see #operation(ObjectName, String, Object...) */
 	public Object operation(String objectName, String method, Object...arguments) {
 		return operation(new ObjectName(objectName), method, arguments)
