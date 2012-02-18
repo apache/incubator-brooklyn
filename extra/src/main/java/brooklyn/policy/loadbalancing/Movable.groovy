@@ -6,6 +6,7 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.MethodEffector
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
+import brooklyn.util.flags.SetFromFlag
 
 
 /**
@@ -13,6 +14,7 @@ import brooklyn.event.basic.BasicConfigKey
  */
 public interface Movable {
     
+    @SetFromFlag("immovable")
     public static ConfigKey<Boolean> IMMOVABLE = new BasicConfigKey<Boolean>(
         Boolean.class, "movable.item.immovable", "Indicates whether this item instance is immovable, so cannot be moved by policies", false)
     
