@@ -178,7 +178,7 @@ public class FollowTheSunPool extends AbstractEntity implements Resizable {
     private void onItemRemoved(Entity item) {
         if (items.remove(item)) {
             unsubscribe(item)
-            emit(ITEM_REMOVED, new ContainerItemPair(null, item))
+            emit(ITEM_REMOVED, item)
         }
     }
     

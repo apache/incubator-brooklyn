@@ -29,7 +29,7 @@ public class FollowTheSunPolicySoakTest extends AbstractFollowTheSunPolicyTest {
     
     private static final long TIMEOUT_MS = 10*1000;
     
-    @Test(groups="WIP")
+    @Test
     public void testFollowTheSunQuickTest() {
         RunConfig config = new RunConfig()
         config.numCycles = 1
@@ -41,7 +41,7 @@ public class FollowTheSunPolicySoakTest extends AbstractFollowTheSunPolicyTest {
         runFollowTheSunSoakTest(config)
     }
     
-    @Test(groups="WIP")
+    @Test
     public void testLoadBalancingManyItemsQuickTest() {
         RunConfig config = new RunConfig()
         config.numCycles = 1
@@ -139,15 +139,15 @@ public class FollowTheSunPolicySoakTest extends AbstractFollowTheSunPolicyTest {
         for (int i in 1..numCycles) {
             LOG.info(FollowTheSunPolicySoakTest.class.getSimpleName()+": cycle $i")
             
-//            // Stop items, and start others
-//            for (j in 1..numItemStopsPerCycle) {
-//                int itemIndex = random.nextInt(numItems)
-//                MockItemEntity itemToStop = items.get(itemIndex)
-//                itemToStop.stop()
-//                LOG.debug("Unmanaging item {}", itemToStop)
-//                app.managementContext.unmanage(itemToStop)
-//                items.set(itemIndex, newItem(app, containers.get(0), "item-"+(itemIndex+1)+".$i.$j", 5))
-//            }
+            // Stop movable items, and start others
+            for (j in 1..numItemStopsPerCycle) {
+                int itemIndex = random.nextInt(numMovableItems)
+                MockItemEntity itemToStop = movableItems.get(itemIndex)
+                itemToStop.stop()
+                LOG.debug("Unmanaging item {}", itemToStop)
+                app.managementContext.unmanage(itemToStop)
+                movableItems.set(itemIndex, newItem(app, Iterables.get(containers.values(), 0), "item-movable$itemIndex"))
+            }
 
             // Choose a location to be busiest
             int locIndex = random.nextInt(numLocations)
@@ -169,17 +169,21 @@ public class FollowTheSunPolicySoakTest extends AbstractFollowTheSunPolicyTest {
                 item.setAttribute(TEST_METRIC, workrates)
             }
 
-//            // Stop containers, and start others
-//            for (j in 1..numContainerStopsPerCycle) {
-//                int containerIndex = random.nextInt(numContainers)
-//                MockContainerEntity containerToStop = containers.get(containerIndex)
-//                containerToStop.offloadAndStop(containers.get((containerIndex+1)%numContainers))
-//                LOG.debug("Unmanaging container {}", containerToStop)
-//                app.managementContext.unmanage(containerToStop)
-//                
-//                MockContainerEntity containerToAdd = newContainer(app, "container-"+(containerIndex+1)+".$i.$j", lowThreshold, highThreshold)
-//                containers.set(containerIndex, containerToAdd)
-//            }
+            // Stop containers, and start others
+            // This offloads the "immovable" items to other containers in the same location!
+            for (j in 1..numContainerStopsPerCycle) {
+                int containerIndex = random.nextInt(containers.size())
+                MockContainerEntity containerToStop = Iterables.get(containers.values(), containerIndex)
+                Location location = Iterables.get(containerToStop.getLocations(), 0)
+                MockContainerEntity otherContainerInLocation = containers.get(location).find { it != containerToStop }
+                containerToStop.offloadAndStop(otherContainerInLocation)
+                LOG.debug("Unmanaging container {}", containerToStop)
+                app.managementContext.unmanage(containerToStop)
+                containers.remove(location, containerToStop)
+                
+                MockContainerEntity containerToAdd = newContainer(app, location, "container-${location.name}-new.$i.$j")
+                containers.put(location, containerToAdd)
+            }
 
             // Assert that the items all end up in the location with maximum load-generation
             executeUntilSucceeds(timeout:TIMEOUT_MS) {

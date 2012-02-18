@@ -1,5 +1,7 @@
 package brooklyn.policy.followthesun;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.Collections;
@@ -101,6 +103,7 @@ public class DefaultFollowTheSunModel<LocationType, ContainerType, ItemType> imp
                 ItemType sourceItem = entry2.getKey();
                 LocationType sourceLocation = getItemLocation(sourceItem);
                 double usageVal = (entry.getValue() != null) ? entry2.getValue() : 0d;
+                if (sourceLocation == null) continue; // don't know where to attribute this load; e.g. item may have just terminated
                 if (sourceItem.equals(targetItem)) continue; // ignore msgs to self
                 
                 Double usageValTotal = targetUsageByLocation.get(sourceLocation);
@@ -114,6 +117,7 @@ public class DefaultFollowTheSunModel<LocationType, ContainerType, ItemType> imp
     
     @Override
     public Set<ContainerType> getAvailableContainersFor(ItemType item, LocationType location) {
+        checkNotNull(location);
         return getContainersInLocation(location);
     }
 
@@ -226,6 +230,10 @@ public class DefaultFollowTheSunModel<LocationType, ContainerType, ItemType> imp
             }
         }
         out.flush();
+    }
+    
+    private boolean hasItem(ItemType item) {
+        return itemToContainer.containsKey(item);
     }
     
     private Set<LocationType> getLocations() {

@@ -110,4 +110,41 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
         Thread.sleep(SHORT_WAIT_MS)
         assertItemDistributionEventually([(containerA):[item1], (containerB):[item2]])
     }
+    
+    @Test
+    public void testItemRemovedCausesRecalculationOfOptimalLocation() {
+        // Set-up containers and items.
+        MockContainerEntity containerA = newContainer(app, loc1, "A")
+        MockContainerEntity containerB = newContainer(app, loc2, "B")
+        MockItemEntity item1 = newItem(app, containerA, "1")
+        MockItemEntity item2 = newItem(app, containerA, "2")
+        MockItemEntity item3 = newItem(app, containerB, "3")
+        
+        item1.setAttribute(TEST_METRIC, ImmutableMap.of(item2, 100d, item3, 1000d))
+        
+        assertItemDistributionEventually([(containerA):[item2], (containerB):[item1,item3]])
+        
+        item3.stop()
+        app.getManagementContext().unmanage(item3)
+        
+        assertItemDistributionEventually([(containerA):[item1, item2], (containerB):[]])
+    }
+    
+    @Test
+    public void testItemMovedCausesRecalculationOfOptimalLocationForOtherItems() {
+        // Set-up containers and items.
+        MockContainerEntity containerA = newContainer(app, loc1, "A")
+        MockContainerEntity containerB = newContainer(app, loc2, "B")
+        MockItemEntity item1 = newItem(app, containerA, "1")
+        MockItemEntity item2 = newItem(app, containerA, "2")
+        MockItemEntity item3 = newItem(app, containerB, "3")
+        
+        item1.setAttribute(TEST_METRIC, ImmutableMap.of(item2, 100d, item3, 1000d))
+        
+        assertItemDistributionEventually([(containerA):[item2], (containerB):[item1,item3]])
+        
+        item3.move(containerA)
+        
+        assertItemDistributionEventually([(containerA):[item1, item2, item3], (containerB):[]])
+    }
 }
