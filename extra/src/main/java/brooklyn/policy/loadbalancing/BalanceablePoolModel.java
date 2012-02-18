@@ -7,9 +7,7 @@ import brooklyn.location.Location;
 
 /**
  * Captures the state of a balanceable cluster of containers and all their constituent items, including workrates,
- * for consumption by a BalancingStrategy.
- * 
- * @author splodge
+ * for consumption by a {@link BalancingStrategy}.
  */
 public interface BalanceablePoolModel<ContainerType, ItemType> {
     
@@ -41,7 +39,7 @@ public interface BalanceablePoolModel<ContainerType, ItemType> {
     public void onContainerAdded(ContainerType newContainer, double lowThreshold, double highThreshold);
     public void onContainerRemoved(ContainerType oldContainer);
     public void onItemAdded(ItemType item, ContainerType parentContainer);
-    public void onItemAdded(ItemType item, ContainerType parentContainer, Number currentWorkrate);
+    public void onItemAdded(ItemType item, ContainerType parentContainer, boolean immovable);
     public void onItemRemoved(ItemType item);
     public void onItemWorkrateUpdated(ItemType item, double newValue);
     public void onItemMoved(ItemType item, ContainerType targetContainer);

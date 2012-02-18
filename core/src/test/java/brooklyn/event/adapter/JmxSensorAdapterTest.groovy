@@ -1,12 +1,12 @@
 package brooklyn.event.adapter
 
 import static org.testng.Assert.*
-import groovy.transform.InheritConstructors
 
 import java.util.Map
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
+import javax.management.DynamicMBean
 import javax.management.MBeanOperationInfo
 import javax.management.MBeanParameterInfo
 import javax.management.Notification
@@ -26,7 +26,7 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import brooklyn.entity.Entity;
+import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.Attributes
@@ -347,6 +347,16 @@ public class JmxSensorAdapterTest {
             assertEquals received.size(), 1
             assertNotificationsEqual(received.getAt(0), notif)
         }
+    }
+
+    @Test
+    public void testSetAttribute() {
+        DynamicMBean mbean = jmxService.registerMBean(["myattr":"myval"], objectName)
+
+        jmxHelper.connect(TIMEOUT)
+        jmxHelper.setAttribute(jmxObjectName, "myattr", "abc")
+        Object actual = jmxHelper.getAttribute(jmxObjectName, "myattr")
+        assertEquals(actual, "abc")
     }
 
     // Test reproduces functionality used in Monterey, for Venue entity being told of requestActor

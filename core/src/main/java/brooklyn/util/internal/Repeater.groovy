@@ -46,6 +46,7 @@ public class Repeater {
 	private TimeDuration durationLimit = null
     private int iterationLimit = 0
     private boolean rethrowException = false
+    private boolean rethrowExceptionImmediately = false
 	private boolean warnOnUnRethrownException = true
 
 	public Repeater(Map flags=[:]) { this(flags, null) }
@@ -132,7 +133,7 @@ public class Repeater {
     }
 
     /**
-     * If the exit conditon check throws an exception, it will be recorded and the last exception will be thrown on failure.
+     * If the exit condition check throws an exception, it will be recorded and the last exception will be thrown on failure.
      *
      * @return {@literal this} to aid coding in a fluent style.
      */
@@ -140,6 +141,16 @@ public class Repeater {
         this.rethrowException = true
         return this
     }
+
+   /**
+    * If the repeated body or the exit condition check throws an exception, then propagate that exception immediately.
+    *
+    * @return {@literal this} to aid coding in a fluent style.
+    */
+   Repeater rethrowExceptionImmediately() {
+       this.rethrowExceptionImmediately = true
+       return this
+   }
 
 	Repeater suppressWarnings() {
 		this.warnOnUnRethrownException = false
@@ -219,6 +230,7 @@ public class Repeater {
                 body.call()
             } catch (Exception e) {
                 log.warn description, e
+                if (rethrowExceptionImmediately) throw e
             }
 
             boolean done = false
@@ -228,6 +240,7 @@ public class Repeater {
             } catch (Exception e) {
                 log.debug description, e
                 lastError = e
+                if (rethrowExceptionImmediately) throw e
             }
             if (done) {
                 log.debug "{}: condition satisfied", description

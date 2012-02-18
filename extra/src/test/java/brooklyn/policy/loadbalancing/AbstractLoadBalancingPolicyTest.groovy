@@ -21,12 +21,14 @@ import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.test.entity.TestApplication
+import brooklyn.util.internal.Repeater
 
 public class AbstractLoadBalancingPolicyTest {
     
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractLoadBalancingPolicyTest.class)
     
     protected static final long TIMEOUT_MS = 10*1000;
+    protected static final long SHORT_WAIT_MS = 250;
     
     protected static final long CONTAINER_STARTUP_DELAY_MS = 100
     
@@ -75,6 +77,15 @@ public class AbstractLoadBalancingPolicyTest {
     }
     
     // Using this utility, as it gives more info about the workrates of all containers rather than just the one that differs    
+    protected void assertWorkrates(List<MockContainerEntity> containers, List<Double> expected, double precision) {
+        List<Double> actual = containers.collect { getContainerWorkrate(it) }
+        String errMsg = "actual=$actual; expected=$expected"
+        assertEquals(containers.size(), expected.size(), errMsg)
+        for (int i = 0; i < containers.size(); i++) {
+            assertEquals(actual.get(i), expected.get(i), precision, errMsg)
+        }
+    }
+    
     protected void assertWorkratesEventually(List<MockContainerEntity> containers, List<Double> expected) {
         assertWorkratesEventually(containers, expected, 0d)
     }
@@ -86,13 +97,33 @@ public class AbstractLoadBalancingPolicyTest {
     protected void assertWorkratesEventually(List<MockContainerEntity> containers, List<Double> expected, double precision) {
         try {
             executeUntilSucceeds(timeout:TIMEOUT_MS) {
-                List<Double> actual = containers.collect { getContainerWorkrate(it) }
-                String errMsg = "actual=$actual; expected=$expected"
-                assertEquals(containers.size(), expected.size(), errMsg)
-                for (int i = 0; i < containers.size(); i++) {
-                    assertEquals(actual.get(i), expected.get(i), precision, errMsg)
-                }
+                assertWorkrates(containers, expected, precision)
             }
+        } catch (AssertionError e) {
+            String errMsg = e.getMessage()+"; "+verboseDumpToString(containers)
+            throw new RuntimeException(errMsg, e);
+        }
+    }
+
+    // Using this utility, as it gives more info about the workrates of all containers rather than just the one that differs    
+    protected void assertWorkratesContinually(List<MockContainerEntity> containers, List<Double> expected) {
+        assertWorkratesContinually(containers, expected, 0d)
+    }
+
+    /**
+     * Asserts that the given containers have the given expected workrates (by querying the containers directly)
+     * continuously for SHORT_WAIT_MS.
+     * Accepts an accuracy of "precision" for each container's workrate.
+     */
+    protected void assertWorkratesContinually(List<MockContainerEntity> containers, List<Double> expected, double precision) {
+        try {
+            new Repeater()
+                .every((long)(SHORT_WAIT_MS/10))
+                .limitIterationsTo(10)
+                .rethrowExceptionImmediately()
+                .until({false})
+                .repeat( { assertWorkrates(containers, expected, precision) } )
+                .run()
         } catch (AssertionError e) {
             String errMsg = e.getMessage()+"; "+verboseDumpToString(containers)
             throw new RuntimeException(errMsg, e);
@@ -128,6 +159,17 @@ public class AbstractLoadBalancingPolicyTest {
     
     protected static MockItemEntity newItem(Application app, MockContainerEntity container, String name, double workrate) {
         MockItemEntity item = new MockItemEntity([displayName:name], app)
+        LOG.debug("Managing new item {}", container)
+        app.getManagementContext().manage(item)
+        item.move(container)
+        item.setAttribute(TEST_METRIC, workrate)
+        return item
+    }
+    
+    protected static MockItemEntity newLockedItem(Application app, MockContainerEntity container, String name, double workrate) {
+        MockItemEntity item = new MockItemEntity([displayName:name])
+        item.setConfig(Movable.IMMOVABLE, true)
+        item.setOwner(app)
         LOG.debug("Managing new item {}", container)
         app.getManagementContext().manage(item)
         item.move(container)

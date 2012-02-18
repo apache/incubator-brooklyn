@@ -19,6 +19,10 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 
+/**
+ * Standard implementation of <code>BalanceablePoolModel</code>, providing essential arithmetic for item and container
+ * workrates and thresholds. See subclasses for specific requirements for migrating items.
+ */
 public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements BalanceablePoolModel<ContainerType, ItemType> {
     
     private static final Logger LOG = LoggerFactory.getLogger(DefaultBalanceablePoolModel.class);
@@ -44,6 +48,7 @@ public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements Bal
     private final Map<ItemType, ContainerType> itemToContainer = new ConcurrentHashMap<ItemType, ContainerType>();
     private final SetMultimap<ContainerType, ItemType> containerToItems =  Multimaps.synchronizedSetMultimap(HashMultimap.<ContainerType, ItemType>create());
     private final Map<ItemType, Double> itemToWorkrate = new ConcurrentHashMap<ItemType, Double>();
+    private final Set<ItemType> immovableItems = Collections.newSetFromMap(new ConcurrentHashMap<ItemType, Boolean>());
     
     private volatile double poolLowThreshold = 0;
     private volatile double poolHighThreshold = 0;
@@ -119,7 +124,8 @@ public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements Bal
     }
     
     @Override public boolean isItemMoveable(ItemType item) {
-        return true; // TODO?
+        // If don't know about item, then assume not movable; otherwise has this item been explicitly flagged as immovable?
+        return itemToContainer.containsKey(item) && !immovableItems.contains(item);
     }
     
     @Override public boolean isItemAllowedIn(ItemType item, Location location) {
@@ -171,20 +177,21 @@ public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements Bal
     
     @Override
     public void onItemAdded(ItemType item, ContainerType parentContainer) {
-        onItemAdded(item, parentContainer, null);
+        onItemAdded(item, parentContainer, false);
     }
     
     @Override
-    public void onItemAdded(ItemType item, ContainerType parentContainer, Number currentWorkrate) {
+    public void onItemAdded(ItemType item, ContainerType parentContainer, boolean immovable) {
         // Duplicate calls to onItemAdded do no harm, as long as most recent is most accurate!
         // Important that it stays that way for now - See LoadBalancingPolicy.onContainerAdded for explanation.
 
+        if (immovable)
+            immovableItems.add(item);
+        
         ContainerType parentContainerNonNull = toNonNullContainer(parentContainer);
         ContainerType oldNode = itemToContainer.put(item, parentContainerNonNull);
         if (oldNode != null && oldNode != NULL_CONTAINER) containerToItems.remove(oldNode, item);
         if (parentContainer != null) containerToItems.put(parentContainer, item);
-        if (currentWorkrate != null)
-            onItemWorkrateUpdated(item, currentWorkrate.doubleValue());
     }
     
     @Override
@@ -194,6 +201,7 @@ public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements Bal
         Double workrate = itemToWorkrate.remove(item);
         if (workrate != null)
             currentPoolWorkrate -= workrate;
+        immovableItems.remove(item);
     }
     
     @Override

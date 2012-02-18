@@ -12,7 +12,13 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.location.Location;
 
-// TODO: extract interface
+/**
+ * Represents an abstract algorithm for optimally balancing worker "items" among several "containers" based on the workloads
+ * of the items, and corresponding high- and low-thresholds on the containers.
+ * 
+ * TODO: extract interface, provide default implementation
+ * TODO: remove legacy code comments
+ */
 public class BalancingStrategy<NodeType, ItemType> {
     
     // This is a modified version of the watermark elasticity policy from Monterey v3.

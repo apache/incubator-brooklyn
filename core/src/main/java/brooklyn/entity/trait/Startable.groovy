@@ -69,7 +69,7 @@ public interface Startable {
 	/**
 	 * Start the entity in the given collection of locations.
 	 */
-	@Description("Stop the process/service represented by an entity")
+	@Description("Start the process/service represented by an entity")
 	void start(@NamedParameter("locations") @DefaultValue("") Collection<? extends Location> locations);
 
 	/**

@@ -1,6 +1,5 @@
 package brooklyn.policy.loadbalancing;
 
-import java.io.PrintStream;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -53,8 +52,10 @@ public class MockWorkerPool extends DefaultBalanceablePoolModel<String, String> 
         super("Mock pool");
         for (ContainerSpec container : containers)
             onContainerAdded(container.name, container.lowThreshold, container.highThreshold);
-        for (ItemSpec item : items)
-            onItemAdded(item.name, item.parentContainer, item.currentWorkrate);
+        for (ItemSpec item : items) {
+            onItemAdded(item.name, item.parentContainer);
+            onItemWorkrateUpdated(item.name, item.currentWorkrate);
+        }
     }
     
     @Override

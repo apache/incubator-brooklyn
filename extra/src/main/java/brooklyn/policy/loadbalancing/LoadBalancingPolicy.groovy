@@ -24,6 +24,22 @@ import brooklyn.policy.resizing.ResizingPolicy
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableMap
 
+
+/**
+ * <p>Policy that is attached to a pool of "containers", each of which can host one or more migratable "items".
+ * The policy monitors the workrates of the items and effects migrations in an attempt to ensure that the containers
+ * are all sufficiently utilized without any of them being overloaded.
+ * 
+ * <p>The particular sensor that defines the items' workrates is specified when the policy is constructed. High- and
+ * low-thresholds are defined as <strong>configuration keys</strong> on each of the container entities in the pool:
+ * for an item sensor named <code>foo.bar.sensorName</code>, the corresponding container config keys would be named
+ * <code>foo.bar.sensorName.threshold.low</code> and <code>foo.bar.sensorName.threshold.high</code>.
+ * 
+ * <p>In addition to balancing items among the available containers, this policy causes the pool Entity to emit
+ * <code>POOL_COLD</code> and <code>POOL_HOT</code> events when it is determined that there is a surplus or shortfall
+ * of container resource in the pool respectively. These events may be consumed by a separate policy that is capable
+ * of resizing the container pool.
+ */
 public class LoadBalancingPolicy extends AbstractPolicy {
     
     private static final Logger LOG = LoggerFactory.getLogger(LoadBalancingPolicy.class)
@@ -209,11 +225,11 @@ public class LoadBalancingPolicy extends AbstractPolicy {
         subscribe(item, metric, eventHandler)
         
         // Update the model, including the current metric value (if any).
+        boolean immovable = item.getConfig(Movable.IMMOVABLE)?:false
         Number currentValue = item.getAttribute(metric)
-        if (currentValue == null)
-            model.onItemAdded(item, parentContainer)
-        else
-            model.onItemAdded(item, parentContainer, currentValue.doubleValue())
+        model.onItemAdded(item, parentContainer, immovable)
+        if (currentValue != null)
+            model.onItemWorkrateUpdated(item, currentValue.doubleValue())
         
         if (rebalanceNow) scheduleRebalance()
     }

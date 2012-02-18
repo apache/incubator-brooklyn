@@ -21,15 +21,9 @@ public class CommandLineLocations {
     private CommandLineLocations() { }
 
     public static final JcloudsLocationFactory newJcloudsLocationFactory(String provider) {
-        CredentialsFromEnv creds = new CredentialsFromEnv(provider);
-        return new JcloudsLocationFactory([
-                provider : provider,
-                identity : creds.getIdentity(),
-                credential : creds.getCredential(),
-                sshPrivateKey : creds.getPrivateKeyFile(),
-                sshPublicKey : creds.getPublicKeyFile()
-            ])
+        return new JcloudsLocationFactory(new CredentialsFromEnv(provider).asMap());
     }
+    
     /** creates a location referring e.g. to  "aws-ec2:us-east-1" */
     public static final JcloudsLocation newJcloudsLocation(String provider) {
         String region = null;
