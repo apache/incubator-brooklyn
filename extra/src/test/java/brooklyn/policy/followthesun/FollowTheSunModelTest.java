@@ -134,8 +134,8 @@ public class FollowTheSunModelTest {
     
     @Test
     public void testItemAddedAnswersMovability() throws Exception {
-        model.onItemAdded(item1, container1, true);
-        model.onItemAdded(item2, container1, false);
+        model.onItemAdded(item1, container1, false);
+        model.onItemAdded(item2, container1, true);
         assertTrue(model.isItemMoveable(item1));
         assertFalse(model.isItemMoveable(item2));
     }
