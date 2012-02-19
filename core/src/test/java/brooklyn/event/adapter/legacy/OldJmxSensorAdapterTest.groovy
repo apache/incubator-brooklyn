@@ -47,7 +47,7 @@ public class OldJmxSensorAdapterTest {
     JmxService jmxService;
     LocallyManagedEntity entity;
     
-    @BeforeMethod
+    @BeforeMethod(alwaysRun=true)
     public void setUp() {
         jmxService = new JmxService()
         
@@ -59,7 +59,7 @@ public class OldJmxSensorAdapterTest {
         entity.setAttribute(Attributes.JMX_CONTEXT)
     }
     
-    @AfterMethod
+    @AfterMethod(alwaysRun=true)
     public void tearDown() {
         if (jmxService != null) jmxService.shutdown();
     }

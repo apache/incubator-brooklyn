@@ -67,7 +67,7 @@ public class JmxSensorAdapterTest {
     private String attributeName = 'myattrib'
     private String opName = 'myop'
     
-    @BeforeMethod
+    @BeforeMethod(alwaysRun=true)
     public void setUp() {
         // Create an entity and configure it with the above JMX service
         app = new AbstractApplication() {}
