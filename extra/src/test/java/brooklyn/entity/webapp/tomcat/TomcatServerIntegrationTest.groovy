@@ -4,10 +4,10 @@ import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
-import java.net.URL
-import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 
+import org.codehaus.groovy.runtime.InvokerInvocationException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.AfterMethod
@@ -16,13 +16,7 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.Application
 import brooklyn.event.EntityStartException
-import brooklyn.event.SensorEvent
-import brooklyn.event.SensorEventListener
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
-import brooklyn.location.basic.SshMachineLocation
-import brooklyn.management.SubscriptionContext
-import brooklyn.management.SubscriptionHandle
-import brooklyn.test.TestUtils.BooleanWithMessage
 import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
@@ -91,21 +85,20 @@ public class TomcatServerIntegrationTest {
     @Test(groups = [ "Integration" ])
     public void detectFailureIfTomcatCantBindToPort() {
         ServerSocket listener = new ServerSocket(DEFAULT_HTTP_PORT);
-        Thread t = new Thread({ try { for(;;) { Socket socket = listener.accept(); socket.close(); } } catch(Exception e) {} })
-        t.start()
         try {
             app = new TestApplication()
             tc = new TomcatServer(owner:app, httpPort:DEFAULT_HTTP_PORT)
-            Exception caught = null
             try {
-                tc.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
-                fail("Should have thrown start-exception")
+                try {
+                    tc.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
+                    fail("Should have thrown start-exception")
+                } catch (ExecutionException e) {
+                    throw unwrapThrowable(e)
+                }
             } catch (IllegalArgumentException e) {
                 // LocalhostMachineProvisioningLocation does NetworkUtils.isPortAvailable, so get -1
-                caught = e
                 assertEquals e.message, "Invalid port value -1: httpPort (suggested $DEFAULT_HTTP_PORT)"
             } catch (EntityStartException e) {
-                caught = e
                 assertEquals e.message, "HTTP service on port ${DEFAULT_HTTP_PORT} failed"
             } finally {
                 tc.stop()
@@ -113,7 +106,6 @@ public class TomcatServerIntegrationTest {
             assertFalse tc.getAttribute(TomcatServer.SERVICE_UP)
         } finally {
             listener.close();
-            t.join();
         }
     }
 
@@ -166,6 +158,18 @@ public class TomcatServerIntegrationTest {
         assertEquals(props.stringPropertyNames(), expected.keySet())
         for (String key in props.stringPropertyNames()) {
             assertEquals(props.getProperty(key), expected.get(key))
+        }
+    }
+    
+    private static Throwable unwrapThrowable(Throwable t) {
+        if (t.getCause() == null) {
+            return t;
+        } else if (t instanceof ExecutionException) {
+            return unwrapThrowable(t.getCause())
+        } else if (t instanceof InvokerInvocationException) {
+            return unwrapThrowable(t.getCause())
+        } else {
+            return t
         }
     }
 }
