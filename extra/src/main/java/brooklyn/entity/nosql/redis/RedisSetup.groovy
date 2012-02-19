@@ -26,11 +26,12 @@ public class RedisSetup extends SshBasedAppSetup {
         String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/"+"${version}"+"/"+"redis-${version}")
         String runDir = suggestedRunDir ?: (BROOKLYN_HOME_DIR+"/"+"${entity.application.id}"+"/"+"redis-${entity.id}")
 
-        PortRange redisPort = entity.getConfig(RedisStore.REDIS_PORT)
-        Preconditions.checkState machine.obtainSpecificPort(redisPort), "The port ${redisPort} must be available"
+        PortRange redisPortRange = entity.getConfig(RedisStore.REDIS_PORT)
+        int redisPort = machine.obtainPort(redisPortRange)
+        Preconditions.checkState(redisPort > 0, "The port ${redisPortRange} must be available")
 
         RedisSetup result = new RedisSetup(entity, machine)
-        result.setRedisPort(redisPort.iterator().next())
+        result.setRedisPort(redisPort)
         result.setVersion(version)
         result.setInstallDir(installDir)
         result.setRunDir(runDir)
