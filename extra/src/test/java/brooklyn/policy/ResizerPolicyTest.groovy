@@ -215,41 +215,47 @@ class ResizerPolicyTest {
         Integer port = 7880
         Integer jmxP = 32199
         Integer shutdownP = 31880
-        DynamicWebAppCluster cluster = new DynamicWebAppCluster(
-            newEntity: { Map properties ->
-                properties.httpPort = port++
-                def tc = new TomcatServer(properties)
-                tc.pollForHttpStatus = false
-                tc.setConfig(TomcatServer.JMX_PORT.configKey, jmxP++)
-                tc.setConfig(TomcatServer.SUGGESTED_SHUTDOWN_PORT, shutdownP++)
-                tc
-            },
-            initialSize: 1,
-            owner: new TestApplication()
-        )
-        
-        ResizerPolicy policy = new ResizerPolicy(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)
-        policy.setMetricLowerBound(0).setMetricUpperBound(1).setMinSize(1)
-        cluster.addPolicy(policy)
-        
-        cluster.start([new LocalhostMachineProvisioningLocation(name:'london', count:4)])
-        assertEquals 1, cluster.currentSize
-        assertNotNull policy.@entity
-        assertNotNull policy.@resizable
-        
-        TomcatServer tc = Iterables.getOnlyElement(cluster.getMembers())
-        2.times { connectToURL(tc.getAttribute(TomcatServer.ROOT_URL)) }
-        
-        executeUntilSucceeds(timeout: 3*SECONDS) {
-            assertEquals 2.0d/cluster.currentSize, cluster.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)
-        }
-
-        executeUntilSucceedsWithShutdown(cluster, timeout: 5*MINUTES) {
-            assertTrue policy.isRunning()
-            assertFalse policy.resizing.get()
-            assertEquals 2, policy.calculateDesiredSize(cluster.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT))
-            assertEquals 2, cluster.currentSize
-            assertEquals 1.0d, cluster.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)
+        TestApplication app = new TestApplication()
+        try {
+            DynamicWebAppCluster cluster = new DynamicWebAppCluster(
+                newEntity: { Map properties ->
+                    properties.httpPort = port++
+                    def tc = new TomcatServer(properties)
+                    tc.pollForHttpStatus = false
+                    tc.setConfig(TomcatServer.JMX_PORT.configKey, jmxP++)
+                    tc.setConfig(TomcatServer.SUGGESTED_SHUTDOWN_PORT, shutdownP++)
+                    tc
+                },
+                initialSize: 1,
+                owner: app
+            )
+            
+            ResizerPolicy policy = new ResizerPolicy(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)
+            policy.setMetricLowerBound(0).setMetricUpperBound(1).setMinSize(1)
+            cluster.addPolicy(policy)
+            
+            app.start([new LocalhostMachineProvisioningLocation(name:'london')])
+            
+            assertEquals 1, cluster.currentSize
+            assertNotNull policy.@entity
+            assertNotNull policy.@resizable
+            
+            TomcatServer tc = Iterables.getOnlyElement(cluster.getMembers())
+            2.times { connectToURL(tc.getAttribute(TomcatServer.ROOT_URL)) }
+            
+            executeUntilSucceeds(timeout: 3*SECONDS) {
+                assertEquals 2.0d/cluster.currentSize, cluster.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)
+            }
+    
+            executeUntilSucceedsWithShutdown(cluster, timeout: 5*MINUTES) {
+                assertTrue policy.isRunning()
+                assertFalse policy.resizing.get()
+                assertEquals 2, policy.calculateDesiredSize(cluster.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT))
+                assertEquals 2, cluster.currentSize
+                assertEquals 1.0d, cluster.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)
+            }
+        } finally {
+            app.stop()
         }
     }
 }
