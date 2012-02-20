@@ -1,5 +1,7 @@
 package brooklyn.policy.followthesun;
 
+import static com.google.common.base.Preconditions.checkArgument
+
 import java.util.Map
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -33,16 +35,16 @@ public class FollowTheSunPolicy extends AbstractPolicy {
     private final AttributeSensor<? extends Number> itemUsageMetric
     private final FollowTheSunModel<Entity, Entity> model
     private final FollowTheSunStrategy<Entity, ?> strategy
+    private final FollowTheSunParameters parameters;
+    private final Closure locationFinder
     
     private FollowTheSunPool poolEntity
     private ExecutorService executor = Executors.newSingleThreadExecutor()
     private AtomicBoolean executorQueued = new AtomicBoolean(false)
 
-    private final FollowTheSunParameters parameters;
-    
     private boolean loggedConstraintsIgnored = false;
     
-    Closure locationFinder = { Entity e ->
+    Closure defaultLocationFinder = { Entity e ->
         Collection<Location> locs = e.getLocations()
         if (locs.isEmpty()) return null
         Location contender = Iterables.get(locs, 0)
@@ -93,11 +95,13 @@ public class FollowTheSunPolicy extends AbstractPolicy {
         this.model = model
         this.parameters = parameters
         this.strategy = new FollowTheSunStrategy<Entity, Object>(model, parameters) // TODO: extract interface, inject impl
+        this.locationFinder = flags.locationFinder ?: defaultLocationFinder
+        checkArgument(locationFinder instanceof Closure, "locationFinder must be a closure, but is "+locationFinder.class.getClass())
     }
     
     @Override
     public void setEntity(EntityLocal entity) {
-        Preconditions.checkArgument(entity instanceof FollowTheSunPool, "Provided entity must be a FollowTheSunPool")
+        checkArgument(entity instanceof FollowTheSunPool, "Provided entity must be a FollowTheSunPool")
         super.setEntity(entity)
         this.poolEntity = (FollowTheSunPool) entity
         
@@ -172,7 +176,7 @@ public class FollowTheSunPolicy extends AbstractPolicy {
     }
     
     private void onItemAdded(Entity item, Entity parentContainer, boolean rebalanceNow) {
-        Preconditions.checkArgument(item instanceof Movable, "Added item $item must implement Movable")
+        checkArgument(item instanceof Movable, "Added item $item must implement Movable")
         if (LOG.isTraceEnabled()) LOG.trace("{} recording addition of item {} in container {}", this, item, parentContainer)
         
         subscribe(item, itemUsageMetric, eventHandler)

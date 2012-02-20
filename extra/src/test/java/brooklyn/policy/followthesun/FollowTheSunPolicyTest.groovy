@@ -9,6 +9,7 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.Entity
 import brooklyn.event.AttributeSensor
+import brooklyn.location.basic.SimulatedLocation
 import brooklyn.policy.loadbalancing.MockContainerEntity
 import brooklyn.policy.loadbalancing.MockItemEntity
 import brooklyn.test.entity.TestApplication
@@ -21,6 +22,7 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
     public void before() {
         super.before()
     }
+    
     @Test
     public void testPolicyUpdatesModel() {
         MockContainerEntity containerA = newContainer(app, loc1, "A")
@@ -34,6 +36,23 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
             assertEquals(model.getItemLocation(item1), loc1)
             assertEquals(model.getContainerLocation(containerA), loc1)
             assertEquals(model.getDirectSendsToItemByLocation(), [(item2):[(loc1):11d]])
+        }
+    }
+    
+    @Test
+    public void testPolicyAcceptsLocationFinder() {
+        pool.removePolicy(policy)
+        
+        Closure customLocationFinder = { Entity e ->
+            return new SimulatedLocation(name:"custom location for "+e)
+        }
+        FollowTheSunPolicy customPolicy = new FollowTheSunPolicy([locationFinder:customLocationFinder], TEST_METRIC, model, FollowTheSunParameters.newDefault())
+        pool.addPolicy(customPolicy)
+        
+        MockContainerEntity containerA = newContainer(app, loc1, "A")
+        
+        executeUntilSucceeds(timeout:TIMEOUT_MS) {
+            assertEquals(model.getContainerLocation(containerA).getName(), "custom location for "+containerA)
         }
     }
     
