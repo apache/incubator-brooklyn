@@ -58,7 +58,7 @@ public class FollowTheSunStrategy<ContainerType, ItemType> {
                     continue;
                 }
                 
-                double total = sum(sendsByLocation.values());
+                double total = DefaultFollowTheSunModel.sum(sendsByLocation.values());
 
                 if (LOG.isTraceEnabled()) LOG.trace("POLICY {} detected {} msgs/sec in {}, split up as: {}", new Object[] {name, total, itemName, sendsByLocation});
                 
@@ -120,21 +120,12 @@ public class FollowTheSunStrategy<ContainerType, ItemType> {
                         LOG.warn("POLICY "+name+" detected "+itemName+" should be on "+optimalContainerInHighest+", but can't move it: "+e, e);
                     }
                 } else {
-                    if (LOG.isTraceEnabled())
-                        LOG.trace("POLICY "+name+" detected "+itemName+" need not move to "+optimalContainerInHighest+" ("+highestMsgRate+" of "+total+" msgs/sec not much better than "+current+" at "+activeContainer+")");
+                    if (LOG.isTraceEnabled()) LOG.trace("POLICY "+name+" detected "+itemName+" need not move to "+optimalContainerInHighest+" ("+highestMsgRate+" of "+total+" msgs/sec not much better than "+current+" at "+activeContainer+")");
                 }
             }
         } catch (Exception e) {
             LOG.warn("Error in policy "+name+" (ignoring): "+e, e);
         }
-    }
-
-    private static double sum(Collection<Double> values) {
-        double total = 0;
-        for (Double d : values) {
-            total+=d;
-        }
-        return total;
     }
 
     private ContainerType findOptimal(Collection<ContainerType> contenders) {

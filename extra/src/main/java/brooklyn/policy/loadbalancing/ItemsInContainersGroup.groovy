@@ -76,43 +76,43 @@ public class ItemsInContainersGroup extends DynamicGroup {
         subscribe(containerGroup, AbstractGroup.MEMBER_REMOVED, eventHandler)
         subscribe(null, Movable.CONTAINER, eventHandler)
         
-        log.trace("{} scanning entities on container group set", this)
+        if (LOG.isTraceEnabled()) LOG.trace("{} scanning entities on container group set", this)
         rescanEntities()
     }
     
     private void onContainerAdded(Entity newContainer) {
-        log.trace("{} rescanning entities on container {} added", this, newContainer)
+        if (LOG.isTraceEnabled()) LOG.trace("{} rescanning entities on container {} added", this, newContainer)
         rescanEntities()
     }
     
     private void onContainerRemoved(Entity oldContainer) {
-        log.trace("{} rescanning entities on container {} removed", this, oldContainer)
+        if (LOG.isTraceEnabled()) LOG.trace("{} rescanning entities on container {} removed", this, oldContainer)
         rescanEntities()
     }
     
     protected void onEntityAdded(Entity item) {
         if (acceptsEntity(item)) {
-            LOG.debug("{} adding new item {}", this, item)
+            if (LOG.isDebugEnabled()) LOG.debug("{} adding new item {}", this, item)
             addMember(item)
         }
     }
     
     protected void onEntityRemoved(Entity item) {
         if (removeMember(item)) {
-            LOG.debug("{} removing deleted item {}", this, item)
+            if (LOG.isDebugEnabled()) LOG.debug("{} removing deleted item {}", this, item)
         }
     }
     
     private void onItemMoved(Movable item, BalanceableContainer container) {
-        LOG.trace("{} processing moved item {}, to container {}", this, item, container)
+        if (LOG.isTraceEnabled()) LOG.trace("{} processing moved item {}, to container {}", this, item, container)
         if (hasMember(item)) {
             if (!acceptsItem(item, container)) {
-                LOG.debug("{} removing moved item {} from group, as new container {} is not a member", this, item, container)
+                if (LOG.isDebugEnabled()) LOG.debug("{} removing moved item {} from group, as new container {} is not a member", this, item, container)
                 removeMember(item)
             }
         } else {
             if (acceptsItem(item, container)) {
-                LOG.debug("{} adding moved item {} to group, as new container {} is a member", this, item, container)
+                if (LOG.isDebugEnabled()) LOG.debug("{} adding moved item {} to group, as new container {} is a member", this, item, container)
                 addMember(item)
             }
         }

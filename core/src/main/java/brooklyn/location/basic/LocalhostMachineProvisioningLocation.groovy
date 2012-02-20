@@ -88,7 +88,7 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
     /** checks the actual availability of the port on localhost, ie by binding to it */
     public static boolean checkPortAvailable(InetAddress localAddress, int portNumber) {
         if (portNumber<1024) {
-            LOG.debug("Skipping system availability check for privileged localhost port "+portNumber);
+            if (LOG.isDebugEnabled()) LOG.debug("Skipping system availability check for privileged localhost port "+portNumber);
             return true;
         }
         return NetworkUtils.isPortAvailable(portNumber);
@@ -96,7 +96,7 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
     public static int obtainPort(InetAddress localAddress, PortRange range) {
         for (int p: range)
             if (obtainSpecificPort(localAddress, p)) return p;
-        LOG.debug("unable to find port in {} on {}; returning -1", range, this)
+        if (LOG.isDebugEnabled()) LOG.debug("unable to find port in {} on {}; returning -1", range, this)
         return -1;
     }
 

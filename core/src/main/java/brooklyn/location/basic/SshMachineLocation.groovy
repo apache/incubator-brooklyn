@@ -149,7 +149,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public int obtainPort(PortRange range) {
         for (int p: range)
             if (obtainSpecificPort(p)) return p
-         LOG.debug("unable to find port in {} on {}; returning -1", range, this)
+         if (LOG.isDebugEnabled()) LOG.debug("unable to find port in {} on {}; returning -1", range, this)
          return -1
     }
 
@@ -164,14 +164,14 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             if (result == 0) {
                 return true
             } else {
-                LOG.debug("Not reachable: $this, executing `$cmd`, exit code $result")
+                if (LOG.isDebugEnabled()) LOG.debug("Not reachable: $this, executing `$cmd`, exit code $result")
                 return false
             }
         } catch (IllegalStateException e) {
-            LOG.debug("Exception checking if $this is reachable; assuming not", e)
+            if (LOG.isDebugEnabled()) LOG.debug("Exception checking if $this is reachable; assuming not", e)
             return false
         } catch (IOException e) {
-            LOG.debug("Exception checking if $this is reachable; assuming not", e)
+            if (LOG.isDebugEnabled()) LOG.debug("Exception checking if $this is reachable; assuming not", e)
             return false
         }
     }

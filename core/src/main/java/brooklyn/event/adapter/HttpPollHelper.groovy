@@ -30,11 +30,11 @@ protected class HttpPollHelper extends AbstractPollHelper {
 	
 	@Override
 	AbstractSensorEvaluationContext executePollOnSuccess() {
-		log.debug "http polling for {} sensors at {}", adapter.entity, adapter.baseUrl+adapter.urlVars
+		if (log.isDebugEnabled()) log.debug "http polling for {} sensors at {}", adapter.entity, adapter.baseUrl+adapter.urlVars
 		HttpURLConnection connection = getConnection();
 		connection.connect()
 		def result = new HttpResponseContext(connection)
-		log.debug "http poll for {} got: {}", adapter.entity, result.content
+		if (log.isDebugEnabled()) log.debug "http poll for {} got: {}", adapter.entity, result.content
 		return result
 	}
 	

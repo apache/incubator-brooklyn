@@ -60,19 +60,19 @@ class JmxNotificationAdapter extends AbstractSensorAdapter {
         }
         @Override
         protected void activatePushing() {
-            LOG.trace("Activating notification listener on $objectName with filter '$notificationFilter', listeners $pushedListeners")
+            if (LOG.isTraceEnabled()) LOG.trace("Activating notification listener on $objectName with filter '$notificationFilter', listeners $pushedListeners")
             adapter.helper.addNotificationListener(objectName, notificationListener)
         }
         @Override
         protected void deactivatePushing() {
-            LOG.trace("Deactivating notification listener on $objectName with filter '$notificationFilter'")
+            if (LOG.isTraceEnabled()) LOG.trace("Deactivating notification listener on $objectName with filter '$notificationFilter'")
             adapter.helper.removeNotificationListener(objectName, notificationListener)
         }
         protected void addListener(NotificationListener listener) {
             pushedListeners.add(listener)
         }
         private void notifyListeners(Notification notif) {
-            LOG.trace("Received notification {}; notifiying listeners {}", notif, pushedListeners)
+            if (LOG.isTraceEnabled()) LOG.trace("Received notification {}; notifiying listeners {}", notif, pushedListeners)
             pushedListeners.each { NotificationListener listener ->
                 try {
                     listener.handleNotification(notif, null)

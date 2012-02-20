@@ -169,13 +169,13 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 
 	// TODO Find a better way to detect early death of process.
 	public void waitForEntityStart() throws IllegalStateException {
-		log.debug "waiting to ensure $this doesn't abort prematurely"
+		if (log.isDebugEnabled()) log.debug "waiting to ensure $this doesn't abort prematurely"
 		long startTime = System.currentTimeMillis()
 		long waitTime = startTime + 75000 // FIXME magic number; should be config key with default value?
 		boolean isRunningResult = false;
 		while (!isRunningResult && System.currentTimeMillis() < waitTime) {
 			isRunningResult = driver.isRunning()
-			log.debug "checked {}, is running returned: {}", this, isRunningResult
+			if (log.isDebugEnabled()) log.debug "checked {}, is running returned: {}", this, isRunningResult
 			Thread.sleep 1000 // FIXME magic number; should be config key with default value?
 		}
 		if (!isRunningResult) {

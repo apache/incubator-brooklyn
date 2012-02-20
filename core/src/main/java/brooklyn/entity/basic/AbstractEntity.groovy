@@ -221,7 +221,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
                         def overwritten = configT.put(k.name, k)
                         configFields.put(k.name, f)
                     } else if (definitiveField != null) {
-                        LOG.debug("multiple definitions for config key ${k.name} on $this; preferring that in sub-class: $alternativeField to $f")
+                        if (LOG.isDebugEnabled()) LOG.debug("multiple definitions for config key ${k.name} on $this; preferring that in sub-class: $alternativeField to $f")
                     } else if (definitiveField == null) {
                         LOG.warn("multiple definitions for config key ${k.name} on $this; preferring $alternativeField to $f")
                     }
@@ -467,7 +467,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 
     @Override
     public <T> T setAttribute(AttributeSensor<T> attribute, T val) {
-        LOG.debug "setting attribute {} to {} on {}", attribute.name, val, this
+        if (LOG.isDebugEnabled()) LOG.debug "setting attribute {} to {} on {}", attribute.name, val, this
         attributesInternal.update(attribute, val);
     }
 
@@ -717,7 +717,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
             LOG.warn("Strongly discouraged use of emit with sensor event as value $sensor $val; value should be unpacked!",
                 new Throwable("location of discouraged event $sensor emit"))
         }
-        LOG.debug "Emitting sensor notification {} value {} on {}", sensor.name, val, this
+        if (LOG.isDebugEnabled()) LOG.debug "Emitting sensor notification {} value {} on {}", sensor.name, val, this
         emitInternal(sensor, val);
     }
     
@@ -767,13 +767,15 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
             this.@skipInvokeMethodEffectorInterception.set(true);
 
             //args should be an array, warn if we got here wrongly (extra defensive as args accepts it, but it shouldn't happen here)
-            if (args==null) LOG.warn("$this.$name invoked with incorrect args signature (null)", new Throwable("source of incorrect invocation of $this.$name"))
-            else if (!args.class.isArray()) LOG.warn("$this.$name invoked with incorrect args signature (non-array ${args.class}): "+args, new Throwable("source of incorrect invocation of $this.$name"))
+            if (args==null) 
+                LOG.warn("$this.$name invoked with incorrect args signature (null)", new Throwable("source of incorrect invocation of $this.$name"))
+            else if (!args.class.isArray()) 
+                LOG.warn("$this.$name invoked with incorrect args signature (non-array ${args.class}): "+args, new Throwable("source of incorrect invocation of $this.$name"))
 
             try {
                 Effector eff = effectors.get(name)
                 if (eff) {
-                    LOG.debug("Invoking effector {} on {} with args {}", name, this, args)
+                    if (LOG.isDebugEnabled()) LOG.debug("Invoking effector {} on {} with args {}", name, this, args)
                     return getManagementContext().invokeEffectorMethodSync(this, eff, args);
                 }
             } catch (CancellationException ce) {

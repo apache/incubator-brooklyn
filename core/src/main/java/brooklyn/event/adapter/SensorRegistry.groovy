@@ -67,12 +67,12 @@ public class SensorRegistry {
 		deactivationListeners << onDown
 	}
 	public void activateAdapters() {
-		log.debug "activating adapters at sensor registry for {}", this, entity
+		if (log.isDebugEnabled()) log.debug "activating adapters at sensor registry for {}", this, entity
 		activated = true;
 		activationListeners.each { it.call() }
 	}
 	public void deactivateAdapters() {
-		log.debug "deactivating adapters at sensor registry for {}", this, entity
+		if (log.isDebugEnabled()) log.debug "deactivating adapters at sensor registry for {}", this, entity
 		deactivationListeners.each { it.call() }
 	}
 
@@ -90,7 +90,7 @@ public class SensorRegistry {
 
 	@Deprecated
     public <T> void addSensor(AttributeSensor<T> sensor, ValueProvider<? extends T> provider, long period) {
-        log.debug "adding calculated sensor {} with delay {} to {}", sensor.name, period, entity
+        if (log.isDebugEnabled()) log.debug "adding calculated sensor {} with delay {} to {}", sensor.name, period, entity
         providers.put(sensor, provider)
         
         Closure safeCalculate = {
@@ -100,7 +100,8 @@ public class SensorRegistry {
             } catch (Exception e) {
 				if (activated)
                 	log.error "Error calculating value for sensor ${sensor} on entity ${entity}", e
-				else log.debug "Error (post deactivation) calculating value for sensor ${sensor} on entity ${entity}", e
+				else 
+                    if (log.isDebugEnabled()) log.debug "Error (post deactivation) calculating value for sensor ${sensor} on entity ${entity}", e
             }
         }
         
@@ -109,18 +110,18 @@ public class SensorRegistry {
 
 	@Deprecated
     public <T> void removeSensor(AttributeSensor<T> sensor) {
-        log.debug "removing sensor {} from {}", sensor.name, entity
+        if (log.isDebugEnabled()) log.debug "removing sensor {} from {}", sensor.name, entity
         providers.remove(sensor)
         scheduled.remove(sensor)?.cancel(true)
     }
 
 	@Deprecated
     private void updateAll() {
-        log.debug "updating all sensors for {}", entity
+        if (log.isDebugEnabled()) log.debug "updating all sensors for {}", entity
         providers.each {
                 AttributeSensor sensor, ValueProvider provider ->
                 def newValue = provider.compute()
-                log.debug "update for attribute {} to {}", sensor.name, newValue
+                if (log.isDebugEnabled()) log.debug "update for attribute {} to {}", sensor.name, newValue
                 entity.setAttribute(sensor, newValue)
             }
     }
@@ -130,7 +131,7 @@ public class SensorRegistry {
         if (!providers.containsKey(sensor)) throw new IllegalStateException("Sensor ${sensor.name} not found");
         ValueProvider<?> provider = providers.get(sensor)
         def newValue = provider.compute()
-        log.debug "update for attribute {} on {}: new value {}", sensor.name, entity, newValue
+        if (log.isDebugEnabled()) log.debug "update for attribute {} on {}: new value {}", sensor.name, entity, newValue
         entity.setAttribute(sensor, newValue)
     }
 }

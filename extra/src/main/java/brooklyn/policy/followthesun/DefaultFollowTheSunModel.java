@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -230,9 +231,11 @@ public class DefaultFollowTheSunModel<ContainerType, ItemType> implements Follow
                 for (ItemType item : getItemsOnContainer(container)) {
                     Map<Location, Double> inboundUsage = directSendsToItemByLocation.get(item);
                     Map<? extends ItemType, Double> outboundUsage = itemUsage.get(item);
+                    double totalInbound = (inboundUsage != null) ? sum(inboundUsage.values()) : 0d;
+                    double totalOutbound = (outboundUsage != null) ? sum(outboundUsage.values()) : 0d;
                     out.println("\t\t\t"+"Item "+item);
-                    out.println("\t\t\t\t"+"Inbound: "+inboundUsage);
-                    out.println("\t\t\t\t"+"Outbound: "+outboundUsage);
+                    out.println("\t\t\t\t"+"Inbound: "+totalInbound+": "+inboundUsage);
+                    out.println("\t\t\t\t"+"Outbound: "+totalOutbound+": "+outboundUsage);
                 }
             }
         }
@@ -297,5 +300,13 @@ public class DefaultFollowTheSunModel<ContainerType, ItemType> implements Follow
         Map<K,V> result = Maps.newLinkedHashMap();
         result.put(k, v);
         return result;
+    }
+    
+    public static double sum(Collection<? extends Number> values) {
+        double total = 0;
+        for (Number d : values) {
+            total += d.doubleValue();
+        }
+        return total;
     }
 }
