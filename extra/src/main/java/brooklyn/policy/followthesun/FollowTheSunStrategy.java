@@ -20,8 +20,6 @@ public class FollowTheSunStrategy<ContainerType, ItemType> {
     // This is a modified version of the InterGeographyLatencyPolicy (aka Follow-The-Sun) policy from Monterey v3.
     
     // TODO location constraints
- 
-    // TODO look at who is publishing to topics, and who is subscribed
     
     private static final Logger LOG = LoggerFactory.getLogger(FollowTheSunStrategy.class);
     
@@ -65,13 +63,13 @@ public class FollowTheSunStrategy<ContainerType, ItemType> {
                 if (LOG.isTraceEnabled()) LOG.trace("POLICY {} detected {} msgs/sec in {}, split up as: {}", new Object[] {name, total, itemName, sendsByLocation});
                 
                 Double current = sendsByLocation.get(activeLocation);
-                if (current==null) current=0d;
+                if (current == null) current=0d;
                 List<WeightedObject<Location>> locationsWtd = new ArrayList<WeightedObject<Location>>();
-                if (total>0) {
+                if (total > 0) {
                     for (Map.Entry<Location, Double> entry : sendsByLocation.entrySet()) {
                         Location l = entry.getKey();
                         Double d = entry.getValue();
-                        if (d>current) locationsWtd.add(new WeightedObject<Location>(l, d));
+                        if (d > current) locationsWtd.add(new WeightedObject<Location>(l, d));
                     }
                 }
                 Collections.sort(locationsWtd);
@@ -89,7 +87,7 @@ public class FollowTheSunStrategy<ContainerType, ItemType> {
                         break;
                     }
                 }
-                if (optimalContainerInHighest==null) {
+                if (optimalContainerInHighest == null) {
                     if (LOG.isDebugEnabled()) LOG.debug("POLICY {} detected {} is already in optimal permitted location ({} of {} msgs/sec)", new Object[] {name, itemName, highestMsgRate, total});
                     continue;                   
                 }
@@ -105,7 +103,7 @@ public class FollowTheSunStrategy<ContainerType, ItemType> {
                         break;
                     }
                 }
-                if (optimalContainerInNextHighest==null) {
+                if (optimalContainerInNextHighest == null) {
                     nextHighestMsgRate = current;
                 }
                 
@@ -140,8 +138,12 @@ public class FollowTheSunStrategy<ContainerType, ItemType> {
     }
 
     private ContainerType findOptimal(Collection<ContainerType> contenders) {
-        // FIXME choose the least loaded mediator
-        // policyUtil.findLeastLoadedMediator(nodesInLocation);
+        /*
+         * TODO should choose the least loaded mediator. Currently chooses first available, and relies 
+         * on a load-balancer to move it again; would be good if these could share decision code so move 
+         * it to the right place immediately. e.g.
+         *   policyUtil.findLeastLoadedMediator(nodesInLocation);
+         */
         return (contenders.isEmpty() ? null : Iterables.get(contenders, 0));
     }
 }

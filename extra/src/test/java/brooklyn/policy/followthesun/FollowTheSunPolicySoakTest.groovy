@@ -21,10 +21,6 @@ import com.google.common.collect.Multimap
 
 public class FollowTheSunPolicySoakTest extends AbstractFollowTheSunPolicyTest {
 
-    // FIXME Implement stopping/starting items and containers (and new locations)
-    
-    // FIXME Implement lockedItems
-    
     protected static final Logger LOG = LoggerFactory.getLogger(FollowTheSunPolicySoakTest.class)
     
     private static final long TIMEOUT_MS = 10*1000;
@@ -217,13 +213,5 @@ public class FollowTheSunPolicySoakTest extends AbstractFollowTheSunPolicyTest {
         int numItemStopsPerCycle = 0
         int timeout_ms = TIMEOUT_MS
         boolean verbose = true
-    }
-
-    // Testing conveniences.
-    
-    private double sum(Iterable<Double> vals) {
-        double total = 0;
-        vals.each { total += it }
-        return total;
     }
 }

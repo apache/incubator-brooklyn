@@ -179,25 +179,4 @@ public class AbstractFollowTheSunPolicyTest {
         }
         return item
     }
-    
-    /**
-     * Asks the item directly for its workrate.
-     */
-    protected static double getItemWorkrate(MockItemEntity item) {
-        Object result = item.getAttribute(TEST_METRIC)
-        return (result == null ? 0 : ((Number) result).doubleValue())
-    }
-    
-    /**
-     * Asks the container for its items, and then each of those items directly for their workrates; returns the total.
-     */
-    protected static double getContainerWorkrate(MockContainerEntity container) {
-        double result = 0.0
-        container.getBalanceableItems().each { MockItemEntity item ->
-            assertEquals(item.getContainerId(), container.getId())
-            result += getItemWorkrate(item)
-        }
-        return result
-    }
-    
 }

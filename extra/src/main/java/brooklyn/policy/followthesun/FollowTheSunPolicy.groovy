@@ -23,7 +23,6 @@ import brooklyn.policy.basic.AbstractPolicy
 import brooklyn.policy.followthesun.FollowTheSunPool.ContainerItemPair
 import brooklyn.policy.loadbalancing.Movable
 
-import com.google.common.base.Preconditions
 import com.google.common.collect.Iterables
 
 public class FollowTheSunPolicy extends AbstractPolicy {
@@ -62,10 +61,10 @@ public class FollowTheSunPolicy extends AbstractPolicy {
             Sensor sensor = event.getSensor()
             switch (sensor) {
                 case itemUsageMetric:
-                    onItemMetricUpdate(source, (Map<? extends Entity, Double>) value, true)
+                    onItemMetricUpdated(source, (Map<? extends Entity, Double>) value, true)
                     break
                 case Attributes.LOCATION_CHANGED:
-                    onContainerLocationUpdate(source, true)
+                    onContainerLocationUpdated(source, true)
                     break
                 case FollowTheSunPool.CONTAINER_ADDED:
                     onContainerAdded((Entity) value, true)
@@ -74,7 +73,7 @@ public class FollowTheSunPolicy extends AbstractPolicy {
                     onContainerRemoved((Entity) value, true)
                     break
                 case FollowTheSunPool.ITEM_ADDED:
-                    onItemAdded((Entity) value, ((Entity)value).getAttribute(Movable.CONTAINER), true)
+                    onItemAdded((Entity) value, true)
                     break
                 case FollowTheSunPool.ITEM_REMOVED:
                     onItemRemoved((Entity) value, true)
@@ -117,7 +116,7 @@ public class FollowTheSunPolicy extends AbstractPolicy {
             onContainerAdded(container, false)
         }
         for (Entity item : poolEntity.getItemGroup().getMembers()) {
-            onItemAdded(item, item.getAttribute(Movable.CONTAINER), false)
+            onItemAdded(item, false)
         }
 
         scheduleLatencyReductionJig()
@@ -175,8 +174,10 @@ public class FollowTheSunPolicy extends AbstractPolicy {
         if (rebalanceNow) scheduleLatencyReductionJig()
     }
     
-    private void onItemAdded(Entity item, Entity parentContainer, boolean rebalanceNow) {
+    private void onItemAdded(Entity item, boolean rebalanceNow) {
         checkArgument(item instanceof Movable, "Added item $item must implement Movable")
+        Entity parentContainer = item.getAttribute(Movable.CONTAINER)
+        
         if (LOG.isTraceEnabled()) LOG.trace("{} recording addition of item {} in container {}", this, item, parentContainer)
         
         subscribe(item, itemUsageMetric, eventHandler)
@@ -206,14 +207,14 @@ public class FollowTheSunPolicy extends AbstractPolicy {
         if (rebalanceNow) scheduleLatencyReductionJig()
     }
     
-    private void onContainerLocationUpdate(Entity container, boolean rebalanceNow) {
+    private void onContainerLocationUpdated(Entity container, boolean rebalanceNow) {
         Location location = locationFinder.call(container)
         if (LOG.isTraceEnabled()) LOG.trace("{} recording location for container {}, new value {}", this, container, location)
         model.onContainerLocationUpdated(container, location)
         if (rebalanceNow) scheduleLatencyReductionJig()
     }
     
-    private void onItemMetricUpdate(Entity item, Map<? extends Entity, Double> newValues, boolean rebalanceNow) {
+    private void onItemMetricUpdated(Entity item, Map<? extends Entity, Double> newValues, boolean rebalanceNow) {
         if (LOG.isTraceEnabled()) LOG.trace("{} recording usage update for item {}, new value {}", this, item, newValues)
         model.onItemUsageUpdated(item, newValues)
         if (rebalanceNow) scheduleLatencyReductionJig()
