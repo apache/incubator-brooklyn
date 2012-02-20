@@ -78,7 +78,7 @@ public class ActiveMQSetup extends SshBasedJavaAppSetup {
     public List<String> getRunScript() {
         List<String> script = [
             "cd ${runDir}",
-			"nohup ./bin/activemq start &",
+			"nohup ./bin/activemq start > /tmp/smlog 2>&1 &",
         ]
         return script
     }
