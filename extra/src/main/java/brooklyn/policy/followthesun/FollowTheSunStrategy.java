@@ -10,10 +10,12 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.location.Location;
+
 import com.google.common.collect.Iterables;
 
 // TODO: extract interface
-public class FollowTheSunStrategy<LocationType, ContainerType, ItemType> {
+public class FollowTheSunStrategy<ContainerType, ItemType> {
     
     // This is a modified version of the InterGeographyLatencyPolicy (aka Follow-The-Sun) policy from Monterey v3.
     
@@ -24,10 +26,10 @@ public class FollowTheSunStrategy<LocationType, ContainerType, ItemType> {
     private static final Logger LOG = LoggerFactory.getLogger(FollowTheSunStrategy.class);
     
     private final FollowTheSunParameters parameters;
-    private final FollowTheSunModel<LocationType, ContainerType,ItemType> model;
+    private final FollowTheSunModel<ContainerType,ItemType> model;
     private final String name;
     
-    public FollowTheSunStrategy(FollowTheSunModel<LocationType,ContainerType,ItemType> model, FollowTheSunParameters parameters) {
+    public FollowTheSunStrategy(FollowTheSunModel<ContainerType,ItemType> model, FollowTheSunParameters parameters) {
         this.model = model;
         this.parameters = parameters;
         this.name = model.getName();
@@ -36,13 +38,13 @@ public class FollowTheSunStrategy<LocationType, ContainerType, ItemType> {
     public void rebalance() {
         try {
             Set<ItemType> items = model.getItems();
-            Map<ItemType, Map<LocationType, Double>> directSendsToItemByLocation = model.getDirectSendsToItemByLocation();
+            Map<ItemType, Map<Location, Double>> directSendsToItemByLocation = model.getDirectSendsToItemByLocation();
             
             for (ItemType item : items) {
                 String itemName = model.getName(item);
-                LocationType activeLocation = model.getItemLocation(item);
+                Location activeLocation = model.getItemLocation(item);
                 ContainerType activeContainer = model.getItemContainer(item);
-                Map<LocationType, Double> sendsByLocation = directSendsToItemByLocation.get(item);
+                Map<Location, Double> sendsByLocation = directSendsToItemByLocation.get(item);
                 if (sendsByLocation == null) sendsByLocation = Collections.emptyMap();
                 
                 if (parameters.excludedLocations.contains(activeLocation)) {
@@ -64,22 +66,22 @@ public class FollowTheSunStrategy<LocationType, ContainerType, ItemType> {
                 
                 Double current = sendsByLocation.get(activeLocation);
                 if (current==null) current=0d;
-                List<WeightedObject<LocationType>> locationsWtd = new ArrayList<WeightedObject<LocationType>>();
+                List<WeightedObject<Location>> locationsWtd = new ArrayList<WeightedObject<Location>>();
                 if (total>0) {
-                    for (Map.Entry<LocationType, Double> entry : sendsByLocation.entrySet()) {
-                        LocationType l = entry.getKey();
+                    for (Map.Entry<Location, Double> entry : sendsByLocation.entrySet()) {
+                        Location l = entry.getKey();
                         Double d = entry.getValue();
-                        if (d>current) locationsWtd.add(new WeightedObject<LocationType>(l, d));
+                        if (d>current) locationsWtd.add(new WeightedObject<Location>(l, d));
                     }
                 }
                 Collections.sort(locationsWtd);
                 Collections.reverse(locationsWtd);
                 
                 double highestMsgRate = -1;
-                LocationType highestLocation = null;
+                Location highestLocation = null;
                 ContainerType optimalContainerInHighest = null;
                 while (!locationsWtd.isEmpty()) {
-                    WeightedObject<LocationType> weightedObject = locationsWtd.remove(0);
+                    WeightedObject<Location> weightedObject = locationsWtd.remove(0);
                     highestMsgRate = weightedObject.getWeight();
                     highestLocation = weightedObject.getObject();
                     optimalContainerInHighest = findOptimal(model.getAvailableContainersFor(item, highestLocation));
@@ -95,9 +97,9 @@ public class FollowTheSunStrategy<LocationType, ContainerType, ItemType> {
                 double nextHighestMsgRate = -1;
                 ContainerType optimalContainerInNextHighest = null;
                 while (!locationsWtd.isEmpty()) {
-                    WeightedObject<LocationType> weightedObject = locationsWtd.remove(0);
+                    WeightedObject<Location> weightedObject = locationsWtd.remove(0);
                     nextHighestMsgRate = weightedObject.getWeight();
-                    LocationType nextHighestLocation = weightedObject.getObject();
+                    Location nextHighestLocation = weightedObject.getObject();
                     optimalContainerInNextHighest = findOptimal(model.getAvailableContainersFor(item, nextHighestLocation));
                     if (optimalContainerInNextHighest != null) {
                         break;

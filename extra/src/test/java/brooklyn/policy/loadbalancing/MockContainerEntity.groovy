@@ -14,10 +14,11 @@ import brooklyn.entity.ConfigKey
 import brooklyn.entity.Effector
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractGroup
+import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.MethodEffector
 import brooklyn.entity.trait.Startable
 import brooklyn.event.AttributeSensor
-import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.event.Sensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.Location
 import brooklyn.util.flags.SetFromFlag
@@ -32,10 +33,6 @@ public class MockContainerEntity extends AbstractGroup implements BalanceableCon
     @SetFromFlag("membership")
     public static final ConfigKey<String> MOCK_MEMBERSHIP =
             new BasicConfigKey<String>(String.class, "mock.container.membership", "For testing ItemsInContainersGroup")
-
-    // FIXME temp fix; think more about this for follow-the-sun
-    public static final AttributeSensor<String> LOCATION =
-            new BasicAttributeSensor<String>(String.class, "mock.container.location", "For testing follow-the-sun")
 
     public static final Effector OFFLOAD_AND_STOP = new MethodEffector(MockContainerEntity.&offloadAndStop);
 
@@ -114,7 +111,7 @@ public class MockContainerEntity extends AbstractGroup implements BalanceableCon
             locations.addAll(locs)
             Location loc = Iterables.get(locs, 0)
             String locName = (loc.getName() != null) ? loc.getName() : loc.toString()
-            setAttribute(LOCATION, locName)
+            emit(Attributes.LOCATION_CHANGED, null)
             setAttribute(SERVICE_UP, true);
         } finally {
             _lock.unlock();

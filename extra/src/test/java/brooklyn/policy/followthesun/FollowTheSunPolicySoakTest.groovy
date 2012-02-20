@@ -202,7 +202,7 @@ public class FollowTheSunPolicySoakTest extends AbstractFollowTheSunPolicyTest {
                     errMsg = "locsInUse=$locNamesInUse; totalMoves=${MockItemEntity.totalMoveCount}"
                 }
                 
-                assertEquals(itemLocNames, Collections.nCopies(movableItems.size(), busiestLocation.getName()), errMsg)
+                assertEquals(itemLocs, Collections.nCopies(movableItems.size(), busiestLocation), errMsg)
             }
         }
     }

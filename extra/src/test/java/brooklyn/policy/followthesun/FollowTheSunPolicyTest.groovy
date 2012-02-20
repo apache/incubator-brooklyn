@@ -17,14 +17,9 @@ import com.google.common.collect.ImmutableMap
 
 public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
     
-    private String loc1Name
-    private String loc2Name
-    
     @BeforeMethod(alwaysRun=true) 
     public void before() {
         super.before()
-        loc1Name = loc1.getName()
-        loc2Name = loc2.getName()
     }
     @Test
     public void testPolicyUpdatesModel() {
@@ -36,9 +31,9 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
         executeUntilSucceeds(timeout:TIMEOUT_MS) {
             assertEquals(model.getItems(), [item1, item2] as Set)
             assertEquals(model.getItemContainer(item1), containerA)
-            assertEquals(model.getItemLocation(item1), loc1Name)
-            assertEquals(model.getContainerLocation(containerA), loc1Name)
-            assertEquals(model.getDirectSendsToItemByLocation(), [(item2):[(loc1Name):11d]])
+            assertEquals(model.getItemLocation(item1), loc1)
+            assertEquals(model.getContainerLocation(containerA), loc1)
+            assertEquals(model.getDirectSendsToItemByLocation(), [(item2):[(loc1):11d]])
         }
     }
     

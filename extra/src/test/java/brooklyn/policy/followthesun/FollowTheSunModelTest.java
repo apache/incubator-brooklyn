@@ -1,8 +1,8 @@
 package brooklyn.policy.followthesun;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -25,11 +25,11 @@ public class FollowTheSunModelTest {
     private MockItemEntity item2 = new MockItemEntity();
     private MockItemEntity item3 = new MockItemEntity();
     
-    private DefaultFollowTheSunModel<Location, MockContainerEntity, MockItemEntity> model;
+    private DefaultFollowTheSunModel<MockContainerEntity, MockItemEntity> model;
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        model = new DefaultFollowTheSunModel<Location, MockContainerEntity, MockItemEntity>("myname");
+        model = new DefaultFollowTheSunModel<MockContainerEntity, MockItemEntity>("myname");
     }
     
     @Test

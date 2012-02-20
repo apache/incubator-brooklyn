@@ -21,7 +21,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 
-public class DefaultFollowTheSunModel<LocationType, ContainerType, ItemType> implements FollowTheSunModel<LocationType, ContainerType, ItemType> {
+public class DefaultFollowTheSunModel<ContainerType, ItemType> implements FollowTheSunModel<ContainerType, ItemType> {
     
     private static final Logger LOG = LoggerFactory.getLogger(DefaultFollowTheSunModel.class);
     
@@ -32,8 +32,8 @@ public class DefaultFollowTheSunModel<LocationType, ContainerType, ItemType> imp
     private final String name;
     private final Set<ContainerType> containers = Collections.newSetFromMap(new ConcurrentHashMap<ContainerType,Boolean>());
     private final Map<ItemType, ContainerType> itemToContainer = new ConcurrentHashMap<ItemType, ContainerType>();
-    private final Map<ContainerType, LocationType> containerToLocation = new ConcurrentHashMap<ContainerType, LocationType>();
-    private final Map<ItemType, LocationType> itemToLocation = new ConcurrentHashMap<ItemType, LocationType>();
+    private final Map<ContainerType, Location> containerToLocation = new ConcurrentHashMap<ContainerType, Location>();
+    private final Map<ItemType, Location> itemToLocation = new ConcurrentHashMap<ItemType, Location>();
     private final Map<ItemType, Map<? extends ItemType, Double>> itemUsage = new ConcurrentHashMap<ItemType, Map<? extends ItemType,Double>>();
     private final Set<ItemType> immovableItems = Collections.newSetFromMap(new ConcurrentHashMap<ItemType, Boolean>());
 
@@ -53,14 +53,14 @@ public class DefaultFollowTheSunModel<LocationType, ContainerType, ItemType> imp
     }
     
     @Override
-    public LocationType getItemLocation(ItemType item) {
-        LocationType result = itemToLocation.get(item);
+    public Location getItemLocation(ItemType item) {
+        Location result = itemToLocation.get(item);
         return (isNull(result) ? null : result);
     }
     
     @Override
-    public LocationType getContainerLocation(ContainerType container) {
-        LocationType result = containerToLocation.get(container);
+    public Location getContainerLocation(ContainerType container) {
+        Location result = containerToLocation.get(container);
         return (isNull(result) ? null : result);
     }
     
@@ -80,7 +80,7 @@ public class DefaultFollowTheSunModel<LocationType, ContainerType, ItemType> imp
         return hasItem(item) && !immovableItems.contains(item);
     }
     
-    @Override public boolean isItemAllowedIn(ItemType item, LocationType location) {
+    @Override public boolean isItemAllowedIn(ItemType item, Location location) {
         return true; // TODO?
     }
     
@@ -90,20 +90,20 @@ public class DefaultFollowTheSunModel<LocationType, ContainerType, ItemType> imp
     
     @Override
     // FIXME Too expensive to compute; store in a different data structure?
-    public Map<ItemType, Map<LocationType, Double>> getDirectSendsToItemByLocation() {
-        Map<ItemType, Map<LocationType, Double>> result = new LinkedHashMap<ItemType, Map<LocationType,Double>>(getNumItems());
+    public Map<ItemType, Map<Location, Double>> getDirectSendsToItemByLocation() {
+        Map<ItemType, Map<Location, Double>> result = new LinkedHashMap<ItemType, Map<Location,Double>>(getNumItems());
         
         for (Map.Entry<ItemType, Map<? extends ItemType, Double>> entry : itemUsage.entrySet()) {
             ItemType targetItem = entry.getKey();
             Map<? extends ItemType, Double> sources = entry.getValue();
             if (sources.isEmpty()) continue; // no-one talking to us
             
-            Map<LocationType, Double> targetUsageByLocation = new LinkedHashMap<LocationType, Double>();
+            Map<Location, Double> targetUsageByLocation = new LinkedHashMap<Location, Double>();
             result.put(targetItem, targetUsageByLocation);
 
             for (Map.Entry<? extends ItemType, Double> entry2 : sources.entrySet()) {
                 ItemType sourceItem = entry2.getKey();
-                LocationType sourceLocation = getItemLocation(sourceItem);
+                Location sourceLocation = getItemLocation(sourceItem);
                 double usageVal = (entry.getValue() != null) ? entry2.getValue() : 0d;
                 if (sourceLocation == null) continue; // don't know where to attribute this load; e.g. item may have just terminated
                 if (sourceItem.equals(targetItem)) continue; // ignore msgs to self
@@ -118,7 +118,7 @@ public class DefaultFollowTheSunModel<LocationType, ContainerType, ItemType> imp
     }
     
     @Override
-    public Set<ContainerType> getAvailableContainersFor(ItemType item, LocationType location) {
+    public Set<ContainerType> getAvailableContainersFor(ItemType item, Location location) {
         checkNotNull(location);
         return getContainersInLocation(location);
     }
@@ -129,16 +129,16 @@ public class DefaultFollowTheSunModel<LocationType, ContainerType, ItemType> imp
     @Override
     public void onItemMoved(ItemType item, ContainerType newContainer) {
         // idempotent, as may be called multiple times
-        LocationType newLocation = (newContainer != null) ? containerToLocation.get(newContainer) : null;
+        Location newLocation = (newContainer != null) ? containerToLocation.get(newContainer) : null;
         ContainerType newContainerNonNull = toNonNullContainer(newContainer);
-        LocationType newLocationNonNull = toNonNullLocation(newLocation);
+        Location newLocationNonNull = toNonNullLocation(newLocation);
         ContainerType oldContainer = itemToContainer.put(item, newContainerNonNull);
-        LocationType oldLocation = itemToLocation.put(item, newLocationNonNull);
+        Location oldLocation = itemToLocation.put(item, newLocationNonNull);
     }
     
     @Override
-    public void onContainerAdded(ContainerType container, LocationType location) {
-        LocationType locationNonNull = toNonNullLocation(location);
+    public void onContainerAdded(ContainerType container, Location location) {
+        Location locationNonNull = toNonNullLocation(location);
         containers.add(container);
         containerToLocation.put(container, locationNonNull);
         for (ItemType item : getItemsOnContainer(container)) {
@@ -152,14 +152,14 @@ public class DefaultFollowTheSunModel<LocationType, ContainerType, ItemType> imp
         containerToLocation.remove(container);
     }
     
-    public void onContainerLocationUpdated(ContainerType container, LocationType location) {
+    public void onContainerLocationUpdated(ContainerType container, Location location) {
         if (!containers.contains(container)) {
             // unknown container; probably just stopped? 
             // If this overtook onContainerAdded, then assume we'll lookup the location and get it right in onContainerAdded
             LOG.debug("Ignoring setting of location for unknown container {}, to {}", container, location);
             return;
         }
-        LocationType locationNonNull = toNonNullLocation(location);
+        Location locationNonNull = toNonNullLocation(location);
         containerToLocation.put(container, locationNonNull);
         for (ItemType item : getItemsOnContainer(container)) {
             itemToLocation.put(item, locationNonNull);
@@ -173,11 +173,11 @@ public class DefaultFollowTheSunModel<LocationType, ContainerType, ItemType> imp
         if (immovable) {
             immovableItems.add(item);
         }
-        LocationType location = (container != null) ? containerToLocation.get(container) : null;
+        Location location = (container != null) ? containerToLocation.get(container) : null;
         ContainerType containerNonNull = toNonNullContainer(container);
-        LocationType locationNonNull = toNonNullLocation(location);
+        Location locationNonNull = toNonNullLocation(location);
         ContainerType oldContainer = itemToContainer.put(item, containerNonNull);
-        LocationType oldLocation = itemToLocation.put(item, locationNonNull);
+        Location oldLocation = itemToLocation.put(item, locationNonNull);
     }
     
     @Override
@@ -220,15 +220,15 @@ public class DefaultFollowTheSunModel<LocationType, ContainerType, ItemType> imp
     
     @VisibleForTesting
     public void dumpItemDistribution(PrintStream out) {
-        Map<ItemType, Map<LocationType, Double>> directSendsToItemByLocation = getDirectSendsToItemByLocation();
+        Map<ItemType, Map<Location, Double>> directSendsToItemByLocation = getDirectSendsToItemByLocation();
         
         out.println("Follow-The-Sun dump: ");
-        for (LocationType location: getLocations()) {
+        for (Location location: getLocations()) {
             out.println("\t"+"Location "+location);
             for (ContainerType container : getContainersInLocation(location)) {
                 out.println("\t\t"+"Container "+container);
                 for (ItemType item : getItemsOnContainer(container)) {
-                    Map<LocationType, Double> inboundUsage = directSendsToItemByLocation.get(item);
+                    Map<Location, Double> inboundUsage = directSendsToItemByLocation.get(item);
                     Map<? extends ItemType, Double> outboundUsage = itemUsage.get(item);
                     out.println("\t\t\t"+"Item "+item);
                     out.println("\t\t\t\t"+"Inbound: "+inboundUsage);
@@ -243,13 +243,13 @@ public class DefaultFollowTheSunModel<LocationType, ContainerType, ItemType> imp
         return itemToContainer.containsKey(item);
     }
     
-    private Set<LocationType> getLocations() {
+    private Set<Location> getLocations() {
         return ImmutableSet.copyOf(containerToLocation.values());
     }
     
-    private Set<ContainerType> getContainersInLocation(LocationType location) {
+    private Set<ContainerType> getContainersInLocation(Location location) {
         Set<ContainerType> result = new LinkedHashSet<ContainerType>();
-        for (Map.Entry<ContainerType, LocationType> entry : containerToLocation.entrySet()) {
+        for (Map.Entry<ContainerType, Location> entry : containerToLocation.entrySet()) {
             if (location.equals(entry.getValue())) {
                 result.add(entry.getKey());
             }
@@ -276,16 +276,15 @@ public class DefaultFollowTheSunModel<LocationType, ContainerType, ItemType> imp
         return (ContainerType) NULL; // relies on erasure
     }
     
-    @SuppressWarnings("unchecked")
-    private LocationType nullLocation() {
-        return (LocationType) NULL_LOCATION; // relies on erasure
+    private Location nullLocation() {
+        return NULL_LOCATION;
     }
     
     private ContainerType toNonNullContainer(ContainerType val) {
         return (val != null) ? val : nullContainer();
     }
     
-    private LocationType toNonNullLocation(LocationType val) {
+    private Location toNonNullLocation(Location val) {
         return (val != null) ? val : nullLocation();
     }
     
