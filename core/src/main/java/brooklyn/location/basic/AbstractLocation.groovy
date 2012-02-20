@@ -1,5 +1,7 @@
 package brooklyn.location.basic
 
+import java.util.Collection;
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -77,6 +79,7 @@ public abstract class AbstractLocation implements Location {
         
         if (!name && properties.displayName) {
             //'displayName' is a legacy way to refer to a location's name
+            //FIXME could this be a GString?
             Preconditions.checkArgument properties.displayName instanceof String, "'displayName' property should be a string"
             name = properties.remove("displayName")
         }
@@ -147,5 +150,22 @@ public abstract class AbstractLocation implements Location {
         if (hasLocationProperty(key)) return getLocationProperty(key);
         if (parentLocation != null) return parentLocation.findLocationProperty(key);
         return null;
+    }
+    
+    /** Default String representation is simplified name of class, together with selected fields. */
+    @Override
+    public String toString() {
+        StringBuilder result = []
+        result << (getClass().getSimpleName() ?: getClass().getName())
+        def fields = toStringFieldsToInclude()
+        result << "[" << fields.collect({
+            def v = this.hasProperty(it) ? this[it] : null
+            v ? "$it=$v" : null
+        }).findAll({it!=null}).join(",") << "]"
+    }
+    
+    /** override this, adding to the collection, to supply fields whose value, if not null, should be included in the toString */
+    public Collection<String> toStringFieldsToInclude() {
+        return ['id', 'name']
     }
 }

@@ -637,7 +637,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     /** Default String representation is simplified name of class, together with selected fields. */
     @Override
     public String toString() {
-        StringBuffer result = []
+        StringBuilder result = []
         result << getClass().getSimpleName()
         if (!result) result << getClass().getName()
 		def fields = toStringFieldsToInclude()

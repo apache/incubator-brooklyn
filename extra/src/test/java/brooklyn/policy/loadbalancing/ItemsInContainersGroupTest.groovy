@@ -24,6 +24,8 @@ public class ItemsInContainersGroupTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
+        loc = new SimulatedLocation(name:"loc")
+        
         app = new TestApplication()
         Closure containerGroupFilter = { Entity e -> 
                 e instanceof MockContainerEntity && 
