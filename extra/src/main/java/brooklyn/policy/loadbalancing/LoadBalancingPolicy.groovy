@@ -225,11 +225,11 @@ public class LoadBalancingPolicy extends AbstractPolicy {
         subscribe(item, metric, eventHandler)
         
         // Update the model, including the current metric value (if any).
+        boolean immovable = item.getConfig(Movable.IMMOVABLE)?:false
         Number currentValue = item.getAttribute(metric)
-        if (currentValue == null)
-            model.onItemAdded(item, parentContainer)
-        else
-            model.onItemAdded(item, parentContainer, currentValue.doubleValue())
+        model.onItemAdded(item, parentContainer, immovable)
+        if (currentValue != null)
+            model.onItemWorkrateUpdated(item, currentValue.doubleValue())
         
         if (rebalanceNow) scheduleRebalance()
     }

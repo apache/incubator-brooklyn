@@ -22,15 +22,17 @@ import brooklyn.util.flags.SetFromFlag
 
 public class JavaStartStopSshDriverIntegrationTest {
 
-    MachineProvisioningLocation localhost = new LocalhostMachineProvisioningLocation(name:'localhost', count:2)
+    private static final long TIMEOUT_MS = 10*1000
+    
+    MachineProvisioningLocation localhost = new LocalhostMachineProvisioningLocation(name:'localhost')
     AbstractApplication app
 
-    @BeforeMethod(groups = "Integration")
+    @BeforeMethod(alwaysRun=true)
     public void setup() {
         app = new AbstractApplication() {}
     }
 
-    @AfterMethod(groups = "Integration")
+    @AfterMethod(alwaysRun=true)
     public void shutdown() {
         if (app) app.stop()
     }
@@ -39,10 +41,12 @@ public class JavaStartStopSshDriverIntegrationTest {
     public void testJavaStartStopSshDriverStartsAndStopsApp() {
         MyEntity entity = new MyEntity(owner:app);
         app.start([ localhost ]);
-        executeUntilSucceedsWithShutdown(entity, timeout:5000) {
+        executeUntilSucceeds(timeout:TIMEOUT_MS) {
             assertNotNull entity.getAttribute(SoftwareProcessEntity.SERVICE_UP)
             assertTrue entity.getAttribute(SoftwareProcessEntity.SERVICE_UP)
         }
+        
+        entity.stop()
         assertFalse entity.getAttribute(SoftwareProcessEntity.SERVICE_UP)
     }
 }

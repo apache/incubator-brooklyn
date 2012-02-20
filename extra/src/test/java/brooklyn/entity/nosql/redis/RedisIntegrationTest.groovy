@@ -11,13 +11,10 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import redis.clients.jedis.Connection
-import brooklyn.entity.Application
-import brooklyn.entity.basic.legacy.JavaApp;
-import brooklyn.entity.trait.Startable
+import brooklyn.entity.basic.legacy.JavaApp
 import brooklyn.location.Location
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.test.entity.TestApplication
-import brooklyn.util.internal.EntityStartUtils
 import brooklyn.util.internal.TimeExtras
 
 /**
@@ -30,21 +27,19 @@ public class RedisIntegrationTest {
 
     static { TimeExtras.init() }
 
-    private Application app
+    private TestApplication app
     private Location testLocation
     private RedisStore redis
 
     @BeforeMethod(groups = "Integration")
     public void setup() {
         app = new TestApplication();
-        testLocation = new LocalhostMachineProvisioningLocation(name:'london', count:2)
+        testLocation = new LocalhostMachineProvisioningLocation(name:'london')
     }
 
     @AfterMethod(groups = "Integration")
     public void shutdown() {
-        if (redis != null && redis.getAttribute(Startable.SERVICE_UP)) {
-	        EntityStartUtils.stopEntity(redis)
-        }
+        if (app != null) app.stop()
     }
 
     /**
@@ -53,10 +48,12 @@ public class RedisIntegrationTest {
     @Test(groups = "Integration")
     public void canStartupAndShutdown() {
         redis = new RedisStore(owner:app);
-        redis.start([ testLocation ])
-        executeUntilSucceedsWithShutdown(redis) {
+        app.start([ testLocation ])
+        executeUntilSucceeds() {
             assertTrue redis.getAttribute(JavaApp.SERVICE_UP)
         }
+        
+        redis.stop()
         assertFalse redis.getAttribute(JavaApp.SERVICE_UP)
     }
 
@@ -67,7 +64,7 @@ public class RedisIntegrationTest {
     public void testRedisConnection() {
         // Start Redis
         redis = new RedisStore(owner:app)
-        redis.start([ testLocation ])
+        app.start([ testLocation ])
         executeUntilSucceeds {
             assertTrue redis.getAttribute(JavaApp.SERVICE_UP)
         }
