@@ -172,6 +172,7 @@ public class SshJschTool {
         long pause = properties.pause ?: 500
 
         def allCmds = []
+        //using the -e tell bash to end the script as soon as one of the statements returns a non zero value.
         allCmds.add "exec bash -e"
         allCmds.addAll env.collect { String key, String value ->
 			def ve = value.replaceAll("\\\"", "\\\\\\\"");
