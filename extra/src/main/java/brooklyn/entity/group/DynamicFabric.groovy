@@ -19,7 +19,6 @@ import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.Location
 import brooklyn.management.Task
 import brooklyn.util.flags.SetFromFlag
-import brooklyn.util.task.ParallelTask
 
 import com.google.common.base.Preconditions
 
@@ -91,8 +90,10 @@ public class DynamicFabric extends AbstractEntity implements Startable {
             //        listeners (notably AbstractDeoDnsService). A more robust mechanism is required; see ENGR-????
             //        for ideas and discussion.
             e.setLocations([it])
-            Task task = e.invoke(Startable.START, [locations:[it]])
-            tasks.put(e, task)
+            if (e instanceof Startable) {
+                Task task = e.invoke(Startable.START, [locations:[it]])
+                tasks.put(e, task)
+            }
         }
 
         // TODO Could do best-effort for waiting for remaining tasks, rather than failing on first?
@@ -109,7 +110,8 @@ public class DynamicFabric extends AbstractEntity implements Startable {
     }
 
     public void stop() {
-        Task invoke = Entities.invokeEffectorList(this, ownedChildren, Startable.STOP)
+        Collection<Entity> stoppableChildren = ownedChildren.findAll({it instanceof Startable})
+        Task invoke = Entities.invokeEffectorList(this, stoppableChildren, Startable.STOP)
         try {
 	        invoke?.get()
         } catch (ExecutionException ee) {

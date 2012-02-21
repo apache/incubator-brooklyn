@@ -109,16 +109,62 @@ public class TestEntity extends AbstractEntity implements Startable {
  * Mock entity that blocks on startup via the {@link CountDownLatch} argument.
  */
 public class BlockingEntity extends TestEntity {
-    final CountDownLatch startupLatch
     
+    public static class Builder {
+        private final Map props
+        private CountDownLatch startupLatch
+        private CountDownLatch shutdownLatch
+        private CountDownLatch executingStartupNotificationLatch
+        private CountDownLatch executingShutdownNotificationLatch
+        
+        public Builder(Map props=[:]) {
+            this.props = props
+        }
+        public Builder startupLatch(CountDownLatch val) {
+            startupLatch = val; return this
+        }
+        public Builder shutdownLatch(CountDownLatch val) {
+            shutdownLatch = val; return this
+        }
+        public Builder executingStartupNotificationLatch(CountDownLatch val) {
+            executingStartupNotificationLatch = val; return this
+        }
+        public Builder executingShutdownNotificationLatch(CountDownLatch val) {
+            executingShutdownNotificationLatch = val; return this
+        }
+        public BlockingEntity build() {
+            return new BlockingEntity(this)
+        }
+    }
+    
+    final CountDownLatch startupLatch
+    final CountDownLatch shutdownLatch
+    final CountDownLatch executingStartupNotificationLatch
+    final CountDownLatch executingShutdownNotificationLatch
+
     public BlockingEntity(Map props=[:], CountDownLatch startupLatch) {
-        super(props)
-        this.startupLatch = startupLatch
+        this(new Builder(props).startupLatch(startupLatch))
+    }
+    
+    public BlockingEntity(Builder builder) {
+        super(builder.props)
+        this.startupLatch = builder.startupLatch
+        this.shutdownLatch = builder.shutdownLatch
+        this.executingStartupNotificationLatch = builder.executingStartupNotificationLatch
+        this.executingShutdownNotificationLatch = builder.executingShutdownNotificationLatch
     }
 
     @Override
     void start(Collection<? extends Location> locs) {
-        startupLatch.await()
+        if (executingStartupNotificationLatch != null) executingStartupNotificationLatch.countDown()
+        if (startupLatch != null) startupLatch.await()
         super.start(locs)
+    }
+    
+    @Override
+    void stop() {
+        if (executingShutdownNotificationLatch != null) executingShutdownNotificationLatch.countDown()
+        if (shutdownLatch != null) shutdownLatch.await()
+        super.stop()
     }
 }

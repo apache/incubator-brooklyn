@@ -1,18 +1,21 @@
 package brooklyn.entity.group
 
+import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.testng.annotations.Test
 import org.testng.annotations.BeforeMethod
+import org.testng.annotations.Test
 
 import brooklyn.entity.Entity
+import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
 import brooklyn.location.basic.SimulatedLocation
@@ -110,11 +113,11 @@ class DynamicFabricTest {
     
     @Test
     public void testDynamicFabricStartsEntitiesInParallel() {
-        List<CountDownLatch> startupLatches = [] as CopyOnWriteArrayList<CountDownLatch>
+        List<CountDownLatch> latches = [] as CopyOnWriteArrayList<CountDownLatch>
         DynamicFabric fabric = new DynamicFabric(
                 newEntity:{ properties -> 
                         CountDownLatch latch = new CountDownLatch(1); 
-                        startupLatches.add(latch); 
+                        latches.add(latch); 
                         return new BlockingEntity(properties, latch) 
                 }, 
                 app)
@@ -126,12 +129,12 @@ class DynamicFabricTest {
                 .repeat()
                 .every(100 * MILLISECONDS)
                 .limitTimeTo(30 * SECONDS)
-                .until { startupLatches.size() == locs.size() }
+                .until { latches.size() == locs.size() }
                 .run()
 
         assertFalse(task.isDone())
         
-        startupLatches.each { it.countDown() }
+        latches.each { it.countDown() }
                
         new Repeater("Wait until complete")
                 .repeat()
@@ -147,6 +150,86 @@ class DynamicFabricTest {
         }
     }
 	
+    @Test
+    public void testDynamicFabricStopsEntitiesInParallel() {
+        List<CountDownLatch> shutdownLatches = [] as CopyOnWriteArrayList<CountDownLatch>
+        List<CountDownLatch> executingShutdownNotificationLatches = [] as CopyOnWriteArrayList<CountDownLatch>
+        DynamicFabric fabric = new DynamicFabric(
+                newEntity:{ properties -> 
+                        CountDownLatch shutdownLatch = new CountDownLatch(1); 
+                        CountDownLatch executingShutdownNotificationLatch = new CountDownLatch(1); 
+                        shutdownLatches.add(shutdownLatch);
+                        executingShutdownNotificationLatches.add(executingShutdownNotificationLatch)
+                        return new BlockingEntity.Builder(properties)
+                                .shutdownLatch(shutdownLatch)
+                                .executingShutdownNotificationLatch(executingShutdownNotificationLatch)
+                                .build() 
+                }, 
+                app)
+        Collection<Location> locs = [ loc1, loc2 ]
+        
+        // Start the fabric (and check we have the required num things to concurrently stop)
+        fabric.start(locs)
+        
+        assertEquals(shutdownLatches.size(), locs.size())
+        assertEquals(executingShutdownNotificationLatches.size(), locs.size())
+        assertEquals(fabric.ownedChildren.size(), locs.size())
+        Collection<BlockingEntity> children = fabric.ownedChildren
+        
+        // On stop, expect each child to get as far as blocking on its latch
+        Task task = fabric.invoke(Startable.STOP)
+
+        executingShutdownNotificationLatches.each {
+            assertTrue(it.await(10*1000, TimeUnit.MILLISECONDS))
+        }
+        assertFalse(task.isDone())
+        
+        // When we release the latches, expect shutdown to complete
+        shutdownLatches.each { it.countDown() }
+        
+        executeUntilSucceeds(timeout:10*1000) {
+            task.isDone()
+        }
+
+        fabric.ownedChildren.each {
+            assertEquals(it.counter.get(), 0)
+        }
+    }
+    
+    @Test
+    public void testDynamicFabricDoesNotAcceptUnstartableChildren() {
+        DynamicFabric fabric = new DynamicFabric(
+                newEntity:{ properties -> return new AbstractEntity(properties) {} }, 
+                app)
+        
+        try {
+            fabric.start([loc1])
+            assertEquals(fabric.ownedChildren.size(), 1)
+        } catch (ExecutionException e) {
+            Throwable unwrapped = unwrapThrowable(e)
+            if (unwrapped instanceof IllegalStateException && (unwrapped.getMessage()?.contains("is not Startable"))) {
+                // success
+            } else {
+                throw e
+            }
+        }
+    }
+    
+    // For follow-the-sun, a valid pattern is to associate the FollowTheSunModel as a child of the dynamic-fabric.
+    // Thus we have "unstoppable" entities. Let's be relaxed about it, rather than blowing up.
+    @Test
+    public void testDynamicFabricIgnoresExtraUnstoppableChildrenOnStop() {
+        DynamicFabric fabric = new DynamicFabric(
+                newEntity:{ properties -> return new TestEntity(properties) }, 
+                app)
+        
+        fabric.start([loc1])
+        
+        AbstractEntity extraChild = new AbstractEntity(owner:fabric) {}
+        
+        fabric.stop()
+    }
+    
 	@Test
     public void testDynamicFabricPropagatesProperties() {
 		Closure entityFactory = { properties -> return new TestEntity(properties) }
