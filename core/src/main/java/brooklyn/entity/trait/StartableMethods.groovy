@@ -14,6 +14,7 @@ public class StartableMethods {
 	
 	private StartableMethods() {}
 
+    /** Common implementation for start in parent nodes; just invokes start on all children of the entity */
 	public static void start(EntityLocal e, Collection<Location> locations) {
         List<Entity> startables = e.ownedChildren.findAll { it in Startable }
         if (startables && !startables.isEmpty() && locations && !locations.isEmpty()) {
@@ -25,7 +26,8 @@ public class StartableMethods {
 	        }
         }
 	}
-	
+
+    /** Common implementation for start in parent nodes; just invokes stop on all children of the entity */
 	public static void stop(EntityLocal e) {
 		List<Entity> startables = e.ownedChildren.findAll { it in Startable }
 		if (startables && !startables.isEmpty()) {
