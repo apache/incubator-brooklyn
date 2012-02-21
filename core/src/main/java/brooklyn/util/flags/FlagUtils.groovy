@@ -17,12 +17,12 @@ public class FlagUtils {
     
     /** sets all public fields (local and inherited) on the given object from the given flags map, returning unknown elements */
     public static Map setPublicFieldsFromFlags(Map flags, Object o) {
-        setFieldsFromFlags(flags, o, o.getClass().getFields() as Set)
+        setFieldsFromFlagsInternal(flags, o, o.getClass().getFields() as Set)
     }
     /** sets all fields (including private and static) on the given object and all supertypes, 
      * from the given flags map, returning just those flag-value pairs passed in which do not correspond to SetFromFlags fields */
     public static Map setFieldsFromFlags(Map flags, Object o) {
-        setFieldsFromFlags(flags, o, getAllFields(o.getClass()))
+        setFieldsFromFlagsInternal(flags, o, getAllFields(o.getClass()))
     }
 	
 	/** returns all fields on the given class, superclasses, and interfaces thereof, in that order of preference,
@@ -46,7 +46,7 @@ public class FlagUtils {
 		classes
 	}
 	
-    private static Map setFieldsFromFlags(Map flags, Object o, Collection<Field> fields) {
+    private static Map setFieldsFromFlagsInternal(Map flags, Object o, Collection<Field> fields) {
         Map remaining=[:]
 		if (flags) remaining += flags
         for (Field f: fields) {
