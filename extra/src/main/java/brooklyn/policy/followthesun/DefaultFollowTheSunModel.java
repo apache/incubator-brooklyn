@@ -231,11 +231,11 @@ public class DefaultFollowTheSunModel<ContainerType, ItemType> implements Follow
                 for (ItemType item : getItemsOnContainer(container)) {
                     Map<Location, Double> inboundUsage = directSendsToItemByLocation.get(item);
                     Map<? extends ItemType, Double> outboundUsage = itemUsage.get(item);
-                    double totalInbound = (inboundUsage != null) ? sum(inboundUsage.values()) : 0d;
-                    double totalOutbound = (outboundUsage != null) ? sum(outboundUsage.values()) : 0d;
+                    double totalInboundByLocation = (inboundUsage != null) ? sum(inboundUsage.values()) : 0d;
+                    double totalInboundByActor = (outboundUsage != null) ? sum(outboundUsage.values()) : 0d;
                     out.println("\t\t\t"+"Item "+item);
-                    out.println("\t\t\t\t"+"Inbound: "+totalInbound+": "+inboundUsage);
-                    out.println("\t\t\t\t"+"Outbound: "+totalOutbound+": "+outboundUsage);
+                    out.println("\t\t\t\t"+"Inbound-by-location: "+totalInboundByLocation+": "+inboundUsage);
+                    out.println("\t\t\t\t"+"Inbound-by-actor: "+totalInboundByActor+": "+outboundUsage);
                 }
             }
         }
