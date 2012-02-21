@@ -160,16 +160,4 @@ public class TomcatServerIntegrationTest {
             assertEquals(props.getProperty(key), expected.get(key))
         }
     }
-    
-    private static Throwable unwrapThrowable(Throwable t) {
-        if (t.getCause() == null) {
-            return t;
-        } else if (t instanceof ExecutionException) {
-            return unwrapThrowable(t.getCause())
-        } else if (t instanceof InvokerInvocationException) {
-            return unwrapThrowable(t.getCause())
-        } else {
-            return t
-        }
-    }
 }
