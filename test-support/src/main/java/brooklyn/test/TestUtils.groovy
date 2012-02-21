@@ -4,7 +4,9 @@ import static org.testng.AssertJUnit.*
 import groovy.time.TimeDuration
 
 import java.io.File
+import java.util.concurrent.ExecutionException
 
+import org.codehaus.groovy.runtime.InvokerInvocationException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -178,6 +180,18 @@ public class TestUtils {
             return new TimeDuration(0,0,0,(int)duration)
         } else {
             throw new IllegalArgumentException("Cannot convert $duration of type ${duration.class.name} to a TimeDuration")
+        }
+    }
+    
+    public static Throwable unwrapThrowable(Throwable t) {
+        if (t.getCause() == null) {
+            return t;
+        } else if (t instanceof ExecutionException) {
+            return unwrapThrowable(t.getCause())
+        } else if (t instanceof InvokerInvocationException) {
+            return unwrapThrowable(t.getCause())
+        } else {
+            return t
         }
     }
 }
