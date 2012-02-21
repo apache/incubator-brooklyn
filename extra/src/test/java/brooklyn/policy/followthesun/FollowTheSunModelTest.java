@@ -139,4 +139,15 @@ public class FollowTheSunModelTest {
         assertTrue(model.isItemMoveable(item1));
         assertFalse(model.isItemMoveable(item2));
     }
+    
+    @Test
+    public void testWorkrateUpdateAfterItemRemovalIsNotRecorded() throws Exception {
+        model.onContainerAdded(container1, loc1);
+        model.onItemAdded(item1, container1, true);
+        model.onItemAdded(item2, container1, true);
+        model.onItemRemoved(item1);
+        model.onItemUsageUpdated(item1, ImmutableMap.of(item2, 123d));
+        
+        assertFalse(model.getDirectSendsToItemByLocation().containsKey(item1));
+    }
 }

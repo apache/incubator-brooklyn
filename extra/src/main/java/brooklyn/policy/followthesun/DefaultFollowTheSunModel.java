@@ -157,7 +157,7 @@ public class DefaultFollowTheSunModel<ContainerType, ItemType> implements Follow
         if (!containers.contains(container)) {
             // unknown container; probably just stopped? 
             // If this overtook onContainerAdded, then assume we'll lookup the location and get it right in onContainerAdded
-            LOG.debug("Ignoring setting of location for unknown container {}, to {}", container, location);
+            if (LOG.isDebugEnabled()) LOG.debug("Ignoring setting of location for unknown container {}, to {}", container, location);
             return;
         }
         Location locationNonNull = toNonNullLocation(location);
@@ -191,7 +191,13 @@ public class DefaultFollowTheSunModel<ContainerType, ItemType> implements Follow
     
     @Override
     public void onItemUsageUpdated(ItemType item, Map<? extends ItemType, Double> newValue) {
-        itemUsage.put(item, newValue);
+        if (hasItem(item)) {
+            itemUsage.put(item, newValue);
+        } else {
+            // Can happen when item removed - get notification of removal and workrate from group and item
+            // respectively, so can overtake each other
+            if (LOG.isDebugEnabled()) LOG.debug("Ignoring setting of usage for unknown item {}, to {}", item, newValue);
+        }
     }
     
     

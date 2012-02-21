@@ -206,12 +206,21 @@ public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements Bal
     
     @Override
     public void onItemWorkrateUpdated(ItemType item, double newValue) {
-        Double oldValue = itemToWorkrate.put(item, newValue);
-        double delta = ( newValue - (oldValue != null ? oldValue : 0) );
-        currentPoolWorkrate += delta;
+        if (hasItem(item)) {
+            Double oldValue = itemToWorkrate.put(item, newValue);
+            double delta = ( newValue - (oldValue != null ? oldValue : 0) );
+            currentPoolWorkrate += delta;
+        } else {
+            // Can happen when item removed - get notification of removal and workrate from group and item
+            // respectively, so can overtake each other
+            if (LOG.isDebugEnabled()) LOG.debug("Ignoring setting of workrate for unknown item {}, to {}", item, newValue);
+        }
     }
     
-    
+    private boolean hasItem(ItemType item) {
+        return itemToContainer.containsKey(item);
+    }
+
     // Mutators that change the real world
     
     @Override public void moveItem(ItemType item, ContainerType oldNode, ContainerType newNode) {
