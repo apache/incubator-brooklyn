@@ -204,7 +204,7 @@ public abstract class SshBasedAppSetup extends StartStopSshDriver implements Scr
         if (Strings.isNullOrEmpty(service)) service = entity.id
         List<String> script = [
             "cd ${runDir}",
-            "test -f ${pidFile}",
+            "test -f ${pidFile} || exit 1",
             "ps aux | grep ${service} | grep \$(cat ${pidFile}) > /dev/null"
 			//FIXME
 			// ps -p instead?
