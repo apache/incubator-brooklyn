@@ -55,7 +55,7 @@ public class ScriptHelper {
 	
 	public int execute() {
 		if (!executionCheck.call(this)) return 0
-		log.debug "executing: {} - {}", summary, lines
+		if (log.isDebugEnabled()) log.debug "executing: {} - {}", summary, lines
 		int result;
 		try {
 			result = runner.execute(lines, summary)
@@ -64,7 +64,7 @@ public class ScriptHelper {
 		} catch (Exception e) {
 			throw new IllegalStateException("execution failed, invocation error for ${summary}", e)
 		}
-		log.debug "finished executing: {} - result code {}", summary, result
+		if (log.isDebugEnabled()) log.debug "finished executing: {} - result code {}", summary, result
 		if (!resultCodeCheck.call(result))
 			throw new IllegalStateException("execution failed, invalid result ${result} for ${summary}")
 		result		

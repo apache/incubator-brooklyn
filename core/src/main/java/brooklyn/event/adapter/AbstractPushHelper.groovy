@@ -43,7 +43,7 @@ public abstract class AbstractPushHelper {
 	
 	/** implementation-specific generation of AbstractSensorEvaluationContext which is then typically passed to evaluateSensorsOnPollResponse */
 	protected void onPush(AbstractSensorEvaluationContext notification) {
-		log.debug "push for {} got: {}", adapter.entity, notification
+		if (log.isDebugEnabled()) log.debug "push for {} got: {}", adapter.entity, notification
 		if (notification!=null) evaluateSensorsOnResponse(notification)
 	}
 	
@@ -67,7 +67,7 @@ public abstract class AbstractPushHelper {
 				log.warn "unable to compute ${s} for ${entity}: ${e.getMessage()}"+
 					(optionalContextForErrors?"\n"+optionalContextForErrors:""), e
 			else
-				log.debug "unable to compute ${s} for ${entity} (when deactive): ${e.getMessage()}"+
+				if (log.isDebugEnabled()) log.debug "unable to compute ${s} for ${entity} (when deactive): ${e.getMessage()}"+
 					(optionalContextForErrors?"\n"+optionalContextForErrors:""), e
 		}
 		return null

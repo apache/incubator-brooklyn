@@ -194,7 +194,7 @@ public class SshJschTool {
             }
         } catch (IOException ioe) {
 			if (channel.getExitStatus()!=-1)
-            	log.debug "Caught an IOException ({}) - the script has probably exited early", ioe.message
+            	if (log.isDebugEnabled()) log.debug "Caught an IOException ({}) - the script has probably exited early", ioe.message
 			else
 				log.warn "Caught an IOException ({}) - the script may have exited early", ioe.message
         }
@@ -234,7 +234,7 @@ public class SshJschTool {
         StringBuffer run = []
         env.each { key, value -> run.append("export $key=\"$value\"").append(separator) }
         commands.each { run.append(it).append(separator) }
-        log.trace "Running command {}", run.toString()
+        if (log.isTraceEnabled()) log.trace "Running command {}", run.toString()
         channel.setCommand  run.toString()
 
         channel.connect()

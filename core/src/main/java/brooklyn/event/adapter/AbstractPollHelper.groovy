@@ -33,13 +33,13 @@ public abstract class AbstractPollHelper {
 	ScheduledTask schedule;
 	
 	protected activatePoll() {
-		log.debug "activating poll (period {}) for {} sensors {} (using {})", adapter.pollPeriod, adapter.entity, polledSensors.keySet(), this
+		if (log.isDebugEnabled()) log.debug "activating poll (period {}) for {} sensors {} (using {})", adapter.pollPeriod, adapter.entity, polledSensors.keySet(), this
 		Closure pollingTaskFactory = { new BasicTask(entity: entity, { executePoll() }); }
 		schedule = new ScheduledTask(period: adapter.pollPeriod, pollingTaskFactory);
 		entity.executionContext.submit schedule;
 	}
 	protected deactivatePoll() {
-		log.debug "deactivating poll for {} sensors {} (using {})", adapter.entity, polledSensors.keySet(), this
+		if (log.isDebugEnabled()) log.debug "deactivating poll for {} sensors {} (using {})", adapter.entity, polledSensors.keySet(), this
 		if (schedule) schedule.cancel();
 	}
 	
@@ -49,18 +49,18 @@ public abstract class AbstractPollHelper {
 		if (!adapter.isActivated()) return;
 		AbstractSensorEvaluationContext response;
 		try {
-			log.trace "executing poll for {} sensors {} (using {})", adapter.entity, polledSensors.keySet(), this
+			if (log.isTraceEnabled()) log.trace "executing poll for {} sensors {} (using {})", adapter.entity, polledSensors.keySet(), this
 			response = executePollOnSuccess();
 			lastWasSuccessful = true;
 		} catch (Exception e) {
 			if (!adapter.isConnected() || !lastWasSuccessful)
-				log.debug("error reading ${this} (disconnect): ${e}", e)
+				if (log.isDebugEnabled()) log.debug("error reading ${this} (disconnect): ${e}", e)
 			else
 				log.warn("error reading ${this} (disconnect): ${e}", e)
 			lastWasSuccessful = false;
 			response = executePollOnError(e);
 		}
-		log.trace "poll for {} got: {}", adapter.entity, response
+		if (log.isTraceEnabled()) log.trace "poll for {} got: {}", adapter.entity, response
 		if (response!=null) evaluateSensorsOnResponse(response)
 	}
 	
@@ -88,7 +88,7 @@ public abstract class AbstractPollHelper {
 				log.warn "unable to compute ${s} for ${entity}: ${e.getMessage()}"+
 					(optionalContextForErrors?"\n"+optionalContextForErrors:""), e
 			else
-				log.debug "unable to compute ${s} for ${entity} (when deactive): ${e.getMessage()}"+
+				if (log.isDebugEnabled()) log.debug "unable to compute ${s} for ${entity} (when deactive): ${e.getMessage()}"+
 					(optionalContextForErrors?"\n"+optionalContextForErrors:""), e
 		}
 		return null

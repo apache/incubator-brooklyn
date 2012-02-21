@@ -4,16 +4,20 @@ import java.util.List
 
 import brooklyn.event.Sensor
 import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.event.basic.AttributeSensorAndConfigKey
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey
+import brooklyn.event.basic.BasicNotificationSensor
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey
-import brooklyn.location.PortRange
 import brooklyn.location.basic.PortRanges
 
 /**
  * This interface should be used to access {@link Sensor} definitions.
  */
 public interface Attributes {
+    
+    BasicNotificationSensor<Void> LOCATION_CHANGED = 
+            [Void.class, "entity.locationChanged", "Indicates that an entity's location has been changed"]
+
+
     /*
      * Application information sensors.
      */

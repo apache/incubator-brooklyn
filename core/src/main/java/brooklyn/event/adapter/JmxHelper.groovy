@@ -133,7 +133,7 @@ public class JmxHelper {
 	
 	/** continuously attempts to connect (blocking), for at least the indicated amount of time; or indefinitely if -1 */
 	public boolean connect(long timeout) {
-		LOG.debug "Connecting to JMX URL: {} ({})", url, ((timeout == -1) ? "indefinitely" : "${timeout}ms timeout")
+		if (LOG.isDebugEnabled()) LOG.debug "Connecting to JMX URL: {} ({})", url, ((timeout == -1) ? "indefinitely" : "${timeout}ms timeout")
 		long start = System.currentTimeMillis()
 		long end = start + timeout
 		if (timeout == -1) end = Long.MAX_VALUE
@@ -142,15 +142,15 @@ public class JmxHelper {
 		while (start <= end) {
 			start = System.currentTimeMillis()
 			if (attempt!=0) Thread.sleep(100); //sleep 100 to prevent trashing and facilitate interruption
-			LOG.trace "trying connection to {} at time {}", url, start
+			if (LOG.isTraceEnabled()) LOG.trace "trying connection to {} at time {}", url, start
 			try {
 				connect()
 				return true
             } catch (SecurityException e) {
-                LOG.debug "Attempt {} failed connecting to {} ({})", attempt+1, url, e.message
+                if (LOG.isDebugEnabled()) LOG.debug "Attempt {} failed connecting to {} ({})", attempt+1, url, e.message
                 lastError = e;
 			} catch (IOException e) {
-				LOG.debug "Attempt {} failed connecting to {} ({})", attempt+1, url, e.message
+				if (LOG.isDebugEnabled()) LOG.debug "Attempt {} failed connecting to {} ({})", attempt+1, url, e.message
 				lastError = e;
             } catch (NumberFormatException e) {
                 LOG.warn "Failed connection to {} ({}); rethrowing...", url, e.message
@@ -165,7 +165,7 @@ public class JmxHelper {
 	public synchronized void disconnect() {
         triedConnecting = false
 		if (jmxc) {
-            LOG.debug "Disconnecting from JMX URL {}", url
+            if (LOG.isDebugEnabled()) LOG.debug "Disconnecting from JMX URL {}", url
 			try {
 				jmxc.close()
 			} catch (Exception e) {
@@ -208,7 +208,7 @@ public class JmxHelper {
                 if (changed) {
                     LOG.warn "JMX object {} not found at {}", objectName.canonicalName, url
                 } else {
-                    LOG.debug "JMX object {} not found at {} (repeating)", objectName.canonicalName, url
+                    if (LOG.isDebugEnabled()) LOG.debug "JMX object {} not found at {} (repeating)", objectName.canonicalName, url
                 }
             }
             return null
@@ -244,7 +244,7 @@ public class JmxHelper {
 		ObjectInstance bean = findMBean objectName
 		if (bean != null) {
 			def result = mbsc.getAttribute(bean.objectName, attribute)
-			LOG.trace "From {}, for jmx attribute {}.{}, got value {}", url, objectName.canonicalName, attribute, result
+			if (LOG.isTraceEnabled()) LOG.trace "From {}, for jmx attribute {}.{}, got value {}", url, objectName.canonicalName, attribute, result
 			return result
 		} else {
 			return null
@@ -261,9 +261,9 @@ public class JmxHelper {
         ObjectInstance bean = findMBean objectName
         if (bean != null) {
             mbsc.setAttribute(bean.objectName, new javax.management.Attribute(attribute, val))
-            LOG.trace "From {}, for jmx attribute {}.{}, set value {}", url, objectName.canonicalName, attribute, val
+            if (LOG.isTraceEnabled()) LOG.trace "From {}, for jmx attribute {}.{}, set value {}", url, objectName.canonicalName, attribute, val
         } else {
-            LOG.debug "From {}, cannot set attribute {}.{}, because mbean not found", url, objectName.canonicalName, attribute
+            if (LOG.isDebugEnabled()) LOG.debug "From {}, cannot set attribute {}.{}, because mbean not found", url, objectName.canonicalName, attribute
         }
     }
 
@@ -285,7 +285,7 @@ public class JmxHelper {
 			signature[index] = (CLASSES.containsKey(clazz.simpleName) ? CLASSES.get(clazz.simpleName) : clazz.name);
 		}
 		def result = mbsc.invoke(objectName, method, arguments, signature)
-		LOG.trace "From {}, for jmx operation {}.{}, got value {}", url, objectName.canonicalName, method, result
+		if (LOG.isTraceEnabled()) LOG.trace "From {}, for jmx operation {}.{}, got value {}", url, objectName.canonicalName, method, result
 		return result
 	}
 

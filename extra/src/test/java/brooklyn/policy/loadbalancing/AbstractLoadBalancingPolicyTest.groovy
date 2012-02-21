@@ -53,6 +53,8 @@ public class AbstractLoadBalancingPolicyTest {
         
         MockItemEntity.totalMoveCount.set(0)
         
+        loc = new SimulatedLocation(name:"loc")
+        
         // TODO: improve the default impl to avoid the need for this anonymous overrider of 'moveItem'
         model = new DefaultBalanceablePoolModel<Entity, Entity>("pool-model") {
             @Override public void moveItem(Entity item, Entity oldContainer, Entity newContainer) {

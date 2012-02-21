@@ -55,7 +55,7 @@ public abstract class JavaApp extends SoftwareProcessEntity implements UsesJmx {
 			throw new IllegalStateException("JMX is not available")
 		}
 
-		log.debug "Connecting {} to JMX on {}:{}", this, getAttribute(HOSTNAME), getAttribute(JMX_PORT)
+		if (log.isDebugEnabled()) log.debug "Connecting {} to JMX on {}:{}", this, getAttribute(HOSTNAME), getAttribute(JMX_PORT)
 		jmxAdapter = new OldJmxSensorAdapter(this, 60*1000)
 		jmxAdapter.connect();
 		waitForJmx()

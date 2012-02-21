@@ -111,7 +111,7 @@ public abstract class AbstractController extends SoftwareProcessEntity {
 
     //FIXME members locations might be remote?
     public void addEntity(Entity member) {
-        LOG.trace("About to add to $displayName, new member ${member.displayName} in locations ${member.locations} - waiting for service to be up")
+        if (LOG.isTraceEnabled()) LOG.trace("About to add to $displayName, new member ${member.displayName} in locations ${member.locations} - waiting for service to be up")
 
         //FIXME messy way to prevent subscriptions from applying until service is up
         //anyway, this is the wrong place for that logic; should be in update        

@@ -55,7 +55,7 @@ public abstract class AbstractSensorEvaluationContext {
 			return c.call(getDefaultValue())
 		} catch (Exception e) {
 			if (error) {
-				log.debug "unable to evaluate sensor {} because call had an error ({}): {}", properties, error, e
+				if (log.isDebugEnabled()) log.debug "unable to evaluate sensor {} because call had an error ({}): {}", properties, error, e
 				return UNSET;
 			}
 			else throw e;

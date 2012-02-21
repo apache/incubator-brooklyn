@@ -260,7 +260,7 @@ public abstract class SshBasedAppSetup extends StartStopSshDriver implements Scr
                 int result = execute(script, "install "+entity+" on "+machine)
                 if (result) throw new IllegalStateException("failed to install $entity (exit code $result)")
             } else {
-                log.debug "not installing entity {} on machine {}, as no install-script defined", entity, machine
+                if (log.isDebugEnabled()) log.debug "not installing entity {} on machine {}, as no install-script defined", entity, machine
             }
         }
     }
@@ -280,7 +280,7 @@ public abstract class SshBasedAppSetup extends StartStopSshDriver implements Scr
                 int result = execute(script, "config "+entity+" on "+machine)
                 if (result) throw new IllegalStateException("failed to configure $entity (exit code $result)")
             } else {
-                log.debug "not configuring entity {} on machine {}, as no config-script defined", entity, machine
+                if (log.isDebugEnabled()) log.debug "not configuring entity {} on machine {}, as no config-script defined", entity, machine
             }
         }
     }
@@ -337,10 +337,10 @@ public abstract class SshBasedAppSetup extends StartStopSshDriver implements Scr
      * Shut down the application process.
      */
     public void shutdown() {
-        log.debug "invoking shutdown script for {}: {}", entity, getShutdownScript()
+        if (log.isDebugEnabled()) log.debug "invoking shutdown script for {}: {}", entity, getShutdownScript()
         def result = execute(getShutdownScript(), "shutdown "+entity+" on "+machine)
         if (result) log.warn "non-zero result code terminating {}: {}", entity, result
-        log.debug "done invoking shutdown script for {}", entity
+        if (log.isDebugEnabled()) log.debug "done invoking shutdown script for {}", entity
     }
 
 	public void customize() {
@@ -378,10 +378,10 @@ public abstract class SshBasedAppSetup extends StartStopSshDriver implements Scr
 	        stop()
 	        runApp()
         } else {
-	        log.debug "invoking restart script on {}: {}", entity, restartScript
+	        if (log.isDebugEnabled()) log.debug "invoking restart script on {}: {}", entity, restartScript
 	        def result = execute(getRestartScript(), "restart "+entity+" on "+machine)
 	        if (result) log.info "non-zero result code terminating {}: {}", entity, result
-	        log.debug "done invoking restart script on {}", entity
+	        if (log.isDebugEnabled()) log.debug "done invoking restart script on {}", entity
         }
     }
 
@@ -477,7 +477,7 @@ public abstract class SshBasedAppSetup extends StartStopSshDriver implements Scr
                 log.error "Failed to deploy {} on {}, result {}", local.name, machine, result
                 throw new IllegalStateException("Failed to deploy ${local.name} on ${machine}")
             } else {
-                log.debug "deployed {} on {}", local.name, machine
+                if (log.isDebugEnabled()) log.debug "deployed {} on {}", local.name, machine
             }
         }
     }

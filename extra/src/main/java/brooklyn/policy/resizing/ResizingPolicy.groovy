@@ -82,7 +82,7 @@ public class ResizingPolicy extends AbstractPolicy {
     }
     
     private void onPoolCold(Map<String, ?> properties) {
-        LOG.trace("{} recording pool-cold for {}: {}", this, poolEntity, properties)
+        if (LOG.isTraceEnabled()) LOG.trace("{} recording pool-cold for {}: {}", this, poolEntity, properties)
         
         int poolCurrentSize = properties.get(POOL_CURRENT_SIZE_KEY)
         double poolCurrentWorkrate = properties.get(POOL_CURRENT_WORKRATE_KEY)
@@ -93,15 +93,15 @@ public class ResizingPolicy extends AbstractPolicy {
         int desiredPoolSize = Math.ceil(poolCurrentWorkrate / (poolLowThreshold/poolCurrentSize)).intValue()
         desiredPoolSize = toBoundedDesiredPoolSize(desiredPoolSize)
         if (desiredPoolSize < poolCurrentSize) {
-            LOG.trace("{} resizing cold pool {} from {} to {}", this, poolEntity, poolCurrentSize, desiredPoolSize)
+            if (LOG.isTraceEnabled()) LOG.trace("{} resizing cold pool {} from {} to {}", this, poolEntity, poolCurrentSize, desiredPoolSize)
             scheduleResize(desiredPoolSize)
         } else {
-            LOG.trace("{} not resizing cold pool {} from {} to {}", this, poolEntity, poolCurrentSize, desiredPoolSize)
+            if (LOG.isTraceEnabled()) LOG.trace("{} not resizing cold pool {} from {} to {}", this, poolEntity, poolCurrentSize, desiredPoolSize)
         }
     }
     
     private void onPoolHot(Map<String, ?> properties) {
-        LOG.trace("{} recording pool-hot for {}: {}", this, poolEntity, properties)
+        if (LOG.isTraceEnabled()) LOG.trace("{} recording pool-hot for {}: {}", this, poolEntity, properties)
         
         int poolCurrentSize = properties.get(POOL_CURRENT_SIZE_KEY)
         double poolCurrentWorkrate = properties.get(POOL_CURRENT_WORKRATE_KEY)
@@ -112,10 +112,10 @@ public class ResizingPolicy extends AbstractPolicy {
         int desiredPoolSize = Math.ceil(poolCurrentWorkrate / (poolHighThreshold/poolCurrentSize)).intValue()
         desiredPoolSize = toBoundedDesiredPoolSize(desiredPoolSize)
         if (desiredPoolSize > poolCurrentSize) {
-            LOG.trace("{} resizing hot pool {} from {} to {}", this, poolEntity, poolCurrentSize, desiredPoolSize)
+            if (LOG.isTraceEnabled()) LOG.trace("{} resizing hot pool {} from {} to {}", this, poolEntity, poolCurrentSize, desiredPoolSize)
             scheduleResize(desiredPoolSize)
         } else {
-            LOG.trace("{} not resizing hot pool {} from {} to {}", this, poolEntity, poolCurrentSize, desiredPoolSize)
+            if (LOG.isTraceEnabled()) LOG.trace("{} not resizing hot pool {} from {} to {}", this, poolEntity, poolCurrentSize, desiredPoolSize)
         }
     }
     
@@ -149,7 +149,7 @@ public class ResizingPolicy extends AbstractPolicy {
                     if (isRunning()) {
                         LOG.error("Error resizing: "+e, e)
                     } else {
-                        LOG.debug("Error resizing, but no longer running: "+e, e)
+                        if (LOG.isDebugEnabled()) LOG.debug("Error resizing, but no longer running: "+e, e)
                     }
                 }
             } )

@@ -121,19 +121,19 @@ public class OldJmxSensorAdapter {
  
     /** continuously attempts to connect (blocking), for at least the indicated amount of time; or indefinitely if -1 */
     public boolean connect(long timeout) {
-        log.debug "Connecting to JMX URL: {} ({})", url, ((timeout == -1) ? "indefinitely" : "${timeout}ms timeout")
+        if (log.isDebugEnabled()) log.debug "Connecting to JMX URL: {} ({})", url, ((timeout == -1) ? "indefinitely" : "${timeout}ms timeout")
         long start = System.currentTimeMillis()
         long end = start + timeout
         if (timeout == -1) end = Long.MAX_VALUE
         Throwable lastError;
         while (start <= end) {
             start = System.currentTimeMillis()
-            log.debug "trying connection to {}:{} at {}", host, rmiRegistryPort, start
+            if (log.isDebugEnabled()) log.debug "trying connection to {}:{} at {}", host, rmiRegistryPort, start
             try {
                 connect()
                 return true
             } catch (IOException e) {
-                log.debug "failed connection (io) to {}:{} ({})", host, rmiRegistryPort, e.message
+                if (log.isDebugEnabled()) log.debug "failed connection (io) to {}:{} ({})", host, rmiRegistryPort, e.message
                 lastError = e;
             } catch (SecurityException e) {
 				if (lastError==null) {
@@ -141,7 +141,7 @@ public class OldJmxSensorAdapter {
 					//maybe just throw? a security exception is likely definitive, retry probably won't help
 					//(but maybe it will?)
 				} else {
-                	log.debug "failed connection (security) to {}:{} ({})", host, rmiRegistryPort, e.message
+                	if (log.isDebugEnabled()) log.debug "failed connection (security) to {}:{} ({})", host, rmiRegistryPort, e.message
 				}
                 lastError = e;
 			}
@@ -187,7 +187,7 @@ public class OldJmxSensorAdapter {
         if (bean != null) {
 			try {
 				def result = mbsc.getAttribute(bean.objectName, attribute)
-				log.trace "got value {} for jmx attribute {}.{}", result, objectName.canonicalName, attribute
+				if (log.isTraceEnabled()) log.trace "got value {} for jmx attribute {}.{}", result, objectName.canonicalName, attribute
 				return result
 			} catch (Exception e) {
 				log.warn "error getting $attribute from ${bean.objectName} with $mbsc", e
@@ -216,7 +216,7 @@ public class OldJmxSensorAdapter {
             signature[index] = (CLASSES.containsKey(clazz.simpleName) ? CLASSES.get(clazz.simpleName) : clazz.name)
         }
         def result = mbsc.invoke(objectName, method, arguments, signature)
-        log.trace "got result {} for jmx operation {}.{}", result, objectName.canonicalName, method
+        if (log.isTraceEnabled()) log.trace "got result {} for jmx operation {}.{}", result, objectName.canonicalName, method
         return result
     }
 
@@ -336,7 +336,7 @@ public class JmxAttributeNotifier implements NotificationListener {
     }
     
     public void handleNotification(Notification notification, Object handback) {
-        log.debug "Got notification type {}: {} (sequence {})", notification.type, notification.message, notification.sequenceNumber
+        if (log.isDebugEnabled()) log.debug "Got notification type {}: {} (sequence {})", notification.type, notification.message, notification.sequenceNumber
         if (notification.type == sensor.name) {
             entity.emit(sensor, notification.userData)
         }

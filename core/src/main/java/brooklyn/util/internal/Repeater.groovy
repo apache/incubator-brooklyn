@@ -224,7 +224,7 @@ public class Repeater {
 
         while (true) {
             iterations++
-            log.debug "{}: iteration {}", description, iterations
+            if (log.isDebugEnabled()) log.debug "{}: iteration {}", description, iterations
 
             try {
                 body.call()
@@ -238,17 +238,17 @@ public class Repeater {
                 lastError = null
                 done = exitCondition.call()
             } catch (Exception e) {
-                log.debug description, e
+                if (log.isDebugEnabled()) log.debug description, e
                 lastError = e
                 if (rethrowExceptionImmediately) throw e
             }
             if (done) {
-                log.debug "{}: condition satisfied", description
+                if (log.isDebugEnabled()) log.debug "{}: condition satisfied", description
                 return true
             }
 
             if (iterationLimit > 0 && iterations == iterationLimit) {
-                log.debug "{}: condition not satisfied and exceeded iteration limit", description
+                if (log.isDebugEnabled()) log.debug "{}: condition not satisfied and exceeded iteration limit", description
                 if (rethrowException && lastError) {
                     log.warn("{}: error caught checking condition (rethrowing): {}", description, lastError.getMessage())
                     throw lastError
@@ -260,7 +260,7 @@ public class Repeater {
 
             if (endTime > 0) {
 				if (System.currentTimeMillis() > endTime) {
-                    log.debug "{}: condition not satisfied and deadline passed", description
+                    if (log.isDebugEnabled()) log.debug "{}: condition not satisfied and deadline passed", description
 	                if (rethrowException && lastError) {
 	                    log.error("{}: error caught checking condition: {}", description, lastError.getMessage())
 	                    throw lastError

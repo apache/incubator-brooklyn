@@ -51,12 +51,12 @@ public abstract class AbstractSensorAdapter {
 		deactivationListeners << onDown
 	}
 	protected void activateAdapter() {
-		log.debug "activating adapter {} for {}", this, entity
+		if (log.isDebugEnabled()) log.debug "activating adapter {} for {}", this, entity
 		activationListeners.each { it.call() }
 		activated = true;
 	}
 	protected void deactivateAdapter() {
-		log.debug "deactivating adapter {} for {}", this, entity
+		if (log.isDebugEnabled()) log.debug "deactivating adapter {} for {}", this, entity
 		activated = false;
 		deactivationListeners.each { it.call() }
 	}
