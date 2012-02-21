@@ -21,10 +21,22 @@ public class DynamicGroup extends AbstractGroup {
     
     private volatile MyEntitySetChangeListener setChangeListener = null;
     private Closure entityFilter
+    private volatile running = true
     
     public DynamicGroup(Map properties=[:], Entity owner=null, Closure entityFilter=null) {
         super(properties, owner)
         if (entityFilter) this.entityFilter = entityFilter;
+    }
+    
+    /**
+     * Stops this group (but does not stop any of its members). De-activates the filter and unsubscribes to
+     * entity-updates, so the membership of the group will not change.
+     */
+    public void stop() {
+        running = false
+        if (setChangeListener != null) {
+            ((AbstractManagementContext)getManagementContext()).removeEntitySetListener(setChangeListener)
+        }
     }
     
     void setEntityFilter(Closure entityFilter) {
@@ -91,6 +103,10 @@ public class DynamicGroup extends AbstractGroup {
     }
     
     public synchronized void rescanEntities() {
+        if (!running) {
+            if (log.isDebugEnabled()) log.debug "$this not scanning for children: stopped"
+            return
+        }
         if (!entityFilter) {
             log.warn "$this not (yet) scanning for children of $this: no filter defined"
             return

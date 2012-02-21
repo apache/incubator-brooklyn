@@ -13,6 +13,7 @@ import brooklyn.entity.Entity
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 import brooklyn.util.internal.LanguageUtils
 
@@ -21,17 +22,17 @@ import com.google.common.base.Predicate
 
 public class DynamicGroupTest {
     
-    private AbstractApplication app
+    private TestApplication app
     private DynamicGroup group
-    private AbstractEntity e1
-    private AbstractEntity e2
+    private TestEntity e1
+    private TestEntity e2
     
     @BeforeMethod
     public void setUp() {
-        app = new AbstractApplication() {}
-        group = new DynamicGroup(owner:app) {}
-        e1 = new AbstractEntity(owner:app) {}
-        e2 = new AbstractEntity(owner:app) {}
+        app = new TestApplication()
+        group = new DynamicGroup(owner:app)
+        e1 = new TestEntity(owner:app)
+        e2 = new TestEntity(owner:app)
         app.getManagementContext().manage(app)
     }
     
@@ -123,6 +124,22 @@ public class DynamicGroupTest {
         }
     }
     
+    @Test
+    public void testStoppedGroupIgnoresComingAndGoingsOfEntities() {
+        Entity e3 = new AbstractEntity() {}
+        group.setEntityFilter( { it instanceof TestEntity } )
+        assertEquals(group.getMembers(), [e1, e2])
+        group.stop()
+        
+        e3.setOwner(app)
+        app.getManagementContext().manage(e3)
+        assertEquals(group.getMembers(), [e1, e2])
+        
+        app.getManagementContext().unmanage(e1)
+        assertEquals(group.getMembers(), [e1, e2])
+    }
+    
+
     // Motivated by strange behavior observed testing load-balancing policy, but this passed...
     @Test
     public void testGroupAddsAndRemovesManagedAndUnmanagedEntitiesExactlyOnce() {
