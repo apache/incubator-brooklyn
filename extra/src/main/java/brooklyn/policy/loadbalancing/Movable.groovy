@@ -3,7 +3,9 @@ package brooklyn.policy.loadbalancing;
 import brooklyn.entity.ConfigKey
 import brooklyn.entity.Effector
 import brooklyn.entity.Entity
+import brooklyn.entity.basic.Description
 import brooklyn.entity.basic.MethodEffector
+import brooklyn.entity.basic.NamedParameter
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.util.flags.SetFromFlag
@@ -24,6 +26,8 @@ public interface Movable {
     public static final Effector MOVE = new MethodEffector(Movable.&move);
     
     public String getContainerId();
-    public void move(Entity destination);
+    
+    @Description("Moves this entity to the given container")
+    public void move(@NamedParameter("destination") Entity destination);
     
 }
