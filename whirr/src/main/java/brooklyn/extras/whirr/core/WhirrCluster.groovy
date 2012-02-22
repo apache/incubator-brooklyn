@@ -35,8 +35,9 @@ public class WhirrCluster extends AbstractEntity implements Startable {
     public static final BasicConfigKey<String> RECIPE =
         [String, "whirr.recipe", "Apache Whirr cluster recipe"]
 
-    private final ClusterController controller = null
-    private ClusterSpec deployed = null
+    protected ClusterController controller = null
+    protected ClusterSpec clusterSpec = null
+    protected Cluster cluster = null
 
     /**
      * General entity initialisation
@@ -64,18 +65,18 @@ public class WhirrCluster extends AbstractEntity implements Startable {
         PropertiesConfiguration config = new PropertiesConfiguration()
         config.load(new StringReader(getConfig(RECIPE)))
 
-        ClusterSpec clusterSpec = new ClusterSpec(config)
+        clusterSpec = new ClusterSpec(config)
 
         clusterSpec.setProvider(location.getConf().provider)
         clusterSpec.setIdentity(location.getConf().identity)
         clusterSpec.setCredential(location.getConf().credential)
         clusterSpec.setLocationId(location.getConf().providerLocationId)
+        // TODO: also add security groups when supported in the Whirr trunk
 
         log.info("Starting cluster with roles " + config.getProperty("whirr.instance-templates")
                 + " in location " + location.getConf().providerLocationId)
 
-        Cluster cluster = controller.launchCluster(clusterSpec)
-        deployed = clusterSpec
+        cluster = controller.launchCluster(clusterSpec)
 
         for (Cluster.Instance instance: cluster.getInstances()) {
             log.info("Creating group for instance " + instance.id)
@@ -89,10 +90,12 @@ public class WhirrCluster extends AbstractEntity implements Startable {
     }
 
     void stop() {
-        if (deployed != null) {
-            controller.destroyCluster(deployed)
+        if (clusterSpec != null) {
+            controller.destroyCluster(clusterSpec)
         }
-        deployed = null
+
+        clusterSpec = null
+        cluster = null
     }
 
     void restart() {
