@@ -59,13 +59,6 @@ public class BalanceableWorkerPool extends AbstractEntity implements Resizable {
     public static BasicNotificationSensor<ContainerItemPair> ITEM_MOVED = new BasicNotificationSensor<ContainerItemPair>(
         ContainerItemPair.class, "balanceablepool.item.moved", "Item moved in balanceable pool to the given container")
     
-    // Pool workrate notifications.
-    public static BasicNotificationSensor<Map> POOL_HOT = new BasicNotificationSensor<Map>(
-        Map.class, "balanceablepool.hot", "Pool has insufficient container resource for current workload")
-    public static BasicNotificationSensor<Map> POOL_COLD = new BasicNotificationSensor<Map>(
-        Map.class, "balanceablepool.cold", "Pool has too much container resource for current workload")
-    
-    
     private Group containerGroup
     private Group itemGroup
     
