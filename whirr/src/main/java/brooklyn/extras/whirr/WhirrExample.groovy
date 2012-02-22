@@ -14,7 +14,7 @@ public class WhirrExample extends AbstractApplication {
     public static final String RECIPE_ZOOKEEPER = '''
 whirr.cluster-name=brooklyn-whirr
 whirr.hardware-id=t1.micro
-whirr.instance-templates= 2 noop
+whirr.instance-templates= 1 noop, 1 elasticsearch
 '''
     WhirrCluster cluster = new WhirrCluster(recipe: RECIPE_ZOOKEEPER, this)
 

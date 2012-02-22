@@ -73,13 +73,16 @@ public class WhirrCluster extends AbstractEntity implements Startable {
 
         log.info("Starting cluster with roles " + config.getProperty("whirr.instance-templates")
                 + " in location " + location.getConf().providerLocationId)
-        controller.launchCluster(clusterSpec)
+
+        Cluster cluster = controller.launchCluster(clusterSpec)
         deployed = clusterSpec
 
-        for (Cluster.Instance instance: controller.getInstances(clusterSpec)) {
+        for (Cluster.Instance instance: cluster.getInstances()) {
+            log.info("Creating group for instance " + instance.id)
             def rolesGroup = new AbstractGroup(displayName: "Instance:" + instance.id, this) {}
-            for (String role: instance.getRoles()) {
-                rolesGroup.addOwnedChild(new WhirrRole(displayName: "Role:" + role, role: role, this))
+            for (String role: instance.roles) {
+                log.info("Creating entity for '" + role + "' on instance " + instance.id)
+                rolesGroup.addOwnedChild(new WhirrRole(displayName: "Role:" + role, role: role, rolesGroup))
             }
             addGroup(rolesGroup)
         }
