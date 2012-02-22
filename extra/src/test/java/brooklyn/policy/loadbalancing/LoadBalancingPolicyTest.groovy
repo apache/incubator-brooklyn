@@ -17,8 +17,7 @@ public class LoadBalancingPolicyTest extends AbstractLoadBalancingPolicyTest {
     
     // Expect no balancing to occur as container A isn't above the high threshold.
     @Test
-    public void testNoopBalancing() {
-        // Set-up containers and items.
+    public void testNoopWhenWithinThresholds() {
         MockContainerEntity containerA = newContainer(app, "A", 10, 100)
         MockContainerEntity containerB = newContainer(app, "B", 20, 60)
         MockItemEntity item1 = newItem(app, containerA, "1", 10)
@@ -27,6 +26,20 @@ public class LoadBalancingPolicyTest extends AbstractLoadBalancingPolicyTest {
         MockItemEntity item4 = newItem(app, containerA, "4", 10)
 
         assertWorkratesEventually([containerA, containerB], [40d, 0d])
+    }
+    
+    @Test
+    public void testNoopWhenAlreadyBalanced() {
+        MockContainerEntity containerA = newContainer(app, "A", 20, 80)
+        MockContainerEntity containerB = newContainer(app, "B", 20, 80)
+        MockItemEntity item1 = newItem(app, containerA, "1", 10)
+        MockItemEntity item2 = newItem(app, containerA, "2", 30)
+        MockItemEntity item3 = newItem(app, containerB, "3", 20)
+        MockItemEntity item4 = newItem(app, containerB, "4", 20)
+
+        assertWorkratesEventually([containerA, containerB], [40d, 40d])
+        assertEquals(containerA.getBalanceableItems(), [item1, item2] as Set)
+        assertEquals(containerB.getBalanceableItems(), [item3, item4] as Set)
     }
     
     // Expect 20 units of workload to be migrated from hot container (A) to cold (B).
@@ -41,6 +54,59 @@ public class LoadBalancingPolicyTest extends AbstractLoadBalancingPolicyTest {
         MockItemEntity item4 = newItem(app, containerA, "4", 10)
 
         assertWorkratesEventually([containerA, containerB], [20d, 20d])
+    }
+    
+    @Test
+    public void testSimpleBalancing2() {
+        MockContainerEntity containerA = newContainer(app, "A", 20, 40)
+        MockContainerEntity containerB = newContainer(app, "B", 20, 40)
+        MockItemEntity item1 = newItem(app, containerA, "1", 0)
+        MockItemEntity item2 = newItem(app, containerB, "2", 40)
+        MockItemEntity item3 = newItem(app, containerB, "3", 20)
+        MockItemEntity item4 = newItem(app, containerB, "4", 20)
+
+        assertWorkratesEventually([containerA, containerB], [40d, 40d])
+    }
+    
+//    @Test
+//    public void testAdjustedItemNotMoved() {
+//        MockBalancingModel pool = new MockBalancingModel(
+//                containers(
+//                        containerA, 20, 50,
+//                        containerB, 20, 50),
+//                items(
+//                        "item1", containerA, 0,
+//                        "item2", containerB, -40,
+//                        "item3", containerB, 20,
+//                        "item4", containerB, 20)
+//        );
+//        
+//        BalancingStrategy<String, String> policy = new BalancingStrategy<String, String>("Test", pool);
+//        policy.rebalance();
+//        
+//        assertEquals((Object)pool.getItemsForContainer(containerA), ImmutableSet.of("item1", "item3", "item4"), pool.itemDistributionToString());
+//        assertEquals((Object)pool.getItemsForContainer(containerB), ImmutableSet.of("item2"), pool.itemDistributionToString());
+//    }
+
+    @Test
+    public void testMultiMoveBalancing() {
+        MockContainerEntity containerA = newContainer(app, "A", 20, 50)
+        MockContainerEntity containerB = newContainer(app, "B", 20, 50)
+        MockItemEntity item1 = newItem(app, containerA, "1", 10)
+        MockItemEntity item2 = newItem(app, containerA, "2", 10)
+        MockItemEntity item3 = newItem(app, containerA, "3", 10)
+        MockItemEntity item4 = newItem(app, containerA, "4", 10)
+        MockItemEntity item5 = newItem(app, containerA, "5", 10)
+        MockItemEntity item6 = newItem(app, containerA, "6", 10)
+        MockItemEntity item7 = newItem(app, containerA, "7", 10)
+        MockItemEntity item8 = newItem(app, containerA, "8", 10)
+        MockItemEntity item9 = newItem(app, containerA, "9", 10)
+        MockItemEntity item10 = newItem(app, containerA, "10", 10)
+
+        // non-deterministic which items will be moved; but can assert how many (given they all have same workrate)
+        assertWorkratesEventually([containerA, containerB], [50d, 50d])
+        assertEquals(containerA.getBalanceableItems().size(), 5)
+        assertEquals(containerB.getBalanceableItems().size(), 5)
     }
     
     @Test

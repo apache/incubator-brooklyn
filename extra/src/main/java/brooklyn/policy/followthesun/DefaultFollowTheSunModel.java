@@ -201,13 +201,6 @@ public class DefaultFollowTheSunModel<ContainerType, ItemType> implements Follow
     }
     
     
-    // Mutators that change the real world
-    
-    @Override public void moveItem(ItemType item, ContainerType newNode) {
-        // TODO no-op; should this be abstract?
-    }
-    
-    
     // Additional methods for tests.
 
     /**

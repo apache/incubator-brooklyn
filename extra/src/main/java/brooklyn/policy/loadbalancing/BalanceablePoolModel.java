@@ -43,7 +43,4 @@ public interface BalanceablePoolModel<ContainerType, ItemType> {
     public void onItemRemoved(ItemType item);
     public void onItemWorkrateUpdated(ItemType item, double newValue);
     public void onItemMoved(ItemType item, ContainerType targetContainer);
-    
-    // Mutator for effecting the real world
-    public void moveItem(ItemType item, ContainerType originContainer, ContainerType targetContainer);
 }

@@ -10,6 +10,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.Entity;
 import brooklyn.location.Location;
 
 /**
@@ -19,7 +20,7 @@ import brooklyn.location.Location;
  * TODO: extract interface, provide default implementation
  * TODO: remove legacy code comments
  */
-public class BalancingStrategy<NodeType, ItemType> {
+public class BalancingStrategy<NodeType extends Entity, ItemType extends Entity & Movable> {
     
     // This is a modified version of the watermark elasticity policy from Monterey v3.
     
@@ -287,7 +288,7 @@ public class BalancingStrategy<NodeType, ItemType> {
             nodeWorkrate -= itemWorkrate;
             coldNodeWorkrate += itemWorkrate;
             
-            model.moveItem(itemToMove, node, coldNode);
+            moveItem(itemToMove, node, coldNode);
             ++migrationCount;
         }
         
@@ -484,7 +485,7 @@ public class BalancingStrategy<NodeType, ItemType> {
             questionedNodeTotalWorkrate += segmentRate;
             hotNodeWorkrate -= segmentRate;
             
-            model.moveItem(itemToMove, hotNode, questionedNode);
+            moveItem(itemToMove, hotNode, questionedNode);
             
             if (++numMigrations >= getMaxMigrationsPerBalancingNode()) {
                 break;
@@ -519,6 +520,10 @@ public class BalancingStrategy<NodeType, ItemType> {
         return !itemsMoved.isEmpty();
     }
     
+    protected void moveItem(ItemType item, NodeType oldNode, NodeType newNode) {
+        item.move(newNode);
+        model.onItemMoved(item, newNode);
+    }
     
     /**
      * "Best" is defined as nearest to the targetCost, without exceeding maxCost, unless maxCostIfNothingSmallerButLarger > 0
