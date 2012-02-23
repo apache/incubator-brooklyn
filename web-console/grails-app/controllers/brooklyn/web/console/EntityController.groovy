@@ -16,6 +16,7 @@ import brooklyn.policy.basic.GeneralPurposePolicy
 import brooklyn.web.console.entity.JsTreeNode
 import brooklyn.web.console.EntityService.NoSuchEntity
 import brooklyn.entity.Effector
+import brooklyn.entity.Group;
 import brooklyn.entity.ParameterType
 import brooklyn.entity.basic.BasicParameterType
 
@@ -184,9 +185,17 @@ class EntityController {
 
         entities.each {
             entity ->
+                boolean hasChildren = false;
                 entity.getOwnedChildren().each {
-                child -> nodeMap[entity.id].children.add(nodeMap[child.id])
-            }
+                    child -> 
+                    hasChildren = true;
+                    nodeMap[entity.id].children.add(nodeMap[child.id])
+                }
+                if (!hasChildren && entity in Group) ((Group)entity).getMembers().each {
+                    //if we have a group with no children (the usual case for groups) show its members instead
+                    //NB: tree view seems to hang if multiple identical children (poss mutiple identical elements in tree?) 
+                    child -> nodeMap[entity.id].children.add(nodeMap[child.id])
+                }
         }
 
         List<JsTreeNode> roots = []
