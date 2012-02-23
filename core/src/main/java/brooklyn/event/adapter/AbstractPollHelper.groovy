@@ -56,7 +56,7 @@ public abstract class AbstractPollHelper {
 			if (!adapter.isConnected() || !lastWasSuccessful)
 				if (log.isDebugEnabled()) log.debug("error reading ${this} (disconnect): ${e}", e)
 			else
-				log.warn("error reading ${this} (disconnect): ${e}", e)
+				log.warn("error reading ${this} (disconnect): ${e}")
 			lastWasSuccessful = false;
 			response = executePollOnError(e);
 		}
@@ -93,4 +93,7 @@ public abstract class AbstractPollHelper {
 		}
 		return null
 	}
+    
+    public String toString() { super.toString()+"["+entity+"]" }
+    
 }
