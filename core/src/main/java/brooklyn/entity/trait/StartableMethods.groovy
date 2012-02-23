@@ -27,7 +27,7 @@ public class StartableMethods {
         }
 	}
 
-    /** Common implementation for start in parent nodes; just invokes stop on all children of the entity */
+    /** Common implementation for stop in parent nodes; just invokes stop on all children of the entity */
 	public static void stop(EntityLocal e) {
 		List<Entity> startables = e.ownedChildren.findAll { it in Startable }
 		if (startables && !startables.isEmpty()) {
