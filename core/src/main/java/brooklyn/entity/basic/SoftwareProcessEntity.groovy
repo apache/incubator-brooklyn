@@ -42,9 +42,11 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 
 	@SetFromFlag("version")
 	public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.SUGGESTED_VERSION
-	@SetFromFlag("installDir")
+	
+    @SetFromFlag("installDir")
 	public static final ConfigKey<String> SUGGESTED_INSTALL_DIR = ConfigKeys.SUGGESTED_INSTALL_DIR
-	@SetFromFlag("runDir")
+	
+    @SetFromFlag("runDir")
 	public static final ConfigKey<String> SUGGESTED_RUN_DIR = ConfigKeys.SUGGESTED_RUN_DIR
 
 	@SetFromFlag("env")

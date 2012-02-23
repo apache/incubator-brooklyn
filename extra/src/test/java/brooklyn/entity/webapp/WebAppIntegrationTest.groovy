@@ -129,8 +129,8 @@ public class WebAppIntegrationTest {
         return [ 
 			[ tomcat ], 
 			[ jboss6 ], 
-			[ jboss7 ], 
-			]
+			[ jboss7 ]
+		]
     }
 
     /**
@@ -347,7 +347,7 @@ public class WebAppIntegrationTest {
         URL resource = getClass().getClassLoader().getResource(war)
         assertNotNull resource
         
-        entity.setConfig(JavaWebAppService.NAMED_WARS, [resource.path])
+        entity.setConfig(JavaWebAppService.NAMED_DEPLOYMENTS, [resource.path])
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         executeUntilSucceedsWithShutdown(entity, abortOnError:false, timeout:60*SECONDS) {
             // TODO get this URL from a WAR file entity

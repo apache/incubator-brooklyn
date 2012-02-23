@@ -94,7 +94,7 @@ public abstract class OldJavaWebApp extends JavaApp implements JavaWebAppService
 		def rootWar = getConfig(ROOT_WAR);
 		if (rootWar) deploy(rootWar)
 
-		def namedWars = getConfig(NAMED_WARS, []);
+		def namedWars = getConfig(NAMED_DEPLOYMENTS, []);
 		namedWars.each { String it ->
 			String name = it.substring(it.lastIndexOf('/')+1);
 			deploy(new File(it), new File(driver.deployDir +"/"+name))

@@ -38,7 +38,7 @@ public abstract class JavaWebAppSoftwareProcess extends SoftwareProcessEntity im
 		def rootWar = getConfig(ROOT_WAR);
 		if (rootWar) driver.deploy(rootWar, "ROOT.war")
 		
-		def namedWars = getConfig(NAMED_WARS, []);
+		def namedWars = getConfig(NAMED_DEPLOYMENTS, []);
 		namedWars.each { String it ->
 			String name = it.substring(it.lastIndexOf('/')+1);
 			driver.deploy(it, name)
