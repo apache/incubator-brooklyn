@@ -37,9 +37,21 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     @SetFromFlag
     Closure postStartEntity
 
+    @SetFromFlag
+    Closure removalStrategy
+    
     Location location
     private Map createFlags
 
+    private Closure defaultRemovalStrategy = { Collection<Entity> contenders ->
+        // choose last (i.e. newest) entity that is stoppable
+        Entity result
+        contenders.each {
+            if (it instanceof Startable) result = it
+        }
+        return result
+    }
+    
     /**
      * Instantiate a new DynamicCluster.
      * 
@@ -60,6 +72,8 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
 
         Preconditions.checkNotNull newEntity, "'newEntity' property is mandatory"
 
+        removalStrategy = removalStrategy ?: defaultRemovalStrategy
+        
         // Save flags for use when creating members
         // TODO But we aren't calling remove anymore; passing them to the child isn't good because the 
         // string in the properties isn't as unique as the ConfigKey constant!
@@ -184,14 +198,16 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     }
 
     protected Entity removeNode() {
+        
         // TODO use pluggable strategy; default is to remove newest
         // TODO inefficient impl
-        if (logger.isDebugEnabled()) logger.debug "Removing a node from {}", id
-        Entity entity
-        members.each {
-            if (it instanceof Startable) entity = it
-        }
-        Preconditions.checkNotNull entity, "No Startable member entity found to remove from $id"
+        Preconditions.checkState(members.size() > 0, "Attempt to remove a node when members is empty, from cluster $this")
+        if (logger.isDebugEnabled()) logger.debug "Removing a node from {}", this
+        
+        Entity entity = removalStrategy.call(members)
+        Preconditions.checkNotNull entity, "No entity chosen for removal from $id"
+        Preconditions.checkState(entity instanceof Startable, "Chosen entity for removal not stoppable: cluster=$this; choice=$entity")
+        
         removeNode(entity)
     }
     

@@ -4,7 +4,7 @@ import static org.testng.AssertJUnit.*
 
 import java.util.Collection
 import java.util.concurrent.CopyOnWriteArrayList
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -30,6 +30,7 @@ import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 import brooklyn.util.internal.TimeExtras
 
+import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Iterables
 
 class DynamicClusterTest {
@@ -41,6 +42,7 @@ class DynamicClusterTest {
     TestApplication app
     SimulatedLocation loc
     SimulatedLocation loc2
+    Random random = new Random()
     
     @BeforeMethod
     public void setUp() {
@@ -256,7 +258,7 @@ class DynamicClusterTest {
     }
     
     @Test
-    public void shutsDownNewestFirstWhenResizing() {
+    public void defaultRemovalStrategyShutsDownNewestFirstWhenResizing() {
         TestEntity entity
         final int failNum = 2
         final List<Entity> creationOrder = []
@@ -310,9 +312,6 @@ class DynamicClusterTest {
     
     @Test
     public void testStoppedChildIsRemoveFromGroup() {
-        TestEntity entity
-        final int failNum = 2
-        final AtomicInteger counter = new AtomicInteger(0)
         DynamicCluster cluster = new DynamicCluster([
                 newEntity:{ properties -> return new TestEntity(properties) },
                 initialSize:1 
@@ -329,6 +328,34 @@ class DynamicClusterTest {
             assertEquals(0, cluster.currentSize)
             assertEquals(0, cluster.members.size())
         }
+    }
+    
+    @Test
+    public void testPluggableRemovalStrategyIsUsed() {
+        List<Entity> removedEntities = []
+        
+        Closure removalStrategy = { Collection<Entity> contenders ->
+            Entity choice = Iterables.get(contenders, random.nextInt(contenders.size()))
+            removedEntities.add(choice)
+            return choice
+        }
+        DynamicCluster cluster = new DynamicCluster([
+                newEntity:{ properties -> return new TestEntity(properties) },
+                initialSize:10,
+                removalStrategy:removalStrategy
+            ], app)
+        
+        cluster.start([loc])
+        Set origMembers = cluster.members as Set
+        
+        for (int i = 10; i >= 0; i--) {
+            cluster.resize(i)
+            assertEquals(cluster.getAttribute(Changeable.GROUP_SIZE), i)
+            assertEquals(removedEntities.size(), 10-i)
+            assertEquals(ImmutableSet.copyOf(Iterables.concat(cluster.members, removedEntities)), origMembers)
+        }
+        
+        Collection<TestEntity> children = cluster.ownedChildren
     }
     
     @Test
