@@ -52,7 +52,7 @@ class JmxService {
         this.jmxPort = jmxPort;
         url = JmxHelper.toConnectorUrl(jmxHost, jmxPort, null, "jmxrmi")
 
-        JMXServiceURL address = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://localhost:" + jmxPort + "/jmxrmi");
+        JMXServiceURL address = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://" + jmxHost + ":" + jmxPort + "/jmxrmi");
         connectorServer = JMXConnectorServerFactory.newJMXConnectorServer(address, null, null)
         server = MBeanServerFactory.createMBeanServer();
         ObjectName cntorServerName = ObjectName.getInstance("connectors:protocol=rmi");
