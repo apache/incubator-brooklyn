@@ -253,7 +253,7 @@ public abstract class SshBasedAppSetup extends StartStopSshDriver implements Scr
      * @see #getInstallScript()
      */
     public void install() {
-        synchronized (getClass()) {
+        synchronized (entity) {
             List<String> script = getInstallScript()
             if (script) {
                 log.info "installing entity {} on machine {}", entity, machine
