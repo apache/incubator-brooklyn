@@ -354,10 +354,35 @@ class DynamicClusterTest {
             assertEquals(removedEntities.size(), 10-i)
             assertEquals(ImmutableSet.copyOf(Iterables.concat(cluster.members, removedEntities)), origMembers)
         }
-        
-        Collection<TestEntity> children = cluster.ownedChildren
     }
     
+    @Test
+    public void testPluggableRemovalStrategyCanBeSetAfterConstruction() {
+        List<Entity> removedEntities = []
+        
+        Closure removalStrategy = { Collection<Entity> contenders ->
+            Entity choice = Iterables.get(contenders, random.nextInt(contenders.size()))
+            removedEntities.add(choice)
+            return choice
+        }
+        DynamicCluster cluster = new DynamicCluster([
+                newEntity:{ properties -> return new TestEntity(properties) },
+                initialSize:10,
+            ], app)
+        
+        cluster.start([loc])
+        Set origMembers = cluster.members as Set
+
+        cluster.setRemovalStrategy(removalStrategy)
+        
+        for (int i = 10; i >= 0; i--) {
+            cluster.resize(i)
+            assertEquals(cluster.getAttribute(Changeable.GROUP_SIZE), i)
+            assertEquals(removedEntities.size(), 10-i)
+            assertEquals(ImmutableSet.copyOf(Iterables.concat(cluster.members, removedEntities)), origMembers)
+        }
+    }
+
     @Test
     public void testResizeDoesNotBlockCallsToQueryGroupMembership() {
         CountDownLatch executingLatch = new CountDownLatch(1)

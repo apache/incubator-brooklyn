@@ -1,5 +1,7 @@
 package brooklyn.entity.group
 
+import static com.google.common.base.Preconditions.checkNotNull
+
 import brooklyn.entity.basic.AbstractGroup
 
 import java.util.Collection
@@ -82,6 +84,10 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         createFlags = properties
 
         setAttribute(SERVICE_UP, false)
+    }
+
+    public void setRemovalStrategy(Closure val) {
+        removalStrategy = checkNotNull(val, "removalStrategy")
     }
 
     public void start(Collection<? extends Location> locations) {
