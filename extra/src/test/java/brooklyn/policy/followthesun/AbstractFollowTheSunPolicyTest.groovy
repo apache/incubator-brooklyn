@@ -22,7 +22,6 @@ import brooklyn.location.Location
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.policy.loadbalancing.MockContainerEntity
 import brooklyn.policy.loadbalancing.MockItemEntity
-import brooklyn.policy.loadbalancing.Movable
 import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.Repeater
 
@@ -57,17 +56,11 @@ public class AbstractFollowTheSunPolicyTest {
         loc1 = new SimulatedLocation(name:"loc1")
         loc2 = new SimulatedLocation(name:"loc2")
         
-        // TODO: improve the default impl to avoid the need for this anonymous overrider of 'moveItem'
-        model = new DefaultFollowTheSunModel<Entity, Entity>("pool-model") {
-            @Override public void moveItem(Entity item, Entity newContainer) {
-                ((Movable) item).move(newContainer)
-                onItemMoved(item, newContainer)
-            }
-        }
         
         app = new TestApplication()
         containerGroup = new DynamicGroup([name:"containerGroup"], app, { e -> (e instanceof MockContainerEntity) })
         itemGroup = new DynamicGroup([name:"itemGroup"], app, { e -> (e instanceof MockItemEntity) })
+        model = new DefaultFollowTheSunModel<Entity, Entity>("pool-model");
         pool = new FollowTheSunPool([:], app)
         pool.setContents(containerGroup, itemGroup)
         policy = new FollowTheSunPolicy([:], TEST_METRIC, model, FollowTheSunParameters.newDefault())

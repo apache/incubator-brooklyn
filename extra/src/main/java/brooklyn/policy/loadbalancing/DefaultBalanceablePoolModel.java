@@ -220,12 +220,6 @@ public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements Bal
     private boolean hasItem(ItemType item) {
         return itemToContainer.containsKey(item);
     }
-
-    // Mutators that change the real world
-    
-    @Override public void moveItem(ItemType item, ContainerType oldNode, ContainerType newNode) {
-        // TODO no-op; should this be abstract?
-    }
     
     
     // Additional methods for tests.

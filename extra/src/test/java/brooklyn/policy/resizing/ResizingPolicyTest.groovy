@@ -5,18 +5,19 @@ import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
 import java.util.List
+import java.util.Map
+import java.util.concurrent.atomic.AtomicInteger
 
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import com.google.common.collect.ImmutableMap
-
 import brooklyn.entity.LocallyManagedEntity
 import brooklyn.entity.trait.Resizable
-import brooklyn.policy.loadbalancing.BalanceableWorkerPool
-import brooklyn.policy.loadbalancing.MockContainerEntity
+import brooklyn.event.basic.BasicNotificationSensor
 import brooklyn.test.entity.TestCluster
 import brooklyn.util.internal.TimeExtras
+
+import com.google.common.collect.ImmutableMap
 
 
 class ResizingPolicyTest {
@@ -57,7 +58,7 @@ class ResizingPolicyTest {
     @Test
     public void testShrinkColdPool() {
         resizable.resize(4)
-        resizable.emit(BalanceableWorkerPool.POOL_COLD, message(4, 30L, 4*10L, 4*20L))
+        resizable.emit(ResizingPolicy.POOL_COLD, message(4, 30L, 4*10L, 4*20L))
         
         // expect pool to shrink to 3 (i.e. maximum to have >= 40 per container)
         executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 3) }
@@ -66,7 +67,7 @@ class ResizingPolicyTest {
     @Test
     public void testShrinkColdPoolRoundsUpDesiredNumberOfContainers() {
         resizable.resize(4)
-        resizable.emit(BalanceableWorkerPool.POOL_COLD, message(4, 1L, 4*10L, 4*20L))
+        resizable.emit(ResizingPolicy.POOL_COLD, message(4, 1L, 4*10L, 4*20L))
         
         executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 1) }
     }
@@ -74,7 +75,7 @@ class ResizingPolicyTest {
     @Test
     public void testGrowHotPool() {
         resizable.resize(2)
-        resizable.emit(BalanceableWorkerPool.POOL_HOT, message(2, 41L, 2*10L, 2*20L))
+        resizable.emit(ResizingPolicy.POOL_HOT, message(2, 41L, 2*10L, 2*20L))
         
         // expect pool to grow to 3 (i.e. minimum to have <= 80 per container)
         executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 3) }
@@ -87,7 +88,7 @@ class ResizingPolicyTest {
         resizable.addPolicy(policy)
         
         resizable.resize(4)
-        resizable.emit(BalanceableWorkerPool.POOL_COLD, message(4, 0L, 4*10L, 4*20L))
+        resizable.emit(ResizingPolicy.POOL_COLD, message(4, 0L, 4*10L, 4*20L))
         
         // expect pool to shrink only to the minimum
         executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 2) }
@@ -100,7 +101,7 @@ class ResizingPolicyTest {
         resizable.addPolicy(policy)
         
         resizable.resize(4)
-        resizable.emit(BalanceableWorkerPool.POOL_HOT, message(4, 1000000L, 4*10L, 4*20L))
+        resizable.emit(ResizingPolicy.POOL_HOT, message(4, 1000000L, 4*10L, 4*20L))
         
         // expect pool to grow only to the maximum
         executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 5) }
@@ -109,7 +110,7 @@ class ResizingPolicyTest {
     @Test
     public void testNeverGrowColdPool() {
         resizable.resize(2)
-        resizable.emit(BalanceableWorkerPool.POOL_COLD, message(2, 1000L, 2*10L, 2*20L))
+        resizable.emit(ResizingPolicy.POOL_COLD, message(2, 1000L, 2*10L, 2*20L))
         
         Thread.sleep(SHORT_WAIT_MS)
         assertEquals(resizable.currentSize, 2)
@@ -119,7 +120,7 @@ class ResizingPolicyTest {
     public void testNeverShrinkHotPool() {
         resizeSleepTime = 0
         resizable.resize(2)
-        resizable.emit(BalanceableWorkerPool.POOL_HOT, message(2, 0L, 2*10L, 2*20L))
+        resizable.emit(ResizingPolicy.POOL_HOT, message(2, 0L, 2*10L, 2*20L))
         
         // if had been a POOL_COLD, would have shrunk to 3
         Thread.sleep(SHORT_WAIT_MS)
@@ -130,10 +131,10 @@ class ResizingPolicyTest {
     public void testConcurrentShrinkShrink() {
         resizeSleepTime = 250
         resizable.resize(4)
-        resizable.emit(BalanceableWorkerPool.POOL_COLD, message(4, 30L, 4*10L, 4*20L))
+        resizable.emit(ResizingPolicy.POOL_COLD, message(4, 30L, 4*10L, 4*20L))
         // would cause pool to shrink to 3
         
-        resizable.emit(BalanceableWorkerPool.POOL_COLD, message(4, 1L, 4*10L, 4*20L))
+        resizable.emit(ResizingPolicy.POOL_COLD, message(4, 1L, 4*10L, 4*20L))
         // now expect pool to shrink to 1
         
         executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 1) }
@@ -143,10 +144,10 @@ class ResizingPolicyTest {
     public void testConcurrentGrowGrow() {
         resizeSleepTime = 250
         resizable.resize(2)
-        resizable.emit(BalanceableWorkerPool.POOL_HOT, message(2, 41L, 2*10L, 2*20L))
+        resizable.emit(ResizingPolicy.POOL_HOT, message(2, 41L, 2*10L, 2*20L))
         // would cause pool to grow to 3
         
-        resizable.emit(BalanceableWorkerPool.POOL_HOT, message(2, 81L, 2*10L, 2*20L))
+        resizable.emit(ResizingPolicy.POOL_HOT, message(2, 81L, 2*10L, 2*20L))
         // now expect pool to grow to 5
         
         executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 5) }
@@ -156,10 +157,10 @@ class ResizingPolicyTest {
     public void testConcurrentGrowShrink() {
         resizeSleepTime = 250
         resizable.resize(2)
-        resizable.emit(BalanceableWorkerPool.POOL_HOT, message(2, 81L, 2*10L, 2*20L))
+        resizable.emit(ResizingPolicy.POOL_HOT, message(2, 81L, 2*10L, 2*20L))
         // would cause pool to grow to 5
         
-        resizable.emit(BalanceableWorkerPool.POOL_COLD, message(2, 1L, 2*10L, 2*20L))
+        resizable.emit(ResizingPolicy.POOL_COLD, message(2, 1L, 2*10L, 2*20L))
         // now expect pool to shrink to 1
         
         executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 1) }
@@ -169,10 +170,10 @@ class ResizingPolicyTest {
     public void testConcurrentShrinkGrow() {
         resizeSleepTime = 250
         resizable.resize(4)
-        resizable.emit(BalanceableWorkerPool.POOL_COLD, message(4, 1L, 4*10L, 4*20L))
+        resizable.emit(ResizingPolicy.POOL_COLD, message(4, 1L, 4*10L, 4*20L))
         // would cause pool to shrink to 1
         
-        resizable.emit(BalanceableWorkerPool.POOL_HOT, message(4, 81L, 4*10L, 4*20L))
+        resizable.emit(ResizingPolicy.POOL_HOT, message(4, 81L, 4*10L, 4*20L))
         // now expect pool to grow to 5
         
         executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 5) }
@@ -185,9 +186,9 @@ class ResizingPolicyTest {
         // TODO is this too time sensitive? the resize takes only 250ms so if it finishes before the next emit we'd also see size=2
         resizeSleepTime = 500
         resizable.resize(4)
-        resizable.emit(BalanceableWorkerPool.POOL_COLD, message(4, 30L, 4*10L, 4*20L)) // shrink to 3
-        resizable.emit(BalanceableWorkerPool.POOL_COLD, message(4, 20L, 4*10L, 4*20L)) // shrink to 2
-        resizable.emit(BalanceableWorkerPool.POOL_COLD, message(4, 10L, 4*10L, 4*20L)) // shrink to 1
+        resizable.emit(ResizingPolicy.POOL_COLD, message(4, 30L, 4*10L, 4*20L)) // shrink to 3
+        resizable.emit(ResizingPolicy.POOL_COLD, message(4, 20L, 4*10L, 4*20L)) // shrink to 2
+        resizable.emit(ResizingPolicy.POOL_COLD, message(4, 10L, 4*10L, 4*20L)) // shrink to 1
         
         executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 1) }
         assertEquals(resizable.sizes, [4, 3, 1])
@@ -202,4 +203,34 @@ class ResizingPolicyTest {
             ResizingPolicy.POOL_HIGH_THRESHOLD_KEY, highThreshold)
     }
     
+    @Test
+    public void testUsesResizeOperatorOverride() {
+        resizable.removePolicy(policy)
+        
+        AtomicInteger counter = new AtomicInteger()
+        policy = new ResizingPolicy(resizeOperator:{entity,desiredSize -> counter.incrementAndGet()})
+        resizable.addPolicy(policy)
+        
+        resizable.emit(ResizingPolicy.POOL_HOT, message(1, 21L, 1*10L, 1*20L)) // grow to 2
+        
+        executeUntilSucceeds(timeout:TIMEOUT_MS) {
+            assertTrue(counter.get() >= 1, "cccounter=$counter")
+        }
+    }
+    
+    @Test
+    public void testUsesCustomSensorOverride() {
+        resizable.removePolicy(policy)
+        
+        BasicNotificationSensor<Map> customPoolHotSensor = new BasicNotificationSensor<Map>(Map.class, "custom.hot", "")
+        BasicNotificationSensor<Map> customPoolColdSensor = new BasicNotificationSensor<Map>(Map.class, "custom.cold", "")
+        policy = new ResizingPolicy(poolHotSensor:customPoolHotSensor, poolColdSensor:customPoolColdSensor)
+        resizable.addPolicy(policy)
+        
+        resizable.emit(customPoolHotSensor, message(1, 21L, 1*10L, 1*20L)) // grow to 2
+        executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 2) }
+        
+        resizable.emit(customPoolColdSensor, message(2, 1L, 1*10L, 1*20L)) // shrink to 1
+        executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 1) }
+    }
 }
