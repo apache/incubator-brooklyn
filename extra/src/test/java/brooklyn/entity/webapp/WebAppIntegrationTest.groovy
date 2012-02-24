@@ -5,7 +5,6 @@ import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
 import java.util.concurrent.CopyOnWriteArrayList
-import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -14,6 +13,7 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
+import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.basic.legacy.JavaApp
 import brooklyn.entity.webapp.jboss.JBoss6Server
@@ -47,7 +47,7 @@ public class WebAppIntegrationTest {
     public static final int PORT_INCREMENT = 400
 
     // The owner application entity for these tests
-    TestApplication application = new TestApplication()
+    private List<AbstractApplication> applications = new ArrayList<AbstractApplication>()
     SoftwareProcessEntity entity
     
 	static { TimeExtras.init() }
@@ -59,9 +59,13 @@ public class WebAppIntegrationTest {
         }
     }
 
+    // Make sure everything created by newTestApplication() is shut down
     @AfterMethod(alwaysRun=true)
     public void shutdownApp() {
-        application.stop()
+        for (AbstractApplication app : applications) {
+            app.stop()
+        }
+        applications.clear()
     }
 
     @AfterMethod(alwaysRun=true)
@@ -97,7 +101,18 @@ public class WebAppIntegrationTest {
             log.info "Cannot shutdown, because shutdown-port not set for $entity";
         }
     }
-    
+
+    /** 
+     * Create a new instance of TestApplication and append it to applications list
+     * so it can be terminated suitable after each test has run.
+     * @return
+     */
+    private TestApplication newTestApplication() {
+        TestApplication ta = new TestApplication()
+        applications.add(ta)
+        return ta
+    }
+
     /**
      * Provides instances of {@link TomcatServer}, {@link JBoss6Server} and {@link JBoss7Server} to the tests below.
      *
@@ -107,10 +122,10 @@ public class WebAppIntegrationTest {
      */
     @DataProvider(name = "basicEntities")
     public Object[][] basicEntities() {
-		//FIXME they mustn't share the application, and we should start the application, not the entity
-        TomcatServer tomcat = [ owner:application, httpPort:DEFAULT_HTTP_PORT ]
-        JBoss6Server jboss6 = [ owner:application, portIncrement:PORT_INCREMENT ]
-        JBoss7Server jboss7 = [ owner:application, httpPort:DEFAULT_HTTP_PORT ]
+		//FIXME we should start the application, not the entity
+        TomcatServer tomcat = [ owner:newTestApplication(), httpPort:DEFAULT_HTTP_PORT ]
+        JBoss6Server jboss6 = [ owner:newTestApplication(), portIncrement:PORT_INCREMENT ]
+        JBoss7Server jboss7 = [ owner:newTestApplication(), httpPort:DEFAULT_HTTP_PORT ]
         return [ 
 			[ tomcat ], 
 			[ jboss6 ], 
