@@ -3,8 +3,9 @@ package brooklyn.policy.resizing
 import groovy.lang.Closure
 
 import java.util.Map
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 import org.slf4j.Logger
@@ -17,6 +18,7 @@ import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.event.basic.BasicNotificationSensor
 import brooklyn.policy.basic.AbstractPolicy
+import brooklyn.util.flags.SetFromFlag
 
 import com.google.common.base.Preconditions
 
@@ -42,8 +44,14 @@ public class ResizingPolicy extends AbstractPolicy {
     public static final String POOL_LOW_THRESHOLD_KEY = "pool.low.threshold"
     public static final String POOL_CURRENT_WORKRATE_KEY = "pool.current.workrate"
     
+    @SetFromFlag // TODO not respected for policies? I had to look this up in the constructor
+    private long minPeriodBetweenExecs = 100
+    
     private Entity poolEntity
-    private ExecutorService executor = Executors.newSingleThreadExecutor()
+    
+    private volatile ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor()
+    private final AtomicBoolean executorQueued = new AtomicBoolean(false)
+    private volatile long executorTime = 0
     
     private int minPoolSize = 0
     private int maxPoolSize = Integer.MAX_VALUE
@@ -52,7 +60,6 @@ public class ResizingPolicy extends AbstractPolicy {
     private final BasicNotificationSensor poolColdSensor
     
     private volatile int desiredPoolSize;
-    private AtomicBoolean executorQueued = new AtomicBoolean();
     
     Closure defaultResizeOperator = { Entity e, int desiredSize ->
         ((Entity)e).resize(desiredSize)
@@ -68,13 +75,14 @@ public class ResizingPolicy extends AbstractPolicy {
         }
     }
     
-    public ResizingPolicy(Map properties = [:]) {
-        super(properties)
-        if (properties.containsKey("minPoolSize")) minPoolSize = properties.minPoolSize
-        if (properties.containsKey("maxPoolSize")) maxPoolSize = properties.maxPoolSize
-        resizeOperator = properties.resizeOperator ?: defaultResizeOperator
-        poolHotSensor = properties.poolHotSensor ?: POOL_HOT
-        poolColdSensor = properties.poolColdSensor ?: POOL_COLD
+    public ResizingPolicy(Map props = [:]) {
+        super(props)
+        if (props.containsKey("minPoolSize")) minPoolSize = props.minPoolSize
+        if (props.containsKey("maxPoolSize")) maxPoolSize = props.maxPoolSize
+        resizeOperator = props.resizeOperator ?: defaultResizeOperator
+        poolHotSensor = props.poolHotSensor ?: POOL_HOT
+        poolColdSensor = props.poolColdSensor ?: POOL_COLD
+        minPeriodBetweenExecs = props.minPeriodBetweenExecs ?: 100
     }
     
     @Override
@@ -87,7 +95,7 @@ public class ResizingPolicy extends AbstractPolicy {
     @Override
     public void resume() {
         super.resume();
-        executor = Executors.newSingleThreadExecutor()
+        executor = Executors.newSingleThreadScheduledExecutor()
     }
     
     @Override
@@ -159,21 +167,29 @@ public class ResizingPolicy extends AbstractPolicy {
         this.desiredPoolSize = newSize
 
         if (isRunning() && executorQueued.compareAndSet(false, true)) {
-            executor.submit( {
-                executorQueued.set(false)
-                try {
-                    resizeOperator.call(poolEntity, desiredPoolSize)
-                    
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt() // gracefully stop
-                } catch (Exception e) {
-                    if (isRunning()) {
-                        LOG.error("Error resizing: "+e, e)
-                    } else {
-                        if (LOG.isDebugEnabled()) LOG.debug("Error resizing, but no longer running: "+e, e)
+            long now = System.currentTimeMillis()
+            long delay = Math.max(0, (executorTime + minPeriodBetweenExecs) - now)
+            
+            executor.schedule(
+                {
+                    try {
+                        executorTime = System.currentTimeMillis()
+                        executorQueued.set(false)
+                        
+                        resizeOperator.call(poolEntity, desiredPoolSize)
+                        
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt() // gracefully stop
+                    } catch (Exception e) {
+                        if (isRunning()) {
+                            LOG.error("Error resizing: "+e, e)
+                        } else {
+                            if (LOG.isDebugEnabled()) LOG.debug("Error resizing, but no longer running: "+e, e)
+                        }
                     }
-                }
-            } )
+                },
+                delay,
+                TimeUnit.MILLISECONDS)
         }
     }
 }

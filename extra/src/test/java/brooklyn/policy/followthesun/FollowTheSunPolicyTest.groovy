@@ -4,16 +4,23 @@ import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
+import java.util.concurrent.Semaphore
+import java.util.concurrent.TimeUnit
+
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.Entity
 import brooklyn.event.AttributeSensor
+import brooklyn.event.SensorEvent
+import brooklyn.event.SensorEventListener
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.policy.loadbalancing.MockContainerEntity
 import brooklyn.policy.loadbalancing.MockItemEntity
+import brooklyn.policy.loadbalancing.Movable
 import brooklyn.test.entity.TestApplication
 
+import com.google.common.base.Stopwatch
 import com.google.common.collect.ImmutableMap
 
 public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
@@ -46,7 +53,12 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
         Closure customLocationFinder = { Entity e ->
             return new SimulatedLocation(name:"custom location for "+e)
         }
-        FollowTheSunPolicy customPolicy = new FollowTheSunPolicy([locationFinder:customLocationFinder], TEST_METRIC, model, FollowTheSunParameters.newDefault())
+        FollowTheSunPolicy customPolicy = new FollowTheSunPolicy(
+                [minPeriodBetweenExecs:0, locationFinder:customLocationFinder], 
+                TEST_METRIC, 
+                model, 
+                FollowTheSunParameters.newDefault())
+        
         pool.addPolicy(customPolicy)
         
         MockContainerEntity containerA = newContainer(app, loc1, "A")
@@ -184,5 +196,55 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
         item2.setAttribute(TEST_METRIC, ImmutableMap.of(item1, 100d))
         
         assertItemDistributionContinually([(containerA):[item1, item2], (containerB):[]])
+    }
+    
+    @Test
+    public void testRespectsMinPeriodBetweenExecs() {
+        long minPeriodBetweenExecs = 500
+        long timePrecision = 100
+        
+        pool.removePolicy(policy)
+        
+        MockContainerEntity containerA = newContainer(app, loc1, "A")
+        MockContainerEntity containerB = newContainer(app, loc2, "B")
+        MockItemEntity item1 = newItem(app, containerA, "1")
+        MockItemEntity item2 = newItem(app, containerB, "2")
+        MockItemEntity item3 = newItem(app, containerA, "3")
+        
+        FollowTheSunPolicy customPolicy = new FollowTheSunPolicy(
+            [minPeriodBetweenExecs:minPeriodBetweenExecs],
+            TEST_METRIC,
+            model,
+            FollowTheSunParameters.newDefault())
+    
+        pool.addPolicy(customPolicy)
+        
+        // Record times that things are moved, by lisening to the container sensor being set
+        Stopwatch stopwatch = new Stopwatch()
+        stopwatch.start()
+        
+        List<Long> eventTimes = []
+        Semaphore semaphore = new Semaphore(0)
+        
+        app.subscribe(item1, Movable.CONTAINER, new SensorEventListener<Entity>() {
+            @Override public void onEvent(SensorEvent<Entity> event) {
+                long eventTime = stopwatch.elapsedMillis()
+                LOG.info("Received $event at $eventTime")
+                eventTimes += eventTime
+                semaphore.release()
+            }});
+
+        // Set the workrate, causing the policy to move item1 to item2's location, and wait for it to happen
+        item1.setAttribute(TEST_METRIC, ImmutableMap.of(item2, 100d))
+        assertTrue(semaphore.tryAcquire(TIMEOUT_MS, TimeUnit.MILLISECONDS))
+        assertEquals(item1.getAttribute(Movable.CONTAINER), containerB)
+        
+        // now cause item1 to be moved to item3's location, and wait for it to happen
+        item1.setAttribute(TEST_METRIC, ImmutableMap.of(item3, 100d))
+        assertTrue(semaphore.tryAcquire(TIMEOUT_MS, TimeUnit.MILLISECONDS))
+        assertEquals(item1.getAttribute(Movable.CONTAINER), containerA)
+        
+        assertEquals(eventTimes.size(), 2)
+        assertTrue(eventTimes[1] - eventTimes[0] > (minPeriodBetweenExecs-timePrecision), ""+eventTimes)
     }
 }
