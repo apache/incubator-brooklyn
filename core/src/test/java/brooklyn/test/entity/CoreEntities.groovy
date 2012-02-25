@@ -8,9 +8,12 @@ import java.util.concurrent.atomic.AtomicInteger
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.entity.Effector
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractEntity
+import brooklyn.entity.basic.Description
+import brooklyn.entity.basic.MethodEffector
 import brooklyn.entity.trait.Startable
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEventListener
@@ -59,6 +62,8 @@ public class TestEntity extends AbstractEntity implements Startable {
     public static final BasicAttributeSensor<String> NAME = [ String, "test.name", "Test name" ]
     public static final BasicNotificationSensor<Integer> MY_NOTIF = [ Integer, "test.myNotif", "Test notification" ]
     
+    public static final Effector MY_EFFECTOR = new MethodEffector(TestEntity.&myEffector);
+    
     int sequenceValue = 0
     AtomicInteger counter = new AtomicInteger(0)
     Map constructorProperties
@@ -69,6 +74,11 @@ public class TestEntity extends AbstractEntity implements Startable {
     }
     public TestEntity(Entity owner) {
         this([:], owner)
+    }
+    
+    @Description("an example of a no-arg effector")
+    public void myEffector() {
+        if (LOG.isTraceEnabled()) LOG.trace "In myEffector for {}", this
     }
     
     public synchronized int getSequenceValue() {
