@@ -2,12 +2,12 @@ package brooklyn.entity.basic
 
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
-import java.util.Collection;
+import java.util.Collection
 import java.util.concurrent.CancellationException
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Future
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -27,16 +27,13 @@ import brooklyn.event.SensorEventListener
 import brooklyn.event.basic.AttributeMap
 import brooklyn.event.basic.AttributeSensorAndConfigKey
 import brooklyn.event.basic.BasicNotificationSensor
-import brooklyn.event.basic.ListConfigKey
-import brooklyn.event.basic.MapConfigKey
-import brooklyn.event.basic.SubElementConfigKey
 import brooklyn.location.Location
 import brooklyn.management.ExecutionContext
 import brooklyn.management.ManagementContext
 import brooklyn.management.SubscriptionContext
 import brooklyn.management.SubscriptionHandle
 import brooklyn.management.Task
-import brooklyn.management.internal.SubscriptionTracker;
+import brooklyn.management.internal.SubscriptionTracker
 import brooklyn.policy.Enricher
 import brooklyn.policy.Policy
 import brooklyn.policy.basic.AbstractPolicy
@@ -49,7 +46,7 @@ import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.task.BasicExecutionContext
 
 import com.google.common.collect.ImmutableList
-import com.google.common.collect.SetMultimap;
+import com.google.common.collect.Iterables
 
 /**
  * Default {@link Entity} implementation.
@@ -85,7 +82,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     Map<String,Object> presentationAttributes = [:]
     Collection<AbstractPolicy> policies = [] as CopyOnWriteArrayList
     Collection<AbstractEnricher> enrichers = [] as CopyOnWriteArrayList
-    Collection<Location> locations = [] as CopyOnWriteArrayList
+    Collection<Location> locations = Collections.newSetFromMap(new ConcurrentHashMap<Location,Boolean>())
 
     // FIXME we do not currently support changing owners, but to implement a cluster that can shrink we need to support at least
     // removing ownership. This flag notes if the class has previously been owned, and if an attempt is made to set a new owner
@@ -453,6 +450,10 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         locations
     }
 
+    public Location firstLocation() {
+        return Iterables.get(locations, 0)
+    }
+    
     /**
      * Should be invoked at end-of-life to clean up the item.
      */

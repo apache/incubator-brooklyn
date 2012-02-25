@@ -109,6 +109,14 @@ class DynamicClusterTest {
     }
 
     @Test
+    public void testClusterHasOneLocationAfterStarting() {
+        DynamicCluster cluster = new DynamicCluster(newEntity:{ new TestEntity() }, app)
+        cluster.start([loc])
+        assertEquals(cluster.getLocations().size(), 1)
+        assertEquals(cluster.getLocations() as List, [loc])
+    }
+
+    @Test
     public void resizeFromZeroToOneStartsANewEntityAndSetsItsOwner() {
         TestEntity entity
         DynamicCluster cluster = new DynamicCluster(newEntity:{ properties -> entity = new TestEntity(properties) }, app)

@@ -90,10 +90,10 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         removalStrategy = checkNotNull(val, "removalStrategy")
     }
 
-    public void start(Collection<? extends Location> locations) {
-        Preconditions.checkNotNull locations, "locations must be supplied"
-        Preconditions.checkArgument locations.size() == 1, "Exactly one location must be supplied"
-        location = Iterables.getOnlyElement(locations)
+    public void start(Collection<? extends Location> locs) {
+        Preconditions.checkNotNull locs, "locations must be supplied"
+        Preconditions.checkArgument locs.size() == 1, "Exactly one location must be supplied"
+        location = Iterables.getOnlyElement(locs)
         this.locations.add(location)
         resize(getConfig(INITIAL_SIZE))
         policies.each { it.resume() }
