@@ -466,6 +466,10 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         attributesInternal.getValue(attribute);
     }
 
+    public <T> T getAttributeByNameParts(List<String> nameParts) {
+        attributesInternal.getValue(nameParts)
+    }
+    
     @Override
     public <T> T setAttribute(AttributeSensor<T> attribute, T val) {
         if (LOG.isDebugEnabled()) LOG.debug "setting attribute {} to {} on {}", attribute.name, val, this
