@@ -156,8 +156,8 @@ public class FollowTheSunPolicy extends AbstractPolicy {
                     try {
                         executorTime = System.currentTimeMillis()
                         executorQueued.set(false)
-                        if (LOG.isTraceEnabled()) LOG.trace("{} executing migration-strategy, $minPeriodBetweenExecs", this)
                         
+                        if (LOG.isTraceEnabled()) LOG.trace("{} executing follow-the-sun migration-strategy", this)
                         strategy.rebalance()
                         
                     } catch (InterruptedException e) {

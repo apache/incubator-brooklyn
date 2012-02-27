@@ -178,6 +178,8 @@ public class ResizingPolicy extends AbstractPolicy {
                         
                         resizeOperator.call(poolEntity, desiredPoolSize)
                         
+                        if (LOG.isDebugEnabled()) LOG.debug("{} requested resize to {}", this, desiredPoolSize)
+                        
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt() // gracefully stop
                     } catch (Exception e) {

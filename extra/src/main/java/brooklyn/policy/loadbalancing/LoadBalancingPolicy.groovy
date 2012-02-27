@@ -60,6 +60,9 @@ public class LoadBalancingPolicy extends AbstractPolicy {
     private final AtomicBoolean executorQueued = new AtomicBoolean(false)
     private volatile long executorTime = 0
 
+    private int lastEmittedDesiredPoolSize = 0
+    private String lastEmittedPoolTemperature = null // "cold" or "hot"
+    
     private final SensorEventListener<?> eventHandler = new SensorEventListener<Object>() {
         public void onEvent(SensorEvent<?> event) {
             if (LOG.isTraceEnabled()) LOG.trace("{} received event {}", LoadBalancingPolicy.this, event)
@@ -156,23 +159,45 @@ public class LoadBalancingPolicy extends AbstractPolicy {
                         executorQueued.set(false)
                         strategy.rebalance()
                         
-                        if (LOG.isTraceEnabled()) LOG.trace("{} post-rebalance: poolSize={}; workrate={}; lowThreshold={}; " + 
+                        if (LOG.isDebugEnabled()) LOG.debug("{} post-rebalance: poolSize={}; workrate={}; lowThreshold={}; " + 
                                 "highThreshold={}", this, model.getPoolSize(), model.getCurrentPoolWorkrate(), 
                                 model.getPoolLowThreshold(), model.getPoolHighThreshold())
                         
                         if (model.isCold()) {
-                            poolEntity.emit(ResizingPolicy.POOL_COLD, ImmutableMap.of(
+                            Map eventVal = ImmutableMap.of(
                                     ResizingPolicy.POOL_CURRENT_SIZE_KEY, model.poolSize,
                                     ResizingPolicy.POOL_CURRENT_WORKRATE_KEY, model.getCurrentPoolWorkrate(),
                                     ResizingPolicy.POOL_LOW_THRESHOLD_KEY, model.getPoolLowThreshold(),
-                                    ResizingPolicy.POOL_HIGH_THRESHOLD_KEY, model.getPoolHighThreshold()));
+                                    ResizingPolicy.POOL_HIGH_THRESHOLD_KEY, model.getPoolHighThreshold())
+            
+                            poolEntity.emit(ResizingPolicy.POOL_COLD, eventVal)
+                            
+                            if (LOG.isInfoEnabled()) {
+                                int desiredPoolSize = Math.ceil(model.getCurrentPoolWorkrate() / (model.getPoolLowThreshold()/model.poolSize)).intValue()
+                                if (desiredPoolSize != lastEmittedDesiredPoolSize || lastEmittedPoolTemperature != "cold") {
+                                    LOG.info("Emitted pool-cold with new desired size $desiredPoolSize: $eventVal")
+                                    lastEmittedDesiredPoolSize = desiredPoolSize
+                                    lastEmittedPoolTemperature = "cold"
+                                }
+                            }
                         
                         } else if (model.isHot()) {
-                            poolEntity.emit(ResizingPolicy.POOL_HOT, ImmutableMap.of(
+                            Map eventVal = ImmutableMap.of(
                                     ResizingPolicy.POOL_CURRENT_SIZE_KEY, model.poolSize,
                                     ResizingPolicy.POOL_CURRENT_WORKRATE_KEY, model.getCurrentPoolWorkrate(),
                                     ResizingPolicy.POOL_LOW_THRESHOLD_KEY, model.getPoolLowThreshold(),
-                                    ResizingPolicy.POOL_HIGH_THRESHOLD_KEY, model.getPoolHighThreshold()));
+                                    ResizingPolicy.POOL_HIGH_THRESHOLD_KEY, model.getPoolHighThreshold())
+                            
+                            poolEntity.emit(ResizingPolicy.POOL_HOT, eventVal);
+                            
+                            if (LOG.isInfoEnabled()) {
+                                int desiredPoolSize = Math.ceil(model.getCurrentPoolWorkrate() / (model.getPoolHighThreshold()/model.poolSize)).intValue()
+                                if (desiredPoolSize != lastEmittedDesiredPoolSize || lastEmittedPoolTemperature != "hot") {
+                                    LOG.info("Emitted pool-hot with new desired size $desiredPoolSize: $eventVal")
+                                    lastEmittedDesiredPoolSize = desiredPoolSize
+                                    lastEmittedPoolTemperature = "hot"
+                                }
+                            }
                         }
                                                                 
                     } catch (InterruptedException e) {
