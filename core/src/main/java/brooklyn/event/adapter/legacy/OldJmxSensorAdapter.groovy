@@ -190,7 +190,7 @@ public class OldJmxSensorAdapter {
 				if (log.isTraceEnabled()) log.trace "got value {} for jmx attribute {}.{}", result, objectName.canonicalName, attribute
 				return result
 			} catch (Exception e) {
-				log.warn "error getting $attribute from ${bean.objectName} with $mbsc", e
+				log.warn "error getting $attribute from ${bean.objectName} with $mbsc: $e (rethrowing)"
 				throw e
 			}
         } else {
