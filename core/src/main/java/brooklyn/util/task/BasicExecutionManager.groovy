@@ -80,11 +80,11 @@ public class BasicExecutionManager implements ExecutionManager {
 
     private ConcurrentMap<Object, TaskScheduler> schedulerByTag = new ConcurrentHashMap()
     
-    private final AtomicLong totalTasksCount = new AtomicLong()
+    private final AtomicLong totalTaskCount = new AtomicLong()
     
-    private final AtomicInteger incompleteTasksCount = new AtomicInteger()
+    private final AtomicInteger incompleteTaskCount = new AtomicInteger()
     
-    private final AtomicInteger activeTasksCount = new AtomicInteger()
+    private final AtomicInteger activeTaskCount = new AtomicInteger()
     
 	/** for use by overriders to use custom thread factory */
 	protected ThreadFactory newThreadFactory() {
@@ -96,15 +96,15 @@ public class BasicExecutionManager implements ExecutionManager {
     }
     
     public long getTotalTasksSubmitted() {
-        return totalTasksCount.get()
+        return totalTaskCount.get()
     }
     
     public long getNumIncompleteTasks() {
-        return incompleteTasksCount.get()
+        return incompleteTaskCount.get()
     }
     
     public long getNumActiveTasks() {
-        return activeTasksCount.get()
+        return activeTaskCount.get()
     }
     
     private Set<Task> getMutableTasksWithTag(Object tag) {
@@ -191,7 +191,7 @@ public class BasicExecutionManager implements ExecutionManager {
 	}
 
     protected <T> Task<T> submitNewTask(Map flags, Task<T> task) {
-        totalTasksCount.incrementAndGet()
+        totalTaskCount.incrementAndGet()
         
         beforeSubmit(flags, task)
         
@@ -243,7 +243,7 @@ public class BasicExecutionManager implements ExecutionManager {
     }
 
     protected void beforeSubmit(Map flags, Task<?> task) {
-        incompleteTasksCount.incrementAndGet()
+        incompleteTaskCount.incrementAndGet()
         
 		Task currentTask = getCurrentTask();
         if (currentTask) task.submittedByTask = currentTask
@@ -266,7 +266,7 @@ public class BasicExecutionManager implements ExecutionManager {
     }
 
     protected void beforeStart(Map flags, Task<?> task) {
-        activeTasksCount.incrementAndGet()
+        activeTaskCount.incrementAndGet()
         
         //set thread _before_ start time, so we won't get a null thread when there is a start-time
         if (log.isTraceEnabled()) log.trace "$this beforeStart, task: $task"
@@ -284,8 +284,8 @@ public class BasicExecutionManager implements ExecutionManager {
     }
 
     protected void afterEnd(Map flags, Task<?> task) {
-        activeTasksCount.decrementAndGet()
-        incompleteTasksCount.decrementAndGet()
+        activeTaskCount.decrementAndGet()
+        incompleteTaskCount.decrementAndGet()
 
         if (log.isTraceEnabled()) log.trace "$this afterEnd, task: $task"
         ExecutionUtils.invoke flags.newTaskEndCallback, task

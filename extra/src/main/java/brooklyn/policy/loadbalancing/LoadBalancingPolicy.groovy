@@ -175,7 +175,7 @@ public class LoadBalancingPolicy extends AbstractPolicy {
                             if (LOG.isInfoEnabled()) {
                                 int desiredPoolSize = Math.ceil(model.getCurrentPoolWorkrate() / (model.getPoolLowThreshold()/model.poolSize)).intValue()
                                 if (desiredPoolSize != lastEmittedDesiredPoolSize || lastEmittedPoolTemperature != "cold") {
-                                    LOG.info("Emitted pool-cold with new desired size $desiredPoolSize: $eventVal")
+                                    LOG.info("$this emitted COLD (suggesting $desiredPoolSize): $eventVal")
                                     lastEmittedDesiredPoolSize = desiredPoolSize
                                     lastEmittedPoolTemperature = "cold"
                                 }
@@ -193,7 +193,7 @@ public class LoadBalancingPolicy extends AbstractPolicy {
                             if (LOG.isInfoEnabled()) {
                                 int desiredPoolSize = Math.ceil(model.getCurrentPoolWorkrate() / (model.getPoolHighThreshold()/model.poolSize)).intValue()
                                 if (desiredPoolSize != lastEmittedDesiredPoolSize || lastEmittedPoolTemperature != "hot") {
-                                    LOG.info("Emitted pool-hot with new desired size $desiredPoolSize: $eventVal")
+                                    LOG.info("$this emitted HOT (suggesting $desiredPoolSize): $eventVal")
                                     lastEmittedDesiredPoolSize = desiredPoolSize
                                     lastEmittedPoolTemperature = "hot"
                                 }
