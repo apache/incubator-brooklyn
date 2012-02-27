@@ -7,6 +7,7 @@ import brooklyn.entity.Entity;
 import brooklyn.management.Task;
 import java.util.Map
 import java.util.concurrent.ExecutionException
+import java.util.concurrent.atomic.AtomicLong
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -28,6 +29,12 @@ public abstract class AbstractManagementContext implements ManagementContext  {
     private static final Logger log = LoggerFactory.getLogger(AbstractManagementContext.class)
     public static final EFFECTOR_TAG = "EFFECTOR"
 
+    private final AtomicLong totalEffectorInvocationCount = new AtomicLong()
+    
+    public long getTotalEffectorInvocations() {
+        return totalEffectorInvocationCount.get()
+    }
+    
     public ExecutionContext getExecutionContext(Entity e) { 
         new BasicExecutionContext(tag:e, getExecutionManager());
     }
@@ -100,6 +107,7 @@ public abstract class AbstractManagementContext implements ManagementContext  {
 
     protected <T> T invokeEffectorMethodLocal(Entity entity, Effector<T> eff, Object args) {
         assert isManagedLocally(entity) : "cannot invoke effector method at $this because it is not managed here"
+        totalEffectorInvocationCount.incrementAndGet()
         args = AbstractEffector.prepareArgsForEffector(eff, args);
         entity.metaClass.invokeMethod(entity, eff.name, args)
     }
