@@ -1,5 +1,12 @@
 package brooklyn.util.task
 
+import groovy.lang.Closure
+
+import java.util.Collections
+import java.util.LinkedHashSet
+import java.util.List
+import java.util.Map
+import java.util.Set
 import java.util.concurrent.Callable
 import java.util.concurrent.CancellationException
 import java.util.concurrent.ConcurrentHashMap
@@ -13,6 +20,8 @@ import java.util.concurrent.SynchronousQueue
 import java.util.concurrent.ThreadFactory
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -23,7 +32,6 @@ import brooklyn.management.Task
 import brooklyn.util.internal.LanguageUtils
 
 import com.google.common.base.CaseFormat
-import com.google.common.collect.Iterables;
 
 /**
  * TODO javadoc
@@ -63,6 +71,12 @@ public class BasicExecutionManager implements ExecutionManager {
 
     private ConcurrentMap<Object, TaskScheduler> schedulerByTag = new ConcurrentHashMap()
     
+    private final AtomicLong totalTasksCount = new AtomicLong()
+    
+    private final AtomicInteger incompleteTasksCount = new AtomicInteger()
+    
+    private final AtomicInteger activeTasksCount = new AtomicInteger()
+    
 	/** for use by overriders to use custom thread factory */
 	protected ThreadFactory newThreadFactory() {
 		Executors.defaultThreadFactory();
@@ -70,6 +84,18 @@ public class BasicExecutionManager implements ExecutionManager {
 	
     public void shutdownNow() {
         runner.shutdownNow()
+    }
+    
+    public long getTotalTasksSubmitted() {
+        return totalTasksCount.get()
+    }
+    
+    public long getNumIncompleteTasks() {
+        return incompleteTasksCount.get()
+    }
+    
+    public long getNumActiveTasks() {
+        return activeTasksCount.get()
     }
     
     private Set<Task> getMutableTasksWithTag(Object tag) {
@@ -156,6 +182,8 @@ public class BasicExecutionManager implements ExecutionManager {
 	}
 
     protected <T> Task<T> submitNewTask(Map flags, Task<T> task) {
+        totalTasksCount.incrementAndGet()
+        
         beforeSubmit(flags, task)
         
         Closure job = {
@@ -201,6 +229,8 @@ public class BasicExecutionManager implements ExecutionManager {
     }
 
     protected void beforeSubmit(Map flags, Task<?> task) {
+        incompleteTasksCount.incrementAndGet()
+        
 		Task currentTask = getCurrentTask();
         if (currentTask) task.submittedByTask = currentTask
         task.submitTimeUtc = System.currentTimeMillis()
@@ -222,6 +252,8 @@ public class BasicExecutionManager implements ExecutionManager {
     }
 
     protected void beforeStart(Map flags, Task<?> task) {
+        activeTasksCount.incrementAndGet()
+        
         //set thread _before_ start time, so we won't get a null thread when there is a start-time
         if (log.isTraceEnabled()) log.trace "$this beforeStart, task: $task"
         if (!task.isCancelled()) {
@@ -235,6 +267,9 @@ public class BasicExecutionManager implements ExecutionManager {
     }
 
     protected void afterEnd(Map flags, Task<?> task) {
+        activeTasksCount.decrementAndGet()
+        incompleteTasksCount.decrementAndGet()
+
         if (log.isTraceEnabled()) log.trace "$this afterEnd, task: $task"
         ExecutionUtils.invoke flags.newTaskEndCallback, task
         Collections.reverse(flags.tagLinkedPreprocessors)
