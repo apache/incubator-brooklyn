@@ -13,6 +13,10 @@
     <relativePath>../parent/pom.xml</relativePath>
   </parent>
 
+  <properties>
+    <whirr.version>0.7.1</whirr.version>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>brooklyn</groupId>
@@ -35,12 +39,12 @@
     <dependency>
       <groupId>org.apache.whirr</groupId>
       <artifactId>whirr-core</artifactId>
-      <version>0.8.0-SNAPSHOT</version>
+      <version>${whirr.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.whirr</groupId>
       <artifactId>whirr-cli</artifactId>
-      <version>0.8.0-SNAPSHOT</version>
+      <version>${whirr.version}</version>
       <!-- you need the whirr services you actually use! for tests we might use any of them -->
     </dependency>
     <dependency>
