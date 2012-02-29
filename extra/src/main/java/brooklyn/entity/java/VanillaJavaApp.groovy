@@ -1,18 +1,16 @@
 package brooklyn.entity.java
 
 import java.util.List
-import java.util.Set
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.SoftwareProcessEntity
+import brooklyn.entity.basic.UsesJava
 import brooklyn.entity.basic.lifecycle.JavaStartStopSshDriver
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.flags.SetFromFlag
-
-import com.google.common.collect.Iterables
 
 
 public class VanillaJavaApp extends SoftwareProcessEntity implements UsesJava {
@@ -25,7 +23,10 @@ public class VanillaJavaApp extends SoftwareProcessEntity implements UsesJava {
     String main
 
     @SetFromFlag
-    String classpath
+    List<String> classpath
+
+    @SetFromFlag
+    List<String> args
 
     public VanillaJavaApp(Map props=[:], Entity owner=null) {
         super(props, owner)
@@ -36,7 +37,6 @@ public class VanillaJavaApp extends SoftwareProcessEntity implements UsesJava {
         super.connectSensors();
     }
     
-    //just provide better typing
     public VanillaJavaAppSshDriver newDriver(SshMachineLocation loc) {
         new VanillaJavaAppSshDriver(this, loc)
     }
@@ -59,8 +59,8 @@ public class VanillaJavaAppSshDriver extends JavaStartStopSshDriver {
         // TODO install classpath entries?
         
         newScript(INSTALLING).
-            failOnNonZeroResultCode().
-            ).execute();
+            failOnNonZeroResultCode()
+            .execute();
     }
 
     @Override
@@ -72,7 +72,7 @@ public class VanillaJavaAppSshDriver extends JavaStartStopSshDriver {
     public void launch() {
         // TODO Use JAVA_OPTIONS config, once that is fixed to support more than sys properties
         // TODO quote args?
-        String cp = entity.classpath.join(" ")
+        String classpath = entity.classpath.join(" ")
         String clazz = entity.main
         String args = entity.args.join(" ")
         
@@ -86,18 +86,14 @@ public class VanillaJavaAppSshDriver extends JavaStartStopSshDriver {
     @Override
     public boolean isRunning() {
         //TODO use PID instead
-        newScript(CHECK_RUNNING).
-            body.append(
-                "ps aux | grep '${entity.id}' | grep -v grep | grep -v java"
-            ).execute() == 0;
+        newScript(CHECK_RUNNING, usePidFile: true)
+                .execute() == 0;
     }
     
     @Override
     public void stop() {
-        newScript(STOPPING).
-            body.append(
-                "ps aux | grep '${entity.id}' | grep -v grep | awk '{ print \$2 }' | xargs kill -9"
-            ).execute();
+        newScript(STOPPING, usePidFile: true)
+                .execute();
     }
 
     @Override
