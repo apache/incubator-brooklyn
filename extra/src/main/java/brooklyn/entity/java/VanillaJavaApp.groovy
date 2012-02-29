@@ -9,6 +9,7 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.basic.UsesJava
 import brooklyn.entity.basic.lifecycle.JavaStartStopSshDriver
+import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.flags.SetFromFlag
 
@@ -18,6 +19,9 @@ public class VanillaJavaApp extends SoftwareProcessEntity implements UsesJava {
     // FIXME classpath values: need these to be downloaded and installed?
     
     private static final Logger log = LoggerFactory.getLogger(VanillaJavaApp.class)
+    
+    @SetFromFlag("args")
+    public static final BasicConfigKey<String> ARGS = [ List, "vanillaJavaApp.args", "Arguments for launching the java app", [] ]
     
     @SetFromFlag
     String main
@@ -74,7 +78,7 @@ public class VanillaJavaAppSshDriver extends JavaStartStopSshDriver {
         // TODO quote args?
         String classpath = entity.classpath.join(";")
         String clazz = entity.main
-        String args = entity.args.join(" ")
+        String args = entity.getConfig(VanillaJavaApp.ARGS).join(" ")
         
         newScript(LAUNCHING, usePidFile:true).
             body.append(
