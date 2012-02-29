@@ -23,10 +23,10 @@ public class VanillaJavaApp extends SoftwareProcessEntity implements UsesJava {
     String main
 
     @SetFromFlag
-    List<String> classpath
+    List<String> classpath = []
 
     @SetFromFlag
-    List<String> args
+    List<String> args = []
 
     public VanillaJavaApp(Map props=[:], Entity owner=null) {
         super(props, owner)
@@ -72,7 +72,7 @@ public class VanillaJavaAppSshDriver extends JavaStartStopSshDriver {
     public void launch() {
         // TODO Use JAVA_OPTIONS config, once that is fixed to support more than sys properties
         // TODO quote args?
-        String classpath = entity.classpath.join(" ")
+        String classpath = entity.classpath.join(";")
         String clazz = entity.main
         String args = entity.args.join(" ")
         
