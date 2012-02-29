@@ -8,6 +8,7 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.Lifecycle
+import brooklyn.entity.basic.UsesJava;
 import brooklyn.location.basic.SshMachineLocation
 
 class VanillaJavaAppTest {
@@ -32,6 +33,13 @@ class VanillaJavaAppTest {
         assertEquals(javaProcess.getMain(), "my.Main")
         assertEquals(javaProcess.getClasspath(), ["c1","c2"])
         assertEquals(javaProcess.getArgs(), ["a1", "a2"])
+    }
+    
+    @Test(groups=["WIP", "Integration"])
+    public void testJavaSystemProperties() {
+        VanillaJavaApp javaProcess = new VanillaJavaApp(owner:app, main:"my.Main", classpath:["c1", "c2"], args:["a1", "a2"])
+        javaProcess.setConfig(UsesJava.JAVA_OPTIONS, ["fooKey":"fooValue", "barKey":"barValue"])
+        // TODO: how to test: launch standalone app that outputs system properties to stdout? Probe via JMX?
     }
     
     // FIXME Hard-codes Aled's path; needs fixed!
