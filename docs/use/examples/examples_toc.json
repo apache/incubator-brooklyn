@@ -1,0 +1,7 @@
+[
+{ "title": "Start",
+  "file":  "/index.html" },
+{ "title": "Examples",
+  "file": "/use/examples/index.html",
+  "children": {% readj ./toc.json %} }
+]

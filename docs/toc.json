@@ -1,0 +1,14 @@
+[
+{ "title": "Start",
+  "file":  "/start/index.html",
+  "children": {% readj /start/toc.json %} },
+{ "title": "Using",
+  "file":  "/use/index.html",
+  "children": {% readj /use/toc.json %} },
+{ "title": "Developing",
+  "file": "/dev/index.html",
+  "children": {% readj /dev/toc.json %} },
+{ "title": "Meta",
+  "file": "/meta/index.html",
+  "children": {% readj /meta/toc.json %} }
+]

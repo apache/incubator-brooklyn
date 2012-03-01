@@ -1,0 +1,12 @@
+[
+{ "title": "User's Guide",
+  "file":  "/use/guide/index.html", 
+  "children": {% readj ./guide/toc.json %} },
+{ "title": "Examples",
+  "file":  "/use/examples/index.html", 
+  "children": {% readj ./examples/toc.json %} },
+{ "title": "API Reference",
+  "file": "/use/api/index.html" },
+{ "title": "Contact",
+  "file": "/use/contact.html" }
+]

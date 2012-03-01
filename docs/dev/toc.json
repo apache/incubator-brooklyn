@@ -1,0 +1,10 @@
+[
+{ "title": "Get the Code",
+  "file":  "/dev/code/index.html" },
+{ "title": "Resources",
+  "file": "/dev/links.html" },
+{ "title": "How to Contribute",
+  "file":  "/dev/contribute/index.html",
+  "children": {% readj ./contribute/toc.json %} }
+]
+

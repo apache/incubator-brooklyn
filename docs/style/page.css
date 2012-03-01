@@ -1,0 +1,49 @@
+#page_header {
+  text-align: left;
+  height: 100px;
+  background-color: #68aa70;
+}
+
+#header_logo {
+  display: inline;
+  padding: 0px 8px 0px 0px;
+}
+
+#header_title {
+  display: inline;
+  vertical-align: 30px;
+  padding: 0px 0px 0px 30px;
+  color: #ffffff;
+  font-size: 200%;
+  font-weight: bold;
+}
+
+#all {
+  width: 960px;
+  margin: 0 auto;
+}
+
+
+.page_row {
+  width: 100%; 
+  text-align: center;
+  clear: both;
+}
+
+#page_toc {
+  width: 220px;
+  height: 100%;
+  float: left;
+  text-align: left;
+  padding: 0px 48px 0px 0px;
+}
+
+#page_content {
+  width: 100%;
+  text-align: left;
+  padding: 0px 0px 0px 8px;
+}
+
+#page_footer {
+  font-size: 50%;
+}

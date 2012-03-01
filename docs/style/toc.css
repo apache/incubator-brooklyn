@@ -1,0 +1,16 @@
+
+.ui-accordion { font-size: 90% }
+.ui-accordion .left-menu-body { padding: 0; }
+.ui-accordion .toc1 { margin: 14px 0px 0px 0px; }
+
+#sidebar_toc .toc1 { background: #f8f8f8; }
+#sidebar_toc .toc2 { background: #f0f0f0; }
+#sidebar_toc .toc3 { background: #e8e8e8; padding: 0px 0px 0px 20px; }
+
+#sidebar_toc .ui-accordion-header-active { background: #d8d8d8; }
+
+#sidebar_toc .toc-active { background: #68aa70; }
+#sidebar_toc .toc-active a { color: #103010; }
+
+#sidebar_toc .ui-state-hover { background: #c8d0c8; }
+

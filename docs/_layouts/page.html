@@ -1,0 +1,54 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+
+<head>
+  <title>{{ page.title }}</title>
+  <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+
+  <link rel="stylesheet" type="text/css" href="{{ site.url }}/style/main.css" />
+  <link rel="stylesheet" type="text/css" href="{{ site.url }}/style/page.css" />
+  <link rel="stylesheet" type="text/css" href="{{ site.url }}/style/toc.css" />
+  <link rel="stylesheet" type="text/css" href="{{ site.url }}/style/docs/code.css" />
+
+  <link href='http://fonts.googleapis.com/css?family=Droid+Sans+Mono' rel='stylesheet' type='text/css'>
+</head>
+
+<body>
+  <div id="all">
+
+    <div id="page_header" class="page_row">
+      <div id="header_logo">
+        <img height="100" src="{{ site.url }}/style/brooklyn-logo.png"/>
+      </div>
+      <div id="header_title">
+        {{ page.title }}
+      </div>
+    </div>
+
+<hr/>
+
+    <div class="page_row">
+
+      <div id="page_toc">
+		<!-- Sidebar -->
+		{% include sidebar.html %}
+      </div>
+
+      <div id="page_content">
+		{{ content }}
+      </div>
+
+    </div>
+
+    <div class="page_row"/>
+
+<hr/>
+
+    <div id="page_footer" class="page_row">
+      Copyright &copy; 2012 Cloudsoft Corporation
+    </div>
+
+  </div>
+
+</body>
+</html>

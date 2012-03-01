@@ -1,0 +1,12 @@
+[
+{ "title": "Quick Start",
+  "file":  "/use/guide/brooklyn-10-quickstart.html" }, 
+{ "title": "Defining Applications",
+  "file":  "/use/guide/brooklyn-20-defining-applications.html" }, 
+{ "title": "Management",
+  "file":  "/use/guide/brooklyn-30-management.html" },
+{ "title": "Entities",
+  "file": "/use/guide/brooklyn-40-entities.html" },
+{ "title": "Extras",
+  "file":  "/use/guide/brooklyn-50-extras.html" }
+]
