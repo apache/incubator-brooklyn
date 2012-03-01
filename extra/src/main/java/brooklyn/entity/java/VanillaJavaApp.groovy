@@ -28,7 +28,7 @@ public class VanillaJavaApp extends SoftwareProcessEntity implements UsesJava, U
     String main
 
     @SetFromFlag
-    List<String> classpath = []
+    List<String> classpath
 
     public VanillaJavaApp(Map props=[:], Entity owner=null) {
         super(props, owner)
