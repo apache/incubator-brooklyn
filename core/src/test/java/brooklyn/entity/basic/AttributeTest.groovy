@@ -23,4 +23,16 @@ public class AttributeTest {
         LocallyManagedEntity e = []
         assertEquals(e.getAttribute(COLOR), null)
     }
+    
+    @Test
+    public void canGetAttributeByNameParts() {
+        LocallyManagedEntity e = []
+        
+        // Initially null
+        assertNull(e.getAttributeByNameParts(COLOR.nameParts))
+        
+        // Once set, returns val
+        e.setAttribute(COLOR, "red")
+        assertEquals(e.getAttributeByNameParts(COLOR.nameParts), "red")
+    }
 }

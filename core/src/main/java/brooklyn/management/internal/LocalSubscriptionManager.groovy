@@ -6,6 +6,7 @@ import java.util.Map
 import java.util.Set
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
+import java.util.concurrent.atomic.AtomicLong
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -43,11 +44,27 @@ public class LocalSubscriptionManager implements SubscriptionManager {
     protected ConcurrentMap<String, Subscription> allSubscriptions = new ConcurrentHashMap<String, Subscription>();
     protected ConcurrentMap<Object, Set<Subscription>> subscriptionsBySubscriber = new ConcurrentHashMap<Object, Set<Subscription>>()
     protected ConcurrentMap<Object, Set<Subscription>> subscriptionsByToken = new ConcurrentHashMap<Object, Set<Subscription>>()
-  
+    
+    private final AtomicLong totalEventsPublishedCount = new AtomicLong()
+    
+    private final AtomicLong totalEventsDeliveredCount = new AtomicLong()
+    
     public LocalSubscriptionManager(ExecutionManager m) {
         this.em = m
     }
-      
+
+    public long getTotalEventsPublished() {
+        return totalEventsPublishedCount.get()
+    }
+    
+    public long getTotalEventsDelivered() {
+        return totalEventsDeliveredCount.get()
+    }
+    
+    public long getNumSubscriptions() {
+        return allSubscriptions.size()
+    }
+    
     /** @see SubscriptionManager#subscribe(Map, Entity, Sensor, EventListener) */
     public <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<T> listener) {
         subscribe([:], producer, sensor, listener)
@@ -172,6 +189,8 @@ public class LocalSubscriptionManager implements SubscriptionManager {
         //note, generating the notifications must be done in the calling thread to preserve order
         //e.g. emit(A); emit(B); should cause onEvent(A); onEvent(B) in that order
         if (LOG.isTraceEnabled()) LOG.trace "$this got a $event event"
+        totalEventsPublishedCount.incrementAndGet()
+        
         Set<Subscription> subs = getSubscriptionsForEntitySensor(event.source, event.sensor)
         if (subs) {
             if (LOG.isTraceEnabled()) LOG.trace "sending {}, {} to {}", event.sensor.name, event, subs.join(",")
@@ -180,6 +199,7 @@ public class LocalSubscriptionManager implements SubscriptionManager {
                     continue;
                 def final sAtClosureCreation = s
                 em.submit(tags: s.subscriberExecutionManagerTag, { sAtClosureCreation.listener.onEvent(event) })
+                totalEventsDeliveredCount.incrementAndGet()
             }
         }
     }
