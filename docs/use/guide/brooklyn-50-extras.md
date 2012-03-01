@@ -1,7 +1,7 @@
 ---
 title: Systems Available Out-of-the-Box
 layout: page
-toc: guide_toc.json
+toc: ../../toc.json
 ---
 
 brooklyn comes bundled with support for a large number of systems and entities.

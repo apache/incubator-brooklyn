@@ -1,3 +1,8 @@
+html {
+     overflow: -moz-scrollbars-vertical;
+     overflow-y: scroll;
+}
+
 body {
 	font-family: verdana, arial, sans-serif;
 }

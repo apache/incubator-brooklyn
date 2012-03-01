@@ -1,7 +1,7 @@
 ---
 title: brooklyn Introduction
 layout: page
-toc: guide_toc.json
+toc: ../../toc.json
 ---
 
 **brooklyn** is a provisioning and management framework for big, distributed applications. At a glance, it lets you:
@@ -12,7 +12,7 @@ toc: guide_toc.json
 - Run in multiple locations with efficient, secure wide-area management
 
 Prerequisites
-=============
+-------------
 
 This guide requires that you have the Java 6 JDK, curl, wget and Maven 3 installed.
 
@@ -27,7 +27,7 @@ If you are using Eclipse, you will require the Groovy and Maven plugins.
 
 
 WorldwideSpringTravel Example
-=============================
+-----------------------------
 
 
 This is what a relatively complex sample application looks like::

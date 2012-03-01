@@ -1,7 +1,7 @@
 ---
 title: How Management Works
 layout: page
-toc: guide_toc.json
+toc: ../../toc.json
 ---
 
 brooklyn uses many of the ideas from autonomic computing to implement management of entities in a structured and reusable fashion (including provisioning, 

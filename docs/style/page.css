@@ -1,12 +1,15 @@
 #page_header {
   text-align: left;
-  height: 100px;
+  height: 68px;
   background-color: #68aa70;
 }
-
+h1{
+	color: #68aa70;
+}
 #header_logo {
   display: inline;
   padding: 0px 8px 0px 0px;
+  
 }
 
 #header_title {
@@ -19,7 +22,8 @@
 }
 
 #all {
-  width: 960px;
+  width: 60em;
+  height:100%;
   margin: 0 auto;
 }
 
@@ -31,7 +35,7 @@
 }
 
 #page_toc {
-  width: 220px;
+  width: 14em;
   height: 100%;
   float: left;
   text-align: left;
@@ -39,7 +43,8 @@
 }
 
 #page_content {
-  width: 100%;
+  width: 40em;
+  float: left;
   text-align: left;
   padding: 0px 0px 0px 8px;
 }

@@ -1,7 +1,7 @@
 ---
 layout: page
 title: User Guide
-toc: guide_toc.json
+toc: ../../toc.json
 ---
 
 TODO -- Brooklyn docs haven't really been ported, just experimenting...

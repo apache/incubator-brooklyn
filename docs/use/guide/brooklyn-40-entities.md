@@ -1,7 +1,7 @@
 ---
 title: Custom Entity Development
 layout: page
-toc: guide_toc.json
+toc: ../../toc.json
 ---
 
 This section details how to create new custom application components or groups as brooklyn entities.
