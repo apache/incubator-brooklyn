@@ -1,17 +1,19 @@
 ---
 title: Custom Entity Development
 layout: page
-toc: ../../toc.json
+toc: ../guide_toc.json
 ---
 
 This section details how to create new custom application components or groups as brooklyn entities.
 
+<a name="entity-lifestyle" />
 The Entity Lifecycle
 --------------------
 
 - Importance of serialization, ref to How mananagement works
 - Ownership (children) and Membership (groups)
 
+<a name="implementation-classes" />
 What to Extend -- Implementation Classes
 ----------------------------------------
 
@@ -28,7 +30,7 @@ What to Extend -- Implementation Classes
 A common lifecycle pattern is that the ``start`` effector (see more on effectors below) is invoked, 
 often delegating either to a driver (for software processes) or children entities (for clusters etc)
 
-
+<a name="configuration" />
 Configuration
 -------------
 
@@ -46,7 +48,7 @@ Configuration
   and of course the config is done by the user like ordinary configuration,
   and the actual port used is reported back as a sensor on the entity
  
-
+<a name="implementing-sensors" />
 Implementing Sensors
 --------------------
 
@@ -78,7 +80,7 @@ Note the first line; as one descends into specific convenience subclasses (such 
 
 For some sensors, and often at compound entities, the values are obtained by monitoring values of other sensors on the same (in the case of a rolling average) or different (in the case of the average of children nodes) entities. This is achieved by policies, described below.
 
-
+<a name="implementing-effectors" />
 Implementing Effectors
 ----------------------
 
@@ -101,7 +103,7 @@ Routines which are convenient for specific drivers can then be inherited in the 
 
 .. TODO more drivers such as whirr, jmx, etc are planned
 
-
+<a name="implementing-policies" />
 Implementing Policies
 ---------------------
 

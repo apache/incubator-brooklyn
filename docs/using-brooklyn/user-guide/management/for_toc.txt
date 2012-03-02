@@ -1,0 +1,7 @@
+<a name="distributed-management" />
+<a name="resilience" />
+<a name="key-apis" />
+<a name="observation" />
+<a name="observation-other" />
+<a name="sensors-and-effectors" />
+<a name="writing-policies" />

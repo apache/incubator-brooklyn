@@ -1,7 +1,8 @@
 ---
 title: How Management Works
 layout: page
-toc: ../../toc.json
+toc: ../guide_toc.json
+categories: [using-brooklyn, user-guide]
 ---
 
 brooklyn uses many of the ideas from autonomic computing to implement management of entities in a structured and reusable fashion (including provisioning, 
@@ -41,6 +42,7 @@ Best practices for this include:
       
 For this milestone release, some of the mechanisms for implementing the above practices are still being developed.
 
+<a name="distributed-management" />
 Distributed Management
 ----------------------
 
@@ -48,6 +50,7 @@ Distributed Management
 
 *This section is not available in this milestone release.*
 
+<a name="resilience" />
 Resilience
 ----------
 
@@ -55,6 +58,7 @@ Resilience
 
 *This section is not available in this milestone release.*
 
+<a name="key-apis" />
 Key APIs
 --------
 
@@ -65,11 +69,11 @@ Key APIs
 - ``ManagementContext`` (Java management API)
 - ``EntityLocal`` (used by policies)
 
+<a name="observation" />
 Observing What is Happening
 ---------------------------
 
-Management Web Console
-......................
+### Management Web Console
 
 brooklyn comes with a web based management console that can be started using BrooklynLaucher:
 ::
@@ -112,8 +116,8 @@ The details view gives an in depth view of the application and its entities. Chi
 
 **Policies:** Lists the policies associated with the current entity. Policies can be suspended, resumed and removed through the UI.
 
-Security
-........
+### Security
+
 
 In this milestone release only two Spring Security users are created: user and admin.
 
@@ -125,28 +129,25 @@ In future releases it will be possible to add and configure users.
 
 Only the **admin** user has access to the Management Console.
 
+<a name="observation-other" />
 Other Ways to Observe Activity
 ------------------------------
 
-Java API
---------
+### Java API
 
 ``ManagementContext`` provides a Java programmatic API. 
 
 More information can be found in the javadoc for ``ManagementContext``.
 
-Command-line Console
-....................
+### Command-line Console
 
 *Not available yet.*
 
-Management REST API
-...................
+### Management REST API
 
 *Not available yet.*
 
-Logging
-.......
+### Logging
 
 *This section is in development at the time of this milestone release.*
 
@@ -156,11 +157,11 @@ Examples for testing can be found in some of the poms.
 
 .. TODO - describe how to simply configure logging slf4j
 
+<a name="sensors-and-effectors" />
 Sensors and Effectors
 ---------------------
 
-Sensors
-.......
+### Sensors
 
 Sensors are typically defined as static named fields on the Entity subclass. These define the channels of events and activity that interested parties can track remotely. For example:
 
@@ -201,8 +202,7 @@ Sensor values are defined as statics which can be used to programmatically drive
 
 .. TODO , etc., example
 
-SubscriptionManager
-...................
+### SubscriptionManager
 
 *This section is is progress at the time of this milestone release.*
 
@@ -211,8 +211,7 @@ SubscriptionManager
 .. TODO
 
 
-Effectors
-.........
+### Effectors
 
 Like sensors and config info, effectors are also static fields on the Entity class. These describe actions available on the entity, similar to methods. Their implementation includes details of how to invoke them, typically this is done by calling a method on the entity. Effectors are typically defined as follows:
 
@@ -235,8 +234,7 @@ It is worth noting that, where a method corresponds to an effector, direct invoc
 
 The execution framework that provides this functionality is independent of brooklyn, although it was developed for brooklyn.
 
-ExecutionManager
-................
+### ExecutionManager
 
 The ``ExecutionManager`` is responsible for tracking simultaneous executing tasks and associating these with given **tags**.
 Arbitrary tasks can be run by calling ``Task submit(Runnable)`` (similarly to the standard ``Executor``, although it also supports ``Callable`` arguments including Groovy closures, and can even be passed ``Task`` instances which have not been started). ``submit`` also accepts a few other named parameters, including ``description``, which allow additional metadata to be kept on the ``Task``. The main benefit then is to have rich metadata for executing tasks, which can be inspected through methods on the ``Task`` interface.
@@ -262,6 +260,7 @@ Note that it is currently necessary to prune dead tasks, either periodically or 
 It is possible to define ParallelTasks and SequentialTasks and to specify inter-task relationships with TaskPreprocessors — e.g. either submitting a SequentialTasks or specifying ``em.setTaskPreprocessorForTag("a", SingleThreadedExecution.class)`` will cause ``2-a+b`` to run after ``1-a``
 completes. This allows building quite sophisticated workflows relatively easily. For more information consult the javadoc on these classes and associated tests.
 
+<a name="writing-policies" />
 Writing Policies
 ----------------
 
@@ -271,8 +270,7 @@ Writing Policies
 - Policies can add subscriptions to sensors on any entity (although usually it will be its related entity, those entities it owns, and/or those entities which are members) 
 - Policies may invoke effectors (management policies) or simply generate new attributes or events (enricher policies).
 
-Implementation Classes
-......................
+### Implementation Classes
 
 *This section is not complete in this milestone release.*
 
