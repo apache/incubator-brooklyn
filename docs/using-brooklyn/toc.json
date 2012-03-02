@@ -1,6 +1,6 @@
 [
 { "title": "User's Guide",
-  "file":  "/using-brooklyn/user-guide/index.html"},
+  "file":  "/using-brooklyn/user-guide/index.html",
   "children": {% readj ./user-guide/toc.json %} },
 { "title": "Examples",
   "file":  "/using-brooklyn/examples/index.html", 
