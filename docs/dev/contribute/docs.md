@@ -1,6 +1,6 @@
 ---
 layout: page
-title: Upating the Docs
+title: Updating the Docs
 toc: /toc.json
 ---
 

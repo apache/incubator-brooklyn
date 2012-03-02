@@ -1,6 +1,6 @@
 [
-{ "title": "The Basics",
-  "file":  "/dev/contribute/basics.html" },
-{ "title": "Updating Documentation",
+{ "title": "Fork -> Write -> Pull",
+  "file":  "/dev/contribute/index.html" },
+{ "title": "Updating Docs",
   "file": "/dev/contribute/docs.html" }
 ]

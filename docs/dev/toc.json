@@ -1,10 +1,15 @@
 [
 { "title": "Get the Code",
-  "file":  "/dev/code/index.html" },
+  "file": "/dev/code/index.html",
+  "exclude": true,
+  "children": {% readj ./code/toc.json %} },
+{ "title": "Wishlist",
+  "file": "/dev/wishlist.html" },
 { "title": "Resources",
   "file": "/dev/links.html" },
 { "title": "How to Contribute",
   "file":  "/dev/contribute/index.html",
+  "exclude": true,
   "children": {% readj ./contribute/toc.json %} }
 ]
 
