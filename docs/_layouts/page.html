@@ -35,7 +35,18 @@
       </div>
 
       <div id="page_content">
+		<div class="breadcrumbs">
+		{% assign b = " " %}
+		{% capture b %}{{site.base_dir}}{% endcapture %}
+		<span class="breadcrumb-item"><a href="{{site.base_dir}}/">Home</a></span>
+		{% for p in page.categories %}
+		<span class="bcsep">&raquo;</span> <span class="breadcrumb-item"><a href="{{b}}/{{p}}">{{p}}</a></span>
+		{% capture b %}{{b}}/{{p}}{% endcapture %}
+		{%endfor%}
+		</div>
+		
 		<h1>{{ page.title }}</h1>
+
 		{{ content }}
       </div>
 

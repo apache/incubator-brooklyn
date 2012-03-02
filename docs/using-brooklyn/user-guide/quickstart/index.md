@@ -1,7 +1,8 @@
 ---
 title: brooklyn Introduction
 layout: page
-toc: ../../toc.json
+toc: ../guide_toc.json
+categories: [using-brooklyn, user-guide]
 ---
 
 **brooklyn** is a provisioning and management framework for big, distributed applications. At a glance, it lets you:

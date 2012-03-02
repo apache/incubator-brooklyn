@@ -2,6 +2,7 @@
 title: Advanced Concepts
 layout: page
 toc: ../../toc.json
+categories: [using-brooklyn, user-guide, defining-applications]
 ---
 
 Lifecycle and ManagementContext
