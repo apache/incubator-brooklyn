@@ -32,7 +32,7 @@ class VanillaJavaAppTest {
         VanillaJavaApp javaProcess = new VanillaJavaApp(owner:app, main:"my.Main", classpath:["c1", "c2"], args:["a1", "a2"])
         assertEquals(javaProcess.getMain(), "my.Main")
         assertEquals(javaProcess.getClasspath(), ["c1","c2"])
-        assertEquals(javaProcess.getArgs(), ["a1", "a2"])
+        assertEquals(javaProcess.getConfig(VanillaJavaApp.ARGS), ["a1", "a2"])
     }
     
     @Test(groups=["WIP", "Integration"])
