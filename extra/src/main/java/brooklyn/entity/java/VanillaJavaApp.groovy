@@ -100,6 +100,6 @@ public class VanillaJavaAppSshDriver extends JavaStartStopSshDriver {
 
     @Override
     protected List<String> getCustomJavaConfigOptions() {
-        return super.getCustomJavaConfigOptions() + ["-Xms128m", "-Xmx256m", "-XX:MaxPermSize=256m"]
+        return super.getCustomJavaConfigOptions() + ["-Xms128m", "-Xmx512m", "-XX:MaxPermSize=512m"]
     }
 }
