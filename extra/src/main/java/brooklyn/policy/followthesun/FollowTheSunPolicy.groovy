@@ -236,4 +236,9 @@ public class FollowTheSunPolicy extends AbstractPolicy {
         model.onItemUsageUpdated(item, newValues)
         if (rebalanceNow) scheduleLatencyReductionJig()
     }
+    
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + (name ? "("+name+")" : "")
+    }
 }

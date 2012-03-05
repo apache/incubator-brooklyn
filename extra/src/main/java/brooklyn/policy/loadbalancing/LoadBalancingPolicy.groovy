@@ -293,4 +293,8 @@ public class LoadBalancingPolicy extends AbstractPolicy {
         if (rebalanceNow) scheduleRebalance()
     }
     
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + (name ? "("+name+")" : "")
+    }
 }

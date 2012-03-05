@@ -194,4 +194,9 @@ public class ResizingPolicy extends AbstractPolicy {
                 TimeUnit.MILLISECONDS)
         }
     }
+    
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + (name ? "("+name+")" : "")
+    }
 }
