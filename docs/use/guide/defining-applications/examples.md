@@ -49,16 +49,8 @@ The Tomcat's configuration indicates that the given WAR should be deployed to th
 TODO httpPort: => http: in Alex's docs
 -->
 
-{% highlight java linenos %}
-class TomcatServerApp extends AbstractApplication {
-	def tomcat = new TomcatServer(owner: this, httpPort: 8080, war: "/path/to/booking-mvc.war")
-	
-	public static void main(String... args) {
-		TomcatServerApp demo = new TomcatServerApp(displayName : "tomcat server example")
-		BrooklynLauncher.manage(demo)
-		demo.start([new LocalhostMachineProvisioningLocation(count: 1)])
-	}
-}
+{% highlight java %}
+{% readj example_files/tomcat_simple.java %}
 {% endhighlight %}
 
 The code can be written in pure Java if preferred, using the long-hand syntax of ``tomcat.setConfig(TomcatServer.HTTP_PORT, 80)``
@@ -76,33 +68,11 @@ TODO httpPort: => http: in Alex's docs
 -->
 
 *In this milestone release, the following snippet should be considered pseudo code as it has not been tested.*
-{% highlight java linenos %}
-class TomcatClusterApp extends AbstractApplication {
-	DynamicWebAppCluster cluster = new DynamicWebAppCluster(
-		owner : this,
-		initialSize: 2,
-		newEntity: { properties -> new TomcatServer(properties) },
-		httpPort: 8080, 
-		war: "/path/to/booking-mvc.war")
 
-	public static void main(String[] argv) {
-		TomcatClusterApp demo = new TomcatClusterApp(displayName : "tomcat cluster example")
-		BrooklynLauncher.manage(demo)
-
-		JcloudsLocationFactory locFactory = new JcloudsLocationFactory([
-					provider : "aws-ec2",
-					identity : "xxxxxxxxxxxxxxxxxxxxxxxxxxx",
-					credential : "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-					sshPrivateKey : new File("/home/bob/.ssh/id_rsa.private"),
-					sshPublicKey : new File("/home/bob/.ssh/id_rsa.pub"),
-					securityGroups:["my-security-group"]
-				])
-
-		JcloudsLocation loc = locFactory.newLocation("us-west-1")
-		demo.start([loc])
-	}
-}
+{% highlight java %}
+{% readj example_files/tomcat_EC2.java %}
 {% endhighlight %}
+
 The ``newEntity`` flag in the cluster constructor indicates how new entities should be created. The WAR configuration set on the cluster is inherited by each of the TomcatServer contained (i.e. "owned") by the cluster.
 
 The ``DynamicWebAppCluster`` is dynamic in that it supports resizing the cluster, adding and removing servers, as managed either manually or by policies embedded in the entity.
@@ -119,38 +89,8 @@ The code below starts a Tomcat cluster along with an Nginx instance, where each 
 <!---
 TODO httpPort: => http: in Alex's docs
 -->
-{% highlight java linenos %}
-class TomcatClusterWithNginxApp extends AbstractApplication {
-	NginxController nginxController = new NginxController(
-		domain : "brooklyn.geopaas.org",
-		port : 8000,
-		portNumberSensor : Attributes.HTTP_PORT)
-
-	ControlledDynamicWebAppCluster cluster = new ControlledDynamicWebAppCluster(
-		owner : this,
-		controller : nginxController,
-		webServerFactory : { properties -> new TomcatServer(properties) },
-		initialSize: 2,
-		httpPort: 8080, war: "/path/to/booking-mvc.war")
-
-	public static void main(String[] argv) {
-		TomcatClusterWithNginxApp demo = new TomcatClusterWithNginxApp(displayName : "tomcat cluster with nginx example")
-		BrooklynLauncher.manage(demo)
-		
-		JcloudsLocationFactory locFactory = new JcloudsLocationFactory([
-					provider : "aws-ec2",
-					identity : "xxxxxxxxxxxxxxxxxxxxxxxxxxx",
-					credential : "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-					sshPrivateKey : new File("/home/bob/.ssh/id_rsa.private"),
-					sshPublicKey : new File("/home/bob/.ssh/id_rsa.pub"),
-					securityGroups:["my-security-group"]
-				])
-
-		JcloudsLocation loc = locFactory.newLocation("us-west-1")
-
-		demo.start([loc])
-	}
-}
+{% highlight java %}
+{% readj example_files/tomcat_nginx.java %}
 {% endhighlight %}
 
 This creates a cluster that of Tomcat servers, along with an Nginx instance. The ``NginxController`` instance
@@ -180,42 +120,10 @@ FIXME Discuss above comment with Aled/Alex as it is contentious
 <!---
 TODO httpPort: => http: in Alex's docs
 -->
-{% highlight java linenos %}
-class TomcatFabricApp extends AbstractApplication {
-	Closure webClusterFactory = { Map flags, Entity owner ->
-		Map clusterFlags = flags + [newEntity: { properties -> new TomcatServer(properties) }]
-		return new DynamicWebAppCluster(clusterFlags, owner)
-	}
-
-	DynamicFabric fabric = new DynamicFabric(
-			owner : this,
-			displayName : "WebFabric",
-			displayNamePrefix : "",
-			displayNameSuffix : " web cluster",
-			initialSize : 2,
-			newEntity : webClusterFactory,
-			httpPort : 8080, 
-			war: "/path/to/booking-mvc.war")
-	
-	public static void main(String[] argv) {
-		TomcatFabricApp demo = new TomcatFabricApp(displayName : "tomcat example")
-		BrooklynLauncher.manage(demo)
-		
-		JcloudsLocationFactory locFactory = new JcloudsLocationFactory([
-					provider : "aws-ec2",
-					identity : "xxxxxxxxxxxxxxxxxxxxxxxxxxx",
-					credential : "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-					sshPrivateKey : new File("/home/bob/.ssh/id_rsa.private"),
-					sshPublicKey : new File("/home/bob/.ssh/id_rsa.pub"),
-					securityGroups:["my-security-group"]
-				])
-
-		JcloudsLocation loc = locFactory.newLocation("us-west-1")
-		JcloudsLocation loc2 = locFactory.newLocation("eu-west-1")
-		demo.start([loc, loc2])
-	}
-}
+{% highlight java %}
+{% readj example_files/tomcat_multi-location.java %}
 {% endhighlight %}
+
 This creates a web-fabric. When started, this creates a web-cluster in each location supplied.
 
 Examples Source
