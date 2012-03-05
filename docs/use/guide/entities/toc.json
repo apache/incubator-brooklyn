@@ -1,0 +1,12 @@
+[{ "title": "Entity Lifecycle",
+  "file":  "/use/guide/entities/index.html#entity-lifestyle" }, 
+{ "title": "What to Extend",
+  "file":  "/use/guide/entities/index.html#implementation-classes" }, 
+{ "title": "Configuration",
+  "file":  "/use/guide/entities/index.html#configuration" }, 
+{ "title": "Implementing Sensors",
+  "file":  "/use/guide/entities/index.html#implementing-sensors" }, 
+{ "title": "Implementing Effectors",
+  "file":  "/use/guide/entities/index.html#implementing-effectors" }, 
+{ "title": "Implementing Policies",
+  "file":  "/use/guide/entities/index.html#implementing-policies" }]

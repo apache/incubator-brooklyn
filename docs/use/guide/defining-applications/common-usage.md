@@ -1,14 +1,14 @@
 ---
 title: Introduction
 layout: page
-toc: ../../../toc.json
+toc: ../../toc.json
+categories: [use, guide, defining-applications]
 ---
 
 Common Usage
 ------------
 
-Entity Class Hierarchy
-......................
+### Entity Class Hierarchy
 
 By convention in brooklyn the following words have a particular meaning, both as types (which extend Group, which extends Entity) and when used as words in other entities (such as TomcatFabric):
 
@@ -21,7 +21,9 @@ By convention in brooklyn the following words have a particular meaning, both as
 
 - Application - user's entry point
 
-.. TODO
+<!---
+TODO
+-->
 
 - **template** entities are often used by groups to define how to instantiate themselves and scale-out.
   A template is an entity which does not have an owner and which is not an application.
@@ -32,8 +34,7 @@ By convention in brooklyn the following words have a particular meaning, both as
 
 - Balanceable / Moveable / MoveableWithCost
 
-Off-the-Shelf Entities
-......................
+### Off-the-Shelf Entities
 
 brooklyn includes a selection of entities already available for use in applications,
 including appropriate sensors and effectors, and in some cases include Cluster and Fabric variants.
@@ -46,11 +47,10 @@ These include:
 - NoSQL: Infinispan, Redis, GemFire
 - Messaging: ActiveMQ, Qpid
 
-For a full list see |chapter:systems available|.
+See [Extras](../extras/) for a full list of systems available out of the box.
 
 
-Off-the-Shelf Policies
-......................
+### Off-the-Shelf Policies
 
 Policies are highly reusable as their inputs, thresholds and targets are customizable.
 
@@ -62,14 +62,13 @@ Policies are highly reusable as their inputs, thresholds and targets are customi
 
    e.g. if the average request per second across a cluster of Tomcat servers goes over the high watermark, it will resize the cluster to bring the average back to within the watermarks.
   
-.. TODO - list some
+<!---
+TODO - list some
+TODO - describe how they can be customised (briefly mention sensors)
+-->
 
-.. TODO - describe how they can be customised (briefly mention sensors)
 
-
-
-Off-the-Shelf Enrichers
-.......................
+### Off-the-Shelf Enrichers
 
 - Delta - converts absolute sensor values into a delta
 
@@ -82,21 +81,25 @@ Off-the-Shelf Enrichers
 - Custom Aggregating - aggregates multiple sensor values (usually across a tier, esp. a cluster) and 
   performs a supplied aggregation method to them to return an aggregate figure, e.g. sum, mean, median, etc. 
 
-Off-the-Shelf Locations
-.......................
+### Off-the-Shelf Locations
 
 - SSH
 - Compute: Amazon, GoGrid, vCloud, and many more (using jclouds)
 
-::
-
     # use a special key when connecting to public clouds
     brooklyn.jclouds.private-key-file=~/.ssh/public_clouds/id_rsa
-    brooklyn.jclouds.localhost.private-key-file=~/.ssh/id_rsa   # need this one for localhost
-    brooklyn.jclouds.aws-ec2.identity=ABCDEFGHIJKLMNOPQRST      # AWS credentials
+    
+    # need this one for localhost
+    brooklyn.jclouds.localhost.private-key-file=~/.ssh/id_rsa   
+    
+    # AWS credentials
+    brooklyn.jclouds.aws-ec2.identity=ABCDEFGHIJKLMNOPQRST      
     brooklyn.jclouds.aws-ec2.credential=s3cr3tsq1rr3ls3cr3tsq1rr3ls3cr3tsq1rr3l
-    brooklyn.geoscaling.username=cloudsoft                      # credentials for 'geoscaling' service
+    
+    # credentials for 'geoscaling' service
+    brooklyn.geoscaling.username=cloudsoft                      
     brooklyn.geoscaling.password=xxx
+
 
 These can also be set as environment variables (in the shell) or system properties (java command line).
 (There are also ``BROOKLYN_JCLOUDS_PRIVATE_KEY_FILE`` variants accepted.)

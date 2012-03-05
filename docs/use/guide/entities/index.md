@@ -2,6 +2,7 @@
 title: Custom Entity Development
 layout: page
 toc: ../guide_toc.json
+categories: [use, guide, entities]
 ---
 
 This section details how to create new custom application components or groups as brooklyn entities.
@@ -33,8 +34,9 @@ often delegating either to a driver (for software processes) or children entitie
 <a name="configuration" />
 Configuration
 -------------
-
-.. TODO: why to use config?
+<!---
+TODO: why to use config?
+-->
 
 - AttributeSensorAndConfigKey fields can be automatically converted, for ``SoftwareProcessEntity``
   this is done in ``preStart()`` (for other entities it must be done manually if required)
@@ -58,15 +60,15 @@ Sensors at base entities are often retrieved by adapters which poll the entity's
 The ``SoftwareProcessEntity`` provides a good example; by subclassing it and overriding the ``connectSensors()`` method
 you could wire some example sensors using the following: 
 
-::
-
-    public void connectSensors() {
-        super.connectSensors()
-        def http = sensorRegistry.register(new HttpSensorAdapter(mgmtUrl, period: 200*TimeUnit.MILLISECONDS))
-        http.poll(SERVICE_UP, { responseCode==200 })
-        http.suburl("requests").poll(REQUEST_COUNT)
-        http.suburl("requestDurationsAsJsonList").poll(MAX_PER_SITE) { (json.durations as List).collect({ it as Long }).max() }
-    }
+{% highlight java %}
+public void connectSensors() {
+	super.connectSensors()
+	def http = sensorRegistry.register(new HttpSensorAdapter(mgmtUrl, period: 200*TimeUnit.MILLISECONDS))
+	http.poll(SERVICE_UP, { responseCode==200 })
+	http.suburl("requests").poll(REQUEST_COUNT)
+	http.suburl("requestDurationsAsJsonList").poll(MAX_PER_SITE) { (json.durations as List).collect({ it as Long }).max() }
+}
+{% endhighlight %}
 
 In this example
 
@@ -90,8 +92,9 @@ For example deploying a WAR to a cluster can be done as follows:
 
 *This section is not complete in this milestone release.*
 
-.. TODO show an effector which recurses across children
-
+<!---
+TODO show an effector which recurses across children
+-->
 
 For some entities, specifically base entities, the implementation of effectors might needother tools (such as SSH), and may vary by location, so having a single implementation is not appropriate.
 
@@ -101,7 +104,9 @@ In the implementations of ``JavaWebApp`` entities, the behaviour which the entit
 
 Routines which are convenient for specific drivers can then be inherited in the driver class hierarchy. For example, when passing JMX environment variables to Java over SSH, ``JavaStartStopSshDriver`` extends ``StartStopSshDriver`` and parents ``JBoss7SshDriver``.
 
-.. TODO more drivers such as whirr, jmx, etc are planned
+<!---
+TODO more drivers such as whirr, jmx, etc are planned
+-->
 
 <a name="implementing-policies" />
 Implementing Policies
@@ -110,8 +115,9 @@ Implementing Policies
 *This section is in development at the time of this milestone release.*
 
 Please see the class* ``brooklyn.policy.Policy`` *and implementations.
-
-.. TODO
+<!---
+TODO
+-->
 
 
 Testing

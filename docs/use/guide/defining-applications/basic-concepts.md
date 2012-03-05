@@ -2,7 +2,7 @@
 title: Basic Concepts
 layout: page
 toc: ../guide_toc.json
-categories: [using-brooklyn, user-guide, defining-applications]
+categories: [use, guide, defining-applications]
 ---
 
 This introduces brooklyn and describes how it simplifies the deployment and management of big applications. It is

@@ -17,3 +17,9 @@ code {
 h2 {
 	color: #185018;
 }
+
+/*Configuration for pygments syntax higlighting*/
+div.highlight code.java span.err{
+	/*Single quotes were being highlighted as errors, so just turn that off.*/
+	border: none;
+}

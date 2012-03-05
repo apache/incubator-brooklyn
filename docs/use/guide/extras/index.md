@@ -1,7 +1,8 @@
 ---
 title: Systems Available Out-of-the-Box
 layout: page
-toc: ../../toc.json
+toc: ../guide_toc.json
+categories: [use, guide]
 ---
 
 brooklyn comes bundled with support for a large number of systems and entities.
@@ -9,10 +10,11 @@ brooklyn comes bundled with support for a large number of systems and entities.
 *In this pre-release version not all entities are fully functional and that the documentation is incomplete.*
 
 *Please contact Cloudsoft for assistance and clarification.*
-
+<!---
 .. TODO fix
 .. TODO name entities
 .. TODO include the fully qualified name of the entity
+-->
 
 <a name="web" />
 Web

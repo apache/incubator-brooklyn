@@ -2,8 +2,8 @@
 { "title": "Start",
   "file":  "{% read /fields/landing_page_url.txt | trim %}" },
 { "title": "User Guide",
-  "file": "/using-brooklyn/user-guide/index.html",
+  "file": "/use/guide/index.html",
   "children": {% readj ./toc.json %} },
 { "title": "API Reference",
-  "file": "/using-brooklyn/api/index.html" }
+  "file": "/use/api/index.html" }
 ]

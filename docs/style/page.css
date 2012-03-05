@@ -1,8 +1,17 @@
 #page_header {
   text-align: left;
   height: 68px;
-  background-color: #68aa70;
+
 }
+
+#search_box{
+	display: none;
+	text-align: right;
+	clear: both;
+	float: right;
+	margin-top: 1.5em;
+}
+
 h1{
 	color: #68aa70;
 }
@@ -51,4 +60,13 @@ h1{
 
 #page_footer {
   font-size: 50%;
+}
+
+
+a.breadcrumb, a.breadcrumb:visited{
+	text-decoration:none;
+	color:#185018; 
+}
+a.breadcrumb:hover{
+	color:#68AA70;
 }

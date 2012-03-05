@@ -2,6 +2,7 @@
 layout: page
 title: Overview
 toc: /toc.json
+categories: [start]
 ---
 
 ## What is Brooklyn?
@@ -9,8 +10,9 @@ toc: /toc.json
 Brooklyn a unified framework that allows you to deploy and managed
 distributed, multi-cloud, multi-paas applications.
 
+<!---
 TODO
-
+-->
 * **deploy and manage**: describe your application, including the management logic, 
   in such a way that it can be deployed _with the deployment information available 
   to the management layer_
@@ -21,9 +23,9 @@ TODO
 
 
 ## How does it work?
-
+<!---
 TODO (brief bit saying it is code?)
-
+-->
 Brooklyn is still pre-release, and has
 
 

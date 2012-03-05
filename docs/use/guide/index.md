@@ -2,7 +2,7 @@
 layout: page
 title: User Guide
 toc: ../../toc.json
-categories: using-brooklyn
+categories: use
 ---
 
 TODO -- Brooklyn docs haven't really been ported, just experimenting...

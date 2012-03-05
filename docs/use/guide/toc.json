@@ -1,0 +1,14 @@
+[
+{ "title": "Quick Start",
+  "file":  "/use/guide/quickstart/index.html" }, 
+{ "title": "Defining Applications",
+  "file":  "/use/guide/defining-applications/basic-concepts.html", 
+  "children": {% readj ./defining-applications/toc.json %} },
+{ "title": "Management",
+  "file":  "/use/guide/management/index.html" },
+{ "title": "Entities",
+  "file":  "/use/guide/entities/index.html",
+  "children": {% readj ./entities/toc.json %} },
+{ "title": "Extras",
+  "file":  "/use/guide/extras/index.html" }
+]

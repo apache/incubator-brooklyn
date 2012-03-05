@@ -2,7 +2,7 @@
 title: Advanced Concepts
 layout: page
 toc: ../../toc.json
-categories: [using-brooklyn, user-guide, defining-applications]
+categories: [use, guide, defining-applications]
 ---
 
 Lifecycle and ManagementContext
@@ -27,11 +27,11 @@ Dependent Configuration
 -----------------------
 
 Under the covers brooklyn has a sophisticated sensor event and subscription model, but conveniences around this model make it very simple to express  cross-entity dependencies. Consider the example where Tomcat instances need to know a set of URLs to connect to a Monterey processing fabric (or a database tier or other entities)
-::
 
+{% highlight java %}
     tomcat.webCluster.template.setConfig(JavaEntity.JVM_PROPERTY("monterey.urls"),
                attributeWhenReady(monterey, Monterey.MGMT_PLANE_URLS) )
-
+{% endhighlight %}
 
 The ``attributeWhenReady(Entity, Sensor)`` call causes the configuration value to be set when that given entity's attribue is ready. 
 In the example, ``attributeWhenReady()`` causes the JVM system property ``monterey.urls`` to be set to the value of the ``Monterey.MGMT_PLANE_URLS`` sensor from ``monterey`` when that value is ready. As soon as a management plane URL is announced by the Monterey entity, the configuration value will be available to the Tomcat cluster. 
@@ -41,7 +41,9 @@ By default "ready" means being *set* (non-null) and, if appropriate, *non-empty*
 You can customize "readiness" by supplying a ``Predicate`` (Google common) or ``Closure`` (Groovy) in a third parameter. This evaluates candidate values reported by the sensor until one is found to be ``true``. For
 example, passing ``it.size()>=3`` as the readiness argument is useful if you require three management plane URLs.
 
-.. TODO Is this a duplicate thought? You can transform the attribute value with a Function (Google) or Closure to set the config to something different.
+<!---
+TODO Is this a duplicate thought? You can transform the attribute value with a Function (Google) or Closure to set the config to something different.
+-->
 
 More information can be found in the javadoc for ``DependentConfiguration``.
 

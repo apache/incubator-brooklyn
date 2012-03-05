@@ -2,7 +2,8 @@
 title: How Management Works
 layout: page
 toc: ../guide_toc.json
-categories: [using-brooklyn, user-guide]
+categories: [use, guide]
+
 ---
 
 brooklyn uses many of the ideas from autonomic computing to implement management of entities in a structured and reusable fashion (including provisioning, 
@@ -46,24 +47,26 @@ For this milestone release, some of the mechanisms for implementing the above pr
 Distributed Management
 ----------------------
 
-.. TODO Describe how and when objects become "live", pushed out to other nodes.
+<!---
+TODO Describe how and when objects become "live", pushed out to other nodes.
+-->
 
 *This section is not available in this milestone release.*
 
 <a name="resilience" />
 Resilience
 ----------
-
-.. TODO
-
+<!---
+TODO
+-->
 *This section is not available in this milestone release.*
 
 <a name="key-apis" />
 Key APIs
 --------
-
-.. TODO - brief overview of
-
+<!---
+TODO - brief overview of
+-->
 *This section is not complete in this milestone release.*
 
 - ``ManagementContext`` (Java management API)
@@ -76,13 +79,13 @@ Observing What is Happening
 ### Management Web Console
 
 brooklyn comes with a web based management console that can be started using BrooklynLaucher:
-::
-
-    public static void main(String\[\] argv) {
-        application app = new MyApplicationExample(displayName:"myapp")
-        brooklyn.launcher.BrooklynLauncher.manage(app)
-        // ...
-    }
+{% highlight java %}
+public static void main(String\[\] argv) {
+	application app = new MyApplicationExample(displayName:"myapp")
+	brooklyn.launcher.BrooklynLauncher.manage(app)
+	// ...
+}
+{% endhighlight %}
 
 This will start an embedded brooklyn management node, including the web console.
 The URL for the web console defaults to http://localhost:8081.
@@ -96,13 +99,14 @@ entities. It contains two main views: Dashboard and Details.
 
 The dashboard is a high level overview of the state of the application:
 
-.. image:: images/webconsole-dashboard.png
+[![Screenshot of the Webconsole Dashboard](webconsole-dashboard-w400.png "Screenshot of the Webconsole Dashboard")](webconsole-dashboard.png)
+
 
 **Details**
 
 The details view gives an in depth view of the application and its entities. Child/parent relationships between the entities are navigable using the entity tree. Selecting a specific entity, allows you to access detailed information about that entity.
 
-.. image:: images/webconsole-detail.png
+[![Screenshot of the Webconsole Detail](webconsole-detail-w400.png "Screenshot of the Webconsole Detail")](webconsole-detail.png)
 
 **Summary:** Description of the selected entity.
 
@@ -155,8 +159,9 @@ Logging uses slf4j. Add the appropriate maven slf4j implementation dependency an
 
 Examples for testing can be found in some of the poms.
 
-.. TODO - describe how to simply configure logging slf4j
-
+<!---
+TODO - describe how to simply configure logging slf4j
+-->
 <a name="sensors-and-effectors" />
 Sensors and Effectors
 ---------------------
@@ -164,64 +169,64 @@ Sensors and Effectors
 ### Sensors
 
 Sensors are typically defined as static named fields on the Entity subclass. These define the channels of events and activity that interested parties can track remotely. For example:
+{% highlight java %}
+/** a sensor for saying hi (illustrative), carrying a String value 
+	which is typically the name of the person to whom we are saying hi */
+public static final Sensor<String> HELLO_SENSOR = ...
 
-::
-
-    /** a sensor for saying hi (illustrative), carrying a String value 
-        which is typically the name of the person to whom we are saying hi */
-        
-    
-    public static final Sensor<String> HELLO_SENSOR = ...
-
-..
+{% endhighlight %}
 
 If the entity is local (e.g. to a policy) these can be looked up using get(Sensor). If it may be remote, you can subscribe to it through various APIs.
 
-.. TODO probably say about events now, quick reference about SubscriptionManager (either here or in next section on management context)
-.. TODO remaining section on Sensors perhaps should be moved to Writing Entities section? as reader won't need to know too much detail of sensor types to understand policies... though perhaps saying some is right. (Talking about JSON is almost certainly overkill...)
+<!---
+TODO probably say about events now, quick reference about SubscriptionManager (either here or in next section on management context)
+TODO remaining section on Sensors perhaps should be moved to Writing Entities section? as reader won't need to know too much detail of sensor types to understand policies... though perhaps saying some is right. (Talking about JSON is almost certainly overkill...)
+-->
 
 Sensors are used by operators and policies to monitor health and know when to invoke the effectors. The sensor data forms a nested map (i.e. JSON), which can be subscribed to through the ``ManagementContext``.
 
 Often ``Policy`` instances will subscribe to sensor events on their associated entity or its children; these events might be an ``AttributeValueEvent`` – an attribute value being reported on change or periodically – or something transient such as ``LogMessage`` or a custom ``Event`` such as "TOO_HOT".
 
-.. TODO check classes above; is this much detail needed here?
+<!---
+TODO check classes above; is this much detail needed here?
+-->
 
-Sensor values form a map-of-maps. An example of some simple sensor information is shown below in JSON::
-
-    {
-      config : {
-        url : "jdbc:mysql://ec2-50-17-19-65.compute-1.amazonaws.com:3306/mysql"
-        status : "running"
-      }
-      workrate : {
-        msgsPerSec : 432
-      }
-    }
+Sensor values form a map-of-maps. An example of some simple sensor information is shown below in JSON:
+		
+	{
+	  config : {
+		url : "jdbc:mysql://ec2-50-17-19-65.compute-1.amazonaws.com:3306/mysql"
+		status : "running"
+	  }
+	  workrate : {
+		msgsPerSec : 432
+	  }
+	}
 
 Sensor values are defined as statics which can be used to programmatically drive the subscription.
-
-.. TODO , etc., example
+<!---
+TODO , etc., example
+-->
 
 ### SubscriptionManager
 
 *This section is is progress at the time of this milestone release.*
 
 *See the* ``SubscriptionManager`` *class.*
-
-.. TODO
-
+<!---
+TODO
+-->
 
 ### Effectors
 
 Like sensors and config info, effectors are also static fields on the Entity class. These describe actions available on the entity, similar to methods. Their implementation includes details of how to invoke them, typically this is done by calling a method on the entity. Effectors are typically defined as follows:
 
-::
+{% highlight java %}
+/** an effector which returns no value,
+	but which causes the entity to emit a HELLO sensor event */
+public static Effector<Void> SAY_HI = ...
 
-    /** an effector which returns no value,
-        but which causes the entity to emit a HELLO sensor event */
-        
-    
-    public static Effector<Void> SAY_HI = ...
+{% endhighlight %}
 
 Effectors are invoked by calling ``invoke(SAY_HI, name:"Bob")`` or similar. The method may take an entity if context is not clear, and it takes parameters as named parameters or a Map.
 
@@ -243,21 +248,19 @@ By using the ``tag`` or ``tags`` named parameters on ``submit`` (or setting ``ta
 ``ExecutionManager.getTasksWithTag(...)``.
 
 In this example uses Groovy, with time delays abused for readability. brooklyn's test cases check this using mutexes, which is recommended.
-::
-
-    ExecutionManager em = []
-       em.submit(tag:"a", description:"1-a", { Thread.sleep(1000) })
-       em.submit(tags:["a","b"], description:"2-a+b", { Thread.sleep(1000) })
-       assert em.getTasksWithTag("a").size()==2
-       assert em.getTasksWithTag("a").every { Task t -> !t.isDone() }
-       Thread.sleep(1500)
-       assert em.getTasksWithTag("a").size()==2
-       assert em.getTasksWithTag("a").every { Task t -> t.isDone() }
-
-
+	
+	ExecutionManager em = []
+	em.submit(tag:"a", description:"1-a", { Thread.sleep(1000) })
+	em.submit(tags:["a","b"], description:"2-a+b", { Thread.sleep(1000) })
+	assert em.getTasksWithTag("a").size()==2
+	assert em.getTasksWithTag("a").every { Task t -> !t.isDone() }
+	Thread.sleep(1500)
+	assert em.getTasksWithTag("a").size()==2
+	assert em.getTasksWithTag("a").every { Task t -> t.isDone() }
+	
 Note that it is currently necessary to prune dead tasks, either periodically or by the caller. By default they are kept around for reference. It is expected that an enhancement in a future release will allow pruning completed/failed tasks after a specified amount of time.
 
-It is possible to define ParallelTasks and SequentialTasks and to specify inter-task relationships with TaskPreprocessors — e.g. either submitting a SequentialTasks or specifying ``em.setTaskPreprocessorForTag("a", SingleThreadedExecution.class)`` will cause ``2-a+b`` to run after ``1-a``
+It is possible to define ParallelTasks and SequentialTasks and to specify inter-task relationships with TaskPreprocessors - e.g. either submitting a SequentialTasks or specifying ``em.setTaskPreprocessorForTag("a", SingleThreadedExecution.class)`` will cause ``2-a+b`` to run after ``1-a``
 completes. This allows building quite sophisticated workflows relatively easily. For more information consult the javadoc on these classes and associated tests.
 
 <a name="writing-policies" />

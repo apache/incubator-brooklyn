@@ -20,8 +20,8 @@
       <div id="header_logo">
         <img height="68" width="220" src="{{ site.url }}/style/brooklyn-logo.png"/>
       </div>
-      <div id="header_title">
-        {{ page.title }}
+      <div id="search_box">
+        Search Placeholder
       </div>
     </div>
 
@@ -38,9 +38,9 @@
 		<div class="breadcrumbs">
 		{% assign b = " " %}
 		{% capture b %}{{site.base_dir}}{% endcapture %}
-		<span class="breadcrumb-item"><a href="{{site.base_dir}}/">Home</a></span>
+		<span class="breadcrumb-item"><a class='breadcrumb' href="{{site.base_dir}}/">Home</a></span>
 		{% for p in page.categories %}
-		<span class="bcsep">&raquo;</span> <span class="breadcrumb-item"><a href="{{b}}/{{p}}">{{p}}</a></span>
+		<span class="bcsep">&raquo;</span> <span class="breadcrumb-item"><a class='breadcrumb' href="{{b}}/{{p}}">{{p}}</a></span>
 		{% capture b %}{{b}}/{{p}}{% endcapture %}
 		{%endfor%}
 		</div>
