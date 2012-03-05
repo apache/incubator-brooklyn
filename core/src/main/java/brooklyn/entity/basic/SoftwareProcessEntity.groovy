@@ -113,7 +113,6 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 	public void start(Collection<? extends Location> locations) {
 		setAttribute(SERVICE_STATE, Lifecycle.STARTING)
 		if (!sensorRegistry) sensorRegistry = new SensorRegistry(this)
-		ConfigSensorAdapter.apply(this);
 
 		startInLocation locations
 		postStart()
@@ -147,6 +146,10 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 	public void startInLocation(SshMachineLocation machine) {
 		locations.add(machine)
 
+        // Note: must only apply config-sensors after adding to locations; otherwise can't do things like acquire free port from location
+        // TODO use different method naming/overriding pattern, so as we have more things than SshMachineLocation they all still get called?
+        ConfigSensorAdapter.apply(this);
+        
 		setAttribute(HOSTNAME, machine.address.hostName)
 		setAttribute(ADDRESS, machine.address.hostAddress)
 

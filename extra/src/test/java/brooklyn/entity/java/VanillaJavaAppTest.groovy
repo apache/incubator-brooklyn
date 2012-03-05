@@ -8,7 +8,8 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.Lifecycle
-import brooklyn.entity.basic.UsesJava;
+import brooklyn.entity.basic.UsesJava
+import brooklyn.entity.basic.UsesJmx
 import brooklyn.location.basic.SshMachineLocation
 
 class VanillaJavaAppTest {
@@ -53,6 +54,18 @@ class VanillaJavaAppTest {
         
         javaProcess.stop()
         assertEquals(javaProcess.getAttribute(VanillaJavaApp.SERVICE_STATE), Lifecycle.STOPPED)
+    }
+    
+    // FIXME Hard-codes Aled's path; needs fixed!
+    @Test(groups=["WIP", "Integration"])
+    public void testStartsWithJmxPortSpecifiedInConfig() {
+        String cp = "/Users/aled/eclipse-workspaces/cloudsoft/brooklyn/extra/target/test-classes"
+        String main = "brooklyn.entity.java.ExampleVanillaMain"
+        VanillaJavaApp javaProcess = new VanillaJavaApp(owner:app, main:main, classpath:[cp], args:[])
+        javaProcess.setConfig(UsesJmx.JMX_PORT, 54321)
+        app.start([loc])
+        
+        assertEquals(javaProcess.getAttribute(UsesJmx.JMX_PORT), 54321)
     }
 }
 
