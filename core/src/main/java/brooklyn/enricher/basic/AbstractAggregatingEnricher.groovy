@@ -3,6 +3,7 @@ package brooklyn.enricher.basic
 import java.util.List
 import java.util.Map
 import java.util.Map.Entry
+import java.util.concurrent.ConcurrentHashMap
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -23,7 +24,7 @@ public abstract class AbstractAggregatingEnricher<S,T> extends AbstractEnricher 
     protected Sensor<T> target
     protected S defaultValue
     
-    protected Map<Entity, S> values = new HashMap<Entity, S>()
+    protected Map<Entity, S> values = new ConcurrentHashMap<Entity, S>()
     
     public AbstractAggregatingEnricher(List<Entity> producers, Sensor<S> source, Sensor<T> target, S defaultValue=null) {
         for (Entity producer : producers) { values.put(producer, defaultValue) }
