@@ -5,7 +5,7 @@ toc: ../guide_toc.json
 categories: [use, guide]
 
 ---
-
+<a name="introduction"></a>
 brooklyn uses many of the ideas from autonomic computing to implement management of entities in a structured and reusable fashion (including provisioning, 
 healing, and optimising).
 
@@ -37,13 +37,14 @@ e.g. if the earlier VM CPU cannot be increased, the TOO_HOT event may go to the 
 **management escalation should be carefully designed so that policies are not incompatible**
 
 Best practices for this include:
-    - place management responsibility in policies at the entity, as much as possible
-    - place escalated management responsibility at the owner entity. Where this is impractical, perhaps because two aspects of an entity are best handled in two different places, ensure that the separation of responsibilities is documented and there is a group membership relationship between secondary/aspect managers.
-    - order policies carefully, and mark sensors as "handled" (or potentially "swallow" them locally), so that subsequent policies and owner entities do not take superfluous (or contradictory) corrective action
+
+*	place management responsibility in policies at the entity, as much as possible
+*	place escalated management responsibility at the owner entity. Where this is impractical, perhaps because two aspects of an entity are best handled in two different places, ensure that the separation of responsibilities is documented and there is a group membership relationship between secondary/aspect managers.
+*	order policies carefully, and mark sensors as "handled" (or potentially "swallow" them locally), so that subsequent policies and owner entities do not take superfluous (or contradictory) corrective action.
       
 For this milestone release, some of the mechanisms for implementing the above practices are still being developed.
 
-<a name="distributed-management" />
+<a name="distributed-management"></a>
 Distributed Management
 ----------------------
 
@@ -53,7 +54,7 @@ TODO Describe how and when objects become "live", pushed out to other nodes.
 
 *This section is not available in this milestone release.*
 
-<a name="resilience" />
+<a name="resilience"></a>
 Resilience
 ----------
 <!---
@@ -61,7 +62,7 @@ TODO
 -->
 *This section is not available in this milestone release.*
 
-<a name="key-apis" />
+<a name="key-apis"></a>
 Key APIs
 --------
 <!---
@@ -72,7 +73,7 @@ TODO - brief overview of
 - ``ManagementContext`` (Java management API)
 - ``EntityLocal`` (used by policies)
 
-<a name="observation" />
+<a name="observation"></a>
 Observing What is Happening
 ---------------------------
 
@@ -93,7 +94,7 @@ The URL for the web console defaults to http://localhost:8081.
 The mechanism for launching brooklyn management will change in a future release. For this milestone release, the brooklyn management node is embedded.
 
 The brooklyn Management Console serves as a way to track and manage brooklyn
-entities. It contains two main views: Dashboard and Details.
+entities. It contains two main views: Dashboard and Details. These update in real-time.
 
 **Dashboard**
 
@@ -102,11 +103,13 @@ The dashboard is a high level overview of the state of the application:
 [![Screenshot of the Webconsole Dashboard](webconsole-dashboard-w400.png "Screenshot of the Webconsole Dashboard")](webconsole-dashboard.png)
 
 
-**Details**
+**Detail**
 
-The details view gives an in depth view of the application and its entities. Child/parent relationships between the entities are navigable using the entity tree. Selecting a specific entity, allows you to access detailed information about that entity.
+The Detail view gives an in-depth view of the application and its entities. Child/parent relationships between the entities are navigable using the entity tree. Selecting a specific entity allows you to access detailed information about that entity.
 
 [![Screenshot of the Webconsole Detail](webconsole-detail-w400.png "Screenshot of the Webconsole Detail")](webconsole-detail.png)
+
+Below the breadcrumb showing the selected entity's place in the heirarchy are six tabs:
 
 **Summary:** Description of the selected entity.
 
@@ -125,15 +128,16 @@ The details view gives an in depth view of the application and its entities. Chi
 
 In this milestone release only two Spring Security users are created: user and admin.
 
-In future releases it will be possible to add and configure users. 
 
-*admin access* (username:admin, password:password).
+Admin access: username: *admin*, password: *password*.
 
-*user access* (username:user, password:password).
+User access: username: *user*, password: *password*.
 
 Only the **admin** user has access to the Management Console.
 
-<a name="observation-other" />
+In future releases it will be possible to add and configure users. 
+
+<a name="observation-other"></a>
 Other Ways to Observe Activity
 ------------------------------
 
@@ -162,7 +166,7 @@ Examples for testing can be found in some of the poms.
 <!---
 TODO - describe how to simply configure logging slf4j
 -->
-<a name="sensors-and-effectors" />
+<a name="sensors-and-effectors"></a>
 Sensors and Effectors
 ---------------------
 
@@ -176,7 +180,7 @@ public static final Sensor<String> HELLO_SENSOR = ...
 
 {% endhighlight %}
 
-If the entity is local (e.g. to a policy) these can be looked up using get(Sensor). If it may be remote, you can subscribe to it through various APIs.
+If the entity is local (e.g. to a policy) these can be looked up using ``get(Sensor)``. If it may be remote, you can subscribe to it through various APIs.
 
 <!---
 TODO probably say about events now, quick reference about SubscriptionManager (either here or in next section on management context)
@@ -203,7 +207,7 @@ Sensor values form a map-of-maps. An example of some simple sensor information i
 	  }
 	}
 
-Sensor values are defined as statics which can be used to programmatically drive the subscription.
+Sensor values are defined as statics, which can be used to programmatically drive the subscription.
 <!---
 TODO , etc., example
 -->
@@ -230,14 +234,11 @@ public static Effector<Void> SAY_HI = ...
 
 Effectors are invoked by calling ``invoke(SAY_HI, name:"Bob")`` or similar. The method may take an entity if context is not clear, and it takes parameters as named parameters or a Map.
 
-Invocation returns a ``Task`` object (extending ``Future``) allowing the caller to understand progress and errors on the task, as well as ``Task.get()`` the
-return value (blocking).
+Invocation returns a ``Task`` object (extending ``Future``). This allows the caller to understand progress and errors on the task, as well as ``Task.get()`` the return value. Be aware that ``task.get()`` is a blocking function that will wait until a value is available before returning.
 
 The management framework ensures that execution occurs on the machine where the ``Entity`` is mastered, with progress, result, and/or any errors reported back to the caller. It does this through the ``ExecutionManager`` which, where necessary, creates proxy ``Task`` instances. The ``ExecutionManager`` associates ``Tasks`` with the corresponding ``Entity`` so that these can be tracked externally (and relocated if the Entity is remastered to a different location).
 
-It is worth noting that, where a method corresponds to an effector, direct invocation of that method on an ``Entity`` will implicitly generate the ``Task`` object as though the effector had been invoked. For example, invoking ``Cluster.resize(int)``, where ``resize`` provides an ``Effector RESIZE``, will generate a Task which can be observed remotely.
-
-The execution framework that provides this functionality is independent of brooklyn, although it was developed for brooklyn.
+It is worth noting that where a method corresponds to an effector, direct invocation of that method on an ``Entity`` will implicitly generate the ``Task`` object as though the effector had been invoked. For example, invoking ``Cluster.resize(int)``, where ``resize`` provides an ``Effector RESIZE``, will generate a ``Task`` which can be observed remotely.
 
 ### ExecutionManager
 
@@ -247,23 +248,27 @@ Arbitrary tasks can be run by calling ``Task submit(Runnable)`` (similarly to th
 By using the ``tag`` or ``tags`` named parameters on ``submit`` (or setting ``tags`` in a ``Task`` that is submitted), execution can be associated with various categories. This allows easy viewing can be examined by calling
 ``ExecutionManager.getTasksWithTag(...)``.
 
-In this example uses Groovy, with time delays abused for readability. brooklyn's test cases check this using mutexes, which is recommended.
+The following example uses Groovy, with time delays abused for readability. brooklyn's test cases check this using mutexes, which is recommended.
 	
 	ExecutionManager em = []
-	em.submit(tag:"a", description:"1-a", { Thread.sleep(1000) })
-	em.submit(tags:["a","b"], description:"2-a+b", { Thread.sleep(1000) })
+	em.submit(tag:"a", description:"One Mississippi", { Thread.sleep(1000) })
+	em.submit(tags:["a","b"], description:"Two Mississippi", { Thread.sleep(1000) })
 	assert em.getTasksWithTag("a").size()==2
 	assert em.getTasksWithTag("a").every { Task t -> !t.isDone() }
 	Thread.sleep(1500)
 	assert em.getTasksWithTag("a").size()==2
 	assert em.getTasksWithTag("a").every { Task t -> t.isDone() }
-	
-Note that it is currently necessary to prune dead tasks, either periodically or by the caller. By default they are kept around for reference. It is expected that an enhancement in a future release will allow pruning completed/failed tasks after a specified amount of time.
 
-It is possible to define ParallelTasks and SequentialTasks and to specify inter-task relationships with TaskPreprocessors - e.g. either submitting a SequentialTasks or specifying ``em.setTaskPreprocessorForTag("a", SingleThreadedExecution.class)`` will cause ``2-a+b`` to run after ``1-a``
-completes. This allows building quite sophisticated workflows relatively easily. For more information consult the javadoc on these classes and associated tests.
+It is possible to define ParallelTasks and SequentialTasks and to specify inter-task relationships with TaskPreprocessors. This allows building quite sophisticated workflows relatively easily. 
 
-<a name="writing-policies" />
+Continuing the example above, submitting a SequentialTasks or specifying ``em.setTaskPreprocessorForTag("a", SingleThreadedExecution.class)`` will cause ``Two Mississippi`` to run after ``One Mississippi`` completes.
+
+For more information consult the javadoc on these classes and associated tests.
+
+Note that it is currently necessary to prune dead tasks, either periodically or by the caller. By default they are kept around for reference. It is expected that an enhancement in a future release will allow pruning completed and failed tasks after a specified amount of time.
+
+
+<a name="writing-policies"></a>
 Writing Policies
 ----------------
 
