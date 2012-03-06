@@ -5,7 +5,7 @@
 }
 
 #search_box{
-	display: none;
+	display: inline;
 	text-align: right;
 	clear: both;
 	float: right;
@@ -62,11 +62,14 @@ h1{
   font-size: 50%;
 }
 
-
-a.breadcrumb, a.breadcrumb:visited{
-	text-decoration:none;
+a, a:visited{
+	text-decoration:underline;
 	color:#185018; 
 }
-a.breadcrumb:hover{
-	color:#68AA70;
+a:hover{
+	color:#68AA70;	
+}
+
+a.breadcrumb, a.toc{
+	text-decoration:none; 
 }
