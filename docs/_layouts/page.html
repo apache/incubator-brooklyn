@@ -9,6 +9,22 @@
   <link rel="stylesheet" type="text/css" href="{{ site.url }}/style/page.css" />
   <link rel="stylesheet" type="text/css" href="{{ site.url }}/style/toc.css" />
   <link rel="stylesheet" type="text/css" href="{{ site.url }}/style/docs/code.css" />
+  
+	<!-- Sidebar/ToC Scripts and CSS -->
+	<script src="{{ site.url }}/style/js/jquery/jquery-1.7.1.min.js"></script>
+	<script src="{{ site.url }}/style/js/jquery/jquery-ui-1.8.18.custom.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="{{ site.url }}/style/js/jquery/smoothness/jquery-ui-1.8.18.custom.css" />
+	<link rel="stylesheet" type="text/css" href="{{ site.url }}/style/toc.css" />
+
+	<script>
+	$(function() {
+		$('#simple_google').submit(function() {
+      		$('input[name="q"]').val("site:" + document.location.hostname + " " + $('input[name="qfront"]').val());
+        return true;
+		});
+    });
+	</script>
+
 
   <link href='http://fonts.googleapis.com/css?family=Droid+Sans+Mono' rel='stylesheet' type='text/css'>
 </head>
@@ -18,10 +34,13 @@
 
     <div id="page_header" class="page_row">
       <div id="header_logo">
-        <img height="68" width="220" src="{{ site.url }}/style/brooklyn-logo.png"/>
+        <a href = "/"><img height="68" width="220" border='0' src="{{ site.url }}/style/brooklyn-logo.png"/></a>
       </div>
       <div id="search_box">
-        Search Placeholder
+        <form id="simple_google" action="http://www.google.com/search" method="get">
+		<input name="q" type="hidden" />
+		<input name="qfront" type="text" placeholder='Search'/></p>
+		</form>
       </div>
     </div>
 
