@@ -1,12 +1,9 @@
 ---
-title: Introduction
+title: Common Usage
 layout: page
 toc: ../../toc.json
 categories: [use, guide, defining-applications]
 ---
-
-Common Usage
-------------
 
 ### Entity Class Hierarchy
 
@@ -42,10 +39,10 @@ including appropriate sensors and effectors, and in some cases include Cluster a
  
 These include:
 
-- Web: Tomcat, JBoss; nginx; GeoScaling; cluster and fabric
-- Relational databases: MySQL, Derby
-- NoSQL: Infinispan, Redis, GemFire
-- Messaging: ActiveMQ, Qpid
+- **Web**: Tomcat, JBoss; nginx; GeoScaling; cluster and fabric
+- **Relational Databases**: MySQL, Derby
+- **NoSQL**: Infinispan, Redis, GemFire
+- **Messaging**: ActiveMQ, Qpid
 
 See [Extras](../extras/) for a full list of systems available out of the box.
 
@@ -74,9 +71,9 @@ TODO - describe how they can be customised (briefly mention sensors)
 
 - Time-weighted Delta - converts absolute sensor values into a delta/second
 
-- Rolling Mean - converts the last N sensor values into a mean
+- Rolling Mean - converts the last *N* sensor values into a mean
 
-- Rolling time-window mean - converts the last N seconds of sensor values into a weighted mean
+- Rolling Time-window Mean - converts the last *N* seconds of sensor values into a weighted mean
 
 - Custom Aggregating - aggregates multiple sensor values (usually across a tier, esp. a cluster) and 
   performs a supplied aggregation method to them to return an aggregate figure, e.g. sum, mean, median, etc. 
@@ -85,7 +82,7 @@ TODO - describe how they can be customised (briefly mention sensors)
 
 - SSH
 - Compute: Amazon, GoGrid, vCloud, and many more (using jclouds)
-
+{% highlight java %}
     # use a special key when connecting to public clouds
     brooklyn.jclouds.private-key-file=~/.ssh/public_clouds/id_rsa
     
@@ -99,7 +96,7 @@ TODO - describe how they can be customised (briefly mention sensors)
     # credentials for 'geoscaling' service
     brooklyn.geoscaling.username=cloudsoft                      
     brooklyn.geoscaling.password=xxx
-
+{% endhighlight %}
 
 These can also be set as environment variables (in the shell) or system properties (java command line).
 (There are also ``BROOKLYN_JCLOUDS_PRIVATE_KEY_FILE`` variants accepted.)

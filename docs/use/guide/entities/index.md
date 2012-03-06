@@ -7,14 +7,14 @@ categories: [use, guide, entities]
 
 This section details how to create new custom application components or groups as brooklyn entities.
 
-<a name="entity-lifestyle" />
+<a name="entity-lifestyle"></a>
 The Entity Lifecycle
 --------------------
 
 - Importance of serialization, ref to How mananagement works
 - Ownership (children) and Membership (groups)
 
-<a name="implementation-classes" />
+<a name="implementation-classes"></a>
 What to Extend -- Implementation Classes
 ----------------------------------------
 
@@ -31,26 +31,24 @@ What to Extend -- Implementation Classes
 A common lifecycle pattern is that the ``start`` effector (see more on effectors below) is invoked, 
 often delegating either to a driver (for software processes) or children entities (for clusters etc)
 
-<a name="configuration" />
+<a name="configuration"></a>
 Configuration
 -------------
 <!---
 TODO: why to use config?
 -->
 
-- AttributeSensorAndConfigKey fields can be automatically converted, for ``SoftwareProcessEntity``
-  this is done in ``preStart()`` (for other entities it must be done manually if required)
+- AttributeSensorAndConfigKey fields can be automatically converted for ``SoftwareProcessEntity``. This is done in ``preStart()``. This must be done manually if required for other entities.
 
 - Setting ports is a special challenge, and one which the ``AttributeSensorAndConfigKey`` is particularly helpful for,
   cf ``PortAttributeSensorAndConfigKey`` (a subclass),
-  causing ports automatically get assigned from a range and compared with the target ``PortSupplied`` location;
-  syntax is as described in the PortRange interface (in brief, it allows e.g. "8080-8099,8800+" 
-  to at 8080, try sequentially through 8099, then try from 8800 and try until all ports are exhausted);
-  this is particularly useful on a contended machine (such as localhost!),
-  and of course the config is done by the user like ordinary configuration,
-  and the actual port used is reported back as a sensor on the entity
+  causing ports automatically get assigned from a range and compared with the target ``PortSupplied`` location.
+  
+  Syntax is as described in the PortRange interface. For example, "8080-8099,8800+" will try port 8080, try sequentially through 8099, then try from 8800 until all ports are exhausted.
+  
+  This is particularly useful on a contended machine (localhost!). Like ordinary configuration, the config is done by the user, and the actual port used is reported back as a sensor on the entity.
  
-<a name="implementing-sensors" />
+<a name="implementing-sensors"></a>
 Implementing Sensors
 --------------------
 
@@ -63,10 +61,15 @@ you could wire some example sensors using the following:
 {% highlight java %}
 public void connectSensors() {
 	super.connectSensors()
-	def http = sensorRegistry.register(new HttpSensorAdapter(mgmtUrl, period: 200*TimeUnit.MILLISECONDS))
+	def http = sensorRegistry.register(
+		new HttpSensorAdapter(mgmtUrl,
+								period: 200*TimeUnit.MILLISECONDS)
+		)
 	http.poll(SERVICE_UP, { responseCode==200 })
 	http.suburl("requests").poll(REQUEST_COUNT)
-	http.suburl("requestDurationsAsJsonList").poll(MAX_PER_SITE) { (json.durations as List).collect({ it as Long }).max() }
+	http.suburl("requestDurationsAsJsonList").poll(MAX_PER_SITE) {
+		(json.durations as List).collect({ it as Long }).max()
+	}
 }
 {% endhighlight %}
 
@@ -82,7 +85,7 @@ Note the first line; as one descends into specific convenience subclasses (such 
 
 For some sensors, and often at compound entities, the values are obtained by monitoring values of other sensors on the same (in the case of a rolling average) or different (in the case of the average of children nodes) entities. This is achieved by policies, described below.
 
-<a name="implementing-effectors" />
+<a name="implementing-effectors"></a>
 Implementing Effectors
 ----------------------
 
@@ -108,7 +111,7 @@ Routines which are convenient for specific drivers can then be inherited in the 
 TODO more drivers such as whirr, jmx, etc are planned
 -->
 
-<a name="implementing-policies" />
+<a name="implementing-policies"></a>
 Implementing Policies
 ---------------------
 

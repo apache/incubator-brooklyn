@@ -1,12 +1,9 @@
 ---
-title: Introduction
+title: Examples
 layout: page
 toc: ../../toc.json
 categories: [use, guide, defining-applications]
 ---
-
-Examples
---------
 
 ### Integrating with a Maven project
 
@@ -53,8 +50,10 @@ TODO httpPort: => http: in Alex's docs
 {% readj example_files/tomcat_simple.java %}
 {% endhighlight %}
 
-The code can be written in pure Java if preferred, using the long-hand syntax of ``tomcat.setConfig(TomcatServer.HTTP_PORT, 80)``
-in lieu of the flags. The ``wars`` flag is also supported (with config keys ``ROOT_WAR`` and ``NAMED_WARS`` the long-hand syntax);
+While this is written in scala, the code can be written in pure Java if preferred, using the long-hand syntax of ``tomcat.setConfig(TomcatServer.HTTP_PORT, 80)``
+in lieu of the flags.
+
+The ``wars`` flag is also supported (with config keys ``ROOT_WAR`` and ``NAMED_WARS`` the long-hand syntax);
 they accept EARs and other common archives, and can be described as files or URLs, including a ``classpath://org/acme/resources/xxx.war``
 syntax.
 
@@ -97,7 +96,7 @@ This creates a cluster that of Tomcat servers, along with an Nginx instance. The
 is notified whenever a member of the cluster joins or leaves; the entity is configured to look at the ``HTTP_PORT``
 attribute of that instance so that the Nginx configuration can be updated with the ip:port of the cluster member.
 
-The beauty of OO programming, of course, is that classes can be re-used.  The compound entity we've created above is
+The beauty of OO programming is that classes can be re-used.  The compound entity created above is
 available off-the-shelf as the ``LoadBalancedWebCluster`` entity, as used in the following example. 
 
 

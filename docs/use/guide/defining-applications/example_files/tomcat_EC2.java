@@ -12,13 +12,13 @@ class TomcatClusterApp extends AbstractApplication {
 		BrooklynLauncher.manage(demo)
 
 		JcloudsLocationFactory locFactory = new JcloudsLocationFactory([
-					provider : "aws-ec2",
-					identity : "xxxxxxxxxxxxxxxxxxxxxxxxxxx",
-					credential : "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-					sshPrivateKey : new File("/home/bob/.ssh/id_rsa.private"),
-					sshPublicKey : new File("/home/bob/.ssh/id_rsa.pub"),
-					securityGroups:["my-security-group"]
-				])
+			provider : "aws-ec2",
+			identity : "xxxxxxxxxxxxxxxxxxxxxxxxxxx",
+			credential : "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+			sshPrivateKey : new File("/home/bob/.ssh/id_rsa.private"),
+			sshPublicKey : new File("/home/bob/.ssh/id_rsa.pub"),
+			securityGroups:["my-security-group"]
+		])
 
 		JcloudsLocation loc = locFactory.newLocation("us-west-1")
 		demo.start([loc])

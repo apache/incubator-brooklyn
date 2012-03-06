@@ -29,8 +29,9 @@ Dependent Configuration
 Under the covers brooklyn has a sophisticated sensor event and subscription model, but conveniences around this model make it very simple to express  cross-entity dependencies. Consider the example where Tomcat instances need to know a set of URLs to connect to a Monterey processing fabric (or a database tier or other entities)
 
 {% highlight java %}
-    tomcat.webCluster.template.setConfig(JavaEntity.JVM_PROPERTY("monterey.urls"),
-               attributeWhenReady(monterey, Monterey.MGMT_PLANE_URLS) )
+tomcat.webCluster.template.setConfig(JavaEntity.JVM_PROPERTY("monterey.urls"),
+	attributeWhenReady(monterey, Monterey.MGMT_PLANE_URLS)
+)
 {% endhighlight %}
 
 The ``attributeWhenReady(Entity, Sensor)`` call causes the configuration value to be set when that given entity's attribue is ready. 
@@ -57,6 +58,6 @@ Location
 
 Entities can be provisioned/started in the location of your choice. brooklyn transparently uses jclouds to support different cloud providers and to support BYON (Bring Your Own Nodes). 
 
-The implementation of an entity (e.g. Tomcat) is agnostic about where it will be installed/started. When writing the application definition, specify the location (or list of possible locations) for hosting the entity.
+The implementation of an entity (e.g. Tomcat) is agnostic about where it will be installed/started. When writing the application definition specify the location (or list of possible locations) for hosting the entity.
 
 The idea is that you could specify the location as AWS and also supply an image id. You could configure the Tomcat entity accordingly: specify the path if the image already has Tomcat installed, or specify that Tomcat must be downloaded/installed. Entities typically use _drivers_ (such as SSH-based) to install, start, and interact with their corresponding real-world instance. 

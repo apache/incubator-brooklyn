@@ -16,7 +16,7 @@ brooklyn comes bundled with support for a large number of systems and entities.
 .. TODO include the fully qualified name of the entity
 -->
 
-<a name="web" />
+<a name="web"></a>
 Web
 ---
 
@@ -35,7 +35,7 @@ autoconf and compiles them. This requires gcc and autoconf to be installed. The 
 On debian/ubuntu to build nginx you can get the required libraries with: apt-get install zlib1g-dev libdigest-sha-perl
 libssl-dev
 
-<a name="database" />
+<a name="database"></a>
 Database
 --------
 
@@ -64,7 +64,7 @@ Support for Infinispan server is currently in progress.
 Gemfire support is a current work in progress providing capability to configure and setup Gemfire servers and define
 clusters. See GemfireSetup and GemfireCluster.
 
-<a name="messaging" />
+<a name="messaging"></a>
 Messaging
 ---------
 
