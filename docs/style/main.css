@@ -8,17 +8,20 @@ body {
 }
 
 pre {
- 	font-family: 'Droid Sans Mono', sans-serif;
+ 	font-family: 'Droid Sans Mono', Monaco, Courier, sans-serif; font-size: 90%;
 }
 code {
- 	font-family: 'Droid Sans Mono', sans-serif;
+ 	font-family: 'Droid Sans Mono', Monaco, Courier, sans-serif; font-size: 90%;
 }
 
-h2 {
-	color: #185018;
-}
+a { color: #204818; text-decoration: none; }
+a:visited { color: #002808; }
+a:hover { text-decoration: underline; }
 
-/*Configuration for pygments syntax higlighting*/
+h2 { color: #185018; }
+
+
+/* Configuration for pygments syntax highlighting */
 div.highlight code.java span.err{
 	/*Single quotes were being highlighted as errors, so just turn that off.*/
 	border: none;
