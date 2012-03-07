@@ -12,18 +12,19 @@ It's built using standard jekyll/markdown with a few extensions.
 
 Install the following:
 
-* [Jekyll](https://github.com/mojombo/jekyll/wiki/install): `sudo gem install jekyll`
-* [json] `sudo gem install json`
-* [RDiscount](https://github.com/rtomayko/rdiscount/#readme): `sudo gem install rdiscount`
-* [Pygments](http://pygments.org/): `sudo easy_install Pygments`
+* [**Jekyll**](https://github.com/mojombo/jekyll/wiki/install): `sudo gem install jekyll`
+* [**JSON gem**](TODO): `sudo gem install json`
+* [**RDiscount**](https://github.com/rtomayko/rdiscount/#readme): `sudo gem install rdiscount`
+* [**Pygments**](http://pygments.org/): `sudo easy_install Pygments`
 
 Then, in the `docs/` directory, run:
 
     jekyll --pygments --server --auto
 
-Visit [http://localhost:4000/](http://localhost:4000/) and you should see the documentation.
+Visit [http://localhost:4000/start/index.html](http://localhost:4000/start/index.html) and you should see the documentation.
 
-.. http://localhost:4000/start
+(See also the scripts stored in `_scripts/` for convenience.)
+
 
 # Extensions
 

@@ -4,4 +4,4 @@ title: Getting to Code
 toc: /toc.json
 ---
 
-{% readj code/code.include.md %}
+{% readj code/index.include.md %}
