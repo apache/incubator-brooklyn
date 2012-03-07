@@ -7,7 +7,11 @@
 { "title": "Management",
   "file":  "/use/guide/management/index.html" ,
   "children": {% readj ./management/toc.json %} },
-{ "title": "Entities",
+
+{ "title": "Policies",
+  "file":  "/use/guide/policies/index.html",
+  "children": {% readj ./policies/toc.json %} },
+{ "title": "Custom Entities",
   "file":  "/use/guide/entities/index.html",
   "children": {% readj ./entities/toc.json %} },
 { "title": "Extras",

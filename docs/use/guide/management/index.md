@@ -18,32 +18,6 @@ managed by other entities, and so forth through a hierarchy rooted in entities r
 - policies which perform analysis, enrichment (sensors), and execution (effectors). It is the policies in brooklyn which
   perform the self-management (in autonomic terms) by monitoring sensors and invoking effectors.
 
-
-The following recommendations should be considered when designing policies:
-
-**policies should be small and composable**
-
-e.g. one policy which takes a sensor and emits a different, enriched sensor, and a second policy which responds to the enriched sensor of the first 	(e.g. a policy detects a process is maxed out and emits a TOO_HOT sensor; a second policy responds to this by scaling up the VM where it is running, requesting more CPU)
-	
-**management should take place as "low" as possible in the hierarchy**
-
-ideally management should take run as a policy on the relevant entity
-
-**where a policy cannot resolve a situation at an entity, the issue should be escalated to a manager with a compatible policy**
-
-Typically escalation will go to the entity owner, and then cascade up.
-e.g. if the earlier VM CPU cannot be increased, the TOO_HOT event may go to the owner, a cluster entity, which attempts to balance. If the cluster cannot balance, then to another policy which attempts to scale out the cluster, and should the cluster be unable to scale, to a third policy which emits TOO_HOT for the cluster.
-	
-**management escalation should be carefully designed so that policies are not incompatible**
-
-Best practices for this include:
-
-*	place management responsibility in policies at the entity, as much as possible
-*	place escalated management responsibility at the owner entity. Where this is impractical, perhaps because two aspects of an entity are best handled in two different places, ensure that the separation of responsibilities is documented and there is a group membership relationship between secondary/aspect managers.
-*	order policies carefully, and mark sensors as "handled" (or potentially "swallow" them locally), so that subsequent policies and owner entities do not take superfluous (or contradictory) corrective action.
-      
-For this milestone release, some of the mechanisms for implementing the above practices are still being developed.
-
 <a name="distributed-management"></a>
 Distributed Management
 ----------------------
@@ -77,7 +51,7 @@ TODO - brief overview of
 Management Web Console
 ----------------------
 
-brooklyn comes with a web based management console that serves as a way to track and manage brooklyn entities.
+brooklyn comes with a web-based management console that serves as a way to track and manage brooklyn entities.
 
 The management console can be started using BrooklynLaucher:
 {% highlight java %}
@@ -104,11 +78,11 @@ The dashboard is a high level overview of the state of the application:
 
 **Detail**
 
-The Detail view gives an in-depth view of the application and its entities. Child/parent relationships between the entities are navigable using the entity tree. Selecting a specific entity allows you to access detailed information about that entity.
+The Detail view gives an in-depth view of the application and its entities. Child-parent relationships between entities are navigable using the entity tree. Selecting a specific entity allows you to access detailed information about that entity.
 
 [![Screenshot of the Webconsole Detail](webconsole-detail-w400.png "Screenshot of the Webconsole Detail")](webconsole-detail.png)
 
-The Detail view contains a breadcrumb, showing the current entitiy's position in the heirarchy, and six tabs:
+The Detail view contains a breadcrumb trail, showing the current entitiy's position in the heirarchy, and six tabs:
 
 **Summary:** Description of the selected entity.
 
@@ -262,20 +236,3 @@ Continuing the example above, submitting a SequentialTasks or specifying ``em.se
 For more information consult the javadoc on these classes and associated tests.
 
 Note that it is currently necessary to prune dead tasks, either periodically or by the caller. By default they are kept around for reference. It is expected that an enhancement in a future release will allow pruning completed and failed tasks after a specified amount of time.
-
-
-<a name="writing-policies"></a>
-Writing Policies
-----------------
-
-*This section is not complete in this milestone release.*
-
-- Policies often run periodically or on sensor events
-- Policies can add subscriptions to sensors on any entity (although usually it will be its related entity, those entities it owns, and/or those entities which are members) 
-- Policies may invoke effectors (management policies) or simply generate new attributes or events (enricher policies).
-
-### Implementation Classes
-
-*This section is not complete in this milestone release.*
-
-- extend ``AbstractPolicy``, or override an existing policy
