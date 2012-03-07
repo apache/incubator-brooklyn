@@ -73,13 +73,13 @@ TODO - brief overview of
 - ``ManagementContext`` (Java management API)
 - ``EntityLocal`` (used by policies)
 
-<a name="observation"></a>
-Observing What is Happening
----------------------------
+<a name="console"></a>
+Management Web Console
+----------------------
 
-### Management Web Console
+brooklyn comes with a web based management console that serves as a way to track and manage brooklyn entities.
 
-brooklyn comes with a web based management console that can be started using BrooklynLaucher:
+The management console can be started using BrooklynLaucher:
 {% highlight java %}
 public static void main(String\[\] argv) {
 	application app = new MyApplicationExample(displayName:"myapp")
@@ -93,8 +93,7 @@ The URL for the web console defaults to http://localhost:8081.
 
 The mechanism for launching brooklyn management will change in a future release. For this milestone release, the brooklyn management node is embedded.
 
-The brooklyn Management Console serves as a way to track and manage brooklyn
-entities. It contains two main views: Dashboard and Details. These update in real-time.
+The console contains two main views: Dashboard and Detail. These update in real-time.
 
 **Dashboard**
 
@@ -109,7 +108,7 @@ The Detail view gives an in-depth view of the application and its entities. Chil
 
 [![Screenshot of the Webconsole Detail](webconsole-detail-w400.png "Screenshot of the Webconsole Detail")](webconsole-detail.png)
 
-Below the breadcrumb showing the selected entity's place in the heirarchy are six tabs:
+The Detail view contains a breadcrumb, showing the current entitiy's position in the heirarchy, and six tabs:
 
 **Summary:** Description of the selected entity.
 
@@ -126,14 +125,11 @@ Below the breadcrumb showing the selected entity's place in the heirarchy are si
 ### Security
 
 
-In this milestone release only two Spring Security users are created: user and admin.
+In this milestone release only two Spring Security users are created: user and admin. Only the admin user has access to the Management Console.
 
+Admin access: 	username: *admin*, password: *password*.
 
-Admin access: username: *admin*, password: *password*.
-
-User access: username: *user*, password: *password*.
-
-Only the **admin** user has access to the Management Console.
+User access: 	username: *user*, password: *password*.
 
 In future releases it will be possible to add and configure users. 
 

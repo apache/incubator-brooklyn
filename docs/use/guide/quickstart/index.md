@@ -7,10 +7,10 @@ categories: [use, guide]
 
 **brooklyn** is a provisioning and management framework for big, distributed applications. At a glance, it lets you:
 
-- Describe an application topology once, and use this definition to set it up (provision) and keep it up (management)
+- Describe an application topology once, and use this definition to set it up (provision) and keep it up (manage)
 - Describe the application topology in code, for re-use, version control, power and readability
 - Run multiple tiers and even varying stacks, configured and managed together
-- Run in multiple locations with efficient, secure wide-area management
+- Run in multiple locations with efficient, secure, wide-area management
 
 Prerequisites
 -------------

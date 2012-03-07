@@ -5,8 +5,6 @@ toc: ../../toc.json
 categories: use
 ---
 
-TODO -- Brooklyn docs haven't really been ported, just experimenting...
-
 TODO -- would like to have PDF avail, with links in corner -- "download PDF"
 
 ## Table of Contents
