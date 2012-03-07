@@ -3,7 +3,7 @@
   "file":  "/start/index.html",
   "exclude": true,
   "children": {% readj /start/toc.json %} },
-{ "title": "Using",
+{ "title": "Using brooklyn",
   "file":  "/use/index.html",
   "children": {% readj /use/toc.json %} },
 { "title": "Developing",

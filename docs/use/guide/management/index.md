@@ -123,13 +123,26 @@ More information can be found in the javadoc for ``ManagementContext``.
 
 ### Management REST API
 
-*Not available yet.*
+Brooklyn does not yet expose a REST API. This was to allow the APi to be designed to align with emerging standards.
+
+Selected management operations are possible remotely using links exposed by the GUI (after authenticating with the GUI).
 
 ### Logging
 
 *This section is in development at the time of this milestone release.*
 
-Logging uses slf4j. Add the appropriate maven slf4j implementation dependency and logging config file.
+Brooklyn uses the SLF4J logging facade,  which allows use of many popular frameworks including java.util.logging, log4j, and logback.
+
+The convention for log levels is as follows:
+* ERROR and above:  exceptional situations which indicate that something has unexpectedly failed or
+some other problem has occured which the user is expected to attend to
+* WARN:  exceptional situations which the user may which to know about but which do not necessarily indicate failure or require a response
+* INFO:  a synopsis of activity, but which should not generate large volumes of events nor overwhelm a human observer
+* DEBUG and lower:  detail of activity which is not normally of interest, but which might merit closer inspection under certain circumstances.
+
+Loggers follow the ``package.ClassName`` naming standard.  
+
+It is possible for entities to emit logging activity sensors so that an operator can observe what is occurring within their application through the web console or via programmatic means.
 
 Examples for testing can be found in some of the poms.
 
