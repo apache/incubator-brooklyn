@@ -7,6 +7,6 @@
 { "title": "Implementing Sensors",
   "file":  "/use/guide/entities/index.html#implementing-sensors" }, 
 { "title": "Implementing Effectors",
-  "file":  "/use/guide/entities/index.html#implementing-effectors" }, 
-{ "title": "Implementing Policies",
-  "file":  "/use/guide/entities/index.html#implementing-policies" }]
+  "file":  "/use/guide/entities/index.html#implementing-effectors" },
+{ "title": "Testing",
+  "file":  "/use/guide/entities/index.html#testing" }]

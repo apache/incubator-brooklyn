@@ -1,3 +1,0 @@
-<a name="web" />
-<a name="database" />
-<a name="messaging" />

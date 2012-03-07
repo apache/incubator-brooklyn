@@ -15,5 +15,6 @@
   "file":  "/use/guide/entities/index.html",
   "children": {% readj ./entities/toc.json %} },
 { "title": "Extras",
-  "file":  "/use/guide/extras/index.html" }
+  "file":  "/use/guide/extras/index.html",
+  "children": {% readj ./extras/toc.json %}  }
 ]
