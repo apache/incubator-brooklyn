@@ -10,6 +10,6 @@
   "file": "/dev/index.html",
   "children": {% readj /dev/toc.json %} },
 { "title": "Meta",
-  "file": "/meta/index.html",
+  "file": "/meta/versions.html",
   "children": {% readj /meta/toc.json %} }
 ]

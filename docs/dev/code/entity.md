@@ -28,7 +28,9 @@ Finally, there are a collection of *traits* providing common
 sensors and effectors on entities, supplied as interfaces.
 Choose one (or more) as appropriate.
 
-XXX
+<!---
+TODO: XXX
+-->
 
 ## Key Steps
 

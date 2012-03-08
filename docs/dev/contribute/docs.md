@@ -49,13 +49,14 @@ and automatically detecting which page is active.
 
 # Publishing
 
-Because github don't run plugins (they run with the `--safe` option),
+Because GitHub don't run plugins (they run with the `--safe` option),
 the site has to be built and the result of this copied to the `gh_pages` branch
-of the Brooklyn project (as per the github pages documentation).
+of the Brooklyn project (as per the GitHub pages documentation).
 
 This makes the process a little more tedious, but it does have the advantage 
 that the documentation lives right in the Brooklyn project,
 easy to open alongside the code inside your IDE.
+
 (We could also put multiple versions of the documentation in the `gh_pages` branch,
 so that user guides for specific versions are always available on-line.)
 
