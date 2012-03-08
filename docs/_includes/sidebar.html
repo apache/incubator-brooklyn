@@ -92,16 +92,16 @@ $("#accordionish").addClass("ui-accordion ui-accordion-icons ui-widget ui-helper
         $(this).addClass("self-hover");
         openAccordionishSoonIfHover($(this), false); }, 
       function() { 
-        $(this).removeClass("self-hover");
-        closeAccordionishSoonIfNoHover($(this)); 
+        //$(this).removeClass("self-hover");
+        //closeAccordionishSoonIfNoHover($(this)); 
       })
     .next()
       .hover(function() { 
           $(this).prev().addClass("next-hover");
           openAccordionish($(this).prev(), false); }, 
         function() { 
-          $(this).prev().removeClass("next-hover");
-          closeAccordionishSoonIfNoHover($(this).prev());
+          //$(this).prev().removeClass("next-hover");
+          //closeAccordionishSoonIfNoHover($(this).prev());
         })
       .addClass("left-menu-body ui-accordion-content ui-helper-reset ui-widget-content ui-corner-bottom")
       .addClass("ui-accordion-content-active")
@@ -113,7 +113,19 @@ $("#accordionish").addClass("ui-accordion ui-accordion-icons ui-widget ui-helper
 $("#accordionish")
   .find(".unaccordiable")
     .addClass("left-menu-leaf ui-accordion-header ui-helper-reset ui-state-default ui-corner-top ui-corner-cottom")
-    .hover(function() { $(this).toggleClass("ui-state-hover"); }).end();
+    .hover(function() { $(this).toggleClass("ui-state-hover"); })
+  .end()
+  .mouseleave(function() {
+  	$(this).find(".accordiable")
+  		.removeClass("self-hover")
+  		.removeClass("next-hover")
+  		.each(function(){
+  			closeAccordionishSoonIfNoHover($(this));
+  		})
+ 	.end();
+  })
+
+  
 
 
 $("#accordionish").find(".toc-active").each(function(i, a) {
