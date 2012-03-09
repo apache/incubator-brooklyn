@@ -1,6 +1,9 @@
 
 .ui-accordion { font-size: 90% }
-.ui-accordion .left-menu-body { padding: 0; }
+.ui-accordion .left-menu-body {
+	padding: 0;
+	overflow:hidden;
+}
 .ui-accordion .toc1 { margin: 14px 0px 0px 0px; }
 
 #sidebar_toc .toc1 { background: #f8f8f8; }
