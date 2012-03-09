@@ -47,7 +47,7 @@ TODO httpPort: => http: in Alex's docs
 -->
 
 {% highlight java %}
-{% readj example_files/tomcat_simple.java %}
+{% readj example_files/tomcat_simple.groovy %}
 {% endhighlight %}
 
 While this is written in scala, the code can be written in pure Java if preferred, using the long-hand syntax of ``tomcat.setConfig(TomcatServer.HTTP_PORT, 80)``
@@ -69,7 +69,7 @@ TODO httpPort: => http: in Alex's docs
 *In this milestone release, the following snippet should be considered pseudo code as it has not been tested.*
 
 {% highlight java %}
-{% readj example_files/tomcat_EC2.java %}
+{% readj example_files/tomcat_EC2.groovy %}
 {% endhighlight %}
 
 The ``newEntity`` flag in the cluster constructor indicates how new entities should be created. The WAR configuration set on the cluster is inherited by each of the TomcatServer contained (i.e. "owned") by the cluster.
@@ -89,7 +89,7 @@ The code below starts a Tomcat cluster along with an Nginx instance, where each 
 TODO httpPort: => http: in Alex's docs
 -->
 {% highlight java %}
-{% readj example_files/tomcat_nginx.java %}
+{% readj example_files/tomcat_nginx.groovy %}
 {% endhighlight %}
 
 This creates a cluster that of Tomcat servers, along with an Nginx instance. The ``NginxController`` instance
@@ -120,7 +120,7 @@ FIXME Discuss above comment with Aled/Alex as it is contentious
 TODO httpPort: => http: in Alex's docs
 -->
 {% highlight java %}
-{% readj example_files/tomcat_multi-location.java %}
+{% readj example_files/tomcat_multi-location.groovy %}
 {% endhighlight %}
 
 This creates a web-fabric. When started, this creates a web-cluster in each location supplied.
