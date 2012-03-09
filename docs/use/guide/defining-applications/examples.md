@@ -1,7 +1,7 @@
 ---
 title: Examples
 layout: page
-toc: ../../toc.json
+toc: ../guide_toc.json
 categories: [use, guide, defining-applications]
 ---
 

@@ -7,7 +7,7 @@ categories: [start]
 
 ## What is Brooklyn?
 
-Brooklyn a unified framework that allows you to deploy and managed
+Brooklyn is a unified framework that allows you to deploy and managed
 distributed, multi-cloud, multi-paas applications.
 
 Brooklyn aims to give DevOps practitioners a method for describing deployment configuration and management behavior in a single, concise descriptor.

@@ -1,35 +1,31 @@
 ---
 title: Common Usage
 layout: page
-toc: ../../toc.json
+toc: ../guide_toc.json
 categories: [use, guide, defining-applications]
 ---
 
 ### Entity Class Hierarchy
 
-By convention in brooklyn the following words have a particular meaning, both as types (which extend Group, which extends Entity) and when used as words in other entities (such as TomcatFabric):
+By convention in Brooklyn the following words have a particular meaning, both as types (which extend ``Group``, which extends ``Entity``) and when used as words in other entities (such as ``TomcatFabric``):
 
-- Tier - anything which is homogeneous (has a template and type)
-
-    - Cluster - in-location tier
-    - Fabric - multi-location tier
-
-- Stack - heterogeneous (mixed types of children)
-
-- Application - user's entry point
+- *Tier* - anything which is homogeneous (has a template and type)
+    - *Cluster* - an in-location tier
+    - *Fabric* - a multi-location tier
+- *Stack* - heterogeneous (mixed types of children)
+- *Application* - user's entry point
 
 <!---
 TODO
 -->
 
-- **template** entities are often used by groups to define how to instantiate themselves and scale-out.
+-	*template* entities are often used by groups to define how to instantiate themselves and scale-out.
   A template is an entity which does not have an owner and which is not an application.
-
-- **traits** (mixins) providing certain capabilities, such as Resizable and Balanceable
-
-- Resizable
-
-- Balanceable / Moveable / MoveableWithCost
+-	*traits* (mixins) providing certain capabilities, such as Resizable and Balanceable
+-	*Resizable*
+-	*Balanceable*
+-	*Moveable*
+-	*MoveableWithCost*
 
 ### Off-the-Shelf Entities
 
@@ -46,37 +42,6 @@ These include:
 
 See [Extras](../extras/) for a full list of systems available out of the box.
 
-
-### Off-the-Shelf Policies
-
-Policies are highly reusable as their inputs, thresholds and targets are customizable.
-
-- Resizer Policy
-   
-   Increases or decreases the size of a Resizable entity based on an aggregate sensor value, the current size of the entity, and customized high/low watermarks.
-
-   A Resizer policy can take any sensor as a metric, have its watermarks tuned live, and target any resizable entity - be it an application server managing how many instances it handles, or a tier managing global capacity.
-
-   e.g. if the average request per second across a cluster of Tomcat servers goes over the high watermark, it will resize the cluster to bring the average back to within the watermarks.
-  
-<!---
-TODO - list some
-TODO - describe how they can be customised (briefly mention sensors)
--->
-
-
-### Off-the-Shelf Enrichers
-
-- Delta - converts absolute sensor values into a delta
-
-- Time-weighted Delta - converts absolute sensor values into a delta/second
-
-- Rolling Mean - converts the last *N* sensor values into a mean
-
-- Rolling Time-window Mean - converts the last *N* seconds of sensor values into a weighted mean
-
-- Custom Aggregating - aggregates multiple sensor values (usually across a tier, esp. a cluster) and 
-  performs a supplied aggregation method to them to return an aggregate figure, e.g. sum, mean, median, etc. 
 
 ### Off-the-Shelf Locations
 

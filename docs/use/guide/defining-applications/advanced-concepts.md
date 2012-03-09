@@ -1,32 +1,48 @@
 ---
 title: Advanced Concepts
 layout: page
-toc: ../../toc.json
+toc: ../guide_toc.json
 categories: [use, guide, defining-applications]
 ---
 
 Lifecycle and ManagementContext
 -------------------------------
 
-An ``Application Entity`` defines the ``ManagementContext`` instance and is responsible for starting the deployment of the entire entity tree under its ownership. Only ``Application Entity`` can define the ``ManagementContext``.
+A Brooklyn deployment consists of many entities in a hierarchical tree, with  the privileged *application* entity at the top level.
 
-The management context entity forms part of the management plane. The management plane is responsible for the distribution of the ``Entity`` instances across multiple machines and multiple locations, tracking the transfer of events (subscriptions) between ``Entity`` instances, and the execution of tasks (often initiated by management policies).
+An application entity (``Application`` class) defines a management context  (``ManagementContext`` instance) and is responsible for starting the deployment of the entire entity tree under its ownership. Only an application entity can define the ``ManagementContext``.
 
-An ``Application Entity`` provides a ``start()`` method which begins provisioning the management plane and distributing the management of entities owned by the application (and their entities, recursively). In a multi-location deployment, management operates in all regions, with brooklyn entity instances 
-being mastered in the relevant region.
+An ``Application``'s ``start()`` method begins provisioning the management plane and distributing the management of entities owned by the application (and their entities, recursively). 
 
 Provisioning of entities typically happens in parallel automatically,
-although this can be customized. This is implemented as ``Tasks`` which are tracked by the management plane and is visible in the management console.
+although this can be customized. This is implemented as ***tasks*** which are tracked by the management plane and is visible in the [web-based management console](/use/guide/management/index.html#console).
 
-Customizing provisioning can be useful where two starting entities depend on each other. For example, it is often necessary to delay start of one entity until another entity reaches a certain state, and to supply run-time information about the latter to the former.
+Customized provisioning can be useful where two starting entities depend on each other. For example, it is often necessary to delay start of one entity until another entity reaches a certain state, and to supply run-time information about the latter to the former.
 
-For new entities joining an existing network, the entity is deployed to the management plane when it is wired in to an application i.e. by giving it an owner. Templates for new entities are also deployed to the management plane in the same manner.
+When new entities join an existing network, the entity is deployed to the management plane when it is wired in to an application i.e. by giving it an owner. Templates for new entities are also deployed to the management plane in the same manner.
+
+Typically a Brooklyn deployment has a single management context which records all the entities under management, as well as:
+
+*	the state associated with each entity owned (directly or recursively) by any application,
+*	subscribers (listeners) to sensor events arising from the entities,
+*	active tasks (jobs) associated with any the entity,
+*	which Brooklyn management node is mastering (managing) each entity.
+
+
+In a multi-location deployment, management operates in all regions, with brooklyn entity instances being mastered in the relevant region.
+
+When management is distributed a Brooklyn deployment may consist of multiple Brooklyn management nodes each with a ``ManagementContext`` instance.
+
+<!-- TODO - Clarify the following statements.
+The management context entity forms part of the management plane. The management plane is responsible for the distribution of the ``Entity`` instances across multiple machines and multiple locations, tracking the transfer of events (subscriptions) between ``Entity`` instances, and the execution of tasks (often initiated by management policies).
+
+-->
 
 
 Dependent Configuration
 -----------------------
 
-Under the covers brooklyn has a sophisticated sensor event and subscription model, but conveniences around this model make it very simple to express  cross-entity dependencies. Consider the example where Tomcat instances need to know a set of URLs to connect to a Monterey processing fabric (or a database tier or other entities)
+Under the covers Brooklyn has a sophisticated sensor event and subscription model, but conveniences around this model make it very simple to express  cross-entity dependencies. Consider the example where Tomcat instances need to know a set of URLs to connect to a Monterey processing fabric (or a database tier or other entities)
 
 {% highlight java %}
 tomcat.webCluster.template.setConfig(JavaEntity.JVM_PROPERTY("monterey.urls"),
@@ -55,9 +71,58 @@ You should be careful not to request config information until really necessary (
 
 Location
 --------
+<!-- TODO, Clarify is how geographical location works.
+-->
 
-Entities can be provisioned/started in the location of your choice. brooklyn transparently uses jclouds to support different cloud providers and to support BYON (Bring Your Own Nodes). 
+Entities can be provisioned/started in the location of your choice. Brooklyn transparently uses [jclouds](http://www.jclouds.org) to support different cloud providers and to support BYON (Bring Your Own Nodes). 
 
-The implementation of an entity (e.g. Tomcat) is agnostic about where it will be installed/started. When writing the application definition specify the location (or list of possible locations) for hosting the entity.
+The implementation of an entity (e.g. Tomcat) is agnostic about where it will be installed/started. When writing the application definition specify the location or list of possible locations (``Location`` instances) for hosting the entity.
+
+``Location`` instances represent where they run and indicate how that location (resource or service) can be accessed.
+
+For example, a ``JBoss7Server`` will usually be running in an ``SshMachineLocation``, which contains the credentials and address for sshing to the machine. A cluster of such servers may be running in a ``MachineProvisioningLocation``, capable of creating new ``SshMachineLocation`` instances as required.
+
+<!-- TODO, incorporate the following.
 
 The idea is that you could specify the location as AWS and also supply an image id. You could configure the Tomcat entity accordingly: specify the path if the image already has Tomcat installed, or specify that Tomcat must be downloaded/installed. Entities typically use _drivers_ (such as SSH-based) to install, start, and interact with their corresponding real-world instance. 
+-->
+
+Policies
+--------
+Policies perform the active management enabled by Brooklyn. Entities can have zero or more ``Policy`` instances attached to them. 
+
+Policies can subscribe to sensors from entities or run periodically, and
+when they run they can perform calculations, look up other values, and if deemed necessary invoke effectors or emit sensor values from the entity with which they are associated.
+
+Execution
+---------
+
+All processing, whether an effector invocation or a policy cycle, are tracked as ***tasks***. This allows several important capabilities:
+
+*	active and historic processing can be observed by operators
+*	the invocation context is available in the thread, to check entitlement (permissions) and maintain a
+hierarchical causal chain even when operations are run in parallel
+*	processing can be managed across multiple management nodes
+
+Some executions create new entities, which can then have tasks associated with them, and the system will record, for example, that a start efector on the new entity is a task associated with that entity, with that task
+created by a task associated with a different entity.
+
+The execution of a typical overall start-up sequence is shown below:
+
+[![Brooklyn Flow Diagram](brooklyn-flow-websequencediagrams.com-w400.png "Brooklyn Flow Diagram" )](brooklyn-flow-websequencediagrams.com.png)
+
+
+## Integration
+
+One vital aspect of Brooklyn is its ability to communicate with the systems it starts. This is abstracted using a ***driver*** facility in Brooklyn, where a
+driver describes how a process or service can be installed and managed using a particular technology.
+
+For example, a ``TomcatServer`` may implement start and other effectors using a ``TomcatSshDriver`` which inherits from ``JavaSshStartStopDriver`` (for JVM and JMX start confguration), inheriting from ``AbstractSshDriver``
+(for SSH scripting support).
+
+Particularly for sensors, some technologies are used so frequently that they are
+packaged as ***adapters*** which can discover their confguration (including from drivers). These include JMX and HTTP.
+
+Brooklyn comes with entity implementations for a growing number of commonly used systems, including various web application servers, databases and NoSQL data stores, and messaging systems. See: [Extras](/use/guide/extras/index.html).
+
+
