@@ -7,12 +7,7 @@ body {
 	font-family: verdana, arial, sans-serif;
 }
 
-pre {
- 	font-family: 'Droid Sans Mono', Monaco, Courier, sans-serif; font-size: 90%;
-}
-code {
- 	font-family: 'Droid Sans Mono', Monaco, Courier, sans-serif; font-size: 90%;
-}
+
 
 a { color: #204818; text-decoration: none; }
 a:visited { color: #002808; }
@@ -21,8 +16,22 @@ a:hover { text-decoration: underline; }
 h2 { color: #185018; }
 
 
+/* Code Snippets */
+pre {
+ 	font-family: 'Droid Sans Mono', Monaco, Courier, sans-serif; font-size: 90%;
+ 	background-color:#f6f6f6;
+ 	margin-right: -5em;
+	padding: 1em;
+}
+code {
+ 	font-family: 'Droid Sans Mono', Monaco, Courier, sans-serif; font-size: 90%;
+ 	background-color:#f4f4f4;
+}
+
+
 /* Configuration for pygments syntax highlighting */
 div.highlight code.java span.err{
 	/*Single quotes were being highlighted as errors, so just turn that off.*/
 	border: none;
 }
+
