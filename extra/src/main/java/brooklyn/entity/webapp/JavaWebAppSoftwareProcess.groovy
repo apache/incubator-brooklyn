@@ -75,8 +75,7 @@ public abstract class JavaWebAppSshDriver extends JavaStartStopSshDriver {
         entity.setAttribute(WebAppService.ROOT_URL, "http://${hostname}:${httpPort}/")
         super.start();
     }
-        
-	protected abstract String getDefaultVersion();
+
 	protected abstract String getDeploySubdir();
 	
 	public void deploy(File f, String targetName=null) {
