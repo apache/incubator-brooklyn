@@ -22,7 +22,7 @@ public class MockItemEntity extends AbstractEntity implements Movable {
     public static final AttributeSensor<Integer> TEST_METRIC =
         new BasicAttributeSensor<Integer>(Integer.class, "test.metric", "Dummy workrate for test entities")
     
-    static AtomicInteger totalMoveCount = new AtomicInteger(0)
+    public static AtomicInteger totalMoveCount = new AtomicInteger(0)
     
     private volatile boolean stopped;
     private volatile MockContainerEntity currentContainer;

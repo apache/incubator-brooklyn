@@ -51,7 +51,7 @@ public class NginxController extends AbstractController {
     public void doExtraConfigurationDuringStart() {
         LOG.info("Reconfiguring $displayName, members are $addresses")
         
-        MachineLocation machine = locations.first()
+        MachineLocation machine = firstLocation()
         File file = new File("/tmp/${id}")
         Files.write(getConfigFile(), file, Charsets.UTF_8)
 		driver.machine.copyTo file, "${driver.runDir}/conf/server.conf"

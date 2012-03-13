@@ -1,5 +1,12 @@
 package brooklyn.util.task
 
+import groovy.lang.Closure
+
+import java.util.Collections
+import java.util.LinkedHashSet
+import java.util.List
+import java.util.Map
+import java.util.Set
 import java.util.concurrent.Callable
 import java.util.concurrent.CancellationException
 import java.util.concurrent.ConcurrentHashMap
@@ -13,6 +20,8 @@ import java.util.concurrent.SynchronousQueue
 import java.util.concurrent.ThreadFactory
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -23,7 +32,6 @@ import brooklyn.management.Task
 import brooklyn.util.internal.LanguageUtils
 
 import com.google.common.base.CaseFormat
-import com.google.common.collect.Iterables;
 
 /**
  * TODO javadoc
@@ -31,6 +39,15 @@ import com.google.common.collect.Iterables;
 public class BasicExecutionManager implements ExecutionManager {
     private static final Logger log = LoggerFactory.getLogger(BasicExecutionManager.class)
 
+    /**
+     * Renaming threads can really helps with debugging etc; however it's a massive performance hit.
+     * We can run approx 2300 tasks per sec (submitted from a single thread) when using thread-renaming,
+     * compared to almost 6500 when this is disabled.
+     * 
+     * Defaults to false if system property is not set.
+     */
+    private static final boolean RENAME_THREADS = Boolean.parseBoolean(System.getProperty("brooklyn.executionManager.renameThreads"))
+    
     private static class PerThreadCurrentTaskHolder {
         public static final perThreadCurrentTask = new ThreadLocal<Task>()
     }
@@ -63,6 +80,12 @@ public class BasicExecutionManager implements ExecutionManager {
 
     private ConcurrentMap<Object, TaskScheduler> schedulerByTag = new ConcurrentHashMap()
     
+    private final AtomicLong totalTaskCount = new AtomicLong()
+    
+    private final AtomicInteger incompleteTaskCount = new AtomicInteger()
+    
+    private final AtomicInteger activeTaskCount = new AtomicInteger()
+    
 	/** for use by overriders to use custom thread factory */
 	protected ThreadFactory newThreadFactory() {
 		Executors.defaultThreadFactory();
@@ -70,6 +93,18 @@ public class BasicExecutionManager implements ExecutionManager {
 	
     public void shutdownNow() {
         runner.shutdownNow()
+    }
+    
+    public long getTotalTasksSubmitted() {
+        return totalTaskCount.get()
+    }
+    
+    public long getNumIncompleteTasks() {
+        return incompleteTaskCount.get()
+    }
+    
+    public long getNumActiveTasks() {
+        return activeTaskCount.get()
     }
     
     private Set<Task> getMutableTasksWithTag(Object tag) {
@@ -156,13 +191,18 @@ public class BasicExecutionManager implements ExecutionManager {
 	}
 
     protected <T> Task<T> submitNewTask(Map flags, Task<T> task) {
+        totalTaskCount.incrementAndGet()
+        
         beforeSubmit(flags, task)
         
         Closure job = {
             Object result = null
             String oldThreadName = Thread.currentThread().getName();
             try {
-                Thread.currentThread().setName(oldThreadName+"-"+task.getDisplayName()+"["+task.id[0..8]+"]")
+                if (RENAME_THREADS) {
+                    String newThreadName = oldThreadName+"-"+task.getDisplayName()+"["+task.id[0..8]+"]"
+                    Thread.currentThread().setName(newThreadName)
+                }
                 beforeStart(flags, task)
                 if (!task.isCancelled()) {
                     result = task.job.call()
@@ -170,7 +210,9 @@ public class BasicExecutionManager implements ExecutionManager {
             } catch(Exception e) {
                 result = e
             } finally {
-                Thread.currentThread().setName(oldThreadName)
+                if (RENAME_THREADS) {
+                    Thread.currentThread().setName(oldThreadName)
+                }
                 afterEnd(flags, task)
             }
             if (result instanceof Exception) {
@@ -201,6 +243,8 @@ public class BasicExecutionManager implements ExecutionManager {
     }
 
     protected void beforeSubmit(Map flags, Task<?> task) {
+        incompleteTaskCount.incrementAndGet()
+        
 		Task currentTask = getCurrentTask();
         if (currentTask) task.submittedByTask = currentTask
         task.submitTimeUtc = System.currentTimeMillis()
@@ -222,11 +266,16 @@ public class BasicExecutionManager implements ExecutionManager {
     }
 
     protected void beforeStart(Map flags, Task<?> task) {
+        activeTaskCount.incrementAndGet()
+        
         //set thread _before_ start time, so we won't get a null thread when there is a start-time
         if (log.isTraceEnabled()) log.trace "$this beforeStart, task: $task"
         if (!task.isCancelled()) {
             task.thread = Thread.currentThread()
-            task.thread.setName("brooklyn-" + CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL, task.displayName.replace(" ", "")) + "-" + task.id[0..7])
+            if (RENAME_THREADS) {
+                String newThreadName = "brooklyn-" + CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL, task.displayName.replace(" ", "")) + "-" + task.id[0..7]
+                task.thread.setName(newThreadName)
+            }
             perThreadCurrentTask.set task
             task.startTimeUtc = System.currentTimeMillis()
         }
@@ -235,6 +284,9 @@ public class BasicExecutionManager implements ExecutionManager {
     }
 
     protected void afterEnd(Map flags, Task<?> task) {
+        activeTaskCount.decrementAndGet()
+        incompleteTaskCount.decrementAndGet()
+
         if (log.isTraceEnabled()) log.trace "$this afterEnd, task: $task"
         ExecutionUtils.invoke flags.newTaskEndCallback, task
         Collections.reverse(flags.tagLinkedPreprocessors)
@@ -243,7 +295,10 @@ public class BasicExecutionManager implements ExecutionManager {
         perThreadCurrentTask.remove()
         task.endTimeUtc = System.currentTimeMillis()
         //clear thread _after_ endTime set, so we won't get a null thread when there is no end-time
-        task.thread.setName("brooklyn-"+LanguageUtils.newUid())
+        if (RENAME_THREADS) {
+            String newThreadName = "brooklyn-"+LanguageUtils.newUid()
+            task.thread.setName(newThreadName)
+        }
         task.thread = null
         synchronized (task) { task.notifyAll() }
 

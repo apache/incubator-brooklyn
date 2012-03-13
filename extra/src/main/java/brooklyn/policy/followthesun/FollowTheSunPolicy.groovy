@@ -3,8 +3,9 @@ package brooklyn.policy.followthesun;
 import static com.google.common.base.Preconditions.checkArgument
 
 import java.util.Map
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 import org.slf4j.Logger
@@ -22,6 +23,7 @@ import brooklyn.location.MachineProvisioningLocation
 import brooklyn.policy.basic.AbstractPolicy
 import brooklyn.policy.followthesun.FollowTheSunPool.ContainerItemPair
 import brooklyn.policy.loadbalancing.Movable
+import brooklyn.util.flags.SetFromFlag
 
 import com.google.common.collect.Iterables
 
@@ -31,6 +33,9 @@ public class FollowTheSunPolicy extends AbstractPolicy {
 
     public static final String NAME = "Follow the Sun (Inter-Geography Latency Optimization)";
 
+    @SetFromFlag // TODO not respected for policies? I had to look this up in the constructor
+    private long minPeriodBetweenExecs = 100
+    
     private final AttributeSensor<? extends Number> itemUsageMetric
     private final FollowTheSunModel<Entity, Entity> model
     private final FollowTheSunStrategy<Entity, ?> strategy
@@ -38,9 +43,10 @@ public class FollowTheSunPolicy extends AbstractPolicy {
     private final Closure locationFinder
     
     private FollowTheSunPool poolEntity
-    private ExecutorService executor = Executors.newSingleThreadExecutor()
-    private AtomicBoolean executorQueued = new AtomicBoolean(false)
-
+    
+    private volatile ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor()
+    private final AtomicBoolean executorQueued = new AtomicBoolean(false)
+    private volatile long executorTime = 0
     private boolean loggedConstraintsIgnored = false;
     
     Closure defaultLocationFinder = { Entity e ->
@@ -87,14 +93,16 @@ public class FollowTheSunPolicy extends AbstractPolicy {
     }
     
     // FIXME parameters: use a more groovy way of doing it, that's consistent with other policies/entities?
-    public FollowTheSunPolicy(Map flags = [:], AttributeSensor itemUsageMetric, 
+    public FollowTheSunPolicy(Map props = [:], AttributeSensor itemUsageMetric, 
             FollowTheSunModel<? extends Entity, ? extends Entity> model, FollowTheSunParameters parameters) {
-        super(flags)
+        super(props)
         this.itemUsageMetric = itemUsageMetric
         this.model = model
         this.parameters = parameters
         this.strategy = new FollowTheSunStrategy<Entity, Object>(model, parameters) // TODO: extract interface, inject impl
-        this.locationFinder = flags.locationFinder ?: defaultLocationFinder
+        this.locationFinder = props.locationFinder ?: defaultLocationFinder
+        this.minPeriodBetweenExecs = props.minPeriodBetweenExecs ?: 100
+        checkArgument(minPeriodBetweenExecs instanceof Number, "minPeriodBetweenExecs must be a number, but is "+minPeriodBetweenExecs.class.getClass())
         checkArgument(locationFinder instanceof Closure, "locationFinder must be a closure, but is "+locationFinder.class.getClass())
     }
     
@@ -133,28 +141,37 @@ public class FollowTheSunPolicy extends AbstractPolicy {
     @Override
     public void resume() {
         super.resume();
-        executor = Executors.newSingleThreadExecutor()
+        executor = Executors.newSingleThreadScheduledExecutor()
+        executorTime = 0
         executorQueued.set(false)
     }
     
     private scheduleLatencyReductionJig() {
         if (isRunning() && executorQueued.compareAndSet(false, true)) {
+            long now = System.currentTimeMillis()
+            long delay = Math.max(0, (executorTime + minPeriodBetweenExecs) - now)
             
-            executor.submit( {
-                try {
-                    executorQueued.set(false)
-                    strategy.rebalance()
-                    
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt() // gracefully stop
-                } catch (Exception e) {
-                    if (isRunning()) {
-                        LOG.error("Error during latency-reduction-jig", e)
-                    } else {
-                        LOG.debug("Error during latency-reduction-jig, but no longer running", e)
+            executor.schedule(
+                {
+                    try {
+                        executorTime = System.currentTimeMillis()
+                        executorQueued.set(false)
+                        
+                        if (LOG.isTraceEnabled()) LOG.trace("{} executing follow-the-sun migration-strategy", this)
+                        strategy.rebalance()
+                        
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt() // gracefully stop
+                    } catch (Exception e) {
+                        if (isRunning()) {
+                            LOG.error("Error during latency-reduction-jig", e)
+                        } else {
+                            LOG.debug("Error during latency-reduction-jig, but no longer running", e)
+                        }
                     }
-                }
-            } )
+                },
+                delay,
+                TimeUnit.MILLISECONDS)
         }
     }
     
@@ -218,5 +235,10 @@ public class FollowTheSunPolicy extends AbstractPolicy {
         if (LOG.isTraceEnabled()) LOG.trace("{} recording usage update for item {}, new value {}", this, item, newValues)
         model.onItemUsageUpdated(item, newValues)
         if (rebalanceNow) scheduleLatencyReductionJig()
+    }
+    
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + (name ? "("+name+")" : "")
     }
 }

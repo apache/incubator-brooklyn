@@ -42,7 +42,9 @@ class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<S,T> im
     }
     
     public T getAggregate() {
-        return (T)aggegator.call(values.values())
+        synchronized (values) {
+            return (T) aggegator.call(values.values())
+        }
     }
     
     public static <N extends Number> CustomAggregatingEnricher<N,N> getSummingEnricher(

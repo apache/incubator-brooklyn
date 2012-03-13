@@ -117,7 +117,7 @@ class AbstractControllerTest {
     private Collection<String> locationsToAddresses(int port, Collection<Entity> entities) {
         Set<String> result = [] as Set
         entities.each {
-            result << it.locations.first().address.hostAddress+":"+port
+            result << it.firstLocation().address.hostAddress+":"+port
         }
         return result
     }
@@ -133,6 +133,6 @@ class ClusteredEntity extends TestEntity {
         locations << provisioner.obtain([:])
     }
     public void stop() {
-        provisioner?.release(locations.first())
+        provisioner?.release(firstLocation())
     }
 }

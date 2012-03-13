@@ -55,13 +55,7 @@ public class AbstractLoadBalancingPolicyTest {
         
         loc = new SimulatedLocation(name:"loc")
         
-        // TODO: improve the default impl to avoid the need for this anonymous overrider of 'moveItem'
-        model = new DefaultBalanceablePoolModel<Entity, Entity>("pool-model") {
-            @Override public void moveItem(Entity item, Entity oldContainer, Entity newContainer) {
-                ((Movable) item).move(newContainer)
-                onItemMoved(item, newContainer)
-            }
-        }
+        model = new DefaultBalanceablePoolModel<Entity, Entity>("pool-model");
         
         app = new TestApplication()
         containerGroup = new DynamicGroup([name:"containerGroup"], app, { e -> (e instanceof MockContainerEntity) })

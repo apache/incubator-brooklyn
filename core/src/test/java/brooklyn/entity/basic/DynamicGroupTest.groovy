@@ -18,6 +18,7 @@ import brooklyn.test.entity.TestEntity
 import brooklyn.util.internal.LanguageUtils
 
 import com.google.common.base.Predicate
+import com.google.common.base.Predicates;
 
 
 public class DynamicGroupTest {
@@ -50,6 +51,13 @@ public class DynamicGroupTest {
     @Test
     public void testGroupWithMatchingFilterReturnsOnlyMatchingMembers() {
         group.setEntityFilter( { it.getId().equals(e1.getId()) } )
+        assertEquals(group.getMembers(), [e1])
+    }
+    
+    @Test
+    public void testCanUsePredicateAsFilter() {
+        Predicate predicate = Predicates.equalTo(e1)
+        group.setEntityFilter(predicate)
         assertEquals(group.getMembers(), [e1])
     }
     

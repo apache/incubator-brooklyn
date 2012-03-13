@@ -1,5 +1,7 @@
 package brooklyn.event.adapter.legacy
 
+import java.util.concurrent.atomic.AtomicBoolean
+
 import javax.management.JMX
 import javax.management.MBeanServerConnection
 import javax.management.Notification
@@ -22,6 +24,7 @@ import brooklyn.event.basic.BasicNotificationSensor
 
 import com.google.common.base.Preconditions
 
+
 /**
  * This class adapts JMX {@link ObjectName} data to {@link brooklyn.event.Sensor} data
  * for a particular {@link brooklyn.entity.Entity}, updating the {@link Activity} as required.
@@ -36,56 +39,56 @@ public class OldJmxSensorAdapter {
     public static final String RMI_JMX_URL_FORMAT = "service:jmx:rmi://%s:%d/jndi/rmi://%s:%d/%s"
 
     private static final Map<String,String> CLASSES = [
-            "Integer" : Integer.TYPE.name,
-            "Long" : Long.TYPE.name,
-            "Boolean" : Boolean.TYPE.name,
-            "Byte" : Byte.TYPE.name,
-            "Character" : Character.TYPE.name,
-            "Double" : Double.TYPE.name,
-            "Float" : Float.TYPE.name,
-            "GStringImpl" : String.class.getName(),
-            "LinkedHashMap" : Map.class.getName(),
-            "TreeMap" : Map.class.getName(),
-            "HashMap" : Map.class.getName(),
-            "ConcurrentHashMap" : Map.class.getName(),
-            "TabularDataSupport" : TabularData.class.getName(),
-            "CompositeDataSupport" : CompositeData.class.getName(),
-        ]
- 
+        "Integer" : Integer.TYPE.name,
+        "Long" : Long.TYPE.name,
+        "Boolean" : Boolean.TYPE.name,
+        "Byte" : Byte.TYPE.name,
+        "Character" : Character.TYPE.name,
+        "Double" : Double.TYPE.name,
+        "Float" : Float.TYPE.name,
+        "GStringImpl" : String.class.getName(),
+        "LinkedHashMap" : Map.class.getName(),
+        "TreeMap" : Map.class.getName(),
+        "HashMap" : Map.class.getName(),
+        "ConcurrentHashMap" : Map.class.getName(),
+        "TabularDataSupport" : TabularData.class.getName(),
+        "CompositeDataSupport" : CompositeData.class.getName(),
+    ]
+
     final EntityLocal entity
     final String host
     final Integer rmiRegistryPort
     final Integer rmiServerPort
     final String context
     final String url
-    
+
     JMXConnector jmxc
     MBeanServerConnection mbsc
- 
+
     public OldJmxSensorAdapter(EntityLocal entity, long timeout = -1) {
         this.entity = entity
- 
+
         host = entity.getAttribute(Attributes.HOSTNAME);
         rmiRegistryPort = entity.getAttribute(Attributes.JMX_PORT);
         rmiServerPort = entity.getAttribute(Attributes.RMI_PORT);
         context = entity.getAttribute(Attributes.JMX_CONTEXT);
- 
+
         if (rmiServerPort) {
-	        url = String.format(RMI_JMX_URL_FORMAT, host, rmiServerPort, host, rmiRegistryPort, context)
+            url = String.format(RMI_JMX_URL_FORMAT, host, rmiServerPort, host, rmiRegistryPort, context)
         } else {
-	        url = String.format(JMX_URL_FORMAT, host, rmiRegistryPort, context)
+            url = String.format(JMX_URL_FORMAT, host, rmiRegistryPort, context)
         }
 
         if (!connect(timeout)) throw new IllegalStateException("Could not connect to JMX service on ${host}:${rmiRegistryPort}")
     }
 
     public <T> ValueProvider<T> newAttributeProvider(String objectName, String attribute) {
-		try {
-			return new JmxAttributeProvider(this, new ObjectName(objectName), attribute)
-		} catch (Exception e) {
-			log.warn "error creating JMX object '"+objectName+"', $attribute."
-			throw e;
-		}
+        try {
+            return new JmxAttributeProvider(this, new ObjectName(objectName), attribute)
+        } catch (Exception e) {
+            log.warn "error creating JMX object '"+objectName+"', $attribute."
+            throw e;
+        }
     }
 
     public <T> ValueProvider<T> newOperationProvider(String objectName, String method, Object...arguments) {
@@ -99,11 +102,11 @@ public class OldJmxSensorAdapter {
     public JmxAttributeNotifier newAttributeNotifier(String objectName, EntityLocal entity, BasicNotificationSensor sensor) {
         return new JmxAttributeNotifier(this, new ObjectName(objectName), entity, sensor)
     }
-    
+
     public boolean isConnected() {
         return (jmxc && mbsc);
     }
- 
+
     /** attempts to connect immediately */
     public void connect() throws IOException {
         if (jmxc) jmxc.close()
@@ -112,13 +115,13 @@ public class OldJmxSensorAdapter {
         String user = entity.getAttribute(Attributes.JMX_USER);
         String password = entity.getAttribute(Attributes.JMX_PASSWORD);
         if (user && password) {
-			String[] creds = [ user, password ]
-			env.put(JMXConnector.CREDENTIALS, creds);
+            String[] creds = [ user, password ]
+            env.put(JMXConnector.CREDENTIALS, creds);
         }
         jmxc = JMXConnectorFactory.connect(url, env);
         mbsc = jmxc.getMBeanServerConnection();
     }
- 
+
     /** continuously attempts to connect (blocking), for at least the indicated amount of time; or indefinitely if -1 */
     public boolean connect(long timeout) {
         if (log.isDebugEnabled()) log.debug "Connecting to JMX URL: {} ({})", url, ((timeout == -1) ? "indefinitely" : "${timeout}ms timeout")
@@ -136,15 +139,15 @@ public class OldJmxSensorAdapter {
                 if (log.isDebugEnabled()) log.debug "failed connection (io) to {}:{} ({})", host, rmiRegistryPort, e.message
                 lastError = e;
             } catch (SecurityException e) {
-				if (lastError==null) {
-					log.warn "failed connection (security) to {}:{}, will retry ({})", host, rmiRegistryPort, e.message
-					//maybe just throw? a security exception is likely definitive, retry probably won't help
-					//(but maybe it will?)
-				} else {
-                	if (log.isDebugEnabled()) log.debug "failed connection (security) to {}:{} ({})", host, rmiRegistryPort, e.message
-				}
+                if (lastError==null) {
+                    log.warn "failed connection (security) to {}:{}, will retry ({})", host, rmiRegistryPort, e.message
+                    //maybe just throw? a security exception is likely definitive, retry probably won't help
+                    //(but maybe it will?)
+                } else {
+                    if (log.isDebugEnabled()) log.debug "failed connection (security) to {}:{} ({})", host, rmiRegistryPort, e.message
+                }
                 lastError = e;
-			}
+            }
         }
         log.warn("unable to connect to JMX url: ${url}", lastError);
         false
@@ -153,12 +156,12 @@ public class OldJmxSensorAdapter {
     public void disconnect() {
         if (jmxc) {
             try {
-	            jmxc.close()
+                jmxc.close()
             } catch (Exception e) {
                 log.warn("Caught exception disconnecting from JMX at {}:{}, {}", host, rmiRegistryPort, e.message)
             } finally {
-	            jmxc = null
-	            mbsc = null
+                jmxc = null
+                mbsc = null
             }
         }
     }
@@ -177,24 +180,65 @@ public class OldJmxSensorAdapter {
         return bean
     }
 
+    private Object getAttributeInternal(ObjectName objectName, String attribute) throws Exception {
+        ObjectInstance bean = findMBean objectName
+        if (bean != null) {
+            try {
+                def result = mbsc.getAttribute(bean.objectName, attribute)
+                if (log.isTraceEnabled()) log.trace "got value {} for jmx attribute {}.{}", result, objectName.canonicalName, attribute
+                return result
+            } catch (Exception e) {
+                log.warn "error getting $attribute from ${bean.objectName} with $mbsc: $e (rethrowing)"
+                throw e
+            }
+        } else {
+            return null
+        }
+    }
+    
     /**
      * Returns a specific attribute for a JMX {@link ObjectName}.
      */
     public Object getAttribute(ObjectName objectName, String attribute) {
         checkConnected()
-        
-        ObjectInstance bean = findMBean objectName
-        if (bean != null) {
-			try {
-				def result = mbsc.getAttribute(bean.objectName, attribute)
-				if (log.isTraceEnabled()) log.trace "got value {} for jmx attribute {}.{}", result, objectName.canonicalName, attribute
-				return result
-			} catch (Exception e) {
-				log.warn "error getting $attribute from ${bean.objectName} with $mbsc", e
-				throw e
-			}
-        } else {
-            return null
+        try {
+            return getAttributeInternal(objectName, attribute);
+        } catch (IOException e) {
+            //allow 1 retry after a reconnection, in case jmx connection has been dropped
+            //(better would be to put that logic in the jmxc but this is a quick way to try)
+            if (e.toString().contains("The client has been closed.")) {
+                if (tryReconnect("detected client close event")) {
+                    return getAttributeInternal(objectName, attribute);
+                }
+            }
+            throw e;
+        }
+    }
+
+    long lastReconnect = -1;
+    AtomicBoolean reconnectSuccess = new AtomicBoolean(true);
+
+    public boolean tryReconnect(String msg) {
+        if (!reconnectSuccess.get() && lastReconnect > System.currentTimeMillis()-10000)
+            //reconnect failed within past 10s, don't retry
+            return false;
+            
+        synchronized (reconnectSuccess) {
+            if (System.currentTimeMillis()-lastReconnect < 3000) {
+                //there was a reconnect attempt within the last 3s, use its result
+                return reconnectSuccess.get();
+            }
+            lastReconnect = System.currentTimeMillis();
+            log.info "reconnecting "+this+" ("+entity+"): "+msg
+            try {
+                disconnect();
+                connect();
+                log.info "reconnecting "+this+" ("+entity+"): success"
+                reconnectSuccess.set(true);
+            } catch (Exception e) {
+                log.info "reconnecting "+this+" ("+entity+"): failure, "+e
+                reconnectSuccess.set(false);
+            }
         }
     }
 
@@ -208,7 +252,7 @@ public class OldJmxSensorAdapter {
      */
     public Object operation(ObjectName objectName, String method, Object...arguments) {
         checkConnected()
-        
+
         ObjectInstance bean = findMBean objectName
         String[] signature = new String[arguments.length]
         arguments.eachWithIndex { arg, int index ->
@@ -223,18 +267,18 @@ public class OldJmxSensorAdapter {
     public void addNotification(String objectName, NotificationListener listener) {
         addNotification(new ObjectName(objectName), listener)
     }
-    
+
     public void addNotification(ObjectName objectName, NotificationListener listener) {
         ObjectInstance bean = findMBean objectName
         mbsc.addNotificationListener(objectName, listener, null, null)
     }
-    
+
     public <M> M getProxyObject(String objectName, Class<M> mbeanInterface) {
         return getProxyObject(new ObjectName(objectName), mbeanInterface)
     }
-    
+
     public <M> M getProxyObject(ObjectName objectName, Class<M> mbeanInterface) {
-        return JMX.newMBeanProxy(mbsc, objectName, mbeanInterface, false) 
+        return JMX.newMBeanProxy(mbsc, objectName, mbeanInterface, false)
     }
 }
 
@@ -245,13 +289,13 @@ public class JmxAttributeProvider<T> implements ValueProvider<T> {
     private final OldJmxSensorAdapter adapter
     private final ObjectName objectName
     private final String attribute
-    
+
     public JmxAttributeProvider(OldJmxSensorAdapter adapter, ObjectName objectName, String attribute) {
         this.adapter = Preconditions.checkNotNull(adapter, "adapter")
         this.objectName = Preconditions.checkNotNull(objectName, "object name")
         this.attribute = Preconditions.checkNotNull(attribute, "attribute")
     }
-    
+
     public T compute() {
         return adapter.getAttribute(objectName, attribute)
     }
@@ -265,14 +309,14 @@ public class JmxOperationProvider<T> implements ValueProvider<T> {
     private final ObjectName objectName
     private final String method
     private final Object[] arguments
-    
+
     public JmxOperationProvider(OldJmxSensorAdapter adapter, ObjectName objectName, String method, Object...arguments) {
         this.adapter = Preconditions.checkNotNull(adapter, "adapter")
         this.objectName = Preconditions.checkNotNull(objectName, "object name")
         this.method = Preconditions.checkNotNull(method, "method")
         this.arguments = arguments
     }
-    
+
     public T compute() {
         return adapter.operation(objectName, method, arguments)
     }
@@ -325,16 +369,16 @@ public class JmxAttributeNotifier implements NotificationListener {
     private final ObjectName objectName
     private final EntityLocal entity
     private final BasicNotificationSensor sensor
-    
+
     public JmxAttributeNotifier(OldJmxSensorAdapter adapter, ObjectName objectName, EntityLocal entity, BasicNotificationSensor sensor) {
         this.adapter = Preconditions.checkNotNull(adapter, "adapter")
         this.objectName = Preconditions.checkNotNull(objectName, "object name")
         this.entity = Preconditions.checkNotNull(entity, "entity")
         this.sensor = Preconditions.checkNotNull(sensor, "sensor")
-        
+
         adapter.addNotification(objectName, this)
     }
-    
+
     public void handleNotification(Notification notification, Object handback) {
         if (log.isDebugEnabled()) log.debug "Got notification type {}: {} (sequence {})", notification.type, notification.message, notification.sequenceNumber
         if (notification.type == sensor.name) {

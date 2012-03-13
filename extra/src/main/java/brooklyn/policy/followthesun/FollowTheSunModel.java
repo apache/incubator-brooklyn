@@ -35,7 +35,4 @@ public interface FollowTheSunModel<ContainerType, ItemType> {
     public void onItemRemoved(ItemType item);
     public void onItemUsageUpdated(ItemType item, Map<? extends ItemType, Double> newValues);
     public void onItemMoved(ItemType item, ContainerType newContainer);
-    
-    // Mutator for effecting the real world
-    public void moveItem(ItemType item, ContainerType targetContainer);
 }

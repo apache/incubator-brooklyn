@@ -109,6 +109,14 @@ class DynamicClusterTest {
     }
 
     @Test
+    public void testClusterHasOneLocationAfterStarting() {
+        DynamicCluster cluster = new DynamicCluster(newEntity:{ new TestEntity() }, app)
+        cluster.start([loc])
+        assertEquals(cluster.getLocations().size(), 1)
+        assertEquals(cluster.getLocations() as List, [loc])
+    }
+
+    @Test
     public void resizeFromZeroToOneStartsANewEntityAndSetsItsOwner() {
         TestEntity entity
         DynamicCluster cluster = new DynamicCluster(newEntity:{ properties -> entity = new TestEntity(properties) }, app)
@@ -354,10 +362,35 @@ class DynamicClusterTest {
             assertEquals(removedEntities.size(), 10-i)
             assertEquals(ImmutableSet.copyOf(Iterables.concat(cluster.members, removedEntities)), origMembers)
         }
-        
-        Collection<TestEntity> children = cluster.ownedChildren
     }
     
+    @Test
+    public void testPluggableRemovalStrategyCanBeSetAfterConstruction() {
+        List<Entity> removedEntities = []
+        
+        Closure removalStrategy = { Collection<Entity> contenders ->
+            Entity choice = Iterables.get(contenders, random.nextInt(contenders.size()))
+            removedEntities.add(choice)
+            return choice
+        }
+        DynamicCluster cluster = new DynamicCluster([
+                newEntity:{ properties -> return new TestEntity(properties) },
+                initialSize:10,
+            ], app)
+        
+        cluster.start([loc])
+        Set origMembers = cluster.members as Set
+
+        cluster.setRemovalStrategy(removalStrategy)
+        
+        for (int i = 10; i >= 0; i--) {
+            cluster.resize(i)
+            assertEquals(cluster.getAttribute(Changeable.GROUP_SIZE), i)
+            assertEquals(removedEntities.size(), 10-i)
+            assertEquals(ImmutableSet.copyOf(Iterables.concat(cluster.members, removedEntities)), origMembers)
+        }
+    }
+
     @Test
     public void testResizeDoesNotBlockCallsToQueryGroupMembership() {
         CountDownLatch executingLatch = new CountDownLatch(1)

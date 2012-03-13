@@ -59,15 +59,9 @@ public class BalanceableWorkerPool extends AbstractEntity implements Resizable {
     public static BasicNotificationSensor<ContainerItemPair> ITEM_MOVED = new BasicNotificationSensor<ContainerItemPair>(
         ContainerItemPair.class, "balanceablepool.item.moved", "Item moved in balanceable pool to the given container")
     
-    // Pool workrate notifications.
-    public static BasicNotificationSensor<Map> POOL_HOT = new BasicNotificationSensor<Map>(
-        Map.class, "balanceablepool.hot", "Pool has insufficient container resource for current workload")
-    public static BasicNotificationSensor<Map> POOL_COLD = new BasicNotificationSensor<Map>(
-        Map.class, "balanceablepool.cold", "Pool has too much container resource for current workload")
-    
-    
     private Group containerGroup
     private Group itemGroup
+    private Resizable resizable
     
     private final Set<Entity> containers = Collections.synchronizedSet(new HashSet<Entity>())
     private final Set<Entity> items = Collections.synchronizedSet(new HashSet<Entity>())
@@ -118,10 +112,16 @@ public class BalanceableWorkerPool extends AbstractEntity implements Resizable {
     public BalanceableWorkerPool(Map properties = [:], Entity owner = null) {
         super(properties, owner)
     }
+
+    public void setResizable(Resizable resizable) {
+        this.resizable = resizable
+    }
     
     public void setContents(Group containerGroup, Group itemGroup) {
         this.containerGroup = containerGroup
         this.itemGroup = itemGroup
+        if (resizable == null && containerGroup instanceof Resizable) resizable = (Resizable) containerGroup
+        
         subscribe(containerGroup, AbstractGroup.MEMBER_ADDED, eventHandler)
         subscribe(containerGroup, AbstractGroup.MEMBER_REMOVED, eventHandler)
         subscribe(itemGroup, AbstractGroup.MEMBER_ADDED, eventHandler)
@@ -148,11 +148,10 @@ public class BalanceableWorkerPool extends AbstractEntity implements Resizable {
     public Integer getCurrentSize() { return containerGroup.getCurrentSize() }
     
     public Integer resize(Integer desiredSize) {
-        if (containerGroup instanceof Resizable) return ((Resizable) containerGroup).resize(desiredSize)
+        if (resizable != null) return resizable.resize(desiredSize)
         
-        throw new UnsupportedOperationException("Container group is not resizable")
+        throw new UnsupportedOperationException("Container group is not resizable, and no resizable supplied: $containerGroup of type "+(containerGroup?.getClass().getCanonicalName()))
     }
-    
     
     private void onContainerAdded(Entity newContainer) {
         subscribe(newContainer, Startable.SERVICE_UP, eventHandler)

@@ -31,6 +31,15 @@ import com.jcraft.jsch.Session
  * @see http://wiki.jsch.org/index.php?Manual%2FExamples%2FJschExecExample
  */
 public class SshJschTool {
+    
+    // FIXME On execShell (and execCommands), it synchronized on class so that only one
+    // command executes at a time. This is a point-solution for getting demos to work.
+    // We sometimes see commands fail to execute because only part of the command-to-execute 
+    // is being used - i.e. it truncates the command.
+    //
+    // Alex says this is a known issue with Jsch. Suggestion is to either use sshj (as is used
+    // in jclouds), or to just use the jclouds commands directly.
+    
     private static final Logger log = LoggerFactory.getLogger(SshJschTool.class)
     
 	static {
@@ -151,59 +160,69 @@ public class SshJschTool {
      *  
      */
     public int execShell(Map properties=[:], List<String> commands, Map env=[:]) {
-        assertConnected()
-        ChannelShell channel=session.openChannel("shell");
-        lastChannel = channel
-        if (properties.err) {
-        	channel.setExtOutputStream(properties.err, true)
-        }
-		OutputStream echo = null;
-        if (properties.echo) {
-        	echo = properties.echo
-        }
-        if (properties.out) {
-            channel.setOutputStream(properties.out, true)
-			if (!properties.err) 
-        		channel.setExtOutputStream(properties.out, true)
-        }
-		//TODO would rather not have this, but funny things might happen
-        //(especially if running multiple scripts simulatenously?) if it's too low
-        //(although for the most part this doesn't apply because we run a single command with commas
-        long pause = properties.pause ?: 500
-
-        def allCmds = []
-        //using the -e tell bash to end the script as soon as one of the statements returns a non zero value.
-        allCmds.add "exec bash -e"
-        allCmds.addAll env.collect { String key, String value ->
-			def ve = value.replaceAll("\\\"", "\\\\\\\"");
-			"export $key=\"${ve}\"" }
-        allCmds.addAll commands
-		//explicit exit, in case it wasn't in the script above, because we run in blocking interactive mode
-        allCmds.add 'exit $?'
-
-        PipedOutputStream out = new PipedOutputStream()
-        channel.setInputStream new PipedInputStream(out)
-        channel.connect()
-
-        try {
-            allCmds.each {
-                byte[] data = (it+"\n").getBytes("UTF-8")
-                if (echo) echo.write(data);
-                out.write(data)
-                Thread.sleep pause
+        synchronized (SshJschTool.class) {
+            assertConnected()
+            ChannelShell channel=session.openChannel("shell");
+            lastChannel = channel
+            PipedOutputStream out = null
+            
+            try {
+                if (properties.err) {
+                	channel.setExtOutputStream(properties.err, true)
+                }
+        		OutputStream echo = null;
+                if (properties.echo) {
+                	echo = properties.echo
+                }
+                if (properties.out) {
+                    channel.setOutputStream(properties.out, true)
+        			if (!properties.err) 
+                		channel.setExtOutputStream(properties.out, true)
+                }
+        		//TODO would rather not have this, but funny things might happen
+                //(especially if running multiple scripts simulatenously?) if it's too low
+                //(although for the most part this doesn't apply because we run a single command with commas
+                long pause = properties.pause ?: 2000
+        
+                def allCmds = []
+                //using the -e tell bash to end the script as soon as one of the statements returns a non zero value.
+                allCmds.add "exec bash -e"
+                allCmds.addAll env.collect { String key, String value ->
+        			def ve = value.replaceAll("\\\"", "\\\\\\\"");
+        			"export $key=\"${ve}\"" }
+                allCmds.addAll commands
+        		//explicit exit, in case it wasn't in the script above, because we run in blocking interactive mode
+                allCmds.add 'exit $?'
+        
+                out = new PipedOutputStream()
+                channel.setInputStream new PipedInputStream(out, 32768)
+                channel.connect()
+        
+                try {
+                    allCmds.each {
+                        byte[] data = (it+"\n").getBytes("UTF-8")
+                        if (echo) echo.write(data);
+                        out.write(data)
+                        out.flush()
+                        Thread.sleep pause
+                    }
+                } catch (IOException ioe) {
+        			if (channel.getExitStatus()!=-1)
+                    	if (log.isDebugEnabled()) log.debug "Caught an IOException ({}) - the script has probably exited early", ioe.message
+        			else
+        				log.warn "Caught an IOException ({}) - the script may have exited early", ioe.message
+                }
+        
+                if (properties.block==null || properties.block) {
+                    block(channel)
+                }
+        
+                channel.getExitStatus()
+            } finally {
+                if (out != null) out.close()
+                channel.disconnect()
             }
-        } catch (IOException ioe) {
-			if (channel.getExitStatus()!=-1)
-            	if (log.isDebugEnabled()) log.debug "Caught an IOException ({}) - the script has probably exited early", ioe.message
-			else
-				log.warn "Caught an IOException ({}) - the script may have exited early", ioe.message
         }
-
-        if (properties.block==null || properties.block) {
-            block(channel)
-        }
-
-        channel.getExitStatus()
     }
 
     /** convenience for the last channel used, in case it is needed */
@@ -221,28 +240,30 @@ public class SshJschTool {
      * returns exit status (if blocking)
      */
     public int execCommands(Map properties=[:], List<String> commands, Map env=[:]) {
-        assertConnected()
-        ChannelExec channel=session.openChannel("exec");
-        lastChannel = channel;
-        if (properties.out) {
-            channel.setOutputStream(properties.out, true)
+        synchronized (SshJschTool.class) {
+            assertConnected()
+            ChannelExec channel=session.openChannel("exec");
+            lastChannel = channel;
+            if (properties.out) {
+                channel.setOutputStream(properties.out, true)
+            }
+            if (properties.err) {
+                channel.setErrStream(properties.err, true)
+            }
+            String separator = properties.separator ?: "; "
+            StringBuffer run = []
+            env.each { key, value -> run.append("export $key=\"$value\"").append(separator) }
+            commands.each { run.append(it).append(separator) }
+            if (log.isTraceEnabled()) log.trace "Running command {}", run.toString()
+            channel.setCommand  run.toString()
+    
+            channel.connect()
+            if (properties.block==null || properties.block) {
+                block(channel)
+            }
+    
+            channel.getExitStatus()
         }
-        if (properties.err) {
-            channel.setErrStream(properties.err, true)
-        }
-        String separator = properties.separator ?: "; "
-        StringBuffer run = []
-        env.each { key, value -> run.append("export $key=\"$value\"").append(separator) }
-        commands.each { run.append(it).append(separator) }
-        if (log.isTraceEnabled()) log.trace "Running command {}", run.toString()
-        channel.setCommand  run.toString()
-
-        channel.connect()
-        if (properties.block==null || properties.block) {
-            block(channel)
-        }
-
-        channel.getExitStatus()
     }
 
 

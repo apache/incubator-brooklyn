@@ -29,13 +29,17 @@ public class WebAppRunner {
     
     @SetFromFlag
     int port=8081;
+    
     @SetFromFlag
     private String war=BROOKLYN_WAR_URL;
-    @SetFromFlag
+    
     /** map of context-prefix to file */
+    @SetFromFlag
     Map<String,String> wars=[:];
+    
     @SetFromFlag
     Map<String,Object> attributes=[:];
+    
     ManagementContext managementContext;
 
     /** accepts flags:  port, 

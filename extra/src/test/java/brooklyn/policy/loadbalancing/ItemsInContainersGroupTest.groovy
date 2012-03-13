@@ -47,6 +47,21 @@ public class ItemsInContainersGroupTest {
     }
 
     @Test
+    public void testFilterIsAppliedToItems() throws Exception {
+        itemGroup.stop()
+        app.managementContext.unmanage(itemGroup)
+        
+        itemGroup = new ItemsInContainersGroup([itemFilter:{it.displayName == "2"}], app)
+        itemGroup.setContainers(containerGroup)
+        
+        MockContainerEntity containerIn = newContainer(app, "A", "ingroup")
+        MockItemEntity item1 = newItem(app, containerIn, "1")
+        MockItemEntity item2 = newItem(app, containerIn, "2")
+        
+        assertItemsEventually(item2) // does not include item1
+    }
+
+    @Test
     public void testItemsInOtherContainersIgnored() throws Exception {
         MockContainerEntity containerOut = newContainer(app, "A", "outgroup")
         MockItemEntity item1 = newItem(app, containerOut, "1")

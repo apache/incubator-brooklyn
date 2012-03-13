@@ -102,6 +102,22 @@ public class FollowTheSunModelTest {
     }
     
     @Test
+    public void testItemMovedWillUpdateLocationUsage() throws Exception {
+        model.onContainerAdded(container1, loc1);
+        model.onContainerAdded(container2, loc2);
+        model.onItemAdded(item1, container1, false);
+        model.onItemAdded(item2, container2, false);
+        model.onItemUsageUpdated(item2, ImmutableMap.of(item1, 12d));
+        
+        model.onItemMoved(item1, container2);
+
+        assertEquals(model.getDirectSendsToItemByLocation(),
+                ImmutableMap.of(item2, ImmutableMap.of(loc2, 12d)));
+        assertEquals(model.getItemContainer(item1), container2);
+        assertEquals(model.getItemLocation(item1), loc2);
+    }
+    
+    @Test
     public void testItemAddedWithNoContainer() throws Exception {
         model.onItemAdded(item1, null, true);
 

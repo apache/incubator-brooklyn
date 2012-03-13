@@ -38,7 +38,7 @@ public abstract class JavaWebAppSoftwareProcess extends SoftwareProcessEntity im
 		def rootWar = getConfig(ROOT_WAR);
 		if (rootWar) driver.deploy(rootWar, "ROOT.war")
 		
-		def namedWars = getConfig(NAMED_WARS, []);
+		def namedWars = getConfig(NAMED_DEPLOYMENTS, []);
 		namedWars.each { String it ->
 			String name = it.substring(it.lastIndexOf('/')+1);
 			driver.deploy(it, name)
@@ -75,8 +75,7 @@ public abstract class JavaWebAppSshDriver extends JavaStartStopSshDriver {
         entity.setAttribute(WebAppService.ROOT_URL, "http://${hostname}:${httpPort}/")
         super.start();
     }
-        
-	protected abstract String getDefaultVersion();
+
 	protected abstract String getDeploySubdir();
 	
 	public void deploy(File f, String targetName=null) {

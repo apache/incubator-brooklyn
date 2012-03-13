@@ -39,8 +39,12 @@ public class DynamicGroup extends AbstractGroup {
         }
     }
     
-    void setEntityFilter(Closure entityFilter) {
-        this.entityFilter = entityFilter
+    void setEntityFilter(Predicate<Entity> filter) {
+        setEntityFilter({ Entity e -> filter.apply(e) })
+    }
+    
+    void setEntityFilter(Closure filter) {
+        this.entityFilter = filter
         rescanEntities()
     }
     

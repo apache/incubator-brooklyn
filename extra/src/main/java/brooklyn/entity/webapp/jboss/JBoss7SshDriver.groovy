@@ -45,9 +45,6 @@ class JBoss7SshDriver extends JavaWebAppSshDriver {
         super(entity, machine)
     }
 
-    @Override @Deprecated
-	protected String getDefaultVersion() { return "7.0.0.Final" }
-    
 	protected String getLogFileLocation() { "${runDir}/${SERVER_TYPE}/log/server.log" }
 	protected String getDeploySubdir() { "${SERVER_TYPE}/deployments" }
 	protected Integer getManagementPort() { entity.getAttribute(JBoss7Server.MANAGEMENT_PORT) }

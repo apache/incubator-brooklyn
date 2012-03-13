@@ -7,6 +7,8 @@ import java.util.Map.Entry
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import com.google.common.collect.ImmutableMap
+
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.Sensor
@@ -22,8 +24,13 @@ public abstract class AbstractAggregatingEnricher<S,T> extends AbstractEnricher 
     Sensor<S> source
     protected Sensor<T> target
     protected S defaultValue
-    
-    protected Map<Entity, S> values = new HashMap<Entity, S>()
+
+    /**
+     * Users of values should either on it synchronize when iterating over its entries or use
+     * copyOfValues to obtain an immutable copy of the map.
+     */
+    // We use a synchronizedMap over a ConcurrentHashMap for entities that store null values.
+    protected Map<Entity, S> values = Collections.synchronizedMap(new LinkedHashMap<Entity, S>())
     
     public AbstractAggregatingEnricher(List<Entity> producers, Sensor<S> source, Sensor<T> target, S defaultValue=null) {
         for (Entity producer : producers) { values.put(producer, defaultValue) }
@@ -44,8 +51,16 @@ public abstract class AbstractAggregatingEnricher<S,T> extends AbstractEnricher 
         values.remove(producer)
     }
     
+    protected Map<Entity, S> copyOfValues() {
+        synchronized (values) {
+            return ImmutableMap.copyOf(values)
+        }
+    }
+    
     public void setEntity(EntityLocal entity) {
         super.setEntity(entity)
-        for (Entry<Entity, S> entry : values) { subscribe(entry.getKey(), source, this) }
+        for (Entry<Entity, S> entry : copyOfValues()) {
+            subscribe(entry.getKey(), source, this)
+        }
     }
 }

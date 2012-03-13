@@ -12,6 +12,7 @@ import brooklyn.entity.basic.DynamicGroup
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
+import brooklyn.util.flags.SetFromFlag
 
 /**
  * A group of items that are contained within a given (dynamically changing) set of containers.
@@ -30,6 +31,10 @@ public class ItemsInContainersGroup extends DynamicGroup {
 
     private static final Logger LOG = LoggerFactory.getLogger(ItemsInContainersGroup)
     
+    // FIXME Can't set default value in fiel declaration, because super sets it before this class initializes the field values!
+    @SetFromFlag
+    Closure itemFilter
+
     private Group containerGroup
     
     private final SensorEventListener<?> eventHandler = new SensorEventListener<Object>() {
@@ -54,9 +59,10 @@ public class ItemsInContainersGroup extends DynamicGroup {
         }
     }
     
-    public ItemsInContainersGroup(Map properties = [:], Entity owner = null) {
-        super(properties, owner)
+    public ItemsInContainersGroup(Map props = [:], Entity owner = null) {
+        super(props, owner)
         setEntityFilter( {Entity e -> return acceptsEntity(e) } )
+        if (itemFilter == null) itemFilter = {true}
     }
 
     boolean acceptsEntity(Entity e) {
@@ -67,7 +73,7 @@ public class ItemsInContainersGroup extends DynamicGroup {
     }
 
     boolean acceptsItem(Movable e, BalanceableContainer c) {
-        return (containerGroup != null && c != null) ? containerGroup.hasMember((Entity)c) : false
+        return (containerGroup != null && c != null) ? itemFilter.call(e) && containerGroup.hasMember((Entity)c) : false
     }
 
     public void setContainers(Group containerGroup) {

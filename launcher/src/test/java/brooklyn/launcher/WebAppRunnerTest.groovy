@@ -47,7 +47,6 @@ public class WebAppRunnerTest {
         String contents;
         executeUntilSucceeds(timeout:TIMEOUT_MS, maxAttempts:50) {
             contents = new URL(url).openStream().getText();
-//            println "contents: "+contents
             assertTrue(contents!=null && contents.length()>0)
         }
         for (String text: phrases) {

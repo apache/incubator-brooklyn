@@ -10,12 +10,14 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.Entity;
 import brooklyn.location.Location;
+import brooklyn.policy.loadbalancing.Movable;
 
 import com.google.common.collect.Iterables;
 
 // TODO: extract interface
-public class FollowTheSunStrategy<ContainerType, ItemType> {
+public class FollowTheSunStrategy<ContainerType extends Entity, ItemType extends Entity & Movable> {
     
     // This is a modified version of the InterGeographyLatencyPolicy (aka Follow-The-Sun) policy from Monterey v3.
     
@@ -114,7 +116,8 @@ public class FollowTheSunStrategy<ContainerType, ItemType> {
                             //shouldn't happen
                             LOG.warn("POLICY "+name+" detected "+itemName+" should move to "+optimalContainerInHighest+" ("+highestMsgRate+" of "+total+" msgs/sec) but it is already there with "+current+" msgs/sec");
                         } else {
-                            model.moveItem(item, optimalContainerInHighest);
+                            item.move(optimalContainerInHighest);
+                            model.onItemMoved(item, optimalContainerInHighest);
                         }
                     } catch (Exception e) {
                         LOG.warn("POLICY "+name+" detected "+itemName+" should be on "+optimalContainerInHighest+", but can't move it: "+e, e);
