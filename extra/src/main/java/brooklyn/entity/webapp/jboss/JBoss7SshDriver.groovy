@@ -39,7 +39,7 @@ class JBoss7SshDriver extends JavaWebAppSshDriver {
 	 */
 	
     public static final String SERVER_TYPE = "standalone"
-    private static final String BROOKLYN_JBOSS_CONFIG_FILENAME = "standalone-brooklyn.xml"
+    private static final String CONFIG_FILE = "standalone-brooklyn.xml"
     
     public JBoss7SshDriver(JBoss7Server entity, SshMachineLocation machine) {
         super(entity, machine)
@@ -80,17 +80,19 @@ class JBoss7SshDriver extends JavaWebAppSshDriver {
 			body.append(
 				"cp -r ${installDir}/jboss-as-${version}/${SERVER_TYPE} . || exit \$!",
 				"cd ${runDir}/${SERVER_TYPE}/configuration/",
-				"cp standalone.xml $BROOKLYN_JBOSS_CONFIG_FILENAME",
-				"sed -i.bk 's/8080/${httpPort}/' $BROOKLYN_JBOSS_CONFIG_FILENAME",
-				"sed -i.bk 's/9990/${managementPort}/' $BROOKLYN_JBOSS_CONFIG_FILENAME",
-				"sed -i.bk 's/enable-welcome-root=\"true\"/enable-welcome-root=\"false\"/' $BROOKLYN_JBOSS_CONFIG_FILENAME",
-				
+				"cp standalone.xml $CONFIG_FILE",
+				"sed -i.bk 's/8080/${httpPort}/' $CONFIG_FILE",
+				"sed -i.bk 's/9990/${managementPort}/' $CONFIG_FILE",
+                "sed -i.bk 's/enable-welcome-root=\"true\"/enable-welcome-root=\"false\"/' $CONFIG_FILE",
+
                 // Disable Management security (!) by deleting the security-realm attribute
-                "sed -i.bk 's/http-interface security-realm=\"ManagementRealm\"/http-interface/' $BROOKLYN_JBOSS_CONFIG_FILENAME",
+                "sed -i.bk 's/http-interface security-realm=\"ManagementRealm\"/http-interface/' $CONFIG_FILE",
+
+                // Increase deployment timeout to ten minutes
+                "sed -i.bk 's/\\(path=\"deployments\"\\)/\\1 deployment-timeout=\"600\"/' $CONFIG_FILE",
 
                 // TODO: This sed is no longer applicable in 7.1.1.
-				"sed -i.bk 's/inet-address value=\"127.0.0.1\"/any-address/' $BROOKLYN_JBOSS_CONFIG_FILENAME",
-				"sed -i.bk 's/\\(path=\"deployments\"\\)/\\1 deployment-timeout=\"600\"/' $BROOKLYN_JBOSS_CONFIG_FILENAME"
+				"sed -i.bk 's/inet-address value=\"127.0.0.1\"/any-address/' $CONFIG_FILE"
 			).execute();
 		
 		entity.deployInitialWars()
@@ -101,7 +103,7 @@ class JBoss7SshDriver extends JavaWebAppSshDriver {
 		newScript(LAUNCHING, usePidFile:true).
 			body.append(
 				"$installDir/jboss-as-${version}/bin/${SERVER_TYPE}.sh "+
-					"--server-config $BROOKLYN_JBOSS_CONFIG_FILENAME "+
+					"--server-config $CONFIG_FILE "+
 					"-Djboss.server.base.dir=$runDir/$SERVER_TYPE " + 
                 	"\"-Djboss.server.base.url=file://$runDir/$SERVER_TYPE\" " +
 					"-Djava.net.preferIPv4Stack=true "+
