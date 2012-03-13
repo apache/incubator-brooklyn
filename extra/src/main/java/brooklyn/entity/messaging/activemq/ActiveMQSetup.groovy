@@ -108,6 +108,8 @@ public class ActiveMQSetup extends SshBasedJavaAppSetup {
             "sed -i.bk 's/broker /broker useJmx=\"true\" /g' conf/activemq.xml",
             "sed -i.bk 's/managementContext createConnector=\"false\"/managementContext connectorPort=\"${jmxPort}\"/g' conf/activemq.xml",
             "sed -i.bk 's/tcp:\\/\\/0.0.0.0:61616\"/tcp:\\/\\/0.0.0.0:${openWirePort}\"/g' conf/activemq.xml",
+            //disable persistence (this should be a flag -- but it seems to have no effect, despite ):
+//            "sed -i.bk 's/broker /broker persistent=\"false\" /g' conf/activemq.xml",
         ]
         return script
     }

@@ -117,9 +117,9 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
             // the context of the class that is invoking the closure (maybe related to it being a static class member?)
             final Logger logger = DynamicCluster.logger
             if (delta != 0) {
-                logger.info "Resize from {} to {}; delta = {}", currentSize, desiredSize, delta
+                logger.info "Resize {} from {} to {}; delta = {}", this, currentSize, desiredSize, delta
             } else {
-                if (logger.isDebugEnabled()) logger.debug "Resize no-op from {} to {}", currentSize, desiredSize
+                if (logger.isDebugEnabled()) logger.debug "Resize no-op {} from {} to {}", this, currentSize, desiredSize
             }
     
             Collection<Entity> addedEntities = []
