@@ -1,7 +1,30 @@
 package brooklyn.entity.database.mysql
 
-class MySqlNode {
+import brooklyn.entity.Entity
+import brooklyn.entity.basic.SoftwareProcessEntity
+import brooklyn.entity.basic.lifecycle.StartStopDriver
+import brooklyn.event.basic.BasicConfigKey
+import brooklyn.location.basic.SshMachineLocation
+import brooklyn.util.flags.SetFromFlag
 
-    //http://dev.mysql.com/get/Downloads/MySQL-5.5/mysql-5.5.13-osx10.6-x86_64.tar.gz/from/http://gd.tuwien.ac.at/db/mysql/
+public class MySqlNode extends SoftwareProcessEntity {
+
+    @SetFromFlag("version")
+    public static final BasicConfigKey<String> SUGGESTED_VERSION = [SoftwareProcessEntity.SUGGESTED_VERSION, "5.5.21"]
+
+    public MySqlNode(Entity owner) { this([:], owner) }
+    public MySqlNode(Map flags=[:], Entity owner=null) {
+        super(flags, owner)
+    }
+
+    @Override
+    protected StartStopDriver newDriver(SshMachineLocation loc) {
+        return new MySqlSshDriver(this, loc);
+    }
+
+    protected void connectSensors() {
+        super.connectSensors();
+        //TODO sensors
+    }
     
 }
