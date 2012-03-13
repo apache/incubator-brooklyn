@@ -3,13 +3,13 @@ package brooklyn.location.basic
 import java.util.Collection
 import java.util.Map
 
-import com.google.common.collect.Iterables;
-
 import brooklyn.location.MachineLocation
 import brooklyn.location.MachineProvisioningLocation
+import brooklyn.location.OsDetails
 import brooklyn.location.PortRange
-import brooklyn.location.PortSupplier;
-import brooklyn.util.CollectionUtils;
+import brooklyn.location.PortSupplier
+
+import com.google.common.collect.Iterables
 
 
 /** Location for use in dev/test, defining custom start/stop support, and/or tweaking the ports which are permitted to be available
@@ -63,5 +63,10 @@ class SimulatedLocation extends AbstractLocation implements MachineProvisioningL
     public synchronized void setPermittedPorts(Iterable<Integer> ports) {
         permittedPorts  = ports;
     }
-        
+
+    @Override
+    public OsDetails getOsDetails() {
+        return BasicOsDetails.Factory.ANONYMOUS_LINUX;
+    }
+
 }

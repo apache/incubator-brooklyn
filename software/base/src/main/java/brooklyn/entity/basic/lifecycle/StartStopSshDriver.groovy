@@ -1,18 +1,18 @@
 package brooklyn.entity.basic.lifecycle;
 
-import java.io.File;
+import java.io.File
 import java.util.List
-import java.util.Map;
-import java.util.Set;
+import java.util.Map
+import java.util.Set
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.EntityLocal
-import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.internal.StreamGobbler;
+import brooklyn.util.internal.StreamGobbler
 
 public abstract class StartStopSshDriver extends AbstractStartStopDriver implements ScriptRunner {
 
@@ -28,7 +28,12 @@ public abstract class StartStopSshDriver extends AbstractStartStopDriver impleme
 
     @Deprecated // Set default on ConfigKey in entity? Rather than overriding it here and not telling the entity what value was chosen!
 	protected String getDefaultVersion() { NO_VERSION_INFO }
-	
+
+    /** returns location (tighten type, since we know it is an ssh machine location here) */	
+    public SshMachineLocation getLocation() {
+        return super.getLocation();
+    }
+    
     protected String getVersion() {
 		entity.getConfig(SoftwareProcessEntity.SUGGESTED_VERSION) ?: getDefaultVersion()
 	}
@@ -89,7 +94,7 @@ public abstract class StartStopSshDriver extends AbstractStartStopDriver impleme
 	protected final static String CHECK_RUNNING = "check-running";
 	protected final static String STOPPING = "stopping";
 
-	/** sets up a script for the given phase
+	/** sets up a script for the given phase, including default wrapper commands
 	 * (e.g. INSTALLING, LAUNCHING, etc)
 	 * <p>
 	 * flags supported include:

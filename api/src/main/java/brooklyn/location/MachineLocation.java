@@ -15,4 +15,6 @@ public interface MachineLocation extends Location {
      */
     InetAddress getAddress();
     
+    OsDetails getOsDetails();
+    
 }
