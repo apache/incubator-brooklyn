@@ -26,7 +26,7 @@ public class JBoss7Server extends JavaWebAppSoftwareProcess implements JavaWebAp
 	public static final Logger log = LoggerFactory.getLogger(JBoss7Server.class)
 	
     @SetFromFlag("version")
-    public static final BasicConfigKey<String> SUGGESTED_VERSION = [SoftwareProcessEntity.SUGGESTED_VERSION, "7.0.0.Final"]
+    public static final BasicConfigKey<String> SUGGESTED_VERSION = [SoftwareProcessEntity.SUGGESTED_VERSION, "7.1.1.Final"]
 
     @SetFromFlag("managementPort")
     public static final PortAttributeSensorAndConfigKey MANAGEMENT_PORT = 

@@ -51,7 +51,7 @@ class JBoss7SshDriver extends JavaWebAppSshDriver {
 	
 	@Override
 	public void install() {
-        String url = "http://download.jboss.org/jbossas/7.0/jboss-as-${version}/jboss-as-${version}.tar.gz"
+        String url = "http://download.jboss.org/jbossas/7.1/jboss-as-${version}/jboss-as-${version}.tar.gz"
         String saveAs  = "jboss-as-distribution-${version}.tar.gz"
 		newScript(INSTALLING).
 			failOnNonZeroResultCode().
@@ -61,7 +61,18 @@ class JBoss7SshDriver extends JavaWebAppSshDriver {
 			).execute();
 	}
 
-	// TODO: Too much sed! The last one is especially nasty.
+    /**
+     * AS7 config notes and TODOs: 
+     *  We're using the http management interface on port managementPort
+     *  We're not using any JMX.
+     *   - AS 7 simply doesn't boot with Sun JMX enabled (https://issues.jboss.org/browse/JBAS-7427)
+     *   - 7.1 onwards uses Remoting 3, which we haven't configured
+     *  We're completely disabling security on the management interface.
+     *   - In the future we probably want to use the as7/bin/add-user.sh script using config keys for user and password
+     *   - Or we could create our own security realm and use that.
+     *  We disable the root welcome page, since we can't deploy our own root otherwise
+     *  
+     */
 	@Override
 	public void customize() {
 		PortPreconditions.checkPortsValid(httpPort:httpPort, managementPort:managementPort);
@@ -72,13 +83,12 @@ class JBoss7SshDriver extends JavaWebAppSshDriver {
 				"cp standalone.xml $BROOKLYN_JBOSS_CONFIG_FILENAME",
 				"sed -i.bk 's/8080/${httpPort}/' $BROOKLYN_JBOSS_CONFIG_FILENAME",
 				"sed -i.bk 's/9990/${managementPort}/' $BROOKLYN_JBOSS_CONFIG_FILENAME",
-				
-				//jmx not used; value -1 breaks it
-//				"sed -i.bk 's/1090/${jmxPort}/' $brooklynConfig",  
-				
-				//disable the welcome root so we can deploy our own ROOT (not allowed otherwise!)
 				"sed -i.bk 's/enable-welcome-root=\"true\"/enable-welcome-root=\"false\"/' $BROOKLYN_JBOSS_CONFIG_FILENAME",
 				
+                // Disable Management security (!) by deleting the security-realm attribute
+                "sed -i.bk 's/http-interface security-realm=\"ManagementRealm\"/http-interface/' $BROOKLYN_JBOSS_CONFIG_FILENAME",
+
+                // TODO: This sed is no longer applicable in 7.1.1.
 				"sed -i.bk 's/inet-address value=\"127.0.0.1\"/any-address/' $BROOKLYN_JBOSS_CONFIG_FILENAME",
 				"sed -i.bk 's/\\(path=\"deployments\"\\)/\\1 deployment-timeout=\"600\"/' $BROOKLYN_JBOSS_CONFIG_FILENAME"
 			).execute();
