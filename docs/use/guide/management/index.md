@@ -78,7 +78,10 @@ The dashboard is a high level overview of the state of the application:
 
 **Detail**
 
-The Detail view gives an in-depth view of the application and its entities. Child-parent relationships between entities are navigable using the entity tree. Selecting a specific entity allows you to access detailed information about that entity.
+The Detail view gives an in-depth view of the application and its entities. 
+Child-parent relationships between entities are navigable using the entity tree;
+each entity is shown with its children (or, in the case of childless group entities, the members). 
+Selecting a specific entity allows you to access detailed information about that entity.
 
 [![Screenshot of the Webconsole Detail](webconsole-detail-w400.png "Screenshot of the Webconsole Detail")](webconsole-detail.png)
 
