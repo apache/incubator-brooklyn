@@ -294,16 +294,16 @@ public class WebAppIntegrationTest {
      * <li>JBoss can deploy Seam travel
      * </ul>
      */
-    @DataProvider(name = "entitiesWithWARAndURL")
-    public Object[][] entitiesWithWAR() {
+    @DataProvider(name = "entitiesWithWarAndURL")
+    public Object[][] entitiesWithWar() {
         basicEntities().collect {
             [   it[0],
                 "hello-world.war",
                 "hello-world/",
-				""
+				"" // no sub-page path
             ]
         } + [
-            [   new TomcatServer(owner:application, httpPort:DEFAULT_HTTP_PORT), 
+            [   new TomcatServer(owner:newTestApplication(), httpPort:DEFAULT_HTTP_PORT), 
                 "swf-booking-mvc.war",
                 "swf-booking-mvc/",
 				"spring/intro",
@@ -323,7 +323,7 @@ public class WebAppIntegrationTest {
     /**
      * Tests given entity can deploy the given war.  Checks given httpURL to confirm success.
      */
-    @Test(groups = "Integration", dataProvider = "entitiesWithWARAndURL")
+    @Test(groups = "Integration", dataProvider = "entitiesWithWarAndURL")
     public void warDeployments(SoftwareProcessEntity entity, String war, 
 			String urlSubPathToWebApp, String urlSubPathToPageToQuery) {
         this.entity = entity
@@ -340,7 +340,7 @@ public class WebAppIntegrationTest {
         }
     }
 	
-    @Test(groups = "Integration", dataProvider = "entitiesWithWARAndURL")
+    @Test(groups = "Integration", dataProvider = "entitiesWithWarAndURL")
     public void warDeploymentsNamed(SoftwareProcessEntity entity, String war, 
 			String urlSubPathToWebApp, String urlSubPathToPageToQuery) {
         this.entity = entity
