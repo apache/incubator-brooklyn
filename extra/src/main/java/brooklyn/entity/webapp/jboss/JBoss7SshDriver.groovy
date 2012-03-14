@@ -3,12 +3,12 @@ package brooklyn.entity.webapp.jboss
 import java.util.List
 import java.util.Map
 
-import brooklyn.entity.basic.Attributes
+import com.google.common.base.Preconditions
+
+import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import brooklyn.entity.webapp.JavaWebAppSshDriver
 import brooklyn.entity.webapp.PortPreconditions
-import brooklyn.entity.webapp.WebAppService
-import brooklyn.location.PortRange;
 import brooklyn.location.basic.SshMachineLocation
 
 
@@ -71,11 +71,13 @@ class JBoss7SshDriver extends JavaWebAppSshDriver {
      *   - In the future we probably want to use the as7/bin/add-user.sh script using config keys for user and password
      *   - Or we could create our own security realm and use that.
      *  We disable the root welcome page, since we can't deploy our own root otherwise
-     *  
+     *  We bind all interfaces to entity.hostname, rather than 127.0.0.1.
      */
 	@Override
 	public void customize() {
 		PortPreconditions.checkPortsValid(httpPort:httpPort, managementPort:managementPort);
+        String hostname = entity.getAttribute(SoftwareProcessEntity.HOSTNAME)
+        Preconditions.checkNotNull(hostname, "AS 7 entity must set hostname otherwise server will only be visible on localhost")
 		newScript(CUSTOMIZING).
 			body.append(
 				"cp -r ${installDir}/jboss-as-${version}/${SERVER_TYPE} . || exit \$!",
@@ -91,8 +93,8 @@ class JBoss7SshDriver extends JavaWebAppSshDriver {
                 // Increase deployment timeout to ten minutes
                 "sed -i.bk 's/\\(path=\"deployments\"\\)/\\1 deployment-timeout=\"600\"/' $CONFIG_FILE",
 
-                // TODO: This sed is no longer applicable in 7.1.1.
-				"sed -i.bk 's/inet-address value=\"127.0.0.1\"/any-address/' $CONFIG_FILE"
+                // Bind interfaces to entity hostname
+				"sed -i.bk 's/\\(inet-address value=.*\\)127.0.0.1/\\1$hostname/' $CONFIG_FILE"
 			).execute();
 		
 		entity.deployInitialWars()

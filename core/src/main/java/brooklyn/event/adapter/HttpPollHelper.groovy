@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.util.internal.StringEscapeUtils
 
-
 protected class HttpPollHelper extends AbstractPollHelper {
 	public static final Logger log = LoggerFactory.getLogger(HttpPollHelper.class);
 	
@@ -16,25 +15,32 @@ protected class HttpPollHelper extends AbstractPollHelper {
 		this.adapter = adapter;
 	}
 	
-	HttpURLConnection getConnection() {
+	private HttpURLConnection getConnection() {
 		if (adapter.isPost) throw new UnsupportedOperationException("when you need POST please implement it!")
 		String url = adapter.baseUrl;
 		if (adapter.urlVars) {
-			url += "?"+adapter.urlVars.collect({k,v -> StringEscapeUtils.escapeHttpUrl(k)+(v!=null?"="+StringEscapeUtils.escapeHttpUrl(v):"")}).join("&")
+			def args = adapter.urlVars.collect { k,v ->
+                StringEscapeUtils.escapeHttpUrl(k.toString()) +
+                    (v != null ? "=" + StringEscapeUtils.escapeHttpUrl(v.toString()) : "")
+			}
+            url += "?" + args.join("&")
 		}
+        log.info(url)
 		return new URL(url).openConnection()
 	}
 	
 	@Override
-	protected String getOptionalContextForErrors(AbstractSensorEvaluationContext response) { response?.content }
+	protected String getOptionalContextForErrors(AbstractSensorEvaluationContext response) {
+        response?.content
+    }
 	
 	@Override
 	AbstractSensorEvaluationContext executePollOnSuccess() {
-		if (log.isDebugEnabled()) log.debug "http polling for {} sensors at {}", adapter.entity, adapter.baseUrl+adapter.urlVars
+        if (log.isDebugEnabled()) log.debug "http polling for {} sensors at {}", adapter.entity, adapter.baseUrl+adapter.urlVars
 		HttpURLConnection connection = getConnection();
 		connection.connect()
 		def result = new HttpResponseContext(connection)
-		if (log.isDebugEnabled()) log.debug "http poll for {} got: {}", adapter.entity, result.content
+        if (log.isDebugEnabled()) log.debug "http poll for {} got: {}", adapter.entity, result.content
 		return result
 	}
 	

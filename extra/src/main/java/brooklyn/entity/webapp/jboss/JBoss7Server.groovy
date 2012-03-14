@@ -26,16 +26,16 @@ public class JBoss7Server extends JavaWebAppSoftwareProcess implements JavaWebAp
 	public static final Logger log = LoggerFactory.getLogger(JBoss7Server.class)
 	
     @SetFromFlag("version")
-    public static final BasicConfigKey<String> SUGGESTED_VERSION = [SoftwareProcessEntity.SUGGESTED_VERSION, "7.1.1.Final"]
+    public static final BasicConfigKey<String> SUGGESTED_VERSION =
+            [ SoftwareProcessEntity.SUGGESTED_VERSION, "7.1.1.Final" ]
 
     @SetFromFlag("managementPort")
     public static final PortAttributeSensorAndConfigKey MANAGEMENT_PORT = 
             [ "http.managementPort", "Management port", "9990+" ]
 
-    public static final BasicAttributeSensor<Integer> MANAGEMENT_STATUS =
+    private static final BasicAttributeSensor<Integer> MANAGEMENT_STATUS =
             [ Integer, "webapp.http.managementStatus", "HTTP response code for the management server" ]
-    
-			
+
     public JBoss7Server(Map flags=[:], Entity owner=null) {
         super(flags, owner)
     }
@@ -49,7 +49,7 @@ public class JBoss7Server extends JavaWebAppSoftwareProcess implements JavaWebAp
 		def http = sensorRegistry.register(
 			new HttpSensorAdapter("http://$host:$port/management/subsystem/web/connector/http/read-resource", 
                 period: 200*TimeUnit.MILLISECONDS).
-				vars("include-runtime":null) )
+				vars("include-runtime":true) )
 		
 		with(http) {
 			poll(MANAGEMENT_STATUS, { responseCode })
@@ -64,6 +64,8 @@ public class JBoss7Server extends JavaWebAppSoftwareProcess implements JavaWebAp
 		}
 	}
 
-    public JBoss7SshDriver newDriver(SshMachineLocation machine) { return new JBoss7SshDriver(this, machine) }
+    public JBoss7SshDriver newDriver(SshMachineLocation machine) {
+        return new JBoss7SshDriver(this, machine)
+    }
 
 }
