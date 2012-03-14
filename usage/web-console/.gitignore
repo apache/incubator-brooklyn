@@ -1,0 +1,5 @@
+target
+plugins
+stacktrace.log
+test-output/
+*.gsp

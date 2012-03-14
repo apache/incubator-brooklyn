@@ -1,0 +1,43 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>brooklyn-systems-hadoop</artifactId>
+	<packaging>bundle</packaging>
+	<name>Brooklyn Hadoop System Entities</name>
+	<description>
+		Brooklyn entities for Hadoop systems deployed using Whirr
+	</description>
+
+	<parent>
+		<groupId>brooklyn</groupId>
+		<artifactId>brooklyn-parent</artifactId>
+		<version>0.3.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
+		<relativePath>../../../pom.xml</relativePath>
+	</parent>
+
+	<dependencies>
+		<dependency>
+			<groupId>brooklyn</groupId>
+			<artifactId>brooklyn-systems-whirr</artifactId>
+            <version>${project.version}</version>
+		</dependency>
+        <dependency>
+            <groupId>org.apache.whirr</groupId>
+            <artifactId>whirr-hadoop</artifactId>
+            <version>${whirr.version}</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>brooklyn-test-support</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>brooklyn</groupId>
+            <artifactId>brooklyn-core</artifactId>
+            <version>${project.version}</version>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+	</dependencies>
+
+</project>

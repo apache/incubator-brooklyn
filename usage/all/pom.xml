@@ -1,0 +1,107 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>brooklyn-all</artifactId>
+    <packaging>jar</packaging>
+    <name>Brooklyn All Things</name>
+    <description>
+		Brooklyn entities, policies, web-console, and CLI launcher,
+        including a shaded jar for easy usage
+	</description>
+
+    <parent>
+        <groupId>brooklyn</groupId>
+        <artifactId>brooklyn-parent</artifactId>
+        <version>0.3.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>${slf4j.version}</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.jclouds</groupId>
+            <artifactId>jclouds-all</artifactId>
+            <version>${jclouds.version}</version>
+            <!-- bring in all jclouds-supported clouds -->
+        </dependency>
+        <dependency>
+            <groupId>org.apache.whirr</groupId>
+            <artifactId>whirr-cli</artifactId>
+            <version>${whirr.version}</version>
+            <!-- bring in all whirr services -->
+        </dependency>
+        
+        <dependency>
+            <groupId>brooklyn</groupId>
+            <artifactId>brooklyn-policy</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>brooklyn</groupId>
+            <artifactId>brooklyn-software-webapp</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>brooklyn</groupId>
+            <artifactId>brooklyn-software-messaging</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>brooklyn</groupId>
+            <artifactId>brooklyn-software-database</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>brooklyn</groupId>
+            <artifactId>brooklyn-software-osgi</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>brooklyn</groupId>
+            <artifactId>brooklyn-software-nosql</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>brooklyn</groupId>
+            <artifactId>brooklyn-systems-hadoop</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>brooklyn</groupId>
+            <artifactId>brooklyn-systems-openshift</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>brooklyn</groupId>
+            <artifactId>brooklyn-launcher</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+
+    <profiles>
+        <profile>
+            <activation>
+                <property>
+                    <name>!skipShade</name>
+                </property>
+            </activation>
+            <id>shade</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-shade-plugin</artifactId>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+</project>

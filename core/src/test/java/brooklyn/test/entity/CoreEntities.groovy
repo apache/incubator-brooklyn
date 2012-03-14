@@ -14,6 +14,7 @@ import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.Description
 import brooklyn.entity.basic.MethodEffector
+import brooklyn.entity.group.DynamicCluster
 import brooklyn.entity.trait.Startable
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEventListener
@@ -177,4 +178,27 @@ public class BlockingEntity extends TestEntity {
         if (shutdownLatch != null) shutdownLatch.await()
         super.stop()
     }
+}
+
+/**
+* Mock cluster entity for testing.
+*/
+public class TestCluster extends DynamicCluster {
+   public int size
+           
+   TestCluster(int initialSize) {
+       super(newEntity: {})
+       size = initialSize
+   }
+           
+   @Override
+   public Integer getCurrentSize() {
+       return size
+   }
+}
+
+public class NoopStartable implements Startable {
+   public void start(Collection loc) {}
+   public void stop() {}
+   public void restart() {}
 }
