@@ -1,10 +1,11 @@
-package brooklyn.util.internal;
+package brooklyn.util.internal
+
+import java.net.URLEncoder
 
 public class StringEscapeUtils {
 
 	public static String escapeHttpUrl(String url) {
-		return url.replaceAll(" ", "%20");
-		//TODO quite a few other things disallowed in URL
+        return URLEncoder.encode(url, "UTF-8")
 	}
 
 	public static String replaceAllNonRegex(String source, String pattern, String replacement) {
