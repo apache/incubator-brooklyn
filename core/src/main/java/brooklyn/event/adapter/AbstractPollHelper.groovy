@@ -94,4 +94,7 @@ public abstract class AbstractPollHelper {
 		}
 		return null
 	}
+    
+    public String toString() { super.toString()+"["+entity+"]" }
+    
 }
