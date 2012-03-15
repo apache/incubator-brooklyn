@@ -22,7 +22,7 @@ ROOT=$(cd $(dirname $0) && pwd)
 cd $ROOT
 
 if [ -z "$BROOKLYN_VERSION" ] ; then 
-  BROOKLYN_VERSION=0.3.0-SNAPSHOT   # BROOKLYN_VERSION
+  BROOKLYN_VERSION=0.4.0-SNAPSHOT   # BROOKLYN_VERSION
 fi
 
 if [[ -z "$JAVA_OPTS" ]] ; then
