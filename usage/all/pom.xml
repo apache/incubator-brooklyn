@@ -1,13 +1,15 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>brooklyn-all</artifactId>
     <packaging>jar</packaging>
+
+    <artifactId>brooklyn-all</artifactId>
+
     <name>Brooklyn All Things</name>
     <description>
-		Brooklyn entities, policies, web-console, and CLI launcher,
+        Brooklyn entities, policies, web-console, and CLI launcher,
         including a shaded jar for easy usage
-	</description>
+    </description>
 
     <parent>
         <groupId>brooklyn</groupId>
@@ -25,7 +27,7 @@
         </dependency>
         <dependency>
             <groupId>org.jclouds</groupId>
-            <artifactId>jclouds-all</artifactId>
+            <artifactId>jclouds-allcompute</artifactId>
             <version>${jclouds.version}</version>
             <!-- bring in all jclouds-supported clouds -->
         </dependency>

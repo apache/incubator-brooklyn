@@ -13,6 +13,8 @@ grails.project.dependency.resolution = {
 
         //have experimented excluding the following but it causes more problem that it's worth... sticking with log4j for now
         // 'grails-plugin-logging', 'log4j', 'junit', 'slf4j-api', 'slf4j-log4j12' 'jcl-over-slf4j', 'jul-to-slf4j'
+        //this has no effect; we exclude in the pom instead, that keeps the war a bit smaller
+	//excludes 'groovy-all', 'org.codehaus.groovy'
                      
         // following exclusions also recommended to resolve some sax / xml nasties
         // (which you may see if you add brooklyn-extra below and try grails run-app) ... but don't work 
@@ -33,20 +35,25 @@ grails.project.dependency.resolution = {
     }
     dependencies {
         // specify dependencies here under either 'build', 'compile', 'runtime', 'test' or 'provided' scopes eg.
-        compile 'brooklyn:brooklyn-api:'+appVersion, transitive:false 
-        compile 'brooklyn:brooklyn-core:'+appVersion, transitive:false
-        compile 'brooklyn:brooklyn-extra:'+appVersion, transitive:false
+//        test 'brooklyn:brooklyn-core:'+appVersion
+        test 'brooklyn:brooklyn-software-webapp:'+appVersion
         
         //instead of transitive:false the following might work better:
 //        excludes "org.codehaus.groovy","org.jclouds"
-        
-        
     }
+
+    // seems to do nothing? despite much documentation to the contrary
+//    defaultDependenciesProvided true
 }
 
+//this makes the war much leaner but is lacking org.springframework.web.filter.DelegatingFilterProxy,
+//and if we put that in the container it breaks when it tries to instantiate a g:render tag
+//solution is probably to make the war skinny as a post-processing step, and have ALL jars in the container
+/*
 if (Environment.current==Environment.DEVELOPMENT) {
-    // in "dev" environment build a small WAR (set by maven if skipShade is true)
+    // in "dev" environment build a small WAR (set by maven depending on build params)
     grails.war.dependencies = {
         fileset(dir: "${grailsSettings.baseDir}/lib") { }
     }
 }
+*/

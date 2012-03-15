@@ -290,7 +290,7 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-shade-plugin</artifactId>
-                    <version>1.4</version>
+                    <version>1.5</version>
                     <executions>
                         <execution>
                             <phase>package</phase>

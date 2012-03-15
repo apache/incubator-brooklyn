@@ -14,7 +14,7 @@
     <parent>
         <groupId>brooklyn</groupId>
         <artifactId>brooklyn-parent</artifactId>
-        <version>0.3.0-SNAPSHOT</version>
+        <version>0.3.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -25,8 +25,9 @@
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>brooklyn-extra</artifactId>
+            <artifactId>brooklyn-core</artifactId>
             <version>${project.version}</version>
+            <scope>test</scope>  <!-- exclude from war -->
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -37,14 +38,14 @@
         <dependency>
             <groupId>brooklyn</groupId>
             <artifactId>brooklyn-core</artifactId>
-            <version>${project.version}</version><!--$NO-MVN-MAN-VER$ -->
+            <version>${project.version}</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>brooklyn</groupId>
             <artifactId>brooklyn-software-webapp</artifactId>
-            <version>${project.version}</version><!--$NO-MVN-MAN-VER$ -->
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -53,6 +54,10 @@
             <artifactId>grails-bootstrap</artifactId>
             <version>${grails.version}</version>
             <exclusions>
+                <exclusion>
+                    <groupId>org.codehaus.groovy</groupId>
+                    <artifactId>groovy-all</artifactId>
+                </exclusion>
                 <exclusion>
                     <groupId>org.codehaus.gpars</groupId>
                     <artifactId>gpars</artifactId>
@@ -95,6 +100,10 @@
             <version>${grails.version}</version>
             <exclusions>
                 <exclusion>
+                    <groupId>org.codehaus.groovy</groupId>
+                    <artifactId>groovy-all</artifactId>
+                </exclusion>
+                <exclusion>
                     <groupId>org.grails</groupId>
                     <artifactId>grails-docs</artifactId>
                 </exclusion>
@@ -134,6 +143,10 @@
             <artifactId>grails-gorm</artifactId>
             <version>${grails.version}</version>
             <exclusions>
+                <exclusion>
+                    <groupId>org.codehaus.groovy</groupId>
+                    <artifactId>groovy-all</artifactId>
+                </exclusion>
                 <exclusion>
                     <groupId>org.apache.ant</groupId>
                     <artifactId>ant</artifactId>
@@ -175,6 +188,10 @@
             <version>${grails.version}</version>
             <scope>test</scope>
             <exclusions>
+                <exclusion>
+                    <groupId>org.codehaus.groovy</groupId>
+                    <artifactId>groovy-all</artifactId>
+                </exclusion>
                 <exclusion>
                     <groupId>org.grails</groupId>
                     <artifactId>grails-docs</artifactId>
@@ -254,13 +271,14 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
+            <!-- exclude from war -->
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
             <version>${slf4j.version}</version>
-            <!-- TODO not sure whether this should be included here or by higher-level project (it is included by tests) -->
-            <scope>runtime</scope>
+            <scope>runtime</scope>  <!-- TODO maybe test is better, to exclude from war? -->
             <optional>true</optional>
         </dependency>
 
@@ -353,14 +371,15 @@
         <profile>
             <activation>
                 <property>
-                    <name>skipShade</name>
+                    <name>buildFatWar</name>
                 </property>
             </activation>
-            <id>shade</id>
+            <id>fatWar</id>
             <build>
                 <plugins>
-                    <!-- with grails, for "skipShade", we set "development" env when invoking grails, which is read in BuildConfig 
-                        to make skinny war -->
+                    <!-- with grails, for "skipShade" like behaviour, we set "development" env when invoking grails, 
+                        which is read in BuildConfig to make skinny war; 
+                        or set "production" here to make fat war (including dependencies) -->
                     <plugin>
                         <groupId>org.grails</groupId>
                         <artifactId>grails-maven-plugin</artifactId>
@@ -375,7 +394,7 @@
                                     <goal>maven-war</goal>
                                 </goals>
                                 <configuration>
-                                    <env>development</env>
+                                    <env>production</env>
                                 </configuration>
                             </execution>
                         </executions>
@@ -409,7 +428,7 @@
                             <goal>maven-war</goal>
                         </goals>
                         <configuration>
-                            <env>production</env>
+                            <env>development</env>
                         </configuration>
                     </execution>
                     <execution>

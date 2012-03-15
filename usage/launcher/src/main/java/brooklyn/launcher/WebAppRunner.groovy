@@ -3,7 +3,6 @@ package brooklyn.launcher
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.HandlerList
 import org.eclipse.jetty.webapp.WebAppContext
-import org.jclouds.gogrid.options.GetServerListOptions;
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
