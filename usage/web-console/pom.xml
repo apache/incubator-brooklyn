@@ -444,6 +444,8 @@
                             <directory>.</directory>
                             <includes>
                                 <include>stacktrace.log</include>
+                                <include>brooklyn.log</include>
+                                <include>prodDb.*</include>
                             </includes>
                         </fileset>
                         <fileset>
