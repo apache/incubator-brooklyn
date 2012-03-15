@@ -9,7 +9,7 @@
 		<groupId>brooklyn</groupId>
 		<artifactId>brooklyn-parent</artifactId>
 		<version>0.4.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
-		<relativePath>../parent/pom.xml</relativePath>
+		<relativePath>../../pom.xml</relativePath>
 	</parent>
 
     <dependencies>
