@@ -99,23 +99,25 @@ public abstract class StartStopSshDriver extends AbstractStartStopDriver impleme
 	 */
 	protected ScriptHelper newScript(Map flags=[:], String phase) {
 		def s = new ScriptHelper(this, phase+" "+(entity?:this));
-		if (phase==INSTALLING) {
-			s.header.append(
-				'export INSTALL_DIR="'+installDir+'"',
-				'mkdir -p $INSTALL_DIR',
-				'cd $INSTALL_DIR',
-				'test -f BROOKLYN && exit 0',
-			).footer.append(
-				'date > $INSTALL_DIR/BROOKLYN'
-			)
-		}
-		if (phase in [CUSTOMIZING, LAUNCHING, CHECK_RUNNING, STOPPING]) {
-			s.header.append(
-				"export RUN_DIR=\"${runDir}\"",
-				'mkdir -p $RUN_DIR',
-				'cd $RUN_DIR'
-			)
-		}
+        if(!flags.nonStandardLayout){
+            if (phase==INSTALLING) {
+			    s.header.append(
+				    'export INSTALL_DIR="'+installDir+'"',
+				    'mkdir -p $INSTALL_DIR',
+				    'cd $INSTALL_DIR',
+				    'test -f BROOKLYN && exit 0',
+			    ).footer.append(
+				    'date > $INSTALL_DIR/BROOKLYN'
+			    )
+		    }
+		    if (phase in [CUSTOMIZING, LAUNCHING, CHECK_RUNNING, STOPPING]) {
+			    s.header.append(
+				    "export RUN_DIR=\"${runDir}\"",
+				    'mkdir -p $RUN_DIR',
+				    'cd $RUN_DIR'
+			    )
+		    }
+        }
 		
 		if (phase in [CUSTOMIZING])
 			s.skipIfBodyEmpty()

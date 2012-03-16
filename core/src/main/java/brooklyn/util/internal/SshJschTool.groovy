@@ -47,6 +47,7 @@ public class SshJschTool {
 	}
        
     String host
+    String password
     String user = System.getProperty('user.name')
     int port = 22
     List<String> keyFiles = ['~/.ssh/id_dsa','~/.ssh/id_rsa']
@@ -76,6 +77,11 @@ public class SshJschTool {
         if (properties.keyFiles) {
             Preconditions.checkArgument properties.keyFiles instanceof Collection, "keyFiles value must be a Collection"
             keyFiles = properties.remove('keyFiles')
+        }
+
+        if(properties.password){
+            Preconditions.checkArgument properties.password instanceof String, "password value must be a string"
+            user = properties.remove('password')
         }
 
         if (properties.publicKey && properties.privateKey) {
@@ -120,6 +126,10 @@ public class SshJschTool {
         keyFiles.each { String file -> if (new File(file).exists()) jsch.addIdentity(file) }
         session = jsch.getSession(user, host, port)
         session.setConfig((Hashtable) config)
+
+        if(password){
+            session.password = password
+        }
 
         try {
             session.connect()
