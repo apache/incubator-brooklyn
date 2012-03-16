@@ -1,7 +1,7 @@
 [{ "title": "Web",
-  "file":  "/use/guide/extras/index.html#web" }, 
+  "file":  "{{ site.url }}/use/guide/extras/index.html#web" }, 
 { "title": "Database",
-  "file":  "/use/guide/extras/index.html#database" }, 
+  "file":  "{{ site.url }}/use/guide/extras/index.html#database" }, 
 { "title": "Messaging",
-  "file":  "/use/guide/extras/index.html#messaging" } 
+  "file":  "{{ site.url }}/use/guide/extras/index.html#messaging" } 
 ]

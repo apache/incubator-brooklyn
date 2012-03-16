@@ -1,6 +1,6 @@
 [
 { "title": "Fork -> Write -> Pull",
-  "file":  "/dev/contribute/index.html" },
+  "file":  "{{ site.url }}/dev/contribute/index.html" },
 { "title": "Updating Docs",
-  "file": "/dev/contribute/docs.html" }
+  "file": "{{ site.url }}/dev/contribute/docs.html" }
 ]

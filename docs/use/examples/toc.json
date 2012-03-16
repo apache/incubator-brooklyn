@@ -1,4 +1,4 @@
 [
 { "title": "Elastic Web Cluster",
-  "file":  "/use/examples/webcluster.html" }
+  "file":  "{{ site.url }}/use/examples/webcluster.html" }
 ]

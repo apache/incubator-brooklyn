@@ -1,8 +1,8 @@
 [{ "title": "Basic Concepts",
-  "file":  "/use/guide/defining-applications/basic-concepts.html" }, 
+  "file":  "{{ site.url }}/use/guide/defining-applications/basic-concepts.html" }, 
 { "title": "Advanced Concepts",
-  "file":  "/use/guide/defining-applications/advanced-concepts.html" }, 
+  "file":  "{{ site.url }}/use/guide/defining-applications/advanced-concepts.html" }, 
 { "title": "Common Usage",
-  "file":  "/use/guide/defining-applications/common-usage.html" },
+  "file":  "{{ site.url }}/use/guide/defining-applications/common-usage.html" },
 { "title": "Examples",
-  "file": "/use/guide/defining-applications/examples.html" }]
+  "file": "{{ site.url }}/use/guide/defining-applications/examples.html" }]

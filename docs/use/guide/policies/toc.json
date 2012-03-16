@@ -1,8 +1,8 @@
 [{ "title": "Introduction",
-  "file":  "/use/guide/policies/index.html#introduction" }, 
+  "file":  "{{ site.url }}/use/guide/policies/index.html#introduction" }, 
 { "title": "Writing Policies",
-  "file":  "/use/guide/policies/index.html#writing-policies" },
+  "file":  "{{ site.url }}/use/guide/policies/index.html#writing-policies" },
 { "title": "Off-the-Shelf Policies",
-  "file":  "/use/guide/policies/index.html#off-the-shelf-policies" },
+  "file":  "{{ site.url }}/use/guide/policies/index.html#off-the-shelf-policies" },
 { "title": "Implementing Policies",
-  "file":  "/use/guide/policies/index.html#implementing-policies" }]
+  "file":  "{{ site.url }}/use/guide/policies/index.html#implementing-policies" }]

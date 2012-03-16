@@ -1,15 +1,17 @@
 [
 { "title": "Start",
-  "file":  "/start/index.html",
+  "file":  "{{ site.url }}/start/index.html",
   "exclude": true,
   "children": {% readj /start/toc.json %} },
 { "title": "Using brooklyn",
-  "file":  "/use/index.html",
+  "file":  "{{ site.url }}/use/index.html",
   "children": {% readj /use/toc.json %} },
 { "title": "Developing",
-  "file": "/dev/index.html",
+  "file": "{{ site.url }}/dev/code/index.html",
+  "exclude": true,
   "children": {% readj /dev/toc.json %} },
 { "title": "Meta",
-  "file": "/meta/versions.html",
+  "file": "{{ site.url }}/meta/versions.html",
+  "exclude": true,
   "children": {% readj /meta/toc.json %} }
 ]

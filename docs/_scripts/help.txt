@@ -1,10 +1,8 @@
-to make the docs live, you need to build.sh then copy in to the gh-pages branch
+to make the docs LIVE, you need to build.sh then copy in to the gh-pages branch
 (suggest making a separate repo for that, keeping it in the gh-pages branch)
 
-ideally we'd like it versioned (so we can see v0.x docs), 
-but there are issues with links in the pages being to the root
-so it won't maintain a version atm, but if we can resolve that
-then i'd advocate a process like this:
+here are some draft scripts for how to do it,
+assuming we have a "staging" area for snapshot builds
 
 export TARGET=/path/to/other/repo/
 export BV=0.4.0-SNAPSHOT   # BROOKLYN_VERSION
@@ -17,16 +15,30 @@ cp -r _site/* $TARGET/v/$BV/
 # and push
 pushd $TARGET
 git add -A .
-git commit -m "updated docs for version $BV"
+git commit -m "updated version docs for version $BV"
+git push
 popd
 
 
+(note the whole thing is mounted under /brooklyn at cloudsoft.github.com
+currently, hence the refs to /brooklyn in _config.yml and various scripts)
 
-(when we do a release we'll update the main as well, e.g.
+when we do a RELEASE we'll run the above for e.g. BV=0.4.0
+AND update the files in the root dir as well, with a process below 
+(kinda like the process above but with / in place of /v/$BV
+and overriding url in _config.yml with the --url arg below):
+
 pushd $TARGET
-for x in * ; do if [[ $x != "v" ]] ; then rm -rf $x ; fi
-cp -r v/$BV/* .
+for x in * ; do if [[ $x != "v" ]] ; then rm -rf $x ; fi ; done
 popd
 
-and have to figure out a way for paths to indicate whether they are versioned or latest release)
+
+_scripts/build.sh --url /brooklyn
+cp -r _site/* $TARGET/
+
+pushd $TARGET
+git add -A .
+git commit -m "updated root docs for version $BV"
+git push
+popd
 

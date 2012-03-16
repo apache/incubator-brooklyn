@@ -9,27 +9,29 @@
 {% capture toc_string %}{% readj p %}{% endcapture %}
 {% jsonball toc from var toc_string %}
 
+{% capture pagesiteurl %}{{ site.url }}{{ page.url }}{% endcapture %}
+
 <div id="sidebar_toc">
 	<div id="accordionish">
 {% for x in toc %}
   {% if x.children %}
-	  <div class="accordiable toc1 {% if page.url == x.file %}{% if x.exclude %}{% else %}toc-active{% endif %}{% endif %}"><a href="{{ x.file }}">{{ x.title }}</a></div>
+	  <div class="accordiable toc1 {% if pagesiteurl == x.file %}{% if x.exclude %}{% else %}toc-active{% endif %}{% endif %}"><a href="{{ x.file }}">{{ x.title }}</a></div>
           <div>
     {% for x2 in x.children %}
       {% if x2.children %}
-	    <div class="accordiable toc2 {% if page.url == x2.file %}{% if x2.exclude %}{% else %}toc-active{% endif %}{% endif %}"><a href="{{ x2.file }}">{{ x2.title }}</a></div>
+	    <div class="accordiable toc2 {% if pagesiteurl == x2.file %}{% if x2.exclude %}{% else %}toc-active{% endif %}{% endif %}"><a href="{{ x2.file }}">{{ x2.title }}</a></div>
             <div>
         {% for x3 in x2.children %}
-	      <div class="unaccordiable toc3 {% if page.url == x3.file %}{% if x3.exclude %}{% else %}toc-active{% endif %}{% endif %}"><a href="{{ x3.file }}">{{ x3.title }}</a></div>
+	      <div class="unaccordiable toc3 {% if pagesiteurl == x3.file %}{% if x3.exclude %}{% else %}toc-active{% endif %}{% endif %}"><a href="{{ x3.file }}">{{ x3.title }}</a></div>
         {% endfor %}
             </div>
       {% else %}
-	    <div class="unaccordiable toc2 {% if page.url == x2.file %}toc-active{% endif %}"><a href="{{ x2.file }}">{{ x2.title }}</a></div>
+	    <div class="unaccordiable toc2 {% if pagesiteurl == x2.file %}toc-active{% endif %}"><a href="{{ x2.file }}">{{ x2.title }}</a></div>
       {% endif %}
     {% endfor %}
           </div>
   {% else %}
-	  <div class="unaccordiable toc1 {% if page.url == x.file %}toc-active{% endif %}"><a href="{{ x.file }}">{{ x.title }}</a></div>
+	  <div class="unaccordiable toc1 {% if pagesiteurl == x.file %}toc-active{% endif %}"><a href="{{ x.file }}">{{ x.title }}</a></div>
   {% endif %}
 {% endfor %} 
       </div>

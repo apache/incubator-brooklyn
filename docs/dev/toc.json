@@ -1,14 +1,14 @@
 [
 { "title": "Get the Code",
-  "file": "/dev/code/index.html",
+  "file": "{{ site.url }}/dev/code/index.html",
   "exclude": true,
   "children": {% readj ./code/toc.json %} },
 { "title": "Wishlist",
-  "file": "/dev/wishlist.html" },
+  "file": "{{ site.url }}/dev/wishlist.html" },
 { "title": "Resources",
-  "file": "/dev/links.html" },
+  "file": "{{ site.url }}/dev/links.html" },
 { "title": "How to Contribute",
-  "file":  "/dev/contribute/index.html",
+  "file":  "{{ site.url }}/dev/contribute/index.html",
   "exclude": true,
   "children": {% readj ./contribute/toc.json %} }
 ]

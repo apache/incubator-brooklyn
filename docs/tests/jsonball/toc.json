@@ -2,5 +2,5 @@
 { "title": "Test Jsonball",
   "file":  "test_jsonball.html" },
 { "title": "Home",
-  "file":  "/index.html" }
+  "file":  "{{ site.url }}/index.html" }
 ]

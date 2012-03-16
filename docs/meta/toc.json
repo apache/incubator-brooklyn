@@ -1,7 +1,7 @@
 [
 { "title": "Versions",
-  "file":  "/meta/versions.html" },
+  "file":  "{{ site.url }}/meta/versions.html" },
 { "title": "Contact",
-  "file":  "/meta/contact.html" }
+  "file":  "{{ site.url }}/meta/contact.html" }
 ]
 
