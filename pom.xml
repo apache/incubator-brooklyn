@@ -37,6 +37,22 @@
         <url>http://github.com/cloudsoft/brooklyn</url>
     </scm>
 
+    <repositories>
+        <repository>
+            <id>cloudsoft-releases</id>
+            <url>http://developers.cloudsoftcorp.com/download/maven2/</url>
+        </repository>
+            <repository>
+                <id>libs-snapshot-local</id>
+                <url>http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/</url>
+                <snapshots>
+                    <enabled>true</enabled>
+                    <updatePolicy>never</updatePolicy>
+                    <checksumPolicy>fail</checksumPolicy>
+               </snapshots>
+         </repository>
+    </repositories>
+
     <distributionManagement>
         <repository>
             <id>local-release</id>
