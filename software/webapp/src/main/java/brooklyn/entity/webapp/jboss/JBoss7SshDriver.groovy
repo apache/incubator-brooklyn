@@ -16,26 +16,10 @@ class JBoss7SshDriver extends JavaWebAppSshDriver {
 
 	/*
 	 * TODO
-	 * - port increment
-	 * - use pid to stop
-	 * - log _files_
-	 * - collect ports used, release ports (http, management, jmx)
-	 * 
-	 * - apply interface to openshift, clusters
-	 *   per server metrics
-	 * 
-	 * - more policies / examples
-	 * 
-	 * - refactor
-	 * 		some of extra into library
-	 * 		some of extra into extras
-	 * 
-	 * - brooklyn cloudfoundry extra
-	 * - brooklyn whirr driver
-	 * 
-	 * - tiny example, localhost, with and without web console
-	 * - medium example, web and data in AWS
-	 * - big example, geo dns web+msg+data1+data2 , AWS, CloudSigma, Rackspace
+	 * - collect ports used, release ports (http, management, jmx) for security groups
+	 * - security for stats access (see below)
+	 * - expose log file location, or even support accessing them dynamically
+	 * - more configurability of config files, java memory, etc
 	 */
 	
     public static final String SERVER_TYPE = "standalone"
@@ -116,19 +100,12 @@ class JBoss7SshDriver extends JavaWebAppSshDriver {
 	
 	@Override
 	public boolean isRunning() {
-		//TODO use PID instead
-		newScript(CHECK_RUNNING).
-			body.append(
-				"ps aux | grep '${entity.id}' | grep -v grep | grep -v ${SERVER_TYPE}.sh"
-			).execute() == 0;
+		newScript(CHECK_RUNNING, usePidFile:true).execute() == 0;
 	}
 	
 	@Override
 	public void stop() {
-		newScript(STOPPING).
-			body.append(
-				"ps aux | grep '${entity.id}' | grep -v grep | awk '{ print \$2 }' | xargs kill -9"
-			).execute();
+		newScript(STOPPING, usePidFile:true).execute();
 	}
 
 	@Override

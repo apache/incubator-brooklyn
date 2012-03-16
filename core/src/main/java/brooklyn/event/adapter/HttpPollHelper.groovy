@@ -16,7 +16,7 @@ protected class HttpPollHelper extends AbstractPollHelper {
 	}
 	
 	private HttpURLConnection getConnection() {
-		if (adapter.isPost) throw new UnsupportedOperationException("when you need POST please implement it!")
+		if (adapter.isPost) throw new UnsupportedOperationException("when you need POST please implement it here!")
 		String url = adapter.baseUrl;
 		if (adapter.urlVars) {
 			def args = adapter.urlVars.collect { k,v ->
@@ -25,7 +25,6 @@ protected class HttpPollHelper extends AbstractPollHelper {
 			}
             url += "?" + args.join("&")
 		}
-        log.info(url)
 		return new URL(url).openConnection()
 	}
 	
