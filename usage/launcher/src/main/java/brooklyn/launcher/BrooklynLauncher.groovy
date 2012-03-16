@@ -25,8 +25,14 @@ class BrooklynLauncher {
         }
 
         addShutdownHook {
-            LOG.info("Brooklyn launcher's shutdown-hook invoked: shutting down application and web-console")
+            LOG.info("Brooklyn launcher's shutdown-hook invoked: shutting down application")
             app?.stop()
+        }
+        //do these in parallel on shutdown; whilst it would be nice to watch the application closing
+        //in the browser, spring is also listening to the shutdown hook so leaving the server up just
+        //causes lots of stack trace messages if a browser is trying to hit it!
+        addShutdownHook {
+            LOG.info("Brooklyn launcher's shutdown-hook invoked: shutting down web-console")
             web?.stop()
         }
     }

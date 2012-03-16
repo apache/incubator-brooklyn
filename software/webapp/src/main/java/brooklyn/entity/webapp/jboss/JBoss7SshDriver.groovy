@@ -3,12 +3,12 @@ package brooklyn.entity.webapp.jboss
 import java.util.List
 import java.util.Map
 
-import brooklyn.entity.basic.Attributes
+import com.google.common.base.Preconditions
+
+import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import brooklyn.entity.webapp.JavaWebAppSshDriver
 import brooklyn.entity.webapp.PortPreconditions
-import brooklyn.entity.webapp.WebAppService
-import brooklyn.location.PortRange;
 import brooklyn.location.basic.SshMachineLocation
 
 
@@ -16,30 +16,14 @@ class JBoss7SshDriver extends JavaWebAppSshDriver {
 
 	/*
 	 * TODO
-	 * - port increment
-	 * - use pid to stop
-	 * - log _files_
-	 * - collect ports used, release ports (http, management, jmx)
-	 * 
-	 * - apply interface to openshift, clusters
-	 *   per server metrics
-	 * 
-	 * - more policies / examples
-	 * 
-	 * - refactor
-	 * 		some of extra into library
-	 * 		some of extra into extras
-	 * 
-	 * - brooklyn cloudfoundry extra
-	 * - brooklyn whirr driver
-	 * 
-	 * - tiny example, localhost, with and without web console
-	 * - medium example, web and data in AWS
-	 * - big example, geo dns web+msg+data1+data2 , AWS, CloudSigma, Rackspace
+	 * - collect ports used, release ports (http, management, jmx) for security groups
+	 * - security for stats access (see below)
+	 * - expose log file location, or even support accessing them dynamically
+	 * - more configurability of config files, java memory, etc
 	 */
 	
     public static final String SERVER_TYPE = "standalone"
-    private static final String BROOKLYN_JBOSS_CONFIG_FILENAME = "standalone-brooklyn.xml"
+    private static final String CONFIG_FILE = "standalone-brooklyn.xml"
     
     public JBoss7SshDriver(JBoss7Server entity, SshMachineLocation machine) {
         super(entity, machine)
@@ -51,7 +35,7 @@ class JBoss7SshDriver extends JavaWebAppSshDriver {
 	
 	@Override
 	public void install() {
-        String url = "http://download.jboss.org/jbossas/7.0/jboss-as-${version}/jboss-as-${version}.tar.gz"
+        String url = "http://download.jboss.org/jbossas/7.1/jboss-as-${version}/jboss-as-${version}.tar.gz"
         String saveAs  = "jboss-as-distribution-${version}.tar.gz"
 		newScript(INSTALLING).
 			failOnNonZeroResultCode().
@@ -61,26 +45,40 @@ class JBoss7SshDriver extends JavaWebAppSshDriver {
 			).execute();
 	}
 
-	// TODO: Too much sed! The last one is especially nasty.
+    /**
+     * AS7 config notes and TODOs: 
+     *  We're using the http management interface on port managementPort
+     *  We're not using any JMX.
+     *   - AS 7 simply doesn't boot with Sun JMX enabled (https://issues.jboss.org/browse/JBAS-7427)
+     *   - 7.1 onwards uses Remoting 3, which we haven't configured
+     *  We're completely disabling security on the management interface.
+     *   - In the future we probably want to use the as7/bin/add-user.sh script using config keys for user and password
+     *   - Or we could create our own security realm and use that.
+     *  We disable the root welcome page, since we can't deploy our own root otherwise
+     *  We bind all interfaces to entity.hostname, rather than 127.0.0.1.
+     */
 	@Override
 	public void customize() {
 		PortPreconditions.checkPortsValid(httpPort:httpPort, managementPort:managementPort);
+        String hostname = entity.getAttribute(SoftwareProcessEntity.HOSTNAME)
+        Preconditions.checkNotNull(hostname, "AS 7 entity must set hostname otherwise server will only be visible on localhost")
 		newScript(CUSTOMIZING).
 			body.append(
 				"cp -r ${installDir}/jboss-as-${version}/${SERVER_TYPE} . || exit \$!",
 				"cd ${runDir}/${SERVER_TYPE}/configuration/",
-				"cp standalone.xml $BROOKLYN_JBOSS_CONFIG_FILENAME",
-				"sed -i.bk 's/8080/${httpPort}/' $BROOKLYN_JBOSS_CONFIG_FILENAME",
-				"sed -i.bk 's/9990/${managementPort}/' $BROOKLYN_JBOSS_CONFIG_FILENAME",
-				
-				//jmx not used; value -1 breaks it
-//				"sed -i.bk 's/1090/${jmxPort}/' $brooklynConfig",  
-				
-				//disable the welcome root so we can deploy our own ROOT (not allowed otherwise!)
-				"sed -i.bk 's/enable-welcome-root=\"true\"/enable-welcome-root=\"false\"/' $BROOKLYN_JBOSS_CONFIG_FILENAME",
-				
-				"sed -i.bk 's/inet-address value=\"127.0.0.1\"/any-address/' $BROOKLYN_JBOSS_CONFIG_FILENAME",
-				"sed -i.bk 's/\\(path=\"deployments\"\\)/\\1 deployment-timeout=\"600\"/' $BROOKLYN_JBOSS_CONFIG_FILENAME"
+				"cp standalone.xml $CONFIG_FILE",
+				"sed -i.bk 's/8080/${httpPort}/' $CONFIG_FILE",
+				"sed -i.bk 's/9990/${managementPort}/' $CONFIG_FILE",
+                "sed -i.bk 's/enable-welcome-root=\"true\"/enable-welcome-root=\"false\"/' $CONFIG_FILE",
+
+                // Disable Management security (!) by deleting the security-realm attribute
+                "sed -i.bk 's/http-interface security-realm=\"ManagementRealm\"/http-interface/' $CONFIG_FILE",
+
+                // Increase deployment timeout to ten minutes
+                "sed -i.bk 's/\\(path=\"deployments\"\\)/\\1 deployment-timeout=\"600\"/' $CONFIG_FILE",
+
+                // Bind interfaces to entity hostname
+				"sed -i.bk 's/\\(inet-address value=.*\\)127.0.0.1/\\1$hostname/' $CONFIG_FILE"
 			).execute();
 		
 		entity.deployInitialWars()
@@ -91,7 +89,7 @@ class JBoss7SshDriver extends JavaWebAppSshDriver {
 		newScript(LAUNCHING, usePidFile:true).
 			body.append(
 				"$installDir/jboss-as-${version}/bin/${SERVER_TYPE}.sh "+
-					"--server-config $BROOKLYN_JBOSS_CONFIG_FILENAME "+
+					"--server-config $CONFIG_FILE "+
 					"-Djboss.server.base.dir=$runDir/$SERVER_TYPE " + 
                 	"\"-Djboss.server.base.url=file://$runDir/$SERVER_TYPE\" " +
 					"-Djava.net.preferIPv4Stack=true "+
@@ -102,19 +100,12 @@ class JBoss7SshDriver extends JavaWebAppSshDriver {
 	
 	@Override
 	public boolean isRunning() {
-		//TODO use PID instead
-		newScript(CHECK_RUNNING).
-			body.append(
-				"ps aux | grep '${entity.id}' | grep -v grep | grep -v ${SERVER_TYPE}.sh"
-			).execute() == 0;
+		newScript(CHECK_RUNNING, usePidFile:true).execute() == 0;
 	}
 	
 	@Override
 	public void stop() {
-		newScript(STOPPING).
-			body.append(
-				"ps aux | grep '${entity.id}' | grep -v grep | awk '{ print \$2 }' | xargs kill -9"
-			).execute();
+		newScript(STOPPING, usePidFile:true).execute();
 	}
 
 	@Override

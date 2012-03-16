@@ -130,8 +130,10 @@ public class WebAppRunner {
 
     /** Asks the app server to stop and waits for it to finish up. */
     public void stop() throws Exception {
+        log.info("Stopping Brooklyn web console at http://localhost:" + port+" ("+war+(wars? " and "+wars.values() : "")+")")
         server.stop()
         try { server.join() } catch (Exception e) { /* NPE may be thrown e.g. if threadpool not started */ }
+        log.info("Stopped Brooklyn web console at http://localhost:" + port)
     }
     
     public Server getServer() {
