@@ -33,7 +33,7 @@ public class JBoss7Server extends JavaWebAppSoftwareProcess implements JavaWebAp
     public static final PortAttributeSensorAndConfigKey MANAGEMENT_PORT = 
             [ "http.managementPort", "Management port", "9990+" ]
 
-    private static final BasicAttributeSensor<Integer> MANAGEMENT_STATUS =
+    public static final BasicAttributeSensor<Integer> MANAGEMENT_STATUS =
             [ Integer, "webapp.http.managementStatus", "HTTP response code for the management server" ]
 
     public JBoss7Server(Map flags=[:], Entity owner=null) {
