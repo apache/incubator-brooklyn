@@ -1,0 +1,32 @@
+to make the docs live, you need to build.sh then copy in to the gh-pages branch
+(suggest making a separate repo for that, keeping it in the gh-pages branch)
+
+ideally we'd like it versioned (so we can see v0.x docs), 
+but there are issues with links in the pages being to the root
+so it won't maintain a version atm, but if we can resolve that
+then i'd advocate a process like this:
+
+export TARGET=/path/to/other/repo/
+export BV=0.4.0-SNAPSHOT   # BROOKLYN_VERSION
+
+_scripts/build.sh
+rm -rf $TARGET/v/$BV
+mkdir $TARGET/v/$BV
+cp -r _site/* $TARGET/v/$BV/
+
+# and push
+pushd $TARGET
+git add -A .
+git commit -m "updated docs for version $BV"
+popd
+
+
+
+(when we do a release we'll update the main as well, e.g.
+pushd $TARGET
+for x in * ; do if [[ $x != "v" ]] ; then rm -rf $x ; fi
+cp -r v/$BV/* .
+popd
+
+and have to figure out a way for paths to indicate whether they are versioned or latest release)
+
