@@ -34,7 +34,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     
     public void configure(Map properties) {
         if (config==null) config = [:]
-        
+
         super.configure(properties)
 
         Preconditions.checkNotNull(address, "address is required for SshMachineLocation")
@@ -76,6 +76,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         if (!user) user = System.getProperty "user.name"
         Map args = [ user:user, host:address.hostName ]
         args << config
+        args << leftoverProperties
         SshJschTool ssh = new SshJschTool(args)
         ssh.connect()
         int result = ssh.execShell props, commands, env
@@ -106,6 +107,8 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         if (!user) user = System.getProperty "user.name"
         Map args = [user:user, host:address.hostName]
         args << config
+        args << leftoverProperties
+
         SshJschTool ssh = new SshJschTool(args)
         ssh.connect()
         int result = ssh.createFile props, destination, src, filesize
@@ -120,6 +123,8 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         if (!user) user = System.getProperty "user.name"
         Map args = [user:user, host:address.hostName]
         args << config
+        args << leftoverProperties
+
         SshJschTool ssh = new SshJschTool(args)
         ssh.connect()
         int result = ssh.transferFileFrom props, remote, local

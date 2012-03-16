@@ -81,7 +81,7 @@ public class SshJschTool {
 
         if(properties.password){
             Preconditions.checkArgument properties.password instanceof String, "password value must be a string"
-            user = properties.remove('password')
+            password = properties.remove('password')
         }
 
         if (properties.publicKey && properties.privateKey) {
