@@ -6,6 +6,8 @@ import java.util.Map
 import com.google.common.base.Preconditions
 
 import brooklyn.entity.basic.SoftwareProcessEntity
+import brooklyn.entity.basic.Attributes
+import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import brooklyn.entity.webapp.JavaWebAppSshDriver
 import brooklyn.entity.webapp.PortPreconditions
@@ -40,7 +42,8 @@ class JBoss7SshDriver extends JavaWebAppSshDriver {
 		newScript(INSTALLING).
 			failOnNonZeroResultCode().
 			body.append(
-				"curl -L \"${url}\" -o ${saveAs} || exit 9",
+                CommonCommands.downloadUrlAs(url, getEntityVersionLabel('/'), saveAs),
+                CommonCommands.INSTALL_TAR, 
 				"tar xzfv ${saveAs}",
 			).execute();
 	}
