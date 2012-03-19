@@ -1,12 +1,10 @@
-package monterey.brooklyn.karaf
+package brooklyn.entity.osgi.karaf
 
 import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
 import java.util.concurrent.TimeUnit
-
-import monterey.brooklyn.karaf.KarafContainer
 
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod

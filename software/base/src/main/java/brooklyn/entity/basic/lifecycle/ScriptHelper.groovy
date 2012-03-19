@@ -83,25 +83,34 @@ public class ScriptPart {
 		this.helper = helper;
 	}
 	public ScriptHelper append(String l1) {
-		append([l1])
+		lines.add(l1);
+        helper
 	}
 	//bit ugly but 'xxx' and "xxx" mixed don't fit String...
 	public ScriptHelper append(Object l1, Object l2, Object ...ll) {
-		append([l1, l2] + (ll as List));
+        append(l1);
+        append(l2);
+        ll.each { append it }
+        helper
 	}
-	public ScriptHelper append(List ll) {
-		lines.addAll(ll)
+	public ScriptHelper append(Collection ll) {
+        ll.each { append it }
 		helper
 	}
 	
 	public ScriptHelper prepend(String l1) {
-		prepend([l1])
+		lines.add(0, l1);
 	}
 	public ScriptHelper prepend(Object l1, Object l2, Object ...ll) {
-		prepend([l1, l2] + (ll as List));
+        for (int i=ll.length-1; i>=0; i--) prepend(ll[i])
+        prepend(l2);
+        prepend(l1);
+        
 	}
-	public ScriptHelper prepend(List ll) {
-		lines.addAll(0, ll)
+	public ScriptHelper prepend(Collection ll) {
+        List l = new ArrayList(ll);
+        Collections.reverse(l);
+        l.each { prepend it }
 		helper
 	}
 	
@@ -109,12 +118,12 @@ public class ScriptPart {
 		reset([l1])
 	}
 	public ScriptHelper reset(Object l1, Object l2, Object ...ll) {
-		reset([l1, l2] + (ll as List));
+        lines.clear();
+        append(l1, l2, ll);
 	}
 	public ScriptHelper reset(List ll) {
 		lines.clear()
-		lines.addAll(ll)
-		helper
+		append(ll);
 	}
 	/** passes the list to a closure for amendment; result of closure ignored */
 	public ScriptHelper apply(Closure c) {
@@ -122,27 +131,47 @@ public class ScriptPart {
 		helper
 	}
 	public boolean isEmpty() { lines.isEmpty() }
+}
 
-    public static class CommonCommands {
-        /** returns a string for checking whether the given executable is available,
-         * and installing it if necessary, using {@link #installPackage} 
-         * and accepting the same flags e.g. for apt, yum, rpm */
-        public static String installExecutable(Map flags, String executable) {
-            "which ${executable} || "+installPackage(flags, executable)
+public class CommonCommands {
+    /** returns a string for checking whether the given executable is available,
+     * and installing it if necessary, using {@link #installPackage}
+     * and accepting the same flags e.g. for apt, yum, rpm */
+    public static String installExecutable(Map flags=[:], String executable) {
+        "which ${executable} || "+installPackage(flags, executable)
+    }
+    /** returns a string for installing the given package;
+     * flags can contain common overrides e.g. for apt, yum, rpm
+     * (as the package names can be different for each of those), e.g.:
+     * installPackage("libssl-devel", yum: "openssl-devel", apt:"openssl libssl-dev zlib1g-dev");
+     * exit code 44 used to indicate failure */
+    public static String installPackage(Map flags=[:], String packageDefaultName) {
+        "(which apt-get && apt-get install ${flags.apt?:packageDefaultName}) || "+
+                "(which rpm && rpm -i ${flags.rpm?:packageDefaultName}) || "+
+                "(which yum && yum install ${flags.yum?:packageDefaultName}) || "+
+                "(echo \"No known package manager to install ${packageDefaultName}, failing\" && exit 44)"
+    }
+    public static final String INSTALL_TAR = installExecutable("tar");
+    public static final String INSTALL_CURL = installExecutable("curl");
+    public static final String INSTALL_WGET = installExecutable("wget");
+    
+    /** returns string for downloading from a url and saving to a file;
+     * currently using curl
+     * <p>
+     * will read from a local repository, if files have been copied there
+     * (cp -r /tmp/brooklyn/installs/ ~/.brooklyn/repository/),
+     * unless skipLocalRepo: true
+     * <p>
+     * ideally use a blobstore staging area
+     */
+    public static List<String> downloadUrlAs(Map flags=[:], String url, String entityVersionPath, String pathlessFilenameToSaveAs) {
+        boolean useLocalRepo = flags.skipLocalRepo!=null ? !flags.skipLocalRepo : true;
+        String command = "curl -L \"${url}\" -o ${pathlessFilenameToSaveAs}";
+        if (useLocalRepo) {
+            String file = '$'+"HOME/.brooklyn/repository/${entityVersionPath}/${pathlessFilenameToSaveAs}";
+            command = "if [ -f ${file} ]; then cp ${file} ./${pathlessFilenameToSaveAs}; else "+command+" ; fi"
         }
-        /** returns a string for installing the given package;
-         * flags can contain common overrides e.g. for apt, yum, rpm
-         * (as the package names can be different for each of those), e.g.:
-         * installPackage("libssl-devel", yum: "openssl-devel", apt:"openssl libssl-dev zlib1g-dev");
-         * exit code 44 used to indicate failure */
-        public static String installPackage(Map flags, String packageDefaultName) {
-            "(which apt-get && apt-get install ${flags.apt?:packageDefaultName}) || "+
-                    "(which rpm && rpm -i ${flags.rpm?:packageDefaultName}) || "+
-                    "(which yum && yum install ${flags.yum?:packageDefaultName}) || "+
-                    "(echo \"No known package manager to install ${packageDefaultName}, failing\" && exit 44)"
-        }
-        public static final String INSTALL_TAR = installExecutable("tar");
-        public static final String INSTALL_CURL = installExecutable("curl");
-        public static final String INSTALL_WGET = installExecutable("wget");
+        command = command + " || exit 9"
+        return [INSTALL_CURL, command];
     }
 }

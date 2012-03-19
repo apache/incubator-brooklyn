@@ -4,6 +4,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.location.MachineLocation
+import brooklyn.location.OsDetails;
 import brooklyn.location.PortRange
 import brooklyn.location.PortSupplier
 import brooklyn.util.flags.SetFromFlag
@@ -180,4 +181,10 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             return false
         }
     }
+    
+    @Override
+    public OsDetails getOsDetails() {
+        return BasicOsDetails.Factory.ANONYMOUS_LINUX;
+    }
+
 }
