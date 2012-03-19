@@ -1,6 +1,7 @@
 package brooklyn.entity.database.mysql;
 
 import org.slf4j.Logger
+
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.SoftwareProcessEntity
@@ -9,6 +10,7 @@ import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.BasicOsDetails.OsArchs
 import brooklyn.location.basic.BasicOsDetails.OsVersions
 import brooklyn.util.ComparableVersion
+import brooklyn.entity.basic.lifecycle.CommonCommands;
 
 public class MySqlSshDriver extends StartStopSshDriver {
 
@@ -56,41 +58,53 @@ public class MySqlSshDriver extends StartStopSshDriver {
     @Override
     public void install() {
         String saveAs  = "mysql-${version}-${osTag}.${suffix}"
-        String file = '$'+"HOME/.brooklyn/repository/${entityVersionLabel}/${saveAs}";
         newScript(INSTALLING).
             failOnNonZeroResultCode().
             body.append(
-                "URL=$url",
-                "FILE=$file",
-                "if [ -f \$FILE ]; then cp \$FILE ./$saveAs; else curl -L \"${url}\" -o ${saveAs}; fi || exit 9",
-                "curl -L \"${url}\" -o ${saveAs} || exit 9",
-                "tar xfv"+(saveAs.endsWith("z") ? "z" : "")+" ${saveAs}",
+                CommonCommands.downloadUrlAs(url, getEntityVersionLabel('/'), saveAs),
+                CommonCommands.INSTALL_TAR, 
+                "tar xfv"+(saveAs.endsWith("z") ? "z" : "")+" ${saveAs}",  //because they don't offer a consistent set of downloads
             ).execute();
     }
 
+    String secretPassword = "random"+(int)(Math.random()*100000)
+    public String getPassword() { secretPassword }
+    public MySqlNode getEntity() { return super.getEntity() }
+    public int getPort() { return entity.port }
+    
     @Override
     public void customize() {
         newScript(CUSTOMIZING).
             failOnNonZeroResultCode().
             body.append(
-                "'${basedir}/mysql_install_db' '--basedir=${basedir}' --datadir=.",
+                "cat > mymysql.cnf << END_MYSQL_CONF_${entity.id}\n"+"""
+[client]
+port            = ${port}
+socket          = /tmp/mysql.sock.${port}
+user            = root
+password        = ${password}
                 
-//                --socket=/tmp/mysql.sock.${port} --port=${port} -u root
-            ).execute();
+# Here follows entries for some specific programs
+                
+# The MySQL server
+[mysqld]
+port            = ${port}
+socket          = /tmp/mysql.sock.${port}
+basedir         = ${basedir}
+datadir         = .
 
-        //TODO put this in a file        
-//        [client]
-//        password       = secret_password
-//        port            = 3307
-//        socket          = /tmp/mysql.sock.3307
-//        
-//        # Here follows entries for some specific programs
-//        
-//        # The MySQL server
-//        [mysqld]
-//        port            = 3307
-//        socket          = /tmp/mysql.sock.3307
-        
+"""+"END_MYSQL_CONF_${entity.id}\n",
+                "${basedir}/scripts/mysql_install_db "+
+                    "--basedir=${basedir} --datadir=. "+
+                    "--defaults-file=mymysql.cnf",
+                "cat > creation-script.cnf << END_MYSQL_CONF_${entity.id}\n"+
+                    entity.getConfig(MySqlNode.CREATION_SCRIPT)+"\n"+"END_MYSQL_CONF_${entity.id}\n",
+                "${basedir}/bin/mysqld --defaults-file=mymysql.cnf &",
+                "export MYSQL_PID=\$!",
+                "sleep 5 && ${basedir}/bin/mysqladmin --defaults-file=mymysql.cnf --password= password ${password}",
+                "${basedir}/bin/mysql --defaults-file=mymysql.cnf < creation-script.cnf",
+                "kill \$MYSQL_PID"
+            ).execute();
     }
 
     @Override
@@ -98,7 +112,7 @@ public class MySqlSshDriver extends StartStopSshDriver {
         newScript(LAUNCHING, usePidFile: true).
             failOnNonZeroResultCode().
             body.append(
-                "nohup '${basedir}/bin/mysqld' --basedir='${basedir}' --datadir=. &"
+                "nohup ${basedir}/bin/mysqld --defaults-file=mymysql.cnf &",
             ).execute();
     }
 
