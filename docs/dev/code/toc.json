@@ -1,0 +1,9 @@
+[
+{ "title": "Structure",
+  "file":  "{{ site.url }}/dev/code/index.html" },
+{ "title": "Writing an Entity",
+  "file": "{{ site.url }}/dev/code/entity.html" },
+{ "title": "Writing a Policy",
+  "file":  "{{ site.url }}/dev/code/policy.html" }
+]
+

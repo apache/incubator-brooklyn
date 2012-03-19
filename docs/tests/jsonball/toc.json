@@ -1,0 +1,6 @@
+[
+{ "title": "Test Jsonball",
+  "file":  "test_jsonball.html" },
+{ "title": "Home",
+  "file":  "{{ site.url }}/index.html" }
+]

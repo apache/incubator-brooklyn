@@ -1,0 +1,85 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+
+<head>
+  <title>{{ page.title }}</title>
+  <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+
+  <link rel="stylesheet" type="text/css" href="{{ site.url }}/style/main.css" />
+  <link rel="stylesheet" type="text/css" href="{{ site.url }}/style/page.css" />
+  <link rel="stylesheet" type="text/css" href="{{ site.url }}/style/toc.css" />
+  <link rel="stylesheet" type="text/css" href="{{ site.url }}/style/docs/code.css" />
+  
+	<!-- Sidebar/ToC Scripts and CSS -->
+	<script src="{{ site.url }}/style/js/jquery/jquery-1.7.1.min.js"></script>
+	<script src="{{ site.url }}/style/js/jquery/jquery-ui-1.8.18.custom.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="{{ site.url }}/style/js/jquery/smoothness/jquery-ui-1.8.18.custom.css" />
+	<link rel="stylesheet" type="text/css" href="{{ site.url }}/style/toc.css" />
+
+	<script>
+	$(function() {
+		$('#simple_google').submit(function() {
+      		$('input[name="q"]').val("site:" + document.location.hostname + " " + $('input[name="qfront"]').val());
+        return true;
+		});
+    });
+	</script>
+
+
+  <link href='http://fonts.googleapis.com/css?family=Droid+Sans+Mono' rel='stylesheet' type='text/css'>
+</head>
+
+<body>
+  <div id="all">
+
+    <div id="page_header" class="page_row">
+      <div id="header_logo">
+        <a href = "/"><img height="68" width="220" border='0' src="{{ site.url }}/style/brooklyn-logo.png"/></a>
+      </div>
+      <div id="search_box">
+        <form id="simple_google" action="http://www.google.com/search" method="get">
+		<input name="q" type="hidden" />
+		<input name="qfront" type="text" placeholder='Search'/></p>
+		</form>
+      </div>
+    </div>
+
+<hr/>
+
+    <div class="page_row">
+
+      <div id="page_toc">
+		<!-- Sidebar -->
+		{% include sidebar.html %}
+      </div>
+
+      <div id="page_content">
+		<div class="breadcrumbs">
+		{% assign b = " " %}
+		{% capture b %}{{site.base_dir}}{% endcapture %}
+		<span class="breadcrumb-item"><a class='breadcrumb' href="{{site.base_dir}}/">Home</a></span>
+		{% for p in page.categories %}
+		<span class="bcsep">&raquo;</span> <span class="breadcrumb-item"><a class='breadcrumb' href="{{b}}/{{p}}">{{p}}</a></span>
+		{% capture b %}{{b}}/{{p}}{% endcapture %}
+		{%endfor%}
+		</div>
+		
+		<h1>{{ page.title }}</h1>
+
+		{{ content }}
+      </div>
+
+    </div>
+
+    <div class="page_row"/>
+
+<hr/>
+
+    <div id="page_footer" class="page_row">
+      Copyright &copy; 2012 Cloudsoft Corporation
+    </div>
+
+  </div>
+
+</body>
+</html>
