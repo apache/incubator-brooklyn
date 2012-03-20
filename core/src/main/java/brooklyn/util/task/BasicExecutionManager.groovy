@@ -207,7 +207,7 @@ public class BasicExecutionManager implements ExecutionManager {
                 if (!task.isCancelled()) {
                     result = task.job.call()
                 } else throw new CancellationException()
-            } catch(Exception e) {
+            } catch(Throwable e) {
                 result = e
             } finally {
                 if (RENAME_THREADS) {
@@ -215,8 +215,8 @@ public class BasicExecutionManager implements ExecutionManager {
                 }
                 afterEnd(flags, task)
             }
-            if (result instanceof Exception) {
-                log.warn "Error while running task $task (rethrowing): ${result.message}", (Exception)result
+            if (result instanceof Throwable) {
+                log.warn "Error while running task $task (rethrowing): ${result.message}", (Throwable)result
                 throw result
             }
             result
