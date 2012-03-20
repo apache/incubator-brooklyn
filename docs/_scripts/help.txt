@@ -1,0 +1,44 @@
+to make the docs LIVE, you need to build.sh then copy in to the gh-pages branch
+(suggest making a separate repo for that, keeping it in the gh-pages branch)
+
+here are some draft scripts for how to do it,
+assuming we have a "staging" area for snapshot builds
+
+export TARGET=/path/to/other/repo/
+export BV=0.4.0-SNAPSHOT   # BROOKLYN_VERSION
+
+_scripts/build.sh
+rm -rf $TARGET/v/$BV
+mkdir $TARGET/v/$BV
+cp -r _site/* $TARGET/v/$BV/
+
+# and push
+pushd $TARGET
+git add -A .
+git commit -m "updated version docs for version $BV"
+git push
+popd
+
+
+(note the whole thing is mounted under /brooklyn at cloudsoft.github.com
+currently, hence the refs to /brooklyn in _config.yml and various scripts)
+
+when we do a RELEASE we'll run the above for e.g. BV=0.4.0
+AND update the files in the root dir as well, with a process below 
+(kinda like the process above but with / in place of /v/$BV
+and overriding url in _config.yml with the --url arg below):
+
+pushd $TARGET
+for x in * ; do if [[ $x != "v" ]] ; then rm -rf $x ; fi ; done
+popd
+
+
+_scripts/build.sh --url /brooklyn
+cp -r _site/* $TARGET/
+
+pushd $TARGET
+git add -A .
+git commit -m "updated root docs for version $BV"
+git push
+popd
+

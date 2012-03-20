@@ -1,0 +1,8 @@
+[{ "title": "Introduction",
+  "file":  "{{ site.url }}/use/guide/policies/index.html#introduction" }, 
+{ "title": "Writing Policies",
+  "file":  "{{ site.url }}/use/guide/policies/index.html#writing-policies" },
+{ "title": "Off-the-Shelf Policies",
+  "file":  "{{ site.url }}/use/guide/policies/index.html#off-the-shelf-policies" },
+{ "title": "Implementing Policies",
+  "file":  "{{ site.url }}/use/guide/policies/index.html#implementing-policies" }]

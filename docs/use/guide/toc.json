@@ -1,0 +1,20 @@
+[
+{ "title": "Quick Start",
+  "file":  "{{ site.url }}/use/guide/quickstart/index.html" }, 
+{ "title": "Defining Applications",
+  "file":  "{{ site.url }}/use/guide/defining-applications/basic-concepts.html", 
+  "children": {% readj ./defining-applications/toc.json %} },
+{ "title": "Management",
+  "file":  "{{ site.url }}/use/guide/management/index.html" ,
+  "children": {% readj ./management/toc.json %} },
+
+{ "title": "Policies",
+  "file":  "{{ site.url }}/use/guide/policies/index.html",
+  "children": {% readj ./policies/toc.json %} },
+{ "title": "Custom Entities",
+  "file":  "{{ site.url }}/use/guide/entities/index.html",
+  "children": {% readj ./entities/toc.json %} },
+{ "title": "Extras",
+  "file":  "{{ site.url }}/use/guide/extras/index.html",
+  "children": {% readj ./extras/toc.json %}  }
+]

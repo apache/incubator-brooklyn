@@ -1,4 +1,4 @@
-package monterey.brooklyn.karaf;
+package brooklyn.entity.osgi.karaf
 
 import java.util.Collection
 import java.util.Map

@@ -1,4 +1,4 @@
-package brooklyn.policy
+package brooklyn.entity.webapp
 
 import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
@@ -10,12 +10,12 @@ import org.testng.annotations.Test
 import brooklyn.entity.LocallyManagedEntity
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.entity.trait.Resizable
-import brooklyn.entity.webapp.*
 import brooklyn.entity.webapp.tomcat.*
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.event.basic.BasicSensorEvent
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
+import brooklyn.policy.ResizerPolicy;
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestCluster
 import brooklyn.util.internal.TimeExtras

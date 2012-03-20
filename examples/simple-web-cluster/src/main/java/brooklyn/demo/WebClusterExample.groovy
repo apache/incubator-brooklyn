@@ -38,24 +38,27 @@ public class WebClusterExample extends AbstractApplication {
         super(props)
         setConfig(JavaWebAppService.ROOT_WAR, WAR_PATH)
     }
+    
 
-    NginxController nginxController = new NginxController( 
-        domain:'brooklyn.geopaas.org',
-        port:8000 )
+    protected JavaWebAppService newWebServer(Map flags, Entity cluster) {
+        return new JBoss7Server(flags, cluster).configure(httpPort: "8080+")
+    }
+
+    NginxController nginxController = new NginxController(
+        domain: 'brooklyn.geopaas.org',
+        port:8000)
 
     ControlledDynamicWebAppCluster webCluster = new ControlledDynamicWebAppCluster(this,
-        name:"WebApp cluster",
-        controller:nginxController,
+        name: "WebApp cluster",
+        controller: nginxController,
         initialSize: 1,
         webServerFactory: this.&newWebServer )
 
+    
     ResizerPolicy policy = new ResizerPolicy(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND).
         setSizeRange(1, 5).
         setMetricRange(10, 100);
     
-    protected JavaWebAppService newWebServer(Map flags, Entity cluster) {
-        return new JBoss7Server(flags, cluster).configure(httpPort: "8080+")
-    }
 
     public static void main(String[] argv) {
         ArrayList args = new ArrayList(Arrays.asList(argv));

@@ -3,6 +3,7 @@ package brooklyn.location.basic
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.location.OsDetails;
 import brooklyn.location.PortRange
 import brooklyn.util.NetworkUtils;
 import brooklyn.util.flags.SetFromFlag
@@ -137,6 +138,11 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
                 portsObtained -= portNumber;
             }
             LocalhostMachineProvisioningLocation.releasePort(address, portNumber)
+        }
+        
+        @Override
+        public OsDetails getOsDetails() {
+            return new BasicOsDetails.Factory().newLocalhostInstance();
         }
     }
 }
