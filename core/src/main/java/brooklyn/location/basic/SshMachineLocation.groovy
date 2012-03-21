@@ -4,9 +4,10 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.location.MachineLocation
-import brooklyn.location.OsDetails;
+import brooklyn.location.OsDetails
 import brooklyn.location.PortRange
 import brooklyn.location.PortSupplier
+import brooklyn.util.ReaderInputStream
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.internal.SshJschTool
 
@@ -95,12 +96,15 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         Preconditions.checkArgument src.exists(), "File %s must exist for scp", src.path
 		copyTo new FileInputStream(src), src.length(), destination 
     }
+	public int copyTo(Map props=[:], Reader src, String destination) {
+		copyTo(props, new ReaderInputStream(src), destination);
+	}
 	public int copyTo(Map props=[:], InputStream src, String destination) {
 		copyTo(props, src, -1, destination)
 	}
 	public int copyTo(Map props=[:], InputStream src, long filesize, String destination) {
 		if (filesize==-1) {
-			def bytes = src.getBytes() //DefaultGroovyMethods.getBytes(src)   //src.getBytes() doesn't work as advertised?
+			def bytes = src.getBytes()
 			filesize = bytes.size()
 			src = new ByteArrayInputStream(bytes)
 		}

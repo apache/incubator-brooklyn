@@ -208,6 +208,7 @@ public class JcloudsUtil {
      * contact it. When using a VPN, this could be a private address. It could
      * also be a public one. The method tries to guess what will work.
      */
+	//TODO this method doesn't have enough info; better to have a method on the target, eg MachineLocation.getHostnameForUseFrom(Location source)
     public static String getNodeAddress(NodeMetadata node) {
         String addr = JcloudsUtil.getFirstReachableAddress(node);
 
@@ -215,7 +216,7 @@ public class JcloudsUtil {
             return addr;
         } else if (node.getPublicAddresses().size() > 0) {
             String publicAddr = Iterables.get(node.getPublicAddresses(), 0);
-            LOG.warning("No reachable address found for node; using " + publicAddr);
+            LOG.warn("No reachable address found for node; using " + publicAddr);
             return publicAddr;
         } else {
             throw new IllegalStateException("Could not discover a suitable address for " + node);

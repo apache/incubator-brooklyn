@@ -5,6 +5,8 @@ import static java.util.concurrent.TimeUnit.SECONDS
 import static org.jclouds.compute.options.RunScriptOptions.Builder.overrideLoginCredentials
 import static org.jclouds.scriptbuilder.domain.Statements.exec
 
+import javax.annotation.Nullable;
+
 import org.jclouds.compute.ComputeService
 import org.jclouds.compute.RunNodesException
 import org.jclouds.compute.domain.ExecResponse
@@ -164,7 +166,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             String vmHostname = getPublicHostname(node, allconf)
             Map sshConfig = [:]
             if (allconf.sshPrivateKey) sshConfig.keyFiles = [ fileAsString(allconf.sshPrivateKey) ]
-            SshMachineLocation sshLocByHostname = new SshMachineLocation(
+            SshMachineLocation sshLocByHostname = new JcloudsSshMachineLocation(this, node,
                     address:vmHostname, 
                     displayName:vmHostname,
                     username:allconf.userName, 
@@ -310,14 +312,14 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     }
     
     private String getPublicHostname(NodeMetadata node, Map allconf) {
-        if (allconf.provider.equals("aws-ec2")) {
+        if (allconf?.provider?.equals("aws-ec2")) {
             return getPublicHostnameAws(node, allconf);
         } else {
             return getPublicHostnameGeneric(node, allconf);
         }
     }
     
-    private String getPublicHostnameGeneric(NodeMetadata node, Map allconf) {
+    private String getPublicHostnameGeneric(NodeMetadata node, @Nullable Map allconf) {
         //prefer the public address to the hostname because hostname is sometimes wrong/abbreviated
         //(see that javadoc; also e.g. on rackspace, the hostname lacks the domain)
         if (node.getPublicAddresses()) {
@@ -347,4 +349,25 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         }
         throw new IllegalStateException("Could not obtain hostname for vm $vmIp ("+node.getId()+"); exitcode="+exitcode+"; stdout="+outString+"; stderr="+new String(errStream.toByteArray()))
     }
+	
+	public static class JcloudsSshMachineLocation extends SshMachineLocation {
+		final JcloudsLocation parent;
+		final NodeMetadata node;
+		public JcloudsSshMachineLocation(Map flags, JcloudsLocation parent, NodeMetadata node) {
+			super(flags);
+			this.parent = parent;
+			this.node = node;
+		}
+		/** returns the hostname for use by peers in the same subnet,
+		 * defaulting to public hostname if nothing special
+		 * <p>
+		 * for use e.g. in clouds like amazon where other machines
+		 * in the same subnet need to use a different IP
+		 */
+		public String getSubnetHostname() {
+			if (node.getPrivateAddresses())
+            	return node.getPrivateAddresses().iterator().next()
+			return parent.getPublicHostname(node, null);
+		}
+	}
 }
