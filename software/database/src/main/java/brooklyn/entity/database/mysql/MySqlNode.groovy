@@ -20,6 +20,12 @@ public class MySqlNode extends SoftwareProcessEntity {
     @SetFromFlag("creationScript")
     public static final BasicConfigKey<String> CREATION_SCRIPT = [ String, "mysql.creation.script", "MySQL creation script", "" ]
 
+	@SetFromFlag("mirrorUrl")
+	public static final BasicConfigKey<String> MIRROR_URL = [ String, "mysql.install.mirror.url", "URL of mirror", 
+//		"http://mysql.mirrors.pair.com/"
+		"http://gd.tuwien.ac.at/db/mysql/"
+		 ]
+
     public MySqlNode(Entity owner) { this([:], owner) }
     public MySqlNode(Map flags=[:], Entity owner=null) {
         super(flags, owner)
