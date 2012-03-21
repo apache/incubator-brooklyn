@@ -232,11 +232,11 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
         long start = System.currentTimeMillis()
         long milliseconds = TimeUnit.MILLISECONDS.convert(timeout, unit)
         long end  = start + milliseconds
-	    while (end < System.currentTimeMillis()) {
+        while (end > System.currentTimeMillis()) {
             if (cancelled) throw new CancellationException()
             if (result == null) wait(end - System.currentTimeMillis())
             if (result != null) break
-		}
+        }
         long remaining = end -  System.currentTimeMillis()
         if (remaining > 0) {
             return result.get(remaining, TimeUnit.MILLISECONDS)
@@ -295,7 +295,7 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
             rv = "Ended "
             if (isCancelled()) {
                 rv += "by cancellation"
-                if (verbosity >= 1) rv+" after "+duration;
+                if (verbosity >= 1) rv+=" after "+duration;
             } else if (isError()) {
                 rv += "by error"
                 if (verbosity >= 1) {
