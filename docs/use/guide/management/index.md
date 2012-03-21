@@ -26,7 +26,7 @@ Distributed Management
 TODO Describe how and when objects become "live", pushed out to other nodes.
 -->
 
-*This section is not available in this milestone release.*
+*This section still needs to be written. Feel free to [fork](/dev/contribute) the docs and lend a hand.*
 
 <a name="resilience"></a>
 Resilience
@@ -34,7 +34,7 @@ Resilience
 <!---
 TODO
 -->
-*This section is not available in this milestone release.*
+*This section still needs to be written. Feel free to [fork](/dev/contribute) the docs and lend a hand.*
 
 <a name="key-apis"></a>
 Key APIs
@@ -42,7 +42,7 @@ Key APIs
 <!---
 TODO - brief overview of
 -->
-*This section is not complete in this milestone release.*
+*This section still needs to be written. Feel free to [fork](/dev/contribute) the docs and lend a hand.*
 
 - ``ManagementContext`` (Java management API)
 - ``EntityLocal`` (used by policies)
@@ -65,7 +65,7 @@ public static void main(String\[\] argv) {
 This will start an embedded brooklyn management node, including the web console.
 The URL for the web console defaults to http://localhost:8081.
 
-The mechanism for launching brooklyn management will change in a future release. For this milestone release, the brooklyn management node is embedded.
+The mechanism for launching brooklyn management will change in a future release. For this release, the brooklyn management node is embedded.
 
 The console contains two main views: Dashboard and Detail. These update in real-time.
 
@@ -102,7 +102,7 @@ The Detail view contains a breadcrumb trail, showing the current entitiy's posit
 ### Security
 
 
-In this milestone release only two Spring Security users are created: user and admin. Only the admin user has access to the Management Console.
+In this release only two Spring Security users are created: user and admin. Only the admin user has access to the Management Console.
 
 Admin access: 	username: *admin*, password: *password*.
 
@@ -132,7 +132,7 @@ Selected management operations are possible remotely using links exposed by the 
 
 ### Logging
 
-*This section is in development at the time of this milestone release.*
+*This section is not complete. Feel free to [fork](/dev/contribute) the docs and lend a hand.*
 
 Brooklyn uses the SLF4J logging facade,  which allows use of many popular frameworks including java.util.logging, log4j, and logback.
 
@@ -200,7 +200,7 @@ TODO , etc., example
 
 ### SubscriptionManager
 
-*This section is is progress at the time of this milestone release.*
+*This section is not complete. Feel free to [fork](/dev/contribute) the docs and lend a hand.*
 
 *See the* ``SubscriptionManager`` *class.*
 <!---

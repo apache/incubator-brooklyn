@@ -66,7 +66,7 @@ The code below starts a tomcat cluster in Amazon EC2:
 TODO httpPort: => http: in Alex's docs
 -->
 
-*In this milestone release, the following snippet should be considered pseudo code as it has not been tested.*
+*In this release, the following snippet should be considered pseudo code.*
 
 {% highlight java %}
 {% readj example_files/tomcat_EC2.groovy %}

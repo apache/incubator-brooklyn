@@ -4,15 +4,17 @@ title: Downloads
 toc: ../toc.json
 ---
 
-(TODO)
+<!---
+TODO
+-->
 
 ## Binaries
 
-{code}
-<dependency>...</dependency>
-{code}
 
-or f you want to download them manually, get them here from Maven?
+``<dependency>...</dependency>``
+
+
+or if you want to download them manually, get them from Maven.
 
 
 ## Sources
@@ -23,10 +25,14 @@ or f you want to download them manually, get them here from Maven?
 
 ## Latest stable
 
+<!---
 TODO
+-->
 
 ## All Versions
 
+<!---
 TODO
+-->
 
 
