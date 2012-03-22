@@ -3,10 +3,12 @@ package brooklyn.location.basic
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.location.OsDetails;
 import brooklyn.location.PortRange
 import brooklyn.util.NetworkUtils;
 import brooklyn.util.flags.SetFromFlag
+import brooklyn.util.flags.TypeCoercions;
 
 /**
  * An implementation of {@link brooklyn.location.MachineProvisioningLocation} that can provision a {@link SshMachineLocation} for the
@@ -52,8 +54,8 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
         super.configure(flags)
         
         if (!name) { name="localhost" }
-        if (!address) address = Inet4Address.localHost;
-        // could try to confirm this machine is accessible on the given address ... but there's no 
+        if (!address) address = TypeCoercions.coerce(BrooklynServiceAttributes.LOCALHOST_IP_ADDRESS.getValue() ?: Inet4Address.localHost, InetAddress)
+        // TODO should try to confirm this machine is accessible on the given address ... but there's no 
         // immediate convenience in java so early-trapping of that particular error is deferred
         
         if (canProvisionMore==null) {

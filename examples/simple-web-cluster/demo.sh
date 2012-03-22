@@ -61,6 +61,7 @@ if [ $# -gt 0 ]; then
     ARGS="$*"
 else
     ARGS="localhost"
+    JAVA_OPTS="-Dbrooklyn.localhost.address=127.0.0.1 $JAVA_OPTS"
 fi
 
 echo running demo for $CLASS from $CP at $ARGS
