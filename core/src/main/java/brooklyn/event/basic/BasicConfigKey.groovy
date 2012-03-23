@@ -92,6 +92,9 @@ class BasicConfigKey<T> implements ConfigKey<T>, ConfigKeySelfExtracting<T>, Ser
     }
     
     protected Object resolveValue(Object v, ExecutionContext exec) {
+        resolveValue(v, type, exec);
+    }
+    public static resolveValue(Object v, Class type, ExecutionContext exec) {
         //if the expected type is a closure or map and that's what we have, we're done (or if it's null)
         if (v==null || type.isInstance(v))
             return v;
@@ -109,11 +112,11 @@ class BasicConfigKey<T> implements ConfigKey<T>, ConfigKeySelfExtracting<T>, Ser
             } else if (v in Map) {
                 //and if a map or list we look inside
                 Map result = [:]
-                v.each { k,val -> result << [(k): resolveValue(val, exec)] }
+                v.each { k,val -> result << [(k): resolveValue(val, type, exec)] }
                 return result
             } else if (v in List) {
                 List result = []
-                v.each { result << resolveValue(it, exec) }
+                v.each { result << resolveValue(it, type, exec) }
                 return result
             } else {
                 return TypeCoercions.coerce(v, type);
@@ -121,8 +124,9 @@ class BasicConfigKey<T> implements ConfigKey<T>, ConfigKeySelfExtracting<T>, Ser
         } catch (Exception e) {
             throw new IllegalArgumentException("Error resolving "+v+" for "+this+" in "+exec+": "+e, e);
         }
-        return resolveValue(v, exec)
+        return resolveValue(v, type, exec)
     }
+    
 }
 
 class SubElementConfigKey<T> extends BasicConfigKey<T> {
