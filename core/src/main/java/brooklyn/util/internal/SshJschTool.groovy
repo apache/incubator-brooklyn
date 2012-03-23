@@ -189,9 +189,9 @@ public class SshJschTool {
         			if (!properties.err) 
                 		channel.setExtOutputStream(properties.out, true)
                 }
-        		//TODO would rather not have this, but funny things might happen
-                //(especially if running multiple scripts simulatenously?) if it's too low
-                //(although for the most part this doesn't apply because we run a single command with commas
+        		//TODO would rather not have this, but funny things sometimes happen if it's too log
+                //(especially if running multiple scripts simulatenously?)
+                //(although sometimes this doesn't apply because we run a single command with commas)
                 long pause = properties.pause ?: 2000
         
                 def allCmds = []
@@ -217,10 +217,10 @@ public class SshJschTool {
                         Thread.sleep pause
                     }
                 } catch (IOException ioe) {
-        			if (channel.getExitStatus()!=-1)
-                    	if (log.isDebugEnabled()) log.debug "Caught an IOException ({}) - the script has probably exited early", ioe.message
-        			else
-        				log.warn "Caught an IOException ({}) - the script may have exited early", ioe.message
+                    //scripts often say "exit", causing this
+                    //would be nice if we could differentiate!
+                    if (log.isDebugEnabled())
+                        log.debug "Caught an IOException ({}) - the script has probably exited early; exit code {}", ioe.message, channel.getExitStatus()
                 }
         
                 if (properties.block==null || properties.block) {

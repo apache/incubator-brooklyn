@@ -55,7 +55,7 @@ class AbstractControllerTest {
                 domain:"mydomain") {
 
             public void update() {
-                log.info "update, with addresses $addresses"
+                log.info "test controller update, addresses $addresses"
                 updates.add(addresses)
             }
             public SshBasedAppSetup newDriver(SshMachineLocation machine) {

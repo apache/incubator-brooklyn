@@ -35,6 +35,8 @@ public abstract class AbstractPolicy extends AbstractEntityAdjunct implements Po
             name = properties.remove "name"
         } else if (properties.displayName) {
             name = properties.remove "displayName"
+        } else if (getClass().getSimpleName()) {
+            name = getClass().getSimpleName()
         }
         if (properties.id) {
             id = properties.remove "id"

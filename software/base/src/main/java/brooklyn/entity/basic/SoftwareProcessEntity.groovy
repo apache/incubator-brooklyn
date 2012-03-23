@@ -111,6 +111,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 
     @Override
 	public void start(Collection<? extends Location> locations) {
+        log.info("Starting software process entity "+this+" at "+locations);
 		setAttribute(SERVICE_STATE, Lifecycle.STARTING)
 		if (!sensorRegistry) sensorRegistry = new SensorRegistry(this)
 
@@ -189,6 +190,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 	}
 
 	public void stop() {
+        log.info("Stopping software process entity "+this);
 		setAttribute(SERVICE_STATE, Lifecycle.STOPPING)
         setAttribute(SERVICE_UP, false)
 		if (sensorRegistry!=null) sensorRegistry.deactivateAdapters();
@@ -198,6 +200,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 			stopInLocation(machine)
 		}
 		setAttribute(SERVICE_STATE, Lifecycle.STOPPED)
+        if (log.isDebugEnabled()) log.debug("Stopped software process entity "+this);
 	}
 
 	Location removeFirstMatchingLocation(Closure matcher) {

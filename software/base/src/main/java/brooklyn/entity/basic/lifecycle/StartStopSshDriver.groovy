@@ -8,6 +8,7 @@ import java.util.Set
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.config.BrooklynLogging;
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.entity.basic.SoftwareProcessEntity
@@ -17,6 +18,7 @@ import brooklyn.util.internal.StreamGobbler
 public abstract class StartStopSshDriver extends AbstractStartStopDriver implements ScriptRunner {
 
 	public static final Logger log = LoggerFactory.getLogger(StartStopSshDriver.class);
+	public static final Logger logSsh = LoggerFactory.getLogger(BrooklynLogging.SSH_IO);
 	
     public static final String BROOKLYN_HOME_DIR = "/tmp/brooklyn";
     public static final String DEFAULT_INSTALL_BASEDIR = BROOKLYN_HOME_DIR+"/"+"installs";
@@ -56,7 +58,7 @@ public abstract class StartStopSshDriver extends AbstractStartStopDriver impleme
 	public String getHostname() { entity.getAttribute(Attributes.HOSTNAME) }
 
 	public int execute(List<String> script, String summaryForLogging, Map environmentOverride=null) {
-		log.info("{} on machine {}: {}", summaryForLogging, machine, script)
+		logSsh.debug("{} on machine {}: {}", summaryForLogging, machine, script)
 		def environment = environmentOverride!=null ? environmentOverride : getShellEnvironment() 
 		
 		InputStream insO = new PipedInputStream();
@@ -65,12 +67,14 @@ public abstract class StartStopSshDriver extends AbstractStartStopDriver impleme
         OutputStream outE = new PipedOutputStream(insE)
 //        InputStream insEcho = new PipedInputStream();
 //        OutputStream outEcho = new PipedOutputStream(insEcho)
-		new StreamGobbler(insO, null, log).setPrefix("["+entity.id+"@"+machine.getName()+":stdout] ").start()
-		new StreamGobbler(insE, null, log).setPrefix("["+entity.id+"@"+machine.getName()+":stderr] ").start()
+		new StreamGobbler(insO, null, logSsh).setPrefix("["+entity.id+"@"+machine.getName()+":stdout] ").start()
+		new StreamGobbler(insE, null, logSsh).setPrefix("["+entity.id+"@"+machine.getName()+":stderr] ").start()
 		//don't need echo here because we run bash with echo on
 //		new StreamGobbler(insEcho, null, log).setPrefix("["+entity.id+"@"+machine.getName()+":stdin]% ").start()
 		
 		int result = machine.run(out:outO, err:outE, /*echo:outEcho,*/ script, environment);
+        logSsh.debug("{} on machine {} completed: {}", summaryForLogging, machine, result)
+        return result
 	}
 	
 	/**

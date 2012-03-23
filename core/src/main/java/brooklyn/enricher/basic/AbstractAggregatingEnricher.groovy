@@ -40,13 +40,13 @@ public abstract class AbstractAggregatingEnricher<S,T> extends AbstractEnricher 
     }
     
     public void addProducer(Entity producer) {
-        LOG.info "$this linked ($producer, $source) to $target"
+        LOG.debug "$this linked ($producer, $source) to $target"
         values.put(producer, defaultValue)
         subscribe(producer, source, this)
     }
     
     public S removeProducer(Entity producer) {
-        LOG.info "$this unlinked ($producer, $source) from $target"
+        LOG.debug "$this unlinked ($producer, $source) from $target"
         unsubscribe(producer)
         values.remove(producer)
     }

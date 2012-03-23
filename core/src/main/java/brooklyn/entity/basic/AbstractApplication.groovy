@@ -1,18 +1,17 @@
 package brooklyn.entity.basic
 
-import java.util.concurrent.ExecutionException
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Application
-import brooklyn.entity.Entity
-import brooklyn.entity.trait.Changeable
 import brooklyn.entity.trait.Startable
-import brooklyn.entity.trait.StartableMethods;
+import brooklyn.entity.trait.StartableMethods
 import brooklyn.location.Location
-import brooklyn.management.Task
 import brooklyn.management.internal.AbstractManagementContext
 import brooklyn.management.internal.LocalManagementContext
 
 public abstract class AbstractApplication extends AbstractEntity implements Startable, Application {
+    public static final Logger log = LoggerFactory.getLogger(AbstractApplication.class);
     private volatile AbstractManagementContext mgmt = null;
     private boolean deployed = false
     
@@ -37,12 +36,16 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
 		
         setAttribute(SERVICE_UP, true)
         deployed = true
+        
+        log.info("Started application "+this);
     }
 
     /**
      * Default stop will stop all Startable children
      */
     public void stop() {
+        log.info("Stopping application "+this);
+        
     	setAttribute(SERVICE_UP, false)
 		StartableMethods.stop(this);
 		
@@ -55,6 +58,8 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         //(keeping recently unmanaged things)  
         //  however unmanaging must be done last, _after_ we stop children and set attributes 
         getManagementContext().unmanage(this)
+        
+        log.info("Stopped application "+this);
     }
 
     public void restart() {

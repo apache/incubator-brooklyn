@@ -126,9 +126,9 @@ public abstract class AbstractManagementContext implements ManagementContext  {
 				rootUnmanaged = candidateUnmanagedOwner;
 			}
 			if (context==Startable.START.name)
-				log.info("activating local management for $rootUnmanaged on start")
+				log.info("Activating local management for $rootUnmanaged on start")
 			else
-				log.warn("activating local management for $rootUnmanaged due to running code on $entity: "+context)
+				log.warn("Activating local management for $rootUnmanaged due to effector invocation on $entity: "+context)
 			manage(rootUnmanaged)
 		}
 	}

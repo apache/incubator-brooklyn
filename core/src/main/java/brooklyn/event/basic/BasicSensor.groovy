@@ -192,7 +192,7 @@ public class PortAttributeSensorAndConfigKey extends AttributeSensorAndConfigKey
                 if (l in PortSupplier) {
                     def p = ((PortSupplier)l).obtainPort(value);
                     if (p!=-1) {
-                        LOG.info(""+entity+" choosing port "+p+" for "+getName())
+                        LOG.debug(""+entity+" choosing port "+p+" for "+getName())
                         return p;
                     }
                     LOG.warn(""+entity+" no port available for "+getName())
@@ -201,7 +201,7 @@ public class PortAttributeSensorAndConfigKey extends AttributeSensorAndConfigKey
                 }
                 // ports may be available, we just can't tell from the location
                 def v = (value.isEmpty() ? null : value.iterator().next())
-                LOG.info(""+entity+" choosing port "+v+" (unconfirmed) for "+getName());
+                LOG.debug(""+entity+" choosing port "+v+" (unconfirmed) for "+getName());
                 return v;
             }
         }

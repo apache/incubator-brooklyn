@@ -59,7 +59,7 @@ public class StreamGobbler extends Thread {
     	while (line.length()>0 && (line.charAt(0)=='\n' || line.charAt(0)=='\r'))
     		line = line.substring(1);
     	if (out!=null) out.println(prefix+line);
-    	if (log!=null) log.info(prefix+line);
+    	if (log!=null && log.isDebugEnabled()) log.debug(prefix+line);
     }
     
     public void onClose() {
