@@ -3,10 +3,13 @@ package brooklyn.entity.database.mysql
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.basic.lifecycle.StartStopDriver
+import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey
+import brooklyn.location.Location
 import brooklyn.location.basic.PortRanges
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.location.basic.jclouds.JcloudsLocation.JcloudsSshMachineLocation
 import brooklyn.util.flags.SetFromFlag
 
 public class MySqlNode extends SoftwareProcessEntity {
@@ -26,6 +29,8 @@ public class MySqlNode extends SoftwareProcessEntity {
 		"http://gd.tuwien.ac.at/db/mysql/"
 		 ]
 
+    public static final BasicAttributeSensor<String> MYSQL_URL = [ String, "mysql.url", "URL to access mysql (e.g. mysql://localhost:3306/)" ]
+    
     public MySqlNode(Entity owner) { this([:], owner) }
     public MySqlNode(Map flags=[:], Entity owner=null) {
         super(flags, owner)
@@ -38,7 +43,13 @@ public class MySqlNode extends SoftwareProcessEntity {
 
     protected void connectSensors() {
         super.connectSensors();
-        //TODO sensors
+        Location l = locations.iterator().next();
+        String hostname = null;
+        if (l in JcloudsSshMachineLocation) hostname = ((JcloudsSshMachineLocation)l).getSubnetHostname();
+        else if (l in SshMachineLocation) hostname =  ((SshMachineLocation)l).getAddress()?.hostAddress;
+        if (hostname==null) 
+            throw new IllegalStateException("Cannot find hostname for unexpected location type "+l+" where "+this+" is running");
+        setAttribute(MYSQL_URL, "mysql://"+hostname+":"+getAttribute(MYSQL_PORT)+"/");
     }
 
     public int getPort() {
