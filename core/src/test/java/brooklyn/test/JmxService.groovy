@@ -62,7 +62,14 @@ class JmxService {
         server.registerMBean(new NamingService(jmxPort), naming);
         Object proxy = MBeanServerInvocationHandler.newProxyInstance(server, naming, NamingServiceMBean.class, false);
         namingServiceMBean = (NamingServiceMBean) proxy
-        namingServiceMBean.start();
+        try {
+            namingServiceMBean.start();
+        } catch (Exception e) {
+            // may take a bit of time for port to be available, if it had just been used
+            logger.warn("JmxService couldn't start test mbean ("+e+"); will delay then retry once");
+            Thread.sleep(1000);
+            namingServiceMBean.start();
+        }
 
         connectorServer.start()
         logger.info "JMX tester service started at URL {}", address
