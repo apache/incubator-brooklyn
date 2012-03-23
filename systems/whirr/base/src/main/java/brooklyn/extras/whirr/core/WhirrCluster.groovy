@@ -99,6 +99,8 @@ public class WhirrCluster extends AbstractEntity implements Startable {
     }
 
     void restart() {
-        // TODO: rebuild cluster by destroy all?
+        // TODO better would be to restart the software instances, not the machines ? 
+        stop();
+        start();
     }
 }
