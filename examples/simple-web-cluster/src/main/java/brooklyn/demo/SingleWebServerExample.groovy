@@ -15,7 +15,7 @@ public class SingleWebServerExample extends AbstractApplication {
     public static final Logger LOG = LoggerFactory.getLogger(SingleWebServerExample)
 
     public static final List<String> DEFAULT_LOCATIONS = [ CommandLineLocations.newLocalhostLocation() ]
-    private static final String WAR_PATH = "classpath://hello-world.war"
+    private static final String WAR_PATH = "classpath://hello-world-webapp.war"
 
     JBoss7Server web = new JBoss7Server(this, war: WAR_PATH, httpPort: 8080)
 

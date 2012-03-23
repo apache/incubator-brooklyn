@@ -32,7 +32,7 @@ public class WebClusterExample extends AbstractApplication {
 
     public static final List<String> DEFAULT_LOCATION = [ CommandLineLocations.LOCALHOST ]
 
-    public static final String WAR_PATH = "classpath://hello-world.war"
+    public static final String WAR_PATH = "classpath://hello-world-webapp.war"
     
     public WebClusterExample(Map props=[:]) {
         super(props)
@@ -41,19 +41,18 @@ public class WebClusterExample extends AbstractApplication {
     
 
     protected JavaWebAppService newWebServer(Map flags, Entity cluster) {
-        return new JBoss7Server(flags, cluster).configure(httpPort: "8080+")
+        return new JBoss7Server(flags, cluster).configure(httpPort: "8000+")
     }
 
     NginxController nginxController = new NginxController(
-        domain: 'brooklyn.geopaas.org',
-        port:8000)
+        domain: 'webclusterexample.brooklyn.local',
+        port:8080)
 
     ControlledDynamicWebAppCluster webCluster = new ControlledDynamicWebAppCluster(this,
         name: "WebApp cluster",
         controller: nginxController,
         initialSize: 1,
         webServerFactory: this.&newWebServer )
-
     
     ResizerPolicy policy = new ResizerPolicy(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND).
         setSizeRange(1, 5).

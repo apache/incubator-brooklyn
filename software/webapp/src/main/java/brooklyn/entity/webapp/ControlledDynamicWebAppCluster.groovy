@@ -34,7 +34,7 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
     Closure webServerFactory
 
     @SetFromFlag('initialSize')
-    public static BasicConfigKey<Integer> INITIAL_SIZE = Cluster.INITIAL_SIZE
+    public static BasicConfigKey<Integer> INITIAL_SIZE = [ Cluster.INITIAL_SIZE, 1 ]
         
     ControlledDynamicWebAppCluster(Map flags, Entity owner = null) {
         super(flags, owner)

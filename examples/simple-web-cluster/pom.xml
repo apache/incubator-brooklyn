@@ -21,4 +21,37 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <!-- copy the WAR so it is available on the classpath for programmatic deployment -->
+                <executions>
+                    <execution>
+                        <id>copy</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <!-- this can fail in eclipse trying to copy _from_ target/classes.
+                                         see http://jira.codehaus.org/browse/MDEP-259 -->
+                                    <groupId>${project.groupId}</groupId>
+                                    <artifactId>brooklyn-example-hello-world-webapp</artifactId>
+                                    <version>${project.version}</version>
+                                    <type>war</type>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>target/classes</outputDirectory>
+                                    <destFileName>hello-world-webapp.war</destFileName>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+        
 </project>
