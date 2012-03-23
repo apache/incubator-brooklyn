@@ -43,10 +43,10 @@ if [[ -z "$BROOKLYN_ALL_JAR" ]] ; then
 fi
 
 if [[ -z "$BROOKLYN_THIS_JAR" ]] ; then
-  if [[ -f `ls target/*.jar` ]] ; then
-    BROOKLYN_THIS_JAR=`ls target/*.jar | awk '{print $1}'`
-  elif [[ -d target/classes ]] ; then
+  if [[ ! -z `ls target/classes/* 2> /dev/null` ]] ; then
     BROOKLYN_THIS_JAR=target/classes
+  elif [[ -f `ls target/*.jar` ]] ; then
+    BROOKLYN_THIS_JAR=`ls target/*.jar | awk '{print $1}'`
   elif [[ -z "$CLASSPATH" ]] ; then
     echo "Cannot find project JAR or classes/ in target/ ; either set CLASSPATH or mvn clean install this project"
     exit 1
