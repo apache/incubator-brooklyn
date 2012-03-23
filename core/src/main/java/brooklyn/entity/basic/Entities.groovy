@@ -38,7 +38,9 @@ public class Entities {
 	 */
 	public static <T> Task<List<T>> invokeEffectorList(EntityLocal callingEntity, Collection<Entity> entitiesToCall, Effector<T> effector, Map<String,?> parameters=[:]) {
 		if (!entitiesToCall || entitiesToCall.isEmpty()) return null
-		List<Task> tasks = entitiesToCall.collect { it.invoke(effector, parameters) }
+		List<Task> tasks = entitiesToCall.collect { entity -> { -> entity.invoke(effector, parameters).get() } }
+        //above formulation is complicated, but it is building up a list of tasks, without blocking on them initially,
+        //but ensuring that when the parallel task is gotten it does block on all of them
 		ParallelTask invoke = new ParallelTask(tasks)
 		callingEntity.executionContext.submit(invoke)
 		return invoke
