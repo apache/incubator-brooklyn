@@ -19,7 +19,7 @@ class JavaAppUtils {
     
     public static void connectMXBeanSensors(EntityLocal entity, JmxSensorAdapter jmxAdapter) {
         
-        if (!entity.getConfig(UsesJavaMXBeans.DISABLE_MXBEAN_STATS)) {
+        if (entity.getConfig(UsesJavaMXBeans.MXBEAN_STATS_ENABLED)) {
             jmxAdapter.objectName(ManagementFactory.MEMORY_MXBEAN_NAME).with {
                 attribute("HeapMemoryUsage").subscribe(UsesJavaMXBeans.USED_HEAP_MEMORY, { CompositeData m -> MemoryUsage.from(m)?.getUsed() });
                 attribute("HeapMemoryUsage").subscribe(UsesJavaMXBeans.INIT_HEAP_MEMORY, { CompositeData m -> MemoryUsage.from(m)?.getInit() });

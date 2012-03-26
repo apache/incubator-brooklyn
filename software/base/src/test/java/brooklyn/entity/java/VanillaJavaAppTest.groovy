@@ -17,6 +17,9 @@ class VanillaJavaAppTest {
 
     private static final long TIMEOUT_MS = 10*1000
     
+    // FIXME Hard-codes Aled's path; needs fixed!
+    private static final String BROOKLYN_HOME = "/Users/aled/eclipse-workspaces/cloudsoft/brooklyn"
+    
     AbstractApplication app
     SshMachineLocation loc
     
@@ -46,10 +49,9 @@ class VanillaJavaAppTest {
         // TODO: how to test: launch standalone app that outputs system properties to stdout? Probe via JMX?
     }
     
-    // FIXME Hard-codes Aled's path; needs fixed!
     @Test(groups=["WIP", "Integration"])
     public void testStartsAndStops() {
-        String cp = "/Users/aled/eclipse-workspaces/cloudsoft/brooklyn/software/base/target/test-classes"
+        String cp = "/$BROOKLYN_HOME/software/base/target/test-classes"
         String main = "brooklyn.entity.java.ExampleVanillaMain"
         VanillaJavaApp javaProcess = new VanillaJavaApp(owner:app, main:main, classpath:[cp], args:[])
         app.start([loc])
@@ -59,10 +61,9 @@ class VanillaJavaAppTest {
         assertEquals(javaProcess.getAttribute(VanillaJavaApp.SERVICE_STATE), Lifecycle.STOPPED)
     }
     
-    // FIXME Hard-codes Aled's path; needs fixed!
     @Test(groups=["WIP", "Integration"])
     public void testHasJvmMXBeanSensorVals() {
-        String cp = "/Users/aled/eclipse-workspaces/cloudsoft/brooklyn/software/base/target/test-classes"
+        String cp = "$BROOKLYN_HOME/software/base/target/test-classes"
         String main = "brooklyn.entity.java.ExampleVanillaMain"
         VanillaJavaApp javaProcess = new VanillaJavaApp(owner:app, main:main, classpath:[cp], args:[])
         app.start([loc])
@@ -95,10 +96,9 @@ class VanillaJavaAppTest {
         }
     }
     
-    // FIXME Hard-codes Aled's path; needs fixed!
     @Test(groups=["WIP", "Integration"])
     public void testStartsWithJmxPortSpecifiedInConfig() {
-        String cp = "/Users/aled/eclipse-workspaces/cloudsoft/brooklyn/software/base/target/test-classes"
+        String cp = "$BROOKLYN_HOME/software/base/target/test-classes"
         String main = "brooklyn.entity.java.ExampleVanillaMain"
         VanillaJavaApp javaProcess = new VanillaJavaApp(owner:app, main:main, classpath:[cp], args:[])
         javaProcess.setConfig(UsesJmx.JMX_PORT, 54321)

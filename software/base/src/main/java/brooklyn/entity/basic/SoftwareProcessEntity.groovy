@@ -246,8 +246,8 @@ public interface UsesJmx extends UsesJava {
 
 public interface UsesJavaMXBeans {
     
-    @SetFromFlag("disableMxbeanStats")
-    public static final BasicConfigKey<Boolean> DISABLE_MXBEAN_STATS = [ Boolean, "java.metrics.disableMxbeanStats", "Disables collection of JVM stats from the MXBeans, such as memory and thread usage (default is false)", false ]
+    @SetFromFlag("mxbeanStatsEnabled")
+    public static final BasicConfigKey<Boolean> MXBEAN_STATS_ENABLED = [ Boolean, "java.metrics.mxbeanStatsEnabled", "Enables collection of JVM stats from the MXBeans, such as memory and thread usage (default is true)", true ]
     
     public static final BasicAttributeSensor<Long> USED_HEAP_MEMORY = [ Long, "java.metrics.heap.used", "current heap size in bytes" ]
     public static final BasicAttributeSensor<Long> INIT_HEAP_MEMORY = [ Long, "java.metrics.heap.init", "initial heap size in bytes" ]

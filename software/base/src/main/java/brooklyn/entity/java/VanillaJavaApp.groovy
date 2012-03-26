@@ -1,5 +1,7 @@
 package brooklyn.entity.java
 
+import groovy.time.TimeDuration
+
 import java.util.List
 import java.util.concurrent.TimeUnit
 
@@ -23,6 +25,9 @@ public class VanillaJavaApp extends SoftwareProcessEntity implements UsesJava, U
 
     // FIXME classpath values: need these to be downloaded and installed?
     
+    // TODO Make jmxPollPeriod @SetFromFlag easier to use: currently a confusion over long and TimeDuration, and 
+    // no ability to set default value (can't just set field because config vals read/set in super-constructor :-(
+     
     private static final Logger log = LoggerFactory.getLogger(VanillaJavaApp.class)
     
     @SetFromFlag("args")
@@ -33,6 +38,9 @@ public class VanillaJavaApp extends SoftwareProcessEntity implements UsesJava, U
 
     @SetFromFlag
     List<String> classpath
+
+    @SetFromFlag
+    long jmxPollPeriod
 
     JmxSensorAdapter jmxAdapter
     
@@ -45,7 +53,8 @@ public class VanillaJavaApp extends SoftwareProcessEntity implements UsesJava, U
         super.connectSensors();
         
         sensorRegistry.register(new ConfigSensorAdapter());
-        jmxAdapter = sensorRegistry.register(new JmxSensorAdapter(period: 500*TimeUnit.MILLISECONDS));
+        TimeDuration jmxPollPeriod = (jmxPollPeriod > 0 ? jmxPollPeriod : 500)*TimeUnit.MILLISECONDS
+        jmxAdapter = sensorRegistry.register(new JmxSensorAdapter(period:jmxPollPeriod));
         
         JavaAppUtils.connectMXBeanSensors(this, jmxAdapter)
     }
