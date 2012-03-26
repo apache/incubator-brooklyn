@@ -1,8 +1,3 @@
-/*
- * Copyright (c) 2009-2011 Cloudsoft Corporation Ltd. All rights reserved.
- * Supplied under license http://www.cloudsoftcorp.com/license/montereyDeveloperEdition
- * or such subsequent license agreed between Cloudsoft Corporation Ltd and the licensee.
- */
 package brooklyn.location.basic.jclouds;
 
 import static org.jclouds.aws.ec2.reference.AWSEC2Constants.PROPERTY_EC2_AMI_QUERY

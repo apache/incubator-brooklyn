@@ -1,8 +1,3 @@
-/*
- * Copyright (c) 2009-2011 Cloudsoft Corporation Ltd. All rights reserved.
- * Supplied under license http://www.cloudsoftcorp.com/license/montereyDeveloperEdition
- * or such subsequent license agreed between Cloudsoft Corporation Ltd and the licensee.
- */
 package brooklyn.util.internal.duplicates;
 
 import java.io.IOException;
