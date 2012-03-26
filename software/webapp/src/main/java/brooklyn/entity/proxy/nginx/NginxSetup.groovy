@@ -4,6 +4,8 @@ import java.util.List
 import java.util.Map
 
 import brooklyn.entity.basic.Attributes
+import brooklyn.entity.basic.lifecycle.CommonCommands;
+import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup;
 import brooklyn.location.basic.SshMachineLocation
 
@@ -56,12 +58,17 @@ public class NginxSetup extends SshBasedAppSetup {
     public List<String> getInstallScript() {
         makeInstallScript([
 				"export INSTALL_DIR=${installDir}",
+                CommonCommands.INSTALL_WGET,
+                CommonCommands.INSTALL_TAR,
+                CommonCommands.installPackage("nginx-prerequisites", 
+                        yum: "openssl-devel", 
+                        rpm: "openssl-devel",  //TODO needs testing
+                        apt:"libssl-dev zlib1g-dev libpcre3-dev"),
                 "wget http://nginx.org/download/nginx-${version}.tar.gz",
                 "tar xvzf nginx-${version}.tar.gz",
 	            "cd \$INSTALL_DIR/src",
                 "wget http://nginx-sticky-module.googlecode.com/files/nginx-sticky-module-1.0-rc2.tar.gz",
                 "tar xvzf nginx-sticky-module-1.0-rc2.tar.gz",
-                "which yum && yum -y install openssl-devel",
                 "cd ..",
 	            "mkdir -p dist",
 	            "./configure --prefix=\$INSTALL_DIR/dist --add-module=\$INSTALL_DIR/src/nginx-sticky-module-1.0-rc2 --without-http_rewrite_module",
