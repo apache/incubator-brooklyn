@@ -7,7 +7,7 @@ categories: [start]
 
 ## What is Brooklyn?
 
-Brooklyn is a unified framework that allows you to deploy and managed
+Brooklyn is a unified framework that allows you to deploy and manage
 distributed, multi-cloud, multi-paas applications.
 
 Brooklyn aims to give DevOps practitioners a method for describing deployment configuration and management behavior in a single, concise descriptor.
@@ -40,12 +40,12 @@ Brooklyn is still pre-release, and has ...
 ## Getting Started
 
 See the [developer's walkthrough](walkthrough.html) for a quick tour,
-then dive in to the [user guide](/use/guide/) describing the 
-[concepts](/use/guide/defining-applications/basic-concepts.md)
-and giving some [tutorial examples](/use/examples/index.html).
+then dive in to the [user guide]({{site.url}}/use/guide/) describing the 
+[concepts]({{site.url}}/use/guide/defining-applications/basic-concepts.html)
+and giving some [tutorial examples]({{site.url}}/use/examples/index.html).
 
-Alternatively jump straight in to the [/develop/code](/use/code.html), 
+Alternatively jump straight in to the [/dev/code]({{site.url}}/use/code.html), 
 or other [documentation](docs-summary.html).
 
 If you like it, join the discussion on the user and developer groups.
-[Details](/meta/contact.html).
+[Details]({{site.url}}/meta/contact.html).

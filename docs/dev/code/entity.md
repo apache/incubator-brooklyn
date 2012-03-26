@@ -56,5 +56,5 @@ it is suggested to avoid them!):
 
 You might also find the following helpful:
 
-* The **[User Guide](/use/guide/index.html)**
+* The **[User Guide]({{site.url}}/use/guide/index.html)**
 * The **[Mailing List](http://groups.google.com/group/brooklyn-dev)** (brooklyn-dev@googlegroups.com)

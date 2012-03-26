@@ -15,7 +15,7 @@ An application entity (``Application`` class) defines a management context  (``M
 An ``Application``'s ``start()`` method begins provisioning the management plane and distributing the management of entities owned by the application (and their entities, recursively). 
 
 Provisioning of entities typically happens in parallel automatically,
-although this can be customized. This is implemented as ***tasks*** which are tracked by the management plane and is visible in the [web-based management console](/use/guide/management/index.html#console).
+although this can be customized. This is implemented as ***tasks*** which are tracked by the management plane and is visible in the [web-based management console]({{site.url}}/use/guide/management/index.html#console).
 
 Customized provisioning can be useful where two starting entities depend on each other. For example, it is often necessary to delay start of one entity until another entity reaches a certain state, and to supply run-time information about the latter to the former.
 
@@ -123,6 +123,6 @@ For example, a ``TomcatServer`` may implement start and other effectors using a 
 Particularly for sensors, some technologies are used so frequently that they are
 packaged as ***adapters*** which can discover their confguration (including from drivers). These include JMX and HTTP.
 
-Brooklyn comes with entity implementations for a growing number of commonly used systems, including various web application servers, databases and NoSQL data stores, and messaging systems. See: [Extras](/use/guide/extras/index.html).
+Brooklyn comes with entity implementations for a growing number of commonly used systems, including various web application servers, databases and NoSQL data stores, and messaging systems. See: [Extras]({{site.url}}/use/guide/extras/index.html).
 
 

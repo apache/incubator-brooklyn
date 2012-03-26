@@ -35,7 +35,7 @@ Application, Ownership and Membership
 
 All entities have an ***owner*** entity, which creates and manages it, with two exceptions: *applications* and *templates*. Top-level application entities are created and managed externally, perhaps by a script.
 
-(Templates are covered in [Advanced Concepts](/use/guide/defining-applications/advanced-concepts.html).)
+(Templates are covered in [Advanced Concepts]({{site.url}}/use/guide/defining-applications/advanced-concepts.html).)
 
 Applications described using Brooklyn are typically supplied in an ***application descriptor***. This is a Java class (implementing the class ``Application``) specifying the entities which make up the application and how they are to be configured and managed.
 
@@ -74,6 +74,6 @@ Effectors can be invoked by an entity's owner remotely, and the invoker is able 
 Entities are Java classes and data can also be stored in internal fields.
 This data will not be inherited and will not be externally visible (and resilience is more limited), but the data will be moved when an entity's master location is changed.
 
-Next: [Advanced Concepts](/use/guide/defining-applications/advanced-concepts.html).
-See also: [Management > Sensors and Effectors](/use/guide/management/index.html#sensors-and-effectors).
+Next: [Advanced Concepts]({{site.url}}/use/guide/defining-applications/advanced-concepts.html).
+See also: [Management > Sensors and Effectors]({{site.url}}/use/guide/management/index.html#sensors-and-effectors).
 
