@@ -18,12 +18,12 @@ Install the following:
 * [**Pygments**](http://pygments.org/): `sudo easy_install Pygments`
 
 Then, in the `docs/` directory, run:
-
-    jekyll --pygments --server --auto
-
-Visit [http://localhost:4000/start/index.html](http://localhost:4000/start/index.html) and you should see the documentation.
-
-(See also the scripts stored in `_scripts/` for convenience.)
+	
+	jekyll --pygments --server --auto --base-url /brooklyn/v/0.4.0-SNAPSHOT
+or 
+    ./_scripts/jekyll-server.sh 
+    
+Visit [http://localhost:4000/brooklyn/v/0.4.0-SNAPSHOT/start/index.html](http://localhost:4000/brooklyn/v/0.4.0-SNAPSHOT/start/index.html) and you should see the documentation.
 
 
 # Extensions
