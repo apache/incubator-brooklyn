@@ -3,7 +3,7 @@ package brooklyn.util;
 import java.util.Random;
 
 /**
- * Select utility methods copied from Monterey util's com.cloudsoftcorp.util.StringUtils.
+ * 
  */
 public class IdGenerator {
     private static Random random = new Random();
@@ -24,6 +24,8 @@ public class IdGenerator {
      * prefer to use a counter where feasible
      **/
     public static String makeRandomId(int l) {
+            // copied from Monterey util's com.cloudsoftcorp.util.StringUtils.
+
             //this version is 30-50% faster than the old double-based one, 
             //which computed a random every 3 turns --
             //takes about 600 ns to do id of len 10, compared to 10000 ns for old version [on 1.6ghz machine]
