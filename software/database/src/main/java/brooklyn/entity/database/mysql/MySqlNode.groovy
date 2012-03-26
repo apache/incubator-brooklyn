@@ -20,17 +20,21 @@ public class MySqlNode extends SoftwareProcessEntity {
     @SetFromFlag("port")
     public static final PortAttributeSensorAndConfigKey MYSQL_PORT = [ "mysql.port", "MySQL port", PortRanges.fromString("3306, 13306+") ]
 
-    @SetFromFlag("creationScript")
-    public static final BasicConfigKey<String> CREATION_SCRIPT = [ String, "mysql.creation.script", "MySQL creation script", "" ]
+    @SetFromFlag("creationScriptContents")
+    public static final BasicConfigKey<String> CREATION_SCRIPT_CONTENTS = [ String, "mysql.creation.script.contents", "MySQL creation script (SQL contents)", "" ]
 
+    @SetFromFlag("creationScriptUrl")
+    public static final BasicConfigKey<String> CREATION_SCRIPT_URL = [ String, "mysql.creation.script.url", "URL where MySQL creation script can be found", "" ]
+    
+    /** download mirror, if desired; defaults to Austria which seems one of the fastest */
 	@SetFromFlag("mirrorUrl")
 	public static final BasicConfigKey<String> MIRROR_URL = [ String, "mysql.install.mirror.url", "URL of mirror", 
-//		"http://mysql.mirrors.pair.com/"
+//		"http://mysql.mirrors.pair.com/"   // Pennsylvania
 		"http://gd.tuwien.ac.at/db/mysql/"
 		 ]
 
     public static final BasicAttributeSensor<String> MYSQL_URL = [ String, "mysql.url", "URL to access mysql (e.g. mysql://localhost:3306/)" ]
-    
+
     public MySqlNode(Entity owner) { this([:], owner) }
     public MySqlNode(Map flags=[:], Entity owner=null) {
         super(flags, owner)

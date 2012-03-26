@@ -1,16 +1,16 @@
 package brooklyn.entity.database.mysql;
 
 import org.slf4j.Logger
-
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.SoftwareProcessEntity
+import brooklyn.entity.basic.lifecycle.CommonCommands
 import brooklyn.entity.basic.lifecycle.StartStopSshDriver
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.BasicOsDetails.OsArchs
 import brooklyn.location.basic.BasicOsDetails.OsVersions
 import brooklyn.util.ComparableVersion
-import brooklyn.entity.basic.lifecycle.CommonCommands;
+import brooklyn.util.ResourceUtils
 
 public class MySqlSshDriver extends StartStopSshDriver {
 
@@ -21,11 +21,7 @@ public class MySqlSshDriver extends StartStopSshDriver {
     }
     
     protected String getVersion() {
-        String v = entity.getConfig(SoftwareProcessEntity.SUGGESTED_VERSION) ?: getDefaultVersion();
-//        if (osTag.contains("linux") && v.equals("5.5.21"))
-//            v = "5.5.21-1";  //special mangling required for linux
-		//there is also a 5.5.21 version (not containing RPMs)
-        return v;
+        entity.getConfig(SoftwareProcessEntity.SUGGESTED_VERSION) ?: getDefaultVersion();
     }
 
     public String getOsTag() {
@@ -45,48 +41,30 @@ public class MySqlSshDriver extends StartStopSshDriver {
         String osp2 = os.arch.equals(OsArchs.X_86_64) ? "x86_64" : "i686"
         return osp1+"-"+osp2;
     }
-    public String getSuffix() {
-        def os = getLocation().getOsDetails();
-//        //they don't offer a consistent set of downloads...
-//        if (os.isMac()) return "tar.gz";
-//        if (os.isLinux()) return "tar";
-        //guess
-        return "tar.gz";
-    }
-	public String getBasenameForUrl() {
-        def os = getLocation().getOsDetails();
-//        //they don't offer a consistent set of downloads...
-//        if (os.isLinux()) return "MySQL";
-//        //most others are lower case
-        return "mysql";
-	}
 	
 	public String getMirrorUrl() {
-		"http://mysql.mirrors.pair.com/"
+        entity.getConfig(MySqlNode.MIRROR_URL);
+//		"http://mysql.mirrors.pair.com/"
 //		"http://gd.tuwien.ac.at/db/mysql/"
 	}
+    
+	public String getBasename() { "mysql-${version}-${osTag}" }
+    
 	//http://dev.mysql.com/get/Downloads/MySQL-5.5/mysql-5.5.21-osx10.6-x86_64.tar.gz/from/http://gd.tuwien.ac.at/db/mysql/
 	//http://dev.mysql.com/get/Downloads/MySQL-5.5/mysql-5.5.21-linux2.6-i686.tar.gz/from/http://gd.tuwien.ac.at/db/mysql/
-	//ignore these:
-    //http://dev.mysql.com/get/Downloads/MySQL-5.5/MySQL-5.5.21-1.linux2.6.i386.tar/from/http://mysql.mirrors.pair.com/
-	//http://dev.mysql.com/get/Downloads/MySQL-5.5/MySQL-5.5.21-1.linux2.6.i386.tar/from/http://gd.tuwien.ac.at/db/mysql/
-	//http://dev.mysql.com/get/Downloads/MySQL-5.5/MySQL-5.5.21-1.linux2.6.i386.tar/from/http://gd.tuwien.ac.at/db/mysql/
-	//                                             mysql-5.5.21-linux2.6-i686
-	//http://dev.mysql.com/get/Downloads/MySQL-5.5/MySQL-5.5.21-1.linux2.6.i386.tar/from/http://www.mirrorservice.org/sites/ftp.mysql.com/
-    public String getUrl() { "http://dev.mysql.com/get/Downloads/MySQL-5.5/${basenameForUrl}-${version}-${osTag}.${suffix}/from/${mirrorUrl}" }
+	public String getUrl() { "http://dev.mysql.com/get/Downloads/MySQL-5.5/${basename}.tar.gz/from/${mirrorUrl}" }
     
-    public String getBasename() { "mysql-${version}-${osTag}" }
     public String getBasedir() { installDir+"/"+basename }
 	
     @Override
     public void install() {
-        String saveAs  = "${basename}.${suffix}"
+        String saveAs  = "${basename}.tar.gz"
         newScript(INSTALLING).
             failOnNonZeroResultCode().
             body.append(
                 CommonCommands.downloadUrlAs(url, getEntityVersionLabel('/'), saveAs),
                 CommonCommands.INSTALL_TAR, 
-                "tar xfv"+(saveAs.endsWith("z") ? "z" : "")+" ${saveAs}",  //because they don't offer a consistent set of downloads
+                "tar xfvz ${saveAs}",
             ).execute();
     }
 
@@ -100,7 +78,11 @@ public class MySqlSshDriver extends StartStopSshDriver {
         newScript(CUSTOMIZING).
 			body.append("echo copying creation script").
 			execute();  //create the directory
-		machine.copyTo(new StringReader(entity.getConfig(MySqlNode.CREATION_SCRIPT)?:""), runDir+"/"+"creation-script.cnf");
+        Reader creationScript;
+        def url = entity.getConfig(MySqlNode.CREATION_SCRIPT_URL)
+        if (url) creationScript = new InputStreamReader(new ResourceUtils(entity).getResourceFromUrl(url));
+        else creationScript = new StringReader(entity.getConfig(MySqlNode.CREATION_SCRIPT_CONTENTS)?:"")
+		machine.copyTo(creationScript, runDir+"/"+"creation-script.cnf");
         newScript(CUSTOMIZING).
             failOnNonZeroResultCode().
             body.append(
