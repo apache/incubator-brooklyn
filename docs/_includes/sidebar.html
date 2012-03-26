@@ -63,10 +63,10 @@ function closeAccordionish(x, pinned) {
   }
 }
 function openAccordionishSoonIfHover(x) {
-  setTimeout(function() {
+  x.data('dwellTimer', setTimeout(function() {
           if (x.hasClass("self-hover") || x.hasClass("next-hover"))
             openAccordionish(x, false); 
-    }, 250);
+    }, 250));
 }
 function closeAccordionishSoonIfNoHover(x) {
   setTimeout(function() {
@@ -74,7 +74,10 @@ function closeAccordionishSoonIfNoHover(x) {
             closeAccordionish(x, false); 
     }, 100);
 }
-
+function cancelAccordionishSoonIfNoHover(x) {
+	var timeout = x.data("dwellTimer");
+	if(timeout) clearTimeout(timeout);
+}
 $("#accordionish").addClass("ui-accordion ui-accordion-icons ui-widget ui-helper-reset")
   .find(".accordiable")
     .addClass("left-menu-parent left-menu-body ui-accordion-header ui-helper-reset ui-state-default ui-corner-top ui-corner-bottom")
@@ -95,7 +98,7 @@ $("#accordionish").addClass("ui-accordion ui-accordion-icons ui-widget ui-helper
         openAccordionishSoonIfHover($(this), false); }, 
       function() { 
         //$(this).removeClass("self-hover");
-        //closeAccordionishSoonIfNoHover($(this)); 
+        cancelAccordionishSoonIfNoHover($(this)); 
       })
     .next()
       .hover(function() { 
@@ -103,7 +106,7 @@ $("#accordionish").addClass("ui-accordion ui-accordion-icons ui-widget ui-helper
           openAccordionish($(this).prev(), false); }, 
         function() { 
           //$(this).prev().removeClass("next-hover");
-          //closeAccordionishSoonIfNoHover($(this).prev());
+        	cancelAccordionishSoonIfNoHover($(this));
         })
       .addClass("left-menu-body ui-accordion-content ui-helper-reset ui-widget-content ui-corner-bottom")
       .addClass("ui-accordion-content-active")
