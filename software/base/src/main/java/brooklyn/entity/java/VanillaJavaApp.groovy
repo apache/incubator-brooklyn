@@ -1,6 +1,7 @@
 package brooklyn.entity.java
 
 import java.util.List
+import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -8,14 +9,17 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.basic.UsesJava
+import brooklyn.entity.basic.UsesJavaMXBeans
 import brooklyn.entity.basic.UsesJmx
 import brooklyn.entity.basic.lifecycle.JavaStartStopSshDriver
+import brooklyn.event.adapter.ConfigSensorAdapter
+import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.flags.SetFromFlag
 
 
-public class VanillaJavaApp extends SoftwareProcessEntity implements UsesJava, UsesJmx {
+public class VanillaJavaApp extends SoftwareProcessEntity implements UsesJava, UsesJmx, UsesJavaMXBeans {
 
     // FIXME classpath values: need these to be downloaded and installed?
     
@@ -30,6 +34,8 @@ public class VanillaJavaApp extends SoftwareProcessEntity implements UsesJava, U
     @SetFromFlag
     List<String> classpath
 
+    JmxSensorAdapter jmxAdapter
+    
     public VanillaJavaApp(Map props=[:], Entity owner=null) {
         super(props, owner)
     }
@@ -37,8 +43,19 @@ public class VanillaJavaApp extends SoftwareProcessEntity implements UsesJava, U
     @Override
     protected void connectSensors() {
         super.connectSensors();
+        
+        sensorRegistry.register(new ConfigSensorAdapter());
+        jmxAdapter = sensorRegistry.register(new JmxSensorAdapter(period: 500*TimeUnit.MILLISECONDS));
+        
+        JavaAppUtils.connectMXBeanSensors(this, jmxAdapter)
     }
     
+    @Override
+    protected void preStop() {
+        jmxAdapter?.deactivateAdapter();
+        super.preStop();
+    }
+
     public VanillaJavaAppSshDriver newDriver(SshMachineLocation loc) {
         new VanillaJavaAppSshDriver(this, loc)
     }

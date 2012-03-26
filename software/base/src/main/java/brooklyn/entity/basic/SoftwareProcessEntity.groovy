@@ -243,3 +243,20 @@ public interface UsesJmx extends UsesJava {
 	
 	public static final BasicAttributeSensor<String> JMX_URL = [ String, "jmx.url", "JMX URL" ]
 }
+
+public interface UsesJavaMXBeans {
+    
+    @SetFromFlag("disableMxbeanStats")
+    public static final BasicConfigKey<Boolean> DISABLE_MXBEAN_STATS = [ Boolean, "java.metrics.disableMxbeanStats", "Disables collection of JVM stats from the MXBeans, such as memory and thread usage (default is false)", false ]
+    
+    public static final BasicAttributeSensor<Long> USED_HEAP_MEMORY = [ Long, "java.metrics.heap.used", "current heap size in bytes" ]
+    public static final BasicAttributeSensor<Long> INIT_HEAP_MEMORY = [ Long, "java.metrics.heap.init", "initial heap size in bytes" ]
+    public static final BasicAttributeSensor<Long> COMMITTED_HEAP_MEMORY = [ Long, "java.metrics.heap.committed", "commited heap size in bytes" ]
+    public static final BasicAttributeSensor<Long> MAX_HEAP_MEMORY = [ Long, "java.metrics.heap.max", "max heap size in bytes" ]
+    public static final BasicAttributeSensor<Long> NON_HEAP_MEMORY_USAGE = [ Long, "java.metrics.nonheap.used", "current non-heap size in bytes" ]
+    public static final BasicAttributeSensor<Long> CURRENT_THREAD_COUNT = [ Integer, "java.metrics.threads.current", "current number of threads" ]
+    public static final BasicAttributeSensor<Long> PEAK_THREAD_COUNT = [ Integer, "java.metrics.threads.max", "peak number of threads" ]
+    public static final BasicAttributeSensor<Long> START_TIME = [ Long, "java.metrics.starttime", "start time" ]
+    public static final BasicAttributeSensor<Double> SYSTEM_LOAD_AVERAGE = [ Double, "java.metrics.systemload.average", "average system load" ]
+    public static final BasicAttributeSensor<Long> GARBAGE_COLLECTION_TIME = [ Map, "java.metrics.gc.time", "garbage collection time" ]
+}
