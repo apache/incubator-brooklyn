@@ -4,6 +4,7 @@ import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutionException
@@ -16,6 +17,7 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
 import brooklyn.location.basic.SimulatedLocation
@@ -60,7 +62,7 @@ class DynamicFabricTest {
     }
     
     private void runWithLocations(Collection<Location> locs) {
-        DynamicFabric fabric = new DynamicFabric(newEntity:{ properties -> return new TestEntity(properties) }, app)
+        DynamicFabric fabric = new DynamicFabric(factory:{ properties -> return new TestEntity(properties) }, app)
         app.start(locs)
         
         assertEquals(fabric.ownedChildren.size(), locs.size(), Joiner.on(",").join(fabric.ownedChildren))
@@ -78,8 +80,10 @@ class DynamicFabricTest {
         List<Entity> entitiesAdded = new CopyOnWriteArrayList<Entity>()
         
         DynamicFabric fabric = new DynamicFabric(
-                newEntity:{ properties -> return new TestEntity(properties) },
-                postStartEntity:{ Entity e -> entitiesAdded.add(e) },
+                factory:{ properties, owner -> 
+                        def result = new TestEntity(properties, owner)
+                        entitiesAdded.add(result)
+                        result },
                 app)
         
         app.start([loc1,loc2])
@@ -91,9 +95,9 @@ class DynamicFabricTest {
     @Test
     public void testSizeEnricher() {
         Collection<Location> locs = [ new SimulatedLocation(), new SimulatedLocation(), new SimulatedLocation() ]
-        DynamicFabric fabric = new DynamicFabric(newEntity:{ fabricProperties, owner ->
+        DynamicFabric fabric = new DynamicFabric(factory:{ fabricProperties, owner ->
             return new DynamicCluster(owner:owner, initialSize:0,
-                newEntity:{ clusterProperties -> return new TestEntity(clusterProperties) })
+                factory:{ clusterProperties -> return new TestEntity(clusterProperties) })
             }, app)
         
         app.start(locs)
@@ -115,7 +119,7 @@ class DynamicFabricTest {
     public void testDynamicFabricStartsEntitiesInParallel() {
         List<CountDownLatch> latches = [] as CopyOnWriteArrayList<CountDownLatch>
         DynamicFabric fabric = new DynamicFabric(
-                newEntity:{ properties -> 
+                factory:{ properties -> 
                         CountDownLatch latch = new CountDownLatch(1); 
                         latches.add(latch); 
                         return new BlockingEntity(properties, latch) 
@@ -155,7 +159,7 @@ class DynamicFabricTest {
         List<CountDownLatch> shutdownLatches = [] as CopyOnWriteArrayList<CountDownLatch>
         List<CountDownLatch> executingShutdownNotificationLatches = [] as CopyOnWriteArrayList<CountDownLatch>
         DynamicFabric fabric = new DynamicFabric(
-                newEntity:{ properties -> 
+                factory:{ properties -> 
                         CountDownLatch shutdownLatch = new CountDownLatch(1); 
                         CountDownLatch executingShutdownNotificationLatch = new CountDownLatch(1); 
                         shutdownLatches.add(shutdownLatch);
@@ -199,7 +203,7 @@ class DynamicFabricTest {
     @Test
     public void testDynamicFabricDoesNotAcceptUnstartableChildren() {
         DynamicFabric fabric = new DynamicFabric(
-                newEntity:{ properties -> return new AbstractEntity(properties) {} }, 
+                factory:{ properties -> return new AbstractEntity(properties) {} }, 
                 app)
         
         try {
@@ -220,7 +224,7 @@ class DynamicFabricTest {
     @Test
     public void testDynamicFabricIgnoresExtraUnstoppableChildrenOnStop() {
         DynamicFabric fabric = new DynamicFabric(
-                newEntity:{ properties -> return new TestEntity(properties) }, 
+                factory:{ properties -> return new TestEntity(properties) }, 
                 app)
         
         fabric.start([loc1])
@@ -232,20 +236,37 @@ class DynamicFabricTest {
     
 	@Test
     public void testDynamicFabricPropagatesProperties() {
-		Closure entityFactory = { properties -> return new TestEntity(properties) }
-        Closure clusterFactory = { properties -> 
-            def clusterProperties = properties + [initialSize:1, newEntity:entityFactory]
-            new DynamicCluster(clusterProperties)
+		Closure entityFactory = { properties -> 
+            def entityProperties = properties + [b: "avail"]
+            return new TestEntity(entityProperties) 
         }
-		DynamicFabric fabric = new DynamicFabric(initialSize:1, httpPort: 8080, newEntity:clusterFactory, app)
+        Closure clusterFactory = { properties -> 
+            def clusterProperties = properties + [factory:entityFactory, a: "ignored"]
+            new DynamicCluster(clusterProperties) {
+                protected Map getCustomChildFlags() { [fromCluster: "passed to base entity"] }
+            }
+        }
+		DynamicFabric fabric = new DynamicFabric(factory:clusterFactory, app) {
+            protected Map getCustomChildFlags() { [fromFabric: "passed to cluster but not base entity"] }
+        }
+        //available through inheritance (as a PortRange)
+        fabric.setConfig(Attributes.HTTP_PORT, 1234)
 		
 		app.start([ new SimulatedLocation() ])
         
 		assertEquals(fabric.ownedChildren.size(), 1)
 		assertEquals(fabric.ownedChildren[0].ownedChildren.size(), 1)
-		assertEquals(fabric.ownedChildren[0].ownedChildren[0].constructorProperties.httpPort, 8080)
+		assertEquals(fabric.ownedChildren[0].ownedChildren[0].getConfig(Attributes.HTTP_PORT)?.toString(), "1234")
+		assertEquals(fabric.ownedChildren[0].ownedChildren[0].constructorProperties.a, null)
+		assertEquals(fabric.ownedChildren[0].ownedChildren[0].constructorProperties.b, "avail")
+		assertEquals(fabric.ownedChildren[0].ownedChildren[0].constructorProperties.fromCluster, "passed to base entity")
+		assertEquals(fabric.ownedChildren[0].ownedChildren[0].constructorProperties.fromFabric, null)
         
         fabric.ownedChildren[0].resize(2)
-        assertEquals(fabric.ownedChildren[0].ownedChildren[1].constructorProperties.httpPort, 8080)
+        assertEquals(fabric.ownedChildren[0].ownedChildren[1].getConfig(Attributes.HTTP_PORT)?.toString(), "1234")
+        assertEquals(fabric.ownedChildren[0].ownedChildren[1].constructorProperties.a, null)
+        assertEquals(fabric.ownedChildren[0].ownedChildren[1].constructorProperties.b, "avail")
+        assertEquals(fabric.ownedChildren[0].ownedChildren[1].constructorProperties.fromCluster, "passed to base entity")
+        assertEquals(fabric.ownedChildren[0].ownedChildren[1].constructorProperties.fromFabric, null)
 	}
 }

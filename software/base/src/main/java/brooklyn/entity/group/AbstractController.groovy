@@ -34,7 +34,7 @@ public abstract class AbstractController extends SoftwareProcessEntity {
     /** port where this controller should live */
     //TODO make independent from web; push web-logic to subclass (AbstractWebController) with default 8000
     @SetFromFlag("port")
-    public static final PortAttributeSensorAndConfigKey HTTP_PORT = Attributes.HTTP_PORT
+    public static final PortAttributeSensorAndConfigKey HTTP_PORT = [ "http.port", "HTTP port", [8000,"8001+"] ]
     @SetFromFlag("protocol")
     public static final BasicAttributeSensorAndConfigKey<String> PROTOCOL = [ String, "proxy.protocol", "Protocol", "http" ]
     @SetFromFlag("domain")

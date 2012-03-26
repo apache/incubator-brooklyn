@@ -32,6 +32,19 @@ class ConfigFieldTest {
         assertEquals(entity.getConfig(MyBaseEntity.SUPER_KEY_1), "overridden superKey1 default")
     }
 
+    @Test
+    public void testConfigureFromKey() throws Exception {
+        MySubEntity entity2 = new MySubEntity((MySubEntity.SUPER_KEY_1): "changed", app);
+        assertEquals(entity2.getConfig(MySubEntity.SUPER_KEY_1), "changed")
+    }
+
+    //FIXME config needs to be mapped based on string value, not the key itself
+//    @Test
+//    public void testConfigureFromSuperKey() throws Exception {
+//        MySubEntity entity2 = new MySubEntity((MyBaseEntity.SUPER_KEY_1): "changed", app);
+//        assertEquals(entity2.getConfig(MySubEntity.SUPER_KEY_1), "changed")
+//    }
+
     @InheritConstructors
     public static class MyBaseEntity extends AbstractEntity {
         public static final BasicConfigKey SUPER_KEY_1 = [ String, "superKey1", "superKey1 key", "superKey1 default"]

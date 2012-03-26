@@ -29,8 +29,8 @@ import brooklyn.util.CommandLineUtil
  * -Xmx512m -Xms128m -XX:MaxPermSize=256m
  * and brooklyn-all jar, and this jar or classes dir, on classpath. 
  **/
-public class WebClusterExample extends AbstractApplication {
-    public static final Logger LOG = LoggerFactory.getLogger(WebClusterExample)
+public class WebClusterExampleAlt extends AbstractApplication {
+    public static final Logger LOG = LoggerFactory.getLogger(WebClusterExampleAlt)
     
     static BrooklynProperties config = BrooklynProperties.Factory.newDefault()
 
@@ -38,22 +38,12 @@ public class WebClusterExample extends AbstractApplication {
 
     public static final String WAR_PATH = "classpath://hello-world-webapp.war"
     
-    public WebClusterExample(Map props=[:]) {
+    public WebClusterExampleAlt(Map props=[:]) {
         super(props)
     }
     
 
-    NginxController nginxController = new NginxController(
-        domain: 'webclusterexample.brooklyn.local',
-        port:8000)
-    
-    JBoss7ServerFactory jbossFactory = new JBoss7ServerFactory(httpPort: "8080+", war: WAR_PATH); 
-
-    ControlledDynamicWebAppCluster web = new ControlledDynamicWebAppCluster(this,
-        name: "WebApp cluster",
-        controller: nginxController,
-        initialSize: 1,
-        webServerFactory: jbossFactory)
+    ControlledDynamicWebAppCluster web = new ControlledDynamicWebAppCluster(this, war: WAR_PATH);
     
     ResizerPolicy policy = new ResizerPolicy(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND).
         setSizeRange(1, 5).
@@ -65,7 +55,7 @@ public class WebClusterExample extends AbstractApplication {
         int port = CommandLineUtil.getCommandLineOptionInt(args, "--port", 8081);
         List<Location> locations = CommandLineLocations.getLocationsById(args ?: [DEFAULT_LOCATION])
 
-        WebClusterExample app = new WebClusterExample(name:'Brooklyn WebApp Cluster example')
+        WebClusterExampleAlt app = new WebClusterExampleAlt(name:'Brooklyn WebApp Cluster example')
             
         BrooklynLauncher.manage(app, port)
         app.start(locations)

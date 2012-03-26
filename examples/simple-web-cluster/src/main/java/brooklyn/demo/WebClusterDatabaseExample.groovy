@@ -1,5 +1,7 @@
 package brooklyn.demo
 
+import static brooklyn.event.basic.DependentConfiguration.valueWhenAttributeReady
+
 import java.util.List
 import java.util.Map
 
@@ -9,15 +11,13 @@ import org.slf4j.LoggerFactory
 import brooklyn.config.BrooklynProperties
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
-import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities
-import brooklyn.entity.database.mysql.MySqlNode;
-import brooklyn.entity.proxy.nginx.NginxController
+import brooklyn.entity.database.mysql.MySqlNode
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster
 import brooklyn.entity.webapp.DynamicWebAppCluster
 import brooklyn.entity.webapp.JavaWebAppService
 import brooklyn.entity.webapp.jboss.JBoss7Server
-import brooklyn.event.basic.DependentConfiguration;
+import brooklyn.event.basic.DependentConfiguration
 import brooklyn.launcher.BrooklynLauncher
 import brooklyn.location.Location
 import brooklyn.location.basic.CommandLineLocations
@@ -25,8 +25,11 @@ import brooklyn.policy.ResizerPolicy
 import brooklyn.util.CommandLineUtil
 
 /**
- * Run with:
- *   java -Xmx512m -Xms128m -XX:MaxPermSize=256m -cp target/brooklyn-example-*-with-dependencies.jar brooklyn.demo.WebClusterExample 
+ * Launches a 3-tier app with nginx, clustered jboss, and mysql.
+ * <p>
+ * Requires: 
+ * -Xmx512m -Xms128m -XX:MaxPermSize=256m
+ * and brooklyn-all jar, and this jar or classes dir, on classpath. 
  **/
 public class WebClusterDatabaseExample extends AbstractApplication {
     public static final Logger LOG = LoggerFactory.getLogger(WebClusterDatabaseExample)
@@ -40,50 +43,28 @@ public class WebClusterDatabaseExample extends AbstractApplication {
     public static final String DB_USERNAME = "brooklyn"
     public static final String DB_PASSWORD = "br00k11n"
     
-    public static final String DB_SETUP_SQL = """
-create database visitors;
-use visitors;
-create user '${DB_USERNAME}' identified by '${DB_PASSWORD}';
-grant usage on *.* to '${DB_USERNAME}'@'localhost' identified by '${DB_PASSWORD}';
-grant all privileges on visitors.* to '${DB_USERNAME}'@'localhost';
-flush privileges;
-
-CREATE TABLE MESSAGES (
-        id INT NOT NULL AUTO_INCREMENT,
-        NAME VARCHAR(30) NOT NULL,
-        MESSAGE VARCHAR(400) NOT NULL,
-        PRIMARY KEY (ID)
-    );
-
-INSERT INTO MESSAGES values (default, 'Isaac Asimov', 'I grew up in Brooklyn' );
-""";
+    public static final String DB_SETUP_SQL_URL = "classpath://visitors-creation-script.sql"
 
     public WebClusterDatabaseExample(Map props=[:]) {
         super(props)
-        setConfig(JavaWebAppService.ROOT_WAR, WAR_PATH)
     }
     
-    MySqlNode mysql = new MySqlNode(this, creationScript: DB_SETUP_SQL);
+    ControlledDynamicWebAppCluster web = new ControlledDynamicWebAppCluster(this, war: WAR_PATH);
+    MySqlNode mysql = new MySqlNode(this, creationScriptUrl: DB_SETUP_SQL_URL);
 
-    protected JavaWebAppService newWebServer(Map flags, Entity cluster) {
-        JBoss7Server jb7 = new JBoss7Server(flags).configure(httpPort: "8000+");
-        jb7.setConfig(JBoss7Server.JAVA_OPTIONS, ["brooklyn.example.db.url": 
-                //"jdbc:mysql://localhost/visitors?user=brooklyn&password=br00k11n"
-                DependentConfiguration.valueWhenAttributeReady(mysql, MySqlNode.MYSQL_URL, 
+    {
+        web.factory.configure(
+            httpPort: "8080+", 
+            (JBoss7Server.JAVA_OPTIONS):
+                // -Dbrooklyn.example.db.url="jdbc:mysql://192.168.1.2:3306/visitors?user=brooklyn\\&password=br00k11n"
+                ["brooklyn.example.db.url": valueWhenAttributeReady(mysql, MySqlNode.MYSQL_URL,
                     { "jdbc:"+it+"visitors?user=${DB_USERNAME}\\&password=${DB_PASSWORD}" }) ]);
-        jb7.setOwner(cluster);
-        return jb7;
-    }
 
-    ControlledDynamicWebAppCluster webCluster = new ControlledDynamicWebAppCluster(this,
-        controller: new NginxController(),
-        webServerFactory: this.&newWebServer )
-
-    
-    ResizerPolicy policy = new ResizerPolicy(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND).
-        setSizeRange(1, 5).
-        setMetricRange(10, 100);
-    
+        web.cluster.addPolicy(new
+            ResizerPolicy(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND).
+                setSizeRange(1, 5).
+                setMetricRange(10, 100));
+    }    
 
     public static void main(String[] argv) {
         ArrayList args = new ArrayList(Arrays.asList(argv));
@@ -95,8 +76,6 @@ INSERT INTO MESSAGES values (default, 'Isaac Asimov', 'I grew up in Brooklyn' );
         BrooklynLauncher.manage(app, port)
         app.start(locations)
         Entities.dumpInfo(app)
-        
-        app.webCluster.cluster.addPolicy(app.policy)
     }
     
 }

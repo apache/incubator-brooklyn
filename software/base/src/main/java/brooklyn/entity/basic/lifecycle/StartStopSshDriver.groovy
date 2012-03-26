@@ -97,6 +97,8 @@ public abstract class StartStopSshDriver extends AbstractStartStopDriver impleme
 	protected final static String LAUNCHING = "launching";
 	protected final static String CHECK_RUNNING = "check-running";
 	protected final static String STOPPING = "stopping";
+    
+    public final static String PID_FILENAME = "pid.txt";
 
 	/** sets up a script for the given phase, including default wrapper commands
 	 * (e.g. INSTALLING, LAUNCHING, etc)
@@ -136,7 +138,7 @@ public abstract class StartStopSshDriver extends AbstractStartStopDriver impleme
 			s.failOnNonZeroResultCode()
 
 		if (flags.usePidFile) {
-			String pidFile = (flags.usePidFile in String ? flags.usePidFile : "${runDir}/pid.txt")
+			String pidFile = (flags.usePidFile in String ? flags.usePidFile : "${runDir}/${PID_FILENAME}")
 			if (phase in [LAUNCHING])
 				s.footer.prepend("echo \$! > ${pidFile}")
 			else if (phase in [CHECK_RUNNING])

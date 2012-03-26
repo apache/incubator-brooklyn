@@ -7,7 +7,6 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.basic.lifecycle.JavaStartStopSshDriver
-import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.location.basic.SshMachineLocation
 
 
@@ -27,7 +26,7 @@ public abstract class JavaWebAppSoftwareProcess extends SoftwareProcessEntity im
 	protected void connectSensors() {
 		super.connectSensors();
 		
-		WebAppService.Utils.connectWebAppServerPolicies(this);
+		WebAppServiceMethods.connectWebAppServerPolicies(this);
 
 	}
 	

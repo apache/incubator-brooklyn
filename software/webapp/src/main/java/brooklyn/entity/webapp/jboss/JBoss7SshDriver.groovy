@@ -89,8 +89,10 @@ class JBoss7SshDriver extends JavaWebAppSshDriver {
 	
 	@Override
 	public void launch() {
-		newScript(LAUNCHING, usePidFile:true).
+		newScript(LAUNCHING, usePidFile:false).
 			body.append(
+                "export LAUNCH_JBOSS_IN_BACKGROUND=true",
+                "export JBOSS_PIDFILE=$runDir/$PID_FILENAME",
 				"$installDir/jboss-as-${version}/bin/${SERVER_TYPE}.sh "+
 					"--server-config $CONFIG_FILE "+
 					"-Djboss.server.base.dir=$runDir/$SERVER_TYPE " + 

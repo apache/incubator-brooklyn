@@ -187,7 +187,7 @@ public class TestCluster extends DynamicCluster {
    public int size
            
    TestCluster(int initialSize) {
-       super(newEntity: {})
+       super(factory: {})
        size = initialSize
    }
            

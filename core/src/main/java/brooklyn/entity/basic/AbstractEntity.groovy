@@ -318,6 +318,14 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
 		if (displayName==null)
 			displayName = flags.name ? flags.remove('name') : getClass().getSimpleName()+":"+id.substring(0, 4)
 		
+        for (Iterator fi = flags.iterator(); fi.hasNext(); ) {
+            Map.Entry entry = fi.next();
+            if (entry.key in ConfigKey) {
+                setConfig(entry.key, entry.value)
+                fi.remove();
+            }
+        }
+        
         if (!flags.isEmpty()) {
             LOG.warn "Unsupported flags when configuring {}; ignoring: {}", this, flags
         }

@@ -1,7 +1,5 @@
 package brooklyn.entity.group
 
-import groovy.lang.Closure
-
 import java.util.Collection
 import java.util.Map
 import java.util.concurrent.ExecutionException
@@ -12,6 +10,7 @@ import org.slf4j.LoggerFactory
 import brooklyn.enricher.CustomAggregatingEnricher
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
+import brooklyn.entity.basic.ConfigurableEntityFactory
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.trait.Changeable
 import brooklyn.entity.trait.Startable
@@ -32,21 +31,13 @@ public class DynamicFabric extends AbstractEntity implements Startable {
     public static final BasicAttributeSensor<Integer> FABRIC_SIZE = [ Integer, "fabric.size", "Fabric size" ]
     
     @SetFromFlag
-    Closure<Entity> newEntity
-
-    @SetFromFlag
-    Closure postStartEntity
+    ConfigurableEntityFactory factory
 
     @SetFromFlag
     String displayNamePrefix
     @SetFromFlag
     String displayNameSuffix
 
-    //FIXME delete?  seems like never used?
-    int initialSize
-    //FIXME deprecate, ensure isn't used anywhere
-    Map createFlags
-    
     private CustomAggregatingEnricher fabricSizeEnricher
 
     /**
@@ -54,10 +45,9 @@ public class DynamicFabric extends AbstractEntity implements Startable {
      * 
      * Valid properties are:
      * <ul>
-     * <li>newEntity - a {@link Closure} that creates an {@link Entity} that implements {@link Startable}, taking the {@link Map}
-     * of properties from this fabric as an argument, or the {@link Map} of properties and the owning {link Entity} 
-     * (useful for chaining/nested Closures).  This property is mandatory.
-     * <li>postStartEntity - a {@link Closure} that is called after newEntity, taking the {@link Entity} as an argument. This property is optional, with a default of no-op.
+     * <li>factory - an {@EntityFactory) (or {@link Closure}) that creates an {@link Entity},
+     * typically a Cluster which implements {@link Startable}, taking the {@link Map}
+     * of properties from this cluster as an argument. This property is mandatory.
      * </ul>
      *
      * @param properties the properties of the fabric and any new entity.
@@ -66,11 +56,6 @@ public class DynamicFabric extends AbstractEntity implements Startable {
     public DynamicFabric(Map properties = [:], Entity owner = null) {
         super(properties, owner)
 
-        Preconditions.checkNotNull newEntity, "'newEntity' property is mandatory"
-        Preconditions.checkArgument newEntity in Closure, "'newEntity' must be a closure"
-        
-        createFlags = properties
-        
         fabricSizeEnricher = CustomAggregatingEnricher.getSummingEnricher(Collections.emptyList(), Changeable.GROUP_SIZE, FABRIC_SIZE)
         addEnricher(fabricSizeEnricher)
         
@@ -100,7 +85,6 @@ public class DynamicFabric extends AbstractEntity implements Startable {
         tasks.each { Entity entity, Task task ->
             try {
                 task.get()
-                if (postStartEntity) postStartEntity.call(entity)
             } catch (ExecutionException e) {
                 throw e.cause
             }
@@ -125,24 +109,20 @@ public class DynamicFabric extends AbstractEntity implements Startable {
         throw new UnsupportedOperationException()
     }
 
+    protected Map getCustomChildFlags() { [:] }
+    
     protected Entity addCluster(Location location) {
         Map creation = [:]
-        creation << createFlags
+        creation << getCustomChildFlags()
         creation.displayName = (displayNamePrefix?:"") + (location.getLocationProperty("displayName")?:location.name?:"unnamed") + (displayNameSuffix?:"")
         logger.info "Adding a cluster to {} with properties {}", id, creation
 
         
-        Entity entity
-        if (newEntity.maximumNumberOfParameters > 1) {
-            entity = newEntity.call(creation, this)
-        } else {
-            entity = newEntity.call(creation)
-        } 
-        if (entity.owner == null) addOwnedChild(entity)
+        Entity entity = factory.newEntity(creation, this)
         
-        Preconditions.checkNotNull entity, "newEntity call returned null"
-        Preconditions.checkState entity instanceof Entity, "newEntity call returned an object that is not an Entity"
-        Preconditions.checkState entity instanceof Startable, "newEntity call returned an object that is not Startable"
+        Preconditions.checkNotNull entity, "$this factory.newEntity call returned null"
+        Preconditions.checkState entity instanceof Entity, "$this factory.newEntity call returned an object that is not an Entity"
+        if (entity.owner==null) entity.setOwner(this)
         
         fabricSizeEnricher.addProducer(entity)
 

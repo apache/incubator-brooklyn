@@ -229,7 +229,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 }
 
 public interface UsesJava {
-	public static final BasicConfigKey<Map<String, String>> JAVA_OPTIONS = [ Map, "java.options", "Java options", [:] ]
+	public static final BasicConfigKey<Map<String, String>> JAVA_OPTIONS = [ Map, "java.options", "Java command line options", [:] ]
 }
 
 public interface UsesJmx extends UsesJava {

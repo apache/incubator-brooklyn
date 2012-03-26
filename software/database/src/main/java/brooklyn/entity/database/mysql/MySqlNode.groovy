@@ -54,6 +54,7 @@ public class MySqlNode extends SoftwareProcessEntity {
         if (hostname==null) 
             throw new IllegalStateException("Cannot find hostname for unexpected location type "+l+" where "+this+" is running");
         setAttribute(MYSQL_URL, "mysql://"+hostname+":"+getAttribute(MYSQL_PORT)+"/");
+        setAttribute(SERVICE_UP, true);  //TODO poll for status, and activity
     }
 
     public int getPort() {

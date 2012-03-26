@@ -22,6 +22,7 @@ import com.google.common.io.Files
 public class NginxController extends AbstractController {
     transient OldHttpSensorAdapter httpAdapter
 
+    public NginxController(Entity owner) { this([:], owner) }
     public NginxController(Map properties=[:], Entity owner=null) {
         super(properties, owner)
     }

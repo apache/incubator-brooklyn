@@ -4,6 +4,8 @@ import java.util.List
 
 import brooklyn.enricher.RollingTimeWindowMeanEnricher
 import brooklyn.enricher.TimeWeightedDeltaEnricher
+import brooklyn.entity.ConfigKey;
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.basic.BasicAttributeSensor
@@ -11,7 +13,8 @@ import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey
 import brooklyn.util.flags.SetFromFlag
 
-public interface WebAppService {
+
+public interface WebAppServiceConstants {
 
 	//FIXME not used?
     public static final BasicConfigKey<List<String>> RESOURCES = [ List, "resources", "List of names of resources to copy to run directory" ]
@@ -41,13 +44,17 @@ public interface WebAppService {
     public static final BasicAttributeSensor<String> ROOT_URL = [ String, "webapp.url", "URL" ]
     public static final BasicAttributeSensor<String> HTTP_SERVER = [ String, "webapp.http.server", "Server name" ]
     public static final BasicAttributeSensor<Integer> HTTP_STATUS = [ Integer, "webapp.http.status", "HTTP response code for the server" ]
+}
 
-	public static class Utils implements WebAppService {
-		public static void connectWebAppServerPolicies(EntityLocal entity) {
-			entity.addEnricher(TimeWeightedDeltaEnricher.<Integer>getPerSecondDeltaEnricher(entity, REQUEST_COUNT, REQUESTS_PER_SECOND))
-			entity.addEnricher(new RollingTimeWindowMeanEnricher<Double>(entity, REQUESTS_PER_SECOND, AVG_REQUESTS_PER_SECOND,
-					AVG_REQUESTS_PER_SECOND_PERIOD))
-		}
+public class WebAppServiceMethods implements WebAppServiceConstants {
+    public static void connectWebAppServerPolicies(EntityLocal entity) {
+        entity.addEnricher(TimeWeightedDeltaEnricher.<Integer>getPerSecondDeltaEnricher(entity, 
+            WebAppServiceConstants.REQUEST_COUNT, WebAppServiceConstants.REQUESTS_PER_SECOND))
+        entity.addEnricher(new RollingTimeWindowMeanEnricher<Double>(entity, 
+            WebAppServiceConstants.REQUESTS_PER_SECOND, WebAppServiceConstants.AVG_REQUESTS_PER_SECOND,
+            WebAppServiceConstants.AVG_REQUESTS_PER_SECOND_PERIOD))
     }
-	
+}
+
+public interface WebAppService extends WebAppServiceConstants, Entity {
 }
