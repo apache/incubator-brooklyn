@@ -189,16 +189,18 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         if (logger.isDebugEnabled()) logger.debug "Adding a node to {} with properties {}", id, creation
 
         Entity entity
+        if (newEntity==null) 
+            throw new IllegalStateException("newEntity routine not supplied for {}", this)
         if (newEntity.maximumNumberOfParameters > 1) {
             entity = newEntity.call(creation, this)
         } else {
             entity = newEntity.call(creation)
-        } 
-        if (entity.owner == null) addOwnedChild(entity)
-        Preconditions.checkNotNull entity, "newEntity call returned null"
-        Preconditions.checkState entity instanceof Entity, "newEntity call returned an object that is not an Entity"
-        Preconditions.checkState entity instanceof Startable, "newEntity call returned an object that is not Startable"
- 
+        }
+        if (entity==null || !(entity in Entity)) 
+            throw new IllegalStateException("newEntity routine did not return an entity in {} ({})", this, entity)
+            
+        if (entity.owner==null)
+            entity.setOwner(this)
         addMember(entity)
         entity
     }

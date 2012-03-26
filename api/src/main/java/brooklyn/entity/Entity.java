@@ -57,12 +57,12 @@ public interface Entity extends Serializable {
     Collection<Entity> getOwnedChildren();
     
     /**
-     * Sets the owner of this entity.
+     * Sets the owner of this entity. Returns this entity, for convenience.
      *
      * @see #getOwner
      * @see #clearOwner
      */
-    void setOwner(Entity group);
+    Entity setOwner(Entity group);
     
     /**
      * Clears the owner of this entity. Also cleans up any references within its parent entity.

@@ -5,6 +5,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -182,6 +183,16 @@ public class TypeCoercions {
                 try {
                     return Inet4Address.getByName(input);
                 } catch (UnknownHostException e) {
+                    throw Throwables.propagate(e);
+                }
+            }
+        });
+        registerAdapter(String.class, URL.class, new Function<String,URL>() {
+            @Override
+            public URL apply(String input) {
+                try {
+                    return new URL(input);
+                } catch (Exception e) {
                     throw Throwables.propagate(e);
                 }
             }
