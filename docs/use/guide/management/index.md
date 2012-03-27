@@ -1,5 +1,5 @@
 ---
-title: How Management Works
+title: Runtime Management
 layout: page
 toc: ../guide_toc.json
 categories: [use, guide]
@@ -18,42 +18,49 @@ managed by other entities, and so forth through a hierarchy rooted in entities r
 - policies which perform analysis, enrichment (sensors), and execution (effectors). It is the policies in brooklyn which
   perform the self-management (in autonomic terms) by monitoring sensors and invoking effectors.
 
-<a name="distributed-management"></a>
-Distributed Management
-----------------------
+There are several ways to launch applications with brooklyn, and useful configuration options,
+as well as a debug-view web console.
+This chapter describes these high-level runtime concepts, then proceeds to present more
+detailed information on the underlying implementation of management within brooklyn.
 
-<!---
-TODO Describe how and when objects become "live", pushed out to other nodes.
--->
 
-*This section still needs to be written. Feel free to [fork](/dev/contribute) the docs and lend a hand.*
+<a name="startup-config"></a>
+Startup Configuration
+---------------------
 
-<a name="resilience"></a>
-Resilience
-----------
-<!---
-TODO
--->
-*This section still needs to be written. Feel free to [fork](/dev/contribute) the docs and lend a hand.*
+brooklyn can read configuration from a variety of places:
 
-<a name="key-apis"></a>
-Key APIs
---------
-<!---
-TODO - brief overview of
--->
-*This section still needs to be written. Feel free to [fork](/dev/contribute) the docs and lend a hand.*
+* the file ``~/.brooklyn/brooklyn.properties``
+* ``-D`` defines on the brooklyn (java) command-line
+* shell environment variables
 
-- ``ManagementContext`` (Java management API)
-- ``EntityLocal`` (used by policies)
+Default properties are described in the Javadoc and code of classes ``CredentialsFromEnv`` and ``BrooklynSystemProperties``,
+but some of the most common ones are:
+ 
+{% highlight properties %}
+brooklyn.jclouds.aws-ec2.identity=AKA50M30N3S1DFR0MAW55
+brooklyn.jclouds.aws-ec2.credential=aT0Ps3cr3tC0D3wh1chAW5w1llG1V3y0uTOus333
+brooklyn.jclouds.private-key-file=~/my/id_rsa       # use specified key (default is ~/.ssh/id_rsa)
+brooklyn.jclouds.public-key-file=~/my/id_rsa.pub    # (optional, inferred from previous if omitted)
+{% endhighlight %} 
+
+These can be specified as a shell environment variable or as a Java system property,
+although in those contexts the conventional format ``BROOKLYN_JCLOUDS_AWS_EC2_IDENTITY`` 
+is supported and recommended. 
+
 
 <a name="console"></a>
 Management Web Console
 ----------------------
 
-brooklyn comes with a web-based management console that serves as a way to track and manage brooklyn entities.
+The web-based management console that comes with brooklyn serves as a way to observe and manage brooklyn entities.
+It provides low-level details of activity (including stack-traces), sensor values, and policies,
+and some visual widgets for observing what is happening.
+This console is not designed as a management dashboard or portal -- 
+many good options exist in that space --
+but what could be useful is to embed widgets from the brooklyn portal for selected high-level views.
 
-The management console can be started using BrooklynLaucher:
+To start a management console from your own code, use the ``BrooklynLaucher.manage`` method:
 {% highlight java %}
 public static void main(String\[\] argv) {
 	application app = new MyApplicationExample(displayName:"myapp")
@@ -63,7 +70,8 @@ public static void main(String\[\] argv) {
 {% endhighlight %}
 
 This will start an embedded brooklyn management node, including the web console.
-The URL for the web console defaults to http://localhost:8081.
+The URL for the web console defaults to http://localhost:8081,
+with credentials admin/password.
 
 The mechanism for launching brooklyn management will change in a future release. For this release, the brooklyn management node is embedded.
 
@@ -148,6 +156,40 @@ Loggers follow the ``package.ClassName`` naming standard.
 It is possible for entities to emit logging activity sensors so that an operator can observe what is occurring within their application through the web console or via programmatic means.
 
 Examples for testing can be found in some of the poms.
+
+
+
+<a name="distributed-management"></a>
+Distributed Management
+----------------------
+
+<!---
+TODO Describe how and when objects become "live", pushed out to other nodes.
+-->
+
+*This section still needs to be written. Feel free to [fork](/dev/contribute) the docs and lend a hand.*
+
+
+<a name="resilience"></a>
+Resilience
+----------
+<!---
+TODO
+-->
+*This section still needs to be written. Feel free to [fork](/dev/contribute) the docs and lend a hand.*
+
+
+<a name="key-apis"></a>
+Key APIs
+--------
+<!---
+TODO - brief overview of
+-->
+*This section still needs to be written. Feel free to [fork](/dev/contribute) the docs and lend a hand.*
+
+- ``ManagementContext`` (Java management API)
+- ``EntityLocal`` (used by policies)
+
 
 <!---
 TODO - describe how to simply configure logging slf4j

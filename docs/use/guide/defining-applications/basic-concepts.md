@@ -73,7 +73,7 @@ of the form ``new MyEntity(owner, config1: "value1", config2: "value2")``.
 Documentation of the flags available for individual constructors can normally be found in the javadocs, 
 or by inspecting ``@SetFromFlag`` annotations on the ``ConfigKey`` static field definitions
 in the class or its ancestors (often in interfaces).
- 
+
 
 ### Sensors and Effectors
 

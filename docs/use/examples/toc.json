@@ -1,4 +1,7 @@
 [
 { "title": "Elastic Web Cluster",
-  "file":  "{{ site.url }}/use/examples/webcluster.html" }
+  "file":  "{{ site.url }}/use/examples/webcluster.html" },
+{ "title": "Whirr Hadoop Cluster",
+  "file":  "{{ site.url }}/use/examples/whirrhadoop.html" }
+
 ]
