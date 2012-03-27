@@ -258,5 +258,6 @@ public interface UsesJavaMXBeans {
     public static final BasicAttributeSensor<Long> PEAK_THREAD_COUNT = [ Integer, "java.metrics.threads.max", "peak number of threads" ]
     public static final BasicAttributeSensor<Long> START_TIME = [ Long, "java.metrics.starttime", "start time" ]
     public static final BasicAttributeSensor<Double> SYSTEM_LOAD_AVERAGE = [ Double, "java.metrics.systemload.average", "average system load" ]
+    public static final BasicAttributeSensor<Integer> AVAILABLE_PROCESSORS = [ Integer, "java.metrics.processors.available", "number of processors available to the Java virtual machine" ]
     public static final BasicAttributeSensor<Long> GARBAGE_COLLECTION_TIME = [ Map, "java.metrics.gc.time", "garbage collection time" ]
 }

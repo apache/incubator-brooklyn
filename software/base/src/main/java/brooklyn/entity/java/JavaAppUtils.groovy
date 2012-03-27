@@ -39,6 +39,7 @@ class JavaAppUtils {
             
             jmxAdapter.objectName(ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME).with {
                 attribute("SystemLoadAverage").subscribe(UsesJavaMXBeans.SYSTEM_LOAD_AVERAGE);
+                attribute("AvailableProcessors").subscribe(UsesJavaMXBeans.AVAILABLE_PROCESSORS);
             }
             
             //FIXME: need a new type of adapter that maps multiple objectNames to a mapping
