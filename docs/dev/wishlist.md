@@ -18,7 +18,9 @@ email the list, and get started!
 
 ## Features
 
-* REST API for deploying, viewing, and managing, including application definitions in JSON/XML (and support for dependent configuration)  
+* REST API for deploying, viewing, and managing, including application definitions in JSON/XML (and support for dependent configuration)
+* Distributed management plane
+* At-Rest serialization of state (likely piggy-backing on JSON/XML and datagrid support)  
 * Bind to existing entities on restart
 * Extract data from entities that are being stopped, to restore on restart (could extend MySQL example to do this)
 * Windows:  support running from windows (untested); work on installation _to_ Windows servers

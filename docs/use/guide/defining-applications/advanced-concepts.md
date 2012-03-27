@@ -39,7 +39,7 @@ The management plane is responsible for the distribution of the ``Entity`` insta
 tracking the transfer of events (subscriptions) between ``Entity`` instances, and the execution of tasks (often initiated by management policies).
 -->
 
-
+<a name="dependent"></a>
 Dependent Configuration
 -----------------------
 

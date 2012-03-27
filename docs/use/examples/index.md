@@ -1,7 +1,7 @@
 ---
 layout: page
 title: Examples
-toc: ../../toc.json
+toc: /toc.json
 ---
 
 We currently have the following examples on the site:

@@ -29,7 +29,7 @@ Visit [http://localhost:4000/brooklyn/v/0.4.0-SNAPSHOT/start/index.html](http://
 # Extensions
 
 In addition to the standard pygments plugin for code-highlighting,
-we use some self-built Jekyll plugins (in the `_plugins` dir) to:
+we use some custom Jekyll plugins (in the `_plugins` dir) to:
 
 * include markdown files inside other files 
   (see, for example, the `*.include.md` files which contain text
