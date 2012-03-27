@@ -1,7 +1,7 @@
 class TomcatFabricApp extends AbstractApplication {
 	Closure webClusterFactory = { Map flags, Entity owner ->
 		Map clusterFlags = flags + 
-			[newEntity: { properties -> new TomcatServer(properties) }]
+			[factory: { properties -> new TomcatServer(properties) }]
 		return new DynamicWebAppCluster(clusterFlags, owner)
 	}
 
@@ -11,7 +11,7 @@ class TomcatFabricApp extends AbstractApplication {
 			displayNamePrefix : "",
 			displayNameSuffix : " web cluster",
 			initialSize : 2,
-			newEntity : webClusterFactory,
+			factory : webClusterFactory,
 			httpPort : 8080, 
 			war: "/path/to/booking-mvc.war")
 	
