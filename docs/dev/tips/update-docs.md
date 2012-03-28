@@ -8,7 +8,7 @@ The Brooklyn docs live in the **docs** project in the Brooklyn codebase.
 It's built using standard jekyll/markdown with a few extensions.
 
 
-# Jekyll
+## Jekyll
 
 Install the following:
 
@@ -26,7 +26,7 @@ or
 Visit [http://localhost:4000/brooklyn/v/0.4.0-SNAPSHOT/start/index.html](http://localhost:4000/brooklyn/v/0.4.0-SNAPSHOT/start/index.html) and you should see the documentation.
 
 
-# Extensions
+## Extensions
 
 In addition to the standard pygments plugin for code-highlighting,
 we use some custom Jekyll plugins (in the `_plugins` dir) to:
@@ -35,6 +35,7 @@ we use some custom Jekyll plugins (in the `_plugins` dir) to:
   (see, for example, the `*.include.md` files which contain text
   which is used in multiple other files)
 * parse JSON which we can loop over in our markdown docs
+* trim whitespace of ends of variables
 
 Using JSON table-of-contents files (`toc.json`) is our lightweight solution
 to the problem of making the site structure navigable (the menus at left).
@@ -47,7 +48,7 @@ a menu in the left side-bar (`_includes/sidebar.html`) using the JSON --
 and automatically detecting which page is active. 
  
 
-# Publishing
+## Publishing
 
 Because GitHub don't run plugins (they run with the `--safe` option),
 the site has to be built and the result of this copied to the `gh_pages` branch

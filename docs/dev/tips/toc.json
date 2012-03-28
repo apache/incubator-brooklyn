@@ -1,0 +1,10 @@
+[
+{ "title": "Miscellany",
+  "file": "{{ site.url }}/dev/tips/index.html" },
+{ "title": "Logging",
+  "file": "{{ site.url }}/dev/tips/logging.html" },
+{ "title": "Release Process",
+  "file": "{{ site.url }}/dev/tips/release.html" },
+{ "title": "Updating Docs",
+  "file":  "{{ site.url }}/dev/tips/update-docs.html" }
+]
