@@ -34,7 +34,9 @@ class JBoss7SshDriver extends JavaWebAppSshDriver {
 	protected String getLogFileLocation() { "${runDir}/${SERVER_TYPE}/log/server.log" }
 	protected String getDeploySubdir() { "${SERVER_TYPE}/deployments" }
 	protected Integer getManagementPort() { entity.getAttribute(JBoss7Server.MANAGEMENT_PORT) }
-	
+    protected Integer getManagementNativePort() { entity.getAttribute(JBoss7Server.MANAGEMENT_NATIVE_PORT) }
+    protected Integer getPortIncrement() { entity.getAttribute(JBoss7Server.PORT_INCREMENT) }
+    
 	@Override
 	public void install() {
         String url = "http://download.jboss.org/jbossas/7.1/jboss-as-${version}/jboss-as-${version}.tar.gz"
@@ -62,7 +64,7 @@ class JBoss7SshDriver extends JavaWebAppSshDriver {
      */
 	@Override
 	public void customize() {
-		PortPreconditions.checkPortsValid(httpPort:httpPort, managementPort:managementPort);
+		PortPreconditions.checkPortsValid(httpPort:httpPort, managementPort:managementPort, managementNativePort:managementNativePort);
         String hostname = entity.getAttribute(SoftwareProcessEntity.HOSTNAME)
         Preconditions.checkNotNull(hostname, "AS 7 entity must set hostname otherwise server will only be visible on localhost")
 		newScript(CUSTOMIZING).
@@ -72,6 +74,8 @@ class JBoss7SshDriver extends JavaWebAppSshDriver {
 				"cp standalone.xml $CONFIG_FILE",
 				"sed -i.bk 's/8080/${httpPort}/' $CONFIG_FILE",
 				"sed -i.bk 's/9990/${managementPort}/' $CONFIG_FILE",
+                "sed -i.bk 's/9999/${managementNativePort}/' $CONFIG_FILE",
+                "sed -i.bk 's/port-offset:0/port-offset:${portIncrement}/' $CONFIG_FILE",
                 "sed -i.bk 's/enable-welcome-root=\"true\"/enable-welcome-root=\"false\"/' $CONFIG_FILE",
 
                 // Disable Management security (!) by deleting the security-realm attribute
