@@ -1,15 +1,14 @@
 [
-{ "title": "Get the Code",
+{ "title": "The Code",
   "file": "{{ site.url }}/dev/code/index.html",
   "exclude": true,
   "children": {% readj ./code/toc.json %} },
 { "title": "Wishlist",
   "file": "{{ site.url }}/dev/wishlist.html" },
+{ "title": "Submitting Code",
+  "file":  "{{ site.url }}/dev/submitting.html" },
+{ "title": "Updating Docs",
+  "file":  "{{ site.url }}/dev/update-docs.html" },
 { "title": "Resources",
-  "file": "{{ site.url }}/dev/links.html" },
-{ "title": "How to Contribute",
-  "file":  "{{ site.url }}/dev/contribute/index.html",
-  "exclude": true,
-  "children": {% readj ./contribute/toc.json %} }
+  "file": "{{ site.url }}/dev/links.html" }
 ]
-

@@ -1,3 +1,10 @@
+
+jekyll-debug.sh will launch the docs for viewing at http://localhost:4000/start/
+
+jekyll-versioned.sh will launch it in a versioned subdir e.g. http://localhost:4000/brooklyn/v/0.4.0-SNAPSHOT/start/
+
+on the web site it is hosted under /brooklyn (optionally in a /v/XXXX dir if it is a specific version)
+
 to make the docs LIVE, you need to build.sh then copy in to the gh-pages branch
 (suggest making a separate repo for that, keeping it in the gh-pages branch)
 

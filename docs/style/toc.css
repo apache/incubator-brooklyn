@@ -1,4 +1,45 @@
 
+
+#sidebar_toc { font-size: 90%; }
+#sidebar_toc a { text-decoration: none; }
+
+#sidebar_toc div.toc-1-item { color: #666; font-size: 90%; text-transform:uppercase; font-weight:bold; margin: 12px 0px 0px 0px; }
+#sidebar_toc div.toc-1-item.toc-1-header { margin: 12px 0px 2px 0px; }
+#sidebar_toc div.toc-2-item:hover { color: #9a9; }
+
+#sidebar_toc div.toc-2-item { color: #060; background: #fff; }
+#sidebar_toc div.toc-2-item:hover { color: #484; }
+
+#sidebar_toc div.toc-3-item { color: #262; background: #aaa;
+    text-align: right; padding: 2px 6px 2px 6px;
+    border-width: 2px; border-style: solid; border-radius: 3px;
+}
+#sidebar_toc div.toc-3-item:hover { color: #030; background: #888; }
+
+#sidebar_toc div.toc-1-item.toc-active { color: #222; }
+#sidebar_toc div.toc-2-item.toc-active { color: #222; }
+#sidebar_toc div.toc-3-item.toc-active { color: #222; }
+
+/* popup for level 3 menus */
+#sidebar_toc div.toc-2-children-popup { 
+	display: none;
+}
+#sidebar_toc div.toc-2:hover div.toc-2-children-popup { 
+    display: block;
+    position: relative;
+    height: 0px;
+/*  right: -180px; to make appear at right */
+    left: -180px;
+    width: 180px;
+    top: -20px;
+}
+#sidebar_toc div.toc-2-children { 
+	display: block;
+    width: 160px;
+    padding: 0px 10px 0px 10px;
+}
+
+/* old 
 .ui-accordion { font-size: 90% }
 .ui-accordion .left-menu-body {
 	padding: 0;
@@ -16,4 +57,5 @@
 #sidebar_toc .toc-active a { color: #103010; }
 
 #sidebar_toc .ui-state-hover { background: #c8d0c8; }
+*/
 

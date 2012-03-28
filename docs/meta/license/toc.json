@@ -1,0 +1,8 @@
+[
+{ "title": "Overview",
+  "file":  "{{ site.url }}/meta/license/index.html" },
+{ "title": "License",
+  "file":  "{{ site.url }}/meta/license/license.html" },
+{ "title": "Contributor Agreement",
+  "file":  "{{ site.url }}/meta/license/contributor-agreement.html" }
+]

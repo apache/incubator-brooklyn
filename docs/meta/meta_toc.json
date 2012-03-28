@@ -1,4 +1,6 @@
 [
+{ "title": "Start",
+  "file":  "{{ site.url }}/start/index.html" },
 { "title": "License",
   "file":  "{{ site.url }}/meta/license/index.html",
   "exclude": true,

@@ -12,133 +12,32 @@
 {% capture pagesiteurl %}{{ site.url }}{{ page.url }}{% endcapture %}
 
 <div id="sidebar_toc">
-	<div id="accordionish">
 {% for x in toc %}
+	  <div class="toc-1">
   {% if x.children %}
-	  <div class="accordiable toc1 {% if pagesiteurl == x.file %}{% if x.exclude %}{% else %}toc-active{% endif %}{% endif %}"><a href="{{ x.file }}">{{ x.title }}</a></div>
-          <div>
+	    <a href="{{ x.file }}"><div class="toc-1-item toc-1-header {% if pagesiteurl == x.file %}{% if x.exclude %}{% else %} toc-active{% endif %}{% endif %}">{{ x.title }}</div></a>
+        <div class="toc-1-children">
     {% for x2 in x.children %}
+	      <div class="toc-2">
       {% if x2.children %}
-	    <div class="accordiable toc2 {% if pagesiteurl == x2.file %}{% if x2.exclude %}{% else %}toc-active{% endif %}{% endif %}"><a href="{{ x2.file }}">{{ x2.title }}</a></div>
-            <div>
+	        <a href="{{ x2.file }}"><div class="toc-2-item toc-2-header{% if pagesiteurl == x2.file %}{% if x2.exclude %}{% else %} toc-active{% endif %}{% endif %}">{{ x2.title }}</div></a>
+            <div class="toc-2-children-popup"><div class="toc-2-children">
         {% for x3 in x2.children %}
-	      <div class="unaccordiable toc3 {% if pagesiteurl == x3.file %}{% if x3.exclude %}{% else %}toc-active{% endif %}{% endif %}"><a href="{{ x3.file }}">{{ x3.title }}</a></div>
+              <div class="toc-3">
+	            <a href="{{ x3.file }}"><div class="toc-3-item{% if pagesiteurl == x3.file %}{% if x3.exclude %}{% else %} toc-active{% endif %}{% endif %}">{{ x3.title }}</div></a>
+              </div>
         {% endfor %}
-            </div>
+            </div></div>
       {% else %}
-	    <div class="unaccordiable toc2 {% if pagesiteurl == x2.file %}toc-active{% endif %}"><a href="{{ x2.file }}">{{ x2.title }}</a></div>
+	        <a href="{{ x2.file }}"><div class="toc-2-item{% if pagesiteurl == x2.file %} toc-active{% endif %}">{{ x2.title }}</div></a>
       {% endif %}
-    {% endfor %}
           </div>
+    {% endfor %}
+        </div>
   {% else %}
-	  <div class="unaccordiable toc1 {% if pagesiteurl == x.file %}toc-active{% endif %}"><a href="{{ x.file }}">{{ x.title }}</a></div>
+	    <a href="{{ x.file }}"><div class="toc-1-item{% if pagesiteurl == x.file %} toc-active{% endif %}">{{ x.title }}</div></a>
   {% endif %}
-{% endfor %} 
       </div>
-      <br/>
+{% endfor %} 
 </div>
-       
-<script>
-function openAccordionish(x, pinned) {
-  if (pinned || !x.hasClass("accordion-pinned")) {
-    if (!x.hasClass("ui-accordion-header-active")) {
-      x.addClass("ui-accordion-header-active ui-state-active ui-corner-bottom")
-        .addClass("ui-state-default")
-        .find("> .ui-icon").removeClass("ui-icon-triangle-1-e").addClass("ui-icon-triangle-1-s").end()
-        .next().addClass("ui-accordion-content-active").slideToggle(150);
-    }
-    if (pinned && x.hasClass("ui-state-active")) x.addClass("accordion-pinned");
-    else x.removeClass("accordion-pinned")
-  }
-}
-function closeAccordionish(x, pinned) {
-  if (pinned || !x.hasClass("accordion-pinned")) {
-    if (x.hasClass("ui-accordion-header-active")) {
-      x.removeClass("ui-accordion-header-active ui-state-active ui-corner-bottom")
-        .addClass("ui-state-default")
-        .find("> .ui-icon").addClass("ui-icon-triangle-1-e").removeClass("ui-icon-triangle-1-s").end()
-        .next().removeClass("ui-accordion-content-active").slideToggle(300);
-    }
-    x.removeClass("accordion-pinned")
-  }
-}
-function openAccordionishSoonIfHover(x) {
-  x.data('dwellTimer', setTimeout(function() {
-          if (x.hasClass("self-hover") || x.hasClass("next-hover"))
-            openAccordionish(x, false); 
-    }, 250));
-}
-function closeAccordionishSoonIfNoHover(x) {
-  setTimeout(function() {
-          if (!x.hasClass("self-hover") && !x.hasClass("next-hover"))
-            closeAccordionish(x, false); 
-    }, 100);
-}
-function cancelAccordionishSoonIfNoHover(x) {
-	var timeout = x.data("dwellTimer");
-	if(timeout) clearTimeout(timeout);
-}
-$("#accordionish").addClass("ui-accordion ui-accordion-icons ui-widget ui-helper-reset")
-  .find(".accordiable")
-    .addClass("left-menu-parent left-menu-body ui-accordion-header ui-helper-reset ui-state-default ui-corner-top ui-corner-bottom")
-    .hover(function() { $(this).toggleClass("ui-state-hover"); })
-    .prepend('<span class="ui-icon ui-icon-triangle-1-e"></span>')
-    .find("span")
-      .click(function() { 
-        if (!$(this).parent().hasClass("accordion-pinned") || !$(this).parent().hasClass("ui-accordion-header-active")) {
-          openAccordionish($(this).parent(), true); 
-        } else if ($(this).parent().hasClass("accordion-pinned")) {
-          closeAccordionish($(this).parent(), true);
-        }
-        return false; 
-      })
-    .end()
-    .hover(function() { 
-        $(this).addClass("self-hover");
-        openAccordionishSoonIfHover($(this), false); }, 
-      function() { 
-        //$(this).removeClass("self-hover");
-        cancelAccordionishSoonIfNoHover($(this)); 
-      })
-    .next()
-      .hover(function() { 
-          $(this).prev().addClass("next-hover");
-          openAccordionish($(this).prev(), false); }, 
-        function() { 
-          //$(this).prev().removeClass("next-hover");
-        	cancelAccordionishSoonIfNoHover($(this));
-        })
-      .addClass("left-menu-body ui-accordion-content ui-helper-reset ui-widget-content ui-corner-bottom")
-      .addClass("ui-accordion-content-active")
-      .addClass("left-menu-body")
-      .slideToggle(0)
-      .hide()
-  .end();
-
-$("#accordionish")
-  .find(".unaccordiable")
-    .addClass("left-menu-leaf ui-accordion-header ui-helper-reset ui-state-default ui-corner-top ui-corner-cottom")
-    .hover(function() { $(this).toggleClass("ui-state-hover"); })
-  .end()
-  .mouseleave(function() {
-  	$(this).find(".accordiable")
-  		.removeClass("self-hover")
-  		.removeClass("next-hover")
-  		.each(function(){
-  			closeAccordionishSoonIfNoHover($(this));
-  		})
- 	.end();
-  })
-
-  
-
-
-$("#accordionish").find(".toc-active").each(function(i, a) {
-  var activeToc = $(a)
-  while (activeToc && !activeToc.hasClass("ui-accordion")) {
-    if (activeToc.hasClass("left-menu-parent")) openAccordionish(activeToc, true)
-    else if (activeToc.hasClass("left-menu-body")) openAccordionish(activeToc.prev(), true)
-    activeToc = activeToc.parent()
-  }  
-}).end();
-</script>
+<br/>

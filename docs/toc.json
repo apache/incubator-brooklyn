@@ -6,7 +6,7 @@
 { "title": "Using brooklyn",
   "file":  "{{ site.url }}/use/index.html",
   "children": {% readj /use/toc.json %} },
-{ "title": "Developing",
+{ "title": "Contributing",
   "file": "{{ site.url }}/dev/code/index.html",
   "exclude": true,
   "children": {% readj /dev/toc.json %} },
