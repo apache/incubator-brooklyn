@@ -36,7 +36,12 @@ AND update the files in the root dir as well, with a process below
 and overriding url in _config.yml with the --url arg below):
 
 pushd $TARGET
-for x in * ; do if [[ $x != "v" ]] ; then rm -rf $x ; fi ; done
+if [ -f start/index.html ] ; then
+  for x in * ; do if [[ $x != "v" ]] ; then rm -rf $x ; fi ; done
+else
+  echo IN WRONG DIRECTORY $TARGET - export TARGET to continue
+  exit 1
+fi
 popd
 
 

@@ -1,7 +1,7 @@
 ---
 layout: page
 title: Walkthrough
-toc: ../toc.json
+toc: /toc.json
 ---
 
 Brooklyn makes it easy to describe how to launch and manage 
