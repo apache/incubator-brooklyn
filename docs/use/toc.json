@@ -1,5 +1,5 @@
 [
-{ "title": "User's Guide",
+{ "title": "User Guide",
   "file":  "{{ site.url }}/use/guide/index.html",
   "children": {% readj ./guide/toc.json %} },
 { "title": "Examples",
@@ -7,6 +7,6 @@
   "children": {% readj ./examples/toc.json %} },
 { "title": "API Reference",
   "file": "{{ site.url }}/use/api/index.html" },
-{ "title": "Contact",
+{ "title": "Discuss",
   "file": "{{ site.url }}/use/contact.html" }
 ]

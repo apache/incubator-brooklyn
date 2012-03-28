@@ -1,4 +1,5 @@
-<img width="220" heigh="157" src="{{ site.url }}/style/brooklyn-bridge-v2.png"/>
+
+<div id="sidebar_image"><img width="204" src="{{ site.url }}/style/brooklyn-bridge-v2.png"/></div>
 <br/>
 
 {% if page.toc %}
@@ -13,17 +14,34 @@
 
 <div id="sidebar_toc">
 {% for x in toc %}
-	  <div class="toc-1">
+    {% capture ifactive %}{% if pagesiteurl == x.file %}toc-active
+      {% else %}{% if x.children %}{% for x2 in x.children %}
+        {% if pagesiteurl == x2.file %}toc-active{% else %}{% if x2.children %}{% for x3 in x2.children %}
+            {% if pagesiteurl == x3.file %}toc-active{% endif %}
+          {% endfor %}{% endif %}
+        {% endif %}
+      {% endfor %}{% endif %}
+    {% endif %}{% endcapture %}
+    {% capture ifactive %}{{ ifactive | trim }}{% endcapture %}
+    
+    
+	  <div class="toc-1 {{ ifactive }}">
   {% if x.children %}
 	    <a href="{{ x.file }}"><div class="toc-1-item toc-1-header {% if pagesiteurl == x.file %}{% if x.exclude %}{% else %} toc-active{% endif %}{% endif %}">{{ x.title }}</div></a>
         <div class="toc-1-children">
     {% for x2 in x.children %}
-	      <div class="toc-2">
+        {% capture ifactive %}{% if pagesiteurl == x2.file %}toc-active{% else %}{% if x2.children %}{% for x3 in x2.children %}
+            {% if pagesiteurl == x3.file %}toc-active{% endif %}
+          {% endfor %}{% endif %}
+        {% endif %}{% endcapture %}
+        {% capture ifactive %}{{ ifactive | trim }}{% endcapture %}
+	      <div class="toc-2 {{ ifactive }}">
       {% if x2.children %}
 	        <a href="{{ x2.file }}"><div class="toc-2-item toc-2-header{% if pagesiteurl == x2.file %}{% if x2.exclude %}{% else %} toc-active{% endif %}{% endif %}">{{ x2.title }}</div></a>
             <div class="toc-2-children-popup"><div class="toc-2-children">
         {% for x3 in x2.children %}
-              <div class="toc-3">
+            {% capture ifactive %}{% if pagesiteurl == x3.file %}toc-active{% endif %}{% endcapture %}
+              <div class="toc-3 {{ ifactive }}">
 	            <a href="{{ x3.file }}"><div class="toc-3-item{% if pagesiteurl == x3.file %}{% if x3.exclude %}{% else %} toc-active{% endif %}{% endif %}">{{ x3.title }}</div></a>
               </div>
         {% endfor %}

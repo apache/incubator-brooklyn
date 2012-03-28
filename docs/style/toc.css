@@ -3,28 +3,37 @@
 #sidebar_toc { font-size: 90%; }
 #sidebar_toc a { text-decoration: none; }
 
-#sidebar_toc div.toc-1-item { color: #666; font-size: 90%; text-transform:uppercase; font-weight:bold; margin: 12px 0px 0px 0px; }
-#sidebar_toc div.toc-1-item.toc-1-header { margin: 12px 0px 2px 0px; }
-#sidebar_toc div.toc-2-item:hover { color: #9a9; }
+#sidebar_toc div.toc-1-item { color: #666; font-size: 95%; text-transform:uppercase; font-weight:bold; margin: 12px 0px 0px 0px; }
+#sidebar_toc div.toc-1-item.toc-1-header { margin: 0px 0px 2px 0px; }
+#sidebar_toc div.toc-1-item:hover { color: #343; }
 
-#sidebar_toc div.toc-2-item { color: #060; background: #fff; }
-#sidebar_toc div.toc-2-item:hover { color: #484; }
+#sidebar_toc div.toc-2-item { color: #060; }
+#sidebar_toc div.toc-2-item:hover { color: #020; }
 
-#sidebar_toc div.toc-3-item { color: #262; background: #aaa;
+#sidebar_toc div.toc-1 { padding: 8px; margin: 4px 0px 0px 0px; }
+#sidebar_toc div.toc-1.toc-active { background: #ddd; }
+#sidebar_toc div.toc-1.toc-active div.toc-1-item { color: #222; }
+#sidebar_toc div.toc-2.toc-active div.toc-2-item { font-weight: bold; }
+#sidebar_toc div.toc-3.toc-active div.toc-3-item { font-weight: bold; }
+
+/* level 3 menu is displayed in the list, indented, if parent is active */
+#sidebar_toc div.toc-2.toc-active div.toc-2-children { margin: 2px 0px 3px 0px; } 
+#sidebar_toc div.toc-2.toc-active div.toc-3-item { 
+    padding: 0px 0px 0px 12px;
+}
+#sidebar_toc div.toc-2.toc-active div.toc-3-item:hover { color: #020; }
+
+/* otherwise level 3 menu is popup */
+#sidebar_toc div.toc-2:not(.toc-active) div.toc-3-item { color: #262; background: #aaa;
     text-align: right; padding: 2px 6px 2px 6px;
     border-width: 2px; border-style: solid; border-radius: 3px;
 }
-#sidebar_toc div.toc-3-item:hover { color: #030; background: #888; }
+#sidebar_toc div.toc-2:not(.toc-active) div.toc-3-item:hover { color: #030; background: #888; }
 
-#sidebar_toc div.toc-1-item.toc-active { color: #222; }
-#sidebar_toc div.toc-2-item.toc-active { color: #222; }
-#sidebar_toc div.toc-3-item.toc-active { color: #222; }
-
-/* popup for level 3 menus */
-#sidebar_toc div.toc-2-children-popup { 
+#sidebar_toc div.toc-2:not(.toc-active) div.toc-2-children-popup { 
 	display: none;
 }
-#sidebar_toc div.toc-2:hover div.toc-2-children-popup { 
+#sidebar_toc div.toc-2:not(.toc-active):hover div.toc-2-children-popup { 
     display: block;
     position: relative;
     height: 0px;
@@ -33,7 +42,7 @@
     width: 180px;
     top: -20px;
 }
-#sidebar_toc div.toc-2-children { 
+#sidebar_toc div.toc-2:not(.toc-active) div.toc-2-children { 
 	display: block;
     width: 160px;
     padding: 0px 10px 0px 10px;

@@ -4,6 +4,10 @@
 
 }
 
+#sidebar_image {
+	text-align: center;
+}
+
 #search_box{
 	display: inline;
 	text-align: right;
@@ -12,9 +16,6 @@
 	margin-top: 1.5em;
 }
 
-h1{
-	color: #68aa70;
-}
 #header_logo {
   display: inline;
   padding: 0px 8px 0px 0px;
@@ -22,20 +23,16 @@ h1{
 }
 
 #header_title {
-  display: inline;
-  vertical-align: 30px;
-  padding: 0px 0px 0px 30px;
-  color: #ffffff;
-  font-size: 200%;
-  font-weight: bold;
+    display: block;
+    font-weight: normal;
+    margin: 42px 0px 0px 0px;
 }
 
 #all {
-  width: 60em;
+  width: 64em;
   height:100%;
   margin: 0 auto;
 }
-
 
 .page_row {
   width: 100%; 
@@ -43,35 +40,33 @@ h1{
   clear: both;
 }
 
+#page_content {
+  width: 48em;
+  float: left;
+  text-align: left;
+  padding: 0px 8px 0px 0px;
+}
+
 #page_toc {
   width: 14em;
   height: 100%;
-  float: left;
+  float: right;
   text-align: left;
-  padding: 0px 48px 0px 0px;
-}
-
-#page_content {
-  width: 40em;
-  float: left;
-  text-align: left;
-  padding: 0px 0px 0px 8px;
+  padding: 0px 8px 0px 8px;
 }
 
 #page_footer {
   font-size: 50%;
 }
 
-a, a:visited{
-	text-decoration:underline;
-	color:#185018; 
+div.breadcrumbs {
+	margin: 0px 0px 0px 2px;
 }
-a:hover{
-	color:#68AA70;	
-}
-
-a.breadcrumb, a.toc{
+.breadcrumbs a {
 	text-decoration:none; 
 }
 
-
+h2 {
+	/* font-weight: normal; */ 
+	margin: 32px 0px 0px 0px;
+}

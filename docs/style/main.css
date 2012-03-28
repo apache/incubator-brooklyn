@@ -7,25 +7,30 @@ body {
 	font-family: verdana, arial, sans-serif;
 }
 
-
-
+a { color:#484; text-decoration:none; }
+a:visited { color: #363; }
+a:hover{ color:#2a2; text-decoration:underline; }
+/*
 a { color: #204818; text-decoration: none; }
 a:visited { color: #002808; }
 a:hover { text-decoration: underline; }
+*/
 
+h1 { color: #68aa70; }
 h2 { color: #185018; }
 
 
 /* Code Snippets */
 pre {
- 	font-family: 'Droid Sans Mono', Monaco, Courier, sans-serif; font-size: 90%;
+    font-family: Monaco, Courier, sans-serif /* 'Droid Sans Mono' */; 
+    font-size: 90%;
  	background-color:#f6f6f6;
- 	margin-right: -5em;
 	padding: 1em;
 }
 code {
- 	font-family: 'Droid Sans Mono', Monaco, Courier, sans-serif; font-size: 90%;
- 	background-color:#f4f4f4;
+ 	font-family: Monaco, Courier, sans-serif /* 'Droid Sans Mono' */; 
+ 	font-size: 90%;
+/* 	background-color:#f4f4f4; */
 }
 
 
