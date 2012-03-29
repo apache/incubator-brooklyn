@@ -18,6 +18,8 @@ import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.event.basic.BasicNotificationSensor
 import brooklyn.policy.basic.AbstractPolicy
+import brooklyn.util.TimeWindowedList
+import brooklyn.util.TimestampedValue
 import brooklyn.util.flags.SetFromFlag
 
 import com.google.common.base.Preconditions
@@ -38,7 +40,9 @@ public class ResizingPolicy extends AbstractPolicy {
         Map.class, "resizablepool.hot", "Pool is over-utilized; it has insufficient resource for current workload")
     public static BasicNotificationSensor<Map> POOL_COLD = new BasicNotificationSensor<Map>(
         Map.class, "resizablepool.cold", "Pool is under-utilized; it has too much resource for current workload")
-    
+    public static BasicNotificationSensor<Map> POOL_OK = new BasicNotificationSensor<Map>(
+        Map.class, "resizablepool.cold", "Pool utilization is ok; the available resources are fine for the current workload")
+
     public static final String POOL_CURRENT_SIZE_KEY = "pool.current.size"
     public static final String POOL_HIGH_THRESHOLD_KEY = "pool.high.threshold"
     public static final String POOL_LOW_THRESHOLD_KEY = "pool.low.threshold"
@@ -46,6 +50,12 @@ public class ResizingPolicy extends AbstractPolicy {
     
     @SetFromFlag // TODO not respected for policies? I had to look this up in the constructor
     private long minPeriodBetweenExecs = 100
+    
+    @SetFromFlag
+    private long resizeUpStabilizationDelay
+    
+    @SetFromFlag
+    private long resizeDownStabilizationDelay
     
     private Entity poolEntity
     
@@ -56,13 +66,19 @@ public class ResizingPolicy extends AbstractPolicy {
     private int minPoolSize = 0
     private int maxPoolSize = Integer.MAX_VALUE
     private final Closure resizeOperator
+    private final Closure currentSizeOperator
     private final BasicNotificationSensor poolHotSensor
     private final BasicNotificationSensor poolColdSensor
+    private final BasicNotificationSensor poolOkSensor
     
-    private volatile int desiredPoolSize;
+    private final TimeWindowedList recentDesiredResizes
     
-    Closure defaultResizeOperator = { Entity e, int desiredSize ->
+    private final Closure defaultResizeOperator = { Entity e, int desiredSize ->
         ((Entity)e).resize(desiredSize)
+    }
+    
+    private final Closure defaultCurrentSizeOperator = { Entity e ->
+        return ((Entity)e).getCurrentSize()
     }
     
     private final SensorEventListener<?> eventHandler = new SensorEventListener<Object>() {
@@ -71,6 +87,7 @@ public class ResizingPolicy extends AbstractPolicy {
             switch (event.getSensor()) {
                 case poolColdSensor: onPoolCold(properties); break
                 case poolHotSensor: onPoolHot(properties); break
+                case poolOkSensor: onPoolOk(properties); break
             }
         }
     }
@@ -80,9 +97,20 @@ public class ResizingPolicy extends AbstractPolicy {
         if (props.containsKey("minPoolSize")) minPoolSize = props.minPoolSize
         if (props.containsKey("maxPoolSize")) maxPoolSize = props.maxPoolSize
         resizeOperator = props.resizeOperator ?: defaultResizeOperator
+        currentSizeOperator = props.currentSizeOperator ?: defaultCurrentSizeOperator
         poolHotSensor = props.poolHotSensor ?: POOL_HOT
         poolColdSensor = props.poolColdSensor ?: POOL_COLD
-        minPeriodBetweenExecs = props.minPeriodBetweenExecs ?: 100
+        poolOkSensor = props.poolOkSensor ?: POOL_OK
+        if (props.containsKey("minPeriodBetweenExecs")) {
+            minPeriodBetweenExecs = props.minPeriodBetweenExecs // accept zero
+        } else {
+            minPeriodBetweenExecs = 100
+        }
+        resizeUpStabilizationDelay = props.resizeUpStabilizationDelay ?: 0
+        resizeDownStabilizationDelay = props.resizeDownStabilizationDelay ?: 0
+        
+        long maxResizeStabilizationDelay = Math.max(resizeUpStabilizationDelay, resizeDownStabilizationDelay)
+        recentDesiredResizes = new TimeWindowedList<Number>([timePeriod:maxResizeStabilizationDelay, minExpiredVals:1])
     }
     
     @Override
@@ -108,6 +136,7 @@ public class ResizingPolicy extends AbstractPolicy {
         
         subscribe(poolEntity, poolColdSensor, eventHandler)
         subscribe(poolEntity, poolHotSensor, eventHandler)
+        subscribe(poolEntity, poolOkSensor, eventHandler)
     }
     
     private void onPoolCold(Map<String, ?> properties) {
@@ -126,7 +155,9 @@ public class ResizingPolicy extends AbstractPolicy {
             scheduleResize(desiredPoolSize)
         } else {
             if (LOG.isTraceEnabled()) LOG.trace("{} not resizing cold pool {} from {} to {}", this, poolEntity, poolCurrentSize, desiredPoolSize)
+            abortResize(poolCurrentSize)
         }
+
     }
     
     private void onPoolHot(Map<String, ?> properties) {
@@ -145,7 +176,17 @@ public class ResizingPolicy extends AbstractPolicy {
             scheduleResize(desiredPoolSize)
         } else {
             if (LOG.isTraceEnabled()) LOG.trace("{} not resizing hot pool {} from {} to {}", this, poolEntity, poolCurrentSize, desiredPoolSize)
+            abortResize(poolCurrentSize)
         }
+    }
+    
+    private void onPoolOk(Map<String, ?> properties) {
+        if (LOG.isTraceEnabled()) LOG.trace("{} recording pool-ok for {}: {}", this, poolEntity, properties)
+        
+        int poolCurrentSize = properties.get(POOL_CURRENT_SIZE_KEY)
+        
+        if (LOG.isTraceEnabled()) LOG.trace("{} not resizing ok pool {} from {}", this, poolEntity, poolCurrentSize)
+        abortResize(poolCurrentSize)
     }
     
     private int toBoundedDesiredPoolSize(int size) {
@@ -160,27 +201,53 @@ public class ResizingPolicy extends AbstractPolicy {
      * to do at the point the job was queued).
      */
     private void scheduleResize(final int newSize) {
+        recentDesiredResizes.add(newSize)
+        
+        scheduleResize()
+    }
+
+    private void abortResize(final int currentSize) {
+        recentDesiredResizes.add(currentSize)
+    }
+    
+    private void scheduleResize() {
         // TODO perhaps make concurrent calls, rather than waiting for first resize to entirely 
         // finish? On ec2 for example, this can cause us to grow very slowly if first request is for
         // just one new VM to be provisioned.
         
-        this.desiredPoolSize = newSize
-
         if (isRunning() && executorQueued.compareAndSet(false, true)) {
             long now = System.currentTimeMillis()
             long delay = Math.max(0, (executorTime + minPeriodBetweenExecs) - now)
+            if (LOG.isTraceEnabled()) LOG.trace("{} scheduling resize in {}ms", this, delay)
             
             executor.schedule(
                 {
                     try {
                         executorTime = System.currentTimeMillis()
                         executorQueued.set(false)
+
+                        long currentPoolSize = currentSizeOperator.call(poolEntity)
+                        int desiredPoolSize = calculateDesiredPoolSize(currentPoolSize)
+                        boolean stable = isDesiredPoolSizeStable()
+                        if (!stable) {
+                            // the desired size fluctuations are not stable; ensure we check again later (due to time-window)
+                            // even if no additional events have been received
+                            if (LOG.isTraceEnabled()) LOG.trace("{} re-scheduling resize check, as desired size not stable; continuing with resize...", 
+                                    this, poolEntity, currentPoolSize, desiredPoolSize)
+                            scheduleResize()
+                        }
+                        if (currentPoolSize == desiredPoolSize) {
+                            if (LOG.isTraceEnabled()) LOG.trace("{} not resizing pool {} from {} to {}", this, poolEntity, currentPoolSize, desiredPoolSize)
+                            return
+                        }
                         
                         resizeOperator.call(poolEntity, desiredPoolSize)
                         
-                        if (LOG.isDebugEnabled()) LOG.debug("{} requested resize to {}", this, desiredPoolSize)
+                        if (LOG.isDebugEnabled()) LOG.debug("{} requested resize to {}; current {}, min {}, max {}", this, desiredPoolSize,
+                                currentPoolSize, minPoolSize, maxPoolSize)
                         
                     } catch (InterruptedException e) {
+                        if (LOG.isDebugEnabled()) LOG.debug("Interrupted while attempting resize", e)
                         Thread.currentThread().interrupt() // gracefully stop
                     } catch (Exception e) {
                         if (isRunning()) {
@@ -188,11 +255,79 @@ public class ResizingPolicy extends AbstractPolicy {
                         } else {
                             if (LOG.isDebugEnabled()) LOG.debug("Error resizing, but no longer running: "+e, e)
                         }
+                    } catch (Throwable t) {
+                        LOG.error("Error resizing: "+t, t)
+                        throw t
                     }
                 },
                 delay,
                 TimeUnit.MILLISECONDS)
         }
+    }
+    
+    private boolean isDesiredPoolSizeStable() {
+        long now = System.currentTimeMillis()
+        List<TimestampedValue<?>> downWindowVals = recentDesiredResizes.getValuesInWindow(now, resizeDownStabilizationDelay)
+        List<TimestampedValue<?>> upWindowVals = recentDesiredResizes.getValuesInWindow(now, resizeUpStabilizationDelay)
+        return (minInWindow(downWindowVals, resizeDownStabilizationDelay) == maxInWindow(downWindowVals, resizeDownStabilizationDelay)) && 
+                (minInWindow(upWindowVals, resizeUpStabilizationDelay) == maxInWindow(upWindowVals, resizeUpStabilizationDelay))
+    }
+    
+    /**
+     * Complicated logic for stabilization-delay...
+     * Only grow if we have consistently been asked to grow for the resizeUpStabilizationDelay period;
+     * Only shrink if we have consistently been asked to shrink for the resizeDownStabilizationDelay period.
+     */
+    private int calculateDesiredPoolSize(long currentPoolSize) {
+        long now = System.currentTimeMillis()
+        List<TimestampedValue<?>> downsizeWindowVals = recentDesiredResizes.getValuesInWindow(now, resizeDownStabilizationDelay)
+        List<TimestampedValue<?>> upsizeWindowVals = recentDesiredResizes.getValuesInWindow(now, resizeUpStabilizationDelay)
+        int minDesiredPoolSize = maxInWindow(downsizeWindowVals, resizeDownStabilizationDelay)
+        int maxDesiredPoolSize = minInWindow(upsizeWindowVals, resizeUpStabilizationDelay)
+        
+        int desiredPoolSize
+        if (currentPoolSize > minDesiredPoolSize) {
+            // need to shrink
+            desiredPoolSize = minDesiredPoolSize
+        } else if (currentPoolSize < maxDesiredPoolSize) {
+            // need to grow
+            desiredPoolSize = maxDesiredPoolSize
+        } else {
+            desiredPoolSize = currentPoolSize
+        }
+        
+        if (LOG.isTraceEnabled()) LOG.trace("{} calculated desired pool size: from {} to {}; minDesired {}, maxDesired {}; downsizeHistory {}; upsizeHistor {}", 
+                this, currentPoolSize, desiredPoolSize, minDesiredPoolSize, maxDesiredPoolSize, downsizeWindowVals, upsizeWindowVals)
+        
+        return desiredPoolSize
+    }
+
+    /**
+     * If the entire time-window is not covered by the given values, then returns Integer.MAX_VALUE.
+     */
+    private <T> T maxInWindow(List<TimestampedValue<T>> vals, long timewindow) {
+        long now = System.currentTimeMillis()
+        long epoch = now-timewindow
+        T result = null
+        for (TimestampedValue<T> val : vals) {
+            if (result == null && val.getTimestamp() > epoch) result = Integer.MAX_VALUE
+            if (result == null || (val.getValue() != null && val.getValue() > result)) result = val.getValue()
+        }
+        return result
+    }
+    
+    /**
+     * If the entire time-window is not covered by the given values, then returns Integer.MIN_VALUE
+     */
+    private <T> T minInWindow(List<TimestampedValue<T>> vals, long timewindow) {
+        long now = System.currentTimeMillis()
+        T result = null
+        long epoch = now-timewindow
+        for (TimestampedValue<T> val : vals) {
+            if (result == null && val.getTimestamp() > epoch) result = Integer.MIN_VALUE
+            if (result == null || (val.getValue() != null && val.getValue() < result)) result = val.getValue()
+        }
+        return result
     }
     
     @Override
