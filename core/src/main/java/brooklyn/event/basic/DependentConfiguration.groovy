@@ -5,6 +5,9 @@ import groovy.lang.Closure
 import java.util.concurrent.Callable
 import java.util.concurrent.Semaphore
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.event.AttributeSensor
@@ -27,6 +30,8 @@ import com.google.common.base.Predicate
  */
 public class DependentConfiguration {
 
+    protected static final Logger LOG = LoggerFactory.getLogger(DependentConfiguration.class)
+    
     //not instantiable, only a static helper
     private DependentConfiguration() {}
 
@@ -84,6 +89,7 @@ public class DependentConfiguration {
                 semaphore.acquire()
                 value = data
             }
+            if (LOG.isDebugEnabled()) LOG.debug("Attribute-ready for $sensor in entity $source")
             return value
         } finally {
             entity.subscriptionContext.unsubscribe(subscription)
