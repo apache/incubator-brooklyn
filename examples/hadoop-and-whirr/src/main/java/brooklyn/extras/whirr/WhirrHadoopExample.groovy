@@ -1,9 +1,15 @@
 package brooklyn.extras.whirr
 
+import java.util.List;
+
 import brooklyn.entity.basic.AbstractApplication
+import brooklyn.entity.basic.Entities;
 import brooklyn.extras.whirr.core.WhirrCluster
 import brooklyn.launcher.BrooklynLauncher
+import brooklyn.location.Location;
 import brooklyn.location.basic.CommandLineLocations
+import brooklyn.util.CommandLineUtil;
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import brooklyn.extras.whirr.hadoop.WhirrHadoopCluster
@@ -12,21 +18,20 @@ public class WhirrHadoopExample extends AbstractApplication {
 
     private static final Logger LOG = LoggerFactory.getLogger(WhirrHadoopExample.class);
 
-    WhirrCluster cluster = new WhirrHadoopCluster(size: 2, memory: 1024, name: "brooklyn-hadoop", this)
+    public static final List<String> DEFAULT_LOCATION = [ "aws-ec2:eu-west-1" ]
 
-    public static void main(String[] args) {
-        WhirrHadoopExample app = new WhirrHadoopExample()
-        BrooklynLauncher.manage(app)
+    WhirrCluster cluster = new WhirrHadoopCluster(this, size: 2, memory: 2048, name: "brooklyn-hadoop-example")
 
-        LOG.info("Starting Hadoop cluster ...")
-        app.start([CommandLineLocations.newAwsLocationFactory().newLocation("eu-west-1")])
+    public static void main(String[] argv) {
+        ArrayList args = new ArrayList(Arrays.asList(argv));
+        int port = CommandLineUtil.getCommandLineOptionInt(args, "--port", 8081);
+        List<Location> locations = CommandLineLocations.getLocationsById(args ?: [DEFAULT_LOCATION])
 
-        LOG.info("Press enter to exit")
-        System.in.read()
+        def app = new WhirrHadoopExample()
 
-        LOG.info("Destroying cluster ...")
-        app.stop()
-
-        System.exit(0)
+        BrooklynLauncher.manage(app, port)
+        app.start(locations)
+        Entities.dumpInfo(app)
     }
+
 }
