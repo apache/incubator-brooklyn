@@ -1,23 +1,20 @@
 ---
 layout: page
-title: IDE Setup
+title: Tests
 toc: /toc.json
 ---
 
 TODO
 
-gone are the days when it just works.  maven and eclipse fight, neither quite gets along perfectly with groovy,
-    but with a bit of a dance the IDE can be your friend.
-    
-## Eclipse
+*     normal -- should run quickly, not need internet, and not side effect the machine (apart from a few /tmp files)          
+*     integration -- deploys locally, may read and write from internet, takes longer
+          if you change an entity, rerun the relevant integration test to make sure all is well!
+*     live -- deploys remotely, may provision machines (but should clean them up)
 
-TODO
+--
 
-## Intelli-J IDEA
+how to run each of these, as a group
 
-TODO
+how to run these, individually
 
 
-## Netbeans
-
-TODO

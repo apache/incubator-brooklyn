@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# launches jekyll as a server at the /brooklyn location, for easy debug
+# launches jekyll as a server at the / location, for easy debug
 
-jekyll --pygments --server --auto --base-url /brooklyn --url /brooklyn  $*
+jekyll --pygments --server --auto --url ""  $*
 

@@ -30,7 +30,7 @@ If you've not inherited brooklyn-launcher (or brooklyn-all) you'll need a ``log4
 There are plenty of other valid reasons for wanting to supply your own logging as well.
 
 A good starting point is the configuration file in 
-[launcher](https://github.com/cloudsoft/brooklyn/blob/master/usage/launcher/src/main/resources/log4j.properties).
+[launcher](https://github.com/brooklyncentral/brooklyn/blob/master/usage/launcher/src/main/resources/log4j.properties).
 
 Once you've tweaked this, place it in your classpath, 
 or specify ``-Dlog4j.configuration=/path/to/your/log4j.properties``. 
@@ -52,7 +52,7 @@ Adding a dependency on an implementation, such as ``log4j12``, should resolve th
 {% endhighlight %} 
 
 As of this writing we use 1.5.11 for the version,
-as per the [root pom](https://github.com/cloudsoft/brooklyn/blob/master/pom.xml).
+as per the [root pom](https://github.com/brooklyncentral/brooklyn/blob/master/pom.xml).
 The ``optional`` line means the dependency should not be passed to any projects
 which depend on your project; you can remove it to force the import your logging implementation choice.
 (You can of course use a differing slf4j-compliant logger, such as ``java.util.logging`` or ``ch.qos.logback``.)

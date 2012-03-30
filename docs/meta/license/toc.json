@@ -1,7 +1,7 @@
 [
 { "title": "Overview",
   "file":  "{{ site.url }}/meta/license/index.html" },
-{ "title": "License",
+{ "title": "Apache License v2.0",
   "file":  "{{ site.url }}/meta/license/license.html" },
 { "title": "Contributor Agreement",
   "file":  "{{ site.url }}/meta/license/contributor-agreement.html" }

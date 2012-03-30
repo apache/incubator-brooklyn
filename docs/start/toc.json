@@ -1,6 +1,6 @@
 [
 { "title": "Overview",
-  "file":  "{{ site.url }}/start/index.html" },
+  "file":  "{{ site.url }}/index.html" },
 { "title": "Walkthrough",
   "file": "{{ site.url }}/start/walkthrough/index.html" },
 { "title": "Download",

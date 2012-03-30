@@ -6,14 +6,14 @@ toc: /toc.json
 
 ## The Basics
 
-Brooklyn is available on [GitHub](http://github.com/cloudsoft/brooklyn).  Check it out using:
+Brooklyn is available on [GitHub](http://github.com/brooklyncentral/brooklyn).  Check it out using:
 
 {% highlight bash %}
-git clone git@github.com:cloudsoft/brooklyn.git
+git clone git@github.com:brooklyncentral/brooklyn.git
 {% endhighlight %}
 
 You'll find versions in branches, and examples in the **examples** sub-dir.
-These examples are pushed to the [brooklyn-examples](http://github.com/cloudsoft/brooklyn-examples) GitHub project when a version is released.
+These examples are pushed to the [brooklyn-examples](http://github.com/brooklyncentral/brooklyn-examples) GitHub project when a version is released.
 
 
 ## Project Structure
@@ -33,10 +33,6 @@ Brooklyn is split into the following projects and subprojects:
     * TODO
 
  
-Some summary of the project structure and architecture is currently
-kept on the [wiki](http://github.com/cloudsoft/brooklyn/wiki).
-
-
 ## Next Steps
 
 If you're interested in building and editting the code, check out:

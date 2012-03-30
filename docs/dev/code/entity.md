@@ -45,10 +45,11 @@ So to get started:
 
 ## Helpful References
 
-A few handy guides will help make it easy to build your own entities.
+A few handy pointers will help make it easy to build your own entities.
 Check out some of the exemplar existing entities
-(note, some of the other entities use a deprecated class hierarchy;
-it is suggested to avoid them!):
+(note, some of the other entities use a deprecated class hierarchy,
+obvious with the word *legacy* in the FQN; it is suggested to avoid these,
+looking at the ones below instead):
 
 * JBoss7Server
 * MySqlNode
@@ -56,5 +57,6 @@ it is suggested to avoid them!):
 
 You might also find the following helpful:
 
+* **[Entity Design Tips]({{site.url}}/dev/tips/index.html#EntityDesign)**
 * The **[User Guide]({{site.url}}/use/guide/index.html)**
 * The **[Mailing List](http://groups.google.com/group/brooklyn-dev)** (brooklyn-dev@googlegroups.com)

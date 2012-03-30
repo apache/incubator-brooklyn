@@ -5,4 +5,4 @@ toc: /toc.json
 categories: [start]
 ---
 
-{% readj index.include.md %}
+{% readj start/index.include.md %}

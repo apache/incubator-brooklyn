@@ -132,6 +132,6 @@ The source code for these examples is available for download from GitHub. To ret
 
     git clone git@github.com:cloudsoft/brooklyn-examples.git
 
-You can also [browse the code](https://github.com/cloudsoft/brooklyn-examples) on the web.
+You can also [browse the code](https://github.com/brooklyncentral/brooklyn-examples) on the web.
 
 

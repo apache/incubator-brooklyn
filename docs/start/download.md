@@ -29,7 +29,7 @@ and repositories to your pom:
     
     <dependencies>
         <dependency>
-            <groupId>brooklyn</groupId>
+            <groupId>info.brooklyncentral</groupId>
             <artifactId>brooklyn-all</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -47,17 +47,17 @@ and some of ``brooklyn-{software-{webapp,database,messaging},systems-hadoop}``.
 If you prefer to grab a JAR containing all of Brooklyn and its dependencies, you'll find that here:
 
 <!-- BROOKLYN_VERSION_BELOW -->
-* [SNAPSHOT](http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/brooklyn/brooklyn-all/0.4.0-SNAPSHOT/)
+* [SNAPSHOT](http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/info/brooklyncentral/brooklyn-all/0.4.0-SNAPSHOT/)
 
 
 ## Sources
 
-Full source is at [github.com/cloudsoft/brooklyn](github.com/cloudsoft/brooklyn).
+Full source is at [github.com/brooklyncentral/brooklyn](http://github.com/brooklyncentral/brooklyn).
 Information on working with the source is [here]({{ site.url }}/dev/code).
 
 Alternatively you can download archives of the source directly:
 
-<a href="https://github.com/cloudsoft/brooklyn/tarball/master"><img border="0" width="90" src="https://github.com/images/modules/download/tar.png"></a>
-<a href="https://github.com/cloudsoft/brooklyn/zipball/master"><img border="0" width="90" src="https://github.com/images/modules/download/zip.png"></a>
+<a href="https://github.com/brooklyncentral/brooklyn/tarball/master"><img border="0" width="90" src="https://github.com/images/modules/download/tar.png"></a>
+<a href="https://github.com/brooklyncentral/brooklyn/master"><img border="0" width="90" src="https://github.com/images/modules/download/zip.png"></a>
 
 

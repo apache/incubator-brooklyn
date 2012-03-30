@@ -45,7 +45,7 @@ fi
 popd
 
 
-_scripts/build.sh --url /brooklyn
+_scripts/build.sh --url ""
 cp -r _site/* $TARGET/
 
 pushd $TARGET
