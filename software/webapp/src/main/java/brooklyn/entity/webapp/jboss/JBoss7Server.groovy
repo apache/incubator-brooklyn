@@ -12,8 +12,8 @@ import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.webapp.JavaWebAppService
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcess
 import brooklyn.event.adapter.HttpSensorAdapter
-import brooklyn.event.basic.AttributeSensorAndConfigKey
 import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.event.basic.BasicAttributeSensorAndConfigKey
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey
 import brooklyn.location.basic.SshMachineLocation
@@ -36,7 +36,7 @@ public class JBoss7Server extends JavaWebAppSoftwareProcess implements JavaWebAp
             [ "webapp.jboss.managementNativePort", "Management native port", "10999+" ]
 
     @SetFromFlag("portIncrement")
-    public static final AttributeSensorAndConfigKey PORT_INCREMENT = 
+    public static final BasicAttributeSensorAndConfigKey PORT_INCREMENT =
             [ Integer, "webapp.jboss.portIncrement", "Port increment, for all ports in config file", 0 ]
 
     public static final BasicAttributeSensor<Integer> MANAGEMENT_STATUS =
