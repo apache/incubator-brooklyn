@@ -13,7 +13,6 @@
 	text-align: right;
 	clear: both;
 	float: right;
-	margin-top: 1.5em;
 }
 
 #header_logo {
@@ -55,8 +54,12 @@
   padding: 0px 8px 0px 8px;
 }
 
+#header_logo {
+  margin: 0px 0px 0px -7px;
+}
+
 #page_footer {
-  font-size: 50%;
+  font-size: 60%;
 }
 
 div.breadcrumbs {

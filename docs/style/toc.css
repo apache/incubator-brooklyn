@@ -5,10 +5,10 @@
 
 #sidebar_toc div.toc-1-item { color: #666; font-size: 95%; text-transform:uppercase; font-weight:bold; margin: 12px 0px 0px 0px; }
 #sidebar_toc div.toc-1-item.toc-1-header { margin: 0px 0px 2px 0px; }
-#sidebar_toc div.toc-1-item:hover { color: #343; }
+#sidebar_toc div.toc-1-item:hover { color: #020; }
 
-#sidebar_toc div.toc-2-item { color: #060; }
-#sidebar_toc div.toc-2-item:hover { color: #020; }
+#sidebar_toc div.toc-2-item { color: #282; }
+#sidebar_toc div.toc-2-item:hover { color: #010; }
 
 #sidebar_toc div.toc-1 { padding: 8px; margin: 4px 0px 0px 0px; }
 #sidebar_toc div.toc-1.toc-active { background: #ddd; }
@@ -21,10 +21,11 @@
 #sidebar_toc div.toc-2.toc-active div.toc-3-item { 
     padding: 0px 0px 0px 12px;
 }
-#sidebar_toc div.toc-2.toc-active div.toc-3-item:hover { color: #020; }
+#sidebar_toc div.toc-2.toc-active div.toc-3-item:hover { color: #060; }
 
 /* otherwise level 3 menu is popup */
 #sidebar_toc div.toc-2:not(.toc-active) div.toc-3-item { color: #262; background: #aaa;
+    font-size: 98%;
     text-align: right; padding: 2px 6px 2px 6px;
     border-width: 2px; border-style: solid; border-radius: 3px;
 }
@@ -40,7 +41,7 @@
 /*  right: -180px; to make appear at right */
     left: -180px;
     width: 180px;
-    top: -20px;
+    top: -17px;
 }
 #sidebar_toc div.toc-2:not(.toc-active) div.toc-2-children { 
 	display: block;
