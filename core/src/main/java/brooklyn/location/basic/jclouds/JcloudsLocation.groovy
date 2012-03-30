@@ -107,13 +107,19 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         rootSshPrivateKey:{}, rootSshPublicKey:{}, 
         groupId:{},
         providerLocationId:{}, provider:{} ];
-     
+    
+    /** returns public key file, if one has been configured */
+    public File getPublicKeyFile() { asFile(conf.publicKeyFile) }
+    
+    /** returns private key file, if one has been configured */
+    public File getPrivateKeyFile() { asFile(conf.privateKeyFile) }
+
     public SshMachineLocation obtain(Map flags=[:]) throws NoMachinesAvailableException {
         Map allconf = flags + conf;
         Map unusedConf = [:] + allconf
         if (!unusedConf.remove("userName")) allconf.userName = ROOT_USERNAME
-        if (unusedConf.remove("publicKeyFile")) allconf.sshPublicKeyData = Files.toString(asFile(allconf.publicKeyFile), Charsets.UTF_8)
-        if (unusedConf.remove("privateKeyFile")) allconf.sshPrivateKeyData = Files.toString(asFile(allconf.privateKeyFile), Charsets.UTF_8)
+        if (unusedConf.remove("publicKeyFile")) allconf.sshPublicKeyData = Files.toString(getPublicKeyFile(), Charsets.UTF_8)
+        if (unusedConf.remove("privateKeyFile")) allconf.sshPrivateKeyData = Files.toString(getPrivateKeyFile(), Charsets.UTF_8)
         if (unusedConf.remove("sshPublicKey")) allconf.sshPublicKeyData = Files.toString(asFile(allconf.sshPublicKey), Charsets.UTF_8)
         if (unusedConf.remove("sshPrivateKey")) allconf.sshPrivateKeyData = Files.toString(asFile(allconf.sshPrivateKey), Charsets.UTF_8)
         if (unusedConf.remove("rootSshPrivateKey")) allconf.rootSshPrivateKeyData = Files.toString(asFile(allconf.rootSshPrivateKey), Charsets.UTF_8)
