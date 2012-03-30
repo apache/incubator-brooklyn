@@ -50,7 +50,8 @@ public class SshJschTool {
     String password
     String user = System.getProperty('user.name')
     int port = 22
-    List<String> keyFiles = ['~/.ssh/id_dsa','~/.ssh/id_rsa']
+    public static final List<String> DEFAULT_KEY_FILES = ['~/.ssh/id_dsa','~/.ssh/id_rsa']
+    List<String> keyFiles = DEFAULT_KEY_FILES
     String privateKey
     String publicKey
     Map config = [StrictHostKeyChecking:'no']
@@ -141,6 +142,8 @@ public class SshJschTool {
                 return;
             } catch (Exception e) {
                 error = e;
+                //TODO remove following
+                log.info("ssh failed 1, retrying - attempt ${i+1} of ${maxAttempts} to ${user}@${port}: "+e);
                 if (log.isDebugEnabled())
                     log.debug("ssh failed, retrying - attempt ${i+1} of ${maxAttempts} to ${user}@${port}: "+e);
                 if (i+1<maxAttempts) sleep(250+250*i);

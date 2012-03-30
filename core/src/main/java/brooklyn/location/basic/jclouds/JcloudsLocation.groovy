@@ -29,6 +29,7 @@ import brooklyn.location.basic.AbstractLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.IdGenerator
 import brooklyn.util.internal.Repeater
+import brooklyn.util.internal.SshJschTool;
 
 import com.google.common.base.Charsets
 import com.google.common.base.Throwables
@@ -118,6 +119,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         Map allconf = flags + conf;
         Map unusedConf = [:] + allconf
         if (!unusedConf.remove("userName")) allconf.userName = ROOT_USERNAME
+        //TODO deprecate supply of data (and of different root key?) to keep it simpler
         if (unusedConf.remove("publicKeyFile")) allconf.sshPublicKeyData = Files.toString(getPublicKeyFile(), Charsets.UTF_8)
         if (unusedConf.remove("privateKeyFile")) allconf.sshPrivateKeyData = Files.toString(getPrivateKeyFile(), Charsets.UTF_8)
         if (unusedConf.remove("sshPublicKey")) allconf.sshPublicKeyData = Files.toString(asFile(allconf.sshPublicKey), Charsets.UTF_8)
@@ -171,7 +173,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
 
             String vmHostname = getPublicHostname(node, allconf)
             Map sshConfig = [:]
-            if (allconf.sshPrivateKey) sshConfig.keyFiles = [ fileAsString(allconf.sshPrivateKey) ]
+            if (getPrivateKeyFile()) sshConfig.keyFiles = [ getPrivateKeyFile().getCanonicalPath() ] + SshJschTool.DEFAULT_KEY_FILES 
             SshMachineLocation sshLocByHostname = new JcloudsSshMachineLocation(this, node,
                     address:vmHostname, 
                     displayName:vmHostname,
@@ -343,7 +345,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         String vmIp = JcloudsUtil.getFirstReachableAddress(node);
         
         Map sshConfig = [:]
-        if (allconf.sshPrivateKey) sshConfig.keyFiles = [ fileAsString(allconf.sshPrivateKey) ]
+        if (getPrivateKeyFile()) sshConfig.keyFiles = [ getPrivateKeyFile().getCanonicalPath() ] + SshJschTool.DEFAULT_KEY_FILES 
         SshMachineLocation sshLocByIp = new SshMachineLocation(address:vmIp, username:allconf.userName, config:sshConfig);
         ByteArrayOutputStream outStream = new ByteArrayOutputStream()
         ByteArrayOutputStream errStream = new ByteArrayOutputStream()
