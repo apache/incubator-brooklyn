@@ -17,7 +17,7 @@ toc: ../toc.json
 You can grab a single JAR containing all of Brooklyn and its dependencies here:
 
 <!-- BROOKLYN_VERSION_BELOW -->
-* [SNAPSHOT](http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/info/brooklyncentral/brooklyn-all/0.4.0-SNAPSHOT/)
+* [SNAPSHOT](http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/io/brooklyn/brooklyn-all/0.4.0-SNAPSHOT/)
 
 Just download your preferred flavour and add it to your classpath.
 
@@ -57,7 +57,7 @@ If you use maven, you can add Brooklyn with the following entries in your pom:
     
     <dependencies>
         <dependency>
-            <groupId>info.brooklyncentral</groupId>
+            <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-all</artifactId>
             <version>${project.version}</version>
         </dependency>
