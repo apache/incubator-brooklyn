@@ -14,5 +14,7 @@
 { "title": "Wishlist",
   "file": "{{ site.url }}/dev/wishlist.html" },
 { "title": "Resources",
-  "file": "{{ site.url }}/dev/links.html" }
+  "file": "{{ site.url }}/dev/links.html" },
+{ "title": "How to Contribute",
+  "file": "{{ site.url }}/dev/how-to-contrib.html" }
 ]

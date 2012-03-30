@@ -1,0 +1,8 @@
+[
+{ "title": "Apache License v2.0",
+  "file":  "{{ site.url }}/license/license.html" },
+{ "title": "Contributor Agreements",
+  "file":  "{{ site.url }}/license/contributor-agreements/index.html",
+  "exclude": true,
+  "children": {% readj ./contributor-agreements/toc.json %} }
+]

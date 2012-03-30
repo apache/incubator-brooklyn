@@ -18,7 +18,7 @@ it's easy to give back to the community.  Just:
 
 1. **Push it**, and tell everyone about it
 
-1. **Sign the relevant [contributor agreement(s)]({{site.url}}/meta/license/contributor-agreement.html)**
+1. **Sign the relevant [contributor agreement(s)]({{site.url}}/license/contributor-agreements/index.html)**
 
 1. **Issue a pull request** from your GitHub repo
 
@@ -35,4 +35,4 @@ but see the additional [tips for updating documentation]({{ site.url }}/dev/tips
 
 * See the [tips here]({{site.url}}/dev/tips/index.html)
 
-* If you get blocked, **[hollar](contact.html)**!
+* If you get blocked, **[hollar]({{site.url}}/meta/contact.html)**!

@@ -1,0 +1,12 @@
+[
+{ "title": "Instructions",
+  "file":  "{{ site.url }}/license/contributor-agreements/index.html" },
+{ "title": "Individual CLA (text)",
+  "file":  "{{ site.url }}/license/contributor-agreements/brooklyn-icla.txt" },
+{ "title": "Individual CLA (echosign)",
+  "file":  "http://echosign.com/TODO" },
+{ "title": "Corporate CLA (text)",
+  "file":  "{{ site.url }}/license/contributor-agreements/brooklyn-ccla.txt" },
+{ "title": "Corporate CLA (echosign)",
+  "file":  "http://echosign.com/TODO" }
+]

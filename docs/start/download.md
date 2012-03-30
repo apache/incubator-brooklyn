@@ -4,11 +4,39 @@ title: Downloads
 toc: ../toc.json
 ---
 
+## Contents
+
+* [A Single Jar](#alljar)
+* [Examples](#alljar)
+* [Maven](#alljar)  
+* [Source](#alljar)
+
+
+## The All Jar
+
+You can grab a single JAR containing all of Brooklyn and its dependencies here:
+
+<!-- BROOKLYN_VERSION_BELOW -->
+* [SNAPSHOT](http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/info/brooklyncentral/brooklyn-all/0.4.0-SNAPSHOT/)
+
+Just download your preferred flavour and add it to your classpath.
+
+
+## Examples
+
+You can checkout 
+[examples]({{site.url}}/use/examples) 
+from [github.com/brooklyncentral/brooklyn-examples](http://github.com/brooklyncentral/brooklyn-examples),
+build them with [maven (v3)]({{site.url}}/dev/build/), 
+and then run them with the ``demo*.sh`` scripts in the examples.
+This will take care of downloading Brooklyn and the dependencies.
+
+A good entry point is the [Simple Web Cluster]({{site.url}}/use/examples/webcluster.html).
+
 
 ## Maven
 
-If you use maven, you can get add Brooklyn to a project by adding the following dependency
-and repositories to your pom:
+If you use maven, you can add Brooklyn with the following entries in your pom:
 
 {% highlight xml %}
     <repositories>
@@ -41,13 +69,7 @@ If you prefer a smaller repo you might want just ``brooklyn-core``,  ``brooklyn-
 and some of ``brooklyn-{software-{webapp,database,messaging},systems-hadoop}``.
 (Browse the full list [here](http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/brooklyn/).)
 
-
-## The All Jar
-
-If you prefer to grab a JAR containing all of Brooklyn and its dependencies, you'll find that here:
-
-<!-- BROOKLYN_VERSION_BELOW -->
-* [SNAPSHOT](http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/info/brooklyncentral/brooklyn-all/0.4.0-SNAPSHOT/)
+**TODO: we are moving to mavencentral so the repositories section will shortly be unnecessary**
 
 
 ## Sources
@@ -59,5 +81,4 @@ Alternatively you can download archives of the source directly:
 
 <a href="https://github.com/brooklyncentral/brooklyn/tarball/master"><img border="0" width="90" src="https://github.com/images/modules/download/tar.png"></a>
 <a href="https://github.com/brooklyncentral/brooklyn/master"><img border="0" width="90" src="https://github.com/images/modules/download/zip.png"></a>
-
 

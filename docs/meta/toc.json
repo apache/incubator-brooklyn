@@ -1,10 +1,6 @@
 [
-{ "title": "License",
-  "file":  "{{ site.url }}/meta/license/index.html",
-  "exclude": true,
-  "children": {% readj ./license/toc.json %} },
-{ "title": "How to Contribute",
-  "file": "{{ site.url }}/meta/how-to-contrib.html" },
+{ "title": "Governance",
+  "file": "{{ site.url }}/meta/governance.html" },
 { "title": "Versions",
   "file":  "{{ site.url }}/meta/versions.html" },
 { "title": "Contact",
