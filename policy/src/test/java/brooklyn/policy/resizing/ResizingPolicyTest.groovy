@@ -19,7 +19,6 @@ import brooklyn.util.internal.TimeExtras
 
 import com.google.common.collect.ImmutableMap
 
-
 class ResizingPolicyTest {
     
     /**
@@ -38,6 +37,8 @@ class ResizingPolicyTest {
     
     private static long TIMEOUT_MS = 5000
     private static long SHORT_WAIT_MS = 250
+    private static long OVERHEAD_DURATION_MS = 250
+    private static long EARLY_RETURN_MS = 10
     
     ResizingPolicy policy
     TestCluster cluster
@@ -195,14 +196,6 @@ class ResizingPolicyTest {
     }
     
 
-    static Map<String, Object> message(int currentSize, double currentWorkrate, double lowThreshold, double highThreshold) {
-        return ImmutableMap.of(
-            ResizingPolicy.POOL_CURRENT_SIZE_KEY, currentSize,
-            ResizingPolicy.POOL_CURRENT_WORKRATE_KEY, currentWorkrate,
-            ResizingPolicy.POOL_LOW_THRESHOLD_KEY, lowThreshold,
-            ResizingPolicy.POOL_HIGH_THRESHOLD_KEY, highThreshold)
-    }
-    
     @Test
     public void testUsesResizeOperatorOverride() {
         resizable.removePolicy(policy)
@@ -224,13 +217,142 @@ class ResizingPolicyTest {
         
         BasicNotificationSensor<Map> customPoolHotSensor = new BasicNotificationSensor<Map>(Map.class, "custom.hot", "")
         BasicNotificationSensor<Map> customPoolColdSensor = new BasicNotificationSensor<Map>(Map.class, "custom.cold", "")
-        policy = new ResizingPolicy(poolHotSensor:customPoolHotSensor, poolColdSensor:customPoolColdSensor)
+        BasicNotificationSensor<Map> customPoolOkSensor = new BasicNotificationSensor<Map>(Map.class, "custom.ok", "")
+        policy = new ResizingPolicy(poolHotSensor:customPoolHotSensor, poolColdSensor:customPoolColdSensor, poolOkSensor:customPoolOkSensor)
         resizable.addPolicy(policy)
         
         resizable.emit(customPoolHotSensor, message(1, 21L, 1*10L, 1*20L)) // grow to 2
-        executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 2) }
+        executeUntilSucceeds(timeout:TIMEOUT_MS*100) { assertEquals(resizable.currentSize, 2) }
         
         resizable.emit(customPoolColdSensor, message(2, 1L, 1*10L, 1*20L)) // shrink to 1
+        executeUntilSucceeds(timeout:TIMEOUT_MS*100) { assertEquals(resizable.currentSize, 1) }
+    }
+    
+    @Test
+    public void testResizeUpStabilizationDelayIgnoresBlip() {
+        long resizeUpStabilizationDelay = 1000L
+        long minPeriodBetweenExecs = 0
+        resizable.removePolicy(policy)
+        
+        policy = new ResizingPolicy(resizeUpStabilizationDelay:resizeUpStabilizationDelay, minPeriodBetweenExecs:minPeriodBetweenExecs)
+        resizable.addPolicy(policy)
+        resizable.resize(1)
+        
+        // Ignores temporary blip
+        resizable.emit(ResizingPolicy.POOL_HOT, message(1, 61L, 1*10L, 1*20L)) // would grow to 4
+        Thread.sleep(resizeUpStabilizationDelay-OVERHEAD_DURATION_MS)
+        resizable.emit(ResizingPolicy.POOL_OK, message(1, 11L, 4*10L, 4*20L)) // but 1 is still adequate
+        
+        assertEquals(resizable.currentSize, 1)
+        assertSucceedsContinually(duration:2000L) { assertEquals(resizable.sizes, [1]) }
+    }
+
+    @Test
+    public void testResizeUpStabilizationDelayTakesMaxSustainedDesired() {
+        long resizeUpStabilizationDelay = 1000L
+        long minPeriodBetweenExecs = 0
+        resizable.removePolicy(policy)
+        
+        policy = new ResizingPolicy(resizeUpStabilizationDelay:resizeUpStabilizationDelay, minPeriodBetweenExecs:minPeriodBetweenExecs)
+        resizable.addPolicy(policy)
+        resizable.resize(1)
+        
+        // Grows to max sustained in time window
+        resizable.emit(ResizingPolicy.POOL_HOT, message(1, 61L, 1*10L, 1*20L)) // would grow to 4
+        resizable.emit(ResizingPolicy.POOL_HOT, message(1, 21L, 1*10L, 1*20L)) // would grow to 2
+        Thread.sleep(resizeUpStabilizationDelay-OVERHEAD_DURATION_MS)
+        resizable.emit(ResizingPolicy.POOL_HOT, message(1, 61L, 1*10L, 1*20L)) // would grow to 4
+        
+        long emitTime = System.currentTimeMillis()
+        executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 2) }
+        long resizeDelay = System.currentTimeMillis() - emitTime
+        assertTrue(resizeDelay >= (OVERHEAD_DURATION_MS*2))
+    }
+
+    @Test
+    public void testResizeUpStabilizationDelayResizesAfterDelay() {
+        long resizeUpStabilizationDelay = 1000L
+        long minPeriodBetweenExecs = 0
+        resizable.removePolicy(policy)
+        
+        policy = new ResizingPolicy(resizeUpStabilizationDelay:resizeUpStabilizationDelay, minPeriodBetweenExecs:minPeriodBetweenExecs)
+        resizable.addPolicy(policy)
+        resizable.resize(1)
+        
+        // After suitable delay, grows to desired
+        long emitTime = System.currentTimeMillis()
+        resizable.emit(ResizingPolicy.POOL_HOT, message(1, 61L, 1*10L, 1*20L)) // would grow to 4
+        
+        executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 4) }
+        long resizeDelay = System.currentTimeMillis() - emitTime
+        assertTrue(resizeDelay >= (resizeUpStabilizationDelay-EARLY_RETURN_MS), "resizeDelay=$resizeDelay")
+    }
+
+    @Test
+    public void testResizeDownStabilizationDelayIgnoresBlip() {
+        long resizeStabilizationDelay = 1000L
+        long minPeriodBetweenExecs = 0
+        resizable.removePolicy(policy)
+        
+        policy = new ResizingPolicy(resizeDownStabilizationDelay:resizeStabilizationDelay, minPeriodBetweenExecs:minPeriodBetweenExecs)
+        resizable.addPolicy(policy)
+        resizable.resize(2)
+        
+        // Ignores temporary blip
+        resizable.emit(ResizingPolicy.POOL_COLD, message(2, 1L, 2*10L, 2*20L)) // would shrink to 1
+        Thread.sleep(resizeStabilizationDelay-OVERHEAD_DURATION_MS)
+        resizable.emit(ResizingPolicy.POOL_OK, message(2, 20L, 1*10L, 1*20L)) // but 2 is still adequate
+        
+        assertEquals(resizable.currentSize, 2)
+        assertSucceedsContinually(duration:2000L) { assertEquals(resizable.sizes, [2]) }
+    }
+
+    @Test
+    public void testResizeDownStabilizationDelayTakesMinSustainedDesired() {
+        long resizeDownStabilizationDelay = 1000L
+        long minPeriodBetweenExecs = 0
+        resizable.removePolicy(policy)
+        
+        policy = new ResizingPolicy(resizeDownStabilizationDelay:resizeDownStabilizationDelay, minPeriodBetweenExecs:minPeriodBetweenExecs)
+        resizable.addPolicy(policy)
+        resizable.resize(3)
+        
+        // Shrink to min sustained in time window
+        resizable.emit(ResizingPolicy.POOL_COLD, message(3, 1L, 3*10L, 3*20L)) // would shrink to 1
+        resizable.emit(ResizingPolicy.POOL_COLD, message(3, 20L, 3*10L, 3*20L)) // would shrink to 2
+        Thread.sleep(resizeDownStabilizationDelay-OVERHEAD_DURATION_MS)
+        resizable.emit(ResizingPolicy.POOL_COLD, message(3, 1L, 3*10L, 3*20L)) // would shrink to 1
+        
+        long emitTime = System.currentTimeMillis()
+        executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 2) }
+        long resizeDelay = System.currentTimeMillis() - emitTime
+        assertTrue(resizeDelay >= (OVERHEAD_DURATION_MS*2))
+    }
+
+    @Test
+    public void testResizeDownStabilizationDelayResizesAfterDelay() {
+        long resizeDownStabilizationDelay = 1000L
+        long minPeriodBetweenExecs = 0
+        resizable.removePolicy(policy)
+        
+        policy = new ResizingPolicy(resizeDownStabilizationDelay:resizeDownStabilizationDelay, minPeriodBetweenExecs:minPeriodBetweenExecs)
+        resizable.addPolicy(policy)
+        resizable.resize(2)
+        
+        // After suitable delay, grows to desired
+        long emitTime = System.currentTimeMillis()
+        resizable.emit(ResizingPolicy.POOL_COLD, message(2, 1L, 2*10L, 2*20L)) // would shrink to 1
+        
         executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 1) }
+        long resizeDelay = System.currentTimeMillis() - emitTime
+        assertTrue(resizeDelay >= (resizeDownStabilizationDelay-EARLY_RETURN_MS), "resizeDelay=$resizeDelay")
+    }
+
+    static Map<String, Object> message(int currentSize, double currentWorkrate, double lowThreshold, double highThreshold) {
+        return ImmutableMap.of(
+            ResizingPolicy.POOL_CURRENT_SIZE_KEY, currentSize,
+            ResizingPolicy.POOL_CURRENT_WORKRATE_KEY, currentWorkrate,
+            ResizingPolicy.POOL_LOW_THRESHOLD_KEY, lowThreshold,
+            ResizingPolicy.POOL_HIGH_THRESHOLD_KEY, highThreshold)
     }
 }

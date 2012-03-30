@@ -3,7 +3,7 @@ package brooklyn.test
 import static org.testng.AssertJUnit.*
 import groovy.time.TimeDuration
 
-import java.io.File
+import java.util.concurrent.Callable
 import java.util.concurrent.ExecutionException
 
 import org.codehaus.groovy.runtime.InvokerInvocationException
@@ -11,6 +11,9 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
+
+import com.google.common.base.Predicate
+import com.google.common.base.Supplier
 
 /**
  * Helper functions for tests of Tomcat, JBoss and others.
@@ -150,6 +153,40 @@ public class TestUtils {
         }
     }
 
+    public static <T> void assertSucceedsContinually(Map flags=[:], Callable<T> job) {
+        TimeDuration duration = toTimeDuration(flags.timeout) ?: new TimeDuration(0,0,1,0)
+        TimeDuration period = toTimeDuration(flags.period) ?: new TimeDuration(0,0,0,1)
+        long periodMs = period.toMilliseconds()
+        long startTime = System.currentTimeMillis()
+        long expireTime = startTime+duration.toMilliseconds()
+        
+        boolean first = true;
+        while (first || System.currentTimeMillis() <= expireTime) {
+            job.call();
+            if (periodMs > 0) sleep(periodMs);
+            first = false;
+        }
+    }
+    
+    public static <T> void assertContinually(Map flags=[:], Supplier<? extends T> supplier, Predicate<T> predicate) {
+        assertContinually(flags, supplier, predicate, (String)null);
+    }
+    
+    public static <T> void assertContinually(Map flags=[:], Supplier<? extends T> supplier, Predicate<T> predicate, String errMsg, long durationMs) {
+        TimeDuration duration = toTimeDuration(flags.timeout) ?: new TimeDuration(0,0,1,0)
+        TimeDuration period = toTimeDuration(flags.period) ?: new TimeDuration(0,0,0,1)
+        long periodMs = period.toMilliseconds()
+        long startTime = System.currentTimeMillis()
+        long expireTime = startTime+duration.toMilliseconds()
+        
+        boolean first = true;
+        while (first || System.currentTimeMillis() <= expireTime) {
+            assertTrue(predicate.apply(supplier.get()), "supplied="+supplier.get()+"; predicate="+predicate+(errMsg!=null?"; "+errMsg:""));
+            if (periodMs > 0) sleep(periodMs);
+            first = false;
+        }
+    }
+    
     public static class BooleanWithMessage {
         boolean value; String message;
         public BooleanWithMessage(boolean value, String message) {

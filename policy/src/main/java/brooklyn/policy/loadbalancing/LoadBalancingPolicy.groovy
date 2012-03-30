@@ -235,9 +235,8 @@ public class LoadBalancingPolicy extends AbstractPolicy {
         
         model.onContainerAdded(newContainer, lowThreshold.doubleValue(), highThreshold.doubleValue())
         
-        // Take heed of any extant items.
-        for (Movable item : ((BalanceableContainer) newContainer).getBalanceableItems()) 
-            onItemAdded((Entity) item, newContainer, false)
+        // Note: no need to scan the container for items; they will appear via the ITEM_ADDED events.
+        // Also, must abide by any item-filters etc defined in the pool.
         
         if (rebalanceNow) scheduleRebalance()
     }

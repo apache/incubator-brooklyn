@@ -173,7 +173,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     protected Entity addNode() {
         Map creation = [:]
         creation << getCustomChildFlags()
-        if (logger.isDebugEnabled()) logger.debug "Adding a node to {} with properties {}", id, creation
+        if (logger.isDebugEnabled()) logger.debug "Adding a node to {}({}) with properties {}", displayName, id, creation
 
         if (factory==null) 
             throw new IllegalStateException("EntityFactory factory not supplied for $this")

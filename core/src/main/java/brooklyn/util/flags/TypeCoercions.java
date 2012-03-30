@@ -24,6 +24,7 @@ import brooklyn.entity.basic.ConfigurableEntityFactoryFromEntityFactory;
 import brooklyn.entity.basic.EntityFactory;
 
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 
@@ -221,6 +222,16 @@ public class TypeCoercions {
             @Override
             public EntityFactory apply(Closure input) {
                 return new ClosureEntityFactory(input);
+            }
+        });
+        registerAdapter(Closure.class, Predicate.class, new Function<Closure,Predicate>() {
+            @Override
+            public Predicate<?> apply(final Closure closure) {
+                return new Predicate<Object>() {
+                    @Override public boolean apply(Object input) {
+                        return (Boolean) closure.call(input);
+                    }
+                };
             }
         });
     }

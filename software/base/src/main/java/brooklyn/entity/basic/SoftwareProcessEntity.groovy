@@ -40,6 +40,19 @@ import com.google.common.collect.Iterables
 public abstract class SoftwareProcessEntity extends AbstractEntity implements Startable {
 	private static final Logger log = LoggerFactory.getLogger(SoftwareProcessEntity.class)
 
+    
+    @SetFromFlag("startLatch")
+    public static final ConfigKey<String> START_LATCH = ConfigKeys.START_LATCH
+    
+    @SetFromFlag("installLatch")
+    public static final ConfigKey<String> INSTALL_LATCH = ConfigKeys.INSTALL_LATCH
+    
+    @SetFromFlag("customizeLatch")
+    public static final ConfigKey<String> CUSTOMIZE_LATCH = ConfigKeys.CUSTOMIZE_LATCH
+    
+    @SetFromFlag("launchLatch")
+    public static final ConfigKey<String> LAUNCH_LATCH = ConfigKeys.LAUNCH_LATCH
+    
 	@SetFromFlag("version")
 	public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.SUGGESTED_VERSION
 	
@@ -154,6 +167,10 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 		setAttribute(HOSTNAME, machine.address.hostName)
 		setAttribute(ADDRESS, machine.address.hostAddress)
 
+        // Opportunity to block startup until other dependent components are available
+        Object val = getConfig(START_LATCH)
+        if (val != null) LOG.debug("{} finished waiting for start-latch; continuing...", this, val)
+        
 		if (driver!=null) {
 			if ((driver in StartStopSshDriver) && ( ((StartStopSshDriver)driver).location==machine)) {
 				//just reuse
@@ -258,5 +275,6 @@ public interface UsesJavaMXBeans {
     public static final BasicAttributeSensor<Long> PEAK_THREAD_COUNT = [ Integer, "java.metrics.threads.max", "peak number of threads" ]
     public static final BasicAttributeSensor<Long> START_TIME = [ Long, "java.metrics.starttime", "start time" ]
     public static final BasicAttributeSensor<Double> SYSTEM_LOAD_AVERAGE = [ Double, "java.metrics.systemload.average", "average system load" ]
+    public static final BasicAttributeSensor<Integer> AVAILABLE_PROCESSORS = [ Integer, "java.metrics.processors.available", "number of processors available to the Java virtual machine" ]
     public static final BasicAttributeSensor<Long> GARBAGE_COLLECTION_TIME = [ Map, "java.metrics.gc.time", "garbage collection time" ]
 }

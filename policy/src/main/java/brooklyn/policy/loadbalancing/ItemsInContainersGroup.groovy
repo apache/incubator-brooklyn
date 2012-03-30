@@ -14,6 +14,8 @@ import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.util.flags.SetFromFlag
 
+import com.google.common.base.Predicate
+
 /**
  * A group of items that are contained within a given (dynamically changing) set of containers.
  * 
@@ -33,7 +35,7 @@ public class ItemsInContainersGroup extends DynamicGroup {
     
     // FIXME Can't set default value in fiel declaration, because super sets it before this class initializes the field values!
     @SetFromFlag
-    Closure itemFilter
+    Predicate<Entity> itemFilter
 
     private Group containerGroup
     
@@ -62,7 +64,7 @@ public class ItemsInContainersGroup extends DynamicGroup {
     public ItemsInContainersGroup(Map props = [:], Entity owner = null) {
         super(props, owner)
         setEntityFilter( {Entity e -> return acceptsEntity(e) } )
-        if (itemFilter == null) itemFilter = {true}
+        if (itemFilter == null) itemFilter = {true} as Predicate<Entity>
     }
 
     boolean acceptsEntity(Entity e) {
@@ -73,7 +75,7 @@ public class ItemsInContainersGroup extends DynamicGroup {
     }
 
     boolean acceptsItem(Movable e, BalanceableContainer c) {
-        return (containerGroup != null && c != null) ? itemFilter.call(e) && containerGroup.hasMember((Entity)c) : false
+        return (containerGroup != null && c != null) ? itemFilter.apply(e) && containerGroup.hasMember((Entity)c) : false
     }
 
     public void setContainers(Group containerGroup) {

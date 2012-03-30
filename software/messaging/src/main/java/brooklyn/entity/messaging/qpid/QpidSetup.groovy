@@ -1,5 +1,7 @@
 package brooklyn.entity.messaging.qpid
 
+import static brooklyn.entity.webapp.PortPreconditions.checkPortValid
+
 import java.util.List
 import java.util.Map
 
@@ -34,10 +36,10 @@ public class QpidSetup extends SshBasedJavaAppSetup {
         String runDir = suggestedRunDir ?: "$BROOKLYN_HOME_DIR/${entity.application.id}/qpid-${entity.id}"
         String logFileLocation = "$runDir/log/qpid.log"
 
-        int jmxPort = machine.obtainPort(suggestedJmxPort)
-        int rmiPort = machine.obtainPort(PortRanges.fromString(String.format("%d+", jmxPort+100)))
-        int amqpPort = machine.obtainPort(suggestedAmqpPort)
-
+        int jmxPort = checkPortValid(machine.obtainPort(suggestedJmxPort), "jmxPort (suggested $suggestedJmxPort)")
+        int rmiPort = checkPortValid(machine.obtainPort(PortRanges.fromString(String.format("%d+", jmxPort+100))), "rmiPort (suggested $jmxPort+100)")
+        int amqpPort = checkPortValid(machine.obtainPort(suggestedAmqpPort), "amqpPort (suggested $suggestedAmqpPort)")
+        
         QpidSetup result = new QpidSetup(entity, machine)
         result.setRmiPort(rmiPort)
         result.setJmxPort(jmxPort)
