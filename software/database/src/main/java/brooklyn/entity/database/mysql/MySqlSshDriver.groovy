@@ -64,9 +64,8 @@ public class MySqlSshDriver extends StartStopSshDriver {
             body.append(
                 CommonCommands.downloadUrlAs(url, getEntityVersionLabel('/'), saveAs),
                 CommonCommands.INSTALL_TAR, 
-                //"tar xfv"+(saveAs.endsWith("z") ? "z" : "")+" ${saveAs}",  //because they don't offer a consistent set of downloads
                 "tar xfvz ${saveAs}",
-				"(which apt-get && apt-get install libaio1) || echo skipping libaio installation"
+                "(which apt-get && apt-get install libaio1) || echo skipping libaio installation"
             ).execute();
     }
 
