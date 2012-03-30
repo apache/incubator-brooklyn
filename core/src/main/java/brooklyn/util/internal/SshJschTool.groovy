@@ -192,7 +192,7 @@ public class SshJschTool {
         		//TODO would rather not have this, but funny things sometimes happen if it's too log
                 //(especially if running multiple scripts simulatenously?)
                 //(although sometimes this doesn't apply because we run a single command with commas)
-                long pause = properties.pause ?: 500
+                long pause = properties.pause ?: 2000
         
                 def allCmds = []
                 //using the -e tell bash to end the script as soon as one of the statements returns a non zero value.
