@@ -25,7 +25,7 @@ so they're all set, once the application is launched, to keep the application ru
   [concepts]({{site.url}}/use/guide/defining-applications/basic-concepts.html)
   and including a [tutorial]({{site.url}}/use/guide/quickstart/).
 * or jump straight in to the [code]({{site.url}}/dev/code/), 
-  including [examples]({{site.url}}/use/examples/), or other [documentation](/start/docs-summary.html).
+  including [examples]({{site.url}}/use/examples/), or other [documentation]({{site.url}}/start/docs-summary.html).
 
 If you like it, join the discussion on the user and developer groups.
 [Details]({{site.url}}/meta/contact.html).

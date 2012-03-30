@@ -103,13 +103,13 @@ The ``Entity`` implementation defines the sensors and effectors available, the w
 and in simple cases it may be straightforward to capture the behaviour of the effectors in methods.
 For example deploying a WAR to a cluster can be done as follows:
 
-*This section is not complete. Feel free to [fork](/dev/code) the docs and lend a hand.*
+*This section is not complete. Feel free to [fork]({{site.url}}/dev/code) the docs and lend a hand.*
 
 <!---
 TODO show an effector which recurses across children
 -->
 
-For some entities, specifically base entities, the implementation of effectors might needother tools (such as SSH), and may vary by location, so having a single implementation is not appropriate.
+For some entities, specifically base entities, the implementation of effectors might need other tools (such as SSH), and may vary by location, so having a single implementation is not appropriate.
 
 The problem of multiple inheritance (e.g. SSH functionality and entity inheritance) and multiple implementations (e.g. SSH versus Windows) is handled in brooklyn using delegates called _drivers_. 
 

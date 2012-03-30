@@ -140,8 +140,6 @@ Selected management operations are possible remotely using links exposed by the 
 
 ### Logging
 
-*This section is not complete. Feel free to [fork](/dev/code) the docs and lend a hand.*
-
 Brooklyn uses the SLF4J logging facade,  which allows use of many popular frameworks including java.util.logging, log4j, and logback.
 
 The convention for log levels is as follows:
@@ -158,34 +156,32 @@ It is possible for entities to emit logging activity sensors so that an operator
 Examples for testing can be found in some of the poms.
 
 
+<!---
 
 <a name="distributed-management"></a>
 Distributed Management
 ----------------------
 
-<!---
 TODO Describe how and when objects become "live", pushed out to other nodes.
 -->
 
-*This section still needs to be written. Feel free to [fork](/dev/code) the docs and lend a hand.*
-
+<!---
 
 <a name="resilience"></a>
 Resilience
 ----------
-<!---
 TODO
+*This section still needs to be written. Feel free to [fork]({{site.url}}/dev/code) the docs and lend a hand.*
 -->
-*This section still needs to be written. Feel free to [fork](/dev/code) the docs and lend a hand.*
 
 
 <a name="key-apis"></a>
 Key APIs
 --------
 <!---
-TODO - brief overview of
+TODO - brief overview of key APIs
 -->
-*This section still needs to be written. Feel free to [fork](/dev/code) the docs and lend a hand.*
+*This section still needs to be written. Feel free to [fork]({{site.url}}/dev/code) the docs and lend a hand.*
 
 - ``ManagementContext`` (Java management API)
 - ``EntityLocal`` (used by policies)
@@ -242,7 +238,7 @@ TODO , etc., example
 
 ### SubscriptionManager
 
-*This section is not complete. Feel free to [fork](/dev/code) the docs and lend a hand.*
+*This section is not complete. Feel free to [fork]({{site.url}}/dev/code) the docs and lend a hand.*
 
 *See the* ``SubscriptionManager`` *class.*
 <!---
