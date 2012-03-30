@@ -262,6 +262,8 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
      * @return this entity, for fluent style initialization
      */
     public Entity configure(Map flags=[:]) {
+        assertNotYetOwned()
+		
         Entity suppliedOwner = flags.remove('owner') ?: null
         if (suppliedOwner) suppliedOwner.addOwnedChild(this)
 
@@ -272,48 +274,60 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         
         // allow config keys, and fields, to be set from these flags if they have a SetFromFlag annotation
         for (Field f: FlagUtils.getAllFields(getClass())) {
-            SetFromFlag cf = f.getAnnotation(SetFromFlag.class);
-            if (cf) {
-                ConfigKey key;
-                if (ConfigKey.class.isAssignableFrom(f.getType())) {
-                    key = f.get(this);
-                } else if (HasConfigKey.class.isAssignableFrom(f.getType())) {
-                    key = ((HasConfigKey)f.get(this)).getConfigKey();
-                } else {
-                    if ((f.getModifiers() & (Modifier.STATIC))!=0) {
-                        LOG.warn "Unsupported {} on static on {} in {}; ignoring", SetFromFlag.class.getSimpleName(), f, this
+            try {
+                SetFromFlag cf = f.getAnnotation(SetFromFlag.class);
+                if (cf) {
+                    ConfigKey key;
+                    if (ConfigKey.class.isAssignableFrom(f.getType())) {
+                        key = f.get(this);
+                    } else if (HasConfigKey.class.isAssignableFrom(f.getType())) {
+                        key = ((HasConfigKey)f.get(this)).getConfigKey();
                     } else {
-                        //normal field, not a config key
-                        String flagName = cf.value() ?: f.getName();
-                        if (flagName && flags.containsKey(flagName)) {
-                            Object v, value;
-                            try {
-                                v = flags.remove(flagName);
-                                value = TypeCoercions.coerce(v, f.getType());
-                                FlagUtils.setField(this, f, value, cf)
-                            } catch (Exception e) {
-                                throw new IllegalArgumentException("Cannot coerce or set "+v+" / "+value+" to "+f, e)
+                        if ((f.getModifiers() & (Modifier.STATIC))!=0) {
+                            LOG.warn "Unsupported {} on static on {} in {}; ignoring", SetFromFlag.class.getSimpleName(), f, this
+                        } else {
+                            //normal field, not a config key
+                            String flagName = cf.value() ?: f.getName();
+                            if (flagName && flags.containsKey(flagName)) {
+                                Object v, value;
+                                try {
+                                    v = flags.remove(flagName);
+                                    value = TypeCoercions.coerce(v, f.getType());
+                                    FlagUtils.setField(this, f, value, cf)
+                                } catch (Exception e) {
+                                    throw new IllegalArgumentException("Cannot coerce or set "+v+" / "+value+" to "+f, e)
+                                }
+                            } else if (!flagName) {
+                                LOG.warn "Unsupported {} on {} in {}; ignoring", SetFromFlag.class.getSimpleName(), f, this
                             }
-                        } else if (!flagName) {
-                            LOG.warn "Unsupported {} on {} in {}; ignoring", SetFromFlag.class.getSimpleName(), f, this
+                        }
+                    }
+                    if (key) {
+                        String flagName = cf.value() ?: key?.getName();
+                        if (flagName && flags.containsKey(flagName)) {
+                            Object v = flags.remove(flagName);
+                            setConfigInternal(key, v)
+                            if (flagName=="name" && displayName==null)
+                            displayName = v
                         }
                     }
                 }
-                if (key) {
-                    String flagName = cf.value() ?: key?.getName();
-                    if (flagName && flags.containsKey(flagName)) {
-                        Object v = flags.remove(flagName);
-                        setConfigInternal(key, v)
-                        if (flagName=="name" && displayName==null)
-                            displayName = v
-                    }
-                }
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Cannot configure ${f.name} on ${this}: ${e}", e);
             }
         }
 
 		if (displayName==null)
 			displayName = flags.name ? flags.remove('name') : getClass().getSimpleName()+":"+id.substring(0, 4)
 		
+        for (Iterator fi = flags.iterator(); fi.hasNext(); ) {
+            Map.Entry entry = fi.next();
+            if (entry.key in ConfigKey) {
+                setConfigInternal(entry.key, entry.value)
+                fi.remove();
+            }
+        }
+        
         if (!flags.isEmpty()) {
             LOG.warn "Unsupported flags when configuring {}; ignoring: {}", this, flags
         }
@@ -324,7 +338,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     /**
      * Adds this as a member of the given group, registers with application if necessary
      */
-    public void setOwner(Entity entity) {
+    public AbstractEntity setOwner(Entity entity) {
         if (owner != null) {
             // If we are changing to the same owner...
             if (owner.get() == entity) return
@@ -352,6 +366,8 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         previouslyOwned = true
         
         getApplication()
+        
+        return this;
     }
 
     public void clearOwner() {
@@ -532,12 +548,16 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         }
         return TypeCoercions.coerce((defaultValue != null) ? defaultValue : ownKey.getDefaultValue(), key.type);
     }
-    
+
+    protected void assertNotYetOwned() {
+        if (getApplication()?.isDeployed())
+            LOG.warn("configuration being made to $this after deployment; may not be supported in future versions");
+        //throw new IllegalStateException("Cannot set configuration $key on active entity $this")
+    }
+
     @Override
     public <T> T setConfig(ConfigKey<T> key, T val) {
-        // TODO Is this the best idea, for making life easier for brooklyn coders when supporting changing config?
-        if (getApplication()?.isDeployed()) throw new IllegalStateException("Cannot set configuration $key on active entity $this")
-
+        assertNotYetOwned()
         setConfigInternal(key, val)
     }
     
@@ -792,6 +812,8 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
                 throw ee.getCause()
             } finally { this.@skipInvokeMethodEffectorInterception.set(false); }
         }
+        if (metaClass==null) 
+            throw new IllegalStateException("no meta class for "+this+", invoking "+name); 
         metaClass.invokeMethod(this, name, args);
     }
 

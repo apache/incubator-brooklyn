@@ -26,7 +26,7 @@ public class RedisCluster extends AbstractEntity implements Startable {
         super(properties, owner)
 
         redisProperties << properties
-        redisProperties.newEntity = { Map props -> new RedisSlave(props) }
+        redisProperties.factory = { Map props -> new RedisSlave(props) }
     }
 
     @Override

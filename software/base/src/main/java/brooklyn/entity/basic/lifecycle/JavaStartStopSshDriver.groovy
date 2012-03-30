@@ -9,6 +9,7 @@ import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.entity.basic.UsesJmx
 import brooklyn.entity.basic.legacy.JavaApp
+import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.internal.StringEscapeUtils
 
@@ -37,8 +38,7 @@ public abstract class JavaStartStopSshDriver extends StartStopSshDriver {
 	@Override
 	public Map<String, String> getShellEnvironment() {
 		def sJavaOpts = getJavaOpts().collect({
-			if (!StringEscapeUtils.isValidForDoubleQuotingInBash(it))
-				throw new IllegalArgumentException("will not accept ${it} as valid BASH string (has unescaped double quote)")
+			StringEscapeUtils.assertValidForDoubleQuotingInBash(it)
 			it
 		}).join(" ");
 //		println "using java opts: $sJavaOpts"
@@ -52,7 +52,10 @@ public abstract class JavaStartStopSshDriver extends StartStopSshDriver {
 	 * See {@link #getShellEnvironment()} for discussion of quoting/escaping strategy.
 	 **/
 	public List<String> getJavaOpts() {
-		getCustomJavaConfigOptions() + (getJavaSystemProperties().collect { k,v -> "-D"+k+(v!=null? "="+v : "") })
+		getCustomJavaConfigOptions() + (getJavaSystemProperties().collect { k,v ->
+            v = BasicConfigKey.resolveValue(v, String, entity.executionContext);
+            return "-D"+k+(v!=null? "="+v : "") 
+        })
 	}
 
 	/**

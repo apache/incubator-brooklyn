@@ -38,7 +38,7 @@ class JmxService {
     private String jmxHost;
     private int jmxPort;
     private String url;
-    
+
     public JmxService() {
         this("localhost", 28000 + Math.floor(new Random().nextDouble() * 1000));
         logger.warn("use of deprecated default host and port in JmxService");
@@ -46,6 +46,7 @@ class JmxService {
     public JmxService(Entity e) {
         this(e.getAttribute(Attributes.HOSTNAME)?:"localhost", e.getAttribute(Attributes.JMX_PORT)?:null);
     }
+    
     public JmxService(String jmxHost, Integer jmxPort) {
         this.jmxHost = jmxHost;
         Preconditions.checkNotNull(jmxPort, "JMX_PORT must be set when starting JmxService"); 
@@ -78,6 +79,7 @@ class JmxService {
     public void shutdown() {
         connectorServer.stop();
         namingServiceMBean.stop()
+        logger.info "JMX tester service stopped ({}:{})", jmxHost, jmxPort
     }
 
     public String getUrl() {

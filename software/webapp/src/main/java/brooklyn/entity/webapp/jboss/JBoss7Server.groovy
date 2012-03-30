@@ -2,12 +2,14 @@ package brooklyn.entity.webapp.jboss
 
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.with
 
+import java.util.Map
 import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
+import brooklyn.entity.basic.BasicConfigurableEntityFactory
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.webapp.JavaWebAppService
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcess
@@ -73,5 +75,10 @@ public class JBoss7Server extends JavaWebAppSoftwareProcess implements JavaWebAp
     public JBoss7SshDriver newDriver(SshMachineLocation machine) {
         return new JBoss7SshDriver(this, machine)
     }
+}
 
+public class JBoss7ServerFactory extends BasicConfigurableEntityFactory<JBoss7Server> {
+    public JBoss7ServerFactory(Map flags=[:]) {
+        super(flags, JBoss7Server)
+    }
 }

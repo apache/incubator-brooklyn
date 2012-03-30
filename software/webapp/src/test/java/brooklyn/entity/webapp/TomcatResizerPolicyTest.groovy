@@ -4,21 +4,13 @@ import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.AssertJUnit.*
 
-import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import brooklyn.entity.LocallyManagedEntity
-import brooklyn.entity.basic.EntityLocal
-import brooklyn.entity.trait.Resizable
+import brooklyn.entity.Entity
 import brooklyn.entity.webapp.tomcat.*
-import brooklyn.event.SensorEvent
-import brooklyn.event.SensorEventListener
-import brooklyn.event.basic.BasicSensorEvent
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
-import brooklyn.policy.ResizerPolicy;
+import brooklyn.policy.ResizerPolicy
 import brooklyn.test.entity.TestApplication
-import brooklyn.test.entity.TestCluster
-import brooklyn.util.internal.TimeExtras
 
 import com.google.common.collect.Iterables
 
@@ -41,9 +33,9 @@ public void testWithTomcatServers() {
     TestApplication app = new TestApplication()
     try {
         DynamicWebAppCluster cluster = new DynamicWebAppCluster(
-            newEntity: { Map properties ->
+            factory: { Map properties, Entity owner ->
                 properties.httpPort = port++
-                def tc = new TomcatServer(properties)
+                def tc = new TomcatServer(properties, owner)
                 tc.pollForHttpStatus = false
                 tc.setConfig(TomcatServer.JMX_PORT.configKey, jmxP++)
                 tc.setConfig(TomcatServer.SUGGESTED_SHUTDOWN_PORT, shutdownP++)

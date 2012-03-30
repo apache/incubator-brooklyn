@@ -60,7 +60,7 @@ public class NginxIntegrationTest {
         URL war = getClass().getClassLoader().getResource("hello-world.war")
         Preconditions.checkState war != null, "Unable to locate resource $war"
         
-        cluster = new DynamicCluster(owner:app, newEntity:template, initialSize:1, httpPort:7080)
+        cluster = new DynamicCluster(owner:app, factory:template, initialSize:1, httpPort:7080)
         cluster.setConfig(TomcatServer.WAR, war.path)
         cluster.start([ new LocalhostMachineProvisioningLocation(count:1) ])
         nginx = new NginxController([

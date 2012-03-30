@@ -27,15 +27,18 @@ import com.google.common.base.Preconditions
 public abstract class AbstractController extends SoftwareProcessEntity {
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractController.class)
 
-    @SetFromFlag("portNumberSensor")  //TODO javadoc; and make default be HTTP_PORT
+    /** sensor for port to forward to on target entities */
+    @SetFromFlag("portNumberSensor")
     public static final BasicConfigKey<Sensor> PORT_NUMBER_SENSOR = [ Sensor, "member.sensor.portNumber", "Port number sensor on members" ]
 
-    @SetFromFlag("port")  //TODO get standard name; ideally inherit the standard field
-    public static final PortAttributeSensorAndConfigKey HTTP_PORT = Attributes.HTTP_PORT
+    /** port where this controller should live */
+    //TODO make independent from web; push web-logic to subclass (AbstractWebController) with default 8000
+    @SetFromFlag("port")
+    public static final PortAttributeSensorAndConfigKey HTTP_PORT = [ "http.port", "HTTP port", [8000,"8001+"] ]
     @SetFromFlag("protocol")
     public static final BasicAttributeSensorAndConfigKey<String> PROTOCOL = [ String, "proxy.protocol", "Protocol", "http" ]
     @SetFromFlag("domain")
-    public static final BasicAttributeSensorAndConfigKey<String> DOMAIN_NAME = [ String, "proxy.domainName", "Domain name" ]
+    public static final BasicAttributeSensorAndConfigKey<String> DOMAIN_NAME = [ String, "proxy.domainName", "Domain name", "anonymous" ]
     @SetFromFlag("url")
     public static final BasicAttributeSensorAndConfigKey<String> URL = [ String, "proxy.url", "URL" ]
 

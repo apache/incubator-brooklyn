@@ -1,10 +1,13 @@
 package brooklyn.util.flags;
 
+import groovy.lang.Closure;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,6 +17,11 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import brooklyn.entity.basic.ClosureEntityFactory;
+import brooklyn.entity.basic.ConfigurableEntityFactory;
+import brooklyn.entity.basic.ConfigurableEntityFactoryFromEntityFactory;
+import brooklyn.entity.basic.EntityFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Throwables;
@@ -184,6 +192,35 @@ public class TypeCoercions {
                 } catch (UnknownHostException e) {
                     throw Throwables.propagate(e);
                 }
+            }
+        });
+        registerAdapter(String.class, URL.class, new Function<String,URL>() {
+            @Override
+            public URL apply(String input) {
+                try {
+                    return new URL(input);
+                } catch (Exception e) {
+                    throw Throwables.propagate(e);
+                }
+            }
+        });
+        registerAdapter(Closure.class, ConfigurableEntityFactory.class, new Function<Closure,ConfigurableEntityFactory>() {
+            @Override
+            public ConfigurableEntityFactory apply(Closure input) {
+                return new ClosureEntityFactory(input);
+            }
+        });
+        registerAdapter(EntityFactory.class, ConfigurableEntityFactory.class, new Function<EntityFactory,ConfigurableEntityFactory>() {
+            @Override
+            public ConfigurableEntityFactory apply(EntityFactory input) {
+                if (input instanceof ConfigurableEntityFactory) return (ConfigurableEntityFactory)input;
+                return new ConfigurableEntityFactoryFromEntityFactory(input);
+            }
+        });
+        registerAdapter(Closure.class, EntityFactory.class, new Function<Closure,EntityFactory>() {
+            @Override
+            public EntityFactory apply(Closure input) {
+                return new ClosureEntityFactory(input);
             }
         });
     }

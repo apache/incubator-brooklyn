@@ -45,7 +45,7 @@ class AbstractControllerTest {
         updates = []
         
         app = new AbstractApplication() {}
-        cluster = new DynamicCluster(owner:app, initialSize:0, newEntity:{new ClusteredEntity()})
+        cluster = new DynamicCluster(owner:app, initialSize:0, factory:{flags,parent -> new ClusteredEntity(flags, parent)})
         
         final AtomicInteger invokeCountForStart = new AtomicInteger(0);
         controller = new AbstractController(
@@ -124,6 +124,9 @@ class AbstractControllerTest {
 }
 
 class ClusteredEntity extends TestEntity {
+    public ClusteredEntity(Map flags=[:], Entity owner=null) { super(flags,owner) }
+    public ClusteredEntity(Entity owner) { this([:],owner) }
+    
     public static final Sensor<Integer> MY_PORT = new BasicAttributeSensor<Integer>(Integer.class, "port", "My port");
     
     MachineProvisioningLocation provisioner

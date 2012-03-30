@@ -59,7 +59,7 @@ public class AbstractGeoDnsServiceTest {
     public void setup() {
         def template = { properties -> new TestEntity(properties) }
         app = new AbstractApplication() { };
-        fabric = new DynamicFabric(owner:app, newEntity:template);
+        fabric = new DynamicFabric(owner:app, factory:template);
     }
 
     @AfterMethod
@@ -72,7 +72,7 @@ public class AbstractGeoDnsServiceTest {
     
     @Test
     public void testGeoInfoOnLocation() {
-        DynamicFabric fabric = new DynamicFabric([newEntity:{ Map properties -> return new TestEntity(properties) }], app)
+        DynamicFabric fabric = new DynamicFabric(factory:{ Map properties -> return new TestEntity(properties) }, app)
         DynamicGroup testEntities = new DynamicGroup([:], app, { Entity e -> (e instanceof TestEntity) });
         geoDns = new TestService(app);
         geoDns.setTargetEntityProvider(testEntities);
@@ -86,7 +86,7 @@ public class AbstractGeoDnsServiceTest {
     
     @Test
     public void testGeoInfoOnParentLocation() {
-        DynamicFabric fabric = new DynamicFabric([newEntity:{ Map properties -> return new TestEntity(properties) }], app)
+        DynamicFabric fabric = new DynamicFabric(factory:{ Map properties -> return new TestEntity(properties) }, app)
         DynamicGroup testEntities = new DynamicGroup([:], app, { Entity e -> (e instanceof TestEntity) });
         geoDns = new TestService(app);
         geoDns.setTargetEntityProvider(testEntities);

@@ -1,23 +1,16 @@
 package brooklyn.util.internal
 
-import java.util.concurrent.CancellationException
-import java.util.concurrent.ExecutionException
+import java.lang.reflect.Field
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.entity.Effector
 import brooklyn.entity.Entity
-import brooklyn.entity.Group
-import brooklyn.entity.trait.Startable
+import brooklyn.entity.basic.AbstractEntity
 import brooklyn.location.Location
-import brooklyn.management.Task
 import brooklyn.util.internal.LanguageUtils.FieldVisitor
-import brooklyn.util.task.BasicTask;
-import brooklyn.util.task.ParallelTask
 
 import com.google.common.base.Preconditions
-import com.google.common.base.Throwables
 
 
 /**
@@ -40,19 +33,23 @@ class EntityStartUtils {
     /**
      * Starts a clone of the given template entity running as a child of the host.
      */
-    public static void startFromTemplate(Group host, Entity template, Collection<Location> locations) {
-        startEntity(createFromTemplate(host, template), locations)
+    public static void startFromTemplate(Entity owner, Entity template, Collection<Location> locations) {
+        startEntity(createFromTemplate(owner, template), locations)
     }
 
     /**
      * Creates a (not-started) clone of the given template, configured to be owned by the given entity
      */
-    public static <T extends Entity> T createFromTemplate(Group owner, T template) {
+    public static <T extends Entity> T createFromTemplate(Entity owner, T template) {
         Preconditions.checkArgument(template.owner == null, "Templates must not be assigned any owner (but is in "+template.owner+")")
         Preconditions.checkArgument(template.groups == null || template.groups.isEmpty(), "Templates must not be a member of any group entity (but is in "+template.groups+")")
 
+        //pick a different ID
         Entity copy = cloneTemplate(template);
-        copy.id = LanguageUtils.newUid()
+        Field f = AbstractEntity.class.getDeclaredFields().find { it.name == "id" }
+        f.setAccessible(true);
+        f.set(copy, LanguageUtils.newUid());
+        
         owner.addOwnedChild(copy)
         copy
     }
@@ -63,6 +60,7 @@ class EntityStartUtils {
      * With one change - all fields called <em>entity</em> in any object contained anywhere in the given
      * template's hierarchy which had been equal to the template are set equal to the clone.
      */
+    //FIXME doesn't work for non-trivial groovy classes -- there is no metaclass
     public static <T extends Entity> T cloneTemplate(T template) {
         Entity result = LanguageUtils.clone template
         LanguageUtils.visitFields(result,

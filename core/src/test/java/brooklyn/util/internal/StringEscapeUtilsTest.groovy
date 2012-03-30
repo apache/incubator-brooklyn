@@ -18,4 +18,13 @@ public class StringEscapeUtilsTest {
 		Assert.assertFalse StringEscapeUtils.isValidForDoubleQuotingInBash("\"")
 		Assert.assertTrue StringEscapeUtils.isValidForDoubleQuotingInBash("\\\"")
 	}	
+    
+    @Test
+    public void testBashEscapableAmpersand() {
+        Assert.assertTrue StringEscapeUtils.isValidForDoubleQuotingInBash("\\&")
+        Assert.assertFalse StringEscapeUtils.isValidForDoubleQuotingInBash("Marks & Spencer")
+        Assert.assertTrue StringEscapeUtils.isValidForDoubleQuotingInBash("Marks \\& Spencer")
+        Assert.assertFalse StringEscapeUtils.isValidForDoubleQuotingInBash("Marks \\\\& Spencer")
+    }
+
 }

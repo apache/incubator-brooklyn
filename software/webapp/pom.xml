@@ -15,7 +15,7 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <dependencies>
+    <dependencies>    
         <!-- required for GeoScaling DNS (entity accesses management service via HTTP) -->
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>

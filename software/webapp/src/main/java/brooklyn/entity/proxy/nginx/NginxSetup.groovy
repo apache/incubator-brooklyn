@@ -4,6 +4,8 @@ import java.util.List
 import java.util.Map
 
 import brooklyn.entity.basic.Attributes
+import brooklyn.entity.basic.lifecycle.CommonCommands;
+import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup;
 import brooklyn.location.basic.SshMachineLocation
 
@@ -17,14 +19,15 @@ public class NginxSetup extends SshBasedAppSetup {
     int httpPort
 
     public static NginxSetup newInstance(NginxController entity, SshMachineLocation machine) {
+        NginxSetup result = new NginxSetup(entity, machine)
+        
         String suggestedVersion = entity.getConfig(NginxController.SUGGESTED_VERSION)
         String suggestedInstallDir = entity.getConfig(NginxController.SUGGESTED_INSTALL_DIR)
         String suggestedRunDir = entity.getConfig(NginxController.SUGGESTED_RUN_DIR)
 
         String version = suggestedVersion ?: DEFAULT_VERSION
         String installDir = suggestedInstallDir ?: "$DEFAULT_INSTALL_DIR/${version}/nginx-${version}"
-        String runDir = suggestedRunDir ?: "$BROOKLYN_HOME_DIR/${entity.application.id}/nginx-${entity.id}"
-        String logFileLocation = "$runDir/logs/error.log"
+        String logFileLocation = "${result.runDir}/logs/error.log"
 
         // We must have the specified HTTP port as this is part of the public URL
         int httpPort = entity.getAttribute(Attributes.HTTP_PORT)
@@ -32,11 +35,9 @@ public class NginxSetup extends SshBasedAppSetup {
             throw new IllegalStateException("Could not allocate port ${httpPort} for Nginx")
         }
 
-        NginxSetup result = new NginxSetup(entity, machine)
         result.setHttpPort(httpPort)
         result.setVersion(version)
         result.setInstallDir(installDir)
-        result.setRunDir(runDir)
 		entity.setAttribute(Attributes.LOG_FILE_LOCATION, logFileLocation)
 
         return result
@@ -55,13 +56,18 @@ public class NginxSetup extends SshBasedAppSetup {
     @Override
     public List<String> getInstallScript() {
         makeInstallScript([
-				"export INSTALL_DIR=${installDir}",
+		"export INSTALL_DIR=${installDir}",
+                CommonCommands.INSTALL_WGET,
+                CommonCommands.INSTALL_TAR,
+                CommonCommands.installPackage("nginx-prerequisites", 
+                        yum: "openssl-devel", 
+                        rpm: "openssl-devel",  //TODO RH needs testing
+                        apt: "libssl-dev zlib1g-dev libpcre3-dev"),
                 "wget http://nginx.org/download/nginx-${version}.tar.gz",
                 "tar xvzf nginx-${version}.tar.gz",
 	            "cd \$INSTALL_DIR/src",
                 "wget http://nginx-sticky-module.googlecode.com/files/nginx-sticky-module-1.0-rc2.tar.gz",
                 "tar xvzf nginx-sticky-module-1.0-rc2.tar.gz",
-                "which yum && yum -y install openssl-devel",
                 "cd ..",
 	            "mkdir -p dist",
 	            "./configure --prefix=\$INSTALL_DIR/dist --add-module=\$INSTALL_DIR/src/nginx-sticky-module-1.0-rc2 --without-http_rewrite_module",

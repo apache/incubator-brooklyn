@@ -4,6 +4,8 @@ import static org.testng.Assert.*
 
 import java.util.Map
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -51,6 +53,40 @@ public class CompoundTaskExecutionTest {
         Task tSequence = em.submit tag:"A", new ParallelTask(t4, t2, t1, t3)
         
         assertEquals(["a", "b", "c", "d", "e"], (tSequence.get() + data.get(1)).sort())
+    }
+
+    Semaphore locker = new Semaphore(0);
+    
+    @Test
+    public void runParallelTaskWithDelay() {
+        data.clear()
+        
+        data.put(1, "a")
+        BasicTask t1 = [ { locker.acquire(); data.put(1, "b"); } ]
+        BasicTask t2 = [ { data.put(1, "c") } ]
+        BasicTask t3 = [ { data.put(1, "d") } ]
+        BasicTask t4 = [ { data.put(1, "e") } ]
+        
+        BasicExecutionManager em = []
+        Task tSequence = em.submit tag:"A", new ParallelTask(t4, t2, t1, t3)
+        
+        assertEquals(["a", "c", "d", "e"], [t2.get(), t3.get(), t4.get(), data.get(1)].sort());
+        assertFalse(t1.isDone());
+        assertFalse(tSequence.isDone());
+        
+        //get blocks until tasks have completed
+        Thread t = new Thread({tSequence.get(); locker.release();});
+        t.start();
+        Thread.sleep(30);
+        assertTrue(t.isAlive());
+                
+        locker.release();
+        
+        assertEquals(["a", "b", "c", "d", "e"], (tSequence.get() + data.get(1)).sort())
+        assertTrue(t1.isDone());
+        assertTrue(tSequence.isDone());
+        
+        locker.acquire();
     }
 
     @Test

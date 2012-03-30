@@ -24,6 +24,5 @@ import brooklyn.util.internal.EntityStartUtils
  */
 public interface Cluster extends Group, Startable, Resizable {
     @SetFromFlag('initialSize')
-    BasicConfigKey<Integer> INITIAL_SIZE = [ Integer, "cluster.initial.size", "Initial cluster size", 0 ]
+    BasicConfigKey<Integer> INITIAL_SIZE = [ Integer, "cluster.initial.size", "Initial cluster size", 1 ]
 }
-

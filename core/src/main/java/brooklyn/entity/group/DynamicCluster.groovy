@@ -2,8 +2,6 @@ package brooklyn.entity.group
 
 import static com.google.common.base.Preconditions.checkNotNull
 
-import brooklyn.entity.basic.AbstractGroup
-
 import java.util.Collection
 import java.util.Map
 import java.util.concurrent.ExecutionException
@@ -13,13 +11,14 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractGroup
-import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.ConfigurableEntityFactory
+import brooklyn.entity.basic.Entities
 import brooklyn.entity.trait.Changeable
 import brooklyn.entity.trait.Startable
 import brooklyn.event.EntityStartException
 import brooklyn.location.Location
 import brooklyn.management.Task
-import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.flags.SetFromFlag
 
 import com.google.common.base.Preconditions
 import com.google.common.collect.Iterables
@@ -34,18 +33,14 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     private final Object mutex = new Object[0];
     
     @SetFromFlag
-    Closure<Entity> newEntity
-    
-    @SetFromFlag
-    Closure postStartEntity
+    ConfigurableEntityFactory factory
 
     @SetFromFlag
     Closure removalStrategy
-    
-    Location location
-    private Map createFlags
 
-    private Closure defaultRemovalStrategy = { Collection<Entity> contenders ->
+    Location location
+
+    private static final Closure defaultRemovalStrategy = { Collection<Entity> contenders ->
         // choose last (i.e. newest) entity that is stoppable
         Entity result
         contenders.each {
@@ -59,33 +54,24 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
      * 
      * Valid properties are:
      * <ul>
-     * <li>newEntity - a {@link Closure} that creates an {@link Entity} that implements {@link Startable}, taking the {@link Map}
+     * <li>factory - an {@EntityFactory) (or {@link Closure}) that creates an {@link Entity},
+     * typically implementing {@link Startable}, taking the {@link Map}
      * of properties from this cluster as an argument. This property is mandatory.
-     * <li>postStartEntity - a {@link Closure} that is called after newEntity, taking the {@link Entity} as an argument. This property is optional, with a default of no-op.
      * <li>initialSize - an {@link Integer} that is the number of nodes to start when the cluster's {@link #start(List)} method is
-     * called. This property is optional, with a default of 0.
+     * called. This property is optional, with a default of 1.
      * </ul>
      *
-     * @param properties the properties of the cluster and any new entity.
+     * @param properties the properties of the cluster (these may be visible to created children by inheritance,
+     *  but to set properties on children explicitly, use the factory)
      * @param owner the entity that owns this cluster (optional)
      */
     public DynamicCluster(Map properties = [:], Entity owner = null) {
         super(properties, owner)
-
-        Preconditions.checkNotNull newEntity, "'newEntity' property is mandatory"
-
         removalStrategy = removalStrategy ?: defaultRemovalStrategy
-        
-        // Save flags for use when creating members
-        // TODO But we aren't calling remove anymore; passing them to the child isn't good because the 
-        // string in the properties isn't as unique as the ConfigKey constant!
-        // Alex agrees: use a config key instead. remove createFlags.
-        // (you'll be getting a warning anyway from configure(Map) that some flags haven't been applied!
-        createFlags = properties
-
         setAttribute(SERVICE_UP, false)
     }
-
+    public DynamicCluster(Entity owner) { this([:], owner) }
+    
     public void setRemovalStrategy(Closure val) {
         removalStrategy = checkNotNull(val, "removalStrategy")
     }
@@ -138,7 +124,6 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
                     try {
                         try {
                             task.get()
-                            if (postStartEntity) postStartEntity.call(entity)
                         } catch (Throwable t) {
                             throw unwrapException(t)
                         }
@@ -183,22 +168,19 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         }
     }
     
+    protected Map getCustomChildFlags() { [:] }
+    
     protected Entity addNode() {
         Map creation = [:]
-        creation << createFlags
+        creation << getCustomChildFlags()
         if (logger.isDebugEnabled()) logger.debug "Adding a node to {} with properties {}", id, creation
 
-        Entity entity
-        if (newEntity.maximumNumberOfParameters > 1) {
-            entity = newEntity.call(creation, this)
-        } else {
-            entity = newEntity.call(creation)
-        } 
-        if (entity.owner == null) addOwnedChild(entity)
-        Preconditions.checkNotNull entity, "newEntity call returned null"
-        Preconditions.checkState entity instanceof Entity, "newEntity call returned an object that is not an Entity"
-        Preconditions.checkState entity instanceof Startable, "newEntity call returned an object that is not Startable"
- 
+        if (factory==null) 
+            throw new IllegalStateException("EntityFactory factory not supplied for $this")
+        Entity entity = factory.newEntity(creation, this)
+        if (entity==null || !(entity in Entity)) 
+            throw new IllegalStateException("EntityFactory factory routine did not return an entity, in $this ($entity)")
+        
         addMember(entity)
         entity
     }

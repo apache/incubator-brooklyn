@@ -30,7 +30,7 @@ abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
     }
 
     public void reset() {
-        unsubscribe(group)
+        if (getSubscriptionTracker()!=null) unsubscribe(group)
     }
 
     /**
