@@ -13,7 +13,7 @@ terms of the [Apache License, v2.0](license.html).
 ## Software Contributor Agreement
 
 If you or your company wish to make contributions to the Brooklyn
-project, we will require the appropriate [Software Contributor Agreement](contributor-agreement.html).
+project, we will require the appropriate [Software Contributor Agreement](/license/contributor-agreements).
 
 
 ## Trademark

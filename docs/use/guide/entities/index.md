@@ -103,7 +103,7 @@ The ``Entity`` implementation defines the sensors and effectors available, the w
 and in simple cases it may be straightforward to capture the behaviour of the effectors in methods.
 For example deploying a WAR to a cluster can be done as follows:
 
-*This section is not complete. Feel free to [fork](/dev/contribute) the docs and lend a hand.*
+*This section is not complete. Feel free to [fork](/dev/code) the docs and lend a hand.*
 
 <!---
 TODO show an effector which recurses across children

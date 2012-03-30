@@ -15,7 +15,7 @@
   "exclude": true,
   "children": {% readj /license/toc.json %} },
 { "title": "Meta",
-  "file": "{{ site.url }}/meta/license/index.html",
+  "file": "{{ site.url }}/meta/governance.html",
   "exclude": true,
   "children": {% readj /meta/toc.json %} }
 ]
