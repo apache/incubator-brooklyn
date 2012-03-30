@@ -146,11 +146,10 @@ public class CommonCommands {
      * installPackage("libssl-devel", yum: "openssl-devel", apt:"openssl libssl-dev zlib1g-dev");
      * exit code 44 used to indicate failure */
     public static String installPackage(Map flags=[:], String packageDefaultName) {
-        "(which apt-get && apt-get install -y ${flags.apt?:packageDefaultName}) || "+
-                "(which rpm && rpm -i ${flags.rpm?:packageDefaultName}) || "+
-                "(which yum && yum -y install ${flags.yum?:packageDefaultName}) || "+
-                //FIXME does this actually exit? or just exit from this subshell
-                "(echo \"WARNING: no known package manager to install ${packageDefaultName}, may fail subsequently\")"
+        "(which apt-get && sudo apt-get install -y ${flags.apt?:packageDefaultName}) || "+
+                "(which rpm && sudo rpm -i ${flags.rpm?:packageDefaultName}) || "+
+                "(which yum && sudo yum -y install ${flags.yum?:packageDefaultName}) || "+
+                "(echo \"WARNING: no known/successful package manager to install ${packageDefaultName}, may fail subsequently\")"
     }
     public static final String INSTALL_TAR = installExecutable("tar");
     public static final String INSTALL_CURL = installExecutable("curl");
