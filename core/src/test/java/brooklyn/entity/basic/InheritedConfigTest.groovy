@@ -141,7 +141,7 @@ public class InheritedConfigTest {
         assertEquals("aval", e2.getConfig(strKey))
     }
 
-    @Test
+    @Test(enabled=false)
     public void testConfigCannotBeSetAfterApplicationIsStarted() throws Exception {
         TestEntity entity = new TestEntity([owner:app])
         app.start([new SimulatedLocation()])
