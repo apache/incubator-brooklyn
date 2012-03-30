@@ -17,11 +17,3 @@ You will need to complete, sign, and return the appropriate agreements below:
    (such as if you are working for a company), someone authorized by the company must
    [Echosign](TODO) the **Corporate Contributor License Agreement** ([text here](brooklyn-ccla.txt))
 
-These can also be printed, signed, and mailed to the project at:
-
-    Brooklyn Open Source Project
-    Cloudsoft Corporation
-    Appleton Tower, suite 8.12
-    Edinburgh
-    EH8 9LE
-    Scotland
