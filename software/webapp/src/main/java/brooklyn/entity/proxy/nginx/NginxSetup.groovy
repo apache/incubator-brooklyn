@@ -56,13 +56,13 @@ public class NginxSetup extends SshBasedAppSetup {
     @Override
     public List<String> getInstallScript() {
         makeInstallScript([
-				"export INSTALL_DIR=${installDir}",
+		"export INSTALL_DIR=${installDir}",
                 CommonCommands.INSTALL_WGET,
                 CommonCommands.INSTALL_TAR,
                 CommonCommands.installPackage("nginx-prerequisites", 
                         yum: "openssl-devel", 
                         rpm: "openssl-devel",  //TODO RH needs testing
-                        apt:"libssl-dev zlib1g-dev libpcre3-dev"),
+                        apt: "libssl-dev zlib1g-dev libpcre3-dev"),
                 "wget http://nginx.org/download/nginx-${version}.tar.gz",
                 "tar xvzf nginx-${version}.tar.gz",
 	            "cd \$INSTALL_DIR/src",

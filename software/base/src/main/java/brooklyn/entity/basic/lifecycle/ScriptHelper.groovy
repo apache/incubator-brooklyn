@@ -150,7 +150,7 @@ public class CommonCommands {
                 "(which rpm && rpm -i ${flags.rpm?:packageDefaultName}) || "+
                 "(which yum && yum -y install ${flags.yum?:packageDefaultName}) || "+
                 //FIXME does this actually exit? or just exit from this subshell
-                "(echo \"No known package manager to install ${packageDefaultName}, failing\" && exit 44)"
+                "(echo \"WARNING: no known package manager to install ${packageDefaultName}, may fail subsequently\")"
     }
     public static final String INSTALL_TAR = installExecutable("tar");
     public static final String INSTALL_CURL = installExecutable("curl");

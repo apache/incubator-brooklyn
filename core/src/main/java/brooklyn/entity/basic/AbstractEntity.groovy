@@ -262,6 +262,8 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
      * @return this entity, for fluent style initialization
      */
     public Entity configure(Map flags=[:]) {
+		assertNotYetOwned()
+		
         Entity suppliedOwner = flags.remove('owner') ?: null
         if (suppliedOwner) suppliedOwner.addOwnedChild(this)
 
@@ -321,7 +323,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         for (Iterator fi = flags.iterator(); fi.hasNext(); ) {
             Map.Entry entry = fi.next();
             if (entry.key in ConfigKey) {
-                setConfig(entry.key, entry.value)
+                setConfigInternal(entry.key, entry.value)
                 fi.remove();
             }
         }
@@ -546,12 +548,16 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         }
         return TypeCoercions.coerce((defaultValue != null) ? defaultValue : ownKey.getDefaultValue(), key.type);
     }
-    
+
+	protected void assertNotYetOwned() {
+		if (getApplication()?.isDeployed())
+			LOG.warn("configuration being made to $this after deployment; may not be supported in future versions"); 
+			//throw new IllegalStateException("Cannot set configuration $key on active entity $this")
+	}
+	
     @Override
     public <T> T setConfig(ConfigKey<T> key, T val) {
-        // TODO Is this the best idea, for making life easier for brooklyn coders when supporting changing config?
-        if (getApplication()?.isDeployed()) throw new IllegalStateException("Cannot set configuration $key on active entity $this")
-
+		assertNotYetOwned()
         setConfigInternal(key, val)
     }
     
