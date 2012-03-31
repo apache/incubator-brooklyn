@@ -89,7 +89,7 @@ tweak the database start script, or drop in your favourite WAR.
 
 This project includes an intermediate nginx-web-cluster only example, 
 in ``WebClusterExample``, and a few demonstrations of other syntaxes (classes ending ``Alt``).
-Tweak the scripts to use these, or run in your IDE (TODO-IDE setup info).
+Tweak the scripts to use these, or run in your IDE (which may take [a bit of setup]({{site.url}}/dev/build/ide.html)).
 
 The webapp that is used is included under ``examples/hello-world-webapp``.
 

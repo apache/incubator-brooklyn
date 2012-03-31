@@ -44,10 +44,7 @@ plus it means we can hopefully improve things for other people!
 
 ## Project Maintenance
 
-TODO
+* Adding a new project may need updates to ``/pom.xml`` ``modules`` section and ``usage/all`` dependencies
+ 
+* Adding a new example project may need updates to ``/pom.xml`` and ``/examples/pom.xml`` (and the documentation too!)
 
-     new entity to main may need update to 
-          /pom.xml modules
-          all-software-and-systems/pom.xml dependencies
-          
-     new examples needs update to /pom.xml and /examples/pom.xml; you may want to update the documentation too

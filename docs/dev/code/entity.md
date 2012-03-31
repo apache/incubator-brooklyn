@@ -5,7 +5,6 @@ toc: /toc.json
 ---
 
 
-
 ## Things To Know
 
 All entities inherit from `AbstractEntity`, 
@@ -24,13 +23,12 @@ targetting `SshMachineLocation` (a machine to which Brooklyn can ssh).
 The various `SoftwareProcess` entities above (and some the exemplars 
 listed at the end of this page) have their own dedicated drivers.
 
-Finally, there are a collection of *traits* providing common
+Finally, there are a collection of *traits* 
+in the package ``brooklyn.entity.trait`` providing common
 sensors and effectors on entities, supplied as interfaces.
 Choose one (or more) as appropriate.
 
-<!---
-TODO: XXX
--->
+
 
 ## Key Steps
 

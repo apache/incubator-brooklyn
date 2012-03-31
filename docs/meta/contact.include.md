@@ -1,6 +1,4 @@
 
-<!-- TODO Look for us at #brooklyn on IRC or join the email groups: -->
-
 Contact us on the discussion groups:
 
 * **[brooklyn-users@googlegroups.com](http://groups.google.com/group/brooklyn-users)**: discussions about _using_ Brooklyn

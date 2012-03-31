@@ -6,18 +6,17 @@ toc: /toc.json
 
 ## A Quick Overview
 
-TODO
+For logging, we use the ``slf4j`` facade, usually hooked up to a ``log4j`` implementation.
 
-slf4j, hooked up to a log4j impl
+Tests have debug logging across the board, included by default from ``usage/test-support``
 
-tests have debug logging across the board, included by default from ``usage/test-support``
+Launcher (and all) define a log4j.properties which logs at INFO level with a few selected categories at DEBUG
+(debug output goes only to a file, ``./brooklyn.log``).
 
-launcher (and all) define a log4j.properties which logs at INFO level with a few selected categories at DEBUG
-(debug output goes only to a file, ./brooklyn.log)
-
-Some categories are quite useful:
+Some categories are quite useful, as you'll see in the ``log4j.properties`` files in the project:
 
 * brooklyn
+* brooklyn.SSH
 * org.jclouds
 
 
@@ -60,12 +59,12 @@ which depend on your project; you can remove it to force the import your logging
 
 ## Caveats
 
-SLF4J **version >= 1.6** is **not compatible** with 1.5.x and breaks certain things (such as the web console written in Grails).
+* SLF4J **version >= 1.6** is **not compatible** with 1.5.x and breaks certain things (such as the web console written in Grails).
 
-The **webapp** can clobber logging settings in strange ways; setting ``grails.TODO`` to INFO seems to help.
+* The **webapp** can clobber logging settings in strange ways; setting ``grails``, ``grails.app``, and ``grails.app.brooklyn`` to INFO seems to help.
 
-Logging for **tests** isn't picked up correctly in some environments (some Eclipse flavours).
-The root cause seems to be a rogue log4j.properties included in the groovy-all OSGi bundle bsf.jar which sets a FATAL threshhold.
-To resolve this add an explicit project dependency on test-support, 
-or create your own log4j.properties file.
+* Logging for **tests** isn't picked up correctly in some environments (some Eclipse flavours).
+  The root cause seems to be a rogue log4j.properties included in the groovy-all OSGi bundle bsf.jar which sets a FATAL threshhold.
+  To resolve this add an explicit project dependency on test-support, 
+  or create your own log4j.properties file.
 

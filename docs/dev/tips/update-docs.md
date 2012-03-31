@@ -13,7 +13,7 @@ It's built using standard jekyll/markdown with a few extensions.
 Install the following:
 
 * [**Jekyll**](https://github.com/mojombo/jekyll/wiki/install): `sudo gem install jekyll`
-* [**JSON gem**](TODO): `sudo gem install json`
+* [**JSON gem**](http://rubygems.org/gems/json): `sudo gem install json`
 * [**RDiscount**](https://github.com/rtomayko/rdiscount/#readme): `sudo gem install rdiscount`
 * [**Pygments**](http://pygments.org/): `sudo easy_install Pygments`
 
