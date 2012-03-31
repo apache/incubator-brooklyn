@@ -60,8 +60,6 @@ public abstract class AbstractStartStopDriver implements StartStopDriver {
 	
 	public EntityLocal getEntity() { entityLocal } 
 	
-	public Set<Integer> getPortsUsed() { [] }
-
     public InputStream getResource(String url) {
         new ResourceUtils(entityLocal).getResourceFromUrl(url);
     }

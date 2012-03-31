@@ -88,7 +88,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             }
         }
         if (unmatchedTags) {
-            LOG.info("Location $this, failed to match provisioning tags $unmatchedTags")
+            LOG.debug("Location $this, failed to match provisioning tags $unmatchedTags")
         }
         return result
     }
@@ -140,7 +140,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             Template template = buildTemplate(computeService, allconf.providerLocationId, allconf, unusedConf);
             
             if (!unusedConf.isEmpty())
-                LOG.warn("Unused flags passed to JcloudsLocation.buildTemplate in "+(allconf.providerLocationId?:allconf.provider)+": "+unusedConf);
+                LOG.debug("NOTE: unused flags passed to JcloudsLocation.buildTemplate in "+(allconf.providerLocationId?:allconf.provider)+": "+unusedConf);
     
             Set<? extends NodeMetadata> nodes = computeService.createNodesInGroup(groupId, 1, template);
             node = Iterables.getOnlyElement(nodes, null);
@@ -271,7 +271,8 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             },
             inboundPorts:      { TemplateOptions t, Map props, Object v ->
                 Object[] inboundPorts = (v instanceof Collection) ? v.toArray(new Integer[0]) : v;
-                options.inboundPorts(inboundPorts);
+                if (LOG.isDebugEnabled()) LOG.debug("opening inbound ports ${Arrays.toString(v)} for ${t}");
+                t.inboundPorts(inboundPorts);
             },
             rootSshPublicKeyData:  { TemplateOptions t, Map props, Object v -> t.authorizePublicKey(v) },
             sshPublicKey:  { TemplateOptions t, Map props, Object v -> /* special; not included here */  },
