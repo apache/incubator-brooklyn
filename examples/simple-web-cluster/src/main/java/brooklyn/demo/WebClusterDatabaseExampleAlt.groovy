@@ -49,8 +49,8 @@ public class WebClusterDatabaseExampleAlt extends AbstractApplication {
 create database visitors;
 use visitors;
 create user '${DB_USERNAME}' identified by '${DB_PASSWORD}';
-grant usage on *.* to '${DB_USERNAME}'@'localhost' identified by '${DB_PASSWORD}';
-grant all privileges on visitors.* to '${DB_USERNAME}'@'localhost';
+grant usage on *.* to '${DB_USERNAME}'@'%' identified by '${DB_PASSWORD}';
+grant all privileges on visitors.* to '${DB_USERNAME}'@'%';
 flush privileges;
 
 CREATE TABLE MESSAGES (
