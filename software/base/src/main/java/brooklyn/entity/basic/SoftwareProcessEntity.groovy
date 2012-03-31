@@ -2,6 +2,7 @@ package brooklyn.entity.basic
 
 import java.util.Collection
 import java.util.Map
+import java.util.Set
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -12,18 +13,17 @@ import brooklyn.entity.basic.lifecycle.StartStopDriver
 import brooklyn.entity.basic.lifecycle.StartStopSshDriver
 import brooklyn.entity.trait.Startable
 import brooklyn.event.AttributeSensor
-import brooklyn.event.Sensor;
 import brooklyn.event.adapter.ConfigSensorAdapter
 import brooklyn.event.adapter.SensorRegistry
-import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey
+import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey
 import brooklyn.location.Location
 import brooklyn.location.MachineLocation
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.NoMachinesAvailableException
+import brooklyn.location.PortRange
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.flags.SetFromFlag
 
@@ -142,23 +142,37 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 
 	public void startInLocation(MachineProvisioningLocation location) {
 		Map<String,Object> flags = location.getProvisioningFlags([ getClass().getName() ])
-		// XXX port setup was never quite completed to be working:
-		// flags.inboundPorts = getRequiredOpenPorts()
-		// preferred now is to interrogate the helper to expose getUsedPorts
+        if (!flags.inboundPorts) {
+            def ports = getRequiredOpenPorts();
+            if (ports) flags.inboundPorts = getRequiredOpenPorts()
+        }
+        LOG.info("SoftwareProcessEntity {} obtaining a new location instance in {} with ports {}", this, location, flags.inboundPorts)
 
 		provisioningLoc = location
 		SshMachineLocation machine = location.obtain(flags)
 		if (machine == null) throw new NoMachinesAvailableException(location)
+        LOG.info("SoftwareProcessEntity {} obtained a new location instance {}, now preparing process there", this, machine)
 		startInLocation(machine)
 	}
 
-	@Deprecated
-	protected Collection<Integer> getRequiredOpenPorts() {
-		return ([22] + (!driver? [] : driver.getPortsUsed())) as Set
-	}
+    /** returns the ports that this entity wants to use;
+     * default implementation returns 22 plus first value for each PortAttributeSensorAndConfigKey config key PortRange.
+     */
+    protected Collection<Integer> getRequiredOpenPorts() {
+        Set<Integer> ports = [22]
+        for (ConfigKey k: getConfigKeys().values()) {
+            if (PortRange.class.isAssignableFrom(k.getType())) {
+                PortRange p = getConfig(k);
+                if (!p?.isEmpty()) ports += p.iterator().next()
+            }
+        }
+        log.debug("getRequiredOpenPorts detected ${ports} for ${this}")
+        ports
+    }
 
-	public void startInLocation(SshMachineLocation machine) {
-		locations.add(machine)
+
+    public void startInLocation(SshMachineLocation machine) {
+        locations.add(machine)
 
         // Note: must only apply config-sensors after adding to locations; otherwise can't do things like acquire free port from location
         // TODO use different method naming/overriding pattern, so as we have more things than SshMachineLocation they all still get called?

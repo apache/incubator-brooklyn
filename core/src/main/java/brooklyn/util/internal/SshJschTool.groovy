@@ -50,7 +50,8 @@ public class SshJschTool {
     String password
     String user = System.getProperty('user.name')
     int port = 22
-    List<String> keyFiles = ['~/.ssh/id_dsa','~/.ssh/id_rsa']
+    public static final List<String> DEFAULT_KEY_FILES = ['~/.ssh/id_dsa','~/.ssh/id_rsa']
+    List<String> keyFiles = DEFAULT_KEY_FILES
     String privateKey
     String publicKey
     Map config = [StrictHostKeyChecking:'no']
@@ -115,27 +116,40 @@ public class SshJschTool {
     public Session getSession() { session }
 
     public void connect() {
+        connect(4);
+    }
+    public void connect(int maxAttempts) {
         if (session && session.isConnected()) throw new IllegalStateException("already connected to "+session)
         if (!host) throw new IllegalStateException("host must be specified")
 
         tidy()
 
-        if (publicKey && privateKey) {
-            jsch.addIdentity(privateKey, publicKey, null)
-        }
-        keyFiles.each { String file -> if (new File(file).exists()) jsch.addIdentity(file) }
-        session = jsch.getSession(user, host, port)
-        session.setConfig((Hashtable) config)
+        Exception error = null;
+        for (int i=0; i<maxAttempts; i++) {
+            try {
+                if (publicKey && privateKey) {
+                    jsch.addIdentity(privateKey, publicKey, null)
+                }
+                keyFiles.each { String file -> if (new File(file).exists()) jsch.addIdentity(file) }
+                session = jsch.getSession(user, host, port)
+                session.setConfig((Hashtable) config)
 
-        if(password){
-            session.password = password
-        }
+                if(password){
+                    session.password = password
+                }
 
-        try {
-            session.connect()
-        } catch (Exception e) {
-            throw new IllegalStateException("Cannot connect to $user@$host", e);
+                session.connect();
+                return;
+            } catch (Exception e) {
+                error = e;
+                //TODO remove following
+                log.info("ssh failed 1, retrying - attempt ${i+1} of ${maxAttempts} to ${user}@${port}: "+e);
+                if (log.isDebugEnabled())
+                    log.debug("ssh failed, retrying - attempt ${i+1} of ${maxAttempts} to ${user}@${port}: "+e);
+                if (i+1<maxAttempts) sleep(250+250*i);
+            }
         }
+        throw new IllegalStateException("Cannot connect SSH to $user@$host: "+error, error);
     }
 
     public void disconnect() {
@@ -220,7 +234,7 @@ public class SshJschTool {
                     //scripts often say "exit", causing this
                     //would be nice if we could differentiate!
                     if (log.isDebugEnabled())
-                        log.debug "Caught an IOException ({}) - the script has probably exited early; exit code {}", ioe.message, channel.getExitStatus()
+                        log.debug "Caught an IOException from jsch ({}) - the ssh script has probably exited early; exit code {}", ioe.message, channel.getExitStatus()
                 }
         
                 if (properties.block==null || properties.block) {

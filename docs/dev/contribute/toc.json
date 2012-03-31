@@ -1,6 +1,0 @@
-[
-{ "title": "Fork -> Write -> Pull",
-  "file":  "{{ site.url }}/dev/contribute/index.html" },
-{ "title": "Updating Docs",
-  "file": "{{ site.url }}/dev/contribute/docs.html" }
-]

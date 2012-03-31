@@ -1,7 +1,8 @@
 [
+{ "title": "Governance",
+  "file": "{{ site.url }}/meta/governance.html" },
 { "title": "Versions",
   "file":  "{{ site.url }}/meta/versions.html" },
 { "title": "Contact",
   "file":  "{{ site.url }}/meta/contact.html" }
 ]
-

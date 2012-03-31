@@ -168,6 +168,6 @@ public abstract class StartStopSshDriver extends AbstractStartStopDriver impleme
         return s
     }
 
-    public Set<Integer> getPortsUsed() { super.getPortsUsed() + [22] }
+    public Set<Integer> getPortsUsed() { (super.getPortsUsed() + [22]) as Set }
 
 }

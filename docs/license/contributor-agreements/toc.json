@@ -1,0 +1,14 @@
+[
+{ "title": "Instructions",
+  "file":  "{{ site.url }}/license/contributor-agreements/index.html" },
+{ "title": "Individual CLA (echosign)",
+  "file":  "{{ site.url }}/license/contributor-agreements/individual.html" },
+{ "title": "Corporate CLA (echosign)",
+  "file":  "{{ site.url }}/license/contributor-agreements/corporate.html" },
+{ "title": "CCLA Schedule A Update (echosign)",
+  "file":  "{{ site.url }}/license/contributor-agreements/corporate-update-schedule.html" },
+{ "title": "Individual CLA (raw text)",
+  "file":  "{{ site.url }}/license/contributor-agreements/brooklyn-icla.txt" },
+{ "title": "Corporate CLA (raw text)",
+  "file":  "{{ site.url }}/license/contributor-agreements/brooklyn-ccla.txt" }
+]

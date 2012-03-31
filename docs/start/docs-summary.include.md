@@ -1,5 +1,5 @@
-To learn about Brooklyn, there are a few possible starting points currently:
+To learn about Brooklyn, here are some recommended starting points:
 
-* [Developer's Walkthrough](../start/walkthrough.html) 
-* [User Guide](/use/guide/) 
-* [The Code](/dev/code/index.html)
+* [Developer's Walkthrough]({{site.url}}/start/walkthrough/index.html) 
+* [User Guide]({{site.url}}/use/guide/) 
+* [The Code]({{site.url}}/dev/code/)

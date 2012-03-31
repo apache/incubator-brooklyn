@@ -1,5 +1,7 @@
 package brooklyn.extras.whirr.core
 
+import java.io.FileReader;
+
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity
 import org.apache.whirr.ClusterController
@@ -12,6 +14,7 @@ import brooklyn.util.flags.SetFromFlag
 import brooklyn.location.Location
 import brooklyn.location.basic.jclouds.JcloudsLocation
 import org.apache.commons.configuration.PropertiesConfiguration
+import org.apache.commons.io.IOUtils;
 import org.apache.whirr.ClusterSpec
 import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Sets
@@ -71,10 +74,12 @@ public class WhirrCluster extends AbstractEntity implements Startable {
         clusterSpec.setIdentity(location.getConf().identity)
         clusterSpec.setCredential(location.getConf().credential)
         clusterSpec.setLocationId(location.getConf().providerLocationId)
+        clusterSpec.setPrivateKey((File)location.getPrivateKeyFile());
+        clusterSpec.setPublicKey((File)location.getPublicKeyFile());
         // TODO: also add security groups when supported in the Whirr trunk
 
         log.info("Starting cluster with roles " + config.getProperty("whirr.instance-templates")
-                + " in location " + location.getConf().providerLocationId)
+                + " in location " + location)
 
         cluster = controller.launchCluster(clusterSpec)
 

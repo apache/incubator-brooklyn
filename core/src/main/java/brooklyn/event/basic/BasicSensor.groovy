@@ -8,9 +8,11 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.ConfigKey
 import brooklyn.entity.Entity
 import brooklyn.entity.ConfigKey.HasConfigKey
+import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.event.AttributeSensor
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
+import brooklyn.event.adapter.ConfigSensorAdapter;
 import brooklyn.location.PortRange
 import brooklyn.location.PortSupplier
 import brooklyn.util.flags.TypeCoercions
@@ -125,8 +127,11 @@ public abstract class AttributeSensorAndConfigKey<ConfigType,SensorType> extends
      * calls to this may allocate resources (e.g. ports) so should be called only once and 
      * then (if non-null) assigned as the sensor's value
      * <p>
-     * <b>(for this reason this method should generally not be invoked except in tests (and in AbstractEntity),
-     * and similarly should not be overridden; implement convertConfigToSensor instead)</b> 
+     * <b>(for this reason this method should generally not be invoked by callers except in tests and by the framework,
+     * and similarly should not be overridden; implement convertConfigToSensor instead for single-execution calls.
+     * the framework calls this from {@link AbstractEntity#setAttribute(AttributeSensorAndConfigKey)} 
+     * typically via {@link ConfigSensorAdapter#apply()} e.g. from SoftwareProcessEntity.preStart.)
+     * </b> 
      */
     public SensorType getAsSensorValue(Entity e) {
         def v = e.getAttribute(this);

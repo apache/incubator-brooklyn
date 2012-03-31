@@ -1,8 +1,8 @@
 [
 { "title": "Overview",
-  "file":  "{{ site.url }}/start/index.html" },
+  "file":  "{{ site.url }}/index.html" },
 { "title": "Walkthrough",
-  "file": "{{ site.url }}/start/walkthrough.html" },
+  "file": "{{ site.url }}/start/walkthrough/index.html" },
 { "title": "Download",
   "file": "{{ site.url }}/start/download.html" },
 { "title": "Documentation",

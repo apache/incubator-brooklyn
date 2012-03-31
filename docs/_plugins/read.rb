@@ -5,7 +5,7 @@
 # handy if we want to include a toc.json file which itself calls {% readj child/toc.json %}
 
 # the argument can be a variable or a filename literal (not quoted)
-# TODO: figure out how to accept a quoted string!
+# TODO: figure out how to accept a quoted string as an argument
 
 module JekyllRead
   class ReadTag < Liquid::Tag

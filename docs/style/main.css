@@ -4,34 +4,42 @@ html {
 }
 
 body {
-	font-family: verdana, arial, sans-serif;
+    font-family: Arial, Verdana, sans-serif;
+    color: #222;
 }
 
-
-
+a { color:#484; text-decoration:none; }
+a:visited { color: #363; }
+a:hover{ color:#2a2; text-decoration:underline; }
+/*
 a { color: #204818; text-decoration: none; }
 a:visited { color: #002808; }
 a:hover { text-decoration: underline; }
+*/
 
-h2 { color: #185018; }
+h1 { color: #68aa70; font-weight: normal; }
+h2 { color: #185018; font-weight: normal; }
 
 
 /* Code Snippets */
 pre {
- 	font-family: 'Droid Sans Mono', Monaco, Courier, sans-serif; font-size: 90%;
- 	background-color:#f6f6f6;
- 	margin-right: -5em;
-	padding: 1em;
+    font-family: Consolas, Lucida Console, Monaco, monospace;
+       /* Courier, sans-serif  'Droid Sans Mono' */
+    font-size: 90%;
+    background-color:#f6f6f6;
+    padding: 1em;
 }
 code {
- 	font-family: 'Droid Sans Mono', Monaco, Courier, sans-serif; font-size: 90%;
- 	background-color:#f4f4f4;
+    font-family: Consolas, Lucida Console, Monaco, monospace;
+       /* Courier, sans-serif  'Droid Sans Mono' */
+    font-size: 90%;
+    /* background-color:#f4f4f4; */
 }
 
 
 /* Configuration for pygments syntax highlighting */
 div.highlight code.java span.err{
-	/*Single quotes were being highlighted as errors, so just turn that off.*/
-	border: none;
+    /* Single quotes were being highlighted as errors, so just turn that off. */
+    border: none;
 }
 

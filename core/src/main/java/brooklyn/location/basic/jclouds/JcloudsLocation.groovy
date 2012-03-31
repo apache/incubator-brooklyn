@@ -29,6 +29,7 @@ import brooklyn.location.basic.AbstractLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.IdGenerator
 import brooklyn.util.internal.Repeater
+import brooklyn.util.internal.SshJschTool;
 
 import com.google.common.base.Charsets
 import com.google.common.base.Throwables
@@ -87,7 +88,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             }
         }
         if (unmatchedTags) {
-            LOG.info("Location $this, failed to match provisioning tags $unmatchedTags")
+            LOG.debug("Location $this, failed to match provisioning tags $unmatchedTags")
         }
         return result
     }
@@ -107,13 +108,20 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         rootSshPrivateKey:{}, rootSshPublicKey:{}, 
         groupId:{},
         providerLocationId:{}, provider:{} ];
-     
+    
+    /** returns public key file, if one has been configured */
+    public File getPublicKeyFile() { asFile(conf.publicKeyFile) }
+    
+    /** returns private key file, if one has been configured */
+    public File getPrivateKeyFile() { asFile(conf.privateKeyFile) }
+
     public SshMachineLocation obtain(Map flags=[:]) throws NoMachinesAvailableException {
         Map allconf = flags + conf;
         Map unusedConf = [:] + allconf
         if (!unusedConf.remove("userName")) allconf.userName = ROOT_USERNAME
-        if (unusedConf.remove("publicKeyFile")) allconf.sshPublicKeyData = Files.toString(asFile(allconf.publicKeyFile), Charsets.UTF_8)
-        if (unusedConf.remove("privateKeyFile")) allconf.sshPrivateKeyData = Files.toString(asFile(allconf.privateKeyFile), Charsets.UTF_8)
+        //TODO deprecate supply of data (and of different root key?) to keep it simpler
+        if (unusedConf.remove("publicKeyFile")) allconf.sshPublicKeyData = Files.toString(getPublicKeyFile(), Charsets.UTF_8)
+        if (unusedConf.remove("privateKeyFile")) allconf.sshPrivateKeyData = Files.toString(getPrivateKeyFile(), Charsets.UTF_8)
         if (unusedConf.remove("sshPublicKey")) allconf.sshPublicKeyData = Files.toString(asFile(allconf.sshPublicKey), Charsets.UTF_8)
         if (unusedConf.remove("sshPrivateKey")) allconf.sshPrivateKeyData = Files.toString(asFile(allconf.sshPrivateKey), Charsets.UTF_8)
         if (unusedConf.remove("rootSshPrivateKey")) allconf.rootSshPrivateKeyData = Files.toString(asFile(allconf.rootSshPrivateKey), Charsets.UTF_8)
@@ -132,7 +140,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             Template template = buildTemplate(computeService, allconf.providerLocationId, allconf, unusedConf);
             
             if (!unusedConf.isEmpty())
-                LOG.warn("Unused flags passed to JcloudsLocation.buildTemplate in "+(allconf.providerLocationId?:allconf.provider)+": "+unusedConf);
+                LOG.debug("NOTE: unused flags passed to JcloudsLocation.buildTemplate in "+(allconf.providerLocationId?:allconf.provider)+": "+unusedConf);
     
             Set<? extends NodeMetadata> nodes = computeService.createNodesInGroup(groupId, 1, template);
             node = Iterables.getOnlyElement(nodes, null);
@@ -165,7 +173,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
 
             String vmHostname = getPublicHostname(node, allconf)
             Map sshConfig = [:]
-            if (allconf.sshPrivateKey) sshConfig.keyFiles = [ fileAsString(allconf.sshPrivateKey) ]
+            if (getPrivateKeyFile()) sshConfig.keyFiles = [ getPrivateKeyFile().getCanonicalPath() ] + SshJschTool.DEFAULT_KEY_FILES 
             SshMachineLocation sshLocByHostname = new JcloudsSshMachineLocation(this, node,
                     address:vmHostname, 
                     displayName:vmHostname,
@@ -263,7 +271,8 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             },
             inboundPorts:      { TemplateOptions t, Map props, Object v ->
                 Object[] inboundPorts = (v instanceof Collection) ? v.toArray(new Integer[0]) : v;
-                options.inboundPorts(inboundPorts);
+                if (LOG.isDebugEnabled()) LOG.debug("opening inbound ports ${Arrays.toString(v)} for ${t}");
+                t.inboundPorts(inboundPorts);
             },
             rootSshPublicKeyData:  { TemplateOptions t, Map props, Object v -> t.authorizePublicKey(v) },
             sshPublicKey:  { TemplateOptions t, Map props, Object v -> /* special; not included here */  },
@@ -337,7 +346,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         String vmIp = JcloudsUtil.getFirstReachableAddress(node);
         
         Map sshConfig = [:]
-        if (allconf.sshPrivateKey) sshConfig.keyFiles = [ fileAsString(allconf.sshPrivateKey) ]
+        if (getPrivateKeyFile()) sshConfig.keyFiles = [ getPrivateKeyFile().getCanonicalPath() ] + SshJschTool.DEFAULT_KEY_FILES 
         SshMachineLocation sshLocByIp = new SshMachineLocation(address:vmIp, username:allconf.userName, config:sshConfig);
         ByteArrayOutputStream outStream = new ByteArrayOutputStream()
         ByteArrayOutputStream errStream = new ByteArrayOutputStream()

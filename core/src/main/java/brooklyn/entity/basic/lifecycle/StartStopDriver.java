@@ -1,6 +1,5 @@
 package brooklyn.entity.basic.lifecycle;
 
-import java.util.Set;
 
 /** In many cases it is cleaner to store entity lifecycle effectors (and sometimes other implementations) in a class to 
  * which the entity delegates.  Classes implementing this interface provide this delegate, often inheriting utilities
@@ -15,7 +14,5 @@ public interface StartStopDriver {
 	public void start();
 	public void stop();
 	public void restart();
-	
-	public Set<Integer> getPortsUsed();
-	
+		
 }

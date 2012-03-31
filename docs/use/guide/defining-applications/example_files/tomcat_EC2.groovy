@@ -2,7 +2,7 @@ class TomcatClusterApp extends AbstractApplication {
 	DynamicWebAppCluster cluster = new DynamicWebAppCluster(
 		owner : this,
 		initialSize: 2,
-		newEntity: { properties -> new TomcatServer(properties) },
+		factory: { properties -> new TomcatServer(properties) },
 		httpPort: 8080, 
 		war: "/path/to/booking-mvc.war")
 

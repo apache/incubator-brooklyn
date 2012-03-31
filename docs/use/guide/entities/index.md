@@ -20,16 +20,24 @@ What to Extend -- Implementation Classes
 
 - entity implementation class hierarchy
 
-  - ``SoftwareProcessEntity`` as the main starting point for base entities (corresponding to software processes)
-  - cluster, group, stack, fabric, etc. provide conveniences for collecting entities (including software processes)
-
+  - ``SoftwareProcessEntity`` as the main starting point for base entities (corresponding to software processes),
+    and subclasses such as ``VanillaJavaApp``
+  - ``DynamicCluster`` (multiple instances of the same entity in a location) and 
+    ``DynamicFabric`` (clusters in multiple location) for automatically creating many instances,
+    supplied with an ``EntityFactory`` (e.g. ``BaseEntityFactory``) in the ``factory`` flag
+  - abstract ``Group`` for collecting entities which are owned elsewhere in the hierachy
+  - ``AbstractEntity`` if nothing else fits
+  
 - traits (mixins, otherwise known as interfaces with statics) to define available config keys, sensors, and effectors;
-    and conveniences e.g. StartableMethods for entities which implement Startable
+    and conveniences e.g. ``StartableMethods.{start,stop}`` is useful for entities which implement ``Startable``
 
 - the ``Entities`` class provides some generic convenience methods; worth looking at it for any work you do
 
 A common lifecycle pattern is that the ``start`` effector (see more on effectors below) is invoked, 
-often delegating either to a driver (for software processes) or children entities (for clusters etc)
+often delegating either to a driver (for software processes) or children entities (for clusters etc).
+
+See ``JBoss7Server`` and ``MySqlNode`` for exemplars.
+
 
 <a name="configuration"></a>
 Configuration
@@ -38,7 +46,9 @@ Configuration
 TODO: why to use config?
 -->
 
-- AttributeSensorAndConfigKey fields can be automatically converted for ``SoftwareProcessEntity``. This is done in ``preStart()``. This must be done manually if required for other entities.
+- AttributeSensorAndConfigKey fields can be automatically converted for ``SoftwareProcessEntity``. 
+  This is done in ``preStart()``. This must be done manually if required for other entities,
+  often with ``ConfigSensorAdapter.apply(this)``.
 
 - Setting ports is a special challenge, and one which the ``AttributeSensorAndConfigKey`` is particularly helpful for,
   cf ``PortAttributeSensorAndConfigKey`` (a subclass),
@@ -93,13 +103,13 @@ The ``Entity`` implementation defines the sensors and effectors available, the w
 and in simple cases it may be straightforward to capture the behaviour of the effectors in methods.
 For example deploying a WAR to a cluster can be done as follows:
 
-*This section is not complete in this milestone release.*
+*This section is not complete. Feel free to [fork]({{site.url}}/dev/code) the docs and lend a hand.*
 
 <!---
 TODO show an effector which recurses across children
 -->
 
-For some entities, specifically base entities, the implementation of effectors might needother tools (such as SSH), and may vary by location, so having a single implementation is not appropriate.
+For some entities, specifically base entities, the implementation of effectors might need other tools (such as SSH), and may vary by location, so having a single implementation is not appropriate.
 
 The problem of multiple inheritance (e.g. SSH functionality and entity inheritance) and multiple implementations (e.g. SSH versus Windows) is handled in brooklyn using delegates called _drivers_. 
 

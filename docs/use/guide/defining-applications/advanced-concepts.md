@@ -15,7 +15,7 @@ An application entity (``Application`` class) defines a management context  (``M
 An ``Application``'s ``start()`` method begins provisioning the management plane and distributing the management of entities owned by the application (and their entities, recursively). 
 
 Provisioning of entities typically happens in parallel automatically,
-although this can be customized. This is implemented as ***tasks*** which are tracked by the management plane and is visible in the [web-based management console](/use/guide/management/index.html#console).
+although this can be customized. This is implemented as ***tasks*** which are tracked by the management plane and is visible in the [web-based management console]({{site.url}}/use/guide/management/index.html#console).
 
 Customized provisioning can be useful where two starting entities depend on each other. For example, it is often necessary to delay start of one entity until another entity reaches a certain state, and to supply run-time information about the latter to the former.
 
@@ -34,40 +34,42 @@ In a multi-location deployment, management operates in all regions, with brookly
 When management is distributed a Brooklyn deployment may consist of multiple Brooklyn management nodes each with a ``ManagementContext`` instance.
 
 <!-- TODO - Clarify the following statements.
-The management context entity forms part of the management plane. The management plane is responsible for the distribution of the ``Entity`` instances across multiple machines and multiple locations, tracking the transfer of events (subscriptions) between ``Entity`` instances, and the execution of tasks (often initiated by management policies).
-
+The management context entity forms part of the management plane. 
+The management plane is responsible for the distribution of the ``Entity`` instances across multiple machines and multiple locations, 
+tracking the transfer of events (subscriptions) between ``Entity`` instances, and the execution of tasks (often initiated by management policies).
 -->
 
-
+<a name="dependent"></a>
 Dependent Configuration
 -----------------------
 
 Under the covers Brooklyn has a sophisticated sensor event and subscription model, but conveniences around this model make it very simple to express  cross-entity dependencies. Consider the example where Tomcat instances need to know a set of URLs to connect to a Monterey processing fabric (or a database tier or other entities)
 
 {% highlight java %}
-tomcat.webCluster.template.setConfig(JavaEntity.JVM_PROPERTY("monterey.urls"),
-	attributeWhenReady(monterey, Monterey.MGMT_PLANE_URLS)
-)
+web.factory.setConfig(UsesJava.JAVA_OPTIONS, ["mysql.url":
+	attributeWhenReady(mysql, MySqlNode.MY_SQL_URL) ])
 {% endhighlight %}
 
-The ``attributeWhenReady(Entity, Sensor)`` call causes the configuration value to be set when that given entity's attribue is ready. 
+The ``attributeWhenReady(Entity, Sensor)`` call (a static method on the class ``DependentConfiguration``)
+causes the configuration value to be set when that given entity's attribue is ready. 
 In the example, ``attributeWhenReady()`` causes the JVM system property ``monterey.urls`` to be set to the value of the ``Monterey.MGMT_PLANE_URLS`` sensor from ``monterey`` when that value is ready. As soon as a management plane URL is announced by the Monterey entity, the configuration value will be available to the Tomcat cluster. 
 
 By default "ready" means being *set* (non-null) and, if appropriate, *non-empty* (for collections and strings) or *non-zero* (for numbers). Formally the interpretation of ready is that of "Groovy truth" defined by an ``asBoolean()`` method on the class and in the Groovy language extensions. 
 
-You can customize "readiness" by supplying a ``Predicate`` (Google common) or ``Closure`` (Groovy) in a third parameter. This evaluates candidate values reported by the sensor until one is found to be ``true``. For
-example, passing ``it.size()>=3`` as the readiness argument is useful if you require three management plane URLs.
+You can customize "readiness" by supplying a ``Predicate`` (Google common) or ``Closure`` (Groovy) in a third parameter. 
+This evaluates candidate values reported by the sensor until one is found to be ``true``. 
+For example, passing ``{ it.size()>=3 }`` as the readiness argument would require at least three management plane URLs.
 
-<!---
-TODO Is this a duplicate thought? You can transform the attribute value with a Function (Google) or Closure to set the config to something different.
--->
+More information on this can be found in the javadoc for ``DependentConfiguration``,
+along with a few other methods such as ``valueWhenAttributeReady`` which allow post-processing of an attribute value.
 
-More information can be found in the javadoc for ``DependentConfiguration``.
-
-Note that ``Entity.getConfig(KEY)`` will block when it is used. Typically
-this does the right thing, blocking only when necessary without the developer having to think through explicit start-up phases, but it can take some getting used to.
-
-You should be careful not to request config information until really necessary (or to use internal non-blocking "raw" mechanisms). Be ready in complicated situations to attend to circular dependencies. The management console gives sufficient information to understand what is happening and identify what is blocking.
+Note that if the value of ``CONFIG_KEY`` passed to ``Entity.getConfig`` is a Closure or Task (such as returned by ``attributeWhenReady``),
+the first access of ``Entity.getConfig(CONFIG_KEY)`` will block until the task completes.
+Typically this does the right thing, blocking when necessary to generate the right start-up sequence
+without the developer having to think through the order, but it can take some getting used to.
+Be careful not to request config information until really necessary (or to use non-blocking "raw" mechanisms),
+and in complicated situations be ready to attend to circular dependencies.
+The management console gives useful information for understanding what is happening and resolving the cycle.
 
 Location
 --------
@@ -121,8 +123,8 @@ For example, a ``TomcatServer`` may implement start and other effectors using a 
 (for SSH scripting support).
 
 Particularly for sensors, some technologies are used so frequently that they are
-packaged as ***adapters*** which can discover their confguration (including from drivers). These include JMX and HTTP.
+packaged as ***adapters*** which can discover their configuration (including from drivers). These include JMX and HTTP.
 
-Brooklyn comes with entity implementations for a growing number of commonly used systems, including various web application servers, databases and NoSQL data stores, and messaging systems. See: [Extras](/use/guide/extras/index.html).
+Brooklyn comes with entity implementations for a growing number of commonly used systems, including various web application servers, databases and NoSQL data stores, and messaging systems. See: [Extras]({{site.url}}/use/guide/extras/index.html).
 
 

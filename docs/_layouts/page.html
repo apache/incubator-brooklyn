@@ -14,7 +14,6 @@
 	<script src="{{ site.url }}/style/js/jquery/jquery-1.7.1.min.js"></script>
 	<script src="{{ site.url }}/style/js/jquery/jquery-ui-1.8.18.custom.min.js"></script>
 	<link rel="stylesheet" type="text/css" href="{{ site.url }}/style/js/jquery/smoothness/jquery-ui-1.8.18.custom.css" />
-	<link rel="stylesheet" type="text/css" href="{{ site.url }}/style/toc.css" />
 
 	<script>
 	$(function() {
@@ -48,11 +47,6 @@
 
     <div class="page_row">
 
-      <div id="page_toc">
-		<!-- Sidebar -->
-		{% include sidebar.html %}
-      </div>
-
       <div id="page_content">
 		<div class="breadcrumbs">
 		{% assign b = " " %}
@@ -64,9 +58,15 @@
 		{%endfor%}
 		</div>
 		
-		<h1>{{ page.title }}</h1>
+		<h1 id="header_title">{{ page.title }}</h1>
+		<hr/>
 
 		{{ content }}
+      </div>
+
+      <div id="page_toc">
+        <!-- Sidebar -->
+        {% include sidebar.html %}
       </div>
 
     </div>
@@ -76,7 +76,9 @@
 <hr/>
 
     <div id="page_footer" class="page_row">
-      Copyright &copy; 2012 Cloudsoft Corporation
+      <b>brooklyn is distributed under the Apache License v2.0.</b><br/>
+      brooklyn is a registered trademark of Cloudsoft Corporation.<br/>
+      &copy; 2012 Cloudsoft Corporation.
     </div>
 
   </div>

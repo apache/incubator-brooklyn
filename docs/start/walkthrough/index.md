@@ -1,7 +1,7 @@
 ---
 layout: page
 title: Walkthrough
-toc: ../toc.json
+toc: /toc.json
 ---
 
 Brooklyn makes it easy to describe how to launch and manage 
@@ -29,9 +29,7 @@ Amazon has been used here, but lots of targets are supported (using [jclouds](ht
 as well as fixed IP addresses or even everything to localhost (very handy for dev/test,
 and with port conflicts resolved automatically).
 
-[![Web Console Showing Our Application](walkthrough-webconsole-map-w400.png "Screenshot of the Web Console")](walkthrough-webconsole-map.png) 
-
-.. TODO image is wrong needs updating!
+[![Web Console](walkthrough-webconsole-map-w700.png "Web Console")](walkthrough-webconsole-map.png) 
 
 The management console provides a view on to the entities that launched,
 including the hierarchy (appservers grouped into a cluster) and their locations. 
@@ -39,12 +37,11 @@ Brooklyn collects information from these entities ("sensors"),
 aggregates these for clusters and other groups (using "enrichers"),
 and exposes operations ("effectors") that can be performed on entities.
 
-[![Web Console Showing Nginx](walkthrough-webconsole-details-w400.png "Screenshot of the Web Console Showing Nginx")](walkthrough-webconsole-details.png) 
-
-.. TODO image is wrong needs updating!
+[![Web Console Details](walkthrough-webconsole-details-w700.png "Web Console Details")](walkthrough-webconsole-details.png) 
 
 Of course in the real world, application deployments are more interesting;
 they do things and need configuration.  For instance you might need to:
+
 * specify a WAR file
 * initialize the database
 * tell the webapp servers where to find the database
@@ -75,14 +72,14 @@ public class WebClusterDatabaseExample extends AbstractApplication {
             (JBoss7Server.JAVA_OPTIONS):
                 // -Dbrooklyn.example.db.url="jdbc:mysql://192.168.1.2:3306/visitors?user=brooklyn\\&password=br00k11n"
                 ["brooklyn.example.db.url": valueWhenAttributeReady(mysql, MySqlNode.MYSQL_URL,
-                    { "jdbc:"+it+"visitors?user=${DB_USERNAME}\\&password=${DB_PASSWORD}" }) ]);
+                    { "jdbc:"+it+"visitors?user=brooklyn\\&password=br00k11n" }) ]);
     }
 }
 {% endhighlight %}
 
 We now see our app at the Nginx URL:
 
-[![Our Web App](walkthrough-webapp-w400.png "Screenshot of our Web App")](walkthrough-webapp.png) 
+[![Our Web App](walkthrough-webapp-w700.png "Screenshot of our Web App")](walkthrough-webapp.png) 
 
 Finally, we'll bring in some active management: we're going to monitor requests per second,
 and scale out if this exceeds 100 up to a maximum of 5 servers.
@@ -115,13 +112,12 @@ load-balancer is updated as the pool of web servers expands and contracts.
 Let us fire up a JMeter session and blast the Nginx address.
 The resizer policy scales up our cluster:
 
-[![Web Cluster Scaling with the Resizer Policy](walkthrough-webconsole-scaling-w400.png "Screenshot of Web Cluster Scaling with the Resizer Policy")](walkthrough-webconsole-scaling.png) 
-
-.. TODO image is wrong needs updating!
+[![Web Cluster Scaling with the Resizer Policy](walkthrough-webconsole-scaling-w700.png "Screenshot of Web Cluster Scaling with the Resizer Policy")](walkthrough-webconsole-scaling.png) 
 
 For your applications, you might want to mix in other data stores, messaging systems, or on-line services including PaaS.
 Brooklyn supports some of these out-of-the-box, including a wide-range of tools which it can use Whirr to provision, such as Hadoop.
 But if you have something you don't see, [let us know] -- we'd love to work with you to [write a new entity] and [contribute it].
  
-All the code for this walkthrough (and even the JMeter script) is included in the {{examples/simple-web-cluster}}
-project which comes with Brooklyn.
+All the code for this walkthrough (and even the JMeter script) is included with
+Brooklyn as the [simple-web-cluster example]({{site.url}}/examples/simple-web-cluster).
+

@@ -6,12 +6,16 @@
 { "title": "Using brooklyn",
   "file":  "{{ site.url }}/use/index.html",
   "children": {% readj /use/toc.json %} },
-{ "title": "Developing",
+{ "title": "Contributing",
   "file": "{{ site.url }}/dev/code/index.html",
   "exclude": true,
   "children": {% readj /dev/toc.json %} },
+{ "title": "License",
+  "file": "{{ site.url }}/license/index.html",
+  "exclude": true,
+  "children": {% readj /license/toc.json %} },
 { "title": "Meta",
-  "file": "{{ site.url }}/meta/versions.html",
+  "file": "{{ site.url }}/meta/governance.html",
   "exclude": true,
   "children": {% readj /meta/toc.json %} }
 ]

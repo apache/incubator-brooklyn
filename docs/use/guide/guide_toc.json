@@ -1,9 +1,9 @@
 [
 { "title": "Start",
-  "file":  "/start/index.html" },
+  "file":  "{{ site.url }}/start/index.html" },
 { "title": "User Guide",
-  "file": "/use/guide/index.html",
+  "file": "{{ site.url }}/use/guide/index.html",
   "children": {% readj ./toc.json %} },
 { "title": "API Reference",
-  "file": "/use/api/index.html" }
+  "file": "{{ site.url }}/use/api/index.html" }
 ]

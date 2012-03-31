@@ -1,15 +1,20 @@
 [
-{ "title": "Get the Code",
+{ "title": "The Code",
   "file": "{{ site.url }}/dev/code/index.html",
   "exclude": true,
   "children": {% readj ./code/toc.json %} },
+{ "title": "Build and Test",
+  "file": "{{ site.url }}/dev/build/index.html",
+  "exclude": true,
+  "children": {% readj ./build/toc.json %} },
+{ "title": "Tips and Tricks",
+  "file": "{{ site.url }}/dev/tips/index.html",
+  "exclude": true,
+  "children": {% readj ./tips/toc.json %} },
 { "title": "Wishlist",
   "file": "{{ site.url }}/dev/wishlist.html" },
 { "title": "Resources",
   "file": "{{ site.url }}/dev/links.html" },
 { "title": "How to Contribute",
-  "file":  "{{ site.url }}/dev/contribute/index.html",
-  "exclude": true,
-  "children": {% readj ./contribute/toc.json %} }
+  "file": "{{ site.url }}/dev/how-to-contrib.html" }
 ]
-

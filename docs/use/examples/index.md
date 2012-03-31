@@ -1,7 +1,7 @@
 ---
 layout: page
 title: Examples
-toc: ../../toc.json
+toc: /toc.json
 ---
 
 We currently have the following examples on the site:
@@ -15,4 +15,4 @@ We currently have the following examples on the site:
 
 There are examples in the code also, just check out the examples/ project.
 
-**Have one of your own?**  [Add it here!](/dev/contribute/docs.html)
+**Have one of your own?**  [Add it here!]({{site.url}}/dev/tips/update-docs.html)

@@ -33,7 +33,7 @@ Writing Policies
 TODO
 -->
 
-*This section is not complete in this milestone release.*
+*This section is not complete. Feel free to [fork]({{site.url}}/dev/code) the docs and lend a hand.*
 
 ### Best Practice
 
@@ -61,11 +61,11 @@ e.g. if the earlier VM CPU cannot be increased, the TOO_HOT event may go to the 
 Order policies carefully, and mark sensors as "handled" (or potentially "swallow" them locally), so that subsequent policies and owner entities do not take superfluous (or contradictory) corrective action.
       
 
-For this milestone release, some of the mechanisms for implementing the above practices are still being developed.
+For this release, some of the mechanisms for implementing the above practices are still being developed.
 
 ### Implementation Classes
 
-*This section is not complete in this milestone release.*
+*This section is not complete. Feel free to [fork]({{site.url}}/dev/code) the docs and lend a hand.*
 
 - extend ``AbstractPolicy``, or override an existing policy
 
@@ -122,7 +122,7 @@ Implementing Policies
 TODO
 -->
 
-*This section is in development at the time of this milestone release.*
+*This section is not yet complete. Feel free to [fork]({{site.url}}/dev/code) the docs and lend a hand.*
 
 Please see the class* ``brooklyn.policy.Policy`` *and implementations.
 
