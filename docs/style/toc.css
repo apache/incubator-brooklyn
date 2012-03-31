@@ -11,7 +11,7 @@
 #sidebar_toc div.toc-2-item:hover { color: #010; }
 
 #sidebar_toc div.toc-1 { padding: 8px; margin: 4px 0px 0px 0px; }
-#sidebar_toc div.toc-1.toc-active { background: #ddd; }
+#sidebar_toc div.toc-1.toc-active { background: #D0D8D8; border-radius: 5px; }
 #sidebar_toc div.toc-1.toc-active div.toc-1-item { color: #222; }
 #sidebar_toc div.toc-2.toc-active div.toc-2-item { font-weight: bold; }
 #sidebar_toc div.toc-3.toc-active div.toc-3-item { font-weight: bold; }
@@ -24,15 +24,15 @@
 #sidebar_toc div.toc-2.toc-active div.toc-3-item:hover { color: #060; }
 
 /* otherwise level 3 menu is popup */
-#sidebar_toc div.toc-2:not(.toc-active) div.toc-3-item { color: #262; background: #aaa;
+#sidebar_toc div.toc-2:not(.toc-active) div.toc-3-item { color: #262; background: #B0B8B0;
     font-size: 98%;
     text-align: right; padding: 2px 6px 2px 6px;
     border-width: 2px; border-style: solid; border-radius: 3px;
 }
-#sidebar_toc div.toc-2:not(.toc-active) div.toc-3-item:hover { color: #030; background: #888; }
+#sidebar_toc div.toc-2:not(.toc-active) div.toc-3-item:hover { color: #030; background: #D0D8D8; }
 
 #sidebar_toc div.toc-2:not(.toc-active) div.toc-2-children-popup { 
-	display: none;
+    display: none;
 }
 #sidebar_toc div.toc-2:not(.toc-active):hover div.toc-2-children-popup { 
     display: block;
@@ -44,7 +44,7 @@
     top: -17px;
 }
 #sidebar_toc div.toc-2:not(.toc-active) div.toc-2-children { 
-	display: block;
+    display: block;
     width: 160px;
     padding: 0px 10px 0px 10px;
 }
