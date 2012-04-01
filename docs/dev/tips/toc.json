@@ -5,8 +5,6 @@
   "file": "{{ site.url }}/dev/tips/logging.html" },
 { "title": "Code Standards",
   "file": "{{ site.url }}/dev/tips/standards.html" },
-{ "title": "Release Process",
-  "file": "{{ site.url }}/dev/tips/release.html" },
 { "title": "Updating Docs",
   "file":  "{{ site.url }}/dev/tips/update-docs.html" }
 ]

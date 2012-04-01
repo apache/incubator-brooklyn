@@ -4,4 +4,8 @@ title: API Reference
 toc: ../../toc.json
 ---
 
-TODO -- JavaDoc goes here?
+*Javadoc is not available as part of this build.*
+
+Please see the [source code]({{site.url}}/dev/) to view javadoc.
+
+<!-- TODO build javadoc... but rather than put it here maybe copy directly to hosted site on release. -->

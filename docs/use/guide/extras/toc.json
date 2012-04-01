@@ -2,6 +2,8 @@
   "file":  "{{ site.url }}/use/guide/extras/index.html#web" }, 
 { "title": "Database",
   "file":  "{{ site.url }}/use/guide/extras/index.html#database" }, 
+{ "title": "NoSQL",
+  "file":  "{{ site.url }}/use/guide/extras/index.html#nosql" }, 
 { "title": "Messaging",
   "file":  "{{ site.url }}/use/guide/extras/index.html#messaging" } 
 ]

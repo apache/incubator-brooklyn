@@ -7,7 +7,8 @@ categories: [use, guide]
 ---
 <a name="introduction"></a>
 
-Policies perform the active management enabled by Brooklyn.  They can subscribe to entity sensors and be triggered by them or they can run periodically.
+Policies perform the active management enabled by Brooklyn.  
+They can subscribe to entity sensors and be triggered by them or they can run periodically.
 
 <!---
 TODO, clarify below, memebers of what?

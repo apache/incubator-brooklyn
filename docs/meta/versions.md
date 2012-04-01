@@ -4,9 +4,11 @@ title: Versions
 toc: /toc.json
 ---
 
-**Placeholder**:  This section will contain information on archived releases 
-(ideally links to binaries, documentation, and source code branch).
+Brooklyn is still in pre-release, 
+currently at snapshot version v{% readj /fields/current-snapshot-version.txt %}.
 
-Brooklyn is currently working on v{% read /fields/current-snapshot-version.txt %}.
+A GA release for 0.4.0 will be coming soon (in April)
+once we have feedback.
 
-The most recent stable release is v{% read /fields/last-stable-version.txt %}.
+This section will contain information on the current GA release 
+as well as access to snapshot and archived releases.

@@ -4,6 +4,8 @@ title: Walkthrough
 toc: /toc.json
 ---
 
+### Intro
+
 Brooklyn makes it easy to describe how to launch and manage 
 sophisticated distributed applications.
 Let's start with an example of a three tier application
@@ -23,11 +25,14 @@ public class WebClusterDatabaseExample extends AbstractApplication {
 }
 {% endhighlight %}
 
-Launch this Brooklyn "Application", specifying a target location,
+
+### Runtime: the Web Console
+
+Run this Brooklyn "Application", specifying a target location,
 and our application is deployed.
-Amazon has been used here, but lots of targets are supported (using [jclouds](http://jclouds.org))
-as well as fixed IP addresses or even everything to localhost (very handy for dev/test,
-and with port conflicts resolved automatically).
+Amazon is used in these screenshots, but lots of targets are supported (using [jclouds](http://jclouds.org))
+including fixed IP addresses and private clouds, 
+or just localhost (very handy for dev/test, and with port conflicts resolved automatically!).
 
 [![Web Console](walkthrough-webconsole-map-w700.png "Web Console")](walkthrough-webconsole-map.png) 
 
@@ -38,6 +43,8 @@ aggregates these for clusters and other groups (using "enrichers"),
 and exposes operations ("effectors") that can be performed on entities.
 
 [![Web Console Details](walkthrough-webconsole-details-w700.png "Web Console Details")](walkthrough-webconsole-details.png) 
+
+### Some Configuration and Management
 
 Of course in the real world, application deployments are more interesting;
 they do things and need configuration.  For instance you might need to:
@@ -109,7 +116,7 @@ attempting to keep it within healthy limits.
 A separate policy operates at the ``Controlled`` cluster to ensure the
 load-balancer is updated as the pool of web servers expands and contracts.
 
-Let us fire up a JMeter session and blast the Nginx address.
+Fire up a JMeter session and blast the Nginx address.
 The resizer policy scales up our cluster:
 
 [![Web Cluster Scaling with the Resizer Policy](walkthrough-webconsole-scaling-w700.png "Screenshot of Web Cluster Scaling with the Resizer Policy")](walkthrough-webconsole-scaling.png) 
@@ -117,7 +124,44 @@ The resizer policy scales up our cluster:
 For your applications, you might want to mix in other data stores, messaging systems, or on-line services including PaaS.
 Brooklyn supports some of these out-of-the-box, including a wide-range of tools which it can use Whirr to provision, such as Hadoop.
 But if you have something you don't see, [let us know] -- we'd love to work with you to [write a new entity] and [contribute it].
+
+
+### Run it Yourself
  
 All the code for this walkthrough (and even the JMeter script) is included with
-Brooklyn as the [simple-web-cluster example]({{site.url}}/examples/simple-web-cluster).
+Brooklyn as the ``simple-web-cluster`` example,
+described [in detail here]({{site.url}}/examples/webcluster).
 
+
+
+<!--
+
+Alternatively you can just add a ``main`` method to the Groovy class as follows:
+
+{% highlight java %}
+    public static void main(String[] argv) {
+        ArrayList args = new ArrayList(Arrays.asList(argv));
+        int port = CommandLineUtil.getCommandLineOptionInt(args, "--port", 8081);
+        List<Location> locations = CommandLineLocations.getLocationsById(args ?: [DEFAULT_LOCATION])
+
+        def app = new WebClusterDatabaseExample(name:'Brooklyn WebApp Cluster with Database example')
+            
+        BrooklynLauncher.manage(app, port)
+        app.start(locations)
+        Entities.dumpInfo(app)
+    }
+{% endhighlight %}
+
+Compile and run this with the [``brooklyn-all`` jar]({{site.url}}/start/download.html) on the classpath,
+pointing at your favourite WAR on your filesystem. 
+(If the ``import`` packages aren't picked up correctly,
+you can cheat by looking at [the file in Github](https://github.com/brooklyncentral/brooklyn/blob/master/examples/simple-web-cluster/src/main/java/brooklyn/demo/WebClusterDatabaseExample.groovy);
+and you'll find a sample WAR which uses the database as configured above 
+[here](https://http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/io/brooklyn/).)
+ TODO example webapp url 
+ 
+If you want to adventure beyond ``localhost`` (the default),
+simply supply the your favourite cloud (e.g. ``aws-ec2:eu-west-1``)
+with credentials set up as described [here]({{ site.url }}/use/guide/management/index.html#startup-config).
+
+-->

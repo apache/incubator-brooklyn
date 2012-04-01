@@ -1,6 +1,5 @@
 class TomcatClusterApp extends AbstractApplication {
-	DynamicWebAppCluster cluster = new DynamicWebAppCluster(
-		owner : this,
+	DynamicWebAppCluster cluster = new DynamicWebAppCluster(this
 		initialSize: 2,
 		factory: { properties -> new TomcatServer(properties) },
 		httpPort: 8080, 

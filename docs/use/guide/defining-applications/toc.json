@@ -3,6 +3,5 @@
 { "title": "Advanced Concepts",
   "file":  "{{ site.url }}/use/guide/defining-applications/advanced-concepts.html" }, 
 { "title": "Common Usage",
-  "file":  "{{ site.url }}/use/guide/defining-applications/common-usage.html" },
-{ "title": "Examples",
-  "file": "{{ site.url }}/use/guide/defining-applications/examples.html" }]
+  "file":  "{{ site.url }}/use/guide/defining-applications/common-usage.html" }
+]

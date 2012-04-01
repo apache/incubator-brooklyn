@@ -27,6 +27,14 @@ See instructions below for specific IDEs.
     
 ## Eclipse
 
+If you're an Eclipse user, you'll probably want the Groovy, Maven, and Git plugins. 
+Via Help -> Install New Software, or from the Eclipse Marketplace,
+we recommend:
+
+{% readj /use/guide/quickstart/eclipse.include.md %}
+
+Once you've got the code imported, the following hints may be helpful:
+
 * You may need to ensure ``src/main/{java,resources}`` is created in each project dir,
   and same for ``src/test/{java,resources}`` *if* there are tests (``src/test`` exists):
 
