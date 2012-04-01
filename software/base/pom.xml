@@ -10,7 +10,7 @@
 		Base classes for Brooklyn software process entities
 	</description>
     <parent>
-        <groupId>brooklyn</groupId>
+        <groupId>io.brooklyn</groupId>
         <artifactId>brooklyn-parent</artifactId>
         <version>0.4.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
         <relativePath>../../pom.xml</relativePath>
@@ -18,7 +18,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>brooklyn</groupId>
+            <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-core</artifactId>
         </dependency>
         
@@ -28,7 +28,7 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>brooklyn</groupId>
+            <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-core</artifactId>
             <version>${project.version}</version>
             <classifier>tests</classifier>

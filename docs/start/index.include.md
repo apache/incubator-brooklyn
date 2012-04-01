@@ -2,12 +2,21 @@
 
 **brooklyn** is a library that simplifies application deployment and management.
 
-For **deployment**, it is designed to tie in with tools like Whirr, Chef, and Puppet,
-as well as platform-as-a-service offerings like OpenShift and CloudFoundry,
-or just POBS (plain-old-bash-scripts).
+For **deployment**, it is designed to tie in with other tools, 
+giving single-click deploy and adding the concepts of 
+manageable clusters and fabrics:
+
+* many common software entities available out-of-the-box
+* integrates with [Apache Whirr](http://whirr.apache.org) -- and thereby Chef and Puppet --
+  to deploy well-known services such as Hadoop and elasticsearch
+  (or use POBS, plain-old-bash-scripts)
+* use PaaS's such as OpenShift, alongside self-built clusters, for maximum flexibility
+
 Brooklyn makes roll-out an integral part of the DevOps chain,
 as code which can be version-controlled and automatically tested,
-and portable across many clouds, fixed IP machines, or even localhost.
+and portable across many clouds or fixed IP machines,
+using [jclouds](http://jclouds.org),
+or even localhost for quick.
 
 Brooklyn's main emphasis however is **management**:
 management policies are an integral part of the deployment descriptor,
