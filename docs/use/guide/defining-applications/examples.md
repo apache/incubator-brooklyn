@@ -12,7 +12,7 @@ If you have a Maven-based project, integrate this XML fragment with your pom.xml
 {% highlight xml %}
 <dependencies>
 	<dependency>
-		<groupId>brooklyn</groupId>
+		<groupId>io.brooklyn</groupId>
 		<artifactId>brooklyn-launcher</artifactId>
 		<version>0.3.0-SNAPSHOT</version>
 		<classifier>with-dependencies</classifier>

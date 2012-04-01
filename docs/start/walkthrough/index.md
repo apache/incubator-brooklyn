@@ -52,7 +52,7 @@ on the classpath, but a range of URL formats is supported.
 The "dependent inter-process configuration" -- giving the database's URL
 to the webapps -- we'll do here with a JVM system property,
 but you're free to use any mechanism you wish.
-Under the covers, {{valueWhenAttributeReady}} is monitoring a sensor from MySQL
+Under the covers, ``valueWhenAttributeReady`` is monitoring a sensor from MySQL
 and generating a string to pass to the webapp software processes;
 due to the use of closures, the Brooklyn webapp entities will automatically
 block "at the last moment" when the value is needed
@@ -103,10 +103,10 @@ and groups themselves can be hierarchical.
 It's also handy that often Brooklyn creates the entities,
 so it knows what the hierarchy is.
 
-Under the covers, this {{ResizerPolicy}} attaches to any {{Resizable}} entity
-(exposing a {{resize}} effector), and monitors a specified sensor (or function)
+Under the covers, this ``ResizerPolicy`` attaches to any ``Resizable`` entity
+(exposing a ``resize`` effector), and monitors a specified sensor (or function)
 attempting to keep it within healthy limits.
-A separate policy operates at the {{Controlled}} cluster to ensure the
+A separate policy operates at the ``Controlled`` cluster to ensure the
 load-balancer is updated as the pool of web servers expands and contracts.
 
 Let us fire up a JMeter session and blast the Nginx address.

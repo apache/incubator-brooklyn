@@ -23,8 +23,8 @@ if [[ -z "$JAVA_OPTS" ]] ; then
 fi
 
 if [[ -z "$BROOKLYN_ALL_JAR" ]] ; then
-  if [[ -f ~/.m2/repository/brooklyn/brooklyn-all/$BROOKLYN_VERSION/brooklyn-all-${BROOKLYN_VERSION}-with-dependencies.jar ]] ; then
-    BROOKLYN_ALL_JAR=~/.m2/repository/brooklyn/brooklyn-all/$BROOKLYN_VERSION/brooklyn-all-${BROOKLYN_VERSION}-with-dependencies.jar
+  if [[ -f ~/.m2/repository/io/brooklyn/brooklyn-all/$BROOKLYN_VERSION/brooklyn-all-${BROOKLYN_VERSION}-with-dependencies.jar ]] ; then
+    BROOKLYN_ALL_JAR=~/.m2/repository/io/brooklyn/brooklyn-all/$BROOKLYN_VERSION/brooklyn-all-${BROOKLYN_VERSION}-with-dependencies.jar
   elif [[ -f ../../usage/all/target/brooklyn-all-${BROOKLYN_VERSION}-with-dependencies.jar ]] ; then
     BROOKLYN_ALL_JAR=../../usage/all/target/brooklyn-all-${BROOKLYN_VERSION}-with-dependencies.jar
   elif [[ -z "$CLASSPATH" ]] ; then

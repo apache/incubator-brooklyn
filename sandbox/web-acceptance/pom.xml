@@ -6,7 +6,7 @@
     <name>Brooklyn Web Console Acceptance Tests</name>
 
     <parent>
-        <groupId>brooklyn</groupId>
+        <groupId>io.brooklyn</groupId>
         <artifactId>brooklyn-parent</artifactId>
         <version>0.4.0-SNAPSHOT</version>   <!-- BROOKLYN_VERSION -->
         <relativePath>../../pom.xml</relativePath>
