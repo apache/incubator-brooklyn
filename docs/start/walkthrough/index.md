@@ -77,7 +77,8 @@ public class WebClusterDatabaseExample extends AbstractApplication {
         web.factory.configure(
             httpPort: "8080+", 
             (JBoss7Server.JAVA_OPTIONS):
-                // -Dbrooklyn.example.db.url="jdbc:mysql://192.168.1.2:3306/visitors?user=brooklyn\\&password=br00k11n"
+                // -Dbrooklyn.example.db.url="jdbc:mysql://192.168.1.2:3306
+                //     /visitors?user=brooklyn\\&password=br00k11n"
                 ["brooklyn.example.db.url": valueWhenAttributeReady(mysql, MySqlNode.MYSQL_URL,
                     { "jdbc:"+it+"visitors?user=brooklyn\\&password=br00k11n" }) ]);
     }
@@ -121,10 +122,6 @@ The resizer policy scales up our cluster:
 
 [![Web Cluster Scaling with the Resizer Policy](walkthrough-webconsole-scaling-w700.png "Screenshot of Web Cluster Scaling with the Resizer Policy")](walkthrough-webconsole-scaling.png) 
 
-For your applications, you might want to mix in other data stores, messaging systems, or on-line services including PaaS.
-Brooklyn supports some of these out-of-the-box, including a wide-range of tools which it can use Whirr to provision, such as Hadoop.
-But if you have something you don't see, [let us know] -- we'd love to work with you to [write a new entity] and [contribute it].
-
 
 ### Run it Yourself
  
@@ -132,6 +129,14 @@ All the code for this walkthrough (and even the JMeter script) is included with
 Brooklyn as the ``simple-web-cluster`` example,
 described [in detail here]({{site.url}}/use/examples/webcluster).
 
+For your applications, you might want to mix in other data stores, messaging systems, or on-line services including PaaS.
+Brooklyn supports some of these out-of-the-box, including a wide-range of tools which it can use Whirr to provision, such as Hadoop.
+But if you have something you don't see, 
+[let us know]({{site.url}}/meta/contact.html) -- 
+we want to work with you to 
+[write a new entity]({{site.url}}/dev/code/entity.html) or
+[policy]({{site.url}}/dev/code/policy.html) 
+and [contribute it]({{site.url}}/dev/how-to-contrib.html).
 
 
 <!--
