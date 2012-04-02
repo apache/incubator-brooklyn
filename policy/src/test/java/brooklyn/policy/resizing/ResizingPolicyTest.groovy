@@ -281,9 +281,18 @@ class ResizingPolicyTest {
         
         // After suitable delay, grows to desired
         long emitTime = System.currentTimeMillis()
-        resizable.emit(ResizingPolicy.POOL_HOT, message(1, 61L, 1*10L, 1*20L)) // would grow to 4
+        def need4 = message(1, 61L, 1*10L, 1*20L)
+        resizable.emit(ResizingPolicy.POOL_HOT, need4) // would grow to 4
+        int emitCount = 0;
         
-        executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 4) }
+        executeUntilSucceeds(timeout:TIMEOUT_MS) {
+            if (System.currentTimeMillis() - emitTime > (2+emitCount)*resizeUpStabilizationDelay) {
+                //first one may not have been received, in a registration race 
+                resizable.emit(ResizingPolicy.POOL_HOT, need4)
+                emitCount++;
+            }
+            assertEquals(resizable.currentSize, 4) 
+        }
         long resizeDelay = System.currentTimeMillis() - emitTime
         assertTrue(resizeDelay >= (resizeUpStabilizationDelay-EARLY_RETURN_MS), "resizeDelay=$resizeDelay")
     }
@@ -331,7 +340,7 @@ class ResizingPolicyTest {
 
     @Test
     public void testResizeDownStabilizationDelayResizesAfterDelay() {
-        long resizeDownStabilizationDelay = 3000L
+        long resizeDownStabilizationDelay = 1000L
         long minPeriodBetweenExecs = 0
         resizable.removePolicy(policy)
         
@@ -341,9 +350,19 @@ class ResizingPolicyTest {
         
         // After suitable delay, grows to desired
         long emitTime = System.currentTimeMillis()
-        resizable.emit(ResizingPolicy.POOL_COLD, message(2, 1L, 2*10L, 2*20L)) // would shrink to 1
+        def needJust1 = message(2, 1L, 2*10L, 2*20L);
+        resizable.emit(ResizingPolicy.POOL_COLD, needJust1) // would shrink to 1
+        int emitCount = 0;
         
-        executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 1) }
+        executeUntilSucceeds(timeout:TIMEOUT_MS) {
+            if (System.currentTimeMillis() - emitTime > (2+emitCount)*resizeDownStabilizationDelay) {
+                //first one may not have been received, in a registration race
+                resizable.emit(ResizingPolicy.POOL_COLD, needJust1) // would shrink to 1
+                emitCount++;
+            }
+            assertEquals(resizable.currentSize, 1)
+        }
+
         long resizeDelay = System.currentTimeMillis() - emitTime
         assertTrue(resizeDelay >= (resizeDownStabilizationDelay-EARLY_RETURN_MS), "resizeDelay=$resizeDelay")
     }
