@@ -24,41 +24,41 @@
     });
 	</script>
 
-
-  <link href='http://fonts.googleapis.com/css?family=Droid+Sans+Mono' rel='stylesheet' type='text/css'>
 </head>
 
 <body>
   <div id="all">
 
     <div id="page_header" class="page_row">
+     <table width="100%"><tr><td rowspan="2">
       <div id="header_logo">
         <a href = "/"><img height="68" width="220" border='0' src="{{ site.url }}/style/brooklyn-logo.png"/></a>
       </div>
+     </td><td align="right" valign="top" width="100%">
       <div id="search_box">
         <form id="simple_google" action="http://www.google.com/search" method="get">
 		<input name="q" type="hidden" />
 		<input name="qfront" type="text" placeholder='Search'/></p>
 		</form>
       </div>
+     </td></tr>
+     <tr><td valign="bottom">
+      {% include breadcrumbs.html %}
+     </td></tr></table>
     </div>
 
-<hr/>
+
+<div style="
+    background-color: #b8c0b8;
+    width: 100%;
+    height: 20px;
+    margin: 6px 0px 12px 0px;
+    border-radius: 9px;
+"></div>
 
     <div class="page_row">
 
       <div id="page_content">
-<!-- FIND HIERARCHY IN TOC AND USE THAT
-		<div class="breadcrumbs">
-		{% assign b = " " %}
-		{% capture b %}{{site.base_dir}}{% endcapture %}
-		<span class="breadcrumb-item"><a class='breadcrumb' href="{{site.base_dir}}/">Home</a></span>
-		{% for p in page.categories %}
-		<span class="bcsep">&raquo;</span> <span class="breadcrumb-item"><a class='breadcrumb' href="{{b}}/{{p}}">{{p}}</a></span>
-		{% capture b %}{{b}}/{{p}}{% endcapture %}
-		{%endfor%}
-		</div>
- -->
 		
 		<h1 id="header_title">{{ page.title }}</h1>
 		<hr/>

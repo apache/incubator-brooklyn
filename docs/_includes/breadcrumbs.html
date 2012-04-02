@@ -1,0 +1,62 @@
+{% if page.toc %}
+  {% assign p = page.toc %}
+{% else %}
+  {% assign p = 'toc.json' %}
+{% endif %}
+{% capture toc_string %}{% readj p %}{% endcapture %}
+{% jsonball toc from var toc_string %}
+
+{% capture pagesiteurl %}{{ site.url }}{{ page.url }}{% endcapture %}
+
+{% for x in toc %}
+    {% if pagesiteurl == x.file %}
+        {% capture l1name %}{{ x.title }}{% endcapture %}
+        {% capture l1link %}{{ x.file }}{% endcapture %}
+    {% endif %}
+    {% if x.children %}{% for x2 in x.children %}
+        {% if pagesiteurl == x2.file %}
+            {% capture l1name %}{{ x.title }}{% endcapture %}
+            {% capture l1link %}{{ x.file }}{% endcapture %}
+            {% capture l2name %}{{ x2.title }}{% endcapture %}
+            {% capture l2link %}{{ x2.file }}{% endcapture %}
+        {% endif %}
+        {% if x2.children %}{% for x3 in x2.children %}
+            {% if pagesiteurl == x3.file %}
+                {% capture l1name %}{{ x.title }}{% endcapture %}
+                {% capture l1link %}{{ x.file }}{% endcapture %}
+                {% capture l2name %}{{ x2.title }}{% endcapture %}
+                {% capture l2link %}{{ x2.file }}{% endcapture %}
+                {% capture l3name %}{{ x3.title }}{% endcapture %}
+                {% capture l3link %}{{ x3.file }}{% endcapture %}
+            {% endif %}
+        {% endfor %}{% endif %}
+    {% endfor %}{% endif %}
+{% endfor %}
+
+{% if l1name %}{% else %}
+    {% capture l1name %}Home{% endcapture %}
+    {% capture l1link %}{{ site.url }}{% endcapture %}
+    {% capture l2name %}{{ page.title }}{% endcapture %}
+    {% capture l2link %}{{ pagesiteurl }}{% endcapture %}
+{% endif %}
+
+<div class="breadcrumbs">
+    <span class="breadcrumb-item bc1"><a class='breadcrumb bc1' href="{{l1link}}">{{ l1name }}</a></span>
+    {% if l2name %}
+        <span class="bcsep bc1">&raquo;</span> <span class="breadcrumb-item bc2"><a class='breadcrumb bc2' href="{{l2link}}">{{l2name}}</a></span>
+        {% if l3name %}
+            <span class="bcsep bc2">&raquo;</span> <span class="breadcrumb-item bc2"><a class='breadcrumb bc3' href="{{l3link}}">{{l3name}}</a></span>
+        {% endif %}
+    {% endif %}
+</div>
+
+<!-- FIND HIERARCHY IN TOC AND USE THAT
+        {% assign b = " " %}
+        {% capture b %}{{site.base_dir}}{% endcapture %}
+        <span class="breadcrumb-item"><a class='breadcrumb' href="{{site.base_dir}}/">Home</a></span>
+        {% for p in page.categories %}
+        <span class="bcsep">&raquo;</span> <span class="breadcrumb-item"><a class='breadcrumb' href="{{b}}/{{p}}">{{p}}</a></span>
+        {% capture b %}{{b}}/{{p}}{% endcapture %}
+        {%endfor%}
+ -->
+ 
