@@ -331,7 +331,7 @@ class ResizingPolicyTest {
 
     @Test
     public void testResizeDownStabilizationDelayResizesAfterDelay() {
-        long resizeDownStabilizationDelay = 1000L
+        long resizeDownStabilizationDelay = 3000L
         long minPeriodBetweenExecs = 0
         resizable.removePolicy(policy)
         
