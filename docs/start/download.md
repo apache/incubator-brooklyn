@@ -7,11 +7,11 @@ toc: ../toc.json
 ## Contents
 
 * [A Single Jar](#alljar)
-* [Examples](#alljar)
-* [Maven](#alljar)  
-* [Source](#alljar)
+* [Examples](#examples)
+* [Maven](#maven)  
+* [Source Code](#source)
 
-
+<a name="alljar"></a>
 ## The All Jar
 
 You can grab a single JAR containing all of Brooklyn and its dependencies here:
@@ -21,7 +21,7 @@ You can grab a single JAR containing all of Brooklyn and its dependencies here:
 
 Just download your preferred flavour and add it to your classpath.
 
-
+<a name="examples"></a>
 ## Examples
 
 You can checkout 
@@ -33,7 +33,7 @@ This will take care of downloading Brooklyn and the dependencies.
 
 A good entry point is the [Simple Web Cluster]({{site.url}}/use/examples/webcluster.html).
 
-
+<a name="maven"></a>
 ## Maven
 
 If you use maven, you can add Brooklyn with the following entries in your pom:
@@ -71,8 +71,8 @@ and some of ``brooklyn-{software-{webapp,database,messaging},systems-hadoop}``.
 
 **TODO: we are moving to mavencentral so the repositories section will shortly be unnecessary**
 
-
-## Sources
+<a name="source"></a>
+## Source Code
 
 Full source is at [github.com/brooklyncentral/brooklyn](http://github.com/brooklyncentral/brooklyn).
 Information on working with the source is [here]({{ site.url }}/dev/code).
