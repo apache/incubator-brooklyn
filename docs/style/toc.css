@@ -27,7 +27,7 @@
 #sidebar_toc div.toc-2:not(.toc-active) div.toc-3-item { color: #262; background: #B0B8B0;
     font-size: 98%;
     text-align: right; padding: 2px 6px 2px 6px;
-    border-width: 2px; border-style: solid; border-radius: 3px;
+    border-width: 2px; border-style: solid; border-radius: 5px;
 }
 #sidebar_toc div.toc-2:not(.toc-active) div.toc-3-item:hover { color: #030; background: #D0D8D8; }
 

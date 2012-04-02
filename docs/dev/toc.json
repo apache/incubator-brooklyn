@@ -13,8 +13,16 @@
   "children": {% readj ./tips/toc.json %} },
 { "title": "Wishlist",
   "file": "{{ site.url }}/dev/wishlist.html" },
-{ "title": "Resources",
-  "file": "{{ site.url }}/dev/links.html" },
+{ "title": "Links",
+  "file": "{{ site.url }}/dev/links.html",
+  "children": [
+    { "title": "Github code",
+      "file": "https://github.com/brooklyncentral/brooklyn" },
+    { "title": "Github issues",
+      "file": "https://github.com/brooklyncentral/brooklyn/issues" },
+    { "title": "Maven snapshots",
+      "file": "http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/io/brooklyn/" }      
+  ] },
 { "title": "How to Contribute",
   "file": "{{ site.url }}/dev/how-to-contrib.html" }
 ]

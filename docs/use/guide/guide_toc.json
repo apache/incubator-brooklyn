@@ -16,7 +16,8 @@
   "file": "{{ site.url }}/use/api/index.html" },
   
 { "title": "Contributing",
-  "file": "{{ site.url }}/dev/code/index.html" },
+  "file": "{{ site.url }}/dev/code/index.html",
+  "children": {% readj /dev/toc.json %} },
 { "title": "License",
   "file": "{{ site.url }}/license/index.html" }  
 ]}

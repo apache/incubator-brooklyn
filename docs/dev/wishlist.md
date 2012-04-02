@@ -6,7 +6,8 @@ toc: /toc.json
 
 This page records some of the additions planned and requested
 (approximately a roadmap).
-If you're interested in helping, scan Github for any related issues,
+If you're interested in helping, scan the [issues list](https://github.com/brooklyncentral/brooklyn/issues)
+on Github for anything related,
 email the list, and get started!
 
 ## Entities

@@ -1,9 +1,3 @@
----
-layout: page
-title: Whirr Hadoop Cluster
-toc: /toc.json
----
-
 {% readj ../before-begin.include.md %}
 
 The project ``examples/hadoop-and-whirr`` includes deployment descriptors 
@@ -12,7 +6,7 @@ including setting up a Hadoop recipe.
 
 ## Background
 
-[Apache Whirr](whirr.apache.org) is an open-source project providing
+[Apache Whirr](http://whirr.apache.org) is an open-source project providing
 a set of libraries for launching cloud services in an easy, repeatable, and reliable way.
 
 Brooklyn can use Whirr to launch a wide variety of services
