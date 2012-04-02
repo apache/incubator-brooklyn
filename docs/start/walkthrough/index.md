@@ -130,7 +130,7 @@ But if you have something you don't see, [let us know] -- we'd love to work with
  
 All the code for this walkthrough (and even the JMeter script) is included with
 Brooklyn as the ``simple-web-cluster`` example,
-described [in detail here]({{site.url}}/examples/webcluster).
+described [in detail here]({{site.url}}/use/examples/webcluster).
 
 
 
