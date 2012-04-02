@@ -1,0 +1,37 @@
+{% assign p = '/toc-menu.json' %}
+{% capture tocm_string %}{% readj p %}{% endcapture %}
+{% jsonball tocm from var tocm_string %}
+
+{% capture pagesiteurl %}{{ site.url }}{{ page.url }}{% endcapture %}
+
+<div id="topbar">
+<table height="100%"><tr style="vertical-align: middle;"><td width="100%" align="left" style="padding-bottom: 12px; padding-left: 18px;">
+{% for x in tocm %}
+  {% capture ifactive %}
+    {% if pagesiteurl == x.file %}toc-active
+      {% else %}{% if x.children %}{% for x2 in x.children %}
+        {% if pagesiteurl == x2.file %}toc-active
+          {% else %}{% if x2.children %}{% for x3 in x2.children %}
+            {% if pagesiteurl == x3.file %}toc-active
+              {% else %}{% if x3.children %}{% for x4 in x3.children %}
+                {% if pagesiteurl == x4.file %}toc-active{% endif %}
+              {% endfor %}{% endif %}
+            {% endif %}
+          {% endfor %}{% endif %}
+        {% endif %}
+      {% endfor %}{% endif %}
+    {% endif %}
+  {% endcapture %}
+  {% capture ifactive %}{{ ifactive | trim }}{% endcapture %}
+  <a class="topbar-item {{ifactive}}" href="{{ x.file }}">{{x.title}}</a>
+{% endfor %}
+</td><td align="right" style="padding-top: 5px; padding-right: 18px;">
+      <div id="search_box">
+        <form id="simple_google" action="http://www.google.com/search" method="get">
+        <input name="q" type="hidden" />
+        <input name="qfront" type="text" placeholder='Search'/></p>
+        </form>
+      </div>
+</td></table>
+
+</div>

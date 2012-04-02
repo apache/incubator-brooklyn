@@ -93,3 +93,43 @@ div.breadcrumbs{
     clear: both;
     float: right;
 }
+
+#top-right-quick-links a {
+    color: #666; 
+    font-size: 80%; 
+    text-transform: uppercase; 
+}
+#top-right-quick-links a:hover {
+    color: #182018;
+    text-decoration: none; 
+}
+
+#topbar {
+    background-color: #b8c0b8;
+    width: 100%;
+    height: 35px;
+    margin: 6px 0px 12px 0px;
+    border-width: 1px;
+    border-radius: 9px;
+    border-color: #80A080;
+    border-style: solid;
+    font-size: 90%;
+}
+#topbar a {
+    padding: 4px 9px;
+    margin: 2px 4px;
+    color: #363;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #b8c0b8;
+}
+#topbar a:hover {
+    border-color: #606460;
+    background-color: #c8d0c8;
+    color: #183018 !important;
+    text-decoration: none;
+}
+#topbar a.toc-active {
+	color: #505450;
+}
+	
