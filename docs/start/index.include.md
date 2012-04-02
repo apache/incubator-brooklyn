@@ -45,7 +45,4 @@ We're still near the beginning of figuring this out:
   including [examples]({{site.url}}/use/examples/), or other [documentation]({{site.url}}/start/docs-summary.html).
 
 If you like it, or if you have ideas how it could be better,
-join the discussion on the user and developer groups
-([details here]({{site.url}}/meta/contact.html)),
-or email us directly at ``brooklyn-users@googlegroups.com``.
-
+[join the discussion]({{site.url}}/meta/contact.html).
