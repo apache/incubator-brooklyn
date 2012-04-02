@@ -35,7 +35,7 @@ class ResizingPolicyTest {
     }
     
     
-    private static long TIMEOUT_MS = 5000
+    private static long TIMEOUT_MS = 10000
     private static long SHORT_WAIT_MS = 250
     private static long OVERHEAD_DURATION_MS = 250
     private static long EARLY_RETURN_MS = 10
