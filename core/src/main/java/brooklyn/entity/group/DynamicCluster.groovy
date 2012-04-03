@@ -117,27 +117,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
                 addedEntities.each { entity ->
                     tasks.put(entity, entity.invoke(Startable.START, [locations:[ location ]]))
                 }
-
-                // TODO Could have CompoundException, rather than propagating first
-                Throwable toPropagate = null
-                tasks.each { Entity entity, Task task ->
-                    try {
-                        try {
-                            task.get()
-                        } catch (Throwable t) {
-                            throw unwrapException(t)
-                        }
-                    } catch (EntityStartException e) {
-                        logger.error("Cluster $this failed to start entity $entity", e)
-                        removeNode(entity)
-                    } catch (InterruptedException e) {
-                        throw e
-                    } catch (Throwable t) {
-                        if (!toPropagate) toPropagate = t
-                    }
-                }
-                if (toPropagate) throw toPropagate
-                
+                waitForTasksOnEntityStart(tasks);                
             } else if (delta < 0) {
                 (-delta).times { removedEntities += removeNode() }
 
@@ -150,6 +130,28 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         return currentSize
     }
 
+    protected void waitForTasksOnEntityStart(Map tasks) {
+        // TODO Could have CompoundException, rather than propagating first
+        Throwable toPropagate = null
+        tasks.each { Entity entity, Task task ->
+            try {
+                try {
+                    task.get()
+                } catch (Throwable t) {
+                    throw unwrapException(t)
+                }
+            } catch (EntityStartException e) {
+                logger.error("Cluster $this failed to start entity $entity", e)
+                removeNode(entity)
+            } catch (InterruptedException e) {
+                throw e
+            } catch (Throwable t) {
+                if (!toPropagate) toPropagate = t
+            }
+        }
+        if (toPropagate) throw toPropagate
+    }
+    
     protected Throwable unwrapException(Throwable e) {
         if (e instanceof ExecutionException) {
             return unwrapException(e.cause)

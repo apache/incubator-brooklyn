@@ -80,7 +80,11 @@ public class DynamicFabric extends AbstractEntity implements Startable {
                 tasks.put(e, task)
             }
         }
+        waitForTasksOnStart(tasks)
+        setAttribute(SERVICE_UP, true)
+    }
 
+    protected void waitForTasksOnStart(Map tasks) {
         // TODO Could do best-effort for waiting for remaining tasks, rather than failing on first?
         tasks.each { Entity entity, Task task ->
             try {
@@ -89,10 +93,8 @@ public class DynamicFabric extends AbstractEntity implements Startable {
                 throw e.cause
             }
         }
-
-        setAttribute(SERVICE_UP, true)
     }
-
+    
     public void stop() {
         Collection<Entity> stoppableChildren = ownedChildren.findAll({it instanceof Startable})
         Task invoke = Entities.invokeEffectorList(this, stoppableChildren, Startable.STOP)
