@@ -29,6 +29,9 @@ You can run this (on *nix or Mac) as follows:
 {% endhighlight %}
 
 Then visit the webapp on port 8080, or the Brooklyn console on 8081.  (Default credentials are admin/password.)
+Note that the installation may take some time, because the default deployment downloads the software from
+the official repos.  You can monitor start-up activity for each entity in the ``Activity`` pane in the management console,
+and see more detail by tailing the log file (``tail -f brooklyn.log``).
 
 With appropriate setup (as described [here]({{ site.url }}/use/guide/management/index.html#startup-config)) 
 this can also be deployed to your favourite cloud, let's pretend it's Amazon Ireland, as follows: 
