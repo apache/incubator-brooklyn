@@ -47,13 +47,14 @@ public class AbstractPerformanceTest {
         double numPerSec = ((double)numIterations/durationMillis * 1000);
         double numPerSecIncludingPostIteration = ((double)numIterations/(durationMillis+postIterationDurationMillis) * 1000);
         
-        String msg = prefix+": "+durationMillis+"ms for "+numIterations+" iterations"+
+        String msg1 = prefix+": "+durationMillis+"ms for "+numIterations+" iterations"+
                     (postIterationPhase != null ? "(+"+postIterationDurationMillis+"ms for post-iteration phase)" : "")+
-                    ": numPerSec="+numPerSec+
-                    (postIterationPhase != null ? "(or "+numPerSecIncludingPostIteration+" per sec including post-iteration phase time)" : "");
+                    ": numPerSec="+numPerSec;
+        String msg2 = (postIterationPhase != null ? " (or "+numPerSecIncludingPostIteration+" per sec including post-iteration phase time)" : "");
         
-        LOG.info(msg);
-        assertTrue(numPerSecIncludingPostIteration >= minRatePerSec, msg);
+        LOG.info(msg1+msg2);
+        System.out.println("\n"+msg1+"\n"+msg2+"\n");  //make it easier to see in the console in eclipse :)
+        assertTrue(numPerSecIncludingPostIteration >= minRatePerSec, msg1+msg2);
     }
     
     protected long measure(String prefix, int numIterations, Runnable r) {

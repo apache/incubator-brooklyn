@@ -30,5 +30,8 @@ public class StackTraceSimplifier {
     public static List<StackTraceElement> cleanStackTrace(List<StackTraceElement> st) {
         return st.findAll { element -> isStackTraceElementUseful(element) }
     }
-    
+    public static StackTraceElement[] cleanStackTrace(StackTraceElement[] st) {
+        cleanStackTrace(st as List) as StackTraceElement[];
+    }
+
 }

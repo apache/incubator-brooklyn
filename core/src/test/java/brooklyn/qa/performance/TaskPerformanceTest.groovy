@@ -33,9 +33,9 @@ public class TaskPerformanceTest extends AbstractPerformanceTest {
         executionManager = app.managementContext.executionManager
     }
     
+    public static final int numIterations = 100000;
     @Test(groups=["Integration", "Acceptance"])
     public void testExecuteSimplestRunnable() {
-        int numIterations = 10000
         double minRatePerSec = 1000
         
         final AtomicInteger counter = new AtomicInteger();
@@ -53,7 +53,6 @@ public class TaskPerformanceTest extends AbstractPerformanceTest {
     
     @Test(groups=["Integration", "Acceptance"])
     public void testExecuteRunnableWithTags() {
-        int numIterations = 10000
         double minRatePerSec = 1000
         
         final AtomicInteger counter = new AtomicInteger();
@@ -73,7 +72,6 @@ public class TaskPerformanceTest extends AbstractPerformanceTest {
     
     @Test(groups=["Integration", "Acceptance"])
     public void testExecuteWithSingleThreadedScheduler() {
-        int numIterations = 10000
         double minRatePerSec = 1000
 
         executionManager.setTaskSchedulerForTag("singlethreaded", SingleThreadedScheduler.class);

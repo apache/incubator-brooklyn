@@ -21,23 +21,6 @@ import brooklyn.util.internal.LanguageUtils
 
 import com.google.common.base.Objects
 
-public class BasicTaskStub implements TaskStub {
-    final String id = LanguageUtils.newUid()
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(id)
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        return LanguageUtils.equals(this, obj, "id")
-    }
-
-    @Override
-    public String toString() { "Task[${id}]" }
-}
-
 /**
  * The basic concrete implementation of a {@link Task} to be executed.
  *
@@ -53,7 +36,7 @@ public class BasicTaskStub implements TaskStub {
  *
  * @see BasicTaskStub
  */
-public class BasicTask<T> extends BasicTaskStub implements Task<T> {
+public class BasicTask2<T> extends BasicTaskStub implements Task<T> {
     protected static final Logger log = LoggerFactory.getLogger(Task.class);
 
     protected Closure<T> job
@@ -69,11 +52,11 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
      *
      * The generics on {@link Closure} break it if that is first constructor.
      */
-    protected BasicTask(Map flags=[:]) {
+    protected BasicTask2(Map flags=[:]) {
         this(flags, (Closure) null)
     }
 
-    public BasicTask(Map flags=[:], Closure<T> job) {
+    public BasicTask2(Map flags=[:], Closure<T> job) {
         this.job = job
 
         if (flags.tag) tags.add flags.remove("tag")
@@ -83,12 +66,14 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
         displayName = flags.remove("displayName") ?: tags.join("-")
     }
 
-    public BasicTask(Map flags=[:], Runnable job)    { this(flags, closureFromRunnable(job) as Closure) }
+    public BasicTask2(Map flags=[:], Runnable job)    { this(flags, closureFromRunnable(job) as Closure) }
 
-    public BasicTask(Map flags=[:], Callable<T> job) { this(flags, closureFromCallable(job) as Closure) }
+    public BasicTask2(Map flags=[:], Callable<T> job) { this(flags, closureFromCallable(job) as Closure) }
 
     @Override
-    public String toString() { "Task["+(displayName?displayName+(tags?"":";")+" ":"")+(tags?""+tags+"; ":"")+"$id]" }
+    public String toString() { "Task["+
+        (displayName?displayName+(tags?"":";")+" ":"")+
+        (tags?""+tags+"; ":"")+id+"]" }
 
     protected static <X> Closure<X> closureFromRunnable(Runnable job) {
         return {
@@ -300,7 +285,7 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
                 rv += "by error"
                 if (verbosity >= 1) {
                     rv += " after "+duration
-                    Throwable error
+                    Object error
                     try { String rvx = get(); error = "no error, return value $rvx" /* shouldn't happen */ }
                     catch (Throwable tt) { error = tt }
 
@@ -310,7 +295,7 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
                     if (verbosity == 1) rv += " ("+error+")"
                     else {
                         StringWriter sw = new StringWriter()
-                        error.printStackTrace(new PrintWriter(sw))
+                        if (error in Throwable) error.printStackTrace(new PrintWriter(sw))
                         rv += "\n"+sw.getBuffer()
                     }
                 }
