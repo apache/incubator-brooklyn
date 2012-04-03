@@ -100,10 +100,14 @@ public class QpidSetup extends SshBasedJavaAppSetup {
 
     @Override
     public List<String> getInstallScript() {
+        // TODO use repo structure (as part of new entity hierarchy)
+        String localRepo = "~/.brooklyn/repository/";
+        String filename = "qpid-java-broker-${version}.tar.gz";
+        String url = "http://download.nextag.com/apache/qpid/${filename}";
         makeInstallScript([
-                "wget http://download.nextag.com/apache/qpid/${version}/qpid-java-broker-${version}.tar.gz",
-                "tar xvzf qpid-java-broker-${version}.tar.gz",
-            ])
+                 "if [ -f ${localRepo}/${filename} ] ; then cp ${localRepo}/${filename} . ; else wget ${url} ; fi",
+                 "tar xzvf ${filename}"
+        ])
     }
 
     /**
