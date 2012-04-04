@@ -36,7 +36,7 @@ import com.google.common.base.CaseFormat;
 /**
  * TODO javadoc
  */
-public class BasicExecutionManager implements ExecutionManager {
+public class BasicExecutionManager2 implements ExecutionManager {
     private static final Logger log = LoggerFactory.getLogger(BasicExecutionManager.class)
 
     /**
