@@ -614,13 +614,13 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
         return result.asImmutable()
     }
 
-    /** @see Entity#subscribe(Entity, Sensor, EventListener) */
-    public <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener) {
+    /** @see EntityLocal#subscribe */
+    public <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<T> listener) {
         return subscriptionTracker.subscribe(producer, sensor, listener)
     }
 
-    /** @see Entity#subscribeToChildren(Entity, Sensor, EventListener) */
-    public <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, SensorEventListener<? super T> listener) {
+    /** @see EntityLocal#subscribeToChildren */
+    public <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, SensorEventListener<T> listener) {
         return subscriptionTracker.subscribeToChildren(parent, sensor, listener)
     }
 

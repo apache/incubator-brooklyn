@@ -67,7 +67,8 @@ public class BalanceableWorkerPool extends AbstractEntity implements Resizable {
     private final Set<Entity> items = Collections.synchronizedSet(new HashSet<Entity>())
     
     private final SensorEventListener<?> eventHandler = new SensorEventListener<Object>() {
-        public void onEvent(SensorEvent<?> event) {
+        @Override
+        public void onEvent(SensorEvent<Object> event) {
             if (LOG.isTraceEnabled()) LOG.trace("{} received event {}", BalanceableWorkerPool.this, event)
             Entity source = event.getSource()
             Object value = event.getValue()

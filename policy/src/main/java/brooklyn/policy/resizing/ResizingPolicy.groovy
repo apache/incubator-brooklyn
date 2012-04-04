@@ -82,7 +82,7 @@ public class ResizingPolicy extends AbstractPolicy {
     }
     
     private final SensorEventListener<?> eventHandler = new SensorEventListener<Object>() {
-        public void onEvent(SensorEvent<?> event) {
+        public void onEvent(SensorEvent<Object> event) {
             Map<String, ?> properties = (Map<String, ?>) event.getValue()
             switch (event.getSensor()) {
                 case poolColdSensor: onPoolCold(properties); break

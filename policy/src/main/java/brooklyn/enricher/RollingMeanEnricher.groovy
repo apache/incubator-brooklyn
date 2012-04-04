@@ -10,7 +10,7 @@ import brooklyn.event.AttributeSensor
 * Transforms a sensor into a rolling average based on a fixed window size. This is useful for smoothing sample type metrics, 
 * such as latency or CPU time
 */
-class RollingMeanEnricher<T extends Number> extends AbstractTransformingEnricher {
+class RollingMeanEnricher<T extends Number> extends AbstractTransformingEnricher<T> {
     private LinkedList<T> values = new LinkedList<T>()
     
     int windowSize

@@ -64,7 +64,7 @@ public class LoadBalancingPolicy extends AbstractPolicy {
     private String lastEmittedPoolTemperature = null // "cold" or "hot"
     
     private final SensorEventListener<?> eventHandler = new SensorEventListener<Object>() {
-        public void onEvent(SensorEvent<?> event) {
+        public void onEvent(SensorEvent<Object> event) {
             if (LOG.isTraceEnabled()) LOG.trace("{} received event {}", LoadBalancingPolicy.this, event)
             Entity source = event.getSource()
             Object value = event.getValue()
