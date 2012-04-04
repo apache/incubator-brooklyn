@@ -28,7 +28,7 @@ import brooklyn.event.SensorEvent
  * <p>
  * The default average when no data has been received is 0, with a confidence of 0
  */
-class RollingTimeWindowMeanEnricher<T extends Number> extends AbstractTransformingEnricher {
+class RollingTimeWindowMeanEnricher<T extends Number> extends AbstractTransformingEnricher<T> {
     public static class ConfidenceQualifiedNumber {
         final Number value
         final double confidence

@@ -60,7 +60,8 @@ public class FollowTheSunPolicy extends AbstractPolicy {
     }
     
     private final SensorEventListener<?> eventHandler = new SensorEventListener<Object>() {
-        public void onEvent(SensorEvent<?> event) {
+        @Override
+        public void onEvent(SensorEvent<Object> event) {
             if (LOG.isTraceEnabled()) LOG.trace("{} received event {}", FollowTheSunPolicy.this, event)
             Entity source = event.getSource()
             Object value = event.getValue()

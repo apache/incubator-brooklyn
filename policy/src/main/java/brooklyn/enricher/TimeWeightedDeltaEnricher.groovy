@@ -13,7 +13,7 @@ import brooklyn.event.SensorEvent
  * Converts an absolute sensor into a delta sensor (i.e. the diff between the current and previous value),
  * presented as a units/timeUnit based on the event timing
  */
-public class TimeWeightedDeltaEnricher<T extends Number> extends AbstractTransformingEnricher {
+public class TimeWeightedDeltaEnricher<T extends Number> extends AbstractTransformingEnricher<T> {
     private static final Logger LOG = LoggerFactory.getLogger(TimeWeightedDeltaEnricher.class)
     
     Number lastValue

@@ -40,7 +40,8 @@ public class ItemsInContainersGroup extends DynamicGroup {
     private Group containerGroup
     
     private final SensorEventListener<?> eventHandler = new SensorEventListener<Object>() {
-        public void onEvent(SensorEvent<?> event) {
+        @Override
+        public void onEvent(SensorEvent<Object> event) {
             Entity source = event.getSource()
             Object value = event.getValue()
             Sensor sensor = event.getSensor()
