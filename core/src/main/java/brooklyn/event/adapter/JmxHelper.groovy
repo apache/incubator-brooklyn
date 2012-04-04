@@ -127,8 +127,21 @@ public class JmxHelper {
 			String[] creds = [ user, password ]
 			env.put(JMXConnector.CREDENTIALS, creds);
 		}
-		jmxc = JMXConnectorFactory.connect(url, env);
-		mbsc = jmxc.getMBeanServerConnection();
+		try{
+            jmxc = JMXConnectorFactory.connect(url, env);
+        }catch(NullPointerException npe){
+            //some software -- eg WSO2 -- will throw an NPE exception if the JMX connection can't be created, instead of an IOException.
+            //this is a break of contract with the JMXConnectorFactory.connect method, so this code verifies if the NPE is
+            //thrown by a known offender (wso2) and if so replaces the bad exception by a new IOException.
+            //ideally WSO2 will fix this bug and we can remove this code.
+            boolean thrownByWso2 = npe.stackTrace[0].toString().contains("org.wso2.carbon.core.security.CarbonJMXAuthenticator.authenticate")
+            if(thrownByWso2){
+                throw new IOException("Failed to connect to url ${url}. NullPointerException is thrown, but replaced by an IOException to fix a WSO2 JMX problem",npe)
+            }else{
+                throw npe
+            }
+        }
+        mbsc = jmxc.getMBeanServerConnection();
 	}
 	
 	/** continuously attempts to connect (blocking), for at least the indicated amount of time; or indefinitely if -1 */
