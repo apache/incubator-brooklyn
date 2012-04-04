@@ -80,5 +80,5 @@ Information on working with the source is [here]({{ site.url }}/dev/code).
 Alternatively you can download archives of the source directly:
 
 <a href="https://github.com/brooklyncentral/brooklyn/tarball/master"><img border="0" width="90" src="https://github.com/images/modules/download/tar.png"></a>
-<a href="https://github.com/brooklyncentral/brooklyn/master"><img border="0" width="90" src="https://github.com/images/modules/download/zip.png"></a>
+<a href="https://github.com/brooklyncentral/brooklyn/zipball/master"><img border="0" width="90" src="https://github.com/images/modules/download/zip.png"></a>
 
