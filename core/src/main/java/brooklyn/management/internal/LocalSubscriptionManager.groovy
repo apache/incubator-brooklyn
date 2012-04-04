@@ -198,7 +198,7 @@ public class LocalSubscriptionManager implements SubscriptionManager {
                 if (s.eventFilter!=null && !s.eventFilter.apply(event))
                     continue;
                 def final sAtClosureCreation = s
-                em.submit(tags: s.subscriberExecutionManagerTag, { sAtClosureCreation.listener.onEvent(event) })
+                em.submit(tag: s.subscriberExecutionManagerTag, { sAtClosureCreation.listener.onEvent(event) })
                 totalEventsDeliveredCount.incrementAndGet()
             }
         }

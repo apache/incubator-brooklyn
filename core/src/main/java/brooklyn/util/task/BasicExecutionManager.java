@@ -1,8 +1,10 @@
 package brooklyn.util.task;
 
-import groovy.lang.Closure;
-
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -32,12 +34,13 @@ import brooklyn.management.Task;
 import brooklyn.util.internal.LanguageUtils;
 
 import com.google.common.base.CaseFormat;
+import com.google.common.base.Throwables;
 
 /**
  * TODO javadoc
  */
-public class BasicExecutionManager2 implements ExecutionManager {
-    private static final Logger log = LoggerFactory.getLogger(BasicExecutionManager.class)
+public class BasicExecutionManager implements ExecutionManager {
+    private static final Logger log = LoggerFactory.getLogger(BasicExecutionManager.class);
 
     /**
      * Renaming threads can really helps with debugging etc; however it's a massive performance hit.
@@ -46,10 +49,10 @@ public class BasicExecutionManager2 implements ExecutionManager {
      * 
      * Defaults to false if system property is not set.
      */
-    private static final boolean RENAME_THREADS = Boolean.parseBoolean(System.getProperty("brooklyn.executionManager.renameThreads"))
+    private static final boolean RENAME_THREADS = Boolean.parseBoolean(System.getProperty("brooklyn.executionManager.renameThreads"));
     
     private static class PerThreadCurrentTaskHolder {
-        public static final perThreadCurrentTask = new ThreadLocal<Task>();
+        public static final ThreadLocal<Task> perThreadCurrentTask = new ThreadLocal<Task>();
     }
 
     public static ThreadLocal<Task> getPerThreadCurrentTask() {
@@ -59,7 +62,13 @@ public class BasicExecutionManager2 implements ExecutionManager {
     public static Task getCurrentTask() { return getPerThreadCurrentTask().get(); }
     
     private ThreadFactory threadFactory = newThreadFactory();
-    private ThreadFactory daemonThreadFactory = { runnable -> Thread t = threadFactory.newThread(runnable); t.setDaemon(true); t } as ThreadFactory
+    private ThreadFactory daemonThreadFactory = new ThreadFactory() {
+        public Thread newThread(Runnable r) {
+            Thread t = threadFactory.newThread(r); 
+            t.setDaemon(true); 
+            return t;
+        }
+    };
     
     private ExecutorService runner = 
 		new ThreadPoolExecutor(0, Integer.MAX_VALUE, 1L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), daemonThreadFactory);
@@ -88,7 +97,7 @@ public class BasicExecutionManager2 implements ExecutionManager {
     
 	/** for use by overriders to use custom thread factory */
 	protected ThreadFactory newThreadFactory() {
-		Executors.defaultThreadFactory();
+		return Executors.defaultThreadFactory();
 	}
 	
     public void shutdownNow() {
@@ -112,26 +121,31 @@ public class BasicExecutionManager2 implements ExecutionManager {
         return tasksByTag.get(tag);
     }
 
-    public Set<Task> getTasksWithTag(Object tag) {
+    public Set<Task<?>> getTasksWithTag(Object tag) {
         Set<Task> result = getMutableTasksWithTag(tag);
         synchronized (result) {
-            return Collections.unmodifiableSet(new LinkedHashSet<Task>(result));
+            return (Set)Collections.unmodifiableSet(new LinkedHashSet<Task>(result));
         }
     }
     
-    public Set<Task> getTasksWithAnyTag(Iterable tags) {
+    public Set<Task<?>> getTasksWithAnyTag(Iterable tags) {
         Set result = new LinkedHashSet<Task>();
-        tags.each { tag -> result.addAll getTasksWithTag(tag) }
-        result
+        Iterator ti = tags.iterator();
+        while (ti.hasNext()) {
+            result.addAll(getTasksWithTag(ti.next()));
+        }
+        return result;
     }
 
-    public Set<Task> getTasksWithAllTags(Iterable tags) {
+    public Set<Task<?>> getTasksWithAllTags(Iterable tags) {
         //NB: for this method retrieval for multiple tags could be made (much) more efficient (if/when it is used with multiple tags!)
         //by first looking for the least-used tag, getting those tasks, and then for each of those tasks
         //checking whether it contains the other tags (looking for second-least used, then third-least used, etc)
         Set result = new LinkedHashSet<Task>();
         boolean first = true;
-        tags.each { tag -> 
+        Iterator ti = tags.iterator();
+        while (ti.hasNext()) {
+            Object tag = ti.next();
             if (first) { 
                 first = false;
                 result.addAll(getTasksWithTag(tag));
@@ -139,50 +153,57 @@ public class BasicExecutionManager2 implements ExecutionManager {
                 result.retainAll(getTasksWithTag(tag));
             }
         }
-        result
+        return result;
     }
 
     public Set<Object> getTaskTags() { return tasksByTag.keySet(); }
 
-    public Task<?> submit(Map flags=[:], Runnable r) { submit(flags, new BasicTask(flags, r)); }
+    public Task<?> submit(Runnable r) { return submit(new LinkedHashMap(1), r); }
+    public Task<?> submit(Map<?,?> flags, Runnable r) { return submit(flags, new BasicTask(flags, r)); }
 
-    public <T> Task<T> submit(Map flags=[:], Callable<T> c) { submit(flags, new BasicTask<T>(flags, c)); }
+    public Task<?> submit(Callable c) { return submit(new LinkedHashMap(1), c); }
+    public <T> Task<T> submit(Map<?,?> flags, Callable<T> c) { return submit(flags, new BasicTask<T>(flags, c)); }
 
-    public <T> Task<T> submit(Map flags=[:], Task<T> task) {
+    public <T> Task<T> submit(Task<T> t) { return submit(new LinkedHashMap(1), t); }
+    public <T> Task<T> submit(Map<?,?> flags, Task<T> task) {
         synchronized (task) {
-            if (task.result!=null) return task;
+            if (((BasicTask)task).getResult()!=null) return task;
             return submitNewTask(flags, task);
         }
     }
 
-	public <T> Task<T> scheduleWith(Map flags=[:], Task<T> task) {
+    public <T> Task<T> scheduleWith(Task<T> task) { return scheduleWith(Collections.emptyMap(), task); }
+	public <T> Task<T> scheduleWith(Map flags, Task<T> task) {
 		synchronized (task) {
-			if (task.result!=null) return task;
+			if (((BasicTask)task).getResult()!=null) return task;
 			return submitNewTask(flags, task);
 		}
 	}
 
-	protected Task submitNewTask(Map flags, ScheduledTask task) {
+	protected Task submitNewScheduledTask(final Map flags, final ScheduledTask task) {
 		task.submitTimeUtc = System.currentTimeMillis();
 		if (!task.isDone()) {
-			task.result = delayedRunner.schedule({
+			task.result = delayedRunner.schedule(new Callable() { public Object call() {
 				if (task.startTimeUtc==-1) task.startTimeUtc = System.currentTimeMillis();
-				BasicTask taskScheduled = task.newTask();
+				final BasicTask taskScheduled = (BasicTask) task.newTask();
 				taskScheduled.submittedByTask = task;
-				Closure oldJob = taskScheduled.job;
-				taskScheduled.job = {
+				final Callable oldJob = taskScheduled.job;
+				taskScheduled.job = new Callable() { public Object call() {
 					task.recentRun = taskScheduled;
-					Object result = oldJob.call();
+					Object result;
+					try {
+					    result = oldJob.call();
+					} catch (Exception e) { throw Throwables.propagate(e); }
 					task.runCount++;
 					if (task.period!=null) {
 						task.delay = task.period;
-						submitNewTask(flags, task);
+						submitNewScheduledTask(flags, task);
 					}
-					result;
-				}
+					return result;
+				}};
 				task.nextRun = taskScheduled;
-				submit taskScheduled;
-			} as Callable,
+				return submit(taskScheduled);
+			}},
 			task.delay.toMilliseconds(), TimeUnit.MILLISECONDS);
 		} else {
 			task.endTimeUtc = System.currentTimeMillis();
@@ -190,22 +211,28 @@ public class BasicExecutionManager2 implements ExecutionManager {
 		return task;
 	}
 
-    protected <T> Task<T> submitNewTask(Map flags, Task<T> task) {
+    protected <T> Task<T> submitNewTask(final Map flags, final Task<T> task) {
+        if (task instanceof ScheduledTask)
+            return submitNewScheduledTask(flags, (ScheduledTask)task);
+        
         totalTaskCount.incrementAndGet();
         
         beforeSubmit(flags, task);
         
-        Closure job = {
+        assert ((BasicTask)task).job != null : "submission of task "+task+" with null job";
+        
+        Callable job = new Callable() { public Object call() {
             Object result = null;
             String oldThreadName = Thread.currentThread().getName();
             try {
                 if (RENAME_THREADS) {
-                    String newThreadName = oldThreadName+"-"+task.getDisplayName()+"["+task.id[0..8]+"]";
+                    String newThreadName = oldThreadName+"-"+task.getDisplayName()+
+                            "["+task.getId().substring(0, 8)+"]";
                     Thread.currentThread().setName(newThreadName);
                 }
                 beforeStart(flags, task);
                 if (!task.isCancelled()) {
-                    result = task.job.call();
+                    result = ((BasicTask)task).job.call();
                 } else throw new CancellationException();
             } catch(Throwable e) {
                 result = e;
@@ -216,29 +243,31 @@ public class BasicExecutionManager2 implements ExecutionManager {
                 afterEnd(flags, task);
             }
             if (result instanceof Throwable) {
-                log.warn("Error while running task $task (rethrowing): ${result.message}", (Throwable)result);
-                throw result;
+                log.warn("Error while running task "+task+" (rethrowing): "+((Throwable)result).getMessage(), (Throwable)result);
+                throw Throwables.propagate((Throwable)result);
             }
             return result;
-        }
-        task.initExecutionManager(this);
+        }};
+        ((BasicTask)task).initExecutionManager(this);
         
         // If there's a scheduler then use that; otherwise execute it directly
-        // 'as Callable' to prevent being treated as Runnable and returning a future that gives null
-        Set<TaskScheduler> schedulers = []
-        task.@tags.each {
-            TaskScheduler scheduler = getTaskSchedulerForTag(it);
-            if (scheduler) schedulers << scheduler;
+        Set<TaskScheduler> schedulers = null;
+        for (Object tago: ((BasicTask)task).tags) {
+            TaskScheduler scheduler = getTaskSchedulerForTag(tago);
+            if (scheduler!=null) {
+                if (schedulers==null) schedulers = new LinkedHashSet(2);
+                schedulers.add(scheduler);
+            }
         }
         Future future;
-        if (schedulers) {
-			if (schedulers.size()>1) log.warn "multiple schedulers detected, using only the first, for ${task}: "+schedulers;
-            future = schedulers.iterator().next().submit(job as Callable);
+        if (schedulers!=null && !schedulers.isEmpty()) {
+			if (schedulers.size()>1) log.warn("multiple schedulers detected, using only the first, for "+task+": "+schedulers);
+            future = schedulers.iterator().next().submit(job);
         } else {
-            future = runner.submit(job as Callable);
+            future = runner.submit(job);
         }
 
-        task.initResult(future);
+        ((BasicTask)task).initResult(future);
         return task;
     }
 
@@ -246,72 +275,83 @@ public class BasicExecutionManager2 implements ExecutionManager {
         incompleteTaskCount.incrementAndGet();
         
 		Task currentTask = getCurrentTask();
-        if (currentTask) task.submittedByTask = currentTask;
-        task.submitTimeUtc = System.currentTimeMillis();
+        if (currentTask!=null) ((BasicTask)task).submittedByTask = currentTask;
+        ((BasicTask)task).submitTimeUtc = System.currentTimeMillis();
         
-        if (flags.tag) task.@tags.add flags.remove("tag");
-        if (flags.tags) task.@tags.addAll flags.remove("tags");
+        if (flags.get("tag")!=null) ((BasicTask)task).tags.add(flags.remove("tag"));
+        if (flags.get("tags")!=null) ((BasicTask)task).tags.addAll((Collection)flags.remove("tags"));
 
-        task.@tags.each { tag -> 
-            getMutableTasksWithTag(tag) << task;
+        for (Object tag: ((BasicTask)task).tags) {
+            getMutableTasksWithTag(tag).add(task);
         }
         
-        List tagLinkedPreprocessors = [];
-        task.@tags.each {
-            TaskPreprocessor p = getTaskPreprocessorForTag(it);
-            if (p) tagLinkedPreprocessors << p;
+        List tagLinkedPreprocessors = new ArrayList();
+        for (Object tag: ((BasicTask)task).tags) {
+            TaskPreprocessor p = getTaskPreprocessorForTag(tag);
+            if (p!=null) tagLinkedPreprocessors.add(p);
         }
-        flags.tagLinkedPreprocessors = tagLinkedPreprocessors;
-        flags.tagLinkedPreprocessors.each { TaskPreprocessor t -> t.onSubmit(flags, task) }
+        flags.put("tagLinkedPreprocessors", tagLinkedPreprocessors);
+        for (Object ppo: tagLinkedPreprocessors) { 
+            TaskPreprocessor t = (TaskPreprocessor)ppo;
+            t.onSubmit(flags, task); 
+        }
     }
 
     protected void beforeStart(Map flags, Task<?> task) {
         activeTaskCount.incrementAndGet();
         
         //set thread _before_ start time, so we won't get a null thread when there is a start-time
-        if (log.isTraceEnabled()) log.trace "$this beforeStart, task: $task";
+        if (log.isTraceEnabled()) log.trace(""+this+" beforeStart, task: "+task);
         if (!task.isCancelled()) {
-            task.thread = Thread.currentThread();
+            ((BasicTask)task).thread = Thread.currentThread();
             if (RENAME_THREADS) {
-                String newThreadName = "brooklyn-" + CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL, task.displayName.replace(" ", "")) + "-" + task.id[0..7];
-                task.thread.setName(newThreadName);
+                String newThreadName = "brooklyn-" + CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL, task.getDisplayName().replace(" ", "")) + "-" + task.getId().substring(0, 8);
+                ((BasicTask)task).thread.setName(newThreadName);
             }
-            perThreadCurrentTask.set(task);
-            task.startTimeUtc = System.currentTimeMillis();
+            PerThreadCurrentTaskHolder.perThreadCurrentTask.set(task);
+            ((BasicTask)task).startTimeUtc = System.currentTimeMillis();
         }
-        flags.tagLinkedPreprocessors.each { TaskPreprocessor t -> t.onStart(flags, task) }
-        ExecutionUtils.invoke(flags.newTaskStartCallback, task);
+        for (Object to : (Collection)flags.get("tagLinkedPreprocessors")) { 
+            TaskPreprocessor t = (TaskPreprocessor)to;
+            t.onStart(flags, task); 
+        }
+        ExecutionUtils.invoke(flags.get("newTaskStartCallback"), task);
     }
 
     protected void afterEnd(Map flags, Task<?> task) {
         activeTaskCount.decrementAndGet();
         incompleteTaskCount.decrementAndGet();
 
-        if (log.isTraceEnabled()) log.trace("$this afterEnd, task: "+task);
-        ExecutionUtils.invoke(flags.newTaskEndCallback, task);
-        Collections.reverse(flags.tagLinkedPreprocessors);
-        flags.tagLinkedPreprocessors.each { TaskPreprocessor t -> t.onEnd(flags, task) }
+        if (log.isTraceEnabled()) log.trace(this+" afterEnd, task: "+task);
+        ExecutionUtils.invoke(flags.get("newTaskEndCallback"), task);
+        List l = (List)flags.get("tagLinkedPreprocessors");
+        Collections.reverse(l);
+        for (Object li: l) {
+            TaskPreprocessor t = (TaskPreprocessor)li;
+            t.onEnd(flags, task); 
+        }
 
-        perThreadCurrentTask.remove();
-        task.endTimeUtc = System.currentTimeMillis();
+        PerThreadCurrentTaskHolder.perThreadCurrentTask.remove();
+        ((BasicTask)task).endTimeUtc = System.currentTimeMillis();
         //clear thread _after_ endTime set, so we won't get a null thread when there is no end-time
         if (RENAME_THREADS) {
             String newThreadName = "brooklyn-"+LanguageUtils.newUid();
-            task.thread.setName(newThreadName);
+            ((BasicTask)task).thread.setName(newThreadName);
         }
-        task.thread = null;
+        ((BasicTask)task).thread = null;
         synchronized (task) { task.notifyAll(); }
 
-        ExpirationPolicy expirationPolicy = flags.expirationPolicy ?: ExpirationPolicy.IMMEDIATE;
+        ExpirationPolicy expirationPolicy = (ExpirationPolicy) flags.get("expirationPolicy");
+        if (expirationPolicy==null) expirationPolicy = ExpirationPolicy.IMMEDIATE;
         if (expirationPolicy == ExpirationPolicy.IMMEDIATE) {
-            task.@tags.each { tag ->
-                getMutableTasksWithTag(tag).remove(task);
+            for (Object t : ((BasicTask)task).tags) {
+                getMutableTasksWithTag(t).remove(task);
             }
         }
     }
 
     /** Returns {@link TaskPreprocessor} defined for tasks with the given tag, or null if none. */
-    public TaskPreprocessor getTaskPreprocessorForTag(Object tag) { return preprocessorByTag.get(tag) }
+    public TaskPreprocessor getTaskPreprocessorForTag(Object tag) { return preprocessorByTag.get(tag); }
 
     /** @see #setTaskPreprocessorForTag(Object, TaskPreprocessor) */
     public void setTaskPreprocessorForTag(Object tag, Class<? extends TaskPreprocessor> preprocessor) {
@@ -323,9 +363,15 @@ public class BasicExecutionManager2 implements ExecutionManager {
                     return;
                 }
                 //might support multiple in future...
-                throw new IllegalStateException("Not allowed to set multiple TaskProcessors on ExecutionManager tag (tag $tag, has $old, setting new $preprocessor)");
+                throw new IllegalStateException("Not allowed to set multiple TaskProcessors on ExecutionManager tag (tag "+tag+", has "+old+", setting new "+preprocessor+")");
             }
-            setTaskPreprocessorForTag(tag, preprocessor.newInstance());
+            try {
+                setTaskPreprocessorForTag(tag, preprocessor.newInstance());
+            } catch (InstantiationException e) {
+                throw Throwables.propagate(e);
+            } catch (IllegalAccessException e) {
+                throw Throwables.propagate(e);
+            }
         }
     }
 
@@ -342,10 +388,10 @@ public class BasicExecutionManager2 implements ExecutionManager {
             preprocessor.injectManager(this);
             preprocessor.injectTag(tag);
 
-            def old = preprocessorByTag.put(tag, preprocessor);
+            Object old = preprocessorByTag.put(tag, preprocessor);
             if (old!=null && old!=preprocessor) {
                 //might support multiple in future...
-                throw new IllegalStateException("Not allowed to set multiple TaskProcessors on ExecutionManager tag (tag $tag)");
+                throw new IllegalStateException("Not allowed to set multiple TaskProcessors on ExecutionManager tag (tag "+tag+")");
             }
         }
     }
@@ -363,7 +409,7 @@ public class BasicExecutionManager2 implements ExecutionManager {
     public boolean clearTaskPreprocessorForTag(Object tag) {
         synchronized (preprocessorByTag) {
             Object old = preprocessorByTag.remove(tag);
-            return (old!=null)
+            return (old!=null);
         }
     }
     
@@ -376,9 +422,15 @@ public class BasicExecutionManager2 implements ExecutionManager {
                     return;
                 }
                 //might support multiple in future...
-                throw new IllegalStateException("Not allowed to set multiple TaskSchedulers on ExecutionManager tag (tag $tag, has $old, setting new $scheduler)");
+                throw new IllegalStateException("Not allowed to set multiple TaskSchedulers on ExecutionManager tag (tag "+tag+", has "+old+", setting new "+scheduler+")");
             }
-            setTaskSchedulerForTag(tag, scheduler.newInstance());
+            try {
+                setTaskSchedulerForTag(tag, scheduler.newInstance());
+            } catch (InstantiationException e) {
+                throw Throwables.propagate(e);
+            } catch (IllegalAccessException e) {
+                throw Throwables.propagate(e);
+            }
         }
     }
     
@@ -394,10 +446,10 @@ public class BasicExecutionManager2 implements ExecutionManager {
         synchronized (schedulerByTag) {
             scheduler.injectExecutor(runner);
 
-            def old = schedulerByTag.put(tag, scheduler);
+            Object old = schedulerByTag.put(tag, scheduler);
             if (old!=null && old!=scheduler) {
                 //might support multiple in future...
-                throw new IllegalStateException("Not allowed to set multiple TaskSchedulers on ExecutionManager tag (tag $tag)");
+                throw new IllegalStateException("Not allowed to set multiple TaskSchedulers on ExecutionManager tag (tag "+tag+")");
             }
         }
     }
@@ -410,7 +462,7 @@ public class BasicExecutionManager2 implements ExecutionManager {
      */
     public boolean clearTaskSchedulerForTag(Object tag) {
         synchronized (schedulerByTag) {
-            def old = schedulerByTag.remove(tag);
+            Object old = schedulerByTag.remove(tag);
             return (old!=null);
         }
     }

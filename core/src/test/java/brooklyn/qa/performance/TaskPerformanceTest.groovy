@@ -33,7 +33,7 @@ public class TaskPerformanceTest extends AbstractPerformanceTest {
         executionManager = app.managementContext.executionManager
     }
     
-    public static final int numIterations = 100000;
+    public static final int numIterations = 1000000;
     @Test(groups=["Integration", "Acceptance"])
     public void testExecuteSimplestRunnable() {
         double minRatePerSec = 1000
@@ -77,6 +77,7 @@ public class TaskPerformanceTest extends AbstractPerformanceTest {
         executionManager.setTaskSchedulerForTag("singlethreaded", SingleThreadedScheduler.class);
         
         final AtomicInteger concurrentCallCount = new AtomicInteger();
+        final AtomicInteger submitCount = new AtomicInteger();
         final AtomicInteger counter = new AtomicInteger();
         final CountDownLatch completionLatch = new CountDownLatch(1)
         final List<Exception> exceptions = new CopyOnWriteArrayList()
@@ -97,9 +98,20 @@ public class TaskPerformanceTest extends AbstractPerformanceTest {
             }}
 
         measureAndAssert("testExecuteWithSingleThreadedScheduler", numIterations, minRatePerSec,
-                { executionManager.submit([tags:["singlethreaded"]], work) },
+                { 
+                    while (submitCount.get() > counter.get() + 5000) {
+                        LOG.info("delaying because ${submitCount.get()} submitted and only ${counter.get()} run")
+                        Thread.sleep(500);
+                    }
+                    executionManager.submit([tags:["singlethreaded"]], work); submitCount.incrementAndGet(); },
                 { completionLatch.await(LONG_TIMEOUT_MS, TimeUnit.MILLISECONDS); assertTrue(completionLatch.getCount() <= 0) })
         
         if (exceptions.size() > 0) throw exceptions.get(0)
+    }
+    
+    public static void main(String[] args) {
+        def t = new TaskPerformanceTest();
+        t.setUp();
+        t.testExecuteWithSingleThreadedScheduler();
     }
 }

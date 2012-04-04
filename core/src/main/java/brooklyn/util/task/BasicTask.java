@@ -1,6 +1,8 @@
 package brooklyn.util.task;
 
-import static brooklyn.util.JavaGroovyEquivalents.*;
+import static brooklyn.util.JavaGroovyEquivalents.asString;
+import static brooklyn.util.JavaGroovyEquivalents.elvisString;
+import static brooklyn.util.JavaGroovyEquivalents.join;
 import groovy.lang.Closure;
 
 import java.io.PrintWriter;
@@ -26,7 +28,6 @@ import org.slf4j.LoggerFactory;
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.Task;
 import brooklyn.util.GroovyJavaMethods;
-import brooklyn.util.JavaGroovyEquivalents;
 
 import com.google.common.base.Throwables;
 
@@ -46,9 +47,9 @@ import com.google.common.base.Throwables;
  * @see BasicTaskStub
  */
 public class BasicTask<T> extends BasicTaskStub implements Task<T> {
-    protected static final Logger log = LoggerFactory.getLogger(Task.class);
+    protected static final Logger log = LoggerFactory.getLogger(BasicTask.class);
 
-    protected Closure<T> job;
+    protected Callable<T> job;
     public final String displayName;
     public final String description;
 
@@ -70,7 +71,14 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
         this.job = job;
 
         if (flags.containsKey("tag")) tags.add(flags.remove("tag"));
-        if (flags.containsKey("tags")) tags.addAll((Collection)flags.remove("tags"));
+        Object ftags = flags.remove("tags");
+        if (ftags!=null) {
+            if (ftags instanceof Collection) tags.addAll((Collection)ftags);
+            else {
+                log.info("discouraged use of non-collection argument for 'tags' ("+ftags+") in "+this, new Throwable("trace of discouraged use of non-colleciton tags argument"));
+                tags.add(ftags);
+            }
+        }
 
         description = elvisString(flags.remove("description"), "");
         String d = asString(flags.remove("displayName"));
@@ -87,7 +95,7 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
     public String toString() { 
         return "Task["+(displayName!=null && displayName.length()>0?displayName+
                 (tags!=null && !tags.isEmpty()?"":";")+" ":"")+
-                (tags!=null && !tags.isEmpty()?tags+"; ":"")+id+"]";
+                (tags!=null && !tags.isEmpty()?tags+"; ":"")+getId()+"]";
     }
 
     // housekeeping --------------------
