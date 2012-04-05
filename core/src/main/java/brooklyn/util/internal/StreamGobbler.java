@@ -18,11 +18,21 @@ public class StreamGobbler extends Thread {
         this.log = log;
     }
     
-    String prefix = "";
+    String logPrefix = "";
+    String printPrefix = "";
     public StreamGobbler setPrefix(String prefix) {
-		this.prefix = prefix;
+        setLogPrefix(prefix);
+        setPrintPrefix(prefix);
 		return this;
 	}
+    public StreamGobbler setPrintPrefix(String prefix) {
+        printPrefix = prefix;
+        return this;
+    }
+    public StreamGobbler setLogPrefix(String prefix) {
+        logPrefix = prefix;
+        return this;
+    }    
     
     public void run() {
         int c = -1;
@@ -34,7 +44,7 @@ public class StreamGobbler extends Thread {
         } catch (IOException e) {
         	onClose();
         	//TODO parametrise log level, for this error, and for normal messages
-        	if (log!=null) log.debug(prefix+"exception reading from stream ("+e+")");
+        	if (log!=null) log.debug(logPrefix+"exception reading from stream ("+e+")");
         }
     }
     
@@ -58,13 +68,28 @@ public class StreamGobbler extends Thread {
     	//right trim, in case there is \r or other funnies
     	while (line.length()>0 && (line.charAt(0)=='\n' || line.charAt(0)=='\r'))
     		line = line.substring(1);
-    	if (out!=null) out.println(prefix+line);
-    	if (log!=null && log.isDebugEnabled()) log.debug(prefix+line);
+    	if (!line.isEmpty()) {
+    	    if (out!=null) out.println(printPrefix+line);
+    	    if (log!=null && log.isDebugEnabled()) log.debug(logPrefix+line);
+    	}
     }
     
     public void onClose() {
-    	onLine(lineSoFar.toString());
-		lineSoFar.setLength(0);
+        onLine(lineSoFar.toString());
+        lineSoFar.setLength(0);
+        finished = true;
+        synchronized (this) { notifyAll(); }
     }
     
+    private volatile boolean finished = false;
+
+    /** convenience -- equivalent to calling join() */
+    public void blockUntilFinished() throws InterruptedException {
+        synchronized (this) { while (!finished) wait(); }
+    }
+
+    /** convenience -- similar to !Thread.isAlive() */
+    public boolean isFinished() {
+        return finished;
+    }
 }
