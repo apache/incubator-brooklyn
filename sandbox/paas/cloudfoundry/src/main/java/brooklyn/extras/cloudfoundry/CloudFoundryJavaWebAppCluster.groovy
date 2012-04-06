@@ -14,7 +14,11 @@ import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.Lifecycle
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.JavaWebAppService
+import brooklyn.event.adapter.FunctionSensorAdapter
+import brooklyn.event.adapter.SensorRegistry
+import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey
+import brooklyn.extras.cloudfoundry.CloudFoundryVmcCliAccess.CloudFoundryAppStats
 import brooklyn.location.Location
 import brooklyn.util.flags.SetFromFlag
 
@@ -32,11 +36,18 @@ class CloudFoundryJavaWebAppCluster extends AbstractEntity implements Startable,
 //    public static final BasicConfigKey<String> URL = [ String, "cloudfoundry.app.url", "URL this app should respond to" ]
     
     public static final SERVICE_STATE = Attributes.SERVICE_STATE
+    
+    public static final BasicAttributeSensor<Integer> SIZE = [ Integer, "cloudfoundry.instances.size", "Number of instances" ];
+    public static final BasicAttributeSensor<Double> CPU_USAGE = [ Double, "cloudfoundry.cpu.usage", "Average CPU utilisation" ];
+    public static final BasicAttributeSensor<Double> MEMORY_USED_FRACTION = [ Double, "cloudfoundry.memory.usage.fraction", "Average memory utilisation" ];
 
+    protected transient SensorRegistry sensorRegistry;
+    
     public CloudFoundryJavaWebAppCluster(Map flags=[:], Entity owner=null) {
         super(flags, owner)
         setAttribute(SERVICE_UP, false)
         setAttribute(SERVICE_STATE, Lifecycle.CREATED);
+        sensorRegistry = new SensorRegistry(this);
     }
 
     public String getAppName() {
@@ -87,6 +98,16 @@ class CloudFoundryJavaWebAppCluster extends AbstractEntity implements Startable,
 
         //add support for DynamicWebAppCluster.startInLocation(CloudFoundry)
         setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
+        connectSensors();
+    }
+    
+    public void connectSensors() {
+        sensorRegistry.register(new FunctionSensorAdapter({cfAccess.stats()})).with {
+            poll(SIZE, { CloudFoundryAppStats stats -> stats.instances.size() });
+            poll(CPU_USAGE, { CloudFoundryAppStats stats -> stats.average.cpuUsage });
+            poll(MEMORY_USED_FRACTION, { CloudFoundryAppStats stats -> stats.average.memUsedFraction });
+        }
+        sensorRegistry.activateAdapters();
     }
 
     public String getWebAppAddress() {
@@ -95,6 +116,7 @@ class CloudFoundryJavaWebAppCluster extends AbstractEntity implements Startable,
     
     public void destroy() {
         log.info "{} destroying app {}", this, getAppName()
+        sensorRegistry.deactivateAdapters();
         cfAccess.destroyApp();
     }
     

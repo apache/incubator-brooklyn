@@ -4,16 +4,22 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.AbstractApplication
+import brooklyn.entity.basic.Entities;
 import brooklyn.test.TestUtils
 
 /**
  * example app showing how to start an cloudfoundry java war
  *  
  * if this doesn't start, we may have too many apps, delete some using:
+ * <code>
  * vmc apps 
  * vmc delete brooklyn-1234
+ * </code>
  * (or online at the cloudfoundry portal)
- * 
+ * or
+ * <code>
+ * for x in `vmc apps | grep brooklyn | awk '{ print $2 }'` ; do vmc delete $x ; done
+ * </code>
  * @author alex
  *
  */
@@ -40,7 +46,11 @@ class CloudFoundryJavaClusterExample extends AbstractApplication {
         log.info "should now be able to visit site (for 2m): {}", app.cloudfoundry.getWebAppAddress()
         //should now be able to visit (assert?)
         
-        Thread.sleep(2*60*1000)
+        for (int i=0; i<2*6; i++) {
+            //periodically print stats
+            Entities.dumpInfo(app.cloudfoundry);
+            Thread.sleep(10*1000);
+        }
 
         //and kill
         log.info "now cleaning up that app: {}", app.cloudfoundry.getWebAppAddress()
