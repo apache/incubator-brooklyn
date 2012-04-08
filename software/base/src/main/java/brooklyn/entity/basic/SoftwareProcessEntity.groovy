@@ -279,16 +279,24 @@ public interface UsesJavaMXBeans {
     
     @SetFromFlag("mxbeanStatsEnabled")
     public static final BasicConfigKey<Boolean> MXBEAN_STATS_ENABLED = [ Boolean, "java.metrics.mxbeanStatsEnabled", "Enables collection of JVM stats from the MXBeans, such as memory and thread usage (default is true)", true ]
-    
+
     public static final BasicAttributeSensor<Long> USED_HEAP_MEMORY = [ Long, "java.metrics.heap.used", "current heap size in bytes" ]
     public static final BasicAttributeSensor<Long> INIT_HEAP_MEMORY = [ Long, "java.metrics.heap.init", "initial heap size in bytes" ]
     public static final BasicAttributeSensor<Long> COMMITTED_HEAP_MEMORY = [ Long, "java.metrics.heap.committed", "commited heap size in bytes" ]
     public static final BasicAttributeSensor<Long> MAX_HEAP_MEMORY = [ Long, "java.metrics.heap.max", "max heap size in bytes" ]
     public static final BasicAttributeSensor<Long> NON_HEAP_MEMORY_USAGE = [ Long, "java.metrics.nonheap.used", "current non-heap size in bytes" ]
-    public static final BasicAttributeSensor<Long> CURRENT_THREAD_COUNT = [ Integer, "java.metrics.threads.current", "current number of threads" ]
-    public static final BasicAttributeSensor<Long> PEAK_THREAD_COUNT = [ Integer, "java.metrics.threads.max", "peak number of threads" ]
+    public static final BasicAttributeSensor<Integer> CURRENT_THREAD_COUNT = [ Integer, "java.metrics.threads.current", "current number of threads" ]
+    public static final BasicAttributeSensor<Integer> PEAK_THREAD_COUNT = [ Integer, "java.metrics.threads.max", "peak number of threads" ]
+
+    //operating system attributes
     public static final BasicAttributeSensor<Long> START_TIME = [ Long, "java.metrics.starttime", "start time" ]
-    public static final BasicAttributeSensor<Double> SYSTEM_LOAD_AVERAGE = [ Double, "java.metrics.systemload.average", "average system load" ]
+    public static final BasicAttributeSensor<Long> UP_TIME = [ Long, "java.metrics.uptime", "the uptime" ]
+
     public static final BasicAttributeSensor<Integer> AVAILABLE_PROCESSORS = [ Integer, "java.metrics.processors.available", "number of processors available to the Java virtual machine" ]
+    public static final BasicAttributeSensor<Double> SYSTEM_LOAD_AVERAGE = [ Double, "java.metrics.systemload.average", "average system load" ]
+    public static final BasicAttributeSensor<Long> TOTAL_PHYSICAL_MEMORY_SIZE = [ Long, "java.metrics.physicalmemory.total", "The physical memory available to the operating system" ]
+    public static final BasicAttributeSensor<Long> FREE_PHYSICAL_MEMORY_SIZE = [ Long, "java.metrics.physicalmemory.free", "The free memory available to the operating system" ]
+
     public static final BasicAttributeSensor<Long> GARBAGE_COLLECTION_TIME = [ Map, "java.metrics.gc.time", "garbage collection time" ]
+
 }

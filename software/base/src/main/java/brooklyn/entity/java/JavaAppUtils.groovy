@@ -35,12 +35,16 @@ class JavaAppUtils {
             
             jmxAdapter.objectName(ManagementFactory.RUNTIME_MXBEAN_NAME).with {
                 attribute("StartTime").subscribe(UsesJavaMXBeans.START_TIME);
+                attribute("UpTime").subscribe(UsesJavaMXBeans.UP_TIME);
             }
             
             jmxAdapter.objectName(ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME).with {
                 attribute("SystemLoadAverage").subscribe(UsesJavaMXBeans.SYSTEM_LOAD_AVERAGE);
                 attribute("AvailableProcessors").subscribe(UsesJavaMXBeans.AVAILABLE_PROCESSORS);
+                attribute("TotalPhysicalMemorySize").subscribe(UsesJavaMXBeans.TOTAL_PHYSICAL_MEMORY_SIZE);
+                attribute("FreePhysicalMemorySize").subscribe(UsesJavaMXBeans.FREE_PHYSICAL_MEMORY_SIZE);
             }
+
             
             //FIXME: need a new type of adapter that maps multiple objectNames to a mapping
 //            jmxAdapter.objectName(ManagementFactory.GARBAGE_COLLECTOR_MXBEAN_DOMAIN_TYPE + ",*").with {
