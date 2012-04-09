@@ -1,28 +1,17 @@
 package brooklyn.event.adapter;
 
 import groovy.lang.Closure
-import groovy.transform.InheritConstructors
+import groovy.time.TimeDuration
 
-import java.io.IOException
 import java.util.Map
+import java.util.concurrent.TimeUnit
 
-import javax.management.JMX
-import javax.management.MBeanServerConnection
-import javax.management.NotificationListener
-import javax.management.ObjectInstance
 import javax.management.ObjectName
-import javax.management.openmbean.CompositeData
-import javax.management.openmbean.TabularData
-import javax.management.remote.JMXConnector
-import javax.management.remote.JMXConnectorFactory
-import javax.management.remote.JMXServiceURL
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.EntityLocal
-import brooklyn.event.Sensor
 
 
 /**
@@ -40,6 +29,7 @@ import brooklyn.event.Sensor
  */
 public class JmxSensorAdapter extends AbstractSensorAdapter {
 
+    public static final Logger log = LoggerFactory.getLogger(JmxSensorAdapter.class);
 	public static final long JMX_CONNECTION_TIMEOUT_MS = 120*1000;
 	
 	JmxHelper helper
@@ -73,5 +63,13 @@ public class JmxSensorAdapter extends AbstractSensorAdapter {
 	//			onJmxError(ERROR_CHANNEL, { "JMX had error: "+errorCode } )
 	
 	public JmxObjectNameAdapter objectName(String objectName) { return new JmxObjectNameAdapter(this, new ObjectName(objectName)); }
-	
+
+    /** blocks for 15s until bean might exist */
+    public boolean checkObjectNameExists(ObjectName objectName, TimeDuration timeout=15*TimeUnit.SECONDS) {
+        def beans = helper.doesMBeanExistsEventually(objectName, timeout);
+        if (!beans) {
+            log.warn("JMX management can't find MBean "+objectName+" (using "+helper.url+")");
+        }
+        return beans;
+    }
 }

@@ -5,6 +5,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Map;
 
 public class NetworkUtils {
 
@@ -51,5 +52,22 @@ public class NetworkUtils {
             }
         }
     }
-    
+
+    public static boolean isPortValid(Integer port) {
+        return (port!=null && port>=NetworkUtils.MIN_PORT_NUMBER && port<=NetworkUtils.MAX_PORT_NUMBER);
+    }
+    public static int checkPortValid(Integer port, String errorMessage) {
+        if (!isPortValid(port)) {
+            throw new IllegalArgumentException("Invalid port value "+port+": "+errorMessage);
+        }
+        return port;
+    }
+
+    public static void checkPortsValid(Map ports) {
+        for (Object ppo : ports.entrySet()) {
+            Map.Entry<?,?> pp = (Map.Entry<?,?>)ppo;
+            checkPortValid((Integer)pp.getValue(), ""+pp.getKey());
+        }
+    }
+
 }

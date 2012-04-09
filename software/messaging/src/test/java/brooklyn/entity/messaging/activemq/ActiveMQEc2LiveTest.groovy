@@ -1,37 +1,30 @@
 package brooklyn.entity.messaging.activemq
 
-import static org.testng.Assert.*
 import static brooklyn.test.TestUtils.executeUntilSucceeds
 import static brooklyn.test.TestUtils.executeUntilSucceedsWithShutdown
+import static org.testng.Assert.*
 
-import brooklyn.entity.basic.legacy.JavaApp;
-import brooklyn.entity.trait.Startable
-import brooklyn.location.basic.SshMachineLocation
-import brooklyn.location.basic.jclouds.CredentialsFromEnv
-import brooklyn.location.basic.jclouds.JcloudsLocation
-import brooklyn.location.basic.jclouds.JcloudsLocationFactory
-import brooklyn.test.entity.TestApplication
-import brooklyn.util.internal.EntityStartUtils
-import brooklyn.util.internal.TimeExtras
+import javax.jms.Connection
+import javax.jms.MessageConsumer
+import javax.jms.MessageProducer
+import javax.jms.Session
+import javax.jms.TextMessage
+
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
-import javax.jms.Connection
-import javax.jms.MessageConsumer
-import javax.jms.Session
-import javax.jms.TextMessage
-import javax.jms.MessageProducer
 
-/**
- * Created by IntelliJ IDEA.
- * User: richard
- * Date: 29/09/2011
- * Time: 23:34
- * To change this template use File | Settings | File Templates.
- */
+import brooklyn.entity.trait.Startable
+import brooklyn.location.basic.SshMachineLocation
+import brooklyn.location.basic.jclouds.CredentialsFromEnv
+import brooklyn.location.basic.jclouds.JcloudsLocation
+import brooklyn.location.basic.jclouds.JcloudsLocationFactory
+import brooklyn.test.entity.TestApplication
+import brooklyn.util.internal.TimeExtras
+
 class ActiveMQEc2LiveTest {
     protected static final Logger LOG = LoggerFactory.getLogger(ActiveMQEc2LiveTest.class)
 
@@ -106,9 +99,9 @@ class ActiveMQEc2LiveTest {
         activeMQ = new ActiveMQBroker(owner:app);
         app.start([ loc ])
         executeUntilSucceedsWithShutdown(activeMQ) {
-            assertTrue activeMQ.getAttribute(JavaApp.SERVICE_UP)
+            assertTrue activeMQ.getAttribute(Startable.SERVICE_UP)
         }
-        assertFalse activeMQ.getAttribute(JavaApp.SERVICE_UP)
+        assertFalse activeMQ.getAttribute(Startable.SERVICE_UP)
     }
 
     protected SshMachineLocation obtainMachine(Map flags) {
@@ -135,7 +128,7 @@ class ActiveMQEc2LiveTest {
         activeMQ = new ActiveMQBroker(owner:app, queue:queueName);
         app.start([ loc ])
         executeUntilSucceeds {
-            assertTrue activeMQ.getAttribute(JavaApp.SERVICE_UP)
+            assertTrue activeMQ.getAttribute(Startable.SERVICE_UP)
         }
 
         try {

@@ -232,17 +232,25 @@ public class JmxHelper {
         }
     }
     
+    @Deprecated
     public void checkMBeanExistsEventually(ObjectName objectName, long timeoutMillis) {
         checkMBeanExistsEventually(objectName, timeoutMillis*TimeUnit.MILLISECONDS)
     }
-    
+    @Deprecated
     public void checkMBeanExistsEventually(ObjectName objectName, TimeDuration timeout) {
+        assertMBeanExistsEventually(objectName, timeout);
+    }
+    public Set<ObjectInstance> doesMBeanExistsEventually(ObjectName objectName, TimeDuration timeout) {
         Set<ObjectInstance> beans = [] as Set
         boolean success = LanguageUtils.repeatUntilSuccess(timeout:timeout, "Wait for $objectName") {
             beans = findMBeans(objectName)
-            return beans.size() == 1
+            return !beans.isEmpty()
         }
-        if (!success) {
+        return beans
+    }
+    public void assertMBeanExistsEventually(ObjectName objectName, TimeDuration timeout) {
+        def beans = doesMBeanExistsEventually(objectName, timeout);
+        if (beans.size()!=1) {
             throw new IllegalStateException("MBean $objectName not found within $timeout" +
                     (beans.size() > 1 ? "; found multiple matches: $beans" : ""))
         }

@@ -35,7 +35,7 @@ class JavaAppUtils {
             
             jmxAdapter.objectName(ManagementFactory.RUNTIME_MXBEAN_NAME).with {
                 attribute("StartTime").subscribe(UsesJavaMXBeans.START_TIME);
-                attribute("UpTime").subscribe(UsesJavaMXBeans.UP_TIME);
+                attribute("Uptime").subscribe(UsesJavaMXBeans.UP_TIME);
             }
             
             jmxAdapter.objectName(ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME).with {

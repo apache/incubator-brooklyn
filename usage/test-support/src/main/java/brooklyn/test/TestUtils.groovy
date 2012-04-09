@@ -102,7 +102,7 @@ public class TestUtils {
      * @param finallyBlock
      */
     public static void executeUntilSucceedsWithFinallyBlock(Map flags=[:], Closure c, Closure finallyBlock={}) {
-        log.debug "abortOnError = {}", flags.abortOnError
+//        log.trace "abortOnError = {}", flags.abortOnError
         boolean abortOnException = flags.abortOnException ?: false
         boolean abortOnError = flags.abortOnError ?: false
         boolean useGroovyTruth = flags.useGroovyTruth ?: false

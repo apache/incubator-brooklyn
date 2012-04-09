@@ -7,28 +7,32 @@ import java.util.Map
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
-import brooklyn.entity.basic.Lifecycle;
-import brooklyn.entity.basic.legacy.JavaApp;
+import brooklyn.entity.basic.Lifecycle
+import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.event.adapter.SensorRegistry
-import brooklyn.event.adapter.legacy.OldJmxSensorAdapter;
-import brooklyn.event.basic.BasicAttributeSensor
 
 import com.google.common.base.Preconditions
 
-public abstract class JMSBroker<Q extends JMSDestination & Queue, T extends JMSDestination & Topic> extends JavaApp implements MessageBroker {
-    Collection<String> queueNames = []
-    Map<String, Q> queues = [:]
-    Collection<String> topicNames = []
-    Map<String, T> topics = [:]
+public abstract class JMSBroker<Q extends JMSDestination & Queue, T extends JMSDestination & Topic> extends SoftwareProcessEntity implements MessageBroker {
+    Collection<String> queueNames;
+    Collection<String> topicNames;
+    Map<String, Q> queues = [:];
+    Map<String, T> topics = [:];
 
     public JMSBroker(Map properties = [:], Entity owner = null) {
         super(properties, owner)
+    }
+    
+    public Entity configure(Map properties) {
+        if (queueNames==null) queueNames = []
+        if (properties.queue) queueNames.add properties.remove('queue')
+        if (properties.queues) queueNames.addAll properties.remove('queues')
 
-        if (properties.queue) queueNames.add properties.queue
-        if (properties.queues) queueNames.addAll properties.queues
-
-        if (properties.topic) topicNames.add properties.topic
-        if (properties.topics) topicNames.addAll properties.topics
+        if (topicNames==null) topicNames = []
+        if (properties.topic) topicNames.add properties.remove('topic')
+        if (properties.topics) topicNames.addAll properties.remove('topics')
+        
+        super.configure(properties)
     }
 
     @Override
@@ -43,15 +47,15 @@ public abstract class JMSBroker<Q extends JMSDestination & Queue, T extends JMSD
         setBrokerUrl();
     }
 
-	public void waitForServiceUp() {}
+	public abstract void waitForServiceUp();
 	
     public abstract void setBrokerUrl();
 
     @Override
     public void preStop() {
-    	super.preStop()
         queues.each { String name, JMSDestination queue -> queue.destroy() }
         topics.each { String name, JMSDestination topic -> topic.destroy() }
+        super.preStop()
     }
 
 	protected void checkBrokerCanBeModified() {
@@ -84,18 +88,12 @@ public abstract class JMSBroker<Q extends JMSDestination & Queue, T extends JMSD
 }
 
 public abstract class JMSDestination extends AbstractEntity {
-    transient OldJmxSensorAdapter jmxAdapter
-    transient SensorRegistry sensorRegistry
-
     public JMSDestination(Map properties=[:], Entity owner=null) {
         super(properties, owner)
 
         Preconditions.checkNotNull name, "Name must be specified"
 
         init()
-
-        jmxAdapter = ((JMSBroker) getOwner()).jmxAdapter
-        sensorRegistry = new SensorRegistry(this)
 
         create()
     }
@@ -104,20 +102,17 @@ public abstract class JMSDestination extends AbstractEntity {
 	
     public abstract void init();
 
-    public abstract void addJmxSensors()
-
-    public abstract void removeJmxSensors()
+    public abstract void connectSensors()
 
     public abstract void create();
 
     public abstract void delete();
 
-    @Override
     public void destroy() {
-        sensorRegistry.close()
+        delete()
         super.destroy()
     }
-
+    
     @Override
     public Collection<String> toStringFieldsToInclude() {
         return super.toStringFieldsToInclude() + ['name']
