@@ -9,6 +9,7 @@ import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.entity.basic.legacy.JavaApp;
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.util.NetworkUtils;
 import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.internal.StringEscapeUtils;
 
@@ -170,6 +171,7 @@ public abstract class SshBasedJavaAppSetup extends SshBasedAppSetup {
      * TODO security!
      */
     protected Map getJmxJavaSystemProperties() {
+        if (!NetworkUtils.isPortValid(jmxPort)) log.warn("Invalid JMX port ${jmxPort} for ${entity}")
         [
           "com.sun.management.jmxremote" : null,
           "com.sun.management.jmxremote.port" : jmxPort,

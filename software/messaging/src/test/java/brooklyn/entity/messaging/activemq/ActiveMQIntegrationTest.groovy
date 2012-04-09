@@ -4,7 +4,7 @@ import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeUnit
 
 import javax.jms.Connection
 import javax.jms.MessageConsumer
@@ -21,7 +21,6 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.Application
-import brooklyn.entity.basic.legacy.JavaApp;
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
@@ -31,8 +30,6 @@ import brooklyn.util.internal.TimeExtras
 
 /**
  * Test the operation of the {@link ActiveMQBroker} class.
- *
- * TODO clarify test purpose
  */
 public class ActiveMQIntegrationTest {
     private static final Logger log = LoggerFactory.getLogger(ActiveMQIntegrationTest.class)
@@ -46,7 +43,7 @@ public class ActiveMQIntegrationTest {
     @BeforeMethod(groups = "Integration")
     public void setup() {
         app = new TestApplication();
-        testLocation = new LocalhostMachineProvisioningLocation(name:'london', count:2)
+        testLocation = new LocalhostMachineProvisioningLocation()
     }
 
     @AfterMethod(groups = "Integration")
@@ -64,10 +61,24 @@ public class ActiveMQIntegrationTest {
         activeMQ = new ActiveMQBroker(owner:app);
         activeMQ.start([ testLocation ])
         executeUntilSucceedsWithShutdown(activeMQ, timeout:600*TimeUnit.SECONDS) {
-            assertTrue activeMQ.getAttribute(JavaApp.SERVICE_UP)
+            assertTrue activeMQ.getAttribute(Startable.SERVICE_UP)
         }
-        assertFalse activeMQ.getAttribute(JavaApp.SERVICE_UP)
+        assertFalse activeMQ.getAttribute(Startable.SERVICE_UP)
     }
+
+    /**
+    * Test that the broker starts up and sets SERVICE_UP correctly,
+    * when a jmx port is supplied
+    */
+   @Test(groups = "Integration")
+   public void canStartupAndShutdownWithCustomJmx() {
+       activeMQ = new ActiveMQBroker(owner:app, jmxPort: 11099);
+       app.start([ testLocation ])
+       executeUntilSucceedsWithShutdown(activeMQ, timeout:600*TimeUnit.SECONDS) {
+           assertTrue activeMQ.getAttribute(Startable.SERVICE_UP)
+       }
+       assertFalse activeMQ.getAttribute(Startable.SERVICE_UP)
+   }
 
     /**
      * Test that setting the 'queue' property causes a named queue to be created.
@@ -82,7 +93,7 @@ public class ActiveMQIntegrationTest {
         activeMQ = new ActiveMQBroker(owner:app, queue:queueName);
         activeMQ.start([ testLocation ])
         executeUntilSucceeds {
-            assertTrue activeMQ.getAttribute(JavaApp.SERVICE_UP)
+            assertTrue activeMQ.getAttribute(Startable.SERVICE_UP)
         }
 
         try {
@@ -102,20 +113,17 @@ public class ActiveMQIntegrationTest {
             // Connect to broker using JMS and send messages
             Connection connection = getActiveMQConnection(activeMQ)
             clearQueue(connection, queueName)
-			Thread.sleep 2000
-            assertEquals queue.getAttribute(ActiveMQQueue.QUEUE_DEPTH_MESSAGES), 0
+            executeUntilSucceeds { assertEquals queue.getAttribute(ActiveMQQueue.QUEUE_DEPTH_MESSAGES), 0 }
             sendMessages(connection, number, queueName, content)
-
             // Check messages arrived
-			Thread.sleep 2000
-            assertEquals queue.getAttribute(ActiveMQQueue.QUEUE_DEPTH_MESSAGES), number
+            executeUntilSucceeds { assertEquals queue.getAttribute(ActiveMQQueue.QUEUE_DEPTH_MESSAGES), number }
 
             // Clear the messages
             assertEquals clearQueue(connection, queueName), number
 
             // Check messages cleared
-			Thread.sleep 1000
-            assertEquals queue.getAttribute(ActiveMQQueue.QUEUE_DEPTH_MESSAGES), 0
+            executeUntilSucceeds { assertEquals queue.getAttribute(ActiveMQQueue.QUEUE_DEPTH_MESSAGES), 0 }
+
 	        connection.close()
 
             // Close the JMS connection

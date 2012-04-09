@@ -166,7 +166,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
                 if (!p?.isEmpty()) ports += p.iterator().next()
             }
         }
-        log.debug("getRequiredOpenPorts detected ${ports} for ${this}")
+        log.debug("getRequiredOpenPorts detected default ${ports} for ${this}")
         ports
     }
 
@@ -174,7 +174,19 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
     public void startInLocation(SshMachineLocation machine) {
         locations.add(machine)
 
-        // Note: must only apply config-sensors after adding to locations; otherwise can't do things like acquire free port from location
+        if (driver!=null) {
+            if ((driver in StartStopSshDriver) && ( ((StartStopSshDriver)driver).location==machine)) {
+                //just reuse
+            } else {
+                log.warn("driver/location change for {} is untested: cannot start ${this} on ${machine}: driver already created");
+                driverLocal = newDriver(machine)
+            }
+        } else {
+            driverLocal = newDriver(machine)
+        }
+        
+        // Note: must only apply config-sensors after adding to locations and creating driver; 
+        // otherwise can't do things like acquire free port from location, or allowing driver to set up ports
         // TODO use different method naming/overriding pattern, so as we have more things than SshMachineLocation they all still get called?
         ConfigSensorAdapter.apply(this);
         
@@ -185,16 +197,6 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
         Object val = getConfig(START_LATCH)
         if (val != null) LOG.debug("{} finished waiting for start-latch; continuing...", this, val)
         
-		if (driver!=null) {
-			if ((driver in StartStopSshDriver) && ( ((StartStopSshDriver)driver).location==machine)) {
-				//just reuse
-			} else {
-				log.warn("driver/location change for {} is untested: cannot start ${this} on ${machine}: driver already created");
-				driverLocal = newDriver(machine)
-			}
-		} else {
-			driverLocal = newDriver(machine)
-		}
 		if (driver) {
             preStart();
 			driver.start()
@@ -211,16 +213,21 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 		long waitTime = startTime + 75000 // FIXME magic number; should be config key with default value?
 		boolean isRunningResult = false;
 		while (!isRunningResult && System.currentTimeMillis() < waitTime) {
+		    Thread.sleep 1000 // FIXME magic number; should be config key with default value?
 			isRunningResult = driver.isRunning()
 			if (log.isDebugEnabled()) log.debug "checked {}, is running returned: {}", this, isRunningResult
-			Thread.sleep 1000 // FIXME magic number; should be config key with default value?
 		}
 		if (!isRunningResult) {
+            log.warn("Software process entity ${this} did not appear to start; setting state to indicate problem; consult logs for more details")
 			setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE)
 		}
 	}
 
 	public void stop() {
+        if (getAttribute(SERVICE_STATE)==Lifecycle.STOPPED) {
+            log.warn("Skipping stop of software process entity "+this+" when already stopped");
+            return;
+        }
         log.info("Stopping software process entity "+this);
 		setAttribute(SERVICE_STATE, Lifecycle.STOPPING)
         setAttribute(SERVICE_UP, false)
@@ -264,7 +271,7 @@ public interface UsesJava {
 }
 
 public interface UsesJmx extends UsesJava {
-	public static final int DEFAULT_JMX_PORT = 1099
+	public static final int DEFAULT_JMX_PORT = 1099;   // RMI port?
 	@SetFromFlag("jmxPort")
 	public static final PortAttributeSensorAndConfigKey JMX_PORT = Attributes.JMX_PORT
 	@SetFromFlag("rmiPort")

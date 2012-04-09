@@ -3,22 +3,20 @@ package brooklyn.entity.webapp.jboss
 import java.util.List
 import java.util.Map
 
-import com.google.common.base.Preconditions
-
 import brooklyn.entity.basic.SoftwareProcessEntity
-import brooklyn.entity.basic.Attributes
-import brooklyn.entity.basic.lifecycle.CommonCommands;
-import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
+import brooklyn.entity.basic.lifecycle.CommonCommands
+import brooklyn.entity.webapp.JavaWebAppSoftwareProcess
 import brooklyn.entity.webapp.JavaWebAppSshDriver
-import brooklyn.entity.webapp.PortPreconditions
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.util.NetworkUtils
+
+import com.google.common.base.Preconditions
 
 
 class JBoss7SshDriver extends JavaWebAppSshDriver {
 
 	/*
 	 * TODO
-	 * - collect ports used, release ports (http, management, jmx) for security groups
 	 * - security for stats access (see below)
 	 * - expose log file location, or even support accessing them dynamically
 	 * - more configurability of config files, java memory, etc
@@ -64,7 +62,7 @@ class JBoss7SshDriver extends JavaWebAppSshDriver {
      */
 	@Override
 	public void customize() {
-		PortPreconditions.checkPortsValid(httpPort:httpPort, managementPort:managementPort, managementNativePort:managementNativePort);
+		NetworkUtils.checkPortsValid(httpPort:httpPort, managementPort:managementPort, managementNativePort:managementNativePort);
         String hostname = entity.getAttribute(SoftwareProcessEntity.HOSTNAME)
         Preconditions.checkNotNull(hostname, "AS 7 entity must set hostname otherwise server will only be visible on localhost")
 		newScript(CUSTOMIZING).

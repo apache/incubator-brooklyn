@@ -51,6 +51,7 @@ public abstract class AbstractSensorAdapter {
 		deactivationListeners << onDown
 	}
 	protected void activateAdapter() {
+        if (activated) return; //prevent double activation
 		if (log.isDebugEnabled()) log.debug "activating adapter {} for {}", this, entity
 		activationListeners.each { it.call() }
 		activated = true;

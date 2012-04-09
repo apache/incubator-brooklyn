@@ -7,6 +7,9 @@ public class BrooklynSystemProperties {
 
     public static BooleanSystemProperty DEBUG = new BooleanSystemProperty("brooklyn.debug");
     public static BooleanSystemProperty EXPERIMENTAL = new BooleanSystemProperty("brooklyn.experimental");
+    
+    /** controls how long jsch delays between commands it issues */
+    public static IntegerSystemProperty JSCH_EXEC_DELAY = new IntegerSystemProperty("brooklyn.jsch.exec.delay");
 
     public static class StringSystemProperty {
         public StringSystemProperty(String name) {

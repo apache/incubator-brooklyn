@@ -1,56 +1,51 @@
 package brooklyn.entity.messaging.activemq
 
+import groovy.lang.MetaClass
+
 import java.util.Collection
 import java.util.Map
 import java.util.concurrent.TimeUnit
 
 import javax.management.ObjectName
-import javax.management.RuntimeMBeanException
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.Attributes
-import brooklyn.entity.basic.legacy.JavaApp
-import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup
+import brooklyn.entity.basic.SoftwareProcessEntity
+import brooklyn.entity.basic.UsesJmx
 import brooklyn.entity.messaging.JMSBroker
 import brooklyn.entity.messaging.JMSDestination
 import brooklyn.entity.messaging.Queue
 import brooklyn.entity.messaging.Topic
+import brooklyn.event.adapter.JmxHelper
+import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.adapter.SensorRegistry
-import brooklyn.event.adapter.legacy.OldJmxSensorAdapter
-import brooklyn.event.adapter.legacy.ValueProvider
+import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey
-import brooklyn.location.PortRange
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.internal.Repeater
-
-import com.google.common.base.Throwables
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single ActiveMQ broker instance.
  */
-public class ActiveMQBroker extends JMSBroker<ActiveMQQueue, ActiveMQTopic> {
+public class ActiveMQBroker extends JMSBroker<ActiveMQQueue, ActiveMQTopic> implements UsesJmx {
 	private static final Logger log = LoggerFactory.getLogger(ActiveMQBroker.class)
 
+    @SetFromFlag("version")
+    public static final BasicConfigKey<String> SUGGESTED_VERSION = [ SoftwareProcessEntity.SUGGESTED_VERSION, "5.5.1" ]
+
+    @SetFromFlag("openWirePort")
 	public static final PortAttributeSensorAndConfigKey OPEN_WIRE_PORT = [ "openwire.port", "OpenWire port", "61616+" ]
 
 	public ActiveMQBroker(Map properties=[:], Entity owner=null) {
 		super(properties, owner)
 
-		setConfigIfValNonNull(OPEN_WIRE_PORT, properties.openWirePort)
-
+        //TODO test, then change keys to be jmxUser, jmxPassword, configurable on the keys themselves
 		setConfigIfValNonNull(Attributes.JMX_USER, properties.user ?: "admin")
 		setConfigIfValNonNull(Attributes.JMX_PASSWORD, properties.password ?: "activemq")
-	}
-
-	@Override
-	protected Collection<Integer> getRequiredOpenPorts() {
-		Collection<Integer> result = super.getRequiredOpenPorts()
-		result.add(getConfig(OPEN_WIRE_PORT))
-		result.add(getConfig(RMI_PORT))
-		return result
 	}
 
 	public void setBrokerUrl() {
@@ -65,14 +60,18 @@ public class ActiveMQBroker extends JMSBroker<ActiveMQQueue, ActiveMQTopic> {
 		return new ActiveMQTopic(properties);
 	}
 
-	public SshBasedAppSetup newDriver(SshMachineLocation machine) {
-		return ActiveMQSetup.newInstance(this, machine)
+	public ActiveMQSshDriver newDriver(SshMachineLocation machine) {
+        return new ActiveMQSshDriver(this, machine)        
 	}
 
-	@Override
-	public void addJmxSensors() {
-		sensorRegistry.addSensor(JavaApp.SERVICE_UP, {
-			computeNodeUp() } as ValueProvider)
+    transient JmxSensorAdapter jmxAdapter;
+    
+    @Override     
+    protected void connectSensors() {
+       jmxAdapter = sensorRegistry.register(new JmxSensorAdapter());
+       jmxAdapter.objectName("org.apache.activemq:BrokerName=localhost,Type=Broker")
+           .attribute("BrokerId").subscribe(SERVICE_UP, { it as Boolean });
+       jmxAdapter.activateAdapter()
 	}
 
 	@Override
@@ -81,67 +80,38 @@ public class ActiveMQBroker extends JMSBroker<ActiveMQQueue, ActiveMQTopic> {
 	}
 
 	public void waitForServiceUp() {
-		Repeater.create(timeout: 60*TimeUnit.SECONDS)
-			.rethrowException().repeat().until { computeNodeUp() }
-//		long expiry = System.currentTimeMillis() + 60*1000;
-//		Exception lastError = null;
-//		while (false) {
-//			try {
-//				if (computeNodeUp()) break;
-//			} catch (RuntimeMBeanException e) {
-//				//ignore while starting, report if we can't start
-//				lastError = e;
-//			} 
-//			if (System.currentTimeMillis()>expiry)
-//				throw new IllegalStateException("failed to start", lastError) 
-//			Thread.sleep(200);
-//		}
+		if (!Repeater.create(timeout: 60*TimeUnit.SECONDS)
+			    .rethrowException().repeat().every(1*TimeUnit.SECONDS).until { getAttribute(SERVICE_UP) }.
+                run()) {
+            throw new IllegalStateException("Could not connect via JMX to determine ${this} is up");
+		}
 		log.info("started JMS $this")
 	}
-
-	protected boolean computeNodeUp() {
-		String host = getAttribute(HOSTNAME)
-
-		//        ValueProvider<String> provider = jmxAdapter.newAttributeProvider("org.apache.camel:context=*/camel,type=components,name=\"activemq\"", "State")
-		//        		FIXME ADK i (alex) am not seeing any camel attributes ?
-
-		//FIXME ADK - also i (alex) wonder if we can remove the "BrokerName=localhost" part 
-		//of the object name lookups, in favour of = *
-		//(we can be pretty sure there is only one being hosted by this process, right?)
-
-		//caller catches most errors, but logs them; this particular error
-		try {
-			ValueProvider<String> provider = jmxAdapter.newAttributeProvider("org.apache.activemq:BrokerName=localhost,Type=Broker", "BrokerId")
-			String state = provider.compute()
-			return (state)  //was =="Started" for camel
-		} catch (RuntimeMBeanException e) {
-            if (e.cause in NullPointerException) {
-                log.warn("ActiveMQ gave NullPointerException when reading JMX computeNodeUp; known issue with ActiveMQ and should resovle itself soon after start-up")
-            } else {
-                Throwables.propagate(e);
-            }
-        }
-//		} catch (Exception e) {
-//			//get InstanceNotFound and even NPE (from looking up broker id on other side)
-//			//if connect too early
-//			return false
-//		}
-	}
+    
 }
 
 public abstract class ActiveMQDestination extends JMSDestination {
 	protected ObjectName broker
+	protected transient SensorRegistry sensorRegistry
+	protected transient JmxSensorAdapter jmxAdapter
 
 	public ActiveMQDestination(Map properties=[:], Entity owner=null) {
 		super(properties, owner)
 	}
-
+    
 	public void init() {
+        //assume just one BrokerName at this endpoint
 		broker = new ObjectName("org.apache.activemq:BrokerName=localhost,Type=Broker")
+        if (!sensorRegistry) sensorRegistry = new SensorRegistry(this)
+        def helper = new JmxHelper(owner)
+        helper.connect();
+        jmxAdapter = sensorRegistry.register(new JmxSensorAdapter(helper));
 	}
 }
 
 public class ActiveMQQueue extends ActiveMQDestination implements Queue {
+    public static final Logger log = LoggerFactory.getLogger(ActiveMQQueue.class);
+            
 	public ActiveMQQueue(Map properties=[:], Entity owner=null) {
 		super(properties, owner)
 	}
@@ -153,24 +123,25 @@ public class ActiveMQQueue extends ActiveMQDestination implements Queue {
 	}
 
 	public void create() {
-		println "id is "+jmxAdapter.getAttribute(broker, "BrokerId")
-		jmxAdapter.operation(broker, "addQueue", name)
-		addJmxSensors()
+		if (log.isDebugEnabled()) log.debug("${this} adding queue ${name} to broker "+jmxAdapter.helper.getAttribute(broker, "BrokerId"))
+        
+		jmxAdapter.helper.operation(broker, "addQueue", name)
+        
+        connectSensors();
+        sensorRegistry.activateAdapters();
 	}
 
 	public void delete() {
-		jmxAdapter.operation(broker, "removeQueue", name)
-		removeJmxSensors()
+		jmxAdapter.helper.operation(broker, "removeQueue", name)
+        sensorRegistry.deactivateAdapters()
 	}
 
-	public void addJmxSensors() {
-		String queue = "org.apache.activemq:BrokerName=localhost,Type=Queue,Destination=${name}"
-		sensorRegistry.addSensor(QUEUE_DEPTH_MESSAGES, jmxAdapter.newAttributeProvider(queue, "QueueSize"))
-	}
+    @Override
+    public void connectSensors() {
+        String queue = "org.apache.activemq:BrokerName=localhost,Type=Queue,Destination=${name}"
+        jmxAdapter.objectName(queue).attribute("QueueSize").subscribe(QUEUE_DEPTH_MESSAGES)
+    }
 
-	public void removeJmxSensors() {
-		sensorRegistry.removeSensor(QUEUE_DEPTH_MESSAGES)
-	}
 }
 
 public class ActiveMQTopic extends ActiveMQDestination implements Topic {
@@ -185,19 +156,17 @@ public class ActiveMQTopic extends ActiveMQDestination implements Topic {
 	}
 
 	public void create() {
-		jmxAdapter.operation(broker, "addTopic", name)
-		addJmxSensors()
+		jmxAdapter.helper.operation(broker, "addTopic", name)
+		connectSensors()
+        sensorRegistry.activateAdapters();
 	}
 
 	public void delete() {
-		jmxAdapter.operation(broker, "removeTopic", name)
-		removeJmxSensors()
+		jmxAdapter.helper.operation(broker, "removeTopic", name)
+		sensorRegistry.deactivateAdapters()
 	}
 
-	public void addJmxSensors() {
+	public void connectSensors() {
 		//TODO add sensors for topics
-	}
-
-	public void removeJmxSensors() {
 	}
 }

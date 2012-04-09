@@ -4,6 +4,9 @@ import groovy.transform.InheritConstructors
 
 import javax.management.ObjectName
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 import brooklyn.event.Sensor
 
 
@@ -15,6 +18,8 @@ import brooklyn.event.Sensor
  */
 @InheritConstructors
 public class JmxAttributeAdapter extends AbstractSensorAdapter {
+    public static final Logger log = LoggerFactory.getLogger(JmxAttributeAdapter.class);
+    
 	final JmxSensorAdapter adapter;
 	final ObjectName objectName;
 	final String attributeName;
@@ -23,6 +28,7 @@ public class JmxAttributeAdapter extends AbstractSensorAdapter {
 	public JmxAttributeAdapter(Map flags=[:], JmxSensorAdapter adapter, ObjectName objectName, String attributeName) {
 		super(flags);
 		this.adapter = adapter;
+        adapter.addActivationLifecycleListeners({activateAdapter()},{deactivateAdapter()});
 		poller = new AttributePollHelper(adapter, objectName, attributeName);
 		this.objectName = objectName;
 		this.attributeName = attributeName;
@@ -55,4 +61,13 @@ public class JmxAttributeAdapter extends AbstractSensorAdapter {
 		//TODO make a "notifications" stream and use it instead
 		poll(s, postProcessing)
 	}
+    
+    @Override
+    protected void activateAdapter() {
+        super.activateAdapter();
+        if (adapter.checkObjectNameExists(objectName)) {
+            if (log.isDebugEnabled()) 
+                log.debug("Initial value of $entity ${adapter.helper.url} JMX is: "+adapter.helper.getAttribute(objectName, attributeName));
+        }
+    }
 }

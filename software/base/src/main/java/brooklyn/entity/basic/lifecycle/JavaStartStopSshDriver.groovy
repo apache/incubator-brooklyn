@@ -9,9 +9,11 @@ import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.entity.basic.UsesJmx
 import brooklyn.entity.basic.legacy.JavaApp
-import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.internal.StringEscapeUtils
+
+import com.google.common.base.Throwables
 
 public abstract class JavaStartStopSshDriver extends StartStopSshDriver {
 
@@ -53,8 +55,14 @@ public abstract class JavaStartStopSshDriver extends StartStopSshDriver {
 	 **/
 	public List<String> getJavaOpts() {
 		getCustomJavaConfigOptions() + (getJavaSystemProperties().collect { k,v ->
-            v = BasicConfigKey.resolveValue(v, String, entity.executionContext);
-            return "-D"+k+(v!=null? "="+v : "") 
+            try {
+                if (v in Integer || v in Long || v in Boolean) v = ""+v;
+                v = BasicConfigKey.resolveValue(v, String, entity.executionContext);
+                return "-D"+k+(v!=null? "="+v : "")
+            } catch (Exception e) {
+                log.warn("Error resolving java option key ${k}, propagating: "+e);
+                Throwables.propagate(e);
+            } 
         })
 	}
 

@@ -21,6 +21,7 @@ public class JmxOperationAdapter extends AbstractSensorAdapter {
 	
 	public JmxOperationAdapter(Map flags=[:], JmxSensorAdapter adapter, ObjectName objectName, String methodName, Object ...args) {
 		super(flags);
+        adapter.addActivationLifecycleListeners({activateAdapter()},{deactivateAdapter()});
 		this.adapter = adapter;
 		this.objectName = objectName;
 		this.methodName = methodName;
@@ -52,4 +53,10 @@ public class JmxOperationAdapter extends AbstractSensorAdapter {
 	public void poll(Sensor s, Closure postProcessing={it}) {
 		poller.addSensor(s, postProcessing);
 	}
+    
+    @Override
+    protected void activateAdapter() {
+        super.activateAdapter();
+        adapter.checkObjectNameExists(objectName);
+    }
 }

@@ -32,6 +32,7 @@ class JmxNotificationAdapter extends AbstractSensorAdapter {
     public JmxNotificationAdapter(Map flags=[:], JmxSensorAdapter adapter, ObjectName objectName, String notificationType) {
         super(flags);
         this.adapter = adapter;
+        adapter.addActivationLifecycleListeners({activateAdapter()},{deactivateAdapter()});
         pusher = new NotificationPushHelper(adapter, objectName, notificationType);
         this.objectName = objectName;
         this.notificationType = notificationType;
@@ -94,4 +95,11 @@ class JmxNotificationAdapter extends AbstractSensorAdapter {
     public void subscribe(NotificationListener listener) {
         pusher.addListener(listener);
     }
+    
+    @Override
+    protected void activateAdapter() {
+        super.activateAdapter();
+        adapter.checkObjectNameExists(objectName);
+    }
+
 }

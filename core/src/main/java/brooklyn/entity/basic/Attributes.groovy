@@ -20,8 +20,8 @@ public interface Attributes {
 
     /*
      * Application information sensors.
+     * @see SoftwareProcessEntities.SUGGESTED_VERSION
      */
-
     BasicAttributeSensor<Integer> VERSION = [ String, "version", "Version information" ]
 
     /*

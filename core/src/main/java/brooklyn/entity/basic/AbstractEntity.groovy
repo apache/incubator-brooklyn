@@ -45,6 +45,7 @@ import brooklyn.util.internal.ConfigKeySelfExtracting
 import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.task.BasicExecutionContext
 
+import com.google.common.base.Equivalences.Equals;
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.Iterables
 
@@ -488,7 +489,13 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     
     @Override
     public <T> T setAttribute(AttributeSensor<T> attribute, T val) {
-        if (LOG.isDebugEnabled()) LOG.debug "setting attribute {} to {} on {}", attribute.name, val, this
+        if (LOG.isDebugEnabled()) {
+            Object oldValue = getAttribute(attribute);
+            if ((oldValue==null && val!=null) || (oldValue!=null && !oldValue.equals(val)))
+                LOG.debug "setting attribute {} to {} (was {}) on {}", attribute.name, val, oldValue, this
+            else    
+                if (LOG.isTraceEnabled()) LOG.trace "setting attribute {} to {} (unchanged) on {}", attribute.name, val, this
+        }
         attributesInternal.update(attribute, val);
     }
 
