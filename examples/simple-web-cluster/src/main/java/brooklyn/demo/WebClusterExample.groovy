@@ -53,7 +53,7 @@ public class WebClusterExample extends AbstractApplication {
         name: "WebApp cluster",
         controller: nginxController,
         initialSize: 1,
-        webServerFactory: jbossFactory)
+        factory: jbossFactory)
     
     ResizerPolicy policy = new ResizerPolicy(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND).
         setSizeRange(1, 5).
