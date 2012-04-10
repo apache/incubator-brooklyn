@@ -16,7 +16,7 @@ import com.google.common.base.Function
  * <p>
  * Example usage:
  * <code>
- *   def fnSensorAdaptor = new FunctionSensorAdapter(&myFunction);
+ *   def fnSensorAdaptor = sensorRegistry.register(new FunctionSensorAdapter(&myFunction));
  *   fnSensorAdaptor.poll(MY_BROOKLYN_RAW_DATA_ATTRIBTE)
  *   fnSensorAdaptor.then({ MyStruct.parse(it) }).with {
  *       then({ it.field1 }).poll(MY_BROOKLYN_ATTRIBUTE_1)
