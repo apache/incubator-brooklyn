@@ -12,11 +12,11 @@ import brooklyn.entity.basic.Entities
 import brooklyn.entity.proxy.nginx.NginxController
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster
 import brooklyn.entity.webapp.DynamicWebAppCluster
-import brooklyn.entity.webapp.JavaWebAppService
 import brooklyn.entity.webapp.jboss.JBoss7ServerFactory
 import brooklyn.launcher.BrooklynLauncher
 import brooklyn.location.Location
 import brooklyn.location.basic.CommandLineLocations
+import brooklyn.location.basic.LocationRegistry
 import brooklyn.policy.ResizerPolicy
 import brooklyn.util.CommandLineUtil
 
@@ -63,7 +63,7 @@ public class WebClusterExample extends AbstractApplication {
     public static void main(String[] argv) {
         ArrayList args = new ArrayList(Arrays.asList(argv));
         int port = CommandLineUtil.getCommandLineOptionInt(args, "--port", 8081);
-        List<Location> locations = CommandLineLocations.getLocationsById(args ?: [DEFAULT_LOCATION])
+        List<Location> locations = new LocationRegistry().getLocationsById(args ?: [DEFAULT_LOCATION])
 
         WebClusterExample app = new WebClusterExample(name:'Brooklyn WebApp Cluster example')
             
@@ -73,5 +73,5 @@ public class WebClusterExample extends AbstractApplication {
         
         app.web.cluster.addPolicy(app.policy)
     }
-    
+
 }

@@ -1,0 +1,60 @@
+package brooklyn.location.basic;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.ServiceLoader;
+
+import brooklyn.config.BrooklynProperties;
+import brooklyn.location.Location;
+import brooklyn.location.LocationResolver;
+
+public class LocationRegistry {
+
+    private final Map properties;
+    
+    public LocationRegistry() {
+        this(BrooklynProperties.Factory.newDefault());
+    }
+    public LocationRegistry(Map properties) {
+        this.properties = properties;
+        findServices();
+    }
+    
+    protected Map<String,LocationResolver> resolvers = new LinkedHashMap<String, LocationResolver>();
+    
+    protected void findServices() {
+        ServiceLoader<LocationResolver> loader = ServiceLoader.load(LocationResolver.class);
+        for (LocationResolver r: loader)
+            resolvers.put(r.getPrefix(), r);
+    }
+
+    public Location resolve(String spec) {
+        int colon = spec.indexOf(':');
+        String prefix = colon>=0 ? spec.substring(0, colon) : spec;
+        LocationResolver resolver = resolvers.get(prefix);
+        
+        if (resolver==null) {
+            //default to jclouds; could do a lookup to ensure provider supported by jclouds
+            resolver = resolvers.get("jclouds");
+        }
+        
+        if (resolver!=null) {
+            return resolver.newLocationFromString(properties, spec);
+        }
+        
+        throw new NoSuchElementException("No resolver found for '"+prefix+"' when trying to find location "+spec);
+    }
+    
+    public List<Location> getLocationsById(Collection<String> ids) {
+        List<Location> result = new ArrayList<Location>();
+        for (String id: ids) {
+            result.add(resolve(id));
+        }
+        return result;
+    }
+    
+}

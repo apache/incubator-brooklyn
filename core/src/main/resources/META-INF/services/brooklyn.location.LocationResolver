@@ -1,0 +1,2 @@
+brooklyn.location.basic.LocalhostResolver
+brooklyn.location.basic.JcloudsResolver
