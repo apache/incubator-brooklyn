@@ -7,8 +7,10 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
+import brooklyn.entity.basic.AbstractConfigurableEntityFactory
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.ConfigurableEntityFactory
+import brooklyn.entity.basic.EntityFactoryForLocation
 import brooklyn.entity.group.AbstractController
 import brooklyn.entity.group.Cluster
 import brooklyn.entity.proxy.nginx.NginxController
@@ -16,6 +18,7 @@ import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.jboss.JBoss7ServerFactory
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.Location
+import brooklyn.location.MachineProvisioningLocation
 import brooklyn.util.flags.SetFromFlag
 
 /**
@@ -118,4 +121,26 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
         start(locations);
     }
 
+    public interface WebClusterAwareLocation {
+        ConfigurableEntityFactory<ControlledDynamicWebAppCluster> newWebClusterFactory();
+    }
+
+    public static class Factory extends AbstractConfigurableEntityFactory<ControlledDynamicWebAppCluster>
+    implements EntityFactoryForLocation<ControlledDynamicWebAppCluster> {
+
+        public ControlledDynamicWebAppCluster newEntity2(Map flags, Entity owner) {
+            new ControlledDynamicWebAppCluster(flags, owner);
+        }
+
+        public ConfigurableEntityFactory<ControlledDynamicWebAppCluster> newFactoryForLocation(Location l) {
+            if (l in WebClusterAwareLocation) {
+                return ((WebClusterAwareLocation)l).newWebClusterFactory().configure(config);
+            }
+            //optional
+            if (!(l in MachineProvisioningLocation))
+                throw new UnsupportedOperationException("cannot create this entity in location "+l);
+            return this;
+        }
+    }
+        
 }

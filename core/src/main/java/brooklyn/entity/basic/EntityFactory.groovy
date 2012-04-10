@@ -2,6 +2,7 @@ package brooklyn.entity.basic;
 
 import brooklyn.entity.ConfigKey
 import brooklyn.entity.Entity
+import brooklyn.location.Location;
 
 public interface EntityFactory<T extends Entity> {
     T newEntity(Map flags, Entity owner);
@@ -13,7 +14,7 @@ public interface ConfigurableEntityFactory<T extends Entity> extends EntityFacto
 }
 
 public abstract class AbstractConfigurableEntityFactory<T extends Entity> implements ConfigurableEntityFactory<T> {
-    private final Map config = [:];
+    protected final Map config = [:];
     public AbstractConfigurableEntityFactory(Map flags=[:]) { 
         this.config << flags;
     }
@@ -67,4 +68,10 @@ public class ConfigurableEntityFactoryFromEntityFactory<T extends Entity> extend
     public ConfigurableEntityFactoryFromEntityFactory(Map flags=[:], EntityFactory factory) {
         super(flags, factory.&newEntity);
     }
+}
+
+/** dispatch interface to allow an EntityFactory to indicate it might be able to discover
+ *  other factories for specific locations (e.g. if the location implements a custom entity-aware interface) */
+public interface EntityFactoryForLocation<T extends Entity> {
+    ConfigurableEntityFactory<T> newFactoryForLocation(Location l);
 }
