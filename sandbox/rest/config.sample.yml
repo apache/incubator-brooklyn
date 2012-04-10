@@ -1,0 +1,10 @@
+# Config file for the Brooklyn REST endpoint
+
+# TODO application specific settings
+
+# Logging settings
+
+logging:
+  console:
+    enabled: true
+    threshold: ALL
