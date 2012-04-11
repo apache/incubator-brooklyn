@@ -1,13 +1,10 @@
 package brooklyn.util.internal
 
-import groovy.time.TimeDuration;
-
-import java.lang.reflect.Field;
+import java.lang.reflect.Field
 import java.lang.reflect.Modifier
 import java.util.ArrayList
 import java.util.Collection
 import java.util.Map
-import java.util.Random;
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
 

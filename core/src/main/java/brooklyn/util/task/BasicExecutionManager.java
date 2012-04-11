@@ -34,6 +34,7 @@ import brooklyn.management.Task;
 import brooklyn.util.internal.LanguageUtils;
 
 import com.google.common.base.CaseFormat;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 
 /**
@@ -219,10 +220,12 @@ public class BasicExecutionManager implements ExecutionManager {
         
         beforeSubmit(flags, task);
         
-        assert ((BasicTask)task).job != null : "submission of task "+task+" with null job";
+        if (((BasicTask)task).job==null) 
+            throw new NullPointerException("Task "+task+" submitted with with null job: job must be supplied.");
         
         Callable job = new Callable() { public Object call() {
             Object result = null;
+            Throwable error = null;
             String oldThreadName = Thread.currentThread().getName();
             try {
                 if (RENAME_THREADS) {
@@ -235,16 +238,16 @@ public class BasicExecutionManager implements ExecutionManager {
                     result = ((BasicTask)task).job.call();
                 } else throw new CancellationException();
             } catch(Throwable e) {
-                result = e;
+                error = e;
             } finally {
                 if (RENAME_THREADS) {
                     Thread.currentThread().setName(oldThreadName);
                 }
                 afterEnd(flags, task);
             }
-            if (result instanceof Throwable) {
-                log.warn("Error while running task "+task+" (rethrowing): "+((Throwable)result).getMessage(), (Throwable)result);
-                throw Throwables.propagate((Throwable)result);
+            if (error!=null) {
+                log.warn("Error while running task "+task+" (rethrowing): "+error.getMessage(), error);
+                throw Throwables.propagate(error);
             }
             return result;
         }};

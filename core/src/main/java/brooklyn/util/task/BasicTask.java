@@ -55,7 +55,7 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
 
     protected final Set tags = new LinkedHashSet();
 
-    String blockingDetails = null;
+    protected String blockingDetails = null;
 
     /**
      * Constructor needed to prevent confusion in groovy stubs when looking for default constructor,
@@ -417,5 +417,13 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
 
     public String getDescription() {
         return description;
+    }
+    
+    public void setBlockingDetails(String blockingDetails) {
+        this.blockingDetails = blockingDetails;
+    }
+    
+    public String getBlockingDetails() {
+        return blockingDetails;
     }
 }
