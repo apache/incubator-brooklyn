@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.enricher.basic.AbstractAggregatingEnricher;
 import brooklyn.entity.Entity
+import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener;
@@ -33,6 +34,7 @@ class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<S,T> im
     @Override
     public void onEvent(SensorEvent<S> event) {
         try {
+            assert event.getSource() in AttributeSensor : "Enricher $this only applicable to AttributeSensors, not $event"
             values.put(event.getSource(), event.getValue())
             entity.setAttribute(target, getAggregate())
         } catch (Throwable t) {
