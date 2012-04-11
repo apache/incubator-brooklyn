@@ -62,5 +62,29 @@ public class LocationResolverTest {
     public void testJcloudsOnlyFails() {
         resolve("jclouds");
     }
+    
+    @Test
+    public void testAcceptsList() {
+        new LocationRegistry().getLocationsById(["localhost"]);
+    }
+    
+    @Test
+    public void testAcceptsListOLists() {
+        //accidental, but if inner list has a single item it automatically gets coerced correctly to string
+        //preserve for compatibility with older CommandLineLocations (since 0.4.0) [but log warning]
+        new LocationRegistry().getLocationsById([["localhost"]]);
+    }
+
+    @Test
+    public void testLegacyCommandLineAcceptsList() {
+        CommandLineLocations.getLocationsById(["localhost"]);
+    }
+    
+    @Test
+    public void testLegacyCommandLineAcceptsListOLists() {
+        //accidental, but if inner list has a single item it automatically gets coerced correctly to string
+        //preserve for compatibility (since 0.4.0)
+        CommandLineLocations.getLocationsById([["localhost"]]);
+    }
 
 }

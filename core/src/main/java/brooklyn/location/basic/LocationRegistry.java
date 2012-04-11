@@ -8,12 +8,17 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.ServiceLoader;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.config.BrooklynProperties;
 import brooklyn.location.Location;
 import brooklyn.location.LocationResolver;
 
 public class LocationRegistry {
 
+    public static final Logger log = LoggerFactory.getLogger(LocationRegistry.class);
+    
     private final Map properties;
     
     public LocationRegistry() {
@@ -51,8 +56,15 @@ public class LocationRegistry {
     
     public List<Location> getLocationsById(Collection<String> ids) {
         List<Location> result = new ArrayList<Location>();
-        for (String id: ids) {
-            result.add(resolve(id));
+        for (Object id: ids) {
+            if (id instanceof String) result.add(resolve((String)id));
+            else if (id instanceof Collection) {
+                log.warn("LocationRegistry got list of list of location strings, "+ids+"; flattening");
+                result.addAll(getLocationsById((Collection)id));
+            } else if (id instanceof Location) result.add((Location)id);
+            else {
+                throw new IllegalArgumentException("Cannot resolve '"+id+"' to a location; unsupported type");
+            }
         }
         return result;
     }
