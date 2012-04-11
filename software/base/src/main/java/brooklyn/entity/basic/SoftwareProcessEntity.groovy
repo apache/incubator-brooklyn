@@ -24,6 +24,7 @@ import brooklyn.location.MachineLocation
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.NoMachinesAvailableException
 import brooklyn.location.PortRange
+import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.flags.SetFromFlag
 
@@ -146,12 +147,14 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
             def ports = getRequiredOpenPorts();
             if (ports) flags.inboundPorts = getRequiredOpenPorts()
         }
-        LOG.info("SoftwareProcessEntity {} obtaining a new location instance in {} with ports {}", this, location, flags.inboundPorts)
+        if (!(location in LocalhostMachineProvisioningLocation))
+            LOG.info("SoftwareProcessEntity {} obtaining a new location instance in {} with ports {}", this, location, flags.inboundPorts)
 
 		provisioningLoc = location
 		SshMachineLocation machine = location.obtain(flags)
 		if (machine == null) throw new NoMachinesAvailableException(location)
-        LOG.info("SoftwareProcessEntity {} obtained a new location instance {}, now preparing process there", this, machine)
+        if (!(location in LocalhostMachineProvisioningLocation))
+            LOG.info("SoftwareProcessEntity {} obtained a new location instance {}, now preparing process there", this, machine)
 		startInLocation(machine)
 	}
 
