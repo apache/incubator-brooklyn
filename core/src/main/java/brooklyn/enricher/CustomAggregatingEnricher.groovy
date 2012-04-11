@@ -34,7 +34,7 @@ class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<S,T> im
     @Override
     public void onEvent(SensorEvent<S> event) {
         try {
-            assert event.getSource() in AttributeSensor : "Enricher $this only applicable to AttributeSensors, not $event"
+            assert event.getSensor() in AttributeSensor : "Enricher $this only applicable to AttributeSensors, not $event"
             values.put(event.getSource(), event.getValue())
             entity.setAttribute(target, getAggregate())
         } catch (Throwable t) {

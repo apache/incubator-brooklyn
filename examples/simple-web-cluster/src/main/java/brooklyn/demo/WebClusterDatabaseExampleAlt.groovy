@@ -9,18 +9,17 @@ import org.slf4j.LoggerFactory
 import brooklyn.config.BrooklynProperties
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
-import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities
-import brooklyn.entity.database.mysql.MySqlNode;
+import brooklyn.entity.database.mysql.MySqlNode
 import brooklyn.entity.proxy.nginx.NginxController
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster
 import brooklyn.entity.webapp.DynamicWebAppCluster
 import brooklyn.entity.webapp.JavaWebAppService
 import brooklyn.entity.webapp.jboss.JBoss7Server
-import brooklyn.event.basic.DependentConfiguration;
+import brooklyn.event.basic.DependentConfiguration
 import brooklyn.launcher.BrooklynLauncher
 import brooklyn.location.Location
-import brooklyn.location.basic.CommandLineLocations
+import brooklyn.location.basic.LocationRegistry
 import brooklyn.policy.ResizerPolicy
 import brooklyn.util.CommandLineUtil
 
@@ -38,7 +37,7 @@ public class WebClusterDatabaseExampleAlt extends AbstractApplication {
     
     static BrooklynProperties config = BrooklynProperties.Factory.newDefault()
 
-    public static final List<String> DEFAULT_LOCATION = [ CommandLineLocations.LOCALHOST ]
+    public static final String DEFAULT_LOCATION = "localhost"
 
     public static final String WAR_PATH = "classpath://hello-world-webapp.war"
     
@@ -92,7 +91,7 @@ INSERT INTO MESSAGES values (default, 'Isaac Asimov', 'I grew up in Brooklyn' );
     public static void main(String[] argv) {
         ArrayList args = new ArrayList(Arrays.asList(argv));
         int port = CommandLineUtil.getCommandLineOptionInt(args, "--port", 8081);
-        List<Location> locations = CommandLineLocations.getLocationsById(args ?: [DEFAULT_LOCATION])
+        List<Location> locations = new LocationRegistry().getLocationsById(args ?: [DEFAULT_LOCATION])
 
         WebClusterDatabaseExampleAlt app = new WebClusterDatabaseExampleAlt(name:'Brooklyn WebApp Cluster with Database example')
             

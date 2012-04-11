@@ -34,7 +34,7 @@ public class WebClusterExample extends AbstractApplication {
     
     static BrooklynProperties config = BrooklynProperties.Factory.newDefault()
 
-    public static final List<String> DEFAULT_LOCATION = [ CommandLineLocations.LOCALHOST ]
+    public static final String DEFAULT_LOCATION = "localhost"
 
     public static final String WAR_PATH = "classpath://hello-world-webapp.war"
     
