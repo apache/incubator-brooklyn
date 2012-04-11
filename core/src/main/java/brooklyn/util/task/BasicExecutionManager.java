@@ -44,10 +44,12 @@ public class BasicExecutionManager implements ExecutionManager {
     private static final Logger log = LoggerFactory.getLogger(BasicExecutionManager.class);
 
     /**
-     * Renaming threads can really helps with debugging etc; however it's a massive performance hit.
-     * We can run approx 2300 tasks per sec (submitted from a single thread) when using thread-renaming,
-     * compared to almost 6500 when this is disabled.
-     * 
+     * Renaming threads can really helps with debugging etc; however it's a massive performance hit (2x)
+     * <p>
+     * We get 55000 tasks per sec with this off, 28k/s with this on.
+     * <p>
+     * (In old Groovy version btw we could run 6500/s vs 2300/s with renaming, from a single thread.) 
+     * <p>
      * Defaults to false if system property is not set.
      */
     private static final boolean RENAME_THREADS = Boolean.parseBoolean(System.getProperty("brooklyn.executionManager.renameThreads"));

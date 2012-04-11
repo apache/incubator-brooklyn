@@ -221,6 +221,7 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
                 try {
                     wait();
                 } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
                     Throwables.propagate(e);
                 }
             if (result!=null) return;
@@ -228,8 +229,18 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
     }
 
     public void blockUntilEnded() {
-        try { blockUntilStarted(); } catch (Throwable t) { /* swallow errors when using this method */ return; }
-        try { result.get(); } catch (Throwable t) { /* swallow errors when using this method */ return; }
+        try { blockUntilStarted(); } catch (Throwable t) {
+            if (log.isDebugEnabled())
+                log.debug("call from "+Thread.currentThread()+" blocking until "+this+" finishes ended with error: "+t);
+            /* contract is just to log errors at debug, otherwise do nothing */
+            return; 
+        }
+        try { result.get(); } catch (Throwable t) {
+            if (log.isDebugEnabled())
+                log.debug("call from "+Thread.currentThread()+" blocking until "+this+" finishes ended with error: "+t);
+            /* contract is just to log errors at debug, otherwise do nothing */
+            return; 
+        }
     }
 
     public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {

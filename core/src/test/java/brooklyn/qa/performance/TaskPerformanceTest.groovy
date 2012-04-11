@@ -33,7 +33,7 @@ public class TaskPerformanceTest extends AbstractPerformanceTest {
         executionManager = app.managementContext.executionManager
     }
     
-    public static final int numIterations = 1000000;
+    public static final int numIterations = 200000;
     @Test(groups=["Integration", "Acceptance"])
     public void testExecuteSimplestRunnable() {
         double minRatePerSec = 1000
