@@ -53,6 +53,7 @@ public interface Task<T> extends TaskStub, Future<T> {
      * Causes calling thread to block until the task is ended.
      *
      * Either normally or by cancellation or error, but without throwing error on cancellation or error.
+     * (Errors are logged at debug.)
      */
     public void blockUntilEnded();
 

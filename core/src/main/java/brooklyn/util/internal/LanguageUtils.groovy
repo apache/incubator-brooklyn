@@ -1,8 +1,6 @@
 package brooklyn.util.internal
 
-import groovy.time.TimeDuration;
-
-import java.lang.reflect.Field;
+import java.lang.reflect.Field
 import java.lang.reflect.Modifier
 import java.util.ArrayList
 import java.util.Collection
