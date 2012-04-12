@@ -47,12 +47,13 @@ Once you've got the code imported, the following hints may be helpful:
   the tips [for jclouds maven-eclipse](http://www.jclouds.org/documentation/devguides/using-eclipse) might be helpful. 
 
 * Some maven integration sets up crazy filters in the generated ``.classpath`` files,
-  excluding * or **
+  excluding * or ** or including only *.java.
   You can go through and remove these manually in Eclipse (Build Path -> Configure)
   or the filesystem.
   The following command has been suggested to remove these rogue blocks in the generated .classpath files:
 
-  ``find . -name .classpath -exec sed -i 's/excluding="[*\/]*" //' {} \;``
+  ``find . -name .classpath -exec sed -i.bak 's/[ ]*..cluding="[\*\/]*\(\.java\)*"//g' {} \;``
+
 
 * Getting the web console project to build nicely is much trickier; basically you build from the
   command-line, then add all the source folders, and ``target/plugin-classes`` as a class file folder.
