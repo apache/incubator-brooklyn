@@ -10,11 +10,13 @@ import static org.testng.Assert.assertEquals;
 import org.testng.annotations.Test;
 
 public class ApplicationTest {
-  final Entity entity = new Entity("brooklyn.entity.java.VanillaJavaApp", ImmutableMap.<String, String>of(
-      "initialSize", "1",
-      "creationScriptUrl", "http://my.brooklyn.io/storage/foo.sql"
-  ));
-  final Application application = new Application(ImmutableSet.of(entity));
+  final Entity entity = new Entity("brooklyn.entity.java.VanillaJavaApp",
+      ImmutableMap.<String, String>of(
+          "initialSize", "1",
+          "creationScriptUrl", "http://my.brooklyn.io/storage/foo.sql"
+      ));
+  final Application application = new Application("myapp", ImmutableSet.of(entity),
+      ImmutableSet.of("/locations/1"));
 
   @Test
   public void testSerializeToJSON() throws IOException {
@@ -23,7 +25,8 @@ public class ApplicationTest {
 
   @Test
   public void testDeserializeFromJSON() throws IOException {
-    assertEquals(fromJson(jsonFixture("fixtures/application.json"), Application.class), application);
+    assertEquals(fromJson(jsonFixture("fixtures/application.json"),
+        Application.class), application);
   }
 
 }

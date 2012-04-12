@@ -1,4 +1,5 @@
 {
+  "name":"myapp",
   "entities":[
     {
       "name":"brooklyn.entity.java.VanillaJavaApp",
@@ -7,4 +8,8 @@
         "creationScriptUrl":"http://my.brooklyn.io/storage/foo.sql"
       }
     }
-  ]}
+  ],
+  "locationRefs":[
+    "/locations/1"
+  ]
+}
