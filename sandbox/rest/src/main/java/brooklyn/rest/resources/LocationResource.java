@@ -1,0 +1,56 @@
+package brooklyn.rest.resources;
+
+import brooklyn.rest.api.Location;
+import brooklyn.rest.core.LocationStore;
+import com.google.common.base.Function;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
+import java.util.Map;
+import javax.validation.Valid;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+
+@Path("/locations")
+@Produces(MediaType.APPLICATION_JSON)
+public class LocationResource {
+
+  private final LocationStore store;
+
+  public LocationResource(LocationStore store) {
+    this.store = store;
+  }
+
+  @GET
+  public Iterable<Map<String, String>> listLocations() {
+    return Iterables.transform(store.entries(),
+        new Function<Map.Entry<Integer, Location>, Map<String, String>>() {
+          @Override
+          public Map<String, String> apply(Map.Entry<Integer, Location> entry) {
+            Location loc = entry.getValue();
+            return ImmutableMap.of(
+                "ref", "/locations/" + entry.getKey(),
+                "provider", loc.getProvider(),
+                "identity", loc.getIdentity(),
+                "location", loc.getLocation()
+            );
+          }
+        });
+  }
+
+  @POST
+  public void add(@Valid Location location) {
+    store.put(location);
+  }
+
+  @DELETE
+  @Path("{location}")
+  public void delete(@PathParam("location") Integer locationId) {
+    store.remove(locationId);
+  }
+
+}

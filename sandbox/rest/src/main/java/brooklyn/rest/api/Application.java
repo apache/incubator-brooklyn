@@ -31,7 +31,8 @@ public class Application {
 
   @Override
   public int hashCode() {
-    return entities != null ? entities.hashCode() : 0;
+    int result = entities != null ? entities.hashCode() : 0;
+    return result;
   }
 
   @Override

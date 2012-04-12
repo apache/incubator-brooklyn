@@ -1,6 +1,7 @@
 package brooklyn.rest.resources;
 
 import brooklyn.rest.api.Application;
+import brooklyn.rest.core.ApplicationStore;
 import com.google.common.collect.ImmutableSet;
 import java.util.Set;
 import javax.validation.Valid;
@@ -13,6 +14,12 @@ import javax.ws.rs.core.MediaType;
 @Path("/applications")
 @Produces(MediaType.APPLICATION_JSON)
 public class ApplicationResource {
+
+  private final ApplicationStore store;
+
+  public ApplicationResource(ApplicationStore store) {
+    this.store = store;
+  }
 
   @GET
   public Set<Application> listRegisteredApplications() {
