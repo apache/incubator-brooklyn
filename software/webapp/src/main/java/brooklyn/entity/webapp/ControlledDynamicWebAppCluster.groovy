@@ -6,7 +6,7 @@ import java.util.Map
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.enricher.basic.SensorPropagatingEnricher;
+import brooklyn.enricher.basic.SensorPropagatingEnricher
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.ConfigurableEntityFactory
@@ -20,6 +20,8 @@ import brooklyn.event.AttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.Location
 import brooklyn.util.flags.SetFromFlag
+
+import com.google.common.collect.Iterables
 
 /**
  * This entity contains the sub-groups and entities that go in to a single location (e.g. datacenter)
@@ -90,6 +92,8 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
     }
     
     public void start(Collection<? extends Location> locations) {
+        Iterables.getOnlyElement(locations) //assert just one
+        
         addOwnedChild(controller)
 
         this.locations.addAll(locations)

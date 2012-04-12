@@ -22,6 +22,9 @@ public class SensorPropagatingEnricher extends AbstractEnricher implements Senso
     /** the sensors to listen to */
     private final Set<Sensor> sensors = []
     
+    public static SensorPropagatingEnricher newInstanceListeningToAllSensors(Entity source) {
+        newInstanceListeningToAllSensorsBut(source);
+    }
     public static SensorPropagatingEnricher newInstanceListeningToAllSensorsBut(Entity source, Sensor ...excludes) {
         Set excluded = []
         excluded.addAll(Arrays.asList(excludes));
