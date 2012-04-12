@@ -5,12 +5,12 @@ import com.google.common.collect.Maps;
 import com.yammer.dropwizard.lifecycle.Managed;
 import java.util.Map;
 
-public class ApplicationStore implements Managed {
+public class ApplicationManager implements Managed {
 
   private final LocationStore locations;
   private final Map<String, Application> applications;
 
-  public ApplicationStore(LocationStore locations) {
+  public ApplicationManager(LocationStore locations) {
     this.locations = locations;
     this.applications = Maps.newConcurrentMap();
   }
@@ -23,5 +23,14 @@ public class ApplicationStore implements Managed {
   @Override
   public void stop() throws Exception {
     // TODO destroy running applications
+  }
+
+  public void registerAndStart(Application application) {
+    applications.put(application.getName(), application);
+    // TODO create managed entities based on the app spec
+  }
+
+  public void destroy(String application) {
+    // TODO destroy running entities and unregister
   }
 }

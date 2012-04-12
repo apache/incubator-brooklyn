@@ -1,6 +1,6 @@
 package brooklyn.rest;
 
-import brooklyn.rest.core.ApplicationStore;
+import brooklyn.rest.core.ApplicationManager;
 import brooklyn.rest.core.LocationStore;
 import brooklyn.rest.health.GeneralHealthCheck;
 import brooklyn.rest.resources.ApplicationResource;
@@ -25,13 +25,13 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
     environment.manage(locationStore);
     environment.addResource(new LocationResource(locationStore));
 
-    ApplicationStore applicationStore = new ApplicationStore(locationStore);
-    environment.manage(applicationStore);
-    environment.addResource(new ApplicationResource(applicationStore));
+    ApplicationManager applicationManager = new ApplicationManager(locationStore);
+    environment.manage(applicationManager);
+    environment.addResource(new ApplicationResource(applicationManager));
 
     environment.addResource(new EntityResource());
-    environment.addResource(new SensorResource());
-    environment.addResource(new EffectorResource());
+    environment.addResource(new SensorResource(applicationManager));
+    environment.addResource(new EffectorResource(applicationManager));
 
     environment.addHealthCheck(new GeneralHealthCheck());
   }
