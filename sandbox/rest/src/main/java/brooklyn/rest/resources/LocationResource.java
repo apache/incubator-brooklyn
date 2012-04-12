@@ -31,15 +31,24 @@ public class LocationResource {
         new Function<Map.Entry<Integer, Location>, Map<String, String>>() {
           @Override
           public Map<String, String> apply(Map.Entry<Integer, Location> entry) {
-            Location loc = entry.getValue();
-            return ImmutableMap.of(
-                "ref", "/locations/" + entry.getKey(),
-                "provider", loc.getProvider(),
-                "identity", loc.getIdentity(),
-                "location", loc.getLocation()
-            );
+            return asMap(entry.getKey(), entry.getValue());
           }
         });
+  }
+
+  @GET
+  @Path("{location}")
+  public Map<String, String> getLocation(@PathParam("location") Integer id) {
+    return asMap(id, store.get(id));
+  }
+
+  private Map<String, String> asMap(Integer id, Location loc) {
+    return ImmutableMap.of(
+        "ref", "/locations/" + id,
+        "provider", loc.getProvider(),
+        "identity", loc.getIdentity(),
+        "location", loc.getLocation()
+    );
   }
 
   @POST

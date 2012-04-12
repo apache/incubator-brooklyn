@@ -17,11 +17,11 @@ public class ApplicationStore implements Managed {
 
   @Override
   public void start() throws Exception {
-    // TODO load data about applications from local storage
+    // TODO load data about running applications from external storage
   }
 
   @Override
   public void stop() throws Exception {
-    //To change body of implemented methods use File | Settings | File Templates.
+    // TODO destroy running applications
   }
 }

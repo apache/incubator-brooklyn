@@ -34,6 +34,10 @@ public class LocationStore implements Managed {
     locations.put(ids.getAndIncrement(), location);
   }
 
+  public Location get(Integer id) {
+    return locations.get(id);
+  }
+
   public Set<Map.Entry<Integer, Location>> entries() {
     return ImmutableSet.copyOf(locations.entrySet());
   }
