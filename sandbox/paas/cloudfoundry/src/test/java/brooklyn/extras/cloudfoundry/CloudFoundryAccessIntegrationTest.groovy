@@ -8,9 +8,9 @@ import org.slf4j.LoggerFactory
 import org.testng.Assert
 import org.testng.annotations.Test
 
+import brooklyn.extras.cloudfoundry.CloudFoundryVmcCliAccess.AppRecord
 import brooklyn.extras.cloudfoundry.CloudFoundryVmcCliAccess.CloudFoundryAppStatLine
 import brooklyn.extras.cloudfoundry.CloudFoundryVmcCliAccess.CloudFoundryAppStats
-import brooklyn.test.TestUtils;
 import brooklyn.util.IdGenerator
 
 
@@ -33,23 +33,30 @@ class CloudFoundryAccessIntegrationTest {
 
     @Test(groups = [ "Integration" ])
     public void testVmcAppsList() {
-        List apps = new CloudFoundryVmcCliAccess().apps();
+        Collection apps = new CloudFoundryVmcCliAccess().appNames;
         log.info("vmc apps gives: "+apps)
         //don't know anything is present, just assert no error
     }
 
     @Test(groups = [ "Integration" ])
     public void testVmcAppCreateRunUpdateScaleStats() {
-        String id = "brooklyn-"+IdGenerator.makeRandomId(8);
+        String id = "brooklyn-"+IdGenerator.makeRandomId(8).toLowerCase();
         CloudFoundryVmcCliAccess access = new CloudFoundryVmcCliAccess(appName: id);
         log.info("creating $id in ${access.appPath}");
-        List apps1 = access.apps();
+        Collection apps1 = access.getAppNames(true);
         try {
             //create
-            access.runAppWar(war: "classpath://hello-world.war");
-            List apps2 = access.apps();
+            AppRecord record = access.runAppWar(war: "classpath://hello-world.war");
+            Collection apps2 = access.getAppNames(true);
             apps2.removeAll(apps1);
             assertEquals(apps2, [ id ])
+            //check record
+            assertEquals(record.size, 1)
+            assertEquals(record.url, id+"."+"cloudfoundry.com")
+            assertEquals(record.state, "RUNNING")
+            assertEquals(record.services, [])
+            AppRecord r2 = access.getAppRecord(id);
+            assertEquals(record, r2);
             //update
             access.runAppWar(war: "classpath://hello-world.war");
             CloudFoundryAppStats stats = access.stats();
@@ -59,11 +66,14 @@ class CloudFoundryAccessIntegrationTest {
             stats = access.stats();
             log.info("stats $stats")
             assertEquals(stats.size, 2)
+//            //set url -- gives 702 not enabled
+//            AppRecord r3 = access.runAppWar(war: "classpath://hello-world.war", url: "foo.bar.com");
+//            assertEquals(r3, "foo.bar.com");
         } finally {
             log.info("destroying $id")
             access.destroyApp();
         }
-        List apps3 = access.apps(true);
+        Collection apps3 = access.getAppNames(true);
         log.info("apps now $apps3")
         assertEquals(apps3, apps1) 
     }

@@ -2,7 +2,7 @@ package brooklyn.extras.cloudfoundry
 
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
-import groovy.lang.MetaClass;
+import groovy.lang.MetaClass
 
 import java.util.Collection
 import java.util.Map
@@ -15,13 +15,14 @@ import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.BasicConfigurableEntityFactory
 import brooklyn.entity.basic.Lifecycle
-import brooklyn.entity.trait.Resizable;
+import brooklyn.entity.trait.Resizable
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.ElasticJavaWebAppService
 import brooklyn.event.adapter.FunctionSensorAdapter
 import brooklyn.event.adapter.SensorRegistry
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
+import brooklyn.extras.cloudfoundry.CloudFoundryVmcCliAccess.AppRecord
 import brooklyn.extras.cloudfoundry.CloudFoundryVmcCliAccess.CloudFoundryAppStats
 import brooklyn.location.Location
 import brooklyn.util.flags.SetFromFlag
@@ -47,10 +48,8 @@ class CloudFoundryJavaWebAppCluster extends AbstractEntity implements Startable,
     public static final BasicAttributeSensor<Double> CPU_USAGE = [ Double, "cloudfoundry.cpu.usage", "Average CPU utilisation" ];
     public static final BasicAttributeSensor<Double> MEMORY_USED_FRACTION = [ Double, "cloudfoundry.memory.usage.fraction", "Average memory utilisation" ];
 
+    public AppRecord appRecord;
     protected transient SensorRegistry sensorRegistry;
-    
-    //TODO other cloudfoundries
-    private final String domain = "cloudfoundry.com";
     
     public CloudFoundryJavaWebAppCluster(Map flags=[:], Entity owner=null) {
         super(flags, owner)
@@ -103,7 +102,7 @@ class CloudFoundryJavaWebAppCluster extends AbstractEntity implements Startable,
         
         if (!war) throw new IllegalStateException("A WAR file is required to start ${this}")
 
-        cfAccess.runAppWar();
+        appRecord = cfAccess.runAppWar();
         log.info "{} app launched: {}", this, getAppName()
 
         //add support for DynamicWebAppCluster.startInLocation(CloudFoundry)
@@ -112,7 +111,7 @@ class CloudFoundryJavaWebAppCluster extends AbstractEntity implements Startable,
     }
     
     public void connectSensors() {
-        String hostname = appName+"."+domain;
+        String hostname = appRecord.url;
         setAttribute(HOSTNAME, hostname);
         setAttribute(ROOT_URL, "http://"+hostname+"/");
         sensorRegistry.register(new FunctionSensorAdapter({cfAccess.stats()})).with {

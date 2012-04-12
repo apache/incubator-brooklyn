@@ -1,5 +1,7 @@
 package brooklyn.extras.cloudfoundry
 
+import groovy.transform.EqualsAndHashCode
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -12,8 +14,7 @@ class CloudFoundryVmcCliAccess {
 
     private static final Logger log = LoggerFactory.getLogger(CloudFoundryVmcCliAccess.class)
 
-    //TODO support multiple targets
-    //    String target = "api.cloudfoundry.com"
+    String target = "api.cloudfoundry.com"
 
     /** optional user-supplied context object used for classloading context and
      * inserting into toString to help with context */
@@ -60,12 +61,37 @@ class CloudFoundryVmcCliAccess {
         ShellUtils.exec(cmd, input, log, context);
     }
 
-    private List apps = null;
-    public synchronized List apps(boolean refresh=false) {
+    private Map<String,AppRecord> apps = null;
+    public synchronized Map<String,AppRecord> getApps(boolean refresh=false) {
         if (refresh || apps==null) apps=_apps();
         return apps;
     }
-    protected List _apps() {
+    public AppRecord getAppRecord(String appName, boolean refresh=false) {
+        getApps(refresh).get(appName);
+    }
+    public Collection<String> getAppNames(boolean refresh=false) {
+        getApps(refresh).keySet();
+    }
+    @EqualsAndHashCode
+    public static class AppRecord implements Serializable {
+        String appName, state, url;
+        int size;
+        List services = []
+        public static AppRecord parse(String line) {
+            def fields = line.split("\\|");
+            AppRecord result = new AppRecord(
+                appName: fields[1].trim(),
+                size: Integer.parseInt(fields[2].trim()),
+                state: fields[3].trim(),
+                url: fields[4].trim())
+            for (String svc : fields[5].trim().split("\\s+")) {
+                //add services (skip blank entries introduced by split)
+                if (svc) result.services << svc
+            }
+            return result
+        }
+    }
+    protected Map<String,AppRecord> _apps() {
         validate();
         String[] lines = exec("vmc apps");
 //        +---------------+----+---------+--------------------------------+-------------+
@@ -74,7 +100,7 @@ class CloudFoundryVmcCliAccess {
 //        | hellobrooklyn | 1  | RUNNING | hellobrooklyn.cloudfoundry.com | mysql-8c1d0 |
 //        | hellobrookly2 | 1  | RUNNING | hellobrookly2.cloudfoundry.com | mysql-8c1d0 |
 //        +---------------+----+---------+--------------------------------+-------------+
-        List result = []
+        Map result = [:]
         
         def li = lines.iterator();
         //skip 3 header lines; bail out if not enough (e.g. 'No Applications') 
@@ -85,7 +111,8 @@ class CloudFoundryVmcCliAccess {
             String line = li.next();
             if (line.startsWith("+---"))
                 continue;
-            result << line.split(" ")[1];
+            def record = AppRecord.parse(line);
+            result.put(record.appName, record);
         }
         
         result
@@ -106,14 +133,14 @@ class CloudFoundryVmcCliAccess {
     public String getUrl(Map localFlags=[:]) {
         String url = localFlags.url ?: this.@url;
         if (url) return url;
-        return getAppName(localFlags)+".cloudfoundry.com"
+        return getAppRecord(getAppName(localFlags))?.url
     }
 
     /** flags appName and war (URL of deployable resource) required;
      * memory (eg "512M") and url (target url) optional
      */
-    public void runAppWar(Map flags=[:]) {
-        List apps = apps();
+    public AppRecord runAppWar(Map flags=[:]) {
+        Collection apps = getAppNames();
 
         String appName = getAppName(flags);
         String appPath = getAppPath();
@@ -122,7 +149,9 @@ class CloudFoundryVmcCliAccess {
         
         if (apps.contains(appName)) {
             //update
-            exec("vmc stop ${appName}")
+            
+            //stop done implicitly on server
+//            exec("vmc stop ${appName}")
             
             if (flags.memory) exec("vmc mem ${appName} "+flags.memory);
             if (flags.url) {
@@ -139,14 +168,16 @@ class CloudFoundryVmcCliAccess {
             url = getUrl(flags)
             exec("vmc push"+
                 " ${appName}"+
-                " --url ${url}"+
+                (url ? " --url ${url}" : "")+
                 " --path ${appPath}"+
                 //" --runtime java"+  //what is syntax here?  vmc runtimes shows java; frameworks shows java_web; all seem to prompt
                 " --mem 512M",  
-                "\n\n");  //need CR supplied twice (java prompt, and services prompt)
+                "\n\n"+(url?"":"\n"));  //need CR supplied twice (java prompt, and services prompt); and once more if url is default
         }
         
-        this.apps(true);
+        AppRecord result = this.getAppRecord(appName, true);
+        url = result.url
+        return result
     }
 
     public void destroyApp(Map flags=[:]) {
