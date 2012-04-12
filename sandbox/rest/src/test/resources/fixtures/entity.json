@@ -1,4 +1,4 @@
 {
-  "className":"brooklyn.entity.java.VanillaJavaApp",
-  "description":"Vanilla Java Application"
+  "name":"brooklyn.entity.java.VanillaJavaApp",
+  "config":{}
 }

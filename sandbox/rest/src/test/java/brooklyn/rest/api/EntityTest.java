@@ -1,5 +1,6 @@
 package brooklyn.rest.api;
 
+import com.google.common.collect.ImmutableMap;
 import static com.yammer.dropwizard.testing.JsonHelpers.asJson;
 import static com.yammer.dropwizard.testing.JsonHelpers.fromJson;
 import static com.yammer.dropwizard.testing.JsonHelpers.jsonFixture;
@@ -9,7 +10,7 @@ import org.testng.annotations.Test;
 
 public class EntityTest {
 
-  final Entity entity = new Entity("brooklyn.entity.java.VanillaJavaApp", "Vanilla Java Application");
+  final Entity entity = new Entity("brooklyn.entity.java.VanillaJavaApp", ImmutableMap.<String, String>of());
 
   @Test
   public void testSerializeToJSON() throws IOException {

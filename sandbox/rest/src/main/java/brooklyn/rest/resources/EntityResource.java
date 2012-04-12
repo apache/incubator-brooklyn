@@ -1,36 +1,43 @@
 package brooklyn.rest.resources;
 
-import brooklyn.rest.api.Entity;
-import com.google.common.collect.ImmutableSet;
-import com.yammer.dropwizard.jersey.params.IntParam;
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import static com.google.common.collect.Iterables.filter;
+import static com.google.common.collect.Iterables.transform;
+import static com.google.common.collect.Sets.newHashSet;
 import java.util.Set;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import org.reflections.Reflections;
 
 @Path("/entities")
 @Produces(MediaType.APPLICATION_JSON)
 public class EntityResource {
 
   @GET
-  public Set<Entity> listAvailableEntities(
-      @QueryParam("offset") @DefaultValue("0") IntParam offset, @QueryParam("limit") @DefaultValue("20") IntParam limit) {
-    return ImmutableSet.of();
-  }
+  public Set<String> listAvailableEntities(
+      final @QueryParam("name") @DefaultValue("") String name
+  ) {
+    Reflections reflections = new Reflections("brooklyn");
+    Set<Class<? extends brooklyn.entity.Entity>> entities = reflections.getSubTypesOf(brooklyn.entity.Entity.class);
+    final String normalizedName = name.toLowerCase();
 
-  @GET
-  @Path("{entity}")
-  public Entity getDetails(@PathParam("entity") String entity) {
-    if (entity.startsWith("brooklyn")) {
-      return new Entity(entity, "Something");
-    }
-    throw new WebApplicationException(Response.Status.NOT_FOUND);
+    return newHashSet(transform(filter(entities,
+        new Predicate<Class<? extends brooklyn.entity.Entity>>() {
+          @Override
+          public boolean apply(Class<? extends brooklyn.entity.Entity> aClass) {
+            return name.equals("") || aClass.getName().toLowerCase().contains(normalizedName);
+          }
+        }),
+        new Function<Class<? extends brooklyn.entity.Entity>, String>() {
+          @Override
+          public String apply(Class<? extends brooklyn.entity.Entity> aClass) {
+            return aClass.getName();
+          }
+        }));
   }
-
 }

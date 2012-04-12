@@ -1,0 +1,10 @@
+{
+  "entities":[
+    {
+      "name":"brooklyn.entity.java.VanillaJavaApp",
+      "config":{
+        "initialSize":"1",
+        "creationScriptUrl":"http://my.brooklyn.io/storage/foo.sql"
+      }
+    }
+  ]}

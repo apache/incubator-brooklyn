@@ -1,23 +1,31 @@
 package brooklyn.rest.api;
 
+import com.google.common.collect.ImmutableMap;
+import java.util.Map;
 import org.codehaus.jackson.annotate.JsonProperty;
 
 public class Entity {
 
-  private final String className;
-  private final String description;
+  private static final Map<String, String> emptyMap = ImmutableMap.<String, String>of();
 
-  public Entity(@JsonProperty("className") String className, @JsonProperty("description") String description) {
-    this.className = className;
-    this.description = description;
+  private final String name;
+  private final Map<String, String> config;
+
+  public Entity(String name) {
+    this(name, emptyMap);
   }
 
-  public String getClassName() {
-    return className;
+  public Entity(@JsonProperty("name") String name, @JsonProperty("config") Map<String, String> config) {
+    this.name = name;
+    this.config = ImmutableMap.copyOf(config);
   }
 
-  public String getDescription() {
-    return description;
+  public String getName() {
+    return name;
+  }
+
+  public Map<String, String> getConfig() {
+    return config;
   }
 
   @Override
@@ -27,9 +35,9 @@ public class Entity {
 
     Entity entity = (Entity) o;
 
-    if (className != null ? !className.equals(entity.className) : entity.className != null)
+    if (config != null ? !config.equals(entity.config) : entity.config != null)
       return false;
-    if (description != null ? !description.equals(entity.description) : entity.description != null)
+    if (name != null ? !name.equals(entity.name) : entity.name != null)
       return false;
 
     return true;
@@ -37,16 +45,16 @@ public class Entity {
 
   @Override
   public int hashCode() {
-    int result = className != null ? className.hashCode() : 0;
-    result = 31 * result + (description != null ? description.hashCode() : 0);
+    int result = name != null ? name.hashCode() : 0;
+    result = 31 * result + (config != null ? config.hashCode() : 0);
     return result;
   }
 
   @Override
   public String toString() {
     return "Entity{" +
-        "className='" + className + '\'' +
-        ", description='" + description + '\'' +
+        "name='" + name + '\'' +
+        ", config=" + config +
         '}';
   }
 }
