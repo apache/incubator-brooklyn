@@ -49,7 +49,7 @@ class CloudFoundryJavaClusterFromLocationExample extends AbstractApplication {
     public static void main(String[] args) {
         def app = new CloudFoundryJavaClusterFromLocationExample();
         
-        app.start([new CloudFoundryLocation()]);
+        app.start([new CloudFoundryLocation(target: 'api.cloudfoundry.com')]);
         
         log.info "should now be able to visit site (for 2m): {}", app.svc.getAttribute(ElasticJavaWebAppService.ROOT_URL)
         //should now be able to visit (assert?)

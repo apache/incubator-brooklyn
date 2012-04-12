@@ -1,7 +1,5 @@
 package brooklyn.extras.cloudfoundry
 
-import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.event.basic.BasicConfigKey;
 import groovy.lang.MetaClass
 
 import java.util.Collection
@@ -39,6 +37,9 @@ class CloudFoundryJavaWebAppCluster extends AbstractEntity implements Startable,
 
     public static final BasicAttributeSensor<String> HOSTNAME = [ String, "cloudfoundry.host.name", "The hostname where the app should be accessed" ];
 
+    //disabled until we can test it against a CF where we can set the URL
+    //(see refs to getUrl and url in VmcCliAccess)
+    //(and note, this is different to ROOT_URL which _is_ exposed as a _sensor_)
 //    @SetFromFlag("url")            
 //    public static final BasicConfigKey<String> URL = [ String, "cloudfoundry.app.url", "URL this app should respond to" ]
     
@@ -102,14 +103,23 @@ class CloudFoundryJavaWebAppCluster extends AbstractEntity implements Startable,
         
         if (!war) throw new IllegalStateException("A WAR file is required to start ${this}")
 
+        useTarget(ol.getTarget());
         appRecord = cfAccess.runAppWar();
         log.info "{} app launched: {}", this, getAppName()
 
         //add support for DynamicWebAppCluster.startInLocation(CloudFoundry)
-        setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
         connectSensors();
+        setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
+        setAttribute(SERVICE_UP, true)
     }
     
+    protected void useTarget(String target) {
+        if (!target) return;
+        if (!target.startsWith("api."))
+            target = "api."+target;
+            
+        cfAccess.setTarget(target)
+    }
     public void connectSensors() {
         String hostname = appRecord.url;
         setAttribute(HOSTNAME, hostname);
@@ -128,14 +138,18 @@ class CloudFoundryJavaWebAppCluster extends AbstractEntity implements Startable,
     
     public void destroy() {
         log.info "{} destroying app {}", this, getAppName()
+        setAttribute(SERVICE_UP, false)
+        setAttribute(SERVICE_STATE, Lifecycle.STOPPING);
         sensorRegistry.deactivateAdapters();
         cfAccess.destroyApp();
+        setAttribute(SERVICE_STATE, Lifecycle.STOPPED);
     }
 
     @Override
     public Integer resize(Integer desiredSize) {
         cfAccess.resizeAbsolute(desiredSize);
-        //TODO could block until SIZE sensor report achieved, or timeout ?
+        //could block until SIZE sensor report achieved, or timeout;
+        //but it seems the command-line call is synchronous so not necessary
     }
 
     @Override

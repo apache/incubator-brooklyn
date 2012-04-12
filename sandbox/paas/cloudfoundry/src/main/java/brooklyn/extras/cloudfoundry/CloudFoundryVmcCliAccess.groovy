@@ -14,13 +14,11 @@ class CloudFoundryVmcCliAccess {
 
     private static final Logger log = LoggerFactory.getLogger(CloudFoundryVmcCliAccess.class)
 
-    String target = "api.cloudfoundry.com"
-
     /** optional user-supplied context object used for classloading context and
      * inserting into toString to help with context */
     protected Object context = this;
     
-    String appName, war, url;
+    String appName, war, url, target;
     
     String appPath;
     public synchronized String getAppPath() {
@@ -93,6 +91,7 @@ class CloudFoundryVmcCliAccess {
     }
     protected Map<String,AppRecord> _apps() {
         validate();
+        setTarget(target);
         String[] lines = exec("vmc apps");
 //        +---------------+----+---------+--------------------------------+-------------+
 //        | Application   | #  | Health  | URLS                           | Services    |
@@ -131,11 +130,29 @@ class CloudFoundryVmcCliAccess {
     }
 
     public String getUrl(Map localFlags=[:]) {
+        //not permitted on cloudfoundry.com; might work elsewhere
         String url = localFlags.url ?: this.@url;
         if (url) return url;
         return getAppRecord(getAppName(localFlags))?.url
     }
 
+    /** sets the target location that will be used, e.g. api.cloudfoundry.com
+     * <p>
+     * we assume vmc on the local system has already been configured to log in to that endpoint,
+     * so user+pass is not used. by default the last target set will be used.
+     * <p>
+     * this is not parallel-safe (if someone else switches target);
+     * we compensate for that by always calling setTarget(target)
+     * which isn't theoretically perfect but is practically so.
+     * (ideally we would use a java API as described in issue #15.) 
+     */
+    public void setTarget(String target) {
+        this.target = target;
+        if (target) exec("vmc target ${target}")
+    }
+    
+    public String getTarget() { target }
+    
     /** flags appName and war (URL of deployable resource) required;
      * memory (eg "512M") and url (target url) optional
      */
@@ -146,6 +163,8 @@ class CloudFoundryVmcCliAccess {
         String appPath = getAppPath();
         new File(appPath).mkdirs();
         new File(appPath+"/root.war") << new ResourceUtils(context).getResourceFromUrl(getWar(flags));
+        
+        setTarget(target);
         
         if (apps.contains(appName)) {
             //update
@@ -172,7 +191,9 @@ class CloudFoundryVmcCliAccess {
                 " --path ${appPath}"+
                 //" --runtime java"+  //what is syntax here?  vmc runtimes shows java; frameworks shows java_web; all seem to prompt
                 " --mem 512M",  
-                "\n\n"+(url?"":"\n"));  //need CR supplied twice (java prompt, and services prompt); and once more if url is default
+                //need CR supplied twice (java prompt, and services prompt) since can't seem to get it specified on CLI; 
+                //and once more if url is default
+                "\n\n"+(url?"":"\n"));  
         }
         
         AppRecord result = this.getAppRecord(appName, true);
@@ -181,24 +202,26 @@ class CloudFoundryVmcCliAccess {
     }
 
     public void destroyApp(Map flags=[:]) {
+        setTarget(target);
         exec("vmc delete ${getAppName(flags)}");
     }
 
     public void resizeAbsolute(Map flags=[:], int newSize) {
         if (newSize<0) throw new IllegalArgumentException("newSize cannot be negative for ${context}")
+        setTarget(target);
         exec("vmc instances ${getAppName(flags)} "+newSize);
     }
     public void resizeDelta(Map flags=[:], int delta) {
+        setTarget(target);
         exec("vmc instances ${getAppName(flags)} "+(delta>=0?"+"+delta:delta));
     }
 
     public static class CloudFoundryAppStats {
         List<CloudFoundryAppStatLine> instances;
         CloudFoundryAppStatLine average;
-        int getSize() { instances.size() }
+        public int getSize() { instances.size() }
         @Override
         public String toString() {
-            // TODO Auto-generated method stub
             return "CloudFoundryAppStats[size="+size+";average="+average+"]";
         }
     }
@@ -326,6 +349,7 @@ class CloudFoundryVmcCliAccess {
     }
     
     public CloudFoundryAppStats stats(Map flags=[:]) {
+        setTarget(target);
         String[] lines = exec("vmc stats ${getAppName(flags)}");
 //+----------+-------------+----------------+--------------+---------------+
 //| Instance | CPU (Cores) | Memory (limit) | Disk (limit) | Uptime        |
