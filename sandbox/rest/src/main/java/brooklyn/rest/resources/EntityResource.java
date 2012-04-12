@@ -5,6 +5,7 @@ import com.google.common.base.Predicate;
 import static com.google.common.collect.Iterables.filter;
 import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Sets.newHashSet;
+import com.yammer.metrics.annotation.Timed;
 import java.util.Set;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -18,14 +19,19 @@ import org.reflections.Reflections;
 @Produces(MediaType.APPLICATION_JSON)
 public class EntityResource {
 
+  private Set<Class<? extends brooklyn.entity.Entity>> entities;
+
+  public EntityResource() {
+    Reflections reflections = new Reflections("brooklyn");
+    entities = reflections.getSubTypesOf(brooklyn.entity.Entity.class);
+  }
+
   @GET
+  @Timed
   public Set<String> listAvailableEntities(
       final @QueryParam("name") @DefaultValue("") String name
   ) {
-    Reflections reflections = new Reflections("brooklyn");
-    Set<Class<? extends brooklyn.entity.Entity>> entities = reflections.getSubTypesOf(brooklyn.entity.Entity.class);
     final String normalizedName = name.toLowerCase();
-
     return newHashSet(transform(filter(entities,
         new Predicate<Class<? extends brooklyn.entity.Entity>>() {
           @Override

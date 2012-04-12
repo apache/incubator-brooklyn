@@ -21,6 +21,5 @@ public class ApplicationResource {
 
   @POST
   public void create(@Valid Application application) {
-
   }
 }
