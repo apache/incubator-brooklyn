@@ -46,8 +46,6 @@ public abstract class JMSBroker<Q extends JMSDestination & Queue, T extends JMSD
         topicNames.each { String name -> addTopic(name) }
         setBrokerUrl();
     }
-
-	public abstract void waitForServiceUp();
 	
     public abstract void setBrokerUrl();
 

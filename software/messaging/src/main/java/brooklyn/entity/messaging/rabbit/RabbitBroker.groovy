@@ -3,29 +3,28 @@
  */
 package brooklyn.entity.messaging.rabbit
 
-import java.util.Collection;
-import java.util.Map;
+import java.util.Collection
+import java.util.Map
 import java.util.concurrent.TimeUnit
 
-
-import org.slf4j.Logger;
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.entity.Entity;
-import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.Entity
+import brooklyn.entity.basic.AbstractEntity
+import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.basic.lifecycle.CommonCommands
-import brooklyn.entity.messaging.MessageBroker;
-import brooklyn.entity.messaging.Queue;
-import brooklyn.entity.messaging.Topic;
-import brooklyn.entity.messaging.amqp.AmqpExchange;
-import brooklyn.entity.messaging.amqp.AmqpServer;
-import brooklyn.event.adapter.SensorRegistry;
+import brooklyn.entity.messaging.MessageBroker
+import brooklyn.entity.messaging.Queue
+import brooklyn.entity.messaging.Topic
+import brooklyn.entity.messaging.amqp.AmqpExchange
+import brooklyn.entity.messaging.amqp.AmqpServer
+import brooklyn.event.adapter.SensorRegistry
 import brooklyn.event.adapter.SshSensorAdapter
-import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
-import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.flags.SetFromFlag;
+import brooklyn.event.basic.BasicAttributeSensorAndConfigKey
+import brooklyn.event.basic.BasicConfigKey
+import brooklyn.location.basic.SshMachineLocation
+import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.internal.Repeater
 
 /**
@@ -78,15 +77,6 @@ public class RabbitBroker extends SoftwareProcessEntity implements MessageBroker
 		            return (it =~ "running_applications.*RabbitMQ")
 		        }
         sshAdapter.activateAdapter()
-    }
-    
-    public void waitForServiceUp() {
-        if (!Repeater.create(timeout: 60*TimeUnit.SECONDS)
-                .rethrowException().repeat().every(1*TimeUnit.SECONDS).until { getAttribute(SERVICE_UP) }.
-                run()) {
-            throw new IllegalStateException("Could not connect via JMX to determine ${this} is up");
-        }
-        log.info("started JMS $this")
     }
 
     @Override

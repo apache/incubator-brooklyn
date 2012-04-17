@@ -111,15 +111,6 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJ
 		setAttribute(Attributes.JMX_USER)
 		setAttribute(Attributes.JMX_PASSWORD)
     }
-    
-    public void waitForServiceUp() {
-        if (!Repeater.create(timeout: 60*TimeUnit.SECONDS)
-                .rethrowException().repeat().every(1*TimeUnit.SECONDS).until { getAttribute(SERVICE_UP) }.
-                run()) {
-            throw new IllegalStateException("Could not connect via JMX to determine ${this} is up");
-        }
-        log.info("started JMS $this")
-    }
 
     @Override
     public Collection<String> toStringFieldsToInclude() {

@@ -3,6 +3,7 @@ package brooklyn.entity.basic
 import java.util.Collection
 import java.util.Map
 import java.util.Set
+import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -27,6 +28,7 @@ import brooklyn.location.PortRange
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.flags.SetFromFlag
+import brooklyn.util.internal.Repeater
 
 import com.google.common.base.Preconditions
 import com.google.common.collect.Iterables
@@ -129,6 +131,18 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 				those which are updated by a policy need to get recorded somehow
 		*/
 	}
+    
+    public void waitForServiceUp() {
+        if (!Repeater.create(timeout: 60*TimeUnit.SECONDS)
+                .rethrowException().repeat().every(1*TimeUnit.SECONDS)
+                .until() {
+                    getAttribute(SERVICE_UP)
+                }
+                .run()) {
+            throw new IllegalStateException("Could determine if ${this} is up");
+        }
+        log.info("started ${this}")
+    }
 
 	protected void preStop() { }
 
