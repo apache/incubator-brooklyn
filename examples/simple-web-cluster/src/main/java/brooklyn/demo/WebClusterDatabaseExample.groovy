@@ -41,6 +41,13 @@ public class WebClusterDatabaseExample extends AbstractApplication {
     public static final String DB_PASSWORD = "br00k11n"
     
     public static final String DB_SETUP_SQL_URL = "classpath://visitors-creation-script.sql"
+    
+    public static String makeJdbcUrl(String dbUrl) {
+        //jdbc:mysql://192.168.1.2:3306/visitors?user=brooklyn&password=br00k11n
+        "jdbc:"+dbUrl+"visitors"+"?"+
+            "user="+DB_USERNAME+"\\&"+
+            "password="+DB_PASSWORD
+    }
 
     public WebClusterDatabaseExample(Map props=[:]) {
         super(props)
@@ -53,9 +60,7 @@ public class WebClusterDatabaseExample extends AbstractApplication {
         web.factory.configure(
             httpPort: "8080+", 
             (JBoss7Server.JAVA_OPTIONS):
-                // -Dbrooklyn.example.db.url="jdbc:mysql://192.168.1.2:3306/visitors?user=brooklyn\\&password=br00k11n"
-                ["brooklyn.example.db.url": valueWhenAttributeReady(mysql, MySqlNode.MYSQL_URL,
-                    { "jdbc:"+it+"visitors?user=${DB_USERNAME}\\&password=${DB_PASSWORD}" }) ]);
+                ["brooklyn.example.db.url": valueWhenAttributeReady(mysql, MySqlNode.MYSQL_URL, this.&makeJdbcUrl)]);
 
         web.cluster.addPolicy(new
             ResizerPolicy(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND).
