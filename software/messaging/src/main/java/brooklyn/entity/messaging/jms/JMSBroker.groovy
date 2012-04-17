@@ -9,6 +9,9 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.Lifecycle
 import brooklyn.entity.basic.SoftwareProcessEntity
+import brooklyn.entity.messaging.MessageBroker
+import brooklyn.entity.messaging.Queue
+import brooklyn.entity.messaging.Topic
 import brooklyn.event.adapter.SensorRegistry
 
 import com.google.common.base.Preconditions

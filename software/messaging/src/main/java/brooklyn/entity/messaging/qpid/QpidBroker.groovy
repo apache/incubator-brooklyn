@@ -96,7 +96,6 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJ
 
     transient JmxSensorAdapter jmxAdapter;
 
-    @Override     
     protected void connectSensors() {
         jmxAdapter = sensorRegistry.register(new JmxSensorAdapter());
         jmxAdapter.objectName("org.apache.qpid:type=ServerInformation,name=ServerInformation")
@@ -114,7 +113,7 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJ
 
     @Override
     public Collection<String> toStringFieldsToInclude() {
-        return super.toStringFieldsToInclude() + ['amqpPort' ]
+        return super.toStringFieldsToInclude() + ['amqpPort', 'amqpVersion']
     }
 
 }
