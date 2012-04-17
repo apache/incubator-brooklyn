@@ -1,6 +1,6 @@
 ## The Basics
 
-Brooklyn is available on [GitHub](http://github.com/brooklyncentral/brooklyn).  Check it out using:
+Brooklyn is available at [GitHub brooklyncentral/brooklyn](http://github.com/brooklyncentral/brooklyn).  Check it out using:
 
 {% highlight bash %}
 git clone git@github.com:brooklyncentral/brooklyn.git
