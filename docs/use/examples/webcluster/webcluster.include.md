@@ -1,4 +1,5 @@
 
+        
 {% readj ../before-begin.include.md %}
 
 The project ``examples/simple-web-cluster`` includes several deployment descriptors 
@@ -24,9 +25,10 @@ public class SingleWebServerExample extends AbstractApplication {
 You can run this (on *nix or Mac) as follows:
 
 {% highlight bash %}
-% cd /path/to/brooklyn-examples/simple-web-cluster
+% cd $EXAMPLES_DIR/simple-web-cluster
 % ./demo-web-cluster.sh
 {% endhighlight %}
+
 
 Then visit the webapp on port 8080, or the Brooklyn console on 8081.  (Default credentials are admin/password.)
 Note that the installation may take some time, because the default deployment downloads the software from
@@ -37,7 +39,7 @@ With appropriate setup (as described [here]({{ site.url }}/use/guide/management/
 this can also be deployed to your favourite cloud, let's pretend it's Amazon Ireland, as follows: 
 
 {% highlight bash %}
-% cd /path/to/brooklyn-examples/simple-web-cluster
+% cd $EXAMPLES_DIR/simple-web-cluster
 % ./demo-web-server.sh aws-ecs:eu-west-1
 {% endhighlight %}
 
@@ -66,8 +68,7 @@ public class WebClusterDatabaseExample extends AbstractApplication {
     {
         web.factory.configure(
             httpPort: "8080+", 
-            (JBoss7Server.JAVA_OPTIONS):
-                // -Dbrooklyn.example.db.url="jdbc:mysql://192.168.1.2:3306/visitors?user=brooklyn\\&password=br00k11n"
+            (UsesJava.JAVA_OPTIONS):
                 ["brooklyn.example.db.url": valueWhenAttributeReady(mysql, MySqlNode.MYSQL_URL,
                     { "jdbc:"+it+"visitors?user=${DB_USERNAME}\\&password=${DB_PASSWORD}" }) ]);
 
