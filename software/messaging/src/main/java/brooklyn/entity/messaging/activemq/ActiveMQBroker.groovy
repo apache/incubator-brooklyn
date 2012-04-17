@@ -15,10 +15,10 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.basic.UsesJmx
-import brooklyn.entity.messaging.JMSBroker
-import brooklyn.entity.messaging.JMSDestination
 import brooklyn.entity.messaging.Queue
 import brooklyn.entity.messaging.Topic
+import brooklyn.entity.messaging.jms.JMSBroker;
+import brooklyn.entity.messaging.jms.JMSDestination;
 import brooklyn.event.adapter.JmxHelper
 import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.adapter.SensorRegistry

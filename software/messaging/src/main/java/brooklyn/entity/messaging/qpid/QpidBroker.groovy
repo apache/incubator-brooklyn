@@ -14,10 +14,11 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.basic.UsesJmx
-import brooklyn.entity.messaging.JMSBroker
-import brooklyn.entity.messaging.JMSDestination
 import brooklyn.entity.messaging.Queue
 import brooklyn.entity.messaging.Topic
+import brooklyn.entity.messaging.amqp.AmqpServer;
+import brooklyn.entity.messaging.jms.JMSBroker;
+import brooklyn.entity.messaging.jms.JMSDestination;
 import brooklyn.event.adapter.JmxHelper
 import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.adapter.SensorRegistry
@@ -32,18 +33,15 @@ import brooklyn.util.internal.Repeater
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Qpid broker instance, using AMQP 0-10.
  */
-public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJmx {
+public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJmx, AmqpServer {
     private static final Logger log = LoggerFactory.getLogger(QpidBroker.class)
 
     @SetFromFlag("version")
     public static final BasicConfigKey<String> SUGGESTED_VERSION = [ SoftwareProcessEntity.SUGGESTED_VERSION, "0.14" ]
-    
-    @SetFromFlag("amqpPort")
-    public static final PortAttributeSensorAndConfigKey AMQP_PORT = Attributes.AMQP_PORT
-    @SetFromFlag("virtualHost")
-    public static final BasicAttributeSensorAndConfigKey<String> VIRTUAL_HOST_NAME = [String, "qpid.virtualHost", "Qpid virtual host name", "localhost" ]
+
     @SetFromFlag("amqpVersion")
-    public static final BasicAttributeSensorAndConfigKey<String> AMQP_VERSION = [ String, "amqp.version", "AMQP protocol version", "0-10" ]
+    public static final BasicAttributeSensorAndConfigKey<String> AMQP_VERSION = [ AmqpServer.AMQP_VERSION, AmqpServer.AMQP_0_10 ]
+
     /** runtimeFiles to be copied to the server, map of "subpath/file.name": "classpath://foo/file.txt" (or other url) */
     @SetFromFlag("runtimeFiles")
     public static final BasicConfigKey<Map> RUNTIME_FILES = [ Map, "qpid.files.runtime", "Map of files to be copied, keyed by destination name relative to runDir" ]
@@ -125,7 +123,7 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJ
 
     @Override
     public Collection<String> toStringFieldsToInclude() {
-        return super.toStringFieldsToInclude() + ['amqpPort']
+        return super.toStringFieldsToInclude() + + ['amqpPort', 'amqpVersion']
     }
 
 }
@@ -174,7 +172,7 @@ public abstract class QpidDestination extends JMSDestination {
     public abstract String getExchangeName();
 
     /**
-     * Return the Qpid name for the queue.
+     * Return the AMQP name for the queue.
      */
     public String getQueueName() { return String.format("'%s'/'%s'; { assert: never }", exchangeName, name) }
 

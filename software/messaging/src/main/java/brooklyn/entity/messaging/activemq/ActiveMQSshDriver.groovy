@@ -70,11 +70,10 @@ public class ActiveMQSshDriver extends JavaStartStopSshDriver {
     public Map<String, String> getShellEnvironment() {
         def result = super.getShellEnvironment()
         result << [
-            "ACTIVEMQ_HOME" : "${runDir}",
-            "ACTIVEMQ_OPTS" : result.JAVA_OPTS ?: [:],
-            "JAVA_OPTS" : "",
-            "ACTIVEMQ_SUNJMX_CONTROL" : "--jmxurl service:jmx:rmi://${machine.address.hostName}:${rmiPort}/jndi/rmi://${machine.address.hostName}:${jmxPort}/jmxrmi"
+            ACTIVEMQ_HOME: "${runDir}",
+            ACTIVEMQ_OPTS: result.JAVA_OPTS ?: "",
+            ACTIVEMQ_SUNJMX_CONTROL: "--jmxurl service:jmx:rmi://${machine.address.hostName}:${rmiPort}/jndi/rmi://${machine.address.hostName}:${jmxPort}/jmxrmi",
+            JAVA_OPTS: "",
         ]
     }
-
 }

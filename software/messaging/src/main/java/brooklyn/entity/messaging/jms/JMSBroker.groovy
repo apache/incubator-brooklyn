@@ -1,4 +1,4 @@
-package brooklyn.entity.messaging
+package brooklyn.entity.messaging.jms
 
 import groovy.lang.MetaClass
 

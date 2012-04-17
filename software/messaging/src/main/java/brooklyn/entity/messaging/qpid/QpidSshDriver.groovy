@@ -32,9 +32,9 @@ public class QpidSshDriver extends JavaStartStopSshDriver {
         newScript(INSTALLING).
                 failOnNonZeroResultCode().
                 body.append(
-                CommonCommands.downloadUrlAs(installUrl, getEntityVersionLabel('/'), installFilename),
-                CommonCommands.INSTALL_TAR,
-                "tar xzfv ${installFilename}",
+	                CommonCommands.downloadUrlAs(installUrl, getEntityVersionLabel('/'), installFilename),
+	                CommonCommands.INSTALL_TAR,
+                    "tar xzfv ${installFilename}",
                 ).execute();
     }
 
@@ -65,7 +65,7 @@ public class QpidSshDriver extends JavaStartStopSshDriver {
     public void launch() {
         newScript(LAUNCHING, usePidFile:false).
                 body.append(
-                            "nohup ./bin/qpid-server -b '*' -m ${jmxPort} -p ${amqpPort} --exclude-0-8 ${amqpPort} --exclude-0-9 ${amqpPort} --exclude-0-9-1 ${amqpPort} &",
+                    "nohup ./bin/qpid-server -b '*' -m ${jmxPort} -p ${amqpPort} --exclude-0-8 ${amqpPort} --exclude-0-9 ${amqpPort} --exclude-0-9-1 ${amqpPort} &",
                 ).execute();
     }
 
@@ -85,9 +85,9 @@ public class QpidSshDriver extends JavaStartStopSshDriver {
     public Map<String, String> getShellEnvironment() {
         Map result = super.getShellEnvironment()
         result << [
-            "QPID_HOME" : "${runDir}",
-            "QPID_WORK" : "${runDir}",
-            "QPID_OPTS" : result.JAVA_OPTS ?: [:]
+            QPID_HOME: "${runDir}",
+            QPID_WORK: "${runDir}",
+            QPID_OPTS: result.JAVA_OPTS ?: [:]
         ]
     }
 

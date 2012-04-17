@@ -4,13 +4,13 @@ import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey
 
 /**
- * An interface that describes a single JMS Queue.
+ * An interface that describes a messaging queue.
  */
 public interface Queue {
-    BasicAttributeSensorAndConfigKey<String> QUEUE_NAME = [ String, "jms.queue.name", "JMS queue name" ]
+    BasicAttributeSensorAndConfigKey<String> QUEUE_NAME = [ String, "queue.name", "Queue name" ]
 
-    BasicAttributeSensor<Integer> QUEUE_DEPTH_BYTES = [ Integer, "jms.queue.depth.bytes", "Queue depth in bytes" ]
-    BasicAttributeSensor<Integer> QUEUE_DEPTH_MESSAGES = [ Integer, "jms.queue.depth.messages", "Queue depth in messages" ]
+    BasicAttributeSensor<Integer> QUEUE_DEPTH_BYTES = [ Integer, "queue.depth.bytes", "Queue depth in bytes" ]
+    BasicAttributeSensor<Integer> QUEUE_DEPTH_MESSAGES = [ Integer, "queue.depth.messages", "Queue depth in messages" ]
     
     /**
      * Create the queue.
