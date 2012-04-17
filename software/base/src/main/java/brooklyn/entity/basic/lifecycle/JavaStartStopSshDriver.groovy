@@ -110,14 +110,14 @@ public abstract class JavaStartStopSshDriver extends StartStopSshDriver {
 	 * TODO security!
 	 */
 	protected Map getJmxJavaSystemProperties() {
-        Integer _jmxRemotePort = checkNotNull(getJmxPort(), "jmxPort for entity "+entity)
-        String _hostname = checkNotNull(machine.address.hostName, "hostname for entity "+entity)
+        Integer jmxRemotePort = checkNotNull(getJmxPort(), "jmxPort for entity "+entity)
+        String hostName = checkNotNull(machine.address.hostName, "hostname for entity "+entity)
 		[
-		 "com.sun.management.jmxremote" : null,
-		 "com.sun.management.jmxremote.port" : _jmxRemotePort,
-		 "com.sun.management.jmxremote.ssl" : false,
-		 "com.sun.management.jmxremote.authenticate" : false,
-		 "java.rmi.server.hostname" : _hostname,
-		 ]
+		    "com.sun.management.jmxremote" : null,
+		    "com.sun.management.jmxremote.port" : jmxRemotePort,
+		    "com.sun.management.jmxremote.ssl" : false,
+		    "com.sun.management.jmxremote.authenticate" : false,
+		    "java.rmi.server.hostname" : hostName,
+		]
 	}
 }
