@@ -3,6 +3,9 @@ package brooklyn.location.basic;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
+import java.util.NoSuchElementException;
+
+import org.jclouds.rest.Providers;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.location.Location;
@@ -10,10 +13,13 @@ import brooklyn.location.LocationResolver;
 import brooklyn.location.basic.jclouds.CredentialsFromEnv;
 import brooklyn.location.basic.jclouds.JcloudsLocationFactory;
 
+import com.google.common.collect.Lists;
+
 public class JcloudsResolver implements LocationResolver {
 
     public static final String JCLOUDS = "jclouds";
     
+    public static final Collection<String> PROVIDERS = Lists.newArrayList(Providers.getSupportedProviders());
     public static final Collection<String> AWS_REGIONS = Arrays.asList(
             "eu-west-1","us-east-1","us-west-1","ap-southeast-1","ap-northeast-1");
             
@@ -44,6 +50,9 @@ public class JcloudsResolver implements LocationResolver {
             region = provider;
             provider = "aws-ec2";
         }
+        
+        if (!PROVIDERS.contains(provider)) 
+            throw new NoSuchElementException("Unknown location '"+spec+"'"); 
         
         return new JcloudsLocationFactory(
                 new CredentialsFromEnv(BrooklynProperties.Factory.newEmpty().addFromMap(properties), provider).asMap()).
