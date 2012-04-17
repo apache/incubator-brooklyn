@@ -29,11 +29,13 @@ public class HttpSensorAdapterTest {
 	public void testContentEvaluation() {
 		assertEquals(adapter.poller.evaluateSensorOnResponse(SENSOR_STRING, { content }, SIMPLE_RESPONSE), "A TEST")
 	}
+
 	@Test
 	public void testLongConversion() {
 		//string in header should be be automatically converted to long
 		assertEquals(adapter.poller.evaluateSensorOnResponse(SENSOR_LONG, { headers.bar }, SIMPLE_RESPONSE), 2);
 	}
+
 	@Test
 	public void testJson() {
 		assertEquals(adapter.poller.evaluateSensorOnResponse(SENSOR_LONG, { json.anInt }, JSON_RESPONSE), 10);
