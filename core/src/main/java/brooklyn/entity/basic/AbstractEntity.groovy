@@ -61,7 +61,7 @@ import com.google.common.collect.Iterables
  * by children, whereas the fields are not. (Attributes cannot be so accessed,
  * nor are they inherited.)
  */
-public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
+public abstract class AbstractEntity extends GroovyObjectSupport implements EntityLocal, GroovyInterceptable {
     
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractEntity.class)
     static { BrooklynLanguageExtensions.init(); }

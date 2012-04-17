@@ -1,17 +1,16 @@
 package brooklyn.entity.basic;
 
-import java.io.Writer
-import java.util.Collection
-import java.util.List
-import java.util.Map
-
 import brooklyn.entity.ConfigKey
 import brooklyn.entity.Effector
 import brooklyn.entity.Entity
+import brooklyn.entity.trait.Startable
 import brooklyn.event.AttributeSensor
 import brooklyn.event.Sensor
+import brooklyn.location.Location
+import brooklyn.management.ManagementContext
 import brooklyn.management.Task
 import brooklyn.util.task.ParallelTask
+
 
 /** Convenience methods for working with entities. 
  * Also see the various *Methods classes for traits 
@@ -109,5 +108,19 @@ public class Entities {
 		
 		return false
 	}
+
+    /** Interim method for assisting with destroying entities */
+    public static Entity start(ManagementContext context, Entity e, Collection<Location> locations) {
+        context?.manage(e);
+        if (e in Startable) ((Startable)e).start(locations);
+        e
+    }
+
+    /** Interim method for assisting with destroying entities */
+    public static void destroy(ManagementContext context, Entity e) {
+        if (e in Startable) ((Startable)e).stop();
+        if (e in AbstractEntity) ((AbstractEntity)e).destroy();
+        context?.unmanage(e);
+    }
 
 }

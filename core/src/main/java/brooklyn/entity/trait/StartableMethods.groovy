@@ -8,6 +8,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
+import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.location.Location
@@ -47,5 +48,20 @@ public class StartableMethods {
 		}
         if (log.isDebugEnabled()) log.debug("Stopped entity "+e);
 	}
-	
+
+    /** Common implementation for restart in parent nodes; just invokes stop on all children of the entity */
+    public static void restart(EntityLocal e) {
+        log.debug("Restarting entity "+e);
+        List<Entity> startables = e.ownedChildren.findAll { it in Startable }
+        if (startables && !startables.isEmpty()) {
+            Task task = Entities.invokeEffectorList(e, startables, Startable.RESTART)
+            try {
+                task.get()
+            } catch (ExecutionException ee) {
+                throw ee.cause
+            }
+        }
+        if (log.isDebugEnabled()) log.debug("Restarted entity "+e);
+    }
+
 }
