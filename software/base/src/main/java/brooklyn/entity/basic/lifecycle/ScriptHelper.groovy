@@ -158,9 +158,11 @@ public class CommonCommands {
     public static String installExecutable(Map flags=[:], String executable) {
         "which ${executable} || "+installPackage(flags, executable)
     }
+
     /** returns a command for safely running sudo (ensuring non-blocking) */
     // -S reads from stdin, routed to /dev/null, so a password prompt will not block
     public static String sudo(String command) { "sudo -S "+command+" < /dev/null" }
+
     /** returns a string for installing the given package;
      * flags can contain common overrides e.g. for apt, yum, rpm
      * (as the package names can be different for each of those), e.g.:
@@ -168,9 +170,10 @@ public class CommonCommands {
      * exit code 44 used to indicate failure */
     public static String installPackage(Map flags=[:], String packageDefaultName) {
         "(which apt-get && "+sudo("apt-get install -y ${flags.apt?:packageDefaultName})")+" || "+
-                "(which rpm && "+sudo("rpm -i ${flags.rpm?:packageDefaultName})")+" || "+
-                "(which yum && "+sudo("yum -y install ${flags.yum?:packageDefaultName})")+" || "+
-                "(echo \"WARNING: no known/successful package manager to install ${packageDefaultName}, may fail subsequently\")"
+        "(which rpm && "+sudo("rpm -i ${flags.rpm?:packageDefaultName})")+" || "+
+        "(which yum && "+sudo("yum -y install ${flags.yum?:packageDefaultName})")+" || "+
+        "(which port && "+sudo("port install ${flags.port?:packageDefaultName})")+" || "+
+        "(echo \"WARNING: no known/successful package manager to install ${packageDefaultName}, may fail subsequently\")"
     }
     public static final String INSTALL_TAR = installExecutable("tar");
     public static final String INSTALL_CURL = installExecutable("curl");
