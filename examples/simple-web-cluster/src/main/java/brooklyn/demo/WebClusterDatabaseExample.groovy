@@ -11,10 +11,10 @@ import org.slf4j.LoggerFactory
 import brooklyn.config.BrooklynProperties
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.Entities
+import brooklyn.entity.basic.UsesJava
 import brooklyn.entity.database.mysql.MySqlNode
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster
 import brooklyn.entity.webapp.DynamicWebAppCluster
-import brooklyn.entity.webapp.jboss.JBoss7Server
 import brooklyn.launcher.BrooklynLauncher
 import brooklyn.location.Location
 import brooklyn.location.basic.LocationRegistry
@@ -59,7 +59,7 @@ public class WebClusterDatabaseExample extends AbstractApplication {
     {
         web.factory.configure(
             httpPort: "8080+", 
-            (JBoss7Server.JAVA_OPTIONS):
+            (UsesJava.JAVA_OPTIONS):
                 ["brooklyn.example.db.url": valueWhenAttributeReady(mysql, MySqlNode.MYSQL_URL, this.&makeJdbcUrl)]);
 
         web.cluster.addPolicy(new
