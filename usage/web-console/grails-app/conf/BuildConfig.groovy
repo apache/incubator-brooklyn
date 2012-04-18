@@ -36,7 +36,7 @@ grails.project.dependency.resolution = {
     dependencies {
         // specify dependencies here under either 'build', 'compile', 'runtime', 'test' or 'provided' scopes eg.
 //        test 'brooklyn:brooklyn-core:'+appVersion
-        test 'brooklyn:brooklyn-software-webapp:'+appVersion
+        test 'io.brooklyn:brooklyn-software-webapp:'+appVersion
         
         //instead of transitive:false the following might work better:
 //        excludes "org.codehaus.groovy","org.jclouds"
