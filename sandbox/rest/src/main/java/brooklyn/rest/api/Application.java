@@ -9,16 +9,16 @@ public class Application {
 
   private String name;
   private Set<Entity> entities;
-  private Set<String> locationRefs;
+  private Set<String> locations;
 
   public Application(
       @JsonProperty("name") String name,
       @JsonProperty("entities") Set<Entity> entities,
-      @JsonProperty("locationRefs") Set<String> locationRefs
+      @JsonProperty("locations") Set<String> locations
   ) {
     this.name = checkNotNull(name, "name");
     this.entities = ImmutableSet.copyOf(entities);
-    this.locationRefs = ImmutableSet.copyOf(locationRefs);
+    this.locations = ImmutableSet.copyOf(locations);
   }
 
   public String getName() {
@@ -29,8 +29,8 @@ public class Application {
     return entities;
   }
 
-  public Set<String> getLocationRefs() {
-    return locationRefs;
+  public Set<String> getLocations() {
+    return locations;
   }
 
   @Override
@@ -42,7 +42,7 @@ public class Application {
 
     if (entities != null ? !entities.equals(that.entities) : that.entities != null)
       return false;
-    if (locationRefs != null ? !locationRefs.equals(that.locationRefs) : that.locationRefs != null)
+    if (locations != null ? !locations.equals(that.locations) : that.locations != null)
       return false;
     if (name != null ? !name.equals(that.name) : that.name != null)
       return false;
@@ -54,7 +54,7 @@ public class Application {
   public int hashCode() {
     int result = name != null ? name.hashCode() : 0;
     result = 31 * result + (entities != null ? entities.hashCode() : 0);
-    result = 31 * result + (locationRefs != null ? locationRefs.hashCode() : 0);
+    result = 31 * result + (locations != null ? locations.hashCode() : 0);
     return result;
   }
 
@@ -63,7 +63,7 @@ public class Application {
     return "Application{" +
         "name='" + name + '\'' +
         ", entities=" + entities +
-        ", locationRefs=" + locationRefs +
+        ", locations=" + locations +
         '}';
   }
 }
