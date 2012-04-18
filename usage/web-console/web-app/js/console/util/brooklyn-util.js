@@ -20,7 +20,7 @@ Brooklyn.util = (function(){
         if (!(x instanceof Object) || !(y instanceof Object)) return false;
 
         // they must have the exact same prototype chain, the closest we can do is
-        // test there constructor.
+        // test their constructors.
         if (x.constructor !== y.constructor) return false;
 
         for (var p in x) {
@@ -37,7 +37,7 @@ Brooklyn.util = (function(){
             if (typeof(x[p]) !== "object") return false;
 
             // Objects and Arrays must be tested recursively
-            if (!testEquivalent2(x[p], y[p])) return false;
+            if (!testEquivalent(x[p], y[p])) return false;
         }
 
         for (p in y) {
