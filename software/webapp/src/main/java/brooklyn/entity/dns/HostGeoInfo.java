@@ -22,7 +22,11 @@ public class HostGeoInfo {
         Object latitude = l.findLocationProperty("latitude");
         Object longitude = l.findLocationProperty("longitude");
 
-        if (address == null || latitude == null || longitude == null) return null;
+        if (address == null) return null;
+        if (latitude == null || longitude == null) {
+            //TODO attempt to discover it from the IP address
+            return null;
+        }
         if (latitude instanceof BigDecimal) latitude = ((BigDecimal) latitude).doubleValue();
         if (longitude instanceof BigDecimal) longitude = ((BigDecimal) longitude).doubleValue();
         if (!(latitude instanceof Double) || !(longitude instanceof Double))

@@ -126,7 +126,7 @@ public class AbstractGeoDnsServiceTest {
         }
         
         @Override
-        protected void reconfigureService(Set<HostGeoInfo> targetHosts) {
+        protected void reconfigureService(Collection<HostGeoInfo> targetHosts) {
             targetHostsByName.clear();
             for (HostGeoInfo host : targetHosts) {
                 if (host != null) targetHostsByName.put(host.displayName, host);
