@@ -1,12 +1,16 @@
 package brooklyn.rest.resources;
 
+import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.trait.Startable;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import static com.google.common.collect.Iterables.filter;
 import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Sets.newHashSet;
 import com.yammer.metrics.annotation.Timed;
+import java.lang.reflect.Modifier;
 import java.util.Set;
+import javax.annotation.Nullable;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -19,31 +23,48 @@ import org.reflections.Reflections;
 @Produces(MediaType.APPLICATION_JSON)
 public class EntityResource {
 
-  private Set<Class<? extends brooklyn.entity.Entity>> entities;
+  private Set<String> entities;
 
   public EntityResource() {
     Reflections reflections = new Reflections("brooklyn");
-    entities = reflections.getSubTypesOf(brooklyn.entity.Entity.class);
+
+    entities = newHashSet(transform(filter(
+        reflections.getSubTypesOf(Startable.class),
+        new Predicate<Class<? extends Startable>>() {
+          @Override
+          public boolean apply(@Nullable Class<? extends Startable> aClass) {
+            return !Modifier.isAbstract(aClass.getModifiers()) &&
+                !aClass.isInterface() &&
+                AbstractEntity.class.isAssignableFrom(aClass);
+          }
+        }),
+        new Function<Class<? extends Startable>, String>() {
+          @Override
+          public String apply(Class<? extends Startable> aClass) {
+            return aClass.getName();
+          }
+        }));
+  }
+
+  public boolean contains(String entityName) {
+    return entities.contains(entityName);
   }
 
   @GET
   @Timed
-  public Set<String> listAvailableEntities(
+  public Iterable<String> listAvailableEntities(
       final @QueryParam("name") @DefaultValue("") String name
   ) {
-    final String normalizedName = name.toLowerCase();
-    return newHashSet(transform(filter(entities,
-        new Predicate<Class<? extends brooklyn.entity.Entity>>() {
-          @Override
-          public boolean apply(Class<? extends brooklyn.entity.Entity> aClass) {
-            return name.equals("") || aClass.getName().toLowerCase().contains(normalizedName);
-          }
-        }),
-        new Function<Class<? extends brooklyn.entity.Entity>, String>() {
-          @Override
-          public String apply(Class<? extends brooklyn.entity.Entity> aClass) {
-            return aClass.getName();
-          }
-        }));
+    if ("".equals(name)) {
+      return entities;
+    } else {
+      final String normalizedName = name.toLowerCase();
+      return filter(entities, new Predicate<String>() {
+        @Override
+        public boolean apply(@Nullable String entity) {
+          return entity != null && entity.toLowerCase().contains(normalizedName);
+        }
+      });
+    }
   }
 }

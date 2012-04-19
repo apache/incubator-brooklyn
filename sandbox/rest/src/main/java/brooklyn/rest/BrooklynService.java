@@ -25,11 +25,13 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
     environment.manage(locationStore);
     environment.addResource(new LocationResource(locationStore));
 
+    EntityResource entityResource = new EntityResource();
+    environment.addResource(entityResource);
+
     ApplicationManager applicationManager = new ApplicationManager(locationStore);
     environment.manage(applicationManager);
-    environment.addResource(new ApplicationResource(applicationManager));
+    environment.addResource(new ApplicationResource(applicationManager, entityResource));
 
-    environment.addResource(new EntityResource());
     environment.addResource(new SensorResource(applicationManager));
     environment.addResource(new EffectorResource(applicationManager));
 
