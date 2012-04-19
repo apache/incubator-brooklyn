@@ -1,31 +1,38 @@
 package brooklyn.rest.api;
 
+import brooklyn.entity.basic.AbstractApplication;
 import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.collect.ImmutableSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
 
-public class Application {
+public class ApplicationSpec {
 
   private String name;
-  private Set<Entity> entities;
+  private Set<EntitySpec> entities;
   private Set<String> locations;
 
-  public Application(
+  @JsonIgnore
+  private transient AtomicReference<AbstractApplication> deployedContext;
+
+  public ApplicationSpec(
       @JsonProperty("name") String name,
-      @JsonProperty("entities") Set<Entity> entities,
+      @JsonProperty("entities") Set<EntitySpec> entities,
       @JsonProperty("locations") Set<String> locations
   ) {
     this.name = checkNotNull(name, "name");
-    this.entities = ImmutableSet.copyOf(entities);
-    this.locations = ImmutableSet.copyOf(locations);
+    this.entities = ImmutableSet.copyOf(checkNotNull(entities));
+    this.locations = ImmutableSet.copyOf(checkNotNull(locations));
+    this.deployedContext = new AtomicReference<AbstractApplication>();
   }
 
   public String getName() {
     return name;
   }
 
-  public Set<Entity> getEntities() {
+  public Set<EntitySpec> getEntities() {
     return entities;
   }
 
@@ -33,12 +40,27 @@ public class Application {
     return locations;
   }
 
+  @JsonIgnore
+  public boolean isDeployed() {
+    return deployedContext.get() != null;
+  }
+
+  @JsonIgnore
+  public AbstractApplication getDeployedContext() {
+    return deployedContext.get();
+  }
+
+  @JsonIgnore
+  public void setDeployedContext(AbstractApplication deployedContext) {
+    this.deployedContext.set(checkNotNull(deployedContext));
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
 
-    Application that = (Application) o;
+    ApplicationSpec that = (ApplicationSpec) o;
 
     if (entities != null ? !entities.equals(that.entities) : that.entities != null)
       return false;
@@ -60,9 +82,9 @@ public class Application {
 
   @Override
   public String toString() {
-    return "Application{" +
+    return "ApplicationSpec{" +
         "name='" + name + '\'' +
-        ", entities=" + entities +
+        ", entitySpecs=" + entities +
         ", locations=" + locations +
         '}';
   }

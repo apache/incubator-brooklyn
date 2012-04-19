@@ -5,30 +5,27 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.jclouds.JcloudsLocation;
-import brooklyn.rest.api.Application;
-import brooklyn.rest.api.Entity;
+import brooklyn.rest.api.ApplicationSpec;
+import brooklyn.rest.api.EntitySpec;
 import com.google.common.base.Function;
-import com.google.common.collect.HashMultimap;
+import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.collect.ImmutableMap;
 import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Lists.newLinkedList;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
 import com.yammer.dropwizard.lifecycle.Managed;
 import java.lang.reflect.Constructor;
 import java.util.Map;
+import java.util.Set;
 
 public class ApplicationManager implements Managed {
 
   private final LocationStore locationStore;
-  private final Map<String, Application> applications;
-
-  private final Multimap<String, Startable> running;
+  private final Map<String, ApplicationSpec> applications;
 
   public ApplicationManager(LocationStore locationStore) {
     this.locationStore = locationStore;
     this.applications = Maps.newConcurrentMap();
-    this.running = HashMultimap.create();
   }
 
   @Override
@@ -41,20 +38,25 @@ public class ApplicationManager implements Managed {
     destroyAll(); // TODO or save specs to external storage
   }
 
-  public void registerAndStart(Application application) {
-    applications.put(application.getName(), application);
+  public ApplicationSpec getSpec(String name) {
+    return applications.get(name);
+  }
 
-    // Create an application to server as a context
+  public Iterable<ApplicationSpec> entries() {
+    return applications.values();
+  }
 
-    Startable context = new AbstractApplication() {
+  public void createInstanceAndStart(ApplicationSpec applicationSpec) {
+    // Create an Brooklyn application instance to server as a context
+    AbstractApplication context = new AbstractApplication() {
     };
 
     // Create instances for all entities
-
-    for (Entity entity : application.getEntities()) {
+    for (EntitySpec entitySpec : applicationSpec.getEntities()) {
       try {
-        Class<Startable> klass = (Class<Startable>) Class.forName(entity.getName());
+        Class<Startable> klass = (Class<Startable>) Class.forName(entitySpec.getType());
         Constructor constructor = klass.getConstructor(new Class[]{Map.class, brooklyn.entity.Entity.class});
+        // TODO parse & rebuild config map as needed
         constructor.newInstance(Maps.newHashMap(), context);
 
       } catch (Exception e) {
@@ -62,10 +64,10 @@ public class ApplicationManager implements Managed {
       }
     }
 
-    // Start all the managed entities by asking the application to start
+    // Start all the managed entities by asking the applicationSpec to start
 
     context.start(newLinkedList(transform(
-        application.getLocations(),
+        applicationSpec.getLocations(),
         new Function<String, Location>() {
           @Override
           public Location apply(String ref) {
@@ -82,15 +84,15 @@ public class ApplicationManager implements Managed {
           }
         })));
 
-    running.put(application.getName(), context);
+    applicationSpec.setDeployedContext(context);
+    applications.put(applicationSpec.getName(), applicationSpec);
   }
 
   public void destroy(String application) {
-    for (Startable entity : running.get(application)) {
-      entity.stop();
+    if (application.contains(application)) {
+      applications.get(application).getDeployedContext().stop();
+      applications.remove(application);
     }
-    running.removeAll(application);
-    applications.remove(application);
   }
 
   /**

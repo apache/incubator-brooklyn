@@ -3,7 +3,7 @@ package brooklyn.rest;
 import brooklyn.rest.core.ApplicationManager;
 import brooklyn.rest.core.LocationStore;
 import brooklyn.rest.health.GeneralHealthCheck;
-import brooklyn.rest.resources.ApplicationResource;
+import brooklyn.rest.resources.ApplicationSpecResource;
 import brooklyn.rest.resources.EffectorResource;
 import brooklyn.rest.resources.EntityResource;
 import brooklyn.rest.resources.LocationResource;
@@ -30,7 +30,7 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
 
     ApplicationManager applicationManager = new ApplicationManager(locationStore);
     environment.manage(applicationManager);
-    environment.addResource(new ApplicationResource(applicationManager, entityResource));
+    environment.addResource(new ApplicationSpecResource(applicationManager, entityResource));
 
     environment.addResource(new SensorResource(applicationManager));
     environment.addResource(new EffectorResource(applicationManager));

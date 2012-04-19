@@ -1,8 +1,7 @@
 package brooklyn.rest.core;
 
-import brooklyn.rest.api.Application;
-import brooklyn.rest.api.Entity;
-import com.google.common.collect.ImmutableMap;
+import brooklyn.rest.api.ApplicationSpec;
+import brooklyn.rest.api.EntitySpec;
 import com.google.common.collect.ImmutableSet;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -13,23 +12,22 @@ public class ApplicationManagerTest {
   private LocationStore locationStore = LocationStore.withLocalhost();
   private ApplicationManager manager;
 
-  private Entity redisEntity = new Entity("brooklyn.entity.nosql.redis.RedisStore",
-      ImmutableMap.<String, String>of());
+  private EntitySpec redisEntitySpec = new EntitySpec("redis", "brooklyn.entity.nosql.redis.RedisStore");
 
   @BeforeMethod
   public void setUp() {
     manager = new ApplicationManager(locationStore);
   }
 
-  private Application createApplicationWithEntity(Entity entity) {
-    return new Application("test-app", ImmutableSet.of(entity),
+  private ApplicationSpec createApplicationWithEntity(EntitySpec entitySpec) {
+    return new ApplicationSpec("test-app", ImmutableSet.of(entitySpec),
         ImmutableSet.of("/locations/0"));
   }
 
-  @Test(enabled = false)
+  @Test
   public void testRegisterAndStartOnLocalhost() {
-    Application redis = createApplicationWithEntity(redisEntity);
-    manager.registerAndStart(redis);
+    ApplicationSpec redis = createApplicationWithEntity(redisEntitySpec);
+    manager.createInstanceAndStart(redis);
   }
 
   @AfterMethod

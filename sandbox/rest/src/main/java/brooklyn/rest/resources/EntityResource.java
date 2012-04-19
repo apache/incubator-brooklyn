@@ -35,7 +35,8 @@ public class EntityResource {
           public boolean apply(@Nullable Class<? extends Startable> aClass) {
             return !Modifier.isAbstract(aClass.getModifiers()) &&
                 !aClass.isInterface() &&
-                AbstractEntity.class.isAssignableFrom(aClass);
+                AbstractEntity.class.isAssignableFrom(aClass) &&
+                !aClass.isAnonymousClass();
           }
         }),
         new Function<Class<? extends Startable>, String>() {
