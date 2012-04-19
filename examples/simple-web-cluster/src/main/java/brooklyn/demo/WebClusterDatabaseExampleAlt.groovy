@@ -49,6 +49,8 @@ create database visitors;
 use visitors;
 create user '${DB_USERNAME}' identified by '${DB_PASSWORD}';
 grant usage on *.* to '${DB_USERNAME}'@'%' identified by '${DB_PASSWORD}';
+# ''@localhost is sometimes set up, overriding brooklyn@'%', so do a second explicit grant
+grant usage on *.* to '${DB_USERNAME}'@'localhost' identified by '${DB_PASSWORD}';
 grant all privileges on visitors.* to '${DB_USERNAME}'@'%';
 flush privileges;
 
