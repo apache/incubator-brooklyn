@@ -57,7 +57,7 @@ public class ApplicationManager implements Managed {
         Class<Startable> klass = (Class<Startable>) Class.forName(entitySpec.getType());
         Constructor constructor = klass.getConstructor(new Class[]{Map.class, brooklyn.entity.Entity.class});
         // TODO parse & rebuild config map as needed
-        constructor.newInstance(Maps.newHashMap(), context);
+        constructor.newInstance(Maps.newHashMap(entitySpec.getConfig()), context);
 
       } catch (Exception e) {
         throw new RuntimeException(e);
