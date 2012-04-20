@@ -67,12 +67,13 @@ public interface ExecutionManager {
     public <T> Task<T> submit(Map<?, ?> flags, Callable<T> c);
 
     /**
-     * Submits the given {@link Task} associated with the given bucket.
+     * Submits the given {@link Task} for execution in the context associated with this manager.
      *
-     * The following optional flags supported.
+     * The following optional flags supported (in the optional map first arg):
      * <ul>
      * <li><em>tag</em> - A single object to be used as a tag for looking up the task
-     * <li><em>tags</em> - A {@link Collection} of object tags each of which the task should be associated
+     * <li><em>tags</em> - A {@link Collection} of object tags each of which the task should be associated,
+     *                      used for associating with contexts, mutex execution, and other purposes
      * <li><em>synchId</em> - A string, or {@link Collection} of strings, representing a category on which an object should own a synch lock 
      * <li><em>synchObj</em> - A string, or {@link Collection} of strings, representing a category on which an object should own a synch lock 
      * <li><em>newTaskStartCallback</em> - A {@link Closure} that will be invoked just before the task starts if it starts as a result of this call
@@ -80,6 +81,8 @@ public interface ExecutionManager {
      * </ul>
      * Callbacks run in the task's thread, and if the callback is a closure it is passed the task for convenience. The closure can be any of the
      * following types; either a {@link Closure}, {@link Runnable} or {@link Callable}.
+     * <p>
+     * If a Map is supplied it must be modifiable (currently; may allow immutable maps in future). 
      */
     public <T> Task<T> submit(Map<?, ?> flags, Task<T> task);
 
