@@ -1,6 +1,3 @@
-/*
- * TODO license
- */
 package brooklyn.event.adapter;
 
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.with

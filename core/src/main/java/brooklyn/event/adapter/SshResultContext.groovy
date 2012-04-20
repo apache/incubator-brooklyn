@@ -1,6 +1,3 @@
-/*
- * TODO license
- */
 package brooklyn.event.adapter;
 
 import groovy.json.JsonSlurper

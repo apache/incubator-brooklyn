@@ -1,6 +1,3 @@
-/*
- * TODO license
- */
 package brooklyn.entity.messaging.rabbit;
 
 import static brooklyn.test.TestUtils.*

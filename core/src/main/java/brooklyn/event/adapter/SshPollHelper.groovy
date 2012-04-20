@@ -1,6 +1,3 @@
-/*
- * TODO license
- */
 package brooklyn.event.adapter;
 
 import org.slf4j.Logger

@@ -1,6 +1,3 @@
-/*
- * TODO license
- */
 package brooklyn.entity.messaging.amqp
 
 import brooklyn.entity.Entity
