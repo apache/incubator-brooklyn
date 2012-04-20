@@ -20,7 +20,7 @@ public class LocationStore implements Managed {
   private final AtomicInteger ids = new AtomicInteger(0);
 
   public static LocationStore withLocalhost() {
-    return new LocationStore(new Location("localhost", "", "", "localhost"));
+    return new LocationStore(Location.localhost());
   }
 
   public LocationStore(Location... locations) {
@@ -43,8 +43,10 @@ public class LocationStore implements Managed {
     // TODO: save credentials to external storage
   }
 
-  public void put(Location location) {
-    locations.put(ids.getAndIncrement(), location);
+  public int put(Location location) {
+    int id = ids.getAndIncrement();
+    locations.put(id, location);
+    return id;
   }
 
   public Location get(Integer id) {

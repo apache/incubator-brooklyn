@@ -5,6 +5,7 @@ import brooklyn.rest.core.LocationStore;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import java.net.URI;
 import java.util.Map;
 import javax.validation.Valid;
 import javax.ws.rs.DELETE;
@@ -14,6 +15,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 @Path("/locations")
 @Produces(MediaType.APPLICATION_JSON)
@@ -52,8 +54,9 @@ public class LocationResource {
   }
 
   @POST
-  public void add(@Valid Location location) {
-    store.put(location);
+  public Response add(@Valid Location location) {
+    int id = store.put(location);
+    return Response.created(URI.create("" + id)).build();
   }
 
   @DELETE

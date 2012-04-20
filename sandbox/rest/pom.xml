@@ -41,7 +41,7 @@
         </dependency>
         <dependency>
             <groupId>io.brooklyn</groupId>
-            <artifactId>brooklyn-all</artifactId>
+            <artifactId>brooklyn-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -70,9 +70,29 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>brooklyn</groupId>
-            <artifactId>brooklyn-extra</artifactId>
-            <version>0.3.0-SNAPSHOT</version>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-software-database</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-software-messaging</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-software-nosql</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-software-osgi</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-software-webapp</artifactId>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 

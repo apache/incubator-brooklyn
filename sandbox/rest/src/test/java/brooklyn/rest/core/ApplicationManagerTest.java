@@ -29,17 +29,16 @@ public class ApplicationManagerTest {
   }
 
   @Test
-  public void testRegisterAndStartOnLocalhostWithArguments() {
+  public void testRegisterAndStartOnLocalhost() {
     ApplicationSpec redis = createApplicationWithEntity(
-        new EntitySpec("redis", "brooklyn.entity.nosql.redis.RedisStore",
-            ImmutableMap.of("redisPort", "61234")));
+        new EntitySpec("redis", "brooklyn.entity.nosql.redis.RedisStore"));
     manager.createInstanceAndStart(redis);
 
     assertTrue(redis.isDeployed());
 
     RedisStore entity = (RedisStore) redis.getDeployedContext().getOwnedChildren().iterator().next();
     int port = entity.getAttribute(RedisStore.REDIS_PORT).intValue();
-    assertEquals(port, 61234);
+    assertEquals(port, 6379);
   }
 
   @AfterMethod

@@ -4,6 +4,10 @@ import org.codehaus.jackson.annotate.JsonProperty;
 
 public class Location {
 
+  public static Location localhost() {
+    return new Location("localhost", "", "", "localhost");
+  }
+
   private final String provider;
   private final String location;
 
