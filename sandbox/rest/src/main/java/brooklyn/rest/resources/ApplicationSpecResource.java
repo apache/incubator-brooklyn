@@ -51,7 +51,7 @@ public class ApplicationSpecResource {
      */
     for (EntitySpec entitySpec : applicationSpec.getEntities()) {
       if (entities.contains(entitySpec.getName())) {
-        throw new WebApplicationException(Response.Status.NOT_FOUND);
+        return Response.status(Response.Status.NOT_FOUND).build();
       }
     }
 
@@ -62,7 +62,7 @@ public class ApplicationSpecResource {
     // TODO: make the deployed context start call in background
     manager.createInstanceAndStart(applicationSpec);
 
-    URI ref = URI.create("/applications/" + applicationSpec.getName());
+    URI ref = URI.create(applicationSpec.getName());
     return Response.created(ref).build();
   }
 

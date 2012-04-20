@@ -5,7 +5,7 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 
 /**
- * Making it testng friendly
+ * Making it test-ng friendly
  */
 public abstract class BaseResourceTest extends ResourceTest {
 
