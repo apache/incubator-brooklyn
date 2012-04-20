@@ -15,7 +15,7 @@ import static org.testng.Assert.assertEquals;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
-public class ApplicationResourceTest extends BaseResourceTest {
+public class ApplicationSpecResourceTest extends BaseResourceTest {
 
   private ApplicationManager manager;
 
