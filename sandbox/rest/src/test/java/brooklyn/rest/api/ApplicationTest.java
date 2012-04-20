@@ -9,7 +9,7 @@ import java.io.IOException;
 import static org.testng.Assert.assertEquals;
 import org.testng.annotations.Test;
 
-public class ApplicationSpecTest {
+public class ApplicationTest {
 
   final EntitySpec entitySpec = new EntitySpec("Vanilla Java App", "brooklyn.entity.java.VanillaJavaApp",
       ImmutableMap.<String, String>of(
@@ -20,15 +20,23 @@ public class ApplicationSpecTest {
   final ApplicationSpec applicationSpec = new ApplicationSpec("myapp", ImmutableSet.of(entitySpec),
       ImmutableSet.of("/locations/1"));
 
+  final Application application = new Application(applicationSpec, Application.Status.STARTING);
+
   @Test
   public void testSerializeToJSON() throws IOException {
-    assertEquals(asJson(applicationSpec), jsonFixture("fixtures/application-spec.json"));
+    assertEquals(asJson(application), jsonFixture("fixtures/application.json"));
   }
 
   @Test
   public void testDeserializeFromJSON() throws IOException {
-    assertEquals(fromJson(jsonFixture("fixtures/application-spec.json"),
-        ApplicationSpec.class), applicationSpec);
+    assertEquals(fromJson(jsonFixture("fixtures/application.json"),
+        Application.class), application);
+  }
+
+  @Test
+  public void testTransitionToRunning() {
+    Application running = application.transitionTo(Application.Status.RUNNING);
+    assertEquals(running.getStatus(), Application.Status.RUNNING);
   }
 
 }

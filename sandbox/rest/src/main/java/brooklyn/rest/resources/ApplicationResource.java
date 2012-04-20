@@ -1,11 +1,11 @@
 package brooklyn.rest.resources;
 
+import brooklyn.rest.api.Application;
 import brooklyn.rest.api.ApplicationSpec;
 import brooklyn.rest.api.EntitySpec;
 import brooklyn.rest.core.ApplicationManager;
-import com.google.common.collect.ImmutableMap;
+import static com.google.common.base.Preconditions.checkNotNull;
 import java.net.URI;
-import java.util.Map;
 import javax.validation.Valid;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -19,33 +19,32 @@ import javax.ws.rs.core.Response;
 
 @Path("/applications")
 @Produces(MediaType.APPLICATION_JSON)
-public class ApplicationSpecResource {
+public class ApplicationResource {
 
   private final ApplicationManager manager;
   private final EntityResource entities;
 
-  public ApplicationSpecResource(ApplicationManager manager, EntityResource entities) {
-    this.manager = manager;
-    this.entities = entities;
+  public ApplicationResource(ApplicationManager manager, EntityResource entities) {
+    this.manager = checkNotNull(manager, "manager");
+    this.entities = checkNotNull(entities, "entities");
   }
 
   @GET
-  public Iterable<ApplicationSpec> listRegisteredApplications() {
-    return manager.entries();
+  public Iterable<Application> listRegisteredApplications() {
+    return manager.registry().values();
   }
 
   @GET
   @Path("{application}")
-  public Map getApplication(@PathParam("application") String application) {
-    return ImmutableMap.of(
-        "spec", manager.getSpec(application),
-        "context", manager.getSpec(application).getDeployedContext()
-    );
+  public Application getApplication(@PathParam("application") String name) {
+    if (manager.registry().containsKey(name)) {
+      return manager.registry().get(name);
+    }
+    throw new WebApplicationException(Response.Status.NOT_FOUND);
   }
 
   @POST
   public Response create(@Valid ApplicationSpec applicationSpec) {
-
     /*
      * All requested entities should be available
      */
@@ -60,7 +59,7 @@ public class ApplicationSpecResource {
      */
 
     // TODO: make the deployed context start call in background
-    manager.createInstanceAndStart(applicationSpec);
+    manager.startInBackground(applicationSpec);
 
     URI ref = URI.create(applicationSpec.getName());
     return Response.created(ref).build();
@@ -69,7 +68,7 @@ public class ApplicationSpecResource {
   @DELETE
   @Path("{application}")
   public Response delete(@PathParam("application") String application) {
-    manager.destroy(application);
+    manager.destroyInBackground(application);
     return Response.status(Response.Status.ACCEPTED).build();
   }
 }

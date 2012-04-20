@@ -1,4 +1,4 @@
-{"spec":{
+{
   "name":"myapp",
   "entities":[
     {
@@ -10,5 +10,7 @@
       }
     }
   ],
-  "locations":["/locations/1"]
-}, "status":"STARTING"}
+  "locations":[
+    "/locations/1"
+  ]
+}

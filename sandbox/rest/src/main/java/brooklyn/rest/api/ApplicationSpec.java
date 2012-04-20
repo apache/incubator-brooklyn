@@ -1,11 +1,8 @@
 package brooklyn.rest.api;
 
-import brooklyn.entity.basic.AbstractApplication;
 import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.collect.ImmutableSet;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
-import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
 
 public class ApplicationSpec {
@@ -13,9 +10,6 @@ public class ApplicationSpec {
   private String name;
   private Set<EntitySpec> entities;
   private Set<String> locations;
-
-  @JsonIgnore
-  private transient AtomicReference<AbstractApplication> deployedContext;
 
   public ApplicationSpec(
       @JsonProperty("name") String name,
@@ -25,7 +19,6 @@ public class ApplicationSpec {
     this.name = checkNotNull(name, "name");
     this.entities = ImmutableSet.copyOf(checkNotNull(entities));
     this.locations = ImmutableSet.copyOf(checkNotNull(locations));
-    this.deployedContext = new AtomicReference<AbstractApplication>();
   }
 
   public String getName() {
@@ -38,21 +31,6 @@ public class ApplicationSpec {
 
   public Set<String> getLocations() {
     return locations;
-  }
-
-  @JsonIgnore
-  public boolean isDeployed() {
-    return deployedContext.get() != null;
-  }
-
-  @JsonIgnore
-  public AbstractApplication getDeployedContext() {
-    return deployedContext.get();
-  }
-
-  @JsonIgnore
-  public void setDeployedContext(AbstractApplication deployedContext) {
-    this.deployedContext.set(checkNotNull(deployedContext));
   }
 
   @Override
