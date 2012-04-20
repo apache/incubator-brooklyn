@@ -111,7 +111,7 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJ
 
     @Override
     public Collection<String> toStringFieldsToInclude() {
-        return super.toStringFieldsToInclude() + ['amqpPort', 'amqpVersion']
+        return super.toStringFieldsToInclude() + ['amqpPort' ]
     }
 
 }

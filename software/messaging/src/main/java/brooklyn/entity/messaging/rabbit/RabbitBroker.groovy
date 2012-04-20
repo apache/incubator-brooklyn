@@ -46,17 +46,24 @@ public class RabbitBroker extends SoftwareProcessEntity implements MessageBroker
         super(properties, owner)
     }
 
+    @Override
+    public void postStart() {
+        super.postStart()
+
+        waitForServiceUp()
+
+//        queueNames.each { String name -> addQueue(name) }
+
+        setBrokerUrl();
+    }
+
     public void setBrokerUrl() {
-        String urlFormat = "amqp://guest:guest@/%s?brokerlist='tcp://%s:%d?tcp_nodelay='true''&maxprefetch='1'"
-        setAttribute(BROKER_URL, String.format(urlFormat, getAttribute(VIRTUAL_HOST_NAME), getAttribute(HOSTNAME), getAttribute(AMQP_PORT)))
+        String urlFormat = "amqp://guest:guest@%s:%d/%s"
+        setAttribute(BROKER_URL, String.format(urlFormat, getAttribute(HOSTNAME), getAttribute(AMQP_PORT), getAttribute(VIRTUAL_HOST_NAME)))
     }
 
     public RabbitQueue createQueue(Map properties) {
         return new RabbitQueue(properties, this)
-    }
-
-    public RabbitTopic createTopic(Map properties) {
-        return new RabbitTopic(properties, this)
     }
 
     public RabbitSshDriver newDriver(SshMachineLocation machine) {
@@ -67,13 +74,13 @@ public class RabbitBroker extends SoftwareProcessEntity implements MessageBroker
 
     @Override     
     protected void connectSensors() {
-        sshAdapter = sensorRegistry.register(new SshSensorAdapter(driver.machine));
+        sshAdapter = sensorRegistry.register(new SshSensorAdapter(driver.machine, env:driver.shellEnvironment))
         sshAdapter.command(CommonCommands.sudo("rabbitmqctl -q status"))
                 .poll(SERVICE_UP) {
 		            if (it == null || exitStatus != 0) return false
 		            return (it =~ "running_applications.*RabbitMQ")
 		        }
-        sshAdapter.activateAdapter()
+        sensorRegistry.activateAdapters()
     }
 
     @Override
@@ -96,19 +103,21 @@ public abstract class RabbitDestination extends AbstractEntity implements AmqpEx
 
     public RabbitDestination(Map properties=[:], Entity owner=null) {
         super(properties, owner)
+        exchange = properties.exchange ?: defaultExchangeName
+
+        init()
+        create()
     }
 
     public void init() {
         if (!virtualHost) virtualHost = getConfig(RabbitBroker.VIRTUAL_HOST_NAME)
         setAttribute(RabbitBroker.VIRTUAL_HOST_NAME, virtualHost)
         if (!sensorRegistry) sensorRegistry = new SensorRegistry(this)
-        sshAdapter = sensorRegistry.register(new SshSensorAdapter(owner.driver.machine));
-        sshAdapter.command("rabbitctl").poll(SERVICE_UP) {
-            return (it != null)
-        }
+        sshAdapter = sensorRegistry.register(new SshSensorAdapter(owner.driver.machine, env:owner.driver.shellEnvironment));
     }
 
     public void create() {
+        connectSensors()
         sensorRegistry.activateAdapters()
     }
     
@@ -116,11 +125,14 @@ public abstract class RabbitDestination extends AbstractEntity implements AmqpEx
         sensorRegistry.deactivateAdapters()
     }
 
+    public void connectSensors() { }
+
     public String getExchangeName() { exchange }
+    public String getDefaultExchangeName() { AmqpExchange.DIRECT }
 
     @Override
     public Collection<String> toStringFieldsToInclude() {
-        return super.toStringFieldsToInclude() + ['exchange']
+        return super.toStringFieldsToInclude() + [ 'virtualHost', 'exchange' ]
     }
 }
 
@@ -132,36 +144,30 @@ public class RabbitQueue extends RabbitDestination implements Queue {
     }
 
     @Override
-    public void init() {
+    public void create() {
         setAttribute QUEUE_NAME, name
-        super.init()
+        super.create()
     }
 
     public void connectSensors() {
-        sshAdapter.command(CommonCommands.sudo("rabbitmqctl list_queues -p /${virtualHost}  | grep '${queue}'")).poll(QUEUE_DEPTH_BYTES) {
-            
+        def queueAdapter = sshAdapter.command(CommonCommands.sudo("rabbitmqctl list_queues -p /${virtualHost}  | grep '${queueName}'"))
+        queueAdapter.poll(QUEUE_DEPTH_BYTES) {
+            if (it == null || exitStatus != 0) return -1
+            return 0 // TODO parse out queue depth from output
+        }
+        queueAdapter.poll(QUEUE_DEPTH_MESSAGES) {
+            if (it == null || exitStatus != 0) return -1
+            return 0 // TODO parse out queue depth from output
         }
     }
 
     /**
      * Return the AMQP name for the queue.
      */
-    public String getQueueName() { return String.format("'%s'/'%s'", exchangeName, name) }
-}
+    public String getQueueName() { name }
 
-public class RabbitTopic extends RabbitDestination implements Topic {
-    protected String name
-
-    public RabbitTopic(Map properties=[:], Entity owner=null) {
-        super(properties, owner)
-    }
-
-    // TODO sensors
-    public void connectSensors() { }
-    
     @Override
-    public void init() {
-        setAttribute TOPIC_NAME, name
-        super.init()
+    public Collection<String> toStringFieldsToInclude() {
+        return super.toStringFieldsToInclude() + [ 'name' ]
     }
 }
