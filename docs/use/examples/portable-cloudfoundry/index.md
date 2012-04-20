@@ -305,17 +305,18 @@ the targets shown in the [Simple Web Cluster example](../webcluster).
 If you've completed this, you're probably ready for a bigger challenge.
 Here are some ideas to get you started:
 
- 1. Combine the ``Movable`` entity built here with the [Global Web Fabric example](../web-fabric),
+ 1. Combine the ``Movable`` entity built here with 
+    a ``DynamicFabric`` <!-- the [Global Web Fabric example](../global-web-fabric), -->
     to make a fabric running our web-app, spanning multiple Cloud Foundry instances,
-    where each instance is able to be moved as well.  **[ EASY ]**
+    where each instance is able to be moved as well.
     
  1. Consume a CF service, such as a database, in your web-app.
     You'll have to modify or sub-class ``CloudFoundryVmcCliAccess`` and ``CloudFoundryJavaWebAppService``
     to allow the service to be specified via ``vmc``.
-    What strategies can then be used to migrate application *data* when the app is moved?  **[ MEDIUM ]**
+    What strategies can then be used to migrate application *data* when the app is moved?
 
  1. Create a new Brooklyn CF entity to support an application other than a Java Web App.
-    The list is (almost) endless -- Ruby, node.js, PHP, etc.  **[ MEDIUM ]**
+    The list is (almost) endless -- Ruby, node.js, PHP, etc.
 
 Is some of what you've built a worthy addition to Brooklyn?
 If so please consider [contributing it]({{ site.url }}/dev/how-to-contrib.html) so that we can make it better
