@@ -58,7 +58,6 @@ public class ApplicationResource {
      * TODO All locations should exists
      */
 
-    // TODO: make the deployed context start call in background
     manager.startInBackground(applicationSpec);
 
     URI ref = URI.create(applicationSpec.getName());

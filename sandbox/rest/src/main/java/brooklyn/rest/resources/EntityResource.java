@@ -7,6 +7,7 @@ import com.google.common.base.Predicate;
 import static com.google.common.collect.Iterables.filter;
 import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Sets.newHashSet;
+import com.yammer.dropwizard.logging.Log;
 import com.yammer.metrics.annotation.Timed;
 import java.lang.reflect.Modifier;
 import java.util.Set;
@@ -23,9 +24,12 @@ import org.reflections.Reflections;
 @Produces(MediaType.APPLICATION_JSON)
 public class EntityResource {
 
+  private static final Log LOG = Log.forClass(EntityResource.class);
+
   private Set<String> entities;
 
   public EntityResource() {
+    LOG.info("Building a list of startable entities from the classpath");
     Reflections reflections = new Reflections("brooklyn");
 
     entities = newHashSet(transform(filter(
@@ -42,6 +46,7 @@ public class EntityResource {
         new Function<Class<? extends Startable>, String>() {
           @Override
           public String apply(Class<? extends Startable> aClass) {
+            LOG.info("Found '{}'", aClass.getName());
             return aClass.getName();
           }
         }));

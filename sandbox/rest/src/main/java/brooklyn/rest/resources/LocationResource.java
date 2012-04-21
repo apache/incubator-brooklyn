@@ -3,6 +3,7 @@ package brooklyn.rest.resources;
 import brooklyn.rest.api.Location;
 import brooklyn.rest.core.LocationStore;
 import com.google.common.base.Function;
+import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import java.net.URI;
@@ -24,7 +25,7 @@ public class LocationResource {
   private final LocationStore store;
 
   public LocationResource(LocationStore store) {
-    this.store = store;
+    this.store = checkNotNull(store, "store");
   }
 
   @GET

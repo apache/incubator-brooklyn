@@ -6,6 +6,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.yammer.dropwizard.lifecycle.Managed;
+import com.yammer.dropwizard.logging.Log;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;

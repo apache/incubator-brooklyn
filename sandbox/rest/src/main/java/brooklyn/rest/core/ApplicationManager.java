@@ -17,12 +17,16 @@ import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Lists.newLinkedList;
 import com.google.common.collect.Maps;
 import com.yammer.dropwizard.lifecycle.Managed;
+import com.yammer.dropwizard.logging.Log;
 import java.lang.reflect.Constructor;
+import java.util.ConcurrentModificationException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 
 public class ApplicationManager implements Managed {
+
+  private final static Log LOG = Log.forClass(ApplicationManager.class);
 
   private final LocationStore locationStore;
   private final ConcurrentMap<String, Application> applications;
@@ -49,23 +53,27 @@ public class ApplicationManager implements Managed {
   }
 
   public void startInBackground(final ApplicationSpec spec) {
-    // Create an Brooklyn application instance to server as a context
+    LOG.info("Creating application instance for {}", spec);
+
     final AbstractApplication instance = new AbstractApplication() {
     };
 
-    // Create instances for all entities attached to the application instance
     for (EntitySpec entitySpec : spec.getEntities()) {
       try {
+        LOG.info("Creating instance for entity {}", entitySpec.getType());
         Class<Startable> clazz = (Class<Startable>) Class.forName(entitySpec.getType());
+
         Constructor constructor = clazz.getConstructor(new Class[]{Map.class, brooklyn.entity.Entity.class});
         // TODO parse & rebuild config map as needed
         constructor.newInstance(Maps.newHashMap(entitySpec.getConfig()), instance);
 
       } catch (Exception e) {
-        throw new RuntimeException(e);
+        LOG.error(e, "Failed to create instance for entity {}", entitySpec);
+        throw Throwables.propagate(e);
       }
     }
 
+    LOG.info("Adding '{}' application to registry with status ACCEPTED", spec.getName());
     applications.put(spec.getName(), new Application(spec, Application.Status.ACCEPTED, instance));
 
     // Start all the managed entities by asking the app instance to start in background
@@ -79,25 +87,28 @@ public class ApplicationManager implements Managed {
               if (location.getProvider().equals("localhost")) {
                 return new LocalhostMachineProvisioningLocation();
               }
-              return new JcloudsLocation(ImmutableMap.of(
-                  "provider", location.getProvider(),
-                  "identity", location.getIdentity(),
-                  "credential", location.getCredential(),
-                  "providerLocationId", location.getLocation()
-              ));
+
+              Map<String, String> config = Maps.newHashMap();
+              config.put("provider", location.getProvider());
+              config.put("identity", location.getIdentity());
+              config.put("credential", location.getCredential());
+              config.put("providerLocationId", location.getLocation());
+
+              return new JcloudsLocation(config);
             }
           };
 
       @Override
       public void run() {
-        transitionTo(spec.getName(), Application.Status.STARTING);
         try {
+          transitionTo(spec.getName(), Application.Status.STARTING);
           instance.start(newLinkedList(transform(spec.getLocations(), buildLocationFromRef)));
           transitionTo(spec.getName(), Application.Status.RUNNING);
 
         } catch (Exception e) {
-          // TODO record the error message in response
+          LOG.error(e, "Failed to start application instance {}", instance);
           transitionTo(spec.getName(), Application.Status.ERROR);
+
           throw Throwables.propagate(e);
         }
       }
@@ -105,7 +116,14 @@ public class ApplicationManager implements Managed {
   }
 
   private void transitionTo(String name, Application.Status status) {
-    applications.put(name, applications.get(name).transitionTo(status));
+    Application target = applications.get(name);
+    LOG.info("Transitioning '{}' application from {} to {}", name, target.getStatus(), status);
+
+    boolean replaced = applications.replace(name, target, target.transitionTo(status));
+    if (!replaced) {
+      throw new ConcurrentModificationException("Unable to transition '" +
+          name + "' application to " + status);
+    }
   }
 
   /**
@@ -119,13 +137,15 @@ public class ApplicationManager implements Managed {
         @Override
         public void run() {
           transitionTo(name, Application.Status.STOPPING);
+          AbstractApplication instance = applications.get(name).getInstance();
           try {
-            applications.get(name).getInstance().stop();
+            instance.stop();
             applications.remove(name);
 
           } catch (Exception e) {
-            // TODO record the error message in response or as a log message
+            LOG.error(e, "Failed to stop application instance {}", instance);
             transitionTo(name, Application.Status.ERROR);
+
             throw Throwables.propagate(e);
           }
         }

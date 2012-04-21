@@ -31,7 +31,7 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
 
     // TODO configure the executor service from yml
     ApplicationManager applicationManager = new ApplicationManager(locationStore,
-        environment.managedExecutorService("brooklyn", 4, 8, 30, TimeUnit.SECONDS));
+        environment.managedExecutorService("brooklyn", 2, 16, 30, TimeUnit.SECONDS));
     environment.manage(applicationManager);
     environment.addResource(new ApplicationResource(applicationManager, entityResource));
 
