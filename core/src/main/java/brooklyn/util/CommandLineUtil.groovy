@@ -9,8 +9,8 @@ public class CommandLineUtil {
         int i = args.indexOf(param);
         if (i>=0) {
             String result = args.get(i+1);
-            args.remove(param);
-            args.remove(result);
+			args.remove(i+1);
+			args.remove(i);
             return result;
         } else {
             return defaultValue;

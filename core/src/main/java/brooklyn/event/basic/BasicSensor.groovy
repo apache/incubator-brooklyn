@@ -200,7 +200,7 @@ public class PortAttributeSensorAndConfigKey extends AttributeSensorAndConfigKey
                         LOG.debug(""+entity+" choosing port "+p+" for "+getName())
                         return p;
                     }
-                    LOG.warn(""+entity+" no port available for "+getName())
+                    LOG.warn(""+entity+" no port available for "+getName()+" in range "+value)
                     // definitively, no ports available
                     return null;
                 }
