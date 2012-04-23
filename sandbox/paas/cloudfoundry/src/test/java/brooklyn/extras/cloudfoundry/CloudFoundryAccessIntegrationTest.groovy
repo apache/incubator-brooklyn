@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory
 import org.testng.Assert
 import org.testng.annotations.Test
 
+import com.google.common.collect.Sets;
+
 import brooklyn.extras.cloudfoundry.CloudFoundryVmcCliAccess.AppRecord
 import brooklyn.extras.cloudfoundry.CloudFoundryVmcCliAccess.CloudFoundryAppStatLine
 import brooklyn.extras.cloudfoundry.CloudFoundryVmcCliAccess.CloudFoundryAppStats
@@ -24,7 +26,7 @@ class CloudFoundryAccessIntegrationTest {
         List lines = new CloudFoundryVmcCliAccess().exec("vmc info") as List;
         String user = lines.find({ it.startsWith("User:") })
         String version = lines.find({ it.startsWith("Client:") })
-        Assert.assertNotNull("expected User: in output");
+        Assert.assertNotNull(user, "expected User: in output");
         user = user.substring(5).trim();
         version = version.substring(7).trim()
         log.info("vmc user is "+user+" and version is "+version);
@@ -47,8 +49,7 @@ class CloudFoundryAccessIntegrationTest {
         try {
             //create
             AppRecord record = access.runAppWar(war: "classpath://hello-world.war");
-            Collection apps2 = access.getAppNames(true);
-            apps2.removeAll(apps1);
+            Collection apps2 = Sets.difference(access.getAppNames(true), apps1);
             assertEquals(apps2, [ id ])
             //check record
             assertEquals(record.size, 1)
@@ -78,11 +79,4 @@ class CloudFoundryAccessIntegrationTest {
         assertEquals(apps3, apps1) 
     }
 
-    @Test
-    public void testParseStats() {
-        CloudFoundryAppStatLine stats = 
-            CloudFoundryAppStatLine.parse "| 0        | 0.0% (4)    | 116.6M (512M)  | 9.5M (2G)    | 0d:15h:41m:2s |"
-        log.info("stats: "+stats);
-        assertEquals(stats.memUsedMB, 116.6d);
-    }
 }

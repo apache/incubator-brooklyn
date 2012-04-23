@@ -9,7 +9,8 @@ import brooklyn.util.ShellUtils
 
 
 /**
- * Like FunctionSensorAdapter but executes a shell command.
+ * Like FunctionSensorAdapter but executes a shell command (on the local machine where this instance of brooklyn is running).
+ * Useful e.g. for paas tools such as Cloud Foundry vmc which operate against a remote target.
  * <p>
  * Example usage:
  * <code>
@@ -19,6 +20,8 @@ import brooklyn.util.ShellUtils
  *      poll(DISK0_FREE_BYTES, {it[0].free})
  *   }
  * </code>
+ * <p>
+ * See also FunctionSensorAdapter (for arbitrary functions) and SshSensorAdapter (to run on remote machines).
  */
 public class ShellSensorAdapter extends FunctionSensorAdapter {
     
