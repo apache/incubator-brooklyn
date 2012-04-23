@@ -70,4 +70,22 @@ public class NetworkUtils {
         }
     }
 
+    /** return true if the IP (v4 only currently) address indicates a private subnet address, 
+     * not exposed on the public internet */
+    public static boolean isPrivateSubnet(InetAddress address) {
+//      127.0.0.1/0
+//      10.0.0.0/8
+//      172.16.0.0/12
+//      192.168.0.0/16
+        byte[] bytes = address.getAddress();
+        if (bytes[0]==10) return true;
+        if (((bytes[0] & 0xFF) == 172) && (bytes[1] & 240)==16) return true;
+        if (((bytes[0] & 0xFF) == 192) && ((bytes[1] & 0xFF) == 168)) return true;
+        
+        if ((bytes[0] & 0xFF) == 169) return true;
+        if (bytes[0]==127 && bytes[1]==0 && bytes[2]==0 && bytes[3]==1) return true;
+        
+        return false;
+    }
+    
 }
