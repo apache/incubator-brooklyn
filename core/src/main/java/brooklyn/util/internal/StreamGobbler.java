@@ -48,7 +48,7 @@ public class StreamGobbler extends Thread {
         }
     }
     
-    StringBuffer lineSoFar = new StringBuffer("");
+    private final StringBuilder lineSoFar = new StringBuilder(16);
     public void onChar(int c) {
     	if (c=='\n' || c=='\r') {
     		if (lineSoFar.length()>0)

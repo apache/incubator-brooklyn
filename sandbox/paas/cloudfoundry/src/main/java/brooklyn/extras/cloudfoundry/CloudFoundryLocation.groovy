@@ -21,7 +21,7 @@ import brooklyn.util.flags.SetFromFlag;
 class CloudFoundryLocation extends AbstractLocation implements ElasticJavaWebAppServiceAwareLocation {
 
     @SetFromFlag
-    private static String target;
+    private String target;
     
     public CloudFoundryLocation(Map properties = [:]) {
         super(properties);

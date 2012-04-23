@@ -17,13 +17,13 @@ import com.google.common.base.Function
  * Example usage:
  * <code>
  *   def fnSensorAdaptor = sensorRegistry.register(new FunctionSensorAdapter(&myFunction));
- *   fnSensorAdaptor.poll(MY_BROOKLYN_RAW_DATA_ATTRIBTE)
+ *   fnSensorAdaptor.poll(MY_BROOKLYN_RAW_DATA_ATTRIBUTE)
  *   fnSensorAdaptor.then({ MyStruct.parse(it) }).with {
  *       then({ it.field1 }).poll(MY_BROOKLYN_ATTRIBUTE_1)
  *       then({ it.field2 }).poll(MY_BROOKLYN_ATTRIBUTE_2)
  *   }
  *   //or, field1 access can also be written:
- *   fnSensorAdaptor.poll(MY_BROOKLYN_ATTRIBTE_1, { MyStruct.parse(it).field1 } )
+ *   fnSensorAdaptor.poll(MY_BROOKLYN_ATTRIBUTE_1, { MyStruct.parse(it).field1 } )
  * </code>
  */
 public class FunctionSensorAdapter extends AbstractSensorAdapter {

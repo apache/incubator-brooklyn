@@ -201,6 +201,10 @@ class CloudFoundryVmcCliAccess {
         return result
     }
 
+    public void stopApp(Map flags=[:]) {
+        exec("vmc stop ${getAppName(flags)}");
+    }
+    
     public void destroyApp(Map flags=[:]) {
         setTarget(target);
         exec("vmc delete ${getAppName(flags)}");

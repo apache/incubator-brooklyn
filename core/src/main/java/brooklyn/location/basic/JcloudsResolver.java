@@ -7,6 +7,9 @@ import java.util.NoSuchElementException;
 
 import org.jclouds.rest.Providers;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.config.BrooklynProperties;
 import brooklyn.location.Location;
 import brooklyn.location.LocationResolver;
@@ -17,11 +20,15 @@ import com.google.common.collect.Lists;
 
 public class JcloudsResolver implements LocationResolver {
 
+    public static final Logger log = LoggerFactory.getLogger(JcloudsResolver.class);
+    
     public static final String JCLOUDS = "jclouds";
     
     public static final Collection<String> PROVIDERS = Lists.newArrayList(Providers.getSupportedProviders());
     public static final Collection<String> AWS_REGIONS = Arrays.asList(
-            "eu-west-1","us-east-1","us-west-1","ap-southeast-1","ap-northeast-1");
+            // from http://docs.amazonwebservices.com/general/latest/gr/rande.html as of Apr 2012.
+            // it is suggested not to maintain this list here, instead to require aws-ec2 explicitly named.
+            "eu-west-1","us-east-1","us-west-1","us-west-2","ap-southeast-1","ap-northeast-1","sa-east-1");
             
     @Override
     public Location newLocationFromString(Map properties, String spec) {
@@ -49,6 +56,7 @@ public class JcloudsResolver implements LocationResolver {
             // treat amazon as a default
             region = provider;
             provider = "aws-ec2";
+            log.warn("Use of deprecated location '"+region+"'; in future refer to with explicit provider '"+provider+":"+region+"'");
         }
         
         if (!PROVIDERS.contains(provider)) 

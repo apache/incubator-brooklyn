@@ -12,6 +12,8 @@ import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 
+import com.google.common.collect.ImmutableSet
+
 /** an enricher policy which just listens for the target sensor(s) on a child entity and passes it up */
 public class SensorPropagatingEnricher extends AbstractEnricher implements SensorEventListener {
     
@@ -26,8 +28,7 @@ public class SensorPropagatingEnricher extends AbstractEnricher implements Senso
         newInstanceListeningToAllSensorsBut(source);
     }
     public static SensorPropagatingEnricher newInstanceListeningToAllSensorsBut(Entity source, Sensor ...excludes) {
-        Set excluded = []
-        excluded.addAll(Arrays.asList(excludes));
+        Set excluded = ImmutableSet.copyOf(excludes);
         Set includes = []
         
         source.entityClass.sensors.each {

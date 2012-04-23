@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.Entities;
+import brooklyn.location.basic.LocationRegistry;
 import brooklyn.test.TestUtils
 
 /**
@@ -36,12 +37,11 @@ class CloudFoundryJavaClusterExample extends AbstractApplication {
       
     // ---- the code above is your app descriptor; code below runs it ----
       
-    CloudFoundryLocation loc = new CloudFoundryLocation()
-      
     public static void main(String[] args) {
         def app = new CloudFoundryJavaClusterExample();
+        def locations = new LocationRegistry().resolve(["cloudfoundry"]);
         
-        app.start([app.loc]);
+        app.start(locations);
         
         log.info "should now be able to visit site (for 2m): {}", app.cloudfoundry.getWebAppAddress()
         //should now be able to visit (assert?)

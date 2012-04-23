@@ -54,6 +54,10 @@ public class LocationRegistry {
         throw new NoSuchElementException("No resolver found for '"+prefix+"' when trying to find location "+spec);
     }
     
+    /** Expects a collection of strings being the spec for locations, returns a list of locations.
+     * For legacy compatibility this also accepts nested lists, but that is deprecated
+     * (and triggers a warning).
+     */
     public List<Location> getLocationsById(Collection<String> ids) {
         List<Location> result = new ArrayList<Location>();
         for (Object id: ids) {
@@ -63,7 +67,8 @@ public class LocationRegistry {
                 result.addAll(getLocationsById((Collection)id));
             } else if (id instanceof Location) result.add((Location)id);
             else {
-                throw new IllegalArgumentException("Cannot resolve '"+id+"' to a location; unsupported type");
+                throw new IllegalArgumentException("Cannot resolve '"+id+"' to a location; unsupported type "+
+                        (id==null ? "null" : ""+id.getClass()));
             }
         }
         return result;
