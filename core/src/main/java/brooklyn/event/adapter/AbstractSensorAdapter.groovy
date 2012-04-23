@@ -22,6 +22,7 @@ public abstract class AbstractSensorAdapter {
 	
 	static { TimeExtras.init() }
 	
+    /** null means no execution; 0 or negative is undefined (but currently no execution) */
 	@SetFromFlag("period")
 	TimeDuration pollPeriod = 5*SECONDS;
 	

@@ -46,21 +46,36 @@ public class Entities {
 		return invoke
 	}
 
+    public static void isSecret(String name) {
+        name.contains("password") || name.contains("credential") || name.contains("secret") || name.contains("private")
+    }
+
+    public static boolean isTrivial(Object v) {
+        v==null || ((v in Map || v in Collection) && (v.isEmpty()))
+    }    
 	public static void dumpInfo(Entity e, Writer out=new PrintWriter(System.out), String currentIndentation="", String tab="  ") {
 		out << currentIndentation+e.toString()+"\n"
-		
 		getConfigKeys(e).each {
-			out << currentIndentation+tab+tab+it.name;
             def v = e.getConfig(it)
-			if (v && (it.getName().contains("password") || it.getName().contains("credential")))
-                out << ": "+"xxxxxxxx"+"\n"
-            else
-                out << ": "+v+"\n"
+            if (!isTrivial(v)) {
+                out << currentIndentation+tab+tab+it.name;
+                out << ": ";
+                if (v && isSecret(it.name)) out << "xxxxxxxx"
+                else out << v;
+                out << "\n"
+            }
 		}
 		getSensors(e).each {
-			out << currentIndentation+tab+tab+it.name;
-			if (it in AttributeSensor) out << ": "+e.getAttribute(it)
-			out << "\n"
+			if (it in AttributeSensor) {
+                def v = e.getAttribute(it)
+                if (!isTrivial(v)) {
+                    out << currentIndentation+tab+tab+it.name;
+                    out << " = ";
+                    if (v && isSecret(it.name)) out << "xxxxxxxx"
+                    else out << v
+                    out << "\n"
+                }
+			}
 		}
 		e.getOwnedChildren().each {
 			dumpInfo(it, out, currentIndentation+tab, tab)

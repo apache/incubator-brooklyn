@@ -4,6 +4,8 @@ import java.util.Map;
 
 import com.google.common.base.Preconditions;
 
+import brooklyn.location.Location;
+import brooklyn.location.LocationResolver;
 import brooklyn.location.basic.AbstractLocation;
 
 class OpenshiftLocation extends AbstractLocation {
@@ -31,5 +33,18 @@ class OpenshiftLocation extends AbstractLocation {
         }
     }
     
+    public static class Resolver implements LocationResolver {
+        @Override
+        public String getPrefix() {
+            return "openshift";
+        }
+
+        @Override
+        public Location newLocationFromString(Map properties, String spec) {
+            assert spec.equals(getPrefix()) : "location '"+getPrefix()+"' is not currently parametrisable (invalid '"+spec+"')"
+            //TODO could support multiple URL/endpoints?
+            return new OpenshiftLocation(properties);
+        }
+    }
     
 }

@@ -63,8 +63,7 @@ public interface Attributes {
      */
     
     BasicAttributeSensor<Lifecycle> SERVICE_STATE = [ Lifecycle, "service.state", "Service lifecycle state" ]
-
-     
+    
 	/** optional */
     BasicAttributeSensor<String> LOG_FILE_LOCATION = [ String, "log.location", "log file location" ]
 }

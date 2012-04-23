@@ -6,25 +6,30 @@ import java.util.Map
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.enricher.basic.SensorPropagatingEnricher
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.ConfigurableEntityFactory
 import brooklyn.entity.group.AbstractController
 import brooklyn.entity.group.Cluster
 import brooklyn.entity.proxy.nginx.NginxController
+import brooklyn.entity.trait.Resizable
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.jboss.JBoss7ServerFactory
+import brooklyn.event.AttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.Location
 import brooklyn.util.flags.SetFromFlag
+
+import com.google.common.collect.Iterables
 
 /**
  * This entity contains the sub-groups and entities that go in to a single location (e.g. datacenter)
  * to provide web-app cluster functionality, viz load-balancer (controller) and webapp software processes.
  * <p>
  * You can customise the web server by customising
- * the webServerFactory (by reference in calling code)
- * or supplying your own webServerFactory (as a config flag).
+ * the factory (by reference in calling code)
+ * or supplying your own factory (as a config flag).
  * <p>
  * The contents of this group entity are:
  * <ul>
@@ -33,13 +38,10 @@ import brooklyn.util.flags.SetFromFlag
  * <li>a {@link brooklyn.policy.Policy} to resize the DynamicCluster
  * </ul>
  */
-public class ControlledDynamicWebAppCluster extends AbstractEntity implements Startable {
+public class ControlledDynamicWebAppCluster extends AbstractEntity implements Startable, Resizable, ElasticJavaWebAppService {
 
     public static final Logger log = LoggerFactory.getLogger(ControlledDynamicWebAppCluster.class);
             
-    @SetFromFlag("war")
-    public static final BasicConfigKey<String> ROOT_WAR = JavaWebAppService.ROOT_WAR
-
     @SetFromFlag('initialSize')
     public static BasicConfigKey<Integer> INITIAL_SIZE = [ Cluster.INITIAL_SIZE, 1 ]
 
@@ -89,7 +91,9 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
             initialSize: { getConfig(INITIAL_SIZE) });
     }
     
-    void start(Collection<? extends Location> locations) {
+    public void start(Collection<? extends Location> locations) {
+        Iterables.getOnlyElement(locations) //assert just one
+        
         addOwnedChild(controller)
 
         this.locations.addAll(locations)
@@ -97,11 +101,13 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
 
         controller.bind(cluster:cluster)
         controller.start(locations)
+        
+        connectSensors();
 
         setAttribute(SERVICE_UP, true)
     }
-
-    void stop() {
+    
+    public void stop() {
         controller.stop()
         cluster.stop()
 
@@ -109,13 +115,34 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
         setAttribute(SERVICE_UP, false)
     }
 
-    void restart() {
+    public void restart() {
         // TODO prod the entities themselves to restart, instead?
         def locations = []
         locations.addAll(this.locations)
 
         stop();
         start(locations);
+    }
+
+    void connectSensors() {
+        String url = "http://"+controller.getAttribute(AbstractController.HOSTNAME)+":"+
+            controller.getAttribute(AbstractController.HTTP_PORT)+"/";
+        setAttribute(ROOT_URL, url)
+        
+        def prop = SensorPropagatingEnricher.newInstanceListeningToAllSensorsBut(cluster, SERVICE_UP, ROOT_URL)
+        addEnricher(prop);
+        prop.emitAllAttributes();
+    }
+
+    public Integer resize(Integer desiredSize) {
+        cluster.resize(desiredSize);
+    }
+
+    /**
+     * @return the current size of the group.
+     */
+    public Integer getCurrentSize() {
+        cluster.getCurrentSize();
     }
 
 }
