@@ -1,14 +1,16 @@
 package brooklyn.extras.cloudfoundry
 
+import java.net.InetAddress;
 import java.util.Map
 
-import brooklyn.entity.basic.ConfigurableEntityFactory;
-import brooklyn.entity.webapp.ElasticJavaWebAppService;
-import brooklyn.entity.webapp.ElasticJavaWebAppService.ElasticJavaWebAppServiceAwareLocation;
+import brooklyn.entity.basic.ConfigurableEntityFactory
+import brooklyn.entity.webapp.ElasticJavaWebAppService
+import brooklyn.entity.webapp.ElasticJavaWebAppService.ElasticJavaWebAppServiceAwareLocation
+import brooklyn.location.AddressableLocation
 import brooklyn.location.Location
 import brooklyn.location.LocationResolver
 import brooklyn.location.basic.AbstractLocation
-import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.flags.SetFromFlag
 
 
 /** defines a cloudfoundry location
@@ -18,13 +20,15 @@ import brooklyn.util.flags.SetFromFlag;
  * <p>
  * username+password are not currently specifiable; 
  * we assume a token has been set up via `vmc login` (stored in ~/.vmc_token) */
-class CloudFoundryLocation extends AbstractLocation implements ElasticJavaWebAppServiceAwareLocation {
+class CloudFoundryLocation extends AbstractLocation implements AddressableLocation, ElasticJavaWebAppServiceAwareLocation {
 
     @SetFromFlag
     private static String target;
     
     public CloudFoundryLocation(Map properties = [:]) {
         super(properties);
+        if (!target) target="api.cloudfoundry.com";
+        if (!name) name="Cloud Foundry ("+target+")";
     }
     
     public static class Resolver implements LocationResolver {
@@ -51,6 +55,12 @@ class CloudFoundryLocation extends AbstractLocation implements ElasticJavaWebApp
 
     public String getTarget() {
         return this.@target;
+    }
+
+    @Override
+    public InetAddress getAddress() {
+        if (!target) return null;
+        return InetAddress.getByName(target);
     }
         
 }
