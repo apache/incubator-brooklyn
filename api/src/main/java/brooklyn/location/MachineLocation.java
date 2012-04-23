@@ -7,7 +7,7 @@ import java.net.InetAddress;
  *
  * This interface marks a {@link Location} being a network node with an IP address, and supports appropriate operations on the node.
  */
-public interface MachineLocation extends Location {
+public interface MachineLocation extends AddressableLocation {
     /**
      * Get the network address of the machine.
      *
