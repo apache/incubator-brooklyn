@@ -2,7 +2,9 @@ package brooklyn.util.internal;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintStream;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 
@@ -11,13 +13,23 @@ public class StreamGobbler extends Thread {
     protected final InputStream stream;
     protected final PrintStream out;
     protected final Logger log;
+    private final AtomicBoolean running = new AtomicBoolean(true);
     
+    public StreamGobbler(InputStream stream, OutputStream out, Logger log) {
+        this(stream, out != null ? new PrintStream(out) : null, log);
+    }
+
     public StreamGobbler(InputStream stream, PrintStream out, Logger log) {
         this.stream = stream;
         this.out = out;
         this.log = log;
     }
     
+    public void shutdown() {
+        running.set(false);
+        interrupt();
+    }
+
     String logPrefix = "";
     String printPrefix = "";
     public StreamGobbler setPrefix(String prefix) {
@@ -37,7 +49,7 @@ public class StreamGobbler extends Thread {
     public void run() {
         int c = -1;
         try {
-            while ((c=stream.read())>=0) {
+            while (running.get() && (c=stream.read())>=0) {
                 onChar(c);
             }
             onClose();
