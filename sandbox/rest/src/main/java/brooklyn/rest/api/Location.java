@@ -1,5 +1,6 @@
 package brooklyn.rest.api;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import org.codehaus.jackson.annotate.JsonProperty;
 
 public class Location {
@@ -20,7 +21,7 @@ public class Location {
       @JsonProperty("credential") String credential,
       @JsonProperty("location") String location
   ) {
-    this.provider = provider;
+    this.provider = checkNotNull(provider, "provider");
     this.identity = identity;
     this.credential = credential;
     this.location = location;

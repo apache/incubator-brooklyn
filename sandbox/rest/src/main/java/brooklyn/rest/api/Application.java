@@ -2,6 +2,8 @@ package brooklyn.rest.api;
 
 import brooklyn.entity.basic.AbstractApplication;
 import static com.google.common.base.Preconditions.checkNotNull;
+import com.google.common.collect.ImmutableMap;
+import java.util.Map;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
 
@@ -15,6 +17,14 @@ public class Application {
     ERROR,
     UNKNOWN
   }
+
+  private final static Map<Status, Status> validTransitions =
+      ImmutableMap.<Status, Status>builder()
+          .put(Status.UNKNOWN, Status.ACCEPTED)
+          .put(Status.ACCEPTED, Status.STARTING)
+          .put(Status.STARTING, Status.RUNNING)
+          .put(Status.RUNNING, Status.STOPPING)
+          .build();
 
   private ApplicationSpec spec;
   private Status status = Status.UNKNOWN;
@@ -50,8 +60,11 @@ public class Application {
   }
 
   public Application transitionTo(Status newStatus) {
-    // TODO check for valid transitions
-    return new Application(spec, newStatus, instance);
+    if (newStatus == Status.ERROR || validTransitions.get(status) == newStatus) {
+      return new Application(spec, newStatus, instance);
+    }
+    throw new IllegalStateException("Invalid transition from '" +
+        status + "' to '" + newStatus + "'");
   }
 
   @Override

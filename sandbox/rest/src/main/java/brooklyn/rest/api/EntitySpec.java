@@ -1,5 +1,6 @@
 package brooklyn.rest.api;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import org.codehaus.jackson.annotate.JsonProperty;
@@ -21,8 +22,8 @@ public class EntitySpec {
       @JsonProperty("type") String type,
       @JsonProperty("config") Map<String, String> config
   ) {
-    this.name = name;
-    this.type = type;
+    this.name = checkNotNull(name, "name");
+    this.type = checkNotNull(type, "type");
     this.config = ImmutableMap.copyOf(config);
   }
 

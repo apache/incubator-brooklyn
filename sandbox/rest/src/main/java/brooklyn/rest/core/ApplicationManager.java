@@ -11,8 +11,11 @@ import brooklyn.rest.api.EntitySpec;
 import com.google.common.base.Function;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
+import static com.google.common.collect.Iterables.all;
 import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Lists.newLinkedList;
 import com.google.common.collect.Maps;
@@ -23,6 +26,7 @@ import java.util.ConcurrentModificationException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
+import javax.annotation.Nullable;
 
 public class ApplicationManager implements Managed {
 
@@ -45,7 +49,26 @@ public class ApplicationManager implements Managed {
 
   @Override
   public void stop() throws Exception {
-    destroyAllInBackground(); // TODO or save specs to external storage
+    destroyAllInBackground();
+    waitForAllApplicationsToStopOrError();
+  }
+
+  private void waitForAllApplicationsToStopOrError() throws InterruptedException {
+    Predicate<Application> applicationInErrorState =
+        new Predicate<Application>() {
+          @Override
+          public boolean apply(Application app) {
+            return app.getStatus() == Application.Status.ERROR;
+          }
+        };
+
+    while (applications.size() != 0) {
+      Thread.sleep(2000);
+
+      if (all(applications.values(), applicationInErrorState)) {
+        break;
+      }
+    }
   }
 
   public ConcurrentMap<String, Application> registry() {
@@ -127,7 +150,7 @@ public class ApplicationManager implements Managed {
   }
 
   /**
-   * Spawn a background taks to destroy an application
+   * Spawn a background task to destroy an application
    *
    * @param name ap
    */
@@ -140,6 +163,7 @@ public class ApplicationManager implements Managed {
           AbstractApplication instance = applications.get(name).getInstance();
           try {
             instance.stop();
+            LOG.info("Removing '{}' application from registry", name);
             applications.remove(name);
 
           } catch (Exception e) {

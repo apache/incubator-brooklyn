@@ -2,6 +2,7 @@ package brooklyn.rest.resources;
 
 import brooklyn.entity.Effector;
 import brooklyn.rest.core.ApplicationManager;
+import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.collect.ImmutableSet;
 import java.util.Set;
 import javax.ws.rs.GET;
@@ -15,7 +16,7 @@ public class EffectorResource {
   private final ApplicationManager manager;
 
   public EffectorResource(ApplicationManager manager) {
-    this.manager = manager;
+    this.manager = checkNotNull(manager, "manager");
   }
 
   @GET
