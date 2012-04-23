@@ -8,6 +8,7 @@ import brooklyn.location.basic.jclouds.JcloudsLocation;
 import brooklyn.rest.api.Application;
 import brooklyn.rest.api.ApplicationSpec;
 import brooklyn.rest.api.EntitySpec;
+import static brooklyn.rest.core.ApplicationPredicates.status;
 import com.google.common.base.Function;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -54,18 +55,9 @@ public class ApplicationManager implements Managed {
   }
 
   private void waitForAllApplicationsToStopOrError() throws InterruptedException {
-    Predicate<Application> applicationInErrorState =
-        new Predicate<Application>() {
-          @Override
-          public boolean apply(Application app) {
-            return app.getStatus() == Application.Status.ERROR;
-          }
-        };
-
     while (applications.size() != 0) {
       Thread.sleep(2000);
-
-      if (all(applications.values(), applicationInErrorState)) {
+      if (all(applications.values(), status(Application.Status.ERROR))) {
         break;
       }
     }
@@ -152,7 +144,7 @@ public class ApplicationManager implements Managed {
   /**
    * Spawn a background task to destroy an application
    *
-   * @param name ap
+   * @param name application name
    */
   public void destroyInBackground(final String name) {
     if (applications.containsKey(name)) {

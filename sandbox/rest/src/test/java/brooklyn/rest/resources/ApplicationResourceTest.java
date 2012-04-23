@@ -19,6 +19,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 import javax.ws.rs.core.Response;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.fail;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
@@ -35,14 +36,17 @@ public class ApplicationResourceTest extends BaseResourceTest {
   protected void setUpResources() throws Exception {
     executorService = Executors.newCachedThreadPool();
     manager = new ApplicationManager(LocationStore.withLocalhost(), executorService);
+
     addResource(new ApplicationResource(manager, new EntityResource()));
+    addResource(new SensorResource(manager));
+    addResource(new EffectorResource(manager));
   }
 
   @AfterClass
   @Override
   public void tearDown() throws Exception {
     super.tearDown();
-    manager.destroyAllInBackground();
+    manager.stop();
     executorService.shutdown();
   }
 
@@ -88,6 +92,14 @@ public class ApplicationResourceTest extends BaseResourceTest {
         });
     assertEquals(applications.size(), 1);
     assertEquals(Iterables.get(applications, 0).getSpec(), redisSpec);
+  }
+
+  @Test(dependsOnMethods = "testDeployRedisApplication")
+  public void testListSensors() {
+    Set<String> sensors = client().resource("/applications/redis/sensors")
+        .get(new GenericType<Set<String>>() {
+        });
+    // fail(sensors.toString());
   }
 
   @Test(dependsOnMethods = "testListApplications")
