@@ -430,6 +430,10 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
         return description;
     }
     
+    /** allows a task user to specify why a task is blocked; for use immediately before a blocking/wait,
+     * and typically cleared immediately afterwards; referenced by management api to inspect a task
+     * which is blocking
+     */
     public void setBlockingDetails(String blockingDetails) {
         this.blockingDetails = blockingDetails;
     }

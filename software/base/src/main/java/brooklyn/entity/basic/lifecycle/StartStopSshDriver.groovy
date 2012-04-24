@@ -119,7 +119,7 @@ public abstract class StartStopSshDriver extends AbstractStartStopDriver impleme
         def s = new ScriptHelper(this, phase+" "+(entity?:this));
         if(!flags.nonStandardLayout){
             if (phase==INSTALLING) {
-                s.acquireMutex(location, installDir, "installing "+(entity?:this));
+                s.useMutex(location, installDir, "installing "+(entity?:this));
                 s.header.append(
                         'export INSTALL_DIR="'+installDir+'"',
                         'mkdir -p $INSTALL_DIR',
