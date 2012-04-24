@@ -1,9 +1,10 @@
 [
 { "title": "Elastic Web Cluster",
   "file":  "{{ site.url }}/use/examples/webcluster/index.html" },
+{ "title": "Global Web Fabric",
+  "file":  "{{ site.url }}/use/examples/global-web-fabric/index.html" },
 { "title": "Whirr Hadoop Cluster",
   "file":  "{{ site.url }}/use/examples/whirrhadoop/index.html" },
 { "title": "Portable Cloud Foundry",
   "file":  "{{ site.url }}/use/examples/portable-cloudfoundry/index.html" }
-
 ]
