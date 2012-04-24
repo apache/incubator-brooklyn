@@ -4,9 +4,13 @@ import static org.testng.AssertJUnit.*
 
 import org.testng.annotations.Test
 
+import brooklyn.util.flags.SetFromFlag;
+
 public class AbstractLocationTest {
 
     private static class ConcreteLocation extends AbstractLocation {
+		@SetFromFlag String myfield
+		
         ConcreteLocation(Map properties = [:]) {
             super(properties)
         }
@@ -96,5 +100,11 @@ public class AbstractLocationTest {
         child.parentLocation = parent
         assertEquals 1, parent.childLocations.size()
         assertEquals child, parent.childLocations.find { true }
+    }
+	
+    @Test
+    public void testFieldSetFromFlag() {
+        AbstractLocation loc = new ConcreteLocation(id: "3", myfield: "myval");
+        assertEquals(loc.myfield, "myval")
     }
 }
