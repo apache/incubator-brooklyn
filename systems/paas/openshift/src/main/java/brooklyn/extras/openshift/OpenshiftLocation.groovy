@@ -1,22 +1,28 @@
 package brooklyn.extras.openshift
 
-import java.util.Map;
+import java.net.InetAddress;
+import java.util.Map
 
-import com.google.common.base.Preconditions;
+import brooklyn.entity.basic.ConfigurableEntityFactory;
+import brooklyn.entity.webapp.ElasticJavaWebAppService;
+import brooklyn.entity.webapp.ElasticJavaWebAppService.ElasticJavaWebAppServiceAwareLocation;
+import brooklyn.location.AddressableLocation;
+import brooklyn.location.Location
+import brooklyn.location.LocationResolver
+import brooklyn.location.basic.AbstractLocation
 
-import brooklyn.location.Location;
-import brooklyn.location.LocationResolver;
-import brooklyn.location.basic.AbstractLocation;
+import com.google.common.base.Preconditions
 
-class OpenshiftLocation extends AbstractLocation {
+class OpenshiftLocation extends AbstractLocation implements AddressableLocation, ElasticJavaWebAppServiceAwareLocation {
 
     public OpenshiftLocation(Map properties = [:]) {
         super(properties);
         setProperties(leftoverProperties);
     }
     
-    String url = "https://openshift.redhat.com/broker"
-    String username, password
+    String hostname = "openshift.redhat.com";
+    String url = "https://${hostname}/broker";
+    String username, password;
     
     protected void setProperties(Map properties) {
         if (properties.url) {
@@ -46,5 +52,17 @@ class OpenshiftLocation extends AbstractLocation {
             return new OpenshiftLocation(properties);
         }
     }
-    
+
+    @Override
+    public ConfigurableEntityFactory<ElasticJavaWebAppService> newWebClusterFactory() {
+        throw new UnsupportedOperationException("ElasticJavaWebAppService is work in progress");
+        //TODO
+//        return new OpenShiftExpressJavaWebAppCluster.Factory();
+    }
+
+    @Override
+    public InetAddress getAddress() {
+        return InetAddress.getByName(hostname);
+    }
+
 }

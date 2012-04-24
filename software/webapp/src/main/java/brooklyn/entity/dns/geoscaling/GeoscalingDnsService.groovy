@@ -8,12 +8,11 @@ import java.util.Set
 
 import brooklyn.entity.Entity
 import brooklyn.entity.dns.AbstractGeoDnsService
-import brooklyn.entity.dns.HostGeoInfo
 import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.Domain
 import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.SmartSubdomain
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
-import brooklyn.management.Task
+import brooklyn.location.geo.HostGeoInfo
 import brooklyn.util.IdGenerator
 
 

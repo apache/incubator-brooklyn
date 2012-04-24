@@ -6,7 +6,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.TimeZone;
 
-import brooklyn.entity.dns.HostGeoInfo;
+import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.util.ResourceUtils;
 
 class GeoscalingScriptGenerator {

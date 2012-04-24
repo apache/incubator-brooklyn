@@ -1,6 +1,6 @@
 package brooklyn.extras.cloudfoundry
 
-import java.net.InetAddress;
+import java.net.InetAddress
 import java.util.Map
 
 import brooklyn.entity.basic.ConfigurableEntityFactory
@@ -10,12 +10,15 @@ import brooklyn.location.AddressableLocation
 import brooklyn.location.Location
 import brooklyn.location.LocationResolver
 import brooklyn.location.basic.AbstractLocation
+import brooklyn.location.geo.HostGeoInfo
+import brooklyn.util.StringUtils;
 import brooklyn.util.flags.SetFromFlag
 
 
 /** defines a cloudfoundry location
  * <p>
- * this can be specified as 'cloudfoundry:api.cloudfoundry.com',
+ * this can be specified as 'cloudfoundry:api.cloudfoundry.com', 
+ * or as 'cloudfoundry:https://api.aws.af.cm/' (required by `vmc` if target requires https)
  * or just 'cloudfoundry' (to use the default `vmc target`, in ~/.vmc_target)
  * <p>
  * username+password are not currently specifiable; 
@@ -29,6 +32,7 @@ class CloudFoundryLocation extends AbstractLocation implements AddressableLocati
         super(properties);
         if (!target) target="api.cloudfoundry.com";
         if (!name) name="Cloud Foundry ("+target+")";
+        if (getHostGeoInfo()==null) setHostGeoInfo(HostGeoInfo.fromLocation(this));
     }
     
     public static class Resolver implements LocationResolver {
@@ -60,7 +64,16 @@ class CloudFoundryLocation extends AbstractLocation implements AddressableLocati
     @Override
     public InetAddress getAddress() {
         if (!target) return null;
-        return InetAddress.getByName(target);
+        String hostname = target;
+        use (StringUtils) {
+            hostname = hostname.
+                removeStart("http://").
+                removeStart("https://").
+                replaceAll("/.*\$", "");
+        }
+        if (hostname.isEmpty())
+            throw new IllegalArgumentException("Cannot parse Cloud Foundry target '"+target+"' to determine address; expected in api.hostname.com or https://api.hostname.com/xxx format.")
+        return InetAddress.getByName(hostname);
     }
         
 }

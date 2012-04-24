@@ -1,19 +1,19 @@
 package brooklyn.entity.dns.geoscaling
 
-import static org.testng.Assert.*
 import static java.util.concurrent.TimeUnit.*
+import static org.testng.Assert.*
 
 import org.testng.annotations.Test
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.DynamicGroup
-import brooklyn.entity.dns.HostGeoInfo
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.location.geo.HostGeoInfo
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 import brooklyn.util.internal.Repeater
-import brooklyn.util.internal.TimeExtras;
+import brooklyn.util.internal.TimeExtras
 
 /**
  * {@link GeoscalingScriptGenerator} unit tests.

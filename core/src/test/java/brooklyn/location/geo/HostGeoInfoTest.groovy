@@ -1,4 +1,4 @@
-package brooklyn.entity.dns;
+package brooklyn.location.geo;
 
 import static org.testng.AssertJUnit.*
 import groovy.lang.MetaClass

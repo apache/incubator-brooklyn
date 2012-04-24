@@ -2,11 +2,9 @@ package brooklyn.entity.dns;
 
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
-
 import groovy.lang.MetaClass
 
 import java.util.Map
-import java.util.Set
 import java.util.concurrent.TimeUnit
 
 import org.testng.annotations.AfterMethod
@@ -21,6 +19,7 @@ import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.location.geo.HostGeoInfo
 import brooklyn.test.entity.TestEntity
 import brooklyn.util.internal.EntityStartUtils
 import brooklyn.util.internal.Repeater

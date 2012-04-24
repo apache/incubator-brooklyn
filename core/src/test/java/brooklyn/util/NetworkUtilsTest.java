@@ -51,6 +51,7 @@ public class NetworkUtilsTest {
         InetAddress address = InetAddress.getByName("localhost");
         Assert.assertEquals(127, address.getAddress()[0]);
         Assert.assertTrue(NetworkUtils.isPrivateSubnet(address));
+        Assert.assertEquals("127.0.0.1", address.getHostAddress());
     }
 
     @Test

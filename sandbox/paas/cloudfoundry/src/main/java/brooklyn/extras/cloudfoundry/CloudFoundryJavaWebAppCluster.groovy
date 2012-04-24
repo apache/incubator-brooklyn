@@ -114,9 +114,6 @@ class CloudFoundryJavaWebAppCluster extends AbstractEntity implements ElasticJav
     
     protected void useTarget(String target) {
         if (!target) return;
-        if (!target.startsWith("api."))
-            target = "api."+target;
-            
         cfAccess.setTarget(target)
     }
     public void connectSensors() {
