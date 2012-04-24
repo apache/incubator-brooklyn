@@ -11,6 +11,7 @@ import brooklyn.location.Location
 import brooklyn.location.LocationResolver
 import brooklyn.location.basic.AbstractLocation
 import brooklyn.location.geo.HostGeoInfo
+import brooklyn.util.HasMutexes;
 import brooklyn.util.StringUtils;
 import brooklyn.util.flags.SetFromFlag
 
@@ -23,7 +24,7 @@ import brooklyn.util.flags.SetFromFlag
  * <p>
  * username+password are not currently specifiable; 
  * we assume a token has been set up via `vmc login` (stored in ~/.vmc_token) */
-class CloudFoundryLocation extends AbstractLocation implements AddressableLocation, ElasticJavaWebAppServiceAwareLocation {
+class CloudFoundryLocation extends AbstractLocation implements AddressableLocation, ElasticJavaWebAppServiceAwareLocation, HasMutexes {
 
     @SetFromFlag
     private String target;
@@ -75,5 +76,27 @@ class CloudFoundryLocation extends AbstractLocation implements AddressableLocati
             throw new IllegalArgumentException("Cannot parse Cloud Foundry target '"+target+"' to determine address; expected in api.hostname.com or https://api.hostname.com/xxx format.")
         return InetAddress.getByName(hostname);
     }
-        
+
+    HasMutexes mutexSupport = new HasMutexes.MutexSupport();
+    
+    @Override
+    public void acquireMutex(String mutexId, String description) throws InterruptedException {
+        mutexSupport.acquireMutex(mutexId, description);
+    }
+
+    @Override
+    public boolean tryAcquireMutex(String mutexId, String description) {
+        return mutexSupport.tryAcquireMutex(mutexId, description);
+    }
+
+    @Override
+    public void releaseMutex(String mutexId) {
+        mutexSupport.releaseMutex(mutexId);
+    }
+
+    @Override
+    public boolean hasMutex(String mutexId) {
+        return mutexSupport.hasMutex(mutexId);
+    }
+
 }

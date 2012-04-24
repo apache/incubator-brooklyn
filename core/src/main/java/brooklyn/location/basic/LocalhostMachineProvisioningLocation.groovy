@@ -8,6 +8,7 @@ import brooklyn.location.AddressableLocation;
 import brooklyn.location.OsDetails
 import brooklyn.location.PortRange
 import brooklyn.location.geo.HostGeoInfo
+import brooklyn.util.HasMutexes;
 import brooklyn.util.NetworkUtils
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.flags.TypeCoercions
@@ -157,5 +158,9 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
         public OsDetails getOsDetails() {
             return new BasicOsDetails.Factory().newLocalhostInstance();
         }
+        
+        private static HasMutexes mutexSupport = new HasMutexes.MutexSupport();
+        protected HasMutexes newMutexSupport() { mutexSupport }
+        
     }
 }

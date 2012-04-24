@@ -6,12 +6,13 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
+import brooklyn.util.HasMutexes
 import brooklyn.util.IdGenerator
 import brooklyn.util.ResourceUtils
 import brooklyn.util.ShellUtils
 
 class CloudFoundryVmcCliAccess {
-
+    
     private static final Logger log = LoggerFactory.getLogger(CloudFoundryVmcCliAccess.class)
 
     /** optional user-supplied context object used for classloading context and
@@ -19,6 +20,7 @@ class CloudFoundryVmcCliAccess {
     protected Object context = this;
     
     String appName, war, url, target;
+    HasMutexes mutexSupport;
     
     String appPath;
     public synchronized String getAppPath() {
@@ -91,27 +93,28 @@ class CloudFoundryVmcCliAccess {
     }
     protected Map<String,AppRecord> _apps() {
         validate();
-        setTarget(target);
-        String[] lines = exec("vmc apps");
-//        +---------------+----+---------+--------------------------------+-------------+
-//        | Application   | #  | Health  | URLS                           | Services    |
-//        +---------------+----+---------+--------------------------------+-------------+
-//        | hellobrooklyn | 1  | RUNNING | hellobrooklyn.cloudfoundry.com | mysql-8c1d0 |
-//        | hellobrookly2 | 1  | RUNNING | hellobrookly2.cloudfoundry.com | mysql-8c1d0 |
-//        +---------------+----+---------+--------------------------------+-------------+
         Map result = [:]
-        
-        def li = lines.iterator();
-        //skip 3 header lines; bail out if not enough (e.g. 'No Applications') 
-        if (!li.hasNext()) return result; else li.next(); 
-        if (!li.hasNext()) return result; else li.next(); 
-        if (!li.hasNext()) return result; else li.next(); 
-        while (li.hasNext()) {
-            String line = li.next();
-            if (line.startsWith("+---"))
-                continue;
-            def record = AppRecord.parse(line);
-            result.put(record.appName, record);
+        useTarget(target, "lookup apps") {
+            String[] lines = exec("vmc apps");
+            //        +---------------+----+---------+--------------------------------+-------------+
+            //        | Application   | #  | Health  | URLS                           | Services    |
+            //        +---------------+----+---------+--------------------------------+-------------+
+            //        | hellobrooklyn | 1  | RUNNING | hellobrooklyn.cloudfoundry.com | mysql-8c1d0 |
+            //        | hellobrookly2 | 1  | RUNNING | hellobrookly2.cloudfoundry.com | mysql-8c1d0 |
+            //        +---------------+----+---------+--------------------------------+-------------+
+
+            def li = lines.iterator();
+            //skip 3 header lines; bail out if not enough (e.g. 'No Applications')
+            if (!li.hasNext()) return result; else li.next();
+            if (!li.hasNext()) return result; else li.next();
+            if (!li.hasNext()) return result; else li.next();
+            while (li.hasNext()) {
+                String line = li.next();
+                if (line.startsWith("+---"))
+                    continue;
+                def record = AppRecord.parse(line);
+                result.put(record.appName, record);
+            }
         }
         
         result
@@ -142,13 +145,28 @@ class CloudFoundryVmcCliAccess {
      * so user+pass is not used. by default the last target set will be used.
      * <p>
      * this is not parallel-safe (if someone else switches target);
-     * we compensate for that by always calling setTarget(target)
-     * which isn't theoretically perfect but is practically so.
-     * (ideally we would use a java API as described in issue #15.) 
+     * we compensate for that by always calling setTarget(target),
+     * which is not safe by itself but if wrapped in a useTarget block
+     * is safe unless something outside brooklyn retargets vmc at the same time. 
+     * (a cleaner alternative would be to use a java API as described in issue #15.) 
      */
     public void setTarget(String target) {
         this.target = target;
         if (target) exec("vmc target ${target}")
+    }
+    
+    public Object useTarget(String target, String description, Closure code) {
+        boolean hasMutex = false;
+        try {
+            if (mutexSupport && !mutexSupport.hasMutex("vmc")) {
+                mutexSupport.acquireMutex("vmc", "Cloud Foundry vmc target ${target} - "+description);
+                hasMutex = true;
+            }
+            setTarget(target);
+            return code.call();
+        } finally {
+            if (hasMutex) mutexSupport.releaseMutex("vmc");
+        }
     }
     
     public String getTarget() { target }
@@ -164,41 +182,41 @@ class CloudFoundryVmcCliAccess {
         new File(appPath).mkdirs();
         new File(appPath+"/root.war") << new ResourceUtils(context).getResourceFromUrl(getWar(flags));
         
-        setTarget(target);
-        
-        if (apps.contains(appName)) {
-            //update
-            
-            //stop done implicitly on server
-//            exec("vmc stop ${appName}")
-            
-            if (flags.memory) exec("vmc mem ${appName} "+flags.memory);
-            if (flags.url) {
+        useTarget(target, "run ${appName} WAR") {
+            if (apps.contains(appName)) {
+                //update
+
+                //stop done implicitly on server
+                //            exec("vmc stop ${appName}")
+
+                if (flags.memory) exec("vmc mem ${appName} "+flags.memory);
+                if (flags.url) {
+                    url = getUrl(flags)
+                    exec("vmc map ${appName} "+url);
+                }
+
+                exec("vmc update ${appName} --path ${appPath}");
+
+                exec("vmc start ${appName}")
+            } else {
+                //create
+                String memory = flags.memory ?: "512M";
                 url = getUrl(flags)
-                exec("vmc map ${appName} "+url);
+                exec("vmc push"+
+                        " ${appName}"+
+                        (url ? " --url ${url}" : "")+
+                        " --path ${appPath}"+
+                        //" --runtime java"+  //what is syntax here?  vmc runtimes shows java; frameworks shows java_web; all seem to prompt
+                        " --mem 512M",
+                        //need CR supplied twice (java prompt, and services prompt) since can't seem to get it specified on CLI;
+                        //and once more if url is default
+                        "\n\n"+(url?"":"\n"));
             }
-            
-            exec("vmc update ${appName} --path ${appPath}");
-            
-            exec("vmc start ${appName}")
-        } else {
-            //create
-            String memory = flags.memory ?: "512M";
-            url = getUrl(flags)
-            exec("vmc push"+
-                " ${appName}"+
-                (url ? " --url ${url}" : "")+
-                " --path ${appPath}"+
-                //" --runtime java"+  //what is syntax here?  vmc runtimes shows java; frameworks shows java_web; all seem to prompt
-                " --mem 512M",  
-                //need CR supplied twice (java prompt, and services prompt) since can't seem to get it specified on CLI; 
-                //and once more if url is default
-                "\n\n"+(url?"":"\n"));  
+
+            AppRecord result = this.getAppRecord(appName, true);
+            url = result.url
+            return result
         }
-        
-        AppRecord result = this.getAppRecord(appName, true);
-        url = result.url
-        return result
     }
 
     public void stopApp(Map flags=[:]) {
@@ -206,18 +224,21 @@ class CloudFoundryVmcCliAccess {
     }
     
     public void destroyApp(Map flags=[:]) {
-        setTarget(target);
-        exec("vmc delete ${getAppName(flags)}");
+        useTarget(target, "delete ${getAppName(flags)}") {
+            exec("vmc delete ${getAppName(flags)}");
+        }
     }
 
     public void resizeAbsolute(Map flags=[:], int newSize) {
         if (newSize<0) throw new IllegalArgumentException("newSize cannot be negative for ${context}")
-        setTarget(target);
-        exec("vmc instances ${getAppName(flags)} "+newSize);
+        useTarget(target, "resize ${getAppName(flags)} to ${newSize}") {
+            exec("vmc instances ${getAppName(flags)} "+newSize);
+        }
     }
     public void resizeDelta(Map flags=[:], int delta) {
-        setTarget(target);
-        exec("vmc instances ${getAppName(flags)} "+(delta>=0?"+"+delta:delta));
+        useTarget(target, "resize ${getAppName(flags)} ${(delta>=0?"+"+delta:delta)}") {
+            exec("vmc instances ${getAppName(flags)} "+(delta>=0?"+"+delta:delta));
+        }
     }
 
     public static class CloudFoundryAppStats {
@@ -353,25 +374,26 @@ class CloudFoundryVmcCliAccess {
     }
     
     public CloudFoundryAppStats stats(Map flags=[:]) {
-        setTarget(target);
-        String[] lines = exec("vmc stats ${getAppName(flags)}");
-//+----------+-------------+----------------+--------------+---------------+
-//| Instance | CPU (Cores) | Memory (limit) | Disk (limit) | Uptime        |
-//+----------+-------------+----------------+--------------+---------------+
-//| 0        | 0.0% (4)    | 116.6M (512M)  | 9.5M (2G)    | 0d:15h:41m:2s |
-//| 1        | 0.0% (4)    | 75.7M (512M)   | 9.4M (2G)    | 0d:9h:54m:44s |
-//+----------+-------------+----------------+--------------+---------------+
-        List result = []
-        
-        def li = lines.iterator();
-        li.next(); li.next(); li.next();  //skip 3 header lines
-        while (li.hasNext()) {
-            String line = li.next();
-            if (line.startsWith("+---"))
-                continue;
-            result << CloudFoundryAppStatLine.parse(line)
+        useTarget(target, "stats ${getAppName(flags)}") {
+            String[] lines = exec("vmc stats ${getAppName(flags)}");
+            //+----------+-------------+----------------+--------------+---------------+
+            //| Instance | CPU (Cores) | Memory (limit) | Disk (limit) | Uptime        |
+            //+----------+-------------+----------------+--------------+---------------+
+            //| 0        | 0.0% (4)    | 116.6M (512M)  | 9.5M (2G)    | 0d:15h:41m:2s |
+            //| 1        | 0.0% (4)    | 75.7M (512M)   | 9.4M (2G)    | 0d:9h:54m:44s |
+            //+----------+-------------+----------------+--------------+---------------+
+            List result = []
+
+            def li = lines.iterator();
+            li.next(); li.next(); li.next();  //skip 3 header lines
+            while (li.hasNext()) {
+                String line = li.next();
+                if (line.startsWith("+---"))
+                    continue;
+                result << CloudFoundryAppStatLine.parse(line)
+            }
+            return new CloudFoundryAppStats(instances: result, average: CloudFoundryAppStatLine.average(result));
         }
-        return new CloudFoundryAppStats(instances: result, average: CloudFoundryAppStatLine.average(result));
     }
     
 }

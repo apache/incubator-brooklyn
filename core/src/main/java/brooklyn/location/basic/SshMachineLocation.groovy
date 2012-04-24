@@ -1,6 +1,5 @@
 package brooklyn.location.basic
 
-import org.jclouds.compute.predicates.NodePredicates.ParentLocationId;
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -8,8 +7,9 @@ import brooklyn.location.MachineLocation
 import brooklyn.location.OsDetails
 import brooklyn.location.PortRange
 import brooklyn.location.PortSupplier
-import brooklyn.location.geo.HasHostGeoInfo;
+import brooklyn.location.geo.HasHostGeoInfo
 import brooklyn.location.geo.HostGeoInfo
+import brooklyn.util.HasMutexes
 import brooklyn.util.ReaderInputStream
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.internal.SshJschTool
@@ -19,7 +19,7 @@ import com.google.common.base.Preconditions
 /**
  * Operations on a machine that is accessible via ssh.
  */
-public class SshMachineLocation extends AbstractLocation implements MachineLocation, PortSupplier {
+public class SshMachineLocation extends AbstractLocation implements MachineLocation, PortSupplier, HasMutexes {
     public static final Logger LOG = LoggerFactory.getLogger(SshMachineLocation.class)
             
     @SetFromFlag('username')
@@ -212,4 +212,27 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         return BasicOsDetails.Factory.ANONYMOUS_LINUX;
     }
 
+    protected HasMutexes newMutexSupport() { new HasMutexes.MutexSupport(); }
+    
+    HasMutexes mutexSupport = newMutexSupport();
+    
+    @Override
+    public void acquireMutex(String mutexId, String description) throws InterruptedException {
+        mutexSupport.acquireMutex(mutexId, description);
+    }
+
+    @Override
+    public boolean tryAcquireMutex(String mutexId, String description) {
+        return mutexSupport.tryAcquireMutex(mutexId, description);
+    }
+
+    @Override
+    public void releaseMutex(String mutexId) {
+        mutexSupport.releaseMutex(mutexId);
+    }
+
+    @Override
+    public boolean hasMutex(String mutexId) {
+        return mutexSupport.hasMutex(mutexId);
+    }
 }
