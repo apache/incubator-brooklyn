@@ -36,7 +36,8 @@ class CloudFoundryJavaWebAppCluster extends AbstractEntity implements ElasticJav
 
     public static final BasicAttributeSensor<String> HOSTNAME = [ String, "cloudfoundry.host.name", "The hostname where the app should be accessed" ];
 
-    //disabled until we can test it against a CF where we can set the URL
+    //TODO allow url to be set
+    //disabled until we have access to a CF which allows setting the URL
     //(see refs to getUrl and url in VmcCliAccess)
     //(and note, this is different to ROOT_URL which _is_ exposed as a _sensor_)
 //    @SetFromFlag("url")            
@@ -85,7 +86,7 @@ class CloudFoundryJavaWebAppCluster extends AbstractEntity implements ElasticJav
     }
     public void stop() {
         setAttribute(SERVICE_STATE, Lifecycle.STOPPING);
-        destroy()
+        cfAccess.stopApp();
         setAttribute(SERVICE_STATE, Lifecycle.STOPPED);
     }
     
