@@ -3,8 +3,10 @@ package brooklyn.util;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -45,8 +47,8 @@ public interface HasMutexes {
             this.name = name;
         }
         private static final long serialVersionUID = -5303474637353009454L;
-        private List<Thread> owningThreads = new ArrayList<Thread>();
-        private List<Thread> requestingThreads = new ArrayList<Thread>();
+        final private List<Thread> owningThreads = new ArrayList<Thread>();
+        final private Set<Thread> requestingThreads = new LinkedHashSet<Thread>();
 
         @Override
         public void acquire() throws InterruptedException {
@@ -169,7 +171,7 @@ public interface HasMutexes {
             if (!result) throw new IllegalStateException("Thread "+Thread.currentThread()+" which released "+this+" did not own it.");  
         }
 
-        /** true iff there are no owners and no requesters (callers blocked trying to acquire) */
+        /** true iff there are any owners or any requesters (callers blocked trying to acquire) */
         public synchronized boolean isInUse() {
             return !owningThreads.isEmpty() || !requestingThreads.isEmpty();
         }
@@ -210,10 +212,16 @@ public interface HasMutexes {
         private Map<String,SemaphoreWithOwners> semaphores = new LinkedHashMap<String,SemaphoreWithOwners>();
 
         protected synchronized SemaphoreWithOwners getSemaphore(String mutexId) {
+            return getSemaphore(mutexId, false);
+        }
+        protected synchronized SemaphoreWithOwners getSemaphore(String mutexId, boolean requestBeforeReturning) {
             SemaphoreWithOwners s = semaphores.get(mutexId);
             if (s==null) {
                 s = new SemaphoreWithOwners(mutexId);
                 semaphores.put(mutexId, s);
+            }
+            if (requestBeforeReturning) {
+                s.requestingThreads.add(Thread.currentThread());
             }
             return s;
         }
@@ -244,7 +252,7 @@ public interface HasMutexes {
             Task current = BasicExecutionManager.getCurrentTask();
             if (current instanceof BasicTask) { ((BasicTask)current).setBlockingDetails("waiting for "+mutexId+":"+description); }
             
-            SemaphoreWithOwners s = getSemaphore(mutexId);
+            SemaphoreWithOwners s = getSemaphore(mutexId, true);
             s.acquire();
             s.setDescription(description);
             
@@ -253,7 +261,7 @@ public interface HasMutexes {
 
         @Override
         public boolean tryAcquireMutex(String mutexId, String description) {
-            SemaphoreWithOwners s = semaphores.get(mutexId);
+            SemaphoreWithOwners s = getSemaphore(mutexId, true);
             if (s.tryAcquire()) {
                 s.setDescription(description);
                 return true;
@@ -275,6 +283,10 @@ public interface HasMutexes {
             return super.toString()+"["+semaphores.size()+" semaphores: "+semaphores.values()+"]";
         }
         
+        /** Returns the semaphores in use at the time the method is called, for inspection purposes (and testing).
+         * The semaphores used by this class may change over time so callers are strongly discouraged
+         * from manipulating the semaphore objects themselves. 
+         */
         public synchronized Map<String,SemaphoreWithOwners> getAllSemaphores() {
             return ImmutableMap.<String,SemaphoreWithOwners>copyOf(semaphores);
         }

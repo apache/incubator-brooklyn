@@ -57,9 +57,15 @@ public class ScriptHelper {
 	
     protected Closure mutexAcquire = {}
     protected Closure mutexRelease = {}
-    public ScriptHelper acquireMutex(HasMutexes mutexSupport, String mutexId, String description) {
-        mutexAcquire = { mutexSupport.acquireMutex(mutexId, description); }
-        mutexRelease = { mutexSupport.releaseMutex(mutexId); }
+    /** indicates that the script should acquire the given mutexId on the given mutexSupport 
+     * and maintain it for the duration of script execution;
+     * typically used to prevent parallel scripts from conflicting in access to a resource
+     * (e.g. a folder, or a config file used by a process)
+     */
+    public ScriptHelper useMutex(HasMutexes mutexSupport, String mutexId, String description) {
+        mutexAcquire = { mutexSupport.acquireMutex(mutexId, description); };
+        mutexRelease = { mutexSupport.releaseMutex(mutexId); };
+        return this;
     }
     
 	public int execute() {

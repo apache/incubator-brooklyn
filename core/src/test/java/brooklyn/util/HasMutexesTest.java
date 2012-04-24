@@ -26,10 +26,12 @@ public class HasMutexesTest {
             Assert.assertEquals(s.getOwningThreads(), Arrays.asList(Thread.currentThread()));
             Assert.assertEquals(s.getRequestingThreads(), Collections.emptyList());
             Assert.assertTrue(s.isInUse());
+            Assert.assertTrue(s.isCallingThreadAnOwner());
         } finally {
             m.releaseMutex("foo");
         }
         Assert.assertFalse(s.isInUse());
+        Assert.assertFalse(s.isCallingThreadAnOwner());
         Assert.assertEquals(s.getDescription(), "something foo");
         Assert.assertEquals(s.getOwningThreads(), Collections.emptyList());
         Assert.assertEquals(s.getRequestingThreads(), Collections.emptyList());
