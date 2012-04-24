@@ -9,17 +9,18 @@ import brooklyn.location.PortRange
 import brooklyn.location.PortSupplier
 import brooklyn.location.geo.HasHostGeoInfo
 import brooklyn.location.geo.HostGeoInfo
-import brooklyn.util.HasMutexes
 import brooklyn.util.ReaderInputStream
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.internal.SshJschTool
+import brooklyn.util.mutex.MutexSupport
+import brooklyn.util.mutex.WithMutexes
 
 import com.google.common.base.Preconditions
 
 /**
  * Operations on a machine that is accessible via ssh.
  */
-public class SshMachineLocation extends AbstractLocation implements MachineLocation, PortSupplier, HasMutexes {
+public class SshMachineLocation extends AbstractLocation implements MachineLocation, PortSupplier, WithMutexes {
     public static final Logger LOG = LoggerFactory.getLogger(SshMachineLocation.class)
             
     @SetFromFlag('username')
@@ -212,9 +213,9 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         return BasicOsDetails.Factory.ANONYMOUS_LINUX;
     }
 
-    protected HasMutexes newMutexSupport() { new HasMutexes.MutexSupport(); }
+    protected WithMutexes newMutexSupport() { new MutexSupport(); }
     
-    HasMutexes mutexSupport = newMutexSupport();
+    WithMutexes mutexSupport = newMutexSupport();
     
     @Override
     public void acquireMutex(String mutexId, String description) throws InterruptedException {

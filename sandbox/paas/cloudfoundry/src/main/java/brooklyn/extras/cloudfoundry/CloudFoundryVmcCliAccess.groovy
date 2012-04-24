@@ -6,10 +6,10 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
-import brooklyn.util.HasMutexes
 import brooklyn.util.IdGenerator
 import brooklyn.util.ResourceUtils
 import brooklyn.util.ShellUtils
+import brooklyn.util.mutex.WithMutexes
 
 class CloudFoundryVmcCliAccess {
     
@@ -20,7 +20,7 @@ class CloudFoundryVmcCliAccess {
     protected Object context = this;
     
     String appName, war, url, target;
-    HasMutexes mutexSupport;
+    WithMutexes mutexSupport;
     
     String appPath;
     public synchronized String getAppPath() {

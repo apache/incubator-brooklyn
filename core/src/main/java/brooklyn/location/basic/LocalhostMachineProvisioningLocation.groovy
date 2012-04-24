@@ -4,14 +4,15 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.config.BrooklynServiceAttributes
-import brooklyn.location.AddressableLocation;
+import brooklyn.location.AddressableLocation
 import brooklyn.location.OsDetails
 import brooklyn.location.PortRange
 import brooklyn.location.geo.HostGeoInfo
-import brooklyn.util.HasMutexes;
 import brooklyn.util.NetworkUtils
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.flags.TypeCoercions
+import brooklyn.util.mutex.MutexSupport
+import brooklyn.util.mutex.WithMutexes
 
 /**
  * An implementation of {@link brooklyn.location.MachineProvisioningLocation} that can provision a {@link SshMachineLocation} for the
@@ -159,8 +160,8 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
             return new BasicOsDetails.Factory().newLocalhostInstance();
         }
         
-        private static HasMutexes mutexSupport = new HasMutexes.MutexSupport();
-        protected HasMutexes newMutexSupport() { mutexSupport }
+        private static WithMutexes mutexSupport = new MutexSupport();
+        protected WithMutexes newMutexSupport() { mutexSupport }
         
     }
 }

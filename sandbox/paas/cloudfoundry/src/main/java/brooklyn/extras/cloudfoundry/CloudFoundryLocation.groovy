@@ -11,9 +11,10 @@ import brooklyn.location.Location
 import brooklyn.location.LocationResolver
 import brooklyn.location.basic.AbstractLocation
 import brooklyn.location.geo.HostGeoInfo
-import brooklyn.util.HasMutexes;
-import brooklyn.util.StringUtils;
+import brooklyn.util.StringUtils
 import brooklyn.util.flags.SetFromFlag
+import brooklyn.util.mutex.MutexSupport
+import brooklyn.util.mutex.WithMutexes
 
 
 /** defines a cloudfoundry location
@@ -24,7 +25,7 @@ import brooklyn.util.flags.SetFromFlag
  * <p>
  * username+password are not currently specifiable; 
  * we assume a token has been set up via `vmc login` (stored in ~/.vmc_token) */
-class CloudFoundryLocation extends AbstractLocation implements AddressableLocation, ElasticJavaWebAppServiceAwareLocation, HasMutexes {
+class CloudFoundryLocation extends AbstractLocation implements AddressableLocation, ElasticJavaWebAppServiceAwareLocation, WithMutexes {
 
     @SetFromFlag
     private String target;
@@ -77,7 +78,7 @@ class CloudFoundryLocation extends AbstractLocation implements AddressableLocati
         return InetAddress.getByName(hostname);
     }
 
-    HasMutexes mutexSupport = new HasMutexes.MutexSupport();
+    WithMutexes mutexSupport = new MutexSupport();
     
     @Override
     public void acquireMutex(String mutexId, String description) throws InterruptedException {
