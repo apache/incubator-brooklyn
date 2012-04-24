@@ -13,6 +13,7 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.basic.ConfigurableEntityFactory
 import brooklyn.entity.basic.Entities
+import brooklyn.entity.basic.EntityFactoryForLocation
 import brooklyn.entity.trait.Changeable
 import brooklyn.entity.trait.Startable
 import brooklyn.event.EntityStartException
@@ -179,7 +180,8 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
 
         if (factory==null) 
             throw new IllegalStateException("EntityFactory factory not supplied for $this")
-        Entity entity = factory.newEntity(creation, this)
+        Entity entity = (factory in EntityFactoryForLocation ? ((EntityFactoryForLocation)factory).newFactoryForLocation(location) : factory).
+            newEntity(creation, this)
         if (entity==null || !(entity in Entity)) 
             throw new IllegalStateException("EntityFactory factory routine did not return an entity, in $this ($entity)")
         

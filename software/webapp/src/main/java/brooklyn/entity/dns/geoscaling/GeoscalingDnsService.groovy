@@ -84,6 +84,7 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
         setAttribute(MANAGED_DOMAIN, fullDomain);
         
         if (rememberedTargetHosts != null) {
+            //FIXME what is point of this?  it just clears "rememberedTargetHosts"
             reconfigureService(rememberedTargetHosts);
             rememberedTargetHosts = null;
         }
@@ -112,7 +113,7 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
 		isConfigured = false;
     }
     
-    protected void reconfigureService(Set<HostGeoInfo> targetHosts) {
+    protected void reconfigureService(Collection<HostGeoInfo> targetHosts) {
         if (!isConfigured) {
             this.rememberedTargetHosts = targetHosts;
             return;

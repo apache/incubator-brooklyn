@@ -2,7 +2,8 @@ package brooklyn.entity.basic;
 
 import brooklyn.entity.ConfigKey
 import brooklyn.entity.Entity
-import brooklyn.location.Location;
+import brooklyn.entity.ConfigKey.HasConfigKey
+import brooklyn.location.Location
 
 public interface EntityFactory<T extends Entity> {
     T newEntity(Map flags, Entity owner);
@@ -11,6 +12,7 @@ public interface EntityFactory<T extends Entity> {
 public interface ConfigurableEntityFactory<T extends Entity> extends EntityFactory<T> {
     public ConfigurableEntityFactory<T> configure(Map flags);
     public ConfigurableEntityFactory<T> setConfig(ConfigKey key, Object value);
+    public ConfigurableEntityFactory<T> setConfig(HasConfigKey key, Object value);
 }
 
 public abstract class AbstractConfigurableEntityFactory<T extends Entity> implements ConfigurableEntityFactory<T> {
@@ -26,7 +28,10 @@ public abstract class AbstractConfigurableEntityFactory<T extends Entity> implem
         config.put(key, value);
         this
     }
-    public T newEntity(Map flags, Entity owner) {
+    public AbstractConfigurableEntityFactory<T> setConfig(HasConfigKey key, Object value) {
+        setConfig(key.getConfigKey(), value)
+    }
+    public T newEntity(Map flags=[:], Entity owner) {
         Map flags2 = [:]
         flags2 << config;
         flags2 << flags;

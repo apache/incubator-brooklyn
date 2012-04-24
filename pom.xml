@@ -603,9 +603,7 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <modules>
-                <module>examples/hello-world-webapp</module>
-                <module>examples/simple-web-cluster</module>
-                <module>examples/hadoop-and-whirr</module>
+                <module>examples</module>
             </modules>
         </profile>
 

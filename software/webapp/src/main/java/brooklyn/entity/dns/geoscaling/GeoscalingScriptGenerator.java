@@ -1,9 +1,9 @@
 package brooklyn.entity.dns.geoscaling;
 
 import java.text.SimpleDateFormat;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.Set;
 import java.util.TimeZone;
 
 import brooklyn.entity.dns.HostGeoInfo;
@@ -16,11 +16,11 @@ class GeoscalingScriptGenerator {
     private static final String DATESTAMP_MARKER = "DATESTAMP";
 
     
-    public static String generateScriptString(Set<HostGeoInfo> hosts) {
+    public static String generateScriptString(Collection<HostGeoInfo> hosts) {
         return generateScriptString(new Date(), hosts);
     }
     
-    public static String generateScriptString(Date generationTime, Set<HostGeoInfo> hosts) {
+    public static String generateScriptString(Date generationTime, Collection<HostGeoInfo> hosts) {
         String template = new ResourceUtils(GeoscalingScriptGenerator.class).getResourceAsString(PHP_SCRIPT_TEMPLATE_RESOURCE);
         SimpleDateFormat sdf = new SimpleDateFormat("E, dd MMM yyyy 'at' HH:mm:ss 'UTC'");
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -31,7 +31,7 @@ class GeoscalingScriptGenerator {
             .replace(HOSTS_DECLARATIONS_MARKER, declarations);
     }
     
-    private static String getHostsDeclaration(Set<HostGeoInfo> hosts) {
+    private static String getHostsDeclaration(Collection<HostGeoInfo> hosts) {
         StringBuffer sb = new StringBuffer();
         sb.append("$hosts = array(\n");
         Iterator<HostGeoInfo> iServer = hosts.iterator();

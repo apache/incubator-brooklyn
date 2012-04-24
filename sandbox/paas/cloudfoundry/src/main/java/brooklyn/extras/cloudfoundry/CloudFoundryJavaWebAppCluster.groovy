@@ -14,7 +14,6 @@ import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.BasicConfigurableEntityFactory
 import brooklyn.entity.basic.Lifecycle
 import brooklyn.entity.trait.Resizable
-import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.ElasticJavaWebAppService
 import brooklyn.event.adapter.FunctionSensorAdapter
 import brooklyn.event.adapter.SensorRegistry
@@ -28,7 +27,7 @@ import brooklyn.util.flags.SetFromFlag
 import com.google.common.base.Preconditions
 import com.google.common.collect.Iterables
 
-class CloudFoundryJavaWebAppCluster extends AbstractEntity implements Startable, Resizable, ElasticJavaWebAppService {
+class CloudFoundryJavaWebAppCluster extends AbstractEntity implements ElasticJavaWebAppService, Resizable {
 
     private static final Logger log = LoggerFactory.getLogger(CloudFoundryJavaWebAppCluster.class)
     
@@ -142,7 +141,8 @@ class CloudFoundryJavaWebAppCluster extends AbstractEntity implements Startable,
         setAttribute(SERVICE_UP, false)
         setAttribute(SERVICE_STATE, Lifecycle.STOPPING);
         sensorRegistry.deactivateAdapters();
-        cfAccess.destroyApp();
+        if (cfAccess.getAppRecord(getAppName(), true))
+            cfAccess.destroyApp();
         setAttribute(SERVICE_STATE, Lifecycle.STOPPED);
     }
 

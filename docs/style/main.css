@@ -42,4 +42,3 @@ div.highlight code.java span.err{
     /* Single quotes were being highlighted as errors, so just turn that off. */
     border: none;
 }
-

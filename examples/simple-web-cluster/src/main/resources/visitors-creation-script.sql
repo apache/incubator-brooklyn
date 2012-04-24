@@ -2,6 +2,8 @@ create database visitors;
 use visitors;
 create user 'brooklyn' identified by 'br00k11n';
 grant usage on *.* to 'brooklyn'@'%' identified by 'br00k11n';
+# ''@localhost is sometimes set up, overriding brooklyn@'%', so do a second explicit grant
+grant usage on *.* to 'brooklyn'@'localhost' identified by 'br00k11n';
 grant all privileges on visitors.* to 'brooklyn'@'%';
 flush privileges;
 

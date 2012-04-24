@@ -12,6 +12,7 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.ConfigurableEntityFactory
 import brooklyn.entity.basic.Entities
+import brooklyn.entity.basic.EntityFactoryForLocation;
 import brooklyn.entity.trait.Changeable
 import brooklyn.entity.trait.Startable
 import brooklyn.event.basic.BasicAttributeSensor
@@ -119,8 +120,10 @@ public class DynamicFabric extends AbstractEntity implements Startable {
         creation.displayName = (displayNamePrefix?:"") + (location.getLocationProperty("displayName")?:location.name?:"unnamed") + (displayNameSuffix?:"")
         logger.info "Adding a cluster to {} with properties {}", id, creation
 
-        
-        Entity entity = factory.newEntity(creation, this)
+        if (factory==null)
+            throw new IllegalStateException("EntityFactory factory not supplied for $this")
+        Entity entity = (factory in EntityFactoryForLocation ? ((EntityFactoryForLocation)factory).newFactoryForLocation(location) : factory).
+                newEntity(creation, this)
         
         Preconditions.checkNotNull entity, "$this factory.newEntity call returned null"
         Preconditions.checkState entity instanceof Entity, "$this factory.newEntity call returned an object that is not an Entity"

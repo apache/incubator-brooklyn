@@ -54,7 +54,7 @@ abstract class AbstractGeoDnsService extends AbstractEntity {
         );
     }
 
-    protected abstract void reconfigureService(Set<HostGeoInfo> targetHosts);
+    protected abstract void reconfigureService(Collection<HostGeoInfo> targetHosts);
     
     // TODO: remove group member polling once locations can be determined via subscriptions
     protected void refreshGroupMembership() {

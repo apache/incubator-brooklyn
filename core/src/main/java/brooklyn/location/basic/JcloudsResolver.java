@@ -3,6 +3,9 @@ package brooklyn.location.basic;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
+import java.util.NoSuchElementException;
+
+import org.jclouds.rest.Providers;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,12 +16,15 @@ import brooklyn.location.LocationResolver;
 import brooklyn.location.basic.jclouds.CredentialsFromEnv;
 import brooklyn.location.basic.jclouds.JcloudsLocationFactory;
 
+import com.google.common.collect.Lists;
+
 public class JcloudsResolver implements LocationResolver {
 
     public static final Logger log = LoggerFactory.getLogger(JcloudsResolver.class);
     
     public static final String JCLOUDS = "jclouds";
     
+    public static final Collection<String> PROVIDERS = Lists.newArrayList(Providers.getSupportedProviders());
     public static final Collection<String> AWS_REGIONS = Arrays.asList(
             // from http://docs.amazonwebservices.com/general/latest/gr/rande.html as of Apr 2012.
             // it is suggested not to maintain this list here, instead to require aws-ec2 explicitly named.
@@ -52,6 +58,9 @@ public class JcloudsResolver implements LocationResolver {
             provider = "aws-ec2";
             log.warn("Use of deprecated location '"+region+"'; in future refer to with explicit provider '"+provider+":"+region+"'");
         }
+        
+        if (!PROVIDERS.contains(provider)) 
+            throw new NoSuchElementException("Unknown location '"+spec+"'"); 
         
         return new JcloudsLocationFactory(
                 new CredentialsFromEnv(BrooklynProperties.Factory.newEmpty().addFromMap(properties), provider).asMap()).
