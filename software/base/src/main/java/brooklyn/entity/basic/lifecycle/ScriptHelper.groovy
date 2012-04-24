@@ -5,7 +5,7 @@ import java.util.List
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.util.HasMutexes
+import brooklyn.util.mutex.WithMutexes
 
 public class ScriptHelper {
 
@@ -62,7 +62,7 @@ public class ScriptHelper {
      * typically used to prevent parallel scripts from conflicting in access to a resource
      * (e.g. a folder, or a config file used by a process)
      */
-    public ScriptHelper useMutex(HasMutexes mutexSupport, String mutexId, String description) {
+    public ScriptHelper useMutex(WithMutexes mutexSupport, String mutexId, String description) {
         mutexAcquire = { mutexSupport.acquireMutex(mutexId, description); };
         mutexRelease = { mutexSupport.releaseMutex(mutexId); };
         return this;

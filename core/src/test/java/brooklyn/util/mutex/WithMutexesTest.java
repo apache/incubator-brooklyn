@@ -1,4 +1,4 @@
-package brooklyn.util;
+package brooklyn.util.mutex;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -7,10 +7,7 @@ import java.util.Map;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import brooklyn.util.HasMutexes.MutexSupport;
-import brooklyn.util.HasMutexes.SemaphoreWithOwners;
-
-public class HasMutexesTest {
+public class WithMutexesTest {
 
     @Test
     public void testOneAcquisitionAndRelease() throws InterruptedException {
@@ -71,4 +68,41 @@ public class HasMutexesTest {
         Assert.assertEquals(m.getAllSemaphores(), Collections.emptyMap());
     }
 
+    
+    public static class SampleWithMutexesDelegatingMixin implements WithMutexes {
+        
+        /* other behaviour would typically go here... */
+        
+        WithMutexes mutexSupport = new MutexSupport();
+        
+        @Override
+        public void acquireMutex(String mutexId, String description) throws InterruptedException {
+            mutexSupport.acquireMutex(mutexId, description);
+        }
+
+        @Override
+        public boolean tryAcquireMutex(String mutexId, String description) {
+            return mutexSupport.tryAcquireMutex(mutexId, description);
+        }
+
+        @Override
+        public void releaseMutex(String mutexId) {
+            mutexSupport.releaseMutex(mutexId);
+        }
+
+        @Override
+        public boolean hasMutex(String mutexId) {
+            return mutexSupport.hasMutex(mutexId);
+        }
+    }
+    
+    @Test
+    public void testDelegatingMixinPattern() throws InterruptedException {
+        WithMutexes m = new SampleWithMutexesDelegatingMixin();
+        m.acquireMutex("foo", "sample");
+        Assert.assertTrue(m.hasMutex("foo"));
+        Assert.assertFalse(m.hasMutex("bar"));
+        m.releaseMutex("foo");
+        Assert.assertFalse(m.hasMutex("foo"));
+    }
 }
