@@ -9,7 +9,7 @@ import brooklyn.test.entity.TestApplication
 
 class ElasticJavaWebAppServiceIntegrationTest {
 
-    @Test
+    @Test(groups = "Integration")
     public void testFactory() {
         def app = new TestApplication();
         try {

@@ -1,24 +1,16 @@
 package brooklyn.entity.dns.geoscaling
 
-import static brooklyn.entity.dns.geoscaling.GeoscalingWebClient.PROVIDE_CITY_INFO;
-import static brooklyn.entity.dns.geoscaling.GeoscalingWebClient.PROVIDE_COUNTRY_INFO;
-import static brooklyn.entity.dns.geoscaling.GeoscalingWebClient.PROVIDE_EXTRA_INFO;
-import static brooklyn.entity.dns.geoscaling.GeoscalingWebClient.PROVIDE_NETWORK_INFO;
-import static brooklyn.entity.dns.geoscaling.GeoscalingWebClient.PROVIDE_UPTIME_INFO;
+import static brooklyn.entity.dns.geoscaling.GeoscalingWebClient.PROVIDE_CITY_INFO
+import static brooklyn.entity.dns.geoscaling.GeoscalingWebClient.PROVIDE_COUNTRY_INFO
+import static brooklyn.entity.dns.geoscaling.GeoscalingWebClient.PROVIDE_EXTRA_INFO
+import static brooklyn.entity.dns.geoscaling.GeoscalingWebClient.PROVIDE_NETWORK_INFO
+import static brooklyn.entity.dns.geoscaling.GeoscalingWebClient.PROVIDE_UPTIME_INFO
 import static org.testng.AssertJUnit.*
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import org.testng.annotations.Test
 
-import org.testng.annotations.Test;
-
-import brooklyn.entity.dns.HostGeoInfo;
-import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.Domain;
-import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.SmartSubdomain;
+import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.Domain
+import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.SmartSubdomain
 
 /**
  * {@link GeoscalingWebClient} unit tests.

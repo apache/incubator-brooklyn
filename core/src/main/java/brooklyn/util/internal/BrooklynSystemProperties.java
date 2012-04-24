@@ -11,6 +11,9 @@ public class BrooklynSystemProperties {
     /** controls how long jsch delays between commands it issues */
     public static IntegerSystemProperty JSCH_EXEC_DELAY = new IntegerSystemProperty("brooklyn.jsch.exec.delay");
 
+    /** allows specifying a particular geo lookup service (to lookup IP addresses), as the class FQN to use */
+    public static StringSystemProperty HOST_GEO_LOOKUP_IMPL = new StringSystemProperty("brooklyn.location.geo.HostGeoLookup");
+
     public static class StringSystemProperty {
         public StringSystemProperty(String name) {
             this.propertyName = name;
@@ -30,11 +33,9 @@ public class BrooklynSystemProperties {
             String property = System.getProperty(getPropertyName());
             return property!=null && !property.equals("");
         }
-
         public String getValue() {
             return System.getProperty(getPropertyName());
         }
-        
         @Override
         public String toString() {
             return getPropertyName()+(isAvailable()?"="+getValue():"(unset)");

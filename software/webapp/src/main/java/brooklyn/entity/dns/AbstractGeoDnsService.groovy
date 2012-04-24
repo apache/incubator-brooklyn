@@ -14,6 +14,7 @@ import brooklyn.entity.Group
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.basic.DynamicGroup
+import brooklyn.location.geo.HostGeoInfo
 
 import com.google.common.base.Throwables
 
