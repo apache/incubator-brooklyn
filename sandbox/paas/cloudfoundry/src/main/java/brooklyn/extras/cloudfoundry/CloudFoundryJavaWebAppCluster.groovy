@@ -93,7 +93,7 @@ class CloudFoundryJavaWebAppCluster extends AbstractEntity implements ElasticJav
     public CloudFoundryVmcCliAccess getCfAccess() {
         if (_cfAccess!=null) return _cfAccess;
         _cfAccess = new CloudFoundryVmcCliAccess(
-            appName:getAppName(), war: war, context: this)
+            appName:getAppName(), war: war, context: this, mutexSupport:Iterables.getOnlyElement(locations))
     }
     
     public void startInLocation(CloudFoundryLocation ol) {

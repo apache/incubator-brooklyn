@@ -14,13 +14,20 @@ import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.geo.HostGeoInfo
 import brooklyn.util.IdGenerator
+import brooklyn.util.flags.SetFromFlag
 
 
 class GeoscalingDnsService extends AbstractGeoDnsService {
+    
+    @SetFromFlag("randomizeSubdomainName")
     public static final BasicConfigKey RANDOMIZE_SUBDOMAIN_NAME = [ Boolean, "randomize.subdomain.name" ];
+    @SetFromFlag("username")
     public static final BasicConfigKey GEOSCALING_USERNAME = [ String, "geoscaling.username" ];
+    @SetFromFlag("password")
     public static final BasicConfigKey GEOSCALING_PASSWORD = [ String, "geoscaling.password" ];
+    @SetFromFlag("primaryDomainName")
     public static final BasicConfigKey GEOSCALING_PRIMARY_DOMAIN_NAME = [ String, "geoscaling.primary.domain.name" ];
+    @SetFromFlag("smartSubdomainName")
     public static final BasicConfigKey GEOSCALING_SMART_SUBDOMAIN_NAME = [ String, "geoscaling.smart.subdomain.name" ];
     
     public static final BasicAttributeSensor GEOSCALING_ACCOUNT =
@@ -39,16 +46,11 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
     private String primaryDomainName;
     private String smartSubdomainName;
     
-    
     public GeoscalingDnsService(Map properties = [:], Entity owner = null) {
         super(properties, owner);
         
-        setConfig(RANDOMIZE_SUBDOMAIN_NAME, true); // TODO: eventually default to non-randomized subdomains?
-        setConfigIfValNonNull(RANDOMIZE_SUBDOMAIN_NAME, properties.randomizeSubdomainName);
-        setConfigIfValNonNull(GEOSCALING_USERNAME, properties.username);
-        setConfigIfValNonNull(GEOSCALING_PASSWORD, properties.password);
-        setConfigIfValNonNull(GEOSCALING_PRIMARY_DOMAIN_NAME, properties.primaryDomainName);
-        setConfigIfValNonNull(GEOSCALING_SMART_SUBDOMAIN_NAME, properties.smartSubdomainName);
+        // defaulting to randomized subdomains makes deploying multiple applications easier
+        if (getConfig(RANDOMIZE_SUBDOMAIN_NAME)==null) setConfig(RANDOMIZE_SUBDOMAIN_NAME, true); 
     }
     
     // Ensure our configure() method gets called; may be able to remove this if/when the framework detects this

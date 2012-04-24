@@ -52,7 +52,7 @@ class CloudFoundryAccessIntegrationTest {
             assertEquals(apps2, [ id ])
             //check record
             assertEquals(record.size, 1)
-            assertEquals(record.url, id+"."+"cloudfoundry.com")
+            assertTrue(record.url.startsWith(id+"."), "url ${record.url} should start with ${id}.")
             assertEquals(record.state, "RUNNING")
             assertEquals(record.services, [])
             AppRecord r2 = access.getAppRecord(id);
