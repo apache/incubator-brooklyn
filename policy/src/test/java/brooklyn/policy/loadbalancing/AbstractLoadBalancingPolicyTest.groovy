@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 
+import com.google.common.base.Preconditions;
+
 import brooklyn.entity.Application
 import brooklyn.entity.ConfigKey
 import brooklyn.entity.Entity
@@ -73,8 +75,9 @@ public class AbstractLoadBalancingPolicyTest {
     }
     
     // Using this utility, as it gives more info about the workrates of all containers rather than just the one that differs    
-    protected void assertWorkrates(List<MockContainerEntity> containers, List<Double> expected, double precision) {
+    protected void assertWorkrates(Collection<MockContainerEntity> containers, Collection<Double> expectedC, double precision) {
         List<Double> actual = containers.collect { getContainerWorkrate(it) }
+        List<Double> expected = [] + expectedC
         String errMsg = "actual=$actual; expected=$expected"
         assertEquals(containers.size(), expected.size(), errMsg)
         for (int i = 0; i < containers.size(); i++) {
@@ -82,7 +85,7 @@ public class AbstractLoadBalancingPolicyTest {
         }
     }
     
-    protected void assertWorkratesEventually(List<MockContainerEntity> containers, List<Double> expected) {
+    protected void assertWorkratesEventually(Collection<MockContainerEntity> containers, Collection<Double> expected) {
         assertWorkratesEventually(containers, expected, 0d)
     }
 
@@ -90,7 +93,7 @@ public class AbstractLoadBalancingPolicyTest {
      * Asserts that the given container have the given expected workrates (by querying the containers directly).
      * Accepts an accuracy of "precision" for each container's workrate.
      */
-    protected void assertWorkratesEventually(List<MockContainerEntity> containers, List<Double> expected, double precision) {
+    protected void assertWorkratesEventually(Collection<MockContainerEntity> containers, Collection<Double> expected, double precision) {
         try {
             executeUntilSucceeds(timeout:TIMEOUT_MS) {
                 assertWorkrates(containers, expected, precision)
@@ -186,7 +189,9 @@ public class AbstractLoadBalancingPolicyTest {
      */
     protected static double getContainerWorkrate(MockContainerEntity container) {
         double result = 0.0
+        Preconditions.checkNotNull(container, "container");
         container.getBalanceableItems().each { MockItemEntity item ->
+            Preconditions.checkNotNull(item, "item in container");
             assertEquals(item.getContainerId(), container.getId())
             result += getItemWorkrate(item)
         }
