@@ -2,14 +2,12 @@ package brooklyn.entity.messaging.qpid
 
 import java.util.Collection
 import java.util.Map
-import java.util.concurrent.TimeUnit
 
 import javax.management.ObjectName
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.entity.ConfigKey
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.SoftwareProcessEntity
@@ -24,11 +22,9 @@ import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.adapter.SensorRegistry
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey
 import brooklyn.event.basic.BasicConfigKey
-import brooklyn.event.basic.PortAttributeSensorAndConfigKey
 import brooklyn.location.PortRange
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.flags.SetFromFlag
-import brooklyn.util.internal.Repeater
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Qpid broker instance, using AMQP 0-10.
@@ -97,14 +93,15 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJ
     transient JmxSensorAdapter jmxAdapter;
 
     protected void connectSensors() {
-        jmxAdapter = sensorRegistry.register(new JmxSensorAdapter());
+        jmxAdapter = sensorRegistry.register(new JmxSensorAdapter())
         jmxAdapter.objectName("org.apache.qpid:type=ServerInformation,name=ServerInformation")
-            .attribute("ProductVersion").subscribe(SERVICE_UP, {
+            .attribute("ProductVersion")
+            .subscribe(SERVICE_UP) {
                 if (it==null) return false;
                 if (it==getConfig(SUGGESTED_VERSION)) return true;
                 log.warn("ProductVersion is ${it}, requested version is "+getConfig(SUGGESTED_VERSION)); 
                 return false
-            });
+            }
         jmxAdapter.activateAdapter()
         
 		setAttribute(Attributes.JMX_USER)
@@ -202,7 +199,7 @@ public class QpidTopic extends QpidDestination implements Topic {
     }
 
     // TODO sensors
-    public void connectSensors() {}
+    public void connectSensors() { }
     
     @Override
     public void init() {

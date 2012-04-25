@@ -29,22 +29,24 @@ public class QpidSshDriver extends JavaStartStopSshDriver {
     
     @Override
     public void install() {
-        newScript(INSTALLING).
-                failOnNonZeroResultCode().
-                body.append(
+        newScript(INSTALLING)
+                .failOnNonZeroResultCode()
+                .body.append(
 	                CommonCommands.downloadUrlAs(installUrl, getEntityVersionLabel('/'), installFilename),
 	                CommonCommands.INSTALL_TAR,
                     "tar xzfv ${installFilename}",
-                ).execute();
+                )
+                .execute()
     }
 
     @Override
     public void customize() {
         NetworkUtils.checkPortsValid(jmxPort:jmxPort, amqpPort:amqpPort);
-        newScript(CUSTOMIZING).
-                body.append(
+        newScript(CUSTOMIZING)
+                .body.append(
                     "cp -R ${installDir}/qpid-broker-${version}/{bin,etc,lib} .",
-                ).execute();
+                )
+                .execute()
         
         def rtf = entity.getConfig(QpidBroker.RUNTIME_FILES);
         if (rtf) {
@@ -73,7 +75,7 @@ public class QpidSshDriver extends JavaStartStopSshDriver {
     
     @Override
     public boolean isRunning() {
-        newScript(CHECK_RUNNING, usePidFile:pidFile).execute() == 0;
+        newScript(CHECK_RUNNING, usePidFile:pidFile).execute() == 0
     }
 
 
