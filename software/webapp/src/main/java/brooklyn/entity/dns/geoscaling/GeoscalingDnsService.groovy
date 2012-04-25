@@ -7,6 +7,7 @@ import java.util.Map
 import java.util.Set
 
 import brooklyn.entity.Entity
+import brooklyn.entity.basic.Lifecycle
 import brooklyn.entity.dns.AbstractGeoDnsService
 import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.Domain
 import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.SmartSubdomain
@@ -34,7 +35,7 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
         [ String, "geoscaling.account", "Active user account for the GeoScaling.com service" ];
     public static final BasicAttributeSensor MANAGED_DOMAIN =
         [ String, "geoscaling.managed.domain", "Fully qualified domain name that will be geo-redirected" ];
-    
+
     // Must remember any desired redirection targets if they're specified before configure() has been called.
     private Set<HostGeoInfo> rememberedTargetHosts;
     private final GeoscalingWebClient webClient = [ ];
@@ -57,8 +58,8 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
     // and invokes the configure() method automatically?
     @Override
     public void onManagementBecomingMaster() {
-        super.onManagementBecomingMaster();
         applyConfig();
+        super.onManagementBecomingMaster();
     }
 
 	boolean isConfigured = false;
@@ -83,18 +84,24 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
         log.info("GeoScaling service will configure redirection for '"+fullDomain+"' domain");
         setAttribute(GEOSCALING_ACCOUNT, username);
         setAttribute(MANAGED_DOMAIN, fullDomain);
+        setAttribute(HOSTNAME, getHostname());
+        
+        isConfigured = true;
         
         if (rememberedTargetHosts != null) {
-            //FIXME what is point of this?  it just clears "rememberedTargetHosts"
             reconfigureService(rememberedTargetHosts);
             rememberedTargetHosts = null;
         }
-		
-		isConfigured = true;
+    }
+    
+    @Override
+    public String getHostname() {
+        return getAttribute(MANAGED_DOMAIN)?:null;
     }
     
     @Override
     public void destroy() {
+        setServiceState(Lifecycle.STOPPING);
         if (!isConfigured) return;
         
         // Don't leave randomized subdomains configured on our GeoScaling account.
@@ -128,6 +135,7 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
         
         if (!smartSubdomain) {
             log.info("GeoScaling smart subdomain '"+smartSubdomainName+"."+primaryDomainName+"' does not exist, creating it now");
+            // TODO use WithMutexes to ensure this is single-entrant
             primaryDomain.createSmartSubdomain(smartSubdomainName);
             smartSubdomain = primaryDomain.getSmartSubdomain(smartSubdomainName);
         }
@@ -135,10 +143,12 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
         if (smartSubdomain) {
             String script = GeoscalingScriptGenerator.generateScriptString(targetHosts);
             smartSubdomain.configure(PROVIDE_CITY_INFO, script);
-            
-        } else
+            setServiceState(targetHosts.isEmpty() ? Lifecycle.CREATED : Lifecycle.RUNNING);
+        } else {
             log.warn("Failed to retrieve or create GeoScaling smart subdomain '"+smartSubdomainName+"."+primaryDomainName+
                     "', aborting attempt to configure service");
+            setServiceState(Lifecycle.ON_FIRE);
+        }
         
         webClient.logout();
     }

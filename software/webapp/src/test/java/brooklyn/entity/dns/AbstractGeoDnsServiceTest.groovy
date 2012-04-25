@@ -131,6 +131,11 @@ public class AbstractGeoDnsServiceTest {
                 if (host != null) targetHostsByName.put(host.displayName, host);
             }
         }
+
+        @Override
+        public String getHostname() {
+            return "localhost";
+        }
     }
     
 }
