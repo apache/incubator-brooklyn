@@ -33,7 +33,7 @@ class CloudFoundryLocation extends AbstractLocation implements AddressableLocati
     public CloudFoundryLocation(Map properties = [:]) {
         super(properties);
         if (!target) target="api.cloudfoundry.com";
-        if (!name) name="Cloud Foundry ("+target+")";
+        if (!name) name="Cloud Foundry @ "+target;
         if (getHostGeoInfo()==null) setHostGeoInfo(HostGeoInfo.fromLocation(this));
     }
     
@@ -63,8 +63,7 @@ class CloudFoundryLocation extends AbstractLocation implements AddressableLocati
         return this.@target;
     }
 
-    @Override
-    public InetAddress getAddress() {
+    public String getHostname() {
         if (!target) return null;
         String hostname = target;
         use (StringUtils) {
@@ -73,12 +72,20 @@ class CloudFoundryLocation extends AbstractLocation implements AddressableLocati
                 removeStart("https://").
                 replaceAll("/.*\$", "");
         }
-        if (hostname.isEmpty())
+        return hostname;
+    }
+    
+    @Override
+    public InetAddress getAddress() {
+        if (!target) return null;
+        if (hostname?.isEmpty())
             throw new IllegalArgumentException("Cannot parse Cloud Foundry target '"+target+"' to determine address; expected in api.hostname.com or https://api.hostname.com/xxx format.")
         return InetAddress.getByName(hostname);
     }
 
-    WithMutexes mutexSupport = new MutexSupport();
+    // make this a static because it has to be shared across all instances on a machine
+    // (using the command-line tool vmc)
+    static WithMutexes mutexSupport = new MutexSupport();
     
     @Override
     public void acquireMutex(String mutexId, String description) throws InterruptedException {

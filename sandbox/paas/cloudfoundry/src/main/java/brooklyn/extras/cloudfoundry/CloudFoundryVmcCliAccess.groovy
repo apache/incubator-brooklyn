@@ -152,6 +152,9 @@ class CloudFoundryVmcCliAccess {
      */
     public void setTarget(String target) {
         this.target = target;
+        setTarget();
+    }
+    protected void setTarget() {
         if (target) exec("vmc target ${target}")
     }
     
@@ -159,13 +162,18 @@ class CloudFoundryVmcCliAccess {
         boolean hasMutex = false;
         try {
             if (mutexSupport && !mutexSupport.hasMutex("vmc")) {
+                if (log.isDebugEnabled()) log.debug("acquiring vmc mutex for $target $description")
                 mutexSupport.acquireMutex("vmc", "Cloud Foundry vmc target ${target} - "+description);
+                if (log.isDebugEnabled()) log.debug("acquired vmc mutex for $target")
                 hasMutex = true;
             }
-            setTarget(target);
+            setTarget();
             return code.call();
         } finally {
-            if (hasMutex) mutexSupport.releaseMutex("vmc");
+            if (hasMutex) {
+                if (log.isDebugEnabled()) log.debug("releasing vmc mutex for $target")
+                mutexSupport.releaseMutex("vmc");
+            }
         }
     }
     
@@ -214,13 +222,17 @@ class CloudFoundryVmcCliAccess {
             }
 
             AppRecord result = this.getAppRecord(appName, true);
+            if (result==null)
+                throw new IllegalStateException("Failed to start $this");
             url = result.url
             return result
         }
     }
 
     public void stopApp(Map flags=[:]) {
-        exec("vmc stop ${getAppName(flags)}");
+        useTarget(target, "delete ${getAppName(flags)}") {
+            exec("vmc stop ${getAppName(flags)}");
+        }
     }
     
     public void destroyApp(Map flags=[:]) {
@@ -385,7 +397,7 @@ class CloudFoundryVmcCliAccess {
             List result = []
 
             def li = lines.iterator();
-            li.next(); li.next(); li.next();  //skip 3 header lines
+            3.times { if (li.hasNext()) li.next(); }  //skip 3 header lines
             while (li.hasNext()) {
                 String line = li.next();
                 if (line.startsWith("+---"))
