@@ -123,7 +123,18 @@ public class ApplicationResourceTest extends BaseResourceTest {
     assertEquals(readings.get("/applications/redis-app/sensors/redis-ent/redis.port"), "6379");
   }
 
-  @Test(dependsOnMethods = {"testReadAllSensors", "testListApplications"})
+  @Test(dependsOnMethods = "testDeployRedisApplication")
+  public void testListEffectors() {
+    Map<String, Set<URI>> effectors = client().resource("/applications/redis-app/effectors")
+        .get(new GenericType<Map<String, Set<URI>>>() {
+        });
+
+    assertTrue(effectors.containsKey("redis-ent"));
+    assertTrue(effectors.get("redis-ent").contains(
+        URI.create("/applications/redis-app/effectors/redis-ent/start")));
+  }
+
+  @Test(dependsOnMethods = {"testListEffectors", "testReadAllSensors", "testListApplications"})
   public void testDeleteApplication() throws TimeoutException, InterruptedException {
     ClientResponse response = client().resource("/applications/redis-app")
         .delete(ClientResponse.class);
