@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import javax.annotation.Nullable;
+import javax.validation.Valid;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -62,13 +63,23 @@ public class EffectorResource extends BaseResource {
 
   @POST
   @Path("{entity}/{effector}")
-  public void trigger(
+  public Response trigger(
       @PathParam("application") String applicationName,
       @PathParam("entity") String entityName,
-      @PathParam("effector") String effector
+      @PathParam("effector") String effectorName,
+      @Valid final Map<String, String> parameters
   ) {
+    final Application application = getApplicationOr404(manager.registry(), applicationName);
+    final EntityLocal entity = getEntityLocalOr404(application, entityName);
 
-    // TODO retrieve effector and submit as a task
+    final Effector<?> effector = entity.getEffectors().get(effectorName);
+    executorService.submit(new Runnable() {
+      @Override
+      public void run() {
+        entity.invoke(effector, parameters);
+      }
+    });
 
+    return Response.status(Response.Status.ACCEPTED).build();
   }
 }

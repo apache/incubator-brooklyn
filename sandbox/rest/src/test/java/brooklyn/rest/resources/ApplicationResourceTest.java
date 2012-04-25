@@ -1,5 +1,6 @@
 package brooklyn.rest.resources;
 
+import brooklyn.entity.basic.Lifecycle;
 import brooklyn.rest.BaseResourceTest;
 import brooklyn.rest.BrooklynConfiguration;
 import brooklyn.rest.api.Application;
@@ -7,9 +8,11 @@ import brooklyn.rest.api.ApplicationSpec;
 import brooklyn.rest.api.EntitySpec;
 import brooklyn.rest.core.ApplicationManager;
 import brooklyn.rest.core.LocationStore;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -134,10 +137,23 @@ public class ApplicationResourceTest extends BaseResourceTest {
 
     assertTrue(effectors.containsKey("redis-ent"));
     assertTrue(effectors.get("redis-ent").contains(
-        URI.create("/v1/applications/redis-app/effectors/redis-ent/start")));
+        URI.create("/v1/applications/redis-app/effectors/redis-ent/stop")));
   }
 
-  @Test(dependsOnMethods = {"testListEffectors", "testReadAllSensors", "testListApplications"})
+  @Test(dependsOnMethods = "testReadAllSensors")
+  public void testTriggerStopEffector() throws InterruptedException {
+    ClientResponse response = client().resource("/v1/applications/redis-app/effectors/redis-ent/stop")
+        .post(ClientResponse.class, ImmutableMap.of());
+
+    assertEquals(response.getStatus(), Response.Status.ACCEPTED.getStatusCode());
+
+    URI stateSensor = URI.create("/v1/applications/redis-app/sensors/redis-ent/service.state");
+    while (!client().resource(stateSensor).get(String.class).equals(Lifecycle.STOPPED.toString())) {
+      Thread.sleep(5000);
+    }
+  }
+
+  @Test(dependsOnMethods = {"testListEffectors", "testTriggerStopEffector", "testListApplications"})
   public void testDeleteApplication() throws TimeoutException, InterruptedException {
     ClientResponse response = client().resource("/v1/applications/redis-app")
         .delete(ClientResponse.class);
