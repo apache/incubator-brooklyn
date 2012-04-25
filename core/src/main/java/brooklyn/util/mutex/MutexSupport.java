@@ -12,7 +12,7 @@ import com.google.common.collect.ImmutableMap;
 
 public class MutexSupport implements WithMutexes {
 
-    private Map<String,SemaphoreWithOwners> semaphores = new LinkedHashMap<String,SemaphoreWithOwners>();
+    private final Map<String,SemaphoreWithOwners> semaphores = new LinkedHashMap<String,SemaphoreWithOwners>();
 
     protected synchronized SemaphoreWithOwners getSemaphore(String mutexId) {
         return getSemaphore(mutexId, false);
