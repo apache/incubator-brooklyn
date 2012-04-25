@@ -44,7 +44,7 @@ public class GeoBytesHostGeoLookup implements HostGeoLookup {
     */
     
     public String getPropertiesLookupUrlForPublicIp(String ip) {
-        return "http://www.geobytes.com/IpLocator.htm?GetLocation&template=valuepairs.txt&IpAddress="+ip;
+        return "http://www.geobytes.com/IpLocator.htm?GetLocation&template=valuepairs.txt&IpAddress="+ip.trim();
     }
 
     public String getPropertiesLookupUrlForLocalhost() {
