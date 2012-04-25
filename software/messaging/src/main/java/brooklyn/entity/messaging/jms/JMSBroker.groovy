@@ -58,18 +58,10 @@ public abstract class JMSBroker<Q extends JMSDestination & Queue, T extends JMSD
         topics.each { String name, JMSDestination topic -> topic.destroy() }
         super.preStop()
     }
-
-	protected void checkBrokerCanBeModified() {
-		def state = getAttribute(SERVICE_STATE);
-		if (getAttribute(SERVICE_STATE)==Lifecycle.RUNNING) return;
-		if (getAttribute(SERVICE_STATE)==Lifecycle.STARTING) return;
-		// TODO this check may be redundant or even inappropriate
-		throw new IllegalStateException("cannot configure broker "+this+" in state "+state)
-	}
 	
     /** TODO make this an effector */
     public void addQueue(String name, Map properties=[:]) {
-		checkBrokerCanBeModified()
+		checkModifiable()
         properties.owner = this
         properties.name = name
         queues.put name, createQueue(properties)
@@ -79,7 +71,7 @@ public abstract class JMSBroker<Q extends JMSDestination & Queue, T extends JMSD
 
     /** TODO make this an effector */
     public void addTopic(String name, Map properties=[:]) {
-		checkBrokerCanBeModified()
+		checkModifiable()
         properties.owner = this
         properties.name = name
         topics.put name, createTopic(properties)

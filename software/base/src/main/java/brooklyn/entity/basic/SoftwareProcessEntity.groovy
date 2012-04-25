@@ -139,9 +139,17 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
                     getAttribute(SERVICE_UP)
                 }
                 .run()) {
-            throw new IllegalStateException("Could determine if ${this} is up");
+            throw new IllegalStateException("Could not determine if ${this} is up");
         }
         log.info("started ${this}")
+    }
+
+    public void checkModifiable() {
+        def state = getAttribute(SERVICE_STATE);
+        if (getAttribute(SERVICE_STATE) == Lifecycle.RUNNING) return;
+        if (getAttribute(SERVICE_STATE) == Lifecycle.STARTING) return;
+        // TODO this check may be redundant or even inappropriate
+        throw new IllegalStateException("Cannot configure entity ${this} in state ${state}")
     }
 
 	protected void preStop() { }

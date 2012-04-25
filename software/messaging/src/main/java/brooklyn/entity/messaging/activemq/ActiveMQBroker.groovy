@@ -70,7 +70,8 @@ public class ActiveMQBroker extends JMSBroker<ActiveMQQueue, ActiveMQTopic> impl
     protected void connectSensors() {
        jmxAdapter = sensorRegistry.register(new JmxSensorAdapter());
        jmxAdapter.objectName("org.apache.activemq:BrokerName=localhost,Type=Broker")
-           .attribute("BrokerId").subscribe(SERVICE_UP, { it as Boolean });
+           .attribute("BrokerId")
+           .subscribe(SERVICE_UP) { it as Boolean }
        jmxAdapter.activateAdapter()
 	}
 
@@ -78,16 +79,6 @@ public class ActiveMQBroker extends JMSBroker<ActiveMQQueue, ActiveMQTopic> impl
 	public Collection<String> toStringFieldsToInclude() {
 		return super.toStringFieldsToInclude() + ['openWirePort']
 	}
-
-	public void waitForServiceUp() {
-		if (!Repeater.create(timeout: 60*TimeUnit.SECONDS)
-			    .rethrowException().repeat().every(1*TimeUnit.SECONDS).until { getAttribute(SERVICE_UP) }.
-                run()) {
-            throw new IllegalStateException("Could not connect via JMX to determine ${this} is up");
-		}
-		log.info("started JMS $this")
-	}
-    
 }
 
 public abstract class ActiveMQDestination extends JMSDestination {
