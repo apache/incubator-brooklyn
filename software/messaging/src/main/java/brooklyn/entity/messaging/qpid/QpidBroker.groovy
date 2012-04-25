@@ -14,6 +14,7 @@ import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.basic.UsesJmx
 import brooklyn.entity.messaging.Queue
 import brooklyn.entity.messaging.Topic
+import brooklyn.entity.messaging.amqp.AmqpExchange
 import brooklyn.entity.messaging.amqp.AmqpServer;
 import brooklyn.entity.messaging.jms.JMSBroker;
 import brooklyn.entity.messaging.jms.JMSDestination;
@@ -115,7 +116,7 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJ
 
 }
 
-public abstract class QpidDestination extends JMSDestination {
+public abstract class QpidDestination extends JMSDestination implements AmqpExchange {
     public static final Logger log = LoggerFactory.getLogger(QpidDestination.class);
     
     @SetFromFlag
@@ -154,11 +155,6 @@ public abstract class QpidDestination extends JMSDestination {
     }
 
     /**
-     * Return the AMQP exchange name.
-     */
-    public abstract String getExchangeName();
-
-    /**
      * Return the AMQP name for the queue.
      */
     public String getQueueName() { return String.format("'%s'/'%s'; { assert: never }", exchangeName, name) }
@@ -190,7 +186,7 @@ public class QpidQueue extends QpidDestination implements Queue {
     }
 
     /** {@inheritDoc} */
-    public String getExchangeName() { return "amq.direct"; }
+    public String getExchangeName() { AmqpExchange.DIRECT }
 }
 
 public class QpidTopic extends QpidDestination implements Topic {
@@ -209,5 +205,5 @@ public class QpidTopic extends QpidDestination implements Topic {
     }
 
     /** {@inheritDoc} */
-    public String getExchangeName() { return "amq.topic"; }
+    public String getExchangeName() { AmqpExchange.TOPIC }
 }

@@ -13,5 +13,11 @@ public interface AmqpExchange {
     String DIRECT = "amq.direct"
     String TOPIC = "amq.topic"
 
-    BasicAttributeSensorAndConfigKey<String> EXCHANGE_NAME = [ String, "amqp.exchange.name", "Exchange name" ]
+    /** The AMQP exchange name {@link Sensor}. */
+    BasicAttributeSensorAndConfigKey<String> EXCHANGE_NAME = [ String, "amqp.exchange.name", "AMQP exchange name" ]
+
+    /**
+     * Return the AMQP exchange name.
+     */
+    public String getExchangeName();
 }

@@ -116,10 +116,7 @@ public abstract class RabbitDestination extends AbstractEntity implements AmqpEx
         sensorRegistry.deactivateAdapters()
     }
 
-    /**
-     * Return the AMQP exchange name.
-     */
-    public String getExchangeName() { return exchange }
+    public String getExchangeName() { exchange }
 
     @Override
     public Collection<String> toStringFieldsToInclude() {
