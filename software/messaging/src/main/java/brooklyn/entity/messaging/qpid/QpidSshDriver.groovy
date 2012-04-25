@@ -23,6 +23,7 @@ public class QpidSshDriver extends JavaStartStopSshDriver {
     protected String getLogFileLocation() { "${runDir}/log/qpid.log"; }
 
     public Integer getAmqpPort() { entity.getAttribute(QpidBroker.AMQP_PORT) }
+    public String getAmqpVersion() { entity.getAttribute(QpidBroker.AMQP_VERSION) }
     
     protected String getInstallFilename() { "qpid-java-broker-${version}.tar.gz" }
     protected String getInstallUrl() { "http://download.nextag.com/apache/qpid/${version}/${installFilename}" }
@@ -65,10 +66,11 @@ public class QpidSshDriver extends JavaStartStopSshDriver {
 
     @Override
     public void launch() {
-        newScript(LAUNCHING, usePidFile:false).
-                body.append(
-                    "nohup ./bin/qpid-server -b '*' -m ${jmxPort} -p ${amqpPort} --exclude-0-8 ${amqpPort} --exclude-0-9 ${amqpPort} --exclude-0-9-1 ${amqpPort} &",
-                ).execute();
+        newScript(LAUNCHING, usePidFile:false)
+                .body.append(
+                    "nohup ./bin/qpid-server -b '*' -m ${jmxPort} -p ${amqpPort} &",
+                )
+                .execute()
     }
 
     public String getPidFile() {"qpid-server.pid"}
