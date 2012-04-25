@@ -1,6 +1,7 @@
 package brooklyn.rest.resources;
 
 import brooklyn.rest.BaseResourceTest;
+import brooklyn.rest.BrooklynConfiguration;
 import brooklyn.rest.api.Application;
 import brooklyn.rest.api.ApplicationSpec;
 import brooklyn.rest.api.EntitySpec;
@@ -34,16 +35,18 @@ public class ApplicationResourceTest extends BaseResourceTest {
 
   private final ApplicationSpec redisSpec = new ApplicationSpec("redis-app",
       ImmutableSet.of(new EntitySpec("redis-ent", "brooklyn.entity.nosql.redis.RedisStore")),
-      ImmutableSet.of("/locations/0"));
+      ImmutableSet.of("/v1/locations/0"));
 
   @Override
   protected void setUpResources() throws Exception {
     executorService = Executors.newCachedThreadPool();
-    manager = new ApplicationManager(LocationStore.withLocalhost(), executorService);
+    LocationStore locationStore = LocationStore.withLocalhost();
 
-    addResource(new ApplicationResource(manager, new EntityResource()));
+    manager = new ApplicationManager(new BrooklynConfiguration(), locationStore, executorService);
+
+    addResource(new ApplicationResource(manager, locationStore, new EntityResource()));
     addResource(new SensorResource(manager));
-    addResource(new EffectorResource(manager));
+    addResource(new EffectorResource(manager, executorService));
   }
 
   @AfterClass
@@ -57,7 +60,7 @@ public class ApplicationResourceTest extends BaseResourceTest {
   @Test
   public void testGetUndefinedApplication() {
     try {
-      client().resource("/applications/dummy-not-found").get(Application.class);
+      client().resource("/v1/applications/dummy-not-found").get(Application.class);
     } catch (UniformInterfaceException e) {
       assertEquals(e.getResponse().getStatus(), 404);
     }
@@ -65,11 +68,11 @@ public class ApplicationResourceTest extends BaseResourceTest {
 
   @Test
   public void testDeployRedisApplication() throws InterruptedException, TimeoutException {
-    ClientResponse response = client().resource("/applications")
+    ClientResponse response = client().resource("/v1/applications")
         .post(ClientResponse.class, redisSpec);
 
     assertEquals(manager.registry().size(), 1);
-    assertEquals(response.getLocation().getPath(), "/applications/redis-app");
+    assertEquals(response.getLocation().getPath(), "/v1/applications/redis-app");
 
     waitForApplicationToBeRunning(response);
   }
@@ -91,7 +94,7 @@ public class ApplicationResourceTest extends BaseResourceTest {
 
   @Test(dependsOnMethods = "testDeployRedisApplication")
   public void testListApplications() {
-    Set<Application> applications = client().resource("/applications")
+    Set<Application> applications = client().resource("/v1/applications")
         .get(new GenericType<Set<Application>>() {
         });
     assertEquals(applications.size(), 1);
@@ -100,17 +103,17 @@ public class ApplicationResourceTest extends BaseResourceTest {
 
   @Test(dependsOnMethods = "testDeployRedisApplication")
   public void testListSensors() {
-    Map<String, Set<URI>> sensors = client().resource("/applications/redis-app/sensors")
+    Map<String, Set<URI>> sensors = client().resource("/v1/applications/redis-app/sensors")
         .get(new GenericType<Map<String, Set<URI>>>() {
         });
     assertTrue(sensors.containsKey("redis-ent"));
     assertTrue(sensors.get("redis-ent").contains(
-        URI.create("/applications/redis-app/sensors/redis-ent/redis.uptime")));
+        URI.create("/v1/applications/redis-app/sensors/redis-ent/redis.uptime")));
   }
 
   @Test(dependsOnMethods = "testListSensors")
   public void testReadAllSensors() {
-    Map<String, Set<URI>> sensors = client().resource("/applications/redis-app/sensors")
+    Map<String, Set<URI>> sensors = client().resource("/v1/applications/redis-app/sensors")
         .get(new GenericType<Map<String, Set<URI>>>() {
         });
 
@@ -119,27 +122,27 @@ public class ApplicationResourceTest extends BaseResourceTest {
       readings.put(ref.toString(), client().resource(ref).get(String.class));
     }
 
-    assertEquals(readings.get("/applications/redis-app/sensors/redis-ent/service.state"), "running");
-    assertEquals(readings.get("/applications/redis-app/sensors/redis-ent/redis.port"), "6379");
+    assertEquals(readings.get("/v1/applications/redis-app/sensors/redis-ent/service.state"), "running");
+    assertEquals(readings.get("/v1/applications/redis-app/sensors/redis-ent/redis.port"), "6379");
   }
 
   @Test(dependsOnMethods = "testDeployRedisApplication")
   public void testListEffectors() {
-    Map<String, Set<URI>> effectors = client().resource("/applications/redis-app/effectors")
+    Map<String, Set<URI>> effectors = client().resource("/v1/applications/redis-app/effectors")
         .get(new GenericType<Map<String, Set<URI>>>() {
         });
 
     assertTrue(effectors.containsKey("redis-ent"));
     assertTrue(effectors.get("redis-ent").contains(
-        URI.create("/applications/redis-app/effectors/redis-ent/start")));
+        URI.create("/v1/applications/redis-app/effectors/redis-ent/start")));
   }
 
   @Test(dependsOnMethods = {"testListEffectors", "testReadAllSensors", "testListApplications"})
   public void testDeleteApplication() throws TimeoutException, InterruptedException {
-    ClientResponse response = client().resource("/applications/redis-app")
+    ClientResponse response = client().resource("/v1/applications/redis-app")
         .delete(ClientResponse.class);
 
-    waitForPageNotFoundResponse("/applications/redis-app");
+    waitForPageNotFoundResponse("/v1/applications/redis-app");
 
     assertEquals(response.getStatus(), Response.Status.ACCEPTED.getStatusCode());
     assertEquals(manager.registry().size(), 0);

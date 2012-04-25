@@ -26,7 +26,7 @@ public class LocationResourceTest extends BaseResourceTest {
 
   @Test
   public void testListAllLocations() {
-    Set<Location> locations = client().resource("/locations").get(new GenericType<Set<Location>>() {
+    Set<Location> locations = client().resource("/v1/locations").get(new GenericType<Set<Location>>() {
     });
     Location location = Iterables.get(locations, 0);
     assertThat(location.getProvider(), is("localhost"));
@@ -35,14 +35,14 @@ public class LocationResourceTest extends BaseResourceTest {
 
   @Test
   public void testGetASpecificLocation() {
-    Location location = client().resource("/locations/0").get(Location.class);
+    Location location = client().resource("/v1/locations/0").get(Location.class);
     assertThat(location.getProvider(), is("localhost"));
     assertNull(location.getCredential());
   }
 
   @Test
   public void testAddNewLocation() {
-    ClientResponse response = client().resource("/locations")
+    ClientResponse response = client().resource("/v1/locations")
         .post(ClientResponse.class, new Location("aws-ec2", "identity", "credential", "us-east-1"));
 
     Location location = client().resource(response.getLocation()).get(Location.class);
@@ -54,7 +54,7 @@ public class LocationResourceTest extends BaseResourceTest {
   public void testDeleteLocation() {
     assertThat(store.entries().size(), is(2));
 
-    ClientResponse response = client().resource("/locations/1").delete(ClientResponse.class);
+    ClientResponse response = client().resource("/v1/locations/1").delete(ClientResponse.class);
     assertThat(response.getStatus(), is(Response.Status.NO_CONTENT.getStatusCode()));
     assertThat(store.entries().size(), is(1));
   }

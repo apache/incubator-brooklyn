@@ -16,7 +16,7 @@ public class EntityResourceTest extends BaseResourceTest {
 
   @Test
   public void testListAllEntities() {
-    Set<String> entities = client().resource("/entities")
+    Set<String> entities = client().resource("/v1/entities")
         .get(new GenericType<Set<String>>() {
         });
     assertTrue(entities.size() > 0);
@@ -24,7 +24,7 @@ public class EntityResourceTest extends BaseResourceTest {
 
   @Test
   public void testFilterListOfEntitiesByName() {
-    Set<String> entities = client().resource("/entities")
+    Set<String> entities = client().resource("/v1/entities")
         .queryParam("name", "redis").get(new GenericType<Set<String>>() {
         });
     assertEquals(entities.size(), 3);

@@ -20,7 +20,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import org.reflections.Reflections;
 
-@Path("/entities")
+@Path("/v1/entities")
 @Produces(MediaType.APPLICATION_JSON)
 public class EntityResource {
 
@@ -58,7 +58,7 @@ public class EntityResource {
 
   @GET
   @Timed
-  public Iterable<String> listAvailableEntities(
+  public Iterable<String> list(
       final @QueryParam("name") @DefaultValue("") String name
   ) {
     if ("".equals(name)) {

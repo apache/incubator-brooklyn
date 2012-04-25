@@ -11,6 +11,8 @@ public class ApplicationSpec {
   private Set<EntitySpec> entities;
   private Set<String> locations;
 
+  // TODO add policies
+
   public ApplicationSpec(
       @JsonProperty("name") String name,
       @JsonProperty("entities") Set<EntitySpec> entities,

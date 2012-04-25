@@ -15,6 +15,7 @@ import com.google.common.collect.Sets;
 import java.net.URI;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 import javax.annotation.Nullable;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -23,20 +24,22 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
-@Path("/applications/{application}/effectors")
-public class EffectorResource {
+@Path("/v1/applications/{application}/effectors")
+public class EffectorResource extends BaseResource {
 
   private final ApplicationManager manager;
+  private ExecutorService executorService;
 
-  public EffectorResource(ApplicationManager manager) {
+  public EffectorResource(ApplicationManager manager, ExecutorService executorService) {
     this.manager = checkNotNull(manager, "manager");
+    this.executorService = checkNotNull(executorService, "executorService");
   }
 
   @GET
-  public Map<String, Set<URI>> listEffectors(
+  public Map<String, Set<URI>> list(
       @PathParam("application") final String applicationName
   ) {
-    final Application application = getApplicationOr404(applicationName);
+    final Application application = getApplicationOr404(manager.registry(), applicationName);
 
     Map<String, Set<URI>> results = Maps.newHashMap();
     for (final Entity entity : application.getInstance().getOwnedChildren()) {
@@ -47,7 +50,7 @@ public class EffectorResource {
                 new Function<Map.Entry<String, Effector<?>>, URI>() {
                   @Override
                   public URI apply(Map.Entry<String, Effector<?>> entry) {
-                    return URI.create(String.format("/applications/%s/effectors/%s/%s",
+                    return URI.create(String.format("/v1/applications/%s/effectors/%s/%s",
                         applicationName, entity.getDisplayName(), entry.getValue().getName()));
                   }
                 })));
@@ -59,34 +62,13 @@ public class EffectorResource {
 
   @POST
   @Path("{entity}/{effector}")
-  public void triggerEffector(
+  public void trigger(
       @PathParam("application") String applicationName,
       @PathParam("entity") String entityName,
       @PathParam("effector") String effector
   ) {
 
-  }
+    // TODO retrieve effector and submit as a task
 
-  public EntityLocal getEntityLocalOr404(Application application, String entityName) {
-
-    // Only scan the first level of children entities
-
-    for (Entity entity : application.getInstance().getOwnedChildren()) {
-      if (entity.getDisplayName().equals(entityName)) {
-        return (EntityLocal) entity;
-      }
-    }
-
-    throw new WebApplicationException(Response.Status.NOT_FOUND);
-  }
-
-  private Application getApplicationOr404(String application) {
-    if (!manager.registry().containsKey(application))
-      throw new WebApplicationException(Response.Status.NOT_FOUND);
-
-    Application current = manager.registry().get(application);
-    if (current.getStatus() != Application.Status.RUNNING)
-      throw new WebApplicationException(Response.Status.NOT_ACCEPTABLE);
-    return current;
   }
 }

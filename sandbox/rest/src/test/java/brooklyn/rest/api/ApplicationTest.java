@@ -18,7 +18,7 @@ public class ApplicationTest {
       ));
 
   final ApplicationSpec applicationSpec = new ApplicationSpec("myapp", ImmutableSet.of(entitySpec),
-      ImmutableSet.of("/locations/1"));
+      ImmutableSet.of("/v1/locations/1"));
 
   final Application application = new Application(applicationSpec, Application.Status.STARTING);
 

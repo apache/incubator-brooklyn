@@ -5,6 +5,7 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.jclouds.JcloudsLocation;
+import brooklyn.rest.BrooklynConfiguration;
 import brooklyn.rest.api.Application;
 import brooklyn.rest.api.ApplicationSpec;
 import brooklyn.rest.api.EntitySpec;
@@ -36,8 +37,14 @@ public class ApplicationManager implements Managed {
   private final LocationStore locationStore;
   private final ConcurrentMap<String, Application> applications;
   private final ExecutorService executorService;
+  private final BrooklynConfiguration configuration;
 
-  public ApplicationManager(LocationStore locationStore, ExecutorService executorService) {
+  public ApplicationManager(
+      BrooklynConfiguration configuration,
+      LocationStore locationStore,
+      ExecutorService executorService
+  ) {
+    this.configuration = checkNotNull(configuration, "configuration");
     this.locationStore = checkNotNull(locationStore, "locationStore");
     this.executorService = checkNotNull(executorService, "executorService");
     this.applications = Maps.newConcurrentMap();
@@ -50,8 +57,10 @@ public class ApplicationManager implements Managed {
 
   @Override
   public void stop() throws Exception {
-    destroyAllInBackground();
-    waitForAllApplicationsToStopOrError();
+    if (configuration.shouldStopApplicationsOnExit()) {
+      destroyAllInBackground();
+      waitForAllApplicationsToStopOrError();
+    }
   }
 
   private void waitForAllApplicationsToStopOrError() throws InterruptedException {
@@ -72,6 +81,7 @@ public class ApplicationManager implements Managed {
 
     final AbstractApplication instance = new AbstractApplication() {
     };
+    instance.setDisplayName(spec.getName());
 
     for (EntitySpec entitySpec : spec.getEntities()) {
       try {

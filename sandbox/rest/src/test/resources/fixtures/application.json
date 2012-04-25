@@ -10,5 +10,5 @@
       }
     }
   ],
-  "locations":["/locations/1"]
+  "locations":["/v1/locations/1"]
 }, "status":"STARTING"}

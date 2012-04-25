@@ -1,5 +1,7 @@
 # Config file for the Brooklyn REST endpoint
 
+stopApplicationsOnExit: true
+
 # A list of locations that are automatically registered when the server starts
 locations:
 

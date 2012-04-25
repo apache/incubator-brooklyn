@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
 
 public class LocationStore implements Managed {
 
-  private final static Pattern refPattern = Pattern.compile("^/locations/(\\d+)$");
+  private final static Pattern refPattern = Pattern.compile("^/v1/locations/(\\d+)$");
 
   private final Map<Integer, Location> locations = Maps.newConcurrentMap();
   private final AtomicInteger ids = new AtomicInteger(0);

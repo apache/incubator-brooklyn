@@ -10,6 +10,7 @@ import brooklyn.rest.resources.LocationResource;
 import brooklyn.rest.resources.SensorResource;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Environment;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class BrooklynService extends Service<BrooklynConfiguration> {
@@ -22,21 +23,27 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
   protected void initialize(BrooklynConfiguration configuration, Environment environment)
       throws Exception {
 
+    // Create managed components and wire them together
+
     LocationStore locationStore = new LocationStore(configuration);
     environment.manage(locationStore);
+
+    // TODO configure executor from application config file
+    ExecutorService managedExecutor = environment.managedExecutorService("brooklyn", 2, 16, 30, TimeUnit.SECONDS);
+    ApplicationManager applicationManager = new ApplicationManager(configuration, locationStore, managedExecutor);
+    environment.manage(applicationManager);
+
+    // Setup REST endpoints
+
     environment.addResource(new LocationResource(locationStore));
 
     EntityResource entityResource = new EntityResource();
     environment.addResource(entityResource);
 
-    // TODO configure the executor service from yml
-    ApplicationManager applicationManager = new ApplicationManager(locationStore,
-        environment.managedExecutorService("brooklyn", 2, 16, 30, TimeUnit.SECONDS));
-    environment.manage(applicationManager);
-    environment.addResource(new ApplicationResource(applicationManager, entityResource));
+    environment.addResource(new ApplicationResource(applicationManager, locationStore, entityResource));
 
     environment.addResource(new SensorResource(applicationManager));
-    environment.addResource(new EffectorResource(applicationManager));
+    environment.addResource(new EffectorResource(applicationManager, managedExecutor));
 
     environment.addHealthCheck(new GeneralHealthCheck());
   }

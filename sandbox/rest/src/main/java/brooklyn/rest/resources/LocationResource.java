@@ -18,7 +18,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-@Path("/locations")
+@Path("/v1/locations")
 @Produces(MediaType.APPLICATION_JSON)
 public class LocationResource {
 
@@ -29,7 +29,7 @@ public class LocationResource {
   }
 
   @GET
-  public Iterable<Map<String, String>> listLocations() {
+  public Iterable<Map<String, String>> list() {
     return Iterables.transform(store.entries(),
         new Function<Map.Entry<Integer, Location>, Map<String, String>>() {
           @Override
@@ -41,13 +41,13 @@ public class LocationResource {
 
   @GET
   @Path("{location}")
-  public Map<String, String> getLocation(@PathParam("location") Integer id) {
+  public Map<String, String> get(@PathParam("location") Integer id) {
     return asMap(id, store.get(id));
   }
 
   private Map<String, String> asMap(Integer id, Location loc) {
     return ImmutableMap.of(
-        "ref", "/locations/" + id,
+        "ref", "/v1/locations/" + id,
         "provider", loc.getProvider(),
         "identity", loc.getIdentity(),
         "location", loc.getLocation()
@@ -55,7 +55,7 @@ public class LocationResource {
   }
 
   @POST
-  public Response add(@Valid Location location) {
+  public Response create(@Valid Location location) {
     int id = store.put(location);
     return Response.created(URI.create("" + id)).build();
   }

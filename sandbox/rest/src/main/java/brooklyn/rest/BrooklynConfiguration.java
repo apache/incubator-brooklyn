@@ -8,9 +8,15 @@ import java.util.Set;
 
 public class BrooklynConfiguration extends Configuration {
 
+  private boolean stopApplicationsOnExit = true;
+
   private Set<Location> locations = Sets.newHashSet();
 
   public Set<Location> getLocations() {
     return ImmutableSet.copyOf(locations);
+  }
+
+  public boolean shouldStopApplicationsOnExit() {
+    return stopApplicationsOnExit;
   }
 }

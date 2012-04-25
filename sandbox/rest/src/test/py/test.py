@@ -25,13 +25,13 @@ def main():
 
     args = parser.parse_args()
 
-    target = args.endpoint + "/applications"
+    target = args.endpoint + "/v1/applications"
     print "\nPOST %s\n" % target
 
     spec = dict(
         name=args.name,
         entities=[dict(name="ent1", type=args.entity, config=dict())],
-        locations=["/locations/" + args.location]
+        locations=["/v1/locations/" + args.location]
     )
     pprint(spec)
 

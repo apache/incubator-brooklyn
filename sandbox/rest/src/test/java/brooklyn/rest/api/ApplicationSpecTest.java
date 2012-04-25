@@ -18,7 +18,7 @@ public class ApplicationSpecTest {
       ));
 
   final ApplicationSpec applicationSpec = new ApplicationSpec("myapp", ImmutableSet.of(entitySpec),
-      ImmutableSet.of("/locations/1"));
+      ImmutableSet.of("/v1/locations/1"));
 
   @Test
   public void testSerializeToJSON() throws IOException {

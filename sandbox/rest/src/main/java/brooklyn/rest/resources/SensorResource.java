@@ -27,8 +27,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
-@Path("/applications/{application}/sensors")
-public class SensorResource {
+@Path("/v1/applications/{application}/sensors")
+public class SensorResource extends BaseResource {
 
   private final ApplicationManager manager;
 
@@ -37,8 +37,8 @@ public class SensorResource {
   }
 
   @GET
-  public Map<String, Set<URI>> listAllSensors(@PathParam("application") final String applicationName) {
-    Application current = getApplicationOr404(applicationName);
+  public Map<String, Set<URI>> list(@PathParam("application") final String applicationName) {
+    Application current = getApplicationOr404(manager.registry(), applicationName);
 
     // Get sensors only for the first level of children entities
 
@@ -57,7 +57,7 @@ public class SensorResource {
                 new Function<Map.Entry<String, Sensor<?>>, URI>() {
                   @Override
                   public URI apply(Map.Entry<String, Sensor<?>> input) {
-                    return URI.create(String.format("/applications/%s/sensors/%s/%s",
+                    return URI.create(String.format("/v1/applications/%s/sensors/%s/%s",
                         applicationName, entity.getDisplayName(), input.getKey()));
                   }
                 })));
@@ -70,12 +70,12 @@ public class SensorResource {
 
   @GET
   @Path("{entity}/{sensor}")
-  public String getSensor(
+  public String get(
       @PathParam("application") String applicationName,
       @PathParam("entity") String entityName,
       @PathParam("sensor") String sensorName
   ) {
-    Application application = getApplicationOr404(applicationName);
+    Application application = getApplicationOr404(manager.registry(), applicationName);
     EntityLocal entity = getEntityLocalOr404(application, entityName);
 
     if (!entity.getSensors().containsKey(sensorName)) {
@@ -91,26 +91,4 @@ public class SensorResource {
     return (value != null) ? value.toString() : "";
   }
 
-  public EntityLocal getEntityLocalOr404(Application application, String entityName) {
-
-    // Only scan the first level of children entities
-
-    for (Entity entity : application.getInstance().getOwnedChildren()) {
-      if (entity.getDisplayName().equals(entityName)) {
-        return (EntityLocal) entity;
-      }
-    }
-
-    throw new WebApplicationException(Response.Status.NOT_FOUND);
-  }
-
-  private Application getApplicationOr404(String application) {
-    if (!manager.registry().containsKey(application))
-      throw new WebApplicationException(Response.Status.NOT_FOUND);
-
-    Application current = manager.registry().get(application);
-    if (current.getStatus() != Application.Status.RUNNING)
-      throw new WebApplicationException(Response.Status.NOT_ACCEPTABLE);
-    return current;
-  }
 }

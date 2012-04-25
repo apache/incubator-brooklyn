@@ -16,6 +16,6 @@ public class LocationStoreTest {
   @Test
   public void testGetLocationByRef() {
     assertEquals(store.get(0).getProvider(), "localhost");
-    assertEquals(store.getByRef("/locations/0").getProvider(), "localhost");
+    assertEquals(store.getByRef("/v1/locations/0").getProvider(), "localhost");
   }
 }
