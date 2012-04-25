@@ -392,9 +392,9 @@ class DynamicClusterTest {
             assertEquals(cluster.getMembers(), [])
             assertEquals(cluster.getCurrentSize(), 0)
             assertFalse(cluster.hasMember(cluster))
-            assertEquals(cluster.addMember(cluster), cluster)
+            cluster.addMember(cluster)
             assertTrue(cluster.removeMember(cluster))
-
+            
             // allow the resize to complete            
             continuationLatch.countDown()
             thread.join(TIMEOUT_MS)
