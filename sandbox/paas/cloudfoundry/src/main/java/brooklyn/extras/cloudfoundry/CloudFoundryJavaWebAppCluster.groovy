@@ -22,6 +22,7 @@ import brooklyn.event.basic.BasicConfigKey
 import brooklyn.extras.cloudfoundry.CloudFoundryVmcCliAccess.AppRecord
 import brooklyn.extras.cloudfoundry.CloudFoundryVmcCliAccess.CloudFoundryAppStats
 import brooklyn.location.Location
+import brooklyn.util.StringUtils;
 import brooklyn.util.flags.SetFromFlag
 
 import com.google.common.base.Preconditions
@@ -32,9 +33,12 @@ class CloudFoundryJavaWebAppCluster extends AbstractEntity implements ElasticJav
     private static final Logger log = LoggerFactory.getLogger(CloudFoundryJavaWebAppCluster.class)
     
     @SetFromFlag("appName")
-    public static final BasicConfigKey<String> APP_NAME = [ String, "cloudfoundry.app.name.uid", "Unique name for this app" ]
+    public static final BasicConfigKey<String> APP_NAME = [ String, "cloudfoundry.app.name.uid", "Unique name for this app" ];
+    @SetFromFlag("url")
+    public static final BasicConfigKey<String> HOSTNAME_TO_USE_FOR_URL = [ String, "cloudfoundry.app.url", "URL to which the app should respond, if not the default" ];
 
-    public static final BasicAttributeSensor<String> HOSTNAME = [ String, "cloudfoundry.host.name", "The hostname where the app should be accessed" ];
+    public static final BasicAttributeSensor<String> APP_HOSTNAME = Attributes.HOSTNAME;
+    public static final BasicAttributeSensor<String> API_HOSTNAME = [ String, "cloudfoundry.api.host.name", "API host name" ];
 
     //TODO allow url to be set
     //disabled until we have access to a CF which allows setting the URL
@@ -95,11 +99,25 @@ class CloudFoundryJavaWebAppCluster extends AbstractEntity implements ElasticJav
         if (_cfAccess!=null) return _cfAccess;
         _cfAccess = new CloudFoundryVmcCliAccess(
             appName:getAppName(), war: war, context: this, mutexSupport:Iterables.getOnlyElement(locations))
+        _cfAccess.url = getConfig(HOSTNAME_TO_USE_FOR_URL);
+        return _cfAccess;
     }
     
     public void startInLocation(CloudFoundryLocation ol) {
+        if (locations.isEmpty()) {
+            locations << ol
+        } else {
+            if (locations.contains(ol)) {
+                if (getAttribute(SERVICE_STATE) in [Lifecycle.STARTING, Lifecycle.RUNNING]) {
+                    log.warn("Entity $this already started; not starting again in same location");
+                    return;
+                }
+                //otherwise continue, we're just being told the location twice!
+            } else {
+                throw new IllegalStateException("Cannot start $this in $ol; it is already configured for $locations");
+            }
+        }
         setAttribute(SERVICE_STATE, Lifecycle.STARTING);
-        locations << ol
         
         if (!war) throw new IllegalStateException("A WAR file is required to start ${this}")
 
@@ -118,9 +136,16 @@ class CloudFoundryJavaWebAppCluster extends AbstractEntity implements ElasticJav
         cfAccess.setTarget(target)
     }
     public void connectSensors() {
-        String hostname = appRecord.url;
-        setAttribute(HOSTNAME, hostname);
-        setAttribute(ROOT_URL, "http://"+hostname+"/");
+        String apiHostname = ((CloudFoundryLocation)Iterables.getOnlyElement(locations)).hostname;
+        setAttribute(API_HOSTNAME, apiHostname);
+        
+        String appHostname = StringUtils.removeStart(apiHostname, "api.");
+        appHostname = appRecord.appName+"."+appHostname;
+        setAttribute(APP_HOSTNAME, appHostname);
+        
+        String urlDomain = appRecord.url;
+        setAttribute(ROOT_URL, "http://"+urlDomain+"/");
+        
         sensorRegistry.register(new FunctionSensorAdapter({cfAccess.stats()})).with {
             poll(SIZE, { CloudFoundryAppStats stats -> stats.instances.size() });
             poll(CPU_USAGE, { CloudFoundryAppStats stats -> stats.average.cpuUsage });
