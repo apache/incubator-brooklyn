@@ -17,6 +17,7 @@ public class MutexSupport implements WithMutexes {
     protected synchronized SemaphoreWithOwners getSemaphore(String mutexId) {
         return getSemaphore(mutexId, false);
     }
+    // NB: the map could be "lock-striped" (hashed on mutexId) to avoid the central lock 
     protected synchronized SemaphoreWithOwners getSemaphore(String mutexId, boolean requestBeforeReturning) {
         SemaphoreWithOwners s = semaphores.get(mutexId);
         if (s==null) {
