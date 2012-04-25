@@ -79,8 +79,12 @@ public class ApplicationManager implements Managed {
         Class<Startable> clazz = (Class<Startable>) Class.forName(entitySpec.getType());
 
         Constructor constructor = clazz.getConstructor(new Class[]{Map.class, brooklyn.entity.Entity.class});
+
         // TODO parse & rebuild config map as needed
-        constructor.newInstance(Maps.newHashMap(entitySpec.getConfig()), instance);
+        Map<String, String> config = Maps.newHashMap(entitySpec.getConfig());
+        config.put("displayName", entitySpec.getName());
+
+        constructor.newInstance(config, instance);
 
       } catch (Exception e) {
         LOG.error(e, "Failed to create instance for entity {}", entitySpec);

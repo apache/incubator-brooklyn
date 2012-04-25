@@ -8,28 +8,32 @@ import brooklyn.rest.core.ApplicationManager;
 import brooklyn.rest.core.LocationStore;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.yammer.dropwizard.logging.Log;
 import java.net.URI;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 import javax.ws.rs.core.Response;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
+@Test(singleThreaded = true)
 public class ApplicationResourceTest extends BaseResourceTest {
 
   private ApplicationManager manager;
   private ExecutorService executorService;
 
-  private final ApplicationSpec redisSpec = new ApplicationSpec("redis",
-      ImmutableSet.of(new EntitySpec("redis", "brooklyn.entity.nosql.redis.RedisStore")),
+  private final ApplicationSpec redisSpec = new ApplicationSpec("redis-app",
+      ImmutableSet.of(new EntitySpec("redis-ent", "brooklyn.entity.nosql.redis.RedisStore")),
       ImmutableSet.of("/locations/0"));
 
   @Override
@@ -65,7 +69,7 @@ public class ApplicationResourceTest extends BaseResourceTest {
         .post(ClientResponse.class, redisSpec);
 
     assertEquals(manager.registry().size(), 1);
-    assertEquals(response.getLocation().getPath(), "/applications/redis");
+    assertEquals(response.getLocation().getPath(), "/applications/redis-app");
 
     waitForApplicationToBeRunning(response);
   }
@@ -96,18 +100,35 @@ public class ApplicationResourceTest extends BaseResourceTest {
 
   @Test(dependsOnMethods = "testDeployRedisApplication")
   public void testListSensors() {
-    Set<String> sensors = client().resource("/applications/redis/sensors")
-        .get(new GenericType<Set<String>>() {
+    Map<String, Set<URI>> sensors = client().resource("/applications/redis-app/sensors")
+        .get(new GenericType<Map<String, Set<URI>>>() {
         });
-    // fail(sensors.toString());
+    assertTrue(sensors.containsKey("redis-ent"));
+    assertTrue(sensors.get("redis-ent").contains(
+        URI.create("/applications/redis-app/sensors/redis-ent/redis.uptime")));
   }
 
-  @Test(dependsOnMethods = "testListApplications")
+  @Test(dependsOnMethods = "testListSensors")
+  public void testReadAllSensors() {
+    Map<String, Set<URI>> sensors = client().resource("/applications/redis-app/sensors")
+        .get(new GenericType<Map<String, Set<URI>>>() {
+        });
+
+    Map<String, String> readings = Maps.newHashMap();
+    for (URI ref : sensors.get("redis-ent")) {
+      readings.put(ref.toString(), client().resource(ref).get(String.class));
+    }
+
+    assertEquals(readings.get("/applications/redis-app/sensors/redis-ent/service.state"), "running");
+    assertEquals(readings.get("/applications/redis-app/sensors/redis-ent/redis.port"), "6379");
+  }
+
+  @Test(dependsOnMethods = {"testReadAllSensors", "testListApplications"})
   public void testDeleteApplication() throws TimeoutException, InterruptedException {
-    ClientResponse response = client().resource("/applications/redis")
+    ClientResponse response = client().resource("/applications/redis-app")
         .delete(ClientResponse.class);
 
-    waitForPageNotFoundResponse("/applications/redis");
+    waitForPageNotFoundResponse("/applications/redis-app");
 
     assertEquals(response.getStatus(), Response.Status.ACCEPTED.getStatusCode());
     assertEquals(manager.registry().size(), 0);
