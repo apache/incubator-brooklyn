@@ -3,13 +3,14 @@ package brooklyn.util.internal
 import groovy.time.Duration
 import groovy.time.TimeDuration
 
+import java.util.concurrent.Callable
 import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.util.flags.FlagUtils;
-import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.flags.FlagUtils
+import brooklyn.util.flags.SetFromFlag
 
 import com.google.common.base.Preconditions
 
@@ -38,8 +39,8 @@ public class Repeater {
 
 	@SetFromFlag
     private final String description
-    private Closure body
-    private Closure<Boolean> exitCondition
+    private Callable body
+    private Callable<Boolean> exitCondition
 	@SetFromFlag
 	private TimeDuration period = null
 	@SetFromFlag("timeout")
@@ -79,7 +80,7 @@ public class Repeater {
      * @param body a closure or other Runnable that is executed in the main body of the loop.
      * @return {@literal this} to aid coding in a fluent style.
      */
-    Repeater repeat(Closure body={}) {
+    Repeater repeat(Callable body={}) {
         Preconditions.checkNotNull body, "body must not be null"
         this.body = body
         return this
@@ -126,7 +127,7 @@ public class Repeater {
      * loop will stop executing.
      * @return {@literal this} to aid coding in a fluent style.
      */
-    Repeater until(Closure<Boolean> exitCondition) {
+    Repeater until(Callable<Boolean> exitCondition) {
         Preconditions.checkNotNull exitCondition, "exitCondition must not be null"
         this.exitCondition = exitCondition
         return this
