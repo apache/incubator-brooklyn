@@ -12,6 +12,7 @@ import brooklyn.management.SubscriptionHandle
 import brooklyn.management.internal.BasicSubscriptionContext
 import brooklyn.management.internal.SubscriptionTracker
 import brooklyn.policy.EntityAdjunct
+import brooklyn.util.IdGenerator;
 import brooklyn.util.internal.LanguageUtils
 
 import com.google.common.collect.HashMultimap
@@ -22,7 +23,7 @@ import com.google.common.collect.SetMultimap
  * Common functionality for policies and enrichers
  */
 abstract class AbstractEntityAdjunct implements EntityAdjunct {
-    String id = LanguageUtils.newUid();
+    String id = IdGenerator.makeRandomId(8);
     String name;
     
     protected transient EntityLocal entity
