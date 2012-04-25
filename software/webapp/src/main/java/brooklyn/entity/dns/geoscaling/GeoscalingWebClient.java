@@ -13,12 +13,16 @@ import java.util.regex.Pattern;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -26,6 +30,8 @@ import org.w3c.dom.NodeList;
 import org.w3c.tidy.Tidy;
 
 public class GeoscalingWebClient {
+    public static final Logger log = LoggerFactory.getLogger(GeoscalingWebClient.class);
+    
     public static final long PROVIDE_NETWORK_INFO = 1 << 0;
     public static final long PROVIDE_CITY_INFO    = 1 << 1;
     public static final long PROVIDE_COUNTRY_INFO = 1 << 2;
@@ -143,9 +149,7 @@ public class GeoscalingWebClient {
             nameValuePairs.add(new BasicNameValuePair("password", password));
             request.setEntity(new UrlEncodedFormEntity(nameValuePairs));
             
-            HttpResponse response = httpClient.execute(request);
-            if (response.getEntity() != null)
-                EntityUtils.consume(response.getEntity());
+            sendRequest(request, true);
             
         } catch (Exception e) {
             throw new RuntimeException("Failed to log-in to GeoScaling service: "+e, e);
@@ -155,9 +159,7 @@ public class GeoscalingWebClient {
     public void logout() {
         try {
             String url = MessageFormat.format("https://{0}/{1}?module=auth&logout", HOST, PATH);
-            HttpResponse response = httpClient.execute(new HttpGet(url));
-            if (response.getEntity() != null)
-                EntityUtils.consume(response.getEntity());
+            sendRequest(new HttpGet(url), true);
             
         } catch (Exception e) {
             throw new RuntimeException("Failed to log-out of GeoScaling service: "+e, e);
@@ -196,9 +198,7 @@ public class GeoscalingWebClient {
             nameValuePairs.add(new BasicNameValuePair("domain", name));
             request.setEntity(new UrlEncodedFormEntity(nameValuePairs));
             
-            HttpResponse response = httpClient.execute(request);
-            if (response.getEntity() != null)
-                EntityUtils.consume(response.getEntity());
+            sendRequest(request, true);
             
         } catch (Exception e) {
             throw new RuntimeException("Failed to create GeoScaling smart subdomain: "+e, e);
@@ -211,7 +211,7 @@ public class GeoscalingWebClient {
         try {
             List<Domain> domains = new LinkedList<Domain>();
             String url = MessageFormat.format("https://{0}/{1}?module=domains", HOST, PATH);
-            HttpResponse response = httpClient.execute(new HttpGet(url));
+            HttpResponse response = sendRequest(new HttpGet(url), false);
             HttpEntity entity = response.getEntity();
             if (entity != null) {
                 Document document = tidy.parseDOM(entity.getContent(), null);
@@ -246,9 +246,7 @@ public class GeoscalingWebClient {
                     "https://{0}/{1}?module=domain&id={2,number,#}&delete=1",
                     HOST, PATH, primaryDomainId);
             
-            HttpResponse response = httpClient.execute(new HttpGet(url));
-            if (response.getEntity() != null)
-                EntityUtils.consume(response.getEntity());
+            sendRequest(new HttpGet(url), true);
             
         } catch (Exception e) {
             throw new RuntimeException("Failed to delete GeoScaling primary domain: "+e, e);
@@ -263,7 +261,7 @@ public class GeoscalingWebClient {
                     "https://{0}/{1}?module=smart_subdomains&id={2,number,#}",
                     HOST, PATH, parent.id);
             
-            HttpResponse response = httpClient.execute(new HttpGet(url));
+            HttpResponse response = sendRequest(new HttpGet(url), false);
             HttpEntity entity = response.getEntity();
             if (entity != null) {
                 Document document = tidy.parseDOM(entity.getContent(), null);
@@ -292,7 +290,7 @@ public class GeoscalingWebClient {
             throw new RuntimeException("Failed to retrieve GeoScaling smart subdomains: "+e, e);
         }
     }
-
+    
     private void createSmartSubdomain(int primaryDomainId, String smartSubdomainName) {
         try {
             smartSubdomainName = smartSubdomainName.toLowerCase();
@@ -305,10 +303,8 @@ public class GeoscalingWebClient {
             nameValuePairs.add(new BasicNameValuePair("MAX_FILE_SIZE", "65536"));
             nameValuePairs.add(new BasicNameValuePair("smart_subdomain_name", smartSubdomainName));
             request.setEntity(new UrlEncodedFormEntity(nameValuePairs));
-            
-            HttpResponse response = httpClient.execute(request);
-            if (response.getEntity() != null)
-                EntityUtils.consume(response.getEntity());
+                        
+            sendRequest(request, true);
             
         } catch (Exception e) {
             throw new RuntimeException("Failed to create GeoScaling smart subdomain: "+e, e);
@@ -321,9 +317,7 @@ public class GeoscalingWebClient {
                     "https://{0}/{1}?module=smart_subdomains&id={2,number,#}&delete={3,number,#}",
                     HOST, PATH, primaryDomainId, smartSubdomainId);
             
-            HttpResponse response = httpClient.execute(new HttpGet(url));
-            if (response.getEntity() != null)
-                EntityUtils.consume(response.getEntity());
+            sendRequest(new HttpGet(url), true);
             
         } catch (Exception e) {
             throw new RuntimeException("Failed to delete GeoScaling smart subdomain: "+e, e);
@@ -351,15 +345,24 @@ public class GeoscalingWebClient {
             nameValuePairs.add(new BasicNameValuePair("code", phpScript));
             request.setEntity(new UrlEncodedFormEntity(nameValuePairs));
             
-            HttpResponse response = httpClient.execute(request);
-            if (response.getEntity() != null)
-                EntityUtils.consume(response.getEntity());
+            sendRequest(request, true);
             
         } catch (Exception e) {
             throw new RuntimeException("Failed to update GeoScaling smart subdomain: "+e, e);
         }
     }
     
+    protected HttpResponse sendRequest(HttpUriRequest request, boolean consumeResponse) throws ClientProtocolException, IOException {
+        if (log.isDebugEnabled()) log.debug("Geoscaling request: "+
+                request.getURI()+
+                (request instanceof HttpPost ? " "+((HttpPost)request).getEntity() : ""));
+        HttpResponse response = httpClient.execute(request);
+        if (log.isDebugEnabled()) log.debug("Geoscaling response: "+response);
+        if (consumeResponse && response.getEntity() != null)
+            EntityUtils.consume(response.getEntity());
+        return response;
+    }
+
     private static String getTextContent(Node n) {
         StringBuffer sb = new StringBuffer();
         NodeList childNodes = n.getChildNodes();

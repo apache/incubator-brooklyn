@@ -30,7 +30,7 @@ public class NginxSetup extends SshBasedAppSetup {
         String logFileLocation = "${result.runDir}/logs/error.log"
 
         // We must have the specified HTTP port as this is part of the public URL
-        int httpPort = entity.getAttribute(Attributes.HTTP_PORT)
+        int httpPort = entity.getAttribute(NginxController.PROXY_HTTP_PORT)
         if (!machine.obtainSpecificPort(httpPort)) {
             throw new IllegalStateException("Could not allocate port ${httpPort} for Nginx")
         }
