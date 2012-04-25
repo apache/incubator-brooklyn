@@ -325,8 +325,7 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
                     if (verbosity == 1) rv += " ("+error+")";
                     else {
                         StringWriter sw = new StringWriter();
-                        if (error instanceof ExecutionException) 
-                            ((Throwable)error).printStackTrace(new PrintWriter(sw));
+                        ((Throwable)error).printStackTrace(new PrintWriter(sw));
                         rv += "\n"+sw.getBuffer();
                     }
                 }
