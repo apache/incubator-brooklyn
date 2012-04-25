@@ -11,7 +11,12 @@ public class IdGenerator {
     private static String javaIdCharsSubseq = javaIdCharsStart+"1234567890";
     private static String base64IdChars = javaIdCharsSubseq+"+=";
 
-    /** @see makeRandomJavaId */
+    /** @see makeRandomJavaId
+     * <p>
+     * Java semantics selected as a good default; 
+     * the 2 extra base-64 chars are confusing as well as sometimes 
+     * disallowed where ID's are used (eg in scripts);
+     * a leading number could also be confusing and the range gain very slight anyway */
     public static String makeRandomId(int l) {
         return makeRandomJavaId(l);
     }
