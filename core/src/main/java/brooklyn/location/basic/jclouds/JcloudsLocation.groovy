@@ -131,7 +131,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         unusedConf.remove("provider");
         unusedConf.remove("providerLocationId");
         
-        ComputeService computeService = JcloudsUtil.buildComputeService(allconf, unusedConf);
+        ComputeService computeService = JcloudsUtil.buildOrFindComputeService(allconf, unusedConf);
         
         NodeMetadata node = null;
         try {
@@ -195,7 +195,8 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             LOG.info Throwables.getStackTraceAsString(e)
             throw Throwables.propagate(e)
         } finally {
-            computeService.getContext().close();
+            //leave it open for reuse
+//            computeService.getContext().close();
         }
 
     }
@@ -224,12 +225,14 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         removeChildLocation(machine)
         ComputeService computeService = null;
         try {
-            computeService = JcloudsUtil.buildComputeService(conf);
+            computeService = JcloudsUtil.buildOrFindComputeService(conf);
             computeService.destroyNode(instanceId);
         } catch (Exception e) {
             LOG.error "Problem releasing machine $machine in $this, instance id $instanceId; discarding instance and continuing...", e
             Throwables.propagate(e)
         } finally {
+        /*
+         //don't close
             if (computeService != null) {
                 try {
                     computeService.getContext().close();
@@ -237,6 +240,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                     LOG.error "Problem closing compute-service's context; continuing...", e
                 }
             }
+         */
         }
     }
     
