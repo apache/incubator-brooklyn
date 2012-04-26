@@ -49,6 +49,7 @@ import brooklyn.util.task.BasicExecutionContext
 import com.google.common.base.Equivalences.Equals;
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.Iterables
+import com.google.common.primitives.Primitives;
 
 /**
  * Default {@link Entity} implementation.
@@ -295,6 +296,20 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
                                 try {
                                     v = flags.remove(flagName);
                                     value = TypeCoercions.coerce(v, f.getType());
+                                    FlagUtils.setField(this, f, value, cf)
+                                } catch (Exception e) {
+                                    throw new IllegalArgumentException("Cannot coerce or set "+v+" / "+value+" to "+f, e)
+                                }
+                            } else if (cf.defaultVal()) {
+                                String v = cf.defaultVal()
+                                Object value
+                                try {
+                                    Class<?> fieldType = f.getType()
+                                    if (Primitives.allPrimitiveTypes().contains(fieldType) || Primitives.allWrapperTypes().contains(fieldType)) {
+                                        value = TypeCoercions.stringToPrimitive(v, fieldType)
+                                    } else {
+                                        value = TypeCoercions.coerce(v, fieldType);
+                                    }
                                     FlagUtils.setField(this, f, value, cf)
                                 } catch (Exception e) {
                                     throw new IllegalArgumentException("Cannot coerce or set "+v+" / "+value+" to "+f, e)

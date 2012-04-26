@@ -34,4 +34,10 @@ public @interface SetFromFlag {
      */
     boolean nullable() default true;
 
+    /** The default value, if it is not explicitly set.
+     * <p>
+     * The value will be coerced from String into primitive if required; 
+     * currently cannot be used for complex types. 
+     */
+    String defaultVal() default "";
 }

@@ -27,6 +27,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.primitives.Primitives;
 
 public class TypeCoercions {
 
@@ -34,6 +35,36 @@ public class TypeCoercions {
 
     private static Map<Class,Map<Class,Function>> registeredAdapters = Collections.synchronizedMap(
             new LinkedHashMap<Class,Map<Class,Function>>());
+    
+    @SuppressWarnings("unchecked")
+    public static <T> T stringToPrimitive(String value, Class<T> targetType) {
+        assert Primitives.allPrimitiveTypes().contains(targetType) || Primitives.allWrapperTypes().contains(targetType) : "targetType="+targetType;
+
+        // If char, then need to do explicit conversion
+        if (targetType == Character.class || targetType == char.class) {
+            if (value.length() == 1) {
+                return (T) (Character) value.charAt(0);
+            } else if (value.length() != 1) {
+                throw new ClassCastException("Cannot coerce type String to "+targetType.getCanonicalName()+" ("+value+"): adapting failed");
+            }
+        }
+        
+        // Otherwise can use valueOf reflectively
+        Class<?> wrappedType;
+        if (Primitives.allPrimitiveTypes().contains(targetType)) {
+            wrappedType = Primitives.wrap(targetType);
+        } else {
+            wrappedType = targetType;
+        }
+        
+        try {
+            return (T) wrappedType.getMethod("valueOf", String.class).invoke(null, value);
+        } catch (Exception e) {
+            ClassCastException tothrow = new ClassCastException("Cannot coerce type String to "+targetType.getCanonicalName()+" ("+value+"): adapting failed");
+            tothrow.initCause(e);
+            throw tothrow;
+        }
+    }
     
     /** attempts to coerce 'value' to 'targetType', 
      * using a variety of strategies,

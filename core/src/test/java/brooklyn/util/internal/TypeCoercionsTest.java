@@ -16,6 +16,25 @@ import com.google.common.collect.ImmutableSet;
 public class TypeCoercionsTest {
 
     @Test
+    public void testCoerceStringToPrimitive() {
+        assertEquals(TypeCoercions.stringToPrimitive("1", Character.class), (Character)'1');
+        assertEquals(TypeCoercions.stringToPrimitive("1", Short.class), (Short)((short)1));
+        assertEquals(TypeCoercions.stringToPrimitive("1", Integer.class), (Integer)1);
+        assertEquals(TypeCoercions.stringToPrimitive("1", Long.class), (Long)1l);
+        assertEquals(TypeCoercions.stringToPrimitive("1", Float.class), (Float)1f);
+        assertEquals(TypeCoercions.stringToPrimitive("1", Double.class), (Double)1d);
+        assertEquals(TypeCoercions.stringToPrimitive("true", Boolean.class), (Boolean)true);
+        
+        assertEquals(TypeCoercions.stringToPrimitive("1", char.class), (Character)'1');
+        assertEquals(TypeCoercions.stringToPrimitive("1", short.class), (Short)((short)1));
+        assertEquals(TypeCoercions.stringToPrimitive("1", int.class), (Integer)1);
+        assertEquals(TypeCoercions.stringToPrimitive("1", long.class), (Long)1l);
+        assertEquals(TypeCoercions.stringToPrimitive("1", float.class), (Float)1f);
+        assertEquals(TypeCoercions.stringToPrimitive("1", double.class), (Double)1d);
+        assertEquals(TypeCoercions.stringToPrimitive("true", boolean.class), (Boolean)true);
+    }
+
+    @Test
     public void testCoercePrimitivesToSameType() {
         assertEquals(TypeCoercions.coerce('1', Character.class), (Character)'1');
         assertEquals(TypeCoercions.coerce((short)1, Short.class), (Short)((short)1));
