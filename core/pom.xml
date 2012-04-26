@@ -73,4 +73,30 @@
             <scope>test</scope>
         </dependency>
 	</dependencies>
+
+  <!-- add maxmind geo-ip library; exact copy of source included as required by LGPL2 -->
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>1.1</version>
+        <executions>
+          <execution>
+            <id>add-source</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>src/3rd/maxmind/GeoIPJava-1.2.8/source</source>
+              </sources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
 </project>

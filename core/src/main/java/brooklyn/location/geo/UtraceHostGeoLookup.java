@@ -20,7 +20,8 @@ public class UtraceHostGeoLookup implements HostGeoLookup {
 
     /*
      * 
-http://xml.utrace.de/?query=88.198.156.18 (IP address)
+http://xml.utrace.de/?query=88.198.156.18 
+(IP address or hostname)
 
 The XML result is as follows:
 
@@ -39,7 +40,9 @@ The XML result is as follows:
 </result>
 </results>
 
-Note the queries field -- you are permitted 100 per day.
+Note the queries count field -- you are permitted 100 per day.
+Beyond this you get blacklisted and requests may time out, or return none.
+(This may last for several days once blacklisting, not sure how long.)
      */
     
     public static final Logger log = LoggerFactory.getLogger(UtraceHostGeoLookup.class);
@@ -48,12 +51,15 @@ Note the queries field -- you are permitted 100 per day.
         return "http://xml.utrace.de/?query="+ip.trim();
     }
 
+    static String localExternalIp;
     /** returns public IP of localhost */
-    public String getLocalhostIp() {
-        return new ResourceUtils(this).getResourceAsString("http://api.externalip.net/ip/");
+    public synchronized static String getLocalhostExternalIp() {
+        if (localExternalIp!=null) return localExternalIp;
+        localExternalIp = new ResourceUtils(HostGeoLookup.class).getResourceAsString("http://api.externalip.net/ip/").trim();
+        return localExternalIp;
     }
     public String getLookupUrlForLocalhost() {
-        return getLookupUrlForPublicIp(getLocalhostIp());
+        return getLookupUrlForPublicIp(getLocalhostExternalIp());
     }
 
     /** returns URL to get properties for the given address (assuming localhost if address is on a subnet) */

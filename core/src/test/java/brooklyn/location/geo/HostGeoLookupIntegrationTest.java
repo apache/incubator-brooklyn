@@ -39,4 +39,13 @@ public class HostGeoLookupIntegrationTest {
         Assert.assertEquals(geo.longitude, 9, 5);
     }
 
+    @Test(groups = "Integration")
+    public void testMaxmindLookup() throws Exception {
+        HostGeoInfo geo = new MaxMindHostGeoLookup().getHostGeoInfo(InetAddress.getByName("maxmind.com"));
+        log.info("maxmind.com at "+geo);
+        Assert.assertEquals(geo.displayName, "Dallas, TX (US)");
+        Assert.assertEquals(geo.latitude, 32.93, 0.1);
+        Assert.assertEquals(geo.longitude, -96.84, 0.1);
+    }
+
 }
