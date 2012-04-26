@@ -5,6 +5,6 @@
   "file": "{{ site.url }}/dev/code/entity.html" },
 { "title": "Writing a Policy",
   "file":  "{{ site.url }}/dev/code/policy.html" },
-{ "title": "Git Repository (github)",
-  "file":  "http://github.com/brooklyncentral" }
+{ "title": "brooklyn.git (github)",
+  "file":  "http://github.com/brooklyncentral/brooklyn" }
 ]
