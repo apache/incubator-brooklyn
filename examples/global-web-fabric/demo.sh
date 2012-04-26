@@ -2,19 +2,14 @@
 #
 # Brooklyn Example Demo
 #
-# Run this, then you should see the brooklyn mgmt console at localhost:8081, 
-# and the webapp from an appserver at 8080, and from nginx at 8000.
+# Run this, then you should see the brooklyn mgmt console at 3 AWS locations, with a Geoscaling DNS front-end.
 #
-# Refresh the webapp at 8080 a few times, and you'll see activity in the details pane at 8081.
-# Then start a load-generator (e.g. jmeter, using the test plan in this directory). 
-# You'll see it scale out, picking up ports 8082, 8083, ...!
+# Pass --port 8084 to start the mgmt console webapp on a different port (e.g. to run multiple instances).
 #
-# Pass --port 8084 to start the webapp on a different port (e.g. to run multiple instances).
+# To launch to specific locations, supply the location(s) as arguments, e.g. one or more of:
+# aws-ec2:eu-west-1 aws-ec2:us-west-1 cloudservers-uk cloudfoundry:https://api.aws.af.cm/
 #
-# To launch to a cloud (instead of localhost), 
-# supply additional arguments being the location(s), e.g. one or more of:
-# aws-ec2:eu-west-1 aws-ec2:us-west-1 cloudservers-uk
-# (you'll need credentials set in your ~/.brooklyn/brooklyn.properties)
+# (you'll need credentials for geoscaling and your target clouds set in your ~/.brooklyn/brooklyn.properties)
 
 CLASS=brooklyn.demo.GlobalWebFabricExample
 
@@ -60,8 +55,7 @@ export CP=$CLASSPATH:$BROOKLYN_THIS_JAR:$BROOKLYN_ALL_JAR
 if [ $# -gt 0 ]; then
     ARGS="$*"
 else
-    ARGS="localhost"
-    JAVA_OPTS="-Dbrooklyn.localhost.address=127.0.0.1 $JAVA_OPTS"
+    ARGS=""
 fi
 
 echo running demo for $CLASS from $CP at $ARGS

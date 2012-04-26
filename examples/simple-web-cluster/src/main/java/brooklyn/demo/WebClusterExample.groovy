@@ -44,7 +44,7 @@ public class WebClusterExample extends AbstractApplication {
     
 
     NginxController nginxController = new NginxController(
-        domain: 'webclusterexample.brooklyn.local',
+//        domain: 'webclusterexample.brooklyn.local',
         port:8000)
     
     JBoss7ServerFactory jbossFactory = new JBoss7ServerFactory(httpPort: "8080+", war: WAR_PATH); 
