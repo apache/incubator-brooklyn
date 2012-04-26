@@ -5,7 +5,7 @@
 { "title": "Examples",
   "file":  "{{ site.url }}/use/examples/index.html", 
   "children": {% readj ./examples/toc.json %} },
-{ "title": "API Reference",
+{ "title": "API Reference (javadoc)",
   "file": "{{ site.url }}/use/api/index.html" },
 { "title": "Discuss",
   "file": "{{ site.url }}/use/contact.html" }
