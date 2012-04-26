@@ -96,7 +96,7 @@ public class HostGeoInfo {
     
     public HostGeoInfo(String address, String displayName, double latitude, double longitude) {
         this.address = address;
-        this.displayName = displayName;
+        this.displayName = displayName==null ? "" : displayName;
         this.latitude = latitude;
         this.longitude = longitude;
     }
@@ -108,14 +108,15 @@ public class HostGeoInfo {
     
     @Override
     public boolean equals(Object o) {
-        // Slight cheat: only tests the address field.
-        return (o instanceof HostGeoInfo) && address.equals(((HostGeoInfo) o).address);
+        // Slight cheat: only includes the address + displayName field (displayName to allow overloading localhost etc)
+        return (o instanceof HostGeoInfo) && address.equals(((HostGeoInfo) o).address)
+                && displayName.equals(((HostGeoInfo) o).displayName);
     }
     
     @Override
     public int hashCode() {
-        // Slight cheat: only includes the address field.
-        return address.hashCode();
+        // Slight cheat: only includes the address + displayName field (displayName to allow overloading localhost etc)
+        return address.hashCode() * 31 + displayName.hashCode();
     }
     
 }
