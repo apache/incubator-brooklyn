@@ -71,7 +71,8 @@ public class HostGeoInfo {
     private static HostGeoLookup findHostGeoLookupImpl() throws InstantiationException, IllegalAccessException, ClassNotFoundException {
         String type = BrooklynSystemProperties.HOST_GEO_LOOKUP_IMPL.getValue();
         //like utrace because it seems more accurate than geobytes and gives a report of how many tokens are left
-        if (type==null) return new UtraceHostGeoLookup();
+        //but maxmind free is even better
+        if (type==null) return new MaxMindHostGeoLookup();
         if (type.isEmpty()) return null;
         return (HostGeoLookup) Class.forName(type).newInstance();
     }
