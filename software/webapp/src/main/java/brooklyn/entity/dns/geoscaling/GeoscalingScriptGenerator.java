@@ -9,7 +9,6 @@ import java.util.TimeZone;
 import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.StringUtils;
-import brooklyn.util.internal.StringEscapeUtils;
 
 class GeoscalingScriptGenerator {
     
@@ -24,7 +23,7 @@ class GeoscalingScriptGenerator {
     
     public static String generateScriptString(Date generationTime, Collection<HostGeoInfo> hosts) {
         String template = new ResourceUtils(GeoscalingScriptGenerator.class).getResourceAsString(PHP_SCRIPT_TEMPLATE_RESOURCE);
-        SimpleDateFormat sdf = new SimpleDateFormat("E, dd MMM yyyy 'at' HH:mm:ss 'UTC'");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss 'UTC'");
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
         String datestamp = sdf.format(generationTime);
         String declarations = getHostsDeclaration(hosts);
