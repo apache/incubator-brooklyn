@@ -19,11 +19,6 @@
             <artifactId>brooklyn-all</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>io.brooklyn</groupId>
-            <artifactId>brooklyn-SANDBOX-systems-cloudfoundry</artifactId>
-            <version>${project.version}</version>
-        </dependency>
     </dependencies>
 
     <build>

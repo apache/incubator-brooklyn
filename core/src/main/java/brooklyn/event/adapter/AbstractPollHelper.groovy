@@ -66,7 +66,7 @@ public abstract class AbstractPollHelper {
             if (!adapter.isConnected() || !lastWasSuccessful) {
                 if (log.isDebugEnabled()) log.debug("error reading ${this} from ${entity} (while not connected or not yet connected): ${e}")
             } else {
-                log.warn("error reading ${this} from ${entity} (disconnect?): ${e}", e)
+                log.warn("error reading ${this} from ${entity}: ${e}", e)
             }
             lastWasSuccessful = false;
             response = executePollOnError(e);

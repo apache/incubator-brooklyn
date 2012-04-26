@@ -45,12 +45,12 @@ public class Entities {
 		return invoke
 	}
 
-    public static void isSecret(String name) {
+    public static boolean isSecret(String name) {
         name.contains("password") || name.contains("credential") || name.contains("secret") || name.contains("private")
     }
 
     public static boolean isTrivial(Object v) {
-        v==null || ((v in Map || v in Collection) && (v.isEmpty()))
+        v==null || ((v in Map || v in Collection || v in String) && (v.isEmpty()))
     }    
 	public static void dumpInfo(Entity e, Writer out=new PrintWriter(System.out), String currentIndentation="", String tab="  ") {
 		out << currentIndentation+e.toString()+"\n"
@@ -58,8 +58,8 @@ public class Entities {
             def v = e.getConfig(it)
             if (!isTrivial(v)) {
                 out << currentIndentation+tab+tab+it.name;
-                out << ": ";
-                if (v && isSecret(it.name)) out << "xxxxxxxx"
+                out << " = ";
+                if (isSecret(it.name)) out << "xxxxxxxx";
                 else out << v;
                 out << "\n"
             }
@@ -69,10 +69,10 @@ public class Entities {
                 def v = e.getAttribute(it)
                 if (!isTrivial(v)) {
                     out << currentIndentation+tab+tab+it.name;
-                    out << " = ";
-                    if (v && isSecret(it.name)) out << "xxxxxxxx"
-                    else out << v
-                    out << "\n"
+                    out << ": ";
+                    if (isSecret(it.name)) out << "xxxxxxxx";
+                    else out << v;
+                    out << "\n";
                 }
 			}
 		}

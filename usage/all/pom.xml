@@ -68,6 +68,11 @@
             <artifactId>brooklyn-systems-openshift</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-systems-cloudfoundry</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>io.brooklyn</groupId>

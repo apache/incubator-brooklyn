@@ -58,6 +58,8 @@ class AbstractControllerTest {
                 log.info "test controller update, addresses $addresses"
                 updates.add(addresses)
             }
+            @Override
+            protected void reconfigureService() {}
             public SshBasedAppSetup newDriver(SshMachineLocation machine) {
                 return new MockSshBasedSoftwareSetup(this, machine);
             }

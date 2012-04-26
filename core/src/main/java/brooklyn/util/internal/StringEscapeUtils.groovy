@@ -2,24 +2,19 @@ package brooklyn.util.internal
 
 import java.net.URLEncoder
 
+import brooklyn.util.StringUtils
+
 public class StringEscapeUtils {
 
 	public static String escapeHttpUrl(String url) {
         return URLEncoder.encode(url, "UTF-8")
 	}
 
+    /** replaces all instances in source, of the given pattern, with replacement,
+     * NOT interpreting any arguments as regular expressions
+     */
 	public static String replaceAllNonRegex(String source, String pattern, String replacement) {
-		StringBuffer result = [""]
-		for (int i=0; i<source.length(); ) {
-			if (source.substring(i).startsWith(pattern)) {
-				result << replacement
-				i += pattern.length()
-			} else {
-				result << source.substring(i, i+1)
-				i++
-			}
-		}
-		return result
+        return StringUtils.replace(source, pattern, replacement);
 	}
 	
 	public static String replaceAllNonRegex(String source, Map replacements) {
@@ -64,4 +59,9 @@ public class StringEscapeUtils {
         return null;
     }
 
+    public static String escapeSql(String x) {
+        //identical to apache commons StringEscapeUtils.escapeSql
+        return x?.replaceAll("'", "''");
+    }
+    
 }

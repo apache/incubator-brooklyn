@@ -3,12 +3,16 @@ package brooklyn.location.basic
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.config.BrooklynServiceAttributes;
-import brooklyn.location.OsDetails;
+import brooklyn.config.BrooklynServiceAttributes
+import brooklyn.location.AddressableLocation
+import brooklyn.location.OsDetails
 import brooklyn.location.PortRange
-import brooklyn.util.NetworkUtils;
+import brooklyn.location.geo.HostGeoInfo
+import brooklyn.util.NetworkUtils
 import brooklyn.util.flags.SetFromFlag
-import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.flags.TypeCoercions
+import brooklyn.util.mutex.MutexSupport
+import brooklyn.util.mutex.WithMutexes
 
 /**
  * An implementation of {@link brooklyn.location.MachineProvisioningLocation} that can provision a {@link SshMachineLocation} for the
@@ -17,7 +21,7 @@ import brooklyn.util.flags.TypeCoercions;
  * By default you can only obtain a single SshMachineLocation for the localhost. Optionally, you can "overload"
  * and choose to allow localhost to be provisioned multiple times, which may be useful in some testing scenarios.
  */
-public class LocalhostMachineProvisioningLocation extends FixedListMachineProvisioningLocation<SshMachineLocation> {
+public class LocalhostMachineProvisioningLocation extends FixedListMachineProvisioningLocation<SshMachineLocation> implements AddressableLocation {
 
     public static final Logger LOG = LoggerFactory.getLogger(LocalhostMachineProvisioningLocation.class);
                 
@@ -31,7 +35,9 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
     InetAddress address;
 
     private static Set<Integer> portsInUse = []
-    
+
+    private static HostGeoInfo cachedHostGeoInfo;
+        
     /**
      * Construct a new instance.
      *
@@ -43,7 +49,7 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
      * @param properties the properties of the new instance.
      */
     public LocalhostMachineProvisioningLocation(Map properties = [:]) {
-        super(properties)
+        super(properties);
     }
         
     public LocalhostMachineProvisioningLocation(String name, int count=0) {
@@ -54,7 +60,7 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
         super.configure(flags)
         
         if (!name) { name="localhost" }
-        if (!address) address = TypeCoercions.coerce(BrooklynServiceAttributes.LOCALHOST_IP_ADDRESS.getValue() ?: Inet4Address.localHost, InetAddress)
+        if (!address) address = TypeCoercions.coerce(BrooklynServiceAttributes.LOCALHOST_IP_ADDRESS.getValue() ?: InetAddress.localHost, InetAddress)
         // TODO should try to confirm this machine is accessible on the given address ... but there's no 
         // immediate convenience in java so early-trapping of that particular error is deferred
         
@@ -62,17 +68,24 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
             if (initialCount>0) canProvisionMore = false;
             else canProvisionMore = true;
         }
+        if (getHostGeoInfo()==null) {
+            if (cachedHostGeoInfo==null)
+                cachedHostGeoInfo = HostGeoInfo.fromLocation(this);
+            setHostGeoInfo(cachedHostGeoInfo);
+        }
         if (initialCount > machines.size()) {
             provisionMore(initialCount - machines.size());
         }
     }
     
+    public InetAddress getAddress() { return address; }
+    
     public boolean canProvisionMore() { return canProvisionMore; }
     public void provisionMore(int size) {
         for (int i=0; i<size; i++) { 
-            SshMachineLocation child = new LocalhostMachine(address:(address ?: InetAddress.localHost)) 
+            SshMachineLocation child = new LocalhostMachine(
+                parentLocation: this, address:(address ?: InetAddress.localHost)) 
             addChildLocation(child)
-            child.setParentLocation(this)
        }
     }
 
@@ -146,5 +159,9 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
         public OsDetails getOsDetails() {
             return new BasicOsDetails.Factory().newLocalhostInstance();
         }
+        
+        private static WithMutexes mutexSupport = new MutexSupport();
+        protected WithMutexes newMutexSupport() { mutexSupport }
+        
     }
 }

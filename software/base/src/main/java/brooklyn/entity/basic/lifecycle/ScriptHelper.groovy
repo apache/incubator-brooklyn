@@ -5,6 +5,8 @@ import java.util.List
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.util.mutex.WithMutexes
+
 public class ScriptHelper {
 
 	public static final Logger log = LoggerFactory.getLogger(ScriptHelper.class);
@@ -53,16 +55,32 @@ public class ScriptHelper {
 		this		
 	}
 	
+    protected Closure mutexAcquire = {}
+    protected Closure mutexRelease = {}
+    /** indicates that the script should acquire the given mutexId on the given mutexSupport 
+     * and maintain it for the duration of script execution;
+     * typically used to prevent parallel scripts from conflicting in access to a resource
+     * (e.g. a folder, or a config file used by a process)
+     */
+    public ScriptHelper useMutex(WithMutexes mutexSupport, String mutexId, String description) {
+        mutexAcquire = { mutexSupport.acquireMutex(mutexId, description); };
+        mutexRelease = { mutexSupport.releaseMutex(mutexId); };
+        return this;
+    }
+    
 	public int execute() {
 		if (!executionCheck.call(this)) return 0
 		if (log.isDebugEnabled()) log.debug "executing: {} - {}", summary, lines
 		int result;
 		try {
+            mutexAcquire.call()
 			result = runner.execute(lines, summary)
 		} catch (InterruptedException e) {
 			throw e
 		} catch (Exception e) {
 			throw new IllegalStateException("execution failed, invocation error for ${summary}", e)
+		} finally {
+            mutexRelease.call()
 		}
 		if (log.isDebugEnabled()) log.debug "finished executing: {} - result code {}", summary, result
 		if (!resultCodeCheck.call(result))

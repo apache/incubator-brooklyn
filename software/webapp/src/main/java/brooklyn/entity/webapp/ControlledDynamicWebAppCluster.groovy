@@ -9,14 +9,17 @@ import org.slf4j.LoggerFactory
 import brooklyn.enricher.basic.SensorPropagatingEnricher
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
+import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.ConfigurableEntityFactory
+import brooklyn.entity.basic.Entities
 import brooklyn.entity.group.AbstractController
 import brooklyn.entity.group.Cluster
 import brooklyn.entity.proxy.nginx.NginxController
 import brooklyn.entity.trait.Resizable
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.jboss.JBoss7ServerFactory
-import brooklyn.event.AttributeSensor
+import brooklyn.event.Sensor
+import brooklyn.event.SensorEventListener
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.Location
 import brooklyn.util.flags.SetFromFlag
@@ -52,6 +55,8 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
     @SetFromFlag("factory")
     ConfigurableEntityFactory<WebAppService> _webServerFactory;
 
+    public static final Sensor HOSTNAME = Attributes.HOSTNAME;
+    
     public ControlledDynamicWebAppCluster(Entity owner) { this([:], owner) }
     public ControlledDynamicWebAppCluster(Map flags = [:], Entity owner = null) {
         super(flags, owner)
@@ -92,19 +97,15 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
     }
     
     public void start(Collection<? extends Location> locations) {
-        Iterables.getOnlyElement(locations) //assert just one
+        Iterables.getOnlyElement(locations); //assert just one
         
-        addOwnedChild(controller)
-
-        this.locations.addAll(locations)
-        cluster.start(locations)
-
-        controller.bind(cluster:cluster)
-        controller.start(locations)
+        addOwnedChild(controller);
+        this.locations.addAll(locations);
+        controller.bind(cluster:cluster);
+        Entities.invokeEffectorList(this, [cluster, controller], Startable.START, [locations:locations]).get();
         
         connectSensors();
-
-        setAttribute(SERVICE_UP, true)
+        setAttribute(SERVICE_UP, true);
     }
     
     public void stop() {
@@ -124,14 +125,32 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
         start(locations);
     }
 
+    void updateHostnameFromController() {
+        String url = controller.getAttribute(NginxController.ROOT_URL);
+        if (url==null) url = controller.getAttribute(AbstractController.SPECIFIED_URL);
+        if (url==null || url.contains("://"+AbstractController.ANONYMOUS+":") || url.contains("://"+AbstractController.ANONYMOUS+"/")) {
+            //probably isn't necessary, as is done in Nginx?
+            String hostname = controller.getAttribute(HOSTNAME);
+            Object port = controller.getAttribute(AbstractController.PROXY_HTTP_PORT);
+            if (hostname==null || port==null) return;
+            url = "http://"+hostname+":"+port+"/";
+            LOG.warn("Building URL for $this from $controller: $url");
+        }
+        setAttribute(ROOT_URL, url);
+    }
+    
     void connectSensors() {
-        String url = "http://"+controller.getAttribute(AbstractController.HOSTNAME)+":"+
-            controller.getAttribute(AbstractController.HTTP_PORT)+"/";
-        setAttribute(ROOT_URL, url)
+        SensorPropagatingEnricher.newInstanceListeningToAllSensorsBut(cluster, SERVICE_UP, ROOT_URL).
+            addToEntityAndEmitAll(this);
         
-        def prop = SensorPropagatingEnricher.newInstanceListeningToAllSensorsBut(cluster, SERVICE_UP, ROOT_URL)
-        addEnricher(prop);
-        prop.emitAllAttributes();
+        //following 3 lines (and updateHostname method) unnecessary if above is working, I think
+        controller.subscribe(controller, NginxController.ROOT_URL, { updateHostnameFromController() } as SensorEventListener);
+        controller.subscribe(controller, NginxController.SPECIFIED_URL, { updateHostnameFromController() } as SensorEventListener);
+        controller.subscribe(controller, AbstractController.HOSTNAME, { updateHostnameFromController() } as SensorEventListener);
+        updateHostnameFromController();
+        
+        SensorPropagatingEnricher.newInstanceListeningTo(controller, AbstractController.HOSTNAME, SERVICE_UP).
+        addToEntityAndEmitAll(this);
     }
 
     public Integer resize(Integer desiredSize) {

@@ -13,7 +13,7 @@ import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.basic.lifecycle.ScriptHelper
 import brooklyn.entity.basic.lifecycle.ScriptRunner
 import brooklyn.entity.basic.lifecycle.StartStopSshDriver
-import brooklyn.location.PortRange;
+import brooklyn.location.PortRange
 import brooklyn.location.basic.PortRanges
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.PortRanges.BasicPortRange

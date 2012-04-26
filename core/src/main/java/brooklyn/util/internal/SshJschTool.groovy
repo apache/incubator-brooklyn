@@ -92,7 +92,7 @@ public class SshJschTool {
             privateKey = properties.remove('privateKey')
         }
 
-        config << properties
+        properties.each { k,v -> config.put(k, ""+v) /* must be a string for jsch */ }
     }
 
     /**

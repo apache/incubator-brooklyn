@@ -7,16 +7,20 @@ import brooklyn.location.MachineLocation
 import brooklyn.location.OsDetails
 import brooklyn.location.PortRange
 import brooklyn.location.PortSupplier
+import brooklyn.location.geo.HasHostGeoInfo
+import brooklyn.location.geo.HostGeoInfo
 import brooklyn.util.ReaderInputStream
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.internal.SshJschTool
+import brooklyn.util.mutex.MutexSupport
+import brooklyn.util.mutex.WithMutexes
 
 import com.google.common.base.Preconditions
 
 /**
  * Operations on a machine that is accessible via ssh.
  */
-public class SshMachineLocation extends AbstractLocation implements MachineLocation, PortSupplier {
+public class SshMachineLocation extends AbstractLocation implements MachineLocation, PortSupplier, WithMutexes {
     public static final Logger LOG = LoggerFactory.getLogger(SshMachineLocation.class)
             
     @SetFromFlag('username')
@@ -28,6 +32,15 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     @SetFromFlag
     Map config
 
+    /** any property that should be passed as ssh config (connection-time) 
+     *  can be prefixed with this and . and will be passed through (with the prefix removed),
+     *  e.g. (SSHCONFIG_PREFIX+"."+"StrictHostKeyChecking"):"yes" */
+    public static final String SSHCONFIG_PREFIX = "sshconfig";
+    //TODO remove once everything is prefixed SSHCONFIG_PREFIX
+    //(I don't think we ever relied on props being passed through in this way,
+    //but the code path was there so I didn't want to delete it immediately.)
+    public static final String NON_SSH_PROPS = ["out", "err", "latitude", "longitude"];
+    
     private final Set<Integer> ports = [] as HashSet
 
     public SshMachineLocation(Map properties = [:]) {
@@ -44,6 +57,12 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         
         if (name == null) {
             name = host
+        }
+        if (getHostGeoInfo()==null) {
+            if ((parentLocation instanceof HasHostGeoInfo) && ((HasHostGeoInfo)parentLocation).getHostGeoInfo()!=null)
+                setHostGeoInfo( ((HasHostGeoInfo)parentLocation).getHostGeoInfo() );
+            else
+                setHostGeoInfo(HostGeoInfo.fromLocation(this));
         }
     }
 
@@ -74,16 +93,31 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public int run(Map props=[:], List<String> commands, Map env=[:]) {
         Preconditions.checkNotNull address, "host address must be specified for ssh"
         if (!commands) return 0
-
-        if (!user) user = System.getProperty "user.name"
-        Map args = [ user:user, host:address.hostName ]
-        args << config
-        args << leftoverProperties
-        SshJschTool ssh = new SshJschTool(args)
-        ssh.connect()
+        SshJschTool ssh = connectSsh(props)
         int result = ssh.execShell props, commands, env
         ssh.disconnect()
         result
+    }
+    
+    protected SshJschTool connectSsh(Map props=[:]) {
+        if (!user) user = System.getProperty "user.name"
+        Map args = [ user:user, host:address.hostName ]
+        (props+config+leftoverProperties).each { kk,v ->
+            String k = ""+kk;
+            if (k.startsWith(SSHCONFIG_PREFIX+".")) {
+                args.put(k.substring(SSHCONFIG_PREFIX.length()+1), v);
+            } else {
+                // TODO remove once everything is prefixed SSHCONFIG_PREFIX
+                if (!NON_SSH_PROPS.contains(k)) {
+                    LOG.warn("including legacy SSH config property "+k+" for "+this+"; either prefix with sshconfig or add to NON_SSH_PROPS");
+                    args.put(k, v);
+                }
+            }
+        }
+        if (LOG.isTraceEnabled()) LOG.trace("creating ssh session for "+args);
+        SshJschTool ssh = new SshJschTool(args)
+        ssh.connect()
+        return ssh;
     }
 
     public int copyTo(Map props=[:], File src, File destination) {
@@ -110,12 +144,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 		}
 		
         if (!user) user = System.getProperty "user.name"
-        Map args = [user:user, host:address.hostName]
-        args << config
-        args << leftoverProperties
-
-        SshJschTool ssh = new SshJschTool(args)
-        ssh.connect()
+        SshJschTool ssh = connectSsh()
         int result = ssh.createFile props, destination, src, filesize
         ssh.disconnect()
         result
@@ -124,14 +153,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     // FIXME the return code is not a reliable indicator of success or failure
     public int copyFrom(Map props=[:], String remote, String local) {
         Preconditions.checkNotNull address, "host address must be specified for scp"
-
-        if (!user) user = System.getProperty "user.name"
-        Map args = [user:user, host:address.hostName]
-        args << config
-        args << leftoverProperties
-
-        SshJschTool ssh = new SshJschTool(args)
-        ssh.connect()
+        SshJschTool ssh = connectSsh(props);
         int result = ssh.transferFileFrom props, remote, local
         ssh.disconnect()
         result
@@ -191,4 +213,27 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         return BasicOsDetails.Factory.ANONYMOUS_LINUX;
     }
 
+    protected WithMutexes newMutexSupport() { new MutexSupport(); }
+    
+    WithMutexes mutexSupport = newMutexSupport();
+    
+    @Override
+    public void acquireMutex(String mutexId, String description) throws InterruptedException {
+        mutexSupport.acquireMutex(mutexId, description);
+    }
+
+    @Override
+    public boolean tryAcquireMutex(String mutexId, String description) {
+        return mutexSupport.tryAcquireMutex(mutexId, description);
+    }
+
+    @Override
+    public void releaseMutex(String mutexId) {
+        mutexSupport.releaseMutex(mutexId);
+    }
+
+    @Override
+    public boolean hasMutex(String mutexId) {
+        return mutexSupport.hasMutex(mutexId);
+    }
 }

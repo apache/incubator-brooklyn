@@ -1,11 +1,13 @@
 package brooklyn.location.basic
 
-import java.util.Collection;
+import java.util.Collection
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.location.Location
+import brooklyn.location.geo.HasHostGeoInfo
+import brooklyn.location.geo.HostGeoInfo
 import brooklyn.util.flags.FlagUtils
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.internal.LanguageUtils
@@ -20,7 +22,7 @@ import com.google.common.base.Preconditions
  * 
  * Override {@link #configure(Map)} to add special initialization logic.
  */
-public abstract class AbstractLocation implements Location {
+public abstract class AbstractLocation implements Location, HasHostGeoInfo {
     public static final Logger LOG = LoggerFactory.getLogger(AbstractLocation.class)
 
     @SetFromFlag
@@ -32,6 +34,8 @@ public abstract class AbstractLocation implements Location {
     protected Map leftoverProperties = [:];
     @SetFromFlag
     protected String name
+    
+    protected HostGeoInfo hostGeoInfo;
 
     /**
      * Construct a new instance of an AbstractLocation.
@@ -168,4 +172,14 @@ public abstract class AbstractLocation implements Location {
     public Collection<String> toStringFieldsToInclude() {
         return ['id', 'name']
     }
+
+    public HostGeoInfo getHostGeoInfo() { return hostGeoInfo; }    
+    public void setHostGeoInfo(HostGeoInfo hostGeoInfo) {
+        if (hostGeoInfo!=null) { 
+            this.hostGeoInfo = hostGeoInfo;
+            if (!getLocationProperty("latitude")) leftoverProperties.put("latitude", hostGeoInfo.latitude); 
+            if (!getLocationProperty("longitude")) leftoverProperties.put("longitude", hostGeoInfo.longitude);
+        } 
+    }
+       
 }

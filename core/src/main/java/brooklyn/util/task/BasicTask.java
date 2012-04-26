@@ -325,8 +325,7 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
                     if (verbosity == 1) rv += " ("+error+")";
                     else {
                         StringWriter sw = new StringWriter();
-                        if (error instanceof ExecutionException) 
-                            ((Throwable)error).printStackTrace(new PrintWriter(sw));
+                        ((Throwable)error).printStackTrace(new PrintWriter(sw));
                         rv += "\n"+sw.getBuffer();
                     }
                 }
@@ -430,6 +429,10 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
         return description;
     }
     
+    /** allows a task user to specify why a task is blocked; for use immediately before a blocking/wait,
+     * and typically cleared immediately afterwards; referenced by management api to inspect a task
+     * which is blocking
+     */
     public void setBlockingDetails(String blockingDetails) {
         this.blockingDetails = blockingDetails;
     }

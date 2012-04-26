@@ -17,15 +17,15 @@ abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
     private AbstractGroup group;
     
     
-    public AbstractMembershipTrackingPolicy() { }
+    public AbstractMembershipTrackingPolicy(Map flags=[:]) { super(flags) }
     
     public void setGroup(AbstractGroup group) {
         Preconditions.checkNotNull(group, "The group cannot be null");
         this.group = group;
         reset();
-        group.members.each { onEntityAdded it }
         subscribe(group, group.MEMBER_ADDED, { SensorEvent<Entity> evt -> onEntityAdded evt.value } as SensorEventListener);
         subscribe(group, group.MEMBER_REMOVED, { SensorEvent<Entity> evt  -> onEntityRemoved evt.value } as SensorEventListener);
+        group.members.each { onEntityAdded it }
         // FIXME cluster may be remote, we need to make this retrieve the remote values, or store members in local mgmt node, or use children
     }
 

@@ -7,28 +7,35 @@ import java.util.Map
 import java.util.Set
 
 import brooklyn.entity.Entity
+import brooklyn.entity.basic.Lifecycle
 import brooklyn.entity.dns.AbstractGeoDnsService
-import brooklyn.entity.dns.HostGeoInfo
 import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.Domain
 import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.SmartSubdomain
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
-import brooklyn.management.Task
+import brooklyn.location.geo.HostGeoInfo
 import brooklyn.util.IdGenerator
+import brooklyn.util.flags.SetFromFlag
 
 
 class GeoscalingDnsService extends AbstractGeoDnsService {
+    
+    @SetFromFlag("randomizeSubdomainName")
     public static final BasicConfigKey RANDOMIZE_SUBDOMAIN_NAME = [ Boolean, "randomize.subdomain.name" ];
+    @SetFromFlag("username")
     public static final BasicConfigKey GEOSCALING_USERNAME = [ String, "geoscaling.username" ];
+    @SetFromFlag("password")
     public static final BasicConfigKey GEOSCALING_PASSWORD = [ String, "geoscaling.password" ];
+    @SetFromFlag("primaryDomainName")
     public static final BasicConfigKey GEOSCALING_PRIMARY_DOMAIN_NAME = [ String, "geoscaling.primary.domain.name" ];
+    @SetFromFlag("smartSubdomainName")
     public static final BasicConfigKey GEOSCALING_SMART_SUBDOMAIN_NAME = [ String, "geoscaling.smart.subdomain.name" ];
     
     public static final BasicAttributeSensor GEOSCALING_ACCOUNT =
         [ String, "geoscaling.account", "Active user account for the GeoScaling.com service" ];
     public static final BasicAttributeSensor MANAGED_DOMAIN =
         [ String, "geoscaling.managed.domain", "Fully qualified domain name that will be geo-redirected" ];
-    
+
     // Must remember any desired redirection targets if they're specified before configure() has been called.
     private Set<HostGeoInfo> rememberedTargetHosts;
     private final GeoscalingWebClient webClient = [ ];
@@ -40,24 +47,19 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
     private String primaryDomainName;
     private String smartSubdomainName;
     
-    
     public GeoscalingDnsService(Map properties = [:], Entity owner = null) {
         super(properties, owner);
         
-        setConfig(RANDOMIZE_SUBDOMAIN_NAME, true); // TODO: eventually default to non-randomized subdomains?
-        setConfigIfValNonNull(RANDOMIZE_SUBDOMAIN_NAME, properties.randomizeSubdomainName);
-        setConfigIfValNonNull(GEOSCALING_USERNAME, properties.username);
-        setConfigIfValNonNull(GEOSCALING_PASSWORD, properties.password);
-        setConfigIfValNonNull(GEOSCALING_PRIMARY_DOMAIN_NAME, properties.primaryDomainName);
-        setConfigIfValNonNull(GEOSCALING_SMART_SUBDOMAIN_NAME, properties.smartSubdomainName);
+        // defaulting to randomized subdomains makes deploying multiple applications easier
+        if (getConfig(RANDOMIZE_SUBDOMAIN_NAME)==null) setConfig(RANDOMIZE_SUBDOMAIN_NAME, true); 
     }
     
     // Ensure our configure() method gets called; may be able to remove this if/when the framework detects this
     // and invokes the configure() method automatically?
     @Override
     public void onManagementBecomingMaster() {
-        super.onManagementBecomingMaster();
         applyConfig();
+        super.onManagementBecomingMaster();
     }
 
 	boolean isConfigured = false;
@@ -82,18 +84,24 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
         log.info("GeoScaling service will configure redirection for '"+fullDomain+"' domain");
         setAttribute(GEOSCALING_ACCOUNT, username);
         setAttribute(MANAGED_DOMAIN, fullDomain);
+        setAttribute(HOSTNAME, getHostname());
+        
+        isConfigured = true;
         
         if (rememberedTargetHosts != null) {
-            //FIXME what is point of this?  it just clears "rememberedTargetHosts"
             reconfigureService(rememberedTargetHosts);
             rememberedTargetHosts = null;
         }
-		
-		isConfigured = true;
+    }
+    
+    @Override
+    public String getHostname() {
+        return getAttribute(MANAGED_DOMAIN)?:null;
     }
     
     @Override
     public void destroy() {
+        setServiceState(Lifecycle.STOPPING);
         if (!isConfigured) return;
         
         // Don't leave randomized subdomains configured on our GeoScaling account.
@@ -126,18 +134,22 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
         SmartSubdomain smartSubdomain = primaryDomain.getSmartSubdomain(smartSubdomainName);
         
         if (!smartSubdomain) {
-            log.info("GeoScaling smart subdomain '"+smartSubdomainName+"."+primaryDomainName+"' does not exist, creating it now");
+            log.info("GeoScaling $this smart subdomain '"+smartSubdomainName+"."+primaryDomainName+"' does not exist, creating it now");
+            // TODO use WithMutexes to ensure this is single-entrant
             primaryDomain.createSmartSubdomain(smartSubdomainName);
             smartSubdomain = primaryDomain.getSmartSubdomain(smartSubdomainName);
         }
         
         if (smartSubdomain) {
+            log.debug("GeoScaling $this being reconfigured to use $targetHosts");
             String script = GeoscalingScriptGenerator.generateScriptString(targetHosts);
             smartSubdomain.configure(PROVIDE_CITY_INFO, script);
-            
-        } else
+            setServiceState(targetHosts.isEmpty() ? Lifecycle.CREATED : Lifecycle.RUNNING);
+        } else {
             log.warn("Failed to retrieve or create GeoScaling smart subdomain '"+smartSubdomainName+"."+primaryDomainName+
                     "', aborting attempt to configure service");
+            setServiceState(Lifecycle.ON_FIRE);
+        }
         
         webClient.logout();
     }

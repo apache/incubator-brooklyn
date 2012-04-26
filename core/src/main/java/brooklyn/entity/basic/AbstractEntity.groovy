@@ -38,6 +38,7 @@ import brooklyn.policy.Enricher
 import brooklyn.policy.Policy
 import brooklyn.policy.basic.AbstractPolicy
 import brooklyn.util.BrooklynLanguageExtensions
+import brooklyn.util.IdGenerator;
 import brooklyn.util.flags.FlagUtils
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.flags.TypeCoercions
@@ -71,7 +72,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     public static BasicNotificationSensor<Sensor> SENSOR_REMOVED = new BasicNotificationSensor<Sensor>(Sensor.class,
             "entity.sensor.removed", "Sensor dynamically removed from entity")
 
-    final String id = LanguageUtils.newUid()
+    final String id = IdGenerator.makeRandomId(8);
     String displayName
     
     EntityReference owner
