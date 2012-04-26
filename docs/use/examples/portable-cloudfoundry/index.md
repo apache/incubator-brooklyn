@@ -306,7 +306,7 @@ If you've completed this, you're probably ready for a bigger challenge.
 Here are some ideas to get you started:
 
  1. Combine the ``Movable`` entity built here with 
-    a ``DynamicFabric`` <!-- the [Global Web Fabric example](../global-web-fabric), -->
+    the [Global Web Fabric example](../global-web-fabric), 
     to make a fabric running our web-app, spanning multiple Cloud Foundry instances,
     where each instance is able to be moved as well.
     

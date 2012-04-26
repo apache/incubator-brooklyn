@@ -5,7 +5,8 @@ toc: /toc.json
 ---
 
 This example shows how to build a multi-site web application *fabric*
-with DNS configured on the front-end to combine the sites.
+with DNS configured on the front-end to combine the sites,
+routing users to the location closest to them.
 
 It can combine with the [Simple Web Cluster](../webcluster) example
 or the [Portable Cloud Foundry](../portable-cloudfoundry) example,
@@ -14,9 +15,376 @@ but does not assume knowledge of either of these.
 {% readj ../before-begin.include.md %}
 
 The project ``examples/global-web-fabric`` contains the code used 
-in this example in ``src/main/java``.
+in this example under ``src/main/java``.
 
 
-## TODO
+### Setting Up Geographic DNS
 
-Let's start by ... 
+This example uses [geoscaling.com](www.geoscaling.com) to provide **free** geographic-dependent DNS services.
+This will forward a domain name of your choice to various IPs depending on a script,
+e.g. computing the nearest IP based on latitude and longitude of the requester and the targets.
+Brooklyn will automatically generate and update this script, but you do need to 
+create and configure a Geoscaling account:
+
+ 1. Create the free account [here](https://www.geoscaling.com/dns2/?module=register).
+ 1. Click the link in the email you receive.
+ 1. Enter the domain name you wish to use into geoscaling (see below).
+
+The simplest domain name to choose is something unique under `geopaas.org`, e.g. `yourname.geopaas.org`,
+which we have already configured for Geoscaling to manage.
+If you are using your own domain name, 
+set its nameservers as advised by geoscaling (e.g. `ns{1,2,3,4}.geoscaling.com`).
+
+Next we need to supply this information to Brooklyn at runtime.
+The simplest way is to create or add the following fields to `~/.brooklyn/brooklyn.properties`:
+
+{% highlight bash %}
+brooklyn.geoscaling.username=yourname
+brooklyn.geoscaling.password=s3cr3t
+brooklyn.geoscaling.primaryDomain=yourname.geopaas.org
+{% endhighlight %}
+
+Replace the values of these fields as appropriate, of course!
+You can, if you prefer, supply (or override) these values in your Brooklyn application.
+
+
+### Setting Up the Locations Database
+
+In order to generate the "closest-IP" script,
+Brooklyn needs a way to find out the latitude and longitude of the
+servers you are using.
+The simplest way to do this is do download the free GeoCityLite binary flatfile 
+from [MaxMind](http://www.maxmind.com/app/geolitecity),
+unpack it, and copy it to `~/.brooklyn/MaxMind-GeoLiteCity.dat`.
+
+This will be picked up automatically if it is installed.
+You can instead specify to use an online lookup service, such as 
+[utrace.de](www.utrace.de) by specifying
+`-Dbrooklyn.location.geo.HostGeoLookup=brooklyn.location.geo.UtraceHostGeoLookup`;
+but note this has a cap of 100 per day.
+
+This information is also used to display locations on the map
+in the Brooklyn dashboard.
+Note however that these free services are not 100% accurate;
+they are handy for dev/test but in a production system
+you may wish to specify the geographical information manually in your application,
+or purchase a commercial locations-database subscription.
+
+
+## The Code
+
+Now let's start writing our application.
+The heavy lifting will be done by off-the-shelf Brooklyn classes:
+
+ * `DynamicFabric` will create the entity specified by `factory` in each location it is given
+ * `GeoscalingDnsService` monitors children of a specified entity (the `DynamicFabric`) 
+   and adds them as DNS targets for the region they are in  
+
+First, however, let's create the Groovy class -- call it `GlobalWebFabricExample`.
+This will extend the Brooklyn `AbstractApplication` and inheriting the default constructors:
+
+{% highlight java %}
+package brooklyn.demo
+
+import brooklyn.entity.basic.AbstractApplication
+
+@InheritConstructors
+public class GlobalWebFabricExample extends AbstractApplication {
+
+    // TODO create our app!
+
+}
+{% endhighlight %}
+
+### The Fabric
+
+The `DynamicFabric` by default has no knowledge of what it will build,
+other than the `factory` it is given to create an entity in each region.
+We'll use the class `ElasticJavaWebAppService.Factory` which creates
+an elastic Java Web App service,
+such as the `ControlledDynamicWebAppCluster` used in the
+[Simple Web Cluster](../webcluster) example, if deploying to VMs,
+or perhaps a `CloudFoundryJavaWebAppCluster` if deploying to a Cloud Foundry location
+(see below). 
+
+{% highlight java %}
+    DynamicFabric webFabric = new DynamicFabric(this, name: "Web Fabric", 
+            factory: new ElasticJavaWebAppService.Factory());
+    { 
+        //specify the WAR file to use
+        webFabric.setConfig(ElasticJavaWebAppService.ROOT_WAR, WAR_PATH);
+    }
+{% endhighlight %}
+
+Here we have specified the WAR to use with `setConfig`.
+The `war:` convenience flag used in the previous example is only available on web-aware entities;
+configuration specified with a named key can be done on any entity,
+and is inherited at runtime, so this provides a useful way to specify the WAR to use
+even though the web-aware entities are only constructed at runtime.     
+
+
+### Stitching the Fabric together with DNS
+
+To stitch these together seamlessly, another entity will run a policy
+which collects the public-facing IP address of each cluster created by the fabric,
+as it comes online, by watching for `SERVICE_UP` sensors.
+First, however, let's make sure any load-balancer proxies (e.g. nginx) in these clusters
+are listening on port 80:
+
+{% highlight java %}
+    { 
+        //load-balancer instances must run on 80 to work with GeoDNS (default is 8000)
+        webFabric.setConfig(AbstractController.PROXY_HTTP_PORT, 80);
+    }
+{% endhighlight %}
+
+Let's now define the Geoscaling entity which does the stitching.
+We need to supply the username, password, and primaryDomainName for Geoscaling;
+we'll take this from the `brooklyn.properties` file mentioned above.
+We'll also specify a `smartSubdomainName`, to use Geoscaling's facility for
+lightweight sub-domains to prevent DNS caching and multiple instances of our application
+from confusing us -- e.g. `brooklyn-1234.yourname.geopaas.org`.
+
+{% highlight java %}
+    GeoscalingDnsService geoDns = new GeoscalingDnsService(this, name: "GeoScaling DNS",
+            username: config.getFirst("brooklyn.geoscaling.username", failIfNone:true),
+            password: config.getFirst("brooklyn.geoscaling.password", failIfNone:true),
+            primaryDomainName: config.getFirst("brooklyn.geoscaling.primaryDomain", failIfNone:true), 
+            smartSubdomainName: 'brooklyn');    
+{% endhighlight %}
+
+Lastly we need to tell this instance what entity it should monitor
+for children to include as targets:
+
+{% highlight java %}
+    {
+        geoDns.setTargetEntityProvider(webFabric);
+    }
+{% endhighlight %}
+
+
+
+### Cloud Foundry and other PaaS Targets
+
+At this point our core application is ready, and can be deployed to AWS or another VM cloud.
+This may take between 15 and 30 minutes to run,
+mainly spent downloading software
+(unless of course you specify a pre-configured `imageId` which contains the software).
+
+A quicker alternative is to deploy to a Java Web App platform-as-a-service
+such as Cloud Foundry.  A major advantage here is that they can provision very quickly,
+in a matter of seconds.
+
+However most of these services use a shared load-balancer, meaning that the
+hostname requested in the URL has to match what is set up at the PaaS.
+The hostname for geo-balancing is chosen at runtime by Geoscaling
+when we are using a `smartSubdomainName`, and we need to configure this in
+any target PaaS we are using.
+*At present the ability to configure URL's is disabled in `cloudfoundry.com` accounts.
+It has been tested and confirmed to work in AppFog's hosted Cloud Foundry.*
+
+We will use the `DependentConfiguration.attributeWhenReady` convenience to
+listen for the `HOSTNAME` sensor on `geoDns` and set the relevant Cloud Foundry 
+config parameter on the `webFabric`. 
+Other PaaS targets may expose a similar config key.
+Please note that this command must be placed in your class 
+*after* `webFabric` and `geoDns` are defined.
+
+{% highlight java %}
+    {
+        webFabric.setConfig(CloudFoundryJavaWebAppCluster.HOSTNAME_TO_USE_FOR_URL,
+            DependentConfiguration.attributeWhenReady(geoDns, Attributes.HOSTNAME));
+    }
+{% endhighlight %}
+
+This config key will only apply to Cloud Foundry targets, 
+so it is safe to include in your class whether or not you are deploying there.
+
+
+### Statics
+
+In the interest of readability above, we have omitted certain static constants we use,
+the `main` method, and the imports.  Your complete class will of course have to include these: 
+
+The following static constants are assumed (most of these as in the [Simple Web Cluster](../webcluster) example and others): 
+
+ * `config`, read from `~/.brooklyn/brooklyn.properties` (as well as from environment variables)
+   to provide the login data for Geoscaling.
+ * `log`, a logger
+ * `WAR_PATH`, pointing to the webapp to deploy (a default supplied as part of the Brooklyn examples is used here)
+ * `DEFAULT_LOCATIONS`, containing a string spec of the locations to deploy to if none are supplied on the command-line;
+   for this example `localhost` will frequently not work unless Geoscaling can see it 
+   (i.e. it has a public IP and appropriate firewall settings)
+
+The code for these is as follows:
+
+{% highlight java %}
+    public static final Logger log = LoggerFactory.getLogger(GlobalWebFabricExample.class);
+    
+    public static final String WAR_PATH = "classpath://hello-world-webapp.war";
+    
+    static final List<String> DEFAULT_LOCATIONS = [
+            "aws-ec2:eu-west-1",
+            "aws-ec2:ap-southeast-1",
+            "aws-ec2:us-west-1", 
+        ];
+        
+    static BrooklynProperties config = BrooklynProperties.Factory.newDefault()
+{% endhighlight %}
+
+Our `main` method looks like this:
+
+{% highlight java %}
+    public static void main(String[] argv) {
+        ArrayList args = new ArrayList(Arrays.asList(argv));
+        int port = CommandLineUtil.getCommandLineOptionInt(args, "--port", 8081);
+        List<Location> locations = new LocationRegistry().getLocationsById(args ?: DEFAULT_LOCATIONS)
+
+        GlobalWebFabricExample app = new GlobalWebFabricExample(name: 'Brooklyn Global Web Fabric Example');
+            
+        BrooklynLauncher.manage(app, port)
+        app.start(locations)
+        Entities.dumpInfo(app)
+    }
+{% endhighlight %}
+
+And finally, the imports are as follows:
+
+{% highlight java %}
+import groovy.transform.InheritConstructors
+
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
+import brooklyn.config.BrooklynProperties
+import brooklyn.entity.basic.AbstractApplication
+import brooklyn.entity.basic.Attributes
+import brooklyn.entity.basic.Entities
+import brooklyn.entity.dns.geoscaling.GeoscalingDnsService
+import brooklyn.entity.group.AbstractController
+import brooklyn.entity.group.DynamicFabric
+import brooklyn.entity.webapp.ElasticJavaWebAppService
+import brooklyn.event.basic.DependentConfiguration
+import brooklyn.extras.cloudfoundry.CloudFoundryJavaWebAppCluster
+import brooklyn.launcher.BrooklynLauncher
+import brooklyn.location.Location
+import brooklyn.location.basic.LocationRegistry
+import brooklyn.util.CommandLineUtil
+{% endhighlight %}
+
+
+## Running the Example
+
+Now let's run this example.  You will need to specify increased heap size and memory limits,
+as well as the appropriate classpath.
+
+{% highlight bash %}
+java -Xmx256m -Xmx1g -XX:MaxPermSize=256m -cp target/classes:\
+    ~/.m2/repository/io/brooklyn/brooklyn-all/0.4.0-SNAPSHOT/brooklyn-all-0.4.0-SNAPSHOT-with-dependencies.jar \
+    brooklyn.demo.GlobalWebFabricExample
+{% endhighlight %}
+
+The management web console will start,
+followed by the web-app services in the locations specified
+(in `DEFAULT_LOCATIONS`, or as arguments on the command-line),
+creating the VM's as needed.
+Let's look at the management web console, on port 8081 (default credentials are admin/password):
+
+[![Web Console Map](console-map-w700.png "Web Console Map")](console-map.png) 
+
+This shows the targets in Seattle (AppFog's Cloud Foundry), Ireland (AWS eu-west-1),
+and Singapore (AWS ap-southeast-1),
+as well as a few other places (wrong locations picked up for some AWS IP's!).
+This also shows the progress of the most recent tasks.
+
+Navigating to the details tab, we can view sensors, invoke effectors, control policies,
+and track activity, 
+for instance if a cluster is slow to start and you want to find out what is going on
+(you'll find additional information in the `brooklyn.log` file).
+Let's drill down on the Geoscaling DNS entity's sensors:
+
+[![Web Console Geoscaling Details](console-geoscaling-details-w700.png "Web Console Geoscaling Details")](console-geoscaling-details.png)
+
+Here we see it has chosen `brooklyn-csgFCzTM.geopaas.org` as the geo-load-balanced domain name.
+(Your will be under `yourname.geopaas.org`, unless you chose a different domain earlier.)
+We can also see the hosts it is forwarding to, one for each cluster, corresponding to the
+children of the Web Fabric (propagated from the nginx hostnames, in the case of the ControlledDynamicWebAppCluster instances).
+
+### Checking the Web App
+
+Once Geoscaling reports at least one target, you should be able to access it on the geo-load-balanced domain name:
+
+[![Our Deployed Application](geopaas-deployed-app-w700.png "Our Deployed Application")](geopaas-deployed-app.png)
+
+Under the covers you are being routed to one of the clusters that has been deployed --
+whichever one is closest to you.
+(Due to DNS caching, at your machine or your ISP, clusters which come online after your first lookup
+will not be picked up until TTL expires, typically 10m, although often more if DNS services don't respect TTL.)
+
+
+### Checking DNS Information
+
+Let's find out exactly where we were routed:
+
+{% highlight bash %}
+% dig brooklyn-csgFCzTm.geopaas.org
+
+; <<>> DiG 9.4.3-P3 <<>> brooklyn-csgFCzTm.geopaas.org
+
+;; QUESTION SECTION:
+;brooklyn-csgFCzTm.geopaas.org. IN      A
+
+;; ANSWER SECTION:
+brooklyn-csgFCzTm.geopaas.org. 120 IN   CNAME   ec2-46-137-138-4.eu-west-1.compute.amazonaws.com.
+ec2-46-137-138-4.eu-west-1.compute.amazonaws.com. 215 IN A 46.137.138.4
+{% endhighlight %}
+
+This was run from Scotland so it seems a sensible choice.
+(Some portions of the output from `dig` have been removed for readability.)
+
+We can get more information by looking at the TXT records: 
+
+{% highlight bash %}
+% dig +trace @ns1.geoscaling.com TXT brooklyn-csgFCzTm.geopaas.org
+
+; <<>> DiG 9.4.3-P3 <<>> +trace @ns1.geoscaling.com TXT brooklyn-csgFCzTm.geopaas.org
+
+...
+
+geopaas.org.            86400   IN      NS      ns1.geoscaling.com.
+geopaas.org.            86400   IN      NS      ns2.geoscaling.com.
+geopaas.org.            86400   IN      NS      ns3.geoscaling.com.
+geopaas.org.            86400   IN      NS      ns4.geoscaling.com.
+;; Received 133 bytes from 199.249.112.1#53(a2.org.afilias-nst.info) in 45 ms
+
+brooklyn-csgFCzTm.geopaas.org. 300 IN   TXT     "Request from [54,-2]-(GB) directed to Ireland (IE)"
+brooklyn-csgFCzTm.geopaas.org. 300 IN   TXT     "GeoScaling config auto-updated by Brooklyn 2012-04-26 12:27:25 UTC"
+;; Received 189 bytes from 80.87.128.195#53(ns3.geoscaling.com) in 60 ms
+{% endhighlight %}
+
+
+## Next Steps
+
+This example has shown how to create a multi-region fabric, using the abstractions from
+[jclouds](jclouds.org) under the covers to make it easy to access different hosting providers
+simultaneously, and using higher-level abstractions in Brooklyn to mix PaaS systems with
+bare-VM (or even bare-metal, if you specify fixed IPs).
+
+This is meant as just the beginning however.  
+Here are some questions to think about and code challenges to give you a steer for what to explore next.
+
+
+ 1. The routines used at Geoscaling optimize for latency between the user and the location of the web-cluster.
+    What other strategies might be used?  Cost?  Compliance?  How would you code these?
+    
+ 2. This example ignores data, but you clearly can't do that in the real world.
+    When big-data is involved, does this introduce other considerations for optimizing geo-location?
+    
+ 3. Add a data tier to this system, such as MySQL or Mongo, or even Hadoop.
+    You might start with a single instance or cluster,
+    but the real fun starts with a fabric, and defining the synchronization/replication strategies
+    between the different clusters.
+    This isn't for the faint-hearted, but whatever you create will certainly be of interest
+    to people in the Brooklyn community.
+    Please [let us know]({{ site.url }}/meta/contact.html) what you've built!
+
