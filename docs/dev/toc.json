@@ -16,8 +16,8 @@
 { "title": "Links",
   "file": "{{ site.url }}/dev/links.html",
   "children": [
-    { "title": "Github code",
-      "file": "https://github.com/brooklyncentral/brooklyn" },
+    { "title": "Github repo",
+      "file": "https://github.com/brooklyncentral/" },
     { "title": "Github issues",
       "file": "https://github.com/brooklyncentral/brooklyn/issues" },
     { "title": "Maven snapshots",

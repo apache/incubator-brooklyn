@@ -17,7 +17,8 @@ public class SingleWebServerExample extends AbstractApplication {
         war: "classpath://hello-world-webapp.war", 
         httpPort: 8080)
         
-    // (other housekeeping removed, including public static void main)
+    // other housekeeping removed, including public static void main
+    // you'll find this in the github repo code mentioned above
      
 }
 {% endhighlight %}
@@ -86,10 +87,13 @@ tweak the database start script, or drop in your favourite WAR.
 
 ## A Few Other Things
 
-This project includes an intermediate nginx-web-cluster only example, 
-in ``WebClusterExample``, and a few demonstrations of other syntaxes (classes ending ``Alt``).
-Tweak the scripts to use these, or run in your IDE (which may take [a bit of setup]({{site.url}}/dev/build/ide.html)).
+The project includes several variants of the examples shown here.
+In particular note the pure-Java version in `WebClusterDatabaseExampleAltJava.java`
+some other variations in syntax (the `*Alt*` files), and a
+web-only cluster (no database) in ``WebClusterExample``.
 
 The webapp that is used is included under ``examples/hello-world-webapp``.
+
+You may wish to check out the [Global Web Fabric example](../global-web-fabric) next.
 
 If you encounter any difficulties, please [tell us]({{ site.url }}/meta/contact.html) and we'll do our best to help.
