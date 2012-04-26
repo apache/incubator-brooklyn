@@ -145,7 +145,8 @@ public abstract class AbstractController extends SoftwareProcessEntity {
         LOG.info("Adding to $displayName, new member ${member.displayName} in locations ${member.locations}")
         Set oldAddresses = new LinkedHashSet(addresses)
         member.locations.each { MachineLocation machine ->
-            String ip = machine.address.hostAddress
+            //use hostname as this is more portable (eg in amazon, ip doesn't resolve)
+            String ip = machine.address.hostName
             Integer port = member.getAttribute(portNumber)
             if (ip==null || port==null) {
                 LOG.warn("Missing ip/port for web controller $this target $member, skipping");
