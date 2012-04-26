@@ -13,10 +13,7 @@ import static brooklyn.rest.core.ApplicationPredicates.status;
 import com.google.common.base.Function;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 import static com.google.common.collect.Iterables.all;
 import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Lists.newLinkedList;
@@ -28,7 +25,6 @@ import java.util.ConcurrentModificationException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
-import javax.annotation.Nullable;
 
 public class ApplicationManager implements Managed {
 
@@ -57,7 +53,7 @@ public class ApplicationManager implements Managed {
 
   @Override
   public void stop() throws Exception {
-    if (configuration.shouldStopApplicationsOnExit()) {
+    if (configuration.isStopApplicationsOnExit()) {
       destroyAllInBackground();
       waitForAllApplicationsToStopOrError();
     }

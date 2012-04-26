@@ -28,8 +28,11 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
     LocationStore locationStore = new LocationStore(configuration);
     environment.manage(locationStore);
 
-    // TODO configure executor from application config file
-    ExecutorService managedExecutor = environment.managedExecutorService("brooklyn", 2, 16, 30, TimeUnit.SECONDS);
+    ExecutorConfiguration executorConfig = configuration.getExecutor();
+    ExecutorService managedExecutor = environment.managedExecutorService("brooklyn",
+        executorConfig.getCorePoolSize(), executorConfig.getMaximumPoolSize(),
+        executorConfig.getKeepAliveTimeInSeconds(), TimeUnit.SECONDS);
+
     ApplicationManager applicationManager = new ApplicationManager(configuration, locationStore, managedExecutor);
     environment.manage(applicationManager);
 

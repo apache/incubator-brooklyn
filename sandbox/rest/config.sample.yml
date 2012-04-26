@@ -17,6 +17,11 @@ locations:
     credential: GIOM34590
     location: eu-west-1
 
+executor:
+  corePoolSize: 2
+  maximumPoolSize: 16
+  keepAliveTimeInSeconds: 120
+
 # Logging settings
 
 logging:

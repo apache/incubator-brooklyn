@@ -12,11 +12,17 @@ public class BrooklynConfiguration extends Configuration {
 
   private Set<Location> locations = Sets.newHashSet();
 
+  private ExecutorConfiguration executor = new ExecutorConfiguration();
+
   public Set<Location> getLocations() {
     return ImmutableSet.copyOf(locations);
   }
 
-  public boolean shouldStopApplicationsOnExit() {
+  public boolean isStopApplicationsOnExit() {
     return stopApplicationsOnExit;
+  }
+
+  public ExecutorConfiguration getExecutor() {
+    return executor;
   }
 }
