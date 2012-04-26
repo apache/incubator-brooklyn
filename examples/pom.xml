@@ -34,7 +34,7 @@
         <module>simple-web-cluster</module>
         <module>global-web-fabric</module>
         <module>hadoop-and-whirr</module>
-<!-- once CF is promoted        <module>portable-cloudfoundry</module> -->
+        <module>portable-cloudfoundry</module>
     </modules>
 
 </project>

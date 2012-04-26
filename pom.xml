@@ -584,6 +584,7 @@
                 <module>systems/whirr/base</module>
                 <module>systems/whirr/hadoop</module>
                 <module>systems/paas/openshift</module>
+                <module>systems/paas/cloudfoundry</module>
             </modules>
         </profile>
         <profile>
