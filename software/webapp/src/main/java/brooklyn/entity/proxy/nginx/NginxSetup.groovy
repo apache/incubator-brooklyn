@@ -1,18 +1,22 @@
 package brooklyn.entity.proxy.nginx
 
 import java.util.List
-import java.util.Map
+
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.Attributes
-import brooklyn.entity.basic.lifecycle.CommonCommands;
-import brooklyn.entity.basic.lifecycle.ScriptHelper;
-import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup;
+import brooklyn.entity.basic.lifecycle.CommonCommands
+import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup
+import brooklyn.entity.trait.Startable
 import brooklyn.location.basic.SshMachineLocation
 
 /**
  * Start a {@link NginxController} in a {@link Location} accessible over ssh.
  */
 public class NginxSetup extends SshBasedAppSetup {
+    public static final Logger log = LoggerFactory.getLogger(NginxSetup.class);
+    
     public static final String DEFAULT_VERSION = "1.0.8"
     public static final String DEFAULT_INSTALL_DIR = DEFAULT_INSTALL_BASEDIR+"/"+"nginx"
 
@@ -136,4 +140,20 @@ public class NginxSetup extends SshBasedAppSetup {
     protected void postShutdown() {
         machine.releasePort(httpPort);
     }
+    
+    @Override
+    public void restart() {
+        //if it hasn't come up we can't do the restart optimization
+        if (entity.getAttribute(Startable.SERVICE_UP)) {
+            super.restart();
+        } else {
+            try {
+                stop();
+            } catch (Exception e) {
+                log.debug("$entity stop failed during restart (but wasn't in stop state, so not surprising): "+e);
+            }
+            runApp();
+        }
+    }
+
 }

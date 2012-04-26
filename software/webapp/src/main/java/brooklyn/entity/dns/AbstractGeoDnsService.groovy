@@ -129,7 +129,7 @@ abstract class AbstractGeoDnsService extends AbstractEntity {
             boolean changed = false;
             Set<Entity> previousOnes = [] + targetHosts.keySet();
             for (Entity e: pool) {
-                if (previousOnes.remove(e)) return;
+                if (previousOnes.remove(e)) continue;
                 changed |= addTargetHost(e, false);
             }
             //anything left in previousOnes is no longer applicable

@@ -134,13 +134,14 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
         SmartSubdomain smartSubdomain = primaryDomain.getSmartSubdomain(smartSubdomainName);
         
         if (!smartSubdomain) {
-            log.info("GeoScaling smart subdomain '"+smartSubdomainName+"."+primaryDomainName+"' does not exist, creating it now");
+            log.info("GeoScaling $this smart subdomain '"+smartSubdomainName+"."+primaryDomainName+"' does not exist, creating it now");
             // TODO use WithMutexes to ensure this is single-entrant
             primaryDomain.createSmartSubdomain(smartSubdomainName);
             smartSubdomain = primaryDomain.getSmartSubdomain(smartSubdomainName);
         }
         
         if (smartSubdomain) {
+            log.debug("GeoScaling $this being reconfigured to use $targetHosts");
             String script = GeoscalingScriptGenerator.generateScriptString(targetHosts);
             smartSubdomain.configure(PROVIDE_CITY_INFO, script);
             setServiceState(targetHosts.isEmpty() ? Lifecycle.CREATED : Lifecycle.RUNNING);
