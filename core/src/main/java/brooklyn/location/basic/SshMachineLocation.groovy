@@ -9,7 +9,9 @@ import brooklyn.location.PortRange
 import brooklyn.location.PortSupplier
 import brooklyn.util.ReaderInputStream
 import brooklyn.util.flags.SetFromFlag
-import brooklyn.util.internal.SshJschTool
+import brooklyn.util.internal.SshTool
+import brooklyn.util.internal.ssh.SshException;
+import brooklyn.util.internal.ssh.SshjTool
 
 import com.google.common.base.Preconditions
 
@@ -79,7 +81,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         Map args = [ user:user, host:address.hostName ]
         args << config
         args << leftoverProperties
-        SshJschTool ssh = new SshJschTool(args)
+        SshTool ssh = new SshjTool(args)
         ssh.connect()
         int result = ssh.execShell props, commands, env
         ssh.disconnect()
@@ -114,7 +116,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         args << config
         args << leftoverProperties
 
-        SshJschTool ssh = new SshJschTool(args)
+        SshTool ssh = new SshjTool(args)
         ssh.connect()
         int result = ssh.createFile props, destination, src, filesize
         ssh.disconnect()
@@ -130,7 +132,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         args << config
         args << leftoverProperties
 
-        SshJschTool ssh = new SshJschTool(args)
+        SshTool ssh = new SshjTool(args)
         ssh.connect()
         int result = ssh.transferFileFrom props, remote, local
         ssh.disconnect()
@@ -177,6 +179,9 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                 if (LOG.isDebugEnabled()) LOG.debug("Not reachable: $this, executing `$cmd`, exit code $result")
                 return false
             }
+        } catch (SshException e) {
+            if (LOG.isDebugEnabled()) LOG.debug("Exception checking if $this is reachable; assuming not", e)
+            return false
         } catch (IllegalStateException e) {
             if (LOG.isDebugEnabled()) LOG.debug("Exception checking if $this is reachable; assuming not", e)
             return false

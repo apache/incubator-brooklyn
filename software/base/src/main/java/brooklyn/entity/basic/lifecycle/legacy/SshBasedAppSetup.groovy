@@ -25,7 +25,7 @@ import com.google.common.base.Strings
  *
  * TODO complete documentation
  *
- * @see SshJschTool
+ * @see SshjTool
  * @see SshMachineLocation
  */
 

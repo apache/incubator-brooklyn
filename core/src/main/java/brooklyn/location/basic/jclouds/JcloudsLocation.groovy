@@ -5,7 +5,7 @@ import static java.util.concurrent.TimeUnit.SECONDS
 import static org.jclouds.compute.options.RunScriptOptions.Builder.overrideLoginCredentials
 import static org.jclouds.scriptbuilder.domain.Statements.exec
 
-import javax.annotation.Nullable;
+import javax.annotation.Nullable
 
 import org.jclouds.compute.ComputeService
 import org.jclouds.compute.RunNodesException
@@ -29,7 +29,6 @@ import brooklyn.location.basic.AbstractLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.IdGenerator
 import brooklyn.util.internal.Repeater
-import brooklyn.util.internal.SshJschTool;
 
 import com.google.common.base.Charsets
 import com.google.common.base.Throwables
@@ -173,8 +172,9 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
 
             String vmHostname = getPublicHostname(node, allconf)
             Map sshConfig = [:]
-            if (getPrivateKeyFile()) sshConfig.keyFiles = [ getPrivateKeyFile().getCanonicalPath() ] + SshJschTool.DEFAULT_KEY_FILES 
-            SshMachineLocation sshLocByHostname = new JcloudsSshMachineLocation(this, node,
+            if (getPrivateKeyFile()) sshConfig.keyFiles = getPrivateKeyFile().getCanonicalPath()
+            if (allconf.sshPrivateKeyData) sshConfig.privateKey = allconf.sshPrivateKeyData
+            JcloudsSshMachineLocation sshLocByHostname = new JcloudsSshMachineLocation(this, node,
                     address:vmHostname, 
                     displayName:vmHostname,
                     username:allconf.userName, 
@@ -346,8 +346,10 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         String vmIp = JcloudsUtil.getFirstReachableAddress(node);
         
         Map sshConfig = [:]
-        if (getPrivateKeyFile()) sshConfig.keyFiles = [ getPrivateKeyFile().getCanonicalPath() ] + SshJschTool.DEFAULT_KEY_FILES 
+        if (getPrivateKeyFile()) sshConfig.keyFiles = getPrivateKeyFile().getCanonicalPath() 
+        if (allconf.sshPrivateKeyData) sshConfig.privateKey = allconf.sshPrivateKeyData 
         SshMachineLocation sshLocByIp = new SshMachineLocation(address:vmIp, username:allconf.userName, config:sshConfig);
+        
         ByteArrayOutputStream outStream = new ByteArrayOutputStream()
         ByteArrayOutputStream errStream = new ByteArrayOutputStream()
         int exitcode = sshLocByIp.run([out:outStream,err:errStream], "echo `curl --silent --retry 20 http://169.254.169.254/latest/meta-data/public-hostname`; exit")
