@@ -42,7 +42,7 @@ public class SshSensorAdapterTest {
 	/** String should be be automatically converted to long while polling */
 	@Test
 	public void testPollAndLongConversion() {
-		with(adapter) {
+		with(adapter.command("command")) {
 			poll(SENSOR_LONG) { stdout }
 		}
 		adapter.poller.evaluateSensorsOnResponse(NUMERIC_RESPONSE);

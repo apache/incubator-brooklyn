@@ -1,5 +1,8 @@
 package brooklyn.location.basic
 
+import java.util.List;
+import java.util.Map;
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -120,6 +123,24 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         SshTool ssh = new SshjTool(args)
         ssh.connect()
         return ssh;
+    }
+
+    /**
+     * Convenience for running commands using ssh {@literal exec} mode.
+     */
+    public int exec(Map props=[:], List<String> commands, Map env=[:]) {
+        Preconditions.checkNotNull address, "host address must be specified for ssh"
+        if (!commands) return 0
+
+        if (!user) user = System.getProperty "user.name"
+        Map args = [ user:user, host:address.hostName ]
+        args << config
+        args << leftoverProperties
+        SshJschTool ssh = new SshJschTool(args)
+        ssh.connect()
+        int result = ssh.execCommands props, commands, env
+        ssh.disconnect()
+        result
     }
 
     public int copyTo(Map props=[:], File src, File destination) {

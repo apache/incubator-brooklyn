@@ -28,10 +28,10 @@ public class ShellSensorAdapterTest {
     public void testDiskFree() {
         registerAdapter(new ShellSensorAdapter("df -b")).
             then(this.&parseDf).with {
-                poll(TestEntity.SEQUENCE, {
+                poll(TestEntity.SEQUENCE) {
                     log.debug("disk stats: "+it)
                     it[0].totalBytes 
-                })
+                }
             }
         
         adapter.poller.executePoll();

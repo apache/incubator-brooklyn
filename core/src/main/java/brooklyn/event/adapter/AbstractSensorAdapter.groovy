@@ -14,8 +14,7 @@ import brooklyn.util.flags.FlagUtils
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.internal.TimeExtras
 
-
-/** captures common fields and processes for sensor adapters */
+/** Captures common fields and processes for sensor adapters */
 public abstract class AbstractSensorAdapter {
 
 	private static final Logger log = LoggerFactory.getLogger(AbstractSensorAdapter)

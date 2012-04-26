@@ -14,10 +14,10 @@ import brooklyn.util.ShellUtils
  * <p>
  * Example usage:
  * <code>
- *   def diskUsage = sensorRegistry.register(new ShellSensorAdapter('df -p'))
+ *   def diskUsage = sensorRegistry.register(new ShellSensorAdapter("df -p"))
  *   diskUsage.then(&parse).with {
- *      poll(DISK0_USAGE_BYTES, {it[0].usage})
- *      poll(DISK0_FREE_BYTES, {it[0].free})
+ *      poll(DISK0_USAGE_BYTES) { it[0].usage }
+ *      poll(DISK0_FREE_BYTES) { it[0].free }
  *   }
  * </code>
  * <p>
