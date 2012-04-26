@@ -8,4 +8,4 @@ toc: ../../toc.json
 
 Please see the [source code]({{site.url}}/dev/code) to view javadoc.
 
-<!-- TODO build javadoc... but rather than put it here maybe copy directly to hosted site on release. -->
+<!-- This page is normally overwritten by generated javadoc. -->
