@@ -96,7 +96,7 @@ public abstract class AbstractEffector<T> implements Effector<T> {
        if (args==null) args = [:]
        if (!args.getClass().isArray()) {
            if (args instanceof Collection) args = args as Object[]
-           else args = new Object[1] { args }
+           else args = [ args ] as Object[]
        }
 
        //if args starts with a map, assume it contains the named arguments
@@ -212,7 +212,7 @@ public class MethodEffector<T> extends AbstractEffector<T> {
     }
 
     public T call(Entity entity, Map parameters) {
-        entity."$name"(parameters);
+        entity.invokeMethod(name, prepareArgsForEffector(this, parameters));
     }
 
 }
