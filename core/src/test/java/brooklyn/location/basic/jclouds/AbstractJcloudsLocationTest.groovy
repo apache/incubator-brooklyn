@@ -10,7 +10,7 @@ import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.internal.SshJschTool
+import brooklyn.util.internal.ssh.SshjTool
 
 public abstract class AbstractJcloudsLocationTest {
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractJcloudsLocationTest.class)
@@ -154,7 +154,7 @@ public abstract class AbstractJcloudsLocationTest {
         
         LOG.info("Provisioned vm $machine; checking if ssh'able")
         
-        def t = new SshJschTool(user:"myname", host:machine.address.getHostName(), publicKey:sshPublicKey.getAbsolutePath(), privateKey:sshPrivateKey.getAbsolutePath())
+        def t = new SshjTool(user:"myname", host:machine.address.getHostName(), publicKeyFile:sshPublicKey.getAbsolutePath(), privateKeyFile:sshPrivateKey.getAbsolutePath())
         t.connect()
         t.execCommands([ "date" ])
         t.disconnect()
