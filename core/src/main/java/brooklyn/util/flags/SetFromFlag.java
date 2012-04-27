@@ -36,8 +36,11 @@ public @interface SetFromFlag {
 
     /** The default value, if it is not explicitly set.
      * <p>
-     * The value will be coerced from String into primitive if required; 
-     * currently cannot be used for complex types. 
+     * The value will be coerced from String if required; only some type are supported (including primitives and PortRange). 
+     * See TypeCoercions for more details.
+     * <p>
+     * Currently supported for entity and location fields: if not explicitly configured, then the field will be set to
+     * the default value. It is then up to the user of the item to consume that field's value.
      */
     String defaultVal() default "";
 }

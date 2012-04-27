@@ -1,10 +1,11 @@
 package brooklyn.util.flags;
 
-import java.lang.reflect.Constructor
 import java.lang.reflect.Field
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+
+import com.google.common.primitives.Primitives
 
 
 /** class to help transfer values passed as named arguments to other well-known variables/fields/objects;
@@ -55,6 +56,8 @@ public class FlagUtils {
                 String flagName = cf.value() ?: f.getName();
                 if (flagName && remaining.containsKey(flagName)) {
                     setField(o, f, remaining.remove(flagName), cf);
+                } else if (cf.defaultVal()) {
+                    setField(o, f, cf.defaultVal(), cf);
                 }
             }
         }
@@ -78,7 +81,13 @@ public class FlagUtils {
         }
         Object newValue;
         try {
-            newValue = TypeCoercions.coerce(value, f.getType());
+            // TODO Should this code be pushed into TypeCoercions.coerce itself?
+            Class<?> fieldType = f.getType();
+            if (value in String && (Primitives.allPrimitiveTypes().contains(fieldType) || Primitives.allWrapperTypes().contains(fieldType))) {
+                newValue = TypeCoercions.stringToPrimitive(value, fieldType);
+            } else {
+                newValue = TypeCoercions.coerce(value, fieldType);
+            }
         } catch (Exception e) {
             throw new IllegalArgumentException("Cannot set $f in $objectOfField from type "+value.getClass()+" ("+value+"): "+e, e);
         }

@@ -7,6 +7,8 @@ import java.util.Map
 import org.testng.annotations.Test
 
 import brooklyn.entity.basic.AbstractEntity
+import brooklyn.location.PortRange
+import brooklyn.location.basic.PortRanges;
 import brooklyn.util.flags.SetFromFlag
 
 public class SetFromFlagTest {
@@ -41,16 +43,6 @@ public class SetFromFlagTest {
         assertEquals(entity.str3, "overridden str3")
     }
     
-    // Fails because configure being called from inside constructor; so field is set after configure called
-    @Test(enabled=false) 
-    public void testSetFromFlagWithFieldThatIsExplicitySet() {
-        MyEntity entity = new MyEntity(str4:"myval")
-        assertEquals(entity.str4, "myval")
-        
-        MyEntity entity2 = new MyEntity()
-        assertEquals(entity2.str4, "explicit str4")
-    }
-    
     @Test
     public void testSetFromFlagCastsDefault() {
         MyEntity entity = new MyEntity()
@@ -73,7 +65,32 @@ public class SetFromFlagTest {
         assertEquals(entity.bool2, Boolean.TRUE)
     }
     
+    @Test
+    public void testSetFromFlagCoercesDefaultToPortRange() {
+        MyEntity entity = new MyEntity()
+        assertEquals(entity.portRange1, PortRanges.fromInteger(1234))
+    }
+    
+    @Test
+    public void testSetFromFlagCoercesStringValueToPortRange() {
+        MyEntity entity = new MyEntity(portRange1:"1-3")
+        assertEquals(entity.portRange1, new PortRanges.LinearPortRange(1, 3))
+    }
+    
+    // Fails because configure being called from inside constructor; so field is set after configure called
+    @Test(enabled=false) 
+    public void testSetFromFlagWithFieldThatIsExplicitySet() {
+        MyEntity entity = new MyEntity(str4:"myval")
+        assertEquals(entity.str4, "myval")
+        
+        MyEntity entity2 = new MyEntity()
+        assertEquals(entity2.str4, "explicit str4")
+    }
+    
     private static class MyEntity extends AbstractEntity {
+
+        @SetFromFlag(defaultVal="1234")
+        PortRange portRange1;
 
         @SetFromFlag
         String str1;
