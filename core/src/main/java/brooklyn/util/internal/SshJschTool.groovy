@@ -60,6 +60,7 @@ public class SshJschTool {
     private Session session;
 
     public SshJschTool(Map properties = [:]) {
+//        if (true) throw new UnsupportedOperationException("Use SshjTool instead")
         Preconditions.checkArgument properties.containsKey('host'), "properties must contain a host key"
         Preconditions.checkArgument properties.get('host') instanceof String, "host value must be a string"
         Preconditions.checkArgument properties.get('host').length() > 0, "host value must not be an empty string"
