@@ -29,7 +29,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.reflections.Reflections;
 
-@Path("/v1/entities")
+@Path("/v1/catalog/entities")
 @Produces(MediaType.APPLICATION_JSON)
 public class EntityResource {
 
