@@ -34,9 +34,12 @@ public class EntityPollingTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
-        // Create an entity and configure it with the above JMX service
         app = new AbstractApplication() {}
-        
+
+		/*
+		 * Create an entity, using real entity code, but that swaps out the external process
+		 * for a JmxService that we can control in the test.        
+		 */
         entity = new VanillaJavaApp(owner:app,
                 jmxPort:40123,
                 rmiPort:0,
@@ -46,6 +49,7 @@ public class EntityPollingTest {
             @Override protected void connectSensors() {
                 super.connectSensors();
                 
+				// Add a sensor that we can explicitly set in jmx
                 jmxAdapter.objectName(jmxObjectName).with {
                     attribute(attributeName).subscribe(stringAttribute)
                 }
@@ -80,7 +84,8 @@ public class EntityPollingTest {
         jmxService?.shutdown()
     }
 
-    @Test(enabled=false) // FIXME
+	// Tests that the happy path works
+    @Test
     public void testSimpleConnection() {
         jmxService = new JmxService("localhost", 40123)
         GeneralisedDynamicMBean mbean = jmxService.registerMBean(objectName, (attributeName): "myval")
@@ -93,18 +98,19 @@ public class EntityPollingTest {
         }
     }
 
-    @Test(enabled=false) // FIXME
+	// Test that connect will keep retrying (e.g. start script returns before the JMX server is up)
+    @Test
     public void testEntityWithDelayedJmxStartupWillKeepRetrying() {
+		// In 2 seconds time, we'll start the JMX server
         Thread t = new Thread({
-            Thread.sleep(5000)
+            Thread.sleep(2000)
             jmxService = new JmxService("localhost", 40123)
             GeneralisedDynamicMBean mbean = jmxService.registerMBean(objectName, (attributeName): "myval")
         })
         try {
             t.start()
             app.start([new SshMachineLocation(address:"localhost")])
-            
-            // Starts with value defined when registering...
+
             TestUtils.executeUntilSucceeds(timeout:TIMEOUT_MS) {
                 assertEquals entity.getAttribute(stringAttribute), "myval"
             }
@@ -121,7 +127,6 @@ public class EntityPollingTest {
 
         app.start([new SshMachineLocation(address:"localhost")])
         
-        // Starts with value defined when registering...
         TestUtils.executeUntilSucceeds(timeout:TIMEOUT_MS) {
             assertEquals entity.getAttribute(stringAttribute), "myval"
         }
@@ -129,11 +134,9 @@ public class EntityPollingTest {
         // Shutdown the MBeanServer - simulates network failure so can't connect
         jmxService.shutdown()
         
-        // FIXME How to tell that it's detected failure?
+        // TODO Want a better way of determining that the entity is down; ideally should have 
+		// sensor for entity-down that's wired up to a JMX attribute?
         Thread.sleep(5000)
-//        TestUtils.executeUntilSucceeds(timeout:TIMEOUT_MS) {
-//            assertEquals entity.getAttribute(stringAttribute), "myval"
-//        }
 
         // Restart MBeanServer, and set attribute to different value; expect it to be polled again
         jmxService = new JmxService("localhost", 40123)

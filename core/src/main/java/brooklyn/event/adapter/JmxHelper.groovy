@@ -121,7 +121,17 @@ public class JmxHelper {
 
     /** attempts to re-connect immediately */
     public synchronized void reconnect() throws IOException {
-        connect()
+		try {
+			connect()
+		} catch (Exception e) {
+			if (triedReconnecting) {
+				if (LOG.isDebugEnabled()) LOG.debug("unable to re-connect to JMX url (repeated failure): {}: {}", url, e);
+			} else {
+				LOG.warn("unable to re-connect to JMX url: {}: {}", url, e);
+				triedReconnecting = true;
+			}
+			throw e;
+		}
     }
     
 	/** attempts to connect immediately */
@@ -355,10 +365,10 @@ public class JmxHelper {
             return task.call()
         } catch (Exception e) {
             if (shouldRetryOn(e)) {
-                do conditional logging...
-                triedReconnecting = true
-                reconnect();
-                return task.call();
+                reconnect()
+				return task.call()
+            } else {
+				throw e;
             }
         }
     }

@@ -53,7 +53,7 @@ public class JmxHelperTest {
     }
 
     @Test
-    public void testReconnects() {
+    public void testReconnectsOnJmxServerTemporaryFailure() {
         jmxService = new JmxService("localhost", 40123)
         jmxHelper.connect()
 
@@ -65,11 +65,17 @@ public class JmxHelperTest {
 
         // Ensure that we have a failed query while the "network is down"         
         try {
-            assertEquals(jmxHelper.getAttribute(jmxObjectName, attributeName), 42)
+            jmxHelper.getAttribute(jmxObjectName, attributeName)
             fail()
         } catch (IOException e) {
             // success
         }
+		try {
+			jmxHelper.getAttribute(jmxObjectName, attributeName)
+			fail()
+		} catch (IOException e) {
+			// success
+		}
 
         // Simulate the network restarting
         jmxService = new JmxService("localhost", 40123)
