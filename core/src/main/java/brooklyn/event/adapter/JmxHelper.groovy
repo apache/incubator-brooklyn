@@ -3,9 +3,7 @@ package brooklyn.event.adapter;
 import static com.google.common.base.Preconditions.checkNotNull
 import groovy.time.TimeDuration
 
-import java.io.IOException
-import java.util.Map
-import java.util.Set
+import java.util.concurrent.Callable
 import java.util.concurrent.TimeUnit
 
 import javax.management.JMX
@@ -28,6 +26,8 @@ import brooklyn.entity.basic.EntityLocal
 import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.internal.TimeExtras
 
+import com.google.common.base.Throwables
+
 public class JmxHelper {
 	
 	protected static final Logger LOG = LoggerFactory.getLogger(JmxHelper.class);
@@ -47,6 +47,7 @@ public class JmxHelper {
 	JMXConnector jmxc
 	MBeanServerConnection mbsc
     boolean triedConnecting
+    boolean triedReconnecting
     
     // Tracks the MBeans we have failed to find for this JmsHelper's connection URL (so can log just once for each)
     private final Set<ObjectName> notFoundMBeans
@@ -114,9 +115,15 @@ public class JmxHelper {
     }
     
 	public boolean isConnected() {
+        // TODO Is there something like an mbsc.isConnected that we could also call?
 		return (jmxc && mbsc);
 	}
 
+    /** attempts to re-connect immediately */
+    public synchronized void reconnect() throws IOException {
+        connect()
+    }
+    
 	/** attempts to connect immediately */
 	public synchronized void connect() throws IOException {
         triedConnecting = true
@@ -148,26 +155,25 @@ public class JmxHelper {
 	public boolean connect(long timeout) {
 		if (LOG.isDebugEnabled()) LOG.debug "Connecting to JMX URL: {} ({})", url, ((timeout == -1) ? "indefinitely" : "${timeout}ms timeout")
 		long start = System.currentTimeMillis()
-		long end = start + timeout
-		if (timeout == -1) end = Long.MAX_VALUE
+		long end = (timeout == -1) ? Long.MAX_VALUE : (start + timeout)
+		long currentTime = start
 		Throwable lastError;
 		int attempt=0;
-		while (start <= end) {
-			start = System.currentTimeMillis()
+		while (currentTime <= end) {
+			currentTime = System.currentTimeMillis()
 			if (attempt!=0) Thread.sleep(100); //sleep 100 to prevent trashing and facilitate interruption
-			if (LOG.isTraceEnabled()) LOG.trace "trying connection to {} at time {}", url, start
+			if (LOG.isTraceEnabled()) LOG.trace "trying connection to {} at time {}", url, currentTime
+            
 			try {
 				connect()
 				return true
-            } catch (SecurityException e) {
-                if (LOG.isDebugEnabled()) LOG.debug "Attempt {} failed connecting to {} ({})", attempt+1, url, e.message
-                lastError = e;
-			} catch (IOException e) {
-				if (LOG.isDebugEnabled()) LOG.debug "Attempt {} failed connecting to {} ({})", attempt+1, url, e.message
-				lastError = e;
-            } catch (NumberFormatException e) {
-                LOG.warn "Failed connection to {} ({}); rethrowing...", url, e.message
-                throw e
+			} catch (Exception e) {
+                if (shouldRetryOn(e)) {
+                    if (LOG.isDebugEnabled()) LOG.debug "Attempt {} failed connecting to {} ({})", attempt+1, url, e.message
+                    lastError = e;
+                } else {
+                    throw Throwables.propagate(e)
+                }
 			}
 			attempt++
 		}
@@ -175,6 +181,13 @@ public class JmxHelper {
 		false
 	}
 
+    private boolean shouldRetryOn(Exception e) {
+        // Expect SecurityException, IOException, etc.
+        // But can also see things like javax.naming.ServiceUnavailableException with WSO2 app-servers.
+        // So let's not try to second guess strange behaviours that future entities will exhibit.
+        return true
+    }
+    
 	public synchronized void disconnect() {
         triedConnecting = false
 		if (jmxc) {
@@ -201,7 +214,7 @@ public class JmxHelper {
 	}
 
     public Set<ObjectInstance> findMBeans(ObjectName objectName) {
-        return mbsc.queryMBeans(objectName, null)
+        return invokeWithReconnect( { return mbsc.queryMBeans(objectName, null) } )
     }
 
     public ObjectInstance findMBean(ObjectName objectName) {
@@ -264,7 +277,8 @@ public class JmxHelper {
 
 		ObjectInstance bean = findMBean objectName
 		if (bean != null) {
-			def result = mbsc.getAttribute(bean.objectName, attribute)
+            def result = invokeWithReconnect( { return mbsc.getAttribute(bean.objectName, attribute) } )
+            
 			if (LOG.isTraceEnabled()) LOG.trace "From {}, for jmx attribute {}.{}, got value {}", url, objectName.canonicalName, attribute, result
 			return result
 		} else {
@@ -281,7 +295,7 @@ public class JmxHelper {
 
         ObjectInstance bean = findMBean objectName
         if (bean != null) {
-            mbsc.setAttribute(bean.objectName, new javax.management.Attribute(attribute, val))
+            invokeWithReconnect( { mbsc.setAttribute(bean.objectName, new javax.management.Attribute(attribute, val)) } )
             if (LOG.isTraceEnabled()) LOG.trace "From {}, for jmx attribute {}.{}, set value {}", url, objectName.canonicalName, attribute, val
         } else {
             if (LOG.isDebugEnabled()) LOG.debug "From {}, cannot set attribute {}.{}, because mbean not found", url, objectName.canonicalName, attribute
@@ -305,7 +319,8 @@ public class JmxHelper {
 			Class clazz = arg.getClass();
 			signature[index] = (CLASSES.containsKey(clazz.simpleName) ? CLASSES.get(clazz.simpleName) : clazz.name);
 		}
-		def result = mbsc.invoke(objectName, method, arguments, signature)
+        def result = invokeWithReconnect( { return mbsc.invoke(objectName, method, arguments, signature) } )
+        
 		if (LOG.isTraceEnabled()) LOG.trace "From {}, for jmx operation {}.{}, got value {}", url, objectName.canonicalName, method, result
 		return result
 	}
@@ -315,7 +330,8 @@ public class JmxHelper {
 	}
 
 	public void addNotificationListener(ObjectName objectName, NotificationListener listener, NotificationFilter filter=null) {
-		mbsc.addNotificationListener(objectName, listener, filter, null)
+        invokeWithReconnect( { mbsc.addNotificationListener(objectName, listener, filter, null) } )
+		
 	}
 
     public void removeNotificationListener(String objectName, NotificationListener listener) {
@@ -323,7 +339,7 @@ public class JmxHelper {
     }
 
     public void removeNotificationListener(ObjectName objectName, NotificationListener listener) {
-        if (mbsc) mbsc.removeNotificationListener(objectName, listener, null, null)
+        if (mbsc) invokeWithReconnect( { mbsc.removeNotificationListener(objectName, listener, null, null) } )
     }
 
 	public <M> M getProxyObject(String objectName, Class<M> mbeanInterface) {
@@ -333,4 +349,17 @@ public class JmxHelper {
 	public <M> M getProxyObject(ObjectName objectName, Class<M> mbeanInterface) {
 		return JMX.newMBeanProxy(mbsc, objectName, mbeanInterface, false)
 	}
+    
+    private <T> T invokeWithReconnect(Callable<T> task) {
+        try {
+            return task.call()
+        } catch (Exception e) {
+            if (shouldRetryOn(e)) {
+                do conditional logging...
+                triedReconnecting = true
+                reconnect();
+                return task.call();
+            }
+        }
+    }
 }

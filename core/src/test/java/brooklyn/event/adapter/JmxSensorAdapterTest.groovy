@@ -60,7 +60,7 @@ public class JmxSensorAdapterTest {
     private JmxHelper jmxHelper
     
     private BasicAttributeSensor<Integer> intAttribute = [ Integer, "brooklyn.test.intAttribute", "Brooklyn testing int attribute" ]
-    private BasicAttributeSensor<String> stringAttribute = [ String, "brooklyn.test.intAttribute", "Brooklyn testing int attribute" ]
+    private BasicAttributeSensor<String> stringAttribute = [ String, "brooklyn.test.stringAttribute", "Brooklyn testing string attribute" ]
     private BasicAttributeSensor<Map> mapAttribute = [ Map, "brooklyn.test.mapAttribute", "Brooklyn testing map attribute" ]
     private String objectName = 'Brooklyn:type=MyTestMBean,name=myname'
     private ObjectName jmxObjectName = new ObjectName('Brooklyn:type=MyTestMBean,name=myname')
