@@ -163,7 +163,7 @@ public abstract class AbstractJcloudsLocationTest {
         assertTrue machine.isSshable()
     }
 
-    // Use this utility method to ensure 
+    // Use this utility method to ensure machines are released on tearDown
     protected SshMachineLocation obtainMachine(Map flags) {
         SshMachineLocation result = loc.obtain(flags)
         machines.add(result)

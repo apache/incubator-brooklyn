@@ -38,13 +38,15 @@ import com.google.common.io.Files
 
 public class JcloudsLocation extends AbstractLocation implements MachineProvisioningLocation<SshMachineLocation> {
 
+    // TODO Needs a big overhaul of how config is being managed, and what the property names are (particularly for private-keys)
+    
     public static final Logger LOG = LoggerFactory.getLogger(JcloudsLocation.class)
     
     public static final String ROOT_USERNAME = "root";
     public static final int START_SSHABLE_TIMEOUT = 5*60*1000;
 
     private final Map<String,Map<String, ? extends Object>> tagMapping = [:]
-    private final Map<SshMachineLocation,String> vmInstanceIds = [:]
+    private final Map<JcloudsSshMachineLocation,String> vmInstanceIds = [:]
 
     JcloudsLocation(Map conf) {
         super(conf)
@@ -62,6 +64,10 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     @Override
     public String toString() {
         return getClass().getSimpleName()+"["+conf?.identity+":"+name+"]";
+    }
+    
+    public String getProvider() {
+        return conf.provider
     }
     
     public Map getConf() { return leftoverProperties; }
@@ -110,12 +116,12 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         providerLocationId:{}, provider:{} ];
     
     /** returns public key file, if one has been configured */
-    public File getPublicKeyFile() { asFile(conf.publicKeyFile) }
+    public File getPublicKeyFile() { asFile(conf.publicKeyFile) ?: asFile(conf.sshPublicKey) }
     
     /** returns private key file, if one has been configured */
-    public File getPrivateKeyFile() { asFile(conf.privateKeyFile) }
+    public File getPrivateKeyFile() { asFile(conf.privateKeyFile) ?: asFile(conf.sshPrivateKey) }
 
-    public SshMachineLocation obtain(Map flags=[:]) throws NoMachinesAvailableException {
+    public JcloudsSshMachineLocation obtain(Map flags=[:]) throws NoMachinesAvailableException {
         Map allconf = flags + conf;
         Map unusedConf = [:] + allconf
         if (!unusedConf.remove("userName")) allconf.userName = ROOT_USERNAME
@@ -199,6 +205,60 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
 //            computeService.getContext().close();
         }
 
+    }
+    
+    /**
+     * Brings an existing machine with the given details under management.
+     * <p>
+     * Required fields are:
+     * <ul>
+     *   <li>id: the jclouds VM id, e.g. "eu-west-1/i-5504f21d"
+     *   <li>hostname: the public hostname or IP of the machine, e.g. "ec2-176-34-93-58.eu-west-1.compute.amazonaws.com"
+     *   <li>userName: the username for ssh'ing into the machine
+     * <ul>
+     */
+    public JcloudsSshMachineLocation rebindMachine(Map flags) throws NoMachinesAvailableException {
+        String id = flags.id
+        String hostname = flags.hostname
+        String username = flags.userName
+        
+        LOG.info("Rebinding to VM $id ($username@$hostname), in lclouds location for provider $provider")
+        
+        // TODO Tidy code below
+        Map allconf = flags + conf;
+        Map unusedConf = [:] + allconf
+        if (!unusedConf.remove("userName")) allconf.userName = ROOT_USERNAME
+        //TODO deprecate supply of data (and of different root key?) to keep it simpler
+        if (unusedConf.remove("publicKeyFile")) allconf.sshPublicKeyData = Files.toString(getPublicKeyFile(), Charsets.UTF_8)
+        if (unusedConf.remove("privateKeyFile")) allconf.sshPrivateKeyData = Files.toString(getPrivateKeyFile(), Charsets.UTF_8)
+        if (unusedConf.remove("sshPublicKey")) allconf.sshPublicKeyData = Files.toString(asFile(allconf.sshPublicKey), Charsets.UTF_8)
+        if (unusedConf.remove("sshPrivateKey")) allconf.sshPrivateKeyData = Files.toString(asFile(allconf.sshPrivateKey), Charsets.UTF_8)
+        if (unusedConf.remove("rootSshPrivateKey")) allconf.rootSshPrivateKeyData = Files.toString(asFile(allconf.rootSshPrivateKey), Charsets.UTF_8)
+        if (unusedConf.remove("rootSshPublicKey")) allconf.rootSshPublicKeyData = Files.toString(asFile(allconf.rootSshPublicKey), Charsets.UTF_8)
+        String groupId = (unusedConf.remove("groupId") ?: "brooklyn-"+System.getProperty("user.name")+"-"+IdGenerator.makeRandomId(8))
+ 
+        unusedConf.remove("provider");
+        unusedConf.remove("providerLocationId");
+        
+        ComputeService computeService = JcloudsUtil.buildComputeService(allconf, unusedConf);
+        NodeMetadata node = computeService.getNodeMetadata(id)
+        if (node == null) {
+            throw new IllegalArgumentException("Node not found with id "+id)
+        }
+        
+        Map sshConfig = [:]
+        if (getPrivateKeyFile()) sshConfig.keyFiles = [ getPrivateKeyFile().getCanonicalPath() ] 
+        if (allconf.sshPrivateKeyData) sshConfig.privateKey = allconf.sshPrivateKeyData 
+        JcloudsSshMachineLocation sshLocByHostname = new JcloudsSshMachineLocation(this, node,
+                address:hostname, 
+                displayName:hostname,
+                username:username, 
+                config:sshConfig);
+
+        sshLocByHostname.setParentLocation(this)
+        vmInstanceIds.put(sshLocByHostname, node.getId())
+            
+        return sshLocByHostname
     }
     
     private static File asFile(Object o) {
@@ -382,5 +442,9 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             	return node.getPrivateAddresses().iterator().next()
 			return parent.getPublicHostname(node, null);
 		}
+        
+        public String getJcloudsId() {
+            return node.getId();
+        }
 	}
 }
