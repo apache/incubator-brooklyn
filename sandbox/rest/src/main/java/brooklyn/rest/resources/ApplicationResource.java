@@ -1,12 +1,15 @@
 package brooklyn.rest.resources;
 
+import brooklyn.entity.Entity;
 import brooklyn.rest.api.Application;
 import brooklyn.rest.api.ApplicationSpec;
 import brooklyn.rest.api.EntitySpec;
-import brooklyn.rest.api.Location;
 import brooklyn.rest.core.ApplicationManager;
 import brooklyn.rest.core.LocationStore;
+import com.google.common.base.Function;
 import static com.google.common.base.Preconditions.checkNotNull;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import java.net.URI;
 import javax.validation.Valid;
 import javax.ws.rs.DELETE;
@@ -21,14 +24,14 @@ import javax.ws.rs.core.Response;
 
 @Path("/v1/applications")
 @Produces(MediaType.APPLICATION_JSON)
-public class ApplicationResource {
+public class ApplicationResource extends BaseResource {
 
   private final ApplicationManager manager;
-  private final EntityResource entities;
+  private final CatalogResource entities;
   private final LocationStore locations;
 
   public ApplicationResource(
-      ApplicationManager manager, LocationStore locations, EntityResource entities
+      ApplicationManager manager, LocationStore locations, CatalogResource entities
   ) {
     this.manager = checkNotNull(manager, "manager");
     this.locations = checkNotNull(locations, "locations");
@@ -47,6 +50,28 @@ public class ApplicationResource {
       return manager.registry().get(name);
     }
     throw new WebApplicationException(Response.Status.NOT_FOUND);
+  }
+
+  @GET
+  @Path("{application}/entities")
+  public Iterable<URI> getEntities(@PathParam("application") final String name) {
+    Application application = getApplicationOr404(manager.registry(), name);
+    return Iterables.transform(application.getInstance().getOwnedChildren(),
+        new Function<Entity, URI>() {
+          @Override
+          public URI apply(Entity entity) {
+            return URI.create("/v1/applications/" + name + "/entities/" + entity.getId());
+          }
+        });
+  }
+
+  @GET
+  @Path("{application}/entities/{entity}")
+  public Iterable<URI> getChildrenEntities(
+      @PathParam("application") final String applicationName,
+      @PathParam("entity") final String entityName
+  ) {
+    return ImmutableSet.of();
   }
 
   @POST
@@ -72,7 +97,7 @@ public class ApplicationResource {
 
   private boolean anyEntityIsNotAvailable(ApplicationSpec applicationSpec) {
     for (EntitySpec entitySpec : applicationSpec.getEntities()) {
-      if (!entities.contains(entitySpec.getType())) {
+      if (!entities.containsEntity(entitySpec.getType())) {
         return true;
       }
     }

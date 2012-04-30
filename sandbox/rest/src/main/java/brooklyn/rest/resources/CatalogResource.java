@@ -5,15 +5,12 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.trait.Startable;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableSet;
 import static com.google.common.collect.Iterables.filter;
 import static com.google.common.collect.Iterables.transform;
 import com.google.common.collect.Maps;
 import static com.google.common.collect.Sets.newHashSet;
 import com.yammer.dropwizard.logging.Log;
-import com.yammer.metrics.annotation.Timed;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.Map;
 import java.util.Set;
@@ -29,16 +26,16 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.reflections.Reflections;
 
-@Path("/v1/catalog/entities")
+@Path("/v1/catalog")
 @Produces(MediaType.APPLICATION_JSON)
-public class EntityResource {
+public class CatalogResource {
 
-  private static final Log LOG = Log.forClass(EntityResource.class);
+  private static final Log LOG = Log.forClass(CatalogResource.class);
 
   private Set<String> entities;
 
-  public EntityResource() {
-    LOG.info("Building a list of startable entities from the classpath");
+  public CatalogResource() {
+    LOG.info("Building a catalog of startable entities from the classpath");
     Reflections reflections = new Reflections("brooklyn");
 
     entities = newHashSet(transform(filter(
@@ -61,11 +58,12 @@ public class EntityResource {
         }));
   }
 
-  public boolean contains(String entityName) {
+  public boolean containsEntity(String entityName) {
     return entities.contains(entityName);
   }
 
   @GET
+  @Path("entities")
   public Iterable<String> list(
       final @QueryParam("name") @DefaultValue("") String name
   ) {
@@ -83,7 +81,7 @@ public class EntityResource {
   }
 
   @GET
-  @Path("{entity}")
+  @Path("entities/{entity}")
   public Set<String> get(@PathParam("entity") String entityName) throws Exception {
     try {
       Class<EntityLocal> clazz = (Class<EntityLocal>) Class.forName(entityName);

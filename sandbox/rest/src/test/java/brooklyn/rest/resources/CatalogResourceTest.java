@@ -10,11 +10,11 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 import org.testng.annotations.Test;
 
-public class EntityResourceTest extends BaseResourceTest {
+public class CatalogResourceTest extends BaseResourceTest {
 
   @Override
   protected void setUpResources() throws Exception {
-    addResource(new EntityResource());
+    addResource(new CatalogResource());
   }
 
   @Test

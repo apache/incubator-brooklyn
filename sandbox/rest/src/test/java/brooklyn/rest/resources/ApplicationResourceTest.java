@@ -12,11 +12,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.UniformInterfaceException;
-import com.yammer.dropwizard.logging.Log;
 import java.net.URI;
 import java.util.Map;
 import java.util.Set;
@@ -47,7 +45,7 @@ public class ApplicationResourceTest extends BaseResourceTest {
 
     manager = new ApplicationManager(new BrooklynConfiguration(), locationStore, executorService);
 
-    addResource(new ApplicationResource(manager, locationStore, new EntityResource()));
+    addResource(new ApplicationResource(manager, locationStore, new CatalogResource()));
     addResource(new SensorResource(manager));
     addResource(new EffectorResource(manager, executorService));
   }
