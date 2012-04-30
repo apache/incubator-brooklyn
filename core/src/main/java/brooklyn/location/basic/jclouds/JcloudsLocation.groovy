@@ -4,6 +4,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS
 import static java.util.concurrent.TimeUnit.SECONDS
 import static org.jclouds.compute.options.RunScriptOptions.Builder.overrideLoginCredentials
 import static org.jclouds.scriptbuilder.domain.Statements.exec
+import static com.google.common.base.Preconditions.checkNotNull
 
 import javax.annotation.Nullable
 
@@ -218,11 +219,11 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
      * <ul>
      */
     public JcloudsSshMachineLocation rebindMachine(Map flags) throws NoMachinesAvailableException {
-        String id = flags.id
-        String hostname = flags.hostname
-        String username = flags.userName
+        String id = checkNotNull(flags.id, "id")
+        String hostname = checkNotNull(flags.hostname, "hostname")
+        String username = checkNotNull(flags.userName, "userName")
         
-        LOG.info("Rebinding to VM $id ($username@$hostname), in lclouds location for provider $provider")
+        LOG.info("Rebinding to VM $id ($username@$hostname), in jclouds location for provider $provider")
         
         // TODO Tidy code below
         Map allconf = flags + conf;

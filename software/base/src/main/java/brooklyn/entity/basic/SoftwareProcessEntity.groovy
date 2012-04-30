@@ -82,6 +82,15 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 		setAttribute(SERVICE_STATE, Lifecycle.CREATED)
 	}
 
+    protected void setProvisioningLocation(MachineProvisioningLocation val) {
+        if (provisioningLoc) throw new IllegalStateException("Cannot change provisioning location: existing="+provisioningLoc+"; new="+val)
+        provisioningLoc = val
+    }
+    
+    protected MachineProvisioningLocation getProvisioningLocation() {
+        return provisioningLoc
+    }
+    
 	public StartStopDriver getDriver() { driverLocal }
 	@Deprecated /** refer to driver instead */
 	public StartStopDriver getSetup() { driver }
@@ -176,17 +185,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 
     public void startInLocation(SshMachineLocation machine) {
         locations.add(machine)
-
-        if (driver!=null) {
-            if ((driver in StartStopSshDriver) && ( ((StartStopSshDriver)driver).location==machine)) {
-                //just reuse
-            } else {
-                log.warn("driver/location change for {} is untested: cannot start ${this} on ${machine}: driver already created");
-                driverLocal = newDriver(machine)
-            }
-        } else {
-            driverLocal = newDriver(machine)
-        }
+        initDriver(machine)
         
         // Note: must only apply config-sensors after adding to locations and creating driver; 
         // otherwise can't do things like acquire free port from location, or allowing driver to set up ports
@@ -209,6 +208,19 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 		}
 	}
 
+    protected void initDriver(SshMachineLocation machine) {
+        if (driver!=null) {
+            if ((driver in StartStopSshDriver) && ( ((StartStopSshDriver)driver).location==machine)) {
+                //just reuse
+            } else {
+                log.warn("driver/location change for {} is untested: cannot start ${this} on ${machine}: driver already created");
+                driverLocal = newDriver(machine)
+            }
+        } else {
+            driverLocal = newDriver(machine)
+        }
+    }
+    
 	// TODO Find a better way to detect early death of process.
 	public void waitForEntityStart() throws IllegalStateException {
 		if (log.isDebugEnabled()) log.debug "waiting to ensure $this doesn't abort prematurely"
