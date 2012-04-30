@@ -11,4 +11,7 @@
     }
   ],
   "locations":["/v1/locations/1"]
-}, "status":"STARTING"}
+}, "status":"STARTING", "links":{
+  "self":"/v1/applications/myapp",
+  "entities":"/v1/applications/myapp/entities"
+}}

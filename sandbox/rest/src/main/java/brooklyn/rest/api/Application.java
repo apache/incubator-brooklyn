@@ -4,7 +4,12 @@ import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.EntityLocal;
 import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
+import java.net.URI;
+import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
 
@@ -58,6 +63,17 @@ public class Application {
 
   public Status getStatus() {
     return status;
+  }
+
+  /* only to make jackson happy */
+  private void setLinks(Map<String, URI> _) {
+  }
+
+  public Map<String, URI> getLinks() {
+    return ImmutableMap.of(
+        "self", URI.create("/v1/applications/" + spec.getName()),
+        "entities", URI.create("/v1/applications/" + spec.getName() + "/entities")
+    );
   }
 
   public Application transitionTo(Status newStatus) {

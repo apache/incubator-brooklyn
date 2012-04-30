@@ -1,0 +1,5 @@
+{"name":"stop",
+  "description":"Effector description",
+  "returnType":"String",
+  "parameters":[],
+  "self":"/v1/applications/redis/entities/redis-ent/effectors/stop"}

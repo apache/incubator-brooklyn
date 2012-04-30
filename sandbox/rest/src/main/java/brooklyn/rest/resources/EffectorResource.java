@@ -4,6 +4,7 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.rest.api.Application;
+import brooklyn.rest.api.EffectorSummary;
 import brooklyn.rest.core.ApplicationManager;
 import com.google.common.base.Function;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -33,7 +34,7 @@ public class EffectorResource extends BaseResource {
   }
 
   @GET
-  public Iterable<URI> list(
+  public Iterable<EffectorSummary> list(
       @PathParam("application") final String applicationName,
       @PathParam("entity") final String entityIdOrName
   ) {
@@ -42,11 +43,14 @@ public class EffectorResource extends BaseResource {
 
     return transform(
         entity.getEffectors().entrySet(),
-        new Function<Map.Entry<String, Effector<?>>, URI>() {
+        new Function<Map.Entry<String, Effector<?>>, EffectorSummary>() {
           @Override
-          public URI apply(Map.Entry<String, Effector<?>> entry) {
-            return URI.create(String.format("/v1/applications/%s/entities/%s/effectors/%s",
-                applicationName, entityIdOrName, entry.getValue().getName()));
+          public EffectorSummary apply(Map.Entry<String, Effector<?>> entry) {
+            return new EffectorSummary(
+                URI.create(String.format(
+                    "/v1/applications/%s/entities/%s/effectors/%s",
+                    applicationName, entityIdOrName, entry.getValue().getName())),
+                entry.getValue());
           }
         });
   }

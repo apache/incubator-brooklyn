@@ -5,12 +5,15 @@ import brooklyn.rest.BaseResourceTest;
 import brooklyn.rest.BrooklynConfiguration;
 import brooklyn.rest.api.Application;
 import brooklyn.rest.api.ApplicationSpec;
+import brooklyn.rest.api.EffectorSummary;
 import brooklyn.rest.api.EntitySpec;
 import brooklyn.rest.core.ApplicationManager;
 import brooklyn.rest.core.LocationStore;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import static com.google.common.collect.Iterables.find;
 import com.google.common.collect.Maps;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
@@ -21,6 +24,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
+import javax.annotation.Nullable;
 import javax.ws.rs.core.Response;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -124,12 +128,19 @@ public class ApplicationResourceTest extends BaseResourceTest {
 
   @Test(dependsOnMethods = "testDeployRedisApplication")
   public void testListEffectors() {
-    Set<URI> effectors = client().resource("/v1/applications/redis-app/entities/redis-ent/effectors")
-        .get(new GenericType<Set<URI>>() {
+    Set<EffectorSummary> effectors = client().resource("/v1/applications/redis-app/entities/redis-ent/effectors")
+        .get(new GenericType<Set<EffectorSummary>>() {
         });
 
-    assertTrue(effectors.contains(
-        URI.create("/v1/applications/redis-app/entities/redis-ent/effectors/stop")));
+    assertTrue(effectors.size() > 0);
+
+    EffectorSummary stopEffector = find(effectors, new Predicate<EffectorSummary>() {
+      @Override
+      public boolean apply(EffectorSummary input) {
+        return input.getName().equals("stop");
+      }
+    });
+    assertEquals(stopEffector.getReturnType(), "void");
   }
 
   @Test(dependsOnMethods = "testReadAllSensors")

@@ -37,28 +37,13 @@ public class CatalogResource {
   private Set<String> policies;
 
   public CatalogResource() {
-    LOG.info("Building a catalog of startable entities from the classpath");
     Reflections reflections = new Reflections("brooklyn");
 
-    entities = newHashSet(transform(filter(
-        reflections.getSubTypesOf(Startable.class),
-        new Predicate<Class<? extends Startable>>() {
-          @Override
-          public boolean apply(@Nullable Class<? extends Startable> aClass) {
-            return !Modifier.isAbstract(aClass.getModifiers()) &&
-                !aClass.isInterface() &&
-                AbstractEntity.class.isAssignableFrom(aClass) &&
-                !aClass.isAnonymousClass();
-          }
-        }),
-        new Function<Class<? extends Startable>, String>() {
-          @Override
-          public String apply(Class<? extends Startable> aClass) {
-            LOG.info("Found entity '{}'", aClass.getName());
-            return aClass.getName();
-          }
-        }));
+    cacheListOfEntities(reflections);
+    cacheListOfPolicies(reflections);
+  }
 
+  private void cacheListOfPolicies(Reflections reflections) {
     LOG.info("Building a catalog of policies from the classpath");
     policies = newHashSet(transform(filter(
         reflections.getSubTypesOf(AbstractPolicy.class),
@@ -77,6 +62,28 @@ public class CatalogResource {
           }
         }
     ));
+  }
+
+  private void cacheListOfEntities(Reflections reflections) {
+    LOG.info("Building a catalog of startable entities from the classpath");
+    entities = newHashSet(transform(filter(
+        reflections.getSubTypesOf(Startable.class),
+        new Predicate<Class<? extends Startable>>() {
+          @Override
+          public boolean apply(@Nullable Class<? extends Startable> aClass) {
+            return !Modifier.isAbstract(aClass.getModifiers()) &&
+                !aClass.isInterface() &&
+                AbstractEntity.class.isAssignableFrom(aClass) &&
+                !aClass.isAnonymousClass();
+          }
+        }),
+        new Function<Class<? extends Startable>, String>() {
+          @Override
+          public String apply(Class<? extends Startable> aClass) {
+            LOG.info("Found entity '{}'", aClass.getName());
+            return aClass.getName();
+          }
+        }));
   }
 
   public boolean containsEntity(String entityName) {
@@ -103,7 +110,7 @@ public class CatalogResource {
 
   @GET
   @Path("entities/{entity}")
-  public Set<String> getEntity(@PathParam("entity") String entityName) throws Exception {
+  public Iterable<String> getEntity(@PathParam("entity") String entityName) throws Exception {
     try {
       Class<EntityLocal> clazz = (Class<EntityLocal>) Class.forName(entityName);
       Constructor constructor = clazz.getConstructor(new Class[]{Map.class});
