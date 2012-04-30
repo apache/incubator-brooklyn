@@ -42,12 +42,16 @@ public abstract class AbstractConfigurableEntityFactory<T extends Entity> implem
 
 public class BasicConfigurableEntityFactory<T extends Entity> extends AbstractConfigurableEntityFactory<T> {
     private final Class<T> clazz;
-    public BasicConfigurableEntityFactory(Map flags=[:], Class<T> clazz) {
+    private final Closure postProcessor;
+    public BasicConfigurableEntityFactory(Map flags=[:], Class<T> clazz, Closure postProcessor=null) {
         super(flags);
         this.clazz = clazz;
+        this.postProcessor = postProcessor;
     }
     public T newEntity2(Map flags, Entity owner) {
-        clazz.getConstructor(Map, Entity).newInstance(flags, owner);
+        T result = clazz.getConstructor(Map, Entity).newInstance(flags, owner);
+        postProcessor?.call(result);
+        return result
     }
 }
 
