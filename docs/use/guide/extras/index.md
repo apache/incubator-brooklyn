@@ -114,3 +114,16 @@ See ``QpidSetup`` for instantiating a broker.
 
 ActiveMQ support provides a JMS broker. This exposes JMS queues and topics as entities as well. See ``ActiveMQSetup`` for
 instantiating a broker.
+
+
+
+<a name="provisioning"></a>
+Provisioning
+---------
+
+### Apache Whirr
+
+
+Whirr allows running services on a variety of cloud providers and on localhost. This is done by providing a ``recipe`` which describes what services to launch. You can find an example of how Brooklyn integrates with Whirr here [TODO: link].
+
+

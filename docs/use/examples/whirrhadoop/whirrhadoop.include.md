@@ -48,7 +48,15 @@ whirr.instance-templates= 1 noop, 1 elasticsearch
     WhirrCluster cluster = new WhirrCluster(this, recipe: RECIPE);
 {% endhighlight %}
 
-This can be launched with the script ``./demo-whirr-recipe.sh``.
+This can be launched with the script ``./demo-whirr-recipe.sh`` that will by default deploy to AWS.
+
+If you would like to deploy to localhost, you can do this by running ``./demo-whirr-recipe.sh localhost``. However, please note that currently there are some limitations when deploying to localhost:
+	* you can not deploy more than one server (noop doesn't count)
+	* this has only been tested on Ubuntu 10.04 and might cause problems on other operating systems
+	* your user will need to be configured for passwordless ssh on localhost [TODO: link]
+	* also, your user will need to be configured for passwordless sudo on localhost [TODO: link]
+
+
 Feel free to experiment with the instance template parameter,
 trying out other recipes from Whirr.
 
