@@ -7,8 +7,6 @@ import brooklyn.rest.api.Application;
 import brooklyn.rest.core.ApplicationManager;
 import com.google.common.base.Function;
 import static com.google.common.base.Preconditions.checkNotNull;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import static com.google.common.collect.Iterables.transform;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -16,16 +14,14 @@ import java.net.URI;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
-import javax.annotation.Nullable;
 import javax.validation.Valid;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
-@Path("/v1/applications/{application}/effectors")
+@Path("/v1/applications/{application}/entities/{entity}/effectors")
 public class EffectorResource extends BaseResource {
 
   private final ApplicationManager manager;
@@ -37,40 +33,34 @@ public class EffectorResource extends BaseResource {
   }
 
   @GET
-  public Map<String, Set<URI>> list(
-      @PathParam("application") final String applicationName
+  public Iterable<URI> list(
+      @PathParam("application") final String applicationName,
+      @PathParam("entity") final String entityIdOrName
   ) {
     final Application application = getApplicationOr404(manager.registry(), applicationName);
+    final EntityLocal entity = getEntityOr404(application, entityIdOrName);
 
-    Map<String, Set<URI>> results = Maps.newHashMap();
-    for (final Entity entity : application.getInstance().getOwnedChildren()) {
-      if (entity instanceof EntityLocal) {
-        results.put(entity.getDisplayName(),
-            Sets.newHashSet(transform(
-                ((EntityLocal) entity).getEffectors().entrySet(),
-                new Function<Map.Entry<String, Effector<?>>, URI>() {
-                  @Override
-                  public URI apply(Map.Entry<String, Effector<?>> entry) {
-                    return URI.create(String.format("/v1/applications/%s/effectors/%s/%s",
-                        applicationName, entity.getDisplayName(), entry.getValue().getName()));
-                  }
-                })));
-      }
-    }
-
-    return results;
+    return transform(
+        entity.getEffectors().entrySet(),
+        new Function<Map.Entry<String, Effector<?>>, URI>() {
+          @Override
+          public URI apply(Map.Entry<String, Effector<?>> entry) {
+            return URI.create(String.format("/v1/applications/%s/entities/%s/effectors/%s",
+                applicationName, entityIdOrName, entry.getValue().getName()));
+          }
+        });
   }
 
   @POST
-  @Path("{entity}/{effector}")
+  @Path("{effector}")
   public Response trigger(
       @PathParam("application") String applicationName,
-      @PathParam("entity") String entityName,
+      @PathParam("entity") String entityIdOrName,
       @PathParam("effector") String effectorName,
       @Valid final Map<String, String> parameters
   ) {
     final Application application = getApplicationOr404(manager.registry(), applicationName);
-    final EntityLocal entity = getEntityLocalOr404(application, entityName);
+    final EntityLocal entity = getEntityOr404(application, entityIdOrName);
 
     final Effector<?> effector = entity.getEffectors().get(effectorName);
     executorService.submit(new Runnable() {

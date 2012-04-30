@@ -27,15 +27,15 @@ import javax.ws.rs.core.Response;
 public class ApplicationResource extends BaseResource {
 
   private final ApplicationManager manager;
-  private final CatalogResource entities;
+  private final CatalogResource catalog;
   private final LocationStore locations;
 
   public ApplicationResource(
-      ApplicationManager manager, LocationStore locations, CatalogResource entities
+      ApplicationManager manager, LocationStore locations, CatalogResource catalog
   ) {
     this.manager = checkNotNull(manager, "manager");
     this.locations = checkNotNull(locations, "locations");
-    this.entities = checkNotNull(entities, "entities");
+    this.catalog = checkNotNull(catalog, "catalog");
   }
 
   @GET
@@ -50,28 +50,6 @@ public class ApplicationResource extends BaseResource {
       return manager.registry().get(name);
     }
     throw new WebApplicationException(Response.Status.NOT_FOUND);
-  }
-
-  @GET
-  @Path("{application}/entities")
-  public Iterable<URI> getEntities(@PathParam("application") final String name) {
-    Application application = getApplicationOr404(manager.registry(), name);
-    return Iterables.transform(application.getInstance().getOwnedChildren(),
-        new Function<Entity, URI>() {
-          @Override
-          public URI apply(Entity entity) {
-            return URI.create("/v1/applications/" + name + "/entities/" + entity.getId());
-          }
-        });
-  }
-
-  @GET
-  @Path("{application}/entities/{entity}")
-  public Iterable<URI> getChildrenEntities(
-      @PathParam("application") final String applicationName,
-      @PathParam("entity") final String entityName
-  ) {
-    return ImmutableSet.of();
   }
 
   @POST
@@ -97,7 +75,7 @@ public class ApplicationResource extends BaseResource {
 
   private boolean anyEntityIsNotAvailable(ApplicationSpec applicationSpec) {
     for (EntitySpec entitySpec : applicationSpec.getEntities()) {
-      if (!entities.containsEntity(entitySpec.getType())) {
+      if (!catalog.containsEntity(entitySpec.getType())) {
         return true;
       }
     }

@@ -32,6 +32,7 @@ public class ApplicationManager implements Managed {
 
   private final LocationStore locationStore;
   private final ConcurrentMap<String, Application> applications;
+
   private final ExecutorService executorService;
   private final BrooklynConfiguration configuration;
 
@@ -57,6 +58,7 @@ public class ApplicationManager implements Managed {
       destroyAllInBackground();
       waitForAllApplicationsToStopOrError();
     }
+    // TODO save data about running applications to external storage
   }
 
   private void waitForAllApplicationsToStopOrError() throws InterruptedException {

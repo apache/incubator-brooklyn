@@ -98,4 +98,6 @@ public class CatalogResource {
     }
   }
 
+  // TODO add an endpoint for policies
+
 }

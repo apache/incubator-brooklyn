@@ -41,8 +41,8 @@ public class LocationResource {
 
   @GET
   @Path("{location}")
-  public Map<String, String> get(@PathParam("location") Integer id) {
-    return asMap(id, store.get(id));
+  public Map<String, String> get(@PathParam("location") Integer locationId) {
+    return asMap(locationId, store.get(locationId));
   }
 
   private Map<String, String> asMap(Integer id, Location loc) {

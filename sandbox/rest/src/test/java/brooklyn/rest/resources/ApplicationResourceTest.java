@@ -46,6 +46,7 @@ public class ApplicationResourceTest extends BaseResourceTest {
     manager = new ApplicationManager(new BrooklynConfiguration(), locationStore, executorService);
 
     addResource(new ApplicationResource(manager, locationStore, new CatalogResource()));
+    addResource(new EntityResource(manager));
     addResource(new SensorResource(manager));
     addResource(new EffectorResource(manager, executorService));
   }
@@ -94,6 +95,16 @@ public class ApplicationResourceTest extends BaseResourceTest {
   }
 
   @Test(dependsOnMethods = "testDeployRedisApplication")
+  public void testListEntities() {
+    Set<URI> entities = client().resource("/v1/applications/redis-app/entities")
+        .get(new GenericType<Set<URI>>() {
+        });
+    for (URI ref : entities) {
+      client().resource(ref).get(ClientResponse.class);
+    }
+  }
+
+  @Test(dependsOnMethods = "testDeployRedisApplication")
   public void testListApplications() {
     Set<Application> applications = client().resource("/v1/applications")
         .get(new GenericType<Set<Application>>() {
@@ -104,48 +115,46 @@ public class ApplicationResourceTest extends BaseResourceTest {
 
   @Test(dependsOnMethods = "testDeployRedisApplication")
   public void testListSensors() {
-    Map<String, Set<URI>> sensors = client().resource("/v1/applications/redis-app/sensors")
-        .get(new GenericType<Map<String, Set<URI>>>() {
+    Set<URI> sensors = client().resource("/v1/applications/redis-app/entities/redis-ent/sensors")
+        .get(new GenericType<Set<URI>>() {
         });
-    assertTrue(sensors.containsKey("redis-ent"));
-    assertTrue(sensors.get("redis-ent").contains(
-        URI.create("/v1/applications/redis-app/sensors/redis-ent/redis.uptime")));
+    assertTrue(sensors.contains(
+        URI.create("/v1/applications/redis-app/entities/redis-ent/sensors/redis.uptime")));
   }
 
   @Test(dependsOnMethods = "testListSensors")
   public void testReadAllSensors() {
-    Map<String, Set<URI>> sensors = client().resource("/v1/applications/redis-app/sensors")
-        .get(new GenericType<Map<String, Set<URI>>>() {
+    Set<URI> sensors = client().resource("/v1/applications/redis-app/entities/redis-ent/sensors")
+        .get(new GenericType<Set<URI>>() {
         });
 
     Map<String, String> readings = Maps.newHashMap();
-    for (URI ref : sensors.get("redis-ent")) {
+    for (URI ref : sensors) {
       readings.put(ref.toString(), client().resource(ref).get(String.class));
     }
 
-    assertEquals(readings.get("/v1/applications/redis-app/sensors/redis-ent/service.state"), "running");
-    assertEquals(readings.get("/v1/applications/redis-app/sensors/redis-ent/redis.port"), "6379");
+    assertEquals(readings.get("/v1/applications/redis-app/entities/redis-ent/sensors/service.state"), "running");
+    assertEquals(readings.get("/v1/applications/redis-app/entities/redis-ent/sensors/redis.port"), "6379");
   }
 
   @Test(dependsOnMethods = "testDeployRedisApplication")
   public void testListEffectors() {
-    Map<String, Set<URI>> effectors = client().resource("/v1/applications/redis-app/effectors")
-        .get(new GenericType<Map<String, Set<URI>>>() {
+    Set<URI> effectors = client().resource("/v1/applications/redis-app/entities/redis-ent/effectors")
+        .get(new GenericType<Set<URI>>() {
         });
 
-    assertTrue(effectors.containsKey("redis-ent"));
-    assertTrue(effectors.get("redis-ent").contains(
-        URI.create("/v1/applications/redis-app/effectors/redis-ent/stop")));
+    assertTrue(effectors.contains(
+        URI.create("/v1/applications/redis-app/entities/redis-ent/effectors/stop")));
   }
 
   @Test(dependsOnMethods = "testReadAllSensors")
   public void testTriggerStopEffector() throws InterruptedException {
-    ClientResponse response = client().resource("/v1/applications/redis-app/effectors/redis-ent/stop")
+    ClientResponse response = client().resource("/v1/applications/redis-app/entities/redis-ent/effectors/stop")
         .post(ClientResponse.class, ImmutableMap.of());
 
     assertEquals(response.getStatus(), Response.Status.ACCEPTED.getStatusCode());
 
-    URI stateSensor = URI.create("/v1/applications/redis-app/sensors/redis-ent/service.state");
+    URI stateSensor = URI.create("/v1/applications/redis-app/entities/redis-ent/sensors/service.state");
     while (!client().resource(stateSensor).get(String.class).equals(Lifecycle.STOPPED.toString())) {
       Thread.sleep(5000);
     }

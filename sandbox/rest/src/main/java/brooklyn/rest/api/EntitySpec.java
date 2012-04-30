@@ -24,7 +24,7 @@ public class EntitySpec {
   ) {
     this.name = checkNotNull(name, "name");
     this.type = checkNotNull(type, "type");
-    this.config = ImmutableMap.copyOf(config);
+    this.config = (config != null) ? ImmutableMap.copyOf(config) : ImmutableMap.<String, String>of();
   }
 
   public String getName() {

@@ -6,7 +6,7 @@ import org.testng.annotations.Test;
 
 public class LocationStoreTest {
 
-  LocationStore store;
+  private LocationStore store;
 
   @BeforeMethod
   public void setUp() {

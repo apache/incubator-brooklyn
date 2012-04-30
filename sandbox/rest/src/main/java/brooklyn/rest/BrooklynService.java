@@ -6,6 +6,7 @@ import brooklyn.rest.health.GeneralHealthCheck;
 import brooklyn.rest.resources.ApplicationResource;
 import brooklyn.rest.resources.CatalogResource;
 import brooklyn.rest.resources.EffectorResource;
+import brooklyn.rest.resources.EntityResource;
 import brooklyn.rest.resources.LocationResource;
 import brooklyn.rest.resources.SensorResource;
 import com.yammer.dropwizard.Service;
@@ -45,6 +46,7 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
 
     environment.addResource(new ApplicationResource(applicationManager, locationStore, catalogResource));
 
+    environment.addResource(new EntityResource(applicationManager));
     environment.addResource(new SensorResource(applicationManager));
     environment.addResource(new EffectorResource(applicationManager, managedExecutor));
 
