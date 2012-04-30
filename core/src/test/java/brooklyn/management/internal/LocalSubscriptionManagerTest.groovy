@@ -51,7 +51,7 @@ public class LocalSubscriptionManagerTest {
         List<SensorEvent<Integer>> events = []
         CountDownLatch latch = new CountDownLatch(1)
         app.subscribeToMembers(group, TestEntity.SEQUENCE, { events.add(it); latch.countDown() } as SensorEventListener)
-        member.emit(TestEntity.SEQUENCE, 123)
+        member.setAttribute(TestEntity.SEQUENCE, 123)
 
         if (!latch.await(1, TimeUnit.SECONDS)) {
             fail "Timeout waiting for Event on parent TestEntity listener"

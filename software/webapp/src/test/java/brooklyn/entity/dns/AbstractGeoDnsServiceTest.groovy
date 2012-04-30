@@ -2,16 +2,18 @@ package brooklyn.entity.dns;
 
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
-
 import groovy.lang.MetaClass
 
 import java.util.Map
-import java.util.Set
 import java.util.concurrent.TimeUnit
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
+
+import com.google.common.collect.Iterables;
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
@@ -21,12 +23,14 @@ import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.location.geo.HostGeoInfo
 import brooklyn.test.entity.TestEntity
 import brooklyn.util.internal.EntityStartUtils
 import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
 
 public class AbstractGeoDnsServiceTest {
+    public static final Logger log = LoggerFactory.getLogger(AbstractGeoDnsServiceTest.class);
     static { TimeExtras.init() }
 
     private static final String WEST_IP = "208.95.232.123";
@@ -98,15 +102,14 @@ public class AbstractGeoDnsServiceTest {
         assertTrue(geoDns.targetHostsByName.containsKey("East child"));
     }
     
-    @Test
-    public void testMissingGeoInfo() {
-        // TODO
-    }
-    
-    @Test
-    public void testEmptyGroup() {
-        // TODO
-    }
+    //TODO
+//    @Test
+//    public void testMissingGeoInfo() {
+//    }
+//    
+//    @Test
+//    public void testEmptyGroup() {
+//    }
     
     private static void waitForTargetHosts(TestService service) {
         new Repeater("Wait for target hosts")
@@ -125,12 +128,28 @@ public class AbstractGeoDnsServiceTest {
             super(properties, owner);
         }
         
+        protected boolean addTargetHost(Entity e, boolean doUpdate) {
+            //ignore geo lookup, override parent menu
+            log.info("TestService adding target host $e");
+            Location l = Iterables.getOnlyElement(e.locations);
+            HostGeoInfo geoInfo = new HostGeoInfo("127.0.0.1", l.name, 
+                l.findLocationProperty("latitude"), l.findLocationProperty("longitude"));
+            targetHosts.put(e, geoInfo);
+            if (doUpdate) update();
+            return true;
+        }
+        
         @Override
-        protected void reconfigureService(Set<HostGeoInfo> targetHosts) {
+        protected void reconfigureService(Collection<HostGeoInfo> targetHosts) {
             targetHostsByName.clear();
             for (HostGeoInfo host : targetHosts) {
                 if (host != null) targetHostsByName.put(host.displayName, host);
             }
+        }
+
+        @Override
+        public String getHostname() {
+            return "localhost";
         }
     }
     

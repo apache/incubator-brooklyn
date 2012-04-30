@@ -59,6 +59,10 @@ public class DependentConfiguration {
         attributePostProcessedWhenReady(source, sensor, { it }, { value })
     }
 
+    public static <T> Task<T> valueWhenAttributeReady(Entity source, AttributeSensor<T> sensor, Function valueProvider) {
+        attributePostProcessedWhenReady(source, sensor, { it }, valueProvider)
+    }
+    
     public static <T> Task<T> valueWhenAttributeReady(Entity source, AttributeSensor<T> sensor, Closure valueProvider) {
         attributePostProcessedWhenReady(source, sensor, { it }, valueProvider)
     }

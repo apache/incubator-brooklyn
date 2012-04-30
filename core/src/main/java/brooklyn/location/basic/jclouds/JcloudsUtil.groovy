@@ -13,6 +13,7 @@ import java.io.IOException
 import java.net.URI
 import java.util.Map
 import java.util.Properties
+import java.util.concurrent.ConcurrentHashMap
 
 import org.jclouds.Constants
 import org.jclouds.compute.ComputeService
@@ -141,10 +142,22 @@ public class JcloudsUtil {
           throw new IllegalArgumentException("don't know how to handle" + os.toString());
     }
 
+    static Map<Properties,ComputeService> cachedComputeServices = new ConcurrentHashMap<Properties,ComputeService> ();
+     
+    public static ComputeService buildOrFindComputeService(Map<String,? extends Object> conf) {
+        return buildComputeService(conf, [:], true)
+    }
+    public static ComputeService buildOrFindComputeService(Map<String,? extends Object> conf, Map unusedConf) {
+        return buildComputeService(conf, unusedConf, true);
+    }
+    
     public static ComputeService buildComputeService(Map<String,? extends Object> conf) {
-        buildComputeService(conf, [:])
+        return buildComputeService(conf, [:]);
     }
     public static ComputeService buildComputeService(Map<String,? extends Object> conf, Map unusedConf) {
+        return buildComputeService(conf, unusedConf, false);
+    }
+    public static ComputeService buildComputeService(Map<String,? extends Object> conf, Map unusedConf, boolean allowReuse) {
         Properties properties = new Properties();
         properties.setProperty(Constants.PROPERTY_PROVIDER, conf.provider); unusedConf.remove("provider");
         properties.setProperty(Constants.PROPERTY_IDENTITY, conf.identity); unusedConf.remove("identity");
@@ -163,6 +176,15 @@ public class JcloudsUtil {
             properties.setProperty(PROPERTY_EC2_AMI_QUERY, "state=available;image-type=machine")
         }
 
+        if (allowReuse) {
+            ComputeService result = cachedComputeServices.get(properties);
+            if (result!=null) {
+                LOG.debug("jclouds ComputeService cache hit for compute service, for "+properties);
+                return result;
+            }
+            LOG.debug("jclouds ComputeService cache miss for compute service, creating, for "+properties);
+        }
+        
         Iterable<Module> modules = ImmutableSet.<Module> of(new SshjSshClientModule(), new SLF4JLoggingModule());
         
         ComputeServiceContextFactory computeServiceFactory = new ComputeServiceContextFactory();
@@ -170,6 +192,21 @@ public class JcloudsUtil {
         ComputeService computeService = computeServiceFactory
                 .createContext(conf.provider, modules, properties)
                 .getComputeService();
+                
+        if (allowReuse) {
+            synchronized (cachedComputeServices) {
+                ComputeService result = cachedComputeServices.get(properties);
+                if (result) {
+                    LOG.debug("jclouds ComputeService cache recovery for compute service, for "+properties);
+                    //keep the old one, discard the new one
+                    computeService.getContext().close();
+                    return result;
+                }
+                LOG.debug("jclouds ComputeService created "+computeService+", adding to cache, for "+properties);
+                cachedComputeServices.put(properties, computeService);
+            }
+        }
+        
         return computeService;
      }
      

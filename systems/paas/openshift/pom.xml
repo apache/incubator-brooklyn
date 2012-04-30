@@ -19,6 +19,13 @@
             <groupId>org.codehaus.groovy.modules.http-builder</groupId>
             <artifactId>http-builder</artifactId>
             <version>0.5.1</version>
+            <exclusions>
+                <exclusion>
+                    <!-- tries to bring in 1.7.10 -->
+                    <groupId>org.codehaus.groovy</groupId>
+                    <artifactId>groovy</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         
         <dependency>

@@ -5,6 +5,7 @@ import groovy.time.TimeDuration
 
 import java.util.concurrent.Callable
 import java.util.concurrent.ExecutionException
+import java.util.concurrent.TimeUnit
 
 import org.codehaus.groovy.runtime.InvokerInvocationException
 import org.slf4j.Logger
@@ -231,4 +232,20 @@ public class TestUtils {
             return t
         }
     }
+    
+    public static void assertUrlHasText(Map flags=[:], String url, String ...phrases) {
+        String contents;
+        TimeDuration timeout = flags.timeout in Number ? flags.timeout*TimeUnit.MILLISECONDS : flags.timeout ?: 30*TimeUnit.SECONDS
+        executeUntilSucceeds(timeout:timeout, maxAttempts:50) {
+            contents = new URL(url).openStream().getText();
+            assertTrue(contents!=null && contents.length()>0)
+        }
+        for (String text: phrases) {
+            if (!contents.contains(text)) {
+                log.warn("CONTENTS OF URL MISSING TEXT: $text\n"+contents)
+                fail("URL $url does not contain text: $text")
+            }
+        }
+    }
+
 }

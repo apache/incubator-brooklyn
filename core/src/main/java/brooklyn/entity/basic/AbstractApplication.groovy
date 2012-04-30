@@ -27,17 +27,35 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
     }
     
     /**
-     * Default start will start all Startable children
+     * Default start will start all Startable children (child.start(Collection<? extends Location>)),
+     * calling preStart(locations) first and postStart(locations) afterwards.
      */
     public void start(Collection<? extends Location> locations) {
         this.locations.addAll(locations)
         
+        preStart(locations);
 		StartableMethods.start(this, locations);
-		
+        postStart(locations);
+        
         setAttribute(SERVICE_UP, true)
         deployed = true
         
         log.info("Started application "+this);
+    }
+    
+    /** 
+     * Default is no-op. Subclasses can override.
+     **/
+    public void preStart(Collection<? extends Location> locations) {
+        //no-op
+    }
+
+    
+    /**
+     * Default is no-op. Subclasses can override.
+     **/
+    public void postStart(Collection<? extends Location> locations) {
+        //no-op
     }
 
     /**

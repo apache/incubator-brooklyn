@@ -34,8 +34,10 @@ body{
 .brooklyn-header{
     height:46px;
     padding-left:192px;
-    background-image:url("../../images/brooklyn/brooklynbannertwo.png");
+    background-image:url("../../images/brooklyn/brooklyn-logo-600px.png");
     background-repeat: no-repeat;
+    background-size: 120px;
+    background-position: 4px 18px;
     top:0px;
     left:0px;
     margin:0px;

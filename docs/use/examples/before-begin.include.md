@@ -8,6 +8,7 @@ build, and run:
 % git clone https://github.com/brooklyncentral/brooklyn-examples.git
 % cd brooklyn-examples
 % mvn clean install
+% export EXAMPLES_DIR=`pwd`
 {% endhighlight %}
 
 If you hit any issues with the above, see the tips

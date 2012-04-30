@@ -38,6 +38,7 @@ import brooklyn.policy.Enricher
 import brooklyn.policy.Policy
 import brooklyn.policy.basic.AbstractPolicy
 import brooklyn.util.BrooklynLanguageExtensions
+import brooklyn.util.IdGenerator;
 import brooklyn.util.flags.FlagUtils
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.flags.TypeCoercions
@@ -61,7 +62,7 @@ import com.google.common.collect.Iterables
  * by children, whereas the fields are not. (Attributes cannot be so accessed,
  * nor are they inherited.)
  */
-public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable {
+public abstract class AbstractEntity extends GroovyObjectSupport implements EntityLocal, GroovyInterceptable {
     
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractEntity.class)
     static { BrooklynLanguageExtensions.init(); }
@@ -71,7 +72,7 @@ public abstract class AbstractEntity implements EntityLocal, GroovyInterceptable
     public static BasicNotificationSensor<Sensor> SENSOR_REMOVED = new BasicNotificationSensor<Sensor>(Sensor.class,
             "entity.sensor.removed", "Sensor dynamically removed from entity")
 
-    final String id = LanguageUtils.newUid()
+    final String id = IdGenerator.makeRandomId(8);
     String displayName
     
     EntityReference owner

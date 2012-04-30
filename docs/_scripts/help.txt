@@ -1,20 +1,25 @@
 
-jekyll-debug.sh will launch the docs for viewing at http://localhost:4000/start/
+OVERVIEW
 
-jekyll-versioned.sh will launch it in a versioned subdir e.g. http://localhost:4000/brooklyn/v/0.4.0-SNAPSHOT/start/
+_scripts/jekyll-debug.sh will launch the docs for viewing at http://localhost:4000/
 
-on the web site it is hosted under /brooklyn (optionally in a /v/XXXX dir if it is a specific version)
+_scripts/build.sh will build the site in _site including javadoc
 
-to make the docs LIVE, you need to build.sh then copy in to the gh-pages branch
-(suggest making a separate repo for that, keeping it in the gh-pages branch)
 
-here are some draft scripts for how to do it,
-assuming we have a "staging" area for snapshot builds
+GO LIVE
 
-export TARGET=/path/to/other/repo/
+to make the docs live you build.sh then push _site to github brooklyncentral/brooklyncentral.github.com
+the following instructions cover this, assuming brooklyncentral.github.com is a sibling dir to the brooklyn project
+
+updating a snapshot version, in /v/VERSION/ on the server:
+
+
+export TARGET=`pwd -P`/../../brooklyncentral.github.com
 export BV=0.4.0-SNAPSHOT   # BROOKLYN_VERSION
 
-_scripts/build.sh
+# build, copy
+if [ ! -f $TARGET/index.html ] ; then echo "could not find docs in $TARGET" ; exit 1 ; fi
+_scripts/build.sh || { echo "failed to build docs" ; exit 1 ; }
 rm -rf $TARGET/v/$BV
 mkdir $TARGET/v/$BV
 cp -r _site/* $TARGET/v/$BV/
@@ -27,14 +32,12 @@ git push
 popd
 
 
-(note the whole thing is mounted under /brooklyn at cloudsoft.github.com
-currently, hence the refs to /brooklyn in _config.yml and various scripts)
-
 when we do a RELEASE we'll run the above for e.g. BV=0.4.0
-AND update the files in the root dir as well, with a process below 
+AND update the files in the root dir as well, with the process below 
 (kinda like the process above but with / in place of /v/$BV
 and overriding url in _config.yml with the --url arg below):
 
+# remove old root files
 pushd $TARGET
 if [ -f start/index.html ] ; then
   for x in * ; do if [[ $x != "v" ]] ; then rm -rf $x ; fi ; done
@@ -44,10 +47,11 @@ else
 fi
 popd
 
-
-_scripts/build.sh --url ""
+# build for hosting of / rather than /v/VERSION/
+_scripts/build.sh --url "" || { echo "failed to build docs" ; exit 1 ; }
 cp -r _site/* $TARGET/
 
+# and git push
 pushd $TARGET
 git add -A .
 git commit -m "updated root docs for version $BV"

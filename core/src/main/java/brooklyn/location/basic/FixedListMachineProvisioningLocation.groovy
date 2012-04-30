@@ -81,7 +81,7 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
     public boolean canProvisionMore() { return false; }
     public void provisionMore(int size) { throw new IllegalStateException("more not permitted"); }
     
-    public T obtain(Map<String,? extends Object> flags) {
+    public T obtain(Map<String,? extends Object> flags=[:]) {
         T machine;
         synchronized (lock) {
             Set a = getAvailable()

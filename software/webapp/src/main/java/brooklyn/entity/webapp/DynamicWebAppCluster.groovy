@@ -70,7 +70,7 @@ class DynamicWebAppCluster extends DynamicCluster implements WebAppService {
         }
     }
     
-    public synchronized Entity addMember(Entity member) {
+    public synchronized void addMember(Entity member) {
         super.addMember(member)
     }
     

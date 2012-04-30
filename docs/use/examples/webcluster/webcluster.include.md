@@ -1,4 +1,5 @@
 
+        
 {% readj ../before-begin.include.md %}
 
 The project ``examples/simple-web-cluster`` includes several deployment descriptors 
@@ -16,7 +17,8 @@ public class SingleWebServerExample extends AbstractApplication {
         war: "classpath://hello-world-webapp.war", 
         httpPort: 8080)
         
-    // (other housekeeping removed, including public static void main)
+    // other housekeeping removed, including public static void main
+    // you'll find this in the github repo code mentioned above
      
 }
 {% endhighlight %}
@@ -24,9 +26,10 @@ public class SingleWebServerExample extends AbstractApplication {
 You can run this (on *nix or Mac) as follows:
 
 {% highlight bash %}
-% cd /path/to/brooklyn-examples/simple-web-cluster
+% cd $EXAMPLES_DIR/simple-web-cluster
 % ./demo-web-cluster.sh
 {% endhighlight %}
+
 
 Then visit the webapp on port 8080, or the Brooklyn console on 8081.  (Default credentials are admin/password.)
 Note that the installation may take some time, because the default deployment downloads the software from
@@ -37,7 +40,7 @@ With appropriate setup (as described [here]({{ site.url }}/use/guide/management/
 this can also be deployed to your favourite cloud, let's pretend it's Amazon Ireland, as follows: 
 
 {% highlight bash %}
-% cd /path/to/brooklyn-examples/simple-web-cluster
+% cd $EXAMPLES_DIR/simple-web-cluster
 % ./demo-web-server.sh aws-ecs:eu-west-1
 {% endhighlight %}
 
@@ -66,8 +69,7 @@ public class WebClusterDatabaseExample extends AbstractApplication {
     {
         web.factory.configure(
             httpPort: "8080+", 
-            (JBoss7Server.JAVA_OPTIONS):
-                // -Dbrooklyn.example.db.url="jdbc:mysql://192.168.1.2:3306/visitors?user=brooklyn\\&password=br00k11n"
+            (UsesJava.JAVA_OPTIONS):
                 ["brooklyn.example.db.url": valueWhenAttributeReady(mysql, MySqlNode.MYSQL_URL,
                     { "jdbc:"+it+"visitors?user=${DB_USERNAME}\\&password=${DB_PASSWORD}" }) ]);
 
@@ -85,10 +87,13 @@ tweak the database start script, or drop in your favourite WAR.
 
 ## A Few Other Things
 
-This project includes an intermediate nginx-web-cluster only example, 
-in ``WebClusterExample``, and a few demonstrations of other syntaxes (classes ending ``Alt``).
-Tweak the scripts to use these, or run in your IDE (which may take [a bit of setup]({{site.url}}/dev/build/ide.html)).
+The project includes several variants of the examples shown here.
+In particular note the pure-Java version in `WebClusterDatabaseExampleAltJava.java`
+some other variations in syntax (the `*Alt*` files), and a
+web-only cluster (no database) in ``WebClusterExample``.
 
 The webapp that is used is included under ``examples/hello-world-webapp``.
+
+You may wish to check out the [Global Web Fabric example](../global-web-fabric) next.
 
 If you encounter any difficulties, please [tell us]({{ site.url }}/meta/contact.html) and we'll do our best to help.

@@ -32,7 +32,9 @@
     <modules>
         <module>hello-world-webapp</module>
         <module>simple-web-cluster</module>
+        <module>global-web-fabric</module>
         <module>hadoop-and-whirr</module>
+        <module>portable-cloudfoundry</module>
     </modules>
 
 </project>

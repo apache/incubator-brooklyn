@@ -13,6 +13,7 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
+import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.basic.legacy.JavaApp
@@ -146,6 +147,13 @@ public class WebAppIntegrationTest {
         assertFalse entity.getAttribute(JavaApp.SERVICE_UP)
     }
     
+    //needed for legacy items only
+    private static void disablePoll(Entity e) {
+        if (e in OldJavaWebApp) {
+            ((OldJavaWebApp)e).pollForHttpStatus = false
+        }
+    }
+    
     /**
      * Checks that an entity correctly sets request and error count metrics by
      * connecting to a non-existent URL several times.
@@ -153,7 +161,7 @@ public class WebAppIntegrationTest {
     @Test(groups = "Integration", dataProvider = "basicEntities")
     public void publishesRequestAndErrorCountMetrics(SoftwareProcessEntity entity) {
         this.entity = entity
-        entity.pollForHttpStatus = false
+        disablePoll(entity)
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         
         String url = entity.getAttribute(WebAppService.ROOT_URL) + "does_not_exist"
@@ -193,7 +201,7 @@ public class WebAppIntegrationTest {
     @Test(groups = "Integration", dataProvider = "basicEntities")
     public void publishesRequestsPerSecondMetric(SoftwareProcessEntity entity) {
         this.entity = entity
-        entity.pollForHttpStatus = false
+        disablePoll(entity)
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         
         try {
@@ -253,7 +261,7 @@ public class WebAppIntegrationTest {
         final int MAX_INTERVAL_BETWEEN_EVENTS = 1000 // events should publish every 500ms so this should be enough overhead
         final int NUM_CONSECUTIVE_EVENTS = 3
 
-        entity.pollForHttpStatus = false 
+        disablePoll(entity) 
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         
         SubscriptionHandle subscriptionHandle
@@ -347,7 +355,7 @@ public class WebAppIntegrationTest {
         URL resource = getClass().getClassLoader().getResource(war)
         assertNotNull resource
         
-        entity.setConfig(JavaWebAppService.NAMED_DEPLOYMENTS, [resource.path])
+        entity.setConfig(JavaWebAppService.NAMED_WARS, [resource.path])
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         executeUntilSucceedsWithShutdown(entity, abortOnError:false, timeout:60*SECONDS) {
             // TODO get this URL from a WAR file entity

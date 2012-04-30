@@ -1,17 +1,16 @@
 package brooklyn.entity.basic;
 
-import java.io.Writer
-import java.util.Collection
-import java.util.List
-import java.util.Map
-
 import brooklyn.entity.ConfigKey
 import brooklyn.entity.Effector
 import brooklyn.entity.Entity
+import brooklyn.entity.trait.Startable
 import brooklyn.event.AttributeSensor
 import brooklyn.event.Sensor
+import brooklyn.location.Location
+import brooklyn.management.ManagementContext
 import brooklyn.management.Task
 import brooklyn.util.task.ParallelTask
+
 
 /** Convenience methods for working with entities. 
  * Also see the various *Methods classes for traits 
@@ -46,21 +45,36 @@ public class Entities {
 		return invoke
 	}
 
+    public static boolean isSecret(String name) {
+        name.contains("password") || name.contains("credential") || name.contains("secret") || name.contains("private")
+    }
+
+    public static boolean isTrivial(Object v) {
+        v==null || ((v in Map || v in Collection || v in String) && (v.isEmpty()))
+    }    
 	public static void dumpInfo(Entity e, Writer out=new PrintWriter(System.out), String currentIndentation="", String tab="  ") {
 		out << currentIndentation+e.toString()+"\n"
-		
 		getConfigKeys(e).each {
-			out << currentIndentation+tab+tab+it.name;
             def v = e.getConfig(it)
-			if (v && (it.getName().contains("password") || it.getName().contains("credential")))
-                out << ": "+"xxxxxxxx"+"\n"
-            else
-                out << ": "+v+"\n"
+            if (!isTrivial(v)) {
+                out << currentIndentation+tab+tab+it.name;
+                out << " = ";
+                if (isSecret(it.name)) out << "xxxxxxxx";
+                else out << v;
+                out << "\n"
+            }
 		}
 		getSensors(e).each {
-			out << currentIndentation+tab+tab+it.name;
-			if (it in AttributeSensor) out << ": "+e.getAttribute(it)
-			out << "\n"
+			if (it in AttributeSensor) {
+                def v = e.getAttribute(it)
+                if (!isTrivial(v)) {
+                    out << currentIndentation+tab+tab+it.name;
+                    out << ": ";
+                    if (isSecret(it.name)) out << "xxxxxxxx";
+                    else out << v;
+                    out << "\n";
+                }
+			}
 		}
 		e.getOwnedChildren().each {
 			dumpInfo(it, out, currentIndentation+tab, tab)
@@ -94,5 +108,19 @@ public class Entities {
 		
 		return false
 	}
+
+    /** Interim method for assisting with destroying entities */
+    public static Entity start(ManagementContext context, Entity e, Collection<Location> locations) {
+        context?.manage(e);
+        if (e in Startable) ((Startable)e).start(locations);
+        e
+    }
+
+    /** Interim method for assisting with destroying entities */
+    public static void destroy(ManagementContext context, Entity e) {
+        if (e in Startable) ((Startable)e).stop();
+        if (e in AbstractEntity) ((AbstractEntity)e).destroy();
+        context?.unmanage(e);
+    }
 
 }

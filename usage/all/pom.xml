@@ -25,18 +25,6 @@
             <version>${slf4j.version}</version>
             <optional>true</optional>
         </dependency>
-        <dependency>
-            <groupId>org.jclouds</groupId>
-            <artifactId>jclouds-allcompute</artifactId>
-            <version>${jclouds.version}</version>
-            <!-- bring in all jclouds-supported clouds -->
-        </dependency>
-        <dependency>
-            <groupId>org.apache.whirr</groupId>
-            <artifactId>whirr-cli</artifactId>
-            <version>${whirr.version}</version>
-            <!-- bring in all whirr services -->
-        </dependency>
         
         <dependency>
             <groupId>io.brooklyn</groupId>
@@ -80,12 +68,31 @@
             <artifactId>brooklyn-systems-openshift</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-systems-cloudfoundry</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-launcher</artifactId>
             <version>${project.version}</version>
         </dependency>
+        
+        <dependency>
+            <groupId>org.jclouds</groupId>
+            <artifactId>jclouds-allcompute</artifactId>
+            <version>${jclouds.version}</version>
+            <!-- bring in all jclouds-supported clouds -->
+        </dependency>
+        <dependency>
+            <groupId>org.apache.whirr</groupId>
+            <artifactId>whirr-cli</artifactId>
+            <version>${whirr.version}</version>
+            <!-- bring in all whirr services -->
+        </dependency>
+        
     </dependencies>
 
     <profiles>

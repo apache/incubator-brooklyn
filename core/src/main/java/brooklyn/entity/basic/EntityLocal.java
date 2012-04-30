@@ -17,6 +17,10 @@ import brooklyn.management.SubscriptionHandle;
 import brooklyn.management.SubscriptionManager;
 import brooklyn.policy.basic.AbstractPolicy;
 
+/** 
+ * Extended Entity interface for use in places where the caller should have certain privileges,
+ * such as setting attribute values, adding policies, etc.
+ */
 public interface EntityLocal extends Entity {
     
     // FIXME Rename to something other than EntityLocal.

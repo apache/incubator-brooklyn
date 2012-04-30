@@ -2,7 +2,9 @@ package brooklyn.util.internal;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintStream;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 
@@ -11,34 +13,54 @@ public class StreamGobbler extends Thread {
     protected final InputStream stream;
     protected final PrintStream out;
     protected final Logger log;
+    private final AtomicBoolean running = new AtomicBoolean(true);
     
+    public StreamGobbler(InputStream stream, OutputStream out, Logger log) {
+        this(stream, out != null ? new PrintStream(out) : null, log);
+    }
+
     public StreamGobbler(InputStream stream, PrintStream out, Logger log) {
         this.stream = stream;
         this.out = out;
         this.log = log;
     }
     
-    String prefix = "";
+    public void shutdown() {
+        running.set(false);
+        interrupt();
+    }
+
+    String logPrefix = "";
+    String printPrefix = "";
     public StreamGobbler setPrefix(String prefix) {
-		this.prefix = prefix;
+        setLogPrefix(prefix);
+        setPrintPrefix(prefix);
 		return this;
 	}
+    public StreamGobbler setPrintPrefix(String prefix) {
+        printPrefix = prefix;
+        return this;
+    }
+    public StreamGobbler setLogPrefix(String prefix) {
+        logPrefix = prefix;
+        return this;
+    }    
     
     public void run() {
         int c = -1;
         try {
-            while ((c=stream.read())>=0) {
+            while (running.get() && (c=stream.read())>=0) {
                 onChar(c);
             }
             onClose();
         } catch (IOException e) {
         	onClose();
         	//TODO parametrise log level, for this error, and for normal messages
-        	if (log!=null) log.debug(prefix+"exception reading from stream ("+e+")");
+        	if (log!=null) log.debug(logPrefix+"exception reading from stream ("+e+")");
         }
     }
     
-    StringBuffer lineSoFar = new StringBuffer("");
+    private final StringBuilder lineSoFar = new StringBuilder(16);
     public void onChar(int c) {
     	if (c=='\n' || c=='\r') {
     		if (lineSoFar.length()>0)
@@ -58,13 +80,28 @@ public class StreamGobbler extends Thread {
     	//right trim, in case there is \r or other funnies
     	while (line.length()>0 && (line.charAt(0)=='\n' || line.charAt(0)=='\r'))
     		line = line.substring(1);
-    	if (out!=null) out.println(prefix+line);
-    	if (log!=null && log.isDebugEnabled()) log.debug(prefix+line);
+    	if (!line.isEmpty()) {
+    	    if (out!=null) out.println(printPrefix+line);
+    	    if (log!=null && log.isDebugEnabled()) log.debug(logPrefix+line);
+    	}
     }
     
     public void onClose() {
-    	onLine(lineSoFar.toString());
-		lineSoFar.setLength(0);
+        onLine(lineSoFar.toString());
+        lineSoFar.setLength(0);
+        finished = true;
+        synchronized (this) { notifyAll(); }
     }
     
+    private volatile boolean finished = false;
+
+    /** convenience -- equivalent to calling join() */
+    public void blockUntilFinished() throws InterruptedException {
+        synchronized (this) { while (!finished) wait(); }
+    }
+
+    /** convenience -- similar to !Thread.isAlive() */
+    public boolean isFinished() {
+        return finished;
+    }
 }

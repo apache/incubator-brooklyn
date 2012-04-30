@@ -38,11 +38,12 @@ We're still near the beginning of figuring this out:
 ## To Get Started
 
 * See the [developer's walkthrough]({{site.url}}/start/walkthrough/index.html) for a quick tour
-* Dive in to the [user guide]({{site.url}}/use/guide/) describing the 
+* Check out the [examples]({{site.url}}/use/examples/), from a global web fabric with geo-DNS to a movable PaaS target
+* Jump in to the [user guide]({{site.url}}/use/guide/) describing the 
   [concepts]({{site.url}}/use/guide/defining-applications/basic-concepts.html)
-  and including a [tutorial]({{site.url}}/use/guide/quickstart/).
-* Or jump straight in to the [code]({{site.url}}/dev/code/), 
-  including [examples]({{site.url}}/use/examples/), or other [documentation]({{site.url}}/start/docs-summary.html).
+  and including a [tutorial]({{site.url}}/use/guide/quickstart/)
+* Or dive straight in to the code, either [reading]({{site.url}}/dev/code/) about it
+  or [gitting](http://github.com/brooklyncentral/brooklyn/) it
 
 If you like it, or if you have ideas how it could be better,
 [join the discussion]({{site.url}}/meta/contact.html).

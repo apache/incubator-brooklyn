@@ -60,7 +60,7 @@ public class JmxSensorAdapterTest {
     private JmxHelper jmxHelper
     
     private BasicAttributeSensor<Integer> intAttribute = [ Integer, "brooklyn.test.intAttribute", "Brooklyn testing int attribute" ]
-    private BasicAttributeSensor<String> stringAttribute = [ String, "brooklyn.test.intAttribute", "Brooklyn testing int attribute" ]
+    private BasicAttributeSensor<String> stringAttribute = [ String, "brooklyn.test.stringAttribute", "Brooklyn testing string attribute" ]
     private BasicAttributeSensor<Map> mapAttribute = [ Map, "brooklyn.test.mapAttribute", "Brooklyn testing map attribute" ]
     private String objectName = 'Brooklyn:type=MyTestMBean,name=myname'
     private ObjectName jmxObjectName = new ObjectName('Brooklyn:type=MyTestMBean,name=myname')
@@ -75,8 +75,8 @@ public class JmxSensorAdapterTest {
             void start(Collection locs) {
                         super.start(locs);
                         entity.setAttribute(Attributes.HOSTNAME, "localhost");
-                        entity.setAttribute(Attributes.JMX_PORT)
-                        entity.setAttribute(Attributes.RMI_PORT)
+                        entity.setAttribute(Attributes.JMX_PORT, 40123)
+                        entity.setAttribute(Attributes.RMI_PORT, 40124)
                         entity.setAttribute(Attributes.JMX_CONTEXT)
                     }
         };

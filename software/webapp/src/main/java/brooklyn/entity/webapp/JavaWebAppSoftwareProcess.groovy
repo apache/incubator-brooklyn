@@ -14,9 +14,6 @@ public abstract class JavaWebAppSoftwareProcess extends SoftwareProcessEntity im
 
     private static final Logger log = LoggerFactory.getLogger(JavaWebAppSoftwareProcess.class)
     
-	//useful for integration tests which assert 0 requests
-	boolean pollForHttpStatus = true;
-
 	
 	public JavaWebAppSoftwareProcess(Map flags=[:], Entity owner=null) {
 		super(flags, owner)
@@ -37,7 +34,7 @@ public abstract class JavaWebAppSoftwareProcess extends SoftwareProcessEntity im
 		def rootWar = getConfig(ROOT_WAR);
 		if (rootWar) driver.deploy(rootWar, "ROOT.war")
 		
-		def namedWars = getConfig(NAMED_DEPLOYMENTS, []);
+		def namedWars = getConfig(NAMED_WARS, []);
 		namedWars.each { String it ->
 			String name = it.substring(it.lastIndexOf('/')+1);
 			driver.deploy(it, name)

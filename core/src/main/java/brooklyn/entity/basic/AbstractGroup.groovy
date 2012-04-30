@@ -5,6 +5,9 @@ import groovy.transform.InheritConstructors
 import java.util.Collection
 import java.util.Map
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 import brooklyn.enricher.basic.AbstractAggregatingEnricher
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
@@ -23,6 +26,7 @@ import brooklyn.entity.trait.Changeable
  */
 @InheritConstructors
 public abstract class AbstractGroup extends AbstractEntity implements Group, Changeable {
+    private static final Logger log = LoggerFactory.getLogger(AbstractGroup.class);
     private final EntityCollectionReference<Entity> _members = new EntityCollectionReference<Entity>(this);
 
     public AbstractGroup(Map props=[:], Entity owner=null) {
@@ -31,13 +35,13 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
     }
 
     /**
-     * Adds the given entity as a member of this group <em>and</em> this group as one of the groups of the child;
-     * returns argument passed in, for convenience.
+     * Adds the given entity as a member of this group <em>and</em> this group as one of the groups of the child
      */
-    public Entity addMember(Entity member) {
+    public void addMember(Entity member) {
         synchronized (_members) {
 	        member.addGroup(this)
 	        if (_members.add(member)) {
+                log.debug("Group $this got new member $member");
 	            emit(MEMBER_ADDED, member)
 	            setAttribute(Changeable.GROUP_SIZE, currentSize)
                 enrichers.each { if (it instanceof AbstractAggregatingEnricher) ((AbstractAggregatingEnricher)it).addProducer(member); }
@@ -53,6 +57,7 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
         synchronized (_members) {
             boolean changed = (member != null && _members.remove(member))
             if (changed) {
+                log.debug("Group $this lost member $member");
 	            emit(MEMBER_REMOVED, member)
 	            setAttribute(Changeable.GROUP_SIZE, currentSize)
                 enrichers.each { 

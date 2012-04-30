@@ -41,10 +41,15 @@ public class SingleThreadedScheduler implements TaskScheduler {
         } else {
             WrappingFuture f = new WrappingFuture<T>()
             order.add(new QueuedSubmission(c, f))
+            int size = order.size()
+            if (size>0 && (size == 10 || (size<=500 && (size%100)==0) || (size%1000)==0) && size!=lastSizeWarn) {
+                LOG.warn "$this is backing up, $size tasks queued"
+                lastSizeWarn = size;
+            }
             return f
         }
-        if(order.size() > 10) LOG.info "$this is backing up, $order.size() tasks queued"
     }
+    int lastSizeWarn = 0
 
     private synchronized void onEnd() {
         boolean done = false

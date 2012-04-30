@@ -6,25 +6,33 @@ import java.util.Map
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.enricher.basic.SensorPropagatingEnricher
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
+import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.ConfigurableEntityFactory
+import brooklyn.entity.basic.Entities
 import brooklyn.entity.group.AbstractController
 import brooklyn.entity.group.Cluster
 import brooklyn.entity.proxy.nginx.NginxController
+import brooklyn.entity.trait.Resizable
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.jboss.JBoss7ServerFactory
+import brooklyn.event.Sensor
+import brooklyn.event.SensorEventListener
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.Location
 import brooklyn.util.flags.SetFromFlag
+
+import com.google.common.collect.Iterables
 
 /**
  * This entity contains the sub-groups and entities that go in to a single location (e.g. datacenter)
  * to provide web-app cluster functionality, viz load-balancer (controller) and webapp software processes.
  * <p>
  * You can customise the web server by customising
- * the webServerFactory (by reference in calling code)
- * or supplying your own webServerFactory (as a config flag).
+ * the factory (by reference in calling code)
+ * or supplying your own factory (as a config flag).
  * <p>
  * The contents of this group entity are:
  * <ul>
@@ -33,13 +41,10 @@ import brooklyn.util.flags.SetFromFlag
  * <li>a {@link brooklyn.policy.Policy} to resize the DynamicCluster
  * </ul>
  */
-public class ControlledDynamicWebAppCluster extends AbstractEntity implements Startable {
+public class ControlledDynamicWebAppCluster extends AbstractEntity implements Startable, Resizable, ElasticJavaWebAppService {
 
     public static final Logger log = LoggerFactory.getLogger(ControlledDynamicWebAppCluster.class);
             
-    @SetFromFlag("war")
-    public static final BasicConfigKey<String> ROOT_WAR = JavaWebAppService.ROOT_WAR
-
     @SetFromFlag('initialSize')
     public static BasicConfigKey<Integer> INITIAL_SIZE = [ Cluster.INITIAL_SIZE, 1 ]
 
@@ -50,6 +55,8 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
     @SetFromFlag("factory")
     ConfigurableEntityFactory<WebAppService> _webServerFactory;
 
+    public static final Sensor HOSTNAME = Attributes.HOSTNAME;
+    
     public ControlledDynamicWebAppCluster(Entity owner) { this([:], owner) }
     public ControlledDynamicWebAppCluster(Map flags = [:], Entity owner = null) {
         super(flags, owner)
@@ -89,19 +96,19 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
             initialSize: { getConfig(INITIAL_SIZE) });
     }
     
-    void start(Collection<? extends Location> locations) {
-        addOwnedChild(controller)
-
-        this.locations.addAll(locations)
-        cluster.start(locations)
-
-        controller.bind(cluster:cluster)
-        controller.start(locations)
-
-        setAttribute(SERVICE_UP, true)
+    public void start(Collection<? extends Location> locations) {
+        Iterables.getOnlyElement(locations); //assert just one
+        
+        addOwnedChild(controller);
+        this.locations.addAll(locations);
+        controller.bind(cluster:cluster);
+        Entities.invokeEffectorList(this, [cluster, controller], Startable.START, [locations:locations]).get();
+        
+        connectSensors();
+        setAttribute(SERVICE_UP, true);
     }
-
-    void stop() {
+    
+    public void stop() {
         controller.stop()
         cluster.stop()
 
@@ -109,13 +116,52 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
         setAttribute(SERVICE_UP, false)
     }
 
-    void restart() {
+    public void restart() {
         // TODO prod the entities themselves to restart, instead?
         def locations = []
         locations.addAll(this.locations)
 
         stop();
         start(locations);
+    }
+
+    void updateHostnameFromController() {
+        String url = controller.getAttribute(NginxController.ROOT_URL);
+        if (url==null) url = controller.getAttribute(AbstractController.SPECIFIED_URL);
+        if (url==null || url.contains("://"+AbstractController.ANONYMOUS+":") || url.contains("://"+AbstractController.ANONYMOUS+"/")) {
+            //probably isn't necessary, as is done in Nginx?
+            String hostname = controller.getAttribute(HOSTNAME);
+            Object port = controller.getAttribute(AbstractController.PROXY_HTTP_PORT);
+            if (hostname==null || port==null) return;
+            url = "http://"+hostname+":"+port+"/";
+            LOG.warn("Building URL for $this from $controller: $url");
+        }
+        setAttribute(ROOT_URL, url);
+    }
+    
+    void connectSensors() {
+        SensorPropagatingEnricher.newInstanceListeningToAllSensorsBut(cluster, SERVICE_UP, ROOT_URL).
+            addToEntityAndEmitAll(this);
+        
+        //following 3 lines (and updateHostname method) unnecessary if above is working, I think
+        controller.subscribe(controller, NginxController.ROOT_URL, { updateHostnameFromController() } as SensorEventListener);
+        controller.subscribe(controller, NginxController.SPECIFIED_URL, { updateHostnameFromController() } as SensorEventListener);
+        controller.subscribe(controller, AbstractController.HOSTNAME, { updateHostnameFromController() } as SensorEventListener);
+        updateHostnameFromController();
+        
+        SensorPropagatingEnricher.newInstanceListeningTo(controller, AbstractController.HOSTNAME, SERVICE_UP).
+        addToEntityAndEmitAll(this);
+    }
+
+    public Integer resize(Integer desiredSize) {
+        cluster.resize(desiredSize);
+    }
+
+    /**
+     * @return the current size of the group.
+     */
+    public Integer getCurrentSize() {
+        cluster.getCurrentSize();
     }
 
 }

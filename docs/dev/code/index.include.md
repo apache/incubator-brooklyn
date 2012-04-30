@@ -1,6 +1,6 @@
 ## The Basics
 
-Brooklyn is available on [GitHub](http://github.com/brooklyncentral/brooklyn).  Check it out using:
+Brooklyn is available at [GitHub brooklyncentral/brooklyn](http://github.com/brooklyncentral/brooklyn).  Check it out using:
 
 {% highlight bash %}
 git clone git@github.com:brooklyncentral/brooklyn.git
@@ -41,11 +41,12 @@ Brooklyn is split into the following projects and subprojects:
  
 ## Next Steps
 
-If you're interested in building and editting the code, check out:
+If you're interested in building and editing the code, check out:
 
-* Maven setup
-* IDE setup
-* Tests
+* [Maven setup](../build/index.html)
+* [IDE setup](../build/ide.html)
+* [Tests](../build/tests.html)
+* [Tips](../tips/index.html)
 
 If you want to start writing your own policies and entities, have a look at:
 

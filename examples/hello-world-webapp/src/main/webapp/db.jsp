@@ -21,6 +21,8 @@ deployed by brooklyn, to show database interactivity.
 
 <%
 String url=System.getProperty("brooklyn.example.db.url");
+//URL should be supplied e.g. ""-Dbrooklyn.example.db.url=jdbc:mysql://localhost/visitors?user=brooklyn&password=br00k11n"
+//(note quoting needed due to ampersand)
 if (url==null) {
 %>
     <p>(There is no database included as part of this example.)</p>
@@ -38,8 +40,6 @@ int i=0;
 
 try {
   
-          //"jdbc:mysql://localhost/visitors?user=brooklyn&password=br00k11n";
-
   String DRIVER = "com.mysql.jdbc.Driver";
   Class.forName(DRIVER).newInstance();
 
@@ -48,8 +48,13 @@ try {
   
   if (request.getParameter("name")!=null) {
       //add a message
-      stmt.execute("INSERT INTO MESSAGES values (default, '"+request.getParameter("name")+
-              "', '"+request.getParameter("message")+"')");
+      stmt.execute("INSERT INTO MESSAGES values (default, '"+
+              //better escaping and security desired... 
+              //this essentially does StringEscapeUtils.escapeSql (either brooklyn.util or apache commons)
+              request.getParameter("name").replaceAll("'", "''")+
+              "', '"+
+              request.getParameter("message").replaceAll("'", "''")+
+              "')");
   }
   
   rst=stmt.executeQuery("select * from MESSAGES");
@@ -62,7 +67,8 @@ try {
 } catch (Exception e) {
   i=-1;
 %>
-  <li> <b>ERROR: <%= e %></b> </li>
+  <li> <b>The database does not appear to be connected.</b> </li>
+  <li> ERROR: <%= e %> </li>
 <%
 } finally {
   if (rst!=null) rst.close();

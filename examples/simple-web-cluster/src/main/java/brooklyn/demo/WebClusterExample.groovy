@@ -12,11 +12,11 @@ import brooklyn.entity.basic.Entities
 import brooklyn.entity.proxy.nginx.NginxController
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster
 import brooklyn.entity.webapp.DynamicWebAppCluster
-import brooklyn.entity.webapp.JavaWebAppService
 import brooklyn.entity.webapp.jboss.JBoss7ServerFactory
 import brooklyn.launcher.BrooklynLauncher
 import brooklyn.location.Location
 import brooklyn.location.basic.CommandLineLocations
+import brooklyn.location.basic.LocationRegistry
 import brooklyn.policy.ResizerPolicy
 import brooklyn.util.CommandLineUtil
 
@@ -34,7 +34,7 @@ public class WebClusterExample extends AbstractApplication {
     
     static BrooklynProperties config = BrooklynProperties.Factory.newDefault()
 
-    public static final List<String> DEFAULT_LOCATION = [ CommandLineLocations.LOCALHOST ]
+    public static final String DEFAULT_LOCATION = "localhost"
 
     public static final String WAR_PATH = "classpath://hello-world-webapp.war"
     
@@ -44,7 +44,7 @@ public class WebClusterExample extends AbstractApplication {
     
 
     NginxController nginxController = new NginxController(
-        domain: 'webclusterexample.brooklyn.local',
+//        domain: 'webclusterexample.brooklyn.local',
         port:8000)
     
     JBoss7ServerFactory jbossFactory = new JBoss7ServerFactory(httpPort: "8080+", war: WAR_PATH); 
@@ -53,7 +53,7 @@ public class WebClusterExample extends AbstractApplication {
         name: "WebApp cluster",
         controller: nginxController,
         initialSize: 1,
-        webServerFactory: jbossFactory)
+        factory: jbossFactory)
     
     ResizerPolicy policy = new ResizerPolicy(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND).
         setSizeRange(1, 5).
@@ -63,7 +63,7 @@ public class WebClusterExample extends AbstractApplication {
     public static void main(String[] argv) {
         ArrayList args = new ArrayList(Arrays.asList(argv));
         int port = CommandLineUtil.getCommandLineOptionInt(args, "--port", 8081);
-        List<Location> locations = CommandLineLocations.getLocationsById(args ?: [DEFAULT_LOCATION])
+        List<Location> locations = new LocationRegistry().getLocationsById(args ?: [DEFAULT_LOCATION])
 
         WebClusterExample app = new WebClusterExample(name:'Brooklyn WebApp Cluster example')
             
@@ -73,5 +73,5 @@ public class WebClusterExample extends AbstractApplication {
         
         app.web.cluster.addPolicy(app.policy)
     }
-    
+
 }

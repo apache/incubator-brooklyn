@@ -9,18 +9,15 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.config.BrooklynProperties
-import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.Entities
+import brooklyn.entity.basic.UsesJava
 import brooklyn.entity.database.mysql.MySqlNode
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster
 import brooklyn.entity.webapp.DynamicWebAppCluster
-import brooklyn.entity.webapp.JavaWebAppService
-import brooklyn.entity.webapp.jboss.JBoss7Server
-import brooklyn.event.basic.DependentConfiguration
 import brooklyn.launcher.BrooklynLauncher
 import brooklyn.location.Location
-import brooklyn.location.basic.CommandLineLocations
+import brooklyn.location.basic.LocationRegistry
 import brooklyn.policy.ResizerPolicy
 import brooklyn.util.CommandLineUtil
 
@@ -36,7 +33,7 @@ public class WebClusterDatabaseExample extends AbstractApplication {
     
     static BrooklynProperties config = BrooklynProperties.Factory.newDefault()
 
-    public static final List<String> DEFAULT_LOCATION = [ CommandLineLocations.LOCALHOST ]
+    public static final String DEFAULT_LOCATION = "localhost"
 
     public static final String WAR_PATH = "classpath://hello-world-webapp.war"
     
@@ -44,6 +41,13 @@ public class WebClusterDatabaseExample extends AbstractApplication {
     public static final String DB_PASSWORD = "br00k11n"
     
     public static final String DB_SETUP_SQL_URL = "classpath://visitors-creation-script.sql"
+    
+    public static String makeJdbcUrl(String dbUrl) {
+        //jdbc:mysql://192.168.1.2:3306/visitors?user=brooklyn&password=br00k11n
+        "jdbc:"+dbUrl+"visitors"+"?"+
+            "user="+DB_USERNAME+"\\&"+
+            "password="+DB_PASSWORD
+    }
 
     public WebClusterDatabaseExample(Map props=[:]) {
         super(props)
@@ -55,10 +59,8 @@ public class WebClusterDatabaseExample extends AbstractApplication {
     {
         web.factory.configure(
             httpPort: "8080+", 
-            (JBoss7Server.JAVA_OPTIONS):
-                // -Dbrooklyn.example.db.url="jdbc:mysql://192.168.1.2:3306/visitors?user=brooklyn\\&password=br00k11n"
-                ["brooklyn.example.db.url": valueWhenAttributeReady(mysql, MySqlNode.MYSQL_URL,
-                    { "jdbc:"+it+"visitors?user=${DB_USERNAME}\\&password=${DB_PASSWORD}" }) ]);
+            (UsesJava.JAVA_OPTIONS):
+                ["brooklyn.example.db.url": valueWhenAttributeReady(mysql, MySqlNode.MYSQL_URL, this.&makeJdbcUrl)]);
 
         web.cluster.addPolicy(new
             ResizerPolicy(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND).
@@ -69,7 +71,7 @@ public class WebClusterDatabaseExample extends AbstractApplication {
     public static void main(String[] argv) {
         ArrayList args = new ArrayList(Arrays.asList(argv));
         int port = CommandLineUtil.getCommandLineOptionInt(args, "--port", 8081);
-        List<Location> locations = CommandLineLocations.getLocationsById(args ?: [DEFAULT_LOCATION])
+        List<Location> locations = new LocationRegistry().getLocationsById(args ?: [DEFAULT_LOCATION])
 
         WebClusterDatabaseExample app = new WebClusterDatabaseExample(name:'Brooklyn WebApp Cluster with Database example')
             

@@ -7,7 +7,7 @@ import java.util.Set
 
 import org.testng.annotations.Test
 
-import brooklyn.entity.dns.HostGeoInfo
+import brooklyn.location.geo.HostGeoInfo
 import brooklyn.util.ResourceUtils
 
 

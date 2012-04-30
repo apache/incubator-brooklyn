@@ -4,6 +4,7 @@ import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import java.util.concurrent.ScheduledExecutorService
@@ -53,13 +54,12 @@ public class LoadBalancingPolicyConcurrencyTest extends AbstractLoadBalancingPol
     
     @Test
     public void testConcurrentlyAddContainers() {
-        List<MockItemEntity> items = []
-        List<MockContainerEntity> containers = []
+        Queue<MockContainerEntity> containers = new ConcurrentLinkedQueue<MockContainerEntity>();
         
         containers.add(newContainer(app, "container-orig", 10, 30))
         
         for (int i = 0; i < NUM_CONTAINERS; i++) {
-            newItemWithPeriodicWorkrates(app, containers.get(0), "item"+i, 20)
+            newItemWithPeriodicWorkrates(app, containers.iterator().next(), "item"+i, 20)
         }
         for (int i = 0; i < NUM_CONTAINERS-1; i++) {
             scheduledExecutor.submit( {containers.add(newContainer(app, "container"+i, 10, 30))} )
@@ -70,7 +70,7 @@ public class LoadBalancingPolicyConcurrencyTest extends AbstractLoadBalancingPol
     
     @Test
     public void testConcurrentlyAddItems() {
-        List<MockItemEntity> items = []
+        Queue<MockContainerEntity> items = new ConcurrentLinkedQueue<MockItemEntity>();
         List<MockContainerEntity> containers = []
         
         for (int i = 0; i < NUM_CONTAINERS; i++) {

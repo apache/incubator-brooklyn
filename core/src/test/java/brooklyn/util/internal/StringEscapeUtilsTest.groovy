@@ -27,4 +27,9 @@ public class StringEscapeUtilsTest {
         Assert.assertFalse StringEscapeUtils.isValidForDoubleQuotingInBash("Marks \\\\& Spencer")
     }
 
+    @Test
+    public void testEscapeSql() {
+        Assert.assertEquals(StringEscapeUtils.escapeSql("I've never been to Brooklyn"), "I''ve never been to Brooklyn");
+    }
+    
 }
