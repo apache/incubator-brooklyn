@@ -11,7 +11,7 @@ import brooklyn.entity.basic.NamedParameter;
  */
 public interface MovableEntityTraitAlt {
 
-    Effector<String> MOVE = new MethodEffector<String>(MovableEntityTrait.class, "move");
+    Effector<String> MOVE = new MethodEffector<String>(MovableEntityTraitAlt.class, "move");
     
     /** Effectively move the entity to the new location.
      * A new entity may be created (and the old destroyed) to effect this.
