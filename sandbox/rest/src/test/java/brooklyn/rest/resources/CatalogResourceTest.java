@@ -41,4 +41,14 @@ public class CatalogResourceTest extends BaseResourceTest {
         });
     assertTrue(keys.containsAll(ImmutableSet.of("redis.port", "install.version", "run.dir")));
   }
+
+  @Test
+  public void testListPolicies() {
+    Set<String> policies = client().resource("/v1/catalog/policies")
+        .get(new GenericType<Set<String>>() {
+        });
+
+    assertTrue(policies.size() > 0);
+    assertTrue(policies.contains("brooklyn.policy.resizing.ResizingPolicy"));
+  }
 }

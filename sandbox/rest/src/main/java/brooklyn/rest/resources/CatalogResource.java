@@ -3,6 +3,7 @@ package brooklyn.rest.resources;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.trait.Startable;
+import brooklyn.policy.basic.AbstractPolicy;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import static com.google.common.collect.Iterables.filter;
@@ -33,6 +34,7 @@ public class CatalogResource {
   private static final Log LOG = Log.forClass(CatalogResource.class);
 
   private Set<String> entities;
+  private Set<String> policies;
 
   public CatalogResource() {
     LOG.info("Building a catalog of startable entities from the classpath");
@@ -52,10 +54,29 @@ public class CatalogResource {
         new Function<Class<? extends Startable>, String>() {
           @Override
           public String apply(Class<? extends Startable> aClass) {
-            LOG.info("Found '{}'", aClass.getName());
+            LOG.info("Found entity '{}'", aClass.getName());
             return aClass.getName();
           }
         }));
+
+    LOG.info("Building a catalog of policies from the classpath");
+    policies = newHashSet(transform(filter(
+        reflections.getSubTypesOf(AbstractPolicy.class),
+        new Predicate<Class<? extends AbstractPolicy>>() {
+          @Override
+          public boolean apply(Class<? extends AbstractPolicy> aClass) {
+            return !Modifier.isAbstract(aClass.getModifiers()) &&
+                !aClass.isInterface() && !aClass.isAnonymousClass();
+          }
+        }),
+        new Function<Class<? extends AbstractPolicy>, String>() {
+          @Override
+          public String apply(Class<? extends AbstractPolicy> aClass) {
+            LOG.info("Found policy '{}'", aClass.getName());
+            return aClass.getName();
+          }
+        }
+    ));
   }
 
   public boolean containsEntity(String entityName) {
@@ -64,7 +85,7 @@ public class CatalogResource {
 
   @GET
   @Path("entities")
-  public Iterable<String> list(
+  public Iterable<String> listEntities(
       final @QueryParam("name") @DefaultValue("") String name
   ) {
     if ("".equals(name)) {
@@ -82,7 +103,7 @@ public class CatalogResource {
 
   @GET
   @Path("entities/{entity}")
-  public Set<String> get(@PathParam("entity") String entityName) throws Exception {
+  public Set<String> getEntity(@PathParam("entity") String entityName) throws Exception {
     try {
       Class<EntityLocal> clazz = (Class<EntityLocal>) Class.forName(entityName);
       Constructor constructor = clazz.getConstructor(new Class[]{Map.class});
@@ -98,6 +119,9 @@ public class CatalogResource {
     }
   }
 
-  // TODO add an endpoint for policies
-
+  @GET
+  @Path("policies")
+  public Iterable<String> listPolicies() {
+    return policies;
+  }
 }
