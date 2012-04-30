@@ -76,22 +76,7 @@ public class ApplicationResourceTest extends BaseResourceTest {
     assertEquals(manager.registry().size(), 1);
     assertEquals(response.getLocation().getPath(), "/v1/applications/redis-app");
 
-    waitForApplicationToBeRunning(response);
-  }
-
-  private void waitForApplicationToBeRunning(ClientResponse response) throws InterruptedException, TimeoutException {
-    int count = 0;
-    while (getApplicationStatus(response.getLocation()) != Application.Status.RUNNING) {
-      Thread.sleep(7000);
-      count += 1;
-      if (count == 20) {
-        throw new TimeoutException("Taking to long to get to RUNNING.");
-      }
-    }
-  }
-
-  private Application.Status getApplicationStatus(URI uri) {
-    return client().resource(uri).get(Application.class).getStatus();
+    waitForApplicationToBeRunning(response.getLocation());
   }
 
   @Test(dependsOnMethods = "testDeployRedisApplication")
@@ -165,28 +150,9 @@ public class ApplicationResourceTest extends BaseResourceTest {
     ClientResponse response = client().resource("/v1/applications/redis-app")
         .delete(ClientResponse.class);
 
-    waitForPageNotFoundResponse("/v1/applications/redis-app");
+    waitForPageNotFoundResponse("/v1/applications/redis-app", Application.class);
 
     assertEquals(response.getStatus(), Response.Status.ACCEPTED.getStatusCode());
     assertEquals(manager.registry().size(), 0);
-  }
-
-  private void waitForPageNotFoundResponse(String resource) throws InterruptedException, TimeoutException {
-    int count = 0;
-    while (true) {
-      try {
-        client().resource(resource).get(Application.class);
-
-      } catch (UniformInterfaceException e) {
-        if (e.getResponse().getStatus() == 404) {
-          break;
-        }
-      }
-      Thread.sleep(5000);
-      count += 1;
-      if (count > 20) {
-        throw new TimeoutException("Timeout while waiting for 404 on " + resource);
-      }
-    }
   }
 }
