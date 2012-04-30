@@ -34,6 +34,12 @@
             <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>mx4j</groupId>
+            <artifactId>mx4j-tools</artifactId>
+            <version>${mx4j.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
 </project>

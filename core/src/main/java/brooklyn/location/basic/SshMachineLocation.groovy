@@ -11,7 +11,6 @@ import brooklyn.location.geo.HasHostGeoInfo
 import brooklyn.location.geo.HostGeoInfo
 import brooklyn.util.ReaderInputStream
 import brooklyn.util.flags.SetFromFlag
-import brooklyn.util.internal.SshJschTool
 import brooklyn.util.mutex.MutexSupport
 import brooklyn.util.mutex.WithMutexes
 import brooklyn.util.internal.SshTool
@@ -96,13 +95,13 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public int run(Map props=[:], List<String> commands, Map env=[:]) {
         Preconditions.checkNotNull address, "host address must be specified for ssh"
         if (!commands) return 0
-        SshJschTool ssh = connectSsh(props)
+        SshjTool ssh = connectSsh(props)
         int result = ssh.execShell props, commands, env
         ssh.disconnect()
         result
     }
     
-    protected SshJschTool connectSsh(Map props=[:]) {
+    protected SshjTool connectSsh(Map props=[:]) {
         if (!user) user = System.getProperty "user.name"
         Map args = [ user:user, host:address.hostName ]
         (props+config+leftoverProperties).each { kk,v ->
