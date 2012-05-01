@@ -4,6 +4,8 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.rest.api.Application;
+import brooklyn.rest.api.EntitySummary;
+import brooklyn.rest.api.SensorSummary;
 import brooklyn.rest.core.ApplicationManager;
 import com.google.common.base.Function;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -30,7 +32,7 @@ public class SensorResource extends BaseResource {
   }
 
   @GET
-  public Iterable<URI> list(
+  public Iterable<SensorSummary> list(
       @PathParam("application") final String applicationName,
       @PathParam("entity") final String entityIdOrName
   ) {
@@ -45,11 +47,10 @@ public class SensorResource extends BaseResource {
             return input != null && input.getValue() instanceof AttributeSensor;
           }
         }),
-        new Function<Map.Entry<String, Sensor<?>>, URI>() {
+        new Function<Map.Entry<String, Sensor<?>>, SensorSummary>() {
           @Override
-          public URI apply(Map.Entry<String, Sensor<?>> input) {
-            return URI.create(String.format("/v1/applications/%s/entities/%s/sensors/%s",
-                applicationName, entityIdOrName, input.getKey()));
+          public SensorSummary apply(Map.Entry<String, Sensor<?>> entry) {
+            return new SensorSummary(application, entity, entry.getValue());
           }
         });
   }

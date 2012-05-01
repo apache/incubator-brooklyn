@@ -1,6 +1,7 @@
 package brooklyn.rest.resources;
 
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.event.Sensor;
 import brooklyn.rest.BaseResourceTest;
 import brooklyn.rest.BrooklynConfiguration;
 import brooklyn.rest.api.Application;
@@ -8,6 +9,7 @@ import brooklyn.rest.api.ApplicationSpec;
 import brooklyn.rest.api.EffectorSummary;
 import brooklyn.rest.api.EntitySpec;
 import brooklyn.rest.api.EntitySummary;
+import brooklyn.rest.api.SensorSummary;
 import brooklyn.rest.core.ApplicationManager;
 import brooklyn.rest.core.LocationStore;
 import com.google.common.base.Predicate;
@@ -111,26 +113,32 @@ public class ApplicationResourceTest extends BaseResourceTest {
 
   @Test(dependsOnMethods = "testDeployRedisApplication")
   public void testListSensors() {
-    Set<URI> sensors = client().resource("/v1/applications/redis-app/entities/redis-ent/sensors")
-        .get(new GenericType<Set<URI>>() {
+    Set<SensorSummary> sensors = client().resource("/v1/applications/redis-app/entities/redis-ent/sensors")
+        .get(new GenericType<Set<SensorSummary>>() {
         });
-    assertTrue(sensors.contains(
-        URI.create("/v1/applications/redis-app/entities/redis-ent/sensors/redis.uptime")));
+    assertTrue(sensors.size() > 0);
+    SensorSummary uptime = Iterables.find(sensors, new Predicate<SensorSummary>() {
+      @Override
+      public boolean apply(SensorSummary sensorSummary) {
+        return sensorSummary.getName().equals("redis.uptime");
+      }
+    });
+    assertEquals(uptime.getType(), "java.lang.Integer");
   }
 
   @Test(dependsOnMethods = "testListSensors")
   public void testReadAllSensors() {
-    Set<URI> sensors = client().resource("/v1/applications/redis-app/entities/redis-ent/sensors")
-        .get(new GenericType<Set<URI>>() {
+    Set<SensorSummary> sensors = client().resource("/v1/applications/redis-app/entities/redis-ent/sensors")
+        .get(new GenericType<Set<SensorSummary>>() {
         });
 
     Map<String, String> readings = Maps.newHashMap();
-    for (URI ref : sensors) {
-      readings.put(ref.toString(), client().resource(ref).get(String.class));
+    for (SensorSummary sensor : sensors) {
+      readings.put(sensor.getName(), client().resource(sensor.getLinks().get("self")).get(String.class));
     }
 
-    assertEquals(readings.get("/v1/applications/redis-app/entities/redis-ent/sensors/service.state"), "running");
-    assertEquals(readings.get("/v1/applications/redis-app/entities/redis-ent/sensors/redis.port"), "6379");
+    assertEquals(readings.get("service.state"), "running");
+    assertEquals(readings.get("redis.port"), "6379");
   }
 
   @Test(dependsOnMethods = "testDeployRedisApplication")
