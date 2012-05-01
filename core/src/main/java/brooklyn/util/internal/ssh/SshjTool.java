@@ -386,7 +386,7 @@ public class SshjTool implements SshTool {
         List<String> cmds = ImmutableList.of(
                 scriptPath,
                 "RESULT=$?",
-                "rm "+scriptPath,
+                "rm -f "+scriptPath, // use "-f" because some systems have "rm" aliased to "rm -i"
                 "exit $RESULT");
         
         Integer result = acquire(new ShellAction(cmds, out, err));
