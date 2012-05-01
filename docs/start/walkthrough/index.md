@@ -4,7 +4,7 @@ title: Walkthrough
 toc: /toc.json
 ---
 
-### Intro
+## Intro
 
 Brooklyn makes it easy to describe how to launch and manage 
 sophisticated distributed applications.
@@ -26,7 +26,7 @@ public class WebClusterDatabaseExample extends AbstractApplication {
 {% endhighlight %}
 
 
-### Runtime: the Web Console
+## Runtime: the Web Console
 
 Run this Brooklyn "Application", specifying a target location,
 and our application is deployed.
@@ -44,7 +44,7 @@ and exposes operations ("effectors") that can be performed on entities.
 
 [![Web Console Details](walkthrough-webconsole-details-w700.png "Web Console Details")](walkthrough-webconsole-details.png) 
 
-### Some Configuration and Management
+## Some Configuration and Management
 
 Of course in the real world, application deployments are more interesting;
 they do things and need configuration.  For instance you might need to:
@@ -123,7 +123,7 @@ The resizer policy scales up our cluster:
 [![Web Cluster Scaling with the Resizer Policy](walkthrough-webconsole-scaling-w700.png "Screenshot of Web Cluster Scaling with the Resizer Policy")](walkthrough-webconsole-scaling.png) 
 
 
-### Run it Yourself
+## Run it Yourself
  
 All the code for this walkthrough (and even the JMeter script) is included with
 Brooklyn as the ``simple-web-cluster`` example,
