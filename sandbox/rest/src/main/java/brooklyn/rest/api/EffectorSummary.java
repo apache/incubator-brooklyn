@@ -116,7 +116,7 @@ public class EffectorSummary {
           }
         }));
 
-    String applicationUri = "/v1/applications" + application.getSpec().getName();
+    String applicationUri = "/v1/applications/" + application.getSpec().getName();
     String entityUri = applicationUri + "/entities/" + entity.getId();
     this.links = ImmutableMap.of(
         "self", URI.create(entityUri + "/effectors/" + effector.getName()),
