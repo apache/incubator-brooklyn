@@ -33,6 +33,12 @@ import brooklyn.util.flags.SetFromFlag
 public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJmx, AmqpServer {
     private static final Logger log = LoggerFactory.getLogger(QpidBroker.class)
 
+    /* Qpid runtime file locations for convenience. */
+
+    public static final String CONFIG_XML = "etc/config.xml"
+    public static final String VIRTUALHOSTS_XML = "etc/virtualhosts.xml"
+    public static final String PASSWD = "etc/passwd"
+
     @SetFromFlag("version")
     public static final BasicConfigKey<String> SUGGESTED_VERSION = [ SoftwareProcessEntity.SUGGESTED_VERSION, "0.14" ]
 
