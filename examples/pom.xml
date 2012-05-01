@@ -35,6 +35,7 @@
         <module>global-web-fabric</module>
         <module>hadoop-and-whirr</module>
         <module>portable-cloudfoundry</module>
+        <module>simple-messaging-pubsub</module>
     </modules>
 
 </project>
