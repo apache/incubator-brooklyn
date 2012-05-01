@@ -5,5 +5,7 @@
 { "title": "NoSQL",
   "file":  "{{ site.url }}/use/guide/extras/index.html#nosql" }, 
 { "title": "Messaging",
-  "file":  "{{ site.url }}/use/guide/extras/index.html#messaging" } 
+  "file":  "{{ site.url }}/use/guide/extras/index.html#messaging" },
+{ "title": "Provisioning",
+  "file":  "{{ site.url }}/use/guide/extras/index.html#provisioning" }  
 ]

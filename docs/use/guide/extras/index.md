@@ -124,6 +124,6 @@ Provisioning
 ### Apache Whirr
 
 
-Whirr allows running services on a variety of cloud providers and on localhost. This is done by providing a ``recipe`` which describes what services to launch. You can find an example of how Brooklyn integrates with Whirr here [TODO: link].
+Whirr allows running a variety of services on cloud providers and on localhost. This is done by providing a ``recipe`` which describes what services to launch. You can find an example of how Brooklyn integrates with Whirr [here](/use/examples/whirrhadoop/index.html#custom-whirr-recipe).
 
 
