@@ -1,17 +1,17 @@
 
 
-#sidebar_toc { font-size: 90%; }
+#sidebar_toc { padding-top: 6px; }
 #sidebar_toc a { text-decoration: none; }
 
-#sidebar_toc div.toc-1-item { color: #666; font-size: 95%; text-transform:uppercase; font-weight:bold; margin: 12px 0px 0px 0px; }
+#sidebar_toc div.toc-1 { padding: 8px; margin: 4px 0px 0px 0px; }
+#sidebar_toc div.toc-1-item {text-transform: uppercase; font-size: 12px; color: #111111; margin: 15px 0 5px 0;}
 #sidebar_toc div.toc-1-item.toc-1-header { margin: 0px 0px 2px 0px; }
-#sidebar_toc div.toc-1-item:hover { color: #020; }
+#sidebar_toc div.toc-1-item:hover { color: #003800; }
 
-#sidebar_toc div.toc-2-item { color: #282; }
+#sidebar_toc div.toc-2-item { color: #282; padding-top: 3px; }
 #sidebar_toc div.toc-2-item:hover { color: #010; }
 
-#sidebar_toc div.toc-1 { padding: 8px; margin: 4px 0px 0px 0px; }
-#sidebar_toc div.toc-1.toc-active { background: #D0D8D8; border-radius: 5px; }
+#sidebar_toc div.toc-1.toc-active { background: #C6D0D8; border-radius: 5px; }
 #sidebar_toc div.toc-1.toc-active div.toc-1-item { color: #222; }
 #sidebar_toc div.toc-2.toc-active div.toc-2-item { font-weight: bold; }
 #sidebar_toc div.toc-3.toc-active div.toc-3-item { font-weight: bold; }
@@ -19,17 +19,16 @@
 /* level 3 menu is displayed in the list, indented, if parent is active */
 #sidebar_toc div.toc-2.toc-active div.toc-2-children { margin: 2px 0px 3px 0px; } 
 #sidebar_toc div.toc-2.toc-active div.toc-3-item { 
-    padding: 0px 0px 0px 12px;
+    padding: 1px 0px 1px 12px;
 }
 #sidebar_toc div.toc-2.toc-active div.toc-3-item:hover { color: #060; }
 
 /* otherwise level 3 menu is popup */
-#sidebar_toc div.toc-2:not(.toc-active) div.toc-3-item { color: #262; background: #B0B8B0;
-    font-size: 98%;
+#sidebar_toc div.toc-2:not(.toc-active) div.toc-3-item { color: #262; background: #C6D0D8;
     text-align: right; padding: 2px 6px 2px 6px;
     border-width: 1px; border-style: solid; border-radius: 0px; border-color: #464;
 }
-#sidebar_toc div.toc-2:not(.toc-active) div.toc-3-item:hover { color: #030; border-color: #353; background: #D0D8D8; }
+#sidebar_toc div.toc-2:not(.toc-active) div.toc-3-item:hover { color: #030; border-color: #353; background: #e8eded; }
 
 #sidebar_toc div.toc-2:not(.toc-active) div.toc-2-children-popup { 
     display: none;

@@ -1,7 +1,4 @@
 
-<div id="sidebar_image"><img width="204" src="{{ site.url }}/style/brooklyn-bridge-v2.png"/></div>
-<br/>
-
 {% if page.toc %}
   {% assign p = page.toc %}
 {% else %}
@@ -23,7 +20,6 @@
       {% endfor %}{% endif %}
     {% endif %}{% endcapture %}
     {% capture ifactive %}{{ ifactive | trim }}{% endcapture %}
-    
     
 	  <div class="toc-1 {{ ifactive }}">
   {% if x.children %}
