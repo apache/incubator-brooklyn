@@ -7,4 +7,6 @@
   "file":  "{{ site.url }}/use/examples/whirrhadoop/index.html" },
 { "title": "Portable Cloud Foundry",
   "file":  "{{ site.url }}/use/examples/portable-cloudfoundry/index.html" }
+{ "title": "Publish-Subscribe Messaging",
+  "file":  "{{ site.url }}/use/examples/messaging/index.html" }
 ]
