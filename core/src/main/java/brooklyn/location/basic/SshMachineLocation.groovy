@@ -131,13 +131,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public int exec(Map props=[:], List<String> commands, Map env=[:]) {
         Preconditions.checkNotNull address, "host address must be specified for ssh"
         if (!commands) return 0
-
-        if (!user) user = System.getProperty "user.name"
-        Map args = [ user:user, host:address.hostName ]
-        args << config
-        args << leftoverProperties
-        SshJschTool ssh = new SshJschTool(args)
-        ssh.connect()
+        SshjTool ssh = connectSsh(props)
         int result = ssh.execCommands props, commands, env
         ssh.disconnect()
         result
