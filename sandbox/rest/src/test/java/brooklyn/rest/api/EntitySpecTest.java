@@ -5,6 +5,7 @@ import static com.yammer.dropwizard.testing.JsonHelpers.fromJson;
 import static com.yammer.dropwizard.testing.JsonHelpers.jsonFixture;
 import java.io.IOException;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNull;
 import org.testng.annotations.Test;
 
 public class EntitySpecTest {
@@ -19,5 +20,12 @@ public class EntitySpecTest {
   @Test
   public void testDeserializeFromJSON() throws IOException {
     assertEquals(fromJson(jsonFixture("fixtures/entity.json"), EntitySpec.class), entitySpec);
+  }
+
+  @Test
+  public void testDeserializeFromJSONOnlyWithType() throws IOException {
+    EntitySpec actual = fromJson(jsonFixture("fixtures/entity-only-type.json"), EntitySpec.class);
+    assertEquals(actual.getName(), actual.getType());
+    assertEquals(actual.getConfig().size(), 0);
   }
 }

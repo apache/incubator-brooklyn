@@ -2,19 +2,22 @@ package brooklyn.rest.api;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.collect.ImmutableMap;
+import java.util.Collections;
 import java.util.Map;
 import org.codehaus.jackson.annotate.JsonProperty;
 
 public class EntitySpec {
 
-  private static final Map<String, String> emptyMap = ImmutableMap.<String, String>of();
-
   private final String name;
   private final String type;
   private final Map<String, String> config;
 
+  public EntitySpec(String type) {
+    this(null, type);
+  }
+
   public EntitySpec(String name, String type) {
-    this(name, type, emptyMap);
+    this(name, type, Collections.<String, String>emptyMap());
   }
 
   public EntitySpec(
@@ -22,13 +25,13 @@ public class EntitySpec {
       @JsonProperty("type") String type,
       @JsonProperty("config") Map<String, String> config
   ) {
-    this.name = checkNotNull(name, "name");
+    this.name = name;
     this.type = checkNotNull(type, "type");
     this.config = (config != null) ? ImmutableMap.copyOf(config) : ImmutableMap.<String, String>of();
   }
 
   public String getName() {
-    return name;
+    return (name == null) ? getType() : name;
   }
 
   public String getType() {
