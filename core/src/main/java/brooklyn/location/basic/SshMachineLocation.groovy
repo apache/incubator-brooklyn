@@ -48,11 +48,11 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     
     private final Set<Integer> ports = [] as HashSet
 
-    public SshMachineLocation(Map properties = [:]) {
+    public SshMachineLocation(Map properties=[:]) {
         super(properties)
     }
     
-    public void configure(Map properties) {
+    public void configure(Map properties=[:]) {
         if (config==null) config = [:]
 
         super.configure(properties)

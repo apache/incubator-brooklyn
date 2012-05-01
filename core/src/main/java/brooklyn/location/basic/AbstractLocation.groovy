@@ -59,7 +59,7 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo {
      * 
      * @param properties
      */
-    public AbstractLocation(Map properties = [:]) {
+    public AbstractLocation(Map properties=[:]) {
         configure(properties)
         FlagUtils.checkRequiredFields(this)
     }
@@ -72,7 +72,7 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo {
      * rely on field initializers because they may not run until *after* this method
      * (this method is invoked by the constructor in this class, so initializers
      * in subclasses will not have run when this overridden method is invoked.) */ 
-    protected void configure(Map properties) {
+    protected void configure(Map properties=[:]) {
         leftoverProperties << FlagUtils.setFieldsFromFlags(properties, this)
         //replace properties _contents_ with leftovers so subclasses see leftovers only
         properties.clear();
