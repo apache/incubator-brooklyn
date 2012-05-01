@@ -7,6 +7,7 @@ import brooklyn.rest.api.Application;
 import brooklyn.rest.api.ApplicationSpec;
 import brooklyn.rest.api.EffectorSummary;
 import brooklyn.rest.api.EntitySpec;
+import brooklyn.rest.api.EntitySummary;
 import brooklyn.rest.core.ApplicationManager;
 import brooklyn.rest.core.LocationStore;
 import com.google.common.base.Predicate;
@@ -85,11 +86,17 @@ public class ApplicationResourceTest extends BaseResourceTest {
 
   @Test(dependsOnMethods = "testDeployRedisApplication")
   public void testListEntities() {
-    Set<URI> entities = client().resource("/v1/applications/redis-app/entities")
-        .get(new GenericType<Set<URI>>() {
+    Set<EntitySummary> entities = client().resource("/v1/applications/redis-app/entities")
+        .get(new GenericType<Set<EntitySummary>>() {
         });
-    for (URI ref : entities) {
-      client().resource(ref).get(ClientResponse.class);
+
+    for (EntitySummary entity : entities) {
+      client().resource(entity.getLinks().get("self")).get(ClientResponse.class);
+
+      Set<EntitySummary> children = client().resource(entity.getLinks().get("children"))
+          .get(new GenericType<Set<EntitySummary>>() {
+          });
+      assertEquals(children.size(), 0);
     }
   }
 

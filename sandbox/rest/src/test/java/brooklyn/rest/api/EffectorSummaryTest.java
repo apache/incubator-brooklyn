@@ -1,5 +1,6 @@
 package brooklyn.rest.api;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import static com.yammer.dropwizard.testing.JsonHelpers.asJson;
 import static com.yammer.dropwizard.testing.JsonHelpers.fromJson;
@@ -12,11 +13,13 @@ import org.testng.annotations.Test;
 public class EffectorSummaryTest {
 
   final EffectorSummary effectorSummary = new EffectorSummary(
-      URI.create(("/v1/applications/redis/entities/redis-ent/effectors/stop")),
       "stop",
       "Effector description",
-      "String",
-      ImmutableSet.<EffectorSummary.ParameterSummary>of()
+      "void",
+      ImmutableSet.<EffectorSummary.ParameterSummary>of(),
+      ImmutableMap.of(
+          "self", URI.create("/v1/applications/redis-app/entities/redis-ent/effectors/stop")
+      )
   );
 
   @Test

@@ -2,10 +2,13 @@ package brooklyn.rest.api;
 
 import brooklyn.entity.Effector;
 import brooklyn.entity.ParameterType;
+import brooklyn.entity.basic.EntityLocal;
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.net.URI;
+import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
 import org.codehaus.jackson.annotate.JsonProperty;
@@ -80,28 +83,27 @@ public class EffectorSummary {
     }
   }
 
-  private URI self;
   private String name;
   private String description;
   private String returnType;
   private Set<ParameterSummary> parameters;
+  private Map<String, URI> links;
 
   public EffectorSummary(
-      @JsonProperty("uri") URI self,
       @JsonProperty("name") String name,
       @JsonProperty("description") String description,
       @JsonProperty("returnType") String returnType,
-      @JsonProperty("parameters") Set<ParameterSummary> parameters
+      @JsonProperty("parameters") Set<ParameterSummary> parameters,
+      @JsonProperty("links") Map<String, URI> links
   ) {
-    this.self = self;
     this.name = name;
     this.description = description;
     this.returnType = returnType;
     this.parameters = parameters;
+    this.links = ImmutableMap.copyOf(links);
   }
 
-  public EffectorSummary(URI self, Effector<?> effector) {
-    this.self = self;
+  public EffectorSummary(Application application, EntityLocal entity, Effector<?> effector) {
     this.name = effector.getName();
     this.description = effector.getDescription();
     this.returnType = effector.getReturnTypeName();
@@ -113,10 +115,14 @@ public class EffectorSummary {
             return new ParameterSummary(parameterType);
           }
         }));
-  }
 
-  public URI getSelf() {
-    return self;
+    String applicationUri = "/v1/applications" + application.getSpec().getName();
+    String entityUri = applicationUri + "/entities/" + entity.getId();
+    this.links = ImmutableMap.of(
+        "self", URI.create(entityUri + "/effectors/" + effector.getName()),
+        "entity", URI.create(entityUri),
+        "application", URI.create(applicationUri)
+    );
   }
 
   public String getName() {
@@ -135,6 +141,10 @@ public class EffectorSummary {
     return parameters;
   }
 
+  public Map<String, URI> getLinks() {
+    return links;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -144,13 +154,13 @@ public class EffectorSummary {
 
     if (description != null ? !description.equals(that.description) : that.description != null)
       return false;
+    if (links != null ? !links.equals(that.links) : that.links != null)
+      return false;
     if (name != null ? !name.equals(that.name) : that.name != null)
       return false;
     if (parameters != null ? !parameters.equals(that.parameters) : that.parameters != null)
       return false;
     if (returnType != null ? !returnType.equals(that.returnType) : that.returnType != null)
-      return false;
-    if (self != null ? !self.equals(that.self) : that.self != null)
       return false;
 
     return true;
@@ -158,22 +168,22 @@ public class EffectorSummary {
 
   @Override
   public int hashCode() {
-    int result = self != null ? self.hashCode() : 0;
-    result = 31 * result + (name != null ? name.hashCode() : 0);
+    int result = name != null ? name.hashCode() : 0;
     result = 31 * result + (description != null ? description.hashCode() : 0);
     result = 31 * result + (returnType != null ? returnType.hashCode() : 0);
     result = 31 * result + (parameters != null ? parameters.hashCode() : 0);
+    result = 31 * result + (links != null ? links.hashCode() : 0);
     return result;
   }
 
   @Override
   public String toString() {
     return "EffectorSummary{" +
-        "self=" + self +
-        ", name='" + name + '\'' +
+        "name='" + name + '\'' +
         ", description='" + description + '\'' +
         ", returnType='" + returnType + '\'' +
         ", parameters=" + parameters +
+        ", links=" + links +
         '}';
   }
 }

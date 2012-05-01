@@ -46,11 +46,7 @@ public class EffectorResource extends BaseResource {
         new Function<Map.Entry<String, Effector<?>>, EffectorSummary>() {
           @Override
           public EffectorSummary apply(Map.Entry<String, Effector<?>> entry) {
-            return new EffectorSummary(
-                URI.create(String.format(
-                    "/v1/applications/%s/entities/%s/effectors/%s",
-                    applicationName, entityIdOrName, entry.getValue().getName())),
-                entry.getValue());
+            return new EffectorSummary(application, entity, entry.getValue());
           }
         });
   }
