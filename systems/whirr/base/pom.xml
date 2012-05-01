@@ -37,6 +37,11 @@
             <!-- you need the whirr services you actually use! for tests we might use any of them -->
             <optional>true</optional>
         </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
         
         <dependency>
             <groupId>${project.groupId}</groupId>
