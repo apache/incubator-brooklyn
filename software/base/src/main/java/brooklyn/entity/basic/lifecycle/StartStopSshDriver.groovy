@@ -59,9 +59,9 @@ public abstract class StartStopSshDriver extends AbstractStartStopDriver impleme
     public SshMachineLocation getMachine() { location }
     public String getHostname() { entity.getAttribute(Attributes.HOSTNAME) }
 
-    public int execute(Map flags=[:], List<String> script, String summaryForLogging, Map environmentOverride=null) {
+    public int execute(Map flags=[:], List<String> script, String summaryForLogging) {
         logSsh.debug("{} on machine {}: {}", summaryForLogging, machine, script)
-        def environment = environmentOverride!=null ? environmentOverride : getShellEnvironment()
+        def environment = flags.env ?: getShellEnvironment()
 
         InputStream insO = new PipedInputStream();
         OutputStream outO = new PipedOutputStream(insO)

@@ -28,7 +28,6 @@ import com.google.common.base.Strings
  * @see SshjTool
  * @see SshMachineLocation
  */
-
 //FIXME ALEX rename SshBasedSoftwareSetup -- or remove altogether
 public abstract class SshBasedAppSetup extends StartStopSshDriver implements ScriptRunner {
     protected static final Logger log = LoggerFactory.getLogger(SshBasedAppSetup.class)
@@ -316,7 +315,7 @@ public abstract class SshBasedAppSetup extends StartStopSshDriver implements Scr
                 environment.put(key, value)
             }
         }
-        def result = execute(getRunScript(), "runApp "+entity+" on "+machine, environment)
+        def result = execute(getRunScript(), "runApp ${entity} on ${machine}", env:environment)
 
         if (result) throw new IllegalStateException("failed to start $entity (exit code $result)")
     }
