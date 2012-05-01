@@ -46,6 +46,7 @@ public class QpidSshDriver extends JavaStartStopSshDriver {
         newScript(CUSTOMIZING)
                 .body.append(
                     "cp -R ${installDir}/qpid-broker-${version}/{bin,etc,lib} .",
+                    "mkdir lib/opt",
                 )
                 .execute()
         

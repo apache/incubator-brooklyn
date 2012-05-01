@@ -2,7 +2,6 @@ package brooklyn.entity.messaging.rabbit
 
 import java.util.Collection
 import java.util.Map
-import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -13,16 +12,15 @@ import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.basic.lifecycle.CommonCommands
 import brooklyn.entity.messaging.MessageBroker
 import brooklyn.entity.messaging.Queue
-import brooklyn.entity.messaging.Topic
 import brooklyn.entity.messaging.amqp.AmqpExchange
 import brooklyn.entity.messaging.amqp.AmqpServer
 import brooklyn.event.adapter.SensorRegistry
 import brooklyn.event.adapter.SshSensorAdapter
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey
 import brooklyn.event.basic.BasicConfigKey
+import brooklyn.event.basic.PortAttributeSensorAndConfigKey
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.flags.SetFromFlag
-import brooklyn.util.internal.Repeater
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Rabbit MQ broker instance, using AMQP 0-9-1.
@@ -35,6 +33,12 @@ public class RabbitBroker extends SoftwareProcessEntity implements MessageBroker
 
     @SetFromFlag("erlangVersion")
     public static final BasicConfigKey<String> ERLANG_VERSION = [ String, "erlang.version", "Erlang runtime version", "R15B" ]
+    
+    @SetFromFlag("amqpPort")
+    public static final PortAttributeSensorAndConfigKey AMQP_PORT = AmqpServer.AMQP_PORT
+
+    @SetFromFlag("virtualHost")
+    public static final BasicAttributeSensorAndConfigKey<String> VIRTUAL_HOST_NAME = AmqpServer.VIRTUAL_HOST_NAME
 
     @SetFromFlag("amqpVersion")
     public static final BasicAttributeSensorAndConfigKey<String> AMQP_VERSION = [ AmqpServer.AMQP_VERSION, AmqpServer.AMQP_0_9_1 ]
@@ -81,6 +85,11 @@ public class RabbitBroker extends SoftwareProcessEntity implements MessageBroker
 		            return (it =~ "running_applications.*RabbitMQ")
 		        }
         sensorRegistry.activateAdapters()
+    }
+
+    @Override
+    protected Collection<Integer> getRequiredOpenPorts() {
+        Set<Integer> ports = super.getRequiredOpenPorts() + getAttribute(AMQP_PORT)
     }
 
     @Override

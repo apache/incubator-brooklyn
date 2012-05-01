@@ -23,6 +23,7 @@ import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.adapter.SensorRegistry
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey
 import brooklyn.event.basic.BasicConfigKey
+import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.location.PortRange
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.flags.SetFromFlag
@@ -41,11 +42,17 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJ
 
     @SetFromFlag("version")
     public static final BasicConfigKey<String> SUGGESTED_VERSION = [ SoftwareProcessEntity.SUGGESTED_VERSION, "0.14" ]
+    
+    @SetFromFlag("amqpPort")
+    public static final PortAttributeSensorAndConfigKey AMQP_PORT = AmqpServer.AMQP_PORT
+
+    @SetFromFlag("virtualHost")
+    public static final BasicAttributeSensorAndConfigKey<String> VIRTUAL_HOST_NAME = AmqpServer.VIRTUAL_HOST_NAME
 
     @SetFromFlag("amqpVersion")
     public static final BasicAttributeSensorAndConfigKey<String> AMQP_VERSION = [ AmqpServer.AMQP_VERSION, AmqpServer.AMQP_0_10 ]
 
-    /** runtimeFiles to be copied to the server, map of "subpath/file.name": "classpath://foo/file.txt" (or other url) */
+    /** Files to be copied to the server, map of "subpath/file.name": "classpath://foo/file.txt" (or other url) */
     @SetFromFlag("runtimeFiles")
     public static final BasicConfigKey<Map> RUNTIME_FILES = [ Map, "qpid.files.runtime", "Map of files to be copied, keyed by destination name relative to runDir" ]
 
@@ -84,7 +91,7 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJ
     }
 
     protected Collection<Integer> getRequiredOpenPorts() {
-        Set<Integer> ports = super.getRequiredOpenPorts()
+        Set<Integer> ports = super.getRequiredOpenPorts() + getAttribute(AMQP_PORT)
         PortRange p = getConfig(JMX_PORT);
         if (!p?.isEmpty()) ports += (p.iterator().next()+100);
         log.debug("getRequiredOpenPorts detected expanded (qpid) ports ${ports} for ${this}")
@@ -117,7 +124,7 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJ
 
     @Override
     public Collection<String> toStringFieldsToInclude() {
-        return super.toStringFieldsToInclude() + ['amqpPort' ]
+        return super.toStringFieldsToInclude() + [ 'amqpPort' ]
     }
 
 }
