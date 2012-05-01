@@ -20,7 +20,7 @@ in this example under ``src/main/java``.
 
 ### Setting Up Geographic DNS
 
-This example uses [geoscaling.com](www.geoscaling.com) to provide **free** geographic-dependent DNS services.
+This example uses [geoscaling.com](http://www.geoscaling.com) to provide **free** geographic-dependent DNS services.
 This will forward a domain name of your choice to various IPs depending on a script,
 e.g. computing the nearest IP based on latitude and longitude of the requester and the targets.
 Brooklyn will automatically generate and update this script, but you do need to 
@@ -59,7 +59,7 @@ unpack it, and copy it to `~/.brooklyn/MaxMind-GeoLiteCity.dat`.
 
 This will be picked up automatically if it is installed.
 You can instead specify to use an online lookup service, such as 
-[utrace.de](www.utrace.de) by specifying
+[utrace.de](http://www.utrace.de) by specifying
 `-Dbrooklyn.location.geo.HostGeoLookup=brooklyn.location.geo.UtraceHostGeoLookup`;
 but note this has a cap of 100 per day.
 
@@ -366,7 +366,7 @@ brooklyn-csgFCzTm.geopaas.org. 300 IN   TXT     "GeoScaling config auto-updated 
 ## Next Steps
 
 This example has shown how to create a multi-region fabric, using the abstractions from
-[jclouds](jclouds.org) under the covers to make it easy to access different hosting providers
+[jclouds](http://jclouds.org) under the covers to make it easy to access different hosting providers
 simultaneously, and using higher-level abstractions in Brooklyn to mix PaaS systems with
 bare-VM (or even bare-metal, if you specify fixed IPs).
 
