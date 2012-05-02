@@ -598,6 +598,7 @@
                 <module>usage/web-console</module>
                 <module>usage/launcher</module>
                 <module>usage/all</module>
+                <module>usage/dist</module>
             </modules>
         </profile>
         <profile>

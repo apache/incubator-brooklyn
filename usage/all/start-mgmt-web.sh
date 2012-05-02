@@ -12,7 +12,7 @@ ROOT=$(cd $(dirname $0) && pwd)
 cd $ROOT
 
 JAVA_OPTS="-Xms256m -Xmx1g -XX:MaxPermSize=256m"
-export CP=`ls ./target/brooklyn-launcher-*-with-dependencies.jar | awk '{print $1}'`
+export CP=`ls ./target/brooklyn-all-*-with-dependencies.jar | awk '{print $1}'`
 
 if [ -z "$CP" ]; then
 	echo "Cannot find the with-dependencies jar"
