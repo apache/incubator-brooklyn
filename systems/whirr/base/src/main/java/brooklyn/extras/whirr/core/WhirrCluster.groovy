@@ -99,9 +99,11 @@ public class WhirrCluster extends AbstractEntity implements Startable {
         }
         
         setAttribute(CLUSTER_NAME, clusterSpec.getClusterName());
+        setAttribute(SERVICE_UP, true);
     }
 
     void stop() {
+        setAttribute(SERVICE_UP, false);
         if (clusterSpec != null) {
             controller.destroyCluster(clusterSpec)
         }
