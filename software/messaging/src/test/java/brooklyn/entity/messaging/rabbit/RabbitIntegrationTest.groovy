@@ -4,8 +4,6 @@ import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -13,13 +11,12 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import com.google.common.collect.Maps;
-import com.rabbitmq.client.AMQP
+import com.google.common.base.Charsets
+import com.google.common.collect.Maps
 import com.rabbitmq.client.Channel
 import com.rabbitmq.client.Connection
 import com.rabbitmq.client.ConnectionFactory
-import com.rabbitmq.client.DefaultConsumer;
-import com.rabbitmq.client.Envelope
+import com.rabbitmq.client.QueueingConsumer
 
 import brooklyn.entity.messaging.MessageBroker
 import brooklyn.entity.messaging.amqp.AmqpExchange
@@ -47,7 +44,7 @@ public class RabbitIntegrationTest {
         testLocation = new LocalhostMachineProvisioningLocation()
     }
 
-    @AfterMethod(alwaysRun=true)
+    @AfterMethod(alwaysRun = true)
     public void shutdown() {
         if (app) app.stop()
     }
@@ -76,25 +73,25 @@ public class RabbitIntegrationTest {
             assertTrue rabbit.getAttribute(Startable.SERVICE_UP)
         }
 
+        byte[] content = "MessageBody".getBytes(Charsets.UTF_8)
+        String queue = "queueName"
+        Channel producer, consumer
         try {
-	        Channel producer = getAmqpChannel(rabbit)
-	        Channel consumer = getAmqpChannel(rabbit)
+	        producer = getAmqpChannel(rabbit)
+	        consumer = getAmqpChannel(rabbit)
 
-	        producer.queueDeclare("queueName", true, false, false, Maps.newHashMap())
-	        producer.queueBind("queueName", AmqpExchange.DIRECT, "queueName")
-	        producer.basicPublish(AmqpExchange.DIRECT, "queueName", null, "MessageBody".getBytes())
-
-	        final CountDownLatch consumed = new CountDownLatch(1)
-	        consumer.basicConsume("queueName", true, new DefaultConsumer() {
-	            public void handleDelivery(String tag, Envelope envelope, AMQP.BasicProperties props, byte[] body) {
-	                consumed.countDown()
-	                assertEquals(new String(body), "MessageBody")
-	            }
-	        })
-
-	        assertTrue(consumed.await(30, TimeUnit.SECONDS))
+	        producer.queueDeclare(queue, true, false, false, Maps.newHashMap())
+	        producer.queueBind(queue, AmqpExchange.DIRECT, queue)
+	        producer.basicPublish(AmqpExchange.DIRECT, queue, null, content)
+            
+            QueueingConsumer queueConsumer = new QueueingConsumer(consumer);
+            consumer.basicConsume(queue, true, queueConsumer);
+        
+            QueueingConsumer.Delivery delivery = queueConsumer.nextDelivery();
+            assertEquals(delivery.body, content)
         } finally {
-	        rabbit.stop()
+	        producer.close()
+	        consumer.close()
         }
     }
 

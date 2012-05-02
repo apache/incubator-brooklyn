@@ -65,7 +65,7 @@ public class RabbitSshDriver extends StartStopSshDriver {
                             apt:"rabbitmq-server=${version}-1",
                             rpm:"rabbitmq-server-${version}-1.rpm",
                             port:"rabbitmq-server@${version}"),
-                    sudo(ok("rabbitmqctl -q stop > /dev/null 2>&1"))
+                    ok(sudo("rabbitmqctl -q stop > /dev/null 2>&1"))
                 )
                 .execute()
     }
@@ -81,7 +81,7 @@ public class RabbitSshDriver extends StartStopSshDriver {
     @Override
     public void launch() {
         newScript(LAUNCHING, usePidFile:false)
-                .body.append(sudo("nohup rabbitmq-server -detached"))
+                .body.append(sudo("nohup rabbitmq-server -detached > /dev/null 2>&1"))
                 .execute()
     }
 

@@ -9,17 +9,21 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine
+import brooklyn.location.basic.LocalhostMachineProvisioningLocation
+import brooklyn.location.basic.SshMachineLocation
 import brooklyn.test.entity.TestEntity
 
 public class SshSensorAdapterTest {
+
+    final static LocalhostMachineProvisioningLocation location = [ count:1 ]
+    final static SshMachineLocation machine = location.obtain()
 
 	final static BasicAttributeSensor SENSOR_STRING = [ String.class, "name.string", "String" ]
 	final static BasicAttributeSensor SENSOR_LONG = [ Long.class, "name.long", "Long" ]
 	final static BasicAttributeSensor SENSOR_BOOLEAN = [ Boolean.class, "name.bool", "Boolean" ]
 
 	final EntityLocal entity = new TestEntity();
-	final SshSensorAdapter adapter = [ null ]
+	final SshSensorAdapter adapter = [ machine ]
 	final SensorRegistry registry = new SensorRegistry(entity)
 
     @BeforeClass
@@ -42,7 +46,7 @@ public class SshSensorAdapterTest {
 	/** String should be be automatically converted to long while polling */
 	@Test
 	public void testPollAndLongConversion() {
-		with(adapter.command("command")) {
+		with(adapter.command("true")) {
 			poll(SENSOR_LONG) { stdout }
 		}
 		adapter.poller.evaluateSensorsOnResponse(NUMERIC_RESPONSE);

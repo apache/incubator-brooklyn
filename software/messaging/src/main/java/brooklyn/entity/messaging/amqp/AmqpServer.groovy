@@ -24,4 +24,11 @@ public interface AmqpServer extends Entity {
     BasicAttributeSensorAndConfigKey<String> VIRTUAL_HOST_NAME = [ String, "amqp.virtualHost", "AMQP virtual host name", "localhost" ]
 
     BasicAttributeSensorAndConfigKey<String> AMQP_VERSION = [ String, "amqp.version", "AMQP protocol version" ]
+
+    String getVirtualHost()
+
+    String getAmqpVersion()
+
+    Integer getAmqpPort()
+
 }

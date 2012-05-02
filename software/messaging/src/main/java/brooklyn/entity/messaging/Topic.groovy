@@ -22,4 +22,7 @@ public interface Topic {
      * TODO make this an effector
      */
     public abstract void delete();
+
+    String getTopicName();
+
 }

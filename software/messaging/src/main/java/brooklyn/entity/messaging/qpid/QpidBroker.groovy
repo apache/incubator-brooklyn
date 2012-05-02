@@ -62,8 +62,9 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJ
 //    /** not configurable; must be 100 more than JMX port */
 //    public static final PortAttributeSensorAndConfigKey RMI_PORT = [ UsesJmx.RMI_PORT, 9101 ] 
     
-    public String getVirtualHost() { return getConfig(VIRTUAL_HOST_NAME) }
-    public String getAmqpVersion() { return getConfig(AMQP_VERSION) }
+    public String getVirtualHost() { return getAttribute(VIRTUAL_HOST_NAME) }
+    public String getAmqpVersion() { return getAttribute(AMQP_VERSION) }
+    public Integer getAmqpPort() { return getAttribute(AMQP_PORT) }
 
     public QpidBroker(Map properties=[:], Entity owner=null) {
         super(properties, owner)
@@ -225,4 +226,6 @@ public class QpidTopic extends QpidDestination implements Topic {
 
     /** {@inheritDoc} */
     public String getExchangeName() { AmqpExchange.TOPIC }
+
+    public String getTopicName() { queueName }
 }

@@ -10,7 +10,7 @@ class JcloudsLocationFactory {
 
     // TODO streetAddress is temporary, until we get lat-lon working in google maps properly
     
-	private static final Map AWS_EC2_DEFAULT_IMAGE_IDS = [
+	public static final Map AWS_EC2_DEFAULT_IMAGE_IDS = [
 		"eu-west-1":"eu-west-1/ami-89def4fd",
 		"us-east-1":"us-east-1/ami-2342a94a",
 		"us-west-1":"us-west-1/ami-25df8e60",
@@ -18,7 +18,7 @@ class JcloudsLocationFactory {
 		"ap-northeast-1":"ap-northeast-1/ami-f0e842f1",
 		]
 
-    private static final Map locationSpecificConf = [
+    public static final Map locationSpecificConf = [
             "gogrid":[
                     "1":[
                             providerLocationId:"1",

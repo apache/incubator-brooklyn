@@ -8,4 +8,7 @@ import brooklyn.event.basic.BasicAttributeSensor
  */
 public interface MessageBroker extends Entity {
     BasicAttributeSensor<String> BROKER_URL = [ String, "broker.url", "Broker Connection URL" ]
+
+    /** Setup the URL for external connections to the broker. */
+    void setBrokerUrl()
 }

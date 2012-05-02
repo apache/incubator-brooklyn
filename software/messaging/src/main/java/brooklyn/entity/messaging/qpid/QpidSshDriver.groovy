@@ -69,7 +69,7 @@ public class QpidSshDriver extends JavaStartStopSshDriver {
     public void launch() {
         newScript(LAUNCHING, usePidFile:false)
                 .body.append(
-                    "nohup ./bin/qpid-server -b '*' -m ${jmxPort} -p ${amqpPort} &",
+                    "nohup ./bin/qpid-server -b '*' -m ${jmxPort} -p ${amqpPort} > /dev/null 2>&1 &",
                 )
                 .execute()
     }

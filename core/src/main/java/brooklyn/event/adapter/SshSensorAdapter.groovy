@@ -20,9 +20,9 @@ public class SshSensorAdapter extends AbstractSensorAdapter {
 
 	public static final Logger log = LoggerFactory.getLogger(SshSensorAdapter.class)
 
-	@SetFromFlag("env")
+	@SetFromFlag
 	Map env
-	@SetFromFlag("command")
+	@SetFromFlag
 	String command
 
 	protected final SshPollHelper poller = new SshPollHelper(this)
@@ -30,7 +30,7 @@ public class SshSensorAdapter extends AbstractSensorAdapter {
 
 	public SshSensorAdapter(Map flags=[:], SshMachineLocation location) {
 		super(flags)
-		this.location = location
+		this.location = Preconditions.checkNotNull(location, "location")
         if (!env) env = [:]
     }
 
@@ -40,7 +40,7 @@ public class SshSensorAdapter extends AbstractSensorAdapter {
     public SshSensorAdapter command(String command, Map cmdEnv=[:]) {
         def newFlags = FlagUtils.getFieldsWithValues(this)
         def newAdapter = new SshSensorAdapter(newFlags, location)
-        newAdapter.command = command
+        newAdapter.command = Preconditions.checkNotNull(command, "command")
         newAdapter.env << cmdEnv
         if (registry) return registry.register(newAdapter);
         return newAdapter;

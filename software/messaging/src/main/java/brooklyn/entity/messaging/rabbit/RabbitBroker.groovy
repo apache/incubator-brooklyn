@@ -43,8 +43,9 @@ public class RabbitBroker extends SoftwareProcessEntity implements MessageBroker
     @SetFromFlag("amqpVersion")
     public static final BasicAttributeSensorAndConfigKey<String> AMQP_VERSION = [ AmqpServer.AMQP_VERSION, AmqpServer.AMQP_0_9_1 ]
 
-    public String getVirtualHost() { return getConfig(VIRTUAL_HOST_NAME) }
-    public String getAmqpVersion() { return getConfig(AMQP_VERSION) }
+    public String getVirtualHost() { return getAttribute(VIRTUAL_HOST_NAME) }
+    public String getAmqpVersion() { return getAttribute(AMQP_VERSION) }
+    public Integer getAmqpPort() { return getAttribute(AMQP_PORT) }
 
     public RabbitBroker(Map properties=[:], Entity owner=null) {
         super(properties, owner)
@@ -56,7 +57,8 @@ public class RabbitBroker extends SoftwareProcessEntity implements MessageBroker
 
         waitForServiceUp()
 
-//        queueNames.each { String name -> addQueue(name) }
+        // TODO implement this using AMQP connection, no external mechanism available
+		// queueNames.each { String name -> addQueue(name) }
 
         setBrokerUrl();
     }
@@ -146,11 +148,12 @@ public abstract class RabbitDestination extends AbstractEntity implements AmqpEx
 }
 
 public class RabbitQueue extends RabbitDestination implements Queue {
-    protected String name
 
     public RabbitQueue(Map properties=[:], Entity owner=null) {
         super(properties, owner)
     }
+
+    public String getName() { getDisplayName() }
 
     @Override
     public void create() {

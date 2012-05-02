@@ -17,12 +17,15 @@ public interface Queue {
      *
      * TODO make this an effector
      */
-    public abstract void create();
+    abstract void create();
 
     /**
      * Delete the queue.
      *
      * TODO make this an effector
      */
-    public abstract void delete();
+    abstract void delete();
+
+    String getQueueName();
+
 }

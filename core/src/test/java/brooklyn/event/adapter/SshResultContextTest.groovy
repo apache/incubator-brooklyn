@@ -7,13 +7,18 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.Entity
 import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.location.basic.LocalhostMachineProvisioningLocation
+import brooklyn.location.basic.SshMachineLocation
 import brooklyn.test.entity.TestEntity
 
 public class SshResultContextTest {
 
-	final static SshResultContext SIMPLE_RESPONSE = [ null, 0, "output", "error" ]
-	final static SshResultContext NUMERIC_RESPONSE = [ null, 0, "31337", "error" ]
-	final static SshResultContext ERROR_RESPONSE = [ null, new IOException("mock") ]
+    final static LocalhostMachineProvisioningLocation location = [ count:1 ]
+    final static SshMachineLocation machine = location.obtain()
+
+	final static SshResultContext SIMPLE_RESPONSE = [ machine, 0, "output", "error" ]
+	final static SshResultContext NUMERIC_RESPONSE = [ machine, 0, "31337", "error" ]
+	final static SshResultContext ERROR_RESPONSE = [ machine, new IOException("mock") ]
 
 	@Test
 	public void testStdout() {

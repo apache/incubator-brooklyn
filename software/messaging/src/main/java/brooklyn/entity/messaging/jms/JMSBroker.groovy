@@ -108,6 +108,6 @@ public abstract class JMSDestination extends AbstractEntity {
     
     @Override
     public Collection<String> toStringFieldsToInclude() {
-        return super.toStringFieldsToInclude() + ['name']
+        return super.toStringFieldsToInclude() + [ 'name' ]
     }
 }

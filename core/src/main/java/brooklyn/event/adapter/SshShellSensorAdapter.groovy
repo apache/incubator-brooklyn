@@ -5,6 +5,9 @@ import java.util.Map
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
+
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.entity.basic.lifecycle.ScriptRunner
 import brooklyn.util.ShellUtils
@@ -36,19 +39,15 @@ public class SshShellSensorAdapter extends ShellSensorAdapter {
     
     public SshShellSensorAdapter(Map flags=[:], ScriptRunner driver, String command) {
         super(flags, command)
-        this.driver = driver
+        this.driver = Preconditions.checkNotNull(driver, "driver")
     }
 
     public String[] exec(String command) {
         if (log.isDebugEnabled()) log.debug "Polling for {} sensors using {}", entity, command
-        ByteArrayOutputStream stdout = new ByteArrayOutputStream()
-        try {
-            // def exitStatus = driver.location.run(out:stdout, command, driver.shellEnvironment)
-            def exitStatus = driver.execute(out:stdout, [ command ], "Polling ssh sensors for ${entity}")
-            if (exitStatus != 0) throw new IllegalStateException("Error executing \"${command}\", exited with status ${exitStatus}")
-            return stdout.toString().split("\n");
-        } finally {
-            stdout.close()
-        }
+        ByteArrayOutputStream stdout = []
+
+        def exitStatus = driver.execute(out:stdout, [ command ], "Polling ssh sensors for ${entity}")
+        if (exitStatus != 0) throw new IllegalStateException("Error executing \"${command}\", exited with status ${exitStatus}: ${stdout}")
+        return stdout.toString(Charsets.UTF_8.name()).split("\n");
     }        
 }

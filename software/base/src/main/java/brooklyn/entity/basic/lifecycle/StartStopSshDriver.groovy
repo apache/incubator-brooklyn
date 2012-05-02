@@ -79,8 +79,6 @@ public abstract class StartStopSshDriver extends AbstractStartStopDriver impleme
             // Must close the pipedOutStreams, otherwise input will never read -1 so StreamGobbler thread would never die
             Closeables.closeQuietly outO
             Closeables.closeQuietly outE
-            if (flags.out) Closeables.closeQuietly flags.out
-            if (flags.err) Closeables.closeQuietly flags.err
         }
     }
 

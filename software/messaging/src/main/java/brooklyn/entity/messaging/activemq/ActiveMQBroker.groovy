@@ -133,6 +133,8 @@ public class ActiveMQQueue extends ActiveMQDestination implements Queue {
         jmxAdapter.objectName(queue).attribute("QueueSize").subscribe(QUEUE_DEPTH_MESSAGES)
     }
 
+    public String getQueueName() { name }
+
 }
 
 public class ActiveMQTopic extends ActiveMQDestination implements Topic {
@@ -160,4 +162,6 @@ public class ActiveMQTopic extends ActiveMQDestination implements Topic {
 	public void connectSensors() {
 		//TODO add sensors for topics
 	}
+
+    public String getTopicName() { name }
 }

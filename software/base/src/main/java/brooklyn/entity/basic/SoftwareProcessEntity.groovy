@@ -1,5 +1,7 @@
 package brooklyn.entity.basic
 
+import groovy.time.Duration;
+
 import java.util.Collection
 import java.util.Map
 import java.util.Set
@@ -133,7 +135,10 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 	}
     
     public void waitForServiceUp() {
-        if (!Repeater.create(timeout: 60*TimeUnit.SECONDS)
+        waitForServiceUp(60*TimeUnit.SECONDS)
+    }
+    public void waitForServiceUp(Duration duration) {
+        if (!Repeater.create(timeout:duration, description:"Waiting for SERVICE_UP on ${this}")
                 .rethrowException().repeat().every(1*TimeUnit.SECONDS)
                 .until() {
                     getAttribute(SERVICE_UP)
@@ -141,7 +146,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
                 .run()) {
             throw new IllegalStateException("Could not determine if ${this} is up");
         }
-        log.info("started ${this}")
+        log.info("Service ${this} is running")
     }
 
     public void checkModifiable() {
