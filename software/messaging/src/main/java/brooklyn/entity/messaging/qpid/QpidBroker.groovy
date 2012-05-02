@@ -69,13 +69,13 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJ
     public QpidBroker(Map properties=[:], Entity owner=null) {
         super(properties, owner)
 
-        //TODO test, then change keys to be jmxUser, jmxPassword, configurable on the keys themselves
+        // TODO test, then change keys to be jmxUser, jmxPassword, configurable on the keys themselves
         setConfigIfValNonNull(Attributes.JMX_USER, properties.user ?: "admin")
         setConfigIfValNonNull(Attributes.JMX_PASSWORD, properties.password ?: "admin")
     }
 
     public void setBrokerUrl() {
-        String urlFormat = "amqp://guest:guest@/%s?brokerlist='tcp://%s:%d?tcp_nodelay='true''&maxprefetch='1'"
+        String urlFormat = "amqp://guest:guest@/%s?brokerlist='tcp://%s:%d'"
         setAttribute(BROKER_URL, String.format(urlFormat, getAttribute(VIRTUAL_HOST_NAME), getAttribute(HOSTNAME), getAttribute(AMQP_PORT)))
     }
 
@@ -91,6 +91,7 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJ
         return new QpidSshDriver(this, machine)
     }
 
+    @Override
     protected Collection<Integer> getRequiredOpenPorts() {
         Set<Integer> ports = super.getRequiredOpenPorts() + getAttribute(AMQP_PORT)
         Integer jmx = getAttribute(JMX_PORT)
@@ -99,6 +100,7 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJ
         ports
     }
 
+    @Override
     protected void preStart() {
         super.preStart();
         // NOTE difference of 100 hard-coded in Qpid - RMI port ignored
@@ -107,14 +109,15 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJ
 
     transient JmxSensorAdapter jmxAdapter;
 
+    @Override
     protected void connectSensors() {
         jmxAdapter = sensorRegistry.register(new JmxSensorAdapter())
         jmxAdapter.objectName("org.apache.qpid:type=ServerInformation,name=ServerInformation")
             .attribute("ProductVersion")
             .subscribe(SERVICE_UP) {
-                if (it==null) return false;
-                if (it==getConfig(SUGGESTED_VERSION)) return true;
-                log.warn("ProductVersion is ${it}, requested version is "+getConfig(SUGGESTED_VERSION)); 
+                if (it == null) return false
+                if (it == getConfig(SUGGESTED_VERSION)) return true
+                log.warn("ProductVersion is ${it}, requested version is {}", getConfig(SUGGESTED_VERSION))
                 return false
             }
         jmxAdapter.activateAdapter()
