@@ -39,27 +39,25 @@ if (request.getParameter("key")!=null) {
 <tr>
 <td>brooklyn.example.db.url</td>
 <td>
-jdbc:mysql://localhost/visitors?user=brooklyn&password=br00k11n
-</td>
-<td>
 <form action="configure.jsp" method="GET">
   <input type="hidden" name="key" value="brooklyn.example.db.url">
-  <input type="submit" value="Set"/>
   <input type="text" name="value" value="<%= System.getProperty("brooklyn.example.db.url", "") %>" width="30">
+  <input type="submit" value="Set"/>
 </form>
 </td>
+<td>jdbc:mysql://localhost/visitors?user=brooklyn&password=br00k11n</td>
 </tr>
 
 <tr>
 <td>brooklyn.example.hadoop.site.xml.url</td>
-<td>file:///tmp/hadoop-site.xml</td>
 <td>
 <form action="configure.jsp" method="GET">
   <input type="hidden" name="key" value="brooklyn.example.hadoop.site.xml.url">
-  <input type="submit" value="Set"/>
   <input type="text" name="value" value="<%= System.getProperty("brooklyn.example.hadoop.site.xml.url", "") %>" width="30">
+  <input type="submit" value="Set"/>
 </form>
 </td>
+<td>file:///tmp/hadoop-site.xml</td>
 </tr>
 
 <tr>
@@ -67,7 +65,7 @@ jdbc:mysql://localhost/visitors?user=brooklyn&password=br00k11n
 <td>
 <form action="configure.jsp" method="GET">
   <input type="hidden" name="key" value="brooklyn.example.hadoop.site.xml.contents">
-  <input type="textarea" name="value" value="<%= System.getProperty("brooklyn.example.hadoop.site.xml.contents", "") %>" cols="30" rows="8">
+  <textarea name="value" cols="40" rows="8"><%= System.getProperty("brooklyn.example.hadoop.site.xml.contents", "") %></textarea>
   <input type="submit" value="Set"/>
 </form>
 </td>
