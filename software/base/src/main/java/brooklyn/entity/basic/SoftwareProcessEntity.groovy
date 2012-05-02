@@ -29,6 +29,7 @@ import brooklyn.location.NoMachinesAvailableException
 import brooklyn.location.PortRange
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.location.basic.jclouds.JcloudsLocation.JcloudsSshMachineLocation
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.internal.Repeater
 
@@ -209,6 +210,16 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
         ports
     }
 
+    public String getLocalHostname() {
+        Location where = Iterables.getFirst(locations, null)
+	    String hostname = null
+        if (where in JcloudsSshMachineLocation)
+            hostname = ((JcloudsSshMachineLocation) where).getSubnetHostname()
+        else if (where in SshMachineLocation)
+            hostname = ((SshMachineLocation) where).getAddress()?.hostAddress
+        if (!hostname)
+            throw new IllegalStateException("Cannot find hostname for ${this} at location ${where}")
+	}
 
     public void startInLocation(SshMachineLocation machine) {
         locations.add(machine)
