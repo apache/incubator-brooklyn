@@ -33,6 +33,7 @@ public class JmxSensorAdapter extends AbstractSensorAdapter {
 	public static final long JMX_CONNECTION_TIMEOUT_MS = 120*1000;
 	
 	JmxHelper helper
+	private volatile long jmxConnectionTimeout = JMX_CONNECTION_TIMEOUT_MS
  
 	static {  // JMX ClientCommunicatorAdmin spits out scary warnings, but we just retry so don't worry
 		// TODO better would be to capture and send to our logger as debug
@@ -48,11 +49,15 @@ public class JmxSensorAdapter extends AbstractSensorAdapter {
         super(flags)
     }
 
+    public void setJmxConnectionTimeout(long val) {
+        this.jmxConnectionTimeout = val
+    }
+    
 	void register(SensorRegistry registry) {
 		super.register(registry)
  
 		if (!helper) helper = new JmxHelper(entity)
-		addActivationLifecycleListeners({ helper.connect(JMX_CONNECTION_TIMEOUT_MS) }, { helper.disconnect() })
+		addActivationLifecycleListeners({ helper.connect(jmxConnectionTimeout) }, { helper.disconnect() })
 	}
 
 	public boolean isConnected() { super.isConnected() && helper.isConnected() }
@@ -62,8 +67,10 @@ public class JmxSensorAdapter extends AbstractSensorAdapter {
 	//			onPostStart(JMX_URL, { getUrl() })
 	//			onJmxError(ERROR_CHANNEL, { "JMX had error: "+errorCode } )
 	
-	public JmxObjectNameAdapter objectName(String objectName) { return new JmxObjectNameAdapter(this, new ObjectName(objectName)); }
+	public JmxObjectNameAdapter objectName(String val) { return objectName(new ObjectName(val)); }
 
+    public JmxObjectNameAdapter objectName(ObjectName val) { return new JmxObjectNameAdapter(this, val); }
+    
     /** blocks for 15s until bean might exist */
     public boolean checkObjectNameExists(ObjectName objectName, TimeDuration timeout=15*TimeUnit.SECONDS) {
         def beans = helper.doesMBeanExistsEventually(objectName, timeout);

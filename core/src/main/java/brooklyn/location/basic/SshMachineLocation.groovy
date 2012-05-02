@@ -11,9 +11,11 @@ import brooklyn.location.geo.HasHostGeoInfo
 import brooklyn.location.geo.HostGeoInfo
 import brooklyn.util.ReaderInputStream
 import brooklyn.util.flags.SetFromFlag
-import brooklyn.util.internal.SshJschTool
 import brooklyn.util.mutex.MutexSupport
 import brooklyn.util.mutex.WithMutexes
+import brooklyn.util.internal.SshTool
+import brooklyn.util.internal.ssh.SshException;
+import brooklyn.util.internal.ssh.SshjTool
 
 import com.google.common.base.Preconditions
 
@@ -93,13 +95,13 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public int run(Map props=[:], List<String> commands, Map env=[:]) {
         Preconditions.checkNotNull address, "host address must be specified for ssh"
         if (!commands) return 0
-        SshJschTool ssh = connectSsh(props)
+        SshjTool ssh = connectSsh(props)
         int result = ssh.execShell props, commands, env
         ssh.disconnect()
         result
     }
     
-    protected SshJschTool connectSsh(Map props=[:]) {
+    protected SshjTool connectSsh(Map props=[:]) {
         if (!user) user = System.getProperty "user.name"
         Map args = [ user:user, host:address.hostName ]
         (props+config+leftoverProperties).each { kk,v ->
@@ -115,7 +117,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             }
         }
         if (LOG.isTraceEnabled()) LOG.trace("creating ssh session for "+args);
-        SshJschTool ssh = new SshJschTool(args)
+        SshTool ssh = new SshjTool(args)
         ssh.connect()
         return ssh;
     }
@@ -143,8 +145,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 			src = new ByteArrayInputStream(bytes)
 		}
 		
-        if (!user) user = System.getProperty "user.name"
-        SshJschTool ssh = connectSsh()
+        SshTool ssh = connectSsh(props)
         int result = ssh.createFile props, destination, src, filesize
         ssh.disconnect()
         result
@@ -153,7 +154,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     // FIXME the return code is not a reliable indicator of success or failure
     public int copyFrom(Map props=[:], String remote, String local) {
         Preconditions.checkNotNull address, "host address must be specified for scp"
-        SshJschTool ssh = connectSsh(props);
+        SshTool ssh = connectSsh(props);
         int result = ssh.transferFileFrom props, remote, local
         ssh.disconnect()
         result
@@ -199,6 +200,9 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                 if (LOG.isDebugEnabled()) LOG.debug("Not reachable: $this, executing `$cmd`, exit code $result")
                 return false
             }
+        } catch (SshException e) {
+            if (LOG.isDebugEnabled()) LOG.debug("Exception checking if $this is reachable; assuming not", e)
+            return false
         } catch (IllegalStateException e) {
             if (LOG.isDebugEnabled()) LOG.debug("Exception checking if $this is reachable; assuming not", e)
             return false

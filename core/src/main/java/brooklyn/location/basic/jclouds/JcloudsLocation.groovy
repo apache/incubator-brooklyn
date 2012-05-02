@@ -4,8 +4,9 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS
 import static java.util.concurrent.TimeUnit.SECONDS
 import static org.jclouds.compute.options.RunScriptOptions.Builder.overrideLoginCredentials
 import static org.jclouds.scriptbuilder.domain.Statements.exec
+import static com.google.common.base.Preconditions.checkNotNull
 
-import javax.annotation.Nullable;
+import javax.annotation.Nullable
 
 import org.jclouds.compute.ComputeService
 import org.jclouds.compute.RunNodesException
@@ -29,7 +30,6 @@ import brooklyn.location.basic.AbstractLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.IdGenerator
 import brooklyn.util.internal.Repeater
-import brooklyn.util.internal.SshJschTool;
 
 import com.google.common.base.Charsets
 import com.google.common.base.Throwables
@@ -179,8 +179,9 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
 
             String vmHostname = getPublicHostname(node, allconf)
             Map sshConfig = [:]
-            if (getPrivateKeyFile()) sshConfig.keyFiles = [ getPrivateKeyFile().getCanonicalPath() ] + SshJschTool.DEFAULT_KEY_FILES 
-            SshMachineLocation sshLocByHostname = new JcloudsSshMachineLocation(this, node,
+            if (getPrivateKeyFile()) sshConfig.keyFiles = getPrivateKeyFile().getCanonicalPath()
+            if (allconf.sshPrivateKeyData) sshConfig.privateKey = allconf.sshPrivateKeyData
+            JcloudsSshMachineLocation sshLocByHostname = new JcloudsSshMachineLocation(this, node,
                     address:vmHostname, 
                     displayName:vmHostname,
                     username:allconf.userName, 
@@ -218,11 +219,11 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
      * <ul>
      */
     public JcloudsSshMachineLocation rebindMachine(Map flags) throws NoMachinesAvailableException {
-        String id = flags.id
-        String hostname = flags.hostname
-        String username = flags.userName
+        String id = checkNotNull(flags.id, "id")
+        String hostname = checkNotNull(flags.hostname, "hostname")
+        String username = checkNotNull(flags.userName, "userName")
         
-        LOG.info("Rebinding to VM $id ($username@$hostname), in lclouds location for provider $provider")
+        LOG.info("Rebinding to VM $id ($username@$hostname), in jclouds location for provider $provider")
         
         // TODO Tidy code below
         Map allconf = flags + conf;
@@ -410,8 +411,10 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         String vmIp = JcloudsUtil.getFirstReachableAddress(node);
         
         Map sshConfig = [:]
-        if (getPrivateKeyFile()) sshConfig.keyFiles = [ getPrivateKeyFile().getCanonicalPath() ] + SshJschTool.DEFAULT_KEY_FILES 
+        if (getPrivateKeyFile()) sshConfig.keyFiles = getPrivateKeyFile().getCanonicalPath() 
+        if (allconf.sshPrivateKeyData) sshConfig.privateKey = allconf.sshPrivateKeyData 
         SshMachineLocation sshLocByIp = new SshMachineLocation(address:vmIp, username:allconf.userName, config:sshConfig);
+        
         ByteArrayOutputStream outStream = new ByteArrayOutputStream()
         ByteArrayOutputStream errStream = new ByteArrayOutputStream()
         int exitcode = sshLocByIp.run([out:outStream,err:errStream], "echo `curl --silent --retry 20 http://169.254.169.254/latest/meta-data/public-hostname`; exit")
