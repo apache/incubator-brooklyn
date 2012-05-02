@@ -93,16 +93,16 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJ
 
     protected Collection<Integer> getRequiredOpenPorts() {
         Set<Integer> ports = super.getRequiredOpenPorts() + getAttribute(AMQP_PORT)
-        PortRange p = getConfig(JMX_PORT);
-        if (!p?.isEmpty()) ports += (p.iterator().next()+100);
+        Integer jmx = getAttribute(JMX_PORT)
+        if (jmx) ports += (jmx + 100)
         log.debug("getRequiredOpenPorts detected expanded (qpid) ports ${ports} for ${this}")
         ports
     }
 
     protected void preStart() {
         super.preStart();
-        //difference of 100 hard-coded in Qpid - RMI port ignored
-        setAttribute(RMI_PORT, getAttribute(JMX_PORT)+100);
+        // NOTE difference of 100 hard-coded in Qpid - RMI port ignored
+        setAttribute(RMI_PORT, getAttribute(JMX_PORT) + 100)
     }
 
     transient JmxSensorAdapter jmxAdapter;

@@ -77,7 +77,7 @@ public class ActiveMQBroker extends JMSBroker<ActiveMQQueue, ActiveMQTopic> impl
 
 	@Override
 	public Collection<String> toStringFieldsToInclude() {
-		return super.toStringFieldsToInclude() + ['openWirePort']
+		return super.toStringFieldsToInclude() + [ 'openWirePort' ]
 	}
 }
 

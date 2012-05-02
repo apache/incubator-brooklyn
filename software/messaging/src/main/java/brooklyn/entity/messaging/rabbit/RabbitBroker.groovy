@@ -90,11 +90,6 @@ public class RabbitBroker extends SoftwareProcessEntity implements MessageBroker
     }
 
     @Override
-    protected Collection<Integer> getRequiredOpenPorts() {
-        Set<Integer> ports = super.getRequiredOpenPorts() + getAttribute(AMQP_PORT)
-    }
-
-    @Override
     public Collection<String> toStringFieldsToInclude() {
         return super.toStringFieldsToInclude() + [ 'amqpPort' ]
     }
