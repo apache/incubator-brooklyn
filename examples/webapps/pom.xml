@@ -5,7 +5,7 @@
     <packaging>pom</packaging>
 
     <groupId>io.brooklyn</groupId>
-    <artifactId>brooklyn-examples-parent</artifactId>
+    <artifactId>brooklyn-examples-webapps-parent</artifactId>
     <version>0.4.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
 
     <name>Brooklyn Examples Project</name>
@@ -30,11 +30,10 @@
     </repositories>
 
     <modules>
-        <module>webapps</module>
-        <module>simple-web-cluster</module>
-        <module>global-web-fabric</module>
-        <module>hadoop-and-whirr</module>
-        <module>portable-cloudfoundry</module>
+        <module>hello-world-webapp</module>
+        <module>hello-world-sql</module>
+        <module>hello-world-hadoop-jar</module>
+        <module>hello-world-hadoop</module>
     </modules>
 
 </project>

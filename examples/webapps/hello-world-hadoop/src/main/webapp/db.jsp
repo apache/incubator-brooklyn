@@ -14,7 +14,7 @@
 <td>
 <h1>Sample Brooklyn Deployed WebApp (Database JSP)</h1>
 This is the output of a JSP page that is part of the Hello, World application,
-deployed by brooklyn, to show database interactivity.
+deployed by brooklyn, to show <b>SQL database interactivity</b>.
 </td>
 </tr>
 </table>
