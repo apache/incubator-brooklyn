@@ -39,7 +39,14 @@ public class SubscriptionTracker {
         subscriptions.put(parent, handle);
         return handle;
     }
-    
+
+    /** @see SubscriptionContext#subscribeToMembers(Entity, Sensor, SensorEventListener) */
+    public <T> SubscriptionHandle subscribeToMembers(Entity parent, Sensor<T> sensor, SensorEventListener<? super T> listener) {
+        SubscriptionHandle handle = subscription.subscribeToMembers(parent, sensor, listener);
+        subscriptions.put(parent, handle);
+        return handle;
+    }    
+
     /**
      * Unsubscribes the given producer.
      *
