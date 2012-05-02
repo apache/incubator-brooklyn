@@ -66,7 +66,7 @@ public class WebFabricWithHadoopExample extends AbstractApplication {
             
     static BrooklynProperties config = BrooklynProperties.Factory.newDefault()
     
-    WhirrHadoopCluster hadoopCluster = new WhirrHadoopCluster(this, size: 2, memory: 2048, name: "brooklyn-hadoop-example");
+    WhirrHadoopCluster hadoopCluster = new WhirrHadoopCluster(this, size: 2, memory: 2048, name: "Whirr Hadoop Cluster");
     
     DynamicFabric webFabric = new DynamicFabric(this, name: "Web Fabric", factory: new ElasticJavaWebAppService.Factory());
     
@@ -102,18 +102,18 @@ public class WebFabricWithHadoopExample extends AbstractApplication {
             otherLocations << clusterLocation;
 
         Task starts = executionContext.submit(new ParallelTask(        
-            { hadoopCluster.start([clusterLocation]) },
-            { webFabric.start(otherLocations) } ));
+            {   hadoopCluster.start([clusterLocation]); 
+                // collect the hadoop-site.xml and feed it to all existing and new appservers,
+                // and start the proxies there
+                webVms.setEntityFilter { it in JBoss7Server }
+        
+                PrepVmsForHadoop prepVmsForHadoop = new PrepVmsForHadoop(this);
+                webVms.addPolicy(prepVmsForHadoop);
+                prepVmsForHadoop.start();
+                webVms.members.each { prepVmsForHadoop.setupMachine(it) }
+            },
+            {   webFabric.start(otherLocations)  } ));
         starts.blockUntilEnded();
-        
-        // collect the hadoop-site.xml and feed it to all existing and new appservers,
-        // and start the proxies there
-        webVms.setEntityFilter { it in JBoss7Server }
-        
-        PrepVmsForHadoop prepVmsForHadoop = new PrepVmsForHadoop(this);
-        webVms.addPolicy(prepVmsForHadoop);
-        prepVmsForHadoop.start();
-        webVms.members.each { prepVmsForHadoop.setupMachine(it) }
 	}    
     
     public static class PrepVmsForHadoop extends AbstractPolicy {
