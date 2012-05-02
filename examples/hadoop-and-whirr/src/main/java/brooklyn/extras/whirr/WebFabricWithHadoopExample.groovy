@@ -1,5 +1,7 @@
 package brooklyn.extras.whirr
 
+import groovy.transform.InheritConstructors;
+
 import java.util.List
 
 import org.slf4j.Logger
@@ -19,23 +21,32 @@ import brooklyn.extras.whirr.hadoop.WhirrHadoopCluster
 import brooklyn.launcher.BrooklynLauncher
 import brooklyn.location.Location
 import brooklyn.location.basic.LocationRegistry
+import brooklyn.management.Task
 import brooklyn.util.CommandLineUtil
+import brooklyn.util.task.ParallelTask
 
+/**
+ * Starts hadoop in the first location supplied, and the hadoop-friendly webapp in all other locations.
+ * TODO The webapp needs to be manually configured (via the configure.jsp page) to connect to hadoop.
+ */
+@InheritConstructors
 public class WebFabricWithHadoopExample extends AbstractApplication {
 
     private static final Logger LOG = LoggerFactory.getLogger(WhirrHadoopExample.class);
 
     static final List<String> DEFAULT_LOCATIONS = [
-        "aws-ec2:eu-west-1",
-        "aws-ec2:ap-southeast-1",
         "aws-ec2:us-west-1",
-//            "cloudfoundry:https://api.aws.af.cm/",
+        "aws-ec2:eu-west-1",
+        "cloudfoundry:https://api.aws.af.cm/",
+//        "aws-ec2:ap-southeast-1",
+//        "aws-ec2:us-west-1",
     ];
 
     public static final String WAR_PATH = "classpath://hello-world-hadoop-webapp.war";
             
     static BrooklynProperties config = BrooklynProperties.Factory.newDefault()
     
+    WhirrHadoopCluster hadoopCluster = new WhirrHadoopCluster(this, size: 2, memory: 2048, name: "brooklyn-hadoop-example");
     
     DynamicFabric webFabric = new DynamicFabric(this, name: "Web Fabric", factory: new ElasticJavaWebAppService.Factory());
     
@@ -44,8 +55,6 @@ public class WebFabricWithHadoopExample extends AbstractApplication {
             password: config.getFirst("brooklyn.geoscaling.password", failIfNone:true),
             primaryDomainName: config.getFirst("brooklyn.geoscaling.primaryDomain", failIfNone:true),
             smartSubdomainName: 'brooklyn');
-    
-    WhirrHadoopCluster cluster = new WhirrHadoopCluster(this, size: 2, memory: 2048, name: "brooklyn-hadoop-example")
     
     {
         //specify the WAR file to use
@@ -60,7 +69,24 @@ public class WebFabricWithHadoopExample extends AbstractApplication {
         geoDns.setTargetEntityProvider(webFabric);
     }
 
-    start();
+    void start(Collection locations) {
+        Iterator li = locations.iterator();
+        if (!li.hasNext()) return;
+        Location clusterLocation = li.next();
+        List otherLocations = [];
+        while (li.hasNext()) otherLocations << li.next();
+        if (!otherLocations)
+            //start web in same location if just given one 
+            otherLocations << clusterLocation;
+
+        Task starts = executionContext.submit(new ParallelTask(        
+            { hadoopCluster.start([clusterLocation]) },
+            { webFabric.start(otherLocations) } ));
+        starts.blockUntilEnded();
+        
+        // TODO collect the hadoop-site.xml and feed it to all existing and new appservers
+        // (currently that has to be done manually in this example)
+	}    
         
     public static void main(String[] argv) {
         ArrayList args = new ArrayList(Arrays.asList(argv));
