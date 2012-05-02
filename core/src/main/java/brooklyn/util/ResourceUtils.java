@@ -1,11 +1,10 @@
 package brooklyn.util;
 
-import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.URL;
 
@@ -13,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
-import com.google.common.io.Closeables;
 
 public class ResourceUtils {
     
@@ -117,7 +115,7 @@ public class ResourceUtils {
     public static byte[] readFullyBytes(InputStream is) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         copy(is, out);
-        return out.getBytes();
+        return out.toByteArray();
     }
 
     public static void copy(InputStream input, OutputStream output) throws IOException {
