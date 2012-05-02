@@ -9,6 +9,8 @@ import org.apache.whirr.ClusterControllerFactory
 import brooklyn.entity.trait.Startable
 import org.slf4j.LoggerFactory
 import org.slf4j.Logger
+
+import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.location.Location
@@ -37,6 +39,9 @@ public class WhirrCluster extends AbstractEntity implements Startable {
     @SetFromFlag("recipe")
     public static final BasicConfigKey<String> RECIPE =
         [String, "whirr.recipe", "Apache Whirr cluster recipe"]
+
+    public static final BasicAttributeSensor<String> CLUSTER_NAME =
+        [String, "whirr.cluster.name", "Name of the Whirr cluster"]
 
     protected ClusterController controller = null
     protected ClusterSpec clusterSpec = null
@@ -92,9 +97,13 @@ public class WhirrCluster extends AbstractEntity implements Startable {
             }
             addGroup(rolesGroup)
         }
+        
+        setAttribute(CLUSTER_NAME, clusterSpec.getClusterName());
+        setAttribute(SERVICE_UP, true);
     }
 
     void stop() {
+        setAttribute(SERVICE_UP, false);
         if (clusterSpec != null) {
             controller.destroyCluster(clusterSpec)
         }
