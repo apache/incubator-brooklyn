@@ -48,7 +48,7 @@ import com.google.common.io.Files
 @InheritConstructors
 public class WebFabricWithHadoopExample extends AbstractApplication {
 
-    private static final Logger LOG = LoggerFactory.getLogger(WebFabricWithHadoopExample.class);
+    private static final Logger log = LoggerFactory.getLogger(WebFabricWithHadoopExample.class);
 
     static final List<String> DEFAULT_LOCATIONS = [
         "aws-ec2:us-west-1",
@@ -132,7 +132,8 @@ public class WebFabricWithHadoopExample extends AbstractApplication {
                 if (!e.getAttribute(Startable.SERVICE_UP)) return;
                 if (!configuredIds.add(e.id)) return;
                 SshMachineLocation ssh = Iterables.getOnlyElement(e.locations);
-                ssh.copyTo(new File("${System.getProperty('user.home')}/.whirr/brooklyn-hadoop-example/hadoop-site.xml"), "/tmp/hadoop-site.xml");
+                //would prefer to extract content from HadoopNameNodeClusterActionHandler (but that class would need refactoring)
+                ssh.copyTo(new File("${System.getProperty('user.home')}/.whirr/"+app.hadoopCluster.clusterSpec.clusterName+"/hadoop-site.xml"), "/tmp/hadoop-site.xml");
 
                 File identity = app.hadoopCluster.clusterSpec.getPrivateKeyFile();
                 if (identity == null){
@@ -143,6 +144,7 @@ public class WebFabricWithHadoopExample extends AbstractApplication {
                 if (log.isDebugEnabled()) log.debug "http config update for {}, identity file: {}", e, identity
                 ssh.copyTo(identity, "/tmp/hadoop-proxy-private-key");
 
+                //copied from HadoopProxy, would prefer to reference (but again refactoring there is needed) 
                 String user = app.hadoopCluster.clusterSpec.getClusterUser();
                 InetAddress namenode = HadoopCluster.getNamenodePublicAddress(app.hadoopCluster.cluster);
                 String server = namenode.getHostName();
@@ -184,6 +186,7 @@ done
         ArrayList args = new ArrayList(Arrays.asList(argv));
         int port = CommandLineUtil.getCommandLineOptionInt(args, "--port", 8081);
         List<Location> locations = new LocationRegistry().getLocationsById(args ?: DEFAULT_LOCATIONS)
+        log.info("starting WebFabricWithHadoop, locations {}, mgmt on port {}", locations, port)
 
         WebFabricWithHadoopExample app = new WebFabricWithHadoopExample(name: 'Brooklyn Global Web Fabric with Hadoop Example');
             
