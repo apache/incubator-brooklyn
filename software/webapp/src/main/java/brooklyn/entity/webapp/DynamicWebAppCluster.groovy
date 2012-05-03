@@ -63,8 +63,8 @@ class DynamicWebAppCluster extends DynamicCluster implements WebAppService {
         
         for (List es : enricherSetup) {
             def (t, total, average) = es
-            def totaller = CustomAggregatingEnricher.<Integer>getSummingEnricher([], t, total);
-            def averager = CustomAggregatingEnricher.<Double>getAveragingEnricher([], t, average);
+            def totaller = CustomAggregatingEnricher.<Integer>newSummingEnricher(t, total, allMembers:true);
+            def averager = CustomAggregatingEnricher.<Double>newAveragingEnricher(t, average, allMembers:true);
             addEnricher(totaller)
             addEnricher(averager)
         }

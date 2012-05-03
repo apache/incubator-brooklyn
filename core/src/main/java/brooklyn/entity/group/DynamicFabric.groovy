@@ -57,7 +57,7 @@ public class DynamicFabric extends AbstractEntity implements Startable {
     public DynamicFabric(Map properties = [:], Entity owner = null) {
         super(properties, owner)
 
-        fabricSizeEnricher = CustomAggregatingEnricher.getSummingEnricher(Collections.emptyList(), Changeable.GROUP_SIZE, FABRIC_SIZE)
+        fabricSizeEnricher = CustomAggregatingEnricher.newSummingEnricher(Changeable.GROUP_SIZE, FABRIC_SIZE)
         addEnricher(fabricSizeEnricher)
         
         setAttribute(SERVICE_UP, false)
