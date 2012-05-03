@@ -1,6 +1,7 @@
 package brooklyn.rest.resources;
 
 import brooklyn.rest.api.Location;
+import brooklyn.rest.api.LocationSummary;
 import brooklyn.rest.core.LocationStore;
 import com.google.common.base.Function;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -29,29 +30,20 @@ public class LocationResource {
   }
 
   @GET
-  public Iterable<Map<String, String>> list() {
+  public Iterable<LocationSummary> list() {
     return Iterables.transform(store.entries(),
-        new Function<Map.Entry<Integer, Location>, Map<String, String>>() {
+        new Function<Map.Entry<Integer, Location>, LocationSummary>() {
           @Override
-          public Map<String, String> apply(Map.Entry<Integer, Location> entry) {
-            return asMap(entry.getKey(), entry.getValue());
+          public LocationSummary apply(Map.Entry<Integer, Location> entry) {
+            return new LocationSummary(entry.getKey().toString(), entry.getValue());
           }
         });
   }
 
   @GET
   @Path("{location}")
-  public Map<String, String> get(@PathParam("location") Integer locationId) {
-    return asMap(locationId, store.get(locationId));
-  }
-
-  private Map<String, String> asMap(Integer id, Location loc) {
-    return ImmutableMap.of(
-        "ref", "/v1/locations/" + id,
-        "provider", loc.getProvider(),
-        "identity", loc.getIdentity(),
-        "location", loc.getLocation()
-    );
+  public LocationSummary get(@PathParam("location") Integer locationId) {
+    return new LocationSummary(locationId.toString(), store.get(locationId));
   }
 
   @POST

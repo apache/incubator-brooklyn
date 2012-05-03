@@ -2,14 +2,13 @@ package brooklyn.rest.resources;
 
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.trait.Startable;
 import brooklyn.policy.basic.AbstractPolicy;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableSet;
 import static com.google.common.collect.Iterables.filter;
 import static com.google.common.collect.Iterables.transform;
 import com.google.common.collect.Maps;
-import static com.google.common.collect.Sets.newHashSet;
 import com.yammer.dropwizard.logging.Log;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
@@ -22,30 +21,28 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import org.reflections.Reflections;
 
 @Path("/v1/catalog")
 @Produces(MediaType.APPLICATION_JSON)
-public class CatalogResource {
+public class CatalogResource extends BaseResource {
 
   private static final Log LOG = Log.forClass(CatalogResource.class);
 
-  private Set<String> entities;
-  private Set<String> policies;
+  private final Set<String> entities;
+  private final Set<String> policies;
 
   public CatalogResource() {
     Reflections reflections = new Reflections("brooklyn");
 
-    cacheListOfEntities(reflections);
-    cacheListOfPolicies(reflections);
+    entities = loadListOfEntities(reflections);
+    policies = loadListOfPolicies(reflections);
   }
 
-  private void cacheListOfPolicies(Reflections reflections) {
-    LOG.info("Building a catalog of policies from the classpath");
-    policies = newHashSet(transform(filter(
+  private Set<String> loadListOfPolicies(Reflections reflections) {
+    LOG.trace("Building a catalog of policies from the classpath");
+    return ImmutableSet.copyOf(transform(filter(
         reflections.getSubTypesOf(AbstractPolicy.class),
         new Predicate<Class<? extends AbstractPolicy>>() {
           @Override
@@ -57,30 +54,29 @@ public class CatalogResource {
         new Function<Class<? extends AbstractPolicy>, String>() {
           @Override
           public String apply(Class<? extends AbstractPolicy> aClass) {
-            LOG.info("Found policy '{}'", aClass.getName());
+            LOG.trace("Found policy '{}'", aClass.getName());
             return aClass.getName();
           }
         }
     ));
   }
 
-  private void cacheListOfEntities(Reflections reflections) {
-    LOG.info("Building a catalog of startable entities from the classpath");
-    entities = newHashSet(transform(filter(
-        reflections.getSubTypesOf(Startable.class),
-        new Predicate<Class<? extends Startable>>() {
+  private Set<String> loadListOfEntities(Reflections reflections) {
+    LOG.trace("Building a catalog of startable entities from the classpath");
+    return ImmutableSet.copyOf(transform(filter(
+        reflections.getSubTypesOf(AbstractEntity.class),
+        new Predicate<Class<? extends EntityLocal>>() {
           @Override
-          public boolean apply(@Nullable Class<? extends Startable> aClass) {
+          public boolean apply(@Nullable Class<? extends EntityLocal> aClass) {
             return !Modifier.isAbstract(aClass.getModifiers()) &&
                 !aClass.isInterface() &&
-                AbstractEntity.class.isAssignableFrom(aClass) &&
                 !aClass.isAnonymousClass();
           }
         }),
-        new Function<Class<? extends Startable>, String>() {
+        new Function<Class<? extends EntityLocal>, String>() {
           @Override
-          public String apply(Class<? extends Startable> aClass) {
-            LOG.info("Found entity '{}'", aClass.getName());
+          public String apply(Class<? extends EntityLocal> aClass) {
+            LOG.trace("Found entity '{}'", aClass.getName());
             return aClass.getName();
           }
         }));
@@ -110,19 +106,25 @@ public class CatalogResource {
 
   @GET
   @Path("entities/{entity}")
-  public Iterable<String> getEntity(@PathParam("entity") String entityName) throws Exception {
+  public Iterable<String> getEntity(@PathParam("entity") String entityType) throws Exception {
+    if (!containsEntity(entityType)) {
+      throw notFound("Entity with type '%s' not found", entityType);
+    }
+
     try {
-      Class<EntityLocal> clazz = (Class<EntityLocal>) Class.forName(entityName);
+      // TODO find a different way to query the list of configuration keys
+      // without having to create an instance
+      Class<EntityLocal> clazz = (Class<EntityLocal>) Class.forName(entityType);
       Constructor constructor = clazz.getConstructor(new Class[]{Map.class});
 
       EntityLocal instance = (EntityLocal) constructor.newInstance(Maps.newHashMap());
       return instance.getConfigKeys().keySet();
 
     } catch (ClassNotFoundException e) {
-      throw new WebApplicationException(Response.Status.NOT_FOUND);
+      throw notFound(e.getMessage());
 
     } catch (NoSuchMethodException e) {
-      throw new WebApplicationException(Response.Status.NOT_FOUND);
+      throw notFound(e.getMessage());
     }
   }
 

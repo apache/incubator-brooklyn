@@ -8,9 +8,11 @@ import brooklyn.rest.api.EffectorSummary;
 import brooklyn.rest.core.ApplicationManager;
 import com.google.common.base.Function;
 import static com.google.common.base.Preconditions.checkNotNull;
+import com.google.common.base.Throwables;
 import static com.google.common.collect.Iterables.transform;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.yammer.dropwizard.logging.Log;
 import java.net.URI;
 import java.util.Map;
 import java.util.Set;
@@ -24,6 +26,8 @@ import javax.ws.rs.core.Response;
 
 @Path("/v1/applications/{application}/entities/{entity}/effectors")
 public class EffectorResource extends BaseResource {
+
+  public static final Log LOG = Log.forClass(EffectorResource.class);
 
   private final ApplicationManager manager;
   private ExecutorService executorService;
@@ -63,10 +67,19 @@ public class EffectorResource extends BaseResource {
     final EntityLocal entity = getEntityOr404(application, entityIdOrName);
 
     final Effector<?> effector = entity.getEffectors().get(effectorName);
+    if (effector == null) {
+      throw notFound("Entity '%s' has no effector with name '%s'", entityIdOrName, effectorName);
+    }
+
     executorService.submit(new Runnable() {
       @Override
       public void run() {
-        entity.invoke(effector, parameters);
+        try {
+          entity.invoke(effector, parameters);
+        } catch (Exception e) {
+          LOG.error(e, "Failed while invoking effector");
+          throw Throwables.propagate(e);
+        }
       }
     });
 

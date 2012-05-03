@@ -83,11 +83,11 @@ public class EffectorSummary {
     }
   }
 
-  private String name;
-  private String description;
-  private String returnType;
-  private Set<ParameterSummary> parameters;
-  private Map<String, URI> links;
+  private final String name;
+  private final String description;
+  private final String returnType;
+  private final Set<ParameterSummary> parameters;
+  private final Map<String, URI> links;
 
   public EffectorSummary(
       @JsonProperty("name") String name,

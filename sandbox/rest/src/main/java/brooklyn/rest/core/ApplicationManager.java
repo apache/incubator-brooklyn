@@ -143,7 +143,7 @@ public class ApplicationManager implements Managed {
   }
 
   private void transitionTo(String name, Application.Status status) {
-    Application target = applications.get(name);
+    Application target = checkNotNull(applications.get(name), "No application found with name '%'", name);
     LOG.info("Transitioning '{}' application from {} to {}", name, target.getStatus(), status);
 
     boolean replaced = applications.replace(name, target, target.transitionTo(status));

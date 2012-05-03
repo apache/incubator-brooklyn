@@ -4,6 +4,7 @@ import brooklyn.entity.basic.Lifecycle;
 import brooklyn.event.Sensor;
 import brooklyn.rest.BaseResourceTest;
 import brooklyn.rest.BrooklynConfiguration;
+import brooklyn.rest.api.ApiError;
 import brooklyn.rest.api.Application;
 import brooklyn.rest.api.ApplicationSpec;
 import brooklyn.rest.api.EffectorSummary;
@@ -84,6 +85,36 @@ public class ApplicationResourceTest extends BaseResourceTest {
     assertEquals(response.getLocation().getPath(), "/v1/applications/redis-app");
 
     waitForApplicationToBeRunning(response.getLocation());
+  }
+
+  @Test
+  public void testDeployWithInvalidEntityType() {
+    try {
+      client().resource("/v1/applications").post(
+          new ApplicationSpec("invalid-app",
+              ImmutableSet.of(new EntitySpec("invalid-ent", "not.existing.entity")),
+              ImmutableSet.<String>of("/v1/locations/0"))
+      );
+
+    } catch (UniformInterfaceException e) {
+      ApiError error = e.getResponse().getEntity(ApiError.class);
+      assertEquals(error.getMessage(), "Undefined entity type 'not.existing.entity'");
+    }
+  }
+
+  @Test
+  public void testDeployWithInvalidLocation() {
+    try {
+      client().resource("/v1/applications").post(
+          new ApplicationSpec("invalid-app",
+              ImmutableSet.<EntitySpec>of(new EntitySpec("redis-ent", "brooklyn.entity.nosql.redis.RedisStore")),
+              ImmutableSet.of("/v1/locations/3423"))
+      );
+
+    } catch (UniformInterfaceException e) {
+      ApiError error = e.getResponse().getEntity(ApiError.class);
+      assertEquals(error.getMessage(), "Undefined location '/v1/locations/3423'");
+    }
   }
 
   @Test(dependsOnMethods = "testDeployRedisApplication")

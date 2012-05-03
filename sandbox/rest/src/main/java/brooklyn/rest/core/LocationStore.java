@@ -6,7 +6,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.yammer.dropwizard.lifecycle.Managed;
-import com.yammer.dropwizard.logging.Log;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -56,7 +55,7 @@ public class LocationStore implements Managed {
 
   public Location getByRef(String ref) {
     Matcher matcher = refPattern.matcher(ref);
-    checkArgument(matcher.matches());
+    checkArgument(matcher.matches(), "URI '%s' does not match pattern '%'", ref, refPattern);
 
     return get(Integer.parseInt(matcher.group(1)));
   }
@@ -65,8 +64,8 @@ public class LocationStore implements Managed {
     return ImmutableSet.copyOf(locations.entrySet());
   }
 
-  public void remove(int id) {
-    locations.remove(id);
+  public boolean remove(int id) {
+    return locations.remove(id) != null;
   }
 
 }

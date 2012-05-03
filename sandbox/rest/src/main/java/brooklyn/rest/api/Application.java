@@ -32,8 +32,8 @@ public class Application {
           .put(Status.RUNNING, Status.STOPPING)
           .build();
 
-  private ApplicationSpec spec;
-  private Status status = Status.UNKNOWN;
+  private final ApplicationSpec spec;
+  private final Status status;
 
   @JsonIgnore
   private transient AbstractApplication instance;

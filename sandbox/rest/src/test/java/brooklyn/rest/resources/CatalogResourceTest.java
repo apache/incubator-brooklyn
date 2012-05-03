@@ -30,7 +30,7 @@ public class CatalogResourceTest extends BaseResourceTest {
     Set<String> entities = client().resource("/v1/catalog/entities")
         .queryParam("name", "redis").get(new GenericType<Set<String>>() {
         });
-    assertEquals(entities.size(), 3);
+    assertEquals(entities.size(), 4);
   }
 
   @Test
