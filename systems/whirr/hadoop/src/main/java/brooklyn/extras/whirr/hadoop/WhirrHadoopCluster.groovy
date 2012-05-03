@@ -51,7 +51,7 @@ public class WhirrHadoopCluster extends WhirrCluster {
         checkArgument(getConfig(MEMORY) >= 1000, "We need at least 1GB of memory per machine")
 
         List<String> recipeLines = Lists.newArrayList(
-                "whirr.cluster-name=" + getConfig(NAME),
+                "whirr.cluster-name=" + ((String)getConfig(NAME)).replaceAll("\\s+","-"),
                 "whirr.instance-templates=1 hadoop-namenode+hadoop-jobtracker, "
                         + (getConfig(SIZE) - 1) + " hadoop-datanode+hadoop-tasktracker",
                 "whirr.hardware-min-ram=" + getConfig(MEMORY)
