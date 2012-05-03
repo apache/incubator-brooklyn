@@ -55,7 +55,7 @@ public class LocationStore implements Managed {
 
   public Location getByRef(String ref) {
     Matcher matcher = refPattern.matcher(ref);
-    checkArgument(matcher.matches(), "URI '%s' does not match pattern '%'", ref, refPattern);
+    checkArgument(matcher.matches(), "URI '%s' does not match pattern '%s'", ref, refPattern);
 
     return get(Integer.parseInt(matcher.group(1)));
   }
