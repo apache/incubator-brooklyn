@@ -55,6 +55,15 @@
                                     <outputDirectory>target/classes</outputDirectory>
                                     <destFileName>hello-world-sql-webapp.war</destFileName>
                                 </artifactItem>
+                                <artifactItem>
+                                    <groupId>${project.groupId}</groupId>
+                                    <artifactId>brooklyn-example-hello-world-hadoop-webapp</artifactId>
+                                    <version>${project.version}</version>
+                                    <type>war</type>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>target/classes</outputDirectory>
+                                    <destFileName>hello-world-hadoop-webapp.war</destFileName>
+                                </artifactItem>
                             </artifactItems>
                         </configuration>
                     </execution>
