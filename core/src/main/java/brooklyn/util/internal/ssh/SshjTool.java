@@ -477,7 +477,6 @@ public class SshjTool implements SshTool {
     }
 
     protected <T, C extends SshAction<T>> T acquire(C connection) {
-        String errorMessage = String.format("(%s) error acquiring %s", toString(), connection);
         for (int i = 0; i < sshTries; i++) {
             try {
                 connection.clear();
@@ -486,6 +485,7 @@ public class SshjTool implements SshTool {
                 if (LOG.isTraceEnabled()) LOG.trace("<< ({}) acquired {}", toString(), returnVal);
                 return returnVal;
             } catch (Exception from) {
+                String errorMessage = String.format("(%s) error acquiring %s", toString(), connection);
                 try {
                     disconnect();
                 } catch (Exception e1) {
