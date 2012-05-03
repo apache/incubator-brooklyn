@@ -7,6 +7,7 @@ import brooklyn.location.PortRange;
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedJavaWebAppSetup
 
+//TODO: delete this class!!!!
 public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     public static final String DEFAULT_VERSION = "6.0.0.Final"
     public static final String DEFAULT_INSTALL_DIR = "$DEFAULT_INSTALL_BASEDIR/jboss"
@@ -17,16 +18,16 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     private String serverProfile
     private String clusterName
 
-    public static JBoss6SshSetup newInstance(JBoss6Server entity, SshMachineLocation machine) {
-        Integer suggestedJbossVersion = entity.getConfig(JBoss6Server.SUGGESTED_VERSION)
-        String suggestedInstallDir = entity.getConfig(JBoss6Server.SUGGESTED_INSTALL_DIR)
-        String suggestedRunDir = entity.getConfig(JBoss6Server.SUGGESTED_RUN_DIR)
-        PortRange suggestedJmxPort = entity.getConfig(JBoss6Server.JMX_PORT)
-        Integer portIncrement = entity.getConfig(JBoss6Server.PORT_INCREMENT)
-        String serverProfile = entity.getConfig(JBoss6Server.SERVER_PROFILE)
-        String clusterName = entity.getConfig(JBoss6Server.CLUSTER_NAME)
+    public static JBoss6SshSetup newInstance(OldJBoss6Server entity, SshMachineLocation machine) {
+        Integer suggestedJbossVersion = entity.getConfig(OldJBoss6Server.SUGGESTED_VERSION)
+        String suggestedInstallDir = entity.getConfig(OldJBoss6Server.SUGGESTED_INSTALL_DIR)
+        String suggestedRunDir = entity.getConfig(OldJBoss6Server.SUGGESTED_RUN_DIR)
+        PortRange suggestedJmxPort = entity.getConfig(OldJBoss6Server.JMX_PORT)
+        Integer portIncrement = entity.getConfig(OldJBoss6Server.PORT_INCREMENT)
+        String serverProfile = entity.getConfig(OldJBoss6Server.SERVER_PROFILE)
+        String clusterName = entity.getConfig(OldJBoss6Server.CLUSTER_NAME)
 		
-        Map<String,Map<String,String>> propFilesToGenerate = entity.getConfig(JBoss6Server.PROPERTY_FILES) ?: [:]
+        Map<String,Map<String,String>> propFilesToGenerate = entity.getConfig(OldJBoss6Server.PROPERTY_FILES) ?: [:]
         
         String version = suggestedJbossVersion ?: DEFAULT_VERSION
         String installDir = suggestedInstallDir ?: (DEFAULT_INSTALL_DIR+"/${version}/jboss-${version}")
@@ -55,7 +56,7 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         return result
     }
 
-    public JBoss6SshSetup(JBoss6Server entity, SshMachineLocation machine) {
+    public JBoss6SshSetup(OldJBoss6Server entity, SshMachineLocation machine) {
         super(entity, machine)
     }
     

@@ -19,6 +19,7 @@ import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.basic.legacy.JavaApp
 import brooklyn.entity.webapp.jboss.JBoss6Server
 import brooklyn.entity.webapp.jboss.JBoss7Server
+import brooklyn.entity.webapp.jboss.OldJBoss6Server
 import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
@@ -128,9 +129,9 @@ public class WebAppIntegrationTest {
         JBoss6Server jboss6 = [ owner:newTestApplication(), portIncrement:PORT_INCREMENT ]
         JBoss7Server jboss7 = [ owner:newTestApplication(), httpPort:DEFAULT_HTTP_PORT ]
         return [ 
-			[ tomcat ], 
+			//[ tomcat ], 
 			[ jboss6 ], 
-			[ jboss7 ]
+			//[ jboss7 ]
 		]
     }
 

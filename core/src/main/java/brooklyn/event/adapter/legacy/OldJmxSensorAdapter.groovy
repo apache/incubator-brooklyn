@@ -32,6 +32,7 @@ import com.google.common.base.Preconditions
  * The adapter normally polls the JMX server every second to update sensors, which could involve aggregation of data
  * or simply reading values and setting them in the attribute map of the activity model.
  */
+@Deprecated
 public class OldJmxSensorAdapter {
     private static final Logger log = LoggerFactory.getLogger(OldJmxSensorAdapter.class);
 

@@ -21,6 +21,7 @@ import brooklyn.util.internal.StringEscapeUtils;
  *
  * TODO complete documentation
  */
+@Deprecated
 public abstract class SshBasedJavaAppSetup extends SshBasedAppSetup {
     static final Logger log = LoggerFactory.getLogger(SshBasedJavaAppSetup.class)
 
