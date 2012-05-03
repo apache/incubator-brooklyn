@@ -48,7 +48,7 @@ import com.google.common.io.Files
 @InheritConstructors
 public class WebFabricWithHadoopExample extends AbstractApplication {
 
-    private static final Logger LOG = LoggerFactory.getLogger(WhirrHadoopExample.class);
+    private static final Logger LOG = LoggerFactory.getLogger(WebFabricWithHadoopExample.class);
 
     static final List<String> DEFAULT_LOCATIONS = [
         "aws-ec2:us-west-1",
@@ -118,6 +118,7 @@ public class WebFabricWithHadoopExample extends AbstractApplication {
     
     public static class PrepVmsForHadoop extends AbstractPolicy {
         WebFabricWithHadoopExample app;
+        Set<String> configuredIds = []
         public PrepVmsForHadoop(WebFabricWithHadoopExample app) {
             this.app = app;
         }
@@ -126,48 +127,56 @@ public class WebFabricWithHadoopExample extends AbstractApplication {
                 { SensorEvent evt -> if (evt.value) setupMachine(evt.source) } as SensorEventListener);
         }
         public void setupMachine(Entity e) {
-            SshMachineLocation ssh = Iterables.getOnlyElement(e.locations);
-            ssh.copyTo(new File("${System.getProperty('user.home')}/.whirr/brooklyn-hadoop-example/hadoop-site.xml"), "/tmp/hadoop-site.xml");
-            
-            File identity = app.hadoopCluster.clusterSpec.getPrivateKeyFile();
-            if (identity == null){
-              identity = File.createTempFile("hadoop", "key");
-              identity.deleteOnExit();
-              Files.write(app.hadoopCluster.clusterSpec.getPrivateKey(), identity, Charsets.UTF_8);
-            }
-            if (log.isDebugEnabled()) log.debug "http config update for {}, identity file: {}", e, identity
-            ssh.copyTo(identity, "/tmp/hadoop-proxy-private-key");
-            
-            String user = app.hadoopCluster.clusterSpec.getClusterUser();
-            InetAddress namenode = HadoopCluster.getNamenodePublicAddress(app.hadoopCluster.cluster);
-            String server = namenode.getHostName();
-            String proxyCommand = [ "ssh",
-                "-i", "/tmp/hadoop-proxy-private-key",
-                "-o", "ConnectTimeout=10",
-                "-o", "ServerAliveInterval=60",
-                "-o", "StrictHostKeyChecking=no",
-                "-o", "UserKnownHostsFile=/dev/null",
-                "-o", "StrictHostKeyChecking=no",
-                "-N",
-                "-D 6666",
-                String.format("%s@%s", user, server) ].join(" ");
-            if (log.isDebugEnabled()) log.debug "http config update for {}, proxy command: {}", e, proxyCommand
-            
-            ssh.copyTo(new StringReader("""
-while [ true ] do 
+            try {
+                if (log.isDebugEnabled()) log.debug "setting up machine for hadoop at {}", e
+                if (!e.getAttribute(Startable.SERVICE_UP)) return;
+                if (!configuredIds.add(e.id)) return;
+                SshMachineLocation ssh = Iterables.getOnlyElement(e.locations);
+                ssh.copyTo(new File("${System.getProperty('user.home')}/.whirr/brooklyn-hadoop-example/hadoop-site.xml"), "/tmp/hadoop-site.xml");
+
+                File identity = app.hadoopCluster.clusterSpec.getPrivateKeyFile();
+                if (identity == null){
+                    identity = File.createTempFile("hadoop", "key");
+                    identity.deleteOnExit();
+                    Files.write(app.hadoopCluster.clusterSpec.getPrivateKey(), identity, Charsets.UTF_8);
+                }
+                if (log.isDebugEnabled()) log.debug "http config update for {}, identity file: {}", e, identity
+                ssh.copyTo(identity, "/tmp/hadoop-proxy-private-key");
+
+                String user = app.hadoopCluster.clusterSpec.getClusterUser();
+                InetAddress namenode = HadoopCluster.getNamenodePublicAddress(app.hadoopCluster.cluster);
+                String server = namenode.getHostName();
+                String proxyCommand = [ "ssh",
+                    "-i", "/tmp/hadoop-proxy-private-key",
+                    "-o", "ConnectTimeout=10",
+                    "-o", "ServerAliveInterval=60",
+                    "-o", "StrictHostKeyChecking=no",
+                    "-o", "UserKnownHostsFile=/dev/null",
+                    "-o", "StrictHostKeyChecking=no",
+                    "-N",
+                    "-D 6666",
+                    String.format("%s@%s", user, server) ].join(" ");
+                if (log.isDebugEnabled()) log.debug "http config update for {}, proxy command: {}", e, proxyCommand
+
+                ssh.copyTo(new StringReader("""
+while [ true ] ; do 
   date
   echo starting proxy for hadoop to """+String.format("%s@%s", user, server)+"""
   nohup """+proxyCommand+"""
   echo proxy ended
 done
 """), "/tmp/hadoop-proxy-forever.sh");
-            ssh.run("chmod 600 /tmp/hadoop-proxy-private-key ; chmod +w /tmp/hadoop-proxy-forever.sh ; nohup /tmp/hadoop-proxy-forevery.sh &");
+                ssh.run("chmod 600 /tmp/hadoop-proxy-private-key ; chmod +x /tmp/hadoop-proxy-forever.sh ; nohup /tmp/hadoop-proxy-forever.sh &");
 
-            URL updateConfig = new URL(e.getAttribute(JBoss7Server.ROOT_URL)+
-                    "configure.jsp?key=brooklyn.example.hadoop.site.xml.url&value=file:///tmp/hadoop-site.xml");
-                
-            def result = new HttpResponseContext(updateConfig.openConnection());
-            if (log.isDebugEnabled()) log.debug "http config update for {} got: {}", e, result.content
+                URL updateConfig = new URL(e.getAttribute(JBoss7Server.ROOT_URL)+
+                        "configure.jsp?key=brooklyn.example.hadoop.site.xml.url&value=file:///tmp/hadoop-site.xml");
+                    
+                def result = new HttpResponseContext(updateConfig.openConnection());
+                if (log.isDebugEnabled()) log.debug "http config update for {} got: {}", e, result.content
+            } catch (Exception err) {
+                log.warn "unable to configure {} for hadoop: {}", e, err
+                configuredIds.remove(e.id);
+            }
         }
     }
         

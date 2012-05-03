@@ -95,13 +95,13 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public int run(Map props=[:], List<String> commands, Map env=[:]) {
         Preconditions.checkNotNull address, "host address must be specified for ssh"
         if (!commands) return 0
-        SshjTool ssh = connectSsh(props)
+        SshTool ssh = connectSsh(props)
         int result = ssh.execShell props, commands, env
         ssh.disconnect()
         result
     }
     
-    protected SshjTool connectSsh(Map props=[:]) {
+    protected SshTool connectSsh(Map props=[:]) {
         if (!user) user = System.getProperty "user.name"
         Map args = [ user:user, host:address.hostName ]
         (props+config+leftoverProperties).each { kk,v ->
@@ -112,8 +112,8 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                 // TODO remove once everything is prefixed SSHCONFIG_PREFIX
                 if (!NON_SSH_PROPS.contains(k)) {
                     LOG.warn("including legacy SSH config property "+k+" for "+this+"; either prefix with sshconfig or add to NON_SSH_PROPS");
-                    args.put(k, v);
                 }
+                args.put(k, v);
             }
         }
         if (LOG.isTraceEnabled()) LOG.trace("creating ssh session for "+args);

@@ -179,8 +179,10 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
 
             String vmHostname = getPublicHostname(node, allconf)
             Map sshConfig = [:]
-            if (getPrivateKeyFile()) sshConfig.keyFiles = getPrivateKeyFile().getCanonicalPath()
+            if (getPrivateKeyFile()) sshConfig.keyFiles = [ getPrivateKeyFile().getCanonicalPath() ];
             if (allconf.sshPrivateKeyData) sshConfig.privateKey = allconf.sshPrivateKeyData
+            if (LOG.isDebugEnabled())
+                LOG.debug("creating JcloudsSshMachineLocation for {}@{} with {}", allconf.userName, vmHostname, sshConfig)
             JcloudsSshMachineLocation sshLocByHostname = new JcloudsSshMachineLocation(this, node,
                     address:vmHostname, 
                     displayName:vmHostname,
@@ -411,8 +413,9 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         String vmIp = JcloudsUtil.getFirstReachableAddress(node);
         
         Map sshConfig = [:]
-        if (getPrivateKeyFile()) sshConfig.keyFiles = getPrivateKeyFile().getCanonicalPath() 
-        if (allconf.sshPrivateKeyData) sshConfig.privateKey = allconf.sshPrivateKeyData 
+        if (getPrivateKeyFile()) sshConfig.keyFiles = [ getPrivateKeyFile().getCanonicalPath() ] 
+        if (allconf.sshPrivateKeyData) sshConfig.privateKey = allconf.sshPrivateKeyData
+        // TODO messy way to get an SSH session 
         SshMachineLocation sshLocByIp = new SshMachineLocation(address:vmIp, username:allconf.userName, config:sshConfig);
         
         ByteArrayOutputStream outStream = new ByteArrayOutputStream()
