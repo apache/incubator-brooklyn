@@ -56,8 +56,9 @@ class LocalEntitiesTest {
                     collect { it.invoke(HelloEntity.SET_AGE, age: 5) });
             evt.wait(5000)
         }
-        
-        assertNotNull(evt.get())
+
+        // observed intermittent failure 2 May 2012
+        assertNotNull(evt.get(), "null response after "+(System.currentTimeMillis()-startTime)+" ms")
         assertEquals(HelloEntity.AGE, evt.get().sensor)
         assertEquals(h, evt.get().source)
         assertEquals(5, evt.get().value)
