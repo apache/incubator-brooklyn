@@ -37,7 +37,9 @@ try {
     if (fsClient==null) throw new NullPointerException("Can't access fsClient");
 
     org.apache.hadoop.mapreduce.Job job = brooklyn.demo.webapp.hello.HadoopWordCount.makeJob(conf);
-    ((org.apache.hadoop.mapred.JobConf)job.getConfiguration()).setJar(brooklyn.demo.webapp.hello.SerializeHelloWorldHadoopJar.getJarName());
+    String jar = brooklyn.demo.webapp.hello.SerializeHelloWorldHadoopJar.getJarName();
+    if (jar!=null) { ((org.apache.hadoop.mapred.JobConf)job.getConfiguration()).setJar(jar); }
+    else { %><b>JAR not available. Map-Reduce will likely subsequently fail.</b><% }
     org.apache.hadoop.fs.FileStatus[] files = fsClient.listStatus(new org.apache.hadoop.fs.Path("chats"));
     if (files==null) files = new org.apache.hadoop.fs.FileStatus[0];
     for (org.apache.hadoop.fs.FileStatus f: files) {

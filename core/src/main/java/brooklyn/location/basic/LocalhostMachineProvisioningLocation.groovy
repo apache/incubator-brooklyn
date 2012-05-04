@@ -55,12 +55,12 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
     public LocalhostMachineProvisioningLocation(String name, int count=0) {
         this([name: name, count: count]);
     }
-
+    
     protected void configure(Map flags) {
         super.configure(flags)
         
         if (!name) { name="localhost" }
-        if (!address) address = TypeCoercions.coerce(BrooklynServiceAttributes.LOCALHOST_IP_ADDRESS.getValue() ?: InetAddress.localHost, InetAddress)
+        if (!address) address = getLocalhostInetAddress()
         // TODO should try to confirm this machine is accessible on the given address ... but there's no 
         // immediate convenience in java so early-trapping of that particular error is deferred
         
@@ -78,6 +78,10 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
         }
     }
     
+    public static InetAddress getLocalhostInetAddress() {
+        TypeCoercions.coerce(BrooklynServiceAttributes.LOCALHOST_IP_ADDRESS.getValue() ?: InetAddress.localHost, InetAddress);
+    }
+
     public InetAddress getAddress() { return address; }
     
     public boolean canProvisionMore() { return canProvisionMore; }
@@ -108,6 +112,9 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
             return true;
         }
         return NetworkUtils.isPortAvailable(portNumber);
+    }
+    public static int obtainPort(PortRange range) {
+        obtainPort(getLocalhostInetAddress(), range);
     }
     public static int obtainPort(InetAddress localAddress, PortRange range) {
         for (int p: range)
