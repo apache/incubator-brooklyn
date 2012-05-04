@@ -258,7 +258,7 @@ public class SshjToolLiveTest {
         
         tool.createFile([:], remoteFilePath, contents)
         
-        assertRemoveFileContents(remoteFilePath, contents)
+        assertRemoteFileContents(remoteFilePath, contents)
         assertRemoteFilePermissions(remoteFilePath, "-rw-r--r--")
         assertRemoteFileLastModifiedIsNow(remoteFilePath);
     }
@@ -290,7 +290,7 @@ public class SshjToolLiveTest {
         Files.write(contents, new File(localFilePath), Charsets.UTF_8)
         tool.copyToServer(permissions:'0754', new File(localFilePath), remoteFilePath)
 
-        assertRemoveFileContents(remoteFilePath, contents)
+        assertRemoteFileContents(remoteFilePath, contents)
 
         String lsout = execCommands([ "ls -l "+remoteFilePath ])
         assertTrue(lsout.contains("-rwxr-xr--"), lsout);
@@ -302,7 +302,7 @@ public class SshjToolLiveTest {
         ByteArrayInputStream contentsStream = new ByteArrayInputStream(contents.getBytes())
         tool.transferFileTo([:], contentsStream, remoteFilePath)
 
-        assertRemoveFileContents(remoteFilePath, contents)
+        assertRemoteFileContents(remoteFilePath, contents)
     }
 
     @Test(groups = [ "Integration" ])
@@ -311,7 +311,7 @@ public class SshjToolLiveTest {
         byte[] contentBytes = contents.getBytes()
         tool.createFile([:], remoteFilePath, contentBytes)
 
-        assertRemoveFileContents(remoteFilePath, contents)
+        assertRemoteFileContents(remoteFilePath, contents)
     }
 
     @Test(groups = [ "Integration" ])
@@ -320,7 +320,7 @@ public class SshjToolLiveTest {
         ByteArrayInputStream contentsStream = new ByteArrayInputStream(contents.getBytes())
         tool.createFile([:], remoteFilePath, contentsStream, contents.length())
 
-        assertRemoveFileContents(remoteFilePath, contents)
+        assertRemoteFileContents(remoteFilePath, contents)
     }
 
     @Test(groups = [ "Integration" ])
@@ -346,7 +346,7 @@ public class SshjToolLiveTest {
         
         tool.createFile([:], remoteFileInDirPath, contents)
 
-        assertRemoveFileContents(remoteFileInDirPath, contents)
+        assertRemoteFileContents(remoteFileInDirPath, contents)
     }
     
     // TODO stderr seems to be written to stdout!?
@@ -370,7 +370,7 @@ public class SshjToolLiveTest {
         
     }
 
-    private void assertRemoveFileContents(String remotePath, String expectedContents) {
+    private void assertRemoteFileContents(String remotePath, String expectedContents) {
         String catout = execCommands([ "cat "+remotePath ])
         assertEquals(catout, expectedContents);
     }

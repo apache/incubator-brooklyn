@@ -40,12 +40,11 @@ public class JBoss6Server extends JavaWebAppSoftwareProcess implements JavaWebAp
 	@SetFromFlag("clusterName")
 	public static final BasicAttributeSensorAndConfigKey<String> CLUSTER_NAME = [ String, "jboss.clusterName", "Identifier used to group JBoss instances", "" ]	  
 
-	//copied from JavaApp
+	//TODO copied from JavaApp
 	public static final MapConfigKey<Map> PROPERTY_FILES = [ Map, "java.properties.environment", "Property files to be generated, referenced by an environment variable" ]
 	
     public JBoss6Server(Map flags=[:], Entity owner=null) {
         super(flags, owner)
-		log.info "Running the refactored JBoss6Server !!!!!!!"
     }
 
 	@Override	
@@ -68,7 +67,7 @@ public class JBoss6Server extends JavaWebAppSoftwareProcess implements JavaWebAp
     }
 }
 
-// Do we need this? We are currently not using it.
+//TODO Do we need this? We are currently not using it.
 public class JBoss6ServerFactory extends BasicConfigurableEntityFactory<JBoss6Server> {
     public JBoss6ServerFactory(Map flags=[:]) {
         super(flags, JBoss6Server)

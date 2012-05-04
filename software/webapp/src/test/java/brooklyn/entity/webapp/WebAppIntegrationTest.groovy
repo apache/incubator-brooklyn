@@ -16,7 +16,7 @@ import org.testng.annotations.Test
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.SoftwareProcessEntity
-import brooklyn.entity.basic.legacy.JavaApp
+import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.jboss.JBoss6Server
 import brooklyn.entity.webapp.jboss.JBoss7Server
 import brooklyn.entity.webapp.jboss.OldJBoss6Server
@@ -129,9 +129,9 @@ public class WebAppIntegrationTest {
         JBoss6Server jboss6 = [ owner:newTestApplication(), portIncrement:PORT_INCREMENT ]
         JBoss7Server jboss7 = [ owner:newTestApplication(), httpPort:DEFAULT_HTTP_PORT ]
         return [ 
-			//[ tomcat ], 
-			[ jboss6 ], 
-			//[ jboss7 ]
+			[ tomcat ], 
+			[ jboss6 ],
+			[ jboss7 ]
 		]
     }
 
@@ -143,9 +143,9 @@ public class WebAppIntegrationTest {
         this.entity = entity
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         executeUntilSucceedsWithShutdown(timeout: 120*SECONDS, entity) {
-            assertTrue entity.getAttribute(JavaApp.SERVICE_UP)
+            assertTrue entity.getAttribute(Startable.SERVICE_UP)
         }
-        assertFalse entity.getAttribute(JavaApp.SERVICE_UP)
+        assertFalse entity.getAttribute(Startable.SERVICE_UP)
     }
     
     //needed for legacy items only

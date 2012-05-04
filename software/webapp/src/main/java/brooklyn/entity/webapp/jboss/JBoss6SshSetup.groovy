@@ -8,6 +8,7 @@ import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.SshBasedJavaWebAppSetup
 
 //TODO: delete this class!!!!
+@Deprecated
 public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
     public static final String DEFAULT_VERSION = "6.0.0.Final"
     public static final String DEFAULT_INSTALL_DIR = "$DEFAULT_INSTALL_BASEDIR/jboss"
@@ -195,4 +196,5 @@ public class JBoss6SshSetup extends SshBasedJavaWebAppSetup {
         machine.releasePort(jmxPort)
         machine.releasePort(httpPort);
     }
+
 }
