@@ -83,11 +83,8 @@ public class FlagUtils {
         try {
             // TODO Should this code be pushed into TypeCoercions.coerce itself?
             Class<?> fieldType = f.getType();
-            if (value in String && (Primitives.allPrimitiveTypes().contains(fieldType) || Primitives.allWrapperTypes().contains(fieldType))) {
-                newValue = TypeCoercions.stringToPrimitive(value, fieldType);
-            } else {
-                newValue = TypeCoercions.coerce(value, fieldType);
-            }
+            newValue = TypeCoercions.coerce(value, fieldType);
+            
         } catch (Exception e) {
             throw new IllegalArgumentException("Cannot set $f in $objectOfField from type "+value.getClass()+" ("+value+"): "+e, e);
         }

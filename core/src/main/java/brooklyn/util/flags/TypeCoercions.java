@@ -36,36 +36,6 @@ public class TypeCoercions {
     private static Map<Class,Map<Class,Function>> registeredAdapters = Collections.synchronizedMap(
             new LinkedHashMap<Class,Map<Class,Function>>());
     
-    @SuppressWarnings("unchecked")
-    public static <T> T stringToPrimitive(String value, Class<T> targetType) {
-        assert Primitives.allPrimitiveTypes().contains(targetType) || Primitives.allWrapperTypes().contains(targetType) : "targetType="+targetType;
-
-        // If char, then need to do explicit conversion
-        if (targetType == Character.class || targetType == char.class) {
-            if (value.length() == 1) {
-                return (T) (Character) value.charAt(0);
-            } else if (value.length() != 1) {
-                throw new ClassCastException("Cannot coerce type String to "+targetType.getCanonicalName()+" ("+value+"): adapting failed");
-            }
-        }
-        
-        // Otherwise can use valueOf reflectively
-        Class<?> wrappedType;
-        if (Primitives.allPrimitiveTypes().contains(targetType)) {
-            wrappedType = Primitives.wrap(targetType);
-        } else {
-            wrappedType = targetType;
-        }
-        
-        try {
-            return (T) wrappedType.getMethod("valueOf", String.class).invoke(null, value);
-        } catch (Exception e) {
-            ClassCastException tothrow = new ClassCastException("Cannot coerce type String to "+targetType.getCanonicalName()+" ("+value+"): adapting failed");
-            tothrow.initCause(e);
-            throw tothrow;
-        }
-    }
-    
     /** attempts to coerce 'value' to 'targetType', 
      * using a variety of strategies,
      * including looking at:
@@ -81,7 +51,18 @@ public class TypeCoercions {
         if (value==null) return null;
         if (targetType.isInstance(value)) return (T) value;
 
-        //first look for value.asType where Type is castable to targetType
+        //deal with primitive->primitive casting
+        if (isPrimitiveOrBoxer(targetType) && isPrimitiveOrBoxer(value.getClass())) {
+            // Allow Java to do its normal casting later; don't fail here
+            return (T) value;
+        }
+
+        //deal with string->primitive
+        if (value instanceof String && isPrimitiveOrBoxer(targetType)) {
+            return stringToPrimitive((String)value, targetType);
+        }
+
+        //look for value.asType where Type is castable to targetType
         String targetTypeSimpleName = getVerySimpleName(targetType);
         if (targetTypeSimpleName!=null && targetTypeSimpleName.length()>0) {
             for (Method m: value.getClass().getMethods()) {
@@ -146,6 +127,49 @@ public class TypeCoercions {
         throw new ClassCastException("Cannot coerce type "+value.getClass()+" to "+targetType.getCanonicalName()+" ("+value+"): no adapter known");
     }
     
+    @SuppressWarnings("unchecked")
+    public static <T> T castPrimitive(Object value, Class<T> targetType) {
+        assert isPrimitiveOrBoxer(targetType) : "targetType="+targetType;
+        assert isPrimitiveOrBoxer(value.getClass()) : "value="+targetType+"; valueType="+value.getClass();
+
+        return targetType.cast(value);
+    }
+    
+    @SuppressWarnings("unchecked")
+    public static boolean isPrimitiveOrBoxer(Class<?> type) {
+        return Primitives.allPrimitiveTypes().contains(type) || Primitives.allWrapperTypes().contains(type);
+    }
+    
+    @SuppressWarnings("unchecked")
+    public static <T> T stringToPrimitive(String value, Class<T> targetType) {
+        assert Primitives.allPrimitiveTypes().contains(targetType) || Primitives.allWrapperTypes().contains(targetType) : "targetType="+targetType;
+
+        // If char, then need to do explicit conversion
+        if (targetType == Character.class || targetType == char.class) {
+            if (value.length() == 1) {
+                return (T) (Character) value.charAt(0);
+            } else if (value.length() != 1) {
+                throw new ClassCastException("Cannot coerce type String to "+targetType.getCanonicalName()+" ("+value+"): adapting failed");
+            }
+        }
+        
+        // Otherwise can use valueOf reflectively
+        Class<?> wrappedType;
+        if (Primitives.allPrimitiveTypes().contains(targetType)) {
+            wrappedType = Primitives.wrap(targetType);
+        } else {
+            wrappedType = targetType;
+        }
+        
+        try {
+            return (T) wrappedType.getMethod("valueOf", String.class).invoke(null, value);
+        } catch (Exception e) {
+            ClassCastException tothrow = new ClassCastException("Cannot coerce type String to "+targetType.getCanonicalName()+" ("+value+"): adapting failed");
+            tothrow.initCause(e);
+            throw tothrow;
+        }
+    }
+    
     /** returns the simple class name, and for any inner class the portion after the $ */
     public static String getVerySimpleName(Class c) {
         String s = c.getSimpleName();
@@ -204,6 +228,12 @@ public class TypeCoercions {
     }
     
     static {
+        registerAdapter(CharSequence.class, String.class, new Function<CharSequence,String>() {
+            @Override
+            public String apply(CharSequence input) {
+                return input.toString();
+            }
+        });
         registerAdapter(Collection.class, Set.class, new Function<Collection,Set>() {
             @Override
             public Set apply(Collection input) {

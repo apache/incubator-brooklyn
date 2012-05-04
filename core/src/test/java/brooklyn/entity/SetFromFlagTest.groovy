@@ -42,7 +42,13 @@ public class SetFromFlagTest {
         MyEntity entity = new MyEntity(str3:"overridden str3")
         assertEquals(entity.str3, "overridden str3")
     }
-    
+
+    @Test
+    public void testSetFromFlagCastsPrimitives() {
+        MyEntity entity = new MyEntity(double1:1f)
+        assertEquals(entity.double1, 1d)
+    }
+
     @Test
     public void testSetFromFlagCastsDefault() {
         MyEntity entity = new MyEntity()

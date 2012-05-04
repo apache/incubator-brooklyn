@@ -5,6 +5,7 @@ import static org.testng.Assert.assertEquals;
 import java.util.List;
 import java.util.Set;
 
+import org.codehaus.groovy.runtime.GStringImpl;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -16,22 +17,28 @@ import com.google.common.collect.ImmutableSet;
 public class TypeCoercionsTest {
 
     @Test
+    public void testCoerceCharSequenceToString() {
+        assertEquals(TypeCoercions.coerce(new StringBuilder("abc"), String.class), (String)"abc");
+        assertEquals(TypeCoercions.coerce(new GStringImpl(new Object[0], new String[0]), String.class), (String)"");
+    }
+    
+    @Test
     public void testCoerceStringToPrimitive() {
-        assertEquals(TypeCoercions.stringToPrimitive("1", Character.class), (Character)'1');
-        assertEquals(TypeCoercions.stringToPrimitive("1", Short.class), (Short)((short)1));
-        assertEquals(TypeCoercions.stringToPrimitive("1", Integer.class), (Integer)1);
-        assertEquals(TypeCoercions.stringToPrimitive("1", Long.class), (Long)1l);
-        assertEquals(TypeCoercions.stringToPrimitive("1", Float.class), (Float)1f);
-        assertEquals(TypeCoercions.stringToPrimitive("1", Double.class), (Double)1d);
-        assertEquals(TypeCoercions.stringToPrimitive("true", Boolean.class), (Boolean)true);
+        assertEquals(TypeCoercions.coerce("1", Character.class), (Character)'1');
+        assertEquals(TypeCoercions.coerce("1", Short.class), (Short)((short)1));
+        assertEquals(TypeCoercions.coerce("1", Integer.class), (Integer)1);
+        assertEquals(TypeCoercions.coerce("1", Long.class), (Long)1l);
+        assertEquals(TypeCoercions.coerce("1", Float.class), (Float)1f);
+        assertEquals(TypeCoercions.coerce("1", Double.class), (Double)1d);
+        assertEquals(TypeCoercions.coerce("true", Boolean.class), (Boolean)true);
         
-        assertEquals(TypeCoercions.stringToPrimitive("1", char.class), (Character)'1');
-        assertEquals(TypeCoercions.stringToPrimitive("1", short.class), (Short)((short)1));
-        assertEquals(TypeCoercions.stringToPrimitive("1", int.class), (Integer)1);
-        assertEquals(TypeCoercions.stringToPrimitive("1", long.class), (Long)1l);
-        assertEquals(TypeCoercions.stringToPrimitive("1", float.class), (Float)1f);
-        assertEquals(TypeCoercions.stringToPrimitive("1", double.class), (Double)1d);
-        assertEquals(TypeCoercions.stringToPrimitive("true", boolean.class), (Boolean)true);
+        assertEquals(TypeCoercions.coerce("1", char.class), (Character)'1');
+        assertEquals(TypeCoercions.coerce("1", short.class), (Short)((short)1));
+        assertEquals(TypeCoercions.coerce("1", int.class), (Integer)1);
+        assertEquals(TypeCoercions.coerce("1", long.class), (Long)1l);
+        assertEquals(TypeCoercions.coerce("1", float.class), (Float)1f);
+        assertEquals(TypeCoercions.coerce("1", double.class), (Double)1d);
+        assertEquals(TypeCoercions.coerce("true", boolean.class), (Boolean)true);
     }
 
     @Test
@@ -43,15 +50,6 @@ public class TypeCoercionsTest {
         assertEquals(TypeCoercions.coerce(1f, Float.class), (Float)1f);
         assertEquals(TypeCoercions.coerce(1d, Double.class), (Double)1d);
         assertEquals(TypeCoercions.coerce(true, Boolean.class), (Boolean)true);
-    }
-    
-    @Test(enabled=false) // FIXME would be nice if this worked!
-    public void testCoercePrimitiveToOtherCastablePrimitive() {
-        assertEquals(TypeCoercions.coerce('1', Double.class), (Double)1d);
-        assertEquals(TypeCoercions.coerce((short)1, Double.class), (Double)1d);
-        assertEquals(TypeCoercions.coerce(1, Double.class), (Double)1d);
-        assertEquals(TypeCoercions.coerce(1l, Double.class), (Double)1d);
-        assertEquals(TypeCoercions.coerce(1f, Double.class), (Double)1d);
     }
     
     @Test
