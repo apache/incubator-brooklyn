@@ -137,7 +137,7 @@ public class PortRanges {
         }
         @Override
         public boolean equals(Object obj) {
-            if (!(obj instanceof SinglePort)) return false;
+            if (!(obj instanceof LinearPortRange)) return false;
             LinearPortRange o = (LinearPortRange) obj;
             return start == o.start && end == o.end && delta == o.delta;
         }
@@ -220,7 +220,11 @@ public class PortRanges {
             }
             l.add(new LinearPortRange(start, end));
         }
-        return new AggregatePortRange(l);
+        if (l.size() == 1) {
+            return l.get(0);
+        } else {
+            return new AggregatePortRange(l);
+        }
     }
 
     /** performs the language extensions required for this project */
