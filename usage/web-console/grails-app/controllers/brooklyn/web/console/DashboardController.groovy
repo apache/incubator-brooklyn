@@ -8,7 +8,7 @@ class DashboardController {
     public static final Logger LOG = LoggerFactory.getLogger(this);
             
     def index = {
-        LOG.info("loading dashboard for "+session)
+        LOG.debug("loading dashboard for {}", session)
     }
     
 }
