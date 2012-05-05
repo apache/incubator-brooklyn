@@ -341,6 +341,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                 if (LOG.isDebugEnabled()) LOG.debug("opening inbound ports ${Arrays.toString(v)} for ${t}");
                 t.inboundPorts(inboundPorts);
             },
+            userMetadata:  { TemplateOptions t, Map props, Object v -> t.userMetadata(v) },
             rootSshPublicKeyData:  { TemplateOptions t, Map props, Object v -> t.authorizePublicKey(v) },
             sshPublicKey:  { TemplateOptions t, Map props, Object v -> /* special; not included here */  },
             userName:  { TemplateOptions t, Map props, Object v -> /* special; not included here */ },
