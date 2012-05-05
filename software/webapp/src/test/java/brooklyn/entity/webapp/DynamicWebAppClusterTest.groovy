@@ -36,6 +36,7 @@ public class DynamicWebAppClusterTest {
         
         cluster.members.each { it.spoofRequest() }
         executeUntilSucceeds(timeout: 3*SECONDS) {
+            // intermittent failure observed 4 may 2012
             assertEquals 2, cluster.getAttribute(DynamicWebAppCluster.TOTAL_REQUEST_COUNT)
         }
         
