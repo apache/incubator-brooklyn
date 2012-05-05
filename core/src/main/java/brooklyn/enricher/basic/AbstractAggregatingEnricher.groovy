@@ -89,6 +89,7 @@ public abstract class AbstractAggregatingEnricher<S,T> extends AbstractEnricher 
      * Called whenever the values for the set of producers changes (e.g. on an event, or on a member added/removed).
      * Defaults to no-op
      */
+    // TODO should this be abstract?
     protected void onUpdated() {
         // no-op
     }

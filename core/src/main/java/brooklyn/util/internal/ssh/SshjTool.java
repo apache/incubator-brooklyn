@@ -145,7 +145,7 @@ public class SshjTool implements SshTool {
         private boolean strictHostKeyChecking = false;
         private int connectTimeout;
         private int sessionTimeout;
-        private int sshTries = 1;
+        private int sshTries = 4;  //allow 4 tries by default, much safer
         private long sshRetryDelay = 50L;
         
         @SuppressWarnings("unchecked")

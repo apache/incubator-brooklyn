@@ -183,6 +183,7 @@ class CustomAggregatingEnricherTest {
         group.addMember(p1)
         p1.setAttribute(intSensor, 1)
         TestUtils.executeUntilSucceeds(timeout:TIMEOUT_MS) {
+            //observed to fail intermittently, 4 May 2012
             assertEquals cae.getAggregate(), 1
         }
         
