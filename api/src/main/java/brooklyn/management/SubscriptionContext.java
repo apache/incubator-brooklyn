@@ -4,9 +4,10 @@ import java.util.Map;
 import java.util.Set;
 
 import brooklyn.entity.Entity;
-import brooklyn.event.SensorEventListener;
+import brooklyn.entity.Group;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
+import brooklyn.event.SensorEventListener;
 
 /**
  * This is the context through which an {@link Entity} can manage subscriptions.
@@ -27,10 +28,10 @@ public interface SubscriptionContext {
     <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, SensorEventListener<? super T> listener);
     
     /** @see #subscribe(Map, Entity, Sensor, SensorEventListener) */
-    <T> SubscriptionHandle subscribeToMembers(Map<String, Object> flags, Entity parent, Sensor<T> sensor, SensorEventListener<? super T> listener);
+    <T> SubscriptionHandle subscribeToMembers(Map<String, Object> flags, Group parent, Sensor<T> sensor, SensorEventListener<? super T> listener);
  
     /** @see #subscribe(Map, Entity, Sensor, SensorEventListener) */
-    <T> SubscriptionHandle subscribeToMembers(Entity parent, Sensor<T> sensor, SensorEventListener<? super T> listener);
+    <T> SubscriptionHandle subscribeToMembers(Group parent, Sensor<T> sensor, SensorEventListener<? super T> listener);
     
     /** @see SubscriptionManager#unsubscribe(SubscriptionHandle) */
     boolean unsubscribe(SubscriptionHandle subscriptionId);
