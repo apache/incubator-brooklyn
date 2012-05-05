@@ -59,8 +59,19 @@ public abstract class AbstractAggregatingEnricher<S,T> extends AbstractEnricher 
 
     public void addProducer(Entity producer) {
         if (LOG.isDebugEnabled()) LOG.debug "$this linked ($producer, $source) to $target"
-        values.put(producer, producer.getAttribute(source) ?: defaultValue)
         subscribe(producer, source, this)
+        synchronized (values) {
+            def vo = values.get(producer);
+            if (vo==null) {
+                values.put(producer, producer.getAttribute(source) ?: defaultValue)
+                //we might skip in onEvent in the short window while !values.containsKey(producer)
+                //but that's okay because the put which would have been done there is done here now
+            } else {
+                //vo will be null unless some weird race with addProducer+removeProducer is occuring
+                //(and that's something we can tolerate i think)
+                if (LOG.isDebugEnabled()) LOG.debug("$this already had value ($vo) for producer ($producer); but that producer has just been added");
+            }
+        }
         onUpdated()
     }
     
