@@ -31,6 +31,10 @@
     <div class='sensor-table'>
       <table class='tab-content-table' id='sensor-data'></table>
     </div>
+    <div class='sensor-bottom-buttons'>
+      <a href='javascript:Brooklyn.sensors.update();'>RELOAD</a>
+      <a href='javascript:Brooklyn.sensors.toggleShowEmptySensors();'>FILTER</a>
+    </div>
   </div>
   <div id='effectors' tabindex='2'>
     <g:render template='detail-tabs/effectors'></g:render>

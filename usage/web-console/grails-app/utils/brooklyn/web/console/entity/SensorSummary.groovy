@@ -18,6 +18,7 @@ public class SensorSummary {
     public final String description
     public final String value
     public final String timestamp
+    public final String actions
 
     // formatter is not thread-safe; use thread-local storage
     private static final ThreadLocal<DateFormat> formatter = new ThreadLocal<DateFormat>() {
@@ -33,6 +34,7 @@ public class SensorSummary {
         this.description = sensor.description
         this.value = value
         this.timestamp = formatter.get().format(new Date())
+        this.actions = [ "open": "http://www.google.com/" ]
     }
 
     public SensorSummary(SensorEvent event) {

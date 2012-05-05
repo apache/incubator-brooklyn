@@ -21,6 +21,9 @@
     #sensors{:tabindex=>"1"}
         .sensor-table
             %table{:id=>"sensor-data", :class=>"tab-content-table"}
+        .sensor-bottom-buttons
+            %a{:href=>"javascript:Brooklyn.sensors.update();"}RELOAD
+            %a{:href=>"javascript:Brooklyn.sensors.toggleShowEmptySensors();"}FILTER
     #effectors{:tabindex=>"2"}
         %g:render{:template=>"detail-tabs/effectors"}
     #location{:tabindex=>"3"}

@@ -11,34 +11,62 @@ Brooklyn.sensors = (function() {
         };
 
         this.updateTableData = function(json) {
-            // Config
-            var aoColumns = [ { "mDataProp": "name", "sTitle": "name", "sWidth":"30%"  },
-                              { "mDataProp": "description", "sTitle": "description", "sWidth":"30%" },
-                              { "mDataProp": "value", "sTitle": "value", "sWidth":"20%", "bSortable": false },
-                              { "mDataProp": "timestamp", "sTitle": "last updated", "sWidth":"20%"}];
-
-            Brooklyn.util.getDataTable('#sensor-data', ".", aoColumns, undefined, json, false);
+            for (i in json) {
+              json[i].actionHtml = '<a href="www.google.com" target="_new">Open</a>';
+              json[i].nameWithToolTip = '<div title="'+json[i].description+'">'+json[i].name+'</div>';
+            }
+            
+            console.log("sensors update"); 
+            console.log(json);
+            var table = Brooklyn.util.getDataTable('#sensor-data');
+            console.log(table);
+            table.fnClearTable(false);
+            table.fnAddData(json);
+            
             $(Brooklyn.eventBus).trigger('update_ok');
         }
 
         this.makeHandlers();
     }
+    
     SensorsTab.prototype = new Brooklyn.tabs.Tab();
 
     function init() {
         var tab = new SensorsTab();
         $(Brooklyn.eventBus).bind("entity_selected", tab.handler.entitySelected);
         $(Brooklyn.eventBus).bind("tab_selected", tab.handler.tabSelected);
-
+        
         $('#sensor-data').click(function() {
             Brooklyn.util.pauseUpdate(tab);
         });
+        
+        // Config
+        var aoColumns = [ { "mDataProp": "nameWithToolTip", "sTitle": "Key", "sWidth":"25%"  },
+                          { "mDataProp": "value", "sTitle": "Value", "sWidth":"40%", "bSortable": false },
+                          { "mDataProp": "actionHtml", "sTitle": "Actions", "sWidth":"40%", "bSortable": false },
+                      ];
+        var table = Brooklyn.util.getDataTable('#sensor-data', ".", aoColumns, undefined, undefined, false);
+        table.fnFilter( '.+', 1, true );
+    }
+
+    var showEmptySensors = false;
+    function toggleShowEmptySensors() {
+      setShowEmptySensors(!showEmptySensors)
+    }
+    function setShowEmptySensors(filter) {
+      showEmptySensors = filter;
+      var table = Brooklyn.util.getDataTable('#sensor-data');
+      if (filter) table.fnFilter( '.*', 1, true );
+      else table.fnFilter( '.+', 1, true );
     }
 
     return {
-        init: init
+        init: init,
+        toggleShowEmptySensors: toggleShowEmptySensors,
+        setSensorEmptyFilter: setShowEmptySensors
     };
 
 })();
 
 $(document).ready(Brooklyn.sensors.init);
+
