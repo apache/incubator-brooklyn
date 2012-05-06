@@ -3,6 +3,9 @@ package brooklyn.extras.cloudfoundry
 import java.net.InetAddress
 import java.util.Map
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 import brooklyn.entity.basic.ConfigurableEntityFactory
 import brooklyn.entity.webapp.ElasticJavaWebAppService
 import brooklyn.entity.webapp.ElasticJavaWebAppService.ElasticJavaWebAppServiceAwareLocation
@@ -27,6 +30,8 @@ import brooklyn.util.mutex.WithMutexes
  * we assume a token has been set up via `vmc login` (stored in ~/.vmc_token) */
 class CloudFoundryLocation extends AbstractLocation implements AddressableLocation, ElasticJavaWebAppServiceAwareLocation, WithMutexes {
 
+    public static final Logger log = LoggerFactory.getLogger(CloudFoundryLocation.class);
+            
     @SetFromFlag
     private String target;
     
@@ -80,7 +85,13 @@ class CloudFoundryLocation extends AbstractLocation implements AddressableLocati
         if (!target) return null;
         if (hostname?.isEmpty())
             throw new IllegalArgumentException("Cannot parse Cloud Foundry target '"+target+"' to determine address; expected in api.hostname.com or https://api.hostname.com/xxx format.")
-        return InetAddress.getByName(hostname);
+        try {
+            return InetAddress.getByName(hostname);
+        } catch (Exception e) {
+            if (log.isDebugEnabled())
+                log.warn("unable to look up IP info for "+hostname+": "+e);
+            return null;
+        }
     }
 
     // make this a static because it has to be shared across all instances on a machine
