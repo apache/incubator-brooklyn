@@ -247,13 +247,14 @@ private class TestWebApplication extends AbstractApplication {
                                 "Restart Tomcat": restartTomcat])
 
             //updates sensors (this doesn't seem to be working?)
+            TestTomcatEntity tc = this;  //NB: ref to TestTomcatEntity.this breaks mvn build
             this.getExecutionContext().submit(
                 new ScheduledTask(period: TimeExtras.duration(5, TimeUnit.SECONDS),
                     tags:["EFFECTOR"],
                     tag:this,
                     displayName: "Update values",
                     description: "This updates sensor values",
-                    { updateSensorsWithRandoms(TestTomcatEntity.this); }));
+                    { updateSensorsWithRandoms(tc); }));
                 
             updateSensorsWithRandoms(this);
             setAttribute(sensors.get("webapp.url"), "http://localhost:8080/my-web-app-here");

@@ -14,12 +14,12 @@ Brooklyn.sensors = (function() {
               json[i].actionHtml = '';
               for (ai in actions) {
                 json[i].actionHtml = json[i].actionHtml + ' <b><a href="'+
-                  actions[ai].url+'" target="_new">'+
+                  actions[ai].url+'" target="_blank">'+
                   actions[ai].name+'</a></b> &nbsp; ';
               }
               if (typeof parent.entity_id !== 'undefined') {
                 json[i].actionHtml = json[i].actionHtml + ' <a href="'+
-                  '../entity/sensor?entityId='+parent.entity_id+'&sensorId='+json[i].name+'" target="_new">JSON</a> ';
+                  '../entity/sensor?entityId='+parent.entity_id+'&sensorId='+json[i].name+'" target="_blank">JSON</a> ';
               }
               // others, e.g. little graphs
             }
