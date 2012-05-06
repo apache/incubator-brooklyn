@@ -41,13 +41,11 @@ public interface WebAppServiceConstants {
     public static final BasicAttributeSensor<Double> AVG_REQUESTS_PER_SECOND = [ Double,
         "webapp.reqs.persec.avg.$AVG_REQUESTS_PER_SECOND_PERIOD", "Average Reqs/Sec (over the last ${AVG_REQUESTS_PER_SECOND_PERIOD}ms)" ]
 
-    public static final BasicAttributeSensor<String> ROOT_URL = [ String, "webapp.url", "URL" ]
+    public static final BasicAttributeSensor<String> ROOT_URL = ([ String, "webapp.url", "URL" ] as BasicAttributeSensor).with {
+        RendererHints.register(it, new RendererHints.NamedActionWithUrl("Open"));
+    };
     public static final BasicAttributeSensor<String> HTTP_SERVER = [ String, "webapp.http.server", "Server name" ]
     public static final BasicAttributeSensor<Integer> HTTP_STATUS = [ Integer, "webapp.http.status", "HTTP response code for the server" ];
-    
-    //TODO we want to run this on interface initialization, but not store the result
-    public static final Object initPlaceholder1 = RendererHints.register(ROOT_URL, new RendererHints.NamedActionWithUrl("Open"));
-     
 }
 
 public class WebAppServiceMethods implements WebAppServiceConstants {

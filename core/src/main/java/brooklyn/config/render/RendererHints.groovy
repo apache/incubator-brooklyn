@@ -11,6 +11,9 @@ public class RendererHints {
 
     static Map<Object,Set<Hint>> registry = [:];
     
+    /** registers a hint against the given element (eg a sensor);
+     * returns the element, for convenience when used in a with block after defining the element 
+     */
     public synchronized static <T> T register(T element, Hint<T> hintForThatElement) {
         def set = registry.get(element);
         if (set==null) {
