@@ -32,7 +32,7 @@
       <table class='tab-content-table' id='sensor-data'></table>
     </div>
     <div class='sensor-bottom-buttons'>
-      <a href='javascript:Brooklyn.sensors.update();'>RELOAD</a>
+      <a href='javascript:Brooklyn.sensors.updateSensors();'>RELOAD</a>
       <a href='javascript:Brooklyn.sensors.toggleShowEmptySensors();'>FILTER</a>
     </div>
   </div>

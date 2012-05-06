@@ -2,10 +2,10 @@ package brooklyn.entity.webapp;
 
 import java.util.List
 
+import brooklyn.config.render.RendererHints
 import brooklyn.enricher.RollingTimeWindowMeanEnricher
 import brooklyn.enricher.TimeWeightedDeltaEnricher
-import brooklyn.entity.ConfigKey;
-import brooklyn.entity.Entity;
+import brooklyn.entity.Entity
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.basic.BasicAttributeSensor
@@ -43,7 +43,11 @@ public interface WebAppServiceConstants {
 
     public static final BasicAttributeSensor<String> ROOT_URL = [ String, "webapp.url", "URL" ]
     public static final BasicAttributeSensor<String> HTTP_SERVER = [ String, "webapp.http.server", "Server name" ]
-    public static final BasicAttributeSensor<Integer> HTTP_STATUS = [ Integer, "webapp.http.status", "HTTP response code for the server" ]
+    public static final BasicAttributeSensor<Integer> HTTP_STATUS = [ Integer, "webapp.http.status", "HTTP response code for the server" ];
+    
+    //TODO we want to run this on interface initialization, but not store the result
+    public static final Object initPlaceholder1 = RendererHints.register(ROOT_URL, new RendererHints.NamedActionWithUrl("Open"));
+     
 }
 
 public class WebAppServiceMethods implements WebAppServiceConstants {

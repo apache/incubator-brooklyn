@@ -3,6 +3,8 @@ package brooklyn.web.console.entity
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 
+import brooklyn.config.render.RendererHints
+import brooklyn.config.render.RendererHints.NamedActionWithUrl
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
 
@@ -18,7 +20,7 @@ public class SensorSummary {
     public final String description
     public final String value
     public final String timestamp
-    public final String actions
+    public final Set actions
 
     // formatter is not thread-safe; use thread-local storage
     private static final ThreadLocal<DateFormat> formatter = new ThreadLocal<DateFormat>() {
@@ -34,7 +36,12 @@ public class SensorSummary {
         this.description = sensor.description
         this.value = value
         this.timestamp = formatter.get().format(new Date())
-        this.actions = [ "open": "http://www.google.com/" ]
+        this.actions = [];
+        for (NamedActionWithUrl h: RendererHints.getHintsFor(sensor, NamedActionWithUrl)) {
+            String target = h.getUrlFromValue(value);
+            if (target)
+                actions << [name: h.actionName, url: target]
+        }
     }
 
     public SensorSummary(SensorEvent event) {

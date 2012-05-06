@@ -158,6 +158,26 @@ class EntityController {
             render(status: 404, text: '{message: "Entity with specified id '+params.id+'does not exist"}')
         }
     }
+    def sensor = {
+        if (!params.entityId) {
+            render(status: 400, text: '{message: "You must provide an entityId"}')
+        }
+        if (!params.sensorId) {
+            render(status: 400, text: '{message: "You must provide a sensorId"}')
+        }
+
+        try {
+            Entity ent = entityService.getEntity(params.entityId);
+            def v = ent.getAttribute(ent.getSensors().get(params.sensorId));
+            try { render(v as JSON) }
+            catch (Exception e) {
+                //not json, just return as text
+                render(text: ""+v)
+            }
+        } catch (NoSuchEntity e) {
+            render(status: 404, text: '{message: "Entity with specified id '+params.entityId+'does not exist"}')
+        }
+    }
 
     def activity = {
         if (!params.id) {

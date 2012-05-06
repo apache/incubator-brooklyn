@@ -22,12 +22,16 @@ import brooklyn.location.basic.SimulatedLocation
 import brooklyn.management.Task
 import brooklyn.policy.Policy
 import brooklyn.policy.basic.GeneralPurposePolicy
+import brooklyn.util.BrooklynLanguageExtensions;
 import brooklyn.util.internal.TimeExtras;
 import brooklyn.util.task.ScheduledTask
 import brooklyn.web.console.entity.TestEffector
 
 // TODO remove these test classes as soon as the group agrees they're unnecessary!
 private class TestWebApplication extends AbstractApplication {
+    
+    static { BrooklynLanguageExtensions.reinit() }
+    
     TestWebApplication(Map props=[:]) {
         super(props)
         displayName = "Application";
@@ -218,7 +222,7 @@ private class TestWebApplication extends AbstractApplication {
             this.policies = testPolicies;
 
             // Stealing the sensors from TomcatNode
-            this.sensors.putAll(new TomcatServer().sensors)
+            this.sensors.putAll(new TomcatServer().sensors);
 
             List<ParameterType<?>> parameterTypeList = new ArrayList<ParameterType<?>>()
             ParameterType tomcatStartLocation = new BasicParameterType("Location", new ArrayList<String>().class)
@@ -251,7 +255,8 @@ private class TestWebApplication extends AbstractApplication {
                     description: "This updates sensor values",
                     { updateSensorsWithRandoms(TestTomcatEntity.this); }));
                 
-                updateSensorsWithRandoms(this);
+            updateSensorsWithRandoms(this);
+            setAttribute(sensors.get("webapp.url"), "http://localhost:8080/my-web-app-here");
         }
 
         public <T> Task<T> invoke(Effector<T> eff, Map<String, ?> parameters) {

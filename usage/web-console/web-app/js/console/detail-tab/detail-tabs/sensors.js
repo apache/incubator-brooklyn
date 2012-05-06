@@ -1,25 +1,30 @@
 Brooklyn.sensors = (function() {
+    var parent;
+    
     function SensorsTab() {
         this.id = 'sensors';
 
-        this.update = function() {
-            if (typeof this.entity_id !== 'undefined') {
-                $.getJSON("../entity/sensors?id=" + this.entity_id, this.updateTableData).error(
-                    function() {$(Brooklyn.eventBus).trigger('update_failed', "Could not get sensor data.");}
-                );
-            }
-        };
+        parent = this;
+        this.update = function() { updateSensors(); }
 
         this.updateTableData = function(json) {
             for (i in json) {
-              json[i].actionHtml = '<a href="www.google.com" target="_new">Open</a>';
               json[i].nameWithToolTip = '<div title="'+json[i].description+'">'+json[i].name+'</div>';
+              var actions = json[i].actions;
+              json[i].actionHtml = '';
+              for (ai in actions) {
+                json[i].actionHtml = json[i].actionHtml + ' <b><a href="'+
+                  actions[ai].url+'" target="_new">'+
+                  actions[ai].name+'</a></b> &nbsp; ';
+              }
+              if (typeof parent.entity_id !== 'undefined') {
+                json[i].actionHtml = json[i].actionHtml + ' <a href="'+
+                  '../entity/sensor?entityId='+parent.entity_id+'&sensorId='+json[i].name+'" target="_new">JSON</a> ';
+              }
+              // others, e.g. little graphs
             }
             
-            console.log("sensors update"); 
-            console.log(json);
             var table = Brooklyn.util.getDataTable('#sensor-data');
-            console.log(table);
             table.fnClearTable(false);
             table.fnAddData(json);
             
@@ -49,6 +54,14 @@ Brooklyn.sensors = (function() {
         table.fnFilter( '.+', 1, true );
     }
 
+    function updateSensors() {
+        if (typeof parent.entity_id !== 'undefined') {
+            $.getJSON("../entity/sensors?id=" + parent.entity_id, parent.updateTableData).error(
+                function() {$(Brooklyn.eventBus).trigger('update_failed', "Could not get sensor data.");}
+            );
+        }
+    }
+    
     var showEmptySensors = false;
     function toggleShowEmptySensors() {
       setShowEmptySensors(!showEmptySensors)
@@ -62,6 +75,7 @@ Brooklyn.sensors = (function() {
 
     return {
         init: init,
+        updateSensors: updateSensors,
         toggleShowEmptySensors: toggleShowEmptySensors,
         setSensorEmptyFilter: setShowEmptySensors
     };
