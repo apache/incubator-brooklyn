@@ -37,10 +37,13 @@ public class ExplicitUsersSecurityProvider implements SecurityProvider {
         allowedUsers = new LinkedHashSet<String>();
         Object users = ConfigLoader.getConfig(BrooklynSystemProperties.SECURITY_PROVIDER_EXPLICIT__USERS.getPropertyName());
         if (users==null) {
+            LOG.info("Web console allowing default user (admin)");
             allowDefaultUsers = true;
         } else if ("*".equals(users)) {
+            LOG.info("Web console allowing any users");
             allowAnyUserWithValidPass = true;
         } else {
+            LOG.info("Web console allowing users "+users);
             StringTokenizer t = new StringTokenizer(""+users, ",");
             while (t.hasMoreElements()) {
                 allowedUsers.add((""+t.nextElement()).trim());

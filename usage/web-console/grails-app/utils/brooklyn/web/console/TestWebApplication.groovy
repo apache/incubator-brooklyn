@@ -1,5 +1,10 @@
 package brooklyn.web.console
 
+import grails.converters.JSON
+import groovy.time.TimeDuration;
+
+import java.util.concurrent.TimeUnit
+
 import brooklyn.entity.Effector
 import brooklyn.entity.Entity
 import brooklyn.entity.ParameterType
@@ -7,22 +12,26 @@ import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.basic.BasicParameterType
-import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.basic.EntityLocal
 import brooklyn.entity.webapp.tomcat.TomcatServer
+import brooklyn.event.AttributeSensor
+import brooklyn.event.Sensor
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.Location
 import brooklyn.location.basic.SimulatedLocation
+import brooklyn.management.Task
 import brooklyn.policy.Policy
 import brooklyn.policy.basic.GeneralPurposePolicy
-import brooklyn.management.Task
+import brooklyn.util.BrooklynLanguageExtensions;
+import brooklyn.util.internal.TimeExtras;
+import brooklyn.util.task.ScheduledTask
 import brooklyn.web.console.entity.TestEffector
-import grails.converters.JSON
-import brooklyn.event.basic.BasicSensor
-import brooklyn.event.Sensor
-import brooklyn.event.AttributeSensor
 
 // TODO remove these test classes as soon as the group agrees they're unnecessary!
 private class TestWebApplication extends AbstractApplication {
+    
+    static { BrooklynLanguageExtensions.reinit() }
+    
     TestWebApplication(Map props=[:]) {
         super(props)
         displayName = "Application";
@@ -213,7 +222,7 @@ private class TestWebApplication extends AbstractApplication {
             this.policies = testPolicies;
 
             // Stealing the sensors from TomcatNode
-            this.sensors.putAll(new TomcatServer().sensors)
+            this.sensors.putAll(new TomcatServer().sensors);
 
             List<ParameterType<?>> parameterTypeList = new ArrayList<ParameterType<?>>()
             ParameterType tomcatStartLocation = new BasicParameterType("Location", new ArrayList<String>().class)
@@ -237,14 +246,18 @@ private class TestWebApplication extends AbstractApplication {
                                 "Stop Tomcat": stopTomcat,
                                 "Restart Tomcat": restartTomcat])
 
-            for (def i = 0; i < 10; ++i) {
-                this.getExecutionContext().submit([
-                                                      tags:["EFFECTOR"],
-                                                      tag:this,
-                                                      displayName: "Update values (test " + i + ")",
-                                                      description: "This updates sensor values"],
-                                                  new MyRunnable(this));
-            }
+            //updates sensors (this doesn't seem to be working?)
+            TestTomcatEntity tc = this;  //NB: ref to TestTomcatEntity.this breaks mvn build
+            this.getExecutionContext().submit(
+                new ScheduledTask(period: TimeExtras.duration(5, TimeUnit.SECONDS),
+                    tags:["EFFECTOR"],
+                    tag:this,
+                    displayName: "Update values",
+                    description: "This updates sensor values",
+                    { updateSensorsWithRandoms(tc); }));
+                
+            updateSensorsWithRandoms(this);
+            setAttribute(sensors.get("webapp.url"), "http://localhost:8080/my-web-app-here");
         }
 
         public <T> Task<T> invoke(Effector<T> eff, Map<String, ?> parameters) {
@@ -259,17 +272,22 @@ private class TestWebApplication extends AbstractApplication {
             }
             void run() {
                 while (true) {
-                    Map ss = entity.getSensors()
-                    for (String key: hackMeIn.keySet()) {
-                        def s = ss[key]
-                        if (s != null){
-                            entity.setAttribute(s,
-                                hackMeIn[key] + ManagementContextService.ID_GENERATOR +
-                                    ((int) 1000 * Math.random()))
-                        }
-                    }
-                    Thread.sleep(5000)
+                    updateSensorsWithRandoms(entity);
+                    Thread.sleep(5000);
                 }
+            }
+        }
+    }
+    
+    public void updateSensorsWithRandoms(EntityLocal entity) {
+        Map ss = entity.getSensors()
+        for (String key: entity.hackMeIn.keySet()) {
+            def s = ss[key]
+//                        System.out.println("updating $entity $ss $s");
+            if (s != null){
+                entity.setAttribute(s,
+                    entity.hackMeIn[key] + ManagementContextService.ID_GENERATOR +
+                        ((int) 1000 * Math.random()))
             }
         }
     }

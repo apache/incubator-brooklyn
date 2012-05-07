@@ -28,9 +28,7 @@
     <div id='summary-activity'></div>
   </div>
   <div id='sensors' tabindex='1'>
-    <div class='sensor-table'>
-      <table class='tab-content-table' id='sensor-data'></table>
-    </div>
+    <g:render template='detail-tabs/sensors'></g:render>
   </div>
   <div id='effectors' tabindex='2'>
     <g:render template='detail-tabs/effectors'></g:render>

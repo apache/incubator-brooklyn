@@ -340,6 +340,14 @@ textarea#logbox{
     min-height: 400px;
     max-height: 400px;
     overflow-y: auto;
+    margin-bottom: 8px;
+}
+.sensor-bottom-buttons {
+	float:right;
+}
+.sensor-bottom-buttons a {
+	margin-left: 8px;
+	text-decoration: none;
 }
 
 .mapbox dl {
