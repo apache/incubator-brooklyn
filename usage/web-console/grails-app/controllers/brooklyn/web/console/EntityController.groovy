@@ -1,7 +1,6 @@
 package brooklyn.web.console
 
 import grails.converters.JSON
-import grails.plugins.springsecurity.Secured
 
 import brooklyn.entity.Entity
 import brooklyn.web.console.entity.EntitySummary
@@ -20,7 +19,7 @@ import brooklyn.entity.Group;
 import brooklyn.entity.ParameterType
 import brooklyn.entity.basic.BasicParameterType
 
-@Secured(['ROLE_ADMIN'])
+
 class EntityController {
 
     // Injected
