@@ -87,7 +87,7 @@ file (``tail -f brooklyn.log``).
 
 After starting up, the demo script should display a summary of all
 the Brooklyn managed entities and their attributes. This will show
-bith the Qpid broker and its child entity, the queue _testQueue_
+both the Qpid broker and its child entity, the queue _testQueue_
 which was created at startup. The queue entity has sensors that
 monitor the depth of unread messages, which you can check while
 running the test client scripts later.
