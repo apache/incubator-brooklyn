@@ -12,11 +12,15 @@ import brooklyn.location.Location
 import brooklyn.location.basic.LocationRegistry
 import brooklyn.location.basic.CommandLineLocations
 import brooklyn.util.CommandLineUtil
+import brooklyn.config.BrooklynProperties
 
 /** Starts Brooklyn with a Groovy application script. */
 public class Main {
-    public static final String DEFAULT_LOCATION = CommandLineLocations.newLocalhostLocation()
+    public static final String DEFAULT_LOCATION = "localhost"
 
+    static BrooklynProperties config = BrooklynProperties.Factory.newDefault()
+    
+    //TODO check params
     public static void main(String[] argv) {
         // Parse args to get locations and console port
         List args = new ArrayList(Arrays.asList(argv));
@@ -32,10 +36,9 @@ public class Main {
 		Class groovyClass = loader.parseClass(file)
 
         // Start the application
-		GroovyObject application = (GroovyObject) groovyClass.newInstance();
-		Object[] startArgs = { locations };
-		application.invokeMethod("start", startArgs);
-        BrooklynLauncher.manage((AbstractApplication) application, port)
-        Entities.dumpInfo((AbstractApplication) application)
+		AbstractApplication application = (AbstractApplication) groovyClass.newInstance()
+        BrooklynLauncher.manage(application, port)
+        application.start(locations)
+        Entities.dumpInfo(application)
     }
 }

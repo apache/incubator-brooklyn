@@ -13,7 +13,7 @@ if [ -z "${JAVA_OPTS}" ] ; then
     JAVA_OPTS="-Xmx256m -Xmx1g -XX:MaxPermSize=256m"
 fi
 
-CLASSPATH="${CLASSPATH:-.}:lib/*"
+CLASSPATH="${CLASSPATH:-.}:../lib/*"
 
 if [ $# -ne 0 ]; then
     ARGS="$*"
