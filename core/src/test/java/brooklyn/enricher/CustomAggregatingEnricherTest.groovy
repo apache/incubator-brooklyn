@@ -2,11 +2,11 @@ package brooklyn.enricher
 
 import static org.testng.Assert.*
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
-
-import com.google.common.base.Function
 
 import brooklyn.entity.LocallyManagedEntity
 import brooklyn.entity.basic.AbstractApplication
@@ -17,8 +17,12 @@ import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.test.TestUtils
 
+import com.google.common.base.Function
+
 class CustomAggregatingEnricherTest {
 
+    public static final Logger log = LoggerFactory.getLogger(CustomAggregatingEnricherTest.class);
+            
     private static final long TIMEOUT_MS = 10*1000
     private static final long SHORT_WAIT_MS = 250
     
@@ -171,31 +175,44 @@ class CustomAggregatingEnricherTest {
     
     @Test
     public void testAggregatesNewMembersOfGroup() {
-        AbstractGroup group = new AbstractGroup(owner:app) {}
-        LocallyManagedEntity p1 = [owner: app] 
-        LocallyManagedEntity p2 = [owner: app]
-        
-        CustomAggregatingEnricher<Integer> cae = CustomAggregatingEnricher.<Integer>newSummingEnricher(intSensor, target, allMembers:true)
-        group.addEnricher(cae)
-        
-        assertEquals cae.getAggregate(), 0
+        try {
+            AbstractGroup group = new AbstractGroup(owner:app) {}
+            LocallyManagedEntity p1 = [owner: app]
+            LocallyManagedEntity p2 = [owner: app]
+            log.debug("created $group and the entities it will contain $p1 $p2")
 
-        group.addMember(p1)
-        p1.setAttribute(intSensor, 1)
-        TestUtils.executeUntilSucceeds(timeout:TIMEOUT_MS) {
-            //observed to fail intermittently, 4 May 2012
-            assertEquals cae.getAggregate(), 1
+            CustomAggregatingEnricher<Integer> cae = CustomAggregatingEnricher.<Integer>newSummingEnricher(intSensor, target, allMembers:true)
+            group.addEnricher(cae)
+
+            assertEquals cae.getAggregate(), 0
+
+            group.addMember(p1)
+            p1.setAttribute(intSensor, 1)
+            TestUtils.executeUntilSucceeds(timeout:TIMEOUT_MS) {
+                assertEquals cae.getAggregate(), 1
+            }
+
+            group.addMember(p2)
+            p2.setAttribute(intSensor, 2)
+            TestUtils.executeUntilSucceeds(timeout:TIMEOUT_MS) {
+                assertEquals cae.getAggregate(), 3
+            }
+
+            group.removeMember(p2)
+            TestUtils.executeUntilSucceeds(timeout:TIMEOUT_MS) {
+                assertEquals cae.getAggregate(), 1
+            }
+        } catch (Exception e) {
+            log.error("testAggregatesNewMembersOfGroup failed (now cleaning up): "+e)
+            throw e;
         }
-        
-        group.addMember(p2)
-        p2.setAttribute(intSensor, 2)
-        TestUtils.executeUntilSucceeds(timeout:TIMEOUT_MS) {
-            assertEquals cae.getAggregate(), 3
-        }
-        
-        group.removeMember(p2)
-        TestUtils.executeUntilSucceeds(timeout:TIMEOUT_MS) {
-            assertEquals cae.getAggregate(), 1
+    }
+    
+    @Test(groups = "Integration")
+    public void testAggregatesGroupMembersFiftyTimes() {
+        for (int i=0; i<50; i++) {
+            log.debug "testAggregatesNewMembersOfGroup $i"
+            testAggregatesNewMembersOfGroup();
         }
     }
     
