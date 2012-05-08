@@ -34,7 +34,7 @@ protected class SshPollHelper extends AbstractPollHelper {
 
         def exitStatus = adapter.location.run(out:stdout, err:stderr, adapter.command, adapter.env);
         def result = new SshResultContext(adapter.location, exitStatus, stdout.toString(Charsets.UTF_8.name()), stderr.toString(Charsets.UTF_8.name()))
-        if (log.isDebugEnabled()) log.debug "ssh poll for {} got: {}", adapter.entity, result.stdout.toString(Charsets.UTF_8.name())
+        if (log.isDebugEnabled()) log.debug "ssh poll for {} got: {}", adapter.entity, result.stdout
         return result
     }
 

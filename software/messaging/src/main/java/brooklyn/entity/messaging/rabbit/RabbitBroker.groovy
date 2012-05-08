@@ -29,7 +29,7 @@ public class RabbitBroker extends SoftwareProcessEntity implements MessageBroker
     private static final Logger log = LoggerFactory.getLogger(RabbitBroker.class)
 
     @SetFromFlag("version")
-    public static final BasicConfigKey<String> SUGGESTED_VERSION = [ SoftwareProcessEntity.SUGGESTED_VERSION, "2.7.1" ]
+    public static final BasicConfigKey<String> SUGGESTED_VERSION = [ SoftwareProcessEntity.SUGGESTED_VERSION, "2.8.2" ]
 
     @SetFromFlag("erlangVersion")
     public static final BasicConfigKey<String> ERLANG_VERSION = [ String, "erlang.version", "Erlang runtime version", "R15B" ]
@@ -57,6 +57,8 @@ public class RabbitBroker extends SoftwareProcessEntity implements MessageBroker
 
         waitForServiceUp()
 
+        driver.configure()
+
         // TODO implement this using AMQP connection, no external mechanism available
 		// queueNames.each { String name -> addQueue(name) }
 
@@ -81,10 +83,10 @@ public class RabbitBroker extends SoftwareProcessEntity implements MessageBroker
     @Override     
     protected void connectSensors() {
         sshAdapter = sensorRegistry.register(new SshSensorAdapter(driver.machine, env:driver.shellEnvironment))
-        sshAdapter.command(CommonCommands.sudo("rabbitmqctl -q status"))
-                .poll(SERVICE_UP) {
-		            if (it == null || exitStatus != 0) return false
-		            return (it =~ "running_applications.*RabbitMQ")
+        sshAdapter.command("${driver.runDir}/sbin/rabbitmqctl -q status")
+                .poll(SERVICE_UP) { String out ->
+		            if (out == null || exitStatus != 0) return false
+		            return out.contains("RabbitMQ")
 		        }
         sensorRegistry.activateAdapters()
     }
@@ -157,7 +159,7 @@ public class RabbitQueue extends RabbitDestination implements Queue {
     }
 
     public void connectSensors() {
-        def queueAdapter = sshAdapter.command(CommonCommands.sudo("rabbitmqctl list_queues -p /${virtualHost}  | grep '${queueName}'"))
+        def queueAdapter = sshAdapter.command("${owner.driver.runDir}/sbin/rabbitmqctl list_queues -p /${virtualHost}  | grep '${queueName}'")
         queueAdapter.poll(QUEUE_DEPTH_BYTES) {
             if (it == null || exitStatus != 0) return -1
             return 0 // TODO parse out queue depth from output

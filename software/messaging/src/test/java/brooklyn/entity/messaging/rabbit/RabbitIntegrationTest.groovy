@@ -90,8 +90,8 @@ public class RabbitIntegrationTest {
             QueueingConsumer.Delivery delivery = queueConsumer.nextDelivery();
             assertEquals(delivery.body, content)
         } finally {
-	        producer.close()
-	        consumer.close()
+	        producer?.close()
+	        consumer?.close()
         }
     }
 
