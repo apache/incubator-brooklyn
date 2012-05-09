@@ -1,7 +1,7 @@
 package brooklyn.rest.core;
 
 import brooklyn.rest.BrooklynConfiguration;
-import brooklyn.rest.api.Location;
+import brooklyn.rest.api.LocationSpec;
 import static com.google.common.base.Preconditions.checkArgument;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
@@ -16,20 +16,20 @@ public class LocationStore implements Managed {
 
   private final static Pattern refPattern = Pattern.compile("^/v1/locations/(\\d+)$");
 
-  private final Map<Integer, Location> locations = Maps.newConcurrentMap();
+  private final Map<Integer, LocationSpec> locations = Maps.newConcurrentMap();
   private final AtomicInteger ids = new AtomicInteger(0);
 
   public static LocationStore withLocalhost() {
-    return new LocationStore(Location.localhost());
+    return new LocationStore(LocationSpec.localhost());
   }
 
-  public LocationStore(Location... locations) {
-    for (Location loc : locations) put(loc);
+  public LocationStore(LocationSpec... locationSpecs) {
+    for (LocationSpec loc : locationSpecs) put(loc);
   }
 
   public LocationStore(BrooklynConfiguration configuration) {
-    for (Location location : configuration.getLocations()) {
-      put(location);
+    for (LocationSpec locationSpec : configuration.getLocations()) {
+      put(locationSpec);
     }
   }
 
@@ -43,24 +43,24 @@ public class LocationStore implements Managed {
     // TODO: save credentials to external storage
   }
 
-  public int put(Location location) {
+  public int put(LocationSpec locationSpec) {
     int id = ids.getAndIncrement();
-    locations.put(id, location);
+    locations.put(id, locationSpec);
     return id;
   }
 
-  public Location get(Integer id) {
+  public LocationSpec get(Integer id) {
     return locations.get(id);
   }
 
-  public Location getByRef(String ref) {
+  public LocationSpec getByRef(String ref) {
     Matcher matcher = refPattern.matcher(ref);
     checkArgument(matcher.matches(), "URI '%s' does not match pattern '%s'", ref, refPattern);
 
     return get(Integer.parseInt(matcher.group(1)));
   }
 
-  public Set<Map.Entry<Integer, Location>> entries() {
+  public Set<Map.Entry<Integer, LocationSpec>> entries() {
     return ImmutableSet.copyOf(locations.entrySet());
   }
 

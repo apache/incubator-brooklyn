@@ -9,6 +9,7 @@ import brooklyn.rest.BrooklynConfiguration;
 import brooklyn.rest.api.Application;
 import brooklyn.rest.api.ApplicationSpec;
 import brooklyn.rest.api.EntitySpec;
+import brooklyn.rest.api.LocationSpec;
 import static brooklyn.rest.core.ApplicationPredicates.status;
 import com.google.common.base.Function;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -110,16 +111,14 @@ public class ApplicationManager implements Managed {
           new Function<String, Location>() {
             @Override
             public Location apply(String ref) {
-              brooklyn.rest.api.Location location = locationStore.getByRef(ref);
-              if (location.getProvider().equals("localhost")) {
+              LocationSpec locationSpec = locationStore.getByRef(ref);
+              if (locationSpec.getProvider().equals("localhost")) {
                 return new LocalhostMachineProvisioningLocation();
               }
 
               Map<String, String> config = Maps.newHashMap();
-              config.put("provider", location.getProvider());
-              config.put("identity", location.getIdentity());
-              config.put("credential", location.getCredential());
-              config.put("providerLocationId", location.getLocation());
+              config.put("provider", locationSpec.getProvider());
+              config.putAll(locationSpec.getConfig());
 
               return new JcloudsLocation(config);
             }

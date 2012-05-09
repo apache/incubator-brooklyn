@@ -21,7 +21,7 @@ def main():
     parser.add_argument('--name', required=True, help="Application name")
     parser.add_argument('--entity', type=str,
         default="brooklyn.entity.nosql.redis.RedisStore", help="Entity name")
-    parser.add_argument('--location', type=str, default="0", help="Location ID")
+    parser.add_argument('--location', type=str, default="0", help="LocationSpec ID")
 
     args = parser.parse_args()
 

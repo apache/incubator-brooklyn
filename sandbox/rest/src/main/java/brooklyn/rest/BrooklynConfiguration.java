@@ -1,6 +1,6 @@
 package brooklyn.rest;
 
-import brooklyn.rest.api.Location;
+import brooklyn.rest.api.LocationSpec;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.yammer.dropwizard.config.Configuration;
@@ -10,11 +10,11 @@ public class BrooklynConfiguration extends Configuration {
 
   private boolean stopApplicationsOnExit = true;
 
-  private Set<Location> locations = Sets.newHashSet();
+  private Set<LocationSpec> locations = Sets.newHashSet();
 
   private ExecutorConfiguration executor = new ExecutorConfiguration();
 
-  public Set<Location> getLocations() {
+  public Set<LocationSpec> getLocations() {
     return ImmutableSet.copyOf(locations);
   }
 

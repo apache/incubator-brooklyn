@@ -9,7 +9,7 @@ import org.testng.annotations.Test;
 
 public class LocationSummaryTest {
 
-  final LocationSummary summary = new LocationSummary("123", Location.localhost());
+  final LocationSummary summary = new LocationSummary("123", LocationSpec.localhost());
 
   @Test
   public void testSerializeToJSON() throws IOException {

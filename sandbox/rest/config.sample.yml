@@ -7,15 +7,16 @@ locations:
 
   # Allow the deployment of services on the machine running the REST endpoint
   - provider: localhost
-    identity: ""
-    credential: ""
-    location: localhost
 
   # Dummy aws-ec2 like location
   - provider: aws-ec2
-    identity: ADS45345
-    credential: GIOM34590
-    location: eu-west-1
+    config:
+      identity: ADS45345
+      credential: GIOM34590
+      locationSpec: eu-west-1
+      userName: ''
+      sshPublicKey: ''
+      sshPrivateKey: ''
 
 executor:
   corePoolSize: 2

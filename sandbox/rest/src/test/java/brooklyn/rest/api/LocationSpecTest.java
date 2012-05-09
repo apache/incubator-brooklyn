@@ -8,26 +8,26 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 import org.testng.annotations.Test;
 
-public class LocationTest {
+public class LocationSpecTest {
 
-  final Location location = Location.localhost();
+  final LocationSpec locationSpec = LocationSpec.localhost();
 
   @Test
   public void testSerializeToJSON() throws IOException {
-    assertEquals(asJson(location), jsonFixture("fixtures/location.json"));
+    assertEquals(asJson(locationSpec), jsonFixture("fixtures/location.json"));
   }
 
   @Test
   public void testDeserializeFromJSON() throws IOException {
-    assertEquals(fromJson(jsonFixture("fixtures/location.json"), Location.class), location);
+    assertEquals(fromJson(jsonFixture("fixtures/location.json"), LocationSpec.class), locationSpec);
   }
 
   @Test
   public void testDeserializeFromJSONWithNoCredential() throws IOException {
-    Location loaded = fromJson(jsonFixture("fixtures/location-without-credential.json"), Location.class);
+    LocationSpec loaded = fromJson(jsonFixture("fixtures/location-without-credential.json"), LocationSpec.class);
 
-    assertNull(loaded.getCredential());
-    assertEquals(loaded.getProvider(), location.getProvider());
-    assertEquals(loaded.getIdentity(), location.getIdentity());
+    assertNull(loaded.getConfig().get("credential"));
+    assertEquals(loaded.getProvider(), locationSpec.getProvider());
+    assertEquals(loaded.getConfig(), locationSpec.getConfig());
   }
 }

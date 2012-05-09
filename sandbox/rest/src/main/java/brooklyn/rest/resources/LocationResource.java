@@ -1,11 +1,10 @@
 package brooklyn.rest.resources;
 
-import brooklyn.rest.api.Location;
+import brooklyn.rest.api.LocationSpec;
 import brooklyn.rest.api.LocationSummary;
 import brooklyn.rest.core.LocationStore;
 import com.google.common.base.Function;
 import static com.google.common.base.Preconditions.checkNotNull;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import java.net.URI;
 import java.util.Map;
@@ -32,9 +31,9 @@ public class LocationResource {
   @GET
   public Iterable<LocationSummary> list() {
     return Iterables.transform(store.entries(),
-        new Function<Map.Entry<Integer, Location>, LocationSummary>() {
+        new Function<Map.Entry<Integer, LocationSpec>, LocationSummary>() {
           @Override
-          public LocationSummary apply(Map.Entry<Integer, Location> entry) {
+          public LocationSummary apply(Map.Entry<Integer, LocationSpec> entry) {
             return new LocationSummary(entry.getKey().toString(), entry.getValue());
           }
         });
@@ -47,8 +46,8 @@ public class LocationResource {
   }
 
   @POST
-  public Response create(@Valid Location location) {
-    int id = store.put(location);
+  public Response create(@Valid LocationSpec locationSpec) {
+    int id = store.put(locationSpec);
     return Response.created(URI.create("" + id)).build();
   }
 
