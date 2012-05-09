@@ -92,7 +92,10 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
     }
     
 	public StartStopDriver getDriver() { driverLocal }
-	@Deprecated /** refer to driver instead */
+    /**
+     * @deprecated will be deleted in 0.5. Refer to driver instead
+     */
+    @Deprecated
 	public StartStopDriver getSetup() { driver }
 	
 	protected abstract StartStopDriver newDriver(SshMachineLocation loc);

@@ -14,7 +14,7 @@ import brooklyn.event.basic.BasicAttributeSensor;
  * should implement the {@link #configure()} method to inspect its {@link Sensor}s and {@link ConfigKey}s and then
  * perform any actions such as generating configuration files that are required before starting.
  * 
- * @deprecated externally-driven configuration should be done in entity-specific ways; a generic pattern is not well-enough understood
+ * @deprecated will be deleted in 0.5. externally-driven configuration should be done in entity-specific ways; a generic pattern is not well-enough understood
  * (and there was ambiguity in how it was being done)
  */
 @Deprecated

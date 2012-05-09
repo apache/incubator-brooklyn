@@ -69,7 +69,10 @@ public abstract class OldJavaWebApp extends JavaApp implements JavaWebAppService
 		initHttpSensors()
 	}
 
-	@Deprecated /* use new mechanism */
+    /**
+      * @deprecated will be deleted in 0.5. use new mechanism
+      */
+	@Deprecated
 	public void initHttpSensors() {
 		httpAdapter = new OldHttpSensorAdapter(this)
 		if (pollForHttpStatus) {

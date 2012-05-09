@@ -28,7 +28,11 @@ public abstract class StartStopSshDriver extends AbstractStartStopDriver impleme
         super(entity, machine);
     }
 
-    @Deprecated // Set default on ConfigKey in entity? Rather than overriding it here and not telling the entity what value was chosen!
+    /**
+     * @deprecated will be deleted in 0.5. Set default on ConfigKey in entity? Rather than overriding it here and not
+     * telling the entity what value was chosen!
+     */
+    @Deprecated
     protected String getDefaultVersion() { NO_VERSION_INFO }
 
     /** returns location (tighten type, since we know it is an ssh machine location here) */	

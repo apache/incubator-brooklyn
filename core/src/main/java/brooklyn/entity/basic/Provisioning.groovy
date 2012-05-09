@@ -9,9 +9,11 @@ import com.google.common.base.CaseFormat
 
 /**
  * An enumeration representing the different provisioning mechanisms for an {@link Entity}.
+ *
+ * @deprecated will be deleted in 0.5. bad idea to make this an enum as it cannot then be extended by third parties;
+ * prefer the interfaces below, and I expect eventually a "services-discovery" model using ServiceLoader
  */
-@Deprecated  /* bad idea to make this an enum as it cannot then be extended by third parties; prefer the interfaces below,
-                and I expect eventually a "services-discovery" model using ServiceLoader */ 
+@Deprecated
 public enum Provisioning {
     SCRIPT,
     PALLET,

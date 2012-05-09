@@ -50,7 +50,7 @@ public abstract class AbstractAggregatingEnricher<S,T> extends AbstractEnricher 
     }
 
     /**
-     * @deprecated Instead use AbstractAggregatingEnricher(source, target, defaultValue, producers:producers, allMembers:true)
+     * @deprecated will be deleted in 0.5. Instead use AbstractAggregatingEnricher(source, target, defaultValue, producers:producers, allMembers:true)
      */
     @Deprecated 
     public AbstractAggregatingEnricher(List<Entity> producers, Sensor<S> source, Sensor<T> target, S defaultValue=null) {

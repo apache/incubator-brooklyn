@@ -200,7 +200,7 @@ public class Repeater {
 
     /**
      * @see #limitTimeTo(long, TimeUnit)
-     * @deprecated specify unit
+     * @deprecated will be deleted in 0.5.  specify unit
      */
     Repeater limitTimeTo(long duration) {
         return limitTimeTo(duration, TimeUnit.MILLISECONDS)
