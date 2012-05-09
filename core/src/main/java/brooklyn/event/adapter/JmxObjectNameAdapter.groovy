@@ -21,7 +21,8 @@ public class JmxObjectNameAdapter {
 	JmxAttributeAdapter attribute(Map flags=[:], String attributeName) {
 		adapter.registry.register(new JmxAttributeAdapter(flags, adapter, objectName, attributeName));
 	}
-	JmxOperationAdapter operation(String method, Object ...args) {
+
+    JmxOperationAdapter operation(String method, Object ...args) {
 		adapter.registry.register(new JmxOperationAdapter(adapter, objectName, method, args));
 	}
     
