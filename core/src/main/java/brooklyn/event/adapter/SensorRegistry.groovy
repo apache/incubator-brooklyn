@@ -25,19 +25,32 @@ public class SensorRegistry {
     static final Logger log = LoggerFactory.getLogger(SensorRegistry.class);
  
     final EntityLocal entity
-	
+
+    /**
+     * @deprecated will be deleted in 0.5
+     */
 	@Deprecated
     final Map<?, ?> properties  = [
             period : 500,
             connectDelay : 1000
         ]
- 
+
+    /**
+     * @deprecated will be deleted in 0.5
+     */
 	@Deprecated
     ScheduledExecutorService exec = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors())
- 
+
+    /**
+     * @deprecated  will be deleted in 0.5
+     */
 	@Deprecated
     private final Map<AttributeSensor, ValueProvider> providers = [:]
-	@Deprecated
+
+    /**
+     * @deprecated will be deleted in 0.5
+     */
+    @Deprecated
     private final Map<AttributeSensor, ScheduledFuture> scheduled = [:]
 
 	private final Set<AbstractSensorAdapter> adapters = []
@@ -83,11 +96,17 @@ public class SensorRegistry {
 		scheduled.each { key, ScheduledFuture future -> future.cancel(true) }
 	}
 
+    /**
+     * @deprecated will be deleted in 0.5
+    */
 	@Deprecated
     public <T> void addSensor(AttributeSensor<T> sensor, ValueProvider<? extends T> provider) {
         addSensor(sensor, provider, properties.period)
     }
 
+    /**
+     * @deprecated will be deleted in 0.5
+     */
 	@Deprecated
     public <T> void addSensor(AttributeSensor<T> sensor, ValueProvider<? extends T> provider, long period) {
         if (log.isDebugEnabled()) log.debug "adding calculated sensor {} with delay {} to {}", sensor.name, period, entity
@@ -108,6 +127,9 @@ public class SensorRegistry {
         scheduled[sensor] = exec.scheduleWithFixedDelay(safeCalculate, 0L, period, TimeUnit.MILLISECONDS)
     }
 
+    /**
+      * @deprecated will be deleted in 0.5
+      */
 	@Deprecated
     public <T> void removeSensor(AttributeSensor<T> sensor) {
         if (log.isDebugEnabled()) log.debug "removing sensor {} from {}", sensor.name, entity
@@ -115,6 +137,9 @@ public class SensorRegistry {
         scheduled.remove(sensor)?.cancel(true)
     }
 
+    /**
+      * @deprecated will be deleted in 0.5
+      */
 	@Deprecated
     private void updateAll() {
         if (log.isDebugEnabled()) log.debug "updating all sensors for {}", entity
@@ -125,7 +150,10 @@ public class SensorRegistry {
                 entity.setAttribute(sensor, newValue)
             }
     }
-    
+
+    /**
+      * @deprecated will be deleted in 0.5
+      */
 	@Deprecated
     private void update(Sensor sensor) {
         if (!providers.containsKey(sensor)) throw new IllegalStateException("Sensor ${sensor.name} not found");

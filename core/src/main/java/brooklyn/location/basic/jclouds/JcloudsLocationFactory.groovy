@@ -88,7 +88,7 @@ class JcloudsLocationFactory {
     }
     
     /** Creates a jclouds-backed LocationFactory for use with Amazon and using credentials etc looked up in the given properties set;
-     * @deprecated in favour of "aws-ec2" provider */
+     * @deprecated will be deleted in 0.5. in favour of "aws-ec2" provider */
     @Deprecated
     public static JcloudsLocationFactory newAmazonWebServicesInstance(BrooklynProperties sysProps) {
         return new JcloudsLocationFactory([

@@ -254,11 +254,17 @@ public class JmxHelper {
             return bean
         }
     }
-    
+
+    /**
+     * @deprecated will be deleted in 0.5
+     */
     @Deprecated
     public void checkMBeanExistsEventually(ObjectName objectName, long timeoutMillis) {
         checkMBeanExistsEventually(objectName, timeoutMillis*TimeUnit.MILLISECONDS)
     }
+    /**
+     * @deprecated will be deleted in 0.5.
+     */
     @Deprecated
     public void checkMBeanExistsEventually(ObjectName objectName, TimeDuration timeout) {
         assertMBeanExistsEventually(objectName, timeout);

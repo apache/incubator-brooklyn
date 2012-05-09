@@ -19,8 +19,10 @@ import brooklyn.management.Task
  * This implementation does so by blocking on a {@link ConcurrentLinkedQueue}, <em>after</em>
  * the task is started in a thread (and {@link Task#isStarted()} returns true), but (of course)
  * <em>before</em> the {@link Task#job} actually gets invoked.
+ *
+ * @deprecated will be deleted in 0.5.
  */
-@Deprecated // use SingleThreadedScheduler; FIXME delete this class when we're definitely happy with SingleThreadedScheduler 
+@Deprecated // use SingleThreadedScheduler; FIXME delete this class when we're definitely happy with SingleThreadedScheduler
 public class SingleThreadedExecution implements TaskPreprocessor {
     Queue<String> order = new ConcurrentLinkedQueue<String>()
     AtomicBoolean executing = new AtomicBoolean(false)

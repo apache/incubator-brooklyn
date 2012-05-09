@@ -62,7 +62,7 @@ public class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<
     }
 
     /**
-     * @deprecated Use CustomAggregatingEnricher(source, target, aggregator, deafultValue, producers:producer)
+     * @deprecated will be deleted in 0.5. Use CustomAggregatingEnricher(source, target, aggregator, deafultValue, producers:producer)
      */
     public CustomAggregatingEnricher(List<Entity> producer, Sensor<S> source, AttributeSensor<T> target, 
             Closure aggregator, S defaultValue=null) {
@@ -70,7 +70,7 @@ public class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<
     }
 
     /**
-     * @deprecated Use CustomAggregatingEnricher(source, target, aggregator, deafultValue, producers:producer)
+     * @deprecated will be deleted in 0.5. Use CustomAggregatingEnricher(source, target, aggregator, deafultValue, producers:producer)
      */
     public CustomAggregatingEnricher(List<Entity> producer, Sensor<S> source, AttributeSensor<T> target,
             Function<Collection<S>, T> aggregator, S defaultValue=null) {
@@ -110,7 +110,7 @@ public class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<
     }
 
     /**
-     * @deprecated Use newAveragingEnricher(source, target, producers:producer, allMembers:true)
+     * @deprecated will be deleted in 0.5. Use newAveragingEnricher(source, target, producers:producer, allMembers:true)
      */
     @Deprecated
     public static <N extends Number> CustomAggregatingEnricher<N,N> getSummingEnricher(
@@ -126,7 +126,7 @@ public class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<
     }
 
     /**
-     * @deprecated Use newAveragingEnricher(source, target, producers:producer, allMembers:true)
+     * @deprecated will be deleted in 0.5. Use newAveragingEnricher(source, target, producers:producer, allMembers:true)
      */
     @Deprecated
     public static <N extends Number> CustomAggregatingEnricher<N,Double> getAveragingEnricher(

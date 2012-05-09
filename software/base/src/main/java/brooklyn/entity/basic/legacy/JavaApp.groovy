@@ -48,8 +48,11 @@ public abstract class JavaApp extends SoftwareProcessEntity implements UsesJmx {
 	protected final void setJmxConfig() {
 		throw new UnsupportedOperationException("not used anymore!")
 	}
-	
-	@Deprecated /* use new JmxAdapter */
+
+    /**
+     * @deprecated will be deleted in 0.5. Use new JmxAdapter
+     */
+	@Deprecated
 	protected void initJmxSensors() {
 		if (!(getAttribute(HOSTNAME) && getAttribute(JMX_PORT))) {
 			throw new IllegalStateException("JMX is not available")
@@ -63,7 +66,10 @@ public abstract class JavaApp extends SoftwareProcessEntity implements UsesJmx {
 		addJmxSensors()
     }
 
-	@Deprecated /* use new JmxAdapter */
+    /**
+     * @deprecated will be deleted in 0.5. Use new JmxAdapter.
+     */
+	@Deprecated
     protected void addJmxSensors() { }
 
     @Override

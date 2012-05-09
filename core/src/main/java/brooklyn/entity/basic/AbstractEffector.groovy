@@ -203,7 +203,11 @@ public class MethodEffector<T> extends AbstractEffector<T> {
 	public MethodEffector(MethodClosure mc) {
 		this(new AnnotationsOnMethod(mc.delegate, mc.method), null);
 	}
-	@Deprecated /** use Description annotation */
+
+    /**
+     * @deprecated will be deleted in 0.5. Use description annotation
+     */
+    @Deprecated
     public MethodEffector(Class<?> whereEffectorDefined, String methodName, String description) {
         this(new AnnotationsOnMethod(whereEffectorDefined, methodName), description);
     }
@@ -246,7 +250,10 @@ private class ExplicitEffectorFromClosure<I,T> extends ExplicitEffector<I,T> {
 	public T invokeEffector(I trait, Map parameters) { body.call(trait, parameters) }
 }
 
-@Deprecated /** now called MethodEffector */
+/**
+ * @deprecated will be deleted in 0.5.  now called MethodEffector.
+ */
+@Deprecated
 public class EffectorInferredFromAnnotatedMethod<T> extends MethodEffector<T> {
 	public EffectorInferredFromAnnotatedMethod(Class<?> whereEffectorDefined, String methodName) {
 		super(whereEffectorDefined, methodName);
@@ -256,7 +263,10 @@ public class EffectorInferredFromAnnotatedMethod<T> extends MethodEffector<T> {
 	}
 }
 
-@Deprecated /** now called ExplicitEffector */
+/**
+ * @deprecated will be deleted in 0.5. Now called ExplicitEffector.
+ */
+@Deprecated
 public abstract class EffectorWithExplicitImplementation<I,T> extends ExplicitEffector<I,T> {
 	public EffectorWithExplicitImplementation(String name, Class<T> type, List<ParameterType<?>> parameters=[], String description) {
         super(name, type, parameters, description)

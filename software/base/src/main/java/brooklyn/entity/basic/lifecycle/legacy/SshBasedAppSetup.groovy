@@ -400,6 +400,8 @@ public abstract class SshBasedAppSetup extends StartStopSshDriver implements Scr
      *
      * If desired is specified, then try to use exactly that. Otherwise, use the
      * range from defaultFirst to 65535.
+     *
+     * @deprecated will be deleted in 0.5.
      */
     @Deprecated
     public static PortRange toDesiredPortRange(Integer desired, Integer defaultFirst=desired) {
@@ -425,6 +427,7 @@ public abstract class SshBasedAppSetup extends StartStopSshDriver implements Scr
      *
      * @see #obtainPort(int, boolean)
      * @see SshMachineLocation#obtainPort(PortRange)
+     * @deprecated will be deleted in 0.5.
      */
     @Deprecated
     protected int obtainPort(int suggested, int defaultPort, boolean canIncrement) {
@@ -439,7 +442,9 @@ public abstract class SshBasedAppSetup extends StartStopSshDriver implements Scr
         return machine.obtainPort(range);
     }
 
-    /** @see #obtainPort(int, int, boolean) */
+    /**
+     * @deprecated will be deleted in 0.5.  @see #obtainPort(int, int, boolean)
+     */
     @Deprecated
     protected int obtainPort(int suggested, boolean canIncrement) {
         if (suggested < 0) throw new IllegalArgumentException("Port $suggested must be >= 0")

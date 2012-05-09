@@ -12,7 +12,11 @@ import brooklyn.test.TestUtils
 import org.testng.Assert
 import org.testng.annotations.Test
 
-@Deprecated // use SingleThreadedScheduler; FIXME delete this class when we're definitely happy with SingleThreadedScheduler 
+/**
+ * @deprecated will be deleted in 0.5. // use SingleThreadedScheduler; FIXME delete this class when we're definitely
+ * happy with SingleThreadedScheduler
+ */
+@Deprecated
 class SynchronizedExecutionTest {
     List data = new ArrayList()
     

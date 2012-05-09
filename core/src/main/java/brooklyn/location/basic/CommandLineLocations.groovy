@@ -56,8 +56,11 @@ public class CommandLineLocations {
         return new LocalhostMachineProvisioningLocation()
     }
 
-    /** @Deprecated use new LocationRegistry().getLocationsById(Collection<String>) */
-    public static List<Location> getLocationsById(List<String> ids) {
+    /**
+     * @deprecated will be deleted in 0.5.  use new LocationRegistry().getLocationsById(Collection<String>)
+     */
+    @Deprecated
+   public static List<Location> getLocationsById(List<String> ids) {
         List<Location> locations = ids.collect { String location ->
             if (LOCALHOST == location) {
                 newLocalhostLocation()
