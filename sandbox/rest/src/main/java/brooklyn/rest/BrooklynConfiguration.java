@@ -1,28 +1,38 @@
 package brooklyn.rest;
 
 import brooklyn.rest.api.LocationSpec;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
+import com.google.common.collect.Lists;
 import com.yammer.dropwizard.config.Configuration;
-import java.util.Set;
+import java.util.List;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import org.codehaus.jackson.annotate.JsonProperty;
 
 public class BrooklynConfiguration extends Configuration {
 
+  @Valid
+  @NotNull
   private boolean stopApplicationsOnExit = true;
 
-  private Set<LocationSpec> locations = Sets.newHashSet();
+  @Valid
+  @NotNull
+  @JsonProperty
+  private List<LocationSpec> locations = Lists.newLinkedList();
 
+  @Valid
+  @NotNull
+  @JsonProperty
   private ExecutorConfiguration executor = new ExecutorConfiguration();
 
-  public Set<LocationSpec> getLocations() {
-    return ImmutableSet.copyOf(locations);
+  public List<LocationSpec> getLocations() {
+    return locations;
   }
 
   public boolean isStopApplicationsOnExit() {
     return stopApplicationsOnExit;
   }
 
-  public ExecutorConfiguration getExecutor() {
+  public ExecutorConfiguration getExecutorConfiguration() {
     return executor;
   }
 }

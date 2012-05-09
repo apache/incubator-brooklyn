@@ -1,5 +1,8 @@
 package brooklyn.rest;
 
+import brooklyn.rest.commands.AddLocationCommand;
+import brooklyn.rest.commands.DeleteApplicationCommand;
+import brooklyn.rest.commands.StartApplicationCommand;
 import brooklyn.rest.core.ApplicationManager;
 import brooklyn.rest.core.LocationStore;
 import brooklyn.rest.health.GeneralHealthCheck;
@@ -29,7 +32,7 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
     LocationStore locationStore = new LocationStore(configuration);
     environment.manage(locationStore);
 
-    ExecutorConfiguration executorConfig = configuration.getExecutor();
+    ExecutorConfiguration executorConfig = configuration.getExecutorConfiguration();
     ExecutorService managedExecutor = environment.managedExecutorService("brooklyn",
         executorConfig.getCorePoolSize(), executorConfig.getMaximumPoolSize(),
         executorConfig.getKeepAliveTimeInSeconds(), TimeUnit.SECONDS);
@@ -54,6 +57,12 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
   }
 
   public static void main(String[] args) throws Exception {
-    new BrooklynService().run(args);
+    BrooklynService service = new BrooklynService();
+
+    service.addCommand(new StartApplicationCommand());
+    service.addCommand(new DeleteApplicationCommand());
+    service.addCommand(new AddLocationCommand());
+
+    service.run(args);
   }
 }

@@ -25,13 +25,13 @@ public class EntitySpec {
       @JsonProperty("type") String type,
       @JsonProperty("config") Map<String, String> config
   ) {
-    this.name = name;
     this.type = checkNotNull(type, "type");
+    this.name = (name == null) ? type : name;
     this.config = (config != null) ? ImmutableMap.copyOf(config) : ImmutableMap.<String, String>of();
   }
 
   public String getName() {
-    return (name == null) ? getType() : name;
+    return name;
   }
 
   public String getType() {

@@ -26,6 +26,10 @@ executor:
 # Logging settings
 
 logging:
+  level: INFO
   console:
     enabled: true
-    threshold: ALL
+    threshold: INFO
+  loggers:
+    brooklyn.util.internal.ssh: ERROR
+    net.schmizz.sshj: ERROR

@@ -1,0 +1,10 @@
+{"entities":[
+  {
+    "type":"brooklyn.entity.nosql.redis.RedisStore"
+  }
+],
+  "locations":[
+    "/v1/locations/0"
+  ],
+  "name":"redis"
+} 
