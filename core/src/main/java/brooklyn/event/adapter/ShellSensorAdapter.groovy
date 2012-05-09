@@ -4,6 +4,8 @@ import java.util.Map
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import com.google.common.io.LineProcessor;
+
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.util.ShellUtils
 
@@ -14,10 +16,10 @@ import brooklyn.util.ShellUtils
  * <p>
  * Example usage:
  * <code>
- *   def diskUsage = sensorRegistry.register(new ShellSensorAdapter('df -p'))
+ *   def diskUsage = sensorRegistry.register(new ShellSensorAdapter("df -p"))
  *   diskUsage.then(&parse).with {
- *      poll(DISK0_USAGE_BYTES, {it[0].usage})
- *      poll(DISK0_FREE_BYTES, {it[0].free})
+ *      poll(DISK0_USAGE_BYTES) { it[0].usage }
+ *      poll(DISK0_FREE_BYTES) { it[0].free }
  *   }
  * </code>
  * <p>
@@ -32,6 +34,13 @@ public class ShellSensorAdapter extends FunctionSensorAdapter {
     public ShellSensorAdapter(Map flags=[:], String command) {
         super(flags, null)
         this.command = command;
+    }
+
+    public ShellSensorAdapter process(LineProcessor p) {
+        then() { List<String> lines ->
+            lines.each { String line -> p.processLine(line) }
+            p.result
+        }
     }
 
     // we override call rather than pass a callable in to parent, for efficiency

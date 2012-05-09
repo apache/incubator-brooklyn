@@ -1,5 +1,8 @@
 package brooklyn.location.basic
 
+import java.util.List;
+import java.util.Map;
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -45,11 +48,11 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     
     private final Set<Integer> ports = [] as HashSet
 
-    public SshMachineLocation(Map properties = [:]) {
+    public SshMachineLocation(Map properties=[:]) {
         super(properties)
     }
     
-    public void configure(Map properties) {
+    public void configure(Map properties=[:]) {
         if (config==null) config = [:]
 
         super.configure(properties)
@@ -122,13 +125,25 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         return ssh;
     }
 
+    /**
+     * Convenience for running commands using ssh {@literal exec} mode.
+     */
+    public int exec(Map props=[:], List<String> commands, Map env=[:]) {
+        Preconditions.checkNotNull address, "host address must be specified for ssh"
+        if (!commands) return 0
+        SshjTool ssh = connectSsh(props)
+        int result = ssh.execCommands props, commands, env
+        ssh.disconnect()
+        result
+    }
+
     public int copyTo(Map props=[:], File src, File destination) {
         return copyTo(props, src, destination.path)
     }
 
     // FIXME the return code is not a reliable indicator of success or failure
     public int copyTo(Map props=[:], File src, String destination) {
-        Preconditions.checkNotNull address, "host address must be specified for scp"
+        Preconditions.checkNotNull address, "Host address must be specified for scp"
         Preconditions.checkArgument src.exists(), "File %s must exist for scp", src.path
 		copyTo new FileInputStream(src), src.length(), destination 
     }

@@ -1,4 +1,4 @@
-package brooklyn.entity.messaging
+package brooklyn.entity.messaging.jms
 
 import groovy.lang.MetaClass
 
@@ -9,6 +9,9 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.Lifecycle
 import brooklyn.entity.basic.SoftwareProcessEntity
+import brooklyn.entity.messaging.MessageBroker
+import brooklyn.entity.messaging.Queue
+import brooklyn.entity.messaging.Topic
 import brooklyn.event.adapter.SensorRegistry
 
 import com.google.common.base.Preconditions
@@ -46,8 +49,6 @@ public abstract class JMSBroker<Q extends JMSDestination & Queue, T extends JMSD
         topicNames.each { String name -> addTopic(name) }
         setBrokerUrl();
     }
-
-	public abstract void waitForServiceUp();
 	
     public abstract void setBrokerUrl();
 
@@ -57,18 +58,10 @@ public abstract class JMSBroker<Q extends JMSDestination & Queue, T extends JMSD
         topics.each { String name, JMSDestination topic -> topic.destroy() }
         super.preStop()
     }
-
-	protected void checkBrokerCanBeModified() {
-		def state = getAttribute(SERVICE_STATE);
-		if (getAttribute(SERVICE_STATE)==Lifecycle.RUNNING) return;
-		if (getAttribute(SERVICE_STATE)==Lifecycle.STARTING) return;
-		// TODO this check may be redundant or even inappropriate
-		throw new IllegalStateException("cannot configure broker "+this+" in state "+state)
-	}
 	
     /** TODO make this an effector */
     public void addQueue(String name, Map properties=[:]) {
-		checkBrokerCanBeModified()
+		checkModifiable()
         properties.owner = this
         properties.name = name
         queues.put name, createQueue(properties)
@@ -78,7 +71,7 @@ public abstract class JMSBroker<Q extends JMSDestination & Queue, T extends JMSD
 
     /** TODO make this an effector */
     public void addTopic(String name, Map properties=[:]) {
-		checkBrokerCanBeModified()
+		checkModifiable()
         properties.owner = this
         properties.name = name
         topics.put name, createTopic(properties)
@@ -115,6 +108,6 @@ public abstract class JMSDestination extends AbstractEntity {
     
     @Override
     public Collection<String> toStringFieldsToInclude() {
-        return super.toStringFieldsToInclude() + ['name']
+        return super.toStringFieldsToInclude() + [ 'name' ]
     }
 }

@@ -4,10 +4,10 @@ import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey
 
 /**
- * An interface that describes a single JMS topic.
+ * An interface that describes a messaging topic.
  */
 public interface Topic {
-    BasicAttributeSensorAndConfigKey<String> TOPIC_NAME = [ String, "jms.topic.name", "JMS topic name" ]
+    BasicAttributeSensorAndConfigKey<String> TOPIC_NAME = [ String, "topic.name", "Topic name" ]
 
     /**
      * Create the topic.
@@ -22,4 +22,7 @@ public interface Topic {
      * TODO make this an effector
      */
     public abstract void delete();
+
+    String getTopicName();
+
 }

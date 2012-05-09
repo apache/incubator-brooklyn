@@ -64,6 +64,7 @@ import brooklyn.util.IdGenerator;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.SshTool;
 import brooklyn.util.internal.StreamGobbler;
+import brooklyn.util.internal.StringEscapeUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -455,7 +456,7 @@ public class SshjTool implements SshTool {
         List<String> result = new ArrayList<String>(env.size()+commands.size());
         
         for (Entry<String,?> entry : env.entrySet()) {
-            String escapedVal = entry.getValue().toString().replaceAll("\\\"", "\\\\\\\"");
+            String escapedVal = StringEscapeUtils.escapeLiteralForDoubleQuotedBash(entry.getValue().toString());
             result.add("export "+entry.getKey()+"=\""+escapedVal+"\"");
         }
         

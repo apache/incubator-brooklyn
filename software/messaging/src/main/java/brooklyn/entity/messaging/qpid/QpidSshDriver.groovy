@@ -23,28 +23,32 @@ public class QpidSshDriver extends JavaStartStopSshDriver {
     protected String getLogFileLocation() { "${runDir}/log/qpid.log"; }
 
     public Integer getAmqpPort() { entity.getAttribute(QpidBroker.AMQP_PORT) }
+    public String getAmqpVersion() { entity.getAttribute(QpidBroker.AMQP_VERSION) }
     
     protected String getInstallFilename() { "qpid-java-broker-${version}.tar.gz" }
     protected String getInstallUrl() { "http://download.nextag.com/apache/qpid/${version}/${installFilename}" }
     
     @Override
     public void install() {
-        newScript(INSTALLING).
-                failOnNonZeroResultCode().
-                body.append(
-                CommonCommands.downloadUrlAs(installUrl, getEntityVersionLabel('/'), installFilename),
-                CommonCommands.INSTALL_TAR,
-                "tar xzfv ${installFilename}",
-                ).execute();
+        newScript(INSTALLING)
+                .failOnNonZeroResultCode()
+                .body.append(
+	                CommonCommands.downloadUrlAs(installUrl, getEntityVersionLabel('/'), installFilename),
+	                CommonCommands.INSTALL_TAR,
+                    "tar xzfv ${installFilename}",
+                )
+                .execute()
     }
 
     @Override
     public void customize() {
         NetworkUtils.checkPortsValid(jmxPort:jmxPort, amqpPort:amqpPort);
-        newScript(CUSTOMIZING).
-                body.append(
+        newScript(CUSTOMIZING)
+                .body.append(
                     "cp -R ${installDir}/qpid-broker-${version}/{bin,etc,lib} .",
-                ).execute();
+                    "mkdir lib/opt",
+                )
+                .execute()
         
         def rtf = entity.getConfig(QpidBroker.RUNTIME_FILES);
         if (rtf) {
@@ -63,17 +67,18 @@ public class QpidSshDriver extends JavaStartStopSshDriver {
 
     @Override
     public void launch() {
-        newScript(LAUNCHING, usePidFile:false).
-                body.append(
-                            "nohup ./bin/qpid-server -b '*' -m ${jmxPort} -p ${amqpPort} --exclude-0-8 ${amqpPort} --exclude-0-9 ${amqpPort} --exclude-0-9-1 ${amqpPort} &",
-                ).execute();
+        newScript(LAUNCHING, usePidFile:false)
+                .body.append(
+                    "nohup ./bin/qpid-server -b '*' -m ${jmxPort} -p ${amqpPort} > /dev/null 2>&1 &",
+                )
+                .execute()
     }
 
     public String getPidFile() {"qpid-server.pid"}
     
     @Override
     public boolean isRunning() {
-        newScript(CHECK_RUNNING, usePidFile:pidFile).execute() == 0;
+        newScript(CHECK_RUNNING, usePidFile:pidFile).execute() == 0
     }
 
 
@@ -85,9 +90,9 @@ public class QpidSshDriver extends JavaStartStopSshDriver {
     public Map<String, String> getShellEnvironment() {
         Map result = super.getShellEnvironment()
         result << [
-            "QPID_HOME" : "${runDir}",
-            "QPID_WORK" : "${runDir}",
-            "QPID_OPTS" : result.JAVA_OPTS ?: [:]
+            QPID_HOME: "${runDir}",
+            QPID_WORK: "${runDir}",
+            QPID_OPTS: result.JAVA_OPTS ?: [:]
         ]
     }
 

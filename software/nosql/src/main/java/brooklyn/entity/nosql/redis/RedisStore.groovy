@@ -44,13 +44,6 @@ public class RedisStore extends SoftwareProcessEntity implements DataStore {
         setConfigIfValNonNull(REDIS_PORT, properties.redisPort)
         setConfigIfValNonNull(REDIS_CONFIG_FILE, properties.configFile)
     }
-
-    @Override
-    protected Collection<Integer> getRequiredOpenPorts() {
-        Collection<Integer> result = super.getRequiredOpenPorts()
-        result.add(getAttribute(REDIS_PORT))
-        return result
-    }
     
     @Override
     public void postStart() {

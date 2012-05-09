@@ -8,6 +8,8 @@ import java.util.Set
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import com.google.common.io.Closeables
+
 import brooklyn.config.BrooklynLogging;
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.EntityLocal
@@ -57,30 +59,26 @@ public abstract class StartStopSshDriver extends AbstractStartStopDriver impleme
     public SshMachineLocation getMachine() { location }
     public String getHostname() { entity.getAttribute(Attributes.HOSTNAME) }
 
-    public int execute(List<String> script, String summaryForLogging, Map environmentOverride=null) {
+    public int execute(Map flags=[:], List<String> script, String summaryForLogging) {
         logSsh.debug("{} on machine {}: {}", summaryForLogging, machine, script)
-        def environment = environmentOverride!=null ? environmentOverride : getShellEnvironment()
+        def environment = flags.env ?: getShellEnvironment()
 
         InputStream insO = new PipedInputStream();
         OutputStream outO = new PipedOutputStream(insO)
         InputStream insE = new PipedInputStream();
         OutputStream outE = new PipedOutputStream(insE)
-        //        InputStream insEcho = new PipedInputStream();
-        //        OutputStream outEcho = new PipedOutputStream(insEcho)
         
         try {
-            new StreamGobbler(insO, null, logSsh).setPrefix("["+entity.id+"@"+machine.getName()+":stdout] ").start()
-            new StreamGobbler(insE, null, logSsh).setPrefix("["+entity.id+"@"+machine.getName()+":stderr] ").start()
-            //don't need echo here because we run bash with echo on
-//            new StreamGobbler(insEcho, null, log).setPrefix("["+entity.id+"@"+machine.getName()+":stdin]% ").start()
+            new StreamGobbler(insO, flags.out, logSsh).setLogPrefix("["+entity.id+"@"+machine.getName()+":stdout] ").start()
+            new StreamGobbler(insE, flags.err, logSsh).setLogPrefix("["+entity.id+"@"+machine.getName()+":stderr] ").start()
             
-            int result = machine.run(out:outO, err:outE, /*echo:outEcho,*/ script, environment);
+            int result = machine.run(out:outO, err:outE, script, environment);
             logSsh.debug("{} on machine {} completed: {}", summaryForLogging, machine, result)
             return result
         } finally {
             // Must close the pipedOutStreams, otherwise input will never read -1 so StreamGobbler thread would never die
-            outO.close()
-            outE.close()
+            Closeables.closeQuietly outO
+            Closeables.closeQuietly outE
         }
     }
 

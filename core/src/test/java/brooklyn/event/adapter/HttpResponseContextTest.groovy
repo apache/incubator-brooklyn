@@ -19,18 +19,22 @@ public class HttpResponseContextTest {
 	public void testContent() {
 		assertEquals(SIMPLE_RESPONSE.evaluate({ content }), "A TEST");
 	}
+
 	@Test
 	public void testResult() {
 		assertEquals(SIMPLE_RESPONSE.evaluate({ responseCode == 400 }), true);
 	}
+
 	@Test
 	public void testHeaderString() {
 		assertEquals(SIMPLE_RESPONSE.evaluate({ headers.foo }), "1");
 	}
+
 	@Test
 	public void testHeaderNoneSuch() {
 		assertEquals(SIMPLE_RESPONSE.evaluate({ headers.baz }), null);
 	}
+
 	@Test
 	public void testSensorAndEntityAvailable() {
 		BasicAttributeSensor s = [String.class, "aString", ""];

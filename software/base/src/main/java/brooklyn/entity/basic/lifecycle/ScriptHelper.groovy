@@ -26,15 +26,16 @@ public class ScriptHelper {
 		this.summary = summary;
 	}
 
-	/** takes a closure which accepts this ScriptHelper,
-	 * returns true or false as to whether the script needs to run
-	 * (or can throw error if desired) */
+	/**
+	 * Takes a closure which accepts this ScriptHelper and returns true or false
+	 * as to whether the script needs to run (or can throw error if desired)
+	 */
 	public ScriptHelper executeIf(Closure c) {
 		executionCheck = c
 		this
 	}
 	public ScriptHelper skipIfBodyEmpty() { executeIf { !it.body.isEmpty() } }
-	public ScriptHelper failIfBodyEmpty() { executeIf { 
+	public ScriptHelper failIfBodyEmpty() { executeIf {
 		if (it.body.isEmpty()) throw new IllegalStateException("body empty for "+summary);
 		true
 	} }
@@ -44,12 +45,13 @@ public class ScriptHelper {
 		this
 	}
 	/**
-	 * convenience for error-checking the result
-	 * <p> 
-	 * takes closure which accepts bash exit code (integer),
-	 * and returns false if it is invalid; 
-	 * default is that this resultCodeCheck closure always returns true 
-	 * (and the exit code is made available to the caller if they care) */
+	 * Convenience for error-checking the result.
+	 *
+	 * Takes closure which accepts bash exit code (integer),
+	 * and returns false if it is invalid. Default is that this resultCodeCheck
+	 * closure always returns true (and the exit code is made available to the
+	 * caller if they care)
+	 */
 	public ScriptHelper requireResultCode(Closure integerFilter) {
 		resultCodeCheck = integerFilter
 		this		
@@ -100,6 +102,7 @@ public class ScriptPart {
 	public ScriptPart(ScriptHelper helper) {
 		this.helper = helper;
 	}
+
 	public ScriptHelper append(String l1) {
 		lines.add(l1);
         helper
@@ -123,7 +126,7 @@ public class ScriptPart {
         for (int i=ll.length-1; i>=0; i--) prepend(ll[i])
         prepend(l2);
         prepend(l1);
-        
+
 	}
 	public ScriptHelper prepend(Collection ll) {
         List l = new ArrayList(ll);
@@ -143,54 +146,99 @@ public class ScriptPart {
 		lines.clear()
 		append(ll);
 	}
-	/** passes the list to a closure for amendment; result of closure ignored */
+
+	/** Passes the list to a closure for amendment; result of closure ignored. */
 	public ScriptHelper apply(Closure c) {
 		c.call(lines)
 		helper
 	}
+
 	public boolean isEmpty() { lines.isEmpty() }
 }
 
 public class CommonCommands {
-    /** returns a string for checking whether the given executable is available,
-     * and installing it if necessary, using {@link #installPackage}
-     * and accepting the same flags e.g. for apt, yum, rpm */
+
+    /**
+     * Returns a string for checking whether the given executable is available,
+     * and installing it if necessary.
+     * 
+     * Uses {@link #installPackage} and accepts the same flags e.g. for apt, yum, rpm.
+     */
     public static String installExecutable(Map flags=[:], String executable) {
-        "which ${executable} || "+installPackage(flags, executable)
+        missing(executable, installPackage(flags, executable))
     }
-    /** returns a command for safely running sudo (ensuring non-blocking) */
-    // -S reads from stdin, routed to /dev/null, so a password prompt will not block
-    public static String sudo(String command) { "sudo -S "+command+" < /dev/null" }
-    /** returns a string for installing the given package;
-     * flags can contain common overrides e.g. for apt, yum, rpm
-     * (as the package names can be different for each of those), e.g.:
-     * installPackage("libssl-devel", yum: "openssl-devel", apt:"openssl libssl-dev zlib1g-dev");
-     * exit code 44 used to indicate failure */
+
+    /** Returns a command with all output redirected to /dev/null */
+    public static String quiet(String command) { "(${command} > /dev/null 2>&1)" }
+
+    /** Returns a command that always exits successfully */
+    public static String ok(String command) { "(${command} || true)" }
+
+    /**
+     * Returns a command for safely running as root, using {@code sudo}.
+     * 
+     * Ensuring non-blocking if password not set by using {@code -S} which reads
+     * from stdin routed to {@code /dev/null} and {@code -E} passes the parent
+     * environment in. If already root, simplem runs the command.
+     */
+    public static String sudo(String command) { "(test \$UID -eq 0 && ${command} || sudo -E -S ${command} < /dev/null)" }
+
+    /** Returns a command that runs only 1f the operating system is as specified; Checks {@code /etc/issue} for the specified name */
+    public static String on(String osName, String command) { "(grep \"${osName}\" /etc/issue && ${command})" }
+
+    /** Returns a command that runs only if the specified executable is in the path */
+    public static String file(String path, String command) { "(test -f ${path} && ${command})" }
+
+    /** Returns a command that runs only if the specified executable is in the path */
+    public static String exists(String executable, String command) { "(which ${executable} && ${command})" }
+
+    /** Returns a command that runs only if the specified executable is NOT in the path */
+    public static String missing(String executable, String command) { "(which ${executable} || ${command})" }
+
+    /** Returns a sequence of chained commands that runs until one of them fails */
+    public static String chain(Collection commands) { "(" + commands.join(" && ") + ")" }
+
+    /** Returns a sequence of alternative commands that runs until one of the commands succeeds */
+    public static String alternatives(Collection commands, String failure) { "("  + commands.join(" || ") + " || ${failure})" }
+
+    /**
+     * Returns a command for installing the given package.
+     *
+     * Flags can contain common overrides for deb, apt, yum, rpm and port
+     * as the package names can be different for each of those:
+     * <pre>
+     * installPackage("libssl-devel", yum:"openssl-devel", apt:"openssl libssl-dev zlib1g-dev")
+     * </pre>
+     */
     public static String installPackage(Map flags=[:], String packageDefaultName) {
-        "(which apt-get && "+sudo("apt-get install -y ${flags.apt?:packageDefaultName})")+" || "+
-                "(which rpm && "+sudo("rpm -i ${flags.rpm?:packageDefaultName})")+" || "+
-                "(which yum && "+sudo("yum -y install ${flags.yum?:packageDefaultName})")+" || "+
-                "(echo \"WARNING: no known/successful package manager to install ${packageDefaultName}, may fail subsequently\")"
+        alternatives([
+	            exists("dpkg", sudo("dpkg -i ${flags.deb?:packageDefaultName}")),
+	            exists("apt-get", sudo("apt-get install -y ${flags.apt?:packageDefaultName}")),
+	            exists("yum", sudo("yum -y install ${flags.yum?:packageDefaultName}")),
+	            exists("rpm", sudo("rpm -i ${flags.rpm?:packageDefaultName}")),
+	            exists("port", sudo("port install ${flags.port?:packageDefaultName}")) ],
+	        "(echo \"WARNING: no known/successful package manager to install ${packageDefaultName}, may fail subsequently\")")
     }
     public static final String INSTALL_TAR = installExecutable("tar");
     public static final String INSTALL_CURL = installExecutable("curl");
     public static final String INSTALL_WGET = installExecutable("wget");
-    
-    /** returns string for downloading from a url and saving to a file;
-     * currently using curl
+
+    /**
+     * Returns command for downloading from a url and saving to a file;
+     * currently using {@code curl}.
+     *
+     * Will read from a local repository, if files have been copied there
+     * ({@code cp -r /tmp/brooklyn/installs/ ~/.brooklyn/repository/})
+     * unless <em>skipLocalrepo</em> is {@literal true}.
      * <p>
-     * will read from a local repository, if files have been copied there
-     * (cp -r /tmp/brooklyn/installs/ ~/.brooklyn/repository/),
-     * unless skipLocalRepo: true
-     * <p>
-     * ideally use a blobstore staging area
+     * Ideally use a blobstore staging area.
      */
     public static List<String> downloadUrlAs(Map flags=[:], String url, String entityVersionPath, String pathlessFilenameToSaveAs) {
         boolean useLocalRepo = flags.skipLocalRepo!=null ? !flags.skipLocalRepo : true;
         String command = "curl -L \"${url}\" -o ${pathlessFilenameToSaveAs}";
         if (useLocalRepo) {
-            String file = '$'+"HOME/.brooklyn/repository/${entityVersionPath}/${pathlessFilenameToSaveAs}";
-            command = "if [ -f ${file} ]; then cp ${file} ./${pathlessFilenameToSaveAs}; else "+command+" ; fi"
+            String file = "\$HOME/.brooklyn/repository/${entityVersionPath}/${pathlessFilenameToSaveAs}";
+            command = "if [ -f ${file} ]; then cp ${file} ./${pathlessFilenameToSaveAs}; else ${command} ; fi"
         }
         command = command + " || exit 9"
         return [INSTALL_CURL, command];

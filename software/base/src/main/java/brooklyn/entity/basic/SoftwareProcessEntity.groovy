@@ -1,8 +1,11 @@
 package brooklyn.entity.basic
 
+import groovy.time.Duration;
+
 import java.util.Collection
 import java.util.Map
 import java.util.Set
+import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -26,7 +29,9 @@ import brooklyn.location.NoMachinesAvailableException
 import brooklyn.location.PortRange
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.location.basic.jclouds.JcloudsLocation.JcloudsSshMachineLocation
 import brooklyn.util.flags.SetFromFlag
+import brooklyn.util.internal.Repeater
 
 import com.google.common.base.Preconditions
 import com.google.common.collect.Iterables
@@ -129,6 +134,29 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 				those which are updated by a policy need to get recorded somehow
 		*/
 	}
+    
+    public void waitForServiceUp() {
+        waitForServiceUp(60*TimeUnit.SECONDS)
+    }
+    public void waitForServiceUp(Duration duration) {
+        if (!Repeater.create(timeout:duration, description:"Waiting for SERVICE_UP on ${this}")
+                .rethrowException().repeat().every(1*TimeUnit.SECONDS)
+                .until() {
+                    getAttribute(SERVICE_UP)
+                }
+                .run()) {
+            throw new IllegalStateException("Could not determine if ${this} is up");
+        }
+        log.info("Service ${this} is running")
+    }
+
+    public void checkModifiable() {
+        def state = getAttribute(SERVICE_STATE);
+        if (getAttribute(SERVICE_STATE) == Lifecycle.RUNNING) return;
+        if (getAttribute(SERVICE_STATE) == Lifecycle.STARTING) return;
+        // TODO this check may be redundant or even inappropriate
+        throw new IllegalStateException("Cannot configure entity ${this} in state ${state}")
+    }
 
 	protected void preStop() { }
 
@@ -182,6 +210,16 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
         ports
     }
 
+    public String getLocalHostname() {
+        Location where = Iterables.getFirst(locations, null)
+	    String hostname = null
+        if (where in JcloudsSshMachineLocation)
+            hostname = ((JcloudsSshMachineLocation) where).getSubnetHostname()
+        else if (where in SshMachineLocation)
+            hostname = ((SshMachineLocation) where).getAddress()?.hostAddress
+        if (!hostname)
+            throw new IllegalStateException("Cannot find hostname for ${this} at location ${where}")
+	}
 
     public void startInLocation(SshMachineLocation machine) {
         locations.add(machine)

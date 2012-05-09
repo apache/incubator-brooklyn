@@ -215,8 +215,8 @@ public class SshJschTool {
                 //using the -e tell bash to end the script as soon as one of the statements returns a non zero value.
                 allCmds.add "exec bash -e"
                 allCmds.addAll env.collect { String key, String value ->
-        			def ve = value.replaceAll("\\\"", "\\\\\\\"");
-        			"export $key=\"${ve}\"" }
+	                def esc = StringEscapeUtils.escapeLiteralForDoubleQuotedBash(value)
+        			"export $key=\"${esc}\"" }
                 allCmds.addAll commands
         		//explicit exit, in case it wasn't in the script above, because we run in blocking interactive mode
                 allCmds.add 'exit $?'
@@ -226,8 +226,8 @@ public class SshJschTool {
                 channel.connect()
         
                 try {
-                    allCmds.each {
-                        byte[] data = (it+"\n").getBytes("UTF-8")
+                    allCmds.each { String cmd ->
+                        byte[] data = "${cmd}\n".getBytes("UTF-8")
                         if (echo) echo.write(data);
                         out.write(data)
                         out.flush()
@@ -279,10 +279,13 @@ public class SshJschTool {
             }
             String separator = properties.separator ?: "; "
             StringBuffer run = []
-            env.each { key, value -> run.append("export $key=\"$value\"").append(separator) }
+            env.each { String key, String value ->
+                def esc = StringEscapeUtils.escapeLiteralForDoubleQuotedBash(value)
+                run.append("export $key=\"${esc}\"").append(separator)
+            }
             commands.each { run.append(it).append(separator) }
             if (log.isTraceEnabled()) log.trace "Running command {}", run.toString()
-            channel.setCommand  run.toString()
+            channel.setCommand run.toString()
     
             channel.connect()
             if (properties.block==null || properties.block) {

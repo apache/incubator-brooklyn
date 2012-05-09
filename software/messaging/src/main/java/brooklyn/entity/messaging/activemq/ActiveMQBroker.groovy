@@ -15,10 +15,10 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.basic.UsesJmx
-import brooklyn.entity.messaging.JMSBroker
-import brooklyn.entity.messaging.JMSDestination
 import brooklyn.entity.messaging.Queue
 import brooklyn.entity.messaging.Topic
+import brooklyn.entity.messaging.jms.JMSBroker;
+import brooklyn.entity.messaging.jms.JMSDestination;
 import brooklyn.event.adapter.JmxHelper
 import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.adapter.SensorRegistry
@@ -70,24 +70,15 @@ public class ActiveMQBroker extends JMSBroker<ActiveMQQueue, ActiveMQTopic> impl
     protected void connectSensors() {
        jmxAdapter = sensorRegistry.register(new JmxSensorAdapter());
        jmxAdapter.objectName("org.apache.activemq:BrokerName=localhost,Type=Broker")
-           .attribute("BrokerId").subscribe(SERVICE_UP, { it as Boolean });
+           .attribute("BrokerId")
+           .subscribe(SERVICE_UP) { it as Boolean }
        jmxAdapter.activateAdapter()
 	}
 
 	@Override
 	public Collection<String> toStringFieldsToInclude() {
-		return super.toStringFieldsToInclude() + ['openWirePort']
+		return super.toStringFieldsToInclude() + [ 'openWirePort' ]
 	}
-
-	public void waitForServiceUp() {
-		if (!Repeater.create(timeout: 60*TimeUnit.SECONDS)
-			    .rethrowException().repeat().every(1*TimeUnit.SECONDS).until { getAttribute(SERVICE_UP) }.
-                run()) {
-            throw new IllegalStateException("Could not connect via JMX to determine ${this} is up");
-		}
-		log.info("started JMS $this")
-	}
-    
 }
 
 public abstract class ActiveMQDestination extends JMSDestination {
@@ -142,6 +133,8 @@ public class ActiveMQQueue extends ActiveMQDestination implements Queue {
         jmxAdapter.objectName(queue).attribute("QueueSize").subscribe(QUEUE_DEPTH_MESSAGES)
     }
 
+    public String getQueueName() { name }
+
 }
 
 public class ActiveMQTopic extends ActiveMQDestination implements Topic {
@@ -169,4 +162,6 @@ public class ActiveMQTopic extends ActiveMQDestination implements Topic {
 	public void connectSensors() {
 		//TODO add sensors for topics
 	}
+
+    public String getTopicName() { name }
 }

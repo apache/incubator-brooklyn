@@ -48,15 +48,15 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
      *
      * @param properties the properties of the new instance.
      */
-    public LocalhostMachineProvisioningLocation(Map properties = [:]) {
-        super(properties);
+    public LocalhostMachineProvisioningLocation(Map properties=[:]) {
+        super(properties)
     }
         
     public LocalhostMachineProvisioningLocation(String name, int count=0) {
         this([name: name, count: count]);
     }
     
-    protected void configure(Map flags) {
+    protected void configure(Map flags=[:]) {
         super.configure(flags)
         
         if (!name) { name="localhost" }
@@ -142,7 +142,7 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
     private static class LocalhostMachine extends SshMachineLocation {
         Set portsObtained = []
         
-        private LocalhostMachine(Map properties) {
+        private LocalhostMachine(Map properties=[:]) {
             super(properties)
         }
         public boolean obtainSpecificPort(int portNumber) {

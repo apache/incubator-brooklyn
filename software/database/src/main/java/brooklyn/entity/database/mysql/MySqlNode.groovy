@@ -15,7 +15,7 @@ import brooklyn.util.flags.SetFromFlag
 public class MySqlNode extends SoftwareProcessEntity {
 
     @SetFromFlag("version")
-    public static final BasicConfigKey<String> SUGGESTED_VERSION = [SoftwareProcessEntity.SUGGESTED_VERSION, "5.5.21"]
+    public static final BasicConfigKey<String> SUGGESTED_VERSION = [ SoftwareProcessEntity.SUGGESTED_VERSION, "5.5.21" ]
 
     @SetFromFlag("port")
     public static final PortAttributeSensorAndConfigKey MYSQL_PORT = [ "mysql.port", "MySQL port", PortRanges.fromString("3306, 13306+") ]
@@ -45,16 +45,11 @@ public class MySqlNode extends SoftwareProcessEntity {
         return new MySqlSshDriver(this, loc);
     }
 
+    @Override
     protected void connectSensors() {
         super.connectSensors();
-        Location l = locations.iterator().next();
-        String hostname = null;
-        if (l in JcloudsSshMachineLocation) hostname = ((JcloudsSshMachineLocation)l).getSubnetHostname();
-        else if (l in SshMachineLocation) hostname =  ((SshMachineLocation)l).getAddress()?.hostAddress;
-        if (hostname==null) 
-            throw new IllegalStateException("Cannot find hostname for unexpected location type "+l+" where "+this+" is running");
-        setAttribute(MYSQL_URL, "mysql://"+hostname+":"+getAttribute(MYSQL_PORT)+"/");
-        setAttribute(SERVICE_UP, true);  //TODO poll for status, and activity
+        setAttribute(MYSQL_URL, "mysql://${localHostname}:${port}/")
+        setAttribute(SERVICE_UP, true)  // TODO poll for status, and activity
     }
 
     public int getPort() {
