@@ -6,7 +6,7 @@ import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.test.JmxService
 import brooklyn.test.entity.TestEntity
-import org.omg.CORBA.TIMEOUT
+import groovy.time.TimeDuration
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
@@ -14,11 +14,7 @@ import org.testng.annotations.Test
 import java.util.concurrent.TimeUnit
 import javax.management.ObjectName
 
-import brooklyn.event.adapter.*
-
 import static org.testng.Assert.assertEquals
-import static org.testng.Assert.assertNotNull
-import groovy.time.TimeDuration
 
 class JmxObjectNameAdapterTest {
     private static final long TIMEOUT = 5000
@@ -63,7 +59,7 @@ class JmxObjectNameAdapterTest {
 
 
     @Test
-    public void test() {
+    public void whenAttributeRegisteredWithPeriod() {
         jmxHelper.connect(TIMEOUT)
         JmxObjectNameAdapter objectNameAdapter = new JmxObjectNameAdapter(jmxAdapter, new ObjectName("somename", "somekey", "somevalue"));
         TimeDuration period = 20 * TimeUnit.SECONDS
