@@ -12,6 +12,7 @@ import brooklyn.entity.basic.EntityLocal
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.basic.UsesJavaMXBeans
 import brooklyn.event.adapter.JmxSensorAdapter
+import java.util.concurrent.TimeUnit
 
 class JavaAppUtils {
 
@@ -34,15 +35,15 @@ class JavaAppUtils {
             }
             
             jmxAdapter.objectName(ManagementFactory.RUNTIME_MXBEAN_NAME).with {
-                attribute("StartTime").subscribe(UsesJavaMXBeans.START_TIME);
+                attribute(period:60*TimeUnit.SECONDS, "StartTime").subscribe(UsesJavaMXBeans.START_TIME);
                 attribute("Uptime").subscribe(UsesJavaMXBeans.UP_TIME);
             }
             
             jmxAdapter.objectName(ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME).with {
                 attribute("SystemLoadAverage").subscribe(UsesJavaMXBeans.SYSTEM_LOAD_AVERAGE);
-                attribute("AvailableProcessors").subscribe(UsesJavaMXBeans.AVAILABLE_PROCESSORS);
-                attribute("TotalPhysicalMemorySize").subscribe(UsesJavaMXBeans.TOTAL_PHYSICAL_MEMORY_SIZE);
-                attribute("FreePhysicalMemorySize").subscribe(UsesJavaMXBeans.FREE_PHYSICAL_MEMORY_SIZE);
+                attribute(period:60*TimeUnit.SECONDS, "AvailableProcessors").subscribe(UsesJavaMXBeans.AVAILABLE_PROCESSORS);
+                attribute(period:60*TimeUnit.SECONDS, "TotalPhysicalMemorySize").subscribe(UsesJavaMXBeans.TOTAL_PHYSICAL_MEMORY_SIZE);
+                attribute(period:60*TimeUnit.SECONDS, "FreePhysicalMemorySize").subscribe(UsesJavaMXBeans.FREE_PHYSICAL_MEMORY_SIZE);
             }
 
             
