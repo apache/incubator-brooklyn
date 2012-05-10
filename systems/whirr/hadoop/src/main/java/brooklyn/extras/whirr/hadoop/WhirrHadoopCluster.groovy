@@ -58,7 +58,18 @@ public class WhirrHadoopCluster extends WhirrCluster {
                 // TODO: set whirr.hadoop.tarball.url=... to a reliable location
         );
 
+        if (userRecipeLines) recipeLines.addAll(presetRecipeLines);
         setConfig(RECIPE, Joiner.on("\n").join(recipeLines));
+    }
+    
+    List userRecipeLines = [];
+    public void addRecipeLine(String line) {
+        userRecipeLines << line;
+        String r = getConfig(RECIPE);
+        if (r) {
+            r += "\n"+line;
+            setConfig(RECIPE, r);
+        }
     }
 
     @Override
