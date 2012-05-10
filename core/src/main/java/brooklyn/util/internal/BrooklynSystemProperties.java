@@ -16,6 +16,18 @@ public class BrooklynSystemProperties {
     // -Dbrooklyn.location.geo.HostGeoLookup=brooklyn.location.geo.UtraceHostGeoLookup
     public static StringSystemProperty HOST_GEO_LOOKUP_IMPL = new StringSystemProperty("brooklyn.location.geo.HostGeoLookup");
 
+    /** e.g. brooklyn.security.provider=brooklyn.web.console.security.AnyoneSecurityProvider will allow anyone to log in;
+     * default is explicitly named users, using SECURITY_PROVIDER_EXPLICIT__USERS  */
+    public static StringSystemProperty SECURITY_PROVIDER = new StringSystemProperty("brooklyn.security.provider");
+    /** explicitly set the users/passwords, e.g. in brooklyn.properties: 
+     * brooklyn.security.explicit.users=admin
+     * brooklyn.security.explicit.user.admin=password
+     */
+    public static StringSystemProperty SECURITY_PROVIDER_EXPLICIT__USERS = new StringSystemProperty("brooklyn.security.explicit.users");
+    public static StringSystemProperty SECURITY_PROVIDER_EXPLICIT__PASSWORD(String user) {
+        return new StringSystemProperty("brooklyn.security.explicit.user."+user);
+    }
+    
     public static class StringSystemProperty {
         public StringSystemProperty(String name) {
             this.propertyName = name;

@@ -1,18 +1,17 @@
 package brooklyn.util;
 
-import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.URL;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
-import com.google.common.io.Closeables;
 
 public class ResourceUtils {
     
@@ -101,22 +100,32 @@ public class ResourceUtils {
 
     /** takes {@link #getResourceFromUrl(String)} and reads fully, into a string */
     public String getResourceAsString(String url) {
-        BufferedReader reader = null;
         try {
-            InputStream is = getResourceFromUrl(url);
-            reader = new BufferedReader(new InputStreamReader(is));
-            StringBuffer sb = new StringBuffer();
-            String line;
-            while ((line = reader.readLine()) != null)
-                sb.append(line).append("\n");
-            return sb.toString();
-            
+            return readFullyString(getResourceFromUrl(url));
         } catch (Exception e) {
             log.warn("error reading "+url+(context==null?"":" "+context)+" (rethrowing): "+e);
             throw Throwables.propagate(e);
-        } finally {
-            Closeables.closeQuietly(reader);
         }
+    }
+
+    public static String readFullyString(InputStream is) throws IOException {
+        return new String(readFullyBytes(is));
+    }
+
+    public static byte[] readFullyBytes(InputStream is) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        copy(is, out);
+        return out.toByteArray();
+    }
+
+    public static void copy(InputStream input, OutputStream output) throws IOException {
+        byte[] buf = new byte[1024];
+        int bytesRead = input.read(buf);
+        while (bytesRead != -1) {
+            output.write(buf, 0, bytesRead);
+            bytesRead = input.read(buf);
+        }
+        output.flush();
     }
 
 }

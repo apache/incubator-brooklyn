@@ -10,6 +10,10 @@ import java.lang.annotation.RetentionPolicy;
  * This is used to automate the processing where named arguments are passed in constructors
  * and other methods, and the values of those named arguments should be transferred to
  * other known fields/arguments/objects at runtime.
+ * <p>
+ * Fields on a class are typically set from values in a map with a call to
+ * {@link FlagUtils#setFieldsFromFlags(java.util.Map, Object)}.
+ * That method (and related, in the same class) will attend to the arguments here.
  */
 @Retention(RetentionPolicy.RUNTIME)
 public @interface SetFromFlag {
@@ -28,10 +32,22 @@ public @interface SetFromFlag {
     
     /** whether the object is required & should not be set to null; defaults to true.
      * (there is no 'required' parameter, but setting nullable false then invoking 
-     * e.g. {@link FlagUtils#checkRequiredFields(Object)} has the effect of requiring a value.) 
+     * e.g. {@link FlagUtils#checkRequiredFields(Object)} has the effect of requiring a value)
+     * <p>
+     * code should call that method explicitly to enforce nullable false;
+     * errors are not done during a call to setFieldsFromFlags 
+     * because fields may be initialised in multiple passes.) 
      * <p>
      * this is partially tested for in many routines, but not all
      */
     boolean nullable() default true;
 
+    /** The default value, if it is not explicitly set.
+     * <p>
+     * The value will be coerced from String where required, for types supported by {@link TypeCoercions}.
+     * <p>
+     * The field will be initialised with its default value on the first call to setFieldsFromFlags
+     * (or related).  (The field will not be initialised if that method is not called.) 
+     */
+    String defaultVal() default "";
 }

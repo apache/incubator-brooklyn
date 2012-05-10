@@ -1,27 +1,26 @@
 package brooklyn.extras.whirr.core
 
-import brooklyn.entity.Entity;
-import brooklyn.entity.basic.AbstractEntity
+import static com.google.common.collect.Iterables.getOnlyElement
+
+import org.apache.commons.configuration.PropertiesConfiguration
+import org.apache.whirr.Cluster
 import org.apache.whirr.ClusterController
 import org.apache.whirr.ClusterControllerFactory
-import brooklyn.entity.trait.Startable
-import org.slf4j.LoggerFactory
-import org.slf4j.Logger
-import brooklyn.event.basic.BasicConfigKey
-import brooklyn.util.flags.SetFromFlag
-import brooklyn.location.Location
-import brooklyn.location.basic.FixedListMachineProvisioningLocation
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation
-import brooklyn.location.basic.SshMachineLocation
-import brooklyn.location.basic.jclouds.JcloudsLocation
-import org.apache.commons.configuration.PropertiesConfiguration
 import org.apache.whirr.ClusterSpec
-import org.apache.whirr.Cluster
-import brooklyn.entity.basic.AbstractGroup
-import static com.google.common.collect.Iterables.getOnlyElement
-import brooklyn.extras.whirr.core.WhirrRole
+import org.jclouds.scriptbuilder.domain.OsFamily
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
-import org.jclouds.scriptbuilder.domain.OsFamily;
+import brooklyn.entity.Entity
+import brooklyn.entity.basic.AbstractEntity
+import brooklyn.entity.basic.AbstractGroup
+import brooklyn.entity.trait.Startable
+import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.event.basic.BasicConfigKey
+import brooklyn.location.Location
+import brooklyn.location.basic.LocalhostMachineProvisioningLocation
+import brooklyn.location.basic.jclouds.JcloudsLocation
+import brooklyn.util.flags.SetFromFlag
 
 /**
  * Generic entity that can be used to deploy clusters that are
@@ -30,23 +29,27 @@ import org.jclouds.scriptbuilder.domain.OsFamily;
  */
 public class WhirrCluster extends AbstractEntity implements Startable {
 
-	public static final Logger log = LoggerFactory.getLogger(WhirrCluster.class);
+    public static final Logger log = LoggerFactory.getLogger(WhirrCluster.class);
 
-	@SetFromFlag("recipe")
-	public static final BasicConfigKey<String> RECIPE =
-		[String, "whirr.recipe", "Apache Whirr cluster recipe"]
+    @SetFromFlag("recipe")
+    public static final BasicConfigKey<String> RECIPE =
+        [String, "whirr.recipe", "Apache Whirr cluster recipe"]
 
-	protected ClusterController controller = null
-	protected ClusterSpec clusterSpec = null
-	protected Cluster cluster = null
-	protected Location location = null
+    public static final BasicAttributeSensor<String> CLUSTER_NAME =
+        [String, "whirr.cluster.name", "Name of the Whirr cluster"]
 
-	/**
-	 * General entity initialisation
-	 */
-	public WhirrCluster(Map flags = [:], Entity owner = null) {
-		super(flags, owner)
-	}
+    protected ClusterController _controller = null
+    protected ClusterSpec clusterSpec = null
+    protected Cluster cluster = null
+
+    protected Location location = null
+    
+    /**
+     * General entity initialisation
+     */
+    public WhirrCluster(Map flags = [:], Entity owner = null) {
+        super(flags, owner)
+    }
 
 	/**
 	 * Apache Whirr can only start and manage a cluster in a single location
@@ -126,10 +129,14 @@ public class WhirrCluster extends AbstractEntity implements Startable {
 		startWithClusterSpec(clusterSpec);
 	}
 	
+    synchronized ClusterController getController() {
+        if (_controller==null) {
+            _controller = new ClusterControllerFactory().create(clusterSpec?.getServiceName());
+        }
+        return _controller;
+    }
+    
 	private void startWithClusterSpec(ClusterSpec clusterSpec) {
-		if(controller==null){
-			controller = new ClusterControllerFactory().create(clusterSpec.getServiceName());
-		}
 		cluster = controller.launchCluster(clusterSpec)
 		
 		for (Cluster.Instance instance : cluster.getInstances()) {
@@ -141,6 +148,9 @@ public class WhirrCluster extends AbstractEntity implements Startable {
 			}
 			addGroup(rolesGroup)
 		}
+        
+        setAttribute(CLUSTER_NAME, clusterSpec.getClusterName());
+        setAttribute(SERVICE_UP, true);
 	}
 
 	void stop() {

@@ -17,4 +17,14 @@ class UrlMappings {
 
         "500"(view:'/error')
     }
+    
+    def beforeInterceptor = [action: this.&auth, except: 'login']
+    // defined with private scope, so it's not considered an action
+    private auth() {
+        if (!session.user) {
+            redirect(action: 'login')
+            return false
+        }
+    }
+    
 }

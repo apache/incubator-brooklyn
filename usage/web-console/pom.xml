@@ -241,13 +241,12 @@
             <version>1.1.2</version>
         </dependency>
 
-        <!-- Grails defaults to Ehache for the second-level Hibernate cache. -->
+<!-- don't user hibernate
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-ehcache</artifactId>
             <version>3.3.1.GA</version>
             <exclusions>
-                <!-- We are pulling in ehcache-core below -->
                 <exclusion>
                     <groupId>net.sf.ehcache</groupId>
                     <artifactId>ehcache</artifactId>
@@ -261,13 +260,12 @@
             <version>1.7.1</version>
         </dependency>
 
-        <!-- For ease of development and testing, we include the HSQLDB database. -->
+-->
         <dependency>
             <groupId>hsqldb</groupId>
             <artifactId>hsqldb</artifactId>
             <version>1.8.0.10</version>
         </dependency>
-
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>

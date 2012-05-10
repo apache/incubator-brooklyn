@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <packaging>pom</packaging>
+
+    <groupId>io.brooklyn</groupId>
+    <artifactId>brooklyn-examples-webapps-parent</artifactId>
+    <version>0.4.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
+
+    <name>Brooklyn Examples Project</name>
+    <description>
+        Brooklyn examples module, building the Brooklyn examples.
+    </description>
+
+    <repositories>
+        <repository>
+            <id>cloudsoft-releases</id>
+            <url>http://developers.cloudsoftcorp.com/download/maven2/</url>
+        </repository>
+            <repository>
+                <id>libs-snapshot-local</id>
+                <url>http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/</url>
+                <snapshots>
+                    <enabled>true</enabled>
+                    <updatePolicy>never</updatePolicy>
+                    <checksumPolicy>fail</checksumPolicy>
+               </snapshots>
+         </repository>
+    </repositories>
+
+    <modules>
+        <module>hello-world-webapp</module>
+        <module>hello-world-sql</module>
+        <module>hello-world-hadoop-jar</module>
+        <module>hello-world-hadoop</module>
+    </modules>
+
+</project>

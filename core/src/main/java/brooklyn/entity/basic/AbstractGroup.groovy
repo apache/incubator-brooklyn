@@ -44,7 +44,6 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
                 log.debug("Group $this got new member $member");
 	            emit(MEMBER_ADDED, member)
 	            setAttribute(Changeable.GROUP_SIZE, currentSize)
-                enrichers.each { if (it instanceof AbstractAggregatingEnricher) ((AbstractAggregatingEnricher)it).addProducer(member); }
 	        }
 	        member
 	    }
@@ -60,10 +59,6 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
                 log.debug("Group $this lost member $member");
 	            emit(MEMBER_REMOVED, member)
 	            setAttribute(Changeable.GROUP_SIZE, currentSize)
-                enrichers.each { 
-                    if (it instanceof AbstractAggregatingEnricher) 
-                        ((AbstractAggregatingEnricher)it).removeProducer(member); 
-                }
 	        }
 	        changed
         }

@@ -145,7 +145,7 @@ public class SshjTool implements SshTool {
         private boolean strictHostKeyChecking = false;
         private int connectTimeout;
         private int sessionTimeout;
-        private int sshTries = 1;
+        private int sshTries = 4;  //allow 4 tries by default, much safer
         private long sshRetryDelay = 50L;
         
         @SuppressWarnings("unchecked")
@@ -386,7 +386,7 @@ public class SshjTool implements SshTool {
         List<String> cmds = ImmutableList.of(
                 scriptPath,
                 "RESULT=$?",
-                "rm "+scriptPath,
+                "rm -f "+scriptPath, // use "-f" because some systems have "rm" aliased to "rm -i"
                 "exit $RESULT");
         
         Integer result = acquire(new ShellAction(cmds, out, err));
@@ -477,7 +477,6 @@ public class SshjTool implements SshTool {
     }
 
     protected <T, C extends SshAction<T>> T acquire(C connection) {
-        String errorMessage = String.format("(%s) error acquiring %s", toString(), connection);
         for (int i = 0; i < sshTries; i++) {
             try {
                 connection.clear();
@@ -486,6 +485,7 @@ public class SshjTool implements SshTool {
                 if (LOG.isTraceEnabled()) LOG.trace("<< ({}) acquired {}", toString(), returnVal);
                 return returnVal;
             } catch (Exception from) {
+                String errorMessage = String.format("(%s) error acquiring %s", toString(), connection);
                 try {
                     disconnect();
                 } catch (Exception e1) {
@@ -885,12 +885,12 @@ public class SshjTool implements SshTool {
         }
     }
     
-    private static <T> T getMandatoryVal(Map<String,?> map, String key, Class<T> clazz) {
+    static <T> T getMandatoryVal(Map<String,?> map, String key, Class<T> clazz) {
         checkArgument(map.containsKey(key), "must contain key '"+key+"'");
         return TypeCoercions.coerce(map.get(key), clazz);
     }
     
-    private static <T> T getOptionalVal(Map<String,?> map, String key, Class<T> clazz, T defaultVal) {
+    static <T> T getOptionalVal(Map<String,?> map, String key, Class<T> clazz, T defaultVal) {
         if (map.containsKey(key)) {
             return TypeCoercions.coerce(map.get(key), clazz);
         } else {

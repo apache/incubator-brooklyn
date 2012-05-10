@@ -1,0 +1,26 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>io.brooklyn</groupId>
+  <artifactId>brooklyn-example-hello-world-hadoop-jar</artifactId>
+  <packaging>jar</packaging>
+  <version>0.4.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
+  <name>Jar Code for Hadoop Webapp</name>
+  <url>http://maven.apache.org</url>
+  <build>
+    <finalName>brooklyn-example-hello-world-hadoop-jar</finalName>
+  </build>
+  <dependencies>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-core</artifactId>
+            <version>0.20.205.0</version>
+        </dependency>
+        <dependency>
+            <!-- fix for https://issues.apache.org/jira/browse/HADOOP-7461 -->
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-mapper-asl</artifactId>
+            <version>1.0.1</version>
+        </dependency>
+  </dependencies>
+</project>

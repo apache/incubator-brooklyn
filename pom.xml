@@ -82,7 +82,7 @@
         <plantuml.version>6121</plantuml.version>
         <ant.version>1.8.2</ant.version>
 
-        <groovy.version>1.8.4</groovy.version>
+        <groovy.version>1.8.6</groovy.version>
         <testng.version>6.3.1</testng.version>
         <mockito.version>1.8.4</mockito.version>
         <!-- need 0.8.0 whirr to get guava 11, because 0.7 uses guava 10 which is incompatible -->
@@ -518,7 +518,7 @@
                     <dependency>
                         <groupId>org.codehaus.groovy</groupId>
                         <artifactId>groovy-eclipse-batch</artifactId>
-                        <version>1.8.4-01</version>
+                        <version>1.8.6-01</version>
                     </dependency>
                 </dependencies>
             </plugin>

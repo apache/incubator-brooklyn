@@ -12,6 +12,7 @@ import org.testng.annotations.Test
 import brooklyn.config.BrooklynServiceAttributes
 import brooklyn.management.internal.LocalManagementContext
 import brooklyn.util.BrooklynLanguageExtensions
+import brooklyn.util.internal.BrooklynSystemProperties;
 import brooklyn.util.internal.TimeExtras
 
 public class WebAppRunnerTest {
@@ -22,13 +23,25 @@ public class WebAppRunnerTest {
     private static TimeDuration TIMEOUT_MS;
     static { TIMEOUT_MS = 30*SECONDS }
     
+    public static createLauncher(Map properties) {
+        Map bigProps = [:] + properties;
+        Map attributes = bigProps.attributes
+        if (attributes==null) {
+            attributes = [:]
+        } else {
+            attributes = [:] + attributes; //copy map, don't change what was supplied
+        }
+        bigProps.attributes = attributes;
+        attributes.put(BrooklynSystemProperties.SECURITY_PROVIDER.getPropertyName(), 'brooklyn.web.console.security.AnyoneSecurityProvider');
+        return new WebAppRunner(bigProps, new LocalManagementContext());
+    }
+    
     /**
      * This test requires the brooklyn.war to work. (Should be placed by maven build.)
      */
     @Test
     public void testStartWar1() {
-        WebAppRunner launcher = new WebAppRunner(new LocalManagementContext(), port:8090,
-            attributes:[(BrooklynServiceAttributes.BROOKLYN_AUTOLOGIN_USERNAME):'admin']);
+        WebAppRunner launcher = createLauncher(port:8090);
         assertNotNull(launcher);
         
         launcher.start();
@@ -59,9 +72,7 @@ public class WebAppRunnerTest {
         
     @Test
     public void testStartSecondaryWar() {
-        WebAppRunner launcher = new WebAppRunner(new LocalManagementContext(), 
-            port: 8090, war:"brooklyn.war", wars:["hello":"hello-world.war"],
-            attributes:[(BrooklynServiceAttributes.BROOKLYN_AUTOLOGIN_USERNAME):'admin']);
+        WebAppRunner launcher = createLauncher(port:8090, war:"brooklyn.war", wars:["hello":"hello-world.war"]);
         assertNotNull(launcher);
         
         launcher.start();

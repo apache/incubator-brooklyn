@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.Group;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEventListener;
 import brooklyn.management.SubscriptionContext;
@@ -39,7 +40,14 @@ public class SubscriptionTracker {
         subscriptions.put(parent, handle);
         return handle;
     }
-    
+
+    /** @see SubscriptionContext#subscribeToMembers(Entity, Sensor, SensorEventListener) */
+    public <T> SubscriptionHandle subscribeToMembers(Group parent, Sensor<T> sensor, SensorEventListener<? super T> listener) {
+        SubscriptionHandle handle = subscription.subscribeToMembers(parent, sensor, listener);
+        subscriptions.put(parent, handle);
+        return handle;
+    }    
+
     /**
      * Unsubscribes the given producer.
      *

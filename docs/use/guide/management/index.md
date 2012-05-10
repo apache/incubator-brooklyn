@@ -109,14 +109,28 @@ The Detail view contains a breadcrumb trail, showing the current entitiy's posit
 
 ### Security
 
+Security providers can be configured by specifying `brooklyn.security.provider` equal 
+to the name of a class implementing `SecurityProvider`.
+An implementation of this could point to Spring, LDAP, OpenID or another identity management system.
 
-In this release only two Spring Security users are created: user and admin. Only the admin user has access to the Management Console.
+The default implementation, `ExplicitUsersSecurityProvider`, reads from a list of users and passwords
+which should be specified as configuration parameters e.g. in `brooklyn.properties`.
+This configuration could look like:
 
-Admin access: 	username: *admin*, password: *password*.
+{% highlight properties %}
+brooklyn.security.explicit.users=admin
+brooklyn.security.explicit.user.admin=password
+{% endhighlight %}
 
-User access: 	username: *user*, password: *password*.
+The `users` line should contain a comma-separated list. The special value `*` is accepted to permit all users.
+If no values are specified at all the above setting (`admin`/`password`) is used by default.
 
-In future releases it will be possible to add and configure users. 
+If not using the web console, you should specify
+`brooklyn.security.provider=brooklyn.web.console.security.BlackholeSecurityProvider` to prevent inadvertant logins.
+During dev/test you can specify `brooklyn.security.provider=brooklyn.web.console.security.AnyoneSecurityProvider`
+to allow logins with no credentials. 
+
+ 
 
 <a name="observation-other"></a>
 Other Ways to Observe Activity

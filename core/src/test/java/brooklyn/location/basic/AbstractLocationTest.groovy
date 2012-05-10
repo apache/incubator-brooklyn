@@ -9,7 +9,8 @@ import brooklyn.util.flags.SetFromFlag;
 public class AbstractLocationTest {
 
     private static class ConcreteLocation extends AbstractLocation {
-		@SetFromFlag String myfield
+		@SetFromFlag(defaultVal="mydefault")
+        String myfield
 		
         ConcreteLocation(Map properties = [:]) {
             super(properties)
@@ -106,5 +107,11 @@ public class AbstractLocationTest {
     public void testFieldSetFromFlag() {
         AbstractLocation loc = new ConcreteLocation(id: "3", myfield: "myval");
         assertEquals(loc.myfield, "myval")
+    }
+    
+    @Test
+    public void testFieldSetFromFlagUsesDefault() {
+        AbstractLocation loc = new ConcreteLocation(id: "3");
+        assertEquals(loc.myfield, "mydefault")
     }
 }

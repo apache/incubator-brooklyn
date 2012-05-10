@@ -1,0 +1,30 @@
+# Config file for the Brooklyn REST endpoint
+
+stopApplicationsOnExit: true
+
+# A list of locations that are automatically registered when the server starts
+locations:
+
+  # Allow the deployment of services on the machine running the REST endpoint
+  - provider: localhost
+    identity: ""
+    credential: ""
+    location: localhost
+
+  # Dummy aws-ec2 like location
+  - provider: aws-ec2
+    identity: ADS45345
+    credential: GIOM34590
+    location: eu-west-1
+
+executor:
+  corePoolSize: 2
+  maximumPoolSize: 16
+  keepAliveTimeInSeconds: 120
+
+# Logging settings
+
+logging:
+  console:
+    enabled: true
+    threshold: ALL

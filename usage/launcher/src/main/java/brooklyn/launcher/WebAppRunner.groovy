@@ -47,7 +47,8 @@ public class WebAppRunner {
      * attrs (map of attribute-name : object pairs passed to the servlet) */
     public WebAppRunner(Map flags=[:], ManagementContext managementContext) {
         this.managementContext = managementContext
-        FlagUtils.setFieldsFromFlags(flags, this);
+        Map leftovers = FlagUtils.setFieldsFromFlags(flags, this);
+        if (leftovers) log.warn("Ignoring unknown flags "+leftovers);
     }
     public WebAppRunner(ManagementContext managementContext,  int port, String warUrl="brooklyn.war") {
         this(managementContext, port:port, war:warUrl);

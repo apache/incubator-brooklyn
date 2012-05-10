@@ -279,7 +279,8 @@ public class SshjToolLiveTest {
 
         String lsout = execCommands([ "ls -l "+remoteFilePath]);//+" | awk '{print \$6 \" \" \$7 \" \" \$8}'"])
         //execCommands([ "ls -l "+remoteFilePath+" | awk '{print \$6 \" \" \$7 \" \" \$8}'"])
-        assertTrue(lsout.contains("Jan 15  1970"), lsout)
+        //varies depending on timezone
+        assertTrue(lsout.contains("Jan 15  1970") || lsout.contains("Jan 14  1970") || lsout.contains("Jan 16  1970"), lsout)
         //assertLastModified(lsout, lastModifiedDate)
     }
     

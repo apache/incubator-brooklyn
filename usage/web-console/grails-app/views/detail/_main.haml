@@ -19,8 +19,7 @@
         #summary-groups
         #summary-activity
     #sensors{:tabindex=>"1"}
-        .sensor-table
-            %table{:id=>"sensor-data", :class=>"tab-content-table"}
+        %g:render{:template=>"detail-tabs/sensors"}
     #effectors{:tabindex=>"2"}
         %g:render{:template=>"detail-tabs/effectors"}
     #location{:tabindex=>"3"}
