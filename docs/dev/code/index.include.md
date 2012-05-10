@@ -35,7 +35,7 @@ Brooklyn is split into the following projects and subprojects:
     * **all**: maven project to supply a shaded JAR (containing all dependencies) for convenience 
     * **scripts**: various scripts useful for building, updating, etc. (see comments in the scripts)
 * **``docs``**: the markdown source code for this documentation, as described [here]({{site.url}}/dev/tips/update-docs.html)
-* **``examples``**: some canonical examples, as listed [here]({{site.url}}/examples)
+* **``examples``**: some canonical examples, as listed [here]({{site.url}}/use/examples)
 * **``sandbox``**: various projects, entities, and policies which the Brooklyn Project is incubating
 
  

@@ -94,6 +94,6 @@ web-only cluster (no database) in ``WebClusterExample``.
 
 The webapp that is used is included under ``examples/hello-world-webapp``.
 
-You may wish to check out the [Global Web Fabric example](../global-web-fabric) next.
+You may wish to check out the [Global Web Fabric example]({{ site.url }}/use/examples/global-web-fabric/) next.
 
 If you encounter any difficulties, please [tell us]({{ site.url }}/meta/contact.html) and we'll do our best to help.
