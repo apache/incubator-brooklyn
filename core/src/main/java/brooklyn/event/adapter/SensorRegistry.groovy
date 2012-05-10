@@ -27,7 +27,7 @@ public class SensorRegistry {
     final EntityLocal entity
 
     /**
-     * @deprecated will be deleted in 0.5
+     * @deprecated in 0.4. use new SensorAdapter model.
      */
 	@Deprecated
     final Map<?, ?> properties  = [
@@ -36,19 +36,26 @@ public class SensorRegistry {
         ]
 
     /**
-     * @deprecated will be deleted in 0.5
+     * @deprecated in 0.4. use new SensorAdapter model.
      */
 	@Deprecated
-    ScheduledExecutorService exec = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors())
-
+    private ScheduledExecutorService _exec = null;
+    synchronized ScheduledExecutorService getExec() {
+        if (_exec==null) {
+            log.warn("using legacy executor service sensor model in $entity .  class should be updated to use adapters.");
+            _exec = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
+        }
+        return _exec;
+    }
+    
     /**
-     * @deprecated  will be deleted in 0.5
+     * @deprecated in 0.4. use new SensorAdapter model.
      */
 	@Deprecated
     private final Map<AttributeSensor, ValueProvider> providers = [:]
 
     /**
-     * @deprecated will be deleted in 0.5
+     * @deprecated in 0.4. use new SensorAdapter model.
      */
     @Deprecated
     private final Map<AttributeSensor, ScheduledFuture> scheduled = [:]
@@ -97,7 +104,7 @@ public class SensorRegistry {
 	}
 
     /**
-     * @deprecated will be deleted in 0.5
+     * @deprecated in 0.4. use new SensorAdapter model.
     */
 	@Deprecated
     public <T> void addSensor(AttributeSensor<T> sensor, ValueProvider<? extends T> provider) {
@@ -105,7 +112,7 @@ public class SensorRegistry {
     }
 
     /**
-     * @deprecated will be deleted in 0.5
+     * @deprecated in 0.4. use new SensorAdapter model.
      */
 	@Deprecated
     public <T> void addSensor(AttributeSensor<T> sensor, ValueProvider<? extends T> provider, long period) {
@@ -128,7 +135,7 @@ public class SensorRegistry {
     }
 
     /**
-      * @deprecated will be deleted in 0.5
+      * @deprecated in 0.4. use new SensorAdapter model.
       */
 	@Deprecated
     public <T> void removeSensor(AttributeSensor<T> sensor) {
@@ -138,7 +145,7 @@ public class SensorRegistry {
     }
 
     /**
-      * @deprecated will be deleted in 0.5
+      * @deprecated in 0.4. use new SensorAdapter model.
       */
 	@Deprecated
     private void updateAll() {
@@ -152,7 +159,7 @@ public class SensorRegistry {
     }
 
     /**
-      * @deprecated will be deleted in 0.5
+      * @deprecated in 0.4. use new SensorAdapter model.
       */
 	@Deprecated
     private void update(Sensor sensor) {
