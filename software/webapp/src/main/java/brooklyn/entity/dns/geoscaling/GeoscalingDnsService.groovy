@@ -6,6 +6,7 @@ import static com.google.common.base.Preconditions.*
 import java.util.Map
 import java.util.Set
 
+import brooklyn.config.render.RendererHints
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.Lifecycle
 import brooklyn.entity.dns.AbstractGeoDnsService
@@ -33,8 +34,10 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
     
     public static final BasicAttributeSensor GEOSCALING_ACCOUNT =
         [ String, "geoscaling.account", "Active user account for the GeoScaling.com service" ];
-    public static final BasicAttributeSensor MANAGED_DOMAIN =
-        [ String, "geoscaling.managed.domain", "Fully qualified domain name that will be geo-redirected" ];
+    public static final BasicAttributeSensor<String> MANAGED_DOMAIN =
+        ([ String, "geoscaling.managed.domain", "Fully qualified domain name that will be geo-redirected" ] as BasicAttributeSensor<String>).with {
+        RendererHints.register(it, new RendererHints.NamedActionWithUrl("Open", { "http://"+it+"/" }));
+    };
 
     // Must remember any desired redirection targets if they're specified before configure() has been called.
     private Set<HostGeoInfo> rememberedTargetHosts;
