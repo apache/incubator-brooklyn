@@ -32,15 +32,8 @@ public class SensorRegistry {
             connectDelay : 1000
         ]
  
-	@Deprecated /** @deprecated new sensor "adapter" model used, with scheduled tasks */
-    private ScheduledExecutorService _exec = null;
-    synchronized ScheduledExecutorService getExec() {
-        if (_exec==null) {
-            log.warn("using legacy executor service sensor model in $entity .  class should be updated to use adapters.");
-            _exec = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
-        }
-        return _exec;
-    }
+	@Deprecated
+    ScheduledExecutorService exec = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors())
  
 	@Deprecated
     private final Map<AttributeSensor, ValueProvider> providers = [:]
@@ -90,12 +83,12 @@ public class SensorRegistry {
 		scheduled.each { key, ScheduledFuture future -> future.cancel(true) }
 	}
 
-	@Deprecated /** @deprecated new sensor "adapter" model used, with scheduled tasks */
+	@Deprecated
     public <T> void addSensor(AttributeSensor<T> sensor, ValueProvider<? extends T> provider) {
         addSensor(sensor, provider, properties.period)
     }
 
-	@Deprecated /** @deprecated new sensor "adapter" model used, with scheduled tasks */
+	@Deprecated
     public <T> void addSensor(AttributeSensor<T> sensor, ValueProvider<? extends T> provider, long period) {
         if (log.isDebugEnabled()) log.debug "adding calculated sensor {} with delay {} to {}", sensor.name, period, entity
         providers.put(sensor, provider)
@@ -115,14 +108,14 @@ public class SensorRegistry {
         scheduled[sensor] = exec.scheduleWithFixedDelay(safeCalculate, 0L, period, TimeUnit.MILLISECONDS)
     }
 
-	@Deprecated /** @deprecated new sensor "adapter" model used, with scheduled tasks */
+	@Deprecated
     public <T> void removeSensor(AttributeSensor<T> sensor) {
         if (log.isDebugEnabled()) log.debug "removing sensor {} from {}", sensor.name, entity
         providers.remove(sensor)
         scheduled.remove(sensor)?.cancel(true)
     }
 
-	@Deprecated /** @deprecated new sensor "adapter" model used, with scheduled tasks */
+	@Deprecated
     private void updateAll() {
         if (log.isDebugEnabled()) log.debug "updating all sensors for {}", entity
         providers.each {
@@ -133,7 +126,7 @@ public class SensorRegistry {
             }
     }
     
-	@Deprecated /** @deprecated new sensor "adapter" model used, with scheduled tasks */
+	@Deprecated
     private void update(Sensor sensor) {
         if (!providers.containsKey(sensor)) throw new IllegalStateException("Sensor ${sensor.name} not found");
         ValueProvider<?> provider = providers.get(sensor)
