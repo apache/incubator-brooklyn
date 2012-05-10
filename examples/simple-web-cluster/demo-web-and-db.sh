@@ -57,14 +57,9 @@ fi
 
 export CP=$CLASSPATH:$BROOKLYN_THIS_JAR:$BROOKLYN_ALL_JAR
 
-if [ $# -gt 0 ]; then
-    ARGS="$*"
-else
-    ARGS="localhost"
-    JAVA_OPTS="-Dbrooklyn.localhost.address=127.0.0.1 $JAVA_OPTS"
-fi
+JAVA_OPTS="-Dbrooklyn.localhost.address=127.0.0.1 $JAVA_OPTS"
 
-echo running demo for $CLASS from $CP at $ARGS
-echo java $JAVA_OPTS -cp "$CP" $CLASS $ARGS
+echo running demo for $CLASS from $CP at $@
+echo java $JAVA_OPTS -cp "$CP" $CLASS $@
 
-java $JAVA_OPTS -cp "$CP" $CLASS $ARGS
+java $JAVA_OPTS -cp "$CP" $CLASS $@
