@@ -21,7 +21,8 @@ public class SerializeHelloWorldHadoopJar {
     
     public static final Logger LOG = LoggerFactory.getLogger(SerializeHelloWorldHadoopJar.class);
     
-    private static AtomicBoolean initialized = new AtomicBoolean(true);
+    private static final String JAR_RESOURCE_NAME = "brooklyn-example-hello-world-hadoop-jar.jar";
+    private static AtomicBoolean initialized = new AtomicBoolean(false);
     private static String jarFileName;
     
     public static void init() {
@@ -29,9 +30,9 @@ public class SerializeHelloWorldHadoopJar {
         synchronized (initialized) {
             if (initialized.get()) return;
             try {
-                URL u = SerializeHelloWorldHadoopJar.class.getClassLoader().getResource("brooklyn-example-hello-world-hadoop-jar.jar");
+                URL u = SerializeHelloWorldHadoopJar.class.getClassLoader().getResource(JAR_RESOURCE_NAME);
                 if (u==null) {
-                    throw new FileNotFoundException("jar not on classpath");
+                    throw new FileNotFoundException("jar "+JAR_RESOURCE_NAME+" not on classpath");
                 } else {
                     OutputStream out = new FileOutputStream("/tmp/brooklyn-example-hello-world-hadoop-jar.jar");
                     copy(u.openStream(), out);
@@ -39,7 +40,7 @@ public class SerializeHelloWorldHadoopJar {
                     jarFileName = "/tmp/brooklyn-example-hello-world-hadoop-jar.jar";
                 }
             } catch (Exception e) {
-                LOG.warn("Cannot copy brooklyn-example-hello-world-hadoop-jar.jar; hadoop will fail: "+e);
+                LOG.warn("Cannot copy "+JAR_RESOURCE_NAME+"; hadoop will likely fail: "+e);
             }
             initialized.set(true);
         }
