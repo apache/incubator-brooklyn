@@ -18,6 +18,13 @@ class JavaAppUtils {
 
     private static final Logger log = LoggerFactory.getLogger(SoftwareProcessEntity.class)
     
+    /* TODO we should switch to:
+     * 
+     *  attribute("HeapMemoryUsage").then( { CompositeData m -> MemoryUsage.from(m) }).with {
+     *      subscribe(UsesJavaMXBeans.USED_HEAP_MEMORY, { it?.getUsed() });
+     *      subscribe(...);
+     *  }
+     */
     public static void connectMXBeanSensors(EntityLocal entity, JmxSensorAdapter jmxAdapter) {
         
         if (entity.getConfig(UsesJavaMXBeans.MXBEAN_STATS_ENABLED)) {
