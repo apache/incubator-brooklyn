@@ -74,18 +74,20 @@ public class WhirrCluster extends AbstractEntity implements Startable {
 		StringBuilder nodes = []
 		nodes.with {
 			append "nodes:\n"
-			append "    - id: localhost\n"
-			append "      name: local machine\n"
-			append "      hostname: 127.0.0.1\n"
-			append "      os_arch: "+System.getProperty("os.arch")+"\n"
-			append "      os_family: "+OsFamily.UNIX+"\n"
-			append "      os_description: "+System.getProperty("os.name")+"\n"
-			append "      os_version: "+System.getProperty("os.version")+"\n"
-			append "      group: whirr\n"
-			append "      tags:\n"
-			append "          - local\n"
-			append "      username: "+System.getProperty("user.name")+"\n" //NOTE: needs passwordless sudo!!!
-			append "      credential_url: file://"+System.getProperty("user.home")+"/.ssh/id_rsa\n"
+            for (int i=0; i<=9; i++) {
+                append "    - id: localhost"+i+"\n"
+                append "      name: local machine "+i+"\n"
+                append "      hostname: 127.0.0.1\n"
+                append "      os_arch: "+System.getProperty("os.arch")+"\n"
+                append "      os_family: "+OsFamily.UNIX+"\n"
+                append "      os_description: "+System.getProperty("os.name")+"\n"
+                append "      os_version: "+System.getProperty("os.version")+"\n"
+                append "      group: whirr\n"
+                append "      tags:\n"
+                append "          - local\n"
+                append "      username: "+System.getProperty("user.name")+"\n" //NOTE: needs passwordless sudo!!!
+                append "      credential_url: file://"+System.getProperty("user.home")+"/.ssh/id_rsa\n"
+            }
 		}
 		
 		//provide the BYON nodes to whirr
