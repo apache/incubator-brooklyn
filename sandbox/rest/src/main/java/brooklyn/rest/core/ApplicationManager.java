@@ -113,7 +113,7 @@ public class ApplicationManager implements Managed {
             public Location apply(String ref) {
               LocationSpec locationSpec = locationStore.getByRef(ref);
               if (locationSpec.getProvider().equals("localhost")) {
-                return new LocalhostMachineProvisioningLocation();
+                return new LocalhostMachineProvisioningLocation(locationSpec.getConfig());
               }
 
               Map<String, String> config = Maps.newHashMap();

@@ -13,7 +13,7 @@ locations:
     config:
       identity: ADS45345
       credential: GIOM34590
-      locationSpec: eu-west-1
+      location: eu-west-1
       userName: ''
       sshPublicKey: ''
       sshPrivateKey: ''
@@ -26,6 +26,10 @@ executor:
 # Logging settings
 
 logging:
+  level: INFO
   console:
     enabled: true
-    threshold: ALL
+    threshold: INFO
+  loggers:
+    brooklyn.util.internal.ssh: ERROR
+    net.schmizz.sshj: ERROR

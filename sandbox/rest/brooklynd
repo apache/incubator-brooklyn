@@ -1,0 +1,2 @@
+#! /bin/bash
+java -jar target/brooklyn-rest-SANDBOX-*-SNAPSHOT.jar $@
