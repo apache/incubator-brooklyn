@@ -74,9 +74,10 @@ public class WhirrCluster extends AbstractEntity implements Startable {
 		StringBuilder nodes = []
 		nodes.with {
 			append "nodes:\n"
-            for (int i=0; i<=9; i++) {
-                append "    - id: localhost"+i+"\n"
-                append "      name: local machine "+i+"\n"
+            for (int i=0; i<10; i++) {
+                String mid = (i==0?"":(""+(i+1)));
+                append "    - id: localhost"+mid+"\n"
+                append "      name: local machine "+mid+"\n"
                 append "      hostname: 127.0.0.1\n"
                 append "      os_arch: "+System.getProperty("os.arch")+"\n"
                 append "      os_family: "+OsFamily.UNIX+"\n"
