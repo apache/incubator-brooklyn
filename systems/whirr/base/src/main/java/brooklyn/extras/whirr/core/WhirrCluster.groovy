@@ -33,17 +33,17 @@ public class WhirrCluster extends AbstractEntity implements Startable {
 
     @SetFromFlag("recipe")
     public static final BasicConfigKey<String> RECIPE =
-        [String, "whirr.recipe", "Apache Whirr cluster recipe"]
+            [String, "whirr.recipe", "Apache Whirr cluster recipe"]
 
     public static final BasicAttributeSensor<String> CLUSTER_NAME =
-        [String, "whirr.cluster.name", "Name of the Whirr cluster"]
+            [String, "whirr.cluster.name", "Name of the Whirr cluster"]
 
     protected ClusterController _controller = null
     protected ClusterSpec clusterSpec = null
     protected Cluster cluster = null
 
     protected Location location = null
-    
+
     /**
      * General entity initialisation
      */
@@ -51,29 +51,29 @@ public class WhirrCluster extends AbstractEntity implements Startable {
         super(flags, owner)
     }
 
-	/**
-	 * Apache Whirr can only start and manage a cluster in a single location
-	 *
-	 * @param locations
-	 */
-	void start(Collection<? extends Location> locations) {
-		location = getOnlyElement(locations)
-		startInLocation(location)
-	}
+    /**
+     * Apache Whirr can only start and manage a cluster in a single location
+     *
+     * @param locations
+     */
+    void start(Collection<? extends Location> locations) {
+        location = getOnlyElement(locations)
+        startInLocation(location)
+    }
 
-	/**
-	* Start a cluster as specified in the recipe on localhost
-	*
-	* @param location corresponding to localhost
-	*/
-	void startInLocation(LocalhostMachineProvisioningLocation location) {
-		
-		PropertiesConfiguration config = new PropertiesConfiguration()
-		config.load(new StringReader(getConfig(RECIPE)))
-   		
-		StringBuilder nodes = []
-		nodes.with {
-			append "nodes:\n"
+    /**
+     * Start a cluster as specified in the recipe on localhost
+     *
+     * @param location corresponding to localhost
+     */
+    void startInLocation(LocalhostMachineProvisioningLocation location) {
+
+        PropertiesConfiguration config = new PropertiesConfiguration()
+        config.load(new StringReader(getConfig(RECIPE)))
+
+        StringBuilder nodes = []
+        nodes.with {
+            append "nodes:\n"
             for (int i=0; i<10; i++) {
                 String mid = (i==0?"":(""+(i+1)));
                 append "    - id: localhost"+mid+"\n"
@@ -89,84 +89,84 @@ public class WhirrCluster extends AbstractEntity implements Startable {
                 append "      username: "+System.getProperty("user.name")+"\n" //NOTE: needs passwordless sudo!!!
                 append "      credential_url: file://"+System.getProperty("user.home")+"/.ssh/id_rsa\n"
             }
-		}
-		
-		//provide the BYON nodes to whirr
-		config.setProperty("jclouds.byon.nodes", nodes.toString())
-   
-		clusterSpec = new ClusterSpec(config)
-   
-		clusterSpec.setServiceName("byon")
-		clusterSpec.setProvider("byon")
-		clusterSpec.setIdentity("notused")
-		clusterSpec.setCredential("notused")
-		clusterSpec.setLocationId("byon");
-   
-		log.info("Starting cluster with roles " + config.getProperty("whirr.instance-templates")
-						   + " in location " + location)
-   
-		startWithClusterSpec(clusterSpec);
-	}
-	
-	/**
-	 * Start a cluster as specified in the recipe in a given location
-	 *
-	 * @param location jclouds location spec
-	 */
-	void startInLocation(JcloudsLocation location) {
-		PropertiesConfiguration config = new PropertiesConfiguration()
-		config.load(new StringReader(getConfig(RECIPE)))
+        }
 
-		clusterSpec = new ClusterSpec(config)
-		clusterSpec.setProvider(location.getConf().provider)
-		clusterSpec.setIdentity(location.getConf().identity)
-		clusterSpec.setCredential(location.getConf().credential)
-		clusterSpec.setLocationId(location.getConf().providerLocationId)
-		clusterSpec.setPrivateKey((File)location.getPrivateKeyFile());
-		clusterSpec.setPublicKey((File)location.getPublicKeyFile());
-		// TODO: also add security groups when supported in the Whirr trunk
-		
-		log.info("Starting cluster with roles " + config.getProperty("whirr.instance-templates")
-				+ " in location " + location)
+        //provide the BYON nodes to whirr
+        config.setProperty("jclouds.byon.nodes", nodes.toString())
 
-		startWithClusterSpec(clusterSpec);
-	}
-	
+        clusterSpec = new ClusterSpec(config)
+
+        clusterSpec.setServiceName("byon")
+        clusterSpec.setProvider("byon")
+        clusterSpec.setIdentity("notused")
+        clusterSpec.setCredential("notused")
+        clusterSpec.setLocationId("byon");
+
+        log.info("Starting cluster with roles " + config.getProperty("whirr.instance-templates")
+                + " in location " + location)
+
+        startWithClusterSpec(clusterSpec);
+    }
+
+    /**
+     * Start a cluster as specified in the recipe in a given location
+     *
+     * @param location jclouds location spec
+     */
+    void startInLocation(JcloudsLocation location) {
+        PropertiesConfiguration config = new PropertiesConfiguration()
+        config.load(new StringReader(getConfig(RECIPE)))
+
+        clusterSpec = new ClusterSpec(config)
+        clusterSpec.setProvider(location.getConf().provider)
+        clusterSpec.setIdentity(location.getConf().identity)
+        clusterSpec.setCredential(location.getConf().credential)
+        clusterSpec.setLocationId(location.getConf().providerLocationId)
+        clusterSpec.setPrivateKey((File)location.getPrivateKeyFile());
+        clusterSpec.setPublicKey((File)location.getPublicKeyFile());
+        // TODO: also add security groups when supported in the Whirr trunk
+
+        log.info("Starting cluster with roles " + config.getProperty("whirr.instance-templates")
+                + " in location " + location)
+
+        startWithClusterSpec(clusterSpec);
+    }
+
     synchronized ClusterController getController() {
         if (_controller==null) {
             _controller = new ClusterControllerFactory().create(clusterSpec?.getServiceName());
         }
         return _controller;
     }
-    
-	private void startWithClusterSpec(ClusterSpec clusterSpec) {
-		cluster = controller.launchCluster(clusterSpec)
-		
-		for (Cluster.Instance instance : cluster.getInstances()) {
-			log.info("Creating group for instance " + instance.id)
-			def rolesGroup = new AbstractGroup(displayName: "Instance:" + instance.id, this) {}
-			for (String role: instance.roles) {
-				log.info("Creating entity for '" + role + "' on instance " + instance.id)
-				rolesGroup.addOwnedChild(new WhirrRole(displayName: "Role:" + role, role: role, rolesGroup))
-			}
-			addGroup(rolesGroup)
-		}
-        
+
+    private void startWithClusterSpec(ClusterSpec clusterSpec) {
+        cluster = controller.launchCluster(clusterSpec)
+
+        for (Cluster.Instance instance : cluster.getInstances()) {
+            log.info("Creating group for instance " + instance.id)
+            def rolesGroup = new AbstractGroup(displayName: "Instance:" + instance.id, this) {}
+            for (String role: instance.roles) {
+                log.info("Creating entity for '" + role + "' on instance " + instance.id)
+                rolesGroup.addOwnedChild(new WhirrRole(displayName: "Role:" + role, role: role, rolesGroup))
+            }
+            addGroup(rolesGroup)
+        }
+
         setAttribute(CLUSTER_NAME, clusterSpec.getClusterName());
         setAttribute(SERVICE_UP, true);
-	}
+    }
 
-	void stop() {
-		if (clusterSpec != null) {
-			controller.destroyCluster(clusterSpec)
-		}
-		clusterSpec = null
-		cluster = null
-	}
+    void stop() {
+        if (clusterSpec != null) {
+            controller.destroyCluster(clusterSpec)
+        }
+        clusterSpec = null
+        cluster = null
+    }
 
-	void restart() {
-		// TODO better would be to restart the software instances, not the machines ?
-		stop();
-		start([location]); 
-	}
+    void restart() {
+        // TODO better would be to restart the software instances, not the machines ?
+        stop();
+        start([location]);
+    }
 }
