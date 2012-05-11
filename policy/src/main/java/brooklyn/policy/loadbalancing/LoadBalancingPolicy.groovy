@@ -46,8 +46,8 @@ public class LoadBalancingPolicy extends AbstractPolicy {
     
     private static final Logger LOG = LoggerFactory.getLogger(LoadBalancingPolicy.class)
     
-    @SetFromFlag // TODO not respected for policies? I had to look this up in the constructor
-    private long minPeriodBetweenExecs = 100
+    @SetFromFlag(defaultVal="100")
+    private long minPeriodBetweenExecs
     
     private final AttributeSensor<? extends Number> metric
     private final String lowThresholdConfigKeyName
@@ -104,7 +104,6 @@ public class LoadBalancingPolicy extends AbstractPolicy {
         this.highThresholdConfigKeyName = metric.getName()+".threshold.high"
         this.model = model
         this.strategy = new BalancingStrategy<Entity, Object>(getName(), model) // TODO: extract interface, inject impl
-        this.minPeriodBetweenExecs = props.minPeriodBetweenExecs ?: 100
     }
     
     @Override
