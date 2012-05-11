@@ -49,6 +49,7 @@ import brooklyn.util.task.BasicExecutionContext
 import com.google.common.base.Equivalences.Equals;
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.Iterables
+import com.google.common.primitives.Primitives;
 
 /**
  * Default {@link Entity} implementation.
@@ -291,14 +292,9 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
                             //normal field, not a config key
                             String flagName = cf.value() ?: f.getName();
                             if (flagName && flags.containsKey(flagName)) {
-                                Object v, value;
-                                try {
-                                    v = flags.remove(flagName);
-                                    value = TypeCoercions.coerce(v, f.getType());
-                                    FlagUtils.setField(this, f, value, cf)
-                                } catch (Exception e) {
-                                    throw new IllegalArgumentException("Cannot coerce or set "+v+" / "+value+" to "+f, e)
-                                }
+                                FlagUtils.setField(this, f, flags.remove(flagName), cf)
+                            } else if (cf.defaultVal()) {
+                                FlagUtils.setField(this, f, cf.defaultVal(), cf)
                             } else if (!flagName) {
                                 LOG.warn "Unsupported {} on {} in {}; ignoring", SetFromFlag.class.getSimpleName(), f, this
                             }

@@ -87,20 +87,6 @@ log4j = {
            'net.sf.ehcache.hibernate'
 
     warn   'org.mortbay.log'
+
+    info   'brooklyn'
 }
-
-// Added by the Spring Security Core plugin:
-grails.plugins.springsecurity.userLookup.userDomainClassName = 'brooklyn.web.console.SecurityUser'
-grails.plugins.springsecurity.userLookup.authorityJoinClassName = 'brooklyn.web.console.SecurityUserRole'
-grails.plugins.springsecurity.authority.className = 'brooklyn.web.console.SecurityRole'
-
-grails.plugins.springsecurity.useBasicAuth = true
-grails.plugins.springsecurity.basic.realmName = "Brooklyn Web Console"
-
-grails.plugins.springsecurity.successHandler.defaultTargetUrl = "/dashboard"
-
-grails.plugins.springsecurity.controllerAnnotations.staticRules = [
-   '/dashboard/**': ['ROLE_ADMIN'],
-   '/detail/**': ['ROLE_ADMIN'],
-   '/entity/**': ['ROLE_ADMIN']
-]

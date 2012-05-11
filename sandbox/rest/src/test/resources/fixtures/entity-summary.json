@@ -1,0 +1,3 @@
+{"type":"brooklyn.entity.nosql.redis.RedisStore", "links":{
+  "self":"/v1/applications/redis-app/entities/redis-ent"
+}}

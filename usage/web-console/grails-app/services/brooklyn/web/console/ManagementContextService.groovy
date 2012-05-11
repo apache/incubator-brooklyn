@@ -11,6 +11,8 @@ import java.util.concurrent.atomic.AtomicLong
 import org.codehaus.groovy.grails.web.context.ServletContextHolder
 
 class ManagementContextService {
+    static transactional = false
+    
     private ManagementContext managementContext
     protected static AtomicLong ID_GENERATOR = new AtomicLong(0L)
 
@@ -27,7 +29,7 @@ class ManagementContextService {
             managementContext = (ManagementContext) ServletContextHolder.servletContext?.
                 getAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT)
         }
-        // TODO remove this test code as soon as the group agrees it's unnecessary!
+        // TODO use a different mechanism for specifying test-app
         if (!managementContext) {
             managementContext = new LocalManagementContext();
             managementContext.manage(new TestWebApplication())

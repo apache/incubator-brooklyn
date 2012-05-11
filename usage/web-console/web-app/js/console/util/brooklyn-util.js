@@ -51,6 +51,8 @@ Brooklyn.util = (function(){
 // NOTE: You can simply call getDataTable(id) once the table is initialized
 
     function getDataTable(id, sAjaxDataProp, aoColumns, clickCallback, data, paginate) {
+        // TODO looks like paginate argument not used (?) -- remove?
+      
         var table = $(id).dataTable( {
                 "bRetrieve": true, // return existing table if initialized
                 "bAutoWidth": false,
@@ -68,8 +70,9 @@ Brooklyn.util = (function(){
         }
 
         if (data) {
-            table.fnClearTable();
+            table.fnClearTable(false);
             table.fnAddData(data);
+            
         }
 
         return table;

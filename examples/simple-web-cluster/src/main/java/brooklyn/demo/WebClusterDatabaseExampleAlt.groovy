@@ -39,7 +39,7 @@ public class WebClusterDatabaseExampleAlt extends AbstractApplication {
 
     public static final String DEFAULT_LOCATION = "localhost"
 
-    public static final String WAR_PATH = "classpath://hello-world-webapp.war"
+    public static final String WAR_PATH = "classpath://hello-world-sql-webapp.war"
     
     public static final String DB_USERNAME = "brooklyn"
     public static final String DB_PASSWORD = "br00k11n"
