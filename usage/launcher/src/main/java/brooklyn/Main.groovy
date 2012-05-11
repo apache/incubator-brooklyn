@@ -29,10 +29,19 @@ public class Main {
         
         // Parse command line args
         List args = new ArrayList(Arrays.asList(argv))
+        int numArgs = args.size()
         int port = CommandLineUtil.getCommandLineOptionInt(args, "--port", 8081)
         String scriptFileName = CommandLineUtil.getCommandLineOption(args, "--script")
         String applicationClassName = CommandLineUtil.getCommandLineOption(args, "--application")
         String location = CommandLineUtil.getCommandLineOption(args, "--location")
+        
+        // If no args, then print usage info
+        if(numArgs<=1) {
+            System.out.println("Usage:")
+            System.out.println("% export BROOKLYN_CLASSPATH=/path/to/my/application/classes")
+            System.out.println("% ./brooklyn.sh [--script GROOVY_FILE | --application CLASS_NAME] --location COMMA_SEPARATED_LIST")
+            System.exit(0)
+        }
         
         // Figure out the location(s) where to launch the application
         List<String> locs = Arrays.asList(location.split("\\s*,\\s*"));

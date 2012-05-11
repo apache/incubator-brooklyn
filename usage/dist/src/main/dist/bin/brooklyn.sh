@@ -2,6 +2,7 @@
 #
 # Brooklyn
 #
+
 #set -x # debug
 
 ROOT=$(cd $(dirname $0) && pwd)
@@ -13,7 +14,8 @@ if [ -z "${JAVA_OPTS}" ] ; then
     JAVA_OPTS="-Xmx256m -Xmx1g -XX:MaxPermSize=256m"
 fi
 
-CLASSPATH="${CLASSPATH:-.}:../lib/*"
+CLASSPATH="${CLASSPATH:-.}:${BROOKLYN_CLASSPATH}:../lib/*"
+
 
 if [ $# -ne 0 ]; then
     ARGS="$*"
