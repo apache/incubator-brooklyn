@@ -3,87 +3,83 @@ package brooklyn.rest.resources;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.policy.basic.AbstractPolicy;
-import com.google.common.base.Function;
 import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableSet;
-import static com.google.common.collect.Iterables.filter;
-import static com.google.common.collect.Iterables.transform;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import static com.google.common.collect.Sets.filter;
 import com.yammer.dropwizard.logging.Log;
+import groovy.lang.GroovyClassLoader;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
+import java.net.URI;
 import java.util.Map;
-import java.util.Set;
 import javax.annotation.Nullable;
+import javax.validation.Valid;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import org.reflections.Reflections;
 
 @Path("/v1/catalog")
 @Produces(MediaType.APPLICATION_JSON)
 public class CatalogResource extends BaseResource {
 
-  private static final Log LOG = Log.forClass(CatalogResource.class);
-
-  private final Set<String> entities;
-  private final Set<String> policies;
+  private final Map<String, Class<? extends AbstractEntity>> entities = Maps.newConcurrentMap();
+  private final Map<String, Class<? extends AbstractPolicy>> policies = Maps.newConcurrentMap();
 
   public CatalogResource() {
-    Reflections reflections = new Reflections("brooklyn");
-
-    entities = loadListOfEntities(reflections);
-    policies = loadListOfPolicies(reflections);
+    entities.putAll(buildMapOfSubTypesOf("brooklyn", AbstractEntity.class));
+    policies.putAll(buildMapOfSubTypesOf("brooklyn", AbstractPolicy.class));
   }
 
-  private Set<String> loadListOfPolicies(Reflections reflections) {
-    LOG.trace("Building a catalog of policies from the classpath");
-    return ImmutableSet.copyOf(transform(filter(
-        reflections.getSubTypesOf(AbstractPolicy.class),
-        new Predicate<Class<? extends AbstractPolicy>>() {
-          @Override
-          public boolean apply(Class<? extends AbstractPolicy> aClass) {
-            return !Modifier.isAbstract(aClass.getModifiers()) &&
-                !aClass.isInterface() && !aClass.isAnonymousClass();
-          }
-        }),
-        new Function<Class<? extends AbstractPolicy>, String>() {
-          @Override
-          public String apply(Class<? extends AbstractPolicy> aClass) {
-            LOG.trace("Found policy '{}'", aClass.getName());
-            return aClass.getName();
-          }
-        }
-    ));
-  }
-
-  private Set<String> loadListOfEntities(Reflections reflections) {
-    LOG.trace("Building a catalog of startable entities from the classpath");
-    return ImmutableSet.copyOf(transform(filter(
-        reflections.getSubTypesOf(AbstractEntity.class),
-        new Predicate<Class<? extends EntityLocal>>() {
-          @Override
-          public boolean apply(@Nullable Class<? extends EntityLocal> aClass) {
-            return !Modifier.isAbstract(aClass.getModifiers()) &&
-                !aClass.isInterface() &&
-                !aClass.isAnonymousClass();
-          }
-        }),
-        new Function<Class<? extends EntityLocal>, String>() {
-          @Override
-          public String apply(Class<? extends EntityLocal> aClass) {
-            LOG.trace("Found entity '{}'", aClass.getName());
-            return aClass.getName();
-          }
-        }));
+  private <T> Map<String, Class<? extends T>> buildMapOfSubTypesOf(String prefix, Class<T> clazz) {
+    Reflections reflections = new Reflections(prefix);
+    ImmutableMap.Builder<String, Class<? extends T>> builder = ImmutableMap.builder();
+    for (Class<? extends T> candidate : reflections.getSubTypesOf(clazz)) {
+      if (!Modifier.isAbstract(candidate.getModifiers()) &&
+          !candidate.isInterface() &&
+          !candidate.isAnonymousClass()) {
+        builder.put(candidate.getName(), candidate);
+      }
+    }
+    return builder.build();
   }
 
   public boolean containsEntity(String entityName) {
-    return entities.contains(entityName);
+    return entities.containsKey(entityName);
+  }
+
+  public Class<? extends AbstractEntity> getEntityClass(String entityName) {
+    return entities.get(entityName);
+  }
+
+  public Class<? extends AbstractPolicy> getEntityPolicy(String policyName) {
+    return policies.get(policyName);
+  }
+
+  @POST
+  public Response create(@Valid String groovyCode) {
+    ClassLoader parent = getClass().getClassLoader();
+    GroovyClassLoader loader = new GroovyClassLoader(parent);
+
+    Class clazz = loader.parseClass(groovyCode);
+
+    if (AbstractEntity.class.isAssignableFrom(clazz)) {
+      entities.put(clazz.getName(), clazz);
+      return Response.created(URI.create("entities/" + clazz.getName())).build();
+
+    } else if (AbstractPolicy.class.isAssignableFrom(clazz)) {
+      policies.put(clazz.getName(), clazz);
+      return Response.created(URI.create("policies/" + clazz.getName())).build();
+    }
+
+    return Response.ok().build();
   }
 
   @GET
@@ -92,10 +88,10 @@ public class CatalogResource extends BaseResource {
       final @QueryParam("name") @DefaultValue("") String name
   ) {
     if ("".equals(name)) {
-      return entities;
+      return entities.keySet();
     } else {
       final String normalizedName = name.toLowerCase();
-      return filter(entities, new Predicate<String>() {
+      return filter(entities.keySet(), new Predicate<String>() {
         @Override
         public boolean apply(@Nullable String entity) {
           return entity != null && entity.toLowerCase().contains(normalizedName);
@@ -114,14 +110,11 @@ public class CatalogResource extends BaseResource {
     try {
       // TODO find a different way to query the list of configuration keys
       // without having to create an instance
-      Class<EntityLocal> clazz = (Class<EntityLocal>) Class.forName(entityType);
+      Class<? extends AbstractEntity> clazz = entities.get(entityType);
       Constructor constructor = clazz.getConstructor(new Class[]{Map.class});
 
       EntityLocal instance = (EntityLocal) constructor.newInstance(Maps.newHashMap());
       return instance.getConfigKeys().keySet();
-
-    } catch (ClassNotFoundException e) {
-      throw notFound(e.getMessage());
 
     } catch (NoSuchMethodException e) {
       throw notFound(e.getMessage());
@@ -131,6 +124,6 @@ public class CatalogResource extends BaseResource {
   @GET
   @Path("policies")
   public Iterable<String> listPolicies() {
-    return policies;
+    return policies.keySet();
   }
 }

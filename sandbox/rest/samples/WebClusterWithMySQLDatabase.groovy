@@ -1,4 +1,4 @@
-package brooklyn.rest.entities
+package brooklyn.rest.entities.external
 
 import static brooklyn.event.basic.DependentConfiguration.valueWhenAttributeReady
 
