@@ -14,6 +14,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -52,6 +53,10 @@ public class ApplicationResource extends BaseResource {
     checkAllEntityTypesAreValid(applicationSpec);
     checkAllLocationsAreValid(applicationSpec);
 
+    if (manager.registry().containsKey(applicationSpec.getName())) {
+      throw preconditionFailed("Application '%s' already registered.",
+          applicationSpec.getName());
+    }
     manager.startInBackground(applicationSpec);
 
     URI ref = URI.create(applicationSpec.getName());

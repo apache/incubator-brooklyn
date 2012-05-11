@@ -1,0 +1,77 @@
+package brooklyn.rest.commands.applications;
+
+import brooklyn.rest.api.ApiError;
+import brooklyn.rest.api.Application;
+import static brooklyn.rest.api.Application.Status;
+import brooklyn.rest.api.ApplicationSpec;
+import brooklyn.rest.commands.BrooklynCommand;
+import static com.google.common.base.Preconditions.checkArgument;
+import com.sun.jersey.api.client.ClientResponse;
+import com.yammer.dropwizard.client.JerseyClient;
+import com.yammer.dropwizard.json.Json;
+import java.io.File;
+import java.net.URI;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
+
+public class StartApplicationCommand extends BrooklynCommand {
+
+  public StartApplicationCommand() {
+    super("start-application", "Start a new application from a JSON spec file.");
+  }
+
+  @Override
+  public String getSyntax() {
+    return "[options] <json file>";
+  }
+
+  @Override
+  public Options getOptions() {
+    return super.getOptions()
+        .addOption("n", "name", true, "Override application name");
+  }
+
+  @Override
+  protected void run(Json json, JerseyClient client, CommandLine params) throws Exception {
+    checkArgument(params.getArgList().size() >= 1, "Path to JSON file is mandatory");
+
+    String jsonFileName = (String) params.getArgList().get(0);
+    ApplicationSpec spec = json.readValue(new File(jsonFileName), ApplicationSpec.class);
+
+    if (params.hasOption("name")) {
+      spec = ApplicationSpec.builder().from(spec).name(params.getOptionValue("name")).build();
+    }
+
+    ClientResponse response = client.post(uriFor("/v1/applications"),
+        MediaType.APPLICATION_JSON_TYPE, spec, ClientResponse.class);
+
+    if (response.getStatus() != Response.Status.CREATED.getStatusCode()) {
+      ApiError error = response.getEntity(ApiError.class);
+      throw new RuntimeException(error.getMessage());
+    }
+
+    System.out.println("Starting at " + response.getLocation());
+
+    Status status;
+    do {
+      System.out.print(".");
+      System.out.flush();
+      Thread.sleep(1000);
+
+      status = getApplicationStatus(client, response.getLocation());
+    } while (status != Status.RUNNING && status != Status.ERROR);
+
+    if (status == Status.RUNNING) {
+      System.out.println("Done.");
+    } else {
+      System.out.println("Error.");
+    }
+  }
+
+  private Status getApplicationStatus(JerseyClient client, URI uri) {
+    Application application = client.get(uri, MediaType.APPLICATION_JSON_TYPE, Application.class);
+    return application.getStatus();
+  }
+}

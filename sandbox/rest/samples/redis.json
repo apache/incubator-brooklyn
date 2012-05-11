@@ -1,6 +1,7 @@
 {"entities":[
   {
-    "type":"brooklyn.entity.nosql.redis.RedisStore"
+    "type":"brooklyn.entity.nosql.redis.RedisStore",
+    "config": {"redisPort": "6379+"}
   }
 ],
   "locations":[

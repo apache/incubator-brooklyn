@@ -16,6 +16,11 @@ public abstract class BaseResource {
         .entity(new ApiError(String.format(format, args))).build());
   }
 
+  protected WebApplicationException preconditionFailed(String format, Object... args) {
+    throw new WebApplicationException(Response.status(Response.Status.PRECONDITION_FAILED)
+        .entity(new ApiError(String.format(format, args))).build());
+  }
+
   /**
    * Find an entity by querying the application tree of entities
    */
