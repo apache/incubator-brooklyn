@@ -1,31 +1,26 @@
 package brooklyn.extras.whirr.core
 
-import java.io.FileReader;
+import static com.google.common.collect.Iterables.getOnlyElement
 
-import brooklyn.entity.Entity;
-import brooklyn.entity.basic.AbstractEntity
+import org.apache.commons.configuration.PropertiesConfiguration
+import org.apache.whirr.Cluster
 import org.apache.whirr.ClusterController
 import org.apache.whirr.ClusterControllerFactory
-import brooklyn.entity.trait.Startable
-import org.slf4j.LoggerFactory
-import org.slf4j.Logger
-
-import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.event.basic.BasicConfigKey
-import brooklyn.util.flags.SetFromFlag
-import brooklyn.location.Location
-import brooklyn.location.basic.jclouds.JcloudsLocation
-import org.apache.commons.configuration.PropertiesConfiguration
-import org.apache.commons.io.IOUtils;
 import org.apache.whirr.ClusterSpec
-import com.google.common.collect.ImmutableSet
-import com.google.common.collect.Sets
-import org.apache.whirr.Cluster
+import org.jclouds.scriptbuilder.domain.OsFamily
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
+import brooklyn.entity.Entity
+import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.AbstractGroup
-import com.google.common.collect.Iterables
-import static com.google.common.collect.Iterables.getOnlyElement
-import brooklyn.entity.basic.DynamicGroup
-import brooklyn.extras.whirr.core.WhirrRole
+import brooklyn.entity.trait.Startable
+import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.event.basic.BasicConfigKey
+import brooklyn.location.Location
+import brooklyn.location.basic.LocalhostMachineProvisioningLocation
+import brooklyn.location.basic.jclouds.JcloudsLocation
+import brooklyn.util.flags.SetFromFlag
 
 /**
  * Generic entity that can be used to deploy clusters that are
@@ -38,21 +33,22 @@ public class WhirrCluster extends AbstractEntity implements Startable {
 
     @SetFromFlag("recipe")
     public static final BasicConfigKey<String> RECIPE =
-        [String, "whirr.recipe", "Apache Whirr cluster recipe"]
+            [String, "whirr.recipe", "Apache Whirr cluster recipe"]
 
     public static final BasicAttributeSensor<String> CLUSTER_NAME =
-        [String, "whirr.cluster.name", "Name of the Whirr cluster"]
+            [String, "whirr.cluster.name", "Name of the Whirr cluster"]
 
-    protected ClusterController controller = null
+    protected ClusterController _controller = null
     protected ClusterSpec clusterSpec = null
     protected Cluster cluster = null
+
+    protected Location location = null
 
     /**
      * General entity initialisation
      */
     public WhirrCluster(Map flags = [:], Entity owner = null) {
         super(flags, owner)
-        controller = new ClusterControllerFactory().create(null);
     }
 
     /**
@@ -61,7 +57,55 @@ public class WhirrCluster extends AbstractEntity implements Startable {
      * @param locations
      */
     void start(Collection<? extends Location> locations) {
-        startInLocation(getOnlyElement(locations))
+        location = getOnlyElement(locations)
+        startInLocation(location)
+    }
+
+    /**
+     * Start a cluster as specified in the recipe on localhost
+     *
+     * @param location corresponding to localhost
+     */
+    void startInLocation(LocalhostMachineProvisioningLocation location) {
+
+        PropertiesConfiguration config = new PropertiesConfiguration()
+        config.load(new StringReader(getConfig(RECIPE)))
+
+        StringBuilder nodes = []
+        nodes.with {
+            append "nodes:\n"
+            for (int i=0; i<10; i++) {
+                String mid = (i==0?"":(""+(i+1)));
+                append "    - id: localhost"+mid+"\n"
+                append "      name: local machine "+mid+"\n"
+                append "      hostname: 127.0.0.1\n"
+                append "      os_arch: "+System.getProperty("os.arch")+"\n"
+                append "      os_family: "+OsFamily.UNIX+"\n"
+                append "      os_description: "+System.getProperty("os.name")+"\n"
+                append "      os_version: "+System.getProperty("os.version")+"\n"
+                append "      group: whirr\n"
+                append "      tags:\n"
+                append "          - local\n"
+                append "      username: "+System.getProperty("user.name")+"\n" //NOTE: needs passwordless sudo!!!
+                append "      credential_url: file://"+System.getProperty("user.home")+"/.ssh/id_rsa\n"
+            }
+        }
+
+        //provide the BYON nodes to whirr
+        config.setProperty("jclouds.byon.nodes", nodes.toString())
+
+        clusterSpec = new ClusterSpec(config)
+
+        clusterSpec.setServiceName("byon")
+        clusterSpec.setProvider("byon")
+        clusterSpec.setIdentity("notused")
+        clusterSpec.setCredential("notused")
+        clusterSpec.setLocationId("byon");
+
+        log.info("Starting cluster with roles " + config.getProperty("whirr.instance-templates")
+                + " in location " + location)
+
+        startWithClusterSpec(clusterSpec);
     }
 
     /**
@@ -74,7 +118,6 @@ public class WhirrCluster extends AbstractEntity implements Startable {
         config.load(new StringReader(getConfig(RECIPE)))
 
         clusterSpec = new ClusterSpec(config)
-
         clusterSpec.setProvider(location.getConf().provider)
         clusterSpec.setIdentity(location.getConf().identity)
         clusterSpec.setCredential(location.getConf().credential)
@@ -86,9 +129,20 @@ public class WhirrCluster extends AbstractEntity implements Startable {
         log.info("Starting cluster with roles " + config.getProperty("whirr.instance-templates")
                 + " in location " + location)
 
+        startWithClusterSpec(clusterSpec);
+    }
+
+    synchronized ClusterController getController() {
+        if (_controller==null) {
+            _controller = new ClusterControllerFactory().create(clusterSpec?.getServiceName());
+        }
+        return _controller;
+    }
+
+    private void startWithClusterSpec(ClusterSpec clusterSpec) {
         cluster = controller.launchCluster(clusterSpec)
 
-        for (Cluster.Instance instance: cluster.getInstances()) {
+        for (Cluster.Instance instance : cluster.getInstances()) {
             log.info("Creating group for instance " + instance.id)
             def rolesGroup = new AbstractGroup(displayName: "Instance:" + instance.id, this) {}
             for (String role: instance.roles) {
@@ -97,24 +151,22 @@ public class WhirrCluster extends AbstractEntity implements Startable {
             }
             addGroup(rolesGroup)
         }
-        
+
         setAttribute(CLUSTER_NAME, clusterSpec.getClusterName());
         setAttribute(SERVICE_UP, true);
     }
 
     void stop() {
-        setAttribute(SERVICE_UP, false);
         if (clusterSpec != null) {
             controller.destroyCluster(clusterSpec)
         }
-
         clusterSpec = null
         cluster = null
     }
 
     void restart() {
-        // TODO better would be to restart the software instances, not the machines ? 
+        // TODO better would be to restart the software instances, not the machines ?
         stop();
-        start();
+        start([location]);
     }
 }

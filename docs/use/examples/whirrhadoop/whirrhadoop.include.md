@@ -33,6 +33,7 @@ Once it is running, navigate to the Brooklyn web console to see the ``NAME_NODE_
 you can easily configure a larger application to use its own dedicated Hadoop cluster.)
 
 
+<a name="custom-whirr-recipe"></a>
 ## Custom Whirr Recipe
 
 The class ``WhirrExample`` shows how an arbitrary [Whirr](http://whirr.apache.org) recipe
@@ -48,7 +49,15 @@ whirr.instance-templates= 1 noop, 1 elasticsearch
     WhirrCluster cluster = new WhirrCluster(this, recipe: RECIPE);
 {% endhighlight %}
 
-This can be launched with the script ``./demo-whirr-recipe.sh``.
+This can be launched with the script ``./demo-whirr-recipe.sh``. In the provided example this will by default deploy to AWS.
+
+If you would like to deploy to localhost, you can do this by running ``./demo-whirr-recipe.sh localhost``. However, please note that currently there are some limitations when deploying to localhost:
+
+*	You can not deploy more than one server (noop doesn't count in the above case).
+*	This has only been tested on Ubuntu 10.04 and might cause problems on other operating systems.
+*	Your user will need to be configured for [passwordless ssh and passwordless sudo](http://docs.outerthought.org/lilyenterprise-docs-trunk/539-lily/541-lily.html) on localhost.
+
+
 Feel free to experiment with the instance template parameter,
 trying out other recipes from Whirr.
 
