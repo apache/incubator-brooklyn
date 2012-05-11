@@ -49,12 +49,30 @@ abstract class AbstractEntityAdjunct implements EntityAdjunct {
     
     /** @see SubscriptionContext#subscribe(Entity, Sensor, EventListener) */
     protected <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener) {
-        if (destroyed.get()) return null
-        if (entity==null) throw new IllegalStateException("$this cannot subscribe to $producer because it is not associated to an entity")
-        if (entity.getManagementContext()==null) throw new IllegalStateException("$this cannot subscribe to $producer because the associated entity $entity is not yet managed")
+        if (!check()) return null;
         return subscriptionTracker.subscribe(producer, sensor, listener)
     }
-    
+
+    /** @see SubscriptionContext#subscribe(Entity, Sensor, EventListener) */
+    protected <T> SubscriptionHandle subscribeToMembers(Entity producerGroup, Sensor<T> sensor, SensorEventListener<? super T> listener) {
+        if (!check(producerGroup)) return null;
+        return subscriptionTracker.subscribeToMembers(producerGroup, sensor, listener)
+    }
+
+    /** @see SubscriptionContext#subscribe(Entity, Sensor, EventListener) */
+    protected <T> SubscriptionHandle subscribeToChildren(Entity producerParent, Sensor<T> sensor, SensorEventListener<? super T> listener) {
+        if (!check(producerParent)) return null;
+        return subscriptionTracker.subscribeToChildren(producerParent, sensor, listener)
+    }
+
+    /** returns false if deleted, throws exception if invalid state, otherwise true */
+    protected boolean check(Entity producer) {
+        if (destroyed.get()) return false;
+        if (entity==null) throw new IllegalStateException("$this cannot subscribe to $producer because it is not associated to an entity")
+        if (entity.getManagementContext()==null) throw new IllegalStateException("$this cannot subscribe to $producer because the associated entity $entity is not yet managed")
+        return true;
+    }
+        
     /**
      * Unsubscribes the given producer.
      *
