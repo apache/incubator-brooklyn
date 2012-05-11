@@ -28,7 +28,7 @@ public class AddLocationCommand extends BrooklynCommand {
     String jsonFileName = (String) params.getArgList().get(0);
     LocationSpec spec = json.readValue(new File(jsonFileName), LocationSpec.class);
 
-    ClientResponse response = client.post(uriFor("/v1/applications"),
+    ClientResponse response = client.post(uriFor("/v1/locations"),
         MediaType.APPLICATION_JSON_TYPE, spec, ClientResponse.class);
 
     System.out.println("Ok: " + response.getLocation());
