@@ -1,20 +1,15 @@
 package brooklyn.policy.basic
 
-import java.util.Map
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.entity.Entity
-import brooklyn.entity.basic.EntityLocal
-import brooklyn.event.Sensor
-import brooklyn.event.SensorEventListener
 import brooklyn.management.ExecutionContext
-import brooklyn.management.SubscriptionContext
-import brooklyn.management.SubscriptionHandle
 import brooklyn.policy.Policy
-import brooklyn.util.task.BasicExecutionContext
+import brooklyn.util.flags.FlagUtils
+import brooklyn.util.internal.LanguageUtils
 
 import com.google.common.base.Preconditions
 
@@ -25,25 +20,40 @@ public abstract class AbstractPolicy extends AbstractEntityAdjunct implements Po
     private static final Logger log = LoggerFactory.getLogger(AbstractPolicy.class)
 
     protected String policyStatus
-    protected Map leftoverProperties
+    protected Map leftoverProperties = [:]
     protected AtomicBoolean suspended = new AtomicBoolean(false)
 
     protected transient ExecutionContext execution
 
-    public AbstractPolicy(Map properties = [:]) {
-        if (properties.name) {
-            name = properties.remove "name"
-        } else if (properties.displayName) {
-            name = properties.remove "displayName"
-        } else if (getClass().getSimpleName()) {
-            name = getClass().getSimpleName()
-        }
-        if (properties.id) {
-            id = properties.remove "id"
-        }
-        leftoverProperties = properties
+    public AbstractPolicy(Map flags = [:]) {
+        configure(flags)
+        FlagUtils.checkRequiredFields(this)
     }
 
+    /** will set fields from flags, and put the remaining ones into the 'leftovers' map.
+     * can be subclassed for custom initialization but note the following. 
+     * <p>
+     * if you require fields to be initialized you must do that in this method. You must
+     * *not* rely on field initializers because they may not run until *after* this method
+     * (this method is invoked by the constructor in this class, so initializers
+     * in subclasses will not have run when this overridden method is invoked.) */ 
+    protected void configure(Map properties=[:]) {
+        leftoverProperties << FlagUtils.setFieldsFromFlags(properties, this)
+        //replace properties _contents_ with leftovers so subclasses see leftovers only
+        properties.clear();
+        properties.putAll(leftoverProperties)
+        leftoverProperties = properties;
+        
+        if (id==null) id = LanguageUtils.newUid();
+        
+        if (!name && properties.displayName) {
+            //'displayName' is a legacy way to refer to a location's name
+            //FIXME could this be a GString?
+            Preconditions.checkArgument properties.displayName instanceof CharSequence, "'displayName' property should be a string"
+            name = properties.remove("displayName")
+        }
+    }
+    
     public void suspend() {
         suspended.set(true)
     }
