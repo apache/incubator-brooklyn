@@ -36,4 +36,13 @@ public class MockSshBasedSoftwareSetup extends SshBasedAppSetup {
         return [];
     }
 
+    @Override
+    public List<String> getRestartScript() {
+        return [];
+    }
+    
+    @Override
+    public List<String> getShutdownScript() {
+        return [];
+    }
 }
