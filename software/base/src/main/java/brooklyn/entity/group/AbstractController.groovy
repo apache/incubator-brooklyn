@@ -10,6 +10,7 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.SoftwareProcessEntity
+import brooklyn.entity.trait.Startable;
 import brooklyn.event.Sensor
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey
@@ -100,7 +101,7 @@ public abstract class AbstractController extends SoftwareProcessEntity {
         Preconditions.checkNotNull(domain, "Domain must be set for controller")
 
         policy = new AbstractMembershipTrackingPolicy(name: "Controller targets tracker") {
-            //FIXME seems to be getting invoked twice?
+            protected void onEntityChange(Entity member) { checkEntity(member); }
             protected void onEntityAdded(Entity member) { addEntity(member); }
             protected void onEntityRemoved(Entity member) { removeEntity(member); }
         }
@@ -132,9 +133,34 @@ public abstract class AbstractController extends SoftwareProcessEntity {
         return result
     }
 
+    public void checkEntity(Entity member) {
+        if (belongs(member)) addEntity(member);
+        else removeEntity(member);
+    }
+    
+    public boolean belongs(Entity member) {
+        if (!member.getAttribute(Startable.SERVICE_UP)) {
+            LOG.debug("Members of $displayName, checking ${member.displayName}, eliminating because not up")
+            return false;
+        }
+        if (!cluster.members.contains(member)) {
+            LOG.debug("Members of $displayName, checking ${member.displayName}, eliminating because not member")
+            return false;
+        }
+        LOG.debug("Members of $displayName, checking ${member.displayName}, approving")
+        return true;
+    }
+    
+    //FIXME this can be tidied up, to just a checkEntity, which calls add/remove and add/remove are conclusive
+    
     //FIXME members locations might be remote?
     public void addEntity(Entity member) {
         if (LOG.isTraceEnabled()) LOG.trace("About to add to $displayName, new member ${member.displayName} in locations ${member.locations} - waiting for service to be up")
+        
+        if (!member.getAttribute(Startable.SERVICE_UP)) {
+            LOG.info("Members of $displayName, not adding ${member.displayName} because not yet up")
+            return;
+        }
         
         //FIXME messy way to prevent subscriptions from applying until service is up
         //anyway, this is the wrong place for that logic; should be in update        
@@ -154,11 +180,14 @@ public abstract class AbstractController extends SoftwareProcessEntity {
                 addresses.add("${ip}:${port}");
             }
         }
-        if (addresses==oldAddresses)
+        if (addresses==oldAddresses) {
+            LOG.debug("invocation of {}.addEntity({}) causes no change", this, member);
             //FIXME no change; shouldn't happen but it does
             return;
-            
-        //update the url; shouldn't be necessary, but won't hurt
+        }
+        LOG.debug("invocation of {}.addEntity({}) successful, triggering makeUrl and update", this, member);
+        
+        // TODO shouldn't need to do this here? (no harm though)
         makeUrl();
 
         update()
@@ -173,24 +202,23 @@ public abstract class AbstractController extends SoftwareProcessEntity {
             int port = member.getAttribute(portNumber)
             addresses.remove("${ip}:${port}")
         }
-        if (addresses==oldAddresses)
-            //FIXME no change; shouldn't happen but it does
+        if (addresses==oldAddresses) {
+            LOG.debug("when removing from $displayName, member ${member.displayName}, not found (already removed?)")
             return;
+        }
         update()
     }
     
     boolean isActive = false;
-    boolean updateNeeded = false;
+    boolean updateNeeded = true;
     
     public void start(Collection<? extends Location> locations) {
+        LOG.info("adding policy to {}", this)
         addPolicy(policy)
         reset()
-        updateNeeded = false;
         super.start(locations)
         isActive = true;
-        if (updateNeeded) {
-            update();
-        }
+        update();
     }
 
     /** should set up so that 'addresses' are targeted */
@@ -200,6 +228,7 @@ public abstract class AbstractController extends SoftwareProcessEntity {
         if (!isActive) updateNeeded = true;
         else {
             updateNeeded = false;
+            LOG.info("updating {}", this)
             reconfigureService()
             restart()
         }

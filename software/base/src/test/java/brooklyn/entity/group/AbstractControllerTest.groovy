@@ -3,6 +3,7 @@ package brooklyn.entity.group
 import static brooklyn.test.TestUtils.*
 import static org.testng.Assert.*
 
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicInteger
 
 import org.slf4j.Logger
@@ -13,7 +14,7 @@ import org.testng.annotations.Test
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.EntityLocal
-import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup;
+import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup
 import brooklyn.entity.driver.MockSshBasedSoftwareSetup
 import brooklyn.entity.trait.Startable
 import brooklyn.event.Sensor
@@ -42,7 +43,7 @@ class AbstractControllerTest {
             machines << new SshMachineLocation(address:Inet4Address.getByName("1.1.1.$i"))
         }
         loc = new FixedListMachineProvisioningLocation<SshMachineLocation>(machines:machines)
-        updates = []
+        updates = new CopyOnWriteArrayList();
         
         app = new AbstractApplication() {}
         cluster = new DynamicCluster(owner:app, initialSize:0, factory:{flags,parent -> new ClusteredEntity(flags, parent)})
@@ -54,12 +55,11 @@ class AbstractControllerTest {
                 portNumberSensor:ClusteredEntity.MY_PORT,
                 domain:"mydomain") {
 
-            public void update() {
-                log.info "test controller update, addresses $addresses"
-                updates.add(addresses)
-            }
             @Override
-            protected void reconfigureService() {}
+            protected void reconfigureService() {
+                log.info "test controller reconfigure, addresses $addresses"
+                if ((addresses && !updates) || (updates && addresses!=updates.last())) updates.add(addresses)
+            }
             public SshBasedAppSetup newDriver(SshMachineLocation machine) {
                 return new MockSshBasedSoftwareSetup(this, machine);
             }
@@ -74,7 +74,8 @@ class AbstractControllerTest {
         cluster.resize(1)
         EntityLocal child = cluster.ownedChildren.first()
         
-        assertEquals(updates, [])
+        def u = new ArrayList(updates);
+        assertEquals(u, [], "expected empty list but got $u")
         
         child.setAttribute(ClusteredEntity.MY_PORT, 1234)
         child.setAttribute(Startable.SERVICE_UP, true)
@@ -90,6 +91,22 @@ class AbstractControllerTest {
         assertEventuallyAddressesMatchCluster()
     }
 
+    @Test(groups = "Integration")
+    public void testUpdateCalledWithAddressesOfNewChildrenManyTimes() {
+        for (int i=0; i<10; i++) {
+            try {
+                log.info("testUpdateCalledWithAddressesOfNewChildren #"+i);
+                testUpdateCalledWithAddressesOfNewChildren();
+                cluster.resize(0);
+                assertEventuallyAddressesMatchCluster();
+                updates.clear();
+            } catch (Throwable e) {
+                log.warn "testUpdateCalledWithAddressesOfNewChildren, #"+i+" failed: "+e
+                throw e;
+            }
+        }
+    }
+    
     @Test
     public void testUpdateCalledWithAddressesRemovedForStoppedChildren() {
         // Get some children, so we can remove one...
@@ -108,7 +125,9 @@ class AbstractControllerTest {
 
     private void assertEventuallyAddressesMatchCluster() {
         executeUntilSucceeds(timeout:5000) {
-            updates.size() > 0 && locationsToAddresses(1234, cluster.ownedChildren) == updates.last()
+            def u = new ArrayList(updates);
+            log.debug "test ${u.size()} updates, expecting ${locationsToAddresses(1234, cluster.ownedChildren)} = ${u ? u.last() : 'empty'}"
+            return u.size() > 0 && locationsToAddresses(1234, cluster.ownedChildren) == u.last()
         }
     }
     
