@@ -18,7 +18,7 @@ import brooklyn.util.CommandLineUtil
 /** This example starts a Qpid broker, waits for a keypress, then stops it. */
 public class StandaloneBrokerExample extends AbstractApplication {
 
-    public static final String DEFAULT_LOCATION = "localhost"
+    public static final String DEFAULT_LOCATION = CommandLineLocations.LOCALHOST
     public static final String CUSTOM_CONFIG_PATH = "classpath://custom-config.xml"
     public static final String PASSWD_PATH = "classpath://passwd"
     public static final String QPID_BDBSTORE_JAR_PATH = "classpath://qpid-bdbstore-0.14.jar"
