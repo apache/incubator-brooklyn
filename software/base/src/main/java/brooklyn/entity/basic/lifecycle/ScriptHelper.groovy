@@ -181,7 +181,7 @@ public class CommonCommands {
      * from stdin routed to {@code /dev/null} and {@code -E} passes the parent
      * environment in. If already root, simplem runs the command.
      */
-    public static String sudo(String command) { "(test \$UID -eq 0 && ${command} || sudo -E -S ${command} < /dev/null)" }
+    public static String sudo(String command) { "(test \$UID -eq 0 && ${command} || sudo -E -n ${command})" }
 
     /** Returns a command that runs only 1f the operating system is as specified; Checks {@code /etc/issue} for the specified name */
     public static String on(String osName, String command) { "(grep \"${osName}\" /etc/issue && ${command})" }
