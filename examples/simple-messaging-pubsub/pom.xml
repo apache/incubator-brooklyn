@@ -68,38 +68,10 @@
                 <configuration>
                     <filesets>
                         <fileset>
-                            <directory>.</directory>
-                            <includes>
-                                <include>${project.artifactId}.*</include>
-                            </includes>
-                        </fileset>
-                        <fileset>
                             <directory>${project.artifactId}</directory>
                         </fileset>
                     </filesets>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>attach-distribution</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>attach-artifact</goal>
-                        </goals>
-                        <configuration>
-                            <artifacts>
-                                <artifact>
-                                    <file>${project.artifactId}.tar.gz</file>
-                                    <type>tar.gz</type>
-                                    <classifier>dist</classifier>
-                                </artifact>
-                            </artifacts>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
