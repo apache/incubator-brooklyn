@@ -366,6 +366,11 @@
                     <version>2.3.2</version>
                 </plugin>
                 <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>build-helper-maven-plugin</artifactId>
+                    <version>1.7</version>
+                </plugin>
+                <plugin>
                     <groupId>net.sourceforge.cobertura</groupId>
                     <artifactId>cobertura</artifactId>
                     <version>${cobertura.version}</version>
