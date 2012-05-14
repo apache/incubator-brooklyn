@@ -113,7 +113,7 @@ public class SensorRegistryTest {
             {
                 desiredVal.set(++nn);
                 TestUtils.assertSucceedsContinually(period:10*TimeUnit.MILLISECONDS, 
-                    timeout:250*TimeUnit.MILLISECONDS, {
+                    timeout:1000*TimeUnit.MILLISECONDS, {
                         entity.getAttribute(FOO)!=nn
                     });
             }
