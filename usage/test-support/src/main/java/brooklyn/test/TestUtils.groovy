@@ -76,7 +76,7 @@ public class TestUtils {
     public static void executeUntilSucceeds(Map flags=[:], Runnable r) {
         if (r in Callable) 
             executeUntilSucceedsWithFinallyBlock(flags, {return ((Callable)r).call();}, { })
-        else if (r in Closure)  // Closure check shouldn't be necessary, but seems to be
+        else if (r in Closure)  // Closure check probably not necessary, just was trying to fix a server build which had a screwy problem
             executeUntilSucceedsWithFinallyBlock(flags, {return ((Closure)r).call();}, { })
         else
             executeUntilSucceedsWithFinallyBlock(flags, {r.run(); return true}, { })
