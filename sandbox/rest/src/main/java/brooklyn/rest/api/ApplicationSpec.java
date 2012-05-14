@@ -7,11 +7,45 @@ import org.codehaus.jackson.annotate.JsonProperty;
 
 public class ApplicationSpec {
 
-  private String name;
-  private Set<EntitySpec> entities;
-  private Set<String> locations;
+  public static Builder builder() {
+    return new Builder();
+  }
 
-  // TODO add policies
+  public static class Builder {
+    private String name;
+    private Set<EntitySpec> entities;
+    private Set<String> locations;
+
+    public Builder from(ApplicationSpec spec) {
+      this.name = spec.name;
+      this.entities = spec.entities;
+      this.locations = spec.locations;
+      return this;
+    }
+
+    public Builder name(String name) {
+      this.name = name;
+      return this;
+    }
+
+    public Builder entities(Set<EntitySpec> entities) {
+      this.entities = entities;
+      return this;
+    }
+
+    public Builder locations(Set<String> locations) {
+      this.locations = locations;
+      return this;
+    }
+
+    public ApplicationSpec build() {
+      return new ApplicationSpec(name, entities, locations);
+    }
+  }
+
+  private final String name;
+  private final Set<EntitySpec> entities;
+  private final Set<String> locations;
 
   public ApplicationSpec(
       @JsonProperty("name") String name,
