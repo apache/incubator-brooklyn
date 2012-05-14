@@ -1,4 +1,4 @@
-package brooklyn
+package brooklyn.cli
 
 import java.lang.reflect.Constructor
 

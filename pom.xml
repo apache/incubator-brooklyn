@@ -597,6 +597,7 @@
             <modules>
                 <module>usage/web-console</module>
                 <module>usage/launcher</module>
+                <module>usage/cli</module>
                 <module>usage/all</module>
                 <module>usage/dist</module>
             </modules>

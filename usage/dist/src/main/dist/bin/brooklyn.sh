@@ -8,7 +8,7 @@
 ROOT=$(cd $(dirname $0) && pwd)
 cd ${ROOT}
 
-CLASS=brooklyn.Main
+CLASS=brooklyn.cli.Main
 
 if [ -z "${JAVA_OPTS}" ] ; then
     JAVA_OPTS="-Xmx256m -Xmx1g -XX:MaxPermSize=256m"
