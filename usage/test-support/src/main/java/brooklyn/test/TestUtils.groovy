@@ -69,12 +69,15 @@ public class TestUtils {
         executeUntilSucceedsWithFinallyBlock(flags, c) { }
     }
 
-    public static void executeUntilSucceeds(Map flags=[:], Runnable r) {
-        executeUntilSucceedsWithFinallyBlock(flags, {r.run(); return true}, { })
-    }
-
     public static void executeUntilSucceeds(Map flags=[:], Callable c) {
         executeUntilSucceedsWithFinallyBlock(flags, c) { }
+    }
+    
+    public static void executeUntilSucceeds(Map flags=[:], Runnable r) {
+        if (r instanceof Callable)
+            executeUntilSucceedsWithFinallyBlock(flags, {return r.call();}, { })
+        else
+            executeUntilSucceedsWithFinallyBlock(flags, {r.run(); return true}, { })
     }
 
     public static void executeUntilSucceedsElseShutdown(Map flags=[:], Entity entity, Closure c) {
