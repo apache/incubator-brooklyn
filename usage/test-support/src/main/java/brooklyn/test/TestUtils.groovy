@@ -74,8 +74,10 @@ public class TestUtils {
     }
     
     public static void executeUntilSucceeds(Map flags=[:], Runnable r) {
-        if (r instanceof Callable)
-            executeUntilSucceedsWithFinallyBlock(flags, {return r.call();}, { })
+        if (r in Callable) 
+            executeUntilSucceedsWithFinallyBlock(flags, {return ((Callable)r).call();}, { })
+        else if (r in Closure)  // Closure check shouldn't be necessary, but seems to be
+            executeUntilSucceedsWithFinallyBlock(flags, {return ((Closure)r).call();}, { })
         else
             executeUntilSucceedsWithFinallyBlock(flags, {r.run(); return true}, { })
     }
@@ -95,7 +97,7 @@ public class TestUtils {
     }
 
     public static void executeUntilSucceedsWithFinallyBlock(Map flags=[:], Closure c, Closure finallyBlock={}) {
-        executeUntilSucceedsWithFinallyBlock(flags, c, finallyBlock)
+        executeUntilSucceedsWithFinallyBlockInternal(flags, c, finallyBlock)
     }
     
     /**
@@ -119,6 +121,10 @@ public class TestUtils {
      * @param finallyBlock
      */
     public static void executeUntilSucceedsWithFinallyBlock(Map flags=[:], Callable<?> c, Closure finallyBlock={}) {
+        executeUntilSucceedsWithFinallyBlockInternal(flags, c, finallyBlock);
+    }
+    /** the "real" implementation, renamed to allow multiple entry points (depending whether closure cast to callable) */
+    private static void executeUntilSucceedsWithFinallyBlockInternal(Map flags=[:], Callable<?> c, Closure finallyBlock={}) {
 //        log.trace "abortOnError = {}", flags.abortOnError
         boolean abortOnException = flags.abortOnException ?: false
         boolean abortOnError = flags.abortOnError ?: false
