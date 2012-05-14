@@ -51,7 +51,8 @@ public class ApplicationResourceTest extends BaseResourceTest {
     executorService = Executors.newCachedThreadPool();
     LocationStore locationStore = LocationStore.withLocalhost();
 
-    manager = new ApplicationManager(new BrooklynConfiguration(), locationStore, executorService);
+    manager = new ApplicationManager(new BrooklynConfiguration(), locationStore,
+        new CatalogResource(), executorService);
 
     addResource(new ApplicationResource(manager, locationStore, new CatalogResource()));
     addResource(new EntityResource(manager));

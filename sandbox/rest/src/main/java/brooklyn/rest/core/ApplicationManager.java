@@ -1,6 +1,7 @@
 package brooklyn.rest.core;
 
 import brooklyn.entity.basic.AbstractApplication;
+import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
@@ -11,6 +12,7 @@ import brooklyn.rest.api.ApplicationSpec;
 import brooklyn.rest.api.EntitySpec;
 import brooklyn.rest.api.LocationSpec;
 import static brooklyn.rest.core.ApplicationPredicates.status;
+import brooklyn.rest.resources.CatalogResource;
 import com.google.common.base.Function;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -36,15 +38,18 @@ public class ApplicationManager implements Managed {
 
   private final ExecutorService executorService;
   private final BrooklynConfiguration configuration;
+  private final CatalogResource catalog;
 
   public ApplicationManager(
       BrooklynConfiguration configuration,
       LocationStore locationStore,
+      CatalogResource catalog,
       ExecutorService executorService
   ) {
     this.configuration = checkNotNull(configuration, "configuration");
     this.locationStore = checkNotNull(locationStore, "locationStore");
     this.executorService = checkNotNull(executorService, "executorService");
+    this.catalog = checkNotNull(catalog, "catalog");
     this.applications = Maps.newConcurrentMap();
   }
 
@@ -85,7 +90,7 @@ public class ApplicationManager implements Managed {
     for (EntitySpec entitySpec : spec.getEntities()) {
       try {
         LOG.info("Creating instance for entity {}", entitySpec.getType());
-        Class<Startable> clazz = (Class<Startable>) Class.forName(entitySpec.getType());
+        Class<? extends AbstractEntity> clazz = catalog.getEntityClass(entitySpec.getType());
 
         Constructor constructor = clazz.getConstructor(new Class[]{Map.class, brooklyn.entity.Entity.class});
 

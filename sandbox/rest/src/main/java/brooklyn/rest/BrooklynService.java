@@ -5,6 +5,7 @@ import brooklyn.rest.commands.applications.ListApplicationsCommand;
 import brooklyn.rest.commands.applications.ListEffectorsCommand;
 import brooklyn.rest.commands.applications.QuerySensorsCommand;
 import brooklyn.rest.commands.catalog.ListConfigKeysCommand;
+import brooklyn.rest.commands.catalog.LoadClassCommand;
 import brooklyn.rest.commands.locations.AddLocationCommand;
 import brooklyn.rest.commands.catalog.ListCatalogEntitiesCommand;
 import brooklyn.rest.commands.catalog.ListCatalogPoliciesCommand;
@@ -40,19 +41,20 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
     LocationStore locationStore = new LocationStore(configuration);
     environment.manage(locationStore);
 
+    CatalogResource catalogResource = new CatalogResource();
+
     ExecutorConfiguration executorConfig = configuration.getExecutorConfiguration();
     ExecutorService managedExecutor = environment.managedExecutorService("brooklyn",
         executorConfig.getCorePoolSize(), executorConfig.getMaximumPoolSize(),
         executorConfig.getKeepAliveTimeInSeconds(), TimeUnit.SECONDS);
 
-    ApplicationManager applicationManager = new ApplicationManager(configuration, locationStore, managedExecutor);
+    ApplicationManager applicationManager = new ApplicationManager(configuration,
+        locationStore, catalogResource, managedExecutor);
     environment.manage(applicationManager);
 
     // Setup REST endpoints
 
     environment.addResource(new LocationResource(locationStore));
-
-    CatalogResource catalogResource = new CatalogResource();
     environment.addResource(catalogResource);
 
     environment.addResource(new ApplicationResource(applicationManager, locationStore, catalogResource));
@@ -81,6 +83,7 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
     service.addCommand(new ListConfigKeysCommand());
     service.addCommand(new ListCatalogEntitiesCommand());
     service.addCommand(new ListCatalogPoliciesCommand());
+    service.addCommand(new LoadClassCommand());
 
     service.run(args);
   }
