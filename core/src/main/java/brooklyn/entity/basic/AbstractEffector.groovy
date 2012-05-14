@@ -230,7 +230,7 @@ public abstract class ExplicitEffector<I,T> extends AbstractEffector<T> {
         invokeEffector((I) entity, parameters );
     }
 
-    public abstract T invokeEffector(I trait, Map parameters);
+    public abstract T invokeEffector(I trait, Map<String,?> parameters);
 	
 	/** convenience to create an effector supplying a closure; annotations are preferred,
 	 * and subclass here would be failback, but this is offered as 
@@ -247,7 +247,7 @@ private class ExplicitEffectorFromClosure<I,T> extends ExplicitEffector<I,T> {
 		super(name, type, parameters, description)
 		this.body = body
 	}
-	public T invokeEffector(I trait, Map parameters) { body.call(trait, parameters) }
+	public T invokeEffector(I trait, Map<String,?> parameters) { body.call(trait, parameters) }
 }
 
 /**

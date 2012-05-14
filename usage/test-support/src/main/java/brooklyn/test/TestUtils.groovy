@@ -5,6 +5,7 @@ import groovy.time.TimeDuration
 
 import java.util.concurrent.Callable
 import java.util.concurrent.ExecutionException
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit
 
 import org.codehaus.groovy.runtime.InvokerInvocationException
@@ -67,7 +68,15 @@ public class TestUtils {
     public static void executeUntilSucceeds(Map flags=[:], Closure c) {
         executeUntilSucceedsWithFinallyBlock(flags, c) { }
     }
-    
+
+    public static void executeUntilSucceeds(Map flags=[:], Runnable r) {
+        executeUntilSucceedsWithFinallyBlock(flags, {r.run(); return true}, { })
+    }
+
+    public static void executeUntilSucceeds(Map flags=[:], Callable c) {
+        executeUntilSucceedsWithFinallyBlock(flags, c) { }
+    }
+
     public static void executeUntilSucceedsElseShutdown(Map flags=[:], Entity entity, Closure c) {
         try { 
             executeUntilSucceedsWithFinallyBlock(flags, c) { }
@@ -82,6 +91,10 @@ public class TestUtils {
         executeUntilSucceedsWithFinallyBlock(flags, c) { entity.stop() }
     }
 
+    public static void executeUntilSucceedsWithFinallyBlock(Map flags=[:], Closure c, Closure finallyBlock={}) {
+        executeUntilSucceedsWithFinallyBlock(flags, c, finallyBlock)
+    }
+    
     /**
      * Convenience method for cases where we need to test until something is true.
      *
@@ -102,7 +115,7 @@ public class TestUtils {
      * @param r
      * @param finallyBlock
      */
-    public static void executeUntilSucceedsWithFinallyBlock(Map flags=[:], Closure c, Closure finallyBlock={}) {
+    public static void executeUntilSucceedsWithFinallyBlock(Map flags=[:], Callable<?> c, Closure finallyBlock={}) {
 //        log.trace "abortOnError = {}", flags.abortOnError
         boolean abortOnException = flags.abortOnException ?: false
         boolean abortOnError = flags.abortOnError ?: false
