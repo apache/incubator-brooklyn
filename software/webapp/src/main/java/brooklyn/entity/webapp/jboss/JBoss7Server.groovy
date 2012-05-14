@@ -78,7 +78,7 @@ public class JBoss7Server extends JavaWebAppSoftwareProcess implements JavaWebAp
 }
 
 public class JBoss7ServerFactory extends BasicConfigurableEntityFactory<JBoss7Server> {
-    public JBoss7ServerFactory(Map flags=[:], Closure postProcessor=null) {
-        super(flags, JBoss7Server, postProcessor)
+    public JBoss7ServerFactory(Map flags=[:]) {
+        super(flags, JBoss7Server)
     }
 }

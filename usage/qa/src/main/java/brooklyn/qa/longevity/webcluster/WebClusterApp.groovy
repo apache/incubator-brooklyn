@@ -4,10 +4,12 @@ import java.util.Map
 
 import brooklyn.config.BrooklynProperties
 import brooklyn.enricher.CustomAggregatingEnricher
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.proxy.nginx.NginxController
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster
+import brooklyn.entity.webapp.jboss.JBoss7Server
 import brooklyn.entity.webapp.jboss.JBoss7ServerFactory
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.launcher.BrooklynLauncher
@@ -44,8 +46,13 @@ public class WebClusterApp extends AbstractApplication {
                 // domain: 'webclusterexample.brooklyn.local',
                 port:8000)
         
-        JBoss7ServerFactory jbossFactory = new JBoss7ServerFactory(httpPort: "8080+", war: WAR_PATH, 
-                {it.addEnricher(new SinusoidalLoadGenerator(sinusoidalLoad, 500L, loadCyclePeriodMs, 1d))})
+        JBoss7ServerFactory jbossFactory = new JBoss7ServerFactory(httpPort: "8080+", war: WAR_PATH) {
+            public JBoss7Server newEntity2(Map flags, Entity owner) {
+                JBoss7Server result = super.newEntity2(flags, owner)
+                result.addEnricher(new SinusoidalLoadGenerator(sinusoidalLoad, 500L, loadCyclePeriodMs, 1d))
+                return result
+            }
+        }
         
         ControlledDynamicWebAppCluster web = new ControlledDynamicWebAppCluster(app,
             name: "WebApp cluster",
