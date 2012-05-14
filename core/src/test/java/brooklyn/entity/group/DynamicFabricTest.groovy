@@ -153,7 +153,15 @@ class DynamicFabricTest {
             assertEquals(it.counter.get(), 1)
         }
     }
-	
+
+    @Test(groups="Integration")
+    public void testDynamicFabricStopsEntitiesInParallelManyTimes() {
+        for (int i=0; i<100; i++) {
+            log.info("running testDynamicFabricStopsEntitiesInParallel iteration $i");
+            testDynamicFabricStopsEntitiesInParallel();
+        }
+    }
+    
     @Test
     public void testDynamicFabricStopsEntitiesInParallel() {
         List<CountDownLatch> shutdownLatches = [] as CopyOnWriteArrayList<CountDownLatch>
@@ -195,8 +203,11 @@ class DynamicFabricTest {
             task.isDone()
         }
 
-        fabric.ownedChildren.each {
-            assertEquals(it.counter.get(), 0)
+        executeUntilSucceeds(timeout:10*1000) {
+            fabric.ownedChildren.each {
+                def count = it.counter.get();
+                assertEquals(count, 0, "$it counter reports $count")
+            }
         }
     }
     
