@@ -74,6 +74,19 @@ public class SensorRegistryTest {
         Thread.sleep(500)
         assertApproxPeriod(callTimes, PERIOD, 500)
     }
+
+    @Test(groups="Integration")
+    public void testRemoveSensorStopsItBeingUpdatedManyTimes() {
+        for (int i=0; i<100; i++) {
+            log.info("running testRemoveSensorStopsItBeingUpdated iteration $i");
+            try {
+                testRemoveSensorStopsItBeingUpdated();
+            } catch (Throwable t) {
+                log.info("failed testRemoveSensorStopsItBeingUpdated, iteration $i: $t");
+                throw t;
+            }
+        }
+    }
     
     @Test
     public void testRemoveSensorStopsItBeingUpdated() {
@@ -95,13 +108,23 @@ public class SensorRegistryTest {
         // And want to ensure that it is never called again (after any currently executing call), so need to wait.
         // TODO Nicer way than a sleep?  (see comment in TestUtils about need for blockUntilTrue)
         
-        Thread.sleep(200)
-        desiredVal.set(2)
+        int nn = 1;
+        TestUtils.executeUntilSucceeds(period:10*TimeUnit.MILLISECONDS, timeout:1*TimeUnit.SECONDS, 
+            {
+                desiredVal.set(++nn);
+                TestUtils.assertSucceedsContinually(period:10*TimeUnit.MILLISECONDS, 
+                    timeout:250*TimeUnit.MILLISECONDS, {
+                        entity.getAttribute(FOO)!=nn
+                    });
+            }
+        );
+    
+        desiredVal.set(-1)
         Thread.sleep(100)
-        assertEquals(entity.getAttribute(FOO), 1)
+        assertNotEquals(entity.getAttribute(FOO), -1)
         
         sensorRegistry.updateAll()
-        assertEquals(entity.getAttribute(FOO), 1)
+        assertNotEquals(entity.getAttribute(FOO), -1)
         
         try {
             sensorRegistry.update(FOO)
