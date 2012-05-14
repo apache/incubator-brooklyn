@@ -48,8 +48,8 @@ public class ResizingPolicy extends AbstractPolicy {
     public static final String POOL_LOW_THRESHOLD_KEY = "pool.low.threshold"
     public static final String POOL_CURRENT_WORKRATE_KEY = "pool.current.workrate"
     
-    @SetFromFlag // TODO not respected for policies? I had to look this up in the constructor
-    private long minPeriodBetweenExecs = 100
+    @SetFromFlag(defaultVal="100")
+    private long minPeriodBetweenExecs
     
     @SetFromFlag
     private long resizeUpStabilizationDelay
@@ -57,19 +57,32 @@ public class ResizingPolicy extends AbstractPolicy {
     @SetFromFlag
     private long resizeDownStabilizationDelay
     
+    @SetFromFlag
+    private int minPoolSize
+    
+    @SetFromFlag(defaultVal="2147483647") // defaultVal=Integer.MAX_VALUE
+    private int maxPoolSize
+    
+    @SetFromFlag
+    private final Closure resizeOperator
+    
+    @SetFromFlag
+    private final Closure currentSizeOperator
+    
+    @SetFromFlag
+    private final BasicNotificationSensor poolHotSensor
+    
+    @SetFromFlag
+    private final BasicNotificationSensor poolColdSensor
+    
+    @SetFromFlag
+    private final BasicNotificationSensor poolOkSensor
+    
     private Entity poolEntity
     
     private volatile ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor()
     private final AtomicBoolean executorQueued = new AtomicBoolean(false)
     private volatile long executorTime = 0
-    
-    private int minPoolSize = 0
-    private int maxPoolSize = Integer.MAX_VALUE
-    private final Closure resizeOperator
-    private final Closure currentSizeOperator
-    private final BasicNotificationSensor poolHotSensor
-    private final BasicNotificationSensor poolColdSensor
-    private final BasicNotificationSensor poolOkSensor
     
     private final TimeWindowedList recentDesiredResizes
     
@@ -94,20 +107,11 @@ public class ResizingPolicy extends AbstractPolicy {
     
     public ResizingPolicy(Map props = [:]) {
         super(props)
-        if (props.containsKey("minPoolSize")) minPoolSize = props.minPoolSize
-        if (props.containsKey("maxPoolSize")) maxPoolSize = props.maxPoolSize
-        resizeOperator = props.resizeOperator ?: defaultResizeOperator
-        currentSizeOperator = props.currentSizeOperator ?: defaultCurrentSizeOperator
-        poolHotSensor = props.poolHotSensor ?: POOL_HOT
-        poolColdSensor = props.poolColdSensor ?: POOL_COLD
-        poolOkSensor = props.poolOkSensor ?: POOL_OK
-        if (props.containsKey("minPeriodBetweenExecs")) {
-            minPeriodBetweenExecs = props.minPeriodBetweenExecs // accept zero
-        } else {
-            minPeriodBetweenExecs = 100
-        }
-        resizeUpStabilizationDelay = props.resizeUpStabilizationDelay ?: 0
-        resizeDownStabilizationDelay = props.resizeDownStabilizationDelay ?: 0
+        resizeOperator = resizeOperator ?: defaultResizeOperator
+        currentSizeOperator = currentSizeOperator ?: defaultCurrentSizeOperator
+        poolHotSensor = poolHotSensor ?: POOL_HOT
+        poolColdSensor = poolColdSensor ?: POOL_COLD
+        poolOkSensor = poolOkSensor ?: POOL_OK
         
         long maxResizeStabilizationDelay = Math.max(resizeUpStabilizationDelay, resizeDownStabilizationDelay)
         recentDesiredResizes = new TimeWindowedList<Number>([timePeriod:maxResizeStabilizationDelay, minExpiredVals:1])

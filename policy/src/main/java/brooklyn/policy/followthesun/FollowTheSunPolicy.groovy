@@ -33,14 +33,16 @@ public class FollowTheSunPolicy extends AbstractPolicy {
 
     public static final String NAME = "Follow the Sun (Inter-Geography Latency Optimization)";
 
-    @SetFromFlag // TODO not respected for policies? I had to look this up in the constructor
-    private long minPeriodBetweenExecs = 100
+    @SetFromFlag(defaultVal="100")
+    private long minPeriodBetweenExecs
+    
+    @SetFromFlag
+    private Closure locationFinder
     
     private final AttributeSensor<? extends Number> itemUsageMetric
     private final FollowTheSunModel<Entity, Entity> model
     private final FollowTheSunStrategy<Entity, ?> strategy
     private final FollowTheSunParameters parameters;
-    private final Closure locationFinder
     
     private FollowTheSunPool poolEntity
     
@@ -101,8 +103,7 @@ public class FollowTheSunPolicy extends AbstractPolicy {
         this.model = model
         this.parameters = parameters
         this.strategy = new FollowTheSunStrategy<Entity, Object>(model, parameters) // TODO: extract interface, inject impl
-        this.locationFinder = props.locationFinder ?: defaultLocationFinder
-        this.minPeriodBetweenExecs = props.minPeriodBetweenExecs ?: 100
+        this.locationFinder = locationFinder ?: defaultLocationFinder
         checkArgument(minPeriodBetweenExecs instanceof Number, "minPeriodBetweenExecs must be a number, but is "+minPeriodBetweenExecs.class.getClass())
         checkArgument(locationFinder instanceof Closure, "locationFinder must be a closure, but is "+locationFinder.class.getClass())
     }
