@@ -94,9 +94,12 @@ class BasicConfigKey<T> implements ConfigKey<T>, ConfigKeySelfExtracting<T>, Ser
     protected Object resolveValue(Object v, ExecutionContext exec) {
         resolveValue(v, type, exec);
     }
-    public static resolveValue(Object v, Class type, ExecutionContext exec) {
-        //if the expected type is a closure or map and that's what we have, we're done (or if it's null)
-        if (v==null || type.isInstance(v))
+    /** attempt to resolve the given value as the given type, waiting on futures,
+     * and coercing as allowed by TypeCoercions */
+    public static T resolveValue(Object v, Class<T> type, ExecutionContext exec) {
+        //if the expected type is a closure or map and that's what we have, we're done (or if it's null);
+        //but not allowed to return a future as the resolved value
+        if (v==null || (type.isInstance(v) && !Future.class.isInstance(v)))
             return v;
         try {
             //if it's a task, we wait for the task to complete

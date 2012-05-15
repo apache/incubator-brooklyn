@@ -39,10 +39,11 @@ public abstract class JavaStartStopSshDriver extends StartStopSshDriver {
 	 */
 	@Override
 	public Map<String, String> getShellEnvironment() {
-		def sJavaOpts = getJavaOpts().collect({
-			StringEscapeUtils.assertValidForDoubleQuotingInBash(it)
-			it
-		}).join(" ");
+        getJavaOpts().each { StringEscapeUtils.assertValidForDoubleQuotingInBash(it) }
+        // do not double quote here; the env var is double quoted subsequently;
+        // spaces should be preceded by double-quote
+        // (if dbl quotes are needed we could pass on the command-line instead of in an env var) 
+		def sJavaOpts = getJavaOpts().join(" ");
 //		println "using java opts: $sJavaOpts"
 		super.getShellEnvironment() + [ "JAVA_OPTS" : sJavaOpts ]
 	}
@@ -57,7 +58,17 @@ public abstract class JavaStartStopSshDriver extends StartStopSshDriver {
 		getCustomJavaConfigOptions() + (getJavaSystemProperties().collect { k,v ->
             try {
                 if (v in Integer || v in Long || v in Boolean) v = ""+v;
-                v = BasicConfigKey.resolveValue(v, String, entity.executionContext);
+                else {
+                    v = BasicConfigKey.resolveValue(v, Object, entity.executionContext);
+                    if (v in Integer || v in Long || v in Boolean) v = ""+v;
+                    else if (v in String) {}
+                    else if (v==null) {}
+                    else {
+                        //could do toString, but that's likely not what is desired; probably a type mismatch, 
+                        //post-processing should be specified (common types are accepted above)
+                        throw new IllegalArgumentException("cannot convert value $v of type ${v.getClass()} to string to pass as JVM property; use a post-processor")  
+                    }
+                }
                 return "-D"+k+(v!=null? "="+v : "")
             } catch (Exception e) {
                 log.warn("Error resolving java option key ${k}, propagating: "+e);
