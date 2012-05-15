@@ -37,7 +37,7 @@ class VanillaJavaAppTest {
     @Test
     public void testReadsConfigFromFlags() {
         VanillaJavaApp javaProcess = new VanillaJavaApp(owner:app, main:"my.Main", classpath:["c1", "c2"], args:["a1", "a2"])
-        assertEquals(javaProcess.getMain(), "my.Main")
+        assertEquals(javaProcess.getMainClass(), "my.Main")
         assertEquals(javaProcess.getClasspath(), ["c1","c2"])
         assertEquals(javaProcess.getConfig(VanillaJavaApp.ARGS), ["a1", "a2"])
     }
