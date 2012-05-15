@@ -172,7 +172,8 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 		startInLocation locations
 		postStart()
 		sensorRegistry.activateAdapters()
-		setAttribute(SERVICE_STATE, Lifecycle.RUNNING)
+		if (getAttribute(SERVICE_STATE) == Lifecycle.STARTING) 
+            setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
 	}
 
 	public void startInLocation(Collection<Location> locations) {

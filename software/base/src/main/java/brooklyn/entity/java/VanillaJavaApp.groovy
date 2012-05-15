@@ -2,7 +2,7 @@ package brooklyn.entity.java
 
 import groovy.time.TimeDuration
 
-import java.util.List
+import java.util.Map
 import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
@@ -14,11 +14,15 @@ import brooklyn.entity.basic.UsesJava
 import brooklyn.entity.basic.UsesJavaMXBeans
 import brooklyn.entity.basic.UsesJmx
 import brooklyn.entity.basic.lifecycle.JavaStartStopSshDriver
+import brooklyn.entity.basic.lifecycle.ScriptHelper
 import brooklyn.event.adapter.ConfigSensorAdapter
+import brooklyn.event.adapter.FunctionSensorAdapter
 import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.util.ResourceUtils
 import brooklyn.util.flags.SetFromFlag
+import brooklyn.util.internal.StringEscapeUtils
 
 
 public class VanillaJavaApp extends SoftwareProcessEntity implements UsesJava, UsesJmx, UsesJavaMXBeans {
@@ -31,32 +35,57 @@ public class VanillaJavaApp extends SoftwareProcessEntity implements UsesJava, U
     private static final Logger log = LoggerFactory.getLogger(VanillaJavaApp.class)
     
     @SetFromFlag("args")
-    public static final BasicConfigKey<String> ARGS = [ List, "vanillaJavaApp.args", "Arguments for launching the java app", [] ]
+    public static final BasicConfigKey<List> ARGS = [ List, "vanillaJavaApp.args", "Arguments for launching the java app", 
+        [] ]
+    
+    @SetFromFlag(value="main", nullable=false)
+    public static final BasicConfigKey<String> MAIN_CLASS = [ String, "vanillaJavaApp.mainClass", "class to launch" ];
+
+    @SetFromFlag("classpath")
+    public static final BasicConfigKey<List> CLASSPATH = [ List, "vanillaJavaApp.classpath", "classpath to use, as list of URL entries", 
+        [] ];
+
+    @SetFromFlag(defaultVal="true")
+    boolean useJmx;
     
     @SetFromFlag
-    String main
-
-    @SetFromFlag
-    List<String> classpath
-
-    @SetFromFlag
     long jmxPollPeriod
+    
+    @SetFromFlag("jvmXArgs")
+    public static final BasicConfigKey<List> JVM_XARGS = [ List, "vanillaJavaApp.jvmXArgs", "JVM -X args for the java app (e.g. memory)", 
+        ["-Xms128m", "-Xmx512m", "-XX:MaxPermSize=512m"] ];
+
+    @SetFromFlag("jvmDefines")
+    public static final BasicConfigKey<Map> JVM_DEFINES = [ Map, "vanillaJavaApp.jvmDefines", "JVM system property definitions for the app",
+        [:] ];
 
     JmxSensorAdapter jmxAdapter
     
     public VanillaJavaApp(Map props=[:], Entity owner=null) {
         super(props, owner)
     }
+    
+    public String getMainClass() { getConfig(MAIN_CLASS); }
+    public List getClasspath() { getConfig(CLASSPATH); }
+    public Map getJvmDefines() { getConfig(JVM_DEFINES); }
+    public List getJvmXArgs() { getConfig(JVM_XARGS); }
 
     @Override
     protected void connectSensors() {
         super.connectSensors();
         
         sensorRegistry.register(new ConfigSensorAdapter());
-        TimeDuration jmxPollPeriod = (jmxPollPeriod > 0 ? jmxPollPeriod : 500)*TimeUnit.MILLISECONDS
-        jmxAdapter = sensorRegistry.register(new JmxSensorAdapter(period:jmxPollPeriod));
         
-        JavaAppUtils.connectMXBeanSensors(this, jmxAdapter)
+        if (useJmx) {
+            TimeDuration jmxPollPeriod = (jmxPollPeriod > 0 ? jmxPollPeriod : 500)*TimeUnit.MILLISECONDS
+            jmxAdapter = sensorRegistry.register(new JmxSensorAdapter(period:jmxPollPeriod));
+            JavaAppUtils.connectMXBeanSensors(this, jmxAdapter)
+        }
+        
+        FunctionSensorAdapter serviceUpAdapter = sensorRegistry.register(new FunctionSensorAdapter(
+            period:10*TimeUnit.SECONDS, 
+            { driver.isRunning() } ));
+        serviceUpAdapter.poll(SERVICE_UP);
     }
     
     @Override
@@ -78,42 +107,51 @@ public class VanillaJavaAppSshDriver extends JavaStartStopSshDriver {
 
     public VanillaJavaApp getEntity() { super.getEntity() }
 
+    public boolean isJmxEnabled() { super.isJmxEnabled() && entity.useJmx }
+    
     protected String getLogFileLocation() {
         return "$runDir/console"
     }
     
     @Override
     public void install() {
-        // TODO install classpath entries?
-        
         newScript(INSTALLING).
-            failOnNonZeroResultCode()
-            .execute();
+            failOnNonZeroResultCode().
+            execute();
     }
 
     @Override
     public void customize() {
-        // no-op
+        newScript(CUSTOMIZING).
+            failOnNonZeroResultCode().
+            body.append("mkdir -p $runDir/lib").
+            execute();
+        ResourceUtils r = new ResourceUtils(entity);
+        for (String f: entity.classpath) {
+            int result = machine.installTo(new ResourceUtils(entity), f, runDir+"/"+"lib"+"/");
+            if (result!=0)
+                throw new IllegalStateException("unable to install classpath entry $f for $entity at $machine");
+        }
     }
     
     @Override
     public void launch() {
-        // TODO Use JAVA_OPTIONS config, once that is fixed to support more than sys properties
-        // TODO quote args?
-        String classpath = entity.classpath.join(":")
-        String clazz = entity.main
-        String args = entity.getConfig(VanillaJavaApp.ARGS).join(" ")
-        
+        String clazz = entity.mainClass;
+        String args = entity.getConfig(VanillaJavaApp.ARGS).collect({
+            StringEscapeUtils.assertValidForDoubleQuotingInBash(it);
+            return "\""+it+"\"";
+        }).join(" ");
+    
         newScript(LAUNCHING, usePidFile:true).
             body.append(
-                "java \$JAVA_OPTS -cp \"$classpath\" $clazz $args "+
+                "echo \"launching: java \$JAVA_OPTS -cp \'lib/*\' $clazz $args\"",
+                "java \$JAVA_OPTS -cp \"lib/*\" $clazz $args "+
                     " >> $runDir/console 2>&1 </dev/null &",
             ).execute();
     }
     
     @Override
     public boolean isRunning() {
-        //TODO use PID instead
         newScript(CHECK_RUNNING, usePidFile: true)
                 .execute() == 0;
     }
@@ -125,7 +163,11 @@ public class VanillaJavaAppSshDriver extends JavaStartStopSshDriver {
     }
 
     @Override
+    protected Map getCustomJavaSystemProperties() { 
+        return super.getCustomJavaSystemProperties() + entity.jvmDefines }
+    
+    @Override
     protected List<String> getCustomJavaConfigOptions() {
-        return super.getCustomJavaConfigOptions() + ["-Xms128m", "-Xmx512m", "-XX:MaxPermSize=512m"]
+        return super.getCustomJavaConfigOptions() + entity.jvmXArgs;
     }
 }

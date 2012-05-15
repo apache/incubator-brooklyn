@@ -1,7 +1,7 @@
 package brooklyn.location.basic
 
-import java.util.List;
-import java.util.Map;
+import java.util.List
+import java.util.Map
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -13,12 +13,14 @@ import brooklyn.location.PortSupplier
 import brooklyn.location.geo.HasHostGeoInfo
 import brooklyn.location.geo.HostGeoInfo
 import brooklyn.util.ReaderInputStream
+import brooklyn.util.ResourceUtils
 import brooklyn.util.flags.SetFromFlag
+import brooklyn.util.internal.SshTool
+import brooklyn.util.internal.StreamGobbler
+import brooklyn.util.internal.ssh.SshException
+import brooklyn.util.internal.ssh.SshjTool
 import brooklyn.util.mutex.MutexSupport
 import brooklyn.util.mutex.WithMutexes
-import brooklyn.util.internal.SshTool
-import brooklyn.util.internal.ssh.SshException;
-import brooklyn.util.internal.ssh.SshjTool
 
 import com.google.common.base.Preconditions
 
@@ -175,6 +177,39 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         result
     }
 
+    /** installs the given URL at the indicated destination.
+     * attempts to curl the sourceUrl on the remote machine,
+     * then if that fails, loads locally (from classpath or file) and transfers.
+     * <p>
+     * accepts either a path (terminated with /) or filename for the destination. 
+     **/
+    public int installTo(ResourceUtils loader, String url, String destination) {
+        if (destination.endsWith('/')) {
+            String destName = url;
+            destName = destName.contains('?') ? destName.substring(0, destName.indexOf('?')) : destName;
+            destName = destName.substring(destName.lastIndexOf('/')+1);
+            destination = destination + destName;            
+        }
+        LOG.debug("installing {} to {} on {}, attempting remote curl", url, destination, this);
+
+        InputStream insO = new PipedInputStream(); OutputStream outO = new PipedOutputStream(insO);
+        InputStream insE = new PipedInputStream(); OutputStream outE = new PipedOutputStream(insE);
+        new StreamGobbler(insO, null, LOG).setLogPrefix("[curl @ "+address+":stdout] ").start();
+        new StreamGobbler(insE, null, LOG).setLogPrefix("[curl @ "+address+":stdout] ").start();
+        int result = exec(out:outO, err:outE,
+                ["curl $url -L --silent --insecure --show-error --fail --connect-timeout 60 --max-time 600 --retry 5 -o $destination"])
+        
+        if (result!=0 && loader!=null) {
+            LOG.debug("installing {} to {} on {}, curl failed, attempting local fetch and copy", url, destination, this);
+            result = copyTo(loader.getResourceFromUrl(url), destination);
+        }
+        if (result==0)
+            LOG.debug("installing {} complete; {} on {}", url, destination, this);
+        else
+            LOG.warn("installing {} failed; {} on {}: {}", url, destination, this, result);
+        return result;
+    }
+    
     @Override
     public String toString() {
         return address
