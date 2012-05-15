@@ -90,6 +90,24 @@ class BrooklynProperties extends LinkedHashMap {
        this
    }
 
+   /** inserts the value under the given key, if it was not present */
+   public boolean putIfAbsent(String key, Object value) {
+       if (containsKey(key)) return false;
+       put(key, value);
+       return true;
+   }
+
+   /** @deprecated attempts to call get with this syntax are probably mistakes; get(key, defaultValue) is fine but
+    * Map is unlikely the key, much more likely they meant getFirst(flags, key).   
+    */
+   @Deprecated
+   public String get(Map flags, String key) {
+       LOG.warn("Discouraged use of 'BrooklynProperties.get(Map,String)' (ambiguous); use getFirst(Map,String) or get(String) -- assuming the former");
+       LOG.debug("Trace for discouraged use of 'BrooklynProperties.get(Map,String)'",
+           new Throwable("Arguments: "+flags+" "+key));
+       return getFirst(flags, key);
+   }
+       
     /** returns the value of the first key which is defined
      * <p>
      * takes the following flags:
