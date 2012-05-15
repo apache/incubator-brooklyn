@@ -10,6 +10,8 @@ import org.testng.annotations.Test
 
 import brooklyn.location.PortRange
 import brooklyn.location.basic.PortRanges.BasicPortRange
+import brooklyn.util.ResourceUtils
+import brooklyn.util.internal.ssh.SshException;
 
 import com.google.common.base.Charsets
 import com.google.common.io.Files
@@ -36,7 +38,7 @@ public class SshMachineLocationTest {
         assertTrue outString.contains(expectedName), outString
     }
     
-    @Test(groups = "Integration", expectedExceptions=[IllegalStateException.class])
+    @Test(groups = "Integration", expectedExceptions=[IllegalStateException, SshException])
     public void testSshRunWithInvalidUserFails() throws Exception {
         SshMachineLocation badHost = new SshMachineLocation(username:"doesnotexist", address: InetAddress.getLocalHost());
         badHost.run("whoami; exit");
@@ -56,7 +58,35 @@ public class SshMachineLocationTest {
             dest.delete()
         }
     }
+
+    @Test(groups = "Integration")
+    public void testInstallUrlTo() throws Exception {
+        File dest = new File(System.getProperty("java.io.tmpdir")+"/"+"sssMachineLocationTest_dir/");
+        dest.mkdir();
+        try {
+            int result = host.installTo(null, "http://github.com/brooklyncentral/brooklyn/raw/master/README.rst", dest.getCanonicalPath()+"/");
+            assertEquals(result, 0);
+            String contents = ResourceUtils.readFullyString(new FileInputStream(new File(dest, "README.rst")));
+            assertTrue(contents.contains("http://brooklyncentral.github.com"), "contents missing expected phrase; contains:\n"+contents);
+        } finally {
+            dest.delete()
+        }
+    }
     
+    @Test(groups = "Integration")
+    public void testInstallClasspathCopyTo() throws Exception {
+        File dest = new File(System.getProperty("java.io.tmpdir")+"/"+"sssMachineLocationTest_dir/");
+        dest.mkdir();
+        try {
+            int result = host.installTo(new ResourceUtils(this), "classpath://brooklyn/config/sample.properties", dest.getCanonicalPath()+"/");
+            assertEquals(result, 0);
+            String contents = ResourceUtils.readFullyString(new FileInputStream(new File(dest, "sample.properties")));
+            assertTrue(contents.contains("Property 1"), "contents missing expected phrase; contains:\n"+contents);
+        } finally {
+            dest.delete()
+        }
+    }
+
     // Note: requires `ssh localhost` to be setup such that no password is required    
     @Test(groups = "Integration")
     public void testIsSshableWhenTrue() throws Exception {
