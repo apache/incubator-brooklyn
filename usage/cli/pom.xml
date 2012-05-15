@@ -15,11 +15,6 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <properties>
-        <jetty.version>7.4.4.v20110707</jetty.version>
-        <jsp.version>2.1.v20100127</jsp.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>io.brooklyn</groupId>
@@ -43,103 +38,22 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
-            <version>4.3.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-webapp</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-plus</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-jmx</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-jsp-2.1</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-annotations</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-start</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-jndi</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-websocket</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
-        <dependency>
-          <groupId>org.mortbay.jetty</groupId>
-          <artifactId>jsp-2.1-glassfish</artifactId>
-          <version>${jsp.version}</version>
+            <groupId>org.iq80.cli</groupId>
+            <artifactId>git-like-cli</artifactId>
+            <version>0.3</version>
         </dependency>
     </dependencies>
 
     <build>
         <plugins>
             <plugin>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <!-- copy the WAR so it is available on the classpath for programmatic deployment -->
-                <executions>
-                    <execution>
-                        <id>copy</id>
-                        <phase>process-classes</phase>
-                        <goals>
-                            <goal>copy</goal>
-                        </goals>
-                        <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <!-- this can fail in eclipse trying to copy _from_ target/classes.
-                                         see http://jira.codehaus.org/browse/MDEP-259 -->
-                                    <groupId>${project.groupId}</groupId>
-                                    <artifactId>brooklyn-web-console</artifactId>
-                                    <version>${project.version}</version>
-                                    <type>war</type>
-                                    <overWrite>true</overWrite>
-                                    <outputDirectory>target/classes</outputDirectory>
-                                    <destFileName>brooklyn.war</destFileName>
-                                </artifactItem>
-                            </artifactItems>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <configuration>
                     <instructions>
-                        <Include-Resource>{maven-resources}, target/classes/brooklyn.war</Include-Resource>
-                        <Bundle-Activator>brooklyn.launcher.Activator</Bundle-Activator>
-                        <Main-class>brooklyn.launcher.Main</Main-class>
+                        <Main-class>brooklyn.cli.Main</Main-class>
                     </instructions>
                 </configuration>
-            </plugin>
-            <plugin> 
-                <artifactId>maven-site-plugin</artifactId> 
-                <configuration> 
-                    <generateReports>false</generateReports> 
-                </configuration> 
             </plugin>
 		</plugins>
 	</build>
