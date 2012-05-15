@@ -5,25 +5,20 @@
 
 #set -x # debug
 
-ROOT=$(cd $(dirname $0) && pwd)
-cd ${ROOT}
+# Get root direcotry of distribution
+ROOT=$(cd $(dirname $0)/.. && pwd)
 
+# The CLI main class to run
 CLASS=brooklyn.cli.Main
 
+# Default memory
 if [ -z "${JAVA_OPTS}" ] ; then
     JAVA_OPTS="-Xmx256m -Xmx1g -XX:MaxPermSize=256m"
 fi
 
-CLASSPATH="${CLASSPATH:-.}:${BROOKLYN_CLASSPATH}:../lib/*"
+# Set up the environment
+CLASSPATH="${CLASSPATH:-.}:${BROOKLYN_CLASSPATH}:${ROOT}/lib/*:${ROOT}/app:${ROOT}/app/*"
+JAVA_OPTS="-Dbrooklyn.localhost.address=127.0.0.1 ${JAVA_OPTS}"
 
-
-if [ $# -ne 0 ]; then
-    ARGS="$*"
-else
-    ARGS="localhost"
-    JAVA_OPTS="-Dbrooklyn.localhost.address=127.0.0.1 ${JAVA_OPTS}"
-fi
-
-echo Running Brooklyn using ${CLASS} and ${ARGS}
-echo java ${JAVA_OPTS} -cp ${CLASSPATH} ${CLASS} ${ARGS}
-java ${JAVA_OPTS} -cp "${CLASSPATH}" ${CLASS} ${ARGS}
+# Start Brooklyn
+exec java ${JAVA_OPTS} -cp "${CLASSPATH}" ${CLASS} $@
