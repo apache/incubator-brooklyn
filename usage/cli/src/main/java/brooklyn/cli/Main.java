@@ -10,6 +10,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import javax.inject.Inject;
+
 import org.iq80.cli.Cli;
 import org.iq80.cli.Cli.CliBuilder;
 import org.iq80.cli.Command;
@@ -27,32 +29,25 @@ import brooklyn.util.ResourceUtils;
 
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Objects;
+import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 public class Main {
 
-    private static final StringBuilder launchHelp = new StringBuilder();
-    
-    @SuppressWarnings({ "rawtypes" })
     public static void main(String...args) {
-        @SuppressWarnings({ "unchecked" })
-        CliBuilder<Callable> builder = Cli.buildCli("brooklyn", Callable.class)
-                .withDescription("Brooklyn Management Service")
-                .withDefaultCommand(Help.class)
-                .withCommands(
-                        Help.class,
-                        Launch.class
-                );
-
-        Cli<Callable> brooklynParser = builder.build();
-        Help.help(brooklynParser.getMetadata(), Arrays.asList("launch"), launchHelp);
-
+       
+        Cli<BrooklynCommand> parser = getCli();
+        
         try {
-            Callable<?> command = brooklynParser.parse(args); 
+            BrooklynCommand command = parser.parse(args); 
             command.call();
         } catch (ParseException pe) {
             System.err.println("Parse error: " + pe.getMessage());
-            System.err.println(launchHelp.toString());
+            StringBuilder parseErrorHelp = new StringBuilder();
+            Help.help(parser.getMetadata(), ImmutableList.of("brooklyn"),parseErrorHelp);
+            System.err.println(parseErrorHelp);
             System.exit(1);
         } catch (Exception e) {
             System.err.println("Execution error: " + e.getMessage());
@@ -61,15 +56,37 @@ public class Main {
     }
 
     public static abstract class BrooklynCommand implements Callable<Void> {
+        @Inject
+        public Help help;
+
         @Option(type = OptionType.GLOBAL, name = { "-v", "--verbose" }, description = "Verbose mode")
         public boolean verbose = false;
 
         @Option(type = OptionType.GLOBAL, name = { "-q", "--quiet" }, description = "Quiet mode")
         public boolean quiet = false;
+        
+        public ToStringHelper string() {
+            return Objects.toStringHelper(getClass())
+                    .add("verbose", verbose)
+                    .add("quiet", quiet);
+        }
+        
+        public String toString() {
+            return string().toString();
+        }
     }
 
+    @Command(name = "help", description = "Display help information about brooklyn")
+    public static class HelpCommand extends BrooklynCommand
+    {
+        @Override
+        public Void call() throws Exception {
+            return help.call();
+        }
+    }
+    
     @Command(name = "launch", description = "Starts a brooklyn application. Note that a BROOKLYN_CLASSPATH environment variable needs to be set up beforehand to point to the user application classpath.")
-    public static class Launch extends BrooklynCommand {
+    public static class LaunchCommand extends BrooklynCommand {
         @Option(name = { "-a", "--app" }, required = true, title = "application class or file",
                 description = "The Application to start. For example my.AppName or file://my/AppName.groovy or classpath://my/AppName.groovy")
         public String app;
@@ -116,7 +133,7 @@ public class Main {
             List<Location> brooklynLocations = new LocationRegistry().getLocationsById(locations);
             
             // Start the application
-            BrooklynLauncher.manage(application, port);
+            BrooklynLauncher.manage(application, port); //TODO make sure it soesn't start web console if ti's not supposed to, might need to change manage
             application.start(brooklynLocations);
             
             if (verbose) {
@@ -144,6 +161,26 @@ public class Main {
             Constructor<?> constructor = appClass.getConstructor();
             return (AbstractApplication) constructor.newInstance();
         }
+
+        @Override
+        public ToStringHelper string() {
+            return super.string()
+                    .add("app", app);
+                    //TODO" add all the other options 
+        }
         
+    }
+
+    public static Cli<BrooklynCommand> getCli() {
+        @SuppressWarnings({ "unchecked" })
+        CliBuilder<BrooklynCommand> builder = Cli.buildCli("brooklyn", BrooklynCommand.class)
+                .withDescription("Brooklyn Management Service")
+                .withDefaultCommand(HelpCommand.class)
+                .withCommands(
+                        HelpCommand.class,
+                        LaunchCommand.class
+                );
+
+        return builder.build();
     }
 }
