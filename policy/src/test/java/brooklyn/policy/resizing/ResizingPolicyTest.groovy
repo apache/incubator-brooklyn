@@ -17,6 +17,7 @@ import brooklyn.event.basic.BasicNotificationSensor
 import brooklyn.test.entity.TestCluster
 import brooklyn.util.internal.TimeExtras
 
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap
 
 class ResizingPolicyTest {
@@ -37,7 +38,7 @@ class ResizingPolicyTest {
     
     private static long TIMEOUT_MS = 10000
     private static long SHORT_WAIT_MS = 250
-    private static long OVERHEAD_DURATION_MS = 250
+    private static long OVERHEAD_DURATION_MS = 500
     private static long EARLY_RETURN_MS = 10
     
     ResizingPolicy policy
@@ -247,9 +248,14 @@ class ResizingPolicyTest {
         assertSucceedsContinually(duration:2000L) { assertEquals(resizable.sizes, [1]) }
     }
 
+    @Test(groups="Integration", invocationCount=100)
+    public void testRepeatedResizeUpStabilizationDelayTakesMaxSustainedDesired() {
+        testResizeUpStabilizationDelayTakesMaxSustainedDesired();
+    }
+    
     @Test
     public void testResizeUpStabilizationDelayTakesMaxSustainedDesired() {
-        long resizeUpStabilizationDelay = 1000L
+        long resizeUpStabilizationDelay = 1100L
         long minPeriodBetweenExecs = 0
         resizable.removePolicy(policy)
         
@@ -257,16 +263,35 @@ class ResizingPolicyTest {
         resizable.addPolicy(policy)
         resizable.resize(1)
         
-        // Grows to max sustained in time window
+        // Will grow to only the max sustained in this time window 
+        // (i.e. to 2 within the first $resizeUpStabilizationDelay milliseconds)
+        Stopwatch stopwatch = new Stopwatch()
+        stopwatch.start()
+        
         resizable.emit(ResizingPolicy.POOL_HOT, message(1, 61L, 1*10L, 1*20L)) // would grow to 4
         resizable.emit(ResizingPolicy.POOL_HOT, message(1, 21L, 1*10L, 1*20L)) // would grow to 2
         Thread.sleep(resizeUpStabilizationDelay-OVERHEAD_DURATION_MS)
-        resizable.emit(ResizingPolicy.POOL_HOT, message(1, 61L, 1*10L, 1*20L)) // would grow to 4
         
-        long emitTime = System.currentTimeMillis()
+        Stopwatch stopwatch2 = new Stopwatch()
+        stopwatch2.start()
+        
+        resizable.emit(ResizingPolicy.POOL_HOT, message(1, 61L, 1*10L, 1*20L)) // would grow to 4
+
+        // Wait for it to reach size 2, and confirm take expected time
         executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 2) }
-        long resizeDelay = System.currentTimeMillis() - emitTime
-        assertTrue(resizeDelay >= (OVERHEAD_DURATION_MS*2))
+        
+        long timeToResize = stopwatch.elapsedMillis()
+        assertTrue(timeToResize >= resizeUpStabilizationDelay-EARLY_RETURN_MS &&
+                timeToResize <= resizeUpStabilizationDelay+OVERHEAD_DURATION_MS,
+                "Resizing to 2: expected=$timeToResize; resizeUpStabilizationDelay=$resizeUpStabilizationDelay")
+
+        // Will then grow to 4 $resizeUpStabilizationDelay milliseconds after that emission
+        executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 4) }
+        long timeToResizeTo4 = stopwatch2.elapsedMillis()
+        
+        assertTrue(timeToResizeTo4 >= resizeUpStabilizationDelay-EARLY_RETURN_MS &&
+                timeToResizeTo4 <= resizeUpStabilizationDelay+OVERHEAD_DURATION_MS,
+                "Resizing to 4: expected=$timeToResize; resizeUpStabilizationDelay=$resizeUpStabilizationDelay")
     }
 
     @Test
@@ -316,9 +341,14 @@ class ResizingPolicyTest {
         assertSucceedsContinually(duration:2000L) { assertEquals(resizable.sizes, [2]) }
     }
 
+    @Test(groups="Integration", invocationCount=100)
+    public void testRepeatedResizeDownStabilizationDelayTakesMinSustainedDesired() {
+        testResizeDownStabilizationDelayTakesMinSustainedDesired();
+    }
+    
     @Test
     public void testResizeDownStabilizationDelayTakesMinSustainedDesired() {
-        long resizeDownStabilizationDelay = 1000L
+        long resizeDownStabilizationDelay = 1100L
         long minPeriodBetweenExecs = 0
         resizable.removePolicy(policy)
         
@@ -326,16 +356,36 @@ class ResizingPolicyTest {
         resizable.addPolicy(policy)
         resizable.resize(3)
         
-        // Shrink to min sustained in time window
+        // Will shrink to only the min sustained in this time window
+        // (i.e. to 2 within the first $resizeUpStabilizationDelay milliseconds)
+        Stopwatch stopwatch = new Stopwatch()
+        stopwatch.start()
+        
         resizable.emit(ResizingPolicy.POOL_COLD, message(3, 1L, 3*10L, 3*20L)) // would shrink to 1
         resizable.emit(ResizingPolicy.POOL_COLD, message(3, 20L, 3*10L, 3*20L)) // would shrink to 2
         Thread.sleep(resizeDownStabilizationDelay-OVERHEAD_DURATION_MS)
-        resizable.emit(ResizingPolicy.POOL_COLD, message(3, 1L, 3*10L, 3*20L)) // would shrink to 1
         
-        long emitTime = System.currentTimeMillis()
+        Stopwatch stopwatch2 = new Stopwatch()
+        stopwatch2.start()
+        
+        resizable.emit(ResizingPolicy.POOL_COLD, message(3, 1L, 3*10L, 3*20L)) // would shrink to 1
+
+        // Wait for it to shrink to size 2, and confirm take expected time
         executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 2) }
-        long resizeDelay = System.currentTimeMillis() - emitTime
-        assertTrue(resizeDelay >= (OVERHEAD_DURATION_MS*2))
+        
+        long timeToResize = stopwatch.elapsedMillis()
+        assertTrue(timeToResize >= resizeDownStabilizationDelay-EARLY_RETURN_MS &&
+                timeToResize <= resizeDownStabilizationDelay+OVERHEAD_DURATION_MS,
+                "Resizing to 2: expected=$timeToResize; resizeDownStabilizationDelay=$resizeDownStabilizationDelay")
+
+        // Will then shrink to 1 $resizeUpStabilizationDelay milliseconds after that emission
+        executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 1) }
+        long timeToResizeTo1 = stopwatch2.elapsedMillis()
+        
+        assertTrue(timeToResizeTo1 >= resizeDownStabilizationDelay-EARLY_RETURN_MS &&
+                timeToResizeTo1 <= resizeDownStabilizationDelay+OVERHEAD_DURATION_MS,
+                "Resizing to 4: expected=$timeToResize; resizeDownStabilizationDelay=$resizeDownStabilizationDelay")
+
     }
 
     @Test
