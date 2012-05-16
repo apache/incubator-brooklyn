@@ -1,30 +1,28 @@
 package brooklyn.cli;
 
-import java.io.InputStreamReader;
+import static org.testng.Assert.assertTrue;
+import groovy.lang.GroovyClassLoader;
 
 import org.testng.annotations.Test;
 
+import brooklyn.cli.Main.Launch;
+import brooklyn.entity.basic.AbstractApplication;
+import brooklyn.util.ResourceUtils;
+
 public class CliTest {
-    @Test(enabled = false, groups = "Integration")
-    public void testLaunchCliHelp() throws Exception {
-        ProcessBuilder pb = new ProcessBuilder();
-        pb.command("brooklyn.sh", "help");
-        Process brooklyn = pb.start();
-        InputStreamReader reader = new InputStreamReader(brooklyn.getErrorStream());
-        // TODO etc ...
-    }
 
-    @Test(enabled = false, groups = "Integration")
-    public void testLaunchCliApp() throws Exception {
-        ProcessBuilder pb = new ProcessBuilder();
-        pb.command("brooklyn.sh", "--verbose", "launch", "--app", "brooklyn.cli.TestApp", "--location", "localhost", "--noConsole");
-        Process brooklyn = pb.start();
+    @Test
+    public void testClassloadsApplication() throws Exception {
+        Launch launchCommand = new Main.Launch();
+        ResourceUtils resourceUtils = new ResourceUtils(this);
+        GroovyClassLoader loader = new GroovyClassLoader(CliTest.class.getClassLoader());
+        String appName = ExampleApp.class.getName();
+        
+        AbstractApplication app = launchCommand.loadApplicationFromClasspathOrParse(resourceUtils, loader, appName);
+        assertTrue(app instanceof ExampleApp, "app="+app);
     }
-
-    @Test(enabled = false, groups = "Integration")
-    public void testLaunchCliAppError() throws Exception {
-        ProcessBuilder pb = new ProcessBuilder();
-        pb.command("brooklyn.sh", "launch", "--doesNotExist", "nothing");
-        Process brooklyn = pb.start();
-    }
+    
+    @SuppressWarnings("serial")
+    public static class ExampleApp extends AbstractApplication {}
+    
 }
