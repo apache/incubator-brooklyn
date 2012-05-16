@@ -46,10 +46,10 @@ public class VanillaJavaApp extends SoftwareProcessEntity implements UsesJava, U
         [] ];
 
     @SetFromFlag(defaultVal="true")
-    boolean useJmx;
+    protected boolean useJmx;
     
     @SetFromFlag
-    long jmxPollPeriod
+    protected long jmxPollPeriod
     
     @SetFromFlag("jvmXArgs")
     public static final BasicConfigKey<List> JVM_XARGS = [ List, "vanillaJavaApp.jvmXArgs", "JVM -X args for the java app (e.g. memory)", 
@@ -59,7 +59,7 @@ public class VanillaJavaApp extends SoftwareProcessEntity implements UsesJava, U
     public static final BasicConfigKey<Map> JVM_DEFINES = [ Map, "vanillaJavaApp.jvmDefines", "JVM system property definitions for the app",
         [:] ];
 
-    JmxSensorAdapter jmxAdapter
+    protected JmxSensorAdapter jmxAdapter
     
     public VanillaJavaApp(Map props=[:], Entity owner=null) {
         super(props, owner)
