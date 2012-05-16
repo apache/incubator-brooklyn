@@ -51,10 +51,6 @@ public class TimeWindowedList<T> {
     }
     
     public synchronized List<TimestampedValue<T>> getValuesInWindow(long now, long subTimePeriod) {
-        if (values.size() <= minVals) {
-            return ImmutableList.copyOf(values.subList(values.size()-minVals, values.size()));
-        }
-        
         List<TimestampedValue<T>> result = new LinkedList<TimestampedValue<T>>();
         TimestampedValue<T> mostRecentExpired = null;
         for (TimestampedValue<T> val : values) {
@@ -68,7 +64,13 @@ public class TimeWindowedList<T> {
         if (minExpiredVals > 0 && mostRecentExpired != null) {
             result.add(0, mostRecentExpired);
         }
-        return result;
+        
+        if (result.size() < minVals) {
+            int minIndex = Math.max(0, values.size()-minVals);
+            return ImmutableList.copyOf(values.subList(minIndex, values.size()));
+        } else {
+            return result;
+        }
     }
     
     public void add(T val) {

@@ -278,20 +278,20 @@ class ResizingPolicyTest {
         resizable.emit(ResizingPolicy.POOL_HOT, message(1, 61L, 1*10L, 1*20L)) // would grow to 4
 
         // Wait for it to reach size 2, and confirm take expected time
-        executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 2) }
+        executeUntilSucceeds(period:1, timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 2) }
         
         long timeToResize = stopwatch.elapsedMillis()
         assertTrue(timeToResize >= resizeUpStabilizationDelay-EARLY_RETURN_MS &&
                 timeToResize <= resizeUpStabilizationDelay+OVERHEAD_DURATION_MS,
-                "Resizing to 2: expected=$timeToResize; resizeUpStabilizationDelay=$resizeUpStabilizationDelay")
+                "Resizing to 2: time=$timeToResize; resizeUpStabilizationDelay=$resizeUpStabilizationDelay")
 
         // Will then grow to 4 $resizeUpStabilizationDelay milliseconds after that emission
-        executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 4) }
+        executeUntilSucceeds(period:1, timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 4) }
         long timeToResizeTo4 = stopwatch2.elapsedMillis()
         
         assertTrue(timeToResizeTo4 >= resizeUpStabilizationDelay-EARLY_RETURN_MS &&
                 timeToResizeTo4 <= resizeUpStabilizationDelay+OVERHEAD_DURATION_MS,
-                "Resizing to 4: expected=$timeToResize; resizeUpStabilizationDelay=$resizeUpStabilizationDelay")
+                "Resizing to 4: time=$timeToResize; resizeUpStabilizationDelay=$resizeUpStabilizationDelay")
     }
 
     @Test
@@ -371,20 +371,20 @@ class ResizingPolicyTest {
         resizable.emit(ResizingPolicy.POOL_COLD, message(3, 1L, 3*10L, 3*20L)) // would shrink to 1
 
         // Wait for it to shrink to size 2, and confirm take expected time
-        executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 2) }
+        executeUntilSucceeds(period:1, timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 2) }
         
         long timeToResize = stopwatch.elapsedMillis()
         assertTrue(timeToResize >= resizeDownStabilizationDelay-EARLY_RETURN_MS &&
                 timeToResize <= resizeDownStabilizationDelay+OVERHEAD_DURATION_MS,
-                "Resizing to 2: expected=$timeToResize; resizeDownStabilizationDelay=$resizeDownStabilizationDelay")
+                "Resizing to 2: time=$timeToResize; resizeDownStabilizationDelay=$resizeDownStabilizationDelay")
 
         // Will then shrink to 1 $resizeUpStabilizationDelay milliseconds after that emission
-        executeUntilSucceeds(timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 1) }
+        executeUntilSucceeds(period:1, timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 1) }
         long timeToResizeTo1 = stopwatch2.elapsedMillis()
         
         assertTrue(timeToResizeTo1 >= resizeDownStabilizationDelay-EARLY_RETURN_MS &&
                 timeToResizeTo1 <= resizeDownStabilizationDelay+OVERHEAD_DURATION_MS,
-                "Resizing to 4: expected=$timeToResize; resizeDownStabilizationDelay=$resizeDownStabilizationDelay")
+                "Resizing to 1: time=$timeToResize; resizeDownStabilizationDelay=$resizeDownStabilizationDelay")
 
     }
 

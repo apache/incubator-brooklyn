@@ -80,7 +80,7 @@ public class WhirrHadoopCluster extends WhirrCluster {
 
     @Override
     public void stop() {
-        proxy.stop()
+        proxy?.stop()
         super.stop()
     }
 
