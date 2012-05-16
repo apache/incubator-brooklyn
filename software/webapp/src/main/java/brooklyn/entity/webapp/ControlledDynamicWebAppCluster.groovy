@@ -51,7 +51,7 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
     @SetFromFlag("controller")
     AbstractController _controller;
 
-    /** closure to create the web server, given flags */
+    /** factory (or closure) to create the web server, given flags */
     @SetFromFlag("factory")
     ConfigurableEntityFactory<WebAppService> _webServerFactory;
 

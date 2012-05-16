@@ -295,6 +295,16 @@ public class TypeCoercions {
                 };
             }
         });
+        registerAdapter(Closure.class, Function.class, new Function<Closure,Function>() {
+            @Override
+            public Function apply(final Closure closure) {
+                return new Function() {
+                    @Override public Object apply(Object input) {
+                        return closure.call(input);
+                    }
+                };
+            }
+        });
     }
     
 }

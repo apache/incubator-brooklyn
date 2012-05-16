@@ -1,6 +1,6 @@
 package brooklyn.policy.resizing
 
-import groovy.lang.Closure
+import groovy.lang.Closure;
 
 import java.util.Map
 import java.util.concurrent.Executors
@@ -21,7 +21,9 @@ import brooklyn.policy.basic.AbstractPolicy
 import brooklyn.util.TimeWindowedList
 import brooklyn.util.TimestampedValue
 import brooklyn.util.flags.SetFromFlag
+import brooklyn.util.flags.TypeCoercions;
 
+import com.google.common.base.Function
 import com.google.common.base.Preconditions
 
 
@@ -34,6 +36,21 @@ import com.google.common.base.Preconditions
 public class ResizingPolicy extends AbstractPolicy {
     
     private static final Logger LOG = LoggerFactory.getLogger(ResizingPolicy.class)
+
+    // TODO Is there a nicer pattern for registering such type-coercions? 
+    // Can't put it in the ResizeOperator interface, nor in core TypeCoercions class because interface is defined in policy/.
+    static {
+        TypeCoercions.registerAdapter(Closure.class, ResizeOperator.class, new Function<Closure,ResizeOperator>() {
+            @Override
+            public ResizeOperator apply(final Closure closure) {
+                return new ResizeOperator() {
+                    @Override public Integer resize(Entity entity, Integer input) {
+                        return closure.call(entity, input);
+                    }
+                };
+            }
+        });
+    }
     
     // Pool workrate notifications.
     public static BasicNotificationSensor<Map> POOL_HOT = new BasicNotificationSensor<Map>(
@@ -64,19 +81,19 @@ public class ResizingPolicy extends AbstractPolicy {
     private int maxPoolSize
     
     @SetFromFlag
-    private final Closure resizeOperator
+    private ResizeOperator resizeOperator
     
     @SetFromFlag
-    private final Closure currentSizeOperator
+    private Function<Entity,Integer> currentSizeOperator
     
     @SetFromFlag
-    private final BasicNotificationSensor poolHotSensor
+    private BasicNotificationSensor poolHotSensor
     
     @SetFromFlag
-    private final BasicNotificationSensor poolColdSensor
+    private BasicNotificationSensor poolColdSensor
     
     @SetFromFlag
-    private final BasicNotificationSensor poolOkSensor
+    private BasicNotificationSensor poolOkSensor
     
     private Entity poolEntity
     
@@ -86,12 +103,16 @@ public class ResizingPolicy extends AbstractPolicy {
     
     private final TimeWindowedList recentDesiredResizes
     
-    private final Closure defaultResizeOperator = { Entity e, int desiredSize ->
-        ((Entity)e).resize(desiredSize)
+    private final ResizeOperator defaultResizeOperator = new ResizeOperator() {
+        public Integer resize(Entity entity, Integer desiredSize) {
+            return entity.resize(desiredSize)
+        }
     }
     
-    private final Closure defaultCurrentSizeOperator = { Entity e ->
-        return ((Entity)e).getCurrentSize()
+    private final Function<Entity,Integer> defaultCurrentSizeOperator = new Function<Entity,Integer>() {
+        public Integer apply(Entity entity) {
+            return entity.getCurrentSize()
+        }
     }
     
     private final SensorEventListener<?> eventHandler = new SensorEventListener<Object>() {
@@ -230,7 +251,7 @@ public class ResizingPolicy extends AbstractPolicy {
                         executorTime = System.currentTimeMillis()
                         executorQueued.set(false)
 
-                        long currentPoolSize = currentSizeOperator.call(poolEntity)
+                        long currentPoolSize = currentSizeOperator.apply(poolEntity)
                         def (int desiredPoolSize, boolean stable) = calculateDesiredPoolSize(currentPoolSize)
                         if (!stable) {
                             // the desired size fluctuations are not stable; ensure we check again later (due to time-window)
@@ -244,7 +265,7 @@ public class ResizingPolicy extends AbstractPolicy {
                             return
                         }
                         
-                        resizeOperator.call(poolEntity, desiredPoolSize)
+                        resizeOperator.resize(poolEntity, desiredPoolSize)
                         
                         if (LOG.isDebugEnabled()) LOG.debug("{} requested resize to {}; current {}, min {}, max {}", this, desiredPoolSize,
                                 currentPoolSize, minPoolSize, maxPoolSize)
