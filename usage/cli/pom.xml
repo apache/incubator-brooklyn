@@ -40,7 +40,7 @@
         <dependency>
             <groupId>org.iq80.cli</groupId>
             <artifactId>git-like-cli</artifactId>
-            <version>0.3</version>
+            <version>${git-like-cli.version}</version>
         </dependency>
     </dependencies>
 
