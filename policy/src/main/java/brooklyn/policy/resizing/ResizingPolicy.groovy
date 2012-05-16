@@ -231,8 +231,7 @@ public class ResizingPolicy extends AbstractPolicy {
                         executorQueued.set(false)
 
                         long currentPoolSize = currentSizeOperator.call(poolEntity)
-                        int desiredPoolSize = calculateDesiredPoolSize(currentPoolSize)
-                        boolean stable = isDesiredPoolSizeStable()
+                        def (int desiredPoolSize, boolean stable) = calculateDesiredPoolSize(currentPoolSize)
                         if (!stable) {
                             // the desired size fluctuations are not stable; ensure we check again later (due to time-window)
                             // even if no additional events have been received
@@ -269,20 +268,15 @@ public class ResizingPolicy extends AbstractPolicy {
         }
     }
     
-    private boolean isDesiredPoolSizeStable() {
-        long now = System.currentTimeMillis()
-        List<TimestampedValue<?>> downWindowVals = recentDesiredResizes.getValuesInWindow(now, resizeDownStabilizationDelay)
-        List<TimestampedValue<?>> upWindowVals = recentDesiredResizes.getValuesInWindow(now, resizeUpStabilizationDelay)
-        return (minInWindow(downWindowVals, resizeDownStabilizationDelay) == maxInWindow(downWindowVals, resizeDownStabilizationDelay)) && 
-                (minInWindow(upWindowVals, resizeUpStabilizationDelay) == maxInWindow(upWindowVals, resizeUpStabilizationDelay))
-    }
-    
     /**
      * Complicated logic for stabilization-delay...
      * Only grow if we have consistently been asked to grow for the resizeUpStabilizationDelay period;
      * Only shrink if we have consistently been asked to shrink for the resizeDownStabilizationDelay period.
+     * 
+     * @return tuple of desired pool size, and whether this is "stable" (i.e. if we receive no more events 
+     *         will this continue to be the desired pool size)
      */
-    private int calculateDesiredPoolSize(long currentPoolSize) {
+    private List<?> calculateDesiredPoolSize(long currentPoolSize) {
         long now = System.currentTimeMillis()
         List<TimestampedValue<?>> downsizeWindowVals = recentDesiredResizes.getValuesInWindow(now, resizeDownStabilizationDelay)
         List<TimestampedValue<?>> upsizeWindowVals = recentDesiredResizes.getValuesInWindow(now, resizeUpStabilizationDelay)
@@ -300,10 +294,14 @@ public class ResizingPolicy extends AbstractPolicy {
             desiredPoolSize = currentPoolSize
         }
         
-        if (LOG.isTraceEnabled()) LOG.trace("{} calculated desired pool size: from {} to {}; minDesired {}, maxDesired {}; downsizeHistory {}; upsizeHistor {}", 
-                this, currentPoolSize, desiredPoolSize, minDesiredPoolSize, maxDesiredPoolSize, downsizeWindowVals, upsizeWindowVals)
+        boolean stable = (minInWindow(downsizeWindowVals, resizeDownStabilizationDelay) == maxInWindow(downsizeWindowVals, resizeDownStabilizationDelay)) &&
+                (minInWindow(upsizeWindowVals, resizeUpStabilizationDelay) == maxInWindow(upsizeWindowVals, resizeUpStabilizationDelay))
+
+        if (LOG.isTraceEnabled()) LOG.trace("{} calculated desired pool size: from {} to {}; minDesired {}, maxDesired {}; " +
+                "stable {}; now {}; downsizeHistory {}; upsizeHistory {}", 
+                this, currentPoolSize, desiredPoolSize, minDesiredPoolSize, maxDesiredPoolSize, stable, now, downsizeWindowVals, upsizeWindowVals)
         
-        return desiredPoolSize
+        return [desiredPoolSize, stable]
     }
 
     /**
@@ -317,7 +315,7 @@ public class ResizingPolicy extends AbstractPolicy {
             if (result == null && val.getTimestamp() > epoch) result = Integer.MAX_VALUE
             if (result == null || (val.getValue() != null && val.getValue() > result)) result = val.getValue()
         }
-        return result
+        return (result != null ? result : Integer.MAX_VALUE)
     }
     
     /**
@@ -331,7 +329,7 @@ public class ResizingPolicy extends AbstractPolicy {
             if (result == null && val.getTimestamp() > epoch) result = Integer.MIN_VALUE
             if (result == null || (val.getValue() != null && val.getValue() < result)) result = val.getValue()
         }
-        return result
+        return (result != null ? result : Integer.MIN_VALUE)
     }
     
     @Override
