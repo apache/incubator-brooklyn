@@ -25,6 +25,7 @@
             <fileMode>0755</fileMode>
             <includes>
                 <include>*.sh</include>
+                <include>brooklyn</include>
             </includes>
         </fileSet>
         <fileSet>
