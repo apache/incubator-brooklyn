@@ -12,6 +12,7 @@ import brooklyn.management.Task
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.ConfigKeySelfExtracting
 import brooklyn.util.internal.LanguageUtils
+import brooklyn.util.task.BasicExecutionManager
 
 import com.google.common.base.Splitter
 import com.google.common.collect.Lists
@@ -102,14 +103,23 @@ class BasicConfigKey<T> implements ConfigKey<T>, ConfigKeySelfExtracting<T>, Ser
         if (v==null || (type.isInstance(v) && !Future.class.isInstance(v)))
             return v;
         try {
-            //if it's a task, we wait for the task to complete
+            //if it's a task or a future, we wait for the task to complete
             if (v in Task) {
+                //if it's a task or a future, we make sure it is submitted
+                //(perhaps could run it here? ... tbd)
                 if (!((Task) v).isSubmitted() ) {
                     exec.submit((Task) v)
                 }
-                v = ((Task) v).get()
-            } else if (v in Future) {
-                v = ((Future) v).get()
+            }
+            if (v in Future) {
+                //including tasks, above
+                if (!((Future) v).isDone()) {
+                    BasicExecutionManager.withBlockingDetails("waiting for $v") {
+                        v = ((Future) v).get();
+                    }
+                } else {
+                    v = ((Future) v).get();
+                }
             } else if (v in Closure) {
                 v = ((Closure) v).call()
             } else if (v in Map) {

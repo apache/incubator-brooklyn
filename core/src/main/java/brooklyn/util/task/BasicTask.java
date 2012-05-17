@@ -135,12 +135,16 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
     private volatile boolean cancelled = false;
     protected Future<T> result = null;
 
-    protected ExecutionManager em = null;
-
+    /** discouraged, but used in tests. not always set (e.g. if it is a scheduled task)
+     * @deprecated in 0.4.0; use current execution context, as per CompoundTask.submitXxx */
+    @Deprecated
+    protected ExecutionManager em;
+    
+    @SuppressWarnings("deprecation")
     void initExecutionManager(ExecutionManager em) {
         this.em = em;
     }
-
+    
     synchronized void initResult(Future result) {
         if (this.result != null) 
             throw new IllegalStateException("task "+this+" is being given a result twice");

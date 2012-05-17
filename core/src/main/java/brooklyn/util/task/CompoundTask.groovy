@@ -1,9 +1,10 @@
 package brooklyn.util.task
 
 import java.util.concurrent.Callable
-import java.util.concurrent.Future
 
-import brooklyn.management.ExecutionManager
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 import brooklyn.management.Task
 
 
@@ -15,7 +16,9 @@ import brooklyn.management.Task
  * sensible manner by implementing the abstract {@link #runJobs} method.
  */
 public abstract class CompoundTask extends BasicTask<Object> {
-    
+
+    private static final Logger log = LoggerFactory.getLogger(CompoundTask.class);
+                
     protected final Collection<Task> children;
     protected final Collection<Object> result;
     
@@ -55,4 +58,18 @@ public abstract class CompoundTask extends BasicTask<Object> {
     /** return value needs to be specified by subclass */    
     protected abstract Object runJobs()
     
+    protected void submitIfNecessary(Task task) {
+        if (!task.isSubmitted()) {
+            if (!BasicExecutionContext.currentExecutionContext) {
+                if (em!=null) {
+                    log.warn("Discouraged submission of compound task ($task) from $this without execution context; using execution manager");
+                    em.submit(task);
+                } else {
+                    throw new IllegalStateException("Compound task ($task) launched from $this missing required execution context");
+                }
+            } else {
+                BasicExecutionContext.currentExecutionContext.submit(task)
+            }
+        }
+    }
 }
