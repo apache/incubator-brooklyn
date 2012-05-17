@@ -2,6 +2,9 @@ package brooklyn.entity.java
 
 import groovy.time.TimeDuration
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map
 import java.util.concurrent.TimeUnit
 
@@ -69,6 +72,21 @@ public class VanillaJavaApp extends SoftwareProcessEntity implements UsesJava, U
     public List getClasspath() { getConfig(CLASSPATH); }
     public Map getJvmDefines() { getConfig(JVM_DEFINES); }
     public List getJvmXArgs() { getConfig(JVM_XARGS); }
+
+    public void addToClasspath(String url) {
+        List<String> cp = getConfig(CLASSPATH);
+        List<String> newCP = new ArrayList<String>();
+        if (cp!=null) newCP.addAll(cp);
+        newCP.add(url);
+        setConfig(CLASSPATH, newCP);
+    }
+    public void addToClasspath(Collection<String> urls) {
+        List<String> cp = getConfig(CLASSPATH);
+        List<String> newCP = new ArrayList<String>();
+        if (cp!=null) newCP.addAll(cp);
+        newCP.addAll(urls);
+        setConfig(CLASSPATH, newCP);
+    }
 
     @Override
     protected void connectSensors() {
