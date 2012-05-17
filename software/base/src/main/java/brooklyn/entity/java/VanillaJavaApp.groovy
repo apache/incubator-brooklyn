@@ -146,9 +146,27 @@ public class VanillaJavaAppSshDriver extends JavaStartStopSshDriver {
             execute();
         ResourceUtils r = new ResourceUtils(entity);
         for (String f: entity.classpath) {
+            // TODO if it's a local folder then JAR it up before sending?
+            // TODO support wildcards
             int result = machine.installTo(new ResourceUtils(entity), f, runDir+"/"+"lib"+"/");
             if (result!=0)
                 throw new IllegalStateException("unable to install classpath entry $f for $entity at $machine");
+            // if it's a zip or tgz then expand
+                
+            // FIXME dedup with code in machine.installTo above
+            String destName = f;
+            destName = destName.contains('?') ? destName.substring(0, destName.indexOf('?')) : destName;
+            destName = destName.substring(destName.lastIndexOf('/')+1);
+            
+            if (destName.toLowerCase().endsWith(".zip")) {
+                result = machine.run("cd $runDir/lib && unzip $destName");
+            } else if (destName.toLowerCase().endsWith(".tgz") || destName.toLowerCase().endsWith(".tar.gz")) {
+                result = machine.run("cd $runDir/lib && tar xvfz $destName");
+            } else if (destName.toLowerCase().endsWith(".tar")) {
+                result = machine.run("cd $runDir/lib && tar xvfz $destName");
+            }
+            if (result!=0)
+                throw new IllegalStateException("unable to install classpath entry $f for $entity at $machine (failed to expand archive)");
         }
     }
     
