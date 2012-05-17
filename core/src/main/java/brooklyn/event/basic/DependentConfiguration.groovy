@@ -16,6 +16,7 @@ import brooklyn.management.SubscriptionHandle
 import brooklyn.management.Task
 import brooklyn.util.task.BasicExecutionContext
 import brooklyn.util.task.BasicTask
+import brooklyn.util.task.ParallelTask
 
 import com.google.common.base.Function
 import com.google.common.base.Predicate
@@ -91,6 +92,7 @@ public class DependentConfiguration {
             while (!ready.apply(value)) {
                 current.setBlockingDetails("Waiting for notification from subscription on $source $sensor")
                 semaphore.acquire()
+                current.setBlockingDetails(null)
                 value = data
             }
             if (LOG.isDebugEnabled()) LOG.debug("Attribute-ready for $sensor in entity $source")
@@ -116,17 +118,62 @@ public class DependentConfiguration {
      * passed in the first argument then transformed by the function in the second argument to generate
      * the value that is used for the configuration
      */
-    public static <U,T> Task<T> transform(Task<U> f, Function<U,T> g) {
+    public static <U,T> Task<T> transform(Task<U> task, Function<U,T> transformer) {
         new BasicTask<T>( {
-            if (!f.isSubmitted()) {
-                BasicExecutionContext.getCurrentExecutionContext().submit(f);
+            if (!task.isSubmitted()) {
+                BasicExecutionContext.getCurrentExecutionContext().submit(task);
             } 
-            g.apply(f.get())
+            transformer.apply(task.get())
         } );
     }
  
     /** @see #transform(Task, Function) */
-    public static <U,T> Task<T> transform(Task<U> f, Closure g) {
-        transform(f, g as Function)
+    public static <U,T> Task<T> transform(Task<U> task, Closure transformer) {
+        transform(task, transformer as Function)
     }
+    
+    /** Returns a task which waits for multiple other tasks (submitting if necessary)
+     * and performs arbitrary computation over the List of results.
+     * @see #transform(Task, Function) but note argument order is reversed (counterintuitive) to allow for varargs */
+    public static <U,T> Task<T> transformMultiple(Function<List<U>,T> transformer, Task<U> ...tasks) {
+        transform(new ParallelTask(tasks), transformer);
+    }
+
+    /** Returns a task which waits for multiple other tasks (submitting if necessary)
+     * and performs arbitrary computation over the List of results.
+     * @see #transform(Task, Function) but note argument order is reversed (counterintuitive) to allow for varargs */
+    public static <U,T> Task<T> transformMultiple(Closure transformer, Task<U> ...tasks) {
+        transform(new ParallelTask(tasks), transformer);
+    }
+
+    /** Method which returns a Future containing a string formatted using String.format,
+     * where the arguments can be normal objects or tasks;
+     * tasks will be waited on (submitted if necessary) and their results substituted in the call
+     * to String.format.
+     * <p>
+     * Example:
+     * <code>
+        setConfig(URL, DependentConfiguration.formatString("%s:%s", 
+                        DependentConfiguration.attributeWhenReady(target, Target.HOSTNAME),
+                        DependentConfiguration.attributeWhenReady(target, Target.PORT) ) );
+     * </code>
+     */
+    public static Task<String> formatString(String spec, Object ...args) {
+        List taskArgs = []
+        for (Object arg: args)
+            if (arg in Task) taskArgs << arg;
+            
+        transformMultiple({ List<Object> taskResults ->
+                Iterator<Object> tri = taskResults.iterator();
+                Object[] vv = new Object[args.length];
+                int i=0;
+                for (Object arg: args) {
+                    if (arg in Task) vv[i] = tri.next();
+                    else vv[i] = arg;
+                    i++;
+                }
+                String.format(spec, vv);
+            }, taskArgs.toArray(new Task[taskArgs.size()]));
+    }
+    
 }

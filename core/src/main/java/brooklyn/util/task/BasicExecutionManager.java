@@ -62,7 +62,35 @@ public class BasicExecutionManager implements ExecutionManager {
     }
 
     public static Task getCurrentTask() { return getPerThreadCurrentTask().get(); }
-    
+
+    /** convenience for setting "blocking details" on any task where the current thread is running;
+     * typically invoked prior to a wait, for transparency to a user;
+     * then invoked with 'null' just after the wait */
+    public static void setBlockingDetails(String description) {
+        try {
+            withBlockingDetails(description, null);
+        } catch (Exception e) {
+            Throwables.propagate(e);
+        }
+    }
+    /** convenience for setting "blocking details" on any task where the current thread is running,
+     * while the passed code is executed; often used from groovy as
+     * <code> withBlockingDetails("sleeping 5s") { Thread.sleep(5000); } </code> */
+    public static Object withBlockingDetails(String description, Callable code) throws Exception {
+        Task current = BasicExecutionManager.getCurrentTask();
+        if (current instanceof BasicTask)
+            ((BasicTask)current).setBlockingDetails(description); 
+        if (code!=null) {
+            try {
+                return code.call();
+            } finally {
+                if (current instanceof BasicTask)
+                    ((BasicTask)current).setBlockingDetails(null); 
+            }
+        }
+        return null;
+    }
+
     private ThreadFactory threadFactory = newThreadFactory();
     private ThreadFactory daemonThreadFactory = new ThreadFactory() {
         public Thread newThread(Runnable r) {

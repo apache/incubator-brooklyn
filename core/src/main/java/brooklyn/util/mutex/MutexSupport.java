@@ -4,9 +4,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import brooklyn.management.Task;
 import brooklyn.util.task.BasicExecutionManager;
-import brooklyn.util.task.BasicTask;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -51,14 +49,11 @@ public class MutexSupport implements WithMutexes {
     
     @Override
     public void acquireMutex(String mutexId, String description) throws InterruptedException {
-        Task current = BasicExecutionManager.getCurrentTask();
-        if (current instanceof BasicTask) { ((BasicTask)current).setBlockingDetails("waiting for "+mutexId+":"+description); }
-        
         SemaphoreWithOwners s = getSemaphore(mutexId, true);
-        s.acquire();
+        if (description!=null) BasicExecutionManager.setBlockingDetails(description+" - waiting for "+mutexId);
+        s.acquire(); 
+        if (description!=null) BasicExecutionManager.setBlockingDetails(null);
         s.setDescription(description);
-        
-        if (current instanceof BasicTask) { ((BasicTask)current).setBlockingDetails(null); }
     }
 
     @Override

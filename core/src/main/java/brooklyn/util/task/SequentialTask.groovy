@@ -17,7 +17,10 @@ class SequentialTask extends CompoundTask {
     protected Object runJobs() {
         List<Object> result = []
         children.each { task ->
-            em.submit(task)
+            // this could run in-thread if not submitted, for efficiency,
+            // but for task separation, interruption, distribution etc
+            // it seems cleaner to separate it out
+            submitIfNecessary(task)
             result.add (task.get())
         }
         return result
