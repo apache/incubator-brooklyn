@@ -15,17 +15,24 @@ import brooklyn.util.ResourceUtils;
 
 public class CliTest {
 
-    //TODO: add another test like this one, but which which loads the class
-    //      from a .groovy file (DO NOT call it ExampleApp)
     @Test
-    public void testClassloadsApplication() throws Exception {
+    public void testLoadApplicationFromClasspath() throws Exception {
         LaunchCommand launchCommand = new Main.LaunchCommand();
         ResourceUtils resourceUtils = new ResourceUtils(this);
         GroovyClassLoader loader = new GroovyClassLoader(CliTest.class.getClassLoader());
         String appName = ExampleApp.class.getName();
-        
         AbstractApplication app = launchCommand.loadApplicationFromClasspathOrParse(resourceUtils, loader, appName);
         assertTrue(app instanceof ExampleApp, "app="+app);
+    }
+
+    @Test
+    public void testLoadApplicationByParsingFile() throws Exception {
+        LaunchCommand launchCommand = new Main.LaunchCommand();
+        ResourceUtils resourceUtils = new ResourceUtils(this);
+        GroovyClassLoader loader = new GroovyClassLoader(CliTest.class.getClassLoader());
+        String appName = "ExampleAppInFile.groovy"; // file found in src/test/resources (contains empty app)
+        AbstractApplication app = launchCommand.loadApplicationFromClasspathOrParse(resourceUtils, loader, appName);
+        assertTrue(app.getClass().getName().equals("ExampleAppInFile"), "app="+app);
     }
     
     @Test
@@ -47,6 +54,7 @@ public class CliTest {
     
     //TODO: add tests for the HelpCommand
     
+    // An empty app to be used for testing
     @SuppressWarnings("serial")
     public static class ExampleApp extends AbstractApplication {}
     
