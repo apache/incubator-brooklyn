@@ -24,6 +24,7 @@ import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.location.Location;
+import brooklyn.location.basic.CommandLineLocations;
 import brooklyn.location.basic.LocationRegistry;
 import brooklyn.util.ResourceUtils;
 
@@ -32,6 +33,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 public class Main {
@@ -98,7 +100,7 @@ public class Main {
         
         @Option(name = { "-l", "--location", "--locations" }, title = "location list",
                 description = "Specifies the locations where the application will be launched.")
-        public Collection<String> locations = Arrays.asList("localhost");
+        public Collection<String> locations;
         
         @Option(name = { "-p", "--port" }, title = "port number",
                 description = "Specifies the port to be used by the Brooklyn Management Console.")
@@ -134,7 +136,8 @@ public class Main {
             }
             
             // Figure out the brooklyn location(s) where to launch the application
-            List<Location> brooklynLocations = new LocationRegistry().getLocationsById(locations);
+            List<Location> brooklynLocations = new LocationRegistry().getLocationsById(
+                    Iterables.isEmpty(locations) ? ImmutableSet.of(CommandLineLocations.LOCALHOST) : locations);
             
             // Start the application
             BrooklynLauncher.manage(application, port, !noShutdownOnExit, !noConsole);
