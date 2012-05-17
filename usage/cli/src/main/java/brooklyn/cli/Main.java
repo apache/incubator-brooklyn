@@ -108,6 +108,10 @@ public class Main {
                 description = "Whether to start the web console")
         public boolean noConsole = false;
 
+        @Option(name = { "-ns", "--noShutdownOnExit" },
+                description = "Whether to stop the application when the JVM exits")
+        public boolean noShutdownOnExit = false;
+
         @Override
         public Void call() throws Exception {
             
@@ -133,14 +137,29 @@ public class Main {
             List<Location> brooklynLocations = new LocationRegistry().getLocationsById(locations);
             
             // Start the application
-            BrooklynLauncher.manage(application, port); //TODO make sure it soesn't start web console if ti's not supposed to, might need to change manage
+            BrooklynLauncher.manage(application, port, !noShutdownOnExit, !noConsole);
             application.start(brooklynLocations);
             
             if (verbose) {
                 Entities.dumpInfo(application);
             }
             
+            // Block forever so that Brooklyn doesn't exit (until someone does cntrl-c or kill)
+            waitUntilInterrupted();
             return null;
+        }
+
+        private void waitUntilInterrupted() {
+            synchronized (this) {
+                while (true) {
+                    try {
+                        wait();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        return; // exit gracefully
+                    }
+                }
+            }
         }
         
         /**
