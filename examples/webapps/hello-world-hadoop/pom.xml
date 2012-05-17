@@ -1,16 +1,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <packaging>war</packaging>
-
     <artifactId>brooklyn-example-hello-world-hadoop-webapp</artifactId>
-
+    <packaging>war</packaging>
     <name>hello-world-hadoop-webapp Maven Webapp</name>
 
     <parent>
-        <groupId>io.brooklyn</groupId>
-        <artifactId>brooklyn-examples-parent</artifactId>
+        <groupId>io.brooklyn.example</groupId>
+        <artifactId>brooklyn-examples-webapps-parent</artifactId>
         <version>0.4.0-SNAPSHOT</version>   <!-- BROOKLYN_VERSION -->
-        <relativePath>../../pom.xml</relativePath>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <dependencies>
