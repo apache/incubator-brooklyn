@@ -9,6 +9,7 @@ import org.iq80.cli.ParseException;
 import org.testng.annotations.Test;
 
 import brooklyn.cli.Main.BrooklynCommand;
+import brooklyn.cli.Main.HelpCommand;
 import brooklyn.cli.Main.LaunchCommand;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.util.ResourceUtils;
@@ -41,8 +42,12 @@ public class CliTest {
         BrooklynCommand command = cli.parse("launch", "--app", "my.App");
         assertTrue(command instanceof LaunchCommand);
         String details = command.toString();
-        assertTrue(details.contains("app=my.App"));
-        //TODO: add more assertions
+        assertTrue(details.contains("app=my.App"));   
+        assertTrue(details.contains("script=null"));
+        assertTrue(details.contains("location=[localhost]"));
+        assertTrue(details.contains("port=8081"));
+        assertTrue(details.contains("noConsole=false"));
+        assertTrue(details.contains("noShutdwonOnExit=false"));
     }
 
     @Test(expectedExceptions = ParseException.class, expectedExceptionsMessageRegExp = "Required option '-a' is missing")
@@ -52,7 +57,13 @@ public class CliTest {
         fail("Should throw ParseException");
     }
     
-    //TODO: add tests for the HelpCommand
+    public void testHelpCommand() {
+        Cli<BrooklynCommand> cli = Main.getCli();
+        BrooklynCommand command = cli.parse("help");
+        assertTrue(command instanceof HelpCommand);
+        command = cli.parse();
+        assertTrue(command instanceof HelpCommand);
+    }
     
     // An empty app to be used for testing
     @SuppressWarnings("serial")
