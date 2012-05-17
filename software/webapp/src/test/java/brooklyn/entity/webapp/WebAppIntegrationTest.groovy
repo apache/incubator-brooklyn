@@ -19,7 +19,6 @@ import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.jboss.JBoss6Server
 import brooklyn.entity.webapp.jboss.JBoss7Server
-import brooklyn.entity.webapp.jboss.OldJBoss6Server
 import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
@@ -43,7 +42,7 @@ public class WebAppIntegrationTest {
     static { TimeExtras.init() }
     
     // Don't use 8080 since that is commonly used by testing software
-    public static final int DEFAULT_HTTP_PORT = 7880
+    public static final String DEFAULT_HTTP_PORT = "7880+"
     
     // Port increment for JBoss 6.
     public static final int PORT_INCREMENT = 400
@@ -54,13 +53,6 @@ public class WebAppIntegrationTest {
     
 	static { TimeExtras.init() }
 	
-    @BeforeMethod(groups = "Integration")
-    public void failIfHttpPortInUse() {
-        if (isPortInUse(DEFAULT_HTTP_PORT, 5000L)) {
-            fail "someone is already listening on port $DEFAULT_HTTP_PORT; tests assume that port $DEFAULT_HTTP_PORT is free on localhost"
-        }
-    }
-
     // Make sure everything created by newTestApplication() is shut down
     @AfterMethod(alwaysRun=true)
     public void shutdownApp() {
@@ -74,7 +66,7 @@ public class WebAppIntegrationTest {
     public void ensureTomcatIsShutDown() {
         Socket shutdownSocket = null;
         SocketException gotException = null;
-        Integer shutdownPort = entity?.getAttribute(TomcatServer.TOMCAT_SHUTDOWN_PORT)
+        Integer shutdownPort = entity?.getAttribute(TomcatServer.SHUTDOWN_PORT)
         
         if (shutdownPort != null) {
             boolean socketClosed = new Repeater("Checking Tomcat has shut down")
@@ -229,6 +221,7 @@ public class WebAppIntegrationTest {
                     n.times { connectToURL url }
                     Thread.sleep 1000
                     def requestCount = entity.getAttribute(WebAppService.REQUEST_COUNT)
+                    assertNotNull(requestCount, "requestCount not set")
                     assertEquals requestCount % n, 0
                     elapsedTime = System.currentTimeMillis() - startTime
                 }

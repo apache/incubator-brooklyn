@@ -115,6 +115,9 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 		checkAllSensorsConnected()
 	}
 	
+    protected void postActivation() {
+    }
+    
 	/** lifecycle message for connecting sensors to registry;
 	 * typically overridden by subclasses */
 	protected void connectSensors() {
@@ -172,6 +175,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 		startInLocation locations
 		postStart()
 		sensorRegistry.activateAdapters()
+        postActivation()
 		if (getAttribute(SERVICE_STATE) == Lifecycle.STARTING) 
             setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
 	}

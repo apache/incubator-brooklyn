@@ -1,78 +1,116 @@
 package brooklyn.entity.webapp.tomcat
 
-import java.util.Collection
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.MINUTES;
 
-import javax.management.InstanceNotFoundException
+import java.util.Map;
+
+import brooklyn.entity.basic.BasicConfigurableEntityFactory;
+
+import java.util.concurrent.TimeUnit
+
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
-import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup
-import brooklyn.entity.webapp.OldJavaWebApp
-import brooklyn.event.adapter.legacy.ValueProvider
+import brooklyn.entity.basic.SoftwareProcessEntity
+import brooklyn.entity.basic.UsesJmx;
+import brooklyn.entity.webapp.JavaWebAppService;
+import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
+import brooklyn.event.adapter.ConfigSensorAdapter
+import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
+import brooklyn.event.basic.MapConfigKey;
+import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.location.PortRange
+import brooklyn.location.basic.PortRanges
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.util.flags.SetFromFlag
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Tomcat instance.
  */
-public class TomcatServer extends OldJavaWebApp {
+public class TomcatServer extends JavaWebAppSoftwareProcess implements JavaWebAppService, UsesJmx {
     private static final Logger log = LoggerFactory.getLogger(TomcatServer.class)
     
-    public static final BasicConfigKey<PortRange> SUGGESTED_SHUTDOWN_PORT =
-            [ PortRange, "tomcat.shutdownport", "Suggested shutdown port", "31880+" ]
+    @SetFromFlag("version")
+    public static final BasicConfigKey<String> SUGGESTED_VERSION = [ SoftwareProcessEntity.SUGGESTED_VERSION, "7.0.27" ]
     
+    /**
+     * Tomcat insists on having a port you can connect to for the sole purpose of shutting it down.
+     * Don't see an easy way to disable it; causes collisions in its out-of-the-box location of 8005,
+     * so override default here to a high-numbered port.
+     */
+    @SetFromFlag("shutdownPort")
+    public static final PortAttributeSensorAndConfigKey SHUTDOWN_PORT = 
+            [ "tomcat.shutdownport", "Suggested shutdown port", PortRanges.fromString("31880+") ]
+    
+    @Deprecated /** @deprecated Use SHUTDOWN_PORT */
+    public static final BasicConfigKey<PortRange> SUGGESTED_SHUTDOWN_PORT = 
+            [ PortRange, "tomcat.shutdownport.deprecated", "Suggested shutdown port" ]
+
+    @Deprecated /** @deprecated Use SHUTDOWN_PORT */
     public static final BasicAttributeSensor<Integer> TOMCAT_SHUTDOWN_PORT =
-        [ Integer, "webapp.tomcat.shutdownPort", "Port to use for shutting down" ]
+            [ Integer, "webapp.tomcat.shutdownPort.deprecated", "Port to use for shutting down" ]
+    
     public static final BasicAttributeSensor<String> CONNECTOR_STATUS =
-        [String, "webapp.tomcat.connectorStatus", "Catalina connector state name"]
+            [String, "webapp.tomcat.connectorStatus", "Catalina connector state name"]
+    
+    /**
+     * @deprecated Unsupported in 0.4.0
+     */
+    @Deprecated
+    //TODO property copied from legacy JavaApp, but underlying implementation has not been
+    public static final MapConfigKey<Map> PROPERTY_FILES = [ Map, "java.properties.environment", "Property files to be generated, referenced by an environment variable" ]
+    
+    private JmxSensorAdapter jmx
     
     public TomcatServer(Map flags=[:], Entity owner=null) {
         super(flags, owner)
+    }
+
+    @Override   
+    public void connectSensors() {
+        super.connectSensors();
         
-        setConfigIfValNonNull(SUGGESTED_SHUTDOWN_PORT, flags.shutdownPort)
-    }
+        sensorRegistry.register(new ConfigSensorAdapter());
 
-    @Override
-    protected Collection<Integer> getRequiredOpenPorts() {
-        Collection<Integer> result = super.getRequiredOpenPorts()
-        if (getConfig(SUGGESTED_SHUTDOWN_PORT)) result.add(getConfig(SUGGESTED_SHUTDOWN_PORT))
-        return result
-    }
-
-    public SshBasedAppSetup newDriver(SshMachineLocation machine) {
-        return Tomcat7SshSetup.newInstance(this, machine)
-    }
-    
-    @Override
-    public void addJmxSensors() {
-		super.addJmxSensors()
-        sensorRegistry.addSensor(ERROR_COUNT, 
-				jmxAdapter.newAttributeProvider("Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "errorCount"))
-        sensorRegistry.addSensor(REQUEST_COUNT, 
-				jmxAdapter.newAttributeProvider("Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "requestCount"))
-        sensorRegistry.addSensor(TOTAL_PROCESSING_TIME, 
-				jmxAdapter.newAttributeProvider("Catalina:type=GlobalRequestProcessor,name=\"http-*\"", "processingTime"))
-        sensorRegistry.addSensor(CONNECTOR_STATUS, { computeConnectorStatus() } as ValueProvider)
-        sensorRegistry.addSensor(SERVICE_UP, { computeNodeUp() } as ValueProvider)
-    }
-    
-    // state values include: STARTED, FAILED, InstanceNotFound
-    protected String computeConnectorStatus() {
-        int port = getAttribute(HTTP_PORT)
-        ValueProvider<String> rawProvider = jmxAdapter.newAttributeProvider("Catalina:type=Connector,port=$port", "stateName")
-        try {
-            return rawProvider.compute()
-        } catch (InstanceNotFoundException infe) {
-            return "InstanceNotFound"
+        jmx = sensorRegistry.register(new JmxSensorAdapter(period: 500*MILLISECONDS));
+        jmx.objectName("Catalina:type=GlobalRequestProcessor,name=\"http-*\"").with {
+            attribute("errorCount").subscribe(ERROR_COUNT)
+            attribute("requestCount").subscribe(REQUEST_COUNT)
+            attribute("processingTime").subscribe(TOTAL_PROCESSING_TIME)
+        }
+        
+        jmx.objectName("Catalina:type=Connector,port=${getAttribute(HTTP_PORT)}").with {
+            attribute("stateName").with {
+                subscribe(CONNECTOR_STATUS)
+                subscribe(SERVICE_UP) { it == "STARTED" }
+                        // TODO set to "InstanceNotFound" if can't connect to MBean
+                        //      e.g..onError( {"InstanceNotFound"} )
+            }
         }
     }
     
-    protected boolean computeNodeUp() {
-        String connectorStatus = getAttribute(CONNECTOR_STATUS)
-        return (connectorStatus == "STARTED")
+    @Override    
+    protected void postActivation() {
+        super.postActivation()
+
+        // wait for MBeans to be available, rather than just the process to have started
+        LOG.info("Waiting for {} up, via {}", this, jmx?.getConnectionUrl())
+        waitForServiceUp(5*MINUTES)
+    }
+    
+
+    public Tomcat7SshDriver newDriver(SshMachineLocation machine) {
+        return new Tomcat7SshDriver(this, machine)
+    }
+}
+
+public class TomcatServerFactory extends BasicConfigurableEntityFactory<TomcatServer> {
+    public TomcatServerFactory(Map flags=[:]) {
+        super(flags, TomcatServer)
     }
 }

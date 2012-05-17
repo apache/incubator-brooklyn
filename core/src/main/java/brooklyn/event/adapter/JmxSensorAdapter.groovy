@@ -53,6 +53,10 @@ public class JmxSensorAdapter extends AbstractSensorAdapter {
         this.jmxConnectionTimeout = val
     }
     
+    public String getConnectionUrl() {
+        return helper?.getUrl()
+    }
+    
 	void register(SensorRegistry registry) {
 		super.register(registry)
  
