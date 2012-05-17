@@ -184,8 +184,12 @@ public class Main {
         @Override
         public ToStringHelper string() {
             return super.string()
-                    .add("app", app);
-                    //TODO" add all the other options 
+                    .add("app", app)
+                    .add("script", script)
+                    .add("location", locations)
+                    .add("port", port)
+                    .add("noConsole",noConsole)
+                    .add("noShutdwonOnExit",noShutdownOnExit);
         }
         
     }
