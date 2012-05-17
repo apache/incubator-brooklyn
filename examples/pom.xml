@@ -13,21 +13,12 @@
         Brooklyn examples module, building the Brooklyn examples.
     </description>
 
-    <repositories>
-        <repository>
-            <id>cloudsoft-releases</id>
-            <url>http://developers.cloudsoftcorp.com/download/maven2/</url>
-        </repository>
-            <repository>
-                <id>libs-snapshot-local</id>
-                <url>http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/</url>
-                <snapshots>
-                    <enabled>true</enabled>
-                    <updatePolicy>never</updatePolicy>
-                    <checksumPolicy>fail</checksumPolicy>
-               </snapshots>
-         </repository>
-    </repositories>
+    <parent>
+        <groupId>io.brooklyn</groupId>
+        <artifactId>brooklyn-parent</artifactId>
+        <version>0.4.0-SNAPSHOT</version>   <!-- BROOKLYN_VERSION -->
+        <relativePath>../pom.xml</relativePath>
+    </parent>
 
     <modules>
         <module>webapps</module>
