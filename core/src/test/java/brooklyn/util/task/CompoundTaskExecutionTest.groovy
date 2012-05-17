@@ -9,6 +9,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test
 
 import brooklyn.management.Task
@@ -21,7 +23,20 @@ public class CompoundTaskExecutionTest {
  
     private Map data = new ConcurrentHashMap()
 
-    BasicExecutionContext ec = new BasicExecutionContext(new BasicExecutionManager())
+    BasicExecutionManager em;
+    BasicExecutionContext ec;
+    
+    @BeforeClass
+    public void setup() {
+        em = new BasicExecutionManager();
+        ec = new BasicExecutionContext(em)
+    }
+    
+    @AfterClass
+    public void teardown() {
+        if (em) em.shutdownNow();
+        em = null;
+    }
     
     @Test
     public void runSequenceTask() {
