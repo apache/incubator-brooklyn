@@ -16,11 +16,19 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
+    <repositories>
+        <repository>
+            <id>oracle</id>
+            <url>http://download.oracle.com/maven</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-all</artifactId>
             <version>${project.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -37,6 +45,16 @@
             <groupId>org.apache.qpid</groupId>
             <artifactId>qpid-client</artifactId>
             <version>0.14</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.qpid</groupId>
+            <artifactId>qpid-bdbstore</artifactId>
+            <version>0.14</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sleepycat</groupId>
+            <artifactId>je</artifactId>
+            <version>5.0.34</version>
         </dependency>
     </dependencies>
 
@@ -55,7 +73,7 @@
                         <configuration>
 	                        <appendAssemblyId>false</appendAssemblyId>
                             <descriptors>
-                                <descriptor>src/main/config/demo.xml</descriptor>
+                                <descriptor>src/main/config/example.xml</descriptor>
                             </descriptors>
                             <finalName>${project.artifactId}</finalName>
 					        <outputDirectory>${project.basedir}</outputDirectory>
