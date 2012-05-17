@@ -20,7 +20,7 @@
             <version>5.1.18</version>
         </dependency>
         <dependency>
-            <groupId>io.brooklyn</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>brooklyn-example-hello-world-hadoop-jar</artifactId>
             <version>${project.version}</version>
         </dependency>

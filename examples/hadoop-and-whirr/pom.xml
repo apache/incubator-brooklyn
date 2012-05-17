@@ -3,6 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <packaging>bundle</packaging>
 
+    <groupId>io.brooklyn.example</groupId>
     <artifactId>brooklyn-example-hadoop-and-whirr</artifactId>
 
     <name>Brooklyn Hadoop and Whirr Example</name>
@@ -21,6 +22,7 @@
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-all</artifactId>
             <version>${project.version}</version>
+            <classifier>with-dependencies</classifier>
         </dependency>
     </dependencies>
 
