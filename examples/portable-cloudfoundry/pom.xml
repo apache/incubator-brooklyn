@@ -6,11 +6,13 @@
     
     <name>Brooklyn Portable CloudFoundry Example</name>
 
+    <!-- this is only needed for "mvn deploy"; the group and version can be extracted
+         and parent block removed to run this standalone -->
     <parent>
         <groupId>io.brooklyn</groupId>
-        <artifactId>brooklyn-parent</artifactId>
+        <artifactId>brooklyn-examples-parent</artifactId>
         <version>0.4.0-SNAPSHOT</version>   <!-- BROOKLYN_VERSION -->
-        <relativePath>../../pom.xml</relativePath>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <dependencies>

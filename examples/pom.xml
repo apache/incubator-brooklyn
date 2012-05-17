@@ -26,8 +26,7 @@
         <module>global-web-fabric</module>
         <module>hadoop-and-whirr</module>
         <module>portable-cloudfoundry</module>
-<!-- TODO temporarily disabled as this may be what is failing the build -->
-<!--        <module>simple-messaging-pubsub</module>  -->
+        <module>simple-messaging-pubsub</module>
     </modules>
 
 </project>
