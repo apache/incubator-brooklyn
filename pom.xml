@@ -695,6 +695,39 @@
             </build>
         </profile>
         <profile>
+            <id>dist</id>
+            <activation>
+                <file>
+                    <exists>dist.xml</exists>
+                </file>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <version>2.3</version>
+                        <executions>
+                            <execution>
+                                <id>build-distribution</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                                <configuration>
+                                    <appendAssemblyId>true</appendAssemblyId>
+                                    <archiveBaseDirectory>brooklyn</archiveBaseDirectory>
+                                    <descriptors>
+                                        <descriptor>dist.xml</descriptor>
+                                    </descriptors>
+                                    <useProjectArtifact>false</useProjectArtifact>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
             <id>Java</id>
             <activation>
                 <file>
