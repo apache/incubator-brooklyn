@@ -1,13 +1,16 @@
 #!/bin/bash
 #
 # Simple Messaging PubSub Example
+#
 #set -x # debug
 
-# Setup environment
-EXAMPLE_HOME=$(cd $(dirname $0)/.. && pwd)
-APPLICATION=brooklyn.demo.StandaloneBrokerExample
-BROOKLYN_CLASSPATH="${EXAMPLE_HOME}/resources:${EXAMPLE_HOME}/lib/*"
+# Set example directory
+DIR=$(cd $(dirname $0)/.. && pwd)
+
+# Setup Brooklyn environment
+BROOKLYN_CLASSPATH="${DIR}/resources:${DIR}/lib/*"
 BROOKLYN_OPTS="-Xms512m -Xmx512m"
+export BROOKLYN_CLASSPATH BROOKLYN_OPTS
 
 # Launch Brooklyn with application
-brooklyn launch --app ${APPLICATION} --location ${@:-localhost}
+brooklyn -v launch --app brooklyn.demo.StandaloneBrokerExample --location ${@:-localhost}

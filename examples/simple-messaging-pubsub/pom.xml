@@ -32,6 +32,10 @@
         </dependency>
 
         <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
             <version>${slf4j.version}</version>
@@ -46,23 +50,42 @@
             <artifactId>qpid-client</artifactId>
             <version>0.14</version>
         </dependency>
-        <dependency>
-            <groupId>org.apache.qpid</groupId>
-            <artifactId>qpid-bdbstore</artifactId>
-            <version>0.14</version>
-        </dependency>
-        <dependency>
-            <groupId>com.sleepycat</groupId>
-            <artifactId>je</artifactId>
-            <version>5.0.34</version>
-        </dependency>
     </dependencies>
 
     <build>
         <plugins>
             <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.apache.qpid</groupId>
+                                    <artifactId>qpid-bdbstore</artifactId>
+                                    <version>0.14</version>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.build.directory}/resources</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>com.sleepycat</groupId>
+                                    <artifactId>je</artifactId>
+                                    <version>5.0.34</version>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.build.directory}/resources</outputDirectory>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.3</version>
                 <executions>
                     <execution>
                         <id>build-distribution</id>

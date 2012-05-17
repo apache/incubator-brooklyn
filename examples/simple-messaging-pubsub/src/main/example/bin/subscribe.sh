@@ -2,23 +2,20 @@
 #
 # Brooklyn Messaging Example Subscriber
 #
-# Run this with the broker URL as the only argument to test publishing messages
+# Run this with the broker URL as the only argument to test subscribing to messages
 #
 #set -x # debug
 
+# Set example directory
+DIR=$(cd $(dirname $0)/.. && pwd)
 
-ROOT=$(cd $(dirname $0) && pwd)
-cd $ROOT
-
-CLASS=brooklyn.demo.Subscribe
-CLASSPATH="${CLASSPATH:-.}:lib/*"
-
-if [ $# -eq 0 ]; then
+# Check arguments
+if [ $# -ne 1 ]; then
     echo "Usage: $0 url"
     exit 255
 else
-    URL=$1
+    URL="$1"
 fi
 
-echo running ${CLASS}
-java ${JAVA_OPTS} -cp "${CLASSPATH}" ${CLASS} ${URL}
+# Run Subscribe client
+java -cp "${DIR}/lib/*" brooklyn.demo.Subscribe ${URL}
