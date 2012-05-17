@@ -211,7 +211,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
         for (ConfigKey k: getConfigKeys().values()) {
             if (PortRange.class.isAssignableFrom(k.getType())) {
                 PortRange p = getConfig(k);
-                if (!p?.isEmpty()) ports += p.iterator().next()
+                if (p != null & !p.isEmpty()) ports += p.iterator().next()
             }
         }
         log.debug("getRequiredOpenPorts detected default ${ports} for ${this}")

@@ -56,21 +56,13 @@ public class PortRanges {
         public static final PortRange ANY_HIGH_PORT = PortRanges.ANY_HIGH_PORT;
         public BasicPortRange(int start, int end) { super(start, end); }
         @Override
-        public boolean isEmpty() {
-            return false;
-        }
-        @Override
-        public boolean asBoolean() {
-            return true;
-        }
-        @Override
         public String toString() {
             return //getClass().getName()+"["+
                     start+"-"+end; //+"]";
         }
         @Override
         public boolean equals(Object obj) {
-            return obj!=null && toString().equals(obj.toString());
+            return (obj instanceof BasicPortRange) && toString().equals(obj.toString());
         }
         @Override
         public int hashCode() {

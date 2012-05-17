@@ -277,7 +277,7 @@ public class SshjTool implements SshTool {
 
     @Override
     public void disconnect() {
-        if (LOG.isDebugEnabled()) LOG.debug("Disconnecting {}", toString());
+        if (LOG.isTraceEnabled()) LOG.trace("Disconnecting {}", toString());
         try {
             sshClientConnection.clear();
         } catch (Exception e) {
@@ -380,7 +380,7 @@ public class SshjTool implements SshTool {
         
         String scriptContents = toScript(commands, env);
         
-        if (LOG.isTraceEnabled()) LOG.trace("Running shell command as script {}", scriptContents);
+        if (LOG.isDebugEnabled()) LOG.debug("Running shell command as script: {}", scriptContents);
         
         createFile(ImmutableMap.of("permissions", "0700"), scriptPath, scriptContents);
         
@@ -405,7 +405,7 @@ public class SshjTool implements SshTool {
                 .add("exit $?")
                 .build();
         
-        if (LOG.isTraceEnabled()) LOG.trace("Running shell command {}", allcmds);
+        if (LOG.isDebugEnabled()) LOG.debug("Running shell command: {}", allcmds);
         
         Integer result = acquire(new ShellAction(allcmds, out, err));
         return result != null ? result : -1;
@@ -428,7 +428,7 @@ public class SshjTool implements SshTool {
         List<String> allcmds = toCommandSequence(commands, env);
         String singlecmd = Joiner.on(separator).join(allcmds);
 
-        if (LOG.isTraceEnabled()) LOG.trace("Running command {}", singlecmd);
+        if (LOG.isDebugEnabled()) LOG.debug("Running command {}", singlecmd);
         
         Command result = acquire(new ExecAction(singlecmd, out, err));
         return result.getExitStatus();
@@ -481,7 +481,7 @@ public class SshjTool implements SshTool {
         for (int i = 0; i < sshTries; i++) {
             try {
                 connection.clear();
-                if (LOG.isDebugEnabled()) LOG.debug(">> ({}) acquiring {}", toString(), connection);
+                if (LOG.isTraceEnabled()) LOG.trace(">> ({}) acquiring {}", toString(), connection);
                 T returnVal = connection.create();
                 if (LOG.isTraceEnabled()) LOG.trace("<< ({}) acquired {}", toString(), returnVal);
                 return returnVal;
@@ -818,7 +818,7 @@ public class SshjTool implements SshTool {
                     } catch (ConnectionException e) {
                         if (!shell.isOpen()) {
                             // shell is closed; presumably the user command did `exit`
-                            LOG.debug("Shell closed to {} when executing {}", SshjTool.this.toString(), commands);
+                            if (LOG.isDebugEnabled()) LOG.debug("Shell closed to {} when executing {}", SshjTool.this.toString(), commands);
                             break;
                         } else {
                             throw e;
