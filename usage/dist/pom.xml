@@ -24,11 +24,6 @@
             <version>${project.version}</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>${slf4j.version}</version>
-        </dependency>
         <!-- TODO include examples -->
         <!-- TODO include documentation -->
     </dependencies>
@@ -73,9 +68,6 @@
                             <includes>
                                 <include>brooklyn-${project.version}-dist.*</include>
                             </includes>
-                        </fileset>
-                        <fileset>
-                            <directory>brooklyn-${project.version}-dist</directory>
                         </fileset>
                     </filesets>
                 </configuration>
