@@ -36,7 +36,7 @@ class AbstractControllerTest {
     FixedListMachineProvisioningLocation loc
     List<Collection<String>> updates
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     public void setUp() {
         List<SshMachineLocation> machines = []
         for (i in 1..10) {

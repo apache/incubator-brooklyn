@@ -18,6 +18,8 @@ import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.util.IdGenerator;
+import brooklyn.util.ResourceUtils
 import brooklyn.util.flags.SetFromFlag
 
 public class JavaStartStopSshDriverIntegrationTest {
@@ -81,15 +83,16 @@ class MyEntityDriver extends JavaStartStopSshDriver {
     @Override
     public void install() {
         String resourceName = "/"+MyEntityApp.class.name.replace(".", "/")+".class"
-        URL url = getClass().getResource(resourceName)
-        if (url == null) {
+        if (!new ResourceUtils(this).getResourceFromUrl(resourceName)) 
             throw new IllegalStateException("Cannot find resource $resourceName")
-        }
+        String tmpFile = "/tmp/brooklyn-test-MyEntityApp-"+IdGenerator.makeRandomId(6)+".class";
+        int result = machine.installTo(new ResourceUtils(this), resourceName, tmpFile)
+        if (result!=0) throw new IllegalStateException("Cannot install $resourceName to $tmpFile");
         String saveAs = "classes/"+MyEntityApp.class.getPackage().name.replace(".", "/")+"/"+MyEntityApp.class.simpleName+".class"
         newScript(INSTALLING).
             failOnNonZeroResultCode().
             body.append(
-                "curl -L \"${url}\" --create-dirs -o ${saveAs} || exit 9"
+                "curl -L \"file://${tmpFile}\" --create-dirs -o ${saveAs} || exit 9"
             ).execute();
     }
 

@@ -25,7 +25,7 @@ class StartStopSshDriverTest {
     SshMachineLocation sshMachineLocation
     StartStopSshDriver driver
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     public void setUp() {
         app = new TestApplication()
         entity = new TestEntity(app)
