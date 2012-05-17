@@ -19,7 +19,6 @@ import com.google.common.base.Preconditions
 class JBoss6SshDriver extends JavaWebAppSshDriver {
 	
     public static final String SERVER_TYPE = "standard"
-    public static final String DEFAULT_INSTALL_DIR = "$DEFAULT_INSTALL_BASEDIR/jboss"
     public static final int DEFAULT_HTTP_PORT = 8080;
     private static final PORT_GROUP_NAME = "ports-brooklyn"
     
@@ -94,7 +93,7 @@ class JBoss6SshDriver extends JavaWebAppSshDriver {
             "${installDir}/jboss-${version}/bin/twiddle.sh --host ${host} --port ${port} get \"jboss.system:type=Server\" Started | grep false && exit 1"
         ]
 		//have to override the CLI/JMX options
-        int result = execute(checkRunningScript, "checkRunning "+entity+" on "+machine, [:])
+        int result = execute(checkRunningScript, "checkRunning "+entity+" on "+machine, env:[:])
 		if (result==0) return true
         if (result==1) return false
         throw new IllegalStateException("$entity running check gave result code $result")
@@ -109,7 +108,7 @@ class JBoss6SshDriver extends JavaWebAppSshDriver {
         ]
 	    //again, messy copy of parent; but new driver scheme could allow script-helper to customise parameters
 	    log.debug "invoking shutdown script for {}: {}", entity, shutdownScript
-	    def result = execute(shutdownScript, "shutdown "+entity+" on "+machine, [:])
+	    def result = execute(shutdownScript, "shutdown "+entity+" on "+machine, env:[:])
 	    if (result) log.warn "non-zero result code terminating {}: {}", entity, result
 	    log.debug "done invoking shutdown script for {}", entity
 	}
@@ -135,8 +134,7 @@ class JBoss6SshDriver extends JavaWebAppSshDriver {
             "jboss.platform.mbeanserver" : null,
             "javax.management.builder.initial" : "org.jboss.system.server.jmx.MBeanServerBuilderImpl",
             "java.util.logging.manager" : "org.jboss.logmanager.LogManager",
-            "org.jboss.logging.Logger.pluginClass" : "org.jboss.logging.logmanager.LoggerPluginImpl",
-            //"jboss.boot.server.log.dir" : "${runDir}/server/${SERVER_TYPE}/log"
+            "org.jboss.logging.Logger.pluginClass" : "org.jboss.logging.logmanager.LoggerPluginImpl"
         ]
         return options
     }

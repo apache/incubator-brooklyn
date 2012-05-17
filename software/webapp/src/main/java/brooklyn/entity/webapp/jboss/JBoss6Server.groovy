@@ -27,7 +27,7 @@ import brooklyn.util.flags.SetFromFlag
 
 
 /**
- *  FIXME propFiles are never being generated!
+ * JBoss web application server.
  */
 public class JBoss6Server extends JavaWebAppSoftwareProcess implements JavaWebAppService, UsesJmx {
 
@@ -35,12 +35,16 @@ public class JBoss6Server extends JavaWebAppSoftwareProcess implements JavaWebAp
 
     @SetFromFlag("version")
     public static final BasicConfigKey<String> SUGGESTED_VERSION = [ SoftwareProcessEntity.SUGGESTED_VERSION, "6.0.0.Final" ]
-	@SetFromFlag("portIncrement")
-	public static final BasicAttributeSensorAndConfigKey<Integer> PORT_INCREMENT = [ Integer, "jboss.portincrement", "Increment to be used for all jboss ports", 0 ]
-	@SetFromFlag("clusterName")
-	public static final BasicAttributeSensorAndConfigKey<String> CLUSTER_NAME = [ String, "jboss.clusterName", "Identifier used to group JBoss instances", "" ]	  
+    @SetFromFlag("portIncrement")
+    public static final BasicAttributeSensorAndConfigKey<Integer> PORT_INCREMENT = [ Integer, "jboss.portincrement", "Increment to be used for all jboss ports", 0 ]
+    @SetFromFlag("clusterName")
+    public static final BasicAttributeSensorAndConfigKey<String> CLUSTER_NAME = [ String, "jboss.clusterName", "Identifier used to group JBoss instances", "" ]	  
 
-	//TODO copied from JavaApp
+    /**
+     * @deprecated Unsupported in 0.4.0
+     */
+    @Deprecated
+	//TODO property copied from legacy JavaApp, but underlying implementation has not been
 	public static final MapConfigKey<Map> PROPERTY_FILES = [ Map, "java.properties.environment", "Property files to be generated, referenced by an environment variable" ]
 	
     public JBoss6Server(Map flags=[:], Entity owner=null) {
@@ -67,7 +71,6 @@ public class JBoss6Server extends JavaWebAppSoftwareProcess implements JavaWebAp
     }
 }
 
-//TODO Do we need this? We are currently not using it.
 public class JBoss6ServerFactory extends BasicConfigurableEntityFactory<JBoss6Server> {
     public JBoss6ServerFactory(Map flags=[:]) {
         super(flags, JBoss6Server)

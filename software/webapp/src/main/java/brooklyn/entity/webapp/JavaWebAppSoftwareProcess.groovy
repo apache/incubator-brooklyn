@@ -76,17 +76,17 @@ public abstract class JavaWebAppSshDriver extends JavaStartStopSshDriver {
 	public void deploy(File f, String targetName=null) {
 		if (!targetName) targetName = f.getName();
         def dest = runDir+"/"+deploySubdir+"/"+targetName
-		log.info "{} deploying {} to {}:"+dest, entity, f, hostname
+		log.info "{} deploying {} to {}:{}", entity, f, hostname, dest
 		machine.run "mv -f ${dest} ${dest}.bak > /dev/null 2>&1" //back up old file/directory
         int result = machine.copyTo(f, dest);
-		log.debug "{} deployed {} to {}:"+dest+": result {}", entity, f, hostname, result
+		log.debug "{} deployed {} to {}:{}: result {}", entity, f, hostname, dest, result
 	}
 	public void deploy(String url, String targetName) {
         def dest = runDir+"/"+deploySubdir+"/"+targetName
-        log.info "{} deploying {} to {}:"+dest, entity, url, hostname
+        log.info "{} deploying {} to {}:{}", entity, url, hostname, dest
         machine.run "mv -f ${dest} ${dest}.bak > /dev/null 2>&1" //back up old file/directory
         int result = machine.copyTo(backup:true, getResource(url), runDir+"/"+deploySubdir+"/"+targetName)
-		log.debug "{} deployed {} to {}:"+dest+": result {}", entity, url, hostname, result
+		log.debug "{} deployed {} to {}:{}: result {}", entity, url, hostname, dest, result
 	}
 
 }
