@@ -20,7 +20,7 @@ brooklyn comes bundled with support for a large number of systems and entities.
 Web
 ---
 
-###ÊClusters and Interfaces
+### Clusters and Interfaces
 
 The class ``ControlledDynamicWebAppCluster`` creates a load-balanced cluster of web servers.
 It defaults to Nginx and JBoss 7, but this is configurable with the ``controller:`` and ``factory:``
