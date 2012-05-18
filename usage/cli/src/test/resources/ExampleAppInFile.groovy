@@ -1,3 +1,3 @@
 import brooklyn.entity.basic.AbstractApplication
 
-public class ExampleAppInFile extends AbstractApplication {}
+class ExampleAppInFile extends AbstractApplication { }
