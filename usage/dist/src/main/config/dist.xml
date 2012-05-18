@@ -6,6 +6,7 @@
     <includeBaseDirectory>true</includeBaseDirectory>
     <baseDirectory>brooklyn</baseDirectory>
     <formats>
+        <format>dir</format>
         <format>tar.gz</format>
         <format>zip</format>
     </formats>
@@ -23,16 +24,13 @@
             <directory>${project.basedir}/src/main/dist/bin</directory>
             <outputDirectory>/bin</outputDirectory>
             <fileMode>0755</fileMode>
-            <includes>
-                <include>*.sh</include>
-                <include>brooklyn</include>
-            </includes>
+            <directoryMode>0755</directoryMode>
         </fileSet>
         <fileSet>
             <directory>${project.basedir}/src/main/dist</directory>
             <outputDirectory>/</outputDirectory>
             <excludes>
-                <exclude>bin/*.sh</exclude>
+                <exclude>bin/*</exclude>
             </excludes>
         </fileSet>
     </fileSets>

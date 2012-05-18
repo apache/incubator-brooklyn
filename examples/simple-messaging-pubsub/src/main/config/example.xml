@@ -19,15 +19,13 @@
             <directory>${project.basedir}/src/main/example/bin</directory>
             <outputDirectory>/bin</outputDirectory>
             <fileMode>0755</fileMode>
-            <includes>
-                <include>*.sh</include>
-            </includes>
+            <directoryMode>0755</directoryMode>
         </fileSet>
         <fileSet>
             <directory>${project.basedir}/src/main/example</directory>
             <outputDirectory>/</outputDirectory>
             <excludes>
-                <exclude>*.sh</exclude>
+                <exclude>bin/*</exclude>
             </excludes>
         </fileSet>
         <fileSet>
@@ -38,8 +36,6 @@
     <dependencySets>
         <dependencySet>
             <outputDirectory>/lib</outputDirectory>
-            <fileMode>0644</fileMode>
-            <directoryMode>0755</directoryMode>
             <useTransitiveFiltering>true</useTransitiveFiltering>
             <excludes>
                 <exclude>io.brooklyn:*</exclude>
