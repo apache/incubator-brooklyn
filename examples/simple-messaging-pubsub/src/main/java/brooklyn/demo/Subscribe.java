@@ -40,7 +40,7 @@ public class Subscribe {
             do {
                 TextMessage msg = (TextMessage) messageConsumer.receive(15000L);
                 if (msg == null) break;
-                System.out.printf("Got message: '%s'\n", n++, msg.getText());
+                System.out.printf("Got message: '%s'\n", msg.getText());
             } while (n --> 0);
         } catch (Exception e) {
             System.err.printf("Error while receiving - %s\n", e.getMessage());
