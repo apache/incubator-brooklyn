@@ -109,10 +109,12 @@ public class TestUtils {
      * The following flags are supported:
      * <ul>
      * <li>abortOnError (boolean, default true)
-     * <li>abortOnException - (boolean, default false),
-     * <li>useGroovyTruth - (defaults to false; any result code apart from 'false' will be treated as success including null; ignored for Runnables which aren't Callables),
-     * <li>timeout - (a TimeDuration or an integer, defaults to 30*SECONDS)
-     * <li>period - (a TimeDuration or an integer, defaults to 500*MILLISECONDS),
+     * <li>abortOnException - (boolean, default false)
+     * <li>useGroovyTruth - (defaults to false; any result code apart from 'false' will be treated as success including null; ignored for Runnables which aren't Callables)
+     * <li>timeout - (a TimeDuration or an integer in millis, defaults to 30*SECONDS)
+     * <li>period - (a TimeDuration or an integer in millis, for fixed retry time; if not set, defaults to exponentially increasing from 1 to 500ms)
+     * <li>minPeriod - (a TimeDuration or an integer in millis; only used if period not explicitly set; the minimum period when exponentially increasing; defaults to 1ms)
+     * <li>maxPeriod - (a TimeDuration or an integer in millis; only used if period not explicitly set; the maximum period when exponentially increasing; defaults to 500ms)
      * <li>maxAttempts - (integer, Integer.MAX_VALUE)
      * </ul>
      *
@@ -131,8 +133,11 @@ public class TestUtils {
         boolean useGroovyTruth = flags.useGroovyTruth ?: false
         boolean logException = flags.logException ?: true
 
+        // To speed up tests, default is for the period to start small and increase...
         TimeDuration duration = toTimeDuration(flags.timeout) ?: new TimeDuration(0,0,30,0)
-        TimeDuration period = toTimeDuration(flags.period) ?: new TimeDuration(0,0,0,500)
+        TimeDuration fixedPeriod = toTimeDuration(flags.period) ?: null
+        TimeDuration minPeriod = fixedPeriod ?: toTimeDuration(flags.minPeriod) ?: new TimeDuration(0,0,0,1)
+        TimeDuration maxPeriod = fixedPeriod ?: toTimeDuration(flags.maxPeriod) ?: new TimeDuration(0,0,0,500)
         int maxAttempts = flags.maxAttempts ?: Integer.MAX_VALUE
         try {
             Throwable lastException = null;
@@ -141,6 +146,8 @@ public class TestUtils {
             long startTime = System.currentTimeMillis()
             long expireTime = startTime+duration.toMilliseconds()
             int attempt = 0;
+            long sleepTimeBetweenAttempts = minPeriod.toMilliseconds();
+            
             while (attempt<maxAttempts && lastAttemptTime<expireTime) {
                 try {
                     attempt++
@@ -162,8 +169,11 @@ public class TestUtils {
                     if (abortOnException) throw e
                     if (abortOnError && e in Error) throw e
                 }
-                if (period.toMilliseconds()>0) Thread.sleep period.toMilliseconds()
+                long sleepTime = Math.min(sleepTimeBetweenAttempts, expireTime-System.currentTimeMillis())
+                if (sleepTime > 0) Thread.sleep(sleepTime)
+                sleepTimeBetweenAttempts = Math.min(sleepTimeBetweenAttempts*2, maxPeriod.toMilliseconds())
             }
+            
             log.trace "Exceeded max attempts or timeout - {} attempts lasting {} ms", attempt, System.currentTimeMillis()-startTime
             if (lastException != null)
                 throw lastException
@@ -178,7 +188,7 @@ public class TestUtils {
 
     public static <T> void assertSucceedsContinually(Map flags=[:], Callable<T> job) {
         TimeDuration duration = toTimeDuration(flags.timeout) ?: new TimeDuration(0,0,1,0)
-        TimeDuration period = toTimeDuration(flags.period) ?: new TimeDuration(0,0,0,1)
+        TimeDuration period = toTimeDuration(flags.period) ?: new TimeDuration(0,0,0,10)
         long periodMs = period.toMilliseconds()
         long startTime = System.currentTimeMillis()
         long expireTime = startTime+duration.toMilliseconds()
@@ -197,7 +207,7 @@ public class TestUtils {
     
     public static <T> void assertContinually(Map flags=[:], Supplier<? extends T> supplier, Predicate<T> predicate, String errMsg, long durationMs) {
         TimeDuration duration = toTimeDuration(flags.timeout) ?: new TimeDuration(0,0,1,0)
-        TimeDuration period = toTimeDuration(flags.period) ?: new TimeDuration(0,0,0,1)
+        TimeDuration period = toTimeDuration(flags.period) ?: new TimeDuration(0,0,0,10)
         long periodMs = period.toMilliseconds()
         long startTime = System.currentTimeMillis()
         long expireTime = startTime+duration.toMilliseconds()
