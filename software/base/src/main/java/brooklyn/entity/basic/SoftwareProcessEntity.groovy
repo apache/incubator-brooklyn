@@ -34,6 +34,7 @@ import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.internal.Repeater
 
 import com.google.common.base.Preconditions
+import com.google.common.base.Predicate
 import com.google.common.collect.Iterables
 
 /**
@@ -299,12 +300,17 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 	}
 
 	Location removeFirstMatchingLocation(Closure matcher) {
-		synchronized (locations) {
-			Location loc = locations.find(matcher)
-			if (loc) locations.remove(loc)
-			return loc
-		}
+        synchronized (locations) {
+            Location loc = locations.find(matcher)
+            if (loc) locations.remove(loc)
+            return loc
+        }
+        return removeFirstMatchingLocation(matcher as Predicate)
 	}
+
+    Location removeFirstMatchingLocation(Predicate<Location> matcher) {
+        return removeFirstMatchingLocation({ return matcher.apply(it) })
+    }
 
 	public void stopInLocation(MachineLocation machine) {
 		if (sensorRegistry) sensorRegistry.close()

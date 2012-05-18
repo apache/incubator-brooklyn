@@ -3,6 +3,8 @@ package brooklyn.enricher
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import com.google.common.base.Function
+
 import brooklyn.enricher.basic.AbstractTransformingEnricher;
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.EntityLocal
@@ -19,7 +21,7 @@ public class TimeWeightedDeltaEnricher<T extends Number> extends AbstractTransfo
     Number lastValue
     long lastTime = -1
     int unitMillis
-    Closure postProcessor
+    Function<Double,Double> postProcessor
     
     // default 1 second
     public static <T extends Number> TimeWeightedDeltaEnricher getPerSecondDeltaEnricher(Entity producer, Sensor<T> source, Sensor<Double> target) {
@@ -27,6 +29,10 @@ public class TimeWeightedDeltaEnricher<T extends Number> extends AbstractTransfo
     }
 
     public TimeWeightedDeltaEnricher(Entity producer, Sensor<T> source, Sensor<Double> target, int unitMillis, Closure postProcessor={it}) {
+        this(producer, source, target, unitMillis, postProcessor as Function)
+    }
+    
+    public TimeWeightedDeltaEnricher(Entity producer, Sensor<T> source, Sensor<Double> target, int unitMillis, Function<Double,Double> postProcessor) {
         super(producer, source, target)
         this.unitMillis = unitMillis
         this.postProcessor = postProcessor

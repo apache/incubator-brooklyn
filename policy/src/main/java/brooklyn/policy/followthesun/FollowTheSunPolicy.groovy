@@ -25,6 +25,7 @@ import brooklyn.policy.followthesun.FollowTheSunPool.ContainerItemPair
 import brooklyn.policy.loadbalancing.Movable
 import brooklyn.util.flags.SetFromFlag
 
+import com.google.common.base.Function
 import com.google.common.collect.Iterables
 
 public class FollowTheSunPolicy extends AbstractPolicy {
@@ -37,7 +38,7 @@ public class FollowTheSunPolicy extends AbstractPolicy {
     private long minPeriodBetweenExecs
     
     @SetFromFlag
-    private Closure locationFinder
+    private Function<Entity, Location> locationFinder
     
     private final AttributeSensor<? extends Number> itemUsageMetric
     private final FollowTheSunModel<Entity, Entity> model
@@ -51,14 +52,16 @@ public class FollowTheSunPolicy extends AbstractPolicy {
     private volatile long executorTime = 0
     private boolean loggedConstraintsIgnored = false;
     
-    Closure defaultLocationFinder = { Entity e ->
-        Collection<Location> locs = e.getLocations()
-        if (locs.isEmpty()) return null
-        Location contender = Iterables.get(locs, 0)
-        while (contender.getParentLocation() != null && !(contender instanceof MachineProvisioningLocation)) {
-            contender = contender.getParentLocation()
+    private final Function<Entity, Location> defaultLocationFinder = new Function<Entity, Location>() {
+        public Location apply(Entity e) {
+            Collection<Location> locs = e.getLocations()
+            if (locs.isEmpty()) return null
+            Location contender = Iterables.get(locs, 0)
+            while (contender.getParentLocation() != null && !(contender instanceof MachineProvisioningLocation)) {
+                contender = contender.getParentLocation()
+            }
+            return contender
         }
-        return contender
     }
     
     private final SensorEventListener<?> eventHandler = new SensorEventListener<Object>() {
@@ -105,7 +108,7 @@ public class FollowTheSunPolicy extends AbstractPolicy {
         this.strategy = new FollowTheSunStrategy<Entity, Object>(model, parameters) // TODO: extract interface, inject impl
         this.locationFinder = locationFinder ?: defaultLocationFinder
         checkArgument(minPeriodBetweenExecs instanceof Number, "minPeriodBetweenExecs must be a number, but is "+minPeriodBetweenExecs.class.getClass())
-        checkArgument(locationFinder instanceof Closure, "locationFinder must be a closure, but is "+locationFinder.class.getClass())
+        checkArgument(locationFinder instanceof Function, "locationFinder must be a Function, but is "+locationFinder.class.getClass())
     }
     
     @Override
@@ -179,7 +182,7 @@ public class FollowTheSunPolicy extends AbstractPolicy {
     
     private void onContainerAdded(Entity container, boolean rebalanceNow) {
         subscribe(container, Attributes.LOCATION_CHANGED, eventHandler)
-        Location location = locationFinder.call(container)
+        Location location = locationFinder.apply(container)
         
         if (LOG.isTraceEnabled()) LOG.trace("{} recording addition of container {} in location {}", this, container, location)
         model.onContainerAdded(container, location)
@@ -227,7 +230,7 @@ public class FollowTheSunPolicy extends AbstractPolicy {
     }
     
     private void onContainerLocationUpdated(Entity container, boolean rebalanceNow) {
-        Location location = locationFinder.call(container)
+        Location location = locationFinder.apply(container)
         if (LOG.isTraceEnabled()) LOG.trace("{} recording location for container {}, new value {}", this, container, location)
         model.onContainerLocationUpdated(container, location)
         if (rebalanceNow) scheduleLatencyReductionJig()

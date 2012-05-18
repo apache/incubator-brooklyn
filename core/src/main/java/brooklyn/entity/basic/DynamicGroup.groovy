@@ -20,10 +20,14 @@ public class DynamicGroup extends AbstractGroup {
     public static final Logger log = LoggerFactory.getLogger(DynamicGroup.class)
     
     private volatile MyEntitySetChangeListener setChangeListener = null;
-    private Closure entityFilter
+    private Predicate<Entity> entityFilter
     private volatile running = true
-    
+
     public DynamicGroup(Map properties=[:], Entity owner=null, Closure entityFilter=null) {
+        this(properties, owner, (entityFilter != null ? entityFilter as Predicate : null))
+    }
+    
+    public DynamicGroup(Map properties=[:], Entity owner=null, Predicate<Entity> entityFilter) {
         super(properties, owner)
         if (entityFilter) this.entityFilter = entityFilter;
     }
@@ -40,12 +44,12 @@ public class DynamicGroup extends AbstractGroup {
     }
     
     void setEntityFilter(Predicate<Entity> filter) {
-        setEntityFilter({ Entity e -> filter.apply(e) })
+        this.entityFilter = filter
+        rescanEntities()
     }
     
     void setEntityFilter(Closure filter) {
-        this.entityFilter = filter
-        rescanEntities()
+        setEntityFilter(filter != null ? filter as Predicate : null)
     }
     
     void addSubscription(Entity producer, Sensor sensor, Predicate<SensorEvent> filter={true} as Predicate) {
@@ -53,7 +57,7 @@ public class DynamicGroup extends AbstractGroup {
     }
     
     protected boolean acceptsEntity(Entity e) {
-        return (entityFilter != null && entityFilter.call(e))
+        return (entityFilter != null && entityFilter.apply(e))
     }
     
     protected void onEntityAdded(Entity item) {

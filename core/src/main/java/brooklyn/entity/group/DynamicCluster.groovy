@@ -21,6 +21,7 @@ import brooklyn.location.Location
 import brooklyn.management.Task
 import brooklyn.util.flags.SetFromFlag
 
+import com.google.common.base.Function
 import com.google.common.base.Preconditions
 import com.google.common.collect.Iterables
 
@@ -37,17 +38,19 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     ConfigurableEntityFactory factory
 
     @SetFromFlag
-    Closure removalStrategy
+    Function<Collection<Entity>, Entity> removalStrategy
 
     Location location
 
-    private static final Closure defaultRemovalStrategy = { Collection<Entity> contenders ->
-        // choose last (i.e. newest) entity that is stoppable
-        Entity result
-        contenders.each {
-            if (it instanceof Startable) result = it
+    private static final Function<Collection<Entity>, Entity> defaultRemovalStrategy = new Function<Collection<Entity>, Entity>() {
+        public Entity apply(Collection<Entity> contenders) {
+            // choose last (i.e. newest) entity that is stoppable
+            Entity result
+            contenders.each {
+                if (it instanceof Startable) result = it
+            }
+            return result
         }
-        return result
     }
     
     /**
@@ -72,9 +75,13 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         setAttribute(SERVICE_UP, false)
     }
     public DynamicCluster(Entity owner) { this([:], owner) }
+
+    public void setRemovalStrategy(Function<Collection<Entity>, Entity> val) {
+        removalStrategy = checkNotNull(val, "removalStrategy")
+    }
     
     public void setRemovalStrategy(Closure val) {
-        removalStrategy = checkNotNull(val, "removalStrategy")
+        setRemovalStrategy(val as Function)
     }
 
     public void start(Collection<? extends Location> locs) {
@@ -196,7 +203,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         Preconditions.checkState(members.size() > 0, "Attempt to remove a node when members is empty, from cluster $this")
         if (logger.isDebugEnabled()) logger.debug "Removing a node from {}", this
         
-        Entity entity = removalStrategy.call(members)
+        Entity entity = removalStrategy.apply(members)
         Preconditions.checkNotNull entity, "No entity chosen for removal from $id"
         Preconditions.checkState(entity instanceof Startable, "Chosen entity for removal not stoppable: cluster=$this; choice=$entity")
         
