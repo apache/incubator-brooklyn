@@ -1,5 +1,6 @@
 package brooklyn.location.basic
 
+import java.util.Arrays;
 import java.util.Collection
 import java.util.Map
 
@@ -8,6 +9,7 @@ import brooklyn.location.Location
 import brooklyn.location.MachineLocation
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.NoMachinesAvailableException
+import brooklyn.util.MutableMap;
 import brooklyn.util.flags.SetFromFlag
 
 import com.google.common.base.Preconditions
@@ -109,5 +111,64 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
     
     Map<String,Object> getProvisioningFlags(Collection<String> tags) {
         return [:]
+    }
+    
+    /**
+     * Facilitates fluent/programmatic style for constructing a fixed pool of machines.
+     * <code>
+     * new FixedListMachineProvisioningLocation.Builder().
+                user("alex").
+                keyFile("/Users/alex/.ssh/id_rsa").
+                addAddress("10.0.0.1").
+                addAddress("10.0.0.2").
+                addAddress("10.0.0.3").
+                addAddressMultipleTimes("127.0.0.1", 5).
+                build();
+     * </code>
+     */
+    public static class Builder {
+        String user;
+        String privateKeyFile;
+        String privateKeyData;
+        List machines = [];
+        public Builder user(String user) {
+            this.user = user;
+            this;
+        }
+        public Builder keyFile(String keyFile) {
+            this.privateKeyFile = keyFile;
+            this; 
+        }
+        public Builder keyData(String keyData) {
+            this.privateKeyData = keyData;
+            this;
+        }
+        /** adds the locations; user and keyfile set in the builder are _not_ applied to the machine
+         * (use add(String address) for that)
+         */
+        public Builder add(SshMachineLocation location) {
+            machines << location;
+            this;
+        }
+        public Builder addAddress(String address) {
+            Map config = [address: address];
+            if (user) config.put("sshconfig.user", user);
+            if (privateKeyFile) config.put("sshconfig.privateKeyFile", privateKeyFile);
+            if (privateKeyData) config.put("sshconfig.privateKey", privateKeyData);
+            add(new SshMachineLocation(config)); 
+            this;
+        }
+        public Builder addAddressMultipleTimes(String address, int n) {
+            Map config = [address: address];
+            if (user) config.put("sshconfig.user", user);
+            if (privateKeyFile) config.put("sshconfig.privateKeyFile", privateKeyFile);
+            if (privateKeyData) config.put("sshconfig.privateKey", privateKeyData);
+            for (int i=0; i<n; i++)
+                add(new SshMachineLocation(new MutableMap(config))); 
+            this;
+        }
+        public FixedListMachineProvisioningLocation build() {
+            new FixedListMachineProvisioningLocation(machines: machines);
+        }        
     }
 } 
