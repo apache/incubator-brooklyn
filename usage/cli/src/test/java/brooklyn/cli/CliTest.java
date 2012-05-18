@@ -38,8 +38,8 @@ public class CliTest {
     
     @Test
     public void testLaunchCommand() throws ParseException {
-        Cli<BrooklynCommand> cli = Main.getCli();
-        BrooklynCommand command = cli.parse("launch", "--app", "my.App");
+        Cli<BrooklynCommand> cli = Main.buildCli();
+        BrooklynCommand command = cli.parse("launch", "--app", "my.App", "--location", "localhost");
         assertTrue(command instanceof LaunchCommand);
         String details = command.toString();
         assertTrue(details.contains("app=my.App"));   
@@ -52,13 +52,13 @@ public class CliTest {
 
     @Test(expectedExceptions = ParseException.class, expectedExceptionsMessageRegExp = "Required option '-a' is missing")
     public void testMissingAppOption() throws ParseException {
-        Cli<BrooklynCommand> cli = Main.getCli();
+        Cli<BrooklynCommand> cli = Main.buildCli();
         cli.parse("launch", "blah", "my.App");
         fail("Should throw ParseException");
     }
     
     public void testHelpCommand() {
-        Cli<BrooklynCommand> cli = Main.getCli();
+        Cli<BrooklynCommand> cli = Main.buildCli();
         BrooklynCommand command = cli.parse("help");
         assertTrue(command instanceof HelpCommand);
         command = cli.parse();
@@ -67,6 +67,5 @@ public class CliTest {
     
     // An empty app to be used for testing
     @SuppressWarnings("serial")
-    public static class ExampleApp extends AbstractApplication {}
-    
+    public static class ExampleApp extends AbstractApplication { }
 }

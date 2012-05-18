@@ -5,7 +5,6 @@ import groovy.lang.GroovyShell;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -39,17 +38,15 @@ import com.google.common.collect.Iterables;
 public class Main {
 
     public static void main(String...args) {
-       
-        Cli<BrooklynCommand> parser = getCli();
-        
+        Cli<BrooklynCommand> parser = buildCli();
         try {
             BrooklynCommand command = parser.parse(args); 
             command.call();
         } catch (ParseException pe) {
             System.err.println("Parse error: " + pe.getMessage());
-            StringBuilder parseErrorHelp = new StringBuilder();
-            Help.help(parser.getMetadata(), ImmutableList.of("brooklyn"),parseErrorHelp);
-            System.err.println(parseErrorHelp);
+            StringBuilder help = new StringBuilder();
+            Help.help(parser.getMetadata(), ImmutableList.of("brooklyn"), help);
+            System.err.println(help);
             System.exit(1);
         } catch (Exception e) {
             System.err.println("Execution error: " + e.getMessage());
@@ -73,14 +70,14 @@ public class Main {
                     .add("quiet", quiet);
         }
         
+        @Override
         public String toString() {
             return string().toString();
         }
     }
 
     @Command(name = "help", description = "Display help information about brooklyn")
-    public static class HelpCommand extends BrooklynCommand
-    {
+    public static class HelpCommand extends BrooklynCommand {
         @Override
         public Void call() throws Exception {
             return help.call();
@@ -116,7 +113,6 @@ public class Main {
 
         @Override
         public Void call() throws Exception {
-            
             if (verbose) {
                 System.out.println("Launching brooklyn app: "+app+" in "+Iterables.toString(locations));
             }
@@ -152,16 +148,12 @@ public class Main {
             return null;
         }
 
-        private void waitUntilInterrupted() {
-            synchronized (this) {
-                while (true) {
-                    try {
-                        wait();
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        return; // exit gracefully
-                    }
-                }
+        private synchronized void waitUntilInterrupted() {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return; // exit gracefully
             }
         }
         
@@ -194,10 +186,10 @@ public class Main {
                     .add("noConsole",noConsole)
                     .add("noShutdwonOnExit",noShutdownOnExit);
         }
-        
     }
 
-    public static Cli<BrooklynCommand> getCli() {
+    @VisibleForTesting
+    static Cli<BrooklynCommand> buildCli() {
         @SuppressWarnings({ "unchecked" })
         CliBuilder<BrooklynCommand> builder = Cli.buildCli("brooklyn", BrooklynCommand.class)
                 .withDescription("Brooklyn Management Service")
