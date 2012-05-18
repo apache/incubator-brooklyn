@@ -31,6 +31,9 @@ public class MutableMap<K,V> extends LinkedHashMap<K,V> {
         return result;
     }
     
+    public MutableMap() {}
+    public MutableMap(Map source) { super(source); }
+    
     public MutableMap<K,V> add(K key, V value) {
         put(key, value);
         return this;

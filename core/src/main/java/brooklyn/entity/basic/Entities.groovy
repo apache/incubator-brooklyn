@@ -60,7 +60,13 @@ public class Entities {
                 out << currentIndentation+tab+tab+it.name;
                 out << " = ";
                 if (isSecret(it.name)) out << "xxxxxxxx";
-                else out << v;
+                else if ((v in Task) && ((Task)v).isDone()) {
+                    if (((Task)v).isError()) {
+                        out << "ERROR in "+v;
+                    } else {
+                        out << ((Task)v).get() + " (from "+v+")";
+                    }
+                } else out << v;
                 out << "\n"
             }
 		}
