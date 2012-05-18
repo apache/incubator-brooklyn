@@ -36,7 +36,7 @@ public class TaskPerformanceTest extends AbstractPerformanceTest {
     public static final int numIterations = 200000;
     @Test(groups=["Integration", "Acceptance"])
     public void testExecuteSimplestRunnable() {
-        double minRatePerSec = 1000
+        double minRatePerSec = 1000 * PERFORMANCE_EXPECTATION;
         
         final AtomicInteger counter = new AtomicInteger();
         final CountDownLatch completionLatch = new CountDownLatch(1)
@@ -53,7 +53,7 @@ public class TaskPerformanceTest extends AbstractPerformanceTest {
     
     @Test(groups=["Integration", "Acceptance"])
     public void testExecuteRunnableWithTags() {
-        double minRatePerSec = 1000
+        double minRatePerSec = 1000 * PERFORMANCE_EXPECTATION;
         
         final AtomicInteger counter = new AtomicInteger();
         final CountDownLatch completionLatch = new CountDownLatch(1)
@@ -72,7 +72,7 @@ public class TaskPerformanceTest extends AbstractPerformanceTest {
     
     @Test(groups=["Integration", "Acceptance"])
     public void testExecuteWithSingleThreadedScheduler() {
-        double minRatePerSec = 1000
+        double minRatePerSec = 1000 * PERFORMANCE_EXPECTATION;
 
         executionManager.setTaskSchedulerForTag("singlethreaded", SingleThreadedScheduler.class);
         

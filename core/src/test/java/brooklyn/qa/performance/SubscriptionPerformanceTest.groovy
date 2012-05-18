@@ -43,11 +43,12 @@ public class SubscriptionPerformanceTest extends AbstractPerformanceTest {
         subscriptionManager = app.managementContext.subscriptionManager
     }
     
+    // TODO but surely parallel should be much faster?!
     @Test(groups=["Integration", "Acceptance"])
     public void testManyListenersForSensorEvent() {
         int numSubscribers = 10
         int numIterations = 1000
-        double minRatePerSec = 100 // i.e. 100*10 events delivered per sec; TODO but surely parallel should be much faster!
+        double minRatePerSec = 100 * PERFORMANCE_EXPECTATION; // i.e. 100*10 events delivered per sec
         int iter = 0
         int expectedCount = numIterations*numSubscribers
         
@@ -71,7 +72,7 @@ public class SubscriptionPerformanceTest extends AbstractPerformanceTest {
     public void testUpdateAttributeWithNoListenersButManyUnrelatedListeners() {
         int numUnrelatedSubscribers = 1000
         int numIterations = 1000
-        double minRatePerSec = 1000
+        double minRatePerSec = 1000 * PERFORMANCE_EXPECTATION;
         int iter = 0
         int lastVal = 0
         Exception exception
