@@ -53,7 +53,7 @@ public class KarafContainer extends SoftwareProcessEntity implements UsesJava, U
     public static final BasicAttributeSensorAndConfigKey<String> JMX_CONTEXT = [ UsesJmx.JMX_CONTEXT, "karaf-"+KARAF_NAME.configKey.defaultValue ]
 
     @SetFromFlag("version")
-    public static final BasicConfigKey SUGGESTED_VERSION = [ SoftwareProcessEntity.SUGGESTED_VERSION, "2.2.5" ]
+    public static final BasicConfigKey SUGGESTED_VERSION = [ SoftwareProcessEntity.SUGGESTED_VERSION, "2.2.7" ]
     
     public static final BasicAttributeSensor<Map> KARAF_INSTANCES = [ Map, "karaf.admin.instances", "Karaf admin instances" ]
     public static final BasicAttributeSensor<Boolean> KARAF_ROOT = [ Boolean, "karaf.admin.isRoot", "Karaf admin isRoot" ]
