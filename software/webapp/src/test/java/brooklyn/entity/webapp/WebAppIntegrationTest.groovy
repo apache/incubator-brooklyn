@@ -238,7 +238,7 @@ public class WebAppIntegrationTest {
             executeUntilSucceeds {
                 Double activityValue = entity.getAttribute(WebAppService.AVG_REQUESTS_PER_SECOND)
                 assertNotNull activityValue
-                assertEquals activityValue, 0.0d
+                assertEquals activityValue.doubleValue(), 0.0d, 0.00001d
                 true
             }
         } finally {

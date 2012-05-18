@@ -39,9 +39,9 @@ class RollingTimeWindowMeanEnricher<T extends Number> extends AbstractTransformi
         }
     }
     
-    private LinkedList<T> values = new LinkedList<T>()
-    private LinkedList<Long> timestamps = new LinkedList<Long>()
-    ConfidenceQualifiedNumber lastAverage = [0,0]
+    private final LinkedList<T> values = new LinkedList<T>()
+    private final LinkedList<Long> timestamps = new LinkedList<Long>()
+    volatile ConfidenceQualifiedNumber lastAverage = [0,0]
     
     long timePeriod
     
@@ -70,14 +70,14 @@ class RollingTimeWindowMeanEnricher<T extends Number> extends AbstractTransformi
     public ConfidenceQualifiedNumber getAverage(long now) {
         pruneValues(now)
         if (timestamps.isEmpty()) {
-            return lastAverage = [lastAverage.value, 0.0d]
+            return lastAverage = new ConfidenceQualifiedNumber(lastAverage.value, 0.0d)
         }
 
         // XXX grkvlt - see email to development list
 
         Double confidence = (timePeriod - (now - timestamps.last())) / timePeriod
-        if (confidence == 0.0d) {
-            return lastAverage = [lastAverage.value, 0.0d]
+        if (confidence <= 0.0d) {
+            return lastAverage = new ConfidenceQualifiedNumber((double)values.last(), 0.0d)
         }
         
         Long start = now - timePeriod
@@ -85,16 +85,22 @@ class RollingTimeWindowMeanEnricher<T extends Number> extends AbstractTransformi
         Double weightedAverage = 0.0d
         
         timestamps.eachWithIndex { timestamp, i ->
-            end = timestamp
-            weightedAverage += ((end - start) / (confidence * timePeriod)) * values[i]
-            start = timestamp
+            // Ignores out-of-date values (and also values that are received out-of-order, but that shouldn't happen!)
+            if (timestamp >= start) {
+                end = timestamp
+                weightedAverage += ((end - start) / (confidence * timePeriod)) * values[i]
+                start = timestamp
+            }
         }
         
         return lastAverage = [weightedAverage, confidence]
     }
     
+    /**
+     * Discards out-of-date values, but keeps at least one value.
+     */
     private void pruneValues(long now) {
-        while(timestamps.size() > 0 && timestamps.first() < (now - timePeriod)) {
+        while(timestamps.size() > 1 && timestamps.first() < (now - timePeriod)) {
             timestamps.removeFirst()
             values.removeFirst()
         }
