@@ -54,24 +54,10 @@
                                 <descriptor>src/main/config/dist.xml</descriptor>
                             </descriptors>
                             <finalName>brooklyn-${project.version}</finalName>
-                            <outputDirectory>${project.basedir}</outputDirectory>
                             <useProjectArtifact>false</useProjectArtifact>
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-clean-plugin</artifactId>
-                <configuration>
-                    <filesets>
-                        <fileset>
-                            <directory>.</directory>
-                            <includes>
-                                <include>brooklyn-${project.version}-dist.*</include>
-                            </includes>
-                        </fileset>
-                    </filesets>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -86,12 +72,12 @@
                         <configuration>
                             <artifacts>
                                 <artifact>
-                                    <file>brooklyn-${project.version}-dist.tar.gz</file>
+                                    <file>${project.build.directory}/brooklyn-${project.version}-dist.tar.gz</file>
                                     <type>tar.gz</type>
                                     <classifier>dist</classifier>
                                 </artifact>
                                 <artifact>
-                                    <file>brooklyn-${project.version}-dist.zip</file>
+                                    <file>${project.build.directory}/brooklyn-${project.version}-dist.zip</file>
                                     <type>zip</type>
                                     <classifier>dist</classifier>
                                 </artifact>
