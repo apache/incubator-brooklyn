@@ -133,7 +133,7 @@ public class Main {
             
             // Figure out the brooklyn location(s) where to launch the application
             List<Location> brooklynLocations = new LocationRegistry().getLocationsById(
-                    Iterables.isEmpty(locations) ? ImmutableSet.of(CommandLineLocations.LOCALHOST) : locations);
+                    (locations==null || Iterables.isEmpty(locations)) ? ImmutableSet.of(CommandLineLocations.LOCALHOST) : locations);
             
             // Start the application
             BrooklynLauncher.manage(application, port, !noShutdownOnExit, !noConsole);
