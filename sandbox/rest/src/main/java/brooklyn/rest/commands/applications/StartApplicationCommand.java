@@ -6,10 +6,12 @@ import static brooklyn.rest.api.Application.Status;
 import brooklyn.rest.api.ApplicationSpec;
 import brooklyn.rest.commands.BrooklynCommand;
 import static com.google.common.base.Preconditions.checkArgument;
+import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.yammer.dropwizard.client.JerseyClient;
 import com.yammer.dropwizard.json.Json;
 import java.io.File;
+import java.io.PrintStream;
 import java.net.URI;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -34,7 +36,8 @@ public class StartApplicationCommand extends BrooklynCommand {
   }
 
   @Override
-  protected void run(Json json, JerseyClient client, CommandLine params) throws Exception {
+  protected void run(PrintStream out, PrintStream err, Json json,
+                     Client client, CommandLine params) throws Exception {
     checkArgument(params.getArgList().size() >= 1, "Path to JSON file is mandatory");
 
     String jsonFileName = (String) params.getArgList().get(0);
@@ -44,34 +47,35 @@ public class StartApplicationCommand extends BrooklynCommand {
       spec = ApplicationSpec.builder().from(spec).name(params.getOptionValue("name")).build();
     }
 
-    ClientResponse response = client.post(uriFor("/v1/applications"),
-        MediaType.APPLICATION_JSON_TYPE, spec, ClientResponse.class);
+    ClientResponse response = client.resource(uriFor("/v1/applications"))
+        .type(MediaType.APPLICATION_JSON).post(ClientResponse.class, spec);
 
     if (response.getStatus() != Response.Status.CREATED.getStatusCode()) {
       ApiError error = response.getEntity(ApiError.class);
       throw new RuntimeException(error.getMessage());
     }
 
-    System.out.println("Starting at " + response.getLocation());
+    out.println("Starting at " + response.getLocation());
 
     Status status;
     do {
-      System.out.print(".");
-      System.out.flush();
+      out.print(".");
+      out.flush();
       Thread.sleep(1000);
 
       status = getApplicationStatus(client, response.getLocation());
     } while (status != Status.RUNNING && status != Status.ERROR);
 
     if (status == Status.RUNNING) {
-      System.out.println("Done.");
+      out.println("Done.");
     } else {
-      System.out.println("Error.");
+      err.println("Error.");
     }
   }
 
-  private Status getApplicationStatus(JerseyClient client, URI uri) {
-    Application application = client.get(uri, MediaType.APPLICATION_JSON_TYPE, Application.class);
+  private Status getApplicationStatus(Client client, URI uri) {
+    Application application = client.resource(uri)
+        .type(MediaType.APPLICATION_JSON_TYPE).get(Application.class);
     return application.getStatus();
   }
 }
