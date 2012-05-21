@@ -81,7 +81,7 @@ public class JmxSensorAdapterTest {
                     }
         };
         app.start([new SimulatedLocation()])
-        
+
         registry = new SensorRegistry(entity);
         jmxAdapter = registry.register(new JmxSensorAdapter(period: 50*TimeUnit.MILLISECONDS));
         jmxHelper = new JmxHelper(entity)
@@ -401,7 +401,7 @@ public class JmxSensorAdapterTest {
         jmxService.shutdown();
         jmxHelper.disconnect()
         
-        jmxService = new JmxService("127.0.0.1", 9001)
+        jmxService = new JmxService("127.0.0.1", (int)(11000+(100*Math.random())))
         jmxHelper = new JmxHelper(jmxService.getUrl())
         jmxHelper.connect()
         
