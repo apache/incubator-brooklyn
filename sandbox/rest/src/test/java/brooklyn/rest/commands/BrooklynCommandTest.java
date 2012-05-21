@@ -23,6 +23,7 @@ public abstract class BrooklynCommandTest extends ResourceTest {
   private PrintStream err;
 
   @BeforeClass
+  @Override
   public void setUpJersey() throws Exception {
     super.setUpJersey();
   }
@@ -37,6 +38,7 @@ public abstract class BrooklynCommandTest extends ResourceTest {
   }
 
   @AfterClass
+  @Override
   public void tearDownJersey() throws Exception {
     super.tearDownJersey();
   }

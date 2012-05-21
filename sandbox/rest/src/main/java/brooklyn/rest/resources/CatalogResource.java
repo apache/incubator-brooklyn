@@ -59,7 +59,7 @@ public class CatalogResource extends BaseResource {
     return entities.get(entityName);
   }
 
-  public Class<? extends AbstractPolicy> getEntityPolicy(String policyName) {
+  public Class<? extends AbstractPolicy> getPolicyClass(String policyName) {
     return policies.get(policyName);
   }
 
