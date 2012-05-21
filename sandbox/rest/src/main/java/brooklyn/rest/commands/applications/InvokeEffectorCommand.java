@@ -5,9 +5,10 @@ import brooklyn.rest.commands.BrooklynCommand;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import com.google.common.collect.ImmutableMap;
+import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
-import com.yammer.dropwizard.client.JerseyClient;
 import com.yammer.dropwizard.json.Json;
+import java.io.PrintStream;
 import java.net.URI;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -25,7 +26,8 @@ public class InvokeEffectorCommand extends BrooklynCommand {
   }
 
   @Override
-  protected void run(Json json, JerseyClient client, CommandLine params) throws Exception {
+  protected void run(PrintStream out, PrintStream err, Json json,
+                     Client client, CommandLine params) throws Exception {
     checkArgument(params.getArgList().size() >= 1, "Effector URI is mandatory");
 
     URI effectorUri = uriFor((String) params.getArgList().get(0));
