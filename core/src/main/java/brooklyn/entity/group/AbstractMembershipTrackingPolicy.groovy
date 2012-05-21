@@ -26,6 +26,7 @@ abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
         reset();
         subscribe(group, group.MEMBER_ADDED, { SensorEvent<Entity> evt -> onEntityAdded evt.value } as SensorEventListener);
         subscribe(group, group.MEMBER_REMOVED, { SensorEvent<Entity> evt  -> onEntityRemoved evt.value } as SensorEventListener);
+        // TODO having last value would be handy in the event publication (or suppressing if no change)
         subscribeToMembers(group, Startable.SERVICE_UP, { SensorEvent<Entity> evt -> onEntityChange evt.source } as SensorEventListener );
         group.members.each { onEntityAdded it }
         
@@ -37,7 +38,7 @@ abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
     }
 
     /**
-     * Called when a member is added.
+     * Called when a member's "up" sensor changes
      */
     protected void onEntityChange(Entity member) {}
 
