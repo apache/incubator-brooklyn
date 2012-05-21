@@ -17,7 +17,10 @@ if [ -z "${JAVA_OPTS}" ] ; then
 fi
 
 # Set up the environment
-CLASSPATH="${CLASSPATH:-.}:${BROOKLYN_CLASSPATH}:${ROOT}/lib/*:${ROOT}/app:${ROOT}/app/*"
+CLASSPATH="${CLASSPATH}:${BROOKLYN_CLASSPATH}"
+if [ -z "${BROOKLYN_HOME}" ]; then # lookup on ROOT only if BROOKLYN_HOME is not set
+    CLASSPATH="$CLASSPATH:${ROOT}/lib/*:${ROOT}/app:${ROOT}/app/*";
+fi
 JAVA_OPTS="-Dbrooklyn.localhost.address=127.0.0.1 ${JAVA_OPTS}"
 
 # Start Brooklyn
