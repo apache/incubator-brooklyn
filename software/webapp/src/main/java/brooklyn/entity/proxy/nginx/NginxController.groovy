@@ -11,8 +11,10 @@ import brooklyn.event.adapter.SensorRegistry
 import brooklyn.event.adapter.legacy.OldHttpSensorAdapter
 import brooklyn.event.adapter.legacy.ValueProvider
 import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.MachineLocation
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.util.task.BasicExecutionManager
 
 import com.google.common.base.Charsets
 import com.google.common.io.Files
@@ -63,6 +65,12 @@ public class NginxController extends AbstractController {
 
     public void doExtraConfigurationDuringStart() {
         reconfigureService();
+    }
+    
+    protected void preStart() {
+        super.preStart();
+        // block until we have targets
+        execution.submit(DependentConfiguration.attributeWhenReady(this, TARGETS)).get();
     }
     
     protected void reconfigureService() {

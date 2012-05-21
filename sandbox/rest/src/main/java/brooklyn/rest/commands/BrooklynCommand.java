@@ -1,6 +1,9 @@
 package brooklyn.rest.commands;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.filter.GZIPContentEncodingFilter;
 import com.sun.jersey.client.apache4.ApacheHttpClient4Handler;
 import com.sun.jersey.client.apache4.config.ApacheHttpClient4Config;
@@ -13,6 +16,7 @@ import com.yammer.dropwizard.client.JerseyClientConfiguration;
 import com.yammer.dropwizard.jersey.JacksonMessageBodyProvider;
 import com.yammer.dropwizard.json.Json;
 import com.yammer.dropwizard.util.Duration;
+import java.io.PrintStream;
 import java.net.URI;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.SynchronousQueue;
@@ -45,52 +49,80 @@ public abstract class BrooklynCommand extends Command {
 
   @Override
   protected void run(AbstractService<?> service, CommandLine params) throws Exception {
-    JerseyClientConfiguration config = new JerseyClientConfiguration();
-    config.setTimeout(Duration.seconds(2));
-
-    endpoint = getEndpointFromCommandLineOrEnv(params);
-
     try {
-      run(service.getJson(), buildJerseyClient(service, config), params);
+      buildJerseyClientAndRun(System.out, System.err, service.getJson(), params);
 
     } catch (Exception e) {
-      System.err.println(e.getMessage());
       System.exit(-1);
+    }
+  }
+
+  protected void buildJerseyClientAndRun(PrintStream out, PrintStream err,
+                                         Json json, CommandLine params) throws Exception {
+    try {
+      JerseyClientConfiguration jerseyConfig = new JerseyClientConfiguration();
+      jerseyConfig.setTimeout(Duration.seconds(2));
+
+      setEndpointFromCommandLineOrEnvironment(params);
+
+      run(out, err, json, buildJerseyClient(json, jerseyConfig), params);
+
+    } catch (Exception e) {
+      err.println(e.getMessage());
+
+      throw Throwables.propagate(e);
+    }
+  }
+
+  @VisibleForTesting
+  void runAsATest(PrintStream out, PrintStream err,
+                  Client client, CommandLine params) throws Exception {
+    try {
+      setEndpointFromCommandLineOrEnvironment(params);
+      run(out, err, new Json(), client, params);
+
+    } catch (Exception e) {
+      err.println(e.getMessage());
     }
   }
 
   /**
    * Override this method to implement command functionality
    */
-  protected abstract void run(Json json, JerseyClient client, CommandLine params) throws Exception;
+  protected abstract void run(PrintStream out, PrintStream err, Json json,
+                              Client client, CommandLine params) throws Exception;
 
-  private String getEndpointFromCommandLineOrEnv(CommandLine params) {
+  private void setEndpointFromCommandLineOrEnvironment(CommandLine params) {
     String endpointFromEnv = System.getenv("BROOKLYN_ENDPOINT");
 
     // the command line has precedence over the environment
-    return params.getOptionValue("endpoint",
+    this.endpoint = params.getOptionValue("endpoint",
         (endpointFromEnv != null) ? endpointFromEnv : "http://localhost:8080");
+  }
 
+
+  protected String getEndpoint() {
+    return endpoint;
   }
 
   protected URI uriFor(String resource) {
-    return URI.create(endpoint + resource);
+    return URI.create(getEndpoint() + resource);
   }
 
   protected URI expandIfRelative(URI uri) {
     if (uri.getHost() != null) {
       return uri;
     }
-    return URI.create(endpoint + uri.getPath());
+    return URI.create(getEndpoint() + uri.getPath());
   }
 
-  protected JerseyClient buildJerseyClient(AbstractService<?> service, JerseyClientConfiguration configuration) {
+  private JerseyClient buildJerseyClient(Json json, JerseyClientConfiguration configuration) {
 
     final HttpClient client = new HttpClientFactory(configuration).build();
     final ApacheHttpClient4Handler handler = new ApacheHttpClient4Handler(client, null, true);
 
     final ApacheHttpClient4Config config = new DefaultApacheHttpClient4Config();
-    config.getSingletons().add(new JacksonMessageBodyProvider(service.getJson()));
+    config.getSingletons().add(new JacksonMessageBodyProvider(json));
 
     final JerseyClient jerseyClient = new JerseyClient(handler, config);
     jerseyClient.setExecutorService(buildThreadPool(configuration));

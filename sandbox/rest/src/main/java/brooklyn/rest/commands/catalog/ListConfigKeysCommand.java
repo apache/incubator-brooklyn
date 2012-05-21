@@ -2,9 +2,11 @@ package brooklyn.rest.commands.catalog;
 
 import brooklyn.rest.commands.BrooklynCommand;
 import static com.google.common.base.Preconditions.checkArgument;
+import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.GenericType;
 import com.yammer.dropwizard.client.JerseyClient;
 import com.yammer.dropwizard.json.Json;
+import java.io.PrintStream;
 import java.util.List;
 import javax.ws.rs.core.MediaType;
 import org.apache.commons.cli.CommandLine;
@@ -21,7 +23,8 @@ public class ListConfigKeysCommand extends BrooklynCommand {
   }
 
   @Override
-  protected void run(Json json, JerseyClient client, CommandLine params) throws Exception {
+  protected void run(PrintStream out, PrintStream err, Json json,
+                     Client client, CommandLine params) throws Exception {
     checkArgument(params.getArgList().size() >= 1, "The type of the entity is mandatory");
 
     String type = (String) params.getArgList().get(0);
@@ -30,7 +33,7 @@ public class ListConfigKeysCommand extends BrooklynCommand {
         });
 
     for (String key : keys) {
-      System.out.println(key);
+      out.println(key);
     }
   }
 }

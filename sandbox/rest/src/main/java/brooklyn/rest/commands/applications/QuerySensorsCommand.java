@@ -5,9 +5,10 @@ import brooklyn.rest.api.EntitySummary;
 import brooklyn.rest.api.SensorSummary;
 import brooklyn.rest.commands.BrooklynCommand;
 import static com.google.common.base.Preconditions.checkArgument;
+import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.GenericType;
-import com.yammer.dropwizard.client.JerseyClient;
 import com.yammer.dropwizard.json.Json;
+import java.io.PrintStream;
 import java.net.URI;
 import java.util.Set;
 import javax.ws.rs.core.MediaType;
@@ -25,37 +26,38 @@ public class QuerySensorsCommand extends BrooklynCommand {
   }
 
   @Override
-  protected void run(Json json, JerseyClient client, CommandLine params) throws Exception {
+  protected void run(PrintStream out, PrintStream err, Json json,
+                     Client client, CommandLine params) throws Exception {
     checkArgument(params.getArgList().size() >= 1, "Application name is mandatory");
 
     String name = (String) params.getArgList().get(0);
     Application application = client.resource(uriFor("/v1/applications/" + name))
         .type(MediaType.APPLICATION_JSON_TYPE).get(Application.class);
 
-    queryAllEntities(client, application.getLinks().get("entities"));
+    queryAllEntities(out, client, application.getLinks().get("entities"));
   }
 
-  private void queryAllEntities(JerseyClient client, URI resource) {
+  private void queryAllEntities(PrintStream out, Client client, URI resource) {
     Set<EntitySummary> entities = client.resource(expandIfRelative(resource))
         .type(MediaType.APPLICATION_JSON_TYPE).get(new GenericType<Set<EntitySummary>>() {
         });
 
     for (EntitySummary summary : entities) {
-      System.out.println(summary.getLinks().get("self") + " #" + summary.getType());
-      queryAllSensors(client, summary.getLinks().get("sensors"));
-      queryAllEntities(client, summary.getLinks().get("children"));
+      out.println(summary.getLinks().get("self") + " #" + summary.getType());
+      queryAllSensors(out, client, summary.getLinks().get("sensors"));
+      queryAllEntities(out, client, summary.getLinks().get("children"));
     }
   }
 
-  private void queryAllSensors(JerseyClient client, URI sensorsUri) {
+  private void queryAllSensors(PrintStream out, Client client, URI sensorsUri) {
     Set<SensorSummary> sensors = client.resource(expandIfRelative(sensorsUri))
         .type(MediaType.APPLICATION_JSON_TYPE).get(new GenericType<Set<SensorSummary>>() {
         });
     for (SensorSummary summary : sensors) {
       String value = client.resource(expandIfRelative(summary.getLinks().get("self")))
           .type(MediaType.APPLICATION_JSON_TYPE).get(String.class);
-      System.out.println("\t" + summary.getName() + " = " + value);
+      out.println("\t" + summary.getName() + " = " + value);
     }
-    System.out.println();
+    out.println();
   }
 }

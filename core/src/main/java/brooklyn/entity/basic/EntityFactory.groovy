@@ -47,7 +47,8 @@ public class BasicConfigurableEntityFactory<T extends Entity> extends AbstractCo
         this.clazz = clazz;
     }
     public T newEntity2(Map flags, Entity owner) {
-        clazz.getConstructor(Map, Entity).newInstance(flags, owner);
+        T result = clazz.getConstructor(Map, Entity).newInstance(flags, owner);
+        return result
     }
 }
 

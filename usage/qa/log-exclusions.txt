@@ -1,0 +1,2 @@
+GrailsUtil.*is deprecated please use
+echo.*WARNING

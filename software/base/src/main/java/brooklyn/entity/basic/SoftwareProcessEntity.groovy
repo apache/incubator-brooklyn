@@ -220,10 +220,12 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 	    String hostname = null
         if (where in JcloudsSshMachineLocation)
             hostname = ((JcloudsSshMachineLocation) where).getSubnetHostname()
-        else if (where in SshMachineLocation)
+        if (!hostname && where in SshMachineLocation)
             hostname = ((SshMachineLocation) where).getAddress()?.hostAddress
+        log.debug("computed hostname ${hostname} for ${this}")
         if (!hostname)
             throw new IllegalStateException("Cannot find hostname for ${this} at location ${where}")
+        return hostname
 	}
 
     public void startInLocation(SshMachineLocation machine) {
@@ -325,6 +327,8 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 	public void restart() {
 		if (driver) driver.restart()
 		else throw new IllegalStateException("entity "+this+" not set up for operations (restart)")
+        //if successfully restarts
+        setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
 	}
 
 }
