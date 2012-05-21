@@ -37,7 +37,7 @@ public class JavaYardStickPerformanceTest extends AbstractPerformanceTest {
     @Test(groups={"Integration", "Acceptance"})
     public void testPureJavaNoopToEnsureTestFrameworkIsVeryFast() {
         int numIterations = 1000000;
-        double minRatePerSec = 1000000;
+        double minRatePerSec = 1000000 * PERFORMANCE_EXPECTATION;
         final int[] i = {0};
         measureAndAssert("noop-java", numIterations, minRatePerSec, new Runnable() {
             @Override public void run() {
@@ -50,7 +50,7 @@ public class JavaYardStickPerformanceTest extends AbstractPerformanceTest {
     @Test(groups={"Integration", "Acceptance"})
     public void testPureJavaScheduleExecuteAndGet() {
         int numIterations = 100000;
-        double minRatePerSec = 100000;
+        double minRatePerSec = 100000 * PERFORMANCE_EXPECTATION;
         final int[] i = {0};
         measureAndAssert("scheduleExecuteAndGet-java", numIterations, minRatePerSec, new Runnable() {
             @Override public void run() {

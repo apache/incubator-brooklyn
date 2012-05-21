@@ -45,7 +45,7 @@ public class EntityPerformanceTest extends AbstractPerformanceTest {
     @Test(groups=["Integration", "Acceptance"])
     public void testGroovyNoopToEnsureTestFrameworkIsVeryFast() {
         int numIterations = numIterations()
-        double minRatePerSec = 100000
+        double minRatePerSec = 100000 * PERFORMANCE_EXPECTATION;
         int i = 0
         
         measureAndAssert("noop-groovy", numIterations, minRatePerSec) { i++ }
@@ -55,7 +55,7 @@ public class EntityPerformanceTest extends AbstractPerformanceTest {
     @Test(groups=["Integration", "Acceptance"])
     public void testUpdateAttributeWhenNoListeners() {
         int numIterations = numIterations()
-        double minRatePerSec = 1000
+        double minRatePerSec = 1000 * PERFORMANCE_EXPECTATION;
         int i = 0
         
         measureAndAssert("updateAttribute", numIterations, minRatePerSec) {
@@ -66,7 +66,7 @@ public class EntityPerformanceTest extends AbstractPerformanceTest {
     @Test(groups=["Integration", "Acceptance"])
     public void testUpdateAttributeWithNoopListeners() {
         int numIterations = numIterations()
-        double minRatePerSec = 1000
+        double minRatePerSec = 1000 * PERFORMANCE_EXPECTATION;
         int i = 0
         int lastVal = 0
         
@@ -87,7 +87,7 @@ public class EntityPerformanceTest extends AbstractPerformanceTest {
     @Test(groups=["Integration", "Acceptance"])
     public void testInvokeEffector() {
         int numIterations = numIterations()
-        double minRatePerSec = 1000
+        double minRatePerSec = 1000 * PERFORMANCE_EXPECTATION;
         
         measureAndAssert("invokeEffector", numIterations, minRatePerSec) {
             entity.myEffector()
@@ -97,7 +97,7 @@ public class EntityPerformanceTest extends AbstractPerformanceTest {
     @Test(groups=["Integration", "Acceptance"])
     public void testAsyncEffectorInvocation() {
         int numIterations = numIterations()
-        double minRatePerSec = 1000
+        double minRatePerSec = 1000 * PERFORMANCE_EXPECTATION;
         
         measureAndAssert("invokeEffectorAsyncAndGet", numIterations, minRatePerSec) {
             Task task = entity.invoke(TestEntity.MY_EFFECTOR)
@@ -105,10 +105,11 @@ public class EntityPerformanceTest extends AbstractPerformanceTest {
         }
     }
     
+    // TODO but surely parallel should be much faster?!
     @Test(groups=["Integration", "Acceptance"])
     public void testMultiEntityConcurrentEffectorInvocation() {
         int numIterations = numIterations()
-        double minRatePerSec = 100 // i.e. 1000 invocations; TODO but surely parallel should be much faster!
+        double minRatePerSec = 100 * PERFORMANCE_EXPECTATION; // i.e. 1000 invocations
         
         measureAndAssert("invokeEffectorMultiEntityConcurrentAsyncAndGet", numIterations, minRatePerSec) {
             Task task = Entities.invokeEffectorList(app, entities, TestEntity.MY_EFFECTOR)
