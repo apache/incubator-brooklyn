@@ -46,7 +46,7 @@ public class BrooklynMachinePoolLiveTest {
     
     @Test(groups="Live")
     public void buildClaimAndDestroy() {
-        SamplePool p = new SamplePool(JcloudsResolver.resolve("aws-ec2:us-east-1"));
+        SamplePool p = new SamplePool(JcloudsResolver.resolve("aws-ec2:us-west-1"));
         log.info("buildClaimAndDestroy: created pool");
         p.refresh();
         log.info("buildClaimAndDestroy: refreshed pool");
@@ -59,6 +59,7 @@ public class BrooklynMachinePoolLiveTest {
         log.info("buildClaimAndDestroy: unclaimed now "+unclaimedUsual);
         Assert.assertTrue(!unclaimedUsual.isEmpty(), "should have been unclaimed machines (can fail if there are some we cannot connect to, ie blacklisted)");
         p.destroy(unclaimedUsual);
+        p.destroy(l);
         unclaimedUsual = p.unclaimed(MachinePoolPredicates.matching(SamplePool.USUAL_VM));
         log.info("buildClaimAndDestroy: destroyed, unclaimed now "+unclaimedUsual);
         log.info("end");

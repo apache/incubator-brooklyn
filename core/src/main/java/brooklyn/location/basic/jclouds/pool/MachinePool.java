@@ -93,19 +93,20 @@ public class MachinePool {
             }
         }
 
-        MachineSet newDetectedMachines = new MachineSet(nodes).removed(blacklistedMachines);
+        MachineSet allNewDetectedMachines = new MachineSet(nodes);
+        MachineSet newDetectedMachines = filterForAllowedMachines(allNewDetectedMachines);
         MachineSet oldDetectedMachines;
         synchronized (this) {
             oldDetectedMachines = detectedMachines;
-            detectedMachines = newDetectedMachines.removed(blacklistedMachines);
+            detectedMachines = newDetectedMachines;
             refreshNeeded.set(false);
         }
 
         if (log.isDebugEnabled()) {
-            MachineSet appearedMachinesIncludingBlacklist = newDetectedMachines.removed(oldDetectedMachines);
-            MachineSet appearedMachines = appearedMachinesIncludingBlacklist.removed(blacklistedMachines);
+            MachineSet appearedMachinesIncludingBlacklist = allNewDetectedMachines.removed(oldDetectedMachines);
+            MachineSet appearedMachines = filterForAllowedMachines(appearedMachinesIncludingBlacklist);
             if (appearedMachinesIncludingBlacklist.size()>appearedMachines.size())
-                log.debug("Pool "+this+", ignoring "+(appearedMachinesIncludingBlacklist.size()-appearedMachines.size())+" blacklisted machines");
+                log.debug("Pool "+this+", ignoring "+(appearedMachinesIncludingBlacklist.size()-appearedMachines.size())+" disallowed");
             int matchedAppeared = 0;
             for (NodeMetadata m: appearedMachines) {
                 Set<ReusableMachineTemplate> ts = getTemplatesMatchingInstance(m);
@@ -118,11 +119,14 @@ public class MachinePool {
                 }
             }
             if (matchedAppeared>0)
-                //could log this at info?
-                log.debug("Pool "+this+" discovered "+matchedAppeared+" matching machines (of "+appearedMachines.size()+" total new, now having "+newDetectedMachines.size()+" total including claimed and unmatched)");
+                log.info("Pool "+this+" discovered "+matchedAppeared+" matching machines (of "+appearedMachines.size()+" total new; "+newDetectedMachines.size()+" total including claimed and unmatched)");
             else
-                log.debug("Pool "+this+" discovered "+matchedAppeared+" matching machines (of "+appearedMachines.size()+" total new, now having "+newDetectedMachines.size()+" total including claimed and unmatched)");
+                log.debug("Pool "+this+" discovered "+matchedAppeared+" matching machines (of "+appearedMachines.size()+" total new; "+newDetectedMachines.size()+" total including claimed and unmatched)");
         }
+    }
+
+    protected MachineSet filterForAllowedMachines(MachineSet input) {
+        return input.removed(blacklistedMachines);
     }
 
     protected ReusableMachineTemplate registerTemplate(ReusableMachineTemplate template) {

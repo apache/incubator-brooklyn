@@ -157,6 +157,11 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         return JcloudsUtil.buildOrFindComputeService(allconf, unusedConf);
     }
     
+    /** returns the location ID used by the provider, if set, e.g. us-west-1 */
+    public String getJcloudsProviderLocationId() {
+        return conf.providerLocationId;
+    }
+    
     public Set<? extends ComputeMetadata> listNodes(Map flags=[:]) {
         return getComputeService(flags).listNodes();
     }

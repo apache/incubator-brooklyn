@@ -6,6 +6,7 @@ import java.util.Set;
 
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.Processor;
+import org.jclouds.domain.Location;
 
 import com.google.common.base.Function;
 
@@ -102,10 +103,20 @@ public class MachinePoolPredicates {
         if (template.getIs64bit()!=null) {
             if (m.getOperatingSystem().is64Bit() != template.getIs64bit()) return false;
         }
+        
+        if (template.getLocationId()!=null) {
+            if (!isLocationContainedIn(m.getLocation(), template.getLocationId())) return false;
+        }
 
         // TODO other TemplateBuilder fields and TemplateOptions
         
         return true;
+    }
+
+    private static boolean isLocationContainedIn(Location location, String locationId) {
+        if (location==null) return false;
+        if (locationId.equals(location.getId())) return true;
+        return isLocationContainedIn(location.getParent(), locationId);
     }
 
     public static boolean isSubMapOf(Map<String, String> sub, Map<String, String> bigger) {

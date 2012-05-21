@@ -30,9 +30,11 @@ public class BrooklynMachinePool extends MachinePool {
     
     final JcloudsLocation location;
     final List<Task> activeTasks = new ArrayList<Task>();
+    final String providerLocationId;
     
     public BrooklynMachinePool(JcloudsLocation l) {
         super(l.getComputeService());
+        providerLocationId = l.getJcloudsProviderLocationId();
         this.location = l;
     }
     
@@ -63,6 +65,14 @@ public class BrooklynMachinePool extends MachinePool {
         }
     }
     
+    protected MachineSet filterForAllowedMachines(MachineSet input) {
+        MachineSet result = super.filterForAllowedMachines(input);
+        if (providerLocationId!=null) {
+            result = matching( new ReusableMachineTemplate().locationId(providerLocationId).strict(false) ).apply(input);
+        }
+        return result;
+    }
+
     /** returns an SshMachineLocation, if one can be created and accessed; returns null if it cannot be created */
     protected SshMachineLocation toSshMachineLocation(NodeMetadata m) {
         try {

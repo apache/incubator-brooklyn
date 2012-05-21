@@ -19,6 +19,7 @@ import com.google.common.collect.ImmutableSet;
  * then find matching instances, create instances, and generally manipulate them.
  * <p>
  * NB: to be sure of matching a specific template, you should provide a unique id in the constructor.
+ * (this will force 'strict' mode.)
  */
 // TODO we could use a hashcode over the values of template-builder and template-options fields, as a tag/usermetadata, 
 // to guarantee (virtually) matching only machines created from this template (instead of asking for unique id)
@@ -33,14 +34,15 @@ public class ReusableMachineTemplate extends PortableTemplateBuilder<ReusableMac
     private String name = null;
     private String owner = null;
     private String description = null;
-    private boolean strict = true;
+    private boolean strict;
     
-    public ReusableMachineTemplate() { }
+    public ReusableMachineTemplate() { strict = false; }
     public ReusableMachineTemplate(String name) { name(name); }
     
     /** see #getName() */
     public ReusableMachineTemplate name(String name) {
         this.name = name;
+        strict = true;
         return this;
     }
     
@@ -50,7 +52,8 @@ public class ReusableMachineTemplate extends PortableTemplateBuilder<ReusableMac
         return this;
     }
 
-    /** whether this template only matches machines instances created from this template; default true.
+    /** whether this template only matches machines instances created from this template; 
+     * defaults true if a name is set, otherwise false.
      * if false, it will ignore name, owner, and hashcode */
     public ReusableMachineTemplate strict(boolean strict) {
         this.strict = strict;
