@@ -44,12 +44,19 @@ public class JcloudsMachinePoolLiveTest {
         { registerTemplates(USUAL_VM, ANYONE_NOT_TINY_VM, VM_LARGE1, VM_SMALL1); }
     }
     
+    public static String getRequiredSystemProperty(String field) {
+        String result = System.getProperty(field);
+        if (result==null)
+            throw new IllegalArgumentException("This requires 'field' to be passed on the command-line (-D"+field+"=...");
+        return result;
+    }
+
     @Test(groups="Live")
     public void buildClaimAndDestroy() {
         ComputeServiceContext context =
                 new ComputeServiceContextFactory().createContext("aws-ec2",
-                        System.getProperty("identity"),
-                        System.getProperty("credential"),
+                        getRequiredSystemProperty("identity"),
+                        getRequiredSystemProperty("credential"),
                         ImmutableSet.<Module> of(new SLF4JLoggingModule(),
                                 new SshjSshClientModule()));
         ComputeService svc = context.getComputeService();
