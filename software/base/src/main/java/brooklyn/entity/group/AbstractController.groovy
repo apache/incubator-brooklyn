@@ -135,8 +135,10 @@ public abstract class AbstractController extends SoftwareProcessEntity {
     }
 
     public void checkEntity(Entity member) {
+        if (LOG.isTraceEnabled()) LOG.trace("Start {} checkEntity {}", this, member);
         if (belongs(member)) addEntity(member);
         else removeEntity(member);
+        if (LOG.isTraceEnabled()) LOG.trace("Done {} checkEntity {}", this, member);
     }
     
     public boolean belongs(Entity member) {
@@ -175,7 +177,6 @@ public abstract class AbstractController extends SoftwareProcessEntity {
         }
         if (addresses==oldAddresses) {
             if (LOG.isTraceEnabled()) LOG.trace("invocation of {}.addEntity({}) causes no change", this, member);
-            //FIXME no change; shouldn't happen but it does
             return;
         }
         LOG.info("Adding to $displayName, new member ${member.displayName} in locations ${member.locations}")
@@ -227,7 +228,8 @@ public abstract class AbstractController extends SoftwareProcessEntity {
             updateNeeded = false;
             LOG.info("updating {}", this)
             reconfigureService()
-            restart()
+            LOG.debug("submitting restart for update to {}", this)
+            invoke(RESTART);
         }
         setAttribute(TARGETS, addresses);
     }
