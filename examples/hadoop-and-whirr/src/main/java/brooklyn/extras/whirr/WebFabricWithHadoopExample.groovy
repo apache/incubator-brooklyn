@@ -44,7 +44,7 @@ import com.google.common.io.Files
 
 /**
  * Starts hadoop in the first location supplied, and the hadoop-friendly webapp in all other locations.
- * TODO The webapp needs to be manually configured (via the configure.jsp page, plus supplying the proxy command) to connect to hadoop
+ * Webapp get configured via the configure.jsp page, plus supplying the proxy command, to connect to hadoop.
  */
 @InheritConstructors
 public class WebFabricWithHadoopExample extends AbstractApplication {
