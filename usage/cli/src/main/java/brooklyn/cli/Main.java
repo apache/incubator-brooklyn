@@ -35,12 +35,19 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class Main {
+
+    public static final Logger log = LoggerFactory.getLogger(Main.class);
 
     public static void main(String...args) {
         Cli<BrooklynCommand> parser = buildCli();
         try {
+            log.debug("Parsing command line arguments");
             BrooklynCommand command = parser.parse(args); 
+            log.debug("Executing command: "+command);
             command.call();
         } catch (ParseException pe) {
             System.err.println("Parse error: " + pe.getMessage());
@@ -136,7 +143,9 @@ public class Main {
                     (locations==null || Iterables.isEmpty(locations)) ? ImmutableSet.of(CommandLineLocations.LOCALHOST) : locations);
             
             // Start the application
+            log.info("Adding application under brooklyn management");
             BrooklynLauncher.manage(application, port, !noShutdownOnExit, !noConsole);
+            log.info("Starting brooklyn application: "+app);
             application.start(brooklynLocations);
             
             if (verbose) {
