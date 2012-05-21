@@ -11,7 +11,7 @@ import brooklyn.entity.webapp.OldJavaWebApp
 import brooklyn.location.basic.SshMachineLocation
 
 /**
- * @deprecated Instead use brooklyn.entity.webapp.JavaWebAppSshDriver 
+ * @deprecated will be deleted in 0.5. Use brooklyn.entity.webapp.JavaWebAppSshDriver 
  */
 @Deprecated
 public abstract class SshBasedJavaWebAppSetup extends SshBasedJavaAppSetup {

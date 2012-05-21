@@ -19,6 +19,8 @@ import brooklyn.util.internal.Repeater
 
 /**
  * An {@link brooklyn.entity.Entity} representing a single web application instance.
+ * 
+ * @deprecated will be deleted in 0.5. Use SoftwareProcessEntity with UsesJava, UsesJm and JavaStartStopSshDriver
  */
 @Deprecated
 public abstract class JavaApp extends SoftwareProcessEntity implements UsesJmx {

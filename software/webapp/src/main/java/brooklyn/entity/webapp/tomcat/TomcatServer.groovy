@@ -47,11 +47,17 @@ public class TomcatServer extends JavaWebAppSoftwareProcess implements JavaWebAp
     public static final PortAttributeSensorAndConfigKey SHUTDOWN_PORT = 
             [ "tomcat.shutdownport", "Suggested shutdown port", PortRanges.fromString("31880+") ]
     
-    @Deprecated /** @deprecated Use SHUTDOWN_PORT */
+    /** 
+     * @deprecated will be deleted in 0.5. Use SHUTDOWN_PORT
+     */
+    @Deprecated
     public static final BasicConfigKey<PortRange> SUGGESTED_SHUTDOWN_PORT = 
             [ PortRange, "tomcat.shutdownport.deprecated", "Suggested shutdown port" ]
 
-    @Deprecated /** @deprecated Use SHUTDOWN_PORT */
+    /** 
+     * @deprecated will be deleted in 0.5. Use SHUTDOWN_PORT
+     */
+    @Deprecated
     public static final BasicAttributeSensor<Integer> TOMCAT_SHUTDOWN_PORT =
             [ Integer, "webapp.tomcat.shutdownPort.deprecated", "Port to use for shutting down" ]
     
@@ -59,7 +65,7 @@ public class TomcatServer extends JavaWebAppSoftwareProcess implements JavaWebAp
             [String, "webapp.tomcat.connectorStatus", "Catalina connector state name"]
     
     /**
-     * @deprecated Unsupported in 0.4.0
+     * @deprecated will be deleted in 0.5. Unsupported in 0.4.0.
      */
     @Deprecated
     //TODO property copied from legacy JavaApp, but underlying implementation has not been
