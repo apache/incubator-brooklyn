@@ -42,7 +42,7 @@ public class SensorRegistry {
     private ScheduledExecutorService _exec = null;
     synchronized ScheduledExecutorService getExec() {
         if (_exec==null) {
-            log.warn("using legacy executor service sensor model in $entity .  class should be updated to use adapters.");
+            log.warn("using legacy executor service sensor model in $entity -- class should be updated to use adapters.");
             _exec = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
         }
         return _exec;
@@ -99,7 +99,7 @@ public class SensorRegistry {
 	public void close() {
 		activated = false;
 		deactivateAdapters();
-		exec.shutdownNow()
+		if (_exec) exec.shutdownNow()
 		scheduled.each { key, ScheduledFuture future -> future.cancel(true) }
 	}
 

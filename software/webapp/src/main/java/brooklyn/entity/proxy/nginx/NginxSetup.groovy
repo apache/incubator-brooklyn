@@ -148,7 +148,8 @@ public class NginxSetup extends SshBasedAppSetup {
             super.restart();
         } else {
             try {
-                stop();
+                if (isRunning())
+                    stop();
             } catch (Exception e) {
                 log.debug("$entity stop failed during restart (but wasn't in stop state, so not surprising): "+e);
             }
