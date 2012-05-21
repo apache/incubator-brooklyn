@@ -53,7 +53,7 @@ public class TimeWeightedDeltaEnricher<T extends Number> extends AbstractTransfo
             } else {
                 double duration = lastTime == null ? unitMillis : eventTime - lastTime
                 double delta = (current - lastValue) / (duration / unitMillis)
-                double deltaPostProcessed = postProcessor.call(delta)
+                double deltaPostProcessed = postProcessor.apply(delta)
                 entity.setAttribute(target, deltaPostProcessed)
                 if (LOG.isTraceEnabled()) LOG.trace "set $this to ${deltaPostProcessed}, $lastValue -> $current at $eventTime" 
             }
