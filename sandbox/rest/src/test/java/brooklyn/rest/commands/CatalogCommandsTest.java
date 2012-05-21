@@ -5,10 +5,6 @@ import brooklyn.rest.commands.catalog.ListCatalogPoliciesCommand;
 import brooklyn.rest.commands.catalog.ListConfigKeysCommand;
 import brooklyn.rest.commands.catalog.LoadClassCommand;
 import brooklyn.rest.resources.CatalogResource;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Writer;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import org.testng.annotations.Test;
@@ -70,26 +66,12 @@ public class CatalogCommandsTest extends BrooklynCommandTest {
         "  }" +
         "}\n";
 
-    File temp = createTemporaryFileWithContent("brooklyn-rest", ".groovy", groovyScript);
-    runCommandWithArgs(LoadClassCommand.class, temp.getAbsolutePath());
+    runCommandWithArgs(LoadClassCommand.class,
+        createTemporaryFileWithContent(".groovy", groovyScript));
 
-    assertThat(standardOut(), containsString("http://localhost:8080/v1/catalog/entities/brooklyn.rest.entities.cli.custom.DummyEntity"));
+    assertThat(standardOut(), containsString("http://localhost:8080/v1/catalog/entities" +
+        "/brooklyn.rest.entities.cli.custom.DummyEntity"));
   }
 
-  public File createTemporaryFileWithContent(String prefix, String suffix, String content)
-      throws IOException {
-    File temporaryFile = File.createTempFile(prefix, suffix);
-    Writer writer = null;
 
-    try {
-      writer = new FileWriter(temporaryFile);
-      writer.write(content);
-      return temporaryFile;
-
-    } finally {
-      if (writer != null) {
-        writer.close();
-      }
-    }
-  }
 }

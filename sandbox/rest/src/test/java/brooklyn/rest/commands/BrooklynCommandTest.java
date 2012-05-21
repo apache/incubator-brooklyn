@@ -1,10 +1,12 @@
 package brooklyn.rest.commands;
 
-import com.google.common.collect.Lists;
 import com.yammer.dropwizard.testing.ResourceTest;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintStream;
-import java.util.List;
+import java.io.Writer;
 import org.apache.commons.cli.GnuParser;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -50,5 +52,22 @@ public abstract class BrooklynCommandTest extends ResourceTest {
 
   protected String standardErr() {
     return errBytes.toString();
+  }
+
+  protected String createTemporaryFileWithContent(String suffix, String content)
+      throws IOException {
+    File temporaryFile = File.createTempFile("brooklyn-rest", suffix);
+    Writer writer = null;
+
+    try {
+      writer = new FileWriter(temporaryFile);
+      writer.write(content);
+      return temporaryFile.getAbsolutePath();
+
+    } finally {
+      if (writer != null) {
+        writer.close();
+      }
+    }
   }
 }
