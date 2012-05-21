@@ -20,7 +20,10 @@ import com.google.common.io.CharStreams
  *
  *  The adapter normally polls the HTTP server every second to update sensors, which could involve aggregation of data
  *  or simply reading values and setting them in the attribute map of the activity model.
+ *  
+ * @deprecated will be deleted in 0.5. Use new HttpSensorAdapter
  */
+@Deprecated
 public class OldHttpSensorAdapter {
     static final Logger log = LoggerFactory.getLogger(OldHttpSensorAdapter.class);
 
@@ -125,7 +128,10 @@ public class OldHttpSensorAdapter {
 
 /**
  * Provides integer values to a sensor via JSON+HTTP.
+ * 
+ * @deprecated will be deleted in 0.5. Use HttpSensorAdapter.
  */
+@Deprecated
 public class HttpJsonLongValueProvider implements ValueProvider<Long> {
    private final URL url
    private final String jsonKey
@@ -146,8 +152,11 @@ public class HttpJsonLongValueProvider implements ValueProvider<Long> {
 
 
 /**
-* Provides the body as a String to a sensor via HTTP.
-*/
+ * Provides the body as a String to a sensor via HTTP.
+ * 
+ * @deprecated will be deleted in 0.5. Use HttpSensorAdapter.
+ */
+@Deprecated
 public class HttpStringBodyProvider implements ValueProvider<String> {
 	private final URL url
 	private final OldHttpSensorAdapter adapter
@@ -164,7 +173,10 @@ public class HttpStringBodyProvider implements ValueProvider<String> {
 
 /**
  * Provides values to a sensor via HTTP.
+ * 
+ * @deprecated will be deleted in 0.5. Use HttpSensorAdapter.
  */
+@Deprecated
 public class HttpDataValueProvider implements ValueProvider<Boolean> {
     private final URL url
     private final String regexp
@@ -183,7 +195,10 @@ public class HttpDataValueProvider implements ValueProvider<Boolean> {
 
 /**
  * Provides HTTP status values to a sensor.
+ * 
+ * @deprecated will be deleted in 0.5. Use HttpSensorAdapter.
  */
+@Deprecated
 public class HttpStatusValueProvider implements ValueProvider<Integer> {
     private final URL url
     private final OldHttpSensorAdapter adapter
@@ -200,7 +215,10 @@ public class HttpStatusValueProvider implements ValueProvider<Integer> {
 
 /**
  * Provides HTTP header values to a sensor.
+ * 
+ * @deprecated will be deleted in 0.5. Use HttpSensorAdapter.
  */
+@Deprecated
 public class HttpHeaderValueProvider implements ValueProvider<String> {
     private final URL url
     private final String headerName

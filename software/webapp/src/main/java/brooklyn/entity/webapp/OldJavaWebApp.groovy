@@ -19,7 +19,9 @@ import brooklyn.util.internal.Repeater
 
 /**
 * An {@link Entity} representing a single java web application server instance.
-*/
+* 
+ * @deprecated will be deleted in 0.5. Use JavaWebAppSoftwareProcess
+ */
 @Deprecated
 public abstract class OldJavaWebApp extends JavaApp implements JavaWebAppService {
 	

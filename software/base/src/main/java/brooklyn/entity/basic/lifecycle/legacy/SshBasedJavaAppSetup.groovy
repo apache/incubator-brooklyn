@@ -20,6 +20,8 @@ import brooklyn.util.internal.StringEscapeUtils;
  * application.
  *
  * TODO complete documentation
+ * 
+ * @deprecated will be deleted in 0.5. Use JavaStartStopSshDriver, with SoftwareProcessEntity
  */
 @Deprecated
 public abstract class SshBasedJavaAppSetup extends SshBasedAppSetup {

@@ -12,7 +12,10 @@ import com.google.common.io.CharStreams
 /**
  * This class adapts the result of commands sent over SSH to {@link Sensor} data for a particular {@link Entity}, updating the
  * {@link Activity} as required.
+ * 
+ * @deprecated will be deleted in 0.5. Use new SshSensorAdapter
  */
+@Deprecated
 public class OldSshSensorAdapter {
     static final Logger log = LoggerFactory.getLogger(OldSshSensorAdapter.class);
 
@@ -66,7 +69,10 @@ public class OldSshSensorAdapter {
 
 /**
  * Provides return value of a command to a sensor.
+ * 
+ * @deprecated will be deleted in 0.5. Use SshSensorAdapter.
  */
+@Deprecated
 public class SshReturnValueProvider<Integer> implements ValueProvider<Integer> {
     private final String command
     private final OldSshSensorAdapter adapter
@@ -83,7 +89,10 @@ public class SshReturnValueProvider<Integer> implements ValueProvider<Integer> {
 
 /**
  * Provides output of a command to a sensor.
+ * 
+ * @deprecated will be deleted in 0.5. Use SshSensorAdapter.
  */
+@Deprecated
 public class SshOutputValueProvider<String> implements ValueProvider<String> {
     private final String command
     private final OldSshSensorAdapter adapter
@@ -100,7 +109,10 @@ public class SshOutputValueProvider<String> implements ValueProvider<String> {
 
 /**
  * Provides return value of a command to a sensor.
+ * 
+ * @deprecated will be deleted in 0.5. Use SshSensorAdapter.
  */
+@Deprecated
 public class SshMatchValueProvider<Boolean> implements ValueProvider<Boolean> {
     private final String command
     private final String regexp

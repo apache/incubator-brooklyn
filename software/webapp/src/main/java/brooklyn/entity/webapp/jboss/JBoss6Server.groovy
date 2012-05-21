@@ -41,7 +41,7 @@ public class JBoss6Server extends JavaWebAppSoftwareProcess implements JavaWebAp
     public static final BasicAttributeSensorAndConfigKey<String> CLUSTER_NAME = [ String, "jboss.clusterName", "Identifier used to group JBoss instances", "" ]	  
 
     /**
-     * @deprecated Unsupported in 0.4.0
+     * @deprecated will be deleted in 0.5. Unsupported in 0.4.0.
      */
     @Deprecated
 	//TODO property copied from legacy JavaApp, but underlying implementation has not been

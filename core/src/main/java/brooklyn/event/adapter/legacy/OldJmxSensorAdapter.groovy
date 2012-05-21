@@ -31,6 +31,8 @@ import com.google.common.base.Preconditions
  * 
  * The adapter normally polls the JMX server every second to update sensors, which could involve aggregation of data
  * or simply reading values and setting them in the attribute map of the activity model.
+ * 
+ * @deprecated will be deleted in 0.5. Use new JmxSensorAdapter
  */
 @Deprecated
 public class OldJmxSensorAdapter {
@@ -285,7 +287,10 @@ public class OldJmxSensorAdapter {
 
 /**
  * Provides JMX attribute values to a sensor.
+ * 
+ * @deprecated will be deleted in 0.5. Use new JmxSensorAdapter
  */
+@Deprecated
 public class JmxAttributeProvider<T> implements ValueProvider<T> {
     private final OldJmxSensorAdapter adapter
     private final ObjectName objectName
@@ -304,7 +309,10 @@ public class JmxAttributeProvider<T> implements ValueProvider<T> {
 
 /**
  * Provides JMX operation results to a sensor.
+ * 
+ * @deprecated will be deleted in 0.5. Use new JmxSensorAdapter
  */
+@Deprecated
 public class JmxOperationProvider<T> implements ValueProvider<T> {
     private final OldJmxSensorAdapter adapter
     private final ObjectName objectName
@@ -323,8 +331,14 @@ public class JmxOperationProvider<T> implements ValueProvider<T> {
     }
 }
 
+/**
+ * @deprecated will be deleted in 0.5.
+ */
+@Deprecated
 public class JmxTabularDataProvider implements ValueProvider<Map<String, Object>> {
 
+    // TODO Before deleting, first confirm there is nothing we want to move out of here!
+    
     private static final Logger log = LoggerFactory.getLogger(JmxTabularDataProvider.class);
 
     private final OldJmxSensorAdapter adapter
@@ -362,7 +376,10 @@ public class JmxTabularDataProvider implements ValueProvider<Map<String, Object>
 
 /**
  * Provides JMX attribute values to a sensor.
+ * 
+ * @deprecated will be deleted in 0.5. Use JmxSensorAdapter.
  */
+@Deprecated
 public class JmxAttributeNotifier implements NotificationListener {
     private static final Logger log = LoggerFactory.getLogger(JmxAttributeNotifier.class);
 
