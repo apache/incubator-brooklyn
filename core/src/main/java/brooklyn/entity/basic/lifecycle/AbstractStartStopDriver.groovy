@@ -25,10 +25,10 @@ public abstract class AbstractStartStopDriver implements StartStopDriver {
      * Start the entity.
      *
      * this installs, configures and launches the application process. However,
-     * users can also call the {@link #install()}, {@link #config()} and
-     * {@link #runApp()} steps independently. The {@link #postStart()} method
-     * will be called after the application run script has been executed, but
-     * the process may not be completely initialised at this stage, so care is
+     * users can also call the {@link #install()}, {@link #customize()} and
+     * {@link #launch()} steps independently. The {@link #postLaunch()} will
+     * be called after the {@link #launch()} metheod is executed, but the
+     * process may not be completely initialised at this stage, so care is
      * required when implementing these stages.
      *
      * @see #stop()
@@ -43,6 +43,8 @@ public abstract class AbstractStartStopDriver implements StartStopDriver {
         
         waitForConfigKey(ConfigKeys.LAUNCH_LATCH)
 		launch();
+        
+        postLaunch();  
 	}
 
 	@Override
@@ -51,7 +53,12 @@ public abstract class AbstractStartStopDriver implements StartStopDriver {
 	public abstract void install();
 	public abstract void customize();
 	public abstract void launch();
-	
+    
+    /**
+     * Implement this method in child classes to add some post-launch behavior
+     */
+	public void postLaunch(){}
+    
 	@Override
 	public void restart() {
 		stop();

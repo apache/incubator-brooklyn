@@ -65,7 +65,7 @@ public abstract class StartStopSshDriver extends AbstractStartStopDriver impleme
 
     public int execute(Map flags=[:], List<String> script, String summaryForLogging) {
         logSsh.debug("{} on machine {}: {}", summaryForLogging, machine, script)
-        def environment = flags.env ?: getShellEnvironment()
+        def environment = (flags.env != null) ? flags.env : getShellEnvironment()
 
         InputStream insO = new PipedInputStream();
         OutputStream outO = new PipedOutputStream(insO)

@@ -37,7 +37,8 @@ public class TomcatSimulator {
             throw new IllegalStateException("TomcatSimulator is already running")
         synchronized (activeInstances) { activeInstances.add(this) }
 
-        jmxService = new JmxService();
+        // TODO A better way to get an available port?
+        jmxService = new JmxService("localhost", 28000 + (int)Math.floor(new Random().nextDouble() * 1000));
 
 		//FIXME use of random here could cause collisions; should at least check if port available ?
         int httpPort = new Random().nextInt(1000) + 7000

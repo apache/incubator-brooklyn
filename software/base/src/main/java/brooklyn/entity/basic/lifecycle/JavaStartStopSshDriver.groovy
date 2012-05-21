@@ -11,6 +11,7 @@ import brooklyn.entity.basic.UsesJmx
 import brooklyn.entity.basic.legacy.JavaApp
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.util.flags.TypeCoercions
 import brooklyn.util.internal.StringEscapeUtils
 
 import com.google.common.base.Throwables
@@ -60,9 +61,9 @@ public abstract class JavaStartStopSshDriver extends StartStopSshDriver {
                 if (v in Integer || v in Long || v in Boolean) v = ""+v;
                 else {
                     v = BasicConfigKey.resolveValue(v, Object, entity.executionContext);
-                    if (v in Integer || v in Long || v in Boolean) v = ""+v;
-                    else if (v in String) {}
-                    else if (v==null) {}
+                    if (v==null) {}
+                    else if (v in CharSequence) {}
+                    else if (TypeCoercions.isPrimitiveOrBoxer(v.getClass())) v = ""+v;
                     else {
                         //could do toString, but that's likely not what is desired; probably a type mismatch, 
                         //post-processing should be specified (common types are accepted above)

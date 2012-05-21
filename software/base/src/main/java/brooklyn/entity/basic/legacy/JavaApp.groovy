@@ -20,6 +20,7 @@ import brooklyn.util.internal.Repeater
 /**
  * An {@link brooklyn.entity.Entity} representing a single web application instance.
  */
+@Deprecated
 public abstract class JavaApp extends SoftwareProcessEntity implements UsesJmx {
     public static final Logger log = LoggerFactory.getLogger(JavaApp.class)
 	

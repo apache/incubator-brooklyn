@@ -44,14 +44,24 @@ public class TimeWeightedDeltaEnricher<T extends Number> extends AbstractTransfo
     }
     
     public void onEvent(SensorEvent<T> event, long eventTime) {
-        Number current = event.getValue() ?: 0
+        Number current = event.getValue()
+        
+        if (current == null) {
+            // Can't compute a delta; 
+            // don't assume current=zero because then things like requestCount->requestsPerSecond is negative!
+            // instead assume same as last time, so delta == 0
+            double deltaPostProcessed = postProcessor.call(0d)
+            entity.setAttribute(target, deltaPostProcessed)
+            if (LOG.isTraceEnabled()) LOG.trace "set $this to ${deltaPostProcessed}, $lastValue -> $current at $eventTime"
+            return
+        }
         
         if (eventTime > lastTime) {
             if (lastValue == null) {
                 // cannot calculate time-based delta with a single value
                 if (LOG.isTraceEnabled()) LOG.trace "$this received event but no last value so will not emit, null -> $current at $eventTime" 
             } else {
-                double duration = lastTime == null ? unitMillis : eventTime - lastTime
+                double duration = (lastTime == null) ? unitMillis : eventTime - lastTime
                 double delta = (current - lastValue) / (duration / unitMillis)
                 double deltaPostProcessed = postProcessor.apply(delta)
                 entity.setAttribute(target, deltaPostProcessed)

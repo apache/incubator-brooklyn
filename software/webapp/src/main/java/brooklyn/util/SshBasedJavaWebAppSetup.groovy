@@ -1,6 +1,7 @@
 package brooklyn.util
 
 import java.io.File
+
 import java.util.List
 
 import brooklyn.entity.basic.Attributes
@@ -9,6 +10,10 @@ import brooklyn.entity.basic.lifecycle.legacy.SshBasedJavaAppSetup;
 import brooklyn.entity.webapp.OldJavaWebApp
 import brooklyn.location.basic.SshMachineLocation
 
+/**
+ * @deprecated Instead use brooklyn.entity.webapp.JavaWebAppSshDriver 
+ */
+@Deprecated
 public abstract class SshBasedJavaWebAppSetup extends SshBasedJavaAppSetup {
 
     int httpPort

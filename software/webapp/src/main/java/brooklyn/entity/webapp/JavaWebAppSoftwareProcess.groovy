@@ -66,24 +66,27 @@ public abstract class JavaWebAppSshDriver extends JavaStartStopSshDriver {
     public Integer getHttpPort() { return entity.getAttribute(Attributes.HTTP_PORT) }	
 
     @Override
-    public void start() {
+    public void postLaunch() {
         assert httpPort!=null : "HTTP_PORT sensor not set; is an acceptable port available?"
         entity.setAttribute(WebAppService.ROOT_URL, "http://${hostname}:${httpPort}/")
-        super.start();
     }
 
 	protected abstract String getDeploySubdir();
 	
 	public void deploy(File f, String targetName=null) {
 		if (!targetName) targetName = f.getName();
-		log.info "{} deploying {} to {}:"+runDir+"/"+deploySubdir+"/"+targetName, entity, f, hostname
-		int result = machine.copyTo(f, runDir+"/"+deploySubdir+"/"+targetName);
-		log.debug "{} deployed {} to {}:"+runDir+"/"+deploySubdir+"/"+targetName+": result {}", entity, f, hostname, result
+        def dest = runDir+"/"+deploySubdir+"/"+targetName
+		log.info "{} deploying {} to {}:{}", entity, f, hostname, dest
+		machine.run "mv -f ${dest} ${dest}.bak > /dev/null 2>&1" //back up old file/directory
+        int result = machine.copyTo(f, dest);
+		log.debug "{} deployed {} to {}:{}: result {}", entity, f, hostname, dest, result
 	}
 	public void deploy(String url, String targetName) {
-		log.info "{} deploying {} to {}:"+runDir+"/"+deploySubdir+"/"+targetName, entity, url, hostname
-		int result = machine.copyTo(getResource(url), runDir+"/"+deploySubdir+"/"+targetName)
-		log.debug "{} deployed {} to {}:"+runDir+"/"+deploySubdir+"/"+targetName+": result {}", entity, url, hostname, result
+        def dest = runDir+"/"+deploySubdir+"/"+targetName
+        log.info "{} deploying {} to {}:{}", entity, url, hostname, dest
+        machine.run "mv -f ${dest} ${dest}.bak > /dev/null 2>&1" //back up old file/directory
+        int result = machine.copyTo(backup:true, getResource(url), runDir+"/"+deploySubdir+"/"+targetName)
+		log.debug "{} deployed {} to {}:{}: result {}", entity, url, hostname, dest, result
 	}
 
 }

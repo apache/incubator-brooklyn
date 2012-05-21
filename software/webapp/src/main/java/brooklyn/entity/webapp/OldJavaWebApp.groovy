@@ -20,6 +20,7 @@ import brooklyn.util.internal.Repeater
 /**
 * An {@link Entity} representing a single java web application server instance.
 */
+@Deprecated
 public abstract class OldJavaWebApp extends JavaApp implements JavaWebAppService {
 	
     public static final Logger log = LoggerFactory.getLogger(OldJavaWebApp.class)

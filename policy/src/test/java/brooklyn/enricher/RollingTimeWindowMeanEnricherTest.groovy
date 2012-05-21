@@ -27,6 +27,8 @@ class RollingTimeWindowMeanEnricherTest {
     RollingTimeWindowMeanEnricher<Integer> averager
     ConfidenceQualifiedNumber average
 
+    private final long timePeriod = 1000
+    
     @BeforeMethod
     public void before() {
         app = new AbstractApplication() {}
@@ -38,7 +40,7 @@ class RollingTimeWindowMeanEnricherTest {
         avgSensor = new BasicAttributeSensor<Double>(Integer.class, "avg sensor")
         
         producer.addEnricher(new DeltaEnricher<Integer>(producer, intSensor, deltaSensor))
-        averager = new RollingTimeWindowMeanEnricher<Integer>(producer, deltaSensor, avgSensor, 1000)
+        averager = new RollingTimeWindowMeanEnricher<Integer>(producer, deltaSensor, avgSensor, timePeriod)
         producer.addEnricher(averager)
     }
 
@@ -47,10 +49,27 @@ class RollingTimeWindowMeanEnricherTest {
     }
 
     @Test
-    public void testDefaultAverage() {
+    public void testDefaultAverageWhenEmpty() {
         average = averager.getAverage(0)
         assertEquals(average.value, 0)
         assertEquals(average.confidence, 0.0d)
+    }
+    
+    @Test
+    public void testNoRecentValuesAverage() {
+        averager.onEvent(intSensor.newEvent(producer, 10), 0L)
+        average = averager.getAverage(timePeriod+1000)
+        assertEquals(average.value, 10d)
+        assertEquals(average.confidence, 0d)
+    }
+    
+    @Test
+    public void testNoRecentValuesUsesLastForAverage() {
+        averager.onEvent(intSensor.newEvent(producer, 10), 0L)
+        averager.onEvent(intSensor.newEvent(producer, 20), 10L)
+        average = averager.getAverage(timePeriod+1000)
+        assertEquals(average.value, 20d)
+        assertEquals(average.confidence, 0d)
     }
     
     @Test
