@@ -13,7 +13,7 @@ CLASS=brooklyn.cli.Main
 
 # Default memory
 if [ -z "${JAVA_OPTS}" ] ; then
-    JAVA_OPTS="-Xmx256m -Xmx1g -XX:MaxPermSize=256m"
+    JAVA_OPTS="-Xms256m -Xmx1g -XX:MaxPermSize=256m"
 fi
 
 # Set up the environment
