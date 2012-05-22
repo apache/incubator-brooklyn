@@ -8,6 +8,10 @@
 # Get root direcotry of distribution
 ROOT=$(cd $(dirname $0)/.. && pwd)
 
+if [ -z "$BROOKLYN_HOME" ] ;
+    then BROOKLYN_HOME=$(cd $(dirname $(readlink -f $0 2> /dev/null || readlink $0 2> /dev/null || echo $0))/.. && pwd) ;
+fi
+
 # The CLI main class to run
 CLASS=brooklyn.cli.Main
 
@@ -17,10 +21,11 @@ if [ -z "${JAVA_OPTS}" ] ; then
 fi
 
 # Set up the environment
-CLASSPATH="${CLASSPATH}:${BROOKLYN_CLASSPATH}"
-if [ -z "${BROOKLYN_HOME}" ]; then # lookup on ROOT only if BROOKLYN_HOME is not set
-    CLASSPATH="$CLASSPATH:${ROOT}/lib/*:${ROOT}/app:${ROOT}/app/*";
+CLASSPATH=${ROOT}/lib/*
+if [ -n "${BROOKLYN_CLASSPATH}" ]; then
+    CLASSPATH="${BROOKLYN_CLASSPATH}:${CLASSPATH}"
 fi
+
 JAVA_OPTS="-Dbrooklyn.localhost.address=127.0.0.1 ${JAVA_OPTS}"
 
 # Start Brooklyn
