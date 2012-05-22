@@ -24,7 +24,7 @@ public class BrooklynMachinePoolLiveTest {
 
         public final static ReusableMachineTemplate 
             USUAL_VM = 
-                new ReusableMachineTemplate("usual").ownedByMe().
+                new ReusableMachineTemplate("usual").templateOwnedByMe().
                 tagOptional("tagForUsualVm").
                 metadataOptional("metadataForUsualVm", "12345").
                 minRam(1024).minCores(2);
@@ -36,10 +36,10 @@ public class BrooklynMachinePoolLiveTest {
 
         public static final ReusableMachineTemplate 
             VM_LARGE1 = 
-                new ReusableMachineTemplate("vm.large1").ownedByMe().
+                new ReusableMachineTemplate("vm.large1").templateOwnedByMe().
                 minRam(16384).minCores(4),
             VM_SMALL1 = 
-                new ReusableMachineTemplate("vm.small1").ownedByMe().smallest();
+                new ReusableMachineTemplate("vm.small1").templateOwnedByMe().smallest();
         
         { registerTemplates(USUAL_VM, ANYONE_NOT_TINY_VM, VM_LARGE1, VM_SMALL1); }
     }
@@ -52,7 +52,7 @@ public class BrooklynMachinePoolLiveTest {
         log.info("buildClaimAndDestroy: refreshed pool");
         p.ensureExists(2, SamplePool.USUAL_VM);
         log.info("buildClaimAndDestroy: ensure have 2");
-        SshMachineLocation l = p.claim(SamplePool.USUAL_VM);
+        SshMachineLocation l = p.obtain(SamplePool.USUAL_VM);
         Assert.assertNotNull(l);
         log.info("buildClaimAndDestroy: claimed 1");
         MachineSet unclaimedUsual = p.unclaimed(MachinePoolPredicates.matching(SamplePool.USUAL_VM));

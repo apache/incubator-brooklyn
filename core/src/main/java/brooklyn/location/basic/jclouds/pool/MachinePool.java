@@ -1,8 +1,9 @@
 package brooklyn.location.basic.jclouds.pool;
 
-import static brooklyn.location.basic.jclouds.pool.MachinePoolPredicates.*;
+import static brooklyn.location.basic.jclouds.pool.MachinePoolPredicates.compose;
+import static brooklyn.location.basic.jclouds.pool.MachinePoolPredicates.matching;
+
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -42,15 +43,19 @@ import com.google.common.collect.ImmutableList;
  * Callers wishing to guarantee results of e.g. ensureUnclaimed remaining available
  * can synchronize on this class for the duration that they wish to have that guarantee
  * (at the cost, of course, of any other threads being able to access this pool).
+ * <p>
+ * If underlying provisioning/destroying operations fail, the pool
+ * currently may be in an unknown state, currently.
+ * If more robustness is needed this can be added.
  */
 public class MachinePool {
     
     private static final Logger log = LoggerFactory.getLogger(MachinePool.class);
     
     final ComputeService computeService;
-    AtomicBoolean refreshNeeded = new AtomicBoolean(true);
+    final AtomicBoolean refreshNeeded = new AtomicBoolean(true);
     final List<ReusableMachineTemplate> templates = new ArrayList<ReusableMachineTemplate>();
-    String poolName;
+    String poolName = null;
     
     /** all machines detected, less those in the black list */
     volatile MachineSet detectedMachines = new MachineSet();
@@ -68,20 +73,24 @@ public class MachinePool {
     }
     
     public void setPoolName(String poolName) {
+        if (poolName!=null)
+            log.warn("Changing pool name of "+this+" (from "+this.poolName+" to "+poolName+") is discouraged.");
         this.poolName = poolName;
     }
     /** pool name is used as a group/label by jclouds, for convenience only; 
      * it has no special properties for detecting matching instances
      * (use explicit tags on the templates, for that). 
-     * defaults to name of pool class and user name */
-    public String getPoolName() {
-        if (poolName!=null)
-            return poolName;
-        return getClass().getSimpleName()+"-"+System.getProperty("user.name");
+     * defaults to name of pool class and user name.
+     * callers should set pool name before getting, if using a custom name. */
+    public synchronized String getPoolName() {
+        if (poolName==null)
+            poolName = getClass().getSimpleName()+"-"+System.getProperty("user.name");
+        return poolName;
     }
     
     /** refreshes the pool of machines from the server (finding all instances matching the registered templates) */
-    public void refresh() {
+    public synchronized void refresh() {
+        refreshNeeded.set(false);
         Set<? extends ComputeMetadata> computes = computeService.listNodes();
         Set<NodeMetadata> nodes = new LinkedHashSet<NodeMetadata>();
         for (ComputeMetadata c: computes) {
@@ -96,31 +105,29 @@ public class MachinePool {
         MachineSet allNewDetectedMachines = new MachineSet(nodes);
         MachineSet newDetectedMachines = filterForAllowedMachines(allNewDetectedMachines);
         MachineSet oldDetectedMachines;
-        synchronized (this) {
-            oldDetectedMachines = detectedMachines;
-            detectedMachines = newDetectedMachines;
-            refreshNeeded.set(false);
-        }
+        oldDetectedMachines = detectedMachines;
+        detectedMachines = newDetectedMachines;
 
-        if (log.isDebugEnabled()) {
-            MachineSet appearedMachinesIncludingBlacklist = allNewDetectedMachines.removed(oldDetectedMachines);
-            MachineSet appearedMachines = filterForAllowedMachines(appearedMachinesIncludingBlacklist);
-            if (appearedMachinesIncludingBlacklist.size()>appearedMachines.size())
-                log.debug("Pool "+this+", ignoring "+(appearedMachinesIncludingBlacklist.size()-appearedMachines.size())+" disallowed");
-            int matchedAppeared = 0;
-            for (NodeMetadata m: appearedMachines) {
-                Set<ReusableMachineTemplate> ts = getTemplatesMatchingInstance(m);
-                if (!ts.isEmpty()) {
-                    matchedAppeared++;
-                    if (log.isDebugEnabled()) 
-                        log.debug("Pool "+this+", newly detected machine "+m+", matches pool templates "+ts);
-                } else {
+        MachineSet appearedMachinesIncludingBlacklist = allNewDetectedMachines.removed(oldDetectedMachines);
+        MachineSet appearedMachines = filterForAllowedMachines(appearedMachinesIncludingBlacklist);
+        if (appearedMachinesIncludingBlacklist.size()>appearedMachines.size())
+            if (log.isDebugEnabled()) log.debug("Pool "+this+", ignoring "+(appearedMachinesIncludingBlacklist.size()-appearedMachines.size())+" disallowed");
+        int matchedAppeared = 0;
+        for (NodeMetadata m: appearedMachines) {
+            Set<ReusableMachineTemplate> ts = getTemplatesMatchingInstance(m);
+            if (!ts.isEmpty()) {
+                matchedAppeared++;
+                if (log.isDebugEnabled()) 
+                    log.debug("Pool "+this+", newly detected machine "+m+", matches pool templates "+ts);
+            } else {
+                if (log.isDebugEnabled()) 
                     log.debug("Pool "+this+", newly detected machine "+m+", does not match any pool templates");
-                }
             }
-            if (matchedAppeared>0)
-                log.info("Pool "+this+" discovered "+matchedAppeared+" matching machines (of "+appearedMachines.size()+" total new; "+newDetectedMachines.size()+" total including claimed and unmatched)");
-            else
+        }
+        if (matchedAppeared>0) {
+            log.info("Pool "+this+" discovered "+matchedAppeared+" matching machines (of "+appearedMachines.size()+" total new; "+newDetectedMachines.size()+" total including claimed and unmatched)");
+        } else {
+            if (log.isDebugEnabled()) 
                 log.debug("Pool "+this+" discovered "+matchedAppeared+" matching machines (of "+appearedMachines.size()+" total new; "+newDetectedMachines.size()+" total including claimed and unmatched)");
         }
     }
@@ -152,13 +159,13 @@ public class MachinePool {
     }
     
     /** all machines matching any templates */
-    public MachineSet getAllMachines() {
+    public MachineSet all() {
         init();
         return detectedMachines;
     }
 
     /** machines matching any templates which have not been claimed */
-    public MachineSet getUnclaimedMachines() {
+    public MachineSet unclaimed() {
         init();
         synchronized (this) {
             return detectedMachines.removed(claimedMachines);
@@ -167,12 +174,12 @@ public class MachinePool {
     
     /** returns all machines matching the given criteria (may be claimed) */
     public MachineSet all(Function<MachineSet, MachineSet> ...ops) {
-        return compose(ops).apply(getAllMachines());
+        return compose(ops).apply(all());
     }
 
     /** returns unclaimed machines matching the given criteria */
     public MachineSet unclaimed(Function<MachineSet, MachineSet> ...ops) {
-        return compose(ops).apply(getUnclaimedMachines());
+        return compose(ops).apply(unclaimed());
     }
 
     /** creates machines if necessary so that this spec exists (may already be claimed however) 
@@ -186,18 +193,21 @@ public class MachinePool {
         setBlacklist(blacklistedMachines.added(newToBlacklist));
     }
     
+    /** replaces the blacklist set; callers should generally perform a refresh()
+     * afterwards, to trigger re-detection of blacklisted machines
+     */
     public synchronized void setBlacklist(MachineSet newBlacklist) {
         blacklistedMachines = newBlacklist;
         detectedMachines = detectedMachines.removed(blacklistedMachines);
     }
     
     /** creates machines if necessary so that this spec exists (may already be claimed however);
-     * returns a set of all matching machines, of size at least count (but possibly some are already claimed) */
+     * returns a set of all matching machines, of size at least count (but possibly some are already claimed).
+     * (the pool can change at any point, so this set is a best-effort but may be out of date.
+     * see javadoc comments on this class.) */
     public MachineSet ensureExists(int count, ReusableMachineTemplate template) {
         MachineSet current;
-        synchronized (this) {
-             current = all(matching(template));
-        }
+        current = all(matching(template));
         if (current.size() >= count)
             return current;
         //have to create more
@@ -206,7 +216,9 @@ public class MachinePool {
     }
     
     /** creates machines if necessary so that this spec can subsequently be claimed;
-     * returns all such unclaimed machines, guaranteed to be non-empty */
+     * returns all such unclaimed machines, guaranteed to be non-empty.
+    * (the pool can change at any point, so this set is a best-effort but may be out of date.
+    * see javadoc comments on this class.) */
     public MachineSet ensureUnclaimed(ReusableMachineTemplate template) {
         return ensureUnclaimed(1, template);
     }
@@ -215,9 +227,7 @@ public class MachinePool {
      * returns a set of at least count unclaimed machines */
     public MachineSet ensureUnclaimed(int count, ReusableMachineTemplate template) {
         MachineSet current;
-        synchronized (this) {
-             current = unclaimed(matching(template));
-        }
+        current = unclaimed(matching(template));
         if (current.size() >= count)
             return current;
         //have to create more
@@ -268,16 +278,20 @@ public class MachinePool {
     /** claims the indicated number of machines with the indicated spec, creating if necessary */
     public MachineSet claim(int count, ReusableMachineTemplate t) {
         init();
-        synchronized (this) {
-            MachineSet mm = ensureUnclaimed(count, t);
-            Set<NodeMetadata> claiming = new LinkedHashSet<NodeMetadata>();
-            Iterator<NodeMetadata> mmi = mm.iterator();
-            for (int i=0; i<count; i++) 
-                claiming.add(mmi.next());
-            MachineSet result = new MachineSet(claiming);
-            claimedMachines = claimedMachines.added(result);
-            return result;
+        Set<NodeMetadata> claiming = new LinkedHashSet<NodeMetadata>();
+        while (claiming.size() < count) {
+            MachineSet mm = ensureUnclaimed(count - claiming.size(), t);
+            for (NodeMetadata m : mm) {
+                synchronized (this) {
+                    if (!claimedMachines.contains(m)) {
+                        claiming.add(m);
+                        claimedMachines = claimedMachines.added(new MachineSet(m));
+                    }
+                }
+            }
         }
+        MachineSet result = new MachineSet(claiming);
+        return result;
     }
 
 
@@ -294,7 +308,7 @@ public class MachinePool {
                 //did not claim all; unclaim and fail
                 claimedMachines = originalClaimed;
                 MachineSet unavailable = set.removed(newlyClaimed); 
-                throw new IllegalArgumentException("Could not claim at least one requested element: "+unavailable);
+                throw new IllegalArgumentException("Could not claim all requested machines; failed to claim "+unavailable);
             }
             return newlyClaimed;
         }

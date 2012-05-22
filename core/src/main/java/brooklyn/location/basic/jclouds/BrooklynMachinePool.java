@@ -5,6 +5,7 @@ import static brooklyn.location.basic.jclouds.pool.MachinePoolPredicates.matchin
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.jclouds.compute.domain.NodeMetadata;
 import org.slf4j.Logger;
@@ -39,8 +40,9 @@ public class BrooklynMachinePool extends MachinePool {
     }
     
     /** claims a machine with the indicated spec, creating if necessary */
-    public SshMachineLocation claim(ReusableMachineTemplate t) {
+    public SshMachineLocation obtain(ReusableMachineTemplate t) {
         MachineSet previous = unclaimed(matching(t));
+        
         while (true) {
             NodeMetadata m = claim(1, t).iterator().next();
             // TODO ideally shouldn't have to rebind
@@ -160,18 +162,22 @@ public class BrooklynMachinePool extends MachinePool {
     public Task start(final ReusableMachineTemplate template, final List<? extends Startable> entities) {
         BasicExecutionContext ctx = BasicExecutionContext.getCurrentExecutionContext();
         if (ctx==null) throw new IllegalStateException("Pool.start is only permitted within a task (effector)");
-        final Task t[] = new Task[1];
-        t[0] = ctx.submit(new Runnable() {
-            public void run() {
-                if (log.isDebugEnabled()) log.debug("Pool "+this+", task "+t[0]+" claiming a "+template);
-                SshMachineLocation m = claim(template);
-                if (log.isDebugEnabled()) log.debug("Pool "+this+", task "+t[0]+" got "+m+"; starting "+entities);
-                for (Startable entity: entities)
-                    addTask( ((Entity)entity).invoke(Startable.START, MutableMap.of("locations", Arrays.asList(m))) );
-            }
-        });
-        addTask(t[0]);
-        return t[0];
+        final AtomicReference<Task> t = new AtomicReference<Task>();
+        synchronized (t) {
+            t.set(ctx.submit(new Runnable() {
+                public void run() {
+                    synchronized (t) {
+                        if (log.isDebugEnabled()) log.debug("Pool "+this+", task "+t.get()+" claiming a "+template);
+                        SshMachineLocation m = obtain(template);
+                        if (log.isDebugEnabled()) log.debug("Pool "+this+", task "+t.get()+" got "+m+"; starting "+entities);
+                        for (Startable entity: entities)
+                            addTask( ((Entity)entity).invoke(Startable.START, MutableMap.of("locations", Arrays.asList(m))) );
+                    }
+                }
+            }));
+        }
+        addTask(t.get());
+        return t.get();
     }
 
     /** @see #start(ReusableMachineTemplate, List) */

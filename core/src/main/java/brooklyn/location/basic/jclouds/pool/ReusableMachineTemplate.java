@@ -29,10 +29,10 @@ public class ReusableMachineTemplate extends PortableTemplateBuilder<ReusableMac
     public static final String NAME_METADATA_KEY = PREFIX+"name";
     public static final String DESCRIPTION_METADATA_KEY = PREFIX+"name";
     public static final String HASH_METADATA_KEY = PREFIX+"hash";
-    public static final String OWNER_METADATA_KEY = PREFIX+"owner";
+    public static final String TEMPLATE_OWNER_METADATA_KEY = PREFIX+"owner";
     
     private String name = null;
-    private String owner = null;
+    private String templateOwner = null;
     private String description = null;
     private boolean strict;
     
@@ -61,16 +61,16 @@ public class ReusableMachineTemplate extends PortableTemplateBuilder<ReusableMac
     }
 
     /** no owner, means anyone can pick this up (default) */
-    public ReusableMachineTemplate unowned() {
-        return owner(null);
+    public ReusableMachineTemplate templateUnowned() {
+        return templateOwner(null);
     }
     /** adds user.name as owner of this template */
-    public ReusableMachineTemplate ownedByMe() {
-        return owner(System.getProperty("user.name"));
+    public ReusableMachineTemplate templateOwnedByMe() {
+        return templateOwner(System.getProperty("user.name"));
     }
     /** adds an owner tag to this template */
-    public ReusableMachineTemplate owner(String owner) {
-        this.owner = owner;
+    public ReusableMachineTemplate templateOwner(String owner) {
+        this.templateOwner = owner;
         return this;
     }
     
@@ -86,7 +86,7 @@ public class ReusableMachineTemplate extends PortableTemplateBuilder<ReusableMac
     }
     
     public String getOwner() {
-        return owner;
+        return templateOwner;
     }
     
     public boolean isStrict() {
@@ -111,7 +111,7 @@ public class ReusableMachineTemplate extends PortableTemplateBuilder<ReusableMac
     
     protected void addStrictOptions(List<TemplateOptions> result) {
         if (name!=null) result.add(TemplateOptions.Builder.userMetadata(NAME_METADATA_KEY, name));
-        if (owner!=null) result.add(TemplateOptions.Builder.userMetadata(OWNER_METADATA_KEY, owner));
+        if (templateOwner!=null) result.add(TemplateOptions.Builder.userMetadata(TEMPLATE_OWNER_METADATA_KEY, templateOwner));
         result.add(TemplateOptions.Builder.userMetadata(HASH_METADATA_KEY, ""+hashCode()));
     }
     

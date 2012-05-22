@@ -196,7 +196,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     public JcloudsSshMachineLocation obtain(Map flags=[:]) throws NoMachinesAvailableException {
         BrooklynJcloudsSetupHolder setup = new BrooklynJcloudsSetupHolder(this).useConfig(flags).apply();
                 
-        String groupId = (setup.remove("groupId") ?: "brooklyn-"+System.getProperty("user.name")+"-"+IdGenerator.makeRandomId(8))
+        String groupId = (setup.remove("groupId") ?: "brooklyn_"+System.getProperty("user.name")+"_"+IdGenerator.makeRandomId(8))
         ComputeService computeService = JcloudsUtil.buildOrFindComputeService(setup.allconf, setup.unusedConf);
         
         NodeMetadata node = null;

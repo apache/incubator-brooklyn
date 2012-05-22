@@ -24,7 +24,7 @@ public class JcloudsMachinePoolLiveTest {
 
         public final static ReusableMachineTemplate 
             USUAL_VM = 
-                new ReusableMachineTemplate("usual").ownedByMe().
+                new ReusableMachineTemplate("usual").templateOwnedByMe().
                 tagOptional("tagForUsualVm").
                 metadataOptional("metadataForUsualVm", "12345").
                 minRam(1024).minCores(2);
@@ -36,10 +36,10 @@ public class JcloudsMachinePoolLiveTest {
 
         public static final ReusableMachineTemplate 
             VM_LARGE1 = 
-                new ReusableMachineTemplate("vm.large1").ownedByMe().
+                new ReusableMachineTemplate("vm.large1").templateOwnedByMe().
                 minRam(16384).minCores(4),
             VM_SMALL1 = 
-                new ReusableMachineTemplate("vm.small1").ownedByMe().smallest();
+                new ReusableMachineTemplate("vm.small1").templateOwnedByMe().smallest();
         
         { registerTemplates(USUAL_VM, ANYONE_NOT_TINY_VM, VM_LARGE1, VM_SMALL1); }
     }
