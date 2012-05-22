@@ -42,33 +42,36 @@ public class LocationRegistry {
         String prefix = colon>=0 ? spec.substring(0, colon) : spec;
         LocationResolver resolver = resolvers.get(prefix);
         
-        if (resolver==null) {
+        if (resolver == null) {
             //default to jclouds; could do a lookup to ensure provider supported by jclouds
             resolver = resolvers.get("jclouds");
         }
         
-        if (resolver!=null) {
+        if (resolver != null) {
             return resolver.newLocationFromString(properties, spec);
         }
         
         throw new NoSuchElementException("No resolver found for '"+prefix+"' when trying to find location "+spec);
     }
     
-    /** Expects a collection of strings being the spec for locations, returns a list of locations.
+    /**
+     * Expects a collection of strings being the spec for locations, returns a list of locations.
      * For legacy compatibility this also accepts nested lists, but that is deprecated
      * (and triggers a warning).
      */
-    public List<Location> getLocationsById(Collection<String> ids) {
+    public List<Location> getLocationsById(Iterable<?> ids) {
         List<Location> result = new ArrayList<Location>();
-        for (Object id: ids) {
-            if (id instanceof String) result.add(resolve((String)id));
-            else if (id instanceof Collection) {
+        for (Object id : ids) {
+            if (id instanceof String) {
+                result.add(resolve((String) id));
+            } else if (id instanceof Iterable) {
                 log.warn("LocationRegistry got list of list of location strings, "+ids+"; flattening");
-                result.addAll(getLocationsById((Collection)id));
-            } else if (id instanceof Location) result.add((Location)id);
-            else {
+                result.addAll(getLocationsById((Iterable<?>) id));
+            } else if (id instanceof Location) {
+                result.add((Location) id);
+            } else {
                 throw new IllegalArgumentException("Cannot resolve '"+id+"' to a location; unsupported type "+
-                        (id==null ? "null" : ""+id.getClass()));
+                        (id == null ? "null" : id.getClass().getName())); 
             }
         }
         return result;

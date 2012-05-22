@@ -1,28 +1,35 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <packaging>bundle</packaging>
-
-    <groupId>io.brooklyn.example</groupId>
+    <packaging>jar</packaging>
     <artifactId>brooklyn-example-simple-messaging-pubsub</artifactId>
-
     <name>Brooklyn Simple Messaging Publish-Subscribe Example</name>
 
-    <!-- this is only needed for "mvn deploy"; the group and version can be extracted
-         and parent block removed to run this standalone -->
     <parent>
-        <groupId>io.brooklyn</groupId>
+        <groupId>io.brooklyn.example</groupId>
         <artifactId>brooklyn-examples-parent</artifactId>
         <version>0.4.0-SNAPSHOT</version>   <!-- BROOKLYN_VERSION -->
         <relativePath>../pom.xml</relativePath>
     </parent>
+
+    <repositories>
+        <repository>
+            <id>oracle</id>
+            <url>http://download.oracle.com/maven</url>
+        </repository>
+    </repositories>
 
     <dependencies>
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-all</artifactId>
             <version>${project.version}</version>
+            <scope>provided</scope>
         </dependency>
 
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
@@ -43,8 +50,37 @@
     <build>
         <plugins>
             <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.apache.qpid</groupId>
+                                    <artifactId>qpid-bdbstore</artifactId>
+                                    <version>0.14</version>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.build.directory}/resources</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>com.sleepycat</groupId>
+                                    <artifactId>je</artifactId>
+                                    <version>5.0.34</version>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.build.directory}/resources</outputDirectory>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.3</version>
                 <executions>
                     <execution>
                         <id>build-distribution</id>
@@ -55,7 +91,7 @@
                         <configuration>
 	                        <appendAssemblyId>false</appendAssemblyId>
                             <descriptors>
-                                <descriptor>src/main/config/demo.xml</descriptor>
+                                <descriptor>src/main/config/example.xml</descriptor>
                             </descriptors>
                             <finalName>${project.artifactId}</finalName>
 					        <outputDirectory>${project.basedir}</outputDirectory>
@@ -68,38 +104,10 @@
                 <configuration>
                     <filesets>
                         <fileset>
-                            <directory>.</directory>
-                            <includes>
-                                <include>${project.artifactId}.*</include>
-                            </includes>
-                        </fileset>
-                        <fileset>
                             <directory>${project.artifactId}</directory>
                         </fileset>
                     </filesets>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>attach-distribution</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>attach-artifact</goal>
-                        </goals>
-                        <configuration>
-                            <artifacts>
-                                <artifact>
-                                    <file>${project.artifactId}.tar.gz</file>
-                                    <type>tar.gz</type>
-                                    <classifier>dist</classifier>
-                                </artifact>
-                            </artifacts>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>

@@ -1,11 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <packaging>war</packaging>
-
     <artifactId>brooklyn-web-console</artifactId>
-
     <name>Brooklyn Web Console</name>
     <description>
         Web App for inspecting Brooklyn operations
@@ -27,7 +26,7 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>brooklyn-core</artifactId>
             <version>${project.version}</version>
-            <scope>test</scope>  <!-- exclude from war -->
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -241,43 +240,10 @@
             <version>1.1.2</version>
         </dependency>
 
-<!-- don't user hibernate
-        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-ehcache</artifactId>
-            <version>3.3.1.GA</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>net.sf.ehcache</groupId>
-                    <artifactId>ehcache</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>net.sf.ehcache</groupId>
-            <artifactId>ehcache-core</artifactId>
-            <version>1.7.1</version>
-        </dependency>
-
--->
         <dependency>
             <groupId>hsqldb</groupId>
             <artifactId>hsqldb</artifactId>
             <version>1.8.0.10</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <!-- exclude from war -->
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>${slf4j.version}</version>
-            <scope>runtime</scope>  <!-- TODO maybe test is better, to exclude from war? -->
-            <optional>true</optional>
         </dependency>
 
         <!-- Needed in the case of AOP usage -->
@@ -297,26 +263,36 @@
             <artifactId>commons-codec</artifactId>
             <version>1.3</version>
         </dependency>
-
         <dependency>
             <groupId>commons-collections</groupId>
             <artifactId>commons-collections</artifactId>
             <version>3.2.1</version>
         </dependency>
-
         <dependency>
             <groupId>commons-pool</groupId>
             <artifactId>commons-pool</artifactId>
             <version>1.5.3</version>
         </dependency>
 
+        <!-- excluded from war -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>${slf4j.version}</version>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
             <version>2.5</version>
             <scope>provided</scope>
         </dependency>
-
     </dependencies>
 
     <repositories>
@@ -347,10 +323,10 @@
             <id>codehaus.snapshots</id>
             <url>http://snapshots.repository.codehaus.org/</url>
         </pluginRepository>
-        <!-- suggested for org.xhtmlrenderer:core-renderer:jar:R8 needed by grails-eclipse-plugin to run eclipse:eclpse, at http://grails.1312388.n4.nabble.com/Several-problems-starting-grails-application-with-Maven-according-to-tutorial-td3208760.html, 
-            possibly a bug according to http://jira.grails.org/browse/MAVEN-153?page=com.atlassian.jira.plugin.system.issuetabpanels%3Aall-tabpanel; 
-            according to https://cwiki.apache.org/confluence/display/MAVEN/PluginResolutionException it must be a plugin repository, as well 
-            as a repository (above) -->
+        <!-- suggested for org.xhtmlrenderer:core-renderer:jar:R8 needed by grails-eclipse-plugin to run eclipse:eclpse -->
+        <!-- http://grails.1312388.n4.nabble.com/Several-problems-starting-grails-application-with-Maven-according-to-tutorial-td3208760.html -->
+        <!-- possibly a bug according to http://jira.grails.org/browse/MAVEN-153 -->
+        <!-- according to https://cwiki.apache.org/confluence/display/MAVEN/PluginResolutionException it must be a plugin repository -->
         <pluginRepository>
             <id>maven-repository.dev.java.net</id>
             <name>Java Dev Net Repository</name>
@@ -369,15 +345,14 @@
         <profile>
             <activation>
                 <property>
-                    <name>buildFatWar</name>
+                    <name>withDependencies</name>
                 </property>
             </activation>
-            <id>fatWar</id>
+            <id>war-with-dependencies</id>
             <build>
                 <plugins>
-                    <!-- with grails, for "skipShade" like behaviour, we set "development" env when invoking grails, 
-                        which is read in BuildConfig to make skinny war; 
-                        or set "production" here to make fat war (including dependencies) -->
+                    <!-- with grails, for "skipShade" like behaviour, we set "development" env when invoking grails -->
+                    <!-- which is read in BuildConfig to make skinny war or set "production" here to include dependencies -->
                     <plugin>
                         <groupId>org.grails</groupId>
                         <artifactId>grails-maven-plugin</artifactId>
@@ -387,7 +362,7 @@
                             <execution>
                                 <id>main</id>
                                 <goals>
-                                    <!-- note: plugins are installed and classpath correctly tweaked by maven-compile! -->
+                                    <!-- NOTE plugins are installed and classpath correctly tweaked by maven-compile -->
                                     <goal>maven-compile</goal>
                                     <goal>maven-war</goal>
                                 </goals>
@@ -421,7 +396,7 @@
                     <execution>
                         <id>main</id>
                         <goals>
-                            <!-- note: plugins are installed and classpath correctly tweaked by maven-compile! -->
+                            <!-- NOTE plugins are installed and classpath correctly tweaked by maven-compile -->
                             <goal>maven-compile</goal>
                             <goal>maven-war</goal>
                         </goals>
@@ -438,6 +413,7 @@
                 <artifactId>maven-clean-plugin</artifactId>
                 <configuration>
                     <filesets>
+                        <!--
                         <fileset>
                             <directory>.</directory>
                             <includes>
@@ -446,6 +422,7 @@
                                 <include>prodDb.*</include>
                             </includes>
                         </fileset>
+                          -->
                         <fileset>
                             <directory>lib</directory>
                             <directory>plugins</directory>
@@ -456,7 +433,7 @@
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <!-- preventing compiler from doing anything during compile phase! -->
+                    <!-- preventing compiler from doing anything during compile phase -->
                     <excludes>
                         <exclude>**/*.*</exclude>
                     </excludes>
@@ -475,5 +452,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>

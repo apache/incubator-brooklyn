@@ -1,0 +1,62 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>brooklyn-cli</artifactId>
+    <packaging>bundle</packaging>
+    <name>Brooklyn Command Line Interface</name>
+    <description>
+        This project contains a brooklyn.cli.Main class
+        for command-line invocation.
+    </description>
+
+    <parent>
+        <groupId>io.brooklyn</groupId>
+        <artifactId>brooklyn-parent</artifactId>
+        <version>0.4.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>${slf4j.version}</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-launcher</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-test-support</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.iq80.cli</groupId>
+            <artifactId>git-like-cli</artifactId>
+            <version>${git-like-cli.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <configuration>
+                    <instructions>
+                        <Main-class>brooklyn.cli.Main</Main-class>
+                    </instructions>
+                </configuration>
+            </plugin>
+		</plugins>
+	</build>
+</project>

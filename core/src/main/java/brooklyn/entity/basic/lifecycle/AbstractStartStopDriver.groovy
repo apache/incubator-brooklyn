@@ -14,7 +14,7 @@ public abstract class AbstractStartStopDriver implements StartStopDriver {
 	private static final Logger log = LoggerFactory.getLogger(AbstractStartStopDriver.class);
 	
     private final EntityLocal entityLocal;
-    Location location;
+    private final Location location;
     
     public AbstractStartStopDriver(EntityLocal entity, Location location) {
     	this.entityLocal = entity;
@@ -66,6 +66,8 @@ public abstract class AbstractStartStopDriver implements StartStopDriver {
 	}
 	
 	public EntityLocal getEntity() { entityLocal } 
+
+	public Location getLocation() { location } 
 	
     public InputStream getResource(String url) {
         new ResourceUtils(entityLocal).getResourceFromUrl(url);

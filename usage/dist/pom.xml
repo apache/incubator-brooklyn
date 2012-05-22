@@ -1,0 +1,91 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <packaging>pom</packaging>
+
+    <artifactId>brooklyn-dist</artifactId>
+
+    <name>Brooklyn Distribution</name>
+    <description>
+        Brooklyn redistributable package archive, includes all required
+        Jar files and scripts
+    </description>
+
+    <parent>
+        <groupId>io.brooklyn</groupId>
+        <artifactId>brooklyn-parent</artifactId>
+        <version>0.4.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-all</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- TODO include examples -->
+        <!-- TODO include documentation -->
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <skipTests>true</skipTests>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>build-distribution</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <appendAssemblyId>true</appendAssemblyId>
+                            <descriptors>
+                                <descriptor>src/main/config/dist.xml</descriptor>
+                            </descriptors>
+                            <finalName>brooklyn-${project.version}</finalName>
+                            <useProjectArtifact>false</useProjectArtifact>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-distribution</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>attach-artifact</goal>
+                        </goals>
+                        <configuration>
+                            <artifacts>
+                                <artifact>
+                                    <file>${project.build.directory}/brooklyn-${project.version}-dist.tar.gz</file>
+                                    <type>tar.gz</type>
+                                    <classifier>dist</classifier>
+                                </artifact>
+                                <artifact>
+                                    <file>${project.build.directory}/brooklyn-${project.version}-dist.zip</file>
+                                    <type>zip</type>
+                                    <classifier>dist</classifier>
+                                </artifact>
+                            </artifacts>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

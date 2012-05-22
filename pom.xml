@@ -100,6 +100,7 @@
         <mx4j.version>3.0.1</mx4j.version>
         <bouncycastle.version>1.46</bouncycastle.version>
         <sshj.version>0.7.0</sshj.version>
+        <git-like-cli.version>0.3</git-like-cli.version>
 
         <includedTestGroups />
         <excludedTestGroups>Integration,Live,WIP</excludedTestGroups>
@@ -230,6 +231,10 @@
 
         <pluginManagement>
             <plugins>
+                <plugin>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>2.3</version>
+                </plugin>
                 <plugin>
                     <artifactId>maven-antrun-plugin</artifactId>
                     <version>1.6</version>
@@ -602,7 +607,9 @@
             <modules>
                 <module>usage/web-console</module>
                 <module>usage/launcher</module>
+                <module>usage/cli</module>
                 <module>usage/all</module>
+                <module>usage/dist</module>
             </modules>
         </profile>
         <profile>
@@ -684,15 +691,6 @@
             <build>
                 <plugins>
                     <plugin>
-                        <artifactId>maven-jar-plugin</artifactId>
-                        <inherited>true</inherited>
-                        <configuration>
-                            <archive>
-                                <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
-                            </archive>
-                        </configuration>
-                    </plugin>
-                    <plugin>
                         <groupId>org.apache.felix</groupId>
                         <artifactId>maven-bundle-plugin</artifactId>
                         <extensions>true</extensions>
@@ -703,6 +701,38 @@
                                 <goals>
                                     <goal>manifest</goal>
                                 </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>dist</id>
+            <activation>
+                <file>
+                    <exists>dist.xml</exists>
+                </file>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>build-distribution</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                                <configuration>
+                                    <appendAssemblyId>true</appendAssemblyId>
+                                    <archiveBaseDirectory>brooklyn</archiveBaseDirectory>
+                                    <descriptors>
+                                        <descriptor>dist.xml</descriptor>
+                                    </descriptors>
+                                    <useProjectArtifact>false</useProjectArtifact>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
