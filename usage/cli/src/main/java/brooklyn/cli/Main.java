@@ -5,6 +5,7 @@ import groovy.lang.GroovyShell;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -40,6 +41,10 @@ import org.slf4j.LoggerFactory;
 
 public class Main {
 
+    // Error codes
+    public static final int PARSE_ERROR = 1;
+    public static final int EXECUTION_ERROR = 2;
+
     public static final Logger log = LoggerFactory.getLogger(Main.class);
 
     public static void main(String...args) {
@@ -49,15 +54,15 @@ public class Main {
             BrooklynCommand command = parser.parse(args); 
             log.debug("Executing command: "+command);
             command.call();
-        } catch (ParseException pe) {
-            System.err.println("Parse error: " + pe.getMessage());
-            StringBuilder help = new StringBuilder();
-            Help.help(parser.getMetadata(), ImmutableList.of("brooklyn"), help);
-            System.err.println(help);
-            System.exit(1);
-        } catch (Exception e) {
+        } catch (ParseException pe) { // looks like the user typed it wrong
+            System.err.println("Parse error: " + pe.getMessage()); // display error
+            System.err.println();
+            callHelpCommand(); // display cli help
+            System.exit(PARSE_ERROR);
+        } catch (Exception e) { // unexpected error during command execution
             System.err.println("Execution error: " + e.getMessage());
             e.printStackTrace();
+            System.exit(EXECUTION_ERROR);
         }
     }
 
@@ -87,6 +92,7 @@ public class Main {
     public static class HelpCommand extends BrooklynCommand {
         @Override
         public Void call() throws Exception {
+            log.debug("Invoked help command");
             return help.call();
         }
     }
@@ -120,6 +126,9 @@ public class Main {
 
         @Override
         public Void call() throws Exception {
+
+            log.debug("Invoked launch command");
+
             if (verbose) {
                 System.out.println("Launching brooklyn app: "+app+" in "+Iterables.toString(locations));
             }
@@ -129,10 +138,12 @@ public class Main {
             GroovyClassLoader loader = new GroovyClassLoader(parent);
             
             // Get an instance of the brooklyn app
+            log.debug("Load the user's application");
             AbstractApplication application = loadApplicationFromClasspathOrParse(utils, loader, app);
             
             //First, run a setup script if the user has provided one
             if (script != null) {
+                log.debug("Running the user povided script: " + script);
                 String content = utils.getResourceAsString(script);
                 GroovyShell shell = new GroovyShell(loader);
                 shell.evaluate(content);
@@ -153,6 +164,7 @@ public class Main {
             }
             
             // Block forever so that Brooklyn doesn't exit (until someone does cntrl-c or kill)
+            log.info("Blocking and waiting for cntrl-c or kill");
             waitUntilInterrupted();
             return null;
         }
@@ -175,8 +187,10 @@ public class Main {
                 IllegalAccessException, InvocationTargetException {
             Class<?> appClass;
             try {
+                log.debug("Trying to load application as class on classpath");
                 appClass = loader.loadClass(app, true, false);
             } catch (ClassNotFoundException cnfe) { // Not a class on the classpath
+                log.debug("Loading as class on classpath failed, now trying as .groovy file");
                 String content = utils.getResourceAsString(app);
                 appClass = loader.parseClass(content);
             }
@@ -210,4 +224,18 @@ public class Main {
 
         return builder.build();
     }
+
+    static void callHelpCommand() {
+        Cli<BrooklynCommand> parser = buildCli();
+        BrooklynCommand command = parser.parse(Arrays.asList("brooklyn","help"));
+        try {
+            command.call();
+        } catch (Exception e) {
+            log.debug("Unexpected execution error when calling the help command");
+            System.err.println("Execution error: " + e.getMessage());
+            e.printStackTrace();
+            System.exit(EXECUTION_ERROR);
+        }
+    }
+
 }
