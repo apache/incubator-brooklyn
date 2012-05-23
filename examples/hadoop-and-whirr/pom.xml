@@ -39,12 +39,12 @@
                                          see http://jira.codehaus.org/browse/MDEP-259 -->
                                 <artifactItem>
                                     <groupId>${project.groupId}</groupId>
-                                    <artifactId>brooklyn-example-hello-world-webapp</artifactId>
+                                    <artifactId>brooklyn-example-hello-world-hadoop-webapp</artifactId>
                                     <version>${project.version}</version>
                                     <type>war</type>
                                     <overWrite>true</overWrite>
                                     <outputDirectory>target/classes</outputDirectory>
-                                    <destFileName>hello-world-webapp.war</destFileName>
+                                    <destFileName>hello-world-hadoop-webapp.war</destFileName>
                                 </artifactItem>
                             </artifactItems>
                         </configuration>
