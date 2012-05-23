@@ -39,7 +39,7 @@ try {
     org.apache.hadoop.mapreduce.Job job = brooklyn.demo.webapp.hello.HadoopWordCount.makeJob(conf);
     String jar = brooklyn.demo.webapp.hello.SerializeHelloWorldHadoopJar.getJarName();
     if (jar!=null) { ((org.apache.hadoop.mapred.JobConf)job.getConfiguration()).setJar(jar); }
-    else { %><b>JAR not available. Map-Reduce will likely subsequently fail.</b><% }
+    else { %><b>JAR not available. Map-Reduce submission will likely fail.</b><% }
     org.apache.hadoop.fs.FileStatus[] files = fsClient.listStatus(new org.apache.hadoop.fs.Path("chats"));
     if (files==null) files = new org.apache.hadoop.fs.FileStatus[0];
     for (org.apache.hadoop.fs.FileStatus f: files) {
@@ -49,10 +49,16 @@ try {
     org.apache.hadoop.fs.Path outp = new org.apache.hadoop.fs.Path("out-"+((int)(Math.random()*10000)));
     org.apache.hadoop.mapreduce.lib.output.FileOutputFormat.setOutputPath(job, outp);
 
+    %> <p>Running Map-Reduce... <%
+    out.flush();
+    
     boolean result = job.waitForCompletion(true);
     
+    %> finished: <%
     if (!result) {
-        %> <p><b></b><i>Map reduce job returned non-zero result code.</i></b></p> <%
+        %> <b>Job failed.</b> Consult the logs for more information.</p> <%
+    } else {
+        %> <b>Success.</b> </p> <%
     }
 
     %> <p>Output from map reduce is as follows:</p> <%

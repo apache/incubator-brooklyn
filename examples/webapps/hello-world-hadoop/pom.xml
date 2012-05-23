@@ -18,7 +18,12 @@
             <version>5.1.18</version>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-client</artifactId>
+            <version>1.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-example-hello-world-hadoop-jar</artifactId>
             <version>${project.version}</version>
         </dependency>

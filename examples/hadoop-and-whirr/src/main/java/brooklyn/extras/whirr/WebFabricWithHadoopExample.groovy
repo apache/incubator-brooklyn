@@ -39,11 +39,12 @@ import brooklyn.util.task.ParallelTask
 
 import com.google.common.base.Charsets
 import com.google.common.collect.Iterables
+import com.google.common.collect.Lists;
 import com.google.common.io.Files
 
 /**
  * Starts hadoop in the first location supplied, and the hadoop-friendly webapp in all other locations.
- * TODO The webapp needs to be manually configured (via the configure.jsp page, plus supplying the proxy command) to connect to hadoop
+ * Webapp get configured via the configure.jsp page, plus supplying the proxy command, to connect to hadoop.
  */
 @InheritConstructors
 public class WebFabricWithHadoopExample extends AbstractApplication {
@@ -51,14 +52,16 @@ public class WebFabricWithHadoopExample extends AbstractApplication {
     private static final Logger log = LoggerFactory.getLogger(WebFabricWithHadoopExample.class);
 
     static final List<String> DEFAULT_LOCATIONS = [
-        "aws-ec2:us-west-1",
-        "aws-ec2:us-west-1",
+        // hadoop location
         "aws-ec2:eu-west-1",
-//        "aws-ec2:ap-southeast-1",
-//        "aws-ec2:us-west-1",
+          
+        //web locations
+        "aws-ec2:eu-west-1",
+        "aws-ec2:ap-southeast-1",
+        "aws-ec2:us-west-1",
         
-        // cloudfoundry seems to have a cap on app size, this one is too big :(
-        // (in any case we have no way to initiate the proxy settings from there)
+        // cloudfoundry seems to have a timeout in upload time
+        // (in any case we don't have a clean way to initiate the proxy settings in there)
 //        "cloudfoundry:https://api.aws.af.cm/",
     ];
 
@@ -67,6 +70,7 @@ public class WebFabricWithHadoopExample extends AbstractApplication {
     static BrooklynProperties config = BrooklynProperties.Factory.newDefault()
     
     WhirrHadoopCluster hadoopCluster = new WhirrHadoopCluster(this, size: 2, memory: 2048, name: "Whirr Hadoop Cluster");
+    { hadoopCluster.addRecipeLine("whirr.hadoop.version=1.0.2"); }
     
     DynamicFabric webFabric = new DynamicFabric(this, name: "Web Fabric", factory: new ElasticJavaWebAppService.Factory());
     
@@ -89,42 +93,49 @@ public class WebFabricWithHadoopExample extends AbstractApplication {
         geoDns.setTargetEntityProvider(webFabric);
     }
 
-    DynamicGroup webVms = new DynamicGroup(this, name: "Web VMs");
+    DynamicGroup webVms = new DynamicGroup(this, name: "Web VMs", { it in JBoss7Server });
     
     void start(Collection locations) {
-        Iterator li = locations.iterator();
-        if (!li.hasNext()) return;
-        Location clusterLocation = li.next();
-        List otherLocations = [];
-        while (li.hasNext()) otherLocations << li.next();
-        if (!otherLocations)
-            //start web in same location if just given one 
-            otherLocations << clusterLocation;
+        Location hadoopLocation = Iterables.getFirst(locations, null);
+        if (hadoopLocation==null) throw new IllegalStateException("location required to start $this");
+        // start hadoop in first, web in others (unless there is just one location supplied)
+        List<Location> webLocations = Lists.newArrayList(Iterables.skip(locations, 1)) ?: [hadoopLocation];
 
         Task starts = executionContext.submit(new ParallelTask(        
-            {   hadoopCluster.start([clusterLocation]); 
-                // collect the hadoop-site.xml and feed it to all existing and new appservers,
-                // and start the proxies there
-                webVms.setEntityFilter { it in JBoss7Server }
-        
-                PrepVmsForHadoop prepVmsForHadoop = new PrepVmsForHadoop(this);
-                webVms.addPolicy(prepVmsForHadoop);
-                prepVmsForHadoop.start();
-                webVms.members.each { prepVmsForHadoop.setupMachine(it) }
-            },
-            {   webFabric.start(otherLocations)  } ));
+                {   webFabric.start(webLocations)  },
+                {   hadoopCluster.start([hadoopLocation]); 
+                    // collect the hadoop-site.xml and feed it to all existing and new appservers,
+                    // and start the proxies there
+                    PrepVmsForHadoop.newPolicyFromGroupToHadoop(webVms, hadoopCluster);
+                } ));
         starts.blockUntilEnded();
 	}    
     
     public static class PrepVmsForHadoop extends AbstractPolicy {
-        WebFabricWithHadoopExample app;
+        private static final Logger log = LoggerFactory.getLogger(WebFabricWithHadoopExample.class);
+        
+        WhirrHadoopCluster hadoopCluster;
         Set<String> configuredIds = []
-        public PrepVmsForHadoop(WebFabricWithHadoopExample app) {
-            this.app = app;
+        
+        public PrepVmsForHadoop(WhirrHadoopCluster hadoopCluster) {
+            this.hadoopCluster = hadoopCluster;
         }
+        
+        public static PrepVmsForHadoop newPolicyFromGroupToHadoop(DynamicGroup target, WhirrHadoopCluster hadoopCluster) {
+            log.debug "creating policy for hadoop clusters target {} hadoop ", target, hadoopCluster
+            PrepVmsForHadoop prepVmsForHadoop = new PrepVmsForHadoop(hadoopCluster);
+            target.addPolicy(prepVmsForHadoop);
+            prepVmsForHadoop.start();
+            log.debug "running policy over existing members {}", target.members
+            target.members.each { prepVmsForHadoop.setupMachine(it) }
+            return prepVmsForHadoop;
+        }
+        
         public void start() {
             subscriptionTracker.subscribeToMembers(entity, Startable.SERVICE_UP, 
-                { SensorEvent evt -> if (evt.value) setupMachine(evt.source) } as SensorEventListener);
+                { SensorEvent evt -> 
+                    log.debug "hadoop set up policy recieved {}", evt
+                    if (evt.value) setupMachine(evt.source) } as SensorEventListener);
         }
         public void setupMachine(Entity e) {
             try {
@@ -133,20 +144,20 @@ public class WebFabricWithHadoopExample extends AbstractApplication {
                 if (!configuredIds.add(e.id)) return;
                 SshMachineLocation ssh = Iterables.getOnlyElement(e.locations);
                 //would prefer to extract content from HadoopNameNodeClusterActionHandler (but that class would need refactoring)
-                ssh.copyTo(new File("${System.getProperty('user.home')}/.whirr/"+app.hadoopCluster.clusterSpec.clusterName+"/hadoop-site.xml"), "/tmp/hadoop-site.xml");
+                ssh.copyTo(new File("${System.getProperty('user.home')}/.whirr/"+hadoopCluster.clusterSpec.clusterName+"/hadoop-site.xml"), "/tmp/hadoop-site.xml");
 
-                File identity = app.hadoopCluster.clusterSpec.getPrivateKeyFile();
+                File identity = hadoopCluster.clusterSpec.getPrivateKeyFile();
                 if (identity == null){
                     identity = File.createTempFile("hadoop", "key");
                     identity.deleteOnExit();
-                    Files.write(app.hadoopCluster.clusterSpec.getPrivateKey(), identity, Charsets.UTF_8);
+                    Files.write(hadoopCluster.clusterSpec.getPrivateKey(), identity, Charsets.UTF_8);
                 }
                 if (log.isDebugEnabled()) log.debug "http config update for {}, identity file: {}", e, identity
                 ssh.copyTo(identity, "/tmp/hadoop-proxy-private-key");
 
                 //copied from HadoopProxy, would prefer to reference (but again refactoring there is needed) 
-                String user = app.hadoopCluster.clusterSpec.getClusterUser();
-                InetAddress namenode = HadoopCluster.getNamenodePublicAddress(app.hadoopCluster.cluster);
+                String user = hadoopCluster.clusterSpec.getClusterUser();
+                InetAddress namenode = HadoopCluster.getNamenodePublicAddress(hadoopCluster.cluster);
                 String server = namenode.getHostName();
                 String proxyCommand = [ "ssh",
                     "-i", "/tmp/hadoop-proxy-private-key",

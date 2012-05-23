@@ -35,6 +35,12 @@
 			<groupId>com.jcraft</groupId>
 			<artifactId>jsch</artifactId>
 		</dependency>
+        <dependency>
+            <groupId>net.schmizz</groupId>
+            <artifactId>sshj</artifactId>
+            <version>${sshj.version}</version>
+        </dependency>
+
 		<dependency>
 			<groupId>com.thoughtworks.xstream</groupId>
 			<artifactId>xstream</artifactId>
@@ -66,11 +72,6 @@
             <artifactId>bcprov-jdk16</artifactId>
 			<version>${bouncycastle.version}</version>
             <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>net.schmizz</groupId>
-            <artifactId>sshj</artifactId>
-			<version>${sshj.version}</version>
         </dependency>
 
         <dependency>

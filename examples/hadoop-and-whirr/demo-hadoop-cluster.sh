@@ -3,20 +3,13 @@
 # Brooklyn Example Demo
 #
 # Run this, then you should see the brooklyn mgmt console at localhost:8081, 
-# and the webapp from an appserver at 8080, and from nginx at 8000.
+# and hadoop launched using whirr, just by running the WhirrHadoopExample class
+# (source code in this project).
 #
-# Refresh the webapp at 8080 a few times, and you'll see activity in the details pane at 8081.
-# Then start a load-generator (e.g. jmeter, using the test plan in this directory). 
-# You'll see it scale out, picking up ports 8082, 8083, ...!
-#
-# Pass --port 8084 to start the webapp on a different port (e.g. to run multiple instances).
-#
-# To launch to a cloud (instead of localhost), 
-# supply additional arguments being the location(s), e.g. one or more of:
-# aws-ec2:eu-west-1 aws-ec2:us-west-1 cloudservers-uk
-# (you'll need credentials set in your ~/.brooklyn/brooklyn.properties)
+# Currently hard-coded to aws eu-west-1 (unless you edit the *Example.groovy files here) 
+# so you need your credentials set up in ~/.brooklyn/brooklyn.properties
 
-CLASS=brooklyn.demo.WebClusterDatabaseExample
+CLASS=brooklyn.extras.whirr.WebClusterWithHadoopExample
 
 ROOT=$(cd $(dirname $0) && pwd)
 cd $ROOT
@@ -43,10 +36,10 @@ if [[ -z "$BROOKLYN_ALL_JAR" ]] ; then
 fi
 
 if [[ -z "$BROOKLYN_THIS_JAR" ]] ; then
-  if [[ ! -z `ls target/classes/* 2> /dev/null` ]] ; then
-    BROOKLYN_THIS_JAR=target/classes
-  elif [[ -f `ls target/*.jar` ]] ; then
+  if [[ -f `ls target/*.jar` ]] ; then
     BROOKLYN_THIS_JAR=`ls target/*.jar | awk '{print $1}'`
+  elif [[ -d target/classes ]] ; then
+    BROOKLYN_THIS_JAR=target/classes
   elif [[ -z "$CLASSPATH" ]] ; then
     echo "Cannot find project JAR or classes/ in target/ ; either set CLASSPATH or mvn clean install this project"
     exit 1
@@ -57,9 +50,13 @@ fi
 
 export CP=$CLASSPATH:$BROOKLYN_THIS_JAR:$BROOKLYN_ALL_JAR
 
-JAVA_OPTS="-Dbrooklyn.localhost.address=127.0.0.1 $JAVA_OPTS"
+if [ $# -gt 0 ]; then
+    ARGS="$*"
+else
+    ARGS=""
+fi
 
-echo running demo for $CLASS from $CP at $@
-echo java $JAVA_OPTS -cp "$CP" $CLASS $@
+echo running demo for $CLASS from $CP at $ARGS
+echo java $JAVA_OPTS -cp "$CP" $CLASS $ARGS
 
-java $JAVA_OPTS -cp "$CP" $CLASS $@
+java $JAVA_OPTS -cp "$CP" $CLASS $ARGS

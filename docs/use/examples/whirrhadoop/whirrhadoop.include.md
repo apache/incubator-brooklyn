@@ -67,4 +67,16 @@ Chef and Puppet scripts you may wish to use.
 The Whirr state is loaded into Brooklyn, as well as saved to disk in the usual Whirr way.
 This means it is available for programmatic extensions (as is used for Hadoop),
 including defining sensors and effectors and applying policy:
-stop is available, with [resize](https://issues.apache.org/jira/browse/WHIRR-214) expected soon.
+stop is available, with [resize](https://issues.apache.org/jira/browse/WHIRR-214) expected soon
+(making it easy -- or at least much easier -- to write custom **elasticity policies**).
+
+
+## Integrating with Other Entities
+
+The real interest of Brooklyn working with Whirr, of course, is to combine systems such as Hadoop
+with your custom applications which use these systems.
+One example, combining the [Global Web Fabric example]({{ site.url }}/use/examples/global-web-fabric)
+with the Whirr Hadoop entity, is included in this example project.
+A Hadoop-based chatroom web app, performing map-reduce (and a few necessary contortions to work with private subnets)
+is in ``WebFabrixWithHadoopExample``. 
+ 
