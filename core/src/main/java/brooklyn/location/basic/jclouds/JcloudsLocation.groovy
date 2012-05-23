@@ -1,5 +1,3 @@
-
-
 package brooklyn.location.basic.jclouds
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS

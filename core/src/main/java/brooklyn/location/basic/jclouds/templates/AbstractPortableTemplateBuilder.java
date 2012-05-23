@@ -11,6 +11,7 @@ import org.jclouds.compute.domain.TemplateBuilder;
 import org.jclouds.compute.options.TemplateOptions;
 
 import com.google.common.base.Function;
+import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 
@@ -30,7 +31,7 @@ public abstract class AbstractPortableTemplateBuilder<T extends AbstractPortable
     private String osNameRegex;
     private String osDescriptionRegex;
     private String osVersionRegex;
-    private String osArchictectureRegex;
+    private String osArchitectureRegex;
     private Boolean is64bit;
     private String imageNameRegex;
     private String imageDescriptionRegex;
@@ -205,14 +206,14 @@ public abstract class AbstractPortableTemplateBuilder<T extends AbstractPortable
 
     @Override
     public T osArchMatches(final String osArchitectureRegex) {
-        this.osArchictectureRegex = osArchitectureRegex;
+        this.osArchitectureRegex = osArchitectureRegex;
         commands.add(new Function<TemplateBuilder,TemplateBuilder>() { 
             public TemplateBuilder apply(TemplateBuilder b) { return b.osArchMatches(osArchitectureRegex); }});
         return (T)this;
     }
     
-    public String getOsArchictectureMatchesRegex() {
-        return osArchictectureRegex;
+    public String getOsArchitectureMatchesRegex() {
+        return osArchitectureRegex;
     }
 
     @Override
@@ -326,175 +327,58 @@ public abstract class AbstractPortableTemplateBuilder<T extends AbstractPortable
     /** some fields don't implement hashcode, so we ignore them */
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime
-                * result
-                + ((additionalOptions == null) ? 0 : additionalOptions
-                        .hashCode());
-//        result = prime * result
-//                + ((commands == null) ? 0 : commands.hashCode());
-//        result = prime * result
-//                + ((hardware == null) ? 0 : hardware.hashCode());
-        result = prime * result
-                + ((hardwareId == null) ? 0 : hardwareId.hashCode());
-        result = prime * result
-                + ((hypervisorRegex == null) ? 0 : hypervisorRegex.hashCode());
-//        result = prime * result + ((image == null) ? 0 : image.hashCode());
-//        result = prime * result
-//                + ((imageCondition == null) ? 0 : imageCondition.hashCode());
-        result = prime
-                * result
-                + ((imageDescriptionRegex == null) ? 0 : imageDescriptionRegex
-                        .hashCode());
-        result = prime * result + ((imageId == null) ? 0 : imageId.hashCode());
-        result = prime * result
-                + ((imageNameRegex == null) ? 0 : imageNameRegex.hashCode());
-        result = prime
-                * result
-                + ((imageVersionRegex == null) ? 0 : imageVersionRegex
-                        .hashCode());
-        result = prime * result + ((is64bit == null) ? 0 : is64bit.hashCode());
-        result = prime * result
-                + ((locationId == null) ? 0 : locationId.hashCode());
-        result = prime * result
-                + ((minCores == null) ? 0 : minCores.hashCode());
-        result = prime * result + ((minRam == null) ? 0 : minRam.hashCode());
-        result = prime * result + ((options == null) ? 0 : options.hashCode());
-        result = prime * result + ((os == null) ? 0 : os.hashCode());
-        result = prime
-                * result
-                + ((osArchictectureRegex == null) ? 0 : osArchictectureRegex
-                        .hashCode());
-        result = prime
-                * result
-                + ((osDescriptionRegex == null) ? 0 : osDescriptionRegex
-                        .hashCode());
-        result = prime * result
-                + ((osNameRegex == null) ? 0 : osNameRegex.hashCode());
-        result = prime * result
-                + ((osVersionRegex == null) ? 0 : osVersionRegex.hashCode());
-//        result = prime * result
-//                + ((template == null) ? 0 : template.hashCode());
-        return result;
+        return Objects.hashCode(
+                additionalOptions,
+                hardwareId,
+                hypervisorRegex,
+//                imageCondition,
+                imageDescriptionRegex,
+                imageId,
+                imageNameRegex,
+                imageVersionRegex,
+                is64bit,
+                locationId,
+                minCores,
+                minRam,
+                options,
+                os,
+                osArchitectureRegex,
+                osDescriptionRegex,
+                osNameRegex,
+                osVersionRegex,
+//                template,
+                0);
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
+        if (this == obj) return true;
+        if (obj == null) return false;
+        if (getClass() != obj.getClass()) return false;
         AbstractPortableTemplateBuilder other = (AbstractPortableTemplateBuilder) obj;
-        if (additionalOptions == null) {
-            if (other.additionalOptions != null)
-                return false;
-        } else if (!additionalOptions.equals(other.additionalOptions))
-            return false;
-        if (commands == null) {
-            if (other.commands != null)
-                return false;
-        } else if (!commands.equals(other.commands))
-            return false;
-        if (hardware == null) {
-            if (other.hardware != null)
-                return false;
-        } else if (!hardware.equals(other.hardware))
-            return false;
-        if (hardwareId == null) {
-            if (other.hardwareId != null)
-                return false;
-        } else if (!hardwareId.equals(other.hardwareId))
-            return false;
-        if (hypervisorRegex == null) {
-            if (other.hypervisorRegex != null)
-                return false;
-        } else if (!hypervisorRegex.equals(other.hypervisorRegex))
-            return false;
-        if (image == null) {
-            if (other.image != null)
-                return false;
-        } else if (!image.equals(other.image))
-            return false;
-        if (imageCondition == null) {
-            if (other.imageCondition != null)
-                return false;
-        } else if (!imageCondition.equals(other.imageCondition))
-            return false;
-        if (imageDescriptionRegex == null) {
-            if (other.imageDescriptionRegex != null)
-                return false;
-        } else if (!imageDescriptionRegex.equals(other.imageDescriptionRegex))
-            return false;
-        if (imageId == null) {
-            if (other.imageId != null)
-                return false;
-        } else if (!imageId.equals(other.imageId))
-            return false;
-        if (imageNameRegex == null) {
-            if (other.imageNameRegex != null)
-                return false;
-        } else if (!imageNameRegex.equals(other.imageNameRegex))
-            return false;
-        if (imageVersionRegex == null) {
-            if (other.imageVersionRegex != null)
-                return false;
-        } else if (!imageVersionRegex.equals(other.imageVersionRegex))
-            return false;
-        if (is64bit == null) {
-            if (other.is64bit != null)
-                return false;
-        } else if (!is64bit.equals(other.is64bit))
-            return false;
-        if (locationId == null) {
-            if (other.locationId != null)
-                return false;
-        } else if (!locationId.equals(other.locationId))
-            return false;
-        if (minCores == null) {
-            if (other.minCores != null)
-                return false;
-        } else if (!minCores.equals(other.minCores))
-            return false;
-        if (minRam == null) {
-            if (other.minRam != null)
-                return false;
-        } else if (!minRam.equals(other.minRam))
-            return false;
-        if (options == null) {
-            if (other.options != null)
-                return false;
-        } else if (!options.equals(other.options))
-            return false;
-        if (os != other.os)
-            return false;
-        if (osArchictectureRegex == null) {
-            if (other.osArchictectureRegex != null)
-                return false;
-        } else if (!osArchictectureRegex.equals(other.osArchictectureRegex))
-            return false;
-        if (osDescriptionRegex == null) {
-            if (other.osDescriptionRegex != null)
-                return false;
-        } else if (!osDescriptionRegex.equals(other.osDescriptionRegex))
-            return false;
-        if (osNameRegex == null) {
-            if (other.osNameRegex != null)
-                return false;
-        } else if (!osNameRegex.equals(other.osNameRegex))
-            return false;
-        if (osVersionRegex == null) {
-            if (other.osVersionRegex != null)
-                return false;
-        } else if (!osVersionRegex.equals(other.osVersionRegex))
-            return false;
-        if (template == null) {
-            if (other.template != null)
-                return false;
-        } else if (!template.equals(other.template))
-            return false;
+        if (!Objects.equal(additionalOptions, other.additionalOptions)) return false;
+        if (!Objects.equal(commands, other.commands)) return false;
+        if (!Objects.equal(hardware, other.hardware)) return false;
+        if (!Objects.equal(hardwareId, other.hardwareId)) return false;
+        if (!Objects.equal(hypervisorRegex, other.hypervisorRegex)) return false;
+        if (!Objects.equal(image, other.image)) return false;
+        if (!Objects.equal(imageCondition, other.imageCondition)) return false;
+        if (!Objects.equal(imageDescriptionRegex, other.imageDescriptionRegex)) return false;
+        if (!Objects.equal(imageId, other.imageId)) return false;
+        if (!Objects.equal(imageNameRegex, other.imageNameRegex)) return false;
+        if (!Objects.equal(imageVersionRegex, other.imageVersionRegex)) return false;
+        if (!Objects.equal(is64bit, other.is64bit)) return false;
+        if (!Objects.equal(locationId, other.locationId)) return false;
+        if (!Objects.equal(minCores, other.minCores)) return false;
+        if (!Objects.equal(minRam, other.minRam)) return false;
+        if (!Objects.equal(options, other.options)) return false;
+        if (!Objects.equal(os, other.os)) return false;
+        if (!Objects.equal(osArchitectureRegex, other.osArchitectureRegex)) return false;
+        if (!Objects.equal(osDescriptionRegex, other.osDescriptionRegex)) return false;
+        if (!Objects.equal(osNameRegex, other.osNameRegex)) return false;
+        if (!Objects.equal(osVersionRegex, other.osVersionRegex)) return false;
+        if (!Objects.equal(template, other.template)) return false;
+        if (!Objects.equal(template, other.template)) return false;
         return true;
     }
     
@@ -520,8 +404,8 @@ public abstract class AbstractPortableTemplateBuilder<T extends AbstractPortable
                         + osDescriptionRegex + ", " : "")
                 + (osVersionRegex != null ? "osVersionRegex=" + osVersionRegex
                         + ", " : "")
-                + (osArchictectureRegex != null ? "osArchictectureRegex="
-                        + osArchictectureRegex + ", " : "")
+                + (osArchitectureRegex != null ? "osArchictectureRegex="
+                        + osArchitectureRegex + ", " : "")
                 + (is64bit != null ? "is64bit=" + is64bit + ", " : "")
                 + (imageNameRegex != null ? "imageNameRegex=" + imageNameRegex
                         + ", " : "")

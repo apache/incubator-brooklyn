@@ -78,7 +78,27 @@ class JcloudsLocationFactory {
     }
 
     public JcloudsLocation newLocation(String locationId) {
-        Map locSpecifics = locationId!=null ? locationSpecificConf.get(conf.provider)?.get(locationId) : [:]
+        // load cloud-specific details from above
+        // jclouds image auto-detection isn't 100% so we've picked good known default images
+        // (we should also use the lat/long specified because MaxMind and others are spotty wrt AWS)
+        Map locSpecifics = [:];
+        if (locationId!=null) {
+             Map l1 = locationSpecificConf.get(conf.provider);
+            if (l1!=null) {
+                Map l2 = l1?.get(locationId);
+                if (l2==null) {
+                    // look for keys that _start_ with the locationId
+                    locationSpecificConf.each { k,v -> 
+                        if (locationId.startsWith(k)) {
+                            l2 = v;
+                        }
+                    }
+                }
+                if (l2!=null) {
+                    locSpecifics << l2;
+                }
+            }
+        }
         Map allconf = [:]
         allconf << conf
         if (locationId!=null)

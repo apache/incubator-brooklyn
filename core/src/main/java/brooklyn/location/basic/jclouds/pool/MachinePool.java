@@ -136,6 +136,8 @@ public class MachinePool {
         return input.removed(blacklistedMachines);
     }
 
+    // TODO template registry and claiming from a template could be a separate responsibility
+    
     protected ReusableMachineTemplate registerTemplate(ReusableMachineTemplate template) {
         registerTemplates(template);
         return template;

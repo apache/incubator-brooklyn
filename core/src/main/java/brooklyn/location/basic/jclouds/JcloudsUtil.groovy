@@ -173,8 +173,9 @@ public class JcloudsUtil {
         } else if (conf.imageOwner) {
             properties.setProperty(PROPERTY_EC2_AMI_QUERY, "owner-id="+conf.imageOwner+";state=available;image-type=machine")
         } else {
-            // something is causing much weirdness, including binding to "zircon_paid" images requiring a product code
-//            properties.setProperty(PROPERTY_EC2_AMI_QUERY, "state=available;image-type=machine")
+            // this allows the AMI query to bind to any machine
+            // (note however, we pick defaults in JcloudsLocationFactory)
+            properties.setProperty(PROPERTY_EC2_AMI_QUERY, "state=available;image-type=machine")
         }
 
         if (allowReuse) {
