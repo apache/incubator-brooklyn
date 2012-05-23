@@ -49,15 +49,16 @@ public class Main {
     public static void main(String...args) {
         Cli<BrooklynCommand> parser = buildCli();
         try {
-            log.debug("Parsing command line arguments");
+            log.debug("Parsing command line arguments: {}",args);
             BrooklynCommand command = parser.parse(args); 
-            log.debug("Executing command: "+command);
+            log.debug("Executing command: {}", command);
             command.call();
         } catch (ParseException pe) { // looks like the user typed it wrong
             System.err.println("Parse error: " + pe.getMessage()); // display error
             System.err.println(getUsageInfo(parser)); // display cli help
             System.exit(PARSE_ERROR);
         } catch (Exception e) { // unexpected error during command execution
+            log.error("Execution error: {}\n{}" + e.getMessage(),e.getStackTrace());
             System.err.println("Execution error: " + e.getMessage());
             e.printStackTrace();
             System.exit(EXECUTION_ERROR);
@@ -136,12 +137,12 @@ public class Main {
             GroovyClassLoader loader = new GroovyClassLoader(parent);
             
             // Get an instance of the brooklyn app
-            log.debug("Load the user's application");
+            log.debug("Load the user's application: {}", app);
             AbstractApplication application = loadApplicationFromClasspathOrParse(utils, loader, app);
             
             //First, run a setup script if the user has provided one
             if (script != null) {
-                log.debug("Running the user povided script: " + script);
+                log.debug("Running the user povided script: {}", script);
                 String content = utils.getResourceAsString(script);
                 GroovyShell shell = new GroovyShell(loader);
                 shell.evaluate(content);
@@ -154,7 +155,7 @@ public class Main {
             // Start the application
             log.info("Adding application under brooklyn management");
             BrooklynLauncher.manage(application, port, !noShutdownOnExit, !noConsole);
-            log.info("Starting brooklyn application: "+app);
+            log.info("Starting brooklyn application: {}", app);
             application.start(brooklynLocations);
             
             if (verbose) {
@@ -162,7 +163,7 @@ public class Main {
             }
             
             // Block forever so that Brooklyn doesn't exit (until someone does cntrl-c or kill)
-            log.info("Blocking and waiting for cntrl-c or kill");
+            log.info("Launched application; now blocking to wait for cntrl-c or kill");
             waitUntilInterrupted();
             return null;
         }
@@ -185,10 +186,10 @@ public class Main {
                 IllegalAccessException, InvocationTargetException {
             Class<?> appClass;
             try {
-                log.debug("Trying to load application as class on classpath");
+                log.debug("Trying to load application as class on classpath: {}", app);
                 appClass = loader.loadClass(app, true, false);
             } catch (ClassNotFoundException cnfe) { // Not a class on the classpath
-                log.debug("Loading as class on classpath failed, now trying as .groovy file");
+                log.debug("Loading \"{}\" as class on classpath failed, now trying as .groovy source file",app);
                 String content = utils.getResourceAsString(app);
                 appClass = loader.parseClass(content);
             }
