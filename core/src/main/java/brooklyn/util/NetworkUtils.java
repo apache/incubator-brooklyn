@@ -67,7 +67,9 @@ public class NetworkUtils {
         for (Object ppo : ports.entrySet()) {
             Map.Entry<?,?> pp = (Map.Entry<?,?>)ppo;
             Object val = pp.getValue();
-            if (!(val instanceof Integer)) {
+            if(val == null){
+                throw new IllegalArgumentException("port for "+pp.getKey()+" is null");
+            }else if (!(val instanceof Integer)) {
                 throw new IllegalArgumentException("port "+val+" for "+pp.getKey()+" is not an integer ("+val.getClass()+")");
             }
             checkPortValid((Integer)val, ""+pp.getKey());
