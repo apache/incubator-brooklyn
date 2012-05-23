@@ -5,7 +5,6 @@ import groovy.lang.GroovyShell;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -56,8 +55,7 @@ public class Main {
             command.call();
         } catch (ParseException pe) { // looks like the user typed it wrong
             System.err.println("Parse error: " + pe.getMessage()); // display error
-            System.err.println();
-            callHelpCommand(); // display cli help
+            System.err.println(getUsageInfo(parser)); // display cli help
             System.exit(PARSE_ERROR);
         } catch (Exception e) { // unexpected error during command execution
             System.err.println("Execution error: " + e.getMessage());
@@ -225,17 +223,12 @@ public class Main {
         return builder.build();
     }
 
-    static void callHelpCommand() {
-        Cli<BrooklynCommand> parser = buildCli();
-        BrooklynCommand command = parser.parse(Arrays.asList("brooklyn","help"));
-        try {
-            command.call();
-        } catch (Exception e) {
-            log.debug("Unexpected execution error when calling the help command");
-            System.err.println("Execution error: " + e.getMessage());
-            e.printStackTrace();
-            System.exit(EXECUTION_ERROR);
-        }
+    static String getUsageInfo(Cli<BrooklynCommand> parser) {
+        StringBuilder help = new StringBuilder();
+        help.append("\n");
+        Help.help(parser.getMetadata(), ImmutableList.of("brooklyn"),help);
+        help.append("See 'brooklyn help <command>' for more information on a specific command.");
+        return help.toString();
     }
 
 }
