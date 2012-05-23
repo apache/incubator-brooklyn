@@ -61,9 +61,12 @@ public class WebClusterWithHadoopExample extends AbstractApplication {
     static BrooklynProperties config = BrooklynProperties.Factory.newDefault()
     
     WhirrHadoopCluster hadoopCluster = new WhirrHadoopCluster(this, size: 2, memory: 2048, name: "Whirr Hadoop Cluster");
-    { 
+    {
+        // specify hadoop version (1.0.2 has a nice, smaller hadoop client jar)
         hadoopCluster.addRecipeLine("whirr.hadoop.version=1.0.2"); 
-        hadoopCluster.addRecipeLine("whirr.firewall-rules=8020,8021"); 
+        // for this example we'll allow access from anywhere
+        hadoopCluster.addRecipeLine("whirr.client-cidrs=0.0.0.0/0");
+        hadoopCluster.addRecipeLine("whirr.firewall-rules=8020,8021,50010");
     }
     
     ControlledDynamicWebAppCluster webCluster = new ControlledDynamicWebAppCluster(this, war: WAR_PATH);
