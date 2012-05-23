@@ -61,7 +61,10 @@ public class WebClusterWithHadoopExample extends AbstractApplication {
     static BrooklynProperties config = BrooklynProperties.Factory.newDefault()
     
     WhirrHadoopCluster hadoopCluster = new WhirrHadoopCluster(this, size: 2, memory: 2048, name: "Whirr Hadoop Cluster");
-    { hadoopCluster.addRecipeLine("whirr.hadoop.version=1.0.2"); }
+    { 
+        hadoopCluster.addRecipeLine("whirr.hadoop.version=1.0.2"); 
+        hadoopCluster.addRecipeLine("whirr.firewall-rules=8020,8021"); 
+    }
     
     ControlledDynamicWebAppCluster webCluster = new ControlledDynamicWebAppCluster(this, war: WAR_PATH);
     {
@@ -98,7 +101,7 @@ public class WebClusterWithHadoopExample extends AbstractApplication {
             //read the contents, and disable socks proxy since we're in the same cluster
             hadoopSiteXmlContents = new File("${System.getProperty('user.home')}/.whirr/"+
                 hadoopCluster.clusterSpec.clusterName+"/hadoop-site.xml").text
-            hadoopSiteXmlContents = hadoopSiteXmlContents.replaceAll("<?xml.*?>", "");
+            hadoopSiteXmlContents = hadoopSiteXmlContents.replaceAll("<\\?xml.*\\?>\\s*", "");
             hadoopSiteXmlContents = hadoopSiteXmlContents.replaceAll("hadoop.socks.server", "ignore.hadoop.socks.server");
             
             subscriptionTracker.subscribeToMembers(entity, Startable.SERVICE_UP, 
