@@ -1,6 +1,5 @@
 package brooklyn.location.basic.jclouds.pool;
 
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -9,15 +8,16 @@ import javax.annotation.concurrent.Immutable;
 
 import org.jclouds.compute.domain.NodeMetadata;
 
-import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 @Immutable
 public class MachineSet implements Iterable<NodeMetadata> {
 
     final Set<NodeMetadata> members;
     
-    public MachineSet(Collection<? extends NodeMetadata> m) { 
+    public MachineSet(Iterable<? extends NodeMetadata> m) { 
         members = ImmutableSet.copyOf(m); 
     }
     public MachineSet(NodeMetadata ...nodes) {
@@ -30,18 +30,24 @@ public class MachineSet implements Iterable<NodeMetadata> {
     }
 
     public MachineSet removed(MachineSet toRemove) {
-        Set<NodeMetadata> s = new LinkedHashSet(members);
+        Set<NodeMetadata> s = new LinkedHashSet<NodeMetadata>(members);
         for (NodeMetadata m: toRemove) s.remove(m);
         return new MachineSet(s);
     }
     public MachineSet added(MachineSet toAdd) {
-        Set<NodeMetadata> s = new LinkedHashSet(members);
+        Set<NodeMetadata> s = new LinkedHashSet<NodeMetadata>(members);
         for (NodeMetadata m: toAdd) s.add(m);
         return new MachineSet(s);
     }
-    
-    public MachineSet filtered(Function<MachineSet,MachineSet> ...ops) {
-        return MachinePoolPredicates.compose(ops).apply(this);
+
+    @SuppressWarnings("unchecked")
+    public MachineSet filtered(Predicate<NodeMetadata> criterion) {
+        // To avoid generics complaints in callers caused by varargs, overload here
+        return filtered(new Predicate[] {criterion});
+    }
+
+    public MachineSet filtered(Predicate<NodeMetadata> ...criteria) {
+        return new MachineSet(Iterables.filter(members, MachinePoolPredicates.compose(criteria)));
     }
 
     public int size() {

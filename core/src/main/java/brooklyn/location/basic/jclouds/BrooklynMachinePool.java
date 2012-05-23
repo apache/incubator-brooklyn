@@ -30,7 +30,7 @@ public class BrooklynMachinePool extends MachinePool {
     private static final Logger log = LoggerFactory.getLogger(BrooklynMachinePool.class);
     
     final JcloudsLocation location;
-    final List<Task> activeTasks = new ArrayList<Task>();
+    final List<Task<?>> activeTasks = new ArrayList<Task<?>>();
     final String providerLocationId;
     
     public BrooklynMachinePool(JcloudsLocation l) {
@@ -70,7 +70,7 @@ public class BrooklynMachinePool extends MachinePool {
     protected MachineSet filterForAllowedMachines(MachineSet input) {
         MachineSet result = super.filterForAllowedMachines(input);
         if (providerLocationId!=null) {
-            result = matching( new ReusableMachineTemplate().locationId(providerLocationId).strict(false) ).apply(input);
+            result = result.filtered(matching( new ReusableMachineTemplate().locationId(providerLocationId).strict(false) ));
         }
         return result;
     }
@@ -106,7 +106,7 @@ public class BrooklynMachinePool extends MachinePool {
         registerNewNodes(result, template);
         return result;
     }
-    
+
     public boolean unclaim(SshMachineLocation location) {
         init();
         if (location instanceof JcloudsSshMachineLocation)
@@ -121,22 +121,22 @@ public class BrooklynMachinePool extends MachinePool {
     }
 
     // TODO we need to remove stale tasks somewhere
-    protected Task addTask(Task t) {
+    protected <T> Task<T> addTask(Task<T> t) {
         synchronized (activeTasks) { activeTasks.add(t); }
         return t;
     }
     
-    public List<Task> getActiveTasks() {
-        List<Task> result;
-        synchronized (activeTasks) { result = ImmutableList.copyOf(activeTasks); }
+    public List<Task<?>> getActiveTasks() {
+        List<Task<?>> result;
+        synchronized (activeTasks) { result = ImmutableList.<Task<?>>copyOf(activeTasks); }
         return result;
     }
 
     public void blockUntilTasksEnded() {
         boolean allDone = true;
         while (true) {
-            List<Task> tt = getActiveTasks();
-            for (Task t: tt) {
+            List<Task<?>> tt = getActiveTasks();
+            for (Task<?> t: tt) {
                 if (!t.isDone()) {
                     allDone = false;
                     if (log.isDebugEnabled()) log.debug("Pool "+this+", blocking for completion of: "+t);
@@ -159,10 +159,10 @@ public class BrooklynMachinePool extends MachinePool {
      * returns a child task of the current task.
      * <p>
      * throws exception if not in a task. (you will have to claim, then invoke the effectors manually.) */
-    public Task start(final ReusableMachineTemplate template, final List<? extends Startable> entities) {
+    public Task<?> start(final ReusableMachineTemplate template, final List<? extends Startable> entities) {
         BasicExecutionContext ctx = BasicExecutionContext.getCurrentExecutionContext();
         if (ctx==null) throw new IllegalStateException("Pool.start is only permitted within a task (effector)");
-        final AtomicReference<Task> t = new AtomicReference<Task>();
+        final AtomicReference<Task<?>> t = new AtomicReference<Task<?>>();
         synchronized (t) {
             t.set(ctx.submit(new Runnable() {
                 public void run() {
@@ -181,7 +181,7 @@ public class BrooklynMachinePool extends MachinePool {
     }
 
     /** @see #start(ReusableMachineTemplate, List) */
-    public Task start(ReusableMachineTemplate template, Startable ...entities) {
+    public Task<?> start(ReusableMachineTemplate template, Startable ...entities) {
         return start(template, Arrays.asList(entities));
     }
 
