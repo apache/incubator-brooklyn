@@ -50,7 +50,7 @@ public class TimeWeightedDeltaEnricher<T extends Number> extends AbstractTransfo
             // Can't compute a delta; 
             // don't assume current=zero because then things like requestCount->requestsPerSecond is negative!
             // instead assume same as last time, so delta == 0
-            double deltaPostProcessed = postProcessor.call(0d)
+            double deltaPostProcessed = postProcessor.apply(0d)
             entity.setAttribute(target, deltaPostProcessed)
             if (LOG.isTraceEnabled()) LOG.trace "set $this to ${deltaPostProcessed}, $lastValue -> $current at $eventTime"
             return
