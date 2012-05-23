@@ -78,7 +78,7 @@ public class NginxIntegrationTest {
             cluster.members.each { assertTrue it.getAttribute(SoftwareProcessEntity.SERVICE_UP) }
 
             // Nginx URL is available
-	        String url = nginx.getAttribute(NginxController.URL) + "hello-world"
+	        String url = nginx.getAttribute(NginxController.ROOT_URL) + "hello-world"
             assertTrue urlRespondsWithStatusCode200(url)
 
             // Tomcat URL is available
