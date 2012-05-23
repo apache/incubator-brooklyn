@@ -46,10 +46,10 @@ public class BasicExecutionContext implements ExecutionContext {
     public Task<?> submit(Map properties=[:], Runnable runnable) { submitInternal(properties, runnable) }
  
     /** @see #submit(Map, Runnable) */
-    public <T> Task<T> submit(Map properties=[:], Callable callable) { submitInternal(properties, callable) }
+    public <T> Task<T> submit(Map properties=[:], Callable<T> callable) { submitInternal(properties, callable) }
  
     /** @see #submit(Map, Runnable) */
-    public <T> Task<T> submit(Map properties=[:], Task task) { submitInternal(properties, task) }
+    public <T> Task<T> submit(Map properties=[:], Task<T> task) { submitInternal(properties, task) }
  
     private Task submitInternal(Map properties, Object task) {
         if (properties.tags==null) properties.tags = [] 
