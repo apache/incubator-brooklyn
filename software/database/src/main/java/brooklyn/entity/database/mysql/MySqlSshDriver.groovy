@@ -109,7 +109,7 @@ datadir         = .
                     "--defaults-file=mymysql.cnf",
                 "${basedir}/bin/mysqld --defaults-file=mymysql.cnf --user=`whoami` &", //--user=root needed if we are root
                 "export MYSQL_PID=\$!",
-                "sleep 5 && ${basedir}/bin/mysqladmin --defaults-file=mymysql.cnf --password= password ${password}",
+                "sleep 15 && ${basedir}/bin/mysqladmin --defaults-file=mymysql.cnf --password= password ${password}",
                 "${basedir}/bin/mysql --defaults-file=mymysql.cnf < creation-script.cnf",
                 "kill \$MYSQL_PID"
             ).execute();
