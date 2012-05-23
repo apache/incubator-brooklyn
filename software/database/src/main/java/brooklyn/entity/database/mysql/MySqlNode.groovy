@@ -15,7 +15,7 @@ import brooklyn.util.flags.SetFromFlag
 public class MySqlNode extends SoftwareProcessEntity {
 
     @SetFromFlag("version")
-    public static final BasicConfigKey<String> SUGGESTED_VERSION = [ SoftwareProcessEntity.SUGGESTED_VERSION, "5.5.21" ]
+    public static final BasicConfigKey<String> SUGGESTED_VERSION = [ SoftwareProcessEntity.SUGGESTED_VERSION, "5.5.24" ]
 
     @SetFromFlag("port")
     public static final PortAttributeSensorAndConfigKey MYSQL_PORT = [ "mysql.port", "MySQL port", PortRanges.fromString("3306, 13306+") ]
