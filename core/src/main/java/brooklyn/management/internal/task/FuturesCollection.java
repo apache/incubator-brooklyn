@@ -14,8 +14,10 @@ import com.google.common.util.concurrent.ListenableFuture;
 /**
  * A collection of future objects, also treatable as a future over the collection.
  * 
+ * @deprecated in 0.4; this unused code will be deleted; use guava Future etc where possible 
  * @author alex
  */
+@Deprecated
 public class FuturesCollection extends ArrayList<Future<?>> implements Future<Collection<?>> {
     private static final long serialVersionUID = 1L;
 

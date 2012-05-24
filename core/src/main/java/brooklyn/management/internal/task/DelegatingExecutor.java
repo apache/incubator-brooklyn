@@ -16,7 +16,10 @@ import java.util.concurrent.TimeUnit;
 
 import brooklyn.util.JavaGroovyEquivalents;
 
-
+/**
+ * @deprecated in 0.4; this unused code will be deleted; use guava Future etc where possible 
+ */
+@Deprecated
 class DelegatingExecutor implements Executor {
 	
     ExecutorService executor = Executors.newCachedThreadPool();

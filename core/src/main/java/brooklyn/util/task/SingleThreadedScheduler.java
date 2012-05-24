@@ -32,7 +32,7 @@ import brooklyn.management.Task;
 public class SingleThreadedScheduler implements TaskScheduler {
     private static final Logger LOG = LoggerFactory.getLogger(SingleThreadedScheduler.class);
     
-    private final Queue<QueuedSubmission> order = new ConcurrentLinkedQueue<QueuedSubmission>();
+    private final Queue<QueuedSubmission<?>> order = new ConcurrentLinkedQueue<QueuedSubmission<?>>();
     private final AtomicBoolean running = new AtomicBoolean(false);
     
     private ExecutorService executor;
@@ -43,8 +43,8 @@ public class SingleThreadedScheduler implements TaskScheduler {
         if (running.compareAndSet(false, true)) {
             return executeNow(c);
         } else {
-            WrappingFuture f = new WrappingFuture<T>();
-            order.add(new QueuedSubmission(c, f));
+            WrappingFuture<T> f = new WrappingFuture<T>();
+            order.add(new QueuedSubmission<T>(c, f));
             int size = order.size();
             if (size>0 && (size == 10 || (size<=500 && (size%100)==0) || (size%1000)==0) && size!=lastSizeWarn) {
                 LOG.warn("{} is backing up, {} tasks queued", this, size);
@@ -55,6 +55,7 @@ public class SingleThreadedScheduler implements TaskScheduler {
     }
     int lastSizeWarn = 0;
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     private synchronized void onEnd() {
         boolean done = false;
         while (!done) {
@@ -62,7 +63,7 @@ public class SingleThreadedScheduler implements TaskScheduler {
                 running.set(false);
                 done = true;
             } else {
-                QueuedSubmission qs = order.remove();
+                QueuedSubmission<?> qs = order.remove();
                 if (!qs.f.isCancelled()) {
                     Future future = executeNow(qs.c);
                     qs.f.setDelegate(future);
@@ -84,11 +85,11 @@ public class SingleThreadedScheduler implements TaskScheduler {
     }
     
     
-    private static class QueuedSubmission {
-        final Callable c;
-        final WrappingFuture f;
+    private static class QueuedSubmission<T> {
+        final Callable<T> c;
+        final WrappingFuture<T> f;
         
-        QueuedSubmission(Callable c, WrappingFuture f) {
+        QueuedSubmission(Callable<T> c, WrappingFuture<T> f) {
             this.c = c;
             this.f = f;
         }
@@ -120,6 +121,7 @@ public class SingleThreadedScheduler implements TaskScheduler {
                 return true;
             }
         }
+        
         @Override public boolean isCancelled() {
             if (delegate != null) {
                 return delegate.isCancelled();
@@ -127,9 +129,11 @@ public class SingleThreadedScheduler implements TaskScheduler {
                 return cancelled;
             }
         }
+        
         @Override public boolean isDone() {
             return (delegate != null) ? delegate.isDone() : cancelled;
         }
+        
         @Override public T get() throws CancellationException, ExecutionException, InterruptedException {
             if (cancelled) {
                 throw new CancellationException();
@@ -144,6 +148,7 @@ public class SingleThreadedScheduler implements TaskScheduler {
                 return get();
             }
         }
+        
         @Override public T get(long timeout, TimeUnit unit) throws CancellationException, ExecutionException, InterruptedException, TimeoutException {
             long endtime = System.currentTimeMillis()+unit.toMillis(timeout);
             

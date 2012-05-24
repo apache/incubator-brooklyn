@@ -19,8 +19,10 @@ import com.google.common.base.Throwables;
 /**
  * A future value.
  * 
+ * @deprecated in 0.4; this unused code will be deleted; use guava Future etc where possible 
  * @author alex
  */
+@Deprecated
 public class FutureValue<T> implements QualifiableFuture<T> {
     private final Closure<T> expression;
     private final Predicate<T> validity;

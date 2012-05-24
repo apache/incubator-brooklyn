@@ -6,6 +6,10 @@ import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+/**
+ * @deprecated in 0.4; this unused code will be deleted; use guava Future etc where possible 
+ */
+@Deprecated
 class DelegateFuture<T> implements Future<T> {
 
     private final ThreadLocal<Long> threadTimeout = new ThreadLocal<Long>();

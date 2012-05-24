@@ -20,7 +20,10 @@ import brooklyn.util.JavaGroovyEquivalents;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 
-
+/**
+ * @deprecated in 0.4; this unused code will be deleted; use guava Future etc where possible 
+ */
+@Deprecated
 public class Futures {
     private Futures() {}
     

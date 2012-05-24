@@ -10,7 +10,11 @@ import brooklyn.management.Task;
  *
  * This can be used to enhance tasks that they acquire a {@code synchronized} block (to cause
  * them to effectively run singly-threaded), or clear intermediate queued jobs, etc.
+ * 
+ *
+ * @deprecated in 0.4; unused code; will be deleted
  */
+@Deprecated
 public interface TaskPreprocessor {
     /**
      * Called by {@link BasicExecutionManager} when preprocessor is associated with an
