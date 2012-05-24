@@ -347,10 +347,7 @@
                      <version>${surefire.version}</version>
                      <configuration>
                          <systemProperties>
-                             <property>
-                                 <name>log4j.debug</name>
-                             </property>
-                             <property>
+                              <property>
                                 <name>maven.junit.sysproperties</name>
                                 <value>log4j.configuration</value>
                             </property>
