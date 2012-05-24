@@ -28,7 +28,7 @@ import brooklyn.management.ExpirationPolicy
 public class BasicTaskExecutionTest {
     private static final Logger log = LoggerFactory.getLogger(BasicTaskExecutionTest.class)
  
-    private static final int TIMEOUT = 10*1000
+    private static final int TIMEOUT_MS = 10*1000
     
     private ExecutionManager em
     private Map data
@@ -71,31 +71,29 @@ public class BasicTaskExecutionTest {
 
     @Test
     public void runBasicTaskWithWaits() {
+        CountDownLatch signalStarted = new CountDownLatch(1);
+        CountDownLatch allowCompletion = new CountDownLatch(1);
         data.clear()
         BasicTask t = [ {
-            synchronized(data) {
-                def result = data.put(1, "b")
-                data.notify()
-                data.wait()
-                result
-            }
+            def result = data.put(1, "b")
+            signalStarted.countDown();
+            assertTrue(allowCompletion.await(TIMEOUT_MS, TimeUnit.MILLISECONDS));
+            result
         } ]
         data.put(1, "a")
-        synchronized (data) {
-            BasicTask t2 = em.submit tag:"A", t
-            assertEquals(t, t2)
-            assertFalse(t.isDone())
-            
-            assertEquals("a", data.get(1))
-            data.wait()
-            assertEquals("b", data.get(1))
-            assertFalse(t.isDone())
-            
-            log.debug "runBasicTaskWithWaits, BasicTask status: {}", t.getStatusDetail(false)
-            assertTrue(t.getStatusDetail(false).toLowerCase().contains("waiting"))
-            
-            data.notify()
-        }
+
+        BasicTask t2 = em.submit tag:"A", t
+        assertEquals(t, t2)
+        assertFalse(t.isDone())
+        
+        assertTrue(signalStarted.await(TIMEOUT_MS, TimeUnit.MILLISECONDS));
+        assertEquals("b", data.get(1))
+        assertFalse(t.isDone())
+        
+        log.debug "runBasicTaskWithWaits, BasicTask status: {}", t.getStatusDetail(false)
+        assertTrue(t.getStatusDetail(false).toLowerCase().contains("waiting"), "details="+t.getStatusDetail(false))
+        
+        allowCompletion.countDown();
         assertEquals("a", t.get())
     }
 
@@ -205,7 +203,7 @@ public class BasicTaskExecutionTest {
         em.submit tags:["A"], t
         
         try {
-            runningLatch.await(TIMEOUT, TimeUnit.MILLISECONDS);
+            runningLatch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
     
             assertEquals(em.getTasksWithTag("A"), [t]);
         } finally {
@@ -215,7 +213,9 @@ public class BasicTaskExecutionTest {
     
     @Test
     public void cancelBeforeRun() {
-        BasicTask t = [ { synchronized (data) { data.notify(); data.wait() }; return 42 } ]
+        CountDownLatch blockForever = new CountDownLatch(1);
+        
+        BasicTask t = [ { blockForever.await(); return 42 } ]
         t.cancel true
         assertTrue(t.isCancelled())
         assertTrue(t.isDone())
@@ -232,15 +232,18 @@ public class BasicTaskExecutionTest {
 
     @Test
     public void cancelDuringRun() {
-        BasicTask t = [ { synchronized (data) { data.notify(); data.wait() }; return 42 } ]
+        CountDownLatch signalStarted = new CountDownLatch(1);
+        CountDownLatch blockForever = new CountDownLatch(1);
+        
+        BasicTask t = [ { synchronized (data) { signalStarted.countDown(); blockForever.await() }; return 42 } ]
+        em.submit tag:"A", t
         assertFalse(t.isCancelled())
         assertFalse(t.isDone())
         assertFalse(t.isError())
-        synchronized (data) {
-            em.submit tag:"A", t
-            data.wait()
-            t.cancel true
-        }
+        
+        assertTrue(signalStarted.await(TIMEOUT_MS, TimeUnit.MILLISECONDS));
+        t.cancel true
+        
         assertTrue(t.isCancelled())
         assertTrue(t.isError())
         try { t.get(); fail("get should have failed due to cancel"); } catch (CancellationException e) {}
@@ -251,15 +254,9 @@ public class BasicTaskExecutionTest {
     
     @Test
     public void cancelAfterRun() {
-        BasicTask t = [ { synchronized (data) { data.notify(); data.wait() }; return 42 } ]
-        synchronized (data) {
-            em.submit tag:"A", t
-            data.wait()
-            assertFalse(t.isCancelled())
-            assertFalse(t.isDone())
-            assertFalse(t.isError())
-            data.notify()
-        }
+        BasicTask t = [ { return 42 } ]
+        em.submit tag:"A", t
+
         assertEquals(42, t.get());
         t.cancel true
         assertFalse(t.isCancelled())
@@ -269,16 +266,9 @@ public class BasicTaskExecutionTest {
     
     @Test
     public void errorDuringRun() {
-        BasicTask t = [ { synchronized (data) { data.notify(); data.wait() }; throw new IllegalStateException("Aaargh"); } ]
+        BasicTask t = [ { throw new IllegalStateException("Aaargh"); } ]
         
-        synchronized (data) {
-            em.submit tag:"A", t
-            data.wait()
-            assertFalse(t.isCancelled())
-            assertFalse(t.isDone())
-            assertFalse(t.isError())
-            data.notify()
-        }
+        em.submit tag:"A", t
         
         try { t.get(); fail("get should have failed due to error"); } catch (Exception eo) { Exception e = Throwables.getRootCause(eo); assertEquals("Aaargh", e.getMessage()) }
         
@@ -287,25 +277,29 @@ public class BasicTaskExecutionTest {
         assertTrue(t.isDone())
         
         log.debug "errorDuringRun status: {}", t.getStatusDetail(false)
-        assertTrue(t.getStatusDetail(false).contains("Aaargh"))
+        assertTrue(t.getStatusDetail(false).contains("Aaargh"), "details="+t.getStatusDetail(false))
     }
 
     @Test
     public void fieldsSetForSimpleBasicTask() {
-        BasicTask t = [ { synchronized (data) { data.notify(); data.wait() }; return 42 } ]
+        CountDownLatch signalStarted = new CountDownLatch(1);
+        CountDownLatch allowCompletion = new CountDownLatch(1);
+        
+        BasicTask t = [ { signalStarted.countDown(); allowCompletion.await(); return 42 } ]
         assertEquals(null, t.submittedByTask)
         assertEquals(-1, t.submitTimeUtc)
         assertNull(t.getResult())
-        synchronized (data) {
-            em.submit tag:"A", t
-            data.wait()
-        }
+
+        em.submit tag:"A", t
+        assertTrue(signalStarted.await(TIMEOUT_MS, TimeUnit.MILLISECONDS));
+        
         assertTrue(t.submitTimeUtc > 0)
         assertTrue(t.startTimeUtc >= t.submitTimeUtc)
         assertNotNull(t.getResult())
         assertEquals(-1, t.endTimeUtc)
         assertEquals(false, t.isCancelled())
-        synchronized (data) { data.notify() }
+        
+        allowCompletion.countDown()
         assertEquals(42, t.get())
         assertTrue(t.endTimeUtc >= t.startTimeUtc)
 

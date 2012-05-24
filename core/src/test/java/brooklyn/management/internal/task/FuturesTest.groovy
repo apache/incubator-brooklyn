@@ -4,12 +4,13 @@ import static brooklyn.management.internal.task.Futures.*
 
 import org.testng.annotations.Test
 
+import brooklyn.util.internal.TimeExtras;
+
 import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.entity.EffectorSayHiTest
 
 /**
  * Test the operation of the {@link Futures} factory utilities.
@@ -18,6 +19,9 @@ import brooklyn.entity.EffectorSayHiTest
  * TODO add assertions
  */
 public class FuturesTest {
+    
+    static { TimeExtras.init() }
+    
     private static final Logger log = LoggerFactory.getLogger(FuturesTest.class)
  
     @Test

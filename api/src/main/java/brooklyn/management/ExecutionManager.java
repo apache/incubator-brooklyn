@@ -66,6 +66,14 @@ public interface ExecutionManager {
     /** see {@link #submit(Map, Task)} */
     public <T> Task<T> submit(Map<?, ?> flags, Callable<T> c);
 
+    /** 
+     * @see {@link #submit(Map, Task)}
+     * 
+     * @deprecated While refactoring groovy->java; use strongly typed methods
+     */
+    @Deprecated
+    public <T> Task<T> submit(Map<?, ?> flags, Object c);
+
     /**
      * Submits the given {@link Task} for execution in the context associated with this manager.
      *
