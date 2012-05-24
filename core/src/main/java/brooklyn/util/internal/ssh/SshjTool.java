@@ -456,6 +456,10 @@ public class SshjTool implements SshTool {
         List<String> result = new ArrayList<String>(env.size()+commands.size());
         
         for (Entry<String,?> entry : env.entrySet()) {
+            if (entry.getKey() == null || entry.getValue() == null) {
+                LOG.warn("env key-values must not be null; ignoring: key="+entry.getKey()+"; value="+entry.getValue());
+                continue;
+            }
             String escapedVal = StringEscapeUtils.escapeLiteralForDoubleQuotedBash(entry.getValue().toString());
             result.add("export "+entry.getKey()+"=\""+escapedVal+"\"");
         }
