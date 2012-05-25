@@ -13,4 +13,4 @@ BROOKLYN_OPTS="-Xms512m -Xmx512m"
 export BROOKLYN_CLASSPATH BROOKLYN_OPTS
 
 # Launch Brooklyn with application
-brooklyn -v launch --app brooklyn.extras.whirr.WhirrExample --location ${@:-localhost}
+brooklyn -v launch --app brooklyn.extras.whirr.WhirrExample --stopOnKeyPress --location ${@:-localhost}
