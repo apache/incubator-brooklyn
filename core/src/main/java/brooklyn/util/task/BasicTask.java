@@ -18,6 +18,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -63,11 +64,11 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
      * The generics on {@link Closure} break it if that is first constructor.
      */
     protected BasicTask() { this(Collections.emptyMap()); }
-    protected BasicTask(Map flags) { this(flags, (Closure) null); }
+    protected BasicTask(Map flags) { this(flags, (Callable<T>) null); }
 
-    public BasicTask(Closure<T> job) { this(Collections.emptyMap(), job); }
+    public BasicTask(Callable<T> job) { this(Collections.emptyMap(), job); }
     
-    public BasicTask(Map flags, Closure<T> job) {
+    public BasicTask(Map flags, Callable<T> job) {
         this.job = job;
 
         if (flags.containsKey("tag")) tags.add(flags.remove("tag"));
@@ -86,10 +87,10 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
         displayName = d;
     }
 
-    public BasicTask(Runnable job) { this(GroovyJavaMethods.closureFromRunnable(job)); }
-    public BasicTask(Map flags, Runnable job) { this(flags, GroovyJavaMethods.closureFromRunnable(job)); }
-    public BasicTask(Callable<T> job) { this(GroovyJavaMethods.closureFromCallable(job)); }
-    public BasicTask(Map flags, Callable<T> job) { this(flags, GroovyJavaMethods.closureFromCallable(job)); }
+    public BasicTask(Runnable job) { this(GroovyJavaMethods.<T>callableFromRunnable(job)); }
+    public BasicTask(Map flags, Runnable job) { this(flags, GroovyJavaMethods.<T>callableFromRunnable(job)); }
+    public BasicTask(Closure<T> job) { this(GroovyJavaMethods.callableFromClosure(job)); }
+    public BasicTask(Map flags, Closure<T> job) { this(flags, GroovyJavaMethods.callableFromClosure(job)); }
 
     @Override
     public String toString() { 
