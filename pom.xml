@@ -343,8 +343,20 @@
                     </executions>
                 </plugin>
                 <plugin>
-                    <artifactId>maven-surefire-plugin</artifactId>
-                    <version>${surefire.version}</version>
+                     <artifactId>maven-surefire-plugin</artifactId>
+                     <version>${surefire.version}</version>
+                     <configuration>
+                         <systemProperties>
+                              <property>
+                                <name>maven.junit.sysproperties</name>
+                                <value>log4j.configuration</value>
+                            </property>
+                            <property>
+                                <name>log4j.configuration</name>
+                                <value>test-log4j.properties</value>
+                            </property>
+                        </systemProperties>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <artifactId>maven-site-plugin</artifactId>
