@@ -3,11 +3,10 @@ package brooklyn.entity.trait;
 import java.util.Collection
 
 import brooklyn.entity.Effector
-import brooklyn.entity.basic.DefaultValue
 import brooklyn.entity.basic.Description
 import brooklyn.entity.basic.MethodEffector
 import brooklyn.entity.basic.NamedParameter
-import brooklyn.event.Sensor
+import brooklyn.event.AttributeSensor
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.Location
 
@@ -60,7 +59,7 @@ public interface Startable {
 	//FIXME prefer generics above, but am getting inconsistent class refs Startable.1 refers to <T>
 	//claimed fixed with groovy 1.8.3 but eclipse compiler still on 1.8.2 (nov 2011)
 	 	
-	Sensor SERVICE_UP = new BasicAttributeSensor(Boolean.class, "service.isUp", "Service has been started successfully and is running");
+	AttributeSensor SERVICE_UP = new BasicAttributeSensor(Boolean.class, "service.isUp", "Service has been started successfully and is running");
 
 	Effector START = new MethodEffector(Startable.&start);
 	Effector STOP = new MethodEffector(Startable.&stop);
