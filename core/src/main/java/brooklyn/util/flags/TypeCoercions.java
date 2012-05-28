@@ -36,6 +36,7 @@ public class TypeCoercions {
     private static Map<Class,Map<Class,Function>> registeredAdapters = Collections.synchronizedMap(
             new LinkedHashMap<Class,Map<Class,Function>>());
     
+    
     /** attempts to coerce 'value' to 'targetType', 
      * using a variety of strategies,
      * including looking at:
@@ -126,13 +127,81 @@ public class TypeCoercions {
         //not found
         throw new ClassCastException("Cannot coerce type "+value.getClass()+" to "+targetType.getCanonicalName()+" ("+value+"): no adapter known");
     }
-    
+
+    /**
+     * Sometimes need to explicitly cast primitives, rather than relying on Java casting.
+     * For example, when using generics then type-erasure means it doesn't actually cast,
+     * which causes tests to fail with 0 != 0.0
+     */
     @SuppressWarnings("unchecked")
     public static <T> T castPrimitive(Object value, Class<T> targetType) {
         assert isPrimitiveOrBoxer(targetType) : "targetType="+targetType;
         assert isPrimitiveOrBoxer(value.getClass()) : "value="+targetType+"; valueType="+value.getClass();
 
-        return targetType.cast(value);
+        Class<?> sourceWrapType = Primitives.wrap(value.getClass());
+        Class<?> targetWrapType = Primitives.wrap(targetType);
+        
+        // optimization, for when already correct type
+        if (sourceWrapType == targetWrapType) {
+            return (T) value;
+        }
+        
+        // boolean can only be cast to itself
+        if (targetWrapType == Boolean.class) {
+            return (T) value;
+        } else if (sourceWrapType == Boolean.class) {
+            return (T) value;
+        }
+        
+        // for whole-numbers (where casting to long won't lose anything)...
+        long v = 0;
+        boolean islong = true;
+        if (sourceWrapType == Character.class) {
+            v = (long) ((Character)value).charValue();
+        } else if (sourceWrapType == Byte.class) {
+            v = (long) ((Byte)value).byteValue();
+        } else if (sourceWrapType == Short.class) {
+            v = (long) ((Short)value).shortValue();
+        } else if (sourceWrapType == Integer.class) {
+            v = (long) ((Integer)value).intValue();
+        } else if (sourceWrapType == Long.class) {
+            v = ((Long)value).longValue();
+        } else {
+            islong = false;
+        }
+        if (islong) {
+            if (targetWrapType == Character.class) return (T) Character.valueOf((char)v); 
+            if (targetWrapType == Byte.class) return (T) Byte.valueOf((byte)v); 
+            if (targetWrapType == Short.class) return (T) Short.valueOf((short)v); 
+            if (targetWrapType == Integer.class) return (T) Integer.valueOf((int)v); 
+            if (targetWrapType == Long.class) return (T) Long.valueOf((long)v); 
+            if (targetWrapType == Float.class) return (T) Float.valueOf((float)v); 
+            if (targetWrapType == Double.class) return (T) Double.valueOf((double)v);
+            throw new IllegalStateException("Unexpected: sourceType="+sourceWrapType+"; targetType="+targetWrapType);
+        }
+        
+        // for real-numbers (cast to double)...
+        double d = 0;
+        boolean isdouble = true;
+        if (sourceWrapType == Float.class) {
+            d = (double) ((Float)value).floatValue();
+        } else if (sourceWrapType == Double.class) {
+            d = (double) ((Double)value).doubleValue();
+        } else {
+            isdouble = false;
+        }
+        if (isdouble) {
+            if (targetWrapType == Character.class) return (T) Character.valueOf((char)d); 
+            if (targetWrapType == Byte.class) return (T) Byte.valueOf((byte)d); 
+            if (targetWrapType == Short.class) return (T) Short.valueOf((short)d); 
+            if (targetWrapType == Integer.class) return (T) Integer.valueOf((int)d); 
+            if (targetWrapType == Long.class) return (T) Long.valueOf((long)d); 
+            if (targetWrapType == Float.class) return (T) Float.valueOf((float)d); 
+            if (targetWrapType == Double.class) return (T) Double.valueOf((double)d);
+            throw new IllegalStateException("Unexpected: sourceType="+sourceWrapType+"; targetType="+targetWrapType);
+        } else {
+            throw new IllegalStateException("Unexpected: sourceType="+sourceWrapType+"; targetType="+targetWrapType);
+        }
     }
     
     @SuppressWarnings("unchecked")
