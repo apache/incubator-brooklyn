@@ -37,7 +37,7 @@ class CustomAggregatingEnricherTest {
         app = new AbstractApplication() {}
         producer = new LocallyManagedEntity(owner:app)
         intSensor = new BasicAttributeSensor<Integer>(Integer.class, "int sensor")
-        target = new BasicAttributeSensor<Integer>(Integer.class, "target sensor")
+        target = new BasicAttributeSensor<Integer>(Long.class, "target sensor")
         
         app.start([new SimulatedLocation()])
     }
