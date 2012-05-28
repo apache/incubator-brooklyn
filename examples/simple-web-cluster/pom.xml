@@ -95,7 +95,8 @@
                 <configuration>
                     <filesets>
                         <fileset>
-                            <directory>${project.artifactId}</directory>
+                            <directory>${project.basedir}</directory>
+							<includes><include>${project.artifactId}/</include></includes>
                         </fileset>
                     </filesets>
                 </configuration>
