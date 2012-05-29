@@ -13,6 +13,8 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
+import com.google.common.base.Stopwatch;
+
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.SoftwareProcessEntity
@@ -134,17 +136,12 @@ public class WebAppIntegrationTest {
     public void canStartAndStop(SoftwareProcessEntity entity) {
         this.entity = entity
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
-        executeUntilSucceedsWithShutdown(timeout: 120*SECONDS, entity) {
+        executeUntilSucceeds(timeout: 120*SECONDS) {
             assertTrue entity.getAttribute(Startable.SERVICE_UP)
         }
+        
+        entity.stop()
         assertFalse entity.getAttribute(Startable.SERVICE_UP)
-    }
-    
-    //needed for legacy items only
-    private static void disablePoll(Entity e) {
-        if (e in OldJavaWebApp) {
-            ((OldJavaWebApp)e).pollForHttpStatus = false
-        }
     }
     
     /**
@@ -154,20 +151,19 @@ public class WebAppIntegrationTest {
     @Test(groups = "Integration", dataProvider = "basicEntities")
     public void publishesRequestAndErrorCountMetrics(SoftwareProcessEntity entity) {
         this.entity = entity
-        disablePoll(entity)
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
-        
-        String url = entity.getAttribute(WebAppService.ROOT_URL) + "does_not_exist"
         
         executeUntilSucceeds(timeout:10*SECONDS) {
             assertTrue entity.getAttribute(SoftwareProcessEntity.SERVICE_UP)
         }
         
+        String url = entity.getAttribute(WebAppService.ROOT_URL) + "does_not_exist"
+        
         final int n = 10
         n.times {
             def connection = connectToURL(url)
             int status = ((HttpURLConnection) connection).getResponseCode()
-            log.debug "connection to {} gives {}", url, status
+            log.info "connection to {} gives {}", url, status
         }
         
         executeUntilSucceedsWithShutdown(entity, timeout:20*SECONDS) {
@@ -194,58 +190,64 @@ public class WebAppIntegrationTest {
     @Test(groups = "Integration", dataProvider = "basicEntities")
     public void publishesRequestsPerSecondMetric(SoftwareProcessEntity entity) {
         this.entity = entity
-        disablePoll(entity)
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
+        log.info("Entity "+entity+" started");
         
         try {
             // reqs/sec initially zero
+            log.info("Waiting for initial avg-requests to be zero...");
             executeUntilSucceeds(useGroovyTruth:true) {
                 Double activityValue = entity.getAttribute(WebAppService.AVG_REQUESTS_PER_SECOND)
-                if (activityValue == null)
+                if (activityValue == null) {
                     return new BooleanWithMessage(false, "activity not set yet ($activityValue)")
-
-                assertEquals activityValue, 0.0d
+                }
+                assertEquals activityValue.doubleValue(), 0.0d, 0.000001d
                 true
             }
             
             // apply workload on 1 per sec; reqs/sec should update
-            executeUntilSucceeds(timeout:10*SECONDS, useGroovyTruth:true) {
-                String url = entity.getAttribute(WebAppService.ROOT_URL) + "foo"
-
-                long startTime = System.currentTimeMillis()
-                long elapsedTime = 0
+            executeUntilSucceeds(timeout:30*SECONDS) {
+                String url = entity.getAttribute(WebAppService.ROOT_URL) + "does_not_exist"
+                int desiredMsgsPerSec = 10
+                
+                Stopwatch stopwatch = new Stopwatch().start()
+                int reqsSent = 0
+                Integer preRequestCount = entity.getAttribute(WebAppService.REQUEST_COUNT)
                 
                 // need to maintain n requests per second for the duration of the window size
-                while (elapsedTime < WebAppService.AVG_REQUESTS_PER_SECOND_PERIOD) {
-                    int n = 10
-                    n.times { connectToURL url }
-                    Thread.sleep 1000
-                    def requestCount = entity.getAttribute(WebAppService.REQUEST_COUNT)
-                    assertNotNull(requestCount, "requestCount not set")
-                    assertEquals requestCount % n, 0
-                    elapsedTime = System.currentTimeMillis() - startTime
+                log.info("Applying load for "+WebAppService.AVG_REQUESTS_PER_SECOND_PERIOD+"ms");
+                while (stopwatch.elapsedMillis() < WebAppService.AVG_REQUESTS_PER_SECOND_PERIOD) {
+                    long preReqsTime = stopwatch.elapsedMillis()
+                    desiredMsgsPerSec.times { connectToURL url }
+                    sleep(1000 - (stopwatch.elapsedMillis()-preReqsTime))
+                    reqsSent += desiredMsgsPerSec
                 }
 
-                Double activityValue = entity.getAttribute(WebAppService.AVG_REQUESTS_PER_SECOND)
-                assertEquals activityValue, 10.0d, 1.0d
-
-                true
+                executeUntilSucceeds(timeout:1*SECONDS) {
+                    Double avgReqs = entity.getAttribute(WebAppService.AVG_REQUESTS_PER_SECOND)
+                    Integer requestCount = entity.getAttribute(WebAppService.REQUEST_COUNT)
+                    
+                    log.info("avg-requests="+avgReqs+"; total-requests="+requestCount);
+                    assertEquals(avgReqs.doubleValue(), (double)desiredMsgsPerSec, 3.0d)
+                    assertEquals(requestCount.intValue(), preRequestCount+reqsSent)
+                }
             }
             
             // After suitable delay, expect to again get zero msgs/sec
+            log.info("Waiting for avg-requests to drop to zero, for "+WebAppService.AVG_REQUESTS_PER_SECOND_PERIOD+"ms");
             Thread.sleep(WebAppService.AVG_REQUESTS_PER_SECOND_PERIOD)
             
-            executeUntilSucceeds {
-                Double activityValue = entity.getAttribute(WebAppService.AVG_REQUESTS_PER_SECOND)
-                assertNotNull activityValue
-                assertEquals activityValue.doubleValue(), 0.0d, 0.00001d
+            executeUntilSucceeds(timeout:10*SECONDS) {
+                Double avgReqs = entity.getAttribute(WebAppService.AVG_REQUESTS_PER_SECOND)
+                assertNotNull avgReqs
+                assertEquals avgReqs.doubleValue(), 0.0d, 0.00001d
                 true
             }
         } finally {
             entity.stop()
         }
     }
-    
+
     /**
      * Tests that we get consecutive events with zero workrate, and with suitably small timestamps between them.
      */
@@ -255,7 +257,6 @@ public class WebAppIntegrationTest {
         final int MAX_INTERVAL_BETWEEN_EVENTS = 1000 // events should publish every 500ms so this should be enough overhead
         final int NUM_CONSECUTIVE_EVENTS = 3
 
-        disablePoll(entity) 
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         
         SubscriptionHandle subscriptionHandle
@@ -334,6 +335,7 @@ public class WebAppIntegrationTest {
         
         entity.setConfig(JavaWebAppService.ROOT_WAR, resource.path)
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
+        
 		//tomcat may need a while to unpack everything
         executeUntilSucceedsWithShutdown(entity, abortOnError:false, timeout:60*SECONDS) {
             // TODO get this URL from a WAR file entity
@@ -363,4 +365,7 @@ public class WebAppIntegrationTest {
 		t.canStartAndStop(null)
 	}
 	
+    private void sleep(long millis) {
+        if (millis > 0) Thread.sleep(millis);
+    }    
 }
