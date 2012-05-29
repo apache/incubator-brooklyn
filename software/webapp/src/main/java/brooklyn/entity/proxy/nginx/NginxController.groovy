@@ -56,8 +56,6 @@ public class NginxController extends AbstractController {
         
         http.with {
             poll(SERVICE_UP, { 
-                println("headers="+headerLists);
-                println("expect="+(["nginx/"+getConfig(SUGGESTED_VERSION)])) 
                 headerLists.get("Server") == ["nginx/"+getConfig(SUGGESTED_VERSION)] 
             })
         }
