@@ -105,7 +105,7 @@ public class WhirrCluster extends AbstractEntity implements Startable {
         log.info("Starting cluster with roles " + config.getProperty("whirr.instance-templates")
                 + " in location " + location)
 
-        startWithClusterSpec(clusterSpec);
+        startWithClusterSpec(clusterSpec,config);
     }
 
     /**
@@ -126,7 +126,7 @@ public class WhirrCluster extends AbstractEntity implements Startable {
         clusterSpec.setPublicKey((File)location.getPublicKeyFile());
         // TODO: also add security groups when supported in the Whirr trunk
 
-        startWithClusterSpec(clusterSpec);
+        startWithClusterSpec(clusterSpec, config);
     }
 
     synchronized ClusterController getController() {
@@ -136,7 +136,7 @@ public class WhirrCluster extends AbstractEntity implements Startable {
         return _controller;
     }
 
-    private void startWithClusterSpec(ClusterSpec clusterSpec) {
+    private void startWithClusterSpec(ClusterSpec clusterSpec, PropertiesConfiguration config) {
         log.info("Starting cluster "+this+" with roles " + config.getProperty("whirr.instance-templates")
                 + " in location " + location)
         if (log.isDebugEnabled()) log.debug("Cluster "+this+" using recipe:\n"+getConfig(RECIPE));
