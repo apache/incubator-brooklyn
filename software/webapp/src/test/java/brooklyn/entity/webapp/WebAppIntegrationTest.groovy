@@ -121,9 +121,9 @@ public class WebAppIntegrationTest {
         JBoss6Server jboss6 = [ owner:newTestApplication(), portIncrement:PORT_INCREMENT ]
         JBoss7Server jboss7 = [ owner:newTestApplication(), httpPort:DEFAULT_HTTP_PORT ]
         return [ 
-			[ tomcat ], 
+//			[ tomcat ], 
 			[ jboss6 ],
-			[ jboss7 ]
+//			[ jboss7 ]
 		]
     }
 

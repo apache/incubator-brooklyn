@@ -14,7 +14,9 @@ import brooklyn.entity.Application
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.group.DynamicCluster
 import brooklyn.entity.trait.Startable
-import brooklyn.entity.webapp.tomcat.TomcatServer
+import brooklyn.entity.webapp.JavaWebAppService
+import brooklyn.entity.webapp.WebAppService
+import brooklyn.entity.webapp.jboss.JBoss7Server
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.EntityStartUtils
@@ -32,7 +34,7 @@ public class NginxIntegrationTest {
 
     static { TimeExtras.init() }
 
-    private Application app
+    private TestApplication app
     private NginxController nginx
     private DynamicCluster cluster
 
@@ -41,14 +43,9 @@ public class NginxIntegrationTest {
         app = new TestApplication();
     }
 
-    @AfterMethod(groups = "Integration")
+    @AfterMethod(groups = "Integration", alwaysRun=true)
     public void shutdown() {
-        if (cluster != null && cluster.getAttribute(Startable.SERVICE_UP)) {
-	        EntityStartUtils.stopEntity(cluster)
-        }
-        if (nginx != null && nginx.getAttribute(Startable.SERVICE_UP)) {
-	        EntityStartUtils.stopEntity(nginx)
-        }
+        app?.stop()
     }
 
     /**
@@ -56,37 +53,41 @@ public class NginxIntegrationTest {
      */
     @Test(groups = "Integration")
     public void canStartupAndShutdown() {
-        def template = { Map properties -> new TomcatServer(properties) }
+        def template = { Map properties -> new JBoss7Server(properties) }
         URL war = getClass().getClassLoader().getResource("hello-world.war")
         Preconditions.checkState war != null, "Unable to locate resource $war"
         
         cluster = new DynamicCluster(owner:app, factory:template, initialSize:1, httpPort:7080)
-        cluster.setConfig(TomcatServer.WAR, war.path)
-        cluster.start([ new LocalhostMachineProvisioningLocation(count:1) ])
+        cluster.setConfig(JavaWebAppService.ROOT_WAR, war.path)
+        
         nginx = new NginxController([
 	            "owner" : app,
 	            "cluster" : cluster,
 	            "domain" : "localhost",
 	            "port" : 8000,
-	            "portNumberSensor" : TomcatServer.HTTP_PORT,
+	            "portNumberSensor" : WebAppService.HTTP_PORT,
             ])
-        nginx.start([ new LocalhostMachineProvisioningLocation(count:1) ])
-        executeUntilSucceedsWithShutdown(nginx) {
+        
+        app.start([ new LocalhostMachineProvisioningLocation() ])
+        
+        executeUntilSucceeds() {
             // Services are running
             assertTrue cluster.getAttribute(SoftwareProcessEntity.SERVICE_UP)
-            assertTrue nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP)
             cluster.members.each { assertTrue it.getAttribute(SoftwareProcessEntity.SERVICE_UP) }
+            
+            assertTrue nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP)
 
             // Nginx URL is available
-	        String url = nginx.getAttribute(NginxController.ROOT_URL) + "hello-world"
+            String url = nginx.getAttribute(NginxController.ROOT_URL)
             assertTrue urlRespondsWithStatusCode200(url)
 
-            // Tomcat URL is available
+            // Web-server URL is available
             cluster.members.each {
-	            assertTrue urlRespondsWithStatusCode200(it.getAttribute(TomcatServer.ROOT_URL) + "hello-world")
+	            assertTrue urlRespondsWithStatusCode200(it.getAttribute(WebAppService.ROOT_URL))
             }
         }
-        cluster.stop()
+        
+        app.stop()
 
         // Services have stopped
         assertFalse nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP)
