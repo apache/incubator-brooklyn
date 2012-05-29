@@ -259,7 +259,7 @@ public class JmxHelper {
      * @returns the MBeanServerConnection
      * @throws IllegalStateException if not connected.
      */
-    private synchronized MBeanServerConnection getUsableConnectionOrFail() {
+    private synchronized MBeanServerConnection getConnectionOrFail() {
         if (connection)
             return connection;
 
@@ -287,7 +287,7 @@ public class JmxHelper {
     // ====================== query related calls =======================================
 
     public Set<ObjectInstance> findMBeans(ObjectName objectName) {
-        return invokeWithReconnect({ return getUsableConnectionOrFail().queryMBeans(objectName, null) })
+        return invokeWithReconnect({ return getConnectionOrFail().queryMBeans(objectName, null) })
     }
 
     public ObjectInstance findMBean(ObjectName objectName) {
@@ -352,7 +352,7 @@ public class JmxHelper {
     public Object getAttribute(ObjectName objectName, String attribute) {
          ObjectInstance bean = findMBean objectName
         if (bean != null) {
-            def result = invokeWithReconnect({ return getUsableConnectionOrFail().getAttribute(bean.objectName, attribute) })
+            def result = invokeWithReconnect({ return getConnectionOrFail().getAttribute(bean.objectName, attribute) })
 
             if (LOG.isTraceEnabled()) LOG.trace "From {}, for jmx attribute {}.{}, got value {}", url, objectName.canonicalName, attribute, result
             return result
@@ -368,7 +368,7 @@ public class JmxHelper {
     public void setAttribute(ObjectName objectName, String attribute, Object val) {
          ObjectInstance bean = findMBean objectName
         if (bean != null) {
-            invokeWithReconnect({ getUsableConnectionOrFail().setAttribute(bean.objectName, new javax.management.Attribute(attribute, val)) })
+            invokeWithReconnect({ getConnectionOrFail().setAttribute(bean.objectName, new javax.management.Attribute(attribute, val)) })
             if (LOG.isTraceEnabled()) LOG.trace "From {}, for jmx attribute {}.{}, set value {}", url, objectName.canonicalName, attribute, val
         } else {
             if (LOG.isDebugEnabled()) LOG.debug "From {}, cannot set attribute {}.{}, because mbean not found", url, objectName.canonicalName, attribute
@@ -390,7 +390,7 @@ public class JmxHelper {
             Class clazz = arg.getClass();
             signature[index] = (CLASSES.containsKey(clazz.simpleName) ? CLASSES.get(clazz.simpleName) : clazz.name);
         }
-        def result = invokeWithReconnect({ return getUsableConnectionOrFail().invoke(objectName, method, arguments, signature) })
+        def result = invokeWithReconnect({ return getConnectionOrFail().invoke(objectName, method, arguments, signature) })
 
         if (LOG.isTraceEnabled()) LOG.trace "From {}, for jmx operation {}.{}, got value {}", url, objectName.canonicalName, method, result
         return result
@@ -401,7 +401,7 @@ public class JmxHelper {
     }
 
     public void addNotificationListener(ObjectName objectName, NotificationListener listener, NotificationFilter filter = null) {
-        invokeWithReconnect({ getUsableConnectionOrFail().addNotificationListener(objectName, listener, filter, null) })
+        invokeWithReconnect({ getConnectionOrFail().addNotificationListener(objectName, listener, filter, null) })
     }
 
     public void removeNotificationListener(String objectName, NotificationListener listener) {
@@ -409,7 +409,7 @@ public class JmxHelper {
     }
 
     public void removeNotificationListener(ObjectName objectName, NotificationListener listener) {
-        if (isConnected()) invokeWithReconnect({ getUsableConnectionOrFail().removeNotificationListener(objectName, listener, null, null) })
+        if (isConnected()) invokeWithReconnect({ getConnectionOrFail().removeNotificationListener(objectName, listener, null, null) })
     }
 
     public <M> M getProxyObject(String objectName, Class<M> mbeanInterface) {
@@ -417,7 +417,7 @@ public class JmxHelper {
     }
 
     public <M> M getProxyObject(ObjectName objectName, Class<M> mbeanInterface) {
-        MBeanServerConnection connection = getUsableConnectionOrFail()
+        MBeanServerConnection connection = getConnectionOrFail()
         return JMX.newMBeanProxy(connection, objectName, mbeanInterface, false)
     }
 
