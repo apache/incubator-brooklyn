@@ -197,8 +197,13 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
         
         assertItemDistributionContinually([(containerA):[item1, item2], (containerB):[]])
     }
+
+    @Test(groups="Integration", invocationCount=20)
+    public void testRespectsMinPeriodBetweenExecsRepeated() {
+        testRespectsMinPeriodBetweenExecs();
+    }
     
-    @Test(invocationCount=100)
+    @Test
     public void testRespectsMinPeriodBetweenExecs() {
         long minPeriodBetweenExecs = 1000
         long timePrecision = 250
