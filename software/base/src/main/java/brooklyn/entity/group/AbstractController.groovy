@@ -1,4 +1,4 @@
-package brooklyn.entity.group
+package brooklyn.entity.group;
 
 import java.util.Collection
 import java.util.Map
@@ -28,32 +28,39 @@ import com.google.common.base.Preconditions
  * Represents a controller mechanism for a {@link Cluster}.
  */
 public abstract class AbstractController extends SoftwareProcessEntity {
-    protected static final Logger LOG = LoggerFactory.getLogger(AbstractController.class)
+    protected static final Logger LOG = LoggerFactory.getLogger(AbstractController.class);
 
     /** sensor for port to forward to on target entities */
     @SetFromFlag("portNumberSensor")
-    public static final BasicConfigKey<Sensor> PORT_NUMBER_SENSOR = [ Sensor, "member.sensor.portNumber", "Port number sensor on members" ]
+    public static final BasicConfigKey<Sensor> PORT_NUMBER_SENSOR = new BasicConfigKey<Sensor>(
+            Sensor.class, "member.sensor.portNumber", "Port number sensor on members");
 
     //TODO make independent from web; push web-logic to subclass (AbstractWebController) with default 8000
     @SetFromFlag("port")
     /** port where this controller should live */
-    public static final PortAttributeSensorAndConfigKey PROXY_HTTP_PORT = [ "proxy.http.port", "HTTP port", [8000,"8001+"] ];
+    public static final PortAttributeSensorAndConfigKey PROXY_HTTP_PORT = new PortAttributeSensorAndConfigKey(
+            "proxy.http.port", "HTTP port", [8000,"8001+"]);
     
     @SetFromFlag("protocol")
-    public static final BasicAttributeSensorAndConfigKey<String> PROTOCOL = [ String, "proxy.protocol", "Protocol", "http" ];
+    public static final BasicAttributeSensorAndConfigKey<String> PROTOCOL = new BasicAttributeSensorAndConfigKey<String>(
+            String.class, "proxy.protocol", "Protocol", "http");
     
     //does this have special meaning to nginx/others? or should we just take the hostname ?
     public static final String ANONYMOUS = "anonymous";
     
     @SetFromFlag("domain")
-    public static final BasicAttributeSensorAndConfigKey<String> DOMAIN_NAME = [ String, "proxy.domainName", "Domain name", ANONYMOUS ];
+    public static final BasicAttributeSensorAndConfigKey<String> DOMAIN_NAME = new BasicAttributeSensorAndConfigKey<String>(
+            String.class, "proxy.domainName", "Domain name", ANONYMOUS);
+        
     @SetFromFlag("url")
-    public static final BasicAttributeSensorAndConfigKey<String> SPECIFIED_URL = [ String, "proxy.url", "URL this proxy controller responds to" ];
+    public static final BasicAttributeSensorAndConfigKey<String> SPECIFIED_URL = new BasicAttributeSensorAndConfigKey<String>(
+            String.class, "proxy.url", "URL this proxy controller responds to");
     
-    public static final BasicAttributeSensor<Set> TARGETS = [ Set, "proxy.targets", "Downstream targets" ];
+    public static final BasicAttributeSensor<Set> TARGETS = new BasicAttributeSensor<Set>(
+            Set.class, "proxy.targets", "Downstream targets");
     
     @SetFromFlag
-    Cluster cluster
+    Cluster cluster;
     
     String domain;
     int port;
@@ -78,28 +85,28 @@ public abstract class AbstractController extends SoftwareProcessEntity {
 
         // FIXME shouldn't have these as vars and config keys; just use a getter method
         // TODO needs to be discovered/obtained
-        port = getConfig(PROXY_HTTP_PORT)?.iterator()?.next() ?: 8000
-        protocol = getConfig(PROTOCOL)
-        domain = getConfig(DOMAIN_NAME)
+        port = getConfig(PROXY_HTTP_PORT)?.iterator()?.next() ?: 8000;
+        protocol = getConfig(PROTOCOL);
+        domain = getConfig(DOMAIN_NAME);
 
         if (getConfig(SPECIFIED_URL)) {
-	        url = getConfig(SPECIFIED_URL)
-	        setAttribute(SPECIFIED_URL, url)
+	        url = getConfig(SPECIFIED_URL);
+	        setAttribute(SPECIFIED_URL, url);
 
             // Set attributes from URL
             URI uri = new URI(url)
-            if (port==null) port = uri.port; else assert port==uri.port : "mismatch between port and uri $url for $this"
-            if (protocol==null) protocol = uri.scheme; else assert protocol==uri.scheme : "mismatch between port and uri $url for $this"
-            if (domain==null) domain = uri.host; else assert domain==uri.host : "mismatch between domain and uri $url for $this"
+            if (port==null) port = uri.port; else assert port==uri.port : "mismatch between port and uri "+url+" for "+this;
+            if (protocol==null) protocol = uri.scheme; else assert protocol==uri.scheme : "mismatch between port and uri "+url+" for "+this;
+            if (domain==null) domain = uri.host; else assert domain==uri.host : "mismatch between domain and uri "+url+" for "+this;
         } else {
             // Set attributes from properties or config with defaults
             makeUrl();
         }
-        setAttribute(PROXY_HTTP_PORT, port)
-        setAttribute(PROTOCOL, protocol)
-        setAttribute(DOMAIN_NAME, domain)
+        setAttribute(PROXY_HTTP_PORT, port);
+        setAttribute(PROTOCOL, protocol);
+        setAttribute(DOMAIN_NAME, domain);
         
-        Preconditions.checkNotNull(domain, "Domain must be set for controller")
+        Preconditions.checkNotNull(domain, "Domain must be set for controller");
 
         policy = new AbstractMembershipTrackingPolicy(name: "Controller targets tracker") {
             protected void onEntityChange(Entity member) { checkEntity(member); }
@@ -114,7 +121,7 @@ public abstract class AbstractController extends SoftwareProcessEntity {
             // use 'hostname' instead of domain if domain is anonymous
             if (hostname==null || hostname==ANONYMOUS) hostname = getAttribute(HOSTNAME);
             if (hostname==null) hostname = ANONYMOUS;
-            url = "${protocol}://${hostname}:${port}/";
+            url = protocol+"://"+hostname+":"+port+"/";
             setAttribute(SPECIFIED_URL, url)
         }
     }
@@ -124,14 +131,14 @@ public abstract class AbstractController extends SoftwareProcessEntity {
      * Can pass in the 'cluster'.
      */
     public void bind(Map flags) {
-        this.cluster = flags.cluster ?: this.cluster
+        this.cluster = flags.cluster ?: this.cluster;
     }
 
     @Override
     protected Collection<Integer> getRequiredOpenPorts() {
-        Collection<Integer> result = super.getRequiredOpenPorts()
-        if (getAttribute(PROXY_HTTP_PORT)) result.add(getAttribute(PROXY_HTTP_PORT))
-        return result
+        Collection<Integer> result = super.getRequiredOpenPorts();
+        if (getAttribute(PROXY_HTTP_PORT)) result.add(getAttribute(PROXY_HTTP_PORT));
+        return result;
     }
 
     public void checkEntity(Entity member) {
@@ -143,43 +150,44 @@ public abstract class AbstractController extends SoftwareProcessEntity {
     
     public boolean belongs(Entity member) {
         if (!member.getAttribute(Startable.SERVICE_UP)) {
-            LOG.debug("Members of $displayName, checking ${member.displayName}, eliminating because not up")
+            LOG.debug("Members of {}, checking {}, eliminating because not up", displayName, member.displayName);
             return false;
         }
         if (!cluster.members.contains(member)) {
-            LOG.debug("Members of $displayName, checking ${member.displayName}, eliminating because not member")
+            LOG.debug("Members of {}, checking {}, eliminating because not member", displayName, member.displayName);
             return false;
         }
-        LOG.debug("Members of $displayName, checking ${member.displayName}, approving")
+        LOG.debug("Members of {}, checking {}, approving", displayName, member.displayName);
         return true;
     }
     
     //FIXME members locations might be remote?
     public synchronized void addEntity(Entity member) {
-        if (LOG.isTraceEnabled()) LOG.trace("Considering to add to $displayName, new member ${member.displayName} in locations ${member.locations} - waiting for service to be up")
+        if (LOG.isTraceEnabled()) LOG.trace("Considering to add to {}, new member {} in locations {} - "+
+                "waiting for service to be up", displayName, member.displayName, member.locations);
         if (targets.contains(member)) return;
         
         if (!member.getAttribute(Startable.SERVICE_UP)) {
-            LOG.debug("Members of $displayName, not adding ${member.displayName} because not yet up")
+            LOG.debug("Members of {}, not adding {} because not yet up", displayName, member.displayName);
             return;
         }
         
-        Set oldAddresses = new LinkedHashSet(addresses)
-        member.locations.each { MachineLocation machine ->
+        Set oldAddresses = new LinkedHashSet(addresses);
+        for (MachineLocation machine : member.locations) {
             //use hostname as this is more portable (eg in amazon, ip doesn't resolve)
-            String ip = machine.address.hostName
-            Integer port = member.getAttribute(portNumber)
+            String ip = machine.address.hostName;
+            Integer port = member.getAttribute(portNumber);
             if (ip==null || port==null) {
-                LOG.warn("Missing ip/port for web controller $this target $member, skipping");
+                LOG.warn("Missing ip/port for web controller {} target {}, skipping", this, member);
             } else {
-                addresses.add("${ip}:${port}");
+                addresses.add(ip+":"+port);
             }
         }
         if (addresses==oldAddresses) {
             if (LOG.isTraceEnabled()) LOG.trace("invocation of {}.addEntity({}) causes no change", this, member);
             return;
         }
-        LOG.info("Adding to $displayName, new member ${member.displayName} in locations ${member.locations}")
+        LOG.info("Adding to {}, new member {} in locations {}", displayName, member.displayName, member.locations);
         
         // TODO shouldn't need to do this here? (no harm though)
         makeUrl();
@@ -191,19 +199,19 @@ public abstract class AbstractController extends SoftwareProcessEntity {
     public synchronized void removeEntity(Entity member) {
         if (!targets.contains(member)) return;
         
-        Set oldAddresses = new LinkedHashSet(addresses)
-        member.locations.each { MachineLocation machine ->
-            String ip = machine.address.hostAddress
-            int port = member.getAttribute(portNumber)
-            addresses.remove("${ip}:${port}")
+        Set oldAddresses = new LinkedHashSet(addresses);
+        for (MachineLocation machine : member.locations) {
+            String ip = machine.address.hostAddress;
+            int port = member.getAttribute(portNumber);
+            addresses.remove(ip+":"+port);
         }
         if (addresses==oldAddresses) {
-            LOG.debug("when removing from $displayName, member ${member.displayName}, not found (already removed?)")
+            LOG.debug("when removing from {}, member {}, not found (already removed?)", displayName, member.displayName);
             return;
         }
         
-        LOG.info("Removing from $displayName, member ${member.displayName} previously in locations ${member.locations}")
-        update()
+        LOG.info("Removing from {}, member {} previously in locations {}", displayName, member.displayName, member.locations);
+        update();
         targets.remove(member);
     }
     
@@ -211,10 +219,10 @@ public abstract class AbstractController extends SoftwareProcessEntity {
     boolean updateNeeded = true;
     
     public void start(Collection<? extends Location> locations) {
-        LOG.info("adding policy to {}", this)
-        addPolicy(policy)
-        reset()
-        super.start(locations)
+        LOG.info("adding policy to {}", this);
+        addPolicy(policy);
+        reset();
+        super.start(locations);
         isActive = true;
         update();
     }
@@ -226,26 +234,26 @@ public abstract class AbstractController extends SoftwareProcessEntity {
         if (!isActive) updateNeeded = true;
         else {
             updateNeeded = false;
-            LOG.info("updating {}", this)
-            reconfigureService()
-            LOG.debug("submitting restart for update to {}", this)
+            LOG.info("updating {}", this);
+            reconfigureService();
+            LOG.debug("submitting restart for update to {}", this);
             invoke(RESTART);
         }
         setAttribute(TARGETS, addresses);
     }
 
     public void reset() {
-        policy.reset()
-        addresses.clear()
-        policy.setGroup(cluster)
+        policy.reset();
+        addresses.clear();
+        policy.setGroup(cluster);
         setAttribute(TARGETS, addresses);
     }
 
 	
 	protected void preStop() {
-		super.preStop()
-        policy.reset()
-        addresses.clear()
+		super.preStop();
+        policy.reset();
+        addresses.clear();
         setAttribute(TARGETS, addresses);
     }
 }

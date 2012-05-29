@@ -3,6 +3,9 @@ package brooklyn.util;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 
+import com.google.common.base.Function
+import com.google.common.base.Predicate
+
 /** handy methods available in groovy packaged so they can be consumed from java,
  *  and other conversion/conveniences; but see JavaGroovyEquivalents for faster alternatives */
 public class GroovyJavaMethods {
@@ -28,6 +31,14 @@ public class GroovyJavaMethods {
         return (job in Callable) ? callableFromClosure(job) : Executors.callable(job);
     }
 
+    public static <K,T> Function<K,T> functionFromClosure(final Closure<T> job) {
+        return job as Function;
+    }
+
+    public static <T> Predicate<T> predicateFromClosure(final Closure<Boolean> job) {
+        return job as Predicate;
+    }
+    
     public static boolean truth(Object o) {
         if (o) return true;
         return false;
@@ -35,6 +46,14 @@ public class GroovyJavaMethods {
 
     public static <T> T elvis(Object preferred, Object fallback) {
         return fix(preferred ?: fallback);
+    }
+    
+    public static <T> T elvis(Object... preferences) {
+        if (preferences.length == 0) throw new IllegalArgumentException("preferences must not be empty for elvis");
+        for (Object contender : preferences) {
+            if (contender) return fix(contender);
+        }
+        return fix(preferences[preferences.size()-1]);
     }
     
     public static <T> T fix(Object o) {

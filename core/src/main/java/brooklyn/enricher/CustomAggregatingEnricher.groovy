@@ -103,11 +103,16 @@ public class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<
             Map<String,?> flags=[:], Sensor<S> source, AttributeSensor<T> target, Function<List<S>, T> aggregator, T defaultVal=null) {
         return new CustomAggregatingEnricher<S,T>(flags, source, target, aggregator, defaultVal)
     }
-            
-    public static <N extends Number> CustomAggregatingEnricher<N,N> newSummingEnricher(
-            Map<String,?> flags=[:], Sensor<N> source, AttributeSensor<N> target) {
-        return new CustomAggregatingEnricher<N,N>(flags, source, target, { it?.sum(0, {it ?: 0}) ?: 0 }, 0)
+
+    public static CustomAggregatingEnricher newSummingEnricher(
+            Map<String,?> flags=[:], Sensor source, AttributeSensor target) {
+        return new CustomAggregatingEnricher(flags, source, target, { it?.sum(0, {it ?: 0}) ?: 0 }, 0)
     }
+    
+//    public static <N extends Number> CustomAggregatingEnricher<N,N> newSummingEnricher(
+//            Map<String,?> flags=[:], Sensor<N> source, AttributeSensor<N> target) {
+//        return new CustomAggregatingEnricher<N,N>(flags, source, target, { it?.sum(0, {it ?: 0}) ?: 0 }, 0)
+//    }
 
     /**
      * @deprecated will be deleted in 0.5. Use newAveragingEnricher(source, target, producers:producer, allMembers:true)

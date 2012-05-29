@@ -1,4 +1,4 @@
-package brooklyn.enricher
+package brooklyn.enricher;
 
 import brooklyn.enricher.basic.AbstractTransformingEnricher;
 import brooklyn.entity.Entity
@@ -11,32 +11,32 @@ import brooklyn.event.AttributeSensor
 * such as latency or CPU time
 */
 class RollingMeanEnricher<T extends Number> extends AbstractTransformingEnricher<T> {
-    private LinkedList<T> values = new LinkedList<T>()
+    private LinkedList<T> values = new LinkedList<T>();
     
     int windowSize
     
     public RollingMeanEnricher(Entity producer, AttributeSensor<T> source, AttributeSensor<Double> target,
             int windowSize) {
-        super(producer, source, target)
-        this.windowSize = windowSize
+        super(producer, source, target);
+        this.windowSize = windowSize;
     }
     
     /** @returns null when no data has been received or windowSize is 0 */
     public Double getAverage() {
-        pruneValues()
-        return values.size() == 0 ? null : values.sum() / values.size()
+        pruneValues();
+        return values.size() == 0 ? null : values.sum() / values.size();
     }
     
     @Override
     public void onEvent(SensorEvent<T> event) {
-        values.addLast(event.getValue())
-        pruneValues()
-        entity.setAttribute(target, getAverage())
+        values.addLast(event.getValue());
+        pruneValues();
+        entity.setAttribute(target, getAverage());
     }
     
     private void pruneValues() {
         while(windowSize > -1 && values.size() > windowSize) {
-            values.removeFirst()
+            values.removeFirst();
         }
     }
 }

@@ -26,173 +26,173 @@ import brooklyn.event.basic.BasicNotificationSensor
  */
 public class BalanceableWorkerPool extends AbstractEntity implements Resizable {
 
-    private static final Logger LOG = LoggerFactory.getLogger(BalanceableWorkerPool.class)
+    private static final Logger LOG = LoggerFactory.getLogger(BalanceableWorkerPool.class);
     
     /** Encapsulates an item and a container; emitted for <code>ITEM_ADDED</code>, <code>ITEM_REMOVED</code> and
      * <code>ITEM_MOVED</code> sensors.
      */
     public static class ContainerItemPair implements Serializable {
         private static final long serialVersionUID = 1L;
-        public final Entity container
-        public final Entity item
+        public final Entity container;
+        public final Entity item;
         
         public ContainerItemPair(Entity container, Entity item) {
-            this.container = container
-            this.item = checkNotNull(item)
+            this.container = container;
+            this.item = checkNotNull(item);
         }
         
         @Override
         public String toString() {
-            return "$item @ $container"
+            return item+" @ "+container;
         }
     }
     
     // Pool constituent notifications.
     public static BasicNotificationSensor<Entity> CONTAINER_ADDED = new BasicNotificationSensor<Entity>(
-        Entity.class, "balanceablepool.container.added", "Container added to balanceable pool")
+        Entity.class, "balanceablepool.container.added", "Container added to balanceable pool");
     public static BasicNotificationSensor<Entity> CONTAINER_REMOVED = new BasicNotificationSensor<Entity>(
-        Entity.class, "balanceablepool.container.removed", "Container removed from balanceable pool")
+        Entity.class, "balanceablepool.container.removed", "Container removed from balanceable pool");
     public static BasicNotificationSensor<ContainerItemPair> ITEM_ADDED = new BasicNotificationSensor<ContainerItemPair>(
-        ContainerItemPair.class, "balanceablepool.item.added", "Item added to balanceable pool")
+        ContainerItemPair.class, "balanceablepool.item.added", "Item added to balanceable pool");
     public static BasicNotificationSensor<ContainerItemPair> ITEM_REMOVED = new BasicNotificationSensor<ContainerItemPair>(
-        ContainerItemPair.class, "balanceablepool.item.removed", "Item removed from balanceable pool")
+        ContainerItemPair.class, "balanceablepool.item.removed", "Item removed from balanceable pool");
     public static BasicNotificationSensor<ContainerItemPair> ITEM_MOVED = new BasicNotificationSensor<ContainerItemPair>(
-        ContainerItemPair.class, "balanceablepool.item.moved", "Item moved in balanceable pool to the given container")
+        ContainerItemPair.class, "balanceablepool.item.moved", "Item moved in balanceable pool to the given container");
     
-    private Group containerGroup
-    private Group itemGroup
-    private Resizable resizable
+    private Group containerGroup;
+    private Group itemGroup;
+    private Resizable resizable;
     
-    private final Set<Entity> containers = Collections.synchronizedSet(new HashSet<Entity>())
-    private final Set<Entity> items = Collections.synchronizedSet(new HashSet<Entity>())
+    private final Set<Entity> containers = Collections.synchronizedSet(new HashSet<Entity>());
+    private final Set<Entity> items = Collections.synchronizedSet(new HashSet<Entity>());
     
     private final SensorEventListener<?> eventHandler = new SensorEventListener<Object>() {
         @Override
         public void onEvent(SensorEvent<Object> event) {
-            if (LOG.isTraceEnabled()) LOG.trace("{} received event {}", BalanceableWorkerPool.this, event)
-            Entity source = event.getSource()
-            Object value = event.getValue()
-            Sensor sensor = event.getSensor()
+            if (LOG.isTraceEnabled()) LOG.trace("{} received event {}", BalanceableWorkerPool.this, event);
+            Entity source = event.getSource();
+            Object value = event.getValue();
+            Sensor sensor = event.getSensor();
             
             switch (sensor) {
                 case AbstractGroup.MEMBER_ADDED:
                     if (source.equals(containerGroup)) {
-                        onContainerAdded((Entity) value)
+                        onContainerAdded((Entity) value);
                     } else if (source.equals(itemGroup)) {
-                        onItemAdded((Entity)value)
+                        onItemAdded((Entity)value);
                     } else {
-                        throw new IllegalStateException()
+                        throw new IllegalStateException("unexpected event source="+source);
                     }
                     break
                 case AbstractGroup.MEMBER_REMOVED:
                     if (source.equals(containerGroup)) {
-                        onContainerRemoved((Entity) value)
+                        onContainerRemoved((Entity) value);
                     } else if (source.equals(itemGroup)) {
-                        onItemRemoved((Entity) value)
+                        onItemRemoved((Entity) value);
                     } else {
-                        throw new IllegalStateException()
+                        throw new IllegalStateException("unexpected event source="+source);
                     }
-                    break
+                    break;
                 case Startable.SERVICE_UP:
                     // TODO What if start has failed? Is there a sensor to indicate that?
                     if ((Boolean)value) {
-                        onContainerUp((Entity) source)
+                        onContainerUp((Entity) source);
                     } else {
-                        onContainerDown((Entity) source)
+                        onContainerDown((Entity) source);
                     }
-                    break
+                    break;
                 case Movable.CONTAINER:
-                    onItemMoved(source, (Entity) value)
-                    break
+                    onItemMoved(source, (Entity) value);
+                    break;
                 default:
-                    throw new IllegalStateException("Unhandled event type $sensor: $event")
+                    throw new IllegalStateException("Unhandled event type "+sensor+": "+event);
             }
         }
     }
     
     public BalanceableWorkerPool(Map properties = [:], Entity owner = null) {
-        super(properties, owner)
+        super(properties, owner);
     }
 
     public void setResizable(Resizable resizable) {
-        this.resizable = resizable
+        this.resizable = resizable;
     }
     
     public void setContents(Group containerGroup, Group itemGroup) {
-        this.containerGroup = containerGroup
-        this.itemGroup = itemGroup
-        if (resizable == null && containerGroup instanceof Resizable) resizable = (Resizable) containerGroup
+        this.containerGroup = containerGroup;
+        this.itemGroup = itemGroup;
+        if (resizable == null && containerGroup instanceof Resizable) resizable = (Resizable) containerGroup;
         
-        subscribe(containerGroup, AbstractGroup.MEMBER_ADDED, eventHandler)
-        subscribe(containerGroup, AbstractGroup.MEMBER_REMOVED, eventHandler)
-        subscribe(itemGroup, AbstractGroup.MEMBER_ADDED, eventHandler)
-        subscribe(itemGroup, AbstractGroup.MEMBER_REMOVED, eventHandler)
+        subscribe(containerGroup, AbstractGroup.MEMBER_ADDED, eventHandler);
+        subscribe(containerGroup, AbstractGroup.MEMBER_REMOVED, eventHandler);
+        subscribe(itemGroup, AbstractGroup.MEMBER_ADDED, eventHandler);
+        subscribe(itemGroup, AbstractGroup.MEMBER_REMOVED, eventHandler);
         
         // Process extant containers and items
         for (Entity existingContainer : containerGroup.getMembers()) {
-            onContainerAdded(existingContainer)
+            onContainerAdded(existingContainer);
         }
         for (Entity existingItem : itemGroup.getMembers()) {
-            onItemAdded((Entity)existingItem)
+            onItemAdded((Entity)existingItem);
         }
     }
     
     public Group getContainerGroup() {
-        return containerGroup
+        return containerGroup;
     }
     
     public Group getItemGroup() {
-        return itemGroup
+        return itemGroup;
     }
 
     // methods inherited from Resizable
-    public Integer getCurrentSize() { return containerGroup.getCurrentSize() }
+    public Integer getCurrentSize() { return containerGroup.getCurrentSize(); }
     
     public Integer resize(Integer desiredSize) {
-        if (resizable != null) return resizable.resize(desiredSize)
+        if (resizable != null) return resizable.resize(desiredSize);
         
-        throw new UnsupportedOperationException("Container group is not resizable, and no resizable supplied: $containerGroup of type "+(containerGroup?.getClass().getCanonicalName()))
+        throw new UnsupportedOperationException("Container group is not resizable, and no resizable supplied: "+containerGroup+" of type "+(containerGroup?.getClass().getCanonicalName()));
     }
     
     private void onContainerAdded(Entity newContainer) {
-        subscribe(newContainer, Startable.SERVICE_UP, eventHandler)
+        subscribe(newContainer, Startable.SERVICE_UP, eventHandler);
         if (!(newContainer instanceof Startable) || newContainer.getAttribute(Startable.SERVICE_UP)) {
-            onContainerUp(newContainer)
+            onContainerUp(newContainer);
         }
     }
     
     private void onContainerUp(Entity newContainer) {
         if (containers.add(newContainer)) {
-            emit(CONTAINER_ADDED, newContainer)
+            emit(CONTAINER_ADDED, newContainer);
         }
     }
     
     private void onContainerDown(Entity oldContainer) {
         if (containers.remove(oldContainer)) {
-            emit(CONTAINER_REMOVED, oldContainer)
+            emit(CONTAINER_REMOVED, oldContainer);
         }
     }
     
     private void onContainerRemoved(Entity oldContainer) {
-        unsubscribe(oldContainer)
-        onContainerDown(oldContainer)
+        unsubscribe(oldContainer);
+        onContainerDown(oldContainer);
     }
     
     private void onItemAdded(Entity item) {
         if (items.add(item)) {
-            subscribe(item, Movable.CONTAINER, eventHandler)
-            emit(ITEM_ADDED, new ContainerItemPair(item.getAttribute(Movable.CONTAINER), item))
+            subscribe(item, Movable.CONTAINER, eventHandler);
+            emit(ITEM_ADDED, new ContainerItemPair(item.getAttribute(Movable.CONTAINER), item));
         }
     }
     
     private void onItemRemoved(Entity item) {
         if (items.remove(item)) {
-            unsubscribe(item)
-            emit(ITEM_REMOVED, new ContainerItemPair(null, item))
+            unsubscribe(item);
+            emit(ITEM_REMOVED, new ContainerItemPair(null, item));
         }
     }
     
     private void onItemMoved(Entity item, Entity container) {
-        emit(ITEM_MOVED, new ContainerItemPair(container, item))
+        emit(ITEM_MOVED, new ContainerItemPair(container, item));
     }
 }

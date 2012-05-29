@@ -31,84 +31,84 @@ public class ItemsInContainersGroup extends DynamicGroup {
 
     // TODO Inefficient: will not scale to many 1000s of items
 
-    private static final Logger LOG = LoggerFactory.getLogger(ItemsInContainersGroup)
+    private static final Logger LOG = LoggerFactory.getLogger(ItemsInContainersGroup);
     
     // FIXME Can't set default value in fiel declaration, because super sets it before this class initializes the field values!
     @SetFromFlag
-    Predicate<Entity> itemFilter
+    Predicate<Entity> itemFilter;
 
-    private Group containerGroup
+    private Group containerGroup;
     
     private final SensorEventListener<?> eventHandler = new SensorEventListener<Object>() {
         @Override
         public void onEvent(SensorEvent<Object> event) {
-            Entity source = event.getSource()
-            Object value = event.getValue()
-            Sensor sensor = event.getSensor()
+            Entity source = event.getSource();
+            Object value = event.getValue();
+            Sensor sensor = event.getSensor();
             
             switch (sensor) {
                 case AbstractGroup.MEMBER_ADDED:
-                    onContainerAdded((Entity) value)
-                    break
+                    onContainerAdded((Entity) value);
+                    break;
                 case AbstractGroup.MEMBER_REMOVED:
-                    onContainerRemoved((Entity) value)
-                    break
+                    onContainerRemoved((Entity) value);
+                    break;
                 case Movable.CONTAINER:
-                    onItemMoved(source, (Entity) value)
-                    break
+                    onItemMoved(source, (Entity) value);
+                    break;
                 default:
-                    throw new IllegalStateException("Unhandled event type $sensor: $event")
+                    throw new IllegalStateException("Unhandled event type "+sensor+": "+event);
             }
         }
     }
     
     public ItemsInContainersGroup(Map props = [:], Entity owner = null) {
-        super(props, owner)
-        setEntityFilter( {Entity e -> return acceptsEntity(e) } )
-        if (itemFilter == null) itemFilter = {true} as Predicate<Entity>
+        super(props, owner);
+        setEntityFilter( {Entity e -> return acceptsEntity(e) } );
+        if (itemFilter == null) itemFilter = {true} as Predicate<Entity>;
     }
 
     boolean acceptsEntity(Entity e) {
         if (e instanceof Movable) {
-            return acceptsItem((Movable)e, ((Movable)e).getAttribute(Movable.CONTAINER))
+            return acceptsItem((Movable)e, ((Movable)e).getAttribute(Movable.CONTAINER));
         }
-        return false
+        return false;
     }
 
     boolean acceptsItem(Movable e, BalanceableContainer c) {
-        return (containerGroup != null && c != null) ? itemFilter.apply(e) && containerGroup.hasMember((Entity)c) : false
+        return (containerGroup != null && c != null) ? itemFilter.apply(e) && containerGroup.hasMember((Entity)c) : false;
     }
 
     public void setContainers(Group containerGroup) {
-        this.containerGroup = containerGroup
-        subscribe(containerGroup, AbstractGroup.MEMBER_ADDED, eventHandler)
-        subscribe(containerGroup, AbstractGroup.MEMBER_REMOVED, eventHandler)
-        subscribe(null, Movable.CONTAINER, eventHandler)
+        this.containerGroup = containerGroup;
+        subscribe(containerGroup, AbstractGroup.MEMBER_ADDED, eventHandler);
+        subscribe(containerGroup, AbstractGroup.MEMBER_REMOVED, eventHandler);
+        subscribe(null, Movable.CONTAINER, eventHandler);
         
-        if (LOG.isTraceEnabled()) LOG.trace("{} scanning entities on container group set", this)
-        rescanEntities()
+        if (LOG.isTraceEnabled()) LOG.trace("{} scanning entities on container group set", this);
+        rescanEntities();
     }
     
     private void onContainerAdded(Entity newContainer) {
-        if (LOG.isTraceEnabled()) LOG.trace("{} rescanning entities on container {} added", this, newContainer)
-        rescanEntities()
+        if (LOG.isTraceEnabled()) LOG.trace("{} rescanning entities on container {} added", this, newContainer);
+        rescanEntities();
     }
     
     private void onContainerRemoved(Entity oldContainer) {
-        if (LOG.isTraceEnabled()) LOG.trace("{} rescanning entities on container {} removed", this, oldContainer)
-        rescanEntities()
+        if (LOG.isTraceEnabled()) LOG.trace("{} rescanning entities on container {} removed", this, oldContainer);
+        rescanEntities();
     }
     
     protected void onEntityAdded(Entity item) {
         if (acceptsEntity(item)) {
-            if (LOG.isDebugEnabled()) LOG.debug("{} adding new item {}", this, item)
-            addMember(item)
+            if (LOG.isDebugEnabled()) LOG.debug("{} adding new item {}", this, item);
+            addMember(item);
         }
     }
     
     protected void onEntityRemoved(Entity item) {
         if (removeMember(item)) {
-            if (LOG.isDebugEnabled()) LOG.debug("{} removing deleted item {}", this, item)
+            if (LOG.isDebugEnabled()) LOG.debug("{} removing deleted item {}", this, item);
         }
     }
     
