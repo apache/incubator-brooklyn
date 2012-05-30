@@ -30,6 +30,10 @@ public class GroovyJavaMethods {
         return { it -> return job.apply(it); };
     }
 
+    public static Closure closureFromFunction(final Function f) {
+        return { it -> return f.apply(it); };
+    }
+
     public static <T> Callable<T> callableFromClosure(final Closure<T> job) {
         return job as Callable;
     }

@@ -21,7 +21,7 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity;
 
-public class HttpSensorAdapterIntegrationJavaTest {
+public class HttpSensorAdapterIntegrationTest {
 
 	final static BasicAttributeSensor<String> SENSOR_STRING = new BasicAttributeSensor<String>(String.class, "aString", "");
 	final static BasicAttributeSensor<Integer> SENSOR_INT = new BasicAttributeSensor<Integer>(Integer.class, "aLong", "");

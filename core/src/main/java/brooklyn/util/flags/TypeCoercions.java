@@ -2,6 +2,7 @@ package brooklyn.util.flags;
 
 import groovy.lang.Closure;
 import groovy.time.TimeDuration;
+import groovy.time.Duration;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -397,6 +398,12 @@ public class TypeCoercions {
             @Override
             public TimeDuration apply(final Object input) {
                 return JavaGroovyEquivalents.toTimeDuration(input);
+            }
+        });
+        registerAdapter(Duration.class, Long.class, new Function<Duration,Long>() {
+            @Override
+            public Long apply(final Duration duration) {
+                return duration.toMilliseconds();
             }
         });
         registerAdapter(Integer.class, AtomicLong.class, new Function<Integer,AtomicLong>() {

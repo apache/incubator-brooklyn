@@ -86,6 +86,13 @@
             <artifactId>vcloud</artifactId>
             <version>${jclouds.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>${httpclient.version}</version>
+        </dependency>
+        
         <dependency>
             <groupId>org.jclouds.api</groupId>
             <artifactId>openstack-nova</artifactId>
