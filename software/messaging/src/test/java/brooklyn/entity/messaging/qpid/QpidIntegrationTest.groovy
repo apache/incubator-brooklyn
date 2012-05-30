@@ -40,6 +40,8 @@ public class QpidIntegrationTest {
 
     @BeforeMethod(groups = "Integration")
     public void setup() {
+        String workingDir = System.getProperty("user.dir");
+        println workingDir
         app = new TestApplication();
         testLocation = new LocalhostMachineProvisioningLocation()
     }
@@ -67,8 +69,18 @@ public class QpidIntegrationTest {
      */
     @Test(groups = "Integration")
     public void canStartupAndShutdownWithPlugin() {
-        Map qpidRuntimeFiles = [ ('lib/plugins/sample-plugin.jar'):new File('software/messaging/src/test/resources/qpid-test-plugin.jar'),
-                                 ('etc/config.xml'):new File('software/messaging/src/test/resources/qpid-test-config.xml') ]
+        Map qpidRuntimeFiles;
+        String pluginjar = "src/test/resources/qpid-test-plugin.jar";
+        String configfile = "src/test/resources/qpid-test-config.xml";
+        if (new File(pluginjar).isFile()) {
+           qpidRuntimeFiles = [
+                   ('lib/plugins/sample-plugin.jar'):new File(pluginjar),
+                    ('etc/config.xml'):new File(configfile) ]
+        } else {
+           qpidRuntimeFiles = [
+                   ('lib/plugins/sample-plugin.jar'):new File('software/messaging/'+pluginjar),
+                   ('etc/config.xml'):new File('software/messaging/'+configfile) ]
+        }
         qpid = new QpidBroker(owner:app, runtimeFiles:qpidRuntimeFiles);
         qpid.start([ testLocation ])
         //TODO assert the files/plugins were installed?
