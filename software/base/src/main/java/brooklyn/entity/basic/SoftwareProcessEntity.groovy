@@ -288,19 +288,25 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 	}
 
 	public void stop() {
+	    // TODO There is a race where we set SERVICE_UP=false while sensor-adapter threads may still be polling.
+        // The other thread might reset SERVICE_UP to true immediately after we set it to false here.
+        // Deactivating adapters before setting SERVICE_UP reduces the race, and it is reduced further by setting
+        // SERVICE_UP to false at the end of stop as well.
+        
         if (getAttribute(SERVICE_STATE)==Lifecycle.STOPPED) {
             log.warn("Skipping stop of software process entity "+this+" when already stopped");
             return;
         }
         log.info("Stopping software process entity "+this);
 		setAttribute(SERVICE_STATE, Lifecycle.STOPPING)
-        setAttribute(SERVICE_UP, false)
 		if (sensorRegistry!=null) sensorRegistry.deactivateAdapters();
+        setAttribute(SERVICE_UP, false)
 		preStop()
 		MachineLocation machine = removeFirstMatchingLocation({ it in MachineLocation })
 		if (machine) {
 			stopInLocation(machine)
 		}
+        setAttribute(SERVICE_UP, false)
 		setAttribute(SERVICE_STATE, Lifecycle.STOPPED)
         if (log.isDebugEnabled()) log.debug("Stopped software process entity "+this);
 	}
