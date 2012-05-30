@@ -180,14 +180,14 @@ public class Main {
             
             if(stopOnKeyPress){
             	// Wait for the user to type a key
-            	System.out.println("Application started. Press return to stop.");
+            	log.info("Application started. Press return to stop.");
             	System.in.read();
             	application.stop();
+            } else {
+                // Block forever so that Brooklyn doesn't exit (until someone does cntrl-c or kill)
+                log.info("Launched application; now blocking to wait for cntrl-c or kill");
+                waitUntilInterrupted();
             }
-	        
-            // Block forever so that Brooklyn doesn't exit (until someone does cntrl-c or kill)
-            log.info("Launched application; now blocking to wait for cntrl-c or kill");
-            waitUntilInterrupted();
             return null;
         }
 
