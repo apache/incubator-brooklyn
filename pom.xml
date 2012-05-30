@@ -107,6 +107,7 @@
         <reflections.version>0.9.8</reflections.version>
         <jetty.version>8.1.4.v20120524</jetty.version>
         <git-like-cli.version>0.3</git-like-cli.version>
+        <mockwebserver.version>20120401</mockwebserver.version>
 
         <includedTestGroups />
         <excludedTestGroups>Integration,Live,WIP</excludedTestGroups>
