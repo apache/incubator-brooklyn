@@ -15,11 +15,6 @@
         <relativePath>../../../pom.xml</relativePath>
     </parent>
 
-    <properties>
-        <!-- need 0.8.0 to get guava 11, because 0.7 uses guava 10 which is incompatible -->
-        <whirr.version>0.8.0-SNAPSHOT</whirr.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>io.brooklyn</groupId>
