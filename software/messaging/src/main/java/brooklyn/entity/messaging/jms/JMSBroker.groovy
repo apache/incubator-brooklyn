@@ -1,22 +1,24 @@
 package brooklyn.entity.messaging.jms
 
-import groovy.lang.MetaClass
 
 import java.util.Collection
 import java.util.Map
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory
+
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
-import brooklyn.entity.basic.Lifecycle
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.messaging.MessageBroker
 import brooklyn.entity.messaging.Queue
 import brooklyn.entity.messaging.Topic
-import brooklyn.event.adapter.SensorRegistry
 
 import com.google.common.base.Preconditions
 
 public abstract class JMSBroker<Q extends JMSDestination & Queue, T extends JMSDestination & Topic> extends SoftwareProcessEntity implements MessageBroker {
+    private static final Logger log = LoggerFactory.getLogger(JMSBroker.class)
+    
     Collection<String> queueNames;
     Collection<String> topicNames;
     Map<String, Q> queues = [:];
@@ -54,9 +56,25 @@ public abstract class JMSBroker<Q extends JMSDestination & Queue, T extends JMSD
 
     @Override
     public void preStop() {
-        queues.each { String name, JMSDestination queue -> queue.destroy() }
-        topics.each { String name, JMSDestination topic -> topic.destroy() }
-        super.preStop()
+        // If can't delete queues, continue trying to stop.
+        // (e.g. in CI have seen activemq "BrokerStoppedException" thrown in queue.destroy()). 
+        try {
+            queues.each { String name, JMSDestination queue -> queue.destroy() }
+        } catch (InterruptedException e) {
+            throw e;
+        } catch (Exception e) {
+            log.warn("Error deleting queues from broker "+this+"; continuing with stop...", e);
+        }
+        
+        try {
+            topics.each { String name, JMSDestination topic -> topic.destroy() }
+        } catch (InterruptedException e) {
+            throw e;
+        } catch (Exception e) {
+            log.warn("Error deleting topics from broker "+this+"; continuing with stop...", e);
+        }
+        
+        super.preStop();
     }
 	
     /** TODO make this an effector */
