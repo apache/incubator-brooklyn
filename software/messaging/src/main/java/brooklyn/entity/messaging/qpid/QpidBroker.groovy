@@ -175,6 +175,7 @@ public abstract class QpidDestination extends JMSDestination implements AmqpExch
      * Return the AMQP name for the queue.
      */
     public String getQueueName() {
+
         if (getOwner().amqpVersion == AmqpServer.AMQP_0_10) {
 	        return String.format("'%s'/'%s'; { assert: never }", exchangeName, name)
         } else {
