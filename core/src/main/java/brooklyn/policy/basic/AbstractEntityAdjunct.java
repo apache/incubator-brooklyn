@@ -35,8 +35,11 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct {
     private AtomicBoolean destroyed = new AtomicBoolean(false);
 
     public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
     public String getId() { return id; }
-    
+    public void setId(String id) { this.id = id; }
+ 
     public void setEntity(EntityLocal entity) {
         if (destroyed.get()) throw new IllegalStateException("Cannot set entity on a destroyed entity adjunct");
         this.entity = entity;
