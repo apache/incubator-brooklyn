@@ -50,7 +50,7 @@ public abstract class SshBasedAppSetup extends StartStopSshDriver implements Scr
 		manualInstallDir = val
 	}
 	@Override
-	protected String getInstallDir() {
+	public String getInstallDir() {
 		manualInstallDir ?: super.getInstallDir()
 	}
 	

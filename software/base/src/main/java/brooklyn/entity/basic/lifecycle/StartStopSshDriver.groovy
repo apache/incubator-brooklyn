@@ -50,11 +50,11 @@ public abstract class StartStopSshDriver extends AbstractStartStopDriver impleme
         (entity.getClass().getSimpleName() ?: entity.getClass().getName())+
                 (getVersion()!=NO_VERSION_INFO ? separator+getVersion() : "");
     }
-    protected String getInstallDir() {
+    public String getInstallDir() {
         entity.getConfig(SoftwareProcessEntity.SUGGESTED_INSTALL_DIR) ?:
                 DEFAULT_INSTALL_BASEDIR+"/"+getEntityVersionLabel("/")
     }
-    protected String getRunDir() {
+    public String getRunDir() {
         entity.getConfig(SoftwareProcessEntity.SUGGESTED_RUN_DIR) ?:
                 BROOKLYN_HOME_DIR+"/"+"apps"+"/"+entity.application.id+"/"+"entities"+"/"+
                 entityVersionLabel+"_"+entity.id
@@ -106,7 +106,8 @@ public abstract class StartStopSshDriver extends AbstractStartStopDriver impleme
     protected final static String LAUNCHING = "launching";
     protected final static String CHECK_RUNNING = "check-running";
     protected final static String STOPPING = "stopping";
-
+    protected final static String RESTARTING = "restarting";
+    
     public final static String PID_FILENAME = "pid.txt";
 
     /** sets up a script for the given phase, including default wrapper commands
@@ -131,7 +132,7 @@ public abstract class StartStopSshDriver extends AbstractStartStopDriver impleme
                         'date > $INSTALL_DIR/BROOKLYN'
                         )
             }
-            if (phase in [CUSTOMIZING, LAUNCHING, CHECK_RUNNING, STOPPING]) {
+            if (phase in [CUSTOMIZING, LAUNCHING, CHECK_RUNNING, STOPPING, RESTARTING]) {
                 s.header.append(
                         "export RUN_DIR=\"${runDir}\"",
                         'mkdir -p $RUN_DIR',
@@ -142,7 +143,7 @@ public abstract class StartStopSshDriver extends AbstractStartStopDriver impleme
 
         if (phase in [CUSTOMIZING])
             s.skipIfBodyEmpty()
-        if (phase in [CHECK_RUNNING, LAUNCHING, STOPPING])
+        if (phase in [CHECK_RUNNING, LAUNCHING, STOPPING, RESTARTING])
             s.failIfBodyEmpty()
         if (phase in [INSTALLING, LAUNCHING])
             s.failOnNonZeroResultCode()
@@ -171,6 +172,14 @@ public abstract class StartStopSshDriver extends AbstractStartStopDriver impleme
                         'kill -9 $PID',
                         "rm ${pidFile}"
                         )
+                
+            else if (phase in [RESTARTING])
+                s.footer.prepend(
+                        "test -f ${pidFile} || exit 1", //no pid, not running
+                        "ps -p `cat ${pidFile}` || exit 1" //no process; can't restart,
+                        )
+            // 1 is not running
+
             else
                 log.warn("usePidFile script option not valid for "+s.summary)
         }

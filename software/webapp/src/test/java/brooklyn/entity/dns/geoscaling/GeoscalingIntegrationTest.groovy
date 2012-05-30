@@ -14,6 +14,7 @@ import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
+import brooklyn.entity.basic.Attributes
 
 /**
  * {@link GeoscalingScriptGenerator} unit tests.
@@ -35,6 +36,7 @@ class GeoscalingIntegrationTest {
     public void testRoutesToExpectedLocation() {
         AbstractApplication app = new TestApplication()
         TestEntity target = new TestEntity(owner:app)
+        target.setAttribute(Attributes.HOSTNAME,addr.getHostName())
         DynamicGroup group = new DynamicGroup([:], app, { Entity e -> (e instanceof TestEntity) })
         
         GeoscalingDnsService geoDns = new GeoscalingDnsService(displayName: 'Geo-DNS',

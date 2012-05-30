@@ -14,7 +14,9 @@ import org.testng.annotations.Test
 import brooklyn.entity.Application
 import brooklyn.entity.group.DynamicCluster
 import brooklyn.entity.trait.Startable
-import brooklyn.entity.webapp.tomcat.TomcatServer
+import brooklyn.entity.webapp.JavaWebAppService
+import brooklyn.entity.webapp.WebAppService
+import brooklyn.entity.webapp.jboss.JBoss7Server
 import brooklyn.location.MachineLocation
 import brooklyn.location.basic.jclouds.CredentialsFromEnv
 import brooklyn.location.basic.jclouds.JcloudsLocation
@@ -23,7 +25,7 @@ import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.EntityStartUtils
 
 /**
- * Test Nginx proxying a cluster of TomcatServer entities on AWS for ENGR-1689.
+ * Test Nginx proxying a cluster of JBoss7Server entities on AWS for ENGR-1689.
  *
  * This test is a proof-of-concept for the Brooklyn demo application, with each
  * service running on a separate Amazon EC2 instance.
@@ -81,16 +83,16 @@ public class NginxAmazonTest {
 	            securityGroups:[ "everything" ]
             ]
         loc.setTagMapping([
-            "brooklyn.entity.webapp.tomcat.TomcatServer":imageData,
+            "brooklyn.entity.webapp.jboss.JBoss7Server":imageData,
             "brooklyn.entity.proxy.nginx.NginxController":imageData,
         ])
  
-        def template = { Map properties -> new TomcatServer(properties) }
+        def template = { Map properties -> new JBoss7Server(properties) }
         
         cluster = new DynamicCluster(owner:app, factory:template, initialSize:2, httpPort:8080 )
         URL war = getClass().getClassLoader().getResource("swf-booking-mvc.war")
         assertNotNull war, "Unable to locate resource $war"
-        cluster.setConfig(TomcatServer.WAR, war.path)
+        cluster.setConfig(JavaWebAppService.ROOT_WAR, war.path)
         cluster.start([ loc ])
 
         nginx = new NginxController([
@@ -98,7 +100,7 @@ public class NginxAmazonTest {
                 "cluster" : cluster,
                 "domain" : "localhost",
                 "port" : 8000,
-                "portNumberSensor" : TomcatServer.HTTP_PORT,
+                "portNumberSensor" : WebAppService.HTTP_PORT,
             ])
 
         nginx.start([ loc ])
@@ -109,9 +111,9 @@ public class NginxAmazonTest {
             String url = "http://" + machine.address.hostName + ":" + nginx.getAttribute(NginxController.HTTP_PORT) + "/swf-booking-mvc"
             assertTrue urlRespondsWithStatusCode200(url)
 
-            // Tomcat URL is available
+            // Web-app URL is available
             cluster.members.each {
-                assertTrue urlRespondsWithStatusCode200(it.getAttribute(TomcatServer.ROOT_URL) + "swf-booking-mvc")
+                assertTrue urlRespondsWithStatusCode200(it.getAttribute(JavaWebAppService.ROOT_URL) + "swf-booking-mvc")
             }
         }
 

@@ -343,8 +343,20 @@
                     </executions>
                 </plugin>
                 <plugin>
-                    <artifactId>maven-surefire-plugin</artifactId>
-                    <version>${surefire.version}</version>
+                     <artifactId>maven-surefire-plugin</artifactId>
+                     <version>${surefire.version}</version>
+                     <configuration>
+                         <systemProperties>
+                              <property>
+                                <name>maven.junit.sysproperties</name>
+                                <value>log4j.configuration</value>
+                            </property>
+                            <property>
+                                <name>log4j.configuration</name>
+                                <value>test-log4j.properties</value>
+                            </property>
+                        </systemProperties>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <artifactId>maven-site-plugin</artifactId>
@@ -842,6 +854,7 @@
                                         <testng listeners="brooklyn.test.StatusListener" groups="${includedTestGroups}"
                                             excludedGroups="${excludedTestGroups}" haltonfailure="true" enableAssert="true"
                                             classpathref="maven.test.classpath" outputDir="target/testng">
+                                            <jvmarg value="-Dlog4j.configuration=test-log4j.properties"/>                                         
                                             <classfileset dir="target/test-classes" includes="**/${test}.class" />
                                             <sysproperty key="java.util.logging.config.file" value="src/test/resources/logging.properties" />
                                             <sysproperty key="net.sourceforge.cobertura.datafile" value="${project.build.directory}/cobertura/cobertura.ser" />

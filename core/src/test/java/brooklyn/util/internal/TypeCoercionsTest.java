@@ -53,6 +53,34 @@ public class TypeCoercionsTest {
     }
     
     @Test
+    public void testCastPrimitives() {
+        assertEquals(TypeCoercions.castPrimitive(1L, Character.class), (Character)(char)1);
+        assertEquals(TypeCoercions.castPrimitive(1L, Byte.class), (Byte)(byte)1);
+        assertEquals(TypeCoercions.castPrimitive(1L, Short.class), (Short)(short)1);
+        assertEquals(TypeCoercions.castPrimitive(1L, Integer.class), (Integer)1);
+        assertEquals(TypeCoercions.castPrimitive(1L, Long.class), (Long)(long)1);
+        assertEquals(TypeCoercions.castPrimitive(1L, Float.class), (Float)(float)1);
+        assertEquals(TypeCoercions.castPrimitive(1L, Double.class), (Double)(double)1);
+        
+        assertEquals(TypeCoercions.castPrimitive(1L, char.class), (Character)(char)1);
+        assertEquals(TypeCoercions.castPrimitive(1L, byte.class), (Byte)(byte)1);
+        assertEquals(TypeCoercions.castPrimitive(1L, short.class), (Short)(short)1);
+        assertEquals(TypeCoercions.castPrimitive(1L, int.class), (Integer)1);
+        assertEquals(TypeCoercions.castPrimitive(1L, long.class), (Long)(long)1);
+        assertEquals(TypeCoercions.castPrimitive(1L, float.class), (Float)(float)1);
+        assertEquals(TypeCoercions.castPrimitive(1L, double.class), (Double)(double)1);
+        
+        assertEquals(TypeCoercions.castPrimitive((char)1, Integer.class), (Integer)1);
+        assertEquals(TypeCoercions.castPrimitive((byte)1, Integer.class), (Integer)1);
+        assertEquals(TypeCoercions.castPrimitive((short)1, Integer.class), (Integer)1);
+        assertEquals(TypeCoercions.castPrimitive((int)1, Integer.class), (Integer)1);
+        assertEquals(TypeCoercions.castPrimitive((long)1, Integer.class), (Integer)1);
+        assertEquals(TypeCoercions.castPrimitive((float)1, Integer.class), (Integer)1);
+        assertEquals(TypeCoercions.castPrimitive((double)1, Integer.class), (Integer)1);
+        
+    }
+    
+    @Test
     public void testListToSetCoercion() {
         Set<?> s = TypeCoercions.coerce(ImmutableList.of(1), Set.class);
         Assert.assertEquals(s, ImmutableSet.of(1));

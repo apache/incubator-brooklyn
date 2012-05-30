@@ -97,7 +97,7 @@ public class TomcatServerIntegrationTest {
                 }
             } catch (IllegalArgumentException e) {
                 // LocalhostMachineProvisioningLocation does NetworkUtils.isPortAvailable, so get -1
-                assertEquals e.message, "Invalid port value -1: httpPort (suggested $DEFAULT_HTTP_PORT)"
+                assertEquals e.message, "port for httpPort is null"
             } catch (EntityStartException e) {
                 assertEquals e.message, "HTTP service on port ${DEFAULT_HTTP_PORT} failed"
             } finally {
