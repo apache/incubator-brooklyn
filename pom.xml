@@ -42,14 +42,19 @@
             <id>cloudsoft-releases</id>
             <url>http://developers.cloudsoftcorp.com/download/maven2/</url>
         </repository>
-            <repository>
-                <id>libs-snapshot-local</id>
-                <url>http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/</url>
-                <snapshots>
-                    <enabled>true</enabled>
-                    <updatePolicy>never</updatePolicy>
-                    <checksumPolicy>fail</checksumPolicy>
-               </snapshots>
+        <repository>
+            <id>ccweb.cloudsoftcorp.com</id>
+            <name>ccweb.cloudsoftcorp.com-releases</name>
+            <url>http://ccweb.cloudsoftcorp.com/maven/cloudsoft-release</url>
+        </repository>
+        <repository>
+            <id>libs-snapshot-local</id>
+            <url>http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/</url>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
+                <checksumPolicy>fail</checksumPolicy>
+           </snapshots>
          </repository>
     </repositories>
 
@@ -86,7 +91,7 @@
         <testng.version>6.3.1</testng.version>
         <mockito.version>1.8.4</mockito.version>
         <!-- need 0.8.0 whirr to get guava 11, because 0.7 uses guava 10 which is incompatible -->
-        <whirr.version>0.8.0-SNAPSHOT</whirr.version>
+        <whirr.version>0.8.0-brooklyn.1</whirr.version>
         <mortbay.jetty.version>6.1.26</mortbay.jetty.version>
         <slf4j.version>1.5.11</slf4j.version>
         <!-- NB: slf4j 1.6.x seems to change some signatures which breaks e.g. grails 1.3; grails may ask for 1.5.8 but that's okay -->
