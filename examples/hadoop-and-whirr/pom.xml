@@ -35,9 +35,9 @@
                         </goals>
                         <configuration>
                             <artifactItems>
-                                <artifactItem>
-                                    <!-- this can fail in eclipse trying to copy _from_ target/classes.
+                                <!-- these can fail in eclipse trying to copy _from_ target/classes.
                                          see http://jira.codehaus.org/browse/MDEP-259 -->
+                                <artifactItem>
                                     <groupId>${project.groupId}</groupId>
                                     <artifactId>brooklyn-example-hello-world-hadoop-webapp</artifactId>
                                     <version>${project.version}</version>
@@ -51,6 +51,37 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>build-distribution</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <descriptors>
+                                <descriptor>src/main/config/example.xml</descriptor>
+                            </descriptors>
+                            <finalName>${project.artifactId}</finalName>
+                            <outputDirectory>${project.basedir}</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>${project.basedir}</directory>
+							<includes><include>${project.artifactId}/</include></includes>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>            
         </plugins>
     </build>
     

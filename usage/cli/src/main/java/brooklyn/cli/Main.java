@@ -122,6 +122,22 @@ public class Main {
         @Option(name = { "-ns", "--noShutdownOnExit" },
                 description = "Whether to stop the application when the JVM exits")
         public boolean noShutdownOnExit = false;
+        
+        /**
+         * Note that this is a temporrary workaround to allow  for runnig the
+         * brooklyn-whirr example.
+         * 
+         * This will be replaced by more powerful CLI control for running processes,
+         * to send shutdown and other commands to brooklyn.
+         * 
+         * Without using this flag you get a java.util.concurrent.RejectedExecutionException
+         * because the brooklyn and whirr shutdown hooks get executed in parallel.
+         * This is how it looks like: {@linktourl https://gist.github.com/47066f72d6f6f79b953e}
+         */
+        @Beta
+        @Option(name = { "-sk", "--stopOnKeyPress" },
+                description = "After the application gets started, brooklyn will wait for a key press to stop it.")
+        public boolean stopOnKeyPress = false;
 
         @Override
         public Void call() throws Exception {
@@ -162,9 +178,16 @@ public class Main {
                 Entities.dumpInfo(application);
             }
             
-            // Block forever so that Brooklyn doesn't exit (until someone does cntrl-c or kill)
-            log.info("Launched application; now blocking to wait for cntrl-c or kill");
-            waitUntilInterrupted();
+            if(stopOnKeyPress){
+            	// Wait for the user to type a key
+            	log.info("Application started. Press return to stop.");
+            	System.in.read();
+            	application.stop();
+            } else {
+                // Block forever so that Brooklyn doesn't exit (until someone does cntrl-c or kill)
+                log.info("Launched application; now blocking to wait for cntrl-c or kill");
+                waitUntilInterrupted();
+            }
             return null;
         }
 
