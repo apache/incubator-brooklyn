@@ -159,9 +159,14 @@ public class QpidIntegrationTest {
         System.setProperty(ClientProperties.AMQP_VERSION, "0-10");
         System.setProperty(ClientProperties.DEST_SYNTAX, "ADDR");
         AMQConnectionFactory factory = new AMQConnectionFactory("amqp://admin:admin@brooklyn/localhost?brokerlist='tcp://localhost:${port}'")
-        Connection connection = factory.createConnection();
-        connection.start();
-        return connection
+        try {
+            Connection connection = factory.createConnection();
+            connection.start();
+            return connection
+        } catch (Exception e) {
+            log.error("Error connecting to qpid: url="+factory.getConnectionURLString(), e);
+            throw e;
+        }
     }
 
     private void sendMessages(Connection connection, int count, String queueName, String content="") {
