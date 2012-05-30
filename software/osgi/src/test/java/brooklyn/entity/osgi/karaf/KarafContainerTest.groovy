@@ -12,7 +12,7 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.Application
 import brooklyn.entity.basic.AbstractApplication
-import brooklyn.entity.basic.legacy.JavaApp
+import brooklyn.entity.trait.Startable;
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.util.internal.LanguageUtils
@@ -32,18 +32,21 @@ public class KarafContainerTest {
 
     @AfterMethod(alwaysRun=true)
     public void shutdown() {
-        if (karaf) karaf.stop()
-        app.stop()
+        if (app != null) app.stop()
     }
 
     @Test(groups = "Integration")
     public void canStartupAndShutdown() {
-        karaf = new KarafContainer(owner:app, name:LanguageUtils.newUid(), displayName:"Karaf Test", jmxPort:8099, rmiPort:9099);
+        karaf = new KarafContainer(owner:app, name:LanguageUtils.newUid(), displayName:"Karaf Test", jmxPort:"8099+", rmiPort:"9099+");
         app.start([ localhost ]);
-        executeUntilSucceedsWithShutdown(karaf, timeout:30 * SECONDS) {
-            assertNotNull karaf.getAttribute(JavaApp.SERVICE_UP)
-            assertTrue karaf.getAttribute(JavaApp.SERVICE_UP)
+        executeUntilSucceeds(timeout:30 * SECONDS) {
+            assertNotNull karaf.getAttribute(Startable.SERVICE_UP)
+            assertTrue karaf.getAttribute(Startable.SERVICE_UP)
         }
-        assertFalse karaf.getAttribute(JavaApp.SERVICE_UP)
+        
+        karaf.stop();
+        executeUntilSucceeds(timeout:10 * SECONDS) {
+            assertFalse karaf.getAttribute(Startable.SERVICE_UP)
+        }
     }
 }
