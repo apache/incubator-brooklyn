@@ -72,7 +72,7 @@ public class ActiveMQIntegrationTest {
     */
    @Test(groups = "Integration")
    public void canStartupAndShutdownWithCustomJmx() {
-       activeMQ = new ActiveMQBroker(owner:app, jmxPort: 11099);
+       activeMQ = new ActiveMQBroker(owner:app, jmxPort: "11099+");
        app.start([ testLocation ])
        executeUntilSucceedsWithShutdown(activeMQ, timeout:600*TimeUnit.SECONDS) {
            assertTrue activeMQ.getAttribute(Startable.SERVICE_UP)
