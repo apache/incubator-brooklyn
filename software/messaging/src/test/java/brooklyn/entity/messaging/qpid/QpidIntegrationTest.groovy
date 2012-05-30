@@ -67,8 +67,8 @@ public class QpidIntegrationTest {
      */
     @Test(groups = "Integration")
     public void canStartupAndShutdownWithPlugin() {
-        Map qpidRuntimeFiles = [ ('lib/plugins/sample-plugin.jar'):new File('src/test/resources/qpid-test-plugin.jar'),
-                                 ('etc/config.xml'):new File('src/test/resources/qpid-test-config.xml') ]
+        Map qpidRuntimeFiles = [ ('lib/plugins/sample-plugin.jar'):new File('software/messaging/src/test/resources/qpid-test-plugin.jar'),
+                                 ('etc/config.xml'):new File('software/messaging/src/test/resources/qpid-test-config.xml') ]
         qpid = new QpidBroker(owner:app, runtimeFiles:qpidRuntimeFiles);
         qpid.start([ testLocation ])
         //TODO assert the files/plugins were installed?
