@@ -159,14 +159,14 @@ public class JmxHelper {
 
         triedConnecting = true
         if (connector) connector.close()
-        JMXServiceURL url = new JMXServiceURL(url)
+        JMXServiceURL serviceUrl = new JMXServiceURL(url)
         Map env = [:]
         if (user && password) {
             String[] creds = [user, password]
             env.put(JMXConnector.CREDENTIALS, creds);
         }
         try {
-            connector = JMXConnectorFactory.connect(url, env);
+            connector = JMXConnectorFactory.connect(serviceUrl, env);
         } catch (NullPointerException npe) {
             //some software -- eg WSO2 -- will throw an NPE exception if the JMX connection can't be created, instead of an IOException.
             //this is a break of contract with the JMXConnectorFactory.connect method, so this code verifies if the NPE is
