@@ -41,7 +41,7 @@ this can also be deployed to your favourite cloud, let's pretend it's Amazon Ire
 
 {% highlight bash %}
 % cd $EXAMPLES_DIR/simple-web-cluster/brooklyn-example-simple-web-cluster
-% ./web-server.sh aws-ecs:eu-west-1
+% ./web-server.sh aws-ec2:eu-west-1
 {% endhighlight %}
 
 
