@@ -18,7 +18,7 @@ public abstract class AbstractPollHelper {
 
     final Map<AttributeSensor, Closure> polledSensors = [:]
 
-    boolean lastWasSuccessful = true;
+    boolean lastWasSuccessful = false;
 
     AbstractSensorAdapter adapter;
     public AbstractPollHelper(AbstractSensorAdapter adapter) {
