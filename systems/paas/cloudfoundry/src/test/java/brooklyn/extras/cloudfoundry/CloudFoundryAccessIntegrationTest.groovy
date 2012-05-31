@@ -21,7 +21,7 @@ class CloudFoundryAccessIntegrationTest {
     
     static final Logger log = LoggerFactory.getLogger(CloudFoundryAccessIntegrationTest.class)
     
-    @Test(groups = [ "Integration" ])
+    @Test(groups = [ "Integration", "WIP" ])
     public void testVmcInfo() {
         List lines = new CloudFoundryVmcCliAccess().exec("vmc info") as List;
         String user = lines.find({ it.startsWith("User:") })
@@ -33,14 +33,14 @@ class CloudFoundryAccessIntegrationTest {
         Assert.assertTrue(user.indexOf('@')>0);
     }
 
-    @Test(groups = [ "Integration" ])
+    @Test(groups = [ "Integration", "WIP" ])
     public void testVmcAppsList() {
         Collection apps = new CloudFoundryVmcCliAccess().appNames;
         log.info("vmc apps gives: "+apps)
         //don't know anything is present, just assert no error
     }
 
-    @Test(groups = [ "Integration" ])
+    @Test(groups = [ "Integration", "WIP" ])
     public void testVmcAppCreateRunUpdateScaleStats() {
         String id = "brooklyn-"+IdGenerator.makeRandomId(8).toLowerCase();
         CloudFoundryVmcCliAccess access = new CloudFoundryVmcCliAccess(appName: id);
