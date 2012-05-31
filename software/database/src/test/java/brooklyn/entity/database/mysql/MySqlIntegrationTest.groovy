@@ -58,7 +58,7 @@ INSERT INTO COMMENTS values (default, 'lars', 'myemail@gmail.com','http://www.vo
     @Test(groups = [ "Integration" ])
     public void runIt() {
         TestApplication tapp = new TestApplication(name: "MySqlIntegrationTest");
-        MySqlNode mysql = new MySqlNode(tapp, creationScript: CREATION_SCRIPT);
+        MySqlNode mysql = new MySqlNode(tapp, creationScriptContents: CREATION_SCRIPT);
         
         try {
             tapp.start([new LocalhostMachineProvisioningLocation()]);
