@@ -49,6 +49,50 @@ although in those contexts the conventional format ``BROOKLYN_JCLOUDS_AWS_EC2_ID
 is supported and recommended. 
 
 
+
+<a name="cli"></a>
+Command Line Interface
+----------------------
+
+Brooklyn comes with a Command Line Interface (cli) that makes it easier to launch an application.
+
+In order to have easy access to the cli it is useful to configure the PATH environment variable to also point to the cli's bin directory:
+
+{% highlight bash %}
+% BROOKLYN_HOME=/path/to/brooklyn/
+% export PATH=$PATH:$BROOKLYN_HOME/usage/dist/target/brooklyn-0.4..0-SNAPSHOT-dist/brooklyn/bin
+{% endhighlight %}
+
+If you have set this up correctly you should be able to invoke the ```brooklyn``` command:
+
+{% highlight bash %}
+% brooklyn
+{% endhighlight %}
+
+To get information about all the supported cli options just run:
+
+{% highlight bash %}
+% brooklyn help
+usage: brooklyn [(-q | --quiet)] [(-v | --verbose)] <command> [<args>]
+
+The most commonly used brooklyn commands are:
+    help     Display help information about brooklyn
+    launch   Starts a brooklyn application. Note that a BROOKLYN_CLASSPATH environment variable needs to be set up beforehand to point to the user application classpath.
+
+See 'brooklyn help <command>' for more information on a specific command.
+{% endhighlight %}
+
+Here is an example of the commands you might run to launch a Brooklyn application:
+
+{% highlight bash %}
+% BROOKLYN_HOME=/path/to/brooklyn
+% PATH=$PATH:${BROOKLYN_HOME}/usage/dist/target/brooklyn-0.4.0-SNAPSHOT-dist/brooklyn/bin
+% export BROOKLYN_CLASSPATH=${BROOKLYN_HOME}/examples/simple-web-cluster/target/brooklyn-example-simple-web-cluster-0.4.0-SNAPSHOT.jar
+% brooklyn launch --app brooklyn.demo.SingleWebServerExample --location localhost
+{% endhighlight %}
+
+
+
 <a name="console"></a>
 Management Web Console
 ----------------------

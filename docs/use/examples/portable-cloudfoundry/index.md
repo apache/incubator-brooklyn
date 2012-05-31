@@ -284,9 +284,14 @@ And finally, we'll define ``move``, as the sequence of the three effectors above
 
 ## Running It
 
-When we run this application (e.g. using the ``demo.sh`` script in the example project),
-we have our webapp running in Cloud Foundry,
-and we have the effectors we've introduced exposed in the web console:
+You can run the application using the provided shell script:
+
+{% highlight bash %}
+% cd $EXAMPLES_DIR/portable-cloudfoundry/brooklyn-example-portable-cloudfoundry/bin
+% ./demo.sh
+{% endhighlight %}
+
+Note that we have our webapp running in Cloud Foundry, and we have the effectors we've introduced exposed in the web console:
 
 [![MovableElasticWebAppCluster Effectors](console-sensors-750px.png "MovableElasticWebAppCluster Effectors")](console-sensors.png)
 

@@ -279,9 +279,8 @@ Now let's run this example.  You will need to specify increased heap size and me
 as well as the appropriate classpath.
 
 {% highlight bash %}
-java -Xmx256m -Xmx1g -XX:MaxPermSize=256m -cp target/classes:\
-    ~/.m2/repository/io/brooklyn/brooklyn-all/0.4.0-SNAPSHOT/brooklyn-all-0.4.0-SNAPSHOT-with-dependencies.jar \
-    brooklyn.demo.GlobalWebFabricExample
+% cd $EXAMPLES_DIR/global-web-fabric/brooklyn-example-global-web-fabric/bin
+% ./demo.sh
 {% endhighlight %}
 
 The management web console will start,

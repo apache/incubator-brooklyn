@@ -69,10 +69,8 @@ out the Brooklyn [repository](https://www.github.com/brooklyncentral/brooklyn)
 as follows:
 
 {% highlight bash %}
-% cd $BROOKLYN/examples/simple-messaging-pubsub
-% mvn clean install
-% cd brooklyn-example-simple-messaging-pubsub
-% ./demo-broker.sh
+% cd $EXAMPLES_DIR/simple-messaging-pubsub/brooklyn-example-simple-messaging-pubsub/bin
+% ./broker.sh
 {% endhighlight %}
 
 Now, visit the the Brooklyn web console on port 8081 using credentials
@@ -112,6 +110,7 @@ below, and that any unquoted ``&`` characters *must* be escaped,
 if present.
 
 {% highlight bash %}
+% cd $EXAMPLES_DIR/simple-messaging-pubsub/brooklyn-example-simple-messaging-pubsub/bin
 % ./publish.sh "amqp://guest:guest@/localhost?brokerlist='tcp://localhost:5672'"
 % ./subscribe.sh "amqp://guest:guest@/localhost?brokerlist='tcp://localhost:5672'"
 {% endhighlight %}
@@ -140,7 +139,8 @@ this can also be deployed to your favourite cloud, let's pretend
 it's Amazon Ireland, as follows:
 
 {% highlight bash %}
-$ ./demo-broker.sh aws-ec2:eu-west-1
+% cd $EXAMPLES_DIR/simple-messaging-pubsub/brooklyn-example-simple-messaging-pubsub/bin
+$ ./broker.sh aws-ec2:eu-west-1
 {% endhighlight %}
 
 If you encounter any difficulties, please
