@@ -8,26 +8,25 @@ import brooklyn.web.console.security.WebConsoleSecurity
 
 class LoginController {
 
-    private String getRedirectTarget(boolean includePrefix) {
-        String result = "/dashboard/"; 
-        if (includePrefix) result = createLinkTo(dir:result)
-        return result;
+    private void loadDashboard() {
+        redirect controller: "dashboard"
     }
-    
+
     /**
      * Default action; redirects to 'defaultTargetUrl' if logged in, /login/auth otherwise.
      */
     def index = {
         if (WebConsoleSecurity.getInstance().isAuthenticated(session) || tryAuthenticate()) {
-            redirect uri: getRedirectTarget(false);
+            loadDashboard()
         } else {
-            redirect action: auth, params: params
+            redirect action: auth
         }
     }
 
     private boolean tryAuthenticate() {
         if (params.j_username) {
-            return WebConsoleSecurity.getInstance().authenticate(session, params.j_username, params.j_password)
+            def success = WebConsoleSecurity.getInstance().authenticate(session, params.j_username, params.j_password)
+            flash.message = "Bad login"
         }
         return false;
     }
@@ -36,16 +35,11 @@ class LoginController {
      */
     def auth = {
         if (WebConsoleSecurity.getInstance().isAuthenticated(session)) {
-            redirect uri: getRedirectTarget(false)
-            return
+            loadDashboard()
         }
 
-        String view = 'auth'
-        String postUrl = createLinkTo(dir:"login")
         //TODO support following to the originally requested URL
-        String postAfterUrl = getRedirectTarget(true)
-        render view: view, model: [postUrl: postUrl,
-                                   rememberMeParameter: true]
+        render view: "auth", model: [rememberMeParameter: true]
     }
 
     /**
