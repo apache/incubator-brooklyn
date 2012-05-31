@@ -30,10 +30,6 @@ public class GroovyJavaMethods {
         return { it -> return job.apply(it); };
     }
 
-    public static Closure closureFromFunction(final Function f) {
-        return { it -> return f.apply(it); };
-    }
-
     public static <T> Callable<T> callableFromClosure(final Closure<T> job) {
         return job as Callable;
     }
@@ -69,7 +65,9 @@ public class GroovyJavaMethods {
     }
 
     public static <T> Closure castToClosure(Object o) {
-        if (o in Closure) {
+        if (o == null) {
+            return o;
+        } else if (o in Closure) {
             return o;
         } else if (o instanceof Runnable) {
             return closureFromRunnable((Runnable)o);

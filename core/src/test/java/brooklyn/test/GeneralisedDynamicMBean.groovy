@@ -29,11 +29,11 @@ import brooklyn.util.JavaGroovyEquivalents;
  */
 class GeneralisedDynamicMBean implements DynamicMBean {
     private final MBeanInfo mBeanInfo
-    private final Map attributes
+    private final Map attributes = [:]
     private final Map<String,Closure> operations = [:]
     
     public GeneralisedDynamicMBean(Map initialAttributes, Map initialOperations) {
-        this.attributes = initialAttributes
+        attributes.putAll(initialAttributes);
 
         initialOperations.entrySet().each {
             String opName = (it.key instanceof String) ? it.key : it.key.getName()
