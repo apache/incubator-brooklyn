@@ -860,6 +860,7 @@
                                             excludedGroups="${excludedTestGroups}" haltonfailure="true" enableAssert="true"
                                             classpathref="maven.test.classpath" outputDir="target/testng">
                                             <jvmarg value="-Dlog4j.configuration=test-log4j.properties"/>                                         
+                                            <jvmarg value="-Dmaven.test.failure.ignore=true"/>
                                             <classfileset dir="target/test-classes" includes="**/${test}.class" />
                                             <sysproperty key="java.util.logging.config.file" value="src/test/resources/logging.properties" />
                                             <sysproperty key="net.sourceforge.cobertura.datafile" value="${project.build.directory}/cobertura/cobertura.ser" />
