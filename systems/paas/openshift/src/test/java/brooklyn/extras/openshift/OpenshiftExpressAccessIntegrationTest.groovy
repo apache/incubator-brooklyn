@@ -24,7 +24,7 @@ class OpenshiftExpressAccessIntegrationTest {
         TEST_PASSWORD = "0penshift",
         TEST_APP = "KeepForUnitTest1";
     
-    @Test(groups = [ "Integration" ])
+    @Test(groups = [ "Integration", "WIP" ])
     public void testCanGetUserInfo() {
         def osa = new OpenshiftExpressAccess(username:TEST_USER, password:TEST_PASSWORD);
         def result = osa.getUserInfo();
@@ -37,7 +37,7 @@ class OpenshiftExpressAccessIntegrationTest {
     }
 
     
-    @Test(groups = [ "Integration" ])
+    @Test(groups = [ "Integration", "WIP" ])
     public void testCanCreateDestroyApp() {
         String appName = "UnitTestTemp"+((int)(10000*Math.random()));
         def app = new OpenshiftExpressApplicationAccess(username:TEST_USER, password:TEST_PASSWORD, appName: appName, debug:true);
