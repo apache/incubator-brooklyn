@@ -94,8 +94,12 @@ public class QpidIntegrationTest {
      * Test that setting the 'queue' property causes a named queue to be created.
      *
      * This test is disabled, pending further investigation. Issue with AMQP 0-10 queue names.
+     * 
+     * FIXME disabled becausing failing in jenkins CI (in QpidIntegrationTest.getQpidConnection()).
+     *     url=amqp://admin:********@brooklyn/localhost?brokerlist='tcp://localhost:5672'
+     * Was previously enabled, dispite comment above about "test is disabled".	
      */
-    @Test(groups = "Integration")
+    @Test(groups = ["Integration", "WIP"])
     public void testCreatingQueues() {
         String queueName = "testQueue"
         int number = 20
