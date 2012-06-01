@@ -49,7 +49,7 @@
 			<div class='login_message'>${flash.message}</div>
 			</g:if>
 			<div class='fheader'>Please Login</div>
-			<form action='${postUrl}' method='POST' id='loginForm' class='cssform' autocomplete='off'>
+			<form action='<g:createLink controller="login"/>' method='POST' id='loginForm' class='cssform' autocomplete='off'>
 				<p>
 					<label for='username'>Login ID</label>
 					<input type='text' class='text_' name='j_username' id='username' />
