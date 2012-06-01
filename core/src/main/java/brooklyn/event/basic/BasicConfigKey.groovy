@@ -95,6 +95,14 @@ class BasicConfigKey<T> implements ConfigKey<T>, ConfigKeySelfExtracting<T>, Ser
     protected Object resolveValue(Object v, ExecutionContext exec) {
         resolveValue(v, type, exec);
     }
+
+    // Required because groovy generics behave strangely when trying to call from Java!
+    // Delete when convert this to Java.
+    @Deprecated    
+    public static Object resolveValue2(Object v, Class<?> type, ExecutionContext exec) {
+        return resolveValue(v, type, exec);
+    }
+    
     /** attempt to resolve the given value as the given type, waiting on futures,
      * and coercing as allowed by TypeCoercions */
     public static T resolveValue(Object v, Class<T> type, ExecutionContext exec) {

@@ -1,23 +1,25 @@
 package brooklyn.entity.basic.lifecycle;
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import java.io.InputStream;
 
-import brooklyn.entity.ConfigKey
-import brooklyn.entity.basic.ConfigKeys
-import brooklyn.entity.basic.EntityLocal
-import brooklyn.location.Location
-import brooklyn.util.ResourceUtils
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import brooklyn.entity.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.basic.EntityLocal;
+import brooklyn.location.Location;
+import brooklyn.util.ResourceUtils;
 
 public abstract class AbstractStartStopDriver implements StartStopDriver {
 
 	private static final Logger log = LoggerFactory.getLogger(AbstractStartStopDriver.class);
 	
-    private final EntityLocal entityLocal;
+    protected final EntityLocal entity;
     private final Location location;
     
     public AbstractStartStopDriver(EntityLocal entity, Location location) {
-    	this.entityLocal = entity;
+    	this.entity = entity;
     	this.location = location;
     }
 	
@@ -35,13 +37,13 @@ public abstract class AbstractStartStopDriver implements StartStopDriver {
      */
 	@Override
 	public void start() {
-        waitForConfigKey(ConfigKeys.INSTALL_LATCH)
+        waitForConfigKey(ConfigKeys.INSTALL_LATCH);
 		install();
         
-        waitForConfigKey(ConfigKeys.CUSTOMIZE_LATCH)
+        waitForConfigKey(ConfigKeys.CUSTOMIZE_LATCH);
 		customize();
         
-        waitForConfigKey(ConfigKeys.LAUNCH_LATCH)
+        waitForConfigKey(ConfigKeys.LAUNCH_LATCH);
 		launch();
         
         postLaunch();  
@@ -57,7 +59,7 @@ public abstract class AbstractStartStopDriver implements StartStopDriver {
     /**
      * Implement this method in child classes to add some post-launch behavior
      */
-	public void postLaunch(){}
+	public void postLaunch() {}
     
 	@Override
 	public void restart() {
@@ -65,16 +67,16 @@ public abstract class AbstractStartStopDriver implements StartStopDriver {
 		start();
 	}
 	
-	public EntityLocal getEntity() { entityLocal } 
+	public EntityLocal getEntity() { return entity; } 
 
-	public Location getLocation() { location } 
+	public Location getLocation() { return location; } 
 	
     public InputStream getResource(String url) {
-        new ResourceUtils(entityLocal).getResourceFromUrl(url);
+        return new ResourceUtils(entity).getResourceFromUrl(url);
     }
 		
-    protected void waitForConfigKey(ConfigKey configKey) {
-        Object val = entityLocal.getConfig(configKey)
-        if (val != null) log.debug("{} finished waiting for "+configKey+"; continuing...", this, val)
+    protected void waitForConfigKey(ConfigKey<?> configKey) {
+        Object val = entity.getConfig(configKey);
+        if (val != null) log.debug("{} finished waiting for {} (value {}); continuing...", new Object[] {this, configKey, val});
     }
 }
