@@ -278,7 +278,10 @@ class ResizingPolicyTest {
         resizable.emit(ResizingPolicy.POOL_HOT, message(1, 61L, 1*10L, 1*20L)) // would grow to 4
 
         // Wait for it to reach size 2, and confirm take expected time
-        executeUntilSucceeds(period:1, timeout:TIMEOUT_MS) { assertEquals(resizable.currentSize, 2) }
+        // TODO This is time sensitive, and sometimes fails in CI with size=4 if we wait for currentSize==2 (presumably GC kicking in?)
+        //      Therefore do strong assertion of currentSize==2 later, so can write out times if it goes wrong.
+        executeUntilSucceeds(period:1, timeout:TIMEOUT_MS) { assertTrue(resizable.currentSize >= 2, "currentSize="+resizable.currentSize) }
+        assertEquals(resizable.currentSize, 2, stopwatch.elapsedMillis()+"ms after first emission; "+stopwatch2.elapsedMillis()+"ms after last");
         
         long timeToResize = stopwatch.elapsedMillis()
         assertTrue(timeToResize >= resizeUpStabilizationDelay-EARLY_RETURN_MS &&
