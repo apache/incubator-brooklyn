@@ -45,13 +45,16 @@ class MonitorUtilsTest {
         int usedPid = MonitorUtils.findOwnPid()
         
         // Find a pid that is in not in use
+        // Don't count upwards as that is more likely to be the next pid to be allocated leading to non-deterministic failures!
+        // 10000 is a conservative estimate of a legal large pid (/proc/sys/kernel/pid_max gives the real max)
         def process = MonitorUtils.exec("ps ax")
         String out = MonitorUtils.waitFor(process)
-        int unusedPid = 1
+        int unusedPid = 10000;
         while (out.contains(""+unusedPid)) {
-            unusedPid++;
+            unusedPid--;
         }
-
+        if (unusedPid <= 0) throw new IllegalStateException("No unused pid found in the range 1-10000");
+         
         assertTrue(MonitorUtils.isPidRunning(usedPid))
         assertFalse(MonitorUtils.isPidRunning(unusedPid))
         assertFalse(MonitorUtils.isPidRunning(1234567)) // too large
