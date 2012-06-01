@@ -1,5 +1,7 @@
 package brooklyn.enricher;
 
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableMap;
 import groovy.lang.Closure;
 
 import java.util.Collection;
@@ -18,8 +20,7 @@ import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.flags.TypeCoercions;
 
 import com.google.common.base.Function;
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableMap;
+import brooklyn.util.MutableMap;
 
 /**
  * Subscribes to events from producers with a sensor of type T, aggregates them with the 
@@ -219,7 +220,7 @@ public class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<
     @Deprecated
     public static <N extends Number> CustomAggregatingEnricher<N,Double> getAveragingEnricher(
             List<Entity> producer, AttributeSensor<N> source, AttributeSensor<Double> target) {
-        return newAveragingEnricher(ImmutableMap.of("producers", producer, "allMembers", true), source, target);
+        return newAveragingEnricher(MutableMap.of("producers", producer, "allMembers", true), source, target);
     }
     
     private static <N extends Number> double sum(Iterable<N> vals) {
