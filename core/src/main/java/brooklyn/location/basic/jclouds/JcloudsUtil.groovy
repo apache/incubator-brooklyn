@@ -164,7 +164,7 @@ public class JcloudsUtil {
         properties.setProperty(Constants.PROPERTY_CREDENTIAL, conf.credential); unusedConf.remove("credential");
         properties.setProperty(Constants.PROPERTY_TRUST_ALL_CERTS, Boolean.toString(true))
         properties.setProperty(Constants.PROPERTY_RELAX_HOSTNAME, Boolean.toString(true))
-        
+                
         // Enable aws-ec2 lazy image fetching, if givena specific imageId; otherwise customize for specific owners; or all as a last resort
         // See https://issues.apache.org/jira/browse/WHIRR-416
         if (conf.imageId) {
@@ -177,6 +177,9 @@ public class JcloudsUtil {
             // (note however, we pick defaults in JcloudsLocationFactory)
             properties.setProperty(PROPERTY_EC2_AMI_QUERY, "state=available;image-type=machine")
         }
+
+        String endpoint = unusedConf.remove(Constants.PROPERTY_ENDPOINT);
+        if (endpoint) properties.setProperty(Constants.PROPERTY_ENDPOINT, endpoint);
 
         if (allowReuse) {
             ComputeService result = cachedComputeServices.get(properties);

@@ -1,11 +1,8 @@
 package brooklyn.location.basic
 
-import java.util.Map
 
-import org.jclouds.ec2.domain.InstanceType
 
 import brooklyn.location.Location
-import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.basic.jclouds.CredentialsFromEnv
 import brooklyn.location.basic.jclouds.JcloudsLocation
 import brooklyn.location.basic.jclouds.JcloudsLocationFactory
