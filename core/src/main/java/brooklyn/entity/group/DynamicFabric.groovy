@@ -26,7 +26,7 @@ import com.google.common.base.Preconditions
  * When a dynamic fabric is started, it starts an entity in each of its locations. 
  * This entity will be the owner of each of the started entities. 
  */
-public class DynamicFabric extends AbstractEntity implements Startable {
+public class DynamicFabric extends AbstractEntity implements Startable, Fabric {
     private static final Logger logger = LoggerFactory.getLogger(DynamicFabric)
 
     public static final BasicAttributeSensor<Integer> FABRIC_SIZE = [ Integer, "fabric.size", "Fabric size" ]
