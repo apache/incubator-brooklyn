@@ -39,7 +39,7 @@ public abstract class AbstractEnricher extends AbstractEntityAdjunct implements 
         properties.putAll(leftoverProperties);
         leftoverProperties = properties;
         
-        if (getName() == null && properties.containsKey("displayName")) {
+        if (name == null && properties.containsKey("displayName")) {
             //'displayName' is a legacy way to refer to a location's name
             //FIXME could this be a GString?
             Object displayName = properties.get("displayName");

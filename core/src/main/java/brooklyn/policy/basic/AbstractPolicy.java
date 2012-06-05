@@ -20,6 +20,7 @@ import com.google.common.collect.Maps;
  * Base {@link Policy} implementation; all policies should extend this or its children
  */
 public abstract class AbstractPolicy extends AbstractEntityAdjunct implements Policy {
+    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(AbstractPolicy.class);
 
     protected String policyStatus;
@@ -54,7 +55,7 @@ public abstract class AbstractPolicy extends AbstractEntityAdjunct implements Po
         properties.putAll(leftoverProperties);
         leftoverProperties = properties;
         
-        if (!truth(getName()) && properties.containsKey("displayName")) {
+        if (!truth(name) && properties.containsKey("displayName")) {
             //'displayName' is a legacy way to refer to a location's name
             Preconditions.checkArgument(properties.get("displayName") instanceof CharSequence, "'displayName' property should be a string");
             setName(properties.remove("displayName").toString());
