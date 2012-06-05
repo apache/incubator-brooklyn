@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.lifecycle.CommonCommands
+import brooklyn.entity.basic.lifecycle.ScriptHelper
 import brooklyn.entity.basic.lifecycle.StartStopSshDriver
 import brooklyn.entity.trait.Startable
 import brooklyn.location.basic.SshMachineLocation
@@ -40,9 +41,9 @@ public class NginxSshDriver extends StartStopSshDriver {
         String nginxSaveAs  = "nginx-${version}.tar.gz"
         String stickyModuleUrl = "http://nginx-sticky-module.googlecode.com/files/nginx-sticky-module-1.0.tar.gz"
         String stickyModuleSaveAs = "nginx-sticky-module-1.0.tar.gz"
+        boolean sticky = ((NginxController)entity).isSticky();
         
-        newScript(INSTALLING).
-            failOnNonZeroResultCode().
+        ScriptHelper script = newScript(INSTALLING).
             body.append(
                 CommonCommands.INSTALL_WGET,
                 CommonCommands.INSTALL_TAR,
@@ -52,14 +53,23 @@ public class NginxSshDriver extends StartStopSshDriver {
                         apt: "libssl-dev zlib1g-dev libpcre3-dev"),
                 CommonCommands.downloadUrlAs(nginxUrl, getEntityVersionLabel('/'), nginxSaveAs),
                 "tar xvzf ${nginxSaveAs}",
-                "cd ${installDir}/nginx-${version}/src",
+                "cd ${installDir}/nginx-${version}");
+        if (sticky)
+            script.body.append(
+                "cd src",
                 CommonCommands.downloadUrlAs(stickyModuleUrl, getEntityVersionLabel('/'), stickyModuleSaveAs),
                 "tar xvzf ${stickyModuleSaveAs}",
-                "cd ..",
+                "cd ..");
+        script.body.append(
                 "mkdir -p dist",
-                "./configure --prefix=${installDir}/nginx-${version}/dist --add-module=${installDir}/nginx-${version}/src/nginx-sticky-module-1.0 --without-http_rewrite_module",
-                "make install"
-            ).execute();
+                "./configure --prefix=${installDir}/nginx-${version}/dist "+
+                    (sticky ? "--add-module=${installDir}/nginx-${version}/src/nginx-sticky-module-1.0 " : "")+
+                    "--without-http_rewrite_module",
+                "make install");
+        
+        int result = script.execute();
+        if (result!=0)
+            throw new IllegalStateException("execution failed, invalid result ${result} for ${script.summary}; NB gcc 4.2 is required");
     }
 
     @Override

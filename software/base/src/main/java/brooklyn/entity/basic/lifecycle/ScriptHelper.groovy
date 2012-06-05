@@ -12,7 +12,7 @@ public class ScriptHelper {
 	public static final Logger log = LoggerFactory.getLogger(ScriptHelper.class);
 			
 	protected final ScriptRunner runner;
-	protected final String summary;
+	public final String summary;
 	
 	public final ScriptPart header = [this];
 	public final ScriptPart body = [this];
