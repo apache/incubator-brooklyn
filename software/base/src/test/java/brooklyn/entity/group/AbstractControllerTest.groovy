@@ -127,7 +127,8 @@ class AbstractControllerTest {
         executeUntilSucceeds(timeout:5000) {
             def u = new ArrayList(updates);
             log.debug "test ${u.size()} updates, expecting ${locationsToAddresses(1234, cluster.ownedChildren)} = ${u ? u.last() : 'empty'}"
-            return u.size() > 0 && locationsToAddresses(1234, cluster.ownedChildren) == u.last()
+            assertTrue(u.size() > 0);
+            assertTrue(u.last() == locationsToAddresses(1234, cluster.ownedChildren), "actual="+u.last());
         }
     }
     

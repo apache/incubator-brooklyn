@@ -56,14 +56,11 @@ public interface Startable {
 //    @Description("Restart the process/service represented by an entity")
 //    void restart();
 
-	//FIXME prefer generics above, but am getting inconsistent class refs Startable.1 refers to <T>
-	//claimed fixed with groovy 1.8.3 but eclipse compiler still on 1.8.2 (nov 2011)
-	 	
-	AttributeSensor SERVICE_UP = new BasicAttributeSensor(Boolean.class, "service.isUp", "Service has been started successfully and is running");
+	AttributeSensor<Boolean> SERVICE_UP = new BasicAttributeSensor(Boolean.class, "service.isUp", "Service has been started successfully and is running");
 
-	Effector START = new MethodEffector(Startable.&start);
-	Effector STOP = new MethodEffector(Startable.&stop);
-	Effector RESTART = new MethodEffector(Startable.&restart);
+	Effector<Void> START = new MethodEffector(Startable.&start);
+	Effector<Void> STOP = new MethodEffector(Startable.&stop);
+	Effector<Void> RESTART = new MethodEffector(Startable.&restart);
 
 	/**
 	 * Start the entity in the given collection of locations.

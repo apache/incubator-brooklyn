@@ -58,6 +58,16 @@ public class GroovyJavaMethods {
         }
     }
 
+/* alternatives to above; but I think the above is more efficient?  (even more efficient if moved from java to groovy)  --alex jun 2012
+    public static <K,T> Function<K,T> functionFromClosure(final Closure<T> job) {
+        return job as Function;
+    }
+
+    public static <T> Predicate<T> predicateFromClosure(final Closure<Boolean> job) {
+        return job as Predicate;
+    }
+*/
+    
     public static boolean truth(Object o) {
         if (o) return true;
         return false;
@@ -65,6 +75,14 @@ public class GroovyJavaMethods {
 
     public static <T> T elvis(Object preferred, Object fallback) {
         return fix(preferred ?: fallback);
+    }
+    
+    public static <T> T elvis(Object... preferences) {
+        if (preferences.length == 0) throw new IllegalArgumentException("preferences must not be empty for elvis");
+        for (Object contender : preferences) {
+            if (contender) return fix(contender);
+        }
+        return fix(preferences[preferences.size()-1]);
     }
     
     public static <T> T fix(Object o) {

@@ -1,4 +1,4 @@
-package brooklyn.enricher
+package brooklyn.enricher;
 
 import brooklyn.enricher.basic.AbstractTransformingEnricher
 import brooklyn.entity.Entity
@@ -30,70 +30,70 @@ import brooklyn.event.SensorEvent
  */
 class RollingTimeWindowMeanEnricher<T extends Number> extends AbstractTransformingEnricher<T> {
     public static class ConfidenceQualifiedNumber {
-        final Number value
-        final double confidence
+        final Number value;
+        final double confidence;
         
         public ConfidenceQualifiedNumber(Number value, double confidence) {
-            this.value = value
-            this.confidence = confidence
+            this.value = value;
+            this.confidence = confidence;
         }
     }
     
-    private final LinkedList<T> values = new LinkedList<T>()
-    private final LinkedList<Long> timestamps = new LinkedList<Long>()
-    volatile ConfidenceQualifiedNumber lastAverage = [0,0]
+    private final LinkedList<T> values = new LinkedList<T>();
+    private final LinkedList<Long> timestamps = new LinkedList<Long>();
+    volatile ConfidenceQualifiedNumber lastAverage = [0,0];
     
-    long timePeriod
+    long timePeriod;
     
     public RollingTimeWindowMeanEnricher(Entity producer, AttributeSensor<T> source, 
         AttributeSensor<Double> target, long timePeriod) {
-        super(producer, source, target)
-        this.timePeriod = timePeriod
+        super(producer, source, target);
+        this.timePeriod = timePeriod;
     }
 
     @Override
     public void onEvent(SensorEvent<T> event) {
-        onEvent(event, event.getTimestamp())
+        onEvent(event, event.getTimestamp());
     }
     
     public void onEvent(SensorEvent<T> event, long eventTime) {
-        values.addLast(event.getValue())
-        timestamps.addLast(eventTime)
-        pruneValues(eventTime)
-        entity.setAttribute(target, getAverage(eventTime).value) //TODO this can potentially go stale... maybe we need to timestamp as well?
+        values.addLast(event.getValue());
+        timestamps.addLast(eventTime);
+        pruneValues(eventTime);
+        entity.setAttribute(target, getAverage(eventTime).value); //TODO this can potentially go stale... maybe we need to timestamp as well?
     }
     
     public ConfidenceQualifiedNumber getAverage() {
-        return getAverage(System.currentTimeMillis())
+        return getAverage(System.currentTimeMillis());
     }
     
     public ConfidenceQualifiedNumber getAverage(long now) {
-        pruneValues(now)
+        pruneValues(now);
         if (timestamps.isEmpty()) {
-            return lastAverage = new ConfidenceQualifiedNumber(lastAverage.value, 0.0d)
+            return lastAverage = new ConfidenceQualifiedNumber(lastAverage.value, 0.0d);
         }
 
         // XXX grkvlt - see email to development list
 
         Double confidence = (timePeriod - (now - timestamps.last())) / timePeriod
         if (confidence <= 0.0d) {
-            return lastAverage = new ConfidenceQualifiedNumber((double)values.last(), 0.0d)
+            return lastAverage = new ConfidenceQualifiedNumber((double)values.last(), 0.0d);
         }
         
-        Long start = now - timePeriod
-        Long end
-        Double weightedAverage = 0.0d
+        Long start = now - timePeriod;
+        Long end;
+        Double weightedAverage = 0.0d;
         
         timestamps.eachWithIndex { timestamp, i ->
             // Ignores out-of-date values (and also values that are received out-of-order, but that shouldn't happen!)
             if (timestamp >= start) {
-                end = timestamp
-                weightedAverage += ((end - start) / (confidence * timePeriod)) * values[i]
-                start = timestamp
+                end = timestamp;
+                weightedAverage += ((end - start) / (confidence * timePeriod)) * values[i];
+                start = timestamp;
             }
         }
         
-        return lastAverage = [weightedAverage, confidence]
+        return lastAverage = [weightedAverage, confidence];
     }
     
     /**
@@ -101,8 +101,8 @@ class RollingTimeWindowMeanEnricher<T extends Number> extends AbstractTransformi
      */
     private void pruneValues(long now) {
         while(timestamps.size() > 1 && timestamps.first() < (now - timePeriod)) {
-            timestamps.removeFirst()
-            values.removeFirst()
+            timestamps.removeFirst();
+            values.removeFirst();
         }
     }
 }
