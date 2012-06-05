@@ -111,8 +111,13 @@ datadir         = .
                     "--defaults-file=mymysql.cnf",
                 "${basedir}/bin/mysqld --defaults-file=mymysql.cnf --user=`whoami` &", //--user=root needed if we are root
                 "export MYSQL_PID=\$!",
-                "sleep 15 && ${basedir}/bin/mysqladmin --defaults-file=mymysql.cnf --password= password ${password}",
+                "sleep 20",
+                "echo launching mysqladmin",
+                "${basedir}/bin/mysqladmin --defaults-file=mymysql.cnf --password= password ${password}",
+                "sleep 20",
+                "echo launching mysql creation script",
                 "${basedir}/bin/mysql --defaults-file=mymysql.cnf < creation-script.cnf",
+                "echo terminating mysql on customization complete",
                 "kill \$MYSQL_PID"
             ).execute();
     }
