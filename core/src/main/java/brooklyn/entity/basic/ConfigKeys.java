@@ -7,7 +7,7 @@ import brooklyn.event.basic.BasicConfigKey;
 /**
  * Dictionary of {@link ConfigKey} entries.
  */
-class ConfigKeys {
+public class ConfigKeys {
     
     // FIXME Rename to VERSION, instead of SUGGESTED_VERSION? And declare as BasicAttributeSensorAndConfigKey?
     
