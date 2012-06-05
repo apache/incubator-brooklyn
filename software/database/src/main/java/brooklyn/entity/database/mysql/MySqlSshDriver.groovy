@@ -10,6 +10,7 @@ import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.BasicOsDetails.OsArchs
 import brooklyn.location.basic.BasicOsDetails.OsVersions
 import brooklyn.util.ComparableVersion
+import brooklyn.util.IdGenerator;
 import brooklyn.util.ResourceUtils
 
 public class MySqlSshDriver extends StartStopSshDriver {
@@ -69,7 +70,8 @@ public class MySqlSshDriver extends StartStopSshDriver {
             ).execute();
     }
 
-    String secretPassword = "random"+(int)(Math.random()*100000)
+    final String socketUid = IdGenerator.makeRandomId(6);
+    String secretPassword = IdGenerator.makeRandomId(6);
     public String getPassword() { secretPassword }
     public MySqlNode getEntity() { return super.getEntity() }
     public int getPort() { return entity.port }
@@ -90,7 +92,7 @@ public class MySqlSshDriver extends StartStopSshDriver {
                 "cat > mymysql.cnf << END_MYSQL_CONF_${entity.id}\n"+"""
 [client]
 port            = ${port}
-socket          = /tmp/mysql.sock.${port}
+socket          = /tmp/mysql.sock.${socketUid}.${port}
 user            = root
 password        = ${password}
                 
@@ -99,7 +101,7 @@ password        = ${password}
 # The MySQL server
 [mysqld]
 port            = ${port}
-socket          = /tmp/mysql.sock.${port}
+socket          = /tmp/mysql.sock.${socketUid}.${port}
 basedir         = ${basedir}
 datadir         = .
 
