@@ -46,7 +46,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     //TODO remove once everything is prefixed SSHCONFIG_PREFIX
     //(I don't think we ever relied on props being passed through in this way,
     //but the code path was there so I didn't want to delete it immediately.)
-    public static final String NON_SSH_PROPS = ["out", "err", "latitude", "longitude", "keyFiles", "publicKey", "privateKey"];
+    public static final String NON_SSH_PROPS = ["out", "err", "latitude", "longitude", "keyFiles", "publicKey", "privateKey", "backup"];
     
     private final Set<Integer> ports = [] as HashSet
 
@@ -147,7 +147,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public int copyTo(Map props=[:], File src, String destination) {
         Preconditions.checkNotNull address, "Host address must be specified for scp"
         Preconditions.checkArgument src.exists(), "File %s must exist for scp", src.path
-		copyTo new FileInputStream(src), src.length(), destination 
+		copyTo props, new FileInputStream(src), src.length(), destination 
     }
 	public int copyTo(Map props=[:], Reader src, String destination) {
 		copyTo(props, new ReaderInputStream(src), destination);

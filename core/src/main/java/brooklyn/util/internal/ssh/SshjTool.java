@@ -567,6 +567,7 @@ public class SshjTool implements SshTool {
 
     private class PutFileAction implements SshAction<Void> {
         // TODO See SshJschTool.createFile: it does whacky stuff when copying; do we need that here as well?
+        // TODO support backup as a property?
         
         private final String path;
         private final Payload contents;
