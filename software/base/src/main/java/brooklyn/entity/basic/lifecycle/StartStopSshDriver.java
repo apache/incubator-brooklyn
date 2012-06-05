@@ -36,7 +36,7 @@ public abstract class StartStopSshDriver extends AbstractStartStopDriver impleme
     public static final Logger log = LoggerFactory.getLogger(StartStopSshDriver.class);
     public static final Logger logSsh = LoggerFactory.getLogger(BrooklynLogging.SSH_IO);
 
-    public static final String BROOKLYN_HOME_DIR = "/tmp/brooklyn";
+    public static final String BROOKLYN_HOME_DIR = "/tmp/brooklyn-"+System.getProperty("user.name");
     public static final String DEFAULT_INSTALL_BASEDIR = BROOKLYN_HOME_DIR+"/"+"installs";
     public static final String NO_VERSION_INFO = "no-version-info";
 
