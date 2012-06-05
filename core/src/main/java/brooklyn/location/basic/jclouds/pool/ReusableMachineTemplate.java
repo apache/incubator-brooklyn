@@ -135,7 +135,7 @@ public class ReusableMachineTemplate extends PortableTemplateBuilder<ReusableMac
     public ReusableMachineTemplate metadata(String key, String value) {
         return addOptions(TemplateOptions.Builder.userMetadata(key, value));
     }
-    public ReusableMachineTemplate metadata(Map m) {
+    public ReusableMachineTemplate metadata(Map<String,String> m) {
         return addOptions(TemplateOptions.Builder.userMetadata(m));
     }
 
@@ -149,7 +149,7 @@ public class ReusableMachineTemplate extends PortableTemplateBuilder<ReusableMac
     public ReusableMachineTemplate metadataOptional(String key, String value) {
         return addOptionalOptions(TemplateOptions.Builder.userMetadata(key, value));
     }
-    public ReusableMachineTemplate metadataOptional(Map m) {
+    public ReusableMachineTemplate metadataOptional(Map<String,String> m) {
         return addOptionalOptions(TemplateOptions.Builder.userMetadata(m));
     }
 

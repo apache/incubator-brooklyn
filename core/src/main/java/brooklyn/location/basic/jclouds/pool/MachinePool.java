@@ -17,10 +17,10 @@ import org.jclouds.compute.domain.Template;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 /**
  * Contains details of machines detected at a given cloud (ComputeService),
@@ -175,13 +175,27 @@ public class MachinePool {
     }
     
     /** returns all machines matching the given criteria (may be claimed) */
-    public MachineSet all(Function<MachineSet, MachineSet> ...ops) {
-        return compose(ops).apply(all());
+    @SuppressWarnings("unchecked")
+    public MachineSet all(Predicate<NodeMetadata> criterion) {
+        // To avoid generics complaints in callers caused by varargs, overload here
+        return all(new Predicate[] {criterion});
+    }
+    
+    /** returns all machines matching the given criteria (may be claimed) */
+    public MachineSet all(Predicate<NodeMetadata> ...ops) {
+        return new MachineSet(Iterables.filter(all(), compose(ops)));
     }
 
     /** returns unclaimed machines matching the given criteria */
-    public MachineSet unclaimed(Function<MachineSet, MachineSet> ...ops) {
-        return compose(ops).apply(unclaimed());
+    @SuppressWarnings("unchecked")
+    public MachineSet unclaimed(Predicate<NodeMetadata> criterion) {
+        // To avoid generics complaints in callers caused by varargs, overload here
+        return unclaimed(new Predicate[] {criterion});
+    }
+    
+    /** returns unclaimed machines matching the given criteria */
+    public MachineSet unclaimed(Predicate<NodeMetadata> ...criteria) {
+        return new MachineSet(Iterables.filter(unclaimed(), compose(criteria)));
     }
 
     /** creates machines if necessary so that this spec exists (may already be claimed however) 
@@ -238,10 +252,9 @@ public class MachinePool {
     }
 
     public Set<ReusableMachineTemplate> getTemplatesMatchingInstance(NodeMetadata nm) {
-        MachineSet input = new MachineSet(nm);
         Set<ReusableMachineTemplate> result = new LinkedHashSet<ReusableMachineTemplate>(); 
         for (ReusableMachineTemplate t: getTemplates()) {
-            if (!matching(t).apply(input).isEmpty()) {
+            if (!matching(t).apply(nm)) {
                result.add(t); 
             }
         }        
@@ -285,7 +298,7 @@ public class MachinePool {
             MachineSet mm = ensureUnclaimed(count - claiming.size(), t);
             for (NodeMetadata m : mm) {
                 synchronized (this) {
-                    if (!claimedMachines.contains(m)) {
+                    if (claiming.size() < count && !claimedMachines.contains(m)) {
                         claiming.add(m);
                         claimedMachines = claimedMachines.added(new MachineSet(m));
                     }
