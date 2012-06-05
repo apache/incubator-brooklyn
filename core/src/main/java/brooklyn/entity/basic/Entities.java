@@ -5,6 +5,7 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -84,6 +85,15 @@ public class Entities {
         return v==null || (v instanceof Map && ((Map<?,?>)v).isEmpty()) ||
                 (v instanceof Collection && ((Collection<?>)v).isEmpty()) ||
                 (v instanceof CharSequence&& ((CharSequence)v).length() == 0);
+    }
+    
+    public static Map<Object,Object> sanitize(Map<?,?> input) {
+        Map<Object,Object> result = new LinkedHashMap<Object,Object>();
+        for (Map.Entry<?,?> e: input.entrySet()) {
+            if (isSecret(""+e.getKey())) result.put(e.getKey(), "xxxxxxxx");
+            else result.put(e.getKey(), e.getValue());
+        }
+        return result;
     }
     
     public static void dumpInfo(Entity e) throws IOException {
