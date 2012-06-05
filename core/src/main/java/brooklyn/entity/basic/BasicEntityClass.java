@@ -1,7 +1,5 @@
 package brooklyn.entity.basic;
 
-import groovy.transform.EqualsAndHashCode;
-
 import java.util.Collection;
 
 import brooklyn.entity.ConfigKey;
@@ -9,7 +7,8 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.EntityClass;
 import brooklyn.event.Sensor;
 
-@EqualsAndHashCode(includeFields=true)
+import com.google.common.base.Objects;
+
 public class BasicEntityClass implements EntityClass {
     private static final long serialVersionUID = 4670930188951106009L;
     
@@ -18,6 +17,21 @@ public class BasicEntityClass implements EntityClass {
     private Collection<Sensor<?>> sensors;
     private Collection<Effector<?>> effectors;
 
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(name, configKeys, sensors, effectors);
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (!(obj instanceof BasicEntityClass)) return false;
+        BasicEntityClass o = (BasicEntityClass) obj;
+        
+        return Objects.equal(name, o.name) && Objects.equal(configKeys, o.configKeys) &&
+                Objects.equal(sensors, o.sensors) && Objects.equal(effectors, o.effectors);
+    }
+    
     @SuppressWarnings("unused")
     private BasicEntityClass() { /* for gson */ }
 
