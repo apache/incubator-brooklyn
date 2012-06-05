@@ -1,19 +1,20 @@
 package brooklyn.util.task;
 
-import java.util.Map
-import java.util.Queue
-import java.util.concurrent.ConcurrentLinkedQueue
-import java.util.concurrent.atomic.AtomicBoolean
+import java.util.Map;
 
-import brooklyn.management.ExecutionManager
-import brooklyn.management.Task
+import brooklyn.management.ExecutionManager;
+import brooklyn.management.Task;
 
 /**
  * The preprocessor is an internal mechanism to decorate {@link Task}s.
  *
  * This can be used to enhance tasks that they acquire a {@code synchronized} block (to cause
  * them to effectively run singly-threaded), or clear intermediate queued jobs, etc.
+ * 
+ *
+ * @deprecated in 0.4; unused code; will be deleted
  */
+@Deprecated
 public interface TaskPreprocessor {
     /**
      * Called by {@link BasicExecutionManager} when preprocessor is associated with an

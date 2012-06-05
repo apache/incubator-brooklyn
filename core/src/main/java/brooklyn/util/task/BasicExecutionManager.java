@@ -147,6 +147,9 @@ public class BasicExecutionManager implements ExecutionManager {
     }
     
     private Set<Task> getMutableTasksWithTag(Object tag) {
+        if (tag == null) {
+            System.out.println("argph, null");
+        }
         tasksByTag.putIfAbsent(tag, Collections.synchronizedSet(new LinkedHashSet<Task>()));
         return tasksByTag.get(tag);
     }
@@ -199,6 +202,18 @@ public class BasicExecutionManager implements ExecutionManager {
         synchronized (task) {
             if (((BasicTask)task).getResult()!=null) return task;
             return submitNewTask(flags, task);
+        }
+    }
+
+    public <T> Task<T> submit(Map<?,?> flags, Object c) {
+        if (c instanceof Task) {
+            return submit(flags, (Task)c);
+        } else if (c instanceof Callable) {
+            return submit(flags, (Callable)c);
+        } else if (c instanceof Runnable) {
+            return (Task<T>) submit(flags, (Runnable)c);
+        } else {
+            throw new IllegalArgumentException("Unhandled task type: c="+c+"; type="+(c!=null ? c.getClass() : "null"));
         }
     }
 
