@@ -1,4 +1,4 @@
-package brooklyn.entity.java
+package brooklyn.entity.java;
 
 import groovy.time.TimeDuration
 
@@ -11,13 +11,13 @@ import java.util.concurrent.TimeUnit
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.entity.ConfigKey
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.basic.UsesJava
 import brooklyn.entity.basic.UsesJavaMXBeans
 import brooklyn.entity.basic.UsesJmx
 import brooklyn.entity.basic.lifecycle.JavaStartStopSshDriver
-import brooklyn.entity.basic.lifecycle.ScriptHelper
 import brooklyn.event.adapter.ConfigSensorAdapter
 import brooklyn.event.adapter.FunctionSensorAdapter
 import brooklyn.event.adapter.JmxSensorAdapter
@@ -38,40 +38,38 @@ public class VanillaJavaApp extends SoftwareProcessEntity implements UsesJava, U
     private static final Logger log = LoggerFactory.getLogger(VanillaJavaApp.class)
     
     @SetFromFlag("args")
-    public static final BasicConfigKey<List> ARGS = [ List, "vanillaJavaApp.args", "Arguments for launching the java app", 
-        [] ]
+    public static final ConfigKey<List> ARGS = new BasicConfigKey<List>(List.class, "vanillaJavaApp.args", "Arguments for launching the java app", []);
     
     @SetFromFlag(value="main", nullable=false)
-    public static final BasicConfigKey<String> MAIN_CLASS = [ String, "vanillaJavaApp.mainClass", "class to launch" ];
+    public static final ConfigKey<String> MAIN_CLASS = new BasicConfigKey<String>(String.class, "vanillaJavaApp.mainClass", "class to launch");
 
     @SetFromFlag("classpath")
-    public static final BasicConfigKey<List> CLASSPATH = [ List, "vanillaJavaApp.classpath", "classpath to use, as list of URL entries", 
-        [] ];
+    public static final ConfigKey<List> CLASSPATH = new BasicConfigKey<List>(List.class, "vanillaJavaApp.classpath", "classpath to use, as list of URL entries", []);
 
     @SetFromFlag(defaultVal="true")
     protected boolean useJmx;
     
     @SetFromFlag
-    protected long jmxPollPeriod
+    protected long jmxPollPeriod;
     
     @SetFromFlag("jvmXArgs")
-    public static final BasicConfigKey<List> JVM_XARGS = [ List, "vanillaJavaApp.jvmXArgs", "JVM -X args for the java app (e.g. memory)", 
-        ["-Xms128m", "-Xmx512m", "-XX:MaxPermSize=512m"] ];
+    public static final ConfigKey<List> JVM_XARGS = new BasicConfigKey<List>(List.class, "vanillaJavaApp.jvmXArgs", "JVM -X args for the java app (e.g. memory)", 
+        ["-Xms128m", "-Xmx512m", "-XX:MaxPermSize=512m"]);
 
     @SetFromFlag("jvmDefines")
-    public static final BasicConfigKey<Map> JVM_DEFINES = [ Map, "vanillaJavaApp.jvmDefines", "JVM system property definitions for the app",
-        [:] ];
+    public static final ConfigKey<Map> JVM_DEFINES = new BasicConfigKey<Map>(Map.class, "vanillaJavaApp.jvmDefines", "JVM system property definitions for the app",
+        [:]);
 
-    protected JmxSensorAdapter jmxAdapter
+    protected JmxSensorAdapter jmxAdapter;
     
     public VanillaJavaApp(Map props=[:], Entity owner=null) {
-        super(props, owner)
+        super(props, owner);
     }
     
-    public String getMainClass() { getConfig(MAIN_CLASS); }
-    public List getClasspath() { getConfig(CLASSPATH); }
-    public Map getJvmDefines() { getConfig(JVM_DEFINES); }
-    public List getJvmXArgs() { getConfig(JVM_XARGS); }
+    public String getMainClass() { return getConfig(MAIN_CLASS); }
+    public List getClasspath() { return getConfig(CLASSPATH); }
+    public Map getJvmDefines() { return getConfig(JVM_DEFINES); }
+    public List getJvmXArgs() { return getConfig(JVM_XARGS); }
 
     public void addToClasspath(String url) {
         List<String> cp = getConfig(CLASSPATH);
@@ -80,6 +78,7 @@ public class VanillaJavaApp extends SoftwareProcessEntity implements UsesJava, U
         newCP.add(url);
         setConfig(CLASSPATH, newCP);
     }
+    
     public void addToClasspath(Collection<String> urls) {
         List<String> cp = getConfig(CLASSPATH);
         List<String> newCP = new ArrayList<String>();
@@ -95,9 +94,9 @@ public class VanillaJavaApp extends SoftwareProcessEntity implements UsesJava, U
         sensorRegistry.register(new ConfigSensorAdapter());
         
         if (useJmx) {
-            TimeDuration jmxPollPeriod = (jmxPollPeriod > 0 ? jmxPollPeriod : 500)*TimeUnit.MILLISECONDS
+            TimeDuration jmxPollPeriod = (jmxPollPeriod > 0 ? jmxPollPeriod : 500)*TimeUnit.MILLISECONDS;
             jmxAdapter = sensorRegistry.register(new JmxSensorAdapter(period:jmxPollPeriod));
-            JavaAppUtils.connectMXBeanSensors(this, jmxAdapter)
+            JavaAppUtils.connectMXBeanSensors(this, jmxAdapter);
         }
         
         FunctionSensorAdapter serviceUpAdapter = sensorRegistry.register(new FunctionSensorAdapter(
@@ -113,22 +112,22 @@ public class VanillaJavaApp extends SoftwareProcessEntity implements UsesJava, U
     }
 
     public VanillaJavaAppSshDriver newDriver(SshMachineLocation loc) {
-        new VanillaJavaAppSshDriver(this, loc)
+        new VanillaJavaAppSshDriver(this, loc);
     }
 }
 
 public class VanillaJavaAppSshDriver extends JavaStartStopSshDriver {
 
     public VanillaJavaAppSshDriver(VanillaJavaApp entity, SshMachineLocation machine) {
-        super(entity, machine)
+        super(entity, machine);
     }
 
-    public VanillaJavaApp getEntity() { super.getEntity() }
+    public VanillaJavaApp getEntity() { return super.getEntity(); }
 
-    public boolean isJmxEnabled() { super.isJmxEnabled() && entity.useJmx }
+    public boolean isJmxEnabled() { return super.isJmxEnabled() && entity.useJmx; }
     
     protected String getLogFileLocation() {
-        return "$runDir/console"
+        return "$runDir/console";
     }
     
     @Override
