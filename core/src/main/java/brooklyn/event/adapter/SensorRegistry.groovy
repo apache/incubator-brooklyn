@@ -21,6 +21,7 @@ import brooklyn.event.adapter.legacy.ValueProvider
  * This class manages the periodic polling of a set of sensors, to update the attribute values 
  * of a particular {@link Entity}.
  */
+@SuppressWarnings("deprecation")
 public class SensorRegistry {
     static final Logger log = LoggerFactory.getLogger(SensorRegistry.class);
  

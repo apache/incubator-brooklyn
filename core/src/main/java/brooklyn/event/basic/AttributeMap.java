@@ -21,6 +21,7 @@ import com.google.common.base.Preconditions;
  * A {@link Map} of {@link Entity} attribute values.
  */
 public final class AttributeMap implements Serializable {
+
     static final Logger log = LoggerFactory.getLogger(AttributeMap.class);
 
     private final static Object NULL = new Object();
