@@ -14,6 +14,7 @@ import java.util.Set;
 
 import javax.annotation.Nullable
 
+import org.jclouds.Constants
 import org.jclouds.compute.ComputeService
 import org.jclouds.compute.RunNodesException
 import org.jclouds.compute.domain.ComputeMetadata;
@@ -31,14 +32,12 @@ import org.jclouds.scriptbuilder.statements.login.UserAdd
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.config.BrooklynProperties
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.NoMachinesAvailableException
 import brooklyn.location.basic.AbstractLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.jclouds.templates.PortableTemplateBuilder
 import brooklyn.util.IdGenerator
-import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.internal.Repeater
 
 import com.google.common.base.Charsets
@@ -68,7 +67,10 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     
     protected void configure(Map properties) {
         super.configure(properties)
-        if (!name) name = conf.providerLocationId ?: conf.provider ?: "default";
+        if (!name) name = conf.providerLocationId ?:
+            conf.get(Constants.PROPERTY_ENDPOINT) ? conf.provider+":"+conf.get(Constants.PROPERTY_ENDPOINT) :
+            conf.provider ?: 
+            "default";
     }
     
     @Override
