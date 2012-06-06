@@ -29,7 +29,7 @@ public class BrooklynMachinePool extends MachinePool {
 
     private static final Logger log = LoggerFactory.getLogger(BrooklynMachinePool.class);
     
-    final JcloudsLocation location;
+    protected final JcloudsLocation location;
     final List<Task<?>> activeTasks = new ArrayList<Task<?>>();
     final String providerLocationId;
     

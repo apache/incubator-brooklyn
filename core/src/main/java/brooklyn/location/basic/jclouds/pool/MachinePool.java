@@ -52,7 +52,7 @@ public class MachinePool {
     
     private static final Logger log = LoggerFactory.getLogger(MachinePool.class);
     
-    final ComputeService computeService;
+    protected final ComputeService computeService;
     final AtomicBoolean refreshNeeded = new AtomicBoolean(true);
     final List<ReusableMachineTemplate> templates = new ArrayList<ReusableMachineTemplate>();
     String poolName = null;
