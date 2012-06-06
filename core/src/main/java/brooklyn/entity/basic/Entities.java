@@ -96,8 +96,13 @@ public class Entities {
         return result;
     }
     
-    public static void dumpInfo(Entity e) throws IOException {
-        dumpInfo(e, new PrintWriter(System.out), "", "  ");
+    public static void dumpInfo(Entity e) {
+        try {
+            dumpInfo(e, new PrintWriter(System.out), "", "  ");
+        } catch (IOException exc) {
+            // system.out throwing an exception is odd, so don't have IOException on signature
+            throw new RuntimeException(exc);
+        }
     }
     public static void dumpInfo(Entity e, Writer out) throws IOException {
         dumpInfo(e, out, "", "  ");
