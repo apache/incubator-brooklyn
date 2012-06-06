@@ -17,7 +17,7 @@ import com.google.common.base.Throwables;
 
 import brooklyn.management.ExecutionManager
 import brooklyn.management.Task
-import brooklyn.util.internal.LanguageUtils
+import brooklyn.test.TestUtils
 import brooklyn.management.ExpirationPolicy
 
 /**
@@ -91,7 +91,9 @@ public class BasicTaskExecutionTest {
         assertFalse(t.isDone())
         
         log.debug "runBasicTaskWithWaits, BasicTask status: {}", t.getStatusDetail(false)
-        assertTrue(t.getStatusDetail(false).toLowerCase().contains("waiting"), "details="+t.getStatusDetail(false))
+        
+        TestUtils.executeUntilSucceeds { t.getStatusDetail(false).toLowerCase().contains("waiting") }
+        // "details="+t.getStatusDetail(false))
         
         allowCompletion.countDown();
         assertEquals("a", t.get())
