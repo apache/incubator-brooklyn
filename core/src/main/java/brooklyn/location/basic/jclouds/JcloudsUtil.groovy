@@ -167,17 +167,32 @@ public class JcloudsUtil {
         properties.setProperty(Constants.PROPERTY_TRUST_ALL_CERTS, Boolean.toString(true))
         properties.setProperty(Constants.PROPERTY_RELAX_HOSTNAME, Boolean.toString(true))
                 
-        // Enable aws-ec2 lazy image fetching, if givena specific imageId; otherwise customize for specific owners; or all as a last resort
+        // Enable aws-ec2 lazy image fetching, if given a specific imageId; otherwise customize for specific owners; or all as a last resort
         // See https://issues.apache.org/jira/browse/WHIRR-416
-        if (conf.imageId) {
-            properties.setProperty(PROPERTY_EC2_AMI_QUERY, "")
-            properties.setProperty(PROPERTY_EC2_CC_AMI_QUERY, "")
-        } else if (conf.imageOwner) {
-            properties.setProperty(PROPERTY_EC2_AMI_QUERY, "owner-id="+conf.imageOwner+";state=available;image-type=machine")
-        } else {
-            // this allows the AMI query to bind to any machine
-            // (note however, we pick defaults in JcloudsLocationFactory)
-            properties.setProperty(PROPERTY_EC2_AMI_QUERY, "state=available;image-type=machine")
+        if ("aws-ec2".equals(conf.provider)) {
+            if (conf.imageId) {
+                properties.setProperty(PROPERTY_EC2_AMI_QUERY, "")
+                properties.setProperty(PROPERTY_EC2_CC_AMI_QUERY, "")
+            } else if (conf.imageOwner) {
+                unusedConf.remove("imageOwner");
+                properties.setProperty(PROPERTY_EC2_AMI_QUERY, "owner-id="+conf.imageOwner+";state=available;image-type=machine")
+            } else if (conf.anyOwner) {
+                // set `anyOwner: true` to override the default query (which is restricted to certain owners as per below), 
+                // allowing the AMI query to bind to any machine
+                // (note however, we sometimes pick defaults in JcloudsLocationFactory);
+                // (and be careful, this can give a LOT of data back, taking several minutes,
+                // and requiring extra memory allocated on the command-line)
+                unusedConf.remove("anyOwner");
+                properties.setProperty(PROPERTY_EC2_AMI_QUERY, "state=available;image-type=machine")
+            
+                // by default the following filters are applied:
+//            Filter.1.Name=owner-id&Filter.1.Value.1=137112412989&
+//            Filter.1.Value.2=063491364108&
+//            Filter.1.Value.3=099720109477&
+//            Filter.1.Value.4=411009282317&
+//            Filter.2.Name=state&Filter.2.Value.1=available&
+//            Filter.3.Name=image-type&Filter.3.Value.1=machine&
+            }
         }
 
         String endpoint = unusedConf.remove(Constants.PROPERTY_ENDPOINT);
