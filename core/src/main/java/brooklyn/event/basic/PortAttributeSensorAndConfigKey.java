@@ -11,6 +11,7 @@ import brooklyn.event.Sensor;
 import brooklyn.location.Location;
 import brooklyn.location.PortRange;
 import brooklyn.location.PortSupplier;
+import brooklyn.util.flags.TypeCoercions;
 
 /**
  * A {@link Sensor} describing a port on a system,
@@ -34,8 +35,7 @@ public class PortAttributeSensorAndConfigKey extends AttributeSensorAndConfigKey
         super(PortRange.class, Integer.class, name, description, defaultValue);
     }
     public PortAttributeSensorAndConfigKey(PortAttributeSensorAndConfigKey orig, Object defaultValue) {
-        // TODO is this cast valid? could the port range be a string yet to be coerced for example?
-        super(orig, (PortRange)defaultValue);
+        super(orig, TypeCoercions.coerce(defaultValue, PortRange.class));
     }
     protected Integer convertConfigToSensor(PortRange value, Entity entity) {
         if (value==null) return null;
