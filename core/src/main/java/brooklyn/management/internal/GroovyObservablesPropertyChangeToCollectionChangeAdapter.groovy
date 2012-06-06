@@ -26,7 +26,7 @@ public class GroovyObservablesPropertyChangeToCollectionChangeAdapter implements
                 evt.values { delegate.onItemAdded(it); }; break;
         }
     }
-    public int hashCode() { delegate.hashCode(); }
+    public int hashCode() { return delegate.hashCode(); }
     public boolean equals(Object other) {
         if (other instanceof GroovyObservablesPropertyChangeToCollectionChangeAdapter) 
             return delegate.equals(other.delegate);

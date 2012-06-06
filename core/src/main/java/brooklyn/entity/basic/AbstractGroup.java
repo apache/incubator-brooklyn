@@ -1,17 +1,17 @@
-package brooklyn.entity.basic
+package brooklyn.entity.basic;
 
-import groovy.transform.InheritConstructors
+import groovy.transform.InheritConstructors;
 
-import java.util.Collection
-import java.util.Map
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import brooklyn.enricher.basic.AbstractAggregatingEnricher
-import brooklyn.entity.Entity
-import brooklyn.entity.Group
-import brooklyn.entity.trait.Changeable
+import brooklyn.entity.Entity;
+import brooklyn.entity.Group;
+import brooklyn.entity.trait.Changeable;
 
 
 /**
@@ -29,9 +29,21 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
     private static final Logger log = LoggerFactory.getLogger(AbstractGroup.class);
     private final EntityCollectionReference<Entity> _members = new EntityCollectionReference<Entity>(this);
 
-    public AbstractGroup(Map props=[:], Entity owner=null) {
-        super(props, owner)
-        setAttribute(Changeable.GROUP_SIZE, 0)
+    public AbstractGroup(Map<?,?> props, Entity owner) {
+        super(props, owner);
+        setAttribute(Changeable.GROUP_SIZE, 0);
+    }
+    
+    public AbstractGroup() {
+        this(Collections.emptyMap(), null);
+    }
+    
+    public AbstractGroup(Map<?,?> props) {
+        this(props, null);
+    }
+    
+    public AbstractGroup(Entity owner) {
+        this(Collections.emptyMap(), null);
     }
 
     /**
@@ -39,13 +51,12 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
      */
     public void addMember(Entity member) {
         synchronized (_members) {
-	        member.addGroup(this)
+	        member.addGroup(this);
 	        if (_members.add(member)) {
-                log.debug("Group $this got new member $member");
-	            emit(MEMBER_ADDED, member)
-	            setAttribute(Changeable.GROUP_SIZE, currentSize)
+                log.debug("Group {} got new member {}", this, member);
+	            emit(MEMBER_ADDED, member);
+	            setAttribute(Changeable.GROUP_SIZE, getCurrentSize());
 	        }
-	        member
 	    }
     }
  
@@ -54,32 +65,32 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
      */
     public boolean removeMember(Entity member) {
         synchronized (_members) {
-            boolean changed = (member != null && _members.remove(member))
+            boolean changed = (member != null && _members.remove(member));
             if (changed) {
-                log.debug("Group $this lost member $member");
-	            emit(MEMBER_REMOVED, member)
-	            setAttribute(Changeable.GROUP_SIZE, currentSize)
+                log.debug("Group {} lost member {}", this, member);
+	            emit(MEMBER_REMOVED, member);
+	            setAttribute(Changeable.GROUP_SIZE, getCurrentSize());
 	        }
-	        changed
+	        return changed;
         }
     }
  
     // Declared so can be overridden (the default auto-generated getter is final!)
     public Collection<Entity> getMembers() {
         synchronized (_members) {
-            return _members.get()
+            return _members.get();
         }
     }
 
     public boolean hasMember(Entity e) {
         synchronized (_members) {
-            return _members.contains(e)
+            return _members.contains(e);
         }
     }
 
     public Integer getCurrentSize() {
         synchronized (_members) {
-            return _members.size()
+            return _members.size();
         }
     }
 }

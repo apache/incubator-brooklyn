@@ -139,8 +139,10 @@ private class TestWebApplication extends AbstractApplication {
                     "Direct children of this group"), DataRate: new BasicAttributeSensor<String>(String.class, "DataRate")])
         }
 
-        TestGroupEntity addOwnedChild(Entity child) {
-            super.addOwnedChild(child)
+        public Entity addOwnedChild(Entity child) {
+            // TODO using super.addOwnedChild gives StackOverflowException. Sounds similar to http://jira.codehaus.org/browse/GROOVY-5385,
+            // except that changing the return type to match super's doesn't fix it...
+            child.setOwner(this)
             setAttribute(getSensor("Children"), ownedChildren.size())
             return this
         }

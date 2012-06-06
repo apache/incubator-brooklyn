@@ -28,7 +28,7 @@ Brooklyn.summary = (function() {
 
             $("#summary-basic-info").html(name_html + locations_html);
 
-            var status_html = '<span class="label">Status: </span>TODO';
+            var status_html = '<p><span class="label">Status: </span>'+json.status+'</p><br/>';
             $("#summary-status").html(status_html);
 
             var groups_html = '<h4>Groups</h4>';
@@ -41,9 +41,11 @@ Brooklyn.summary = (function() {
             }
             $("#summary-groups").html(groups_html);
 
-            var activity_html = '<h4>Recent Activity</h4>';
-            activity_html += '<p>TODO</p>';
-            $("#summary-activity").html(activity_html);
+            var identity_html = '<p>Self: '+json.id+'</p><br/>';
+            var owner_html = '';
+            if (json.ownerId) owner_html = '<p>Owner: '+json.ownerId+'</p><br/>';
+            var app_html = '<p>App: '+json.applicationId+'</p>';
+            $("#summary-activity").html('<h4>IDs</h4>'+identity_html + owner_html + app_html);
 
             $(Brooklyn.eventBus).trigger('update_ok');
         };

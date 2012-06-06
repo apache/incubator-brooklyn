@@ -41,7 +41,9 @@ Brooklyn.circles = (function() {
 
         for (id in json) {
             var l = json[id];
-            if (lm = locationMarkers[id]) {
+            if (l.lat == null || l.lng == null || (l.lat == 0 && l.lng == 0)) {
+                // Suppress circle if not set or at (0,0); slightly clumsy, but workable
+            } else if (lm = locationMarkers[id]) {
                 // Update
                 var latlng = new google.maps.LatLng(l.lat, l.lng);
 

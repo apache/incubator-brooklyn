@@ -37,6 +37,8 @@ import org.jclouds.sshj.config.SshjSshClientModule
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.entity.basic.Entities
+
 import com.google.common.base.Charsets
 import com.google.common.base.Predicate
 import com.google.common.base.Splitter
@@ -164,7 +166,7 @@ public class JcloudsUtil {
         properties.setProperty(Constants.PROPERTY_CREDENTIAL, conf.credential); unusedConf.remove("credential");
         properties.setProperty(Constants.PROPERTY_TRUST_ALL_CERTS, Boolean.toString(true))
         properties.setProperty(Constants.PROPERTY_RELAX_HOSTNAME, Boolean.toString(true))
-        
+                
         // Enable aws-ec2 lazy image fetching, if givena specific imageId; otherwise customize for specific owners; or all as a last resort
         // See https://issues.apache.org/jira/browse/WHIRR-416
         if (conf.imageId) {
@@ -178,13 +180,16 @@ public class JcloudsUtil {
             properties.setProperty(PROPERTY_EC2_AMI_QUERY, "state=available;image-type=machine")
         }
 
+        String endpoint = unusedConf.remove(Constants.PROPERTY_ENDPOINT);
+        if (endpoint) properties.setProperty(Constants.PROPERTY_ENDPOINT, endpoint);
+
         if (allowReuse) {
             ComputeService result = cachedComputeServices.get(properties);
             if (result!=null) {
-                LOG.debug("jclouds ComputeService cache hit for compute service, for "+properties);
+                LOG.debug("jclouds ComputeService cache hit for compute service, for "+Entities.sanitize(properties));
                 return result;
             }
-            LOG.debug("jclouds ComputeService cache miss for compute service, creating, for "+properties);
+            LOG.debug("jclouds ComputeService cache miss for compute service, creating, for "+Entities.sanitize(properties));
         }
         
         Iterable<Module> modules = ImmutableSet.<Module> of(new SshjSshClientModule(), new SLF4JLoggingModule());
@@ -199,12 +204,12 @@ public class JcloudsUtil {
             synchronized (cachedComputeServices) {
                 ComputeService result = cachedComputeServices.get(properties);
                 if (result) {
-                    LOG.debug("jclouds ComputeService cache recovery for compute service, for "+properties);
+                    LOG.debug("jclouds ComputeService cache recovery for compute service, for "+Entities.sanitize(properties));
                     //keep the old one, discard the new one
                     computeService.getContext().close();
                     return result;
                 }
-                LOG.debug("jclouds ComputeService created "+computeService+", adding to cache, for "+properties);
+                LOG.debug("jclouds ComputeService created "+computeService+", adding to cache, for "+Entities.sanitize(properties));
                 cachedComputeServices.put(properties, computeService);
             }
         }

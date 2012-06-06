@@ -26,13 +26,13 @@ import brooklyn.util.task.BasicExecutionContext
 import brooklyn.util.task.BasicExecutionManager
 
 public abstract class AbstractManagementContext implements ManagementContext  {
-    private static final Logger log = LoggerFactory.getLogger(AbstractManagementContext.class)
-    public static final EFFECTOR_TAG = "EFFECTOR"
+    private static final Logger log = LoggerFactory.getLogger(AbstractManagementContext.class);
+    public static final EFFECTOR_TAG = "EFFECTOR";
 
-    private final AtomicLong totalEffectorInvocationCount = new AtomicLong()
+    private final AtomicLong totalEffectorInvocationCount = new AtomicLong();
     
     public long getTotalEffectorInvocations() {
-        return totalEffectorInvocationCount.get()
+        return totalEffectorInvocationCount.get();
     }
     
     public ExecutionContext getExecutionContext(Entity e) { 
@@ -44,7 +44,7 @@ public abstract class AbstractManagementContext implements ManagementContext  {
     }
         
     public boolean isManaged(Entity e) {
-        return (getEntity(e.id)!=null)
+        return (getEntity(e.getId())!=null);
     }
 
     /**
@@ -55,13 +55,13 @@ public abstract class AbstractManagementContext implements ManagementContext  {
      */
     public void manage(Entity e) {
         if (isManaged(e)) {
-            log.warn("call to manage entity $e but it is already managed (known at $this); skipping, and all descendants")
-            new Throwable("source of duplicate management").printStackTrace()
-            return
+            log.warn("call to manage entity {} but it is already managed (known at {}); skipping, and all descendants", e, this);
+            new Throwable("source of duplicate management").printStackTrace();
+            return;
         }
         if (manageNonRecursive(e)) {
-            ((AbstractEntity)e).onManagementBecomingMaster()
-            ((AbstractEntity)e).setBeingManaged()
+            ((AbstractEntity)e).onManagementBecomingMaster();
+            ((AbstractEntity)e).setBeingManaged();
         }
         for (Entity ei : e.getOwnedChildren()) {
             manage(ei);
@@ -82,14 +82,14 @@ public abstract class AbstractManagementContext implements ManagementContext  {
      */
     public void unmanage(Entity e) {
         if (!isManaged(e)) {
-            log.warn("call to unmanage entity $e but it is not known at $this; skipping, and all descendants")
-            return
+            log.warn("call to unmanage entity {} but it is not known at {}; skipping, and all descendants", e, this);
+            return;
         }
         for (Entity ei : e.getOwnedChildren()) {
             unmanage(ei);
         }
         if (unmanageNonRecursive(e))
-            ((AbstractEntity)e).onManagementNoLongerMaster()
+            ((AbstractEntity)e).onManagementNoLongerMaster();
     }
 
     /**
@@ -102,21 +102,21 @@ public abstract class AbstractManagementContext implements ManagementContext  {
 
     public <T> Task<T> invokeEffector(Entity entity, Effector<T> eff, Map parameters) {
         runAtEntity(expirationPolicy: ExpirationPolicy.NEVER, entity, { eff.call(entity, parameters); },
-           description:"invoking ${eff.name} on ${entity.displayName}", displayName:eff.name, tags:[EFFECTOR_TAG])
+           description:"invoking "+eff.getName()+" on "+entity.getDisplayName(), displayName:eff.name, tags:[EFFECTOR_TAG]);
     }
 
     protected <T> T invokeEffectorMethodLocal(Entity entity, Effector<T> eff, Object args) {
-        assert isManagedLocally(entity) : "cannot invoke effector method at $this because it is not managed here"
-        totalEffectorInvocationCount.incrementAndGet()
+        assert isManagedLocally(entity) : "cannot invoke effector method at "+this+" because it is not managed here";
+        totalEffectorInvocationCount.incrementAndGet();
         args = AbstractEffector.prepareArgsForEffector(eff, args);
-        entity.metaClass.invokeMethod(entity, eff.name, args)
+        entity.metaClass.invokeMethod(entity, eff.name, args);
     }
 
 	/** activates management when effector invoked, warning unless context is acceptable
 	 * (currently only acceptable context is "start") */
 	protected void manageIfNecessary(Entity entity, Object context) {
         if (((AbstractEntity)entity).hasEverBeenManaged()) {
-            return
+            return;
         } else if (!isManaged(entity)) {
 			Entity rootUnmanaged = entity;
 			while (true) {
@@ -126,10 +126,10 @@ public abstract class AbstractManagementContext implements ManagementContext  {
 				rootUnmanaged = candidateUnmanagedOwner;
 			}
 			if (context==Startable.START.name)
-				log.info("Activating local management for $rootUnmanaged on start")
+				log.info("Activating local management for {} on start", rootUnmanaged);
 			else
-				log.warn("Activating local management for $rootUnmanaged due to effector invocation on $entity: "+context)
-			manage(rootUnmanaged)
+				log.warn("Activating local management for {} due to effector invocation on {}: {}", rootUnmanaged, entity, context);
+			manage(rootUnmanaged);
 		}
 	}
 
@@ -139,17 +139,17 @@ public abstract class AbstractManagementContext implements ManagementContext  {
      */
     protected <T> T invokeEffectorMethodSync(Entity entity, Effector<T> eff, Object args) {
         try {
-            Task current = BasicExecutionManager.currentTask
+            Task current = BasicExecutionManager.currentTask;
             if (!current || !current.tags.contains(entity) || !isManagedLocally(entity)) {
     			manageIfNecessary(entity, eff.name);
                 // Wrap in a task if we aren't already in a task that is tagged with this entity
                 runAtEntity(expirationPolicy: ExpirationPolicy.NEVER, entity, { invokeEffectorMethodLocal(entity, eff, args); },
-                    description:"invoking ${eff.name} on ${entity.displayName}", displayName:eff.name, tags:[EFFECTOR_TAG]).get()
+                    description:"invoking "+eff.getName()+" on "+entity.getDisplayName(), displayName:eff.name, tags:[EFFECTOR_TAG]).get();
             } else {
-                return invokeEffectorMethodLocal(entity, eff, args)
+                return invokeEffectorMethodLocal(entity, eff, args);
             }
         } catch (Exception e) {
-            throw new ExecutionException("Error invoking $eff on entity $entity", e);
+            throw new ExecutionException("Error invoking "+eff+" on entity "+entity, e);
         }
     }
 

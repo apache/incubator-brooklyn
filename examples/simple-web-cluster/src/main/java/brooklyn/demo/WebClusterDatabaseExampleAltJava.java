@@ -2,6 +2,7 @@ package brooklyn.demo;
 
 import static brooklyn.event.basic.DependentConfiguration.valueWhenAttributeReady;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -86,7 +87,7 @@ public class WebClusterDatabaseExampleAltJava extends AbstractApplication {
                 setMetricRange(10, 100));
     }    
 
-    public static void main(String[] argv) {
+    public static void main(String[] argv) throws IOException {
         ArrayList args = new ArrayList(Arrays.asList(argv));
         int port = CommandLineUtil.getCommandLineOptionInt(args, "--port", 8081);
         List<Location> locations = new LocationRegistry().getLocationsById(

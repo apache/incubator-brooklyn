@@ -2,6 +2,7 @@ package brooklyn.util;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -10,6 +11,10 @@ import com.google.common.collect.ImmutableMap;
 public class MutableMap<K,V> extends LinkedHashMap<K,V> {
     private static final long serialVersionUID = -2463168443382874384L;
 
+    public static <K,V> MutableMap<K,V> of() {
+        return new MutableMap<K,V>();
+    }
+    
     public static <K,V> MutableMap<K,V> of(K k1, V v1) {
         MutableMap<K,V> result = new MutableMap<K,V>();
         result.put(k1, v1);
@@ -30,7 +35,7 @@ public class MutableMap<K,V> extends LinkedHashMap<K,V> {
         result.put(k3, v3);
         return result;
     }
-    
+
     public MutableMap() {}
     public MutableMap(Map source) { super(source); }
     
@@ -48,4 +53,35 @@ public class MutableMap<K,V> extends LinkedHashMap<K,V> {
         return ImmutableMap.<K,V>builder().putAll(this).build();
     }
     
+    public static <K, V> Builder<K, V> builder() {
+        return new Builder<K,V>();
+    }
+
+    /**
+     * @see guava's ImmutableMap.Builder
+     */
+    public static class Builder<K, V> {
+        final MutableMap<K,V> result = new MutableMap<K,V>();
+
+        public Builder() {}
+
+        public Builder<K, V> put(K key, V value) {
+            result.put(key, value);
+            return this;
+        }
+
+        public Builder<K, V> put(Entry<? extends K, ? extends V> entry) {
+            result.put(entry.getKey(), entry.getValue());
+            return this;
+        }
+
+        public Builder<K, V> putAll(Map<? extends K, ? extends V> map) {
+            result.putAll(map);
+            return this;
+        }
+
+        public MutableMap<K, V> build() {
+          return new MutableMap<K,V>(result);
+        }
+    }
 }

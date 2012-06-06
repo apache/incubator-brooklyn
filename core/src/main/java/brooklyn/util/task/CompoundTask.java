@@ -72,6 +72,7 @@ public abstract class CompoundTask<T> extends BasicTask<List<T>> {
      * @throws InterruptedException */    
     protected abstract List<T> runJobs() throws InterruptedException, ExecutionException;
     
+    @SuppressWarnings("deprecation")
     protected void submitIfNecessary(Task<?> task) {
         if (!task.isSubmitted()) {
             if (BasicExecutionContext.getCurrentExecutionContext() == null) {

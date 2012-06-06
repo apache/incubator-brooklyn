@@ -10,6 +10,7 @@ import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.BasicOsDetails.OsArchs
 import brooklyn.location.basic.BasicOsDetails.OsVersions
 import brooklyn.util.ComparableVersion
+import brooklyn.util.IdGenerator;
 import brooklyn.util.ResourceUtils
 
 public class MySqlSshDriver extends StartStopSshDriver {
@@ -69,7 +70,8 @@ public class MySqlSshDriver extends StartStopSshDriver {
             ).execute();
     }
 
-    String secretPassword = "random"+(int)(Math.random()*100000)
+    final String socketUid = IdGenerator.makeRandomId(6);
+    String secretPassword = IdGenerator.makeRandomId(6);
     public String getPassword() { secretPassword }
     public MySqlNode getEntity() { return super.getEntity() }
     public int getPort() { return entity.port }
@@ -90,7 +92,7 @@ public class MySqlSshDriver extends StartStopSshDriver {
                 "cat > mymysql.cnf << END_MYSQL_CONF_${entity.id}\n"+"""
 [client]
 port            = ${port}
-socket          = /tmp/mysql.sock.${port}
+socket          = /tmp/mysql.sock.${socketUid}.${port}
 user            = root
 password        = ${password}
                 
@@ -99,7 +101,7 @@ password        = ${password}
 # The MySQL server
 [mysqld]
 port            = ${port}
-socket          = /tmp/mysql.sock.${port}
+socket          = /tmp/mysql.sock.${socketUid}.${port}
 basedir         = ${basedir}
 datadir         = .
 
@@ -109,8 +111,13 @@ datadir         = .
                     "--defaults-file=mymysql.cnf",
                 "${basedir}/bin/mysqld --defaults-file=mymysql.cnf --user=`whoami` &", //--user=root needed if we are root
                 "export MYSQL_PID=\$!",
-                "sleep 15 && ${basedir}/bin/mysqladmin --defaults-file=mymysql.cnf --password= password ${password}",
+                "sleep 20",
+                "echo launching mysqladmin",
+                "${basedir}/bin/mysqladmin --defaults-file=mymysql.cnf --password= password ${password}",
+                "sleep 20",
+                "echo launching mysql creation script",
                 "${basedir}/bin/mysql --defaults-file=mymysql.cnf < creation-script.cnf",
+                "echo terminating mysql on customization complete",
                 "kill \$MYSQL_PID"
             ).execute();
     }

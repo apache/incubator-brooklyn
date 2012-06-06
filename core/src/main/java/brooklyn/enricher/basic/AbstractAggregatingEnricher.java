@@ -14,7 +14,6 @@ import brooklyn.entity.Group;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.trait.Changeable;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.util.GroovyJavaMethods;

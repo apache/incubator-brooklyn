@@ -1,72 +1,45 @@
 package brooklyn.location.basic.jclouds.pool;
 
-import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.Processor;
 import org.jclouds.domain.Location;
 
-import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 
 public class MachinePoolPredicates {
 
-    public static Function<MachineSet, MachineSet> except(final MachineSet removedItems) {
-        return new Function<MachineSet, MachineSet>() {
+    public static Predicate<NodeMetadata> except(final MachineSet removedItems) {
+        return new Predicate<NodeMetadata>() {
             @Override
-            public MachineSet apply(MachineSet universe) {
-                return universe.removed(removedItems);
+            public boolean apply(NodeMetadata input) {
+                return !removedItems.contains(input);
             }
         };
     }
 
-    public static Function<MachineSet, MachineSet> except(final Function<MachineSet, MachineSet> removedItemsFilter) {
-        return new Function<MachineSet, MachineSet>() {
+    public static Predicate<NodeMetadata> matching(final ReusableMachineTemplate template) {
+        return new Predicate<NodeMetadata>() {
             @Override
-            public MachineSet apply(MachineSet universe) {
-                return except(removedItemsFilter.apply(universe)).apply(universe);
+            public boolean apply(NodeMetadata input) {
+                return matches(template, input);
             }
         };
     }
 
-    public static Function<MachineSet, MachineSet> matching(final ReusableMachineTemplate template) {
-        return new Function<MachineSet, MachineSet>() {
+    public static Predicate<NodeMetadata> withTag(final String tag) {
+        return new Predicate<NodeMetadata>() {
             @Override
-            public MachineSet apply(MachineSet universe) {
-                Set<NodeMetadata> s = new LinkedHashSet();
-                for (NodeMetadata m: universe) {
-                    if (matches(template, m))
-                        s.add(m);
-                }
-                return new MachineSet(s);
+            public boolean apply(NodeMetadata input) {
+                return input.getTags().contains(tag);
             }
         };
     }
 
-    public static Function<MachineSet, MachineSet> withTag(final String tag) {
-        return new Function<MachineSet, MachineSet>() {
-            @Override
-            public MachineSet apply(MachineSet universe) {
-                Set<NodeMetadata> s = new LinkedHashSet();
-                for (NodeMetadata m: universe)
-                    if (m.getTags().contains(tag))
-                        s.add(m);
-                return new MachineSet(s);
-            }
-        };
-    }
-
-    public static Function<MachineSet, MachineSet> compose(final Function<MachineSet, MachineSet> ...ops) {
-        return new Function<MachineSet, MachineSet>() {
-            @Override
-            public MachineSet apply(MachineSet set) {
-                for (int i=ops.length-1; i>=0; i--)
-                    set = ops[i].apply(set);
-                return set;
-            }
-        };
-        
+    public static Predicate<NodeMetadata> compose(final Predicate<NodeMetadata> ...predicates) {
+        return Predicates.and(predicates);
     }
 
     /** True iff the node matches the criteria specified in this template. 

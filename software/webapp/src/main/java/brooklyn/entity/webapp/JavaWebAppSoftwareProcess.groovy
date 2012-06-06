@@ -85,6 +85,7 @@ public abstract class JavaWebAppSshDriver extends JavaStartStopSshDriver {
         def dest = runDir+"/"+deploySubdir+"/"+targetName
         log.info "{} deploying {} to {}:{}", entity, url, hostname, dest
         machine.run "mv -f ${dest} ${dest}.bak > /dev/null 2>&1" //back up old file/directory
+        // TODO backup not supported, is it?
         int result = machine.copyTo(backup:true, getResource(url), runDir+"/"+deploySubdir+"/"+targetName)
 		log.debug "{} deployed {} to {}:{}: result {}", entity, url, hostname, dest, result
 	}

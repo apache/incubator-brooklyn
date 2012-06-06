@@ -1,10 +1,11 @@
 package brooklyn.util.task;
 
-import com.google.common.base.Throwables;
-
 import groovy.lang.Closure;
 
 import java.util.concurrent.Callable;
+
+import com.google.common.base.Function;
+import com.google.common.base.Throwables;
 
 public class ExecutionUtils {
     /**
@@ -21,7 +22,8 @@ public class ExecutionUtils {
             }
         }
         if (callable instanceof Runnable) { ((Runnable)callable).run(); return null; }
+        if (callable instanceof Function && args.length == 1) { return ((Function)callable).apply(args[0]); }
         if (callable==null) return null;
-        throw new IllegalArgumentException("Cannot invoke unexpected object "+callable+" of type "+callable.getClass().getCanonicalName());
+        throw new IllegalArgumentException("Cannot invoke unexpected object "+callable+" of type "+callable.getClass()+", with "+args.length+" args");
     }
 }

@@ -69,10 +69,13 @@ Brooklyn.util = (function(){
             $(id + " tbody").click(clickCallback);
         }
 
-        if (data) {
+        if ((typeof data === "undefined") || (data==null)) {
+            // do nothing
+        } else {
+            // clear and repopulate (have to force a redraw, in case data was empty add would not redraw)
             table.fnClearTable(false);
-            table.fnAddData(data);
-            
+            table.fnAddData(data, false);
+            table.fnDraw(true);
         }
 
         return table;

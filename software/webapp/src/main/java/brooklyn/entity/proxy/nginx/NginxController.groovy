@@ -11,7 +11,6 @@ import brooklyn.entity.webapp.WebAppService
 import brooklyn.event.adapter.ConfigSensorAdapter
 import brooklyn.event.adapter.HttpSensorAdapter;
 import brooklyn.event.adapter.SensorRegistry
-import brooklyn.event.adapter.legacy.OldHttpSensorAdapter
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.DependentConfiguration;
@@ -31,17 +30,22 @@ public class NginxController extends AbstractController {
     static { TimeExtras.init() }
        
     @SetFromFlag("version")
-    public static final BasicConfigKey<String> SUGGESTED_VERSION = [ SoftwareProcessEntity.SUGGESTED_VERSION, "1.2.0" ]
+    public static final BasicConfigKey<String> SUGGESTED_VERSION = [ SoftwareProcessEntity.SUGGESTED_VERSION, "1.3.0" ]
+
+    @SetFromFlag("sticky")
+    public static final BasicConfigKey<String> STICKY = [ Boolean, "nginx.sticky", "whether to use sticky sessions", true ];
 
     public static final BasicAttributeSensor<String> ROOT_URL = WebAppService.ROOT_URL;
     
-    transient OldHttpSensorAdapter httpAdapter
-
     public NginxController(Entity owner) { this([:], owner) }
     public NginxController(Map properties=[:], Entity owner=null) {
         super(properties, owner)
     }
 
+    public boolean isSticky() {
+        getConfig(STICKY);
+    } 
+    
     @Override   
     public void connectSensors() {
         super.connectSensors();
@@ -107,8 +111,8 @@ events {
 }
 http {
   upstream ${id} {
-    sticky;
 """
+        if (sticky) config.append "        sticky;\n"
         addresses.each { String address -> config.append("    server ${address};\n") }
         config.append """
   }

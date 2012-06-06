@@ -34,7 +34,10 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct {
     protected transient SubscriptionTracker _subscriptionTracker;
     private AtomicBoolean destroyed = new AtomicBoolean(false);
 
-    public String getName() { return name; }
+    public String getName() { 
+        if (name!=null && name.length()>0) return name;
+        return getClass().getCanonicalName();
+    }
     public void setName(String name) { this.name = name; }
 
     public String getId() { return id; }

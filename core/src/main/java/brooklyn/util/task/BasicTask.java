@@ -18,7 +18,6 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -134,7 +133,7 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
 
     protected volatile Thread thread = null;
     private volatile boolean cancelled = false;
-    protected Future<T> result = null;
+    protected volatile Future<T> result = null;
 
     /** discouraged, but used in tests. not always set (e.g. if it is a scheduled task)
      * @deprecated in 0.4.0; use current execution context, as per CompoundTask.submitXxx */

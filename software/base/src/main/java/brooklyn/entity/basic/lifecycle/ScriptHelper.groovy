@@ -5,6 +5,10 @@ import java.util.List
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import com.google.common.base.Predicate
+import com.google.common.base.Predicates;
+
+import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.mutex.WithMutexes
 
 public class ScriptHelper {
@@ -12,14 +16,14 @@ public class ScriptHelper {
 	public static final Logger log = LoggerFactory.getLogger(ScriptHelper.class);
 			
 	protected final ScriptRunner runner;
-	protected final String summary;
+	public final String summary;
 	
 	public final ScriptPart header = [this];
 	public final ScriptPart body = [this];
 	public final ScriptPart footer = [this];
 	
-	protected Closure resultCodeCheck = { true }
-	protected Closure executionCheck = { true }
+	protected Predicate<Integer> resultCodeCheck = Predicates.alwaysTrue();
+    protected Predicate<ScriptHelper> executionCheck = Predicates.alwaysTrue();
 	
 	public ScriptHelper(ScriptRunner runner, String summary) {
 		this.runner = runner;
@@ -31,9 +35,13 @@ public class ScriptHelper {
 	 * as to whether the script needs to run (or can throw error if desired)
 	 */
 	public ScriptHelper executeIf(Closure c) {
-		executionCheck = c
-		this
+		return executeIf(GroovyJavaMethods.predicateFromClosure(c))
 	}
+    public ScriptHelper executeIf(Predicate<ScriptHelper> c) {
+        executionCheck = c
+        this
+    }
+    
 	public ScriptHelper skipIfBodyEmpty() { executeIf { !it.body.isEmpty() } }
 	public ScriptHelper failIfBodyEmpty() { executeIf {
 		if (it.body.isEmpty()) throw new IllegalStateException("body empty for "+summary);
@@ -53,10 +61,14 @@ public class ScriptHelper {
 	 * caller if they care)
 	 */
 	public ScriptHelper requireResultCode(Closure integerFilter) {
-		resultCodeCheck = integerFilter
-		this		
+		return requireResultCode(GroovyJavaMethods.predicateFromClosure(integerFilter))
 	}
-	
+
+    public ScriptHelper requireResultCode(Predicate<Integer> integerFilter) {
+        resultCodeCheck = integerFilter
+        this
+    }
+
     protected Closure mutexAcquire = {}
     protected Closure mutexRelease = {}
     /** indicates that the script should acquire the given mutexId on the given mutexSupport 
@@ -71,7 +83,7 @@ public class ScriptHelper {
     }
     
 	public int execute() {
-		if (!executionCheck.call(this)) return 0
+		if (!executionCheck.apply(this)) return 0
 		if (log.isDebugEnabled()) log.debug "executing: {} - {}", summary, lines
 		int result;
 		try {
@@ -85,7 +97,7 @@ public class ScriptHelper {
             mutexRelease.call()
 		}
 		if (log.isDebugEnabled()) log.debug "finished executing: {} - result code {}", summary, result
-		if (!resultCodeCheck.call(result))
+		if (!resultCodeCheck.apply(result))
 			throw new IllegalStateException("execution failed, invalid result ${result} for ${summary}")
 		result		
 	}
