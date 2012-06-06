@@ -21,6 +21,8 @@ import com.google.common.collect.ImmutableSet;
  * NB: to be sure of matching a specific template, you should provide a unique id in the constructor.
  * (this will force 'strict' mode.)
  */
+// TODO tags/metadata semantics are not quite right, as they could apply to the server _image_ or _instance_
+
 // TODO we could use a hashcode over the values of template-builder and template-options fields, as a tag/usermetadata, 
 // to guarantee (virtually) matching only machines created from this template (instead of asking for unique id)
 public class ReusableMachineTemplate extends PortableTemplateBuilder<ReusableMachineTemplate> {
@@ -156,7 +158,7 @@ public class ReusableMachineTemplate extends PortableTemplateBuilder<ReusableMac
     @Override
     public String toString() {
         String s = makeNonTrivialArgumentsString();
-        return (name!=null ? name : "Template") + " [" +(s!=null && s.length()>0 ? ", "+s : "") + "]";
+        return (name!=null ? name : "Template") + " [ " + s + " ]";
     }
     
 }

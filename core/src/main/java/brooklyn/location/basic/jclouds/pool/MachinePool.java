@@ -254,7 +254,7 @@ public class MachinePool {
     public Set<ReusableMachineTemplate> getTemplatesMatchingInstance(NodeMetadata nm) {
         Set<ReusableMachineTemplate> result = new LinkedHashSet<ReusableMachineTemplate>(); 
         for (ReusableMachineTemplate t: getTemplates()) {
-            if (!matching(t).apply(nm)) {
+            if (matching(t).apply(nm)) {
                result.add(t); 
             }
         }        

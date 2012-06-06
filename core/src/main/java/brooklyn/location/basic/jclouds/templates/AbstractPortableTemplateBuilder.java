@@ -300,7 +300,45 @@ public abstract class AbstractPortableTemplateBuilder<T extends AbstractPortable
     public Integer getMinRam() {
         return minRam;
     }
+    
+    /** clears everything set in this template, including any default from the compute service */
+    // not sure this is that useful, as the default is only applied if there are no changes
+    public T blank() {
+        hardware = null;
+        image = null;
+        template = null;
+        hypervisorRegex = null;
+        os = null;
+        locationId = null;
+        imageId = null;
+        hardwareId = null;
+        osNameRegex = null;
+        osDescriptionRegex = null;
+        osVersionRegex = null;
+        osArchitectureRegex = null;
+        is64bit = null;
+        imageNameRegex = null;
+        imageDescriptionRegex = null;
+        imageVersionRegex = null;
+        imageCondition = null;
+        minCores = null;
+        minRam = null;
+        options = null;
+        additionalOptions.clear();
 
+        // clear all fields, and commands
+        commands.clear();
+        // then add a command to clear osName + Version + 64bit
+        osFamily(null);
+        osVersionMatches(null);
+        // no way to turn off 64-bitness, but it won't usually be turned on
+//        os64bit(null);
+        // set _something_ to prevent the default from applying
+        minRam(1);
+
+        return (T)this;
+    }
+    
     @Override
     public T options(final TemplateOptions options) {
         this.options = options;
