@@ -7,7 +7,7 @@
     <parent>
         <groupId>io.brooklyn.example</groupId>
         <artifactId>brooklyn-examples-webapps-parent</artifactId>
-        <version>0.4.0-SNAPSHOT</version>   <!-- BROOKLYN_VERSION -->
+        <version>0.4.0-M1</version>   <!-- BROOKLYN_VERSION -->
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -23,7 +23,7 @@
             <version>1.0.2</version>
         </dependency>
         <dependency>
-            <groupId>io.brooklyn</groupId>
+            <groupId>io.brooklyn.example</groupId>
             <artifactId>brooklyn-example-hello-world-hadoop-jar</artifactId>
             <version>${project.version}</version>
         </dependency>
