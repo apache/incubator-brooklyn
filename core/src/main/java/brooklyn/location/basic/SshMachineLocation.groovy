@@ -33,6 +33,9 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     @SetFromFlag('username')
     String user
 
+    @SetFromFlag('privateKeyData')
+    String privateKeyData
+
     @SetFromFlag(nullable = false)
     InetAddress address
 
@@ -130,6 +133,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     /**
      * Convenience for running commands using ssh {@literal exec} mode.
      */
+    // TODO deprecate this, and expose execCommand and execScript ? ... and execScriptSudo ?
     public int exec(Map props=[:], List<String> commands, Map env=[:]) {
         Preconditions.checkNotNull address, "host address must be specified for ssh"
         if (!commands) return 0

@@ -230,8 +230,8 @@ public class SshjTool implements SshTool {
                     "for defaults of ~/.ssh/id_rsa and ~/.ssh/id_dsa leave blank");
         } else if (builder.privateKeyFiles.size() == 1) {
             String privateKeyFileStr = Iterables.get(builder.privateKeyFiles, 0);
-            String ammendedKeyFile = privateKeyFileStr.startsWith("~") ? (System.getProperty("user.home")+privateKeyFileStr.substring(1)) : privateKeyFileStr;
-            privateKeyFile = new File(ammendedKeyFile);
+            String amendedKeyFile = privateKeyFileStr.startsWith("~") ? (System.getProperty("user.home")+privateKeyFileStr.substring(1)) : privateKeyFileStr;
+            privateKeyFile = new File(amendedKeyFile);
         } else {
             privateKeyFile = null;
         }
@@ -380,7 +380,7 @@ public class SshjTool implements SshTool {
         
         String scriptContents = toScript(commands, env);
         
-        if (LOG.isDebugEnabled()) LOG.debug("Running shell command as script: {}", scriptContents);
+        if (LOG.isDebugEnabled()) LOG.debug("Running shell command at "+host+" as script: {}", scriptContents);
         
         createFile(ImmutableMap.of("permissions", "0700"), scriptPath, scriptContents);
         
@@ -405,9 +405,10 @@ public class SshjTool implements SshTool {
                 .add("exit $?")
                 .build();
         
-        if (LOG.isDebugEnabled()) LOG.debug("Running shell command: {}", allcmds);
+        if (LOG.isDebugEnabled()) LOG.debug("Running shell command at "+host+": {}", allcmds);
         
         Integer result = acquire(new ShellAction(allcmds, out, err));
+        if (LOG.isDebugEnabled()) LOG.debug("Running shell command at "+host+" completed, exit code: {}", result);
         return result != null ? result : -1;
     }
 
@@ -423,14 +424,15 @@ public class SshjTool implements SshTool {
         }
         OutputStream out = getOptionalVal(props, "out", OutputStream.class, null);
         OutputStream err = getOptionalVal(props, "err", OutputStream.class, null);
-        String separator = getOptionalVal(props, "separator", String.class, "; ");
+        String separator = getOptionalVal(props, "separator", String.class, " ; ");
 
         List<String> allcmds = toCommandSequence(commands, env);
         String singlecmd = Joiner.on(separator).join(allcmds);
 
-        if (LOG.isDebugEnabled()) LOG.debug("Running command {}", singlecmd);
+        if (LOG.isDebugEnabled()) LOG.debug("Running command at "+host+": {}", singlecmd);
         
         Command result = acquire(new ExecAction(singlecmd, out, err));
+        if (LOG.isDebugEnabled()) LOG.debug("Running command at "+host+" completed, exit code: {}", result.getExitStatus());
         return result.getExitStatus();
     }
 

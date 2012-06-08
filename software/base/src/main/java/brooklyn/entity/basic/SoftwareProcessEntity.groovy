@@ -187,15 +187,20 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 		startInLocation(location)
 	}
 
-	public void startInLocation(MachineProvisioningLocation location) {
-		Map<String,Object> flags = location.getProvisioningFlags([ getClass().getName() ])
+    protected Map<String,Object> getProvisioningFlags(MachineProvisioningLocation location) {
+        Map<String,Object> flags = [:];
+        flags << location.getProvisioningFlags([ getClass().getName() ]) ?: [:];
         if (!flags.inboundPorts) {
             def ports = getRequiredOpenPorts();
             if (ports) flags.inboundPorts = getRequiredOpenPorts()
         }
+        flags.callerContext = ""+this;
+        return flags;
+    }
+	public void startInLocation(MachineProvisioningLocation location) {
+		Map<String,Object> flags = getProvisioningFlags(location);
         if (!(location in LocalhostMachineProvisioningLocation))
             LOG.info("SoftwareProcessEntity {} obtaining a new location instance in {} with ports {}", this, location, flags.inboundPorts)
-
 		provisioningLoc = location
 		SshMachineLocation machine = location.obtain(flags)
 		if (machine == null) throw new NoMachinesAvailableException(location)

@@ -7,8 +7,8 @@ import static org.jclouds.scriptbuilder.domain.Statements.exec
 import static com.google.common.base.Preconditions.checkNotNull
 
 import java.io.File;
+import java.net.URI;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -17,21 +17,31 @@ import javax.annotation.Nullable
 import org.jclouds.Constants
 import org.jclouds.compute.ComputeService
 import org.jclouds.compute.RunNodesException
+import org.jclouds.compute.callables.RunScriptOnNode
 import org.jclouds.compute.domain.ComputeMetadata;
 import org.jclouds.compute.domain.ExecResponse
+import org.jclouds.compute.domain.Hardware;
 import org.jclouds.compute.domain.NodeMetadata
+import org.jclouds.compute.domain.NodeMetadataBuilder;
+import org.jclouds.compute.domain.NodeState;
+import org.jclouds.compute.domain.OperatingSystem;
 import org.jclouds.compute.domain.Template
 import org.jclouds.compute.domain.TemplateBuilder
+import org.jclouds.compute.domain.internal.NodeMetadataImpl
+import org.jclouds.compute.options.RunScriptOptions;
 import org.jclouds.compute.options.TemplateOptions
 import org.jclouds.domain.Credentials
+import org.jclouds.domain.Location;
 import org.jclouds.domain.LoginCredentials
 import org.jclouds.ec2.compute.options.EC2TemplateOptions
+import org.jclouds.scriptbuilder.domain.InterpretableStatement
 import org.jclouds.scriptbuilder.domain.Statement
 import org.jclouds.scriptbuilder.domain.Statements
 import org.jclouds.scriptbuilder.statements.login.UserAdd
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.entity.basic.Entities;
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.NoMachinesAvailableException
 import brooklyn.location.basic.AbstractLocation
@@ -44,6 +54,7 @@ import com.google.common.base.Charsets
 import com.google.common.base.Throwables
 import com.google.common.collect.Iterables
 import com.google.common.io.Files
+import com.google.common.util.concurrent.ListenableFuture;
 
 public class JcloudsLocation extends AbstractLocation implements MachineProvisioningLocation<SshMachineLocation> {
 
@@ -52,6 +63,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     public static final Logger LOG = LoggerFactory.getLogger(JcloudsLocation.class)
     
     public static final String ROOT_USERNAME = "root";
+    public static final List NON_ADDABLE_USERS = [ ROOT_USERNAME, "ubuntu" ];
     public static final int START_SSHABLE_TIMEOUT = 5*60*1000;
 
     private final Map<String,Map<String, ? extends Object>> tagMapping = [:]
@@ -116,6 +128,8 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         final JcloudsLocation instance;
         public final Map allconf = [:], unusedConf = [:];
         
+        Object _callerContext = null;
+        
         public BrooklynJcloudsSetupHolder(JcloudsLocation instance) {
             this.instance = instance;
             useConfig(instance.conf);
@@ -128,6 +142,8 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         }
         
         BrooklynJcloudsSetupHolder apply() {
+            if (unusedConf.remove("callerContext")) _callerContext = allconf.callerContext;
+            
             if (!unusedConf.remove("userName")) allconf.userName = ROOT_USERNAME
             // perhaps deprecate supply of data (and of different root key?) to keep it simpler?
             if (unusedConf.remove("publicKeyFile")) allconf.sshPublicKeyData = Files.toString(instance.getPublicKeyFile(), Charsets.UTF_8)
@@ -149,6 +165,11 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         void warnIfUnused(String context) {
             if (!unusedConf.isEmpty())
                 LOG.debug("NOTE: unused flags passed to "+context+" in "+(allconf.providerLocationId?:allconf.provider)+": "+unusedConf);
+        }
+        
+        public String getCallerContext() {
+            if (_callerContext) return _callerContext;
+            return "thread "+Thread.currentThread().id;
         }
         
     }
@@ -201,40 +222,43 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         
         NodeMetadata node = null;
         try {
-            LOG.info("Creating VM in "+(setup.allconf.providerLocationId?:setup.allconf.provider));
+            LOG.info("Creating VM in "+(setup.allconf.providerLocationId?:setup.allconf.provider)+" for "+setup.callerContext);
 
-            Template template = buildTemplate(computeService, setup.allconf.providerLocationId, setup.allconf, setup.unusedConf);
+            Template template = buildTemplate(computeService, setup.allconf.providerLocationId, setup);
 
             setup.warnIfUnused("JcloudsLocation.obtain")            
     
-            LOG.debug("jclouds using template $template for provisioning $this");
             Set<? extends NodeMetadata> nodes = computeService.createNodesInGroup(groupId, 1, template);
             node = Iterables.getOnlyElement(nodes, null);
+            LOG.debug("jclouds created $node for ${setup.callerContext}");
             if (node == null) {
-                throw new IllegalStateException("No nodes returned by jclouds create-nodes in location ${allconf.providerLocationId}");
+                throw new IllegalStateException("No nodes returned by jclouds create-nodes in location ${allconf.providerLocationId} for ${setup.callerContext}");
             }
 
             String vmIp = JcloudsUtil.getFirstReachableAddress(node);
-            Credentials nodeCredentials = node.getCredentials()
-            Credentials expectedCredentials = LoginCredentials.fromCredentials(
-                setup.allconf.sshPrivateKeyData ? new Credentials(setup.allconf.userName, setup.allconf.sshPrivateKeyData) : nodeCredentials)
+            LoginCredentials expectedCredentials = LoginCredentials.fromCredentials(node.getCredentials());
+            if (setup.allconf.sshPrivateKeyData) {
+                expectedCredentials = LoginCredentials.fromCredentials(new Credentials(setup.allconf.userName, setup.allconf.sshPrivateKeyData));
+                //override credentials                
+                node = NodeMetadataBuilder.fromNodeMetadata(node).credentials(expectedCredentials).build();
+            }
+            
             
             // Wait for the VM to be reachable over SSH
-            LOG.info("Started VM in ${setup.allconf.providerLocationId ?: setup.allconf.provider}; "+
-                "waiting for it to be sshable by ${setup.allconf.userName}@${vmIp}");
+            LOG.info("Started VM in ${setup.allconf.providerLocationId ?: setup.allconf.provider} for ${setup.callerContext}; "+
+                "waiting for it to be sshable on ${setup.allconf.userName}@${vmIp}");
             boolean reachable = new Repeater()
                     .repeat()
                     .every(1,SECONDS)
                     .until {
                         Statement statement = Statements.newStatementList(exec('date'))
-                        ExecResponse response = computeService.runScriptOnNode(node.getId(), statement,
-                                overrideLoginCredentials(expectedCredentials))
+                        ExecResponse response = computeService.runScriptOnNode(node.getId(), statement, overrideLoginCredentials(expectedCredentials));
                         return response.exitCode == 0 }
                     .limitTimeTo(START_SSHABLE_TIMEOUT,MILLISECONDS)
                     .run()
         
             if (!reachable) {
-                throw new IllegalStateException("SSH failed for ${setup.allconf.userName}@${vmIp} after waiting ${START_SSHABLE_TIMEOUT}ms");
+                throw new IllegalStateException("SSH failed for ${setup.allconf.userName}@${vmIp} (for ${setup.callerContext}) after waiting ${START_SSHABLE_TIMEOUT}ms");
             }
 
             String vmHostname = getPublicHostname(node, setup.allconf)
@@ -242,14 +266,14 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             if (getPrivateKeyFile()) sshConfig.keyFiles = [ getPrivateKeyFile().getCanonicalPath() ];
             if (setup.allconf.sshPrivateKeyData) sshConfig.privateKey = setup.allconf.sshPrivateKeyData
             if (LOG.isDebugEnabled())
-                LOG.debug("creating JcloudsSshMachineLocation for {}@{} with {}", setup.allconf.userName, vmHostname, sshConfig)
+                LOG.debug("creating JcloudsSshMachineLocation for {}@{} for {} with {}", setup.allconf.userName, vmHostname, setup.callerContext, Entities.sanitize(sshConfig))
             JcloudsSshMachineLocation sshLocByHostname = new JcloudsSshMachineLocation(this, node,
                     address:vmHostname, 
                     displayName:vmHostname,
                     username:setup.allconf.userName, 
                     config:sshConfig);
 
-            sshLocByHostname.setParentLocation(this)
+            sshLocByHostname.setParentLocation(this);
             vmInstanceIds.put(sshLocByHostname, node.getId())
             
             return sshLocByHostname
@@ -312,7 +336,14 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         if (node == null) {
             throw new IllegalArgumentException("Node not found with id "+id)
         }
-        
+
+        if (setup.allconf.sshPrivateKeyData) {
+            LoginCredentials expectedCredentials = LoginCredentials.fromCredentials(new Credentials(setup.allconf.userName, setup.allconf.sshPrivateKeyData));
+            //override credentials
+            node = NodeMetadataBuilder.fromNodeMetadata(node).credentials(expectedCredentials).build();
+        }
+        // TODO confirm we can SSH ?
+
         Map sshConfig = [:]
         if (getPrivateKeyFile()) sshConfig.keyFiles = [ getPrivateKeyFile().getCanonicalPath() ] 
         if (setup.allconf.sshPrivateKeyData) sshConfig.privateKey = setup.allconf.sshPrivateKeyData 
@@ -376,17 +407,14 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     
     public static final Map SUPPORTED_TEMPLATE_BUILDER_PROPERTIES = [
             minRam:         { TemplateBuilder tb, Map props, Object v -> tb.minRam(v) },
+            minCores:       { TemplateBuilder tb, Map props, Object v -> tb.minCores(v) },
             hardwareId:     { TemplateBuilder tb, Map props, Object v -> tb.hardwareId(v) },
-//            imageSize:      { TemplateBuilder tb, Map props, Object v -> tb.imageSize(v) },  //doesn't exist?
             imageId:        { TemplateBuilder tb, Map props, Object v -> tb.imageId(v) },
             imageDescriptionRegex:        { TemplateBuilder tb, Map props, Object v -> tb.imageDescriptionMatches(v) },
             imageNameRegex:               { TemplateBuilder tb, Map props, Object v -> tb.imageNameMatches(v) },
-            defaultImageId:               { TemplateBuilder tb, Map props, Object v ->
-                if (!(props.imageId || props.imageDescriptionRegex || props.imageNameRegex
-                        || props.imageDescriptionPattern || props.imageNamePattern))
-                    tb.imageId(v) 
-            },
-//deprecated, kept for backwards compatibility:
+            defaultImageId:               { TemplateBuilder tb, Map props, Object v -> /* deferred */ },
+            templateBuilder:              { TemplateBuilder tb, Map props, Object v -> /* deferred */ },
+// following are deprecated in 0.4.0, kept for backwards compatibility:
             imageDescriptionPattern:      { TemplateBuilder tb, Map props, Object v -> tb.imageDescriptionMatches(v) },
             imageNamePattern:             { TemplateBuilder tb, Map props, Object v -> tb.imageNameMatches(v) },
         ];
@@ -411,14 +439,14 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             userName:  { TemplateOptions t, Map props, Object v -> /* special; not included here */ },
         ];
 
-    private Template buildTemplate(ComputeService computeService, String providerLocationId, Map<String,? extends Object> properties, Map unusedConf) {
+    private Template buildTemplate(ComputeService computeService, String providerLocationId, BrooklynJcloudsSetupHolder setup) {
+        Map<String,? extends Object> properties = setup.allconf;
+        Map unusedConf = setup.unusedConf;
         TemplateBuilder templateBuilder = unusedConf.remove("templateBuilder");
-        if (templateBuilder in PortableTemplateBuilder) {
-            LOG.debug("jclouds using template $templateBuilder as base for provisioning $this");
-            templateBuilder = ((PortableTemplateBuilder)templateBuilder).newJcloudsTemplateBuilder(computeService);
-        }
         if (templateBuilder==null)
-            templateBuilder = computeService.templateBuilder();
+            templateBuilder = new PortableTemplateBuilder();
+        else
+            LOG.debug("jclouds using templateBuilder $templateBuilder as base for provisioning in $this for ${setup.callerContext}");
  
         if (providerLocationId!=null) {
             templateBuilder.locationId(providerLocationId);
@@ -429,6 +457,16 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                 code.call(templateBuilder, properties, properties.get(name));
         }
 
+        if (templateBuilder in PortableTemplateBuilder) {
+            ((PortableTemplateBuilder)templateBuilder).attachComputeService(computeService);
+            // do the default last, and only if nothing else specified (guaranteed to be a PTB if nothing else specified)
+            if (unusedConf.remove("defaultImageId")) {
+                if (((PortableTemplateBuilder)templateBuilder).isBlank()) {
+                    templateBuilder.imageId(properties.get("defaultImageId"));
+                }
+            }
+        }
+
         Template template = templateBuilder.build();
         TemplateOptions options = template.getOptions();
         
@@ -437,7 +475,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                 code.call(options, properties, properties.get(name));
         }
         
-        if (properties.userName == ROOT_USERNAME && properties.sshPublicKeyData) {
+        if ((properties.userName in NON_ADDABLE_USERS) && properties.sshPublicKeyData) {
             String keyData = properties.sshPublicKeyData
             options.authorizePublicKey(keyData)
         }
@@ -446,7 +484,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         //but not elsewhere, e.g. on rackspace)
         
         // Setup the user
-        if (properties.userName && properties.userName != ROOT_USERNAME) {
+        if (properties.userName && !(properties.userName in NON_ADDABLE_USERS)) {
             UserAdd.Builder userBuilder = UserAdd.builder();
             userBuilder.login(properties.userName);
             String publicKeyData = properties.sshPublicKeyData
@@ -454,7 +492,8 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             Statement userBuilderStatement = userBuilder.build();
             options.runScript(userBuilderStatement);
         }
-                      
+                  
+        LOG.debug("jclouds using template $template to provision machine in $this for ${setup.callerContext}");
         return template;
     }
     
@@ -503,10 +542,15 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     public static class JcloudsSshMachineLocation extends SshMachineLocation {
         final JcloudsLocation parent;
         final NodeMetadata node;
+        private final RunScriptOnNode.Factory runScriptFactory;
+        
         public JcloudsSshMachineLocation(Map flags, JcloudsLocation parent, NodeMetadata node) {
             super(flags);
             this.parent = parent;
             this.node = node;
+            
+            def context = parent.getComputeService().context;
+            runScriptFactory = context.utils().injector().getInstance(RunScriptOnNode.Factory.class);
         }
         /** returns the hostname for use by peers in the same subnet,
          * defaulting to public hostname if nothing special
@@ -523,5 +567,30 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         public String getJcloudsId() {
             return node.getId();
         }
+        
+        /** executes the given statements on the server using jclouds ScriptBuilder,
+         * wrapping in a script which is polled periodically.
+         * the output is returned once the script completes (disadvantage compared to other methods)
+         * but the process is nohupped and the SSH session is not kept, 
+         * so very useful for long-running processes
+         */
+        public ListenableFuture<ExecResponse> submitRunScript(String ...statements) {
+            return submitRunScript(new InterpretableStatement(statements));
+        }
+        public ListenableFuture<ExecResponse> submitRunScript(Statement script) {
+            return submitRunScript(script, new RunScriptOptions());            
+        }
+        public ListenableFuture<ExecResponse> submitRunScript(Statement script, RunScriptOptions options) {
+            return runScriptFactory.submit(node, script, options);
+        }
+        /** uses submitRunScript to execute the commands, and throws error if it fails or returns non-zero */
+        public void execRemoteScript(String ...commands) {
+            ExecResponse result = submitRunScript(commands).get();
+            if (result.getError()!=null)
+                throw new IllegalStateException("Error running remote commands (error ${result.error}): ${commands}");
+            if (result.getExitStatus()!=0)
+                throw new IllegalStateException("Error running remote commands (code ${result.exitStatus}): ${commands}");
+        }
+    
     }
 }

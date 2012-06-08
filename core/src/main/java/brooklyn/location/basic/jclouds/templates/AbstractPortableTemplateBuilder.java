@@ -339,6 +339,14 @@ public abstract class AbstractPortableTemplateBuilder<T extends AbstractPortable
         return (T)this;
     }
     
+    /** true if the templateBuilder spec is blank (ignoring customization options e.g. tags for the resulting instance) */
+    public boolean isBlank() {
+        if (commands.isEmpty()) return true;
+        //also "blank" if we've blanked it
+        if (commands.size()==1 && minRam==1) return true;
+        return false;
+    }
+    
     @Override
     public T options(final TemplateOptions options) {
         this.options = options;
@@ -347,10 +355,14 @@ public abstract class AbstractPortableTemplateBuilder<T extends AbstractPortable
         return (T)this;
     }
 
+    /** sets customization options; may be null if not set. use addOptions(new TemplateOptions()) to set new ones. */
     public TemplateOptions getOptions() {
         return options;
     }
     
+    /** adds customization options; if options have already been set, this will additively set selected options
+     * (but not all, see addTemplateOptions for more info)
+     */
     public T addOptions(final TemplateOptions options) {
         this.additionalOptions.add(options);
         commands.add(new Function<TemplateBuilder,TemplateBuilder>() { 
