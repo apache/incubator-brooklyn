@@ -203,6 +203,19 @@ class LocalEntitiesTest {
 		a.start([new SimulatedLocation()])
         assertEquals(son.getConfig(HelloEntity.MY_NAME), "Danny")
     }
-
+    @Test
+    public void testConfigSetFromAttributeWhenReadyNullTransformations() {
+        AbstractApplication a = new AbstractApplication() {}
+        a.setConfig(HelloEntity.MY_NAME, "Bob")
+        
+        HelloEntity dad = new HelloEntity(owner:a)
+        HelloEntity son = new HelloEntity(owner:dad)
+        
+        //and config can have transformations
+        son.setConfig(HelloEntity.MY_NAME, transform(attributeWhenReady(dad, HelloEntity.FAVOURITE_NAME, null), { it+it[-1]+"y" }))
+        dad.setAttribute(HelloEntity.FAVOURITE_NAME, "Dan");
+        a.start([new SimulatedLocation()])
+        assertEquals(son.getConfig(HelloEntity.MY_NAME), "Danny")
+    }
 
 }

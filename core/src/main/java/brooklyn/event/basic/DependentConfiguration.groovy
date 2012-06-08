@@ -2,6 +2,7 @@ package brooklyn.event.basic;
 
 import groovy.lang.Closure
 
+import java.util.List;
 import java.util.concurrent.Callable
 import java.util.concurrent.Semaphore
 
@@ -11,6 +12,7 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.event.AttributeSensor
+import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent
 import brooklyn.management.SubscriptionHandle
 import brooklyn.management.Task
@@ -38,7 +40,7 @@ public class DependentConfiguration {
 
     /** @see #attributeWhenReady(Entity, AttributeSensor, Predicate); default readiness (if no third argument) is Groovy truth */    
     public static <T> Task<T> attributeWhenReady(Entity source, AttributeSensor<T> sensor, Closure ready = { it }) {
-        attributeWhenReady(source, sensor, new Predicate() { public boolean apply(Object o) { ready.call(o) } })
+        attributeWhenReady(source, sensor, new Predicate() { public boolean apply(Object o) { (ready?:{it}).call(o) } })
     }
     
     /** returns a {@link Task} which blocks until the given sensor on the given source entity gives a value that satisfies ready, then returns that value;
@@ -49,7 +51,7 @@ public class DependentConfiguration {
     }
 
     public static <T> Task<T> attributePostProcessedWhenReady(Entity source, AttributeSensor<T> sensor, Closure ready, Closure postProcess) {
-        attributePostProcessedWhenReady(source, sensor, new Predicate() { public boolean apply(Object o) { ready.call(o) } }, postProcess)
+        attributePostProcessedWhenReady(source, sensor, new Predicate() { public boolean apply(Object o) { (ready?:{it}).call(o) } }, postProcess)
     }
 
     public static <T> Task<T> attributePostProcessedWhenReady(Entity source, AttributeSensor<T> sensor, Closure postProcess) {
@@ -75,6 +77,8 @@ public class DependentConfiguration {
 
     private static <T> T waitInTaskForAttributeReady(Entity source, AttributeSensor<T> sensor, Predicate ready) {
         T value = source.getAttribute(sensor);
+        if (ready==null) ready = new Predicate() { public boolean apply(Object o) { o } };
+        
         if (ready.apply(value)) return value
         BasicTask current = BasicExecutionContext.currentExecutionContext.currentTask
         if (!current) throw new IllegalStateException("Should only be invoked in a running task")
@@ -176,4 +180,11 @@ public class DependentConfiguration {
             }, taskArgs.toArray(new Task[taskArgs.size()]));
     }
     
+    public static <T> Task<List<T>> listAttributesWhenReady(Sensor<T> sensor, Iterable<Entity> entities, Closure readiness = null) {
+        listAttributesWhenReady(sensor, entities, new Predicate() { public boolean apply(Object o) { (readiness?:{it}).call(o) } });
+    }
+    public static <T> Task<List<T>> listAttributesWhenReady(Sensor<T> sensor, Iterable<Entity> entities, Predicate<T> readiness) {
+        new ParallelTask(entities.collect({ attributeWhenReady(it, sensor, readiness) }) );
+    }
+
 }
