@@ -13,6 +13,7 @@ import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.RunNodesException;
 import org.jclouds.compute.domain.ComputeMetadata;
 import org.jclouds.compute.domain.NodeMetadata;
+import org.jclouds.compute.domain.NodeState;
 import org.jclouds.compute.domain.Template;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -104,8 +105,8 @@ public class MachinePool {
 
         MachineSet allNewDetectedMachines = new MachineSet(nodes);
         MachineSet newDetectedMachines = filterForAllowedMachines(allNewDetectedMachines);
-        MachineSet oldDetectedMachines;
-        oldDetectedMachines = detectedMachines;
+        MachineSet oldDetectedMachines = detectedMachines;
+        MachineSet newMatchedMachines = new MachineSet();
         detectedMachines = newDetectedMachines;
 
         MachineSet appearedMachinesIncludingBlacklist = allNewDetectedMachines.removed(oldDetectedMachines);
@@ -114,14 +115,20 @@ public class MachinePool {
             if (log.isDebugEnabled()) log.debug("Pool "+this+", ignoring "+(appearedMachinesIncludingBlacklist.size()-appearedMachines.size())+" disallowed");
         int matchedAppeared = 0;
         for (NodeMetadata m: appearedMachines) {
-            Set<ReusableMachineTemplate> ts = getTemplatesMatchingInstance(m);
-            if (!ts.isEmpty()) {
-                matchedAppeared++;
+            if (m.getState() != NodeState.RUNNING) {
                 if (log.isDebugEnabled()) 
-                    log.debug("Pool "+this+", newly detected machine "+m+", matches pool templates "+ts);
+                    log.debug("Pool "+this+", newly detected machine "+m+", not running ("+m.getState()+")");
             } else {
-                if (log.isDebugEnabled()) 
-                    log.debug("Pool "+this+", newly detected machine "+m+", does not match any pool templates");
+                Set<ReusableMachineTemplate> ts = getTemplatesMatchingInstance(m);
+                if (!ts.isEmpty()) {
+                    matchedAppeared++;
+                    newMatchedMachines = newMatchedMachines.added(new MachineSet(m));
+                    if (log.isDebugEnabled()) 
+                        log.debug("Pool "+this+", newly detected machine "+m+", matches pool templates "+ts);
+                } else {
+                    if (log.isDebugEnabled()) 
+                        log.debug("Pool "+this+", newly detected machine "+m+", does not match any pool templates");
+                }
             }
         }
         if (matchedAppeared>0) {
@@ -130,6 +137,7 @@ public class MachinePool {
             if (log.isDebugEnabled()) 
                 log.debug("Pool "+this+" discovered "+matchedAppeared+" matching machines (of "+appearedMachines.size()+" total new; "+newDetectedMachines.size()+" total including claimed and unmatched)");
         }
+        matchedMachines = newMatchedMachines;
     }
 
     protected MachineSet filterForAllowedMachines(MachineSet input) {
@@ -163,14 +171,14 @@ public class MachinePool {
     /** all machines matching any templates */
     public MachineSet all() {
         init();
-        return detectedMachines;
+        return matchedMachines;
     }
 
     /** machines matching any templates which have not been claimed */
     public MachineSet unclaimed() {
         init();
         synchronized (this) {
-            return detectedMachines.removed(claimedMachines);
+            return matchedMachines.removed(claimedMachines);
         }
     }
     
@@ -215,6 +223,7 @@ public class MachinePool {
     public synchronized void setBlacklist(MachineSet newBlacklist) {
         blacklistedMachines = newBlacklist;
         detectedMachines = detectedMachines.removed(blacklistedMachines);
+        matchedMachines = matchedMachines.removed(blacklistedMachines);
     }
     
     /** creates machines if necessary so that this spec exists (may already be claimed however);
@@ -287,6 +296,7 @@ public class MachinePool {
         }
         synchronized (this) {
             detectedMachines = detectedMachines.added(result);
+            matchedMachines = matchedMachines.added(result);
         }
     }
 
@@ -343,6 +353,7 @@ public class MachinePool {
         init();
         synchronized (this) {
             detectedMachines = detectedMachines.removed(set);
+            matchedMachines = matchedMachines.removed(set);
             claimedMachines = claimedMachines.removed(set);
         }
         Set<? extends NodeMetadata> destroyed = computeService.destroyNodesMatching(new Predicate<NodeMetadata>() {
@@ -354,6 +365,7 @@ public class MachinePool {
         synchronized (this) {
             //in case a rescan happened while we were destroying
             detectedMachines = detectedMachines.removed(set);
+            matchedMachines = matchedMachines.removed(set);
             claimedMachines = claimedMachines.removed(set);
         }
         return destroyed.size();        

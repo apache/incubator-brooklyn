@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nullable
+import javax.annotation.OverridingMethodsMustInvokeSuper;
 
 import org.jclouds.Constants
 import org.jclouds.compute.ComputeService
@@ -238,7 +239,17 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             String vmIp = JcloudsUtil.getFirstReachableAddress(node);
             LoginCredentials expectedCredentials = LoginCredentials.fromCredentials(node.getCredentials());
             if (setup.allconf.sshPrivateKeyData) {
-                expectedCredentials = LoginCredentials.fromCredentials(new Credentials(setup.allconf.userName, setup.allconf.sshPrivateKeyData));
+                String userName = setup.allconf.userName;
+                if (expectedCredentials.getUser()) {
+                    if ("root".equals(userName) && "ubuntu".equals(expectedCredentials.getUser())) {
+                        // FIXME should use 'null' as username then learn it from jclouds
+                        // (or use AdminAccess!)
+                        LOG.debug("overriding username 'root' in favour of 'ubuntu' at ${node}");
+                        setup.allconf.userName = "ubuntu";
+                        userName = "ubuntu";
+                    }
+                }
+                expectedCredentials = LoginCredentials.fromCredentials(new Credentials(userName, setup.allconf.sshPrivateKeyData));
                 //override credentials                
                 node = NodeMetadataBuilder.fromNodeMetadata(node).credentials(expectedCredentials).build();
             }
@@ -299,15 +310,33 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         
         def newFlags = setup.allconf;
         newFlags.id = metadata.getId();
-        newFlags.hostname = getPublicHostname(metadata, newFlags);
         LoginCredentials credentials = metadata.getCredentials();
         if (credentials) {
             if (credentials.getUser()) newFlags.userName = credentials.getUser();
-            if (credentials.getPrivateKey()) newFlags.sshPrivateKey = credentials.getPrivateKey();
+            if (credentials.getPrivateKey()) newFlags.sshPrivateKeyData = credentials.getPrivateKey();
         } else {
             //username should already be set
-            if (!newFlags.sshPrivateKey)
-                newFlags.sshPrivateKey = getPrivateKeyFile();
+            if (!newFlags.privateKeyFile)
+                newFlags.privateKeyFile = getPrivateKeyFile();
+        }
+        try {
+            newFlags.hostname = getPublicHostname(metadata, newFlags);
+        } catch (Exception e) {
+            // TODO this logic should be placed somewhere more useful/shared
+            //try again with user ubuntu, then root
+            newFlags.userName = "ubuntu";
+            try {
+                newFlags.hostname = getPublicHostname(metadata, newFlags);
+            } catch (Exception e2) {
+                newFlags.userName = "root";
+                try {
+                    newFlags.hostname = getPublicHostname(metadata, newFlags);
+                } catch (Exception e3) {
+                    LOG.warn "couldn't access "+metadata+" to discover hostname (rethrowing): "+e
+                    throw Throwables.propagate(e);
+                }
+            }
+            LOG.info "remapping username at "+metadata+" to "+newFlags.userName+" (this username works)"
         }
         return rebindMachine(newFlags);
     }
@@ -346,7 +375,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
 
         Map sshConfig = [:]
         if (getPrivateKeyFile()) sshConfig.keyFiles = [ getPrivateKeyFile().getCanonicalPath() ] 
-        if (setup.allconf.sshPrivateKeyData) sshConfig.privateKey = setup.allconf.sshPrivateKeyData 
+        if (setup.allconf.sshPrivateKeyData) sshConfig.privateKeyData = setup.allconf.sshPrivateKeyData 
         JcloudsSshMachineLocation sshLocByHostname = new JcloudsSshMachineLocation(this, node,
                 address:hostname, 
                 displayName:hostname,
@@ -524,7 +553,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         
         Map sshConfig = [:]
         if (getPrivateKeyFile()) sshConfig.keyFiles = [ getPrivateKeyFile().getCanonicalPath() ] 
-        if (allconf.sshPrivateKeyData) sshConfig.privateKey = allconf.sshPrivateKeyData
+        if (allconf.sshPrivateKeyData) sshConfig.privateKeyData = allconf.sshPrivateKeyData
         // TODO messy way to get an SSH session 
         SshMachineLocation sshLocByIp = new SshMachineLocation(address:vmIp, username:allconf.userName, config:sshConfig);
         
@@ -586,8 +615,6 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         /** uses submitRunScript to execute the commands, and throws error if it fails or returns non-zero */
         public void execRemoteScript(String ...commands) {
             ExecResponse result = submitRunScript(commands).get();
-            if (result.getError()!=null)
-                throw new IllegalStateException("Error running remote commands (error ${result.error}): ${commands}");
             if (result.getExitStatus()!=0)
                 throw new IllegalStateException("Error running remote commands (code ${result.exitStatus}): ${commands}");
         }

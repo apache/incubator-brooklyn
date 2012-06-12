@@ -128,7 +128,7 @@ public class SshjTool implements SshTool {
     private final String user;
     private final String password;
     private final int port;
-    private String privateKey;
+    private String privateKeyData;
     private File privateKeyFile;
     private boolean strictHostKeyChecking;
 
@@ -141,7 +141,7 @@ public class SshjTool implements SshTool {
         private String user = System.getProperty("user.name");
         private String password;
         private int port = 22;
-        private String privateKey;
+        private String privateKeyData;
         private Set<String> privateKeyFiles = Sets.newLinkedHashSet();
         private boolean strictHostKeyChecking = false;
         private int connectTimeout;
@@ -161,7 +161,8 @@ public class SshjTool implements SshTool {
             sshTries = getOptionalVal(props, "sshTries", Integer.class, sshTries);
             sshRetryDelay = getOptionalVal(props, "sshRetryDelay", Long.class, sshRetryDelay);
 
-            privateKey = getOptionalVal(props, "privateKey", String.class, privateKey);
+            privateKeyData = getOptionalVal(props, "privateKey", String.class, privateKeyData);
+            privateKeyData = getOptionalVal(props, "privateKeyData", String.class, privateKeyData);
 
             // for backwards compatibility accept keyFiles and privateKey
             // but sshj accepts only a single privateKeyFile; leave blank to use defaults (i.e. ~/.ssh/id_rsa and id_dsa)
@@ -183,8 +184,12 @@ public class SshjTool implements SshTool {
         public Builder port(int val) {
             this.port = val; return this;
         }
+        /** @deprecated 1.4.0, use privateKeyData */
         public Builder privateKey(String val) {
-            this.privateKey = val; return this;
+            this.privateKeyData = val; return this;
+        }
+        public Builder privateKeyData(String val) {
+            this.privateKeyData = val; return this;
         }
         public Builder privateKeyFile(String val) {
             this.privateKeyFiles.add(val); return this;
@@ -223,7 +228,7 @@ public class SshjTool implements SshTool {
         strictHostKeyChecking = builder.strictHostKeyChecking;
         sshTries = builder.sshTries ;
         backoffLimitedRetryHandler = new BackoffLimitedRetryHandler(sshTries, builder.sshRetryDelay);
-        privateKey = builder.privateKey;
+        privateKeyData = builder.privateKeyData;
         
         if (builder.privateKeyFiles.size() > 1) {
             throw new IllegalArgumentException("sshj supports only a single private key-file; " +
@@ -245,7 +250,7 @@ public class SshjTool implements SshTool {
                 .hostAndPort(HostAndPort.fromParts(host, port))
                 .username(user)
                 .password(password)
-                .privateKey(privateKey)
+                .privateKeyData(privateKeyData)
                 .privateKeyFile(privateKeyFile)
                 .strictHostKeyChecking(strictHostKeyChecking)
                 .connectTimeout(builder.connectTimeout)
@@ -340,9 +345,16 @@ public class SshjTool implements SshTool {
         return 0; // TODO Can we assume put will have thrown exception if failed? Rather than exit code != 0?
     }
 
-    @Override
     public int execShell(Map<String,?> props, List<String> commands) {
-        return execShell(props, commands, Collections.<String,Object>emptyMap());
+        return execScript(props, commands, Collections.<String,Object>emptyMap());
+    }
+    public int execShell(Map<String,?> props, List<String> commands, Map<String,?> env) {
+        return execScript(props, commands, Collections.<String,Object>emptyMap());
+    }
+
+    @Override
+    public int execScript(Map<String,?> props, List<String> commands) {
+        return execScript(props, commands, Collections.<String,Object>emptyMap());
     }
     
     /**
@@ -372,7 +384,7 @@ public class SshjTool implements SshTool {
      * of separate message(s) for copying the file!
      */
     @Override
-    public int execShell(Map<String,?> props, List<String> commands, Map<String,?> env) {
+    public int execScript(Map<String,?> props, List<String> commands, Map<String,?> env) {
         OutputStream out = getOptionalVal(props, "out", OutputStream.class, null);
         OutputStream err = getOptionalVal(props, "err", OutputStream.class, null);
         String scriptDir = getOptionalVal(props, "scriptDir", String.class, "/tmp");
@@ -496,12 +508,13 @@ public class SshjTool implements SshTool {
                 try {
                     disconnect();
                 } catch (Exception e1) {
-                    LOG.warn("<< ("+toString()+") error closing connection", from);
+                    LOG.warn("<< ("+toString()+") error closing connection: "+from+" / "+e1, from);
                 }
                 if (i + 1 == sshTries) {
+                    LOG.warn("<< " + errorMessage + " (attempt " + (i + 1) + " of " + sshTries + "): " + from.getMessage());
                     throw propagate(from, errorMessage + " (out of retries - max " + sshTries + ")");
                 } else {
-                    LOG.info("<< " + errorMessage + " (attempt " + (i + 1) + " of " + sshTries + "): " + from.getMessage());
+                    LOG.debug("<< " + errorMessage + " (attempt " + (i + 1) + " of " + sshTries + "): " + from.getMessage());
                     backoffForAttempt(i + 1, errorMessage + ": " + from.getMessage());
                     if (connection != sshClientConnection)
                         connect();
@@ -656,7 +669,8 @@ public class SshjTool implements SshTool {
 
     private SshException propagate(Exception e, String message) throws SshException {
         message += ": " + e.getMessage();
-        LOG.error("<< " + message, e);
+        // it's not necessarily an error yet, that's up to the caller
+        LOG.debug("<< PROPAGATING: " + message, e);
         throw new SshException("(" + toString() + ") " + message, e);
     }
 
@@ -807,12 +821,12 @@ public class SshjTool implements SshTool {
                 
                 if (out != null) {
                     InputStream outstream = shell.getInputStream();
-                    outgobbler = new StreamGobbler(outstream, out, LOG);//(Logger)null);
+                    outgobbler = new StreamGobbler(outstream, out, (Logger)null);
                     outgobbler.start();
                 }
-                if (out != null) {
+                if (err != null) {
                     InputStream errstream = shell.getErrorStream();
-                    errgobbler = new StreamGobbler(errstream, err, LOG);//(Logger)null);
+                    errgobbler = new StreamGobbler(errstream, err, (Logger)null);
                     errgobbler.start();
                 }
                 

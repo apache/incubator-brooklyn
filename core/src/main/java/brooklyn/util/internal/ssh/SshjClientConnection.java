@@ -49,7 +49,7 @@ public class SshjClientConnection implements SshAction<SSHClient> {
         protected HostAndPort hostAndPort;
         protected String username;
         protected String password;
-        protected String privateKey;
+        protected String privateKeyData;
         protected File privateKeyFile;
         protected int connectTimeout;
         protected int sessionTimeout;
@@ -70,11 +70,17 @@ public class SshjClientConnection implements SshAction<SSHClient> {
             return this;
         }
 
+        /** @deprecated use privateKeyData */
         public Builder privateKey(String val) {
-            this.privateKey = val;
+            this.privateKeyData = val;
             return this;
         }
 
+        public Builder privateKeyData(String val) {
+            this.privateKeyData = val;
+            return this;
+        }
+        
         public Builder privateKeyFile(File val) {
             this.privateKeyFile = val;
             return this;
@@ -101,14 +107,14 @@ public class SshjClientConnection implements SshAction<SSHClient> {
 
         protected static Builder fromSSHClientConnection(SshjClientConnection in) {
             return new Builder().hostAndPort(in.getHostAndPort()).connectTimeout(in.getConnectTimeout()).sessionTimeout(
-                    in.getSessionTimeout()).username(in.username).password(in.password).privateKey(in.privateKey).privateKeyFile(in.privateKeyFile);
+                    in.getSessionTimeout()).username(in.username).password(in.password).privateKey(in.privateKeyData).privateKeyFile(in.privateKeyFile);
         }
     }
 
     private final HostAndPort hostAndPort;
     private final String username;
     private final String password;
-    private final String privateKey;
+    private final String privateKeyData;
     private final File privateKeyFile;
     private final boolean strictHostKeyChecking;
     private final int connectTimeout;
@@ -120,7 +126,7 @@ public class SshjClientConnection implements SshAction<SSHClient> {
         this.hostAndPort = checkNotNull(builder.hostAndPort);
         this.username = builder.username;
         this.password = builder.password;
-        this.privateKey = builder.privateKey;
+        this.privateKeyData = builder.privateKeyData;
         this.privateKeyFile = builder.privateKeyFile;
         this.strictHostKeyChecking = builder.strictHostKeyChecking;
         this.connectTimeout = builder.connectTimeout;
@@ -159,9 +165,9 @@ public class SshjClientConnection implements SshAction<SSHClient> {
         
         if (password != null) {
             ssh.authPassword(username, password);
-        } else if (privateKey != null) {
+        } else if (privateKeyData != null) {
             OpenSSHKeyFile key = new OpenSSHKeyFile();
-            key.init(privateKey, null);
+            key.init(privateKeyData, null);
             ssh.authPublickey(username, key);
         } else if (privateKeyFile != null) {
             OpenSSHKeyFile key = new OpenSSHKeyFile();
@@ -221,20 +227,20 @@ public class SshjClientConnection implements SshAction<SSHClient> {
             return false;
         SshjClientConnection that = SshjClientConnection.class.cast(o);
         return equal(this.hostAndPort, that.hostAndPort) && equal(this.username, that.username) 
-                && equal(this.password, that.password) && equal(this.privateKey, that.privateKey)
+                && equal(this.password, that.password) && equal(this.privateKeyData, that.privateKeyData)
                 && equal(this.privateKeyFile, that.privateKeyFile) && equal(this.ssh, that.ssh);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(hostAndPort, username, password, privateKey, ssh);
+        return Objects.hashCode(hostAndPort, username, password, privateKeyData, ssh);
     }
 
     @Override
     public String toString() {
         return Objects.toStringHelper("").add("hostAndPort", hostAndPort).add("user", username)
                 .add("ssh", ssh != null ? ssh.hashCode() : null).add("password", password)
-                .add("privateKeyFile", privateKeyFile).add("privateKey", (privateKey != null ? null : "xxxxxx"))
+                .add("privateKeyFile", privateKeyFile).add("privateKey", (privateKeyData != null ? null : "xxxxxx"))
                 .add("connectTimeout", connectTimeout).add("sessionTimeout", sessionTimeout).toString();
     }
 }

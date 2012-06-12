@@ -26,7 +26,7 @@ public interface SshTool {
     public boolean isConnected();
 
     /**
-     * Executes the set of commands in a shell; optional property 'out'
+     * Executes the set of commands in a shell script; optional property 'out'
      * should be an output stream. Blocks until completion (unless property
      * 'block' set as false).
      * <p>
@@ -35,12 +35,17 @@ public interface SshTool {
      * @return exit status of script
      * @throws SshException
      */
-    public int execShell(Map<String,?> props, List<String> commands, Map<String,?> env);
+    public int execScript(Map<String,?> props, List<String> commands, Map<String,?> env);
 
     /**
-     * @see execShell(Map, List, Map)
+     * @see execScript(Map, List, Map)
      */
+    public int execScript(Map<String,?> props, List<String> commands);
+
+    /** @deprecated @see execScript(Map, List, Map) */
     public int execShell(Map<String,?> props, List<String> commands);
+    /** @deprecated @see execScript(Map, List, Map) */
+    public int execShell(Map<String,?> props, List<String> commands, Map<String,?> env);
 
     /**
      * Executes the set of commands using ssh exec, ";" separated (overridable
