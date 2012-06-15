@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
+import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.AttributeSensor
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent
@@ -19,6 +20,7 @@ import brooklyn.management.Task
 import brooklyn.util.task.BasicExecutionContext
 import brooklyn.util.task.BasicTask
 import brooklyn.util.task.ParallelTask
+import brooklyn.util.task.Tasks
 
 import com.google.common.base.Function
 import com.google.common.base.Predicate
@@ -179,12 +181,21 @@ public class DependentConfiguration {
                 String.format(spec, vv);
             }, taskArgs.toArray(new Task[taskArgs.size()]));
     }
-    
+
+    /** returns a task for parallel execution returning a list of values for the given sensor for the given entity list, 
+     * optionally when the values satisfy a given readiness predicate (defaulting to groovy truth if not supplied) */    
     public static <T> Task<List<T>> listAttributesWhenReady(Sensor<T> sensor, Iterable<Entity> entities, Closure readiness = null) {
         listAttributesWhenReady(sensor, entities, new Predicate() { public boolean apply(Object o) { (readiness?:{it}).call(o) } });
     }
+    /** returns a task for parallel execution returning a list of values of the given sensor list on the given entity, 
+     * optionally when the values satisfy a given readiness predicate (defaulting to groovy truth if not supplied) */    
     public static <T> Task<List<T>> listAttributesWhenReady(Sensor<T> sensor, Iterable<Entity> entities, Predicate<T> readiness) {
         new ParallelTask(entities.collect({ attributeWhenReady(it, sensor, readiness) }) );
     }
 
+    /** blocks until the given task completes, submitting if necessary, returning the result of that (uncoerced) */
+    public static <T> T waitForTask(Task<T> t, Entity context) {
+        return Tasks.resolveValue(t, Object.class, ((EntityLocal)context).getExecutionContext());
+    }
+    
 }

@@ -115,6 +115,7 @@ public class BasicExecutionManager implements ExecutionManager {
     //Not using a CopyOnWriteArraySet for each, because profiling showed this being a massive perf bottleneck.
     private ConcurrentMap<Object,Set<Task>> tasksByTag = new ConcurrentHashMap();
 
+    @Deprecated
     private ConcurrentMap<Object, TaskPreprocessor> preprocessorByTag = new ConcurrentHashMap();
 
     private ConcurrentMap<Object, TaskScheduler> schedulerByTag = new ConcurrentHashMap();
@@ -318,6 +319,7 @@ public class BasicExecutionManager implements ExecutionManager {
         return task;
     }
 
+    @SuppressWarnings("deprecation")
     protected void beforeSubmit(Map flags, Task<?> task) {
         incompleteTaskCount.incrementAndGet();
         
@@ -344,6 +346,7 @@ public class BasicExecutionManager implements ExecutionManager {
         }
     }
 
+    @SuppressWarnings("deprecation")
     protected void beforeStart(Map flags, Task<?> task) {
         activeTaskCount.incrementAndGet();
         
@@ -365,6 +368,7 @@ public class BasicExecutionManager implements ExecutionManager {
         ExecutionUtils.invoke(flags.get("newTaskStartCallback"), task);
     }
 
+    @SuppressWarnings("deprecation")
     protected void afterEnd(Map flags, Task<?> task) {
         activeTaskCount.decrementAndGet();
         incompleteTaskCount.decrementAndGet();
@@ -398,9 +402,11 @@ public class BasicExecutionManager implements ExecutionManager {
     }
 
     /** Returns {@link TaskPreprocessor} defined for tasks with the given tag, or null if none. */
+    @Deprecated
     public TaskPreprocessor getTaskPreprocessorForTag(Object tag) { return preprocessorByTag.get(tag); }
 
     /** @see #setTaskPreprocessorForTag(Object, TaskPreprocessor) */
+    @SuppressWarnings("deprecation")
     public void setTaskPreprocessorForTag(Object tag, Class<? extends TaskPreprocessor> preprocessor) {
         synchronized (preprocessorByTag) {
             TaskPreprocessor old = getTaskPreprocessorForTag(tag);
@@ -430,6 +436,7 @@ public class BasicExecutionManager implements ExecutionManager {
      *
      * @see #setTaskPreprocessorForTag(Object, Class)
      */
+    @SuppressWarnings("deprecation")
     public void setTaskPreprocessorForTag(Object tag, TaskPreprocessor preprocessor) {
         synchronized (preprocessorByTag) {
             preprocessor.injectManager(this);
