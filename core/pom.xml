@@ -75,6 +75,18 @@
         </dependency>
 
         <dependency>
+            <groupId>org.jclouds.api</groupId>
+            <artifactId>cloudservers</artifactId>
+            <version>${jclouds.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jclouds.provider</groupId>
+            <artifactId>cloudservers-uk</artifactId>
+            <version>${jclouds.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>mx4j</groupId>
             <artifactId>mx4j-tools</artifactId>
             <version>${mx4j.version}</version>
