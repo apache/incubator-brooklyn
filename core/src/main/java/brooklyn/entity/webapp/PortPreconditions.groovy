@@ -2,9 +2,11 @@ package brooklyn.entity.webapp
 
 import brooklyn.util.NetworkUtils
 
+/**
+ * @deprecated will be deleted in 0.5. Use NetworkUtils
+ */
+@Deprecated
 class PortPreconditions {
-
-    //TODO move to NetworkUtils
 
     /**
      * @deprecated will be deleted in 0.5. Use NetworkUtils.checkPortValid.

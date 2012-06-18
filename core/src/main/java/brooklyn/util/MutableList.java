@@ -1,0 +1,83 @@
+package brooklyn.util;
+
+import java.util.ArrayList;
+import java.util.Collection;
+
+import com.google.common.collect.ImmutableList;
+
+public class MutableList<V> extends ArrayList<V> {
+    private static final long serialVersionUID = -5533940507175152491L;
+
+    public static <V> MutableList<V> of() {
+        return new MutableList<V>();
+    }
+    
+    public static <V> MutableList<V> of(V v1) {
+        MutableList<V> result = new MutableList<V>();
+        result.add(v1);
+        return result;
+    }
+    
+    public static <V> MutableList<V> of(V v1, V v2) {
+        MutableList<V> result = new MutableList<V>();
+        result.add(v1);
+        result.add(v2);
+        return result;
+    }
+    
+    public static <V> MutableList<V> of(V v1, V v2, V v3) {
+        MutableList<V> result = new MutableList<V>();
+        result.add(v1);
+        result.add(v2);
+        result.add(v3);
+        return result;
+    }
+
+    public static <V> MutableList<V> copyOf(Iterable<? extends V> orig) {
+        return new MutableList<V>(orig);
+    }
+    
+    public MutableList() {
+    }
+    
+    public MutableList(Iterable<? extends V> source) {
+        super((source instanceof Collection) ? (Collection<? extends V>)source : ImmutableList.copyOf(source));
+    }
+    
+    public ImmutableList<V> toImmutable() {
+        return ImmutableList.copyOf(this);
+    }
+    
+    public static <V> Builder<V> builder() {
+        return new Builder<V>();
+    }
+
+    /**
+     * @see guava's ImMutableList.Builder
+     */
+    public static class Builder<V> {
+        final MutableList<V> result = new MutableList<V>();
+
+        public Builder() {}
+
+        public Builder<V> add(V value) {
+            result.add(value);
+            return this;
+        }
+
+        public Builder<V> addAll(Iterable<? extends V> iterable) {
+            if (iterable instanceof Collection) {
+                result.addAll((Collection<? extends V>) iterable);
+            } else {
+                for (V v : iterable) {
+                    result.add(v);
+                }
+            }
+            return this;
+        }
+
+        public MutableList<V> build() {
+          return new MutableList<V>(result);
+        }
+    }
+}

@@ -1,11 +1,6 @@
-package brooklyn.entity.group
+package brooklyn.entity.group;
 
-import java.util.Map
-
-import brooklyn.entity.Entity
-import brooklyn.entity.Group
-import brooklyn.entity.basic.AbstractGroup
-import brooklyn.entity.trait.Startable
+import brooklyn.entity.Entity;
 
 /**
  * Intended to represent a "layer" of an application; this could be within a single location

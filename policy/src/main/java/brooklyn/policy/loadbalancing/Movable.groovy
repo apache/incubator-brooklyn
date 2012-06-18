@@ -14,7 +14,7 @@ import brooklyn.util.flags.SetFromFlag
 /**
  * Represents an item that can be migrated between balanceable containers.
  */
-public interface Movable {
+public interface Movable extends Entity {
     
     @SetFromFlag("immovable")
     public static ConfigKey<Boolean> IMMOVABLE = new BasicConfigKey<Boolean>(

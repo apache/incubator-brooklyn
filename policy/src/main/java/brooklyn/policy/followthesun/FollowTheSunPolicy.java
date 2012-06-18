@@ -1,32 +1,36 @@
 package brooklyn.policy.followthesun;
 
-import static com.google.common.base.Preconditions.checkArgument
+import static brooklyn.util.GroovyJavaMethods.elvis;
+import static brooklyn.util.GroovyJavaMethods.truth;
+import static com.google.common.base.Preconditions.checkArgument;
 
-import java.util.Map
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledExecutorService
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicBoolean
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.Entity
-import brooklyn.entity.basic.Attributes
-import brooklyn.entity.basic.EntityLocal
-import brooklyn.event.AttributeSensor
-import brooklyn.event.Sensor
-import brooklyn.event.SensorEvent
-import brooklyn.event.SensorEventListener
-import brooklyn.location.Location
-import brooklyn.location.MachineProvisioningLocation
-import brooklyn.policy.basic.AbstractPolicy
-import brooklyn.policy.followthesun.FollowTheSunPool.ContainerItemPair
-import brooklyn.policy.loadbalancing.Movable
-import brooklyn.util.flags.SetFromFlag
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.EntityLocal;
+import brooklyn.event.AttributeSensor;
+import brooklyn.event.Sensor;
+import brooklyn.event.SensorEvent;
+import brooklyn.event.SensorEventListener;
+import brooklyn.location.Location;
+import brooklyn.location.MachineProvisioningLocation;
+import brooklyn.policy.basic.AbstractPolicy;
+import brooklyn.policy.followthesun.FollowTheSunPool.ContainerItemPair;
+import brooklyn.policy.loadbalancing.Movable;
+import brooklyn.util.MutableMap;
+import brooklyn.util.flags.SetFromFlag;
 
-import com.google.common.base.Function
-import com.google.common.collect.Iterables
+import com.google.common.base.Function;
+import com.google.common.collect.Iterables;
 
 public class FollowTheSunPolicy extends AbstractPolicy {
 
@@ -40,9 +44,9 @@ public class FollowTheSunPolicy extends AbstractPolicy {
     @SetFromFlag
     private Function<Entity, Location> locationFinder;
     
-    private final AttributeSensor<? extends Number> itemUsageMetric;
-    private final FollowTheSunModel<Entity, Entity> model;
-    private final FollowTheSunStrategy<Entity, ?> strategy;
+    private final AttributeSensor<Map<? extends Movable, Double>> itemUsageMetric;
+    private final FollowTheSunModel<Entity, Movable> model;
+    private final FollowTheSunStrategy<Entity, Movable> strategy;
     private final FollowTheSunParameters parameters;
     
     private FollowTheSunPool poolEntity;
@@ -62,53 +66,49 @@ public class FollowTheSunPolicy extends AbstractPolicy {
             }
             return contender;
         }
-    }
+    };
     
-    private final SensorEventListener<?> eventHandler = new SensorEventListener<Object>() {
+    private final SensorEventListener<Object> eventHandler = new SensorEventListener<Object>() {
         @Override
         public void onEvent(SensorEvent<Object> event) {
             if (LOG.isTraceEnabled()) LOG.trace("{} received event {}", FollowTheSunPolicy.this, event);
             Entity source = event.getSource();
             Object value = event.getValue();
-            Sensor sensor = event.getSensor();
-            switch (sensor) {
-                case itemUsageMetric:
-                    onItemMetricUpdated(source, (Map<? extends Entity, Double>) value, true);
-                    break;
-                case Attributes.LOCATION_CHANGED:
-                    onContainerLocationUpdated(source, true);
-                    break;
-                case FollowTheSunPool.CONTAINER_ADDED:
-                    onContainerAdded((Entity) value, true);
-                    break;
-                case FollowTheSunPool.CONTAINER_REMOVED:
-                    onContainerRemoved((Entity) value, true);
-                    break;
-                case FollowTheSunPool.ITEM_ADDED:
-                    onItemAdded((Entity) value, true);
-                    break;
-                case FollowTheSunPool.ITEM_REMOVED:
-                    onItemRemoved((Entity) value, true);
-                    break;
-                case FollowTheSunPool.ITEM_MOVED:
-                    ContainerItemPair pair = value;
-                    onItemMoved(pair.item, pair.container, true);
-                    break;
+            Sensor<?> sensor = event.getSensor();
+            
+            if (sensor.equals(itemUsageMetric)) {
+                onItemMetricUpdated((Movable)source, (Map<? extends Movable, Double>) value, true);
+            } else if (sensor.equals(Attributes.LOCATION_CHANGED)) {
+                onContainerLocationUpdated(source, true);
+            } else if (sensor.equals(FollowTheSunPool.CONTAINER_ADDED)) {
+                onContainerAdded((Entity) value, true);
+            } else if (sensor.equals(FollowTheSunPool.CONTAINER_REMOVED)) {
+                onContainerRemoved((Entity) value, true);
+            } else if (sensor.equals(FollowTheSunPool.ITEM_ADDED)) {
+                onItemAdded((Movable) value, true);
+            } else if (sensor.equals(FollowTheSunPool.ITEM_REMOVED)) {
+                onItemRemoved((Movable) value, true);
+            } else if (sensor.equals(FollowTheSunPool.ITEM_MOVED)) {
+                ContainerItemPair pair = (ContainerItemPair) value;
+                onItemMoved((Movable)pair.item, pair.container, true);
             }
         }
-    }
+    };
     
     // FIXME parameters: use a more groovy way of doing it, that's consistent with other policies/entities?
-    public FollowTheSunPolicy(Map props = [:], AttributeSensor itemUsageMetric, 
-            FollowTheSunModel<? extends Entity, ? extends Entity> model, FollowTheSunParameters parameters) {
+    public FollowTheSunPolicy(AttributeSensor itemUsageMetric, 
+            FollowTheSunModel<Entity, Movable> model, FollowTheSunParameters parameters) {
+        this(MutableMap.of(), itemUsageMetric, model, parameters);
+    }
+    
+    public FollowTheSunPolicy(Map props, AttributeSensor itemUsageMetric, 
+            FollowTheSunModel<Entity, Movable> model, FollowTheSunParameters parameters) {
         super(props);
         this.itemUsageMetric = itemUsageMetric;
         this.model = model;
         this.parameters = parameters;
-        this.strategy = new FollowTheSunStrategy<Entity, Object>(model, parameters); // TODO: extract interface, inject impl
-        this.locationFinder = locationFinder ?: defaultLocationFinder;
-        checkArgument(minPeriodBetweenExecs instanceof Number, "minPeriodBetweenExecs must be a number, but is "+minPeriodBetweenExecs.class.getClass());
-        checkArgument(locationFinder instanceof Function, "locationFinder must be a Function, but is "+locationFinder.class.getClass());
+        this.strategy = new FollowTheSunStrategy<Entity, Movable>(model, parameters); // TODO: extract interface, inject impl
+        this.locationFinder = elvis(locationFinder, defaultLocationFinder);
     }
     
     @Override
@@ -129,7 +129,7 @@ public class FollowTheSunPolicy extends AbstractPolicy {
             onContainerAdded(container, false);
         }
         for (Entity item : poolEntity.getItemGroup().getMembers()) {
-            onItemAdded(item, false);
+            onItemAdded((Movable)item, false);
         }
 
         scheduleLatencyReductionJig();
@@ -151,13 +151,13 @@ public class FollowTheSunPolicy extends AbstractPolicy {
         executorQueued.set(false);
     }
     
-    private scheduleLatencyReductionJig() {
+    private void scheduleLatencyReductionJig() {
         if (isRunning() && executorQueued.compareAndSet(false, true)) {
             long now = System.currentTimeMillis();
             long delay = Math.max(0, (executorTime + minPeriodBetweenExecs) - now);
             
-            executor.schedule(
-                {
+            executor.schedule(new Runnable() {
+                public void run() {
                     try {
                         executorTime = System.currentTimeMillis();
                         executorQueued.set(false);
@@ -165,16 +165,14 @@ public class FollowTheSunPolicy extends AbstractPolicy {
                         if (LOG.isTraceEnabled()) LOG.trace("{} executing follow-the-sun migration-strategy", this);
                         strategy.rebalance();
                         
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt(); // gracefully stop
-                    } catch (Exception e) {
+                    } catch (RuntimeException e) {
                         if (isRunning()) {
                             LOG.error("Error during latency-reduction-jig", e);
                         } else {
                             LOG.debug("Error during latency-reduction-jig, but no longer running", e);
                         }
                     }
-                },
+                }},
                 delay,
                 TimeUnit.MILLISECONDS);
         }
@@ -184,7 +182,7 @@ public class FollowTheSunPolicy extends AbstractPolicy {
         subscribe(container, Attributes.LOCATION_CHANGED, eventHandler);
         Location location = locationFinder.apply(container);
         
-        if (LOG.isTraceEnabled()) LOG.trace("{} recording addition of container {} in location {}", this, container, location);
+        if (LOG.isTraceEnabled()) LOG.trace("{} recording addition of container {} in location {}", new Object[] {this, container, location});
         model.onContainerAdded(container, location);
         
         if (rebalanceNow) scheduleLatencyReductionJig();
@@ -196,17 +194,17 @@ public class FollowTheSunPolicy extends AbstractPolicy {
         if (rebalanceNow) scheduleLatencyReductionJig();
     }
     
-    private void onItemAdded(Entity item, boolean rebalanceNow) {
+    private void onItemAdded(Movable item, boolean rebalanceNow) {
         checkArgument(item instanceof Movable, "Added item "+item+" must implement Movable");
-        Entity parentContainer = item.getAttribute(Movable.CONTAINER);
+        Entity parentContainer = (Entity) item.getAttribute(Movable.CONTAINER);
         
-        if (LOG.isTraceEnabled()) LOG.trace("{} recording addition of item {} in container {}", this, item, parentContainer);
+        if (LOG.isTraceEnabled()) LOG.trace("{} recording addition of item {} in container {}", new Object[] {this, item, parentContainer});
         
         subscribe(item, itemUsageMetric, eventHandler);
         
         // Update the model, including the current metric value (if any).
-        Map<? extends Entity, Double> currentValue = item.getAttribute(itemUsageMetric);
-        boolean immovable = item.getConfig(Movable.IMMOVABLE)?:false;
+        Map<? extends Movable, Double> currentValue = item.getAttribute(itemUsageMetric);
+        boolean immovable = elvis(item.getConfig(Movable.IMMOVABLE), false);
         model.onItemAdded(item, parentContainer, immovable);
 
         if (currentValue != null) {
@@ -216,34 +214,34 @@ public class FollowTheSunPolicy extends AbstractPolicy {
         if (rebalanceNow) scheduleLatencyReductionJig();
     }
     
-    private void onItemRemoved(Entity item, boolean rebalanceNow) {
+    private void onItemRemoved(Movable item, boolean rebalanceNow) {
         if (LOG.isTraceEnabled()) LOG.trace("{} recording removal of item {}", this, item);
         unsubscribe(item);
         model.onItemRemoved(item);
         if (rebalanceNow) scheduleLatencyReductionJig();
     }
     
-    private void onItemMoved(Entity item, Entity parentContainer, boolean rebalanceNow) {
-        if (LOG.isTraceEnabled()) LOG.trace("{} recording moving of item {} to {}", this, item, parentContainer);
+    private void onItemMoved(Movable item, Entity parentContainer, boolean rebalanceNow) {
+        if (LOG.isTraceEnabled()) LOG.trace("{} recording moving of item {} to {}", new Object[] {this, item, parentContainer});
         model.onItemMoved(item, parentContainer);
         if (rebalanceNow) scheduleLatencyReductionJig();
     }
     
     private void onContainerLocationUpdated(Entity container, boolean rebalanceNow) {
         Location location = locationFinder.apply(container);
-        if (LOG.isTraceEnabled()) LOG.trace("{} recording location for container {}, new value {}", this, container, location);
+        if (LOG.isTraceEnabled()) LOG.trace("{} recording location for container {}, new value {}", new Object[] {this, container, location});
         model.onContainerLocationUpdated(container, location);
         if (rebalanceNow) scheduleLatencyReductionJig();
     }
     
-    private void onItemMetricUpdated(Entity item, Map<? extends Entity, Double> newValues, boolean rebalanceNow) {
-        if (LOG.isTraceEnabled()) LOG.trace("{} recording usage update for item {}, new value {}", this, item, newValues);
+    private void onItemMetricUpdated(Movable item, Map<? extends Movable, Double> newValues, boolean rebalanceNow) {
+        if (LOG.isTraceEnabled()) LOG.trace("{} recording usage update for item {}, new value {}", new Object[] {this, item, newValues});
         model.onItemUsageUpdated(item, newValues);
         if (rebalanceNow) scheduleLatencyReductionJig();
     }
     
     @Override
     public String toString() {
-        return getClass().getSimpleName() + (name ? "("+name+")" : "");
+        return getClass().getSimpleName() + (truth(name) ? "("+name+")" : "");
     }
 }

@@ -1,20 +1,22 @@
 package brooklyn.policy.loadbalancing;
 
-import java.util.Map
+import java.util.Map;
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.Entity
-import brooklyn.entity.Group
-import brooklyn.entity.basic.AbstractGroup
-import brooklyn.entity.basic.DynamicGroup
-import brooklyn.event.Sensor
-import brooklyn.event.SensorEvent
-import brooklyn.event.SensorEventListener
-import brooklyn.util.flags.SetFromFlag
+import brooklyn.entity.Entity;
+import brooklyn.entity.Group;
+import brooklyn.entity.basic.AbstractGroup;
+import brooklyn.entity.basic.DynamicGroup;
+import brooklyn.event.Sensor;
+import brooklyn.event.SensorEvent;
+import brooklyn.event.SensorEventListener;
+import brooklyn.util.MutableMap;
+import brooklyn.util.flags.SetFromFlag;
 
-import com.google.common.base.Predicate
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 
 /**
  * A group of items that are contained within a given (dynamically changing) set of containers.
@@ -31,7 +33,7 @@ public class ItemsInContainersGroup extends DynamicGroup {
 
     // TODO Inefficient: will not scale to many 1000s of items
 
-    private static final Logger LOG = LoggerFactory.getLogger(ItemsInContainersGroup);
+    private static final Logger LOG = LoggerFactory.getLogger(ItemsInContainersGroup.class);
     
     // FIXME Can't set default value in fiel declaration, because super sets it before this class initializes the field values!
     @SetFromFlag
@@ -39,36 +41,44 @@ public class ItemsInContainersGroup extends DynamicGroup {
 
     private Group containerGroup;
     
-    private final SensorEventListener<?> eventHandler = new SensorEventListener<Object>() {
+    private final SensorEventListener<Object> eventHandler = new SensorEventListener<Object>() {
         @Override
         public void onEvent(SensorEvent<Object> event) {
             Entity source = event.getSource();
             Object value = event.getValue();
             Sensor sensor = event.getSensor();
             
-            switch (sensor) {
-                case AbstractGroup.MEMBER_ADDED:
+            if (sensor.equals(AbstractGroup.MEMBER_ADDED)) {
                     onContainerAdded((Entity) value);
-                    break;
-                case AbstractGroup.MEMBER_REMOVED:
-                    onContainerRemoved((Entity) value);
-                    break;
-                case Movable.CONTAINER:
-                    onItemMoved(source, (Entity) value);
-                    break;
-                default:
-                    throw new IllegalStateException("Unhandled event type "+sensor+": "+event);
+            } else if (sensor.equals(AbstractGroup.MEMBER_REMOVED)) {
+                onContainerRemoved((Entity) value);
+            } else if (sensor.equals(Movable.CONTAINER)) {
+                onItemMoved((Movable)source, (BalanceableContainer<?>) value);
+            } else {
+                throw new IllegalStateException("Unhandled event type "+sensor+": "+event);
             }
         }
+    };
+
+    public ItemsInContainersGroup() {
+        this(MutableMap.of(), null);
     }
-    
-    public ItemsInContainersGroup(Map props = [:], Entity owner = null) {
+    public ItemsInContainersGroup(Map props) {
+        this(props, null);
+    }
+    public ItemsInContainersGroup(Entity owner) {
+        this(MutableMap.of(), owner);
+    }
+    public ItemsInContainersGroup(Map props, Entity owner) {
         super(props, owner);
-        setEntityFilter( {Entity e -> return acceptsEntity(e) } );
-        if (itemFilter == null) itemFilter = {true} as Predicate<Entity>;
+        setEntityFilter(new Predicate<Entity>() {
+            @Override public boolean apply(Entity e) {
+                return acceptsEntity(e);
+            }});
+        if (itemFilter == null) itemFilter = Predicates.alwaysTrue();
     }
 
-    boolean acceptsEntity(Entity e) {
+    protected boolean acceptsEntity(Entity e) {
         if (e instanceof Movable) {
             return acceptsItem((Movable)e, ((Movable)e).getAttribute(Movable.CONTAINER));
         }
@@ -113,16 +123,16 @@ public class ItemsInContainersGroup extends DynamicGroup {
     }
     
     private void onItemMoved(Movable item, BalanceableContainer container) {
-        if (LOG.isTraceEnabled()) LOG.trace("{} processing moved item {}, to container {}", this, item, container)
+        if (LOG.isTraceEnabled()) LOG.trace("{} processing moved item {}, to container {}", new Object[] {this, item, container});
         if (hasMember(item)) {
             if (!acceptsItem(item, container)) {
-                if (LOG.isDebugEnabled()) LOG.debug("{} removing moved item {} from group, as new container {} is not a member", this, item, container)
-                removeMember(item)
+                if (LOG.isDebugEnabled()) LOG.debug("{} removing moved item {} from group, as new container {} is not a member", new Object[] {this, item, container});
+                removeMember(item);
             }
         } else {
             if (acceptsItem(item, container)) {
-                if (LOG.isDebugEnabled()) LOG.debug("{} adding moved item {} to group, as new container {} is a member", this, item, container)
-                addMember(item)
+                if (LOG.isDebugEnabled()) LOG.debug("{} adding moved item {} to group, as new container {} is a member", new Object[] {this, item, container});
+                addMember(item);
             }
         }
     }

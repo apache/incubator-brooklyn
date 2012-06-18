@@ -1,42 +1,58 @@
-package brooklyn.location.basic
+package brooklyn.location.basic;
 
-import java.util.Collection
-import java.util.Map
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 
-import brooklyn.location.MachineLocation
-import brooklyn.location.MachineProvisioningLocation
-import brooklyn.location.OsDetails
-import brooklyn.location.PortRange
-import brooklyn.location.PortSupplier
+import brooklyn.location.MachineLocation;
+import brooklyn.location.MachineProvisioningLocation;
+import brooklyn.location.OsDetails;
+import brooklyn.location.PortRange;
+import brooklyn.location.PortSupplier;
+import brooklyn.util.MutableMap;
 
-import com.google.common.collect.Iterables
+import com.google.common.base.Throwables;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 
 
 /** Location for use in dev/test, defining custom start/stop support, and/or tweaking the ports which are permitted to be available
  * (using setPermittedPorts(Iterable))
  */
-class SimulatedLocation extends AbstractLocation implements MachineProvisioningLocation<MachineLocation>, MachineLocation, PortSupplier {
+public class SimulatedLocation extends AbstractLocation implements MachineProvisioningLocation<MachineLocation>, MachineLocation, PortSupplier {
 
     private static final long serialVersionUID = 1L;
     
-    private static final address = InetAddress.getLocalHost()
+    private static final InetAddress address;
+    static {
+        try {
+            address = InetAddress.getLocalHost();
+        } catch (UnknownHostException e) {
+            throw Throwables.propagate(e);
+        }
+    }
 
     Iterable permittedPorts = PortRanges.fromString("1+");
-    Set usedPorts = []
+    Set usedPorts = Sets.newLinkedHashSet();
 
-    public SimulatedLocation(Map<String,? extends Object> flags = [:]) {
+    public SimulatedLocation() {
+        this(MutableMap.<String,Object>of());
+    }
+    public SimulatedLocation(Map<String,? extends Object> flags) {
         super(flags);
     }
     
     public MachineLocation obtain(Map<String,? extends Object> flags) {
-        return this
+        return this;
     }
 
     public void release(MachineLocation machine) {
     }
 
     public Map<String,Object> getProvisioningFlags(Collection<String> tags) {
-        return [:]
+        return MutableMap.<String,Object>of();
     }
     
     public InetAddress getAddress() {
@@ -52,7 +68,7 @@ class SimulatedLocation extends AbstractLocation implements MachineProvisioningL
 
     public synchronized int obtainPort(PortRange range) {
         for (int p: range)
-            if (obtainSpecificPort(p)) return p
+            if (obtainSpecificPort(p)) return p;
         return -1;
     }
 
