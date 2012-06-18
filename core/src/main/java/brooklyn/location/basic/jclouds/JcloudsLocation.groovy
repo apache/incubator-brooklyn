@@ -318,15 +318,23 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             }
             
             String vmHostname = getPublicHostname(node, setup.allconf)
+            
             Map sshConfig = [:]
+
+            if (getPrivateKeyFile()) sshConfig.keyFiles = [ getPrivateKeyFile().getCanonicalPath() ];
             if (setup.allconf.sshPrivateKeyData) {
                 sshConfig.privateKey = setup.allconf.sshPrivateKeyData;
+                sshConfig.privateKeyData = setup.allconf.sshPrivateKeyData;
+                sshConfig.sshPrivateKeyData = setup.allconf.sshPrivateKeyData;
             } else if (getPrivateKeyFile()) {
                 sshConfig.keyFiles = [ getPrivateKeyFile().getCanonicalPath() ];
             } else if (node.getCredentials().getPassword() != null) {
                 sshConfig.password = node.getCredentials().getPassword();
             }
-            
+            if (setup.allconf.sshPublicKeyData) {
+                sshConfig.sshPublicKeyData = setup.allconf.sshPublicKeyData;
+            }
+    
             if (LOG.isDebugEnabled())
                 LOG.debug("creating JcloudsSshMachineLocation for {}@{} for {} with {}", setup.allconf.userName, vmHostname, setup.callerContext, Entities.sanitize(sshConfig))
             JcloudsSshMachineLocation sshLocByHostname = new JcloudsSshMachineLocation(this, node,
@@ -426,18 +434,24 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         // TODO confirm we can SSH ?
 
         Map sshConfig = [:]
-
         if (password != null) {
             sshConfig.password = password;
-        } else if (setup.allconf.sshPrivateKeyData) {
-            sshConfig.privateKeyData = setup.allconf.sshPrivateKeyData;
-            sshConfig.privateKey = setup.allconf.sshPrivateKeyData;
-        } else if (getPrivateKeyFile()) {
-            sshConfig.keyFiles = [ getPrivateKeyFile().getCanonicalPath() ];
-        } else if (node.getCredentials().getPassword() != null) {
-            sshConfig.password = node.getCredentials().getPassword();
+        } else {
+            if (getPrivateKeyFile()) sshConfig.keyFiles = [ getPrivateKeyFile().getCanonicalPath() ];
+            if (setup.allconf.sshPrivateKeyData) {
+                sshConfig.privateKey = setup.allconf.sshPrivateKeyData;
+                sshConfig.privateKeyData = setup.allconf.sshPrivateKeyData;
+                sshConfig.sshPrivateKeyData = setup.allconf.sshPrivateKeyData;
+            } else if (getPrivateKeyFile()) {
+                sshConfig.keyFiles = [ getPrivateKeyFile().getCanonicalPath() ];
+            } else if (node.getCredentials().getPassword() != null) {
+                sshConfig.password = node.getCredentials().getPassword();
+            }
+            if (setup.allconf.sshPublicKeyData) {
+                sshConfig.sshPublicKeyData = setup.allconf.sshPublicKeyData;
+            }
         }
-
+        
         JcloudsSshMachineLocation sshLocByHostname = new JcloudsSshMachineLocation(this, node,
                 address:hostname, 
                 displayName:hostname,
