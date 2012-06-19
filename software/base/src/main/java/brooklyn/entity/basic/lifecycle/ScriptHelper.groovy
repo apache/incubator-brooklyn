@@ -225,7 +225,7 @@ public class CommonCommands {
     public static String installPackage(Map flags=[:], String packageDefaultName) {
         alternatives([
 	            exists("dpkg", sudo("dpkg -i ${flags.deb?:packageDefaultName}")),
-	            exists("apt-get", sudo("apt-get install -y ${flags.apt?:packageDefaultName}")),
+	            exists("apt-get", sudo("apt-get update && apt-get install -y ${flags.apt?:packageDefaultName}")),
 	            exists("yum", sudo("yum -y install ${flags.yum?:packageDefaultName}")),
 	            exists("rpm", sudo("rpm -i ${flags.rpm?:packageDefaultName}")),
 	            exists("port", sudo("port install ${flags.port?:packageDefaultName}")) ],
