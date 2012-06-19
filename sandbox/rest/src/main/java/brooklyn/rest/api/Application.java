@@ -1,17 +1,14 @@
 package brooklyn.rest.api;
 
 import brooklyn.entity.basic.AbstractApplication;
-import brooklyn.entity.basic.EntityLocal;
-import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
-import java.net.URI;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
+
+import java.net.URI;
+import java.util.Map;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class Application {
 
@@ -25,12 +22,12 @@ public class Application {
   }
 
   private final static Map<Status, Status> validTransitions =
-      ImmutableMap.<Status, Status>builder()
-          .put(Status.UNKNOWN, Status.ACCEPTED)
-          .put(Status.ACCEPTED, Status.STARTING)
-          .put(Status.STARTING, Status.RUNNING)
-          .put(Status.RUNNING, Status.STOPPING)
-          .build();
+    ImmutableMap.<Status, Status>builder()
+      .put(Status.UNKNOWN, Status.ACCEPTED)
+      .put(Status.ACCEPTED, Status.STARTING)
+      .put(Status.STARTING, Status.RUNNING)
+      .put(Status.RUNNING, Status.STOPPING)
+      .build();
 
   private final ApplicationSpec spec;
   private final Status status;
@@ -39,8 +36,8 @@ public class Application {
   private transient AbstractApplication instance;
 
   public Application(
-      @JsonProperty("spec") ApplicationSpec spec,
-      @JsonProperty("status") Status status
+    @JsonProperty("spec") ApplicationSpec spec,
+    @JsonProperty("status") Status status
   ) {
     this.spec = checkNotNull(spec, "spec");
     this.status = checkNotNull(status, "status");
@@ -71,8 +68,8 @@ public class Application {
 
   public Map<String, URI> getLinks() {
     return ImmutableMap.of(
-        "self", URI.create("/v1/applications/" + spec.getName()),
-        "entities", URI.create("/v1/applications/" + spec.getName() + "/entities")
+      "self", URI.create("/v1/applications/" + spec.getName()),
+      "entities", URI.create("/v1/applications/" + spec.getName() + "/entities")
     );
   }
 
@@ -81,7 +78,7 @@ public class Application {
       return new Application(spec, newStatus, instance);
     }
     throw new IllegalStateException("Invalid transition from '" +
-        status + "' to '" + newStatus + "'");
+      status + "' to '" + newStatus + "'");
   }
 
   @Override
@@ -108,9 +105,9 @@ public class Application {
   @Override
   public String toString() {
     return "Application{" +
-        "spec=" + spec +
-        ", status=" + status +
-        ", instance=" + instance +
-        '}';
+      "spec=" + spec +
+      ", status=" + status +
+      ", instance=" + instance +
+      '}';
   }
 }

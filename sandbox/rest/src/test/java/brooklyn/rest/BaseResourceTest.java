@@ -8,6 +8,7 @@ import java.util.concurrent.TimeoutException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 
+
 public abstract class BaseResourceTest extends ResourceTest {
 
   @BeforeClass

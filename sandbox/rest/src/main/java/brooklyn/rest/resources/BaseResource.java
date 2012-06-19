@@ -4,21 +4,24 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
-import brooklyn.rest.api.*;
-import java.util.Map;
+import brooklyn.rest.api.ApiError;
+import brooklyn.rest.api.Application;
+import com.axemblr.dropwizard.swagger.SwaggerResource;
+
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
+import java.util.Map;
 
-public abstract class BaseResource {
+public abstract class BaseResource extends SwaggerResource {
 
   protected WebApplicationException notFound(String format, Object... args) {
     throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
-        .entity(new ApiError(String.format(format, args))).build());
+      .entity(new ApiError(String.format(format, args))).build());
   }
 
   protected WebApplicationException preconditionFailed(String format, Object... args) {
     throw new WebApplicationException(Response.status(Response.Status.PRECONDITION_FAILED)
-        .entity(new ApiError(String.format(format, args))).build());
+      .entity(new ApiError(String.format(format, args))).build());
   }
 
   /**
@@ -28,7 +31,7 @@ public abstract class BaseResource {
     EntityLocal result = recursiveGetEntityOrNull(application.getInstance(), entityIdOrName);
     if (result == null) {
       throw notFound("Application '%s' has no entity with id or name '%s'",
-          application.getSpec().getName(), entityIdOrName);
+        application.getSpec().getName(), entityIdOrName);
     }
     return result;
   }

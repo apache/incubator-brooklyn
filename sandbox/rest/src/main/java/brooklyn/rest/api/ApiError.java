@@ -1,7 +1,8 @@
 package brooklyn.rest.api;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import org.codehaus.jackson.annotate.JsonProperty;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class ApiError {
 
@@ -36,7 +37,7 @@ public class ApiError {
   @Override
   public String toString() {
     return "ApiError{" +
-        "message='" + message + '\'' +
-        '}';
+      "message='" + message + '\'' +
+      '}';
   }
 }

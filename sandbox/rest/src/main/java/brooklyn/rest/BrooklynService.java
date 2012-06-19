@@ -1,40 +1,38 @@
 package brooklyn.rest;
 
-import brooklyn.rest.commands.applications.InvokeEffectorCommand;
-import brooklyn.rest.commands.applications.ListApplicationsCommand;
-import brooklyn.rest.commands.applications.ListEffectorsCommand;
-import brooklyn.rest.commands.applications.QuerySensorsCommand;
+import brooklyn.rest.commands.applications.*;
+import brooklyn.rest.commands.catalog.ListCatalogEntitiesCommand;
+import brooklyn.rest.commands.catalog.ListCatalogPoliciesCommand;
 import brooklyn.rest.commands.catalog.ListConfigKeysCommand;
 import brooklyn.rest.commands.catalog.LoadClassCommand;
 import brooklyn.rest.commands.locations.AddLocationCommand;
-import brooklyn.rest.commands.catalog.ListCatalogEntitiesCommand;
-import brooklyn.rest.commands.catalog.ListCatalogPoliciesCommand;
-import brooklyn.rest.commands.applications.DeleteApplicationCommand;
-import brooklyn.rest.commands.applications.StartApplicationCommand;
 import brooklyn.rest.commands.locations.ListLocationsCommand;
 import brooklyn.rest.core.ApplicationManager;
 import brooklyn.rest.core.LocationStore;
 import brooklyn.rest.health.GeneralHealthCheck;
-import brooklyn.rest.resources.ApplicationResource;
-import brooklyn.rest.resources.CatalogResource;
-import brooklyn.rest.resources.EffectorResource;
-import brooklyn.rest.resources.EntityResource;
-import brooklyn.rest.resources.LocationResource;
-import brooklyn.rest.resources.SensorResource;
+import brooklyn.rest.resources.*;
+import com.axemblr.dropwizard.swagger.ApiListingResource;
+import com.axemblr.dropwizard.swagger.SwaggerBundle;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Environment;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Application entry point. Configures and starts the embedded web-server.
+ * Adds the commands the service exposes to the outside world.
+ */
 public class BrooklynService extends Service<BrooklynConfiguration> {
 
   protected BrooklynService() {
     super("brooklyn-rest");
+    addBundle(new SwaggerBundle());
   }
 
   @Override
   protected void initialize(BrooklynConfiguration configuration, Environment environment)
-      throws Exception {
+    throws Exception {
 
     // Create managed components and wire them together
 
@@ -45,14 +43,12 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
 
     ExecutorConfiguration executorConfig = configuration.getExecutorConfiguration();
     ExecutorService managedExecutor = environment.managedExecutorService("brooklyn",
-        executorConfig.getCorePoolSize(), executorConfig.getMaximumPoolSize(),
-        executorConfig.getKeepAliveTimeInSeconds(), TimeUnit.SECONDS);
+      executorConfig.getCorePoolSize(), executorConfig.getMaximumPoolSize(),
+      executorConfig.getKeepAliveTimeInSeconds(), TimeUnit.SECONDS);
 
     ApplicationManager applicationManager = new ApplicationManager(configuration,
-        locationStore, catalogResource, managedExecutor);
+      locationStore, catalogResource, managedExecutor);
     environment.manage(applicationManager);
-
-    // Setup REST endpoints
 
     environment.addResource(new LocationResource(locationStore));
     environment.addResource(catalogResource);
@@ -68,7 +64,6 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
 
   public static void main(String[] args) throws Exception {
     BrooklynService service = new BrooklynService();
-
     service.addCommand(new ListApplicationsCommand());
     service.addCommand(new StartApplicationCommand());
     service.addCommand(new DeleteApplicationCommand());

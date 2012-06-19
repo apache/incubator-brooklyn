@@ -3,9 +3,10 @@ package brooklyn.rest.api;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.Sensor;
 import com.google.common.collect.ImmutableMap;
+import org.codehaus.jackson.annotate.JsonProperty;
+
 import java.net.URI;
 import java.util.Map;
-import org.codehaus.jackson.annotate.JsonProperty;
 
 public class SensorSummary {
 
@@ -15,10 +16,10 @@ public class SensorSummary {
   private final Map<String, URI> links;
 
   public SensorSummary(
-      @JsonProperty("name") String name,
-      @JsonProperty("type") String type,
-      @JsonProperty("description") String description,
-      @JsonProperty("links") Map<String, URI> links
+    @JsonProperty("name") String name,
+    @JsonProperty("type") String type,
+    @JsonProperty("description") String description,
+    @JsonProperty("links") Map<String, URI> links
   ) {
     this.name = name;
     this.type = type;
@@ -35,10 +36,10 @@ public class SensorSummary {
     String entityUri = applicationUri + "/entities/" + entity.getId();
 
     this.links = ImmutableMap.<String, URI>builder()
-        .put("self", URI.create(entityUri + "/sensors/" + sensor.getName()))
-        .put("application", URI.create(applicationUri))
-        .put("entity", URI.create(entityUri))
-        .build();
+      .put("self", URI.create(entityUri + "/sensors/" + sensor.getName()))
+      .put("application", URI.create(applicationUri))
+      .put("entity", URI.create(entityUri))
+      .build();
   }
 
   public String getName() {
@@ -88,10 +89,10 @@ public class SensorSummary {
   @Override
   public String toString() {
     return "SensorSummary{" +
-        "name='" + name + '\'' +
-        ", type='" + type + '\'' +
-        ", description='" + description + '\'' +
-        ", links=" + links +
-        '}';
+      "name='" + name + '\'' +
+      ", type='" + type + '\'' +
+      ", description='" + description + '\'' +
+      ", links=" + links +
+      '}';
   }
 }

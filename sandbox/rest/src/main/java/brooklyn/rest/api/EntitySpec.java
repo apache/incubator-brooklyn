@@ -1,10 +1,12 @@
 package brooklyn.rest.api;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.collect.ImmutableMap;
+import org.codehaus.jackson.annotate.JsonProperty;
+
 import java.util.Collections;
 import java.util.Map;
-import org.codehaus.jackson.annotate.JsonProperty;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class EntitySpec {
 
@@ -21,9 +23,9 @@ public class EntitySpec {
   }
 
   public EntitySpec(
-      @JsonProperty("name") String name,
-      @JsonProperty("type") String type,
-      @JsonProperty("config") Map<String, String> config
+    @JsonProperty("name") String name,
+    @JsonProperty("type") String type,
+    @JsonProperty("config") Map<String, String> config
   ) {
     this.type = checkNotNull(type, "type");
     this.name = (name == null) ? type : name;
@@ -70,9 +72,9 @@ public class EntitySpec {
   @Override
   public String toString() {
     return "EntitySpec{" +
-        "name='" + name + '\'' +
-        ", type='" + type + '\'' +
-        ", config=" + config +
-        '}';
+      "name='" + name + '\'' +
+      ", type='" + type + '\'' +
+      ", config=" + config +
+      '}';
   }
 }

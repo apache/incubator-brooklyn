@@ -99,6 +99,21 @@
             <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.wordnik</groupId>
+            <artifactId>swagger-jaxrs_2.9.1</artifactId>
+            <version>1.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.wordnik</groupId>
+            <artifactId>swagger-core_2.9.1</artifactId>
+            <version>1.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.axemblr.dropwizard</groupId>
+            <artifactId>dropwizard-swagger</artifactId>
+            <version>0.1.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
     <build>

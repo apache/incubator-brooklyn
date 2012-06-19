@@ -2,15 +2,17 @@ package brooklyn.rest.core;
 
 import brooklyn.rest.BrooklynConfiguration;
 import brooklyn.rest.api.LocationSpec;
-import static com.google.common.base.Preconditions.checkArgument;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.yammer.dropwizard.lifecycle.Managed;
+
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 public class LocationStore implements Managed {
 

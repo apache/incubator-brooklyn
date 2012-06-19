@@ -2,7 +2,6 @@ package brooklyn.rest.core;
 
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.jclouds.JcloudsLocation;
@@ -11,23 +10,24 @@ import brooklyn.rest.api.Application;
 import brooklyn.rest.api.ApplicationSpec;
 import brooklyn.rest.api.EntitySpec;
 import brooklyn.rest.api.LocationSpec;
-import static brooklyn.rest.core.ApplicationPredicates.status;
 import brooklyn.rest.resources.CatalogResource;
 import com.google.common.base.Function;
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.base.Throwables;
-import static com.google.common.collect.Iterables.all;
-import static com.google.common.collect.Iterables.transform;
-import static com.google.common.collect.Lists.newLinkedList;
 import com.google.common.collect.Maps;
 import com.yammer.dropwizard.lifecycle.Managed;
 import com.yammer.dropwizard.logging.Log;
+
 import java.lang.reflect.Constructor;
 import java.util.ConcurrentModificationException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
+
+import static brooklyn.rest.core.ApplicationPredicates.status;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.collect.Iterables.all;
+import static com.google.common.collect.Iterables.transform;
+import static com.google.common.collect.Lists.newLinkedList;
 
 public class ApplicationManager implements Managed {
 
@@ -41,10 +41,10 @@ public class ApplicationManager implements Managed {
   private final CatalogResource catalog;
 
   public ApplicationManager(
-      BrooklynConfiguration configuration,
-      LocationStore locationStore,
-      CatalogResource catalog,
-      ExecutorService executorService
+    BrooklynConfiguration configuration,
+    LocationStore locationStore,
+    CatalogResource catalog,
+    ExecutorService executorService
   ) {
     this.configuration = checkNotNull(configuration, "configuration");
     this.locationStore = checkNotNull(locationStore, "locationStore");
@@ -113,21 +113,21 @@ public class ApplicationManager implements Managed {
     executorService.submit(new Runnable() {
 
       Function<String, Location> buildLocationFromRef =
-          new Function<String, Location>() {
-            @Override
-            public Location apply(String ref) {
-              LocationSpec locationSpec = locationStore.getByRef(ref);
-              if (locationSpec.getProvider().equals("localhost")) {
-                return new LocalhostMachineProvisioningLocation(locationSpec.getConfig());
-              }
-
-              Map<String, String> config = Maps.newHashMap();
-              config.put("provider", locationSpec.getProvider());
-              config.putAll(locationSpec.getConfig());
-
-              return new JcloudsLocation(config);
+        new Function<String, Location>() {
+          @Override
+          public Location apply(String ref) {
+            LocationSpec locationSpec = locationStore.getByRef(ref);
+            if (locationSpec.getProvider().equals("localhost")) {
+              return new LocalhostMachineProvisioningLocation(locationSpec.getConfig());
             }
-          };
+
+            Map<String, String> config = Maps.newHashMap();
+            config.put("provider", locationSpec.getProvider());
+            config.putAll(locationSpec.getConfig());
+
+            return new JcloudsLocation(config);
+          }
+        };
 
       @Override
       public void run() {
@@ -153,7 +153,7 @@ public class ApplicationManager implements Managed {
     boolean replaced = applications.replace(name, target, target.transitionTo(status));
     if (!replaced) {
       throw new ConcurrentModificationException("Unable to transition '" +
-          name + "' application to " + status);
+        name + "' application to " + status);
     }
   }
 

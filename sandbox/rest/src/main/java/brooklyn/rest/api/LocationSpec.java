@@ -1,11 +1,13 @@
 package brooklyn.rest.api;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.collect.ImmutableMap;
+import org.codehaus.jackson.annotate.JsonProperty;
+
+import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.Map;
-import javax.annotation.Nullable;
-import org.codehaus.jackson.annotate.JsonProperty;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class LocationSpec {
 
@@ -18,8 +20,8 @@ public class LocationSpec {
 
 
   public LocationSpec(
-      @JsonProperty("provider") String provider,
-      @JsonProperty("config") @Nullable Map<String, String> config
+    @JsonProperty("provider") String provider,
+    @JsonProperty("config") @Nullable Map<String, String> config
   ) {
     this.provider = checkNotNull(provider, "provider");
     this.config = (config == null) ? Collections.<String, String>emptyMap() : ImmutableMap.copyOf(config);
@@ -58,8 +60,8 @@ public class LocationSpec {
   @Override
   public String toString() {
     return "LocationSpec{" +
-        "provider='" + provider + '\'' +
-        ", config=" + config +
-        '}';
+      "provider='" + provider + '\'' +
+      ", config=" + config +
+      '}';
   }
 }

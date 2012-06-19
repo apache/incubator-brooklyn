@@ -1,17 +1,14 @@
 package brooklyn.rest.commands;
 
+import com.axemblr.dropwizard.swagger.ApiListingResource;
 import com.yammer.dropwizard.testing.ResourceTest;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.io.Writer;
 import org.apache.commons.cli.GnuParser;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+
+import java.io.*;
 
 @Test(singleThreaded = true)
 public abstract class BrooklynCommandTest extends ResourceTest {
@@ -25,6 +22,7 @@ public abstract class BrooklynCommandTest extends ResourceTest {
   @BeforeClass
   @Override
   public void setUpJersey() throws Exception {
+    addResource(new ApiListingResource());
     super.setUpJersey();
   }
 
@@ -57,7 +55,7 @@ public abstract class BrooklynCommandTest extends ResourceTest {
   }
 
   protected String createTemporaryFileWithContent(String suffix, String content)
-      throws IOException {
+    throws IOException {
     File temporaryFile = File.createTempFile("brooklyn-rest", suffix);
     Writer writer = null;
 

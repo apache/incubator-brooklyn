@@ -1,9 +1,11 @@
 package brooklyn.rest.api;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.collect.ImmutableSet;
-import java.util.Set;
 import org.codehaus.jackson.annotate.JsonProperty;
+
+import java.util.Set;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class ApplicationSpec {
 
@@ -48,9 +50,9 @@ public class ApplicationSpec {
   private final Set<String> locations;
 
   public ApplicationSpec(
-      @JsonProperty("name") String name,
-      @JsonProperty("entities") Set<EntitySpec> entities,
-      @JsonProperty("locations") Set<String> locations
+    @JsonProperty("name") String name,
+    @JsonProperty("entities") Set<EntitySpec> entities,
+    @JsonProperty("locations") Set<String> locations
   ) {
     this.name = checkNotNull(name, "name");
     this.entities = ImmutableSet.copyOf(checkNotNull(entities));
@@ -97,9 +99,9 @@ public class ApplicationSpec {
   @Override
   public String toString() {
     return "ApplicationSpec{" +
-        "name='" + name + '\'' +
-        ", entitySpecs=" + entities +
-        ", locations=" + locations +
-        '}';
+      "name='" + name + '\'' +
+      ", entitySpecs=" + entities +
+      ", locations=" + locations +
+      '}';
   }
 }

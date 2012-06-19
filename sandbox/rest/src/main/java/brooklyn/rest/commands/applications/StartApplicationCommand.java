@@ -2,21 +2,22 @@ package brooklyn.rest.commands.applications;
 
 import brooklyn.rest.api.ApiError;
 import brooklyn.rest.api.Application;
-import static brooklyn.rest.api.Application.Status;
 import brooklyn.rest.api.ApplicationSpec;
 import brooklyn.rest.commands.BrooklynCommand;
-import static com.google.common.base.Preconditions.checkArgument;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
-import com.yammer.dropwizard.client.JerseyClient;
 import com.yammer.dropwizard.json.Json;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
+
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.PrintStream;
 import java.net.URI;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
+
+import static brooklyn.rest.api.Application.Status;
+import static com.google.common.base.Preconditions.checkArgument;
 
 public class StartApplicationCommand extends BrooklynCommand {
 
@@ -32,7 +33,7 @@ public class StartApplicationCommand extends BrooklynCommand {
   @Override
   public Options getOptions() {
     return super.getOptions()
-        .addOption("n", "name", true, "Override application name");
+      .addOption("n", "name", true, "Override application name");
   }
 
   @Override
@@ -48,7 +49,7 @@ public class StartApplicationCommand extends BrooklynCommand {
     }
 
     ClientResponse response = client.resource(uriFor("/v1/applications"))
-        .type(MediaType.APPLICATION_JSON).post(ClientResponse.class, spec);
+      .type(MediaType.APPLICATION_JSON).post(ClientResponse.class, spec);
 
     if (response.getStatus() != Response.Status.CREATED.getStatusCode()) {
       ApiError error = response.getEntity(ApiError.class);
@@ -75,7 +76,7 @@ public class StartApplicationCommand extends BrooklynCommand {
 
   private Status getApplicationStatus(Client client, URI uri) {
     Application application = client.resource(uri)
-        .type(MediaType.APPLICATION_JSON_TYPE).get(Application.class);
+      .type(MediaType.APPLICATION_JSON_TYPE).get(Application.class);
     return application.getStatus();
   }
 }
