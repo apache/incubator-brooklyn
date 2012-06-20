@@ -46,7 +46,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     //TODO remove once everything is prefixed SSHCONFIG_PREFIX
     //(I don't think we ever relied on props being passed through in this way,
     //but the code path was there so I didn't want to delete it immediately.)
-    public static final String NON_SSH_PROPS = ["out", "err", "latitude", "longitude", "keyFiles", "publicKey", "privateKey", "backup"];
+    public static final String NON_SSH_PROPS = ["out", "err", "latitude", "longitude", "keyFiles", "publicKey", "privateKey", "password", "backup"];
     
     private final Set<Integer> ports = [] as HashSet
 
