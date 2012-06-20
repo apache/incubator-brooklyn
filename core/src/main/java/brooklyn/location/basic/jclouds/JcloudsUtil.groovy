@@ -37,6 +37,7 @@ import org.jclouds.ec2.compute.domain.PasswordDataAndPrivateKey
 import org.jclouds.ec2.compute.functions.WindowsLoginCredentialsFromEncryptedData
 import org.jclouds.ec2.domain.PasswordData
 import org.jclouds.ec2.services.WindowsClient
+import org.jclouds.encryption.bouncycastle.config.BouncyCastleCryptoModule;
 import org.jclouds.logging.slf4j.config.SLF4JLoggingModule
 import org.jclouds.net.IPSocket
 import org.jclouds.predicates.InetSocketAddressConnect
@@ -203,7 +204,10 @@ public class JcloudsUtil {
             LOG.debug("jclouds ComputeService cache miss for compute service, creating, for "+Entities.sanitize(properties));
         }
         
-        Iterable<Module> modules = ImmutableSet.<Module> of(new SshjSshClientModule(), new SLF4JLoggingModule());
+        Iterable<Module> modules = ImmutableSet.<Module> of(
+                new SshjSshClientModule(), 
+                new SLF4JLoggingModule(),
+                new BouncyCastleCryptoModule());
         
         ComputeServiceContextFactory computeServiceFactory = new ComputeServiceContextFactory();
         

@@ -27,6 +27,11 @@
             <artifactId>jclouds-slf4j</artifactId>
             <version>${jclouds.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.jclouds.driver</groupId>
+            <artifactId>jclouds-bouncycastle</artifactId>
+            <version>${jclouds.version}</version>
+        </dependency>
 		<dependency>
 			<groupId>org.codehaus.groovy</groupId>
 			<artifactId>groovy-all</artifactId>
