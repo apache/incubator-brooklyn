@@ -520,15 +520,18 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     
     private String getPublicHostname(NodeMetadata node, Map allconf) {
         if (allconf?.provider?.equals("aws-ec2")) {
+            String vmIp = null;
             try {
-                return getPublicHostnameAws(node, allconf);
+                vmIp = JcloudsUtil.getFirstReachableAddress(node);
             } catch (Exception e) {
-                LOG.warn("Error querying aws-ec2 instance over ssh for its hostname; falling back to first reachable IP", e);
-                
+                LOG.warn("Error reaching aws-ec2 instance on port 22; falling back to jclouds metadata for address", e);
+            }
+            if (vmIp != null) {
                 try {
-                    return JcloudsUtil.getFirstReachableAddress(node);
-                } catch (Exception e2) {
-                    LOG.warn("Error reaching aws-ec2 instance on port 22; falling back to jclouds metadata for address", e2);
+                    return getPublicHostnameAws(node, allconf);
+                } catch (Exception e) {
+                    LOG.warn("Error querying aws-ec2 instance over ssh for its hostname; falling back to first reachable IP", e);
+                    return vmIp;
                 }
             }
         }
@@ -550,9 +553,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         }
     }
     
-    private String getPublicHostnameAws(NodeMetadata node, Map allconf) {
-        String vmIp = JcloudsUtil.getFirstReachableAddress(node);
-        
+    private String getPublicHostnameAws(String ip, Map allconf) {
         Map sshConfig = [:]
         if (getPrivateKeyFile()) sshConfig.keyFiles = [ getPrivateKeyFile().getCanonicalPath() ] 
         if (allconf.sshPrivateKeyData) sshConfig.privateKey = allconf.sshPrivateKeyData
@@ -567,7 +568,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         for (String line : outLines) {
             if (line.startsWith("ec2-")) return line.trim()
         }
-        throw new IllegalStateException("Could not obtain hostname for vm $vmIp ("+node.getId()+"); exitcode="+exitcode+"; stdout="+outString+"; stderr="+new String(errStream.toByteArray()))
+        throw new IllegalStateException("Could not obtain hostname for vm $ip; exitcode="+exitcode+"; stdout="+outString+"; stderr="+new String(errStream.toByteArray()))
     }
     
     public static class JcloudsSshMachineLocation extends SshMachineLocation {
