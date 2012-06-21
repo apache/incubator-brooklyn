@@ -558,7 +558,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         if (getPrivateKeyFile()) sshConfig.keyFiles = [ getPrivateKeyFile().getCanonicalPath() ] 
         if (allconf.sshPrivateKeyData) sshConfig.privateKey = allconf.sshPrivateKeyData
         // TODO messy way to get an SSH session 
-        SshMachineLocation sshLocByIp = new SshMachineLocation(address:vmIp, username:allconf.userName, config:sshConfig);
+        SshMachineLocation sshLocByIp = new SshMachineLocation(address:ip, username:allconf.userName, config:sshConfig);
         
         ByteArrayOutputStream outStream = new ByteArrayOutputStream()
         ByteArrayOutputStream errStream = new ByteArrayOutputStream()
