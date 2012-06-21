@@ -528,7 +528,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             }
             if (vmIp != null) {
                 try {
-                    return getPublicHostnameAws(node, allconf);
+                    return getPublicHostnameAws(vmIp, allconf);
                 } catch (Exception e) {
                     LOG.warn("Error querying aws-ec2 instance over ssh for its hostname; falling back to first reachable IP", e);
                     return vmIp;
