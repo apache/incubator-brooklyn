@@ -17,7 +17,7 @@ class ShellUtils {
      * and a context object (whose toString is used in the logger and in error messages);
      * optionally takes a string to use as input to the command
      */
-    protected static String[] exec(String cmd, String input=null, Logger log, Object context) {
+    public static String[] exec(String cmd, String input=null, Logger log, Object context) {
         exec(["bash", "-l", "-c", cmd] as String[], null, null, input, log, context);
     }
     
@@ -26,7 +26,7 @@ class ShellUtils {
      * logs I/O at debug (if not null).
      * throws exception if return code non-zero, otherwise returns lines from stdout.
      */
-    protected static String[] exec(String[] cmd, String[] envp, File dir, String input, Logger log, Object context) {
+    public static String[] exec(String[] cmd, String[] envp, File dir, String input, Logger log, Object context) {
         log.debug("Running local command: $context% ${cmd.join(" ")}");
         Process proc = cmd.execute(envp, dir);                 // Call *execute* on the string
         ByteArrayOutputStream stdoutB = new ByteArrayOutputStream();

@@ -7,14 +7,12 @@ import static org.jclouds.scriptbuilder.domain.Statements.exec
 import static com.google.common.base.Preconditions.checkNotNull
 
 import java.io.File;
-import java.net.URI;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit
 
 import javax.annotation.Nullable
-import javax.annotation.OverridingMethodsMustInvokeSuper;
 
 
 import org.jclouds.Constants
@@ -23,18 +21,13 @@ import org.jclouds.compute.RunNodesException
 import org.jclouds.compute.callables.RunScriptOnNode
 import org.jclouds.compute.domain.ComputeMetadata;
 import org.jclouds.compute.domain.ExecResponse
-import org.jclouds.compute.domain.Hardware;
 import org.jclouds.compute.domain.NodeMetadata
 import org.jclouds.compute.domain.NodeMetadataBuilder;
-import org.jclouds.compute.domain.NodeState;
-import org.jclouds.compute.domain.OperatingSystem;
 import org.jclouds.compute.domain.Template
 import org.jclouds.compute.domain.TemplateBuilder
-import org.jclouds.compute.domain.internal.NodeMetadataImpl
 import org.jclouds.compute.options.RunScriptOptions;
 import org.jclouds.compute.options.TemplateOptions
 import org.jclouds.domain.Credentials
-import org.jclouds.domain.Location;
 import org.jclouds.domain.LoginCredentials
 import org.jclouds.ec2.compute.options.EC2TemplateOptions
 import org.jclouds.scriptbuilder.domain.InterpretableStatement
@@ -167,6 +160,8 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         
         Object _callerContext = null;
         
+        LoginCredentials customCredentials;
+        
         public BrooklynJcloudsSetupHolder(JcloudsLocation instance) {
             this.instance = instance;
             useConfig(instance.conf);
@@ -181,7 +176,9 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         BrooklynJcloudsSetupHolder apply() {
             if (unusedConf.remove("callerContext")) _callerContext = allconf.callerContext;
             
+            // this _creates_ the indicated userName (not a good API...)
             if (!unusedConf.remove("userName")) allconf.userName = ROOT_USERNAME
+            
             // perhaps deprecate supply of data (and of different root key?) to keep it simpler?
             if (unusedConf.remove("publicKeyFile")) allconf.sshPublicKeyData = Files.toString(instance.getPublicKeyFile(allconf), Charsets.UTF_8)
             if (unusedConf.remove("privateKeyFile")) allconf.sshPrivateKeyData = Files.toString(instance.getPrivateKeyFile(allconf), Charsets.UTF_8)
@@ -190,6 +187,11 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             if (unusedConf.remove("rootSshPrivateKey")) allconf.rootSshPrivateKeyData = Files.toString(asFile(allconf.rootSshPrivateKey), Charsets.UTF_8)
             if (unusedConf.remove("rootSshPublicKey")) allconf.rootSshPublicKeyData = Files.toString(asFile(allconf.rootSshPublicKey), Charsets.UTF_8)
             if (unusedConf.remove("dontCreateUser")) allconf.dontCreateUser = true;
+            // allows specifying a LoginCredentials object, for use by jclouds, if known for the VM (ie it is non-standard);
+            if (unusedConf.remove("customCredentials")) customCredentials = allconf.customCredentials;
+     
+            // this does not apply to creating a password
+            unusedConf.remove("password");
             
             unusedConf.remove("provider");
             unusedConf.remove("providerLocationId");
@@ -279,8 +281,15 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             }
 
             String vmIp = JcloudsUtil.getFirstReachableAddress(node);
-            LoginCredentials expectedCredentials = LoginCredentials.fromCredentials(node.getCredentials());
-            if (setup.allconf.sshPrivateKeyData) {
+            LoginCredentials expectedCredentials = setup.customCredentials;
+            if (expectedCredentials!=null) {
+                //set userName and other data, from these credentials
+                setup.allconf.userName = expectedCredentials.getUser();
+                if (expectedCredentials.getPassword()) setup.allconf.password = expectedCredentials.getPassword();
+                if (expectedCredentials.getPrivateKey()) setup.allconf.sshPrivateKeyData = expectedCredentials.getPrivateKey();
+            }
+            if (expectedCredentials==null && setup.allconf.sshPrivateKeyData) {
+                expectedCredentials = LoginCredentials.fromCredentials(node.getCredentials());
                 String userName = setup.allconf.userName;
                 if (expectedCredentials.getUser()) {
                     if ("root".equals(userName) && "ubuntu".equals(expectedCredentials.getUser())) {
@@ -292,10 +301,12 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                     }
                 }
                 expectedCredentials = LoginCredentials.fromCredentials(new Credentials(userName, setup.allconf.sshPrivateKeyData));
-                //override credentials                
-                node = NodeMetadataBuilder.fromNodeMetadata(node).credentials(expectedCredentials).build();
+                //override credentials
             }
-            
+            if (expectedCredentials)
+                node = NodeMetadataBuilder.fromNodeMetadata(node).credentials(expectedCredentials).build();
+            else
+                expectedCredentials = LoginCredentials.fromCredentials(node.getCredentials());
             
             // Wait for the VM to be reachable over SSH
             if (setup.allconf.waitForSshable != null ? setup.allconf.waitForSshable : true) {
@@ -342,7 +353,10 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                     displayName:vmHostname,
                     username:setup.allconf.userName, 
                     config:sshConfig);
-
+            if (setup.allconf.sshPrivateKeyData) sshLocByHostname.configure(sshPrivateKeyData: setup.allconf.sshPrivateKeyData);
+            if (setup.allconf.sshPublicKeyData) sshLocByHostname.configure(sshPublicKeyData: setup.allconf.sshPublicKeyData);
+            if (setup.allconf.password) sshLocByHostname.configure(password: setup.allconf.password);
+            
             sshLocByHostname.setParentLocation(this);
             vmInstanceIds.put(sshLocByHostname, node.getId())
             
@@ -457,7 +471,10 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                 displayName:hostname,
                 username:username, 
                 config:sshConfig);
-
+            
+        if (setup.allconf.sshPrivateKeyData) sshLocByHostname.configure(sshPrivateKeyData, setup.allconf.sshPrivateKeyData);
+        if (setup.allconf.sshPublicKeyData) sshLocByHostname.configure(sshPublicKeyData, setup.allconf.sshPublicKeyData);
+        
         sshLocByHostname.setParentLocation(this)
         vmInstanceIds.put(sshLocByHostname, node.getId())
             
@@ -528,9 +545,22 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             securityGroups:    { TemplateOptions t, Map props, Object v -> 
                 if (t instanceof EC2TemplateOptions) {
                     String[] securityGroups = (v instanceof Collection) ? v.toArray(new String[0]) : v;
-                    t.as(EC2TemplateOptions.class).securityGroups(securityGroups);
+                    ((EC2TemplateOptions)t).securityGroups(securityGroups);
+                // jclouds 1.5, also support:
+//                } else if (t instanceof NovaTemplateOptions) {
+//                    String[] securityGroups = (v instanceof Collection) ? v.toArray(new String[0]) : v;
+//                    ((NovaTemplateOptions)t).securityGroupNames(securityGroups);
                 } else {
-                    LOG.info("ignoring securityGroups({$v}) in VM creation because not EC2 (${t})");
+                    LOG.info("ignoring securityGroups({$v}) in VM creation because not supported for cloud/type (${t})");
+                }
+            },
+            userData:    { TemplateOptions t, Map props, Object v ->
+                /** expects UUENCODED byte array or string */
+                if (v instanceof String) v = ((String)v).getBytes(); 
+                if (t instanceof EC2TemplateOptions) {
+                    ((EC2TemplateOptions)t).userData(v);
+                } else {
+                    LOG.info("ignoring userData({$v}) in VM creation because not supported for cloud/type (${t})");
                 }
             },
             inboundPorts:      { TemplateOptions t, Map props, Object v ->
@@ -578,7 +608,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         TemplateOptions options = template.getOptions();
         
         SUPPORTED_TEMPLATE_OPTIONS_PROPERTIES.each { name, code ->
-            if (unusedConf.remove(name))
+            if (unusedConf.remove(name)!=null)
                 code.call(options, properties, properties.get(name));
         }
         
@@ -641,6 +671,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     
     private String getPublicHostnameAws(String ip, Map allconf) {
         Map sshConfig = [:]
+        if (allconf.password) sshConfig.password = allconf.password
         if (getPrivateKeyFile()) sshConfig.keyFiles = [ getPrivateKeyFile().getCanonicalPath() ] 
         if (allconf.sshPrivateKeyData) sshConfig.privateKeyData = allconf.sshPrivateKeyData
         // TODO messy way to get an SSH session 

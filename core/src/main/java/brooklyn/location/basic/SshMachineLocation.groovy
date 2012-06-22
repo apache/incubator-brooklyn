@@ -58,10 +58,10 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
      *  e.g. (SSHCONFIG_PREFIX+"."+"StrictHostKeyChecking"):"yes" */
     public static final String SSHCONFIG_PREFIX = "sshconfig";
     /** properties which are passed to ssh */
-    public static final String SSH_PROPS = ["logPrefix", "out", "err", "keyFiles", "publicKey", "privateKey", "privateKeyData", "password" ];
+    public static final String SSH_PROPS = ["logPrefix", "out", "err", "password", "keyFiles", "publicKey", "privateKey", "privateKeyData" ];
     //TODO prefer privateKeyData (confusion about whether other holds a file or data)
     //TODO remove once everything is prefixed SSHCONFIG_PREFIX or included above
-    public static final String NON_SSH_PROPS = ["latitude", "longitude", "backup"];
+    public static final String NON_SSH_PROPS = ["latitude", "longitude", "backup", "sshPublicKeyData", "sshPrivateKeyData" ];
     
     private final Set<Integer> ports = [] as HashSet
 

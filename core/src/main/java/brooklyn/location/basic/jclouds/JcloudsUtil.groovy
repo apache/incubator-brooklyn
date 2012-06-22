@@ -49,6 +49,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.Entities
+import brooklyn.util.StringUtils;
 
 import com.google.common.base.Charsets
 import com.google.common.base.Predicate
@@ -270,6 +271,19 @@ public class JcloudsUtil {
         Timeouts timeouts = new ComputeServiceConstants.Timeouts();
         IPSocket reachableSocketOnNode = ComputeServiceUtils.findReachableSocketOnNode(new RetryIfSocketNotYetOpen(inetSocketAddressConnect, timeouts), node, 22);
         return (reachableSocketOnNode != null) ? reachableSocketOnNode.getAddress() : null;
+        
+        //previous approach, keep for a few weeks if any problems with above (from 26 Jun 2012):
+//        ExecutorService executor = Executors.newCachedThreadPool();
+//        try {
+//            OpenSocketFinder socketFinder = new ConcurrentOpenSocketFinder(new InetSocketAddressConnect(), null, executor);
+//            HostAndPort reachableSocketOnNode = socketFinder.findOpenSocketOnNode(node, 22, timeouts.portOpen, TimeUnit.MILLISECONDS);
+//            String result = reachableSocketOnNode.toString().trim();
+//            // sometimes get  IP:22  here (jclouds 1.5 AWS ?)
+//            result=StringUtils.removeEnd(result, ":22");
+//            return result;
+//        } finally {
+//            executor.shutdown();
+//        }
     }
     
     /**
