@@ -192,6 +192,9 @@ public class CommonCommands {
      * Ensuring non-blocking if password not set by using {@code -S} which reads
      * from stdin routed to {@code /dev/null} and {@code -E} passes the parent
      * environment in. If already root, simplem runs the command.
+     *
+     * The command is not escapped in any ways. If you are using single quotes
+     * you need to escape them. 
      */
     public static String sudo(String command) { "(test \$UID -eq 0 && ${command} || sudo -E -n -s -- '${command}')" }
 
