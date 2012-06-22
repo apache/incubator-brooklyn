@@ -78,10 +78,14 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
         checkNotNull(username, "The GeoScaling username is not specified");
         checkNotNull(password, "The GeoScaling password is not specified");
         checkNotNull(primaryDomainName, "The GeoScaling primary domain name is not specified");
-        checkNotNull(smartSubdomainName, "The GeoScaling smart subdomain name is not specified");
         
-        if (randomizeSmartSubdomainName)
-            smartSubdomainName += "-"+IdGenerator.makeRandomId(8);
+        if (randomizeSmartSubdomainName) {
+            // if no smart subdomain specified, but random is, use something random
+            if (smartSubdomainName) smartSubdomainName += "-";
+            else smartSubdomainName = "";
+            smartSubdomainName += IdGenerator.makeRandomId(8);
+        }
+        checkNotNull(smartSubdomainName, "The GeoScaling smart subdomain name is not specified or randomized");
         
         String fullDomain = smartSubdomainName+"."+primaryDomainName;
         log.info("GeoScaling service will configure redirection for '"+fullDomain+"' domain");
@@ -101,6 +105,9 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
     public String getHostname() {
         return getAttribute(MANAGED_DOMAIN)?:null;
     }
+    
+    /** minimum/default TTL here is 300s = 5m */
+    public long getTimeToLiveSeconds() { return 5*60; }
     
     @Override
     public void destroy() {
@@ -156,5 +163,5 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
         
         webClient.logout();
     }
-    
+
 }
