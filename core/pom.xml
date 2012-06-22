@@ -63,6 +63,11 @@
 			<artifactId>aws-ec2</artifactId>
 			<version>${jclouds.version}</version>
 		</dependency>
+        <dependency>
+            <groupId>org.jclouds.api</groupId>
+            <artifactId>openstack-nova</artifactId>
+            <version>${jclouds.version}</version>
+        </dependency>
 		<dependency>
 			<groupId>org.jclouds.driver</groupId>
 			<artifactId>jclouds-sshj</artifactId>

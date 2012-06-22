@@ -39,6 +39,7 @@ import org.jclouds.compute.options.TemplateOptions;
 import org.jclouds.domain.Credentials;
 import org.jclouds.domain.LoginCredentials;
 import org.jclouds.ec2.compute.options.EC2TemplateOptions;
+import org.jclouds.openstack.nova.v2_0.compute.options.NovaTemplateOptions;
 import org.jclouds.scriptbuilder.domain.InterpretableStatement;
 import org.jclouds.scriptbuilder.domain.Statement;
 import org.jclouds.scriptbuilder.domain.Statements;
@@ -687,9 +688,9 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                             String[] securityGroups = toStringArray(v);
                             ((EC2TemplateOptions)t).securityGroups(securityGroups);
                         // jclouds 1.5, also support:
-        //                } else if (t instanceof NovaTemplateOptions) {
-        //                    String[] securityGroups = (v instanceof Collection) ? v.toArray(new String[0]) : v;
-        //                    ((NovaTemplateOptions)t).securityGroupNames(securityGroups);
+                        } else if (t instanceof NovaTemplateOptions) {
+                            String[] securityGroups = toStringArray(v);
+                            ((NovaTemplateOptions)t).securityGroupNames(securityGroups);
                         } else {
                             LOG.info("ignoring securityGroups({}) in VM creation because not supported for cloud/type ({})", v, t);
                         }
