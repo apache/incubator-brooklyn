@@ -55,7 +55,7 @@ public class RedisSetup extends SshBasedAppSetup {
                 "wget http://redis.googlecode.com/files/redis-${version}.tar.gz",
                 "tar xvzf redis-${version}.tar.gz",
                 "cd redis-${version}",
-	            "make"
+	            "make LDFLAGS=\"-all-static\""
             ])
     }
 

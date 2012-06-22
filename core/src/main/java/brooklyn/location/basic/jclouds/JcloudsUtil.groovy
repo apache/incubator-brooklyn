@@ -14,9 +14,13 @@ import java.net.URI
 import java.util.Map
 import java.util.Properties
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 import org.jclouds.Constants
+import org.jclouds.aws.ec2.AWSEC2Client
 import org.jclouds.compute.ComputeService
+import org.jclouds.compute.ComputeServiceContext
 import org.jclouds.compute.ComputeServiceContextFactory
 import org.jclouds.compute.RunScriptOnNodesException
 import org.jclouds.compute.domain.ExecResponse
@@ -28,9 +32,16 @@ import org.jclouds.compute.predicates.RetryIfSocketNotYetOpen
 import org.jclouds.compute.reference.ComputeServiceConstants
 import org.jclouds.compute.reference.ComputeServiceConstants.Timeouts
 import org.jclouds.compute.util.ComputeServiceUtils
+import org.jclouds.domain.LoginCredentials
+import org.jclouds.ec2.compute.domain.PasswordDataAndPrivateKey
+import org.jclouds.ec2.compute.functions.WindowsLoginCredentialsFromEncryptedData
+import org.jclouds.ec2.domain.PasswordData
+import org.jclouds.ec2.services.WindowsClient
+import org.jclouds.encryption.bouncycastle.config.BouncyCastleCryptoModule;
 import org.jclouds.logging.slf4j.config.SLF4JLoggingModule
 import org.jclouds.net.IPSocket
 import org.jclouds.predicates.InetSocketAddressConnect
+import org.jclouds.predicates.RetryablePredicate
 import org.jclouds.scriptbuilder.domain.Statement
 import org.jclouds.scriptbuilder.domain.Statements
 import org.jclouds.sshj.config.SshjSshClientModule
@@ -42,6 +53,7 @@ import brooklyn.entity.basic.Entities
 import com.google.common.base.Charsets
 import com.google.common.base.Predicate
 import com.google.common.base.Splitter
+import com.google.common.base.Strings
 import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Iterables
 import com.google.common.io.Files
@@ -192,7 +204,10 @@ public class JcloudsUtil {
             LOG.debug("jclouds ComputeService cache miss for compute service, creating, for "+Entities.sanitize(properties));
         }
         
-        Iterable<Module> modules = ImmutableSet.<Module> of(new SshjSshClientModule(), new SLF4JLoggingModule());
+        Iterable<Module> modules = ImmutableSet.<Module> of(
+                new SshjSshClientModule(), 
+                new SLF4JLoggingModule(),
+                new BouncyCastleCryptoModule());
         
         ComputeServiceContextFactory computeServiceFactory = new ComputeServiceContextFactory();
         
@@ -260,5 +275,43 @@ public class JcloudsUtil {
         } else {
             throw new IllegalStateException("Could not discover a suitable address for " + node);
         }
+    }
+    
+    // Suggest at least 15 minutes for timeout
+    public static String waitForPasswordOnAws(ComputeService computeService, final NodeMetadata node, long timeout, TimeUnit timeUnit) throws TimeoutException {
+        //TODO For jclouds 1.5, switch to this:        
+        //     final WindowsClient client = computeServiceContext.unwrap(EC2ApiMetadata.CONTEXT_TOKEN).getApi().getWindowsServices();
+        
+        ComputeServiceContext computeServiceContext = computeService.getContext();
+        AWSEC2Client ec2Client = AWSEC2Client.class.cast(computeServiceContext.getProviderSpecificContext().getApi());
+        final WindowsClient client = ec2Client.getWindowsServices();
+        final String region = node.getLocation().getParent().getId();
+      
+        // The Administrator password will take some time before it is ready - Amazon says sometimes 15 minutes.
+        // So we create a predicate that tests if the password is ready, and wrap it in a retryable predicate.
+        Predicate<String> passwordReady = new Predicate<String>() {
+            @Override public boolean apply(String s) {
+                if (Strings.isNullOrEmpty(s)) return false;
+                PasswordData data = client.getPasswordDataInRegion(region, s);
+                if (data == null) return false;
+                return !Strings.isNullOrEmpty(data.getPasswordData());
+            }
+        };
+        
+        LOG.info("Waiting for password, for "+node.getProviderId()+":"+node.getId());
+        RetryablePredicate<String> passwordReadyRetryable = new RetryablePredicate<String>(passwordReady, timeUnit.toMillis(timeout), 10*1000, TimeUnit.MILLISECONDS);
+        boolean ready = passwordReadyRetryable.apply(node.getProviderId());
+        if (!ready) throw new TimeoutException("Password not available for "+node+" in region "+region+" after "+timeout+" "+timeUnit.name());
+
+        // Now pull together Amazon's encrypted password blob, and the private key that jclouds generated
+        PasswordDataAndPrivateKey dataAndKey = new PasswordDataAndPrivateKey(
+                client.getPasswordDataInRegion(region, node.getProviderId()),
+                node.getCredentials().getPrivateKey());
+
+        // And apply it to the decryption function
+        WindowsLoginCredentialsFromEncryptedData f = computeServiceContext.getUtils().getInjector().getInstance(WindowsLoginCredentialsFromEncryptedData.class);
+        LoginCredentials credentials = f.apply(dataAndKey);
+
+        return credentials.getPassword();
     }
 }
