@@ -10,6 +10,9 @@ public class LocallyManagedEntity extends AbstractEntity {
 
     ManagementContext mgmt = new LocalManagementContext()
     
+    public LocallyManagedEntity(Entity owner) {
+        super(owner);
+    }
     public LocallyManagedEntity(Map flags=[:], Entity owner=null) {
         super(flags, owner)
     }

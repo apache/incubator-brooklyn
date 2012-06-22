@@ -63,6 +63,13 @@ public class TestUtils {
         return connection
     }
     
+    public static void assertEventually(Map flags=[:], Callable c) {
+        executeUntilSucceeds(flags, c);
+    }
+    public static void assertEventually(Map flags=[:], Runnable c) {
+        executeUntilSucceeds(flags, c);
+    }
+
     //FIXME rename these to assertEventually, refactor to have boolean blockUntil in some other util class
     //FIXME remove dupilcation with LanguageUtils.repeatUntilSuccess
     public static void executeUntilSucceeds(Map flags=[:], Closure c) {
