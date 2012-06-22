@@ -55,10 +55,11 @@ class CloudFoundryVmcCliAccess {
     }
 
     protected String[] exec(String cmd) {
-        ShellUtils.exec(cmd, log, context);
+        // 10min timeout
+        ShellUtils.exec(timeout: 10*60*1000, cmd, log, context);
     }
     protected String[] exec(String cmd, String input) {
-        ShellUtils.exec(cmd, input, log, context);
+        ShellUtils.exec(timeout: 10*60*1000, cmd, input, log, context);
     }
 
     private Map<String,AppRecord> apps = null;
@@ -290,7 +291,7 @@ class CloudFoundryVmcCliAccess {
             String[] fields = l.split("\\s+");
             CloudFoundryAppStatLine result = new CloudFoundryAppStatLine();
             int i=3;
-            result.cpuUsage = parseDouble(fields[i++]);
+            result.cpuUsage = parseDouble(fields[i++]) / 100;
             result.numCores = parseInt(fields[i++]);
             i++
             result.memUsedMB = parseSizeMB(fields[i++]);

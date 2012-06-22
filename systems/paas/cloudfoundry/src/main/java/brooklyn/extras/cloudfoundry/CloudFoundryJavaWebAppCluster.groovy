@@ -1,6 +1,5 @@
 package brooklyn.extras.cloudfoundry
 
-import groovy.lang.MetaClass
 
 import java.util.Collection
 import java.util.Map
@@ -14,6 +13,7 @@ import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.BasicConfigurableEntityFactory
 import brooklyn.entity.basic.Lifecycle
 import brooklyn.entity.trait.Resizable
+import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.ElasticJavaWebAppService
 import brooklyn.event.adapter.FunctionSensorAdapter
 import brooklyn.event.adapter.SensorRegistry
@@ -24,11 +24,14 @@ import brooklyn.extras.cloudfoundry.CloudFoundryVmcCliAccess.CloudFoundryAppStat
 import brooklyn.location.Location
 import brooklyn.util.StringUtils;
 import brooklyn.util.flags.SetFromFlag
+import brooklyn.util.mutex.MutexSupport
+import brooklyn.util.mutex.WithMutexes
 
 import com.google.common.base.Preconditions
 import com.google.common.collect.Iterables
 
-class CloudFoundryJavaWebAppCluster extends AbstractEntity implements ElasticJavaWebAppService, Resizable {
+class CloudFoundryJavaWebAppCluster extends AbstractEntity implements ElasticJavaWebAppService, Startable, Resizable {
+    //Startable shouldn't have to be declared but sometimes it isn't picked up??!?!
 
     private static final Logger log = LoggerFactory.getLogger(CloudFoundryJavaWebAppCluster.class)
     
@@ -50,14 +53,14 @@ class CloudFoundryJavaWebAppCluster extends AbstractEntity implements ElasticJav
     public static final SERVICE_STATE = Attributes.SERVICE_STATE
     
     public static final BasicAttributeSensor<Integer> SIZE = [ Integer, "cloudfoundry.instances.size", "Number of instances" ];
-    public static final BasicAttributeSensor<Double> CPU_USAGE = [ Double, "cloudfoundry.cpu.usage", "Average CPU utilisation" ];
-    public static final BasicAttributeSensor<Double> MEMORY_USED_FRACTION = [ Double, "cloudfoundry.memory.usage.fraction", "Average memory utilisation" ];
+    public static final BasicAttributeSensor<Double> CPU_USAGE = [ Double, "cloudfoundry.cpu.usage", "Average CPU utilisation (in [0..1], mean over number of instances and CPUs)" ];
+    public static final BasicAttributeSensor<Double> MEMORY_USED_FRACTION = [ Double, "cloudfoundry.memory.usage.fraction", "Average memory utilisation (in [0..1])" ];
 
     public AppRecord appRecord;
     protected transient SensorRegistry sensorRegistry;
     
     public CloudFoundryJavaWebAppCluster(Map flags=[:], Entity owner=null) {
-        super(flags, owner)
+        super(flags, owner);
         setAttribute(SERVICE_UP, false)
         setAttribute(SERVICE_STATE, Lifecycle.CREATED);
         sensorRegistry = new SensorRegistry(this);
@@ -90,15 +93,18 @@ class CloudFoundryJavaWebAppCluster extends AbstractEntity implements ElasticJav
     }
     public void stop() {
         setAttribute(SERVICE_STATE, Lifecycle.STOPPING);
+        setAttribute(SERVICE_UP, false);
         cfAccess.stopApp();
         setAttribute(SERVICE_STATE, Lifecycle.STOPPED);
     }
     
+    protected static WithMutexes cfMutex = new MutexSupport();
+     
     private transient CloudFoundryVmcCliAccess _cfAccess;
     public CloudFoundryVmcCliAccess getCfAccess() {
         if (_cfAccess!=null) return _cfAccess;
         _cfAccess = new CloudFoundryVmcCliAccess(
-            appName:getAppName(), war: war, context: this, mutexSupport:Iterables.getOnlyElement(locations))
+            appName:getAppName(), war: war, context: this, mutexSupport:cfMutex)
         _cfAccess.url = getConfig(HOSTNAME_TO_USE_FOR_URL);
         return _cfAccess;
     }
@@ -184,5 +190,4 @@ class CloudFoundryJavaWebAppCluster extends AbstractEntity implements ElasticJav
     public static class Factory extends BasicConfigurableEntityFactory<CloudFoundryJavaWebAppCluster> {
         public Factory(Map flags=[:]) { super(flags, CloudFoundryJavaWebAppCluster) }
     }
-
 }

@@ -43,7 +43,7 @@ public class CloudFoundryParseTest {
         
         CloudFoundryAppStatLine avg = stats.getAverage();
         
-        Assert.assertEquals(avg.getCpuUsage(), 5d);
+        Assert.assertEquals(avg.getCpuUsage(), 0.05d);
         Assert.assertEquals(avg.getNumCores(), 4);
         Assert.assertEquals(avg.getMemUsedMB(), 216.6d, 0.0000001);
         Assert.assertEquals(avg.getMemLimitMB(), 512d, 0.0000001);
