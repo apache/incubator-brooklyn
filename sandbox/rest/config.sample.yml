@@ -26,10 +26,10 @@ executor:
 # Logging settings
 
 logging:
-  level: DEBUG
+  level: INFO
   console:
     enabled: true
-    threshold: DEBUG
+    threshold: INFO
   loggers:
     brooklyn.util.internal.ssh: ERROR
     net.schmizz.sshj: ERROR
