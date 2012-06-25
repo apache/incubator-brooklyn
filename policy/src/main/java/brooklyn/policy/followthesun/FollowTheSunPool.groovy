@@ -40,7 +40,7 @@ public class FollowTheSunPool extends AbstractEntity implements Resizable {
 
         @Override
         public String toString() {
-            return item+" @ "+container;
+            return ""+item+" @ "+container;
         }
     }
 
