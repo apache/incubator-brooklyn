@@ -13,9 +13,7 @@ import brooklyn.rest.resources.CatalogResource;
 import brooklyn.rest.resources.EffectorResource;
 import brooklyn.rest.resources.EntityResource;
 import brooklyn.rest.resources.SensorResource;
-import com.yammer.dropwizard.client.JerseyClientConfiguration;
 import com.yammer.dropwizard.jersey.DropwizardResourceConfig;
-import com.yammer.metrics.reporting.HealthCheckServlet;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 

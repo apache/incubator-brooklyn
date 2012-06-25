@@ -21,7 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Iterables.filter;
 import static com.google.common.collect.Iterables.transform;
 
-@Path("/v1/applications/{application}/entities/{entity}/sensors.json")
+@Path("/v1/applications/{application}/entities/{entity}/sensors")
 @Api(value = "/v1/applications/{application}/entities/{entity}/sensors", description = "Manage sensors for each application entity")
 @Produces("application/json")
 public class SensorResource extends BaseResource {

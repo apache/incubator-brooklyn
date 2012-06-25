@@ -170,7 +170,7 @@
 </#macro>
 
 <p id='colophon'>
-    Sexy API documentation from
+    Sexy API documentation based on
     <a href="http://swagger.wordnik.com">Swagger</a>.
 </p>
 </body>

@@ -6,13 +6,12 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.rest.api.ApiError;
 import brooklyn.rest.api.Application;
-import com.axemblr.dropwizard.swagger.SwaggerResource;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import java.util.Map;
 
-public abstract class BaseResource extends SwaggerResource {
+public abstract class BaseResource {
 
   protected WebApplicationException notFound(String format, Object... args) {
     throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)

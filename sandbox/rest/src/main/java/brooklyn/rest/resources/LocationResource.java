@@ -18,7 +18,7 @@ import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-@Path("/v1/locations.json")
+@Path("/v1/locations")
 @Api(value = "/v1/locations", description = "Manage locations")
 @Produces(MediaType.APPLICATION_JSON)
 public class LocationResource extends BaseResource {

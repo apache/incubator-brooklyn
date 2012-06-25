@@ -16,7 +16,7 @@ import javax.ws.rs.Produces;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-@Path("/v1/applications/{application}/entities.json")
+@Path("/v1/applications/{application}/entities")
 @Api(value = "/v1/applications/{application}/entities", description = "Manage entities")
 @Produces("application/json")
 public class EntityResource extends BaseResource {

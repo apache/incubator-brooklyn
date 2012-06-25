@@ -19,7 +19,7 @@ import java.util.concurrent.ExecutorService;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Iterables.transform;
 
-@Path("/v1/applications/{application}/entities/{entity}/effectors.json")
+@Path("/v1/applications/{application}/entities/{entity}/effectors")
 @Api(value = "/v1/applications/{application}/entities/{entity}/effectors", description = "Manage effectors")
 @Produces("application/json")
 public class EffectorResource extends BaseResource {

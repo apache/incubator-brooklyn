@@ -7,7 +7,6 @@ import com.wordnik.swagger.core.Api;
 import com.wordnik.swagger.core.Documentation;
 import com.wordnik.swagger.core.DocumentationEndPoint;
 import com.wordnik.swagger.jaxrs.JaxrsApiReader;
-import com.yammer.dropwizard.logging.Log;
 import com.yammer.dropwizard.views.View;
 
 import javax.ws.rs.Path;
@@ -15,7 +14,6 @@ import java.util.List;
 import java.util.Set;
 
 public class SwaggerUiView extends View {
-  private final static Log LOG = Log.forClass(SwaggerUiView.class);
 
   private final Set<Class<?>> resourceList;
   private final List<Documentation> apiList;
@@ -26,7 +24,7 @@ public class SwaggerUiView extends View {
   public final static String SWAGGER_VERSION = "1.0";
 
   public SwaggerUiView(Set<Class<?>> resourceClasses) {
-    super("swagger-ui.ftl");
+    super("brooklyn/rest/views/swagger-ui.ftl");
     resourceList = resourceClasses;
     apiListing = readApiListing(resourceList);
     apiList = readApis(resourceList);
@@ -96,5 +94,4 @@ public class SwaggerUiView extends View {
     return String.format("Value %s, description %s, listing class %s, listing path %s, open %b", apiAnnotation.value(),
       apiAnnotation.description(), apiAnnotation.listingClass(), apiAnnotation.listingPath(), apiAnnotation.open());
   }
-
 }

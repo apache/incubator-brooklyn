@@ -18,7 +18,7 @@ import static javax.ws.rs.core.Response.Status.ACCEPTED;
 import static javax.ws.rs.core.Response.created;
 import static javax.ws.rs.core.Response.status;
 
-@Path("/v1/applications.json")
+@Path("/v1/applications")
 @Api(value = "/v1/applications", description = "Manage applications")
 @Produces(MediaType.APPLICATION_JSON)
 public class ApplicationResource extends BaseResource {

@@ -35,6 +35,11 @@
             <version>${dropwizard.version}</version>
         </dependency>
         <dependency>
+            <groupId>com.yammer.dropwizard</groupId>
+            <artifactId>dropwizard-views</artifactId>
+            <version>${dropwizard.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.reflections</groupId>
             <artifactId>reflections</artifactId>
             <version>${reflections.version}</version>
@@ -108,11 +113,6 @@
             <groupId>com.wordnik</groupId>
             <artifactId>swagger-core_2.9.1</artifactId>
             <version>1.0.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.axemblr.dropwizard</groupId>
-            <artifactId>dropwizard-swagger</artifactId>
-            <version>0.1.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
 

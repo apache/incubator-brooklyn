@@ -22,7 +22,7 @@ import java.util.Map;
 
 import static com.google.common.collect.Sets.filter;
 
-@Path("/v1/catalog.json")
+@Path("/v1/catalog")
 @Api(value = "/v1/catalog", description = "Manage entities and policies available on the server")
 @Produces(MediaType.APPLICATION_JSON)
 public class CatalogResource extends BaseResource {

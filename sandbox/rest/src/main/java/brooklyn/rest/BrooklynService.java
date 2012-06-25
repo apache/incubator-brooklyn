@@ -22,8 +22,8 @@ import brooklyn.rest.resources.EntityResource;
 import brooklyn.rest.resources.LocationResource;
 import brooklyn.rest.resources.SensorResource;
 import brooklyn.rest.resources.SwaggerUiResource;
-import com.axemblr.dropwizard.swagger.SwaggerBundle;
 import com.yammer.dropwizard.Service;
+import com.yammer.dropwizard.bundles.AssetsBundle;
 import com.yammer.dropwizard.config.Environment;
 import com.yammer.dropwizard.views.ViewBundle;
 
@@ -38,7 +38,7 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
 
   protected BrooklynService() {
     super("brooklyn-rest");
-    addBundle(new SwaggerBundle());
+    addBundle(new AssetsBundle("/swagger-ui"));
     addBundle(new ViewBundle());
   }
 
