@@ -83,6 +83,7 @@ public class ApplicationResource extends BaseResource {
   })
   public Response create(
       @ApiParam(
+          name = "applicationSpec",
           value = "Specification for application to be created",
           required = true)
       @Valid ApplicationSpec applicationSpec) {
@@ -110,6 +111,7 @@ public class ApplicationResource extends BaseResource {
   })
   public Response delete(
       @ApiParam(
+          name = "application",
           value = "Application name",
           required = true
       )

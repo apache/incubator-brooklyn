@@ -73,7 +73,7 @@ public class CatalogResource extends BaseResource {
   @POST
   @ApiOperation(value = "Create new entity or policy by uploading a Groovy script", responseClass = "String")
   public Response create(
-      @ApiParam(value = "Groovy code for the entity or policy", required = true)
+      @ApiParam(name = "groovyCode", value = "Groovy code for the entity or policy", required = true)
       @Valid String groovyCode) {
     ClassLoader parent = getClass().getClassLoader();
     GroovyClassLoader loader = new GroovyClassLoader(parent);

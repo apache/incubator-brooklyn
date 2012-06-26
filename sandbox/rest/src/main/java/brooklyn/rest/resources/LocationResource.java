@@ -62,7 +62,7 @@ public class LocationResource extends BaseResource {
   @POST
   @ApiOperation(value = "Create a new location", responseClass = "String")
   public Response create(
-      @ApiParam(value = "Location specification object", required = true)
+      @ApiParam(name = "locationSpec", value = "Location specification object", required = true)
       @Valid LocationSpec locationSpec) {
     int id = store.put(locationSpec);
     return Response.created(URI.create("" + id)).build();

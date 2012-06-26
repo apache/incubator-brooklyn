@@ -20,7 +20,7 @@
 </head>
 <body>
 <div id="header" style="background-color:#89BF04;">
-    <p>Brooklyn REST Api</p>
+    <h2 style="padding-left: 20px; color: white;">Brooklyn REST Api</h2>
 </div>
 <div class='container' id='resources_container'>
     <ul id='resources'>
@@ -38,10 +38,6 @@
                    onclick="toggle('ul#endpoint_list_${resource_index}');">${resource.getResourcePath()}</a>
             </h2>
             <ul class='options'>
-                <li>
-                    <a href='#!/${resource_index}'
-                       id='endpointListTogger_${resource_index}'>Show/Hide</a>
-                </li>
                 <li>
                     <a href='#operations_list' onclick="toggle('ul#endpoint_list_${resource_index}');">Toggle Operations
                         List</a>
@@ -93,14 +89,13 @@
     </div>
     <div class='content resource${resourceIndex}' id='content_${apiIndex}_${resourceIndex}_${operationIndex}'
          style='display:none'>
-        <#attempt>
+        <#if operation.getNotes()??>
             <h4>Implementation Notes</h4>
 
             <p>${operation.getNotes()}</p>
-            <#recover>
-        </#attempt>
+        </#if>
 
-        <#attempt>
+        <#if operation.getParameters()??>
             <#assign parameterList = operation.getParameters() />
 
             <form accept-charset='UTF-8' action='#' class='sandbox'
@@ -140,29 +135,28 @@
 
                 <div class='block response_headers'></div>
             </div>
-            <#recover>
-        </#attempt>
+        </#if>
     </div>
 </li>
 </#macro>
 
 <#macro paramTemplate param>
     <#attempt>
-        <#attempt>
+        <#if param.getName()??>
             <#assign paramName = param.getName() />
-            <#recover>
-                <#assign paramName = param.getNickname() />
-        </#attempt>
+        <#elseif param.getNickname()??>
+            <#assign paramName = param.getNickname() />
+        </#if>
     <tr>
         <td class='code'> ${paramName}</td>
-        <td><#attempt>
+        <td>
+        <#if param.getRequired()??>
             <#if param.getRequired()>
                 Required
             <#else>
                 Optional
             </#if>
-            <#recover>
-        </#attempt></td>
+        </#if></td>
         <td width='500'>${param.getDescription()}</td>
     </tr>
         <#recover>
