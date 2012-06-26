@@ -23,10 +23,10 @@ The following apps are available:
 
 <ul>
 <%
-String url=System.getProperty("brooklyn.example.db.url");
+String dburl=System.getProperty("brooklyn.example.db.url");
 //URL should be supplied e.g. "-Dbrooklyn.example.db.url=jdbc:mysql://localhost/visitors?user=brooklyn&password=br00k11n"
 //(note quoting needed due to ampersand)
-if (url!=null) {
+if (dburl!=null) {
 %>
 <li><a href="db.jsp">SQL database chatroom</a></li>
 <% } %>
@@ -41,7 +41,14 @@ if (hadoop!=null) {
 <% } %>
 
 <%
-if (hadoop==null && url==null) {
+boolean primes = true;
+if (primes) {
+%>
+<li><a href="primes.jsp">Prime number counting (compute)</a></li>
+<% } %>
+
+<%
+if (hadoop==null && dburl==null && primes==false) {
 %>
 <li><i>None.</i> Try one of the other Brooklyn examples to see SQL or Hadoop.</li>
 <% } %>
