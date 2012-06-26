@@ -35,7 +35,7 @@ public class ApplicationCommandsTest extends BrooklynCommandTest {
     LocationStore locationStore = LocationStore.withLocalhost();
 
     manager = new ApplicationManager(new BrooklynConfiguration(), locationStore,
-      new CatalogResource(), executorService);
+        new CatalogResource(), executorService);
 
     addResource(new ApplicationResource(manager, locationStore, new CatalogResource()));
     addResource(new EntityResource(manager));
@@ -55,21 +55,21 @@ public class ApplicationCommandsTest extends BrooklynCommandTest {
   @Test
   public void testStartApplication() throws Exception {
     String redisRecipe = "{\"entities\":[\n" +
-      "  {\n" +
-      "    \"type\":\"brooklyn.entity.nosql.redis.RedisStore\",\n" +
-      "    \"config\": {\"redisPort\": \"7000+\"}\n" +
-      "  }\n" +
-      "],\n" +
-      "  \"locations\":[\n" +
-      "    \"/v1/locations/0\"\n" +
-      "  ],\n" +
-      "  \"name\":\"redis\"\n" +
-      "}";
+        "  {\n" +
+        "    \"type\":\"brooklyn.entity.nosql.redis.RedisStore\",\n" +
+        "    \"config\": {\"redisPort\": \"7000+\"}\n" +
+        "  }\n" +
+        "],\n" +
+        "  \"locations\":[\n" +
+        "    \"/v1/locations/0\"\n" +
+        "  ],\n" +
+        "  \"name\":\"redis\"\n" +
+        "}";
     runCommandWithArgs(StartApplicationCommand.class,
-      createTemporaryFileWithContent(".json", redisRecipe));
+        createTemporaryFileWithContent(".json", redisRecipe));
 
     assertThat(standardOut(), allOf(containsString("/v1/applications/redis"),
-      containsString("Done")));
+        containsString("Done")));
   }
 
   @Test(dependsOnMethods = "testStartApplication")
@@ -84,9 +84,9 @@ public class ApplicationCommandsTest extends BrooklynCommandTest {
     runCommandWithArgs(QuerySensorsCommand.class, "redis");
 
     assertThat(standardOut(), allOf(
-      containsString("/v1/applications/redis/entities/"),
-      containsString("brooklyn.entity.nosql.redis.RedisStore"),
-      containsString("redis.port = 700")
+        containsString("/v1/applications/redis/entities/"),
+        containsString("brooklyn.entity.nosql.redis.RedisStore"),
+        containsString("redis.port = 700")
     ));
   }
 
@@ -95,9 +95,9 @@ public class ApplicationCommandsTest extends BrooklynCommandTest {
     runCommandWithArgs(ListEffectorsCommand.class, "redis");
 
     assertThat(standardOut(), allOf(
-      containsString("/v1/applications/redis/entities/"),
-      containsString("void start"),
-      containsString("void stop []")
+        containsString("/v1/applications/redis/entities/"),
+        containsString("void start"),
+        containsString("void stop []")
     ));
   }
 

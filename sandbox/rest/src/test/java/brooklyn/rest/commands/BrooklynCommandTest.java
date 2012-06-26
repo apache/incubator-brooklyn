@@ -59,7 +59,7 @@ public abstract class BrooklynCommandTest extends ResourceTest {
   }
 
   protected String createTemporaryFileWithContent(String suffix, String content)
-    throws IOException {
+      throws IOException {
     File temporaryFile = File.createTempFile("brooklyn-rest", suffix);
     Writer writer = null;
 

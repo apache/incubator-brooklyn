@@ -33,10 +33,10 @@ public class LoadClassCommand extends BrooklynCommand {
 
     String scriptFileName = (String) params.getArgList().get(0);
     String groovyScript = Joiner.on("\n").join(Files.readLines(new File(scriptFileName),
-      Charset.forName("utf-8")));
+        Charset.forName("utf-8")));
 
     ClientResponse response = client.resource(uriFor("/v1/catalog"))
-      .type(MediaType.APPLICATION_JSON_TYPE).post(ClientResponse.class, groovyScript);
+        .type(MediaType.APPLICATION_JSON_TYPE).post(ClientResponse.class, groovyScript);
 
     out.println("Ok, create: " + response.getLocation());
   }

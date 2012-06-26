@@ -28,7 +28,7 @@ public class DeleteApplicationCommand extends BrooklynCommand {
 
     String name = (String) params.getArgList().get(0);
     ClientResponse response = client.resource(uriFor("/v1/applications/" + name))
-      .delete(ClientResponse.class);
+        .delete(ClientResponse.class);
 
     out.println("Ok, status: " + response.getStatus());
   }

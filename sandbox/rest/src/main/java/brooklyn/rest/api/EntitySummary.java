@@ -13,8 +13,8 @@ public class EntitySummary {
   private final Map<String, URI> links;
 
   public EntitySummary(
-    @JsonProperty("type") String type,
-    @JsonProperty("links") Map<String, URI> links
+      @JsonProperty("type") String type,
+      @JsonProperty("links") Map<String, URI> links
   ) {
     this.type = type;
     this.links = ImmutableMap.copyOf(links);
@@ -26,13 +26,13 @@ public class EntitySummary {
     String applicationUri = "/v1/applications/" + application.getSpec().getName();
     String entityUri = applicationUri + "/entities/" + entity.getId();
     this.links = ImmutableMap.<String, URI>builder()
-      .put("self", URI.create(entityUri))
-      .put("catalog", URI.create("/v1/catalog/entities/" + type))
-      .put("application", URI.create(applicationUri))
-      .put("children", URI.create(entityUri + "/entities"))
-      .put("effectors", URI.create(entityUri + "/effectors"))
-      .put("sensors", URI.create(entityUri + "/sensors"))
-      .build();
+        .put("self", URI.create(entityUri))
+        .put("catalog", URI.create("/v1/catalog/entities/" + type))
+        .put("application", URI.create(applicationUri))
+        .put("children", URI.create(entityUri + "/entities"))
+        .put("effectors", URI.create(entityUri + "/effectors"))
+        .put("sensors", URI.create(entityUri + "/sensors"))
+        .build();
   }
 
   public String getType() {
@@ -68,8 +68,8 @@ public class EntitySummary {
   @Override
   public String toString() {
     return "EntitySummary{" +
-      "type='" + type + '\'' +
-      ", links=" + links +
-      '}';
+        "type='" + type + '\'' +
+        ", links=" + links +
+        '}';
   }
 }

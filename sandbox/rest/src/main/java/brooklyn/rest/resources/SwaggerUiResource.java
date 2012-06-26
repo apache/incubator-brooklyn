@@ -4,7 +4,6 @@ package brooklyn.rest.resources;
 import brooklyn.rest.views.SwaggerUiView;
 import com.sun.jersey.api.core.ResourceConfig;
 import com.wordnik.swagger.core.Api;
-import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
 
 import javax.ws.rs.GET;
@@ -20,10 +19,10 @@ import java.util.Set;
 public class SwaggerUiResource extends BaseResource {
 
   public static final String RESOURCE_PATH = "/v1/api/docs";
-  private Configuration configuration = new Configuration();
 
   @GET
-  public SwaggerUiView showRestDocumentation(@Context ResourceConfig config) throws IOException, TemplateException {
+  public SwaggerUiView showRestDocumentation(@Context ResourceConfig config)
+      throws IOException, TemplateException {
     Set<Class<?>> classList = config.getRootResourceClasses();
     for (Object singleton : config.getRootResourceSingletons()) {
       if (singleton.getClass().isAnnotationPresent(Api.class)) {

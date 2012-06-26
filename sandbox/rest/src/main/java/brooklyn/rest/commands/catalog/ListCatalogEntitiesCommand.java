@@ -21,8 +21,8 @@ public class ListCatalogEntitiesCommand extends BrooklynCommand {
                      Client client, CommandLine params
   ) throws Exception {
     List<String> entities = client.resource(uriFor("/v1/catalog/entities"))
-      .type(MediaType.APPLICATION_JSON_TYPE).get(new GenericType<List<String>>() {
-      });
+        .type(MediaType.APPLICATION_JSON_TYPE).get(new GenericType<List<String>>() {
+        });
     for (String entity : entities) {
       out.println(entity);
     }

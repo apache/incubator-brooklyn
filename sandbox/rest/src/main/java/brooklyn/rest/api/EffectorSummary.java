@@ -22,9 +22,9 @@ public class EffectorSummary {
     private final String description;
 
     public ParameterSummary(
-      @JsonProperty("name") String name,
-      @JsonProperty("type") String type,
-      @JsonProperty("description") String description
+        @JsonProperty("name") String name,
+        @JsonProperty("type") String type,
+        @JsonProperty("description") String description
     ) {
       this.name = name;
       this.type = type;
@@ -77,10 +77,10 @@ public class EffectorSummary {
     @Override
     public String toString() {
       return "ParameterSummary{" +
-        "name='" + name + '\'' +
-        ", type='" + type + '\'' +
-        ", description='" + description + '\'' +
-        '}';
+          "name='" + name + '\'' +
+          ", type='" + type + '\'' +
+          ", description='" + description + '\'' +
+          '}';
     }
   }
 
@@ -91,11 +91,11 @@ public class EffectorSummary {
   private final Map<String, URI> links;
 
   public EffectorSummary(
-    @JsonProperty("name") String name,
-    @JsonProperty("description") String description,
-    @JsonProperty("returnType") String returnType,
-    @JsonProperty("parameters") Set<ParameterSummary> parameters,
-    @JsonProperty("links") Map<String, URI> links
+      @JsonProperty("name") String name,
+      @JsonProperty("description") String description,
+      @JsonProperty("returnType") String returnType,
+      @JsonProperty("parameters") Set<ParameterSummary> parameters,
+      @JsonProperty("links") Map<String, URI> links
   ) {
     this.name = name;
     this.description = description;
@@ -110,19 +110,19 @@ public class EffectorSummary {
     this.returnType = effector.getReturnTypeName();
 
     this.parameters = ImmutableSet.copyOf(Iterables.transform(effector.getParameters(),
-      new Function<ParameterType<?>, ParameterSummary>() {
-        @Override
-        public ParameterSummary apply(@Nullable ParameterType<?> parameterType) {
-          return new ParameterSummary(parameterType);
-        }
-      }));
+        new Function<ParameterType<?>, ParameterSummary>() {
+          @Override
+          public ParameterSummary apply(@Nullable ParameterType<?> parameterType) {
+            return new ParameterSummary(parameterType);
+          }
+        }));
 
     String applicationUri = "/v1/applications/" + application.getSpec().getName();
     String entityUri = applicationUri + "/entities/" + entity.getId();
     this.links = ImmutableMap.of(
-      "self", URI.create(entityUri + "/effectors/" + effector.getName()),
-      "entity", URI.create(entityUri),
-      "application", URI.create(applicationUri)
+        "self", URI.create(entityUri + "/effectors/" + effector.getName()),
+        "entity", URI.create(entityUri),
+        "application", URI.create(applicationUri)
     );
   }
 
@@ -180,11 +180,11 @@ public class EffectorSummary {
   @Override
   public String toString() {
     return "EffectorSummary{" +
-      "name='" + name + '\'' +
-      ", description='" + description + '\'' +
-      ", returnType='" + returnType + '\'' +
-      ", parameters=" + parameters +
-      ", links=" + links +
-      '}';
+        "name='" + name + '\'' +
+        ", description='" + description + '\'' +
+        ", returnType='" + returnType + '\'' +
+        ", parameters=" + parameters +
+        ", links=" + links +
+        '}';
   }
 }

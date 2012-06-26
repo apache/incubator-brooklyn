@@ -6,13 +6,23 @@ import brooklyn.policy.basic.AbstractPolicy;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import com.wordnik.swagger.core.*;
+import com.wordnik.swagger.core.Api;
+import com.wordnik.swagger.core.ApiError;
+import com.wordnik.swagger.core.ApiErrors;
+import com.wordnik.swagger.core.ApiOperation;
+import com.wordnik.swagger.core.ApiParam;
 import groovy.lang.GroovyClassLoader;
 import org.reflections.Reflections;
 
 import javax.annotation.Nullable;
 import javax.validation.Valid;
-import javax.ws.rs.*;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.lang.reflect.Constructor;
@@ -40,8 +50,8 @@ public class CatalogResource extends BaseResource {
     ImmutableMap.Builder<String, Class<? extends T>> builder = ImmutableMap.builder();
     for (Class<? extends T> candidate : reflections.getSubTypesOf(clazz)) {
       if (!Modifier.isAbstract(candidate.getModifiers()) &&
-        !candidate.isInterface() &&
-        !candidate.isAnonymousClass()) {
+          !candidate.isInterface() &&
+          !candidate.isAnonymousClass()) {
         builder.put(candidate.getName(), candidate);
       }
     }
@@ -63,8 +73,8 @@ public class CatalogResource extends BaseResource {
   @POST
   @ApiOperation(value = "Create new entity or policy by uploading a Groovy script", responseClass = "String")
   public Response create(
-    @ApiParam(value = "Groovy code for the entity or policy", required = true)
-    @Valid String groovyCode) {
+      @ApiParam(value = "Groovy code for the entity or policy", required = true)
+      @Valid String groovyCode) {
     ClassLoader parent = getClass().getClassLoader();
     GroovyClassLoader loader = new GroovyClassLoader(parent);
 
@@ -86,8 +96,8 @@ public class CatalogResource extends BaseResource {
   @Path("/entities")
   @ApiOperation(value = "Fetch a list of entities matching a query", responseClass = "String", multiValueResponse = true)
   public Iterable<String> listEntities(
-    @ApiParam(name = "name", value = "Query to filter entities by")
-    final @QueryParam("name") @DefaultValue("") String name
+      @ApiParam(name = "name", value = "Query to filter entities by")
+      final @QueryParam("name") @DefaultValue("") String name
   ) {
     if ("".equals(name)) {
       return entities.keySet();
@@ -106,11 +116,11 @@ public class CatalogResource extends BaseResource {
   @Path("/entities/{entity}")
   @ApiOperation(value = "Fetch an entity", responseClass = "String", multiValueResponse = true)
   @ApiErrors(value = {
-    @ApiError(code = 404, reason = "Entity not found")
+      @ApiError(code = 404, reason = "Entity not found")
   })
   public Iterable<String> getEntity(
-    @ApiParam(name = "entity", value = "The name of the entity to retrieve", required = true)
-    @PathParam("entity") String entityType) throws Exception {
+      @ApiParam(name = "entity", value = "The name of the entity to retrieve", required = true)
+      @PathParam("entity") String entityType) throws Exception {
     if (!containsEntity(entityType)) {
       throw notFound("Entity with type '%s' not found", entityType);
     }

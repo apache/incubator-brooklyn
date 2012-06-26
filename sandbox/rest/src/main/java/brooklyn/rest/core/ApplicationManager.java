@@ -41,10 +41,10 @@ public class ApplicationManager implements Managed {
   private final CatalogResource catalog;
 
   public ApplicationManager(
-    BrooklynConfiguration configuration,
-    LocationStore locationStore,
-    CatalogResource catalog,
-    ExecutorService executorService
+      BrooklynConfiguration configuration,
+      LocationStore locationStore,
+      CatalogResource catalog,
+      ExecutorService executorService
   ) {
     this.configuration = checkNotNull(configuration, "configuration");
     this.locationStore = checkNotNull(locationStore, "locationStore");
@@ -113,21 +113,21 @@ public class ApplicationManager implements Managed {
     executorService.submit(new Runnable() {
 
       Function<String, Location> buildLocationFromRef =
-        new Function<String, Location>() {
-          @Override
-          public Location apply(String ref) {
-            LocationSpec locationSpec = locationStore.getByRef(ref);
-            if (locationSpec.getProvider().equals("localhost")) {
-              return new LocalhostMachineProvisioningLocation(locationSpec.getConfig());
+          new Function<String, Location>() {
+            @Override
+            public Location apply(String ref) {
+              LocationSpec locationSpec = locationStore.getByRef(ref);
+              if (locationSpec.getProvider().equals("localhost")) {
+                return new LocalhostMachineProvisioningLocation(locationSpec.getConfig());
+              }
+
+              Map<String, String> config = Maps.newHashMap();
+              config.put("provider", locationSpec.getProvider());
+              config.putAll(locationSpec.getConfig());
+
+              return new JcloudsLocation(config);
             }
-
-            Map<String, String> config = Maps.newHashMap();
-            config.put("provider", locationSpec.getProvider());
-            config.putAll(locationSpec.getConfig());
-
-            return new JcloudsLocation(config);
-          }
-        };
+          };
 
       @Override
       public void run() {
@@ -153,7 +153,7 @@ public class ApplicationManager implements Managed {
     boolean replaced = applications.replace(name, target, target.transitionTo(status));
     if (!replaced) {
       throw new ConcurrentModificationException("Unable to transition '" +
-        name + "' application to " + status);
+          name + "' application to " + status);
     }
   }
 

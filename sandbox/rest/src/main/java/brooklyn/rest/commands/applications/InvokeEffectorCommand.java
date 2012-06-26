@@ -34,11 +34,11 @@ public class InvokeEffectorCommand extends BrooklynCommand {
 
     URI effectorUri = uriFor((String) params.getArgList().get(0));
     ClientResponse response = client.resource(effectorUri)
-      .type(MediaType.APPLICATION_JSON_TYPE)
-      .entity(ImmutableMap.<String, String>of())
-      .post(ClientResponse.class);
+        .type(MediaType.APPLICATION_JSON_TYPE)
+        .entity(ImmutableMap.<String, String>of())
+        .post(ClientResponse.class);
 
     checkState(response.getStatus() == Response.Status.ACCEPTED.getStatusCode(),
-      "Got unexpected response: " + response.toString());
+        "Got unexpected response: " + response.toString());
   }
 }

@@ -5,10 +5,19 @@ import brooklyn.rest.api.ApplicationSpec;
 import brooklyn.rest.api.EntitySpec;
 import brooklyn.rest.core.ApplicationManager;
 import brooklyn.rest.core.LocationStore;
-import com.wordnik.swagger.core.*;
+import com.wordnik.swagger.core.Api;
+import com.wordnik.swagger.core.ApiError;
+import com.wordnik.swagger.core.ApiErrors;
+import com.wordnik.swagger.core.ApiOperation;
+import com.wordnik.swagger.core.ApiParam;
 
 import javax.validation.Valid;
-import javax.ws.rs.*;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.URI;
@@ -28,7 +37,7 @@ public class ApplicationResource extends BaseResource {
   private final LocationStore locations;
 
   public ApplicationResource(
-    ApplicationManager manager, LocationStore locations, CatalogResource catalog
+      ApplicationManager manager, LocationStore locations, CatalogResource catalog
   ) {
     this.manager = checkNotNull(manager, "manager");
     this.locations = checkNotNull(locations, "locations");
@@ -37,8 +46,8 @@ public class ApplicationResource extends BaseResource {
 
   @GET
   @ApiOperation(
-    value = "Fetch list of applications",
-    responseClass = "brooklyn.rest.api.Application"
+      value = "Fetch list of applications",
+      responseClass = "brooklyn.rest.api.Application"
   )
   public Iterable<Application> list() {
     return manager.registry().values();
@@ -47,17 +56,17 @@ public class ApplicationResource extends BaseResource {
   @GET
   @Path("/{application}")
   @ApiOperation(
-    value = "Fetch a specific application",
-    responseClass = "brooklyn.rest.api.Application"
+      value = "Fetch a specific application",
+      responseClass = "brooklyn.rest.api.Application"
   )
   @ApiErrors(value = {
-    @ApiError(code = 404, reason = "Application not found")
+      @ApiError(code = 404, reason = "Application not found")
   })
   public Application get(
-    @ApiParam(
-      value = "Name of application that needs to be fetched",
-      required = true)
-    @PathParam("application") String name) {
+      @ApiParam(
+          value = "Name of application that needs to be fetched",
+          required = true)
+      @PathParam("application") String name) {
     if (manager.registry().containsKey(name)) {
       return manager.registry().get(name);
     }
@@ -66,23 +75,23 @@ public class ApplicationResource extends BaseResource {
 
   @POST
   @ApiOperation(
-    value = "Create a new application"
+      value = "Create a new application"
   )
   @ApiErrors(value = {
-    @ApiError(code = 404, reason = "Undefined entity or location"),
-    @ApiError(code = 412, reason = "Application already registered")
+      @ApiError(code = 404, reason = "Undefined entity or location"),
+      @ApiError(code = 412, reason = "Application already registered")
   })
   public Response create(
-    @ApiParam(
-      value = "Specification for application to be created",
-      required = true)
-    @Valid ApplicationSpec applicationSpec) {
+      @ApiParam(
+          value = "Specification for application to be created",
+          required = true)
+      @Valid ApplicationSpec applicationSpec) {
     checkAllEntityTypesAreValid(applicationSpec);
     checkAllLocationsAreValid(applicationSpec);
 
     if (manager.registry().containsKey(applicationSpec.getName())) {
       throw preconditionFailed("Application '%s' already registered.",
-        applicationSpec.getName());
+          applicationSpec.getName());
     }
     manager.startInBackground(applicationSpec);
 
@@ -94,17 +103,17 @@ public class ApplicationResource extends BaseResource {
   @DELETE
   @Path("/{application}")
   @ApiOperation(
-    value = "Delete a specified application"
+      value = "Delete a specified application"
   )
   @ApiErrors(value = {
-    @ApiError(code = 404, reason = "Application not found")
+      @ApiError(code = 404, reason = "Application not found")
   })
   public Response delete(
-    @ApiParam(
-      value = "Application name",
-      required = true
-    )
-    @PathParam("application") String application) {
+      @ApiParam(
+          value = "Application name",
+          required = true
+      )
+      @PathParam("application") String application) {
     if (!manager.registry().containsKey(application))
       throw notFound("Application '%s' not found.", application);
 

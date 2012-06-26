@@ -34,15 +34,15 @@ public class QuerySensorsCommand extends BrooklynCommand {
 
     String name = (String) params.getArgList().get(0);
     Application application = client.resource(uriFor("/v1/applications/" + name))
-      .type(MediaType.APPLICATION_JSON_TYPE).get(Application.class);
+        .type(MediaType.APPLICATION_JSON_TYPE).get(Application.class);
 
     queryAllEntities(out, client, application.getLinks().get("entities"));
   }
 
   private void queryAllEntities(PrintStream out, Client client, URI resource) {
     Set<EntitySummary> entities = client.resource(expandIfRelative(resource))
-      .type(MediaType.APPLICATION_JSON_TYPE).get(new GenericType<Set<EntitySummary>>() {
-      });
+        .type(MediaType.APPLICATION_JSON_TYPE).get(new GenericType<Set<EntitySummary>>() {
+        });
 
     for (EntitySummary summary : entities) {
       out.println(summary.getLinks().get("self") + " #" + summary.getType());
@@ -53,11 +53,11 @@ public class QuerySensorsCommand extends BrooklynCommand {
 
   private void queryAllSensors(PrintStream out, Client client, URI sensorsUri) {
     Set<SensorSummary> sensors = client.resource(expandIfRelative(sensorsUri))
-      .type(MediaType.APPLICATION_JSON_TYPE).get(new GenericType<Set<SensorSummary>>() {
-      });
+        .type(MediaType.APPLICATION_JSON_TYPE).get(new GenericType<Set<SensorSummary>>() {
+        });
     for (SensorSummary summary : sensors) {
       String value = client.resource(expandIfRelative(summary.getLinks().get("self")))
-        .type(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+          .type(MediaType.APPLICATION_JSON_TYPE).get(String.class);
       out.println("\t" + summary.getName() + " = " + value);
     }
     out.println();

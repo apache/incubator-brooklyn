@@ -33,7 +33,7 @@ public class AddLocationCommand extends BrooklynCommand {
     LocationSpec spec = json.readValue(new File(jsonFileName), LocationSpec.class);
 
     ClientResponse response = client.resource(uriFor("/v1/locations"))
-      .type(MediaType.APPLICATION_JSON_TYPE).post(ClientResponse.class, spec);
+        .type(MediaType.APPLICATION_JSON_TYPE).post(ClientResponse.class, spec);
 
     out.println("Ok: " + response.getLocation());
   }

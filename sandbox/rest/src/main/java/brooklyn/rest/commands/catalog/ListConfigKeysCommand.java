@@ -30,8 +30,8 @@ public class ListConfigKeysCommand extends BrooklynCommand {
 
     String type = (String) params.getArgList().get(0);
     List<String> keys = client.resource(uriFor("/v1/catalog/entities/" + type))
-      .type(MediaType.APPLICATION_JSON_TYPE).get(new GenericType<List<String>>() {
-      });
+        .type(MediaType.APPLICATION_JSON_TYPE).get(new GenericType<List<String>>() {
+        });
 
     for (String key : keys) {
       out.println(key);

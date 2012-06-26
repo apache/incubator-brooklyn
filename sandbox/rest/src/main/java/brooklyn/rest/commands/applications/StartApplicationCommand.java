@@ -33,7 +33,7 @@ public class StartApplicationCommand extends BrooklynCommand {
   @Override
   public Options getOptions() {
     return super.getOptions()
-      .addOption("n", "name", true, "Override application name");
+        .addOption("n", "name", true, "Override application name");
   }
 
   @Override
@@ -49,7 +49,7 @@ public class StartApplicationCommand extends BrooklynCommand {
     }
 
     ClientResponse response = client.resource(uriFor("/v1/applications"))
-      .type(MediaType.APPLICATION_JSON).post(ClientResponse.class, spec);
+        .type(MediaType.APPLICATION_JSON).post(ClientResponse.class, spec);
 
     if (response.getStatus() != Response.Status.CREATED.getStatusCode()) {
       ApiError error = response.getEntity(ApiError.class);
@@ -76,7 +76,7 @@ public class StartApplicationCommand extends BrooklynCommand {
 
   private Status getApplicationStatus(Client client, URI uri) {
     Application application = client.resource(uri)
-      .type(MediaType.APPLICATION_JSON_TYPE).get(Application.class);
+        .type(MediaType.APPLICATION_JSON_TYPE).get(Application.class);
     return application.getStatus();
   }
 }

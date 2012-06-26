@@ -20,8 +20,8 @@ public class LocationSpec {
 
 
   public LocationSpec(
-    @JsonProperty("provider") String provider,
-    @JsonProperty("config") @Nullable Map<String, String> config
+      @JsonProperty("provider") String provider,
+      @JsonProperty("config") @Nullable Map<String, String> config
   ) {
     this.provider = checkNotNull(provider, "provider");
     this.config = (config == null) ? Collections.<String, String>emptyMap() : ImmutableMap.copyOf(config);
@@ -60,8 +60,8 @@ public class LocationSpec {
   @Override
   public String toString() {
     return "LocationSpec{" +
-      "provider='" + provider + '\'' +
-      ", config=" + config +
-      '}';
+        "provider='" + provider + '\'' +
+        ", config=" + config +
+        '}';
   }
 }

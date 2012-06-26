@@ -15,12 +15,12 @@ public abstract class BaseResource {
 
   protected WebApplicationException notFound(String format, Object... args) {
     throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
-      .entity(new ApiError(String.format(format, args))).build());
+        .entity(new ApiError(String.format(format, args))).build());
   }
 
   protected WebApplicationException preconditionFailed(String format, Object... args) {
     throw new WebApplicationException(Response.status(Response.Status.PRECONDITION_FAILED)
-      .entity(new ApiError(String.format(format, args))).build());
+        .entity(new ApiError(String.format(format, args))).build());
   }
 
   /**
@@ -30,7 +30,7 @@ public abstract class BaseResource {
     EntityLocal result = recursiveGetEntityOrNull(application.getInstance(), entityIdOrName);
     if (result == null) {
       throw notFound("Application '%s' has no entity with id or name '%s'",
-        application.getSpec().getName(), entityIdOrName);
+          application.getSpec().getName(), entityIdOrName);
     }
     return result;
   }

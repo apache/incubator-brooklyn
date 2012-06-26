@@ -20,8 +20,8 @@ public class ListCatalogPoliciesCommand extends BrooklynCommand {
   protected void run(PrintStream out, PrintStream err, Json json,
                      Client client, CommandLine params) throws Exception {
     List<String> policies = client.resource(uriFor("/v1/catalog/policies"))
-      .type(MediaType.APPLICATION_JSON_TYPE).get(new GenericType<List<String>>() {
-      });
+        .type(MediaType.APPLICATION_JSON_TYPE).get(new GenericType<List<String>>() {
+        });
     for (String policy : policies) {
       out.println(policy);
     }

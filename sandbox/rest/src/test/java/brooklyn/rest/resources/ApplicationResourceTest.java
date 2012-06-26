@@ -3,7 +3,13 @@ package brooklyn.rest.resources;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.rest.BaseResourceTest;
 import brooklyn.rest.BrooklynConfiguration;
-import brooklyn.rest.api.*;
+import brooklyn.rest.api.ApiError;
+import brooklyn.rest.api.Application;
+import brooklyn.rest.api.ApplicationSpec;
+import brooklyn.rest.api.EffectorSummary;
+import brooklyn.rest.api.EntitySpec;
+import brooklyn.rest.api.EntitySummary;
+import brooklyn.rest.api.SensorSummary;
 import brooklyn.rest.core.ApplicationManager;
 import brooklyn.rest.core.LocationStore;
 import com.google.common.base.Predicate;
@@ -37,8 +43,8 @@ public class ApplicationResourceTest extends BaseResourceTest {
   private ExecutorService executorService;
 
   private final ApplicationSpec redisSpec = new ApplicationSpec("redis-app",
-    ImmutableSet.of(new EntitySpec("redis-ent", "brooklyn.entity.nosql.redis.RedisStore")),
-    ImmutableSet.of("/v1/locations/0"));
+      ImmutableSet.of(new EntitySpec("redis-ent", "brooklyn.entity.nosql.redis.RedisStore")),
+      ImmutableSet.of("/v1/locations/0"));
 
   @Override
   protected void setUpResources() throws Exception {
@@ -46,7 +52,7 @@ public class ApplicationResourceTest extends BaseResourceTest {
     LocationStore locationStore = LocationStore.withLocalhost();
 
     manager = new ApplicationManager(new BrooklynConfiguration(), locationStore,
-      new CatalogResource(), executorService);
+        new CatalogResource(), executorService);
 
     addResource(new ApplicationResource(manager, locationStore, new CatalogResource()));
     addResource(new EntityResource(manager));
@@ -75,7 +81,7 @@ public class ApplicationResourceTest extends BaseResourceTest {
   @Test
   public void testDeployRedisApplication() throws InterruptedException, TimeoutException {
     ClientResponse response = client().resource("/v1/applications")
-      .post(ClientResponse.class, redisSpec);
+        .post(ClientResponse.class, redisSpec);
 
     assertEquals(manager.registry().size(), 1);
     assertEquals(response.getLocation().getPath(), "/v1/applications/redis-app");
@@ -87,9 +93,9 @@ public class ApplicationResourceTest extends BaseResourceTest {
   public void testDeployWithInvalidEntityType() {
     try {
       client().resource("/v1/applications").post(
-        new ApplicationSpec("invalid-app",
-          ImmutableSet.of(new EntitySpec("invalid-ent", "not.existing.entity")),
-          ImmutableSet.<String>of("/v1/locations/0"))
+          new ApplicationSpec("invalid-app",
+              ImmutableSet.of(new EntitySpec("invalid-ent", "not.existing.entity")),
+              ImmutableSet.<String>of("/v1/locations/0"))
       );
 
     } catch (UniformInterfaceException e) {
@@ -102,9 +108,9 @@ public class ApplicationResourceTest extends BaseResourceTest {
   public void testDeployWithInvalidLocation() {
     try {
       client().resource("/v1/applications").post(
-        new ApplicationSpec("invalid-app",
-          ImmutableSet.<EntitySpec>of(new EntitySpec("redis-ent", "brooklyn.entity.nosql.redis.RedisStore")),
-          ImmutableSet.of("/v1/locations/3423"))
+          new ApplicationSpec("invalid-app",
+              ImmutableSet.<EntitySpec>of(new EntitySpec("redis-ent", "brooklyn.entity.nosql.redis.RedisStore")),
+              ImmutableSet.of("/v1/locations/3423"))
       );
 
     } catch (UniformInterfaceException e) {
@@ -116,15 +122,15 @@ public class ApplicationResourceTest extends BaseResourceTest {
   @Test(dependsOnMethods = "testDeployRedisApplication")
   public void testListEntities() {
     Set<EntitySummary> entities = client().resource("/v1/applications/redis-app/entities")
-      .get(new GenericType<Set<EntitySummary>>() {
-      });
+        .get(new GenericType<Set<EntitySummary>>() {
+        });
 
     for (EntitySummary entity : entities) {
       client().resource(entity.getLinks().get("self")).get(ClientResponse.class);
 
       Set<EntitySummary> children = client().resource(entity.getLinks().get("children"))
-        .get(new GenericType<Set<EntitySummary>>() {
-        });
+          .get(new GenericType<Set<EntitySummary>>() {
+          });
       assertEquals(children.size(), 0);
     }
   }
@@ -132,8 +138,8 @@ public class ApplicationResourceTest extends BaseResourceTest {
   @Test(dependsOnMethods = "testDeployRedisApplication")
   public void testListApplications() {
     Set<Application> applications = client().resource("/v1/applications")
-      .get(new GenericType<Set<Application>>() {
-      });
+        .get(new GenericType<Set<Application>>() {
+        });
     assertEquals(applications.size(), 1);
     assertEquals(Iterables.get(applications, 0).getSpec(), redisSpec);
   }
@@ -141,8 +147,8 @@ public class ApplicationResourceTest extends BaseResourceTest {
   @Test(dependsOnMethods = "testDeployRedisApplication")
   public void testListSensors() {
     Set<SensorSummary> sensors = client().resource("/v1/applications/redis-app/entities/redis-ent/sensors")
-      .get(new GenericType<Set<SensorSummary>>() {
-      });
+        .get(new GenericType<Set<SensorSummary>>() {
+        });
     assertTrue(sensors.size() > 0);
     SensorSummary uptime = Iterables.find(sensors, new Predicate<SensorSummary>() {
       @Override
@@ -156,8 +162,8 @@ public class ApplicationResourceTest extends BaseResourceTest {
   @Test(dependsOnMethods = "testListSensors")
   public void testReadAllSensors() {
     Set<SensorSummary> sensors = client().resource("/v1/applications/redis-app/entities/redis-ent/sensors")
-      .get(new GenericType<Set<SensorSummary>>() {
-      });
+        .get(new GenericType<Set<SensorSummary>>() {
+        });
 
     Map<String, String> readings = Maps.newHashMap();
     for (SensorSummary sensor : sensors) {
@@ -171,8 +177,8 @@ public class ApplicationResourceTest extends BaseResourceTest {
   @Test(dependsOnMethods = "testDeployRedisApplication")
   public void testListEffectors() {
     Set<EffectorSummary> effectors = client().resource("/v1/applications/redis-app/entities/redis-ent/effectors")
-      .get(new GenericType<Set<EffectorSummary>>() {
-      });
+        .get(new GenericType<Set<EffectorSummary>>() {
+        });
 
     assertTrue(effectors.size() > 0);
 
@@ -188,7 +194,7 @@ public class ApplicationResourceTest extends BaseResourceTest {
   @Test(dependsOnMethods = "testReadAllSensors")
   public void testTriggerStopEffector() throws InterruptedException {
     ClientResponse response = client().resource("/v1/applications/redis-app/entities/redis-ent/effectors/stop")
-      .post(ClientResponse.class, ImmutableMap.of());
+        .post(ClientResponse.class, ImmutableMap.of());
 
     assertEquals(response.getStatus(), Response.Status.ACCEPTED.getStatusCode());
 
@@ -201,7 +207,7 @@ public class ApplicationResourceTest extends BaseResourceTest {
   @Test(dependsOnMethods = {"testListEffectors", "testTriggerStopEffector", "testListApplications"})
   public void testDeleteApplication() throws TimeoutException, InterruptedException {
     ClientResponse response = client().resource("/v1/applications/redis-app")
-      .delete(ClientResponse.class);
+        .delete(ClientResponse.class);
 
     waitForPageNotFoundResponse("/v1/applications/redis-app", Application.class);
 

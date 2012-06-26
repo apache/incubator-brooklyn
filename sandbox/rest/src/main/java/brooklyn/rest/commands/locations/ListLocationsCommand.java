@@ -21,8 +21,8 @@ public class ListLocationsCommand extends BrooklynCommand {
   protected void run(PrintStream out, PrintStream err, Json json,
                      Client client, CommandLine params) throws Exception {
     List<LocationSummary> locations = client.resource(uriFor("/v1/locations"))
-      .type(MediaType.APPLICATION_JSON_TYPE).get(new GenericType<List<LocationSummary>>() {
-      });
+        .type(MediaType.APPLICATION_JSON_TYPE).get(new GenericType<List<LocationSummary>>() {
+        });
     for (LocationSummary summary : locations) {
       out.println(summary.toString());
     }

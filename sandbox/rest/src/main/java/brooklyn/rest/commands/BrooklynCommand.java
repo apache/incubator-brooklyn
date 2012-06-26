@@ -22,7 +22,11 @@ import org.apache.http.client.HttpClient;
 
 import java.io.PrintStream;
 import java.net.URI;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public abstract class BrooklynCommand extends Command {
 
@@ -41,7 +45,7 @@ public abstract class BrooklynCommand extends Command {
   @Override
   public Options getOptions() {
     return super.getOptions()
-      .addOption("e", "endpoint", true, "Server endpoint");
+        .addOption("e", "endpoint", true, "Server endpoint");
   }
 
   @Override
@@ -94,7 +98,7 @@ public abstract class BrooklynCommand extends Command {
 
     // the command line has precedence over the environment
     this.endpoint = params.getOptionValue("endpoint",
-      (endpointFromEnv != null) ? endpointFromEnv : "http://localhost:8080");
+        (endpointFromEnv != null) ? endpointFromEnv : "http://localhost:8080");
   }
 
 
@@ -133,14 +137,14 @@ public abstract class BrooklynCommand extends Command {
 
   private ExecutorService buildThreadPool(JerseyClientConfiguration configuration) {
     final ThreadFactory threadFactory = new ThreadFactoryBuilder().setDaemon(true)
-      .setNameFormat("jersey-client-%d")
-      .build();
+        .setNameFormat("jersey-client-%d")
+        .build();
 
     return new ThreadPoolExecutor(configuration.getMinThreads(),
-      configuration.getMaxThreads(),
-      60, TimeUnit.SECONDS,
-      new SynchronousQueue<Runnable>(),
-      threadFactory);
+        configuration.getMaxThreads(),
+        60, TimeUnit.SECONDS,
+        new SynchronousQueue<Runnable>(),
+        threadFactory);
   }
 
 }

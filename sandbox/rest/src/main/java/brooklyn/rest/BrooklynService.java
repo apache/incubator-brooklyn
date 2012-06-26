@@ -44,7 +44,7 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
 
   @Override
   protected void initialize(BrooklynConfiguration configuration, Environment environment)
-    throws Exception {
+      throws Exception {
 
     // Create managed components and wire them together
 
@@ -55,11 +55,11 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
 
     ExecutorConfiguration executorConfig = configuration.getExecutorConfiguration();
     ExecutorService managedExecutor = environment.managedExecutorService("brooklyn",
-      executorConfig.getCorePoolSize(), executorConfig.getMaximumPoolSize(),
-      executorConfig.getKeepAliveTimeInSeconds(), TimeUnit.SECONDS);
+        executorConfig.getCorePoolSize(), executorConfig.getMaximumPoolSize(),
+        executorConfig.getKeepAliveTimeInSeconds(), TimeUnit.SECONDS);
 
     ApplicationManager applicationManager = new ApplicationManager(configuration,
-      locationStore, catalogResource, managedExecutor);
+        locationStore, catalogResource, managedExecutor);
     environment.manage(applicationManager);
 
     environment.addResource(new LocationResource(locationStore));

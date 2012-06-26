@@ -92,6 +92,6 @@ public class SwaggerUiView extends View {
 
   public static String toString(Api apiAnnotation) {
     return String.format("Value %s, description %s, listing class %s, listing path %s, open %b", apiAnnotation.value(),
-      apiAnnotation.description(), apiAnnotation.listingClass(), apiAnnotation.listingPath(), apiAnnotation.open());
+        apiAnnotation.description(), apiAnnotation.listingClass(), apiAnnotation.listingPath(), apiAnnotation.open());
   }
 }

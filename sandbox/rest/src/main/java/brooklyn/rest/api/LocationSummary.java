@@ -14,20 +14,20 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class LocationSummary {
 
   private final static Set<String> SENSITIVE_CONFIGS =
-    ImmutableSet.of("credential", "privateKeyFile", "sshPrivateKey", "rootSshPrivateKey");
+      ImmutableSet.of("credential", "privateKeyFile", "sshPrivateKey", "rootSshPrivateKey");
 
   private final String provider;
   private final Map<String, String> config;
   private final Map<String, URI> links;
 
   public LocationSummary(
-    @JsonProperty("provider") String provider,
-    @JsonProperty("config") Map<String, String> config,
-    @JsonProperty("links") Map<String, URI> links
+      @JsonProperty("provider") String provider,
+      @JsonProperty("config") Map<String, String> config,
+      @JsonProperty("links") Map<String, URI> links
   ) {
     this.provider = checkNotNull(provider, "provider");
     this.config = (config == null) ? Collections.<String, String>emptyMap()
-      : ImmutableMap.copyOf(config);
+        : ImmutableMap.copyOf(config);
     this.links = ImmutableMap.copyOf(links);
   }
 
@@ -35,7 +35,7 @@ public class LocationSummary {
     this.provider = locationSpec.getProvider();
     this.config = copyConfigsExceptSensitiveKeys(locationSpec);
     this.links = ImmutableMap.of(
-      "self", URI.create("/v1/locations/" + id)
+        "self", URI.create("/v1/locations/" + id)
     );
   }
 
@@ -89,9 +89,9 @@ public class LocationSummary {
   @Override
   public String toString() {
     return "LocationSummary{" +
-      "provider='" + provider + '\'' +
-      ", config=" + config +
-      ", links=" + links +
-      '}';
+        "provider='" + provider + '\'' +
+        ", config=" + config +
+        ", links=" + links +
+        '}';
   }
 }
