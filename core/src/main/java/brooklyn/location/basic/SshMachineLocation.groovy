@@ -101,9 +101,11 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         Preconditions.checkNotNull address, "host address must be specified for ssh"
         if (!commands) return 0
         SshTool ssh = connectSsh(props)
-        int result = ssh.execShell props, commands, env
-        ssh.disconnect()
-        result
+        try {
+            return ssh.execShell(props, commands, env);
+        } finally {
+            ssh.disconnect()
+        }
     }
     
     protected SshTool connectSsh(Map props=[:]) {
@@ -202,7 +204,6 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                 flags.err = outE;
             }
             
-            int 
             SshjTool ssh = connectSsh(flags)
             int result = execCommand.call(ssh, flags, commands, env);
             ssh.disconnect()
@@ -214,8 +215,8 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             throw Throwables.propagate(e);
         } finally {
             // Must close the pipedOutStreams, otherwise input will never read -1 so StreamGobbler thread would never die
-            if (outO != null) Closeables.closeQuietly(outO);
-            if (outE != null) Closeables.closeQuietly(outE);
+            Closeables.closeQuietly(outO);
+            Closeables.closeQuietly(outE);
         }
 
     }
