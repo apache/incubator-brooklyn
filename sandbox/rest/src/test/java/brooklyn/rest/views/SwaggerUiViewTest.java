@@ -70,7 +70,7 @@ public class SwaggerUiViewTest {
     assertEquals(SwaggerUiView.buildPath(SwaggerUiResource.class), SwaggerUiResource.RESOURCE_PATH);
     boolean exceptionThrown = false;
     try {
-      assertEquals(SwaggerUiView.buildPath(SwaggerUiView.class), "");
+      assertEquals(SwaggerUiView.buildPath(SwaggerUiView.class), "should fail");
     } catch (IllegalStateException e) {
       exceptionThrown = true;
     }
