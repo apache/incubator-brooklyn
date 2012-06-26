@@ -36,6 +36,7 @@ import brooklyn.util.internal.Repeater
 import com.google.common.base.Preconditions
 import com.google.common.base.Predicate
 import com.google.common.collect.Iterables
+import com.google.common.collect.Maps
 
 /**
  * An {@link Entity} representing a piece of software which can be installed, run, and controlled.
@@ -72,6 +73,10 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 	@SetFromFlag("env")
 	public static final BasicConfigKey<Map> SHELL_ENVIRONMENT = [ Map, "shell.env", "Map of environment variables to pass to the runtime shell", [:] ]
 
+    @SetFromFlag("provisioningProperties")
+    public static final BasicConfigKey<Map<String,Object>> PROVISIONING_PROPERTIES = [ Map, "provisioning.properties", 
+            "Custom properties to be passed in when provisioning a new machine", [:] ]
+    
 	public static final AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME
 	public static final AttributeSensor<String> ADDRESS = Attributes.ADDRESS
 
@@ -187,8 +192,14 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 		startInLocation(location)
 	}
 
+    protected Map<String,Object> obtainProvisioningFlags(MachineProvisioningLocation location) {
+        Map result = Maps.newLinkedHashMap(location.getProvisioningFlags([ getClass().getName() ]));
+        result.putAll(getConfig(PROVISIONING_PROPERTIES));
+        return result;
+    }
+    
 	public void startInLocation(MachineProvisioningLocation location) {
-		Map<String,Object> flags = location.getProvisioningFlags([ getClass().getName() ])
+		Map<String,Object> flags = Maps.newLinkedHashMap(obtainProvisioningFlags(location))
         if (!flags.inboundPorts) {
             def ports = getRequiredOpenPorts();
             if (ports) flags.inboundPorts = getRequiredOpenPorts()

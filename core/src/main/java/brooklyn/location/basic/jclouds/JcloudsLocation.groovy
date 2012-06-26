@@ -605,7 +605,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             if (parent.getProvider().equals("aws-ec2")) {
                 return JcloudsUtil.waitForPasswordOnAws(parent.getComputeService(), node, 15, TimeUnit.MINUTES);
             } else {
-                return node.getCredentials()?:getPassword();
+                return node.getCredentials()?.getPassword();
             }
         }
     }
