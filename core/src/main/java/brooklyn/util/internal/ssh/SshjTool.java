@@ -396,10 +396,12 @@ public class SshjTool implements SshTool {
         
         createFile(ImmutableMap.of("permissions", "0700"), scriptPath, scriptContents);
         
+        // use "-f" because some systems have "rm" aliased to "rm -i"; use "< /dev/null" to guarantee doesn't hang
         List<String> cmds = ImmutableList.of(
-                scriptPath,
+                scriptPath+" < /dev/null",
                 "RESULT=$?",
-                "rm -f "+scriptPath, // use "-f" because some systems have "rm" aliased to "rm -i"
+                "echo \"Executed "+scriptPath+", result $RESULT\"", 
+                "rm -f "+scriptPath+" < /dev/null", 
                 "exit $RESULT");
         
         Integer result = acquire(new ShellAction(cmds, out, err));

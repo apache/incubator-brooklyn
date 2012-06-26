@@ -39,24 +39,13 @@
     {% capture l2name %}{{ page.title }}{% endcapture %}
     {% capture l2link %}{{ pagesiteurl }}{% endcapture %}
 {% endif %}
-
-<div class="breadcrumbs">
-    <span class="breadcrumb-item bc1"><a class='breadcrumb bc1' href="{{l1link}}">{{ l1name }}</a></span>
+            
+<p id="breadcrumb">
+    <a href="{{l1link}}">{{ l1name }}</a>
     {% if l2name %}
-        <span class="bcsep bc1">&raquo;</span> <span class="breadcrumb-item bc2"><a class='breadcrumb bc2' href="{{l2link}}">{{l2name}}</a></span>
+        &raquo; <a href="{{l2link}}">{{l2name}}</a>
         {% if l3name %}
-            <span class="bcsep bc2">&raquo;</span> <span class="breadcrumb-item bc2"><a class='breadcrumb bc3' href="{{l3link}}">{{l3name}}</a></span>
+            &raquo; <a href="{{l3link}}">{{l3name}}</a>
         {% endif %}
     {% endif %}
-</div>
-
-<!-- FIND HIERARCHY IN TOC AND USE THAT
-        {% assign b = " " %}
-        {% capture b %}{{site.base_dir}}{% endcapture %}
-        <span class="breadcrumb-item"><a class='breadcrumb' href="{{site.base_dir}}/">Home</a></span>
-        {% for p in page.categories %}
-        <span class="bcsep">&raquo;</span> <span class="breadcrumb-item"><a class='breadcrumb' href="{{b}}/{{p}}">{{p}}</a></span>
-        {% capture b %}{{b}}/{{p}}{% endcapture %}
-        {%endfor%}
- -->
- 
+</p>

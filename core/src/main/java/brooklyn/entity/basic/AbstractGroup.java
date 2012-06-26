@@ -43,7 +43,7 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
     }
     
     public AbstractGroup(Entity owner) {
-        this(Collections.emptyMap(), null);
+        this(Collections.emptyMap(), owner);
     }
 
     /**

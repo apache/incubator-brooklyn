@@ -5,6 +5,8 @@ import java.lang.reflect.Field;
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import com.google.common.collect.Maps;
+
 import brooklyn.config.BrooklynProperties
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag
@@ -66,10 +68,11 @@ public class CredentialsFromEnv {
         props.credential = getRequiredProviderSpecificValue("credential")
         
         // TODO do these need to be required?:
-        props.privateKeyFile = findProviderSpecificValueFile("private-key-file",
-            ["~/.ssh/id_rsa", "~/.ssh/id_dsa"]);
-        props.publicKeyFile = findProviderSpecificValueFile("public-key-file",
-            props.privateKeyFile?[props.privateKeyFile+".pub"]:[])
+        String privateKeyFile = findProviderSpecificValueFile("private-key-file") ?: ((props.noDefaultSshKeys || sysProps.noDefaultSshKeys) ? null : pickExistingFile(["~/.ssh/id_rsa", "~/.ssh/id_dsa"]));
+        if (privateKeyFile != null) props.privateKeyFile = privateKeyFile;
+        
+        String publicKeyFile = findProviderSpecificValueFile("public-key-file") ?: ((props.noDefaultSshKeys || sysProps.noDefaultSshKeys || !privateKeyFile) ? null : pickExistingFile([privateKeyFile+".pub"]));
+        if (publicKeyFile != null) props.publicKeyFile = publicKeyFile;
     }
 
     public String getProvider() { props.provider }
@@ -90,10 +93,10 @@ public class CredentialsFromEnv {
             "JCLOUDS_"+convertFromPropertyToShell(type)+"_"+convertFromPropertyToShell(provider),
             "brooklyn.jclouds."+type,
             "JCLOUDS_"+convertFromPropertyToShell(type) );
-    }   
-    protected String findProviderSpecificValueFile(String type, List defaults) {
-        String n = getProviderSpecificValue(type);
-        List candidates = n ? [n] : defaults
+    }
+
+    protected String pickExistingFile(List candidates) {
+        if (!candidates) return null;
         
         String home=null;
         for (String f: candidates) {
@@ -106,8 +109,24 @@ public class CredentialsFromEnv {
             if (ff.exists()) return f;
         }
         throw new IllegalStateException("Unable to locate "+
-            (candidates.size()>1 ? "any of the candidate SSH key files "+candidates : "SSH key file "+candidates.get(0) ) +
+            (candidates.size()>1 ? "any of the candidate files "+candidates : "file "+candidates.get(0) ) +
             "; set brooklyn.jclouds.${provider}.public-key-file" );
+    }
+    
+    protected String findProviderSpecificValueFile(String type) {
+        String f = getProviderSpecificValue(type);
+        if (!f) return null
+        
+        String home=null;
+        if (f.startsWith("~/")) {
+            if (home==null) home = sysProps.getFirst("user.home", defaultIfNone: null);
+            if (home==null) home = System.getProperty("user.home")
+            f = home + f.substring(1)
+        }
+        File ff = new File(f);
+        if (ff.exists()) return f;
+        throw new IllegalStateException("Unable to locate SSH key file "+f+
+                "; set brooklyn.jclouds.${provider}.public-key-file" );
     }
     
     static Set WARNED_MISSING_KEY_FILES = []

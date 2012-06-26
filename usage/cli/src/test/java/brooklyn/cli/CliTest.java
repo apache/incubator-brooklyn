@@ -40,14 +40,14 @@ public class CliTest {
     public void testLaunchCommand() throws ParseException {
         Cli<BrooklynCommand> cli = Main.buildCli();
         BrooklynCommand command = cli.parse("launch", "--app", "my.App", "--location", "localhost");
-        assertTrue(command instanceof LaunchCommand);
+        assertTrue(command instanceof LaunchCommand, ""+command);
         String details = command.toString();
-        assertTrue(details.contains("app=my.App"));   
-        assertTrue(details.contains("script=null"));
-        assertTrue(details.contains("location=[localhost]"));
-        assertTrue(details.contains("port=8081"));
-        assertTrue(details.contains("noConsole=false"));
-        assertTrue(details.contains("noShutdwonOnExit=false"));
+        assertTrue(details.contains("app=my.App"), details);   
+        assertTrue(details.contains("script=null"), details);
+        assertTrue(details.contains("location=localhost"), details);
+        assertTrue(details.contains("port=8081"), details);
+        assertTrue(details.contains("noConsole=false"), details);
+        assertTrue(details.contains("noShutdwonOnExit=false"), details);
     }
 
     @Test(expectedExceptions = ParseException.class, expectedExceptionsMessageRegExp = "Required option '-a' is missing")

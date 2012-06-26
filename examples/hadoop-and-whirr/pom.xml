@@ -77,7 +77,12 @@
                     <filesets>
                         <fileset>
                             <directory>${project.basedir}</directory>
-							<includes><include>${project.artifactId}/</include></includes>
+							<includes>
+                                <include>${project.artifactId}/</include>
+                                <include>brooklyn*.log</include>
+                                <include>brooklyn*.log.*</include>
+                                <include>stacktrace.log</include>
+                            </includes>
                         </fileset>
                     </filesets>
                 </configuration>

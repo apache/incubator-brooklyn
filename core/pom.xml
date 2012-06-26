@@ -27,6 +27,11 @@
             <artifactId>jclouds-slf4j</artifactId>
             <version>${jclouds.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.jclouds.driver</groupId>
+            <artifactId>jclouds-bouncycastle</artifactId>
+            <version>${jclouds.version}</version>
+        </dependency>
 		<dependency>
 			<groupId>org.codehaus.groovy</groupId>
 			<artifactId>groovy-all</artifactId>
@@ -74,6 +79,24 @@
             <scope>compile</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.jclouds.api</groupId>
+            <artifactId>cloudservers</artifactId>
+            <version>${jclouds.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jclouds.provider</groupId>
+            <artifactId>cloudservers-uk</artifactId>
+            <version>${jclouds.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jclouds.api</groupId>
+            <artifactId>vcloud</artifactId>
+            <version>${jclouds.version}</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>mx4j</groupId>
             <artifactId>mx4j-tools</artifactId>

@@ -31,6 +31,7 @@ import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -108,8 +109,8 @@ public class Main {
         public String script = null;
         
         @Option(name = { "-l", "--location", "--locations" }, title = "location list",
-                description = "Specifies the locations where the application will be launched.")
-        public Collection<String> locations;
+                description = "Specifies the locations where the application will be launched. You can specify more than one location like this: \"loc1,loc2,loc3\"")
+        public String locations;
         
         @Option(name = { "-p", "--port" }, title = "port number",
                 description = "Specifies the port to be used by the Brooklyn Management Console.")
@@ -145,7 +146,7 @@ public class Main {
             log.debug("Invoked launch command");
 
             if (verbose) {
-                System.out.println("Launching brooklyn app: "+app+" in "+Iterables.toString(locations));
+                System.out.println("Launching brooklyn app: "+app+" in "+locations);
             }
             
             ResourceUtils utils = new ResourceUtils(this);
@@ -165,13 +166,14 @@ public class Main {
             }
             
             // Figure out the brooklyn location(s) where to launch the application
+            Iterable<String> parsedLocations = Splitter.on(",").split(locations);
             List<Location> brooklynLocations = new LocationRegistry().getLocationsById(
-                    (locations==null || Iterables.isEmpty(locations)) ? ImmutableSet.of(CommandLineLocations.LOCALHOST) : locations);
+                    (parsedLocations==null || Iterables.isEmpty(parsedLocations)) ? ImmutableSet.of(CommandLineLocations.LOCALHOST) : parsedLocations);
             
             // Start the application
             log.info("Adding application under brooklyn management");
             BrooklynLauncher.manage(application, port, !noShutdownOnExit, !noConsole);
-            log.info("Starting brooklyn application: {}", app);
+            log.info("Starting brooklyn application {} in location(s) {}", app, brooklynLocations);
             application.start(brooklynLocations);
             
             if (verbose) {

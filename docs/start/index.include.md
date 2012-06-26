@@ -13,22 +13,23 @@ manageable clusters and fabrics:
 * use PaaS's such as OpenShift, alongside self-built clusters, for maximum flexibility
 
 Brooklyn makes roll-out an integral part of the DevOps chain,
-as code which can be version-controlled and automatically tested,
+as code which can be version-controlled and programmatically tested,
 and portable across many clouds or fixed IP machines,
-using [jclouds](http://jclouds.org),
+using [jclouds](http://jclouds.org) -- 
 or just hitting ``localhost`` for quick dev/test.
 
 Brooklyn's main emphasis is post-deployment, **managing** an application once it is live:
 management policies are an integral part of the deployment descriptor,
-and at runtime have access to all aspects of the deployment.
-They are aware of the deployment topology (hierarchical) and locations (machines, PaaSes, and jurisdictions), 
-as well as launch mechanisms, instrumentation from managed entities or third-party systems,
-and operational goals and constraints.
-This means they're all set, once the application is launched, to keep the application running optimally,
-based on whatever *optimally* means for a particular application.
+and at runtime policies have access to all aspects of the deployment.
+They are aware of the deployment topology (hierarchical) and
+locations (machines, PaaSes, and jurisdictions), 
+as well as scripts, instrumentation, and operational goals and constraints.
+This means they're all set, once the application is launched, 
+to keep the application running optimally,
+based on whatever *optimally* means in that context.
 
 These deployment patterns and management policies are expressed as Java (and Groovy) classes,
-open-sourced here, and giving you full control over what you want to happen.
+open-sourced here and giving you full control over what you want to happen.
 More importantly, however, this code can be shared, improved, and extended.
 
 We're still near the beginning of figuring this out: 

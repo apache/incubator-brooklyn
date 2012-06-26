@@ -36,6 +36,7 @@ import brooklyn.util.internal.Repeater
 import com.google.common.base.Preconditions
 import com.google.common.base.Predicate
 import com.google.common.collect.Iterables
+import com.google.common.collect.Maps
 
 /**
  * An {@link Entity} representing a piece of software which can be installed, run, and controlled.
@@ -72,6 +73,10 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 	@SetFromFlag("env")
 	public static final BasicConfigKey<Map> SHELL_ENVIRONMENT = [ Map, "shell.env", "Map of environment variables to pass to the runtime shell", [:] ]
 
+    @SetFromFlag("provisioningProperties")
+    public static final BasicConfigKey<Map<String,Object>> PROVISIONING_PROPERTIES = [ Map, "provisioning.properties", 
+            "Custom properties to be passed in when provisioning a new machine", [:] ]
+    
 	public static final AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME
 	public static final AttributeSensor<String> ADDRESS = Attributes.ADDRESS
 
@@ -187,18 +192,26 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 		startInLocation(location)
 	}
 
-    protected Map<String,Object> getProvisioningFlags(MachineProvisioningLocation location) {
-        Map<String,Object> flags = [:];
-        flags << location.getProvisioningFlags([ getClass().getName() ]) ?: [:];
-        if (!flags.inboundPorts) {
+    protected Map<String,Object> obtainProvisioningFlags(MachineProvisioningLocation location) {
+        Map result = Maps.newLinkedHashMap(location.getProvisioningFlags([ getClass().getName() ]));
+        result.putAll(getConfig(PROVISIONING_PROPERTIES));
+        if (!result.inboundPorts) {
             def ports = getRequiredOpenPorts();
-            if (ports) flags.inboundPorts = getRequiredOpenPorts()
+            if (ports) result.inboundPorts = getRequiredOpenPorts()
         }
-        flags.callerContext = ""+this;
-        return flags;
+        result.callerContext = ""+this;
+        return result;
     }
+    
+    /** @deprecated in 0.4.0. use obtainPF. 
+     * introduced in a branch which duplicates changes in master where it is called "obtainPF".
+     * will remove as soon as those uses are updated. */
+    protected Map<String,Object> getProvisioningFlags(MachineProvisioningLocation location) {
+        return obtainProvisioningFlags(location);
+    }
+    
 	public void startInLocation(MachineProvisioningLocation location) {
-		Map<String,Object> flags = getProvisioningFlags(location);
+		Map<String,Object> flags = obtainProvisioningFlags(location);
         if (!(location in LocalhostMachineProvisioningLocation))
             LOG.info("SoftwareProcessEntity {} obtaining a new location instance in {} with ports {}", this, location, flags.inboundPorts)
 		provisioningLoc = location

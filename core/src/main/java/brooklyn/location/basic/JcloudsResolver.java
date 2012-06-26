@@ -82,7 +82,11 @@ public class JcloudsResolver implements LocationResolver {
             throw new NoSuchElementException("Unknown location '"+spec+"'");
         }
 
-        Map jcloudsProperties = new MutableMap(new CredentialsFromEnv(BrooklynProperties.Factory.newEmpty().addFromMap(properties), provider).asMap());
+        Map jcloudsProperties = new MutableMap(new CredentialsFromEnv(BrooklynProperties.Factory.newDefault().addFromMap(properties), provider).asMap());
+        
+        // TODO Adding properties here, so user can programmatically pass things through to JcloudsLocation for provisioning
+        jcloudsProperties.putAll(properties);
+        
         if (PROVIDERS_LOADER.contains(provider)) {
             // providers from ServiceLoader take a location (endpoint already configured)
             return new JcloudsLocationFactory(jcloudsProperties).newLocation(region);

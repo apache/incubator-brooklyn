@@ -11,9 +11,11 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit
 
 import javax.annotation.Nullable
 import javax.annotation.OverridingMethodsMustInvokeSuper;
+
 
 import org.jclouds.Constants
 import org.jclouds.compute.ComputeService
@@ -57,6 +59,40 @@ import com.google.common.collect.Iterables
 import com.google.common.io.Files
 import com.google.common.util.concurrent.ListenableFuture;
 
+/**
+ * For provisioning and managing VMs in a particular provider/region, using jclouds.
+ * 
+ * Configuration flags include the following:
+ *  - userName (defaults to "root")
+ *  - publicKeyFile
+ *  - privateKeyFile
+ *  - sshPublicKey
+ *  - sshPrivateKey
+ *  - rootSshPrivateKey (@Beta)
+ *  - rootSshPublicKey (@Beta)
+ *  - rootSshPublicKeyData (@Beta; calls templateOptions.authorizePublicKey())
+ *  - dontCreateUser (otherwise if user != root, then creates this user)
+ *  - provider (e.g. "aws-ec2")
+ *  - providerLocationId (e.g. "eu-west-1")
+ *  - defaultImageId
+ * 
+ * The flags can also includes values passed straight through to jclouds; to the TemplateBuilder:
+ *  - minRam
+ *  - hardwareId
+ *  - imageSize
+ *  - imageId
+ *  - imageDescriptionRegex
+ *  - imageNameRegex
+ *  - imageDescriptionPattern (deprecated: use imageDescriptionRegex)
+ *  - imageNamePattern (deprecated: use imageNameRegex)
+ * 
+ * And flag values passed to TemplateOptions:
+ *  - securityGroups (for ec2)
+ *  - inboundPorts
+ *  - userMetadata
+ *  - runAsRoot
+ *  - overrideLoginUser
+ */
 public class JcloudsLocation extends AbstractLocation implements MachineProvisioningLocation<SshMachineLocation> {
 
     // TODO Needs a big overhaul of how config is being managed, and what the property names are (particularly for private-keys)
@@ -147,15 +183,17 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             
             if (!unusedConf.remove("userName")) allconf.userName = ROOT_USERNAME
             // perhaps deprecate supply of data (and of different root key?) to keep it simpler?
-            if (unusedConf.remove("publicKeyFile")) allconf.sshPublicKeyData = Files.toString(instance.getPublicKeyFile(), Charsets.UTF_8)
-            if (unusedConf.remove("privateKeyFile")) allconf.sshPrivateKeyData = Files.toString(instance.getPrivateKeyFile(), Charsets.UTF_8)
+            if (unusedConf.remove("publicKeyFile")) allconf.sshPublicKeyData = Files.toString(instance.getPublicKeyFile(allconf), Charsets.UTF_8)
+            if (unusedConf.remove("privateKeyFile")) allconf.sshPrivateKeyData = Files.toString(instance.getPrivateKeyFile(allconf), Charsets.UTF_8)
             if (unusedConf.remove("sshPublicKey")) allconf.sshPublicKeyData = Files.toString(asFile(allconf.sshPublicKey), Charsets.UTF_8)
             if (unusedConf.remove("sshPrivateKey")) allconf.sshPrivateKeyData = Files.toString(asFile(allconf.sshPrivateKey), Charsets.UTF_8)
             if (unusedConf.remove("rootSshPrivateKey")) allconf.rootSshPrivateKeyData = Files.toString(asFile(allconf.rootSshPrivateKey), Charsets.UTF_8)
             if (unusedConf.remove("rootSshPublicKey")) allconf.rootSshPublicKeyData = Files.toString(asFile(allconf.rootSshPublicKey), Charsets.UTF_8)
-     
+            if (unusedConf.remove("dontCreateUser")) allconf.dontCreateUser = true;
+            
             unusedConf.remove("provider");
             unusedConf.remove("providerLocationId");
+            unusedConf.remove("noDefaultSshKeys");
             return this;
         }
         
@@ -192,10 +230,14 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         providerLocationId:{}, provider:{} ];
     
     /** returns public key file, if one has been configured */
-    public File getPublicKeyFile() { asFile(conf.publicKeyFile) ?: asFile(conf.sshPublicKey) }
+    public File getPublicKeyFile() { return getPublicKeyFile(conf); }
+
+    public File getPublicKeyFile(Map allconf) { asFile(allconf.publicKeyFile) ?: asFile(allconf.sshPublicKey) }
     
     /** returns private key file, if one has been configured */
-    public File getPrivateKeyFile() { asFile(conf.privateKeyFile) ?: asFile(conf.sshPrivateKey) }
+    public File getPrivateKeyFile() { return getPrivateKeyFile(conf); }
+
+    public File getPrivateKeyFile(Map allconf) { asFile(allconf.privateKeyFile) ?: asFile(allconf.sshPrivateKey) }
     
     public ComputeService getComputeService(Map flags=[:]) {
         BrooklynJcloudsSetupHolder setup = new BrooklynJcloudsSetupHolder(this).useConfig(flags).apply();
@@ -256,26 +298,35 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             
             
             // Wait for the VM to be reachable over SSH
-            LOG.info("Started VM in ${setup.allconf.providerLocationId ?: setup.allconf.provider} for ${setup.callerContext}; "+
-                "waiting for it to be sshable on ${setup.allconf.userName}@${vmIp}");
-            boolean reachable = new Repeater()
+            if (setup.allconf.waitForSshable != null ? setup.allconf.waitForSshable : true) {
+                LOG.info("Started VM in ${setup.allconf.providerLocationId ?: setup.allconf.provider} for ${setup.callerContext}; "+
+                        "waiting for it to be sshable on ${setup.allconf.userName}@${vmIp}");
+                boolean reachable = new Repeater()
                     .repeat()
                     .every(1,SECONDS)
                     .until {
-                        Statement statement = Statements.newStatementList(exec('date'))
-                        ExecResponse response = computeService.runScriptOnNode(node.getId(), statement, overrideLoginCredentials(expectedCredentials));
+                        Statement statement = Statements.newStatementList(exec('hostname'))
+                        ExecResponse response = computeService.runScriptOnNode(node.getId(), statement, 
+                                overrideLoginCredentials(expectedCredentials));
                         return response.exitCode == 0 }
                     .limitTimeTo(START_SSHABLE_TIMEOUT,MILLISECONDS)
                     .run()
-        
-            if (!reachable) {
-                throw new IllegalStateException("SSH failed for ${setup.allconf.userName}@${vmIp} (for ${setup.callerContext}) after waiting ${START_SSHABLE_TIMEOUT}ms");
-            }
 
+                if (!reachable) {
+                    throw new IllegalStateException("SSH failed for ${setup.allconf.userName}@${vmIp} (for ${setup.callerContext}) after waiting ${START_SSHABLE_TIMEOUT}ms");
+                }
+            }
+            
             String vmHostname = getPublicHostname(node, setup.allconf)
             Map sshConfig = [:]
-            if (getPrivateKeyFile()) sshConfig.keyFiles = [ getPrivateKeyFile().getCanonicalPath() ];
-            if (setup.allconf.sshPrivateKeyData) sshConfig.privateKey = setup.allconf.sshPrivateKeyData
+            if (setup.allconf.sshPrivateKeyData) {
+                sshConfig.privateKey = setup.allconf.sshPrivateKeyData;
+            } else if (getPrivateKeyFile()) {
+                sshConfig.keyFiles = [ getPrivateKeyFile().getCanonicalPath() ];
+            } else if (node.getCredentials().getPassword() != null) {
+                sshConfig.password = node.getCredentials().getPassword();
+            }
+            
             if (LOG.isDebugEnabled())
                 LOG.debug("creating JcloudsSshMachineLocation for {}@{} for {} with {}", setup.allconf.userName, vmHostname, setup.callerContext, Entities.sanitize(sshConfig))
             JcloudsSshMachineLocation sshLocByHostname = new JcloudsSshMachineLocation(this, node,
@@ -355,6 +406,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         String id = checkNotNull(flags.id, "id")
         String hostname = checkNotNull(flags.hostname, "hostname")
         String username = checkNotNull(flags.userName, "userName")
+        String password = flags.password
         
         LOG.info("Rebinding to VM $id ($username@$hostname), in jclouds location for provider $provider")
         
@@ -374,8 +426,18 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         // TODO confirm we can SSH ?
 
         Map sshConfig = [:]
-        if (getPrivateKeyFile()) sshConfig.keyFiles = [ getPrivateKeyFile().getCanonicalPath() ] 
-        if (setup.allconf.sshPrivateKeyData) sshConfig.privateKeyData = setup.allconf.sshPrivateKeyData 
+
+        if (password != null) {
+            sshConfig.password = password;
+        } else if (setup.allconf.sshPrivateKeyData) {
+            sshConfig.privateKeyData = setup.allconf.sshPrivateKeyData;
+            sshConfig.privateKey = setup.allconf.sshPrivateKeyData;
+        } else if (getPrivateKeyFile()) {
+            sshConfig.keyFiles = [ getPrivateKeyFile().getCanonicalPath() ];
+        } else if (node.getCredentials().getPassword() != null) {
+            sshConfig.password = node.getCredentials().getPassword();
+        }
+
         JcloudsSshMachineLocation sshLocByHostname = new JcloudsSshMachineLocation(this, node,
                 address:hostname, 
                 displayName:hostname,
@@ -458,7 +520,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                 }
             },
             inboundPorts:      { TemplateOptions t, Map props, Object v ->
-                Object[] inboundPorts = (v instanceof Collection) ? v.toArray(new Integer[0]) : v;
+                int[] inboundPorts = (v instanceof Collection) ? v.toArray(new int[0]) : v;
                 if (LOG.isDebugEnabled()) LOG.debug("opening inbound ports ${Arrays.toString(v)} for ${t}");
                 t.inboundPorts(inboundPorts);
             },
@@ -466,6 +528,8 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             rootSshPublicKeyData:  { TemplateOptions t, Map props, Object v -> t.authorizePublicKey(v) },
             sshPublicKey:  { TemplateOptions t, Map props, Object v -> /* special; not included here */  },
             userName:  { TemplateOptions t, Map props, Object v -> /* special; not included here */ },
+            runAsRoot:  { TemplateOptions t, Map props, Object v -> t.runAsRoot(v) },
+            overrideLoginUser:  { TemplateOptions t, Map props, Object v -> t.overrideLoginUser(v) }
         ];
 
     private Template buildTemplate(ComputeService computeService, String providerLocationId, BrooklynJcloudsSetupHolder setup) {
@@ -513,7 +577,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         //but not elsewhere, e.g. on rackspace)
         
         // Setup the user
-        if (properties.userName && !(properties.userName in NON_ADDABLE_USERS)) {
+        if (properties.userName && !(properties.userName in NON_ADDABLE_USERS) && !properties.dontCreateUser) {
             UserAdd.Builder userBuilder = UserAdd.builder();
             userBuilder.login(properties.userName);
             String publicKeyData = properties.sshPublicKeyData
@@ -521,17 +585,30 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             Statement userBuilderStatement = userBuilder.build();
             options.runScript(userBuilderStatement);
         }
-                  
+        
         LOG.debug("jclouds using template $template to provision machine in $this for ${setup.callerContext}");
         return template;
     }
     
     private String getPublicHostname(NodeMetadata node, Map allconf) {
         if (allconf?.provider?.equals("aws-ec2")) {
-            return getPublicHostnameAws(node, allconf);
-        } else {
-            return getPublicHostnameGeneric(node, allconf);
+            String vmIp = null;
+            try {
+                vmIp = JcloudsUtil.getFirstReachableAddress(node);
+            } catch (Exception e) {
+                LOG.warn("Error reaching aws-ec2 instance on port 22; falling back to jclouds metadata for address", e);
+            }
+            if (vmIp != null) {
+                try {
+                    return getPublicHostnameAws(vmIp, allconf);
+                } catch (Exception e) {
+                    LOG.warn("Error querying aws-ec2 instance over ssh for its hostname; falling back to first reachable IP", e);
+                    return vmIp;
+                }
+            }
         }
+        
+        return getPublicHostnameGeneric(node, allconf);
     }
     
     private String getPublicHostnameGeneric(NodeMetadata node, @Nullable Map allconf) {
@@ -548,14 +625,12 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         }
     }
     
-    private String getPublicHostnameAws(NodeMetadata node, Map allconf) {
-        String vmIp = JcloudsUtil.getFirstReachableAddress(node);
-        
+    private String getPublicHostnameAws(String ip, Map allconf) {
         Map sshConfig = [:]
         if (getPrivateKeyFile()) sshConfig.keyFiles = [ getPrivateKeyFile().getCanonicalPath() ] 
         if (allconf.sshPrivateKeyData) sshConfig.privateKeyData = allconf.sshPrivateKeyData
         // TODO messy way to get an SSH session 
-        SshMachineLocation sshLocByIp = new SshMachineLocation(address:vmIp, username:allconf.userName, config:sshConfig);
+        SshMachineLocation sshLocByIp = new SshMachineLocation(address:ip, username:allconf.userName, config:sshConfig);
         
         ByteArrayOutputStream outStream = new ByteArrayOutputStream()
         ByteArrayOutputStream errStream = new ByteArrayOutputStream()
@@ -565,7 +640,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         for (String line : outLines) {
             if (line.startsWith("ec2-")) return line.trim()
         }
-        throw new IllegalStateException("Could not obtain hostname for vm $vmIp ("+node.getId()+"); exitcode="+exitcode+"; stdout="+outString+"; stderr="+new String(errStream.toByteArray()))
+        throw new IllegalStateException("Could not obtain hostname for vm $ip; exitcode="+exitcode+"; stdout="+outString+"; stderr="+new String(errStream.toByteArray()))
     }
     
     public static class JcloudsSshMachineLocation extends SshMachineLocation {
@@ -619,5 +694,18 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                 throw new IllegalStateException("Error running remote commands (code ${result.exitStatus}): ${commands}");
         }
     
+        /**
+         * Retrieves the password for this VM, if one exists. The behaviour/implementation is different for different clouds.
+         * e.g. on Rackspace, the password for a windows VM is available immediately; on AWS-EC2, for a Windows VM you need 
+         * to poll repeatedly until the password is available which can take up to 15 minutes.
+         */
+        public String waitForPassword() {
+            // TODO Hacky; don't want aws specific stuff here but what to do?!
+            if (parent.getProvider().equals("aws-ec2")) {
+                return JcloudsUtil.waitForPasswordOnAws(parent.getComputeService(), node, 15, TimeUnit.MINUTES);
+            } else {
+                return node.getCredentials()?.getPassword();
+            }
+        }
     }
 }

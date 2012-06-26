@@ -5,15 +5,18 @@
   <title>{{ page.title }}</title>
   <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
 
-  <link rel="stylesheet" type="text/css" href="{{ site.url }}/style/main.css" />
-  <link rel="stylesheet" type="text/css" href="{{ site.url }}/style/page.css" />
-  <link rel="stylesheet" type="text/css" href="{{ site.url }}/style/toc.css" />
-  <link rel="stylesheet" type="text/css" href="{{ site.url }}/style/docs/code.css" />
+  <link rel="stylesheet" href="{{ site.url }}/style/style.css" type="text/css" media="screen" />
+  <link rel="stylesheet" href="{{ site.url }}/style/toc.css" type="text/css" media="screen" />
+  <link rel="stylesheet" href="{{ site.url }}/style/docs/code.css" type="text/css" media="screen" />
+
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
   
 	<!-- Sidebar/ToC Scripts and CSS -->
 	<script src="{{ site.url }}/style/js/jquery/jquery-1.7.1.min.js"></script>
 	<script src="{{ site.url }}/style/js/jquery/jquery-ui-1.8.18.custom.min.js"></script>
 	<link rel="stylesheet" type="text/css" href="{{ site.url }}/style/js/jquery/smoothness/jquery-ui-1.8.18.custom.css" />
+	
+	<script type="text/javascript" src="{{ site.url }}/style/js/superfish.js"></script>
 	
 <!-- Clipboard support -->
 <script src="{{ site.url }}/style/js/zeroclipboard/ZeroClipboard.js"></script>
@@ -48,6 +51,19 @@ $(document).ready(function() {
 });
 </script>
 
+    <script type="text/javascript">
+        // initialise menu delay
+        jQuery(function(){
+            jQuery('ul#mainmenu').superfish({ 
+                autoArrows:  false,  // disable generation of arrow mark-up 
+                dropShadows: false,  // disable drop shadows 
+                disableHI:   true,   // set to true to disable hoverIntent detection 
+                delay:       500,    // the delay in milliseconds that the mouse can remain outside a submenu without it closing 
+                speed:       'fast', 
+            });
+        });
+    </script>
+
 <script type="text/javascript"> <!-- search -->
 	$(function() {
 		$('#simple_google').submit(function() {
@@ -72,56 +88,68 @@ _gaq.push(['_trackPageview']);
 </head>
 
 <body>
-  <div id="all">
 
-    <div id="page_header" class="page_row">
-     <table width="100%"><tr><td rowspan="2">
-      <div id="header_logo">
-        <a href = "/"><img height="68" width="220" border='0' src="{{ site.url }}/style/brooklyn-logo.png"/></a>
-      </div>
-     </td><td align="right" valign="top" width="100%">
-        <div id="top-right-quick-links">
-            <a href="{{site.url}}/meta/contact.html">Contact</a> &nbsp;|&nbsp;
-            <a href="{{site.url}}/start/download.html">Download</a> &nbsp;|&nbsp;
-            <a href="https://twitter.com/#!/search?q=brooklyncentral">Twitter</a>
+    <ul id="shortcuts" title="Accessibility shortcuts menu">
+        <li><a href="#maincontent">Skip to main content</a></li>
+    </ul>
+   
+
+<div id="container">
+
+    <div id="header">
+    
+        <div id="identity">
+            <a href="http://brooklyncentral.github.com/" rel="home">Brooklyn</a>
         </div>
-     </td></tr>
-     <tr><td valign="bottom">
-     </td></tr></table>
-    </div>
+        
+        <ul id="quicklinks">
+            <li><a href="{{site.url}}/meta/contact.html">Contact</a></li>
+            <li><a href="{{site.url}}/start/download.html">Download</a></li>
+            <li><a href="https://twitter.com/#!/search?q=brooklyncentral">Twitter</a></li>
+        </ul>
 
-    {% include topbar.html %}
+        <div id="menubar">  
 
-    <div class="page_row">
+{% include topbar.html %}                    
 
+            <form method="get" id="simple_google" class="searchform" action="http://www.google.com/search">
+                <input type="text" class="searchinput" value="Search: type &amp; hit enter" name="qfront" id="qfront" onfocus="if (this.value == 'Search: type &amp; hit enter') {this.value = '';}" onblur="if (this.value == '') {this.value = 'Search: type &amp; hit enter';}" />
+                <input type="hidden" id="q" value="Search" />
+            </form>
+            
+        </div>
+                
+    </div><!--header-->
+    
+    <div id="contentcontainer">
+    
+        <div id="maincontent">
 
-      <div id="page_content">
-        {% include breadcrumbs.html %}
-		
-		<h1 id="header_title">{{ page.title }}</h1>
-		<hr/>
+{% include breadcrumbs.html %}
 
-		{{ content }}
+<h1 id="header_title">{{ page.title }}</h1>
+    
+{{ content }}
+
+        </div><!--maincontent-->
+        
+      <div id="sidebar">
+      
+{% include sidebar.html %}
+
       </div>
 
-      <div id="page_toc">
-        <!-- Sidebar -->
-        {% include sidebar.html %}
-      </div>
+    </div><!--contentcontainer-->
+        
+    <div id="footer">
+        <p id="copyright">
+            <b>brooklyn is distributed under the Apache License v2.0.</b><br/>
+            brooklyn is a registered trademark of Cloudsoft Corporation.<br/>
+            &copy; 2012 Cloudsoft Corporation.
+        </p>
+    </div><!--footer -->
 
-    </div>
-
-    <div class="page_row"/>
-
-<hr/>
-
-    <div id="page_footer" class="page_row">
-      <b>brooklyn is distributed under the Apache License v2.0.</b><br/>
-      brooklyn is a registered trademark of Cloudsoft Corporation.<br/>
-      &copy; 2012 Cloudsoft Corporation.
-    </div>
-
-  </div>
+</div><!--container-->
 
 </body>
 </html>
