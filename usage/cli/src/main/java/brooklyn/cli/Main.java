@@ -5,7 +5,7 @@ import groovy.lang.GroovyShell;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Collection;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -35,6 +35,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,12 +46,16 @@ public class Main {
     public static final int PARSE_ERROR = 1;
     public static final int EXECUTION_ERROR = 2;
 
+    private static final Splitter LOCATIONS_SPLITTER = Splitter.on(',')
+            .trimResults()
+            .omitEmptyStrings();
+
     public static final Logger log = LoggerFactory.getLogger(Main.class);
 
     public static void main(String...args) {
         Cli<BrooklynCommand> parser = buildCli();
         try {
-            log.debug("Parsing command line arguments: {}",args);
+            log.debug("Parsing command line arguments: {}",Arrays.asList(args));
             BrooklynCommand command = parser.parse(args); 
             log.debug("Executing command: {}", command);
             command.call();
@@ -97,19 +102,24 @@ public class Main {
         }
     }
     
-    @Command(name = "launch", description = "Starts a brooklyn application. Note that a BROOKLYN_CLASSPATH environment variable needs to be set up beforehand to point to the user application classpath.")
+    @Command(name = "launch", description = "Starts a brooklyn application. " +
+            "Note that a BROOKLYN_CLASSPATH environment variable needs to be set up beforehand " +
+            "to point to the user application classpath.")
     public static class LaunchCommand extends BrooklynCommand {
         @Option(name = { "-a", "--app" }, required = true, title = "application class or file",
-                description = "The Application to start. For example my.AppName or file://my/AppName.groovy or classpath://my/AppName.groovy")
+                description = "The Application to start. " +
+                        "For example my.AppName or file://my/AppName.groovy or classpath://my/AppName.groovy")
         public String app;
 
         @Beta
         @Option(name = { "-s", "--script" }, title = "script URI",
-                description = "EXPERIMENTAL. URI for a Groovy script to parse and load. This script will run before starting the app.")
+                description = "EXPERIMENTAL. URI for a Groovy script to parse and load." +
+                        " This script will run before starting the app.")
         public String script = null;
         
         @Option(name = { "-l", "--location", "--locations" }, title = "location list",
-                description = "Specifies the locations where the application will be launched. You can specify more than one location like this: \"loc1,loc2,loc3\"")
+                description = "Specifies the locations where the application will be launched. " +
+                        "You can specify more than one location like this: \"loc1,loc2,loc3\"")
         public String locations;
         
         @Option(name = { "-p", "--port" }, title = "port number",
@@ -166,9 +176,11 @@ public class Main {
             }
             
             // Figure out the brooklyn location(s) where to launch the application
-            Iterable<String> parsedLocations = Splitter.on(",").split(locations);
+            Iterable<String> parsedLocations = LOCATIONS_SPLITTER.split(locations);
+            log.info("Parsed user provided location(s): {}",Lists.newArrayList(parsedLocations));
             List<Location> brooklynLocations = new LocationRegistry().getLocationsById(
-                    (parsedLocations==null || Iterables.isEmpty(parsedLocations)) ? ImmutableSet.of(CommandLineLocations.LOCALHOST) : parsedLocations);
+                    (parsedLocations==null || Iterables.isEmpty(parsedLocations)) ?
+                            ImmutableSet.of(CommandLineLocations.LOCALHOST) : parsedLocations);
             
             // Start the application
             log.info("Adding application under brooklyn management");
