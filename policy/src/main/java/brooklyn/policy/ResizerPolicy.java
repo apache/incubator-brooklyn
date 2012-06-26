@@ -39,19 +39,20 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
 
     /** Lock held if we are in the process of resizing. */
     private final AtomicBoolean resizing = new AtomicBoolean(false);
-
+    
     private Runnable resizeAction = new Runnable() {
         public void run() {
             try {
-                LOG.info("policy resizer performing resizing...");
                 int desire = desiredSize.get();
+                LOG.info("{} resizing {} to {}", new Object[] {this, entity, desire});
                 resizable.resize(desire);
                 while (desire != desiredSize.get()) {
-                    LOG.info("policy resizer performing re-resizing...");
+                    // naive logic, loop until we have the desired size
+                    LOG.info("{} repeating attempt to resize {} to {}", new Object[] {this, entity, desire});
                     desire = desiredSize.get();
                     resizable.resize(desire);
                 }
-                LOG.info("policy resizer resizing complete");
+                LOG.info("{} completed resizing {} to {}", new Object[] {this, entity, desire});
             } finally {
                 resizing.set(false);
             }
@@ -129,11 +130,11 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
         desiredSize.set(calculateDesiredSize(val));
 
         if (desiredSize.get() != currentSize) {
-            if (LOG.isDebugEnabled()) LOG.debug("policy resizer resizing: metric={}, workrate={}, lowerBound={}, upperBound={}; currentSize={}, desiredSize={}, minSize={}, maxSize={}",
+            if (LOG.isDebugEnabled()) LOG.debug("Policy resizer resizing: metric={}, workrate={}, lowerBound={}, upperBound={}; currentSize={}, desiredSize={}, minSize={}, maxSize={}",
                     new Object[] {source, val, metricLowerBound, metricUpperBound, currentSize, desiredSize.get(), minSize, maxSize});
             resize();
         } else {
-            if (LOG.isTraceEnabled()) LOG.trace("policy resizer doing nothing: metric={}, workrate={}, lowerBound={}, upperBound={}; currentSize={}, minSize={}, maxSize={}",
+            if (LOG.isTraceEnabled()) LOG.trace("Policy resizer doing nothing: metric={}, workrate={}, lowerBound={}, upperBound={}; currentSize={}, minSize={}, maxSize={}",
                     new Object[] {source, val, metricLowerBound, metricUpperBound, currentSize, minSize, maxSize});
         }
     }

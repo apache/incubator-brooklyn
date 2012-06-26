@@ -80,6 +80,11 @@ public abstract class AbstractManagementContext implements ManagementContext  {
      * (for instance because the entity is no longer relevant)
      */
     public void unmanage(Entity e) {
+        if (e==null) {
+            log.warn("call to unmanage null entity "+e+" in "+this+"; skipping",  
+                new IllegalStateException("call to unmanage null entity "+e+" in "+this));
+            return;
+        }
         if (!isManaged(e)) {
             log.warn("call to unmanage entity {} but it is not known at {}; skipping, and all descendants", e, this);
             return;
