@@ -14,7 +14,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class LocationSummary {
 
   private final static Set<String> SENSITIVE_CONFIGS =
-      ImmutableSet.of("credential", "privateKeyFile", "sshPrivateKey", "rootSshPrivateKey");
+      ImmutableSet.of("credential", "privateKeyFile", "sshPrivateKey", "rootSshPrivateKey", "password");
 
   private final String provider;
   private final Map<String, String> config;

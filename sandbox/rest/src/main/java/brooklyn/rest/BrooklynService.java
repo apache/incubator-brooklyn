@@ -1,5 +1,10 @@
 package brooklyn.rest;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+
 import brooklyn.rest.commands.applications.DeleteApplicationCommand;
 import brooklyn.rest.commands.applications.InvokeEffectorCommand;
 import brooklyn.rest.commands.applications.ListApplicationsCommand;
@@ -22,13 +27,13 @@ import brooklyn.rest.resources.EntityResource;
 import brooklyn.rest.resources.LocationResource;
 import brooklyn.rest.resources.SensorResource;
 import brooklyn.rest.resources.SwaggerUiResource;
+
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.bundles.AssetsBundle;
 import com.yammer.dropwizard.config.Environment;
 import com.yammer.dropwizard.views.ViewBundle;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
+import com.google.common.base.Throwables;
 
 /**
  * Application entry point. Configures and starts the embedded web-server.
@@ -36,12 +41,20 @@ import java.util.concurrent.TimeUnit;
  */
 public class BrooklynService extends Service<BrooklynConfiguration> {
 
+  private volatile ApplicationManager applicationManager;
+
+  private final CountDownLatch initialized = new CountDownLatch(1);
+  
   protected BrooklynService() {
     super("brooklyn-rest");
     addBundle(new AssetsBundle("/swagger-ui"));
     addBundle(new ViewBundle());
   }
 
+  public ApplicationManager getApplicationManager() {
+      return applicationManager;
+  }
+  
   @Override
   protected void initialize(BrooklynConfiguration configuration, Environment environment)
       throws Exception {
@@ -58,7 +71,7 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
         executorConfig.getCorePoolSize(), executorConfig.getMaximumPoolSize(),
         executorConfig.getKeepAliveTimeInSeconds(), TimeUnit.SECONDS);
 
-    ApplicationManager applicationManager = new ApplicationManager(configuration,
+    applicationManager = new ApplicationManager(configuration,
         locationStore, catalogResource, managedExecutor);
     environment.manage(applicationManager);
 
@@ -73,9 +86,35 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
     environment.addResource(new SwaggerUiResource());
 
     environment.addHealthCheck(new GeneralHealthCheck());
+    
+    initialized.countDown();
   }
 
+  public void runAsync(final String[] args) throws InterruptedException {
+    final AtomicReference<Throwable> err = new AtomicReference<Throwable>();
+    new Thread("brooklyn-rest") {
+        public void run() {
+          try {
+            BrooklynService.this.run(args);
+          } catch (Throwable e) {
+              err.set(e);
+              initialized.countDown();
+              throw Throwables.propagate(e);
+          }
+        }
+    }.start();
+    
+    initialized.await();
+    if (err.get() != null) {
+        throw Throwables.propagate(err.get());
+    }
+  }
   public static void main(String[] args) throws Exception {
+      BrooklynService service = newBrooklynService();
+      service.run(args);
+  }
+  
+  public static BrooklynService newBrooklynService() throws Exception {
     BrooklynService service = new BrooklynService();
     service.addCommand(new ListApplicationsCommand());
     service.addCommand(new StartApplicationCommand());
@@ -92,7 +131,7 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
     service.addCommand(new ListCatalogEntitiesCommand());
     service.addCommand(new ListCatalogPoliciesCommand());
     service.addCommand(new LoadClassCommand());
-
-    service.run(args);
+    
+    return service;
   }
 }
