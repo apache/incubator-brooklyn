@@ -65,7 +65,7 @@ Example usage
 Launching one of the examples on localhost:
 ```
 $ BROOKLYN_HOME=/path/to/brooklyn
-$ PATH=$PATH:${BROOKLYN_HOME}/usage/dist/brooklyn-0.4.0-SNAPSHOT-dist/bin
+$ PATH=$PATH:${BROOKLYN_HOME}/usage/dist/brooklyn-0.4.0-M2-dist/bin
 $ export BROOKLYN_CLASSPATH=${BROOKLYN_HOME}/examples/simple-web-cluster/target/classes/ # point this to your app
 $ brooklyn launch --app brooklyn.demo.SingleWebServerExample # --location is set to localhost by default
 ```

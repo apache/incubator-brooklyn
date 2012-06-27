@@ -20,7 +20,7 @@
     <parent>
         <groupId>io.brooklyn.example</groupId>
         <artifactId>brooklyn-examples-webapps-parent</artifactId>
-        <version>0.4.0-SNAPSHOT</version>   <!-- BROOKLYN_VERSION -->
+        <version>0.4.0-M2</version>   <!-- BROOKLYN_VERSION -->
         <relativePath>../pom.xml</relativePath>
     </parent>
 

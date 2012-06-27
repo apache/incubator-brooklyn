@@ -86,8 +86,8 @@ Here is an example of the commands you might run to launch a Brooklyn applicatio
 
 {% highlight bash %}
 % BROOKLYN_HOME=/path/to/brooklyn
-% PATH=$PATH:${BROOKLYN_HOME}/usage/dist/target/brooklyn-0.4.0-SNAPSHOT-dist/brooklyn/bin
-% export BROOKLYN_CLASSPATH=${BROOKLYN_HOME}/examples/simple-web-cluster/target/brooklyn-example-simple-web-cluster-0.4.0-SNAPSHOT.jar
+% PATH=$PATH:${BROOKLYN_HOME}/usage/dist/target/brooklyn-0.4.0-M2-dist/brooklyn/bin
+% export BROOKLYN_CLASSPATH=${BROOKLYN_HOME}/examples/simple-web-cluster/target/brooklyn-example-simple-web-cluster-0.4.0-M2.jar
 % brooklyn launch --app brooklyn.demo.SingleWebServerExample --location localhost
 {% endhighlight %}
 
