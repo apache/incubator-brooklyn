@@ -1,11 +1,15 @@
 package brooklyn.location.basic
 
-import java.util.List
-import java.util.Map
+
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import com.google.common.base.Preconditions
+import com.google.common.base.Throwables
+import com.google.common.io.Closeables
+
+import brooklyn.config.BrooklynLogging
 import brooklyn.location.MachineLocation
 import brooklyn.location.OsDetails
 import brooklyn.location.PortRange
@@ -22,16 +26,26 @@ import brooklyn.util.internal.ssh.SshjTool
 import brooklyn.util.mutex.MutexSupport
 import brooklyn.util.mutex.WithMutexes
 
-import com.google.common.base.Preconditions
 
 /**
  * Operations on a machine that is accessible via ssh.
+ * <p>
+ * We expose two ways of running scripts.
+ * One (execCommands) passes lines to bash, that is lightweight but fragile.
+ * Another (execScript) creates a script on the remote machine, more portable but heavier.
+ * <p>
+ * Additionally there are routines to copyTo, copyFrom; and installTo (which tries a curl, and falls back to copyTo
+ * in event the source is accessible by the caller only). 
  */
 public class SshMachineLocation extends AbstractLocation implements MachineLocation, PortSupplier, WithMutexes {
-    public static final Logger LOG = LoggerFactory.getLogger(SshMachineLocation.class)
+    public static final Logger LOG = LoggerFactory.getLogger(SshMachineLocation.class);
+    public static final Logger logSsh = LoggerFactory.getLogger(BrooklynLogging.SSH_IO);
             
     @SetFromFlag('username')
     String user
+
+    @SetFromFlag('privateKeyData')
+    String privateKeyData
 
     @SetFromFlag(nullable = false)
     InetAddress address
@@ -43,10 +57,11 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
      *  can be prefixed with this and . and will be passed through (with the prefix removed),
      *  e.g. (SSHCONFIG_PREFIX+"."+"StrictHostKeyChecking"):"yes" */
     public static final String SSHCONFIG_PREFIX = "sshconfig";
-    //TODO remove once everything is prefixed SSHCONFIG_PREFIX
-    //(I don't think we ever relied on props being passed through in this way,
-    //but the code path was there so I didn't want to delete it immediately.)
-    public static final String NON_SSH_PROPS = ["out", "err", "latitude", "longitude", "keyFiles", "publicKey", "privateKey", "password", "backup"];
+    /** properties which are passed to ssh */
+    public static final String SSH_PROPS = ["logPrefix", "out", "err", "password", "keyFiles", "publicKey", "privateKey", "privateKeyData" ];
+    //TODO prefer privateKeyData (confusion about whether other holds a file or data)
+    //TODO remove once everything is prefixed SSHCONFIG_PREFIX or included above
+    public static final String NON_SSH_PROPS = ["latitude", "longitude", "backup", "sshPublicKeyData", "sshPrivateKeyData" ];
     
     private final Set<Integer> ports = [] as HashSet
 
@@ -80,8 +95,61 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     }
 
     /**
-     * Convenience for running a script, returning the result code.
-     *
+     * @deprecated in 1.4.1, @see execCommand and execScript
+     */
+    public int run(Map props=[:], List<String> commands, Map env=[:]) {
+        Preconditions.checkNotNull address, "host address must be specified for ssh"
+        if (!commands) return 0
+        SshTool ssh = connectSsh(props)
+        try {
+            return ssh.execShell(props, commands, env);
+        } finally {
+            ssh.disconnect()
+        }
+    }
+    
+    protected SshTool connectSsh(Map props=[:]) {
+        if (!user) user = System.getProperty "user.name"
+        Map args = [ user:user, host:address.hostName ]
+        (props+config+leftoverProperties).each { kk,v ->
+            String k = ""+kk;
+            if (SSH_PROPS.contains(k)) {
+                args.put(k, v);
+            } else if (k.startsWith(SSHCONFIG_PREFIX+".")) {
+                args.put(k.substring(SSHCONFIG_PREFIX.length()+1), v);
+            } else {
+                // TODO remove once everything is included above and we no longer see these warnings
+                if (!NON_SSH_PROPS.contains(k)) {
+                    LOG.warn("including legacy SSH config property "+k+" for "+this+"; either prefix with sshconfig or add to NON_SSH_PROPS");
+                    args.put(k, v);
+                }
+            }
+        }
+        if (LOG.isTraceEnabled()) LOG.trace("creating ssh session for "+args);
+        SshTool ssh = new SshjTool(args)
+        ssh.connect()
+        return ssh;
+    }
+
+    /**
+     * Convenience for running commands using ssh {@literal exec} mode.
+     * @deprecated in 1.4.1, @see execCommand and execScript
+     */
+    public int exec(Map props=[:], List<String> commands, Map env=[:]) {
+        Preconditions.checkNotNull address, "host address must be specified for ssh"
+        if (!commands) return 0
+        SshjTool ssh = connectSsh(props)
+        int result = ssh.execCommands props, commands, env
+        ssh.disconnect()
+        result
+    }
+        
+    // TODO submitCommands and submitScript which submit objects we can subsequently poll (cf JcloudsSshMachineLocation.submitRunScript)
+    
+    /** executes a set of commands, directly on the target machine (no wrapping in script).
+     * joined using ' ; ' by default.  
+     * set flag 'logPrefix' to have logging send to brooklyn.SSH logger.
+     * <p>
      * Currently runs the commands in an interactive/login shell
      * by passing each as a line to bash. To terminate early, use:
      * <pre>
@@ -93,50 +161,64 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
      * </pre>
      * and run as a single command (possibly not as an interacitve/login
      * shell) causing the script to exit on the first command which fails.
-     *
-     * @todo Perhaps add a flag {@code exitIfAnyNonZero} to toggle between
-     *       the above modes ?
+     * <p>
+     * Currently this has to be done by the caller.
+     * (If desired we can add a flag {@code exitIfAnyNonZero} to support this mode,
+     * and/or {@code commandPrepend} and {@code commandAppend} similar to 
+     * (currently supported in SshjTool) {@code separator}.) 
      */
-    public int run(Map props=[:], List<String> commands, Map env=[:]) {
-        Preconditions.checkNotNull address, "host address must be specified for ssh"
-        if (!commands) return 0
-        SshTool ssh = connectSsh(props)
-        int result = ssh.execShell props, commands, env
-        ssh.disconnect()
-        result
-    }
-    
-    protected SshTool connectSsh(Map props=[:]) {
-        if (!user) user = System.getProperty "user.name"
-        Map args = [ user:user, host:address.hostName ]
-        (props+config+leftoverProperties).each { kk,v ->
-            String k = ""+kk;
-            if (k.startsWith(SSHCONFIG_PREFIX+".")) {
-                args.put(k.substring(SSHCONFIG_PREFIX.length()+1), v);
-            } else {
-                // TODO remove once everything is prefixed SSHCONFIG_PREFIX
-                if (!NON_SSH_PROPS.contains(k)) {
-                    LOG.warn("including legacy SSH config property "+k+" for "+this+"; either prefix with sshconfig or add to NON_SSH_PROPS");
-                }
-                args.put(k, v);
-            }
-        }
-        if (LOG.isTraceEnabled()) LOG.trace("creating ssh session for "+args);
-        SshTool ssh = new SshjTool(args)
-        ssh.connect()
-        return ssh;
+    public int execCommands(Map props=[:], String summaryForLogging, List<String> commands, Map env=[:]) {
+        return execWithLogging(props, summaryForLogging, commands, env, { ssh, flags, commands2, env2 -> ssh.execCommands(flags, commands2, env2); });
     }
 
-    /**
-     * Convenience for running commands using ssh {@literal exec} mode.
-     */
-    public int exec(Map props=[:], List<String> commands, Map env=[:]) {
+    /** executes a set of commands, wrapped as a script sent to the remote machine.
+    * set flag 'logPrefix' to have logging send to brooklyn.SSH logger.
+    */
+   public int execScript(Map props=[:], String summaryForLogging, List<String> commands, Map env=[:]) {
+       return execWithLogging(props, summaryForLogging, commands, env, { ssh, flags, commands2, env2 -> ssh.execScript(flags, commands2, env2); });
+   }
+
+    protected int execWithLogging(Map props, String summaryForLogging, List<String> commands, Map env, Closure execCommand) {
+        logSsh.debug("{} on machine {}: {}", summaryForLogging, this, commands);
+        
         Preconditions.checkNotNull address, "host address must be specified for ssh"
-        if (!commands) return 0
-        SshjTool ssh = connectSsh(props)
-        int result = ssh.execCommands props, commands, env
-        ssh.disconnect()
-        result
+        if (!commands) {
+            logSsh.debug("{} on machine {} ending: no commands to run", summaryForLogging, this);
+            return 0
+        }
+        Map flags = [:] + props;
+        
+        PipedOutputStream outO = null;
+        PipedOutputStream outE = null;
+        try {
+            if (flags.logPrefix) {
+                PipedInputStream insO = new PipedInputStream();
+                outO = new PipedOutputStream(insO);
+                PipedInputStream insE = new PipedInputStream();
+                outE = new PipedOutputStream(insE);
+            
+                new StreamGobbler(insO, (OutputStream) flags.get("out"), logSsh).setLogPrefix("["+flags.logPrefix+":stdout] ").start();
+                new StreamGobbler(insE, (OutputStream) flags.get("err"), logSsh).setLogPrefix("["+flags.logPrefix+":stderr] ").start();
+                
+                flags.out = outO;
+                flags.err = outE;
+            }
+            
+            SshjTool ssh = connectSsh(flags)
+            int result = execCommand.call(ssh, flags, commands, env);
+            ssh.disconnect()
+            if (logSsh.isDebugEnabled()) logSsh.debug("{} on machine {} completed: {}", summaryForLogging, this, result);
+            
+            return result;
+        } catch (IOException e) {
+            if (logSsh.isDebugEnabled()) logSsh.debug("{} on machine {} failed: {}", summaryForLogging, this, e);
+            throw Throwables.propagate(e);
+        } finally {
+            // Must close the pipedOutStreams, otherwise input will never read -1 so StreamGobbler thread would never die
+            Closeables.closeQuietly(outO);
+            Closeables.closeQuietly(outE);
+        }
+
     }
 
     public int copyTo(Map props=[:], File src, File destination) {

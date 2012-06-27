@@ -44,8 +44,8 @@ class LocalEntitiesTest {
         AtomicReference<SensorEvent> evt = new AtomicReference()
         a.getSubscriptionContext().subscribe(h, HelloEntity.AGE, { 
             SensorEvent e -> 
-            evt.set(e)
             synchronized (evt) {
+                evt.set(e)
                 evt.notifyAll();
             }
         } as SensorEventListener)
@@ -54,10 +54,13 @@ class LocalEntitiesTest {
 //            h.setAge(5)
             new ParallelTask([h /*, otherEntity, anotherEntity */ ].
                     collect { it.invoke(HelloEntity.SET_AGE, age: 5) });
-            evt.wait(5000)
+            while (evt.get()==null && (System.currentTimeMillis()-startTime < 5000)) {
+                evt.wait(5000)
+            }
         }
 
-        // observed intermittent failure 2 May 2012
+        // observed intermittent failure 2 May 2012. and 14 Jun "after 2 ms". spurious wakeups.
+        // code added above to guard against this. (if problem does not recur, remove these comments!)
         assertNotNull(evt.get(), "null response after "+(System.currentTimeMillis()-startTime)+" ms")
         assertEquals(HelloEntity.AGE, evt.get().sensor)
         assertEquals(h, evt.get().source)
@@ -203,6 +206,19 @@ class LocalEntitiesTest {
 		a.start([new SimulatedLocation()])
         assertEquals(son.getConfig(HelloEntity.MY_NAME), "Danny")
     }
-
+    @Test
+    public void testConfigSetFromAttributeWhenReadyNullTransformations() {
+        AbstractApplication a = new AbstractApplication() {}
+        a.setConfig(HelloEntity.MY_NAME, "Bob")
+        
+        HelloEntity dad = new HelloEntity(owner:a)
+        HelloEntity son = new HelloEntity(owner:dad)
+        
+        //and config can have transformations
+        son.setConfig(HelloEntity.MY_NAME, transform(attributeWhenReady(dad, HelloEntity.FAVOURITE_NAME, null), { it+it[-1]+"y" }))
+        dad.setAttribute(HelloEntity.FAVOURITE_NAME, "Dan");
+        a.start([new SimulatedLocation()])
+        assertEquals(son.getConfig(HelloEntity.MY_NAME), "Danny")
+    }
 
 }

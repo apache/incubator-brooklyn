@@ -80,6 +80,7 @@ public class BasicExecutionContext implements ExecutionContext {
     /** @see #submit(Map, Runnable) */
     public <T> Task<T> submit(Map<?, ?> properties, Task<T> task) { return submitInternal(properties, task); }
  
+    @SuppressWarnings("deprecation")
     private <T> Task<T> submitInternal(Map properties, Object task) {
         if (properties.get("tags")==null) properties.put("tags", new ArrayList()); 
         ((Collection)properties.get("tags")).addAll(tags);

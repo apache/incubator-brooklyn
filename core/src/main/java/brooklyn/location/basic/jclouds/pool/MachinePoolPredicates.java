@@ -14,7 +14,7 @@ import com.google.common.base.Throwables;
 
 public class MachinePoolPredicates {
 
-    public static final Logger log = LoggerFactory.getLogger(MachinePoolPredicates.class);
+    private static final Logger log = LoggerFactory.getLogger(MachinePoolPredicates.class);
     
     public static Predicate<NodeMetadata> except(final MachineSet removedItems) {
         return new Predicate<NodeMetadata>() {

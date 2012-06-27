@@ -195,18 +195,25 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
     protected Map<String,Object> obtainProvisioningFlags(MachineProvisioningLocation location) {
         Map result = Maps.newLinkedHashMap(location.getProvisioningFlags([ getClass().getName() ]));
         result.putAll(getConfig(PROVISIONING_PROPERTIES));
+        if (!result.inboundPorts) {
+            def ports = getRequiredOpenPorts();
+            if (ports) result.inboundPorts = getRequiredOpenPorts()
+        }
+        result.callerContext = ""+this;
         return result;
     }
     
+    /** @deprecated in 0.4.0. use obtainPF. 
+     * introduced in a branch which duplicates changes in master where it is called "obtainPF".
+     * will remove as soon as those uses are updated. */
+    protected Map<String,Object> getProvisioningFlags(MachineProvisioningLocation location) {
+        return obtainProvisioningFlags(location);
+    }
+    
 	public void startInLocation(MachineProvisioningLocation location) {
-		Map<String,Object> flags = Maps.newLinkedHashMap(obtainProvisioningFlags(location))
-        if (!flags.inboundPorts) {
-            def ports = getRequiredOpenPorts();
-            if (ports) flags.inboundPorts = getRequiredOpenPorts()
-        }
+		Map<String,Object> flags = obtainProvisioningFlags(location);
         if (!(location in LocalhostMachineProvisioningLocation))
             LOG.info("SoftwareProcessEntity {} obtaining a new location instance in {} with ports {}", this, location, flags.inboundPorts)
-
 		provisioningLoc = location
 		SshMachineLocation machine = location.obtain(flags)
 		if (machine == null) throw new NoMachinesAvailableException(location)

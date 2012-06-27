@@ -12,9 +12,10 @@ public interface MachineProvisioningLocation<T extends MachineLocation> extends 
     /**
      * Obtain a machine in this location.
      * 
-     * @param flags Details of the desired machine (e.g. image, size, open ports, etc; flag support is limited to selected providers)
+     * @param flags Details of the desired machine (e.g. image, size, open ports, etc; some flag support is limited to selected providers).
+     * "callerContext" can be specified to have custom logging and error messages (useful if starting machines in parallel)
      * @return a machine that is a child of this location.
-     * @throws NoMachinesAvailableException if there are no machines available in this location.
+     * @throws NoMachinesAvailableException if there are no machines available in this location (or impls may return null, but that is discouraged)
      */
     // TODO Document dictionary of flag keys
     T obtain(Map<String,? extends Object> flags) throws NoMachinesAvailableException;

@@ -114,7 +114,8 @@ public class ReusableMachineTemplate extends PortableTemplateBuilder<ReusableMac
     protected void addStrictOptions(List<TemplateOptions> result) {
         if (name!=null) result.add(TemplateOptions.Builder.userMetadata(NAME_METADATA_KEY, name));
         if (templateOwner!=null) result.add(TemplateOptions.Builder.userMetadata(TEMPLATE_OWNER_METADATA_KEY, templateOwner));
-        result.add(TemplateOptions.Builder.userMetadata(HASH_METADATA_KEY, ""+hashCode()));
+        // this is too strict -- the hash code seems to change from run to run (would be nice to fix that)
+//        result.add(TemplateOptions.Builder.userMetadata(HASH_METADATA_KEY, ""+hashCode()));
     }
     
     /** computes the user metadata that this template will set (argument true) or required to match (argument false) */

@@ -1,10 +1,17 @@
 package brooklyn.entity.basic.lifecycle;
 
+import static brooklyn.util.GroovyJavaMethods.elvis;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import org.jclouds.compute.domain.ExecResponse;
+import org.jclouds.scriptbuilder.statements.java.InstallJDK;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.EntityLocal;
@@ -12,6 +19,7 @@ import brooklyn.entity.basic.UsesJava;
 import brooklyn.entity.basic.UsesJmx;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.location.basic.jclouds.JcloudsLocation.JcloudsSshMachineLocation;
 import brooklyn.util.MutableMap;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.StringEscapeUtils;
@@ -26,6 +34,8 @@ import com.google.gson.internal.Primitives;
 
 public abstract class JavaStartStopSshDriver extends StartStopSshDriver {
 
+    public static final Logger log = LoggerFactory.getLogger(JavaStartStopSshDriver.class);
+    
 	public JavaStartStopSshDriver(EntityLocal entity, SshMachineLocation machine) {
 		super(entity, machine);
         
@@ -162,4 +172,43 @@ public abstract class JavaStartStopSshDriver extends StartStopSshDriver {
                 .put("java.rmi.server.hostname", hostName)
                 .build();
 	}
+	
+	public void installJava() {
+        //this should work, but not in 1.4.0 because oracle have blocked download (fixed in head 1.4.1 and 1.5.0)
+	    try {
+	        getLocation().acquireMutex("install:"+getLocation().getName(), "installing Java at "+getLocation());
+	        log.debug("checking for java at "+entity+" @ "+getLocation());
+	        int result = getLocation().execCommands("check java", Arrays.asList("which java"));
+	        if (result==0) {
+	            log.debug("java detected at "+entity+" @ "+getLocation());
+	        } else {
+	            log.debug("java not detected at "+entity+" @ "+getLocation()+", installing");
+	            if (getLocation() instanceof JcloudsSshMachineLocation) {
+	                ExecResponse result2 = ((JcloudsSshMachineLocation)getLocation()).submitRunScript(InstallJDK.fromURL()).get();
+	                if (result2.getExitStatus()!=0)
+	                    log.warn("invalid result code "+result2.getExitStatus()+" installing java at "+entity+" @ "+getLocation()+":\n"+
+	                            result2.getOutput()+"\n"+result2.getError());
+	            } else {
+                    log.warn("No knowledge of how to install Java at "+getLocation()+" for "+entity+", and Java not detected. "+
+                            "Processes may fail to start.");	                
+	            }
+	        }
+        } catch (Exception e) {
+            Throwables.propagate(e);
+        } finally {
+            getLocation().releaseMutex("install:"+getLocation().getName());
+        }
+      
+//      //this works on ubuntu (surprising that jdk not in default repos!)
+//          "sudo add-apt-repository ppa:dlecan/openjdk",
+//          "sudo apt-get update",
+//          "sudo apt-get install -y --allow-unauthenticated openjdk-7-jdk"
+	}
+	
+	@Override
+	public void start() {
+	    installJava();
+	    super.start();
+	}
+
 }

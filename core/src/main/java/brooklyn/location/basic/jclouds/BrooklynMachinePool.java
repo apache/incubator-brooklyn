@@ -96,7 +96,7 @@ public class BrooklynMachinePool extends MachinePool {
             // TODO this in parallel
             JcloudsSshMachineLocation m;
             try {
-                m = location.obtain(template);
+                m = location.obtain(MutableMap.of("callerContext", ""+this+"("+template+")"), template);
             } catch (Exception e) {
                 throw Throwables.propagate(e);
             }
@@ -133,8 +133,8 @@ public class BrooklynMachinePool extends MachinePool {
     }
 
     public void blockUntilTasksEnded() {
-        boolean allDone = true;
         while (true) {
+            boolean allDone = true;
             List<Task<?>> tt = getActiveTasks();
             for (Task<?> t: tt) {
                 if (!t.isDone()) {
@@ -144,13 +144,15 @@ public class BrooklynMachinePool extends MachinePool {
                 }
             }
             synchronized (activeTasks) {
-                if (allDone && tt.equals(getActiveTasks())) {
+                List<Task> newTT = new ArrayList<Task>(getActiveTasks());
+                newTT.removeAll(tt);
+                if (allDone && tt.isEmpty()) {
                     //task list has stabilized, and there are no active tasks; clear and exit
                     if (log.isDebugEnabled()) log.debug("Pool "+this+", all known tasks have completed, clearing list");
                     activeTasks.clear();
                     break;
                 }
-                if (log.isDebugEnabled()) log.debug("Pool "+this+", all previously known tasks have completed, but there are new tasks, checking them");
+                if (log.isDebugEnabled()) log.debug("Pool "+this+", all previously known tasks have completed, but there are new tasks ("+newTT+") checking them");
             }
         }
     }

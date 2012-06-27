@@ -4,10 +4,6 @@ import static brooklyn.util.GroovyJavaMethods.elvis;
 import static brooklyn.util.GroovyJavaMethods.truth;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -21,15 +17,11 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.SoftwareProcessEntity;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.internal.StreamGobbler;
 
 import com.google.common.base.Predicates;
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.io.Closeables;
 
 public abstract class StartStopSshDriver extends AbstractStartStopDriver implements ScriptRunner {
 
@@ -84,32 +76,11 @@ public abstract class StartStopSshDriver extends AbstractStartStopDriver impleme
         return execute(Maps.newLinkedHashMap(), script, summaryForLogging);
     }
     
-    public int execute(Map flags, List<String> script, String summaryForLogging) {
-        logSsh.debug("{} on machine {}: {}", new Object[] {summaryForLogging, getMachine(), script});
+    public int execute(Map flags2, List<String> script, String summaryForLogging) {
+        Map flags = Maps.newLinkedHashMap(flags2);
         Map<String, String> environment = (Map<String, String>) ((flags.get("env") != null) ? flags.get("env") : getShellEnvironment());
-
-        PipedOutputStream outO = null;
-        PipedOutputStream outE = null;
-        
-        try {
-            PipedInputStream insO = new PipedInputStream();
-            outO = new PipedOutputStream(insO);
-            PipedInputStream insE = new PipedInputStream();
-            outE = new PipedOutputStream(insE);
-            
-            new StreamGobbler(insO, (OutputStream) flags.get("out"), logSsh).setLogPrefix("["+entity.getId()+"@"+getMachine().getName()+":stdout] ").start();
-            new StreamGobbler(insE, (OutputStream) flags.get("err"), logSsh).setLogPrefix("["+entity.getId()+"@"+getMachine().getName()+":stderr] ").start();
-            
-            int result = getMachine().run(ImmutableMap.of("out", outO, "err", outE), script, environment);
-            if (logSsh.isDebugEnabled()) logSsh.debug("{} on machine {} completed: {}", new Object[] {summaryForLogging, getMachine(), result});
-            return result;
-        } catch (IOException e) {
-            throw Throwables.propagate(e);
-        } finally {
-            // Must close the pipedOutStreams, otherwise input will never read -1 so StreamGobbler thread would never die
-            if (outO != null) Closeables.closeQuietly(outO);
-            if (outE != null) Closeables.closeQuietly(outE);
-        }
+        if (!flags.containsKey("logPrefix")) flags.put("logPrefix", ""+entity.getId()+"@"+getLocation().getName());
+        return getMachine().execScript(flags, summaryForLogging, script, environment);
     }
 
     /**
