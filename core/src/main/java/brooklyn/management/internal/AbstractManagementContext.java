@@ -12,6 +12,7 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEffector;
 import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.basic.EffectorUtils;
 import brooklyn.entity.trait.Startable;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ExpirationPolicy;
@@ -118,7 +119,7 @@ public abstract class AbstractManagementContext implements ManagementContext  {
     protected <T> T invokeEffectorMethodLocal(Entity entity, Effector<T> eff, Object args) {
         assert isManagedLocally(entity) : "cannot invoke effector method at "+this+" because it is not managed here";
         totalEffectorInvocationCount.incrementAndGet();
-        Object[] transformedArgs = AbstractEffector.prepareArgsForEffector(eff, args);
+        Object[] transformedArgs = EffectorUtils.prepareArgsForEffector(eff, args);
         return GroovyJavaMethods.invokeMethodOnMetaClass(entity, eff.getName(), transformedArgs);
     }
 
