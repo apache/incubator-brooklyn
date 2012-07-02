@@ -1,5 +1,7 @@
 package brooklyn.util;
 
+import static brooklyn.util.GroovyJavaMethods.truth;
+
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 
@@ -68,6 +70,14 @@ public class GroovyJavaMethods {
     }
 */
     
+    public static Predicate<Object> truthPredicate() {
+        return new Predicate<Object>() {
+           @Override public boolean apply(Object input) {
+               return truth(input);
+           }
+        };
+    }
+    
     public static boolean truth(Object o) {
         if (o) return true;
         return false;
@@ -88,5 +98,10 @@ public class GroovyJavaMethods {
     public static <T> T fix(Object o) {
         if (o in GString) return (o as String);
         return o;
+    }
+    
+    // args is expected to be an array, but for groovy compilation reasons it's not declared as such in the signature :-(
+    public static <T> T invokeMethodOnMetaClass(Object target, String methodName, Object args) {
+        return target.metaClass.invokeMethod(target, methodName, args);
     }
 }

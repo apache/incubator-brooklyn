@@ -1,4 +1,4 @@
-package brooklyn.location.basic.jclouds
+package brooklyn.location.basic.jclouds;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS
 import static java.util.concurrent.TimeUnit.SECONDS
@@ -44,11 +44,14 @@ import brooklyn.location.basic.AbstractLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.jclouds.templates.PortableTemplateBuilder
 import brooklyn.util.IdGenerator
+import brooklyn.util.MutableMap
 import brooklyn.util.internal.Repeater
 
 import com.google.common.base.Charsets
 import com.google.common.base.Throwables
 import com.google.common.collect.Iterables
+import com.google.common.collect.Lists
+import com.google.common.collect.Maps
 import com.google.common.io.Files
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -90,25 +93,25 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
 
     // TODO Needs a big overhaul of how config is being managed, and what the property names are (particularly for private-keys)
     
-    public static final Logger LOG = LoggerFactory.getLogger(JcloudsLocation.class)
+    public static final Logger LOG = LoggerFactory.getLogger(JcloudsLocation.class);
     
     public static final String ROOT_USERNAME = "root";
     public static final List NON_ADDABLE_USERS = [ ROOT_USERNAME, "ubuntu" ];
     public static final int START_SSHABLE_TIMEOUT = 5*60*1000;
 
-    private final Map<String,Map<String, ? extends Object>> tagMapping = [:]
-    private final Map<JcloudsSshMachineLocation,String> vmInstanceIds = [:]
+    private final Map<String,Map<String, ? extends Object>> tagMapping = Maps.newLinkedHashMap();
+    private final Map<JcloudsSshMachineLocation,String> vmInstanceIds = Maps.newLinkedHashMap();
 
     JcloudsLocation(Map conf) {
-        super(conf)
+        super(conf);
     }
     
     JcloudsLocation(String identity, String credential, String providerLocationId) {
-        this([identity:identity, credential:credential, providerLocationId:providerLocationId])
+        this(MutableMap.of("identity", identity, "credential", credential, "providerLocationId", providerLocationId));
     }
     
     protected void configure(Map properties) {
-        super.configure(properties)
+        super.configure(properties);
         if (!name) name = conf.providerLocationId ?:
             conf.get(Constants.PROPERTY_ENDPOINT) ? conf.provider+":"+conf.get(Constants.PROPERTY_ENDPOINT) :
             conf.provider ?: 
@@ -121,42 +124,43 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     }
     
     public String getProvider() {
-        return conf.provider
+        return conf.provider;
     }
     
     public Map getConf() { return leftoverProperties; }
     
     public void setTagMapping(Map<String,Map<String, ? extends Object>> val) {
-        tagMapping.clear()
-        tagMapping.putAll(val)
+        tagMapping.clear();
+        tagMapping.putAll(val);
     }
     
     public void setDefaultImageId(String val) {
-        defaultImageId = val
+        defaultImageId = val;
     }
     
     // TODO Decide on semantics. If I give "TomcatServer" and "Ubuntu", then must I get back an image that matches both?
     // Currently, just takes first match that it finds...
     Map<String,Object> getProvisioningFlags(Collection<String> tags) {
-        Map<String,Object> result = [:]
-        Collection<String> unmatchedTags = []
-        tags.each {
+        Map<String,Object> result = Maps.newLinkedHashMap();
+        Collection<String> unmatchedTags = Lists.newArrayList();
+        for (String it : tags) {
             if (tagMapping.get(it) && !result) {
-                result.putAll(tagMapping.get(it))
+                result.putAll(tagMapping.get(it));
             } else {
-                unmatchedTags.add(it)
+                unmatchedTags.add(it);
             }
         }
         if (unmatchedTags) {
-            LOG.debug("Location $this, failed to match provisioning tags $unmatchedTags")
+            LOG.debug("Location {}, failed to match provisioning tags {}", this, unmatchedTags);
         }
-        return result
+        return result;
     }
     
     public static class BrooklynJcloudsSetupHolder {
         // TODO this could use an external immutable pattern (unused kept internal, used for logging)
         final JcloudsLocation instance;
-        public final Map allconf = [:], unusedConf = [:];
+        public final Map allconf = Maps.newLinkedHashMap();
+        public final Map unusedConf = Maps.newLinkedHashMap();
         
         Object _callerContext = null;
         

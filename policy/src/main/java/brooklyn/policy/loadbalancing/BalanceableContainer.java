@@ -10,7 +10,7 @@ import brooklyn.event.basic.BasicNotificationSensor;
  * Membership of a balanceable container does not imply a parent-child relationship in the Brooklyn
  * management sense.
  */
-public interface BalanceableContainer<ItemType extends Movable> {
+public interface BalanceableContainer<ItemType extends Movable> extends Entity {
     
     public static BasicNotificationSensor<Entity> ITEM_ADDED = new BasicNotificationSensor<Entity>(
             Entity.class, "balanceablecontainer.item.added", "Movable item added to balanceable container");

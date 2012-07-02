@@ -36,6 +36,12 @@ public class MutableMap<K,V> extends LinkedHashMap<K,V> {
         return result;
     }
 
+    public static <K,V> MutableMap<K,V> copyOf(Map<? extends K, ? extends V> orig) {
+        MutableMap<K,V> result = new MutableMap<K,V>();
+        result.putAll(orig);
+        return result;
+    }
+    
     public MutableMap() {}
     public MutableMap(Map source) { super(source); }
     

@@ -14,7 +14,9 @@ public interface Group extends Entity {
      * Return the entities that are members of this group.
      */
     Collection<Entity> getMembers();
-    
+
+    boolean hasMember(Entity member);
+
     void addMember(Entity member);
  
     boolean removeMember(Entity member);

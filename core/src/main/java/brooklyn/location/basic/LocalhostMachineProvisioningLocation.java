@@ -1,18 +1,31 @@
-package brooklyn.location.basic
+package brooklyn.location.basic;
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import static brooklyn.util.GroovyJavaMethods.elvis;
+import static brooklyn.util.GroovyJavaMethods.truth;
 
-import brooklyn.config.BrooklynServiceAttributes
-import brooklyn.location.AddressableLocation
-import brooklyn.location.OsDetails
-import brooklyn.location.PortRange
-import brooklyn.location.geo.HostGeoInfo
-import brooklyn.util.NetworkUtils
-import brooklyn.util.flags.SetFromFlag
-import brooklyn.util.flags.TypeCoercions
-import brooklyn.util.mutex.MutexSupport
-import brooklyn.util.mutex.WithMutexes
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.Map;
+import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import brooklyn.config.BrooklynServiceAttributes;
+import brooklyn.location.AddressableLocation;
+import brooklyn.location.OsDetails;
+import brooklyn.location.PortRange;
+import brooklyn.location.geo.HostGeoInfo;
+import brooklyn.util.MutableMap;
+import brooklyn.util.NetworkUtils;
+import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.mutex.MutexSupport;
+import brooklyn.util.mutex.WithMutexes;
+
+import com.google.common.base.Throwables;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 /**
  * An implementation of {@link brooklyn.location.MachineProvisioningLocation} that can provision a {@link SshMachineLocation} for the
@@ -25,7 +38,7 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
 
     public static final Logger LOG = LoggerFactory.getLogger(LocalhostMachineProvisioningLocation.class);
                 
-    @SetFromFlag('count')
+    @SetFromFlag("count")
     int initialCount;
 
     @SetFromFlag
@@ -34,7 +47,7 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
     @SetFromFlag
     InetAddress address;
 
-    private static Set<Integer> portsInUse = []
+    private static Set<Integer> portsInUse = Sets.newLinkedHashSet();
 
     private static HostGeoInfo cachedHostGeoInfo;
         
@@ -48,19 +61,27 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
      *
      * @param properties the properties of the new instance.
      */
-    public LocalhostMachineProvisioningLocation(Map properties=[:]) {
-        super(properties)
+    public LocalhostMachineProvisioningLocation() {
+        this(Maps.newLinkedHashMap());
     }
-        
-    public LocalhostMachineProvisioningLocation(String name, int count=0) {
-        this([name: name, count: count]);
+    public LocalhostMachineProvisioningLocation(Map properties) {
+        super(properties);
+    }
+    public LocalhostMachineProvisioningLocation(String name) {
+        this(name, 0);
+    }
+    public LocalhostMachineProvisioningLocation(String name, int count) {
+        this(MutableMap.of("name", name, "count", count));
     }
     
-    protected void configure(Map flags=[:]) {
-        super.configure(flags)
+    protected void configure() {
+        configure(Maps.newLinkedHashMap());
+    }    
+    protected void configure(Map flags) {
+        super.configure(flags);
         
-        if (!name) { name="localhost" }
-        if (!address) address = getLocalhostInetAddress()
+        if (!truth(name)) { name = "localhost"; }
+        if (!truth(address)) address = getLocalhostInetAddress();
         // TODO should try to confirm this machine is accessible on the given address ... but there's no 
         // immediate convenience in java so early-trapping of that particular error is deferred
         
@@ -73,36 +94,46 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
                 cachedHostGeoInfo = HostGeoInfo.fromLocation(this);
             setHostGeoInfo(cachedHostGeoInfo);
         }
-        if (initialCount > machines.size()) {
-            provisionMore(initialCount - machines.size());
+        if (initialCount > getMachines().size()) {
+            provisionMore(initialCount - getMachines().size());
         }
     }
     
     public static InetAddress getLocalhostInetAddress() {
-        TypeCoercions.coerce(BrooklynServiceAttributes.LOCALHOST_IP_ADDRESS.getValue() ?: InetAddress.localHost, InetAddress);
+        return TypeCoercions.coerce(elvis(BrooklynServiceAttributes.LOCALHOST_IP_ADDRESS.getValue(), lookupLocalHost()), InetAddress.class);
     }
 
     public InetAddress getAddress() { return address; }
     
     public boolean canProvisionMore() { return canProvisionMore; }
+    
     public void provisionMore(int size) {
-        for (int i=0; i<size; i++) { 
-            SshMachineLocation child = new LocalhostMachine(
-                parentLocation: this, address:(address ?: InetAddress.localHost)) 
-            addChildLocation(child)
+        for (int i=0; i<size; i++) {
+            SshMachineLocation child = new LocalhostMachine(MutableMap.of(
+                    "parentLocation", this, 
+                    "address", elvis(address, lookupLocalHost())));
+            addChildLocation(child);
        }
     }
 
+    private static InetAddress lookupLocalHost() {
+        try {
+            return InetAddress.getLocalHost();
+        } catch (UnknownHostException e) {
+            throw Throwables.propagate(e);
+        }
+    }
+    
     public static synchronized boolean obtainSpecificPort(InetAddress localAddress, int portNumber) {
         if (portsInUse.contains(portNumber)) {
-            return false
+            return false;
         } else {
             //see if it is available?
             if (!checkPortAvailable(localAddress, portNumber)) {
                 return false;
             }
-            portsInUse.add(portNumber)
-            return true
+            portsInUse.add(portNumber);
+            return true;
         }
     }
     /** checks the actual availability of the port on localhost, ie by binding to it */
@@ -114,12 +145,12 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
         return NetworkUtils.isPortAvailable(portNumber);
     }
     public static int obtainPort(PortRange range) {
-        obtainPort(getLocalhostInetAddress(), range);
+        return obtainPort(getLocalhostInetAddress(), range);
     }
     public static int obtainPort(InetAddress localAddress, PortRange range) {
         for (int p: range)
             if (obtainSpecificPort(localAddress, p)) return p;
-        if (LOG.isDebugEnabled()) LOG.debug("unable to find port in {} on {}; returning -1", range, this)
+        if (LOG.isDebugEnabled()) LOG.debug("unable to find port in {} on {}; returning -1", range, localAddress);
         return -1;
     }
 
@@ -128,38 +159,42 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
     }
 
     public void release(SshMachineLocation machine) {
-        Set portsObtained = []
-        synchronized (machine.portsObtained) {
-            portsObtained.addAll(machine.portsObtained)
+        LocalhostMachine localMachine = (LocalhostMachine) machine;
+        Set<Integer> portsObtained = Sets.newLinkedHashSet();
+        synchronized (localMachine.portsObtained) {
+            portsObtained.addAll(localMachine.portsObtained);
         }
         
         super.release(machine);
         
         for (int p: portsObtained)
-            releasePort(null, p)
+            releasePort(null, p);
     }
     
     private static class LocalhostMachine extends SshMachineLocation {
-        Set portsObtained = []
+        private final Set<Integer> portsObtained = Sets.newLinkedHashSet();
         
-        private LocalhostMachine(Map properties=[:]) {
-            super(properties)
+        private LocalhostMachine() {
+            this(MutableMap.of());
+        }
+        private LocalhostMachine(Map properties) {
+            super(properties);
         }
         public boolean obtainSpecificPort(int portNumber) {
-            return LocalhostMachineProvisioningLocation.obtainSpecificPort(address, portNumber)
+            return LocalhostMachineProvisioningLocation.obtainSpecificPort(getAddress(), portNumber);
         }
         public int obtainPort(PortRange range) {
-            int r = LocalhostMachineProvisioningLocation.obtainPort(address, range)
+            int r = LocalhostMachineProvisioningLocation.obtainPort(getAddress(), range);
             synchronized (portsObtained) {
-                if (r>0) portsObtained += r;
+                if (r>0) portsObtained.add(r);
             }
             return r;
         }
         public void releasePort(int portNumber) {
             synchronized (portsObtained) {
-                portsObtained -= portNumber;
+                portsObtained.remove((Object)portNumber);
             }
-            LocalhostMachineProvisioningLocation.releasePort(address, portNumber)
+            LocalhostMachineProvisioningLocation.releasePort(getAddress(), portNumber);
         }
         
         @Override
@@ -168,7 +203,7 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
         }
         
         private static WithMutexes mutexSupport = new MutexSupport();
-        protected WithMutexes newMutexSupport() { mutexSupport }
+        protected WithMutexes newMutexSupport() { return mutexSupport; }
         
     }
 }

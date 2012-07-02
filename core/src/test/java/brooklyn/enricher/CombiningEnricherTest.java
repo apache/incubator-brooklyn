@@ -1,7 +1,6 @@
 package brooklyn.enricher;
 
 import java.util.Arrays;
-import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,9 +73,8 @@ public class CombiningEnricherTest {
         producer.setAttribute(intSensorC, 3);
 
         TestUtils.assertEventually(MutableMap.of("timeout", TIMEOUT_MS), 
-                new Callable<Object>() { public Object call() {
+                new Runnable() { public void run() {
                     Assert.assertEquals(producer.getAttribute(target), (Long)((long)6));
-                    return null;
                 }});
 
     }

@@ -61,11 +61,11 @@ public interface EntityLocal extends Entity {
      * @see SubscriptionManager#subscribe(Map, Entity, Sensor, SensorEventListener)
      */
     // FIXME remove from interface?
-    <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<T> listener);
+    <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener);
  
     /** @see SubscriptionManager#subscribeToChildren(Map, Entity, Sensor, SensorEventListener) */
     // FIXME remove from interface?
-    <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, SensorEventListener<T> listener);
+    <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, SensorEventListener<? super T> listener);
  
     /**
      * Adds the given policy to this entity. Also calls policy.setEntity if available.

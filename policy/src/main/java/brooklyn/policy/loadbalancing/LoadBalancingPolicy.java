@@ -1,30 +1,34 @@
-package brooklyn.policy.loadbalancing
+package brooklyn.policy.loadbalancing;
 
-import java.util.Map
-import java.util.Map.Entry
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledExecutorService
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicBoolean
+import static brooklyn.util.GroovyJavaMethods.elvis;
+import static brooklyn.util.GroovyJavaMethods.truth;
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-import brooklyn.entity.ConfigKey
-import brooklyn.entity.Entity
-import brooklyn.entity.basic.AbstractEntity
-import brooklyn.entity.basic.EntityLocal
-import brooklyn.event.AttributeSensor
-import brooklyn.event.Sensor
-import brooklyn.event.SensorEvent
-import brooklyn.event.SensorEventListener
-import brooklyn.policy.basic.AbstractPolicy
-import brooklyn.policy.loadbalancing.BalanceableWorkerPool.ContainerItemPair
-import brooklyn.policy.resizing.ResizingPolicy
-import brooklyn.util.flags.SetFromFlag
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions
-import com.google.common.collect.ImmutableMap
+import brooklyn.entity.ConfigKey;
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.basic.EntityLocal;
+import brooklyn.event.AttributeSensor;
+import brooklyn.event.Sensor;
+import brooklyn.event.SensorEvent;
+import brooklyn.event.SensorEventListener;
+import brooklyn.policy.basic.AbstractPolicy;
+import brooklyn.policy.loadbalancing.BalanceableWorkerPool.ContainerItemPair;
+import brooklyn.policy.resizing.ResizingPolicy;
+import brooklyn.util.MutableMap;
+import brooklyn.util.flags.SetFromFlag;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 
 
 /**
@@ -42,9 +46,9 @@ import com.google.common.collect.ImmutableMap
  * of container resource in the pool respectively. These events may be consumed by a separate policy that is capable
  * of resizing the container pool.
  */
-public class LoadBalancingPolicy extends AbstractPolicy {
+public class LoadBalancingPolicy<NodeType extends Entity, ItemType extends Movable> extends AbstractPolicy {
     
-    private static final Logger LOG = LoggerFactory.getLogger(LoadBalancingPolicy.class)
+    private static final Logger LOG = LoggerFactory.getLogger(LoadBalancingPolicy.class);
     
     @SetFromFlag(defaultVal="100")
     private long minPeriodBetweenExecs;
@@ -52,8 +56,8 @@ public class LoadBalancingPolicy extends AbstractPolicy {
     private final AttributeSensor<? extends Number> metric;
     private final String lowThresholdConfigKeyName;
     private final String highThresholdConfigKeyName;
-    private final BalanceablePoolModel<Entity, Entity> model;
-    private final BalancingStrategy<Entity, ?> strategy;
+    private final BalanceablePoolModel<NodeType, ItemType> model;
+    private final BalancingStrategy<NodeType, ItemType> strategy;
     private BalanceableWorkerPool poolEntity;
     
     private volatile ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
@@ -63,47 +67,45 @@ public class LoadBalancingPolicy extends AbstractPolicy {
     private int lastEmittedDesiredPoolSize = 0;
     private String lastEmittedPoolTemperature = null; // "cold" or "hot"
     
-    private final SensorEventListener<?> eventHandler = new SensorEventListener<Object>() {
+    private final SensorEventListener<Object> eventHandler = new SensorEventListener<Object>() {
         public void onEvent(SensorEvent<Object> event) {
             if (LOG.isTraceEnabled()) LOG.trace("{} received event {}", LoadBalancingPolicy.this, event);
             Entity source = event.getSource();
             Object value = event.getValue();
             Sensor sensor = event.getSensor();
-            switch (sensor) {
-                case metric:
-                    onItemMetricUpdate(source, ((Number) value).doubleValue(), true);
-                    break;
-                case BalanceableWorkerPool.CONTAINER_ADDED:
-                    onContainerAdded((Entity) value, true);
-                    break;
-                case BalanceableWorkerPool.CONTAINER_REMOVED:
-                    onContainerRemoved((Entity) value, true);
-                    break;
-                case BalanceableWorkerPool.ITEM_ADDED:
-                    ContainerItemPair pair = value;
-                    onItemAdded(pair.item, pair.container, true);
-                    break;
-                case BalanceableWorkerPool.ITEM_REMOVED:
-                    ContainerItemPair pair = value;
-                    onItemRemoved(pair.item, pair.container, true);
-                    break;
-                case BalanceableWorkerPool.ITEM_MOVED:
-                    ContainerItemPair pair = value;
-                    onItemMoved(pair.item, pair.container, true);
-                    break;
+            
+            if (sensor.equals(metric)) {
+                onItemMetricUpdate((ItemType)source, ((Number) value).doubleValue(), true);
+            } else if (sensor.equals(BalanceableWorkerPool.CONTAINER_ADDED)) {
+                onContainerAdded((NodeType) value, true);
+            } else if (sensor.equals(BalanceableWorkerPool.CONTAINER_REMOVED)) {
+                onContainerRemoved((NodeType) value, true);
+            } else if (sensor.equals(BalanceableWorkerPool.ITEM_ADDED)) {
+                ContainerItemPair pair = (ContainerItemPair) value;
+                onItemAdded((ItemType)pair.item, (NodeType)pair.container, true);
+            } else if (sensor.equals(BalanceableWorkerPool.ITEM_REMOVED)) {
+                ContainerItemPair pair = (ContainerItemPair) value;
+                onItemRemoved((ItemType)pair.item, (NodeType)pair.container, true);
+            } else if (sensor.equals(BalanceableWorkerPool.ITEM_MOVED)) {
+                ContainerItemPair pair = (ContainerItemPair) value;
+                onItemMoved((ItemType)pair.item, (NodeType)pair.container, true);
             }
         }
+    };
+
+    public LoadBalancingPolicy(AttributeSensor<? extends Number> metric,
+            BalanceablePoolModel<NodeType, ItemType> model) {
+        this(MutableMap.of(), metric, model);
     }
-    
-    public LoadBalancingPolicy(Map props = [:], AttributeSensor<? extends Number> metric,
-            BalanceablePoolModel<? extends Entity, ? extends Entity> model) {
+    public LoadBalancingPolicy(Map props, AttributeSensor<? extends Number> metric,
+            BalanceablePoolModel<NodeType, ItemType> model) {
         
         super(props);
         this.metric = metric;
         this.lowThresholdConfigKeyName = metric.getName()+".threshold.low";
         this.highThresholdConfigKeyName = metric.getName()+".threshold.high";
         this.model = model;
-        this.strategy = new BalancingStrategy<Entity, Object>(getName(), model); // TODO: extract interface, inject impl
+        this.strategy = new BalancingStrategy(getName(), model); // TODO: extract interface, inject impl
     }
     
     @Override
@@ -121,10 +123,10 @@ public class LoadBalancingPolicy extends AbstractPolicy {
         
         // Take heed of any extant containers.
         for (Entity container : poolEntity.getContainerGroup().getMembers()) {
-            onContainerAdded(container, false);
+            onContainerAdded((NodeType)container, false);
         }
         for (Entity item : poolEntity.getItemGroup().getMembers()) {
-            onItemAdded(item, item.getAttribute(Movable.CONTAINER), false);
+            onItemAdded((ItemType)item, (NodeType)item.getAttribute(Movable.CONTAINER), false);
         }
 
         scheduleRebalance();
@@ -146,25 +148,25 @@ public class LoadBalancingPolicy extends AbstractPolicy {
         executorQueued.set(false);
     }
     
-    private scheduleRebalance() {
+    private void scheduleRebalance() {
         if (isRunning() && executorQueued.compareAndSet(false, true)) {
             long now = System.currentTimeMillis();
             long delay = Math.max(0, (executorTime + minPeriodBetweenExecs) - now);
             
-            executor.schedule(
-                {
+            executor.schedule(new Runnable() {
+                public void run() {
                     try {
                         executorTime = System.currentTimeMillis();
                         executorQueued.set(false);
                         strategy.rebalance();
                         
                         if (LOG.isDebugEnabled()) LOG.debug("{} post-rebalance: poolSize={}; workrate={}; lowThreshold={}; " + 
-                                "highThreshold={}", this, model.getPoolSize(), model.getCurrentPoolWorkrate(), 
-                                model.getPoolLowThreshold(), model.getPoolHighThreshold());
+                                "highThreshold={}", new Object[] {this, model.getPoolSize(), model.getCurrentPoolWorkrate(), 
+                                model.getPoolLowThreshold(), model.getPoolHighThreshold()});
                         
                         if (model.isCold()) {
                             Map eventVal = ImmutableMap.of(
-                                    ResizingPolicy.POOL_CURRENT_SIZE_KEY, model.poolSize,
+                                    ResizingPolicy.POOL_CURRENT_SIZE_KEY, model.getPoolSize(),
                                     ResizingPolicy.POOL_CURRENT_WORKRATE_KEY, model.getCurrentPoolWorkrate(),
                                     ResizingPolicy.POOL_LOW_THRESHOLD_KEY, model.getPoolLowThreshold(),
                                     ResizingPolicy.POOL_HIGH_THRESHOLD_KEY, model.getPoolHighThreshold());
@@ -172,9 +174,9 @@ public class LoadBalancingPolicy extends AbstractPolicy {
                             poolEntity.emit(ResizingPolicy.POOL_COLD, eventVal);
                             
                             if (LOG.isInfoEnabled()) {
-                                int desiredPoolSize = Math.ceil(model.getCurrentPoolWorkrate() / (model.getPoolLowThreshold()/model.poolSize)).intValue();
+                                int desiredPoolSize = (int) Math.ceil(model.getCurrentPoolWorkrate() / (model.getPoolLowThreshold()/model.getPoolSize()));
                                 if (desiredPoolSize != lastEmittedDesiredPoolSize || lastEmittedPoolTemperature != "cold") {
-                                    LOG.info("{} emitted COLD (suggesting {}): {}", this, desiredPoolSize, eventVal);
+                                    LOG.info("{} emitted COLD (suggesting {}): {}", new Object[] {this, desiredPoolSize, eventVal});
                                     lastEmittedDesiredPoolSize = desiredPoolSize;
                                     lastEmittedPoolTemperature = "cold";
                                 }
@@ -182,25 +184,23 @@ public class LoadBalancingPolicy extends AbstractPolicy {
                         
                         } else if (model.isHot()) {
                             Map eventVal = ImmutableMap.of(
-                                    ResizingPolicy.POOL_CURRENT_SIZE_KEY, model.poolSize,
+                                    ResizingPolicy.POOL_CURRENT_SIZE_KEY, model.getPoolSize(),
                                     ResizingPolicy.POOL_CURRENT_WORKRATE_KEY, model.getCurrentPoolWorkrate(),
                                     ResizingPolicy.POOL_LOW_THRESHOLD_KEY, model.getPoolLowThreshold(),
-                                    ResizingPolicy.POOL_HIGH_THRESHOLD_KEY, model.getPoolHighThreshold())
+                                    ResizingPolicy.POOL_HIGH_THRESHOLD_KEY, model.getPoolHighThreshold());
                             
                             poolEntity.emit(ResizingPolicy.POOL_HOT, eventVal);
                             
                             if (LOG.isInfoEnabled()) {
-                                int desiredPoolSize = Math.ceil(model.getCurrentPoolWorkrate() / (model.getPoolHighThreshold()/model.poolSize)).intValue();
+                                int desiredPoolSize = (int) Math.ceil(model.getCurrentPoolWorkrate() / (model.getPoolHighThreshold()/model.getPoolSize()));
                                 if (desiredPoolSize != lastEmittedDesiredPoolSize || lastEmittedPoolTemperature != "hot") {
-                                    LOG.info("{} emitted HOT (suggesting {}): {}", this, desiredPoolSize, eventVal);
+                                    LOG.info("{} emitted HOT (suggesting {}): {}", new Object[] {this, desiredPoolSize, eventVal});
                                     lastEmittedDesiredPoolSize = desiredPoolSize;
                                     lastEmittedPoolTemperature = "hot";
                                 }
                             }
                         }
-                                                                
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt(); // gracefully stop
+
                     } catch (Exception e) {
                         if (isRunning()) {
                             LOG.error("Error rebalancing", e);
@@ -208,7 +208,7 @@ public class LoadBalancingPolicy extends AbstractPolicy {
                             LOG.debug("Error rebalancing, but no longer running", e);
                         }
                     }
-                },
+                }},
                 delay,
                 TimeUnit.MILLISECONDS);
         }
@@ -218,7 +218,7 @@ public class LoadBalancingPolicy extends AbstractPolicy {
     //      I presume it's because we subscribe and then iterate over the extant containers.
     //      Solution would be for subscription to give you events for existing / current value(s).
     //      Also current impl messes up single-threaded updates model: the setEntity is a different thread than for subscription events.
-    private void onContainerAdded(Entity newContainer, boolean rebalanceNow) {
+    private void onContainerAdded(NodeType newContainer, boolean rebalanceNow) {
         Preconditions.checkArgument(newContainer instanceof BalanceableContainer, "Added container must be a BalanceableContainer");
         if (LOG.isTraceEnabled()) LOG.trace("{} recording addition of container {}", this, newContainer);
         // Low and high thresholds for the metric we're interested in are assumed to be present
@@ -250,20 +250,20 @@ public class LoadBalancingPolicy extends AbstractPolicy {
     }
     
     // TODO Receiving duplicates of onContainerRemoved (e.g. when running LoadBalancingInmemorySoakTest)
-    private void onContainerRemoved(Entity oldContainer, boolean rebalanceNow) {
+    private void onContainerRemoved(NodeType oldContainer, boolean rebalanceNow) {
         if (LOG.isTraceEnabled()) LOG.trace("{} recording removal of container {}", this, oldContainer);
         model.onContainerRemoved(oldContainer);
         if (rebalanceNow) scheduleRebalance();
     }
     
-    private void onItemAdded(Entity item, Entity parentContainer, boolean rebalanceNow) {
+    private void onItemAdded(ItemType item, NodeType parentContainer, boolean rebalanceNow) {
         Preconditions.checkArgument(item instanceof Movable, "Added item "+item+" must implement Movable");
-        if (LOG.isTraceEnabled()) LOG.trace("{} recording addition of item {} in container {}", this, item, parentContainer);
+        if (LOG.isTraceEnabled()) LOG.trace("{} recording addition of item {} in container {}", new Object[] {this, item, parentContainer});
         
         subscribe(item, metric, eventHandler);
         
         // Update the model, including the current metric value (if any).
-        boolean immovable = item.getConfig(Movable.IMMOVABLE)?:false;
+        boolean immovable = elvis(item.getConfig(Movable.IMMOVABLE), false);
         Number currentValue = item.getAttribute(metric);
         model.onItemAdded(item, parentContainer, immovable);
         if (currentValue != null)
@@ -272,27 +272,27 @@ public class LoadBalancingPolicy extends AbstractPolicy {
         if (rebalanceNow) scheduleRebalance();
     }
     
-    private void onItemRemoved(Entity item, Entity parentContainer, boolean rebalanceNow) {
+    private void onItemRemoved(ItemType item, NodeType parentContainer, boolean rebalanceNow) {
         if (LOG.isTraceEnabled()) LOG.trace("{} recording removal of item {}", this, item);
         unsubscribe(item);
         model.onItemRemoved(item);
         if (rebalanceNow) scheduleRebalance();
     }
     
-    private void onItemMoved(Entity item, Entity parentContainer, boolean rebalanceNow) {
-        if (LOG.isTraceEnabled()) LOG.trace("{} recording moving of item {} to {}", this, item, parentContainer);
+    private void onItemMoved(ItemType item, NodeType parentContainer, boolean rebalanceNow) {
+        if (LOG.isTraceEnabled()) LOG.trace("{} recording moving of item {} to {}", new Object[] {this, item, parentContainer});
         model.onItemMoved(item, parentContainer);
         if (rebalanceNow) scheduleRebalance();
     }
     
-    private void onItemMetricUpdate(Entity item, double newValue, boolean rebalanceNow) {
-        if (LOG.isTraceEnabled()) LOG.trace("{} recording metric update for item {}, new value {}", this, item, newValue);
+    private void onItemMetricUpdate(ItemType item, double newValue, boolean rebalanceNow) {
+        if (LOG.isTraceEnabled()) LOG.trace("{} recording metric update for item {}, new value {}", new Object[] {this, item, newValue});
         model.onItemWorkrateUpdated(item, newValue);
         if (rebalanceNow) scheduleRebalance();
     }
     
     @Override
     public String toString() {
-        return getClass().getSimpleName() + (name ? "("+name+")" : "");
+        return getClass().getSimpleName() + (truth(name) ? "("+name+")" : "");
     }
 }

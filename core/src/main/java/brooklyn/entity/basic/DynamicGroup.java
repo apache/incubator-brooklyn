@@ -25,7 +25,7 @@ public class DynamicGroup extends AbstractGroup {
     public static final Logger log = LoggerFactory.getLogger(DynamicGroup.class);
     
     private volatile MyEntitySetChangeListener setChangeListener = null;
-    private Predicate<Entity> entityFilter;
+    private volatile Predicate<Entity> entityFilter;
     private volatile boolean running = true;
 
     public DynamicGroup(Map<?,?> properties, Entity owner, Closure<Boolean> entityFilter) {
@@ -75,16 +75,16 @@ public class DynamicGroup extends AbstractGroup {
         }
     }
     
-    void setEntityFilter(Predicate<Entity> filter) {
+    public void setEntityFilter(Predicate<Entity> filter) {
         this.entityFilter = filter;
         rescanEntities();
     }
     
-    void setEntityFilter(Closure<Boolean> filter) {
+    public void setEntityFilter(Closure<Boolean> filter) {
         setEntityFilter(filter != null ? GroovyJavaMethods.<Entity>predicateFromClosure(filter) : null);
     }
     
-    <T> void addSubscription(Entity producer, Sensor<T> sensor, final Predicate<SensorEvent<? super T>> filter) {
+    public <T> void addSubscription(Entity producer, Sensor<T> sensor, final Predicate<SensorEvent<? super T>> filter) {
         SensorEventListener<T> listener = new SensorEventListener<T>() {
             @Override public void onEvent(SensorEvent<T> event) {
                 if (filter.apply(event)) onEntityChanged(event.getSource());
@@ -98,6 +98,7 @@ public class DynamicGroup extends AbstractGroup {
     }
     
     protected boolean acceptsEntity(Entity e) {
+        // TODO Race where entityFilter could be set to null between the two statements below
         return (entityFilter != null && entityFilter.apply(e));
     }
     

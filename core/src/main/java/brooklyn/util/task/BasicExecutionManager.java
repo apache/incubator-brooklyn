@@ -236,6 +236,9 @@ public class BasicExecutionManager implements ExecutionManager {
 				final Callable oldJob = taskScheduled.job;
 				taskScheduled.job = new Callable() { public Object call() {
 					task.recentRun = taskScheduled;
+					synchronized (task) {
+					    task.notifyAll();
+					}
 					Object result;
 					try {
 					    result = oldJob.call();
