@@ -2,7 +2,12 @@ package brooklyn.entity.basic.lifecycle;
 
 import groovy.lang.Closure;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 public class ScriptPart {
     protected ScriptHelper helper;
@@ -18,13 +23,13 @@ public class ScriptPart {
     }
 
     public ScriptHelper append(Collection<String> lines) {
-        for(String line:lines){
+        for (String line : lines) {
             append(line);
         }
         return helper;
     }
 
-    public ScriptHelper append(String... lines){
+    public ScriptHelper append(String... lines) {
         return append(Arrays.asList(lines));
     }
 
@@ -33,23 +38,16 @@ public class ScriptPart {
         return helper;
     }
 
-    //public ScriptHelper prepend(Object l1, Object l2, Object... ll) {
-    //    for (int i = ll.length - 1; i >= 0; i--) prepend(ll[i])
-    //    prepend(l2);
-    //    prepend(l1);
-    //    return helper;
-    //}
-
     public ScriptHelper prepend(Collection<String> lines) {
-        List<String> l = new ArrayList<String>(lines);
-        Collections.reverse(l);
-        for(String line: l){
+        List<String> reversedLines = new ArrayList<String>(lines);
+        Collections.reverse(reversedLines);
+        for (String line : reversedLines) {
             prepend(line);
         }
         return helper;
     }
 
-    public ScriptHelper prepend(String... lines){
+    public ScriptHelper prepend(String... lines) {
         return prepend(Arrays.asList(lines));
     }
 
@@ -57,20 +55,12 @@ public class ScriptPart {
         return reset(Arrays.asList(line));
     }
 
-   public ScriptHelper reset(List<String> ll) {
+    public ScriptHelper reset(List<String> ll) {
         lines.clear();
         return append(ll);
     }
 
-    /**
-     * Passes the list to a closure for amendment; result of closure ignored.
-     */
-    public ScriptHelper apply(Closure<List<String>> c) {
-        c.call(lines);
-        return helper;
-    }
-
     public boolean isEmpty() {
-       return lines.isEmpty();
+        return lines.isEmpty();
     }
 }
