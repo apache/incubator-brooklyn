@@ -1,13 +1,12 @@
 package brooklyn.entity.basic
 
-import java.lang.reflect.Field
-import java.lang.reflect.Modifier
 import java.util.Collection
 import java.util.concurrent.CancellationException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.ExecutionException
-import java.util.concurrent.Future
+
+import net.schmizz.sshj.ConfigImpl;
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -20,6 +19,8 @@ import brooklyn.entity.Entity
 import brooklyn.entity.EntityClass
 import brooklyn.entity.Group
 import brooklyn.entity.ConfigKey.HasConfigKey
+import brooklyn.entity.basic.EntityReferences.EntityCollectionReference;
+import brooklyn.entity.basic.EntityReferences.EntityReference;
 import brooklyn.event.AttributeSensor
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
@@ -40,12 +41,8 @@ import brooklyn.policy.basic.AbstractPolicy
 import brooklyn.util.BrooklynLanguageExtensions
 import brooklyn.util.IdGenerator;
 import brooklyn.util.flags.FlagUtils
-import brooklyn.util.flags.SetFromFlag
-import brooklyn.util.flags.TypeCoercions
-import brooklyn.util.internal.ConfigKeySelfExtracting
 import brooklyn.util.task.BasicExecutionContext
 
-import com.google.common.collect.ImmutableList
 import com.google.common.collect.Iterables
 
 /**
@@ -73,7 +70,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     final String id = IdGenerator.makeRandomId(8);
     String displayName
     
-    EntityReference owner
+    EntityReference<Entity> owner
     protected volatile EntityReference<Application> application
     final EntityCollectionReference<Group> groups = new EntityCollectionReference<Group>(this);
     
@@ -89,24 +86,18 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     // an exception will be thrown.
     boolean previouslyOwned = false
 
-    // following two perhaps belong in entity class in a registry;
-    // but that is an optimization, and possibly wrong if we have dynamic sensors/effectors
-    // (added only to this instance), however if we did we'd need to reset/update entity class
-    // on sensor/effector set change
-
-    /** Map of effectors on this entity by name, populated at constructor time. */
-    private Map<String,Effector> effectors = null
-
-    /** Map of sensors on this entity by name, populated at constructor time. */
-    private Map<String,Sensor> sensors = null
-
-    /** Map of config keys on this entity by name, populated at constructor time. */
-	private Map<String,ConfigKey> configKeys = null
-
+    private final EntityDynamicType entityType;
+    
     private transient EntityClass entityClass = null
     protected transient ExecutionContext execution
     protected transient SubscriptionContext subscription
     protected transient ManagementContext managementContext
+
+    /**
+     * The config values of this entity. Updating this map should be done
+     * via getConfig/setConfig.
+     */
+    protected final ConfigMap configsInternal = new ConfigMap(this)
 
     /**
      * The sensor-attribute values of this entity. Updating this map should be done
@@ -119,23 +110,6 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
      * calculating averages over time etc.
      */
     protected final Map<String,Object> tempWorkings = [:]
-
-    /*
-     * TODO An alternative implementation approach would be to have:
-     *   setOwner(Entity o, Map<ConfigKey,Object> inheritedConfig=[:])
-     * The idea is that the owner could in theory decide explicitly what in its config
-     * would be shared.
-     * I (Aled) am undecided as to whether that would be better...
-     * 
-     * (Alex) i lean toward the config key getting to make the decision
-     */
-    /**
-     * Map of configuration information that is defined at start-up time for the entity. These
-     * configuration parameters are shared and made accessible to the "owned children" of this
-     * entity.
-     */
-    protected final Map<ConfigKey,Object> ownConfig = [:]
-    protected final Map<ConfigKey,Object> inheritedConfig = [:]
 
     protected transient SubscriptionTracker _subscriptionTracker;
 
@@ -153,6 +127,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         this([:], owner)
     }
 
+    // FIXME don't leak this reference in constructor - even to utils
     public AbstractEntity(Map flags=[:], Entity owner=null) {
         this.@skipInvokeMethodEffectorInterception.set(true)
         try {
@@ -164,70 +139,9 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
             }
             if (owner!=null) flags.owner = owner;
             
-            // initialize the effectors defined on the class
-            // (dynamic effectors could still be added; see #getEffectors
-			// TODO we could/should maintain a registry of EntityClass instances and re-use that,
-			//      except where dynamic sensors/effectors are desired (nowhere currently I think)
-            Map<String,Effector> effectorsT = [:]
-            for (Field f in getClass().getFields()) {
-                if (Effector.class.isAssignableFrom(f.getType())) {
-                    Effector eff = f.get(this)
-                    def overwritten = effectorsT.put(eff.name, eff)
-                    if (overwritten!=null && !overwritten.is(eff)) 
-                        LOG.warn("multiple definitions for effector ${eff.name} on $this; preferring $eff to $overwritten")
-                }
-            }
-            if (LOG.isTraceEnabled())
-                LOG.trace "Entity {} effectors: {}", id, effectorsT.keySet().join(", ")
-            effectors = effectorsT
-    
-            Map<String,Sensor> sensorsT = [:]
-            for (Field f in getClass().getFields()) {
-                if (Sensor.class.isAssignableFrom(f.getType())) {
-                    Sensor sens = f.get(this)
-                    def overwritten = sensorsT.put(sens.name, sens)
-                    if (overwritten!=null && !overwritten.is(sens)) 
-                        LOG.warn("multiple definitions for sensor ${sens.name} on $this; preferring $sens to $overwritten")
-                }
-            }
-            if (LOG.isTraceEnabled())
-                LOG.trace "Entity {} sensors: {}", id, sensorsT.keySet().join(", ")
-            sensors = sensorsT
-
-            Map<String,ConfigKey> configT = [:]
-            Map<String,Field> configFields = [:]
-            for (Field f in getClass().getFields()) {
-            	ConfigKey k = null;
-                if (ConfigKey.class.isAssignableFrom(f.getType())) {
-                	k = f.get(this)
-                } else if (HasConfigKey.class.isAssignableFrom(f.getType())) {
-					k = ((HasConfigKey)f.get(this)).getConfigKey();
-				}
-				if (k) {
-				    Field alternativeField = configFields.get(k.name)
-                    // Allow overriding config keys (e.g. to set default values) when there is an assignable-from relationship between classes
-                    Field definitiveField = alternativeField ? inferSubbestField(alternativeField, f) : f
-                    boolean skip = false;
-                    if (definitiveField != f) {
-                        // If they refer to the _same_ instance, just keep the one we already have
-                        if (alternativeField.get(this).is(f.get(this))) skip = true;
-                    }
-                    if (skip) {
-                        //nothing
-                    } else if (definitiveField == f) {
-                        def overwritten = configT.put(k.name, k)
-                        configFields.put(k.name, f)
-                    } else if (definitiveField != null) {
-                        if (LOG.isDebugEnabled()) LOG.debug("multiple definitions for config key ${k.name} on $this; preferring that in sub-class: $alternativeField to $f")
-                    } else if (definitiveField == null) {
-                        LOG.warn("multiple definitions for config key ${k.name} on $this; preferring $alternativeField to $f")
-                    }
-                }
-            }
-            if (LOG.isTraceEnabled())
-                LOG.trace "Entity {} config keys: {}", id, configT.keySet().join(", ")
-            configKeys = configT
-
+            // TODO Don't let `this` reference escape during construction
+            entityType = new EntityDynamicType(this);
+            
             def checkWeGetThis = configure(flags);
             assert this == checkWeGetThis : "$this configure method does not return itself; returns $checkWeGetThis instead"
 
@@ -240,16 +154,6 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     
     public boolean hasEverBeenManaged() {
         return hasEverBeenManaged;
-    }
-    /**
-     * Gets the field that is in the sub-class; or null if one field does not come from a sub-class of the other field's class
-     */
-    protected Field inferSubbestField(Field f1, Field f2) {
-        Class<?> c1 = f1.getDeclaringClass()
-        Class<?> c2 = f2.getDeclaringClass()
-        boolean isSuper1 = c1.isAssignableFrom(c2)
-        boolean isSuper2 = c2.isAssignableFrom(c1)
-        return (isSuper1) ? (isSuper2 ? null : f2) : (isSuper2 ? f1 : null)
     }
     
     /** sets fields from flags; can be overridden if needed, subclasses should
@@ -268,57 +172,25 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         if (suppliedOwner) suppliedOwner.addOwnedChild(this)
 
         Map<ConfigKey,Object> suppliedOwnConfig = flags.remove('config')
-        if (suppliedOwnConfig) ownConfig.putAll(suppliedOwnConfig)
+        if (suppliedOwnConfig != null) {
+            for (Map.Entry<ConfigKey, Object> entry : suppliedOwnConfig.entrySet()) {
+                setConfigEvenIfOwned(entry.getKey(), entry.getValue());
+            }
+        }
 
         displayName = flags.remove('displayName') ?: displayName;
         
         // allow config keys, and fields, to be set from these flags if they have a SetFromFlag annotation
-        for (Field f: FlagUtils.getAllFields(getClass())) {
-            try {
-                SetFromFlag cf = f.getAnnotation(SetFromFlag.class);
-                if (cf) {
-                    ConfigKey key;
-                    if (ConfigKey.class.isAssignableFrom(f.getType())) {
-                        key = f.get(this);
-                    } else if (HasConfigKey.class.isAssignableFrom(f.getType())) {
-                        key = ((HasConfigKey)f.get(this)).getConfigKey();
-                    } else {
-                        if ((f.getModifiers() & (Modifier.STATIC))!=0) {
-                            LOG.warn "Unsupported {} on static on {} in {}; ignoring", SetFromFlag.class.getSimpleName(), f, this
-                        } else {
-                            //normal field, not a config key
-                            String flagName = cf.value() ?: f.getName();
-                            if (flagName && flags.containsKey(flagName)) {
-                                FlagUtils.setField(this, f, flags.remove(flagName), cf)
-                            } else if (cf.defaultVal()) {
-                                FlagUtils.setField(this, f, cf.defaultVal(), cf)
-                            } else if (!flagName) {
-                                LOG.warn "Unsupported {} on {} in {}; ignoring", SetFromFlag.class.getSimpleName(), f, this
-                            }
-                        }
-                    }
-                    if (key) {
-                        String flagName = cf.value() ?: key?.getName();
-                        if (flagName && flags.containsKey(flagName)) {
-                            Object v = flags.remove(flagName);
-                            setConfigInternal(key, v)
-                            if (flagName=="name" && displayName==null)
-                            displayName = v
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                throw new IllegalArgumentException("Cannot configure ${f.name} on ${this}: ${e}", e);
-            }
-        }
-
+        flags = FlagUtils.setConfigKeysFromFlags(flags, this);
+        flags = FlagUtils.setFieldsFromFlags(flags, this);
+        
 		if (displayName==null)
 			displayName = flags.name ? flags.remove('name') : getClass().getSimpleName()+":"+id.substring(0, 4)
 		
         for (Iterator fi = flags.iterator(); fi.hasNext(); ) {
             Map.Entry entry = fi.next();
             if (entry.key in ConfigKey) {
-                setConfigInternal(entry.key, entry.value)
+                setConfigEvenIfOwned(entry.key, entry.value)
                 fi.remove();
             }
         }
@@ -357,7 +229,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         owner = new EntityReference(this, entity)
         //used to test entity!=null but that should be guaranteed?
         entity.addOwnedChild(this)
-        inheritedConfig.putAll(entity.getAllConfig())
+        configsInternal.setInheritedConfig(entity.getAllConfig());
         previouslyOwned = true
         
         getApplication()
@@ -452,8 +324,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
 
     @Override
     public synchronized EntityClass getEntityClass() {
-        if (entityClass) entityClass
-        entityClass = new BasicEntityClass(this.class.canonicalName, configKeys.values(), sensors.values(), effectors.values()) 
+        return entityType.getEntityClass();
     }
 
     @Override
@@ -474,23 +345,16 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
 
     @Override
     public <T> T getAttribute(AttributeSensor<T> attribute) {
-        attributesInternal.getValue(attribute);
+        return attributesInternal.getValue(attribute);
     }
 
     public <T> T getAttributeByNameParts(List<String> nameParts) {
-        attributesInternal.getValue(nameParts)
+        return attributesInternal.getValue(nameParts)
     }
     
     @Override
     public <T> T setAttribute(AttributeSensor<T> attribute, T val) {
-        if (LOG.isDebugEnabled()) {
-            Object oldValue = getAttribute(attribute);
-            if ((oldValue==null && val!=null) || (oldValue!=null && !oldValue.equals(val)))
-                LOG.debug "setting attribute {} to {} (was {}) on {}", attribute.name, val, oldValue, this
-            else    
-                if (LOG.isTraceEnabled()) LOG.trace "setting attribute {} to {} (unchanged) on {}", attribute.name, val, this
-        }
-        attributesInternal.update(attribute, val);
+        return attributesInternal.update(attribute, val);
     }
 
     /** sets the value of the given attribute sensor from the config key value herein,
@@ -508,46 +372,36 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
 	/**
 	 * ConfigKeys available on this entity.
 	 */
-	public Map<String,ConfigKey<?>> getConfigKeys() { configKeys }
+	public Map<String,ConfigKey<?>> getConfigKeys() {
+        return entityType.getConfigKeys();
+    }
 
-	@Override
-	public <T> T getConfig(ConfigKey<T> key) { getConfig(key, null) }
+    /**
+     * ConfigKeys available on this entity.
+     */
+    public ConfigKey<?> getConfigKey(String keyName) { 
+        return entityType.getConfigKey(keyName);
+    }
     
 	@Override
-	public <T> T getConfig(HasConfigKey<T> key) { getConfig(key, null) }
+	public <T> T getConfig(ConfigKey<T> key) {
+        return configsInternal.getConfig(key);
+    }
+    
+	@Override
+	public <T> T getConfig(HasConfigKey<T> key) {
+        return configsInternal.getConfig(key);
+    }
 	
     @Override
     public <T> T getConfig(HasConfigKey<T> key, T defaultValue) {
-        return getConfig(key.configKey, defaultValue)
+        return configsInternal.getConfig(key, defaultValue);
     }
     
 	//don't use groovy defaults for defaultValue as that doesn't implement the contract; we need the above
     @Override
     public <T> T getConfig(ConfigKey<T> key, T defaultValue) {
-        // FIXME What about inherited task in config?!
-		//              alex says: think that should work, no?
-        // FIXME What if someone calls getConfig on a task, before setting parent app?
-		//              alex says: not supported (throw exception, or return the task)
-        
-        // In case this entity class has overridden the given key (e.g. to set default), then retrieve this entity's key
-        // TODO If ask for a config value that's not in our configKeys, should we really continue with rest of method and return key.getDefaultValue?
-        //      e.g. SshBasedJavaAppSetup calls setAttribute(JMX_USER), which calls getConfig(JMX_USER)
-        //           but that example doesn't have a default...
-        ConfigKey<T> ownKey = getConfigKeys().get(key.getName()) ?: key
-        
-        ExecutionContext exec = getExecutionContext();
-        
-        // Don't use groovy truth: if the set value is e.g. 0, then would ignore set value and return default!
-        if (ownKey in ConfigKeySelfExtracting) {
-            if (((ConfigKeySelfExtracting)ownKey).isSet(ownConfig)) {
-                return ((ConfigKeySelfExtracting)ownKey).extractValue(ownConfig, exec);
-            } else if (((ConfigKeySelfExtracting)ownKey).isSet(inheritedConfig)) {
-                return ((ConfigKeySelfExtracting)ownKey).extractValue(inheritedConfig, exec);
-            }
-        } else {
-            LOG.warn("Config key $ownKey of $this is not a ConfigKeySelfExtracting; cannot retrieve value; returning default")
-        }
-        return TypeCoercions.coerce((defaultValue != null) ? defaultValue : ownKey.getDefaultValue(), key.type);
+        return configsInternal.getConfig(key, defaultValue);
     }
 
     protected void assertNotYetOwned() {
@@ -559,27 +413,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     @Override
     public <T> T setConfig(ConfigKey<T> key, T val) {
         assertNotYetOwned()
-        setConfigInternal(key, val)
-    }
-    
-    protected <T> T setConfigInternal(ConfigKey<T> key, T v) {
-        Object val
-        if ((v in Future) || (v in Closure)) {
-            //no coercion for these (yet)
-            val = v;
-        } else {
-            try {
-                val = TypeCoercions.coerce(v, key.getType())
-            } catch (Exception e) {
-                throw new IllegalArgumentException("Cannot coerce or set "+v+" / "+val+" to "+key, e)
-            }
-        }
-        T oldVal = ownConfig.put(key, val);        
-        ownedChildren.get().each {
-            it.refreshInheritedConfig()
-        }
-
-        oldVal
+        configsInternal.setConfig(key, val);
     }
     
 	@Override
@@ -587,20 +421,29 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
 		setConfig(key.configKey, val)
 	}
 
+    protected <T> T setConfigEvenIfOwned(ConfigKey<T> key, T val) {
+        configsInternal.setConfig(key, val);
+    }
+    
     protected void setConfigIfValNonNull(ConfigKey key, Object val) {
         if (val != null) setConfig(key, val)
     }
+    
     protected void setConfigIfValNonNull(HasConfigKey key, Object val) {
         if (val != null) setConfig(key, val)
     }
 
     public void refreshInheritedConfig() {
         if (getOwner() != null) {
-            inheritedConfig.putAll(getOwner().getAllConfig())
+            configsInternal.setInheritedConfig(getOwner().getAllConfig())
         } else {
-            inheritedConfig.clear();
+            configsInternal.clearInheritedConfig();
         }
 
+        refreshInheritedConfigOfChildren();
+    }
+
+    void refreshInheritedConfigOfChildren() {
         ownedChildren.get().each {
             it.refreshInheritedConfig()
         }
@@ -608,11 +451,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
 
     @Override
     public Map<ConfigKey,Object> getAllConfig() {
-        // FIXME What about task-based config?!
-        Map<ConfigKey,Object> result = [:]
-        result.putAll(ownConfig);
-        result.putAll(inheritedConfig);
-        return result.asImmutable()
+        return configsInternal.getAllConfig();
     }
 
     /** @see EntityLocal#subscribe */
@@ -756,16 +595,20 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
 	/**
 	 * Sensors available on this entity.
 	 */
-	public Map<String,Sensor<?>> getSensors() { sensors }
+	public Map<String,Sensor<?>> getSensors() {
+        return entityType.getSensors();
+    }
 
     /** Convenience for finding named sensor in {@link #getSensor()} {@link Map}. */
-    public <T> Sensor<T> getSensor(String sensorName) { getSensors()[sensorName] }
+    public <T> Sensor<T> getSensor(String sensorName) {
+        return entityType.getSensor(sensorName);
+    }
 
     /**
      * Add the given {@link Sensor} to this entity.
      */
     public void addSensor(Sensor<?> sensor) {
-        sensors.put(sensor.name, sensor)
+        entityType.addSensor(sensor);
         emit(SENSOR_ADDED, sensor)
     }
 
@@ -773,7 +616,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
      * Remove the named {@link Sensor} from this entity.
      */
     public void removeSensor(String sensorName) {
-        Sensor removedSensor = sensors.remove(sensorName)
+        Sensor removedSensor = entityType.removeSensor(sensorName);
         if (removedSensor != null) {
             emit(SENSOR_REMOVED, removedSensor)
         }
@@ -799,7 +642,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
                 LOG.warn("$this.$name invoked with incorrect args signature (non-array ${args.class}): "+args, new Throwable("source of incorrect invocation of $this.$name"))
 
             try {
-                Effector eff = effectors.get(name)
+                Effector eff = entityType.getEffector(name);
                 if (eff) {
                     if (LOG.isDebugEnabled()) LOG.debug("Invoking effector {} on {} with args {}", name, this, args)
                     return getManagementContext().invokeEffectorMethodSync(this, eff, args);
@@ -824,10 +667,14 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
      * NB no work has been done supporting changing this after initialization,
      * but the idea of these so-called "dynamic effectors" has been discussed and it might be supported in future...
      */
-    public Map<String,Effector<?>> getEffectors() { effectors }
+    public Map<String,Effector<?>> getEffectors() {
+        return entityType.getEffectors();
+    }
 
     /** Convenience for finding named effector in {@link #getEffectors()} {@link Map}. */
-    public <T> Effector<T> getEffector(String effectorName) { effectors[effectorName] }
+    public <T> Effector<T> getEffector(String effectorName) {
+        return entityType.getEffector(effectorName);
+    }
 
     /** Invoke an {@link Effector} directly. */
     public <T> Task<T> invoke(Map parameters=[:], Effector<T> eff) {
@@ -868,125 +715,5 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         entityClass = null
         execution = null
         subscription = null
-    }
-}
-
-/**
- * Serialization helper.
- *
- * This masks (with transience) a remote entity (e.g a child or parent) during serialization,
- * by keeping a non-transient reference to the entity which owns the reference, 
- * and using his management context reference to find the referred Entity (master instance or proxy),
- * which is then cached.
- */
-private class EntityReference<T extends Entity> implements Serializable {
-    Entity referrer;
-
-    String id;
-    transient T entity = null;
-
-    public EntityReference(Entity referrer, String id) {
-        this.referrer = referrer;
-        this.id = id;
-    }
-
-    public EntityReference(Entity referrer, Entity reference) {
-        this(referrer, reference.id);
-        entity = reference;
-    }
-    
-    public T get() {
-        T e = entity;
-        if (e!=null) return e;
-        find();
-    }
-
-    protected synchronized T find() {
-        if (entity) return entity;
-        if (!referrer)
-            throw new IllegalStateException("EntityReference $id should have been initialised with a reference owner")
-        entity = ((AbstractEntity)referrer).getManagementContext().getEntity(id);
-    }
-    
-    synchronized void invalidate() {
-        entity = null;
-    }
-    
-    public String toString() {
-        getClass().getSimpleName()+"["+get().toString()+"]"
-    }
-}
-
-
-class SelfEntityReference<T extends Entity> extends EntityReference<T> {
-    public SelfEntityReference(Entity self) {
-        super(self, self);
-    }
-    protected synchronized T find() {
-        return referrer;
-    }
-}
-
-class EntityCollectionReference<T extends Entity> implements Serializable {
-    private static final Logger LOG = LoggerFactory.getLogger(EntityCollectionReference.class)
-    Entity referrer;
-    
-    Collection<String> entityRefs = new LinkedHashSet<String>();
-    transient Collection<T> entities = null;
-    
-    public EntityCollectionReference(Entity referrer) {
-        this.referrer = referrer;
-    }
-
-    public synchronized boolean add(Entity e) {
-        if (entityRefs.add(e.id)) {
-            def e2 = new LinkedHashSet<T>(entities!=null?entities:Collections.emptySet());
-            e2 << e
-            entities = e2;
-            return true
-        } else {
-            return false
-        }
-    }
-
-    public synchronized boolean remove(Entity e) {
-        if (entityRefs.remove(e.id) && entities!=null) {
-            def e2 = new LinkedHashSet<T>(entities);
-            e2.remove(e);
-            entities = e2;
-            return true
-        } else {
-            return false
-        }
-    }
-
-    public synchronized Collection<T> get() {
-        Collection<T> result = entities;
-        if (result==null) {
-            result = find();
-        }
-        return ImmutableList.copyOf(result)
-    }
-
-    public synchronized int size() {
-        return entityRefs.size()
-    }
-
-    public synchronized boolean contains(Entity e) {
-        return entityRefs.contains(e.id)
-    }
-
-    protected synchronized Collection<T> find() {
-        if (entities!=null) return entities;
-        if (!referrer)
-            throw new IllegalStateException("EntityReference should have been initialised with a reference owner")
-        Collection<T> result = new CopyOnWriteArrayList<T>();
-        entityRefs.each { 
-            def e = ((AbstractEntity)referrer).getManagementContext().getEntity(it); 
-            if (e==null) 
-                LOG.warn("unable to find $it, referred to by $referrer");
-            else result << e;
-        }
-        entities = result;
     }
 }

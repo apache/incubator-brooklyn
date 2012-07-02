@@ -13,7 +13,6 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.Sensor;
 
 import com.google.common.base.Preconditions;
 
@@ -41,8 +40,7 @@ public final class AttributeMap implements Serializable {
      * @throws IllegalArgumentException if entity is null
      */
     public AttributeMap(EntityLocal entity) {
-        Preconditions.checkNotNull(entity, "entity must be specified");
-        this.entity = entity;
+        this.entity = Preconditions.checkNotNull(entity, "entity must be specified");
     }
 
     /**
@@ -74,10 +72,20 @@ public final class AttributeMap implements Serializable {
         Preconditions.checkArgument(!path.isEmpty(), "path can't be empty");
     }
 
-    public <T> void update(Sensor<T> sensor, T newValue) {
-        Preconditions.checkArgument(sensor instanceof AttributeSensor, "AttributeMap can only update an attribute sensor's value, not %s", sensor);
-        T oldValue = (T) update(sensor.getNameParts(), newValue);
-        ((AbstractEntity)entity).emitInternal(sensor, newValue);
+    public <T> T update(AttributeSensor<T> attribute, T newValue) {
+        if (log.isDebugEnabled()) {
+            Object oldValue = getValue(attribute);
+            if ((oldValue == null && newValue != null) || (oldValue != null && !oldValue.equals(newValue))) {
+                log.debug("setting attribute {} to {} (was {}) on {}", new Object[] {attribute.getName(), newValue, oldValue, entity});
+            } else {
+                if (log.isTraceEnabled()) log.trace("setting attribute {} to {} (unchanged) on {}", new Object[] {attribute.getName(), newValue, this});
+            }
+        }
+
+        T oldValue = (T) update(attribute.getNameParts(), newValue);
+        ((AbstractEntity)entity).emitInternal(attribute, newValue);
+        
+        return (isNull(oldValue)) ? null : oldValue;
     }
 
     /**
@@ -96,7 +104,7 @@ public final class AttributeMap implements Serializable {
         return (isNull(result)) ? null : result;
     }
 
-    public <T> T getValue(Sensor<T> sensor) {
+    public <T> T getValue(AttributeSensor<T> sensor) {
         return (T) getValue(sensor.getNameParts());
     }
 

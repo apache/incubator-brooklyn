@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
+import brooklyn.entity.basic.EntityReferences.EntityCollectionReference;
 import brooklyn.entity.trait.Changeable;
 
 
