@@ -63,7 +63,7 @@ public abstract class AttributeSensorAndConfigKey<ConfigType,SensorType> extends
         try {
             return convertConfigToSensor(v, e);
         } catch (Throwable t) {
-            throw new IllegalArgumentException("Cannot convert config value $v for sensor "+this+": "+t, t);
+            throw new IllegalArgumentException("Cannot convert config value "+v+" for sensor "+this+": "+t, t);
         }
     }
     

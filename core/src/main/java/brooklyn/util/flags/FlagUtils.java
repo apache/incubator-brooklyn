@@ -175,7 +175,7 @@ public class FlagUtils {
                 newValue = TypeCoercions.coerce(value, fieldType);
                 
             } catch (Exception e) {
-                throw new IllegalArgumentException("Cannot set $f in $objectOfField from type "+value.getClass()+" ("+value+"): "+e, e);
+                throw new IllegalArgumentException("Cannot set "+f+" in "+objectOfField+" from type "+value.getClass()+" ("+value+"): "+e, e);
             }
             f.set(objectOfField, newValue);
         } catch (IllegalAccessException e) {
@@ -210,7 +210,7 @@ public class FlagUtils {
         if (t==Character.TYPE) return (char)0;
         if (t==Boolean.TYPE) return false;
         //should never happen
-        throw new IllegalStateException("Class $t is an unknown primitive.");
+        throw new IllegalStateException("Class "+t+" is an unknown primitive.");
     }
 
     /** returns a map of all fields which are annotated 'SetFromFlag', along with the annotation */

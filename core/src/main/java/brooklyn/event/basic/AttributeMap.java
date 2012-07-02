@@ -60,7 +60,7 @@ public final class AttributeMap implements Serializable {
         }
 
         if (log.isTraceEnabled()) {
-            log.trace("setting sensor $path=$newValue for $entity");
+            log.trace("setting sensor {}={} for {}", new Object[] {path, newValue, entity});
         }
 
         T oldValue = (T) values.put(path, newValue);
