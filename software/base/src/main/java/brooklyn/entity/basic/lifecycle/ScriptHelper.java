@@ -1,6 +1,7 @@
 package brooklyn.entity.basic.lifecycle;
 
 import brooklyn.util.GroovyJavaMethods;
+import brooklyn.util.RuntimeInterruptedException;
 import brooklyn.util.mutex.WithMutexes;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -122,7 +123,7 @@ public class ScriptHelper {
                 try {
                     mutexSupport.acquireMutex(mutexId, description);
                 } catch (InterruptedException e) {
-                    throw new UncheckedInterruptedException(e);
+                    throw new RuntimeInterruptedException(e);
                 }
             }
         };
@@ -136,7 +137,7 @@ public class ScriptHelper {
         return this;
     }
 
-    public int execute() throws InterruptedException {
+    public int execute() {
         if (!executionCheck.apply(this)) {
             return 0;
         }
@@ -150,8 +151,8 @@ public class ScriptHelper {
         try {
             mutexAcquire.run();
             result = runner.execute(lines, summary);
-        } catch (UncheckedInterruptedException e) {
-            throw e.getCause();
+        } catch (RuntimeInterruptedException e) {
+            throw e;
         } catch (Exception e) {
             throw new IllegalStateException(format("execution failed, invocation error for %s", summary), e);
         } finally {
@@ -160,8 +161,9 @@ public class ScriptHelper {
         if (log.isDebugEnabled()) {
             log.debug("finished executing: {} - result code {}", summary, result);
         }
-        if (!resultCodeCheck.apply(result))
+        if (!resultCodeCheck.apply(result)) {
             throw new IllegalStateException(format("execution failed, invalid result %s for %s", result, summary));
+        }
         return result;
     }
 
@@ -171,16 +173,6 @@ public class ScriptHelper {
         result.addAll(body.lines);
         result.addAll(footer.lines);
         return result;
-    }
-
-    class UncheckedInterruptedException extends RuntimeException {
-        UncheckedInterruptedException(InterruptedException cause) {
-            super(cause);
-        }
-
-        public InterruptedException getCause() {
-            return (InterruptedException) super.getCause();
-        }
     }
 }
 
