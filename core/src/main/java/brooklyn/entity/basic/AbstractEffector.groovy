@@ -91,9 +91,9 @@ public abstract class AbstractEffector<T> implements Effector<T> {
 
     /** takes an array of arguments, which typically contain a map in the first position (and possibly nothing else),
     * and returns an array of arguments suitable for use by Effector according to the ParameterTypes it exposes */
-   public static Object prepareArgsForEffector(Effector eff, Object args) {
+   public static Object[] prepareArgsForEffector(Effector eff, Object args) {
        //attempt to coerce unexpected types
-       if (args==null) args = [:]
+       if (args==null) args = [] as Object[]
        if (!args.getClass().isArray()) {
            if (args instanceof Collection) args = args as Object[]
            else args = [ args ] as Object[]

@@ -15,7 +15,7 @@ public class HostGeoLookupIntegrationTest {
     public static final Logger log = LoggerFactory.getLogger(HostGeoLookupIntegrationTest.class);
     
     @Test(groups = "Integration")
-    public void testLocalhostGetsLocation() {
+    public void testLocalhostGetsLocation() throws Exception {
         SshMachineLocation l = new LocalhostMachineProvisioningLocation().obtain();
         HostGeoInfo geo = HostGeoInfo.fromLocation(l);
         log.info("localhost is in "+geo);

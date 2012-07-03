@@ -1,30 +1,37 @@
 package brooklyn.policy.resizing;
 
+import static brooklyn.util.GroovyJavaMethods.elvis;
+import static brooklyn.util.GroovyJavaMethods.truth;
 import groovy.lang.Closure;
 
-import java.util.Map
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledExecutorService
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicBoolean
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.Entity
-import brooklyn.entity.basic.EntityLocal
-import brooklyn.entity.trait.Resizable
-import brooklyn.event.SensorEvent
-import brooklyn.event.SensorEventListener
-import brooklyn.event.basic.BasicNotificationSensor
-import brooklyn.policy.basic.AbstractPolicy
-import brooklyn.util.TimeWindowedList
-import brooklyn.util.TimestampedValue
-import brooklyn.util.flags.SetFromFlag
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.trait.Resizable;
+import brooklyn.event.Sensor;
+import brooklyn.event.SensorEvent;
+import brooklyn.event.SensorEventListener;
+import brooklyn.event.basic.BasicNotificationSensor;
+import brooklyn.policy.basic.AbstractPolicy;
+import brooklyn.policy.loadbalancing.LoadBalancingPolicy;
+import brooklyn.util.MutableMap;
+import brooklyn.util.TimeWindowedList;
+import brooklyn.util.TimestampedValue;
+import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
 
-import com.google.common.base.Function
-import com.google.common.base.Preconditions
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 
 
 /**
@@ -45,7 +52,7 @@ public class ResizingPolicy extends AbstractPolicy {
             public ResizeOperator apply(final Closure closure) {
                 return new ResizeOperator() {
                     @Override public Integer resize(Entity entity, Integer input) {
-                        return closure.call(entity, input);
+                        return (Integer) closure.call(entity, input);
                     }
                 };
             }
@@ -101,41 +108,48 @@ public class ResizingPolicy extends AbstractPolicy {
     private final AtomicBoolean executorQueued = new AtomicBoolean(false);
     private volatile long executorTime = 0;
     
-    private final TimeWindowedList recentDesiredResizes;
+    private final TimeWindowedList<Number> recentDesiredResizes;
     
     private final ResizeOperator defaultResizeOperator = new ResizeOperator() {
         public Integer resize(Entity entity, Integer desiredSize) {
-            return entity.resize(desiredSize);
+            return ((Resizable)entity).resize(desiredSize);
         }
-    }
+    };
     
     private final Function<Entity,Integer> defaultCurrentSizeOperator = new Function<Entity,Integer>() {
         public Integer apply(Entity entity) {
-            return entity.getCurrentSize();
+            return ((Resizable)entity).getCurrentSize();
         }
-    }
+    };
     
-    private final SensorEventListener<?> eventHandler = new SensorEventListener<Object>() {
+    private final SensorEventListener<Object> eventHandler = new SensorEventListener<Object>() {
         public void onEvent(SensorEvent<Object> event) {
             Map<String, ?> properties = (Map<String, ?>) event.getValue();
-            switch (event.getSensor()) {
-                case poolColdSensor: onPoolCold(properties); break;
-                case poolHotSensor: onPoolHot(properties); break;
-                case poolOkSensor: onPoolOk(properties); break;
+            Sensor<?> sensor = event.getSensor();
+            
+            if (sensor.equals(poolColdSensor)) {
+                onPoolCold(properties);
+            } else if (sensor.equals(poolHotSensor)) {
+                onPoolHot(properties);
+            } else if (sensor.equals(poolOkSensor)) {
+                onPoolOk(properties);
             }
         }
+    };
+
+    public ResizingPolicy() {
+        this(MutableMap.of());
     }
-    
-    public ResizingPolicy(Map props = [:]) {
-        super(props)
-        resizeOperator = resizeOperator ?: defaultResizeOperator;
-        currentSizeOperator = currentSizeOperator ?: defaultCurrentSizeOperator;
-        poolHotSensor = poolHotSensor ?: POOL_HOT;
-        poolColdSensor = poolColdSensor ?: POOL_COLD;
-        poolOkSensor = poolOkSensor ?: POOL_OK;
+    public ResizingPolicy(Map props) {
+        super(props);
+        resizeOperator = elvis(resizeOperator, defaultResizeOperator);
+        currentSizeOperator = elvis(currentSizeOperator, defaultCurrentSizeOperator);
+        poolHotSensor = elvis(poolHotSensor, POOL_HOT);
+        poolColdSensor = elvis(poolColdSensor, POOL_COLD);
+        poolOkSensor = elvis(poolOkSensor, POOL_OK);
         
         long maxResizeStabilizationDelay = Math.max(resizeUpStabilizationDelay, resizeDownStabilizationDelay);
-        recentDesiredResizes = new TimeWindowedList<Number>([timePeriod:maxResizeStabilizationDelay, minExpiredVals:1]);
+        recentDesiredResizes = new TimeWindowedList<Number>(MutableMap.of("timePeriod", maxResizeStabilizationDelay, "minExpiredVals", 1));
     }
     
     @Override
@@ -165,52 +179,52 @@ public class ResizingPolicy extends AbstractPolicy {
     }
     
     private void onPoolCold(Map<String, ?> properties) {
-        if (LOG.isTraceEnabled()) LOG.trace("{} recording pool-cold for {}: {}", this, poolEntity, properties);
+        if (LOG.isTraceEnabled()) LOG.trace("{} recording pool-cold for {}: {}", new Object[] {this, poolEntity, properties});
         
-        int poolCurrentSize = properties.get(POOL_CURRENT_SIZE_KEY);
-        double poolCurrentWorkrate = properties.get(POOL_CURRENT_WORKRATE_KEY);
-        double poolLowThreshold = properties.get(POOL_LOW_THRESHOLD_KEY);
+        int poolCurrentSize = (Integer) properties.get(POOL_CURRENT_SIZE_KEY);
+        double poolCurrentWorkrate = (Double) properties.get(POOL_CURRENT_WORKRATE_KEY);
+        double poolLowThreshold = (Double) properties.get(POOL_LOW_THRESHOLD_KEY);
         
         // Shrink the pool to force its low threshold to fall below the current workrate.
         // NOTE: assumes the pool is homogeneous for now.
-        int desiredPoolSize = Math.ceil(poolCurrentWorkrate / (poolLowThreshold/poolCurrentSize)).intValue();
+        int desiredPoolSize = (int) Math.ceil(poolCurrentWorkrate / (poolLowThreshold/poolCurrentSize));
         desiredPoolSize = toBoundedDesiredPoolSize(desiredPoolSize);
         if (desiredPoolSize < poolCurrentSize) {
-            if (LOG.isTraceEnabled()) LOG.trace("{} resizing cold pool {} from {} to {}", this, poolEntity, poolCurrentSize, desiredPoolSize);
+            if (LOG.isTraceEnabled()) LOG.trace("{} resizing cold pool {} from {} to {}", new Object[] {this, poolEntity, poolCurrentSize, desiredPoolSize});
             scheduleResize(desiredPoolSize);
         } else {
-            if (LOG.isTraceEnabled()) LOG.trace("{} not resizing cold pool {} from {} to {}", this, poolEntity, poolCurrentSize, desiredPoolSize);
+            if (LOG.isTraceEnabled()) LOG.trace("{} not resizing cold pool {} from {} to {}", new Object[] {this, poolEntity, poolCurrentSize, desiredPoolSize});
             abortResize(poolCurrentSize);
         }
 
     }
     
     private void onPoolHot(Map<String, ?> properties) {
-        if (LOG.isTraceEnabled()) LOG.trace("{} recording pool-hot for {}: {}", this, poolEntity, properties);
+        if (LOG.isTraceEnabled()) LOG.trace("{} recording pool-hot for {}: {}", new Object[] {this, poolEntity, properties});
         
-        int poolCurrentSize = properties.get(POOL_CURRENT_SIZE_KEY);
-        double poolCurrentWorkrate = properties.get(POOL_CURRENT_WORKRATE_KEY);
-        double poolHighThreshold = properties.get(POOL_HIGH_THRESHOLD_KEY);
+        int poolCurrentSize = (Integer) properties.get(POOL_CURRENT_SIZE_KEY);
+        double poolCurrentWorkrate = (Double) properties.get(POOL_CURRENT_WORKRATE_KEY);
+        double poolHighThreshold = (Double) properties.get(POOL_HIGH_THRESHOLD_KEY);
         
         // Grow the pool to force its high threshold to rise above the current workrate.
         // FIXME: assumes the pool is homogeneous for now.
-        int desiredPoolSize = Math.ceil(poolCurrentWorkrate / (poolHighThreshold/poolCurrentSize)).intValue();
+        int desiredPoolSize = (int) Math.ceil(poolCurrentWorkrate / (poolHighThreshold/poolCurrentSize));
         desiredPoolSize = toBoundedDesiredPoolSize(desiredPoolSize);
         if (desiredPoolSize > poolCurrentSize) {
-            if (LOG.isTraceEnabled()) LOG.trace("{} resizing hot pool {} from {} to {}", this, poolEntity, poolCurrentSize, desiredPoolSize);
+            if (LOG.isTraceEnabled()) LOG.trace("{} resizing hot pool {} from {} to {}", new Object[] {this, poolEntity, poolCurrentSize, desiredPoolSize});
             scheduleResize(desiredPoolSize);
         } else {
-            if (LOG.isTraceEnabled()) LOG.trace("{} not resizing hot pool {} from {} to {}", this, poolEntity, poolCurrentSize, desiredPoolSize);
+            if (LOG.isTraceEnabled()) LOG.trace("{} not resizing hot pool {} from {} to {}", new Object[] {this, poolEntity, poolCurrentSize, desiredPoolSize});
             abortResize(poolCurrentSize);
         }
     }
     
     private void onPoolOk(Map<String, ?> properties) {
-        if (LOG.isTraceEnabled()) LOG.trace("{} recording pool-ok for {}: {}", this, poolEntity, properties);
+        if (LOG.isTraceEnabled()) LOG.trace("{} recording pool-ok for {}: {}", new Object[] {this, poolEntity, properties});
         
-        int poolCurrentSize = properties.get(POOL_CURRENT_SIZE_KEY);
+        int poolCurrentSize = (Integer) properties.get(POOL_CURRENT_SIZE_KEY);
         
-        if (LOG.isTraceEnabled()) LOG.trace("{} not resizing ok pool {} from {}", this, poolEntity, poolCurrentSize);
+        if (LOG.isTraceEnabled()) LOG.trace("{} not resizing ok pool {} from {}", new Object[] {this, poolEntity, poolCurrentSize});
         abortResize(poolCurrentSize);
     }
     
@@ -245,34 +259,36 @@ public class ResizingPolicy extends AbstractPolicy {
             long delay = Math.max(0, (executorTime + minPeriodBetweenExecs) - now);
             if (LOG.isTraceEnabled()) LOG.trace("{} scheduling resize in {}ms", this, delay);
             
-            executor.schedule(
-                {
+            executor.schedule(new Runnable() {
+                @Override public void run() {
                     try {
                         executorTime = System.currentTimeMillis();
                         executorQueued.set(false);
 
                         long currentPoolSize = currentSizeOperator.apply(poolEntity);
-                        def (int desiredPoolSize, boolean stable) = calculateDesiredPoolSize(currentPoolSize);
+                        CalculatedDesiredPoolSize calculatedDesiredPoolSize = calculateDesiredPoolSize(currentPoolSize);
+                        long desiredPoolSize = calculatedDesiredPoolSize.size;
+                        boolean stable = calculatedDesiredPoolSize.stable;
+                        
                         if (!stable) {
                             // the desired size fluctuations are not stable; ensure we check again later (due to time-window)
                             // even if no additional events have been received
                             if (LOG.isTraceEnabled()) LOG.trace("{} re-scheduling resize check, as desired size not stable; continuing with resize...", 
-                                    this, poolEntity, currentPoolSize, desiredPoolSize);
+                                    new Object[] {this, poolEntity, currentPoolSize, desiredPoolSize});
                             scheduleResize();
                         }
                         if (currentPoolSize == desiredPoolSize) {
-                            if (LOG.isTraceEnabled()) LOG.trace("{} not resizing pool {} from {} to {}", this, poolEntity, currentPoolSize, desiredPoolSize);
+                            if (LOG.isTraceEnabled()) LOG.trace("{} not resizing pool {} from {} to {}", 
+                                    new Object[] {this, poolEntity, currentPoolSize, desiredPoolSize});
                             return;
                         }
                         
-                        resizeOperator.resize(poolEntity, desiredPoolSize);
+                        // TODO Should we use int throughout, rather than casting here?
+                        resizeOperator.resize(poolEntity, (int) desiredPoolSize);
                         
-                        if (LOG.isDebugEnabled()) LOG.debug("{} requested resize to {}; current {}, min {}, max {}", this, desiredPoolSize,
-                                currentPoolSize, minPoolSize, maxPoolSize);
+                        if (LOG.isDebugEnabled()) LOG.debug("{} requested resize to {}; current {}, min {}, max {}", 
+                                new Object[] {this, desiredPoolSize, currentPoolSize, minPoolSize, maxPoolSize});
                         
-                    } catch (InterruptedException e) {
-                        if (LOG.isDebugEnabled()) LOG.debug("Interrupted while attempting resize", e);
-                        Thread.currentThread().interrupt(); // gracefully stop
                     } catch (Exception e) {
                         if (isRunning()) {
                             LOG.error("Error resizing: "+e, e);
@@ -281,9 +297,9 @@ public class ResizingPolicy extends AbstractPolicy {
                         }
                     } catch (Throwable t) {
                         LOG.error("Error resizing: "+t, t);
-                        throw t;
+                        throw Throwables.propagate(t);
                     }
-                },
+                }},
                 delay,
                 TimeUnit.MILLISECONDS);
         }
@@ -297,14 +313,14 @@ public class ResizingPolicy extends AbstractPolicy {
      * @return tuple of desired pool size, and whether this is "stable" (i.e. if we receive no more events 
      *         will this continue to be the desired pool size)
      */
-    private List<?> calculateDesiredPoolSize(long currentPoolSize) {
+    private CalculatedDesiredPoolSize calculateDesiredPoolSize(long currentPoolSize) {
         long now = System.currentTimeMillis();
-        List<TimestampedValue<?>> downsizeWindowVals = recentDesiredResizes.getValuesInWindow(now, resizeDownStabilizationDelay);
-        List<TimestampedValue<?>> upsizeWindowVals = recentDesiredResizes.getValuesInWindow(now, resizeUpStabilizationDelay);
-        int minDesiredPoolSize = maxInWindow(downsizeWindowVals, resizeDownStabilizationDelay);
-        int maxDesiredPoolSize = minInWindow(upsizeWindowVals, resizeUpStabilizationDelay);
+        List<TimestampedValue<Number>> downsizeWindowVals = recentDesiredResizes.getValuesInWindow(now, resizeDownStabilizationDelay);
+        List<TimestampedValue<Number>> upsizeWindowVals = recentDesiredResizes.getValuesInWindow(now, resizeUpStabilizationDelay);
+        long minDesiredPoolSize = maxInWindow(downsizeWindowVals, resizeDownStabilizationDelay).longValue();
+        long maxDesiredPoolSize = minInWindow(upsizeWindowVals, resizeUpStabilizationDelay).longValue();
         
-        int desiredPoolSize;
+        long desiredPoolSize;
         if (currentPoolSize > minDesiredPoolSize) {
             // need to shrink
             desiredPoolSize = minDesiredPoolSize;
@@ -315,46 +331,75 @@ public class ResizingPolicy extends AbstractPolicy {
             desiredPoolSize = currentPoolSize;
         }
         
-        boolean stable = (minInWindow(downsizeWindowVals, resizeDownStabilizationDelay) == maxInWindow(downsizeWindowVals, resizeDownStabilizationDelay)) &&
-                (minInWindow(upsizeWindowVals, resizeUpStabilizationDelay) == maxInWindow(upsizeWindowVals, resizeUpStabilizationDelay));
+        boolean stable = (minInWindow(downsizeWindowVals, resizeDownStabilizationDelay).equals(maxInWindow(downsizeWindowVals, resizeDownStabilizationDelay))) &&
+                (minInWindow(upsizeWindowVals, resizeUpStabilizationDelay).equals(maxInWindow(upsizeWindowVals, resizeUpStabilizationDelay)));
 
         if (LOG.isTraceEnabled()) LOG.trace("{} calculated desired pool size: from {} to {}; minDesired {}, maxDesired {}; " +
                 "stable {}; now {}; downsizeHistory {}; upsizeHistory {}", 
-                this, currentPoolSize, desiredPoolSize, minDesiredPoolSize, maxDesiredPoolSize, stable, now, downsizeWindowVals, upsizeWindowVals);
+                new Object[] {this, currentPoolSize, desiredPoolSize, minDesiredPoolSize, maxDesiredPoolSize, stable, now, downsizeWindowVals, upsizeWindowVals});
         
-        return [desiredPoolSize, stable];
+        return new CalculatedDesiredPoolSize(desiredPoolSize, stable);
     }
-
+    
+    private static class CalculatedDesiredPoolSize {
+        final long size;
+        final boolean stable;
+        
+        CalculatedDesiredPoolSize(long size, boolean stable) {
+            this.size = size;
+            this.stable = stable;
+        }
+    }
+    
     /**
      * If the entire time-window is not covered by the given values, then returns Integer.MAX_VALUE.
      */
-    private <T> T maxInWindow(List<TimestampedValue<T>> vals, long timewindow) {
+    private <T extends Number> T maxInWindow(List<TimestampedValue<T>> vals, long timewindow) {
+        // TODO bad casting from Integer default result to T
         long now = System.currentTimeMillis();
         long epoch = now-timewindow;
         T result = null;
+        double resultAsDouble = Integer.MAX_VALUE;
         for (TimestampedValue<T> val : vals) {
-            if (result == null && val.getTimestamp() > epoch) result = Integer.MAX_VALUE;
-            if (result == null || (val.getValue() != null && val.getValue() > result)) result = val.getValue();
+            T valAsNum = val.getValue();
+            double valAsDouble = (valAsNum != null) ? valAsNum.doubleValue() : 0;
+            if (result == null && val.getTimestamp() > epoch) {
+                result = (T) Integer.valueOf(Integer.MAX_VALUE);
+                resultAsDouble = result.doubleValue();
+            }
+            if (result == null || (valAsNum != null && valAsDouble > resultAsDouble)) {
+                result = valAsNum;
+                resultAsDouble = valAsDouble;
+            }
         }
-        return (result != null ? result : Integer.MAX_VALUE);
+        return (T) (result != null ? result : Integer.MAX_VALUE);
     }
     
     /**
      * If the entire time-window is not covered by the given values, then returns Integer.MIN_VALUE
      */
-    private <T> T minInWindow(List<TimestampedValue<T>> vals, long timewindow) {
+    private <T extends Number> T minInWindow(List<TimestampedValue<T>> vals, long timewindow) {
         long now = System.currentTimeMillis();
-        T result = null;
         long epoch = now-timewindow;
+        T result = null;
+        double resultAsDouble = Integer.MIN_VALUE;
         for (TimestampedValue<T> val : vals) {
-            if (result == null && val.getTimestamp() > epoch) result = Integer.MIN_VALUE;
-            if (result == null || (val.getValue() != null && val.getValue() < result)) result = val.getValue();
+            T valAsNum = val.getValue();
+            double valAsDouble = (valAsNum != null) ? valAsNum.doubleValue() : 0;
+            if (result == null && val.getTimestamp() > epoch) {
+                result = (T) Integer.valueOf(Integer.MIN_VALUE);
+                resultAsDouble = result.doubleValue();
+            }
+            if (result == null || (val.getValue() != null && valAsDouble < resultAsDouble)) {
+                result = valAsNum;
+                resultAsDouble = valAsDouble;
+            }
         }
-        return (result != null ? result : Integer.MIN_VALUE);
+        return (T) (result != null ? result : Integer.MIN_VALUE);
     }
     
     @Override
     public String toString() {
-        return getClass().getSimpleName() + (name ? "("+name+")" : "");
+        return getClass().getSimpleName() + (truth(name) ? "("+name+")" : "");
     }
 }

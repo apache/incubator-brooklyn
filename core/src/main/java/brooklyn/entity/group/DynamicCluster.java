@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
+import org.jclouds.util.Throwables2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -175,14 +176,16 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
                 } catch (Throwable t) {
                     throw unwrapException(t);
                 }
-            } catch (EntityStartException e) {
-                logger.error("Cluster "+this+" failed to start entity "+entity, e);
-                removeNode(entity);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw Throwables.propagate(e);
             } catch (Throwable t) {
-                if (toPropagate == null) toPropagate = t;
+                if (Throwables2.getFirstThrowableOfType(t, EntityStartException.class) != null) {
+                    logger.error("Cluster "+this+" failed to start entity "+entity, t);
+                    removeNode(entity);
+                } else {
+                    if (toPropagate == null) toPropagate = t;
+                }
             }
         }
         if (toPropagate != null) throw Throwables.propagate(toPropagate);

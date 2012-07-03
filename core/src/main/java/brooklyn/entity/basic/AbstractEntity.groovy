@@ -43,13 +43,10 @@ import brooklyn.util.flags.FlagUtils
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.flags.TypeCoercions
 import brooklyn.util.internal.ConfigKeySelfExtracting
-import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.task.BasicExecutionContext
 
-import com.google.common.base.Equivalences.Equals;
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.Iterables
-import com.google.common.primitives.Primitives;
 
 /**
  * Default {@link Entity} implementation.
@@ -619,12 +616,12 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     }
 
     /** @see EntityLocal#subscribe */
-    public <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<T> listener) {
+    public <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener) {
         return subscriptionTracker.subscribe(producer, sensor, listener)
     }
 
     /** @see EntityLocal#subscribeToChildren */
-    public <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, SensorEventListener<T> listener) {
+    public <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, SensorEventListener<? super T> listener) {
         return subscriptionTracker.subscribeToChildren(parent, sensor, listener)
     }
 
@@ -646,7 +643,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
        return subscriptionTracker.unsubscribe(producer, handle)
    }
 
-    protected synchronized SubscriptionContext getSubscriptionContext() {
+    public synchronized SubscriptionContext getSubscriptionContext() {
         if (subscription) return subscription
         subscription = getManagementContext()?.getSubscriptionContext(this);
     }
@@ -930,7 +927,7 @@ class SelfEntityReference<T extends Entity> extends EntityReference<T> {
     }
 }
 
-private class EntityCollectionReference<T extends Entity> implements Serializable {
+class EntityCollectionReference<T extends Entity> implements Serializable {
     private static final Logger LOG = LoggerFactory.getLogger(EntityCollectionReference.class)
     Entity referrer;
     

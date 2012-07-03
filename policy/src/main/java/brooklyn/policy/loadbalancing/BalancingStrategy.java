@@ -20,7 +20,7 @@ import brooklyn.location.Location;
  * TODO: extract interface, provide default implementation
  * TODO: remove legacy code comments
  */
-public class BalancingStrategy<NodeType extends Entity, ItemType extends Entity & Movable> {
+public class BalancingStrategy<NodeType extends Entity, ItemType extends Movable> {
     
     // This is a modified version of the watermark elasticity policy from Monterey v3.
     

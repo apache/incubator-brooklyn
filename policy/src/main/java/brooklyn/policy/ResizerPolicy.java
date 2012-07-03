@@ -1,21 +1,21 @@
 package brooklyn.policy;
 
-import java.util.Map
-import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.Entity
-import brooklyn.entity.basic.EntityLocal
-import brooklyn.entity.trait.Resizable
-import brooklyn.entity.trait.Startable
-import brooklyn.event.AttributeSensor
-import brooklyn.event.SensorEvent
-import brooklyn.event.SensorEventListener
-import brooklyn.policy.basic.AbstractPolicy
-import brooklyn.util.task.BasicTask
+import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.trait.Resizable;
+import brooklyn.entity.trait.Startable;
+import brooklyn.event.AttributeSensor;
+import brooklyn.event.SensorEvent;
+import brooklyn.event.SensorEventListener;
+import brooklyn.policy.basic.AbstractPolicy;
+import brooklyn.util.MutableMap;
+import brooklyn.util.task.BasicTask;
 
 public class ResizerPolicy<T extends Number> extends AbstractPolicy implements SensorEventListener<T> {
     
@@ -39,36 +39,41 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
 
     /** Lock held if we are in the process of resizing. */
     private final AtomicBoolean resizing = new AtomicBoolean(false);
-    
-    private Closure resizeAction = {
-        try {
-            LOG.info "policy resizer performing resizing...";
-            int desire = desiredSize.get();
-            resizable.resize(desire);
-            while (desire != desiredSize.get()) {
-                LOG.info "policy resizer performing re-resizing...";
-                desire = desiredSize.get();
+
+    private Runnable resizeAction = new Runnable() {
+        public void run() {
+            try {
+                LOG.info("policy resizer performing resizing...");
+                int desire = desiredSize.get();
                 resizable.resize(desire);
+                while (desire != desiredSize.get()) {
+                    LOG.info("policy resizer performing re-resizing...");
+                    desire = desiredSize.get();
+                    resizable.resize(desire);
+                }
+                LOG.info("policy resizer resizing complete");
+            } finally {
+                resizing.set(false);
             }
-            LOG.info "policy resizer resizing complete";
-        } finally {
-            resizing.set(false);
         }
-    }
+    };
 
     /**
      * @param averagingSource - A sensor that averages a relevant metric across the attaching entity
      */
-    public ResizerPolicy(Map properties = [:], AttributeSensor<T> averagingSource) {
+    public ResizerPolicy(AttributeSensor<T> averagingSource) {
+        this(MutableMap.of(), averagingSource);
+    }
+    public ResizerPolicy(Map properties, AttributeSensor<T> averagingSource) {
         super(properties);
         this.source = averagingSource;
     }
 
     @Override
     public void setEntity(EntityLocal entity) {
+        assert entity instanceof Resizable : "entity="+entity+"; class="+(entity != null ? entity.getClass() : null);
         super.setEntity(entity);
-        assert entity instanceof Resizable : "entity="+entity;
-        resizable = entity;
+        resizable = (Resizable) entity;
         if(entity instanceof Startable) {
             entityStartable = true;
         }
@@ -78,6 +83,7 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
     public ResizerPolicy setMetricRange(T min, T max) {
         setMetricLowerBound(min);
         setMetricUpperBound(max);
+        return this;
     }
 
     public ResizerPolicy setMetricLowerBound(T val) {
@@ -93,6 +99,7 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
     public ResizerPolicy setSizeRange(int min, int max) {
         setMinSize(min);
         setMaxSize(max);
+        return this;
     }
     
     public ResizerPolicy setMinSize(int val) {
@@ -123,11 +130,11 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
 
         if (desiredSize.get() != currentSize) {
             if (LOG.isDebugEnabled()) LOG.debug("policy resizer resizing: metric={}, workrate={}, lowerBound={}, upperBound={}; currentSize={}, desiredSize={}, minSize={}, maxSize={}",
-                    source, val, metricLowerBound, metricUpperBound, currentSize, desiredSize.get(), minSize, maxSize);
+                    new Object[] {source, val, metricLowerBound, metricUpperBound, currentSize, desiredSize.get(), minSize, maxSize});
             resize();
         } else {
             if (LOG.isTraceEnabled()) LOG.trace("policy resizer doing nothing: metric={}, workrate={}, lowerBound={}, upperBound={}; currentSize={}, minSize={}, maxSize={}",
-                    source, val, metricLowerBound, metricUpperBound, currentSize, minSize, maxSize);
+                    new Object[] {source, val, metricLowerBound, metricUpperBound, currentSize, minSize, maxSize});
         }
     }
 
@@ -135,12 +142,18 @@ public class ResizerPolicy<T extends Number> extends AbstractPolicy implements S
     //      PID design (proportional-integral-derivative)
     // TODO Could show example of overriding this to do something smarter
     protected int calculateDesiredSize(T currentMetric) {
+        double currentMetricD = currentMetric.doubleValue();
+        double metricUpperBoundD = metricUpperBound.doubleValue();
+        double metricLowerBoundD = metricLowerBound.doubleValue();
         int currentSize = resizable.getCurrentSize();
+        
         int desiredSize;
-        if (0 < currentMetric - metricUpperBound) {
-            desiredSize = currentSize+Math.ceil(currentSize * ((currentMetric - metricUpperBound) / metricUpperBound));// scale out
-        } else if (0 < metricLowerBound - currentMetric) {
-            desiredSize = currentSize-Math.ceil(currentSize * (Math.abs(currentMetric - metricLowerBound) / metricLowerBound)); // scale back
+        if (0 < (currentMetricD - metricUpperBoundD)) {
+            // scale out
+            desiredSize = currentSize + (int)Math.ceil(currentSize * ((currentMetricD - metricUpperBoundD) / metricUpperBoundD));
+        } else if (0 < (metricLowerBoundD - currentMetricD)) {
+            // scale back
+            desiredSize = currentSize - (int)Math.ceil(currentSize * (Math.abs(currentMetricD - metricLowerBoundD) / metricLowerBoundD));
         } else {
             desiredSize = currentSize;
         }

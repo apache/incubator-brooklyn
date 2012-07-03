@@ -1,22 +1,27 @@
-package brooklyn.policy.loadbalancing
+package brooklyn.policy.loadbalancing;
 
-import static com.google.common.base.Preconditions.checkNotNull
+import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.Map
+import java.io.Serializable;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.Entity
-import brooklyn.entity.Group
-import brooklyn.entity.basic.AbstractEntity
-import brooklyn.entity.basic.AbstractGroup
-import brooklyn.entity.trait.Resizable
-import brooklyn.entity.trait.Startable
-import brooklyn.event.Sensor
-import brooklyn.event.SensorEvent
-import brooklyn.event.SensorEventListener
-import brooklyn.event.basic.BasicNotificationSensor
+import brooklyn.entity.Entity;
+import brooklyn.entity.Group;
+import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.basic.AbstractGroup;
+import brooklyn.entity.trait.Resizable;
+import brooklyn.entity.trait.Startable;
+import brooklyn.event.Sensor;
+import brooklyn.event.SensorEvent;
+import brooklyn.event.SensorEventListener;
+import brooklyn.event.basic.BasicNotificationSensor;
+import brooklyn.util.MutableMap;
 
 
 /**
@@ -26,6 +31,9 @@ import brooklyn.event.basic.BasicNotificationSensor
  */
 public class BalanceableWorkerPool extends AbstractEntity implements Resizable {
 
+    // FIXME Asymmetry between loadbalancing and followTheSun: ITEM_ADDED and ITEM_REMOVED in loadbalancing
+    // are of type ContainerItemPair, but in followTheSun it is just the `Entity item`.
+    
     private static final Logger LOG = LoggerFactory.getLogger(BalanceableWorkerPool.class);
     
     /** Encapsulates an item and a container; emitted for <code>ITEM_ADDED</code>, <code>ITEM_REMOVED</code> and
@@ -33,10 +41,10 @@ public class BalanceableWorkerPool extends AbstractEntity implements Resizable {
      */
     public static class ContainerItemPair implements Serializable {
         private static final long serialVersionUID = 1L;
-        public final Entity container;
+        public final BalanceableContainer<?> container;
         public final Entity item;
         
-        public ContainerItemPair(Entity container, Entity item) {
+        public ContainerItemPair(BalanceableContainer<?> container, Entity item) {
             this.container = container;
             this.item = checkNotNull(item);
         }
@@ -66,7 +74,7 @@ public class BalanceableWorkerPool extends AbstractEntity implements Resizable {
     private final Set<Entity> containers = Collections.synchronizedSet(new HashSet<Entity>());
     private final Set<Entity> items = Collections.synchronizedSet(new HashSet<Entity>());
     
-    private final SensorEventListener<?> eventHandler = new SensorEventListener<Object>() {
+    private final SensorEventListener<Object> eventHandler = new SensorEventListener<Object>() {
         @Override
         public void onEvent(SensorEvent<Object> event) {
             if (LOG.isTraceEnabled()) LOG.trace("{} received event {}", BalanceableWorkerPool.this, event);
@@ -74,43 +82,47 @@ public class BalanceableWorkerPool extends AbstractEntity implements Resizable {
             Object value = event.getValue();
             Sensor sensor = event.getSensor();
             
-            switch (sensor) {
-                case AbstractGroup.MEMBER_ADDED:
-                    if (source.equals(containerGroup)) {
-                        onContainerAdded((Entity) value);
-                    } else if (source.equals(itemGroup)) {
-                        onItemAdded((Entity)value);
-                    } else {
-                        throw new IllegalStateException("unexpected event source="+source);
-                    }
-                    break
-                case AbstractGroup.MEMBER_REMOVED:
-                    if (source.equals(containerGroup)) {
-                        onContainerRemoved((Entity) value);
-                    } else if (source.equals(itemGroup)) {
-                        onItemRemoved((Entity) value);
-                    } else {
-                        throw new IllegalStateException("unexpected event source="+source);
-                    }
-                    break;
-                case Startable.SERVICE_UP:
-                    // TODO What if start has failed? Is there a sensor to indicate that?
-                    if ((Boolean)value) {
-                        onContainerUp((Entity) source);
-                    } else {
-                        onContainerDown((Entity) source);
-                    }
-                    break;
-                case Movable.CONTAINER:
-                    onItemMoved(source, (Entity) value);
-                    break;
-                default:
-                    throw new IllegalStateException("Unhandled event type "+sensor+": "+event);
+            if (sensor.equals(AbstractGroup.MEMBER_ADDED)) {
+                if (source.equals(containerGroup)) {
+                    onContainerAdded((BalanceableContainer<?>) value);
+                } else if (source.equals(itemGroup)) {
+                    onItemAdded((Entity)value);
+                } else {
+                    throw new IllegalStateException("unexpected event source="+source);
+                }
+            } else if (sensor.equals(AbstractGroup.MEMBER_REMOVED)) {
+                if (source.equals(containerGroup)) {
+                    onContainerRemoved((BalanceableContainer<?>) value);
+                } else if (source.equals(itemGroup)) {
+                    onItemRemoved((Entity) value);
+                } else {
+                    throw new IllegalStateException("unexpected event source="+source);
+                }
+            } else if (sensor.equals(Startable.SERVICE_UP)) {
+                // TODO What if start has failed? Is there a sensor to indicate that?
+                if ((Boolean)value) {
+                    onContainerUp((BalanceableContainer<?>) source);
+                } else {
+                    onContainerDown((BalanceableContainer<?>) source);
+                }
+            } else if (sensor.equals(Movable.CONTAINER)) {
+                onItemMoved(source, (BalanceableContainer<?>) value);
+            } else {
+                throw new IllegalStateException("Unhandled event type "+sensor+": "+event);
             }
         }
-    }
+    };
     
-    public BalanceableWorkerPool(Map properties = [:], Entity owner = null) {
+    public BalanceableWorkerPool() {
+        this(MutableMap.of(), null);
+    }
+    public BalanceableWorkerPool(Map properties) {
+        this(properties, null);
+    }
+    public BalanceableWorkerPool(Entity owner) {
+        this(MutableMap.of(), owner);
+    }
+    public BalanceableWorkerPool(Map properties, Entity owner) {
         super(properties, owner);
     }
 
@@ -130,7 +142,7 @@ public class BalanceableWorkerPool extends AbstractEntity implements Resizable {
         
         // Process extant containers and items
         for (Entity existingContainer : containerGroup.getMembers()) {
-            onContainerAdded(existingContainer);
+            onContainerAdded((BalanceableContainer<?>)existingContainer);
         }
         for (Entity existingItem : itemGroup.getMembers()) {
             onItemAdded((Entity)existingItem);
@@ -151,29 +163,29 @@ public class BalanceableWorkerPool extends AbstractEntity implements Resizable {
     public Integer resize(Integer desiredSize) {
         if (resizable != null) return resizable.resize(desiredSize);
         
-        throw new UnsupportedOperationException("Container group is not resizable, and no resizable supplied: "+containerGroup+" of type "+(containerGroup?.getClass().getCanonicalName()));
+        throw new UnsupportedOperationException("Container group is not resizable, and no resizable supplied: "+containerGroup+" of type "+(containerGroup != null ? containerGroup.getClass().getCanonicalName() : null));
     }
     
-    private void onContainerAdded(Entity newContainer) {
+    private void onContainerAdded(BalanceableContainer<?> newContainer) {
         subscribe(newContainer, Startable.SERVICE_UP, eventHandler);
         if (!(newContainer instanceof Startable) || newContainer.getAttribute(Startable.SERVICE_UP)) {
             onContainerUp(newContainer);
         }
     }
     
-    private void onContainerUp(Entity newContainer) {
+    private void onContainerUp(BalanceableContainer<?> newContainer) {
         if (containers.add(newContainer)) {
             emit(CONTAINER_ADDED, newContainer);
         }
     }
     
-    private void onContainerDown(Entity oldContainer) {
+    private void onContainerDown(BalanceableContainer<?> oldContainer) {
         if (containers.remove(oldContainer)) {
             emit(CONTAINER_REMOVED, oldContainer);
         }
     }
     
-    private void onContainerRemoved(Entity oldContainer) {
+    private void onContainerRemoved(BalanceableContainer<?> oldContainer) {
         unsubscribe(oldContainer);
         onContainerDown(oldContainer);
     }
@@ -192,7 +204,7 @@ public class BalanceableWorkerPool extends AbstractEntity implements Resizable {
         }
     }
     
-    private void onItemMoved(Entity item, Entity container) {
+    private void onItemMoved(Entity item, BalanceableContainer<?> container) {
         emit(ITEM_MOVED, new ContainerItemPair(container, item));
     }
 }

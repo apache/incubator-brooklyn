@@ -1,18 +1,26 @@
-package brooklyn.location.basic
+package brooklyn.location.basic;
 
-import java.util.Collection
+import static brooklyn.util.GroovyJavaMethods.truth;
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
 
-import brooklyn.location.Location
-import brooklyn.location.geo.HasHostGeoInfo
-import brooklyn.location.geo.HostGeoInfo
-import brooklyn.util.flags.FlagUtils
-import brooklyn.util.flags.SetFromFlag
-import brooklyn.util.internal.LanguageUtils
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions
+import brooklyn.location.Location;
+import brooklyn.location.geo.HasHostGeoInfo;
+import brooklyn.location.geo.HostGeoInfo;
+import brooklyn.util.flags.FlagUtils;
+import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.internal.LanguageUtils;
+
+import com.google.common.base.Objects;
+import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * A basic implementation of the {@link Location} interface.
@@ -23,17 +31,17 @@ import com.google.common.base.Preconditions
  * Override {@link #configure(Map)} to add special initialization logic.
  */
 public abstract class AbstractLocation implements Location, HasHostGeoInfo {
-    public static final Logger LOG = LoggerFactory.getLogger(AbstractLocation.class)
+    public static final Logger LOG = LoggerFactory.getLogger(AbstractLocation.class);
 
     @SetFromFlag
-    String id
+    String id;
     
-    private Location parentLocation
-    private final Collection<Location> childLocations = []
-    private final Collection<Location> childLocationsReadOnly = Collections.unmodifiableCollection(childLocations)
-    protected Map leftoverProperties = [:];
+    private Location parentLocation;
+    private final Collection<Location> childLocations = Lists.newArrayList();
+    private final Collection<Location> childLocationsReadOnly = Collections.unmodifiableCollection(childLocations);
+    protected Map leftoverProperties = Maps.newLinkedHashMap();
     @SetFromFlag
-    protected String name
+    protected String name;
     
     protected HostGeoInfo hostGeoInfo;
 
@@ -59,9 +67,12 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo {
      * 
      * @param properties
      */
-    public AbstractLocation(Map properties=[:]) {
-        configure(properties)
-        FlagUtils.checkRequiredFields(this)
+    public AbstractLocation() {
+        this(Maps.newLinkedHashMap());
+    }
+    public AbstractLocation(Map properties) {
+        configure(properties);
+        FlagUtils.checkRequiredFields(this);
     }
 
     /** will set fields from flags, and put the remaining ones into the 'leftovers' map.
@@ -72,26 +83,29 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo {
      * rely on field initializers because they may not run until *after* this method
      * (this method is invoked by the constructor in this class, so initializers
      * in subclasses will not have run when this overridden method is invoked.) */ 
-    protected void configure(Map properties=[:]) {
-        leftoverProperties << FlagUtils.setFieldsFromFlags(properties, this)
+    protected void configure() {
+        configure(Maps.newLinkedHashMap());
+    }
+    protected void configure(Map properties) {
+        leftoverProperties.putAll(FlagUtils.setFieldsFromFlags(properties, this));
         //replace properties _contents_ with leftovers so subclasses see leftovers only
         properties.clear();
-        properties.putAll(leftoverProperties)
+        properties.putAll(leftoverProperties);
         leftoverProperties = properties;
         
         if (id==null) id = LanguageUtils.newUid();
         
-        if (!name && properties.displayName) {
+        if (!truth(name) && truth(properties.get("displayName"))) {
             //'displayName' is a legacy way to refer to a location's name
             //FIXME could this be a GString?
-            Preconditions.checkArgument properties.displayName instanceof String, "'displayName' property should be a string"
-            name = properties.remove("displayName")
+            Preconditions.checkArgument(properties.get("displayName") instanceof String, "'displayName' property should be a string");
+            name = (String) properties.remove("displayName");
         }
 
-        if (properties.parentLocation) {
-            Preconditions.checkArgument properties.parentLocation == null || properties.parentLocation instanceof Location,
-                "'parentLocation' property should be a Location instance"
-            setParentLocation(properties.remove("parentLocation"))
+        if (truth(properties.get("parentLocation"))) {
+            Preconditions.checkArgument(properties.get("parentLocation") == null || properties.get("parentLocation") instanceof Location,
+                "'parentLocation' property should be a Location instance");
+            setParentLocation((Location)properties.remove("parentLocation"));
         }
     }
     
@@ -114,12 +128,12 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo {
     }
 
     public boolean containsLocation(Location potentialDescendent) {
-        Location loc = potentialDescendent
+        Location loc = potentialDescendent;
         while (loc != null) {
-            if (this == loc) return true
-            loc = loc.getParentLocation()
+            if (this == loc) return true;
+            loc = loc.getParentLocation();
         }
-        return false
+        return false;
     }
     
     protected void addChildLocation(Location child) {
@@ -132,19 +146,19 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo {
 
     public void setParentLocation(Location parent) {
         if (parent == this) {
-            throw new IllegalArgumentException("Location cannot be its own parent: "+this)
+            throw new IllegalArgumentException("Location cannot be its own parent: "+this);
         }
         if (parent == parentLocation) {
-            return // no-op; already have desired parent
+            return; // no-op; already have desired parent
         }
         if (parentLocation != null) {
             Location oldParent = parentLocation;
             parentLocation = null;
-            oldParent.removeChildLocation(this);
+            ((AbstractLocation)oldParent).removeChildLocation(this); // FIXME Nasty cast
         }
         if (parent != null) {
             parentLocation = parent;
-            parentLocation.addChildLocation(this);
+            ((AbstractLocation)parentLocation).addChildLocation(this); // FIXME Nasty cast
         }
     }
     
@@ -159,26 +173,20 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo {
     /** Default String representation is simplified name of class, together with selected fields. */
     @Override
     public String toString() {
-        StringBuilder result = []
-        result << (getClass().getSimpleName() ?: getClass().getName())
-        def fields = toStringFieldsToInclude()
-        result << "[" << fields.collect({
-            def v = this.hasProperty(it) ? this[it] : null
-            v ? "$it=$v" : null
-        }).findAll({it!=null}).join(",") << "]"
+        return string().toString();
     }
     
-    /** override this, adding to the collection, to supply fields whose value, if not null, should be included in the toString */
-    public Collection<String> toStringFieldsToInclude() {
-        return ['id', 'name']
+    /** override this, adding to the returned value, to supply additional fields to include in the toString */
+    protected ToStringHelper string() {
+        return Objects.toStringHelper(AbstractLocation.class).add("id", id).add("name", name);
     }
-
+    
     public HostGeoInfo getHostGeoInfo() { return hostGeoInfo; }    
     public void setHostGeoInfo(HostGeoInfo hostGeoInfo) {
         if (hostGeoInfo!=null) { 
             this.hostGeoInfo = hostGeoInfo;
-            if (!getLocationProperty("latitude")) leftoverProperties.put("latitude", hostGeoInfo.latitude); 
-            if (!getLocationProperty("longitude")) leftoverProperties.put("longitude", hostGeoInfo.longitude);
+            if (!truth(getLocationProperty("latitude"))) leftoverProperties.put("latitude", hostGeoInfo.latitude); 
+            if (!truth(getLocationProperty("longitude"))) leftoverProperties.put("longitude", hostGeoInfo.longitude);
         } 
     }
        

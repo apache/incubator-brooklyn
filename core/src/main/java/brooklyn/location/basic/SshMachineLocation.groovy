@@ -1,4 +1,4 @@
-package brooklyn.location.basic
+package brooklyn.location.basic;
 
 
 
@@ -16,6 +16,7 @@ import brooklyn.location.PortRange
 import brooklyn.location.PortSupplier
 import brooklyn.location.geo.HasHostGeoInfo
 import brooklyn.location.geo.HostGeoInfo
+import brooklyn.util.MutableMap
 import brooklyn.util.ReaderInputStream
 import brooklyn.util.ResourceUtils
 import brooklyn.util.flags.SetFromFlag
@@ -26,6 +27,10 @@ import brooklyn.util.internal.ssh.SshjTool
 import brooklyn.util.mutex.MutexSupport
 import brooklyn.util.mutex.WithMutexes
 
+import com.google.common.base.Preconditions
+import com.google.common.collect.ImmutableSet
+import com.google.common.collect.Maps
+import com.google.common.collect.Sets
 
 /**
  * Operations on a machine that is accessible via ssh.
@@ -42,16 +47,16 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public static final Logger logSsh = LoggerFactory.getLogger(BrooklynLogging.SSH_IO);
             
     @SetFromFlag('username')
-    String user
+    String user;
 
     @SetFromFlag('privateKeyData')
     String privateKeyData
 
     @SetFromFlag(nullable = false)
-    InetAddress address
+    InetAddress address;
 
     @SetFromFlag
-    Map config
+    Map config;
 
     /** any property that should be passed as ssh config (connection-time) 
      *  can be prefixed with this and . and will be passed through (with the prefix removed),
@@ -63,24 +68,32 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     //TODO remove once everything is prefixed SSHCONFIG_PREFIX or included above
     public static final String NON_SSH_PROPS = ["latitude", "longitude", "backup", "sshPublicKeyData", "sshPrivateKeyData" ];
     
-    private final Set<Integer> ports = [] as HashSet
+    private final Set<Integer> ports = Sets.newLinkedHashSet();
 
-    public SshMachineLocation(Map properties=[:]) {
-        super(properties)
+    public SshMachineLocation() {
+        this(MutableMap.of());
     }
     
-    public void configure(Map properties=[:]) {
-        if (config==null) config = [:]
+    public SshMachineLocation(Map properties) {
+        super(properties);
+    }
 
-        super.configure(properties)
+    public void configure() {
+        configure(MutableMap.of());
+    }
+    
+    public void configure(Map properties) {
+        if (config==null) config = Maps.newLinkedHashMap();
 
-        Preconditions.checkNotNull(address, "address is required for SshMachineLocation")
-        String host = (user ? "${user}@" : "") + address.hostName
+        super.configure(properties);
+
+        Preconditions.checkNotNull(address, "address is required for SshMachineLocation");
+        String host = (user ? user+"@" : "") + address.getHostName();
         
         if (name == null) {
-            name = host
+            name = host;
         }
-        if (getHostGeoInfo()==null) {
+        if (getHostGeoInfo() == null) {
             if ((parentLocation instanceof HasHostGeoInfo) && ((HasHostGeoInfo)parentLocation).getHostGeoInfo()!=null)
                 setHostGeoInfo( ((HasHostGeoInfo)parentLocation).getHostGeoInfo() );
             else
@@ -88,29 +101,51 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         }
     }
 
-    public InetAddress getAddress() { return address }
+    public InetAddress getAddress() { return address; }
 
-    public int run(Map props=[:], String command, Map env=[:]) {
+    public int run(String command) {
+        return run(MutableMap.of(), command, MutableMap.of());
+    }
+    public int run(Map props, String command) {
+        return run(props, command, MutableMap.of());
+    }
+    public int run(String command, Map env) {
+        return run(MutableMap.of(), command, env);
+    }
+    public int run(Map props, String command, Map env) {
         run(props, [ command ], env)
     }
 
     /**
      * @deprecated in 1.4.1, @see execCommand and execScript
      */
-    public int run(Map props=[:], List<String> commands, Map env=[:]) {
-        Preconditions.checkNotNull address, "host address must be specified for ssh"
-        if (!commands) return 0
-        SshTool ssh = connectSsh(props)
+    public int run(List<String> commands) {
+        return run(MutableMap.of(), commands, MutableMap.of());
+    }
+    public int run(Map props, List<String> commands) {
+        return run(props, commands, MutableMap.of());
+    }
+    public int run(List<String> commands, Map env) {
+        return run(MutableMap.of(), commands, env);
+    }
+    public int run(Map props, List<String> commands, Map env) {
+        Preconditions.checkNotNull(address, "host address must be specified for ssh");
+        if (commands == null || commands.isEmpty()) return 0;
+        SshTool ssh = connectSsh(props);
         try {
             return ssh.execShell(props, commands, env);
         } finally {
-            ssh.disconnect()
+            ssh.disconnect();
         }
     }
+
+    protected SshTool connectSsh() {
+        return connectSsh(MutableMap.of());
+    }
     
-    protected SshTool connectSsh(Map props=[:]) {
-        if (!user) user = System.getProperty "user.name"
-        Map args = [ user:user, host:address.hostName ]
+    protected SshTool connectSsh(Map props) {
+        if (!user) user = System.getProperty("user.name");
+        Map args = MutableMap.of("user", user, "host", address.getHostName());
         (props+config+leftoverProperties).each { kk,v ->
             String k = ""+kk;
             if (SSH_PROPS.contains(k)) {
@@ -126,8 +161,8 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             }
         }
         if (LOG.isTraceEnabled()) LOG.trace("creating ssh session for "+args);
-        SshTool ssh = new SshjTool(args)
-        ssh.connect()
+        SshTool ssh = new SshjTool(args);
+        ssh.connect();
         return ssh;
     }
 
@@ -135,13 +170,22 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
      * Convenience for running commands using ssh {@literal exec} mode.
      * @deprecated in 1.4.1, @see execCommand and execScript
      */
-    public int exec(Map props=[:], List<String> commands, Map env=[:]) {
-        Preconditions.checkNotNull address, "host address must be specified for ssh"
-        if (!commands) return 0
-        SshjTool ssh = connectSsh(props)
-        int result = ssh.execCommands props, commands, env
-        ssh.disconnect()
-        result
+    public int exec(List<String> commands) {
+        return exec(MutableMap.of(), commands, MutableMap.of());
+    }
+    public int exec(Map props, List<String> commands) {
+        return exec(props, commands, MutableMap.of());
+    }
+    public int exec(List<String> commands, Map env) {
+        return exec(MutableMap.of(), commands, env);
+    }
+    public int exec(Map props, List<String> commands, Map env) {
+        Preconditions.checkNotNull(address, "host address must be specified for ssh");
+        if (commands == null || commands.isEmpty()) return 0;
+        SshjTool ssh = connectSsh(props);
+        int result = ssh.execCommands(props, commands, env);
+        ssh.disconnect();
+        return result;
     }
         
     // TODO submitCommands and submitScript which submit objects we can subsequently poll (cf JcloudsSshMachineLocation.submitRunScript)
@@ -221,42 +265,60 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
     }
 
-    public int copyTo(Map props=[:], File src, File destination) {
+    public int copyTo(File src, File destination) {
+        return copyTo(MutableMap.of(), src, destination);
+    }
+    public int copyTo(Map props, File src, File destination) {
         return copyTo(props, src, destination.path)
     }
 
     // FIXME the return code is not a reliable indicator of success or failure
-    public int copyTo(Map props=[:], File src, String destination) {
-        Preconditions.checkNotNull address, "Host address must be specified for scp"
-        Preconditions.checkArgument src.exists(), "File %s must exist for scp", src.path
-		copyTo props, new FileInputStream(src), src.length(), destination 
+    public int copyTo(File src, String destination) {
+        return copyTo(MutableMap.of(), src, destination);
     }
-	public int copyTo(Map props=[:], Reader src, String destination) {
-		copyTo(props, new ReaderInputStream(src), destination);
+    public int copyTo(Map props, File src, String destination) {
+        Preconditions.checkNotNull(address, "Host address must be specified for scp");
+        Preconditions.checkArgument(src.exists(), "File %s must exist for scp", src.path);
+		return copyTo(props, new FileInputStream(src), src.length(), destination); 
+    }
+    public int copyTo(Reader src, String destination) {
+        return copyTo(MutableMap.of(), src, destination);
+    }
+	public int copyTo(Map props, Reader src, String destination) {
+		return copyTo(props, new ReaderInputStream(src), destination);
 	}
-	public int copyTo(Map props=[:], InputStream src, String destination) {
-		copyTo(props, src, -1, destination)
+    public int copyTo(InputStream src, String destination) {
+        return copyTo(MutableMap.of(), src, destination);
+    }
+	public int copyTo(Map props, InputStream src, String destination) {
+		return copyTo(props, src, -1, destination)
 	}
-	public int copyTo(Map props=[:], InputStream src, long filesize, String destination) {
+    public int copyTo(InputStream src, long filesize, String destination) {
+        return copyTo(MutableMap.of(), src, filesize, destination);
+    }
+	public int copyTo(Map props, InputStream src, long filesize, String destination) {
 		if (filesize==-1) {
-			def bytes = src.getBytes()
-			filesize = bytes.size()
-			src = new ByteArrayInputStream(bytes)
+			def bytes = src.getBytes();
+			filesize = bytes.size();
+			src = new ByteArrayInputStream(bytes);
 		}
 		
-        SshTool ssh = connectSsh(props)
-        int result = ssh.createFile props, destination, src, filesize
-        ssh.disconnect()
-        result
+        SshTool ssh = connectSsh(props);
+        int result = ssh.createFile(props, destination, src, filesize);
+        ssh.disconnect();
+        return result;
     }
 
     // FIXME the return code is not a reliable indicator of success or failure
-    public int copyFrom(Map props=[:], String remote, String local) {
-        Preconditions.checkNotNull address, "host address must be specified for scp"
+    public int copyFrom(String remote, String local) {
+        return copyFrom(MutableMap.of(), remote, local);
+    }
+    public int copyFrom(Map props, String remote, String local) {
+        Preconditions.checkNotNull(address, "host address must be specified for scp");
         SshTool ssh = connectSsh(props);
-        int result = ssh.transferFileFrom props, remote, local
-        ssh.disconnect()
-        result
+        int result = ssh.transferFileFrom(props, remote, local);
+        ssh.disconnect();
+        return result;
     }
 
     /** installs the given URL at the indicated destination.
@@ -294,7 +356,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     
     @Override
     public String toString() {
-        return address
+        return address;
     }
 
     /**
@@ -304,10 +366,10 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public boolean obtainSpecificPort(int portNumber) {
 	    // TODO Does not yet check if the port really is free on this machine
         if (ports.contains(portNumber)) {
-            return false
+            return false;
         } else {
-            ports.add(portNumber)
-            return true
+            ports.add(portNumber);
+            return true;
         }
     }
 
@@ -323,24 +385,24 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     }
 
     public boolean isSshable() {
-        String cmd = "date"
+        String cmd = "date";
         try {
-            int result = run(cmd)
+            int result = run(cmd);
             if (result == 0) {
-                return true
+                return true;
             } else {
-                if (LOG.isDebugEnabled()) LOG.debug("Not reachable: $this, executing `$cmd`, exit code $result")
-                return false
+                if (LOG.isDebugEnabled()) LOG.debug("Not reachable: {}, executing `{}`, exit code {}", this, cmd, result);
+                return false;
             }
         } catch (SshException e) {
-            if (LOG.isDebugEnabled()) LOG.debug("Exception checking if $this is reachable; assuming not", e)
-            return false
+            if (LOG.isDebugEnabled()) LOG.debug("Exception checking if "+this+" is reachable; assuming not", e);
+            return false;
         } catch (IllegalStateException e) {
-            if (LOG.isDebugEnabled()) LOG.debug("Exception checking if $this is reachable; assuming not", e)
-            return false
+            if (LOG.isDebugEnabled()) LOG.debug("Exception checking if "+this+" is reachable; assuming not", e);
+            return false;
         } catch (IOException e) {
-            if (LOG.isDebugEnabled()) LOG.debug("Exception checking if $this is reachable; assuming not", e)
-            return false
+            if (LOG.isDebugEnabled()) LOG.debug("Exception checking if "+this+" is reachable; assuming not", e);
+            return false;
         }
     }
     
@@ -349,7 +411,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         return BasicOsDetails.Factory.ANONYMOUS_LINUX;
     }
 
-    protected WithMutexes newMutexSupport() { new MutexSupport(); }
+    protected WithMutexes newMutexSupport() { return new MutexSupport(); }
     
     WithMutexes mutexSupport = newMutexSupport();
     

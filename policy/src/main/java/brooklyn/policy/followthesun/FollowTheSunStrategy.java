@@ -17,7 +17,7 @@ import brooklyn.policy.loadbalancing.Movable;
 import com.google.common.collect.Iterables;
 
 // TODO: extract interface
-public class FollowTheSunStrategy<ContainerType extends Entity, ItemType extends Entity & Movable> {
+public class FollowTheSunStrategy<ContainerType extends Entity, ItemType extends Movable> {
     
     // This is a modified version of the InterGeographyLatencyPolicy (aka Follow-The-Sun) policy from Monterey v3.
     

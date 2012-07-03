@@ -121,7 +121,7 @@ public class FederatingManagementContext extends AbstractManagementContext {
         //TODO
         return true
 	}
-    public Task runAtEntity(Map flags, Entity entity, Runnable code) {
+    public Task runAtEntity(Map flags, Entity entity, Callable code) {
         //TODO
         entity.executionContext.submit(flags, code)
 	}
