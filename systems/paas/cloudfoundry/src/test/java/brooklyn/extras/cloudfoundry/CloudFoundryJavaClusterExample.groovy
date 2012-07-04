@@ -39,7 +39,10 @@ class CloudFoundryJavaClusterExample extends AbstractApplication {
       
     public static void main(String[] args) {
         def app = new CloudFoundryJavaClusterExample();
-        def locations = new LocationRegistry().resolve(["cloudfoundry"]);
+        def locations = new LocationRegistry().resolve([
+            "cloudfoundry"
+//            "cloudfoundry:https://api.your-stackato.example.com/"
+        ]);
         
         app.start(locations);
         

@@ -50,6 +50,9 @@ public interface EntityLocal extends Entity {
     
     /**
      * Emits a {@link SensorEvent} event on behalf of this entity (as though produced by this entity).
+     * <p>
+     * Note that for attribute sensors it is nearly always recommended to use setAttribute, 
+     * as this method will not update local values.
      */
     <T> void emit(Sensor<T> sensor, T value);
     

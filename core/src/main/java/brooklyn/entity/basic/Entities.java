@@ -181,14 +181,14 @@ public class Entities {
 		return false;
 	}
 
-    /** Interim method for assisting with destroying entities */
+    /** Interim method for assisting with entity lifecycle */
     public static Entity start(ManagementContext context, Entity e, Collection<Location> locations) {
         if (context != null) context.manage(e);
         if (e instanceof Startable) ((Startable)e).start(locations);
         return e;
     }
 
-    /** Interim method for assisting with destroying entities */
+    /** Interim method for assisting with entity lifecycle */
     public static void destroy(ManagementContext context, Entity e) {
         if (e instanceof Startable) ((Startable)e).stop();
         if (e instanceof AbstractEntity) ((AbstractEntity)e).destroy();

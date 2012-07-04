@@ -72,10 +72,14 @@ public class SensorPropagatingEnricher extends AbstractEnricher implements Senso
     
     /** useful post-addition to emit current values */
     public void emitAllAttributes() {
+        emitAllAttributes(false);
+    }
+
+    public void emitAllAttributes(boolean includeNullValues) {
         for (Sensor s: sensors) {
             if (s instanceof AttributeSensor) {
                 Object v = source.getAttribute((AttributeSensor)s);
-                if (v!=null) entity.setAttribute((AttributeSensor)s, v);
+                if (v!=null || includeNullValues) entity.setAttribute((AttributeSensor)s, v);
             }
         }
     }

@@ -29,6 +29,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.tidy.Tidy;
 
+import brooklyn.util.StringUtils;
+
 public class GeoscalingWebClient {
     public static final Logger log = LoggerFactory.getLogger(GeoscalingWebClient.class);
     
@@ -67,6 +69,15 @@ public class GeoscalingWebClient {
                 if (s.name.equals(name)) return s;
             }
             return null;
+        }
+        
+        /** e.g. editRecord("foo", "A", "1.2.3.4"), which assuming this domain is "bar.com", will create A record for foo.bar.com.
+         * <p>
+         * or editRecord("*.foo", "CNAME", "foo.bar.com") to map everything at *.foo.bar.com to foo.bar.com
+         */
+        public void editRecord(String subdomainPart, String type, String content) {
+            subdomainPart = StringUtils.removeEnd(subdomainPart, "."+name);
+            editSubdomainRecord(id, subdomainPart, type, content);
         }
         
         public SmartSubdomain getSmartSubdomain(int id) {
@@ -137,6 +148,11 @@ public class GeoscalingWebClient {
         tidy.setErrout(new PrintWriter(new OutputStream() {
             @Override public void write(int b) throws IOException { }
         }));
+    }
+    
+    public GeoscalingWebClient(String username, String password) {
+        this();
+        login(username, password);
     }
     
     public void login(String username, String password) {
@@ -351,7 +367,32 @@ public class GeoscalingWebClient {
             throw new RuntimeException("Failed to update GeoScaling smart subdomain: "+e, e);
         }
     }
+
+    private void editSubdomainRecord(int primaryDomainId, String record, String type, String content) {
+        
+        try {
+            String url = MessageFormat.format(
+                    "https://{0}/{1}?",
+                    HOST, "dns2/ajax/add_record.php");
+
+            HttpPost request = new HttpPost(url);
+            List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
+            nameValuePairs.add(new BasicNameValuePair("id", ""+primaryDomainId));
+            nameValuePairs.add(new BasicNameValuePair("name", record));
+            nameValuePairs.add(new BasicNameValuePair("type", type));
+            nameValuePairs.add(new BasicNameValuePair("content", content));
+            nameValuePairs.add(new BasicNameValuePair("ttl", "300"));
+            nameValuePairs.add(new BasicNameValuePair("prio", "0"));
+           
+            request.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+            
+            sendRequest(request, true);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to update GeoScaling smart subdomain: "+e, e);
+        }
+    }
     
+
     protected HttpResponse sendRequest(HttpUriRequest request, boolean consumeResponse) throws ClientProtocolException, IOException {
         if (log.isDebugEnabled()) log.debug("Geoscaling request: "+
                 request.getURI()+
