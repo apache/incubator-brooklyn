@@ -45,13 +45,15 @@ class JBoss6SshDriver extends JavaWebAppSshDriver {
 		// Note the -o option to unzip, to overwrite existing files without warning.
 		// The JBoss zip file contains lgpl.txt (at least) twice and the prompt to
 		// overwrite interrupts the installer.
-		newScript(INSTALLING).
+
+        List<String> commands = new LinkedList<String>();
+        commands.addAll(CommonCommands.downloadUrlAs(url, getEntityVersionLabel('/'), saveAs));
+        commands.add(CommonCommands.installExecutable("unzip"));
+        commands.add("unzip -o ${saveAs}");
+
+        newScript(INSTALLING).
 			failOnNonZeroResultCode().
-			body.append(
-                CommonCommands.downloadUrlAs(url, getEntityVersionLabel('/'), saveAs),
-                CommonCommands.installExecutable("unzip"), 
-				"unzip -o ${saveAs}",
-			).execute();
+			body.append(commands).execute();
 	}
 
 	@Override

@@ -1,6 +1,7 @@
 package brooklyn.entity.basic.lifecycle;
 
 import brooklyn.util.GroovyJavaMethods;
+import brooklyn.util.RuntimeInterruptedException;
 import brooklyn.util.mutex.WithMutexes;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -10,6 +11,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.LinkedList;
 import java.util.List;
+
+import static java.lang.String.format;
 
 public class ScriptHelper {
 
@@ -70,19 +73,8 @@ public class ScriptHelper {
     }
 
     public ScriptHelper failOnNonZeroResultCode(boolean val) {
-        Predicate<Integer> onTrue = new Predicate<Integer>() {
-            @Override
-            public boolean apply(Integer input) {
-                return input == 0;
-            }
-        };
-
-        Predicate<Integer> onFalse = new Predicate<Integer>() {
-            @Override
-            public boolean apply(Integer input) {
-                return true;
-            }
-        };
+        Predicate<Integer> onTrue = Predicates.equalTo(0);
+        Predicate<Integer> onFalse = Predicates.alwaysTrue();
         requireResultCode(val ? onTrue : onFalse);
         return this;
     }
@@ -109,17 +101,13 @@ public class ScriptHelper {
         return this;
     }
 
-    protected Closure mutexAcquire = new Closure(this) {
-        @Override
-        public Object call() {
-            return null;
+    protected Runnable mutexAcquire = new Runnable() {
+        public void run() {
         }
     };
 
-    protected Closure mutexRelease = new Closure(this) {
-        @Override
-        public Object call() {
-            return null;
+    protected Runnable mutexRelease = new Runnable() {
+        public void run() {
         }
     };
 
@@ -130,53 +118,51 @@ public class ScriptHelper {
      * (e.g. a folder, or a config file used by a process)
      */
     public ScriptHelper useMutex(final WithMutexes mutexSupport, final String mutexId, final String description) {
-        mutexAcquire = new Closure(this) {
-            public Object call() {
+        mutexAcquire = new Runnable() {
+            public void run() {
                 try {
                     mutexSupport.acquireMutex(mutexId, description);
                 } catch (InterruptedException e) {
-                    throw new UncheckedInterruptedException(e);
+                    throw new RuntimeInterruptedException(e);
                 }
-                return null;
             }
         };
 
-        mutexRelease = new Closure(this) {
-            public Object call() {
+        mutexRelease = new Runnable() {
+            public void run() {
                 mutexSupport.releaseMutex(mutexId);
-                return null;
             }
         };
 
         return this;
     }
 
-    public int execute() throws InterruptedException {
+    public int execute() {
         if (!executionCheck.apply(this)) {
             return 0;
         }
 
         List<String> lines = getLines();
-
         if (log.isDebugEnabled()) {
             log.debug("executing: {} - {}", summary, lines);
         }
         int result;
         try {
-            mutexAcquire.call();
+            mutexAcquire.run();
             result = runner.execute(lines, summary);
-        } catch (UncheckedInterruptedException e) {
-            throw e.getCause();
+        } catch (RuntimeInterruptedException e) {
+            throw e;
         } catch (Exception e) {
-            throw new IllegalStateException("execution failed, invocation error for ${summary}", e);
+            throw new IllegalStateException(format("execution failed, invocation error for %s", summary), e);
         } finally {
-            mutexRelease.call();
+            mutexRelease.run();
         }
         if (log.isDebugEnabled()) {
             log.debug("finished executing: {} - result code {}", summary, result);
         }
-        if (!resultCodeCheck.apply(result))
-            throw new IllegalStateException("execution failed, invalid result ${result} for ${summary}");
+        if (!resultCodeCheck.apply(result)) {
+            throw new IllegalStateException(format("execution failed, invalid result %s for %s", result, summary));
+        }
         return result;
     }
 
@@ -186,16 +172,6 @@ public class ScriptHelper {
         result.addAll(body.lines);
         result.addAll(footer.lines);
         return result;
-    }
-
-    class UncheckedInterruptedException extends RuntimeException {
-        UncheckedInterruptedException(InterruptedException cause) {
-            super(cause);
-        }
-
-        public InterruptedException getCause(){
-            return (InterruptedException)super.getCause();
-        }
     }
 }
 

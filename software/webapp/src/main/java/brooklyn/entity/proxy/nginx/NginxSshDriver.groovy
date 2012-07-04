@@ -42,24 +42,25 @@ public class NginxSshDriver extends StartStopSshDriver {
         String stickyModuleUrl = "http://nginx-sticky-module.googlecode.com/files/nginx-sticky-module-1.0.tar.gz"
         String stickyModuleSaveAs = "nginx-sticky-module-1.0.tar.gz"
         boolean sticky = ((NginxController)entity).isSticky();
-        
-        ScriptHelper script = newScript(INSTALLING).
-            body.append(
-                CommonCommands.INSTALL_WGET,
-                CommonCommands.INSTALL_TAR,
-                CommonCommands.installPackage("nginx-prerequisites",
-                        yum: "openssl-devel",
-                        rpm: "openssl-devel",  //TODO RH needs testing
-                        apt: "libssl-dev zlib1g-dev libpcre3-dev"),
-                CommonCommands.downloadUrlAs(nginxUrl, getEntityVersionLabel('/'), nginxSaveAs),
-                "tar xvzf ${nginxSaveAs}",
-                "cd ${installDir}/nginx-${version}");
-        if (sticky)
-            script.body.append(
-                "cd src",
-                CommonCommands.downloadUrlAs(stickyModuleUrl, getEntityVersionLabel('/'), stickyModuleSaveAs),
-                "tar xvzf ${stickyModuleSaveAs}",
-                "cd ..");
+
+        ScriptHelper script = newScript(INSTALLING);
+        script.body.append(CommonCommands.INSTALL_WGET);
+        script.body.append(CommonCommands.INSTALL_TAR);
+        script.body.append(CommonCommands.installPackage("nginx-prerequisites",
+                                yum: "openssl-devel",
+                                rpm: "openssl-devel",  //TODO RH needs testing
+                                apt: "libssl-dev zlib1g-dev libpcre3-dev"))
+        script.body.append(CommonCommands.downloadUrlAs(nginxUrl, getEntityVersionLabel('/'), nginxSaveAs))
+        script.body.append("tar xvzf ${nginxSaveAs}")
+        script.body.append( "cd ${installDir}/nginx-${version}")
+
+        if (sticky) {
+            script.body.append("cd src");
+            script.body.append(CommonCommands.downloadUrlAs(stickyModuleUrl, getEntityVersionLabel('/'), stickyModuleSaveAs));
+            script.body.append("tar xvzf ${stickyModuleSaveAs}");
+            script.body.append("cd ..");
+        }
+
         script.body.append(
                 "mkdir -p dist",
                 "./configure --prefix=${installDir}/nginx-${version}/dist "+

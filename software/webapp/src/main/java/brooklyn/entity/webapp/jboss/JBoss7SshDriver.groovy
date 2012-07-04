@@ -39,13 +39,20 @@ class JBoss7SshDriver extends JavaWebAppSshDriver {
 	public void install() {
         String url = "http://download.jboss.org/jbossas/7.1/jboss-as-${version}/jboss-as-${version}.tar.gz"
         String saveAs  = "jboss-as-distribution-${version}.tar.gz"
-		newScript(INSTALLING).
-			failOnNonZeroResultCode().
-			body.append(
-                CommonCommands.downloadUrlAs(url, getEntityVersionLabel('/'), saveAs),
-                CommonCommands.INSTALL_TAR, 
-				"tar xzfv ${saveAs}",
-			).execute();
+
+        List<String> commands = new LinkedList();
+
+        commands.add("echo 1")
+        commands.addAll(CommonCommands.downloadUrlAs(url, getEntityVersionLabel('/'), saveAs));
+        commands.add("echo 2")
+        commands.addAll(CommonCommands.INSTALL_TAR);
+        commands.add("echo 3")
+        commands.addAll("tar xzfv ${saveAs}");
+        commands.add("echo 4")
+
+        newScript(INSTALLING).
+            failOnNonZeroResultCode().
+            body.append(commands).execute();
 	}
 
     /**
