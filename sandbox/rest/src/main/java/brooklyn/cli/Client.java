@@ -1,7 +1,6 @@
 package brooklyn.cli;
 
-import brooklyn.cli.commands.BrooklynCommand;
-import brooklyn.cli.commands.HelpCommand;
+import brooklyn.cli.commands.*;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import org.iq80.cli.*;
@@ -43,7 +42,10 @@ public class Client {
                 .withDescription("Brooklyn CLI client")
                 .withDefaultCommand(HelpCommand.class)
                 .withCommands(
-                        HelpCommand.class
+                        HelpCommand.class,
+                        VersionCommand.class,
+                        DeployCommand.class,
+                        UndeployCommand.class
                 );
 
         return builder.build();
