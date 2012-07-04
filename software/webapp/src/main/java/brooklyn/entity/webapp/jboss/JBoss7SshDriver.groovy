@@ -42,8 +42,8 @@ class JBoss7SshDriver extends JavaWebAppSshDriver {
 
         List<String> commands = new LinkedList();
         commands.addAll(CommonCommands.downloadUrlAs(url, getEntityVersionLabel('/'), saveAs));
-        commands.addAll(CommonCommands.INSTALL_TAR);
-        commands.addAll("tar xzfv ${saveAs}");
+        commands.add(CommonCommands.INSTALL_TAR);
+        commands.add("tar xzfv ${saveAs}");
 
         newScript(INSTALLING).
             failOnNonZeroResultCode().
