@@ -114,6 +114,11 @@
             <artifactId>swagger-core_2.9.1</artifactId>
             <version>1.0.1</version>
         </dependency>
+        <dependency>    
+            <groupId>org.iq80.cli</groupId>
+            <artifactId>git-like-cli</artifactId>
+            <version>${git-like-cli.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
