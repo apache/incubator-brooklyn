@@ -1,7 +1,5 @@
 package brooklyn.entity.basic.lifecycle;
 
-import groovy.lang.Closure;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -17,45 +15,45 @@ public class ScriptPart {
         this.helper = helper;
     }
 
-    public ScriptHelper append(String line) {
-        lines.add(line);
+    public ScriptHelper append(CharSequence line) {
+        lines.add(line.toString());
         return helper;
     }
 
-    public ScriptHelper append(Collection<String> lines) {
-        for (String line : lines) {
+    public ScriptHelper append(Collection<? extends CharSequence> lines) {
+        for (CharSequence line : lines) {
             append(line);
         }
         return helper;
     }
 
-    public ScriptHelper append(String... lines) {
+    public ScriptHelper append(CharSequence... lines) {
         return append(Arrays.asList(lines));
     }
 
-    public ScriptHelper prepend(String line) {
-        lines.add(0, line);
+    public ScriptHelper prepend(CharSequence line) {
+        lines.add(0, line.toString());
         return helper;
     }
 
-    public ScriptHelper prepend(Collection<String> lines) {
-        List<String> reversedLines = new ArrayList<String>(lines);
+    public ScriptHelper prepend(Collection<? extends CharSequence> lines) {
+        List<CharSequence> reversedLines = new ArrayList<CharSequence>(lines);
         Collections.reverse(reversedLines);
-        for (String line : reversedLines) {
+        for (CharSequence line : reversedLines) {
             prepend(line);
         }
         return helper;
     }
 
-    public ScriptHelper prepend(String... lines) {
+    public ScriptHelper prepend(CharSequence... lines) {
         return prepend(Arrays.asList(lines));
     }
 
-    public ScriptHelper reset(String line) {
+    public ScriptHelper reset(CharSequence line) {
         return reset(Arrays.asList(line));
     }
 
-    public ScriptHelper reset(List<String> ll) {
+    public ScriptHelper reset(List<? extends CharSequence> ll) {
         lines.clear();
         return append(ll);
     }

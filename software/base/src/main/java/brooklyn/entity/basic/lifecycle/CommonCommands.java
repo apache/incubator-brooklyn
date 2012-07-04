@@ -87,7 +87,7 @@ public class CommonCommands {
      * Returns a sequence of alternative commands that runs until one of the commands succeeds
      */
     public static String alternatives(Collection<String> commands, String failure) {
-        return format("(%s || %s", join(commands, " || "), failure);
+        return format("(%s || %s)", join(commands, " || "), failure);
     }
 
     private static String join(Collection<String> c, String separator) {

@@ -22,13 +22,15 @@ public class ActiveMQSshDriver extends JavaStartStopSshDriver {
     public void install() {
         String url = "http://www.mirrorservice.org/sites/ftp.apache.org/activemq/apache-activemq/${version}/apache-activemq-${version}-bin.tar.gz"
         String saveAs  = "apache-activemq-${version}-bin.tar.gz"
+
+        List<String> commands = new LinkedList();
+        commands.addAll(CommonCommands.downloadUrlAs(url, getEntityVersionLabel('/'), saveAs));
+        commands.add(CommonCommands.INSTALL_TAR);
+        commands.add("tar xzfv ${saveAs}")
+
         newScript(INSTALLING).
                 failOnNonZeroResultCode().
-                body.append(
-                CommonCommands.downloadUrlAs(url, getEntityVersionLabel('/'), saveAs),
-                CommonCommands.INSTALL_TAR,
-                "tar xzfv ${saveAs}",
-                ).execute();
+                body.append(commands).execute();
     }
 
     @Override

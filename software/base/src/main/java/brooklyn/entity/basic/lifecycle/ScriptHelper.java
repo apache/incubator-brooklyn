@@ -143,7 +143,6 @@ public class ScriptHelper {
         }
 
         List<String> lines = getLines();
-
         if (log.isDebugEnabled()) {
             log.debug("executing: {} - {}", summary, lines);
         }

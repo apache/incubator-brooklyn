@@ -37,13 +37,15 @@ class Tomcat7SshDriver extends JavaWebAppSshDriver {
 	public void install() {
 		String url = "http://download.nextag.com/apache/tomcat/tomcat-7/v${version}/bin/apache-tomcat-${version}.tar.gz"
 		String saveAs  = "apache-tomcat-${version}.tar.gz"
-		newScript(INSTALLING).
+
+        List<String> commands = new LinkedList<String>();
+        commands.addAll(CommonCommands.downloadUrlAs(url, getEntityVersionLabel('/'), saveAs));
+        commands.add(CommonCommands.installExecutable("tar xvzf"));
+        commands.add("tar xvzf ${saveAs}");
+
+        newScript(INSTALLING).
 			failOnNonZeroResultCode().
-			body.append(
-                CommonCommands.downloadUrlAs(url, getEntityVersionLabel('/'), saveAs),
-                CommonCommands.installExecutable("tar xvzf"), 
-				"tar xvzf ${saveAs}",
-			).execute();
+			body.append(commands).execute();
 	}
 
 	@Override
