@@ -60,14 +60,15 @@ public class MySqlSshDriver extends StartStopSshDriver {
     @Override
     public void install() {
         String saveAs  = "${basename}.tar.gz"
+        List<String> commands = new LinkedList<String>();
+        commands.addAll(CommonCommands.downloadUrlAs(url, getEntityVersionLabel('/'), saveAs));
+        commands.add(CommonCommands.INSTALL_TAR);
+        commands.add("tar xfvz ${saveAs}");
+        commands.add("(which apt-get && apt-get install libaio1) || echo skipping libaio installation");
+
         newScript(INSTALLING).
             failOnNonZeroResultCode().
-            body.append(
-                CommonCommands.downloadUrlAs(url, getEntityVersionLabel('/'), saveAs),
-                CommonCommands.INSTALL_TAR, 
-                "tar xfvz ${saveAs}",
-                "(which apt-get && apt-get install libaio1) || echo skipping libaio installation"
-            ).execute();
+            body.append(commands).execute();
     }
 
     final String socketUid = IdGenerator.makeRandomId(6);

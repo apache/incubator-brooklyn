@@ -30,13 +30,14 @@ public class QpidSshDriver extends JavaStartStopSshDriver {
     
     @Override
     public void install() {
+        List<String> commands = new LinkedList<String>();
+        commands.addAll( CommonCommands.downloadUrlAs(installUrl, getEntityVersionLabel('/'), installFilename));
+        commands.add(CommonCommands.INSTALL_TAR);
+        commands.add("tar xzfv ${installFilename}");
+
         newScript(INSTALLING)
                 .failOnNonZeroResultCode()
-                .body.append(
-	                CommonCommands.downloadUrlAs(installUrl, getEntityVersionLabel('/'), installFilename),
-	                CommonCommands.INSTALL_TAR,
-                    "tar xzfv ${installFilename}",
-                )
+                .body.append(commands)
                 .execute()
     }
 
