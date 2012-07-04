@@ -22,4 +22,4 @@ BROOKLYN_CLASSPATH=${BROOKLYN_CLASSPATH}:${BROOKLYN_HOME}/lib/*
 JAVA_OPTS="-Dbrooklyn.localhost.address=127.0.0.1 ${JAVA_OPTS}"
 
 # Start Brooklyn
-exec java ${JAVA_OPTS} -cp "${BROOKLYN_CLASSPATH}" brooklyn.cli.Main $@
+exec java ${JAVA_OPTS} -cp "${BROOKLYN_CLASSPATH}" brooklyn.cli.Main "$@"
