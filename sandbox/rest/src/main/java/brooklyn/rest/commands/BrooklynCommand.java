@@ -16,6 +16,10 @@ import com.yammer.dropwizard.client.JerseyClientConfiguration;
 import com.yammer.dropwizard.jersey.JacksonMessageBodyProvider;
 import com.yammer.dropwizard.json.Json;
 import com.yammer.dropwizard.util.Duration;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
+import org.apache.http.client.HttpClient;
+
 import java.io.PrintStream;
 import java.net.URI;
 import java.util.concurrent.ExecutorService;
@@ -23,9 +27,6 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
-import org.apache.http.client.HttpClient;
 
 public abstract class BrooklynCommand extends Command {
 

@@ -1,17 +1,13 @@
 package brooklyn.rest.api;
 
 import brooklyn.entity.basic.AbstractApplication;
-import brooklyn.entity.basic.EntityLocal;
-import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 import java.net.URI;
-import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class Application {
 

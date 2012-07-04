@@ -2,17 +2,18 @@ package brooklyn.rest.commands.catalog;
 
 import brooklyn.rest.commands.BrooklynCommand;
 import com.google.common.base.Joiner;
-import static com.google.common.base.Preconditions.checkArgument;
 import com.google.common.io.Files;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
-import com.yammer.dropwizard.client.JerseyClient;
 import com.yammer.dropwizard.json.Json;
+import org.apache.commons.cli.CommandLine;
+
+import javax.ws.rs.core.MediaType;
 import java.io.File;
 import java.io.PrintStream;
 import java.nio.charset.Charset;
-import javax.ws.rs.core.MediaType;
-import org.apache.commons.cli.CommandLine;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 public class LoadClassCommand extends BrooklynCommand {
 

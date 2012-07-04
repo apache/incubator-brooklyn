@@ -3,9 +3,10 @@ package brooklyn.rest.api;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.Sensor;
 import com.google.common.collect.ImmutableMap;
+import org.codehaus.jackson.annotate.JsonProperty;
+
 import java.net.URI;
 import java.util.Map;
-import org.codehaus.jackson.annotate.JsonProperty;
 
 public class SensorSummary {
 

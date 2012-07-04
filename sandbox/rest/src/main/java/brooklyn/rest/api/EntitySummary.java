@@ -2,9 +2,10 @@ package brooklyn.rest.api;
 
 import brooklyn.entity.Entity;
 import com.google.common.collect.ImmutableMap;
+import org.codehaus.jackson.annotate.JsonProperty;
+
 import java.net.URI;
 import java.util.Map;
-import org.codehaus.jackson.annotate.JsonProperty;
 
 public class EntitySummary {
 

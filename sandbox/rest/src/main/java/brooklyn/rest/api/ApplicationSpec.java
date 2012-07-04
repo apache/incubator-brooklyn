@@ -1,9 +1,9 @@
 package brooklyn.rest.api;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.collect.ImmutableSet;
-import java.util.Set;
 import org.codehaus.jackson.annotate.JsonProperty;
+import java.util.Set;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class ApplicationSpec {
 

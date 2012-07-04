@@ -1,13 +1,14 @@
 package brooklyn.rest.commands.applications;
 
 import brooklyn.rest.commands.BrooklynCommand;
-import static com.google.common.base.Preconditions.checkArgument;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
-import com.yammer.dropwizard.client.JerseyClient;
 import com.yammer.dropwizard.json.Json;
-import java.io.PrintStream;
 import org.apache.commons.cli.CommandLine;
+
+import java.io.PrintStream;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 public class DeleteApplicationCommand extends BrooklynCommand {
 

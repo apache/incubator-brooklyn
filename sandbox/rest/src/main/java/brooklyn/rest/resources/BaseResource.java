@@ -4,10 +4,12 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
-import brooklyn.rest.api.*;
-import java.util.Map;
+import brooklyn.rest.api.ApiError;
+import brooklyn.rest.api.Application;
+
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
+import java.util.Map;
 
 public abstract class BaseResource {
 

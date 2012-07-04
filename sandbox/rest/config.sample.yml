@@ -29,7 +29,8 @@ logging:
   level: INFO
   console:
     enabled: true
-    threshold: INFO
+    threshold: ALL
   loggers:
     brooklyn.util.internal.ssh: ERROR
     net.schmizz.sshj: ERROR
+

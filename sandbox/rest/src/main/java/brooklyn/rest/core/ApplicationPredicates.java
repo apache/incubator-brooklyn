@@ -2,6 +2,7 @@ package brooklyn.rest.core;
 
 import brooklyn.rest.api.Application;
 import com.google.common.base.Predicate;
+
 import javax.annotation.Nullable;
 
 public class ApplicationPredicates {

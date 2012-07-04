@@ -3,11 +3,15 @@ package brooklyn.rest;
 import brooklyn.rest.api.LocationSpec;
 import com.google.common.collect.Lists;
 import com.yammer.dropwizard.config.Configuration;
-import java.util.List;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 import org.codehaus.jackson.annotate.JsonProperty;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import java.util.List;
+
+/**
+ * Values for the fields in this Configuration object are loaded from a YAML/JSON config file.
+ */
 public class BrooklynConfiguration extends Configuration {
 
   @Valid

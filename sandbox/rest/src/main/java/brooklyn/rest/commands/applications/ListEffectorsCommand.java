@@ -4,16 +4,17 @@ import brooklyn.rest.api.Application;
 import brooklyn.rest.api.EffectorSummary;
 import brooklyn.rest.api.EntitySummary;
 import brooklyn.rest.commands.BrooklynCommand;
-import static com.google.common.base.Preconditions.checkArgument;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.GenericType;
-import com.yammer.dropwizard.client.JerseyClient;
 import com.yammer.dropwizard.json.Json;
+import org.apache.commons.cli.CommandLine;
+
+import javax.ws.rs.core.MediaType;
 import java.io.PrintStream;
 import java.net.URI;
 import java.util.Set;
-import javax.ws.rs.core.MediaType;
-import org.apache.commons.cli.CommandLine;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 public class ListEffectorsCommand extends BrooklynCommand {
 

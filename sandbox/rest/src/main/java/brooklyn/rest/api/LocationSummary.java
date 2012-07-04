@@ -1,13 +1,15 @@
 package brooklyn.rest.api;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import org.codehaus.jackson.annotate.JsonProperty;
+
 import java.net.URI;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-import org.codehaus.jackson.annotate.JsonProperty;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class LocationSummary {
 

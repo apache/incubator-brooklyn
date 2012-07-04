@@ -1,7 +1,6 @@
 package brooklyn.rest.resources;
 
 import brooklyn.entity.basic.Lifecycle;
-import brooklyn.event.Sensor;
 import brooklyn.rest.BaseResourceTest;
 import brooklyn.rest.BrooklynConfiguration;
 import brooklyn.rest.api.ApiError;
@@ -17,24 +16,25 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import static com.google.common.collect.Iterables.find;
 import com.google.common.collect.Maps;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.UniformInterfaceException;
+import com.yammer.dropwizard.jersey.DropwizardResourceConfig;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.Test;
+
+import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
-import javax.annotation.Nullable;
-import javax.ws.rs.core.Response;
+
+import static com.google.common.collect.Iterables.find;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.Test;
 
 @Test(singleThreaded = true)
 public class ApplicationResourceTest extends BaseResourceTest {
@@ -58,6 +58,7 @@ public class ApplicationResourceTest extends BaseResourceTest {
     addResource(new EntityResource(manager));
     addResource(new SensorResource(manager));
     addResource(new EffectorResource(manager, executorService));
+    addResource(new DropwizardResourceConfig());
   }
 
   @AfterClass

@@ -5,7 +5,6 @@ import static com.yammer.dropwizard.testing.JsonHelpers.fromJson;
 import static com.yammer.dropwizard.testing.JsonHelpers.jsonFixture;
 import java.io.IOException;
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNull;
 import org.testng.annotations.Test;
 
 public class EntitySpecTest {
