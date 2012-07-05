@@ -10,9 +10,6 @@ import java.util.concurrent.Callable;
 
 public abstract class BrooklynCommand implements Callable<Void> {
 
-    @Inject
-    public Help help;
-
     @Option(type = OptionType.GLOBAL,
             name = { "--embedded" },
             description = "Start a simple embedded local web server")
