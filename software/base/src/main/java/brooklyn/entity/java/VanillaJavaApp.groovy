@@ -67,7 +67,7 @@ public class VanillaJavaApp extends SoftwareProcessEntity implements UsesJava, U
     }
     
     public String getMainClass() { return getConfig(MAIN_CLASS); }
-    public List getClasspath() { return getConfig(CLASSPATH); }
+    public List<String> getClasspath() { return getConfig(CLASSPATH); }
     public Map getJvmDefines() { return getConfig(JVM_DEFINES); }
     public List getJvmXArgs() { return getConfig(JVM_XARGS); }
 
