@@ -57,7 +57,7 @@ public abstract class StartStopSshDriver extends AbstractStartStopDriver impleme
     }
     protected String getEntityVersionLabel(String separator) {
         return elvis(entity.getClass().getSimpleName(),  
-                entity.getClass().getName())+(!getVersion().equals(NO_VERSION_INFO) ? separator+getVersion() : "");
+                entity.getClass().getName())+(!NO_VERSION_INFO.equals(getVersion()) ? separator+getVersion() : "");
     }
     public String getInstallDir() {
         return elvis(entity.getConfig(SoftwareProcessEntity.SUGGESTED_INSTALL_DIR),

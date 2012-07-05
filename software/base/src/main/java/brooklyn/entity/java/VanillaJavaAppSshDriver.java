@@ -86,7 +86,7 @@ public class VanillaJavaAppSshDriver extends JavaStartStopSshDriver {
         newScript(flags, LAUNCHING).
             body.append(
                 format("echo \"launching: java $JAVA_OPTS -cp \'lib/*\' %s %s\"",clazz,args),
-                format("java $JAVA_OPTS -cp \"lib/*\" %s %s  >> $runDir/console 2>&1 </dev/null &",clazz,args)
+                format("java $JAVA_OPTS -cp \"lib/*\" %s %s  >> %s/console 2>&1 </dev/null &",getRunDir(),clazz,args)
         ).execute();
     }
 

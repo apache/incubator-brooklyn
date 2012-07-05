@@ -28,7 +28,7 @@ public class KarafSshDriver extends JavaStartStopSshDriver {
 
     @Override
     protected String getLogFileLocation() {
-        return format("${%s}/data/karaf.out", getRunDir());
+        return format("{%s}/data/karaf.out", getRunDir());
     }
 
     protected String getUntarredDirName() {
@@ -100,7 +100,7 @@ public class KarafSshDriver extends JavaStartStopSshDriver {
     public void stop() {
         newScript(STOPPING).
                 body.append(
-                "${runDir}/bin/stop"
+                format("%s/bin/stop",getRunDir())
         ).execute();
     }
 
