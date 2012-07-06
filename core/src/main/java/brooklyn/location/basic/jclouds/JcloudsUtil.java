@@ -1,64 +1,65 @@
 package brooklyn.location.basic.jclouds;
 
-import static org.jclouds.aws.ec2.reference.AWSEC2Constants.PROPERTY_EC2_AMI_QUERY
-import static org.jclouds.aws.ec2.reference.AWSEC2Constants.PROPERTY_EC2_CC_AMI_QUERY
-import static org.jclouds.compute.util.ComputeServiceUtils.execHttpResponse
-import static org.jclouds.scriptbuilder.domain.Statements.appendFile
-import static org.jclouds.scriptbuilder.domain.Statements.exec
-import static org.jclouds.scriptbuilder.domain.Statements.interpret
-import static org.jclouds.scriptbuilder.domain.Statements.newStatementList
+import static brooklyn.util.GroovyJavaMethods.truth;
+import static org.jclouds.aws.ec2.reference.AWSEC2Constants.PROPERTY_EC2_AMI_QUERY;
+import static org.jclouds.aws.ec2.reference.AWSEC2Constants.PROPERTY_EC2_CC_AMI_QUERY;
+import static org.jclouds.compute.util.ComputeServiceUtils.execHttpResponse;
+import static org.jclouds.scriptbuilder.domain.Statements.appendFile;
+import static org.jclouds.scriptbuilder.domain.Statements.exec;
+import static org.jclouds.scriptbuilder.domain.Statements.interpret;
+import static org.jclouds.scriptbuilder.domain.Statements.newStatementList;
 
-import java.io.File
-import java.io.IOException
-import java.net.URI
-import java.util.Map
-import java.util.Properties
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.TimeoutException
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.util.Map;
+import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
-import org.jclouds.Constants
-import org.jclouds.aws.ec2.AWSEC2Client
-import org.jclouds.compute.ComputeService
-import org.jclouds.compute.ComputeServiceContext
-import org.jclouds.compute.ComputeServiceContextFactory
-import org.jclouds.compute.RunScriptOnNodesException
-import org.jclouds.compute.domain.ExecResponse
-import org.jclouds.compute.domain.NodeMetadata
-import org.jclouds.compute.domain.OperatingSystem
-import org.jclouds.compute.options.RunScriptOptions
-import org.jclouds.compute.predicates.OperatingSystemPredicates
-import org.jclouds.compute.predicates.RetryIfSocketNotYetOpen
-import org.jclouds.compute.reference.ComputeServiceConstants
-import org.jclouds.compute.reference.ComputeServiceConstants.Timeouts
-import org.jclouds.compute.util.ComputeServiceUtils
-import org.jclouds.domain.LoginCredentials
-import org.jclouds.ec2.compute.domain.PasswordDataAndPrivateKey
-import org.jclouds.ec2.compute.functions.WindowsLoginCredentialsFromEncryptedData
-import org.jclouds.ec2.domain.PasswordData
-import org.jclouds.ec2.services.WindowsClient
+import org.jclouds.Constants;
+import org.jclouds.aws.ec2.AWSEC2Client;
+import org.jclouds.compute.ComputeService;
+import org.jclouds.compute.ComputeServiceContext;
+import org.jclouds.compute.ComputeServiceContextFactory;
+import org.jclouds.compute.RunScriptOnNodesException;
+import org.jclouds.compute.domain.ExecResponse;
+import org.jclouds.compute.domain.NodeMetadata;
+import org.jclouds.compute.domain.OperatingSystem;
+import org.jclouds.compute.options.RunScriptOptions;
+import org.jclouds.compute.predicates.OperatingSystemPredicates;
+import org.jclouds.compute.predicates.RetryIfSocketNotYetOpen;
+import org.jclouds.compute.reference.ComputeServiceConstants;
+import org.jclouds.compute.reference.ComputeServiceConstants.Timeouts;
+import org.jclouds.compute.util.ComputeServiceUtils;
+import org.jclouds.domain.LoginCredentials;
+import org.jclouds.ec2.compute.domain.PasswordDataAndPrivateKey;
+import org.jclouds.ec2.compute.functions.WindowsLoginCredentialsFromEncryptedData;
+import org.jclouds.ec2.domain.PasswordData;
+import org.jclouds.ec2.services.WindowsClient;
 import org.jclouds.encryption.bouncycastle.config.BouncyCastleCryptoModule;
-import org.jclouds.logging.slf4j.config.SLF4JLoggingModule
-import org.jclouds.net.IPSocket
-import org.jclouds.predicates.InetSocketAddressConnect
-import org.jclouds.predicates.RetryablePredicate
-import org.jclouds.scriptbuilder.domain.Statement
-import org.jclouds.scriptbuilder.domain.Statements
-import org.jclouds.sshj.config.SshjSshClientModule
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
+import org.jclouds.net.IPSocket;
+import org.jclouds.predicates.InetSocketAddressConnect;
+import org.jclouds.predicates.RetryablePredicate;
+import org.jclouds.scriptbuilder.domain.Statement;
+import org.jclouds.scriptbuilder.domain.Statements;
+import org.jclouds.sshj.config.SshjSshClientModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.basic.Entities
-import brooklyn.util.StringUtils;
+import brooklyn.entity.basic.Entities;
+import brooklyn.util.MutableMap;
 
-import com.google.common.base.Charsets
-import com.google.common.base.Predicate
-import com.google.common.base.Splitter
-import com.google.common.base.Strings
-import com.google.common.collect.ImmutableSet
-import com.google.common.collect.Iterables
-import com.google.common.io.Files
-import com.google.inject.Module
+import com.google.common.base.Charsets;
+import com.google.common.base.Predicate;
+import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.io.Files;
+import com.google.inject.Module;
 
 public class JcloudsUtil {
     
@@ -127,7 +128,7 @@ public class JcloudsUtil {
                 .append("echo nameserver 208.67.222.222 >> /etc/resolv.conf\n")//
                 // jeos hasn't enough room!
                 .append("rm -rf /var/cache/apt /usr/lib/vmware-tools\n")//
-                .append('echo \"export PATH=\\\"\\$JAVA_HOME/bin/:\\$PATH\\\"\" >> /root/.bashrc')//
+                .append("echo \"export PATH=\\\"$JAVA_HOME/bin/:$PATH\\\"\" >> /root/.bashrc")//
                 .toString()));
 
     public static final Statement YUM_RUN_SCRIPT = newStatementList(
@@ -136,7 +137,7 @@ public class JcloudsUtil {
           execHttpResponse(URI.create("http://whirr.s3.amazonaws.com/0.2.0-incubating-SNAPSHOT/sun/java/install")),//
           exec(new StringBuilder()//
                 .append("echo nameserver 208.67.222.222 >> /etc/resolv.conf\n") //
-                .append('echo \"export PATH=\\\"\\$JAVA_HOME/bin/:\\$PATH\\\"\" >> /root/.bashrc')//
+                .append("echo \"export PATH=\\\"$JAVA_HOME/bin/:$PATH\\\"\" >> /root/.bashrc")//
                 .toString()));
 
     public static final Statement ZYPPER_RUN_SCRIPT = exec(new StringBuilder()//
@@ -160,43 +161,43 @@ public class JcloudsUtil {
     static Map<Properties,ComputeService> cachedComputeServices = new ConcurrentHashMap<Properties,ComputeService> ();
      
     public static ComputeService buildOrFindComputeService(Map<String,? extends Object> conf) {
-        return buildComputeService(conf, [:], true)
+        return buildComputeService(conf, MutableMap.of(), true);
     }
     public static ComputeService buildOrFindComputeService(Map<String,? extends Object> conf, Map unusedConf) {
         return buildComputeService(conf, unusedConf, true);
     }
     
     public static ComputeService buildComputeService(Map<String,? extends Object> conf) {
-        return buildComputeService(conf, [:]);
+        return buildComputeService(conf, MutableMap.of());
     }
     public static ComputeService buildComputeService(Map<String,? extends Object> conf, Map unusedConf) {
         return buildComputeService(conf, unusedConf, false);
     }
     public static ComputeService buildComputeService(Map<String,? extends Object> conf, Map unusedConf, boolean allowReuse) {
         Properties properties = new Properties();
-        properties.setProperty(Constants.PROPERTY_PROVIDER, conf.provider); unusedConf.remove("provider");
-        properties.setProperty(Constants.PROPERTY_IDENTITY, conf.identity); unusedConf.remove("identity");
-        properties.setProperty(Constants.PROPERTY_CREDENTIAL, conf.credential); unusedConf.remove("credential");
-        properties.setProperty(Constants.PROPERTY_TRUST_ALL_CERTS, Boolean.toString(true))
-        properties.setProperty(Constants.PROPERTY_RELAX_HOSTNAME, Boolean.toString(true))
+        properties.setProperty(Constants.PROPERTY_PROVIDER, (String)conf.get("provider")); unusedConf.remove("provider");
+        properties.setProperty(Constants.PROPERTY_IDENTITY, (String)conf.get("identity")); unusedConf.remove("identity");
+        properties.setProperty(Constants.PROPERTY_CREDENTIAL, (String)conf.get("credential")); unusedConf.remove("credential");
+        properties.setProperty(Constants.PROPERTY_TRUST_ALL_CERTS, Boolean.toString(true));
+        properties.setProperty(Constants.PROPERTY_RELAX_HOSTNAME, Boolean.toString(true));
                 
         // Enable aws-ec2 lazy image fetching, if given a specific imageId; otherwise customize for specific owners; or all as a last resort
         // See https://issues.apache.org/jira/browse/WHIRR-416
-        if ("aws-ec2".equals(conf.provider)) {
-            if (conf.imageId) {
-                properties.setProperty(PROPERTY_EC2_AMI_QUERY, "")
-                properties.setProperty(PROPERTY_EC2_CC_AMI_QUERY, "")
-            } else if (conf.imageOwner) {
+        if ("aws-ec2".equals(conf.get("provider"))) {
+            if (truth(conf.get("imageId"))) {
+                properties.setProperty(PROPERTY_EC2_AMI_QUERY, "");
+                properties.setProperty(PROPERTY_EC2_CC_AMI_QUERY, "");
+            } else if (truth(conf.get("imageOwner"))) {
                 unusedConf.remove("imageOwner");
-                properties.setProperty(PROPERTY_EC2_AMI_QUERY, "owner-id="+conf.imageOwner+";state=available;image-type=machine")
-            } else if (conf.anyOwner) {
+                properties.setProperty(PROPERTY_EC2_AMI_QUERY, "owner-id="+conf.get("imageOwner")+";state=available;image-type=machine");
+            } else if (truth(conf.get("anyOwner"))) {
                 // set `anyOwner: true` to override the default query (which is restricted to certain owners as per below), 
                 // allowing the AMI query to bind to any machine
                 // (note however, we sometimes pick defaults in JcloudsLocationFactory);
                 // (and be careful, this can give a LOT of data back, taking several minutes,
                 // and requiring extra memory allocated on the command-line)
                 unusedConf.remove("anyOwner");
-                properties.setProperty(PROPERTY_EC2_AMI_QUERY, "state=available;image-type=machine")
+                properties.setProperty(PROPERTY_EC2_AMI_QUERY, "state=available;image-type=machine");
             
                 // by default the following filters are applied:
 //            Filter.1.Name=owner-id&Filter.1.Value.1=137112412989&
@@ -208,8 +209,8 @@ public class JcloudsUtil {
             }
         }
 
-        String endpoint = unusedConf.remove(Constants.PROPERTY_ENDPOINT);
-        if (endpoint) properties.setProperty(Constants.PROPERTY_ENDPOINT, endpoint);
+        String endpoint = (String) unusedConf.remove(Constants.PROPERTY_ENDPOINT);
+        if (truth(endpoint)) properties.setProperty(Constants.PROPERTY_ENDPOINT, endpoint);
 
         if (allowReuse) {
             ComputeService result = cachedComputeServices.get(properties);
@@ -228,13 +229,13 @@ public class JcloudsUtil {
         ComputeServiceContextFactory computeServiceFactory = new ComputeServiceContextFactory();
         
         ComputeService computeService = computeServiceFactory
-                .createContext(conf.provider, modules, properties)
+                .createContext((String)conf.get("provider"), modules, properties)
                 .getComputeService();
                 
         if (allowReuse) {
             synchronized (cachedComputeServices) {
                 ComputeService result = cachedComputeServices.get(properties);
-                if (result) {
+                if (result != null) {
                     LOG.debug("jclouds ComputeService cache recovery for compute service, for "+Entities.sanitize(properties));
                     //keep the old one, discard the new one
                     computeService.getContext().close();

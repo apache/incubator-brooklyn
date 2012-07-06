@@ -32,8 +32,8 @@ public class RackspaceUkLocationWithImageNameLiveTest {
     
     @Test(groups = "Live")
     public void withImageNamePattern() {
-        props["brooklyn.jclouds.cloudservers-uk.image-name-regex"] = "linux-no-firewall";
-        props["brooklyn.jclouds.cloudservers-uk.hardware-id"] = "4";  //gives the 80gb disk needed
+        props["brooklyn.jclouds.cloudservers-uk.image-name-regex"] = ".*Ubuntu 11.10.*";
+        props["brooklyn.jclouds.cloudservers-uk.hardware-id"] = "1";  //gives the 80gb disk needed
         factory = new JcloudsLocationFactory(new CredentialsFromEnv(props, PROVIDER).asMap());
         loc = factory.newLocation(null);
         machine = loc.obtain();
@@ -52,8 +52,8 @@ public class RackspaceUkLocationWithImageNameLiveTest {
      */
     @Test(groups = "Live")
     public void withVmMetadata() {
-        props["brooklyn.jclouds.cloudservers-uk.image-name-regex"] = ".*AppCloudBase.*";
-        props["brooklyn.jclouds.cloudservers-uk.hardware-id"] = "4";  //gives the 80gb disk needed
+        props["brooklyn.jclouds.cloudservers-uk.image-name-regex"] = ".*Ubuntu 11.10.*";
+        props["brooklyn.jclouds.cloudservers-uk.hardware-id"] = "1";
         factory = new JcloudsLocationFactory(new CredentialsFromEnv(props, PROVIDER).asMap());
         loc = factory.newLocation(null);
         machine = loc.obtain([userMetadata: [mykey: "myval"]]);
