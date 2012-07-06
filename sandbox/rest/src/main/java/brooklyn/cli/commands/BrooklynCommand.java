@@ -1,6 +1,8 @@
 package brooklyn.cli.commands;
 
 import com.google.common.base.Objects;
+import com.sun.jersey.api.client.Client;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.iq80.cli.Help;
 import org.iq80.cli.Option;
 import org.iq80.cli.OptionType;
@@ -9,6 +11,9 @@ import javax.inject.Inject;
 import java.util.concurrent.Callable;
 
 public abstract class BrooklynCommand implements Callable<Void> {
+
+    public static final Client httpClient = Client.create(); // Jersey rest client
+    public static final ObjectMapper jsonParser = new ObjectMapper(); // Jackson json parser
 
     @Option(type = OptionType.GLOBAL,
             name = { "--embedded" },
