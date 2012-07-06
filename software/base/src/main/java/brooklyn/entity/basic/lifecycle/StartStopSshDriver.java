@@ -57,7 +57,7 @@ public abstract class StartStopSshDriver extends AbstractStartStopDriver impleme
     }
     protected String getEntityVersionLabel(String separator) {
         return elvis(entity.getClass().getSimpleName(),  
-                entity.getClass().getName())+(getVersion()!=NO_VERSION_INFO ? separator+getVersion() : "");
+                entity.getClass().getName())+(!NO_VERSION_INFO.equals(getVersion()) ? separator+getVersion() : "");
     }
     public String getInstallDir() {
         return elvis(entity.getConfig(SoftwareProcessEntity.SUGGESTED_INSTALL_DIR),
@@ -121,7 +121,7 @@ public abstract class StartStopSshDriver extends AbstractStartStopDriver impleme
     protected ScriptHelper newScript(Map flags, String phase) {
         ScriptHelper s = new ScriptHelper(this, phase+" "+elvis(entity,this));
         if (!truth(flags.get("nonStandardLayout"))) {
-            if (phase==INSTALLING) {
+            if (INSTALLING.equals(phase)) {
                 s.useMutex(getLocation(), getInstallDir(), "installing "+elvis(entity,this));
                 s.header.append(
                         "export INSTALL_DIR=\""+getInstallDir()+"\"",
