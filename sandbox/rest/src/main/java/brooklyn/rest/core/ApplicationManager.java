@@ -1,5 +1,18 @@
 package brooklyn.rest.core;
 
+import static brooklyn.rest.core.ApplicationPredicates.status;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.collect.Iterables.all;
+import static com.google.common.collect.Iterables.transform;
+import static com.google.common.collect.Lists.newLinkedList;
+
+import java.lang.reflect.Constructor;
+import java.util.Collections;
+import java.util.ConcurrentModificationException;
+import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
+
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.location.Location;
@@ -11,23 +24,13 @@ import brooklyn.rest.api.ApplicationSpec;
 import brooklyn.rest.api.EntitySpec;
 import brooklyn.rest.api.LocationSpec;
 import brooklyn.rest.resources.CatalogResource;
+import brooklyn.util.MutableMap;
+
 import com.google.common.base.Function;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
 import com.yammer.dropwizard.lifecycle.Managed;
 import com.yammer.dropwizard.logging.Log;
-
-import java.lang.reflect.Constructor;
-import java.util.ConcurrentModificationException;
-import java.util.Map;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutorService;
-
-import static brooklyn.rest.core.ApplicationPredicates.status;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.collect.Iterables.all;
-import static com.google.common.collect.Iterables.transform;
-import static com.google.common.collect.Lists.newLinkedList;
 
 public class ApplicationManager implements Managed {
 
@@ -80,6 +83,13 @@ public class ApplicationManager implements Managed {
     return applications;
   }
 
+
+  public void injectApplication(final AbstractApplication instance, Application.Status status) {
+    String name = instance.getDisplayName();
+    ApplicationSpec spec = new ApplicationSpec(name, Collections.<EntitySpec>emptySet(), Collections.<String>emptySet());
+    applications.put(name, new Application(spec, status, instance));
+  }
+
   public void startInBackground(final ApplicationSpec spec) {
     LOG.info("Creating application instance for {}", spec);
 
@@ -118,7 +128,7 @@ public class ApplicationManager implements Managed {
             public Location apply(String ref) {
               LocationSpec locationSpec = locationStore.getByRef(ref);
               if (locationSpec.getProvider().equals("localhost")) {
-                return new LocalhostMachineProvisioningLocation(locationSpec.getConfig());
+                return new LocalhostMachineProvisioningLocation(MutableMap.copyOf(locationSpec.getConfig()));
               }
 
               Map<String, String> config = Maps.newHashMap();
