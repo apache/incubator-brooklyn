@@ -46,6 +46,7 @@ public class Client {
                         VersionCommand.class,
                         DeployCommand.class,
                         UndeployCommand.class,
+                        ListApplicationsCommand.class,
                         CatalogEntitiesCommand.class,
                         CatalogPoliciesCommand.class
                 );
