@@ -46,8 +46,8 @@ public class Client {
                         VersionCommand.class,
                         DeployCommand.class,
                         UndeployCommand.class,
-                        ListEntitiesCommand.class,
-                        ListPoliciesCommand.class
+                        CatalogEntitiesCommand.class,
+                        CatalogPoliciesCommand.class
                 );
 
         return builder.build();

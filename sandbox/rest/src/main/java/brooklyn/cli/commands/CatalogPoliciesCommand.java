@@ -6,8 +6,8 @@ import org.iq80.cli.Command;
 
 import java.util.List;
 
-@Command(name = "list-policies", description = "Prints the available policies")
-public class ListPoliciesCommand extends BrooklynCommand {
+@Command(name = "catalog-policies", description = "Prints the policies available on the server")
+public class CatalogPoliciesCommand extends BrooklynCommand {
 
     @Override
     public Void call() throws Exception {

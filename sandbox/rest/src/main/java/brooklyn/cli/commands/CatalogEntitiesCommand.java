@@ -5,8 +5,8 @@ import org.codehaus.jackson.type.TypeReference;
 import org.iq80.cli.Command;
 import java.util.List;
 
-@Command(name = "list-entities", description = "Prints the available entities")
-public class ListEntitiesCommand extends BrooklynCommand {
+@Command(name = "catalog-entities", description = "Prints the entities available on the server")
+public class CatalogEntitiesCommand extends BrooklynCommand {
 
     @Override
     public Void call() throws Exception {
