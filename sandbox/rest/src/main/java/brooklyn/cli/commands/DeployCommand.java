@@ -1,9 +1,20 @@
 package brooklyn.cli.commands;
 
-import brooklyn.cli.Client;
+import brooklyn.rest.api.ApiError;
+import brooklyn.rest.api.Application;
+import brooklyn.rest.api.Application.Status;
+import brooklyn.rest.api.ApplicationSpec;
+import brooklyn.rest.api.EntitySpec;
+import com.google.common.collect.Sets;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.Client;
 import org.iq80.cli.Command;
 import org.iq80.cli.Option;
 import org.iq80.cli.Arguments;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.net.URI;
 
 @Command(name = "deploy", description = "Deploys the specified application using given config, classpath, location, etc")
 public class DeployCommand extends BrooklynCommand {
@@ -39,8 +50,58 @@ public class DeployCommand extends BrooklynCommand {
 
     @Override
     public Void call() throws Exception {
-        System.out.println("Invoked deploy command stub . . .");
+
+        // Create Java object for request
+        ApplicationSpec applicationSpec = new ApplicationSpec(
+                app, // name
+                Sets.newHashSet(new EntitySpec(app)), // entities
+                Sets.newHashSet("/v1/locations/1") // locations
+        );
+
+        // Serialize the Java object to JSON
+        String objectJsonString = jsonParser.writeValueAsString(applicationSpec);
+
+        // Make an HTTP request to the REST server
+        ClientResponse clientResponse = httpClient
+                .resource("http://localhost:8080/v1/applications")
+                .type(MediaType.APPLICATION_JSON)
+                .post(ClientResponse.class, objectJsonString);
+
+        // Make sure we get the correct HTTP response code
+        if (clientResponse.getStatus() != Response.Status.CREATED.getStatusCode()) {
+            String response = clientResponse.getEntity(String.class);
+            ApiError error = jsonParser.readValue(response, ApiError.class);
+            System.err.println(error.getMessage());
+            return null;
+        }
+
+        // Inform the user of the application location
+        System.out.println("Starting at " + clientResponse.getLocation());
+
+        // Check if application was  started successfully (via another REST call)
+        Status status = getApplicationStatus(httpClient, clientResponse.getLocation());
+        while (status != Application.Status.RUNNING && status != Application.Status.ERROR) {
+            System.out.print(".");
+            System.out.flush();
+            Thread.sleep(1000);
+        }
+        if (status == Application.Status.RUNNING) {
+            System.out.println("Done.");
+        } else {
+            System.err.println("Error.");
+        }
+
         return null;
+    }
+
+    private Application.Status getApplicationStatus(Client client, URI uri) throws IOException {
+        ClientResponse clientResponse = client
+                .resource(uri)
+                .type(MediaType.APPLICATION_JSON)
+                .get(ClientResponse.class);
+        String response = clientResponse.getEntity(String.class);
+        Application application = jsonParser.readValue(response, Application.class);
+        return application.getStatus();
     }
 
 }
