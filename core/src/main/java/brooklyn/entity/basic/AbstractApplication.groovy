@@ -4,6 +4,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Application
+import brooklyn.entity.basic.EntityReferences.SelfEntityReference
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.trait.StartableMethods
 import brooklyn.location.Location

@@ -78,8 +78,8 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct {
     /** returns false if deleted, throws exception if invalid state, otherwise true */
     protected boolean check(Entity producer) {
         if (destroyed.get()) return false;
-        if (entity==null) throw new IllegalStateException("$this cannot subscribe to $producer because it is not associated to an entity");
-        if (entity.getManagementContext()==null) throw new IllegalStateException("$this cannot subscribe to $producer because the associated entity $entity is not yet managed");
+        if (entity==null) throw new IllegalStateException(this+" cannot subscribe to "+producer+" because it is not associated to an entity");
+        if (entity.getManagementContext()==null) throw new IllegalStateException(this+" cannot subscribe to "+producer+" because the associated entity "+entity+" is not yet managed");
         return true;
     }
         

@@ -77,7 +77,7 @@ class CloudFoundryJavaWebAppCluster extends AbstractEntity implements ElasticJav
     }
     
     public void start(Collection<Location> locations) {
-        if (getConfig(APP_NAME)!=appName) setConfigInternal(APP_NAME, appName);
+        if (getConfig(APP_NAME)!=appName) setConfigEvenIfOwned(APP_NAME, appName);
         startInLocation locations
     }
 

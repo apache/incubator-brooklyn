@@ -15,6 +15,9 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.ConfigKey;
+import brooklyn.entity.ConfigKey.HasConfigKey;
+import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.util.GroovyJavaMethods;
 
 import com.google.common.base.Objects;
@@ -48,6 +51,11 @@ public class FlagUtils {
         return setFieldsFromFlagsInternal(flags, o, getAllFields(o.getClass()));
     }
 	
+    // TODO Don't want to use class AbstractEntity here...
+    public static Map<String, ? extends Object> setConfigKeysFromFlags(Map<String, ? extends Object> flags, AbstractEntity entity) {
+        return setConfigKeysFromFlagsInternal(flags, entity, getAllFields(entity.getClass()));
+    }
+
 	/** returns all fields on the given class, superclasses, and interfaces thereof, in that order of preference,
 	 * (excluding fields on Object) */
     public static List<Field> getAllFields(Class<?> base, Closure<Boolean> filter) {
@@ -117,6 +125,32 @@ public class FlagUtils {
         return remaining;
     }
 
+    private static Map<String, ? extends Object> setConfigKeysFromFlagsInternal(Map<String,? extends Object> flags, AbstractEntity entity, Collection<Field> fields) {
+        Map<String, Object> remaining = Maps.newLinkedHashMap();
+        if (truth(flags)) remaining.putAll(flags);
+        for (Field f: fields) {
+            SetFromFlag cf = f.getAnnotation(SetFromFlag.class);
+            if (cf != null) {
+                ConfigKey key = null;
+                if (ConfigKey.class.isAssignableFrom(f.getType())) {
+                    key = (ConfigKey) getField(entity, f);
+                } else if (HasConfigKey.class.isAssignableFrom(f.getType())) {
+                    key = ((HasConfigKey)getField(entity, f)).getConfigKey();
+                } else {
+                    
+                }
+                if (key != null) {
+                    String flagName = elvis(cf.value(), (key != null ? key.getName() : null));
+                    if (truth(flagName) && remaining.containsKey(flagName)) {
+                        Object v = remaining.remove(flagName);
+                        entity.setConfig(key, v);
+                    }
+                }
+            }
+        }
+        return remaining;
+    }
+
     /** sets the field to the value, after checking whether the given value can be set 
      * respecting the constraints of the annotation 
      */
@@ -141,9 +175,20 @@ public class FlagUtils {
                 newValue = TypeCoercions.coerce(value, fieldType);
                 
             } catch (Exception e) {
-                throw new IllegalArgumentException("Cannot set $f in $objectOfField from type "+value.getClass()+" ("+value+"): "+e, e);
+                throw new IllegalArgumentException("Cannot set "+f+" in "+objectOfField+" from type "+value.getClass()+" ("+value+"): "+e, e);
             }
             f.set(objectOfField, newValue);
+        } catch (IllegalAccessException e) {
+            throw Throwables.propagate(e);
+        }
+    }
+    
+    /** gets the value of the field. 
+     */
+    public static Object getField(Object objectOfField, Field f) {
+        try {
+            if (!f.isAccessible()) f.setAccessible(true);
+            return f.get(objectOfField);
         } catch (IllegalAccessException e) {
             throw Throwables.propagate(e);
         }
@@ -165,7 +210,7 @@ public class FlagUtils {
         if (t==Character.TYPE) return (char)0;
         if (t==Boolean.TYPE) return false;
         //should never happen
-        throw new IllegalStateException("Class $t is an unknown primitive.");
+        throw new IllegalStateException("Class "+t+" is an unknown primitive.");
     }
 
     /** returns a map of all fields which are annotated 'SetFromFlag', along with the annotation */
