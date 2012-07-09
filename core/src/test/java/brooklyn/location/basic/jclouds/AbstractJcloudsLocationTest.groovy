@@ -137,6 +137,7 @@ public abstract class AbstractJcloudsLocationTest {
         assertTrue machine.isSshable()
     }
 
+    // FIXME Fails: can't ssh to machine using `myname`
     @Test(groups = "Live", dataProvider="fromFirstImageId")
     public void testProvisioningVmWithCustomUsername(String regionName, String imageId, String imageOwner) {
         loc = locFactory.newLocation(regionName)

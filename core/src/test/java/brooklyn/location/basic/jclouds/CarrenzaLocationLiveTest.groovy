@@ -24,7 +24,7 @@ import brooklyn.util.MutableMap
  * machine with winsshd installed.
  * 
  * TODO Will only work with jclouds 1.5, due to jclouds issues 994 and 995. Therefore it 
- * will not work in brooklyn 0.4.0-M1 etc.
+ * will not work in brooklyn 0.4.0-M2 etc.
  */
 class CarrenzaLocationLiveTest {
     protected static final Logger LOG = LoggerFactory.getLogger(CarrenzaLocationLiveTest.class)
@@ -32,7 +32,7 @@ class CarrenzaLocationLiveTest {
     private static final String PROVIDER = "vcloud"
     private static final String ENDPOINT = "https://myvdc.carrenza.net/api"
     private static final String LOCATION_ID = "jclouds:"+PROVIDER+":"+ENDPOINT;
-    private static final String IMAGE_ID = "https://myvdc.carrenza.net/api/v1.0/vAppTemplate/vappTemplate-c71706d2-9040-459a-bb4e-9fba558f341b"
+    private static final String WINDOWS_IMAGE_ID = "https://myvdc.carrenza.net/api/v1.0/vAppTemplate/vappTemplate-2bd5b0ff-ecd9-405e-8306-2f4f6c092a1b"
     
     private JcloudsLocation loc;
     private Collection<SshMachineLocation> machines = []
@@ -48,7 +48,7 @@ class CarrenzaLocationLiveTest {
                         .put("identity", creds.getIdentity())
                         .put("credential", creds.getCredential())
                         .put("jclouds.endpoint", ENDPOINT)
-                        .put("imageId", IMAGE_ID)
+                        .put("imageId", WINDOWS_IMAGE_ID)
                         .put("noDefaultSshKeys", true)
                         .put("userName", "Administrator")
                         .put("dontCreateUser", true)
@@ -67,7 +67,6 @@ class CarrenzaLocationLiveTest {
         return new CredentialsFromEnv(PROVIDER);
     }
     
-    // FIXME tearDown was failing; need to investigate...
     @AfterMethod(groups = "Live")
     public void tearDown() {
         List<Exception> exceptions = []
@@ -85,12 +84,20 @@ class CarrenzaLocationLiveTest {
         machines.clear()
     }
     
+    // FIXME Disabled because of jclouds issues #994 and #995 (fixed in jclouds 1.5, so not in brooklyn 0.4.0-M2 etc)
+    // Note the careful settings in setUp (e.g. so don't try to install ssh-keys etc
+    // Also, the windows image used has winsshd installed
     @Test(enabled=false, groups = [ "Live" ])
     public void testProvisionWindowsVm() {
-        JcloudsSshMachineLocation machine = obtainMachine(MutableMap.of());
+        JcloudsSshMachineLocation machine = obtainMachine(MutableMap.of(
+                "imageId", WINDOWS_IMAGE_ID));
         
         LOG.info("Provisioned Windows VM {}; checking if has password", machine)
-        assertNotNull(machine.waitForPassword())
+        String password = machine.waitForPassword();
+        assertNotNull(password);
+        
+        LOG.info("Checking can ssh to windows machine {} using password {}", machine, password);
+        assertEquals(machine.exec(MutableMap.of("password", password), ImmutableList.of("hostname")), 0);
     }
     
     // Use this utility method to ensure machines are released on tearDown
