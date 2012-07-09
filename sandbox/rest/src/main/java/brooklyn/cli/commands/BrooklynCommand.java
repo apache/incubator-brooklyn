@@ -22,8 +22,8 @@ public abstract class BrooklynCommand implements Callable<Void> {
 
     @Option(type = OptionType.GLOBAL,
             name = { "--endpoint" },
-            description = "REST endpoint, default \"http://localhost:8181\"")
-    public String endpoint = "http://localhost:8181";
+            description = "REST endpoint, default \"http://localhost:8080\"")
+    public String endpoint = "http://localhost:8080";
 
     @Option(type = OptionType.GLOBAL,
             name = { "--retry" },

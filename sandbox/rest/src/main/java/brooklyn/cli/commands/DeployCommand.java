@@ -63,7 +63,7 @@ public class DeployCommand extends BrooklynCommand {
 
         // Make an HTTP request to the REST server
         ClientResponse clientResponse = httpClient
-                .resource("http://localhost:8080/v1/applications")
+                .resource(endpoint + "/v1/applications")
                 .type(MediaType.APPLICATION_JSON)
                 .post(ClientResponse.class, objectJsonString);
 

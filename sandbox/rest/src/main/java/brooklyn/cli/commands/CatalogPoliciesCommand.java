@@ -14,7 +14,7 @@ public class CatalogPoliciesCommand extends BrooklynCommand {
 
         // Make an HTTP request to the REST server and get back a JSON encoded response
         String jsonResponse = httpClient
-                .resource("http://localhost:8080/v1/catalog/policies")
+                .resource(endpoint + "/v1/catalog/policies")
                 .accept("application/json")
                 .get(ClientResponse.class)
                 .getEntity(String.class);
