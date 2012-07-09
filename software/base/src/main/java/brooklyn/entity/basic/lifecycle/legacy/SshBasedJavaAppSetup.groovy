@@ -1,17 +1,15 @@
 package brooklyn.entity.basic.lifecycle.legacy
 
-import java.util.Map
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.EntityLocal
-import brooklyn.entity.basic.legacy.JavaApp;
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.NetworkUtils;
 import brooklyn.util.internal.LanguageUtils
-import brooklyn.util.internal.StringEscapeUtils;
+import brooklyn.util.internal.StringEscapeUtils
+import brooklyn.entity.basic.UsesJava;
 
 /**
  * Java application installation, configuration and startup using ssh.
@@ -145,7 +143,7 @@ public abstract class SshBasedJavaAppSetup extends SshBasedAppSetup {
      * See {@link #getShellEnvironment()} for discussion of quoting/escaping strategy.
      */
     protected Map getJavaSystemProperties() {
-        entity.getConfig(JavaApp.JAVA_OPTIONS) + getCustomJavaSystemProperties() + (jmxEnabled ? getJmxJavaSystemProperties() : [:])
+        entity.getConfig(UsesJava.JAVA_OPTIONS) + getCustomJavaSystemProperties() + (jmxEnabled ? getJmxJavaSystemProperties() : [:])
     }
 
     /**

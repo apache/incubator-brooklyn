@@ -1,7 +1,6 @@
 package brooklyn.entity.nosql.redis;
 
 import static brooklyn.test.TestUtils.*
-import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
 import org.slf4j.Logger
@@ -11,11 +10,11 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import redis.clients.jedis.Connection
-import brooklyn.entity.basic.legacy.JavaApp
 import brooklyn.location.Location
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.TimeExtras
+import brooklyn.entity.trait.Startable
 
 /**
  * Test the operation of the {@link RedisStore} class.
@@ -50,11 +49,11 @@ public class RedisIntegrationTest {
         redis = new RedisStore(owner:app);
         app.start([ testLocation ])
         executeUntilSucceeds() {
-            assertTrue redis.getAttribute(JavaApp.SERVICE_UP)
+            assertTrue redis.getAttribute(Startable.SERVICE_UP)
         }
         
         redis.stop()
-        assertFalse redis.getAttribute(JavaApp.SERVICE_UP)
+        assertFalse redis.getAttribute(Startable.SERVICE_UP)
     }
 
     /**
@@ -66,7 +65,7 @@ public class RedisIntegrationTest {
         redis = new RedisStore(owner:app)
         app.start([ testLocation ])
         executeUntilSucceeds {
-            assertTrue redis.getAttribute(JavaApp.SERVICE_UP)
+            assertTrue redis.getAttribute(Startable.SERVICE_UP)
         }
 
         try {
