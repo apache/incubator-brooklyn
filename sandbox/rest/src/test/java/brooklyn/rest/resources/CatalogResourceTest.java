@@ -82,6 +82,6 @@ public class CatalogResourceTest extends BaseResourceTest {
         });
 
     assertTrue(policies.size() > 0);
-    assertTrue(policies.contains("brooklyn.policy.resizing.ResizingPolicy"));
+    assertTrue(policies.contains("brooklyn.policy.autoscaling.AutoScalerPolicy"));
   }
 }

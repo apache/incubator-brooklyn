@@ -26,7 +26,7 @@ import brooklyn.util.MutableMap;
 
 /**
  * Represents an elastic group of "container" entities, each of which is capable of hosting "item" entities that perform
- * work and consume the container's available resources (e.g. CPU or bandwidth). Resizing and load-balancing policies can
+ * work and consume the container's available resources (e.g. CPU or bandwidth). Auto-scaling and load-balancing policies can
  * be attached to this pool to provide dynamic elasticity based on workrates reported by the individual item entities.
  */
 public class BalanceableWorkerPool extends AbstractEntity implements Resizable {

@@ -1,4 +1,4 @@
-package brooklyn.policy.resizing;
+package brooklyn.policy.autoscaling;
 
 import static brooklyn.util.GroovyJavaMethods.elvis;
 import static brooklyn.util.GroovyJavaMethods.truth;
@@ -40,9 +40,9 @@ import com.google.common.base.Throwables;
  * the pool is hot or cold, but instead relies on these events being emitted by the monitored entity itself, or
  * by another policy that is attached to it; see, for example, {@link LoadBalancingPolicy}.)
  */
-public class ResizingPolicy extends AbstractPolicy {
+public class AutoScalerPolicy extends AbstractPolicy {
     
-    private static final Logger LOG = LoggerFactory.getLogger(ResizingPolicy.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AutoScalerPolicy.class);
 
     // TODO Is there a nicer pattern for registering such type-coercions? 
     // Can't put it in the ResizeOperator interface, nor in core TypeCoercions class because interface is defined in policy/.
@@ -137,10 +137,10 @@ public class ResizingPolicy extends AbstractPolicy {
         }
     };
 
-    public ResizingPolicy() {
+    public AutoScalerPolicy() {
         this(MutableMap.of());
     }
-    public ResizingPolicy(Map props) {
+    public AutoScalerPolicy(Map props) {
         super(props);
         resizeOperator = elvis(resizeOperator, defaultResizeOperator);
         currentSizeOperator = elvis(currentSizeOperator, defaultCurrentSizeOperator);

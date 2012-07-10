@@ -13,6 +13,7 @@ import brooklyn.management.ExecutionContext;
 import brooklyn.policy.Policy;
 import brooklyn.util.flags.FlagUtils;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 
@@ -83,5 +84,13 @@ public abstract class AbstractPolicy extends AbstractEntityAdjunct implements Po
     @Override
     public boolean isRunning() {
         return !isSuspended() && !isDestroyed();
+    }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(getClass())
+                .add("name", name)
+                .add("running", isRunning())
+                .toString();
     }
 }
