@@ -8,8 +8,15 @@ public class VersionCommand extends BrooklynCommand {
 
     @Override
     public Void call() throws Exception {
-        System.out.println("Invoked version command stub . . .");
-        return null;
+
+        // Common command behavior
+        super.call();
+
+        // Stub code
+        // TODO: Probably need to get the server to support something like this in the REST API
+        throw new UnsupportedOperationException("This command is not supported yet");
+
+        //return null;
     }
 
 }

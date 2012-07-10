@@ -12,6 +12,9 @@ public class CatalogPoliciesCommand extends BrooklynCommand {
     @Override
     public Void call() throws Exception {
 
+        // Common command behavior
+        super.call();
+
         // Make an HTTP request to the REST server and get back a JSON encoded response
         String jsonResponse = httpClient
                 .resource(endpoint + "/v1/catalog/policies")

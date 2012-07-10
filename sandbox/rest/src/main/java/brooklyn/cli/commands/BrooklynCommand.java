@@ -6,6 +6,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.iq80.cli.Option;
 import org.iq80.cli.OptionType;
 import java.util.concurrent.Callable;
+import java.lang.UnsupportedOperationException;
 
 public abstract class BrooklynCommand implements Callable<Void> {
 
@@ -41,6 +42,22 @@ public abstract class BrooklynCommand implements Callable<Void> {
                 .add("embedded", embedded)
                 .add("endpoint", endpoint)
                 .toString();
+    }
+
+    /**
+     * Common code that should normally be executed by all commands
+     *
+     * @return null
+     * @throws Exception
+     */
+    public Void call() throws Exception {
+
+        // Embedded web server feature
+        if(embedded)
+            throw new UnsupportedOperationException(
+                    "The \"--embedded\" option is not supported yet");
+
+        return null;
     }
 
 }

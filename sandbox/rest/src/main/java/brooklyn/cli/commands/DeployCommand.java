@@ -51,6 +51,9 @@ public class DeployCommand extends BrooklynCommand {
     @Override
     public Void call() throws Exception {
 
+        // Common command behavior
+        super.call();
+
         // Create Java object for request
         ApplicationSpec applicationSpec = new ApplicationSpec(
                 app, // name

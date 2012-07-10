@@ -14,7 +14,10 @@ public class HelpCommand extends BrooklynCommand {
 
     @Override
     public Void call() throws Exception {
-        Client.log.debug("Invoked help command");
+
+        // Common command behavior
+        super.call();
+
         return help.call();
     }
 

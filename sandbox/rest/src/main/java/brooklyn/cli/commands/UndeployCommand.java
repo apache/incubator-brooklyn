@@ -24,6 +24,9 @@ public class UndeployCommand extends BrooklynCommand {
     @Override
     public Void call() throws Exception {
 
+        // Common command behavior
+        super.call();
+
         // Make an HTTP request to the REST server
         ClientResponse clientResponse = httpClient
                 .resource(endpoint + "/v1/applications/" + app)
