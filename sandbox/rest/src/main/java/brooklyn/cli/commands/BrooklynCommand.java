@@ -70,7 +70,7 @@ public abstract class BrooklynCommand implements Callable<Void> {
      * Git-like-cli doesn't attempt to do this so this is the place
      * where some of the additional things that we need can go.
      *
-     * Calling this will throw a {@link ParseException} that will be caght
+     * Calling this will throw a {@link ParseException} that will be caught.
      *
      * @throws ParseException
      */
