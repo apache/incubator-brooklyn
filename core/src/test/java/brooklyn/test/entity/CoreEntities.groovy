@@ -185,10 +185,15 @@ public class BlockingEntity extends TestEntity {
 */
 public class TestCluster extends DynamicCluster {
    public int size
-           
+
+   TestCluster(Entity owner, int initialSize) {
+       super(factor: {}, owner);
+       size = initialSize;
+   }
+   
    TestCluster(int initialSize) {
-       super(factory: {})
-       size = initialSize
+       super(factory: {});
+       size = initialSize;
    }
            
    @Override

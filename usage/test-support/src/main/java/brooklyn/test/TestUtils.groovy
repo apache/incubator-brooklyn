@@ -193,6 +193,10 @@ public class TestUtils {
         }
     }
 
+    public static <T> void assertSucceedsContinually(Map flags=[:], Runnable job) {
+        assertSucceedsContinually(flags, Executors.callable(job));
+    }
+    
     public static <T> void assertSucceedsContinually(Map flags=[:], Callable<T> job) {
         TimeDuration duration = toTimeDuration(flags.timeout) ?: new TimeDuration(0,0,1,0)
         TimeDuration period = toTimeDuration(flags.period) ?: new TimeDuration(0,0,0,10)
