@@ -3,17 +3,17 @@ package brooklyn.cli.commands;
 import com.google.common.base.Objects;
 import com.sun.jersey.api.client.Client;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.iq80.cli.Help;
 import org.iq80.cli.Option;
 import org.iq80.cli.OptionType;
-
-import javax.inject.Inject;
 import java.util.concurrent.Callable;
 
 public abstract class BrooklynCommand implements Callable<Void> {
 
     public static final Client httpClient = Client.create(); // Jersey rest client
     public static final ObjectMapper jsonParser = new ObjectMapper(); // Jackson json parser
+
+    public static final int DEFAULT_RETRY_PERIOD = 30;
+    public static final String DEFAULT_ENDPOINT = "http://localhost:8080";
 
     @Option(type = OptionType.GLOBAL,
             name = { "--embedded" },
@@ -22,13 +22,13 @@ public abstract class BrooklynCommand implements Callable<Void> {
 
     @Option(type = OptionType.GLOBAL,
             name = { "--endpoint" },
-            description = "REST endpoint, default \"http://localhost:8080\"")
-    public String endpoint = "http://localhost:8080";
+            description = "REST endpoint, default \""+DEFAULT_ENDPOINT+"\"")
+    public String endpoint = DEFAULT_ENDPOINT;
 
     @Option(type = OptionType.GLOBAL,
             name = { "--retry" },
-            description = "Will retry connection to the endpoint for this time period, default \"30s\"")
-    public int retry = 30;
+            description = "Will retry connection to the endpoint for this time period, default \""+DEFAULT_RETRY_PERIOD+"s\"")
+    public int retry = DEFAULT_RETRY_PERIOD;
 
     @Option(type = OptionType.GLOBAL,
             name = { "--no-retry" },
