@@ -1,7 +1,5 @@
 package brooklyn.entity.webapp.tomcat
 
-import static brooklyn.test.TestUtils.*
-import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
 import org.slf4j.Logger
@@ -11,9 +9,9 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.Application
-import brooklyn.entity.webapp.OldJavaWebApp
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.test.entity.TestApplication
+import brooklyn.entity.webapp.WebAppServiceConstants
 
 /**
  * This tests the operation of the {@link TomcatServer} entity.
@@ -157,7 +155,7 @@ class TomcatServerTest {
         tc.emit(TomcatServer.REQUEST_COUNT, 10);
         Thread.sleep(1000)
         
-        assertEquals tc.getAttribute(OldJavaWebApp.AVG_REQUESTS_PER_SECOND).value, 10/OldJavaWebApp.AVG_REQUESTS_PER_SECOND_PERIOD*1000, 0.2d
+        assertEquals tc.getAttribute(WebAppServiceConstants.AVG_REQUESTS_PER_SECOND).value, 10/WebAppServiceConstants.AVG_REQUESTS_PER_SECOND_PERIOD*1000, 0.2d
     }
 }
  

@@ -28,6 +28,7 @@ import brooklyn.location.basic.jclouds.JcloudsLocationFactory
 import brooklyn.test.TestUtils
 import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.TimeExtras
+import brooklyn.entity.basic.SoftwareProcessEntity
 
 /**
  * This tests that we can run jboss entity on AWS.
@@ -111,7 +112,7 @@ public class WebAppLiveIntegrationTest {
     }
 
     @Test(groups = [ "Live" ], dataProvider="basicEntities")
-    public void testStartsWebAppInAws(final OldJavaWebApp entity) {
+    public void testStartsWebAppInAws(final SoftwareProcessEntity entity) {
         entity.start([ loc ])
         executeUntilSucceedsWithShutdown(entity, abortOnError:false, timeout:75*SECONDS, useGroovyTruth:true) {
             assertTrue(entity.getAttribute(Startable.SERVICE_UP))
