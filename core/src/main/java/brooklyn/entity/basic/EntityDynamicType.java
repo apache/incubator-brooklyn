@@ -1,32 +1,27 @@
 package brooklyn.entity.basic;
 
 import java.lang.reflect.Field;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.ConfigKey;
+import brooklyn.entity.ConfigKey.HasConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
-import brooklyn.entity.EntityClass;
-import brooklyn.entity.ConfigKey.HasConfigKey;
+import brooklyn.entity.EntityType;
 import brooklyn.event.Sensor;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
 
-class EntityDynamicType {
-
-    // TODO Merge this with EntityClass: given the dynamic nature of sensors - i.e. we can add
-    // new sensors at runtime - I (Aled) think we we should change the contract of EntityClass.
-    // 
-    // Currently, the difference between this and EntityClass is:
-    //  - EntityClass javadoc says it's a logical equivalent to java.lang.Class, so all instances
-    //    of a given entity type would give the same EntityClass.
-    //  - EntityDynamicType can have sensors added/removed at runtime.
+public class EntityDynamicType {
 
     // TODO Deal with Serializable: what is the requirement? It depends on how we implement remoting,
     // so deferring it for now...
@@ -35,25 +30,28 @@ class EntityDynamicType {
 
     private final AbstractEntity entity;
 
-    /** Map of effectors on this entity by name, populated at constructor time. */
-    private final Map<String,Effector<?>> effectors = new ConcurrentHashMap<String, Effector<?>>();
+    /** 
+     * Effectors on this entity.
+     * TODO support overloading; requires not using a map keyed off method name.
+     */
+    private final ConcurrentMap<String, Effector<?>> effectors = new ConcurrentHashMap<String, Effector<?>>();
 
-    /** Map of sensors on this entity by name, populated at constructor time. */
-    private final Map<String,Sensor<?>> sensors = new ConcurrentHashMap<String, Sensor<?>>();
+    /** 
+     * Map of sensors on this entity by name.
+     */
+    private final ConcurrentMap<String,Sensor<?>> sensors = new ConcurrentHashMap<String, Sensor<?>>();
 
-    /** Map of config keys on this entity by name, populated at constructor time. */
-    private final Map<String,ConfigKey<?>> configKeys = new ConcurrentHashMap<String, ConfigKey<?>>();
+    /** 
+     * Map of config keys on this entity by name.
+     */
+    private final ConcurrentMap<String,ConfigKey<?>> configKeys = new ConcurrentHashMap<String, ConfigKey<?>>();
 
-    private final EntityClass entityClass;
+    private volatile EntityTypeSnapshot snapshot;
+    private final AtomicBoolean snapshotValid = new AtomicBoolean(false);
     
     public EntityDynamicType(AbstractEntity entity) {
         this.entity = entity;
         
-        // initialize the effectors defined on the class
-        // (dynamic effectors could still be added; see #getEffectors
-        // TODO we could/should maintain a registry of EntityClass instances and re-use that,
-        //      except where dynamic sensors/effectors are desired (nowhere currently I think)
-
         effectors.putAll(findEffectors(entity));
         if (LOG.isTraceEnabled())
             LOG.trace("Entity {} effectors: {}", entity.getId(), Joiner.on(", ").join(effectors.keySet()));
@@ -66,11 +64,11 @@ class EntityDynamicType {
         if (LOG.isTraceEnabled())
             LOG.trace("Entity {} config keys: {}", entity.getId(), Joiner.on(", ").join(configKeys.keySet()));
 
-        entityClass = new BasicEntityClass(entity.getClass().getCanonicalName(), configKeys.values(), sensors.values(), effectors.values());
+        refreshSnapshot();
     }
     
-    public synchronized EntityClass getEntityClass() {
-        return entityClass;
+    public synchronized EntityType getSnapshot() {
+        return refreshSnapshot();
     }
     
     /**
@@ -87,49 +85,88 @@ class EntityDynamicType {
      * but the idea of these so-called "dynamic effectors" has been discussed and it might be supported in future...
      */
     public Map<String,Effector<?>> getEffectors() {
-        return effectors;
+        return Collections.unmodifiableMap(effectors);
     }
     
     /**
      * Sensors available on this entity.
      */
     public Map<String,Sensor<?>> getSensors() {
-        return sensors;
+        return Collections.unmodifiableMap(sensors);
     }
     
     /** 
-     * Convenience for finding named sensor in {@link #getSensor()} {@link Map}.
+     * Convenience for finding named sensor.
      */
     public Sensor<?> getSensor(String sensorName) {
-        return getSensors().get(sensorName);
+        return sensors.get(sensorName);
     }
 
-    /**
-     * Add the given {@link Sensor} to this entity.
-     */
-    public void addSensor(Sensor<?> sensor) {
-        sensors.put(sensor.getName(), sensor);
-    }
-    
-    /**
-     * Remove the named {@link Sensor} from this entity.
-     */
-    public Sensor<?> removeSensor(String sensorName) {
-        return sensors.remove(sensorName);
-    }
-    
     /**
      * ConfigKeys available on this entity.
      */
     public Map<String,ConfigKey<?>> getConfigKeys() {
-        return configKeys;
+        return Collections.unmodifiableMap(configKeys);
     }
 
+    /**
+     * Adds the given {@link Sensor} to this entity.
+     */
+    public void addSensor(Sensor<?> newSensor) {
+        sensors.put(newSensor.getName(), newSensor);
+        snapshotValid.set(false);
+        entity.emit(AbstractEntity.SENSOR_ADDED, newSensor);
+    }
+    
+    /**
+     * Adds the given {@link Sensor}s to this entity.
+     */
+    public void addSensors(Iterable<? extends Sensor<?>> newSensors) {
+        for (Sensor<?> sensor : newSensors) {
+            addSensor(sensor);
+        }
+    }
+    
+    public void addSensorIfAbsent(Sensor<?> newSensor) {
+        Sensor<?> prev = sensors.putIfAbsent(newSensor.getName(), newSensor);
+        if (prev == null) {
+            snapshotValid.set(false);
+            entity.emit(AbstractEntity.SENSOR_ADDED, newSensor);
+        }
+    }
+
+    /**
+     * Removes the named {@link Sensor} from this entity.
+     */
+    public Sensor<?> removeSensor(String sensorName) {
+        Sensor<?> result = sensors.remove(sensorName);
+        if (result != null) {
+            snapshotValid.set(false);
+            entity.emit(AbstractEntity.SENSOR_REMOVED, result);
+        }
+        return result;
+    }
+    
+    /**
+     * Removes the named {@link Sensor} from this entity.
+     */
+    public boolean removeSensor(Sensor<?> sensor) {
+        return (removeSensor(sensor.getName()) != null);
+    }
+    
     /**
      * ConfigKeys available on this entity.
      */
     public ConfigKey<?> getConfigKey(String keyName) { 
         return configKeys.get(keyName); 
+    }
+    
+    private EntityTypeSnapshot refreshSnapshot() {
+        if (snapshotValid.compareAndSet(false, true)) {
+            snapshot = new EntityTypeSnapshot(entity.getClass().getCanonicalName(), configKeys, 
+                    sensors, effectors.values());
+        }
+        return snapshot;
     }
     
     /**

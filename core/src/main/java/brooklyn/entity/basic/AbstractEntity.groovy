@@ -6,8 +6,6 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.ExecutionException
 
-import net.schmizz.sshj.ConfigImpl;
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -16,7 +14,7 @@ import brooklyn.entity.Application
 import brooklyn.entity.ConfigKey
 import brooklyn.entity.Effector
 import brooklyn.entity.Entity
-import brooklyn.entity.EntityClass
+import brooklyn.entity.EntityType
 import brooklyn.entity.Group
 import brooklyn.entity.ConfigKey.HasConfigKey
 import brooklyn.entity.basic.EntityReferences.EntityCollectionReference;
@@ -88,7 +86,6 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
 
     private final EntityDynamicType entityType;
     
-    private transient EntityClass entityClass = null
     protected transient ExecutionContext execution
     protected transient SubscriptionContext subscription
     protected transient ManagementContext managementContext
@@ -323,10 +320,14 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
 
 
     @Override
-    public synchronized EntityClass getEntityClass() {
-        return entityType.getEntityClass();
+    public EntityType getEntityType() {
+        return entityType.getSnapshot();
     }
 
+    protected EntityDynamicType getMutableEntityType() {
+        return entityType;
+    }
+    
     @Override
     public Collection<Location> getLocations() {
         locations
@@ -354,7 +355,12 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     
     @Override
     public <T> T setAttribute(AttributeSensor<T> attribute, T val) {
-        return attributesInternal.update(attribute, val);
+        T result = attributesInternal.update(attribute, val);
+        if (result == null) {
+            // could be this is a new sensor
+            entityType.addSensorIfAbsent(attribute);
+        }
+        return result;
     }
 
     /** sets the value of the given attribute sensor from the config key value herein,
@@ -369,20 +375,6 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         return null;
     }
 
-	/**
-	 * ConfigKeys available on this entity.
-	 */
-	public Map<String,ConfigKey<?>> getConfigKeys() {
-        return entityType.getConfigKeys();
-    }
-
-    /**
-     * ConfigKeys available on this entity.
-     */
-    public ConfigKey<?> getConfigKey(String keyName) { 
-        return entityType.getConfigKey(keyName);
-    }
-    
 	@Override
 	public <T> T getConfig(ConfigKey<T> key) {
         return configsInternal.getConfig(key);
@@ -591,37 +583,6 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         subscriptionContext?.publish(sensor.newEvent(this, val))
     }
 
-    
-	/**
-	 * Sensors available on this entity.
-	 */
-	public Map<String,Sensor<?>> getSensors() {
-        return entityType.getSensors();
-    }
-
-    /** Convenience for finding named sensor in {@link #getSensor()} {@link Map}. */
-    public <T> Sensor<T> getSensor(String sensorName) {
-        return entityType.getSensor(sensorName);
-    }
-
-    /**
-     * Add the given {@link Sensor} to this entity.
-     */
-    public void addSensor(Sensor<?> sensor) {
-        entityType.addSensor(sensor);
-        emit(SENSOR_ADDED, sensor)
-    }
-
-    /**
-     * Remove the named {@link Sensor} from this entity.
-     */
-    public void removeSensor(String sensorName) {
-        Sensor removedSensor = entityType.removeSensor(sensorName);
-        if (removedSensor != null) {
-            emit(SENSOR_REMOVED, removedSensor)
-        }
-    }
-
     // -------- EFFECTORS --------------
 
     /** Flag needed internally to prevent invokeMethod from recursing on itself. */     
@@ -659,16 +620,6 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         if (metaClass==null) 
             throw new IllegalStateException("no meta class for "+this+", invoking "+name); 
         metaClass.invokeMethod(this, name, args);
-    }
-
-    /**
-     * Effectors available on this entity.
-     *
-     * NB no work has been done supporting changing this after initialization,
-     * but the idea of these so-called "dynamic effectors" has been discussed and it might be supported in future...
-     */
-    public Map<String,Effector<?>> getEffectors() {
-        return entityType.getEffectors();
     }
 
     /** Convenience for finding named effector in {@link #getEffectors()} {@link Map}. */
@@ -712,8 +663,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         ownedChildren.get().each { it.invalidate() }
         groups.get().each { it.invalidate() }
         
-        entityClass = null
-        execution = null
-        subscription = null
+        execution = null;
+        subscription = null;
     }
 }

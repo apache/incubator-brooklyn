@@ -168,7 +168,7 @@ class EntityController {
 
         try {
             Entity ent = entityService.getEntity(params.entityId);
-            def v = ent.getAttribute(ent.getSensors().get(params.sensorId));
+            def v = ent.getAttribute(ent.getEntityType().getSensor(params.sensorId));
             try { render(v as JSON) }
             catch (Exception e) {
                 //not json, just return as text

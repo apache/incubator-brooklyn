@@ -34,19 +34,6 @@ import com.google.common.collect.Sets;
  * (eg StartableMethods for Startable implementations). */
 public class Entities {
 	
-	public static Collection<ConfigKey<?>> getConfigKeys(Entity e) {
-		if (e instanceof EntityLocal) return ((EntityLocal)e).getConfigKeys().values();
-		else return e.getEntityClass().getConfigKeys();
-	}
-	public static Collection<Sensor<?>> getSensors(Entity e) {
-		if (e instanceof EntityLocal) return ((EntityLocal)e).getSensors().values();
-		else return e.getEntityClass().getSensors();
-	}
-	public static Collection<Effector<?>> getEffectors(Entity e) {
-		if (e instanceof EntityLocal) return ((EntityLocal)e).getEffectors().values();
-		else return e.getEntityClass().getEffectors();
-	}
-
 	/** invokes the given effector with the given named arguments on the entitiesToCall, from the calling context of the callingEntity;
 	 * intended for use only from the callingEntity
 	 * @return ParallelTask containing a results from each invocation; calling get() on the result will block until all complete,
@@ -112,7 +99,7 @@ public class Entities {
     }
 	public static void dumpInfo(Entity e, Writer out, String currentIndentation, String tab) throws IOException {
 		out.append(currentIndentation+e.toString()+"\n");
-		for (ConfigKey<?> it : getConfigKeys(e)) {
+		for (ConfigKey<?> it : e.getEntityType().getConfigKeys()) {
             Object v = e.getConfig(it);
             if (!isTrivial(v)) {
                 out.append(currentIndentation+tab+tab+it.getName());
@@ -135,7 +122,7 @@ public class Entities {
                 out.append("\n");
             }
 		}
-		for (Sensor<?> it : getSensors(e)) {
+		for (Sensor<?> it : e.getEntityType().getSensors()) {
 			if (it instanceof AttributeSensor) {
                 Object v = e.getAttribute((AttributeSensor<?>)it);
                 if (!isTrivial(v)) {

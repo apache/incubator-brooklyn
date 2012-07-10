@@ -54,11 +54,11 @@ public abstract class BaseResource {
   }
 
   protected AttributeSensor<Object> getSensorOr404(EntityLocal entity, String sensorName) {
-    if (!entity.getSensors().containsKey(sensorName)) {
+    if (!entity.getEntityType().hasSensor(sensorName)) {
       throw notFound("Entity '%s' has no sensor with name '%s'", entity.getId(), sensorName);
     }
 
-    Sensor<?> sensor = entity.getSensors().get(sensorName);
+    Sensor<?> sensor = entity.getEntityType().getSensor(sensorName);
     if (!(sensor instanceof AttributeSensor)) {
       throw notFound("Sensor '%s' is not an AttributeSensor", sensorName);
     }

@@ -1,18 +1,12 @@
 package brooklyn.rest.resources;
 
-import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.entity.basic.EntityLocal;
-import brooklyn.policy.basic.AbstractPolicy;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
-import com.wordnik.swagger.core.Api;
-import com.wordnik.swagger.core.ApiError;
-import com.wordnik.swagger.core.ApiErrors;
-import com.wordnik.swagger.core.ApiOperation;
-import com.wordnik.swagger.core.ApiParam;
+import static com.google.common.collect.Sets.filter;
 import groovy.lang.GroovyClassLoader;
-import org.reflections.Reflections;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Modifier;
+import java.net.URI;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 import javax.validation.Valid;
@@ -25,12 +19,24 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Modifier;
-import java.net.URI;
-import java.util.Map;
 
-import static com.google.common.collect.Sets.filter;
+import org.reflections.Reflections;
+
+import brooklyn.entity.ConfigKey;
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.policy.basic.AbstractPolicy;
+
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
+import com.wordnik.swagger.core.Api;
+import com.wordnik.swagger.core.ApiError;
+import com.wordnik.swagger.core.ApiErrors;
+import com.wordnik.swagger.core.ApiOperation;
+import com.wordnik.swagger.core.ApiParam;
 
 @Path("/v1/catalog")
 @Api(value = "/v1/catalog", description = "Manage entities and policies available on the server")
@@ -131,8 +137,11 @@ public class CatalogResource extends BaseResource {
       Class<? extends AbstractEntity> clazz = entities.get(entityType);
       Constructor constructor = clazz.getConstructor(new Class[]{Map.class});
 
-      EntityLocal instance = (EntityLocal) constructor.newInstance(Maps.newHashMap());
-      return instance.getConfigKeys().keySet();
+      Entity instance = (Entity) constructor.newInstance(Maps.newHashMap());
+      return Iterables.transform(instance.getEntityType().getConfigKeys(), new Function<ConfigKey<?>, String>() {
+              public String apply(ConfigKey<?> configKey) {
+                return configKey.getName();
+              }});
 
     } catch (NoSuchMethodException e) {
       throw notFound(e.getMessage());

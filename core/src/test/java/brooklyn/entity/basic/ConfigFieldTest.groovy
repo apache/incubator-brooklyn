@@ -24,12 +24,13 @@ class ConfigFieldTest {
     
     @Test
     public void testGetConfigKeysReturnsFromSuperAndInterfacesAndSubClass() throws Exception {
-        assertEquals(entity.configKeys.keySet(), ImmutableSet.of("superKey1", "superKey2", "subKey2", "interfaceKey1"))
+        assertEquals(entity.getEntityType().getConfigKeys(), ImmutableSet.of(
+                MySubEntity.SUPER_KEY_1, MySubEntity.SUPER_KEY_2, MySubEntity.SUB_KEY_2, MySubEntity.INTERFACE_KEY_1));
     }
 
     @Test
     public void testConfigKeyDefaultUsesValueInSubClass() throws Exception {
-        assertEquals(entity.getConfig(MyBaseEntity.SUPER_KEY_1), "overridden superKey1 default")
+        assertEquals(entity.getConfig(MyBaseEntity.SUPER_KEY_1), "overridden superKey1 default");
     }
 
     @Test
@@ -58,6 +59,6 @@ class ConfigFieldTest {
     }
     
     public interface MyInterface {
-        BasicConfigKey INTERFACE_KEY_1 = [ String, "interfaceKey1", "interface key 1", "interfaceKey1 default"]
+        public static final BasicConfigKey INTERFACE_KEY_1 = [ String, "interfaceKey1", "interface key 1", "interfaceKey1 default"]
     }
 }

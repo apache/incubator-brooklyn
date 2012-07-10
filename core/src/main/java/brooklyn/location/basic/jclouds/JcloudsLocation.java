@@ -118,7 +118,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     private final Map<String,Map<String, ? extends Object>> tagMapping = Maps.newLinkedHashMap();
     private final Map<JcloudsSshMachineLocation,String> vmInstanceIds = Maps.newLinkedHashMap();
 
-    JcloudsLocation(Map conf) {
+    public JcloudsLocation(Map conf) {
         super(conf);
     }
     

@@ -81,7 +81,7 @@ public class EntityService {
             }
 
             sensorCache.putIfAbsent(entity.id, new ConcurrentHashMap<String, SensorSummary>())
-            for (Sensor s : entity.entityClass.sensors) {
+            for (Sensor s : entity.getEntityType().getSensors()) {
                 if (s instanceof AttributeSensor) {
                     sensorCache[entity.id].putIfAbsent(s.name, new SensorSummary(s, entity.getAttribute(s)))
                 }
@@ -141,7 +141,7 @@ public class EntityService {
         Entity entity = getEntity(entityId)
         if (!entity) throw new NoSuchEntity()
         
-        return entity.entityClass.effectors
+        return entity.getEntityType().getEffectors()
     }
 
     public Collection<Policy> getPoliciesOfEntity(Entity entity) {
