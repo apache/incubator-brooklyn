@@ -20,8 +20,9 @@ import java.net.URI;
 public class DeployCommand extends BrooklynCommand {
 
     @Option(name = "--format",
+            allowedValues = {"json", "groovy", "class"},
             description = "Either json,groovy,class, to force APP type detection")
-    public String format;
+    public String format = "class";
 
     @Option(name = "--no-start",
             description = "Don't invoke `start` on the application")
