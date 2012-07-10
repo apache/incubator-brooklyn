@@ -5,6 +5,7 @@ import com.sun.jersey.api.client.Client;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.iq80.cli.Option;
 import org.iq80.cli.OptionType;
+import org.iq80.cli.ParseException;
 import java.util.concurrent.Callable;
 import java.lang.UnsupportedOperationException;
 
@@ -52,12 +53,31 @@ public abstract class BrooklynCommand implements Callable<Void> {
      */
     public Void call() throws Exception {
 
+        // Additional higher level syntax validation
+        additionalValidation();
+
         // Embedded web server feature
         if(embedded)
             throw new UnsupportedOperationException(
                     "The \"--embedded\" option is not supported yet");
 
         return null;
+    }
+
+    /**
+     * Adds some additional validation for the cli arguments.
+     *
+     * Git-like-cli doesn't attempt to do this so this is the place
+     * where some of the additional things that we need can go.
+     *
+     * Calling this will throw a {@link ParseException} that will be caght
+     *
+     * @throws ParseException
+     */
+    private void additionalValidation() throws ParseException {
+        // Make sure that "--retry" and "--no-retry" are mutually exclusive
+        if(noRetry && retry!=DEFAULT_RETRY_PERIOD)
+            throw new ParseException("The \"--retry\" and \"--no-retry\" options are mutually exclusive!");
     }
 
 }
