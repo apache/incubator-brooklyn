@@ -51,7 +51,7 @@ class RollingTimeWindowMeanEnricherTest {
     @Test
     public void testDefaultAverageWhenEmpty() {
         average = averager.getAverage(0)
-        assertEquals(average.value, 0)
+        assertEquals(average.value, 0d)
         assertEquals(average.confidence, 0.0d)
     }
     
