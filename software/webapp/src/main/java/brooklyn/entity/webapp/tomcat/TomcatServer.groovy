@@ -36,7 +36,7 @@ public class TomcatServer extends JavaWebAppSoftwareProcess implements JavaWebAp
     private static final Logger log = LoggerFactory.getLogger(TomcatServer.class)
     
     @SetFromFlag("version")
-    public static final BasicConfigKey<String> SUGGESTED_VERSION = [ SoftwareProcessEntity.SUGGESTED_VERSION, "7.0.27" ]
+    public static final BasicConfigKey<String> SUGGESTED_VERSION = [ SoftwareProcessEntity.SUGGESTED_VERSION, "7.0.29" ]
     
     /**
      * Tomcat insists on having a port you can connect to for the sole purpose of shutting it down.
