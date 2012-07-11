@@ -18,7 +18,7 @@ import brooklyn.entity.webapp.DynamicWebAppCluster
 import brooklyn.launcher.BrooklynLauncher
 import brooklyn.location.Location
 import brooklyn.location.basic.LocationRegistry
-import brooklyn.policy.ResizerPolicy
+import brooklyn.policy.autoscaling.AutoScalerPolicy
 import brooklyn.util.CommandLineUtil
 
 /**
@@ -62,10 +62,11 @@ public class WebClusterDatabaseExample extends AbstractApplication {
             (UsesJava.JAVA_OPTIONS):
                 ["brooklyn.example.db.url": valueWhenAttributeReady(mysql, MySqlNode.MYSQL_URL, this.&makeJdbcUrl)]);
 
-        web.cluster.addPolicy(new
-            ResizerPolicy(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND).
-                setSizeRange(1, 5).
-                setMetricRange(10, 100));
+        web.cluster.addPolicy(AutoScalerPolicy.builder()
+                .metric(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND)
+                .sizeRange(1, 5)
+                .metricRange(10, 100)
+                .build());
     }    
 
     public static void main(String[] argv) {

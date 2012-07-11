@@ -20,7 +20,7 @@ import brooklyn.event.basic.DependentConfiguration
 import brooklyn.launcher.BrooklynLauncher
 import brooklyn.location.Location
 import brooklyn.location.basic.LocationRegistry
-import brooklyn.policy.ResizerPolicy
+import brooklyn.policy.autoscaling.AutoScalerPolicy
 import brooklyn.util.CommandLineUtil
 
 /**
@@ -85,9 +85,11 @@ INSERT INTO MESSAGES values (default, 'Isaac Asimov', 'I grew up in Brooklyn' );
         controller: new NginxController(port: 8080),
         factory: this.&newWebServer )
     
-    ResizerPolicy policy = new ResizerPolicy(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND).
-        setSizeRange(1, 5).
-        setMetricRange(10, 100);
+    AutoScalerPolicy policy = AutoScalerPolicy.builder()
+            .metric(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND)
+            .sizeRange(1, 5)
+            .metricRange(10, 100)
+            .build();
     
 
     public static void main(String[] argv) {

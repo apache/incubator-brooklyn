@@ -17,7 +17,7 @@ import brooklyn.launcher.BrooklynLauncher
 import brooklyn.location.Location
 import brooklyn.location.basic.CommandLineLocations
 import brooklyn.location.basic.LocationRegistry
-import brooklyn.policy.ResizerPolicy
+import brooklyn.policy.autoscaling.AutoScalerPolicy
 import brooklyn.util.CommandLineUtil
 
 /**
@@ -55,9 +55,11 @@ public class WebClusterExample extends AbstractApplication {
         initialSize: 1,
         factory: jbossFactory)
     
-    ResizerPolicy policy = new ResizerPolicy(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND).
-        setSizeRange(1, 5).
-        setMetricRange(10, 100);
+    AutoScalerPolicy policy = AutoScalerPolicy.builder()
+            .metric(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND)
+            .sizeRange(1, 5)
+            .metricRange(10, 100)
+            .build();
     
 
     public static void main(String[] argv) {

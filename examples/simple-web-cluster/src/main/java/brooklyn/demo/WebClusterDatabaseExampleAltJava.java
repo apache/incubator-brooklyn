@@ -24,7 +24,7 @@ import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocationRegistry;
-import brooklyn.policy.ResizerPolicy;
+import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.util.CommandLineUtil;
 
 import com.google.common.base.Function;
@@ -82,9 +82,11 @@ public class WebClusterDatabaseExampleAltJava extends AbstractApplication {
                 }));
         web.getFactory().setConfig(JBoss7Server.JAVA_OPTIONS, jvmOpts);
 
-        web.getCluster().addPolicy(new ResizerPolicy(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND).
-                setSizeRange(1, 5).
-                setMetricRange(10, 100));
+        web.getCluster().addPolicy(AutoScalerPolicy.builder()
+                .metric(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND)
+                .sizeRange(1, 5)
+                .metricRange(10, 100)
+                .build());
     }    
 
     public static void main(String[] argv) throws IOException {
