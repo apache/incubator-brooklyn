@@ -5,16 +5,21 @@ import brooklyn.rest.api.Application;
 import brooklyn.rest.api.Application.Status;
 import brooklyn.rest.api.ApplicationSpec;
 import brooklyn.rest.api.EntitySpec;
+import com.google.common.base.Joiner;
 import com.google.common.collect.Sets;
+import com.google.common.io.Files;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.WebResource;
 import org.iq80.cli.Command;
 import org.iq80.cli.Option;
 import org.iq80.cli.Arguments;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.Charset;
 
 @Command(name = "deploy", description = "Deploys the specified application using given config, classpath, location, etc")
 public class DeployCommand extends BrooklynCommand {
@@ -54,6 +59,43 @@ public class DeployCommand extends BrooklynCommand {
 
         // Common command behavior
         super.call();
+
+        // Upload the groovy app to the server if provided
+        if(format.equals("groovy")){
+
+            // Inform the user that we are loading the application to the server
+            System.out.println("Loading groovy script to the server: "+app);
+
+            // Get the user's groovy script
+            String groovyScript = Joiner
+                    .on("\n")
+                    .join(Files.readLines(
+                            new File(app),Charset.forName("utf-8")));
+
+            // Make an HTTP request to the REST server
+            WebResource webResource = httpClient.resource(endpoint + "/v1/catalog");
+            webResource.type(MediaType.APPLICATION_JSON);
+            ClientResponse clientResponse = webResource.post(ClientResponse.class, groovyScript);
+
+            // Make sure we get the correct HTTP response code
+            if (clientResponse.getStatus() != Response.Status.CREATED.getStatusCode()) {
+                String response = clientResponse.getEntity(String.class);
+                ApiError error = jsonParser.readValue(response, ApiError.class);
+                System.err.println(error.getMessage());
+                return null;
+            }
+
+            // Get the catalog entity name that was just created
+            String locationPath = clientResponse.getLocation().getPath();
+            String entityName = locationPath.substring(locationPath.lastIndexOf("/")+1);
+
+            // Inform the user about the new catalog name for the app
+            System.out.println("Application has been added to the server's catalog: "+entityName);
+
+            // Next stage assumes that app is the catalog name
+            app = entityName;
+
+        }
 
         // Create Java object for request
         ApplicationSpec applicationSpec = new ApplicationSpec(
