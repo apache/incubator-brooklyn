@@ -65,7 +65,7 @@ public class DeployCommand extends BrooklynCommand {
         super.call();
 
         // Upload the groovy app to the server if provided
-        if(format.equals("groovy")){
+        if(format.equals(GROOVY_FORMAT)){
 
             // Inform the user that we are loading the application to the server
             System.out.println("Loading groovy script to the server: "+app);
@@ -101,15 +101,23 @@ public class DeployCommand extends BrooklynCommand {
 
         }
 
-        // Create Java object for request
-        ApplicationSpec applicationSpec = new ApplicationSpec(
-                app, // name
-                Sets.newHashSet(new EntitySpec(app)), // entities
-                Sets.newHashSet("/v1/locations/1") // locations
-        );
-
-        // Serialize the Java object to JSON
-        String objectJsonString = jsonParser.writeValueAsString(applicationSpec);
+        // Create the JSON request object
+        String objectJsonString;
+        if(format.equals(JSON_FORMAT)){
+            // Inform the user that we are loading the JSON provided in the file
+            System.out.println("Loading json request object form file: "+app);
+            // Load the JSON from the file
+            objectJsonString = Files.toString(new File(app),Charset.forName("utf-8"));;
+        } else { // CLASS_FORMAT
+            // Create Java object for request
+            ApplicationSpec applicationSpec = new ApplicationSpec(
+                    app, // name
+                    Sets.newHashSet(new EntitySpec(app)), // entities
+                    Sets.newHashSet("/v1/locations/1") // locations
+            );
+            // Serialize the Java object to JSON
+            objectJsonString = jsonParser.writeValueAsString(applicationSpec);
+        }
 
         // Make an HTTP request to the REST server
         ClientResponse clientResponse = httpClient
