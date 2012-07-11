@@ -1,5 +1,6 @@
 package brooklyn.cli.commands;
 
+import brooklyn.cli.HttpBroker;
 import com.google.common.base.Objects;
 import com.sun.jersey.api.client.Client;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -42,6 +43,8 @@ public abstract class BrooklynCommand implements Callable<Void> {
         return Objects.toStringHelper(getClass())
                 .add("embedded", embedded)
                 .add("endpoint", endpoint)
+                .add("retry", retry)
+                .add("no-retry",noRetry)
                 .toString();
     }
 
@@ -78,6 +81,10 @@ public abstract class BrooklynCommand implements Callable<Void> {
         // Make sure that "--retry" and "--no-retry" are mutually exclusive
         if(noRetry && retry!=DEFAULT_RETRY_PERIOD)
             throw new ParseException("The \"--retry\" and \"--no-retry\" options are mutually exclusive!");
+    }
+
+    HttpBroker getHttpBroker() {
+        return new HttpBroker(httpClient, endpoint, retry);
     }
 
 }
