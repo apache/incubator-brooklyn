@@ -88,6 +88,7 @@ public class DeployCommand extends BrooklynCommand {
             System.out.print(".");
             System.out.flush();
             Thread.sleep(1000);
+            status = getApplicationStatus(httpClient, clientResponse.getLocation());
         }
         if (status == Application.Status.RUNNING) {
             System.out.println("Done.");
