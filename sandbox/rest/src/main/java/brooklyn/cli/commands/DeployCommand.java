@@ -24,10 +24,14 @@ import java.nio.charset.Charset;
 @Command(name = "deploy", description = "Deploys the specified application using given config, classpath, location, etc")
 public class DeployCommand extends BrooklynCommand {
 
+    private static final String JSON_FORMAT = "json";
+    private static final String GROOVY_FORMAT = "groovy";
+    private static final String CLASS_FORMAT = "class";
+
     @Option(name = "--format",
-            allowedValues = {"json", "groovy", "class"},
-            description = "Either json,groovy,class, to force APP type detection")
-    public String format = "class";
+            allowedValues = {JSON_FORMAT, GROOVY_FORMAT, CLASS_FORMAT},
+            description = "Either "+JSON_FORMAT+","+GROOVY_FORMAT+","+CLASS_FORMAT+", to force APP type detection")
+    public String format = CLASS_FORMAT;
 
     @Option(name = "--no-start",
             description = "Don't invoke `start` on the application")
