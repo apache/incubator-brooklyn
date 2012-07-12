@@ -21,7 +21,7 @@ public class HttpBroker {
     private String endpoint;
     private int retry;
 
-    private static enum RequestType { GET, POST };
+    private static enum RequestType { GET, POST, DELETE };
 
     public HttpBroker(Client httpClient, String endpoint, int retry) {
         this.httpClient = httpClient;
@@ -42,13 +42,15 @@ public class HttpBroker {
                 switch (requestType) {
                     case GET:
                         return webResource
-                                .accept("application/json")
+                                .accept(MediaType.APPLICATION_JSON)
                                 .get(ClientResponse.class);
                     case POST:
                         webResource.addFilter(new GZIPContentEncodingFilter(true));
                         return webResource
                                 .type(MediaType.APPLICATION_JSON)
                                 .post(ClientResponse.class, data);
+                    case DELETE:
+                        return webResource.delete(ClientResponse.class);
                     default:
                         return null; //strange case this
                 }
@@ -77,5 +79,8 @@ public class HttpBroker {
         return makeRequestWithRetry(path,RequestType.POST,data);
     }
 
+    public ClientResponse deleteWithRetry(String path) throws InterruptedException {
+        return makeRequestWithRetry(path,RequestType.DELETE,"");
+    }
 
 }
