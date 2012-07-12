@@ -62,9 +62,10 @@ public class HttpBroker {
                 }
             }
         }
-        // Looks like the request was not successful, so return null (probably a bad idea!)
+        // Looks like the request was not successful
         System.out.println("Connecting to server failed. Giving up.");
-        return null;
+        // TODO: figure out a better way to do this!
+        throw new RuntimeException("Connecting to server failed!");
     }
 
     private ClientResponse makeRequestWithRetry(String path, RequestType requestType) throws InterruptedException{
