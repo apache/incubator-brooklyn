@@ -64,6 +64,9 @@ public abstract class BrooklynCommand implements Callable<Void> {
             throw new UnsupportedOperationException(
                     "The \"--embedded\" option is not supported yet");
 
+        // If --no-retry then set number of retries to 1
+        retry = 1;
+
         return null;
     }
 
