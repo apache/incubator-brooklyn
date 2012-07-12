@@ -1,6 +1,5 @@
 package brooklyn.util.task
 
-import java.util.Map
 import java.util.Queue
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
