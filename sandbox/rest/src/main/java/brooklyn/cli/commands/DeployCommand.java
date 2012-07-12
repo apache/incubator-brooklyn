@@ -64,6 +64,17 @@ public class DeployCommand extends BrooklynCommand {
         // Common command behavior
         super.call();
 
+        // Throw exception for unsupported options
+        if(noStart)
+            throw new UnsupportedOperationException(
+                    "The \"--no-start\" option is not supported yet");
+        if(locations!=null)
+            throw new UnsupportedOperationException(
+                    "The \"--location\",\"--locations\" options are not supported yet");
+        if(config!=null)
+            throw new UnsupportedOperationException(
+                    "The \"--config\" option is not supported yet");
+
         // Upload the groovy app to the server if provided
         if(format.equals(GROOVY_FORMAT)){
 
