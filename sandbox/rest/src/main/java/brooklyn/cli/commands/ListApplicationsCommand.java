@@ -17,11 +17,8 @@ public class ListApplicationsCommand extends BrooklynCommand {
         super.call();
 
         // Make an HTTP request to the REST server and get back a JSON encoded response
-        String jsonResponse = httpClient
-                .resource(endpoint + "/v1/applications")
-                .accept("application/json")
-                .get(ClientResponse.class)
-                .getEntity(String.class);
+        ClientResponse clientResponse = getHttpBroker().getWithRetry("/v1/applications");
+        String jsonResponse = clientResponse.getEntity(String.class);
 
         // Parse the JSON response
         List<Application> applications = jsonParser.readValue(jsonResponse,new TypeReference<List<Application>>(){});

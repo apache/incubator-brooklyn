@@ -12,8 +12,8 @@ import java.lang.UnsupportedOperationException;
 
 public abstract class BrooklynCommand implements Callable<Void> {
 
-    public static final Client httpClient = Client.create(); // Jersey rest client
-    public static final ObjectMapper jsonParser = new ObjectMapper(); // Jackson json parser
+    private static final Client httpClient = Client.create(); // Jersey rest client
+    static final ObjectMapper jsonParser = new ObjectMapper(); // Jackson json parser
 
     public static final int DEFAULT_RETRY_PERIOD = 30;
     public static final String DEFAULT_ENDPOINT = "http://localhost:8080";

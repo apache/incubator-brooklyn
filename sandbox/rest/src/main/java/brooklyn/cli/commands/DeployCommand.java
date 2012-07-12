@@ -77,9 +77,8 @@ public class DeployCommand extends BrooklynCommand {
                             new File(app),Charset.forName("utf-8")));
 
             // Make an HTTP request to the REST server
-            WebResource webResource = httpClient.resource(endpoint + "/v1/catalog");
-            webResource.type(MediaType.APPLICATION_JSON);
-            ClientResponse clientResponse = webResource.post(ClientResponse.class, groovyScript);
+            String jsonEncodedGroovyScript = jsonParser.writeValueAsString(groovyScript); //encode the script to a JSON string
+            ClientResponse clientResponse = getHttpBroker().postWithRetry("/v1/catalog",jsonEncodedGroovyScript);
 
             // Make sure we get the correct HTTP response code
             if (clientResponse.getStatus() != Response.Status.CREATED.getStatusCode()) {
@@ -120,10 +119,7 @@ public class DeployCommand extends BrooklynCommand {
         }
 
         // Make an HTTP request to the REST server
-        ClientResponse clientResponse = httpClient
-                .resource(endpoint + "/v1/applications")
-                .type(MediaType.APPLICATION_JSON)
-                .post(ClientResponse.class, objectJsonString);
+        ClientResponse clientResponse = getHttpBroker().postWithRetry("/v1/applications",objectJsonString);
 
         // Make sure we get the correct HTTP response code
         if (clientResponse.getStatus() != Response.Status.CREATED.getStatusCode()) {
@@ -137,12 +133,12 @@ public class DeployCommand extends BrooklynCommand {
         System.out.println("Starting at " + clientResponse.getLocation());
 
         // Check if application was  started successfully (via another REST call)
-        Status status = getApplicationStatus(httpClient, clientResponse.getLocation());
+        Status status = getApplicationStatus(clientResponse.getLocation());
         while (status != Application.Status.RUNNING && status != Application.Status.ERROR) {
             System.out.print(".");
             System.out.flush();
             Thread.sleep(1000);
-            status = getApplicationStatus(httpClient, clientResponse.getLocation());
+            status = getApplicationStatus(clientResponse.getLocation());
         }
         if (status == Application.Status.RUNNING) {
             System.out.println("Done.");
@@ -153,11 +149,8 @@ public class DeployCommand extends BrooklynCommand {
         return null;
     }
 
-    private Application.Status getApplicationStatus(Client client, URI uri) throws IOException {
-        ClientResponse clientResponse = client
-                .resource(uri)
-                .type(MediaType.APPLICATION_JSON)
-                .get(ClientResponse.class);
+    private Application.Status getApplicationStatus(URI uri) throws IOException, InterruptedException {
+        ClientResponse clientResponse = getHttpBroker().getWithRetry(uri.getPath().toString());
         String response = clientResponse.getEntity(String.class);
         Application application = jsonParser.readValue(response, Application.class);
         return application.getStatus();

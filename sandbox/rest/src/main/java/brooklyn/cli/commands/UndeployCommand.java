@@ -28,9 +28,7 @@ public class UndeployCommand extends BrooklynCommand {
         super.call();
 
         // Make an HTTP request to the REST server
-        ClientResponse clientResponse = httpClient
-                .resource(endpoint + "/v1/applications/" + app)
-                .delete(ClientResponse.class);
+        ClientResponse clientResponse = getHttpBroker().deleteWithRetry("/v1/applications/" + app);
 
         // Make sure we get the correct HTTP response code
         if (clientResponse.getStatus() != Response.Status.ACCEPTED.getStatusCode()) {
