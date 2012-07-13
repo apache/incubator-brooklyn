@@ -95,7 +95,6 @@
         <mortbay.jetty.version>6.1.26</mortbay.jetty.version>
         <slf4j.version>1.5.11</slf4j.version>
         <!-- NB: slf4j 1.6.x seems to change some signatures which breaks e.g. grails 1.3; grails may ask for 1.5.8 but that's okay -->
-        <jsch.version>0.1.44-1</jsch.version>
         <xstream.version>1.3.1</xstream.version>
         <jansi.version>1.2.1</jansi.version>
         <guava.version>11.0.2</guava.version>
@@ -160,11 +159,6 @@
                 <groupId>org.apache.ivy</groupId>
                 <artifactId>ivy</artifactId>
                 <version>${ivy.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.jcraft</groupId>
-                <artifactId>jsch</artifactId>
-                <version>${jsch.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.thoughtworks.xstream</groupId>
