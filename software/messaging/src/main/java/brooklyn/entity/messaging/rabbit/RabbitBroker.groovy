@@ -1,15 +1,11 @@
 package brooklyn.entity.messaging.rabbit
 
-import java.util.Collection
-import java.util.Map
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.SoftwareProcessEntity
-import brooklyn.entity.basic.lifecycle.CommonCommands
 import brooklyn.entity.messaging.MessageBroker
 import brooklyn.entity.messaging.Queue
 import brooklyn.entity.messaging.amqp.AmqpExchange
@@ -21,6 +17,10 @@ import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.flags.SetFromFlag
+import brooklyn.event.adapter.AbstractSensorAdapter
+import brooklyn.event.adapter.FunctionSensorAdapter
+import java.util.concurrent.Callable
+import java.util.concurrent.TimeUnit
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Rabbit MQ broker instance, using AMQP 0-9-1.
@@ -78,24 +78,33 @@ public class RabbitBroker extends SoftwareProcessEntity implements MessageBroker
         return new RabbitSshDriver(this, machine)
     }
 
-    transient SshSensorAdapter sshAdapter;
-
-    @Override     
+    @Override
     protected void connectSensors() {
-        sshAdapter = sensorRegistry.register(new SshSensorAdapter(driver.machine, env:driver.shellEnvironment))
-        sshAdapter.command("${driver.runDir}/sbin/rabbitmqctl -q status")
-                .poll(SERVICE_UP) { String out ->
-		            if (out == null || exitStatus != 0) return false
-		            return out.contains("RabbitMQ")
-		        }
-        sensorRegistry.activateAdapters()
-    }
+       super.connectSensors();
+
+        //we need to copy it in a local variable, else the isRunningCallable is not
+        //able to find the field.
+       final RabbitSshDriver rabbitSshDriver = driver;
+
+       Callable isRunningCallable = new Callable(){
+           Object call() {
+              return rabbitSshDriver.isRunning()
+           }
+       };
+
+       FunctionSensorAdapter serviceUpAdapter = sensorRegistry.register(new FunctionSensorAdapter(
+                    period:10*TimeUnit.SECONDS,
+                    isRunningCallable));
+
+       sensorRegistry.activateAdapters();
+
+       serviceUpAdapter.poll(SERVICE_UP);
+     }
 
     @Override
     public Collection<String> toStringFieldsToInclude() {
         return super.toStringFieldsToInclude() + [ 'amqpPort' ]
     }
-
 }
 
 public abstract class RabbitDestination extends AbstractEntity implements AmqpExchange {
