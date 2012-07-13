@@ -168,7 +168,7 @@ public class BalanceableWorkerPool extends AbstractEntity implements Resizable {
     
     private void onContainerAdded(BalanceableContainer<?> newContainer) {
         subscribe(newContainer, Startable.SERVICE_UP, eventHandler);
-        if (!(newContainer instanceof Startable) || newContainer.getAttribute(Startable.SERVICE_UP)) {
+        if (!(newContainer instanceof Startable) || Boolean.TRUE.equals(newContainer.getAttribute(Startable.SERVICE_UP))) {
             onContainerUp(newContainer);
         }
     }
