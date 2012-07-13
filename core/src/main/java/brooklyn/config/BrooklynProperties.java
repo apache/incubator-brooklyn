@@ -1,14 +1,30 @@
 package brooklyn.config;
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import groovy.lang.Closure;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Properties;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import brooklyn.util.MutableMap;
 import brooklyn.util.ResourceUtils;
 
-/** utils for accessing command-line and system-env properties */
-class BrooklynProperties extends LinkedHashMap {
+import com.google.common.base.Throwables;
 
-    protected static final Logger LOG = LoggerFactory.getLogger(BrooklynProperties.class)
+/** utils for accessing command-line and system-env properties */
+public class BrooklynProperties extends LinkedHashMap {
+
+    protected static final Logger LOG = LoggerFactory.getLogger(BrooklynProperties.class);
     
     public static class Factory {
         public static BrooklynProperties newEmpty() {
@@ -20,9 +36,9 @@ class BrooklynProperties extends LinkedHashMap {
         }
         public static BrooklynProperties newDefault() {
             BrooklynProperties p = new BrooklynProperties().addEnvironmentVars().addSystemProperties();
-            File f = new File(p.getFirst("user.home", "HOME", defaultIfNone:"/")+File.separatorChar+".brooklyn"+File.separatorChar+"brooklyn.properties");
+            File f = new File(p.getFirst(MutableMap.of("defaultIfNone", "/"), "user.home", "HOME")+File.separatorChar+".brooklyn"+File.separatorChar+"brooklyn.properties");
             if (f.exists()) p.addFrom(f);
-            return p
+            return p;
         }
     }
     
@@ -31,32 +47,40 @@ class BrooklynProperties extends LinkedHashMap {
     
     public BrooklynProperties addEnvironmentVars() {
         putAll(System.getenv());
-        this
+        return this;
     }
     public BrooklynProperties addSystemProperties() {
         putAll(System.getProperties());
-        this
+        return this;
     }
     
     public BrooklynProperties addFrom(InputStream i) {
         Properties p = new Properties();
-        p.load(i);
+        try {
+            p.load(i);
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
         putAll(p);
-        this
+        return this;
     }
     public BrooklynProperties addFrom(File f) {
         if (!f.exists()) {
             LOG.warn("Unable to find file '"+f.getAbsolutePath()+"' when loading properties; ignoring");
-            return this   
+            return this;
         } else {
-            return addFrom(new FileInputStream(f))
+            try {
+                return addFrom(new FileInputStream(f));
+            } catch (FileNotFoundException e) {
+                throw Throwables.propagate(e);
+            }
         }
     }
     public BrooklynProperties addFrom(URL u) {
         try {
-            addFrom(u.openStream());
+            return addFrom(u.openStream());
         } catch (IOException e) {
-            throw new IOException("Error reading properties from ${u}: "+e, e)
+            throw new RuntimeException("Error reading properties from "+u+": "+e, e);
         }
     }
     /**
@@ -68,30 +92,31 @@ class BrooklynProperties extends LinkedHashMap {
      */
     public BrooklynProperties addFromUrl(String url) {
         try {
-            addFrom(new ResourceUtils(this).getResourceFromUrl(url));
+            return addFrom(new ResourceUtils(this).getResourceFromUrl(url));
         } catch (Exception e) {
-            throw new IOException("Error reading properties from ${url}: "+e, e);
+            throw new RuntimeException("Error reading properties from ${url}: "+e, e);
         }
     }
     
     /** expects a property already set in scope, whose value is acceptable to {@link #addFromUrl(String)};
      * if property not set, does nothing */
     public BrooklynProperties addFromUrlProperty(String urlProperty) {
-        String url = get(urlProperty);
+        String url = (String) get(urlProperty);
         if (url==null) addFromUrl(url);
-        this
+        return this;
     }
 
     /**
     * adds the indicated properties
     */
    public BrooklynProperties addFromMap(Map properties) {
-       putAll(properties)
-       this
+       putAll(properties);
+       return this;
    }
 
    /** inserts the value under the given key, if it was not present */
    public boolean putIfAbsent(String key, Object value) {
+       // TODO Not thread-safe
        if (containsKey(key)) return false;
        put(key, value);
        return true;
@@ -113,28 +138,31 @@ class BrooklynProperties extends LinkedHashMap {
      * takes the following flags:
      * 'warnIfNone', 'failIfNone' (both taking a boolean (to use default message) or a string (which is the message)); 
      * and 'defaultIfNone' (a default value to return if there is no such property); defaults to no warning and null response */   
-    public String getFirst(Map flags=[:], String ...keys) {
+    public String getFirst(String ...keys) {
+       return getFirst(MutableMap.of(), keys);
+    }
+    public String getFirst(Map flags, String ...keys) {
         for (String k: keys) {
-            if (containsKey(k)) return get(k);
+            if (containsKey(k)) return (String) get(k);
         }
-        if (flags.warnIfNone!=null && flags.warnIfNone!=false) {
-            if (flags.warnIfNone==true)
+        if (flags.get("warnIfNone")!=null && !Boolean.FALSE.equals(flags.get("warnIfNone"))) {
+            if (Boolean.TRUE.equals(flags.get("warnIfNone")))
                 LOG.warn("Unable to find Brooklyn property "+keys);
             else
-                LOG.warn(""+flags.warnIfNone);
+                LOG.warn(""+flags.get("warnIfNone"));
         }
-        if (flags.failIfNone!=null && flags.failIfNone!=false) {
-            def f = flags.failIfNone
-            if (f in Closure)
-                f.call(keys)
-            if (f==true)
+        if (flags.get("failIfNone")!=null && !Boolean.FALSE.equals(flags.get("failIfNone"))) {
+            Object f = flags.get("failIfNone");
+            if (f instanceof Closure)
+                ((Closure)f).call(keys);
+            if (Boolean.TRUE.equals(f))
                 throw new NoSuchElementException("Brooklyn unable to find mandatory property "+keys[0]+
                     (keys.length>1 ? " (or "+(keys.length-1)+" other possible names, full list is "+keys+")" : "") );
             else
                 throw new NoSuchElementException(""+f);
         }
-        if (flags.defaultIfNone!=null) {
-            return flags.defaultIfNone;
+        if (flags.get("defaultIfNone")!=null) {
+            return (String) flags.get("defaultIfNone");
         }
         return null;
     }
