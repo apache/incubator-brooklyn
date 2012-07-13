@@ -1,6 +1,7 @@
 package brooklyn.rest.resources;
 
 import brooklyn.entity.Effector;
+import brooklyn.entity.basic.EffectorUtils;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.rest.api.Application;
 import brooklyn.rest.api.EffectorSummary;
@@ -59,11 +60,11 @@ public class EffectorResource extends BaseResource {
     final EntityLocal entity = getEntityOr404(application, entityIdOrName);
 
     return transform(
-        entity.getEffectors().entrySet(),
-        new Function<Map.Entry<String, Effector<?>>, EffectorSummary>() {
+        entity.getEntityType().getEffectors(),
+        new Function<Effector<?>, EffectorSummary>() {
           @Override
-          public EffectorSummary apply(Map.Entry<String, Effector<?>> entry) {
-            return new EffectorSummary(application, entity, entry.getValue());
+          public EffectorSummary apply(Effector<?> effector) {
+            return new EffectorSummary(application, entity, effector);
           }
         });
   }
@@ -87,7 +88,7 @@ public class EffectorResource extends BaseResource {
     final Application application = getApplicationOr404(manager.registry(), applicationName);
     final EntityLocal entity = getEntityOr404(application, entityIdOrName);
 
-    final Effector<?> effector = entity.getEffectors().get(effectorName);
+    final Effector<?> effector = EffectorUtils.findEffectorMatching(entity.getEntityType().getEffectors(), effectorName, parameters);
     if (effector == null) {
       throw notFound("Entity '%s' has no effector with name '%s'", entityIdOrName, effectorName);
     }

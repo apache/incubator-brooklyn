@@ -35,7 +35,7 @@ public class SensorPropagatingEnricher extends AbstractEnricher implements Senso
         Set<Sensor<?>> excluded = ImmutableSet.copyOf(excludes);
         Set<Sensor<?>> includes = Sets.newLinkedHashSet();
         
-        for (Sensor<?> it : source.getEntityClass().getSensors()) {
+        for (Sensor<?> it : source.getEntityType().getSensors()) {
             if (!excluded.contains(it)) includes.add(it);
         }
         return new SensorPropagatingEnricher(source, includes);

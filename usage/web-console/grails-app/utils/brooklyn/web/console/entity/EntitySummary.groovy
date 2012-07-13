@@ -1,7 +1,7 @@
 package brooklyn.web.console.entity;
 
 import brooklyn.entity.Entity
-import brooklyn.entity.EntityClass
+import brooklyn.entity.EntityType
 import brooklyn.entity.Group
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.trait.Startable
@@ -10,7 +10,7 @@ import brooklyn.entity.trait.Startable
 public class EntitySummary {
 
     final String id;
-    final EntityClass entityClass;
+    final EntityType entityType;
     final String displayName;
     final String applicationId;
     final String ownerId;
@@ -21,7 +21,7 @@ public class EntitySummary {
 
     public EntitySummary(Entity entity) {
         this.id = entity.getId();
-        this.entityClass = entity.entityClass;
+        this.entityType = entity.entityType;
         this.displayName = entity.displayName;
         this.applicationId = entity.application?.getId();
         this.ownerId = entity.owner ? entity.owner.id : null;

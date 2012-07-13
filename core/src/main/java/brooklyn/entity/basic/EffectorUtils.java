@@ -4,11 +4,12 @@ import static brooklyn.util.GroovyJavaMethods.truth;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import brooklyn.entity.Effector;
+import brooklyn.entity.EntityType;
 import brooklyn.entity.ParameterType;
 
 import com.google.common.collect.Lists;
@@ -97,5 +98,15 @@ public class EffectorUtils<T> {
         if (truth(m) && !mapUsed)
             throw new IllegalArgumentException("Invalid arguments ("+m.size()+" extra named) for effector "+eff+": "+args);
         return newArgs.toArray(new Object[newArgs.size()]);
+    }
+
+    public static Effector<?> findEffectorMatching(Set<Effector<?>> effectors, String effectorName, Map<String, String> parameters) {
+        // TODO Support overloading: check parameters as well
+        for (Effector<?> effector : effectors) {
+            if (effector.getName().equals(effectorName)) {
+                return effector;
+            }
+        }
+        return null;
     }
 }

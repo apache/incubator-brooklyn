@@ -77,7 +77,7 @@ public class SensorRegistry {
 	}
 
 	// TODO might be useful to have a lookup mechanism, or register ignore duplicates
-	//	sensorRegistry.adapters.find({ it in OldJmxSensorAdapter })?.connect(block: true, publish: (getEntityClass().hasSensor(JMX_URL)))
+	//	sensorRegistry.adapters.find({ it in OldJmxSensorAdapter })?.connect(block: true, publish: (getEntityType().hasSensor(JMX_URL)))
 	
 	boolean activated = false;
 	

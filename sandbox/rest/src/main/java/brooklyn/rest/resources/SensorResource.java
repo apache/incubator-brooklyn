@@ -53,17 +53,17 @@ public class SensorResource extends BaseResource {
     final EntityLocal entity = getEntityOr404(application, entityIdOrName);
 
     return transform(filter(
-        entity.getSensors().entrySet(),
-        new Predicate<Map.Entry<String, Sensor<?>>>() {
+        entity.getEntityType().getSensors(),
+        new Predicate<Sensor<?>>() {
           @Override
-          public boolean apply(@Nullable Map.Entry<String, Sensor<?>> input) {
-            return input != null && input.getValue() instanceof AttributeSensor;
+          public boolean apply(@Nullable Sensor<?> input) {
+            return input instanceof AttributeSensor;
           }
         }),
-        new Function<Map.Entry<String, Sensor<?>>, SensorSummary>() {
+        new Function<Sensor<?>, SensorSummary>() {
           @Override
-          public SensorSummary apply(Map.Entry<String, Sensor<?>> entry) {
-            return new SensorSummary(application, entity, entry.getValue());
+          public SensorSummary apply(Sensor<?> sensor) {
+            return new SensorSummary(application, entity, sensor);
           }
         });
   }

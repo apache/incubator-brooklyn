@@ -29,7 +29,7 @@ public interface Entity extends Serializable {
     /**
      * Information about the type of this entity; analogous to Java's object.getClass.
      */
-    EntityClass getEntityClass();
+    EntityType getEntityType();
     
     /*
      * Return the {@link Application} this entity is registered with.

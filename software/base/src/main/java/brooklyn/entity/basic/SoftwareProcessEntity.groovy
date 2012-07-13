@@ -227,7 +227,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
      */
     protected Collection<Integer> getRequiredOpenPorts() {
         Set<Integer> ports = [22]
-        for (ConfigKey k: getConfigKeys().values()) {
+        for (ConfigKey k: getEntityType().getConfigKeys()) {
             if (PortRange.class.isAssignableFrom(k.getType())) {
                 PortRange p = getConfig(k);
                 if (p != null && !p.isEmpty()) ports += p.iterator().next()
