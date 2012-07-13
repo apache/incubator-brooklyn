@@ -60,20 +60,25 @@ public class RabbitSshDriver extends StartStopSshDriver {
     @Override
     public void launch() {
         newScript(LAUNCHING, usePidFile:false)
-                .body.append(
-                    "nohup ./sbin/rabbitmq-server -detached > ${entity.id}-console.log 2>&1",
-                )
-                .execute()
+            .body.append(
+                "nohup ./sbin/rabbitmq-server > console-out.log 2> console-err.log &",
+                "for i in {1..10}\n" +
+                    "do\n" +
+                     "    grep 'broker running' console-out.log && exit\n" +
+                     "    sleep 1\n" +
+                     "done",
+                "echo \"Couldn't determine if rabbitmq-server is running\"",
+                "exit 1"
+            ).execute()
     }
 
     @Override
     public void configure() {
         newScript(CUSTOMIZING)
-                .body.append(
-                    "./sbin/rabbitmqctl add_vhost ${entity.virtualHost}",
-                    "./sbin/rabbitmqctl set_permissions -p ${entity.virtualHost} guest \".*\" \".*\" \".*\"",
-                )
-                .execute()
+            .body.append(
+                "./sbin/rabbitmqctl add_vhost ${entity.virtualHost}",
+                "./sbin/rabbitmqctl set_permissions -p ${entity.virtualHost} guest \".*\" \".*\" \".*\"",
+            ).execute()
     }
 
     public String getPidFile() { "rabbitmq.pid" }

@@ -2,24 +2,30 @@ package brooklyn.event.adapter;
 
 import static org.testng.Assert.assertEquals
 
-import java.util.concurrent.Callable
-
 import org.testng.annotations.Test
 
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.test.entity.TestEntity
+import java.util.concurrent.TimeUnit
+
+import brooklyn.test.entity.TestApplication
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import brooklyn.test.TestUtils
 
 public class FunctionSensorAdapterTest {
+    private static final Logger log = LoggerFactory.getLogger(FunctionSensorAdapterTest.class)
 
     final EntityLocal entity = new TestEntity();
     final SensorRegistry entityRegistry = new SensorRegistry(entity);
 
     FunctionSensorAdapter adapter;
-    public FunctionSensorAdapter registerAdapter(FunctionSensorAdapter adapter=null) {
+
+    public FunctionSensorAdapter registerAdapter(FunctionSensorAdapter adapter=null, boolean clearPollPeriod=true) {
         if (adapter!=null) this.adapter = adapter;
         else adapter = this.adapter;
-        adapter.pollPeriod = null;
+        if (clearPollPeriod) adapter.pollPeriod = null;
         entityRegistry.register(adapter);
         entityRegistry.activateAdapters();
         adapter;
@@ -40,7 +46,22 @@ public class FunctionSensorAdapterTest {
         adapter.poller.executePoll();
         assertEquals(entity.getAttribute(TestEntity.SEQUENCE), 10);
     }
-    
+
+    @Test
+     public void testWithPeriod() {
+         TestApplication app = new TestApplication();
+         entity.setOwner(app);
+
+         entity.setAttribute(TestEntity.SEQUENCE,0);
+         adapter = new FunctionSensorAdapter(period: 200*TimeUnit.MILLISECONDS, {1});
+         registerAdapter(adapter, false);
+         adapter.poll(TestEntity.SEQUENCE);
+         app.start([]);
+         TestUtils.assertEventually(timeout: 5*TimeUnit.SECONDS) {
+            assertEquals(new Integer(1), entity.getAttribute(TestEntity.SEQUENCE))
+         }
+     }
+
     @Test
     public void testChainedFunction() {
         registerAdapter(new FunctionSensorAdapter(this.&inc)).
