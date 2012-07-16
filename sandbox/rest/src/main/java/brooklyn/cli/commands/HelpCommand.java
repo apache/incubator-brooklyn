@@ -12,13 +12,8 @@ public class HelpCommand extends BrooklynCommand {
     @Inject
     Help help;
 
-    @Override
-    public Void call() throws Exception {
-
-        // Common command behavior
-        super.call();
-
-        return help.call();
+    public void run() throws Exception {
+        help.call();
     }
 
 }

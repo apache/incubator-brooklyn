@@ -10,10 +10,7 @@ import java.util.List;
 public class CatalogPoliciesCommand extends BrooklynCommand {
 
     @Override
-    public Void call() throws Exception {
-
-        // Common command behavior
-        super.call();
+    public void run() throws Exception {
 
         // Make an HTTP request to the REST server and get back a JSON encoded response
         ClientResponse clientResponse = getHttpBroker().getWithRetry("/v1/catalog/policies");
@@ -27,7 +24,6 @@ public class CatalogPoliciesCommand extends BrooklynCommand {
             System.out.println(policy);
         }
 
-        return null;
     }
 
 }

@@ -21,11 +21,7 @@ public class UndeployCommand extends BrooklynCommand {
                     "    * path or URL to a JSON file (if ends .json)")
     public String app;
 
-    @Override
-    public Void call() throws Exception {
-
-        // Common command behavior
-        super.call();
+    public void run() throws Exception {
 
         // Make an HTTP request to the REST server
         ClientResponse clientResponse = getHttpBroker().deleteWithRetry("/v1/applications/" + app);
@@ -35,13 +31,13 @@ public class UndeployCommand extends BrooklynCommand {
             String response = clientResponse.getEntity(String.class);
             ApiError error = jsonParser.readValue(response, ApiError.class);
             System.err.println(error.getMessage());
-            return null;
+            return;
         }
 
         // Looks like all was ok, so will inform the user
         System.out.println("Application has been undeployed: " + app);
 
-        return null;
+        return;
     }
 
 }

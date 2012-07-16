@@ -49,7 +49,14 @@ public abstract class BrooklynCommand implements Callable<Void> {
     }
 
     /**
-     * Common code that should normally be executed by all commands
+     * This method should contain the particular behavior for each command
+     * that extends {@link BrooklynCommand}.
+     */
+    public abstract void run() throws Exception;
+
+    /**
+     * This method contains the common behavior for any {@link BrooklynCommand} and
+     * also makes a call to run() that contains the command-specific behavior.
      *
      * @return null
      * @throws Exception
@@ -67,6 +74,9 @@ public abstract class BrooklynCommand implements Callable<Void> {
         // If --no-retry then set number of retries to 1
         if(noRetry)
             retry = 1;
+
+        // Execute the command-specific code
+        run();
 
         return null;
     }

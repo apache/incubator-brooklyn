@@ -58,11 +58,7 @@ public class DeployCommand extends BrooklynCommand {
                     "    * path or URL to a JSON file (if ends .json)")
     public String app;
 
-    @Override
-    public Void call() throws Exception {
-
-        // Common command behavior
-        super.call();
+    public void run() throws Exception {
 
         // Throw exception for unsupported options
         if(noStart)
@@ -96,7 +92,7 @@ public class DeployCommand extends BrooklynCommand {
                 String response = clientResponse.getEntity(String.class);
                 ApiError error = jsonParser.readValue(response, ApiError.class);
                 System.err.println(error.getMessage());
-                return null;
+                return;
             }
 
             // Get the catalog entity name that was just created
@@ -137,7 +133,7 @@ public class DeployCommand extends BrooklynCommand {
             String response = clientResponse.getEntity(String.class);
             ApiError error = jsonParser.readValue(response, ApiError.class);
             System.err.println(error.getMessage());
-            return null;
+            return;
         }
 
         // Inform the user of the application location
@@ -157,7 +153,7 @@ public class DeployCommand extends BrooklynCommand {
             System.err.println("Error.");
         }
 
-        return null;
+        return;
     }
 
     private Application.Status getApplicationStatus(URI uri) throws IOException, InterruptedException {

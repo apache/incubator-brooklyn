@@ -10,11 +10,7 @@ import java.util.List;
 @Command(name = "list-applications", description = "List all registered applications")
 public class ListApplicationsCommand extends BrooklynCommand {
 
-    @Override
-    public Void call() throws Exception {
-
-        // Common command behavior
-        super.call();
+    public void run() throws Exception {
 
         // Make an HTTP request to the REST server and get back a JSON encoded response
         ClientResponse clientResponse = getHttpBroker().getWithRetry("/v1/applications");
@@ -28,7 +24,6 @@ public class ListApplicationsCommand extends BrooklynCommand {
             System.out.printf("%20s %10s\n",application.getSpec().getName(), application.getStatus());
         }
 
-        return null;
     }
 }
 

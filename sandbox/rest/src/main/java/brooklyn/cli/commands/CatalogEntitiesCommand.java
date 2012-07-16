@@ -8,11 +8,7 @@ import java.util.List;
 @Command(name = "catalog-entities", description = "Prints the entities available on the server")
 public class CatalogEntitiesCommand extends BrooklynCommand {
 
-    @Override
-    public Void call() throws Exception {
-
-        // Common command behavior
-        super.call();
+    public void run() throws Exception {
 
         // Make an HTTP request to the REST server and get back a JSON encoded response
         ClientResponse clientResponse = getHttpBroker().getWithRetry("/v1/catalog/entities");
@@ -26,7 +22,6 @@ public class CatalogEntitiesCommand extends BrooklynCommand {
             System.out.println(entity);
         }
 
-        return null;
     }
 
 }
