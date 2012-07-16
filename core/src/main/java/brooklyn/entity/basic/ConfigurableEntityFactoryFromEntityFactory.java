@@ -11,11 +11,11 @@ public class ConfigurableEntityFactoryFromEntityFactory<T extends Entity> extend
 
    private final EntityFactory<? extends T> factory;
 
-    public ConfigurableEntityFactoryFromEntityFactory(EntityFactory<T> entityFactory){
+    public ConfigurableEntityFactoryFromEntityFactory(EntityFactory<? extends T> entityFactory){
         this(new HashMap(),entityFactory);
     }
 
-    public ConfigurableEntityFactoryFromEntityFactory(Map flags, EntityFactory<T> factory) {
+    public ConfigurableEntityFactoryFromEntityFactory(Map flags, EntityFactory<? extends T> factory) {
         super(flags);
         this.factory = checkNotNull(factory, "factory");
     }
