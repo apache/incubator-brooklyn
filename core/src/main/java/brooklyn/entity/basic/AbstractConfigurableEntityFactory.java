@@ -4,10 +4,11 @@ import brooklyn.entity.ConfigKey;
 import brooklyn.entity.Entity;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public abstract class AbstractConfigurableEntityFactory<T extends Entity> implements ConfigurableEntityFactory<T> {
-    protected final Map config = new HashMap();
+    protected final Map config = new LinkedHashMap();
 
     public AbstractConfigurableEntityFactory(){
         this(new HashMap());

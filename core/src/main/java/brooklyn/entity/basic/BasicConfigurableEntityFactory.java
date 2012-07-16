@@ -11,8 +11,8 @@ import java.util.Map;
 public class BasicConfigurableEntityFactory<T extends Entity> extends AbstractConfigurableEntityFactory<T> {
     private final Class<T> clazz;
 
-    public BasicConfigurableEntityFactory(Class<T> clazz){
-        this(new HashMap(),clazz);
+    public BasicConfigurableEntityFactory(Class<T> clazz) {
+        this(new HashMap(), clazz);
     }
 
     public BasicConfigurableEntityFactory(Map flags, Class<T> clazz) {
@@ -21,19 +21,16 @@ public class BasicConfigurableEntityFactory<T extends Entity> extends AbstractCo
     }
 
     public T newEntity2(Map flags, Entity owner) {
-        Constructor<T> constructor;
         try {
-            constructor = clazz.getConstructor(Map.class, Entity.class);
-        } catch (NoSuchMethodException e) {
-            throw Throwables.propagate(e);
-        }
-        try {
+            Constructor<T> constructor = clazz.getConstructor(Map.class, Entity.class);
             return constructor.newInstance(flags, owner);
         } catch (InstantiationException e) {
             throw Throwables.propagate(e);
         } catch (IllegalAccessException e) {
             throw Throwables.propagate(e);
         } catch (InvocationTargetException e) {
+            throw Throwables.propagate(e);
+        } catch (NoSuchMethodException e) {
             throw Throwables.propagate(e);
         }
     }

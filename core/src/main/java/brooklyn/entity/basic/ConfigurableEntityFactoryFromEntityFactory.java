@@ -5,9 +5,11 @@ import brooklyn.entity.Entity;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public class ConfigurableEntityFactoryFromEntityFactory<T extends Entity> extends AbstractConfigurableEntityFactory<T> {
 
-   private final EntityFactory<T> factory;
+   private final EntityFactory<? extends T> factory;
 
     public ConfigurableEntityFactoryFromEntityFactory(EntityFactory<T> entityFactory){
         this(new HashMap(),entityFactory);
@@ -15,7 +17,7 @@ public class ConfigurableEntityFactoryFromEntityFactory<T extends Entity> extend
 
     public ConfigurableEntityFactoryFromEntityFactory(Map flags, EntityFactory<T> factory) {
         super(flags);
-        this.factory = factory;
+        this.factory = checkNotNull(factory, "factory");
     }
 
     @Override
