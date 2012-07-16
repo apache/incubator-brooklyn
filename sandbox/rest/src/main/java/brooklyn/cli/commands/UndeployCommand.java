@@ -35,7 +35,7 @@ public class UndeployCommand extends BrooklynCommand {
         }
 
         // Looks like all was ok, so will inform the user
-        System.out.println("Application has been undeployed: " + app);
+        getOut().println("Application has been undeployed: " + app);
 
         return;
     }

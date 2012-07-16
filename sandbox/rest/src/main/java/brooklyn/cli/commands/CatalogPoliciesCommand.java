@@ -21,7 +21,7 @@ public class CatalogPoliciesCommand extends BrooklynCommand {
 
         // Display the policies
         for (String policy : policies) {
-            System.out.println(policy);
+            getOut().println(policy);
         }
 
     }

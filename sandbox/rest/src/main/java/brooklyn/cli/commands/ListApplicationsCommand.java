@@ -21,7 +21,7 @@ public class ListApplicationsCommand extends BrooklynCommand {
 
         // Display the applications
         for (Application application : applications) {
-            System.out.printf("%20s %10s\n",application.getSpec().getName(), application.getStatus());
+            getOut().printf("%20s %10s\n",application.getSpec().getName(), application.getStatus());
         }
 
     }

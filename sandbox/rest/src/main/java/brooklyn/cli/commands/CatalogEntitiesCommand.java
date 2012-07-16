@@ -19,7 +19,7 @@ public class CatalogEntitiesCommand extends BrooklynCommand {
 
         // Display the entities
         for (String entity : entities) {
-            System.out.println(entity);
+            getOut().println(entity);
         }
 
     }

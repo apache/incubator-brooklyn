@@ -72,7 +72,7 @@ public class DeployCommand extends BrooklynCommand {
         if(format.equals(GROOVY_FORMAT)){
 
             // Inform the user that we are loading the application to the server
-            System.out.println("Loading groovy script to the server: "+app);
+            getOut().println("Loading groovy script to the server: "+app);
 
             // Get the user's groovy script
             String groovyScript = Joiner
@@ -97,7 +97,7 @@ public class DeployCommand extends BrooklynCommand {
             String entityName = locationPath.substring(locationPath.lastIndexOf("/")+1);
 
             // Inform the user about the new catalog name for the app
-            System.out.println("Application has been added to the server's catalog: "+entityName);
+            getOut().println("Application has been added to the server's catalog: "+entityName);
 
             // Next stage assumes that app is the catalog name
             app = entityName;
@@ -108,9 +108,9 @@ public class DeployCommand extends BrooklynCommand {
         String objectJsonString;
         if(format.equals(JSON_FORMAT)){
             // Inform the user that we are loading the JSON provided in the file
-            System.out.println("Loading json request object form file: "+app);
+            getOut().println("Loading json request object form file: "+app);
             // Load the JSON from the file
-            objectJsonString = Files.toString(new File(app),Charsets.UTF_8);;
+            objectJsonString = Files.toString(new File(app),Charsets.UTF_8);
         } else { // CLASS_FORMAT
             // Create Java object for request
             ApplicationSpec applicationSpec = new ApplicationSpec(
@@ -134,20 +134,20 @@ public class DeployCommand extends BrooklynCommand {
         }
 
         // Inform the user of the application location
-        System.out.println("Starting at " + clientResponse.getLocation());
+        getOut().println("Starting at " + clientResponse.getLocation());
 
         // Check if application was  started successfully (via another REST call)
         Status status = getApplicationStatus(clientResponse.getLocation());
         while (status != Application.Status.RUNNING && status != Application.Status.ERROR) {
-            System.out.print(".");
+            getOut().print(".");
             System.out.flush();
             Thread.sleep(1000);
             status = getApplicationStatus(clientResponse.getLocation());
         }
         if (status == Application.Status.RUNNING) {
-            System.out.println("Done.");
+            getOut().println("Done.");
         } else {
-            System.err.println("Error.");
+            getOut().println("Error.");
         }
 
         return;

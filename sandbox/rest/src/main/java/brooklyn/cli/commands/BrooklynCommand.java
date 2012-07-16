@@ -7,10 +7,15 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.iq80.cli.Option;
 import org.iq80.cli.OptionType;
 import org.iq80.cli.ParseException;
+
+import java.io.PrintStream;
 import java.util.concurrent.Callable;
 import java.lang.UnsupportedOperationException;
 
 public abstract class BrooklynCommand implements Callable<Void> {
+
+    private PrintStream out = System.out;
+    private PrintStream err = System.err;
 
     private static final Client httpClient = Client.create(); // Jersey rest client
     static final ObjectMapper jsonParser = new ObjectMapper(); // Jackson json parser
@@ -99,6 +104,22 @@ public abstract class BrooklynCommand implements Callable<Void> {
 
     HttpBroker getHttpBroker() {
         return new HttpBroker(httpClient, endpoint, retry);
+    }
+
+    public PrintStream getErr() {
+        return err;
+    }
+
+    public void setErr(PrintStream err) {
+        this.err = err;
+    }
+
+    public PrintStream getOut() {
+        return out;
+    }
+
+    public void setOut(PrintStream out) {
+        this.out = out;
     }
 
 }
