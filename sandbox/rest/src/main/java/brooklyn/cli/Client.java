@@ -16,27 +16,49 @@ import org.iq80.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.PrintStream;
+
 public class Client {
 
     // Error codes
     public static final int PARSE_ERROR = 1;
     public static final int EXECUTION_ERROR = 2;
 
-    public static final Logger log = LoggerFactory.getLogger(Client.class);
+    public static final Logger LOG = LoggerFactory.getLogger(Client.class);
+
+    private PrintStream out;
+    private PrintStream err;
+
+    public Client() {
+        this.out = System.out;
+        this.err = System.err;
+    }
+
+    public Client(PrintStream out, PrintStream err) {
+        this.out = out;
+        this.err = err;
+    }
 
     public static void main(String...args) {
+        Client client = new Client();
+        client.run(args);
+    }
+
+    public final void run(String...args) {
         Cli<BrooklynCommand> parser = buildCli();
         try {
-            log.debug("Parsing command line arguments: {}",args);
+            LOG.debug("Parsing command line arguments: {}", args);
             BrooklynCommand command = parser.parse(args);
-            log.debug("Executing command: {}", command);
+            command.setOut(out);
+            command.setErr(err);
+            LOG.debug("Executing command: {}", command);
             command.call();
         } catch (ParseException pe) { // looks like the user typed it wrong
             System.err.println("Parse error: " + pe.getMessage()); // display error
             System.err.println(getUsageInfo(parser)); // display cli help
             System.exit(PARSE_ERROR);
         } catch (Exception e) { // unexpected error during command execution
-            log.error("Execution error: {}\n{}" + e.getMessage(),e.getStackTrace());
+            LOG.error("Execution error: {}\n{}" + e.getMessage(), e.getStackTrace());
             System.err.println("Execution error: " + e.getMessage());
             e.printStackTrace();
             System.exit(EXECUTION_ERROR);
@@ -58,7 +80,6 @@ public class Client {
                         CatalogEntitiesCommand.class,
                         CatalogPoliciesCommand.class
                 );
-
         return builder.build();
     }
 
