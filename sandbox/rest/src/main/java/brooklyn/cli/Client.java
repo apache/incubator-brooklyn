@@ -1,10 +1,18 @@
 package brooklyn.cli;
 
-import brooklyn.cli.commands.*;
+import brooklyn.cli.commands.BrooklynCommand;
+import brooklyn.cli.commands.DeployCommand;
+import brooklyn.cli.commands.HelpCommand;
+import brooklyn.cli.commands.VersionCommand;
+import brooklyn.cli.commands.UndeployCommand;
+import brooklyn.cli.commands.CatalogEntitiesCommand;
+import brooklyn.cli.commands.CatalogPoliciesCommand;
+import brooklyn.cli.commands.ListApplicationsCommand;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-import org.iq80.cli.*;
-
+import org.iq80.cli.Cli;
+import org.iq80.cli.Help;
+import org.iq80.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
