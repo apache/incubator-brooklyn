@@ -112,7 +112,7 @@ public class DependentConfiguration {
                 });
     }
 
-    private static <T> T waitInTaskForAttributeReady(Entity source, AttributeSensor<T> sensor, Predicate<? super T> ready) {
+    public static <T> T waitInTaskForAttributeReady(Entity source, AttributeSensor<T> sensor, Predicate<? super T> ready) {
         T value = source.getAttribute(sensor);
         if (ready==null) ready = GroovyJavaMethods.truthPredicate();
         if (ready.apply(value)) return value;
