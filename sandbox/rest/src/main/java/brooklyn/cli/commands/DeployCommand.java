@@ -5,21 +5,18 @@ import brooklyn.rest.api.Application;
 import brooklyn.rest.api.Application.Status;
 import brooklyn.rest.api.ApplicationSpec;
 import brooklyn.rest.api.EntitySpec;
+import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.WebResource;
 import org.iq80.cli.Command;
 import org.iq80.cli.Option;
 import org.iq80.cli.Arguments;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.nio.charset.Charset;
 
 @Command(name = "deploy", description = "Deploys the specified application using given config, classpath, location, etc")
 public class DeployCommand extends BrooklynCommand {
@@ -81,7 +78,7 @@ public class DeployCommand extends BrooklynCommand {
             String groovyScript = Joiner
                     .on("\n")
                     .join(Files.readLines(
-                            new File(app),Charset.forName("utf-8")));
+                            new File(app), Charsets.UTF_8));
 
             // Make an HTTP request to the REST server
             String jsonEncodedGroovyScript = jsonParser.writeValueAsString(groovyScript); //encode the script to a JSON string
@@ -113,7 +110,7 @@ public class DeployCommand extends BrooklynCommand {
             // Inform the user that we are loading the JSON provided in the file
             System.out.println("Loading json request object form file: "+app);
             // Load the JSON from the file
-            objectJsonString = Files.toString(new File(app),Charset.forName("utf-8"));;
+            objectJsonString = Files.toString(new File(app),Charsets.UTF_8);;
         } else { // CLASS_FORMAT
             // Create Java object for request
             ApplicationSpec applicationSpec = new ApplicationSpec(
