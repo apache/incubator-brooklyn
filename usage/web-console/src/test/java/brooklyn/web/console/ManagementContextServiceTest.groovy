@@ -4,10 +4,12 @@ import static org.testng.Assert.*
 
 import org.testng.annotations.BeforeTest
 import org.testng.annotations.Test
+import brooklyn.entity.Application
+import com.google.common.collect.ImmutableList
 
 class ManagementContextServiceTest {
 
-    def testService
+    ManagementContextService testService
 
     @BeforeTest
     protected void setUp() {
@@ -16,8 +18,8 @@ class ManagementContextServiceTest {
 
     @Test
     void testGetApplication() {
-        def apps = testService.getApplications();
+        Collection<Application> apps = testService.getApplications();
         assertEquals(1, apps.size())
-        assertEquals("Application", apps.asList().get(0).getDisplayName())
+        assertEquals("Application", ImmutableList.copyOf(apps).get(0).getDisplayName())
     }
 }
