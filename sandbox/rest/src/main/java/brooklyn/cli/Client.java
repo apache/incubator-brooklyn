@@ -17,17 +17,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.PrintStream;
+import java.util.Arrays;
 
 public class Client {
+
+    public static final Logger LOG = LoggerFactory.getLogger(Client.class);
 
     // Error codes
     public static final int PARSE_ERROR = 1;
     public static final int EXECUTION_ERROR = 2;
 
-    public static final Logger LOG = LoggerFactory.getLogger(Client.class);
-
     private PrintStream out;
     private PrintStream err;
+
+    private static Cli<BrooklynCommand> parser = buildCli();
 
     public Client() {
         this.out = System.out;
@@ -41,28 +44,27 @@ public class Client {
 
     public static void main(String...args) {
         Client client = new Client();
-        client.run(args);
-    }
-
-    public final void run(String...args) {
-        Cli<BrooklynCommand> parser = buildCli();
         try {
-            LOG.debug("Parsing command line arguments: {}", args);
-            BrooklynCommand command = parser.parse(args);
-            command.setOut(out);
-            command.setErr(err);
-            LOG.debug("Executing command: {}", command);
-            command.call();
+            client.run(args);
         } catch (ParseException pe) { // looks like the user typed it wrong
+            LOG.error("Error parsing command "+ Arrays.toString(args), pe);
             System.err.println("Parse error: " + pe.getMessage()); // display error
             System.err.println(getUsageInfo(parser)); // display cli help
             System.exit(PARSE_ERROR);
         } catch (Exception e) { // unexpected error during command execution
-            LOG.error("Execution error: {}\n{}" + e.getMessage(), e.getStackTrace());
+            LOG.error("Error executing command "+ Arrays.toString(args), e);
             System.err.println("Execution error: " + e.getMessage());
-            e.printStackTrace();
             System.exit(EXECUTION_ERROR);
         }
+    }
+
+    public final void run(String...args) throws Exception {
+        LOG.debug("Parsing command line arguments: {}", args);
+        BrooklynCommand command = parser.parse(args);
+        command.setOut(out);
+        command.setErr(err);
+        LOG.debug("Executing command: {}", command);
+        command.call();
     }
 
     @VisibleForTesting
