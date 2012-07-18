@@ -1,6 +1,7 @@
 package brooklyn.util.flags;
 
 import groovy.lang.Closure;
+import groovy.time.TimeDuration;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -22,6 +23,7 @@ import brooklyn.entity.basic.ClosureEntityFactory;
 import brooklyn.entity.basic.ConfigurableEntityFactory;
 import brooklyn.entity.basic.ConfigurableEntityFactoryFromEntityFactory;
 import brooklyn.entity.basic.EntityFactory;
+import brooklyn.util.JavaGroovyEquivalents;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
@@ -374,6 +376,11 @@ public class TypeCoercions {
                 };
             }
         });
+        registerAdapter(Object.class, TimeDuration.class, new Function<Object,TimeDuration>() {
+            @Override
+            public TimeDuration apply(final Object input) {
+                return JavaGroovyEquivalents.toTimeDuration(input);
+            }
+        });
     }
-    
 }

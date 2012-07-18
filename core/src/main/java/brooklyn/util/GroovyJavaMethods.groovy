@@ -1,9 +1,9 @@
 package brooklyn.util;
 
-import static brooklyn.util.GroovyJavaMethods.truth;
+import static brooklyn.util.GroovyJavaMethods.truth
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
+import java.util.concurrent.Callable
+import java.util.concurrent.Executors
 
 import com.google.common.base.Function
 import com.google.common.base.Predicate
@@ -16,14 +16,18 @@ public class GroovyJavaMethods {
     
     // TODO xFromY nethods not in correct class: they are not "handy method available in groovy"?
     public static Closure closureFromRunnable(final Runnable job) {
-        return { it ->
-            if (job in Callable) { job.call() }
+        return {
+            if (job in Callable) { return job.call() }
             else { job.run(); null; }
         };
     }
     
     public static Closure closureFromCallable(final Callable job) {
-        return { it -> job.call(); };
+        return { job.call(); };
+    }
+
+    public static <T> Closure<T> closureFromFunction(final Function<?,T> job) {
+        return { it -> return job.apply(it); };
     }
 
     public static <T> Callable<T> callableFromClosure(final Closure<T> job) {
@@ -57,6 +61,20 @@ public class GroovyJavaMethods {
             return predicateFromClosure(o);
         } else {
             return (Predicate<T>) o;
+        }
+    }
+
+    public static <T> Closure castToClosure(Object o) {
+        if (o in Closure) {
+            return o;
+        } else if (o instanceof Runnable) {
+            return closureFromRunnable((Runnable)o);
+        } else if (o instanceof Callable) {
+            return closureFromCallable((Callable)o); 
+        } else if (o instanceof Function) {
+            return closureFromFunction((Function)o); 
+        } else {
+            throw new IllegalArgumentException("Cannot convert to closure: o="+o+"; type="+(o != null ? o.getClass() : null));
         }
     }
 

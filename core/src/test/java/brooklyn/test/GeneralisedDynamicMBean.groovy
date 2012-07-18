@@ -10,6 +10,9 @@ import javax.management.MBeanInfo
 import javax.management.MBeanOperationInfo
 import javax.management.MBeanParameterInfo
 
+import brooklyn.util.GroovyJavaMethods;
+import brooklyn.util.JavaGroovyEquivalents;
+
 /**
  * A quick-and-simple general-purpose implementation of DynamicMBean.
  *
@@ -34,7 +37,7 @@ class GeneralisedDynamicMBean implements DynamicMBean {
 
         initialOperations.entrySet().each {
             String opName = (it.key instanceof String) ? it.key : it.key.getName()
-            operations.put(opName, it.value)
+            operations.put(opName, GroovyJavaMethods.castToClosure(it.value));
         }
         
         MBeanAttributeInfo[] attrInfo = initialAttributes.entrySet().collect { Entry it ->
