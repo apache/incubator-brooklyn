@@ -189,5 +189,20 @@ public abstract class BrooklynCommand implements Callable<Void> {
         this.out = out;
     }
 
+    String getErrorMessage(ClientResponse clientResponse) {
+        String response = clientResponse.getEntity(String.class);
+        try {
+            // Try to see if the server responded with an error message from the API
+            ApiError error = getJsonParser().readValue(response, ApiError.class);
+            return error.getMessage();
+        } catch (IOException e) {
+            // If not, inform the user of the underlying response (e.g. if server threw NPE or whatever)
+            int statusCode = clientResponse.getStatus();
+            ClientResponse.Status status = clientResponse.getClientResponseStatus();
+            String responseText = clientResponse.getEntity(String.class);
+            return "Server returned "+status+"("+statusCode+"); "+responseText;
+        }
+    }
+
 }
 
