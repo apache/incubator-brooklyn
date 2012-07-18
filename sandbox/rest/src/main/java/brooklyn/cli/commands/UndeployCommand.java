@@ -2,9 +2,12 @@ package brooklyn.cli.commands;
 
 import brooklyn.rest.api.ApiError;
 import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
 import org.iq80.cli.Arguments;
 import org.iq80.cli.Command;
 import org.iq80.cli.Option;
+
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 @Command(name = "undeploy", description = "Undeploys the specified application")
@@ -24,20 +27,17 @@ public class UndeployCommand extends BrooklynCommand {
     public void run() throws Exception {
 
         // Make an HTTP request to the REST server
-        ClientResponse clientResponse = getHttpBroker().deleteWithRetry("/v1/applications/" + app);
+        WebResource webResource = getClient().resource(endpoint + "/v1/applications/" + app);
+        ClientResponse clientResponse = webResource.accept(MediaType.APPLICATION_JSON).delete(ClientResponse.class);
 
         // Make sure we get the correct HTTP response code
         if (clientResponse.getStatus() != Response.Status.ACCEPTED.getStatusCode()) {
-            String response = clientResponse.getEntity(String.class);
-            ApiError error = jsonParser.readValue(response, ApiError.class);
-            System.err.println(error.getMessage());
-            return;
+            String err = getErrorMessage(clientResponse);
+            throw new CommandExecutionException(err);
         }
 
         // Looks like all was ok, so will inform the user
         getOut().println("Application has been undeployed: " + app);
-
-        return;
     }
 
 }

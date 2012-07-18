@@ -5,30 +5,35 @@ import brooklyn.rest.api.Application;
 import brooklyn.rest.api.Application.Status;
 import brooklyn.rest.api.ApplicationSpec;
 import brooklyn.rest.api.EntitySpec;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
 import org.iq80.cli.Command;
 import org.iq80.cli.Option;
 import org.iq80.cli.Arguments;
+
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.text.ParseException;
 
 @Command(name = "deploy", description = "Deploys the specified application using given config, classpath, location, etc")
 public class DeployCommand extends BrooklynCommand {
 
-    private static final String JSON_FORMAT = "json";
-    private static final String GROOVY_FORMAT = "groovy";
-    private static final String CLASS_FORMAT = "class";
+    static final String JSON_FORMAT = "json";
+    static final String GROOVY_FORMAT = "groovy";
+    static final String CLASS_FORMAT = "class";
 
     @Option(name = "--format",
             allowedValues = {JSON_FORMAT, GROOVY_FORMAT, CLASS_FORMAT},
-            description = "Either "+JSON_FORMAT+","+GROOVY_FORMAT+","+CLASS_FORMAT+", to force APP type detection")
-    public String format = CLASS_FORMAT;
+            description = "Either "+JSON_FORMAT+","+GROOVY_FORMAT+","+CLASS_FORMAT+", to specify the APP type.")
+    public String format = null;
 
     @Option(name = "--no-start",
             description = "Don't invoke `start` on the application")
@@ -68,98 +73,127 @@ public class DeployCommand extends BrooklynCommand {
             throw new UnsupportedOperationException(
                     "The \"--config\" option is not supported yet");
 
-        // Upload the groovy app to the server if provided
-        if(format.equals(GROOVY_FORMAT)){
-
-            // Inform the user that we are loading the application to the server
-            getOut().println("Loading groovy script to the server: "+app);
-
-            // Get the user's groovy script
-            String groovyScript = Joiner
-                    .on("\n")
-                    .join(Files.readLines(
-                            new File(app), Charsets.UTF_8));
-
-            // Make an HTTP request to the REST server
-            String jsonEncodedGroovyScript = jsonParser.writeValueAsString(groovyScript); //encode the script to a JSON string
-            ClientResponse clientResponse = getHttpBroker().postWithRetry("/v1/catalog",jsonEncodedGroovyScript);
-
-            // Make sure we get the correct HTTP response code
-            if (clientResponse.getStatus() != Response.Status.CREATED.getStatusCode()) {
-                String response = clientResponse.getEntity(String.class);
-                ApiError error = jsonParser.readValue(response, ApiError.class);
-                System.err.println(error.getMessage());
-                return;
-            }
-
-            // Get the catalog entity name that was just created
-            String locationPath = clientResponse.getLocation().getPath();
-            String entityName = locationPath.substring(locationPath.lastIndexOf("/")+1);
-
-            // Inform the user about the new catalog name for the app
-            getOut().println("Application has been added to the server's catalog: "+entityName);
-
-            // Next stage assumes that app is the catalog name
-            app = entityName;
-
+        if (format == null) {
+            format = inferAppFormat(app);
         }
-
-        // Create the JSON request object
         String objectJsonString;
-        if(format.equals(JSON_FORMAT)){
-            // Inform the user that we are loading the JSON provided in the file
-            getOut().println("Loading json request object form file: "+app);
-            // Load the JSON from the file
+        if(format.equals(GROOVY_FORMAT)){
+            // app is the path of a groovy file
+            String appClassName = uploadGroovyFile(app);
+
+            ApplicationSpec applicationSpec = new ApplicationSpec(
+                    appClassName, // name
+                    Sets.newHashSet(new EntitySpec(appClassName)), // entities
+                    Sets.newHashSet("/v1/locations/1") // locations
+            );
+            objectJsonString = getJsonParser().writeValueAsString(applicationSpec);
+
+        } else if(format.equals(JSON_FORMAT)) {
+            // app is the path of a json file containing a serialized ApplicationSpec
+            LOG.info("Loading json request object form file: "+app);
             objectJsonString = Files.toString(new File(app),Charsets.UTF_8);
-        } else { // CLASS_FORMAT
-            // Create Java object for request
+
+        } else if (format.equals(CLASS_FORMAT)) { // CLASS_FORMAT or GROOVY_FORMAT
+            // app is the fully qualified classname for an app; so create json for app
             ApplicationSpec applicationSpec = new ApplicationSpec(
                     app, // name
                     Sets.newHashSet(new EntitySpec(app)), // entities
                     Sets.newHashSet("/v1/locations/1") // locations
             );
-            // Serialize the Java object to JSON
-            objectJsonString = jsonParser.writeValueAsString(applicationSpec);
+            objectJsonString = getJsonParser().writeValueAsString(applicationSpec);
+
+        } else {
+            throw new CommandExecutionException("Unrecognized deploy format '"+format+"'");
         }
 
+        // Request the app instance be created + started
+        WebResource webResource = getClient().resource(endpoint+"/v1/applications");
+        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, objectJsonString);
+
+        // Ensure command succeeded
+        if (clientResponse.getStatus() != Response.Status.CREATED.getStatusCode()) {
+            String err = getErrorMessage(clientResponse);
+            throw new CommandExecutionException("Error creating and starting app: "+err);
+        }
+
+        // Wait for app to start (i.e. side-effect of above request)
+        waitForAppStarted(clientResponse.getLocation());
+    }
+
+    private void waitForAppStarted(URI appUri) throws InterruptedException, CommandExecutionException, IOException {
+        // TODO Can use Repeater utility class? or extract to another method
+        // TODO Are there other possible end-states? e.g. ends up as "unknown" or "stopped" somehow?
+        getOut().println("Waiting for application to start ("+appUri+")...");
+        Status status = getApplicationStatus(appUri);
+        Status previousStatus = null;
+        while (status != Application.Status.RUNNING && status != Application.Status.ERROR) {
+            if (status != previousStatus) {
+                getOut().println("Application status: "+status);
+                previousStatus = status;
+            }
+            getOut().print(".");
+            getOut().flush();
+            Thread.sleep(1000);
+            status = getApplicationStatus(appUri);
+        }
+        if (status == Application.Status.RUNNING) {
+            getOut().println("The application has been deployed: "+appUri);
+        } else {
+            throw new CommandExecutionException("Application did not start: status="+status+"; "+appUri);
+        }
+    }
+
+    private String uploadGroovyFile(String path) throws CommandExecutionException, IOException {
+        // Inform the user that we are loading the application to the server
+        LOG.info("Loading groovy file to the server: {}", path);
+
+        // Get the user's groovy script
+        String groovyScript = Files.toString(new File(path), Charsets.UTF_8);
+
         // Make an HTTP request to the REST server
-        ClientResponse clientResponse = getHttpBroker().postWithRetry("/v1/applications",objectJsonString);
+        String jsonEncodedGroovyScript = getJsonParser().writeValueAsString(groovyScript); //encode the script to a JSON string
+        WebResource webResource = getClient().resource(endpoint + "/v1/catalog");
+        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, jsonEncodedGroovyScript);
 
         // Make sure we get the correct HTTP response code
         if (clientResponse.getStatus() != Response.Status.CREATED.getStatusCode()) {
-            String response = clientResponse.getEntity(String.class);
-            ApiError error = jsonParser.readValue(response, ApiError.class);
-            System.err.println(error.getMessage());
-            return;
+            String err = getErrorMessage(clientResponse);
+            throw new CommandExecutionException("Error uploading groovy file: "+err);
         }
 
-        // Inform the user of the application location
-        getOut().println("Starting at " + clientResponse.getLocation());
+        // Get the catalog entity name that was just created
+        String catalogEntityUri = clientResponse.getLocation().getPath();
+        String catalogEntityName = catalogEntityUri.substring(catalogEntityUri.lastIndexOf("/")+1);
 
-        // Check if application was  started successfully (via another REST call)
-        Status status = getApplicationStatus(clientResponse.getLocation());
-        while (status != Application.Status.RUNNING && status != Application.Status.ERROR) {
-            getOut().print(".");
-            System.out.flush();
-            Thread.sleep(1000);
-            status = getApplicationStatus(clientResponse.getLocation());
-        }
-        if (status == Application.Status.RUNNING) {
-            getOut().println("Done.");
-        } else {
-            getOut().println("Error.");
-        }
+        // Inform the user about the new catalog name for the app
+        LOG.info("Application has been added to the server's catalog: {}", catalogEntityName);
 
-        return;
+        // Next stage assumes that app is the catalog name
+        return catalogEntityName;
     }
 
-    private Application.Status getApplicationStatus(URI uri) throws IOException, InterruptedException {
-        ClientResponse clientResponse = getHttpBroker().getWithRetry(uri.getPath().toString());
+    private Application.Status getApplicationStatus(URI uri) throws IOException, InterruptedException, CommandExecutionException {
+        WebResource webResource = getClient().resource(uri.toString());
+        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_JSON).get(ClientResponse.class);
+
+        if (clientResponse.getStatus() != Response.Status.OK.getStatusCode()) {
+            String err = getErrorMessage(clientResponse);
+            throw new CommandExecutionException("Error querying application status for "+uri+": "+err);
+        }
+
         String response = clientResponse.getEntity(String.class);
-        Application application = jsonParser.readValue(response, Application.class);
+        Application application = getJsonParser().readValue(response, Application.class);
         return application.getStatus();
     }
 
+    @VisibleForTesting
+    String inferAppFormat(String app) {
+        if (app.toLowerCase().endsWith(".groovy")) {
+            return GROOVY_FORMAT;
+        } else if (app.toLowerCase().endsWith(".json") || app.toLowerCase().endsWith(".jsn")) {
+            return JSON_FORMAT;
+        } else {
+            return CLASS_FORMAT;
+        }
+    }
 }
-
-
