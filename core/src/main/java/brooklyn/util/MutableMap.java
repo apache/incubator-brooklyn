@@ -56,7 +56,7 @@ public class MutableMap<K,V> extends LinkedHashMap<K,V> {
     }
 
     public ImmutableMap<K,V> toImmutable() {
-        return ImmutableMap.<K,V>builder().putAll(this).build();
+        return ImmutableMap.copyOf(this);
     }
     
     public static <K, V> Builder<K, V> builder() {

@@ -1,8 +1,8 @@
 package brooklyn.entity.osgi.karaf;
 
 import brooklyn.entity.basic.lifecycle.JavaStartStopSshDriver;
-import brooklyn.entity.webapp.PortPreconditions;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.NetworkUtils;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -53,7 +53,7 @@ public class KarafSshDriver extends JavaStartStopSshDriver {
         ports.put("jmxPort", getJmxPort());
         ports.put("rmiPort", getRmiPort());
 
-        PortPreconditions.checkPortsValid(ports);
+        NetworkUtils.checkPortsValid(ports);
         newScript(CUSTOMIZING).
                 body.append(
                 format("cd %s", getRunDir()),

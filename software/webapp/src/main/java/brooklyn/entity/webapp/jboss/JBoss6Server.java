@@ -1,0 +1,73 @@
+package brooklyn.entity.webapp.jboss;
+
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.basic.UsesJmx;
+import brooklyn.entity.webapp.JavaWebAppService;
+import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
+import brooklyn.event.adapter.ConfigSensorAdapter;
+import brooklyn.event.adapter.JmxObjectNameAdapter;
+import brooklyn.event.adapter.JmxSensorAdapter;
+import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
+import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.event.basic.MapConfigKey;
+import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.flags.SetFromFlag;
+import groovy.time.TimeDuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+public class JBoss6Server extends JavaWebAppSoftwareProcess implements JavaWebAppService, UsesJmx {
+
+    public static final Logger log = LoggerFactory.getLogger(JBoss6Server.class);
+
+    @SetFromFlag("version")
+    public static final BasicConfigKey<String> SUGGESTED_VERSION =
+            new BasicConfigKey<String>(SoftwareProcessEntity.SUGGESTED_VERSION, "6.0.0.Final");
+    @SetFromFlag("portIncrement")
+    public static final BasicAttributeSensorAndConfigKey<Integer> PORT_INCREMENT =
+            new BasicAttributeSensorAndConfigKey<Integer>(Integer.class, "jboss.portincrement", "Increment to be used for all jboss ports", 0);
+    @SetFromFlag("clusterName")
+    public static final BasicAttributeSensorAndConfigKey<String> CLUSTER_NAME =
+            new BasicAttributeSensorAndConfigKey<String>(String.class, "jboss.clusterName", "Identifier used to group JBoss instances", "");
+
+    /**
+     * @deprecated will be deleted in 0.5. Unsupported in 0.4.0.
+     */
+    @Deprecated
+    //TODO property copied from legacy JavaApp, but underlying implementation has not been
+    public static final MapConfigKey<Map> PROPERTY_FILES =
+            new MapConfigKey<Map>(Map.class, "java.properties.environment", "Property files to be generated, referenced by an environment variable");
+
+    public JBoss6Server(Entity owner) {
+        this(new LinkedHashMap(), owner);
+    }
+
+    public JBoss6Server(Map flags, Entity owner) {
+        super(flags, owner);
+    }
+
+    @Override
+    public void connectSensors() {
+        super.connectSensors();
+
+        sensorRegistry.register(new ConfigSensorAdapter());
+
+        Map<String, Object> flags = new HashMap<String, Object>();
+        flags.put("period", new TimeDuration(0, 0, 0, 500));
+        JmxSensorAdapter jmx = sensorRegistry.register(new JmxSensorAdapter(flags));
+        JmxObjectNameAdapter objectNameAdapter = jmx.objectName("jboss.web:type=GlobalRequestProcessor,name=http-*");
+        objectNameAdapter.attribute("errorCount").subscribe(ERROR_COUNT);
+        objectNameAdapter.attribute("requestCount").subscribe(REQUEST_COUNT);
+        objectNameAdapter.attribute("processingTime").subscribe(TOTAL_PROCESSING_TIME);
+        jmx.objectName("jboss.system:type=Server").attribute("Started").subscribe(SERVICE_UP);
+    }
+
+    public JBoss6SshDriver newDriver(SshMachineLocation machine) {
+        return new JBoss6SshDriver(this, machine);
+    }
+}

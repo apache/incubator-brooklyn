@@ -4,6 +4,7 @@ import java.util.Map;
 
 import brooklyn.entity.basic.lifecycle.CommonCommands
 import brooklyn.entity.basic.lifecycle.JavaStartStopSshDriver
+import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.NetworkUtils
 
@@ -20,7 +21,10 @@ public class ActiveMQSshDriver extends JavaStartStopSshDriver {
     
     @Override
     public void install() {
-        String url = "http://www.mirrorservice.org/sites/ftp.apache.org/activemq/apache-activemq/${version}/apache-activemq-${version}-bin.tar.gz"
+        String url = entity.getConfig(ActiveMQBroker.TGZ_URL)
+        if (!url) {
+            url = entity.getConfig(ActiveMQBroker.MIRROR_URL)+"/${version}/apache-activemq-${version}-bin.tar.gz"
+        }
         String saveAs  = "apache-activemq-${version}-bin.tar.gz"
 
         List<String> commands = new LinkedList();
