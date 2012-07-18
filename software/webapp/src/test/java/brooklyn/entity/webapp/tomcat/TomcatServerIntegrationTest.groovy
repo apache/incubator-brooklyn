@@ -54,7 +54,7 @@ public class TomcatServerIntegrationTest {
     public void ensureTomcatIsShutDown() {
         Socket shutdownSocket = null;
         SocketException gotException = null;
-        Integer shutdownPort = tc?.getAttribute(TomcatServer.TOMCAT_SHUTDOWN_PORT)
+        Integer shutdownPort = tc?.getAttribute(TomcatServer.SHUTDOWN_PORT)
         
         if (shutdownPort != null) {
             boolean socketClosed = new Repeater("Checking Tomcat has shut down")

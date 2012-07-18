@@ -45,30 +45,8 @@ public class TomcatServer extends JavaWebAppSoftwareProcess implements JavaWebAp
     public static final PortAttributeSensorAndConfigKey SHUTDOWN_PORT =
             new PortAttributeSensorAndConfigKey("tomcat.shutdownport", "Suggested shutdown port", PortRanges.fromString("31880+"));
 
-    /**
-     * @deprecated will be deleted in 0.5. Use SHUTDOWN_PORT
-     */
-    @Deprecated
-    public static final BasicConfigKey<PortRange> SUGGESTED_SHUTDOWN_PORT =
-            new BasicConfigKey<PortRange>(PortRange.class, "tomcat.shutdownport.deprecated", "Suggested shutdown port");
-
-    /**
-     * @deprecated will be deleted in 0.5. Use SHUTDOWN_PORT
-     */
-    @Deprecated
-    public static final BasicAttributeSensor<Integer> TOMCAT_SHUTDOWN_PORT =
-            new BasicAttributeSensor<Integer>(Integer.class, "webapp.tomcat.shutdownPort.deprecated", "Port to use for shutting down");
-
     public static final BasicAttributeSensor<String> CONNECTOR_STATUS =
             new BasicAttributeSensor<String>(String.class, "webapp.tomcat.connectorStatus", "Catalina connector state name");
-
-    /**
-     * @deprecated will be deleted in 0.5. Unsupported in 0.4.0.
-     */
-    @Deprecated
-    //TODO property copied from legacy JavaApp, but underlying implementation has not been
-    public static final MapConfigKey<Map> PROPERTY_FILES =
-            new MapConfigKey<Map>(Map.class, "java.properties.environment", "Property files to be generated, referenced by an environment variable");
 
     private JmxSensorAdapter jmx;
 
@@ -82,16 +60,6 @@ public class TomcatServer extends JavaWebAppSoftwareProcess implements JavaWebAp
 
     public TomcatServer(Map flags, Entity owner) {
         super(flags, owner);
-
-        //log.error("Tomcat: full constructor called");
-        //log.error("owner: " + owner);
-        //log.error("flags: " + flags);
-        //
-        //try {
-        //    throw new Exception();
-        //} catch (Exception e) {
-        //    e.printStackTrace();
-        //}
     }
 
     @Override
