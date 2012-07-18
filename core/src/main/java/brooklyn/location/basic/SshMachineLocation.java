@@ -181,7 +181,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     
     protected SshTool connectSsh(Map props) {
         if (!truth(user)) user = System.getProperty("user.name");
-        Map<?,?> allprops = ImmutableMap.builder().putAll(config).putAll(leftoverProperties).putAll(props).build();
+        Map<?,?> allprops = MutableMap.builder().putAll(config).putAll(leftoverProperties).putAll(props).build();
         Map<String,Object> args = MutableMap.<String,Object>of("user", user, "host", address.getHostName());
         for (Map.Entry<?, ?> entry : allprops.entrySet()) {
             String k = ""+entry.getKey();

@@ -10,10 +10,13 @@ import org.testng.annotations.Test
 
 import brooklyn.location.PortRange
 import brooklyn.location.basic.PortRanges.BasicPortRange
+import brooklyn.util.MutableMap
 import brooklyn.util.ResourceUtils
-import brooklyn.util.internal.ssh.SshException;
+import brooklyn.util.internal.ssh.SshException
 
 import com.google.common.base.Charsets
+import com.google.common.collect.ImmutableList
+import com.google.common.collect.ImmutableMap
 import com.google.common.io.Files
 
 /**
@@ -38,6 +41,19 @@ public class SshMachineLocationTest {
         assertTrue outString.contains(expectedName), outString
     }
     
+    // For issue #230
+    @Test(groups = "Integration")
+    public void testOverridingPropertyOnExec() throws Exception {
+        SshMachineLocation host = new SshMachineLocation(MutableMap.of("address", InetAddress.getLocalHost(), "sshPrivateKeyData", "wrongdata"));
+        
+        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+        String expectedName = System.getProperty("user.name")
+        host.execCommands(MutableMap.of("sshPrivateKeyData", null, "out", outStream), "my summary", ImmutableList.of("whoami"));
+        def outString = new String(outStream.toByteArray())
+        
+        assertTrue(outString.contains(expectedName), "outString="+outString);
+    }
+
     @Test(groups = "Integration", expectedExceptions=[IllegalStateException, SshException])
     public void testSshRunWithInvalidUserFails() throws Exception {
         SshMachineLocation badHost = new SshMachineLocation(username:"doesnotexist", address: InetAddress.getLocalHost());
