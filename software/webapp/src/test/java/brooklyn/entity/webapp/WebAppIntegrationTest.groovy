@@ -1,5 +1,7 @@
 package brooklyn.entity.webapp
 
+import brooklyn.util.MutableMap
+
 import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
@@ -119,9 +121,9 @@ public class WebAppIntegrationTest {
     @DataProvider(name = "basicEntities")
     public Object[][] basicEntities() {
 		//FIXME we should start the application, not the entity
-        TomcatServer tomcat = [ owner:newTestApplication(), httpPort:DEFAULT_HTTP_PORT ]
+        //TomcatServer tomcat = new TomcatServer(owner:newTestApplication(), httpPort:DEFAULT_HTTP_PORT);
         JBoss6Server jboss6 = [ owner:newTestApplication(), portIncrement:PORT_INCREMENT ]
-        JBoss7Server jboss7 = [ owner:newTestApplication(), httpPort:DEFAULT_HTTP_PORT ]
+        //JBoss7Server jboss7 = [ owner:newTestApplication(), httpPort:DEFAULT_HTTP_PORT ]
         return [ 
 //			[ tomcat ], 
 			[ jboss6 ],
@@ -306,7 +308,7 @@ public class WebAppIntegrationTest {
 				"" // no sub-page path
             ]
         } + [
-            [   new TomcatServer(owner:newTestApplication(), httpPort:DEFAULT_HTTP_PORT), 
+            [   new TomcatServer(MutableMap.of("httpPort",DEFAULT_HTTP_PORT),newTestApplication()),
                 "swf-booking-mvc.war",
                 "swf-booking-mvc/",
 				"spring/intro",

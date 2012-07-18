@@ -37,6 +37,7 @@ import com.google.common.base.Preconditions
 import com.google.common.base.Predicate
 import com.google.common.collect.Iterables
 import com.google.common.collect.Maps
+import groovy.time.TimeDuration
 
 /**
  * An {@link Entity} representing a piece of software which can be installed, run, and controlled.
@@ -150,7 +151,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
     public void waitForServiceUp() {
         waitForServiceUp(60*TimeUnit.SECONDS)
     }
-    public void waitForServiceUp(Duration duration) {
+    public void waitForServiceUp(TimeDuration duration) {
         if (!Repeater.create(timeout:duration, description:"Waiting for SERVICE_UP on ${this}")
                 .rethrowException().repeat().every(1*TimeUnit.SECONDS)
                 .until() {

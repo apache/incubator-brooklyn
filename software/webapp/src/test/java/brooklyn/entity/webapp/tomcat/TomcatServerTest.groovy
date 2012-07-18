@@ -74,7 +74,7 @@ class TomcatServerTest {
     @Test(enabled = false)
     public void ensureNodeCanStartAndShutdown() {
         Application app = new TestApplication();
-        TomcatServer tc = new TomcatServer(owner: app);
+        TomcatServer tc = new TomcatServer(app);
         
         tc.start([ new SimulatedLocation() ]);
         tc.stop() 
@@ -84,8 +84,8 @@ class TomcatServerTest {
     @Test(enabled = false, dependsOnMethods = [ "ensureNodeCanStartAndShutdown" ])
     public void ensureNodeShutdownCleansUp() {
         Application app = new TestApplication();
-        TomcatServer tc1 = new TomcatServer(owner: app);
-        TomcatServer tc2 = new TomcatServer(owner: app);
+        TomcatServer tc1 = new TomcatServer(app);
+        TomcatServer tc2 = new TomcatServer(app);
         
         try {
             tc1.start([ new SimulatedLocation() ]);
@@ -105,8 +105,8 @@ class TomcatServerTest {
     @Test(enabled = false, dependsOnMethods = [ "ensureNodeCanStartAndShutdown" ])
     public void detectEarlyDeathOfTomcatProcess() {
         Application app = new TestApplication();
-        TomcatServer tc1 = new TomcatServer(owner: app);
-        TomcatServer tc2 = new TomcatServer(owner: app);
+        TomcatServer tc1 = new TomcatServer(app);
+        TomcatServer tc2 = new TomcatServer(app);
         tc1.start([ new SimulatedLocation() ])
         try {
             tc2.start([ new SimulatedLocation() ])
@@ -124,7 +124,7 @@ class TomcatServerTest {
     public void rejectIfLocationNotSupplied() {
         Application app = new TestApplication();
         boolean caught = false
-        TomcatServer tc = new TomcatServer(owner: app);
+        TomcatServer tc = new TomcatServer(app);
         try {
             tc.start([])
             tc.stop()
@@ -138,7 +138,7 @@ class TomcatServerTest {
     @Test(enabled = false, dependsOnMethods = [ "ensureNodeCanStartAndShutdown" ])
     public void ensureRequestsPerSecondIsReportedCorrectly() {
         Application app = new TestApplication();
-        TomcatServer tc = new TomcatServer(owner: app) {
+        TomcatServer tc = new TomcatServer(app) {
             @Override
             public void addJmxSensors() {
                 super.addJmxSensors()

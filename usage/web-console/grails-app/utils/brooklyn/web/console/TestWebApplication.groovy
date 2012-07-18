@@ -233,7 +233,7 @@ public class TestWebApplication extends AbstractApplication {
             this.policies = testPolicies;
 
             // Stealing the sensors from TomcatNode
-            this.getMutableEntityType().addSensors(new TomcatServer().getEntityType().getSensors());
+            this.getMutableEntityType().addSensors(new TomcatServer([:]).getEntityType().getSensors());
 
             //updates sensors (this doesn't seem to be working?)
             TestTomcatEntity tc = this;  //NB: ref to TestTomcatEntity.this breaks mvn build
