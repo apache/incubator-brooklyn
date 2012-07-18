@@ -1,24 +1,39 @@
 package brooklyn.cli.commands;
 
-import brooklyn.cli.HttpBroker;
+import brooklyn.rest.api.ApiError;
 import com.google.common.base.Objects;
 import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientHandlerException;
+import com.sun.jersey.api.client.ClientRequest;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.filter.ClientFilter;
+import com.sun.jersey.api.client.filter.GZIPContentEncodingFilter;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.iq80.cli.Option;
 import org.iq80.cli.OptionType;
 import org.iq80.cli.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import sun.org.mozilla.javascript.internal.LazilyLoadedCtor;
 
+import javax.ws.rs.core.Response;
+import java.io.IOException;
 import java.io.PrintStream;
+import java.net.ConnectException;
 import java.util.concurrent.Callable;
 import java.lang.UnsupportedOperationException;
 
+import static com.sun.jersey.api.client.ClientResponse.*;
+
 public abstract class BrooklynCommand implements Callable<Void> {
+
+    public static final Logger LOG = LoggerFactory.getLogger(BrooklynCommand.class);
 
     private PrintStream out = System.out;
     private PrintStream err = System.err;
 
-    private static final Client httpClient = Client.create(); // Jersey rest client
-    static final ObjectMapper jsonParser = new ObjectMapper(); // Jackson json parser
+    private Client httpClient = null; // Jersey REST client
+    private ObjectMapper jsonParser = null; // Jackson json parser
 
     public static final int DEFAULT_RETRY_PERIOD = 30;
     public static final String DEFAULT_ENDPOINT = "http://localhost:8080";
@@ -66,6 +81,7 @@ public abstract class BrooklynCommand implements Callable<Void> {
      * @return null
      * @throws Exception
      */
+    @Override
     public Void call() throws Exception {
 
         // Additional higher level syntax validation
@@ -102,8 +118,59 @@ public abstract class BrooklynCommand implements Callable<Void> {
             throw new ParseException("The \"--retry\" and \"--no-retry\" options are mutually exclusive!");
     }
 
-    HttpBroker getHttpBroker() {
-        return new HttpBroker(httpClient, endpoint, retry);
+    /**
+     * Get an instance of the http client
+     *
+     * @return a fully configured retry-aware Jersey client
+     */
+    Client getClient() {
+        if(httpClient==null) { //client has not been initialized
+            // Lazily create a Jersey client instance
+            httpClient = Client.create();
+
+            // Add a retry filter that retries the request every second for a given number of attempts
+            httpClient.addFilter(new ClientFilter() {
+                @Override
+                public ClientResponse handle(ClientRequest cr) throws ClientHandlerException {
+                    ClientHandlerException lasterror = null;
+                    int i = 0;
+                    int maxAttempts = retry+1; // "--retry" option affects this
+                    do {
+                        i++;
+                        try {
+                            return getNext().handle(cr);
+                        } catch (ClientHandlerException e) {
+                            lasterror = e;
+                            if (i < retry) {
+//                                if(e.getCause() instanceof IOException) {
+                                LOG.debug("Request failed, attempt "+i+" of "+maxAttempts, e);
+                                getErr().println("Request failed ("+e.getCause()+"); attempt "+i+" of "+maxAttempts+"...");
+
+                                try {
+                                    Thread.sleep(1000);
+                                } catch(InterruptedException ie) {
+                                    Thread.currentThread().interrupt();
+                                    throw new ClientHandlerException("Interrupted; aborting request retries", ie);
+                                }
+                            }
+                        }
+                    } while (i < maxAttempts);
+
+                    throw lasterror;
+                }
+            });
+            // Add a Jersey GZIP filter
+            httpClient.addFilter(new GZIPContentEncodingFilter(true));
+        }
+        return httpClient;
+    }
+
+    ObjectMapper getJsonParser() {
+        if(jsonParser==null) { //parser has not been initialized
+            // Lazily create a Jackson JSON parser
+            jsonParser = new ObjectMapper();
+        }
+        return jsonParser;
     }
 
     public PrintStream getErr() {
