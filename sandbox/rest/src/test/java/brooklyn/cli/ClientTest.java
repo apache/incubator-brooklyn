@@ -1,5 +1,6 @@
 package brooklyn.cli;
 
+import brooklyn.entity.basic.BasicEntity;
 import brooklyn.rest.BrooklynService;
 import brooklyn.rest.core.ApplicationManager;
 import com.google.common.collect.Iterables;
@@ -81,11 +82,10 @@ public class ClientTest {
     @Test(enabled = true)
     public void testCatalogEntitiesCommand() throws Exception {
         try {
-            // Run the command
             String[] args = {"catalog-entities"};
             brooklynClient.run(args);
-            // Check that output matches what we expect
-            assertThat(standardOut(), containsString("brooklyn.entity.basic.BasicEntity"));
+            // Check list of entity types includes one of the defaults
+            assertThat(standardOut(), containsString(BasicEntity.class.getName()));
         } catch (Exception e) {
             LOG.error("\nstdout="+standardOut()+"\nstderr="+standardErr()+"\n", e);
             throw e;
@@ -95,7 +95,6 @@ public class ClientTest {
     @Test(enabled = true)
     public void testDeployCreatesApp() throws Exception {
         try {
-            // Run the command
             String[] args = {"deploy","--format","class", "brooklyn.cli.ExampleApp"};
             brooklynClient.run(args);
             // We should only have 1 app in the server's registry
@@ -111,10 +110,8 @@ public class ClientTest {
     @Test(enabled = true)
     public void testVersionCommand() throws Exception {
         try {
-            // Run the command
             String[] args = {"version"};
             brooklynClient.run(args);
-            // Check that output matches what we expect
             assertThat(standardOut(), containsString("Brooklyn version:"));
         } catch (Exception e) {
             LOG.error("stdout="+standardOut()+"; stderr="+standardErr(), e);
