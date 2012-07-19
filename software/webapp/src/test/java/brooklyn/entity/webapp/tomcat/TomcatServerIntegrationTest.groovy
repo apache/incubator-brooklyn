@@ -1,5 +1,7 @@
 package brooklyn.entity.webapp.tomcat
 
+import brooklyn.util.MutableMap
+
 import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
@@ -52,7 +54,7 @@ public class TomcatServerIntegrationTest {
     public void ensureTomcatIsShutDown() {
         Socket shutdownSocket = null;
         SocketException gotException = null;
-        Integer shutdownPort = tc?.getAttribute(TomcatServer.TOMCAT_SHUTDOWN_PORT)
+        Integer shutdownPort = tc?.getAttribute(TomcatServer.SHUTDOWN_PORT)
         
         if (shutdownPort != null) {
             boolean socketClosed = new Repeater("Checking Tomcat has shut down")
@@ -87,7 +89,7 @@ public class TomcatServerIntegrationTest {
         ServerSocket listener = new ServerSocket(DEFAULT_HTTP_PORT);
         try {
             app = new TestApplication()
-            tc = new TomcatServer(owner:app, httpPort:DEFAULT_HTTP_PORT)
+            tc = new TomcatServer(MutableMap.of("httpPort",DEFAULT_HTTP_PORT),app);
             try {
                 try {
                     tc.start([ new LocalhostMachineProvisioningLocation(name:'london') ])

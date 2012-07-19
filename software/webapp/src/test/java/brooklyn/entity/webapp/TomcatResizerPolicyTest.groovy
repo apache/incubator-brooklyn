@@ -1,5 +1,8 @@
 package brooklyn.entity.webapp
 
+import brooklyn.location.PortRange
+import brooklyn.location.basic.PortRanges
+
 import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.AssertJUnit.*
@@ -44,7 +47,7 @@ public class TomcatResizerPolicyTest {
                     properties.httpPort = port++
                     def tc = new TomcatServer(properties, owner)
                     tc.setConfig(TomcatServer.JMX_PORT.configKey, jmxP++)
-                    tc.setConfig(TomcatServer.SUGGESTED_SHUTDOWN_PORT, shutdownP++)
+                    tc.setConfig(TomcatServer.SHUTDOWN_PORT, new PortRanges.SinglePort(shutdownP++))
                     tc
                 },
                 initialSize: 1,
