@@ -27,6 +27,7 @@ import brooklyn.rest.resources.EntityResource;
 import brooklyn.rest.resources.LocationResource;
 import brooklyn.rest.resources.SensorResource;
 import brooklyn.rest.resources.SwaggerUiResource;
+import brooklyn.rest.resources.VersionResource;
 
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.bundles.AssetsBundle;
@@ -87,6 +88,7 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
     environment.addResource(new SensorResource(applicationManager));
     environment.addResource(new EffectorResource(applicationManager, managedExecutor));
     environment.addResource(new SwaggerUiResource());
+    environment.addResource(new VersionResource());
 
     environment.addHealthCheck(new GeneralHealthCheck());
     
