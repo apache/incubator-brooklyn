@@ -16,7 +16,7 @@ import brooklyn.launcher.BrooklynLauncher
 import brooklyn.location.Location
 import brooklyn.location.basic.CommandLineLocations
 import brooklyn.location.basic.LocationRegistry
-import brooklyn.policy.ResizerPolicy
+import brooklyn.policy.autoscaling.AutoScalerPolicy
 import brooklyn.util.CommandLineUtil
 
 /**
@@ -37,9 +37,11 @@ public class WebClusterExampleAlt extends AbstractApplication {
 
     ControlledDynamicWebAppCluster web = new ControlledDynamicWebAppCluster(this, war: WAR_PATH);
     {
-        web.addPolicy(new ResizerPolicy(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND).
-            setSizeRange(1, 5).
-            setMetricRange(10, 100));
+        web.addPolicy(AutoScalerPolicy.builder()
+                .metric(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND)
+                .sizeRange(1, 5)
+                .metricRange(10, 100)
+                .builder());
     }
     
 

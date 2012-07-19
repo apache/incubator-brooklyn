@@ -4,7 +4,7 @@ import static brooklyn.event.basic.DependentConfiguration.valueWhenAttributeRead
 
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.webapp.DynamicWebAppCluster
-import brooklyn.policy.ResizerPolicy
+import brooklyn.policy.autoscaling.AutoScalerPolicy
 import brooklyn.entity.database.mysql.MySqlNode
 import brooklyn.entity.basic.UsesJava
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster
@@ -55,9 +55,10 @@ class WebClusterWithMySQLDatabase extends AbstractApplication {
                 (UsesJava.JAVA_OPTIONS):
                         ["brooklyn.example.db.url": valueWhenAttributeReady(mysql, MySqlNode.MYSQL_URL, this.&makeJdbcUrl)]);
 
-        web.cluster.addPolicy(new
-        ResizerPolicy(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND).
-                setSizeRange(1, 5).
-                setMetricRange(10, 100));
+        web.cluster.addPolicy(AutoScalerPolicy.builder()
+                .metric(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND)
+                .sizeRange(1, 5)
+                .metricRange(10, 100)
+                .build());
     }
 }

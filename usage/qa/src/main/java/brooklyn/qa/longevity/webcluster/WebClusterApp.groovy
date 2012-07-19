@@ -15,7 +15,7 @@ import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.launcher.BrooklynLauncher
 import brooklyn.location.Location
 import brooklyn.location.basic.LocationRegistry
-import brooklyn.policy.ResizerPolicy
+import brooklyn.policy.autoscaling.AutoScalerPolicy
 import brooklyn.util.CommandLineUtil
 
 public class WebClusterApp extends AbstractApplication {
@@ -62,9 +62,11 @@ public class WebClusterApp extends AbstractApplication {
         
         
         web.cluster.addEnricher(CustomAggregatingEnricher.getAveragingEnricher([], sinusoidalLoad, averageLoad))
-        web.cluster.addPolicy(new ResizerPolicy(averageLoad).
-                setSizeRange(1, 3).
-                setMetricRange(0.3, 0.7));
+        web.cluster.addPolicy(AutoScalerPolicy.builder()
+                .metric(averageLoad)
+                .sizeRange(1, 3)
+                .metricRange(0.3, 0.7)
+                .build());
         
         BrooklynLauncher.manage(app, port)
         app.start(locations)

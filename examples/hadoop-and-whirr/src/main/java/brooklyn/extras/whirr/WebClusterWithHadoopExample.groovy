@@ -29,7 +29,7 @@ import brooklyn.location.Location
 import brooklyn.location.basic.LocationRegistry
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.management.Task
-import brooklyn.policy.ResizerPolicy
+import brooklyn.policy.autoscaling.AutoScalerPolicy
 import brooklyn.policy.basic.AbstractPolicy
 import brooklyn.util.CommandLineUtil
 import brooklyn.util.ResourceUtils;
@@ -71,9 +71,11 @@ public class WebClusterWithHadoopExample extends AbstractApplication {
     
     ControlledDynamicWebAppCluster webCluster = new ControlledDynamicWebAppCluster(this, war: WAR_PATH);
     {
-        webCluster.addPolicy(new ResizerPolicy(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND).
-            setSizeRange(1, 5).
-            setMetricRange(10, 100));
+        webCluster.addPolicy(AutoScalerPolicy.builder()
+                .metric(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND)
+                .sizeRange(1, 5)
+                .metricRange(10, 100)
+                .build())
     }
         
     DynamicGroup webVms = new DynamicGroup(this, name: "Web VMs", { it in JBoss7Server });

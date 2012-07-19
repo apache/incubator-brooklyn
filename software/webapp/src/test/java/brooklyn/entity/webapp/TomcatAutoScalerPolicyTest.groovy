@@ -12,12 +12,12 @@ import org.testng.annotations.Test
 import brooklyn.entity.Entity
 import brooklyn.entity.webapp.tomcat.*
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
-import brooklyn.policy.ResizerPolicy
+import brooklyn.policy.autoscaling.AutoScalerPolicy
 import brooklyn.test.entity.TestApplication
 
 import com.google.common.collect.Iterables
 
-public class TomcatResizerPolicyTest {
+public class TomcatAutoScalerPolicyTest {
     
     // TODO Test is time-sensitive: we send two web-requests in rapid succession, and expect the average workrate to
     // be 2 msgs/sec; we then expect resizing to kick-in.
@@ -27,13 +27,13 @@ public class TomcatResizerPolicyTest {
     @Test(groups=["Integration"])
     public void testWithTomcatServers() {
         /*
-         * One DynamicWebAppClster with resizer policy
-         * Resizer listening to DynamicWebAppCluster.TOTAL_REQS
-         * Resizer minSize 1
-         * Resizer upper metric 1
-         * Resizer lower metric 0
+         * One DynamicWebAppClster with auto-scaler policy
+         * AutoScaler listening to DynamicWebAppCluster.TOTAL_REQS
+         * AutoScaler minSize 1
+         * AutoScaler upper metric 1
+         * AutoScaler lower metric 0
          * .. send one request
-         * wait til ResizerLock released
+         * wait til auto-scaling complete
          * assert cluster size 2
          */
         
@@ -54,15 +54,16 @@ public class TomcatResizerPolicyTest {
                 owner: app
             )
             
-            ResizerPolicy policy = new ResizerPolicy(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)
-            policy.setMetricLowerBound(0).setMetricUpperBound(1).setMinSize(1)
+            AutoScalerPolicy policy = AutoScalerPolicy.builder()
+                    .metric(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)
+                    .metricRange(0, 1)
+                    .minPoolSize(1)
+                    .build();
             cluster.addPolicy(policy)
             
             app.start([new LocalhostMachineProvisioningLocation(name:'london')])
             
             assertEquals 1, cluster.currentSize
-            assertNotNull policy.@entity
-            assertNotNull policy.@resizable
             
             TomcatServer tc = Iterables.getOnlyElement(cluster.getMembers())
             2.times { connectToURL(tc.getAttribute(TomcatServer.ROOT_URL)) }
@@ -73,8 +74,6 @@ public class TomcatResizerPolicyTest {
     
             executeUntilSucceedsWithShutdown(cluster, timeout: 5*MINUTES) {
                 assertTrue policy.isRunning()
-                assertFalse policy.resizing.get()
-                assertEquals 2, policy.calculateDesiredSize(cluster.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT))
                 assertEquals 2, cluster.currentSize
                 assertEquals 1.0d, cluster.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)
             }

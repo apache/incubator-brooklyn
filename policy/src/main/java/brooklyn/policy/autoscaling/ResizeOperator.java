@@ -1,4 +1,4 @@
-package brooklyn.policy.resizing;
+package brooklyn.policy.autoscaling;
 
 import brooklyn.entity.Entity;
 

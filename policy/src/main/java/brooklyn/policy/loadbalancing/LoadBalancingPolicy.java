@@ -21,9 +21,9 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
+import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.policy.loadbalancing.BalanceableWorkerPool.ContainerItemPair;
-import brooklyn.policy.resizing.ResizingPolicy;
 import brooklyn.util.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 
@@ -166,12 +166,12 @@ public class LoadBalancingPolicy<NodeType extends Entity, ItemType extends Movab
                         
                         if (model.isCold()) {
                             Map eventVal = ImmutableMap.of(
-                                    ResizingPolicy.POOL_CURRENT_SIZE_KEY, model.getPoolSize(),
-                                    ResizingPolicy.POOL_CURRENT_WORKRATE_KEY, model.getCurrentPoolWorkrate(),
-                                    ResizingPolicy.POOL_LOW_THRESHOLD_KEY, model.getPoolLowThreshold(),
-                                    ResizingPolicy.POOL_HIGH_THRESHOLD_KEY, model.getPoolHighThreshold());
+                                    AutoScalerPolicy.POOL_CURRENT_SIZE_KEY, model.getPoolSize(),
+                                    AutoScalerPolicy.POOL_CURRENT_WORKRATE_KEY, model.getCurrentPoolWorkrate(),
+                                    AutoScalerPolicy.POOL_LOW_THRESHOLD_KEY, model.getPoolLowThreshold(),
+                                    AutoScalerPolicy.POOL_HIGH_THRESHOLD_KEY, model.getPoolHighThreshold());
             
-                            poolEntity.emit(ResizingPolicy.POOL_COLD, eventVal);
+                            poolEntity.emit(AutoScalerPolicy.POOL_COLD, eventVal);
                             
                             if (LOG.isInfoEnabled()) {
                                 int desiredPoolSize = (int) Math.ceil(model.getCurrentPoolWorkrate() / (model.getPoolLowThreshold()/model.getPoolSize()));
@@ -184,12 +184,12 @@ public class LoadBalancingPolicy<NodeType extends Entity, ItemType extends Movab
                         
                         } else if (model.isHot()) {
                             Map eventVal = ImmutableMap.of(
-                                    ResizingPolicy.POOL_CURRENT_SIZE_KEY, model.getPoolSize(),
-                                    ResizingPolicy.POOL_CURRENT_WORKRATE_KEY, model.getCurrentPoolWorkrate(),
-                                    ResizingPolicy.POOL_LOW_THRESHOLD_KEY, model.getPoolLowThreshold(),
-                                    ResizingPolicy.POOL_HIGH_THRESHOLD_KEY, model.getPoolHighThreshold());
+                                    AutoScalerPolicy.POOL_CURRENT_SIZE_KEY, model.getPoolSize(),
+                                    AutoScalerPolicy.POOL_CURRENT_WORKRATE_KEY, model.getCurrentPoolWorkrate(),
+                                    AutoScalerPolicy.POOL_LOW_THRESHOLD_KEY, model.getPoolLowThreshold(),
+                                    AutoScalerPolicy.POOL_HIGH_THRESHOLD_KEY, model.getPoolHighThreshold());
                             
-                            poolEntity.emit(ResizingPolicy.POOL_HOT, eventVal);
+                            poolEntity.emit(AutoScalerPolicy.POOL_HOT, eventVal);
                             
                             if (LOG.isInfoEnabled()) {
                                 int desiredPoolSize = (int) Math.ceil(model.getCurrentPoolWorkrate() / (model.getPoolHighThreshold()/model.getPoolSize()));
