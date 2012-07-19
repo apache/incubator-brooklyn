@@ -127,6 +127,10 @@ public class JmxHelper {
         }
     }
 
+    public String getUrl(){
+        return url;
+    }
+
     // ============== connection related calls =======================
 
     //for tesing purposes
