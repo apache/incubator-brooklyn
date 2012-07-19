@@ -141,10 +141,9 @@ public abstract class BrooklynCommand implements Callable<Void> {
                             return getNext().handle(cr);
                         } catch (ClientHandlerException e) {
                             lasterror = e;
-                            if (i < retry) {
-//                                if(e.getCause() instanceof IOException) {
-                                LOG.debug("Request failed, attempt "+i+" of "+maxAttempts, e);
-                                getErr().println("Request failed ("+e.getCause()+"); attempt "+i+" of "+maxAttempts+"...");
+                            if (i < maxAttempts) {
+                                LOG.debug("Request failed, retry attempt "+i+" of "+retry, e);
+                                getErr().println("Request failed ("+e.getCause()+"); retry attempt "+i+" of "+retry+" ...");
 
                                 try {
                                     Thread.sleep(1000);
