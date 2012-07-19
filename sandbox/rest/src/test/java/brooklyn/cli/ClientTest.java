@@ -3,15 +3,17 @@ package brooklyn.cli;
 import brooklyn.rest.BrooklynService;
 import brooklyn.rest.core.ApplicationManager;
 import com.google.common.collect.Iterables;
+import com.google.common.io.ByteStreams;
+import com.google.common.io.Files;
 import com.yammer.dropwizard.logging.Log;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.PrintStream;
-import java.net.URL;
-
+import java.io.InputStream;
 import static org.testng.Assert.assertEquals;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -29,6 +31,8 @@ public class ClientTest {
     private ByteArrayOutputStream errBytes;
     private PrintStream err;
 
+    File tempConfigFile;
+
     protected String standardOut() {
         return outBytes.toString();
     }
@@ -38,19 +42,25 @@ public class ClientTest {
     }
 
     @BeforeClass
-    public void setUp() throws Exception {
+    public void oneTimeSetUp() throws Exception {
+        // Create temporary config file
+        tempConfigFile = File.createTempFile("server-config",".yml");
+        InputStream configInputStream = getClass().getClassLoader().getResourceAsStream("config/config.sample.yml");
+        try {
+            Files.write(ByteStreams.toByteArray(configInputStream), tempConfigFile);
+        } finally {
+            configInputStream.close();
+        }
+
         // Start the REST server
         brooklynServer = BrooklynService.newBrooklynService();
-
-        //TODO Create a temporary file for config.sample.yml, so can run in jenkins?
-        //URL configUrl = getClass().getClassLoader().getResource("config/config.sample.yml");
-        String[] args = {"server","config.sample.yml"};
+        String[] args = {"server",tempConfigFile.getAbsolutePath()};
         brooklynServer.runAsync(args);
         applicationManager = brooklynServer.getApplicationManager();
     }
 
     @BeforeMethod
-    public void setUpBeforeMethod() throws Exception {
+    public void setUp() throws Exception {
         // Set i/o streams
         outBytes = new ByteArrayOutputStream();
         out = new PrintStream(outBytes);
@@ -61,15 +71,17 @@ public class ClientTest {
     }
 
     @AfterClass
-    public void tearDown() throws Exception {
+    public void oneTimeTearDown() throws Exception {
         // Kill the REST server and client instance
         brooklynServer.stop();
+        // Delete temp file
+        tempConfigFile.delete();
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     public void testCatalogEntitiesCommand() throws Exception {
         try {
-            // Run the catalog-entities commandb
+            // Run the command
             String[] args = {"catalog-entities"};
             brooklynClient.run(args);
             // Check that output matches what we expect
@@ -83,7 +95,7 @@ public class ClientTest {
     @Test(enabled = true)
     public void testDeployCreatesApp() throws Exception {
         try {
-            // Run the deploy command
+            // Run the command
             String[] args = {"deploy","--format","class", "brooklyn.cli.ExampleApp"};
             brooklynClient.run(args);
             // We should only have 1 app in the server's registry
