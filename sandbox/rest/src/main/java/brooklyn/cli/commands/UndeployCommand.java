@@ -24,6 +24,7 @@ public class UndeployCommand extends BrooklynCommand {
                     "    * path or URL to a JSON file (if ends .json)")
     public String app;
 
+    @Override
     public void run() throws Exception {
 
         // Make an HTTP request to the REST server
@@ -36,7 +37,6 @@ public class UndeployCommand extends BrooklynCommand {
             throw new CommandExecutionException(err);
         }
 
-        // Looks like all was ok, so will inform the user
         getOut().println("Application has been undeployed: " + app);
     }
 

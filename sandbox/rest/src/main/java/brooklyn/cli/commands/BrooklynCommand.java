@@ -69,13 +69,13 @@ public abstract class BrooklynCommand implements Callable<Void> {
     }
 
     /**
-     * This method should contain the particular behavior for each command
-     * that extends {@link BrooklynCommand}.
+     * Executes behaviour specific to this command.
+     * Called by the framework after initializing all of the CLI option fields.
      */
     public abstract void run() throws Exception;
 
     /**
-     * This method contains the common behavior for any {@link BrooklynCommand} and
+     * Contains the common behavior for any {@link BrooklynCommand} and
      * also makes a call to run() that contains the command-specific behavior.
      *
      * @return null
@@ -92,9 +92,9 @@ public abstract class BrooklynCommand implements Callable<Void> {
             throw new UnsupportedOperationException(
                     "The \"--embedded\" option is not supported yet");
 
-        // If --no-retry then set number of retries to 1
+        // Number of retries should be zero if noRetry; number of "tries" would be 1
         if(noRetry)
-            retry = 1;
+            retry = 0;
 
         // Execute the command-specific code
         run();
@@ -108,14 +108,14 @@ public abstract class BrooklynCommand implements Callable<Void> {
      * Git-like-cli doesn't attempt to do this so this is the place
      * where some of the additional things that we need can go.
      *
-     * Calling this will throw a {@link ParseException} that will be caught.
+     * Calling this could throw a {@link ParseException}
      *
      * @throws ParseException
      */
     private void additionalValidation() throws ParseException {
         // Make sure that "--retry" and "--no-retry" are mutually exclusive
         if(noRetry && retry!=DEFAULT_RETRY_PERIOD)
-            throw new ParseException("The \"--retry\" and \"--no-retry\" options are mutually exclusive!");
+            throw new ParseException("The \"--retry\" and \"--no-retry\" options are mutually exclusive");
     }
 
     /**
@@ -124,7 +124,8 @@ public abstract class BrooklynCommand implements Callable<Void> {
      * @return a fully configured retry-aware Jersey client
      */
     Client getClient() {
-        if(httpClient==null) { //client has not been initialized
+        if(httpClient==null) {
+
             // Lazily create a Jersey client instance
             httpClient = Client.create();
 
@@ -158,6 +159,7 @@ public abstract class BrooklynCommand implements Callable<Void> {
                     throw lasterror;
                 }
             });
+
             // Add a Jersey GZIP filter
             httpClient.addFilter(new GZIPContentEncodingFilter(true));
         }
@@ -165,7 +167,7 @@ public abstract class BrooklynCommand implements Callable<Void> {
     }
 
     ObjectMapper getJsonParser() {
-        if(jsonParser==null) { //parser has not been initialized
+        if(jsonParser==null) {
             // Lazily create a Jackson JSON parser
             jsonParser = new ObjectMapper();
         }
@@ -188,7 +190,7 @@ public abstract class BrooklynCommand implements Callable<Void> {
         this.out = out;
     }
 
-    String getErrorMessage(ClientResponse clientResponse) {
+    protected String getErrorMessage(ClientResponse clientResponse) {
         String response = clientResponse.getEntity(String.class);
         try {
             // Try to see if the server responded with an error message from the API

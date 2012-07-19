@@ -12,6 +12,7 @@ public class HelpCommand extends BrooklynCommand {
     @Inject
     Help help;
 
+    @Override
     public void run() throws Exception {
         help.call();
     }

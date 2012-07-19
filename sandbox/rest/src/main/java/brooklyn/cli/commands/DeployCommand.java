@@ -1,13 +1,11 @@
 package brooklyn.cli.commands;
 
-import brooklyn.rest.api.ApiError;
 import brooklyn.rest.api.Application;
 import brooklyn.rest.api.Application.Status;
 import brooklyn.rest.api.ApplicationSpec;
 import brooklyn.rest.api.EntitySpec;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.sun.jersey.api.client.ClientResponse;
@@ -15,13 +13,11 @@ import com.sun.jersey.api.client.WebResource;
 import org.iq80.cli.Command;
 import org.iq80.cli.Option;
 import org.iq80.cli.Arguments;
-
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.text.ParseException;
 
 @Command(name = "deploy", description = "Deploys the specified application using given config, classpath, location, etc")
 public class DeployCommand extends BrooklynCommand {
@@ -73,9 +69,11 @@ public class DeployCommand extends BrooklynCommand {
             throw new UnsupportedOperationException(
                     "The \"--config\" option is not supported yet");
 
+        // Format overrides inference
         if (format == null) {
             format = inferAppFormat(app);
         }
+
         String objectJsonString;
         if(format.equals(GROOVY_FORMAT)){
             // app is the path of a groovy file
@@ -144,14 +142,14 @@ public class DeployCommand extends BrooklynCommand {
     }
 
     private String uploadGroovyFile(String path) throws CommandExecutionException, IOException {
-        // Inform the user that we are loading the application to the server
+
         LOG.info("Loading groovy file to the server: {}", path);
 
         // Get the user's groovy script
         String groovyScript = Files.toString(new File(path), Charsets.UTF_8);
 
         // Make an HTTP request to the REST server
-        String jsonEncodedGroovyScript = getJsonParser().writeValueAsString(groovyScript); //encode the script to a JSON string
+        String jsonEncodedGroovyScript = getJsonParser().writeValueAsString(groovyScript);
         WebResource webResource = getClient().resource(endpoint + "/v1/catalog");
         ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, jsonEncodedGroovyScript);
 
@@ -165,10 +163,8 @@ public class DeployCommand extends BrooklynCommand {
         String catalogEntityUri = clientResponse.getLocation().getPath();
         String catalogEntityName = catalogEntityUri.substring(catalogEntityUri.lastIndexOf("/")+1);
 
-        // Inform the user about the new catalog name for the app
         LOG.info("Application has been added to the server's catalog: {}", catalogEntityName);
 
-        // Next stage assumes that app is the catalog name
         return catalogEntityName;
     }
 

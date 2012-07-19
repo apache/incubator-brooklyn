@@ -46,12 +46,14 @@ public class Client {
         Client client = new Client();
         try {
             client.run(args);
-        } catch (ParseException pe) { // looks like the user typed it wrong
+        } catch (ParseException pe) {
+            // looks like the user typed it wrong
             LOG.error("Error parsing command "+ Arrays.toString(args), pe);
-            System.err.println("Parse error: " + pe.getMessage()); // display error
-            System.err.println(getUsageInfo(parser)); // display cli help
+            System.err.println("Parse error: " + pe.getMessage());
+            System.err.println(getUsageInfo(parser));
             System.exit(PARSE_ERROR);
-        } catch (Exception e) { // unexpected error during command execution
+        } catch (Exception e) {
+            // unexpected error during command execution
             LOG.error("Error executing command "+ Arrays.toString(args), e);
             System.err.println("Execution error: " + e.getMessage());
             System.exit(EXECUTION_ERROR);
