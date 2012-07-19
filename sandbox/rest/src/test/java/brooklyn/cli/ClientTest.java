@@ -107,4 +107,19 @@ public class ClientTest {
             throw e;
         }
     }
+
+    @Test(enabled = true)
+    public void testVersionCommand() throws Exception {
+        try {
+            // Run the command
+            String[] args = {"version"};
+            brooklynClient.run(args);
+            // Check that output matches what we expect
+            assertThat(standardOut(), containsString("Brooklyn version:"));
+        } catch (Exception e) {
+            LOG.error("stdout="+standardOut()+"; stderr="+standardErr(), e);
+            throw e;
+        }
+    }
+
 }
