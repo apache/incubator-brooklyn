@@ -121,7 +121,7 @@ public class JmxSensorAdapterTest {
     public void jmxCheckInstanceExistsEventuallyThrowsIfNotFound() {
         jmxHelper.connect(TIMEOUT)
         
-        jmxHelper.checkMBeanExistsEventually(new ObjectName('Brooklyn:type=DoesNotExist,name=doesNotExist'), 1*TimeUnit.MILLISECONDS)
+        jmxHelper.assertMBeanExistsEventually(new ObjectName('Brooklyn:type=DoesNotExist,name=doesNotExist'), 1*TimeUnit.MILLISECONDS)
     }
 
     @Test
@@ -129,7 +129,7 @@ public class JmxSensorAdapterTest {
         GeneralisedDynamicMBean mbean = jmxService.registerMBean(objectName)
         jmxHelper.connect(TIMEOUT)
         
-        jmxHelper.checkMBeanExistsEventually(jmxObjectName, 1*TimeUnit.MILLISECONDS)
+        jmxHelper.assertMBeanExistsEventually(jmxObjectName, 1*TimeUnit.MILLISECONDS)
     }
 
     @Test
@@ -137,7 +137,7 @@ public class JmxSensorAdapterTest {
         GeneralisedDynamicMBean mbean = jmxService.registerMBean(objectName)
         jmxHelper.connect(TIMEOUT)
         
-        jmxHelper.checkMBeanExistsEventually(jmxObjectName, 1L)
+        jmxHelper.assertMBeanExistsEventually(jmxObjectName, 1L)
     }
 
     @Test
@@ -152,7 +152,7 @@ public class JmxSensorAdapterTest {
         try {
             t.start()
             
-            jmxHelper.checkMBeanExistsEventually(jmxObjectName, TIMEOUT)
+            jmxHelper.assertMBeanExistsEventually(jmxObjectName, TIMEOUT)
         } finally {
             t.interrupt()
             t.join(TIMEOUT)

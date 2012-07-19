@@ -2,9 +2,7 @@ package brooklyn.util.internal
 
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
-import java.util.ArrayList
-import java.util.Collection
-import java.util.Map
+import java.util.concurrent.Callable
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
 
@@ -30,10 +28,10 @@ public class LanguageUtils {
     public static <T> T getPropertySafe(Object target, String name, T defaultValue=null) {
         target.hasProperty(name)?.getProperty(target) ?: defaultValue
     }
-	public static boolean repeatUntilSuccess(String description, Closure action) throws Exception {
+	public static boolean repeatUntilSuccess(String description, Callable<Boolean> action) throws Exception {
 		repeatUntilSuccess([:], description, action)
 	}
-    public static boolean repeatUntilSuccess(Map flags=[:], String description=null, Closure action) throws Exception {
+    public static boolean repeatUntilSuccess(Map flags=[:], String description=null, Callable<Boolean> action) throws Exception {
 		Repeater r = new Repeater(description).repeat()
 			.every(500, TimeUnit.MILLISECONDS)
 			.until(action)
