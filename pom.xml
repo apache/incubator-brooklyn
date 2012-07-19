@@ -641,7 +641,15 @@
                 <module>usage/qa</module>
             </modules>
         </profile>
-
+        <profile>
+            <id>Sandbox</id>
+            <modules>
+                <module>sandbox/rest</module>
+                <module>sandbox/database</module>
+                <module>sandbox/mgmt</module>
+                <module>sandbox/web-acceptance</module>
+            </modules>
+        </profile>
         <profile>
             <id>Documentation</id>
             <reporting>

@@ -1,0 +1,6 @@
+#! /bin/bash
+#
+# Brooklyn cli client
+#
+
+exec java -cp target/brooklyn-rest-SANDBOX-*-SNAPSHOT.jar brooklyn.cli.Client "$@"

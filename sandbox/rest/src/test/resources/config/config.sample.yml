@@ -1,0 +1,36 @@
+# Config file for the Brooklyn REST endpoint
+
+stopApplicationsOnExit: true
+
+# A list of locations that are automatically registered when the server starts
+locations:
+
+  # Allow the deployment of services on the machine running the REST endpoint
+  - provider: localhost
+
+  # Dummy aws-ec2 like location
+  - provider: aws-ec2
+    config:
+      identity: ADS45345
+      credential: GIOM34590
+      location: eu-west-1
+      userName: ''
+      sshPublicKey: ''
+      sshPrivateKey: ''
+
+executor:
+  corePoolSize: 2
+  maximumPoolSize: 16
+  keepAliveTimeInSeconds: 120
+
+# Logging settings
+
+logging:
+  level: INFO
+  console:
+    enabled: true
+    threshold: ALL
+  loggers:
+    brooklyn.util.internal.ssh: ERROR
+    net.schmizz.sshj: ERROR
+

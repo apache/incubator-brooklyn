@@ -27,6 +27,7 @@ import brooklyn.rest.resources.EntityResource;
 import brooklyn.rest.resources.LocationResource;
 import brooklyn.rest.resources.SensorResource;
 import brooklyn.rest.resources.SwaggerUiResource;
+import brooklyn.rest.resources.VersionResource;
 
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.bundles.AssetsBundle;
@@ -41,6 +42,7 @@ import com.google.common.base.Throwables;
  */
 public class BrooklynService extends Service<BrooklynConfiguration> {
 
+  private volatile Environment environment;
   private volatile ApplicationManager applicationManager;
 
   private final CountDownLatch initialized = new CountDownLatch(1);
@@ -58,6 +60,8 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
   @Override
   protected void initialize(BrooklynConfiguration configuration, Environment environment)
       throws Exception {
+
+    this.environment = environment;
 
     // Create managed components and wire them together
 
@@ -84,6 +88,7 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
     environment.addResource(new SensorResource(applicationManager));
     environment.addResource(new EffectorResource(applicationManager, managedExecutor));
     environment.addResource(new SwaggerUiResource());
+    environment.addResource(new VersionResource());
 
     environment.addHealthCheck(new GeneralHealthCheck());
     
@@ -109,6 +114,13 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
         throw Throwables.propagate(err.get());
     }
   }
+
+  public void stop() throws Exception {
+      if (environment != null) {
+          environment.stop();
+      }
+  }
+
   public static void main(String[] args) throws Exception {
       BrooklynService service = newBrooklynService();
       service.run(args);
