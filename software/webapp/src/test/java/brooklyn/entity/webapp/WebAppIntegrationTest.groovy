@@ -121,14 +121,14 @@ public class WebAppIntegrationTest {
     @DataProvider(name = "basicEntities")
     public Object[][] basicEntities() {
 		//FIXME we should start the application, not the entity
-        //TomcatServer tomcat = new TomcatServer(owner:newTestApplication(), httpPort:DEFAULT_HTTP_PORT);
-        JBoss6Server jboss6 = [ owner:newTestApplication(), portIncrement:PORT_INCREMENT ]
-        //JBoss7Server jboss7 = [ owner:newTestApplication(), httpPort:DEFAULT_HTTP_PORT ]
+        TomcatServer tomcat = new TomcatServer(owner:newTestApplication(), httpPort:DEFAULT_HTTP_PORT);
+        JBoss6Server jboss6 = new JBoss6Server( owner:newTestApplication(), portIncrement:PORT_INCREMENT);
+        JBoss7Server jboss7 = new JBoss7Server(owner:newTestApplication(), httpPort:DEFAULT_HTTP_PORT);
         return [ 
-//			[ tomcat ], 
-			[ jboss6 ],
-//			[ jboss7 ]
-		]
+            [ tomcat ],
+            [ jboss6 ],
+            [ jboss7 ]
+        ]
     }
 
     /**

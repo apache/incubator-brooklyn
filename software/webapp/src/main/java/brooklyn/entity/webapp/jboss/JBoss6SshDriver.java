@@ -6,6 +6,7 @@ import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.webapp.JavaWebAppSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.NetworkUtils;
+import brooklyn.util.StringUtils;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -13,7 +14,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import static brooklyn.util.StringUtils.isEmpty;
 import static java.lang.String.format;
+
 
 class JBoss6SshDriver extends JavaWebAppSshDriver {
 
@@ -23,8 +26,6 @@ class JBoss6SshDriver extends JavaWebAppSshDriver {
 
     public JBoss6SshDriver(JBoss6Server entity, SshMachineLocation machine) {
         super(entity, machine);
-    //    Map config = entity.getConfig(JBoss6Server.PROPERTY_FILES);
-    //    Map<String, Map<String, String>> propFilesToGenerate = config != null ? config : new LinkedHashMap<String, Map<String, String>>();
     }
 
     protected String getLogFileLocation() {
@@ -45,7 +46,7 @@ class JBoss6SshDriver extends JavaWebAppSshDriver {
 
     @Override
     public void postLaunch() {
-        entity.setAttribute(JBoss6Server.HTTP_PORT, DEFAULT_HTTP_PORT + getPortIncrement());
+       entity.setAttribute(JBoss6Server.HTTP_PORT, DEFAULT_HTTP_PORT + getPortIncrement());
         super.postLaunch();
     }
 
@@ -91,7 +92,8 @@ class JBoss6SshDriver extends JavaWebAppSshDriver {
         ports.put("jmxPort",getJmxPort());
 
         NetworkUtils.checkPortsValid(ports);
-        String clusterArg = getClusterName()!=null ? "-g "+getClusterName() : "";
+
+        String clusterArg = isEmpty(getClusterName()) ? "":"-g "+getClusterName();
         // run.sh must be backgrounded otherwise the script will never return.
 
         Map<String,Object> flags = new HashMap<String, Object>();
@@ -100,11 +102,11 @@ class JBoss6SshDriver extends JavaWebAppSshDriver {
         newScript(flags, LAUNCHING).
             body.append(
                 format("export JBOSS_CLASSPATH=%s/jboss-%s/lib/jboss-logmanager.jar",getInstallDir(),getVersion()),
-                format("%s/jboss-%s/bin/run.sh -Djboss.service.binding.set=%s -Djboss.server.base.dir=$RUN/server ",getInstallDir(),getVersion(),PORT_GROUP_NAME) +
-                format("-Djboss.server.base.url=file://$RUN/server -Djboss.messaging.ServerPeerID=%s ",entity.getId())+
+                format("%s/jboss-%s/bin/run.sh -Djboss.service.binding.set=%s -Djboss.server.base.dir=$RUN_DIR/server ",getInstallDir(),getVersion(),PORT_GROUP_NAME) +
+                format("-Djboss.server.base.url=file://$RUN_DIR/server -Djboss.messaging.ServerPeerID=%s ",entity.getId())+
                 format("-Djboss.boot.server.log.dir=%s/server/%s/log ",getRunDir(),SERVER_TYPE) +
                 format("-b 0.0.0.0 %s -c %s ",clusterArg,SERVER_TYPE) +
-                ">>$RUN/console 2>&1 </dev/null &"
+                ">>$RUN_DIR/console 2>&1 </dev/null &"
         ).execute();
     }
 
