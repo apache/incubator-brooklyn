@@ -97,9 +97,7 @@ public class TypeCoercions {
             }
         }
         
-        //now look whether there is a TypeCoercionsSource declared on the target type
-        
-        //ENHANCEMENT could look in type hierarchy of both types for a conversion method...
+       //ENHANCEMENT could look in type hierarchy of both types for a conversion method...
         
         //primitives get run through again boxed up
         Class boxedT = UNBOXED_TO_BOXED_TYPES.get(targetType);
