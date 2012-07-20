@@ -7,6 +7,16 @@ package brooklyn.util;
  */
 public class StringUtils {
 
+    /**
+     * Checks if the given string is null or is an empty string.
+     *
+     * @param s the String to check
+     * @return  true if empty or null, false otherwise.
+     */
+    public static boolean isEmpty(String s){
+        return s == null || s.isEmpty();
+    }
+
     /** removes the prefix from the start of the string, if present */
     public static String removeStart(String source, String prefix) {
         if (source==null) return source;

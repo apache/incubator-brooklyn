@@ -47,6 +47,10 @@ public class JBoss6Server extends JavaWebAppSoftwareProcess implements JavaWebAp
         this(new LinkedHashMap(), owner);
     }
 
+    public JBoss6Server(Map flags){
+        this(flags, null);
+    }
+
     public JBoss6Server(Map flags, Entity owner) {
         super(flags, owner);
     }
