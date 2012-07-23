@@ -2,6 +2,7 @@ package brooklyn.cli;
 
 import brooklyn.cli.commands.CommandExecutionException;
 import brooklyn.entity.basic.BasicEntity;
+import brooklyn.policy.basic.GeneralPurposePolicy;
 import brooklyn.rest.BrooklynService;
 import brooklyn.rest.core.ApplicationManager;
 import com.google.common.collect.Iterables;
@@ -87,6 +88,19 @@ public class ClientTest {
             brooklynClient.run(args);
             // Check list of entity types includes one of the defaults
             assertThat(standardOut(), containsString(BasicEntity.class.getName()));
+        } catch (Exception e) {
+            LOG.error("\nstdout="+standardOut()+"\nstderr="+standardErr()+"\n", e);
+            throw e;
+        }
+    }
+
+    @Test
+    public void testCatalogPoliciesCommand() throws Exception {
+        try {
+            String[] args = {"catalog-policies"};
+            brooklynClient.run(args);
+            // Check list of entity types includes one of the defaults
+            assertThat(standardOut(), containsString(GeneralPurposePolicy.class.getName()));
         } catch (Exception e) {
             LOG.error("\nstdout="+standardOut()+"\nstderr="+standardErr()+"\n", e);
             throw e;
