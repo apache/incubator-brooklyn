@@ -135,7 +135,8 @@ public class DeployCommand extends BrooklynCommand {
             status = getApplicationStatus(appUri);
         }
         if (status == Application.Status.RUNNING) {
-            getOut().println("The application has been deployed: "+appUri);
+            String path = appUri.getPath();
+            getOut().println("The application has been deployed: "+path.substring(path.lastIndexOf("/")+1));
         } else {
             throw new CommandExecutionException("Application did not start: status="+status+"; "+appUri);
         }
