@@ -19,7 +19,6 @@ import brooklyn.entity.webapp.WebAppService
 import brooklyn.entity.webapp.jboss.JBoss7Server
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.test.entity.TestApplication
-import brooklyn.util.internal.EntityStartUtils
 import brooklyn.util.internal.TimeExtras
 
 import com.google.common.base.Preconditions

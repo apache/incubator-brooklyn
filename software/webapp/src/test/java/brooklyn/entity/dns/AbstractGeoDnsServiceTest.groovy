@@ -25,7 +25,6 @@ import brooklyn.location.basic.SimulatedLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.geo.HostGeoInfo
 import brooklyn.test.entity.TestEntity
-import brooklyn.util.internal.EntityStartUtils
 import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
 
@@ -69,7 +68,7 @@ public class AbstractGeoDnsServiceTest {
     @AfterMethod
     public void shutdown() {
         if (fabric != null && fabric.getAttribute(Startable.SERVICE_UP)) {
-            EntityStartUtils.stopEntity(fabric)
+            fabric.stop();
         }
     }
 
