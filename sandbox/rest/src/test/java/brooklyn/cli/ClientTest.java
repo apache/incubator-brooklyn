@@ -123,6 +123,18 @@ public class ClientTest {
     }
 
     @Test(dependsOnMethods = {"testDeployCreatesApp"})
+    public void testListApplicationsShowsRunningApp() throws Exception {
+        try {
+            String[] args = {"list-applications"};
+            brooklynClient.run(args);
+            assertThat(standardOut(), containsString("brooklyn.cli.ExampleApp [RUNNING]"));
+        } catch (Exception e) {
+            LOG.error("stdout="+standardOut()+"; stderr="+standardErr(), e);
+            throw e;
+        }
+    }
+
+    @Test(dependsOnMethods = {"testDeployCreatesApp"})
     public void testUndeployStopsRunningApp() throws Exception {
         try {
             String[] args = {"undeploy","brooklyn.cli.ExampleApp"};
@@ -140,6 +152,18 @@ public class ClientTest {
             String[] args = {"undeploy","brooklyn.cli.ExampleApp"};
             brooklynClient.run(args);
             assertThat(standardOut(), containsString("Application 'brooklyn.test.entity.TestApplication' not found"));
+        } catch (Exception e) {
+            LOG.error("stdout="+standardOut()+"; stderr="+standardErr(), e);
+            throw e;
+        }
+    }
+
+    @Test(dependsOnMethods = {"testUndeployStopsRunningApp"})
+    public void testListApplicationsNoRunningApp() throws Exception {
+        try {
+            String[] args = {"list-applications"};
+            brooklynClient.run(args);
+            assertEquals(standardOut(), "");
         } catch (Exception e) {
             LOG.error("stdout="+standardOut()+"; stderr="+standardErr(), e);
             throw e;
