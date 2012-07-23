@@ -1,5 +1,6 @@
 package brooklyn.cli;
 
+import brooklyn.cli.commands.CommandExecutionException;
 import brooklyn.entity.basic.BasicEntity;
 import brooklyn.rest.BrooklynService;
 import brooklyn.rest.core.ApplicationManager;
@@ -79,7 +80,7 @@ public class ClientTest {
         tempConfigFile.delete();
     }
 
-    @Test(enabled = true)
+    @Test
     public void testCatalogEntitiesCommand() throws Exception {
         try {
             String[] args = {"catalog-entities"};
@@ -92,7 +93,7 @@ public class ClientTest {
         }
     }
 
-    @Test(enabled = true)
+    @Test
     public void testDeployCreatesApp() throws Exception {
         try {
             String[] args = {"deploy","--format","class", "brooklyn.cli.ExampleApp"};
@@ -107,7 +108,31 @@ public class ClientTest {
         }
     }
 
-    @Test(enabled = true)
+    @Test(dependsOnMethods = {"testDeployCreatesApp"})
+    public void testUndeployStopsRunningApp() throws Exception {
+        try {
+            String[] args = {"undeploy","brooklyn.cli.ExampleApp"};
+            brooklynClient.run(args);
+            assertThat(standardOut(), containsString("Application has been undeployed: brooklyn.cli.ExampleApp"));
+        } catch (Exception e) {
+            LOG.error("stdout="+standardOut()+"; stderr="+standardErr(), e);
+            throw e;
+        }
+    }
+
+    @Test(dependsOnMethods = {"testUndeployStopsRunningApp"}, expectedExceptions = {CommandExecutionException.class})
+    public void testUndeployFailsGracefulyIfNoAppRunning() throws Exception {
+        try {
+            String[] args = {"undeploy","brooklyn.cli.ExampleApp"};
+            brooklynClient.run(args);
+            assertThat(standardOut(), containsString("Application 'brooklyn.test.entity.TestApplication' not found"));
+        } catch (Exception e) {
+            LOG.error("stdout="+standardOut()+"; stderr="+standardErr(), e);
+            throw e;
+        }
+    }
+
+    @Test
     public void testVersionCommand() throws Exception {
         try {
             String[] args = {"version"};
