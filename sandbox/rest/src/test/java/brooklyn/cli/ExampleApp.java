@@ -10,6 +10,10 @@ import java.util.Map;
  */
 public class ExampleApp extends AbstractApplication {
 
+    public ExampleApp() {
+        super();
+    }
+
     public ExampleApp(Map flags, Entity owner) {
         super(flags);
     }

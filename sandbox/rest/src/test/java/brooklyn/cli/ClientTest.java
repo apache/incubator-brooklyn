@@ -1,6 +1,8 @@
 package brooklyn.cli;
 
+import brooklyn.cli.commands.CommandExecutionException;
 import brooklyn.entity.basic.BasicEntity;
+import brooklyn.policy.basic.GeneralPurposePolicy;
 import brooklyn.rest.BrooklynService;
 import brooklyn.rest.core.ApplicationManager;
 import com.google.common.collect.Iterables;
@@ -79,7 +81,7 @@ public class ClientTest {
         tempConfigFile.delete();
     }
 
-    @Test(enabled = true)
+    @Test
     public void testCatalogEntitiesCommand() throws Exception {
         try {
             String[] args = {"catalog-entities"};
@@ -92,7 +94,20 @@ public class ClientTest {
         }
     }
 
-    @Test(enabled = true)
+    @Test
+    public void testCatalogPoliciesCommand() throws Exception {
+        try {
+            String[] args = {"catalog-policies"};
+            brooklynClient.run(args);
+            // Check list of entity types includes one of the defaults
+            assertThat(standardOut(), containsString(GeneralPurposePolicy.class.getName()));
+        } catch (Exception e) {
+            LOG.error("\nstdout="+standardOut()+"\nstderr="+standardErr()+"\n", e);
+            throw e;
+        }
+    }
+
+    @Test
     public void testDeployCreatesApp() throws Exception {
         try {
             String[] args = {"deploy","--format","class", "brooklyn.cli.ExampleApp"};
@@ -107,7 +122,55 @@ public class ClientTest {
         }
     }
 
-    @Test(enabled = true)
+    @Test(dependsOnMethods = {"testDeployCreatesApp"})
+    public void testListApplicationsShowsRunningApp() throws Exception {
+        try {
+            String[] args = {"list-applications"};
+            brooklynClient.run(args);
+            assertThat(standardOut(), containsString("brooklyn.cli.ExampleApp [RUNNING]"));
+        } catch (Exception e) {
+            LOG.error("stdout="+standardOut()+"; stderr="+standardErr(), e);
+            throw e;
+        }
+    }
+
+    @Test(dependsOnMethods = {"testDeployCreatesApp"})
+    public void testUndeployStopsRunningApp() throws Exception {
+        try {
+            String[] args = {"undeploy","brooklyn.cli.ExampleApp"};
+            brooklynClient.run(args);
+            assertThat(standardOut(), containsString("Application has been undeployed: brooklyn.cli.ExampleApp"));
+        } catch (Exception e) {
+            LOG.error("stdout="+standardOut()+"; stderr="+standardErr(), e);
+            throw e;
+        }
+    }
+
+    @Test(dependsOnMethods = {"testUndeployStopsRunningApp"}, expectedExceptions = {CommandExecutionException.class})
+    public void testUndeployFailsGracefulyIfNoAppRunning() throws Exception {
+        try {
+            String[] args = {"undeploy","brooklyn.cli.ExampleApp"};
+            brooklynClient.run(args);
+            assertThat(standardOut(), containsString("Application 'brooklyn.test.entity.TestApplication' not found"));
+        } catch (Exception e) {
+            LOG.error("stdout="+standardOut()+"; stderr="+standardErr(), e);
+            throw e;
+        }
+    }
+
+    @Test(dependsOnMethods = {"testUndeployStopsRunningApp"})
+    public void testListApplicationsNoRunningApp() throws Exception {
+        try {
+            String[] args = {"list-applications"};
+            brooklynClient.run(args);
+            assertEquals(standardOut(), "");
+        } catch (Exception e) {
+            LOG.error("stdout="+standardOut()+"; stderr="+standardErr(), e);
+            throw e;
+        }
+    }
+
+    @Test
     public void testVersionCommand() throws Exception {
         try {
             String[] args = {"version"};
