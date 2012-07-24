@@ -43,7 +43,7 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>build-distribution</id>
+                        <id>build-distribution-dir</id>
                         <phase>package</phase>
                         <goals>
                             <goal>single</goal>
@@ -51,7 +51,22 @@
                         <configuration>
                             <appendAssemblyId>true</appendAssemblyId>
                             <descriptors>
-                                <descriptor>src/main/config/dist.xml</descriptor>
+                                <descriptor>src/main/config/build-distribution-dir.xml</descriptor>
+                            </descriptors>
+                            <finalName>brooklyn</finalName>
+                            <useProjectArtifact>false</useProjectArtifact>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>build-distribution-archive</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <appendAssemblyId>true</appendAssemblyId>
+                            <descriptors>
+                                <descriptor>src/main/config/build-distribution-archive.xml</descriptor>
                             </descriptors>
                             <finalName>brooklyn-${project.version}</finalName>
                             <useProjectArtifact>false</useProjectArtifact>
