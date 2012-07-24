@@ -26,8 +26,8 @@ public class SingleWebServerExample extends AbstractApplication {
 You can run this (on *nix or Mac) as follows:
 
 {% highlight bash %}
-% cd $EXAMPLES_DIR/simple-web-cluster/brooklyn-example-simple-web-cluster/bin
-% ./web-cluster.sh
+% BROOKLYN_CLASSPATH=$BROOKLYN_EXAMPLES/simple-web-cluster/target/brooklyn-example-simple-web-cluster-0.4.0-SNAPSHOT.jar
+% $BROOKLYN_HOME/bin/brooklyn launch --app brooklyn.demo.SingleWebServerExample --location localhost
 {% endhighlight %}
 
 
@@ -40,8 +40,8 @@ With appropriate setup (as described [here]({{ site.url }}/use/guide/management/
 this can also be deployed to your favourite cloud, let's pretend it's Amazon Ireland, as follows: 
 
 {% highlight bash %}
-% cd $EXAMPLES_DIR/simple-web-cluster/brooklyn-example-simple-web-cluster
-% ./web-server.sh aws-ec2:eu-west-1
+% BROOKLYN_CLASSPATH=$BROOKLYN_EXAMPLES/simple-web-cluster/target/brooklyn-example-simple-web-cluster-0.4.0-SNAPSHOT.jar
+% $BROOKLYN_HOME/bin/brooklyn launch --app brooklyn.demo.SingleWebServerExample --location aws-ec2:eu-west-1
 {% endhighlight %}
 
 
@@ -50,8 +50,8 @@ this can also be deployed to your favourite cloud, let's pretend it's Amazon Ire
 Ready for something more interesting?  Try this:
 
 {% highlight bash %}
-% cd $EXAMPLES_DIR/simple-web-cluster/brooklyn-example-simple-web-cluster
-% ./web-and-data.sh
+% BROOKLYN_CLASSPATH=$BROOKLYN_EXAMPLES/simple-web-cluster/target/brooklyn-example-simple-web-cluster-0.4.0-SNAPSHOT.jar
+% $BROOKLYN_HOME/bin/brooklyn launch --app brooklyn.demo.WebClusterDatabaseExample --location localhost
 {% endhighlight %}
 
 This launches the class ``WebClusterDatabaseExample`` (also described in the [walkthrough]({{ site.url }}/start/walkthrough/index.html))

@@ -287,8 +287,8 @@ And finally, we'll define ``move``, as the sequence of the three effectors above
 You can run the application using the provided shell script:
 
 {% highlight bash %}
-% cd $EXAMPLES_DIR/portable-cloudfoundry/brooklyn-example-portable-cloudfoundry/bin
-% ./demo.sh
+% BROOKLYN_CLASSPATH=$BROOKLYN_EXAMPLES/portable-cloudfoundry/target/brooklyn-example-portable-cloudfoundry-0.4.0-SNAPSHOT.jar
+% $BROOKLYN_HOME/bin/brooklyn -v launch --app brooklyn.example.cloudfoundry.MovableCloudFoundryClusterExample --location localhost
 {% endhighlight %}
 
 Note that we have our webapp running in Cloud Foundry, and we have the effectors we've introduced exposed in the web console:

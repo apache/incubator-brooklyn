@@ -25,8 +25,8 @@ with an arbitrary size, with one line using the ``WhirrHadoopCluster`` entity.
 You can run this by running:
 
 {% highlight bash %}
-% cd $EXAMPLES_DIR/hadoop-and-whirr/brooklyn-example-hadoop-and-whirr/bin
-% ./hadoop.sh aws-ec2:eu-west-1
+% BROOKLYN_CLASSPATH=$BROOKLYN_EXAMPLES/hadoop-and-whirr/target/brooklyn-example-hadoop-and-whirr-0.4.0-SNAPSHOT.jar
+% $BROOKLYN_HOME/bin/brooklyn launch --app brooklyn.extras.whirr.WhirrHadoopExample --stopOnKeyPress --location aws-ec2:eu-west-1
 {% endhighlight %}
 
 This targets ``aws-ec2:eu-west-1``,
@@ -58,13 +58,13 @@ whirr.instance-templates= 1 noop, 1 elasticsearch
 This can be launched by running:
 
 {% highlight bash %}
-% cd $EXAMPLES_DIR/hadoop-and-whirr/brooklyn-example-hadoop-and-whirr/bin
-% ./whirr-recipe.sh aws-ec2:eu-west-1
+% BROOKLYN_CLASSPATH=$BROOKLYN_EXAMPLES/hadoop-and-whirr/target/brooklyn-example-hadoop-and-whirr-0.4.0-SNAPSHOT.jar
+% $BROOKLYN_HOME/bin/brooklyn launch --app brooklyn.extras.whirr.WhirrExample --stopOnKeyPress --location aws-ec2:eu-west-1
 {% endhighlight %} 
 
 In the provided example this will deploy to AWS.
 
-If you would like to deploy to localhost, you can do this by running ``./whirr-recipe.sh localhost``. However, please note that currently there are some limitations when deploying to localhost:
+If you would like to deploy to localhost, you can do this by running the same command and replacing ``aws-ec2:eu-west-1`` with ``localhost``. However, please note that currently there are some limitations when deploying to localhost:
 
 *	You can not deploy more than one server (noop doesn't count in the above case).
 *	This has only been tested on Ubuntu 10.04 and might cause problems on other operating systems.

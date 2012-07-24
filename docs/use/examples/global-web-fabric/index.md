@@ -279,8 +279,8 @@ Now let's run this example.  You will need to specify increased heap size and me
 as well as the appropriate classpath.
 
 {% highlight bash %}
-% cd $EXAMPLES_DIR/global-web-fabric/brooklyn-example-global-web-fabric/bin
-% ./demo.sh
+% BROOKLYN_CLASSPATH=$BROOKLYN_EXAMPLES/global-web-fabric/target/brooklyn-example-global-web-fabric-0.4.0-SNAPSHOT.jar
+% $BROOKLYN_HOME/bin/brooklyn -v launch --app brooklyn.demo.GlobalWebFabricExample --location locahost
 {% endhighlight %}
 
 The management web console will start,

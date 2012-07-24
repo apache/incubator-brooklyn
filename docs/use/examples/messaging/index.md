@@ -69,8 +69,8 @@ out the Brooklyn [repository](https://www.github.com/brooklyncentral/brooklyn)
 as follows:
 
 {% highlight bash %}
-% cd $EXAMPLES_DIR/simple-messaging-pubsub/brooklyn-example-simple-messaging-pubsub/bin
-% ./broker.sh
+% BROOKLYN_CLASSPATH=$EXAMPLES_HOME/simple-messaging-pubsub/target/brooklyn-example-simple-messaging-pubsub-0.4.0-SNAPSHOT.jar
+% $BROOKLYN_HOME/bin/brooklyn -v launch --app brooklyn.demo.StandaloneBrokerExample --location localhost
 {% endhighlight %}
 
 Now, visit the the Brooklyn web console on port 8081 using credentials
@@ -139,8 +139,8 @@ this can also be deployed to your favourite cloud, let's pretend
 it's Amazon Ireland, as follows:
 
 {% highlight bash %}
-% cd $EXAMPLES_DIR/simple-messaging-pubsub/brooklyn-example-simple-messaging-pubsub/bin
-$ ./broker.sh aws-ec2:eu-west-1
+% BROOKLYN_CLASSPATH=$BROOKLYN_EXAMPLES/simple-messaging-pubsub/target/brooklyn-example-simple-messaging-pubsub-0.4.0-SNAPSHOT.jar
+% $BROOKLYN_HOME/bin/brooklyn -v launch --app brooklyn.demo.StandaloneBrokerExample --location aws-ec2:eu-west-1
 {% endhighlight %}
 
 If you encounter any difficulties, please
