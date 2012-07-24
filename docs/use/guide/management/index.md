@@ -60,7 +60,7 @@ In order to have easy access to the cli it is useful to configure the PATH envir
 
 {% highlight bash %}
 % BROOKLYN_HOME=/path/to/brooklyn/
-% export PATH=$PATH:$BROOKLYN_HOME/usage/dist/target/brooklyn-0.4.0-SNAPSHOT-dist/brooklyn-0.4.0-SNAPSHOT/bin/
+% export PATH=$PATH:$BROOKLYN_HOME/usage/dist/target/brooklyn-dist/bin/
 {% endhighlight %}
 
 If you have set this up correctly you should be able to invoke the ```brooklyn``` command:
@@ -85,11 +85,11 @@ See 'brooklyn help <command>' for more information on a specific command.
 Here is an example of the commands you might run to get the Brooklyn code, compile it and launch an application:
 
 {% highlight bash %}
-git clone https://github.com/brooklyncentral/brooklyn.git
+% git clone https://github.com/brooklyncentral/brooklyn.git
 % cd brooklyn
 % mvn clean install -DskipTests
 % BROOKLYN_HOME=$(pwd)
-% export PATH=$PATH:$BROOKLYN_HOME/usage/dist/target/brooklyn-0.4.0-SNAPSHOT-dist/brooklyn-0.4.0-SNAPSHOT/bin/
+% export PATH=$PATH:$BROOKLYN_HOME/usage/dist/target/brooklyn-dist/bin/
 % export BROOKLYN_CLASSPATH=$BROOKLYN_HOME/examples/simple-web-cluster/target/brooklyn-example-simple-web-cluster-0.4.0-SNAPSHOT.jar
 % brooklyn launch --app brooklyn.demo.SingleWebServerExample --location localhost
 {% endhighlight %}
