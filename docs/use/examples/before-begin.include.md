@@ -8,17 +8,18 @@ First, grab a copy of the Brooklyn distribution:
 % # download and unpack
 % curl -L http://developers.cloudsoftcorp.com/maven/releases/io/brooklyn/brooklyn-dist/0.4.0-M2/brooklyn-dist-0.4.0-M2-dist.tar.gz | tar xzv
 % # set up an environment variable to point to it for convenience
-% BROOKLYN_HOME=$(pwd)/brooklyn
+% export BROOKLYN_HOME=$(pwd)/brooklyn
 {% endhighlight %}
 
 Then, grab a copy of the brooklyn-examples source code and build with Maven:
+
 {% highlight bash %}
 % # download and unpack
-% curl -L https://github.com/brooklyncentral/brooklyn-examples/tarball/master | tar xzv
+% curl -L https://github.com/brooklyncentral/brooklyn-examples/tarball/0.4.0-M2 | tar xzv
 % # set up an environment variable to point to it for convenience
-% BROOKLYN_EXAMPLES=$(pwd)/brooklyncentral-brooklyn-examples-0.4.0-M2
+% export BROOKLYN_EXAMPLES_DIR=$(pwd)/brooklyncentral-brooklyn-examples-b296711
 % # build with Maven
-% cd $BROOKLYN_EXAMPLES
+% cd ${BROOKLYN_EXAMPLES_DIR}
 % mvn clean install
 {% endhighlight %}
 
