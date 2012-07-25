@@ -15,11 +15,11 @@ toc: ../toc.json
 <a name="distro"></a>
 ## The Distro
 
-You can grab the distribution arifact, containing Brooklyn, its dependencies and launch scripts, here:
+You can grab the distribution artifact, containing Brooklyn, its dependencies and launch scripts, here:
 
 <!-- BROOKLYN_VERSION_BELOW -->
-* [0.4.0-M2.tar.gz](http://ccweb.cloudsoftcorp.com/maven/libs-release-local/io/brooklyn/brooklyn-dist/0.4.0-M2/brooklyn-dist-0.4.0-M2-dist.tar.gz)
-* [0.4.0-M2.zip](http://ccweb.cloudsoftcorp.com/maven/libs-release-local/io/brooklyn/brooklyn-dist/0.4.0-M2/brooklyn-dist-0.4.0-M2-dist.zip)
+* [0.4.0-M2.tar.gz](http://developers.cloudsoftcorp.com/download/maven2/io/brooklyn/brooklyn-dist/0.4.0-M2/brooklyn-dist-0.4.0-M2-dist.tar.gz)
+* [0.4.0-M2.zip](http://developers.cloudsoftcorp.com/download/maven2/io/brooklyn/brooklyn-dist/0.4.0-M2/brooklyn-dist-0.4.0-M2-dist.zip)
 * [0.4.0-M1.tar.gz](http://developers.cloudsoftcorp.com/download/maven2/io/brooklyn/brooklyn-dist/0.4.0-M1/brooklyn-dist-0.4.0-M1-dist.tar.gz)
 * [0.4.0-M1.zip](http://developers.cloudsoftcorp.com/download/maven2/io/brooklyn/brooklyn-dist/0.4.0-M1/brooklyn-dist-0.4.0-M1-dist.zip)
 
@@ -31,7 +31,7 @@ Just download your preferred flavour and unpack.
 You can grab a single JAR containing all of Brooklyn and its dependencies here:
 
 <!-- BROOKLYN_VERSION_BELOW -->
-* [0.4.0-M2](http://ccweb.cloudsoftcorp.com/maven/libs-release-local/io/brooklyn/brooklyn-all/0.4.0-M2/)
+* [0.4.0-M2](http://developers.cloudsoftcorp.com/download/maven2/io/brooklyn/brooklyn-all/0.4.0-M2/)
 * [0.4.0-M1](http://developers.cloudsoftcorp.com/download/maven2/io/brooklyn/brooklyn-all/0.4.0-M1/)
 * [SNAPSHOT](http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/io/brooklyn/brooklyn-all/0.4.0-SNAPSHOT/)
 
@@ -40,14 +40,33 @@ Just download your preferred flavour and add it to your classpath.
 <a name="examples"></a>
 ## Examples
 
-You can checkout 
-[examples]({{site.url}}/use/examples) 
-from [github.com/brooklyncentral/brooklyn-examples](http://github.com/brooklyncentral/brooklyn-examples),
-build them with [maven (v3)]({{site.url}}/dev/build/), 
-and then run them with the ``demo*.sh`` scripts in the examples.
-This will take care of downloading Brooklyn and the dependencies.
+You can download the most recent stable examples from [here](https://github.com/brooklyncentral/brooklyn-examples/tarball/master).
 
-A good entry point is the [Simple Web Cluster]({{site.url}}/use/examples/webcluster.html).
+If you prefer to do this from the command-line, use:
+
+{% highlight bash %}
+curl --location https://github.com/brooklyncentral/brooklyn-examples/tarball/master \
+-o brooklyn-latest.tgz
+{% endhighlight %}
+
+If you are looking for a specific version (versions of the examples are aligned with Brooklyn non-snapshot releases) try the following command:
+
+{% highlight bash %}
+curl --location https://github.com/brooklyncentral/brooklyn-examples/tarball/0.4.0-M2 \
+-o brooklyn-0.4.0-M2.tgz
+{% endhighlight %}
+
+You can also clone the [brooklyn-examples git repository](http://github.com/brooklyncentral/brooklyn-examples):
+
+{% highlight bash %}
+git clone https://github.com/brooklyncentral/brooklyn-examples.git
+{% endhighlight %}
+
+Once you have the examples you can build them with [maven (v3)]({{site.url}}/dev/build/).
+
+Note however, that you still need to have the Brooklyn installed in order to run them.
+
+A good entry point is the [Elastic Web Cluster]({{site.url}}/use/examples/webcluster.html).
 
 <a name="maven"></a>
 ## Maven
@@ -82,8 +101,8 @@ If you use maven, you can add Brooklyn with the following entries in your pom:
 
 Brooklyn-All (used above) brings in all dependencies, including jclouds and Apache Whirr.
 If you prefer a smaller repo you might want just ``brooklyn-core``,  ``brooklyn-policies``, 
-and some of ``brooklyn-{software-{webapp,database,messaging},systems-hadoop}``.
-(Browse the full list [here](http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/brooklyn/).)
+and some of: ``brooklyn-software-webapp``,  ``brooklyn-software-database``, ``brooklyn-software-messaging``, ``brooklyn-systems-hadoop``.
+(Browse the full list [here](http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/io/brooklyn/).)
 
 **TODO: we are moving to mavencentral so the repositories section will shortly be unnecessary**
 
