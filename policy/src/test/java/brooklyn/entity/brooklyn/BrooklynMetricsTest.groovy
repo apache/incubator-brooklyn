@@ -13,7 +13,7 @@ import brooklyn.test.entity.TestEntity
 
 class BrooklynMetricsTest {
 
-    private static final long TIMEOUT_MS = 2*1000
+    private static final long TIMEOUT_MS = 2*1000;
     
     TestApplication app
     SimulatedLocation loc
@@ -61,7 +61,7 @@ class BrooklynMetricsTest {
         
         executeUntilSucceeds(timeout:TIMEOUT_MS) {
             assertEquals(brooklynMetrics.getAttribute(BrooklynMetrics.TOTAL_EFFECTORS_INVOKED), effsInvoked+1)
-            assertEquals(brooklynMetrics.getAttribute(BrooklynMetrics.TOTAL_TASKS_SUBMITTED), tasksSubmitted+1)
+            assertTrue(brooklynMetrics.getAttribute(BrooklynMetrics.TOTAL_TASKS_SUBMITTED) > tasksSubmitted)
         }
         
         // Setting attribute causes event to be published and delivered to the subscriber
@@ -71,7 +71,7 @@ class BrooklynMetricsTest {
         
         executeUntilSucceeds(timeout:TIMEOUT_MS) {
             assertTrue(brooklynMetrics.getAttribute(BrooklynMetrics.TOTAL_EVENTS_PUBLISHED) > eventsPublished)
-            assertEquals(brooklynMetrics.getAttribute(BrooklynMetrics.TOTAL_EVENTS_DELIVERED), eventsDelivered+1)
+            assertTrue(brooklynMetrics.getAttribute(BrooklynMetrics.TOTAL_EVENTS_DELIVERED) > eventsDelivered)
             assertEquals(brooklynMetrics.getAttribute(BrooklynMetrics.NUM_SUBSCRIPTIONS), 1)
         }
     }
