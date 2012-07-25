@@ -25,7 +25,6 @@ import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.test.entity.TestApplication
-import brooklyn.util.internal.EntityStartUtils
 import brooklyn.util.internal.TimeExtras
 
 /**
@@ -49,7 +48,7 @@ public class ActiveMQIntegrationTest {
     @AfterMethod(groups = "Integration")
     public void shutdown() {
         if (activeMQ != null && activeMQ.getAttribute(Startable.SERVICE_UP)) {
-	        EntityStartUtils.stopEntity(activeMQ)
+            activeMQ.stop();
         }
     }
 

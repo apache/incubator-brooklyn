@@ -22,7 +22,6 @@ import brooklyn.location.basic.jclouds.CredentialsFromEnv
 import brooklyn.location.basic.jclouds.JcloudsLocation
 import brooklyn.location.basic.jclouds.JcloudsLocationFactory
 import brooklyn.test.entity.TestApplication
-import brooklyn.util.internal.EntityStartUtils
 
 /**
  * Test Nginx proxying a cluster of JBoss7Server entities on AWS for ENGR-1689.
@@ -52,10 +51,10 @@ public class NginxAmazonTest {
     @AfterMethod(groups = "Live")
     public void shutdown() {
         if (cluster != null && cluster.getAttribute(Startable.SERVICE_UP)) {
-            EntityStartUtils.stopEntity(cluster)
+            cluster.stop();
         }
         if (nginx != null && nginx.getAttribute(Startable.SERVICE_UP)) {
-            EntityStartUtils.stopEntity(nginx)
+            nginx.stop();
         }
     }
     

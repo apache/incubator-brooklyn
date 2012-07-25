@@ -23,7 +23,6 @@ import brooklyn.location.Location
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.test.entity.TestEntity
-import brooklyn.util.internal.EntityStartUtils
 import brooklyn.util.internal.TimeExtras
 
 public class HostGeoInfoTest {
