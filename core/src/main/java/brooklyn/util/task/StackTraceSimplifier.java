@@ -1,6 +1,11 @@
-package brooklyn.util.task
+package brooklyn.util.task;
+
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
+ * Utility class for cleaning up stacktraces.
  */
 public class StackTraceSimplifier {
 
@@ -20,18 +25,28 @@ public class StackTraceSimplifier {
 
     public static boolean isStackTraceElementUseful(StackTraceElement el) {
         boolean useful = true;
-        BLACKLIST.each {
-            if (el.className.startsWith(it)) { useful = false }
-            if (el.className.replace('_', '.').startsWith(it)) { useful = false }
+
+        for (String s: BLACKLIST){
+            if (el.getClassName().startsWith(s))  useful = false;
+            if (el.getClassName().replace('_', '.').startsWith(s))  useful = false;
         }
+
         return useful;
     }
 
     public static List<StackTraceElement> cleanStackTrace(List<StackTraceElement> st) {
-        return st.findAll { element -> isStackTraceElementUseful(element) }
-    }
-    public static StackTraceElement[] cleanStackTrace(StackTraceElement[] st) {
-        cleanStackTrace(st as List) as StackTraceElement[];
+        List<StackTraceElement> result = new LinkedList<StackTraceElement>();
+        for (StackTraceElement element: st){
+            if (isStackTraceElementUseful(element)){
+                result.add(element);
+            }
+        }
+
+        return result;
     }
 
+    public static StackTraceElement[] cleanStackTrace(StackTraceElement[] st) {
+        List<StackTraceElement> result = cleanStackTrace(Arrays.asList(st));
+        return result.toArray(new StackTraceElement[result.size()]);
+    }
 }
