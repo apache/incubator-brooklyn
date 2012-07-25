@@ -12,7 +12,14 @@ Java AMQP message broker and clients using the
 
 {% readj ../before-begin.include.md %}
 
-The project ``examples/simple-messaging-pubsub`` includes a deployment
+The CLI needs to know where to find your compiled examples. You can set this up by exporting
+the ``BROOKLYN_CLASSPATH`` environment variable in the following way:
+
+{% highlight bash %}
+export BROOKLYN_CLASSPATH=${BROOKLYN_EXAMPLES_DIR}/simple-messaging-pubsub/target/classes
+{% endhighlight %}
+
+The project ``${BROOKLYN_EXAMPLES_DIR}/simple-messaging-pubsub`` includes a deployment
 descriptor for our example messaging application and simple _Publish_
 and _Subscribe_ JMS test client scripts.
 
@@ -69,8 +76,8 @@ out the Brooklyn [repository](https://www.github.com/brooklyncentral/brooklyn)
 as follows:
 
 {% highlight bash %}
-% BROOKLYN_CLASSPATH=$EXAMPLES_HOME/simple-messaging-pubsub/target/brooklyn-example-simple-messaging-pubsub-0.4.0-SNAPSHOT.jar
-% $BROOKLYN_HOME/bin/brooklyn -v launch --app brooklyn.demo.StandaloneBrokerExample --location localhost
+${BROOKLYN_HOME}/bin/brooklyn launch --app brooklyn.demo.StandaloneBrokerExample \
+--location localhost
 {% endhighlight %}
 
 Now, visit the the Brooklyn web console on port 8081 using credentials
@@ -110,9 +117,9 @@ below, and that any unquoted ``&`` characters *must* be escaped,
 if present.
 
 {% highlight bash %}
-% cd $EXAMPLES_DIR/simple-messaging-pubsub/brooklyn-example-simple-messaging-pubsub/bin
-% ./publish.sh "amqp://guest:guest@/localhost?brokerlist='tcp://localhost:5672'"
-% ./subscribe.sh "amqp://guest:guest@/localhost?brokerlist='tcp://localhost:5672'"
+cd ${BROOKLYN_EXAMPLES_DIR}/simple-messaging-pubsub/brooklyn-example-simple-messaging-pubsub/bin
+./publish.sh "amqp://guest:guest@/localhost?brokerlist='tcp://localhost:5672'"
+./subscribe.sh "amqp://guest:guest@/localhost?brokerlist='tcp://localhost:5672'"
 {% endhighlight %}
 
 In the _Publish_ window you should see a log message every time a
@@ -139,8 +146,8 @@ this can also be deployed to your favourite cloud, let's pretend
 it's Amazon Ireland, as follows:
 
 {% highlight bash %}
-% BROOKLYN_CLASSPATH=$BROOKLYN_EXAMPLES/simple-messaging-pubsub/target/brooklyn-example-simple-messaging-pubsub-0.4.0-SNAPSHOT.jar
-% $BROOKLYN_HOME/bin/brooklyn -v launch --app brooklyn.demo.StandaloneBrokerExample --location aws-ec2:eu-west-1
+${BROOKLYN_HOME}/bin/brooklyn launch --app brooklyn.demo.StandaloneBrokerExample \
+--location aws-ec2:eu-west-1
 {% endhighlight %}
 
 If you encounter any difficulties, please

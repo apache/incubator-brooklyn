@@ -18,7 +18,14 @@ than defining an application. On the plus side, entities are much easier to re-u
 
 {% readj ../before-begin.include.md %}
 
-The project ``examples/portable-cloudfoundry`` contains the code used 
+The CLI needs to know where to find your compiled examples. You can set this up by exporting
+the ``BROOKLYN_CLASSPATH`` environment variable in the following way:
+
+{% highlight bash %}
+export BROOKLYN_CLASSPATH=${BROOKLYN_EXAMPLES_DIR}/portable-cloudfoundry/target/classes
+{% endhighlight %}
+
+The project ``${BROOKLYN_EXAMPLES_DIR}/portable-cloudfoundry`` contains the code used
 in this example in ``src/main/java``.
 
 
@@ -287,8 +294,8 @@ And finally, we'll define ``move``, as the sequence of the three effectors above
 You can run the application using the provided shell script:
 
 {% highlight bash %}
-% BROOKLYN_CLASSPATH=$BROOKLYN_EXAMPLES/portable-cloudfoundry/target/brooklyn-example-portable-cloudfoundry-0.4.0-SNAPSHOT.jar
-% $BROOKLYN_HOME/bin/brooklyn -v launch --app brooklyn.example.cloudfoundry.MovableCloudFoundryClusterExample --location localhost
+${BROOKLYN_HOME}/bin/brooklyn launch \
+--app brooklyn.example.cloudfoundry.MovableCloudFoundryClusterExample --location localhost
 {% endhighlight %}
 
 Note that we have our webapp running in Cloud Foundry, and we have the effectors we've introduced exposed in the web console:
