@@ -3,8 +3,8 @@ Instructions for running examples
 
 The commands below assume that the `brooklyn` script is already on your $PATH, and you are in the examples directory:
 
-  EXAMPLES_HOME=$(pwd)
-  export BROOKLYN_CLASSPATH=$EXAMPLES_HOME/hadoop-and-whirr/target/brooklyn-example-hadoop-and-whirr-0.4.0-SNAPSHOT.jar
+  export BROOKLYN_EXAMPLES_DIR=$(pwd)
+  export BROOKLYN_CLASSPATH=${BROOKLYN_EXAMPLES_DIR}/hadoop-and-whirr/target/classes
   
   # Runs hadoop in aws-ec2 us-east-1
   brooklyn launch --app brooklyn.extras.whirr.WhirrHadoopExample --stopOnKeyPress --location aws-ec2:us-east-1
@@ -19,6 +19,7 @@ The commands below assume that the `brooklyn` script is already on your $PATH, a
   brooklyn -v launch --app brooklyn.extras.whirr.WebFabricWithHadoopExample --stopOnKeyPress --location "aws-ec2:eu-west-1,aws-ec2:us-east-1"
 
 ---
+
 The aws-ec2 credentials are retrieved from ~/.brooklyn/brooklyn.properties
 
 This file should contain something like:
@@ -28,4 +29,5 @@ This file should contain something like:
 Brooklyn defaults to using ~/.ssh/id_rsa and ~/.ssh/id_rsa.pub
 
 ---
+
 For more information, please visit: http://brooklyncentral.github.com/use/examples/whirrhadoop/

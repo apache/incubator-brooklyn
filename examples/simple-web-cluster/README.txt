@@ -3,8 +3,8 @@ Instructions for running examples
 
 The commands below assume that the `brooklyn` script is already on your $PATH, and you are in the examples directory:
 
-  EXAMPLES_HOME=$(pwd)
-  export BROOKLYN_CLASSPATH=$EXAMPLES_HOME/simple-web-cluster/target/brooklyn-example-simple-web-cluster-0.4.0-SNAPSHOT.jar
+  export BROOKLYN_EXAMPLES_DIR=$(pwd)
+  export BROOKLYN_CLASSPATH=${BROOKLYN_EXAMPLES_DIR}/simple-web-cluster/target/classes
   
   # An app with a single web-server
   brooklyn launch --app brooklyn.demo.SingleWebServerExample --location localhost
