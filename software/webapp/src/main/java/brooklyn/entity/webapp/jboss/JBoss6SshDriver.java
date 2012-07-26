@@ -1,6 +1,5 @@
 package brooklyn.entity.webapp.jboss;
 
-
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.webapp.JavaWebAppSshDriver;
@@ -17,8 +16,7 @@ import java.util.Map;
 import static brooklyn.util.StringUtils.isEmpty;
 import static java.lang.String.format;
 
-
-class JBoss6SshDriver extends JavaWebAppSshDriver {
+public class JBoss6SshDriver extends JavaWebAppSshDriver implements JBoss6Driver {
 
     public static final String SERVER_TYPE = "standard";
     public static final int DEFAULT_HTTP_PORT = 8080;

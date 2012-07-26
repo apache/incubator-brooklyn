@@ -99,9 +99,9 @@ public class TomcatServer extends JavaWebAppSoftwareProcess implements JavaWebAp
         waitForServiceUp(new TimeDuration(0, 0, 5, 0, 0));
     }
 
-
-    public Tomcat7SshDriver newDriver(SshMachineLocation machine) {
-        return new Tomcat7SshDriver(this, machine);
+    @Override
+    public Class getDriverInterface() {
+        return Tomcat7Driver.class;
     }
 }
 

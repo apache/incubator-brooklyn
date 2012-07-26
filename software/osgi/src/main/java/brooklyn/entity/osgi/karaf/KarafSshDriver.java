@@ -11,7 +11,7 @@ import java.util.Map;
 
 import static java.lang.String.format;
 
-public class KarafSshDriver extends JavaStartStopSshDriver {
+public class KarafSshDriver extends JavaStartStopSshDriver implements KarafDriver {
 
     // TODO getJmxJavaSystemProperties(), don't set via JAVA_OPTS; set ourselves manually
     // (karaf reads from props files)

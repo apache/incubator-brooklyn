@@ -42,9 +42,14 @@ public class MySqlNode extends SoftwareProcessEntity {
         super(flags, owner)
     }
 
+//    @Override
+//    protected StartStopDriver newDriver(SshMachineLocation loc) {
+//        return new MySqlSshDriver(this, loc);
+//    }
+
     @Override
-    protected StartStopDriver newDriver(SshMachineLocation loc) {
-        return new MySqlSshDriver(this, loc);
+    public Class getDriverInterface() {
+        return MySqlDriver.class;
     }
 
     @Override
@@ -57,5 +62,4 @@ public class MySqlNode extends SoftwareProcessEntity {
     public int getPort() {
         getAttribute(MYSQL_PORT)
     }
-
 }

@@ -32,6 +32,10 @@ public class SoftwareProcessEntityTest {
         public <T> T getConfig(ConfigKey<T> key, T defaultValue=null) {
             return super.getConfig(key, defaultValue)
         }
+
+        Class getDriverInterface() {
+            return null;
+        }
     }
 }
 

@@ -12,6 +12,7 @@ import brooklyn.location.Location;
  * <p>
  * In this way, it is also possible for entities to cleanly support multiple mechanisms for start/stop and other methods. 
  */
+//TODO: Should this be renamed to 'Driver' or 'EntityDriver' ?
 public interface StartStopDriver {
 
     /** The entity whose components we are controlling. */

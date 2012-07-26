@@ -15,7 +15,7 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.internal.StringEscapeUtils;
 
-public class VanillaJavaAppSshDriver extends JavaStartStopSshDriver {
+public class VanillaJavaAppSshDriver extends JavaStartStopSshDriver implements VanillaJavaAppDriver {
 
     public VanillaJavaAppSshDriver(VanillaJavaApp entity, SshMachineLocation machine) {
         super(entity, machine);

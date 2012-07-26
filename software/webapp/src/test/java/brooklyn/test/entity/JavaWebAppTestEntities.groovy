@@ -10,6 +10,7 @@ import brooklyn.util.flags.SetFromFlag
 import brooklyn.entity.java.VanillaJavaApp
 import brooklyn.entity.java.VanillaJavaAppSshDriver
 import brooklyn.entity.webapp.WebAppServiceConstants
+import brooklyn.entity.basic.lifecycle.StartStopDriver
 
 /**
  * Mock web application server entity for testing.
@@ -27,7 +28,8 @@ public class TestJavaWebAppEntity extends VanillaJavaApp {
 
 	public void waitForHttpPort() { }
 
-	public VanillaJavaAppSshDriver newDriver(SshMachineLocation loc) { null }
+	//public VanillaJavaAppSshDriver newDriver(SshMachineLocation loc) { null }
+
 
     @Override
 	public void start(Collection<? extends Location> loc) {

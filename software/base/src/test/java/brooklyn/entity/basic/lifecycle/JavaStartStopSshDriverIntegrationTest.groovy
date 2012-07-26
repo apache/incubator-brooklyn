@@ -59,7 +59,12 @@ class MyEntity extends SoftwareProcessEntity {
     protected StartStopDriver newDriver(SshMachineLocation loc) {
         return new MyEntityDriver(this, loc);
     }
-    
+
+    @Override
+    Class getDriverInterface() {
+        return null;
+    }
+
     @Override
     protected void connectSensors() {
         super.connectSensors();

@@ -14,7 +14,7 @@ import java.util.Map;
 import static java.lang.String.format;
 
 
-class Tomcat7SshDriver extends JavaWebAppSshDriver {
+public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driver {
 
     public Tomcat7SshDriver(TomcatServer entity, SshMachineLocation machine) {
         super(entity, machine);

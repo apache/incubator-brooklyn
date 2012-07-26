@@ -70,10 +70,6 @@ public class ActiveMQBroker extends JMSBroker<ActiveMQQueue, ActiveMQTopic> impl
 		return new ActiveMQTopic(properties);
 	}
 
-	public ActiveMQSshDriver newDriver(SshMachineLocation machine) {
-        return new ActiveMQSshDriver(this, machine)        
-	}
-
     transient JmxSensorAdapter jmxAdapter;
     
     @Override     
@@ -89,6 +85,11 @@ public class ActiveMQBroker extends JMSBroker<ActiveMQQueue, ActiveMQTopic> impl
 	public Collection<String> toStringFieldsToInclude() {
 		return super.toStringFieldsToInclude() + [ 'openWirePort' ]
 	}
+
+    @Override
+    Class getDriverInterface() {
+        return ActiveMQDriver.class;
+    }
 }
 
 public abstract class ActiveMQDestination extends JMSDestination {

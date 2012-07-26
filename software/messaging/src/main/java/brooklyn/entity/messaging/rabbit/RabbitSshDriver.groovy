@@ -15,7 +15,7 @@ import brooklyn.util.NetworkUtils
 /**
  * TODO javadoc
  */
-public class RabbitSshDriver extends StartStopSshDriver {
+public class RabbitSshDriver extends StartStopSshDriver implements RabbitDriver {
 
     private static final Logger log = LoggerFactory.getLogger(RabbitSshDriver.class);
 

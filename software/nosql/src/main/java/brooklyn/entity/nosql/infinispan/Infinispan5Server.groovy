@@ -41,6 +41,10 @@ public class Infinispan5Server extends SoftwareProcessEntity implements UsesJmx 
         return Infinispan5Setup.newInstance(this, machine)
     }
 
+    Class getDriverInterface() {
+        return Infinispan5Setup.class;
+    }
+
     public void connectSensors() {
 		super.connectSensors()
 		

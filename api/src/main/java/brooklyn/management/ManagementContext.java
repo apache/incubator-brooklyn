@@ -36,7 +36,16 @@ public interface ManagementContext {
      * to submit tasks and to observe what tasks are occurring
      */
     ExecutionManager getExecutionManager();
-    
+
+    /**
+     * TODO: For the time being we return an Object because driverRegistry is not part of the api package.
+     * We need to talk about this.
+     *
+     * @param entity
+     * @return
+     */
+    Object getDriverRegistry(Entity entity);
+
     /**
      * Returns the {@link SubscriptionManager} instance for entities and users of this management realm
      * to subscribe to sensor events (and, in the case of entities, to emit sensor events) 

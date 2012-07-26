@@ -13,7 +13,7 @@ import brooklyn.util.ComparableVersion
 import brooklyn.util.IdGenerator;
 import brooklyn.util.ResourceUtils
 
-public class MySqlSshDriver extends StartStopSshDriver {
+public class MySqlSshDriver extends StartStopSshDriver implements MySqlDriver{
 
     public static final Logger log = LoggerFactory.getLogger(MySqlSshDriver.class);
     

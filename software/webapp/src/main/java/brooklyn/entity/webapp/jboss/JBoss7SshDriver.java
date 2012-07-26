@@ -15,7 +15,7 @@ import java.util.Map;
 import static java.lang.String.format;
 
 
-class JBoss7SshDriver extends JavaWebAppSshDriver {
+class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver {
 
     /*
       * TODO

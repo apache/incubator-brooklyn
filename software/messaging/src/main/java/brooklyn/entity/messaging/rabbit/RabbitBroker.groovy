@@ -74,9 +74,14 @@ public class RabbitBroker extends SoftwareProcessEntity implements MessageBroker
         return new RabbitQueue(properties, this)
     }
 
-    public RabbitSshDriver newDriver(SshMachineLocation machine) {
-        return new RabbitSshDriver(this, machine)
+    @Override
+    public Class getDriverInterface() {
+        return RabbitDriver.class;
     }
+
+//    public RabbitSshDriver newDriver(SshMachineLocation machine) {
+//        return new RabbitSshDriver(this, machine)
+//    }
 
     @Override
     protected void connectSensors() {

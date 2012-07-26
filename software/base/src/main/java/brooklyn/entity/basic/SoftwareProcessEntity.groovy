@@ -36,6 +36,8 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables
 import com.google.common.collect.Maps
 import groovy.time.TimeDuration
+import brooklyn.entity.drivers.DriverAwareEntity
+import brooklyn.entity.drivers.BasicDriverFactory
 
 /**
  * An {@link Entity} representing a piece of software which can be installed, run, and controlled.
@@ -44,7 +46,7 @@ import groovy.time.TimeDuration
  * <p>
  * It exposes sensors for service state (Lifecycle) and status (String), and for host info, log file location.
  */
-public abstract class SoftwareProcessEntity extends AbstractEntity implements Startable {
+public abstract class SoftwareProcessEntity extends AbstractEntity implements Startable, DriverAwareEntity {
 	private static final Logger log = LoggerFactory.getLogger(SoftwareProcessEntity.class)
 
     
@@ -107,8 +109,12 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
      */
     @Deprecated
 	public StartStopDriver getSetup() { driver }
-	
-	protected abstract StartStopDriver newDriver(SshMachineLocation loc);
+
+	protected StartStopDriver newDriver(SshMachineLocation loc){
+        //NASTY HACK, the basicdriver factory currently doesn't contain state, so it works. BUt it needs to
+        //be replaced with a better mechanism
+        return new BasicDriverFactory().build(this, loc);
+    }
 
     protected void preStart() {
         if (!sensorRegistry) sensorRegistry = new SensorRegistry(this)

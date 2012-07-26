@@ -1,14 +1,11 @@
 package brooklyn.entity.messaging.activemq;
 
-import java.util.Map;
-
 import brooklyn.entity.basic.lifecycle.CommonCommands
 import brooklyn.entity.basic.lifecycle.JavaStartStopSshDriver
-import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.NetworkUtils
 
-public class ActiveMQSshDriver extends JavaStartStopSshDriver {
+public class ActiveMQSshDriver extends JavaStartStopSshDriver implements ActiveMQDriver {
 
     public ActiveMQSshDriver(ActiveMQBroker entity, SshMachineLocation machine) {
         super(entity, machine)
@@ -17,6 +14,7 @@ public class ActiveMQSshDriver extends JavaStartStopSshDriver {
     @Override
     protected String getLogFileLocation() { "${runDir}/data/activemq.log"; }
 
+    @Override
     public Integer getOpenWirePort() { entity.getAttribute(ActiveMQBroker.OPEN_WIRE_PORT) }
     
     @Override
@@ -66,7 +64,6 @@ public class ActiveMQSshDriver extends JavaStartStopSshDriver {
     public boolean isRunning() {
         newScript(CHECK_RUNNING, usePidFile:pidFile).execute() == 0;
     }
-
 
     @Override
     public void stop() {

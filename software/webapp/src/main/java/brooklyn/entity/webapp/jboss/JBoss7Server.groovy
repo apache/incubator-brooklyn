@@ -15,7 +15,6 @@ import brooklyn.event.basic.BasicAttributeSensor ;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
-import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.flags.SetFromFlag;
 
 public class JBoss7Server extends JavaWebAppSoftwareProcess implements JavaWebAppService {
@@ -50,6 +49,11 @@ public class JBoss7Server extends JavaWebAppSoftwareProcess implements JavaWebAp
 
     public JBoss7Server(Map flags, Entity owner) {
         super(flags, owner);
+    }
+
+    @Override
+    public Class getDriverInterface() {
+        return JBoss7Driver.class;
     }
 
     @Override

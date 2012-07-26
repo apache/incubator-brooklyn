@@ -73,11 +73,16 @@ public class KarafContainer extends SoftwareProcessEntity implements UsesJava, U
         super(properties, owner)
     }
 
+//    @Override
+//    public KarafSshDriver newDriver(SshMachineLocation machine) {
+//        return new KarafSshDriver(this, machine)
+//    }
+
     @Override
-    public KarafSshDriver newDriver(SshMachineLocation machine) {
-        return new KarafSshDriver(this, machine)
+    public Class getDriverInterface() {
+        return KarafDriver.class;
     }
-    
+
     @Override
     protected void connectSensors() {
         super.connectSensors();

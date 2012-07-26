@@ -19,7 +19,6 @@ import brooklyn.event.adapter.ConfigSensorAdapter
 import brooklyn.event.adapter.HttpSensorAdapter
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
-import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.ResourceUtils
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.internal.TimeExtras
@@ -137,8 +136,9 @@ public class NginxController extends AbstractController {
         setAttribute(ROOT_URL, url);
     }
     
-    public NginxSshDriver newDriver(SshMachineLocation machine) {
-        return new NginxSshDriver(this, machine);
+    @Override
+    public Class getDriverInterface() {
+        return NginxDriver.class;
     }
 
     public void doExtraConfigurationDuringStart() {
