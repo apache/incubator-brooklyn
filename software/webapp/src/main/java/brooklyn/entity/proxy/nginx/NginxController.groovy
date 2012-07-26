@@ -13,7 +13,6 @@ import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy
 import brooklyn.entity.proxy.AbstractController
 import brooklyn.entity.proxy.ProxySslConfig
-import brooklyn.entity.group.AbstractController
 import brooklyn.entity.webapp.WebAppService
 import brooklyn.event.SensorEventListener
 import brooklyn.event.adapter.ConfigSensorAdapter

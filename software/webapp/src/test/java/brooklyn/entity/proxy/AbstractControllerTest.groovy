@@ -63,7 +63,8 @@ class AbstractControllerTest {
                 if ((addresses && !updates) || (updates && addresses!=updates.last())) updates.add(addresses)
             }
 
-            Class getDriverInterface() {
+            @Override
+            public Class getDriverInterface() {
                 return MockSshBasedSoftwareSetup.class;
             }
             public void reload() {
