@@ -1,7 +1,5 @@
 package brooklyn.entity.basic
 
-import groovy.time.Duration;
-
 import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
@@ -16,9 +14,9 @@ import brooklyn.event.AttributeSensor
 import brooklyn.event.adapter.ConfigSensorAdapter
 import brooklyn.event.adapter.SensorRegistry
 import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.event.basic.BasicAttributeSensorAndConfigKey
+
 import brooklyn.event.basic.BasicConfigKey
-import brooklyn.event.basic.PortAttributeSensorAndConfigKey
+
 import brooklyn.location.Location
 import brooklyn.location.MachineLocation
 import brooklyn.location.MachineProvisioningLocation
@@ -37,7 +35,6 @@ import com.google.common.collect.Iterables
 import com.google.common.collect.Maps
 import groovy.time.TimeDuration
 import brooklyn.entity.drivers.DriverAwareEntity
-import brooklyn.entity.drivers.BasicDriverFactory
 
 /**
  * An {@link Entity} representing a piece of software which can be installed, run, and controlled.
@@ -111,9 +108,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 	public StartStopDriver getSetup() { driver }
 
 	protected StartStopDriver newDriver(SshMachineLocation loc){
-        //NASTY HACK, the basicdriver factory currently doesn't contain state, so it works. BUt it needs to
-        //be replaced with a better mechanism
-        return new BasicDriverFactory().build(this, loc);
+        return getManagementContext().getEntityDriverFactory().build(this,loc);
     }
 
     protected void preStart() {

@@ -1,6 +1,9 @@
 package brooklyn.management.internal;
 
 import static brooklyn.util.GroovyJavaMethods.elvis;
+
+import brooklyn.entity.drivers.BasicDriverFactory;
+import brooklyn.entity.drivers.EntityDriverFactory;
 import groovy.util.ObservableList;
 
 import java.util.ArrayList;
@@ -39,7 +42,14 @@ public class LocalManagementContext extends AbstractManagementContext {
     protected Set<Application> applications = Sets.newLinkedHashSet();
 
     private static final Object MANAGED_LOCALLY = new Object();
-    
+
+    private final EntityDriverFactory entityDriverFactory = new BasicDriverFactory();
+
+    @Override
+    public EntityDriverFactory getEntityDriverFactory() {
+        return entityDriverFactory;
+    }
+
     protected synchronized boolean manageNonRecursive(Entity e) {
         ((AbstractEntity)e).managementData = MANAGED_LOCALLY;
         Object old = entitiesById.put(e.getId(), e);

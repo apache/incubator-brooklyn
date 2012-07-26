@@ -1,9 +1,11 @@
 package brooklyn.management;
 
+import java.sql.DriverManager;
 import java.util.Collection;
 
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
+import brooklyn.entity.drivers.EntityDriverFactory;
 
 /**
  * This is the entry point for accessing and interacting with a realm of applications and their entities in Brooklyn.
@@ -38,13 +40,11 @@ public interface ManagementContext {
     ExecutionManager getExecutionManager();
 
     /**
-     * TODO: For the time being we return an Object because driverRegistry is not part of the api package.
-     * We need to talk about this.
+     * Returns the {@link EntityDriverFactory} entities can use to create drivers.
      *
-     * @param entity
-     * @return
+      * @return the EntityDriverFactory to use.
      */
-    Object getDriverRegistry(Entity entity);
+    EntityDriverFactory getEntityDriverFactory();
 
     /**
      * Returns the {@link SubscriptionManager} instance for entities and users of this management realm
