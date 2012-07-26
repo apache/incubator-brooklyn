@@ -18,7 +18,7 @@ The CLI needs to know where to find your compiled examples. You can set this up 
 the ``BROOKLYN_CLASSPATH`` environment variable in the following way:
 
 {% highlight bash %}
-export BROOKLYN_CLASSPATH=${BROOKLYN_EXAMPLES_DIR}/global-web-fabric/target/classes
+% export BROOKLYN_CLASSPATH=${BROOKLYN_EXAMPLES_DIR}/global-web-fabric/target/classes
 {% endhighlight %}
 
 The project ``${BROOKLYN_EXAMPLES_DIR}/global-web-fabric`` contains the code used

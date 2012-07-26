@@ -6,7 +6,7 @@ The CLI needs to know where to find your compiled examples. You can set this up 
 the ``BROOKLYN_CLASSPATH`` environment variable in the following way:
 
 {% highlight bash %}
-export BROOKLYN_CLASSPATH=${BROOKLYN_EXAMPLES_DIR}/simple-web-cluster/target/classes
+% export BROOKLYN_CLASSPATH=${BROOKLYN_EXAMPLES_DIR}/simple-web-cluster/target/classes
 {% endhighlight %}
 
 The project ``${BROOKLYN_EXAMPLES_DIR}/simple-web-cluster`` includes several deployment descriptors
@@ -33,7 +33,7 @@ public class SingleWebServerExample extends AbstractApplication {
 You can run this (on *nix or Mac) as follows:
 
 {% highlight bash %}
-${BROOKLYN_HOME}/bin/brooklyn launch --app brooklyn.demo.SingleWebServerExample \
+% ${BROOKLYN_HOME}/bin/brooklyn launch --app brooklyn.demo.SingleWebServerExample \
 --location localhost
 {% endhighlight %}
 
@@ -47,8 +47,7 @@ With appropriate setup (as described [here]({{ site.url }}/use/guide/management/
 this can also be deployed to your favourite cloud, let's pretend it's Amazon Ireland, as follows: 
 
 {% highlight bash %}
-${BROOKLYN_HOME}/bin/brooklyn launch --app brooklyn.demo.SingleWebServerExample \
---location aws-ec2:eu-west-1
+% ${BROOKLYN_HOME}/bin/brooklyn launch --app brooklyn.demo.SingleWebServerExample --location aws-ec2:eu-west-1
 {% endhighlight %}
 
 
@@ -57,8 +56,7 @@ ${BROOKLYN_HOME}/bin/brooklyn launch --app brooklyn.demo.SingleWebServerExample 
 Ready for something more interesting?  Try this:
 
 {% highlight bash %}
-${BROOKLYN_HOME}/bin/brooklyn launch --app brooklyn.demo.WebClusterDatabaseExample \
---location localhost
+% ${BROOKLYN_HOME}/bin/brooklyn launch --app brooklyn.demo.WebClusterDatabaseExample --location localhost
 {% endhighlight %}
 
 This launches the class ``WebClusterDatabaseExample`` (also described in the [walkthrough]({{ site.url }}/start/walkthrough/index.html))

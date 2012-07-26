@@ -4,7 +4,7 @@ The CLI needs to know where to find your compiled examples. You can set this up 
 the ``BROOKLYN_CLASSPATH`` environment variable in the following way:
 
 {% highlight bash %}
-export BROOKLYN_CLASSPATH=${BROOKLYN_EXAMPLES_DIR}/hadoop-and-whirr/target/classes
+% export BROOKLYN_CLASSPATH=${BROOKLYN_EXAMPLES_DIR}/hadoop-and-whirr/target/classes
 {% endhighlight %}
 
 The project ``${BROOKLYN_EXAMPLES_DIR}/hadoop-and-whirr`` includes deployment descriptors
@@ -32,8 +32,7 @@ with an arbitrary size, with one line using the ``WhirrHadoopCluster`` entity.
 You can run this by running:
 
 {% highlight bash %}
-${BROOKLYN_HOME}/bin/brooklyn launch --app brooklyn.extras.whirr.WhirrHadoopExample \
---stopOnKeyPress --location aws-ec2:eu-west-1
+% ${BROOKLYN_HOME}/bin/brooklyn launch --app brooklyn.extras.whirr.WhirrHadoopExample --stopOnKeyPress --location aws-ec2:eu-west-1
 {% endhighlight %}
 
 This targets ``aws-ec2:eu-west-1``,
@@ -65,8 +64,7 @@ whirr.instance-templates= 1 noop, 1 elasticsearch
 This can be launched by running:
 
 {% highlight bash %}
-${BROOKLYN_HOME}/bin/brooklyn launch --app brooklyn.extras.whirr.WhirrExample \
---stopOnKeyPress --location aws-ec2:eu-west-1
+% ${BROOKLYN_HOME}/bin/brooklyn launch --app brooklyn.extras.whirr.WhirrExample --stopOnKeyPress --location aws-ec2:eu-west-1
 {% endhighlight %} 
 
 In the provided example this will deploy to AWS.
