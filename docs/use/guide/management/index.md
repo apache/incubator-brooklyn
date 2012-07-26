@@ -59,20 +59,20 @@ Brooklyn comes with a Command Line Interface (cli) that makes it easier to launc
 In order to have easy access to the cli it is useful to configure the PATH environment variable to also point to the cli's bin directory:
 
 {% highlight bash %}
-% BROOKLYN_HOME=/path/to/brooklyn/
-% export PATH=$PATH:$BROOKLYN_HOME/usage/dist/target/brooklyn-0.4.0-SNAPSHOT-dist/brooklyn-0.4.0-SNAPSHOT/bin/
+BROOKLYN_HOME=/path/to/brooklyn/
+export PATH=$PATH:$BROOKLYN_HOME/usage/dist/target/brooklyn-dist/bin/
 {% endhighlight %}
 
 If you have set this up correctly you should be able to invoke the ```brooklyn``` command:
 
 {% highlight bash %}
-% brooklyn
+brooklyn
 {% endhighlight %}
 
 To get information about all the supported cli options just run:
 
 {% highlight bash %}
-% brooklyn help
+brooklyn help
 usage: brooklyn [(-q | --quiet)] [(-v | --verbose)] <command> [<args>]
 
 The most commonly used brooklyn commands are:
@@ -86,12 +86,12 @@ Here is an example of the commands you might run to get the Brooklyn code, compi
 
 {% highlight bash %}
 git clone https://github.com/brooklyncentral/brooklyn.git
-% cd brooklyn
-% mvn clean install -DskipTests
-% BROOKLYN_HOME=$(pwd)
-% export PATH=$PATH:$BROOKLYN_HOME/usage/dist/target/brooklyn-0.4.0-SNAPSHOT-dist/brooklyn-0.4.0-SNAPSHOT/bin/
-% export BROOKLYN_CLASSPATH=$BROOKLYN_HOME/examples/simple-web-cluster/target/brooklyn-example-simple-web-cluster-0.4.0-SNAPSHOT.jar
-% brooklyn launch --app brooklyn.demo.SingleWebServerExample --location localhost
+cd brooklyn
+mvn clean install -DskipTests
+BROOKLYN_HOME=$(pwd)
+export PATH=${PATH}:${BROOKLYN_HOME}/usage/dist/target/brooklyn-dist/bin/
+export BROOKLYN_CLASSPATH=${BROOKLYN_HOME}/examples/simple-web-cluster/target/classes
+brooklyn launch --app brooklyn.demo.SingleWebServerExample --location localhost
 {% endhighlight %}
 
 

@@ -14,7 +14,14 @@ but does not assume knowledge of either of these.
 
 {% readj ../before-begin.include.md %}
 
-The project ``examples/global-web-fabric`` contains the code used 
+The CLI needs to know where to find your compiled examples. You can set this up by exporting
+the ``BROOKLYN_CLASSPATH`` environment variable in the following way:
+
+{% highlight bash %}
+export BROOKLYN_CLASSPATH=${BROOKLYN_EXAMPLES_DIR}/global-web-fabric/target/classes
+{% endhighlight %}
+
+The project ``${BROOKLYN_EXAMPLES_DIR}/global-web-fabric`` contains the code used
 in this example under ``src/main/java``.
 
 
@@ -279,8 +286,8 @@ Now let's run this example.  You will need to specify increased heap size and me
 as well as the appropriate classpath.
 
 {% highlight bash %}
-% cd $EXAMPLES_DIR/global-web-fabric/brooklyn-example-global-web-fabric/bin
-% ./demo.sh
+${BROOKLYN_HOME}/bin/brooklyn launch --app brooklyn.demo.GlobalWebFabricExample \
+--location locahost
 {% endhighlight %}
 
 The management web console will start,
