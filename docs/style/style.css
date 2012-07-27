@@ -93,9 +93,11 @@ pre {
     background-color:#e8eded;
     padding: 1em;
     font-size: 12px;
+    overflow-y: auto; /* horizontal scroll bar if line length is too long */
 }
 code {
     font-family: Consolas, Lucida Console, Monaco, monospace;
     font-size: 13px;
 }
 pre code { font-size: 12px; }
+.highlight { background-color:#e8eded; } /* clipboard icon should have the same background color as the code */
