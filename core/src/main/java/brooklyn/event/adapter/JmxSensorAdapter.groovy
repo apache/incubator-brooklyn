@@ -3,7 +3,6 @@ package brooklyn.event.adapter;
 import groovy.lang.Closure
 import groovy.time.TimeDuration
 
-import java.util.Map
 import java.util.concurrent.TimeUnit
 
 import javax.management.ObjectName
