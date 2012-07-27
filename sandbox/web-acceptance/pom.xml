@@ -15,14 +15,15 @@
 
     <dependencies>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-all</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-test-support</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
@@ -36,6 +37,7 @@
         </dependency>
     </dependencies>
 
+<!-- 
     <build>
         <resources>
             <resource>
@@ -60,4 +62,6 @@
             </plugin>
         </plugins>
     </build>
+ -->
+ 
 </project>

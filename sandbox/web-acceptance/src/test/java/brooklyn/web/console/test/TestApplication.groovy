@@ -136,6 +136,11 @@ class TestApplication extends AbstractApplication {
     }
 
     public static class TestTomcatEntity extends AbstractEntity {
+		
+		static List<ParameterType<?>> parameterTypeList = new ArrayList<ParameterType<?>>()
+		static ParameterType tomcatStartLocation = new BasicParameterType("Location", Void.class)
+		static ParameterType actionDate = new BasicParameterType("Date", Void.class)
+
         public static final TestEffector START_TOMCAT = new TestEffector("Start Tomcat",
                 "This will start Tomcat at a specified location",
                 parameterTypeList);
@@ -166,9 +171,6 @@ class TestApplication extends AbstractApplication {
             // Stealing the sensors from TomcatNode
             getMutableEntityType().addSensors(new TomcatServer().getEntityType().getSensors())
 
-            List<ParameterType<?>> parameterTypeList = new ArrayList<ParameterType<?>>()
-            ParameterType tomcatStartLocation = new BasicParameterType("Location", Void.class)
-            ParameterType actionDate = new BasicParameterType("Date", Void.class)
             parameterTypeList.add(tomcatStartLocation)
             parameterTypeList.add(actionDate)
 
