@@ -1,7 +1,7 @@
 package brooklyn.entity.java;
 
 import static java.lang.String.format;
-import brooklyn.entity.basic.lifecycle.JavaSoftwareProcessSshDriver;
+
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.internal.StringEscapeUtils;
@@ -19,6 +19,9 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.internal.StringEscapeUtils;
 
+/**
+ * The SSH implementation of the {@link VanillaJavaAppDriver}.
+ */
 public class VanillaJavaAppSshDriver extends JavaSoftwareProcessSshDriver implements VanillaJavaAppDriver {
 
     public VanillaJavaAppSshDriver(VanillaJavaApp entity, SshMachineLocation machine) {

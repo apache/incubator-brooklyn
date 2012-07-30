@@ -1,7 +1,8 @@
 package brooklyn.entity.java;
 
-import brooklyn.entity.basic.lifecycle.JavaSoftwareProcessDriver;
-
+/**
+ * The {@link JavaSoftwareProcessDriver} for a {@link VanillaJavaApp}.
+ */
 public interface VanillaJavaAppDriver extends JavaSoftwareProcessDriver {
 
 }

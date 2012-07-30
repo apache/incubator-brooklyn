@@ -2,16 +2,13 @@ package brooklyn.demo
 
 import static brooklyn.event.basic.DependentConfiguration.valueWhenAttributeReady
 
-import java.util.List
-import java.util.Map
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.config.BrooklynProperties
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.Entities
-import brooklyn.entity.basic.UsesJava
+import brooklyn.entity.java.UsesJava
 import brooklyn.entity.database.mysql.MySqlNode
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster
 import brooklyn.entity.webapp.DynamicWebAppCluster

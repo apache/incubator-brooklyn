@@ -36,15 +36,13 @@ public class MySqlNode extends SoftwareProcessEntity {
 
     public static final BasicAttributeSensor<String> MYSQL_URL = [ String, "mysql.url", "URL to access mysql (e.g. mysql://localhost:3306/)" ]
 
-    public MySqlNode(Entity owner) { this([:], owner) }
+    public MySqlNode(Entity owner) {
+        this([:], owner)
+    }
+
     public MySqlNode(Map flags=[:], Entity owner=null) {
         super(flags, owner)
     }
-
-//    @Override
-//    protected StartStopDriver newDriver(SshMachineLocation loc) {
-//        return new MySqlSshDriver(this, loc);
-//    }
 
     @Override
     public Class getDriverInterface() {

@@ -1,6 +1,6 @@
 package brooklyn.entity.osgi.karaf;
 
-import brooklyn.entity.basic.lifecycle.JavaSoftwareProcessSshDriver;
+import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.NetworkUtils;
 

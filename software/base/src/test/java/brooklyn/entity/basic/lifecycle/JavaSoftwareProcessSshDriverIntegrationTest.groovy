@@ -1,4 +1,7 @@
-package brooklyn.entity.basic.lifecycle;
+package brooklyn.entity.basic.lifecycle
+
+import brooklyn.entity.basic.SoftwareProcessDriver
+import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 
 import static brooklyn.test.TestUtils.*
 

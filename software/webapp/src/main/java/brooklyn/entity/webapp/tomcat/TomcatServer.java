@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcessEntity;
-import brooklyn.entity.basic.UsesJmx;
+import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.webapp.JavaWebAppService;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import brooklyn.event.adapter.ConfigSensorAdapter;
@@ -23,7 +23,6 @@ import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.location.basic.PortRanges;
-import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.flags.SetFromFlag;
 
 /**

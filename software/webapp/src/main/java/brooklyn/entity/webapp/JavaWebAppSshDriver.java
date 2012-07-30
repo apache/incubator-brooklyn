@@ -4,7 +4,7 @@ package brooklyn.entity.webapp;
 import java.io.File;
 
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.lifecycle.JavaSoftwareProcessSshDriver;
+import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 
 public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver implements JavaWebAppDriver {

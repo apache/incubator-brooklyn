@@ -1,6 +1,6 @@
 package brooklyn.entity.webapp;
 
-import brooklyn.entity.basic.lifecycle.JavaSoftwareProcessDriver;
+import brooklyn.entity.java.JavaSoftwareProcessDriver;
 
 import java.io.File;
 

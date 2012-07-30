@@ -1,4 +1,4 @@
-package brooklyn.entity.basic;
+package brooklyn.entity.java;
 
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;

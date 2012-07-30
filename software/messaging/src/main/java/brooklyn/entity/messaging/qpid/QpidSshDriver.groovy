@@ -8,7 +8,7 @@ import brooklyn.entity.basic.lifecycle.CommonCommands
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.NetworkUtils
 import brooklyn.util.ResourceUtils
-import brooklyn.entity.basic.lifecycle.JavaSoftwareProcessSshDriver
+import brooklyn.entity.java.JavaSoftwareProcessSshDriver
 
 public class QpidSshDriver extends JavaSoftwareProcessSshDriver implements QpidDriver{
 

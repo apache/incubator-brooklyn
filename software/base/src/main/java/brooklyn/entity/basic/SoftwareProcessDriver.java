@@ -1,10 +1,11 @@
-package brooklyn.entity.basic.lifecycle;
+package brooklyn.entity.basic;
 
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.drivers.EntityDriver;
 
 /**
- * Delegate for {@link Entity} lifecycle control.
+ * The {@link EntityDriver} for a {@link SoftwareProcessEntity}.
+ *
  * <p/>
  * In many cases it is cleaner to store entity lifecycle effectors (and sometimes other implementations) in a class to
  * which the entity delegates.  Classes implementing this interface provide this delegate, often inheriting utilities
@@ -12,7 +13,6 @@ import brooklyn.entity.drivers.EntityDriver;
  * <p/>
  * In this way, it is also possible for entities to cleanly support multiple mechanisms for start/stop and other methods.
  */
-//TODO: Should this be renamed to 'Driver' or 'EntityDriver' ?
 public interface SoftwareProcessDriver extends EntityDriver {
 
     /**

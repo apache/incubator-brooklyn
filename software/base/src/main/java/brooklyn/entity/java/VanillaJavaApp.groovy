@@ -10,9 +10,6 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.ConfigKey
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.SoftwareProcessEntity
-import brooklyn.entity.basic.UsesJava
-import brooklyn.entity.basic.UsesJavaMXBeans
-import brooklyn.entity.basic.UsesJmx
 import brooklyn.event.adapter.ConfigSensorAdapter
 import brooklyn.event.adapter.FunctionSensorAdapter
 import brooklyn.event.adapter.JmxSensorAdapter

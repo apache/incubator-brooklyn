@@ -1,7 +1,7 @@
 package brooklyn.entity.messaging.activemq;
 
 import brooklyn.entity.basic.lifecycle.CommonCommands
-import brooklyn.entity.basic.lifecycle.JavaSoftwareProcessSshDriver
+import brooklyn.entity.java.JavaSoftwareProcessSshDriver
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.NetworkUtils
 

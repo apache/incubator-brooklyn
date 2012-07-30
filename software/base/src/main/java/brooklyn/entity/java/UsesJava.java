@@ -1,4 +1,4 @@
-package brooklyn.entity.basic;
+package brooklyn.entity.java;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -1,6 +1,6 @@
 package brooklyn.entity.webapp
 
-import brooklyn.entity.basic.UsesJava
+import brooklyn.entity.java.UsesJava
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.util.flags.SetFromFlag
 

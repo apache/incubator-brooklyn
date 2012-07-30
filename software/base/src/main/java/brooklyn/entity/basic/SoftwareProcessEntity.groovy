@@ -7,8 +7,6 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.ConfigKey
 import brooklyn.entity.Entity
-import brooklyn.entity.basic.lifecycle.SoftwareProcessDriver
-import brooklyn.entity.basic.lifecycle.StartStopSshDriver
 import brooklyn.entity.trait.Startable
 import brooklyn.event.AttributeSensor
 import brooklyn.event.adapter.ConfigSensorAdapter
@@ -272,7 +270,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 
     protected void initDriver(SshMachineLocation machine) {
         if (driver!=null) {
-            if ((driver in StartStopSshDriver) && ( ((StartStopSshDriver)driver).location==machine)) {
+            if ((driver in AbstractSoftwareProcessSshDriver) && ( ((AbstractSoftwareProcessSshDriver)driver).location==machine)) {
                 //just reuse
             } else {
                 log.warn("driver/location change for {} is untested: cannot start ${this} on ${machine}: driver already created");

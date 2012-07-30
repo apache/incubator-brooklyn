@@ -1,4 +1,4 @@
-package brooklyn.entity.basic.lifecycle;
+package brooklyn.entity.basic;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -8,11 +8,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.ConfigKey;
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.EntityLocal;
 import brooklyn.location.Location;
 import brooklyn.util.ResourceUtils;
 
+/**
+ * An abstract implementation of the {@link SoftwareProcessDriver}.
+ */
 public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDriver {
 
 	private static final Logger log = LoggerFactory.getLogger(AbstractSoftwareProcessDriver.class);

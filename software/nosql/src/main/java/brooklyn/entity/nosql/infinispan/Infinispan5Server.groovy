@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.SoftwareProcessEntity
-import brooklyn.entity.basic.UsesJmx
+import brooklyn.entity.java.UsesJmx
 import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup
 import brooklyn.event.adapter.legacy.ValueProvider
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey

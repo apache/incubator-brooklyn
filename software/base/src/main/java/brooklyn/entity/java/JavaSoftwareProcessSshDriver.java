@@ -1,6 +1,5 @@
-package brooklyn.entity.basic.lifecycle;
+package brooklyn.entity.java;
 
-import static brooklyn.util.GroovyJavaMethods.elvis;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Arrays;
@@ -8,6 +7,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import org.jclouds.compute.domain.ExecResponse;
 import org.jclouds.scriptbuilder.statements.java.InstallJDK;
 import org.slf4j.Logger;
@@ -15,8 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.basic.UsesJava;
-import brooklyn.entity.basic.UsesJmx;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.basic.jclouds.JcloudsLocation.JcloudsSshMachineLocation;
@@ -32,7 +30,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.gson.internal.Primitives;
 
-public abstract class JavaSoftwareProcessSshDriver extends StartStopSshDriver implements JavaSoftwareProcessDriver {
+/**
+ * The SSH implementation of the {@link brooklyn.entity.java.JavaSoftwareProcessDriver}.
+ */
+public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProcessSshDriver implements JavaSoftwareProcessDriver {
 
     public static final Logger log = LoggerFactory.getLogger(JavaSoftwareProcessSshDriver.class);
     

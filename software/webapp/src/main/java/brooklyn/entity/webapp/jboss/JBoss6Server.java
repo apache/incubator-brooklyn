@@ -2,7 +2,7 @@ package brooklyn.entity.webapp.jboss;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcessEntity;
-import brooklyn.entity.basic.UsesJmx;
+import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.webapp.JavaWebAppService;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import brooklyn.event.adapter.ConfigSensorAdapter;
@@ -11,7 +11,6 @@ import brooklyn.event.adapter.JmxSensorAdapter;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.MapConfigKey;
-import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.flags.SetFromFlag;
 import groovy.time.TimeDuration;
 import org.slf4j.Logger;
