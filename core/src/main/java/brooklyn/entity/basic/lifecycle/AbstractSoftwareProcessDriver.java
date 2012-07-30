@@ -13,16 +13,16 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.location.Location;
 import brooklyn.util.ResourceUtils;
 
-public abstract class AbstractStartStopDriver implements StartStopDriver {
+public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDriver {
 
-	private static final Logger log = LoggerFactory.getLogger(AbstractStartStopDriver.class);
+	private static final Logger log = LoggerFactory.getLogger(AbstractSoftwareProcessDriver.class);
 	
     protected final EntityLocal entity;
     private final Location location;
     
-    public AbstractStartStopDriver(EntityLocal entity, Location location) {
-    	this.entity = checkNotNull(entity, "entity");
-    	this.location = checkNotNull(location, "location");
+    public AbstractSoftwareProcessDriver(EntityLocal entity, Location location) {
+        this.entity = checkNotNull(entity, "entity");
+        this.location = checkNotNull(location, "location");
     }
 	
     /**

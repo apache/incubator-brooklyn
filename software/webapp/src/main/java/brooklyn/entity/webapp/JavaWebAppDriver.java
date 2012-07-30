@@ -1,10 +1,10 @@
 package brooklyn.entity.webapp;
 
-import brooklyn.entity.basic.lifecycle.JavaStartStopDriver;
+import brooklyn.entity.basic.lifecycle.JavaSoftwareProcessDriver;
 
 import java.io.File;
 
-public interface JavaWebAppDriver extends JavaStartStopDriver {
+public interface JavaWebAppDriver extends JavaSoftwareProcessDriver {
 
     Integer getHttpPort();
 

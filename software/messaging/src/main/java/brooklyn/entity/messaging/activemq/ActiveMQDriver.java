@@ -1,8 +1,8 @@
 package brooklyn.entity.messaging.activemq;
 
-import brooklyn.entity.basic.lifecycle.JavaStartStopDriver;
+import brooklyn.entity.basic.lifecycle.JavaSoftwareProcessDriver;
 
-public interface ActiveMQDriver extends JavaStartStopDriver {
+public interface ActiveMQDriver extends JavaSoftwareProcessDriver {
 
     Integer getOpenWirePort();
 }

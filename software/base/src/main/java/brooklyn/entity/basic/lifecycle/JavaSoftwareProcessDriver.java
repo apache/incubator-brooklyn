@@ -1,6 +1,6 @@
 package brooklyn.entity.basic.lifecycle;
 
-public interface JavaStartStopDriver extends StartStopDriver {
+public interface JavaSoftwareProcessDriver extends SoftwareProcessDriver {
 
     Integer getJmxPort();
 

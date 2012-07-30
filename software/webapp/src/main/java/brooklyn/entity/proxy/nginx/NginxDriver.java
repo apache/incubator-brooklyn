@@ -1,6 +1,6 @@
 package brooklyn.entity.proxy.nginx;
 
-import brooklyn.entity.basic.lifecycle.StartStopDriver;
+import brooklyn.entity.basic.lifecycle.SoftwareProcessDriver;
 
-public interface NginxDriver extends StartStopDriver {
+public interface NginxDriver extends SoftwareProcessDriver {
 }

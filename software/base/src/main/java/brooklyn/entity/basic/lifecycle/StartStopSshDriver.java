@@ -23,7 +23,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-public abstract class StartStopSshDriver extends AbstractStartStopDriver implements ScriptRunner {
+public abstract class StartStopSshDriver extends AbstractSoftwareProcessDriver implements ScriptRunner {
 
     public static final Logger log = LoggerFactory.getLogger(StartStopSshDriver.class);
     public static final Logger logSsh = LoggerFactory.getLogger(BrooklynLogging.SSH_IO);

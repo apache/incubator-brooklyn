@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.ConfigKey
 import brooklyn.entity.Entity
-import brooklyn.entity.basic.lifecycle.StartStopDriver
+import brooklyn.entity.basic.lifecycle.SoftwareProcessDriver
 import brooklyn.entity.basic.lifecycle.StartStopSshDriver
 import brooklyn.entity.trait.Startable
 import brooklyn.event.AttributeSensor
@@ -34,7 +34,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables
 import com.google.common.collect.Maps
 import groovy.time.TimeDuration
-import brooklyn.entity.drivers.DriverAwareEntity
+import brooklyn.entity.drivers.DriverDependentEntity
 
 /**
  * An {@link Entity} representing a piece of software which can be installed, run, and controlled.
@@ -43,7 +43,7 @@ import brooklyn.entity.drivers.DriverAwareEntity
  * <p>
  * It exposes sensors for service state (Lifecycle) and status (String), and for host info, log file location.
  */
-public abstract class SoftwareProcessEntity extends AbstractEntity implements Startable, DriverAwareEntity {
+public abstract class SoftwareProcessEntity extends AbstractEntity implements Startable, DriverDependentEntity {
 	private static final Logger log = LoggerFactory.getLogger(SoftwareProcessEntity.class)
 
     
@@ -81,7 +81,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 	public static final BasicAttributeSensor<Lifecycle> SERVICE_STATE = Attributes.SERVICE_STATE
 	
 	private MachineProvisioningLocation provisioningLoc
-	private StartStopDriver driverLocal
+	private SoftwareProcessDriver driver
 	protected transient SensorRegistry sensorRegistry
 
 	public SoftwareProcessEntity(Map properties=[:], Entity owner=null) {
@@ -100,14 +100,9 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
         return provisioningLoc
     }
     
-	public StartStopDriver getDriver() { driverLocal }
-    /**
-     * @deprecated will be deleted in 0.5. Refer to driver instead
-     */
-    @Deprecated
-	public StartStopDriver getSetup() { driver }
+	public SoftwareProcessDriver getDriver() { driver }
 
-	protected StartStopDriver newDriver(SshMachineLocation loc){
+  	protected SoftwareProcessDriver newDriver(SshMachineLocation loc){
         return getManagementContext().getEntityDriverFactory().build(this,loc);
     }
 
@@ -281,10 +276,10 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
                 //just reuse
             } else {
                 log.warn("driver/location change for {} is untested: cannot start ${this} on ${machine}: driver already created");
-                driverLocal = newDriver(machine)
+                driver = newDriver(machine)
             }
         } else {
-            driverLocal = newDriver(machine)
+            driver = newDriver(machine)
         }
     }
     
@@ -355,7 +350,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 		// Only release this machine if we ourselves provisioned it (e.g. it might be running other services)
 		provisioningLoc?.release(machine)
 
-		driverLocal = null;
+		driver = null;
 	}
 
 	public void restart() {

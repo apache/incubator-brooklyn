@@ -4,10 +4,10 @@ package brooklyn.entity.webapp;
 import java.io.File;
 
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.lifecycle.JavaStartStopSshDriver;
+import brooklyn.entity.basic.lifecycle.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 
-public abstract class JavaWebAppSshDriver extends JavaStartStopSshDriver implements JavaWebAppDriver {
+public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver implements JavaWebAppDriver {
 
     public JavaWebAppSshDriver(JavaWebAppSoftwareProcess entity, SshMachineLocation machine) {
         super(entity, machine);

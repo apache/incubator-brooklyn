@@ -13,7 +13,7 @@ import brooklyn.entity.drivers.EntityDriver;
  * In this way, it is also possible for entities to cleanly support multiple mechanisms for start/stop and other methods.
  */
 //TODO: Should this be renamed to 'Driver' or 'EntityDriver' ?
-public interface StartStopDriver extends EntityDriver {
+public interface SoftwareProcessDriver extends EntityDriver {
 
     /**
      * The entity whose components we are controlling.

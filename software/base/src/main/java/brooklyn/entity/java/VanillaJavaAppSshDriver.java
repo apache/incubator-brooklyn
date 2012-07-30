@@ -1,6 +1,10 @@
 package brooklyn.entity.java;
 
 import static java.lang.String.format;
+import brooklyn.entity.basic.lifecycle.JavaSoftwareProcessSshDriver;
+import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.ResourceUtils;
+import brooklyn.util.internal.StringEscapeUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,7 +19,7 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.internal.StringEscapeUtils;
 
-public class VanillaJavaAppSshDriver extends JavaStartStopSshDriver implements VanillaJavaAppDriver {
+public class VanillaJavaAppSshDriver extends JavaSoftwareProcessSshDriver implements VanillaJavaAppDriver {
 
     public VanillaJavaAppSshDriver(VanillaJavaApp entity, SshMachineLocation machine) {
         super(entity, machine);

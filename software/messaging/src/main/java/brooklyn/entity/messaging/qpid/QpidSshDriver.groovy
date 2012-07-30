@@ -4,12 +4,13 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.lifecycle.CommonCommands
-import brooklyn.entity.basic.lifecycle.JavaStartStopSshDriver
+
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.NetworkUtils
 import brooklyn.util.ResourceUtils
+import brooklyn.entity.basic.lifecycle.JavaSoftwareProcessSshDriver
 
-public class QpidSshDriver extends JavaStartStopSshDriver implements QpidDriver{
+public class QpidSshDriver extends JavaSoftwareProcessSshDriver implements QpidDriver{
 
     private static final Logger log = LoggerFactory.getLogger(QpidSshDriver.class);
 

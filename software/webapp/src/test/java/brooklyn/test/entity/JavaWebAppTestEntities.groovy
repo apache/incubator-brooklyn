@@ -5,12 +5,11 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.location.Location
-import brooklyn.location.basic.SshMachineLocation
+
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.entity.java.VanillaJavaApp
-import brooklyn.entity.java.VanillaJavaAppSshDriver
+
 import brooklyn.entity.webapp.WebAppServiceConstants
-import brooklyn.entity.basic.lifecycle.StartStopDriver
 
 /**
  * Mock web application server entity for testing.

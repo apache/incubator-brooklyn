@@ -17,9 +17,7 @@ import brooklyn.event.adapter.ConfigSensorAdapter
 import brooklyn.event.adapter.FunctionSensorAdapter
 import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.basic.BasicConfigKey
-import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.flags.SetFromFlag
-
 
 public class VanillaJavaApp extends SoftwareProcessEntity implements UsesJava, UsesJmx, UsesJavaMXBeans {
 

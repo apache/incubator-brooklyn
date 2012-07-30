@@ -1,7 +1,7 @@
 package brooklyn.entity.database.mysql;
 
-import brooklyn.entity.basic.lifecycle.StartStopDriver;
+import brooklyn.entity.basic.lifecycle.SoftwareProcessDriver;
 
-public interface MySqlDriver extends StartStopDriver {
+public interface MySqlDriver extends SoftwareProcessDriver {
 
 }

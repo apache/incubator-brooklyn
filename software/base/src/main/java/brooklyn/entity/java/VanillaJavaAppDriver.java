@@ -1,7 +1,7 @@
 package brooklyn.entity.java;
 
-import brooklyn.entity.basic.lifecycle.JavaStartStopDriver;
+import brooklyn.entity.basic.lifecycle.JavaSoftwareProcessDriver;
 
-public interface VanillaJavaAppDriver extends JavaStartStopDriver {
+public interface VanillaJavaAppDriver extends JavaSoftwareProcessDriver {
 
 }

@@ -1,11 +1,9 @@
 package brooklyn.entity.basic.lifecycle;
 
 import static brooklyn.test.TestUtils.*
-import static java.util.concurrent.TimeUnit.*
+
 import static org.testng.Assert.*
 import groovy.transform.InheritConstructors
-
-import java.util.List
 
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
@@ -22,7 +20,7 @@ import brooklyn.util.IdGenerator;
 import brooklyn.util.ResourceUtils
 import brooklyn.util.flags.SetFromFlag
 
-public class JavaStartStopSshDriverIntegrationTest {
+public class JavaSoftwareProcessSshDriverIntegrationTest {
 
     private static final long TIMEOUT_MS = 10*1000
     
@@ -56,7 +54,7 @@ public class JavaStartStopSshDriverIntegrationTest {
 @InheritConstructors
 class MyEntity extends SoftwareProcessEntity {
     
-    protected StartStopDriver newDriver(SshMachineLocation loc) {
+    protected SoftwareProcessDriver newDriver(SshMachineLocation loc) {
         return new MyEntityDriver(this, loc);
     }
 
@@ -73,7 +71,7 @@ class MyEntity extends SoftwareProcessEntity {
     }
 }
 
-class MyEntityDriver extends JavaStartStopSshDriver {
+class MyEntityDriver extends JavaSoftwareProcessSshDriver {
 
     @SetFromFlag("version")
     public static final BasicConfigKey<String> SUGGESTED_VERSION = [SoftwareProcessEntity.SUGGESTED_VERSION, "0.1"]

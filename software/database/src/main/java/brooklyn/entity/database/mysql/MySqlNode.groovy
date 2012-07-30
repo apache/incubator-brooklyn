@@ -2,14 +2,13 @@ package brooklyn.entity.database.mysql
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.SoftwareProcessEntity
-import brooklyn.entity.basic.lifecycle.StartStopDriver
+
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey
-import brooklyn.location.Location
+
 import brooklyn.location.basic.PortRanges
-import brooklyn.location.basic.SshMachineLocation
-import brooklyn.location.basic.jclouds.JcloudsLocation.JcloudsSshMachineLocation
+
 import brooklyn.util.flags.SetFromFlag
 
 public class MySqlNode extends SoftwareProcessEntity {

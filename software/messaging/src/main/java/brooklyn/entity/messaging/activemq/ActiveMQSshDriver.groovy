@@ -1,11 +1,11 @@
 package brooklyn.entity.messaging.activemq;
 
 import brooklyn.entity.basic.lifecycle.CommonCommands
-import brooklyn.entity.basic.lifecycle.JavaStartStopSshDriver
+import brooklyn.entity.basic.lifecycle.JavaSoftwareProcessSshDriver
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.NetworkUtils
 
-public class ActiveMQSshDriver extends JavaStartStopSshDriver implements ActiveMQDriver {
+public class ActiveMQSshDriver extends JavaSoftwareProcessSshDriver implements ActiveMQDriver {
 
     public ActiveMQSshDriver(ActiveMQBroker entity, SshMachineLocation machine) {
         super(entity, machine)
