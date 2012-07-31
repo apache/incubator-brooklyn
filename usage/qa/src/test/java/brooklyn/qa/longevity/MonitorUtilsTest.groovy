@@ -37,7 +37,7 @@ class MonitorUtilsTest {
     public void testFindOwnPid() {
         int ownpid = MonitorUtils.findOwnPid()
         assertTrue(ownpid > 0, "ownpid=$ownpid")
-        assertTrue(MonitorUtils.isPidRunning(ownpid, "java"))
+        assertTrue(MonitorUtils.isPidRunning(ownpid, "java"),"java is not running")
     }
             
     @Test
@@ -63,8 +63,9 @@ class MonitorUtilsTest {
     @Test
     public void testGetRunningPids() {
         int ownpid = MonitorUtils.findOwnPid()
+
         List<Integer> javapids = MonitorUtils.getRunningPids("java")
-        
+
         assertTrue(javapids.contains(ownpid), "javapids="+javapids+"; ownpid="+ownpid)
     }
     
@@ -98,7 +99,7 @@ class MonitorUtilsTest {
         assertTrue(memUsage.totalMemoryBytes > 0, memUsage.toString())
         assertEquals(memUsage.getInstanceCounts(), Collections.emptyMap())
         
-        MonitorUtils.MemoryUsage memUsage2 = MonitorUtils.getMemoryUsage(ownpid, MonitorUtilsTest.class.getCanonicalName())
+        MonitorUtils.MemoryUsage memUsage2 = MonitorUtils.getMemoryUsage(ownpid, MonitorUtilsTest.class.getCanonicalName(),0)
         assertEquals(memUsage2.getInstanceCounts(), ImmutableMap.of(MonitorUtilsTest.class.getCanonicalName(), 1))
         
         MonitorUtils.MemoryUsage memUsage3 = MonitorUtils.getMemoryUsage(ownpid, MonitorUtilsTest.class.getCanonicalName(), 2)
