@@ -5,7 +5,7 @@ To use the examples, you'll need ``curl``, ``java``, and ``maven`` (v3) installe
 First, grab a copy of the Brooklyn distribution:
 
 {% highlight bash %}
-% curl -L http://developers.cloudsoftcorp.com/maven/releases/io/brooklyn/brooklyn-dist/0.4.0-M2/brooklyn-dist-0.4.0-M2-dist.tar.gz
+% curl -LO http://developers.cloudsoftcorp.com/maven/releases/io/brooklyn/brooklyn-dist/0.4.0-M2/brooklyn-dist-0.4.0-M2-dist.tar.gz
 % tar xvzf brooklyn-dist-0.4.0-M2-dist.tar.gz
 % export BROOKLYN_HOME=$(pwd)/brooklyn
 {% endhighlight %}
