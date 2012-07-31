@@ -367,7 +367,6 @@
                     <configuration>
                         <additionalProjectnatures>
                             <projectnature>org.eclipse.jdt.groovy.core.groovyNature</projectnature>
-                            <projectnature>org.maven.ide.eclipse.maven2Nature</projectnature>
                         </additionalProjectnatures>
                     </configuration>
                 </plugin>
