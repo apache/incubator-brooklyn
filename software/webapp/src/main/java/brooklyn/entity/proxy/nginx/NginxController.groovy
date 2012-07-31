@@ -22,6 +22,12 @@ import static java.lang.String.format;
 
 /**
  * An entity that represents an Nginx proxy controlling a cluster.
+ * <p>
+ * The default driver *builds* nginx from source (because binaries are not reliably available, esp not with sticky sessions).
+ * This requires gcc and other build tools installed. The code attempts to install them but inevitably 
+ * this entity may be more finicky about the OS/image where it runs than others.
+ * <p>
+ * Paritcularly on OS X we require Xcode and command-line gcc installed and on the path.
  */
 public class NginxController extends AbstractController {
 

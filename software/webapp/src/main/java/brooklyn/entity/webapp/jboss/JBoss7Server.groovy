@@ -24,7 +24,10 @@ public class JBoss7Server extends JavaWebAppSoftwareProcess implements JavaWebAp
 
     @SetFromFlag("version")
     public static final BasicConfigKey<String> SUGGESTED_VERSION =
-        new BasicConfigKey<String>(SoftwareProcessEntity.SUGGESTED_VERSION, "7.1.1.Final");
+            new BasicConfigKey<String>(SoftwareProcessEntity.SUGGESTED_VERSION, "7.1.1.Final");
+    // note: 7.1.2.Final fixes many bugs but is not available for download,
+    // see https://community.jboss.org/thread/197780
+    // 7.2.0.Final should be out during Q3 2012
 
     @SetFromFlag("managementPort")
     public static final PortAttributeSensorAndConfigKey MANAGEMENT_PORT =

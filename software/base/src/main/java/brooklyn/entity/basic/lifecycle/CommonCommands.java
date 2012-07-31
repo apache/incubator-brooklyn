@@ -1,8 +1,14 @@
 package brooklyn.entity.basic.lifecycle;
 
-import java.util.*;
-
 import static java.lang.String.format;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 public class CommonCommands {
 
@@ -43,8 +49,11 @@ public class CommonCommands {
      * <p/>
      * The command is not escapped in any ways. If you are using single quotes
      * you need to escape them.
+     * <p/>
+     * null is returned pass-through (sometimes used to indicate no command desired).
      */
     public static String sudo(String command) {
+        if (command==null) return null;
         return format("(test $UID -eq 0 && %s || sudo -E -n -s -- \'%s\')", command, command);
     }
 
@@ -63,9 +72,11 @@ public class CommonCommands {
     }
 
     /**
-     * Returns a command that runs only if the specified executable is in the path
+     * Returns a command that runs only if the specified executable is in the path.
+     * If command is null, no command runs (and the script component this creates will return true if the package manager exists).
      */
     public static String exists(String executable, String command) {
+        if (command==null) return format("(which %s)", executable, command);
         return format("(which %s && %s)", executable, command);
     }
 
@@ -102,6 +113,12 @@ public class CommonCommands {
         return sb.toString();
     }
 
+    /** returns the pattern formatted with the given arg if the arg is not null, otherwise returns null */
+    public static String formatIfNotNull(String pattern, Object arg) {
+        if (arg==null) return null;
+        return format(pattern, arg);
+    }
+    
     /**
      * Returns a command for installing the given package.
      * <p/>
@@ -113,11 +130,11 @@ public class CommonCommands {
      */
     public static String installPackage(Map flags, String packageDefaultName) {
         List<String> commands = new LinkedList<String>();
-        commands.add(exists("dpkg", sudo(format("dpkg -i %s", getFlag(flags, "deb", packageDefaultName)))));
-        commands.add(exists("apt-get", sudo(format("apt-get update && apt-get install -y %s", getFlag(flags, "apt", packageDefaultName)))));
-        commands.add(exists("yum", sudo(format("yum -y install %s", getFlag(flags, "yum", packageDefaultName)))));
-        commands.add(exists("rpm", sudo(format("rpm -i %s", getFlag(flags, "rpm", packageDefaultName)))));
-        commands.add(exists("port", sudo(format("port install %s", getFlag(flags, "port", packageDefaultName)))));
+        commands.add(exists("dpkg", sudo(formatIfNotNull("dpkg -i %s", getFlag(flags, "deb", packageDefaultName)))));
+        commands.add(exists("apt-get", sudo(formatIfNotNull("apt-get update && apt-get install -y %s", getFlag(flags, "apt", packageDefaultName)))));
+        commands.add(exists("yum", sudo(formatIfNotNull("yum -y install %s", getFlag(flags, "yum", packageDefaultName)))));
+        commands.add(exists("rpm", sudo(formatIfNotNull("rpm -i %s", getFlag(flags, "rpm", packageDefaultName)))));
+        commands.add(exists("port", sudo(formatIfNotNull("port install %s", getFlag(flags, "port", packageDefaultName)))));
         String failure = format("(echo \"WARNING: no known/successful package manager to install %s, may fail subsequently\")",packageDefaultName);
         return alternatives(commands, failure);
     }

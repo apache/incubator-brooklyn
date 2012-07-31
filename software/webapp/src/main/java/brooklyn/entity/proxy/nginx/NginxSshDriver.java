@@ -49,12 +49,15 @@ public class NginxSshDriver extends StartStopSshDriver {
         boolean sticky = ((NginxController) entity).isSticky();
 
         ScriptHelper script = newScript(INSTALLING);
-        script.body.append(CommonCommands.INSTALL_WGET);
         script.body.append(CommonCommands.INSTALL_TAR);
-        MutableMap<String, String> installPackageFlags = MutableMap.of("yum", "openssl-devel", "rpm", "openssl-devel", "apt", "libssl-dev zlib1g-dev libpcre3-dev");
+        MutableMap<String, String> installPackageFlags = MutableMap.of(
+                "yum", "openssl-devel", 
+                "rpm", "openssl-devel", 
+                "apt", "libssl-dev zlib1g-dev libpcre3-dev",
+                "port", null);
         script.body.append(CommonCommands.installPackage(installPackageFlags, "nginx-prerequisites"));
         script.body.append(CommonCommands.downloadUrlAs(nginxUrl, getEntityVersionLabel("/"), nginxSaveAs));
-        script.body.append(format("tar xvzf %s", nginxUrl));
+        script.body.append(format("tar xvzf %s", nginxSaveAs));
         script.body.append(format("cd %s/nginx-%s", getInstallDir(), getVersion()));
 
         if (sticky) {
