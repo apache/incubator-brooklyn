@@ -1,6 +1,17 @@
 package brooklyn.entity.webapp.tomcat;
 
+import static java.lang.String.format;
+import groovy.lang.Closure;
+import groovy.time.TimeDuration;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcessEntity;
 import brooklyn.entity.basic.UsesJmx;
 import brooklyn.entity.webapp.JavaWebAppService;
@@ -10,21 +21,10 @@ import brooklyn.event.adapter.JmxObjectNameAdapter;
 import brooklyn.event.adapter.JmxSensorAdapter;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.event.basic.MapConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
-import brooklyn.location.PortRange;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.flags.SetFromFlag;
-import groovy.lang.Closure;
-import groovy.time.TimeDuration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-import static java.lang.String.format;
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Tomcat instance.
@@ -48,6 +48,8 @@ public class TomcatServer extends JavaWebAppSoftwareProcess implements JavaWebAp
     public static final BasicAttributeSensor<String> CONNECTOR_STATUS =
             new BasicAttributeSensor<String>(String.class, "webapp.tomcat.connectorStatus", "Catalina connector state name");
 
+    public static final BasicAttributeSensor<String> JMX_SERVICE_URL = Attributes.JMX_SERVICE_URL;
+    
     private JmxSensorAdapter jmx;
 
     public TomcatServer(Map flags){

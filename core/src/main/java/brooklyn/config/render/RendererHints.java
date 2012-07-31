@@ -55,6 +55,7 @@ public class RendererHints {
             return actionName;
         }
 
+        /** this is the method invoked by web console SensorSummary, at the moment */
         public String getUrlFromValue(Object v) {
             if (postProcessing != null) {
                 v = postProcessing.call(v);

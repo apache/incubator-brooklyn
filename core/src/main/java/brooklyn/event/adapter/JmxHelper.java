@@ -88,7 +88,10 @@ public class JmxHelper {
             Integer rmiServerPort = entity.getAttribute(Attributes.RMI_PORT);
             String context = entity.getAttribute(Attributes.JMX_CONTEXT);
 
-            return toConnectorUrl(host, rmiRegistryPort, rmiServerPort, context);
+            url = toConnectorUrl(host, rmiRegistryPort, rmiServerPort, context);
+            if (entity.getEntityType().getSensors().contains(Attributes.JMX_SERVICE_URL))
+                entity.setAttribute(Attributes.JMX_SERVICE_URL, url);
+            return url;
         }
     }
 
