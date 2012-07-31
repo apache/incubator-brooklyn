@@ -13,10 +13,9 @@ First, grab a copy of the Brooklyn distribution:
 Then, grab a copy of the brooklyn-examples source code and build with Maven:
 
 {% highlight bash %}
-% curl -L https://github.com/brooklyncentral/brooklyn-examples/tarball/0.4.0-M2 -o brooklyn-examples-dist-0.4.0-M2.tgz
-% tar xvzf brooklyn-examples-dist-0.4.0-M2.tgz
-% export BROOKLYN_EXAMPLES_DIR=$(pwd)/brooklyncentral-brooklyn-examples-b296711
-% cd ${BROOKLYN_EXAMPLES_DIR}
+% git clone https://github.com/brooklyncentral/brooklyn-examples.git
+% cd brooklyn-examples
+% git checkout 0.4.0-M2
 % mvn clean install
 {% endhighlight %}
 
