@@ -81,6 +81,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <brooklyn.version>0.4.0-SNAPSHOT</brooklyn.version>  <!-- BROOKLYN_VERSION -->
 
         <cobertura.version>1.9.4.1</cobertura.version>
         <surefire.version>2.9</surefire.version>
