@@ -2,10 +2,6 @@ package brooklyn.entity.java;
 
 import groovy.time.TimeDuration
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map
 import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
@@ -17,15 +13,12 @@ import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.basic.UsesJava
 import brooklyn.entity.basic.UsesJavaMXBeans
 import brooklyn.entity.basic.UsesJmx
-import brooklyn.entity.basic.lifecycle.JavaStartStopSshDriver
 import brooklyn.event.adapter.ConfigSensorAdapter
 import brooklyn.event.adapter.FunctionSensorAdapter
 import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.ResourceUtils
 import brooklyn.util.flags.SetFromFlag
-import brooklyn.util.internal.StringEscapeUtils
 
 
 public class VanillaJavaApp extends SoftwareProcessEntity implements UsesJava, UsesJmx, UsesJavaMXBeans {

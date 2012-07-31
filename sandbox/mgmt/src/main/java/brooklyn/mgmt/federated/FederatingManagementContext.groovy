@@ -1,14 +1,13 @@
 package brooklyn.mgmt.federated
 
-import java.util.Collection
-import java.util.Set
+import java.util.concurrent.Callable
 
 import org.infinispan.Cache
 import org.infinispan.manager.EmbeddedCacheManager
 import org.infinispan.notifications.Listener
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryModified
 import org.infinispan.notifications.cachelistener.event.CacheEntryModifiedEvent
-import org.infinispan.remoting.transport.Address;
+import org.infinispan.remoting.transport.Address
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -16,9 +15,9 @@ import brooklyn.entity.Application
 import brooklyn.entity.Entity
 import brooklyn.management.ExecutionManager
 import brooklyn.management.SubscriptionManager
-import brooklyn.management.Task;
+import brooklyn.management.Task
 import brooklyn.management.internal.AbstractManagementContext
-import brooklyn.management.internal.CollectionChangeListener;
+import brooklyn.management.internal.CollectionChangeListener
 import brooklyn.management.internal.LocalManagementContext
 import brooklyn.util.internal.LanguageUtils
 
