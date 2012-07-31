@@ -18,14 +18,20 @@ than defining an application. On the plus side, entities are much easier to re-u
 
 {% readj ../before-begin.include.md %}
 
+Now, go to this particular example's directory:
+
+{% highlight bash %}
+% cd portable-cloudfoundry
+{% endhighlight %}
+
 The CLI needs to know where to find your compiled examples. You can set this up by exporting
 the ``BROOKLYN_CLASSPATH`` environment variable in the following way:
 
 {% highlight bash %}
-% export BROOKLYN_CLASSPATH=${BROOKLYN_EXAMPLES_DIR}/portable-cloudfoundry/target/classes
+% export BROOKLYN_CLASSPATH=$(pwd)/target/classes
 {% endhighlight %}
 
-The project ``${BROOKLYN_EXAMPLES_DIR}/portable-cloudfoundry`` contains the code used
+The project ``portable-cloudfoundry`` contains the code used
 in this example in ``src/main/java``.
 
 

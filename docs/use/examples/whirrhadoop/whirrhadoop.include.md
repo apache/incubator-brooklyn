@@ -1,13 +1,19 @@
 {% readj ../before-begin.include.md %}
 
+Now, go to this particular example's directory:
+
+{% highlight bash %}
+% cd hadoop-and-whirr
+{% endhighlight %}
+
 The CLI needs to know where to find your compiled examples. You can set this up by exporting
 the ``BROOKLYN_CLASSPATH`` environment variable in the following way:
 
 {% highlight bash %}
-% export BROOKLYN_CLASSPATH=${BROOKLYN_EXAMPLES_DIR}/hadoop-and-whirr/target/classes
+% export BROOKLYN_CLASSPATH=$(pwd)/target/classes
 {% endhighlight %}
 
-The project ``${BROOKLYN_EXAMPLES_DIR}/hadoop-and-whirr`` includes deployment descriptors
+The project ``hadoop-and-whirr`` includes deployment descriptors
 showing how to provision Whirr-based clusters from Brooklyn,
 including setting up a Hadoop recipe.
 

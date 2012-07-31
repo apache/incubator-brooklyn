@@ -14,14 +14,20 @@ but does not assume knowledge of either of these.
 
 {% readj ../before-begin.include.md %}
 
+Now, go to this particular example's directory:
+
+{% highlight bash %}
+% cd global-web-fabric
+{% endhighlight %}
+
 The CLI needs to know where to find your compiled examples. You can set this up by exporting
 the ``BROOKLYN_CLASSPATH`` environment variable in the following way:
 
 {% highlight bash %}
-% export BROOKLYN_CLASSPATH=${BROOKLYN_EXAMPLES_DIR}/global-web-fabric/target/classes
+% export BROOKLYN_CLASSPATH=$(pwd)/target/classes
 {% endhighlight %}
 
-The project ``${BROOKLYN_EXAMPLES_DIR}/global-web-fabric`` contains the code used
+The project ``global-web-fabric`` contains the code used
 in this example under ``src/main/java``.
 
 

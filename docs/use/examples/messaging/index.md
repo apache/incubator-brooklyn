@@ -12,14 +12,20 @@ Java AMQP message broker and clients using the
 
 {% readj ../before-begin.include.md %}
 
+Now, go to this particular example's directory:
+
+{% highlight bash %}
+% cd simple-messaging-pubsub
+{% endhighlight %}
+
 The CLI needs to know where to find your compiled examples. You can set this up by exporting
 the ``BROOKLYN_CLASSPATH`` environment variable in the following way:
 
 {% highlight bash %}
-% export BROOKLYN_CLASSPATH=${BROOKLYN_EXAMPLES_DIR}/simple-messaging-pubsub/target/classes
+% export BROOKLYN_CLASSPATH=$(pwd)/target/classes
 {% endhighlight %}
 
-The project ``${BROOKLYN_EXAMPLES_DIR}/simple-messaging-pubsub`` includes a deployment
+The project ``simple-messaging-pubsub`` includes a deployment
 descriptor for our example messaging application and simple _Publish_
 and _Subscribe_ JMS test client scripts.
 

@@ -2,14 +2,20 @@
         
 {% readj ../before-begin.include.md %}
 
+Now, go to this particular example's directory:
+
+{% highlight bash %}
+% cd simple-web-cluster
+{% endhighlight %}
+
 The CLI needs to know where to find your compiled examples. You can set this up by exporting
 the ``BROOKLYN_CLASSPATH`` environment variable in the following way:
 
 {% highlight bash %}
-% export BROOKLYN_CLASSPATH=${BROOKLYN_EXAMPLES_DIR}/simple-web-cluster/target/classes
+% export BROOKLYN_CLASSPATH=$(pwd)/target/classes
 {% endhighlight %}
 
-The project ``${BROOKLYN_EXAMPLES_DIR}/simple-web-cluster`` includes several deployment descriptors
+The project ``simple-web-cluster`` includes several deployment descriptors
 for rolling out a web application, under ``src/main/java``.
 
 ## Simple Web Server
