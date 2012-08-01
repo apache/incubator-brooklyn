@@ -1,12 +1,13 @@
 package brooklyn.entity.basic.lifecycle;
 
-import static brooklyn.util.GroovyJavaMethods.elvis;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.jclouds.compute.domain.ExecResponse;
 import org.jclouds.scriptbuilder.statements.java.InstallJDK;
@@ -21,12 +22,14 @@ import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.basic.jclouds.JcloudsLocation.JcloudsSshMachineLocation;
 import brooklyn.util.MutableMap;
+import brooklyn.util.MutableSet;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.StringEscapeUtils;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -35,6 +38,14 @@ import com.google.gson.internal.Primitives;
 public abstract class JavaStartStopSshDriver extends StartStopSshDriver {
 
     public static final Logger log = LoggerFactory.getLogger(JavaStartStopSshDriver.class);
+
+    public static final List<List<String>> MUTUALLY_EXCLUSIVE_OPTS = ImmutableList.<List<String>>of(
+            ImmutableList.of("-client", "-server"));
+    
+    public static final List<String> KEY_VAL_OPT_PREFIXES = ImmutableList.of(
+            "-Xmx",
+            "-Xms",
+            "-Xss");
     
 	public JavaStartStopSshDriver(EntityLocal entity, SshMachineLocation machine) {
 		super(entity, machine);
@@ -43,7 +54,6 @@ public abstract class JavaStartStopSshDriver extends StartStopSshDriver {
 	}
 
     protected abstract String getLogFileLocation();
-    
     
 	public boolean isJmxEnabled() { return entity instanceof UsesJmx; }
 	
@@ -77,9 +87,9 @@ public abstract class JavaStartStopSshDriver extends StartStopSshDriver {
 	 **/
 	public List<String> getJavaOpts() {
 		Iterable<String> sysprops = Iterables.transform(getJavaSystemProperties().entrySet(), 
-		        new Function<Map.Entry, String>() {
-        		    public String apply(Map.Entry entry) {
-        		        Object k = entry.getKey();
+		        new Function<Map.Entry<String,?>, String>() {
+        		    public String apply(Map.Entry<String,?> entry) {
+        		        String k = entry.getKey();
         		        Object v = entry.getValue();
                         try {
                             if (v != null && Primitives.isWrapperType(v.getClass())) {
@@ -102,9 +112,43 @@ public abstract class JavaStartStopSshDriver extends StartStopSshDriver {
                             throw Throwables.propagate(e);
                         } 
                     }});
-        List<String> result = Lists.newArrayList(getCustomJavaConfigOptions());
-        result.addAll(Lists.newArrayList(sysprops));
-        return result;
+		
+		
+		Set<String> result = MutableSet.<String>builder()
+	                .addAll(getCustomJavaConfigOptions())
+	                .addAll(sysprops)
+	                .build();
+		
+		for (String customOpt : entity.getConfig(UsesJava.JAVA_OPTS)) {
+		    for (List<String> mutuallyExclusiveOpt : MUTUALLY_EXCLUSIVE_OPTS) {
+		        if (mutuallyExclusiveOpt.contains(customOpt)) {
+		            result.removeAll(mutuallyExclusiveOpt);
+		        }
+		    }
+		    for (String keyValOptPrefix : KEY_VAL_OPT_PREFIXES) {
+		        if (customOpt.startsWith(keyValOptPrefix)) {
+		            for (Iterator<String> iter = result.iterator(); iter.hasNext();) {
+		                String existingOpt = (String) iter.next();
+		                if (existingOpt.startsWith(keyValOptPrefix)) {
+		                    iter.remove();
+		                }
+                    }
+		        }
+		    }
+		    if (customOpt.indexOf("=") != -1) {
+		        String customOptPrefix = customOpt.substring(0, customOpt.indexOf("="));
+		        
+                for (Iterator<String> iter = result.iterator(); iter.hasNext();) {
+                    String existingOpt = (String) iter.next();
+		            if (existingOpt.startsWith(customOptPrefix)) {
+		                iter.remove();
+		            }
+		        }
+		    }
+		    result.add(customOpt);
+		}
+		
+		return ImmutableList.copyOf(result);
 	}
 
 	/**
@@ -117,11 +161,11 @@ public abstract class JavaStartStopSshDriver extends StartStopSshDriver {
 	 * <p>
 	 * See {@link #getShellEnvironment()} for discussion of quoting/escaping strategy.
 	 */
-	protected Map getJavaSystemProperties() {
-	    return MutableMap.builder()
-	            .putAll(entity.getConfig(UsesJava.JAVA_OPTIONS))
+	protected Map<String,?> getJavaSystemProperties() {
+	    return MutableMap.<String,Object>builder()
 	            .putAll(getCustomJavaSystemProperties())
-	            .putAll(isJmxEnabled() ? getJmxJavaSystemProperties() : Collections.emptyMap())
+	            .putAll(isJmxEnabled() ? getJmxJavaSystemProperties() : Collections.<String,Object>emptyMap())
+	            .putAll(entity.getConfig(UsesJava.JAVA_SYSPROPS))
 	            .build();
 	}
 

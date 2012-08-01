@@ -59,7 +59,7 @@ public class WebClusterDatabaseExample extends AbstractApplication {
     {
         web.factory.configure(
             httpPort: "8080+", 
-            (UsesJava.JAVA_OPTIONS):
+            (UsesJava.JAVA_SYSPROPS):
                 ["brooklyn.example.db.url": valueWhenAttributeReady(mysql, MySqlNode.MYSQL_URL, this.&makeJdbcUrl)]);
 
         web.cluster.addPolicy(AutoScalerPolicy.builder()

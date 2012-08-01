@@ -1,17 +1,19 @@
 package brooklyn.entity.java;
 
-import brooklyn.entity.basic.lifecycle.JavaStartStopSshDriver;
-import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.ResourceUtils;
-import brooklyn.util.internal.StringEscapeUtils;
+import static java.lang.String.format;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import static java.lang.String.format;
+import brooklyn.entity.basic.lifecycle.JavaStartStopSshDriver;
+import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.ResourceUtils;
+import brooklyn.util.internal.StringEscapeUtils;
 
 public class VanillaJavaAppSshDriver extends JavaStartStopSshDriver {
 
@@ -49,13 +51,26 @@ public class VanillaJavaAppSshDriver extends JavaStartStopSshDriver {
         SshMachineLocation machine = getMachine();
         VanillaJavaApp entity = getEntity();
         for (String f : entity.getClasspath()) {
-            // TODO if it's a local folder then JAR it up before sending?
             // TODO support wildcards
-            int result = machine.installTo(new ResourceUtils(entity), f, getRunDir() + "/" + "lib" + "/");
+
+            // If a local folder, then jar it up
+            String toinstall;
+            if (new File(f).isDirectory()) {
+                try {
+                    File jarFile = JarBuilder.buildJar(new File(f));
+                    toinstall = jarFile.getAbsolutePath();
+                } catch (IOException e) {
+                    throw new IllegalStateException("Error jarring classpath entry, for directory "+f, e);
+                }
+            } else {
+                toinstall = f;
+            }
+            
+            int result = machine.installTo(new ResourceUtils(entity), toinstall, getRunDir() + "/" + "lib" + "/");
             if (result != 0)
                 throw new IllegalStateException(format("unable to install classpath entry %s for %s at %s",f,entity,machine));
+            
             // if it's a zip or tgz then expand
-
             // FIXME dedup with code in machine.installTo above
             String destName = f;
             destName = destName.contains("?") ? destName.substring(0, destName.indexOf('?')) : destName;
@@ -86,7 +101,7 @@ public class VanillaJavaAppSshDriver extends JavaStartStopSshDriver {
         newScript(flags, LAUNCHING).
             body.append(
                 format("echo \"launching: java $JAVA_OPTS -cp \'lib/*\' %s %s\"",clazz,args),
-                format("java $JAVA_OPTS -cp \"lib/*\" %s %s  >> %s/console 2>&1 </dev/null &",getRunDir(),clazz,args)
+                format("java $JAVA_OPTS -cp \"lib/*\" %s %s >> %s/console 2>&1 </dev/null &",clazz, args, getRunDir())
         ).execute();
     }
 

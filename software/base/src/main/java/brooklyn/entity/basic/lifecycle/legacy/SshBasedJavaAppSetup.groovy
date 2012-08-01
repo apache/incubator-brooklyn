@@ -143,7 +143,7 @@ public abstract class SshBasedJavaAppSetup extends SshBasedAppSetup {
      * See {@link #getShellEnvironment()} for discussion of quoting/escaping strategy.
      */
     protected Map getJavaSystemProperties() {
-        entity.getConfig(UsesJava.JAVA_OPTIONS) + getCustomJavaSystemProperties() + (jmxEnabled ? getJmxJavaSystemProperties() : [:])
+        entity.getConfig(UsesJava.JAVA_SYSPROPS) + getCustomJavaSystemProperties() + (jmxEnabled ? getJmxJavaSystemProperties() : [:])
     }
 
     /**

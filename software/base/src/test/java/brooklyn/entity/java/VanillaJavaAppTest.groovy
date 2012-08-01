@@ -18,7 +18,7 @@ class VanillaJavaAppTest {
     private static final long TIMEOUT_MS = 10*1000
     
     // FIXME Hard-codes Aled's path; needs fixed!
-    private static final String BROOKLYN_HOME = "/Users/aled/eclipse-workspaces/cloudsoft/brooklyn"
+    private static final String BROOKLYN_HOME = "/Users/aled/eclipse-workspaces/cloudsoft/brooklyn-central"
     
     AbstractApplication app
     SshMachineLocation loc
@@ -45,7 +45,7 @@ class VanillaJavaAppTest {
     @Test(groups=["WIP", "Integration"])
     public void testJavaSystemProperties() {
         VanillaJavaApp javaProcess = new VanillaJavaApp(owner:app, main:"my.Main", classpath:["c1", "c2"], args:["a1", "a2"])
-        javaProcess.setConfig(UsesJava.JAVA_OPTIONS, ["fooKey":"fooValue", "barKey":"barValue"])
+        javaProcess.setConfig(UsesJava.JAVA_SYSPROPS, ["fooKey":"fooValue", "barKey":"barValue"])
         // TODO: how to test: launch standalone app that outputs system properties to stdout? Probe via JMX?
     }
     
