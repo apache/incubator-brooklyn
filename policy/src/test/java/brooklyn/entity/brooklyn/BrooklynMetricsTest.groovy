@@ -6,6 +6,8 @@ import static org.testng.Assert.*
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.entity.Entity
+import brooklyn.event.AttributeSensor
 import brooklyn.event.SensorEventListener
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.test.entity.TestApplication
@@ -50,11 +52,12 @@ class BrooklynMetricsTest {
             assertEquals(brooklynMetrics.getAttribute(BrooklynMetrics.TOTAL_EFFECTORS_INVOKED), 2) // for app and testEntity's start
         }
 
-        long effsInvoked = brooklynMetrics.getAttribute(BrooklynMetrics.TOTAL_EFFECTORS_INVOKED)
-        long tasksSubmitted = brooklynMetrics.getAttribute(BrooklynMetrics.TOTAL_TASKS_SUBMITTED)
-        long eventsPublished = brooklynMetrics.getAttribute(BrooklynMetrics.TOTAL_EVENTS_PUBLISHED)
-        long eventsDelivered = brooklynMetrics.getAttribute(BrooklynMetrics.TOTAL_EVENTS_DELIVERED)
-        long subscriptions = brooklynMetrics.getAttribute(BrooklynMetrics.NUM_SUBSCRIPTIONS)
+        // Note if attribute has not yet been set, the value returned could be null
+        long effsInvoked = getAttribute(brooklynMetrics, BrooklynMetrics.TOTAL_EFFECTORS_INVOKED, 0);
+        long tasksSubmitted = getAttribute(brooklynMetrics, BrooklynMetrics.TOTAL_TASKS_SUBMITTED, 0);
+        long eventsPublished = getAttribute(brooklynMetrics, BrooklynMetrics.TOTAL_EVENTS_PUBLISHED, 0);
+        long eventsDelivered = getAttribute(brooklynMetrics, BrooklynMetrics.TOTAL_EVENTS_DELIVERED, 0);
+        long subscriptions = getAttribute(brooklynMetrics, BrooklynMetrics.NUM_SUBSCRIPTIONS, 0);
 
         // Invoking an effector increments effector/task count
         e.myEffector()
@@ -74,5 +77,10 @@ class BrooklynMetricsTest {
             assertTrue(brooklynMetrics.getAttribute(BrooklynMetrics.TOTAL_EVENTS_DELIVERED) > eventsDelivered)
             assertEquals(brooklynMetrics.getAttribute(BrooklynMetrics.NUM_SUBSCRIPTIONS), 1)
         }
+    }
+    
+    private long getAttribute(Entity entity, AttributeSensor<Long> attribute, long defaultVal) {
+        Long result = entity.getAttribute(attribute);
+        return (result != null) ? result : defaultVal;
     }
 }
