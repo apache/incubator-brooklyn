@@ -31,7 +31,7 @@ GREP_ARGS="-r -l --exclude_dir=\\..* --exclude=.*.(log|war)"
 
 FILES1=`pcregrep $GREP_ARGS "${CURRENT_VERSION}.*${LABEL1}" .`
 for x in $FILES1 ; do
-  sed -i "s/${CURRENT_VERSION}\(.*\)${LABEL1}/${NEW_VERSION}\1${LABEL1}/" $x
+  sed -i .bak "s/${CURRENT_VERSION}\(.*\)${LABEL1}/${NEW_VERSION}\1${LABEL1}/" $x
 done
 
 echo "One-line pattern changed these files: $FILES1"
@@ -42,7 +42,7 @@ echo "One-line pattern changed these files: $FILES1"
 
 FILES2=`pcregrep $GREP_ARGS -M "${LABEL2}.*\n.*${CURRENT_VERSION}" .`
 for x in $FILES2 ; do
-  sed -n -i '1h; 1!H; ${ g; s/'"${LABEL2}"'\([^\n]*\n[^\n]*\)'"${CURRENT_VERSION}"'/'"${LABEL2}"'\1'"${NEW_VERSION}"'/g p }' $x
+  sed -n -i .bak '1h; 1!H; ${ g; s/'"${LABEL2}"'\([^\n]*\n[^\n]*\)'"${CURRENT_VERSION}"'/'"${LABEL2}"'\1'"${NEW_VERSION}"'/g p }' $x
 done
 
 echo "Two-line pattern changed these files: $FILES2"
