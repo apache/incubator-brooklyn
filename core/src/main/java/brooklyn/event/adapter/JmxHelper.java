@@ -211,7 +211,7 @@ public class JmxHelper {
      *
      * TODO: What happens if already connected?
      *
-     * @param timeout
+     * @param timeoutMs
      * @return
      */
     public boolean connect(long timeoutMs) {
